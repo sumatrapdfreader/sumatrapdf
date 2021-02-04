@@ -235,6 +235,7 @@ int fz_reset_rasterizer(fz_context *ctx, fz_rasterizer *rast, fz_irect clip)
 
 	rast->bbox.x0 = rast->bbox.y0 = BBOX_MAX;
 	rast->bbox.x1 = rast->bbox.y1 = BBOX_MIN;
+
 	if (rast->fns.reset)
 		return rast->fns.reset(ctx, rast);
 	return 0;

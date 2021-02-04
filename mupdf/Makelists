@@ -626,7 +626,6 @@ TESSERACT_SRC += thirdparty/tesseract/src/ccutil/unichar.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccutil/unicharcompress.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccutil/unicharmap.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccutil/unicharset.cpp
-TESSERACT_SRC += thirdparty/tesseract/src/ccutil/unicodes.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/classify/classify.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/dict/context.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/dict/dawg.cpp

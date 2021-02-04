@@ -262,26 +262,10 @@ static const fz_path_walker flatten_proc =
 	flatten_rectto
 };
 
-int
-fz_flatten_fill_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, fz_matrix ctm, float flatness, const fz_irect *scissor, fz_irect *bbox)
+static int
+do_flatten_fill(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, fz_matrix ctm, float flatness)
 {
 	flatten_arg arg;
-
-	if (fz_reset_rasterizer(ctx, rast, *scissor))
-	{
-		arg.rast = rast;
-		arg.ctm = ctm;
-		arg.flatness = flatness;
-		arg.b.x = arg.b.y = arg.c.x = arg.c.y = 0;
-
-		fz_walk_path(ctx, path, &flatten_proc, &arg);
-		if (arg.c.x != arg.b.x || arg.c.y != arg.b.y)
-			line(ctx, rast, ctm, arg.c.x, arg.c.y, arg.b.x, arg.b.y);
-
-		fz_gap_rasterizer(ctx, rast);
-
-		fz_postindex_rasterizer(ctx, rast);
-	}
 
 	arg.rast = rast;
 	arg.ctm = ctm;
@@ -294,11 +278,31 @@ fz_flatten_fill_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, 
 
 	fz_gap_rasterizer(ctx, rast);
 
-	if (!bbox)
-		return 0;
+	return fz_is_empty_irect(fz_bound_rasterizer(ctx, rast));
+}
 
-	*bbox = fz_bound_rasterizer(ctx, rast);
-	return fz_is_empty_irect(fz_intersect_irect(*bbox, *scissor));
+int
+fz_flatten_fill_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, fz_matrix ctm, float flatness, fz_irect scissor, fz_irect *bbox)
+{
+	int empty;
+	fz_irect local_bbox;
+	if (!bbox)
+		bbox = &local_bbox;
+
+	if (fz_reset_rasterizer(ctx, rast, scissor))
+	{
+		empty = do_flatten_fill(ctx, rast, path, ctm, flatness);
+		if (empty)
+			return *bbox = fz_empty_irect, 1;
+		fz_postindex_rasterizer(ctx, rast);
+	}
+
+	empty = do_flatten_fill(ctx, rast, path, ctm, flatness);
+	if (empty)
+		return *bbox = fz_empty_irect, 1;
+
+	*bbox = fz_intersect_irect(scissor, fz_bound_rasterizer(ctx, rast));
+	return fz_is_empty_irect(*bbox);
 }
 
 enum {
@@ -1416,7 +1420,7 @@ static const fz_path_walker dash_proc =
 };
 
 static int
-do_flatten_stroke(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth, const fz_irect *scissor, fz_irect *bbox)
+do_flatten_stroke(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth)
 {
 	struct sctx s;
 	const fz_path_walker *proc = &stroke_proc;
@@ -1473,23 +1477,29 @@ do_flatten_stroke(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, con
 	fz_walk_path(ctx, path, proc, &s);
 	fz_stroke_flush(ctx, &s, s.cap, stroke->end_cap);
 
-	if (!bbox)
-		return 0;
-
-	*bbox = fz_bound_rasterizer(ctx, rast);
-	return fz_is_empty_irect(*bbox);
+	return fz_is_empty_irect(fz_bound_rasterizer(ctx, rast));
 }
 
 int
-fz_flatten_stroke_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth, const fz_irect *scissor, fz_irect *bbox)
+fz_flatten_stroke_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth, fz_irect scissor, fz_irect *bbox)
 {
-	if (fz_reset_rasterizer(ctx, rast, *scissor))
+	int empty;
+	fz_irect local_bbox;
+	if (!bbox)
+		bbox = &local_bbox;
+
+	if (fz_reset_rasterizer(ctx, rast, scissor))
 	{
-		if (do_flatten_stroke(ctx, rast, path, stroke, ctm, flatness, linewidth, scissor, bbox))
-			return 1;
+		empty = do_flatten_stroke(ctx, rast, path, stroke, ctm, flatness, linewidth);
+		if (empty)
+			return *bbox = fz_empty_irect, 1;
 		fz_postindex_rasterizer(ctx, rast);
-		bbox = NULL;
 	}
 
-	return do_flatten_stroke(ctx, rast, path, stroke, ctm, flatness, linewidth, scissor, bbox);
+	empty = do_flatten_stroke(ctx, rast, path, stroke, ctm, flatness, linewidth);
+	if (empty)
+		return *bbox = fz_empty_irect, 1;
+
+	*bbox = fz_intersect_irect(scissor, fz_bound_rasterizer(ctx, rast));
+	return fz_is_empty_irect(*bbox);
 }

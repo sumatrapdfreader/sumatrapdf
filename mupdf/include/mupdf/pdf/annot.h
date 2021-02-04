@@ -535,6 +535,7 @@ int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_widget *wi
 */
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot);
 void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const char *name, const char *text, const char *date);
+void pdf_update_signature_appearance_with_image(fz_context *ctx, pdf_annot *annot, fz_image *image);
 
 /*
 	Start/Stop using the annotation-local xref. This allows us to

@@ -962,6 +962,10 @@ swap_fragments(fz_context *ctx, pdf_document *doc, pdf_journal_entry *entry)
 #ifdef PDF_DEBUG_JOURNAL
 	entry->changed_since_last_dumped = 1;
 #endif
+	if (doc->local_xref_nesting != 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't undo/redo within an operation");
+	pdf_drop_local_xref(ctx, doc->local_xref);
+	doc->local_xref = NULL;
 
 	for (frag = entry->head; frag != NULL; frag = frag->next)
 	{

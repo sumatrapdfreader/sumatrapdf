@@ -187,7 +187,7 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 		fz_rethrow(ctx);
 }
 
-void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer)
+void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, fz_image *image)
 {
 	pdf_pkcs7_designated_name *dn = NULL;
 	fz_buffer *fzbuf = NULL;
@@ -232,30 +232,38 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 		/* Create an appearance stream only if the signature is intended to be visible */
 		if (!fz_is_empty_rect(rect))
 		{
-			dn = signer->get_signing_name(ctx, signer);
-			if (!dn || !dn->cn)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Certificate has no common name");
+			if (image)
+			{
+				pdf_update_signature_appearance_with_image(ctx, (pdf_annot *)widget, image);
+			}
+			else
+			{
+				dn = signer->get_signing_name(ctx, signer);
+				if (!dn || !dn->cn)
+					fz_throw(ctx, FZ_ERROR_GENERIC, "Certificate has no common name");
 
-			fzbuf = fz_new_buffer(ctx, 256);
-			fz_append_printf(ctx, fzbuf, "cn=%s", dn->cn);
+				fzbuf = fz_new_buffer(ctx, 256);
+				fz_append_printf(ctx, fzbuf, "cn=%s", dn->cn);
 
-			if (dn->o)
-				fz_append_printf(ctx, fzbuf, ", o=%s", dn->o);
+				if (dn->o)
+					fz_append_printf(ctx, fzbuf, ", o=%s", dn->o);
 
-			if (dn->ou)
-				fz_append_printf(ctx, fzbuf, ", ou=%s", dn->ou);
+				if (dn->ou)
+					fz_append_printf(ctx, fzbuf, ", ou=%s", dn->ou);
 
-			if (dn->email)
-				fz_append_printf(ctx, fzbuf, ", email=%s", dn->email);
+				if (dn->email)
+					fz_append_printf(ctx, fzbuf, ", email=%s", dn->email);
 
-			if (dn->c)
-				fz_append_printf(ctx, fzbuf, ", c=%s", dn->c);
+				if (dn->c)
+					fz_append_printf(ctx, fzbuf, ", c=%s", dn->c);
 
-			dn_str = fz_string_from_buffer(ctx, fzbuf);
+				dn_str = fz_string_from_buffer(ctx, fzbuf);
 
-			if (tm)
-				len = strftime(now_str, sizeof now_str, "%Y.%m.%d %H:%M:%SZ", tm);
-			pdf_update_signature_appearance(ctx, (pdf_annot *)widget, dn->cn, dn_str, len?now_str:NULL);
+				if (tm)
+					len = strftime(now_str, sizeof now_str, "%Y.%m.%d %H:%M:%SZ", tm);
+
+				pdf_update_signature_appearance(ctx, (pdf_annot *)widget, dn->cn, dn_str, len?now_str:NULL);
+			}
 		}
 
 		/* Update the SigFlags for the document if required */

@@ -388,18 +388,19 @@ FUN(PDFWidget_getDesignatedName)(JNIEnv *env, jobject self, jobject jverifier)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFWidget_sign)(JNIEnv *env, jobject self, jobject signer)
+FUN(PDFWidget_signNative)(JNIEnv *env, jobject self, jobject signer, jobject jimage)
 {
 	fz_context *ctx = get_context(env);
 	pdf_widget *widget = from_PDFWidget_safe(env, self);
 	pdf_document *pdf = widget->page->doc;
 	pdf_pkcs7_signer *pkcs7signer = from_PKCS7Signer_safe(env, signer);
+	fz_image *image = from_Image_safe(env, jimage);
 
 	if (!ctx || !widget || !pdf) return JNI_FALSE;
 	if (!pkcs7signer) jni_throw_arg(env, "signer must not be null");
 
 	fz_try(ctx)
-		pdf_sign_signature(ctx, widget, pkcs7signer);
+		pdf_sign_signature(ctx, widget, pkcs7signer, image);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 

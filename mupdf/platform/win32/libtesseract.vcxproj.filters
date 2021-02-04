@@ -866,9 +866,6 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicharset.cpp">
       <Filter>Source Files\tesseract\ccutil</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicodes.cpp">
-      <Filter>Source Files\tesseract\ccutil</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\thirdparty\tesseract\src\wordrec\tface.cpp">
       <Filter>Source Files\tesseract\wordrec</Filter>
     </ClCompile>

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>MuPDF Android SDK</title>
+<title>MuPDF Android Library</title>
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body>
 
 <header>
-<h1>MuPDF Android SDK</h1>
+<h1>MuPDF Android Library</h1>
 </header>
 
 <article>
@@ -26,12 +26,12 @@ h6:before {counter-increment: h6; content: counter(h2) "." counter(h3) "." count
 </style>
 
 <p>
-This document outlines the steps necessary to use the MuPDF Android SDK in various ways.
+This document outlines the steps necessary to use the MuPDF Android Library in various ways.
 
 <p>
-First, we show you how to embed the SDK in your app. Then, we explain how to
+First, we show you how to embed MuPDF in your app. Then, we explain how to
 customize the viewer if you need to change how it looks or behaves. Finally, we
-tell you where to go if you need to do work on the SDK itself.
+tell you where to go if you need to do work on the library itself.
 
 <p>
 Embedding the viewer in your app provides an activity that you can start to
@@ -85,7 +85,7 @@ Go and fill out the <a href="https://www.artifex.com/contact-us/">product inquir
 for commercial licensing terms and pricing.
 
 <h2 id="setup-build">
-Add the MuPDF SDK to your project
+Add the MuPDF Library to your project
 </h2>
 
 <p>
@@ -268,11 +268,11 @@ You're now free to customize the resources in mupdf-lib/src/main/res and behavio
 mupdf-lib/src/main/java as you desire.
 
 <h2>
-Working on the MuPDF SDK
+Working on the MuPDF Library
 </h2>
 
 <p>
-If you want to work on the SDK itself, rather than just use it, you will need
+If you want to work on the library itself, rather than just use it, you will need
 to check out the following git repositories.
 
 <dl>
@@ -290,7 +290,7 @@ It uses mupdf-android-fitz.git as either a Maven artifact or git submodule.
 <dt>mupdf-android-viewer-old.git
 <dd>This repository contains the old Android viewer. It has its own JNI
 bindings and uses mupdf.git as a submodule directly. It is only listed here for
-completeness sake, and is not part of the SDK.
+history.
 </dl>
 
 <p>

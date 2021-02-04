@@ -1,10 +1,8 @@
 #if defined(HAVE_LEPTONICA) && defined(HAVE_TESSERACT)
 
+#include <climits>
 #include "tesseract/baseapi.h"
-#include "tesseract/genericvector.h"
-#include "tesseract/serialis.h"
-#include "tesseract/strngs.h"
-#include "tesseract/ocrclass.h"          // for ETEXT_DESC
+#include "tesseract/capi.h"          // for ETEXT_DESC
 
 extern "C" {
 
@@ -75,6 +73,43 @@ static void my_leptonica_free(void *ptr)
 	fz_free(leptonica_mem, ptr);
 }
 
+#if TESSERACT_MAJOR_VERSION >= 5
+
+static bool
+load_file(const char* filename, std::vector<char>* data)
+{
+	bool result = false;
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return false;
+
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	// Trying to open a directory on Linux sets size to LONG_MAX. Catch it here.
+	if (size > 0 && size < LONG_MAX)
+	{
+		// reserve an extra byte in case caller wants to append a '\0' character
+		data->reserve(size + 1);
+		data->resize(size);
+		result = static_cast<long>(fread(&(*data)[0], 1, size, fp)) == size;
+	}
+	fclose(fp);
+	return result;
+}
+
+static bool
+tess_file_reader(const char *fname, std::vector<char> *out)
+{
+	/* FIXME: Look for inbuilt ones. */
+
+	/* Then under TESSDATA */
+	return load_file(fname, out);
+}
+
+#else
+
 static bool
 load_file(const char* filename, GenericVector<char>* data)
 {
@@ -98,19 +133,6 @@ load_file(const char* filename, GenericVector<char>* data)
 	fclose(fp);
 	return result;
 }
-
-#if TESSERACT_MAJOR_VERSION >= 5
-
-static bool
-tess_file_reader(const char *fname, GenericVector<char> *out)
-{
-	/* FIXME: Look for inbuilt ones. */
-
-	/* Then under TESSDATA */
-	return load_file(fname, out);
-}
-
-#else
 
 static bool
 tess_file_reader(const STRING& fname, GenericVector<char> *out)

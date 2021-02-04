@@ -371,15 +371,13 @@ fz_irect_from_rect(fz_rect r)
 	fz_irect b;
 	if (fz_is_infinite_rect(r))
 		return fz_infinite_irect;
-	if (fz_is_empty_rect(r))
-		return fz_empty_irect;
 	if (!fz_is_valid_rect(r))
 		return fz_invalid_irect;
 
-		b.x0 = fz_clamp(floorf(r.x0), MIN_SAFE_INT, MAX_SAFE_INT);
-		b.y0 = fz_clamp(floorf(r.y0), MIN_SAFE_INT, MAX_SAFE_INT);
-		b.x1 = fz_clamp(ceilf(r.x1), MIN_SAFE_INT, MAX_SAFE_INT);
-		b.y1 = fz_clamp(ceilf(r.y1), MIN_SAFE_INT, MAX_SAFE_INT);
+	b.x0 = fz_clamp(floorf(r.x0), MIN_SAFE_INT, MAX_SAFE_INT);
+	b.y0 = fz_clamp(floorf(r.y0), MIN_SAFE_INT, MAX_SAFE_INT);
+	b.x1 = fz_clamp(ceilf(r.x1), MIN_SAFE_INT, MAX_SAFE_INT);
+	b.y1 = fz_clamp(ceilf(r.y1), MIN_SAFE_INT, MAX_SAFE_INT);
 
 	return b;
 }

@@ -624,7 +624,7 @@ fz_draw_fill_path(fz_context *ctx, fz_device *devp, const fz_path *path, int eve
 		flatness = 0.001f;
 
 	bbox = fz_intersect_irect(fz_pixmap_bbox(ctx, state->dest), state->scissor);
-	if (fz_flatten_fill_path(ctx, rast, path, ctm, flatness, &bbox, &bbox))
+	if (fz_flatten_fill_path(ctx, rast, path, ctm, flatness, bbox, &bbox))
 		return;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
@@ -636,7 +636,7 @@ fz_draw_fill_path(fz_context *ctx, fz_device *devp, const fz_path *path, int eve
 	if (state->shape)
 	{
 		if (!rast->fns.reusable)
-			fz_flatten_fill_path(ctx, rast, path, ctm, flatness, &bbox, NULL);
+			fz_flatten_fill_path(ctx, rast, path, ctm, flatness, bbox, NULL);
 
 		colorbv[0] = 255;
 		fz_convert_rasterizer(ctx, rast, even_odd, state->shape, colorbv, 0);
@@ -644,7 +644,7 @@ fz_draw_fill_path(fz_context *ctx, fz_device *devp, const fz_path *path, int eve
 	if (state->group_alpha)
 	{
 		if (!rast->fns.reusable)
-			fz_flatten_fill_path(ctx, rast, path, ctm, flatness, &bbox, NULL);
+			fz_flatten_fill_path(ctx, rast, path, ctm, flatness, bbox, NULL);
 
 		colorbv[0] = alpha * 255;
 		fz_convert_rasterizer(ctx, rast, even_odd, state->group_alpha, colorbv, 0);
@@ -687,7 +687,7 @@ fz_draw_stroke_path(fz_context *ctx, fz_device *devp, const fz_path *path, const
 		flatness = 0.001f;
 
 	bbox = fz_intersect_irect(fz_pixmap_bbox_no_ctx(state->dest), state->scissor);
-	if (fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, &bbox, &bbox))
+	if (fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, bbox, &bbox))
 		return;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
@@ -708,7 +708,7 @@ fz_draw_stroke_path(fz_context *ctx, fz_device *devp, const fz_path *path, const
 	if (state->shape)
 	{
 		if (!rast->fns.reusable)
-			(void)fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, &bbox, NULL);
+			(void)fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, bbox, NULL);
 
 		colorbv[0] = 255;
 		fz_convert_rasterizer(ctx, rast, 0, state->shape, colorbv, 0);
@@ -716,7 +716,7 @@ fz_draw_stroke_path(fz_context *ctx, fz_device *devp, const fz_path *path, const
 	if (state->group_alpha)
 	{
 		if (!rast->fns.reusable)
-			(void)fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, &bbox, NULL);
+			(void)fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, bbox, NULL);
 
 		colorbv[0] = 255 * alpha;
 		fz_convert_rasterizer(ctx, rast, 0, state->group_alpha, colorbv, 0);
@@ -773,7 +773,7 @@ fz_draw_clip_path(fz_context *ctx, fz_device *devp, const fz_path *path, int eve
 		bbox = fz_intersect_irect(fz_pixmap_bbox(ctx, state->dest), state->scissor);
 	}
 
-	if (fz_flatten_fill_path(ctx, rast, path, ctm, flatness, &bbox, &bbox) || fz_is_rect_rasterizer(ctx, rast))
+	if (fz_flatten_fill_path(ctx, rast, path, ctm, flatness, bbox, &bbox) || fz_is_rect_rasterizer(ctx, rast))
 	{
 		state[1].scissor = bbox;
 		state[1].mask = NULL;
@@ -851,7 +851,7 @@ fz_draw_clip_stroke_path(fz_context *ctx, fz_device *devp, const fz_path *path, 
 		bbox = fz_intersect_irect(fz_pixmap_bbox(ctx, state->dest), state->scissor);
 	}
 
-	if (fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, &bbox, &bbox))
+	if (fz_flatten_stroke_path(ctx, rast, path, stroke, ctm, flatness, linewidth, bbox, &bbox))
 	{
 		state[1].scissor = bbox;
 		state[1].mask = NULL;
@@ -1111,11 +1111,11 @@ fz_draw_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, const
 				int y = (int)trm.f;
 				if (pixmap == NULL || pixmap->n == 1)
 				{
-				draw_glyph(colorbv, state->dest, glyph, x, y, &state->scissor, eop);
-				if (state->shape)
-					draw_glyph(&solid, state->shape, glyph, x, y, &state->scissor, 0);
-				if (state->group_alpha)
-					draw_glyph(&alpha_byte, state->group_alpha, glyph, x, y, &state->scissor, 0);
+					draw_glyph(colorbv, state->dest, glyph, x, y, &state->scissor, eop);
+					if (state->shape)
+						draw_glyph(&solid, state->shape, glyph, x, y, &state->scissor, 0);
+					if (state->group_alpha)
+						draw_glyph(&alpha_byte, state->group_alpha, glyph, x, y, &state->scissor, 0);
 				}
 				else
 				{
@@ -3078,7 +3078,7 @@ fz_new_draw_device_type3(fz_context *ctx, fz_matrix transform, fz_pixmap *dest)
 }
 
 fz_irect *
-fz_bound_path_accurate(fz_context *ctx, fz_irect *bbox, const fz_irect *scissor, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth)
+fz_bound_path_accurate(fz_context *ctx, fz_irect *bbox, fz_irect scissor, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth)
 {
 	fz_rasterizer *rast = fz_new_rasterizer(ctx, NULL);
 

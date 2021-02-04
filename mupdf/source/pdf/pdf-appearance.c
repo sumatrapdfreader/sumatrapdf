@@ -2308,6 +2308,56 @@ void pdf_annot_pop_and_discard_local_xref(fz_context *ctx, pdf_annot *annot)
 	doc->local_xref = NULL;
 }
 
+void
+pdf_update_signature_appearance_with_image(fz_context *ctx, pdf_annot *annot, fz_image *image)
+{
+	pdf_obj *ap, *new_ap_n, *res_xobj;
+	pdf_obj *res = NULL;
+	fz_buffer *buf;
+	fz_rect rect;
+	float xs, ys, scale, aw, ah, w, h, x, y;
+
+	fz_var(res);
+
+	buf = fz_new_buffer(ctx, 1024);
+	fz_try(ctx)
+	{
+		res = pdf_new_dict(ctx, annot->page->doc, 1);
+		res_xobj = pdf_dict_put_dict(ctx, res, PDF_NAME(XObject), 1);
+		pdf_dict_put_drop(ctx, res_xobj, PDF_NAME(Image), pdf_add_image(ctx, annot->page->doc, image));
+
+		rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+		aw = (rect.x1 - rect.x0);
+		ah = (rect.y1 - rect.y0);
+		xs = aw / image->w;
+		ys = ah / image->h;
+		scale = xs < ys ? xs : ys;
+		w = image->w * scale;
+		h = image->h * scale;
+		x = rect.x0 + (aw - w) / 2;
+		y = rect.y0 + (ah - h) / 2;
+
+		fz_append_printf(ctx, buf, "q\n%g 0 0 %g %g %g cm\n/Image Do\nQ\n", w, h, x, y);
+
+		/* Update the AP/N stream */
+		ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
+		if (!ap)
+			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
+		new_ap_n = pdf_new_xobject(ctx, annot->page->doc, rect, fz_identity, res, buf);
+		annot->needs_new_ap = 0;
+		annot->has_new_ap = 1;
+		pdf_dict_put(ctx, ap, PDF_NAME(N), new_ap_n);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, res);
+		fz_drop_buffer(ctx, buf);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
 
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 {

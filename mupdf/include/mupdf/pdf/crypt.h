@@ -73,7 +73,7 @@ int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document
 */
 size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents);
 
-void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer);
+void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, fz_image *image);
 
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget);
 

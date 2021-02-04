@@ -607,6 +607,21 @@ select_unknown_cmap(FT_Face face)
 	return NULL;
 }
 
+static int use_s22pdf_workaround(fz_context *ctx, pdf_obj *dict, pdf_obj *descriptor)
+{
+	if (descriptor)
+	{
+		if (pdf_dict_get(ctx, dict, PDF_NAME(Encoding)) != PDF_NAME(WinAnsiEncoding))
+			return 0;
+		if (pdf_dict_get(ctx, dict, PDF_NAME(ToUnicode)) != NULL)
+			return 0;
+		if (pdf_dict_get_int(ctx, descriptor, PDF_NAME(Flags)) != 4)
+			return 0;
+		return 1;
+	}
+	return 0;
+}
+
 static pdf_font_desc *
 pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 {
@@ -647,10 +662,7 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 			pdf_load_builtin_font(ctx, fontdesc, basefont, 0);
 
 		/* Some chinese documents mistakenly consider WinAnsiEncoding to be codepage 936 */
-		if (descriptor && pdf_is_string(ctx, pdf_dict_get(ctx, descriptor, PDF_NAME(FontName))) &&
-			!pdf_dict_get(ctx, dict, PDF_NAME(ToUnicode)) &&
-			pdf_name_eq(ctx, pdf_dict_get(ctx, dict, PDF_NAME(Encoding)), PDF_NAME(WinAnsiEncoding)) &&
-			pdf_dict_get_int(ctx, descriptor, PDF_NAME(Flags)) == 4)
+		if (use_s22pdf_workaround(ctx, dict, descriptor))
 		{
 			char *cp936fonts[] = {
 				"\xCB\xCE\xCC\xE5", "SimSun,Regular",

@@ -649,7 +649,7 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_irect b
 
 	b = fz_intersect_irect(b, fz_pixmap_bbox(ctx, dest));
 	b = fz_intersect_irect(b, fz_pixmap_bbox(ctx, src));
-	if (b.x1 <= b.x0 || b.y1 <= b.y0)
+	if (fz_is_empty_irect(b))
 		return;
 	w = (unsigned int)(b.x1 - b.x0);
 	y = (unsigned int)(b.y1 - b.y0);

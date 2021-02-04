@@ -3020,9 +3020,9 @@ static void ffi_new_Image(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	fz_image *image = NULL;
 
-		fz_image *mask = NULL;
-		if (js_isuserdata(J, 2, "fz_image"))
-			mask = js_touserdata(J, 2, "fz_image");
+	fz_image *mask = NULL;
+	if (js_isuserdata(J, 2, "fz_image"))
+		mask = js_touserdata(J, 2, "fz_image");
 
 	if (js_isuserdata(J, 1, "fz_pixmap")) {
 		fz_pixmap *pixmap = js_touserdata(J, 1, "fz_pixmap");
@@ -3244,16 +3244,16 @@ static void ffi_Text_walk(js_State *J)
 			trm.e = span->items[i].x;
 			trm.f = span->items[i].y;
 			if (js_hasproperty(J, 1, "showGlyph")) {
-			js_copy(J, 1); /* object for this binding */
-			js_copy(J, -3); /* font */
-			ffi_pushmatrix(J, trm);
-			js_pushnumber(J, span->items[i].gid);
-			js_pushnumber(J, span->items[i].ucs);
-			js_pushnumber(J, span->wmode);
-			js_pushnumber(J, span->bidi_level);
-			js_call(J, 6);
-			js_pop(J, 1);
-		}
+				js_copy(J, 1); /* object for this binding */
+				js_copy(J, -3); /* font */
+				ffi_pushmatrix(J, trm);
+				js_pushnumber(J, span->items[i].gid);
+				js_pushnumber(J, span->items[i].ucs);
+				js_pushnumber(J, span->wmode);
+				js_pushnumber(J, span->bidi_level);
+				js_call(J, 6);
+				js_pop(J, 1);
+			}
 		}
 		js_pop(J, 1); /* pop font object */
 		if (js_hasproperty(J, 1, "endSpan")) {
@@ -6173,9 +6173,10 @@ static void ffi_PDFWidget_sign(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_signer *signer = js_touserdata(J, 1, "pdf_pkcs7_signer");
+	fz_image *image = js_iscoercible(J, 2) ? js_touserdata(J, 2, "fz_image") : NULL;
 
 	fz_try(ctx)
-		pdf_sign_signature(ctx, widget, signer);
+		pdf_sign_signature(ctx, widget, signer, image);
 	fz_catch(ctx)
 		rethrow(J);
 }
@@ -6630,7 +6631,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFWidget.checkDigest", ffi_PDFWidget_checkDigest, 0);
 		jsB_propfun(J, "PDFWidget.getSignatory", ffi_PDFWidget_getSignatory, 0);
 		jsB_propfun(J, "PDFWidget.clearSignature", ffi_PDFWidget_clearSignature, 0);
-		jsB_propfun(J, "PDFWidget.sign", ffi_PDFWidget_sign, 1);
+		jsB_propfun(J, "PDFWidget.sign", ffi_PDFWidget_sign, 2);
 	}
 	js_dup(J);
 	js_setglobal(J, "PDFWidget");
