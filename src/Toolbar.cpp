@@ -69,6 +69,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {5, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page"), 0},
     {6, CmdZoomOut, _TRN("Zoom Out"), 0},
     {7, CmdZoomIn, _TRN("Zoom In"), 0},
+    {13, CmdViewRotateLeft, _TRN("Rotate &Left\tCtrl+Shift+-"), 0},
+    {14, CmdViewRotateRight, _TRN("Rotate &Right\tCtrl+Shift++"), 0},
     {-1, CmdFindFirst, nullptr, 0},
     {8, CmdFindPrev, _TRN("Find Previous"), 0},
     {9, CmdFindNext, _TRN("Find Next"), 0},
@@ -81,12 +83,26 @@ static bool TbIsSeparator(ToolbarButtonInfo& tbi) {
     return tbi.bmpIndex < 0;
 }
 
+// which documents support rotation
+// TODO: what about comic book files?
+static bool NeedsRotateUI(WindowInfo* win) {
+    if (win->AsChm()) {
+        return false;
+    }
+    if (win->AsEbook()) {
+        return false;
+    }
+    return true;
+}
+
 static bool IsVisibleToolbarButton(WindowInfo* win, int buttonNo) {
     switch (gToolbarButtons[buttonNo].cmdId) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
             return !win->AsChm();
-
+        case CmdViewRotateLeft:
+        case CmdViewRotateRight:
+            return NeedsRotateUI(win);
         case CmdFindFirst:
         case CmdFindNext:
         case CmdFindPrev:
@@ -346,7 +362,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
     RECT r{};
-    TbGetRect(win->hwndToolbar, CmdZoomIn, &r);
+    TbGetRect(win->hwndToolbar, CmdViewRotateRight, &r);
     int currX = r.right + DpiScale(win->hwndToolbar, 10);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
