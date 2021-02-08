@@ -667,8 +667,6 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
-bool useSvg = true;
-
 void CreateToolbar(WindowInfo* win) {
     if (!gIsRaMicroBuild) {
         cxButtonSpacing = 0;
@@ -691,46 +689,17 @@ void CreateToolbar(WindowInfo* win) {
     HBITMAP hbmp = nullptr;
 
     Size size{-1, -1};
-    if (useSvg) {
-        // TODO: bitmap is skewed for dxDpi of 20, 24 etc.
-        int dxDpi = 16;
-        int scale = (int)ceilf((float)dpi / 96.f);
-        int dx = dxDpi * scale;
-        size.dx = dx;
-        size.dy = dx;
-        hbmp = BuildIconsBitmap(dx, dx);
-    } else {
-        // stretch the toolbar bitmaps for higher DPI settings
-        // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
+    // TODO: bitmap is skewed for dxDpi of 20, 24 etc.
+    int dxDpi = 16;
+    int scale = (int)ceilf((float)dpi / 96.f);
+    int dx = dxDpi * scale;
+    size.dx = dx;
+    size.dy = dx;
+    hbmp = BuildIconsBitmap(dx, dx);
 
-        // scale toolbar images only by integral sizes (2, 3 etc.)
-        int scaleX = (int)ceilf((float)dpi / 96.f);
-        int scaleY = (int)ceilf((float)dpi / 96.f);
-        bool needsScaling = (scaleX > 1) || (scaleY > 1);
-        bool useDibSection = UseDibSection(needsScaling);
-
-        // the name of the bitmap contains the number of icons so that after adding/removing
-        // icons a complete default toolbar is used rather than an incomplete customized one
-        hbmp = LoadExternalBitmap(GetModuleHandle(nullptr), L"toolbar_11.bmp", IDB_TOOLBAR, useDibSection);
-        size = GetBitmapSize(hbmp);
-
-        if (needsScaling) {
-            size.dx *= scaleX;
-            size.dy *= scaleY;
-
-            uint flags = LR_COPYDELETEORG;
-            if (useDibSection) {
-                flags |= LR_CREATEDIBSECTION;
-            }
-            hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, flags);
-        }
-    }
     // assume square icons
     HIMAGELIST himl = ImageList_Create(size.dy, size.dy, ILC_COLORDDB | ILC_MASK, 0, 0);
-    COLORREF mask = RGB(0xFF, 0, 0xFF);
-    if (useSvg) {
-        mask = RGB(0xff, 0xff, 0xff);
-    }
+    COLORREF mask = RGB(0xff, 0xff, 0xff);
     if (true) {
         ImageList_AddMasked(himl, hbmp, mask);
     } else {
