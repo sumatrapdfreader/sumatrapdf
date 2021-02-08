@@ -67,10 +67,10 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {-1, 0, nullptr, 0},
     {4, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously"), 0},
     {5, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page"), 0},
-    {6, CmdZoomOut, _TRN("Zoom Out"), 0},
-    {7, CmdZoomIn, _TRN("Zoom In"), 0},
     {13, CmdViewRotateLeft, _TRN("Rotate &Left\tCtrl+Shift+-"), 0},
     {14, CmdViewRotateRight, _TRN("Rotate &Right\tCtrl+Shift++"), 0},
+    {6, CmdZoomOut, _TRN("Zoom Out"), 0},
+    {7, CmdZoomIn, _TRN("Zoom In"), 0},
     {-1, CmdFindFirst, nullptr, 0},
     {8, CmdFindPrev, _TRN("Find Previous"), 0},
     {9, CmdFindNext, _TRN("Find Next"), 0},
@@ -84,7 +84,6 @@ static bool TbIsSeparator(ToolbarButtonInfo& tbi) {
 }
 
 // which documents support rotation
-// TODO: what about comic book files?
 static bool NeedsRotateUI(WindowInfo* win) {
     if (win->AsChm()) {
         return false;
@@ -242,18 +241,6 @@ void UpdateFindbox(WindowInfo* win) {
     }
 }
 
-static HBITMAP LoadExternalBitmap(HINSTANCE hInst, const WCHAR* fileName, INT resourceId, bool useDibSection) {
-    AutoFreeWstr path(AppGenDataFilename(fileName));
-    uint flags = useDibSection ? LR_CREATEDIBSECTION : 0;
-    if (path) {
-        HBITMAP hBmp = (HBITMAP)LoadImageW(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | flags);
-        if (hBmp) {
-            return hBmp;
-        }
-    }
-    return (HBITMAP)LoadImageW(hInst, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0, 0, flags);
-}
-
 static WNDPROC DefWndProcToolbar = nullptr;
 static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CTLCOLORSTATIC == msg) {
@@ -362,7 +349,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
     RECT r{};
-    TbGetRect(win->hwndToolbar, CmdViewRotateRight, &r);
+    TbGetRect(win->hwndToolbar, CmdZoomIn, &r);
     int currX = r.right + DpiScale(win->hwndToolbar, 10);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
@@ -625,33 +612,6 @@ static void CreatePageBox(WindowInfo* win) {
     win->hwndPageTotal = total;
 
     UpdateToolbarPageText(win, -1);
-}
-
-// Sometimes scaled icons show up with purple background. Here's what I was able to piece together.
-// When icons not scaled, we don't ask for DIB section (the original behavior of the code)
-// Win 7 : purple if DIB section (tested by me)
-// Win 10 :
-//  build 14383 : purple if no DIB section (tested by me)
-//  build 10586 : purple if DIB section (reported in
-//  https://github.com/sumatrapdfreader/sumatrapdf/issues/569#issuecomment-231508990)
-// Other builds not tested, will default to no DIB section. Might need to update it if more reports come in.
-static bool UseDibSection(bool needsScaling) {
-    if (!needsScaling) {
-        return false;
-    }
-    OSVERSIONINFOEX ver;
-    GetOsVersion(ver);
-    // everything other than win 10: no DIB section
-    if (ver.dwMajorVersion != 10) {
-        return false;
-    }
-    // win 10 seems to behave differently depending on the build
-    // I assume that up to 10586 we don't want dib
-    if (ver.dwBuildNumber <= 10586) {
-        return false;
-    }
-    // builds > 10586, including 14383
-    return true;
 }
 
 void LogBitmapInfo(HBITMAP hbmp) {
