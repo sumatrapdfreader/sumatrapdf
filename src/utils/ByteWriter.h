@@ -7,6 +7,7 @@ struct ByteWriter {
 
     ByteWriter(size_t sizeHint = 0);
     ByteWriter(const ByteWriter& o);
+    ByteWriter& operator=(const ByteWriter&) = delete;
 
     void Write8(u8 b);
     void Write8x2(u8 b1, u8 b2);

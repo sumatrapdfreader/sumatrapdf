@@ -13,6 +13,7 @@ struct Slice {
     Slice(char* s, size_t len);
     Slice(char* start, char* end);
     Slice(const Slice& other);
+    Slice& operator=(const Slice&);
 
     void Set(char* s, size_t len);
 

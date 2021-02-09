@@ -65,8 +65,8 @@ enum class ElAlign { Center = 0, Top, Bottom, Left, Right };
 // This is more flexible than, say, VerticalAlignment property in WPF.
 // Note: this could be extended for values outside of <0.f - 1.f> range.
 struct ElAlignData {
-    float elementPoint;
-    float containerPoint;
+    float elementPoint{0};
+    float containerPoint{0};
 
     bool operator==(const ElAlignData& other) const;
     int CalcOffset(int elSize, int containerSize) const;

@@ -17,17 +17,34 @@ class Grid : public Control {
         ElAlignData vertAlign;
         ElAlignData horizAlign;
 
-        CellData() : vertAlign(GetElAlignTop()), horizAlign(GetElAlignLeft()) {
+        CellData() {
+            vertAlign = GetElAlignTop();
+            horizAlign = GetElAlignLeft();
         }
 
-        CellData(const CellData& other)
-            : el(other.el),
-              cachedStyle(other.cachedStyle),
-              row(other.row),
-              col(other.col),
-              colSpan(other.colSpan),
-              vertAlign(other.vertAlign),
-              horizAlign(other.horizAlign) {
+        // TODO: make it default?
+        CellData(const CellData& other) {
+            CrashIf(this == &other);
+            el = other.el;
+            cachedStyle = other.cachedStyle;
+            row = other.row;
+            col = other.col;
+            colSpan = other.colSpan;
+            vertAlign = other.vertAlign;
+            horizAlign = other.horizAlign;
+        }
+
+        // TODO: make it default?
+        CellData& operator=(const CellData& other) {
+            CrashIf(this == &other);
+            el = other.el;
+            cachedStyle = other.cachedStyle;
+            row = other.row;
+            col = other.col;
+            colSpan = other.colSpan;
+            vertAlign = other.vertAlign;
+            horizAlign = other.horizAlign;
+            return *this;
         }
 
         void Set(Control* el, int row, int col, ElAlign horizAlign = ElAlign::Left,

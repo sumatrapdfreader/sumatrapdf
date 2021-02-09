@@ -25,6 +25,8 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, TextSelection* range);
     // creates a copy of give range
     SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange&);
+    SumatraUIAutomationTextRange& operator=(const SumatraUIAutomationTextRange&) = delete;
+
     ~SumatraUIAutomationTextRange();
 
     bool operator==(const SumatraUIAutomationTextRange&) const;

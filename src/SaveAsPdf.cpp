@@ -29,23 +29,23 @@ extern "C" {
 // based on pdfmerge.c in mupdf
 
 const pdf_write_options pdf_default_write_options2 = {
-    0,  /* do_incremental */
-    0,  /* do_pretty */
-    0,  /* do_ascii */
-    0,  /* do_compress */
-    0,  /* do_compress_images */
-    0,  /* do_compress_fonts */
-    0,  /* do_decompress */
-    0,  /* do_garbage */
-    0,  /* do_linear */
-    0,  /* do_clean */
-    0,  /* do_sanitize */
-    0,  /* do_appearance */
-    0,  /* do_encrypt */
-    ~0, /* permissions */
+    0,   /* do_incremental */
+    0,   /* do_pretty */
+    0,   /* do_ascii */
+    0,   /* do_compress */
+    0,   /* do_compress_images */
+    0,   /* do_compress_fonts */
+    0,   /* do_decompress */
+    0,   /* do_garbage */
+    0,   /* do_linear */
+    0,   /* do_clean */
+    0,   /* do_sanitize */
+    0,   /* do_appearance */
+    0,   /* do_encrypt */
+    ~0,  /* permissions */
     {0}, /* opwd_utf8[128] */
     {0}, /* upwd_utf8[128] */
-                                                      };
+};
 
 /* Copy as few key/value pairs as we can. Do not include items that reference other pages. */
 // clang-format off

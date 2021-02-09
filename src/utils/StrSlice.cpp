@@ -39,6 +39,14 @@ Slice::Slice(const Slice& other) {
     this->curr = other.curr;
 }
 
+Slice& Slice::operator=(const Slice& other) {
+    CrashIf(this == &other);
+    this->begin = other.begin;
+    this->end = other.end;
+    this->curr = other.curr;
+    return *this;
+}
+
 size_t Slice::Left() const {
     CrashIf(curr > end);
     return end - curr;
