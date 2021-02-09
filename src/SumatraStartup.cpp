@@ -756,7 +756,8 @@ bool gEnableMemLeak = false;
 // don't show up
 static void ForceStartupLeaks() {
     time_t secs;
-    gmtime(&secs);
+    struct tm buf_not_used;
+    gmtime_s(&buf_not_used, &secs);
     WCHAR* path = GetExePath();
     FILE* fp = _wfopen(path, L"rb");
     str::Free(path);

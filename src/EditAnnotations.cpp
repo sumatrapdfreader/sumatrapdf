@@ -417,9 +417,10 @@ static void DoAuthor(EditAnnotationsWindow* win, Annotation* annot) {
 }
 
 static void AppendPdfDate(str::Str& s, time_t secs) {
-    struct tm* tm = gmtime(&secs);
+    struct tm tm;
+    gmtime_s(&tm, &secs);
     char buf[100];
-    strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", tm);
+    strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
     s.Append(buf);
 }
 
