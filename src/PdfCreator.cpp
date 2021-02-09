@@ -59,13 +59,14 @@ void PdfCreator::SetProducerName(const WCHAR* name) {
 
 // TODO: in 3.1.2 we had grayscale optimization, not sure if worth it
 // TODO: the resulting pdf is big, even though we tell it to compress images
-// mabye encode bitmaps to *.png or .jp2 and use AddPageFromImageData
+// maybe encode bitmaps to *.png or .jp2 and use AddPageFromImageData
 static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
     int w = size.dx;
     int h = size.dy;
     int stride = ((w * 3 + 3) / 4) * 4;
 
-    u8* data = (u8*)fz_malloc(ctx, stride * h);
+    size_t totalSize = (size_t)stride * (size_t)h;
+    u8* data = (u8*)fz_malloc(ctx, totalSize);
     if (!data) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "render_to_pixmap: failed to allocate %d bytes", (int)stride * h);
     }

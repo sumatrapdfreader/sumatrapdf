@@ -1915,8 +1915,8 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUni
             break;
     }
 
-    AutoFreeWstr xPos(str::FormatFloatWithThousandSep(pt.x * factor));
-    AutoFreeWstr yPos(str::FormatFloatWithThousandSep(pt.y * factor));
+    AutoFreeWstr xPos(str::FormatFloatWithThousandSep((double)pt.x * (double)factor));
+    AutoFreeWstr yPos(str::FormatFloatWithThousandSep((double)pt.y * (double)factor));
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
         if (str::IsDigit(xPos[str::Len(xPos) - 2])) {
