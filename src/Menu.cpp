@@ -258,7 +258,9 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotations,       MF_REQ_DISK_ACCESS },
+#if 0
     {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
+#endif
     { _TRN("Edit Annotations"),             CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
@@ -786,10 +788,14 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         }
     }
 
+    bool enableSaveAnnotations = false;
     bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
-    if (!canDoAnnotations) {
+    if (canDoAnnotations) {
+        enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
+    } else {
         showCreateAnnotation = false;
     }
+    win::menu::SetEnabled(popup, CmdSaveAnnotations, enableSaveAnnotations);
 
     const WCHAR* filePath = win->ctrl->FilePath();
     if (pageNo > 0) {
@@ -990,12 +996,12 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
 
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
-    bool supportsAnnotations = EngineSupportsAnnotations(engine);
+    bool enableSaveAnnotations = false;
     bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
-    if (!canDoAnnotations) {
-        supportsAnnotations = false;
+    if (canDoAnnotations) {
+        enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
     }
-    win::menu::SetEnabled(menu, CmdSaveAnnotations, supportsAnnotations);
+    win::menu::SetEnabled(menu, CmdSaveAnnotations, enableSaveAnnotations);
 }
 
 // so that we can do free everything at exit
