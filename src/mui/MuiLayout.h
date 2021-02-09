@@ -35,7 +35,7 @@ class ILayout {
 // for calculations. LayoutAxis is x for horizontal layout and y
 // for vertical layout. NonLayoutAxis is the other one.
 struct DirectionalLayoutData {
-    ILayout* element = nullptr;
+    ILayout* element{nullptr};
     // size is a float that determines how much of the remaining
     // available space of the container should be allocated to
     // this element. A magic value SizeSelf means the element should
@@ -45,10 +45,10 @@ struct DirectionalLayoutData {
     // is 0.5, it'll get half the remaining space, if size is 1.0, it'll
     // get the whole remaining space but if there are 2 elements and
     // both have size 1.0, they'll only get half remaining space each
-    float sizeLayoutAxis = 0.f;
+    float sizeLayoutAxis{0.f};
     // similar to sizeLayoutAxis except there's only one element in
     // this axis, so things are simpler
-    float sizeNonLayoutAxis = 0.f;
+    float sizeNonLayoutAxis{0.f};
 
     // within layout axis, elements are laid out sequentially.
     // alignNonLayoutAxis determines how to align the element
@@ -60,15 +60,27 @@ struct DirectionalLayoutData {
     // desiredSize of the element after Measure() step
     Size desiredSize;
 
-    DirectionalLayoutData() : alignNonLayoutAxis(GetElAlignCenter()) {
+    DirectionalLayoutData() {
+        alignNonLayoutAxis = GetElAlignCenter();
     }
 
-    DirectionalLayoutData(const DirectionalLayoutData& other)
-        : element(other.element),
-          sizeLayoutAxis(other.sizeLayoutAxis),
-          sizeNonLayoutAxis(other.sizeNonLayoutAxis),
-          alignNonLayoutAxis(other.alignNonLayoutAxis),
-          desiredSize(other.desiredSize) {
+    // TODO: use default
+    DirectionalLayoutData(const DirectionalLayoutData& other) {
+        element = other.element;
+        sizeLayoutAxis = other.sizeLayoutAxis;
+        sizeNonLayoutAxis = other.sizeNonLayoutAxis;
+        alignNonLayoutAxis = other.alignNonLayoutAxis;
+        desiredSize = other.desiredSize;
+    }
+
+    // TODO: use default
+    DirectionalLayoutData& operator=(const DirectionalLayoutData& other) {
+        element = other.element;
+        sizeLayoutAxis = other.sizeLayoutAxis;
+        sizeNonLayoutAxis = other.sizeNonLayoutAxis;
+        alignNonLayoutAxis = other.alignNonLayoutAxis;
+        desiredSize = other.desiredSize;
+        return *this;
     }
 
     void Set(ILayout* el, float sla, float snla, const ElAlignData& a) {
