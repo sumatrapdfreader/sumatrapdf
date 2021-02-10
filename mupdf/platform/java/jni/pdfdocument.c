@@ -1120,3 +1120,38 @@ FUN(PDFDocument_redo)(JNIEnv *env, jobject self)
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_beginOperation)(JNIEnv *env, jobject self, jstring joperation)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	const char *operation = NULL;
+
+	if (!ctx || !pdf) return;
+	if (!joperation) jni_throw_arg_void(env, "operation must not be null");
+
+	operation = (*env)->GetStringUTFChars(env, joperation, NULL);
+	if (!operation) return;
+
+	fz_try(ctx)
+		pdf_begin_operation(ctx, pdf, operation);
+	fz_always(ctx)
+		(*env)->ReleaseStringUTFChars(env, joperation, operation);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_endOperation)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+
+	if (!ctx || !pdf) return;
+
+	fz_try(ctx)
+		pdf_end_operation(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

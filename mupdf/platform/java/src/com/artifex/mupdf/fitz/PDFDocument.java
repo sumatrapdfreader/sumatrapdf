@@ -145,4 +145,7 @@ public class PDFDocument extends Document
 	public native boolean canRedo();
 	public native void undo();
 	public native void redo();
+
+	public native void beginOperation(String operation);
+	public native void endOperation();
 }

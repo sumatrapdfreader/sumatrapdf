@@ -103,6 +103,7 @@ static void pdf_field_mark_dirty(fz_context *ctx, pdf_obj *field)
 
 static void update_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *obj, const char *text)
 {
+	const char *old_text;
 	pdf_obj *grp;
 
 	if (!text)
@@ -113,6 +114,11 @@ static void update_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *obj,
 	grp = find_head_of_field_group(ctx, obj);
 	if (grp)
 		obj = grp;
+
+	/* Only update if we change the actual value. */
+	old_text = pdf_dict_get_text_string(ctx, obj, PDF_NAME(V));
+	if (old_text && !strcmp(old_text, text))
+		return;
 
 	pdf_dict_put_text_string(ctx, obj, PDF_NAME(V), text);
 
@@ -1822,14 +1828,23 @@ static void pdf_execute_js_action(fz_context *ctx, pdf_document *doc, pdf_obj *t
 	if (js)
 	{
 		char *code = pdf_load_stream_or_string_as_utf8(ctx, js);
+		int in_op = 0;
+
+		fz_var(in_op);
 		fz_try(ctx)
 		{
 			char buf[100];
 			fz_snprintf(buf, sizeof buf, "%d/%s", pdf_to_num(ctx, target), path);
+			pdf_begin_operation(ctx, doc, "Javascript Event");
+			in_op = 1;
 			pdf_js_execute(doc->js, buf, code);
 		}
 		fz_always(ctx)
+		{
+			if (in_op)
+				pdf_end_operation(ctx, doc);
 			fz_free(ctx, code);
+		}
 		fz_catch(ctx)
 			fz_rethrow(ctx);
 	}
@@ -1924,12 +1939,12 @@ void pdf_page_event_close(fz_context *ctx, pdf_page *page)
 static void
 annot_execute_action(fz_context *ctx, pdf_annot *annot, const char *act)
 {
-	pdf_annot_push_local_xref(ctx, annot);
+	begin_annot_op(ctx, annot, "JavaScript action");
 
 	fz_try(ctx)
 		pdf_execute_action(ctx, annot->page->doc, annot->obj, act);
 	fz_always(ctx)
-		pdf_annot_pop_local_xref(ctx, annot);
+		end_annot_op(ctx, annot);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 }
@@ -1953,7 +1968,7 @@ void pdf_annot_event_up(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_obj *action;
 
-	pdf_annot_push_local_xref(ctx, annot);
+	begin_annot_op(ctx, annot, "JavaScript action");
 
 	fz_try(ctx)
 	{
@@ -1964,7 +1979,7 @@ void pdf_annot_event_up(fz_context *ctx, pdf_annot *annot)
 			pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/U");
 	}
 	fz_always(ctx)
-		pdf_annot_pop_local_xref(ctx, annot);
+		end_annot_op(ctx, annot);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 }

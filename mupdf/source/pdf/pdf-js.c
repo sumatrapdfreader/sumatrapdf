@@ -805,12 +805,17 @@ static void pdf_js_load_document_level(pdf_js *js)
 	pdf_document *doc = js->doc;
 	pdf_obj *javascript;
 	int len, i;
+	int in_op = 0;
 
 	javascript = pdf_load_name_tree(ctx, doc, PDF_NAME(JavaScript));
 	len = pdf_dict_len(ctx, javascript);
 
+	fz_var(in_op);
+
 	fz_try(ctx)
 	{
+		pdf_begin_operation(ctx, doc, "Document level Javascript");
+		in_op = 1;
 		for (i = 0; i < len; i++)
 		{
 			pdf_obj *fragment = pdf_dict_get_val(ctx, javascript, i);
@@ -826,7 +831,11 @@ static void pdf_js_load_document_level(pdf_js *js)
 		}
 	}
 	fz_always(ctx)
+	{
+		if (in_op)
+			pdf_end_operation(ctx, doc);
 		pdf_drop_obj(ctx, javascript);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 }
