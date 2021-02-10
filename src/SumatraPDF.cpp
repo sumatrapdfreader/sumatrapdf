@@ -3879,7 +3879,7 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType, int pageNo) {
+bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
     bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
         return false;
@@ -3898,12 +3898,28 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType, int pag
     if (!ok) {
         return false;
     }
-    Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
-    Vec<RectF> rects;
+
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
+    int pageNo = -1;
+    Vec<RectF> rects;
+    ok = true;
     for (auto& sel : *s) {
+        int tmpPageNo = sel.pageNo;
+        if (pageNo != -1 && tmpPageNo != pageNo) {
+            ok = false;
+        }
+        pageNo = tmpPageNo;
         rects.Append(sel.rect);
     }
+    if (pageNo == -1) {
+        return false;
+    }
+    if (!ok) {
+        // we don't support selections crossing pages
+        // TODO: show an error message
+        return false;
+    }
+    Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
     annot->SetQuadPointsAsRect(rects);
 
     bool isTextOnlySelection;
@@ -4072,7 +4088,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             OnFrameKeyM(win);
             break;
         case 'a':
-            MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight, win->currPageNo);
+            MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight);
             break;
     }
 }
