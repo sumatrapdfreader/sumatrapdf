@@ -43,7 +43,7 @@ TabInfo::~TabInfo() {
     delete selectionOnPage;
     delete ctrl;
     delete tocSorted;
-    DeleteEditAnnotationsWindow(editAnnotsWindow);
+    CloseAndDeleteEditAnnotationsWindow(editAnnotsWindow);
 }
 
 bool TabInfo::IsDocLoaded() const {

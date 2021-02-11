@@ -247,7 +247,9 @@ static bool IsAnnotationTypeInArray(AnnotationType* arr, size_t arrSize, Annotat
     }
     return false;
 }
-void DeleteEditAnnotationsWindow(EditAnnotationsWindow* win) {
+
+void CloseAndDeleteEditAnnotationsWindow(EditAnnotationsWindow* win) {
+    // this will trigger closing the window
     delete win;
 }
 
@@ -331,7 +333,7 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
         return;
     }
 
-    EngineBase* engine = win->tab->AsFixed()->GetEngine();
+    EngineBase* engine = tab->AsFixed()->GetEngine();
     bool ok = EnginePdfSaveUpdated(engine, {});
     // TODO: show a notification if saved or error message if failed to save
     if (!ok) {

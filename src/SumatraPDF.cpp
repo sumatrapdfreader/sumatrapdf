@@ -4263,6 +4263,17 @@ static int TestBigNew()
 }
 #endif
 
+static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    bool ok = EnginePdfSaveUpdated(engine, {});
+    // TODO: show a notification if saved or error message if failed to save
+    if (!ok) {
+        return;
+    }
+    CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
+    tab->editAnnotsWindow = nullptr;
+}
+
 // To avoid including mui/Mui.h, which conflicts with wingui/Layout.h
 namespace mui {
 extern void SetDebugPaint(bool);
@@ -4435,6 +4446,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdViewShowHideScrollbars:
             OnMenuViewShowHideScrollbars();
+            break;
+
+        case CmdSaveAnnotations:
+            SaveAnnotationsAndCloseEditAnnowtationsWindow(win->currentTab);
             break;
 
         case CmdEditAnnotations:
