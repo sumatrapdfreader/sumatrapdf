@@ -25,6 +25,11 @@ void Free(const WCHAR* s) {
     free((void*)s);
 }
 
+void FreePtr(const WCHAR** s) {
+    free((void*)*s);
+    *s = nullptr;
+}
+
 WCHAR* Dup(const WCHAR* s) {
     return s ? _wcsdup(s) : nullptr;
 }

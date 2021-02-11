@@ -36,6 +36,90 @@ static WCHAR* GetAcrobatPath() {
     return nullptr;
 }
 
+struct ExternalViewerInfo {
+    const char* name;  // shown to the user
+    const WCHAR* exts; // valid extensions
+    const WCHAR* exePartialPath;
+    const WCHAR* launchArgs;
+    const WCHAR* launchArgsWithPage;
+    // set by DetectExternalViewers()
+    const WCHAR* exeFullPath; // if found, full path to the executable
+};
+
+static int gExternalViewersCount{0};
+
+static ExternalViewerInfo gExternalViewers[] = {
+    // it's no longer installed by default in win 10
+    {"Foxit Reader", L".pdf", L"Foxit Software\\Foxit Reader\\FoxitReader.exe", L"%1", L"%1 -n %p", nullptr},
+    {"Acrobat Reader DC", L".pdf", L"Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe", L"/A %1", L"/A page=%p %1",
+     nullptr},
+    {"PDF-XChange Editor", L".pdf", L"Tracker Software\\PDF Editor\\PDFXEdit.exe", L"/A %1", L"/A page=%p %1", nullptr},
+    {"XPS Viewer", L".xps;.oxps", L"xpsrchvw.exe", L"%1", L"%1", nullptr},
+    {"HTML Help", L".chm", L"hh.exe", L"%1", L"%1", nullptr},
+};
+
+static bool DetectExternalViewer(ExternalViewerInfo* info) {
+    {
+        AutoFreeWstr dir = GetSpecialFolder(CSIDL_PROGRAM_FILES);
+        WCHAR* path = path::Join(dir, info->exePartialPath);
+        if (file::Exists(path)) {
+            info->exeFullPath = path;
+            return true;
+        }
+        str::Free(path);
+    }
+    {
+        AutoFreeWstr dir = GetSpecialFolder(CSIDL_PROGRAM_FILESX86);
+        WCHAR* path = path::Join(dir, info->exePartialPath);
+        if (file::Exists(path)) {
+            info->exeFullPath = path;
+            return true;
+        }
+        str::Free(path);
+    }
+    {
+        AutoFreeWstr dir = GetSpecialFolder(CSIDL_WINDOWS);
+        WCHAR* path = path::Join(dir, info->exePartialPath);
+        if (file::Exists(path)) {
+            info->exeFullPath = path;
+            return true;
+        }
+        str::Free(path);
+    }
+    {
+        AutoFreeWstr dir = GetSpecialFolder(CSIDL_SYSTEM);
+        WCHAR* path = path::Join(dir, info->exePartialPath);
+        if (file::Exists(path)) {
+            info->exeFullPath = path;
+            return true;
+        }
+        str::Free(path);
+    }
+
+    return false;
+}
+
+void FreeExternalViewers() {
+    int n = dimof(gExternalViewers);
+    for (int i = 0; i < n; i++) {
+        ExternalViewerInfo* info = &gExternalViewers[i];
+        str::FreePtr(&info->exeFullPath);
+    }
+}
+
+void DetectExternalViewers() {
+    CrashIf(gExternalViewersCount > 0); // only call once
+
+    int n = dimof(gExternalViewers);
+    for (int i = 0; i < n; i++) {
+        ExternalViewerInfo* info = &gExternalViewers[i];
+        bool didDetect = DetectExternalViewer(info);
+        if (didDetect) {
+            gExternalViewersCount++;
+        }
+    }
+}
+
 static WCHAR* GetFoxitPath() {
     AutoFreeWstr path = ReadRegStr(
         HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader", L"DisplayIcon");
@@ -77,7 +161,7 @@ static WCHAR* GetPDFXChangePath() {
 static WCHAR* GetXPSViewerPath() {
     // the XPS-Viewer seems to always be installed into %WINDIR%\system32
     WCHAR buffer[MAX_PATH];
-    uint res = GetSystemDirectory(buffer, dimof(buffer));
+    uint res = GetSystemDirectoryW(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer)) {
         return nullptr;
     }

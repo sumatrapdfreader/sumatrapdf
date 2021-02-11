@@ -75,6 +75,7 @@
 #include "Installer.h"
 #include "SumatraConfig.h"
 #include "EngineEbook.h"
+#include "ExternalViewers.h"
 
 // gFileExistenceChecker is initialized at startup and should
 // terminate and delete itself asynchronously while the UI is
@@ -931,6 +932,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         return 0;
     }
 
+    DetectExternalViewers();
+
     prefs::Load();
     UpdateGlobalPrefs(i);
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
@@ -1168,6 +1171,7 @@ Exit:
         ::ExitProcess(retCode);
     }
 
+    FreeExternalViewers();
     while (gWindows.size() > 0) {
         DeleteWindowInfo(gWindows.at(0));
     }

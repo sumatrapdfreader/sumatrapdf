@@ -71,6 +71,7 @@ bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* DupN(const WCHAR* s, size_t lenCch);
 void Free(const WCHAR* s);
+void FreePtr(const WCHAR** s);
 WCHAR* ToLowerInPlace(WCHAR* s);
 WCHAR* ToLower(const WCHAR* s);
 
