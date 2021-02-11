@@ -78,11 +78,16 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdZoomFitWidthAndContinuous, "Zoom: Fit Width And Continuous")     \
     V(CmdZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")      \
     V(CmdContributeTranslation, "Contribute Translation")                 \
+    V(CmdOpenWithFirst, "")                                               \
     V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                      \
+    V(CmdOpenWithAcrobatDC, "Open With Adobe Acrobat DC")                 \
     V(CmdOpenWithFoxIt, "Open With FoxIt")                                \
+    V(CmdOpenWithFoxItPhantom, "Open With FoxIt Phantom")                 \
     V(CmdOpenWithPdfXchange, "Open With PdfXchange")                      \
     V(CmdOpenWithXpsViewer, "Open With Xps Viewer")                       \
     V(CmdOpenWithHtmlHelp, "Open With HTML Help")                         \
+    V(CmdOpenWithPdfDjvuBookmarker, "Open With Pdf&Djvu Bookmarker")      \
+    V(CmdOpenWithLast, "")                                                \
     V(CmdOpenSelectedDocument, "Open Selected Document")                  \
     V(CmdPinSelectedDocument, "Pin Selected Document")                    \
     V(CmdForgetSelectedDocument, "Remove Selected Document From History") \

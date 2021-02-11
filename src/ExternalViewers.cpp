@@ -21,6 +21,7 @@
 #include "SumatraPDF.h"
 #include "TabInfo.h"
 #include "ExternalViewers.h"
+#include "Commands.h"
 
 static WCHAR* GetAcrobatPath() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
@@ -37,7 +38,8 @@ static WCHAR* GetAcrobatPath() {
 }
 
 struct ExternalViewerInfo {
-    const char* name;  // shown to the user
+    const char* name; // shown to the user
+    int cmd;
     const WCHAR* exts; // valid extensions
     const WCHAR* exePartialPath;
     const WCHAR* launchArgs;
@@ -48,15 +50,118 @@ struct ExternalViewerInfo {
 
 static int gExternalViewersCount{0};
 
+// clang-format off
 static ExternalViewerInfo gExternalViewers[] = {
     // it's no longer installed by default in win 10
-    {"Foxit Reader", L".pdf", L"Foxit Software\\Foxit Reader\\FoxitReader.exe", L"%1", L"%1 -n %p", nullptr},
-    {"Acrobat Reader DC", L".pdf", L"Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe", L"/A %1", L"/A page=%p %1",
-     nullptr},
-    {"PDF-XChange Editor", L".pdf", L"Tracker Software\\PDF Editor\\PDFXEdit.exe", L"/A %1", L"/A page=%p %1", nullptr},
-    {"XPS Viewer", L".xps;.oxps", L"xpsrchvw.exe", L"%1", L"%1", nullptr},
-    {"HTML Help", L".chm", L"hh.exe", L"%1", L"%1", nullptr},
+    {
+        "Acrobat Reader DC",
+        CmdOpenWithAcrobatDC,
+        L".pdf",
+        L"Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
+        L"/A %1",
+        L"/A page=%p %1",
+        nullptr
+    },
+    {
+        "Foxit Reader",
+        CmdOpenWithFoxIt,
+        L".pdf",
+        L"Foxit Software\\Foxit Reader\\FoxitReader.exe",
+        L"%1",
+        L"%1 -n %p",
+        nullptr
+    },
+    {
+        "Foxit PhantomPDF",
+        CmdOpenWithFoxItPhantom,
+        L".pdf",
+        L"Foxit Software\\Foxit PhantomPDF\\FoxitPhantomPDF.exe",
+        L"%1", L"%1 /A page=%p",
+        nullptr
+    },
+    {
+        "PDF-XChange Editor",
+        CmdOpenWithPdfXchange,
+        L".pdf",
+        L"Tracker Software\\PDF Editor\\PDFXEdit.exe",
+        L"/A %1",
+        L"/A page=%p %1",
+        nullptr
+    },
+    {
+        "Pdf & Djvu Bookmarker",
+        CmdOpenWithPdfDjvuBookmarker,
+        L".pdf;.djvu",
+        L"Pdf & Djvu Bookmarker\\PdfDjvuBookmarker.exe",
+        L"%1",
+        L"%1",
+        nullptr
+    },
+    {
+        "XPS Viewer",
+        CmdOpenWithXpsViewer,
+        L".xps;.oxps",
+        L"xpsrchvw.exe",
+        L"%1",
+        L"%1",
+        nullptr
+    },
+    {
+        "HTML Help",
+        CmdOpenWithHtmlHelp,
+        L".chm",
+        L"hh.exe",
+        L"%1",
+        L"%1",
+        nullptr
+    },
 };
+// clang-format on
+
+static ExternalViewerInfo* GetExternalViewerInfoByCmd(int cmd) {
+    int n = dimof(gExternalViewers);
+    for (int i = 0; i < n; i++) {
+        ExternalViewerInfo* info = &gExternalViewers[i];
+        if (info->cmd == cmd) {
+            return info;
+        }
+    }
+    return nullptr;
+}
+
+static bool CanViewExternally(TabInfo* tab) {
+    if (!HasPermission(Perm_DiskAccess)) {
+        return false;
+    }
+    // if tab is nullptr, we're queried for the
+    // About window with disabled menu items
+    if (!tab) {
+        return true;
+    }
+    return file::Exists(tab->filePath);
+}
+
+bool CanOpenWithExternalViewer(TabInfo* tab, int cmd) {
+    ExternalViewerInfo* info = GetExternalViewerInfoByCmd(cmd);
+    CrashIf(!info);
+    if (!info || info->exeFullPath == nullptr) {
+        return false;
+    }
+    if (!CanViewExternally(tab)) {
+        return false;
+    }
+    const WCHAR* filePath = tab->filePath.Get();
+    const WCHAR* ext = path::GetExtNoFree(filePath);
+    const WCHAR* pos = str::FindI(info->exts, ext);
+    if (!pos) {
+        return false;
+    }
+    return true;
+}
+
+void OpenWithExternalViewer(TabInfo* tab, int cmd) {
+    // TODO: write me
+}
 
 static bool DetectExternalViewer(ExternalViewerInfo* info) {
     {
@@ -207,18 +312,6 @@ static WCHAR* GetHtmlHelpPath() {
         return exePath.StealData();
     }
     return nullptr;
-}
-
-static bool CanViewExternally(TabInfo* tab) {
-    if (!HasPermission(Perm_DiskAccess)) {
-        return false;
-    }
-    // if tab is nullptr, we're queried for the
-    // About window with disabled menu items
-    if (!tab) {
-        return true;
-    }
-    return file::Exists(tab->filePath);
 }
 
 bool CouldBePDFDoc(TabInfo* tab) {
