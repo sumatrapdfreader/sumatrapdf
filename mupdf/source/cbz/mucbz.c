@@ -192,7 +192,7 @@ cbz_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 
 	fz_try(ctx)
 	{
-		page = fz_new_derived_page(ctx, cbz_page);
+		page = fz_new_derived_page(ctx, cbz_page, doc_);
 		page->super.bound_page = cbz_bound_page;
 		page->super.run_page_contents = cbz_run_page;
 		page->super.drop_page = cbz_drop_page;

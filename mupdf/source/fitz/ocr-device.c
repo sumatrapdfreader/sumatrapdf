@@ -291,8 +291,8 @@ fz_ocr_end_group(fz_context *ctx, fz_device *dev)
 {
 	fz_ocr_device *ocr = (fz_ocr_device *)dev;
 
-	fz_pop_clip(ctx, ocr->list_dev);
-	fz_pop_clip(ctx, ocr->draw_dev);
+	fz_end_group(ctx, ocr->list_dev);
+	fz_end_group(ctx, ocr->draw_dev);
 }
 
 static int

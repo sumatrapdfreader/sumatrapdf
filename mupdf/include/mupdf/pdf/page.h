@@ -144,7 +144,7 @@ fz_default_colorspaces *pdf_update_default_colorspaces(fz_context *ctx, fz_defau
 struct pdf_page
 {
 	fz_page super;
-	pdf_document *doc;
+	pdf_document *doc; /* type alias for super.doc */
 	pdf_obj *obj;
 
 	int transparency;

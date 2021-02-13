@@ -100,7 +100,7 @@ img_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 			image = fz_new_image_from_buffer(ctx, doc->buffer);
 		}
 
-		page = fz_new_derived_page(ctx, img_page);
+		page = fz_new_derived_page(ctx, img_page, doc_);
 		page->super.bound_page = img_bound_page;
 		page->super.run_page_contents = img_run_page;
 		page->super.drop_page = img_drop_page;
@@ -169,7 +169,7 @@ img_open_document_with_stream(fz_context *ctx, fz_stream *file)
 		{
 			doc->page_count = fz_load_jbig2_subimage_count(ctx, data, len);
 			if (doc->page_count > 1)
-			doc->load_subimage = fz_load_jbig2_subimage;
+				doc->load_subimage = fz_load_jbig2_subimage;
 			doc->format = "JBIG2";
 		}
 		else if (fmt == FZ_IMAGE_BMP)

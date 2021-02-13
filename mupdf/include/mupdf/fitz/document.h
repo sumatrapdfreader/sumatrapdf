@@ -587,9 +587,9 @@ fz_link *fz_load_links(fz_context *ctx, fz_page *page);
 	fz_page. This macro allocates such derived structures, and
 	initialises the base sections.
 */
-fz_page *fz_new_page_of_size(fz_context *ctx, int size);
-#define fz_new_derived_page(CTX,TYPE) \
-	((TYPE *)Memento_label(fz_new_page_of_size(CTX,sizeof(TYPE)),#TYPE))
+fz_page *fz_new_page_of_size(fz_context *ctx, int size, fz_document *doc);
+#define fz_new_derived_page(CTX,TYPE,DOC) \
+	((TYPE *)Memento_label(fz_new_page_of_size(CTX,sizeof(TYPE),DOC),#TYPE))
 
 /**
 	Determine the size of a page at 72 dpi.
@@ -762,6 +762,7 @@ fz_link *fz_create_link(fz_context *ctx, fz_page *page, fz_rect bbox, const char
 struct fz_page
 {
 	int refs;
+	fz_document *doc; /* reference to parent document */
 	int chapter; /* chapter number */
 	int number; /* page number in chapter */
 	int incomplete; /* incomplete from progressive loading; don't cache! */

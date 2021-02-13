@@ -191,6 +191,6 @@ xps_load_links(fz_context *ctx, fz_page *page_)
 	fz_matrix ctm;
 	fz_link *link = NULL;
 	ctm = fz_scale(72.0f / 96.0f, 72.0f / 96.0f);
-	xps_load_links_in_fixed_page(ctx, page->doc, ctm, page, &link);
+	xps_load_links_in_fixed_page(ctx, (xps_document*)page->super.doc, ctm, page, &link);
 	return link;
 }

@@ -927,18 +927,15 @@ pdf_drop_page_imp(fz_context *ctx, pdf_page *page)
 	fz_drop_link(ctx, page->links);
 	pdf_drop_annots(ctx, page->annots);
 	pdf_drop_widgets(ctx, page->widgets);
-
 	pdf_drop_obj(ctx, page->obj);
-
-	fz_drop_document(ctx, &page->doc->super);
 }
 
 static pdf_page *
 pdf_new_page(fz_context *ctx, pdf_document *doc)
 {
-	pdf_page *page = fz_new_derived_page(ctx, pdf_page);
+	pdf_page *page = fz_new_derived_page(ctx, pdf_page, (fz_document*) doc);
 
-	page->doc = (pdf_document*) fz_keep_document(ctx, &doc->super);
+	page->doc = doc; /* typecast alias for page->super.doc */
 
 	page->super.drop_page = (fz_page_drop_page_fn*)pdf_drop_page_imp;
 	page->super.load_links = (fz_page_load_links_fn*)pdf_load_links;

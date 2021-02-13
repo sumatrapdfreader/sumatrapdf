@@ -58,7 +58,6 @@ struct epub_chapter
 struct epub_page
 {
 	fz_page super;
-	epub_document *doc;
 	epub_chapter *ch;
 	int number;
 	fz_html *html;
@@ -344,7 +343,6 @@ static void
 epub_drop_page(fz_context *ctx, fz_page *page_)
 {
 	epub_page *page = (epub_page *)page_;
-	fz_drop_document(ctx, &page->doc->super);
 	fz_drop_html(ctx, page->html);
 }
 
@@ -418,10 +416,11 @@ epub_get_laid_out_html(fz_context *ctx, epub_document *doc, epub_chapter *ch)
 static fz_rect
 epub_bound_page(fz_context *ctx, fz_page *page_)
 {
+	epub_document *doc = (epub_document*)page_->doc;
 	epub_page *page = (epub_page*)page_;
 	epub_chapter *ch = page->ch;
 	fz_rect bbox;
-	fz_html *html = epub_get_laid_out_html(ctx, page->doc, ch);
+	fz_html *html = epub_get_laid_out_html(ctx, doc, ch);
 
 	bbox.x0 = 0;
 	bbox.y0 = 0;
@@ -497,12 +496,11 @@ epub_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 	{
 		if (i == chapter)
 		{
-			epub_page *page = fz_new_derived_page(ctx, epub_page);
+			epub_page *page = fz_new_derived_page(ctx, epub_page, doc_);
 			page->super.bound_page = epub_bound_page;
 			page->super.run_page_contents = epub_run_page;
 			page->super.load_links = epub_load_links;
 			page->super.drop_page = epub_drop_page;
-			page->doc = (epub_document *)fz_keep_document(ctx, doc_);
 			page->ch = ch;
 			page->number = number;
 			page->html = epub_get_laid_out_html(ctx, doc, ch);

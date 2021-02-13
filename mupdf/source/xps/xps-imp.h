@@ -56,7 +56,6 @@ struct xps_fixpage_s
 struct xps_page_s
 {
 	fz_page super;
-	xps_document *doc;
 	xps_fixpage *fix;
 	fz_xml_doc *xml;
 };

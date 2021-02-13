@@ -274,6 +274,8 @@ fz_drop_document(fz_context *ctx, fz_document *doc)
 {
 	if (fz_drop_imp(ctx, doc, &doc->refs))
 	{
+		if (doc->open)
+			fz_warn(ctx, "There are still open pages in the document!");
 		if (doc->drop_document)
 			doc->drop_document(ctx, doc);
 		fz_free(ctx, doc);
@@ -521,11 +523,11 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 	/* Protect modifications to the page list to cope with
 	 * destruction of pages on other threads. */
 	fz_lock(ctx, FZ_LOCK_ALLOC);
-		for (page = doc->open; page; page = page->next)
-			if (page->chapter == chapter && page->number == number)
+	for (page = doc->open; page; page = page->next)
+		if (page->chapter == chapter && page->number == number)
 		{
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
-				return fz_keep_page(ctx, page);
+			return fz_keep_page(ctx, page);
 		}
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 
@@ -630,10 +632,11 @@ fz_run_page(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix transform,
 }
 
 fz_page *
-fz_new_page_of_size(fz_context *ctx, int size)
+fz_new_page_of_size(fz_context *ctx, int size, fz_document *doc)
 {
 	fz_page *page = Memento_label(fz_calloc(ctx, 1, size), "fz_page");
 	page->refs = 1;
+	page->doc = fz_keep_document(ctx, doc);
 	return page;
 }
 
@@ -658,6 +661,8 @@ fz_drop_page(fz_context *ctx, fz_page *page)
 
 		if (page->drop_page)
 			page->drop_page(ctx, page);
+
+		fz_drop_document(ctx, page->doc);
 
 		fz_free(ctx, page);
 	}
