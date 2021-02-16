@@ -1073,7 +1073,7 @@ def get_gitfiles( directory, submodules=False):
 
     with open( '%s/jtest-git-files' % directory, 'r') as f:
         text = f.read()
-    ret = text.split( '\n')
+    ret = text.strip().split( '\n')
     return ret
 
 def get_git_id_raw( directory):
@@ -1121,6 +1121,11 @@ class Args:
             return next( self.items)
         else:
             return self.items.next()
+    def next_or_none( self):
+        try:
+            return self.next()
+        except StopIteration:
+            return None
 
 def update_file( text, filename):
     '''
@@ -1227,6 +1232,11 @@ def update_needed( infiles, outfiles):
         text = f'{in_tmax_name} is newer than {out_tmin_name}'
         return text
 
+def ensure_parent_dir( path):
+    parent = os.path.dirname( path)
+    if parent:
+        os.makedirs( parent, exist_ok=True)
+
 def build(
         infiles,
         outfiles,
@@ -1264,6 +1274,9 @@ def build(
         output.
     verbose:
         Passed to jlib.system().
+
+    Returns:
+        true if we have run the command, otherwise None.
 
     We compare mtimes of <infiles> and <outfiles>, and we also detect changes
     to the command itself.
@@ -1318,6 +1331,7 @@ def build(
     # fails but still creates target(s), then next time we will know target(s)
     # are not up to date.
     #
+    ensure_parent_dir( command_filename)
     with open( command_filename, 'w') as f:
         pass
 
@@ -1325,6 +1339,8 @@ def build(
 
     with open( command_filename, 'w') as f:
         f.write( command)
+
+    return True
 
 
 def link_l_flags( sos):
