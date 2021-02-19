@@ -1591,7 +1591,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
 
     const float FUZZ = 0.01f;
     float newZoom = towardsLevel;
-    if (currZoom < towardsLevel) {
+    if (currZoom + FUZZ < towardsLevel) {
         for (size_t i = 0; i < zoomLevels->size(); i++) {
             if (zoomLevels->at(i) - FUZZ > currZoom) {
                 newZoom = zoomLevels->at(i);
@@ -1603,7 +1603,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
         } else if (currZoom + FUZZ < widthZoom && widthZoom < newZoom - FUZZ) {
             newZoom = ZOOM_FIT_WIDTH;
         }
-    } else if (currZoom > towardsLevel) {
+    } else if (currZoom - FUZZ > towardsLevel) {
         for (size_t i = zoomLevels->size(); i > 0; i--) {
             if (zoomLevels->at(i - 1) + FUZZ < currZoom) {
                 newZoom = zoomLevels->at(i - 1);
