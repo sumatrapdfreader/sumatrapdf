@@ -2503,6 +2503,33 @@ my_log2(int x)
 	return i;
 }
 
+static int64_t
+offset_of_first_used_obj_after(const pdf_write_state *opts, int i, int len)
+{
+	/* The objects in the file are laid out as:
+	 *
+	 * start
+	 * ...
+	 * len-1
+	 * 1
+	 * ...
+	 * start-1
+	 *
+	 * But, some may not be present...
+	 */
+	do
+	{
+		i++;
+		if (i == len)
+			i = 1;
+		if (i == opts->start)
+			return opts->main_xref_offset;
+	}
+	while (opts->use_list[i] == 0);
+
+	return opts->ofs_list[i];
+}
+
 static void
 make_page_offset_hints(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, fz_buffer *buf)
 {
@@ -2527,12 +2554,7 @@ make_page_offset_hints(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		int min, max, page;
 
 		min = opts->ofs_list[i];
-		if (i == opts->start-1 || (opts->start == 1 && i == xref_len-1))
-			max = opts->main_xref_offset;
-		else if (i == xref_len-1)
-			max = opts->ofs_list[1];
-		else
-			max = opts->ofs_list[i+1];
+		max = offset_of_first_used_obj_after(opts, i, xref_len);
 
 		assert(max > min);
 

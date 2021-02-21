@@ -497,6 +497,8 @@ static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 
 		pdf_dict_put(ctx, grp, PDF_NAME(V), val);
 		set_check_grp(ctx, doc, grp, val);
+		if (pdf_field_dirties_document(ctx, doc, field))
+			doc->dirty = 1;
 		doc->recalculate = 1;
 	}
 	fz_always(ctx)
@@ -634,6 +636,8 @@ static int set_checkbox_value(fz_context *ctx, pdf_document *doc, pdf_obj *field
 {
 	update_checkbox_selector(ctx, doc, field, val);
 	update_field_value(ctx, doc, field, val);
+	if (pdf_field_dirties_document(ctx, doc, field))
+		doc->dirty = 1;
 	return 1;
 }
 

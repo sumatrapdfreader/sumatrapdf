@@ -215,9 +215,7 @@ static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_
 	fz_try(ctx)
 	{
 		if (extract_page_begin(writer->extract))
-		{
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin page");
-		}
 		dev = fz_new_derived_device(ctx, fz_docx_device);
 		dev->super.fill_text = dev_fill_text;
 		dev->super.stroke_text = dev_stroke_text;
@@ -330,10 +328,7 @@ static void writer_close(fz_context *ctx, fz_document_writer *writer_)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to close extract_buffer: %s", strerror(errno));
 
 		extract_end(&writer->extract);
-
 		fz_close_output(ctx, writer->output);
-
-		extract_alloc_destroy(&writer->alloc);
 		writer->ctx = NULL;
 	}
 	fz_catch(ctx)
@@ -346,7 +341,6 @@ static void writer_close(fz_context *ctx, fz_document_writer *writer_)
 		extract_buffer_close(&extract_buffer_output);
 		extract_end(&writer->extract);
 		writer->ctx = NULL;
-		extract_alloc_destroy(&writer->alloc);
 		fz_rethrow(ctx);
 	}
 }
@@ -359,6 +353,10 @@ static void writer_drop(fz_context *ctx, fz_document_writer *writer_)
 		fz_drop_output(ctx, writer->output);
 		writer->output = NULL;
 	}
+	assert(!writer->ctx);
+	writer->ctx = ctx;
+	extract_alloc_destroy(&writer->alloc);
+	writer->ctx = NULL;
 }
 
 
@@ -399,13 +397,10 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		if (extract_alloc_create(s_realloc_fn, writer, &writer->alloc))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_alloc instance");
 		if (extract_begin(writer->alloc, &writer->extract))
-		{
-			extract_alloc_destroy(&writer->alloc);
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract instance");
-		}
 		writer->output = out;
 		writer->we_own_output = we_own_output;
-		writer->spacing = get_bool_option(ctx, options, "spacing", 1);
+		writer->spacing = get_bool_option(ctx, options, "spacing", 0);
 		writer->rotation = get_bool_option(ctx, options, "rotation", 1);
 		writer->images = get_bool_option(ctx, options, "images", 1);
 		writer->ctx = NULL;
@@ -413,7 +408,6 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 	fz_catch(ctx)
 	{
 		fz_drop_document_writer(ctx, &writer->super);
-		extract_alloc_destroy(&writer->alloc);
 		fz_rethrow(ctx);
 	}
 	return &writer->super;

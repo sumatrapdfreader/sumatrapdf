@@ -302,7 +302,7 @@ fz_irect_width(fz_irect r)
 }
 
 /**
-	Return the width of an irect. Invalid irects return 0.
+	Return the height of an irect. Invalid irects return 0.
 */
 static inline int
 fz_irect_height(fz_irect r)

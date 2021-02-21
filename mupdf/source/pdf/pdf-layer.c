@@ -569,7 +569,8 @@ pdf_is_hidden_ocg(fz_context *ctx, pdf_ocg_descriptor *desc, pdf_obj *rdb, const
 		/* by default an OCG is visible, unless it's explicitly hidden */
 		for (i = 0; i < len; i++)
 		{
-			if (!pdf_objcmp_resolve(ctx, desc->ocgs[i].obj, ocg))
+			/* Deliberately do NOT resolve here. Bug 702261. */
+			if (!pdf_objcmp(ctx, desc->ocgs[i].obj, ocg))
 			{
 				default_value = !desc->ocgs[i].state;
 				break;
