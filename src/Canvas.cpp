@@ -775,7 +775,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
     }
 }
 
-// cf. http://forums.fofou.org/sumatrapdf/topic?id=3183580
+// cf. https://web.archive.org/web/20140201011540/http://forums.fofou.org/sumatrapdf/topic?id=3183580&comments=15
 static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) {
     u8 ar, ag, ab;
     u8 br, bg, bb;

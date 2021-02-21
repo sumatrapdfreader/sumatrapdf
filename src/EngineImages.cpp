@@ -990,7 +990,7 @@ bool EngineCbx::FinishLoading() {
     };
 
     // not using the resolution of the contained images seems to be
-    // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
+    // expected, cf. https://web.archive.org/web/20140201010902/http://forums.fofou.org:80/sumatrapdf/topic?id=3183827&comments=5
     // TODO: return DpiGetForHwnd(HWND_DESKTOP) instead?
     fileDPI = 96.f;
 

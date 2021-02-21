@@ -68,7 +68,7 @@ void TextSearch::SetText(const WCHAR* text) {
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
-    // cf. http://forums.fofou.org/sumatrapdf/topic?id=2432337
+    // cf. https://web.archive.org/web/20140201013717/http://forums.fofou.org:80/sumatrapdf/topic?id=2432337&comments=3
     else if (*text == '-' || *text == '\'' || *text == '"') {
         anchor = nullptr;
     } else {

@@ -293,7 +293,7 @@ static bool IsEpubFile(const WCHAR* path) {
     }
     // a proper EPUB document has a "mimetype" file with content
     // "application/epub+zip" as the first entry in its ZIP structure
-    /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
+    /* cf. https://web.archive.org/web/20140201013228/http://forums.fofou.org:80/sumatrapdf/topic?id=2599331&comments=6
     if (!str::Eq(zip.GetFileName(0), L"mimetype"))
         return false; */
     if (str::Eq(mimetype.data, "application/epub+zip")) {
