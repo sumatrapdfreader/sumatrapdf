@@ -1618,6 +1618,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
         }
     }
 
+    // logf("towardsLevel: %.2f, newZoom: %.2f, currZoom: %.2f\n", towardsLevel, newZoom, currZoom);
     return newZoom;
 }
 

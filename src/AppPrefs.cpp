@@ -217,7 +217,6 @@ bool Save() {
     defer {
         str::Free(prevPrefs.data());
         str::Free(prefs.data());
-        OutputDebugStringA("defer");
     };
     CrashIf(prefs.empty());
     if (prefs.empty()) {
