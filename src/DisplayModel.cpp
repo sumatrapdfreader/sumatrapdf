@@ -1571,10 +1571,14 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
     CrashIf(zoomLevels[0] != ZOOM_MIN || zoomLevels[dimof(zoomLevels)-1] != ZOOM_MAX);
 #endif
     Vec<float>* zoomLevels = gGlobalPrefs->zoomLevels;
-    CrashIf(zoomLevels->size() != 0 && (zoomLevels->at(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
-    CrashIf(zoomLevels->size() != 0 && zoomLevels->at(0) > zoomLevels->Last());
+    int nZooms = zoomLevels->isize();
+    CrashIf(nZooms != 0 && (zoomLevels->at(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
+    CrashIf(nZooms != 0 && zoomLevels->at(0) > zoomLevels->Last());
 
     float currZoom = GetZoomVirtual(true);
+    if (currZoom == towardsLevel) {
+        return towardsLevel;
+    }
     float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         if (PageShown(pageNo)) {
@@ -1591,10 +1595,11 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
 
     const float FUZZ = 0.01f;
     float newZoom = towardsLevel;
-    if (currZoom < towardsLevel) {
-        for (size_t i = 0; i < zoomLevels->size(); i++) {
-            if (zoomLevels->at(i) - FUZZ > currZoom) {
-                newZoom = zoomLevels->at(i);
+    if (currZoom + FUZZ < towardsLevel) {
+        for (int i = 0; i < nZooms; i++) {
+            float zoom = zoomLevels->at(i);
+            if (zoom - FUZZ > currZoom) {
+                newZoom = zoom;
                 break;
             }
         }
@@ -1603,10 +1608,11 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
         } else if (currZoom + FUZZ < widthZoom && widthZoom < newZoom - FUZZ) {
             newZoom = ZOOM_FIT_WIDTH;
         }
-    } else if (currZoom > towardsLevel) {
-        for (size_t i = zoomLevels->size(); i > 0; i--) {
-            if (zoomLevels->at(i - 1) + FUZZ < currZoom) {
-                newZoom = zoomLevels->at(i - 1);
+    } else if (currZoom - FUZZ > towardsLevel) {
+        for (int i = nZooms-1; i >= 0; i--) {
+            float zoom = zoomLevels->at(i);
+            if (zoom + FUZZ < currZoom) {
+                newZoom = zoom;
                 break;
             }
         }
@@ -1618,7 +1624,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
         }
     }
 
-    // logf("towardsLevel: %.2f, newZoom: %.2f, currZoom: %.2f\n", towardsLevel, newZoom, currZoom);
+    //logf("currZoom: %.2f, towardsLevel: %.2f, newZoom: %.2f\n", currZoom, towardsLevel, newZoom);
     return newZoom;
 }
 
