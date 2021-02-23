@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5344aafc6b6bd333b6d06510d9610cb2c6b0518d
+ec0081f3d46a141c3f16ac760b6317265035123c
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -250,7 +250,7 @@ de:&Alle ausgewählten Seiten
 dk:&Alle valgte sider
 el:Ό&λες οι επιλεγμένες
 es:Tod&as las páginas seleccionadas
-et:Kõik v&alitud lehed
+et:&Kõik valitud lehed
 eu:&Hautatutako orrialde guztiak
 fa:&همه‌ی صفحات انتخاب ‌شده
 fi:K&aikki valitut sivut
@@ -520,7 +520,7 @@ de:Auswahl &kopieren
 dk:&Kopier markering
 el:&Αντιγραφή επιλογής
 es:&Copiar selección
-et:K&opeeri valik
+et:&Kopeeri valik
 eu:&Kopiatu Hautapena
 fa:&رونوشت از قسمت انتخاب شده
 fi:Kopioi &valinta
@@ -584,7 +584,7 @@ de:Auswahl &kopieren\tStrg+C
 dk:&Kopier markering\tCtrl+C
 el:Αντιγραφή επι&λεγμένων\tCtrl+C
 es:&Copiar selección\tCtrl+C
-et:K&opeeri valik\tCtrl+C
+et:&Kopeeri valik\tCtrl+C
 eu:&Kopiatu Hautapena\tKtrl+C
 fa:&رونوشت از قسمت انتخاب شده\tCtrl+C
 fi:Ko&pioi valinta\tCtrl+C
@@ -720,7 +720,7 @@ de:Nur &gerade Seiten
 dk:&Kun lige sider
 el:&Μόνο οι ζυγές σελίδες
 es:&Sólo páginas pares
-et:Vaid paa&risleheküljed
+et:&Vaid paarisleheküljed
 eu:&Orrialde bakoitiak bakarrik
 fa:فقط صفحات &زوج
 fi:Vain pa&rilliset sivut
@@ -986,7 +986,7 @@ de:&Erste Seite\tPos 1
 dk:&Første side\tHome
 el:Πρώτ&η σελίδα\tHome
 es:Primera página\tInicio
-et:E&simene lehekülg\tHome
+et:&Esimene lehekülg\tHome
 eu:&Lehen Orrialdea\tHasiera
 fa:صفحه‌ی &نخست\tHome
 fi:E&nsimmäinen sivu\tHome
@@ -1463,7 +1463,7 @@ de:&Handbuch
 dk:&Manual
 el:&Οδηγίες Χρήσης
 es:&Manual de instrucciones
-et:K&asutusjuhend
+et:&Kasutusjuhend
 eu:E&skuliburua
 fa:&کتابچه‌ی راهنمای آنلاین
 fi:&Käyttöohje
@@ -2641,6 +2641,7 @@ cy:Tynnu o'&r Hanes
 de:Aus der Historie entfernen
 dk:&Fjern fra historikken
 es:&Eliminar del historial
+et:&Eemalda Ajaloost
 fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
@@ -2871,7 +2872,7 @@ de:Seiten auf Druckbereich &verkleinern (falls nötig)
 dk:&Formindsk sider til udskriftsområdet (hvis nødvendigt)
 el:Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (αν χρειάζεται)
 es:&Reducir páginas hasta llegar al área imprimible (si es necesario)
-et:Mahuta leheküljed pr&inditavale alale (kui vaja)
+et:&Mahuta leheküljed prinditavale alale (kui vaja)
 eu:&Txikitu orrialdeak eremu irarkigarrira (beharrezkoa bada)
 fa:صفحات را متناسب با ناحیه‌ی قابل چاپ روی کاغذ &جمع و جور کن (اگر لازم است)
 fi:P&ienennä sivut tulostettavalle alueelle (jos tarpeellista)
@@ -4699,7 +4700,7 @@ de:&Automatisch nach Updates suchen
 dk:Tjek automatisk efter &opdateringer
 el:Αυτόματος έλεγχος για &ενημερώσεις
 es:B&uscar actualizaciones automáticamente
-et:Uuendusi k&ontrollitakse automaatselt
+et:Automaatselt kontrolli &uuendusi
 eu:&Berezgaitasunez egiaztatu eguneraketak
 fa:بررسی خودکار برای به‌روزرسانی‌ها
 fi:Tarkista pä&ivitykset automaattisesti
@@ -5719,6 +5720,7 @@ de:Farbe
 dk:Farve
 el:Χρώμα
 es:Color
+et:Värv
 fr:Couleur
 ga:Dath
 gl:Cor
@@ -7994,6 +7996,7 @@ de:Vollbild verlassen
 dk:A&fslut fuldskærm
 el:Έξοδος από την πλήρη οθόνη
 es:Salir de pantalla completa
+et:V&älju Täisekraanilt
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
 gl:Sa&ír da pantalla completa
@@ -11259,6 +11262,7 @@ cy:Delweddau
 de:Bilder
 dk:Billeder
 es:Imágenes
+et:Pildid
 fr:Images
 ga:Íomhánna
 gl:Imaxes
@@ -11567,7 +11571,7 @@ de:KB
 dk:Kb
 el:KB
 es:KB
-et:kB
+et:KB
 eu:KB
 fa:کیلوبایت
 fi:Kt
@@ -12308,6 +12312,7 @@ de:Neues Fenster\tStrg+N
 dk:Ny &vindue\tCtrl+N
 el:Νέο &παράθυρο\tCtrl+N
 es:Nueva &ventana\tCtrl+N
+et:Uus &aken\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
 gl:Nova xa&nela\tCtrl+N
@@ -12340,6 +12345,7 @@ cy:Nodau Tudalen Newydd
 de:Neue Lesezeichen
 dk:Nye bogmærker
 es:Nuevo marcadores
+et:Uued Järjehoidjad
 fr:Nouveaux marque-pages
 ga:Leabharmharcanna nua
 gl:Novos marcadores
@@ -16436,6 +16442,7 @@ de:Lesezeichen anzeigen\tF12
 dk:Vis &bogmærker\tF12
 el:Εμφάνιση &Σελιδοδεικτών\tF12
 es:Mostrar Marcadores\tF12
+et:Näita &Järjehoidjaid\tF12
 fr:Afficher les &signets\tF12
 ga:Taispeáin na &Leabharmharcanna\tF12
 gl:Amosar &marcadores\tF12
@@ -16470,6 +16477,7 @@ de:&Favoriten anzeigen
 dk:Vis &foretrukne
 el:Εμφάνιση &Αγαπημένων
 es:Mostrar &Favoritos
+et:Näita &Lemmikuid
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
 gl:Amosar &favoritos
@@ -16844,6 +16852,7 @@ de:Dokument-&Ordner öffnen
 dk:Vis i &mappe
 el:Εμφάνιση στον &φάκελο
 es:Mostrar en &Carpeta
+et:Näita &kausta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
 gl:Amosar no carta&fol
@@ -17074,6 +17083,7 @@ de:Sortieren nach
 dk:Sorter efter
 el:Ταξινόμηση κατά
 es:Ordenar por
+et:Järjesta
 fr:Classer
 ga:Sórtáil de réir
 gl:Ordenar por
@@ -17163,6 +17173,7 @@ de:Quadrat
 dk:Firkantet
 el:Τετράγωνο 
 es:Cuadrado
+et:Ruut
 fr:Carré
 ga:Cearnóg
 gl:Cadrado
@@ -17206,6 +17217,7 @@ cy:Stampio
 de:Stempel
 dk:Stempel
 es:Sello
+et:Tempel
 fr:tampon
 ga:Stampa
 gl:Selo
@@ -17947,6 +17959,7 @@ de:SumatraPDF unterstützen
 dk:Støt SumatraPDF
 el:Υποστηρίξτε το SumatraPDF
 es:Soporte SumatraPDF
+et:Toeta SumatraPDF-i
 fr:Soutenir SumatraPDF
 ga:Tacaigh le SumatraPDF
 gl:Asistencia do SumatraPDF
@@ -18139,6 +18152,7 @@ de:Text
 dk:Tekst
 el:Κείμενο
 es:Texto
+et:Tekst
 fr:Texte
 ga:Téacs
 gl:Texto
@@ -19037,7 +19051,7 @@ de:SumatraPDF im &Internet
 dk:Besøg &internetside
 el:&Ιστοσελίδα προγράμματος
 es:Visitar sitio &Web
-et:&Külasta kodulehte
+et:Külasta &kodulehte
 eu:Ikusi &Webgunea
 fa:بازدید از &وب‌سایت
 fi:&Vieraile ohjelman kotisivuilla

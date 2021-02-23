@@ -6422,25 +6422,25 @@ const char * gTranslations_et =
   "&Programmi teave\0"\
   "&Tegelik suurus\tCtrl+1\0"\
   "&Rohkem s\303\244tteid...\0"\
-  "K\303\265ik v&alitud lehed\0"\
+  "&K\303\265ik valitud lehed\0"\
   "&Tagasi\tAlt+Vasaknool\0"\
   "&Raamatuvaade\tCtrl+8\0"\
   "&Sulge\tCtrl+W\0"\
-  "K&opeeri valik\0"\
-  "K&opeeri valik\tCtrl+C\0"\
+  "&Kopeeri valik\0"\
+  "&Kopeeri valik\tCtrl+C\0"\
   "\303\204&ra k\303\274si uuesti\0"\
-  "Vaid paa&rislehek\303\274ljed\0"\
+  "&Vaid paarislehek\303\274ljed\0"\
   "&Kahelehek\303\274ljeline\tCtrl+7\0"\
   "&Fail\0"\
   "&Otsitav:\0"\
-  "E&simene lehek\303\274lg\tHome\0"\
+  "&Esimene lehek\303\274lg\tHome\0"\
   "&Sobita lehek\303\274ljed prinditavale alale\0"\
   "&Liigu\0"\
   "&Lehek\303\274ljele:\0"\
   "&Abi\0"\
   "&Viimane lehek\303\274lg\tEnd\0"\
   "&Suurendus:\0"\
-  "K&asutusjuhend\0"\
+  "&Kasutusjuhend\0"\
   "&T\303\265stutundlik\0"\
   "&J\303\244rgmine lehek\303\274lg\tParemnool\0"\
   "&Ei\0"\
@@ -6458,11 +6458,11 @@ const char * gTranslations_et =
   "&Prindi... (keelatud)\0"\
   "&J\303\244ta meelde selle dokumendi salas\303\265na\0"\
   "Dokumendi sulgemisel j\303\244etakse &meelde k\303\274ljendi s\303\244tted\0"\
-  "\0"\
+  "&Eemalda Ajaloost\0"\
   "Salvesta &kui...\0"\
   "Salvesta &kui...\tCtrl+S\0"\
   "Sea&distused\0"\
-  "Mahuta lehek\303\274ljed pr&inditavale alale (kui vaja)\0"\
+  "&Mahuta lehek\303\274ljed prinditavale alale (kui vaja)\0"\
   "\303\234&helehek\303\274ljeline\tCtrl+6\0"\
   "&J\303\244ta see versioon vahele\0"\
   "&Kujundus\0"\
@@ -6494,7 +6494,7 @@ const char * gTranslations_et =
   "Manus: %s\0"\
   "Autor:\0"\
   "Automaatne\0"\
-  "Uuendusi k&ontrollitakse automaatselt\0"\
+  "Automaatselt kontrolli &uuendusi\0"\
   "Raamatuvaade\0"\
   "J\303\244rjehoidjate otseteed\0"\
   "Tee j\303\244rjehoidja otsetee lehek\303\274ljele %s/%s\0"\
@@ -6511,7 +6511,7 @@ const char * gTranslations_et =
   "\0"\
   "Sulge\0"\
   "\0"\
-  "\0"\
+  "V\303\244rv\0"\
   "Koomiksiraamatud\0"\
   "\303\234hilduvus\0"\
   "J\303\244tkuv\0"\
@@ -6549,7 +6549,7 @@ const char * gTranslations_et =
   "Dokumendi omadused\0"\
   "Laadi alla\0"\
   "V\303\244l&ju\tCtrl+Q\0"\
-  "\0"\
+  "V&\303\244lju T\303\244isekraanilt\0"\
   "EPUB-dokumendid\0"\
   "\0"\
   "\0"\
@@ -6603,13 +6603,13 @@ const char * gTranslations_et =
   "\0"\
   "Soovitus: Uuesti otsimiseks vajuta F3-klahvi\0"\
   "Pildifailid (*.%s)\0"\
-  "\0"\
+  "Pildid\0"\
   "\0"\
   "Paigalda SumatraPDF\0"\
   "Paigalda SumatraPDF &kataloogi:\0"\
   "Paigaldamine eba\303\265nnestus!\0"\
   "Toimub paigaldamine...\0"\
-  "kB\0"\
+  "\0"\
   "Windows Desktop Search &otsib PDF-dokumente\0"\
   "Windows kuvab PDF-dokumentide &eelvaateid\0"\
   "Hele\0"\
@@ -6621,8 +6621,8 @@ const char * gTranslations_et =
   "T\303\265stutundlik\0"\
   "Mobi-dokumendid\0"\
   "Muudetud:\0"\
-  "\0"\
-  "\0"\
+  "Uus &aken\tCtrl+N\0"\
+  "Uued J\303\244rjehoidjad\0"\
   "Uus %s versioon on saadaval. Kas laadin alla uue versiooni?\0"\
   "J\303\244rgmine lehek\303\274lg\0"\
   "Otsitavat teksti ei leitud\0"\
@@ -6690,8 +6690,8 @@ const char * gTranslations_et =
   "Valik:\0"\
   "Saada &e-postiga\0"\
   "Loo p\303\266\303\266ratud otsingu k\303\244surida\0"\
-  "\0"\
-  "\0"\
+  "N\303\244ita &J\303\244rjehoidjaid\tF12\0"\
+  "N\303\244ita &Lemmikuid\0"\
   "N\303\244ita &lehek\303\274lgi pidevana\0"\
   "\0"\
   "&N\303\244ita t\303\266\303\266riistariba\0"\
@@ -6699,15 +6699,15 @@ const char * gTranslations_et =
   "N\303\244ita lemmikuid\0"\
   "\0"\
   "N\303\244ita sageli loetud dokumente\0"\
-  "\0"\
+  "N\303\244ita &kausta\0"\
   "N\303\244ita &j\303\244rjehoidjate k\303\274lgriba kui v\303\265imalik\0"\
   "\303\234helehek\303\274ljeline\0"\
   "Vabandust, seda ei oleks tohtinud juhtuda!\n\nPalun vajuta 'Loobu' kui soovid aidata meil parandada selle kokkujooksmise p\303\265hjust.\0"\
-  "\0"\
+  "J\303\244rjesta\0"\
   "L\303\244htefailil %s puudub s\303\274nkroniseerimispunkt\0"\
+  "Ruut\0"\
   "\0"\
-  "\0"\
-  "\0"\
+  "Tempel\0"\
   "K\303\244ivita SumatraPDF\0"\
   "\0"\
   "Teema:\0"\
@@ -6720,12 +6720,12 @@ const char * gTranslations_et =
   "SumatraPDF paigaldust ei leitud.\0"\
   "SumatraPDF on vaikimisi PDF-lehitseja\0"\
   "SumatraPDF peaks n\303\274\303\274d olema vaikimisi PDF-lehitseja\0"\
-  "\0"\
+  "Toeta SumatraPDF-i\0"\
   "S\303\274nkroniseerimisfaili ei suudeta avada\0"\
   "\0"\
   "\0"\
   "Siltidega PDF\0"\
-  "\0"\
+  "Tekst\0"\
   "Tekstidokumendid\0"\
   "\0"\
   "T\303\244name, et valisid SumatraPDF'i!\0"\
@@ -6741,7 +6741,7 @@ const char * gTranslations_et =
   "Kasuta &kaarte\0"\
   "Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.\0"\
   "Vaade\0"\
-  "&K\303\274lasta kodulehte\0"\
+  "K\303\274lasta &kodulehte\0"\
   "Hoiatus\0"\
   "XPS-dokumendid\0"\
   "Kasutusel on uusim versioon.\0"\
