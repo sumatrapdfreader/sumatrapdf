@@ -156,6 +156,10 @@ bool CopySelfToDir(const WCHAR* destDir) {
     auto* dstPath = path::Join(destDir, exeName);
     BOOL failIfExists = FALSE;
     BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
+    // strip zone identifier (if exists) to avoid windows
+    // complaining when launching the file
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
+    file::DeleteZoneIdentifier(dstPath);
     free(dstPath);
     return ok;
 }
