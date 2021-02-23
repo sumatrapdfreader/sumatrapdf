@@ -977,21 +977,10 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
         win::menu::Remove(menu, CmdSendByEmail);
     }
 
-    // Also suppress PDF specific items for non-PDF documents
-    if (!CouldBePDFDoc(tab) || !CanViewWithAcrobat()) {
-        win::menu::Remove(menu, CmdOpenWithAcrobat);
-    }
-    if (!CouldBePDFDoc(tab) || !CanViewWithFoxit()) {
-        win::menu::Remove(menu, CmdOpenWithFoxIt);
-    }
-    if (!CouldBePDFDoc(tab) || !CanViewWithPDFXChange()) {
-        win::menu::Remove(menu, CmdOpenWithPdfXchange);
-    }
-    if (!CanViewWithXPSViewer(tab)) {
-        win::menu::Remove(menu, CmdOpenWithXpsViewer);
-    }
-    if (!CanViewWithHtmlHelp(tab)) {
-        win::menu::Remove(menu, CmdOpenWithHtmlHelp);
+    for (int cmd = CmdOpenWithFirst + 1; cmd < CmdOpenWithLast; cmd++) {
+        if (!CanViewWithKnownExternalViewer(tab, cmd)) {
+            win::menu::Remove(menu, cmd);
+        }
     }
 
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;

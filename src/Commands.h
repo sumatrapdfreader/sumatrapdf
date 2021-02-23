@@ -80,7 +80,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdContributeTranslation, "Contribute Translation")                 \
     V(CmdOpenWithFirst, "")                                               \
     V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                      \
-    V(CmdOpenWithAcrobatDC, "Open With Adobe Acrobat DC")                 \
     V(CmdOpenWithFoxIt, "Open With FoxIt")                                \
     V(CmdOpenWithFoxItPhantom, "Open With FoxIt Phantom")                 \
     V(CmdOpenWithPdfXchange, "Open With PdfXchange")                      \

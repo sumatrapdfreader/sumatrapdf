@@ -4324,9 +4324,16 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    if (!win->IsAboutWindow() && CmdOpenWithExternalFirst <= wmId && wmId <= CmdOpenWithExternalLast) {
-        ViewWithExternalViewer(win->currentTab, wmId - CmdOpenWithExternalFirst);
-        return 0;
+    if (!win->IsAboutWindow()) {
+        if (CmdOpenWithExternalFirst <= wmId && wmId <= CmdOpenWithExternalLast) {
+            size_t idx = (size_t)wmId - (size_t)CmdOpenWithExternalFirst;
+            ViewWithExternalViewer(win->currentTab, idx);
+            return 0;
+        }
+        if (CmdOpenWithFirst < wmId && wmId < CmdOpenWithLast) {
+            ViewWithKnownExternalViewer(win->currentTab, wmId);
+            return 0;
+        }
     }
 
     auto* ctrl = win->ctrl;
@@ -4572,26 +4579,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdAdvancedOptions:
             OnMenuAdvancedOptions();
-            break;
-
-        case CmdOpenWithAcrobat:
-            ViewWithAcrobat(win->currentTab);
-            break;
-
-        case CmdOpenWithFoxIt:
-            ViewWithFoxit(win->currentTab);
-            break;
-
-        case CmdOpenWithPdfXchange:
-            ViewWithPDFXChange(win->currentTab);
-            break;
-
-        case CmdOpenWithXpsViewer:
-            ViewWithXPSViewer(win->currentTab);
-            break;
-
-        case CmdOpenWithHtmlHelp:
-            ViewWithHtmlHelp(win->currentTab);
             break;
 
         case CmdSendByEmail:

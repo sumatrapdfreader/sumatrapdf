@@ -1609,7 +1609,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
             newZoom = ZOOM_FIT_WIDTH;
         }
     } else if (currZoom - FUZZ > towardsLevel) {
-        for (int i = nZooms-1; i >= 0; i--) {
+        for (int i = nZooms - 1; i >= 0; i--) {
             float zoom = zoomLevels->at(i);
             if (zoom + FUZZ < currZoom) {
                 newZoom = zoom;
@@ -1624,7 +1624,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
         }
     }
 
-    //logf("currZoom: %.2f, towardsLevel: %.2f, newZoom: %.2f\n", currZoom, towardsLevel, newZoom);
+    // logf("currZoom: %.2f, towardsLevel: %.2f, newZoom: %.2f\n", currZoom, towardsLevel, newZoom);
     return newZoom;
 }
 
