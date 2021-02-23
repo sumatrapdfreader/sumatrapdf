@@ -279,6 +279,14 @@ static bool IsEpubFile(const WCHAR* path) {
     if (!archive.Get()) {
         return false;
     }
+
+    // assume that if this file exists, this is a epub file
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1801
+    AutoFree container(archive->GetFileDataByName("META-INF/container.xml"));
+    if (container.data) {
+        return true;
+    }
+
     AutoFree mimetype(archive->GetFileDataByName("mimetype"));
     if (!mimetype.data) {
         return false;
