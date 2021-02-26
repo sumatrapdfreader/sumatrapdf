@@ -95,7 +95,12 @@ func runCppCheck(all bool) {
 }
 
 func main() {
-	u.CdUpDir("sumatrapdf")
+	if u.DirExists("/opt/buildhome/repo") {
+		// on Cloudflare pages build machine
+		os.Chdir("/opt/buildhome/repo")
+	} else {
+		u.CdUpDir("sumatrapdf")
+	}
 	logf("Current directory: %s\n", u.CurrDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
