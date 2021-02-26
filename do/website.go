@@ -36,7 +36,7 @@ func fileDownload(uri string, dstPath string) error {
 }
 
 // needed during cloudflare build: download executables to be served from /dl2
-func websiteBuild() {
+func websiteBuildCloudflare() {
 	ver := "3.2"
 	files := []string{
 		"SumatraPDF-%VER%-64-install.exe",
