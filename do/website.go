@@ -1,7 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/kjk/u"
 )
@@ -22,4 +27,56 @@ func websiteRunLocally() {
 	// using https://github.com/netlify/cli
 	cmd := exec.Command("netlify", "dev", "--dir", "website")
 	u.RunCmdLoggedMust(cmd)
+}
+
+func fileDownload(uri string, dstPath string) error {
+	u.CreateDirForFileMust(dstPath)
+	d := httpDlMust(uri)
+	return ioutil.WriteFile(dstPath, d, 0755)
+}
+
+// needed during cloudflare build: download executables to be served from /dl2
+func websiteBuild() {
+	ver := "3.2"
+	files := []string{
+		"SumatraPDF-%VER%-64-install.exe",
+		"SumatraPDF-%VER%-64.zip",
+		"SumatraPDF-%VER%-install.exe",
+		"SumatraPDF-%VER%.zip",
+	}
+	err := os.MkdirAll(filepath.Join("website", "dl2"), 0755)
+	must(err)
+	baseURI := "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/rel/"
+	for _, file := range files {
+		fileName := strings.ReplaceAll(file, "%VER%", ver)
+		dstPath := filepath.Join("website", "dl2", fileName)
+		if u.PathExists(dstPath) {
+			fmt.Printf("Skipping downloading because %s already exists\n", dstPath)
+			continue
+		}
+		uri := baseURI + fileName
+		fmt.Printf("Downloading %s to %s\n", uri, dstPath)
+		err = fileDownload(uri, dstPath)
+		must(err)
+	}
+}
+
+func websiteDeployCloudlare() {
+	u.EnsureGitClean(".")
+	{
+		cmd := exec.Command("git", "checkout", "website-cf")
+		u.RunCmdLoggedMust(cmd)
+	}
+	{
+		cmd := exec.Command("git", "rebase", "master")
+		u.RunCmdLoggedMust(cmd)
+	}
+	{
+		cmd := exec.Command("git", "push", "--force")
+		u.RunCmdLoggedMust(cmd)
+	}
+	{
+		cmd := exec.Command("git", "checkout", "master")
+		u.RunCmdLoggedMust(cmd)
+	}
 }
