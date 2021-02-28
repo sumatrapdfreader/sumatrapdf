@@ -1727,6 +1727,14 @@ fz_run_display_list(fz_context *ctx, fz_display_list *list, fz_device *dev, fz_m
 			/* Zero area paths are suitable for stroking. */
 			empty = !fz_is_valid_rect(fz_intersect_rect(trans_rect, scissor));
 		}
+		else if (n.cmd == FZ_CMD_FILL_TEXT || n.cmd == FZ_CMD_STROKE_TEXT ||
+			n.cmd == FZ_CMD_CLIP_TEXT || n.cmd == FZ_CMD_CLIP_STROKE_TEXT)
+		{
+			/* Zero area text (such as spaces) should be passed
+			 * through. Text that is completely outside the scissor
+			 * can be elided. */
+			empty = !fz_is_valid_rect(fz_intersect_rect(trans_rect, scissor));
+		}
 		else
 		{
 			empty = fz_is_empty_rect(fz_intersect_rect(trans_rect, scissor));

@@ -1065,6 +1065,12 @@ load_fb2_images(fz_context *ctx, fz_xml *root)
 		fz_var(b64);
 		fz_var(buf);
 
+		if (id == NULL)
+		{
+			fz_warn(ctx, "Skipping image with no id");
+			continue;
+		}
+
 		fz_try(ctx)
 		{
 			b64 = concat_text(ctx, binary);

@@ -736,6 +736,7 @@ void pdf_forget_xref(fz_context *ctx, pdf_document *doc)
 	doc->saved_xref_sections = doc->xref_sections;
 	doc->saved_num_xref_sections = doc->num_xref_sections;
 
+	doc->xref_sections = NULL;
 	doc->startxref = 0;
 	doc->num_xref_sections = 0;
 	doc->num_incremental_sections = 0;

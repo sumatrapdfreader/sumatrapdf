@@ -930,7 +930,11 @@ show_string(fz_context *ctx, pdf_run_processor *pr, unsigned char *buf, size_t l
 		else
 			fz_warn(ctx, "cannot encode character");
 		if (cpt == 32 && w == 1)
+		{
+			/* Bug 703151: pdf_show_char can realloc gstate. */
+			gstate = pr->gstate + pr->gtop;
 			pdf_show_space(ctx, pr, gstate->text.word_space);
+		}
 	}
 }
 

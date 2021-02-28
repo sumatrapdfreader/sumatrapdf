@@ -696,6 +696,9 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 		/* Encoding */
 
 		symbolic = fontdesc->flags & 4;
+		/* Bug 703273: If non-symbolic, we're not symbolic. */
+		if (fontdesc->flags & 32)
+			symbolic = 0;
 
 		if (kind == TYPE1)
 			cmap = select_type1_cmap(face);

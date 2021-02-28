@@ -116,7 +116,15 @@ static void
 xps_add_link_target(fz_context *ctx, xps_document *doc, char *name)
 {
 	xps_fixpage *page = doc->last_page;
-	xps_target *target = fz_malloc_struct(ctx, xps_target);
+	xps_target *target;
+
+	if (page == NULL)
+	{
+		fz_warn(ctx, "Dropping link target with no page");
+		return;
+	}
+
+	target = fz_malloc_struct(ctx, xps_target);
 
 	fz_try(ctx)
 	{

@@ -478,9 +478,7 @@ void fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, fl
 
 	trm: The matrix to apply to the glyph before bounding.
 
-	r: Pointer to a fz_rect to use for storage.
-
-	Returns r, after filling it in with the bounds of the given
+	Returns rectangle by value containing the bounds of the given
 	glyph.
 */
 fz_rect fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
