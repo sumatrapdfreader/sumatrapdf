@@ -237,6 +237,7 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 	unsigned char *src, *dst;
 	unsigned int x, y;
 	unsigned int stride;
+	unsigned int srcstride;
 
 	/* colormap has first all red, then all green, then all blue values */
 	/* colormap values are 0..65535, bits is 4 or 8 */
@@ -254,41 +255,40 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 	if (tiff->imagelength > UINT_MAX / tiff->imagewidth / (tiff->samplesperpixel + 2))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
 
-	stride = tiff->imagewidth * (tiff->samplesperpixel + 2) * 2;
+	srcstride = ((1 + tiff->extrasamples) * tiff->bitspersample + 7) & ~7;
+	if (tiff->stride < 0 || srcstride > (unsigned int)tiff->stride)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for format");
+
+	stride = tiff->imagewidth * (3 + !!tiff->extrasamples) * 2;
 
 	samples = Memento_label(fz_malloc(ctx, (size_t)stride * tiff->imagelength), "tiff_samples");
 
 	for (y = 0; y < tiff->imagelength; y++)
 	{
+		int s = 0;
 		src = tiff->samples + (unsigned int)(tiff->stride * y);
 		dst = samples + (unsigned int)(stride * y);
 
 		for (x = 0; x < tiff->imagewidth; x++)
 		{
+			int c = tiff_getcomp(src, s++, tiff->bitspersample);
+			*dst++ = tiff->colormap[c + 0] >> 8;
+			*dst++ = tiff->colormap[c + 0];
+			*dst++ = tiff->colormap[c + maxval] >> 8;
+			*dst++ = tiff->colormap[c + maxval];
+			*dst++ = tiff->colormap[c + maxval * 2] >> 8;
+			*dst++ = tiff->colormap[c + maxval * 2];
 			if (tiff->extrasamples)
 			{
-				int c = tiff_getcomp(src, x * 2, tiff->bitspersample);
-				int a = tiff_getcomp(src, x * 2 + 1, tiff->bitspersample);
-				*dst++ = tiff->colormap[c + 0] >> 8;
-				*dst++ = tiff->colormap[c + 0];
-				*dst++ = tiff->colormap[c + maxval] >> 8;
-				*dst++ = tiff->colormap[c + maxval];
-				*dst++ = tiff->colormap[c + maxval * 2] >> 8;
-				*dst++ = tiff->colormap[c + maxval * 2];
+				/* Assume the first is alpha, and skip the rest. */
+				int a = tiff_getcomp(src, s++, tiff->bitspersample);
 				if (tiff->bitspersample <= 16)
-					*dst++ = a << (16 - tiff->bitspersample);
+					a = a << (16 - tiff->bitspersample);
 				else
-					*dst++ = a >> (tiff->bitspersample - 16);
-			}
-			else
-			{
-				int c = tiff_getcomp(src, x, tiff->bitspersample);
-				*dst++ = tiff->colormap[c + 0] >> 8;
-				*dst++ = tiff->colormap[c + 0];
-				*dst++ = tiff->colormap[c + maxval] >> 8;
-				*dst++ = tiff->colormap[c + maxval];
-				*dst++ = tiff->colormap[c + maxval * 2] >> 8;
-				*dst++ = tiff->colormap[c + maxval * 2];
+					a = a >> (tiff->bitspersample - 16);
+				*dst++ = a >> 8;
+				*dst++ = a;
+				s += tiff->extrasamples-1;
 			}
 		}
 	}

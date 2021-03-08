@@ -984,6 +984,7 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-interpret.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-js.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-layer.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-layout.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-lex.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-link.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-metrics.c" />

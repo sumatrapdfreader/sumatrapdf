@@ -600,6 +600,9 @@
     <ClCompile Include="..\..\source\fitz\output-docx.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\pdf\pdf-layout.c">
+      <Filter>pdf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">

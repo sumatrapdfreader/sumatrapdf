@@ -740,6 +740,9 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-layer.c">
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-layout.c">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-lex.c">
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>

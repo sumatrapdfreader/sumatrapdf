@@ -759,6 +759,7 @@ function mupdf_files()
     "pdf-interpret.c",
     "pdf-js.c",
     "pdf-layer.c",
+    "pdf-layout.c",
     "pdf-lex.c",
     "pdf-link.c",
     "pdf-metrics.c",

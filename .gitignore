@@ -33,3 +33,4 @@ tools/pdfjs/coverage/
 cppcheck.out.txt
 clangtidy.out.txt
 website/dl2
+node_modules
