@@ -113,7 +113,7 @@ struct StyleRule {
 
     float textIndent{0};
     Unit textIndentUnit = inherit;
-    AlignAttr textAlign = Align_NotFound;
+    AlignAttr textAlign = AlignAttr::NotFound;
 
     StyleRule() = default;
 
@@ -125,7 +125,7 @@ struct StyleRule {
 
 struct DrawStyle {
     mui::CachedFont* font{nullptr};
-    AlignAttr align{Align_NotFound};
+    AlignAttr align{AlignAttr::NotFound};
     bool dirRtl{false};
 };
 

@@ -320,26 +320,26 @@ AlignAttr FindAlignAttr(const char* name, size_t len) {
     switch (key) {
         case CS4('c', 'e', 'n', 't'):
             if (6 == len && CS2('e', 'r') == STR2i(name + 4)) {
-                return Align_Center;
+                return AlignAttr::Center;
             }
             break;
         case CS4('j', 'u', 's', 't'):
             if (7 == len && CS3('i', 'f', 'y') == STR3i(name + 4)) {
-                return Align_Justify;
+                return AlignAttr::Justify;
             }
             break;
         case CS4('l', 'e', 'f', 't'):
             if (4 == len) {
-                return Align_Left;
+                return AlignAttr::Left;
             }
             break;
         case CS4('r', 'i', 'g', 'h'):
             if (5 == len && CS1('t') == STR1i(name + 4)) {
-                return Align_Right;
+                return AlignAttr::Right;
             }
             break;
     }
-    return Align_NotFound;
+    return AlignAttr::NotFound;
 }
 
 // map of entity names to their Unicode runes, cf.

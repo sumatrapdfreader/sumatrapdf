@@ -75,7 +75,7 @@ enum HtmlTag {
     Tag_NotFound
 };
 
-enum AlignAttr { Align_Center, Align_Justify, Align_Left, Align_Right, Align_NotFound };
+enum class AlignAttr { Center, Justify, Left, Right, NotFound };
 
 HtmlTag FindHtmlTag(const char* name, size_t len);
 bool IsTagSelfClosing(HtmlTag item);

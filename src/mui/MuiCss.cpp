@@ -140,7 +140,7 @@ void Initialize() {
     gStyleDefault->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
     gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
     gStyleDefault->Set(Prop::AllocPadding(0, 0, 0, 0));
-    gStyleDefault->Set(Prop::AllocTextAlign(Align_Left));
+    gStyleDefault->Set(Prop::AllocTextAlign(AlignAttr::Left));
     gStyleDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlign::Center));
     gStyleDefault->Set(Prop::AllocAlign(PropHorizAlign, ElAlign::Center));
     gStyleDefault->Set(Prop::AllocColorSolid(PropFill, "white"));

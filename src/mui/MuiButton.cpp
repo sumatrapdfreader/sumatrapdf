@@ -130,10 +130,10 @@ void Button::SetMouseOverStyle(Style* style) {
 // a container and alignment, calculates the position of
 // element within the container.
 static int AlignedOffset(int containerDx, int elDx, AlignAttr align) {
-    if (Align_Left == align) {
+    if (AlignAttr::Left == align) {
         return 0;
     }
-    if (Align_Right == align) {
+    if (AlignAttr::Right == align) {
         return containerDx - elDx;
     }
     // Align_Center or Align_Justify
