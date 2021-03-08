@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/kjk/u"
 )
@@ -37,6 +38,13 @@ func fileDownload(uri string, dstPath string) error {
 
 // needed during cloudflare build: download executables to be served from /dl2
 func websiteBuildCloudflare() {
+	out := runExeMust("git", "branch")
+	currBranch := getCurrentBranch(out)
+	fmt.Printf("websiteBuildCloudflare: branch '%s'\n", currBranch)
+	if currBranch != "website-cf" {
+		fmt.Printf("Skipping downloading executables because not 'website-cf' branch\n")
+		return
+	}
 	ver := "3.2"
 	files := []string{
 		"SumatraPDF-%VER%-64-install.exe",
@@ -55,9 +63,11 @@ func websiteBuildCloudflare() {
 			continue
 		}
 		uri := baseURI + fileName
-		fmt.Printf("Downloading %s to %s\n", uri, dstPath)
+		fmt.Printf("Downloading %s to %s...", uri, dstPath)
+		timeStart := time.Now()
 		err = fileDownload(uri, dstPath)
 		must(err)
+		fmt.Printf("took %s\n", time.Since(timeStart))
 	}
 }
 
