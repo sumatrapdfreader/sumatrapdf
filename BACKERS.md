@@ -38,3 +38,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Christian Schulz
 - Jim Vanderbilt
 - Tobias Widmann
+- shorlee
