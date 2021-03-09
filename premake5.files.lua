@@ -663,6 +663,7 @@ function mupdf_files()
     "geometry.c",
     "getopt.c",
     "glyph.c",
+    "glyphbox.c",
     "halftone.c",
     "harfbuzz.c",
     "hash.c",

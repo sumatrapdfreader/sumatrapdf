@@ -515,7 +515,10 @@ jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_
 	state->yres = 72; /* openjpeg does not read the JPEG 2000 resc box */
 
 	if (w < 0 || h < 0)
+	{
+		opj_image_destroy(jpx);
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Unbelievable size for jpx");
+	}
 
 	state->cs = NULL;
 

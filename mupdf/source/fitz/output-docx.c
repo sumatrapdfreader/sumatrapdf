@@ -1,5 +1,6 @@
 #ifdef HAVE_EXTRACT
 
+#include "glyphbox.h"
 #include "extract.h"
 
 #include "mupdf/fitz.h"
@@ -27,6 +28,8 @@ typedef struct
 	int spacing;
 	int rotation;
 	int images;
+	int mediabox_clip;
+	fz_rect mediabox; /* As passed to writer_begin_page(). */
 	char output_cache[1024];
 } fz_docx_writer;
 
@@ -78,6 +81,10 @@ static void dev_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_m
 			{
 				fz_text_item *item = &span->items[i];
 				float adv = 0;
+
+				if (dev->writer->mediabox_clip)
+					if (fz_glyph_entirely_outside_box(ctx, &ctm, span, item, &dev->writer->mediabox))
+						continue;
 
 				if (span->items[i].gid >= 0)
 					adv = fz_advance_glyph(ctx, span->font, span->items[i].gid, span->wmode);
@@ -211,6 +218,7 @@ static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_
 	fz_docx_device *dev;
 	assert(!writer->ctx);
 	writer->ctx = ctx;
+	writer->mediabox = mediabox;
 	fz_var(dev);
 	fz_try(ctx)
 	{
@@ -403,6 +411,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->spacing = get_bool_option(ctx, options, "spacing", 0);
 		writer->rotation = get_bool_option(ctx, options, "rotation", 1);
 		writer->images = get_bool_option(ctx, options, "images", 1);
+		writer->mediabox_clip = get_bool_option(ctx, options, "mediabox-clip", 0);
 		writer->ctx = NULL;
 	}
 	fz_catch(ctx)

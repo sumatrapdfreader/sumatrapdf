@@ -99,6 +99,8 @@ load_devicen(fz_context *ctx, pdf_obj *array, int is_devn)
 	char name[100];
 	int i, n;
 
+	fz_var(cs);
+
 	if (pdf_is_array(ctx, nameobj))
 	{
 		n = pdf_array_len(ctx, nameobj);

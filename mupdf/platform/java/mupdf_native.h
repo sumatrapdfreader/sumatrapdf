@@ -2272,6 +2272,30 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_undo
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_redo
   (JNIEnv *, jobject);
 
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    beginOperation
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_beginOperation
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    beginImplicitOperation
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_beginImplicitOperation
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    endOperation
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_endOperation
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

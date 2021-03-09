@@ -163,12 +163,12 @@ int fz_font_is_serif(fz_context *ctx, fz_font *font);
 int fz_font_is_monospaced(fz_context *ctx, fz_font *font);
 
 /**
-	Retrieve a pointer to the font bbox.
+	Retrieve the font bbox.
 
 	font: The font to query.
 
-	Returns a pointer to the font bbox (or NULL if the
-	font is NULL).
+	Returns the font bbox by value; it is valid only if
+	fz_font_flags(font)->invalid_bbox is zero.
 */
 fz_rect fz_font_bbox(fz_context *ctx, fz_font *font);
 

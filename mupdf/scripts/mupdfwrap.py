@@ -5632,12 +5632,9 @@ class BuildDirs:
         # whether NDEBUG is defined.
         #
         if 0: pass  # lgtm [py/unreachable-statement]
-        elif dir_so == f'{self.dir_mupdf}build/shared-debug/':
-            self.cpp_flags = '-g'
-        elif dir_so == f'{self.dir_mupdf}build/shared-release/':
-            self.cpp_flags = '-O2 -DNDEBUG'
-        elif dir_so == f'{self.dir_mupdf}build/shared-memento/':
-            self.cpp_flags = '-g -DMEMENTO'
+        elif '-debug' in dir_so:    self.cpp_flags = '-g'
+        elif '-release' in dir_so:  self.cpp_flags = '-O2 -DNDEBUG'
+        elif '-memento' in dir_so:  self.cpp_flags = '-g -DMEMENTO'
         else:
             self.cpp_flags = None
             log( 'Warning: unrecognised {dir_so=}, so cannot determine cpp_flags')
@@ -5710,16 +5707,19 @@ def main():
 
                             command = f'cd {build_dirs.dir_mupdf} && {make} HAVE_GLUT=no HAVE_PTHREAD=yes shared=yes verbose=yes'
                             #command += ' USE_SYSTEM_FREETYPE=yes USE_SYSTEM_ZLIB=yes'
-                            if 0:   # lgtm [py/unreachable-statement]
-                                pass
-                            elif build_dirs.dir_so == f'{build_dirs.dir_mupdf}build/shared-debug/':
-                                command += ' build=debug'
-                            elif build_dirs.dir_so == f'{build_dirs.dir_mupdf}build/shared-release/':
-                                command += ' build=release'
-                            elif build_dirs.dir_so == f'{build_dirs.dir_mupdf}build/shared-memento/':
-                                command += ' build=memento'
-                            else:
-                                raise Exception( f'Unrecognised dir_so={build_dirs.dir_so}')
+                            prefix = f'{build_dirs.dir_mupdf}build/shared-'
+                            assert build_dirs.dir_so.startswith(prefix)
+                            flags = build_dirs.dir_so[ len(prefix): ]
+                            if flags.endswith('/'):    flags = flags[:-1]
+                            flags = flags.split('-')
+                            for flag in flags:
+                                if 0: pass   # lgtm [py/unreachable-statement]
+                                elif flag == 'debug':   command += ' build=debug'
+                                elif flag == 'release': command += ' build=release'
+                                elif flag == 'memento': command += ' build=memento'
+                                elif flag == 'extract': command += ' extract=yes'
+                                else:
+                                    raise Exception(f'Unrecognised flag {flag!r} in {flags!r} in {build_dirs.dir_so!r}')
 
                             jlib.system( command, prefix=jlib.log_text(), out=sys.stderr, verbose=1)
 

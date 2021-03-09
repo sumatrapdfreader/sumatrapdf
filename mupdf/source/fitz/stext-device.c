@@ -1,6 +1,8 @@
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
 
+#include "glyphbox.h"
+
 #include <math.h>
 #include <float.h>
 #include <string.h>
@@ -85,6 +87,7 @@ const char *fz_stext_options_usage =
 	"\tpreserve-whitespace: do not convert all whitespace into space characters\n"
 	"\tpreserve-spans: do not merge spans on the same line\n"
 	"\tdehyphenate: attempt to join up hyphenated words\n"
+	"\tmediabox-clip: exclude characters outside mediabox\n"
 	"\n";
 
 fz_stext_page *
@@ -573,6 +576,10 @@ fz_stext_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_m
 		tm.f = span->items[i].y;
 		trm = fz_concat(tm, ctm);
 
+		if (dev->flags & FZ_STEXT_MEDIABOX_CLIP)
+			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &dev->page->mediabox))
+				continue;
+
 		/* Calculate bounding box and new pen position based on font metrics */
 		if (span->items[i].gid >= 0)
 			adv = fz_advance_glyph(ctx, font, span->items[i].gid, span->wmode);
@@ -805,6 +812,8 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_DEHYPHENATE;
 	if (fz_has_option(ctx, string, "preserve-spans", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_PRESERVE_SPANS;
+	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_MEDIABOX_CLIP;
 
 	return opts;
 }

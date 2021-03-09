@@ -682,6 +682,8 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
 	}
 	fz_catch(ctx)
 	{
+		pdf_drop_obj(ctx, softmask.softmask);
+		pdf_drop_obj(ctx, softmask.page_resources);
 		fz_rethrow(ctx);
 	}
 }

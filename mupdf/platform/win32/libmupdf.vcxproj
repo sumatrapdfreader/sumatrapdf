@@ -1291,6 +1291,7 @@
     <ClCompile Include="..\..\source\fitz\geometry.c" />
     <ClCompile Include="..\..\source\fitz\getopt.c" />
     <ClCompile Include="..\..\source\fitz\glyph.c" />
+    <ClCompile Include="..\..\source\fitz\glyphbox.c" />
     <ClCompile Include="..\..\source\fitz\halftone.c" />
     <ClCompile Include="..\..\source\fitz\harfbuzz.c" />
     <ClCompile Include="..\..\source\fitz\hash.c" />
@@ -1502,6 +1503,7 @@
     <ClInclude Include="..\..\source\fitz\context-imp.h" />
     <ClInclude Include="..\..\source\fitz\draw-imp.h" />
     <ClInclude Include="..\..\source\fitz\glyph-imp.h" />
+    <ClInclude Include="..\..\source\fitz\glyphbox.h" />
     <ClInclude Include="..\..\source\fitz\html-tags.h" />
     <ClInclude Include="..\..\source\fitz\image-imp.h" />
     <ClInclude Include="..\..\source\fitz\jmemcust.h" />

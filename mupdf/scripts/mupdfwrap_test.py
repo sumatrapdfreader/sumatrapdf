@@ -37,6 +37,47 @@ g_test_n = 0
 g_mupdf_root = os.path.abspath('%s/../..' % __file__)
 
 
+def show_stext(document):
+    '''
+    Shows all available information about Stext blocks, lines and characters.
+    '''
+    for p in range(document.count_pages()):
+        page = document.load_page(p)
+        stextpage = mupdf.StextPage(page, mupdf.StextOptions())
+        for block in stextpage:
+            block_ = block.m_internal
+            print(f'block: type={block_.type} bbox=({block_.bbox.x0:6.2f} {block_.bbox.y0:6.2f} {block_.bbox.x1:6.2f} {block_.bbox.y1:6.2f})')
+            for line in block:
+                line_ = line.m_internal
+                print(f'    line: wmode={line_.wmode}'
+                        + f' dir=({line_.dir.x} {line_.dir.y})'
+                        + f' bbox=({line_.bbox.x0:6.2f} {line_.bbox.y0:6.2f} {line_.bbox.x1:6.2f} {line_.bbox.y1:6.2f})'
+                        )
+                for char in line:
+                    char_ = char.m_internal
+                    print(f'        char: {chr(char_.c)!r} c={char_.c:4} color={char_.color}'
+                            + f' origin=({char_.origin.x:6.2f} {char_.origin.y:6.2f})'
+                            + f' quad=('
+                                +  f'ul=({char_.quad.ul.x:6.2f} {char_.quad.ul.y:6.2f})'
+                                + f' ur=({char_.quad.ur.x:6.2f} {char_.quad.ur.y:6.2f})'
+                                + f' ll=({char_.quad.ll.x:6.2f} {char_.quad.ll.y:6.2f})'
+                                + f' lr=({char_.quad.lr.x:6.2f} {char_.quad.lr.y:6.2f})'
+                                + f')'
+                            + f' size={char_.size:6.2f}'
+                            + f' font=('
+                                +  f'is_mono={char_.font.flags.is_mono}'
+                                + f' is_bold={char_.font.flags.is_bold}'
+                                + f' is_italic={char_.font.flags.is_italic}'
+                                + f' ft_substitute={char_.font.flags.ft_substitute}'
+                                + f' ft_stretch={char_.font.flags.ft_stretch}'
+                                + f' fake_bold={char_.font.flags.fake_bold}'
+                                + f' fake_italic={char_.font.flags.fake_italic}'
+                                + f' has_opentype={char_.font.flags.has_opentype}'
+                                + f' invalid_bbox={char_.font.flags.invalid_bbox}'
+                                + f' name={char_.font.name}'
+                                + f')'
+                            )
+
 def test(path):
     '''
     Runs various mupdf operations on <path>, which is assumed to be a file that

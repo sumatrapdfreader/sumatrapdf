@@ -827,6 +827,7 @@
     <ClInclude Include="..\mupdf\source\fitz\draw-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\encodings.h" />
     <ClInclude Include="..\mupdf\source\fitz\glyph-imp.h" />
+    <ClInclude Include="..\mupdf\source\fitz\glyphbox.h" />
     <ClInclude Include="..\mupdf\source\fitz\glyphlist.h" />
     <ClInclude Include="..\mupdf\source\fitz\icc34.h" />
     <ClInclude Include="..\mupdf\source\fitz\image-imp.h" />
@@ -894,6 +895,7 @@
     <ClCompile Include="..\mupdf\source\fitz\geometry.c" />
     <ClCompile Include="..\mupdf\source\fitz\getopt.c" />
     <ClCompile Include="..\mupdf\source\fitz\glyph.c" />
+    <ClCompile Include="..\mupdf\source\fitz\glyphbox.c" />
     <ClCompile Include="..\mupdf\source\fitz\halftone.c" />
     <ClCompile Include="..\mupdf\source\fitz\harfbuzz.c" />
     <ClCompile Include="..\mupdf\source\fitz\hash.c" />

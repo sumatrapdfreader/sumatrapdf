@@ -1143,6 +1143,20 @@ FUN(PDFDocument_beginOperation)(JNIEnv *env, jobject self, jstring joperation)
 }
 
 JNIEXPORT void JNICALL
+FUN(PDFDocument_beginImplicitOperation)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+
+	if (!ctx || !pdf) return;
+
+	fz_try(ctx)
+		pdf_begin_implicit_operation(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
 FUN(PDFDocument_endOperation)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);

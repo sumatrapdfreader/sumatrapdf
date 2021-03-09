@@ -2497,10 +2497,9 @@ int mudraw_main(int argc, char **argv)
 
 	if (trace_info.mem_limit || trace_info.alloc_limit || showmemory)
 	{
-		char buf[100];
-		fz_snprintf(buf, sizeof buf, "Memory use total=%zu peak=%zu current=%zu", trace_info.total, trace_info.peak, trace_info.current);
-		fz_snprintf(buf, sizeof buf, "Allocations total=%zu", trace_info.allocs);
-		fprintf(stderr, "%s\n", buf);
+		char buf[200];
+		fz_snprintf(buf, sizeof buf, "Memory use total=%zu peak=%zu current=%zu\nAllocations total=%zu\n", trace_info.total, trace_info.peak, trace_info.current, trace_info.allocs);
+		fprintf(stderr, "%s", buf);
 	}
 
 	return (errored != 0);

@@ -84,6 +84,7 @@ struct pdfapp_s
 
 	/* presentation mode */
 	int presentation_mode;
+	int presentation_time_in_seconds;
 	int transitions_enabled;
 	fz_pixmap *old_image;
 	fz_pixmap *new_image;

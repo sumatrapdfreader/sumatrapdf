@@ -96,6 +96,9 @@ typedef struct fz_stext_block fz_stext_block;
 	FZ_STEXT_PRESERVE_SPANS: If this option is set, spans on the same line
 	will not be merged. Each line will thus be a span of text with the same
 	font, colour, and size.
+
+	FZ_STEXT_MEDIABOX_CLIP: If this option is set, characters entirely
+	outside each page's mediabox will be ignored.
 */
 enum
 {
@@ -105,6 +108,7 @@ enum
 	FZ_STEXT_INHIBIT_SPACES = 8,
 	FZ_STEXT_DEHYPHENATE = 16,
 	FZ_STEXT_PRESERVE_SPANS = 32,
+	FZ_STEXT_MEDIABOX_CLIP = 64,
 };
 
 /**

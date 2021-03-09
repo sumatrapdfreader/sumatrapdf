@@ -2281,7 +2281,6 @@ pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const char *n
 	fz_var(dlist);
 	fz_var(dev);
 	fz_var(text);
-	fz_var(cs);
 	fz_var(fzbuf);
 	fz_var(font);
 	fz_try(ctx)
@@ -2336,7 +2335,6 @@ pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const char *n
 		fz_drop_display_list(ctx, dlist);
 		fz_drop_path(ctx, path);
 		fz_drop_text(ctx, text);
-		fz_drop_colorspace(ctx, cs);
 		fz_drop_buffer(ctx, fzbuf);
 		fz_drop_font(ctx, font);
 	}
