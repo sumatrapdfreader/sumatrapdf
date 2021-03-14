@@ -132,7 +132,10 @@ func detectVersions() {
 // remove all files and directories under out/ except settings files
 func clean() {
 	entries, err := os.ReadDir("out")
-	must(err)
+	if err != nil {
+		// assuming 'out' doesn't exist, which is fine
+		return
+	}
 	nSkipped := 0
 	nDirsDeleted := 0
 	nFilesDeleted := 0
