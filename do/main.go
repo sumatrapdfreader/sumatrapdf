@@ -165,7 +165,7 @@ func main() {
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
 		flag.BoolVar(&flgUploadTranslations, "trans-upload", false, "upload translations to apptranslators.org if changed")
-		flag.BoolVar(&flgClean, "clean", false, "clean the build")
+		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
 		flag.BoolVar(&flgDeleteOldBuilds, "delete-old-builds", false, "delete old builds")
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")

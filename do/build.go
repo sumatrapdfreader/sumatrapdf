@@ -129,8 +129,40 @@ func detectVersions() {
 	logf("sumatraVersion: '%s'\n", sumatraVersion)
 }
 
+// remove all files and directories under out/ except settings files
 func clean() {
-	os.RemoveAll("out")
+	entries, err := os.ReadDir("out")
+	must(err)
+	nSkipped := 0
+	nDirsDeleted := 0
+	nFilesDeleted := 0
+	for _, e := range entries {
+		path := filepath.Join("out", e.Name())
+		if !e.IsDir() {
+			os.Remove(path)
+			continue
+		}
+		entries2, err := os.ReadDir(path)
+		must(err)
+		for _, e2 := range entries2 {
+			name := e2.Name()
+			path2 := filepath.Join(path, name)
+			// delete everything except those files
+			excluded := (name == "sumatrapdfcache") || (name == "SumatraPDF-settings.txt")
+			if excluded {
+				nSkipped++
+				continue
+			}
+			if e2.IsDir() {
+				os.RemoveAll(path2)
+				nDirsDeleted++
+			} else {
+				os.Remove(path2)
+				nFilesDeleted++
+			}
+		}
+	}
+	fmt.Printf("clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
 }
 
 func runTestUtilMust(dir string) {
