@@ -162,7 +162,11 @@ fz_load_jbig2_globals(fz_context *ctx, fz_buffer *buf)
 	}
 
 	if (jbig2_data_in(jctx, buf->data, buf->len) < 0)
+	{
+		jbig2_global_ctx_free(jbig2_make_global_ctx(jctx));
+		fz_free(ctx, globals);
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot decode jbig2 globals");
+	}
 
 	FZ_INIT_STORABLE(globals, 1, fz_drop_jbig2_globals_imp);
 	globals->gctx = jbig2_make_global_ctx(jctx);

@@ -3940,15 +3940,17 @@ fz_paint_image_imp(fz_context *ctx,
 		w = shape->x + shape->w;
 	if (group_alpha && group_alpha->x + group_alpha->w < w)
 		w = group_alpha->x + group_alpha->w;
+	if (w <= x)
+		return;
 	w -= x;
 	h = bbox.y1;
 	if (shape && shape->y + shape->h < h)
 		h = shape->y + shape->h;
 	if (group_alpha && group_alpha->y + group_alpha->h < h)
 		h = group_alpha->y + group_alpha->h;
-	h -= y;
-	if (w <= 0 || h <= 0)
+	if (h <= y)
 		return;
+	h -= y;
 
 	/* map from screen space (x,y) to image space (u,v) */
 	ctm = fz_pre_scale(ctm, 1.0f / img->w, 1.0f / img->h);

@@ -25,12 +25,10 @@ typedef struct fz_pixmap_image fz_pixmap_image;
 
 	image: The image to retrieve a pixmap from.
 
-	color_params: The color parameters (or NULL for defaults).
-
 	subarea: The subarea of the image that we actually care about
 	(or NULL to indicate the whole image).
 
-	trans: Optional, unless subarea is given. If given, then on
+	ctm: Optional, unless subarea is given. If given, then on
 	entry this is the transform that will be applied to the complete
 	image. It should be updated on exit to the transform to apply to
 	the given subarea of the image. This is used to calculate the
@@ -45,6 +43,11 @@ typedef struct fz_pixmap_image fz_pixmap_image;
 	Returns a non NULL pixmap pointer. May throw exceptions.
 */
 fz_pixmap *fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subarea, fz_matrix *ctm, int *w, int *h);
+
+/**
+	Calls fz_get_pixmap_from_image() with ctm, subarea, w and h all set to NULL.
+*/
+fz_pixmap *fz_get_unscaled_pixmap_from_image(fz_context *ctx, fz_image *image);
 
 /**
 	Increment the (normal) reference count for an image. Returns the
