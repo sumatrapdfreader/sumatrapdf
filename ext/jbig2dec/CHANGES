@@ -1,3 +1,22 @@
+Version 0.19 (2020 September 10)
+
+* API change to use full 32 bit segment numbers, in accordance
+  to the JBIG2 specification.
+
+* Better handling of end of input data stream and and when
+  encountering errors in the arithmetic decoder stream. This
+  should improve many situations where jbig2dec appeared to
+  run forever.
+
+* Fix several bugs related to signedness or over-/underflow
+  checks that were not robust.
+
+* Bug fixes for issues reported by Coverity/OSS-fuzz.
+
+* Add option to limit memory usage to command line tool.
+
+* Update manpages, and command line tool usage.
+
 Version 0.18 (2020 February 11)
 
 * Performance enhancements related to decoding of MMR and generic

@@ -744,6 +744,16 @@ const mmr_table_node jbig2_mmr_black_decode[] = {
 
 #define getbit(buf, x) ( ( buf[x >> 3] >> ( 7 - (x & 7) ) ) & 1 )
 
+/* On platforms that enforce aligned memory accesses, we can't just
+ * cast the byte * to the type of object we are accessing, we have
+ * unpack the requisite number of bytes, and deal with it that way.
+ * Note that the comments below about being 16/32 bit boundaries
+ * is referring to offsets into the byte stream, *not* memory
+ * addresses.
+ */
+#define getword16(b)  ((uint16_t)(b[0] | (b[1] << 8)))
+#define getword32(b)  ((uint32_t)(getword16(b) | (getword16((b + 2)) << 16)))
+
 static uint32_t
 jbig2_find_changing_element(const byte *line, uint32_t x, uint32_t w)
 {
@@ -817,7 +827,7 @@ jbig2_find_changing_element(const byte *line, uint32_t x, uint32_t w)
         if (w - x < 16) {
             goto check8;
         }
-        if ( ((uint16_t*) line)[ x / 16] != all16) {
+        if ( getword16((line + (x / 8))) != all16) {
             goto check8_no_eof;
         }
         x += 16; /* This will make x a multiple of 32. */
@@ -835,7 +845,7 @@ jbig2_find_changing_element(const byte *line, uint32_t x, uint32_t w)
             look at the next uint16, then uint8, then last 8 bits. */
             goto check16;
         }
-        if (((uint32_t*) line)[x/32] != all32) {
+        if ( getword32((line + (x / 8))) != all32) {
             goto check16_no_eof;
         }
         x += 32;
@@ -849,7 +859,7 @@ check16:
     }
 check16_no_eof:
     assert(w - x >= 16);
-    if ( ((uint16_t*) line)[x/16] != all16) {
+    if ( getword16((line + (x / 8))) != all16) {
         goto check8_no_eof;
     }
     x += 16;
@@ -889,6 +899,9 @@ check1:
 end:
     return x;
 }
+
+#undef getword16
+#undef getword32
 
 static uint32_t
 jbig2_find_changing_element_of_color(const byte *line, uint32_t x, uint32_t w, int color)

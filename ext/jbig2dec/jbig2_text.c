@@ -945,7 +945,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     as = jbig2_arith_new(ctx, ws);
     if (as == NULL) {
         code = jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to allocate arithmetic coding context when handling text region image");
-        goto cleanup2;
+        goto cleanup3;
     }
 
     if (!params.SBHUFF) {
@@ -963,7 +963,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
         params.IAIT = jbig2_arith_int_ctx_new(ctx);
         if (params.IADT == NULL || params.IAFS == NULL || params.IADS == NULL || params.IAIT == NULL) {
             code = jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to allocate text region image data");
-            goto cleanup3;
+            goto cleanup4;
         }
 
         /* Table 31 */
@@ -978,7 +978,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
         if (params.IAID == NULL || params.IARI == NULL ||
             params.IARDW == NULL || params.IARDH == NULL || params.IARDX == NULL || params.IARDY == NULL) {
             code = jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to allocate text region image data");
-            goto cleanup4;
+            goto cleanup5;
         }
     }
 
@@ -987,7 +987,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
                                     segment_data + offset, segment->data_length - offset, GR_stats, as, ws);
     if (code < 0) {
         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to decode text region image data");
-        goto cleanup4;
+        goto cleanup5;
     }
 
     if ((segment->flags & 63) == 4) {
@@ -1002,7 +1002,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
             jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "unable to add text region to page");
     }
 
-cleanup4:
+cleanup5:
     if (!params.SBHUFF) {
         jbig2_arith_iaid_ctx_free(ctx, params.IAID);
         jbig2_arith_int_ctx_free(ctx, params.IARI);
@@ -1012,13 +1012,15 @@ cleanup4:
         jbig2_arith_int_ctx_free(ctx, params.IARDY);
     }
 
-cleanup3:
+cleanup4:
     if (!params.SBHUFF) {
         jbig2_arith_int_ctx_free(ctx, params.IADT);
         jbig2_arith_int_ctx_free(ctx, params.IAFS);
         jbig2_arith_int_ctx_free(ctx, params.IADS);
         jbig2_arith_int_ctx_free(ctx, params.IAIT);
     }
+
+cleanup3:
     jbig2_free(ctx->allocator, as);
     jbig2_word_stream_buf_free(ctx, ws);
 
