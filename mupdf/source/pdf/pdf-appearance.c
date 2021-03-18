@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 
 #include <stdio.h>
 
@@ -2266,82 +2267,239 @@ static void draw_logo(fz_context *ctx, fz_path *path)
 
 static float logo_color[3] = { (float)0xa4 / (float)0xFF, (float)0xca / (float)0xFF, (float)0xf5 / (float)0xFF };
 
-void
-pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const char *name, const char *dn, const char *date)
+fz_display_list *
+pdf_signature_appearance(fz_context *ctx, fz_rect rect, fz_text_language lang, fz_image *img, const char *left_text, const char *right_text, int include_logo)
 {
 	fz_display_list *dlist = NULL;
 	fz_device *dev = NULL;
 	fz_text *text = NULL;
 	fz_colorspace *cs = NULL;
 	fz_path *path = NULL;
-	fz_buffer *fzbuf = NULL;
 	fz_font *font = NULL;
 
 	fz_var(path);
 	fz_var(dlist);
 	fz_var(dev);
 	fz_var(text);
-	fz_var(fzbuf);
 	fz_var(font);
 	fz_try(ctx)
 	{
-		fz_rect rect, prect;
+		fz_rect prect;
 		fz_rect logo_bounds;
 		fz_matrix logo_tm;
-		unsigned char *bufstr;
-		fz_text_language lang;
 		float color[] = { 0.0, 0.0, 0.0 };
 
-		rect = pdf_bound_annot(ctx, annot);
 		font = fz_new_base14_font(ctx, "Helvetica");
-		lang = pdf_annot_language(ctx, annot);
+
+		dlist = fz_new_display_list(ctx, rect);
+		dev = fz_new_list_device(ctx, dlist);
+
+		if (include_logo)
+		{
+			path = fz_new_path(ctx);
+			draw_logo(ctx, path);
+			logo_bounds = fz_bound_path(ctx, path, NULL, fz_identity);
+			logo_tm = center_rect_within_rect(logo_bounds, rect);
+			cs = fz_device_rgb(ctx);
+			fz_fill_path(ctx, dev, path, 0, logo_tm, cs, logo_color, 1.0f, fz_default_color_params);
+		}
+
+		prect = rect;
+		/* If there is to be info on the right then use only the left half of the rectangle for
+		 * what is intended for the left */
+		if (right_text)
+			prect.x1 = (prect.x0 + prect.x1) / 2.0f;
+
+		if (img)
+		{
+			float img_aspect = img->w / img->h;
+			float rectw = prect.x1 - prect.x0;
+			float recth = prect.y1 - prect.y0;
+			float midx = (prect.x0 + prect.x1) / 2.0;
+			float midy = (prect.y0 + prect.y1) / 2.0;
+			float rect_aspect = rectw / recth;
+			float scale = img_aspect > rect_aspect ? rectw / img->w : recth / img->h;
+			fz_matrix ctm = fz_pre_translate(fz_pre_scale(fz_translate(midx, midy), scale * img->w, -scale * img->h), -0.5, -0.5);
+			fz_fill_image(ctx, dev, img, ctm, 1.0, fz_default_color_params);
+		}
+
+		if (left_text)
+		{
+			text = pdf_layout_fit_text(ctx, font, lang, left_text, prect);
+			fz_fill_text(ctx, dev, text, fz_identity, cs, color, 1.0f, fz_default_color_params);
+			fz_drop_text(ctx, text);
+			text = NULL;
+		}
+
+		prect = rect;
+		/* If there is to be info on the left then use only the right half of the rectangle for
+		 * what is intended for the right */
+		if (img || left_text)
+			prect.x0 = (prect.x0 + prect.x1) / 2.0f;
+
+		if (right_text)
+		{
+			text = pdf_layout_fit_text(ctx, font, lang, right_text, prect);
+			fz_fill_text(ctx, dev, text, fz_identity, cs, color, 1.0f, fz_default_color_params);
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_device(ctx, dev);
+		fz_drop_path(ctx, path);
+		fz_drop_text(ctx, text);
+		fz_drop_font(ctx, font);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_display_list(ctx, dlist);
+		fz_rethrow(ctx);
+	}
+
+	return dlist;
+}
+
+fz_display_list *
+pdf_signature_appearance_unsigned(fz_context *ctx, fz_rect rect, fz_text_language lang)
+{
+	fz_display_list *dlist = NULL;
+	fz_device *dev = NULL;
+	fz_text *text = NULL;
+	fz_colorspace *cs = NULL;
+	fz_path *path = NULL;
+	fz_font *font = NULL;
+
+	fz_var(path);
+	fz_var(dlist);
+	fz_var(dev);
+	fz_var(text);
+	fz_var(font);
+	fz_try(ctx)
+	{
+		float text_color[] = { 1.0f, 1.0f, 1.0f };
+		float arrow_color[] = { 0.95f, 0.33f, 0.18f };
+
+		rect.y0 = rect.y1 - (rect.y1 - rect.y0) / 6;
+		rect.x1 = rect.x0 + (rect.y1 - rect.y0) * 4;
+		font = fz_new_base14_font(ctx, "Helvetica");
 
 		dlist = fz_new_display_list(ctx, rect);
 		dev = fz_new_list_device(ctx, dlist);
 
 		path = fz_new_path(ctx);
-		draw_logo(ctx, path);
-		logo_bounds = fz_bound_path(ctx, path, NULL, fz_identity);
-		logo_tm = center_rect_within_rect(logo_bounds, rect);
+		/* Draw a rectangle with a protusion to the right [xxxxx> */
+		fz_moveto(ctx, path, rect.x0, rect.y0);
+		fz_lineto(ctx, path, rect.x1, rect.y0);
+		fz_lineto(ctx, path, rect.x1 + (rect.y1 - rect.y0) / 2.0, (rect.y0 + rect.y1) / 2.0);
+		fz_lineto(ctx, path, rect.x1, rect.y1);
+		fz_lineto(ctx, path, rect.x0, rect.y1);
+		fz_closepath(ctx, path);
 		cs = fz_device_rgb(ctx);
-		fz_fill_path(ctx, dev, path, 0, logo_tm, cs, logo_color, 1.0f, fz_default_color_params);
+		fz_fill_path(ctx, dev, path, 0, fz_identity, cs, arrow_color, 1.0f, fz_default_color_params);
 
-		/* Display the name in the left-hand half of the form field */
-		prect = rect;
-		prect.x1 = (prect.x0 + prect.x1) / 2.0f;
-		text = pdf_layout_fit_text(ctx, font, lang, name, prect);
-		fz_fill_text(ctx, dev, text, fz_identity, cs, color, 1.0f, fz_default_color_params);
+		text = pdf_layout_fit_text(ctx, font, lang, "SIGN", rect);
+		fz_fill_text(ctx, dev, text, fz_identity, cs, text_color, 1.0f, fz_default_color_params);
 		fz_drop_text(ctx, text);
 		text = NULL;
-
-		/* Display the distinguished name in the right-hand half */
-		fzbuf = fz_new_buffer(ctx, 256);
-		fz_append_printf(ctx, fzbuf, "Digitally signed by %s", name);
-		fz_append_printf(ctx, fzbuf, "\nDN: %s", dn);
-		if (date)
-			fz_append_printf(ctx, fzbuf, "\nDate: %s", date);
-		fz_terminate_buffer(ctx, fzbuf);
-		(void)fz_buffer_storage(ctx, fzbuf, &bufstr);
-		prect = rect;
-		prect.x0 = (prect.x0 + prect.x1) / 2.0f;
-		text = pdf_layout_fit_text(ctx, font, lang, (char *)bufstr, prect);
-		fz_fill_text(ctx, dev, text, fz_identity, cs, color, 1.0f, fz_default_color_params);
-
-		pdf_update_appearance_from_display_list(ctx, annot, rect, dlist);
 	}
 	fz_always(ctx)
 	{
 		fz_drop_device(ctx, dev);
-		fz_drop_display_list(ctx, dlist);
 		fz_drop_path(ctx, path);
 		fz_drop_text(ctx, text);
-		fz_drop_buffer(ctx, fzbuf);
 		fz_drop_font(ctx, font);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_display_list(ctx, dlist);
+		fz_rethrow(ctx);
+	}
+
+	return dlist;
+}
+
+char *
+pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name *dn, const char *reason, const char *location, time_t date, int include_labels)
+{
+	fz_buffer *fzbuf = NULL;
+	char *dn_str = NULL;
+	char *full_str = NULL;
+
+	fz_var(fzbuf);
+	fz_var(dn_str);
+	fz_try(ctx)
+	{
+#ifdef _POSIX_SOURCE
+		struct tm tmbuf, *tm = localtime_r(&date, &tmbuf);
+#else
+		struct tm *tm = localtime(&date);
+#endif
+		char now_str[40];
+		size_t len = 0;
+#ifdef CLUSTER
+		memset(&date, 0, sizeof(date));
+		memset(tm, 0, sizeof(*tm));
+#endif
+
+		fzbuf = fz_new_buffer(ctx, 256);
+		if (name)
+		{
+			if (include_labels)
+				fz_append_string(ctx, fzbuf, "Digitally signed by ");
+			fz_append_string(ctx, fzbuf, name);
+		}
+
+		if (dn)
+		{
+			fz_append_string(ctx, fzbuf, "\n");
+			if (include_labels)
+				fz_append_string(ctx, fzbuf, "DN: ");
+			dn_str = pdf_signature_format_designated_name(ctx, dn);
+			fz_append_string(ctx, fzbuf, dn_str);
+		}
+
+		if (reason)
+		{
+			fz_append_string(ctx, fzbuf, "\n");
+			if (include_labels)
+				fz_append_string(ctx, fzbuf, "Reason: ");
+			fz_append_string(ctx, fzbuf, reason);
+		}
+
+		if (location)
+		{
+			fz_append_string(ctx, fzbuf, "\n");
+			if (include_labels)
+				fz_append_string(ctx, fzbuf, "Location: ");
+			fz_append_string(ctx, fzbuf, location);
+		}
+
+		if (tm)
+		{
+			len = strftime(now_str, sizeof now_str, "%FT%T%z", tm);
+			if (len)
+			{
+				fz_append_string(ctx, fzbuf, "\n");
+				if (include_labels)
+					fz_append_string(ctx, fzbuf, "Date: ");
+				fz_append_string(ctx, fzbuf, now_str);
+			}
+		}
+
+		fz_terminate_buffer(ctx, fzbuf);
+		(void)fz_buffer_extract(ctx, fzbuf, (unsigned char **)&full_str);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, fzbuf);
+		fz_free(ctx, dn_str);
 	}
 	fz_catch(ctx)
 	{
 		fz_rethrow(ctx);
 	}
+
+	return full_str;
 }
 
 void
@@ -2427,57 +2585,6 @@ void pdf_annot_pop_and_discard_local_xref(fz_context *ctx, pdf_annot *annot)
 	doc->local_xref = NULL;
 }
 
-void
-pdf_update_signature_appearance_with_image(fz_context *ctx, pdf_annot *annot, fz_image *image)
-{
-	pdf_obj *ap, *new_ap_n, *res_xobj;
-	pdf_obj *res = NULL;
-	fz_buffer *buf;
-	fz_rect rect;
-	float xs, ys, scale, aw, ah, w, h, x, y;
-
-	fz_var(res);
-
-	buf = fz_new_buffer(ctx, 1024);
-	fz_try(ctx)
-	{
-		res = pdf_new_dict(ctx, annot->page->doc, 1);
-		res_xobj = pdf_dict_put_dict(ctx, res, PDF_NAME(XObject), 1);
-		pdf_dict_put_drop(ctx, res_xobj, PDF_NAME(Image), pdf_add_image(ctx, annot->page->doc, image));
-
-		rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-		aw = (rect.x1 - rect.x0);
-		ah = (rect.y1 - rect.y0);
-		xs = aw / image->w;
-		ys = ah / image->h;
-		scale = xs < ys ? xs : ys;
-		w = image->w * scale;
-		h = image->h * scale;
-		x = rect.x0 + (aw - w) / 2;
-		y = rect.y0 + (ah - h) / 2;
-
-		fz_append_printf(ctx, buf, "q\n%g 0 0 %g %g %g cm\n/Image Do\nQ\n", w, h, x, y);
-
-		/* Update the AP/N stream */
-		ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
-		if (!ap)
-			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
-		new_ap_n = pdf_new_xobject(ctx, annot->page->doc, rect, fz_identity, res, buf);
-		annot->needs_new_ap = 0;
-		annot->has_new_ap = 1;
-		pdf_dict_put(ctx, ap, PDF_NAME(N), new_ap_n);
-	}
-	fz_always(ctx)
-	{
-		pdf_drop_obj(ctx, res);
-		fz_drop_buffer(ctx, buf);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
-	}
-}
-
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_obj *subtype;
@@ -2519,11 +2626,15 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 
 		ft = pdf_dict_get(ctx, annot->obj, PDF_NAME(FT));
 
-		/* We cannot synthesise an appearance for a Sig, so
+		/* We cannot synthesise an appearance for a signed Sig, so
 		 * don't even try. Attempting to, will move the object
 		 * into the new incremental section, which will
-		 * invalidate the signature. */
-		local_synthesis = (!ap_n && !pdf_name_eq(ctx, ft, PDF_NAME(Sig)));
+		 * invalidate the signature.
+		 *
+		 * For an unsigned Sig, use local synthesis even if there
+		 * is an existing appearance stream, because often they
+		 * are blank and we want the "sign" arrow to be visible. */
+		local_synthesis = ((!ap_n || pdf_name_eq(ctx, ft, PDF_NAME(Sig))) && !pdf_signature_is_signed(ctx, annot->page->doc, annot->obj));
 
 		if (annot->needs_new_ap)
 		{
@@ -2585,6 +2696,25 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 					pdf_update_button_appearance(ctx, annot);
 					pdf_clean_obj(ctx, annot->obj);
 					break;
+				}
+			}
+
+			/* Special case for unsigned signature widget, which are most easily created via a display list */
+			if (pdf_name_eq(ctx, ft, PDF_NAME(Sig)) && !pdf_signature_is_signed(ctx, annot->page->doc, annot->obj))
+			{
+				fz_rect rect = pdf_bound_annot(ctx, annot);
+				fz_display_list *dlist = pdf_signature_appearance_unsigned(ctx, rect, pdf_annot_language(ctx, annot));
+				fz_try(ctx)
+				{
+					pdf_update_appearance_from_display_list(ctx, annot, rect, dlist);
+				}
+				fz_always(ctx)
+				{
+					fz_drop_display_list(ctx, dlist);
+				}
+				fz_catch(ctx)
+				{
+					fz_rethrow(ctx);
 				}
 			}
 

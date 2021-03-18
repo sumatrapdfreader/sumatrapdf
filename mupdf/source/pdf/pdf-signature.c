@@ -187,39 +187,22 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 		fz_rethrow(ctx);
 }
 
-void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, fz_image *image)
+void
+pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, time_t t, fz_display_list *disp_list)
 {
-	pdf_pkcs7_designated_name *dn = NULL;
-	fz_buffer *fzbuf = NULL;
 	pdf_document *doc = widget->page->doc;
 
 	if (pdf_widget_is_readonly(ctx, widget))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature is read only, it cannot be signed.");
 
-	fz_var(dn);
-	fz_var(fzbuf);
-
 	pdf_begin_operation(ctx, doc, "Sign signature");
 
 	fz_try(ctx)
 	{
-		const char *dn_str;
 		pdf_obj *wobj = ((pdf_annot *)widget)->obj;
 		fz_rect rect;
-		time_t now = time(NULL);
-#ifdef _POSIX_SOURCE
-		struct tm tmbuf, *tm = gmtime_r(&now, &tmbuf);
-#else
-		struct tm *tm = gmtime(&now);
-#endif
-		char now_str[40];
-		size_t len = 0;
 		pdf_obj *form;
 		int sf;
-#ifdef CLUSTER
-		memset(&now, 0, sizeof(now));
-		memset(tm, 0, sizeof(*tm));
-#endif
 
 		pdf_dirty_annot(ctx, widget);
 
@@ -229,41 +212,76 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 
 		rect = pdf_dict_get_rect(ctx, wobj, PDF_NAME(Rect));
 
+		pdf_update_appearance_from_display_list(ctx, (pdf_annot *)widget, rect, disp_list);
+
+		/* Update the SigFlags for the document if required */
+		form = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm");
+		if (!form)
+		{
+			pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+			form = pdf_dict_put_dict(ctx, root, PDF_NAME(AcroForm), 1);
+		}
+
+		sf = pdf_to_int(ctx, pdf_dict_get(ctx, form, PDF_NAME(SigFlags)));
+		if ((sf & (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY)) != (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY))
+			pdf_dict_put_drop(ctx, form, PDF_NAME(SigFlags), pdf_new_int(ctx, sf | PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY));
+
+		pdf_signature_set_value(ctx, doc, wobj, signer, t);
+	}
+	fz_always(ctx)
+	{
+		pdf_end_operation(ctx, doc);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, fz_image *image)
+{
+	char *info = NULL;
+	pdf_pkcs7_designated_name *dn = NULL;
+	pdf_annot *annot = (pdf_annot *)widget;
+	fz_text_language lang;
+	pdf_document *doc = widget->page->doc;
+	fz_display_list *dlist = NULL;
+
+	if (pdf_widget_is_readonly(ctx, widget))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature is read only, it cannot be signed.");
+
+	fz_var(info);
+	fz_var(dn);
+	fz_var(dlist);
+
+	pdf_begin_operation(ctx, doc, "Sign signature");
+
+	fz_try(ctx)
+	{
+		pdf_obj *wobj = ((pdf_annot *)widget)->obj;
+		fz_rect rect;
+		pdf_obj *form;
+		int sf;
+		time_t now = time(NULL);
+
+		pdf_dirty_annot(ctx, widget);
+
+		/* Ensure that all fields that will be locked by this signature
+		 * are marked as ReadOnly. */
+		enact_sig_locking(ctx, doc, wobj);
+
+		rect = pdf_dict_get_rect(ctx, wobj, PDF_NAME(Rect));
+		lang = pdf_annot_language(ctx, annot);
+
 		/* Create an appearance stream only if the signature is intended to be visible */
 		if (!fz_is_empty_rect(rect))
 		{
-			if (image)
-			{
-				pdf_update_signature_appearance_with_image(ctx, (pdf_annot *)widget, image);
-			}
-			else
-			{
-				dn = signer->get_signing_name(ctx, signer);
-				if (!dn || !dn->cn)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "Certificate has no common name");
-
-				fzbuf = fz_new_buffer(ctx, 256);
-				fz_append_printf(ctx, fzbuf, "cn=%s", dn->cn);
-
-				if (dn->o)
-					fz_append_printf(ctx, fzbuf, ", o=%s", dn->o);
-
-				if (dn->ou)
-					fz_append_printf(ctx, fzbuf, ", ou=%s", dn->ou);
-
-				if (dn->email)
-					fz_append_printf(ctx, fzbuf, ", email=%s", dn->email);
-
-				if (dn->c)
-					fz_append_printf(ctx, fzbuf, ", c=%s", dn->c);
-
-				dn_str = fz_string_from_buffer(ctx, fzbuf);
-
-				if (tm)
-					len = strftime(now_str, sizeof now_str, "%Y.%m.%d %H:%M:%SZ", tm);
-
-				pdf_update_signature_appearance(ctx, (pdf_annot *)widget, dn->cn, dn_str, len?now_str:NULL);
-			}
+			dn = signer->get_signing_name(ctx, signer);
+			if (!dn || !dn->cn)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "Certificate has no common name.");
+			info = pdf_signature_info(ctx, dn->cn, dn, NULL, NULL, now, 1);
+			dlist = pdf_signature_appearance(ctx, rect, lang, image, dn->cn, info, 1);
+			pdf_update_appearance_from_display_list(ctx, annot, rect, dlist);
 		}
 
 		/* Update the SigFlags for the document if required */
@@ -283,8 +301,9 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 	fz_always(ctx)
 	{
 		pdf_end_operation(ctx, doc);
-		fz_drop_buffer(ctx, fzbuf);
+		fz_free(ctx, info);
 		pdf_signature_drop_designated_name(ctx, dn);
+		fz_drop_display_list(ctx, dlist);
 	}
 	fz_catch(ctx)
 	{
@@ -295,24 +314,43 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
 {
 	int flags;
+	fz_display_list *dlist = NULL;
 
-	if (pdf_widget_is_readonly(ctx, widget))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature read only, it cannot be cleared.");
+	fz_var(dlist);
+	fz_try(ctx)
+	{
+		fz_text_language lang = pdf_annot_language(ctx, (pdf_annot *)widget);
+		fz_rect rect = pdf_bound_widget(ctx, widget);
 
-	pdf_xref_remove_unsaved_signature(ctx, ((pdf_annot *) widget)->page->doc,  ((pdf_annot *) widget)->obj);
+		pdf_begin_operation(ctx, widget->page->doc, "Clear Signature");
+		if (pdf_widget_is_readonly(ctx, widget))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Signature read only, it cannot be cleared.");
 
-	pdf_dirty_annot(ctx, widget);
+		pdf_xref_remove_unsaved_signature(ctx, ((pdf_annot *)widget)->page->doc, ((pdf_annot *)widget)->obj);
 
-	flags = pdf_dict_get_int(ctx, ((pdf_annot *) widget)->obj, PDF_NAME(F));
-	flags &= ~PDF_ANNOT_IS_LOCKED;
-	if (flags)
-		pdf_dict_put_int(ctx, ((pdf_annot *) widget)->obj, PDF_NAME(F), flags);
-	else
-		pdf_dict_del(ctx, ((pdf_annot *) widget)->obj, PDF_NAME(F));
+		pdf_dirty_annot(ctx, widget);
 
-	pdf_dict_del(ctx, ((pdf_annot *) widget)->obj, PDF_NAME(V));
+		flags = pdf_dict_get_int(ctx, ((pdf_annot *)widget)->obj, PDF_NAME(F));
+		flags &= ~PDF_ANNOT_IS_LOCKED;
+		if (flags)
+			pdf_dict_put_int(ctx, ((pdf_annot *)widget)->obj, PDF_NAME(F), flags);
+		else
+			pdf_dict_del(ctx, ((pdf_annot *)widget)->obj, PDF_NAME(F));
 
-	pdf_update_signature_appearance(ctx, widget, NULL, NULL, NULL);
+		pdf_dict_del(ctx, ((pdf_annot *)widget)->obj, PDF_NAME(V));
+
+		dlist = pdf_signature_appearance_unsigned(ctx, rect, lang);
+		pdf_update_appearance_from_display_list(ctx, (pdf_annot *)widget, rect, dlist);
+	}
+	fz_always(ctx)
+	{
+		pdf_end_operation(ctx, widget->page->doc);
+		fz_drop_display_list(ctx, dlist);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 void pdf_drop_signer(fz_context *ctx, pdf_pkcs7_signer *signer)
@@ -367,11 +405,11 @@ void pdf_signature_drop_designated_name(fz_context *ctx, pdf_pkcs7_designated_na
 char *pdf_signature_format_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *name)
 {
 	const char *parts[] = {
-		"CN=", "",
-		", O=", "",
-		", OU=", "",
-		", emailAddress=", "",
-		", C=", ""};
+		"cn=", "",
+		", o=", "",
+		", ou=", "",
+		", email=", "",
+		", c=", ""};
 	size_t len = 1;
 	char *s;
 	int i;
