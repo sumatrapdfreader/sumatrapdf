@@ -83,7 +83,7 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 	Sign a signature field, while assigning it an arbitrary apparance determined by a display list.
 	The function pdf_signature_appearance can generate a variety of common signature appearances.
 */
-void pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, time_t t, fz_display_list *disp_list);
+void pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, int64_t t, fz_display_list *disp_list);
 
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget);
 

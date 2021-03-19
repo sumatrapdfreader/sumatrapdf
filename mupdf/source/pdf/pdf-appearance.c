@@ -2419,20 +2419,21 @@ pdf_signature_appearance_unsigned(fz_context *ctx, fz_rect rect, fz_text_languag
 }
 
 char *
-pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name *dn, const char *reason, const char *location, time_t date, int include_labels)
+pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name *dn, const char *reason, const char *location, int64_t date, int include_labels)
 {
 	fz_buffer *fzbuf = NULL;
 	char *dn_str = NULL;
 	char *full_str = NULL;
+	time_t tdate = (time_t)date;
 
 	fz_var(fzbuf);
 	fz_var(dn_str);
 	fz_try(ctx)
 	{
 #ifdef _POSIX_SOURCE
-		struct tm tmbuf, *tm = localtime_r(&date, &tmbuf);
+		struct tm tmbuf, *tm = localtime_r(&tdate, &tmbuf);
 #else
-		struct tm *tm = localtime(&date);
+		struct tm *tm = localtime(&tdate);
 #endif
 		char now_str[40];
 		size_t len = 0;

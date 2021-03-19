@@ -232,7 +232,9 @@ static char *get_history_filename(void)
 	static int once = 0;
 	if (!once)
 	{
-		char *home;
+		char *home = getenv("MUPDF_HISTORY");
+		if (home)
+			return home;
 		home = getenv("XDG_CACHE_HOME");
 		if (!home)
 			home = getenv("HOME");
@@ -247,18 +249,23 @@ static char *get_history_filename(void)
 	return history_path;
 }
 
-static void read_history_file_as_json(js_State *J)
+static int read_history_file_as_json(js_State *J)
 {
 	fz_buffer *buf = NULL;
 	const char *json = "{}";
+	const char *history_file;
 
 	fz_var(buf);
 
-	if (fz_file_exists(ctx, get_history_filename()))
+	history_file = get_history_filename();
+	if (strlen(history_file) == 0)
+		return 0;
+
+	if (fz_file_exists(ctx, history_file))
 	{
 		fz_try(ctx)
 		{
-			buf = fz_read_file(ctx, get_history_filename());
+			buf = fz_read_file(ctx, history_file);
 			json = fz_string_from_buffer(ctx, buf);
 		}
 		fz_catch(ctx)
@@ -281,6 +288,7 @@ static void read_history_file_as_json(js_State *J)
 	}
 
 	fz_drop_buffer(ctx, buf);
+	return 1;
 }
 
 static fz_location try_location(js_State *J)
@@ -325,7 +333,8 @@ static void load_history(void)
 
 	J = js_newstate(NULL, NULL, 0);
 
-	read_history_file_as_json(J);
+	if (!read_history_file_as_json(J))
+		return;
 
 	if (js_hasproperty(J, -1, absname))
 	{
@@ -402,7 +411,8 @@ static void save_history(void)
 
 	J = js_newstate(NULL, NULL, 0);
 
-	read_history_file_as_json(J);
+	if (!read_history_file_as_json(J))
+		return;
 
 	js_newobject(J);
 	{
@@ -447,10 +457,13 @@ static void save_history(void)
 
 	fz_try(ctx)
 	{
-		out = fz_new_output_with_path(ctx, get_history_filename(), 0);
-		fz_write_string(ctx, out, json);
-		fz_write_byte(ctx, out, '\n');
-		fz_close_output(ctx, out);
+		const char *history_file = get_history_filename();
+		if (strlen(history_file) > 0) {
+			out = fz_new_output_with_path(ctx, history_file, 0);
+			fz_write_string(ctx, out, json);
+			fz_write_byte(ctx, out, '\n');
+			fz_close_output(ctx, out);
+		}
 	}
 	fz_always(ctx)
 		fz_drop_output(ctx, out);

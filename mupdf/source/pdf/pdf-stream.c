@@ -101,6 +101,8 @@ build_compression_params(fz_context *ctx, pdf_obj *f, pdf_obj *p, fz_compression
 	int columns = pdf_to_int(ctx, columns_obj);
 	int colors = pdf_dict_get_int(ctx, p, PDF_NAME(Colors));
 	int bpc = pdf_dict_get_int(ctx, p, PDF_NAME(BitsPerComponent));
+	if (bpc == 0)
+		bpc = 8;
 
 	params->type = FZ_IMAGE_RAW;
 

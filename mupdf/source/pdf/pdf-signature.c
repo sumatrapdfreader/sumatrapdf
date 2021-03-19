@@ -188,7 +188,7 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 }
 
 void
-pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, time_t t, fz_display_list *disp_list)
+pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, int64_t t, fz_display_list *disp_list)
 {
 	pdf_document *doc = widget->page->doc;
 
@@ -262,7 +262,7 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 		fz_rect rect;
 		pdf_obj *form;
 		int sf;
-		time_t now = time(NULL);
+		int64_t now = (int64_t)time(NULL);
 
 		pdf_dirty_annot(ctx, widget);
 

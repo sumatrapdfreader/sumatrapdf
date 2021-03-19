@@ -117,9 +117,17 @@ fz_drop_stext_page(fz_context *ctx, fz_stext_page *page)
 	if (page)
 	{
 		fz_stext_block *block;
+		fz_stext_line *line;
+		fz_stext_char *ch;
 		for (block = page->first_block; block; block = block->next)
+		{
 			if (block->type == FZ_STEXT_BLOCK_IMAGE)
 				fz_drop_image(ctx, block->u.i.image);
+			else
+				for (line = block->u.t.first_line; line; line = line->next)
+					for (ch = line->first_char; ch; ch = ch->next)
+						fz_drop_font(ctx, ch->font);
+		}
 		fz_drop_pool(ctx, page->pool);
 	}
 }
@@ -196,7 +204,7 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	ch->color = color;
 	ch->origin = *p;
 	ch->size = size;
-	ch->font = font; /* TODO: keep and drop */
+	ch->font = fz_keep_font(ctx, font);
 
 	if (line->wmode == 0)
 	{
