@@ -17541,10 +17541,10 @@ const char * gTranslations_sl =
 const char * gTranslations_es = 
   "%s instalaci\303\263n no encontrada.\0"\
   "&Acerca de\0"\
-  "T&ama\303\261o real\tCtrl+1\0"\
-  "Opciones &avanzadas...\0"\
-  "Tod&as las p\303\241ginas seleccionadas\0"\
-  "A&tr\303\241s\tAlt+Izq\0"\
+  "&Tama\303\261o real\tCtrl+1\0"\
+  "&Opciones avanzadas...\0"\
+  "&Todas las p\303\241ginas seleccionadas\0"\
+  "&Atr\303\241s\tAlt+Izq\0"\
   "&Vista de libro\tCtrl+8\0"\
   "&Cerrar\tCtrl+W\0"\
   "&Copiar selecci\303\263n\0"\
@@ -17615,7 +17615,7 @@ const char * gTranslations_es =
   "Adjunto: %s\0"\
   "Autor:\0"\
   "Autom\303\241tico\0"\
-  "B&uscar actualizaciones autom\303\241ticamente\0"\
+  "Buscar &actualizaciones autom\303\241ticamente\0"\
   "Vista de libro\0"\
   "Marcar atajos\0"\
   "Marcar atajo a la p\303\241gina %s de %s\0"\

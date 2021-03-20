@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ec0081f3d46a141c3f16ac760b6317265035123c
+465abf66b6b809b83456e6df6d80a21f121bd923
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -114,7 +114,7 @@ cz:Skutečná &velikost\tCtrl+1
 de:&Tatsächliche Größe\tStrg+1
 dk:&Faktisk størrelse\tCtrl+1
 el:Πραγματικό &μέγεθος\tCtrl+1
-es:T&amaño real\tCtrl+1
+es:&Tamaño real\tCtrl+1
 et:&Tegelik suurus\tCtrl+1
 eu:&Oraingo Neurria\tKtrl+1
 fa:&اندازه واقعی\tCtrl+1
@@ -184,7 +184,7 @@ cz:&Pokročilé možnosti...
 de:&Erweiterte Optionen…
 dk:&Avancerede muligheder
 el:&Επιλογές για προχωρημένους
-es:Opciones &avanzadas...
+es:&Opciones avanzadas...
 et:&Rohkem sätteid...
 eu:Au&kera aurreratuak...
 fa:تنظیمات پیشرفته
@@ -249,7 +249,7 @@ cz:Vše&chny vybrané stránky
 de:&Alle ausgewählten Seiten
 dk:&Alle valgte sider
 el:Ό&λες οι επιλεγμένες
-es:Tod&as las páginas seleccionadas
+es:&Todas las páginas seleccionadas
 et:&Kõik valitud lehed
 eu:&Hautatutako orrialde guztiak
 fa:&همه‌ی صفحات انتخاب ‌شده
@@ -316,7 +316,7 @@ cz:Z&pět\tAlt+Šipka vlevo
 de:Vorherige Ansicht\tAlt+<-
 dk:&Tilbage\tAlt+venstre pil
 el:&Πίσω\tAlt+<-
-es:A&trás\tAlt+Izq
+es:&Atrás\tAlt+Izq
 et:&Tagasi\tAlt+Vasaknool
 eu:A&tzera\tAlt+Ezker Gezia
 fa:جای &قبلی\tAlt+←‎
@@ -4699,7 +4699,7 @@ cz:&Automaticky kontrolovat aktualizace
 de:&Automatisch nach Updates suchen
 dk:Tjek automatisk efter &opdateringer
 el:Αυτόματος έλεγχος για &ενημερώσεις
-es:B&uscar actualizaciones automáticamente
+es:Buscar &actualizaciones automáticamente
 et:Automaatselt kontrolli &uuendusi
 eu:&Berezgaitasunez egiaztatu eguneraketak
 fa:بررسی خودکار برای به‌روزرسانی‌ها
