@@ -40,3 +40,5 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Tobias Widmann
 - shorlee
 - Tony
+- Mikhail Smirnov
+- TRboom
