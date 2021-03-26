@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-465abf66b6b809b83456e6df6d80a21f121bd923
+f319b2600ba02cccbb909f3e23d4a9892ca46d45
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -3707,6 +3707,7 @@ cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
 cy:Ychwanegu PDF fel plentyn
 de:PDF als untergeordnetes Element hinzufügen
+dk:Tilføj PDF som underordnet
 es:Añadir pdf como hijo
 ga:Cuir PDF leis mar leanbh
 gl:Engadir PDF como secundario
@@ -3748,6 +3749,7 @@ cn:添加子项目
 co:Aghjunghje un zitellu
 cy:Ychwanegu plentyn
 de:Untergeordnetes Element hinzufügen
+dk:Tilføj underordnet
 es:Añadir hijo
 ga:Cuir leanbh leis
 gl:Engadir secundario

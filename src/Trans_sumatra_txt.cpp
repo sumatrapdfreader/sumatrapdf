@@ -5801,9 +5801,9 @@ const char * gTranslations_dk =
   "(side %s)\0"\
   "Om SumatraPDF\0"\
   "Tilf\303\270j bogm\303\246rke\0"\
-  "\0"\
+  "Tilf\303\270j PDF som underordnet\0"\
   "Tilf\303\270j PDF som en forg\303\246nger\0"\
-  "\0"\
+  "Tilf\303\270j underordnet\0"\
   "F\303\270j side %s til foretrukne\0"\
   "F\303\270j side %s til foretrukne\tCtrl+B\0"\
   "F\303\270j side %s til foretrukne med (valgfrit) navn:\0"\
