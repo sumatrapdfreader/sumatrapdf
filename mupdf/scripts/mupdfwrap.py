@@ -257,6 +257,27 @@ Tools required to build:
         doxygen-style comments for structures and functions into the generated
         C++ code.
 
+Python packaging test:
+
+    The --py-package-* options test various aspects of Python packaging.
+
+    The main test is to run
+
+        ./scripts/mupdfwrap.py --py-package-create-testupload
+
+    And then after waiting a few minutes for the pypi server to update its
+    state, run:
+
+        ./scripts/mupdfwrap.py --py-package-create-testdownload-test
+
+    This creates and uploads an sdist to the test.pypi.org server, then does a
+    'pip install mupdf' in a venv followed by running scripts/mupdfwrap_test.py
+    to check basic operation of the installed package.
+
+    Note that installing the mupdf package takes a few minutes because it has
+    to build the C, C++ and Python libraries.
+
+
 Usage:
 
     Args:
@@ -380,6 +401,43 @@ Usage:
                     Generate documentation for the Python API using pydoc3:
                         platform/python/mupdf.html
 
+        --py-package-bdist_wheel
+            Checks we can create a wheel, and checks it is ok with
+            check-wheel-contents.
+
+        --py-package-create-sdist
+            Creates Python sdist in dist/.
+
+        --py-package-create-install-test
+            Creates local sdist, installs into fresh Python venv using pip, and
+            checks it runs with mupdfwrap_test.py.
+
+        --py-package-testupload
+            Creates sdist and uploads to https://test.pypi.org/.
+
+            See uploaded sdists:
+                https://test.pypi.org/project/mupdf/
+                https://test.pypi.org/simple/mupdf/
+
+        --py-package-testdownload
+            Installs latest mupdf from https://test.pypi.org/ into venv and tests
+            with scripts/mupdfwrap.py.
+
+        --py-package-upload
+            Uploads latest mupdf to pypi.org.
+
+        --py-package-download
+            Installs latest mupdf with 'pip install mupdf' into venv and tests
+            with scripts/mupdfwrap.py.
+
+        --py-package-sdist-install
+            Create sdist and use pip to install directly, and test with
+            scripts/mupdfwrap_test.py.
+
+        --py-package-sdist-wheel-install
+            Create sdist and use pip to install via a wheel, and test with
+            scripts/mupdfwrap_test.py.
+
         --ref
             Copy generated C++ files to mupdfwrap_ref/ directory for use by --diff.
 
@@ -408,9 +466,31 @@ Usage:
 
             As of 2020-03-09 requires patched mupdf/ checkout.
 
-        -t:
-        --test:
+        -t
+        --test
             Tests the python API.
+
+        --test-setup.py <arg>
+            Tests that setup.py installs a usable Python mupdf module.
+
+                * Creates a Python virtual environment.
+                * Activates the Python environment.
+                * Runs setup.py install.
+                    * Builds C, C++ and Python librariess in build/shared-release.
+                    * Copies build/shared-release/*.so into virtual envionment.
+                * Runs scripts/mupdfwrap_test.py.
+                    * Imports mupdf and checks basic functionality.
+                * Deactivates the Python environment.
+
+        --test-setup.py-extra <arg>
+            Like --test-setup.py but appends <arg> to the setup.py command.
+
+            For example this allows one to specify a debug build of MuPDF C,
+            C++ and Python librariess and omit the MuPDF build:
+
+                --test-setup.py-extra '--mupdf-build-dir build/shared-debug-extract --mupdf-build 0'
+
+            Se setup.py itself for more details.
 
     Examples:
 
@@ -434,6 +514,7 @@ Usage:
 import glob
 import io
 import os
+import pickle
 import re
 import shutil
 import sys
@@ -457,22 +538,35 @@ logx = jlib.logx
 assert sys.version_info[0] == 3 and sys.version_info[1] >= 6, (
         'We require python-3.6+')
 
-
 try:
-    import clang.cindex
+    try:
+        import clang.cindex
 
-except ModuleNotFoundError:
+    except ModuleNotFoundError as e:
 
-    # On devuan, clang-python isn't on python3's path, but python2's
-    # clang-python works fine with python3, so we deviously get the path by
-    # running some python 2.
-    #
-    clang_path = jlib.system( 'python2 -c "import clang; print clang.__path__[0]"', out='return')
-    #log( 'Retrying import of clang using info from python2 {clang_path=}')
+        #print(f'"import clang.cindex" failed: {e}')
+        #print(f'sys.executable={sys.executable}')
 
-    sys.path.append( os.path.dirname( clang_path))
-    import clang.cindex
+        # On devuan, clang-python isn't on python3's path, but python2's
+        # clang-python works fine with python3, so we deviously get the path by
+        # running some python 2.
+        #
+        clang_path = jlib.system( 'python2 -c "import clang; print clang.__path__[0]"', out='return')
 
+        #log( 'Retrying import of clang using info from python2 {clang_path=}')
+
+        sys.path.append( os.path.dirname( clang_path))
+        import clang.cindex
+
+except Exception as e:
+    print(''
+            + f'{__file__}: Warning, failed to import clang.cindex: {e}\n'
+            + f'    We need Clang Python to build MuPDF python.\n'
+            + f'    For example install with:\n'
+            + f'        OpenBSD: pkg_add py3-llvm\n'
+            + f'        Linux:debian/devuan: apt install python-clang\n'
+            )
+    clang = None
 
 
 class ClangInfo:
@@ -545,14 +639,14 @@ class ClangInfo:
                     for leaf in f'libclang-{version}.*so*', f'libclang.so.{version}.*':
                         p = os.path.join( i, leaf)
                         p = os.path.abspath( p)
-                        #log( '{p=}')
+                        log( '{p=}')
                         libclang_so = glob.glob( p)
                         if not libclang_so:
                             continue
 
                         # We have found libclang.so.
                         self.libclang_so = libclang_so[0]
-                        log1( 'Using {self.libclang_so=}')
+                        log( 'Using {self.libclang_so=}')
                         clang.cindex.Config.set_library_file( self.libclang_so)
                         self.resource_dir = jlib.system(
                                 f'{clang_bin} -print-resource-dir',
@@ -563,7 +657,13 @@ class ClangInfo:
                         return True
 
 
-g_clang_info = ClangInfo()
+clang_info_cache = None
+
+def clang_info():
+    global clang_info_cache
+    if not clang_info_cache:
+        clang_info_cache = ClangInfo()
+    return clang_info_cache
 
 
 
@@ -632,7 +732,7 @@ class Rename:
             return 'p' + name
         ret = f'{clip( name, "fz_")}'
         if ret in ('stdin', 'stdout', 'stderr'):
-            log( 'appending underscore to {ret=}')
+            logx( 'appending underscore to {ret=}')
             ret += '_'
         return ret
     def function_call( self, name):
@@ -2235,7 +2335,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, arg_names=False,
         try:
             args = type_.argument_types()
         except Exception as e:
-            if 'libclang-6' in g_clang_info.libclang_so:
+            if 'libclang-6' in clang_info().libclang_so:
                 raise Clang6FnArgsBug( f'type_.spelling is {type_.spelling}: {e!r}')
 
         for arg in args:
@@ -2274,7 +2374,7 @@ def dump_ast( cursor, depth=0):
 def show_ast( filename):
     index = clang.cindex.Index.create()
     tu = index.parse( filename,
-            args=( '-I', g_clang_info.include_path),
+            args=( '-I', clang_info().include_path),
             )
     dump_ast( tu.cursor)
 
@@ -4439,19 +4539,19 @@ def struct_to_string_fns(
     '''
     out_h.write( f'\n')
     out_h.write( f'/* Writes {structname}\'s members, labelled and inside (...), to a stream. */\n')
-    out_h.write( f'std::ostream& operator<< (std::ostream& out, {structname}& rhs);\n')
+    out_h.write( f'std::ostream& operator<< (std::ostream& out, const {structname}& rhs);\n')
 
     out_h.write( f'\n')
     out_h.write( f'/* Returns string containing a {structname}\'s members, labelled and inside (...), using operator<<. */\n')
-    out_h.write( f'std::string to_string_{structname}({structname}& s);\n')
+    out_h.write( f'std::string to_string_{structname}(const {structname}& s);\n')
 
     out_h.write( f'\n')
     out_h.write( f'/* Returns string containing a {structname}\'s members, labelled and inside (...), using operator<<.\n')
     out_h.write( f'(Convenience overload). */\n')
-    out_h.write( f'std::string to_string({structname}& s);\n')
+    out_h.write( f'std::string to_string(const {structname}& s);\n')
 
     out_cpp.write( f'\n')
-    out_cpp.write( f'std::ostream& operator<< (std::ostream& out, {structname}& rhs)\n')
+    out_cpp.write( f'std::ostream& operator<< (std::ostream& out, const {structname}& rhs)\n')
     out_cpp.write( f'{{\n')
     i = 0
     out_cpp.write( f'    out\n')
@@ -4471,7 +4571,7 @@ def struct_to_string_fns(
     out_cpp.write( f'\n')
 
     out_cpp.write( f'\n')
-    out_cpp.write( f'std::string to_string_{structname}({structname}& s)\n')
+    out_cpp.write( f'std::string to_string_{structname}(const {structname}& s)\n')
     out_cpp.write( f'{{\n')
     out_cpp.write( f'    std::ostringstream buffer;\n')
     out_cpp.write( f'    buffer << s;\n')
@@ -4479,7 +4579,7 @@ def struct_to_string_fns(
     out_cpp.write( f'}}\n')
 
     out_cpp.write( f'\n')
-    out_cpp.write( f'std::string to_string({structname}& s)\n')
+    out_cpp.write( f'std::string to_string(const {structname}& s)\n')
     out_cpp.write( f'{{\n')
     out_cpp.write( f'    return to_string_{structname}(s);\n')
     out_cpp.write( f'}}\n')
@@ -4501,10 +4601,10 @@ def class_to_string_fns(
     '''
     out_h.write( f'\n')
     out_h.write( f'/* Writes a {classname}\'s underlying {structname}\'s members, labelled and inside (...), to a stream. */\n')
-    out_h.write( f'std::ostream& operator<< (std::ostream& out, {classname}& rhs);\n')
+    out_h.write( f'std::ostream& operator<< (std::ostream& out, const {classname}& rhs);\n')
 
     out_cpp.write( f'\n')
-    out_cpp.write( f'std::ostream& operator<< (std::ostream& out, {classname}& rhs)\n')
+    out_cpp.write( f'std::ostream& operator<< (std::ostream& out, const {classname}& rhs)\n')
     out_cpp.write( f'{{\n')
     if extras.pod == 'inline':
         out_cpp.write( f'    return out << *rhs.internal();\n')
@@ -4939,6 +5039,8 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
     '''
     assert dir_mupdf.endswith( '/')
     assert base.endswith( '/')
+    clang_info()    # Ensure we have set up clang-python.
+
     index = clang.cindex.Index.create()
     #log( '{dir_mupdf=} {base=}')
 
@@ -4962,7 +5064,7 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
                     temp_h,
                     args=(
                             '-I', f'{dir_mupdf}include',
-                            '-I', g_clang_info.include_path,
+                            '-I', clang_info().include_path,
                             ),
                     )
     finally:
@@ -5846,6 +5948,7 @@ def build_swig( build_dirs, container_classnames, to_string_structnames, swig_c,
     swig_py     = f'{build_dirs.dir_so}mupdf.py'
 
     os.makedirs( f'{build_dirs.dir_mupdf}platform/python', exist_ok=True)
+    os.makedirs( f'{build_dirs.dir_so}', exist_ok=True)
     jlib.update_file( text, swig_i)
 
     command = (
@@ -6004,13 +6107,44 @@ class BuildDirs:
             log( 'Warning: unrecognised {dir_so=}, so cannot determine cpp_flags')
 
 
+def test_setup_py( build_dirs, extra=''):
+    '''
+    Implementation of --test-setup.py*.
+    '''
+    # We use the '.' command to run pylocal/bin/activate rather than 'source',
+    # because the latter is not portable, e.g. not supported by ksh. The '.'
+    # command is posix so should work on all shells.
+    commands = [
+                f'cd {build_dirs.dir_mupdf}',
+                f'python3 -m venv pylocal',
+                f'. pylocal/bin/activate',
+                f'pip install clang',
+                f'python setup.py {extra} install',
+                f'python scripts/mupdfwrap_test.py',
+                f'deactivate',
+                ]
+    command = 'true'
+    for c in commands:
+        command += f' && echo == running: {c}'
+        command += f' && {c}'
+    jlib.system( command)
+
+
+def to_pickle( obj, path):
+    with open( path, 'wb') as f:
+        pickle.dump( obj, f)
+
+def from_pickle( path):
+    with open( path, 'rb') as f:
+        return pickle.load( f)
+
 
 def main():
 
     # Set up behaviour of jlib.log().
     #
     jlib.g_log_prefixes.append( jlib.LogPrefixTime( elapsed=True))
-    jlib.g_log_prefixes.append( jlib.g_log_prefixe_scopes)
+    jlib.g_log_prefixes.append( jlib.g_log_prefix_scopes)
     jlib.g_log_prefixes.append( jlib.LogPrefixFileLine())
 
     build_dirs = BuildDirs()
@@ -6030,8 +6164,18 @@ def main():
                 print( __doc__)
 
             elif arg == '--build' or arg == '-b':
-                h_files     = []
-                cpp_files   = []
+                cpp_files   = [
+                        f'{build_dirs.dir_mupdf}platform/c++/implementation/classes.cpp',
+                        f'{build_dirs.dir_mupdf}platform/c++/implementation/exceptions.cpp',
+                        f'{build_dirs.dir_mupdf}platform/c++/implementation/functions.cpp',
+                        f'{build_dirs.dir_mupdf}platform/c++/implementation/internal.cpp',
+                        ]
+                h_files = [
+                        f'{build_dirs.dir_mupdf}platform/c++/include/mupdf/classes.h',
+                        f'{build_dirs.dir_mupdf}platform/c++/include/mupdf/exceptions.h',
+                        f'{build_dirs.dir_mupdf}platform/c++/include/mupdf/functions.h',
+                        f'{build_dirs.dir_mupdf}platform/c++/include/mupdf/internal.h',
+                        ]
                 container_classnames = None
                 output_param_fns = None
                 force_rebuild = False
@@ -6072,7 +6216,7 @@ def main():
                             command = f'cd {build_dirs.dir_mupdf} && {make} HAVE_GLUT=no HAVE_PTHREAD=yes shared=yes verbose=yes'
                             #command += ' USE_SYSTEM_FREETYPE=yes USE_SYSTEM_ZLIB=yes'
                             prefix = f'{build_dirs.dir_mupdf}build/shared-'
-                            assert build_dirs.dir_so.startswith(prefix)
+                            assert build_dirs.dir_so.startswith(prefix), f'build_dirs.dir_so={build_dirs.dir_so} prefix={prefix}'
                             flags = build_dirs.dir_so[ len(prefix): ]
                             if flags.endswith('/'):    flags = flags[:-1]
                             flags = flags.split('-')
@@ -6089,14 +6233,17 @@ def main():
 
                         elif action == '0':
                             # Generate C++ code that wraps the fz_* API.
+                            if not clang:
+                                raise Exception('Cannot do "-b 0" because failed to import clang.')
                             namespace = 'mupdf'
                             swig_c = io.StringIO()
                             swig_python = io.StringIO()
+
                             (
                                     tu,
                                     base,
-                                    hs,
-                                    cpps,
+                                    h_files_actual,
+                                    cpp_files_actual,
                                     fn_usage_filename,
                                     container_classnames,
                                     to_string_structnames,
@@ -6111,8 +6258,25 @@ def main():
                                     swig_python,
                                     )
 
-                            h_files += hs
-                            cpp_files += cpps
+                            to_pickle( container_classnames,    f'{build_dirs.dir_mupdf}platform/c++/container_classnames.pickle')
+                            to_pickle( to_string_structnames,   f'{build_dirs.dir_mupdf}platform/c++/to_string_structnames.pickle')
+                            to_pickle( swig_c.getvalue(),       f'{build_dirs.dir_mupdf}platform/c++/swig_c.pickle')
+                            to_pickle( swig_python.getvalue(),  f'{build_dirs.dir_mupdf}platform/c++/swig_python.pickle')
+
+                            def check_lists_equal(name, expected, actual):
+                                expected.sort()
+                                actual.sort()
+                                if expected != actual:
+                                    text = f'Generated {name} filenames differ from expected:\n'
+                                    text += '    expected ({len(expected)}:\n'
+                                    for i in expected:
+                                        text += f'        {i}\n'
+                                    text += '    generated ({len(actual)}:\n'
+                                    for i in actual:
+                                        text += f'        {i}\n'
+                                    raise Exception(text)
+                            check_lists_equal('C++ source', cpp_files, cpp_files_actual)
+                            check_lists_equal('C++ headers', h_files, h_files_actual)
 
                             for dir_ in (
                                     f'{build_dirs.dir_mupdf}platform/c++/implementation/',
@@ -6151,8 +6315,6 @@ def main():
 
                         elif action == '1':
                             # Compile and link generated C++ code to create libmupdfcpp.so.
-                            if not h_files:
-                                raise Exception( 'action "0" required')
 
                             out_so = f'{build_dirs.dir_mupdf}platform/c++/libmupdfcpp.so'
                             if build_dirs.dir_so:
@@ -6184,15 +6346,15 @@ def main():
 
                         elif action == '2':
                             # Generate C++ code for python module using SWIG.
-                            if not container_classnames:
+                            if not os.path.isfile(f'{build_dirs.dir_mupdf}platform/c++/container_classnames.pickle'):
                                 raise Exception( 'action "0" required')
                             with jlib.LogPrefixScope( f'swig: '):
                                 build_swig(
                                         build_dirs,
-                                        container_classnames,
-                                        to_string_structnames,
-                                        swig_c.getvalue(),
-                                        swig_python.getvalue(),
+                                        from_pickle( f'{build_dirs.dir_mupdf}platform/c++/container_classnames.pickle'),
+                                        from_pickle( f'{build_dirs.dir_mupdf}platform/c++/to_string_structnames.pickle'),
+                                        from_pickle( f'{build_dirs.dir_mupdf}platform/c++/swig_c.pickle'),
+                                        from_pickle( f'{build_dirs.dir_mupdf}platform/c++/swig_python.pickle'),
                                         swig=swig,
                                         )
 
@@ -6201,7 +6363,7 @@ def main():
                             build_swig_java()
 
                         elif action == '3':
-                            # Compile and link to create _mupdfcpp_swig.so.
+                            # Compile and link to create _mupdf.so.
                             #
                             # We use g++ debug/release flags as implied by
                             # --dir-so, but all builds output the same file
@@ -6381,6 +6543,216 @@ def main():
                 d = args.next()
                 build_dirs.set_dir_so( d)
 
+            elif arg == '--py-package-bdist_wheel':
+                command = ('true'
+                        f' && python3 -m venv pylocal'
+                        f' && . pylocal/bin/activate'
+                        f' && pip install clang check-wheel-contents'
+                        f' && (rm -r dist_bdist_wheel || true)'
+                        f' && ./setup.py -d dist_bdist_wheel bdist_wheel --mupdf-build 0'
+                        f' && check-wheel-contents dist_bdist_wheel/*'
+                        )
+                jlib.system(command, verbose=1)
+
+            elif arg == '--py-package-create-sdist':
+                jlib.system( f'cd {build_dirs.dir_mupdf}'
+                        + f' && ./setup.py sdist'
+                        + f' && ls -lh {build_dirs.dir_mupdf}/dist'
+                        ,
+                        verbose=1,
+                        )
+
+            elif arg == '--py-package-create-install-test':
+                jlib.system( f'cd {build_dirs.dir_mupdf}'
+                        + f' && (rm -r dist || true)'
+                        + f' && ./setup.py sdist'
+                        + f' && ls -lh {build_dirs.dir_mupdf}/dist'
+                        ,
+                        prefix='py_package_createinstall: ',
+                        verbose=1,
+                        )
+                mupdf_sdists = glob.glob('dist/mupdf-*.tar.gz')
+                assert(len(mupdf_sdists) == 1)
+                mupdf_sdist = mupdf_sdists[-1]
+                jlib.log('{mupdf_sdist=}')
+                jlib.system( f'cd {build_dirs.dir_mupdf}'
+                        + f' && (rm -r pylocal-create-install || true)'
+                        + f' && python3 -m venv pylocal-create-install'
+                        + f' && . pylocal-create-install/bin/activate'
+                        + f' && python -m pip install --upgrade pip'
+                        + f' && pip {"-vvv"*1} install {mupdf_sdist}'
+                        + f' && python scripts/mupdfwrap_test.py'
+                        + f' && deactivate'
+                        ,
+                        prefix='py_package_createinstall: ',
+                        verbose=1,
+                        )
+
+            elif arg == '--py-package-testupload':
+                # Use os.system because we need user input.
+                command = ( f'('
+                        + f' cd {build_dirs.dir_mupdf}'
+                        + f' && (rm -r dist pylocal-testupload || true)'
+                        + f' && ./setup.py sdist'
+                        + f' && python3 -m venv pylocal-testupload'
+                        + f' && . pylocal-testupload/bin/activate'
+                        + f' && python -m pip install --upgrade twine'
+                        + f' && python -m twine upload --repository testpypi dist/*'
+                        + f' && deactivate'
+                        + f') 2>&1'
+                        )
+                jlib.log( 'py_package_testupload(): Uploading sdist with twine. Use username="__token__", psasword="pypi-...".')
+                jlib.log( 'py_package_testupload(): Running: {command}')
+                e = os.system(command)
+                jlib.log( '{e=}')
+                assert e == 0
+
+            elif arg == '--py-package-testdownload':
+                # For some reason on Linux, if we are in the mupdf directory, 'pip install
+                # mupdf' says:
+                #
+                #   Requirement already satisfied: mupdf in /home/jules/artifex-remote/mupdf (1.18.0)
+                #
+                # And doesn't attempt to install mupdf.
+                #
+                # So we use a sub-directory py-package-testdownload.
+                #
+                jlib.system( f'cd {build_dirs.dir_mupdf}'
+                        + f' && (rm -r py-package-testdownload || true)'
+                        + f' && mkdir py-package-testdownload'
+                        + f' && cd py-package-testdownload'
+                        + f' && python3 -m venv pylocal'
+                        + f' && . pylocal/bin/activate'
+                        + f' && python -m pip install --upgrade pip'
+                        #+ f' && python -m pip install wheel'
+                        + f' && pip -vvvv install --index-url https://test.pypi.org/simple mupdf'
+                        + f' && python {build_dirs.dir_mupdf}/scripts/mupdfwrap_test.py'
+                        + f' && deactivate',
+                        prefix='py-package-testdownload: ',
+                        verbose=1,
+                        )
+
+            elif arg == '--py-package-upload':
+                # Use os.system because we need user input.
+                command = ( f'('
+                        + f' cd {build_dirs.dir_mupdf}'
+                        + f' && (rm -r dist pylocal-upload || true)'
+                        + f' && ./setup.py sdist'
+                        + f' && python3 -m venv pylocal-upload'
+                        + f' && . pylocal-upload/bin/activate'
+                        + f' && python -m pip install --upgrade twine'
+                        + f' && python -m twine upload dist/*'
+                        + f' && deactivate'
+                        + f') 2>&1'
+                        )
+                jlib.log( '--py-package-upload(): Uploading sdist with twine.')
+                jlib.log( '--py-package-upload(): Running: {command}')
+                e = os.system(command)
+                jlib.log( '{e=}')
+                assert e == 0
+
+            elif arg == '--py-package-download':
+                jlib.system( f'cd {build_dirs.dir_mupdf}'
+                        + f' && (rm -r py-package-download || true)'
+                        + f' && mkdir py-package-download'
+                        + f' && cd py-package-download'
+                        + f' && python3 -m venv pylocal'
+                        + f' && . pylocal/bin/activate'
+                        + f' && python -m pip install --upgrade pip'
+                        + f' && pip -vvvv install mupdf'
+                        + f' && python {build_dirs.dir_mupdf}/scripts/mupdfwrap_test.py'
+                        + f' && deactivate',
+                        prefix='py-package-download: ',
+                        verbose=1,
+                        )
+
+            elif arg == '--py-package-sdist-install':
+                jlib.system('true'
+                        f' && (rm -r pylocal-pep517 dist || true)'
+                        f' && python3 -m venv pylocal-pep517'
+                        f' && . pylocal-pep517/bin/activate'
+                        f' && pip install --upgrade pip'
+                        f' && pip install clang'
+                        f' && ./setup.py sdist'
+                        f' && ls -ld dist/*'
+                        f' && pip install dist/* '
+                        f' && ./scripts/mupdfwrap_test.py'
+                        f' && deactivate'
+                        ,
+                        verbose=1,
+                        )
+
+            elif arg == '--py-package-sdist-wheel-install':
+                jlib.system('true'
+                        f' && (rm -r pylocal-pep517 dist wheels || true)'
+                        f' && python3 -m venv pylocal-pep517'
+                        f' && . pylocal-pep517/bin/activate'
+                        f' && pip install --upgrade pip'
+                        f' && pip install clang'
+                        f' && ./setup.py sdist'
+                        f' && ls -ld dist/*'
+                        f' && pip -vvv wheel --wheel-dir wheels dist/* '
+                        f' && ls -ld wheels/*'
+                        f' && pip -vvv install wheels/*'
+                        f' && ./scripts/mupdfwrap_test.py'
+                        f' && deactivate'
+                        ,
+                        verbose=1,
+                        )
+
+            elif arg == '--py-package-multi':
+                def system(command):
+                    jlib.system(command, verbose=1, out=lambda text: jlib.log(text))
+                system( '(rm -r pylocal-multi dist || true)')
+                system( './setup.py sdist')
+                system( 'cp -p pyproject.toml pyproject.toml-0')
+                results = dict()
+                try:
+                    for toml in 0, 1:
+                        for pip_upgrade in 0, 1:
+                            for do_wheel in 0, 1:
+                                with jlib.LogPrefixScope(f'toml={toml} pip_upgrade={pip_upgrade} do_wheel={do_wheel}: '):
+                                    #print(f'jlib.g_log_prefixes={jlib.g_log_prefixes}')
+                                    #print(f'jlib.g_log_prefix_scopes.items={jlib.g_log_prefix_scopes.items}')
+                                    #print(f'jlib.log_text(""): {jlib.log_text("")}')
+                                    result_key = toml, pip_upgrade, do_wheel
+                                    jlib.log( '')
+                                    jlib.log( '=== {pip_upgrade=} {do_wheel=}')
+                                    if toml:
+                                        system( 'cp -p pyproject.toml-0 pyproject.toml')
+                                    else:
+                                        system( 'rm pyproject.toml || true')
+                                    system( 'ls -l pyproject.toml || true')
+                                    system(
+                                            '(rm -r pylocal-multi wheels || true)'
+                                            ' && python3 -m venv pylocal-multi'
+                                            ' && . pylocal-multi/bin/activate'
+                                            ' && pip install clang'
+                                            )
+                                    try:
+                                        if pip_upgrade:
+                                            system( '. pylocal-multi/bin/activate && pip install --upgrade pip')
+                                        if do_wheel:
+                                            system( '. pylocal-multi/bin/activate && pip install check-wheel-contents')
+                                            system( '. pylocal-multi/bin/activate && pip wheel --wheel-dir wheels dist/*')
+                                            system( '. pylocal-multi/bin/activate && check-wheel-contents wheels/*')
+                                            system( '. pylocal-multi/bin/activate && pip install wheels/*')
+                                        else:
+                                            system( '. pylocal-multi/bin/activate && pip install dist/*')
+                                        #system( './scripts/mupdfwrap_test.py')
+                                        system( '. pylocal-multi/bin/activate && python -m mupdf')
+                                    except Exception as ee:
+                                        e = ee
+                                    else:
+                                        e = 0
+                                    results[ result_key] = e
+                                    jlib.log( '== {e=}')
+                    jlib.log( '== Results:')
+                    for (toml, pip_upgrade, do_wheel), e in results.items():
+                        jlib.log( '    {toml=} {pip_upgrade=} {do_wheel=}: {e=}')
+                finally:
+                    system( 'cp -p pyproject.toml-0 pyproject.toml')
+
             elif arg == '--run-py':
                 command = ''
                 while 1:
@@ -6500,6 +6872,13 @@ def main():
                             )
 
                 log( 'Tests ran ok.')
+
+            elif arg == '--test-setup.py':
+                test_setup_py( build_dirs)
+
+            elif arg == '--test-setup.py-extra':
+                extra = args.next()
+                test_setup_py( build_dirs, extra)
 
             elif arg == '--test-swig':
                 test_swig()

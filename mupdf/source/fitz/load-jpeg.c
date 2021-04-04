@@ -211,9 +211,12 @@ static int float_can_be_int(float x)
 	return fabsf(x - (float)(int) x) < 1;
 }
 
-static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int *yres)
+static uint8_t exif_orientation_to_mupdf[9] = { 0, 1, 5, 3, 7, 6, 4, 8, 2 };
+
+static int extract_exif_resolution(jpeg_saved_marker_ptr marker,
+	int *xres, int *yres, uint8_t *orientation)
 {
-	int is_big_endian;
+	int is_big_endian, orient;
 	const unsigned char *data;
 	unsigned int offset, ifd_len, res_type = 0;
 	float x_res = 0, y_res = 0;
@@ -242,6 +245,13 @@ static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int 
 		unsigned int value_off = read_value(data + offset + 8, 4, is_big_endian) + 6;
 		switch (tag)
 		{
+		case 0x112:
+			if (type == 3 && count == 1) {
+				orient = read_value(data + offset + 8, 2, is_big_endian);
+				if (orient >= 1 && orient <= 8 && orientation)
+					*orientation = exif_orientation_to_mupdf[orient];
+			}
+			break;
 		case 0x11A:
 			if (type == 5 && value_off > offset && value_off <= marker->data_length - 8)
 				x_res = 1.0f * read_value(data + value_off, 4, is_big_endian) / read_value(data + value_off + 4, 4, is_big_endian);
@@ -372,7 +382,7 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 
 		image = fz_new_pixmap(ctx, colorspace, cinfo.output_width, cinfo.output_height, NULL, 0);
 
-		if (extract_exif_resolution(cinfo.marker_list, &image->xres, &image->yres))
+		if (extract_exif_resolution(cinfo.marker_list, &image->xres, &image->yres, NULL))
 			/* XPS prefers EXIF resolution to JFIF density */;
 		else if (extract_app13_resolution(cinfo.marker_list, &image->xres, &image->yres))
 			/* XPS prefers APP13 resolution to JFIF density */;
@@ -438,7 +448,7 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 }
 
 void
-fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *xp, int *yp, int *xresp, int *yresp, fz_colorspace **cspacep)
+fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *xp, int *yp, int *xresp, int *yresp, fz_colorspace **cspacep, uint8_t *orientation)
 {
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr err;
@@ -446,6 +456,8 @@ fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *
 	fz_colorspace *icc = NULL;
 
 	*cspacep = NULL;
+	if (orientation)
+		*orientation = 0;
 
 	cinfo.mem = NULL;
 	cinfo.global_state = 0;
@@ -487,7 +499,7 @@ fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *
 		if (!*cspacep)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot determine colorspace");
 
-		if (extract_exif_resolution(cinfo.marker_list, xresp, yresp))
+		if (extract_exif_resolution(cinfo.marker_list, xresp, yresp, orientation))
 			/* XPS prefers EXIF resolution to JFIF density */;
 		else if (extract_app13_resolution(cinfo.marker_list, xresp, yresp))
 			/* XPS prefers APP13 resolution to JFIF density */;

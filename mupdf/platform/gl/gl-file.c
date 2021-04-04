@@ -28,11 +28,13 @@ static struct
 	struct input input_dir;
 	struct input input_file;
 	struct list list_dir;
+	char original_file_name[PATH_MAX];
 	char curdir[PATH_MAX];
 	int count;
 	int max;
 	struct entry *files;
 	int selected;
+	int confirm;
 } fc;
 
 static int cmp_entry(const void *av, const void *bv)
@@ -331,13 +333,13 @@ int ui_open_file(char filename[PATH_MAX], const char *label)
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			int disabled = (fc.selected < 0);
-				ui_layout(R, NONE, CENTER, 0, 0);
+			ui_layout(R, NONE, CENTER, 0, 0);
 			if (ui_button_aux("Open", disabled) || (!disabled && !ui.focus && ui.key == KEY_ENTER))
-				{
-					fz_snprintf(filename, PATH_MAX, "%s/%s", fc.curdir, fc.files[fc.selected].name);
-					rv = 1;
-				}
-				ui_spacer();
+			{
+				fz_snprintf(filename, PATH_MAX, "%s/%s", fc.curdir, fc.files[fc.selected].name);
+				rv = 1;
+			}
+			ui_spacer();
 			ui_layout(ALL, X, CENTER, 0, 0);
 			if (ui_input(&fc.input_dir, 0, 1) == UI_INPUT_ACCEPT)
 				load_dir(fc.input_dir.text);
@@ -404,6 +406,8 @@ void ui_init_save_file(const char *path, int (*filter)(const char *fn))
 		load_dir(".");
 		ui_input_init(&fc.input_file, dir);
 	}
+	fz_snprintf(fc.original_file_name, PATH_MAX, "%s/%s", fc.curdir, fc.input_file.text);
+	fc.confirm = 0;
 }
 
 static void bump_file_version(int dir)
@@ -429,9 +433,37 @@ static void bump_file_version(int dir)
 	}
 }
 
+static int ui_save_file_confirm(char *filename)
+{
+	int rv = 0;
+	ui_dialog_begin(500, (ui.gridsize+4)*3 + ui.lineheight*5);
+	ui_layout(T, NONE, NW, 2, 2);
+	ui_label("%C File %s already exists!", 0x26a0, filename); /* WARNING SIGN */
+	ui_label("Do you want to replace it?");
+	ui_layout(B, X, S, 2, 2);
+	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
+	{
+		ui_layout(R, NONE, S, 0, 0);
+		if (ui_button("Replace"))
+			rv = 1;
+		ui_spacer();
+		ui_layout(L, NONE, S, 0, 0);
+		if (ui_button("Cancel") || ui.key == KEY_ESCAPE)
+			fc.confirm = 0;
+	}
+	ui_panel_end();
+	ui_dialog_end();
+	return rv;
+}
+
 int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void), const char *label)
 {
 	int i, rv = 0;
+
+	if (fc.confirm)
+	{
+		return ui_save_file_confirm(filename);
+	}
 
 	ui_panel_begin(0, 0, 4, 4, 1);
 	{
@@ -471,6 +503,16 @@ int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void), const char 
 			{
 				fz_snprintf(filename, PATH_MAX, "%s/%s", fc.curdir, fc.input_file.text);
 				rv = 1;
+
+				/* Show confirmation dialog if we would overwrite another file. */
+				if (strcmp(filename, fc.original_file_name))
+				{
+					if (fz_file_exists(ctx, filename))
+					{
+						fc.confirm = 1;
+						rv = 0;
+					}
+				}
 			}
 			ui_spacer();
 			if (ui_button("\xe2\x9e\x95")) /* U+2795 HEAVY PLUS */

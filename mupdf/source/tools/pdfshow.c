@@ -396,6 +396,8 @@ static void showform(void)
 
 static int isnumber(char *s)
 {
+	if (*s == '-')
+		s++;
 	while (*s)
 	{
 		if (*s < '0' || *s > '9')
@@ -450,7 +452,11 @@ static void showpath(char *path, pdf_obj *obj)
 				}
 			}
 			else if (isnumber(part) && pdf_is_array(ctx, obj))
-				showpath(path, pdf_array_get(ctx, obj, atoi(part)-1));
+			{
+				int num = atoi(part);
+				num = num < 0 ? pdf_array_len(ctx, obj) + num : num - 1;
+				showpath(path, pdf_array_get(ctx, obj, num));
+			}
 			else
 				showpath(path, pdf_dict_gets(ctx, obj, part));
 		}
@@ -493,7 +499,11 @@ static void showpathpage(char *path)
 				}
 			}
 			else if (isnumber(part))
-				showpath(path, pdf_lookup_page_obj(ctx, doc, atoi(part)-1));
+			{
+				int num = atoi(part);
+				num = num < 0 ? pdf_count_pages(ctx, doc) + num : num - 1;
+				showpath(path, pdf_lookup_page_obj(ctx, doc, num));
+			}
 			else
 				fz_write_string(ctx, out, "null\n");
 		}
@@ -519,11 +529,14 @@ static void showpathroot(char *path)
 			showpathpage(list);
 		else if (isnumber(part))
 		{
-			pdf_obj *num = pdf_new_indirect(ctx, doc, atoi(part), 0);
+			pdf_obj *obj;
+			int num = atoi(part);
+			num = num < 0 ? pdf_xref_len(ctx, doc) + num : num;
+			obj = pdf_new_indirect(ctx, doc, num, 0);
 			fz_try(ctx)
-				showpath(list, num);
+				showpath(list, obj);
 			fz_always(ctx)
-				pdf_drop_obj(ctx, num);
+				pdf_drop_obj(ctx, obj);
 			fz_catch(ctx)
 				;
 		}

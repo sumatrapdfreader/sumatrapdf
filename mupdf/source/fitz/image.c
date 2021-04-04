@@ -1197,6 +1197,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 	fz_image *image = NULL;
 	int type;
 	int bpc;
+	uint8_t orientation = 0;
 
 	if (len < 8)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown image file format");
@@ -1212,7 +1213,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 		fz_load_jpx_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
 		break;
 	case FZ_IMAGE_JPEG:
-		fz_load_jpeg_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
+		fz_load_jpeg_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace, &orientation);
 		break;
 	case FZ_IMAGE_PNG:
 		fz_load_png_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
@@ -1245,6 +1246,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 		if (type == FZ_IMAGE_JPEG)
 			bc->params.u.jpeg.color_transform = -1;
 		image = fz_new_image_from_compressed_buffer(ctx, w, h, bpc, cspace, xres, yres, 0, 0, NULL, NULL, bc, NULL);
+		image->orientation = orientation;
 	}
 	fz_always(ctx)
 		fz_drop_colorspace(ctx, cspace);
@@ -1310,6 +1312,63 @@ fz_image_resolution(fz_image *image, int *xres, int *yres)
 			*yres = SANE_DPI;
 		}
 	}
+}
+
+uint8_t fz_image_orientation(fz_context *ctx, fz_image *image)
+{
+	return image ? image->orientation : 0;
+}
+
+fz_matrix fz_image_orientation_matrix(fz_context *ctx, fz_image *image)
+{
+	fz_matrix m;
+
+	switch (image ? image->orientation : 0)
+	{
+	case 0:
+	case 1: /* 0 degree rotation */
+		m.a =  1; m.b =  0;
+		m.c =  0; m.d =  1;
+		m.e =  0; m.f =  0;
+		break;
+	case 2: /* 90 degree ccw */
+		m.a =  0; m.b = -1;
+		m.c =  1; m.d =  0;
+		m.e =  0; m.f =  1;
+		break;
+	case 3: /* 180 degree ccw */
+		m.a = -1; m.b =  0;
+		m.c =  0; m.d = -1;
+		m.e =  1; m.f =  1;
+		break;
+	case 4: /* 270 degree ccw */
+		m.a =  0; m.b =  1;
+		m.c = -1; m.d =  0;
+		m.e =  1; m.f =  0;
+		break;
+	case 5: /* flip on X */
+		m.a = -1; m.b = 0;
+		m.c =  0; m.d = 1;
+		m.e =  1; m.f = 0;
+		break;
+	case 6: /* flip on X, then rotate ccw by 90 degrees */
+		m.a =  0; m.b =  1;
+		m.c =  1; m.d =  0;
+		m.e =  0; m.f =  0;
+		break;
+	case 7: /* flip on X, then rotate ccw by 180 degrees */
+		m.a =  1; m.b =  0;
+		m.c =  0; m.d = -1;
+		m.e =  0; m.f =  1;
+		break;
+	case 8: /* flip on X, then rotate ccw by 270 degrees */
+		m.a =  0; m.b = -1;
+		m.c = -1; m.d =  0;
+		m.e =  1; m.f =  1;
+		break;
+	}
+
+	return m;
 }
 
 typedef struct fz_display_list_image_s

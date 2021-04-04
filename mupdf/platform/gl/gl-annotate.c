@@ -107,7 +107,7 @@ static void save_pdf_options(void)
 
 	fz_try(ctx)
 	{
-		if (pdf_count_signatures(ctx, pdf))
+		if (pdf_count_signatures(ctx, pdf) && !save_opts.do_incremental)
 		{
 			if (can_be_incremental)
 				ui_label("WARNING: Saving non-incrementally will break existing signatures");

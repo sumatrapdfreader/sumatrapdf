@@ -162,10 +162,10 @@ class LogPrefixScope:
     def __init__( self, prefix):
         self.prefix = prefix
     def __enter__( self):
-        g_log_prefixe_scopes.items.append( self.prefix)
+        g_log_prefix_scopes.items.append( self.prefix)
     def __exit__( self, exc_type, exc_value, traceback):
         global g_log_prefix
-        g_log_prefixe_scopes.items.pop()
+        g_log_prefix_scopes.items.pop()
 
 
 g_log_delta = 0
@@ -192,7 +192,7 @@ class LogDeltaScope:
 # Special item that can be inserted into <g_log_prefixes> to enable
 # temporary addition of text into log prefixes.
 #
-g_log_prefixe_scopes = LogPrefixScopes()
+g_log_prefix_scopes = LogPrefixScopes()
 
 # List of items that form prefix for all output from log().
 #
@@ -216,7 +216,6 @@ def log_text( text=None, caller=1, nv=True):
     if isinstance( caller, int):
         caller += 1
     prefix = ''
-    prefix += g_log_prefixe_scopes()
     for p in g_log_prefixes:
         if callable( p):
             if isinstance( p, LogPrefixFileLine):
@@ -426,8 +425,8 @@ def force_line_buffering():
     '''
     stdout0 = sys.stdout
     stderr0 = sys.stderr
-    sys.stdout = os.fdopen( os.dup( sys.stdout.fileno()), 'w', 1)
-    sys.stderr = os.fdopen( os.dup( sys.stderr.fileno()), 'w', 1)
+    sys.stdout = os.fdopen( sys.stdout.fileno(), 'w', 1)
+    sys.stderr = os.fdopen( sys.stderr.fileno(), 'w', 1)
     return stdout0, stderr0
 
 
@@ -1186,6 +1185,17 @@ def remove( path):
     shutil.rmtree( path, ignore_errors=1)
     assert not os.path.exists( path)
 
+def remove_dir_contents( path):
+    '''
+    Removes all items in directory <path>; does not remove <path> itself.
+    '''
+    for leaf in os.listdir( path):
+        path2 = os.path.join( path, leaf)
+        remove(path2)
+
+def ensure_empty_dir( path):
+    os.makedirs( path, exist_ok=True)
+    remove_dir_contents( path)
 
 # Things for figuring out whether files need updating, using mtimes.
 #
@@ -1343,7 +1353,17 @@ def build(
     return True
 
 
-def link_l_flags( sos):
+def link_l_flags( sos, ld_origin=None):
+    '''
+    Returns link flags suitable for linking with each .so in <sos>.
+
+    We return -L flags for each unique parent directory and -l flags for each
+    leafname.
+
+    In addition on Linux we append " -Wl,-rpath='$ORIGIN'" so that libraries
+    will be searched for next to each other. This can be disabled by setting
+    ld_origin to false.
+    '''
     dirs = set()
     names = []
     if isinstance( sos, str):
@@ -1365,4 +1385,10 @@ def link_l_flags( sos):
         ret += f' -L {dir_}'
     for name in names:
         ret += f' -l {name}'
+    if ld_origin is None:
+        if os.uname()[0] == 'Linux':
+            ld_origin = True
+    if ld_origin:
+        ret += " -Wl,-rpath='$ORIGIN'"
+    #log('{sos=} {ld_origin=} {ret=}')
     return ret

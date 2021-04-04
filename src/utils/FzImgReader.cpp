@@ -24,12 +24,14 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
     int w = 0, h = 0, xres = 0, yres = 0;
     fz_colorspace* cs = nullptr;
     fz_stream* stm = nullptr;
+    uint8_t orient = 0;
 
     fz_var(cs);
     fz_var(stm);
+    fz_var(orient);
 
     fz_try(ctx) {
-        fz_load_jpeg_info(ctx, data, len, &w, &h, &xres, &yres, &cs);
+        fz_load_jpeg_info(ctx, data, len, &w, &h, &xres, &yres, &cs, &orient);
         stm = fz_open_memory(ctx, data, len);
         stm = fz_open_dctd(ctx, stm, -1, 0, nullptr);
     }
