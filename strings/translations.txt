@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f319b2600ba02cccbb909f3e23d4a9892ca46d45
+f349c3507b3df7ead4beaabaa57a15ccb2eda20a
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -13005,7 +13005,7 @@ kr:PDF-XChange로 열기(&I)
 ku:PDF-XChange کردنەوە &بەهۆی
 kw:Ygeri yn PDF-XChange
 lt:Atverti naudojant „PDF-&XChange“
-lv:Atvērt ar &PDF-XChange
+lv:Atvērt programmā &PDF-XChange
 mk:Отвори со PDF-XChange
 my:Buka &menggunakan PDF-XChange
 ne:PDF-XChange मा &खोल्नुहोस्
@@ -13153,7 +13153,7 @@ kr:%s(으)로 열기
 ku:کردنەوە لە %s
 kw:Ygeri yn %s
 lt:Atidaryti su %s
-lv:Atvērt ar %s
+lv:Atvērt programmā %s
 mk:Отвори во %s
 my:Buka dalam %s
 ne:%s मा खोल्नुहोस्
@@ -13217,7 +13217,7 @@ kr:Adobe Reader로 열기(&A)
 ku:Adobe Reader کردنەوە &بەهۆی
 kw:Ygeri yn &Adobe Reader
 lt:Atverti naudojant „&Adobe Reader“
-lv:Atvērt ar &Adobe Reader
+lv:Atvērt programmā &Adobe Reader
 mk:Отвори со &Adobe Reader
 my:Buka menggunakan &Adobe Reader
 ne:Adobe Reader मा &खोल्नुहोस्
@@ -13282,7 +13282,7 @@ kr:Foxit Reader로 열기(&F)
 ku:Foxit Reader کردنەوە &بەهۆی
 kw:Ygeri yn &Foxit Reader
 lt:Atverti naudojant „&Foxit Reader“
-lv:Atvērt ar &Foxit Reader
+lv:Atvērt programmā &Foxit Reader
 mk:Отвори со &Foxit Reader
 my:Buka dengan &Foxit Reader
 ne:Foxit Reader मा &खोल्नुहोस्
@@ -13346,7 +13346,7 @@ kr:Microsoft HTML Help로 열기(&M)
 ku:Microsoft HTML کردنەوە  بەهۆی &یارمەتی
 kw:Ygeri yn Microsoft HTML Help
 lt:Atverti su &Microsoft HTML Help
-lv:Atvērt ar &Microsoft HTML Help
+lv:Atvērt &Microsoft HTML palīdzības vadīklā
 mk:Отвори со Microsoft HTML Help
 my:Buka menggunakan &Microsoft HTML Help
 ne:Microsoft HTML Help मा &खोल्नुहोस्
@@ -13410,7 +13410,7 @@ kr:Microsoft XPS-Viewer로 열기(&M)
 ku:Microsoft XPS کردنەوەی بەهۆی &پیشاندەری
 kw:Ygeri yn Microsoft XPS-Viewer
 lt:Atverti su &Microsoft XPS-Viewer
-lv:Atvērt ar &Microsoft XPS-Viewer
+lv:Atvērt &Microsoft XPS skatītājā
 mk:Отвори со Microsoft XPS-Viewer
 my:Buka menggunakan &Microsoft XPS-Viewer
 ne:Microsoft XPS-Viewer मा &खोल्नुहोस्

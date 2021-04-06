@@ -11687,14 +11687,14 @@ const char * gTranslations_lv =
   "Lappu\305\241u skaits:\0"\
   "Labi\0"\
   "Atv\304\223rt\0"\
-  "Atv\304\223rt ar &PDF-XChange\0"\
+  "Atv\304\223rt programm\304\201 &PDF-XChange\0"\
   "Atv\304\223rt iegultu PDF\0"\
   "Atv\304\223rt dokumentu...\0"\
-  "Atv\304\223rt ar %s\0"\
-  "Atv\304\223rt ar &Adobe Reader\0"\
-  "Atv\304\223rt ar &Foxit Reader\0"\
-  "Atv\304\223rt ar &Microsoft HTML Help\0"\
-  "Atv\304\223rt ar &Microsoft XPS-Viewer\0"\
+  "Atv\304\223rt programm\304\201 %s\0"\
+  "Atv\304\223rt programm\304\201 &Adobe Reader\0"\
+  "Atv\304\223rt programm\304\201 &Foxit Reader\0"\
+  "Atv\304\223rt &Microsoft HTML pal\304\253dz\304\253bas vad\304\253kl\304\201\0"\
+  "Atv\304\223rt &Microsoft XPS skat\304\253t\304\201j\304\201\0"\
   "&Rekviz\304\253ti\0"\
   "&Rekviz\304\253ti\tCtrl+D\0"\
   "PDF dokuments\0"\
