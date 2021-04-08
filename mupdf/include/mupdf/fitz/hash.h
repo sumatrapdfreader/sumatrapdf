@@ -86,4 +86,17 @@ typedef void (fz_hash_table_for_each_fn)(fz_context *ctx, void *state, void *key
 */
 void fz_hash_for_each(fz_context *ctx, fz_hash_table *table, void *state, fz_hash_table_for_each_fn *callback);
 
+/**
+	Callback function called on each key/value pair in the hash
+	table, when fz_hash_filter is run to remove entries where the
+	callback returns true.
+*/
+typedef int (fz_hash_table_filter_fn)(fz_context *ctx, void *state, void *key, int keylen, void *val);
+
+/**
+	Iterate over the entries in a hash table, removing all the ones where callback returns true.
+	Does NOT free the value of the entry, so the caller is expected to take care of this.
+*/
+void fz_hash_filter(fz_context *ctx, fz_hash_table *table, void *state, fz_hash_table_filter_fn *callback);
+
 #endif

@@ -25,6 +25,12 @@ void pdf_update_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *obj
 */
 void pdf_update_stream(fz_context *ctx, pdf_document *doc, pdf_obj *ref, fz_buffer *buf, int compressed);
 
+/*
+	Return true if 'obj' is an indirect reference to an object that is held
+	by the "local" xref section.
+*/
+int pdf_is_local_object(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
+
 pdf_obj *pdf_add_object(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 pdf_obj *pdf_add_object_drop(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 pdf_obj *pdf_add_stream(fz_context *ctx, pdf_document *doc, fz_buffer *buf, pdf_obj *obj, int compressed);

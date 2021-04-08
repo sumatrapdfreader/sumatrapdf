@@ -86,10 +86,12 @@ struct ui
 	const void *hot, *active, *focus;
 	int last_cursor, cursor;
 
+	float scale;
 	int fontsize;
 	int baseline;
 	int lineheight;
 	int gridsize;
+	int padsize;
 
 	struct layout *layout;
 	fz_irect *cavity;
@@ -104,6 +106,7 @@ struct ui
 
 extern struct ui ui;
 
+void ui_init_dpi();
 void ui_init(int w, int h, const char *title);
 void ui_quit(void);
 void ui_invalidate(void);

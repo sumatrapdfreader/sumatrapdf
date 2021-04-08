@@ -26,7 +26,7 @@ pdf_find_font_resource(fz_context *ctx, pdf_document *doc, int type, int encodin
 
 	key->type = type;
 	key->encoding = encoding;
-	key->local_xref = doc->local_xref;
+	key->local_xref = doc->local_xref_nesting > 0;
 
 	res = fz_hash_find(ctx, doc->resources.fonts, (void *)key);
 	if (res)
@@ -43,6 +43,24 @@ pdf_insert_font_resource(fz_context *ctx, pdf_document *doc, pdf_font_resource_k
 	else
 		res = pdf_keep_obj(ctx, obj);
 	return pdf_keep_obj(ctx, res);
+}
+
+static int purge_local_font_resource(fz_context *ctx, void *state, void *key_, int keylen, void *val)
+{
+	pdf_font_resource_key *key = key_;
+	if (key->local_xref)
+	{
+		pdf_drop_obj(ctx, val);
+		return 1;
+	}
+	return 0;
+}
+
+void
+pdf_purge_local_font_resources(fz_context *ctx, pdf_document *doc)
+{
+	if (doc->resources.fonts)
+		fz_hash_filter(ctx, doc->resources.fonts, NULL, purge_local_font_resource);
 }
 
 void

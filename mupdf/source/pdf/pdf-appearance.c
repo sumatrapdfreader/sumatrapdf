@@ -2582,23 +2582,36 @@ void pdf_annot_pop_and_discard_local_xref(fz_context *ctx, pdf_annot *annot)
 
 	--doc->local_xref_nesting;
 	assert(doc->local_xref_nesting == 0);
+	pdf_purge_local_font_resources(ctx, doc);
 	pdf_drop_local_xref(ctx, doc->local_xref);
 	doc->local_xref = NULL;
+}
+
+static pdf_obj *pdf_current_appearance_stream(fz_context *ctx, pdf_annot *annot, pdf_obj *subtype)
+{
+	pdf_obj *as = pdf_dict_get(ctx, annot->obj, PDF_NAME(AS));
+	pdf_obj *ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
+	pdf_obj *ap_n = pdf_dict_get(ctx, ap, PDF_NAME(N));
+	if (annot->is_hot && annot->is_active && subtype == PDF_NAME(Widget))
+	{
+		pdf_obj *ap_d = pdf_dict_get(ctx, ap, PDF_NAME(D));
+		if (ap_d)
+			ap_n = ap_d;
+	}
+	if (!pdf_is_stream(ctx, ap_n))
+		ap_n = pdf_dict_get(ctx, ap_n, as);
+	return ap_n;
 }
 
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_obj *subtype;
-	pdf_obj *ap, *ap_n, *as, *ft;
+	pdf_obj *ft = NULL;
+	pdf_obj *ap_n;
 	int pop_local_xref = 1;
 
-	/* Must have any local xref in place in order to check if it's
-	 * dirty. */
+	/* Must have any local xref in place in order to check if it's dirty. */
 	pdf_annot_push_local_xref(ctx, annot);
-
-	/* Check if the field is dirtied by JS events */
-	if (pdf_obj_is_dirty(ctx, annot->obj))
-		annot->needs_new_ap = 1;
 
 	pdf_begin_implicit_operation(ctx, annot->page->doc);
 
@@ -2606,48 +2619,54 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 
 	fz_try(ctx)
 	{
-		int local_synthesis;
+		int local_synthesis = 0;
 
+		/* Never update Popup and Link annotations */
 		subtype = pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype));
 		if (subtype == PDF_NAME(Popup) || subtype == PDF_NAME(Link))
 			break;
 
-		/* Check if the current appearance has been swapped */
-		as = pdf_dict_get(ctx, annot->obj, PDF_NAME(AS));
-		ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
-		ap_n = pdf_dict_get(ctx, ap, PDF_NAME(N));
-		if (annot->is_hot && annot->is_active && subtype == PDF_NAME(Widget))
+		/* Never update signed Signature widgets */
+		if (subtype == PDF_NAME(Widget))
 		{
-			pdf_obj *ap_d = pdf_dict_get(ctx, ap, PDF_NAME(D));
-			if (ap_d)
-				ap_n = ap_d;
+			ft = pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(FT));
+			if (ft == PDF_NAME(Sig))
+			{
+				/* We cannot synthesise an appearance for a signed Sig, so don't even try. */
+				if (pdf_signature_is_signed(ctx, annot->page->doc, annot->obj))
+					break;
+			}
 		}
-		if (!pdf_is_stream(ctx, ap_n))
-			ap_n = pdf_dict_get(ctx, ap_n, as);
 
-		ft = pdf_dict_get(ctx, annot->obj, PDF_NAME(FT));
+		/* Check if the field is dirtied by JS events */
+		if (pdf_obj_is_dirty(ctx, annot->obj))
+			annot->needs_new_ap = 1;
 
-		/* We cannot synthesise an appearance for a signed Sig, so
-		 * don't even try. Attempting to, will move the object
-		 * into the new incremental section, which will
-		 * invalidate the signature.
-		 *
-		 * For an unsigned Sig, use local synthesis even if there
-		 * is an existing appearance stream, because often they
-		 * are blank and we want the "sign" arrow to be visible. */
-		local_synthesis = ((!ap_n || pdf_name_eq(ctx, ft, PDF_NAME(Sig))) && !pdf_signature_is_signed(ctx, annot->page->doc, annot->obj));
+		/* Find the current appearance stream, if one exists. */
+		ap_n = pdf_current_appearance_stream(ctx, annot, subtype);
 
+		/* If there is no appearance stream, we need to create a local one for display purposes. */
+		if (!ap_n)
+			local_synthesis = 1;
+
+		/* Ignore appearance streams not created by us (so not local)
+		 * for unsigned digital signature widgets. They are often blank
+		 * and we want the "sign" arrow to be visible. Never write back
+		 * the forced appearance stream for unsigned signatures. */
+		if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Sig))
+		{
+			if (ap_n && !pdf_is_local_object(ctx, annot->page->doc, ap_n))
+				local_synthesis = 1;
+		}
+
+		/* We need to put this appearance stream back into the document. */
 		if (annot->needs_new_ap)
-		{
-			/* We need to put this appearance stream back
-			 * into the document. */
 			local_synthesis = 0;
-		}
 
 		if (local_synthesis || annot->needs_new_ap)
 		{
+			fz_display_list *dlist;
 			fz_rect rect, bbox;
-			fz_matrix matrix = fz_identity;
 			fz_buffer *buf;
 			pdf_obj *res = NULL;
 			pdf_obj *new_ap_n = NULL;
@@ -2655,8 +2674,9 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 			fz_var(new_ap_n);
 
 #ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
-			fz_write_printf(ctx, fz_stddbg(ctx), "Update Appearance:\n");
+			fz_write_printf(ctx, fz_stddbg(ctx), "Update Appearance: %d\n", pdf_to_num(ctx, annot->obj));
 			pdf_debug_obj(ctx, annot->obj);
+			fz_write_printf(ctx, fz_stddbg(ctx), "\n");
 #endif
 
 			if (local_synthesis)
@@ -2668,66 +2688,55 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 			}
 			else
 			{
+#ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
+				fz_write_printf(ctx, fz_stddbg(ctx), "Non-Local synthesis\n");
+#endif
 				/* We don't want to be using any local xref, so
 				 * bin any that we have. */
 				pdf_annot_pop_and_discard_local_xref(ctx, annot);
 				/* Binning the xref may leave us holding pointers
-				 * to the wrong versions of as, ap, ap_n etc. */
-				as = pdf_dict_get(ctx, annot->obj, PDF_NAME(AS));
-				ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
-				ap_n = pdf_dict_get(ctx, ap, PDF_NAME(N));
-				if (annot->is_hot && annot->is_active && subtype == PDF_NAME(Widget))
-				{
-					pdf_obj *ap_d = pdf_dict_get(ctx, ap, PDF_NAME(D));
-					if (ap_d)
-						ap_n = ap_d;
-				}
-				if (!pdf_is_stream(ctx, ap_n))
-					ap_n = pdf_dict_get(ctx, ap_n, as);
+				 * to the wrong versions of ap_n. */
+				ap_n = pdf_current_appearance_stream(ctx, annot, subtype);
 				pop_local_xref = 0;
 			}
 
 			annot->needs_new_ap = 0;
 
 			/* Special case for Btn widgets that need multiple appearance streams. */
-			if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Widget)))
+			if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Btn))
 			{
-				if (pdf_name_eq(ctx, pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(FT)), PDF_NAME(Btn)))
-				{
-					pdf_update_button_appearance(ctx, annot);
-					pdf_clean_obj(ctx, annot->obj);
-					break;
-				}
+				pdf_update_button_appearance(ctx, annot);
+				pdf_clean_obj(ctx, annot->obj);
+				break; /* all done here */
 			}
 
-			/* Special case for unsigned signature widget, which are most easily created via a display list */
-			if (pdf_name_eq(ctx, ft, PDF_NAME(Sig)) && !pdf_signature_is_signed(ctx, annot->page->doc, annot->obj))
+			/* Special case for unsigned signature widgets,
+			 * which are most easily created via a display list. */
+			if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Sig))
 			{
-				fz_rect rect = pdf_bound_annot(ctx, annot);
-				fz_display_list *dlist = pdf_signature_appearance_unsigned(ctx, rect, pdf_annot_language(ctx, annot));
+				rect = pdf_bound_annot(ctx, annot);
+				dlist = pdf_signature_appearance_unsigned(ctx, rect, pdf_annot_language(ctx, annot));
 				fz_try(ctx)
-				{
 					pdf_update_appearance_from_display_list(ctx, annot, rect, dlist);
-				}
 				fz_always(ctx)
-				{
 					fz_drop_display_list(ctx, dlist);
-				}
 				fz_catch(ctx)
-				{
 					fz_rethrow(ctx);
-				}
+				pdf_clean_obj(ctx, annot->obj);
+				break; /* all done here */
 			}
 
 			buf = fz_new_buffer(ctx, 1024);
 			fz_try(ctx)
 			{
+				fz_matrix matrix = fz_identity;
 				rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
 				pdf_write_appearance(ctx, annot, buf, &rect, &bbox, &matrix, &res);
 				pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(Rect), rect);
 
 				if (!ap_n)
 				{
+					pdf_obj *ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
 					if (!ap)
 					{
 						ap = pdf_new_dict(ctx, annot->page->doc, 1);

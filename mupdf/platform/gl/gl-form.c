@@ -75,13 +75,13 @@ static void do_clear_signature(void)
 static void cert_password_dialog(void)
 {
 	int is;
-	ui_dialog_begin(400, (ui.gridsize+4)*3);
+	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3);
 	{
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 		ui_label("Password:");
 		is = ui_input(&cert_password, 200, 1);
 
-		ui_layout(B, X, NW, 2, 2);
+		ui_layout(B, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(R, NONE, S, 0, 0);
@@ -123,16 +123,16 @@ static void sig_sign_dialog(void)
 {
 	const char *label = pdf_field_label(ctx, sig_widget->obj);
 
-	ui_dialog_begin(400, (ui.gridsize+4)*3 + ui.lineheight*10);
+	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3 + ui.lineheight*10);
 	{
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 
 		ui_label("%s", label);
 		ui_spacer();
 
 		ui_label("Would you like to sign this field?");
 
-		ui_layout(B, X, NW, 2, 2);
+		ui_layout(B, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(R, NONE, S, 0, 0);
@@ -158,9 +158,9 @@ static void sig_verify_dialog(void)
 {
 	const char *label = pdf_field_label(ctx, sig_widget->obj);
 
-	ui_dialog_begin(400, (ui.gridsize+4)*3 + ui.lineheight*10);
+	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3 + ui.lineheight*10);
 	{
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 
 		ui_label("%s", label);
 		ui_spacer();
@@ -192,7 +192,7 @@ static void sig_verify_dialog(void)
 		else
 			ui_label("This signature was invalidated %d updates ago by the signed fields being changed.", sig_valid_until);
 
-		ui_layout(B, X, NW, 2, 2);
+		ui_layout(B, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(L, NONE, S, 0, 0);
@@ -265,13 +265,13 @@ static void tx_dialog(void)
 	int lbl_h = ui_break_lines((char*)label, NULL, 20, 394, NULL);
 	int is;
 
-	ui_dialog_begin(400, (ui.gridsize+4)*3 + ui.lineheight*(tx_h+lbl_h-2));
+	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3 + ui.lineheight*(tx_h+lbl_h-2));
 	{
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 		ui_label("%s", label);
 		is = ui_input(&tx_input, 200, tx_h);
 
-		ui_layout(B, X, NW, 2, 2);
+		ui_layout(B, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(R, NONE, S, 0, 0);
@@ -320,9 +320,9 @@ static void ch_dialog(void)
 	pdf_choice_widget_options(ctx, ch_widget, 0, (const char **)options);
 	value = pdf_field_value(ctx, ch_widget->obj);
 
-	ui_dialog_begin(400, (ui.gridsize+4)*3 + ui.lineheight*(label_h-1));
+	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3 + ui.lineheight*(label_h-1));
 	{
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 
 		ui_label("%s", label);
 		choice = ui_select("Widget/Ch", value, (const char **)options, n);
@@ -333,7 +333,7 @@ static void ch_dialog(void)
 			trace_field_value(ch_widget, options[choice]);
 		}
 
-		ui_layout(B, X, NW, 2, 2);
+		ui_layout(B, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(R, NONE, S, 0, 0);

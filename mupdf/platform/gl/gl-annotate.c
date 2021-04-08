@@ -67,9 +67,9 @@ static void save_pdf_options(void)
 	int choice;
 	int can_be_incremental;
 
-	ui_layout(T, X, NW, 2, 2);
+	ui_layout(T, X, NW, ui.padsize, ui.padsize);
 	ui_label("PDF write options:");
-	ui_layout(T, X, NW, 4, 2);
+	ui_layout(T, X, NW, ui.padsize*2, ui.padsize);
 
 	can_be_incremental = pdf_can_be_saved_incrementally(ctx, pdf);
 
@@ -212,8 +212,8 @@ static void slow_operation_dialog(void)
 	int start_time;
 	int errored = 0;
 
-	ui_dialog_begin(400, 100);
-	ui_layout(T, X, NW, 2, 2);
+	ui_dialog_begin(16 * ui.gridsize, 4 * ui.gridsize);
+	ui_layout(T, X, NW, ui.padsize, ui.padsize);
 
 	ui_label("%s", ui_slow_operation_state.operation_text);
 
@@ -868,7 +868,7 @@ void do_annotate_panel(void)
 
 	int was_dirty = pdf->dirty;
 
-	ui_layout(T, X, NW, 2, 2);
+	ui_layout(T, X, NW, ui.padsize, ui.padsize);
 
 	if (ui_popup("CreateAnnotPopup", "Create...", 1, 16))
 	{
@@ -1185,7 +1185,7 @@ void do_annotate_panel(void)
 		}
 	}
 
-	ui_layout(B, X, NW, 2, 2);
+	ui_layout(B, X, NW, ui.padsize, ui.padsize);
 
 	if (ui_button("Save PDF..."))
 		do_save_pdf_file();
@@ -1281,7 +1281,7 @@ void do_redact_panel(void)
 		if (pdf_annot_type(ctx, annot) == PDF_ANNOT_REDACT)
 			++num_redact;
 
-	ui_layout(T, X, NW, 2, 2);
+	ui_layout(T, X, NW, ui.padsize, ui.padsize);
 
 	if (ui_button("Add Redaction"))
 		new_annot(PDF_ANNOT_REDACT);
@@ -1400,7 +1400,7 @@ void do_redact_panel(void)
 		}
 	}
 
-	ui_layout(B, X, NW, 2, 2);
+	ui_layout(B, X, NW, ui.padsize, ui.padsize);
 
 	if (ui_button("Save PDF..."))
 		do_save_pdf_file();

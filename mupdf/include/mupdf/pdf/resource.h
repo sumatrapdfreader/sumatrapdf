@@ -24,12 +24,13 @@ typedef struct
 	unsigned char digest[16];
 	int type;
 	int encoding;
-	pdf_xref *local_xref;
+	int local_xref;
 } pdf_font_resource_key;
 
 pdf_obj *pdf_find_font_resource(fz_context *ctx, pdf_document *doc, int type, int encoding, fz_font *item, pdf_font_resource_key *key);
 pdf_obj *pdf_insert_font_resource(fz_context *ctx, pdf_document *doc, pdf_font_resource_key *key, pdf_obj *obj);
 void pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc);
+void pdf_purge_local_font_resources(fz_context *ctx, pdf_document *doc);
 
 typedef struct pdf_function pdf_function;
 

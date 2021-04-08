@@ -965,6 +965,7 @@ swap_fragments(fz_context *ctx, pdf_document *doc, pdf_journal_entry *entry)
 	if (doc->local_xref_nesting != 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't undo/redo within an operation");
 
+	pdf_purge_local_font_resources(ctx, doc);
 	pdf_drop_local_xref(ctx, doc->local_xref);
 	doc->local_xref = NULL;
 
@@ -1167,6 +1168,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 			/* The local xref isn't in force, and we're about
 			 * to edit the document. This invalidates it, so
 			 * throw it away. */
+			pdf_purge_local_font_resources(ctx, doc);
 			pdf_drop_local_xref(ctx, doc->local_xref);
 			doc->local_xref = NULL;
 		}

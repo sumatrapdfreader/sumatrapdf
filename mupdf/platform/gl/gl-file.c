@@ -308,19 +308,19 @@ int ui_open_file(char filename[PATH_MAX], const char *label)
 	static int last_click_sel = -1;
 	int i, rv = 0;
 
-	ui_panel_begin(0, 0, 4, 4, 1);
+	ui_panel_begin(0, 0, ui.padsize*2, ui.padsize*2, 1);
 	{
 		if (label)
 		{
-			ui_layout(T, X, NW, 4, 2);
+			ui_layout(T, X, NW, ui.padsize*2, ui.padsize);
 			ui_label(label);
 		}
 		ui_layout(L, Y, NW, 0, 0);
-		ui_panel_begin(150, 0, 0, 0, 0);
+		ui_panel_begin(ui.gridsize*6, 0, 0, 0, 0);
 		{
-			ui_layout(T, X, NW, 2, 2);
+			ui_layout(T, X, NW, ui.padsize, ui.padsize);
 			list_drives();
-			ui_layout(B, X, NW, 2, 2);
+			ui_layout(B, X, NW, ui.padsize, ui.padsize);
 			if (ui_button("Cancel") || (!ui.focus && ui.key == KEY_ESCAPE))
 			{
 				filename[0] = 0;
@@ -329,7 +329,7 @@ int ui_open_file(char filename[PATH_MAX], const char *label)
 		}
 		ui_panel_end();
 
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			int disabled = (fc.selected < 0);
@@ -346,7 +346,7 @@ int ui_open_file(char filename[PATH_MAX], const char *label)
 		}
 		ui_panel_end();
 
-		ui_layout(ALL, BOTH, NW, 2, 2);
+		ui_layout(ALL, BOTH, NW, ui.padsize, ui.padsize);
 		ui_list_begin(&fc.list_dir, fc.count, 0, 0);
 		for (i = 0; i < fc.count; ++i)
 		{
@@ -436,11 +436,11 @@ static void bump_file_version(int dir)
 static int ui_save_file_confirm(char *filename)
 {
 	int rv = 0;
-	ui_dialog_begin(500, (ui.gridsize+4)*3 + ui.lineheight*5);
-	ui_layout(T, NONE, NW, 2, 2);
+	ui_dialog_begin(ui.gridsize*20, (ui.gridsize+7)*3);
+	ui_layout(T, NONE, NW, ui.padsize, ui.padsize);
 	ui_label("%C File %s already exists!", 0x26a0, filename); /* WARNING SIGN */
 	ui_label("Do you want to replace it?");
-	ui_layout(B, X, S, 2, 2);
+	ui_layout(B, X, S, ui.padsize, ui.padsize);
 	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 	{
 		ui_layout(R, NONE, S, 0, 0);
@@ -465,24 +465,24 @@ int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void), const char 
 		return ui_save_file_confirm(filename);
 	}
 
-	ui_panel_begin(0, 0, 4, 4, 1);
+	ui_panel_begin(0, 0, ui.padsize*2, ui.padsize*2, 1);
 	{
 		if (label)
 		{
-			ui_layout(T, X, NW, 4, 2);
+			ui_layout(T, X, NW, ui.padsize*2, ui.padsize);
 			ui_label(label);
 		}
 		ui_layout(L, Y, NW, 0, 0);
-		ui_panel_begin(150, 0, 0, 0, 0);
+		ui_panel_begin(ui.gridsize*6, 0, 0, 0, 0);
 		{
-			ui_layout(T, X, NW, 2, 2);
+			ui_layout(T, X, NW, ui.padsize, ui.padsize);
 			list_drives();
 			if (extra_panel)
 			{
 				ui_spacer();
 				extra_panel();
 			}
-			ui_layout(B, X, NW, 2, 2);
+			ui_layout(B, X, NW, ui.padsize, ui.padsize);
 			if (ui_button("Cancel") || (!ui.focus && ui.key == KEY_ESCAPE))
 			{
 				filename[0] = 0;
@@ -491,11 +491,11 @@ int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void), const char 
 		}
 		ui_panel_end();
 
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 		if (ui_input(&fc.input_dir, 0, 1) == UI_INPUT_ACCEPT)
 			load_dir(fc.input_dir.text);
 
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(R, NONE, CENTER, 0, 0);
@@ -525,7 +525,7 @@ int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void), const char 
 		}
 		ui_panel_end();
 
-		ui_layout(ALL, BOTH, NW, 2, 2);
+		ui_layout(ALL, BOTH, NW, ui.padsize, ui.padsize);
 		ui_list_begin(&fc.list_dir, fc.count, 0, 0);
 		for (i = 0; i < fc.count; ++i)
 		{

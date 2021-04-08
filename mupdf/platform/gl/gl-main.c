@@ -596,15 +596,15 @@ static char *help_dialog_text =
 static void help_dialog(void)
 {
 	static int scroll;
-	ui_dialog_begin(500, 1000);
-	ui_layout(T, X, W, 2, 2);
+	ui_dialog_begin(ui.gridsize*20, ui.gridsize*40);
+	ui_layout(T, X, W, ui.padsize, ui.padsize);
 	ui_label("MuPDF %s", FZ_VERSION);
 	ui_spacer();
-	ui_layout(B, NONE, S, 2, 2);
+	ui_layout(B, NONE, S, ui.padsize, ui.padsize);
 	if (ui_button("Okay") || ui.key == KEY_ENTER || ui.key == KEY_ESCAPE)
 		ui.dialog = NULL;
 	ui_spacer();
-	ui_layout(ALL, BOTH, CENTER, 2, 2);
+	ui_layout(ALL, BOTH, CENTER, ui.padsize, ui.padsize);
 	ui_label_with_scrollbar(help_dialog_text, 0, 0, &scroll);
 	ui_dialog_end();
 }
@@ -612,10 +612,10 @@ static void help_dialog(void)
 static char error_message[256];
 static void error_dialog(void)
 {
-	ui_dialog_begin(500, (ui.gridsize+4)*4);
-	ui_layout(T, NONE, NW, 2, 2);
+	ui_dialog_begin(ui.gridsize*20, (ui.gridsize+ui.padsize*2)*4);
+	ui_layout(T, NONE, NW, ui.padsize, ui.padsize);
 	ui_label("%C %s", 0x1f4a3, error_message); /* BOMB */
-	ui_layout(B, NONE, S, 2, 2);
+	ui_layout(B, NONE, S, ui.padsize, ui.padsize);
 	if (ui_button("Quit") || ui.key == KEY_ENTER || ui.key == KEY_ESCAPE || ui.key == 'q')
 		glutLeaveMainLoop();
 	ui_dialog_end();
@@ -632,10 +632,10 @@ void ui_show_error_dialog(const char *fmt, ...)
 static char warning_message[256];
 static void warning_dialog(void)
 {
-	ui_dialog_begin(500, (ui.gridsize+4)*4);
-	ui_layout(T, NONE, NW, 2, 2);
+	ui_dialog_begin(ui.gridsize*20, (ui.gridsize+ui.padsize*2)*4);
+	ui_layout(T, NONE, NW, ui.padsize, ui.padsize);
 	ui_label("%C %s", 0x26a0, warning_message); /* WARNING SIGN */
-	ui_layout(B, NONE, S, 2, 2);
+	ui_layout(B, NONE, S, ui.padsize, ui.padsize);
 	if (ui_button("Okay") || ui.key == KEY_ENTER || ui.key == KEY_ESCAPE)
 		ui.dialog = NULL;
 	ui_dialog_end();
@@ -651,10 +651,10 @@ void ui_show_warning_dialog(const char *fmt, ...)
 
 static void quit_dialog(void)
 {
-	ui_dialog_begin(500, (ui.gridsize+4)*3);
-	ui_layout(T, NONE, NW, 2, 2);
+	ui_dialog_begin(ui.gridsize*20, (ui.gridsize+ui.padsize*2)*3);
+	ui_layout(T, NONE, NW, ui.padsize, ui.padsize);
 	ui_label("%C The document has unsaved changes. Are you sure you want to quit?", 0x26a0); /* WARNING SIGN */
-	ui_layout(B, X, S, 2, 2);
+	ui_layout(B, X, S, ui.padsize, ui.padsize);
 	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 	{
 		ui_layout(R, NONE, S, 0, 0);
@@ -681,10 +681,10 @@ static void quit(void)
 
 static void reload_dialog(void)
 {
-	ui_dialog_begin(500, (ui.gridsize+4)*3);
-	ui_layout(T, NONE, NW, 2, 2);
+	ui_dialog_begin(ui.gridsize*20, (ui.gridsize+ui.padsize*2)*3);
+	ui_layout(T, NONE, NW, ui.padsize, ui.padsize);
 	ui_label("%C The document has unsaved changes. Are you sure you want to reload?", 0x26a0); /* WARNING SIGN */
-	ui_layout(B, X, S, 2, 2);
+	ui_layout(B, X, S, ui.padsize, ui.padsize);
 	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 	{
 		ui_layout(R, NONE, S, 0, 0);
@@ -1184,7 +1184,7 @@ static void do_outline(fz_outline *node)
 	ui_tree_begin(&list, count_outline(node, 65535), outline_w, 0, 1);
 	do_outline_imp(&list, 65535, node, 0);
 	ui_tree_end(&list);
-	ui_splitter(&outline_w, 150, 500, R);
+	ui_splitter(&outline_w, 6*ui.gridsize, 20*ui.gridsize, R);
 }
 
 static void do_undo(void)
@@ -1200,8 +1200,8 @@ static void do_undo(void)
 	else
 		pos = 0;
 	ui_layout(L, BOTH, NW, 0, 0);
-	ui_panel_begin(outline_w, 0, 4, 4, 1);
-	ui_layout(T, X, NW, 2, 2);
+	ui_panel_begin(outline_w, 0, ui.padsize*2, ui.padsize*2, 1);
+	ui_layout(T, X, NW, ui.padsize, ui.padsize);
 	ui_label("Undo history");
 	i = count < 30 ? 30 : count;
 	ui_list_begin(&list, i, 0, ui.lineheight * i + 4);
@@ -1445,13 +1445,13 @@ static struct input input_password;
 static void password_dialog(void)
 {
 	int is;
-	ui_dialog_begin(400, (ui.gridsize+4)*3);
+	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+ui.padsize*2)*3);
 	{
-		ui_layout(T, X, NW, 2, 2);
+		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 		ui_label("Password:");
 		is = ui_input(&input_password, 200, 1);
 
-		ui_layout(B, X, NW, 2, 2);
+		ui_layout(B, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(R, NONE, S, 0, 0);
@@ -1973,7 +1973,7 @@ static void do_info(void)
 		pdf_walk_tree(ctx, form_fields, PDF_NAME(Kids), process_sigs, NULL, &list, &ft_list[0], &ft);
 	}
 
-	ui_dialog_begin(500, (14+list.len) * ui.lineheight);
+	ui_dialog_begin(ui.gridsize*20, (14+list.len) * ui.lineheight);
 	ui_layout(T, X, W, 0, 0);
 
 	if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_TITLE, buf, sizeof buf) > 0)
@@ -2169,8 +2169,8 @@ static void do_canvas(void)
 	if (search_active)
 	{
 		ui_layout(T, X, NW, 0, 0);
-		ui_panel_begin(0, ui.gridsize+8, 4, 4, 1);
-		ui_layout(L, NONE, W, 2, 0);
+		ui_panel_begin(0, ui.gridsize + ui.padsize*4, ui.padsize*2, ui.padsize*2, 1);
+		ui_layout(L, NONE, W, ui.padsize, 0);
 		ui_label("Searching chapter %d page %d...", search_page.chapter, search_page.page);
 		ui_panel_end();
 	}
@@ -2191,10 +2191,10 @@ static void do_canvas(void)
 	if (showsearch)
 	{
 		ui_layout(T, X, NW, 0, 0);
-		ui_panel_begin(0, ui.gridsize+8, 4, 4, 1);
-		ui_layout(L, NONE, W, 2, 0);
+		ui_panel_begin(0, ui.gridsize + ui.padsize*4, ui.padsize*2, ui.padsize*2, 1);
+		ui_layout(L, NONE, W, ui.padsize, 0);
 		ui_label("Search:");
-		ui_layout(ALL, X, E, 2, 0);
+		ui_layout(ALL, X, E, ui.padsize, 0);
 		if (ui_input(&search_input, 0, 1) == UI_INPUT_ACCEPT)
 		{
 			showsearch = 0;
@@ -2219,8 +2219,8 @@ static void do_canvas(void)
 	if (tooltip)
 	{
 		ui_layout(B, X, N, 0, 0);
-		ui_panel_begin(0, ui.gridsize, 4, 4, 1);
-		ui_layout(L, NONE, W, 2, 0);
+		ui_panel_begin(0, ui.gridsize, ui.padsize*2, ui.padsize*2, 1);
+		ui_layout(L, NONE, W, ui.padsize, 0);
 		ui_label("%s", tooltip);
 		ui_panel_end();
 	}
@@ -2298,7 +2298,7 @@ void do_main(void)
 	if (showannotate)
 	{
 		ui_layout(R, BOTH, NW, 0, 0);
-		ui_panel_begin(annotate_w, 0, 4, 4, 1);
+		ui_panel_begin(annotate_w, 0, ui.padsize*2, ui.padsize*2, 1);
 		if (showannotate == ANNOTATE_MODE_NORMAL)
 			do_annotate_panel();
 		else
@@ -2427,6 +2427,10 @@ int main(int argc, char **argv)
 	screen_w = glutGet(GLUT_SCREEN_WIDTH) - SCREEN_FURNITURE_W;
 	screen_h = glutGet(GLUT_SCREEN_HEIGHT) - SCREEN_FURNITURE_H;
 
+	ui_init_dpi();
+
+	oldzoom = currentzoom = DEFRES * ui.scale;
+
 	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJA:B:C:T:")) != -1)
 	{
 		switch (c)
@@ -2540,7 +2544,7 @@ int main(int argc, char **argv)
 #ifdef _WIN32
 		win_install();
 #endif
-		ui_init(640, 700, "MuPDF: Open document");
+		ui_init(ui.gridsize * 26, ui.gridsize * 26, "MuPDF: Open document");
 		ui_input_init(&search_input, "");
 		ui_init_open_file(".", document_filter);
 		ui.dialog = do_open_document_dialog;
