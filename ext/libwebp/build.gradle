@@ -432,8 +432,3 @@ model {
     }
   }
 }
-
-// Task to generate the wrapper.
-task wrapper(type: Wrapper) {
-  gradleVersion = '2.13'
-}

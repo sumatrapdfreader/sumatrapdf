@@ -93,10 +93,6 @@
 /* Define to the version of this package. */
 #cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
 
-/* Define to necessary symbol if this constant uses a non-standard name on
-   your system. */
-#cmakedefine PTHREAD_CREATE_JOINABLE 1
-
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS 1
 

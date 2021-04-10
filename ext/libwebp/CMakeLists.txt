@@ -1,9 +1,24 @@
+##
+##  Copyright (c) 2020 Google LLC.
+##
+##  Use of this source code is governed by a BSD-style license
+##  that can be found in the LICENSE file in the root of the source
+##  tree. An additional intellectual property rights grant can be found
+##  in the file PATENTS.  All contributing project authors may
+##  be found in the AUTHORS file in the root of the source tree.
+
 cmake_minimum_required(VERSION 3.5)
 
 project(WebP C)
 
 # Options for coder / decoder executables.
-option(WEBP_ENABLE_SIMD "Enable any SIMD optimization." ON)
+if(NOT EMSCRIPTEN)
+  # Disable SIMD on Emscripten by default, as it's a new unstable Wasm feature.
+  # Users can still explicitly opt-in to make a SIMD-enabled build.
+  set(WEBP_ENABLE_SIMD_DEFAULT ON)
+endif()
+option(WEBP_ENABLE_SIMD "Enable any SIMD optimization."
+       ${WEBP_ENABLE_SIMD_DEFAULT})
 option(WEBP_BUILD_ANIM_UTILS "Build animation utilities." ON)
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." ON)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." ON)
@@ -26,7 +41,6 @@ if(WIN32)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
-  set(WEBP_ENABLE_SIMD OFF)
   set(WEBP_BUILD_ANIM_UTILS OFF)
   set(WEBP_BUILD_CWEBP OFF)
   set(WEBP_BUILD_DWEBP OFF)
@@ -36,6 +50,10 @@ if(WEBP_BUILD_WEBP_JS)
   set(WEBP_BUILD_WEBPINFO OFF)
   set(WEBP_BUILD_WEBPMUX OFF)
   set(WEBP_BUILD_EXTRAS OFF)
+
+  if(WEBP_ENABLE_SIMD)
+    message("wasm2js does not support SIMD, disabling webp.js generation.")
+  endif()
 endif()
 
 set(WEBP_DEP_LIBRARIES)
@@ -43,7 +61,7 @@ set(WEBP_DEP_INCLUDE_DIRS)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release"
-      CACHE "Build type: Release, Debug, MinSizeRel or RelWithDebInfo" STRING
+      CACHE STRING "Build type: Release, Debug, MinSizeRel or RelWithDebInfo"
       FORCE)
 endif()
 
@@ -164,6 +182,29 @@ add_definitions(-DHAVE_CONFIG_H)
 
 # ##############################################################################
 # Build the webpdecoder library.
+
+# Creates a source file with an unused stub function in $CMAKE_BINARY_DIR and
+# adds it to the specified target. Currently used only with Xcode.
+#
+# See also:
+# https://cmake.org/cmake/help/v3.18/command/add_library.html#object-libraries
+# "Some native build systems (such as Xcode) may not like targets that have
+# only object files, so consider adding at least one real source file to any
+# target that references $<TARGET_OBJECTS:objlib>."
+function(libwebp_add_stub_file TARGET)
+  set(stub_source_dir "${CMAKE_BINARY_DIR}")
+  set(stub_source_file
+      "${stub_source_dir}/libwebp_${TARGET}_stub.c")
+  set(stub_source_code
+      "// Generated file. DO NOT EDIT!\n"
+      "// C source file created for target ${TARGET}.\n"
+      "void libwebp_${TARGET}_stub_function(void)\;\n"
+      "void libwebp_${TARGET}_stub_function(void) {}\n")
+  file(WRITE "${stub_source_file}" ${stub_source_code})
+
+  target_sources(${TARGET} PRIVATE ${stub_source_file})
+endfunction()
+
 if(MSVC)
   # avoid security warnings for e.g., fopen() used in the examples.
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -190,6 +231,9 @@ add_library(webpdecoder
             $<TARGET_OBJECTS:webpdecode>
             $<TARGET_OBJECTS:webpdspdecode>
             $<TARGET_OBJECTS:webputilsdecode>)
+if(XCODE)
+  libwebp_add_stub_file(webpdecoder)
+endif()
 target_link_libraries(webpdecoder ${WEBP_DEP_LIBRARIES})
 target_include_directories(
   webpdecoder
@@ -229,6 +273,9 @@ add_library(webp
             $<TARGET_OBJECTS:webpdsp>
             $<TARGET_OBJECTS:webpencode>
             $<TARGET_OBJECTS:webputils>)
+if(XCODE)
+  libwebp_add_stub_file(webp)
+endif()
 target_link_libraries(webp ${WEBP_DEP_LIBRARIES})
 target_include_directories(webp
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -525,7 +572,9 @@ if(WEBP_BUILD_EXTRAS)
   # webp_quality
   add_executable(webp_quality ${WEBP_QUALITY_SRCS} ${WEBP_EXTRAS_SRCS})
   target_link_libraries(webp_quality exampleutil imagedec)
-  target_include_directories(webp_quality PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_include_directories(webp_quality
+                             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                     ${CMAKE_CURRENT_BINARY_DIR})
   install(TARGETS webp_quality RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   # vwebp_sdl
@@ -546,18 +595,21 @@ if(WEBP_BUILD_EXTRAS)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
-  # JavaScript version
-  add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
-  target_link_libraries(webp_js webpdecoder SDL)
-  target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-  set(WEBP_HAVE_SDL 1)
-  set_target_properties(
-    webp_js
-    PROPERTIES LINK_FLAGS
-               "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
-       -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
-  set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
-  target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
+  # wasm2js does not support SIMD.
+  if(NOT WEBP_ENABLE_SIMD)
+    # JavaScript version
+    add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
+    target_link_libraries(webp_js webpdecoder SDL)
+    target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    set(WEBP_HAVE_SDL 1)
+    set_target_properties(
+      webp_js
+      PROPERTIES LINK_FLAGS "-s WASM=0 \
+         -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
+         -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
+    set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
+    target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
+  endif()
 
   # WASM version
   add_executable(webp_wasm ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
@@ -608,7 +660,6 @@ if(WEBP_BUILD_ANIM_UTILS)
 endif()
 
 # Install the different headers and libraries.
-include(GNUInstallDirs)
 install(TARGETS ${INSTALLED_LIBRARIES}
         EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/webp

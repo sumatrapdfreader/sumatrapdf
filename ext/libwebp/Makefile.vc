@@ -28,7 +28,7 @@ PLATFORM_LDFLAGS = /SAFESEH
 
 NOLOGO     = /nologo
 CCNODBG    = cl.exe $(NOLOGO) /O2 /DNDEBUG
-CCDEBUG    = cl.exe $(NOLOGO) /Od /Gm /Zi /D_DEBUG /RTC1
+CCDEBUG    = cl.exe $(NOLOGO) /Od /Zi /D_DEBUG /RTC1
 CFLAGS     = /I. /Isrc $(NOLOGO) /W3 /EHsc /c
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN
 LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE
@@ -391,7 +391,13 @@ $(DIRBIN)\get_disto.exe: $(IMAGEIO_DEC_OBJS) $(IMAGEIO_UTIL_OBJS)
 $(DIRBIN)\get_disto.exe: $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\webp_quality.exe: $(DIROBJ)\extras\webp_quality.obj
 $(DIRBIN)\webp_quality.exe: $(IMAGEIO_UTIL_OBJS)
-$(DIRBIN)\webp_quality.exe: $(EXTRAS_OBJS) $(LIBWEBP)
+$(DIRBIN)\webp_quality.exe: $(EXTRAS_OBJS)
+# EXTRA_OBJS requires private symbols from dsp. Explicitly add those when
+# building libwebp as a dll.
+!IF "$(DLLBUILD)" == "TRUE"
+$(DIRBIN)\webp_quality.exe: $(DSP_DEC_OBJS)
+!ENDIF
+$(DIRBIN)\webp_quality.exe: $(LIBWEBP)
 $(DIRBIN)\webpinfo.exe: $(DIROBJ)\examples\webpinfo.obj
 $(DIRBIN)\webpinfo.exe: $(IMAGEIO_DEC_OBJS)
 $(DIRBIN)\webpinfo.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS)

@@ -1,7 +1,7 @@
 ﻿          __   __  ____  ____  ____  __ __  _     __ __
          /  \\/  \/  _ \/  _ \/  _ \/  \  \/ \___/_ / _\
          \       /   __/  _  \   __/      /  /  (_/  /__
-          \__\__/\_____/_____/__/  \__//_/\_____/__/___/v1.0.3
+          \__\__/\_____/_____/__/  \__//_/\_____/__/___/v1.2.0
 
 
 Description:
@@ -44,6 +44,7 @@ GET_OPTIONS:
 
 SET_OPTIONS:
  Set color profile/metadata:
+   loop LOOP_COUNT   set the loop count
    icc  file.icc     set ICC profile
    exif file.exif    set EXIF metadata
    xmp  file.xmp     set XMP metadata

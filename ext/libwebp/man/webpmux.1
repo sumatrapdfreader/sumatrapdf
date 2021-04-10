@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "April 23, 2018"
+.TH WEBPMUX 1 "December 12, 2020"
 .SH NAME
 webpmux \- create animated WebP files from non\-animated WebP images, extract
 frames from animated WebP images, and manage XMP/EXIF metadata and ICC profile.
@@ -59,7 +59,7 @@ command.
 to add/extract/strip XMP/EXIF metadata and ICC profile.
 If a single file name (not starting with the character '\-') is supplied as
 the argument, the command line arguments are actually tokenized from this file.
-This allows for easy scripting or using large number of arguments.
+This allows for easy scripting or using a large number of arguments.
 .SH OPTIONS
 .SS GET_OPTIONS (\-get):
 .TP
@@ -76,6 +76,11 @@ Get XMP metadata.
 Get nth frame from an animated image. (n = 0 has a special meaning: last frame).
 
 .SS SET_OPTIONS (\-set)
+.TP
+.BI loop " loop_count
+Set loop count on an animated file.
+.P
+Where: 'loop_count' must be in range [0, 65535].
 .TP
 .BI icc " file.icc
 Set ICC profile.

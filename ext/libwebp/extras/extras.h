@@ -19,7 +19,7 @@ extern "C" {
 
 #include "webp/encode.h"
 
-#define WEBP_EXTRAS_ABI_VERSION 0x0001    // MAJOR(8b) + MINOR(8b)
+#define WEBP_EXTRAS_ABI_VERSION 0x0002    // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 
@@ -50,6 +50,13 @@ WEBP_EXTERN int
 WebPImportColorMappedARGB(const uint8_t* indexed, int indexed_stride,
                           const uint32_t palette[], int palette_size,
                           WebPPicture* pic);
+
+// Convert the ARGB content of 'pic' from associated to unassociated.
+// 'pic' can be for instance the result of calling of some WebPPictureImportXXX
+// functions, with pic->use_argb set to 'true'. It is assumed (and not checked)
+// that the pre-multiplied r/g/b values as less or equal than the alpha value.
+// Return false in case of error (invalid parameter, ...).
+WEBP_EXTERN int WebPUnmultiplyARGB(WebPPicture* pic);
 
 //------------------------------------------------------------------------------
 

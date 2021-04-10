@@ -1,3 +1,26 @@
+- 12/23/2020: version 1.2.0
+  * API changes:
+    - libwebp:
+      encode.h: add a qmin / qmax range for quality factor (cwebp adds -qrange)
+  * lossless encoder improvements
+  * SIMD support for Wasm builds
+  * add xcframeworkbuild.sh, supports Mac Catalyst builds
+  * import fuzzers from oss-fuzz & chromium (#409)
+  * webpmux: add an '-set loop <value>' option (#494)
+  * toolchain updates and bug fixes (#449, #463, #470, #475, #477, #478, #479,
+    #488, #491)
+
+- 12/18/2019: version 1.1.0
+  * API changes:
+    - libwebp:
+      WebPMalloc (issue #442)
+    - extras:
+      WebPUnmultiplyARGB
+  * alpha decode fix (issue #439)
+  * toolchain updates and bug fixes
+    (chromium: #1026858, #1027136, #1027409, #1028620, #1028716, #995200)
+    (oss-fuzz: #19430, #19447)
+
 - 7/4/2019: version 1.0.3
   This is a binary compatible release.
   * resize fixes for Nx1 sizes and the addition of non-opaque alpha values for

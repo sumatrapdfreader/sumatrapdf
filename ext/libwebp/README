@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v1.0.3
+               \____/____/\_____/_____/____/v1.2.0
 
 Description:
 ============
@@ -113,7 +113,7 @@ make install
 
 CMake:
 ------
-With CMake, you can compile libwebp, cwebp, dwebp, gif2web, img2webp, webpinfo
+With CMake, you can compile libwebp, cwebp, dwebp, gif2webp, img2webp, webpinfo
 and the JS bindings.
 
 Prerequisites:
@@ -225,6 +225,7 @@ Usage:
 
 If input size (-s) for an image is not specified, it is
 assumed to be a PNG, JPEG, TIFF or WebP file.
+Note: Animated PNG and WebP files are not supported.
 
 Options:
   -h / -help ............. short help
@@ -254,6 +255,8 @@ Options:
   -partition_limit <int> . limit quality to fit the 512k limit on
                            the first partition (0=no degradation ... 100=full)
   -pass <int> ............ analysis pass number (1..10)
+  -qrange <min> <max> .... specifies the permissible quality range
+                           (default: 0 100)
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
   -resize <w> <h> ........ resize picture (after any cropping)
   -mt .................... use multi-threading if available
@@ -293,6 +296,7 @@ Experimental Options:
   -jpeg_like ............. roughly match expected JPEG size
   -af .................... auto-adjust filter strength
   -pre <int> ............. pre-processing filter
+
 
 The main options you might want to try in order to further tune the
 visual quality are:
@@ -341,7 +345,9 @@ The full list of options is available using -h:
 > dwebp -h
 Usage: dwebp in_file [options] [-o out_file]
 
-Decodes the WebP image file to PNG format [Default]
+Decodes the WebP image file to PNG format [Default].
+Note: Animated WebP files are not supported.
+
 Use following options to convert into alternate image formats:
   -pam ......... save the raw RGBA samples as a color PAM
   -ppm ......... save the raw RGB samples as a color PPM
@@ -423,7 +429,7 @@ Prerequisites:
 1) OpenGL & OpenGL Utility Toolkit (GLUT)
   Linux:
     $ sudo apt-get install freeglut3-dev mesa-common-dev
-  Mac + XCode:
+  Mac + Xcode:
     - These libraries should be available in the OpenGL / GLUT frameworks.
   Windows:
     http://freeglut.sourceforge.net/index.php#download

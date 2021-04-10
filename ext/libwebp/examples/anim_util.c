@@ -405,7 +405,7 @@ static uint32_t GetBackgroundColorGIF(GifFileType* gif) {
     return 0xffffffff;  // Invalid: assume white.
   } else {
     const GifColorType color = color_map->Colors[gif->SBackGroundColor];
-    return (0xff << 24) |
+    return (0xffu << 24) |
            (color.Red << 16) |
            (color.Green << 8) |
            (color.Blue << 0);

@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH IMG2WEBP 1 "April 3, 2018"
+.TH IMG2WEBP 1 "May 1, 2020"
 .SH NAME
 img2webp \- create animated WebP file from a sequence of input images.
 .SH SYNOPSIS
@@ -16,8 +16,8 @@ command.
 \fBimg2webp\fP compresses a sequence of images using the animated WebP format.
 Input images can either be PNG, JPEG, TIFF or WebP.
 If a single file name (not starting with the character '\-') is supplied as
-the argument, the command line argument are actually tokenized from this file.
-This allows for easy scripting or using large number of arguments.
+the argument, the command line arguments are actually tokenized from this file.
+This allows for easy scripting or using a large number of arguments.
 .SH FILE-LEVEL OPTIONS
 The file-level options are applied at the beginning of the compression process,
 before the input frames are read.
@@ -27,7 +27,7 @@ Specify the name of the output WebP file.
 .TP
 .BI \-min_size
 Encode images to achieve smallest size. This disables key frame insertion and
-picks the parameters resulting in smallest output for each frame. It uses
+picks the parameters resulting in the smallest output for each frame. It uses
 lossless compression by default, but can be combined with \-q, \-m, \-lossy or
 \-mixed options.
 .TP

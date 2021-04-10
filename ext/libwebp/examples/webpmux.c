@@ -26,6 +26,7 @@
     webpmux -set icc image_profile.icc in.webp -o out_icc_container.webp
     webpmux -set exif image_metadata.exif in.webp -o out_exif_container.webp
     webpmux -set xmp image_metadata.xmp in.webp -o out_xmp_container.webp
+    webpmux -set loop 1 in.webp -o out_looped.webp
 
   Extract relevant data from WebP container file:
     webpmux -get frame n in.webp -o out_frame.webp
@@ -97,6 +98,7 @@ typedef enum {
   FEATURE_ICCP,
   FEATURE_ANMF,
   FEATURE_DURATION,
+  FEATURE_LOOP,
   LAST_FEATURE
 } FeatureType;
 
@@ -314,6 +316,7 @@ static void PrintHelp(void) {
   printf("\n");
   printf("SET_OPTIONS:\n");
   printf(" Set color profile/metadata:\n");
+  printf("   loop LOOP_COUNT   set the loop count\n");
   printf("   icc  file.icc     set ICC profile\n");
   printf("   exif file.exif    set EXIF metadata\n");
   printf("   xmp  file.xmp     set XMP metadata\n");
@@ -768,6 +771,13 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
+      } else if (!strcmp(argv[i], "loop") &&
+                 (config->action_type_ == ACTION_SET)) {
+        CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
+        config->type_ = FEATURE_LOOP;
+        arg->params_ = argv[i + 1];
+        ++feature_arg_index;
+        i += 2;
       } else {  // Assume input file.
         if (config->input_ == NULL) {
           config->input_ = wargv[i];
@@ -1011,10 +1021,35 @@ static int Process(const Config* config) {
           ok = ExUtilReadFileToWebPData(config->args_[0].filename_, &chunk);
           if (!ok) goto Err2;
           err = WebPMuxSetChunk(mux, kFourccList[config->type_], &chunk, 1);
-          free((void*)chunk.bytes);
+          WebPDataClear(&chunk);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO3("ERROR (%s): Could not set the %s.\n",
                         ErrorString(err), kDescriptions[config->type_], Err2);
+          }
+          break;
+        }
+        case FEATURE_LOOP: {
+          WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
+          int parse_error = 0;
+          const int loop_count =
+              ExUtilGetInt(config->args_[0].params_, 10, &parse_error);
+          if (loop_count < 0 || loop_count > 65535 || parse_error) {
+            ERROR_GOTO1("ERROR: Loop count must be in the range 0 to 65535.\n",
+                        Err2);
+          }
+          ok = CreateMux(config->input_, &mux);
+          if (!ok) goto Err2;
+          ok = (WebPMuxGetAnimationParams(mux, &params) == WEBP_MUX_OK);
+          if (!ok) {
+            ERROR_GOTO1("ERROR: input file does not seem to be an animation.\n",
+                        Err2);
+          }
+          params.loop_count = loop_count;
+          err = WebPMuxSetAnimationParams(mux, &params);
+          ok = (err == WEBP_MUX_OK);
+          if (!ok) {
+            ERROR_GOTO2("ERROR (%s): Could not set animation parameters.\n",
+                        ErrorString(err), Err2);
           }
           break;
         }

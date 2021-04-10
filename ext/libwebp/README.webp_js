@@ -19,21 +19,20 @@ using Emscripten and CMake.
    accessible. This is the toolchain file used by CMake to invoke Emscripten.
    If $EMSCRIPTEN is unset search for Emscripten.cmake under $EMSDK and set
    $EMSCRIPTEN accordingly, for example:
-   unix-like environments: export EMSCRIPTEN=$EMSDK/fastcomp/emscripten
-   windows: set EMSCRIPTEN=%EMSDK%\fastcomp\emscripten
+   unix-like environments: export EMSCRIPTEN=$EMSDK/upstream/emscripten
+   windows: set EMSCRIPTEN=%EMSDK%\upstream\emscripten
 
  - configure the project 'WEBP_JS' with CMake using:
 
  cd webp_js && \
  cmake -DWEBP_BUILD_WEBP_JS=ON \
-       -DEMSCRIPTEN_GENERATE_BITCODE_STATIC_LIBRARIES=1 \
        -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake \
        ../
 
  - compile webp.js using 'make'.
 
  - that's it! Upon completion, you should have the webp.js and
-   webp.js.mem files generated.
+   webp.wasm files generated.
 
 The callable JavaScript function is WebPToSDL(), which decodes a raw WebP
 bitstream into a canvas. See webp_js/index.html for a simple usage sample
@@ -59,8 +58,9 @@ Web-Assembly (WASM) version:
   See webp_js/index_wasm.html for a simple demo page using the WASM version
   of the library.
 
-  You will need a fairly recent version of Emscripten (at least 1.37.8) and of
-  your WASM-enabled browser to run this version. Consider it very experimental!
+  You will need a fairly recent version of Emscripten (at least 1.37.8,
+  latest-upstream is recommended) and of your WASM-enabled browser to run this
+  version.
 
 Caveat:
 =======
@@ -78,3 +78,6 @@ Caveat:
     https://github.com/kripken/emscripten/issues/3788
 
     Therefore, SSE2 optimization is currently disabled in CMakeLists.txt.
+
+  - If WEBP_ENABLE_SIMD is set to 1 the JavaScript version (webp.js) will be
+    disabled as wasm2js does not support SIMD.

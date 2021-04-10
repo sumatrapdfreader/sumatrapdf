@@ -1,4 +1,4 @@
-AC_INIT([libwebp], [1.0.3],
+AC_INIT([libwebp], [1.2.0],
         [https://bugs.chromium.org/p/webp],,
         [http://developers.google.com/speed/webp])
 AC_CANONICAL_HOST
@@ -80,6 +80,7 @@ TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wparentheses-equality])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshadow])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshorten-64-to-32])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wundef])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunreachable-code-aggressive])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunreachable-code])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused-but-set-variable])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused])

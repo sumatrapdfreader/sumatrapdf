@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "January 11, 2019"
+.TH CWEBP 1 "November 19, 2020"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -13,6 +13,7 @@ command.
 .PP
 \fBcwebp\fP compresses an image using the WebP format.
 Input format can be either PNG, JPEG, TIFF, WebP or raw Y'CbCr samples.
+Note: Animated PNG and WebP files are not supported.
 .SH OPTIONS
 The basic options are:
 .TP
@@ -133,6 +134,13 @@ Set a maximum number of passes to use during the dichotomy used by
 options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10, default is 1.
 If options \fB\-size\fP or \fB\-psnr\fP were used, but \fB\-pass\fP wasn't
 specified, a default value of '6' passes will be used.
+.TP
+.BI \-qrange " int int
+Specifies the permissible interval for the quality factor. This is particularly
+useful when using multi-pass (\fB\-size\fP or \fB\-psnr\fP options).
+Default is 0 100.
+If the quality factor is outside this range, it will be clamped.
+If the minimum value must be less or equal to the maximum one.
 .TP
 .B \-af
 Turns auto\-filter on. This algorithm will spend additional time optimizing

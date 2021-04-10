@@ -1,6 +1,7 @@
 *.l[ao]
 *.[ao]
 *.pc
+.DS_Store
 .deps
 .libs
 /aclocal.m4
@@ -33,7 +34,8 @@ src/webp/stamp-h1
 *.idb
 *.pdb
 /iosbuild
-/WebP.framework
+/xcframeworkbuild
+/WebP*.*framework
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -42,3 +44,11 @@ cmake_install.cmake
 extras/get_disto
 extras/vwebp_sdl
 extras/webp_quality
+tests/fuzzer/advanced_api_fuzzer
+tests/fuzzer/animation_api_fuzzer
+tests/fuzzer/animdecoder_fuzzer
+tests/fuzzer/animencoder_fuzzer
+tests/fuzzer/demux_api_fuzzer
+tests/fuzzer/enc_dec_fuzzer
+tests/fuzzer/mux_demux_api_fuzzer
+tests/fuzzer/simple_api_fuzzer
