@@ -411,6 +411,9 @@ static void util_printf_d(fz_context *ctx, fz_buffer *out, int ds, int sign, int
 	unsigned int a, i;
 	int m = 0;
 
+	if (w > sizeof buf)
+		w = sizeof buf;
+
 	if (value < 0)
 	{
 		sign = '-';

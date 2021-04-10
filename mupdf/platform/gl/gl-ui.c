@@ -379,9 +379,15 @@ static void on_timer(int timer_id)
 	glutTimerFunc(500, on_timer, 0);
 }
 
-void ui_init_dpi()
+void ui_init_dpi(float override_scale)
 {
 	ui.scale = 1;
+
+	if (override_scale)
+	{
+		ui.scale = override_scale;
+	}
+	else
 	{
 		int wmm = glutGet(GLUT_SCREEN_WIDTH_MM);
 		int wpx = glutGet(GLUT_SCREEN_WIDTH);

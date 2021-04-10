@@ -2347,6 +2347,7 @@ static void usage(const char *argv0)
 	fprintf(stderr, "\t-A -\tset anti-aliasing level (0-8,9,10)\n");
 	fprintf(stderr, "\t-B -\tset black tint color (default: 303030)\n");
 	fprintf(stderr, "\t-C -\tset white tint color (default: FFFFF0)\n");
+	fprintf(stderr, "\t-Y -\tset the UI scaling factor\n");
 	exit(1);
 }
 
@@ -2416,6 +2417,7 @@ int main(int argc, char **argv)
 #endif
 {
 	const char *trace_file_name = NULL;
+	float scale = 0;
 	int c;
 
 #ifndef _WIN32
@@ -2424,14 +2426,7 @@ int main(int argc, char **argv)
 
 	glutInit(&argc, argv);
 
-	screen_w = glutGet(GLUT_SCREEN_WIDTH) - SCREEN_FURNITURE_W;
-	screen_h = glutGet(GLUT_SCREEN_HEIGHT) - SCREEN_FURNITURE_H;
-
-	ui_init_dpi();
-
-	oldzoom = currentzoom = DEFRES * ui.scale;
-
-	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJA:B:C:T:")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJA:B:C:T:Y:")) != -1)
 	{
 		switch (c)
 		{
@@ -2449,8 +2444,16 @@ int main(int argc, char **argv)
 		case 'C': currenttint = 1; tint_white = strtol(fz_optarg, NULL, 16); break;
 		case 'B': currenttint = 1; tint_black = strtol(fz_optarg, NULL, 16); break;
 		case 'T': trace_file_name = fz_optarg; break;
+		case 'Y': scale = fz_atof(fz_optarg); break;
 		}
 	}
+
+	screen_w = glutGet(GLUT_SCREEN_WIDTH) - SCREEN_FURNITURE_W;
+	screen_h = glutGet(GLUT_SCREEN_HEIGHT) - SCREEN_FURNITURE_H;
+
+	ui_init_dpi(scale);
+
+	oldzoom = currentzoom = DEFRES * ui.scale;
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 

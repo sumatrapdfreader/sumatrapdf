@@ -194,15 +194,25 @@ fz_new_document_writer(fz_context *ctx, const char *path, const char *explicit_f
 			return fz_new_text_writer(ctx, "stext.xml", path, options);
 		if (is_extension(format, "stext.json"))
 			return fz_new_text_writer(ctx, "stext.json", path, options);
+#ifdef HAVE_EXTRACT
+		if (is_extension(format, "odt"))
+		{
+			return fz_new_odt_writer(ctx, format, path, options);
+		}
 		if (is_extension(format, "docx"))
 		{
-#ifdef HAVE_EXTRACT
 			return fz_new_docx_writer(ctx, format, path, options);
-#else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "docx output not available in this build.");
-#endif
 		}
-
+#else
+		if (is_extension(format, "odt"))
+		{
+			fz_throw(ctx, FZ_ERROR_GENERIC, "odt output not available in this build.");
+		}
+		if (is_extension(format, "docx"))
+		{
+			fz_throw(ctx, FZ_ERROR_GENERIC, "docx output not available in this build.");
+		}
+#endif
 		if (format != explicit_format)
 			format = prev_period(path, format);
 		else

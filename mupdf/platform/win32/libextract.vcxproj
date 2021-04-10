@@ -51,7 +51,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\docx_template.c">
+    <ClCompile Include="..\..\thirdparty\extract\src\docx_template.c ">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -63,11 +63,31 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\mem.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\misc-test.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\odt.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\odt_template.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\outf.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\sys.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\text.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>

@@ -175,10 +175,10 @@ static void dev_fill_image(fz_context *ctx, fz_device *dev_, fz_image *img, fz_m
 				if (extract_add_image(
 						dev->writer->extract,
 						type,
-						0 /*x*/,
-						0 /*y*/,
-						0 /*w*/,
-						0 /*h*/,
+						ctm.e /*x*/,
+						ctm.f /*y*/,
+						img->w /*w*/,
+						img->h /*h*/,
 						data,
 						datasize,
 						writer_image_free,
@@ -389,7 +389,7 @@ static void *s_realloc_fn(void *state, void *prev, size_t size)
 	return fz_realloc_no_throw(writer->ctx, prev, size);
 }
 
-static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out, const char *options, int we_own_output)
+static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out, const char *options, int we_own_output, extract_format_t format)
 {
 	fz_docx_writer *writer = fz_new_derived_document_writer(
 			ctx,
@@ -404,7 +404,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->ctx = ctx;
 		if (extract_alloc_create(s_realloc_fn, writer, &writer->alloc))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_alloc instance");
-		if (extract_begin(writer->alloc, &writer->extract))
+		if (extract_begin(writer->alloc, format, &writer->extract))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract instance");
 		writer->output = out;
 		writer->we_own_output = we_own_output;
@@ -422,20 +422,41 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 	return &writer->super;
 }
 
+fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+{
+	return fz_new_docx_writer_internal(ctx, out, options, 0 /*we_own_output*/, extract_format_ODT);
+}
+
+fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *format, const char *path, const char *options)
+{
+	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
+	return fz_new_docx_writer_internal(ctx, out, options, 1 /*we_own_output*/, extract_format_ODT);
+}
+
 fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	return fz_new_docx_writer_internal(ctx, out, options, 0 /*we_own_output*/);
+	return fz_new_docx_writer_internal(ctx, out, options, 0 /*we_own_output*/, extract_format_DOCX);
 }
 
 fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *format, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
-	return fz_new_docx_writer_internal(ctx, out, options, 1 /*we_own_output*/);
+	return fz_new_docx_writer_internal(ctx, out, options, 1 /*we_own_output*/, extract_format_DOCX);
 }
 
 #else
 
 #include "mupdf/fitz.h"
+
+fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *format, const char *path, const char *options)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "odt output not available in this build.");
+}
+
+fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "odt output not available in this build.");
+}
 
 fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *format, const char *path, const char *options)
 {

@@ -260,7 +260,14 @@ $(OUT)/thirdparty/extract/%.o: thirdparty/extract/%.c
 thirdparty/extract/src/docx_template.c: thirdparty/extract/src/template.docx thirdparty/extract/src/docx_template_build.py
 	$(QUIET_GEN) python3 thirdparty/extract/src/docx_template_build.py \
 		-i thirdparty/extract/src/template.docx \
+		-n docx \
 		-o thirdparty/extract/src/docx_template
+
+thirdparty/extract/src/odt_template.c: thirdparty/extract/src/template.odt thirdparty/extract/src/docx_template_build.py
+	$(QUIET_GEN) python3 thirdparty/extract/src/docx_template_build.py \
+		-i thirdparty/extract/src/template.odt \
+		-n odt \
+		-o thirdparty/extract/src/odt_template
 
 generate: thirdparty/extract/src/docx_template.c
 
