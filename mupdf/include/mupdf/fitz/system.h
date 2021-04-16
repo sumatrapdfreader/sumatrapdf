@@ -86,11 +86,11 @@ typedef unsigned __int64 uint64_t;
 #if HAVE_SIGSETJMP
 #define fz_setjmp(BUF) sigsetjmp(BUF, 0)
 #define fz_longjmp(BUF,VAL) siglongjmp(BUF, VAL)
-#define fz_jmp_buf sigjmp_buf
+typedef sigjmp_buf fz_jmp_buf;
 #else
 #define fz_setjmp(BUF) setjmp(BUF)
 #define fz_longjmp(BUF,VAL) longjmp(BUF,VAL)
-#define fz_jmp_buf jmp_buf
+typedef jmp_buf fz_jmp_buf;
 #endif
 
 /* these constants mirror the corresponding macros in stdio.h */

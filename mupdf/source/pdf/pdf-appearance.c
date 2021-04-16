@@ -2293,6 +2293,7 @@ pdf_signature_appearance(fz_context *ctx, fz_rect rect, fz_text_language lang, f
 
 		dlist = fz_new_display_list(ctx, rect);
 		dev = fz_new_list_device(ctx, dlist);
+		cs = fz_device_rgb(ctx);
 
 		if (include_logo)
 		{
@@ -2300,7 +2301,6 @@ pdf_signature_appearance(fz_context *ctx, fz_rect rect, fz_text_language lang, f
 			draw_logo(ctx, path);
 			logo_bounds = fz_bound_path(ctx, path, NULL, fz_identity);
 			logo_tm = center_rect_within_rect(logo_bounds, rect);
-			cs = fz_device_rgb(ctx);
 			fz_fill_path(ctx, dev, path, 0, logo_tm, cs, logo_color, 1.0f, fz_default_color_params);
 		}
 
