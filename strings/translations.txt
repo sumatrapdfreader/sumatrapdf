@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f349c3507b3df7ead4beaabaa57a15ccb2eda20a
+8ed3369de793564c5badf05a7e18cac28b8b2bef
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -23,6 +23,7 @@ pa:%s ਦੀ ਸਥਾਪਤੀ ਨਹੀਂ ਲੱਭੀ।
 pl:Nie znaleziono instalacji %s.
 ru:Не удалось найти установку %s.
 tr:%s kurulumu bulunamadı.
+tw:未有安裝 %s
 vn:Không tìm thấy bản cài đặt đặt %s.
 :&About
 af:&Omtrent
@@ -91,7 +92,7 @@ ta:இந்நிரலைப் பற்றி (&A)
 th:&เกี่ยวกับ
 tl:Tungkol S&a...
 tr:&Hakkında
-tw:關於(&A)...
+tw:關於(&A)
 uk:Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
@@ -762,7 +763,7 @@ ta:இரட்டைபடை எண்கள்  மட்டும்
 th:& แม้แต่หน้าเท่านั้น
 tl:Mga &even na pahina lamang
 tr:Yanlızca &çift sayfalar
-tw:祇有偶數頁(&E)
+tw:僅偶數頁(&E)
 uk:Тільки парні сторінки
 uz:&Faqat juft betlar
 vn:Chỉ những trang lẻ
@@ -825,7 +826,7 @@ ta:பார்வையில்\tCtrl+7
 th:&เป็นหน้า Ctrl + 7
 tl:&Magkaharap\tCrtl+7
 tr:&Her İki Yüz\tCtrl+7
-tw:雙頁模式(&F)
+tw:雙頁模式(&F)\tCtrl+7
 uk:Дві сторінки\tCtrl+7
 uz:&Ikkita betdan\tCtrl+7
 vn:Trang kép\tCtrl+7
@@ -1305,7 +1306,7 @@ ta:உதவி
 th:&ช่วยเหลือ
 tl:Tulong
 tr:&Yardım
-tw:幫助(&H)
+tw:求助(&H)
 uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
@@ -1841,7 +1842,7 @@ ta:ஒற்றைபடை பக்கங்கள் மட்டும்
 th:&เพิ่มหน้าแตกต่างเท่านั้น
 tl:Mga odd na pahina lamang
 tr:Yalnızca &tek sayfalar
-tw:僅有奇數頁(&O)
+tw:僅奇數頁(&O)
 uk:Тільки непарні сторінки
 uz:&Faqat toq betlar
 vn:Chỉ những trang chẵn
@@ -1904,7 +1905,7 @@ sv:&Öppna dokument
 ta:கோப்பை திற
 th:&เปิดเอกสาร
 tr:Belgeyi &Aç
-tw:開啟此文件(&O)
+tw:開啟文件(&O)
 uk:Відкрити документ
 uz:&Hujjatni ochish
 vn:Mở tập tin
@@ -2229,7 +2230,7 @@ sv:&Fäst dokument
 ta:கோப்பை குத்திவை
 th:&เอกสาร Pin
 tr:Belgeyi &Tuttur
-tw:釘選(&P)
+tw:釘選文件(&P)
 uk:Документ pin
 uz:&Hujjatni eslab qolish
 vn:Ghim tập tin
@@ -2714,7 +2715,7 @@ ta:எனச் சேமி...
 th:&บันทึกเป็น...
 tl:I-&save bilang...
 tr:&Farklı Kaydet...
-tw:另存為(&A)...
+tw:另存為(&S)...
 uk:Зберегти як...
 uz:&Quyidagicha saqlash...
 vn:Lưu thành...
@@ -2785,7 +2786,7 @@ ta:எனச் சேமி...\tCtrl+S
 th:&บันทึกเป็น...Ctrl+S
 tl:I-save Bilang...\tCtrl+S
 tr:&Farklı Kaydet...\tCtrl+S
-tw:另存為(&A)...\tCtrl+S
+tw:另存為(&S)...\tCtrl+S
 uk:Зб&ерегти як...\tCtrl+S
 uz:&Quyidagicha saqlash...\tCtrl+S
 vn:Lưu thành...\tCtrl+S
@@ -2850,7 +2851,7 @@ ta:அமைப்புகள்
 th:&การตั้งค่า
 tl:Mga Setting
 tr:&Ayarlar
-tw:設定值(&S)...
+tw:設定(&S)...
 uk:Налаштування
 uz:&Moslamalar
 vn:Cài đặt
@@ -3163,7 +3164,7 @@ ta:மூல பக்க அளவுகளை உபயோகி
 th:&ใช้ขนาดหน้าดั้งเดิม
 tl:Gamitin ang orihinal na laki ng mga pahina
 tr:Özgün sayfa boyutlarını &kullan
-tw:使用頁面原始大小(&S)
+tw:使用頁面原始大小(&U)
 uk:Використовувати оригінальні розміри сторінки
 uz:&Betlarning asl o'lchamlarini ishlatish
 vn:Sử dụng kích thước trang gốc
@@ -3694,7 +3695,7 @@ ta:பிடித்தவைகனளயும் சேர்க்க
 th:เพิ่มรายการโปรด
 tl:I-Add sa favorite
 tr:Sık Kullanılanlara Ekle
-tw:加入最愛(&A)
+tw:加到最愛
 uk:Додати закладку
 uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa thích
@@ -3823,7 +3824,7 @@ sv:Lägg till sida %s i Favoriter
 ta:பிடித்தவையில் பக்கம் %s-ஐ சேர்
 th:เพิ่มหน้า %s ไปยังรายการโปรด
 tr:%s. sayfayı sık kullanılanlara ekle
-tw:加入第 %s 頁到最愛
+tw:將第 %s 頁加到最愛
 uk:Додати %s сторінку до закладок
 uz:%s betni Tanlanganlarga qo'shish
 vn:Thêm trang %s vào Ưa thích
@@ -3888,7 +3889,7 @@ sv:Lägg till sida %s i Favoriter med (valfritt) namn:
 ta:பிடித்தவையில்  பக்கம் %s-ஐ (விருப்ப) பெயருடன் சேர்:
 th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อมชื่อ (สามารถเลือกได้) :
 tr:%s. sayfayı şu (isteğe bağlı) adla sık kullanılanlara ekle:
-tw:以 (可選) 名稱加入第 %s 頁到最愛:
+tw:以 (可有可無) 名稱將第 %s 頁加到最愛:
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
 uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
@@ -3927,7 +3928,7 @@ ru:Добавить страницу %s в избранные\tCtrl+B
 sl:Dodaj stran %s med priljubljene\tCtrl+B
 th:เพิ่มหน้า %s ไปยังรายการโปรด Ctrl+B
 tr:%s. sayfayı sık kullanılanlara ekle\tCtrl+B
-tw:將第 %s 頁加入到最愛\tCtrl+B
+tw:將第 %s 頁加到最愛\tCtrl+B
 uk:Додати %s сторінку до закладок\tCtrl+B
 vn:Thêm trang %s vào mục ưa thích\tCtrl+B
 :Add sibling
@@ -4014,7 +4015,7 @@ sv:Lägg till i Favoriter
 ta:பிடித்தவையில் சேர்
 th:เพิ่มไปยังรายการโปรด
 tr:Sık kullanılanlara ekle
-tw:加入到最愛
+tw:加到最愛
 uk:Додати до закладок
 uz:Tanlanganlarga qo'shish
 vn:Thêm vào Ưa thích
@@ -4246,6 +4247,7 @@ nl:Aantekeningen
 pl:Adnotacje
 ru:Аннотации
 tr:Notlar
+tw:評注
 :Application:
 af:Applikasie
 am:Ծրագիր՝
@@ -4338,6 +4340,7 @@ pl:Czy na pewno chcesz odinstalować %s?
 ru:Уверены, что хотите удалить %s?
 ta:%s நிறுவகற்றுவதில் தவறாது உள்ளீரா?
 tr:%s kaldırılsın istiyor musunuz?
+tw:確定要卸除 %s 嗎？
 vn:Bạn có chắc chắn muốn gỡ cài đặt %s?
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
@@ -4402,7 +4405,7 @@ sv:Är du säker på att du vill avinstallera SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
 th:คุณแน่ใจหรือไม่ว่าต้องการถอนการติดตั้ง SumatraPDF?
 tr:SumatraPDF'yi kaldırmak istediğinize emin misiniz?
-tw:你確定要解除安裝 SumatraPDF 嗎？
+tw:確定要卸除 SumatraPDF 嗎？
 uk:Ви впевнені, що хочете видалити SumatraPDF?
 uz:SumatraPDF'ni o'chirishga ishonchingiz komilmi?
 vn:Bạn có chắc muốn gỡ bỏ SumatraPDF không?
@@ -4747,7 +4750,7 @@ ta:தானாக புதுப்பித்த பதிப்பை த�
 th:ตรวจสอบโดยอัตโนมัติ &อัพเดท
 tl:Awtomatikong tignan kung may mga pagbabago
 tr:&Güncellemeleri kendiliğinden denetle
-tw:自動檢查更新(&U)
+tw:自動檢查是否有新版本(&U)
 uk:Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
@@ -4944,7 +4947,7 @@ ta:%s / %s பக்கத்தின் புத்தகக்குறி�
 th:ทางลัดคั่นหน้าไปยังหน้า %s ของ %s
 tl:I-Bookmark shortcut sa page %s of %s
 tr:%s / %s sayfasını yer imlerine ekle
-tw:書籤捷徑指向第 %s 頁 (檔案 %s)
+tw:書籤捷徑指向第 %s 頁 (%s 檔案)
 uk:Закладка ярлика на сторінку %s з %s
 uz:Xatcho'p yorlig'i betga %s %s dan
 vn:Lối tắt chỉ dấu sách đến trang %s của %s
@@ -5213,7 +5216,7 @@ ta:இணையத்தில் இணைக்க முடியாது (�
 th:ไม่สามารถเชื่อมต่ออินเตอร์เน็ต (ข้อผิดพลาด %#x).
 tl:Hindi makakonekta sa Internet (error %#x).
 tr:İnternete erişilemiyor (hata %#x).
-tw:無法連線到網際網路 (錯誤：%#x)。
+tw:無法連接網際網路 (錯誤：%#x)。
 uk:Неможливо під'єднатись до інтернету (помилка %#x).
 uz:Internet ulanmagan (xato %#x).
 vn:Không thể kết nối Internet (lỗi %#x).
@@ -5283,7 +5286,7 @@ ta:விலக்கு
 th:ยกเลิก
 tl:Ikansela
 tr:İptal Et
-tw:取消(&C)
+tw:取消
 uk:Скасувати
 uz:Bekor qilish
 vn:Hủy
@@ -5416,7 +5419,7 @@ ta:தலைகீழ் தேடல் கட்டளை தொடங்�
 th:ไม่สามารถค้นหาคำสั่งที่ตรงกันข้าม โปรดตรวจสอบแถวคำสั่งในการตั้งค่า
 tl:Hindi ma-execute ang command para sa inverse search. Pakitingnan ang command line sa settings.
 tr:Evrik arama komutu başlatılamadı. Ayarlarda, komut satırını gözden geçirin.
-tw:無法進行逆向搜尋。請檢查設定值裡的命令列。
+tw:無法進行逆向搜尋。請檢查設定的指令列。
 uk:Неможливо запустити команду зворотнього пошуку. Перевірте налашутвання командного рядка.
 uz:Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.
 vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
@@ -5577,7 +5580,7 @@ ta:புதிய பதிப்பை தேடு
 th:ตรวจสอบ &อัพเดท
 tl:Tignan kung may bagong &bersyon
 tr:&Güncellemeleri Denetle
-tw:檢查是否有新版本(&C)
+tw:檢查是否有新版本(&U)
 uk:Перевірити, чи є нова версія
 uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
@@ -5669,7 +5672,7 @@ sv:Stäng
 ta:மூடு
 th:ปิด
 tr:Kapat
-tw:關閉(&C)
+tw:關閉
 uk:Закрити
 uz:Yopish
 vn:Đóng lại
@@ -5708,7 +5711,7 @@ sl:Strni vse
 ta:அனைத்தையும் மறை 
 th:ยุบทั้งหมด
 tr:Tümünü Katla
-tw:全部折叠(&C)
+tw:全部摺疊
 uk:Згорнути всі
 :Color
 am:Գույն
@@ -5799,7 +5802,7 @@ sv:Serier
 ta:சித்திரக்கதை புத்தகங்கள்
 th:หนังสือการ์ตูน
 tr:Çizgi romanlar
-tw:漫畫文件
+tw:漫畫書
 uk:Документи CBR, CBZ (комікси)
 uz:Komikslar
 vn:Truyện tranh comic
@@ -6978,7 +6981,7 @@ sv:Kunde inte avinstallera förhandstitt på PDF:er
 ta:PDF முன்னோட்டத்தை நீக்க முடியவில்லை
 th:ไม่สามารถถอนการติดตั้งโปรแกรมดูตัวอย่าง PDF
 tr:PDF ön izleyicisi kaldırılamadı
-tw:無法解除安裝 PDF 預覽器
+tw:無法卸除 PDF 預覽器
 uk:Не вдалося видалити програму попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
@@ -7003,6 +7006,7 @@ nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 ru:Не удалось удалить фильтр поиска Sumatra
 tr:Sumatra arama süzgeci kaldırılamadı
+tw:無法卸除 Sumatra 搜索過濾器
 vn:Không thể gỡ cài đặt bộ lọc tìm kiếm Sumatra
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
@@ -7062,7 +7066,7 @@ sv:Kunde inte avinstallera webbläsarens insticksprogram
 ta:உலாவி உள்இடுக்கைளை நீக்க முடியவில்லை
 th:ไม่สามารถถอนปลั๊กอินบราวเซอร์
 tr:Tarayıcı eklentisi kaldırılamadı
-tw:無法解除安裝瀏覽器附加元件
+tw:無法卸除瀏覽器附加元件
 uk:Не вдалося видалити розширення для браузера
 uz:Brauzer plaginini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt Plugin trình duyệt
@@ -7124,7 +7128,7 @@ sv:Kunde inte spara %s på hårddisken
 ta:%s ஐ எழுத  இயலவில்லை
 th:ไม่สามารถเขียน %s ไปยังดิสก์
 tr:%s, diske yazılamadı
-tw:無法寫入 %s 到磁碟中
+tw:無法將 %s 寫入磁碟
 uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
@@ -7151,6 +7155,7 @@ nl:Maak Aantekening
 pl:Utwórz adnotację
 ru:Создать аннотацию
 tr:Not Oluştur
+tw:建立評注
 :Created:
 af:Geskep
 am:Ստեղծված`
@@ -7282,7 +7287,7 @@ sv:Aktuell fil
 ta:நடப்பு கோப்பு
 th:ไฟล์ปัจจุบัน
 tr:Geçerli dosya
-tw:當前的檔案
+tw:當前檔案
 uk:Поточний файл
 uz:Joriy fayl
 vn:Tập tin hiện hành
@@ -7345,7 +7350,7 @@ sv:Muspekarens position:
 ta:நிலைகாட்டியின் நிலை
 th:ตำแหน่งเคอร์เซอร์
 tr:İmleç konumu:
-tw:游標位置
+tw:游標位置:
 uk:Позиція вказівника:
 uz:Kursor holati:
 vn:Vị trí con trỏ:
@@ -7469,7 +7474,7 @@ sv:Mörk
 ta:இருள்
 th:เข้ม
 tr:Karanlık
-tw:暗(&D)
+tw:暗
 uk:Темна
 vn:Tối
 :Darker
@@ -7527,7 +7532,7 @@ sv:Mörkare
 ta:மேலும் இருள்
 th:เข้มกว่า
 tr:Kapkaranlık
-tw:更暗(&R)
+tw:更暗
 uk:Темніша
 vn:Tối hơn
 :Default &Layout:
@@ -8010,6 +8015,7 @@ pl:W&yjdź z trybu pełnoekranowego
 ru:&Выйти из полноэкранного режима
 ta:முழுத்திரை வெளியேறு 
 tr:Tam Ekrandan &Çık
+tw:結束全螢幕模式(&X)
 vn:Thoát khỏi chế độ Toàn màn hình
 :E&xit\tCtrl+Q
 af:&Gaan Uit-Q
@@ -8078,7 +8084,7 @@ ta:வெளியேறு\tCtrl+Q
 th:&ออก Ctrl+Q
 tl:Isara\tCtrl+Q
 tr:Ç&ık\tCtrl+O
-tw:離開(&X)\tCtrl+Q
+tw:結束(&X)\tCtrl+Q
 uk:&Вийти\tCtrl+Q
 uz:&Chiqish\tCtrl+Q
 vn:Th&oát\tCtrl+Q
@@ -8175,6 +8181,7 @@ pl:Edytuj
 ru:Изменить
 ta:தொகு 
 tr:Düzenle
+tw:編輯
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 ar:تعديل الشرح و التوضيح 
@@ -8199,6 +8206,7 @@ nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
 tr:Notları Düzenle
+tw:編輯評注
 :Edit Bookmarks
 am:Խմբագրել էջանիշերը
 ar:تعديل العلامات المرجعية
@@ -8222,6 +8230,7 @@ no:Rediger bokmerker
 pl:Edytuj zakładki
 ru:Изменить закладки
 tr:Yer İmlerini Düzenle
+tw:編輯書籤
 vn:Sửa Dấu trang
 :Enter password
 af:Tik Wagwoord In
@@ -8487,7 +8496,7 @@ sv:Fel vid öppning av %s
 ta:ஏற்றுவதில் பிழை %s
 th:เกิดข้อผิดพลาดในการโหลด %s
 tr:%s yükleme hatası
-tw:正在載入 %s 時發生錯誤
+tw:載入 %s 時發生錯誤
 uk:Помилка завантаження %s
 uz:%s yuklab olish xatosi
 vn:Không mở %s được
@@ -8551,6 +8560,7 @@ nl:Exporteer Bladwijzers
 pl:Eksportuj zakładki
 ru:Экспорт закладок
 tr:Yer İmlerini Dışa Aktar
+tw:匯出書籤
 :F&avorites
 am:Ը&նտրյալներ
 ar:المفضلة
@@ -8610,7 +8620,7 @@ sv:&Favoriter
 ta:பிடித்தவை
 th:&รายการโปรด
 tr:S&ık Kullanılanlar
-tw:我的最愛(&A)
+tw:最愛(&A)
 uk:Закладки
 uz:&Tanlanganlar
 vn:Ưa thích
@@ -8674,7 +8684,7 @@ ta:முன்னோக்கி \tAlt+Right Arrow
 th:&ไปข้างหน้า Alt + ลูกศรขวา
 tl:Susunod\tAlt+Right Arrow
 tr:İ&leri\tAlt+Sağ Ok
-tw:下一停頓頁面(&O)\tAlt+->
+tw:下一停頓頁面(&O)\tAlt+右箭頭
 uk:Вперед\tAlt+Права стрілка
 uz:&Oldinga\tAlt+->
 vn:Tiếp tục\tAlt+Mũi tên phải
@@ -8744,7 +8754,7 @@ ta:முழுத்திரை
 th:&เต็มจอภาพ F11
 tl:Pagkasyahin sa buong screen\tCtrl+Shift+L
 tr:&Tam Ekran\tF11
-tw:全螢幕顯示(&U)\tCtrl+Shift+L
+tw:全螢幕模式(&U)\tF11
 uk:На цілий екран\tCtrl+Shift+L
 uz:To'liq &ekran\tCtrl+Shift+L
 vn:Toàn màn hình\tCtrl+Shift+L
@@ -9444,7 +9454,7 @@ sv:Fil %s hittades inte
 ta:%s கோப்பு கிடைக்கவில்லை
 th:ไม่พบไฟล์ %s
 tr:%s dosyası bulunamadı
-tw:找不到檔案 %s
+tw:找不到 %s 檔案
 uk:Файл %s не знайдено
 uz:%s fayli topilmadi
 vn:Không tìm thấy tập tin %s
@@ -9470,6 +9480,7 @@ nl:Bestands Bijlage
 pl:Załącznik
 ru:Вложенный файл
 tr:Dosya Eki
+tw:檔案附件
 vn:Tệp đính kèm
 :File Size:
 am:Ֆայլի չափը՝
@@ -9604,7 +9615,7 @@ ta:கோப்பு
 th:ไฟล์
 tl:File:
 tr:Dosya:
-tw:檔案(&F):
+tw:檔案:
 uk:Файл:
 uz:Fayl:
 vn:Tập tin:
@@ -10222,7 +10233,7 @@ ta:உள்ளடக்கம் பொருந்துக
 th:เต็มจอตามเนื้อหา
 tl:Pagkasyahin ang laman
 tr:İçeriği Sığdır
-tw:符合內容(&T)
+tw:符合內容
 uk:Розмістити вміст
 uz:Tarkibiga moslash
 vn:Vừa nội dung
@@ -10292,7 +10303,7 @@ ta:பக்கம் பொருந்தவை
 th:พอดีหน้า
 tl:Ipagkasya ang Pahina
 tr:Sayfayı Sığdır
-tw:符合頁面(&P)
+tw:符合頁面
 uk:Припасувати сторінку
 uz:Betga moslash
 vn:Vừa trang
@@ -10362,7 +10373,7 @@ ta:அகலத்திற்கு பொருத்து
 th:พอดีความกว้าง
 tl:Ipagkasya ang Lapad
 tr:Genişliğe Sığdır
-tw:符合寬度(&W)
+tw:符合寬度
 uk:Припасувати до ширини
 uz:Eniga moslash
 vn:Vừa chiều rộng
@@ -10425,7 +10436,7 @@ ta:அகலம் பொருத்தி பக்கங்கள் கா�
 th:พอดีกับความกว้างและแสดงหน้าอย่างต่อเนื่อง
 tl:Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 tr:Genişliğe Sığdır ve Sayfaları Sürekli Göster
-tw:符合寬度且連續顯示頁面(&U)
+tw:符合寬度且連續顯示頁面
 uk:Розмістити по ширині на безперервній сторінці
 uz:Eniga moslash va uzluksiz
 vn:Vừa chiều rộng và Xem trang liên tiếp
@@ -10490,7 +10501,7 @@ ta:ஒற்றை பக்கம் பொருந்துக
 th:เต็มจอหน้าเดียว
 tl:Pagkasyahin ang isang pahina
 tr:Tek Sayfa Sığdır
-tw:符合單頁(&T)
+tw:符合單頁
 uk:Вмістити на сторінку
 uz:Bitta betga moslash
 vn:Vừa một trang đơn
@@ -10555,7 +10566,7 @@ sv:Typsnitt:
 ta:எழுத்துரு:
 th:ตัวหนังสือ
 tr:Yazı Tipleri:
-tw:字型(&F):
+tw:字型:
 uk:Шрифти
 uz:Shriftlar:
 vn:Font chữ
@@ -11277,6 +11288,7 @@ pl:Obrazy
 ru:Изображения
 ta:படங்கள் 
 tr:Resimler
+tw:圖片
 :Ink
 am:Թանաք
 ar:حبر
@@ -11681,7 +11693,7 @@ sv:Låt Windows inbyggda sökfunktion indexera PDF-dokument
 ta:விண்டோஸ் டெஸ்க்டாப் தேடல் &PDF கோப்புகளை தேடட்டும்
 th:ให้ Windows Desktop Search &ค้นหาเอกสาร PDF
 tr:Windows Masaüstü Arama'nın, PDF belgelerini aramasını sağla
-tw:讓 Windows 「桌面搜尋」搜尋 PDF 文件
+tw:讓 Windows 「桌面搜尋」搜尋 PDF 文件(&S)
 uk:Дозволити Windows Desktop Search пошук у PDF документах
 uz:Windows Desktop Search yordamida PDF hujjatlarini &qidirish
 vn:Cho phép Windows &tìm kiếm các tài liệu PDF
@@ -11798,7 +11810,7 @@ sv:Ljus
 ta:ஒளி 
 th:สว่าง
 tr:Aydınlık
-tw:亮(&L)
+tw:亮
 uk:Світла
 vn:Sáng
 :Line
@@ -11827,6 +11839,7 @@ pl:Linia
 ru:Линия
 ta:கோடு 
 tr:Çizgi
+tw:線條
 :MB
 af:MB
 am:ՄԲ
@@ -11962,7 +11975,7 @@ ta:சுமத்ராPDFயை கோட நிலை PDF படிப்ப�
 th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF หรือไม่
 tl:Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
 tr:SumatraPDF, PDF dosyalarının öntanımlı uygulaması yapılsın mı?
-tw:把 SumatraPDF 作為預設的 PDF 閱讀器?
+tw:是否把 SumatraPDF 作為預設的 PDF 閱讀器？
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
 uz:SumatraPDF PDF-fayllarni ko'rish andoza dasturi sifatida ishlatilsinmi?
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
@@ -12334,7 +12347,7 @@ sl:Novo okno\tCtrl+N
 ta:புதிய சாளரம் 
 th:เปิด &หน้าต่างใหม่ Ctrl+N
 tr:Yeni &pencere\tCtrl+N
-tw:新建視窗(&W)\tCtrl+N
+tw:新增視窗(&W)\tCtrl+N
 vn:Mở cửa sổ mới\tCtrl+N
 :New Bookmarks
 am:Նոր էջանիշեր
@@ -12359,6 +12372,7 @@ nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
 ru:Новые закладки
 tr:Yeni Yer İmleri
+tw:新增書籤
 vn:Thêm Dấu trang mới
 :New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
@@ -12425,7 +12439,7 @@ ta:புதிய பதிப்பு %s பதிவிறக்க இர�
 th:รุ่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่?
 tl:May bagong bersyon: %s. I-download?
 tr:Yeni sürüm %s dağıtıma sunulmuştur. İndirmek ister misiniz?
-tw:最新版本 %s。 是否下載新版本?
+tw:有最新版本 %s 提供。是否下載新版本?
 uk:Нова версія %s є доступною. Завантажити нову версію?
 uz:Yangi versiya mavjud: %s. Yuklab olinsinmi?
 vn:Đã có phiên bản mới %s. Tải về phiên bản mới?
@@ -12690,7 +12704,7 @@ ta:ஒத்தியங்கு கோப்பு எதுவும் க�
 th:ไม่พบไฟล์การซิงโครไนซ์
 tl:Walang makitang synchronization file
 tr:Eşzamanlama dosyası bulunamadı
-tw:找不到同步檔案
+tw:沒有同步檔案
 uk:Файли синхронізації не знайдено
 uz:Sinxronlanish fayli topilmadi
 vn:Không tìm thấy tập tin đồng bộ nào
@@ -12754,7 +12768,7 @@ ta:ஒத்தியங்கு தகவல் எதுவும் இந�
 th:ไม่มีข้อมูลการซิงโครไนซ์ที่ตำแหน่งนี้
 tl:Walang makitang detalye ng synchronization dito
 tr:Bu konumda eşzamanlama bilgisi yok
-tw:沒有同步資料
+tw:沒有同步資料於此位置
 uk:Немає Інформації про синхронізацію на цій позиції
 uz:Bu joyda sinxronlanish ma'lumoti yo'q
 vn:Không có thông tin đồng bộ ở chỗ này
@@ -13027,7 +13041,7 @@ ta:PDF-XChange இல் திற
 th:เปิด &ใน PDF-XChange
 tl:Buksan sa PDF-XChange
 tr:PDF-XChange ile aç
-tw:開啟於 PDF-XChange(&X)
+tw:於 PDF-XChange 開啟(&I)
 uk:Відкрити у PDF-XChange
 uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
@@ -13052,6 +13066,7 @@ nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
 ru:Открыть вложенный PDF
 tr:Gömülü PDF Aç
+tw:開啟內嵌的 PDF
 :Open a document...
 am:Բացել փաստաթուղթ...
 ar:فتح مستند...
@@ -13112,7 +13127,7 @@ sv:Öppna ett dokument...
 ta:ஆவணத்தை திறக்க...
 th:เปิดข้อมูล
 tr:Belge aç...
-tw:開啟檔案...
+tw:開啟文件...
 uk:Відкрити документ...
 uz:Hujjatni ochish...
 vn:Mở một tập tin...
@@ -14086,7 +14101,7 @@ ta:பக்க அளவு
 th:ขนาดหน้า:
 tl:Laki ng Page
 tr:Sayfa Boyutu:
-tw:頁面大小(&Z):
+tw:頁面大小:
 uk:Розмір сторінки:
 uz:Bet o'lchami:
 vn:Kích thước trang:
@@ -14470,7 +14485,7 @@ ta:தயவுசெய்து காத்திருக்கவும் 
 th:กรุณารอ - กำลังประมวลผล ... ...
 tl:Maghintay - pinapakita...
 tr:Bekleyiniz - oluşturuluyor...
-tw:請稍等—正在渲染...
+tw:請稍等，正在渲染...
 uk:Зачекайте - генерується...
 uz:Kutib turing - render qilinmoqda...
 vn:Xin chờ đợi, đang hiện...
@@ -14495,6 +14510,7 @@ pl:Polilinia
 ru:Ломаная
 ta:பலகோடு 
 tr:Çoklu Çizgi
+tw:多線條
 :Polygon
 am:Պոլիգոն
 ar:مضلع
@@ -14517,6 +14533,7 @@ pl:Wielokąt
 ru:Многоугольник
 ta:பலகோணம் 
 tr:Çokgen
+tw:多邊形
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -15394,6 +15411,7 @@ pl:Usuń element
 ru:Удалить элемент
 ta:உருப்படியை நீக்கு 
 tr:Ögeyi Kaldır
+tw:移除項目
 :Remove from favorites
 af:Verwyder van gunstelinge
 am:Հեռացնել ընտրյալներից
@@ -15516,7 +15534,7 @@ sv:Ta bort sida %s från favoriter
 ta:%s பக்கத்தை பிடித்தவையில் இருந்து நீக்குக
 th:ลบหน้า %s ออกจากรายการโปรด
 tr:%s sayfasını sık kullanılanlardan kaldır
-tw:從我的最愛中移除第 %s 頁
+tw:從最愛移除第 %s 頁
 uk:Видалити %s сторінку із закладок
 uz:%s betni tanlanganlardan o'chirish
 vn:Xoá trang %s khỏi Ưa thích
@@ -15761,7 +15779,7 @@ ru:Сохранить аннотации
 sl:Shrani pripombe
 th:บันทึกคำอธิบายประกอบ
 tr:Notları Kaydet
-tw:儲存注釋
+tw:儲存評注
 uk:Зберегти аннотації
 :Save As
 af:Stoor As
@@ -15855,6 +15873,7 @@ nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
 ru:Сохранить вложенный файл...
 tr:Gömülü Dosyayı Kaydet...
+tw:儲存內嵌的檔案...
 :Save S&hortcut...\tCtrl+Shift+S
 am:Պահպանել պ&իտակը...\tCtrl+Shift+S
 ar:حفظ الاختصار...\tCtrl+Shift+S
@@ -15913,7 +15932,7 @@ sv:Spara g&enväg...\tCtrl+Shift+S
 ta:குறுக்குவழி சேமி...\tCtrl+Shift+S
 th:บันทึก &ทางลัด... Ctrl+Shift+S
 tr:K&ısayolu Kaydet...\tCtrl+Shift+S
-tw:儲存為捷徑(&H)...\tCtrl+Shift+S
+tw:儲存捷徑(&H)...\tCtrl+Shift+S
 uk:Зберегти ярлик...\tCtrl+Shift+S
 uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
@@ -16230,7 +16249,7 @@ sv:Välj en katalog där SumatraPDF ska installeras:
 ta:சுமத்ராPDF நிறுவல் கோப்புறை தேர்வு செய்க:
 th:เลือกโฟลเดอร์ที่ควรติดตั้ง SumatraPDF:
 tr:SumatraPDF'nin kurulacağı klasörün yerini seç:
-tw:選擇 SumatraPDF 應被安裝的資料夾：
+tw:選擇 SumatraPDF 應安裝的資料夾:
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
 uz:SumatraPDF o'rnatish uchun jildni tanlang:
 vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
@@ -16425,7 +16444,7 @@ ta:தலைகீழ் தேடல் கட்டளை வரி அமை�
 th:ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 tr:Evrik arama komut satırı belirle
-tw:設定反向搜尋命令行
+tw:設定反向搜尋指令列
 uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
@@ -16586,6 +16605,7 @@ pl:Pokaż &paski przewijania
 ru:&Показать ползунки
 ta:உருட்பட்டைகளை காண்பி 
 tr:&Kaydırma Çubuklarını Göster
+tw:顯示捲軸(&S)
 vn:Hiện &Thanh cuộn
 :Show &Toolbar\tF8
 af:Vertoon Toolbar
@@ -16653,7 +16673,7 @@ ta:கருவிப்பட்டை காண்பி
 th:แสดง &แถบเครื่องมือ F8
 tl:Ipakita ang toolbar
 tr:&Araç Çubuğunu Göster\tF8
-tw:顯示工具列(&T)
+tw:顯示工具列(&T)\tF8
 uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
@@ -16776,6 +16796,7 @@ pl:Pokaż p&aski przewijania
 ru:Показать пол&зунки
 ta:உருட்பட்டைகளை காண்பி 
 tr:Kaydırma Ç&ubuklarını Göster
+tw:顯示捲軸(&O)
 :Show frequently read
 am:Ցուցադրել հաճախակի բացվածները
 ar:إظهار الأكثر قراءة
@@ -17231,6 +17252,7 @@ pl:Pieczęć
 ru:Печать
 ta:பொளியிடு 
 tr:Damga
+tw:戳記
 :Start SumatraPDF
 am:Բացել SumatraPDF-ը
 ar:بدء تشغيل مستندات Sumatra  المحمولة
@@ -17315,6 +17337,7 @@ pl:Skreślenie
 ru:Перечёркивание
 ta:இடைக்கோடு 
 tr:Üstü Çizili
+tw:刪除線
 vn:Gạch ngang từ
 :Subject:
 af:Onderwerp
@@ -17972,6 +17995,7 @@ nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
 ru:Поддержать SumatraPDF
 tr:SumatraPDF'yi Destekle
+tw:支持 SumatraPDF
 vn:Hỗ trợ SumatraPDF
 :Synchronization file cannot be opened
 am:Հնարավոր չէ բացել համաժամեցման ֆայլը
@@ -18167,6 +18191,7 @@ pl:Tekst
 ru:Текст
 ta:எழுத்து 
 tr:Metin
+tw:文字
 :Text documents
 am:Տեքստային ֆայլեր
 ar:مستندات نصية
@@ -18254,6 +18279,7 @@ pl:Dziękujemy za wybranie RA-MICRO PDF!
 ru:Спасибо, что выбрали RA-MICRO PDF!
 ta:ரா-மைக்ரோ பி.டி.எஃப் ஐ தேர்வு செய்தமைக்கு நன்றி! 
 tr:RA-MICRO PDF'yi seçtiğiniz için teşekkürler!
+tw:感謝您選用 RA-MICRO PDF！
 :Thank you for choosing SumatraPDF!
 am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
 ar:نشكركم لاختياركم مستندات Sumatra المحمولة  
@@ -18591,6 +18617,7 @@ pl:Podkreślenie
 ru:Подчёркивание
 ta:அடிக்கோடு 
 tr:Altı Çizili
+tw:底線
 vn:Gạch chân
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
@@ -18896,7 +18923,7 @@ sv:Använd flikar
 ta:தாவல்களைப் பயன்படுத்துக (&T)
 th:ใช้แท็บ
 tr:&Sekme kullan
-tw:使用頁籤(&T):
+tw:使用分頁(&T)
 uk:Використовувати вкладки
 uz:&Ilovalarni qo'llash
 vn:Dùng &thẻ
@@ -18958,7 +18985,7 @@ sv:Använd SumatraPDF som standardläsare för PDF
 ta:சுமத்ரா PDFஐ முன்னிருப்பக பயன்படுத்து
 th:ใช้ SumatraPDF เป็นโปรแกรมอ่าน PDF เริ่มต้น
 tr:SumatraPDF'yi öntanımlı PDF okuyucu olarak kullan
-tw:使用 SumatraPDF 作為預設的 PDF 閱讀器(&U)
+tw:使用 SumatraPDF 作為預設的 PDF 閱讀器(&D)
 uk:Використовувати SumatraPDF як переглядач для PDF за замовчуванням
 uz:SumatraPDF &andoza PDF o'qish vositasi sifatida ishlatish
 vn:Đặt SumatraPDF là trình đọc PDF mặc định
