@@ -114,11 +114,13 @@ void js_fmtexp(char *p, int e);
 int js_grisu2(double v, char *buffer, int *K);
 double js_strtod(const char *as, char **aas);
 
+double js_strtol(const char *s, char **ep, int radix);
+
 /* Private stack functions */
 
 void js_newarguments(js_State *J);
 void js_newfunction(js_State *J, js_Function *function, js_Environment *scope);
-void js_newscript(js_State *J, js_Function *fun, js_Environment *scope, int type);
+void js_newscript(js_State *J, js_Function *function, js_Environment *scope);
 void js_loadeval(js_State *J, const char *filename, const char *source);
 
 js_Regexp *js_toregexp(js_State *J, int idx);

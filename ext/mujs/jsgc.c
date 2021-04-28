@@ -13,8 +13,6 @@ static void jsG_freeenvironment(js_State *J, js_Environment *env)
 static void jsG_freefunction(js_State *J, js_Function *fun)
 {
 	js_free(J, fun->funtab);
-	js_free(J, fun->numtab);
-	js_free(J, fun->strtab);
 	js_free(J, fun->vartab);
 	js_free(J, fun->code);
 	js_free(J, fun);
@@ -103,7 +101,7 @@ static void jsG_scanobject(js_State *J, int mark, js_Object *obj)
 	if (obj->type == JS_CITERATOR && obj->u.iter.target->gcmark != mark) {
 		jsG_markobject(J, mark, obj->u.iter.target);
 	}
-	if (obj->type == JS_CFUNCTION || obj->type == JS_CSCRIPT || obj->type == JS_CEVAL) {
+	if (obj->type == JS_CFUNCTION || obj->type == JS_CSCRIPT) {
 		if (obj->u.f.scope && obj->u.f.scope->gcmark != mark)
 			jsG_markenvironment(J, mark, obj->u.f.scope);
 		if (obj->u.f.function && obj->u.f.function->gcmark != mark)

@@ -26,8 +26,7 @@ enum js_Class {
 	JS_COBJECT,
 	JS_CARRAY,
 	JS_CFUNCTION,
-	JS_CSCRIPT, /* function created from global code */
-	JS_CEVAL, /* function created from eval code */
+	JS_CSCRIPT, /* function created from global/eval code */
 	JS_CCFUNCTION, /* built-in function */
 	JS_CERROR,
 	JS_CBOOLEAN,

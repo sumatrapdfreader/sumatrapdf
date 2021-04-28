@@ -38,6 +38,7 @@ enum js_OpCode
 
 	OP_IN,		/* <name> <obj> -- <exists?> */
 
+	OP_INITARRAY,	/* <obj> <val> -- <obj> */
 	OP_INITPROP,	/* <obj> <key> <val> -- <obj> */
 	OP_INITGETTER,	/* <obj> <key> <closure> -- <obj> */
 	OP_INITSETTER,	/* <obj> <key> <closure> -- <obj> */
@@ -121,12 +122,6 @@ struct js_Function
 
 	js_Function **funtab;
 	int funcap, funlen;
-
-	double *numtab;
-	int numcap, numlen;
-
-	const char **strtab;
-	int strcap, strlen;
 
 	const char **vartab;
 	int varcap, varlen;

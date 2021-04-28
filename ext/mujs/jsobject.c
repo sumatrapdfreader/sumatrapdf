@@ -31,7 +31,6 @@ static void Op_toString(js_State *J)
 		case JS_CARRAY: js_pushliteral(J, "[object Array]"); break;
 		case JS_CFUNCTION: js_pushliteral(J, "[object Function]"); break;
 		case JS_CSCRIPT: js_pushliteral(J, "[object Function]"); break;
-		case JS_CEVAL: js_pushliteral(J, "[object Function]"); break;
 		case JS_CCFUNCTION: js_pushliteral(J, "[object Function]"); break;
 		case JS_CERROR: js_pushliteral(J, "[object Error]"); break;
 		case JS_CBOOLEAN: js_pushliteral(J, "[object Boolean]"); break;

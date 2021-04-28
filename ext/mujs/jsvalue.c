@@ -7,6 +7,40 @@
 #define JSV_ISSTRING(v) (v->type==JS_TSHRSTR || v->type==JS_TMEMSTR || v->type==JS_TLITSTR)
 #define JSV_TOSTRING(v) (v->type==JS_TSHRSTR ? v->u.shrstr : v->type==JS_TLITSTR ? v->u.litstr : v->type==JS_TMEMSTR ? v->u.memstr->p : "")
 
+double js_strtol(const char *s, char **p, int base)
+{
+	/* ascii -> digit value. max base is 36. */
+	static const unsigned char table[256] = {
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 80, 80, 80, 80, 80, 80,
+		80, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+		25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 80, 80, 80, 80, 80,
+		80, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+		25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80
+	};
+	double x;
+	unsigned char c;
+	if (base == 10)
+		for (x = 0, c = *s++; (0 <= c - '0') && (c - '0' < 10); c = *s++)
+			x = x * 10 + (c - '0');
+	else
+		for (x = 0, c = *s++; table[c] < base; c = *s++)
+			x = x * base + table[c];
+	if (p)
+		*p = (char*)s-1;
+	return x;
+}
+
 int jsV_numbertointeger(double n)
 {
 	if (n == 0) return 0;
@@ -172,10 +206,10 @@ double js_stringtofloat(const char *s, char **ep)
 		while (*e >= '0' && *e <= '9') ++e;
 		isflt = 1;
 	}
-	if (isflt || e - s > 9)
+	if (isflt)
 		n = js_strtod(s, &end);
 	else
-		n = strtol(s, &end, 10);
+		n = js_strtol(s, &end, 10);
 	if (end == e) {
 		*ep = (char*)e;
 		return n;
@@ -191,7 +225,7 @@ double jsV_stringtonumber(js_State *J, const char *s)
 	double n;
 	while (jsY_iswhite(*s) || jsY_isnewline(*s)) ++s;
 	if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X') && s[2] != 0)
-		n = strtol(s + 2, &e, 16);
+		n = js_strtol(s + 2, &e, 16);
 	else if (!strncmp(s, "Infinity", 8))
 		n = INFINITY, e = (char*)s + 8;
 	else if (!strncmp(s, "+Infinity", 9))
@@ -421,9 +455,9 @@ void js_newfunction(js_State *J, js_Function *fun, js_Environment *scope)
 	}
 }
 
-void js_newscript(js_State *J, js_Function *fun, js_Environment *scope, int type)
+void js_newscript(js_State *J, js_Function *fun, js_Environment *scope)
 {
-	js_Object *obj = jsV_newobject(J, type, NULL);
+	js_Object *obj = jsV_newobject(J, JS_CSCRIPT, NULL);
 	obj->u.f.function = fun;
 	obj->u.f.scope = scope;
 	js_pushobject(J, obj);

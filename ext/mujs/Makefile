@@ -1,5 +1,7 @@
 # Build type and install directories:
 
+-include user.make
+
 build ?= release
 
 prefix ?= /usr/local
@@ -30,8 +32,8 @@ ifeq "$(build)" "debug"
 else ifeq "$(build)" "sanitize"
   CFLAGS += -pipe -g -fsanitize=address -fno-omit-frame-pointer
   LDFLAGS += -fsanitize=address
-else
-  CFLAGS += -Os
+else ifeq "$(build)" "release"
+  CFLAGS += -O2
   LDFLAGS += -Wl,-s
 endif
 
@@ -41,6 +43,7 @@ ifeq "$(HAVE_READLINE)" "yes"
 endif
 
 CFLAGS += $(XCFLAGS)
+CPPFLAGS += $(XCPPFLAGS)
 
 # You shouldn't need to edit anything below here.
 
@@ -67,11 +70,11 @@ jsdump.c: astnames.h opnames.h
 
 $(OUT)/%.o: %.c $(HDRS)
 	@ mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 $(OUT)/libmujs.o: one.c $(HDRS)
 	@ mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 $(OUT)/libmujs.a: $(OUT)/libmujs.o
 	@ mkdir -p $(dir $@)
@@ -79,7 +82,7 @@ $(OUT)/libmujs.a: $(OUT)/libmujs.o
 
 $(OUT)/libmujs.so: one.c $(HDRS)
 	@ mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -fPIC -shared -o $@ $< -lm
+	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -shared $(LDFLAGS) -o $@ $< -lm
 
 $(OUT)/mujs: $(OUT)/libmujs.o $(OUT)/main.o
 	@ mkdir -p $(dir $@)

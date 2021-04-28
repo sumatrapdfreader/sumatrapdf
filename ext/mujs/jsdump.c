@@ -286,7 +286,12 @@ static void pstr(const char *s)
 static void pregexp(const char *prog, int flags)
 {
 	pc('/');
-	ps(prog);
+	while (*prog) {
+		if (*prog == '/')
+			pc('\\');
+		pc(*prog);
+		++prog;
+	}
 	pc('/');
 	if (flags & JS_REGEXP_G) pc('g');
 	if (flags & JS_REGEXP_I) pc('i');
@@ -776,6 +781,8 @@ void jsC_dumpfunction(js_State *J, js_Function *F)
 {
 	js_Instruction *p = F->code;
 	js_Instruction *end = F->code + F->codelen;
+	char *s;
+	double n;
 	int i;
 
 	minify = 0;
@@ -802,16 +809,21 @@ void jsC_dumpfunction(js_State *J, js_Function *F)
 			printf(" %ld", (long)((*p++) - 32768));
 			break;
 		case OP_NUMBER:
-			printf(" %.9g", F->numtab[*p++]);
+			memcpy(&n, p, sizeof(n));
+			p += sizeof(n) / sizeof(*p);
+			printf(" %.9g", n);
 			break;
 		case OP_STRING:
+			memcpy(&s, p, sizeof(s));
+			p += sizeof(s) / sizeof(*p);
 			pc(' ');
-			pstr(F->strtab[*p++]);
+			pstr(s);
 			break;
 		case OP_NEWREGEXP:
 			pc(' ');
-			pregexp(F->strtab[p[0]], p[1]);
-			p += 2;
+			memcpy(&s, p, sizeof(s));
+			p += sizeof(s) / sizeof(*p);
+			pregexp(s, *p++);
 			break;
 
 		case OP_GETVAR:
@@ -822,8 +834,10 @@ void jsC_dumpfunction(js_State *J, js_Function *F)
 		case OP_SETPROP_S:
 		case OP_DELPROP_S:
 		case OP_CATCH:
+			memcpy(&s, p, sizeof(s));
+			p += sizeof(s) / sizeof(*p);
 			pc(' ');
-			ps(F->strtab[*p++]);
+			ps(s);
 			break;
 
 		case OP_GETLOCAL:
@@ -885,7 +899,6 @@ void js_dumpvalue(js_State *J, js_Value v)
 				v.u.object->u.f.function->line);
 			break;
 		case JS_CSCRIPT: printf("[Script %s]", v.u.object->u.f.function->filename); break;
-		case JS_CEVAL: printf("[Eval %s]", v.u.object->u.f.function->filename); break;
 		case JS_CCFUNCTION: printf("[CFunction %s]", v.u.object->u.c.name); break;
 		case JS_CBOOLEAN: printf("[Boolean %d]", v.u.object->u.boolean); break;
 		case JS_CNUMBER: printf("[Number %g]", v.u.object->u.number); break;

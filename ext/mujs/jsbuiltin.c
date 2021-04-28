@@ -3,6 +3,7 @@
 #include "jscompile.h"
 #include "jsvalue.h"
 #include "jsbuiltin.h"
+#include "regexp.h"
 
 static void jsB_globalf(js_State *J, const char *name, js_CFunction cfun, int n)
 {
@@ -33,7 +34,7 @@ void jsB_props(js_State *J, const char *name, const char *string)
 static void jsB_parseInt(js_State *J)
 {
 	const char *s = js_tostring(J, 1);
-	int radix = js_isdefined(J, 2) ? js_tointeger(J, 2) : 10;
+	int radix = js_isdefined(J, 2) ? js_tointeger(J, 2) : 0;
 	double sign = 1;
 	double n;
 	char *e;
@@ -56,7 +57,7 @@ static void jsB_parseInt(js_State *J)
 		js_pushnumber(J, NAN);
 		return;
 	}
-	n = strtol(s, &e, radix);
+	n = js_strtol(s, &e, radix);
 	if (s == e)
 		js_pushnumber(J, NAN);
 	else
@@ -166,7 +167,7 @@ static void Decode(js_State *J, const char *str, const char *reserved)
 #define URIRESERVED ";/?:@&=+$,"
 #define URIALPHA "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define URIDIGIT "0123456789"
-#define URIMARK "-_.!~*`()"
+#define URIMARK "-_.!~*'()"
 #define URIUNESCAPED URIALPHA URIDIGIT URIMARK
 
 static void jsB_decodeURI(js_State *J)
@@ -198,8 +199,11 @@ void jsB_init(js_State *J)
 	J->Boolean_prototype = jsV_newobject(J, JS_CBOOLEAN, J->Object_prototype);
 	J->Number_prototype = jsV_newobject(J, JS_CNUMBER, J->Object_prototype);
 	J->String_prototype = jsV_newobject(J, JS_CSTRING, J->Object_prototype);
-	J->RegExp_prototype = jsV_newobject(J, JS_COBJECT, J->Object_prototype);
 	J->Date_prototype = jsV_newobject(J, JS_CDATE, J->Object_prototype);
+
+	J->RegExp_prototype = jsV_newobject(J, JS_CREGEXP, J->Object_prototype);
+	J->RegExp_prototype->u.r.prog = js_regcompx(J->alloc, J->actx, "(?:)", 0, NULL);
+	J->RegExp_prototype->u.r.source = js_strdup(J, "(?:)");
 
 	/* All the native error types */
 	J->Error_prototype = jsV_newobject(J, JS_CERROR, J->Object_prototype);

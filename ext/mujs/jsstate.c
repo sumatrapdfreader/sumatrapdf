@@ -10,15 +10,10 @@
 
 static void *js_defaultalloc(void *actx, void *ptr, int size)
 {
-#ifndef __has_feature
-#define __has_feature(x) 0
-#endif
-#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 	if (size == 0) {
 		free(ptr);
 		return NULL;
 	}
-#endif
 	return realloc(ptr, (size_t)size);
 }
 
@@ -113,7 +108,7 @@ static void js_loadstringx(js_State *J, const char *filename, const char *source
 	P = jsP_parse(J, filename, source);
 	F = jsC_compilescript(J, P, iseval ? J->strict : J->default_strict);
 	jsP_freeparse(J);
-	js_newscript(J, F, iseval ? (J->strict ? J->E : NULL) : J->GE, iseval ? JS_CEVAL : JS_CSCRIPT);
+	js_newscript(J, F, iseval ? (J->strict ? J->E : NULL) : J->GE);
 
 	js_endtry(J);
 }

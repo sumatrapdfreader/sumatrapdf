@@ -3,7 +3,26 @@
 #include "jsbuiltin.h"
 #include "regexp.h"
 
-void js_newregexp(js_State *J, const char *pattern, int flags)
+static char *escaperegexp(js_State *J, const char *pattern) {
+	char *copy, *p;
+	const char *s;
+	int n = 0;
+	for (s = pattern; *s; ++s) {
+		if (*s == '/')
+			++n;
+		++n;
+	}
+	copy = p = js_malloc(J, n+1);
+	for (s = pattern; *s; ++s) {
+		if (*s == '/')
+			*p++ = '\\';
+		*p++ = *s;
+	}
+	*p = 0;
+	return copy;
+}
+
+static void js_newregexpx(js_State *J, const char *pattern, int flags, int is_clone)
 {
 	const char *error;
 	js_Object *obj;
@@ -21,10 +40,15 @@ void js_newregexp(js_State *J, const char *pattern, int flags)
 		js_syntaxerror(J, "regular expression: %s", error);
 
 	obj->u.r.prog = prog;
-	obj->u.r.source = js_strdup(J, pattern);
+	obj->u.r.source = is_clone ? js_strdup(J, pattern) : escaperegexp(J, pattern);
 	obj->u.r.flags = flags;
 	obj->u.r.last = 0;
 	js_pushobject(J, obj);
+}
+
+void js_newregexp(js_State *J, const char *pattern, int flags)
+{
+	js_newregexpx(J, pattern, flags, 0);
 }
 
 void js_RegExp_prototype_exec(js_State *J, js_Regexp *re, const char *text)
@@ -116,6 +140,7 @@ static void jsB_new_RegExp(js_State *J)
 	js_Regexp *old;
 	const char *pattern;
 	int flags;
+	int is_clone = 0;
 
 	if (js_isregexp(J, 1)) {
 		if (js_isdefined(J, 2))
@@ -123,6 +148,7 @@ static void jsB_new_RegExp(js_State *J)
 		old = js_toregexp(J, 1);
 		pattern = old->source;
 		flags = old->flags;
+		is_clone = 1;
 	} else if (js_isundefined(J, 1)) {
 		pattern = "(?:)";
 		flags = 0;
@@ -152,7 +178,7 @@ static void jsB_new_RegExp(js_State *J)
 		if (m) flags |= JS_REGEXP_M;
 	}
 
-	js_newregexp(J, pattern, flags);
+	js_newregexpx(J, pattern, flags, is_clone);
 }
 
 static void jsB_RegExp(js_State *J)

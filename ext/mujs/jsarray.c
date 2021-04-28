@@ -103,7 +103,7 @@ static void Ap_join(js_State *J)
 		seplen = 1;
 	}
 
-	if (len == 0) {
+	if (len <= 0) {
 		js_pushliteral(J, "");
 		return;
 	}
@@ -423,9 +423,18 @@ static void Ap_unshift(js_State *J)
 
 static void Ap_toString(js_State *J)
 {
-	int top = js_gettop(J);
-	js_pop(J, top - 1);
-	Ap_join(J);
+	if (!js_iscoercible(J, 0))
+		js_typeerror(J, "'this' is not an object");
+	js_getproperty(J, 0, "join");
+	if (!js_iscallable(J, -1)) {
+		// TODO: call Object.prototype.toString implementation; not via Object.toString JS objects
+		js_getglobal(J, "Object");
+		js_getproperty(J, -1, "toString");
+		js_rot2pop1(J);
+	}
+	js_copy(J, 0);
+	js_call(J, 0);
+	js_pop(J, 1);
 }
 
 static void Ap_indexOf(js_State *J)

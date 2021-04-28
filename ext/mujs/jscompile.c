@@ -110,34 +110,6 @@ static int addfunction(JF, js_Function *value)
 	return F->funlen++;
 }
 
-static int addnumber(JF, double value)
-{
-	int i;
-	for (i = 0; i < F->numlen; ++i)
-		if (F->numtab[i] == value)
-			return i;
-	if (F->numlen >= F->numcap) {
-		F->numcap = F->numcap ? F->numcap * 2 : 16;
-		F->numtab = js_realloc(J, F->numtab, F->numcap * sizeof *F->numtab);
-	}
-	F->numtab[F->numlen] = value;
-	return F->numlen++;
-}
-
-static int addstring(JF, const char *value)
-{
-	int i;
-	for (i = 0; i < F->strlen; ++i)
-		if (!strcmp(F->strtab[i], value))
-			return i;
-	if (F->strlen >= F->strcap) {
-		F->strcap = F->strcap ? F->strcap * 2 : 16;
-		F->strtab = js_realloc(J, F->strtab, F->strcap * sizeof *F->strtab);
-	}
-	F->strtab[F->strlen] = value;
-	return F->strlen++;
-}
-
 static int addlocal(JF, js_Ast *ident, int reuse)
 {
 	const char *name = ident->string;
@@ -196,15 +168,27 @@ static void emitnumber(JF, double num)
 		emit(J, F, OP_INTEGER);
 		emitarg(J, F, num + 32768);
 	} else {
+#define N (sizeof(num) / sizeof(js_Instruction))
+		js_Instruction x[N];
+		size_t i;
 		emit(J, F, OP_NUMBER);
-		emitarg(J, F, addnumber(J, F, num));
+		memcpy(x, &num, sizeof(num));
+		for (i = 0; i < N; ++i)
+			emitarg(J, F, x[i]);
+#undef N
 	}
 }
 
 static void emitstring(JF, int opcode, const char *str)
 {
+#define N (sizeof(str) / sizeof(js_Instruction))
+	js_Instruction x[N];
+	size_t i;
 	emit(J, F, opcode);
-	emitarg(J, F, addstring(J, F, str));
+	memcpy(x, &str, sizeof(str));
+	for (i = 0; i < N; ++i)
+		emitarg(J, F, x[i]);
+#undef N
 }
 
 static void emitlocal(JF, int oploc, int opvar, js_Ast *ident)
@@ -302,17 +286,10 @@ static void cbinary(JF, js_Ast *exp, int opcode)
 
 static void carray(JF, js_Ast *list)
 {
-	int i = 0;
 	while (list) {
-		if (list->a->type != EXP_UNDEF) {
-			emitline(J, F, list->a);
-			emitnumber(J, F, i++);
-			cexp(J, F, list->a);
-			emitline(J, F, list->a);
-			emit(J, F, OP_INITPROP);
-		} else {
-			++i;
-		}
+		emitline(J, F, list->a);
+		cexp(J, F, list->a);
+		emit(J, F, OP_INITARRAY);
 		list = list->b;
 	}
 }
@@ -630,8 +607,7 @@ static void cexp(JF, js_Ast *exp)
 
 	case EXP_REGEXP:
 		emitline(J, F, exp);
-		emit(J, F, OP_NEWREGEXP);
-		emitarg(J, F, addstring(J, F, exp->string));
+		emitstring(J, F, OP_NEWREGEXP, exp->string);
 		emitarg(J, F, exp->number);
 		break;
 

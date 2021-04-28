@@ -25,6 +25,7 @@
 "setvar",
 "delvar",
 "in",
+"initarray",
 "initprop",
 "initgetter",
 "initsetter",

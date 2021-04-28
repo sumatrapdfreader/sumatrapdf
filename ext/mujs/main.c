@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include <errno.h>
 
 #include "mujs.h"
@@ -216,10 +220,13 @@ static const char *require_js =
 	"require.cache = Object.create(null);\n"
 ;
 
+
 static const char *stacktrace_js =
 	"Error.prototype.toString = function() {\n"
-	"if (this.stackTrace) return this.name + ': ' + this.message + this.stackTrace;\n"
-	"return this.name + ': ' + this.message;\n"
+	"var s = this.name;\n"
+	"if ('message' in this) s += ': ' + this.message;\n"
+	"if ('stackTrace' in this) s += this.stackTrace;\n"
+	"return s;\n"
 	"};\n"
 ;
 

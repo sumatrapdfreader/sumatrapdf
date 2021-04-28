@@ -107,7 +107,7 @@ static int dec(struct cstate *g, int c)
 	return 0;
 }
 
-#define ESCAPES "BbDdSsWw^$\\.*+?()[]{}|0123456789"
+#define ESCAPES "BbDdSsWw^$\\.*+?()[]{}|-0123456789"
 
 static int isunicodeletter(int c)
 {
@@ -809,6 +809,21 @@ static void dumpnode(Renode *node)
 	}
 }
 
+static void dumpcclass(Reclass *cc) {
+	Rune *p;
+	for (p = cc->spans; p < cc->end; p += 2) {
+		if (p[0] > 32 && p[0] < 127)
+			printf(" %c", p[0]);
+		else
+			printf(" \\x%02x", p[0]);
+		if (p[1] > 32 && p[1] < 127)
+			printf("-%c", p[1]);
+		else
+			printf("-\\x%02x", p[1]);
+	}
+	putchar('\n');
+}
+
 static void dumpprog(Reprog *prog)
 {
 	Reinst *inst;
@@ -824,8 +839,8 @@ static void dumpprog(Reprog *prog)
 		case I_ANY: puts("any"); break;
 		case I_ANYNL: puts("anynl"); break;
 		case I_CHAR: printf(inst->c >= 32 && inst->c < 127 ? "char '%c'\n" : "char U+%04X\n", inst->c); break;
-		case I_CCLASS: puts("cclass"); break;
-		case I_NCCLASS: puts("ncclass"); break;
+		case I_CCLASS: printf("cclass"); dumpcclass(inst->cc); break;
+		case I_NCCLASS: printf("ncclass"); dumpcclass(inst->cc); break;
 		case I_REF: printf("ref %d\n", inst->n); break;
 		case I_BOL: puts("bol"); break;
 		case I_EOL: puts("eol"); break;

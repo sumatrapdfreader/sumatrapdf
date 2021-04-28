@@ -57,9 +57,8 @@ static void Ep_toString(js_State *J)
 
 static int jsB_ErrorX(js_State *J, js_Object *prototype)
 {
-	int top = js_gettop(J);
 	js_pushobject(J, jsV_newobject(J, JS_CERROR, prototype));
-	if (top > 1) {
+	if (js_isdefined(J, 1)) {
 		js_pushstring(J, js_tostring(J, 1));
 		js_defproperty(J, -2, "message", JS_DONTENUM);
 	}
@@ -109,7 +108,6 @@ void jsB_initerror(js_State *J)
 	js_pushobject(J, J->Error_prototype);
 	{
 			jsB_props(J, "name", "Error");
-			jsB_props(J, "message", "an error has occurred");
 			jsB_propf(J, "Error.prototype.toString", Ep_toString, 0);
 	}
 	js_newcconstructor(J, jsB_Error, jsB_Error, "Error", 1);

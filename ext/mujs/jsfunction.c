@@ -56,7 +56,7 @@ static void Fp_toString(js_State *J)
 	if (!js_iscallable(J, 0))
 		js_typeerror(J, "not a function");
 
-	if (self->type == JS_CFUNCTION || self->type == JS_CSCRIPT || self->type == JS_CEVAL) {
+	if (self->type == JS_CFUNCTION || self->type == JS_CSCRIPT) {
 		js_Function *F = self->u.f.function;
 
 		if (js_try(J)) {

@@ -691,10 +691,12 @@ js_strtod(const char *string, char **endPtr)
 			}
 			expSign = FALSE;
 		}
-		while ((*p >= '0') && (*p <= '9')) {
+		while ((*p >= '0') && (*p <= '9') && exp < INT_MAX/100) {
 			exp = exp * 10 + (*p - '0');
 			p += 1;
 		}
+		while ((*p >= '0') && (*p <= '9'))
+			p += 1;
 	}
 	if (expSign) {
 		exp = fracExp - exp;
