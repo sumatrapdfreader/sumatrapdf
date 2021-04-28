@@ -11,11 +11,9 @@
 	and removed frequently.
 */
 
-enum { MAX_KEY_LEN = 48 };
-
 typedef struct
 {
-	unsigned char key[MAX_KEY_LEN];
+	unsigned char key[FZ_HASH_TABLE_KEY_LENGTH];
 	void *val;
 } fz_hash_entry;
 
@@ -50,7 +48,8 @@ fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock, fz_has
 {
 	fz_hash_table *table;
 
-	assert(keylen <= MAX_KEY_LEN);
+	if (keylen > FZ_HASH_TABLE_KEY_LENGTH)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "hash table key length too large");
 
 	table = fz_malloc_struct(ctx, fz_hash_table);
 	table->keylen = keylen;

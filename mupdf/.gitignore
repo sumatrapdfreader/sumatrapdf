@@ -6,7 +6,10 @@ thirdparty/cmap-resources
 
 # Generated files:
 build
-generated
+generated/resources/fonts/droid
+generated/resources/fonts/han
+generated/resources/fonts/noto
+generated/resources/fonts/sil
 tags
 cscope.*
 

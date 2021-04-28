@@ -201,7 +201,7 @@ typedef struct
 			char has_group_alpha;
 			float m[4];
 			void *ptr;
-		} im; /* 24 or 28 bytes */
+		} im; /* 28 or 32 bytes */
 		struct
 		{
 			unsigned char src_md5[16];

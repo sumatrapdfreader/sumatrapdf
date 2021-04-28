@@ -238,7 +238,9 @@ LIBS_TO_INSTALL_IN_LIB = $(MUPDF_LIB_IMPORT)
 else
 LIBS_TO_INSTALL_IN_LIB = $(MUPDF_LIB)
 endif
+ifneq ($(USE_SYSTEM_GLUT),yes)
 THIRD_GLUT_LIB = $(OUT)/libmupdf-glut.a
+endif
 THREAD_LIB = $(OUT)/libmupdf-threads.a
 PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
 
@@ -250,7 +252,9 @@ else
 MUPDF_LIB = $(OUT)/libmupdf.a
 LIBS_TO_INSTALL_IN_LIB = $(MUPDF_LIB) $(THIRD_LIB)
 THIRD_LIB = $(OUT)/libmupdf-third.a
+ifneq ($(USE_SYSTEM_GLUT),yes)
 THIRD_GLUT_LIB = $(OUT)/libmupdf-glut.a
+endif
 THREAD_LIB = $(OUT)/libmupdf-threads.a
 PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
 
@@ -453,7 +457,11 @@ all: libs apps
 clean:
 	rm -rf $(OUT)
 nuke:
-	rm -rf build/* generated
+	rm -rf build/*
+	rm -rf generated/resources/fonts/droid
+	rm -rf generated/resources/fonts/han
+	rm -rf generated/resources/fonts/noto
+	rm -rf generated/resources/fonts/sil
 
 release:
 	$(MAKE) build=release

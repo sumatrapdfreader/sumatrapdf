@@ -5,6 +5,8 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/output.h"
 
+#define FZ_HASH_TABLE_KEY_LENGTH 48
+
 /**
 	Generic hash-table with fixed-length keys.
 
