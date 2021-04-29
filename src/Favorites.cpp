@@ -846,6 +846,7 @@ void CreateFavorites(WindowInfo* win) {
 
     TreeCtrl* treeCtrl = new TreeCtrl(win->hwndFavBox);
 
+    treeCtrl->fullRowSelect = true;
     treeCtrl->onContextMenu = FavTreeContextMenu;
     treeCtrl->onChar = TocTreeCharHandler;
     treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;

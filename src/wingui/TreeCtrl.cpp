@@ -502,6 +502,10 @@ bool TreeCtrl::Create() {
     if (!supportDragDrop) {
         dwStyle |= TVS_DISABLEDRAGDROP;
     }
+    if (fullRowSelect) {
+        dwStyle |= TVS_FULLROWSELECT;
+        dwStyle &= ~TVS_HASLINES;
+    }
 
     bool ok = WindowBase::Create();
     if (!ok) {

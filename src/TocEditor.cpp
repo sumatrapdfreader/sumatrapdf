@@ -806,25 +806,26 @@ static void CreateMainLayout(TocEditorWindow* win) {
 
     CreateButtonsLayout(win);
 
-    auto* tree = new TreeCtrl(hwnd);
-    gWindow->treeCtrl = tree;
+    auto* treeCtrl = new TreeCtrl(hwnd);
+    gWindow->treeCtrl = treeCtrl;
 
     int dx = DpiScale(80);
     int dy = DpiScale(120);
-    tree->idealSize = {dx, dy};
+    treeCtrl->idealSize = {dx, dy};
 
-    tree->supportDragDrop = true;
-    tree->withCheckboxes = true;
-    tree->onTreeGetDispInfo = std::bind(&TocEditorWindow::GetDispInfoHandler, win, _1);
-    tree->onDropFiles = std::bind(&TocEditorWindow::DropFilesHandler, win, _1);
-    tree->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChangedHandler, win, _1);
-    tree->onTreeItemCustomDraw = OnTocCustomDraw;
-    tree->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
-    tree->onTreeClick = std::bind(&TocEditorWindow::TreeClickHandler, win, _1);
-    tree->onTreeItemDragStartEnd = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
-    tree->onContextMenu = std::bind(&TocEditorWindow::TreeContextMenu, win, _1);
+    treeCtrl->fullRowSelect = true;
+    treeCtrl->supportDragDrop = true;
+    treeCtrl->withCheckboxes = true;
+    treeCtrl->onTreeGetDispInfo = std::bind(&TocEditorWindow::GetDispInfoHandler, win, _1);
+    treeCtrl->onDropFiles = std::bind(&TocEditorWindow::DropFilesHandler, win, _1);
+    treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChangedHandler, win, _1);
+    treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
+    treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
+    treeCtrl->onTreeClick = std::bind(&TocEditorWindow::TreeClickHandler, win, _1);
+    treeCtrl->onTreeItemDragStartEnd = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
+    treeCtrl->onContextMenu = std::bind(&TocEditorWindow::TreeContextMenu, win, _1);
 
-    bool ok = tree->Create();
+    bool ok = treeCtrl->Create();
     CrashIf(!ok);
 
     win->labelInfo = new StaticCtrl(hwnd);
@@ -837,7 +838,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     main->alignMain = MainAxisAlign::MainStart;
     main->alignCross = CrossAxisAlign::Stretch;
 
-    main->AddChild(tree, 1);
+    main->AddChild(treeCtrl, 1);
     main->AddChild(win->labelInfo, 0);
     main->AddChild(win->layoutButtons, 0);
 

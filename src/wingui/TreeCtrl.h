@@ -106,8 +106,11 @@ typedef std::function<void(TreeItemDraggeddEvent*)> TreeItemDraggedHandler;
 */
 
 struct TreeCtrl : WindowBase {
-    // creation parameters. must be set before CreateTreeCtrl() call
+    // creation parameters. must be set before Create() call
     bool withCheckboxes{false};
+
+    // sets TVS_FULLROWSELECT style https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
+    bool fullRowSelect{false};
 
     // set before Create() to enable drag&drop
     bool supportDragDrop{false};

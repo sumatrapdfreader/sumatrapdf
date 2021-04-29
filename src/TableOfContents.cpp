@@ -1148,6 +1148,7 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks->Create();
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox);
+    treeCtrl->fullRowSelect = true;
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
     treeCtrl->onGetTooltip = TocCustomizeTooltip;
     treeCtrl->onContextMenu = TocContextMenu;
