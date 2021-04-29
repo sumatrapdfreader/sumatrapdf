@@ -1,0 +1,7 @@
+[build-system]
+requires = []
+
+# See pep-517.
+#
+build-backend = "setup"
+backend-path = ["."]
