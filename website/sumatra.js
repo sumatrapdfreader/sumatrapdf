@@ -47,7 +47,8 @@ var gPrevSumatraVersion = [
 ];
 
 var dlPrefix = "/dl/";
-var dlPrefix2 = "/dl2/";
+//var dlPrefix2 = "/dl2/";
+var dlPrefix2 = "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/rel/";
 var host = "https://www.sumatrapdfreader.org";
 
 function a(href, txt) {
