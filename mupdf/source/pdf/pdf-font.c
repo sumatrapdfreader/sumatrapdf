@@ -613,8 +613,6 @@ static int use_s22pdf_workaround(fz_context *ctx, pdf_obj *dict, pdf_obj *descri
 	{
 		if (pdf_dict_get(ctx, dict, PDF_NAME(Encoding)) != PDF_NAME(WinAnsiEncoding))
 			return 0;
-		if (pdf_dict_get(ctx, dict, PDF_NAME(ToUnicode)) != NULL)
-			return 0;
 		if (pdf_dict_get_int(ctx, descriptor, PDF_NAME(Flags)) != 4)
 			return 0;
 		return 1;

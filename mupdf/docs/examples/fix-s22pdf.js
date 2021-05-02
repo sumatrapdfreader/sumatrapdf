@@ -24,10 +24,12 @@ var MAP = {
 var i, n = doc.countPages();
 for (i = 0; i < n; ++i) {
 	var fonts = doc.findPage(i).Resources.Font;
-	fonts.forEach(function (name, font) {
-		if (font.BaseFont in MAP && font.Encoding == 'WinAnsiEncoding')
-			fonts[name] = MAP[font.BaseFont];
-	});
+	if (fonts) {
+		fonts.forEach(function (name, font) {
+			if (font.BaseFont in MAP && font.Encoding == 'WinAnsiEncoding')
+				fonts[name] = MAP[font.BaseFont];
+		});
+	}
 }
 
 doc.save(scriptArgs[1]);
