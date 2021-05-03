@@ -46,10 +46,12 @@ var gPrevSumatraVersion = [
   "0.2"
 ];
 
-var dlPrefix = "/dl/";
+//var dlPrefix = "/dl/";
+var dlPrefix = "https://kjkpub.nyc3.digitaloceanspaces.com/software/sumatrapdf/rel/";
 //var dlPrefix2 = "/dl2/";
 var dlPrefix2 = "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/rel/";
-var host = "https://www.sumatrapdfreader.org";
+//var host = "https://www.sumatrapdfreader.org";
+var host = "";
 
 function a(href, txt) {
   return '<a href="' + href + '">' + txt + "</a>";
