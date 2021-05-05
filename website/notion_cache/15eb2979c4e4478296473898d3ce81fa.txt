@@ -712,7 +712,7 @@ Response:+32821
                 [
                   [
                     "a",
-                    "http://sumatrapdfreader.org/settings.html"
+                    "https://www.sumatrapdfreader.org/settings.html"
                   ]
                 ]
               ],

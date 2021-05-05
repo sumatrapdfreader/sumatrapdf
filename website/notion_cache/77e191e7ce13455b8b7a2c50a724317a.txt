@@ -128,11 +128,11 @@ Response:+30395
                 "As described in "
               ],
               [
-                "http://sumatrapdfreader.org/settings.html",
+                "https://www.sumatrapdfreader.org/settings.html",
                 [
                   [
                     "a",
-                    "http://sumatrapdfreader.org/settings.html"
+                    "https://www.sumatrapdfreader.org/settings.html"
                   ]
                 ]
               ],

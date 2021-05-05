@@ -98,7 +98,7 @@ Response:+15686
                 [
                   [
                     "a",
-                    "http://www.sumatrapdfreader.org/settings.html"
+                    "https://www.sumatrapdfreader.org/settings.html"
                   ]
                 ]
               ],

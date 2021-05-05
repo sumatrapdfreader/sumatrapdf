@@ -2491,7 +2491,7 @@ Response:+106136
               [
                 [
                   "a",
-                  "http://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+                  "https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
                 ]
               ]
             ]
@@ -2538,7 +2538,7 @@ Response:+106136
               [
                 [
                   "a",
-                  "http://www.sumatrapdfreader.org/"
+                  "https://www.sumatrapdfreader.org/"
                 ]
               ]
             ]
@@ -2585,7 +2585,7 @@ Response:+106136
               [
                 [
                   "a",
-                  "http://www.sumatrapdfreader.org/prerelease.html"
+                  "https://www.sumatrapdfreader.org/prerelease.html"
                 ]
               ]
             ]
@@ -2627,7 +2627,7 @@ Response:+106136
               [
                 [
                   "a",
-                  "http://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+                  "https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
                 ]
               ]
             ]
@@ -2652,7 +2652,7 @@ Response:+106136
               [
                 [
                   "a",
-                  "http://www.sumatrapdfreader.org/"
+                  "https://www.sumatrapdfreader.org/"
                 ]
               ]
             ],
@@ -2692,7 +2692,7 @@ Response:+106136
               [
                 [
                   "a",
-                  "http://www.sumatrapdfreader.org/prerelease.html"
+                  "https://www.sumatrapdfreader.org/prerelease.html"
                 ]
               ]
             ],
