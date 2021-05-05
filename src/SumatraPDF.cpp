@@ -3463,7 +3463,11 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
         return;
     }
 
-    if ((presentation ? win->presentation : win->isFullScreen) || !IsWindowVisible(win->hwndFrame)) {
+    if (!IsWindowVisible(win->hwndFrame)) {
+        return;
+    }
+
+    if (presentation ? win->presentation : win->isFullScreen) {
         return;
     }
 
@@ -3578,10 +3582,10 @@ void ExitFullScreen(WindowInfo* win) {
 void OnMenuViewFullscreen(WindowInfo* win, bool presentation) {
     bool enterFullScreen = presentation ? !win->presentation : !win->isFullScreen;
 
-    if (!win->presentation && !win->isFullScreen) {
-        RememberDefaultWindowPosition(win);
-    } else {
+    if (win->presentation  || win->isFullScreen) {
         ExitFullScreen(win);
+    } else {
+        RememberDefaultWindowPosition(win);
     }
 
     if (enterFullScreen && (!presentation || win->IsDocLoaded())) {
@@ -4034,10 +4038,10 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             }
             break;
         case 'f':
-            if (win->isFullScreen == false) {
-                EnterFullScreen(win);
-            } else {
+            if (win->isFullScreen || win->presentation) {
                 ExitFullScreen(win);
+            } else {
+                EnterFullScreen(win);
             }
             break;
         // per https://en.wikipedia.org/wiki/Keyboard_layout
