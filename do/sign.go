@@ -68,7 +68,7 @@ func signMust(path string) {
 		{
 			// sign with sha1 for pre-win-7
 			cmd := exec.Command(signtoolPath, "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
-				"/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
+				"/du", "https://www.sumatrapdfreader.org", "/f", "cert.pfx",
 				"/p", certPwd, fileName)
 			cmd.Dir = fileDir
 			err = runCmdLogged(cmd)
@@ -77,7 +77,7 @@ func signMust(path string) {
 		if err == nil {
 			// double-sign with sha2 for win7+ ater Jan 2016
 			cmd := exec.Command(signtoolPath, "sign", "/fd", "sha256", "/tr", "http://timestamp.comodoca.com/rfc3161",
-				"/td", "sha256", "/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
+				"/td", "sha256", "/du", "https://www.sumatrapdfreader.org", "/f", "cert.pfx",
 				"/p", certPwd, "/as", fileName)
 			cmd.Dir = fileDir
 			err = runCmdLogged(cmd)
