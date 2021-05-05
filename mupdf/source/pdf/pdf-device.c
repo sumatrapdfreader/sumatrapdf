@@ -283,6 +283,8 @@ pdf_dev_alpha(fz_context *ctx, pdf_device *pdev, float alpha, int stroke)
 	if (gs->alpha[stroke] == alpha)
 		return;
 
+	gs->alpha[stroke] = alpha;
+
 	/* Have we sent such an alpha before? */
 	for (i = 0; i < pdev->num_alphas; i++)
 		if (pdev->alphas[i].alpha == alpha && pdev->alphas[i].stroke == stroke)

@@ -87,7 +87,7 @@ const char *fz_stext_options_usage =
 	"\tpreserve-whitespace: do not convert all whitespace into space characters\n"
 	"\tpreserve-spans: do not merge spans on the same line\n"
 	"\tdehyphenate: attempt to join up hyphenated words\n"
-	"\tmediabox-clip: exclude characters outside mediabox\n"
+	"\tmediabox-clip=no: include characters outside mediabox\n"
 	"\n";
 
 fz_stext_page *
@@ -820,8 +820,10 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_DEHYPHENATE;
 	if (fz_has_option(ctx, string, "preserve-spans", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_PRESERVE_SPANS;
-	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "yes"))
-		opts->flags |= FZ_STEXT_MEDIABOX_CLIP;
+
+	opts->flags |= FZ_STEXT_MEDIABOX_CLIP;
+	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "no"))
+		opts->flags ^= FZ_STEXT_MEDIABOX_CLIP;
 
 	return opts;
 }

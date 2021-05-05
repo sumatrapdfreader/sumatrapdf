@@ -411,7 +411,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->spacing = get_bool_option(ctx, options, "spacing", 0);
 		writer->rotation = get_bool_option(ctx, options, "rotation", 1);
 		writer->images = get_bool_option(ctx, options, "images", 1);
-		writer->mediabox_clip = get_bool_option(ctx, options, "mediabox-clip", 0);
+		writer->mediabox_clip = get_bool_option(ctx, options, "mediabox-clip", 1);
 		writer->ctx = NULL;
 	}
 	fz_catch(ctx)
