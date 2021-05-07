@@ -214,15 +214,32 @@ void WindowInfo::ChangePresentationMode(PresentationMode mode) {
     RedrawAll();
 }
 
+static HWND FindModalOwnedBy(HWND hwndParent) {
+    HWND hwnd = nullptr;
+    while (true) {
+        hwnd = FindWindowExW(HWND_DESKTOP, hwnd, nullptr, nullptr);
+        if (hwnd == nullptr) {
+            break;
+        }
+        bool isDlg = (GetWindowStyle(hwnd) & WS_DLGFRAME) != 0;
+        if (!isDlg) {
+            continue;
+        }
+        if (GetWindow(hwnd, GW_OWNER) != hwndParent) {
+            continue;
+        }
+        return hwnd;
+    }
+    return nullptr;
+}
+
 void WindowInfo::Focus() {
     win::ToForeground(hwndFrame);
     // set focus to an owned modal dialog if there is one
-    HWND hwnd = nullptr;
-    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, nullptr, nullptr)) != nullptr) {
-        if (GetWindow(hwnd, GW_OWNER) == hwndFrame && (GetWindowStyle(hwnd) & WS_DLGFRAME)) {
-            SetFocus(hwnd);
-            return;
-        }
+    HWND hwnd = FindModalOwnedBy(hwndFrame);
+    if (hwnd != nullptr) {
+        SetFocus(hwnd);
+        return;
     }
     SetFocus(hwndFrame);
 }
