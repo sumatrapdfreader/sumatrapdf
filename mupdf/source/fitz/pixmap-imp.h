@@ -33,11 +33,6 @@ int fz_valgrind_pixmap(const fz_pixmap *pix);
 #endif
 
 /*
-	Convert between different separation results.
-*/
-fz_pixmap *fz_clone_pixmap_area_with_different_seps(fz_context *ctx, fz_pixmap *src, const fz_irect *bbox, fz_colorspace *dcs, fz_separations *seps, fz_color_params color_params, fz_default_colorspaces *default_cs);
-
-/*
 	Convert a region of the src pixmap into the dst pixmap
 	via an optional proofing colorspace, prf.
 
@@ -45,6 +40,5 @@ fz_pixmap *fz_clone_pixmap_area_with_different_seps(fz_context *ctx, fz_pixmap *
 	DeviceN space here.
  */
 fz_pixmap *fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, fz_color_params color_params, fz_default_colorspaces *default_cs);
-
 
 #endif

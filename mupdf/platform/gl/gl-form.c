@@ -48,12 +48,6 @@ int do_sign(void)
 		ui_show_warning_dialog("%s", fz_caught_message(ctx));
 		ok = 0;
 	}
-
-	if (pdf_update_page(ctx, sig_widget->page))
-	{
-		trace_page_update();
-		render_page();
-	}
 	return ok;
 }
 
@@ -67,9 +61,6 @@ static void do_clear_signature(void)
 	}
 	fz_catch(ctx)
 		ui_show_warning_dialog("%s", fz_caught_message(ctx));
-
-	if (pdf_update_page(ctx, sig_widget->page))
-		render_page();
 }
 
 static void cert_password_dialog(void)
@@ -283,11 +274,6 @@ static void tx_dialog(void)
 				trace_action("widget.setTextValue(%q);\n", tx_input.text);
 				pdf_set_text_field_value(ctx, tx_widget, tx_input.text);
 				trace_field_value(tx_widget, tx_input.text);
-				if (pdf_update_page(ctx, tx_widget->page))
-				{
-					trace_page_update();
-					render_page();
-				}
 				ui.dialog = NULL;
 			}
 		}
@@ -342,11 +328,6 @@ static void ch_dialog(void)
 			ui_spacer();
 			if (ui_button("Okay"))
 			{
-				if (pdf_update_page(ctx, ch_widget->page))
-				{
-					trace_page_update();
-					render_page();
-				}
 				ui.dialog = NULL;
 			}
 		}
@@ -474,13 +455,6 @@ void do_widget_canvas(fz_irect canvas_area)
 					break;
 				}
 			}
-
 		}
-	}
-
-	if (pdf_update_page(ctx, page))
-	{
-		trace_page_update();
-		render_page();
 	}
 }

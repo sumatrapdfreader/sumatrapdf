@@ -183,6 +183,7 @@ static fz_link *links = NULL;
 
 static int number = 0;
 
+static fz_pixmap *page_contents = NULL;
 static struct texture page_tex = { 0 };
 static int screen_w = 0, screen_h = 0;
 static int scroll_x = 0, scroll_y = 0;
@@ -200,7 +201,8 @@ static int oldseparations = 1, currentseparations = 1;
 static fz_location oldpage = {0,0}, currentpage = {0,0};
 static float oldzoom = DEFRES, currentzoom = DEFRES;
 static float oldrotate = 0, currentrotate = 0;
-static int page_contents_changed = 0;
+int page_contents_changed = 0;
+int page_annots_changed = 0;
 
 static fz_output *trace_file = NULL;
 static int isfullscreen = 0;
@@ -924,17 +926,42 @@ void load_page(void)
 	area = fz_irect_from_rect(draw_page_bounds);
 	page_tex.w = area.x1 - area.x0;
 	page_tex.h = area.y1 - area.y0;
+
+	page_contents_changed = 1;
 }
 
-void render_page(void)
+static void render_page(void)
 {
+	fz_irect bbox;
 	fz_pixmap *pix;
+	fz_device *dev;
 
 	transform_page();
 
 	fz_set_aa_level(ctx, currentaa);
 
-	pix = fz_new_pixmap_from_page_with_separations(ctx, fzpage, draw_page_ctm, fz_device_rgb(ctx), seps, 0);
+	if (page_contents_changed)
+	{
+		fz_drop_pixmap(ctx, page_contents);
+		page_contents = NULL;
+
+		bbox = fz_round_rect(fz_transform_rect(fz_bound_page(ctx, fzpage), draw_page_ctm));
+		page_contents = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), bbox, seps, 0);
+		fz_clear_pixmap(ctx, page_contents);
+
+		dev = fz_new_draw_device(ctx, draw_page_ctm, page_contents);
+		fz_run_page_contents(ctx, fzpage, dev, fz_identity, NULL);
+		fz_close_device(ctx, dev);
+	}
+
+	pix = fz_clone_pixmap_area_with_different_seps(ctx, page_contents, NULL, fz_device_rgb(ctx), NULL, fz_default_color_params, NULL);
+	{
+		dev = fz_new_draw_device(ctx, draw_page_ctm, pix);
+		fz_run_page_annots(ctx, fzpage, dev, fz_identity, NULL);
+		fz_run_page_widgets(ctx, fzpage, dev, fz_identity, NULL);
+		fz_close_device(ctx, dev);
+	}
+
 	if (currentinvert)
 	{
 		fz_invert_pixmap_luminance(ctx, pix);
@@ -946,6 +973,7 @@ void render_page(void)
 	}
 
 	ui_texture_from_pixmap(&page_tex, pix);
+
 	fz_drop_pixmap(ctx, pix);
 
 	FZ_LOG_DUMP_STORE(ctx, "Store state after page render:\n");
@@ -953,6 +981,15 @@ void render_page(void)
 
 void render_page_if_changed(void)
 {
+	if (pdf)
+	{
+		if (pdf_update_page(ctx, page))
+		{
+			trace_page_update();
+			page_annots_changed = 1;
+		}
+	}
+
 	if (oldpage.chapter != currentpage.chapter ||
 		oldpage.page != currentpage.page ||
 		oldzoom != currentzoom ||
@@ -961,8 +998,12 @@ void render_page_if_changed(void)
 		oldtint != currenttint ||
 		oldicc != currenticc ||
 		oldseparations != currentseparations ||
-		oldaa != currentaa ||
-		page_contents_changed)
+		oldaa != currentaa)
+	{
+		page_contents_changed = 1;
+	}
+
+	if (page_contents_changed || page_annots_changed)
 	{
 		render_page();
 		oldpage = currentpage;
@@ -974,6 +1015,7 @@ void render_page_if_changed(void)
 		oldseparations = currentseparations;
 		oldaa = currentaa;
 		page_contents_changed = 0;
+		page_annots_changed = 0;
 	}
 }
 
@@ -1117,7 +1159,6 @@ static void relayout(void)
 		future_count = 0;
 
 		load_page();
-		render_page();
 		update_title();
 	}
 }
@@ -1184,7 +1225,6 @@ static void do_outline(fz_outline *node)
 	ui_tree_begin(&list, count_outline(node, 65535), outline_w, 0, 1);
 	do_outline_imp(&list, 65535, node, 0);
 	ui_tree_end(&list);
-	ui_splitter(&outline_w, 6*ui.gridsize, 20*ui.gridsize, R);
 }
 
 static void do_undo(void)
@@ -1202,9 +1242,16 @@ static void do_undo(void)
 	ui_layout(L, BOTH, NW, 0, 0);
 	ui_panel_begin(outline_w, 0, ui.padsize*2, ui.padsize*2, 1);
 	ui_layout(T, X, NW, ui.padsize, ui.padsize);
-	ui_label("Undo history");
-	i = count < 30 ? 30 : count;
-	ui_list_begin(&list, i, 0, ui.lineheight * i + 4);
+	ui_label("Undo history:");
+
+	ui_layout(B, X, NW, ui.padsize, ui.padsize);
+	if (ui_button_aux("Redo", pos == count))
+		desired = pos+1;
+	if (ui_button_aux("Undo", pos == 0))
+		desired = pos-1;
+
+	ui_layout(ALL, BOTH, NW, ui.padsize, ui.padsize);
+	ui_list_begin(&list, count+1, 0, ui.lineheight * 4 + 4);
 
 	for (i = 0; i < count+1; i++)
 	{
@@ -1221,12 +1268,6 @@ static void do_undo(void)
 	}
 
 	ui_list_end(&list);
-
-	if (ui_button_aux("Undo", pos == 0))
-		desired = pos-1;
-
-	if (ui_button_aux("Redo", pos == count))
-		desired = pos+1;
 
 	if (desired != -1 && desired != pos)
 	{
@@ -1430,7 +1471,11 @@ static void toggle_fullscreen(void)
 
 static void shrinkwrap(void)
 {
-	int w = page_tex.w + (showoutline || showundo ? outline_w + 4 : 0) + (showannotate ? annotate_w : 0);
+	int w = page_tex.w;
+	if (showoutline || showundo)
+		w += outline_w + 4;
+	if (showannotate)
+		w += annotate_w;
 	int h = page_tex.h;
 	if (screen_w > 0 && w > screen_w)
 		w = screen_w;
@@ -1585,9 +1630,17 @@ static void load_document(void)
 		if (anchor)
 		{
 			if (parse_location(anchor, &location))
+			{
 				jump_to_location(location);
+			}
 			else
-				jump_to_page(pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL));
+			{
+				int anchor_page = pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL);
+				if (anchor_page < 0)
+					fz_warn(ctx, "cannot find page: %s", anchor);
+				else
+					jump_to_page(anchor_page);
+			}
 		}
 	}
 	else
@@ -1597,7 +1650,14 @@ static void load_document(void)
 			if (parse_location(anchor, &location))
 				jump_to_location(location);
 			else
-				jump_to_page(fz_atoi(anchor) - 1);
+			{
+				int anchor_page = fz_atoi(anchor);
+				pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL);
+				if (anchor_page == 0)
+					fz_warn(ctx, "cannot find page: %s", anchor);
+				else
+					jump_to_page(anchor_page - 1);
+			}
 		}
 	}
 	anchor = NULL;
@@ -1613,7 +1673,6 @@ void reload_document(void)
 	if (doc)
 	{
 		load_page();
-		render_page();
 		update_title();
 	}
 }
@@ -2282,12 +2341,20 @@ void do_main(void)
 			glutPostRedisplay();
 	}
 
+	int was_dirty = 0;
+	if (pdf)
+	{
+		was_dirty = pdf->dirty;
+	}
+
 	do_app();
 
 	if (showoutline)
 		do_outline(outline);
 	else if (showundo)
 		do_undo();
+	if (showoutline || showundo)
+		ui_splitter(&outline_w, 6*ui.gridsize, 20*ui.gridsize, R);
 
 	if (!eqloc(oldpage, currentpage) || oldseparations != currentseparations || oldicc != currenticc)
 	{
@@ -2310,6 +2377,12 @@ void do_main(void)
 
 	if (showinfo)
 		do_info();
+
+	if (pdf)
+	{
+		if (was_dirty != pdf->dirty)
+			update_title();
+	}
 }
 
 void run_main_loop(void)
@@ -2369,7 +2442,6 @@ static void do_open_document_dialog(void)
 			if (doc)
 			{
 				load_page();
-				render_page();
 				shrinkwrap();
 				update_title();
 			}
@@ -2488,13 +2560,16 @@ int main(int argc, char **argv)
 		fz_strlcpy(filename, argv[fz_optind++], sizeof filename);
 		if (fz_optind < argc)
 			anchor = argv[fz_optind++];
+		if (fz_optind < argc)
+			usage(argv[0]);
 
 		fz_try(ctx)
 		{
 			page_tex.w = 600;
 			page_tex.h = 700;
 			load_document();
-			if (doc) load_page();
+			if (doc)
+				load_page();
 		}
 		fz_always(ctx)
 		{
@@ -2532,10 +2607,7 @@ int main(int argc, char **argv)
 		fz_try(ctx)
 		{
 			if (doc)
-			{
-				render_page();
 				update_title();
-			}
 		}
 		fz_catch(ctx)
 		{

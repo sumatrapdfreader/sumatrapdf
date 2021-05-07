@@ -301,6 +301,7 @@ pdf_add_embedded_file(fz_context *ctx, pdf_document *doc,
 	if (!mimetype)
 		mimetype = pdf_guess_mime_type_from_file_name(ctx, filename);
 
+	pdf_begin_operation(ctx, doc, "Embed file");
 	fz_try(ctx)
 	{
 		file = pdf_add_new_dict(ctx, doc, 3);
@@ -317,6 +318,7 @@ pdf_add_embedded_file(fz_context *ctx, pdf_document *doc,
 	}
 	fz_always(ctx)
 	{
+		pdf_end_operation(ctx, doc);
 		pdf_drop_obj(ctx, file);
 	}
 	fz_catch(ctx)

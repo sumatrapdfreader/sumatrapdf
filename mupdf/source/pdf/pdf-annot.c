@@ -895,7 +895,7 @@ pdf_set_annot_rect(fz_context *ctx, pdf_annot *annot, fz_rect rect)
 {
 	fz_matrix page_ctm, inv_page_ctm;
 
-	pdf_begin_operation(ctx, annot->page->doc, "Set Annotation Rectangle");
+	pdf_begin_operation(ctx, annot->page->doc, "Set rectangle");
 
 	fz_try(ctx)
 	{
