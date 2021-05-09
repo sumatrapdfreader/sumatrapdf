@@ -2533,8 +2533,9 @@ pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font,
 		}
 		else
 		{
+			float v = fz_strtof(tok, &end);
 			if (top < 3)
-				stack[top] = fz_strtof(tok, &end);
+				stack[top] = v;
 			if (*end == 0)
 				++top;
 			else

@@ -3752,7 +3752,15 @@ def class_find_constructor_fns( tu, classname, structname, base_name, extras):
             if duplicate_name:
                 continue
             ok = False
-            if fnname in extras.constructor_excludes:
+
+            arg, n = get_first_arg( tu, cursor)
+            if arg and n == 1 and is_pointer_to( arg.cursor.type, structname):
+                # This avoids generation of bogus copy constructor wrapping
+                # function fz_new_pixmap_from_alpha_channel() introduced
+                # 2021-05-07.
+                #
+                jlib.log('ignoring possible constructor because looks like copy constructor: {fnname}')
+            elif fnname in extras.constructor_excludes:
                 pass
             elif extras.pod and cursor.result_type.get_canonical().spelling == f'{structname}':
                 ok = True

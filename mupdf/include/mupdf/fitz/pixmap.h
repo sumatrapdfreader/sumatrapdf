@@ -427,4 +427,15 @@ fz_warp_pixmap(fz_context *ctx, fz_pixmap *src, const fz_point points[4], int wi
 */
 fz_pixmap *fz_clone_pixmap_area_with_different_seps(fz_context *ctx, fz_pixmap *src, const fz_irect *bbox, fz_colorspace *dcs, fz_separations *seps, fz_color_params color_params, fz_default_colorspaces *default_cs);
 
+/*
+ * Extract alpha channel as a separate pixmap.
+ * Returns NULL if there is no alpha channel in the source.
+ */
+fz_pixmap *fz_new_pixmap_from_alpha_channel(fz_context *ctx, fz_pixmap *src);
+
+/*
+ * Combine a pixmap without an alpha channel with a soft mask.
+ */
+fz_pixmap *fz_new_pixmap_from_color_and_mask(fz_context *ctx, fz_pixmap *color, fz_pixmap *mask);
+
 #endif

@@ -41,6 +41,44 @@ static fz_matrix center_rect_within_rect(const fz_rect tofit, const fz_rect with
 	return fz_pre_translate(fz_pre_scale(fz_translate(within_center.x, within_center.y), scale, scale), -tofit_center.x, -tofit_center.y);
 }
 
+static void
+pdf_write_opacity_blend_mode(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res, int bm)
+{
+	pdf_obj *res_egs, *res_egs_h;
+	float opacity = pdf_annot_opacity(ctx, annot);
+
+	if (bm == FZ_BLEND_NORMAL && opacity == 1)
+		return;
+
+	/* /Resources << /ExtGState << /H << /Type/ExtGState /BM/Multiply /CA %g /ca %g >> >> >> */
+
+	if (!*res)
+		*res = pdf_new_dict(ctx, annot->page->doc, 1);
+
+	res_egs = pdf_dict_put_dict(ctx, *res, PDF_NAME(ExtGState), 1);
+	res_egs_h = pdf_dict_put_dict(ctx, res_egs, PDF_NAME(H), 2);
+	pdf_dict_put(ctx, res_egs_h, PDF_NAME(Type), PDF_NAME(ExtGState));
+
+	if (bm == FZ_BLEND_MULTIPLY)
+	{
+		pdf_dict_put(ctx, res_egs_h, PDF_NAME(BM), PDF_NAME(Multiply));
+	}
+
+	if (opacity < 1)
+	{
+		pdf_dict_put_real(ctx, res_egs_h, PDF_NAME(CA), opacity);
+		pdf_dict_put_real(ctx, res_egs_h, PDF_NAME(ca), opacity);
+	}
+
+	fz_append_printf(ctx, buf, "/H gs\n");
+}
+
+static void
+pdf_write_opacity(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res)
+{
+	pdf_write_opacity_blend_mode(ctx, annot, buf, res, FZ_BLEND_NORMAL);
+}
+
 static float pdf_write_border_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf)
 {
 	float w = pdf_annot_border(ctx, annot);
@@ -280,7 +318,7 @@ pdf_write_line_cap_appearance(fz_context *ctx, fz_buffer *buf, fz_rect *rect,
 }
 
 static void
-pdf_write_line_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_line_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	pdf_obj *line, *le;
 	fz_point a, b;
@@ -288,6 +326,7 @@ pdf_write_line_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_
 	int sc;
 	int ic;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	w = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
@@ -319,13 +358,14 @@ pdf_write_line_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_
 }
 
 static void
-pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	float x, y, w, h;
 	float lw;
 	int sc;
 	int ic;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
@@ -362,12 +402,13 @@ draw_circle_in_box(fz_context *ctx, fz_buffer *buf, float lw, float x0, float y0
 }
 
 static void
-pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	float lw;
 	int sc;
 	int ic;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
@@ -377,7 +418,7 @@ pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 }
 
 static void
-pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, int close)
+pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res, int close)
 {
 	pdf_obj *verts;
 	fz_point p;
@@ -385,6 +426,7 @@ pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, 
 	float lw;
 	int sc;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 
@@ -418,7 +460,7 @@ pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, 
 }
 
 static void
-pdf_write_ink_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_ink_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	pdf_obj *ink_list, *stroke;
 	int i, n, k, m;
@@ -426,6 +468,7 @@ pdf_write_ink_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_r
 	fz_point p;
 	int sc;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 
@@ -504,27 +547,15 @@ lerp_point(fz_point a, fz_point b, float t)
 static void
 pdf_write_highlight_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
-	pdf_obj *res_egs, *res_egs_h;
 	pdf_obj *qp;
 	fz_point quad[4], mquad[4], v;
-	float opacity, h, m, dx, dy, vn;
+	float h, m, dx, dy, vn;
 	int i, n;
 
 	*rect = fz_empty_rect;
 
-	/* /Resources << /ExtGState << /H << /Type/ExtGState /BM/Multiply /CA %g >> >> >> */
-	*res = pdf_new_dict(ctx, annot->page->doc, 1);
-	res_egs = pdf_dict_put_dict(ctx, *res, PDF_NAME(ExtGState), 1);
-	res_egs_h = pdf_dict_put_dict(ctx, res_egs, PDF_NAME(H), 2);
-	pdf_dict_put(ctx, res_egs_h, PDF_NAME(Type), PDF_NAME(ExtGState));
-	pdf_dict_put(ctx, res_egs_h, PDF_NAME(BM), PDF_NAME(Multiply));
-	opacity = pdf_annot_opacity(ctx, annot);
-	if (opacity < 1)
-		pdf_dict_put_real(ctx, res_egs_h, PDF_NAME(ca), opacity);
-
+	pdf_write_opacity_blend_mode(ctx, annot, buf, res, FZ_BLEND_MULTIPLY);
 	pdf_write_fill_color_appearance(ctx, annot, buf);
-
-	fz_append_printf(ctx, buf, "/H gs\n");
 
 	qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
 	n = pdf_array_len(ctx, qp);
@@ -567,7 +598,7 @@ pdf_write_highlight_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 }
 
 static void
-pdf_write_underline_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_underline_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	fz_point quad[4], a, b;
 	float h;
@@ -576,6 +607,7 @@ pdf_write_underline_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 
 	*rect = fz_empty_rect;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	pdf_write_stroke_color_appearance(ctx, annot, buf);
 
 	qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
@@ -602,13 +634,14 @@ pdf_write_underline_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 }
 
 static void
-pdf_write_strike_out_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_strike_out_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	fz_point quad[4], a, b;
 	float h;
 	pdf_obj *qp;
 	int i, n;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	pdf_write_stroke_color_appearance(ctx, annot, buf);
 
 	qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
@@ -636,7 +669,7 @@ pdf_write_strike_out_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *bu
 }
 
 static void
-pdf_write_squiggly_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_squiggly_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	fz_point quad[4], a, b, c, v;
 	float h, x, w;
@@ -645,6 +678,7 @@ pdf_write_squiggly_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 
 	*rect = fz_empty_rect;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	pdf_write_stroke_color_appearance(ctx, annot, buf);
 
 	qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
@@ -683,11 +717,13 @@ pdf_write_squiggly_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 }
 
 static void
-pdf_write_redact_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect)
+pdf_write_redact_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	fz_point quad[4];
 	pdf_obj *qp;
 	int i, n;
+
+	pdf_write_opacity(ctx, annot, buf, res);
 
 	fz_append_printf(ctx, buf, "1 0 0 RG\n");
 
@@ -718,11 +754,12 @@ pdf_write_redact_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 }
 
 static void
-pdf_write_caret_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, fz_rect *bbox)
+pdf_write_caret_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, fz_rect *bbox, pdf_obj **res)
 {
 	float xc = (rect->x0 + rect->x1) / 2;
 	float yc = (rect->y0 + rect->y1) / 2;
 
+	pdf_write_opacity(ctx, annot, buf, res);
 	pdf_write_fill_color_appearance(ctx, annot, buf);
 
 	fz_append_string(ctx, buf, "0 0 m\n");
@@ -735,11 +772,13 @@ pdf_write_caret_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz
 }
 
 static void
-pdf_write_icon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, fz_rect *bbox)
+pdf_write_icon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, fz_rect *bbox, pdf_obj **res)
 {
 	const char *name;
 	float xc = (rect->x0 + rect->x1) / 2;
 	float yc = (rect->y0 + rect->y1) / 2;
+
+	pdf_write_opacity(ctx, annot, buf, res);
 
 	if (!pdf_write_fill_color_appearance(ctx, annot, buf))
 		fz_append_string(ctx, buf, "1 g\n");
@@ -861,10 +900,12 @@ pdf_write_stamp_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz
 	fz_try(ctx)
 	{
 		/* /Resources << /Font << /Times %d 0 R >> >> */
-		*res = pdf_new_dict(ctx, annot->page->doc, 1);
+		if (!*res)
+			*res = pdf_new_dict(ctx, annot->page->doc, 1);
 		res_font = pdf_dict_put_dict(ctx, *res, PDF_NAME(Font), 1);
 		pdf_dict_put_drop(ctx, res_font, PDF_NAME(Times), pdf_add_simple_font(ctx, annot->page->doc, font, 0));
 
+		pdf_write_opacity(ctx, annot, buf, res);
 		pdf_write_fill_color_appearance(ctx, annot, buf);
 		pdf_write_stroke_color_appearance(ctx, annot, buf);
 		rotate = fz_rotate(0.6f);
@@ -1452,7 +1493,8 @@ write_variable_text(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj *
 	font = fz_new_base14_font(ctx, full_font_name(&fontname));
 	fz_try(ctx)
 	{
-		*res = pdf_new_dict(ctx, annot->page->doc, 1);
+		if (!*res)
+			*res = pdf_new_dict(ctx, annot->page->doc, 1);
 		res_font = pdf_dict_put_dict(ctx, *res, PDF_NAME(Font), 1);
 		add_required_fonts(ctx, annot->page->doc, res_font, lang, font, fontname, text);
 
@@ -1609,6 +1651,8 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 
 	*matrix = fz_rotate(r);
 	*bbox = fz_make_rect(0, 0, w, h);
+
+	pdf_write_opacity(ctx, annot, buf, res);
 
 	if (pdf_write_fill_color_appearance(ctx, annot, buf))
 		fz_append_printf(ctx, buf, "0 0 %g %g re\nf\n", w, h);
@@ -1873,43 +1917,43 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 		pdf_write_widget_appearance(ctx, annot, buf, rect, bbox, matrix, res);
 		break;
 	case PDF_ANNOT_INK:
-		pdf_write_ink_appearance(ctx, annot, buf, rect);
+		pdf_write_ink_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_POLYGON:
-		pdf_write_polygon_appearance(ctx, annot, buf, rect, 1);
+		pdf_write_polygon_appearance(ctx, annot, buf, rect, res, 1);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_POLY_LINE:
-		pdf_write_polygon_appearance(ctx, annot, buf, rect, 0);
+		pdf_write_polygon_appearance(ctx, annot, buf, rect, res, 0);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_LINE:
-		pdf_write_line_appearance(ctx, annot, buf, rect);
+		pdf_write_line_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_SQUARE:
-		pdf_write_square_appearance(ctx, annot, buf, rect);
+		pdf_write_square_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_CIRCLE:
-		pdf_write_circle_appearance(ctx, annot, buf, rect);
+		pdf_write_circle_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_CARET:
-		pdf_write_caret_appearance(ctx, annot, buf, rect, bbox);
+		pdf_write_caret_appearance(ctx, annot, buf, rect, bbox, res);
 		*matrix = fz_identity;
 		break;
 	case PDF_ANNOT_TEXT:
 	case PDF_ANNOT_FILE_ATTACHMENT:
 	case PDF_ANNOT_SOUND:
-		pdf_write_icon_appearance(ctx, annot, buf, rect, bbox);
+		pdf_write_icon_appearance(ctx, annot, buf, rect, bbox, res);
 		*matrix = fz_identity;
 		break;
 	case PDF_ANNOT_HIGHLIGHT:
@@ -1918,22 +1962,22 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_UNDERLINE:
-		pdf_write_underline_appearance(ctx, annot, buf, rect);
+		pdf_write_underline_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_STRIKE_OUT:
-		pdf_write_strike_out_appearance(ctx, annot, buf, rect);
+		pdf_write_strike_out_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_SQUIGGLY:
-		pdf_write_squiggly_appearance(ctx, annot, buf, rect);
+		pdf_write_squiggly_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;
 	case PDF_ANNOT_REDACT:
-		pdf_write_redact_appearance(ctx, annot, buf, rect);
+		pdf_write_redact_appearance(ctx, annot, buf, rect, res);
 		*matrix = fz_identity;
 		*bbox = *rect;
 		break;

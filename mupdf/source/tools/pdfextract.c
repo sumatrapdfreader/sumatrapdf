@@ -11,6 +11,7 @@
 static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
 static int dorgb = 0;
+static int doalpha = 0;
 static int doicc = 1;
 
 static int usage(void)
@@ -18,6 +19,7 @@ static int usage(void)
 	fprintf(stderr, "usage: mutool extract [options] file.pdf [object numbers]\n");
 	fprintf(stderr, "\t-p\tpassword\n");
 	fprintf(stderr, "\t-r\tconvert images to rgb\n");
+	fprintf(stderr, "\t-a\tembed SMasks as alpha channel\n");
 	fprintf(stderr, "\t-N\tdo not use ICC color conversions\n");
 	return 1;
 }
@@ -89,6 +91,7 @@ static void saveimage(pdf_obj *ref)
 {
 	fz_image *image = NULL;
 	fz_pixmap *pix = NULL;
+	fz_pixmap *mask = NULL;
 	char buf[32];
 	fz_compressed_buffer *cbuf;
 	int type;
@@ -125,12 +128,27 @@ static void saveimage(pdf_obj *ref)
 		else
 		{
 			pix = fz_get_pixmap_from_image(ctx, image, NULL, NULL, 0, 0);
+			if (image->mask && doalpha)
+			{
+				mask = fz_get_pixmap_from_image(ctx, image->mask, NULL, NULL, 0, 0);
+				if (mask->w == pix->w && mask->h == pix->h)
+				{
+					fz_pixmap *apix = fz_new_pixmap_from_color_and_mask(ctx, pix, mask);
+					fz_drop_pixmap(ctx, pix);
+					pix = apix;
+				}
+				else
+				{
+					fz_warn(ctx, "cannot combine image with smask if different resolution");
+				}
+			}
 			writepixmap(pix, buf);
 		}
 	}
 	fz_always(ctx)
 	{
 		fz_drop_image(ctx, image);
+		fz_drop_pixmap(ctx, mask);
 		fz_drop_pixmap(ctx, pix);
 	}
 	fz_catch(ctx)
@@ -239,12 +257,13 @@ int pdfextract_main(int argc, char **argv)
 	char *password = "";
 	int c, o;
 
-	while ((c = fz_getopt(argc, argv, "p:rN")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:raN")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'r': dorgb++; break;
+		case 'a': doalpha++; break;
 		case 'N': doicc^=1; break;
 		default: return usage();
 		}

@@ -1072,6 +1072,74 @@ fz_new_pixmap_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsign
 	return pixmap;
 }
 
+fz_pixmap *
+fz_new_pixmap_from_alpha_channel(fz_context *ctx, fz_pixmap *src)
+{
+	fz_pixmap *dst;
+	int w, h, n, x;
+	unsigned char *sp, *dp;
+
+	if (!src->alpha)
+		return NULL;
+
+	dst = fz_new_pixmap_with_bbox(ctx, NULL, fz_pixmap_bbox(ctx, src), NULL, 1);
+	w = src->w;
+	h = src->h;
+	n = src->n;
+	sp = src->samples + n - 1;
+	dp = dst->samples;
+
+	while (h--)
+	{
+		unsigned char *s = sp;
+		unsigned char *d = dp;
+		for (x = 0; x < w; ++x)
+		{
+			*d++ = *s;
+			s += n;
+		}
+		sp += src->stride;
+		dp += dst->stride;
+	}
+
+	return dst;
+}
+
+fz_pixmap *
+fz_new_pixmap_from_color_and_mask(fz_context *ctx, fz_pixmap *color, fz_pixmap *mask)
+{
+	fz_pixmap *dst;
+	int w = color->w;
+	int h = color->h;
+	int n = color->n;
+	int x, y, k;
+
+	if (color->alpha)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "color pixmap must not have an alpha channel");
+	if (mask->n != 1)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "mask pixmap must have exactly one channel");
+	if (mask->w != color->w || mask->h != color->h)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "color and mask pixmaps must be the same size");
+
+	dst = fz_new_pixmap_with_bbox(ctx, color->colorspace, fz_pixmap_bbox(ctx, color), NULL, 1);
+
+	for (y = 0; y < h; ++y)
+	{
+		unsigned char *cs = &color->samples[y * color->stride];
+		unsigned char *ms = &mask->samples[y * mask->stride];
+		unsigned char *ds = &dst->samples[y * dst->stride];
+		for (x = 0; x < w; ++x)
+		{
+			unsigned char a = *ms++;
+			for (k = 0; k < n; ++k)
+				*ds++ = fz_mul255(*cs++, a);
+			*ds++ = a;
+		}
+	}
+
+	return dst;
+}
+
 int
 fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap)
 {

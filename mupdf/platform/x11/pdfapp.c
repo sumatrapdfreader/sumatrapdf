@@ -983,7 +983,10 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			fz_strlcat(buf, buf2, MAX_TITLE);
 		}
 		else
-			sprintf(buf, "%s%s", app->doctitle, buf2);
+		{
+			fz_strlcpy(buf, app->doctitle, MAX_TITLE);
+			fz_strlcat(buf, buf2, MAX_TITLE);
+		}
 		wintitle(app, buf);
 
 		pdfapp_viewctm(&ctm, app);

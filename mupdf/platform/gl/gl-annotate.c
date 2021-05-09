@@ -1086,7 +1086,6 @@ void do_annotate_panel(void)
 		if (should_edit_icolor(subtype))
 			do_annotate_color("InteriorColor", pdf_annot_interior_color, pdf_set_annot_interior_color);
 
-		if (subtype == PDF_ANNOT_HIGHLIGHT)
 		{
 			static int opacity;
 			opacity = pdf_annot_opacity(ctx, selected_annot) * 255;
