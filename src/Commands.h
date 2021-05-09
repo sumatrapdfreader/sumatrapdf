@@ -10,7 +10,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpen, "Open File...")                                            \
     V(CmdOpenFolder, "Open Folder...")                                    \
     V(CmdClose, "Close Document")                                         \
-    V(CmdCloseAll, "Close Document")                                      \
+    V(CmdCloseAll, "Close All Documents")                                 \
     V(CmdSaveAs, "Save File As...")                                       \
     V(CmdPrint, "Print Document...")                                      \
     V(CmdShowInFolder, "Show File In Folder...")                          \
