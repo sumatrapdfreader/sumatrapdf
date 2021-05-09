@@ -2365,6 +2365,14 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
     }
 }
 
+void CloseAllTabs(WindowInfo* win) {
+    size_t tabCountall = win->tabs.size();
+    while (win && tabCountall) {
+        CloseTab(win);
+        tabCountall = win->tabs.size();
+    }
+}
+
 bool MayCloseWindow(WindowInfo* win) {
     CrashIf(!win);
     if (!win) {
@@ -4374,6 +4382,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdClose:
             CloseTab(win);
+            break;
+
+        case CmdCloseAll:
+            CloseAllTabs(win);
             break;
 
         case CmdExit:

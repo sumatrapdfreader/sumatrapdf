@@ -94,6 +94,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("&Open...\tCtrl+O"),             CmdOpen,                   MF_REQ_DISK_ACCESS },
     { "Open Folder",                        CmdOpenFolder,             MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
     { _TRN("&Close\tCtrl+W"),               CmdClose,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Close All Files"),             CmdCloseAll,               MF_REQ_DISK_ACCESS },
     { _TRN("Show in &folder"),              CmdShowInFolder,           MF_REQ_DISK_ACCESS },
     { _TRN("&Save As...\tCtrl+S"),          CmdSaveAs,                 MF_REQ_DISK_ACCESS },
     { _TRN("Save Annotations"),             CmdSaveAnnotations,        MF_REQ_DISK_ACCESS },
@@ -574,6 +575,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     // TODO: happens with UseTabs = false with .pdf files
     SubmitCrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
     win::menu::SetEnabled(win->menu, CmdClose, IsFileCloseMenuEnabled());
+    win::menu::SetEnabled(win->menu, CmdCloseAll, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win->menu);
 
