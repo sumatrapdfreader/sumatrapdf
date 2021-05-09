@@ -26,6 +26,7 @@ ACCEL gAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'P', CmdPrint},
     {FCONTROL | FVIRTKEY, 'Q', CmdExit},
     {FCONTROL | FVIRTKEY, 'W', CmdClose},
+    {FSHIFT | FCONTROL | FVIRTKEY, 'W', CmdCloseAll},
     {FCONTROL | FVIRTKEY, 'Y', CmdZoomCustom},
     {FCONTROL | FVIRTKEY, '0', CmdZoomFitPage},
     {FCONTROL | FVIRTKEY, VK_NUMPAD0, CmdZoomFitPage},
