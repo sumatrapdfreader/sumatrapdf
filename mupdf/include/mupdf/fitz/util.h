@@ -90,12 +90,12 @@ fz_image *fz_new_image_from_svg(fz_context *ctx, fz_buffer *buf, const char *bas
 /**
 	Parse an SVG document into a display-list.
 */
-fz_display_list *fz_new_display_list_from_svg_xml(fz_context *ctx, fz_xml *xml, const char *base_uri, fz_archive *zip, float *w, float *h);
+fz_display_list *fz_new_display_list_from_svg_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, const char *base_uri, fz_archive *zip, float *w, float *h);
 
 /**
 	Create a scalable image from an SVG document.
 */
-fz_image *fz_new_image_from_svg_xml(fz_context *ctx, fz_xml *xml, const char *base_uri, fz_archive *zip);
+fz_image *fz_new_image_from_svg_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, const char *base_uri, fz_archive *zip);
 
 /**
 	Write image as a data URI (for HTML and SVG output).

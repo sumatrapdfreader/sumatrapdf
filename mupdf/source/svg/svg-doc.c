@@ -78,7 +78,7 @@ svg_build_id_map(fz_context *ctx, svg_document *doc, fz_xml *root)
 }
 
 static fz_document *
-svg_open_document_with_xml(fz_context *ctx, fz_xml *xml, const char *base_uri, fz_archive *zip)
+svg_open_document_with_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, const char *base_uri, fz_archive *zip)
 {
 	svg_document *doc;
 
@@ -96,7 +96,10 @@ svg_open_document_with_xml(fz_context *ctx, fz_xml *xml, const char *base_uri, f
 
 	fz_try(ctx)
 	{
-		svg_build_id_map(ctx, doc, doc->root);
+		if (xmldoc)
+			svg_build_id_map(ctx, doc, fz_xml_root(xmldoc));
+		else
+			svg_build_id_map(ctx, doc, doc->root);
 	}
 	fz_catch(ctx)
 	{
@@ -176,12 +179,12 @@ fz_new_display_list_from_svg(fz_context *ctx, fz_buffer *buf, const char *base_u
 }
 
 fz_display_list *
-fz_new_display_list_from_svg_xml(fz_context *ctx, fz_xml *xml, const char *base_uri, fz_archive *zip, float *w, float *h)
+fz_new_display_list_from_svg_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, const char *base_uri, fz_archive *zip, float *w, float *h)
 {
 	fz_document *doc;
 	fz_display_list *list = NULL;
 
-	doc = svg_open_document_with_xml(ctx, xml, base_uri, zip);
+	doc = svg_open_document_with_xml(ctx, xmldoc, xml, base_uri, zip);
 	fz_try(ctx)
 	{
 		list = fz_new_display_list_from_page_number(ctx, doc, 0);
@@ -214,13 +217,13 @@ fz_new_image_from_svg(fz_context *ctx, fz_buffer *buf, const char *base_uri, fz_
 }
 
 fz_image *
-fz_new_image_from_svg_xml(fz_context *ctx, fz_xml *xml, const char *base_uri, fz_archive *zip)
+fz_new_image_from_svg_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, const char *base_uri, fz_archive *zip)
 {
 	fz_display_list *list;
 	fz_image *image = NULL;
 	float w, h;
 
-	list = fz_new_display_list_from_svg_xml(ctx, xml, base_uri, zip, &w, &h);
+	list = fz_new_display_list_from_svg_xml(ctx, xmldoc, xml, base_uri, zip, &w, &h);
 	fz_try(ctx)
 		image = fz_new_image_from_display_list(ctx, w, h, list);
 	fz_always(ctx)

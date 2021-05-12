@@ -325,7 +325,7 @@ pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 	if (!pdf_is_name(ctx, subtype))
 		fz_throw(ctx, FZ_ERROR_MINOR, "no XObject subtype specified");
 
-	if (pdf_is_hidden_ocg(ctx, csi->doc->ocg, csi->rdb, proc->usage, pdf_dict_get(ctx, xobj, PDF_NAME(OC))))
+	if (pdf_is_ocg_hidden(ctx, csi->doc, csi->rdb, proc->usage, pdf_dict_get(ctx, xobj, PDF_NAME(OC))))
 		return;
 
 	if (pdf_name_eq(ctx, subtype, PDF_NAME(Form)))
@@ -497,7 +497,7 @@ pdf_process_BDC(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 	if (strcmp(csi->name, "OC"))
 		return;
 
-	if (pdf_is_hidden_ocg(ctx, csi->doc->ocg, csi->rdb, proc->usage, csi->obj))
+	if (pdf_is_ocg_hidden(ctx, csi->doc, csi->rdb, proc->usage, csi->obj))
 		++proc->hidden;
 }
 
@@ -1098,7 +1098,7 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_p
 	/* TODO: NoZoom and NoRotate */
 
 	/* XXX what resources, if any, to use for this check? */
-	if (pdf_is_hidden_ocg(ctx, doc->ocg, NULL, proc->usage, pdf_dict_get(ctx, annot->obj, PDF_NAME(OC))))
+	if (pdf_is_ocg_hidden(ctx, doc, NULL, proc->usage, pdf_dict_get(ctx, annot->obj, PDF_NAME(OC))))
 		return;
 
 	if (proc->op_q && proc->op_cm && proc->op_Do_form && proc->op_Q)

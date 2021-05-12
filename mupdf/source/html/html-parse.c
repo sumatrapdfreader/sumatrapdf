@@ -104,6 +104,7 @@ struct genstate
 	fz_html_font_set *set;
 	fz_archive *zip;
 	fz_tree *images;
+	fz_xml_doc *xml;
 	int is_fb2;
 	const char *base_uri;
 	fz_css *css;
@@ -422,11 +423,12 @@ static fz_image *load_html_image(fz_context *ctx, fz_archive *zip, const char *b
 	return img;
 }
 
-static fz_image *load_svg_image(fz_context *ctx, fz_archive *zip, const char *base_uri, fz_xml *xml)
+static fz_image *load_svg_image(fz_context *ctx, fz_archive *zip, const char *base_uri,
+	fz_xml_doc *xmldoc, fz_xml *node)
 {
 	fz_image *img = NULL;
 	fz_try(ctx)
-		img = fz_new_image_from_svg_xml(ctx, xml, base_uri, zip);
+		img = fz_new_image_from_svg_xml(ctx, xmldoc, node, base_uri, zip);
 	fz_catch(ctx)
 		fz_warn(ctx, "html: cannot load embedded svg document");
 	return img;
@@ -751,7 +753,7 @@ generate_boxes(fz_context *ctx,
 				box = new_short_box(ctx, g->pool, markup_dir);
 				box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
 				insert_inline_box(ctx, box, top, markup_dir, g);
-				generate_image(ctx, box, load_svg_image(ctx, g->zip, g->base_uri, node), g);
+				generate_image(ctx, box, load_svg_image(ctx, g->zip, g->base_uri, g->xml, node), g);
 			}
 
 			else if (g->is_fb2 && tag[0]=='i' && tag[1]=='m' && tag[2]=='a' && tag[3]=='g' && tag[4]=='e' && tag[5]==0)
@@ -1277,7 +1279,6 @@ fz_parse_html_imp(fz_context *ctx,
 	fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css,
 	int try_xml, int try_html5)
 {
-	fz_xml_doc *xml;
 	fz_xml *root, *node;
 	fz_html *html = NULL;
 	char *title;
@@ -1299,32 +1300,32 @@ fz_parse_html_imp(fz_context *ctx,
 	if (try_xml && try_html5)
 	{
 		fz_try(ctx)
-			xml = fz_parse_xml(ctx, buf, 1);
+			g.xml = fz_parse_xml(ctx, buf, 1);
 		fz_catch(ctx)
 		{
 			if (fz_caught(ctx) == FZ_ERROR_SYNTAX)
 			{
 				fz_warn(ctx, "syntax error in XHTML; retrying using HTML5 parser");
-				xml = fz_parse_xml_from_html5(ctx, buf);
+				g.xml = fz_parse_xml_from_html5(ctx, buf);
 			}
 			else
 				fz_rethrow(ctx);
 		}
 	}
 	else if (try_xml)
-		xml = fz_parse_xml(ctx, buf, 1);
+		g.xml = fz_parse_xml(ctx, buf, 1);
 	else if (try_html5)
-		xml = fz_parse_xml_from_html5(ctx, buf);
+		g.xml = fz_parse_xml_from_html5(ctx, buf);
 	else
 		return NULL; /* should never happen! */
 
-	root = fz_xml_root(xml);
+	root = fz_xml_root(g.xml);
 
 	fz_try(ctx)
 		g.css = fz_new_css(ctx);
 	fz_catch(ctx)
 	{
-		fz_drop_xml(ctx, xml);
+		fz_drop_xml(ctx, g.xml);
 		fz_rethrow(ctx);
 	}
 
@@ -1416,7 +1417,7 @@ fz_parse_html_imp(fz_context *ctx,
 	{
 		fz_drop_tree(ctx, g.images, (void(*)(fz_context*,void*))fz_drop_image);
 		fz_drop_css(ctx, g.css);
-		fz_drop_xml(ctx, xml);
+		fz_drop_xml(ctx, g.xml);
 	}
 	fz_catch(ctx)
 	{
