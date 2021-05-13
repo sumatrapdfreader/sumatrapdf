@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8ed3369de793564c5badf05a7e18cac28b8b2bef
+f293927803e772c4311f921c5c4905ba34501153
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -644,7 +644,7 @@ bs:Nemoj me ponovo pitati
 by:Больш не пытаць
 ca-xv:&No m'ho tornis a preguntar
 ca:&No ho tornis a preguntar
-cn:不要再问我(&D)
+cn:不再询问(&D)
 co:Ùn mi dumandà &più
 cy:&Peidio â gofyn eto
 cz:&Příště se již neptat
@@ -2182,7 +2182,7 @@ bs:&Pričvrsti dokument
 by:&Замацаваць Дакумент
 ca-xv:&Marca el document
 ca:&Marca el document
-cn:钉选(&P)
+cn:固定文件(&P)
 co:&Spirlà u ducumentu
 cy:&Pinio Dogfen
 cz:&Připnout dokument
@@ -2655,6 +2655,7 @@ pl:&Usuń z historii
 ru:&Удалить из истории
 ta:வரலாற்றிலிருந்து நீக்கு 
 tr:Geçmişten &Kaldır
+tw:从历史记录删除
 :&Save As...
 am:&Պահպանել որպես
 ar:&حفظ باسم...
@@ -3720,6 +3721,7 @@ nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
 ru:Добавить PDF как дочерний элемент
 tr:PDF'yi çocuk olarak ekle
+tw:将 PDF 添加为子项目
 :Add PDF as a sibling
 am:Ավելացնել PDF-ը որպես ժառանգ
 ar:أضف البي.دي.أف كأخ
@@ -3741,6 +3743,7 @@ nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
 ru:Добавить PDF как одноуровневый элемент
 tr:PDF'yi kardeş olarak ekle
+tw:将 PDF 添加为同级项目
 :Add child
 am:Ավելացնել ենթատարր
 ar:أضف ولد
@@ -3762,6 +3765,7 @@ nl:Child toevoegen
 pl:Dodaj potomka
 ru:Добавить дочерний элемент
 tr:Çocuk ekle
+tw:添加子项目
 :Add page %s to favorites
 am:Ավելացնել %s էջը ընտրյալներին
 ar:الى المفضلة %s اضافة صفحة
@@ -3952,6 +3956,7 @@ nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
 ru:Добавить одноуровневый элемент
 tr:Kardeş ekle
+tw:添加同级项目
 :Add to favorites
 am:Ավելացնել ընտրյալներին
 ar:اضافة للمفضلة
@@ -5444,6 +5449,7 @@ nl:Merkteken
 pl:Kareta
 ru:Курсор
 tr:Karet
+tw:插入号
 :Change Language
 af:Verander Taal (Change Language)
 am:Փոխել լեզուն (Change Language)
@@ -5609,6 +5615,7 @@ pl:Okrąg
 ru:Круг
 ta:வட்டம்
 tr:Çember
+tw:圆
 :Close
 am:Փակել
 ar:إغلاق
@@ -5740,6 +5747,7 @@ pl:Kolor
 ru:Цвет
 ta:நிறம்
 tr:Renk
+tw:颜色
 vn:Tô màu
 :Comic books
 am:Հումորային գրքեր
@@ -6616,7 +6624,7 @@ bs:Ne mogu inicijalizirati štampač
 by:Немагчыма ініцыіраваць друкарку
 ca-xv:No es pot inicialitzar la impressora
 ca:No es pot inicialitzar la impressora
-cn:不能初始化打印机
+cn:无法启用打印机
 co:Impussibule d’inizià a stampetta
 cy:Methwyd cychwyn yr argraffydd
 cz:Tiskárnu nelze inicializovat
@@ -10780,6 +10788,7 @@ nl:Vrije Tekst
 pl:Dowolny tekst
 ru:Произвольный текст
 tr:Özgür Metin
+tw:自定义文本
 :Frequently Read
 am:Հաճախ ընթերցվածներ
 ar:الأكثر قراءة
@@ -11137,6 +11146,7 @@ pl:Wyróżnienie
 ru:Выделение
 ta:வண்ணமிடு 
 tr:Vurgula
+tw:高亮
 :Hint: Use the F3 key for finding again
 am:Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
 ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
@@ -11312,6 +11322,7 @@ pl:Atrament
 ru:Чернила
 ta:மை 
 tr:Mürekkep
+tw:墨迹
 :Install SumatraPDF
 af:Installeer SumatraPDF
 am:Տեղակայել SumatraPDF-ը
@@ -15324,6 +15335,7 @@ nl:Redigeren
 pl:Redaguj
 ta:திருத்தஞ்செய் 
 tr:Gözden Geçir
+tw:编辑
 :Remember &opened files
 am:Հիշել &բացված ֆայլերը
 ar:تذكر الملفات المفتوحة
@@ -17119,6 +17131,7 @@ pl:Sortuj według
 ru:Сортировать по
 ta:வகைப்படுத்தல் 
 tr:Şuna Göre Sırala
+tw:排序
 vn:Sắp xếp theo
 :Source file %s has no synchronization point
 am:%s ֆայլը չունի համաժամեցման կետ
@@ -17208,6 +17221,7 @@ pl:Kwadrat
 ru:Квадрат
 ta:நாற்கரம் 
 tr:Kare
+tw:矩形
 :Squiggly
 am:Ալիքավոր
 ar:متعرج
@@ -17229,6 +17243,7 @@ pl:Falowanie
 ru:Волнистая линия
 ta:சீரில்லா கோடு 
 tr:Kıvrımlı
+tw:波浪线
 :Stamp
 am:Կնիք
 ar:خاتم 
@@ -18082,6 +18097,7 @@ nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
 ru:Разметка (сначала большие)
 tr:Etiket (önce büyük)
+tw:标签（大的在前）
 :Tag (small first)
 am:Պիտակ (նախ փոքրը)
 ar:علامة (الصغير أولا)
@@ -18103,6 +18119,7 @@ nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
 ru:Разметка (сначала маленькие)
 tr:Etiket (önce küçük)
+tw:标签（小的在前）
 :Tagged PDF
 am:Կցված PDF
 ar:المستندات المحمولة موسومة
@@ -18878,7 +18895,7 @@ bs:Koristi &tabove
 by:Выкарыстоўваць &закладкі
 ca-xv:Utilitza &pestanyes
 ca:Utilitza les pes&tanyes
-cn:使用页签(&T)
+cn:使用标签页(&T)
 co:Impiegà l’&unghjette
 cy:Defnyddio &tabiau
 cz:Použít &karty
