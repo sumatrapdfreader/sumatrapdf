@@ -334,7 +334,13 @@ static bool isRightToLeftChar(WCHAR c) {
 }
 
 static void GetLeftRightCounts(TocItem* node, int& l2r, int& r2l) {
+next:
     if (!node) {
+        return;
+    }
+    // short-circuit because this could overflow the stack due to recursion
+    // (happened in doc from https://github.com/sumatrapdfreader/sumatrapdf/issues/1795)
+    if (l2r + r2l > 1024) {
         return;
     }
     if (node->title) {
@@ -347,7 +353,10 @@ static void GetLeftRightCounts(TocItem* node, int& l2r, int& r2l) {
         }
     }
     GetLeftRightCounts(node->child, l2r, r2l);
-    GetLeftRightCounts(node->next, l2r, r2l);
+    // could be: GetLeftRightCounts(node->next, l2r, r2l);
+    // but faster if not recursive
+    node = node->next;
+    goto next;
 }
 
 static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
