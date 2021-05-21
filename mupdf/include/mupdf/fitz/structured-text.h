@@ -170,7 +170,7 @@ struct fz_stext_char
 	fz_stext_char *next;
 };
 
-extern const char *fz_stext_options_usage;
+FZ_DATA extern const char *fz_stext_options_usage;
 
 /**
 	Create an empty text page.

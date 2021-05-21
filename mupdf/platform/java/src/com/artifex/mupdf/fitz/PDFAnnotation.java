@@ -86,6 +86,16 @@ public class PDFAnnotation
 	public static final int IS_TOGGLE_NO_VIEW = 1 << (9-1);
 	public static final int IS_LOCKED_CONTENTS = 1 << (10-1);
 
+	/* Languages, keep in sync with FZ_LANG_* */
+	public static final int LANGUAGE_UNSET = 0;
+	public static final int LANGUAGE_ur = 507;
+	public static final int LANGUAGE_urd = 3423;
+	public static final int LANGUAGE_ko = 416;
+	public static final int LANGUAGE_ja = 37;
+	public static final int LANGUAGE_zh = 242;
+	public static final int LANGUAGE_zh_Hans = 14093;
+	public static final int LANGUAGE_zh_Hant = 14822;
+
 	public native int getType();
 	public native int getFlags();
 	public native void setFlags(int flags);
@@ -99,6 +109,8 @@ public class PDFAnnotation
 	public native void setColor(float[] color);
 	public native float[] getInteriorColor();
 	public native void setInteriorColor(float[] color);
+	public native float getOpacity();
+	public native void setOpacity(float opacity);
 	public native String getAuthor();
 	public native void setAuthor(String author);
 	protected native long getCreationDateNative();
@@ -210,4 +222,6 @@ public class PDFAnnotation
 	public native boolean update();
 
 	public native PDFObject getObject();
+
+	public native int getLanguage();
 }

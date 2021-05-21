@@ -24,8 +24,6 @@ extern "C" {
 #include "mupdf/pdf/event.h"
 #include "mupdf/pdf/javascript.h"
 
-#include "mupdf/pdf/output-pdf.h"
-
 #include "mupdf/pdf/clean.h"
 
 #ifdef __cplusplus

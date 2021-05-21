@@ -20,7 +20,7 @@ public abstract class PKCS7Signer
 		pointer = newNative(this);
 	}
 
-	public abstract PKCS7DesignatedName name();
+	public abstract PKCS7DistinguishedName name();
 	public abstract byte[] sign(FitzInputStream stm);
 
 	// Returns a value equal to at least the number of bytes required to store the signing digest.

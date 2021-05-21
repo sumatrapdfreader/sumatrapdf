@@ -290,6 +290,18 @@ fz_buffer *fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *tr
 char *fz_read_line(fz_context *ctx, fz_stream *stm, char *buf, size_t max);
 
 /**
+	Skip over a given string in a stream. Return 0 if successfully
+	skipped, non-zero otherwise. As many characters will be skipped
+	over as matched in the string.
+*/
+int fz_skip_string(fz_context *ctx, fz_stream *stm, const char *str);
+
+/**
+	Skip over whitespace (bytes <= 32) in a stream.
+*/
+void fz_skip_space(fz_context *ctx, fz_stream *stm);
+
+/**
 	Ask how many bytes are available immediately from
 	a given stream.
 

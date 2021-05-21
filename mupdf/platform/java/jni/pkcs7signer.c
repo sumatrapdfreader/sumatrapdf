@@ -66,10 +66,10 @@ static char *string_field_to_utfchars(fz_context *ctx, JNIEnv *env, jobject obj,
 	return val;
 }
 
-static pdf_pkcs7_designated_name *signer_designated_name(fz_context *ctx, pdf_pkcs7_signer *signer_)
+static pdf_pkcs7_distinguished_name *signer_distinguished_name(fz_context *ctx, pdf_pkcs7_signer *signer_)
 {
 	java_pkcs7_signer *signer = (java_pkcs7_signer *)signer_;
-	pdf_pkcs7_designated_name *name = NULL;
+	pdf_pkcs7_distinguished_name *name = NULL;
 	jboolean detach = JNI_FALSE;
 	jobject desname = NULL;
 	JNIEnv *env = NULL;
@@ -78,23 +78,23 @@ static pdf_pkcs7_designated_name *signer_designated_name(fz_context *ctx, pdf_pk
 
 	env = jni_attach_thread(ctx, &detach);
 	if (env == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in pdf_pkcs7_designated_name");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in pdf_pkcs7_distinguished_name");
 
 	desname = (*env)->CallObjectMethod(env, signer->java_signer, mid_PKCS7Signer_name);
 	if ((*env)->ExceptionCheck(env))
 		fz_throw_java_and_detach_thread(ctx, env, detach);
 	if (desname == NULL)
-		fz_throw_and_detach_thread(ctx, detach, FZ_ERROR_GENERIC, "cannot retrieve designated name");
+		fz_throw_and_detach_thread(ctx, detach, FZ_ERROR_GENERIC, "cannot retrieve distinguished name");
 
 	fz_var(name);
 	fz_try(ctx)
 	{
-		name = Memento_label(fz_calloc(ctx, 1, sizeof(*name)), "designated name");
-		name->cn = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_cn);
-		name->o = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_o);
-		name->ou = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_ou);
-		name->email = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_email);
-		name->c = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_c);
+		name = Memento_label(fz_calloc(ctx, 1, sizeof(*name)), "distinguished name");
+		name->cn = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DistinguishedName_cn);
+		name->o = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DistinguishedName_o);
+		name->ou = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DistinguishedName_ou);
+		name->email = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DistinguishedName_email);
+		name->c = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DistinguishedName_c);
 	}
 	fz_catch(ctx)
 	{
@@ -193,7 +193,7 @@ static pdf_pkcs7_signer *pdf_pkcs7_java_signer_create(JNIEnv *env, fz_context *c
 
 	signer->base.keep = signer_keep;
 	signer->base.drop = signer_drop;
-	signer->base.get_signing_name = signer_designated_name;
+	signer->base.get_signing_name = signer_distinguished_name;
 	signer->base.max_digest_size = signer_max_digest_size;
 	signer->base.create_digest = signer_create_digest;
 	signer->refs = 1;

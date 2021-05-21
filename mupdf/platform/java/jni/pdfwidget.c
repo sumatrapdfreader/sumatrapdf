@@ -326,22 +326,22 @@ FUN(PDFWidget_incrementalChangeAfterSigning)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-FUN(PDFWidget_getDesignatedName)(JNIEnv *env, jobject self, jobject jverifier)
+FUN(PDFWidget_getDistinguishedName)(JNIEnv *env, jobject self, jobject jverifier)
 {
 	fz_context *ctx = get_context(env);
 	pdf_widget *widget = from_PDFWidget_safe(env, self);
 	java_pkcs7_verifier *verifier = from_PKCS7Verifier_safe(env, jverifier);
 	pdf_document *pdf = widget->page->doc;
 	jobject jcn, jo, jou, jemail, jc;
-	pdf_pkcs7_designated_name *name;
+	pdf_pkcs7_distinguished_name *name;
 	jobject jname;
 
 	if (!ctx || !widget || !pdf) return NULL;
 	if (!verifier) jni_throw_arg(env, "verifier must not be null");
 
-	jname = (*env)->NewObject(env, cls_PKCS7DesignatedName, mid_PKCS7DesignatedName_init);
+	jname = (*env)->NewObject(env, cls_PKCS7DistinguishedName, mid_PKCS7DistinguishedName_init);
 	if ((*env)->ExceptionCheck(env)) return NULL;
-	if (!jname) jni_throw_run(env, "cannot create designated name object");
+	if (!jname) jni_throw_run(env, "cannot create distinguished name object");
 
 	fz_try(ctx)
 	{
@@ -374,35 +374,87 @@ FUN(PDFWidget_getDesignatedName)(JNIEnv *env, jobject self, jobject jverifier)
 			fz_throw_java(ctx, env);
 	}
 	fz_always(ctx)
-		pdf_signature_drop_designated_name(ctx, name);
+		pdf_signature_drop_distinguished_name(ctx, name);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	(*env)->SetObjectField(env, jname, fid_PKCS7DesignatedName_cn, jcn);
-	(*env)->SetObjectField(env, jname, fid_PKCS7DesignatedName_o, jo);
-	(*env)->SetObjectField(env, jname, fid_PKCS7DesignatedName_ou, jou);
-	(*env)->SetObjectField(env, jname, fid_PKCS7DesignatedName_email, jemail);
-	(*env)->SetObjectField(env, jname, fid_PKCS7DesignatedName_c, jc);
+	(*env)->SetObjectField(env, jname, fid_PKCS7DistinguishedName_cn, jcn);
+	(*env)->SetObjectField(env, jname, fid_PKCS7DistinguishedName_o, jo);
+	(*env)->SetObjectField(env, jname, fid_PKCS7DistinguishedName_ou, jou);
+	(*env)->SetObjectField(env, jname, fid_PKCS7DistinguishedName_email, jemail);
+	(*env)->SetObjectField(env, jname, fid_PKCS7DistinguishedName_c, jc);
 
 	return jname;
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFWidget_signNative)(JNIEnv *env, jobject self, jobject signer, jobject jimage)
+FUN(PDFWidget_signNative)(JNIEnv *env, jobject self, jobject jsigner, jint flags, jobject jimage, jstring jreason, jstring jlocation)
 {
 	fz_context *ctx = get_context(env);
 	pdf_widget *widget = from_PDFWidget_safe(env, self);
 	pdf_document *pdf = widget->page->doc;
-	pdf_pkcs7_signer *pkcs7signer = from_PKCS7Signer_safe(env, signer);
+	pdf_pkcs7_signer *signer = from_PKCS7Signer_safe(env, jsigner);
 	fz_image *image = from_Image_safe(env, jimage);
+	const char *reason = NULL;
+	const char *location = NULL;
 
 	if (!ctx || !widget || !pdf) return JNI_FALSE;
-	if (!pkcs7signer) jni_throw_arg(env, "signer must not be null");
+	if (!signer) jni_throw_arg(env, "signer must not be null");
+
+	if (jreason)
+		reason = (*env)->GetStringUTFChars(env, jreason, NULL);
+	if (jlocation)
+		location = (*env)->GetStringUTFChars(env, jlocation, NULL);
 
 	fz_try(ctx)
-		pdf_sign_signature(ctx, widget, pkcs7signer, image);
+		pdf_sign_signature(ctx, widget, signer, flags, image, reason, location);
+	fz_always(ctx)
+	{
+		if (jreason)
+			(*env)->ReleaseStringUTFChars(env, jreason, reason);
+		if (jlocation)
+			(*env)->ReleaseStringUTFChars(env, jlocation, location);
+	}
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
 	return JNI_TRUE;
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFWidget_previewSignatureNative)(JNIEnv *env, jclass cls, jint width, jint height, jint lang, jobject jsigner, jint flags, jobject jimage, jstring jreason, jstring jlocation)
+{
+	fz_context *ctx = get_context(env);
+	pdf_pkcs7_signer *signer = from_PKCS7Signer_safe(env, jsigner);
+	fz_image *image = from_Image_safe(env, jimage);
+	const char *reason = NULL;
+	const char *location = NULL;
+	fz_pixmap *pixmap = NULL;
+
+	if (!ctx) return JNI_FALSE;
+	if (!signer) jni_throw_arg(env, "signer must not be null");
+
+	if (jreason)
+		reason = (*env)->GetStringUTFChars(env, jreason, NULL);
+	if (jlocation)
+		location = (*env)->GetStringUTFChars(env, jlocation, NULL);
+
+	fz_var(pixmap);
+
+	fz_try(ctx)
+		pixmap = pdf_preview_signature_as_pixmap(ctx,
+				width, height, lang,
+				signer, flags, image,
+				reason, location);
+	fz_always(ctx)
+	{
+		if (jreason)
+			(*env)->ReleaseStringUTFChars(env, jreason, reason);
+		if (jlocation)
+			(*env)->ReleaseStringUTFChars(env, jlocation, location);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Pixmap_safe_own(ctx, env, pixmap);
 }

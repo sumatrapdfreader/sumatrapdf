@@ -46,7 +46,7 @@ typedef struct
 	uint8_t opm;	/* overprint mode */
 }  fz_color_params;
 
-extern const fz_color_params fz_default_color_params;
+FZ_DATA extern const fz_color_params fz_default_color_params;
 
 /**
 	Map from (case sensitive) rendering intent string to enumeration

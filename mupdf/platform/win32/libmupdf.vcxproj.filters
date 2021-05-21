@@ -591,9 +591,6 @@
     <ClCompile Include="..\..\source\fitz\log.c">
       <Filter>fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\fitz\output-pdfocr.c">
-      <Filter>fitz</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\fitz\ocr-device.c">
       <Filter>fitz</Filter>
     </ClCompile>

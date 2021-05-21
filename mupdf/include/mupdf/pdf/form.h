@@ -118,7 +118,7 @@ enum
 	PDF_CH_FIELD_IS_SORT = 1 << 19,
 	PDF_CH_FIELD_IS_MULTI_SELECT = 1 << 21,
 	PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK = 1 << 22,
-	PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = 1 << 26,
+	PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = 1 << 25,
 };
 
 void pdf_calculate_form(fz_context *ctx, pdf_document *doc);
@@ -165,7 +165,7 @@ typedef struct
 	char *email;
 	char *c;
 }
-pdf_pkcs7_designated_name;
+pdf_pkcs7_distinguished_name;
 
 typedef enum
 {
@@ -185,8 +185,8 @@ typedef pdf_pkcs7_signer *(pdf_pkcs7_keep_signer_fn)(fz_context *ctx, pdf_pkcs7_
 /* Drop a reference for a signer object */
 typedef void (pdf_pkcs7_drop_signer_fn)(fz_context *ctx, pdf_pkcs7_signer *signer);
 
-/* Obtain the designated name information from a signer object */
-typedef pdf_pkcs7_designated_name *(pdf_pkcs7_get_signing_name_fn)(fz_context *ctx, pdf_pkcs7_signer *signer);
+/* Obtain the distinguished name information from a signer object */
+typedef pdf_pkcs7_distinguished_name *(pdf_pkcs7_get_signing_name_fn)(fz_context *ctx, pdf_pkcs7_signer *signer);
 
 /* Predict the size of the digest. The actual digest returned by create_digest will be no greater in size */
 typedef size_t (pdf_pkcs7_max_digest_size_fn)(fz_context *ctx, pdf_pkcs7_signer *signer);
@@ -208,7 +208,7 @@ typedef struct pdf_pkcs7_verifier pdf_pkcs7_verifier;
 typedef void (pdf_pkcs7_drop_verifier_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier);
 typedef pdf_signature_error (pdf_pkcs7_check_certificate_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *signature, size_t len);
 typedef pdf_signature_error (pdf_pkcs7_check_digest_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier, fz_stream *in, unsigned char *signature, size_t len);
-typedef pdf_pkcs7_designated_name *(pdf_pkcs7_get_signatory_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *signature, size_t len);
+typedef pdf_pkcs7_distinguished_name *(pdf_pkcs7_get_signatory_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *signature, size_t len);
 
 struct pdf_pkcs7_verifier
 {
@@ -225,15 +225,69 @@ int pdf_count_signatures(fz_context *ctx, pdf_document *doc);
 
 char *pdf_signature_error_description(pdf_signature_error err);
 
-pdf_pkcs7_designated_name *pdf_signature_get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
-void pdf_signature_drop_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *name);
-char *pdf_signature_format_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *name);
-char *pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name *dn, const char *reason, const char *location, int64_t date, int include_labels);
-fz_display_list *pdf_signature_appearance(fz_context *ctx, fz_rect rect, fz_text_language lang, fz_image *img, const char *left_text, const char *right_text, int include_logo);
+pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
+void pdf_signature_drop_distinguished_name(fz_context *ctx, pdf_pkcs7_distinguished_name *name);
+char *pdf_signature_format_distinguished_name(fz_context *ctx, pdf_pkcs7_distinguished_name *name);
+char *pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_name *dn, const char *reason, const char *location, int64_t date, int include_labels);
+fz_display_list *pdf_signature_appearance_signed(fz_context *ctx, fz_rect rect, fz_text_language lang, fz_image *img, const char *left_text, const char *right_text, int include_logo);
 fz_display_list *pdf_signature_appearance_unsigned(fz_context *ctx, fz_rect rect, fz_text_language lang);
 
 pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
 pdf_signature_error pdf_check_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
+
+void pdf_clear_signature(fz_context *ctx, pdf_widget *widget);
+
+/*
+	Sign a signature field, while assigning it an arbitrary apparance determined by a display list.
+	The function pdf_signature_appearance can generate a variety of common signature appearances.
+*/
+void pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, int64_t date, fz_display_list *disp_list);
+
+enum {
+	PDF_SIGNATURE_SHOW_LABELS = 1,
+	PDF_SIGNATURE_SHOW_DN = 2,
+	PDF_SIGNATURE_SHOW_DATE = 4,
+	PDF_SIGNATURE_SHOW_TEXT_NAME = 8,
+	PDF_SIGNATURE_SHOW_GRAPHIC_NAME = 16,
+	PDF_SIGNATURE_SHOW_LOGO = 32,
+};
+
+#define PDF_SIGNATURE_DEFAULT_APPEARANCE ( \
+	PDF_SIGNATURE_SHOW_LABELS | \
+	PDF_SIGNATURE_SHOW_DN | \
+	PDF_SIGNATURE_SHOW_DATE | \
+	PDF_SIGNATURE_SHOW_TEXT_NAME | \
+	PDF_SIGNATURE_SHOW_GRAPHIC_NAME | \
+	PDF_SIGNATURE_SHOW_LOGO )
+
+/*
+	Sign a signature field, while assigning it a default appearance.
+*/
+void pdf_sign_signature(fz_context *ctx, pdf_widget *widget,
+	pdf_pkcs7_signer *signer,
+	int appearance_flags,
+	fz_image *graphic,
+	const char *reason,
+	const char *location);
+
+/*
+	Create a preview of the default signature appearance.
+*/
+fz_display_list *pdf_preview_signature_as_display_list(fz_context *ctx,
+	float w, float h, fz_text_language lang,
+	pdf_pkcs7_signer *signer,
+	int appearance_flags,
+	fz_image *graphic,
+	const char *reason,
+	const char *location);
+
+fz_pixmap *pdf_preview_signature_as_pixmap(fz_context *ctx,
+	int w, int h, fz_text_language lang,
+	pdf_pkcs7_signer *signer,
+	int appearance_flags,
+	fz_image *graphic,
+	const char *reason,
+	const char *location);
 
 /*
 	check a signature's certificate chain and digest

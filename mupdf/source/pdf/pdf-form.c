@@ -768,6 +768,10 @@ static char *get_field_name(fz_context *ctx, pdf_obj *field, int spare)
 		lname = pdf_dict_get_text_string(ctx, field, PDF_NAME(T));
 		llen = (int)strlen(lname);
 
+		// Limit fields to 16K
+		if (llen > (16 << 10) || llen + spare > (16 << 10))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Field name too long");
+
 		/*
 		 * If we found a name at this point in the field hierarchy
 		 * then we'll need extra space for it and a dot

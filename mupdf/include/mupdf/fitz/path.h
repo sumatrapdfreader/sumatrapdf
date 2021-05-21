@@ -352,7 +352,7 @@ fz_rect fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect rect, const fz_stroke
 /**
 	A sane 'default' stroke state.
 */
-extern const fz_stroke_state fz_default_stroke_state;
+FZ_DATA extern const fz_stroke_state fz_default_stroke_state;
 
 /**
 	Create a new (empty) stroke state structure (with no dash

@@ -38,7 +38,7 @@ static fz_matrix center_rect_within_rect(const fz_rect tofit, const fz_rect with
 	 * Scale "tofit" to a size that fits within "within"
 	 * Translate "tofit" to "within's" center
 	 * Do all the above in reverse order so that we can use the fz_pre_xx functions */
-	return fz_pre_translate(fz_pre_scale(fz_translate(within_center.x, within_center.y), scale, scale), -tofit_center.x, -tofit_center.y);
+	return fz_pre_translate(fz_pre_scale(fz_translate(within_center.x, within_center.y), scale, -scale), -tofit_center.x, -tofit_center.y);
 }
 
 static void
@@ -2312,7 +2312,7 @@ static void draw_logo(fz_context *ctx, fz_path *path)
 static float logo_color[3] = { (float)0xa4 / (float)0xFF, (float)0xca / (float)0xFF, (float)0xf5 / (float)0xFF };
 
 fz_display_list *
-pdf_signature_appearance(fz_context *ctx, fz_rect rect, fz_text_language lang, fz_image *img, const char *left_text, const char *right_text, int include_logo)
+pdf_signature_appearance_signed(fz_context *ctx, fz_rect rect, fz_text_language lang, fz_image *img, const char *left_text, const char *right_text, int include_logo)
 {
 	fz_display_list *dlist = NULL;
 	fz_device *dev = NULL;
@@ -2363,7 +2363,7 @@ pdf_signature_appearance(fz_context *ctx, fz_rect rect, fz_text_language lang, f
 			float midy = (prect.y0 + prect.y1) / 2.0;
 			float rect_aspect = rectw / recth;
 			float scale = img_aspect > rect_aspect ? rectw / img->w : recth / img->h;
-			fz_matrix ctm = fz_pre_translate(fz_pre_scale(fz_translate(midx, midy), scale * img->w, -scale * img->h), -0.5, -0.5);
+			fz_matrix ctm = fz_pre_translate(fz_pre_scale(fz_translate(midx, midy), scale * img->w, scale * img->h), -0.5, -0.5);
 			fz_fill_image(ctx, dev, img, ctm, 1.0, fz_default_color_params);
 		}
 
@@ -2423,12 +2423,12 @@ pdf_signature_appearance_unsigned(fz_context *ctx, fz_rect rect, fz_text_languag
 		float text_color[] = { 1.0f, 1.0f, 1.0f };
 		float arrow_color[] = { 0.95f, 0.33f, 0.18f };
 
-		rect.y0 = rect.y1 - (rect.y1 - rect.y0) / 6;
-		rect.x1 = rect.x0 + (rect.y1 - rect.y0) * 4;
-		font = fz_new_base14_font(ctx, "Helvetica");
-
 		dlist = fz_new_display_list(ctx, rect);
 		dev = fz_new_list_device(ctx, dlist);
+
+		rect.y1 = rect.y0 + (rect.y1 - rect.y0) / 6;
+		rect.x1 = rect.x0 + (rect.y1 - rect.y0) * 4;
+		font = fz_new_base14_font(ctx, "Helvetica");
 
 		path = fz_new_path(ctx);
 		/* Draw a rectangle with a protusion to the right [xxxxx> */
@@ -2463,7 +2463,7 @@ pdf_signature_appearance_unsigned(fz_context *ctx, fz_rect rect, fz_text_languag
 }
 
 char *
-pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name *dn, const char *reason, const char *location, int64_t date, int include_labels)
+pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_name *dn, const char *reason, const char *location, int64_t date, int include_labels)
 {
 	fz_buffer *fzbuf = NULL;
 	char *dn_str = NULL;
@@ -2499,7 +2499,7 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name 
 			fz_append_string(ctx, fzbuf, "\n");
 			if (include_labels)
 				fz_append_string(ctx, fzbuf, "DN: ");
-			dn_str = pdf_signature_format_designated_name(ctx, dn);
+			dn_str = pdf_signature_format_distinguished_name(ctx, dn);
 			fz_append_string(ctx, fzbuf, dn_str);
 		}
 
@@ -2519,7 +2519,7 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name 
 			fz_append_string(ctx, fzbuf, location);
 		}
 
-		if (tm)
+		if (date >= 0)
 		{
 			len = strftime(now_str, sizeof now_str, "%FT%T%z", tm);
 			if (len)
@@ -2548,13 +2548,18 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_designated_name 
 }
 
 void
-pdf_update_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, fz_rect rect, fz_display_list *disp_list)
+pdf_update_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, fz_display_list *disp_list)
 {
 	pdf_obj *ap, *new_ap_n;
 	pdf_document *doc = annot->page->doc;
 	fz_device *dev = NULL;
 	pdf_obj *res = NULL;
 	fz_buffer *contents = NULL;
+
+	// Convert fitz-space mediabox to pdf-space bbox:
+	fz_rect mediabox = fz_bound_display_list(ctx, disp_list);
+	fz_matrix transform = { 1, 0, 0, -1, -mediabox.x0, mediabox.y1 };
+	fz_rect bbox = fz_transform_rect(mediabox, transform);
 
 	fz_var(dev);
 	fz_var(res);
@@ -2563,7 +2568,7 @@ pdf_update_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, fz_re
 	{
 		res = pdf_new_dict(ctx, doc, 1);
 		contents = fz_new_buffer(ctx, 0);
-		dev = pdf_new_pdf_device(ctx, doc, fz_identity, rect, res, contents);
+		dev = pdf_new_pdf_device(ctx, doc, transform, res, contents);
 		fz_run_display_list(ctx, disp_list, dev, fz_identity, fz_infinite_rect, NULL);
 		fz_close_device(ctx, dev);
 		fz_drop_device(ctx, dev);
@@ -2573,7 +2578,7 @@ pdf_update_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, fz_re
 		ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
 		if (!ap)
 			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
-		new_ap_n = pdf_new_xobject(ctx, doc, rect, fz_identity, res, contents);
+		new_ap_n = pdf_new_xobject(ctx, doc, bbox, fz_identity, res, contents);
 		annot->needs_new_ap = 0;
 		annot->has_new_ap = 1;
 		pdf_dict_put_drop(ctx, ap, PDF_NAME(N), new_ap_n);
@@ -2758,10 +2763,10 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 			 * which are most easily created via a display list. */
 			if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Sig))
 			{
-				rect = pdf_bound_annot(ctx, annot);
+				rect = pdf_annot_rect(ctx, annot);
 				dlist = pdf_signature_appearance_unsigned(ctx, rect, pdf_annot_language(ctx, annot));
 				fz_try(ctx)
-					pdf_update_appearance_from_display_list(ctx, annot, rect, dlist);
+					pdf_update_appearance_from_display_list(ctx, annot, dlist);
 				fz_always(ctx)
 					fz_drop_display_list(ctx, dlist);
 				fz_catch(ctx)

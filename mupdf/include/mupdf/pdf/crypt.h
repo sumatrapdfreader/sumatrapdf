@@ -73,20 +73,6 @@ int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document
 */
 size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents);
 
-/*
-	Sign a signature field, while assigning it a default appearance, consisting of a central logo,
-	the signer's name on the left and the full designated-name information on the left
-*/
-void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, fz_image *image);
-
-/*
-	Sign a signature field, while assigning it an arbitrary apparance determined by a display list.
-	The function pdf_signature_appearance can generate a variety of common signature appearances.
-*/
-void pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, int64_t t, fz_display_list *disp_list);
-
-void pdf_clear_signature(fz_context *ctx, pdf_widget *widget);
-
 void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void (*fmt_str_out)(fz_context *, void *, const unsigned char *, size_t), void *arg, const unsigned char *s, size_t n);
 
 size_t pdf_encrypted_len(fz_context *ctx, pdf_crypt *crypt, int num, int gen, size_t len);

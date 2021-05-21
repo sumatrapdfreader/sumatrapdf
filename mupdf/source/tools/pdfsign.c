@@ -39,7 +39,7 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 	pdf_signature_error err;
 	pdf_pkcs7_verifier *verifier;
 	int edits;
-	pdf_pkcs7_designated_name *dn = NULL;
+	pdf_pkcs7_distinguished_name *dn = NULL;
 
 	printf("Verifying signature %d:\n", pdf_to_num(ctx, signature));
 
@@ -56,8 +56,8 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 		dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
 		if (dn)
 		{
-			name = pdf_signature_format_designated_name(ctx, dn);
-			printf("\tDesignated name: %s\n", name);
+			name = pdf_signature_format_distinguished_name(ctx, dn);
+			printf("\tDistinguished name: %s\n", name);
 			fz_free(ctx, name);
 		}
 		else
@@ -82,7 +82,7 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 	}
 	fz_always(ctx)
 	{
-		pdf_signature_drop_designated_name(ctx, dn);
+		pdf_signature_drop_distinguished_name(ctx, dn);
 		pdf_drop_verifier(ctx, verifier);
 	}
 	fz_catch(ctx)
@@ -137,7 +137,11 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 		page = pdf_load_page(ctx, doc, pageno);
 		for (widget = pdf_first_widget(ctx, page); widget; widget = pdf_next_widget(ctx, widget))
 			if (pdf_widget_type(ctx, widget) == PDF_WIDGET_TYPE_SIGNATURE && !pdf_objcmp_resolve(ctx, widget->obj, signature))
-				pdf_sign_signature(ctx, widget, signer, NULL);
+				pdf_sign_signature(ctx, widget, signer,
+					PDF_SIGNATURE_DEFAULT_APPEARANCE,
+					NULL,
+					NULL,
+					NULL);
 	}
 	fz_always(ctx)
 	{
@@ -151,7 +155,7 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 
 static void list_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
 {
-	pdf_pkcs7_designated_name *dn;
+	pdf_pkcs7_distinguished_name *dn;
 	pdf_pkcs7_verifier *verifier;
 
 	if (!pdf_signature_is_signed(ctx, doc, signature))
@@ -165,10 +169,10 @@ static void list_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 	dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
 	if (dn)
 	{
-		char *s = pdf_signature_format_designated_name(ctx, dn);
-		printf("%5d: Designated name: %s\n", pdf_to_num(ctx, signature), s);
+		char *s = pdf_signature_format_distinguished_name(ctx, dn);
+		printf("%5d: Distinguished name: %s\n", pdf_to_num(ctx, signature), s);
 		fz_free(ctx, s);
-		pdf_signature_drop_designated_name(ctx, dn);
+		pdf_signature_drop_distinguished_name(ctx, dn);
 	}
 	else
 	{

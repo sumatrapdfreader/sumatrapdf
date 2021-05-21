@@ -12,8 +12,8 @@ pdf_signature_error pkcs7_openssl_check_digest(fz_context *ctx, fz_stream *stm, 
 /* Check a signature's certificate is trusted */
 pdf_signature_error pkcs7_openssl_check_certificate(char *sig, size_t sig_len);
 
-/* Obtain the designated name information from signature's certificate */
-pdf_pkcs7_designated_name *pkcs7_openssl_designated_name(fz_context *ctx, char *sig, size_t sig_len);
+/* Obtain the distinguished name information from signature's certificate */
+pdf_pkcs7_distinguished_name *pkcs7_openssl_distinguished_name(fz_context *ctx, char *sig, size_t sig_len);
 
 /* Read the certificate and private key from a pfx file, holding it as an opaque structure */
 pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, const char *pw);

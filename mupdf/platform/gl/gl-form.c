@@ -16,7 +16,7 @@ static void trace_field_value(pdf_annot *annot, const char *set_value)
 }
 
 static pdf_widget *sig_widget;
-static char *sig_designated_name = NULL;
+static char *sig_distinguished_name = NULL;
 static pdf_signature_error sig_cert_error;
 static pdf_signature_error sig_digest_error;
 static int sig_valid_until;
@@ -36,7 +36,7 @@ int do_sign(void)
 	{
 		trace_action("widget.sign(new PDFPKCS7Signer(%q, %q));\n", cert_filename, cert_password.text);
 		signer = pkcs7_openssl_read_pfx(ctx, cert_filename, cert_password.text);
-		pdf_sign_signature(ctx, sig_widget, signer, NULL);
+		pdf_sign_signature(ctx, sig_widget, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, NULL, NULL, NULL);
 		ui_show_warning_dialog("Signed document successfully.");
 	}
 	fz_always(ctx)
@@ -63,6 +63,18 @@ static void do_clear_signature(void)
 		ui_show_warning_dialog("%s", fz_caught_message(ctx));
 }
 
+static int is_valid_certificate_and_password(void)
+{
+	fz_try(ctx)
+	{
+		pdf_pkcs7_signer *signer = pkcs7_openssl_read_pfx(ctx, cert_filename, cert_password.text);
+		pdf_drop_signer(ctx, signer);
+	}
+	fz_catch(ctx)
+		return 0;
+	return 1;
+}
+
 static void cert_password_dialog(void)
 {
 	int is;
@@ -81,8 +93,12 @@ static void cert_password_dialog(void)
 			ui_spacer();
 			if (ui_button("Okay") || is == UI_INPUT_ACCEPT)
 			{
-				ui.dialog = NULL;
-				do_save_signed_pdf_file();
+				if (is_valid_certificate_and_password()) {
+					ui.dialog = NULL;
+					do_save_signed_pdf_file();
+				} else {
+					ui_show_warning_dialog("%s", fz_caught_message(ctx));
+				}
 			}
 		}
 		ui_panel_end();
@@ -162,7 +178,7 @@ static void sig_verify_dialog(void)
 			ui_spacer();
 		}
 
-		ui_label("Designated name: %s.", sig_designated_name);
+		ui_label("Distinguished name: %s.", sig_distinguished_name);
 		ui_spacer();
 
 		if (sig_cert_error)
@@ -213,7 +229,7 @@ static void show_sig_dialog(pdf_widget *widget)
 		if (pdf_signature_is_signed(ctx, pdf, widget->obj))
 		{
 			pdf_pkcs7_verifier *verifier;
-			pdf_pkcs7_designated_name *dn;
+			pdf_pkcs7_distinguished_name *dn;
 
 			sig_readonly = pdf_widget_is_readonly(ctx, widget);
 
@@ -224,13 +240,13 @@ static void show_sig_dialog(pdf_widget *widget)
 			sig_cert_error = pdf_check_certificate(ctx, verifier, pdf, widget->obj);
 			sig_digest_error = pdf_check_digest(ctx, verifier, pdf, widget->obj);
 
-			fz_free(ctx, sig_designated_name);
+			fz_free(ctx, sig_distinguished_name);
 			dn = pdf_signature_get_signatory(ctx, verifier, pdf, widget->obj);
 			if (dn)
-				sig_designated_name = pdf_signature_format_designated_name(ctx, dn);
+				sig_distinguished_name = pdf_signature_format_distinguished_name(ctx, dn);
 			else
-				sig_designated_name = fz_strdup(ctx, "Signature information missing.");
-			pdf_signature_drop_designated_name(ctx, dn);
+				sig_distinguished_name = fz_strdup(ctx, "Signature information missing.");
+			pdf_signature_drop_distinguished_name(ctx, dn);
 
 			pdf_drop_verifier(ctx, verifier);
 

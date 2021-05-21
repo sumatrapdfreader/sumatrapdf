@@ -506,9 +506,9 @@ exit:
 
 typedef struct
 {
-	pdf_pkcs7_designated_name base;
+	pdf_pkcs7_distinguished_name base;
 	char buf[8192];
-} pdf_pkcs7_designated_name_openssl;
+} pdf_pkcs7_distinguished_name_openssl;
 
 typedef struct
 {
@@ -609,9 +609,9 @@ static char *x509_get_name_entry_string(fz_context *ctx, X509_NAME *name, int ni
 	return data ? fz_strdup(ctx, (const char *)ASN1_STRING_get0_data(data)) : NULL;
 }
 
-static pdf_pkcs7_designated_name *x509_designated_name(fz_context *ctx, X509 *x509)
+static pdf_pkcs7_distinguished_name *x509_distinguished_name(fz_context *ctx, X509 *x509)
 {
-	pdf_pkcs7_designated_name *dn = fz_malloc_struct(ctx, pdf_pkcs7_designated_name);
+	pdf_pkcs7_distinguished_name *dn = fz_malloc_struct(ctx, pdf_pkcs7_distinguished_name);
 
 	fz_try(ctx)
 	{
@@ -624,18 +624,18 @@ static pdf_pkcs7_designated_name *x509_designated_name(fz_context *ctx, X509 *x5
 	}
 	fz_catch(ctx)
 	{
-		pdf_signature_drop_designated_name(ctx, dn);
+		pdf_signature_drop_distinguished_name(ctx, dn);
 		fz_rethrow(ctx);
 	}
 
-	return (pdf_pkcs7_designated_name *)dn;
+	return (pdf_pkcs7_distinguished_name *)dn;
 }
 
-static pdf_pkcs7_designated_name *signer_designated_name(fz_context *ctx, pdf_pkcs7_signer *signer)
+static pdf_pkcs7_distinguished_name *signer_distinguished_name(fz_context *ctx, pdf_pkcs7_signer *signer)
 {
 	openssl_signer *osigner = (openssl_signer *)signer;
 	X509 *x509 = osigner->x509;
-	pdf_pkcs7_designated_name *dn = fz_malloc_struct(ctx, pdf_pkcs7_designated_name);
+	pdf_pkcs7_distinguished_name *dn = fz_malloc_struct(ctx, pdf_pkcs7_distinguished_name);
 
 	fz_try(ctx)
 	{
@@ -648,7 +648,7 @@ static pdf_pkcs7_designated_name *signer_designated_name(fz_context *ctx, pdf_pk
 	}
 	fz_catch(ctx)
 	{
-		pdf_signature_drop_designated_name(ctx, dn);
+		pdf_signature_drop_distinguished_name(ctx, dn);
 		fz_rethrow(ctx);
 	}
 
@@ -754,7 +754,7 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
 		signer = fz_malloc_struct(ctx, openssl_signer);
 		signer->base.keep = keep_signer;
 		signer->base.drop = drop_signer;
-		signer->base.get_signing_name = signer_designated_name;
+		signer->base.get_signing_name = signer_distinguished_name;
 		signer->base.max_digest_size = max_digest_size;
 		signer->base.create_digest = signer_create_digest;
 		signer->refs = 1;
@@ -829,9 +829,9 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
 	return &signer->base;
 }
 
-pdf_pkcs7_designated_name *get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *sig, size_t sig_len)
+pdf_pkcs7_distinguished_name *get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *sig, size_t sig_len)
 {
-	pdf_pkcs7_designated_name *name = NULL;
+	pdf_pkcs7_distinguished_name *name = NULL;
 	PKCS7 *pk7sig = NULL;
 	BIO *bsig = NULL;
 	STACK_OF(PKCS7_SIGNER_INFO) *sk = NULL;
@@ -852,7 +852,7 @@ pdf_pkcs7_designated_name *get_signatory(fz_context *ctx, pdf_pkcs7_verifier *ve
 	x509 = pk7_signer(pk7_certs(pk7sig), sk_PKCS7_SIGNER_INFO_value(sk, 0));
 
 	fz_try(ctx)
-		name = x509_designated_name(ctx, x509);
+		name = x509_distinguished_name(ctx, x509);
 	fz_catch(ctx)
 	{
 		PKCS7_free(pk7sig);

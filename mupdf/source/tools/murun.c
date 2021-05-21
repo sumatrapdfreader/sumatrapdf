@@ -5423,6 +5423,29 @@ static void ffi_PDFAnnotation_setInteriorColor(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_getOpacity(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	float opacity;
+	fz_try(ctx)
+		opacity = pdf_annot_opacity(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushnumber(J, opacity);
+}
+
+static void ffi_PDFAnnotation_setOpacity(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	float opacity = js_tonumber(J, 1);
+	fz_try(ctx)
+		pdf_set_annot_opacity(ctx, annot, opacity);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFAnnotation_getQuadPoints(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -6114,7 +6137,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_verifier *verifier = NULL;
-	pdf_pkcs7_designated_name *dn = NULL;
+	pdf_pkcs7_distinguished_name *dn = NULL;
 	char buf[500];
 	fz_var(verifier);
 	fz_var(dn);
@@ -6124,7 +6147,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
 		dn = pdf_signature_get_signatory(ctx, verifier, widget->page->doc, widget->obj);
 		if (dn)
 		{
-			char *s = pdf_signature_format_designated_name(ctx, dn);
+			char *s = pdf_signature_format_distinguished_name(ctx, dn);
 			fz_strlcpy(buf, s, sizeof buf);
 			fz_free(ctx, s);
 		}
@@ -6135,7 +6158,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
 	}
 	fz_always(ctx)
 	{
-		pdf_signature_drop_designated_name(ctx, dn);
+		pdf_signature_drop_distinguished_name(ctx, dn);
 		pdf_drop_verifier(ctx, verifier);
 	}
 	fz_catch(ctx)
@@ -6167,18 +6190,100 @@ static void ffi_PDFWidget_isReadOnly(js_State *J)
 	js_pushboolean(J, val);
 }
 
+static int check_option(js_State *J, int idx, const char *name) {
+	int result = 0;
+	if (js_hasproperty(J, idx, name)) {
+		if (js_toboolean(J, -1))
+			result = 1;
+		js_pop(J, 1);
+	}
+	return result;
+}
 
 static void ffi_PDFWidget_sign(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_signer *signer = js_touserdata(J, 1, "pdf_pkcs7_signer");
-	fz_image *image = js_iscoercible(J, 2) ? js_touserdata(J, 2, "fz_image") : NULL;
+	int flags = 0;
+	fz_image *graphic = js_iscoercible(J, 3) ? js_touserdata(J, 3, "fz_image") : NULL;
+	const char *reason = js_iscoercible(J, 4) ? js_tostring(J, 4) : NULL;
+	const char *location = js_iscoercible(J, 5) ? js_tostring(J, 5) : NULL;
+
+	if (js_isobject(J, 2)) {
+		if (check_option(J, 2, "showLabels"))
+			flags |= PDF_SIGNATURE_SHOW_LABELS;
+		if (check_option(J, 2, "showDN"))
+			flags |= PDF_SIGNATURE_SHOW_DN;
+		if (check_option(J, 2, "showDate"))
+			flags |= PDF_SIGNATURE_SHOW_DATE;
+		if (check_option(J, 2, "showTextName"))
+			flags |= PDF_SIGNATURE_SHOW_TEXT_NAME;
+		if (check_option(J, 2, "showGraphicName"))
+			flags |= PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+		if (check_option(J, 2, "showLogo"))
+			flags |= PDF_SIGNATURE_SHOW_LOGO;
+	} else {
+		flags = PDF_SIGNATURE_DEFAULT_APPEARANCE;
+	}
 
 	fz_try(ctx)
-		pdf_sign_signature(ctx, widget, signer, image);
+		pdf_sign_signature(ctx, widget, signer,
+			flags,
+			graphic,
+			reason,
+			location);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFWidget_previewSignature(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_pkcs7_signer *signer = NULL;
+	int flags = 0;
+	fz_image *graphic = js_iscoercible(J, 3) ? js_touserdata(J, 3, "fz_image") : NULL;
+	const char *reason = js_iscoercible(J, 4) ? js_tostring(J, 4) : NULL;
+	const char *location = js_iscoercible(J, 5) ? js_tostring(J, 5) : NULL;
+	fz_pixmap *pixmap;
+
+	if (js_isuserdata(J, 1, "pdf_pkcs7_signer"))
+		signer = js_touserdata(J, 1, "pdf_pkcs7_signer");
+
+	if (js_isobject(J, 2)) {
+		if (check_option(J, 2, "showLabels"))
+			flags |= PDF_SIGNATURE_SHOW_LABELS;
+		if (check_option(J, 2, "showDN"))
+			flags |= PDF_SIGNATURE_SHOW_DN;
+		if (check_option(J, 2, "showDate"))
+			flags |= PDF_SIGNATURE_SHOW_DATE;
+		if (check_option(J, 2, "showTextName"))
+			flags |= PDF_SIGNATURE_SHOW_TEXT_NAME;
+		if (check_option(J, 2, "showGraphicName"))
+			flags |= PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+		if (check_option(J, 2, "showLogo"))
+			flags |= PDF_SIGNATURE_SHOW_LOGO;
+	} else {
+		flags = PDF_SIGNATURE_DEFAULT_APPEARANCE;
+	}
+
+	fz_try(ctx) {
+		fz_rect rect = pdf_annot_rect(ctx, widget);
+		fz_text_language lang = pdf_annot_language(ctx, widget);
+		pixmap = pdf_preview_signature_as_pixmap(ctx,
+			rect.x1-rect.x0, rect.y1-rect.y0, lang,
+			signer,
+			flags,
+			graphic,
+			reason,
+			location);
+	}
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_getregistry(J, "fz_pixmap");
+	js_newuserdata(J, "fz_pixmap", pixmap, ffi_gc_fz_pixmap);
 }
 
 static void ffi_PDFWidget_clearSignature(js_State *J)
@@ -6563,6 +6668,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.setColor", ffi_PDFAnnotation_setColor, 1);
 		jsB_propfun(J, "PDFAnnotation.getInteriorColor", ffi_PDFAnnotation_getInteriorColor, 0);
 		jsB_propfun(J, "PDFAnnotation.setInteriorColor", ffi_PDFAnnotation_setInteriorColor, 1);
+		jsB_propfun(J, "PDFAnnotation.getOpacity", ffi_PDFAnnotation_getOpacity, 0);
+		jsB_propfun(J, "PDFAnnotation.setOpacity", ffi_PDFAnnotation_setOpacity, 1);
 		jsB_propfun(J, "PDFAnnotation.getAuthor", ffi_PDFAnnotation_getAuthor, 0);
 		jsB_propfun(J, "PDFAnnotation.setAuthor", ffi_PDFAnnotation_setAuthor, 1);
 		jsB_propfun(J, "PDFAnnotation.getModificationDate", ffi_PDFAnnotation_getModificationDate, 0);
@@ -6631,7 +6738,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFWidget.checkDigest", ffi_PDFWidget_checkDigest, 0);
 		jsB_propfun(J, "PDFWidget.getSignatory", ffi_PDFWidget_getSignatory, 0);
 		jsB_propfun(J, "PDFWidget.clearSignature", ffi_PDFWidget_clearSignature, 0);
-		jsB_propfun(J, "PDFWidget.sign", ffi_PDFWidget_sign, 2);
+		jsB_propfun(J, "PDFWidget.sign", ffi_PDFWidget_sign, 5);
+		jsB_propfun(J, "PDFWidget.previewSignature", ffi_PDFWidget_previewSignature, 5);
 	}
 	js_dup(J);
 	js_setglobal(J, "PDFWidget");

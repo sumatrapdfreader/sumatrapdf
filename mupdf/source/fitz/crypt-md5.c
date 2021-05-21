@@ -208,6 +208,22 @@ void fz_md5_init(fz_md5 *context)
 	context->state[3] = 0x10325476;
 }
 
+void fz_md5_update_int64(fz_md5 *context, int64_t i)
+{
+	unsigned char c[8];
+
+	c[0] = (unsigned char)(i);
+	c[1] = (unsigned char)(i>>8);
+	c[2] = (unsigned char)(i>>16);
+	c[3] = (unsigned char)(i>>24);
+	c[4] = (unsigned char)(i>>32);
+	c[5] = (unsigned char)(i>>40);
+	c[6] = (unsigned char)(i>>48);
+	c[7] = (unsigned char)(i>>56);
+
+	fz_md5_update(context, &c[0], sizeof(c));
+}
+
 void fz_md5_update(fz_md5 *context, const unsigned char *input, size_t inlen)
 {
 	size_t i, index, partlen;

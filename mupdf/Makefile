@@ -159,7 +159,6 @@ MUPDF_OBJ := $(MUPDF_OBJ:%.cpp=$(OUT)/%.o)
 THREAD_SRC := source/helpers/mu-threads/mu-threads.c
 THREAD_OBJ := $(THREAD_SRC:%.c=$(OUT)/%.o)
 
-PKCS7_SRC := source/helpers/pkcs7/pkcs7-check.c
 PKCS7_SRC += source/helpers/pkcs7/pkcs7-openssl.c
 PKCS7_OBJ := $(PKCS7_SRC:%.c=$(OUT)/%.o)
 

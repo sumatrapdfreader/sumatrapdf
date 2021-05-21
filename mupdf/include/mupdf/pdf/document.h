@@ -1,6 +1,8 @@
 #ifndef MUPDF_PDF_DOCUMENT_H
 #define MUPDF_PDF_DOCUMENT_H
 
+#include "mupdf/fitz/export.h"
+
 typedef struct pdf_xref pdf_xref;
 typedef struct pdf_ocg_descriptor pdf_ocg_descriptor;
 
@@ -472,6 +474,17 @@ void pdf_graft_mapped_page(fz_context *ctx, pdf_graft_map *map, int page_to, pdf
 fz_device *pdf_page_write(fz_context *ctx, pdf_document *doc, fz_rect mediabox, pdf_obj **presources, fz_buffer **pcontents);
 
 /*
+	Create a pdf device. Rendering to the device creates
+	new pdf content. WARNING: this device is work in progress. It doesn't
+	currently support all rendering cases.
+
+	Note that contents must be a stream (dictionary) to be updated (or
+	a reference to a stream). Callers should take care to ensure that it
+	is not an array, and that is it not shared with other objects/pages.
+*/
+fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topctm, pdf_obj *resources, fz_buffer *contents);
+
+/*
 	Create a pdf_obj within a document that
 	represents a page, from a previously created resources
 	dictionary and page content stream. This should then be
@@ -563,9 +576,10 @@ typedef struct
 	int permissions; /* Document encryption permissions. */
 	char opwd_utf8[128]; /* Owner password. */
 	char upwd_utf8[128]; /* User password. */
+	int do_snapshot; /* Do not use directly. Use the snapshot functions. */
 } pdf_write_options;
 
-extern const pdf_write_options pdf_default_write_options;
+FZ_DATA extern const pdf_write_options pdf_default_write_options;
 
 /*
 	Parse option string into a pdf_write_options struct.
@@ -589,12 +603,26 @@ int pdf_has_unsaved_sigs(fz_context *ctx, pdf_document *doc);
 /*
 	Write out the document to an output stream with all changes finalised.
 */
-void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, pdf_write_options *opts);
+void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, const pdf_write_options *opts);
 
 /*
 	Write out the document to a file with all changes finalised.
 */
-void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename, pdf_write_options *opts);
+void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename, const pdf_write_options *opts);
+
+/*
+	Snapshot the document to a file. This does not cause the
+	incremental xref to be finalized, so the document in memory
+	remains (essentially) unchanged.
+*/
+void pdf_save_snapshot(fz_context *ctx, pdf_document *doc, const char *filename);
+
+/*
+	Snapshot the document to an output stream. This does not cause
+	the incremental xref to be finalized, so the document in memory
+	remains (essentially) unchanged.
+*/
+void pdf_write_snapshot(fz_context *ctx, pdf_document *doc, fz_output *out);
 
 char *pdf_format_write_options(fz_context *ctx, char *buffer, size_t buffer_len, const pdf_write_options *opts);
 

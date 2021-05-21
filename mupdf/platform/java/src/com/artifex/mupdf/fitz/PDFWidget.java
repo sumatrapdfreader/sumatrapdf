@@ -47,6 +47,15 @@ public class PDFWidget extends PDFAnnotation
 	public static final int PDF_CH_FIELD_IS_SORT = 1 << 19;
 	public static final int PDF_CH_FIELD_IS_MULTI_SELECT = 1 << 21;
 
+	/* Signature appearance */
+	public static final int PDF_SIGNATURE_SHOW_LABELS = 1;
+	public static final int PDF_SIGNATURE_SHOW_DN = 2;
+	public static final int PDF_SIGNATURE_SHOW_DATE = 4;
+	public static final int PDF_SIGNATURE_SHOW_TEXT_NAME = 8;
+	public static final int PDF_SIGNATURE_SHOW_GRAPHIC_NAME = 16;
+	public static final int PDF_SIGNATURE_SHOW_LOGO = 32;
+	public static final int PDF_SIGNATURE_DEFAULT_APPEARANCE = 63;
+
 	// These don't change after creation, so are cached in java fields.
 	private int fieldType;
 	private int fieldFlags;
@@ -150,12 +159,52 @@ public class PDFWidget extends PDFAnnotation
 	public native boolean setChoiceValue(String val);
 
 	/* Signature fields */
-	public native boolean signNative(PKCS7Signer signer, Image image);
+	private static native Pixmap previewSignatureNative(int width, int height, int lang, PKCS7Signer signer, int flags, Image image, String reason, String location);
+	public static Pixmap previewSignature(int width, int height, int lang, PKCS7Signer signer, int flags, Image image, String reason, String location) {
+		return previewSignatureNative(width, height, lang, signer, flags, image, reason, location);
+	}
+	public static Pixmap previewSignature(int width, int height, int lang, PKCS7Signer signer, Image image) {
+		return previewSignatureNative(width, height, lang, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
+	}
+	public static Pixmap previewSignature(int width, int height, int lang, PKCS7Signer signer) {
+		return previewSignatureNative(width, height, lang, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
+	}
+	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer, Image image) {
+		return previewSignatureNative(width, height, LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
+	}
+	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer) {
+		return previewSignatureNative(width, height, LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
+	}
+	public Pixmap previewSignature(float dpi, PKCS7Signer signer, int flags, Image image, String reason, String location) {
+		Rect r = getBounds();
+		float scale = dpi / 72.0f;
+		int w = Math.round((r.x1 - r.x0) * scale);
+		int h = Math.round((r.x1 - r.x0) * scale);
+		return previewSignature(w, h, getLanguage(), signer, flags, image, reason, location);
+	}
+	public Pixmap previewSignature(float dpi, PKCS7Signer signer, Image image) {
+		Rect r = getBounds();
+		float scale = dpi / 72.0f;
+		int w = Math.round((r.x1 - r.x0) * scale);
+		int h = Math.round((r.x1 - r.x0) * scale);
+		return previewSignature(w, h, getLanguage(), signer, image);
+	}
+	public Pixmap previewSignature(float dpi, PKCS7Signer signer) {
+		Rect r = getBounds();
+		float scale = dpi / 72.0f;
+		int w = Math.round((r.x1 - r.x0) * scale);
+		int h = Math.round((r.x1 - r.x0) * scale);
+		return previewSignature(w, h, getLanguage(), signer);
+	}
+	private native boolean signNative(PKCS7Signer signer, int flags, Image image, String reason, String location);
+	public boolean sign(PKCS7Signer signer, int flags, Image image, String reason, String location) {
+		return signNative(signer, flags, image, reason, location);
+	}
 	public boolean sign(PKCS7Signer signer, Image image) {
-		return signNative(signer, image);
+		return signNative(signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
 	}
 	public boolean sign(PKCS7Signer signer) {
-		return signNative(signer, null);
+		return signNative(signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public native int checkCertificate(PKCS7Verifier verifier);
 	public native int checkDigest(PKCS7Verifier verifier);
@@ -167,7 +216,7 @@ public class PDFWidget extends PDFAnnotation
 			return false;
 		return !incrementalChangeAfterSigning();
 	}
-	public native PKCS7DesignatedName getDesignatedName(PKCS7Verifier verifier);
+	public native PKCS7DistinguishedName getDistinguishedName(PKCS7Verifier verifier);
 
 	public native int validateSignature();
 	public native void clearSignature();

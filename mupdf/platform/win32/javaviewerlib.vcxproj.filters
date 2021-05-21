@@ -147,7 +147,7 @@
     <None Include="..\java\src\com\artifex\mupdf\fitz\PDFPage.java">
       <Filter>com/artifex/mupdf/fitz</Filter>
     </None>
-    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7DesignatedName.java">
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7DistinguishedName.java">
       <Filter>com/artifex/mupdf/fitz</Filter>
     </None>
     <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7Signer.java">

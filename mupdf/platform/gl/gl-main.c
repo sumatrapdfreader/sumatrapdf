@@ -853,7 +853,7 @@ void load_page(void)
 				{
 					int valid_until, is_readonly;
 					char *cert_error, *digest_error;
-					pdf_pkcs7_designated_name *dn;
+					pdf_pkcs7_distinguished_name *dn;
 					pdf_pkcs7_verifier *verifier;
 					char *signatory = NULL;
 					char buf[500];
@@ -866,7 +866,7 @@ void load_page(void)
 					dn = pdf_signature_get_signatory(ctx, verifier, pdf, w->obj);
 					if (dn)
 					{
-						char *s = pdf_signature_format_designated_name(ctx, dn);
+						char *s = pdf_signature_format_distinguished_name(ctx, dn);
 						fz_strlcpy(buf, s, sizeof buf);
 						fz_free(ctx, s);
 					}
@@ -952,6 +952,7 @@ static void render_page(void)
 		dev = fz_new_draw_device(ctx, draw_page_ctm, page_contents);
 		fz_run_page_contents(ctx, fzpage, dev, fz_identity, NULL);
 		fz_close_device(ctx, dev);
+		fz_drop_device(ctx, dev);
 	}
 
 	pix = fz_clone_pixmap_area_with_different_seps(ctx, page_contents, NULL, fz_device_rgb(ctx), NULL, fz_default_color_params, NULL);
@@ -960,6 +961,7 @@ static void render_page(void)
 		fz_run_page_annots(ctx, fzpage, dev, fz_identity, NULL);
 		fz_run_page_widgets(ctx, fzpage, dev, fz_identity, NULL);
 		fz_close_device(ctx, dev);
+		fz_drop_device(ctx, dev);
 	}
 
 	if (currentinvert)
@@ -1947,12 +1949,19 @@ static void do_app(void)
 			}
 			search_hit_page = fz_make_location(-1, -1);
 			break;
-		}
 
-		if (ui.key >= '0' && ui.key <= '9')
-			number = number * 10 + ui.key - '0';
-		else
-			number = 0;
+		default:
+			if (ui.key >= '0' && ui.key <= '9')
+			{
+				number = number * 10 + ui.key - '0';
+			}
+			else
+			{
+				number = 0;
+				return; // unknown key event
+			}
+			break;
+		}
 
 		currentpage = fz_clamp_location(ctx, doc, currentpage);
 		while (currentrotate < 0) currentrotate += 360;

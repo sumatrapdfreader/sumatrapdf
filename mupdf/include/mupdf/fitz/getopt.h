@@ -5,8 +5,8 @@
 	Simple functions/variables for use in tools.
 */
 extern int fz_getopt(int nargc, char * const *nargv, const char *ostr);
-extern int fz_optind;
-extern char *fz_optarg;
+FZ_DATA extern int fz_optind;
+FZ_DATA extern char *fz_optarg;
 
 /**
 	Windows unicode versions.

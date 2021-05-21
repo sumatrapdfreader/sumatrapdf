@@ -33,9 +33,6 @@
     <ClCompile Include="..\..\thirdparty\extract\src\docx.c">
       <Filter>Source Files\extract</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\docx_template.c">
-      <Filter>Source Files\extract</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\extract.c">
       <Filter>Source Files\extract</Filter>
     </ClCompile>
@@ -53,6 +50,24 @@
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\join.c">
       <Filter>Source Files\extract</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\docx_template.c ">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\mem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\odt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\odt_template.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\sys.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\text.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

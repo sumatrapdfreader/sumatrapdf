@@ -425,6 +425,37 @@ FUN(PDFAnnotation_setInteriorColor)(JNIEnv *env, jobject self, jobject jcolor)
 		jni_rethrow_void(env, ctx);
 }
 
+JNIEXPORT jfloat JNICALL
+FUN(PDFAnnotation_getOpacity)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jfloat opacity;
+
+	if (!ctx || !annot) return 0.0f;
+
+	fz_try(ctx)
+		opacity = pdf_annot_opacity(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return opacity;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFAnnotation_setOpacity)(JNIEnv *env, jobject self, jfloat opacity)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+
+	if (!ctx || !annot) return;
+
+	fz_try(ctx)
+		pdf_set_annot_opacity(ctx, annot, opacity);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
 JNIEXPORT jint JNICALL
 FUN(PDFAnnotation_getQuadPointCount)(JNIEnv *env, jobject self)
 {
@@ -850,4 +881,15 @@ FUN(PDFAnnotation_getObject)(JNIEnv *env, jobject self)
 	if (!ctx || !annot) return NULL;
 
 	return to_PDFObject_safe(ctx, env, annot->obj);
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFAnnotation_getLanguage)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+
+	if (!ctx || !annot) return FZ_LANG_UNSET;
+
+	return pdf_annot_language(ctx, annot);
 }

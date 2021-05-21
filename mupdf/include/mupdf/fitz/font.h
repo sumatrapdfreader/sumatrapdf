@@ -11,21 +11,21 @@ struct fz_device;
 
 /* Various font encoding tables and lookup functions */
 
-extern const char *fz_glyph_name_from_adobe_standard[256];
-extern const char *fz_glyph_name_from_iso8859_7[256];
-extern const char *fz_glyph_name_from_koi8u[256];
-extern const char *fz_glyph_name_from_mac_expert[256];
-extern const char *fz_glyph_name_from_mac_roman[256];
-extern const char *fz_glyph_name_from_win_ansi[256];
-extern const char *fz_glyph_name_from_windows_1252[256];
+FZ_DATA extern const char *fz_glyph_name_from_adobe_standard[256];
+FZ_DATA extern const char *fz_glyph_name_from_iso8859_7[256];
+FZ_DATA extern const char *fz_glyph_name_from_koi8u[256];
+FZ_DATA extern const char *fz_glyph_name_from_mac_expert[256];
+FZ_DATA extern const char *fz_glyph_name_from_mac_roman[256];
+FZ_DATA extern const char *fz_glyph_name_from_win_ansi[256];
+FZ_DATA extern const char *fz_glyph_name_from_windows_1252[256];
 
-extern const unsigned short fz_unicode_from_iso8859_1[256];
-extern const unsigned short fz_unicode_from_iso8859_7[256];
-extern const unsigned short fz_unicode_from_koi8u[256];
-extern const unsigned short fz_unicode_from_pdf_doc_encoding[256];
-extern const unsigned short fz_unicode_from_windows_1250[256];
-extern const unsigned short fz_unicode_from_windows_1251[256];
-extern const unsigned short fz_unicode_from_windows_1252[256];
+FZ_DATA extern const unsigned short fz_unicode_from_iso8859_1[256];
+FZ_DATA extern const unsigned short fz_unicode_from_iso8859_7[256];
+FZ_DATA extern const unsigned short fz_unicode_from_koi8u[256];
+FZ_DATA extern const unsigned short fz_unicode_from_pdf_doc_encoding[256];
+FZ_DATA extern const unsigned short fz_unicode_from_windows_1250[256];
+FZ_DATA extern const unsigned short fz_unicode_from_windows_1251[256];
+FZ_DATA extern const unsigned short fz_unicode_from_windows_1252[256];
 
 int fz_iso8859_1_from_unicode(int u);
 int fz_iso8859_7_from_unicode(int u);

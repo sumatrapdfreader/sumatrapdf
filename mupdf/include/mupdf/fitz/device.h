@@ -444,7 +444,7 @@ typedef struct
 	int text;
 } fz_draw_options;
 
-extern const char *fz_draw_options_usage;
+FZ_DATA extern const char *fz_draw_options_usage;
 
 /**
 	Parse draw device options from a comma separated key-value string.

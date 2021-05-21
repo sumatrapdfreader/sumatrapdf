@@ -81,6 +81,7 @@
     <OutDir>$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseJava|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
@@ -101,7 +102,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>$(OutDir)$(ProjectName)32.dll</OutputFile>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -141,7 +142,7 @@
       <MinimalRebuild />
     </ClCompile>
     <Link>
-      <OutputFile>$(OutDir)$(ProjectName)32.dll</OutputFile>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -204,7 +205,7 @@
     <None Include="..\java\src\com\artifex\mupdf\fitz\PDFPage.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\PDFWidget.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\Pixmap.java" />
-    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7DesignatedName.java" />
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7DistinguishedName.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7Signer.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7Verifier.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\Point.java" />

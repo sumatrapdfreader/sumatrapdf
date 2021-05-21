@@ -34,6 +34,14 @@ void fz_md5_init(fz_md5 *state);
 void fz_md5_update(fz_md5 *state, const unsigned char *input, size_t inlen);
 
 /**
+	MD5 block update operation. Continues an MD5 message-digest
+	operation, processing an int64, and updating the context.
+
+	Never throws an exception.
+*/
+void fz_md5_update_int64(fz_md5 *state, int64_t i);
+
+/**
 	MD5 finalization. Ends an MD5 message-digest operation, writing
 	the message digest and zeroizing the context.
 

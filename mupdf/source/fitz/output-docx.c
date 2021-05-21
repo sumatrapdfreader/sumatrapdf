@@ -196,8 +196,8 @@ static void dev_fill_image(fz_context *ctx, fz_device *dev_, fz_image *img, fz_m
 		else
 		{
 			/*
-			 * Compressed data not available, so we could write out raw pixel
-			 values. But for * now we ignore.
+			 * Compressed data not available, so we could write out
+			 * raw pixel values. But for now we ignore.
 			 */
 		}
 	}

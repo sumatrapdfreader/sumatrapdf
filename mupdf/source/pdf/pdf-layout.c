@@ -124,7 +124,7 @@ static fz_matrix show_string(fz_context *ctx, fz_text *text, fz_font *user_font,
 		if (wmode == 0)
 			trm = fz_pre_translate(trm, adv, 0);
 		else
-			trm = fz_pre_translate(trm, 0, -adv);
+			trm = fz_pre_translate(trm, 0, adv);
 	}
 
 	return trm;
@@ -165,14 +165,14 @@ fz_text *pdf_layout_fit_text(fz_context *ctx, fz_font *font, fz_text_language la
 			line_count = break_lines(&info, str, lines, LINE_LIMIT, width, &line_len);
 		} while (line_count > target_line_count++);
 
-		trm = fz_scale(info.fontsize, info.fontsize);
+		trm = fz_scale(info.fontsize, -info.fontsize);
 		trm.e += bounds.x0;
 		trm.f += bounds.y1;
 		text = fz_new_text(ctx);
 		for (l = 0; l < line_count; l++)
 		{
 			show_string(ctx, text, font, trm, lines[l].a, lines[l].b - lines[l].a, 0, 0, FZ_BIDI_LTR, lang);
-			trm = fz_pre_translate(trm, 0.0, (float)-LINE_HEIGHT);
+			trm = fz_pre_translate(trm, 0.0, -LINE_HEIGHT);
 		}
 		tbounds = fz_bound_text(ctx, text, NULL, fz_identity);
 		xadj = (bounds.x0 + bounds.x1 - tbounds.x0 - tbounds.x1) / 2.0;

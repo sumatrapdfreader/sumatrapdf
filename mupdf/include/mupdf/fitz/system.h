@@ -17,6 +17,8 @@
 #include <setjmp.h> /* needed for the try/catch macros */
 #include <stdio.h> /* useful for debug printfs */
 
+#include "export.h"
+
 #if defined(_MSC_VER) && (_MSC_VER < 1700) /* MSVC older than VS2012 */
 typedef signed char int8_t;
 typedef short int int16_t;

@@ -696,8 +696,8 @@ void ui_panel_begin(int w, int h, int padx, int pady, int opaque)
 		glColorHex(UI_COLOR_PANEL);
 		glRectf(area.x0, area.y0, area.x1, area.y1);
 	}
-	area.x0 += padx; area.y0 += padx;
-	area.x1 -= pady; area.y1 -= pady;
+	area.x0 += padx; area.y0 += pady;
+	area.x1 -= padx; area.y1 -= pady;
 	ui_pack_push(area);
 }
 
