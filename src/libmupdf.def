@@ -645,7 +645,6 @@ EXPORTS
 	pdf_set_int
 	pdf_new_pdf_device
 	pdf_write_document
-	pdf_localise_page_resources
 	pdf_lookup_page_number
 	pdf_count_pages
 	pdf_lookup_page_obj
