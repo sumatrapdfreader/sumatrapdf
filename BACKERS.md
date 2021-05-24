@@ -46,3 +46,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Brian Bradley
 - Steven Bickle
 - Ahsan Rauf
+- Mark
