@@ -24,6 +24,7 @@ Notes on targets:
 ### Asan notes
 
 Docs:
+* https://docs.microsoft.com/en-us/cpp/sanitizers/asan?view=msvc-160
 * https://devblogs.microsoft.com/cppblog/asan-for-windows-x64-and-debug-build-support/
 * https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
 

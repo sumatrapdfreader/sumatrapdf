@@ -90,6 +90,9 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\document.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\export.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\fitz\filter.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
@@ -235,9 +238,6 @@
       <Filter>mupdf\include\mupdf\pdf</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\pdf\object.h">
-      <Filter>mupdf\include\mupdf\pdf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\mupdf\include\mupdf\pdf\output-pdf.h">
       <Filter>mupdf\include\mupdf\pdf</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\pdf\page.h">

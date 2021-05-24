@@ -51,22 +51,6 @@ Prefast:
 
 include("premake5.files.lua")
 
--- https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
--- https://devblogs.microsoft.com/cppblog/asan-for-windows-x64-and-debug-build-support/
-function configAsan()
-  filter "platforms:x32_asan"
-  --links { "clang_rt.asan-i386.lib", "clang_rt.asan_cxx-i386.lib" }
-  linkoptions { "/WHOLEARCHIVE:clang_rt.asan-i386.lib", "/WHOLEARCHIVE:clang_rt.asan_cxx-i386.lib"}
-  filter {}
-
-  -- TODO: this crashes on startup in memset.asm
-  filter "platforms:x64_asan"
-  -- links { "clang_rt.asan-x86_64.lib", "clang_rt.asan_cxx-x86_64.lib" }
-  linkoptions { "/WHOLEARCHIVE:clang_rt.asan-x86_64.lib", "/WHOLEARCHIVE:clang_rt.asan_cxx-x86_64.lib"}
-  filter {}
-  
-end
-
 function regconf()
   filter "configurations:Debug"
     defines { "DEBUG" }
@@ -74,10 +58,14 @@ function regconf()
 
   filter "configurations:Release*"
     defines { "NDEBUG" }
-    flags {
-      "LinkTimeOptimization",
-    }
     optimize "On"
+
+    -- no ltcg in asan builds
+    filter "platforms:x32 or x64"
+      flags {
+        "LinkTimeOptimization",
+      }
+    filter {}
   filter {}
 end
 
@@ -606,7 +594,6 @@ workspace "SumatraPDF"
     disablewarnings { "4838" }
     defines { "NO_LIBMUPDF" }
     includedirs { "src" }
-    configAsan()
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
@@ -716,7 +703,6 @@ workspace "SumatraPDF"
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet", "uiautomationcore.lib"
     }
-    configAsan()
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }

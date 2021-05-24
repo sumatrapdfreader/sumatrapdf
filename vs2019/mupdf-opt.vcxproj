@@ -766,6 +766,7 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\device.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\display-list.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\document.h" />
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\export.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\filter.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\font.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\geometry.h" />
@@ -815,7 +816,6 @@
     <ClInclude Include="..\mupdf\include\mupdf\pdf\javascript.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\name-table.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\object.h" />
-    <ClInclude Include="..\mupdf\include\mupdf\pdf\output-pdf.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\page.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\parse.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\resource.h" />
