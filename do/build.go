@@ -201,13 +201,15 @@ func smokeBuild() {
 
 	msbuildPath := detectMsbuildPath()
 	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF-dll;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
-	runTestUtilMust(filepath.Join("out", "rel64"))
+	outDir := filepath.Join("out", "rel64")
+	runTestUtilMust(outDir)
 
 	{
 		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "SumatraPDF-dll.pdb:SumatraPDF-dll.pdb")
-		cmd.Dir = filepath.Join("out", "rel64")
+		cmd.Dir = outDir
 		u.RunCmdLoggedMust(cmd)
 	}
+	signFilesMust(outDir)
 }
 
 func buildConfigPath() string {

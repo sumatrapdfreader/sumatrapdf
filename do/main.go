@@ -14,6 +14,7 @@ import (
 
 var (
 	flgNoCleanCheck          bool
+	flgSmoke                 bool
 	flgUpload                bool
 	flgSkipTranslationVerify bool
 )
@@ -117,7 +118,6 @@ func main() {
 		flgBuildRelease            bool
 		flgBuildReleaseFast        bool
 		flgBuildRelease32Fast      bool
-		flgSmoke                   bool
 		flgWc                      bool
 		flgDownloadTranslations    bool
 		flgRegenerateTranslattions bool

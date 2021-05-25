@@ -33,7 +33,7 @@ func isGitClean() bool {
 }
 
 func verifyGitCleanMust() {
-	if flgNoCleanCheck {
+	if flgNoCleanCheck || flgSmoke {
 		return
 	}
 	u.PanicIf(!isGitClean(), "git has unsaved changes\n")
