@@ -54,18 +54,17 @@ include("premake5.files.lua")
 function regconf()
   filter "configurations:Debug"
     defines { "DEBUG" }
-  filter {}
 
   filter "configurations:Release*"
     defines { "NDEBUG" }
     optimize "On"
 
-    -- no ltcg in asan builds
-    filter "platforms:x32 or x64"
-      flags {
-        "LinkTimeOptimization",
-      }
-    filter {}
+  -- no ltcg in asan builds
+  filter { "configurations:Release*", "platforms:x32 or x64" }
+    flags {
+      "LinkTimeOptimization",
+    }
+
   filter {}
 end
 
