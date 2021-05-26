@@ -2356,7 +2356,7 @@ pdf_signature_appearance_signed(fz_context *ctx, fz_rect rect, fz_text_language 
 
 		if (img)
 		{
-			float img_aspect = img->w / img->h;
+			float img_aspect = (float) img->w / img->h;
 			float rectw = prect.x1 - prect.x0;
 			float recth = prect.y1 - prect.y0;
 			float midx = (prect.x0 + prect.x1) / 2.0;

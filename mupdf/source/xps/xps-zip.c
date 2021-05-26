@@ -227,7 +227,7 @@ static int
 xps_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
 {
 	if (!strcmp(key, FZ_META_FORMAT))
-		return (int)fz_strlcpy(buf, "XPS", size);
+		return 1 + (int)fz_strlcpy(buf, "XPS", size);
 	return -1;
 }
 

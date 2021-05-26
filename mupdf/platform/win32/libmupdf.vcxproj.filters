@@ -603,6 +603,9 @@
     <ClCompile Include="..\..\source\pdf\pdf-layout.c">
       <Filter>pdf</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\output-pdfocr.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -669,9 +672,6 @@
       <Filter>!include\pdf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\object.h">
-      <Filter>!include\pdf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\pdf\output-pdf.h">
       <Filter>!include\pdf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\page.h">

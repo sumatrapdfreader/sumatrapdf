@@ -170,7 +170,7 @@ htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char 
 	if (!strcmp(key, FZ_META_FORMAT))
 		return (int)fz_strlcpy(buf, "HTML5", size);
 	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
-		return (int)fz_strlcpy(buf, doc->html->title, size);
+		return 1 + (int)fz_strlcpy(buf, doc->html->title, size);
 	return -1;
 }
 
@@ -181,7 +181,7 @@ xhtdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char
 	if (!strcmp(key, FZ_META_FORMAT))
 		return (int)fz_strlcpy(buf, "XHTML", size);
 	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
-		return (int)fz_strlcpy(buf, doc->html->title, size);
+		return 1 + (int)fz_strlcpy(buf, doc->html->title, size);
 	return -1;
 }
 
