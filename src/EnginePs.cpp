@@ -154,9 +154,9 @@ static EngineBase* ps2pdf(const WCHAR* path) {
     // https://github.com/GravityMedia/Ghostscript/issues/6
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1923
     AutoFreeWstr cmdLine = str::Format(
-            L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
-            L"-f \"%s\"",
-            gswin32c.Get(), tmpFile.Get(), shortPath.Get());
+        L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
+        L"-f \"%s\"",
+        gswin32c.Get(), tmpFile.Get(), shortPath.Get());
 
     {
         const char* fileName = path::GetBaseNameNoFree(__FILE__);

@@ -40,11 +40,10 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
         cs = nullptr;
     }
 
-    Gdiplus::PixelFormat fmt = fz_device_rgb(ctx) == cs
-                                   ? PixelFormat24bppRGB
-                                   : fz_device_gray(ctx) == cs
-                                         ? PixelFormat24bppRGB
-                                         : fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK : PixelFormatUndefined;
+    Gdiplus::PixelFormat fmt = fz_device_rgb(ctx) == cs    ? PixelFormat24bppRGB
+                               : fz_device_gray(ctx) == cs ? PixelFormat24bppRGB
+                               : fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK
+                                                           : PixelFormatUndefined;
     if (PixelFormatUndefined == fmt || w <= 0 || h <= 0 || !cs) {
         fz_drop_stream(ctx, stm);
         fz_drop_colorspace(ctx, cs);

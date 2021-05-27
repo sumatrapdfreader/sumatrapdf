@@ -20,7 +20,7 @@ enum class DisplayMode {
 #define ZOOM_FIT_CONTENT -3.f
 #define ZOOM_ACTUAL_SIZE 100.0f
 #define ZOOM_MAX 6400.f /* max zoom in % */
-#define ZOOM_MIN 8.33f  /* min zoom in % */
+#define ZOOM_MIN 8.33f /* min zoom in % */
 #define INVALID_ZOOM -99.0f
 
 constexpr int INVALID_PAGE_NO = -1;

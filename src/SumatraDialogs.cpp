@@ -837,14 +837,13 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             SetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, _TR("Compatibility"));
 
             CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
-                             data->range == PrintRangeAdv::Even
-                                 ? IDC_PRINT_RANGE_EVEN
-                                 : data->range == PrintRangeAdv::Odd ? IDC_PRINT_RANGE_ODD : IDC_PRINT_RANGE_ALL);
-            CheckRadioButton(
-                hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_NONE,
-                data->scale == PrintScaleAdv::Fit
-                    ? IDC_PRINT_SCALE_FIT
-                    : data->scale == PrintScaleAdv::Shrink ? IDC_PRINT_SCALE_SHRINK : IDC_PRINT_SCALE_NONE);
+                             data->range == PrintRangeAdv::Even  ? IDC_PRINT_RANGE_EVEN
+                             : data->range == PrintRangeAdv::Odd ? IDC_PRINT_RANGE_ODD
+                                                                 : IDC_PRINT_RANGE_ALL);
+            CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_NONE,
+                             data->scale == PrintScaleAdv::Fit      ? IDC_PRINT_SCALE_FIT
+                             : data->scale == PrintScaleAdv::Shrink ? IDC_PRINT_SCALE_SHRINK
+                                                                    : IDC_PRINT_SCALE_NONE);
 
             return FALSE;
             //] ACCESSKEY_GROUP Advanced Print Tab

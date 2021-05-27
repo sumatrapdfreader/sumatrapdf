@@ -109,7 +109,8 @@ struct TreeCtrl : WindowBase {
     // creation parameters. must be set before Create() call
     bool withCheckboxes{false};
 
-    // sets TVS_FULLROWSELECT style https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
+    // sets TVS_FULLROWSELECT style
+    // https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
     bool fullRowSelect{false};
 
     // set before Create() to enable drag&drop

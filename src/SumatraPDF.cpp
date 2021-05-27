@@ -384,6 +384,19 @@ bool WindowInfoStillValid(WindowInfo* win) {
     return gWindows.Contains(win);
 }
 
+// Find WindowInfo using TabInfo. Diffrent than TabInfo->win in that
+// it validates that TabInfo is still valid
+WindowInfo* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
+    for (WindowInfo* win : gWindows) {
+        for (TabInfo* tab : win->tabs) {
+            if (tab == tabToFind) {
+                return win;
+            }
+        }
+    }
+    return nullptr;
+}
+
 // Find the first window showing a given PDF file
 WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
     AutoFreeWstr normFile(path::Normalize(file));
@@ -1602,12 +1615,12 @@ static WindowInfo* LoadDocumentNew(LoadArgs& args)
 }
 #endif
 
-void scheduleReloadTab(TabInfo* tab) {
-    // to prevent race conditions between file changes and closing tabs,
-    // use the tab only on the main UI thread
+static void scheduleReloadTab(TabInfo* tab) {
     uitask::Post([=] {
-        WindowInfo* win = tab->win;
-        if (!win) {
+        // tab might have been closed, so first ensure it's still valid
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
+        WindowInfo* win = FindWindowInfoByTabInfo(tab);
+        if (win == nullptr) {
             return;
         }
         tab->reloadOnFocus = true;
@@ -3582,7 +3595,7 @@ void ExitFullScreen(WindowInfo* win) {
 void OnMenuViewFullscreen(WindowInfo* win, bool presentation) {
     bool enterFullScreen = presentation ? !win->presentation : !win->isFullScreen;
 
-    if (win->presentation  || win->isFullScreen) {
+    if (win->presentation || win->isFullScreen) {
         ExitFullScreen(win);
     } else {
         RememberDefaultWindowPosition(win);

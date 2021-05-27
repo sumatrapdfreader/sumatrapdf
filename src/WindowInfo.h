@@ -268,3 +268,4 @@ void ClearFindBox(WindowInfo*);
 void CreateMovePatternLazy(WindowInfo*);
 void ClearMouseState(WindowInfo*);
 bool IsRightDragging(WindowInfo*);
+WindowInfo* FindWindowInfoByTabInfo(TabInfo*);
