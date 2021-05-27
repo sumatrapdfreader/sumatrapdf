@@ -374,3 +374,14 @@ a.for-nav-icon:hover {
   font-size: 90%;
   float: right;
 }
+
+/* keyboard shortcut */
+.ks {
+  margin-right: .2em;
+  border-radius: 4px;
+  color: #333;
+  background: #eee;
+  border: 1px solid #ddd;
+  padding: .1em .3em;
+  font-size: 90%;
+}
