@@ -142,18 +142,22 @@ static EngineBase* ps2pdf(const WCHAR* path) {
         return nullptr;
     }
 
+    AutoFreeWstr cmdLine;
+
     // try to help Ghostscript determine the intended page size
-    AutoFreeWstr psSetup;
     Rect page = ExtractDSCPageSize(path);
     if (!page.IsEmpty()) {
-        psSetup = str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy);
+        AutoFreeWstr psSetup = str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy);
+        cmdLine = str::Format(
+            L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c "
+            L"\".setpdfwrite%s\" -f \"%s\"",
+            gswin32c.Get(), tmpFile.Get(), psSetup.Get(), shortPath.Get());
+    } else {
+        cmdLine = str::Format(
+            L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
+            L"-f \"%s\"",
+            gswin32c.Get(), tmpFile.Get(), shortPath.Get());
     }
-
-    const WCHAR* psSetupStr = psSetup ? psSetup.Get() : L"";
-    AutoFreeWstr cmdLine = str::Format(
-        L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c "
-        L"\".setpdfwrite%s\" -f \"%s\"",
-        gswin32c.Get(), tmpFile.Get(), psSetupStr, shortPath.Get());
 
     {
         const char* fileName = path::GetBaseNameNoFree(__FILE__);
