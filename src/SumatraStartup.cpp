@@ -756,7 +756,7 @@ bool gEnableMemLeak = false;
 // call this function before MemLeakInit() so that those allocations
 // don't show up
 static void ForceStartupLeaks() {
-    time_t secs;
+    time_t secs{0};
     struct tm buf_not_used;
     gmtime_s(&buf_not_used, &secs);
     WCHAR* path = GetExePath();
