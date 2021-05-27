@@ -89,7 +89,6 @@ extern bool gDebugShowLinks;
 extern bool gShowFrameRate;
 
 extern const WCHAR* gPluginURL;
-extern Vec<WindowInfo*> gWindows;
 extern Favorites gFavorites;
 extern FileHistory gFileHistory;
 extern WNDPROC DefWndProcCloseButton;
@@ -116,7 +115,6 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites);
 void RememberFavTreeExpansionState(WindowInfo* win);
 void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl*, HWND hwndTree);
 void AdvanceFocus(WindowInfo* win);
-bool WindowInfoStillValid(WindowInfo* win);
 void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
 void UpdateFixedPageScrollbarsVisibility();
@@ -126,11 +124,9 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh);
 void OnMenuViewFullscreen(WindowInfo* win, bool presentation = false);
 void RelayoutWindow(WindowInfo* win);
 
-WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 // note: background tabs are only searched if focusTab is true
 WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab);
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab);
-WindowInfo* FindWindowInfoByController(Controller* ctrl);
 
 class EngineBase;
 

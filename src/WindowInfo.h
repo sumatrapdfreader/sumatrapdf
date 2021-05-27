@@ -269,3 +269,8 @@ void CreateMovePatternLazy(WindowInfo*);
 void ClearMouseState(WindowInfo*);
 bool IsRightDragging(WindowInfo*);
 WindowInfo* FindWindowInfoByTabInfo(TabInfo*);
+WindowInfo* FindWindowInfoByHwnd(HWND);
+bool WindowInfoStillValid(WindowInfo*);
+WindowInfo* FindWindowInfoByController(Controller*);
+
+extern Vec<WindowInfo*> gWindows;
