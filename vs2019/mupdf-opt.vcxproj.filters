@@ -512,7 +512,7 @@
     <ClCompile Include="..\mupdf\source\fitz\load-jpx.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\mupdf\source\fitz\load-jxr.c">
+    <ClCompile Include="..\mupdf\source\fitz\load-jxr-win.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\load-png.c">

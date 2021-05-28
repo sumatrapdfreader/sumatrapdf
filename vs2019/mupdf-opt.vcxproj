@@ -908,7 +908,7 @@
     <ClCompile Include="..\mupdf\source\fitz\load-jbig2.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-jpeg.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-jpx.c" />
-    <ClCompile Include="..\mupdf\source\fitz\load-jxr.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-jxr-win.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-png.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-pnm.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-tiff.c" />
