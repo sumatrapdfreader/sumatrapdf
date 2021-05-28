@@ -86,7 +86,7 @@ func build(dir, config, platform string) {
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
-	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util`, p, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
 	runTestUtilMust(dir)
 
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview`, p, `/m`)

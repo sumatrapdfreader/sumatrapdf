@@ -190,6 +190,12 @@ func main() {
 		flag.Parse()
 	}
 
+	if false {
+		detectVersions()
+		buildDaily()
+		return
+	}
+
 	// early check so we don't find it out only after 20 minutes of building
 	if flgUpload || flgUploadCiBuild {
 		if shouldSignAndUpload() {
@@ -257,7 +263,7 @@ func main() {
 
 	if flgTriggerPreRel {
 		triggerPreRelBuild()
-		triggerRaMicroPreRelBuild()
+		//triggerRaMicroPreRelBuild()
 		return
 	}
 
