@@ -766,8 +766,8 @@ void TabsOnCloseDoc(WindowInfo* win) {
     if (dm) {
         EngineBase* engine = dm->GetEngine();
         if (EngineHasUnsavedAnnotations(engine)) {
-            // TODO: warn about unsaved changed
-            logf("File has unsaved changed\n");
+            // TODO: warn about unsaved annotations
+            logf("File has unsaved annotations\n");
         }
     }
 

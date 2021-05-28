@@ -1,5 +1,51 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-05-28 Fri
+
+In 3.2 I introduced a regression: when user changed pages I tried to sync
+the treeview selection to match the current page. In 3.1.2 we would limit
+auto-select to currently expanded items. In 3.2 we would auto-expand
+tree item to make selected tree item visible.
+Fixed it in https://github.com/sumatrapdfreader/sumatrapdf/commit/4960ce53950bd9d50500c4141b41b7d4839dc767
+
+The TreeCtrl / TreeModel still has problems.
+
+1. To make things efficient TreeItem shouldn't be a class but an
+opaque pointer-sized handle and it's items should belong to
+TreeModel. This would allow us to potentially optimize how we store
+information. Currently we have to create TreeItem object for
+every node.
+
+2. Changes to TreeCtrl are not reflected in TreeModel. Maybe
+they shouldn't but then we should be more clear about it
+in the code.
+
+---
+
+Folded premake5.opt.lua into premake5.lua. When changing flags
+in premake5.lua I would always forget to update premake5.opt.lue
+Now relevant projects are close together and in the same file
+so maybe less mistakes in the future.
+
+2021-05-27 Thu
+
+Added support for .xps files with jpeg-xr images in them.
+mupdf has code that uses open-source jpeg-xr library but we used
+to have decoder that used Windows built-in codec. This got lost
+during the big mupdf merge.
+I resurrected this code and tweak it a bit.
+https://github.com/sumatrapdfreader/sumatrapdf/commit/0d5ae4e28120fe563970ef66c1e92f2cc6bfa113
+https://github.com/sumatrapdfreader/sumatrapdf/commit/b16fda12776c223a901efee2afdacbd953671df0
+
+Fixed building on GitHub Actions caused by msbuild changes in
+Visual Studio 2019 Preview.
+In the past "msbuild /t:test_util" worked just fine.
+In latest it has to be "msbuild /t:test_util:Rebuild".
+No idea why ":Rebuild" (also tried just ":Build" but it didn't work).
+
+https://github.com/sumatrapdfreader/sumatrapdf/commit/2fa0bcfce3947a5af5f80d16d92ded81b04eef1f
+https://github.com/sumatrapdfreader/sumatrapdf/commit/348d27f942a71534e769536d1849c9ca6f58dcf3
+
 2021-01-02 Sat
 
 more work on MinHook.[h|cpp] and MemLeakDetect.[h|cpp]
