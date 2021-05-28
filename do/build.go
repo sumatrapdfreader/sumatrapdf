@@ -89,7 +89,7 @@ func build(dir, config, platform string) {
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
 	runTestUtilMust(dir)
 
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview`, p, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
 	signFilesMust(dir)
 	createPdbZipMust(dir)
 	createPdbLzsaMust(dir)
@@ -100,7 +100,7 @@ func buildJustInstaller(dir, config, platform string) {
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF-dll;PdfFilter;PdfPreview`, p, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
 	signFilesMust(dir)
 }
 
@@ -182,7 +182,7 @@ func buildLzsa() {
 	clean()
 
 	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:MakeLZSA`, `/p:Configuration=Release;Platform=Win32`, `/m`)
+	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
@@ -200,7 +200,7 @@ func smokeBuild() {
 	u.PanicIf(!u.FileExists(lzsa), "file '%s' doesn't exist", lzsa)
 
 	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF-dll;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
+	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
 	outDir := filepath.Join("out", "rel64")
 	runTestUtilMust(outDir)
 

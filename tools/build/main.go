@@ -24,7 +24,7 @@ func buildAnalyze() {
 	fmt.Printf("Analyze build\n")
 	// I assume 64-bit build will catch more issues
 	slnPath := filepath.Join(vsVer, "SumatraPDF.sln")
-	out, _ := runMsbuildGetOutput(true, slnPath, "/t:Installer", "/p:Configuration=ReleasePrefast;Platform=x64", "/m")
+	out, _ := runMsbuildGetOutput(true, slnPath, "/t:Installer:Rebuild", "/p:Configuration=ReleasePrefast;Platform=x64", "/m")
 
 	if true {
 		err2 := ioutil.WriteFile("analyze-output.txt", out, 0644)
