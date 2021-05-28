@@ -285,13 +285,37 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     return bestMatch;
 }
 
+// TODO: I can't use TreeItem->IsExpanded() because it's not in sync with
+// the changes user makes to TreeCtrl
+static TreeItem* FindVisibleParentTreeItem(TreeCtrl* treeCtrl, TreeItem* ti) {
+    if (!ti) {
+        return nullptr;
+    }
+    while (true) {
+        auto parent = ti->Parent();
+        if (parent == nullptr) {
+            // ti is a root node
+            return ti;
+        }
+        if (treeCtrl->IsExpanded(parent)) {
+            return ti;
+        }
+        ti = parent;
+    }
+    return nullptr;
+}
+
 void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     if (!win->tocLoaded || !win->tocVisible || win->tocKeepSelection) {
         return;
     }
 
-    TreeItem* item = TreeItemForPageNo(win->tocTreeCtrl, currPageNo);
-    win->tocTreeCtrl->SelectItem(item);
+    auto treeCtrl = win->tocTreeCtrl;
+    TreeItem* item = TreeItemForPageNo(treeCtrl, currPageNo);
+    // only select the items that are visible i.e. are top nodes or
+    // children of expanded node
+    TreeItem* toSelect = FindVisibleParentTreeItem(treeCtrl, item);
+    treeCtrl->SelectItem(toSelect);
 }
 
 static void UpdateDocTocExpansionStateRecur(TreeCtrl* treeCtrl, Vec<int>& tocState, TocItem* tocItem) {
