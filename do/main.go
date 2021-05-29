@@ -133,7 +133,6 @@ func main() {
 		flgWebsiteRun              bool
 		flgWebsiteDeployCloudflare bool
 		flgWebsiteImportNotion     bool
-		flgWebsiteImportAndDeploy  bool
 		flgWebsiteBuildCloudflare  bool
 		flgNoCache                 bool
 		flgClangFormat             bool
@@ -174,7 +173,6 @@ func main() {
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy-cf", false, "deploy website to cloudflare")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
-		flag.BoolVar(&flgWebsiteImportAndDeploy, "website-import-deploy", false, "import from notion and deploy")
 		flag.BoolVar(&flgWebsiteBuildCloudflare, "website-build-cf", false, "build the website (download Sumatra files)")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
@@ -207,13 +205,6 @@ func main() {
 
 	if flgWebsiteImportNotion {
 		websiteImportNotion()
-		return
-	}
-
-	if flgWebsiteImportAndDeploy {
-		websiteImportNotion()
-		u.CdUpDir("sumatrapdf")
-		websiteDeployCloudlare()
 		return
 	}
 
