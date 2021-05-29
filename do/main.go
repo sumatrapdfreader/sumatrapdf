@@ -171,7 +171,7 @@ func main() {
 		flag.BoolVar(&flgTriggerRaMicroPreRel, "trigger-ramicro-pre-rel", false, "trigger pre-release build")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
-		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy-cf", false, "deploy website to cloudflare")
+		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy", false, "deploy website to cloudflare")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
 		flag.BoolVar(&flgWebsiteBuildCloudflare, "website-build-cf", false, "build the website (download Sumatra files)")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
