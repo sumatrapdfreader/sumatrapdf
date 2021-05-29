@@ -27,6 +27,13 @@ in premake5.lua I would always forget to update premake5.opt.lue
 Now relevant projects are close together and in the same file
 so maybe less mistakes in the future.
 
+---
+
+On a treemodel branch, redid TreeModel interface, by folding TreeItem
+methods into it. This is to open possibility for more efficient implementation
+of TreeModel. Even now the code should be a bit smaller by removing methods
+from what were TreeItem subclasses.
+
 2021-05-27 Thu
 
 Added support for .xps files with jpeg-xr images in them.
