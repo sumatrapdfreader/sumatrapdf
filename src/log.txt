@@ -40,6 +40,11 @@ Links to /settings3.3.html and /settings/settings3.3.html were broken because
 Cloudflare Pages doesn't handle HTML files with '.' in the name.
 Had to change naming scheme to /settings/settings3-3.html
 
+---
+
+Fixed Notion HTML generation to not generate files with '.' in them.
+
+
 
 2021-05-27 Thu
 

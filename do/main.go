@@ -131,8 +131,6 @@ func main() {
 		flgTriggerRaMicroPreRel    bool
 		flgTriggerCodeQL           bool
 		flgWebsiteRun              bool
-		flgWebsiteDeployProd       bool
-		flgWebsiteDeployDev        bool
 		flgWebsiteDeployCloudflare bool
 		flgWebsiteImportNotion     bool
 		flgWebsiteImportAndDeploy  bool
@@ -174,8 +172,6 @@ func main() {
 		flag.BoolVar(&flgTriggerRaMicroPreRel, "trigger-ramicro-pre-rel", false, "trigger pre-release build")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
-		flag.BoolVar(&flgWebsiteDeployProd, "website-deploy-prod", false, "deploy website")
-		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
 		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy-cf", false, "deploy website to cloudflare")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
 		flag.BoolVar(&flgWebsiteImportAndDeploy, "website-import-deploy", false, "import from notion and deploy")
@@ -214,20 +210,10 @@ func main() {
 		return
 	}
 
-	if flgWebsiteDeployDev {
-		websiteDeployDev()
-		return
-	}
-
-	if flgWebsiteDeployProd {
-		websiteDeployProd()
-		return
-	}
-
 	if flgWebsiteImportAndDeploy {
 		websiteImportNotion()
 		u.CdUpDir("sumatrapdf")
-		websiteDeployProd()
+		websiteDeployCloudlare()
 		return
 	}
 
