@@ -82,7 +82,7 @@ end
 
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
-  platforms { "x32", "x32_asan", "x64", "x64_asan", "x64_ramicro" }
+  platforms { "x32", "x64", "x64_asan" }
   startproject "SumatraPDF"
 
   filter "platforms:x32 or x32_asan"
@@ -93,8 +93,6 @@ workspace "SumatraPDF"
     buildoptions { "/fsanitize=address"}
     defines { "ASAN_BUILD=1" }
     -- disablewarnings { "4731" }
-    defines { "RAMICRO"}
-    resdefines { "RAMICRO" }
   filter {}
 
   filter "platforms:x64 or x64_asan or x64_ramicro"
