@@ -132,9 +132,10 @@ func eventObserver(ev interface{}) {
 }
 
 func newNotionClient() *notionapi.Client {
-	token := os.Getenv("NOTION_TOKEN")
-	panicIf(token == "", "NOTION_TOKEN env variable not set, needed for downloading images\n")
-	// TODO: verify token still valid, somehow
+	//token := os.Getenv("NOTION_TOKEN")
+	//panicIf(token == "", "NOTION_TOKEN env variable not set, needed for downloading images\n")
+	// Note: public page, no need for a token
+	token := ""
 	client := &notionapi.Client{
 		AuthToken: token,
 	}
