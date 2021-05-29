@@ -346,7 +346,7 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
         if (strcmp(szTTName, "Arial") != 0)
             szPSName[0] = '\0';
         // TODO: is there a better way to distinguish Arial Caps from Arial proper?
-        // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1290
+        // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=1290
         else if (strstr(path, "caps") || strstr(path, "Caps"))
             fz_throw(ctx, FZ_ERROR_GENERIC, "ignore %s, as it can't be distinguished from Arial,Regular", path);
     }
@@ -355,7 +355,7 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
         append_mapping(ctx, &fontlistMS, szPSName, path, index);
     if (szTTName[0]) {
         // derive a PostScript-like name and add it, if it's different from the font's
-        // included PostScript name; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=376
+        // included PostScript name; cf. https://code.google.com/p/sumatrapdf/issues/detail?id=376
         makeFakePSName(szTTName, szStyle);
         // compare the two names before adding this one
         if (lookup_compare(szTTName, szPSName))
@@ -456,7 +456,7 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
     FindClose(hList);
 }
 
-// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
+// cf. https://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define CURRENT_HMODULE ((HMODULE)&__ImageBase)
 
@@ -683,7 +683,7 @@ static fz_font* pdf_load_windows_font(fz_context* ctx, const char* fontname, int
         if (fz_lookup_base14_font(ctx, fontname, &len))
             return NULL;
 
-        /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
+        /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
         if (clean_name != fontname && !strncmp(clean_name, "Times-", 6))
             return NULL;
     }

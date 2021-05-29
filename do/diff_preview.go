@@ -14,7 +14,7 @@ import (
 
 /*
 A tool to preview changes before checkin.
-Uses WinMerge to do the diffing (http://winmerge.org/)
+Uses WinMerge to do the diffing (https://winmerge.org/)
 Anohter option that wouldn't require winmerge is to make it a web server,
 implement web-based ui and launch the browser.
 */
@@ -182,7 +182,7 @@ func getBeforeAfterDirs(dir string) (string, string) {
 	return dirBefore, dirAfter
 }
 
-// http://manual.winmerge.org/Command_line.html
+// https://manual.winmerge.org/Command_line.html
 func runWinMerge(dir string) {
 	dirBefore, dirAfter := getBeforeAfterDirs(dir)
 	/*

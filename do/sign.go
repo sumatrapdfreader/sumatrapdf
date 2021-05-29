@@ -35,7 +35,7 @@ func failIfNoCertPwd() {
 	panicIf(!hasCertPwd(), "CERT_PWD env variable is not set")
 }
 
-// http://zabkat.com/blog/code-signing-sha1-armageddon.htm
+// https://zabkat.com/blog/code-signing-sha1-armageddon.htm
 // signtool sign /n "subject name" /t http://timestamp.comodoca.com/authenticode myInstaller.exe
 // signtool sign /n "subject name" /fd sha256 /tr http://timestamp.comodoca.com/rfc3161 /td sha256 /as myInstaller.exe
 // signtool args (https://msdn.microsoft.com/en-us/library/windows/desktop/aa387764(v=vs.85).aspx):

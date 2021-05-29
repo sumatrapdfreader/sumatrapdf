@@ -102,7 +102,7 @@ formatting instructions and recover current styling.
 
 Screen space is always at premium and most PDFs have very wasteful
 margins. Good Reader has a really nice feature for manual cropping of margins
-(http://www.goodiware.com/gr-man-view-pdf.html#crop). They have a mode for
+(https://www.goodiware.com/gr-man-view-pdf.html#crop). They have a mode for
 manually selecting visible part of the PDF, similar to how many graphics
 program implement cropping. Cropping can be set for all pages or separately
 for odd/even pages. Cropping can also be reset. After cropping, the program

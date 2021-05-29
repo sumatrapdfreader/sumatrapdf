@@ -43,7 +43,7 @@ Next version:
 * new advanced settings: FullPathInTitle, UseSysColors (no longer exposed through the Options dialog)
 * replaced non-free UnRAR with a free RAR extraction library
   (if some CBR files fail to open for you, please download unrar.dll from
-  http://www.rarlab.com/rar_add.htm and place it alongside SumatraPDF.exe)
+  https://www.rarlab.com/rar_add.htm and place it alongside SumatraPDF.exe)
 * removed support for reading sumatrapdfprefs.dat (when updating from a version prior to
   version 2.3, please upgrade to 2.5.2 first and have that convert your settings to the
   format introduced in version 2.3 before updating to a later version)
@@ -93,7 +93,7 @@ Next version:
 * more configurability. Settings are now saved in human-editable
   SumatraPDF-settings.txt (instead of binary sumatrapdfprefs.dat)
   and there are more settings for customizing Sumatra. For more
-  documentation see http://blog.kowalczyk.info/software/sumatrapdf/settings.html
+  documentation see https://blog.kowalczyk.info/software/sumatrapdf/settings.html
 * "Go To Page" for ebook format
 * add support for OpenXPS documents
 * add View/Manga Mode menu item for Comic Book (CBZ/CBR) files
@@ -174,7 +174,7 @@ Next version:
 * logical page numbers are displayed and used, if a document
   provides them (such as i, ii, iii, etc.)
 * allow to restrict SumatraPDF's features with more granularity; see
-  http://code.google.com/p/sumatrapdf/source/browse/trunk/docs/sumatrapdfrestrict.ini
+  https://code.google.com/p/sumatrapdf/source/browse/trunk/docs/sumatrapdfrestrict.ini
 * -named-dest also matches strings in table of contents
 * improved support for EPS files (requires Ghostscript)
 * improved support for right-to-left languages e.g. Arabic

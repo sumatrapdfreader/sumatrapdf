@@ -5,20 +5,20 @@
 * David Lopez
 * Danilo Roascio
 * Jarkko Pöyry
-* Krzysztof J. Kowalczyk  (http://blog.kowalczyk.info)
+* Krzysztof J. Kowalczyk  (https://blog.kowalczyk.info)
 * Ludo Brands
 * Matthew Wilcoxson (matthew.wilcoxson at gmail.com)
 * Nathan Jhaveri
 * Peter Astrand
 * Robert Liu
 * Robert Prouse (rprouse at gmail.com)
-* Simon Bünzli (zeniko at gmail.com, http://www.zeniko.ch/#SumatraPDF)
+* Simon Bünzli (zeniko at gmail.com, https://www.zeniko.ch/#SumatraPDF)
 * Stefan Stefanov (userchefo at gmail.com)
 * Tom Clegg
 * vadmium at gmail.com
 * Vasily Fomin (vasili.fomin at gmail.com)
 * Victor Kozyakin
-* William Blum (william.blum at gmail.com, http://william.famille-blum.org/)
+* William Blum (william.blum at gmail.com, https://william.famille-blum.org/)
 
 Most code under src is licensed as GPL v3 (see COPYING) with the main
 exception of code in src/utils and src/mui which has a BSD license
@@ -30,7 +30,7 @@ FAMFAMFAM and Yusuke Kamiyamane.
 
 Windows program icon (gfx/SumatraPDF*.png, gfx/SumatraPDF.ico) by
 Alex (koo.studios at gmail.com, old address: zenon38 at gmail.com).
-License: CC BY 3.0 (http://creativecommons.org/licenses/by/3.0/).
+License: CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/).
 
 Translations by various translators (see TRANSLATORS).
 
@@ -38,26 +38,26 @@ External projects are by their various authors:
 
 Project        License                   Type Website
 ---------------------------------------------------------------------------------------------------------
-MuPDF          mupdf/COPYING             AGPL http://mupdf.com/
-bzip2          ext/bzip2/LICENSE              http://bzip.org/
-CHMLIB         ext/CHMLib/COPYING        LGPL http://www.jedrea.com/chmlib/
-FreeType       ext/freetype2/FTL.txt          http://www.freetype.org/
-jbig2dec       ext/jbig2dec/COPYING      AGPL http://www.ghostscript.com/jbig2dec.html
-libjpeg-turbo  ext/.../README-turbo.txt  BSD  http://libjpeg-turbo.virtualgl.org/
-DjVuLibre      ext/libdjvu/COPYRIGHT     GPL  http://djvu.sourceforge.net/
-OpenJPEG       ext/openjpeg/LICENSE      BSD  http://www.openjpeg.org/
-SyncTeX        ext/.../synctex_parser.c       http://itexmac.sourceforge.net/SyncTeX.html
-zlib           ext/zlib/zlib.h                http://www.zlib.net/
-lzma           ext/lzma/lzma.txt              http://www.7-zip.org/sdk.html
+MuPDF          mupdf/COPYING             AGPL https://mupdf.com/
+bzip2          ext/bzip2/LICENSE              https://bzip.org/
+CHMLIB         ext/CHMLib/COPYING        LGPL https://www.jedrea.com/chmlib/
+FreeType       ext/freetype2/FTL.txt          https://www.freetype.org/
+jbig2dec       ext/jbig2dec/COPYING      AGPL https://www.ghostscript.com/jbig2dec.html
+libjpeg-turbo  ext/.../README-turbo.txt  BSD  https://libjpeg-turbo.virtualgl.org/
+DjVuLibre      ext/libdjvu/COPYRIGHT     GPL  https://djvu.sourceforge.net/
+OpenJPEG       ext/openjpeg/LICENSE      BSD  https://www.openjpeg.org/
+SyncTeX        ext/.../synctex_parser.c       https://itexmac.sourceforge.net/SyncTeX.html
+zlib           ext/zlib/zlib.h                https://www.zlib.net/
+lzma           ext/lzma/lzma.txt              https://www.7-zip.org/sdk.html
 libwebp        ext/libwebp/COPYING       BSD  https://developers.google.com/speed/webp/
 unarr          ext/unarr/COPYING         LGPL https://github.com/zeniko/unarr
 
-CMap Resources mupdf/.../cmaps/README         http://sourceforge.net/adobe/cmap/home/Home/
-XySSL          mupdf/.../crypt-aes.c     BSD  http://en.wikipedia.org/wiki/PolarSSL#History
-Arcfour        mupdf/.../crypt-arc4.c         http://tools.ietf.org/html/draft-kaukonen-cipher-arcfour-01
-RSA's MD5      mupdf/.../crypt-md5.c          http://tools.ietf.org/html/rfc1321
-Android        mupdf/.../droid/NOTICE    APL  http://www.droidfonts.com/
-Poppler        mupdf/.../pdf-annot.c     GPL  http://poppler.freedesktop.org/
-ezgdi          mupdf/.../pdf-ft-tools.c  GPL  http://code.google.com/p/ezgdi/
+CMap Resources mupdf/.../cmaps/README         https://sourceforge.net/adobe/cmap/home/Home/
+XySSL          mupdf/.../crypt-aes.c     BSD  https://en.wikipedia.org/wiki/PolarSSL#History
+Arcfour        mupdf/.../crypt-arc4.c         https://tools.ietf.org/html/draft-kaukonen-cipher-arcfour-01
+RSA's MD5      mupdf/.../crypt-md5.c          https://tools.ietf.org/html/rfc1321
+Android        mupdf/.../droid/NOTICE    APL  https://www.droidfonts.com/
+Poppler        mupdf/.../pdf-annot.c     GPL  https://poppler.freedesktop.org/
+ezgdi          mupdf/.../pdf-ft-tools.c  GPL  https://code.google.com/p/ezgdi/
 
-Fugue Icons    CC BY 3.0                      http://p.yusukekamiyamane.com/
+Fugue Icons    CC BY 3.0                      https://p.yusukekamiyamane.com/

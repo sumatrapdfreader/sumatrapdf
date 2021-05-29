@@ -151,7 +151,7 @@ const char *gLangCodes = {{.Langcodes}} "\0";
 
 const char *gLangNames = {{.Langnames}} "\0";
 
-// from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
+// from https://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
 #ifndef LANG_CENTRAL_KURDISH
 #define LANG_CENTRAL_KURDISH 0x92

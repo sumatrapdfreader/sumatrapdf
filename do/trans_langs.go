@@ -2,7 +2,7 @@ package main
 
 // List of languages we support, their iso codes and id as understood
 // by Windows SDK (LANG_* and SUBLANG_*_*).
-// See http://msdn.microsoft.com/en-us/library/dd318693.aspx for the full list.
+// See https://msdn.microsoft.com/en-us/library/dd318693.aspx for the full list.
 var gLangs = [][]string{
 	{"af", "Afrikaans", "_LANGID(LANG_AFRIKAANS)"},
 	{"am", "Armenian (Հայերեն)", "_LANGID(LANG_ARMENIAN)"},

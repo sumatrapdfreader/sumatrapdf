@@ -316,12 +316,12 @@ func websiteSettingsDir() string {
 
 func langsFileName() string {
 	ver := extractSumatraVersionMust()
-	return fmt.Sprintf("langs%s.html", ver)
+	return fmt.Sprintf("langs%s.html", urlizeVersion(ver))
 }
 
 func settingsFileName() string {
 	ver := extractSumatraVersionMust()
-	return fmt.Sprintf("settings%s.html", ver)
+	return fmt.Sprintf("settings%s.html", urlizeVersion(ver))
 }
 
 func genLangsHTML() {

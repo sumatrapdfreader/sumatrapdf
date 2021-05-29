@@ -1,4 +1,4 @@
-# http://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 # Easy way to check some of the flags: https://clangformat.com/
 BasedOnStyle: Chromium
 AllowShortFunctionsOnASingleLine: false

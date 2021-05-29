@@ -1,6 +1,6 @@
 --[[
 This is for generating unix makefile.
-I'm using premake5 alpha12 from http://premake.github.io/download.html#v5
+I'm using premake5 alpha12 from https://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
 --]]
 

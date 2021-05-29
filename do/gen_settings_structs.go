@@ -804,8 +804,13 @@ func genSettingsStruct() string {
 	return content
 }
 
+func urlizeVersion(s string) string {
+	return strings.Replace(s, ".", "-", -1)
+}
+
 func genAndSaveSettingsStructs() {
-	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings/settings%s.html", extractSumatraVersionMust())
+	ver := extractSumatraVersionMust()
+	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings/settings%s.html", urlizeVersion(ver))
 
 	globalPrefs[0].Comment = helpURI
 
