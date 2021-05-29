@@ -232,8 +232,11 @@ func validateRune(c rune) byte {
 	if c >= '0' && c <= '9' {
 		return byte(c)
 	}
-	if c == '-' || c == '_' || c == '.' {
+	if c == '-' || c == '_' {
 		return byte(c)
+	}
+	if c == '.' {
+		return '-'
 	}
 	if c == ' ' {
 		return '-'

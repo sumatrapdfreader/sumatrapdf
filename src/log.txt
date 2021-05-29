@@ -34,6 +34,13 @@ methods into it. This is to open possibility for more efficient implementation
 of TreeModel. Even now the code should be a bit smaller by removing methods
 from what were TreeItem subclasses.
 
+---
+
+Links to /settings3.3.html and /settings/settings3.3.html were broken because
+Cloudflare Pages doesn't handle HTML files with '.' in the name.
+Had to change naming scheme to /settings/settings3-3.html
+
+
 2021-05-27 Thu
 
 Added support for .xps files with jpeg-xr images in them.

@@ -179,7 +179,7 @@ func main() {
 		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy-cf", false, "deploy website to cloudflare")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
 		flag.BoolVar(&flgWebsiteImportAndDeploy, "website-import-deploy", false, "import from notion and deploy")
-		flag.BoolVar(&flgWebsiteBuildCloudflare, "website-build-cf", false, "build the website (download Sumatra files")
+		flag.BoolVar(&flgWebsiteBuildCloudflare, "website-build-cf", false, "build the website (download Sumatra files)")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
