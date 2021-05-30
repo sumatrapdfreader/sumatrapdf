@@ -354,7 +354,7 @@ void Notifications::Remove(NotificationWnd* wnd) {
     }
 }
 
-void Notifications::Add(NotificationWnd* wnd, NotificationGroupId groupId) {
+void Notifications::Add(NotificationWnd* wnd, Kind groupId) {
     if (groupId != nullptr) {
         this->RemoveForGroup(groupId);
     }
@@ -367,7 +367,7 @@ void Notifications::Add(NotificationWnd* wnd, NotificationGroupId groupId) {
     this->wnds.Append(wnd);
 }
 
-NotificationWnd* Notifications::GetForGroup(NotificationGroupId groupId) const {
+NotificationWnd* Notifications::GetForGroup(Kind groupId) const {
     CrashIf(!groupId);
     for (auto* wnd : this->wnds) {
         if (wnd->groupId == groupId) {
@@ -377,7 +377,7 @@ NotificationWnd* Notifications::GetForGroup(NotificationGroupId groupId) const {
     return nullptr;
 }
 
-void Notifications::RemoveForGroup(NotificationGroupId groupId) {
+void Notifications::RemoveForGroup(Kind groupId) {
     CrashIf(groupId == nullptr);
     Vec<NotificationWnd*> toRemove;
     for (auto* wnd : this->wnds) {

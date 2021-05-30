@@ -133,8 +133,8 @@ bool gShowFrameRate = false;
 // embedded (e.g. in a web browser)
 const WCHAR* gPluginURL = nullptr; // owned by Flags in WinMain
 
-static NotificationGroupId NG_PERSISTENT_WARNING = "persistentWarning";
-static NotificationGroupId NG_PAGE_INFO_HELPER = "pageInfoHelper";
+static Kind NG_PERSISTENT_WARNING = "persistentWarning";
+static Kind NG_PAGE_INFO_HELPER = "pageInfoHelper";
 
 #define SPLITTER_DX 5
 #define SIDEBAR_MIN_WIDTH 150
@@ -2251,24 +2251,24 @@ void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     EnginePdfSaveUpdated(engine, dstFilePath.AsView());
 }
 
-static void MaybeSaveAnnotations(WindowInfo* win) {
-    DisplayModel* dm = win->AsFixed();
+static void MaybeSaveAnnotations(TabInfo* tab) {
+    DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return;
     }
     EngineBase* engine = dm->GetEngine();
-    bool confirm = EnginePdfHasUnsavedAnnotations(engine);
+    bool confirm = EngineHasUnsavedAnnotations(engine);
     if (!confirm) {
         return;
     }
     uint type = MB_YESNO | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
     const WCHAR* title = _TR("Warning");
     const WCHAR* msg = _TR_TODO("You have unsaved annotations. Save them?");
-    int res = MessageBoxW(win->hwndFrame, msg, title, type);
+    int res = MessageBoxW(tab->win->hwndFrame, msg, title, type);
     if (res == IDNO) {
         return;
     }
-    SaveAnnotationsToMaybeNewPdfFile(win->currentTab);
+    SaveAnnotationsToMaybeNewPdfFile(tab);
 }
 
 // closes the current tab, selecting the next one
@@ -2280,8 +2280,9 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
         return;
     }
 
+    AbortFinding(win, true);
     ClearFindBox(win);
-    MaybeSaveAnnotations(win);
+    MaybeSaveAnnotations(win->currentTab);
 
     bool didSavePrefs = false;
     size_t tabCount = win->tabs.size();
@@ -2292,7 +2293,6 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
         }
     } else {
         CrashIf(gPluginMode && !gWindows.Contains(win));
-        AbortFinding(win, true);
         TabsOnCloseDoc(win);
     }
     if (!didSavePrefs) {

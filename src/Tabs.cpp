@@ -762,6 +762,7 @@ void TabsOnCloseDoc(WindowInfo* win) {
         return;
     }
 
+    /*
     DisplayModel* dm = win->AsFixed();
     if (dm) {
         EngineBase* engine = dm->GetEngine();
@@ -770,6 +771,7 @@ void TabsOnCloseDoc(WindowInfo* win) {
             logf("File has unsaved annotations\n");
         }
     }
+    */
 
     int current = win->tabsCtrl->GetSelectedTabIndex();
     RemoveTab(win, current);

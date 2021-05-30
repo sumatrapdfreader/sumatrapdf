@@ -5,10 +5,6 @@ struct NotificationWnd;
 
 typedef std::function<void(NotificationWnd*)> NotificationWndRemovedCallback;
 
-// this is a unique id for notification group that allows decoupling it
-// from the rest of the code.
-typedef const char* NotificationGroupId;
-
 enum NotificationOptions {
     NOS_WITH_TIMEOUT = 0, // timeout after 3 seconds, no highlight
     NOS_PERSIST = (1 << 0),
@@ -35,7 +31,7 @@ struct NotificationWnd : public ProgressUpdateUI {
 
     bool Create(const WCHAR* msg, const WCHAR* progressMsg);
 
-    NotificationGroupId groupId = nullptr; // for use by Notifications
+    Kind groupId = nullptr; // for use by Notifications
 
     // to reduce flicker, we might ask the window to shrink the size less often
     // (notifcation windows are only shrunken if by less than factor shrinkLimit)
@@ -64,9 +60,9 @@ struct Notifications {
 
     // groupId is used to classify notifications and causes a notification
     // to replace any other notification of the same group
-    void Add(NotificationWnd*, NotificationGroupId);
-    NotificationWnd* GetForGroup(NotificationGroupId) const;
-    void RemoveForGroup(NotificationGroupId);
+    void Add(NotificationWnd*, Kind);
+    NotificationWnd* GetForGroup(Kind) const;
+    void RemoveForGroup(Kind);
     void Relayout();
 
     // NotificationWndCallback methods

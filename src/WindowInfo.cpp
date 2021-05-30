@@ -51,8 +51,8 @@
 
 Vec<WindowInfo*> gWindows;
 
-NotificationGroupId NG_CURSOR_POS_HELPER = "cursorPosHelper";
-NotificationGroupId NG_RESPONSE_TO_ACTION = "responseToAction";
+Kind NG_CURSOR_POS_HELPER = "cursorPosHelper";
+Kind NG_RESPONSE_TO_ACTION = "responseToAction";
 
 WindowInfo::WindowInfo(HWND hwnd) {
     hwndFrame = hwnd;
@@ -270,7 +270,7 @@ void WindowInfo::HideToolTip() {
     infotip->Hide();
 }
 
-NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, int options, NotificationGroupId groupId) {
+NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, int options, Kind groupId) {
     int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
     bool highlight = (options & NOS_HIGHLIGHT);
 

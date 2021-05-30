@@ -49,7 +49,7 @@
 bool gIsStartup = false;
 WStrVec gDdeOpenOnStartup;
 
-NotificationGroupId NG_FIND_PROGRESS = "findProgress";
+Kind NG_FIND_PROGRESS = "findProgress";
 
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific

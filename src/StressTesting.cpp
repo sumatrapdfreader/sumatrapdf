@@ -47,8 +47,8 @@
 
 static bool gIsStressTesting = false;
 static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
-static NotificationGroupId NG_STRESS_TEST_BENCHMARK = "stressTestBenchmark";
-static NotificationGroupId NG_STRESS_TEST_SUMMARY = "stressTestSummary";
+static Kind NG_STRESS_TEST_BENCHMARK = "stressTestBenchmark";
+static Kind NG_STRESS_TEST_SUMMARY = "stressTestSummary";
 
 bool IsStressTesting() {
     return gIsStressTesting;
