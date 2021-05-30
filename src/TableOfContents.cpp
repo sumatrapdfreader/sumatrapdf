@@ -1155,7 +1155,7 @@ void TocTreeCharHandler(CharEvent* ev) {
         return;
     }
 
-    CloseWindow(win, true);
+    CloseWindow(win, true, false);
     ev->didHandle = true;
 }
 

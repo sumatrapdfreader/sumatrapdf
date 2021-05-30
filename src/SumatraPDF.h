@@ -110,7 +110,7 @@ bool OpenFileExternally(const WCHAR* path);
 void AssociateExeWithPdfExtension();
 void CloseTab(WindowInfo* win, bool quitIfLast = false);
 bool MayCloseWindow(WindowInfo* win);
-void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose = false);
+void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose);
 void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites);
 void RememberFavTreeExpansionState(WindowInfo* win);
 void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl*, HWND hwndTree);

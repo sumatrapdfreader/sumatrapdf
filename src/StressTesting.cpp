@@ -579,7 +579,7 @@ static void Finished(StressTest* st, bool success) {
         st->win->ShowNotification(s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
     }
 
-    CloseWindow(st->win, st->exitWhenDone && MayCloseWindow(st->win));
+    CloseWindow(st->win, st->exitWhenDone && MayCloseWindow(st->win), false);
     delete st;
 }
 
@@ -616,7 +616,7 @@ static bool OpenFile(StressTest* st, const WCHAR* fileName) {
             return false;
         }
     } else if (!w->IsDocLoaded()) { // new WindowInfo
-        CloseWindow(w, false);
+        CloseWindow(w, false, false);
         return false;
     }
 
@@ -639,7 +639,7 @@ static bool OpenFile(StressTest* st, const WCHAR* fileName) {
         w->stressTest = st->win->stressTest;
         st->win->stressTest = nullptr;
         st->win = w;
-        CloseWindow(toClose, false);
+        CloseWindow(toClose, false, false);
     }
     if (!st->win->IsDocLoaded()) {
         return false;

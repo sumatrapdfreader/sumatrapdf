@@ -2150,7 +2150,7 @@ static void OnMenuExit() {
     // so use a stable copy for iteration
     Vec<WindowInfo*> toClose = gWindows;
     for (WindowInfo* win : toClose) {
-        CloseWindow(win, true);
+        CloseWindow(win, true, false);
     }
 }
 
@@ -2288,7 +2288,7 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
     size_t tabCount = win->tabs.size();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (MayCloseWindow(win)) {
-            CloseWindow(win, quitIfLast);
+            CloseWindow(win, quitIfLast, false);
             didSavePrefs = true; // in CloseWindow()
         }
     } else {
@@ -3770,7 +3770,7 @@ static void OnFrameKeyEsc(WindowInfo* win) {
         return;
     }
     if (gGlobalPrefs->escToExit && MayCloseWindow(win)) {
-        CloseWindow(win, true);
+        CloseWindow(win, true, false);
         return;
     }
     if (win->presentation || win->isFullScreen) {
@@ -4825,7 +4825,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_CLOSE:
             if (MayCloseWindow(win)) {
-                CloseWindow(win, true);
+                CloseWindow(win, true, false);
             }
             break;
 
