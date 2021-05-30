@@ -516,95 +516,72 @@ struct StressTest {
     // owned by StressTest
     TestFileProvider* fileProvider{nullptr};
 
-    bool OpenFile(const WCHAR* fileName);
-
-    bool GoToNextPage();
-    bool GoToNextFile();
-
-    void TickTimer();
-    void Finished(bool success);
-
-    StressTest(WindowInfo* win, bool exitWhenDone) : win(win), exitWhenDone(exitWhenDone) {
-        timerId = gCurrStressTimerId++;
-    }
-    ~StressTest() {
-        delete fileProvider;
-    }
-
-    void Start(const WCHAR* path, const WCHAR* filter, const WCHAR* ranges, int cycles);
-    void Start(TestFileProvider* fileProvider, int cycles);
-
-    void OnTimer(int timerIdGot);
-    void GetLogInfo(str::Str* s);
+    StressTest(WindowInfo* win, bool exitWhenDone);
+    ~StressTest();
 };
 
-void StressTest::Start(TestFileProvider* fileProvider, int cycles) {
-    GetSystemTime(&stressStartTime);
-
-    this->fileProvider = fileProvider;
-    this->cycles = cycles;
-
-    if (pageRanges.size() == 0) {
-        pageRanges.Append(PageRange());
-    }
-    if (fileRanges.size() == 0) {
-        fileRanges.Append(PageRange());
-    }
-
-    TickTimer();
+StressTest::StressTest(WindowInfo* win, bool exitWhenDone) {
+    this->win = win;
+    this->exitWhenDone = exitWhenDone;
+    timerId = gCurrStressTimerId++;
 }
 
-void StressTest::Start(const WCHAR* path, const WCHAR* filter, const WCHAR* ranges, int cycles) {
+StressTest::~StressTest() {
+    delete fileProvider;
+}
+
+static void TickTimer(StressTest* st) {
+    SetTimer(st->win->hwndFrame, st->timerId, USER_TIMER_MINIMUM, nullptr);
+}
+
+static void Start(StressTest* st, TestFileProvider* fileProvider, int cycles) {
+    GetSystemTime(&st->stressStartTime);
+
+    st->fileProvider = fileProvider;
+    st->cycles = cycles;
+
+    if (st->pageRanges.size() == 0) {
+        st->pageRanges.Append(PageRange());
+    }
+    if (st->fileRanges.size() == 0) {
+        st->fileRanges.Append(PageRange());
+    }
+
+    TickTimer(st);
+}
+
+static void Finished(StressTest* st, bool success) {
+    st->win->stressTest = nullptr; // make sure we're not double-deleted
+
+    if (success) {
+        int secs = SecsSinceSystemTime(st->stressStartTime);
+        AutoFreeWstr tm(FormatTime(secs));
+        AutoFreeWstr s(str::Format(L"Stress test complete, rendered %d files in %s", st->filesCount, tm.Get()));
+        st->win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
+    }
+
+    CloseWindow(st->win, st->exitWhenDone && MayCloseWindow(st->win));
+    delete st;
+}
+
+static void Start(StressTest* st, const WCHAR* path, const WCHAR* filter, const WCHAR* ranges, int cycles) {
     if (file::Exists(path)) {
         FilesProvider* filesProvider = new FilesProvider(path);
-        ParsePageRanges(ranges, pageRanges);
-        Start(filesProvider, cycles);
+        ParsePageRanges(ranges, st->pageRanges);
+        Start(st, filesProvider, cycles);
     } else if (dir::Exists(path)) {
         DirFileProvider* dirFileProvider = new DirFileProvider(path, filter);
-        ParsePageRanges(ranges, fileRanges);
-        Start(dirFileProvider, cycles);
+        ParsePageRanges(ranges, st->fileRanges);
+        Start(st, dirFileProvider, cycles);
     } else {
         // Note: string dev only, don't translate
         AutoFreeWstr s(str::Format(L"Path '%s' doesn't exist", path));
-        win->ShowNotification(s, NOS_WARNING, NG_STRESS_TEST_SUMMARY);
-        Finished(false);
+        st->win->ShowNotification(s, NOS_WARNING, NG_STRESS_TEST_SUMMARY);
+        Finished(st, false);
     }
 }
 
-void StressTest::Finished(bool success) {
-    win->stressTest = nullptr; // make sure we're not double-deleted
-
-    if (success) {
-        int secs = SecsSinceSystemTime(stressStartTime);
-        AutoFreeWstr tm(FormatTime(secs));
-        AutoFreeWstr s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm.Get()));
-        win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
-    }
-
-    CloseWindow(win, exitWhenDone && MayCloseWindow(win));
-    delete this;
-}
-
-bool StressTest::GoToNextFile() {
-    for (;;) {
-        AutoFreeWstr nextFile(fileProvider->NextFile());
-        if (nextFile) {
-            if (!IsInRange(fileRanges, ++fileIndex)) {
-                continue;
-            }
-            if (OpenFile(nextFile)) {
-                return true;
-            }
-            continue;
-        }
-        if (--cycles <= 0) {
-            return false;
-        }
-        fileProvider->Restart();
-    }
-}
-
-bool StressTest::OpenFile(const WCHAR* fileName) {
+static bool OpenFile(StressTest* st, const WCHAR* fileName) {
     wprintf(L"%s\n", fileName);
     fflush(stdout);
 
@@ -615,8 +592,8 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
         return false;
     }
 
-    if (w == win) { // WindowInfo reused
-        if (!win->IsDocLoaded()) {
+    if (w == st->win) { // WindowInfo reused
+        if (!st->win->IsDocLoaded()) {
             return false;
         }
     } else if (!w->IsDocLoaded()) { // new WindowInfo
@@ -626,91 +603,110 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
 
     // transfer ownership of stressTest object to a new window and close the
     // current one
-    CrashIf(this != win->stressTest);
-    if (w != win) {
-        if (win->IsDocLoaded()) {
+    CrashIf(st != st->win->stressTest);
+    if (w != st->win) {
+        if (st->win->IsDocLoaded()) {
             // try to provoke a crash in RenderCache cleanup code
-            Rect rect = ClientRect(win->hwndFrame);
+            Rect rect = ClientRect(st->win->hwndFrame);
             rect.Inflate(rand() % 10, rand() % 10);
-            SendMessageW(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-            if (win->AsFixed()) {
-                win->cbHandler->RequestRendering(1);
+            SendMessageW(st->win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+            if (st->win->AsFixed()) {
+                st->win->cbHandler->RequestRendering(1);
             }
-            RepaintAsync(win, 0);
+            RepaintAsync(st->win, 0);
         }
 
-        WindowInfo* toClose = win;
-        w->stressTest = win->stressTest;
-        win->stressTest = nullptr;
-        win = w;
+        WindowInfo* toClose = st->win;
+        w->stressTest = st->win->stressTest;
+        st->win->stressTest = nullptr;
+        st->win = w;
         CloseWindow(toClose, false);
     }
-    if (!win->IsDocLoaded()) {
+    if (!st->win->IsDocLoaded()) {
         return false;
     }
 
-    win->ctrl->SetDisplayMode(DisplayMode::Continuous);
-    win->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
-    win->ctrl->GoToFirstPage();
-    if (win->tocVisible || gGlobalPrefs->showFavorites) {
-        SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->showFavorites);
+    st->win->ctrl->SetDisplayMode(DisplayMode::Continuous);
+    st->win->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
+    st->win->ctrl->GoToFirstPage();
+    if (st->win->tocVisible || gGlobalPrefs->showFavorites) {
+        SetSidebarVisibility(st->win, st->win->tocVisible, gGlobalPrefs->showFavorites);
     }
 
-    currPage = pageRanges.at(0).start;
-    win->ctrl->GoToPage(currPage, false);
-    currPageRenderTime = TimeGet();
-    ++filesCount;
+    st->currPage = st->pageRanges.at(0).start;
+    st->win->ctrl->GoToPage(st->currPage, false);
+    st->currPageRenderTime = TimeGet();
+    ++st->filesCount;
 
-    pageForSearchStart = (rand() % win->ctrl->PageCount()) + 1;
+    st->pageForSearchStart = (rand() % st->win->ctrl->PageCount()) + 1;
     // search immediately in single page documents
-    if (1 == pageForSearchStart) {
+    if (1 == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
-        win::SetText(win->hwndFindBox, L"!z_yt");
-        FindTextOnThread(win, TextSearchDirection::Forward, true);
+        win::SetText(st->win->hwndFindBox, L"!z_yt");
+        FindTextOnThread(st->win, TextSearchDirection::Forward, true);
     }
 
-    int secs = SecsSinceSystemTime(stressStartTime);
+    int secs = SecsSinceSystemTime(st->stressStartTime);
     AutoFreeWstr tm(FormatTime(secs));
-    AutoFreeWstr s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm.Get()));
-    win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
+    AutoFreeWstr s(str::Format(L"File %d: %s, time: %s", st->filesCount, fileName, tm.Get()));
+    st->win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
 
     return true;
 }
 
-bool StressTest::GoToNextPage() {
-    double pageRenderTime = TimeSinceInMs(currPageRenderTime);
-    AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
-    win->ShowNotification(s, NOS_WITH_TIMEOUT, NG_STRESS_TEST_BENCHMARK);
+static bool GoToNextFile(StressTest* st) {
+    for (;;) {
+        AutoFreeWstr nextFile(st->fileProvider->NextFile());
+        if (nextFile) {
+            if (!IsInRange(st->fileRanges, ++st->fileIndex)) {
+                continue;
+            }
+            if (OpenFile(st, nextFile)) {
+                return true;
+            }
+            continue;
+        }
+        if (--st->cycles <= 0) {
+            return false;
+        }
+        st->fileProvider->Restart();
+    }
+}
 
-    ++currPage;
-    while (!IsInRange(pageRanges, currPage) && currPage <= win->ctrl->PageCount()) {
-        currPage++;
+static bool GoToNextPage(StressTest* st) {
+    double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
+    AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", st->currPage, (int)pageRenderTime));
+    st->win->ShowNotification(s, NOS_WITH_TIMEOUT, NG_STRESS_TEST_BENCHMARK);
+
+    ++st->currPage;
+    while (!IsInRange(st->pageRanges, st->currPage) && st->currPage <= st->win->ctrl->PageCount()) {
+        st->currPage++;
     }
 
-    if (currPage > win->ctrl->PageCount()) {
-        if (GoToNextFile()) {
+    if (st->currPage > st->win->ctrl->PageCount()) {
+        if (GoToNextFile(st)) {
             return true;
         }
-        Finished(true);
+        Finished(st, true);
         return false;
     }
 
-    win->ctrl->GoToPage(currPage, false);
-    currPageRenderTime = TimeGet();
+    st->win->ctrl->GoToPage(st->currPage, false);
+    st->currPageRenderTime = TimeGet();
 
     // start text search when we're in the middle of the document, so that
     // search thread touches both pages that were already rendered and not yet
     // rendered
     // TODO: it would be nice to also randomize search starting page but the
     // current API doesn't make it easy
-    if (currPage == pageForSearchStart) {
+    if (st->currPage == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
-        win::SetText(win->hwndFindBox, L"!z_yt");
-        FindTextOnThread(win, TextSearchDirection::Forward, true);
+        win::SetText(st->win->hwndFindBox, L"!z_yt");
+        FindTextOnThread(st->win, TextSearchDirection::Forward, true);
     }
 
     if (1 == rand() % 3) {
-        Rect rect = ClientRect(win->hwndFrame);
+        Rect rect = ClientRect(st->win->hwndFrame);
         int deltaX = (rand() % 40) - 23;
         rect.dx += deltaX;
         if (rect.dx < 300) {
@@ -721,34 +717,30 @@ bool StressTest::GoToNextPage() {
         if (rect.dy < 300) {
             rect.dy += (abs(deltaY) * 3);
         }
-        SendMessageW(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+        SendMessageW(st->win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
     }
     return true;
 }
 
-void StressTest::TickTimer() {
-    SetTimer(win->hwndFrame, timerId, USER_TIMER_MINIMUM, nullptr);
-}
-
-void StressTest::OnTimer(int timerIdGot) {
+static void OnTimer(StressTest* st, int timerIdGot) {
     DisplayModel* dm;
     bool didRender;
 
-    CrashIf(timerId != timerIdGot);
-    KillTimer(win->hwndFrame, timerId);
-    if (!win->IsDocLoaded()) {
-        if (!GoToNextFile()) {
-            Finished(true);
+    CrashIf(st->timerId != timerIdGot);
+    KillTimer(st->win->hwndFrame, st->timerId);
+    if (!st->win->IsDocLoaded()) {
+        if (!GoToNextFile(st)) {
+            Finished(st, true);
             return;
         }
-        TickTimer();
+        TickTimer(st);
         return;
     }
 
     // chm documents aren't rendered and we block until we show them
     // so we can assume previous page has been shown and go to next page
-    if (!win->AsFixed()) {
-        if (!GoToNextPage()) {
+    if (!st->win->AsFixed()) {
+        if (!GoToNextPage(st)) {
             return;
         }
         goto Next;
@@ -758,29 +750,29 @@ void StressTest::OnTimer(int timerIdGot) {
     // (but we don't wait more than 3 seconds).
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
-    dm = win->AsFixed();
-    didRender = gRenderCache.Exists(dm, currPage, dm->GetRotation());
-    if (!didRender && dm->ShouldCacheRendering(currPage)) {
-        double timeInMs = TimeSinceInMs(currPageRenderTime);
+    dm = st->win->AsFixed();
+    didRender = gRenderCache.Exists(dm, st->currPage, dm->GetRotation());
+    if (!didRender && dm->ShouldCacheRendering(st->currPage)) {
+        double timeInMs = TimeSinceInMs(st->currPageRenderTime);
         if (timeInMs > 3.0 * 1000) {
-            if (!GoToNextPage()) {
+            if (!GoToNextPage(st)) {
                 return;
             }
         }
-    } else if (!GoToNextPage()) {
+    } else if (!GoToNextPage(st)) {
         return;
     }
-    MakeRandomSelection(win, currPage);
+    MakeRandomSelection(st->win, st->currPage);
 
 Next:
-    TickTimer();
+    TickTimer(st);
 }
 
 // note: used from CrashHandler, shouldn't allocate memory
-void StressTest::GetLogInfo(str::Str* s) {
-    s->AppendFmt(", stress test rendered %d files in ", filesCount);
-    FormatTime(SecsSinceSystemTime(stressStartTime), s);
-    s->AppendFmt(", currPage: %d", currPage);
+static void GetLogInfo(StressTest* st, str::Str* s) {
+    s->AppendFmt(", stress test rendered %d files in ", st->filesCount);
+    FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
+    s->AppendFmt(", currPage: %d", st->currPage);
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory
@@ -802,7 +794,7 @@ void GetStressTestInfo(str::Str* s) {
         char buf[256];
         strconv::ToCodePageBuf(buf, dimof(buf), w->currentTab->filePath, CP_UTF8);
         s->Append(buf);
-        w->stressTest->GetLogInfo(s);
+        GetLogInfo(w->stressTest, s);
         s->Append("\r\n");
     }
 }
@@ -916,20 +908,20 @@ void StartStressTest(Flags* i, WindowInfo* win) {
             win->stressTest = dst;
             // divide filesToTest among each window
             FilesProvider* filesProvider = new FilesProvider(filesToTest, n, j);
-            dst->Start(filesProvider, i->stressTestCycles);
+            Start(dst, filesProvider, i->stressTestCycles);
         }
 
         free(windows);
     } else {
         // dst will be deleted when the stress ends
-        StressTest* dst = new StressTest(win, i->exitWhenDone);
-        win->stressTest = dst;
-        dst->Start(i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
+        StressTest* st = new StressTest(win, i->exitWhenDone);
+        win->stressTest = st;
+        Start(st, i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
     }
 }
 
 void OnStressTestTimer(WindowInfo* win, int timerId) {
-    win->stressTest->OnTimer(timerId);
+    OnTimer(win->stressTest, timerId);
 }
 
 void FinishStressTest(WindowInfo* win) {
