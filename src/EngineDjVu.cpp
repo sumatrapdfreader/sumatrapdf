@@ -367,10 +367,10 @@ static bool ReadBytes(HANDLE h, DWORD offset, void* buffer, DWORD count) {
 }
 
 #define DJVU_MARK_MAGIC 0x41542654L /* AT&T */
-#define DJVU_MARK_FORM 0x464F524DL  /* FORM */
-#define DJVU_MARK_DJVM 0x444A564DL  /* DJVM */
-#define DJVU_MARK_DJVU 0x444A5655L  /* DJVU */
-#define DJVU_MARK_INFO 0x494E464FL  /* INFO */
+#define DJVU_MARK_FORM 0x464F524DL /* FORM */
+#define DJVU_MARK_DJVM 0x444A564DL /* DJVM */
+#define DJVU_MARK_DJVU 0x444A5655L /* DJVU */
+#define DJVU_MARK_INFO 0x494E464FL /* INFO */
 
 #include <pshpack1.h>
 

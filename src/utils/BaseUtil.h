@@ -578,6 +578,8 @@ inline bool isOfKindHelper(Kind k1, Kind k2) {
 
 #define IsOfKind(o, wantedKind) (o && isOfKindHelper(o->kind, wantedKind))
 
+extern Kind kindNone; // unknown kind
+
 // from https://pastebin.com/3YvWQa5c
 // In my testing, in debug build defer { } creates somewhat bloated code
 // but in release it seems to be optimized to optimally small code

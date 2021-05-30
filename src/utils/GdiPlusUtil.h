@@ -1,21 +1,6 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-enum class ImgFormat {
-    Unknown,
-    BMP,
-    GIF,
-    JPEG,
-    JXR,
-    PNG,
-    TGA,
-    TIFF,
-    WebP,
-    JP2,
-};
-
-ImgFormat GfxFormatFromData(std::span<u8>);
-
 Gdiplus::RectF RectToRectF(const Gdiplus::Rect r);
 
 typedef RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);

@@ -254,9 +254,9 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
         case SettingType::IntArray:
             for (size_t i = 0; i < (*(Vec<int>**)fieldPtr)->size(); i++) {
                 FieldInfo info = {0};
-                info.type = SettingType::IntArray == field.type
-                                ? SettingType::Int
-                                : SettingType::FloatArray == field.type ? SettingType::Float : SettingType::Color;
+                info.type = SettingType::IntArray == field.type     ? SettingType::Int
+                            : SettingType::FloatArray == field.type ? SettingType::Float
+                                                                    : SettingType::Color;
                 if (i > 0) {
                     out.AppendChar(' ');
                 }
@@ -378,9 +378,9 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             *(Vec<int>**)fieldPtr = new Vec<int>();
             while (value && *value) {
                 FieldInfo info = {0};
-                info.type = SettingType::IntArray == field.type
-                                ? SettingType::Int
-                                : SettingType::FloatArray == field.type ? SettingType::Float : SettingType::Color;
+                info.type = SettingType::IntArray == field.type     ? SettingType::Int
+                            : SettingType::FloatArray == field.type ? SettingType::Float
+                                                                    : SettingType::Color;
                 DeserializeField(info, (u8*)(*(Vec<int>**)fieldPtr)->AppendBlanks(1), value);
                 for (; *value && !str::IsWs(*value); value++) {
                     ;

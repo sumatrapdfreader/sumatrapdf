@@ -7,6 +7,7 @@
 #endif
 #include <wincodec.h>
 #include "utils/ScopedWin.h"
+#include "utils/GuessFileType.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/ByteReader.h"
 #include "utils/FzImgReader.h"
@@ -325,16 +326,9 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-#include "utils/GuessFileType.h"
-
 static const Kind gImageKinds[] = {
     kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,
     kindFileTga, kindFileJxr,  kindFileWebp, kindFileJp2,
-};
-
-static const ImgFormat gImageFormats[] = {
-    ImgFormat::PNG, ImgFormat::JPEG, ImgFormat::GIF,  ImgFormat::BMP, ImgFormat::TIFF,
-    ImgFormat::TGA, ImgFormat::JXR,  ImgFormat::WebP, ImgFormat::JP2,
 };
 
 static const WCHAR* gImageFormatExts =
@@ -349,8 +343,6 @@ static const WCHAR* gImageFormatExts =
     L".jp2\0"
     L"\0";
 
-static_assert(dimof(gImageKinds) == dimof(gImageFormats));
-
 static int FindImageKindIdx(Kind kind) {
     int n = (int)dimof(gImageKinds);
     for (int i = 0; i < n; i++) {
@@ -359,15 +351,6 @@ static int FindImageKindIdx(Kind kind) {
         }
     }
     return -1;
-}
-
-ImgFormat GfxFormatFromData(std::span<u8> d) {
-    Kind kind = GuessFileTypeFromContent(d);
-    int idx = FindImageKindIdx(kind);
-    if (idx >= 0) {
-        return gImageFormats[idx];
-    }
-    return ImgFormat::Unknown;
 }
 
 const WCHAR* GfxFileExtFromData(std::span<u8> d) {
@@ -381,7 +364,7 @@ const WCHAR* GfxFileExtFromData(std::span<u8> d) {
 
 // Windows' JPEG codec doesn't support arithmetic coding
 static bool JpegUsesArithmeticCoding(std::span<u8> d) {
-    CrashIf(GfxFormatFromData(d) != ImgFormat::JPEG);
+    CrashIf(GuessFileTypeFromContent(d) != kindFileJpeg);
 
     ByteReader r(d);
     size_t len = d.size();
@@ -397,7 +380,7 @@ static bool JpegUsesArithmeticCoding(std::span<u8> d) {
 // Windows' PNG codec fails to handle an edge case, resulting in
 // an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
 static bool PngRequiresPresetDict(std::span<u8> d) {
-    CrashIf(GfxFormatFromData(d) != ImgFormat::PNG);
+    CrashIf(GuessFileTypeFromContent(d) != kindFilePng);
 
     ByteReader r(d);
     size_t len = d.size();
@@ -413,28 +396,27 @@ static bool PngRequiresPresetDict(std::span<u8> d) {
 }
 
 bool IsGdiPlusNativeFormat(std::span<u8> d) {
-    ImgFormat fmt = GfxFormatFromData(d);
-    return ImgFormat::BMP == fmt || ImgFormat::GIF == fmt || ImgFormat::TIFF == fmt ||
-           (ImgFormat::JPEG == fmt && !JpegUsesArithmeticCoding(d)) ||
-           (ImgFormat::PNG == fmt && !PngRequiresPresetDict(d));
+    Kind fmt = GuessFileTypeFromContent(d);
+    return kindFileBmp == fmt || kindFileGif == fmt || kindFileTiff == fmt ||
+           (kindFileJpeg == fmt && !JpegUsesArithmeticCoding(d)) || (kindFilePng == fmt && !PngRequiresPresetDict(d));
 }
 
 // see http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap* BitmapFromData(std::span<u8> bmpData) {
-    ImgFormat format = GfxFormatFromData(bmpData);
-    if (ImgFormat::TGA == format) {
+    Kind format = GuessFileTypeFromContent(bmpData);
+    if (kindFileTga == format) {
         return tga::ImageFromData(bmpData);
     }
-    if (ImgFormat::WebP == format) {
+    if (kindFileWebp == format) {
         return webp::ImageFromData(bmpData);
     }
-    if (ImgFormat::JP2 == format) {
+    if (kindFileJp2 == format) {
         return fitz::ImageFromData(bmpData);
     }
-    if (ImgFormat::JPEG == format && JpegUsesArithmeticCoding(bmpData)) {
+    if (kindFileJpeg == format && JpegUsesArithmeticCoding(bmpData)) {
         return fitz::ImageFromData(bmpData);
     }
-    if (ImgFormat::PNG == format && PngRequiresPresetDict(bmpData)) {
+    if (kindFilePng == format && PngRequiresPresetDict(bmpData)) {
         return nullptr;
     }
 
@@ -443,7 +425,7 @@ Bitmap* BitmapFromData(std::span<u8> bmpData) {
     if (!stream) {
         return nullptr;
     }
-    if (ImgFormat::JXR == format) {
+    if (kindFileJxr == format) {
         return WICDecodeImageFromStream(stream);
     }
 
@@ -453,7 +435,7 @@ Bitmap* BitmapFromData(std::span<u8> bmpData) {
         bmp = nullptr;
     }
     // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
-    if (bmp && ImgFormat::JPEG == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {
+    if (bmp && kindFileJpeg == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {
         delete bmp;
         bmp = fitz::ImageFromData(bmpData);
     }
@@ -466,127 +448,118 @@ Size BitmapSizeFromData(std::span<u8> d) {
     ByteReader r(d);
     size_t len = d.size();
     u8* data = d.data();
-    switch (GfxFormatFromData(d)) {
-        case ImgFormat::BMP:
-            if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
-                BITMAPINFOHEADER bmi;
-                bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
-                CrashIf(!ok);
-                result.dx = bmi.biWidth;
-                result.dy = bmi.biHeight;
+    Kind kind = GuessFileTypeFromContent(d);
+
+    if (kind == kindFileBmp) {
+        if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
+            BITMAPINFOHEADER bmi;
+            bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
+            CrashIf(!ok);
+            result.dx = bmi.biWidth;
+            result.dy = bmi.biHeight;
+        }
+    } else if (kind == kindFileGif) {
+        if (len >= 13) {
+            // find the first image's actual size instead of using the
+            // "logical screen" size which is sometimes too large
+            size_t ix = 13;
+            // skip the global color table
+            if ((r.Byte(10) & 0x80)) {
+                ix += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
             }
-            break;
-        case ImgFormat::GIF:
-            if (len >= 13) {
-                // find the first image's actual size instead of using the
-                // "logical screen" size which is sometimes too large
-                size_t ix = 13;
-                // skip the global color table
-                if ((r.Byte(10) & 0x80)) {
-                    ix += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
+            while (ix + 8 < len) {
+                if (r.Byte(ix) == 0x2C) {
+                    result.dx = r.WordLE(ix + 5);
+                    result.dy = r.WordLE(ix + 7);
+                    break;
+                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9) {
+                    ix += 8;
+                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFE) {
+                    const u8* commentEnd = r.Find(ix + 2, 0x00);
+                    ix = commentEnd ? commentEnd - data + 1 : len;
+                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0x01 && ix + 15 < len) {
+                    const u8* textDataEnd = r.Find(ix + 15, 0x00);
+                    ix = textDataEnd ? textDataEnd - data + 1 : len;
+                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFF && ix + 14 < len) {
+                    const u8* applicationDataEnd = r.Find(ix + 14, 0x00);
+                    ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
+                } else {
+                    break;
                 }
-                while (ix + 8 < len) {
-                    if (r.Byte(ix) == 0x2C) {
-                        result.dx = r.WordLE(ix + 5);
-                        result.dy = r.WordLE(ix + 7);
-                        break;
-                    } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9) {
-                        ix += 8;
-                    } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFE) {
-                        const u8* commentEnd = r.Find(ix + 2, 0x00);
-                        ix = commentEnd ? commentEnd - data + 1 : len;
-                    } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0x01 && ix + 15 < len) {
-                        const u8* textDataEnd = r.Find(ix + 15, 0x00);
-                        ix = textDataEnd ? textDataEnd - data + 1 : len;
-                    } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFF && ix + 14 < len) {
-                        const u8* applicationDataEnd = r.Find(ix + 14, 0x00);
-                        ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
-                    } else {
-                        break;
+            }
+        }
+    } else if (kind == kindFileJpeg) {
+        // find the last start of frame marker for non-differential Huffman/arithmetic coding
+        for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF;) {
+            if (0xC0 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xC3 || 0xC9 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xCB) {
+                result.dx = r.WordBE(ix + 7);
+                result.dy = r.WordBE(ix + 5);
+            }
+            ix += (size_t)r.WordBE(ix + 2) + 2;
+        }
+    } else if (kind == kindFileJxr || kind == kindFileTiff) {
+        if (len >= 10) {
+            bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
+            CrashIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
+            const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
+            size_t idx = r.DWord(4, isBE);
+            WORD count = idx <= len - 2 ? r.Word(idx, isBE) : 0;
+            for (idx += 2; count > 0 && idx <= len - 12; count--, idx += 12) {
+                WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
+                if (r.DWord(idx + 4, isBE) != 1) {
+                    continue;
+                } else if (WIDTH == tag && 4 == type) {
+                    result.dx = r.DWord(idx + 8, isBE);
+                } else if (WIDTH == tag && 3 == type) {
+                    result.dx = r.Word(idx + 8, isBE);
+                } else if (WIDTH == tag && 1 == type) {
+                    result.dx = r.Byte(idx + 8);
+                } else if (HEIGHT == tag && 4 == type) {
+                    result.dy = r.DWord(idx + 8, isBE);
+                } else if (HEIGHT == tag && 3 == type) {
+                    result.dy = r.Word(idx + 8, isBE);
+                } else if (HEIGHT == tag && 1 == type) {
+                    result.dy = r.Byte(idx + 8);
+                }
+            }
+        }
+    } else if (kind == kindFilePng) {
+        if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
+            result.dx = r.DWordBE(16);
+            result.dy = r.DWordBE(20);
+        }
+    } else if (kind == kindFileTga) {
+        if (len >= 16) {
+            result.dx = r.WordLE(12);
+            result.dy = r.WordLE(14);
+        }
+    } else if (kind == kindFileWebp) {
+        if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
+            result.dx = r.WordLE(26) & 0x3fff;
+            result.dy = r.WordLE(28) & 0x3fff;
+        } else {
+            result = webp::SizeFromData(d);
+        }
+    } else if (kind == kindFileJp2) {
+        if (len >= 32) {
+            size_t ix = 0;
+            while (ix < len - 32) {
+                u32 lbox = r.DWordBE(ix);
+                u32 tbox = r.DWordBE(ix + 4);
+                if (0x6A703268 /* jp2h */ == tbox) {
+                    ix += 8;
+                    if (r.DWordBE(ix) == 24 && r.DWordBE(ix + 4) == 0x69686472 /* ihdr */) {
+                        result.dx = r.DWordBE(ix + 16);
+                        result.dy = r.DWordBE(ix + 12);
                     }
+                    break;
+                } else if (lbox != 0 && ix < UINT32_MAX - lbox) {
+                    ix += lbox;
+                } else {
+                    break;
                 }
             }
-            break;
-        case ImgFormat::JPEG:
-            // find the last start of frame marker for non-differential Huffman/arithmetic coding
-            for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF;) {
-                if (0xC0 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xC3 ||
-                    0xC9 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xCB) {
-                    result.dx = r.WordBE(ix + 7);
-                    result.dy = r.WordBE(ix + 5);
-                }
-                ix += r.WordBE(ix + 2) + 2;
-            }
-            break;
-        case ImgFormat::JXR:
-        case ImgFormat::TIFF:
-            if (len >= 10) {
-                bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
-                CrashIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
-                const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
-                size_t idx = r.DWord(4, isBE);
-                WORD count = idx <= len - 2 ? r.Word(idx, isBE) : 0;
-                for (idx += 2; count > 0 && idx <= len - 12; count--, idx += 12) {
-                    WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
-                    if (r.DWord(idx + 4, isBE) != 1) {
-                        continue;
-                    } else if (WIDTH == tag && 4 == type) {
-                        result.dx = r.DWord(idx + 8, isBE);
-                    } else if (WIDTH == tag && 3 == type) {
-                        result.dx = r.Word(idx + 8, isBE);
-                    } else if (WIDTH == tag && 1 == type) {
-                        result.dx = r.Byte(idx + 8);
-                    } else if (HEIGHT == tag && 4 == type) {
-                        result.dy = r.DWord(idx + 8, isBE);
-                    } else if (HEIGHT == tag && 3 == type) {
-                        result.dy = r.Word(idx + 8, isBE);
-                    } else if (HEIGHT == tag && 1 == type) {
-                        result.dy = r.Byte(idx + 8);
-                    }
-                }
-            }
-            break;
-        case ImgFormat::PNG:
-            if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-                result.dx = r.DWordBE(16);
-                result.dy = r.DWordBE(20);
-            }
-            break;
-        case ImgFormat::TGA:
-            if (len >= 16) {
-                result.dx = r.WordLE(12);
-                result.dy = r.WordLE(14);
-            }
-            break;
-        case ImgFormat::WebP:
-            if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
-                result.dx = r.WordLE(26) & 0x3fff;
-                result.dy = r.WordLE(28) & 0x3fff;
-            } else {
-                result = webp::SizeFromData(d);
-            }
-            break;
-        case ImgFormat::JP2:
-            if (len >= 32) {
-                size_t ix = 0;
-                while (ix < len - 32) {
-                    u32 lbox = r.DWordBE(ix);
-                    u32 tbox = r.DWordBE(ix + 4);
-                    if (0x6A703268 /* jp2h */ == tbox) {
-                        ix += 8;
-                        if (r.DWordBE(ix) == 24 && r.DWordBE(ix + 4) == 0x69686472 /* ihdr */) {
-                            result.dx = r.DWordBE(ix + 16);
-                            result.dy = r.DWordBE(ix + 12);
-                        }
-                        break;
-                    } else if (lbox != 0 && ix < UINT32_MAX - lbox) {
-                        ix += lbox;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            break;
+        }
     }
 
     if (result.IsEmpty()) {

@@ -44,6 +44,7 @@
 #include "Commands.h"
 #include "Caption.h"
 #include "Selection.h"
+#include "Flags.h"
 #include "StressTesting.h"
 #include "Translations.h"
 #include "uia/Provider.h"

@@ -3,6 +3,8 @@
 
 #include "utils/BaseUtil.h"
 
+Kind kindNone = "none";
+
 // if > 1 we won't crash when memory allocation fails
 std::atomic<int> gAllowAllocFailure = 0;
 

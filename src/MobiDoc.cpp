@@ -713,7 +713,7 @@ static bool KnownNonImageRec(std::span<u8> d) {
 }
 
 static bool KnownImageFormat(std::span<u8> d) {
-    return ImgFormat::Unknown != GfxFormatFromData(d);
+    return nullptr != GuessFileTypeFromContent(d);
 }
 
 // return false if we should stop loading images (because we
