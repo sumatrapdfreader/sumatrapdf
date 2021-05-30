@@ -576,7 +576,7 @@ static void Finished(StressTest* st, bool success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         AutoFreeWstr tm(FormatTime(secs));
         AutoFreeWstr s(str::Format(L"Stress test complete, rendered %d files in %s", st->filesCount, tm.Get()));
-        st->win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
+        st->win->ShowNotification(s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
     }
 
     CloseWindow(st->win, st->exitWhenDone && MayCloseWindow(st->win));
@@ -595,7 +595,7 @@ static void Start(StressTest* st, const WCHAR* path, const WCHAR* filter, const 
     } else {
         // Note: string dev only, don't translate
         AutoFreeWstr s(str::Format(L"Path '%s' doesn't exist", path));
-        st->win->ShowNotification(s, NOS_WARNING, NG_STRESS_TEST_SUMMARY);
+        st->win->ShowNotification(s, NotificationOptions::Warning, NG_STRESS_TEST_SUMMARY);
         Finished(st, false);
     }
 }
@@ -697,7 +697,7 @@ static bool OpenFile(StressTest* st, const WCHAR* fileName) {
     int secs = SecsSinceSystemTime(st->stressStartTime);
     AutoFreeWstr tm(FormatTime(secs));
     AutoFreeWstr s(str::Format(L"File %d: %s, time: %s", st->filesCount, fileName, tm.Get()));
-    st->win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
+    st->win->ShowNotification(s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
 
     return true;
 }
@@ -724,7 +724,7 @@ static bool GoToNextFile(StressTest* st) {
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
     AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", st->currPageNo, (int)pageRenderTime));
-    st->win->ShowNotification(s, NOS_WITH_TIMEOUT, NG_STRESS_TEST_BENCHMARK);
+    st->win->ShowNotification(s, NotificationOptions::WithTimeout, NG_STRESS_TEST_BENCHMARK);
 
     if (st->pagesToRender.size() == 0) {
         if (GoToNextFile(st)) {

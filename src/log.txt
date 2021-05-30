@@ -8,6 +8,8 @@ previously we would only open .txt files if advanced setting
 
 replace NotificationGroupId with Kind
 
+convert enum NotificationOptions to enum class
+
 2021-05-29 Sat
 
 Refactor StressTest: convert most method to functions.

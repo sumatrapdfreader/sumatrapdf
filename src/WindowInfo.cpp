@@ -270,9 +270,9 @@ void WindowInfo::HideToolTip() {
     infotip->Hide();
 }
 
-NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, int options, Kind groupId) {
-    int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
-    bool highlight = (options & NOS_HIGHLIGHT);
+NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, NotificationOptions options, Kind groupId) {
+    int timeoutMS = ((uint)options & (uint)NotificationOptions::Persist) ? 0 : 3000;
+    bool highlight = ((uint)options & (uint)NotificationOptions::Highlight);
 
     NotificationWnd* wnd = new NotificationWnd(hwndCanvas, timeoutMS);
     wnd->highlight = highlight;
@@ -477,7 +477,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
             AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.Get()));
-            owner->ShowNotification(msg, NOS_HIGHLIGHT);
+            owner->ShowNotification(msg, NotificationOptions::Highlight);
         }
         return;
     }
