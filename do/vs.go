@@ -7,62 +7,64 @@ import (
 	"github.com/kjk/u"
 )
 
-const (
-	// https://help.github.com/en/github/automating-your-workflow-with-github-actions/software-in-virtual-environments-for-github-actions#visual-studio-2019-enterprise
-	vsPathGitHub = `C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise`
-	// because I'm poor
-	vsPathLocal = `C:\Program Files (x86)\Microsoft Visual Studio\2019\Community`
-)
-
 var (
-	msbuildPaths = []string{
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe`,
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe`,
+	// from ls "c:\Program Files (x86)\Windows Kits\10\bin"
+	sdkVersions = []string{
+		"10.0.19041.0",
+		"10.0.18362.0",
+		"10.0.17763.0",
+		"10.0.17134.0",
+		"10.0.16299.0",
+		"10.0.15063.0",
+		"10.0.14393.0",
 	}
-	vsvarsPaths = []string{
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat`,
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat`,
-	}
-	signtoolPaths = []string{
-		`C:\Program Files (x86)\Windows Kits\10\bin\10.0.14393.0\x64\signtool.exe`,
-		`C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe`,
-	}
-	makeappxPaths = []string{
-		`c:\Program Files (x86)\Windows Kits\10\bin\10.0.14393.0\x64\makeappx.exe`,
-		`c:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe`,
+
+	msBuildName = `MSBuild\Current\Bin\MSBuild.exe`
+
+	vsBasePaths = []string{
+		// https://help.github.com/en/github/automating-your-workflow-with-github-actions/software-in-virtual-environments-for-github-actions#visual-studio-2019-enterprise
+		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise`,
+		`c:\Program Files (x86)\Microsoft Visual Studio\2019\Preview`,
+		`c:\Program Files (x86)\Microsoft Visual Studio\2019\Community`,
 	}
 )
 
-var (
-	cachedEnv []string
-)
-
-func detectPath(paths []string) string {
-	for _, p := range paths {
+func detectPath(paths []string, name string) string {
+	for _, path := range paths {
+		p := filepath.Join(path, name)
 		if u.FileExists(p) {
 			return p
 		}
 	}
-	panic(fmt.Sprintf("Didn't find %s", filepath.Base(paths[0])))
+	return ""
 }
 
+func detectPathInSDK(name string) string {
+	for _, sdkVer := range sdkVersions {
+		path := filepath.Join(`C:\Program Files (x86)\Windows Kits\10\bin`, sdkVer, name)
+		if u.FileExists(path) {
+			return path
+		}
+	}
+	panic(fmt.Sprintf("Didn't find %s", name))
+}
+
+var printedMsbuildPath bool
+
 func detectMsbuildPath() string {
-	return detectPath(msbuildPaths)
+	path := detectPath(vsBasePaths, msBuildName)
+	panicIf(path == "", fmt.Sprintf("Didn't find %s", msBuildName))
+	if !printedMsbuildPath {
+		logf("msbuild.exe: %s\n", path)
+		printedMsbuildPath = true
+	}
+	return path
 }
 
 func detectSigntoolPath() string {
-	return detectPath(signtoolPaths)
+	return detectPathInSDK(`x64\signtool.exe`)
 }
 
 func detectMakeAppxPath() string {
-	return detectPath(makeappxPaths)
-}
-
-func getVs2019Env() []string {
-	if len(cachedEnv) == 0 {
-		path := detectPath(vsvarsPaths)
-		cachedEnv = getEnvAfterScript(path)
-		u.PanicIf(len(cachedEnv) == 0, "didn't find env from '%s'", path)
-	}
-	return cachedEnv
+	return detectPathInSDK(`x64\makeappx.exe`)
 }

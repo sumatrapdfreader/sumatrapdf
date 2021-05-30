@@ -10,30 +10,20 @@ import (
 	"github.com/kjk/u"
 )
 
-var (
-	clangFormatPath string
-)
+var printClangPath bool
 
 func detectClangFormat() string {
-	if clangFormatPath != "" {
-		return clangFormatPath
+	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\clang-format.exe`)
+	panicIf(!u.FileExists(path), "didn't find clang-format.exe")
+	if !printClangPath {
+		logf("clang-format: %s\n", path)
+		printClangPath = true
 	}
-
-	path, err := exec.LookPath("clang-format.exe")
-	if err == nil {
-		clangFormatPath = path
-		return path
-	}
-	path = `c:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\Llvm\bin\clang-format.exe`
-	if u.FileExists(path) {
-		clangFormatPath = path
-		return path
-	}
-	// TODO: c:\Users\kjk\.vscode\extensions\ms-vscode.cpptools-0.26.1\LLVM\bin\clang-format.exe
-	panic("didn't find clang-format.exe")
+	return path
 }
 
 func clangFormatFile(path string) {
+	clangFormatPath := detectClangFormat()
 	cmd := exec.Command(clangFormatPath, "-i", "-style=file", path)
 	u.RunCmdLoggedMust(cmd)
 }

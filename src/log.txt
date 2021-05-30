@@ -6,6 +6,9 @@ Refactor StressTest: convert most method to functions.
 
 Remove ImgFormat because it's redundant with kindFile*
 
+Tweak detection of clang-format.exe and msbuild.exe so that
+we consistently start with 2019 Preview.
+
 2021-05-28 Fri
 
 In 3.2 I introduced a regression: when user changed pages I tried to sync
