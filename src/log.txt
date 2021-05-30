@@ -9,6 +9,10 @@ Remove ImgFormat because it's redundant with kindFile*
 Tweak detection of clang-format.exe and msbuild.exe so that
 we consistently start with 2019 Preview.
 
+stress testing: limit number of rendered pages per file to 32 randomly
+picked pages. This speeds up stress testing by avoiding rendering really
+big documents. 
+
 2021-05-28 Fri
 
 In 3.2 I introduced a regression: when user changed pages I tried to sync

@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 struct PageRange {
-    int start = 1;
+    int start{1};
     // end == INT_MAX means to the last page
-    int end = INT_MAX;
+    int end{INT_MAX};
 };
 
 struct Flags {

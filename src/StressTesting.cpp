@@ -55,12 +55,21 @@ bool IsStressTesting() {
 }
 
 static bool IsInRange(Vec<PageRange>& ranges, int pageNo) {
-    for (size_t i = 0; i < ranges.size(); i++) {
-        if (ranges.at(i).start <= pageNo && pageNo <= ranges.at(i).end) {
+    for (auto&& range : ranges) {
+        if (range.start <= pageNo && pageNo <= range.end) {
             return true;
         }
     }
     return false;
+}
+
+static bool IsFullRange(Vec<PageRange>& ranges) {
+    if (ranges.size() != 1) {
+        return false;
+    }
+    auto&& range = ranges[0];
+    bool isFull = range.start == 1 && range.end == INT_MAX;
+    return isFull;
 }
 
 static void BenchLoadRender(EngineBase* engine, int pagenum) {
@@ -500,7 +509,8 @@ of PDFs before a release to make sure we're crash proof. */
 struct StressTest {
     WindowInfo* win{nullptr};
     LARGE_INTEGER currPageRenderTime{0};
-    int currPage{0};
+    Vec<int> pagesToRender;
+    int currPageNo{0};
     int pageForSearchStart{0};
     int filesCount{0}; // number of files processed so far
     int timerId{0};
@@ -519,6 +529,15 @@ struct StressTest {
     StressTest(WindowInfo* win, bool exitWhenDone);
     ~StressTest();
 };
+
+template <typename T>
+T RemoveRandomElementFromVec(Vec<T>& v) {
+    auto n = v.isize();
+    CrashIf(n <= 0);
+    int idx = rand() % n;
+    int res = v.PopAt((size_t)idx);
+    return res;
+}
 
 StressTest::StressTest(WindowInfo* win, bool exitWhenDone) {
     this->win = win;
@@ -633,12 +652,41 @@ static bool OpenFile(StressTest* st, const WCHAR* fileName) {
         SetSidebarVisibility(st->win, st->win->tocVisible, gGlobalPrefs->showFavorites);
     }
 
-    st->currPage = st->pageRanges.at(0).start;
-    st->win->ctrl->GoToPage(st->currPage, false);
+    constexpr int nMaxPages = 32;
+    int nPages = st->win->ctrl->PageCount();
+    if (IsFullRange(st->pageRanges)) {
+        Vec<int> allPages;
+        for (int n = 1; n <= nPages; n++) {
+            allPages.Append(n);
+        }
+        while ((st->pagesToRender.size() < nMaxPages) && (allPages.size() > 0)) {
+            int nRandom = RemoveRandomElementFromVec(allPages);
+            st->pagesToRender.Append(nRandom);
+        }
+    } else {
+        for (int n = 1; n <= nPages; n++) {
+            if (IsInRange(st->pageRanges, n)) {
+                st->pagesToRender.Append(n);
+            }
+        }
+        for (auto&& range : st->pageRanges) {
+            for (int n = range.start; n <= range.end && n <= nPages; n++) {
+                st->pagesToRender.Append(n);
+            }
+        }
+        if (st->pagesToRender.size() == 0) {
+            return false;
+        }
+    }
+
+    int randomPageIdx = rand() % st->pagesToRender.isize();
+    st->pageForSearchStart = st->pagesToRender[randomPageIdx];
+
+    st->currPageNo = st->pagesToRender.PopAt(0);
+    st->win->ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
     ++st->filesCount;
 
-    st->pageForSearchStart = (rand() % st->win->ctrl->PageCount()) + 1;
     // search immediately in single page documents
     if (1 == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
@@ -675,15 +723,10 @@ static bool GoToNextFile(StressTest* st) {
 
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
-    AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", st->currPage, (int)pageRenderTime));
+    AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", st->currPageNo, (int)pageRenderTime));
     st->win->ShowNotification(s, NOS_WITH_TIMEOUT, NG_STRESS_TEST_BENCHMARK);
 
-    ++st->currPage;
-    while (!IsInRange(st->pageRanges, st->currPage) && st->currPage <= st->win->ctrl->PageCount()) {
-        st->currPage++;
-    }
-
-    if (st->currPage > st->win->ctrl->PageCount()) {
+    if (st->pagesToRender.size() == 0) {
         if (GoToNextFile(st)) {
             return true;
         }
@@ -691,7 +734,8 @@ static bool GoToNextPage(StressTest* st) {
         return false;
     }
 
-    st->win->ctrl->GoToPage(st->currPage, false);
+    st->currPageNo = st->pagesToRender.PopAt(0);
+    st->win->ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
 
     // start text search when we're in the middle of the document, so that
@@ -699,7 +743,7 @@ static bool GoToNextPage(StressTest* st) {
     // rendered
     // TODO: it would be nice to also randomize search starting page but the
     // current API doesn't make it easy
-    if (st->currPage == st->pageForSearchStart) {
+    if (st->currPageNo == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         win::SetText(st->win->hwndFindBox, L"!z_yt");
         FindTextOnThread(st->win, TextSearchDirection::Forward, true);
@@ -751,8 +795,8 @@ static void OnTimer(StressTest* st, int timerIdGot) {
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
     dm = st->win->AsFixed();
-    didRender = gRenderCache.Exists(dm, st->currPage, dm->GetRotation());
-    if (!didRender && dm->ShouldCacheRendering(st->currPage)) {
+    didRender = gRenderCache.Exists(dm, st->currPageNo, dm->GetRotation());
+    if (!didRender && dm->ShouldCacheRendering(st->currPageNo)) {
         double timeInMs = TimeSinceInMs(st->currPageRenderTime);
         if (timeInMs > 3.0 * 1000) {
             if (!GoToNextPage(st)) {
@@ -762,7 +806,7 @@ static void OnTimer(StressTest* st, int timerIdGot) {
     } else if (!GoToNextPage(st)) {
         return;
     }
-    MakeRandomSelection(st->win, st->currPage);
+    MakeRandomSelection(st->win, st->currPageNo);
 
 Next:
     TickTimer(st);
@@ -772,7 +816,7 @@ Next:
 static void GetLogInfo(StressTest* st, str::Str* s) {
     s->AppendFmt(", stress test rendered %d files in ", st->filesCount);
     FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
-    s->AppendFmt(", currPage: %d", st->currPage);
+    s->AppendFmt(", currPage: %d", st->currPageNo);
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory
