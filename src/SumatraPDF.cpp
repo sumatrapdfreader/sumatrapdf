@@ -860,7 +860,7 @@ static NO_INLINE void VerifyController(Controller* ctrl, const WCHAR* path) {
     auto ctrlFilePath = ctrl->FilePath();
     auto s1 = ctrlFilePath ? strconv::WstrToUtf8(ctrlFilePath).data() : str::Dup("<null>");
     auto s2 = path ? strconv::WstrToUtf8(path).data() : str::Dup("<null>");
-    logf("CreateControllerForFile: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
+    logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
     CrashIf(true);
     str::Free(s1);
     str::Free(s2);

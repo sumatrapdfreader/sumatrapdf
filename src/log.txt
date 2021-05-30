@@ -1,5 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-05-30 Sun
+
+always enable opening text files
+previously we would only open .txt files if advanced setting
+"open ebooks with mupdf engine" was true.
+
 2021-05-29 Sat
 
 Refactor StressTest: convert most method to functions.
