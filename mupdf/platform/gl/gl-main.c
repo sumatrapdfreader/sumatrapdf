@@ -57,7 +57,6 @@ fz_matrix draw_page_ctm, view_page_ctm, view_page_inv_ctm;
 fz_rect page_bounds, draw_page_bounds, view_page_bounds;
 fz_irect view_page_area;
 char filename[PATH_MAX];
-int errored = 0;
 
 enum
 {
@@ -714,14 +713,6 @@ void reload(void)
 		reload_document();
 }
 
-int trace_next_error(void)
-{
-	int old = errored;
-	if (errored < 127)
-		errored++;
-	return old;
-}
-
 void trace_action(const char *fmt, ...)
 {
 	va_list args;
@@ -841,13 +832,13 @@ void load_page(void)
 
 				s++;
 				trace_action("widget = page.getWidgets()[%d];\n", i);
-				trace_action("widgetstr = \"Signature %d on page %d\";\n",
+				trace_action("widgetstr = 'Signature %d on page %d';\n",
 					s, fz_page_number_from_location(ctx, doc, currentpage));
 
 				is_signed = pdf_widget_is_signed(ctx, w);
 				trace_action("tmp = widget.isSigned();\n");
-				trace_action("print(widgetstr, 'is signed:', tmp|0, 'expected:', %d);\n", is_signed);
-				trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", is_signed, trace_next_error());
+				trace_action("if (tmp != %d)\n", is_signed);
+				trace_action("  throw new RegressionError(widgetstr, 'is signed:', tmp|0, 'expected:', %d);\n", is_signed);
 
 				if (is_signed)
 				{
@@ -878,20 +869,20 @@ void load_page(void)
 					pdf_drop_verifier(ctx, verifier);
 
 					trace_action("tmp = widget.validateSignature();\n");
-					trace_action("print(widgetstr, 'valid until:', tmp, 'expected:', %d);\n", valid_until);
-					trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", valid_until, trace_next_error());
+					trace_action("if (tmp != %d)\n", valid_until);
+					trace_action("  throw new RegressionError(widgetstr, 'valid until:', tmp, 'expected:', %d);\n", valid_until);
 					trace_action("tmp = widget.isReadOnly();\n");
-					trace_action("print(widgetstr, 'is read-only:', tmp|0, 'expected:', %d);\n", is_readonly);
-					trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", is_readonly, trace_next_error());
+					trace_action("if (tmp != %d)\n", is_readonly);
+					trace_action("  throw new RegressionError(widgetstr, 'is read-only:', tmp, 'expected:', %d);\n", is_readonly);
 					trace_action("tmp = widget.checkCertificate();\n");
-					trace_action("print(widgetstr, 'certificate error:', tmp, 'expected:', '%s');\n", cert_error);
-					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", cert_error, trace_next_error());
+					trace_action("if (tmp != '%s')\n", cert_error);
+					trace_action("  throw new RegressionError(widgetstr, 'is read-only:', tmp, 'expected:', %d);\n", cert_error);
 					trace_action("tmp = widget.checkDigest();\n");
-					trace_action("print(widgetstr, 'digest error:', tmp, 'expected:', '%s');\n", digest_error);
-					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", digest_error, trace_next_error());
+					trace_action("if (tmp != %q)\n", digest_error);
+					trace_action("  throw new RegressionError(widgetstr, 'digest error:', tmp, 'expected:', %q);\n", digest_error);
 					trace_action("tmp = widget.getSignatory();\n");
-					trace_action("print(widgetstr, 'signatory:', tmp, 'expected:', '%s');\n", signatory);
-					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", signatory, trace_next_error());
+					trace_action("if (tmp != '%s')\n", signatory);
+					trace_action("  throw new RegressionError(widgetstr, 'signatory:', '[', tmp, ']', 'expected:', '[', %q, ']');\n", signatory);
 				}
 			}
 	}
@@ -1581,9 +1572,37 @@ static void load_document(void)
 	trace_action("doc = new Document(%q);\n", filename);
 
 	doc = fz_open_accelerated_document(ctx, filename, accel);
+	pdf = pdf_specifics(ctx, doc);
+
+	if (pdf && trace_file)
+	{
+		int needspass = pdf_needs_password(ctx, pdf);
+		trace_action(
+				"tmp = doc.needsPassword();\n"
+				"if (tmp != %s)\n"
+				"  throw new RegressionError('Document password needed:', tmp, 'expected:', %s);\n",
+				needspass ? "true" : "false",
+				needspass ? "true" : "false");
+	}
+
 	if (fz_needs_password(ctx, doc))
 	{
-		if (!fz_authenticate_password(ctx, doc, password))
+		int result = fz_authenticate_password(ctx, doc, password);
+
+		if (pdf && trace_file)
+		{
+			trace_action(
+					"tmp = doc.authenticatePassword(%q);\n"
+					"if (tmp != %s)\n"
+					"  throw new RegressionError('Open document with password %q result: %s', 'expected:', '%s');\n",
+					password,
+					result ? "true" : "false",
+					password,
+					!result ? "pass" : "fail",
+					result ? "pass" : "fail");
+		}
+
+		if (!result)
 		{
 			fz_drop_document(ctx, doc);
 			doc = NULL;
@@ -1603,7 +1622,6 @@ static void load_document(void)
 
 	load_history();
 
-	pdf = pdf_specifics(ctx, doc);
 	if (pdf)
 	{
 		if (enable_js)
@@ -1617,16 +1635,15 @@ static void load_document(void)
 			int vsns = pdf_count_versions(ctx, pdf);
 			trace_action(
 				"tmp = doc.countVersions();\n"
-				"if (errored == 0 && tmp != %d) {\n"
-				"  print(\"Mismatch in number of versions of document. I expected %d and got \" + tmp + \"\\n\");\n"
-				"  errored=%d;\n"
-				"}\n", vsns, vsns, trace_next_error());
+				"if (tmp != %d)\n"
+				"  throw new RegressionError('Document versions:', tmp, 'expected:', %d);\n",
+				vsns, vsns);
 			if (vsns > 1)
 			{
 				int valid = pdf_validate_change_history(ctx, pdf);
 				trace_action("tmp = doc.validateChangeHistory();\n");
-				trace_action("print('History validation:', tmp, 'expected:', %d);\n", valid);
-				trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", valid, trace_next_error());
+				trace_action("if (tmp != %d)\n", valid);
+				trace_action("  throw new RegressionError('History validation:', tmp, 'expected:', %d);\n", valid);
 			}
 		}
 		if (anchor)
@@ -1949,19 +1966,18 @@ static void do_app(void)
 			}
 			search_hit_page = fz_make_location(-1, -1);
 			break;
-
 		default:
-			if (ui.key >= '0' && ui.key <= '9')
-			{
-				number = number * 10 + ui.key - '0';
-			}
-			else
+			if (ui.key < '0' || ui.key > '9')
 			{
 				number = 0;
-				return; // unknown key event
+				return; /* unrecognized key, pass it through */
 			}
-			break;
 		}
+
+		if (ui.key >= '0' && ui.key <= '9')
+			number = number * 10 + ui.key - '0';
+		else
+			number = 0;
 
 		currentpage = fz_clamp_location(ctx, doc, currentpage);
 		while (currentrotate < 0) currentrotate += 360;
@@ -2470,7 +2486,7 @@ static void cleanup(void)
 		fz_debug_store(ctx, fz_stdout(ctx));
 #endif
 
-	trace_action("quit(errored);\n");
+	trace_action("quit(0);\n");
 	fz_drop_output(ctx, trace_file);
 	fz_drop_stext_page(ctx, page_text);
 	fz_drop_separations(ctx, seps);
@@ -2552,8 +2568,12 @@ int main(int argc, char **argv)
 			trace_file = fz_stdout(ctx);
 		else
 			trace_file = fz_new_output_with_path(ctx, trace_file_name, 0);
-		trace_action("var doc, page, annot, widget, widgetstr, hits, tmp, errored = %d;\n", errored);
-		errored = 2;
+		trace_action("var doc, page, annot, widget, widgetstr, hits, tmp;\n");
+		trace_action("function RegressionError() {\n");
+		trace_action("  var err = new Error(Array.prototype.join.call(arguments, ' '));\n");
+		trace_action("	err.name = 'RegressionError';\n");
+		trace_action("	return err;\n");
+		trace_action("}\n");
 	}
 
 	if (layout_css)

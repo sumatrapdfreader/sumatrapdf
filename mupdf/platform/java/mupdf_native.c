@@ -69,6 +69,7 @@ static jclass cls_Buffer;
 static jclass cls_ColorSpace;
 static jclass cls_Context_Version;
 static jclass cls_Cookie;
+static jclass cls_DefaultAppearance;
 static jclass cls_Device;
 static jclass cls_DisplayList;
 static jclass cls_Document;
@@ -132,6 +133,9 @@ static jfieldID fid_Context_Version_minor;
 static jfieldID fid_Context_Version_patch;
 static jfieldID fid_Context_Version_version;
 static jfieldID fid_Cookie_pointer;
+static jfieldID fid_DefaultAppearance_color;
+static jfieldID fid_DefaultAppearance_font;
+static jfieldID fid_DefaultAppearance_size;
 static jfieldID fid_Device_pointer;
 static jfieldID fid_DisplayList_pointer;
 static jfieldID fid_DocumentWriter_pointer;
@@ -200,6 +204,7 @@ static jfieldID fid_PKCS7Verifier_pointer;
 static jmethodID mid_ColorSpace_fromPointer;
 static jmethodID mid_ColorSpace_init;
 static jmethodID mid_Context_Version_init;
+static jmethodID mid_DefaultAppearance_init;
 static jmethodID mid_Device_beginGroup;
 static jmethodID mid_Device_beginLayer;
 static jmethodID mid_Device_beginMask;
@@ -687,6 +692,12 @@ static int find_fids(JNIEnv *env)
 	cls_Cookie = get_class(&err, env, PKG"Cookie");
 	fid_Cookie_pointer = get_field(&err, env, "pointer", "J");
 
+	cls_DefaultAppearance = get_class(&err, env, PKG"DefaultAppearance");
+	fid_DefaultAppearance_color = get_field(&err, env, "color", "[F");
+	fid_DefaultAppearance_font = get_field(&err, env, "font", "Ljava/lang/String;");
+	fid_DefaultAppearance_size = get_field(&err, env, "size", "F");
+	mid_DefaultAppearance_init = get_method(&err, env, "<init>", "()V");
+
 	cls_Device = get_class(&err, env, PKG"Device");
 	fid_Device_pointer = get_field(&err, env, "pointer", "J");
 	mid_Device_init = get_method(&err, env, "<init>", "(J)V");
@@ -984,6 +995,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);
 	(*env)->DeleteGlobalRef(env, cls_Context_Version);
 	(*env)->DeleteGlobalRef(env, cls_Cookie);
+	(*env)->DeleteGlobalRef(env, cls_DefaultAppearance);
 	(*env)->DeleteGlobalRef(env, cls_Device);
 	(*env)->DeleteGlobalRef(env, cls_DisplayList);
 	(*env)->DeleteGlobalRef(env, cls_Document);

@@ -717,14 +717,14 @@ pdf_parse_stm_obj(fz_context *ctx, pdf_document *doc, fz_stream *file, pdf_lexbu
 }
 
 pdf_obj *
-pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc,
-	fz_stream *file, pdf_lexbuf *buf,
+pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *file,
 	int *onum, int *ogen, int64_t *ostmofs, int *try_repair)
 {
 	pdf_obj *obj = NULL;
 	int num = 0, gen = 0;
 	int64_t stm_ofs;
 	pdf_token tok;
+	pdf_lexbuf *buf = &doc->lexbuf.base;
 	int64_t a, b;
 	int read_next_token = 1;
 

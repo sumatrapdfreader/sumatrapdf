@@ -1071,7 +1071,7 @@ pdf_should_print_annot(fz_context *ctx, pdf_annot *annot)
 }
 
 void
-pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_cookie *cookie)
+pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_annot *annot, fz_cookie *cookie)
 {
 	int flags = pdf_dict_get_int(ctx, annot->obj, PDF_NAME(F));
 
@@ -1098,7 +1098,7 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_p
 	/* TODO: NoZoom and NoRotate */
 
 	/* XXX what resources, if any, to use for this check? */
-	if (pdf_is_ocg_hidden(ctx, doc, NULL, proc->usage, pdf_dict_get(ctx, annot->obj, PDF_NAME(OC))))
+	if (pdf_is_ocg_hidden(ctx, annot->page->doc, NULL, proc->usage, pdf_dict_get(ctx, annot->obj, PDF_NAME(OC))))
 		return;
 
 	if (proc->op_q && proc->op_cm && proc->op_Do_form && proc->op_Q)
@@ -1115,7 +1115,7 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_p
 			matrix.a, matrix.b,
 			matrix.c, matrix.d,
 			matrix.e, matrix.f);
-		proc->op_Do_form(ctx, proc, NULL, ap, pdf_page_resources(ctx, page));
+		proc->op_Do_form(ctx, proc, NULL, ap, pdf_page_resources(ctx, annot->page));
 		proc->op_Q(ctx, proc);
 	}
 }

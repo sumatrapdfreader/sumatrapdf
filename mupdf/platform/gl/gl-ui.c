@@ -1002,6 +1002,16 @@ void ui_tree_begin(struct list *list, int count, int req_w, int req_h, int is_tr
 	if (ui.hot == list)
 		list->scroll_y -= ui.scroll_y * ui.lineheight * 3;
 
+	/* keyboard keys */
+	if (ui.hot == list && ui.key == KEY_HOME)
+		list->scroll_y = 0;
+	if (ui.hot == list && ui.key == KEY_END)
+		list->scroll_y = max_scroll_y;
+	if (ui.hot == list && ui.key == KEY_PAGE_UP)
+		list->scroll_y -= ((area.y1 - area.y0) / ui.lineheight) * ui.lineheight;
+	if (ui.hot == list && ui.key == KEY_PAGE_DOWN)
+		list->scroll_y += ((area.y1 - area.y0) / ui.lineheight) * ui.lineheight;
+
 	/* clamp scrolling to client area */
 	if (list->scroll_y >= max_scroll_y)
 		list->scroll_y = max_scroll_y;

@@ -219,9 +219,20 @@ public class PDFAnnotation
 	public native void eventFocus();
 	public native void eventBlur();
 
+	public native void updateAppearance();
 	public native boolean update();
 
 	public native PDFObject getObject();
 
 	public native int getLanguage();
+	public native void setLanguage(int lang);
+
+	public native int getQuadding();
+	public native void setQuadding(int quadding);
+
+	public native Point[] getLine();
+	public native void setLine(Point a, Point b);
+
+	public native DefaultAppearance getDefaultAppearance();
+	public native void setDefaultAppearance(String font, float size, float[] color);
 }

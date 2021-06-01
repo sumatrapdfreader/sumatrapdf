@@ -235,9 +235,8 @@ fz_link *pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const ch
 	create a new annotation of the specified type on the
 	specified page. Populate it with sensible defaults per the type.
 
-	The page takes a reference, and an additional reference is
-	returned to the caller, hence the caller should drop the
-	reference once it is done.
+	The returned pdf_annot structure is owned by the page and does
+	not need to be freed.
 */
 pdf_annot *pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type);
 
@@ -517,12 +516,16 @@ void pdf_set_annot_modification_date(fz_context *ctx, pdf_annot *annot, int64_t 
 int64_t pdf_annot_creation_date(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_creation_date(fz_context *ctx, pdf_annot *annot, int64_t time);
 
-void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, float color[3]);
-void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, const float color[3]);
-void pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, float color[3]);
-void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, const float color[3]);
+void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4]);
+void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float color[4]);
+void pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, int *n, float color[4]);
+void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float color[4]);
 
+void pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot);
+int pdf_annot_needs_resynthesis(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_resynthesised(fz_context *ctx, pdf_annot *annot);
 void pdf_dirty_annot(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_has_changed(fz_context *ctx, pdf_annot *annot);
 
 int pdf_annot_field_flags(fz_context *ctx, pdf_annot *annot);
 const char *pdf_annot_field_value(fz_context *ctx, pdf_annot *annot);
@@ -627,8 +630,8 @@ struct pdf_annot
 	int is_hot;
 	int is_active;
 
-	int needs_new_ap;
-	int has_new_ap;
+	int needs_new_ap; /* If set, then a resynthesis of this annotation has been requested. */
+	int has_new_ap; /* If set, then the appearance stream has changed since last queried. */
 	int ignore_trigger_events;
 
 	pdf_annot *next;

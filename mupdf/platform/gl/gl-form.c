@@ -9,12 +9,6 @@
 
 #include "mupdf/helpers/pkcs7-openssl.h"
 
-static void trace_field_value(pdf_annot *annot, const char *set_value)
-{
-	const char *get_value = pdf_annot_field_value(ctx, annot);
-	trace_action("print('Set field %d:', repr(%q), repr(%q));\n", pdf_to_num(ctx, annot->obj), set_value, get_value);
-}
-
 static pdf_widget *sig_widget;
 static char *sig_distinguished_name = NULL;
 static pdf_signature_error sig_cert_error;
@@ -24,6 +18,23 @@ static int sig_readonly;
 
 static char cert_filename[PATH_MAX];
 static struct input cert_password;
+
+static int sign_flags = PDF_SIGNATURE_DEFAULT_APPEARANCE;
+static struct input sign_reason_input;
+static int sign_reason_input_initialised = 0;
+static struct input sign_location_input;
+static int sign_location_input_initialised = 0;
+static char sign_image_filename[PATH_MAX];
+static fz_image *sign_image = NULL;
+
+static struct texture preview_tex = { 0 };
+static int preview_needs_update = 0;
+
+static void trace_field_value(pdf_annot *annot, const char *set_value)
+{
+	const char *get_value = pdf_annot_field_value(ctx, annot);
+	trace_action("print('Set field %d:', repr(%q), repr(%q));\n", pdf_to_num(ctx, annot->obj), set_value, get_value);
+}
 
 int do_sign(void)
 {
@@ -36,12 +47,14 @@ int do_sign(void)
 	{
 		trace_action("widget.sign(new PDFPKCS7Signer(%q, %q));\n", cert_filename, cert_password.text);
 		signer = pkcs7_openssl_read_pfx(ctx, cert_filename, cert_password.text);
-		pdf_sign_signature(ctx, sig_widget, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, NULL, NULL, NULL);
+		pdf_sign_signature(ctx, sig_widget, signer, sign_flags, sign_image, sign_reason_input.text, sign_location_input.text);
 		ui_show_warning_dialog("Signed document successfully.");
 	}
 	fz_always(ctx)
 	{
 		pdf_drop_signer(ctx, signer);
+		fz_drop_image(ctx, sign_image);
+		sign_image = NULL;
 	}
 	fz_catch(ctx)
 	{
@@ -61,6 +74,215 @@ static void do_clear_signature(void)
 	}
 	fz_catch(ctx)
 		ui_show_warning_dialog("%s", fz_caught_message(ctx));
+}
+
+static int image_file_filter(const char *fn)
+{
+	return !!strstr(fn, ".jpg") || !!strstr(fn, ".jpeg") || !!strstr(fn, ".png");
+}
+
+static void signature_appearance_dialog(void);
+
+static void signature_select_image_dialog(void)
+{
+	if (ui_open_file(sign_image_filename, "Select an image for use in signature:"))
+	{
+		if (sign_image_filename[0] != 0)
+		{
+			fz_try(ctx)
+			{
+				sign_image = fz_new_image_from_file(ctx, sign_image_filename);
+				sign_flags &= ~PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+				preview_needs_update = 1;
+			}
+			fz_catch(ctx)
+			{
+				ui_show_warning_dialog("%s", fz_caught_message(ctx));
+				ui.dialog = signature_select_image_dialog;
+			}
+		}
+
+		ui.dialog = signature_appearance_dialog;
+	}
+}
+
+
+static void signature_appearance_init(void)
+{
+	if (!sign_reason_input_initialised)
+	{
+		ui_input_init(&sign_reason_input, "");
+		sign_reason_input_initialised = 1;
+	}
+	if (!sign_location_input_initialised)
+	{
+		ui_input_init(&sign_location_input, "");
+		sign_location_input_initialised = 1;
+	}
+	preview_needs_update = 1;
+}
+
+static void signature_appearance_dialog(void)
+{
+	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*16);
+	{
+		int orig_flags = sign_flags;
+		int labels = sign_flags & PDF_SIGNATURE_SHOW_LABELS;
+		int graphic_name = sign_flags & PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+		int graphic_image = sign_image != NULL;
+		int text_name = sign_flags & PDF_SIGNATURE_SHOW_TEXT_NAME;
+		int dn = sign_flags & PDF_SIGNATURE_SHOW_DN;
+		int date = sign_flags & PDF_SIGNATURE_SHOW_DATE;
+		int logo = sign_flags & PDF_SIGNATURE_SHOW_LOGO;
+		fz_irect preview_rect;
+
+		ui_layout(T, X, NW, ui.padsize*2, ui.padsize);
+
+		{
+			ui_panel_begin(0, ui.gridsize * 6, 0, 0, 0);
+			ui_layout(T, Y, NW, 0, 0);
+
+			ui_label("Preview:");
+			ui_spacer();
+
+			ui_layout(ALL, BOTH, CENTER, 0, 0);
+			preview_rect = ui_pack(0, 0);
+
+			ui_panel_end();
+		}
+
+		ui_spacer();
+
+		{
+			ui_label("Graphic:");
+			ui_checkbox("Name", &graphic_name);
+
+			ui_panel_begin(ui.gridsize * 10, ui.gridsize, 0, 0, 0);
+			ui_layout(L, X, NW, 0, 0);
+			ui_checkbox("Image", &graphic_image);
+
+			ui_spacer();
+
+			if (ui_button("Select image"))
+			{
+				fz_drop_image(ctx, sign_image);
+				sign_image = NULL;
+				ui_init_open_file(".", image_file_filter);
+				ui.dialog = signature_select_image_dialog;
+			}
+			ui_panel_end();
+
+			if (graphic_name && graphic_image)
+			{
+				fz_drop_image(ctx, sign_image);
+				sign_image = NULL;
+				graphic_image = 0;
+			}
+		}
+
+		ui_spacer();
+
+		{
+			ui_label("Text:");
+
+			ui_panel_begin(0, ui.gridsize * 5, 0, 0, 0);
+			{
+				ui_layout(L, Y, NW, 0, 0);
+
+				ui_panel_begin(ui.gridsize * 7, ui.gridsize * 5, 0, 0, 0);
+				{
+					ui_layout(T, Y, NW, 0, 0);
+					ui_checkbox("Labels", &labels);
+					ui_checkbox("Common name", &text_name);
+					ui_checkbox("Distinguished name", &dn);
+					ui_checkbox("Date", &date);
+					ui_checkbox("Logo", &logo);
+				}
+				ui_panel_end();
+
+				ui_panel_begin(ui.gridsize * 5, ui.gridsize * 5, 0, 0, 0);
+				{
+					ui_layout(T, Y, NW, 0, 0);
+
+					ui_panel_begin(ui.gridsize * 5, ui.gridsize, 0, 0, 0);
+					ui_layout(L, X, NW, 0, 0);
+					ui_label("Reason:");
+					ui_spacer();
+					if (ui_input(&sign_reason_input, ui.gridsize * 5, 1))
+						preview_needs_update = 1;
+					ui_panel_end();
+
+					ui_panel_begin(ui.gridsize * 10, ui.gridsize, 0, 0, 0);
+					ui_layout(L, X, NW, 0, 0);
+					ui_label("Location:");
+					ui_spacer();
+					if (ui_input(&sign_location_input, ui.gridsize * 5, 1))
+						preview_needs_update = 1;
+					ui_panel_end();
+				}
+				ui_panel_end();
+			}
+			ui_panel_end();
+
+			if (!text_name && !dn && !date && !strlen(sign_reason_input.text) && !strlen(sign_location_input.text))
+			{
+				labels = 1;
+				text_name = 1;
+			}
+		}
+
+		sign_flags = 0;
+		sign_flags |= labels ? PDF_SIGNATURE_SHOW_LABELS : 0;
+		sign_flags |= dn ? PDF_SIGNATURE_SHOW_DN : 0;
+		sign_flags |= date ? PDF_SIGNATURE_SHOW_DATE : 0;
+		sign_flags |= text_name ? PDF_SIGNATURE_SHOW_TEXT_NAME : 0;
+		sign_flags |= graphic_name ? PDF_SIGNATURE_SHOW_GRAPHIC_NAME : 0;
+		sign_flags |= logo ? PDF_SIGNATURE_SHOW_LOGO : 0;
+
+		if (orig_flags != sign_flags)
+			preview_needs_update = 1;
+
+		if (preview_needs_update)
+		{
+			fz_pixmap *pix;
+			pdf_pkcs7_signer *signer;
+			int w = preview_rect.x1 - preview_rect.x0;
+			int h = preview_rect.y1 - preview_rect.y0;
+
+			signer = pkcs7_openssl_read_pfx(ctx, cert_filename, cert_password.text);
+			pix = pdf_preview_signature_as_pixmap(ctx,
+				w, h, FZ_LANG_UNSET, signer, sign_flags, sign_image,
+				strlen(sign_reason_input.text) ? sign_reason_input.text : NULL,
+				strlen(sign_location_input.text) ? sign_location_input.text : NULL);
+			pdf_drop_signer(ctx, signer);
+			ui_texture_from_pixmap(&preview_tex, pix);
+			fz_drop_pixmap(ctx, pix);
+
+			preview_needs_update = 0;
+		}
+
+		ui_draw_image(&preview_tex, preview_rect.x0, preview_rect.y0);
+
+		ui_layout(B, X, NW, ui.padsize, ui.padsize);
+		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
+		{
+			ui_layout(R, NONE, S, 0, 0);
+			if (ui_button("Cancel"))
+			{
+				fz_drop_image(ctx, sign_image);
+				sign_image = NULL;
+				ui.dialog = NULL;
+			}
+			ui_spacer();
+			if (ui_button("Okay"))
+			{
+				ui.dialog = NULL;
+				do_save_signed_pdf_file();
+			}
+		}
+		ui_panel_end();
+	}
+	ui_dialog_end();
 }
 
 static int is_valid_certificate_and_password(void)
@@ -94,8 +316,8 @@ static void cert_password_dialog(void)
 			if (ui_button("Okay") || is == UI_INPUT_ACCEPT)
 			{
 				if (is_valid_certificate_and_password()) {
-					ui.dialog = NULL;
-					do_save_signed_pdf_file();
+					signature_appearance_init();
+					ui.dialog = signature_appearance_dialog;
 				} else {
 					ui_show_warning_dialog("%s", fz_caught_message(ctx));
 				}
@@ -406,7 +628,7 @@ void do_widget_canvas(fz_irect canvas_area)
 				trace_action("page.getWidgets()[%d].eventExit();\n", idx);
 				pdf_annot_event_exit(ctx, widget);
 			}
-			widget->is_hot = 0;
+			pdf_annot_set_hot(ctx, widget, 0);
 		}
 
 		/* Set is_hot and is_active to select current appearance */

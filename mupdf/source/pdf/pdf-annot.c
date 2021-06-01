@@ -33,17 +33,20 @@ pdf_drop_annots(fz_context *ctx, pdf_annot *annot)
 pdf_obj *
 pdf_annot_ap(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_obj *ap;
+	int flags = pdf_dict_get_int(ctx, annot->obj, PDF_NAME(F));
+	int readonly = flags & PDF_ANNOT_IS_READ_ONLY;
 	const char *base = "AP/N";
+	pdf_obj *ap;
 
 	/* If we're a active button, we use AP/D. In all other cases
 	 * we use AP/N. */
 
-	if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Widget)) &&
-		pdf_name_eq(ctx, pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(FT)), PDF_NAME(Btn)) &&
-		(pdf_field_flags(ctx, annot->obj) & PDF_BTN_FIELD_IS_PUSHBUTTON) &&
-		annot->is_hot && annot->is_active)
+	if (!readonly && annot->is_hot && annot->is_active)
 		base = "AP/D";
+	else if (!readonly && annot->is_hot)
+		base = "AP/R";
+	else
+		base = "AP/N";
 
 	/* Either AP/N or AP/D can either be streams themselves, or they
 	 * can be a dictionary of streams. */
@@ -67,13 +70,26 @@ int pdf_annot_active(fz_context *ctx, pdf_annot *annot)
 static void
 check_change(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_obj *subtype = pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype));
 	pdf_obj *ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
+	int flags = pdf_dict_get_int(ctx, annot->obj, PDF_NAME(F));
+	int readonly = flags & PDF_ANNOT_IS_READ_ONLY;
 
-	if (subtype == PDF_NAME(Widget))
+	if (!readonly && annot->is_hot && annot->is_active)
 	{
 		pdf_obj *ap_d = pdf_dict_get(ctx, ap, PDF_NAME(D));
 		if (ap_d)
+			pdf_set_annot_has_changed(ctx, annot);
+	}
+	else if (!readonly && annot->is_hot)
+	{
+		pdf_obj *ap_r = pdf_dict_get(ctx, ap, PDF_NAME(R));
+		if (ap_r)
+			annot->has_new_ap = 1;
+	}
+	else
+	{
+		pdf_obj *ap_n = pdf_dict_get(ctx, ap, PDF_NAME(N));
+		if (ap_n)
 			annot->has_new_ap = 1;
 	}
 }
@@ -85,9 +101,9 @@ void pdf_annot_set_active(fz_context *ctx, pdf_annot *annot, int active)
 	if (!annot)
 		return;
 
-	old = (annot->is_active && annot->is_hot);
+	old = annot->is_active;
 	annot->is_active = !!active;
-	if (old != (annot->is_active && annot->is_hot))
+	if (old != annot->is_active)
 		check_change(ctx, annot);
 }
 
@@ -103,9 +119,9 @@ void pdf_annot_set_hot(fz_context *ctx, pdf_annot *annot, int hot)
 	if (!annot)
 		return;
 
-	old = (annot->is_active && annot->is_hot);
+	old = annot->is_hot;
 	annot->is_hot = !!hot;
-	if (old != (annot->is_active && annot->is_hot))
+	if (old != annot->is_hot)
 		check_change(ctx, annot);
 }
 
@@ -174,10 +190,7 @@ pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots)
 			annot = pdf_new_annot(ctx, page, obj);
 			pdf_begin_implicit_operation(ctx, page->doc);
 			fz_try(ctx)
-			{
 				pdf_update_annot(ctx, annot);
-				annot->has_new_ap = 0;
-			}
 			fz_always(ctx)
 				pdf_end_operation(ctx, page->doc);
 			fz_catch(ctx)
@@ -242,9 +255,51 @@ pdf_bound_annot(fz_context *ctx, pdf_annot *annot)
 }
 
 void
+pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot)
+{
+	if (annot == NULL)
+		return;
+
+	/* Some appearances can NEVER be resynthesised. Spot those here. */
+	if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Stamp)))
+	{
+		/* We can't resynthesise a stamp if we don't have the name! */
+		/* In particular, this is the case we hit when we are asked to
+		 * resynthesise an e-sig. Just exit and do nothing. */
+		if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Name)) == NULL)
+			return;
+	}
+
+	annot->needs_new_ap = 1;
+}
+
+int
+pdf_annot_needs_resynthesis(fz_context *ctx, pdf_annot *annot)
+{
+	return annot ? annot->needs_new_ap : 0;
+}
+
+void pdf_set_annot_resynthesised(fz_context *ctx, pdf_annot *annot)
+{
+	if (annot == NULL)
+		return;
+
+	annot->needs_new_ap = 0;
+	pdf_set_annot_has_changed(ctx, annot);
+}
+
+void pdf_set_annot_has_changed(fz_context *ctx, pdf_annot *annot)
+{
+	if (annot == NULL)
+		return;
+
+	annot->has_new_ap = 1;
+}
+
+void
 pdf_dirty_annot(fz_context *ctx, pdf_annot *annot)
 {
-	annot->needs_new_ap = 1;
+	pdf_annot_request_resynthesis(ctx, annot);
 	if (annot->page && annot->page->doc)
 		annot->page->doc->dirty = 1;
 }
@@ -627,7 +682,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 
 				pdf_set_annot_rect(ctx, annot, text_rect);
 				pdf_set_annot_border(ctx, annot, 0);
-				pdf_set_annot_default_appearance(ctx, annot, "Helv", 12, black);
+				pdf_set_annot_default_appearance(ctx, annot, "Helv", 12, nelem(black), black);
 			}
 			break;
 
@@ -2491,15 +2546,16 @@ pdf_set_annot_author(fz_context *ctx, pdf_annot *annot, const char *author)
 }
 
 void
-pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, float color[3])
+pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4])
 {
 	char buf[100], *p = buf, *tok, *end;
-	float stack[3] = { 0, 0, 0 };
+	float stack[4] = { 0, 0, 0, 0 };
 	int top = 0;
 
 	*font = "Helv";
 	*size = 12;
-	color[0] = color[1] = color[2] = 0;
+	*n = 1;
+	color[0] = color[1] = color[2] = color[3] = 0;
 
 	fz_strlcpy(buf, da, sizeof buf);
 	while ((tok = fz_strsep(&p, " \n\r\t")) != NULL)
@@ -2521,20 +2577,31 @@ pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font,
 		}
 		else if (!strcmp(tok, "g"))
 		{
-			color[0] = color[1] = color[2] = stack[0];
+			*n = 1;
+			color[0] = stack[0];
 			top = 0;
 		}
 		else if (!strcmp(tok, "rg"))
 		{
+			*n = 3;
 			color[0] = stack[0];
 			color[1] = stack[1];
 			color[2] = stack[2];
 			top=0;
 		}
+		else if (!strcmp(tok, "k"))
+		{
+			*n = 4;
+			color[0] = stack[0];
+			color[1] = stack[1];
+			color[2] = stack[2];
+			color[3] = stack[3];
+			top=0;
+		}
 		else
 		{
 			float v = fz_strtof(tok, &end);
-			if (top < 3)
+			if (top < 4)
 				stack[top] = v;
 			if (*end == 0)
 				++top;
@@ -2545,16 +2612,20 @@ pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font,
 }
 
 void
-pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, const float color[3])
+pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float color[4])
 {
-	if (color[0] > 0 || color[1] > 0 || color[2] > 0)
+	if (n == 4 && (color[0] > 0 || color[1] > 0 || color[2] > 0 || color[3] > 0))
+		fz_snprintf(buf, nbuf, "/%s %g Tf %g %g %g %g k", font, size, color[0], color[1], color[2], color[3]);
+	else if (n == 3 && (color[0] > 0 || color[1] > 0 || color[2] > 0))
 		fz_snprintf(buf, nbuf, "/%s %g Tf %g %g %g rg", font, size, color[0], color[1], color[2]);
+	else if (n == 1 && color[0] > 0)
+		fz_snprintf(buf, nbuf, "/%s %g Tf %g g", font, size, color[0]);
 	else
 		fz_snprintf(buf, nbuf, "/%s %g Tf", font, size);
 }
 
 void
-pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, float color[3])
+pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, int *n, float color[4])
 {
 	pdf_obj *da = pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(DA));
 	if (!da)
@@ -2562,11 +2633,11 @@ pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **fon
 		pdf_obj *trailer = pdf_trailer(ctx, annot->page->doc);
 		da = pdf_dict_getl(ctx, trailer, PDF_NAME(Root), PDF_NAME(AcroForm), PDF_NAME(DA), NULL);
 	}
-	pdf_parse_default_appearance(ctx, pdf_to_str_buf(ctx, da), font, size, color);
+	pdf_parse_default_appearance(ctx, pdf_to_str_buf(ctx, da), font, size, n, color);
 }
 
 void
-pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, const float color[3])
+pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float color[4])
 {
 	char buf[100];
 
@@ -2574,7 +2645,7 @@ pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *
 
 	fz_try(ctx)
 	{
-		pdf_print_default_appearance(ctx, buf, sizeof buf, font, size, color);
+		pdf_print_default_appearance(ctx, buf, sizeof buf, font, size, n, color);
 
 		pdf_dict_put_string(ctx, annot->obj, PDF_NAME(DA), buf, strlen(buf));
 

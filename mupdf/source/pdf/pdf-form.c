@@ -506,7 +506,7 @@ static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
-	annot->has_new_ap = 1;
+	pdf_set_annot_has_changed(ctx, annot);
 }
 
 int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc)
@@ -883,18 +883,19 @@ void pdf_field_set_text_color(fz_context *ctx, pdf_obj *field, pdf_obj *col)
 {
 	char buf[100];
 	const char *font;
-	float size, color[3], black;
+	float size, color[4];
 	const char *da = pdf_to_str_buf(ctx, pdf_dict_get_inheritable(ctx, field, PDF_NAME(DA)));
+	int n;
 
-	pdf_parse_default_appearance(ctx, da, &font, &size, color);
+	pdf_parse_default_appearance(ctx, da, &font, &size, &n, color);
 
 	switch (pdf_array_len(ctx, col))
 	{
 	default:
-		color[0] = color[1] = color[2] = 0;
+		color[0] = color[1] = color[2] = color[3] = 0;
 		break;
 	case 1:
-		color[0] = color[1] = color[2] = pdf_array_get_real(ctx, col, 0);
+		color[0] = pdf_array_get_real(ctx, col, 0);
 		break;
 	case 3:
 		color[0] = pdf_array_get_real(ctx, col, 0);
@@ -902,14 +903,14 @@ void pdf_field_set_text_color(fz_context *ctx, pdf_obj *field, pdf_obj *col)
 		color[2] = pdf_array_get_real(ctx, col, 2);
 		break;
 	case 4:
-		black = pdf_array_get_real(ctx, col, 3);
-		color[0] = 1 - fz_min(1, pdf_array_get_real(ctx, col, 0) + black);
-		color[1] = 1 - fz_min(1, pdf_array_get_real(ctx, col, 1) + black);
-		color[2] = 1 - fz_min(1, pdf_array_get_real(ctx, col, 2) + black);
+		color[0] = pdf_array_get_real(ctx, col, 0);
+		color[1] = pdf_array_get_real(ctx, col, 1);
+		color[2] = pdf_array_get_real(ctx, col, 2);
+		color[3] = pdf_array_get_real(ctx, col, 3);
 		break;
 	}
 
-	pdf_print_default_appearance(ctx, buf, sizeof buf, font, size, color);
+	pdf_print_default_appearance(ctx, buf, sizeof buf, font, size, n, color);
 	pdf_dict_put_string(ctx, field, PDF_NAME(DA), buf, strlen(buf));
 	pdf_field_mark_dirty(ctx, field);
 }

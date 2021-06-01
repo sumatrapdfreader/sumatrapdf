@@ -386,61 +386,67 @@ bool Annotation::SetInteriorColor(COLORREF c) {
 std::string_view Annotation::DefaultAppearanceTextFont() {
     ScopedCritSec cs(pdf->ctxAccess);
     const char* fontName;
-    float sizeF;
+    float sizeF{0.0};
+    int n{0};
     float textColor[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, &n, textColor);
     return fontName;
 }
 
 void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
     ScopedCritSec cs(pdf->ctxAccess);
-    const char* fontName;
-    float sizeF;
+    const char* fontName{nullptr};
+    float sizeF{0.0};
+    int n{0};
     float textColor[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
-    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, sv.data(), sizeF, textColor);
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, &n, textColor);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, sv.data(), sizeF, n, textColor);
     pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }
 
 int Annotation::DefaultAppearanceTextSize() {
     ScopedCritSec cs(pdf->ctxAccess);
-    const char* fontName;
-    float sizeF;
+    const char* fontName{nullptr};
+    float sizeF{0.0};
+    int n{0};
     float textColor[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, &n, textColor);
     return (int)sizeF;
 }
 
 void Annotation::SetDefaultAppearanceTextSize(int textSize) {
     ScopedCritSec cs(pdf->ctxAccess);
-    const char* fontName;
-    float sizeF;
+    const char* fontName{nullptr};
+    float sizeF{0.0};
+    int n{0};
     float textColor[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
-    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, fontName, (float)textSize, textColor);
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, &n, textColor);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, fontName, (float)textSize, n, textColor);
     pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }
 
 COLORREF Annotation::DefaultAppearanceTextColor() {
     ScopedCritSec cs(pdf->ctxAccess);
-    const char* fontName;
-    float sizeF;
+    const char* fontName{nullptr};
+    float sizeF{0.0};
+    int n{0};
     float textColor[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, &n, textColor);
     COLORREF res = FromPdfColor(pdf->ctx, 3, textColor);
     return res;
 }
 
 void Annotation::SetDefaultAppearanceTextColor(COLORREF col) {
     ScopedCritSec cs(pdf->ctxAccess);
-    const char* text_font;
-    float sizeF;
+    const char* fontName{nullptr};
+    float sizeF{0.0};
+    int n{0};
     float textColor[4];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &sizeF, textColor);
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, &n, textColor);
     ToPdfRgba(col, textColor);
-    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, text_font, sizeF, textColor);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, fontName, sizeF, n, textColor);
     pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }

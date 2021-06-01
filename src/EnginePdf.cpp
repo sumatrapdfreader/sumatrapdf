@@ -1401,7 +1401,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-        pdf_run_page_with_usage(ctx, doc, pdfpage, dev, ctm, usage, fzcookie);
+        pdf_run_page_with_usage(ctx, pdfpage, dev, ctm, usage, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
         fz_close_device(ctx, dev);
     }
