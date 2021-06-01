@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-05-31 Mon
+
+randomize viewing state during stress test
+
 2021-05-30 Sun
 
 always enable opening text files

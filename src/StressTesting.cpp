@@ -702,6 +702,58 @@ static bool OpenFile(StressTest* st, const WCHAR* fileName) {
     return true;
 }
 
+static void RandomizeViewingState(StressTest* st) {
+    // every 10 pages change the viewing sate (zoom etc.)
+    int every10 = RAND_MAX / 10;
+    if (rand() > every10) {
+        return;
+    }
+    auto ctrl = st->win->ctrl;
+
+    int n = rand() % 12;
+    float zoom;
+    switch (n) {
+        case 0:
+            ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
+            break;
+        case 1:
+            ctrl->SetZoomVirtual(ZOOM_FIT_WIDTH, nullptr);
+            break;
+        case 2:
+            ctrl->SetZoomVirtual(ZOOM_FIT_CONTENT, nullptr);
+            break;
+        case 3:
+            ctrl->SetZoomVirtual(ZOOM_ACTUAL_SIZE, nullptr);
+            break;
+        case 4:
+            ctrl->SetDisplayMode(DisplayMode::SinglePage);
+            break;
+        case 5:
+            ctrl->SetDisplayMode(DisplayMode::Facing);
+            break;
+        case 6:
+            ctrl->SetDisplayMode(DisplayMode::BookView);
+            break;
+        case 7:
+            ctrl->SetDisplayMode(DisplayMode::Continuous);
+            break;
+        case 8:
+            ctrl->SetDisplayMode(DisplayMode::ContinuousFacing);
+            break;
+        case 9:
+            ctrl->SetDisplayMode(DisplayMode::ContinuousBookView);
+            break;
+        case 10:
+            zoom = ctrl->GetNextZoomStep(ZOOM_MAX);
+            ctrl->SetZoomVirtual(zoom, nullptr);
+            break;
+        case 11:
+            zoom = ctrl->GetNextZoomStep(ZOOM_MIN);
+            ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
+            break;
+    }
+}
+
 static bool GoToNextFile(StressTest* st) {
     for (;;) {
         AutoFreeWstr nextFile(st->fileProvider->NextFile());
@@ -734,6 +786,7 @@ static bool GoToNextPage(StressTest* st) {
         return false;
     }
 
+    RandomizeViewingState(st);
     st->currPageNo = st->pagesToRender.PopAt(0);
     st->win->ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
