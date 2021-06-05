@@ -3878,7 +3878,7 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
     return true;
 }
 
-static void OnFrameKeyM(WindowInfo* win) {
+static void ShowCursorPositionInDoc(WindowInfo* win) {
     // "cursor position" tip: make figuring out the current
     // cursor position in cm/in/pt possible (for exact layouting)
     if (!win->AsFixed()) {
@@ -3896,7 +3896,11 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         return;
     }
 
-    if (key >= 0x100 && info && !IsCtrlPressed() && !IsAltPressed()) {
+    bool isCtrl = IsCtrlPressed();
+    bool isShift = IsShiftPressed();
+    bool isAlt = IsAltPressed();
+
+    if (key >= 0x100 && info && !isCtrl && !isAlt) {
         // determine the intended keypress by scan code for non-Latin keyboard layouts
         uint vk = MapVirtualKeyW((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
         if ('A' <= vk && vk <= 'Z') {
@@ -3935,10 +3939,10 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     switch (key) {
         case VK_SPACE:
         case VK_RETURN:
-            FrameOnKeydown(win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
+            FrameOnKeydown(win, isShift ? VK_PRIOR : VK_NEXT, 0);
             break;
         case VK_BACK: {
-            bool forward = IsShiftPressed();
+            bool forward = isShift;
             ctrl->Navigate(forward ? 1 : -1);
         } break;
         case 'g':
@@ -3990,12 +3994,14 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case '+':
         case '=':
         case 0xE0:
-        case 0xE4:
-            ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
-            break;
-        case '-':
-            ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
-            break;
+        case 0xE4: {
+            float newZoom = ctrl->GetNextZoomStep(ZOOM_MAX);
+            ZoomToSelection(win, newZoom, false);
+        } break;
+        case '-': {
+            float newZoom = ctrl->GetNextZoomStep(ZOOM_MIN);
+            ZoomToSelection(win, newZoom, false);
+        } break;
         case '/':
             if (!gIsDivideKeyDown) {
                 OnMenuFind(win);
@@ -4022,12 +4028,12 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'i':
             // experimental "page info" tip: make figuring out current page and
             // total pages count a one-key action (unless they're already visible)
-            if (win->AsFixed()) {
+            if (dm) {
                 TogglePageInfoHelper(win);
             }
             break;
         case 'm':
-            OnFrameKeyM(win);
+            ShowCursorPositionInDoc(win);
             break;
         case 'a':
             MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight);
