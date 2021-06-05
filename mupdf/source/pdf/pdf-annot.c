@@ -1,5 +1,5 @@
 #include "mupdf/fitz.h"
-#include "mupdf/pdf.h"
+#include "pdf-annot-imp.h"
 
 #include <string.h>
 
@@ -94,7 +94,7 @@ check_change(fz_context *ctx, pdf_annot *annot)
 	}
 }
 
-void pdf_annot_set_active(fz_context *ctx, pdf_annot *annot, int active)
+void pdf_set_annot_active(fz_context *ctx, pdf_annot *annot, int active)
 {
 	int old;
 
@@ -112,7 +112,7 @@ int pdf_annot_hot(fz_context *ctx, pdf_annot *annot)
 	return annot ? annot->is_hot : 0;
 }
 
-void pdf_annot_set_hot(fz_context *ctx, pdf_annot *annot, int hot)
+void pdf_set_annot_hot(fz_context *ctx, pdf_annot *annot, int hot)
 {
 	int old;
 
@@ -213,13 +213,23 @@ pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots)
 pdf_annot *
 pdf_first_annot(fz_context *ctx, pdf_page *page)
 {
-	return page->annots;
+	return page ? page->annots : NULL;
 }
 
 pdf_annot *
 pdf_next_annot(fz_context *ctx, pdf_annot *annot)
 {
-	return annot->next;
+	return annot ? annot->next : NULL;
+}
+
+pdf_obj *pdf_annot_obj(fz_context *ctx, pdf_annot *annot)
+{
+	return annot ? annot->obj : NULL;
+}
+
+pdf_page *pdf_annot_page(fz_context *ctx, pdf_annot *annot)
+{
+	return annot ? annot->page : NULL;
 }
 
 fz_rect

@@ -1,5 +1,5 @@
 #include "mupdf/fitz.h"
-#include "mupdf/pdf.h"
+#include "pdf-annot-imp.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -2657,6 +2657,9 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	pdf_lexbuf_init(ctx, &doc->lexbuf.base, PDF_LEXBUF_LARGE);
 	doc->file = fz_keep_stream(ctx, file);
 
+	/* Default to PDF-1.7 if the version header is missing and for new documents */
+	doc->version = 17;
+
 	return doc;
 }
 
@@ -3122,7 +3125,6 @@ pdf_document *pdf_create_document(fz_context *ctx)
 	doc = pdf_new_document(ctx, NULL);
 	fz_try(ctx)
 	{
-		doc->version = 17;
 		doc->file_size = 0;
 		doc->startxref = 0;
 		doc->num_xref_sections = 0;

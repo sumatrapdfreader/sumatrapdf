@@ -1,5 +1,5 @@
 #include "mupdf/fitz.h"
-#include "mupdf/pdf.h"
+#include "pdf-annot-imp.h"
 
 #include <zlib.h>
 
@@ -4040,4 +4040,55 @@ fz_new_pdf_writer(fz_context *ctx, const char *path, const char *options)
 		fz_rethrow(ctx);
 	}
 	return wri;
+}
+
+void pdf_write_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
+{
+	if (!doc || !out)
+		return;
+
+	if (!doc->journal)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't write non-existent journal");
+
+	pdf_serialise_journal(ctx, doc, out);
+}
+
+void pdf_save_journal(fz_context *ctx, pdf_document *doc, const char *filename)
+{
+	fz_output *out;
+
+	if (!doc)
+		return;
+
+	out = fz_new_output_with_path(ctx, filename, 0);
+	fz_try(ctx)
+	{
+		pdf_write_journal(ctx, doc, out);
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+		fz_drop_output(ctx, out);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+void pdf_read_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
+{
+	pdf_deserialise_journal(ctx, doc, stm);
+}
+
+void pdf_load_journal(fz_context *ctx, pdf_document *doc, const char *filename)
+{
+	fz_stream *stm;
+
+	if (!doc)
+		return;
+
+	stm = fz_open_file(ctx, filename);
+	fz_try(ctx)
+		pdf_read_journal(ctx, doc, stm);
+	fz_always(ctx)
+		fz_drop_stream(ctx, stm);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }

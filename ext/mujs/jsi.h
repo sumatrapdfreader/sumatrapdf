@@ -18,6 +18,7 @@
 #pragma warning(disable:4996) /* _CRT_SECURE_NO_WARNINGS */
 #pragma warning(disable:4244) /* implicit conversion from double to int */
 #pragma warning(disable:4267) /* implicit conversion of int to smaller int */
+#pragma warning(disable:4090) /* broken const warnings */
 #define inline __inline
 #if _MSC_VER < 1900 /* MSVC 2015 */
 #define snprintf jsW_snprintf

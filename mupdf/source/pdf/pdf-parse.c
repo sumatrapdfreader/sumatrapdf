@@ -856,3 +856,48 @@ pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *file,
 
 	return obj;
 }
+
+pdf_obj *
+pdf_parse_journal_obj(fz_context *ctx, pdf_document *doc, fz_stream *stm,
+	int *onum, fz_buffer **ostm)
+{
+	pdf_obj *obj = NULL;
+	pdf_token tok;
+	pdf_lexbuf *buf = &doc->lexbuf.base;
+	int64_t stmofs;
+
+	obj = pdf_parse_ind_obj(ctx, doc, stm, onum, NULL, &stmofs, NULL);
+	/* This will have consumed either the stream or the endobj keywords. */
+
+	*ostm = NULL;
+	if (stmofs)
+	{
+		fz_stream *stream = NULL;
+
+		fz_var(stream);
+
+		fz_try(ctx)
+		{
+			stream = fz_open_endstream_filter(ctx, stm, 0, stmofs);
+			*ostm = fz_read_all(ctx, stream, 32);
+			fz_drop_stream(ctx, stream);
+			stream = NULL;
+			fz_seek(ctx, stm, stmofs + (*ostm ? (*ostm)->len : 0), SEEK_SET);
+			tok = pdf_lex(ctx, stm, buf);
+			if (tok != PDF_TOK_ENDSTREAM)
+				fz_throw(ctx, FZ_ERROR_SYNTAX, "expected 'endstream' keyword");
+			tok = pdf_lex(ctx, stm, buf);
+			if (tok != PDF_TOK_ENDOBJ)
+				fz_throw(ctx, FZ_ERROR_SYNTAX, "expected 'endobj' keyword");
+		}
+		fz_always(ctx)
+			fz_drop_stream(ctx, stream);
+		fz_catch(ctx)
+		{
+			pdf_drop_obj(ctx, obj);
+			fz_rethrow(ctx);
+		}
+	}
+
+	return obj;
+}

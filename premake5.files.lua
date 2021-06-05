@@ -787,6 +787,7 @@ function mupdf_files()
     "pdf-write.c",
     "pdf-xobject.c",
     "pdf-xref.c",
+    "*.h",
   })
 
   files_in_dir("mupdf/source/svg", {

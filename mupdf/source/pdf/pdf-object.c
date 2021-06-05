@@ -698,7 +698,8 @@ void pdf_enable_journal(fz_context *ctx, pdf_document *doc)
 	if (ctx == NULL || doc == NULL)
 		return;
 
-	doc->journal = fz_malloc_struct(ctx, pdf_journal);
+	if (doc->journal == NULL)
+		doc->journal = fz_malloc_struct(ctx, pdf_journal);
 }
 
 static void
@@ -735,34 +736,13 @@ discard_journal_entries(fz_context *ctx, pdf_journal_entry **journal_entry)
 	}
 }
 
-/* Call this to start an operation. Undo/redo works at 'operation'
- * granularity. Nested operations are all counted within the outermost
- * operation. Any modification performed on a journalled PDF without an
- * operation having been started will throw an error. */
-void pdf_begin_operation(fz_context *ctx, pdf_document *doc, const char *operation_)
+static void
+new_entry(fz_context *ctx, pdf_document *doc, char *operation, int nest)
 {
-	pdf_journal_entry *entry = NULL;
-	char *operation;
-
-	/* If we aren't journalling this doc, just give up now. */
-	if (ctx == NULL || doc == NULL || doc->journal == NULL)
-		return;
-
-	/* Always increment nesting. If we are already in an operation,
-	 * exit. */
-	if (doc->journal->nesting++ > 0)
-		return;
-
-	operation = fz_strdup(ctx, operation_);
-
-#ifdef PDF_DEBUG_JOURNAL
-	fz_write_printf(ctx, fz_stddbg(ctx), "Beginning: %s\n", operation);
-#endif
-
-	fz_var(entry);
-
 	fz_try(ctx)
 	{
+		pdf_journal_entry *entry;
+
 		/* We create a new entry, and link it into the middle of
 		 * the chain. If we actually come to put anything into
 		 * it later, then the call to add_fragment during that
@@ -789,10 +769,36 @@ void pdf_begin_operation(fz_context *ctx, pdf_document *doc, const char *operati
 	}
 	fz_catch(ctx)
 	{
-		doc->journal->nesting--;
+		doc->journal->nesting -= nest;
 		fz_free(ctx, operation);
 		fz_rethrow(ctx);
 	}
+}
+
+/* Call this to start an operation. Undo/redo works at 'operation'
+ * granularity. Nested operations are all counted within the outermost
+ * operation. Any modification performed on a journalled PDF without an
+ * operation having been started will throw an error. */
+void pdf_begin_operation(fz_context *ctx, pdf_document *doc, const char *operation_)
+{
+	char *operation;
+
+	/* If we aren't journalling this doc, just give up now. */
+	if (ctx == NULL || doc == NULL || doc->journal == NULL)
+		return;
+
+	/* Always increment nesting. If we are already in an operation,
+	 * exit. */
+	if (doc->journal->nesting++ > 0)
+		return;
+
+	operation = fz_strdup(ctx, operation_);
+
+#ifdef PDF_DEBUG_JOURNAL
+	fz_write_printf(ctx, fz_stddbg(ctx), "Beginning: %s\n", operation);
+#endif
+
+	new_entry(ctx, doc, operation, 1);
 }
 
 void pdf_begin_implicit_operation(fz_context *ctx, pdf_document *doc)
@@ -1062,6 +1068,75 @@ void pdf_discard_journal(fz_context *ctx, pdf_journal *journal)
 }
 
 static void
+pdf_fingerprint_file(fz_context *ctx, pdf_document *doc, unsigned char digest[16], int i)
+{
+	fz_md5 state;
+
+	fz_md5_init(&state);
+	fz_md5_update_int64(&state, doc->num_xref_sections);
+	for (; i < doc->num_xref_sections; i++)
+	{
+		pdf_xref_subsec *subsec = doc->xref_sections[i].subsec;
+		fz_md5_update_int64(&state, doc->xref_sections[i].num_objects);
+		while (subsec)
+		{
+			fz_md5_update_int64(&state, subsec->start);
+			fz_md5_update_int64(&state, subsec->len);
+			subsec = subsec->next;
+		}
+	}
+	fz_md5_final(&state, digest);
+}
+
+void
+pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
+{
+	pdf_journal_entry *entry;
+	int currentpos = 0;
+	unsigned char digest[16];
+	int i;
+
+	pdf_fingerprint_file(ctx, doc, digest, doc->num_incremental_sections);
+
+	fz_write_printf(ctx, out, "%!MuPDF-Journal-100\n");
+	fz_write_string(ctx, out, "\njournal\n<<\n");
+	fz_write_printf(ctx, out, "/NumSections %d\n", doc->num_incremental_sections);
+	fz_write_printf(ctx, out, "/FileSize %ld\n", doc->file_size);
+	fz_write_printf(ctx, out, "/Fingerprint <");
+	for (i = 0; i < 16; i++)
+		fz_write_printf(ctx, out, "%02x", digest[i]);
+	fz_write_printf(ctx, out, ">\n");
+
+	for (entry = doc->journal->head; entry != NULL; entry = entry->next)
+	{
+		currentpos++;
+		if (entry == doc->journal->current)
+			break;
+	}
+	fz_write_printf(ctx, out, "/HistoryPos %d\n", currentpos);
+	fz_write_string(ctx, out, ">>\n");
+
+	for (entry = doc->journal->head; entry != NULL; entry = entry->next)
+	{
+		pdf_journal_fragment *frag;
+		fz_write_printf(ctx, out, "entry\n%(\n", entry->title);
+		for (frag = entry->head; frag != NULL; frag = frag->next)
+		{
+			fz_write_printf(ctx, out, "%d 0 obj\n", frag->obj_num, 0);
+			pdf_print_encrypted_obj(ctx, out, frag->inactive, 1, 0, NULL, frag->obj_num, 0);
+			if (frag->stream)
+			{
+				fz_write_printf(ctx, out, "stream\n");
+				fz_write_data(ctx, out, frag->stream->data, frag->stream->len);
+				fz_write_string(ctx, out, "\nendstream");
+			}
+			fz_write_string(ctx, out, "\nendobj\n");
+		}
+	}
+	fz_write_printf(ctx, out, "endjournal\n");
+}
+
+static void
 add_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_buffer *copy_stream)
 {
 	pdf_journal_entry *entry = doc->journal->current;
@@ -1098,6 +1173,130 @@ add_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_b
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+}
+
+void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
+{
+	int num, version, c, nis, pos;
+	pdf_obj *obj = NULL, *fingerprint_obj;
+	fz_buffer *buffer;
+	unsigned char digest[16];
+	int64_t file_size;
+	int digests_match = 0;
+	pdf_token tok;
+
+	if (!doc || !stm)
+		return;
+
+	if (doc->journal)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't load a journal over another one");
+
+	if (fz_skip_string(ctx, stm, "%!MuPDF-Journal-"))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Bad journal format");
+
+	fz_var(obj);
+	fz_var(digests_match);
+
+	fz_try(ctx)
+	{
+		version = 0;
+		while (1)
+		{
+			c = fz_peek_byte(ctx, stm);
+			if (c < '0' || c > '9')
+				break;
+			version = (version*10) + c - '0';
+			(void)fz_read_byte(ctx, stm);
+		}
+		if (version != 100)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad journal format");
+
+		fz_skip_space(ctx, stm);
+		if (fz_skip_string(ctx, stm, "journal\n"))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad journal format");
+
+		tok = pdf_lex(ctx, stm, &doc->lexbuf.base);
+		if (tok != PDF_TOK_OPEN_DICT)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad journal format");
+		obj = pdf_parse_dict(ctx, doc, stm, &doc->lexbuf.base);
+
+		nis = pdf_dict_get_int(ctx, obj, PDF_NAME(NumSections));
+		pdf_fingerprint_file(ctx, doc, digest, nis);
+
+		file_size = pdf_dict_get_int(ctx, obj, PDF_NAME(FileSize));
+
+		fingerprint_obj = pdf_dict_get(ctx, obj, PDF_NAME(Fingerprint));
+		if (pdf_to_str_len(ctx, fingerprint_obj) != 16)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad journal fingerprint");
+
+		digests_match = (memcmp(pdf_to_str_buf(ctx, fingerprint_obj), digest, 16) == 0);
+
+		pos = pdf_dict_get_int(ctx, obj, PDF_NAME(HistoryPos));
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, obj);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	if (!digests_match)
+		return;
+
+	if (doc->file_size < file_size)
+		return;
+
+	doc->journal = fz_malloc_struct(ctx, pdf_journal);
+
+	while (1)
+	{
+		fz_skip_space(ctx, stm);
+
+		if (fz_skip_string(ctx, stm, "entry\n") == 0)
+		{
+			/* Read the fragment title. */
+			pdf_token tok = pdf_lex(ctx, stm, &doc->lexbuf.base);
+			char *title;
+
+			if (tok != PDF_TOK_STRING)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "Bad string in journal");
+			title = fz_malloc(ctx, doc->lexbuf.base.len+1);
+			memcpy(title, doc->lexbuf.base.buffer, doc->lexbuf.base.len);
+			title[doc->lexbuf.base.len] = 0;
+
+			new_entry(ctx, doc, title, 0);
+			continue;
+		}
+		if (fz_skip_string(ctx, stm, /*en*/"djournal") == 0)
+			break;
+
+		if (doc->journal->current == NULL)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Badly formed journal");
+
+		/* Read the object/stream for the next fragment. */
+		obj = pdf_parse_journal_obj(ctx, doc, stm, &num, &buffer);
+
+		add_fragment(ctx, doc, num, obj, buffer);
+	}
+
+	fz_skip_space(ctx, stm);
+
+	doc->journal->current = NULL;
+	if (pos > 0)
+	{
+		doc->journal->current = doc->journal->head;
+		while (--pos)
+		{
+			doc->journal->current = doc->journal->current->next;
+			if (doc->journal->current == NULL)
+				break;
+		}
+	}
+
+	doc->file_size = file_size;
+	doc->num_incremental_sections = nis;
 }
 
 static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj *val)

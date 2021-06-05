@@ -142,6 +142,24 @@ pdf_annot *pdf_first_annot(fz_context *ctx, pdf_page *page);
 pdf_annot *pdf_next_annot(fz_context *ctx, pdf_annot *annot);
 
 /*
+	Returns a borrowed reference to the object underlying
+	an annotation.
+
+	The caller should fz_keep this if it intends to hold the
+	pointer. Unless it fz_keeps it, it must not fz_drop it.
+*/
+pdf_obj *pdf_annot_obj(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Returns a borrowed reference to the page to which
+	an annotation belongs.
+
+	The caller should fz_keep this if it intends to hold the
+	pointer. Unless it fz_keeps it, it must not fz_drop it.
+*/
+pdf_page *pdf_annot_page(fz_context *ctx, pdf_annot *annot);
+
+/*
 	Return the rectangle for an annotation on a page.
 */
 fz_rect pdf_bound_annot(fz_context *ctx, pdf_annot *annot);
@@ -525,7 +543,6 @@ void pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot);
 int pdf_annot_needs_resynthesis(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_resynthesised(fz_context *ctx, pdf_annot *annot);
 void pdf_dirty_annot(fz_context *ctx, pdf_annot *annot);
-void pdf_set_annot_has_changed(fz_context *ctx, pdf_annot *annot);
 
 int pdf_annot_field_flags(fz_context *ctx, pdf_annot *annot);
 const char *pdf_annot_field_value(fz_context *ctx, pdf_annot *annot);
@@ -618,32 +635,10 @@ int pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs);
 fz_buffer *pdf_load_embedded_file(fz_context *ctx, pdf_obj *fs);
 pdf_obj *pdf_add_embedded_file(fz_context *ctx, pdf_document *doc, const char *filename, const char *mimetype, fz_buffer *contents);
 
-/* Implementation details: Subject to change */
-
-struct pdf_annot
-{
-	int refs;
-
-	pdf_page *page;
-	pdf_obj *obj;
-
-	int is_hot;
-	int is_active;
-
-	int needs_new_ap; /* If set, then a resynthesis of this annotation has been requested. */
-	int has_new_ap; /* If set, then the appearance stream has changed since last queried. */
-	int ignore_trigger_events;
-
-	pdf_annot *next;
-};
-
 char *pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 char *pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *obj, int pagenum);
 pdf_obj *pdf_lookup_dest(fz_context *ctx, pdf_document *doc, pdf_obj *needle);
 fz_link *pdf_load_link_annots(fz_context *ctx, pdf_document *, pdf_obj *annots, int pagenum, fz_matrix page_ctm);
-void pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots);
-void pdf_drop_annots(fz_context *ctx, pdf_annot *annot_list);
-void pdf_drop_widgets(fz_context *ctx, pdf_widget *widget_list);
 
 void pdf_annot_MK_BG(fz_context *ctx, pdf_annot *annot, int *n, float color[4]);
 void pdf_annot_MK_BC(fz_context *ctx, pdf_annot *annot, int *n, float color[4]);
@@ -653,8 +648,8 @@ int pdf_annot_MK_BC_rgb(fz_context *ctx, pdf_annot *annot, float rgb[3]);
 pdf_obj *pdf_annot_ap(fz_context *ctx, pdf_annot *annot);
 
 int pdf_annot_active(fz_context *ctx, pdf_annot *annot);
-void pdf_annot_set_active(fz_context *ctx, pdf_annot *annot, int active);
+void pdf_set_annot_active(fz_context *ctx, pdf_annot *annot, int active);
 int pdf_annot_hot(fz_context *ctx, pdf_annot *annot);
-void pdf_annot_set_hot(fz_context *ctx, pdf_annot *annot, int hot);
+void pdf_set_annot_hot(fz_context *ctx, pdf_annot *annot, int hot);
 
 #endif

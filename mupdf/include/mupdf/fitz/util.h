@@ -107,6 +107,6 @@ void fz_write_pixmap_as_data_uri(fz_context *ctx, fz_output *out, fz_pixmap *pix
 	Use text extraction to convert the input document into XHTML,
 	then open the result as a new document that can be reflowed.
 */
-fz_document *fz_new_xhtml_document_from_document(fz_context *ctx, fz_document *old_doc);
+fz_document *fz_new_xhtml_document_from_document(fz_context *ctx, fz_document *old_doc, const fz_stext_options *opts);
 
 #endif

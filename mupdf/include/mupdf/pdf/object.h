@@ -288,4 +288,10 @@ void pdf_discard_journal(fz_context *ctx, pdf_journal *journal);
 /* Internal destructor. */
 void pdf_drop_journal(fz_context *ctx, pdf_journal *journal);
 
+/* Internal call as part of saving a snapshot of a PDF document. */
+void pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out);
+
+/* Internal call as part of loading a snapshot of a PDF document. */
+void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm);
+
 #endif

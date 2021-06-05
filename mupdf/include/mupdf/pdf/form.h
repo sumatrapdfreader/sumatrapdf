@@ -226,6 +226,7 @@ int pdf_count_signatures(fz_context *ctx, pdf_document *doc);
 char *pdf_signature_error_description(pdf_signature_error err);
 
 pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
+pdf_pkcs7_distinguished_name *pdf_signature_get_widget_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget);
 void pdf_signature_drop_distinguished_name(fz_context *ctx, pdf_pkcs7_distinguished_name *name);
 char *pdf_signature_format_distinguished_name(fz_context *ctx, pdf_pkcs7_distinguished_name *name);
 char *pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_name *dn, const char *reason, const char *location, int64_t date, int include_labels);
@@ -234,6 +235,8 @@ fz_display_list *pdf_signature_appearance_unsigned(fz_context *ctx, fz_rect rect
 
 pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
 pdf_signature_error pdf_check_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
+pdf_signature_error pdf_check_widget_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget);
+pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget);
 
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget);
 

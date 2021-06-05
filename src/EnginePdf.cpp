@@ -1134,7 +1134,7 @@ static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_
     fz_rect rect = pdf_annot_rect(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
     const char* contents = pdf_annot_contents(ctx, annot);
-    const char* label = pdf_field_label(ctx, annot->obj);
+    const char* label = pdf_annot_field_label(ctx, annot);
     const char* s = contents;
     // TODO: use separate classes for comments and tooltips?
     if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
@@ -1160,14 +1160,14 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
         auto tp = pdf_annot_type(ctx, annot);
         const char* contents = pdf_annot_contents(ctx, annot); // don't free
         bool isContentsEmpty = str::IsEmpty(contents);
-        const char* label = pdf_field_label(ctx, annot->obj); // don't free
+        const char* label = pdf_annot_field_label(ctx, annot); // don't free
         bool isLabelEmpty = str::IsEmpty(label);
-        int flags = pdf_field_flags(ctx, annot->obj);
+        int flags = pdf_annot_field_flags(ctx, annot);
 
         if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
             dbglogf("found file attachment annotation\n");
 
-            pdf_obj* fs = pdf_dict_get(ctx, annot->obj, PDF_NAME(FS));
+            pdf_obj* fs = pdf_dict_get(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(FS));
             const char* attname = pdf_embedded_file_name(ctx, fs);
             fz_rect rect = pdf_annot_rect(ctx, annot);
             if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {

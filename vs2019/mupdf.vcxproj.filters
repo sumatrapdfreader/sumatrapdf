@@ -306,6 +306,12 @@
     <ClInclude Include="..\mupdf\source\fitz\z-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\pdf\annotation-icons.h">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\pdf\pdf-annot-imp.h">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\mupdf_load_system_font.c">

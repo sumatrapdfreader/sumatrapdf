@@ -1,7 +1,6 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern "C" struct pdf_annot;
 extern "C" struct fz_context;
 
 // for fast conversions, must match the order of pdf_annot_type enum in annot.h

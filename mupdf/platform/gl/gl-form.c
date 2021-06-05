@@ -33,7 +33,7 @@ static int preview_needs_update = 0;
 static void trace_field_value(pdf_annot *annot, const char *set_value)
 {
 	const char *get_value = pdf_annot_field_value(ctx, annot);
-	trace_action("print('Set field %d:', repr(%q), repr(%q));\n", pdf_to_num(ctx, annot->obj), set_value, get_value);
+	trace_action("print('Set field %d:', repr(%q), repr(%q));\n", pdf_to_num(ctx, pdf_annot_obj(ctx, annot)), set_value, get_value);
 }
 
 int do_sign(void)
@@ -350,7 +350,7 @@ static void cert_file_dialog(void)
 
 static void sig_sign_dialog(void)
 {
-	const char *label = pdf_field_label(ctx, sig_widget->obj);
+	const char *label = pdf_field_label(ctx, pdf_annot_obj(ctx, sig_widget));
 
 	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3 + ui.lineheight*10);
 	{
@@ -368,7 +368,7 @@ static void sig_sign_dialog(void)
 			if (ui_button("Cancel") || (!ui.focus && ui.key == KEY_ESCAPE))
 				ui.dialog = NULL;
 			ui_spacer();
-			if (!(pdf_field_flags(ctx, sig_widget->obj) & PDF_FIELD_IS_READ_ONLY))
+			if (!(pdf_field_flags(ctx, pdf_annot_obj(ctx, sig_widget)) & PDF_FIELD_IS_READ_ONLY))
 			{
 				if (ui_button("Sign"))
 				{
@@ -385,7 +385,7 @@ static void sig_sign_dialog(void)
 
 static void sig_verify_dialog(void)
 {
-	const char *label = pdf_field_label(ctx, sig_widget->obj);
+	const char *label = pdf_field_label(ctx, pdf_annot_obj(ctx, sig_widget));
 
 	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3 + ui.lineheight*10);
 	{
@@ -448,7 +448,7 @@ static void show_sig_dialog(pdf_widget *widget)
 	{
 		sig_widget = widget;
 
-		if (pdf_signature_is_signed(ctx, pdf, widget->obj))
+		if (pdf_signature_is_signed(ctx, pdf, pdf_annot_obj(ctx, widget)))
 		{
 			pdf_pkcs7_verifier *verifier;
 			pdf_pkcs7_distinguished_name *dn;
@@ -459,11 +459,11 @@ static void show_sig_dialog(pdf_widget *widget)
 
 			verifier = pkcs7_openssl_new_verifier(ctx);
 
-			sig_cert_error = pdf_check_certificate(ctx, verifier, pdf, widget->obj);
-			sig_digest_error = pdf_check_digest(ctx, verifier, pdf, widget->obj);
+			sig_cert_error = pdf_check_widget_certificate(ctx, verifier, widget);
+			sig_digest_error = pdf_check_widget_digest(ctx, verifier, widget);
 
 			fz_free(ctx, sig_distinguished_name);
-			dn = pdf_signature_get_signatory(ctx, verifier, pdf, widget->obj);
+			dn = pdf_signature_get_widget_signatory(ctx, verifier, widget);
 			if (dn)
 				sig_distinguished_name = pdf_signature_format_distinguished_name(ctx, dn);
 			else
@@ -537,12 +537,12 @@ static void ch_dialog(void)
 	int n, choice;
 	int label_h;
 
-	label = pdf_field_label(ctx, ch_widget->obj);
+	label = pdf_field_label(ctx, pdf_annot_obj(ctx, ch_widget));
 	label_h = ui_break_lines((char*)label, NULL, 20, 394, NULL);
 	n = pdf_choice_widget_options(ctx, ch_widget, 0, NULL);
 	options = fz_malloc_array(ctx, n, char *);
 	pdf_choice_widget_options(ctx, ch_widget, 0, (const char **)options);
-	value = pdf_field_value(ctx, ch_widget->obj);
+	value = pdf_field_value(ctx, pdf_annot_obj(ctx, ch_widget));
 
 	ui_dialog_begin(ui.gridsize*16, (ui.gridsize+4)*3 + ui.lineheight*(label_h-1));
 	{
@@ -599,7 +599,7 @@ void do_widget_canvas(fz_irect canvas_area)
 				trace_action("page.getWidgets()[%d].eventEnter();\n", idx);
 				pdf_annot_event_enter(ctx, widget);
 			}
-			pdf_annot_set_hot(ctx, widget, 1);
+			pdf_set_annot_hot(ctx, widget, 1);
 
 			ui.hot = widget;
 			if (!ui.active && ui.down)
@@ -623,16 +623,16 @@ void do_widget_canvas(fz_irect canvas_area)
 		}
 		else
 		{
-			if (widget->is_hot)
+			if (pdf_annot_hot(ctx, widget))
 			{
 				trace_action("page.getWidgets()[%d].eventExit();\n", idx);
 				pdf_annot_event_exit(ctx, widget);
 			}
-			pdf_annot_set_hot(ctx, widget, 0);
+			pdf_set_annot_hot(ctx, widget, 0);
 		}
 
 		/* Set is_hot and is_active to select current appearance */
-		pdf_annot_set_active(ctx, widget, (ui.active == widget && ui.down));
+		pdf_set_annot_active(ctx, widget, (ui.active == widget && ui.down));
 
 		if (showform)
 		{

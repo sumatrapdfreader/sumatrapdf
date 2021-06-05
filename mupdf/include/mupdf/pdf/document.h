@@ -633,4 +633,26 @@ char *pdf_format_write_options(fz_context *ctx, char *buffer, size_t buffer_len,
 */
 int pdf_can_be_saved_incrementally(fz_context *ctx, pdf_document *doc);
 
+/*
+	Write out the journal to an output stream.
+*/
+void pdf_write_journal(fz_context *ctx, pdf_document *doc, fz_output *out);
+
+/*
+	Write out the journal to a file.
+*/
+void pdf_save_journal(fz_context *ctx, pdf_document *doc, const char *filename);
+
+/*
+	Read a journal from a filename. Will do nothing if the journal
+	does not match. Will throw on a corrupted journal.
+*/
+void pdf_load_journal(fz_context *ctx, pdf_document *doc, const char *filename);
+
+/*
+	Read a journal from a stream. Will do nothing if the journal
+	does not match. Will throw on a corrupted journal.
+*/
+void pdf_read_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm);
+
 #endif

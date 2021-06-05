@@ -26,6 +26,7 @@ pdf_obj *pdf_parse_array(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_l
 pdf_obj *pdf_parse_dict(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
 pdf_obj *pdf_parse_stm_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
 pdf_obj *pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, int *num, int *gen, int64_t *stm_ofs, int *try_repair);
+pdf_obj *pdf_parse_journal_obj(fz_context *ctx, pdf_document *doc, fz_stream *stm, int *onum, fz_buffer **ostm);
 
 /*
 	print a lexed token to a buffer, growing if necessary

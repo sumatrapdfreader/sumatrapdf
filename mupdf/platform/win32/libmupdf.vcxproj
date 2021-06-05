@@ -1153,6 +1153,7 @@
     <ClInclude Include="..\..\source\fitz\pixmap-imp.h" />
     <ClInclude Include="..\..\source\fitz\unicodedata_db.h" />
     <ClInclude Include="..\..\source\fitz\z-imp.h" />
+    <ClInclude Include="..\..\source\pdf\pdf-annot-imp.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libpkcs7.vcxproj">

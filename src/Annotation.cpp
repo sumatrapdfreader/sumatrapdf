@@ -270,7 +270,7 @@ void Annotation::Delete() {
 // -1 if not exist
 int Annotation::PopupId() {
     ScopedCritSec cs(pdf->ctxAccess);
-    pdf_obj* obj = pdf_dict_get(pdf->ctx, pdf->annot->obj, PDF_NAME(Popup));
+    pdf_obj* obj = pdf_dict_get(pdf->ctx, pdf_annot_obj(pdf->ctx, pdf->annot), PDF_NAME(Popup));
     if (!obj) {
         return -1;
     }

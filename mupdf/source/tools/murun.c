@@ -6081,7 +6081,7 @@ static void ffi_PDFAnnotation_setHot(js_State *J)
 	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
 	int hot = js_tonumber(J, 1);
 	fz_try(ctx)
-		pdf_annot_set_hot(ctx, annot, hot);
+		pdf_set_annot_hot(ctx, annot, hot);
 	fz_catch(ctx)
 		rethrow(J);
 }
@@ -6115,7 +6115,7 @@ static void ffi_PDFWidget_getFieldType(js_State *J)
 	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
 	int type;
 	fz_try(ctx)
-		type = pdf_field_type(ctx, widget->obj);
+		type = pdf_field_type(ctx, pdf_annot_obj(ctx, widget));
 	fz_catch(ctx)
 		rethrow(J);
 	switch (type)
@@ -6137,7 +6137,7 @@ static void ffi_PDFWidget_getFieldFlags(js_State *J)
 	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
 	int flags;
 	fz_try(ctx)
-		flags = pdf_field_flags(ctx, widget->obj);
+		flags = pdf_field_flags(ctx, pdf_annot_obj(ctx, widget));
 	fz_catch(ctx)
 		rethrow(J);
 	js_pushnumber(J, flags);
@@ -6172,7 +6172,7 @@ static void ffi_PDFWidget_getValue(js_State *J)
 	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
 	const char *value;
 	fz_try(ctx)
-		value = pdf_field_value(ctx, widget->obj);
+		value = pdf_field_value(ctx, pdf_annot_obj(ctx, widget));
 	fz_catch(ctx)
 		rethrow(J);
 	js_pushstring(J, value);
@@ -6232,13 +6232,13 @@ static void ffi_PDFWidget_getOptions(js_State *J)
 	const char *opt;
 	int i, n;
 	fz_try(ctx)
-		n = pdf_choice_field_option_count(ctx, widget->obj);
+		n = pdf_choice_field_option_count(ctx, pdf_annot_obj(ctx, widget));
 	fz_catch(ctx)
 		rethrow(J);
 	js_newarray(J);
 	for (i = 0; i < n; ++i) {
 		fz_try(ctx)
-			opt = pdf_choice_field_option(ctx, widget->obj, export, i);
+			opt = pdf_choice_field_option(ctx, pdf_annot_obj(ctx, widget), export, i);
 		fz_catch(ctx)
 			rethrow(J);
 		js_pushstring(J, opt);
@@ -6340,7 +6340,7 @@ static void ffi_PDFWidget_checkCertificate(js_State *J)
 	fz_try(ctx)
 	{
 		verifier = pkcs7_openssl_new_verifier(ctx);
-		val = pdf_check_certificate(ctx, verifier, widget->page->doc, widget->obj);
+		val = pdf_check_widget_certificate(ctx, verifier, widget);
 	}
 	fz_always(ctx)
 		pdf_drop_verifier(ctx, verifier);
@@ -6359,7 +6359,7 @@ static void ffi_PDFWidget_checkDigest(js_State *J)
 	fz_try(ctx)
 	{
 		verifier = pkcs7_openssl_new_verifier(ctx);
-		val = pdf_check_digest(ctx, verifier, widget->page->doc, widget->obj);
+		val = pdf_check_widget_digest(ctx, verifier, widget);
 	}
 	fz_always(ctx)
 		pdf_drop_verifier(ctx, verifier);
@@ -6380,7 +6380,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
 	fz_try(ctx)
 	{
 		verifier = pkcs7_openssl_new_verifier(ctx);
-		dn = pdf_signature_get_signatory(ctx, verifier, widget->page->doc, widget->obj);
+		dn = pdf_signature_get_widget_signatory(ctx, verifier, widget);
 		if (dn)
 		{
 			char *s = pdf_signature_format_distinguished_name(ctx, dn);

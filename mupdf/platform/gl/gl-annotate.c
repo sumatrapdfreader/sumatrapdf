@@ -383,7 +383,11 @@ static void do_save_pdf_dialog(int for_signing)
 				pdf_format_write_options(ctx, opts_string, sizeof(opts_string), &save_opts);
 				trace_action("doc.save(%q,%q);\n", save_filename, opts_string);
 				if (do_snapshot)
+				{
 					pdf_save_snapshot(ctx, pdf, save_filename);
+					fz_strlcat(save_filename, ".journal", PATH_MAX);
+					pdf_save_journal(ctx, pdf, save_filename);
+				}
 				else
 				{
 					pdf_save_document(ctx, pdf, save_filename, &save_opts);
@@ -437,7 +441,7 @@ static void save_attachment_dialog(void)
 		{
 			fz_try(ctx)
 			{
-				pdf_obj *fs = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(FS));
+				pdf_obj *fs = pdf_dict_get(ctx, pdf_annot_obj(ctx, selected_annot), PDF_NAME(FS));
 				fz_buffer *buf = pdf_load_embedded_file(ctx, fs);
 				fz_save_buffer(ctx, buf, attach_filename);
 				fz_drop_buffer(ctx, buf);
@@ -475,7 +479,7 @@ static void open_attachment_dialog(void)
 
 				contents = fz_read_file(ctx, attach_filename);
 				fs = pdf_add_embedded_file(ctx, pdf, filename, NULL, contents);
-				pdf_dict_put_drop(ctx, selected_annot->obj, PDF_NAME(FS), fs);
+				pdf_dict_put_drop(ctx, pdf_annot_obj(ctx, selected_annot), PDF_NAME(FS), fs);
 				fz_drop_buffer(ctx, contents);
 				trace_action("// add attachment!\n");
 			}
@@ -930,10 +934,10 @@ void do_annotate_panel(void)
 	for (idx=0, annot = pdf_first_annot(ctx, page); annot; ++idx, annot = pdf_next_annot(ctx, annot))
 	{
 		char buf[256];
-		int num = pdf_to_num(ctx, annot->obj);
+		int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
 		subtype = pdf_annot_type(ctx, annot);
 		fz_snprintf(buf, sizeof buf, "%d: %s", num, pdf_string_from_annot_type(ctx, subtype));
-		if (ui_list_item(&annot_list, annot->obj, buf, selected_annot == annot))
+		if (ui_list_item(&annot_list, pdf_annot_obj(ctx, annot), buf, selected_annot == annot))
 		{
 			trace_action("annot = page.getAnnotations()[%d];\n", idx);
 			selected_annot = annot;
@@ -953,7 +957,7 @@ void do_annotate_panel(void)
 		do_annotate_author();
 		do_annotate_date();
 
-		obj = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(Popup));
+		obj = pdf_dict_get(ctx, pdf_annot_obj(ctx, selected_annot), PDF_NAME(Popup));
 		if (obj)
 			ui_label("Popup: %d 0 R", pdf_to_num(ctx, obj));
 
@@ -1187,7 +1191,7 @@ void do_annotate_panel(void)
 		if (pdf_annot_type(ctx, selected_annot) == PDF_ANNOT_FILE_ATTACHMENT)
 		{
 			char attname[PATH_MAX];
-			pdf_obj *fs = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(FS));
+			pdf_obj *fs = pdf_dict_get(ctx, pdf_annot_obj(ctx, selected_annot), PDF_NAME(FS));
 			if (pdf_is_embedded_file(ctx, fs))
 			{
 				if (ui_button("Save..."))
@@ -1368,13 +1372,13 @@ void do_redact_panel(void)
 	for (idx=0, annot = pdf_first_annot(ctx, page); annot; ++idx, annot = pdf_next_annot(ctx, annot))
 	{
 		char buf[50];
-		int num = pdf_to_num(ctx, annot->obj);
+		int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
 		subtype = pdf_annot_type(ctx, annot);
 		if (subtype == PDF_ANNOT_REDACT)
 		{
 			const char *contents = pdf_annot_contents(ctx, annot);
 			fz_snprintf(buf, sizeof buf, "%d: %s", num, contents[0] ? contents : "Redact");
-			if (ui_list_item(&annot_list, annot->obj, buf, selected_annot == annot))
+			if (ui_list_item(&annot_list, pdf_annot_obj(ctx, annot), buf, selected_annot == annot))
 			{
 				trace_action("annot = page.getAnnotations()[%d];\n", idx);
 				selected_annot = annot;
@@ -1866,7 +1870,7 @@ void do_annotate_canvas(fz_irect canvas_area)
 
 		if (ui_mouse_inside(canvas_area) && ui_mouse_inside(area))
 		{
-			pdf_annot_set_hot(ctx, annot, 1);
+			pdf_set_annot_hot(ctx, annot, 1);
 
 			ui.hot = annot;
 			if (!ui.active && ui.down)
@@ -1883,7 +1887,7 @@ void do_annotate_canvas(fz_irect canvas_area)
 		}
 		else
 		{
-			pdf_annot_set_hot(ctx, annot, 0);
+			pdf_set_annot_hot(ctx, annot, 0);
 		}
 
 		if (annot == selected_annot)

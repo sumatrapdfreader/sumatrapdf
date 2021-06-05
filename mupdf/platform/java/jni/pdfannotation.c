@@ -657,7 +657,7 @@ FUN(PDFAnnotation_eventEnter)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 	{
 		pdf_annot_event_enter(ctx, annot);
-		annot->is_hot = 1;
+		pdf_set_annot_hot(ctx, annot, 1);
 	}
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
@@ -674,7 +674,7 @@ FUN(PDFAnnotation_eventExit)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 	{
 		pdf_annot_event_exit(ctx, annot);
-		annot->is_hot = 0;
+		pdf_set_annot_hot(ctx, annot, 0);
 	}
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
@@ -691,7 +691,7 @@ FUN(PDFAnnotation_eventDown)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 	{
 		pdf_annot_event_down(ctx, annot);
-		pdf_annot_set_active(ctx, annot, 1);
+		pdf_set_annot_active(ctx, annot, 1);
 	}
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
@@ -709,7 +709,7 @@ FUN(PDFAnnotation_eventUp)(JNIEnv *env, jobject self)
 	{
 		if (pdf_annot_hot(ctx, annot) && pdf_annot_active(ctx, annot))
 			pdf_annot_event_up(ctx, annot);
-		pdf_annot_set_active(ctx, annot, 0);
+		pdf_set_annot_active(ctx, annot, 0);
 	}
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
@@ -880,7 +880,7 @@ FUN(PDFAnnotation_getObject)(JNIEnv *env, jobject self)
 
 	if (!ctx || !annot) return NULL;
 
-	return to_PDFObject_safe(ctx, env, annot->obj);
+	return to_PDFObject_safe(ctx, env, pdf_annot_obj(ctx, annot));
 }
 
 JNIEXPORT jint JNICALL
