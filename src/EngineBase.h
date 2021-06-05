@@ -216,6 +216,10 @@ struct TocItem : TreeItem {
     // next sibling
     TocItem* next{nullptr};
 
+    // caching to speed up ChildAt
+    TocItem* currChild{nullptr};
+    int currChildNo{0};
+
     // -- only for .vbkm usage (EngineMulti, TocEditor) --
     // marks a node that represents a file
     char* engineFilePath{nullptr};
