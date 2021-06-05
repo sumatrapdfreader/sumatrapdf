@@ -1,39 +1,141 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+  <head>
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Customize external viewers</title>
+    <link rel="stylesheet" href="../sumatra.css" type="text/css" />
+    <link rel="stylesheet" href="../notion.css" type="text/css" />
+  </head>
 
-<head>
-	<meta http-equiv="Content-Language" content="en-us">
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>Customize external viewers</title>
-	<link rel="stylesheet" href="../sumatra.css" type="text/css" />
-	<link rel="stylesheet" href="../notion.css" type="text/css" />
-</head>
+  <body>
+    <script type="text/javascript" src="../sumatra.js"></script>
 
-<body>
-	<script type="text/javascript" src="../sumatra.js"></script>
-
-	<div id="container">
-		<div id="banner">
-			<h1 style="display:inline;">Sumatra PDF
-				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
-			</h1>
-			<script type="text/javascript">
-				document.write(navHtml());
-			</script>
-			<a id="donate" href="/backers.html">Donate</a>
-		</div>
-		<br/>
-		<div id="center">
-			<div class="content">
-			<div class="notion-page" id="15eb2979-c4e4-4782-9647-3898d3ce81fa"><div class="breadcrumbs"><div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div><div>/</div><div>Customize external viewers</div></div><div id="a4f2b46d-a3c7-43ab-92e1-43e0849008e5" class=""></div><div id="d7e95bb5-997a-464b-bec9-57cac1dd8cef" class="">You might have other viewers installed alongside Sumatra and you might wish to open current file in alternative viewer.</div><div id="2509614f-ce0d-45a3-92c8-a95f4f425ddd" class="">We make it easy for you. By default we auto-detect several other PDF readers (Adobe Acrobat, Foxit, PDF XChange etc.). If they are present, we add <code>Open with Adobe Reader</code> (etc.) items to <code>File</code> menu (available when you have .pdf document opened in Sumatra).</div><div id="d911689d-4f7d-4ac7-8f8f-2b0500e5b3b0" class="">You can also add custom readers by using <a href="https://www.sumatrapdfreader.org/settings/settings.html">advanced settings</a>.</div><div id="8cf26a74-2d40-4062-9578-3d3d718fe6b4" class="">To configure a new external reader:</div><ul id="0dc7ac1d-4de7-4b4c-8a37-fd8298d2dd88" class="bulleted-list"><li>use <code>Settings / Advanced Settings...</code> menu to open configuration file</li><li>find <code>ExternalViewers</code> section and fill it out</li></ul><div id="2b93a9ec-254b-401f-b0bd-0170e64a7858" class=""></div><div id="28fd1dad-2b8a-4e51-9c23-c92f27c56930" class="">Here are the relevant settings:</div><pre id="db422a15-1f93-499f-a7ca-b11a409b306a" class="code lang-plain text"><code>ExternalViewers [
+    <div id="container">
+      <div id="banner">
+        <h1 style="display: inline">
+          Sumatra PDF
+          <font size="-1">
+            is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows
+          </font>
+        </h1>
+        <script type="text/javascript">
+          document.write(navHtml());
+        </script>
+        <a id="donate" href="/backers.html">Donate</a>
+      </div>
+      <br />
+      <div id="center">
+        <div class="content">
+          <div class="notion-page" id="15eb2979-c4e4-4782-9647-3898d3ce81fa">
+            <div class="breadcrumbs">
+              <div>
+                <a href="SumatraPDF-documentation.html">
+                  SumatraPDF documentation
+                </a>
+              </div>
+              <div>/</div>
+              <div>Customize external viewers</div>
+            </div>
+            <div id="a4f2b46d-a3c7-43ab-92e1-43e0849008e5" class=""></div>
+            <div id="d7e95bb5-997a-464b-bec9-57cac1dd8cef" class="">
+              You might have other viewers installed alongside Sumatra and you
+              might wish to open current file in alternative viewer.
+            </div>
+            <div id="2509614f-ce0d-45a3-92c8-a95f4f425ddd" class="">
+              We make it easy for you. By default we auto-detect several other
+              PDF readers (Adobe Acrobat, Foxit, PDF XChange etc.). If they are
+              present, we add
+              <code>Open with Adobe Reader</code>
+              (etc.) items to
+              <code>File</code>
+              menu (available when you have .pdf document opened in Sumatra).
+            </div>
+            <div id="d911689d-4f7d-4ac7-8f8f-2b0500e5b3b0" class="">
+              You can also add custom readers by using
+              <a href="https://www.sumatrapdfreader.org/settings/settings.html">
+                advanced settings
+              </a>
+              .
+            </div>
+            <div id="8cf26a74-2d40-4062-9578-3d3d718fe6b4" class="">
+              To configure a new external reader:
+            </div>
+            <ul id="0dc7ac1d-4de7-4b4c-8a37-fd8298d2dd88" class="bulleted-list">
+              <li>
+                use
+                <code>Settings / Advanced Settings...</code>
+                menu to open configuration file
+              </li>
+              <li>
+                find
+                <code>ExternalViewers</code>
+                section and fill it out
+              </li>
+            </ul>
+            <div id="2b93a9ec-254b-401f-b0bd-0170e64a7858" class=""></div>
+            <div id="28fd1dad-2b8a-4e51-9c23-c92f27c56930" class="">
+              Here are the relevant settings:
+            </div>
+            <pre
+              id="db422a15-1f93-499f-a7ca-b11a409b306a"
+              class="code lang-plain text"
+            ><code>ExternalViewers [
   [
     CommandLine =
     Name =
     Filter =
   ]
-]</code></pre><div id="947bb0bf-fc1b-44ee-8685-9cc496d07781" class=""><code>CommandLine</code> is a full path to program&#x27;s executable. You need to add <code>&quot;%1&quot;</code> at the end (will be substituted for a full path of the document. You can also use <code>%p</code> which will be substituted for a page number (assuming that the viewer has a command-line option to open a file at a given page).</div><div id="20c4dcae-d79d-4773-97f7-9def6f33ad85" class=""><code>Name</code> is the name of the program that will be displayed in <code>File</code> menu.</div><div id="e15ab931-e683-4fba-9db7-e651a7de74ca" class=""><code>Filter</code> dictates what kind of files can be opened by the reader. For example:</div><ul id="37293e9e-8269-4859-9021-c083375c0b13" class="bulleted-list"><li>to only activate it for PDF files, use <code>*.pdf</code></li><li>to activate for PNG and JPEG files, use <code>*.png;*.jpg;*.jpeg</code></li></ul><div id="0a83eed7-31c7-4965-a7d9-dd2bd1f3684c" class=""></div><div id="47d38b54-3d8e-45c5-b3a3-d7f77315fab9" class="">You can configure multiple external viewers.</div><div id="44bb161b-0182-4ed0-978d-a6a21ac1ae16" class=""></div></div><hr><center><a href="https://notion.so/15eb2979c4e4478296473898d3ce81fa" target="_blank" class="suggest-change">suggest change to this page</a></center>
-			</div>
-		</div>
-	</div>
-</body>
+]</code></pre>
+            <div id="947bb0bf-fc1b-44ee-8685-9cc496d07781" class="">
+              <code>CommandLine</code>
+              is a full path to program&#x27;s executable. You need to add
+              <code>&quot;%1&quot;</code>
+              at the end (will be substituted for a full path of the document.
+              You can also use
+              <code>%p</code>
+              which will be substituted for a page number (assuming that the
+              viewer has a command-line option to open a file at a given page).
+            </div>
+            <div id="20c4dcae-d79d-4773-97f7-9def6f33ad85" class="">
+              <code>Name</code>
+              is the name of the program that will be displayed in
+              <code>File</code>
+              menu.
+            </div>
+            <div id="e15ab931-e683-4fba-9db7-e651a7de74ca" class="">
+              <code>Filter</code>
+              dictates what kind of files can be opened by the reader. For
+              example:
+            </div>
+            <ul id="37293e9e-8269-4859-9021-c083375c0b13" class="bulleted-list">
+              <li>
+                to only activate it for PDF files, use
+                <code>*.pdf</code>
+              </li>
+              <li>
+                to activate for PNG and JPEG files, use
+                <code>*.png;*.jpg;*.jpeg</code>
+              </li>
+            </ul>
+            <div id="0a83eed7-31c7-4965-a7d9-dd2bd1f3684c" class=""></div>
+            <div id="47d38b54-3d8e-45c5-b3a3-d7f77315fab9" class="">
+              You can configure multiple external viewers.
+            </div>
+            <div id="44bb161b-0182-4ed0-978d-a6a21ac1ae16" class=""></div>
+          </div>
+          <hr />
+          <center>
+            <a
+              href="https://notion.so/15eb2979c4e4478296473898d3ce81fa"
+              target="_blank"
+              class="suggest-change"
+            >
+              suggest change to this page
+            </a>
+          </center>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

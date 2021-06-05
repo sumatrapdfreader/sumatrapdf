@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -41,12 +40,6 @@ type GitChange struct {
 	Type int // Modified, Added etc.
 	Path string
 	Name string
-}
-
-func printStack() {
-	buf := make([]byte, 1024*164)
-	n := runtime.Stack(buf, false)
-	fmt.Printf("%s", buf[:n])
 }
 
 func detectExeMust(name string) string {
@@ -164,7 +157,7 @@ func deleteOldDirs() {
 			// we shouldn't create anything but dirs
 			continue
 		}
-		age := time.Now().Sub(fi.ModTime())
+		age := time.Since(fi.ModTime())
 		path := filepath.Join(tempDir, fi.Name())
 		if age > time.Hour*24 {
 			fmt.Printf("Deleting %s because older than 1 day\n", path)

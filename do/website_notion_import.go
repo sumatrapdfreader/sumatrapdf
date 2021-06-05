@@ -376,15 +376,21 @@ func websiteImportNotion() {
 		notionToHTML(client, page, pages, d.IdToPage)
 	}
 
-	if false {
+	// to install prettier: npm i -g prettier
+	// TODO: automatically install if not installed
+	cmd := exec.Command("prettier", "--html-whitespace-sensitivity", "ignore", "--write", `*.html`)
+	cmd.Dir = "docs" // only imported pages from notion
+	u.RunCmdLoggedMust(cmd)
+
+	if true {
 		// using https://github.com/netlify/cli
-		cmd := exec.Command("netlify", "dev", "--dir", "website")
+		cmd := exec.Command("netlify", "dev", "--dir", ".")
 		u.RunCmdLoggedMust(cmd)
 	}
 
 	if false {
-		err = os.Chdir("website")
-		must(err)
+		//err = os.Chdir("website")
+		//must(err)
 		u.OpenBrowser("free-pdf-reader.html")
 	}
 }

@@ -1,382 +1,581 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-<head>
-  <meta http-equiv="Content-Language" content="en-us">
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Manual for Sumatra PDF reader</title>
+    <link rel="stylesheet" href="sumatra.css" type="text/css" />
+    <style type="text/css">
+      table.shortcuts {
+        color: black;
+        border: 0px;
+      }
+    </style>
+  </head>
 
-  <title>Manual for Sumatra PDF reader</title>
-  <link rel="stylesheet" href="sumatra.css" type="text/css" />
-  <style type="text/css">
-    table.shortcuts {
-      color: black;
-      border: 0px;
-    }
-  </style>
-</head>
+  <body>
+    <script type="text/javascript" src="sumatra.js"></script>
 
-<body>
-  <script type="text/javascript" src="sumatra.js"></script>
+    <div id="container">
+      <div id="banner">
+        <h1 style="display: inline">
+          Sumatra PDF
+          <font size="-1">
+            is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows
+          </font>
+        </h1>
+        <script type="text/javascript">
+          document.write(navHtml());
+        </script>
+        <a id="donate" href="/backers.html">Donate</a>
+      </div>
 
-  <div id="container">
-    <div id="banner">
+      <div id="center">
+        <div class="content">
+          <h2 id="manual-keyboard">Keyboard shortcuts</h2>
 
-      <h1 style="display:inline;">Sumatra PDF
-        <font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
-      </h1>
-      <script type="text/javascript">
-        document.write(navHtml());
-      </script>
-      <a id="donate" href="/backers.html">Donate</a>
-    </div>
-
-    <div id="center">
-      <div class="content">
-        <h2 id="manual-keyboard">Keyboard shortcuts</h2>
-
-        <table style="line-height: 115%">
-          <tr>
-            <td valign="top">
-              <table class="shortcuts">
-                <tr>
-                  <td></td>
-                  <td><b>Navigation</b></td>
-                </tr>
-                <tr>
-                  <td class="keys-left"><b>j/k</b>, <b>Up/Down</b></td>
-                  <td>&nbsp;scroll up/down by line</td>
-                </tr>
-                <td class="keys-left"><b>space</b></td>
-                <td>&nbsp;scroll by screen</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Shift&gt;</b> + <b>space</b></td>
-            <td>&nbsp;scroll back by screen</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>n/p</b>, <b>l/h</b></td>
-            <td>&nbsp;next/previous page</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>Page Down/Page Up</b></td>
-            <td>&nbsp;next/previous page</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt; + Down/&lt;Ctrl&gt; + Up</b></td>
-            <td>&nbsp;next/previous page</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Alt&gt;</b> + <b>Left</b></td>
-            <td>&nbsp;go back</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Alt&gt;</b> + <b>Right</b></td>
-            <td>&nbsp;go forward</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>G</b>, <b>g</b></td>
-            <td>&nbsp;go to page</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>Home</b></td>
-            <td>&nbsp;go to first page</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>End</b></td>
-            <td>&nbsp;go to last page</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>b</b></td>
-            <td>&nbsp;flip a page in book mode</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>&lt;Shift&gt;</b> + <b>Right</b>
-            </td>
-            <td>&nbsp;open next document in the directory</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>&lt;Shift&gt;</b> + <b>Left</b>
-            </td>
-            <td>&nbsp;open previous document in the directory</td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><b>Actions</b></td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>N</b></td>
-            <td>&nbsp;open a New window</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>&lt;Shift&gt;</b> + <b>N</b></td>
-            <td>&nbsp;open current document in New window</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>O</b></td>
-            <td>&nbsp;open a new document</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>W</b></td>
-            <td>&nbsp;close current document</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>F4</b></td>
-            <td>&nbsp;also close current document</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>S</b></td>
-            <td>&nbsp;save as</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>F2</b></td>
-            <td>&nbsp;rename file and reopen with new name</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>P</b></td>
-            <td>&nbsp;print</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>r</b></td>
-            <td>&nbsp;reload</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>F</b>, <b>/</b></td>
-            <td>&nbsp;find text</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>F3</b>, <b>&lt;Shift&gt;</b> + <b>F3</b></td>
-            <td>&nbsp;find next/previous</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>Q</b> or <b>q</b></td>
-            <td>&nbsp;quit program</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>Left Mouse</b></td>
-            <td>&nbsp;select area (can then use with copy, print or +/- zoom)</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>Right Mouse</b></td>
-            <td>&nbsp;grab and pan page in any direction</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Alt&gt;</b> + <b>Scroll Wheel</b></td>
-            <td>&nbsp;increase vertical scroll wheel steps (faster)</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Shift&gt;</b> + <b>Scroll Wheel</b></td>
-            <td>&nbsp;pan horizontally with scroll wheel</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>y</b></td>
-            <td>&nbsp;show dropdown zoom control</td>
-          </tr>
-          <tr>
-            <td class="keys-left"><b>Ctrl</b>+<b>b</b></td>
-            <td>&nbsp;add current page to favorites (since 3.2)</td>
-          </tr>
-        </table>
-        </td>
-        <td>&nbsp;&nbsp;&nbsp;</td>
-        <td valign="top">
-          <table class="shortcuts">
+          <table style="line-height: 115%">
             <tr>
-              <td></td>
-              <td><b>Viewing state</b></td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>+</b>, <b>-</b></td>
-              <td>&nbsp;zoom in/out</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>scroll wheel</b></td>
-              <td>&nbsp;zoom in/out</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>z</b></td>
-              <td>&nbsp;toggle zoom between Fit Page, Fit Width, Fit Content</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>c</b></td>
-              <td>&nbsp;toggle between continuous/non-continuous mode</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>&lt;Shift&gt; -</b></td>
-              <td>&nbsp;rotate left</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>&lt;Shift&gt; +</b></td>
-              <td>&nbsp;rotate right</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>F12</b></td>
-              <td>&nbsp;show/hide bookmarks (table of contents)</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>F6</b>
+              <td valign="top">
+                <table class="shortcuts">
+                  <tr>
+                    <td></td>
+                    <td><b>Navigation</b></td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>j/k</b>
+                      ,
+                      <b>Up/Down</b>
+                    </td>
+                    <td>&nbsp;scroll up/down by line</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>space</b></td>
+                    <td>&nbsp;scroll by screen</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>space</b>
+                    </td>
+                    <td>&nbsp;scroll back by screen</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>n/p</b>
+                      ,
+                      <b>l/h</b>
+                    </td>
+                    <td>&nbsp;next/previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>Page Down/Page Up</b></td>
+                    <td>&nbsp;next/previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt; + Down/&lt;Ctrl&gt; + Up</b>
+                    </td>
+                    <td>&nbsp;next/previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Alt&gt;</b>
+                      +
+                      <b>Left</b>
+                    </td>
+                    <td>&nbsp;go back</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Alt&gt;</b>
+                      +
+                      <b>Right</b>
+                    </td>
+                    <td>&nbsp;go forward</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>G</b>
+                      ,
+                      <b>g</b>
+                    </td>
+                    <td>&nbsp;go to page</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>Home</b></td>
+                    <td>&nbsp;go to first page</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>End</b></td>
+                    <td>&nbsp;go to last page</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>b</b></td>
+                    <td>&nbsp;flip a page in book mode</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>Right</b>
+                    </td>
+                    <td>&nbsp;open next document in the directory</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>Left</b>
+                    </td>
+                    <td>&nbsp;open previous document in the directory</td>
+                  </tr>
+                  <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td><b>Actions</b></td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>N</b>
+                    </td>
+                    <td>&nbsp;open a New window</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>N</b>
+                    </td>
+                    <td>&nbsp;open current document in New window</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>O</b>
+                    </td>
+                    <td>&nbsp;open a new document</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>W</b>
+                    </td>
+                    <td>&nbsp;close current document</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>F4</b>
+                    </td>
+                    <td>&nbsp;also close current document</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>S</b>
+                    </td>
+                    <td>&nbsp;save as</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>F2</b></td>
+                    <td>&nbsp;rename file and reopen with new name</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>P</b>
+                    </td>
+                    <td>&nbsp;print</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>r</b></td>
+                    <td>&nbsp;reload</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>F</b>
+                      ,
+                      <b>/</b>
+                    </td>
+                    <td>&nbsp;find text</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>F3</b>
+                      ,
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>F3</b>
+                    </td>
+                    <td>&nbsp;find next/previous</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>Q</b>
+                      or
+                      <b>q</b>
+                    </td>
+                    <td>&nbsp;quit program</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>Left Mouse</b>
+                    </td>
+                    <td>
+                      &nbsp;select area (can then use with copy, print or +/-
+                      zoom)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>Right Mouse</b></td>
+                    <td>&nbsp;grab and pan page in any direction</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Alt&gt;</b>
+                      +
+                      <b>Scroll Wheel</b>
+                    </td>
+                    <td>&nbsp;increase vertical scroll wheel steps (faster)</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>Scroll Wheel</b>
+                    </td>
+                    <td>&nbsp;pan horizontally with scroll wheel</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>y</b>
+                    </td>
+                    <td>&nbsp;show dropdown zoom control</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>Ctrl</b>
+                      +
+                      <b>b</b>
+                    </td>
+                    <td>&nbsp;add current page to favorites (since 3.2)</td>
+                  </tr>
+                </table>
               </td>
-              <td>&nbsp;switch focus between bookmarks window and main window</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>L</b> or <b>F5</b></td>
-              <td>&nbsp;toggle presentation mode (minimal full screen mode)</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>&lt;Shift&gt;</b> + <b>L</b></td>
-              <td>&nbsp;toggle full screen mode</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>F11</b></td>
-              <td>&nbsp;toggle full screen mode</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>ESC</b></td>
-              <td>&nbsp;exit full screen or presentation mode</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>.</b>
-              </td>
-              <td>&nbsp;in presentation mode, make whole screen black</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>w</b>
-              </td>
-              <td>&nbsp;in presentation mode, make whole screen white</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>i</b>
-              </td>
-              <td>&nbsp;show page information in full screen/presentation mode</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>m</b>
-              </td>
-              <td>&nbsp;show cursor position in document coordinates</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>F8</b>
-              </td>
-              <td>&nbsp;show/hide toolbar</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>F9</b>
-              </td>
-              <td>&nbsp;show/hide menu</td>
-            </tr>
+              <td>&nbsp;&nbsp;&nbsp;</td>
+              <td valign="top">
+                <table class="shortcuts">
+                  <tr>
+                    <td></td>
+                    <td><b>Viewing state</b></td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>+</b>
+                      ,
+                      <b>-</b>
+                    </td>
+                    <td>&nbsp;zoom in/out</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>scroll wheel</b>
+                    </td>
+                    <td>&nbsp;zoom in/out</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>z</b></td>
+                    <td>
+                      &nbsp;toggle zoom between Fit Page, Fit Width, Fit Content
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>c</b></td>
+                    <td>&nbsp;toggle between continuous/non-continuous mode</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>&lt;Shift&gt; -</b>
+                    </td>
+                    <td>&nbsp;rotate left</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>&lt;Shift&gt; +</b>
+                    </td>
+                    <td>&nbsp;rotate right</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>F12</b></td>
+                    <td>&nbsp;show/hide bookmarks (table of contents)</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>F6</b></td>
+                    <td>
+                      &nbsp;switch focus between bookmarks window and main
+                      window
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>L</b>
+                      or
+                      <b>F5</b>
+                    </td>
+                    <td>
+                      &nbsp;toggle presentation mode (minimal full screen mode)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>L</b>
+                    </td>
+                    <td>&nbsp;toggle full screen mode</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>F11</b></td>
+                    <td>&nbsp;toggle full screen mode</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>ESC</b></td>
+                    <td>&nbsp;exit full screen or presentation mode</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>.</b></td>
+                    <td>&nbsp;in presentation mode, make whole screen black</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>w</b></td>
+                    <td>&nbsp;in presentation mode, make whole screen white</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>i</b></td>
+                    <td>
+                      &nbsp;show page information in full screen/presentation
+                      mode
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>m</b></td>
+                    <td>&nbsp;show cursor position in document coordinates</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>F8</b></td>
+                    <td>&nbsp;show/hide toolbar</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>F9</b></td>
+                    <td>&nbsp;show/hide menu</td>
+                  </tr>
 
-            <tr>
-              <td>&nbsp;</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-              <td><b>Tabs</b></td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Ctrl&gt;</b> + <b>Tab</b></td>
-              <td>&nbsp;go to next tab</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Ctrl&gt; &lt;Shift&gt;</b> + <b>Tab</b></td>
-              <td>&nbsp;go to previous tab</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Alt&gt;</b> + <b>1</b></td>
-              <td>&nbsp;go to tab 1. Use 2, 3 etc. up to 8 to go to n-th tab</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Alt&gt;</b> + <b>9</b></td>
-              <td>&nbsp;go to last tab</td>
-            </tr>
+                  <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td><b>Tabs</b></td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt;</b>
+                      +
+                      <b>Tab</b>
+                    </td>
+                    <td>&nbsp;go to next tab</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Ctrl&gt; &lt;Shift&gt;</b>
+                      +
+                      <b>Tab</b>
+                    </td>
+                    <td>&nbsp;go to previous tab</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Alt&gt;</b>
+                      +
+                      <b>1</b>
+                    </td>
+                    <td>
+                      &nbsp;go to tab 1. Use 2, 3 etc. up to 8 to go to n-th tab
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Alt&gt;</b>
+                      +
+                      <b>9</b>
+                    </td>
+                    <td>&nbsp;go to last tab</td>
+                  </tr>
 
-            <tr>
-              <td>&nbsp;</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-              <td><b>Bookmarks View</b></td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>(numeric keyboard)</b></td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>*</b></td>
-              <td>&nbsp;expand current tree item</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Shift&gt;</b> + <b>*</b></td>
-              <td>&nbsp;expand all tree items</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>/</b></td>
-              <td>&nbsp;collapse current tree item</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Shift&gt;</b> + <b>/</b></td>
-              <td>&nbsp;collapse all tree items</td>
-            </tr>
+                  <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td><b>Bookmarks View</b></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td><b>(numeric keyboard)</b></td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>*</b></td>
+                    <td>&nbsp;expand current tree item</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>*</b>
+                    </td>
+                    <td>&nbsp;expand all tree items</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>/</b></td>
+                    <td>&nbsp;collapse current tree item</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>/</b>
+                    </td>
+                    <td>&nbsp;collapse all tree items</td>
+                  </tr>
 
-            <tr>
-              <td></td>
-              <td>(only in <a href="/dailybuilds.html">daily builds</a>)</b></td>
+                  <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td>
+                      <b>
+                        (only in
+                        <a href="/dailybuilds.html">daily builds</a>
+                        )
+                      </b>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left"><b>Enter</b></td>
+                    <td>&nbsp;toggle current tree item</td>
+                  </tr>
+                  <tr>
+                    <td class="keys-left">
+                      <b>&lt;Shift&gt;</b>
+                      +
+                      <b>Enter</b>
+                    </td>
+                    <td>&nbsp;toggle current tree item and its children</td>
+                  </tr>
+                </table>
+              </td>
             </tr>
-            <tr>
-              <td class="keys-left"><b>Enter</b></td>
-              <td>&nbsp;toggle current tree item</td>
-            </tr>
-            <tr>
-              <td class="keys-left"><b>&lt;Shift&gt;</b> + <b>Enter</b></td>
-              <td>&nbsp;toggle current tree item and its children</td>
-            </tr>
-
           </table>
-        </td>
-        </tr>
-        </table>
-        <p></p>
+          <p></p>
 
-        <h2 id="advanced-settings">Advanced settings</h2>
+          <h2 id="more-shortcuts">More Keyboard shortcuts</h2>
+          <p>
+            For most complete list of keyboard shortcuts, see <a href="/docs/Keyboard-shortcuts.html">this page</a>.
+          </p>
 
-        <p>
-          SumatraPDF can be customized by editing <a href="settings/settings.html">settings file</a>.
-        </p>
+          <h2 id="advanced-settings">Advanced settings</h2>
+          <p>
+            SumatraPDF can be customized by editing
+            <a href="settings/settings.html">settings file</a>.
+          </p>
 
-        <h2 id="manual-cmd-line">Command-line arguments</h2>
-        <p>
-          For most complete documentation, read <a href="docs/Command-line-arguments.html">this
-            page</a>.
-        </p>
+          <h2 id="manual-cmd-line">Command-line arguments</h2>
+          <p>
+            For most complete documentation, read
+            <a href="docs/Command-line-arguments.html">this page</a>.
+          </p>
 
-        <h2 id="manual-latex">LaTeX preview support</h2>
-        <p> Sumatra has built-in support for <a href="docs/Use-Sumatra-as-a-pre-viewer-for-LaTeX-editors.html">easy
-            previewing of LaTeX documents</a>.
-        </p>
+          <h2 id="manual-latex">LaTeX preview support</h2>
+          <p>
+            Sumatra has built-in support for
+            <a href="docs/Use-Sumatra-as-a-pre-viewer-for-LaTeX-editors.html">
+              easy previewing of LaTeX documents</a>.
+          </p>
 
-        <h2 id="manual-restricted">Running in restricted mode</h2>
-        <p>A restricted mode is useful if you want to use SumatraPDF as a bundled viewer for your program's
-          documentation or in kiosk mode. Read <a href="docs/Configure-Sumatra-for-restricted-use.html">more
-            about restricted mode</a>.
+          <h2 id="manual-restricted">Running in restricted mode</h2>
+          <p>
+            A restricted mode is useful if you want to use SumatraPDF as a
+            bundled viewer for your program's documentation or in kiosk mode.
+            Read
+            <a href="docs/Configure-Sumatra-for-restricted-use.html">
+              more about restricted mode
+            </a>
+            .
+          </p>
 
           <h2 id="manual-limitations">Limitations</h2>
 
-          <p>Editing interactive forms and adding comments is not implemented.</p>
+          <p>
+            Editing interactive forms and adding comments is not implemented.
+          </p>
 
           <h2 id="more-docs">More documentation</h2>
 
-          <p>You can find more documentation on <a href="docs/SumatraPDF-documentation.html">this
-              page</a>.</p>
+          <p>
+            You can find more documentation on
+            <a href="docs/SumatraPDF-documentation.html">this page</a>.
+          </p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <hr>
-  <center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
-</body>
-
+    <hr />
+    <center>
+      <a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a>
+    </center>
+  </body>
 </html>

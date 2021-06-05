@@ -1,5 +1,23 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2012-06-05 Sat
+
+fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1970
+a crash when pressing 'q' on empty window. a regression from
+recent change.
+lesson: more testing even when making seemingly simple changes
+
+updates keyboard shortcuts docs, formatted .html files with prettier
+(will be easier to review diffs after notion import in the future).
+
+2012-06-04 Fri
+
+update mupdf
+
+2012-06-01 Tue
+
+update mupdf
+
 2021-05-31 Mon
 
 randomize viewing state during stress test

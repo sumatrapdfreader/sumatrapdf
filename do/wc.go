@@ -7,10 +7,7 @@ import (
 )
 
 func excludeFiles(s string) bool {
-	if strings.Contains(s, "Trans_sumatra_txt.cpp") {
-		return false
-	}
-	return true
+	return !strings.Contains(s, "Trans_sumatra_txt.cpp")
 }
 
 var srcFiles = u.MakeAllowedFileFilterForExts(".go", ".cpp", ".h")
