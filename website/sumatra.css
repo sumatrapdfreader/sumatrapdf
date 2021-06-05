@@ -378,10 +378,10 @@ a.for-nav-icon:hover {
 /* keyboard shortcut */
 .ks {
   margin-right: .2em;
-  border-radius: 4px;
-  color: #333;
-  background: #eee;
-  border: 1px solid #ddd;
-  padding: .1em .3em;
-  font-size: 90%;
+  color: #eb5757;
+  background: rgba(135, 131, 120, 0.07);
+  border-radius: 3px;
+  padding: .2em .4em;
+  font-family: monospace;
+  font-size: 1.2em;
 }

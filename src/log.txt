@@ -10,6 +10,15 @@ lesson: more testing even when making seemingly simple changes
 updates keyboard shortcuts docs, formatted .html files with prettier
 (will be easier to review diffs after notion import in the future).
 
+optimized TocItem::ChildAt() for https://github.com/sumatrapdfreader/sumatrapdf/issues/1795#issuecomment-855295881
+this document is somewhat of an edge case in that it has toc items with
+lots of children and ChildAt(n) would always traverse from first child,
+creating a quadratic time complexity.
+still not fast enough for this particular document but at least now
+the time is spent fully in windows TreeCtrl code.
+
+website: make display of keyboard shortcut in manual.html look closer to docs/Keyboard-shortcuts.html
+
 2012-06-04 Fri
 
 update mupdf
