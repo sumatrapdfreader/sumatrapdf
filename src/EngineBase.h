@@ -45,7 +45,7 @@ enum class DocumentProperty {
 
 class RenderedBitmap {
   public:
-    HBITMAP hbmp = nullptr;
+    HBITMAP hbmp{nullptr};
     Size size = {};
     AutoCloseHandle hMap = {};
 
@@ -90,11 +90,11 @@ void FreePageText(PageText*);
 
 // a link destination
 struct PageDestination {
-    Kind kind = nullptr;
-    int pageNo = 0;
+    Kind kind{nullptr};
+    int pageNo{0};
     RectF rect{};
-    WCHAR* value = nullptr;
-    WCHAR* name = nullptr;
+    WCHAR* value{nullptr};
+    WCHAR* name{nullptr};
 
     PageDestination() = default;
 
@@ -143,14 +143,14 @@ struct IPageElement {
 
 // hoverable (and maybe interactable) element on a single page
 struct PageElement : IPageElement {
-    Kind kind_ = nullptr;
-    int pageNo = 0;
+    Kind kind_{nullptr};
+    int pageNo{0};
     RectF rect{};
-    WCHAR* value = nullptr;
+    WCHAR* value{nullptr};
     // only set if kindPageElementDest
-    PageDestination* dest = nullptr;
+    PageDestination* dest{nullptr};
 
-    int imageID = 0;
+    int imageID{0};
 
     ~PageElement() override;
 
@@ -180,49 +180,49 @@ struct TocItem : TreeItem {
     // each engine has a raw representation of the toc item which
     // we want to access. Not (yet) supported by all engines
     // other values come from parsing this value
-    Kind kindRaw = nullptr;
-    char* rawVal1 = nullptr;
-    char* rawVal2 = nullptr;
+    Kind kindRaw{nullptr};
+    char* rawVal1{nullptr};
+    char* rawVal2{nullptr};
 
-    TocItem* parent = nullptr;
+    TocItem* parent{nullptr};
 
     // the item's visible label
-    WCHAR* title = nullptr;
+    WCHAR* title{nullptr};
 
     // in some formats, the document can specify the tree item
     // is expanded by default. We keep track if user toggled
     // expansion state of the tree item
-    bool isOpenDefault = false;
-    bool isOpenToggled = false;
+    bool isOpenDefault{false};
+    bool isOpenToggled{false};
 
-    bool isUnchecked = false;
+    bool isUnchecked{false};
 
     // page this item points to (0 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
-    int pageNo = 0;
+    int pageNo{0};
 
     // arbitrary number allowing to distinguish this TocItem
     // from any other of the same ToC tree (must be constant
     // between runs so that it can be persisted in FileState::tocState)
-    int id = 0;
+    int id{0};
 
-    int fontFlags = 0; // fontBitBold, fontBitItalic
-    COLORREF color = ColorUnset;
+    int fontFlags{0}; // fontBitBold, fontBitItalic
+    COLORREF color{ColorUnset};
 
-    PageDestination* dest = nullptr;
+    PageDestination* dest{nullptr};
 
     // first child item
-    TocItem* child = nullptr;
+    TocItem* child{nullptr};
     // next sibling
-    TocItem* next = nullptr;
+    TocItem* next{nullptr};
 
     // -- only for .vbkm usage (EngineMulti, TocEditor) --
     // marks a node that represents a file
-    char* engineFilePath = nullptr;
-    int nPages = 0;
+    char* engineFilePath{nullptr};
+    int nPages{0};
     // auto-calculated page number that tells us a span from
     // pageNo => endPageNo
-    int endPageNo = 0;
+    int endPageNo{0};
 
     TocItem() = default;
 
@@ -253,7 +253,7 @@ struct TocItem : TreeItem {
 TocItem* CloneTocItemRecur(TocItem*, bool);
 
 struct TocTree : TreeModel {
-    TocItem* root = nullptr;
+    TocItem* root{nullptr};
 
     TocTree() = default;
     TocTree(TocItem* root);
@@ -280,13 +280,13 @@ class AbortCookie {
 };
 
 struct RenderPageArgs {
-    int pageNo = 0;
-    float zoom = 0;
-    int rotation = 0;
+    int pageNo{0};
+    float zoom{0};
+    int rotation{0};
     /* if nullptr: defaults to the page's mediabox */
-    RectF* pageRect = nullptr;
+    RectF* pageRect{nullptr};
     RenderTarget target = RenderTarget::View;
-    AbortCookie** cookie_out = nullptr;
+    AbortCookie** cookie_out{nullptr};
 
     RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect = nullptr,
                    RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr);
@@ -294,19 +294,19 @@ struct RenderPageArgs {
 
 class EngineBase {
   public:
-    Kind kind = nullptr;
+    Kind kind{nullptr};
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
-    const WCHAR* defaultFileExt = nullptr;
+    const WCHAR* defaultFileExt{nullptr};
     PageLayoutType preferredLayout = Layout_Single;
     float fileDPI = 96.0f;
-    bool isImageCollection = false;
-    bool allowsPrinting = true;
-    bool allowsCopyingText = true;
-    bool isPasswordProtected = false;
-    char* decryptionKey = nullptr;
-    bool hasPageLabels = false;
-    int pageCount = -1;
+    bool isImageCollection{false};
+    bool allowsPrinting{true};
+    bool allowsCopyingText{true};
+    bool isPasswordProtected{false};
+    char* decryptionKey{nullptr};
+    bool hasPageLabels{false};
+    int pageCount{-1};
 
     // TODO: migrate other engines to use this
     AutoFreeWstr fileNameBase;
