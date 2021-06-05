@@ -2252,6 +2252,9 @@ void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
 }
 
 static void MaybeSaveAnnotations(TabInfo* tab) {
+    if (!tab) {
+        return;
+    }
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return;
