@@ -28,10 +28,15 @@ class Vec {
 
   protected:
     bool EnsureCap(size_t needed) {
+        // this is frequent, fast path that should be inlined
         if (cap >= needed) {
             return true;
         }
+        // slow path
+        return EnsureCapSlow(needed);
+    }
 
+    bool EnsureCapSlow(size_t needed) {
         size_t newCap = cap * 2;
         if (needed > newCap) {
             newCap = needed;
