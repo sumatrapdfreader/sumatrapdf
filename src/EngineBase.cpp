@@ -342,10 +342,9 @@ TreeItem* TocItem::ChildAt(int n) {
     }
     // speed up sequential iteration over children
     if (currChild != nullptr && n == currChildNo + 1) {
-        auto res = currChild;
         currChild = currChild->next;
         ++currChildNo;
-        return res;
+        return currChild;
     }
     auto node = child;
     while (n > 0) {
