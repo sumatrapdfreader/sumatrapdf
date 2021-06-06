@@ -26,6 +26,8 @@ https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
 
 speed up TreeCtrl::GetTreeItemByHandle()
 
+speed up TreeCtrl::GetHandleByTreeItem() by storing handle in TreeItem
+
 2012-06-04 Fri
 
 update mupdf

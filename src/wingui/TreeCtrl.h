@@ -160,10 +160,6 @@ struct TreeCtrl : WindowBase {
     // private
     TVITEMW item{};
 
-    // TreeItem* -> HTREEITEM mapping so that we can
-    // find HTREEITEM from TreeItem*
-    Vec<std::tuple<TreeItem*, HTREEITEM>> insertedItems;
-
     TreeCtrl(HWND parent);
     ~TreeCtrl();
 

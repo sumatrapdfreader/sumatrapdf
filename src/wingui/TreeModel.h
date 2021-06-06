@@ -3,6 +3,8 @@
 
 // TreeItem represents an item in a TreeView control
 struct TreeItem {
+    HTREEITEM hItem{nullptr};
+
     virtual ~TreeItem(){};
 
     // TODO: convert to char*
@@ -14,6 +16,13 @@ struct TreeItem {
     virtual bool IsExpanded() = 0;
     // when showing checkboxes
     virtual bool IsChecked() = 0;
+
+    virtual void SetHandle(HTREEITEM h) {
+        hItem = h;
+    }
+    virtual HTREEITEM GetHandle() {
+        return hItem;
+    }
 };
 
 // TreeModel provides data to TreeCtrl

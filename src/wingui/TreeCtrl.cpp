@@ -600,7 +600,6 @@ void TreeCtrl::CollapseAll() {
 
 void TreeCtrl::Clear() {
     treeModel = nullptr;
-    insertedItems.Reset();
 
     HWND hwnd = this->hwnd;
     ::SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
@@ -644,39 +643,18 @@ TreeItem* TreeCtrl::GetItemAt(int x, int y) {
     return GetTreeItemByHandle(ht.hItem);
 }
 
-// TODO: speed up by storing the pointer as TVINSERTSTRUCTW.lParam
 HTREEITEM TreeCtrl::GetHandleByTreeItem(TreeItem* item) {
-    for (auto t : this->insertedItems) {
-        auto* i = std::get<0>(t);
-        if (i == item) {
-            return std::get<1>(t);
-        }
-    }
-    CrashIf(true);
-    return nullptr;
+    HTREEITEM res = item->GetHandle();
+    return res;
 }
 
 TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
     if (item == nullptr) {
         return nullptr;
     }
-#if 1
     auto tvi = GetTVITEM(this, item);
     TreeItem* res = reinterpret_cast<TreeItem*>(tvi->lParam);
     return res;
-#else
-    for (auto t : this->insertedItems) {
-        auto& i = std::get<1>(t);
-        if (i == item) {
-            TreeItem* res = std::get<0>(t);
-            auto tvi = GetTVITEM(this, item);
-            TreeItem* res2 = reinterpret_cast<TreeItem*>(tvi->lParam);
-            CrashIf(res != res2);
-            return res;
-        }
-    }
-    return nullptr;
-#endif
 }
 
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes) {
@@ -777,14 +755,13 @@ void PopulateTreeItem(TreeCtrl* tree, TreeItem* parent, HTREEITEM hParent) {
     for (int i = 0; i < n; i++) {
         auto ti = parent->ChildAt(i);
         CrashIf(ti == nullptr);
-        a[n-1-i] = ti;
+        a[n - 1 - i] = ti;
     }
 
     for (int i = 0; i < n; i++) {
         auto ti = a[i];
         HTREEITEM h = insertItemFront(tree, hParent, ti);
-        auto el = std::make_tuple(ti, h);
-        tree->insertedItems.Append(el);
+        ti->SetHandle(h);
         // avoid recursing if not needed because we use a lot of stack space
         if (ti->ChildCount() > 0) {
             PopulateTreeItem(tree, ti, h);
@@ -796,15 +773,13 @@ void PopulateTreeItem(TreeCtrl* tree, TreeItem* parent, HTREEITEM hParent) {
     }
 }
 
-
 static void PopulateTree(TreeCtrl* tree, TreeModel* tm) {
     HTREEITEM parent = nullptr;
     int n = tm->RootCount();
     for (int i = 0; i < n; i++) {
-        auto* ti = tm->RootAt(i);
+        auto ti = tm->RootAt(i);
         HTREEITEM h = insertItem(tree, parent, ti);
-        auto el = std::make_tuple(ti, h);
-        tree->insertedItems.Append(el);
+        ti->SetHandle(h);
         PopulateTreeItem(tree, ti, h);
     }
 }
@@ -814,7 +789,6 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
 
     SuspendRedraw();
 
-    insertedItems.Reset();
     TreeView_DeleteAllItems(hwnd);
 
     treeModel = tm;
