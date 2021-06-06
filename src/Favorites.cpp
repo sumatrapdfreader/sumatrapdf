@@ -799,7 +799,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     TreeCtrl* treeCtrl = win->favTreeCtrl;
     switch (msg) {
         case WM_SIZE:
-            LayoutTreeContainer(win->favLabelWithClose, nullptr, treeCtrl->hwnd);
+            LayoutTreeContainer(win->favLabelWithClose, treeCtrl->hwnd);
             break;
 
         case WM_COMMAND:

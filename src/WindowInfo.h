@@ -107,7 +107,6 @@ struct WindowInfo {
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox{nullptr};
-    DropDownCtrl* altBookmarks{nullptr};
 
     LabelWithCloseWnd* tocLabelWithClose{nullptr};
     TreeCtrl* tocTreeCtrl{nullptr};

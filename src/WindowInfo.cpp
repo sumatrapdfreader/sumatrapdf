@@ -107,7 +107,6 @@ WindowInfo::~WindowInfo() {
 
     delete frameRateWnd;
     delete infotip;
-    delete altBookmarks;
     delete tocTreeCtrl;
     if (favTreeCtrl) {
         delete favTreeCtrl->treeModel;

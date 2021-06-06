@@ -53,7 +53,7 @@ const char* gitSha1 = QM(GIT_COMMIT_ID);
 const char* gitSha1 = nullptr;
 #endif
 
-#if defined(DEBUG) || defined(PRE_RELEASE_VER) || defined(RAMICRO)
+#if defined(RAMICRO)
 bool gWithTocEditor = true;
 #else
 bool gWithTocEditor = false;

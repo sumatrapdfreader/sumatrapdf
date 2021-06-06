@@ -537,9 +537,6 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SetRtl(win->hwndTocBox, isRTL);
     HWND tocBoxTitle = win->tocLabelWithClose->hwnd;
     SetRtl(tocBoxTitle, isRTL);
-    if (win->altBookmarks) {
-        SetRtl(win->altBookmarks->hwnd, isRTL);
-    }
 
     SetRtl(win->hwndFavBox, isRTL);
     HWND favBoxTitle = win->favLabelWithClose->hwnd;

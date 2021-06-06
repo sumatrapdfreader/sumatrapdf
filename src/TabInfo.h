@@ -35,7 +35,6 @@ struct TabInfo {
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
     float prevZoomVirtual = INVALID_ZOOM;
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
-    Vec<VbkmFile*> altBookmarks;
     TocSort tocSort = TocSort::None;
     TocTree* currToc = nullptr; // not owned by us
     // if sortTag is != SortTag::None, this is a sorted toc tree to be displayed

@@ -32,6 +32,8 @@ website: fix broken links
 
 possibly speed up Vec::EnsureCap()
 
+disable TocEditor, New Bookmarks etc.
+
 2012-06-04 Fri
 
 update mupdf

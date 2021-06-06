@@ -39,7 +39,6 @@ TabInfo::~TabInfo() {
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
     }
-    DeleteVecMembers(altBookmarks);
     delete selectionOnPage;
     delete ctrl;
     delete tocSorted;
