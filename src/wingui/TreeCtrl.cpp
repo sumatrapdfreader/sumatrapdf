@@ -660,13 +660,23 @@ TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
     if (item == nullptr) {
         return nullptr;
     }
+#if 1
+    auto tvi = GetTVITEM(this, item);
+    TreeItem* res = reinterpret_cast<TreeItem*>(tvi->lParam);
+    return res;
+#else
     for (auto t : this->insertedItems) {
-        auto* i = std::get<1>(t);
+        auto& i = std::get<1>(t);
         if (i == item) {
-            return std::get<0>(t);
+            TreeItem* res = std::get<0>(t);
+            auto tvi = GetTVITEM(this, item);
+            TreeItem* res2 = reinterpret_cast<TreeItem*>(tvi->lParam);
+            CrashIf(res != res2);
+            return res;
         }
     }
     return nullptr;
+#endif
 }
 
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes) {

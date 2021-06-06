@@ -19,6 +19,13 @@ the time is spent fully in windows TreeCtrl code.
 
 website: make display of keyboard shortcut in manual.html look closer to docs/Keyboard-shortcuts.html
 
+speedup PopulateTreeItem (fixes #1795)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1795
+the trick was to insert children in reverse order, as per
+https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
+
+speed up TreeCtrl::GetTreeItemByHandle()
+
 2012-06-04 Fri
 
 update mupdf
