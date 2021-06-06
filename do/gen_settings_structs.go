@@ -804,6 +804,7 @@ func genSettingsStruct() string {
 	return content
 }
 
+// this we do to work-around a bug in Cloudflare Pages
 func urlizeVersion(s string) string {
 	return strings.Replace(s, ".", "-", -1)
 }
