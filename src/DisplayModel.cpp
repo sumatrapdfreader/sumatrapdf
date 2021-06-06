@@ -590,12 +590,13 @@ int DisplayModel::CurrentPageNo() const {
 void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     CrashIf(!IsValidZoom(newZoomVirtual));
     zoomVirtual = newZoomVirtual;
+    int nPages = PageCount();
     if ((ZOOM_FIT_WIDTH == newZoomVirtual) || (ZOOM_FIT_PAGE == newZoomVirtual)) {
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most documents
            all pages are the same size anyway */
         float minZoom = (float)HUGE_VAL;
-        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        for (int pageNo = 1; pageNo <= nPages; pageNo++) {
             if (PageShown(pageNo)) {
                 float zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
                 PageInfo* pageInfo = GetPageInfo(pageNo);
@@ -618,13 +619,13 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, CurrentPageNo())) {
             zoomReal = newZoom;
         }
-        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        for (int pageNo = 1; pageNo <= nPages; pageNo++) {
             PageInfo* pageInfo = GetPageInfo(pageNo);
             pageInfo->zoomReal = zoomReal;
         }
     } else {
         zoomReal = zoomVirtual * 0.01f * dpiFactor;
-        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        for (int pageNo = 1; pageNo <= nPages; pageNo++) {
             PageInfo* pageInfo = GetPageInfo(pageNo);
             pageInfo->zoomReal = zoomReal;
         }
