@@ -2345,13 +2345,20 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
     AbortFinding(win, true);
     AbortPrinting(win);
 
-    if (win->AsFixed()) {
-        win->AsFixed()->dontRenderFlag = true;
-    } else if (win->AsEbook()) {
-        win->AsEbook()->EnableMessageHandling(false);
+    for (auto& tab : win->tabs) {
+        if (tab->AsFixed()) {
+            tab->AsFixed()->dontRenderFlag = true;
+        } else if (win->AsEbook()) {
+            tab->AsEbook()->EnableMessageHandling(false);
+        }
     }
+
     if (win->presentation) {
         ExitFullScreen(win);
+    }
+
+    for (auto& tab : win->tabs) {
+        MaybeSaveAnnotations(tab);
     }
 
     bool lastWindow = (1 == gWindows.size());

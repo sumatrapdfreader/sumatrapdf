@@ -1,6 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
-2012-06-05 Sat
+2021-06-06 Sun
+
+ask to save annotations when closing a window (fixes #1962)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1962
+
+2021-06-05 Sat
 
 fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1970
 a crash when pressing 'q' on empty window. a regression from
@@ -34,11 +39,11 @@ possibly speed up Vec::EnsureCap()
 
 disable TocEditor, New Bookmarks etc.
 
-2012-06-04 Fri
+2021-06-04 Fri
 
 update mupdf
 
-2012-06-01 Tue
+2021-06-01 Tue
 
 update mupdf
 
