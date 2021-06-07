@@ -326,6 +326,7 @@ Visit &Website
 Warning
 XPS documents
 You have the latest version.
+You have unsaved annotations
 You have version %s
 Zoom
 Zoom In
