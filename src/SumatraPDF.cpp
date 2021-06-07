@@ -3878,14 +3878,8 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
     Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
     annot->SetQuadPointsAsRect(rects);
 
-    bool isTextOnlySelection;
-    WCHAR* selTxt = GetSelectedText(win, L"\n", isTextOnlySelection);
-    if (selTxt) {
-        strconv::StackWstrToUtf8 str(selTxt);
-        annot->SetContents(str.Get());
-        str::Free(selTxt);
-    }
-
+    // copy selection to clipboard so that user can use Ctrl-V to set contents
+    CopySelectionToClipboard(win);
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
     ToolbarUpdateStateForWindow(win, true);

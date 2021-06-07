@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-06-07 Mon
+
+don't pre-populate annotation content when creating it from text
+mupdf does that but not sure if that was the right behavior
+
 2021-06-06 Sun
 
 ask to save annotations when closing a window (fixes #1962)
