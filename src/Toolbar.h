@@ -9,3 +9,4 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly = fal
 void UpdateFindbox(WindowInfo* win);
 void ShowOrHideToolbar(WindowInfo* win);
 void UpdateToolbarState(WindowInfo* win);
+void SetToolbarInfoText(WindowInfo* win, const WCHAR* s);

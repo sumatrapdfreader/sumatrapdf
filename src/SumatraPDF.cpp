@@ -547,6 +547,7 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SetRtl(win->hwndToolbar, isRTL);
     SetRtl(win->hwndFindBox, isRTL);
     SetRtl(win->hwndFindText, isRTL);
+    SetRtl(win->hwndTbInfoText, isRTL);
     SetRtl(win->hwndPageText, isRTL);
 
     SetRtl(win->hwndCaption, isRTL);
@@ -2063,10 +2064,10 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 
 // re-render the document currently displayed in this window
 void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea) {
-    if (!win->AsFixed()) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
     gRenderCache.CancelRendering(dm);
     gRenderCache.KeepForDisplayModel(dm, dm);
     if (includeNonClientArea) {
@@ -2252,6 +2253,15 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
     if (!tab) {
         return;
     }
+    // TODO: hacky because CloseTab() can call CloseWindow() and
+    // they both ask to save annotations
+    // Could determine in CloseTab() if will CloseWindow() and
+    // not ask
+    if (tab->askedToSaveAnnotations) {
+        return;
+    }
+    tab->askedToSaveAnnotations = true;
+
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return;
@@ -3878,6 +3888,7 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
 
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
+    ToolbarUpdateStateForWindow(win, true);
     StartEditAnnotations(win->currentTab, annot);
     return true;
 }

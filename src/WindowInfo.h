@@ -104,6 +104,7 @@ struct WindowInfo {
     HWND hwndPageBox{nullptr};
     HWND hwndPageBg{nullptr};
     HWND hwndPageTotal{nullptr};
+    HWND hwndTbInfoText{nullptr};
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox{nullptr};

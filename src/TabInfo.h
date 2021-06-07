@@ -14,34 +14,37 @@ enum class TocSort { None, TagSmallFirst, TagBigFirst, Color };
    be moved between windows once this is supported) */
 struct TabInfo {
     AutoFreeWstr filePath;
-    WindowInfo* win = nullptr;
-    Controller* ctrl = nullptr;
+    WindowInfo* win{nullptr};
+    Controller* ctrl{nullptr};
     // text of win->hwndFrame when the tab is selected
     AutoFreeWstr frameTitle;
     // state of the table of contents
-    bool showToc = false;
-    bool showTocPresentation = false;
+    bool showToc{false};
+    bool showTocPresentation{false};
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;
     // canvas dimensions when the document was last visible
     Rect canvasRc;
     // whether to auto-reload the document when the tab is selected
-    bool reloadOnFocus = 0;
+    bool reloadOnFocus{false};
     // FileWatcher token for unsubscribing
-    WatchedFile* watcher = nullptr;
+    WatchedFile* watcher{nullptr};
     // list of rectangles of the last rectangular, text or image selection
     // (split by page, in user coordinates)
-    Vec<SelectionOnPage>* selectionOnPage = nullptr;
+    Vec<SelectionOnPage>* selectionOnPage{nullptr};
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
-    float prevZoomVirtual = INVALID_ZOOM;
+    float prevZoomVirtual{INVALID_ZOOM};
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
-    TocSort tocSort = TocSort::None;
-    TocTree* currToc = nullptr; // not owned by us
+    TocSort tocSort{TocSort::None};
+    TocTree* currToc{nullptr}; // not owned by us
     // if sortTag is != SortTag::None, this is a sorted toc tree to be displayed
-    TocTree* tocSorted = nullptr;
-    EditAnnotationsWindow* editAnnotsWindow = nullptr;
+    TocTree* tocSorted{nullptr};
+    EditAnnotationsWindow* editAnnotsWindow{nullptr};
 
-    TabInfo(WindowInfo* win, const WCHAR* filePath = nullptr);
+    // TODO: terrible hack
+    bool askedToSaveAnnotations{false};
+
+    TabInfo(WindowInfo* win, const WCHAR* filePath);
     ~TabInfo();
 
     DisplayModel* AsFixed() const;

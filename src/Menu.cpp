@@ -44,6 +44,7 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "TocEditor.h"
+#include "Toolbar.h"
 #include "EditAnnotations.h"
 
 // SumatraPDF.cpp
@@ -888,6 +889,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotCircle: {
             Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, ptOnPage);
             WindowInfoRerender(win);
+            ToolbarUpdateStateForWindow(win, true);
             StartEditAnnotations(win->currentTab, annot);
         } break;
         case CmdCreateAnnotHighlight:

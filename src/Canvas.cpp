@@ -237,6 +237,7 @@ static bool StopDraggingAnnotation(WindowInfo* win, int x, int y, bool aborted) 
         // dbglogf(" new rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", r.x, r.y, r.dx, r.dy);
         annot->SetRect(r);
         WindowInfoRerender(win);
+        ToolbarUpdateStateForWindow(win, true);
         StartEditAnnotations(win->currentTab, annot);
     } else {
         delete annot;
