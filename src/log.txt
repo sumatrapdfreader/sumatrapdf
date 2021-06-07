@@ -5,6 +5,9 @@ A daily log of changes and commentary. An experiment of sorts.
 don't pre-populate annotation content when creating it from text
 mupdf does that but not sure if that was the right behavior
 
+using 'a' to create a highlight annotation doesn't open annotation editor (for #1959)
+use shift+a to also open annotation editor
+
 2021-06-06 Sun
 
 ask to save annotations when closing a window (fixes #1962)

@@ -3835,24 +3835,24 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
+Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
     bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
-        return false;
+        return nullptr;
     }
 
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
-    DisplayModel* dm = tab->win->AsFixed();
+    DisplayModel* dm = tab->AsFixed();
     if (!dm) {
-        return false;
+        return nullptr;
     }
     auto engine = dm->GetEngine();
     bool supportsAnnots = EngineSupportsAnnotations(engine);
     WindowInfo* win = tab->win;
     bool ok = supportsAnnots && win->showSelection && tab->selectionOnPage;
     if (!ok) {
-        return false;
+        return nullptr;
     }
 
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
@@ -3868,12 +3868,12 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
         rects.Append(sel.rect);
     }
     if (pageNo == -1) {
-        return false;
+        return nullptr;
     }
     if (!ok) {
         // we don't support selections crossing pages
         // TODO: show an error message
-        return false;
+        return nullptr;
     }
     Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
     annot->SetQuadPointsAsRect(rects);
@@ -3883,8 +3883,7 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
     ToolbarUpdateStateForWindow(win, true);
-    StartEditAnnotations(win->currentTab, annot);
-    return true;
+    return annot;
 }
 
 static void ShowCursorPositionInDoc(WindowInfo* win) {
@@ -4044,9 +4043,12 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'm':
             ShowCursorPositionInDoc(win);
             break;
-        case 'a':
-            MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight);
-            break;
+        case 'a': {
+            auto annot = MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight);
+            if (isShift && annot) {
+                StartEditAnnotations(win->currentTab, annot);
+            }
+        } break;
     }
 }
 
