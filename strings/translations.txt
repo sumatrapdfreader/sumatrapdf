@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f293927803e772c4311f921c5c4905ba34501153
+e8fbadfb867c0fc6428acfe95b3d427565776e5e
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -19346,6 +19346,8 @@ tw:你的版本已是最新版。
 uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
+:You have unsaved annotations
+pl:Masz niezapisane adnotacje
 :You have version %s
 af:Jy Het Weergawe %s
 am:Դուք օգտագործում եք %s տարբերակը
