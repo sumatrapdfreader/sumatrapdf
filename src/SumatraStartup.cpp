@@ -759,6 +759,7 @@ static void ForceStartupLeaks() {
     time_t secs{0};
     struct tm buf_not_used;
     gmtime_s(&buf_not_used, &secs);
+    gmtime(&secs);
     WCHAR* path = GetExePath();
     FILE* fp = _wfopen(path, L"rb");
     str::Free(path);
@@ -779,7 +780,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     CrashIf(hInstance != GetInstance());
 
-    // decide if we should enable mem leak detection
+    // TODO: decide if we should enable mem leak detection
 #if defined(DEBUG)
     gEnableMemLeak = true;
 #endif
@@ -807,13 +808,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     srand((unsigned int)time(nullptr));
 
+    // for testing mem leak detection
+    void* maybeLeak{nullptr};
     if (gEnableMemLeak) {
         ForceStartupLeaks();
         MemLeakInit();
+        maybeLeak = malloc(10);
     }
-
-    // for testing mem leak detection
-    // char* tmp = new char[23];
 
     if (!gIsAsanBuild) {
         SetupCrashHandler();
@@ -1219,15 +1220,18 @@ Exit:
     delete gLogBuf;
     delete gLogAllocator;
 
+    if (gEnableMemLeak) {
+        // free(maybeLeak);
+        DumpMemLeaks();
+    }
+
+#if 0 // no longer seems to be needed in latest vs build, was probably early asan bug
     if (gIsAsanBuild) {
         // TODO: crashes in wild places without this
         // Note: ::ExitProcess(0) also crashes
         ::TerminateProcess(GetCurrentProcess(), 0);
     }
-
-    if (gEnableMemLeak) {
-        DumpMemLeaks();
-    }
+#endif
 
     return retCode;
 }

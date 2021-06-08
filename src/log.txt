@@ -8,6 +8,8 @@ mupdf does that but not sure if that was the right behavior
 using 'a' to create a highlight annotation doesn't open annotation editor (for #1959)
 use shift+a to also open annotation editor
 
+use RtlCaptureStackBackTrace in mem leak detector
+
 2021-06-06 Sun
 
 ask to save annotations when closing a window (fixes #1962)

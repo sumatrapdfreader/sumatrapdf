@@ -35,6 +35,10 @@ Annotations:
 
 ------
 
+use RtlCaptureStackBackTrace in crash reporting code
+
+------
+
 A system to trigger re-layout when e.g. a button text changes.
 Add a way to register function to be called for a given hwnd.
 WindowBaseLayout() registers for its hwnd and calls Relayout().

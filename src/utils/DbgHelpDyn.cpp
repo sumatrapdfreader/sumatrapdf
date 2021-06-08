@@ -104,20 +104,22 @@ static bool CanStackWalk() {
     return ok;
 }
 
+constexpr int kMaxSymLen = 512;
+
 // check if has access to valid .pdb symbols file by trying to resolve a symbol
 __declspec(noinline) bool CanSymbolizeAddress(DWORD64 addr) {
-    static const int MAX_SYM_LEN = 512;
-
-    char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
+    char buf[sizeof(SYMBOL_INFO) + kMaxSymLen * sizeof(char)];
     SYMBOL_INFO* symInfo = (SYMBOL_INFO*)buf;
 
     memset(buf, 0, sizeof(buf));
     symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
-    symInfo->MaxNameLen = MAX_SYM_LEN;
+    symInfo->MaxNameLen = kMaxSymLen;
 
     DWORD64 symDisp = 0;
     BOOL ok = DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
-    return ok && symInfo->Name[0];
+    int symLen = symInfo->NameLen;
+    char* name = symInfo->Name;
+    return ok && symLen > 4 && (name[0] != 0);
 }
 
 // a heuristic to test if we have symbols for our own binaries by testing if
@@ -217,7 +219,10 @@ void WriteMiniDump(const WCHAR* crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
     CloseHandle(hFile);
 }
 
-static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen, DWORD& sectionOut, DWORD_PTR& offsetOut) {
+// note: without __declspec(noinline) it would be mis-compiled to return false in release builds
+// making GetAddressInfo() not provide info about address
+__declspec(noinline) static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen, DWORD& sectionOut,
+                                             DWORD_PTR& offsetOut) {
     MEMORY_BASIC_INFORMATION mbi;
     if (0 == VirtualQuery(addr, &mbi, sizeof(mbi))) {
         return false;
@@ -282,7 +287,8 @@ void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
     char moduleName[MAX_PATH] = {0};
     DWORD section;
     DWORD_PTR offset;
-    if (GetAddrInfo((void*)addr, moduleName, sizeof(moduleName), section, offset)) {
+    ok = GetAddrInfo((void*)addr, moduleName, sizeof(moduleName), section, offset);
+    if (ok) {
         str::ToLowerInPlace(moduleName);
         const char* moduleShort = path::GetBaseNameNoFree(moduleName);
         if (compact) {
