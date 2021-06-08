@@ -969,6 +969,14 @@ JNIEXPORT jlong JNICALL Java_com_artifex_mupdf_fitz_Image_newNativeFromFile
 
 /*
  * Class:     com_artifex_mupdf_fitz_Image
+ * Method:    newNativeFromBytes
+ * Signature: ([B)J
+ */
+JNIEXPORT jlong JNICALL Java_com_artifex_mupdf_fitz_Image_newNativeFromBytes
+  (JNIEnv *, jobject, jbyteArray);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Image
  * Method:    getWidth
  * Signature: ()I
  */

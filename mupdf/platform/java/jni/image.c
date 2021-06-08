@@ -51,6 +51,39 @@ FUN(Image_newNativeFromFile)(JNIEnv *env, jobject self, jstring jfilename)
 	return jlong_cast(image);
 }
 
+JNIEXPORT jlong JNICALL
+FUN(Image_newNativeFromBytes)(JNIEnv *env, jobject self, jbyteArray jByteArray)
+{
+	fz_context *ctx = get_context(env);
+	fz_image *image = NULL;
+	jbyte *bytes = NULL;
+	fz_buffer *buffer = NULL;
+	int count;
+
+	if (!ctx) return 0;
+	if (!jByteArray) jni_throw_arg(env, "jByteArray must not be null");
+
+	count = (*env)->GetArrayLength(env, jByteArray);
+	bytes = (*env)->GetByteArrayElements(env, jByteArray, NULL);
+	if (!bytes)
+		jni_throw_run(env, "cannot get buffer");
+
+	fz_var(buffer);
+	fz_try(ctx) {
+		buffer = fz_new_buffer_from_copied_data(ctx, bytes, count);
+		image = fz_new_image_from_buffer(ctx, buffer);
+	}
+	fz_always(ctx) {
+		fz_drop_buffer(ctx, buffer);
+		if (bytes) (*env)->ReleaseByteArrayElements(env, jByteArray, bytes, 0);
+	}
+	fz_catch(ctx) {
+		jni_rethrow(env, ctx);
+	}
+
+	return jlong_cast(image);
+}
+
 JNIEXPORT jint JNICALL
 FUN(Image_getWidth)(JNIEnv *env, jobject self)
 {
