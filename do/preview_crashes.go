@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -392,8 +391,10 @@ func downloadCrashes() {
 	must(err)
 
 	nRemoteFiles := len(remoteFiles)
-	fmt.Printf("nRemoteFiles: %d\n", nRemoteFiles)
+	logf("nRemoteFiles: %d\n", nRemoteFiles)
 	nDownloaded := 0
+	var wg sync.WaitGroup
+	sem := make(chan bool, 16)
 	for _, rf := range remoteFiles {
 		must(rf.Err)
 		path := crashPathFromKey(rf.Key)
@@ -402,10 +403,18 @@ func downloadCrashes() {
 		}
 		nDownloaded++
 		u.CreateDirForFileMust(path)
-		err = mc.DownloadFileAtomically(path, rf.Key)
-		panicIf(err != nil, "mc.DownloadFileAtomc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, rf.Key, err)
-		logf("Downloaded '%s' => '%s'\n", rf.Key, path)
+
+		wg.Add(1)
+		sem <- true // enter a semaphore
+		go func(rfIn *minio.ObjectInfo) {
+			err := mc.DownloadFileAtomically(path, rfIn.Key)
+			panicIf(err != nil, "mc.DownloadFileAtomc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, rfIn.Key, err)
+			logf("Downloaded '%s' => '%s'\n", rfIn.Key, path)
+			<-sem
+			wg.Done()
+		}(rf)
 	}
+	wg.Wait()
 	logf("%d total crashes, downloaded %d\n", nRemoteFiles, nDownloaded)
 }
 
