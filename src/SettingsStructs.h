@@ -121,12 +121,9 @@ struct ForwardSearch {
     bool highlightPermanent;
 };
 
-// default values for user added annotations in FixedPageUI documents
-// (preliminary and still subject to change)
-struct AnnotationDefaults {
-    // color used for the highlight tool (in prerelease builds, the current
-    // selection can be converted into a highlight annotation by pressing
-    // the 'h' key)
+// default values for annotations in PDF documents
+struct Annotations {
+    // color used for highlight annotations
     COLORREF highlightColor;
 };
 
@@ -296,9 +293,8 @@ struct GlobalPrefs {
     // customization options for how we show forward search results (used
     // from LaTeX editors)
     ForwardSearch forwardSearch;
-    // default values for user added annotations in FixedPageUI documents
-    // (preliminary and still subject to change)
-    AnnotationDefaults annotationDefaults;
+    // default values for annotations in PDF documents
+    Annotations annotations;
     // passwords to try when opening a password protected document
     Vec<WCHAR*>* defaultPasswords;
     // actual resolution of the main screen in DPI (if this value isn't
@@ -468,11 +464,10 @@ static const FieldInfo gForwardSearchFields[] = {
 static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForwardSearchFields,
                                               "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent"};
 
-static const FieldInfo gAnnotationDefaultsFields[] = {
-    {offsetof(AnnotationDefaults, highlightColor), SettingType::Color, 0x60ffff},
+static const FieldInfo gAnnotationsFields[] = {
+    {offsetof(Annotations, highlightColor), SettingType::Color, 0x60ffff},
 };
-static const StructInfo gAnnotationDefaultsInfo = {sizeof(AnnotationDefaults), 1, gAnnotationDefaultsFields,
-                                                   "HighlightColor"};
+static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 1, gAnnotationsFields, "HighlightColor"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -598,7 +593,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, printerDefaults), SettingType::Struct, (intptr_t)&gPrinterDefaultsInfo},
     {offsetof(GlobalPrefs, forwardSearch), SettingType::Struct, (intptr_t)&gForwardSearchInfo},
-    {offsetof(GlobalPrefs, annotationDefaults), SettingType::Prerelease, (intptr_t)&gAnnotationDefaultsInfo},
+    {offsetof(GlobalPrefs, annotations), SettingType::Struct, (intptr_t)&gAnnotationsInfo},
     {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
     {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
     {(size_t)-1, SettingType::Comment, 0},
@@ -637,10 +632,10 @@ static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0EbookUI"
     "\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncr"
-    "ement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePer"
-    "Document\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0Versio"
-    "nToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Window"
-    "State\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0Reop"
-    "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "ement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocumen"
+    "t\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip"
+    "\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0"
+    "WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce"
+    "\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

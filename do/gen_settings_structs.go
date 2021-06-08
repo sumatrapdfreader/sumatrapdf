@@ -397,10 +397,9 @@ var (
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 	}
 
-	annotationDefaults = []*Field{
+	annotations = []*Field{
 		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x60),
-			"color used for the highlight tool (in prerelease builds, the current selection "+
-				"can be converted into a highlight annotation by pressing the 'h' key)"),
+			"color used for highlight annotations"),
 	}
 
 	favorite = []*Field{
@@ -566,9 +565,8 @@ var (
 		mkStruct("ForwardSearch", forwardSearch,
 			"customization options for how we show forward search results (used from "+
 				"LaTeX editors)").setExpert(),
-		mkStruct("AnnotationDefaults", annotationDefaults,
-			"default values for user added annotations in FixedPageUI documents "+
-				"(preliminary and still subject to change)").setExpert().setPreRelease(),
+		mkStruct("Annotations", annotations,
+			"default values for annotations in PDF documents").setExpert().setVersion("3.3"),
 		mkCompactArray("DefaultPasswords", String, nil,
 			"passwords to try when opening a password protected document").setDoc("a whitespace separated list of passwords to try when opening a password protected document " +
 			"(passwords containing spaces must be quoted)").setExpert().setVersion("2.4"),
