@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -340,6 +341,12 @@ func showCrashesToTerminal() {
 }
 
 func listRemoteFiles(c *u.MinioClient, prefix string) ([]*minio.ObjectInfo, error) {
+	logf("listRemoteFiles '%s'", prefix)
+	timeStart := time.Now()
+	nFiles := 0
+	defer func() {
+		logf(" %d files in %s\n", nFiles, time.Since(timeStart))
+	}()
 	var res []*minio.ObjectInfo
 	client, err := c.GetClient()
 	if err != nil {
@@ -352,6 +359,7 @@ func listRemoteFiles(c *u.MinioClient, prefix string) ([]*minio.ObjectInfo, erro
 	for oi := range files {
 		oic := oi
 		res = append(res, &oic)
+		nFiles++
 	}
 	return res, nil
 }
@@ -425,9 +433,18 @@ func deleteWithPrefix(prefix string) {
 	mc := newMinioClient()
 	remoteFiles, err := listRemoteFiles(mc, prefix)
 	must(err)
+	var wg sync.WaitGroup
+	sem := make(chan bool, 16)
 	for _, rf := range remoteFiles {
-		deleteCrashRemoteAndLocal(mc, rf)
+		wg.Add(1)
+		sem <- true // enter semaphore
+		go func(rfIn *minio.ObjectInfo) {
+			deleteCrashRemoteAndLocal(mc, rfIn)
+			<-sem // exit semaphore
+			wg.Done()
+		}(rf)
 	}
+	wg.Wait()
 }
 
 func deleteOldCrashes() {
