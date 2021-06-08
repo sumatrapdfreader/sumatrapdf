@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e8fbadfb867c0fc6428acfe95b3d427565776e5e
+97403abe1e7bf4d4addcc14249d96597d379af3d
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -5566,7 +5566,7 @@ mk:&Провери за надградби
 mm:အမျိုးအစား သစ်စုံစမ်းရန်
 my:Semak &Kemaskini
 ne:&अद्यावधिकहरु जाँच्नुहोस्
-nl:Controleren op &updates
+nl:Controleren op &Updates
 nn:&Sjå etter ny versjon
 no:&Se etter oppdateringer...
 pa:ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
@@ -6133,7 +6133,7 @@ mk:Учествувај во преведувањето на оваа аплик
 ml:മാക്സിന്‍ ബി ജൊണ്‍
 my:Menyumbangkan alihbahasa
 ne:अनुवादमा योगदान दिनुहोस्
-nl:Help met vertalen
+nl:Help met Vertalen
 nn:Delta med omsetjing
 no:Bidra med oversetting
 pa:ਅਨੁਵਾਦ ਵਿੱਚ ਆਪਣਾ ਯੋਗਦਾਨ ਪਾਓ
@@ -19123,7 +19123,7 @@ ml:വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
 mm:&ဝဘ်ဌာနေ သို့
 my:&Lawat lamanweb
 ne:&वेबसाइट भ्रमण गर्नुहोस्
-nl:Bezoek de &website
+nl:Bezoek de &Website
 nn:Vitj &heimeside
 no:Åpne &hjemmesiden
 pa:ਵੇਬਸਾਇਟ ਵੇਥੋ(&V)
@@ -19347,6 +19347,7 @@ uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
+nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 :You have version %s
 af:Jy Het Weergawe %s

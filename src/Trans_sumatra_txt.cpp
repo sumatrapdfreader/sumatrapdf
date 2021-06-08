@@ -6188,7 +6188,7 @@ const char * gTranslations_nl =
   "Kan de omgekeerde zoekopdracht niet starten. Controleer de opdrachtregel in de instellingen.\0"\
   "Merkteken\0"\
   "Taal wijzigen (Change Language)\0"\
-  "Controleren op &updates\0"\
+  "Controleren op &Updates\0"\
   "Cirkel\0"\
   "Sluiten\0"\
   "Alle Samenvouwen\0"\
@@ -6198,7 +6198,7 @@ const char * gTranslations_nl =
   "Doorlopend\0"\
   "Doorlopende boekweergave\0"\
   "Dubbele pagina doorlopend\0"\
-  "Help met vertalen\0"\
+  "Help met Vertalen\0"\
   "Afbeelding kopi\303\253ren\0"\
   "&Verwijzing kopi\303\253ren\0"\
   "Notitie kopi\303\253ren\0"\
@@ -6422,11 +6422,11 @@ const char * gTranslations_nl =
   "Gebruik &tabs\0"\
   "Gebruik SumatraPDF als &standaard PDF lezer\0"\
   "Beeld\0"\
-  "Bezoek de &website\0"\
+  "Bezoek de &Website\0"\
   "Waarschuwing\0"\
   "XPS-documenten\0"\
   "U gebruikt de meest recente versie.\0"\
-  "\0"\
+  "U heeft niet-opgeslagen aantekeningen\0"\
   "U heeft versie %s\0"\
   "\0"\
   "Inzoomen\0"\
