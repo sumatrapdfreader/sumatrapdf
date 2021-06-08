@@ -3,7 +3,6 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/ColorUtil.h"
 
 // #define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
 
@@ -106,6 +105,16 @@ COLORREF ColorSetBlue(COLORREF c, u8 blue) {
 
 COLORREF ColorSetAlpha(COLORREF c, u8 alpha) {
     return colorSetHelper(c, alpha, 3);
+}
+
+// COLORREF has a of 0 for opaque but for PDF use
+// opaque is 0xff
+COLORREF FixupColorForPDF(COLORREF c) {
+    u8 a = GetAlpha(c);
+    if (a == 0) {
+        c = ColorSetAlpha(c, 0xff);
+    }
+    return c;
 }
 
 // TODO: remove use of SerializeColorRgb() and replace with SerializeColor

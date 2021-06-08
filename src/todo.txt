@@ -1,3 +1,9 @@
+For 3.3:
+- when Annotations.HighlightColor has alpha, it's incorrectly parsed because
+  we set as RGB but read as CMYK
+- when EditAnnotations window is visible and we do 'a', annotation is not added to the window
+
+
 Annotations:
  - cannot move ink attachments (repro file from 1716)
  - save attachment

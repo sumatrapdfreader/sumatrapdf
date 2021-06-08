@@ -4045,6 +4045,10 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             break;
         case 'a': {
             auto annot = MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight);
+            COLORREF col = gGlobalPrefs->annotations.highlightColor;
+            col = FixupColorForPDF(col);
+            annot->SetColor(col);
+            WindowInfoRerender(win);
             if (isShift && annot) {
                 StartEditAnnotations(win->currentTab, annot);
             }

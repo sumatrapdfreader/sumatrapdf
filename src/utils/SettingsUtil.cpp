@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "SettingsUtil.h"
 #include "SquareTreeParser.h"
-#include "utils/ColorUtil.h"
 
 static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
     return (const StructInfo*)field.value;

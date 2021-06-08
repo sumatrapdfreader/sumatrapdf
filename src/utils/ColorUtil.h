@@ -1,12 +1,16 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// note: include BaseUtil.h instead of including directly
+
 // a "unset" state for COLORREF value. technically all colors are valid
 // this one is hopefully not used in practice
 // can't use constexpr because they'll end up in multiple .lib and conflict
 #define ColorUnset ((COLORREF)(0xfeffffff))
 // ColorNoChange indicates that we shouldn't change the color
 #define ColorNoChange ((COLORREF)(0xfdffffff))
+
+COLORREF FixupColorForPDF(COLORREF);
 
 COLORREF MkRgb(u8 r, u8 g, u8 b);
 COLORREF MkGray(u8 x);

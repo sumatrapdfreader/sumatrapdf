@@ -10,6 +10,8 @@ use shift+a to also open annotation editor
 
 use RtlCaptureStackBackTrace in mem leak detector
 
+use Annotations.HighlightColor with 'a'
+
 2021-06-06 Sun
 
 ask to save annotations when closing a window (fixes #1962)
