@@ -76,7 +76,7 @@ WindowInfo::~WindowInfo() {
     FinishStressTest(this);
 
     CrashIf(tabs.size() > 0);
-    CrashIf(ctrl);
+    //CrashIf(ctrl); // TODO: seen in crash report
     CrashIf(linkOnLastButtonDown);
     CrashIf(annotationOnLastButtonDown);
 
