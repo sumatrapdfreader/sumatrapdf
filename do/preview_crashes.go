@@ -1,29 +1,38 @@
 package main
 
 import (
-	"context"
-	"net/http"
+	"bytes"
+	"html/template"
+	"io/ioutil"
 	"os"
-	"os/signal"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/kjk/u"
-	"github.com/minio/minio-go/v6"
 )
+
+const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
+const fasterSubset = false
+const filterNoSymbols = true
+const filterOlderVersions = true
 
 // we don't want want to show crsahes for outdated builds
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
-const lowestCrashingBuildToShow = 12064
+const lowestCrashingBuildToShow = 13112
+const nDaysToKeep = 14
 
-const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
+var (
+	// maps day key as YYYY-MM-DD to a list of crashInfo
+	crashesPerDay = map[string][]*crashInfo{}
+	nRemoteFiles  = 0
+)
 
 type crashVersion struct {
 	Main         string
@@ -41,6 +50,7 @@ type crashInfo struct {
 	N                int
 	Day              string // yy-mm-dd format
 	Version          string
+	VersionDisp      string
 	Ver              *crashVersion
 	GitSha1          string
 	CrashFile        string
@@ -50,7 +60,42 @@ type crashInfo struct {
 	crashLinesAll    string
 	ExceptionInfo    []string
 	exceptionInfoAll string
-	path             string
+	body             []byte
+
+	// soft-delete
+	isDeleted bool
+
+	// path of a file on disk, if exists
+	path string
+
+	// unique name of the crash
+	FileName string
+	// full key in remote store
+	storeKey string
+}
+
+func (ci *crashInfo) ShortCrashLine() string {
+	if len(ci.CrashLines) == 0 {
+		return "(none)"
+	}
+	s := ci.CrashLines[0]
+	// "000000007791A365 01:0000000000029365 ntdll.dll!RtlFreeHeap+0x1a5" => "dll!RtlFreeHeap+0x1a5"
+	parts := strings.Split(s, " ")
+	if len(parts) <= 2 {
+		return s
+	}
+	return strings.Join(parts[2:], " ")
+}
+
+func (ci *crashInfo) CrashLine() string {
+	if len(ci.CrashLines) == 0 {
+		return "(none)"
+	}
+	return ci.CrashLines[0]
+}
+
+func (ci *crashInfo) URL() string {
+	return "/" + ci.FileName
 }
 
 func symbolicateCrashLine(s string, gitSha1 string) crashLine {
@@ -150,11 +195,27 @@ func removeEmptyLines(a []string) []string {
 	return res
 }
 
-func parseCrash(d []byte) *crashInfo {
+func removeEmptyCrashLines(a []string) []string {
+	var res []string
+	for _, s := range a {
+		s = strings.TrimSpace(s)
+		if strings.Contains(s, " ") || strings.Contains(s, ".") {
+			res = append(res, s)
+			continue
+		}
+		if len(s) == len("0000000000000001") || len(s) == len("0000003F") {
+			continue
+		}
+		res = append(res, s)
+	}
+	return res
+}
+
+func parseCrash(res *crashInfo) {
+	d := res.body
 	d = u.NormalizeNewlines(d)
 	s := string(d)
 	lines := strings.Split(s, "\n")
-	res := &crashInfo{}
 	var tmpLines []string
 	inExceptionInfo := false
 	inCrashLines := false
@@ -171,7 +232,7 @@ func parseCrash(d []byte) *crashInfo {
 		}
 		if inCrashLines {
 			if isEmptyLine(s) || len(tmpLines) > 6 {
-				res.CrashLines = removeEmptyLines(tmpLines)
+				res.CrashLines = removeEmptyCrashLines(tmpLines)
 				tmpLines = nil
 				inCrashLines = false
 				continue
@@ -210,7 +271,6 @@ func parseCrash(d []byte) *crashInfo {
 	res.crashLinesAll = strings.Join(res.CrashLines, "\n")
 	res.exceptionInfoAll = strings.Join(res.ExceptionInfo, "\n")
 	symbolicateCrashInfoLines(res)
-	return res
 }
 
 var crashesDirCached = ""
@@ -226,404 +286,355 @@ func crashesDataDir() string {
 	return dir
 }
 
-// filePath is:
-// C:\Users\kjk\data\sumatra-crashes\2020\01\28\3f91b0910000006.txt
-// return "2020-01-28"
-func dayFromPath(path string) string {
-	// normalize to use / as dir separator
-	path = filepath.ToSlash(path)
-	// dir should be: C:/Users/kjk/data/sumatra-crashes/2020/01/28
-	parts := strings.Split(path, "/")
-	start := len(parts) - 4
-	parts = parts[start : start+3]
+var crashesHTMLDirCached = ""
+
+func crashesHTMLDataDir() string {
+	if crashesHTMLDirCached != "" {
+		return crashesHTMLDirCached
+	}
+	dir := u.UserHomeDirMust()
+	dir = filepath.Join(dir, "data", "sumatra-crashes-html")
+	u.CreateDirMust((dir))
+	crashesHTMLDirCached = dir
+	return dir
+}
+
+// convert YYYY/MM/DD => YYYY-MM-DD
+func storeDayToDirDay(s string) string {
+	parts := strings.Split(s, "/")
 	panicIf(len(parts) != 3)
 	return strings.Join(parts, "-")
 }
 
-func parseCrashFile(path string) *crashInfo {
-	d := u.ReadFileMust(path)
-	ci := parseCrash(d)
-	ci.Day = dayFromPath(path)
-	ci.path = path
-	return ci
+func getCrashInfoForDayName(day, name string) *crashInfo {
+	panicIf(len(day) != len("yyyy-dd-mm"))
+	crashes := crashesPerDay[day]
+	for _, c := range crashes {
+		if c.FileName == name {
+			return c
+		}
+	}
+	crash := &crashInfo{
+		Day:      day,
+		FileName: name,
+	}
+	crashes = append(crashes, crash)
+	crashesPerDay[day] = crashes
+	return crash
 }
 
-func isCreateThumbnailCrash(ci *crashInfo) bool {
-	s := ci.crashLinesAll
-	if strings.Contains(s, "!CreateThumbnailForFile+0x1ff") {
-		return true
-	}
-	if strings.Contains(s, "CreateThumbnailForFile+0x175") {
-		return true
-	}
-	return false
+// return true if crash in that day is outdated
+func isOutdated(day string) bool {
+	d1, err := time.Parse("2006-01-02", day)
+	panicIfErr(err)
+	diff := time.Now().Sub(d1)
+	return diff > time.Hour*24*nDaysToKeep
 }
 
-func shouldShowCrash(ci *crashInfo) bool {
-	build := ci.Ver.Build
-	// filter out outdated builds
-	if build > 0 && build < lowestCrashingBuildToShow {
-		return false
+// decide if should delete crash based on the content
+// this is to filter out crashes we don't care about
+// like those from other apps
+func shouldDeleteParsedCrash(ci *crashInfo) bool {
+	if bytes.Contains(ci.body, []byte("einkreader.exe")) {
+		return true
 	}
-	if isCreateThumbnailCrash(ci) {
-		return false
-	}
-	return true
+	return bytes.Contains(ci.body, []byte("jikepdf.exe"))
 }
+
+const nDownloaders = 64
 
 var (
-	nTotalCrashes    = 0
-	nNotShownCrashes = 0
+	nInvalid    = 0
+	nReadFiles  = 0
+	nDownloaded = 0
+	nDeleted    = 0
 )
 
-func loadCrashes() []*crashInfo {
+func downloadOrReadOrDelete(mc *u.MinioClient, crash *crashInfo) {
 	dataDir := crashesDataDir()
-	nTotalCrashes = 0
-	logf("loadCrashes: data dir: '%s'", dataDir)
-	timeStart := time.Now()
-	defer logf("  finsished in %s, crashes: %d\n", time.Since(timeStart), nTotalCrashes)
-	var res []*crashInfo
-	fn := func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	crash.path = filepath.Join(dataDir, crash.Day, crash.FileName)
+
+	if isOutdated(crash.Day) {
+		crash.isDeleted = true
+		mc.Delete(crash.storeKey)
+		os.Remove(crash.path)
+		nDeleted++
+		if nDeleted < 32 || nDeleted%100 == 0 {
+			logf("deleted outdated %s %d\n", crash.storeKey, nRemoteFiles)
 		}
-		if info.IsDir() {
-			return nil
-		}
-		nTotalCrashes++
-		ci := parseCrashFile(path)
-		if ci == nil || ci.Ver == nil {
-			logf("Failed to parse crash file '%s'\n", path)
-			return nil
-		}
-		res = append(res, ci)
-		return nil
-	}
-	filepath.Walk(dataDir, fn)
-	return res
-}
-
-func showCrashesToTerminal() {
-	nNotShownCrashes = 0
-	dataDir := crashesDataDir()
-	logf("testParseCrashes: data dir: '%s'\n", dataDir)
-	fn := func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		nTotalCrashes++
-		ci := parseCrashFile(path)
-		if ci == nil || ci.Ver == nil {
-			logf("Failed to parse crash file '%s'\n", path)
-			return nil
-		}
-		if !shouldShowCrash(ci) {
-			nNotShownCrashes++
-			return nil
-		}
-		logf("%s\n", path)
-		if len(ci.CrashFile) != 0 {
-			logf("%s\n", ci.CrashFile)
-		}
-		logf("ver: %s\n", ci.Version)
-		for _, s := range ci.CrashLines {
-			logf("%s\n", s)
-		}
-		logf("\n")
-		return nil
-	}
-	filepath.Walk(dataDir, fn)
-	logf("Total crashes: %d, shown: %d\n", nTotalCrashes, nTotalCrashes-nNotShownCrashes)
-}
-
-func listRemoteFiles(c *u.MinioClient, prefix string) ([]*minio.ObjectInfo, error) {
-	logf("listRemoteFiles '%s'", prefix)
-	timeStart := time.Now()
-	nFiles := 0
-	defer func() {
-		logf(" %d files in %s\n", nFiles, time.Since(timeStart))
-	}()
-	var res []*minio.ObjectInfo
-	client, err := c.GetClient()
-	if err != nil {
-		return nil, err
-	}
-	doneCh := make(chan struct{})
-	defer close(doneCh)
-
-	files := client.ListObjects(c.Bucket, prefix, true, doneCh)
-	for oi := range files {
-		oic := oi
-		res = append(res, &oic)
-		nFiles++
-	}
-	return res, nil
-}
-
-func crashPathFromKey(key string) string {
-	dataDir := crashesDataDir()
-	name := strings.TrimPrefix(key, crashesPrefix)
-	path := filepath.Join(dataDir, name)
-	return path
-}
-
-func downloadCrashes() {
-	timeStart := time.Now()
-	defer func() {
-		logf("downloadCrashes took %s\n", time.Since(timeStart))
-	}()
-	mc := newMinioClient()
-	if false {
-		c, err := mc.GetClient()
-		must(err)
-		c.TraceOn(os.Stdout)
-	}
-
-	// this fails with digital ocean because in ListObjectsV2 they seemingly don't return
-	// continuation token
-	//remoteFiles, err := mc.ListRemoteFiles(crashesPrefix)
-	//must(err)
-
-	remoteFiles, err := listRemoteFiles(mc, crashesPrefix)
-	must(err)
-
-	nRemoteFiles := len(remoteFiles)
-	logf("nRemoteFiles: %d\n", nRemoteFiles)
-	nDownloaded := 0
-	var wg sync.WaitGroup
-	sem := make(chan bool, 16)
-	for _, rf := range remoteFiles {
-		must(rf.Err)
-		path := crashPathFromKey(rf.Key)
-		if u.FileExists(path) {
-			continue
-		}
-		nDownloaded++
-		u.CreateDirForFileMust(path)
-
-		wg.Add(1)
-		sem <- true // enter a semaphore
-		go func(rfIn *minio.ObjectInfo) {
-			err := mc.DownloadFileAtomically(path, rfIn.Key)
-			panicIf(err != nil, "mc.DownloadFileAtomc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, rfIn.Key, err)
-			logf("Downloaded '%s' => '%s'\n", rfIn.Key, path)
-			<-sem
-			wg.Done()
-		}(rf)
-	}
-	wg.Wait()
-	logf("%d total crashes, downloaded %d\n", nRemoteFiles, nDownloaded)
-}
-
-const nDaysToKeep = 14
-
-func deleteCrashRemoteAndLocal(mc *u.MinioClient, rf *minio.ObjectInfo) {
-	must(rf.Err)
-	var err error
-	if true {
-		err = mc.Delete(rf.Key)
-		must(err)
-	}
-	logf("Deleted '%s'\n", rf.Key)
-	path := crashPathFromKey(rf.Key)
-	if os.Remove(path) == nil {
-		logf("Deleted '%s'\n", path)
-	}
-}
-
-func deleteWithPrefix(prefix string) {
-	timeStart := time.Now()
-	defer func() {
-		logf("deleteWithPrefix('%s') took %s\n", prefix, time.Since(timeStart))
-	}()
-	mc := newMinioClient()
-	remoteFiles, err := listRemoteFiles(mc, prefix)
-	must(err)
-	var wg sync.WaitGroup
-	sem := make(chan bool, 16)
-	for _, rf := range remoteFiles {
-		wg.Add(1)
-		sem <- true // enter semaphore
-		go func(rfIn *minio.ObjectInfo) {
-			deleteCrashRemoteAndLocal(mc, rfIn)
-			<-sem // exit semaphore
-			wg.Done()
-		}(rf)
-	}
-	wg.Wait()
-}
-
-func deleteOldCrashes() {
-	timeStart := time.Now()
-	defer func() {
-		logf("deleteOldCrashes took %s\n", time.Since(timeStart))
-	}()
-	mc := newMinioClient()
-	remoteFiles, err := listRemoteFiles(mc, crashesPrefix)
-	must(err)
-	days := map[string]bool{}
-	for _, rf := range remoteFiles {
-		must(rf.Err)
-		day := strings.TrimPrefix(rf.Key, crashesPrefix)
-		// now day is YYYY/MM/DD/rest
-		day = path.Dir(day)
-		panicIf(len(strings.Split(day, "/")) != 3)
-		days[day] = true
-	}
-	var sortedDays []string
-	for day := range days {
-		sortedDays = append(sortedDays, day)
-	}
-	sort.Strings(sortedDays)
-	n := len(sortedDays)
-	nToDelete := n - nDaysToKeep
-	if nToDelete < 1 {
-		logf("nothing to delete, %d days of crashes\n", n)
 		return
 	}
-	for i := 0; i < nToDelete; i++ {
-		day := sortedDays[i]
-		prefix := crashesPrefix + day + "/"
-		deleteWithPrefix(prefix)
+
+	var err error
+	crash.body, err = ioutil.ReadFile(crash.path)
+	if err == nil {
+		nReadFiles++
+		if nReadFiles < 32 || nReadFiles%200 == 0 {
+			logf("read %s for %s %d\n", crash.path, crash.storeKey, nRemoteFiles)
+		}
+	} else {
+		err = mc.DownloadFileAtomically(crash.path, crash.storeKey)
+		panicIf(err != nil, "mc.DownloadFileAtomc.DownloadFileAtomically('%s', '%s') failed with '%s'", crash.path, crash.storeKey, err)
+		crash.body, err = ioutil.ReadFile(crash.path)
+		panicIfErr(err)
+		nDownloaded++
+		if nDownloaded < 50 || nDownloaded%200 == 0 {
+			logf("downloaded '%s' => '%s' %d\n", crash.storeKey, crash.path, nRemoteFiles)
+		}
 	}
+
+	parseCrash(crash)
+	if shouldDeleteParsedCrash(crash) {
+		crash.isDeleted = true
+		mc.Delete(crash.storeKey)
+		os.Remove(crash.path)
+		nInvalid++
+		if nInvalid < 32 || nInvalid%100 == 0 {
+			logf("deleted invalid %s %d\n", crash.path, nRemoteFiles)
+		}
+		return
+	}
+	if filterNoSymbols {
+		// those are not hard deleted but we don't want to show them
+		// TODO: maybe delete them as well?
+		if hasNoSymbols(crash) {
+			crash.isDeleted = true
+		}
+	}
+	if filterOlderVersions && crash.Ver != nil {
+		build := crash.Ver.Build
+		// filter out outdated builds
+		if build > 0 && build < lowestCrashingBuildToShow {
+			crash.isDeleted = true
+		}
+
+	}
+}
+
+// if crash line ends with ".exe", we assume it's because it doesn't
+// have symbols
+func hasNoSymbols(ci *crashInfo) bool {
+	s := ci.CrashLine()
+	return strings.HasSuffix(s, ".exe")
 }
 
 func previewCrashes() {
 	panicIf(!hasSpacesCreds())
 	dataDir := crashesDataDir()
 	logf("previewCrashes: data dir: '%s'\n", dataDir)
-	deleteOldCrashes()
 
-	downloadCrashes()
-	logf("dataDir: %s\n", dataDir)
-	//showCrashesToTerminal()
-	showCrashesWeb()
-}
-
-var crashesCached []*crashInfo
-
-func getCrashesCached() []*crashInfo {
-	if crashesCached == nil {
-		crashesCached = loadCrashes()
-		for i := 0; i < len(crashesCached); i++ {
-			crashesCached[i].N = i
-		}
-	}
-	return crashesCached
-}
-
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	uri := r.URL.String()
-	if uri == "/" {
-		crashes := loadCrashes()
-		d := map[string]interface{}{
-			"Crashes": crashes,
-		}
-		serveHTMLTemplate(w, r, 200, "index.tmpl.html", d)
-		return
-	}
-	servePlainText(w, r, http.StatusNotFound, "'%s' not found", uri)
-}
-
-func handleIndex2(w http.ResponseWriter, r *http.Request) {
-	uri := r.URL.String()
-	path := strings.TrimPrefix(uri, "/")
-	if uri == "/" {
-		path = "index.html"
-	}
-	serveRelativeFile(w, r, path)
-}
-
-func handleCrash(w http.ResponseWriter, r *http.Request) {
-	uri := r.URL.String()
-	crashNoStr := strings.TrimPrefix(uri, "/crash/")
-	crashNo, err := strconv.Atoi(crashNoStr)
-	must(err)
-	crashes := getCrashesCached()
-	crash := crashes[crashNo]
-	crashBody := u.ReadFileMust(crash.path)
-	d := map[string]interface{}{
-		"CrashLinesLinked": crash.CrashLinesLinked,
-		"CrashBody":        string(crashBody),
-	}
-	serveHTMLTemplate(w, r, 200, "crash.tmpl.html", d)
-}
-
-func handleAPIGetCrashes(w http.ResponseWriter, r *http.Request) {
-	crashes := getCrashesCached()
-	d := map[string]interface{}{
-		"Crashes": crashes,
-	}
-	serveJSON(w, r, d)
-}
-
-func handle404(w http.ResponseWriter, r *http.Request) {
-	//w.Header().Set("Content-Type", htmlMimeType)
-	w.WriteHeader(http.StatusNotFound)
-	msg := "Not found"
-	_, _ = w.Write([]byte(msg))
-}
-
-// https://blog.gopheracademy.com/advent-2016/exposing-go-on-the-internet/
-func makeHTTPServer() *http.Server {
-	mux := &http.ServeMux{}
-	mux.HandleFunc("/", handleIndex2)
-	mux.HandleFunc("/favicon.ico", handle404)
-	mux.HandleFunc("/crash/", handleCrash)
-	mux.HandleFunc("/api/crashes", handleAPIGetCrashes)
-
-	var handler http.Handler = mux
-
-	srv := &http.Server{
-		ReadTimeout:  120 * time.Second,
-		WriteTimeout: 120 * time.Second,
-		IdleTimeout:  120 * time.Second, // introduced in Go 1.8
-		Handler:      handler,
-	}
-	return srv
-}
-
-const (
-	httpPort    = ":8945"
-	flgHTTPAddr = "127.0.0.1" + httpPort
-)
-
-func showCrashesWeb() {
-	getCrashesCached()
-
-	httpSrv := makeHTTPServer()
-	httpSrv.Addr = flgHTTPAddr
-
-	chServerClosed := make(chan bool, 1)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	// semaphore for limiting concurrent downloaders
+	sem := make(chan bool, nDownloaders)
 	go func() {
-		err := httpSrv.ListenAndServe()
-		// mute error caused by Shutdown()
-		if err == http.ErrServerClosed {
-			err = nil
-		}
+		mc := newMinioClient()
+		client, err := mc.GetClient()
+		panicIfErr(err)
+
+		doneCh := make(chan struct{})
+		defer close(doneCh)
+
+		remoteFiles := client.ListObjects(mc.Bucket, crashesPrefix, true, doneCh)
+
 		must(err)
-		chServerClosed <- true
+		finished := false
+		for rf := range remoteFiles {
+			if finished {
+				continue
+			}
+			nRemoteFiles++
+			must(rf.Err)
+			//logf("key: %s\n", rf.Key)
+			s := strings.TrimPrefix(rf.Key, crashesPrefix)
+			name := path.Base(s)
+			// now day is YYYY/MM/DD/rest
+			day := path.Dir(s)
+			day = storeDayToDirDay(day)
+			crash := getCrashInfoForDayName(day, name)
+			crash.storeKey = rf.Key
+
+			wg.Add(1)
+			sem <- true
+			go func() {
+				downloadOrReadOrDelete(mc, crash)
+				<-sem
+				wg.Done()
+			}()
+			//
+			if fasterSubset && len(crashesPerDay) > 2 {
+				doneCh <- struct{}{}
+				finished = true
+			}
+		}
+		wg.Done()
 	}()
-	_ = u.OpenBrowser("http://" + flgHTTPAddr)
+	wg.Wait()
 
-	time.Sleep(time.Second * 2)
+	logf("%d remote files, %d invalid\n", nRemoteFiles, nInvalid)
+	filterDeletedCrashes()
+	days := getDaysSorted()
+	for idx, day := range days {
+		a := crashesPerDay[day]
+		logf("%s: %d\n", day, len(a))
+		sort.Slice(a, func(i, j int) bool {
+			v1 := a[i].Version
+			v2 := a[j].Version
+			if v1 == v2 {
+				c1 := getFirstString(a[i].CrashLines)
+				c2 := getFirstString(a[j].CrashLines)
+				if len(c1) == len(c2) {
+					return c1 < c2
+				}
+				return len(c1) > len(c2)
+			}
+			return v1 > v2
+		})
+		crashesPerDay[day] = a
 
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt /* SIGINT */, syscall.SIGTERM)
-	<-c
-
-	ctx := context.Background()
-	if httpSrv != nil {
-		// Shutdown() needs a non-nil context
-		_ = httpSrv.Shutdown(ctx)
-		select {
-		case <-chServerClosed:
-			// do nothing
-		case <-time.After(time.Second * 5):
-			// timeout
+		if false && idx == 0 {
+			for _, ci := range a {
+				logf("%s %s\n", ci.Version, getFirstString(ci.CrashLines))
+			}
 		}
 	}
+	genCrashesHTML()
+	if true {
+		// using https://github.com/netlify/cli
+		cmd := exec.Command("netlify", "dev", "-p", "8765", "--dir", ".")
+		cmd.Dir = crashesHTMLDataDir()
+		u.RunCmdLoggedMust(cmd)
+	}
+}
+
+const tmplDay = `
+<!doctype html>
+<html>
+<head>
+<style>
+		html, body {
+				font-family: monospace;
+				font-size: 10pt;
+				margin: 1em;
+				padding: 0;
+		}
+		.td1 {
+			white-space: nowrap;
+			padding-right: 1em;
+		}
+		.tdh {
+			text-align: center;
+		}
+</style>
+</head>
+<body>
+	<p>
+		{{range .Days}}<a href="/{{.}}.html" target="_blank">{{.}}</a>&nbsp;&nbsp;{{end}}
+	</p>
+	<p>
+		<table>
+			<thead>
+				<tr>
+					<td class="tdh">ver</td>
+					<td class="tdh">crash</td>
+				</tr>
+			</thead>
+			<tbody>
+				{{range .CrashSummaries}}
+				<tr>
+					<td class="td1">{{.VersionDisp}}</td>
+					<td><a href="{{.URL}}" target="_blank">{{.ShortCrashLine}}</a></td>
+				</tr>
+				{{end}}
+			</tbody>
+		</table>
+	</p>
+</body>
+</html>
+`
+
+var nWritten = 0
+
+func genCrashesHTMLForDay(day string, isIndex bool) {
+	days := getDaysSorted()
+	dir := crashesHTMLDataDir()
+	path := filepath.Join(dir, day+".html")
+
+	a := crashesPerDay[day]
+	prevVer := ""
+	for _, ci := range a {
+		ver := ci.Version
+		if ver != prevVer {
+			ver = strings.TrimPrefix(ver, "Ver: ")
+			ver = strings.TrimSpace(ver)
+			ci.VersionDisp = ver
+			prevVer = ci.Version
+		}
+	}
+
+	v := struct {
+		Days           []string
+		CrashSummaries []*crashInfo
+	}{
+		Days:           days,
+		CrashSummaries: a,
+	}
+	t := template.Must(template.New("t1").Parse(tmplDay))
+
+	var buf bytes.Buffer
+	err := t.Execute(&buf, v)
+	must(err)
+	d := buf.Bytes()
+
+	u.WriteFileMust(path, d)
+	if isIndex {
+		path = filepath.Join(dir, "index.html")
+		u.WriteFileMust(path, d)
+	}
+
+	for _, ci := range a {
+		name := ci.FileName
+		path = filepath.Join(dir, name)
+		u.WriteFileMust(path, ci.body)
+		nWritten++
+		if nWritten < 8 || nWritten%100 == 0 {
+			logf("wrote %s %d\n", path, nWritten)
+		}
+	}
+}
+
+func genCrashesHTML() {
+	logf("genCrashesHTML\n")
+	days := getDaysSorted()
+	for idx, day := range days {
+		genCrashesHTMLForDay(day, idx == 0)
+	}
+}
+
+func getFirstString(a []string) string {
+	if len(a) == 0 {
+		return "(none)"
+	}
+	return a[0]
+}
+
+func filterDeletedCrashes() {
+	for day, a := range crashesPerDay {
+		var filtered []*crashInfo
+		for _, ci := range a {
+			if !ci.isDeleted {
+				filtered = append(filtered, ci)
+			}
+		}
+		crashesPerDay[day] = filtered
+	}
+}
+
+func getDaysSorted() []string {
+	var days []string
+	for day := range crashesPerDay {
+		days = append(days, day)
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(days)))
+	return days
 }

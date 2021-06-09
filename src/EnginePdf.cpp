@@ -449,7 +449,9 @@ EnginePdf::~EnginePdf() {
     fz_drop_outline(ctx, attachments);
     pdf_drop_obj(ctx, _info);
 
-    pdf_drop_page_tree(ctx, pdf_document_from_fz_document(ctx, _doc));
+    if (_doc) {
+        pdf_drop_page_tree(ctx, pdf_document_from_fz_document(ctx, _doc));
+    }
 
     fz_drop_document(ctx, _doc);
     drop_cached_fonts_for_ctx(ctx);
