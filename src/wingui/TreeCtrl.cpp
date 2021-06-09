@@ -261,13 +261,12 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         a.nm = (NMTVCUSTOMDRAW*)lp;
         HTREEITEM hItem = (HTREEITEM)a.nm->nmcd.dwItemSpec;
         // it can be 0 in CDDS_PREPAINT state
-        if (hItem) {
-            a.treeItem = w->GetTreeItemByHandle(hItem);
-            // TODO: log more info
-            SubmitCrashIf(!a.treeItem);
-            if (!a.treeItem) {
-                return;
-            }
+        a.treeItem = w->GetTreeItemByHandle(hItem);
+        // TODO: seeing this in crash reports because GetTVITEM() returns nullptr
+        // should log more info
+        //SubmitCrashIf(!a.treeItem);
+        if (!a.treeItem) {
+            return;
         }
         w->onTreeItemCustomDraw(&a);
         return;
@@ -653,6 +652,9 @@ TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
         return nullptr;
     }
     auto tvi = GetTVITEM(this, item);
+    if (!tvi) {
+        return nullptr;
+    }
     TreeItem* res = reinterpret_cast<TreeItem*>(tvi->lParam);
     return res;
 }
