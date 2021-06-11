@@ -30,8 +30,11 @@ const nDaysToKeep = 14
 
 var (
 	// maps day key as YYYY-MM-DD to a list of crashInfo
-	crashesPerDay = map[string][]*crashInfo{}
-	nRemoteFiles  = 0
+	crashesPerDay   = map[string][]*crashInfo{}
+	nRemoteFiles    = 0
+	nWritten        = 0
+	tmplCrashParsed *template.Template
+	tmplDayParsed   *template.Template
 )
 
 type crashVersion struct {
@@ -294,6 +297,8 @@ func crashesHTMLDataDir() string {
 	}
 	dir := u.UserHomeDirMust()
 	dir = filepath.Join(dir, "data", "sumatra-crashes-html")
+	// we want to empty this dir every time
+	must(os.RemoveAll(dir))
 	u.CreateDirMust((dir))
 	crashesHTMLDirCached = dir
 	return dir
@@ -309,14 +314,16 @@ func storeDayToDirDay(s string) string {
 func getCrashInfoForDayName(day, name string) *crashInfo {
 	panicIf(len(day) != len("yyyy-dd-mm"))
 	crashes := crashesPerDay[day]
+	// foo.txt => foo.html
+	fileName := strings.Replace(name, ".txt", ".html", -1)
 	for _, c := range crashes {
-		if c.FileName == name {
+		if c.FileName == fileName {
 			return c
 		}
 	}
 	crash := &crashInfo{
 		Day:      day,
-		FileName: name,
+		FileName: fileName,
 	}
 	crashes = append(crashes, crash)
 	crashesPerDay[day] = crashes
@@ -327,7 +334,7 @@ func getCrashInfoForDayName(day, name string) *crashInfo {
 func isOutdated(day string) bool {
 	d1, err := time.Parse("2006-01-02", day)
 	panicIfErr(err)
-	diff := time.Now().Sub(d1)
+	diff := time.Since(d1)
 	return diff > time.Hour*24*nDaysToKeep
 }
 
@@ -553,11 +560,71 @@ const tmplDay = `
 </html>
 `
 
-var nWritten = 0
+const tmplCrash = `
+<!doctype html>
+<httml>
+    <head>
+        <style>
+            html, body {
+                font-family: monospace;
+                font-size: 10pt;
+								margin: 1em;
+								padding: 0;
+								}
+        </style>
+    </head>
+    <body>
+        <div style="padding-bottom: 1em;"><a href="/">All crashes</a></div>
+            {{range .CrashLinesLinked}}
+                {{if .URL}}
+                    <div><a href="{{.URL}}" target="_blank">{{.Text}}</a></div>
+                {{else}}
+                    <div>{{.Text}}</div>
+                {{end}}
+            {{end}}
+        <pre>{{.CrashBody}}</pre>
+    </body>
+</html>
+`
 
-func genCrashesHTMLForDay(day string, isIndex bool) {
+func getTmplCrash() *template.Template {
+	if tmplCrashParsed == nil {
+		tmplCrashParsed = template.Must(template.New("t2").Parse(tmplCrash))
+	}
+	return tmplCrashParsed
+}
+
+func getTmplDay() *template.Template {
+	if tmplDayParsed == nil {
+		tmplDayParsed = template.Must(template.New("t1").Parse(tmplDay))
+	}
+	return tmplDayParsed
+}
+
+func genCrashHTML(dir string, ci *crashInfo) {
+	name := ci.FileName
+	path := filepath.Join(dir, name)
+	var buf bytes.Buffer
+	v := struct {
+		CrashBody        string
+		CrashLinesLinked []crashLine
+	}{
+		CrashLinesLinked: ci.CrashLinesLinked,
+		CrashBody:        string(ci.body),
+	}
+	err := getTmplCrash().Execute(&buf, v)
+	must(err)
+	d := buf.Bytes()
+
+	u.WriteFileMust(path, d)
+	nWritten++
+	if nWritten < 8 || nWritten%100 == 0 {
+		logf("wrote %s %d\n", path, nWritten)
+	}
+}
+
+func genCrashesHTMLForDay(dir string, day string, isIndex bool) {
 	days := getDaysSorted()
-	dir := crashesHTMLDataDir()
 	path := filepath.Join(dir, day+".html")
 
 	a := crashesPerDay[day]
@@ -579,10 +646,9 @@ func genCrashesHTMLForDay(day string, isIndex bool) {
 		Days:           days,
 		CrashSummaries: a,
 	}
-	t := template.Must(template.New("t1").Parse(tmplDay))
 
 	var buf bytes.Buffer
-	err := t.Execute(&buf, v)
+	err := getTmplDay().Execute(&buf, v)
 	must(err)
 	d := buf.Bytes()
 
@@ -593,21 +659,16 @@ func genCrashesHTMLForDay(day string, isIndex bool) {
 	}
 
 	for _, ci := range a {
-		name := ci.FileName
-		path = filepath.Join(dir, name)
-		u.WriteFileMust(path, ci.body)
-		nWritten++
-		if nWritten < 8 || nWritten%100 == 0 {
-			logf("wrote %s %d\n", path, nWritten)
-		}
+		genCrashHTML(dir, ci)
 	}
 }
 
 func genCrashesHTML() {
-	logf("genCrashesHTML\n")
+	dir := crashesHTMLDataDir()
+	logf("genCrashesHTML in %s\n", dir)
 	days := getDaysSorted()
 	for idx, day := range days {
-		genCrashesHTMLForDay(day, idx == 0)
+		genCrashesHTMLForDay(dir, day, idx == 0)
 	}
 }
 
