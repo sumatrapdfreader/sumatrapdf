@@ -3,6 +3,7 @@ module do
 go 1.13
 
 require (
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/goamz/goamz v0.0.0-20180131231218-8b901b531db8
 	github.com/kjk/fmthtml v0.0.0-20190816041536-39f5e479d32d
 	github.com/kjk/notionapi v0.0.0-20200220221049-45ba7d333957

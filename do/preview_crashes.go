@@ -3,17 +3,20 @@ package main
 import (
 	"bytes"
 	"html/template"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/kjk/u"
 )
 
@@ -102,6 +105,11 @@ func (ci *crashInfo) URL() string {
 }
 
 func symbolicateCrashLine(s string, gitSha1 string) crashLine {
+	if strings.HasPrefix(s, "GetStackFrameInfo()") {
+		return crashLine{
+			Text: s,
+		}
+	}
 	parts := strings.SplitN(s, " ", 4)
 	if len(parts) < 2 {
 		return crashLine{
@@ -234,7 +242,7 @@ func parseCrash(res *crashInfo) {
 			continue
 		}
 		if inCrashLines {
-			if isEmptyLine(s) || len(tmpLines) > 6 {
+			if isEmptyLine(s) || strings.HasPrefix(s, "Thread:") || len(tmpLines) > 32 {
 				res.CrashLines = removeEmptyCrashLines(tmpLines)
 				tmpLines = nil
 				inCrashLines = false
@@ -427,6 +435,10 @@ func hasNoSymbols(ci *crashInfo) bool {
 
 func previewCrashes() {
 	panicIf(!hasSpacesCreds())
+	if true {
+		panicIf(os.Getenv("NETLIFY_AUTH_TOKEN") == "", "missing NETLIFY_AUTH_TOKEN env variable")
+		panicIf(os.Getenv("NETLIFY_SITE_ID") == "", "missing NETLIFY_SITE_ID env variable")
+	}
 	dataDir := crashesDataDir()
 	logf("previewCrashes: data dir: '%s'\n", dataDir)
 
@@ -480,6 +492,8 @@ func previewCrashes() {
 
 	logf("%d remote files, %d invalid\n", nRemoteFiles, nInvalid)
 	filterDeletedCrashes()
+	filterBigCrashes()
+
 	days := getDaysSorted()
 	for idx, day := range days {
 		a := crashesPerDay[day]
@@ -506,12 +520,35 @@ func previewCrashes() {
 		}
 	}
 	genCrashesHTML()
-	if true {
+	if false {
 		// using https://github.com/netlify/cli
 		cmd := exec.Command("netlify", "dev", "-p", "8765", "--dir", ".")
 		cmd.Dir = crashesHTMLDataDir()
 		u.RunCmdLoggedMust(cmd)
 	}
+	if true {
+		cmd := exec.Command("netlify", "deploy", "--prod", "--dir", ".")
+		if strings.Contains(runtime.GOOS, "windows") {
+			// if on windows assume running locally so open browser
+			// automatically after deploying
+			cmd = exec.Command("netlify", "deploy", "--prod", "--open", "--dir", ".")
+		}
+		cmd.Dir = crashesHTMLDataDir()
+		u.RunCmdLoggedMust(cmd)
+	}
+}
+
+func dirSize(dir string) {
+	totalSize := int64(0)
+	fun := func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		totalSize += info.Size()
+		return nil
+	}
+	filepath.Walk(dir, fun)
+	logf("Size of dir %s: %s\n", dir, humanize.Bytes(uint64(totalSize)))
 }
 
 const tmplDay = `
@@ -670,6 +707,7 @@ func genCrashesHTML() {
 	for idx, day := range days {
 		genCrashesHTMLForDay(dir, day, idx == 0)
 	}
+	dirSize(dir)
 }
 
 func getFirstString(a []string) string {
@@ -680,15 +718,41 @@ func getFirstString(a []string) string {
 }
 
 func filterDeletedCrashes() {
+	nFiltered := 0
 	for day, a := range crashesPerDay {
 		var filtered []*crashInfo
 		for _, ci := range a {
-			if !ci.isDeleted {
-				filtered = append(filtered, ci)
+			if ci.isDeleted {
+				nFiltered++
+				continue
 			}
+			filtered = append(filtered, ci)
 		}
 		crashesPerDay[day] = filtered
 	}
+	logf("filterDeletedCrashes: filtered %d\n", nFiltered)
+}
+
+// to avoid uploading too much to netlify, we filter
+// crashes from 3.2 etc. that are 256kb or more in size
+func filterBigCrashes() {
+	nFiltered := 0
+	for day, a := range crashesPerDay {
+		var filtered []*crashInfo
+		for _, ci := range a {
+			if ci.Ver == nil {
+				nFiltered++
+				continue
+			}
+			if len(ci.body) > 256*1024 && ci.Ver.Main == "3.2" {
+				nFiltered++
+				continue
+			}
+			filtered = append(filtered, ci)
+		}
+		crashesPerDay[day] = filtered
+	}
+	logf("filterBigCrashes: filtered %d\n", nFiltered)
 }
 
 func getDaysSorted() []string {
