@@ -535,9 +535,9 @@ int64_t pdf_annot_creation_date(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_creation_date(fz_context *ctx, pdf_annot *annot, int64_t time);
 
 void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4]);
-void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float color[4]);
+void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float *color);
 void pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, int *n, float color[4]);
-void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float color[4]);
+void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float *color);
 
 void pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot);
 int pdf_annot_needs_resynthesis(fz_context *ctx, pdf_annot *annot);
@@ -555,7 +555,6 @@ int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_widget *wi
 */
 fz_text *pdf_layout_fit_text(fz_context *ctx, fz_font *font, fz_text_language lang, const char *str, fz_rect bounds);
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot);
-void pdf_update_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, fz_display_list *disp_list);
 
 /*
 	Start/Stop using the annotation-local xref. This allows us to
@@ -651,5 +650,8 @@ int pdf_annot_active(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_active(fz_context *ctx, pdf_annot *annot, int active);
 int pdf_annot_hot(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_hot(fz_context *ctx, pdf_annot *annot, int hot);
+
+void pdf_set_annot_appearance(fz_context *ctx, pdf_annot *annot, const char *appearance, const char *state, fz_matrix ctm, fz_rect bbox, pdf_obj *res, fz_buffer *contents);
+void pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, const char *appearance, const char *state, fz_matrix ctm, fz_display_list *list);
 
 #endif

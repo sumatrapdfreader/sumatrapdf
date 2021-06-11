@@ -257,6 +257,7 @@ static jmethodID mid_Point_init;
 static jmethodID mid_Quad_init;
 static jmethodID mid_Rect_init;
 static jmethodID mid_SeekableInputStream_read;
+static jmethodID mid_SeekableOutputStream_truncate;
 static jmethodID mid_SeekableOutputStream_write;
 static jmethodID mid_SeekableStream_position;
 static jmethodID mid_SeekableStream_seek;
@@ -845,6 +846,7 @@ static int find_fids(JNIEnv *env)
 	mid_SeekableInputStream_read = get_method(&err, env, "read", "([B)I");
 
 	cls_SeekableOutputStream = get_class(&err, env, PKG"SeekableOutputStream");
+	mid_SeekableOutputStream_truncate = get_method(&err, env, "truncate", "()V");
 	mid_SeekableOutputStream_write = get_method(&err, env, "write", "([BII)V");
 
 	cls_SeekableStream = get_class(&err, env, PKG"SeekableStream");

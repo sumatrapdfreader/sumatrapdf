@@ -70,7 +70,7 @@ FUN(Image_newNativeFromBytes)(JNIEnv *env, jobject self, jbyteArray jByteArray)
 
 	fz_var(buffer);
 	fz_try(ctx) {
-		buffer = fz_new_buffer_from_copied_data(ctx, bytes, count);
+		buffer = fz_new_buffer_from_copied_data(ctx, (unsigned char *) bytes, count);
 		image = fz_new_image_from_buffer(ctx, buffer);
 	}
 	fz_always(ctx) {

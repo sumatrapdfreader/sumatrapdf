@@ -210,7 +210,7 @@ pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs
 		enact_sig_locking(ctx, doc, wobj);
 
 		if (disp_list)
-			pdf_update_appearance_from_display_list(ctx, widget, disp_list);
+			pdf_set_annot_appearance_from_display_list(ctx, widget, "N", NULL, fz_identity, disp_list);
 
 		/* Update the SigFlags for the document if required */
 		form = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm");
@@ -410,7 +410,7 @@ void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
 		pdf_dict_del(ctx, ((pdf_annot *)widget)->obj, PDF_NAME(V));
 
 		dlist = pdf_signature_appearance_unsigned(ctx, rect, lang);
-		pdf_update_appearance_from_display_list(ctx, (pdf_annot *)widget, dlist);
+		pdf_set_annot_appearance_from_display_list(ctx, widget, "N", NULL, fz_identity, dlist);
 	}
 	fz_always(ctx)
 	{

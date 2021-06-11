@@ -121,7 +121,6 @@ static void SeekableOutputStream_write(fz_context *ctx, void *streamState_, cons
 	jni_detach_thread(detach);
 }
 
-
 static int64_t SeekableOutputStream_tell(fz_context *ctx, void *streamState_)
 {
 	SeekableStreamState *state = streamState_;
@@ -140,6 +139,23 @@ static int64_t SeekableOutputStream_tell(fz_context *ctx, void *streamState_)
 	jni_detach_thread(detach);
 
 	return pos;
+}
+
+static void SeekableOutputStream_truncate(fz_context *ctx, void *streamState_)
+{
+	SeekableStreamState *state = streamState_;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+
+	env = jni_attach_thread(ctx, &detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in SeekableOutputStream_truncate");
+
+	(*env)->CallVoidMethod(env, state->stream, mid_SeekableOutputStream_truncate);
+	if ((*env)->ExceptionCheck(env))
+		fz_throw_java_and_detach_thread(ctx, env, detach);
+
+	jni_detach_thread(detach);
 }
 
 static void SeekableOutputStream_seek(fz_context *ctx, void *streamState_, int64_t offset, int whence)

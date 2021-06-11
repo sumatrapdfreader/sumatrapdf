@@ -6,4 +6,7 @@ public interface SeekableOutputStream extends SeekableStream
 {
 	/* Behaves like java.io.OutputStream.write */
 	void write(byte[] b, int off, int len) throws IOException;
+
+	/* Truncate SeekableOutputStream at current position() */
+	void truncate() throws IOException;
 }

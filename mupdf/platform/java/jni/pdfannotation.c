@@ -1076,3 +1076,87 @@ FUN(PDFAnnotation_setDefaultAppearance)(JNIEnv *env, jobject self, jstring jfont
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }
+
+JNIEXPORT void JNICALL
+FUN(PDFAnnotation_setNativeAppearance)(JNIEnv *env, jobject self, jstring jappearance, jstring jstate, jobject jctm, jobject jbbox, jobject jres, jobject jcontents)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	pdf_obj *res = from_PDFObject(env, jres);
+	fz_matrix ctm = from_Matrix(env, jctm);
+	fz_rect bbox = from_Rect(env, jbbox);
+	fz_buffer *contents = from_Buffer(env, jcontents);
+	const char *appearance = NULL;
+	const char *state = NULL;
+
+	if (!ctx || !annot) return;
+
+	if (jappearance)
+	{
+		appearance = (*env)->GetStringUTFChars(env, jappearance, NULL);
+		if (!appearance)
+			jni_throw_oom_void(env, "can not get characters in appearance string");
+	}
+	if (jstate)
+	{
+		state = (*env)->GetStringUTFChars(env, jstate, NULL);
+		if (!state)
+		{
+			(*env)->ReleaseStringUTFChars(env, jappearance, appearance);
+			jni_throw_oom_void(env, "can not get characters in state string");
+		}
+	}
+
+	fz_try(ctx)
+		pdf_set_annot_appearance(ctx, annot, appearance, state, ctm, bbox, res, contents);
+	fz_always(ctx)
+	{
+		if (jstate)
+			(*env)->ReleaseStringUTFChars(env, jstate, state);
+		if (jappearance)
+			(*env)->ReleaseStringUTFChars(env, jappearance, appearance);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFAnnotation_setNativeAppearanceDisplayList)(JNIEnv *env, jobject self, jstring jappearance, jstring jstate, jobject jctm, jobject jlist)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	fz_matrix ctm = from_Matrix(env, jctm);
+	fz_display_list *list = from_DisplayList(env, jlist);
+	const char *appearance = NULL;
+	const char *state = NULL;
+
+	if (!ctx || !annot) return;
+
+	if (jappearance)
+	{
+		appearance = (*env)->GetStringUTFChars(env, jappearance, NULL);
+		if (!appearance)
+			jni_throw_oom_void(env, "can not get characters in appearance string");
+	}
+	if (jstate)
+	{
+		state = (*env)->GetStringUTFChars(env, jstate, NULL);
+		if (!state)
+		{
+			(*env)->ReleaseStringUTFChars(env, jappearance, appearance);
+			jni_throw_oom_void(env, "can not get characters in state string");
+		}
+	}
+
+	fz_try(ctx)
+		pdf_set_annot_appearance_from_display_list(ctx, annot, appearance, state, ctm, list);
+	fz_always(ctx)
+	{
+		if (jstate)
+			(*env)->ReleaseStringUTFChars(env, jstate, state);
+		if (jappearance)
+			(*env)->ReleaseStringUTFChars(env, jappearance, appearance);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

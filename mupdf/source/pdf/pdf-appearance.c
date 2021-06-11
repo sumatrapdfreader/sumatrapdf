@@ -1527,6 +1527,8 @@ write_variable_text(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj *
 			fz_append_printf(ctx, buf, "%g %g %g rg\n", color[0], color[1], color[2]);
 		else if (n == 1)
 			fz_append_printf(ctx, buf, "%g g\n", color[0]);
+		else if (n == 0)
+			fz_append_printf(ctx, buf, "0 g\n");
 		if (multiline)
 		{
 			fz_append_printf(ctx, buf, "%g %g Td\n", padding, padding+h-baseline+lineheight);
@@ -1671,6 +1673,8 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 			fz_append_printf(ctx, buf, "%g %g %g RG\n", color[0], color[1], color[2]);
 		else if (n == 1)
 			fz_append_printf(ctx, buf, "%g G\n", color[0]);
+		else if (n == 0)
+			fz_append_printf(ctx, buf, "0 G\n");
 		fz_append_printf(ctx, buf, "%g %g %g %g re\nS\n", b/2, b/2, w-b, h-b);
 	}
 
@@ -2559,54 +2563,6 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_na
 }
 
 void
-pdf_update_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, fz_display_list *disp_list)
-{
-	pdf_obj *ap, *new_ap_n;
-	pdf_document *doc = annot->page->doc;
-	fz_device *dev = NULL;
-	pdf_obj *res = NULL;
-	fz_buffer *contents = NULL;
-
-	// Convert fitz-space mediabox to pdf-space bbox:
-	fz_rect mediabox = fz_bound_display_list(ctx, disp_list);
-	fz_matrix transform = { 1, 0, 0, -1, -mediabox.x0, mediabox.y1 };
-	fz_rect bbox = fz_transform_rect(mediabox, transform);
-
-	fz_var(dev);
-	fz_var(res);
-	fz_var(contents);
-	fz_try(ctx)
-	{
-		res = pdf_new_dict(ctx, doc, 1);
-		contents = fz_new_buffer(ctx, 0);
-		dev = pdf_new_pdf_device(ctx, doc, transform, res, contents);
-		fz_run_display_list(ctx, disp_list, dev, fz_identity, fz_infinite_rect, NULL);
-		fz_close_device(ctx, dev);
-		fz_drop_device(ctx, dev);
-		dev = NULL;
-
-		/* Update the AP/N stream */
-		ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
-		if (!ap)
-			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
-		new_ap_n = pdf_new_xobject(ctx, doc, bbox, fz_identity, res, contents);
-		pdf_set_annot_resynthesised(ctx, annot);
-		pdf_dict_put_drop(ctx, ap, PDF_NAME(N), new_ap_n);
-
-	}
-	fz_always(ctx)
-	{
-		fz_drop_device(ctx, dev);
-		pdf_drop_obj(ctx, res);
-		fz_drop_buffer(ctx, contents);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
-	}
-}
-
-void
 pdf_annot_push_local_xref(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_document *doc = annot->page->doc;
@@ -2784,7 +2740,7 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 				rect = pdf_annot_rect(ctx, annot);
 				dlist = pdf_signature_appearance_unsigned(ctx, rect, pdf_annot_language(ctx, annot));
 				fz_try(ctx)
-					pdf_update_appearance_from_display_list(ctx, annot, dlist);
+					pdf_set_annot_appearance_from_display_list(ctx, annot, "N", NULL, fz_identity, dlist);
 				fz_always(ctx)
 					fz_drop_display_list(ctx, dlist);
 				fz_catch(ctx)
@@ -2800,23 +2756,7 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 				rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
 				pdf_write_appearance(ctx, annot, buf, &rect, &bbox, &matrix, &res);
 				pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(Rect), rect);
-
-				if (!ap_n)
-				{
-					pdf_obj *ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
-					if (!ap)
-					{
-						ap = pdf_new_dict(ctx, annot->page->doc, 1);
-						pdf_dict_put_drop(ctx, annot->obj, PDF_NAME(AP), ap);
-					}
-					new_ap_n = pdf_new_xobject(ctx, annot->page->doc, bbox, matrix, res, buf);
-					pdf_dict_put(ctx, ap, PDF_NAME(N), new_ap_n);
-				}
-				else
-				{
-					new_ap_n = pdf_keep_obj(ctx, ap_n);
-					pdf_update_xobject(ctx, annot->page->doc, ap_n, bbox, matrix, res, buf);
-				}
+				pdf_set_annot_appearance(ctx, annot, "N", NULL, matrix, bbox, res, buf);
 			}
 			fz_always(ctx)
 			{

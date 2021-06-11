@@ -235,4 +235,38 @@ public class PDFAnnotation
 
 	public native DefaultAppearance getDefaultAppearance();
 	public native void setDefaultAppearance(String font, float size, float[] color);
+
+	protected native void setNativeAppearance(String appearance, String state, Matrix ctm, Rect bbox, PDFObject res, Buffer contents);
+	protected native void setNativeAppearanceDisplayList(String appearance, String state, Matrix ctm, DisplayList list);
+
+	public void setAppearance(String appearance, String state, Matrix ctm, Rect bbox, PDFObject res, Buffer contents) {
+		setNativeAppearance(appearance, state, ctm, bbox, res, contents);
+	}
+	public void setAppearance(String appearance, Matrix ctm, Rect bbox, PDFObject res, Buffer contents) {
+		setNativeAppearance(appearance, null, ctm, bbox, res, contents);
+	}
+	public void setAppearance(String appearance, Rect bbox, PDFObject res, Buffer contents) {
+		setNativeAppearance(appearance, null, null, bbox, res, contents);
+	}
+	public void setAppearance(Matrix ctm, Rect bbox, PDFObject res, Buffer contents) {
+		setNativeAppearance(null, null, ctm, bbox, res, contents);
+	}
+	public void setAppearance(Rect bbox, PDFObject res, Buffer contents) {
+		setNativeAppearance(null, null, null, bbox, res, contents);
+	}
+	public void setAppearance(String appearance, String state, Matrix ctm, DisplayList list) {
+		setNativeAppearanceDisplayList(appearance, state, ctm, list);
+	}
+	public void setAppearance(String appearance, Matrix ctm, DisplayList list) {
+		setNativeAppearanceDisplayList(appearance, null, ctm, list);
+	}
+	public void setAppearance(String appearance, DisplayList list) {
+		setNativeAppearanceDisplayList(appearance, null, null, list);
+	}
+	public void setAppearance(Matrix ctm, DisplayList list) {
+		setNativeAppearanceDisplayList(null, null, ctm, list);
+	}
+	public void setAppearance(DisplayList list) {
+		setNativeAppearanceDisplayList(null, null, null, list);
+	}
 }

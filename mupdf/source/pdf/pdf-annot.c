@@ -974,7 +974,8 @@ pdf_set_annot_rect(fz_context *ctx, pdf_annot *annot, fz_rect rect)
 	fz_always(ctx)
 		pdf_end_operation(ctx, annot->page->doc);
 	fz_catch(ctx)
-		fz_rethrow(ctx);}
+		fz_rethrow(ctx);
+}
 
 const char *
 pdf_annot_contents(fz_context *ctx, pdf_annot *annot)
@@ -2564,7 +2565,7 @@ pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font,
 
 	*font = "Helv";
 	*size = 12;
-	*n = 1;
+	*n = 0;
 	color[0] = color[1] = color[2] = color[3] = 0;
 
 	fz_strlcpy(buf, da, sizeof buf);
@@ -2622,13 +2623,13 @@ pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font,
 }
 
 void
-pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float color[4])
+pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float *color)
 {
-	if (n == 4 && (color[0] > 0 || color[1] > 0 || color[2] > 0 || color[3] > 0))
+	if (n == 4)
 		fz_snprintf(buf, nbuf, "/%s %g Tf %g %g %g %g k", font, size, color[0], color[1], color[2], color[3]);
-	else if (n == 3 && (color[0] > 0 || color[1] > 0 || color[2] > 0))
+	else if (n == 3)
 		fz_snprintf(buf, nbuf, "/%s %g Tf %g %g %g rg", font, size, color[0], color[1], color[2]);
-	else if (n == 1 && color[0] > 0)
+	else if (n == 1)
 		fz_snprintf(buf, nbuf, "/%s %g Tf %g g", font, size, color[0]);
 	else
 		fz_snprintf(buf, nbuf, "/%s %g Tf", font, size);
@@ -2647,7 +2648,7 @@ pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **fon
 }
 
 void
-pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float color[4])
+pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float *color)
 {
 	char buf[100];
 
@@ -2734,4 +2735,88 @@ int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_widget *an
 	pdf_dirty_annot(ctx, annot);
 
 	return ret;
+}
+
+void
+pdf_set_annot_appearance(fz_context *ctx, pdf_annot *annot, const char *appearance, const char *state, fz_matrix ctm, fz_rect bbox, pdf_obj *res, fz_buffer *contents)
+{
+	pdf_obj *form, *ap, *app;
+
+	begin_annot_op(ctx, annot, "Set appearance stream");
+
+	if (!appearance)
+		appearance = "N";
+
+	fz_var(form);
+
+	fz_try(ctx)
+	{
+		form = pdf_new_xobject(ctx, annot->page->doc, bbox, ctm, res, contents);
+		form = pdf_add_object_drop(ctx, annot->page->doc, form);
+
+		ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
+		if (!ap)
+			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
+
+		if (!state)
+			pdf_dict_put(ctx, ap, pdf_new_name(ctx, appearance), form);
+		else
+		{
+			if (strcmp(appearance, "N") && strcmp(appearance, "R") && strcmp(appearance, "D"))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "Unknown annotation appearance");
+
+			app = pdf_dict_put_dict(ctx, ap, pdf_new_name(ctx, appearance), 2);
+			pdf_dict_put(ctx, app, pdf_new_name(ctx, state), form);
+		}
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, form);
+		end_annot_op(ctx, annot);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_set_annot_resynthesised(ctx, annot);
+}
+
+void
+pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, const char *appearance, const char *state, fz_matrix ctm, fz_display_list *list)
+{
+	pdf_document *doc = annot->page->doc;
+	fz_device *dev = NULL;
+	pdf_obj *res = NULL;
+	fz_buffer *contents = NULL;
+
+	/* Convert fitz-space mediabox to pdf-space bbox */
+	fz_rect mediabox = fz_bound_display_list(ctx, list);
+	fz_matrix transform = { 1, 0, 0, -1, -mediabox.x0, mediabox.y1 };
+	fz_rect bbox = fz_transform_rect(mediabox, transform);
+
+	fz_var(dev);
+	fz_var(contents);
+	fz_var(res);
+
+	fz_try(ctx)
+	{
+		res = pdf_new_dict(ctx, doc, 1);
+		contents = fz_new_buffer(ctx, 0);
+		dev = pdf_new_pdf_device(ctx, doc, transform, res, contents);
+		fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, NULL);
+		fz_close_device(ctx, dev);
+		fz_drop_device(ctx, dev);
+		dev = NULL;
+
+		pdf_set_annot_appearance(ctx, annot, appearance, state, ctm, bbox, res, contents);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_device(ctx, dev);
+		fz_drop_buffer(ctx, contents);
+		pdf_drop_obj(ctx, res);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
 }

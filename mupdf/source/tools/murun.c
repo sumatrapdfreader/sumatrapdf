@@ -5269,6 +5269,16 @@ static void ffi_PDFAnnotation_toPixmap(js_State *J)
 	js_newuserdata(J, "fz_pixmap", pixmap, ffi_gc_fz_pixmap);
 }
 
+static void ffi_PDFAnnotation_getObject(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	pdf_obj *obj;
+
+	obj = pdf_annot_obj(ctx, annot);
+	ffi_pushobj(J, pdf_keep_obj(ctx, obj));
+}
+
 static void ffi_PDFAnnotation_getType(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -6023,6 +6033,58 @@ static void ffi_PDFAnnotation_setDefaultAppearance(js_State *J)
 		pdf_set_annot_default_appearance(ctx, annot, font, size, n, color);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_setAppearance(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	const char *appearance = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *state = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
+	fz_matrix ctm = ffi_tomatrix(J, 3);
+
+	if (js_isuserdata(J, 4, "fz_display_list"))
+	{
+		fz_display_list *list = js_touserdata(J, 4, "fz_display_list");
+		fz_try(ctx)
+			pdf_set_annot_appearance_from_display_list(ctx, annot, appearance, state, ctm, list);
+		fz_catch(ctx)
+			rethrow(J);
+	}
+	else if (js_isarray(J, 4))
+	{
+		const char *contents;
+		pdf_document *pdf;
+		fz_buffer *buf;
+		pdf_obj *res;
+		fz_rect bbox;
+
+		fz_try(ctx)
+			pdf = pdf_get_bound_document(ctx, pdf_annot_obj(ctx, annot));
+		fz_catch(ctx)
+			rethrow(J);
+
+		bbox = ffi_torect(J, 4);
+		res = ffi_toobj(J, pdf, 5);
+		contents = js_tostring(J, 6);
+
+		fz_var(buf);
+
+		fz_try(ctx)
+		{
+			buf = fz_new_buffer_from_copied_data(ctx, (unsigned char *) contents, strlen(contents));
+			pdf_set_annot_appearance(ctx, annot, appearance, state, ctm, bbox, res, buf);
+		}
+		fz_always(ctx)
+		{
+			fz_drop_buffer(ctx, buf);
+			pdf_drop_obj(ctx, res);
+		}
+		fz_catch(ctx)
+			rethrow(J);
+	}
+	else
+		js_throw(J);
 }
 
 static void ffi_PDFAnnotation_updateAppearance(js_State *J)
@@ -6891,6 +6953,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.run", ffi_PDFAnnotation_run, 2);
 		jsB_propfun(J, "PDFAnnotation.toPixmap", ffi_PDFAnnotation_toPixmap, 3);
 		jsB_propfun(J, "PDFAnnotation.toDisplayList", ffi_PDFAnnotation_toDisplayList, 0);
+		jsB_propfun(J, "PDFAnnotation.getObject", ffi_PDFAnnotation_getObject, 0);
 
 		jsB_propfun(J, "PDFAnnotation.getType", ffi_PDFAnnotation_getType, 0);
 		jsB_propfun(J, "PDFAnnotation.getFlags", ffi_PDFAnnotation_getFlags, 0);
@@ -6925,6 +6988,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.setLine", ffi_PDFAnnotation_setLine, 2);
 		jsB_propfun(J, "PDFAnnotation.getDefaultAppearance", ffi_PDFAnnotation_getDefaultAppearance, 0);
 		jsB_propfun(J, "PDFAnnotation.setDefaultAppearance", ffi_PDFAnnotation_setDefaultAppearance, 3);
+		jsB_propfun(J, "PDFAnnotation.setAppearance", ffi_PDFAnnotation_setAppearance, 6);
 
 		jsB_propfun(J, "PDFAnnotation.getInkList", ffi_PDFAnnotation_getInkList, 0);
 		jsB_propfun(J, "PDFAnnotation.setInkList", ffi_PDFAnnotation_setInkList, 1);

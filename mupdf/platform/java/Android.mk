@@ -22,6 +22,17 @@
 LOCAL_PATH := $(call my-dir)
 MUPDF_PATH := $(realpath $(LOCAL_PATH)/../..)
 
+ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
+HAVE_NEON := yes
+endif
+
+ifeq ($(TARGET_ARCH_ABI),x86_64)
+HAVE_AVX := yes
+HAVE_AVX2 := yes
+HAVE_FMA := yes
+HAVE_SSE4_1 := yes
+endif
+
 include $(MUPDF_PATH)/Makelists
 
 # --- Build a local static library for core mupdf ---

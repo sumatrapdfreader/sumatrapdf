@@ -40,4 +40,8 @@ public class FileStream implements SeekableInputStream, SeekableOutputStream
 	public void close() throws IOException {
 		file.close();
 	}
+
+	public void truncate() throws IOException {
+		file.setLength(file.getFilePointer());
+	}
 }
