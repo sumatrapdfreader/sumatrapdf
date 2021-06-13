@@ -1,5 +1,25 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-06-13 Sun
+
+Split EnginePdfImpl.h from EnginePdf.cpp
+
+2021-06-12 Sat
+
+Prototyping a different way to handle annotations.
+
+2021-06-11 Fri
+
+looking into AltDrag issue
+
+2021-06-10 Thu
+
+update mupdf / mujs
+
+2021-06-09 Wed
+
+after processing crsahes, deploy to netlify
+
 2021-06-08 Tue
 
 improving code to preview crashes

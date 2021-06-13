@@ -958,6 +958,7 @@ function pdf_preview_files()
     "EngineBase.*",
     "EngineFzUtil.*",
     "EnginePdf.*",
+    "EnginePdfImpl.*",
     "EngineXps.*",
     "ChmDoc.*",
     "EbookDoc.*",

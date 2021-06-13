@@ -19,6 +19,7 @@
     <ClInclude Include="..\src\EngineMulti.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\EnginePdf.h" />
+    <ClInclude Include="..\src\EnginePdfImpl.h" />
     <ClInclude Include="..\src\EnginePs.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />

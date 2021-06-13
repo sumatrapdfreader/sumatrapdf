@@ -22,6 +22,7 @@
     <ClInclude Include="..\src\EngineFzUtil.h" />
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EnginePdf.h" />
+    <ClInclude Include="..\src\EnginePdfImpl.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
