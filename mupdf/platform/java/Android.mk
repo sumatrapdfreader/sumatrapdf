@@ -64,6 +64,10 @@ LOCAL_C_INCLUDES += $(patsubst -I%,$(MUPDF_PATH)/%,$(filter -I%,$(TESSERACT_CFLA
 LOCAL_C_INCLUDES += $(patsubst -I%,$(MUPDF_PATH)/%,$(filter -I%,$(LEPTONICA_CFLAGS)))
 endif
 
+ifdef USE_EXTRACT
+LOCAL_C_INCLUDES += $(patsubst -I%,$(MUPDF_PATH)/%,$(filter -I%,$(EXTRACT_CFLAGS)))
+endif
+
 LOCAL_CFLAGS += $(filter-out -I%,$(FREETYPE_CFLAGS))
 LOCAL_CFLAGS += $(filter-out -I%,$(GUMBO_CFLAGS))
 LOCAL_CFLAGS += $(filter-out -I%,$(HARFBUZZ_CFLAGS))
@@ -77,6 +81,11 @@ ifdef USE_TESSERACT
 LOCAL_CFLAGS += -DHAVE_LEPTONICA -DHAVE_TESSERACT
 LOCAL_CFLAGS += $(filter-out -I%,$(TESSERACT_CFLAGS))
 LOCAL_CFLAGS += $(filter-out -I%,$(LEPTONICA_CFLAGS))
+endif
+
+ifdef USE_EXTRACT
+LOCAL_CFLAGS += -DHAVE_EXTRACT
+LOCAL_CFLAGS += $(filter-out -I%,$(EXTRACT_CFLAGS))
 endif
 
 LOCAL_SRC_FILES += $(wildcard $(MUPDF_PATH)/source/fitz/*.c)
@@ -170,8 +179,9 @@ LOCAL_SRC_FILES += $(patsubst %,$(MUPDF_PATH)/%,$(TESSERACT_SRC))
 LOCAL_SRC_FILES += $(MUPDF_PATH)/source/fitz/tessocr.cpp
 LOCAL_C_INCLUDES += $(patsubst -I%,$(MUPDF_PATH)/%,$(filter -I%,$(TESSERACT_CFLAGS) $(TESSERACT_BUILD_CFLAGS)))
 LOCAL_CFLAGS += $(filter-out -I%,$(TESSERACT_CFLAGS) $(TESSERACT_BUILD_CFLAGS))
-LOCAL_CFLAGS += -DANDROID -Wno-sign-compare
+LOCAL_CFLAGS += -Wno-sign-compare
 LOCAL_CFLAGS += $(MUPDF_EXTRA_CFLAGS)
+LOCAL_CPP_FEATURES := exceptions
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -184,6 +194,16 @@ LOCAL_CFLAGS += $(MUPDF_EXTRA_CFLAGS)
 include $(BUILD_STATIC_LIBRARY)
 
 endif  #  USE_TESSERACT
+
+ifdef USE_EXTRACT
+include $(CLEAR_VARS)
+LOCAL_MODULE += mupdf_thirdparty_extract
+LOCAL_SRC_FILES += $(patsubst %,$(MUPDF_PATH)/%,$(EXTRACT_SRC))
+LOCAL_C_INCLUDES += $(patsubst -I%,$(MUPDF_PATH)/%,$(filter -I%,$(EXTRACT_CFLAGS) $(EXTRACT_BUILD_CFLAGS)))
+LOCAL_CFLAGS += $(filter-out -I%,$(EXTRACT_CFLAGS) $(EXTRACT_BUILD_CFLAGS))
+LOCAL_CFLAGS += $(MUPDF_EXTRA_CFLAGS)
+include $(BUILD_STATIC_LIBRARY)
+endif
 
 # --- Build the final JNI shared library ---
 
@@ -211,6 +231,10 @@ LOCAL_STATIC_LIBRARIES += mupdf_thirdparty_openjpeg
 ifdef USE_TESSERACT
 LOCAL_STATIC_LIBRARIES += mupdf_thirdparty_leptonica
 LOCAL_STATIC_LIBRARIES += mupdf_thirdparty_tesseract
+endif
+
+ifdef USE_EXTRACT
+LOCAL_STATIC_LIBRARIES += mupdf_thirdparty_extract
 endif
 
 LOCAL_LDLIBS += $(MUPDF_EXTRA_LDLIBS)
