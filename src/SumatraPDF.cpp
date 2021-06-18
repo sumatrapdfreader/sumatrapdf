@@ -3876,7 +3876,7 @@ Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) 
         return nullptr;
     }
     Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
-    annot->SetQuadPointsAsRect(rects);
+    SetQuadPointsAsRect(annot, rects);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     CopySelectionToClipboard(win);
@@ -4048,7 +4048,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             if (annot) {
                 COLORREF col = gGlobalPrefs->annotations.highlightColor;
                 col = FixupColorForPDF(col);
-                annot->SetColor(col);
+                SetColor(annot, col);
                 WindowInfoRerender(win);
                 if (isShift) {
                     StartEditAnnotations(win->currentTab, annot);

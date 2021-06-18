@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-06-17 Thu
+
+refactor Annotation: convert methods into functions
+
 2021-06-13 Sun
 
 Split EnginePdfImpl.h from EnginePdf.cpp
