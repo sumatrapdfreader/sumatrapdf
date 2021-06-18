@@ -131,60 +131,60 @@ const char* GetKnownColorName(COLORREF c) {
 }
 
 struct EditAnnotationsWindow {
-    TabInfo* tab = nullptr;
-    Window* mainWindow = nullptr;
-    LayoutBase* mainLayout = nullptr;
+    TabInfo* tab{nullptr};
+    Window* mainWindow{nullptr};
+    LayoutBase* mainLayout{nullptr};
 
-    ListBoxCtrl* listBox = nullptr;
-    StaticCtrl* staticRect = nullptr;
-    StaticCtrl* staticAuthor = nullptr;
-    StaticCtrl* staticModificationDate = nullptr;
-    StaticCtrl* staticPopup = nullptr;
-    StaticCtrl* staticContents = nullptr;
-    EditCtrl* editContents = nullptr;
-    StaticCtrl* staticTextAlignment = nullptr;
-    DropDownCtrl* dropDownTextAlignment = nullptr;
-    StaticCtrl* staticTextFont = nullptr;
-    DropDownCtrl* dropDownTextFont = nullptr;
-    StaticCtrl* staticTextSize = nullptr;
-    TrackbarCtrl* trackbarTextSize = nullptr;
-    StaticCtrl* staticTextColor = nullptr;
-    DropDownCtrl* dropDownTextColor = nullptr;
+    ListBoxCtrl* listBox{nullptr};
+    StaticCtrl* staticRect{nullptr};
+    StaticCtrl* staticAuthor{nullptr};
+    StaticCtrl* staticModificationDate{nullptr};
+    StaticCtrl* staticPopup{nullptr};
+    StaticCtrl* staticContents{nullptr};
+    EditCtrl* editContents{nullptr};
+    StaticCtrl* staticTextAlignment{nullptr};
+    DropDownCtrl* dropDownTextAlignment{nullptr};
+    StaticCtrl* staticTextFont{nullptr};
+    DropDownCtrl* dropDownTextFont{nullptr};
+    StaticCtrl* staticTextSize{nullptr};
+    TrackbarCtrl* trackbarTextSize{nullptr};
+    StaticCtrl* staticTextColor{nullptr};
+    DropDownCtrl* dropDownTextColor{nullptr};
 
-    StaticCtrl* staticLineStart = nullptr;
-    DropDownCtrl* dropDownLineStart = nullptr;
-    StaticCtrl* staticLineEnd = nullptr;
-    DropDownCtrl* dropDownLineEnd = nullptr;
+    StaticCtrl* staticLineStart{nullptr};
+    DropDownCtrl* dropDownLineStart{nullptr};
+    StaticCtrl* staticLineEnd{nullptr};
+    DropDownCtrl* dropDownLineEnd{nullptr};
 
-    StaticCtrl* staticIcon = nullptr;
-    DropDownCtrl* dropDownIcon = nullptr;
+    StaticCtrl* staticIcon{nullptr};
+    DropDownCtrl* dropDownIcon{nullptr};
 
-    StaticCtrl* staticBorder = nullptr;
-    TrackbarCtrl* trackbarBorder = nullptr;
+    StaticCtrl* staticBorder{nullptr};
+    TrackbarCtrl* trackbarBorder{nullptr};
 
-    StaticCtrl* staticColor = nullptr;
-    DropDownCtrl* dropDownColor = nullptr;
-    StaticCtrl* staticInteriorColor = nullptr;
-    DropDownCtrl* dropDownInteriorColor = nullptr;
+    StaticCtrl* staticColor{nullptr};
+    DropDownCtrl* dropDownColor{nullptr};
+    StaticCtrl* staticInteriorColor{nullptr};
+    DropDownCtrl* dropDownInteriorColor{nullptr};
 
-    StaticCtrl* staticOpacity = nullptr;
-    TrackbarCtrl* trackbarOpacity = nullptr;
+    StaticCtrl* staticOpacity{nullptr};
+    TrackbarCtrl* trackbarOpacity{nullptr};
 
-    ButtonCtrl* buttonSaveAttachment = nullptr;
-    ButtonCtrl* buttonEmbedAttachment = nullptr;
+    ButtonCtrl* buttonSaveAttachment{nullptr};
+    ButtonCtrl* buttonEmbedAttachment{nullptr};
 
-    ButtonCtrl* buttonDelete = nullptr;
+    ButtonCtrl* buttonDelete{nullptr};
 
-    StaticCtrl* staticSaveTip = nullptr;
-    ButtonCtrl* buttonSavePDF = nullptr;
+    StaticCtrl* staticSaveTip{nullptr};
+    ButtonCtrl* buttonSavePDF{nullptr};
 
-    ListBoxModel* lbModel = nullptr;
+    ListBoxModel* lbModel{nullptr};
 
-    Vec<Annotation*>* annotations = nullptr;
+    Vec<Annotation*>* annotations{nullptr};
     // currently selected annotation
-    Annotation* annot = nullptr;
+    Annotation* annot{nullptr};
 
-    bool skipGoToPage = false;
+    bool skipGoToPage{false};
 
     str::Str currTextColor;
     str::Str currCustomColor;
