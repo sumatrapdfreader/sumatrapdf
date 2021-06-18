@@ -132,7 +132,6 @@ const char* GetKnownColorName(COLORREF c) {
 
 struct EditAnnotationsWindow {
     TabInfo* tab{nullptr};
-    EnginePdf* engine{nullptr};
     Window* mainWindow{nullptr};
     LayoutBase* mainLayout{nullptr};
 
@@ -193,6 +192,11 @@ struct EditAnnotationsWindow {
 
     ~EditAnnotationsWindow();
 };
+
+static EnginePdf* GetEnginePdf(EditAnnotationsWindow* win) {
+    DisplayModel* dm = win->tab->AsFixed();
+    return AsEnginePdf(dm->GetEngine());
+}
 
 static void HidePerAnnotControls(EditAnnotationsWindow* win) {
     win->staticRect->SetIsVisible(false);
@@ -273,7 +277,7 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
 }
 
 static bool DidAnnotationsChange(EditAnnotationsWindow* win) {
-    EngineBase* engine = win->tab->AsFixed()->GetEngine();
+    EnginePdf* engine = GetEnginePdf(win);
     return EnginePdfHasUnsavedAnnotations(engine);
 }
 
@@ -331,7 +335,7 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
         return;
     }
 
-    EngineBase* engine = tab->AsFixed()->GetEngine();
+    EnginePdf* engine = GetEnginePdf(win);
     bool ok = EnginePdfSaveUpdated(engine, {});
     // TODO: show a notification if saved or error message if failed to save
     if (!ok) {
@@ -1172,7 +1176,11 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
 
 static void GetAnnotationsFromEngine(EditAnnotationsWindow* win, TabInfo* tab) {
     Vec<Annotation*>* annots = new Vec<Annotation*>();
-    EnginePdfGetAnnotations(win->engine, annots);
+    EnginePdf* engine = GetEnginePdf(win);
+    EngineGetAnnotations(engine, annots);
+
+    win->tab = tab;
+    tab->editAnnotsWindow = win;
     win->annotations = annots;
     RebuildAnnotations(win);
 }
@@ -1213,17 +1221,7 @@ void AddAnnotationToEditWindow(EditAnnotationsWindow* win, Annotation* annot) {
 
 // takes ownership of selectedAnnot
 void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
-    DisplayModel* dm = tab->AsFixed();
-    CrashIf(!dm);
-    if (!dm) {
-        return;
-    }
-    EnginePdf* engine = AsEnginePdf(dm->GetEngine());
-    CrashIf(!engine);
-    if (!engine) {
-        return;
-    }
-
+    CrashIf(!tab->AsFixed()->GetEngine());
     EditAnnotationsWindow* win = tab->editAnnotsWindow;
     if (win) {
         AddAnnotationToEditWindow(win, annot);
@@ -1248,7 +1246,6 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     mainWindow->onSize = std::bind(WndSizeHandler, win, _1);
     mainWindow->onKeyDownUp = std::bind(WndKeyHandler, win, _1);
 
-    win->engine = engine;
     win->mainWindow = mainWindow;
     CreateMainLayout(win);
     win->tab = tab;

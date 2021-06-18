@@ -6,7 +6,9 @@ refactor Annotation: convert methods into functions
 
 enable annotations in all builds
 
+when annotation editor window was shown, 'a' wouldn't add annotation to the list
 
+don't crash after saving annotations
 
 2021-06-13 Sun
 
