@@ -82,6 +82,7 @@ RectF GetRect(Annotation*);
 COLORREF GetColor(Annotation*);      // ColorUnset if no color
 COLORREF InteriorColor(Annotation*); // ColorUnset if no color
 std::string_view Author(Annotation*);
+
 int Quadding(Annotation*);
 Vec<RectF> GetQuadPointsAsRect(Annotation*);
 std::string_view Contents(Annotation*);

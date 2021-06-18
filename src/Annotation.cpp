@@ -109,12 +109,11 @@ std::string_view AnnotationReadableName(AnnotationType tp) {
 }
 
 struct AnnotationPdf {
-    fz_context* ctx = nullptr;
+    fz_context* ctx{nullptr};
     // must protect mupdf calls because we might be e.g. rendering
     // a page in a separate thread
-    CRITICAL_SECTION* ctxAccess = nullptr;
-    pdf_page* page = nullptr;
-    pdf_annot* annot = nullptr;
+    CRITICAL_SECTION* ctxAccess{nullptr};
+    pdf_annot* annot{nullptr};
 };
 
 bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
@@ -272,7 +271,8 @@ void Delete(Annotation* annot) {
     auto pdf = annot->pdf;
     CrashIf(annot->isDeleted);
     ScopedCritSec cs(pdf->ctxAccess);
-    pdf_delete_annot(pdf->ctx, pdf->page, pdf->annot);
+    pdf_page* page = pdf_annot_page(pdf->ctx, pdf->annot);
+    pdf_delete_annot(pdf->ctx, page, pdf->annot);
     annot->isDeleted = true;
     annot->isChanged = true; // TODO: not sure I need this
 }
@@ -531,8 +531,7 @@ void SetOpacity(Annotation* annot, int newOpacity) {
     annot->isChanged = true;
 }
 
-Annotation* MakeAnnotationPdf(CRITICAL_SECTION* ctxAccess, fz_context* ctx, pdf_page* page, pdf_annot* annot,
-                              int pageNo) {
+Annotation* MakeAnnotationPdf(CRITICAL_SECTION* ctxAccess, fz_context* ctx, pdf_annot* annot, int pageNo) {
     ScopedCritSec cs(ctxAccess);
 
     auto tp = pdf_annot_type(ctx, annot);
@@ -545,7 +544,6 @@ Annotation* MakeAnnotationPdf(CRITICAL_SECTION* ctxAccess, fz_context* ctx, pdf_
     apdf->ctxAccess = ctxAccess;
     apdf->ctx = ctx;
     apdf->annot = annot;
-    apdf->page = page;
 
     Annotation* res = new Annotation();
     res->pageNo = pageNo;
