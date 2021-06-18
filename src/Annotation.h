@@ -34,7 +34,8 @@ enum class AnnotationType {
     Unknown = -1
 };
 
-struct AnnotationPdf;
+class EnginePdf;
+extern "C" struct pdf_annot;
 
 // an user annotation on page
 // It abstracts over pdf_annot so that we don't have to
@@ -49,11 +50,14 @@ struct Annotation {
     // deleted are not shown but can be undeleted
     bool isDeleted{false};
 
-    AnnotationPdf* pdf{nullptr};
+    EnginePdf* engine{nullptr};
+    pdf_annot* pdfannot{nullptr};
 
     Annotation() = default;
-    ~Annotation();
+    ~Annotation() = default;
 };
+
+Annotation* MakeAnnotationPdf(EnginePdf*, pdf_annot*, int pageNo);
 
 int PageNo(Annotation*);
 RectF GetRect(Annotation*);
