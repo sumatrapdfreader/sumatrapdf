@@ -4,6 +4,8 @@ A daily log of changes and commentary. An experiment of sorts.
 
 refactor Annotation: convert methods into functions
 
+enable annotations in all builds
+
 2021-06-13 Sun
 
 Split EnginePdfImpl.h from EnginePdf.cpp

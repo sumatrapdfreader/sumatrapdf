@@ -789,13 +789,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         }
     }
 
-    bool enableSaveAnnotations = false;
-    bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
-    if (canDoAnnotations) {
-        enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
-    } else {
-        showCreateAnnotation = false;
-    }
+    bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
     win::menu::SetEnabled(popup, CmdSaveAnnotations, enableSaveAnnotations);
 
     const WCHAR* filePath = win->ctrl->FilePath();
@@ -1001,11 +995,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
 
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
-    bool enableSaveAnnotations = false;
-    bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
-    if (canDoAnnotations) {
-        enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
-    }
+    bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
     win::menu::SetEnabled(menu, CmdSaveAnnotations, enableSaveAnnotations);
 }
 
