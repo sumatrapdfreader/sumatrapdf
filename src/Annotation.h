@@ -1,6 +1,10 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// dummy alias for pdf_annot, exists so that we don't have to expose mupdf internals
+// struct Annot;
+// typedef void* Annot;
+
 extern "C" struct fz_context;
 
 // for fast conversions, must match the order of pdf_annot_type enum in annot.h
@@ -55,58 +59,43 @@ struct Annotation {
 
     Annotation() = default;
     ~Annotation();
-
-    AnnotationType Type() const;
-    int PageNo() const;
-    // note: page no can't be changed
-
-    RectF Rect() const;
-    void SetRect(RectF);
-
-    COLORREF Color(); // ColorUnset if no color
-    bool SetColor(COLORREF);
-
-    COLORREF InteriorColor(); // ColorUnset if no color
-    bool SetInteriorColor(COLORREF);
-
-    std::string_view Author();
-
-    int Quadding();
-    bool SetQuadding(int);
-
-    void SetQuadPointsAsRect(const Vec<RectF>&);
-    Vec<RectF> GetQuadPointsAsRect();
-
-    std::string_view Contents();
-    bool SetContents(std::string_view sv);
-
-    int PopupId(); // -1 if not exist
-    time_t CreationDate();
-    time_t ModificationDate();
-
-    std::string_view IconName(); // empty() if no icon
-    void SetIconName(std::string_view);
-
-    std::string_view DefaultAppearanceTextFont();
-    void SetDefaultAppearanceTextFont(std::string_view);
-
-    int DefaultAppearanceTextSize();
-    void SetDefaultAppearanceTextSize(int);
-
-    COLORREF DefaultAppearanceTextColor();
-    void SetDefaultAppearanceTextColor(COLORREF);
-
-    void GetLineEndingStyles(int* start, int* end);
-    void SetLineEndingStyles(int start, int end);
-
-    int Opacity();
-    void SetOpacity(int);
-
-    int BorderWidth();
-    void SetBorderWidth(int);
-
-    void Delete();
 };
+
+void SetRect(Annotation*, RectF);
+bool SetColor(Annotation*, COLORREF);
+bool SetInteriorColor(Annotation*, COLORREF);
+bool SetQuadding(Annotation*, int);
+void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
+void SetDefaultAppearanceTextColor(Annotation*, COLORREF);
+void SetDefaultAppearanceTextSize(Annotation*, int);
+void SetDefaultAppearanceTextFont(Annotation*, std::string_view);
+bool SetContents(Annotation*, std::string_view sv);
+void SetIconName(Annotation*, std::string_view);
+void SetLineEndingStyles(Annotation*, int start, int end);
+void SetOpacity(Annotation*, int);
+void SetBorderWidth(Annotation*, int);
+
+AnnotationType Type(Annotation*);
+int PageNo(Annotation*);
+// note: page no can't be changed
+RectF GetRect(Annotation*);
+COLORREF GetColor(Annotation*);      // ColorUnset if no color
+COLORREF InteriorColor(Annotation*); // ColorUnset if no color
+std::string_view Author(Annotation*);
+int Quadding(Annotation*);
+Vec<RectF> GetQuadPointsAsRect(Annotation*);
+std::string_view Contents(Annotation*);
+int PopupId(Annotation*); // -1 if not exist
+time_t CreationDate(Annotation*);
+time_t ModificationDate(Annotation*);
+std::string_view IconName(Annotation*); // empty() if no icon
+std::string_view DefaultAppearanceTextFont(Annotation*);
+int DefaultAppearanceTextSize(Annotation*);
+COLORREF DefaultAppearanceTextColor(Annotation*);
+void GetLineEndingStyles(Annotation*, int* start, int* end);
+int Opacity(Annotation*);
+int BorderWidth(Annotation*);
+void Delete(Annotation*);
 
 std::string_view AnnotationName(AnnotationType);
 std::string_view AnnotationReadableName(AnnotationType);

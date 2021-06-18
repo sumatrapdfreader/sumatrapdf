@@ -306,7 +306,6 @@ struct PageTreeStackItem {
     }
 };
 
-
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
@@ -2043,4 +2042,3 @@ Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF p
     }
     return nullptr;
 }
-
