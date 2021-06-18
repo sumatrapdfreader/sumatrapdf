@@ -74,3 +74,5 @@ class EnginePdf : public EngineBase {
 
     std::span<u8> LoadStreamFromPDFFile(const WCHAR* filePath);
 };
+
+EnginePdf* AsEnginePdf(EngineBase* engine);
