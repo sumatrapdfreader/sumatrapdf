@@ -3836,11 +3836,6 @@ static void OnFrameKeyB(WindowInfo* win) {
 }
 
 Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
-    bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
-    if (!annotsEnabled) {
-        return nullptr;
-    }
-
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
     DisplayModel* dm = tab->AsFixed();
