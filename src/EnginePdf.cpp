@@ -1872,8 +1872,7 @@ int EnginePdf::GetPageByLabel(const WCHAR* label) const {
 }
 
 // in Annotation.cpp
-extern Annotation* MakeAnnotationPdf(CRITICAL_SECTION* ctxAccess, fz_context* ctx, pdf_page* page, pdf_annot* annot,
-                                     int pageNo);
+extern Annotation* MakeAnnotationPdf(CRITICAL_SECTION* ctxAccess, fz_context* ctx, pdf_annot* annot, int pageNo);
 
 int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     int nAnnots = 0;
@@ -1882,7 +1881,7 @@ int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
         pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pi->page);
         pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
         while (annot) {
-            Annotation* a = MakeAnnotationPdf(ctxAccess, ctx, pdfpage, annot, i);
+            Annotation* a = MakeAnnotationPdf(ctxAccess, ctx, annot, i);
             if (a) {
                 annotsOut->Append(a);
                 nAnnots++;
@@ -1982,7 +1981,7 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
     }
 
     pdf_update_appearance(ctx, annot);
-    auto res = MakeAnnotationPdf(epdf->ctxAccess, ctx, page, annot, pageNo);
+    auto res = MakeAnnotationPdf(epdf->ctxAccess, ctx, annot, pageNo);
     return res;
 }
 
@@ -2038,7 +2037,7 @@ Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF p
         annot = pdf_next_annot(epdf->ctx, annot);
     }
     if (matched) {
-        return MakeAnnotationPdf(epdf->ctxAccess, epdf->ctx, pdfpage, matched, pageNo);
+        return MakeAnnotationPdf(epdf->ctxAccess, epdf->ctx, matched, pageNo);
     }
     return nullptr;
 }

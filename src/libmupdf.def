@@ -6,6 +6,7 @@ EXPORTS
 ; Fitz exports
 
 	; new stuff
+	pdf_annot_page
 	pdf_drop_page_tree
 	pdf_annot_obj
 	pdf_annot_field_label
