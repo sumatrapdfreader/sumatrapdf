@@ -132,6 +132,7 @@ const char* GetKnownColorName(COLORREF c) {
 
 struct EditAnnotationsWindow {
     TabInfo* tab{nullptr};
+    EnginePdf* engine{nullptr};
     Window* mainWindow{nullptr};
     LayoutBase* mainLayout{nullptr};
 
@@ -256,15 +257,10 @@ void CloseAndDeleteEditAnnotationsWindow(EditAnnotationsWindow* win) {
 }
 
 static void DeleteAnnotations(EditAnnotationsWindow* win) {
-    int nAnnots = win->annotations->isize();
-    for (int i = 0; i < nAnnots; i++) {
-        Annotation* a = win->annotations->at(i);
-        if (a->pdf) {
-            // hacky: only annotations with pdf_annot set belong to us
-            delete a;
-        }
+    if (win->annotations) {
+        DeleteVecMembers(*win->annotations);
+        delete win->annotations;
     }
-    delete win->annotations;
     win->annotations = nullptr;
     win->annot = nullptr;
 }
@@ -324,7 +320,7 @@ static void WndCloseHandler(EditAnnotationsWindow* win, WindowCloseEvent* ev) {
 
 extern void ReloadDocument(WindowInfo* win, bool autorefresh);
 extern void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab);
-static void SetAnnotations(EditAnnotationsWindow* win, TabInfo* tab);
+static void GetAnnotationsFromEngine(EditAnnotationsWindow* win, TabInfo* tab);
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo);
 
 static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
@@ -350,7 +346,7 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
     tab->editAnnotsWindow = tmpWin;
 
     DeleteAnnotations(win);
-    SetAnnotations(win, tab);
+    GetAnnotationsFromEngine(win, tab);
     UpdateUIForSelectedAnnotation(win, -1);
 }
 
@@ -1174,20 +1170,10 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     HidePerAnnotControls(win);
 }
 
-static void SetAnnotations(EditAnnotationsWindow* win, TabInfo* tab) {
-    DisplayModel* dm = tab->AsFixed();
-    CrashIf(!dm);
-    if (!dm) {
-        return;
-    }
-
+static void GetAnnotationsFromEngine(EditAnnotationsWindow* win, TabInfo* tab) {
     Vec<Annotation*>* annots = new Vec<Annotation*>();
-    EngineGetAnnotations(dm->GetEngine(), annots);
-
-    win->tab = tab;
-    tab->editAnnotsWindow = win;
+    EnginePdfGetAnnotations(win->engine, annots);
     win->annotations = annots;
-
     RebuildAnnotations(win);
 }
 
@@ -1226,6 +1212,17 @@ static void AddAnnotationToWindow(EditAnnotationsWindow* win, Annotation* annot)
 
 // takes ownership of selectedAnnot
 void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
+    DisplayModel* dm = tab->AsFixed();
+    CrashIf(!dm);
+    if (!dm) {
+        return;
+    }
+    EnginePdf* engine = AsEnginePdf(dm->GetEngine());
+    CrashIf(!engine);
+    if (!engine) {
+        return;
+    }
+
     EditAnnotationsWindow* win = tab->editAnnotsWindow;
     if (win) {
         win->skipGoToPage = (annot != nullptr);
@@ -1251,10 +1248,13 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     mainWindow->onSize = std::bind(WndSizeHandler, win, _1);
     mainWindow->onKeyDownUp = std::bind(WndKeyHandler, win, _1);
 
+    win->engine = engine;
     win->mainWindow = mainWindow;
     CreateMainLayout(win);
+    win->tab = tab;
+    tab->editAnnotsWindow = win;
 
-    SetAnnotations(win, tab);
+    GetAnnotationsFromEngine(win, tab);
 
     // size our editor window to be the same height as main window
     int minDy = 720;

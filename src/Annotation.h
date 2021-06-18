@@ -102,5 +102,4 @@ std::string_view AnnotationName(AnnotationType);
 std::string_view AnnotationReadableName(AnnotationType);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
-void DeleteVecAnnotations(Vec<Annotation*>* annots);
 Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);

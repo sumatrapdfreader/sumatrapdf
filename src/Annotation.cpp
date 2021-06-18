@@ -131,14 +131,6 @@ Annotation::~Annotation() {
     delete pdf;
 }
 
-void DeleteVecAnnotations(Vec<Annotation*>* annots) {
-    if (!annots) {
-        return;
-    }
-    DeleteVecMembers(*annots);
-    delete annots;
-}
-
 AnnotationType Type(Annotation* annot) {
     CrashIf((int)annot->type < 0);
     return annot->type;
