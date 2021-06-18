@@ -5,4 +5,4 @@ struct EditAnnotationsWindow;
 
 void StartEditAnnotations(TabInfo*, Annotation*);
 void CloseAndDeleteEditAnnotationsWindow(EditAnnotationsWindow*);
-bool IsEditAnnotationsWindowOpen(TabInfo*);
+void AddAnnotationToEditWindow(EditAnnotationsWindow*, Annotation*);

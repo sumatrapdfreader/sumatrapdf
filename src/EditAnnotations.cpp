@@ -1194,12 +1194,13 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* win, Annotation* an
     return false;
 }
 
-static void AddAnnotationToWindow(EditAnnotationsWindow* win, Annotation* annot) {
-    HWND hwnd = win->mainWindow->hwnd;
-    BringWindowToTop(hwnd);
+void AddAnnotationToEditWindow(EditAnnotationsWindow* win, Annotation* annot) {
     if (!annot) {
         return;
     }
+    HWND hwnd = win->mainWindow->hwnd;
+    BringWindowToTop(hwnd);
+    win->skipGoToPage = true;
     bool alreadyExists = SelectAnnotationInListBox(win, annot);
     if (alreadyExists) {
         delete annot;
@@ -1225,8 +1226,7 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
 
     EditAnnotationsWindow* win = tab->editAnnotsWindow;
     if (win) {
-        win->skipGoToPage = (annot != nullptr);
-        AddAnnotationToWindow(win, annot);
+        AddAnnotationToEditWindow(win, annot);
         return;
     }
     win = new EditAnnotationsWindow();
@@ -1279,8 +1279,4 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     mainWindow->SetIsVisible(true);
 
     delete annot;
-}
-
-bool IsEditAnnotationsWindowOpen(TabInfo* tab) {
-    return tab->editAnnotsWindow != nullptr;
 }
