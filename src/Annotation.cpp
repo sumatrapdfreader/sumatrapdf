@@ -14,6 +14,15 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 
+/*
+void SetLineEndingStyles(Annotation*, int start, int end);
+
+Vec<RectF> GetQuadPointsAsRect(Annotation*);
+time_t CreationDate(Annotation*);
+
+std::string_view AnnotationName(AnnotationType);
+*/
+
 // spot checks the definitions are the same
 static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
 static_assert((int)AnnotationType::ThreeD == (int)PDF_ANNOT_3D);
@@ -87,6 +96,7 @@ static const char* gAnnotReadableNames =
     "Projection\0";
 // clang format-on
 
+/*
 std::string_view AnnotationName(AnnotationType tp) {
     int n = (int)tp;
     CrashIf(n < -1 || n > (int)AnnotationType::ThreeD);
@@ -97,6 +107,7 @@ std::string_view AnnotationName(AnnotationType tp) {
     CrashIf(!s);
     return {s};
 }
+*/
 
 std::string_view AnnotationReadableName(AnnotationType tp) {
     int n = (int)tp;
@@ -225,6 +236,7 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     annot->isChanged = true;
 }
 
+/*
 Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     auto pdf = annot->pdf;
     ScopedCritSec cs(pdf->ctxAccess);
@@ -238,6 +250,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     }
     return res;
 }
+*/
 
 std::string_view Contents(Annotation* annot) {
     auto pdf = annot->pdf;
@@ -281,12 +294,14 @@ int PopupId(Annotation* annot) {
     return res;
 }
 
+/*
 time_t CreationDate(Annotation* annot) {
     auto pdf = annot->pdf;
     ScopedCritSec cs(pdf->ctxAccess);
     auto res = pdf_annot_creation_date(pdf->ctx, pdf->annot);
     return res;
 }
+*/
 
 time_t ModificationDate(Annotation* annot) {
     auto pdf = annot->pdf;
@@ -478,6 +493,7 @@ void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
     *end = (int)leEnd;
 }
 
+/*
 void SetLineEndingStyles(Annotation* annot, int start, int end) {
     auto pdf = annot->pdf;
     ScopedCritSec cs(pdf->ctxAccess);
@@ -487,6 +503,7 @@ void SetLineEndingStyles(Annotation* annot, int start, int end) {
     pdf_update_appearance(pdf->ctx, pdf->annot);
     annot->isChanged = true;
 }
+*/
 
 int BorderWidth(Annotation* annot) {
     auto pdf = annot->pdf;
