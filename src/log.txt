@@ -30,6 +30,13 @@ https://github.com/sumatrapdfreader/sumatrapdf/issues/1992
 fix DefaultAppearanceTextColor() (for #1974)
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1974
 
+properly handle translparent color (fixes #1974)
+add _TRU() and trans::GetTranslationUtf8() to get translation
+as utf8
+use "Background Color" instead of "Color" for Free Text annotation
+win => ew renaming for EditAnnotationsWindow
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1974
+
 2021-06-18 Fri
 
 hide unused annotation methods

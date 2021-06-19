@@ -242,6 +242,24 @@ static int GetEnglishStringIndex(const char* txt) {
     return -1;
 }
 
+const char* GetTranslationUtf8(const char* s) {
+    if (nullptr == gCurrLangCode) {
+        SetCurrentLangByCode("en");
+    }
+
+    int idx = GetEnglishStringIndex(s);
+    if (-1 == idx) {
+        return s;
+    }
+
+    const char* trans = gCurrLangStrings[idx];
+    // fall back to English if the language doesn't have a translations for this string
+    if (!trans) {
+        trans = s;
+    }
+    return trans;
+}
+
 const WCHAR* GetTranslation(const char* s) {
     if (nullptr == gCurrLangCode) {
         SetCurrentLangByCode("en");
@@ -279,4 +297,8 @@ void Destroy() {
 
 const WCHAR* _TR(const char* s) {
     return trans::GetTranslation(s);
+}
+
+const char* _TRU(const char* s) {
+    return trans::GetTranslationUtf8(s);
 }

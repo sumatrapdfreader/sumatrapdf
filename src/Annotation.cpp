@@ -362,7 +362,7 @@ static PdfColor MkPdfColorFromFloat(float rf, float gf, float bf) {
 // n = 1 (grey), 3 (rgb) or 4 (cmyk).
 static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
     if (n == 0) {
-        return 0;
+        return 0; // transparent
     }
     if (n == 1) {
         return MkPdfColorFromFloat(color[0], color[0], color[0]);
