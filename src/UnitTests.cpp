@@ -199,24 +199,24 @@ static void colorTest() {
     utassert(ok);
     assertSerializedColor(c, "#01020304");
 
-    COLORREF c2 = MkRgba(2, 3, 4, 1);
+    COLORREF c2 = MkColor(2, 3, 4, 1);
     assertSerializedColor(c2, "#01020304");
     utassert(c == c2);
     c = ColorSetRed(c, 5);
     assertSerializedColor(c, "#01050304");
-    c2 = MkRgba(5, 3, 4, 1);
+    c2 = MkColor(5, 3, 4, 1);
     utassert(c == c2);
     c = ColorSetBlue(c, 6);
     assertSerializedColor(c, "#01050306");
-    c2 = MkRgba(5, 3, 6, 1);
+    c2 = MkColor(5, 3, 6, 1);
     utassert(c == c2);
     c = ColorSetGreen(c, 7);
     assertSerializedColor(c, "#01050706");
-    c2 = MkRgba(5, 7, 6, 1);
+    c2 = MkColor(5, 7, 6, 1);
     utassert(c == c2);
     c = ColorSetAlpha(c, 8);
     assertSerializedColor(c, "#08050706");
-    c2 = MkRgba(5, 7, 6, 8);
+    c2 = MkColor(5, 7, 6, 8);
     assertSerializedColor(c2, "#08050706");
     utassert(c == c2);
 }

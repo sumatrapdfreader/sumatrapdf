@@ -12,6 +12,8 @@ fix use of Annotations.HighlightColor
 
 rename UnpackRgb/UnpackRgba to UnpackColor
 
+rename MkRgb/MkRgba to MkColor
+
 2021-06-17 Thu
 
 refactor Annotation: convert methods into functions

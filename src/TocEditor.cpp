@@ -948,7 +948,7 @@ void StartTocEditor(TocEditorArgs* args) {
     win->tocArgs = args;
     auto w = new Window();
     w->isDialog = true;
-    w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    w->backgroundColor = MkColor((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
     int dx = DpiScale(hwndOwner, 640);
     int dy = DpiScale(hwndOwner, 800);

@@ -1229,11 +1229,11 @@ fz_image* fz_find_image_at_idx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
     return nullptr;
 }
 
-static COLORREF MkRgbFloat(float r, float g, float b) {
+static COLORREF MkColorFromFloat(float r, float g, float b) {
     u8 rb = (u8)(r * 255.0f);
     u8 gb = (u8)(g * 255.0f);
     u8 bb = (u8)(b * 255.0f);
-    return MkRgb(rb, gb, bb);
+    return MkColor(rb, gb, bb);
 }
 
 /*
@@ -1244,15 +1244,15 @@ COLORREF ColorRefFromPdfFloat(fz_context* ctx, int n, float color[4]) {
         return ColorUnset;
     }
     if (n == 1) {
-        return MkRgbFloat(color[0], color[0], color[0]);
+        return MkColorFromFloat(color[0], color[0], color[0]);
     }
     if (n == 3) {
-        return MkRgbFloat(color[0], color[1], color[2]);
+        return MkColorFromFloat(color[0], color[1], color[2]);
     }
     if (n == 4) {
         float rgb[4];
         fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, NULL, fz_default_color_params);
-        return MkRgbFloat(rgb[0], rgb[1], rgb[2]);
+        return MkColorFromFloat(rgb[0], rgb[1], rgb[2]);
     }
     CrashIf(true);
     return 0;

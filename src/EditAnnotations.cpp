@@ -274,9 +274,9 @@ static bool DidAnnotationsChange(EditAnnotationsWindow* win) {
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
     bool didChange = DidAnnotationsChange(win);
     if (didChange) {
-        win->staticSaveTip->SetTextColor(MkRgb(0, 0, 0));
+        win->staticSaveTip->SetTextColor(MkColor(0, 0, 0));
     } else {
-        win->staticSaveTip->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
+        win->staticSaveTip->SetTextColor(MkColor(0xcc, 0xcc, 0xcc));
     }
     win->buttonSavePDF->SetIsEnabled(didChange);
 }
@@ -1124,7 +1124,7 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetInsetsPt(11, 0, 0, 0);
         w->SetText("Delete annotation");
         // TODO: doesn't work
-        w->SetTextColor(MkRgb(0xff, 0, 0));
+        w->SetTextColor(MkColor(0xff, 0, 0));
         bool ok = w->Create();
         CrashIf(!ok);
         w->onClicked = std::bind(&ButtonDeleteHandler, win);
@@ -1140,7 +1140,7 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
 
     {
         auto w = CreateStatic(parent, "Tip: use Ctrl to save as a new PDF");
-        w->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
+        w->SetTextColor(MkColor(0xcc, 0xcc, 0xcc));
         w->SetInsetsPt(0, 0, 2, 0);
         // TODO: make invisible until buttonSavePDF is enabled
         win->staticSaveTip = w;
@@ -1224,7 +1224,7 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     mainWindow->hIcon = LoadIconW(h, iconName);
 
     mainWindow->isDialog = true;
-    mainWindow->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    mainWindow->backgroundColor = MkColor((u8)0xee, (u8)0xee, (u8)0xee);
     mainWindow->SetText(_TR("Annotations"));
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};

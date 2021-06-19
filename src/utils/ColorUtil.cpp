@@ -4,23 +4,16 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 
-COLORREF MkRgb(u8 r, u8 g, u8 b) {
-    COLORREF r2 = r;
-    COLORREF g2 = (COLORREF)g << 8;
-    COLORREF b2 = (COLORREF)b << 16;
-    return r2 | g2 | b2;
-}
-
-COLORREF MkGray(u8 x) {
-    return MkRgb(x, x, x);
-}
-
-COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a) {
+COLORREF MkColor(u8 r, u8 g, u8 b, u8 a) {
     COLORREF r2 = r;
     COLORREF g2 = (COLORREF)g << 8;
     COLORREF b2 = (COLORREF)b << 16;
     COLORREF a2 = (COLORREF)a << 24;
     return r2 | g2 | b2 | a2;
+}
+
+COLORREF MkGray(u8 x) {
+    return MkColor(x, x, x);
 }
 
 // format: abgr
@@ -163,12 +156,12 @@ bool ParseColor(COLORREF* destColor, std::string_view sv) {
     unsigned int r, g, b, a;
     bool ok = str::Parse(txt, n, "%2x%2x%2x%2x", &a, &r, &g, &b);
     if (ok) {
-        *destColor = MkRgba((u8)r, (u8)g, (u8)b, (u8)a);
+        *destColor = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
         return true;
     }
     ok = str::Parse(txt, n, "%2x%2x%2x", &r, &g, &b);
     if (ok) {
-        *destColor = MkRgb((u8)r, (u8)g, (u8)b);
+        *destColor = MkColor((u8)r, (u8)g, (u8)b);
     }
     return ok;
 }

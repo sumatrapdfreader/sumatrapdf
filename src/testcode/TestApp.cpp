@@ -59,7 +59,7 @@ void TestApp(HINSTANCE hInstance) {
     // return TestLayout(hInstance, nCmdShow);
 
     auto w = new Window();
-    w->backgroundColor = MkRgb((u8)0xae, (u8)0xae, (u8)0xae);
+    w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
     w->SetTitle("this is a title");
     w->initialPos = {100, 100};
     w->initialSize = {480, 640};

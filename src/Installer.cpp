@@ -1266,8 +1266,8 @@ static bool CreateRaMicroInstallerWindow() {
     auto w = new Window();
     w->msgFilter = std::bind(&RaMicroInstallerWindow::MsgHandler, win, _1);
     w->hIcon = hIcon;
-    // w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
-    w->backgroundColor = MkRgb((u8)0xff, (u8)0xff, (u8)0xff);
+    // w->backgroundColor = MkColor((u8)0xee, (u8)0xee, (u8)0xee);
+    w->backgroundColor = MkColor((u8)0xff, (u8)0xff, (u8)0xff);
     w->SetTitle("RA-MICRO Installer");
     int splashDx = (int)win->bmpSplash->GetWidth();
     int splashDy = (int)win->bmpSplash->GetHeight();

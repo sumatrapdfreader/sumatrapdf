@@ -258,7 +258,7 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
     // remove minimize / maximize buttons from default style
     w->dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
     w->isDialog = true;
-    w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    w->backgroundColor = MkColor((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Edit title");
     int dx = DpiScale(340);
     int dy = DpiScale(258);

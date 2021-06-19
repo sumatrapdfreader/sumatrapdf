@@ -10,9 +10,8 @@
 // ColorNoChange indicates that we shouldn't change the color
 #define ColorNoChange ((COLORREF)(0xfdffffff))
 
-COLORREF MkRgb(u8 r, u8 g, u8 b);
 COLORREF MkGray(u8 x);
-COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a);
+COLORREF MkColor(u8 r, u8 g, u8 b, u8 a = 0);
 void UnpackColor(COLORREF, u8& r, u8& g, u8& b);
 void UnpackColor(COLORREF, u8& r, u8& g, u8& b, u8& a);
 
