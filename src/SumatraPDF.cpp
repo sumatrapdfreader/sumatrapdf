@@ -2215,7 +2215,7 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     // SetFocus(win->hwndFrame);
 }
 
-void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
+bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     WCHAR dstFileName[MAX_PATH + 1] = {0};
 
     OPENFILENAME ofn = {0};
@@ -2243,10 +2243,11 @@ void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
 
     bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
-        return;
+        return false;
     }
     AutoFreeStr dstFilePath = strconv::WstrToUtf8(dstFileName);
-    EnginePdfSaveUpdated(engine, dstFilePath.AsView());
+    ok = EnginePdfSaveUpdated(engine, dstFilePath.AsView());
+    return ok;
 }
 
 static void MaybeSaveAnnotations(TabInfo* tab) {
@@ -2273,7 +2274,7 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
     }
     uint type = MB_YESNO | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
     const WCHAR* title = _TR("Warning");
-    const WCHAR* msg = _TR_TODO("You have unsaved annotations. Save them?");
+    const WCHAR* msg = _TR("You have unsaved annotations. Save them?");
     int res = MessageBoxW(tab->win->hwndFrame, msg, title, type);
     if (res == IDNO) {
         return;

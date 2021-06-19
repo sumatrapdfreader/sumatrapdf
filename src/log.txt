@@ -19,6 +19,8 @@ split `Create Annotation` into `Create Annotation From Selection` and
 `Create Annotation Under Cursor`.
 When using `Edit Annotations` menu, select annotation under cursor (fixes #1992).
 
+in annotations editor, add explicit button for saving to a new PDF instead of ctrl modifier
+
 2021-06-18 Fri
 
 hide unused annotation methods

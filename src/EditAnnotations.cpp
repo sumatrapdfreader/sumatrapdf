@@ -161,8 +161,8 @@ struct EditAnnotationsWindow {
 
     ButtonCtrl* buttonDelete{nullptr};
 
-    StaticCtrl* staticSaveTip{nullptr};
-    ButtonCtrl* buttonSavePDF{nullptr};
+    ButtonCtrl* buttonSaveToCurrentFile{nullptr};
+    ButtonCtrl* buttonSaveToNewFile{nullptr};
 
     ListBoxModel* lbModel{nullptr};
 
@@ -269,12 +269,8 @@ static bool DidAnnotationsChange(EditAnnotationsWindow* win) {
 
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
     bool didChange = DidAnnotationsChange(win);
-    if (didChange) {
-        win->staticSaveTip->SetTextColor(MkColor(0, 0, 0));
-    } else {
-        win->staticSaveTip->SetTextColor(MkColor(0xcc, 0xcc, 0xcc));
-    }
-    win->buttonSavePDF->SetIsEnabled(didChange);
+    win->buttonSaveToCurrentFile->SetIsEnabled(didChange);
+    win->buttonSaveToNewFile->SetIsEnabled(didChange);
 }
 
 static void RebuildAnnotations(EditAnnotationsWindow* win) {
@@ -309,19 +305,22 @@ static void WndCloseHandler(EditAnnotationsWindow* win, WindowCloseEvent* ev) {
 }
 
 extern void ReloadDocument(WindowInfo* win, bool autorefresh);
-extern void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab);
+extern bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab);
 static void GetAnnotationsFromEngine(EditAnnotationsWindow* win, TabInfo* tab);
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo);
 
-static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
+static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* win) {
     TabInfo* tab = win->tab;
-    if (IsCtrlPressed()) {
-        SaveAnnotationsToMaybeNewPdfFile(tab);
-        // TODO: show a notification if saved or error message if failed to save
+    bool ok = SaveAnnotationsToMaybeNewPdfFile(tab);
+    if (!ok) {
         return;
     }
+    // TODO: show a notification if saved or error message if failed to save
+}
 
-    EnginePdf* engine = GetEnginePdf(win);
+static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
+    TabInfo* tab = ew->tab;
+    EnginePdf* engine = GetEnginePdf(ew);
     bool ok = EnginePdfSaveUpdated(engine, {});
     // TODO: show a notification if saved or error message if failed to save
     if (!ok) {
@@ -335,9 +334,9 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
     ReloadDocument(tab->win, false);
     tab->editAnnotsWindow = tmpWin;
 
-    DeleteAnnotations(win);
-    GetAnnotationsFromEngine(win, tab);
-    UpdateUIForSelectedAnnotation(win, -1);
+    DeleteAnnotations(ew);
+    GetAnnotationsFromEngine(ew, tab);
+    UpdateUIForSelectedAnnotation(ew, -1);
 }
 
 static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* strings) {
@@ -830,23 +829,6 @@ static void WndSizeHandler(EditAnnotationsWindow* win, SizeEvent* ev) {
     LayoutToSize(win->mainLayout, {dx, dy});
 }
 
-static void WndKeyHandler(EditAnnotationsWindow* win, KeyEvent* ev) {
-    // dbglogf("key: %d\n", ev->keyVirtCode);
-
-    // only interested in Ctrl
-    if (ev->keyVirtCode != VK_CONTROL) {
-        return;
-    }
-    if (!win->buttonSavePDF->IsEnabled()) {
-        return;
-    }
-    if (ev->isDown) {
-        win->buttonSavePDF->SetText("Save as new PDF");
-    } else {
-        win->buttonSavePDF->SetText("Save changes to PDF");
-    }
-}
-
 static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
     auto w = new StaticCtrl(parent);
     bool ok = w->Create();
@@ -1155,23 +1137,26 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, "Tip: use Ctrl to save as a new PDF");
-        w->SetTextColor(MkColor(0xcc, 0xcc, 0xcc));
-        w->SetInsetsPt(0, 0, 2, 0);
-        // TODO: make invisible until buttonSavePDF is enabled
-        ew->staticSaveTip = w;
+        auto w = new ButtonCtrl(parent);
+        // TODO: maybe  file name e.g. "Save changes to foo.pdf"
+        w->SetText(_TR("Save changes to existing PDF"));
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->SetIsEnabled(false); // only enabled if there are changes
+        w->onClicked = std::bind(&ButtonSaveToCurrentPDFHandler, ew);
+        ew->buttonSaveToCurrentFile = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = new ButtonCtrl(parent);
-        // TODO: maybe  file name e.g. "Save changes to foo.pdf"
-        w->SetText("Save changes to PDF");
+        w->SetInsetsPt(8, 0, 0, 0);
+        w->SetText(_TR("Save changes to new PDF"));
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClicked = std::bind(&ButtonSavePDFHandler, ew);
-        ew->buttonSavePDF = w;
+        w->onClicked = std::bind(&ButtonSaveToNewFileHandler, ew);
+        ew->buttonSaveToNewFile = w;
         vbox->AddChild(w);
     }
 
@@ -1260,7 +1245,6 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     CrashIf(!ok);
     mainWindow->onClose = std::bind(WndCloseHandler, ew, _1);
     mainWindow->onSize = std::bind(WndSizeHandler, ew, _1);
-    mainWindow->onKeyDownUp = std::bind(WndKeyHandler, ew, _1);
 
     ew->mainWindow = mainWindow;
     CreateMainLayout(ew);

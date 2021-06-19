@@ -1,32 +1,13 @@
-For 3.3:
-- when Annotations.HighlightColor has alpha, it's incorrectly parsed because
-  we set as RGB but read as CMYK
-- when EditAnnotations window is visible and we do 'a', annotation is not added to the window
-
-
 Annotations:
  - cannot move ink attachments (repro file from 1716)
  - save attachment
  - add attachment
- - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
- - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
  - has_redact
- - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1720 (Show scrollbars option aren't saving the preference)
- - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1737 (Crash report from forum user)
- - add a toggle for thin lines (example PDFs in https://github.com/sumatrapdfreader/sumatrapdf/issues/1732)
- - https://github.com/sumatrapdfreader/sumatrapdf/issues/1741 ESC to exit change
- - https://github.com/sumatrapdfreader/sumatrapdf/issues/1752 small scroll after refresh
- - https://github.com/sumatrapdfreader/sumatrapdf/issues/1593 djvu bad rotation
- - https://github.com/sumatrapdfreader/sumatrapdf/issues/1764 debug crash
- - https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
- - Ctrl doesn't always work, probably need to hook keyboard on a lower level
- - maybe; show colors in a drop-down
  - maybe: text language drop-down
  - maybe: add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
  - maybe: add label for showing notification that saved or failed to save. Notification should self-dismiss
    after few seconds
  - maybe: display flags
- - color drop-down should allow entering arbitrary colors (text box or add color selection dialog)
  - change text selection to use fz_snap_selection and fz_highlight_selection
  - allow drawing of ink annotations
  - allow drawing of line
@@ -36,6 +17,7 @@ Annotations:
  - no need to redraw when changing contents of most annotations (hard to pull off in current code)
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
    Maybe add sub-menu with list of colors
+ - maybe; show colors in a drop-down
  - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would
    show a dialog box for setting a color. Remember the custom colors in settings for future use.
  -figure out why in mupdf color None for highlight is black. Maybe remove None because it doesn't
@@ -43,6 +25,16 @@ Annotations:
 
 ------
 
+- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
+- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1737 (Crash report from forum user)
+- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1720 (Show scrollbars option aren't saving the preference)
+- https://github.com/sumatrapdfreader/sumatrapdf/issues/1741 ESC to exit change
+- https://github.com/sumatrapdfreader/sumatrapdf/issues/1593 djvu bad rotation
+- https://github.com/sumatrapdfreader/sumatrapdf/issues/1764 debug crash
+- https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
+- add a toggle for thin lines (example PDFs in https://github.com/sumatrapdfreader/sumatrapdf/issues/1732)
+- https://github.com/sumatrapdfreader/sumatrapdf/issues/1752 small scroll after refresh
 - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
 - refactor: simplify how we layout toolbar. Maybe use layout system.
 - refactor: simplify layout of notifications window
