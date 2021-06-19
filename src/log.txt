@@ -6,6 +6,8 @@ hide unused annotation methods
 
 simplify struct Annotation
 
+use less memory during crash processing
+
 2021-06-17 Thu
 
 refactor Annotation: convert methods into functions
