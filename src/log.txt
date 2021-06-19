@@ -14,6 +14,11 @@ use pdf_update_annot instead of pdf_update_appearance
 don't show annotation-related context menu items on non-pdf documents (fixes #1993)
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1993
 
+split `Create Annotation` context menu and fix #1992
+split `Create Annotation` into `Create Annotation From Selection` and
+`Create Annotation Under Cursor`.
+When using `Edit Annotations` menu, select annotation under cursor (fixes #1992).
+
 2021-06-18 Fri
 
 hide unused annotation methods

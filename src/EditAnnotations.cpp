@@ -1208,21 +1208,31 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* win, Annotation* an
     return false;
 }
 
-void AddAnnotationToEditWindow(EditAnnotationsWindow* win, Annotation* annot) {
+void AddAnnotationToEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
     if (!annot) {
         return;
     }
-    HWND hwnd = win->mainWindow->hwnd;
+    HWND hwnd = ew->mainWindow->hwnd;
     BringWindowToTop(hwnd);
-    win->skipGoToPage = true;
-    bool alreadyExists = SelectAnnotationInListBox(win, annot);
+    ew->skipGoToPage = true;
+    bool alreadyExists = SelectAnnotationInListBox(ew, annot);
     if (alreadyExists) {
         delete annot;
         return;
     }
-    win->annotations->Append(annot);
-    RebuildAnnotations(win);
-    SelectAnnotationInListBox(win, annot);
+    ew->annotations->Append(annot);
+    RebuildAnnotations(ew);
+    SelectAnnotationInListBox(ew, annot);
+}
+
+void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
+    if (!ew || !annot) {
+        return;
+    }
+    ew->skipGoToPage = true;
+    HWND hwnd = ew->mainWindow->hwnd;
+    BringWindowToTop(hwnd);
+    SelectAnnotationInListBox(ew, annot);
 }
 
 // takes ownership of selectedAnnot

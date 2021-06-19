@@ -10,7 +10,6 @@ Annotations:
  - add attachment
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
- - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
  - has_redact
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1720 (Show scrollbars option aren't saving the preference)
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1737 (Crash report from forum user)
@@ -33,6 +32,7 @@ Annotations:
  - allow drawing of line
  - allow drawing of polygon
  - allow drawing of polyline
+ - use return value of `pdf_update_annot`
  - no need to redraw when changing contents of most annotations (hard to pull off in current code)
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
    Maybe add sub-menu with list of colors
@@ -41,33 +41,20 @@ Annotations:
 
 ------
 
-use RtlCaptureStackBackTrace in crash reporting code
-
-------
-
-A system to trigger re-layout when e.g. a button text changes.
-Add a way to register function to be called for a given hwnd.
-WindowBaseLayout() registers for its hwnd and calls Relayout().
-Add TriggerRelayout(HWND) which searches for registered function
-for hwnd and its parents.
-
-------
-
-Simplify how we layout toolbar. Maybe use layout system.
-
-------
-
-Installer: maybe when running installer as admin user, install to
+- test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
+- refactor: simplify how we layout toolbar. Maybe use layout system.
+- refactor: simplify layout of notifications window
+- installer: maybe when running installer as admin user, install to
 ProgramFiles directory (maybe would fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1502)
-
-------
-
-Fixes:
-- fix Vec bug (same as Str) where we're not using buf
-- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state from history)
-- tweak PositionCloseTo() to run after creation and use actual window position
-
-------
+- fix: Vec bug (same as Str) where we're not using buf
+- fix: https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state from history)
+- fix: tweak PositionCloseTo() to run after creation and use actual window position
+- cleanup: remove CmdNewBookmarks and related code
+- cleanup: remove .vbkm code
+- cleanup: remove ramicro code
+- crash reporting: use RtlCaptureStackBackTrace
+- crash reporting: on crash re-get list of modules so that we can see modules that were injected after startup
+- cleanup: TocContextMenu: remove code related to showBookmarksMenu
 
 small refactorings:
 - change FileState::filePath to char*
@@ -78,6 +65,15 @@ small refactorings:
 - use DirIter instead of FindFirstFile in Installer.cpp
 - use DirIter instead of FindFirstFile in FileThumbnails.cpp
 - CloseTab(WindowInfo*) => CloseTab(TabInfo*)
+- EditAnnotationsWindow::skipGoToPage pass this explicitly instead of setting a flag
+
+------
+
+A system to trigger re-layout when e.g. a button text changes.
+Add a way to register function to be called for a given hwnd.
+WindowBaseLayout() registers for its hwnd and calls Relayout().
+Add TriggerRelayout(HWND) which searches for registered function
+for hwnd and its parents.
 
 ------
 

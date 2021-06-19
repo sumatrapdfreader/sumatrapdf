@@ -678,9 +678,10 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     TabInfo* tab = win->currentTab;
-    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(tab);
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
+    bool showBookmarksMenu = false;
+#if 0 // TODO: remove
     if (showBookmarksMenu) {
         HMENU popupSort = BuildMenuFromMenuDef(menuDefSortByTag, CreatePopupMenu());
         uint flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
@@ -702,6 +703,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
                 break;
         }
     }
+#endif
 
     bool isEmbeddedFile = false;
     PageDestination* dest = nullptr;
