@@ -465,7 +465,7 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
                                               "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent"};
 
 static const FieldInfo gAnnotationsFields[] = {
-    {offsetof(Annotations, highlightColor), SettingType::Color, 0x60ffff},
+    {offsetof(Annotations, highlightColor), SettingType::Color, 0x00ffff},
 };
 static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 1, gAnnotationsFields, "HighlightColor"};
 

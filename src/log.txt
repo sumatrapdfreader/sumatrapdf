@@ -21,6 +21,8 @@ When using `Edit Annotations` menu, select annotation under cursor (fixes #1992)
 
 in annotations editor, add explicit button for saving to a new PDF instead of ctrl modifier
 
+make default annotation color yellow (0xffffff00) so it matches value in gColorsValues
+
 2021-06-18 Fri
 
 hide unused annotation methods

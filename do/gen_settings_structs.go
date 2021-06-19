@@ -398,7 +398,7 @@ var (
 	}
 
 	annotations = []*Field{
-		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x60),
+		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x0),
 			"color used for highlight annotations"),
 	}
 
