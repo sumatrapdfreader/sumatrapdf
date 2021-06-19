@@ -6,6 +6,7 @@ AppTranslator strings
 &All selected pages
 &Back\tAlt+Left Arrow
 &Book View\tCtrl+8
+&Caret
 &Close\tCtrl+W
 &Copy Selection
 &Copy Selection\tCtrl+C
@@ -16,9 +17,11 @@ AppTranslator strings
 &Find what:
 &First Page\tHome
 &Fit pages to printable area
+&Free Text
 &Go To
 &Go to page:
 &Help
+&Highlight\tA
 &Last Page\tEnd
 &Magnification:
 &Manual
@@ -46,7 +49,11 @@ AppTranslator strings
 &Shrink pages to printable area (if necessary)
 &Single Page\tCtrl+6
 &Skip this version
+&Stamp
+&Strike Out
+&Text
 &Theme
+&Underline
 &Use original page sizes
 &View
 &Window
@@ -74,27 +81,31 @@ Are you sure you want to uninstall SumatraPDF?
 Associate with PDF files?
 Attachment: %s
 Author:
+Author: %s
 Automatic
 Automatically check for &updates
+Background Color:
 Book View
 Bookmark Shortcuts
 Bookmark shortcut to page %s of %s
 Bookmarks
+Border: %d
 Bytes
 CHM documents
 Can't connect to the Internet (error %#x).
 Cancel
 Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
-Caret
 Change Language
 Check for &Updates
 Circle
 Close
 Collapse All
 Color
+Color:
 Comic books
 Compatibility
+Contents:
 Continuous
 Continuous Book View
 Continuous Facing
@@ -115,13 +126,15 @@ Couldn't uninstall PDF previewer
 Couldn't uninstall Sumatra search filter
 Couldn't uninstall browser plugin
 Couldn't write %s to disk
-Create Annotation
+Create Annotation From Selection
+Create Annotation Under Cursor
 Created:
 Current file
 Cursor position:
 Custom &Zoom...\tCtrl+Y
 Dark
 Darker
+Date: 
 Default &Layout:
 Default &Zoom:
 Default PDF reader can't be changed in portable mode
@@ -175,14 +188,13 @@ Fonts:
 Formatting the book... %d pages
 Found text at page %s
 Found text at page %s (again)
-Free Text
 Frequently Read
 GB
 Go to page
 Hide &Options
 Hide frequently read
-Highlight
 Hint: Use the F3 key for finding again
+Icon:
 Image files (*.%s)
 Images
 Ink
@@ -190,11 +202,14 @@ Install SumatraPDF
 Install SumatraPDF in &folder:
 Installation failed!
 Installation in progress...
+Interior Color:
 KB
 Let Windows Desktop Search &search PDF documents
 Let Windows show &previews of PDF documents
 Light
 Line
+Line End:
+Line Start:
 MB
 Make SumatraPDF default application for PDF files?
 Make SumatraPDF my default PDF reader
@@ -212,6 +227,8 @@ No synchronization file found
 No synchronization info at this position
 Number of Pages:
 OK
+Opacity:
+Opacity: %d
 Open
 Open &in PDF-XChange
 Open Embedded PDF
@@ -239,6 +256,7 @@ Please close %s to proceed!
 Please wait - rendering...
 Poly Line
 Polygon
+Popup: %d 0 R
 Postscript documents
 Pr&esentation\tF5
 Previous Page
@@ -251,6 +269,7 @@ Printing is still in progress. Abort and start over?
 Printing page %d of %d...
 Printing problem.
 Re&name...\tF2
+Rect: x=%d y=%d dx=%d dy=%d
 Redact
 Remember &opened files
 Remove Item
@@ -259,13 +278,17 @@ Remove page %s from favorites
 Rename To
 Rotate &Left\tCtrl+Shift+-
 Rotate &Right\tCtrl+Shift++
+S&quiggly
 Save Annotations
 Save As
 Save Embedded File...
 Save S&hortcut...\tCtrl+Shift+S
+Save changes to existing PDF
+Save changes to new PDF
 Searching %d of %d...
 Select &All
 Select &All\tCtrl+A
+Select Annotation
 Select content with Ctrl+left mouse button
 Select the folder where SumatraPDF should be installed:
 Selection:
@@ -287,10 +310,7 @@ Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to he
 Sort By
 Source file %s has no synchronization point
 Square
-Squiggly
-Stamp
 Start SumatraPDF
-Strike Out
 Subject:
 SumatraPDF %s Installer
 SumatraPDF %s Uninstaller
@@ -306,7 +326,10 @@ Synchronization file cannot be opened
 Tag (big first)
 Tag (small first)
 Tagged PDF
-Text
+Text Alignment:
+Text Color:
+Text Size:
+Text Size: %d
 Text documents
 Thank you for choosing RA-MICRO PDF!
 Thank you for choosing SumatraPDF!
@@ -314,7 +337,6 @@ Thank you! SumatraPDF has been installed.
 The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
 This document uses unsupported features (%s) and might not render properly
 Title:
-Underline
 Uninstall SumatraPDF
 Uninstallation failed
 Uninstallation in progress...
@@ -327,6 +349,7 @@ Warning
 XPS documents
 You have the latest version.
 You have unsaved annotations
+You have unsaved annotations. Save them?
 You have version %s
 Zoom
 Zoom In

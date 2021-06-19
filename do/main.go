@@ -128,7 +128,6 @@ func main() {
 		flgCheckAccessKeys         bool
 		flgBuildNo                 bool
 		flgTriggerPreRel           bool
-		flgTriggerRaMicroPreRel    bool
 		flgTriggerCodeQL           bool
 		flgWebsiteRun              bool
 		flgWebsiteDeployCloudflare bool
@@ -168,7 +167,6 @@ func main() {
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerPreRel, "trigger-pre-rel", false, "trigger pre-release build")
-		flag.BoolVar(&flgTriggerRaMicroPreRel, "trigger-ramicro-pre-rel", false, "trigger pre-release build")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy", false, "deploy website to cloudflare")
@@ -241,11 +239,6 @@ func main() {
 	if flgTriggerPreRel {
 		triggerPreRelBuild()
 		//triggerRaMicroPreRelBuild()
-		return
-	}
-
-	if flgTriggerRaMicroPreRel {
-		triggerRaMicroPreRelBuild()
 		return
 	}
 

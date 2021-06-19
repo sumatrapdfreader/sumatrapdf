@@ -32,10 +32,6 @@ func triggerPreRelBuild() {
 	triggerBuildWebHook("build-pre-rel")
 }
 
-func triggerRaMicroPreRelBuild() {
-	triggerBuildWebHook("build-ramicro-pre-rel")
-}
-
 func triggerCodeQL() {
 	triggerBuildWebHook("codeql")
 }
