@@ -342,7 +342,7 @@ static PdfColor MkPdfColorFromFloat(float rf, float gf, float bf) {
     u8 r = (u8)(rf * 255.0f);
     u8 g = (u8)(gf * 255.0f);
     u8 b = (u8)(bf * 255.0f);
-    return MkPdfColor(r, g, b, 1);
+    return MkPdfColor(r, g, b, 0xff);
 }
 
 // n = 1 (grey), 3 (rgb) or 4 (cmyk).
