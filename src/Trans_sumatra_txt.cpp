@@ -5074,7 +5074,7 @@ const char * gTranslations_co =
   "Avertimentu\0"\
   "Ducumenti XPS\0"\
   "Impiegate l\342\200\231ultima versione.\0"\
-  "\0"\
+  "Avete annutazioni micca arregistrate\0"\
   "Avete a versione %s\0"\
   "Adatt\303\240\0"\
   "Pi\303\271 mai\303\262\0"\
@@ -9479,7 +9479,7 @@ const char * gTranslations_hu =
   "Nyomtat\303\241s\0";
 
 const char * gTranslations_id = 
-  "\0"\
+  "%s instalasi tidak ditemukan.\0"\
   "&Tentang\0"\
   "&Ukuran Sebenarnya\tCtrl+1\0"\
   "&Pilihan Lanjutan...\0"\
@@ -9506,7 +9506,7 @@ const char * gTranslations_id =
   "Halaman Berikutnya\t->\0"\
   "&Tidak\0"\
   "&Tidak, terima kasih\0"\
-  "Hanya halaman ganji&l\0"\
+  "&Hanya halaman ganjil\0"\
   "Buka D&okumen\0"\
   "&Buka...\tCtrl+O\0"\
   "Pilihan\0"\
@@ -9519,7 +9519,7 @@ const char * gTranslations_id =
   "&Cetak... (ditolak)\0"\
   "&Ingat kata sandi untuk dokumen ini\0"\
   "&Ingat setelan ini untuk setiap dokumen\0"\
-  "\0"\
+  "&Hapus dari Riwayat\0"\
   "Si&mpan Sebagai...\0"\
   "&Simpan Sebagai...\tCtrl+S\0"\
   "&Pengaturan\0"\
@@ -9547,9 +9547,9 @@ const char * gTranslations_id =
   "Lanjutan\0"\
   "Semua berkas\0"\
   "Semua dokumen yang didukung\0"\
-  "\0"\
+  "Catatan\0"\
   "Aplikasi:\0"\
-  "\0"\
+  "Apakah kamu yakin ingin mencopot aplikasi %s?\0"\
   "Anda yakin ingin menghapus instalasi SumatraPDF?\0"\
   "Asosiasikan dengan berkas PDF?\0"\
   "Lampiran: %s\0"\
@@ -9566,13 +9566,13 @@ const char * gTranslations_id =
   "Batalkan\0"\
   "Tidak dapat mencetak berkas ini\0"\
   "Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.\0"\
-  "\0"\
+  "Tanda Sisipan\0"\
   "Ubah Bahasa (Change Language)\0"\
   "Periksa Versi Terbar&u\0"\
-  "\0"\
+  "Lingkaran\0"\
   "Tutup\0"\
   "Tutup Semua\0"\
-  "\0"\
+  "Warna\0"\
   "Buku komik\0"\
   "Kompabilitas\0"\
   "Bersambung\0"\
@@ -9592,10 +9592,10 @@ const char * gTranslations_id =
   "Gagal menghapus direktori instalasi\0"\
   "Gagal menampilkan halaman\0"\
   "Gagal menghapus penampil cepat PDF\0"\
-  "\0"\
+  "Tidak bisa mencopot filter pencarian Sumatra \0"\
   "Gagal menghapus plugin untuk peramban\0"\
   "Gagal menulis %s ke harddisk\0"\
-  "\0"\
+  "Buat catatan\0"\
   "Dibuat:\0"\
   "Berkas ini\0"\
   "Posisi kursor:\0"\
@@ -9610,17 +9610,17 @@ const char * gTranslations_id =
   "Properti Dokumen\0"\
   "Unduh\0"\
   "&Keluar\tCtrl+Q\0"\
-  "\0"\
+  "Keluar dari layar penuh\0"\
   "Dokumen EPUB\0"\
   "\0"\
-  "\0"\
-  "\0"\
+  "Tambah catatan\0"\
+  "Edit penanda buku\0"\
   "Masukkan kata sandi\0"\
   "Masukkan kata sandi untuk %s\0"\
   "Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:\0"\
   "Kesalahan memuat %s\0"\
   "Buka Semua\0"\
-  "\0"\
+  "Ekspor penanda buku\0"\
   "F&avorit\0"\
   "Berikutnya\tAlt+->\0"\
   "Selayar Penuh\tCtrl+Shift+L\0"\
@@ -9635,7 +9635,7 @@ const char * gTranslations_id =
   "Favorit\0"\
   "Dokumen FictionBook\0"\
   "Berkas %s tak ditemukan\0"\
-  "\0"\
+  "Lampiran File\0"\
   "Ukuran Berkas:\0"\
   "Berkas:\0"\
   "Temukan...\tCtrl+F\0"\
@@ -9655,17 +9655,17 @@ const char * gTranslations_id =
   "Memformat buku... %d halaman\0"\
   "Teks ditemukan pada halaman %s\0"\
   "Teks ditemukan pada halaman %s (lagi)\0"\
-  "\0"\
+  "Teks bebas\0"\
   "Yang Sering Dibaca\0"\
   "\0"\
   "Pergi ke halaman\0"\
   "Sembunyikan &Opsi\0"\
   "Sembunyikan yang sering dibaca\0"\
-  "\0"\
+  "Sorotan\0"\
   "Tips : Gunakan tombol F3 untuk mengulangi pencarian\0"\
   "Berkas gambar (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "Gambar\0"\
+  "Tinta\0"\
   "\0"\
   "Install SumatraPDF ke &folder:\0"\
   "Instalasi gagal!\0"\
@@ -9674,7 +9674,7 @@ const char * gTranslations_id =
   "Izinkan Windows Desktop Search mencari dokumen PDF\0"\
   "Izinkan Windows menampilkan dokumen PDF\0"\
   "Terang\0"\
-  "\0"\
+  "Garis\0"\
   "\0"\
   "Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?\0"\
   "Jadikan SumatraPDF sebagai pembaca PDF standar saya\0"\
@@ -9683,7 +9683,7 @@ const char * gTranslations_id =
   "Dokumen Mobi\0"\
   "Termodifikasi:\0"\
   "&Jendela Baru\tCtrl+N\0"\
-  "\0"\
+  "Tambah penanda buku\0"\
   "Versi baru %s telah tersedia. Unduh versi baru ini?\0"\
   "Halaman Berikutnya\0"\
   "Tidak ditemukan kesamaan\0"\
@@ -9694,7 +9694,7 @@ const char * gTranslations_id =
   "\0"\
   "Buka\0"\
   "Buka di PDF-&XChange\0"\
-  "\0"\
+  "Buka PDF yang disematkan\0"\
   "Buka suatu dokumen...\0"\
   "Buka di %s\0"\
   "Buka di &Adobe Reader\0"\
@@ -9717,8 +9717,8 @@ const char * gTranslations_id =
   "Dokumen PalmDoc\0"\
   "Silakan tutup %s untuk melanjutkan.\0"\
   "Harap tunggu - sedang proses rendering...\0"\
-  "\0"\
-  "\0"\
+  "Garis Poli\0"\
+  "Poligon\0"\
   "Dokumen Postscript\0"\
   "Pr&esentasi\tF5\0"\
   "Halaman Sebelumnya\0"\
@@ -9731,9 +9731,9 @@ const char * gTranslations_id =
   "Mencetak halaman %d dari %d...\0"\
   "Masalah pencetakan.\0"\
   "&Ganti Nama...\tF2\0"\
-  "\0"\
+  "Menyunting\0"\
   "Ingat &berkas yang pernah dibuka\0"\
-  "\0"\
+  "Hapus Item\0"\
   "Hapus dari favorit\0"\
   "Hapus halaman %s dari favorit\0"\
   "Ganti Nama Menjadi\0"\
@@ -9741,7 +9741,7 @@ const char * gTranslations_id =
   "Putar Ke Kanan\tCtrl+Shift++\0"\
   "Simpan Catatan\0"\
   "Simpan Sebagai\0"\
-  "\0"\
+  "Simpan File Tersemat\0"\
   "Simpan &Jalan Pintas...\tCtrl+Shift+S\0"\
   "Sedang mencari %d dari %d\0"\
   "Pilih Semu&a\0"\
@@ -9754,23 +9754,23 @@ const char * gTranslations_id =
   "Tampilkan &Markah\tF12\0"\
   "Tampilkan &Favorit\0"\
   "Tampilkan Halaman Secara &Kontinu\0"\
-  "\0"\
+  "Tampilkan &Scrollbars\0"\
   "Tampilkan &Toolbar\0"\
   "Tampilkan &Markah\tF12\0"\
   "Tampilkan Favorit\0"\
-  "\0"\
+  "Tampilkan Scr&ollbars\0"\
   "Tampilkan yang sering dibaca\0"\
   "Tampilkan dalam &folder\0"\
   "Tampilkan kolom &markah jika tersedia\0"\
   "Halaman Tunggal\0"\
   "Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.\0"\
-  "\0"\
+  "Urut berdasarkan\0"\
   "Tidak ada titik sinkronisasi pada berkas asal %s\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Persegi\0"\
+  "Berlekuk\0"\
+  "Cap\0"\
   "Jalankan SumatraPDF\0"\
-  "\0"\
+  "Ciptakan\0"\
   "Perihal:\0"\
   "Pemasang instalasi SumatraPDF %s\0"\
   "Penghapus instalasi SumatraPDF %s\0"\
@@ -9781,20 +9781,20 @@ const char * gTranslations_id =
   "Instalasi SumatraPDF tidak ditemukan.\0"\
   "SumatraPDF adalah pembaca berkas PDF standar Anda\0"\
   "SumatraPDF sekarang telah menjadi pembaca berkas PDF standar Anda\0"\
-  "\0"\
+  "Dukung SumatraPDF\0"\
   "Berkas sinkronisasi tidak dapat dibuka\0"\
   "\0"\
   "\0"\
   "PDF Terlabeli\0"\
-  "\0"\
+  "Teks\0"\
   "Dokumen teks\0"\
-  "\0"\
+  "Terima kasih sudah menggunakan RA-MICRO PDF!\0"\
   "Terima kasih telah memilih SumatraPDF!\0"\
   "Terima kasih. SumatraPDF telah berhasil terinstal.\0"\
   "Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!\0"\
   "Dokumen ini menggunakan fitur yang tidak didukung (%s) dan kemungkinan tidak layak dijalankan\0"\
   "Judul:\0"\
-  "\0"\
+  "Garis bawah\0"\
   "\0"\
   "Proses uninstall gagal.\0"\
   "Proses uninstall sedang berlangsung...\0"\
@@ -9806,7 +9806,7 @@ const char * gTranslations_id =
   "Peringatan\0"\
   "Dokumen XPS\0"\
   "Anda telah memiliki versi terbaru\0"\
-  "\0"\
+  "Kamu memiliki catatan yang belum tersimpan\0"\
   "Anda memiliki versi %s\0"\
   "Sesuaikan\0"\
   "Perbesar\0"\

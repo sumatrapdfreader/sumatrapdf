@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-97403abe1e7bf4d4addcc14249d96597d379af3d
+4d85bd8e62956ffdd43c24665d44065c4443ff1a
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -14,6 +14,7 @@ es:%s instalación no encontrada.
 fr:%s installation non trouvée
 ga:Níor aimsíodh an tsuiteáil %s.
 gl:%s instalación non atopada.
+id:%s instalasi tidak ditemukan.
 it:%s installazione non trovata.
 ka:ინსტალირებული %s ვერ მოიძებნა.
 kw:Ny gevir leans %s.
@@ -1810,7 +1811,7 @@ he:עמודים אי-זוגיים בלבד
 hi:केवल &विषम पृष्ठों
 hr:Samo &neparne stranice
 hu:Csak a páratlan oldalak
-id:Hanya halaman ganji&l
+id:&Hanya halaman ganjil
 it:S&olo pagine dispari
 ja:奇数ページのみ(&O)
 jv:&mung kaca ganjil
@@ -2646,6 +2647,7 @@ et:&Eemalda Ajaloost
 fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
+id:&Hapus dari Riwayat
 it:&Rimuovi Dalla Cronologia
 ka:&ისტორიიდან წაშლა
 kw:&Removya A Istori
@@ -4244,6 +4246,7 @@ es:Anotaciones
 fr:Annotations
 ga:Nótaí mínithe
 gl:Anotacións
+id:Catatan
 it:Annotazioni
 ka:ანოტაციები
 kw:Notenyans
@@ -4335,6 +4338,7 @@ es:¿Estás seguro que quiere desinstalar %s?
 fr:Voulez-vous vraiment désinstaller %s ?
 ga:An bhfuil tú cinnte gur mian leat %s a dhíshuiteáil?
 gl:Estás seguro de desinstalar %s?
+id:Apakah kamu yakin ingin mencopot aplikasi %s?
 it:Sei sicuro di voler disinstallare %s?
 ka:დარწმუნებული ხართ, რომ გსურთ %s-ის წაშლა?
 kw:Os ta sur bos hwans dhis anlea %s?
@@ -5442,6 +5446,7 @@ es:Signo de intercalación
 fr:curseur
 ga:Carait
 gl:Caret (V invertido)
+id:Tanda Sisipan
 ka:კურსორი
 kw:To byghan
 lv:Kursors
@@ -5606,6 +5611,7 @@ es:Círculo
 fr:Cercle
 ga:Ciorcal
 gl:Círculo
+id:Lingkaran
 ka:წრე
 kw:Kylgh
 lv:Aplis
@@ -5736,6 +5742,7 @@ et:Värv
 fr:Couleur
 ga:Dath
 gl:Cor
+id:Warna
 it:Colore
 ka:ფერი
 kw:Liw
@@ -7007,6 +7014,7 @@ es:No se pudo desinstalar el filtro de búsqueda de Sumatra.
 fr:Impossible de désinstaller le filtre de recherche de Sumatra
 ga:Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
 gl:Non se pode desinstalar o filtro de busca do Sumatra
+id:Tidak bisa mencopot filter pencarian Sumatra 
 ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
 kw:Ny yllir anlea sythel hwilas Sumatra
 lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
@@ -7155,6 +7163,7 @@ es:Crear anotación
 fr:Écrire une annotation
 ga:Cruthaigh nóta mínithe
 gl:Crear anotación
+id:Buat catatan
 it:Crea Annotazione
 ka:ანოტაციის შექმნა
 kw:Gwruthyl Notenyans
@@ -8015,6 +8024,7 @@ et:V&älju Täisekraanilt
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
 gl:Sa&ír da pantalla completa
+id:Keluar dari layar penuh
 ka:სრულ&ეკრანიანიდან გამოსვლა
 kw:Kwytya Skrin-leun
 lv:&Iziet no pilnekrāna
@@ -8178,6 +8188,7 @@ es:Editar
 fr:Éditer
 ga:Eagar
 gl:Editar
+id:Edit
 it:Modifica
 ka:რედაქტირება
 kw:Golegi
@@ -8206,6 +8217,7 @@ es:Editar anotación
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
+id:Tambah catatan
 it:Modifica Annotazioni
 ka:ანოტაციის რედაქტირება
 kw:Golegi notenyans
@@ -8229,6 +8241,7 @@ es:Eliminar marcadores
 fr:Éditer les marque-pages
 ga:Cuir leabharmharcanna in eagar
 gl:Editar marcadores
+id:Edit penanda buku
 it:Modifica Segnalibri
 ka:სანიშნის რედაქტირება
 kw:Golegi Folennotennow
@@ -8560,6 +8573,7 @@ es:Exportar marcadores
 fr:Exporter les marque-pages
 ga:Tabhair amach na leabharmharcanna
 gl:Exportar marcadores
+id:Ekspor penanda buku
 it:Esporta Segnalibri
 ka:სანიშნეების ექსპორტი
 kw:Esperthi Folennotennow
@@ -9480,6 +9494,7 @@ es:Adjuntar archivo
 fr:Pièce jointe
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
+id:Lampiran File
 it:Allega File
 ka:მიმაგრებული ფაილი
 kw:Stagel Restren
@@ -10781,6 +10796,7 @@ es:Liberar texto
 fr:Texte libre
 ga:Téacs saor
 gl:Texto libre
+id:Teks bebas
 ka:თავისუფალი ტექსტი
 kw:Tekst Rydh
 lv:Brīvs teksts
@@ -11137,6 +11153,7 @@ es:Resaltar
 fr:Surligner
 ga:Aibhsigh
 gl:Realzar
+id:Sorotan
 it:Evidenzia
 ka:მონიშვნა
 kw:Golowboyntya
@@ -11289,6 +11306,7 @@ et:Pildid
 fr:Images
 ga:Íomhánna
 gl:Imaxes
+id:Gambar
 it:Immagini
 ka:სურათები
 kw:Skeusennow
@@ -11313,6 +11331,7 @@ dk:Blæk
 es:Tinta
 ga:Dúch
 gl:Trazo
+id:Tinta
 ka:მელანი
 kw:Ynk
 lv:Tinte
@@ -11840,6 +11859,7 @@ es:Línea
 fr:Ligne
 ga:Líne
 gl:Liña
+id:Garis
 it:Linea
 ka:ხაზი
 kw:Linen
@@ -12375,6 +12395,7 @@ et:Uued Järjehoidjad
 fr:Nouveaux marque-pages
 ga:Leabharmharcanna nua
 gl:Novos marcadores
+id:Tambah penanda buku
 it:Nuovo Segnalibro
 ka:ახალი სანიშნე
 kw:Folennotennow Nowydh
@@ -13070,6 +13091,7 @@ es:Abrir PDF adjunto
 fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
 gl:Abrir PDF inserido
+id:Buka PDF yang disematkan
 ka:ჩაშენებული PDF-ის გახსნა
 kw:Ygeri PDF Neythys
 lv:Atvērt iegultu PDF
@@ -14513,6 +14535,7 @@ dk:Polylinje
 es:Polilínea
 ga:Líne iolrach
 gl:Liña polivinílica
+id:Garis Poli
 ka:ტეხილი ხაზი
 kw:Lieslinen
 lv:Lauzta līnija
@@ -14536,6 +14559,7 @@ es:Polígono
 fr:Polygone
 ga:Polagán
 gl:Polígono
+id:Poligon
 ka:მრავალკუთხედი
 kw:Liestuek
 lv:Daudzstūris
@@ -15328,6 +15352,7 @@ es:Redactar
 fr:Rédiger
 ga:Folaigh
 gl:Redactar
+id:Menyunting
 ka:რედაქტირება
 kw:Redaktya
 lv:Rediģēt
@@ -15414,6 +15439,7 @@ es:Eliminar ítem
 fr:Supprimer l'élément
 ga:Bain mír
 gl:Borrar elemento
+id:Hapus Item
 it:Rimuovi Oggetto
 ka:ელემენტის წაშლა
 kw:Removya Tra
@@ -15878,6 +15904,7 @@ es:Guardar archivo incrustado...
 fr:Enregistrer le fichier incorporé...
 ga:Taisc comhad leabaithe...
 gl:Gardar ficheiro inserido...
+id:Simpan File Tersemat
 ka:მიმაგრებული ფაილის შენახვა...
 kw:Gwitha Restren Neythys...
 lv:Saglabāt iegultu failu
@@ -16609,6 +16636,7 @@ es:Mostrar &Barra de desplazamiento
 fr:Afficher les &barres  de défilement
 ga:Taispeáin na barraí &scrollála
 gl:Amosr barra&s de desprazamento
+id:Tampilkan &Scrollbars
 ka:საცოცი &პანელის ჩვენება
 kw:Diskwedhes &Skrolvarrys
 lv:Rādīt &ritjoslas
@@ -16800,6 +16828,7 @@ es:Mostrar barras de desplazamientos&
 fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
 gl:Amosar barras de desprazament&o
+id:Tampilkan Scr&ollbars
 ka:საცოცი პან&ელის ჩვენება
 kw:Diskwedhes Skr&olvarrys
 lv:Rādīt rit&joslas
@@ -17122,6 +17151,7 @@ et:Järjesta
 fr:Classer
 ga:Sórtáil de réir
 gl:Ordenar por
+id:Urut berdasarkan
 it:Ordina Per
 ka:დალაგების ტიპი:
 kw:Digemyska Gans
@@ -17213,6 +17243,7 @@ et:Ruut
 fr:Carré
 ga:Cearnóg
 gl:Cadrado
+id:Persegi
 ka:კვადრატი
 kw:Pedrek
 lv:Kvadrāts
@@ -17235,6 +17266,7 @@ dk:Snoet
 es:Ondulado
 ga:Catach
 gl:Zigzag
+id:Berlekuk
 ka:კლაკნილი ხაზი
 kw:Igam-ogam
 lv:Viļņota
@@ -17259,6 +17291,7 @@ et:Tempel
 fr:tampon
 ga:Stampa
 gl:Selo
+id:Cap
 ka:ბეჭედი
 kw:Stampa
 lv:Zīmogs
@@ -17344,6 +17377,7 @@ es:Tachar
 fr:Rayer
 ga:Scrios amach
 gl:Riscar
+id:Ciptakan
 ka:ხაზის გადასმა
 kw:Treuslinya
 lv:Pārsvītrojums
@@ -18003,6 +18037,7 @@ et:Toeta SumatraPDF-i
 fr:Soutenir SumatraPDF
 ga:Tacaigh le SumatraPDF
 gl:Asistencia do SumatraPDF
+id:Dukung SumatraPDF
 ka: SumatraPDF-ის დახმარება
 kw:Skoodhya SumatraPDF
 lv:Atbalstīt SumatraPDF
@@ -18199,6 +18234,7 @@ et:Tekst
 fr:Texte
 ga:Téacs
 gl:Texto
+id:Teks
 it:Testo
 ka:ტექსტი
 kw:Tekst
@@ -18288,6 +18324,7 @@ es:¡Gracias por elegir RA-MICRO PDF!
 fr:Merci d'avoir choisi RA6MICRO PDF !
 ga:Go raibh maith agat as ucht RA-MICRO PDF a roghnú!
 gl:Grazas por escoller RA-MICRO PDF!
+id:Terima kasih sudah menggunakan RA-MICRO PDF!
 ka:მადლობა რომ აირჩიეთ RA-MICRO PDF!
 kw:Meur ras a dhewis RA-MICRO PDF!
 lv:Paldies, ka izvēlējāties RA-MICRO PDF!
@@ -18625,6 +18662,7 @@ es:Subrayar
 fr:Souligner
 ga:Cuir líne faoi
 gl:Subliñado
+id:Garis bawah
 it:Sottolinea
 ka:ხაზის გასმა
 kw:Islinya
@@ -19347,6 +19385,8 @@ uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
+co:Avete annutazioni micca arregistrate
+id:Kamu memiliki catatan yang belum tersimpan
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 :You have version %s
