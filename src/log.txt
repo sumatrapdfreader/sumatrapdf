@@ -1,5 +1,12 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-06-19 Sat
+
+annotation color fixes
+
+position context menu triggered via Shift-F10 under mouse cursor (fixes #1689)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1689
+
 2021-06-18 Fri
 
 hide unused annotation methods
@@ -13,8 +20,6 @@ fix use of Annotations.HighlightColor
 rename UnpackRgb/UnpackRgba to UnpackColor
 
 rename MkRgb/MkRgba to MkColor
-
-annotation color fixes
 
 2021-06-17 Thu
 

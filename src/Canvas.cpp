@@ -1333,7 +1333,21 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_CONTEXTMENU:
-            OnWindowContextMenu(win, 0, 0);
+            if (x == -1 || y == -1) {
+                // if invoked with a keyboard (shift-F10) use current mouse position
+                Point pt;
+                GetCursorPosInHwnd(hwnd, pt);
+                x = pt.x;
+                y = pt.y;
+            }
+            // super defensive
+            if (x < 0) {
+                x = 0;
+            }
+            if (y < 0) {
+                y = 0;
+            }
+            OnWindowContextMenu(win, x, y);
             return 0;
 
         case WM_GESTURE:
