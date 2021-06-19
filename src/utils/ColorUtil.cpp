@@ -103,15 +103,6 @@ COLORREF ColorSetAlpha(COLORREF c, u8 alpha) {
     return colorSetHelper(c, alpha, 3);
 }
 
-// TODO: remove use of SerializeColorRgb() and replace with SerializeColor
-void SerializeColorRgb(COLORREF c, str::Str& out) {
-    u8 r, g, b;
-    UnpackColor(c, r, g, b);
-    char* s = str::Format("#%02x%02x%02x", r, g, b);
-    out.Append(s);
-    free(s);
-}
-
 void SerializeColor(COLORREF c, str::Str& out) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);

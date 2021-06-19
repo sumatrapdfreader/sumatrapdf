@@ -105,14 +105,10 @@ AnnotationType gAnnotsWithColor[] = {
 };
 // clang-format on
 
-const char* GetKnownColorName(COLORREF c) {
-    if (c == ColorUnset) {
-        return gColors; // first value is "None" for unset
-    }
-    COLORREF c2 = ColorSetAlpha(c, 0xff);
+const char* GetKnownColorName(PdfColor c) {
     int n = (int)dimof(gColorsValues);
     for (int i = 1; i < n; i++) {
-        if (c2 == gColorsValues[i]) {
+        if (c == gColorsValues[i]) {
             const char* s = seqstrings::IdxToStr(gColors, i);
             return s;
         }
@@ -351,14 +347,34 @@ static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* string
     }
 }
 
-static void DropDownFillColors(DropDownCtrl* w, COLORREF col, str::Str& customColor) {
+static void SerializePdfColor(PdfColor c, str::Str& out) {
+    u8 r, g, b, a;
+    UnpackPdfColor(c, r, g, b, a);
+    out.AppendFmt("#%02x%02x%02x", r, g, b);
+}
+
+static bool ParsePdfColor(PdfColor* destColor, std::string_view sv) {
+    CrashIf(!destColor);
+    const char* txt = sv.data();
+    if (str::StartsWith(txt, "0x")) {
+        txt += 2;
+    } else if (str::StartsWith(txt, "#")) {
+        txt += 1;
+    }
+    unsigned int r, g, b;
+    bool ok = str::Parse(txt, "%2x%2x%2x%$", &r, &g, &b);
+    *destColor = MkPdfColor(r, g, b, 0xff);
+    return ok;
+}
+
+static void DropDownFillColors(DropDownCtrl* w, PdfColor col, str::Str& customColor) {
     Vec<std::string_view> items;
     ItemsFromSeqstrings(items, gColors);
     const char* colorName = GetKnownColorName(col);
     int idx = seqstrings::StrToIdx(gColors, colorName);
     if (idx == -1) {
         customColor.Reset();
-        SerializeColorRgb(col, customColor);
+        SerializePdfColor(col, customColor);
         items.Append(customColor.AsView());
         idx = items.isize() - 1;
     }
@@ -366,7 +382,7 @@ static void DropDownFillColors(DropDownCtrl* w, COLORREF col, str::Str& customCo
     w->SetCurrentSelection(idx);
 }
 
-static COLORREF GetDropDownColor(std::string_view sv) {
+static PdfColor GetDropDownColor(std::string_view sv) {
     int idx = seqstrings::StrToIdx(gColors, sv.data());
     if (idx >= 0) {
         int nMaxColors = (int)dimof(gColorsValues);
@@ -374,10 +390,10 @@ static COLORREF GetDropDownColor(std::string_view sv) {
         if (idx < nMaxColors) {
             return gColorsValues[idx];
         }
-        return ColorUnset;
+        return 0;
     }
-    COLORREF col = ColorUnset;
-    ParseColor(&col, sv);
+    PdfColor col{0};
+    ParsePdfColor(&col, sv);
     return col;
 }
 
@@ -520,7 +536,7 @@ static void DoTextColor(EditAnnotationsWindow* win, Annotation* annot) {
     if (Type(annot) != AnnotationType::FreeText) {
         return;
     }
-    COLORREF col = DefaultAppearanceTextColor(annot);
+    PdfColor col = DefaultAppearanceTextColor(annot);
     DropDownFillColors(win->dropDownTextColor, col, win->currTextColor);
     win->staticTextColor->SetIsVisible(true);
     win->dropDownTextColor->SetIsVisible(true);
@@ -629,7 +645,7 @@ static void DoColor(EditAnnotationsWindow* win, Annotation* annot) {
     if (!isVisible) {
         return;
     }
-    COLORREF col = GetColor(annot);
+    PdfColor col = GetColor(annot);
     DropDownFillColors(win->dropDownColor, col, win->currCustomColor);
     win->staticColor->SetIsVisible(true);
     win->dropDownColor->SetIsVisible(true);
@@ -648,7 +664,7 @@ static void DoInteriorColor(EditAnnotationsWindow* win, Annotation* annot) {
     if (!isVisible) {
         return;
     }
-    COLORREF col = InteriorColor(annot);
+    PdfColor col = InteriorColor(annot);
     DropDownFillColors(win->dropDownInteriorColor, col, win->currCustomInteriorColor);
     win->staticInteriorColor->SetIsVisible(true);
     win->dropDownInteriorColor->SetIsVisible(true);
@@ -1266,6 +1282,18 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     mainWindow->SetIsVisible(true);
 
     delete annot;
+}
+
+static PdfColor ToPdfColor(COLORREF c) {
+    u8 r, g, b, a;
+    UnpackColor(c, r, g, b, a);
+    // COLORREF has a of 0 for opaque but for PDF use
+    // opaque is 0xff
+    if (a == 0) {
+        a = 0xff;
+    }
+    auto res = MkPdfColor(r, g, b, a);
+    return res;
 }
 
 PdfColor GetAnnotationHighlightColor() {

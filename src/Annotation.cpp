@@ -110,6 +110,7 @@ std::string_view AnnotationName(AnnotationType tp) {
 }
 */
 
+// return argb
 PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a) {
     PdfColor b2 = (PdfColor)b;
     PdfColor g2 = (PdfColor)g << 8;
@@ -124,21 +125,9 @@ void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
     c = c >> 8;
     g = (u8)(c & 0xff);
     c = c >> 8;
-    b = (u8)(c & 0xff);
+    r = (u8)(c & 0xff);
     c = c >> 8;
     a = (u8)(c & 0xff);
-}
-
-// COLORREF has a of 0 for opaque but for PDF use
-// opaque is 0xff
-PdfColor ToPdfColor(COLORREF c) {
-    u8 r, g, b, a;
-    UnpackColor(c, r, g, b, a);
-    if (a == 0) {
-        a = 0xff;
-    }
-    auto res = MkPdfColor(r, g, b, a);
-    return res;
 }
 
 std::string_view AnnotationReadableName(AnnotationType tp) {
@@ -336,17 +325,27 @@ void SetIconName(Annotation* annot, std::string_view iconName) {
     annot->isChanged = true;
 }
 
-// TODO: verify this is right
-static PdfColor MkPdfColorFromFloat(float r, float g, float b) {
-    u8 rb = (u8)(r * 255.0f);
-    u8 gb = (u8)(g * 255.0f);
-    u8 bb = (u8)(b * 255.0f);
-    return MkPdfColor(rb, gb, bb, 1);
+static void PdfColorToFloat(PdfColor c, float rgb[3]) {
+    u8 r, g, b, a;
+    UnpackPdfColor(c, r, g, b, a);
+    rgb[0] = (float)r / 255.0f;
+    rgb[1] = (float)g / 255.0f;
+    rgb[2] = (float)b / 255.0f;
 }
 
-/*
-    n = 1 (grey), 3 (rgb) or 4 (cmyk).
-*/
+static float GetOpacityFloat(PdfColor c) {
+    u8 alpha = GetAlpha(c);
+    return alpha / 255.0f;
+}
+
+static PdfColor MkPdfColorFromFloat(float rf, float gf, float bf) {
+    u8 r = (u8)(rf * 255.0f);
+    u8 g = (u8)(gf * 255.0f);
+    u8 b = (u8)(bf * 255.0f);
+    return MkPdfColor(r, g, b, 1);
+}
+
+// n = 1 (grey), 3 (rgb) or 4 (cmyk).
 static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
     if (n == 0) {
         return 0;
@@ -367,39 +366,13 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
 }
 
 PdfColor GetColor(Annotation* annot) {
-    ScopedCritSec cs(annot->engine->ctxAccess);
+    EnginePdf* e = annot->engine;
+    ScopedCritSec cs(e->ctxAccess);
     float color[4];
     int n;
-    pdf_annot_color(annot->engine->ctx, annot->pdfannot, &n, color);
-    PdfColor res = PdfColorFromFloat(annot->engine->ctx, n, color);
+    pdf_annot_color(e->ctx, annot->pdfannot, &n, color);
+    PdfColor res = PdfColorFromFloat(e->ctx, n, color);
     return res;
-}
-
-#if 0
-static void UnpackRgbaFloat(PdfColor c, float& r, float& g, float& b, float& a) {
-    r = (float)(c & 0xff);
-    c = c >> 8;
-    r /= 255.0f;
-    g = (float)(c & 0xff);
-    g /= 255.0f;
-    c = c >> 8;
-    b = (float)(c & 0xff);
-    b /= 255.0f;
-    c = c >> 8;
-    a = (float)(c & 0xff);
-    a /= 255.0f;
-}
-#endif
-
-static void PdfColorToFloat(PdfColor c, float color[3]) {
-    color[0] = ((c >> 16) & 0xff) / 255.0f;
-    color[1] = ((c >> 8) & 0xff) / 255.0f;
-    color[2] = ((c)&0xff) / 255.0f;
-}
-
-static float GetOpacityFloat(PdfColor c) {
-    u8 alpha = GetAlpha(c);
-    return alpha / 255.0f;
 }
 
 // return true if color changed

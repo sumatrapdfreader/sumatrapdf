@@ -23,7 +23,6 @@ COLORREF ColorSetAlpha(COLORREF c, u8 alpha);
 bool ParseColor(COLORREF* destColor, const WCHAR* txt);
 bool ParseColor(COLORREF* destColor, const char* txt);
 bool ParseColor(COLORREF* destColor, std::string_view sv);
-void SerializeColorRgb(COLORREF, str::Str&);
 void SerializeColor(COLORREF, str::Str&);
 
 COLORREF AdjustLightness(COLORREF c, float factor);

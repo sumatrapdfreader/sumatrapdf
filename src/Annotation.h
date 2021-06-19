@@ -100,5 +100,4 @@ void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
 
 PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a);
-PdfColor ToPdfColor(COLORREF c);
 void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
