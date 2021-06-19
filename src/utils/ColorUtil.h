@@ -47,6 +47,11 @@ u8 GetGreen(COLORREF rgb);
 u8 GetBlue(COLORREF rgb);
 u8 GetAlpha(COLORREF rgb);
 
+// PdfColor is aarrggbb, where 0xff alpha is opaque and 0x0 alpha is transparent
+// this is different than COLORREF, which ggrrbb and no alpha
+typedef uint64_t PdfColor;
+
+
 // disabled because not compatible with wdl / lice
 #if 0
 #undef GetRValue

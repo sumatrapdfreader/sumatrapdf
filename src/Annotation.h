@@ -70,11 +70,11 @@ int PopupId(Annotation*); // -1 if not exist
 std::string_view AnnotationReadableName(AnnotationType);
 AnnotationType Type(Annotation*);
 std::string_view DefaultAppearanceTextFont(Annotation*);
-COLORREF DefaultAppearanceTextColor(Annotation*);
+PdfColor DefaultAppearanceTextColor(Annotation*);
 int DefaultAppearanceTextSize(Annotation*);
 void SetDefaultAppearanceTextFont(Annotation*, std::string_view);
 void SetDefaultAppearanceTextSize(Annotation*, int);
-void SetDefaultAppearanceTextColor(Annotation*, COLORREF);
+void SetDefaultAppearanceTextColor(Annotation*, PdfColor);
 std::string_view Contents(Annotation*);
 int Quadding(Annotation*);
 bool SetQuadding(Annotation*, int);
@@ -83,10 +83,10 @@ void SetBorderWidth(Annotation*, int);
 void GetLineEndingStyles(Annotation*, int* start, int* end);
 std::string_view IconName(Annotation*); // empty() if no icon
 void SetIconName(Annotation*, std::string_view);
-COLORREF GetColor(Annotation*); // ColorUnset if no color
-bool SetColor(Annotation*, COLORREF);
-COLORREF InteriorColor(Annotation*); // ColorUnset if no color
-bool SetInteriorColor(Annotation*, COLORREF);
+PdfColor GetColor(Annotation*); // ColorUnset if no color
+bool SetColor(Annotation*, PdfColor);
+PdfColor InteriorColor(Annotation*); // ColorUnset if no color
+bool SetInteriorColor(Annotation*, PdfColor);
 int Opacity(Annotation*);
 void SetOpacity(Annotation*, int);
 void Delete(Annotation*);

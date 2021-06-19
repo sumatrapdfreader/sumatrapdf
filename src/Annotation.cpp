@@ -306,17 +306,17 @@ void SetIconName(Annotation* annot, std::string_view iconName) {
 }
 
 // ColorUnset if no color
-COLORREF GetColor(Annotation* annot) {
+PdfColor GetColor(Annotation* annot) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     float color[4];
     int n;
     pdf_annot_color(annot->engine->ctx, annot->pdfannot, &n, color);
-    COLORREF res = FromPdfColor(annot->engine->ctx, n, color);
+    PdfColor res = FromPdfColor(annot->engine->ctx, n, color);
     return res;
 }
 
 // return true if color changed
-bool SetColor(Annotation* annot, COLORREF c) {
+bool SetColor(Annotation* annot, PdfColor c) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     bool didChange = false;
     float color[4];
@@ -345,16 +345,16 @@ bool SetColor(Annotation* annot, COLORREF c) {
 }
 
 // ColorUnset if no color
-COLORREF InteriorColor(Annotation* annot) {
+PdfColor InteriorColor(Annotation* annot) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     float color[4];
     int n;
     pdf_annot_interior_color(annot->engine->ctx, annot->pdfannot, &n, color);
-    COLORREF res = FromPdfColor(annot->engine->ctx, n, color);
+    PdfColor res = FromPdfColor(annot->engine->ctx, n, color);
     return res;
 }
 
-bool SetInteriorColor(Annotation* annot, COLORREF c) {
+bool SetInteriorColor(Annotation* annot, PdfColor c) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     bool didChange = false;
     float color[4];
@@ -422,18 +422,18 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
     annot->isChanged = true;
 }
 
-COLORREF DefaultAppearanceTextColor(Annotation* annot) {
+PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     const char* fontName{nullptr};
     float sizeF{0.0};
     int n{0};
     float textColor[3];
     pdf_annot_default_appearance(annot->engine->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
-    COLORREF res = FromPdfColor(annot->engine->ctx, 3, textColor);
+    PdfColor res = FromPdfColor(annot->engine->ctx, 3, textColor);
     return res;
 }
 
-void SetDefaultAppearanceTextColor(Annotation* annot, COLORREF col) {
+void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     const char* fontName{nullptr};
     float sizeF{0.0};
