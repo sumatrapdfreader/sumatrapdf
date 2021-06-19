@@ -51,7 +51,6 @@ u8 GetAlpha(COLORREF rgb);
 // this is different than COLORREF, which ggrrbb and no alpha
 typedef uint64_t PdfColor;
 
-
 // disabled because not compatible with wdl / lice
 #if 0
 #undef GetRValue

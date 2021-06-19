@@ -838,12 +838,12 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
         return;
     }
 
-    {
-        AutoFree tmp = strconv::WstrToUtf8(cmd);
-        logf("HandleDdeCmds: '%s'\n", tmp.Get());
-    }
-
     while (!str::IsEmpty(cmd)) {
+        {
+            AutoFree tmp = strconv::WstrToUtf8(cmd);
+            logf("HandleDdeCmds: '%s'\n", tmp.Get());
+        }
+
         const WCHAR* nextCmd = HandleSyncCmd(cmd, ack);
         if (!nextCmd) {
             nextCmd = HandleOpenCmd(cmd, ack);
@@ -862,11 +862,6 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
             nextCmd = str::Parse(cmd, L"%S]", &tmp);
         }
         cmd = nextCmd;
-
-        {
-            AutoFree tmp = strconv::WstrToUtf8(cmd);
-            logf("HandleDdeCmds: cmd='%s'\n", tmp.Get());
-        }
     }
 }
 
