@@ -11,6 +11,9 @@ fix MkPdfColorFromFloat() (fixes color of newly created caret etc. annotation)
 
 use pdf_update_annot instead of pdf_update_appearance
 
+don't show annotation-related context menu items on non-pdf documents (fixes #1993)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1993
+
 2021-06-18 Fri
 
 hide unused annotation methods

@@ -295,15 +295,6 @@ static MenuDef menuDefCreateAnnot[] = {
 //] ACCESSKEY_GROUP Context Menu (Start)
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
-static MenuDef menuDefCreateAnnotRaMicro[] = {
-    { _TRN("Text"), CmdCreateAnnotText, 0 },
-    { _TRN("Free Text"), CmdCreateAnnotFreeText, 0 },
-    { _TRN("Highlight"), CmdCreateAnnotHighlight, 0 },
-    { 0, 0, 0 },
-};
-//] ACCESSKEY_GROUP Context Menu (Start)
-
-//[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
     { _TRN("&Pin Document"),                CmdPinSelectedDocument,    MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
@@ -688,23 +679,6 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 }
 
-// TODO: return false in fullscreen
-static bool ShouldShowCreateAnnotationMenu(TabInfo* tab, int x, int y) {
-    DisplayModel* dm = tab->AsFixed();
-    if (!dm) {
-        return false;
-    }
-    Kind engineType = dm->GetEngineType();
-    if (engineType != kindEnginePdf) {
-        return false;
-    }
-    int pageNo = dm->GetPageNoByPoint(Point{x, y});
-    if (pageNo < 0) {
-        return false;
-    }
-    return true;
-}
-
 void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
@@ -721,10 +695,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
-    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(tab);
+    bool showBookmarksMenu = false; // IsTocEditorEnabledForWindowInfo(tab); TODO: remove completely
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, CmdNewBookmarks);
     } else {
+        // TODO: remove
         auto path = tab->filePath.Get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
@@ -732,24 +707,33 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         }
     }
 
-    bool showCreateAnnotations = ShouldShowCreateAnnotationMenu(tab, x, y);
-    if (showCreateAnnotations) {
-        MenuDef* mdef = menuDefCreateAnnot;
-        if (gIsRaMicroBuild) {
-            mdef = menuDefCreateAnnotRaMicro;
-        }
-        HMENU popupCreateAnnot = BuildMenuFromMenuDef(mdef, CreatePopupMenu());
-        uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
-        InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR("Create Annotation"));
+    int pageNo = dm->GetPageNoByPoint(Point{x, y});
+    PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNo);
+    EngineBase* engine = dm->GetEngine();
+    bool annotationsSupported = EngineSupportsAnnotations(engine) && !win->isFullScreen;
+    if (annotationsSupported) {
+        win::menu::SetEnabled(popup, CmdEditAnnotations, true);
+        bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
+        win::menu::SetEnabled(popup, CmdSaveAnnotations, enableSaveAnnotations);
 
-        bool isTextSelection = win->showSelection && tab->selectionOnPage;
-        if (!isTextSelection) {
-            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotHighlight, false);
-            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotUnderline, false);
-            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotStrikeOut, false);
-            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotSquiggly, false);
-            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotRedact, false);
+        bool showCreateAnnotations = (pageNo > 0);
+        if (showCreateAnnotations) {
+            HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnot, CreatePopupMenu());
+            uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
+            InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR("Create Annotation"));
+
+            bool isTextSelection = win->showSelection && tab->selectionOnPage;
+            if (!isTextSelection) {
+                win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotHighlight, false);
+                win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotUnderline, false);
+                win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotStrikeOut, false);
+                win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotSquiggly, false);
+                win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotRedact, false);
+            }
         }
+    } else {
+        win::menu::Remove(popup, CmdEditAnnotations);
+        win::menu::Remove(popup, CmdSaveAnnotations);
     }
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
@@ -777,20 +761,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     win::menu::SetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
-
-    EngineBase* engine = dm->GetEngine();
-    bool showCreateAnnotation = EngineSupportsAnnotations(engine);
-
-    int pageNo = dm->GetPageNoByPoint(Point{x, y});
-    PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNo);
-    if (showCreateAnnotation) {
-        if (pageNo <= 0) {
-            showCreateAnnotation = false;
-        }
-    }
-
-    bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
-    win::menu::SetEnabled(popup, CmdSaveAnnotations, enableSaveAnnotations);
 
     const WCHAR* filePath = win->ctrl->FilePath();
     if (pageNo > 0) {
