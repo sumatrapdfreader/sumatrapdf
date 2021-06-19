@@ -27,6 +27,9 @@ make default annotation color yellow (0xffffff00) so it matches value in gColors
 add context menu Select annotation when cursor over annotation and edit annotation window is visible (replaces Edit annotations menu) (for #1992)
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1992
 
+fix DefaultAppearanceTextColor() (for #1974)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1974
+
 2021-06-18 Fri
 
 hide unused annotation methods
