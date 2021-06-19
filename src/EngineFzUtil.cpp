@@ -1239,7 +1239,7 @@ static COLORREF MkRgbFloat(float r, float g, float b) {
 /*
     n = 1 (grey), 3 (rgb) or 4 (cmyk).
 */
-COLORREF FromPdfColor(fz_context* ctx, int n, float color[4]) {
+COLORREF ColorRefFromPdfFloat(fz_context* ctx, int n, float color[4]) {
     if (n == 0) {
         return ColorUnset;
     }
@@ -1256,27 +1256,4 @@ COLORREF FromPdfColor(fz_context* ctx, int n, float color[4]) {
     }
     CrashIf(true);
     return 0;
-}
-
-static void UnpackRgbaFloat(COLORREF c, float& r, float& g, float& b, float& a) {
-    r = (float)(c & 0xff);
-    c = c >> 8;
-    r /= 255.0f;
-    g = (float)(c & 0xff);
-    g /= 255.0f;
-    c = c >> 8;
-    b = (float)(c & 0xff);
-    b /= 255.0f;
-    c = c >> 8;
-    a = (float)(c & 0xff);
-    a /= 255.0f;
-}
-
-// TODO: not sure if using 0xff for 'not set' for alpha
-int ToPdfRgba(COLORREF c, float col[4]) {
-    UnpackRgbaFloat(c, col[0], col[1], col[2], col[3]);
-    if (0xff == GetAlpha(c)) {
-        return 3;
-    }
-    return 4;
 }

@@ -4,10 +4,11 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 
-// #define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
-
 COLORREF MkRgb(u8 r, u8 g, u8 b) {
-    return RGB(r, g, b);
+    COLORREF r2 = r;
+    COLORREF g2 = (COLORREF)g << 8;
+    COLORREF b2 = (COLORREF)b << 16;
+    return r2 | g2 | b2;
 }
 
 COLORREF MkGray(u8 x) {
@@ -15,13 +16,14 @@ COLORREF MkGray(u8 x) {
 }
 
 COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a) {
-    COLORREF col = RGB(r, g, b);
-    COLORREF alpha = (COLORREF)a;
-    alpha = alpha << 24;
-    col = col | alpha;
-    return col;
+    COLORREF r2 = r;
+    COLORREF g2 = (COLORREF)g << 8;
+    COLORREF b2 = (COLORREF)b << 16;
+    COLORREF a2 = (COLORREF)a << 24;
+    return r2 | g2 | b2 | a2;
 }
 
+// format: abgr
 void UnpackRgba(COLORREF c, u8& r, u8& g, u8& b, u8& a) {
     r = (u8)(c & 0xff);
     c = c >> 8;
@@ -32,6 +34,7 @@ void UnpackRgba(COLORREF c, u8& r, u8& g, u8& b, u8& a) {
     a = (u8)(c & 0xff);
 }
 
+// format: bgr
 void UnpackRgb(COLORREF c, u8& r, u8& g, u8& b) {
     r = (u8)(c & 0xff);
     c = c >> 8;
@@ -105,16 +108,6 @@ COLORREF ColorSetBlue(COLORREF c, u8 blue) {
 
 COLORREF ColorSetAlpha(COLORREF c, u8 alpha) {
     return colorSetHelper(c, alpha, 3);
-}
-
-// COLORREF has a of 0 for opaque but for PDF use
-// opaque is 0xff
-COLORREF FixupColorForPDF(COLORREF c) {
-    u8 a = GetAlpha(c);
-    if (a == 0) {
-        c = ColorSetAlpha(c, 0xff);
-    }
-    return c;
 }
 
 // TODO: remove use of SerializeColorRgb() and replace with SerializeColor

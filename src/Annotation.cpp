@@ -110,6 +110,37 @@ std::string_view AnnotationName(AnnotationType tp) {
 }
 */
 
+PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a) {
+    PdfColor b2 = (PdfColor)b;
+    PdfColor g2 = (PdfColor)g << 8;
+    PdfColor r2 = (PdfColor)r << 16;
+    PdfColor a2 = (PdfColor)a << 24;
+    return a2 | r2 | g2 | b2;
+}
+
+// argb
+void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
+    b = (u8)(c & 0xff);
+    c = c >> 8;
+    g = (u8)(c & 0xff);
+    c = c >> 8;
+    b = (u8)(c & 0xff);
+    c = c >> 8;
+    a = (u8)(c & 0xff);
+}
+
+// COLORREF has a of 0 for opaque but for PDF use
+// opaque is 0xff
+PdfColor ToPdfColor(COLORREF c) {
+    u8 r, g, b, a;
+    UnpackRgba(c, r, g, b, a);
+    if (a == 0) {
+        a = 0xff;
+    }
+    auto res = MkPdfColor(r, g, b, a);
+    return res;
+}
+
 std::string_view AnnotationReadableName(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {
@@ -305,26 +336,85 @@ void SetIconName(Annotation* annot, std::string_view iconName) {
     annot->isChanged = true;
 }
 
-// ColorUnset if no color
+// TODO: verify this is right
+static PdfColor MkPdfColorFromFloat(float r, float g, float b) {
+    u8 rb = (u8)(r * 255.0f);
+    u8 gb = (u8)(g * 255.0f);
+    u8 bb = (u8)(b * 255.0f);
+    return MkRgb(rb, gb, bb);
+}
+
+/*
+    n = 1 (grey), 3 (rgb) or 4 (cmyk).
+*/
+static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
+    if (n == 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return MkPdfColorFromFloat(color[0], color[0], color[0]);
+    }
+    if (n == 3) {
+        return MkPdfColorFromFloat(color[0], color[1], color[2]);
+    }
+    if (n == 4) {
+        float rgb[4];
+        fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, NULL, fz_default_color_params);
+        return MkPdfColorFromFloat(rgb[0], rgb[1], rgb[2]);
+    }
+    CrashIf(true);
+    return 0;
+}
+
 PdfColor GetColor(Annotation* annot) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     float color[4];
     int n;
     pdf_annot_color(annot->engine->ctx, annot->pdfannot, &n, color);
-    PdfColor res = FromPdfColor(annot->engine->ctx, n, color);
+    PdfColor res = PdfColorFromFloat(annot->engine->ctx, n, color);
     return res;
+}
+
+#if 0
+static void UnpackRgbaFloat(PdfColor c, float& r, float& g, float& b, float& a) {
+    r = (float)(c & 0xff);
+    c = c >> 8;
+    r /= 255.0f;
+    g = (float)(c & 0xff);
+    g /= 255.0f;
+    c = c >> 8;
+    b = (float)(c & 0xff);
+    b /= 255.0f;
+    c = c >> 8;
+    a = (float)(c & 0xff);
+    a /= 255.0f;
+}
+#endif
+
+static void PdfColorToFloat(PdfColor c, float color[3]) {
+    color[0] = ((c >> 16) & 0xff) / 255.0f;
+    color[1] = ((c >> 8) & 0xff) / 255.0f;
+    color[2] = ((c)&0xff) / 255.0f;
+}
+
+static float GetOpacityFloat(PdfColor c) {
+    u8 alpha = GetAlpha(c);
+    return alpha / 255.0f;
 }
 
 // return true if color changed
 bool SetColor(Annotation* annot, PdfColor c) {
-    ScopedCritSec cs(annot->engine->ctxAccess);
+    EnginePdf* e = annot->engine;
+    ScopedCritSec cs(e->ctxAccess);
     bool didChange = false;
     float color[4];
     int n;
-    pdf_annot_color(annot->engine->ctx, annot->pdfannot, &n, color);
-    float newColor[4];
-    int newN = ToPdfRgba(c, newColor);
-    didChange = (n != newN);
+    pdf_annot_color(e->ctx, annot->pdfannot, &n, color);
+    float oldOpacity = pdf_annot_opacity(e->ctx, annot->pdfannot);
+    float newColor[3];
+    PdfColorToFloat(c, newColor);
+    float opacity = GetOpacityFloat(c);
+    didChange = (n != 3);
     if (!didChange) {
         for (int i = 0; i < n; i++) {
             if (color[i] != newColor[i]) {
@@ -332,37 +422,46 @@ bool SetColor(Annotation* annot, PdfColor c) {
             }
         }
     }
-    if (c == ColorUnset) {
-        pdf_set_annot_color(annot->engine->ctx, annot->pdfannot, 0, newColor);
+    if (opacity != oldOpacity) {
+        didChange = true;
+    }
+    if (!didChange) {
+        return false;
+    }
+    if (c == 0) {
+        pdf_set_annot_color(e->ctx, annot->pdfannot, 0, newColor);
+        // TODO: set opacity to 1?
+        // pdf_set_annot_opacity(e->ctx, annot->pdfannot, 1.f);
     } else {
-        pdf_set_annot_color(annot->engine->ctx, annot->pdfannot, newN, newColor);
+        pdf_set_annot_color(e->ctx, annot->pdfannot, 3, newColor);
+        if (oldOpacity != opacity) {
+            pdf_set_annot_opacity(e->ctx, annot->pdfannot, opacity);
+        }
     }
-    pdf_update_appearance(annot->engine->ctx, annot->pdfannot);
-    if (didChange) {
-        annot->isChanged = true;
-    }
-    return didChange;
+    pdf_update_appearance(e->ctx, annot->pdfannot);
+    annot->isChanged = true;
+    return true;
 }
 
-// ColorUnset if no color
 PdfColor InteriorColor(Annotation* annot) {
     ScopedCritSec cs(annot->engine->ctxAccess);
     float color[4];
     int n;
     pdf_annot_interior_color(annot->engine->ctx, annot->pdfannot, &n, color);
-    PdfColor res = FromPdfColor(annot->engine->ctx, n, color);
+    PdfColor res = PdfColorFromFloat(annot->engine->ctx, n, color);
     return res;
 }
 
 bool SetInteriorColor(Annotation* annot, PdfColor c) {
-    ScopedCritSec cs(annot->engine->ctxAccess);
+    EnginePdf* e = annot->engine;
+    ScopedCritSec cs(e->ctxAccess);
     bool didChange = false;
     float color[4];
     int n;
-    pdf_annot_interior_color(annot->engine->ctx, annot->pdfannot, &n, color);
-    float newColor[4];
-    int newN = ToPdfRgba(c, newColor);
-    didChange = (n != newN);
+    pdf_annot_color(e->ctx, annot->pdfannot, &n, color);
+    float newColor[3];
+    PdfColorToFloat(c, newColor);
+    didChange = (n != 3);
     if (!didChange) {
         for (int i = 0; i < n; i++) {
             if (color[i] != newColor[i]) {
@@ -370,12 +469,17 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
             }
         }
     }
-    pdf_set_annot_interior_color(annot->engine->ctx, annot->pdfannot, newN, newColor);
-    pdf_update_appearance(annot->engine->ctx, annot->pdfannot);
-    if (didChange) {
-        annot->isChanged = true;
+    if (!didChange) {
+        return false;
     }
-    return didChange;
+    if (c == 0) {
+        pdf_set_annot_interior_color(e->ctx, annot->pdfannot, 0, newColor);
+    } else {
+        pdf_set_annot_interior_color(e->ctx, annot->pdfannot, 3, newColor);
+    }
+    pdf_update_appearance(e->ctx, annot->pdfannot);
+    annot->isChanged = true;
+    return true;
 }
 
 std::string_view DefaultAppearanceTextFont(Annotation* annot) {
@@ -429,7 +533,7 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     int n{0};
     float textColor[3];
     pdf_annot_default_appearance(annot->engine->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
-    PdfColor res = FromPdfColor(annot->engine->ctx, 3, textColor);
+    PdfColor res = PdfColorFromFloat(annot->engine->ctx, 3, textColor);
     return res;
 }
 
@@ -438,10 +542,10 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     const char* fontName{nullptr};
     float sizeF{0.0};
     int n{0};
-    float textColor[4];
+    float textColor[3];
     pdf_annot_default_appearance(annot->engine->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
-    ToPdfRgba(col, textColor);
-    pdf_set_annot_default_appearance(annot->engine->ctx, annot->pdfannot, fontName, sizeF, n, textColor);
+    PdfColorToFloat(col, textColor);
+    pdf_set_annot_default_appearance(annot->engine->ctx, annot->pdfannot, fontName, sizeF, 3, textColor);
     pdf_update_appearance(annot->engine->ctx, annot->pdfannot);
     annot->isChanged = true;
 }

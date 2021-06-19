@@ -38,6 +38,7 @@ extern "C" {
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
+#include "GlobalPrefs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
@@ -63,36 +64,25 @@ static const char *gFontNames = "Cour\0Helv\0TiRo\0";
 static const char *gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
 static const char* gQuaddingNames = "Left\0Center\0Right\0";
 
-static COLORREF gColorsValues[] = {
-    //0x00000000, /* transparent */
-    ColorUnset, /* transparent */
-    //0xff00ffff, /* aqua */
-    0xffffff00, /* aqua */
-    0xff000000, /* black */
-    //0xff0000ff, /* blue */
-    0xffff0000, /* blue */
-    //0xffff00ff, /* fuchsia */
-    0xffff00ff, /* fuchsia */
-    0xff808080, /* gray */
-    0xff008000, /* green */
-    0xff00ff00, /* lime */
-    //0xff800000, /* maroon */
-    0xff000080, /* maroon */
-    //0xff000080, /* navy */
-    0xff800000, /* navy */
-    //0xff808000, /* olive */
-    0xff008080, /* olive */
-    //0xffffa500, /* orange */
-    0xff00a5ff, /* orange */
-    0xff800080, /* purple */
-    //0xffff0000, /* red */
-    0xff0000ff, /* red */
-    0xffc0c0c0, /* silver */
-    //0xff008080, /* teal */
-    0xff808000, /* teal */
-    0xffffffff, /* white */
-    //0xffffff00, /* yellow */
-    0xff00ffff, /* yellow */
+static PdfColor gColorsValues[] = {
+	0x00000000, /* transparent */
+	0xff00ffff, /* aqua */
+	0xff000000, /* black */
+	0xff0000ff, /* blue */
+	0xffff00ff, /* fuchsia */
+	0xff808080, /* gray */
+	0xff008000, /* green */
+	0xff00ff00, /* lime */
+	0xff800000, /* maroon */
+	0xff000080, /* navy */
+	0xff808000, /* olive */
+	0xffffa500, /* orange */
+	0xff800080, /* purple */
+	0xffff0000, /* red */
+	0xffc0c0c0, /* silver */
+	0xff008080, /* teal */
+	0xffffffff, /* white */
+	0xffffff00, /* yellow */
 };
 
 AnnotationType gAnnotsWithBorder[] = {
@@ -1276,4 +1266,9 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     mainWindow->SetIsVisible(true);
 
     delete annot;
+}
+
+PdfColor GetAnnotationHighlightColor() {
+    COLORREF col = gGlobalPrefs->annotations.highlightColor;
+    return ToPdfColor(col);
 }
