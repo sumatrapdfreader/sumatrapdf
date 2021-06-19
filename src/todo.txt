@@ -36,8 +36,10 @@ Annotations:
  - no need to redraw when changing contents of most annotations (hard to pull off in current code)
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
    Maybe add sub-menu with list of colors
- - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
-   a dialog box for setting a color. Remember the custom colors in settings for future use.
+ - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would
+   show a dialog box for setting a color. Remember the custom colors in settings for future use.
+ -figure out why in mupdf color None for highlight is black. Maybe remove None because it doesn't
+  make sense and doesn't seem to work in mupdf either (i.e. it sets the color to black)
 
 ------
 
@@ -47,13 +49,15 @@ Annotations:
 - installer: maybe when running installer as admin user, install to
 ProgramFiles directory (maybe would fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1502)
 - fix: Vec bug (same as Str) where we're not using buf
-- fix: https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state from history)
+- fix: https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state
+  from history)
 - fix: tweak PositionCloseTo() to run after creation and use actual window position
 - cleanup: remove CmdNewBookmarks and related code
 - cleanup: remove .vbkm code
 - cleanup: remove ramicro code
 - crash reporting: use RtlCaptureStackBackTrace
-- crash reporting: on crash re-get list of modules so that we can see modules that were injected after startup
+- crash reporting: on crash re-get list of modules so that we can see modules that were injected
+  after startup
 - cleanup: TocContextMenu: remove code related to showBookmarksMenu
 
 small refactorings:

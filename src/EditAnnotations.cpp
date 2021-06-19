@@ -855,8 +855,8 @@ static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
     return w;
 }
 
-static void CreateMainLayout(EditAnnotationsWindow* win) {
-    HWND parent = win->mainWindow->hwnd;
+static void CreateMainLayout(EditAnnotationsWindow* ew) {
+    HWND parent = ew->mainWindow->hwnd;
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -867,16 +867,16 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetInsetsPt(4, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        win->lbModel = new ListBoxModelStrings();
-        w->SetModel(win->lbModel);
-        w->onSelectionChanged = std::bind(ListBoxSelectionChanged, win, _1);
-        win->listBox = w;
+        ew->lbModel = new ListBoxModelStrings();
+        w->SetModel(ew->lbModel);
+        w->onSelectionChanged = std::bind(ListBoxSelectionChanged, ew, _1);
+        ew->listBox = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent);
-        win->staticRect = w;
+        ew->staticRect = w;
         vbox->AddChild(w);
     }
 
@@ -884,25 +884,25 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         auto w = CreateStatic(parent);
         // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
         // l2->SetInsetsPt(20, 0, 0, 0);
-        win->staticAuthor = w;
+        ew->staticAuthor = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent);
-        win->staticModificationDate = w;
+        ew->staticModificationDate = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent);
-        win->staticPopup = w;
+        ew->staticPopup = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Contents:");
-        win->staticContents = w;
+        ew->staticContents = w;
         w->SetInsetsPt(4, 0, 0, 0);
         vbox->AddChild(w);
     }
@@ -914,15 +914,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->maxDx = 150;
-        w->onTextChanged = std::bind(ContentsChanged, win, _1);
-        win->editContents = w;
+        w->onTextChanged = std::bind(ContentsChanged, ew, _1);
+        ew->editContents = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Text Alignment:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticTextAlignment = w;
+        ew->staticTextAlignment = w;
         vbox->AddChild(w);
     }
 
@@ -932,15 +932,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = std::bind(TextAlignmentSelectionChanged, win, _1);
-        win->dropDownTextAlignment = w;
+        w->onSelectionChanged = std::bind(TextAlignmentSelectionChanged, ew, _1);
+        ew->dropDownTextAlignment = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Text Font:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticTextFont = w;
+        ew->staticTextFont = w;
         vbox->AddChild(w);
     }
 
@@ -950,15 +950,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = std::bind(TextFontSelectionChanged, win, _1);
-        win->dropDownTextFont = w;
+        w->onSelectionChanged = std::bind(TextFontSelectionChanged, ew, _1);
+        ew->dropDownTextFont = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Text Size:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticTextSize = w;
+        ew->staticTextSize = w;
         vbox->AddChild(w);
     }
 
@@ -969,14 +969,14 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->rangeMax = 36;
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onPosChanging = std::bind(TextFontSizeChanging, win, _1);
-        win->trackbarTextSize = w;
+        w->onPosChanging = std::bind(TextFontSizeChanging, ew, _1);
+        ew->trackbarTextSize = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Text Color:");
-        win->staticTextColor = w;
+        ew->staticTextColor = w;
         vbox->AddChild(w);
     }
 
@@ -986,15 +986,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = std::bind(TextColorSelectionChanged, win, _1);
-        win->dropDownTextColor = w;
+        w->onSelectionChanged = std::bind(TextColorSelectionChanged, ew, _1);
+        ew->dropDownTextColor = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Line Start:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticLineStart = w;
+        ew->staticLineStart = w;
         vbox->AddChild(w);
     }
 
@@ -1003,15 +1003,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, win, _1);
-        win->dropDownLineStart = w;
+        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, ew, _1);
+        ew->dropDownLineStart = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Line End:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticLineEnd = w;
+        ew->staticLineEnd = w;
         vbox->AddChild(w);
     }
 
@@ -1020,15 +1020,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, win, _1);
-        win->dropDownLineEnd = w;
+        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, ew, _1);
+        ew->dropDownLineEnd = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Icon:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticIcon = w;
+        ew->staticIcon = w;
         vbox->AddChild(w);
     }
 
@@ -1037,15 +1037,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onSelectionChanged = std::bind(IconSelectionChanged, win, _1);
-        win->dropDownIcon = w;
+        w->onSelectionChanged = std::bind(IconSelectionChanged, ew, _1);
+        ew->dropDownIcon = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Border:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticBorder = w;
+        ew->staticBorder = w;
         vbox->AddChild(w);
     }
 
@@ -1055,15 +1055,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->rangeMax = borderWidthMax;
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onPosChanging = std::bind(BorderWidthChanging, win, _1);
-        win->trackbarBorder = w;
+        w->onPosChanging = std::bind(BorderWidthChanging, ew, _1);
+        ew->trackbarBorder = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Color:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticColor = w;
+        ew->staticColor = w;
         vbox->AddChild(w);
     }
 
@@ -1073,15 +1073,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = std::bind(ColorSelectionChanged, win, _1);
-        win->dropDownColor = w;
+        w->onSelectionChanged = std::bind(ColorSelectionChanged, ew, _1);
+        ew->dropDownColor = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Interior Color:");
         w->SetInsetsPt(8, 0, 0, 0);
-        win->staticInteriorColor = w;
+        ew->staticInteriorColor = w;
         vbox->AddChild(w);
     }
 
@@ -1091,14 +1091,14 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = std::bind(InteriorColorSelectionChanged, win, _1);
-        win->dropDownInteriorColor = w;
+        w->onSelectionChanged = std::bind(InteriorColorSelectionChanged, ew, _1);
+        ew->dropDownInteriorColor = w;
         vbox->AddChild(w);
     }
 
     {
         auto w = CreateStatic(parent, "Opacity:");
-        win->staticOpacity = w;
+        ew->staticOpacity = w;
         vbox->AddChild(w);
     }
 
@@ -1108,8 +1108,8 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->rangeMax = 255;
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onPosChanging = std::bind(OpacityChanging, win, _1);
-        win->trackbarOpacity = w;
+        w->onPosChanging = std::bind(OpacityChanging, ew, _1);
+        ew->trackbarOpacity = w;
         vbox->AddChild(w);
     }
 
@@ -1119,8 +1119,8 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetText("Save...");
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onClicked = std::bind(&ButtonSaveAttachment, win);
-        win->buttonSaveAttachment = w;
+        w->onClicked = std::bind(&ButtonSaveAttachment, ew);
+        ew->buttonSaveAttachment = w;
         vbox->AddChild(w);
     }
 
@@ -1130,8 +1130,8 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetText("Embed...");
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onClicked = std::bind(&ButtonEmbedAttachment, win);
-        win->buttonEmbedAttachment = w;
+        w->onClicked = std::bind(&ButtonEmbedAttachment, ew);
+        ew->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
 
@@ -1143,8 +1143,8 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetTextColor(MkColor(0xff, 0, 0));
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onClicked = std::bind(&ButtonDeleteHandler, win);
-        win->buttonDelete = w;
+        w->onClicked = std::bind(&ButtonDeleteHandler, ew);
+        ew->buttonDelete = w;
         vbox->AddChild(w);
     }
 
@@ -1159,7 +1159,7 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetTextColor(MkColor(0xcc, 0xcc, 0xcc));
         w->SetInsetsPt(0, 0, 2, 0);
         // TODO: make invisible until buttonSavePDF is enabled
-        win->staticSaveTip = w;
+        ew->staticSaveTip = w;
         vbox->AddChild(w);
     }
 
@@ -1170,38 +1170,38 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClicked = std::bind(&ButtonSavePDFHandler, win);
-        win->buttonSavePDF = w;
+        w->onClicked = std::bind(&ButtonSavePDFHandler, ew);
+        ew->buttonSavePDF = w;
         vbox->AddChild(w);
     }
 
     auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
-    win->mainLayout = padding;
-    HidePerAnnotControls(win);
+    ew->mainLayout = padding;
+    HidePerAnnotControls(ew);
 }
 
-static void GetAnnotationsFromEngine(EditAnnotationsWindow* win, TabInfo* tab) {
+static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, TabInfo* tab) {
     Vec<Annotation*>* annots = new Vec<Annotation*>();
-    EnginePdf* engine = GetEnginePdf(win);
+    EnginePdf* engine = GetEnginePdf(ew);
     EngineGetAnnotations(engine, annots);
 
-    win->tab = tab;
-    tab->editAnnotsWindow = win;
-    win->annotations = annots;
-    RebuildAnnotations(win);
+    ew->tab = tab;
+    tab->editAnnotsWindow = ew;
+    ew->annotations = annots;
+    RebuildAnnotations(ew);
 }
 
-static bool SelectAnnotationInListBox(EditAnnotationsWindow* win, Annotation* annot) {
+static bool SelectAnnotationInListBox(EditAnnotationsWindow* ew, Annotation* annot) {
     if (!annot) {
-        win->listBox->SetCurrentSelection(-1);
+        ew->listBox->SetCurrentSelection(-1);
         return false;
     }
-    int n = win->annotations->isize();
+    int n = ew->annotations->isize();
     for (int i = 0; i < n; i++) {
-        Annotation* a = win->annotations->at(i);
+        Annotation* a = ew->annotations->at(i);
         if (IsAnnotationEq(a, annot)) {
-            win->listBox->SetCurrentSelection(i);
-            UpdateUIForSelectedAnnotation(win, i);
+            ew->listBox->SetCurrentSelection(i);
+            UpdateUIForSelectedAnnotation(ew, i);
             return true;
         }
     }
@@ -1238,12 +1238,12 @@ void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) 
 // takes ownership of selectedAnnot
 void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     CrashIf(!tab->AsFixed()->GetEngine());
-    EditAnnotationsWindow* win = tab->editAnnotsWindow;
-    if (win) {
-        AddAnnotationToEditWindow(win, annot);
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    if (ew) {
+        AddAnnotationToEditWindow(ew, annot);
         return;
     }
-    win = new EditAnnotationsWindow();
+    ew = new EditAnnotationsWindow();
     auto mainWindow = new Window();
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
@@ -1258,16 +1258,16 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     // w->initialSize = {winSize.cx, winSize.cy};
     bool ok = mainWindow->Create();
     CrashIf(!ok);
-    mainWindow->onClose = std::bind(WndCloseHandler, win, _1);
-    mainWindow->onSize = std::bind(WndSizeHandler, win, _1);
-    mainWindow->onKeyDownUp = std::bind(WndKeyHandler, win, _1);
+    mainWindow->onClose = std::bind(WndCloseHandler, ew, _1);
+    mainWindow->onSize = std::bind(WndSizeHandler, ew, _1);
+    mainWindow->onKeyDownUp = std::bind(WndKeyHandler, ew, _1);
 
-    win->mainWindow = mainWindow;
-    CreateMainLayout(win);
-    win->tab = tab;
-    tab->editAnnotsWindow = win;
+    ew->mainWindow = mainWindow;
+    CreateMainLayout(ew);
+    ew->tab = tab;
+    tab->editAnnotsWindow = ew;
 
-    GetAnnotationsFromEngine(win, tab);
+    GetAnnotationsFromEngine(ew, tab);
 
     // size our editor window to be the same height as main window
     int minDy = 720;
@@ -1279,13 +1279,13 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
         // if it's a tall window, up the number of items in list box
         // from 5 to 14
         if (minDy > 1024) {
-            win->listBox->idealSizeLines = 14;
+            ew->listBox->idealSizeLines = 14;
         }
     }
-    LayoutAndSizeToContent(win->mainLayout, 520, minDy, mainWindow->hwnd);
+    LayoutAndSizeToContent(ew->mainLayout, 520, minDy, mainWindow->hwnd);
     HwndPositionToTheRightOf(mainWindow->hwnd, tab->win->hwndFrame);
-    win->skipGoToPage = (annot != nullptr);
-    SelectAnnotationInListBox(win, annot);
+    ew->skipGoToPage = (annot != nullptr);
+    SelectAnnotationInListBox(ew, annot);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
