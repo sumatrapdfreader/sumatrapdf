@@ -133,7 +133,7 @@ void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
 // opaque is 0xff
 PdfColor ToPdfColor(COLORREF c) {
     u8 r, g, b, a;
-    UnpackRgba(c, r, g, b, a);
+    UnpackColor(c, r, g, b, a);
     if (a == 0) {
         a = 0xff;
     }

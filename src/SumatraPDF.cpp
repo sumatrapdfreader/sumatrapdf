@@ -4050,8 +4050,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
                     auto w = win->currentTab->editAnnotsWindow;
                     if (w) {
                         AddAnnotationToEditWindow(w, annot);
-                    }
-                    else {
+                    } else {
                         delete annot;
                     }
                 }

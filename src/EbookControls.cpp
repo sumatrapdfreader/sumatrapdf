@@ -295,9 +295,9 @@ void SetMainWndBgCol(EbookControls* ctrls) {
         return;
     }
     u8 r, g, b;
-    UnpackRgb(bgColor, r, g, b);
+    UnpackColor(bgColor, r, g, b);
     u8 rt, gt, bt;
-    UnpackRgb(txtColor, rt, gt, bt);
+    UnpackColor(txtColor, rt, gt, bt);
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, r, g, b));
     ctrls->mainWnd->SetStyle(styleMainWnd);
 

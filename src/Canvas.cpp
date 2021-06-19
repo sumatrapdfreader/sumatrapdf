@@ -780,8 +780,8 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
 static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) {
     u8 ar, ag, ab;
     u8 br, bg, bb;
-    UnpackRgb(a, ar, ag, ab);
-    UnpackRgb(b, br, bg, bb);
+    UnpackColor(a, ar, ag, ab);
+    UnpackColor(b, br, bg, bb);
 
     tv->Red = (COLOR16)((ar + perc * (br - ar)) * 256);
     tv->Green = (COLOR16)((ag + perc * (bg - ag)) * 256);

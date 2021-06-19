@@ -1590,10 +1590,10 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 
     // color order in DIB is blue-green-red-alpha
     byte rt, gt, bt;
-    UnpackRgb(textColor, rt, gt, bt);
+    UnpackColor(textColor, rt, gt, bt);
     int base[4] = {bt, gt, rt, 0};
     byte rb, gb, bb;
-    UnpackRgb(bgColor, rb, gb, bb);
+    UnpackColor(bgColor, rb, gb, bb);
     int diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
 
     DIBSECTION info = {0};

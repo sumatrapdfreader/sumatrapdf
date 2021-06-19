@@ -124,7 +124,7 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     // fill path (and draw optional outline margin)
     Gdiplus::Graphics gs(hdc);
     u8 r, g, b;
-    UnpackRgb(selectionColor, r, g, b);
+    UnpackColor(selectionColor, r, g, b);
     Gdiplus::Color c(alpha, r, g, b);
     Gdiplus::SolidBrush tmpBrush(c);
     gs.FillPath(&tmpBrush, &path);
