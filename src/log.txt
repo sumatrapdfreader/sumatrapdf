@@ -9,6 +9,8 @@ https://github.com/sumatrapdfreader/sumatrapdf/issues/1689
 
 fix MkPdfColorFromFloat() (fixes color of newly created caret etc. annotation)
 
+use pdf_update_annot instead of pdf_update_appearance
+
 2021-06-18 Fri
 
 hide unused annotation methods

@@ -67,7 +67,7 @@ EXPORTS
 	fz_set_warning_callback
 	fz_set_error_callback
 	fz_new_buffer_from_shared_data
-	pdf_update_appearance
+	pdf_update_annot
 	pdf_dict_put_drop
 	pdf_add_page
 	pdf_add_image

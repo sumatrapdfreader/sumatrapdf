@@ -1977,7 +1977,7 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
         pdf_set_annot_border(ctx, annot, 1);
     }
 
-    pdf_update_appearance(ctx, annot);
+    pdf_update_annot(ctx, annot);
     auto res = MakeAnnotationPdf(epdf, annot, pageNo);
     return res;
 }
