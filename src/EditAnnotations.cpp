@@ -1080,6 +1080,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto w = CreateStatic(parent, "Opacity:");
+        w->SetInsetsPt(8, 0, 0, 0);
         ew->staticOpacity = w;
         vbox->AddChild(w);
     }

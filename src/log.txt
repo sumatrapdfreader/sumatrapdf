@@ -18,10 +18,14 @@ split `Create Annotation` context menu and fix #1992
 split `Create Annotation` into `Create Annotation From Selection` and
 `Create Annotation Under Cursor`.
 When using `Edit Annotations` menu, select annotation under cursor (fixes #1992).
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1992
 
 in annotations editor, add explicit button for saving to a new PDF instead of ctrl modifier
 
 make default annotation color yellow (0xffffff00) so it matches value in gColorsValues
+
+add context menu Select annotation when cursor over annotation and edit annotation window is visible (replaces Edit annotations menu) (for #1992)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1992
 
 2021-06-18 Fri
 

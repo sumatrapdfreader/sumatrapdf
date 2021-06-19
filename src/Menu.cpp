@@ -260,6 +260,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotations,       MF_REQ_DISK_ACCESS },
     //{"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
+    { _TRN("Select Annotation"),            CmdSelectAnnotation,      MF_REQ_DISK_ACCESS },
     { _TRN("Edit Annotations"),             CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
@@ -727,11 +728,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNoUnderCursor);
     EngineBase* engine = dm->GetEngine();
     bool annotationsSupported = EngineSupportsAnnotations(engine) && !win->isFullScreen;
+    Annotation* annotUnderCursor{nullptr};
     if (annotationsSupported) {
-        win::menu::SetEnabled(popup, CmdEditAnnotations, true);
-        bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
-        win::menu::SetEnabled(popup, CmdSaveAnnotations, enableSaveAnnotations);
-
+        annotUnderCursor = dm->GetAnnotationAtPos(Point{x, y}, nullptr);
         bool isTextSelected = win->showSelection && tab->selectionOnPage;
         if (isTextSelected) {
             HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnotFromSelection, CreatePopupMenu());
@@ -745,7 +744,18 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
             InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR("Create Annotation Under Cursor"));
         }
+        win::menu::SetEnabled(popup, CmdEditAnnotations, true);
+        bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
+        win::menu::SetEnabled(popup, CmdSaveAnnotations, enableSaveAnnotations);
+        // if annotations editor visible and mouse over annotation, show
+        // `Select Annotation` instead of `Edit Annotations`
+        if (tab->editAnnotsWindow && annotUnderCursor) {
+            win::menu::Remove(popup, CmdEditAnnotations);
+        } else {
+            win::menu::Remove(popup, CmdSelectAnnotation);
+        }
     } else {
+        win::menu::Remove(popup, CmdSelectAnnotation);
         win::menu::Remove(popup, CmdEditAnnotations);
         win::menu::Remove(popup, CmdSaveAnnotations);
     }
@@ -814,7 +824,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DestroyMenu(popup);
 
     AnnotationType annotType = (AnnotationType)(cmd - CmdCreateAnnotText);
-    Annotation* annot{nullptr};
+    Annotation* createdAnnot{nullptr};
     switch (cmd) {
         case CmdCopySelection:
         case CmdSelectAll:
@@ -829,14 +839,13 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdNewBookmarks:
             HwndSendCommand(win->hwndFrame, cmd);
             break;
+        case CmdSelectAnnotation:
+            CrashIf(!annotUnderCursor);
+            SelectAnnotationInEditWindow(tab->editAnnotsWindow, annotUnderCursor);
+            break;
         case CmdEditAnnotations:
             StartEditAnnotations(tab, nullptr);
-            annot = dm->GetAnnotationAtPos(Point{x, y}, nullptr);
-            if (annot) {
-                SelectAnnotationInEditWindow(tab->editAnnotsWindow, annot);
-                delete annot;
-                annot = nullptr;
-            }
+            SelectAnnotationInEditWindow(tab->editAnnotsWindow, annotUnderCursor);
             break;
         case CmdCopyLinkTarget: {
             const WCHAR* tmp = SkipFileProtocol(value);
@@ -871,32 +880,33 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
-            annot = EnginePdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
-            if (annot) {
+            createdAnnot = EnginePdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+            if (createdAnnot) {
                 WindowInfoRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
             }
         } break;
         case CmdCreateAnnotHighlight:
-            annot = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
+            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
             break;
         case CmdCreateAnnotSquiggly:
-            annot = MakeAnnotationFromSelection(tab, AnnotationType::Squiggly);
+            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::Squiggly);
             break;
         case CmdCreateAnnotStrikeOut:
-            annot = MakeAnnotationFromSelection(tab, AnnotationType::StrikeOut);
+            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::StrikeOut);
             break;
         case CmdCreateAnnotUnderline:
-            annot = MakeAnnotationFromSelection(tab, AnnotationType::Underline);
+            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::Underline);
             break;
         case CmdCreateAnnotInk:
         case CmdCreateAnnotPolyLine:
             // TODO: implement me
             break;
     }
-    if (annot) {
-        StartEditAnnotations(tab, annot);
+    if (createdAnnot) {
+        StartEditAnnotations(tab, createdAnnot);
     }
+    delete annotUnderCursor;
 
     /*
         { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
