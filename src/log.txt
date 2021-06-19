@@ -6,7 +6,7 @@ hide unused annotation methods
 
 simplify struct Annotation
 
-use less memory during crash processing
+use less memory during crash processing (ran out of memory on GitHub CI)
 
 2021-06-17 Thu
 
