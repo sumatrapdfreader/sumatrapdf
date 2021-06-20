@@ -5,6 +5,7 @@ For 3.4 (this is a plan, not a promise):
 * remove as much of unused code
 * make it easy (one-click) to upgrade daily builds (all builds?)
 * tooltip for tabs showing full path of the file
+* https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
 
 Annotations:
  - cannot move ink attachments (repro file from 1716)
@@ -13,8 +14,6 @@ Annotations:
  - has_redact
  - maybe: text language drop-down
  - maybe: add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
- - maybe: add label for showing notification that saved or failed to save. Notification should self-dismiss
-   after few seconds
  - maybe: display flags
  - change text selection to use fz_snap_selection and fz_highlight_selection
  - allow drawing of ink annotations
@@ -23,24 +22,19 @@ Annotations:
  - allow drawing of polyline
  - use return value of `pdf_update_annot`
  - no need to redraw when changing contents of most annotations (hard to pull off in current code)
- - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
-   Maybe add sub-menu with list of colors
  - maybe; show colors in a drop-down
  - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would
    show a dialog box for setting a color. Remember the custom colors in settings for future use.
- -figure out why in mupdf color None for highlight is black. Maybe remove None because it doesn't
+ - figure out why in mupdf color None for highlight is black. Maybe remove None because it doesn't
   make sense and doesn't seem to work in mupdf either (i.e. it sets the color to black)
 
 ------
 
 - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
 - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1737 (Crash report from forum user)
 - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1720 (Show scrollbars option aren't saving the preference)
 - https://github.com/sumatrapdfreader/sumatrapdf/issues/1741 ESC to exit change
 - https://github.com/sumatrapdfreader/sumatrapdf/issues/1593 djvu bad rotation
-- https://github.com/sumatrapdfreader/sumatrapdf/issues/1764 debug crash
-- https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
 - add a toggle for thin lines (example PDFs in https://github.com/sumatrapdfreader/sumatrapdf/issues/1732)
 - https://github.com/sumatrapdfreader/sumatrapdf/issues/1752 small scroll after refresh
 - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)

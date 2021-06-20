@@ -273,7 +273,7 @@ static MenuDef menuDefContext[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Create annot from selection)
 static MenuDef menuDefCreateAnnotFromSelection[] = {
-    { _TRN("&Highlight\tA"), CmdCreateAnnotHighlight, 0 },
+    { _TRN("&Highlight\ta"), CmdCreateAnnotHighlight, 0 },
     { _TRN("&Underline"), CmdCreateAnnotUnderline, 0 },
     { _TRN("&Strike Out"), CmdCreateAnnotStrikeOut, 0 },
     { _TRN("S&quiggly"), CmdCreateAnnotSquiggly, 0 },

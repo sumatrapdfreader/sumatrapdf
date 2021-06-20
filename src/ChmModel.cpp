@@ -593,7 +593,7 @@ void ChmModel::GetDisplayState(DisplayState* ds) {
     ZoomToString(&ds->zoom, GetZoomVirtual(), ds);
 
     ds->pageNo = CurrentPageNo();
-    ds->scrollPos = Point();
+    ds->scrollPos = PointF();
 }
 
 class ChmThumbnailTask : public HtmlWindowCallback {

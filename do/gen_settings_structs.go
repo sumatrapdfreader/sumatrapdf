@@ -442,7 +442,7 @@ var (
 				"DefaultDisplayMode after deserialization and before serialization").setDoc("layout of pages. valid values: automatic, single page, facing, book view, " +
 			"continuous, continuous facing, continuous book view"),
 		mkCompactStruct("ScrollPos", scrollPos,
-			"how far this document has been scrolled (in x and y direction)").setStructName("Point"),
+			"how far this document has been scrolled (in x and y direction)").setStructName("PointF"),
 		mkField("PageNo", Int, 1,
 			"number of the last read page"),
 		mkField("Zoom", Utf8String, "fit page",
@@ -493,7 +493,7 @@ var (
 		mkField("Rotation", Int, 0,
 			"same as FileStates -> Rotation"),
 		mkCompactStruct("ScrollPos", scrollPos,
-			"how far this document has been scrolled (in x and y direction)").setStructName("Point"),
+			"how far this document has been scrolled (in x and y direction)").setStructName("PointF"),
 		mkField("ShowToc", Bool, true,
 			"if true, the table of contents was shown when the document was closed"),
 		mkCompactArray("TocState", Int, nil,

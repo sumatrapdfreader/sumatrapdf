@@ -232,9 +232,9 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;
-    ds->scrollPos = Point();
+    ds->scrollPos = PointF();
     if (!presentationMode) {
-        ds->scrollPos = Point((int)ss.x, (int)ss.y);
+        ds->scrollPos = PointF((float)ss.x, (float)ss.y);
     }
     ds->rotation = rotation;
     ds->displayR2L = displayR2L;

@@ -170,7 +170,7 @@ struct FileState {
     // before serialization
     char* displayMode;
     // how far this document has been scrolled (in x and y direction)
-    Point scrollPos;
+    PointF scrollPos;
     // number of the last read page
     int pageNo;
     // zoom (in %) or one of those values: fit page, fit width, fit content
@@ -220,7 +220,7 @@ struct TabState {
     // same as FileStates -> Rotation
     int rotation;
     // how far this document has been scrolled (in x and y direction)
-    Point scrollPos;
+    PointF scrollPos;
     // if true, the table of contents was shown when the document was
     // closed
     bool showToc;
@@ -484,11 +484,11 @@ static const FieldInfo gFavoriteFields[] = {
 };
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 
-static const FieldInfo gPointFields[] = {
-    {offsetof(Point, x), SettingType::Int, 0},
-    {offsetof(Point, y), SettingType::Int, 0},
+static const FieldInfo gPointFFields[] = {
+    {offsetof(PointF, x), SettingType::Int, 0},
+    {offsetof(PointF, y), SettingType::Int, 0},
 };
-static const StructInfo gPointInfo = {sizeof(Point), 2, gPointFields, "X\0Y"};
+static const StructInfo gPointFInfo = {sizeof(PointF), 2, gPointFFields, "X\0Y"};
 
 static const FieldInfo gRect_1_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -507,7 +507,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, decryptionKey), SettingType::Utf8String, 0},
     {offsetof(FileState, useDefaultState), SettingType::Bool, false},
     {offsetof(FileState, displayMode), SettingType::Utf8String, (intptr_t) "automatic"},
-    {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointInfo},
+    {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointFInfo},
     {offsetof(FileState, pageNo), SettingType::Int, 1},
     {offsetof(FileState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
     {offsetof(FileState, rotation), SettingType::Int, 0},
@@ -524,11 +524,11 @@ static StructInfo gFileStateInfo = {
     "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageN"
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState"};
 
-static const FieldInfo gPoint_1_Fields[] = {
-    {offsetof(Point, x), SettingType::Int, 0},
-    {offsetof(Point, y), SettingType::Int, 0},
+static const FieldInfo gPointF_1_Fields[] = {
+    {offsetof(PointF, x), SettingType::Int, 0},
+    {offsetof(PointF, y), SettingType::Int, 0},
 };
-static const StructInfo gPoint_1_Info = {sizeof(Point), 2, gPoint_1_Fields, "X\0Y"};
+static const StructInfo gPointF_1_Info = {sizeof(PointF), 2, gPointF_1_Fields, "X\0Y"};
 
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::Utf8String, 0},
@@ -536,7 +536,7 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, pageNo), SettingType::Int, 1},
     {offsetof(TabState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
     {offsetof(TabState, rotation), SettingType::Int, 0},
-    {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPoint_1_Info},
+    {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
     {offsetof(TabState, showToc), SettingType::Bool, true},
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
 };
