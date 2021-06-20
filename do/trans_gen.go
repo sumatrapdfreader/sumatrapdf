@@ -11,9 +11,8 @@ import (
 )
 
 // number of missing translations for a language to be considered
-// incomplete (will be excluded from Translations_txt.cpp) as a
-// percentage of total string count of that specific file
-const incompleteMissingThreshold = 0.2
+// incomplete (will be excluded from Translations_txt.cpp)
+const incompleteMissingThreshold = 100
 
 // Lang describes a single language
 type Lang struct {
@@ -83,7 +82,7 @@ func getTransForLang(stringsDict map[string][]*Translation, keys []string, langA
 		}
 	}
 
-	if len(untrans) > int(incompleteMissingThreshold*float64(len(keys))) {
+	if len(untrans) > int(incompleteMissingThreshold) {
 		return nil
 	}
 	return trans
@@ -108,7 +107,8 @@ func buildTransForLangs(langs []*Lang, stringsDict map[string][]*Translation, ke
 			gIncompleteLangs = append(gIncompleteLangs, lang)
 		}
 	}
-	logf("g_incomplete_langs: %d\n", len(gIncompleteLangs))
+	logf("gIncompleteLangs: %d\n", len(gIncompleteLangs))
+	panicIf(len(gIncompleteLangs) > 20) // should be ~10
 	for _, il := range gIncompleteLangs {
 		nBefore := len(langs)
 		langs = removeLang(langs, il)
@@ -278,7 +278,7 @@ func printIncompleteLangs(dirName string) {
 }
 
 func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirName string) {
-	logf("gen_c_code_for_dir: '%s', %d strings, len(strings_dict): %d\n", dirName, len(keys), len(stringsDict))
+	logf("genCCodeForDir: '%s', %d strings, len(stringsDict): %d\n", dirName, len(keys), len(stringsDict))
 
 	sort.Slice(gLangs, func(i, j int) bool {
 		x := gLangs[i]
@@ -292,10 +292,10 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 		return x[1] < y[1]
 	})
 	langs := getLangObjects(gLangs)
-	panicIf("en" != langs[0].code)
+	panicIf(langs[0].code != "en")
 
 	langs = buildTransForLangs(langs, stringsDict, keys)
-	logf("langs: %d, g_langs: %d\n", len(langs), len(gLangs))
+	logf("langs: %d, gLangs: %d\n", len(langs), len(gLangs))
 
 	var a []string
 	for _, lang := range langs {
@@ -322,16 +322,21 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 	logf("langids: %d bytes\n", len(langids))
 
 	var rtlInfo []string
-	n := 0
 	for idx, lang := range langs {
 		if !lang.isRtl {
 			continue
 		}
+		logf("lang rtl: %s %s\n", lang.code, lang.name)
 		s := fmt.Sprintf("(%d == idx)", idx)
 		rtlInfo = append(rtlInfo, s)
-		n++
 	}
-	panicIf(len(rtlInfo) != 4)
+
+	// there are 4 rtl langs but `langs` has incomplete langs removed,
+	// so this check is not true
+	if false && len(rtlInfo) != 4 {
+		logf("len(rtlInfo) = %d (expected 4)\n", len(rtlInfo))
+		panicIf(len(rtlInfo) != 4)
+	}
 
 	islangrtl := strings.Join(rtlInfo, " || ")
 	if len(rtlInfo) == 0 {
@@ -348,7 +353,7 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 	}
 
 	translationsRefs := "  NULL,\n" + strings.Join(a, ", \n")
-	logf("translations_refs: %d bytes\n", len(translationsRefs))
+	logf("translationsRefs: %d bytes\n", len(translationsRefs))
 
 	translations := genTranslations(langs)
 	logf("translations: %d bytes\n", len(translations))
@@ -369,7 +374,7 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 		lines = append(lines, s)
 	}
 	originalStrings := strings.Join(lines, ",\n")
-	logf("orignal_strings: %d bytes\n", len(originalStrings))
+	logf("originalStrings: %d bytes\n", len(originalStrings))
 	langsCount := len(langs)
 	translationsCount := len(keys)
 
@@ -394,7 +399,7 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 	}
 	path := filepath.Join(dirName, fileNameFromDirName(dirName))
 	fileContent := evalTmpl(compactCTmpl, v2)
-	logf("file_content: path: %s, file size: %d\n", path, len(fileContent))
+	logf("fileContent: path: %s, file size: %d\n", path, len(fileContent))
 	u.WriteFileMust(path, []byte(fileContent))
 	printIncompleteLangs(dirName)
 	// print_stats(langs)

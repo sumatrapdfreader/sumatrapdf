@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -323,6 +324,13 @@ func generateCode(s string) {
 
 func downloadAndUpdateTranslationsIfChanged() bool {
 	d := downloadTranslations()
+
+	// write what we download so that when we crash
+	// during processing, we can inspect it
+	// file removed if processing ok
+	tmpPath := filepath.Join("strings", "translations-temp.txt")
+	u.WriteFileMust(tmpPath, d)
+
 	s := string(d)
 	//logf("Downloaded translations:\n%s\n", s)
 	lines := strings.Split(s, "\n")
@@ -337,6 +345,8 @@ func downloadAndUpdateTranslationsIfChanged() bool {
 	logf("Translation data size: %d\n", len(s))
 	generateCode(s)
 	saveLastDownload(d)
+
+	must(os.Remove(tmpPath))
 	return true
 }
 

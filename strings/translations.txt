@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4d85bd8e62956ffdd43c24665d44065c4443ff1a
+75e18b725bde77d79a682066b099fc8546681941
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -432,6 +432,9 @@ tw:書本檢視(&B)\tCtrl+8
 uk:Книжна розгортка\tCtrl+8
 uz:&Kitob ko'rinishi\tCtrl+8
 vn:Xem dạng sách\tCtrl+8
+:&Caret
+nl:&Merkteken
+pl:&Kareta
 :&Close\tCtrl+W
 af:Maak Toe\tCtrl+W
 am:&Փակել\tCtrl+W
@@ -1101,6 +1104,9 @@ tw:縮放頁面以符合可列印區域(&F)
 uk:Припасовувати сторінки до зони друку
 uz:&Betlarni printerga moslash
 vn:Vừa trang in
+:&Free Text
+nl:&Vrije Tekst
+pl:&Dowolny tekst
 :&Go To
 af:&Gaan Na
 am:&Անցում
@@ -1311,6 +1317,9 @@ tw:求助(&H)
 uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
+:&Highlight\tA
+nl:&Markeer\tA
+pl:&Wyróżnienie\tA
 :&Last Page\tEnd
 af:Laaste Bladsy\tEnd
 am:Վերջին էջը\tEnd
@@ -3053,6 +3062,15 @@ tw:略過此版本(&S)
 uk:Пропустити цю версію.
 uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
+:&Stamp
+nl:&Stempel
+pl:Pie&częć
+:&Strike Out
+nl:&Doorhalen
+pl:&Skreślenie
+:&Text
+nl:&Tekst
+pl:&Tekst
 :&Theme
 am:&Ոճը
 ar:&قالب
@@ -3108,6 +3126,9 @@ tr:&Tema
 tw:主題(&T)
 uk:&Тема
 vn:&Chủ đề
+:&Underline
+nl:&Onderstrepen
+pl:&Podkreślenie
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -4626,6 +4647,9 @@ tw:作者:
 uk:Автор:
 uz:Muallif:
 vn:Tác giả
+:Author: %s
+nl:Auteur: %s
+pl:Autor: %s
 :Automatic
 af:Outomaties
 am:Ինքնաշխատ
@@ -4763,6 +4787,9 @@ tw:自動檢查是否有新版本(&U)
 uk:Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
+:Background Color:
+nl:Achtergrond Kleur
+pl:Kolor tła:
 :Book View
 am:Գրքի տեսքով
 ar:عرض الكتاب
@@ -5028,6 +5055,9 @@ tw:書籤
 uk:Закладки
 uz:Xatcho'plar
 vn:Chỉ dấu sách
+:Border: %d
+nl:Rand %d
+pl:Obramowanie: %d
 :Bytes
 am:Բայթ
 ar:بايت
@@ -5432,29 +5462,6 @@ tw:無法進行逆向搜尋。請檢查設定的指令列。
 uk:Неможливо запустити команду зворотнього пошуку. Перевірте налашутвання командного рядка.
 uz:Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.
 vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
-:Caret
-am:Նշորդ
-ar:قيراط
-az:Kursor
-br:Acento circunflexo
-cn:插入号
-co:Cursore
-cy:Lleolnod
-de:Cursor
-dk:Indsætningstegn
-es:Signo de intercalación
-fr:curseur
-ga:Carait
-gl:Caret (V invertido)
-id:Tanda Sisipan
-ka:კურსორი
-kw:To byghan
-lv:Kursors
-nl:Merkteken
-pl:Kareta
-ru:Курсор
-tr:Karet
-tw:插入号
 :Change Language
 af:Verander Taal (Change Language)
 am:Փոխել լեզուն (Change Language)
@@ -5756,6 +5763,9 @@ ta:நிறம்
 tr:Renk
 tw:颜色
 vn:Tô màu
+:Color:
+nl:Kleur
+pl:Kolor:
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -5886,6 +5896,9 @@ tw:相容性
 uk:Сумісність
 uz:Mosligi
 vn:Tính tương thích
+:Contents:
+nl:Inhoud
+pl:Zawartość:
 :Continuous
 af:Aanmekaar
 am:Անդադար
@@ -7148,31 +7161,12 @@ tw:無法將 %s 寫入磁碟
 uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
-:Create Annotation
-am:Ստեղծել ծանոթագրություն
-ar:إنشاء شرح و توضيح
-az:Qeyd düzəlt
-br:Criar Anotação
-cn:创建标注
-co:&Scrive un’annutazione
-cy:Creu anodiad
-de:Anmerkung erstellen
-dk:Opret anmærkning
-el:Δημιουργία Σχολίου
-es:Crear anotación
-fr:Écrire une annotation
-ga:Cruthaigh nóta mínithe
-gl:Crear anotación
-id:Buat catatan
-it:Crea Annotazione
-ka:ანოტაციის შექმნა
-kw:Gwruthyl Notenyans
-lv:Izveidot anotāciju
-nl:Maak Aantekening
-pl:Utwórz adnotację
-ru:Создать аннотацию
-tr:Not Oluştur
-tw:建立評注
+:Create Annotation From Selection
+nl:Aantekening maken op basis van Selectie
+pl:Utwórz adnotację z zaznaczenia
+:Create Annotation Under Cursor
+nl:Aantekening maken Onder Cursor
+pl:Utwórz adnotację pod kursorem
 :Created:
 af:Geskep
 am:Ստեղծված`
@@ -7811,6 +7805,9 @@ tw:權限不足:
 uk:У доступі відмовлено:
 uz:Taqiqlangan huquqlar:
 vn:Các quyền bị từ chối
+:Discard
+nl:Weggooien
+pl:Odrzuć
 :DjVu documents
 af:DjVu dokumente
 am:DjVu ֆայլեր
@@ -10781,30 +10778,6 @@ tw:於第 %s 頁找到目標（已從頭尋找）
 uk:Знайти текст на сторінці %s (знову)
 uz:%s betda matn topildi (qayta)
 vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
-:Free Text
-am:Ազատ գրվածք
-ar:نص حر
-az:İxtiyari mətn
-bn:মূক্ত লিখা
-br:Texto Livre
-cn:自定义文本
-co:Testu liberu
-cy:Testun Rydd
-de:Freitext
-dk:Fri tekst
-es:Liberar texto
-fr:Texte libre
-ga:Téacs saor
-gl:Texto libre
-id:Teks bebas
-ka:თავისუფალი ტექსტი
-kw:Tekst Rydh
-lv:Brīvs teksts
-nl:Vrije Tekst
-pl:Dowolny tekst
-ru:Произвольный текст
-tr:Özgür Metin
-tw:自定义文本
 :Frequently Read
 am:Հաճախ ընթերցվածներ
 ar:الأكثر قراءة
@@ -11138,32 +11111,6 @@ tw:隱藏經常開啟的檔案
 uk:Приховати часто читані
 uz:Tez-tez o'qiladiganlarni yashirish
 vn:Ẩn Đọc thường xuyên
-:Highlight
-am:Գունանշում
-ar:إبراز
-az:Seç
-bn:চিহিঞত করুন
-br:Destacar
-cn:高亮
-co:Sopralineà
-cy:Amlygu
-de:Hervorhebung
-dk:Fremhæv
-es:Resaltar
-fr:Surligner
-ga:Aibhsigh
-gl:Realzar
-id:Sorotan
-it:Evidenzia
-ka:მონიშვნა
-kw:Golowboyntya
-lv:Iezīmēt
-nl:Markeer
-pl:Wyróżnienie
-ru:Выделение
-ta:வண்ணமிடு 
-tr:Vurgula
-tw:高亮
 :Hint: Use the F3 key for finding again
 am:Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
 ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
@@ -11228,6 +11175,9 @@ tw:提示: 按 F3 重新尋找。
 uk:Підказка: Для повторного пошуку натисніть F3
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
+:Icon:
+nl:Pictogram:
+pl:Ikona:
 :Image files (*.%s)
 am:Պատկերի ֆայլեր (*.%s)
 ar:ملفات الصور (*.%s)
@@ -11595,6 +11545,9 @@ tw:安裝正在進行...
 uk:Встановлення триває...
 uz:O'rnatilmoqda...
 vn:Đang cài đặt...
+:Interior Color:
+nl:Interieur Kleur
+pl:Kolor wnętrza:
 :KB
 af:KB
 am:ԿԲ
@@ -11871,6 +11824,12 @@ ru:Линия
 ta:கோடு 
 tr:Çizgi
 tw:線條
+:Line End:
+nl:Lijn Eind
+pl:Koniec linii:
+:Line Start:
+nl:Lijn Begin
+pl:Początek linii:
 :MB
 af:MB
 am:ՄԲ
@@ -12942,6 +12901,12 @@ tw:確定(&O)
 uk:Гаразд
 uz:OK
 vn:Đồng ý
+:Opacity:
+nl:Dekking
+pl:Nieprzezroczystość:
+:Opacity: %d
+nl:Dekking: %d
+pl:Nieprzezroczystość: %d
 :Open
 af:Maak Oop
 am:Բացել
@@ -14569,6 +14534,9 @@ ru:Многоугольник
 ta:பலகோணம் 
 tr:Çokgen
 tw:多邊形
+:Popup: %d 0 R
+nl:Popup: %d O R
+pl:Wyskakujące okienko: %d 0 R
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -15338,6 +15306,9 @@ tw:重新命名(&N)...\tF2
 uk:Перейменувати...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
+:Rect: x=%d y=%d dx=%d dy=%d
+nl:Rect: x=%d y=%d dx=%d dy=%d
+pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 :Redact
 am:Փոփոխել
 ar:تنقيح
@@ -15784,6 +15755,9 @@ tw:頁面右旋(&R)\tCtrl+Shift++
 uk:Повернути праворуч\tCtrl+Shift++
 uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
+:S&quiggly
+nl:Kr&onkelig
+pl:&Falowanie
 :Save Annotations
 am:Պահպանել ծանոթագրությունը
 ar:حفظ الحواشي
@@ -15957,7 +15931,7 @@ ne:&सर्टकट बचत गर्नुहोस्...\tCtrl+Shift+S
 nl:Snelkoppeling opslaan...\tCtrl+Shift+S
 nn:Large s&narveg...\tCtrl+Shift+S
 no:Lagre s&narvei...\tCtrl+Shift+S
-pl:Utwórz skrót do dokumentu\tCtrl+Shift+S
+pl:Zapisz s&krót...\tCtrl+Shift+S
 pt:Criar atal&ho...\tCtrl+Shift+S
 ro:Salvează legătura...\tCtrl+Shift+S
 ru:Сохранить &ярлык…\tCtrl+Shift+S
@@ -15975,6 +15949,18 @@ tw:儲存捷徑(&H)...\tCtrl+Shift+S
 uk:Зберегти ярлик...\tCtrl+Shift+S
 uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
+:Save changes to a new PDF
+nl:Wijzigingen opslaan in een nieuwe PDF
+pl:Zapisz zmiany w nowym pliku PDF
+:Save changes to existing PDF
+nl:Wijzigingen opslaan in bestaande PDF
+pl:Zapisz zmiany w istniejącym pliku PDF
+:Saved annotations to '%s'
+nl:Aantekeningen opgeslagen in '%s'
+pl:Zapisano adnotacje do '%s'
+:Saving of '%s' failed with: '%s'
+nl:Opslaan van '%s' mislukt met: '%s'
+pl:Zapisywanie '%s' nie powiodło się z: '%s'
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -16166,6 +16152,9 @@ tw:全選(&A)\tCtrl+A
 uk:Вибрати всі\tCtrl+A
 uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
+:Select Annotation in Editor
+nl:Selecteer Aantekening in Bewerker
+pl:Wybierz adnotację w edytorze
 :Select content with Ctrl+left mouse button
 am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 ar:حدد المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
@@ -17253,54 +17242,6 @@ ru:Квадрат
 ta:நாற்கரம் 
 tr:Kare
 tw:矩形
-:Squiggly
-am:Ալիքավոր
-ar:متعرج
-az:Dalğalı xətt
-br:Ondulado
-cn:波浪线
-co:Undulatu
-cy:Sgwigl
-de:Verschnörkelt
-dk:Snoet
-es:Ondulado
-ga:Catach
-gl:Zigzag
-id:Berlekuk
-ka:კლაკნილი ხაზი
-kw:Igam-ogam
-lv:Viļņota
-nl:Kronkelig
-pl:Falowanie
-ru:Волнистая линия
-ta:சீரில்லா கோடு 
-tr:Kıvrımlı
-tw:波浪线
-:Stamp
-am:Կնիք
-ar:خاتم 
-az:Möhür
-br:Carimbo
-cn:图章
-co:Stampaghjolu
-cy:Stampio
-de:Stempel
-dk:Stempel
-es:Sello
-et:Tempel
-fr:tampon
-ga:Stampa
-gl:Selo
-id:Cap
-ka:ბეჭედი
-kw:Stampa
-lv:Zīmogs
-nl:Stempel
-pl:Pieczęć
-ru:Печать
-ta:பொளியிடு 
-tr:Damga
-tw:戳記
 :Start SumatraPDF
 am:Բացել SumatraPDF-ը
 ar:بدء تشغيل مستندات Sumatra  المحمولة
@@ -17363,31 +17304,6 @@ tw:啟動 SumatraPDF
 uk:Запустити SumatraPDF
 uz:SumatraPDF ishga tushirish
 vn:Mở SumatraPDF
-:Strike Out
-am:Գծաջնջված
-ar:توجيه
-az:Üstdən xətt
-br:Riscado
-cn:删除线
-co:Rigà
-cy:Taro Drwodd
-de:Durchstreichen
-dk:Streg ud
-es:Tachar
-fr:Rayer
-ga:Scrios amach
-gl:Riscar
-id:Ciptakan
-ka:ხაზის გადასმა
-kw:Treuslinya
-lv:Pārsvītrojums
-nl:Doorhalen
-pl:Skreślenie
-ru:Перечёркивание
-ta:இடைக்கோடு 
-tr:Üstü Çizili
-tw:刪除線
-vn:Gạch ngang từ
 :Subject:
 af:Onderwerp
 am:Ֆայլը.
@@ -18218,33 +18134,18 @@ tw:已標示的 PDF
 uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
-:Text
-am:Գրվածք
-ar:نص
-az:Mətn
-br:Texto
-cn:文本
-co:Testu
-cy:Testun
-de:Text
-dk:Tekst
-el:Κείμενο
-es:Texto
-et:Tekst
-fr:Texte
-ga:Téacs
-gl:Texto
-id:Teks
-it:Testo
-ka:ტექსტი
-kw:Tekst
-lv:Teksts
-nl:Tekst
-pl:Tekst
-ru:Текст
-ta:எழுத்து 
-tr:Metin
-tw:文字
+:Text Alignment:
+nl:Tekst Uitlijning:
+pl:Wyrównanie tekstu:
+:Text Color:
+nl:Tekst Kleur
+pl:Kolor tekstu:
+:Text Size:
+nl:Tekst Grootte:
+pl:Rozmiar tekstu:
+:Text Size: %d
+nl:Tekst Grootte: %d
+pl:Rozmiar tekstu: %d
 :Text documents
 am:Տեքստային ֆայլեր
 ar:مستندات نصية
@@ -18647,33 +18548,6 @@ tw:標題:
 uk:Заголовок:
 uz:Sarlavha:
 vn:Tựa đề
-:Underline
-am:Ընդգծում
-ar:تحت السطر
-az:Altdan xətt
-br:Sublinhado
-cn:下划线
-co:Sottulineatu
-cy:Tanlinellu
-de:Unterstreichen
-dk:Understreg
-el:Υπογράμμιση 
-es:Subrayar
-fr:Souligner
-ga:Cuir líne faoi
-gl:Subliñado
-id:Garis bawah
-it:Sottolinea
-ka:ხაზის გასმა
-kw:Islinya
-lv:Pasvītrojums
-nl:Onderstrepen
-pl:Podkreślenie
-ru:Подчёркивание
-ta:அடிக்கோடு 
-tr:Altı Çizili
-tw:底線
-vn:Gạch chân
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
@@ -19389,6 +19263,9 @@ co:Avete annutazioni micca arregistrate
 id:Kamu memiliki catatan yang belum tersimpan
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
+:You have unsaved annotations. Save them?
+nl:Je hebt niet-opgeslagen aantekeningen. Opslaan?
+pl:Masz niezapisane adnotacje. Zapisać je?
 :You have version %s
 af:Jy Het Weergawe %s
 am:Դուք օգտագործում եք %s տարբերակը
@@ -19438,7 +19315,7 @@ nl:U heeft versie %s
 nn:Du har versjon %s
 no:Du har versjon %s
 pa:ਤੁਹਾਡੇ ਕੋਲ ਸੰਸਕਰਨ %s ਹੈ
-pl:Masz wersję %s.
+pl:Masz wersję %s
 pt:Tem a versão %s
 ro:Aveți versiunea %s
 ru:Вы используете версию %s
