@@ -2394,7 +2394,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
 
     // TODO: this doesn't work, is it because we're not running DefDlgProc
     // in the window?
-    //SetDialogFocus(dlg->mainWindow->hwnd, dlg->buttonSaveExisting->hwnd);
+    // SetDialogFocus(dlg->mainWindow->hwnd, dlg->buttonSaveExisting->hwnd);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered

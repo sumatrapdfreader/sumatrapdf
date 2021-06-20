@@ -35,10 +35,11 @@ var (
 
 // Field defines a field in a struct
 type Field struct {
-	Name       string
-	Type       *Type
-	Default    interface{}
-	Comment    string
+	Name    string
+	Type    *Type
+	Default interface{}
+	Comment string
+	// internal settings are not serialized, only valid during program runtime
 	Internal   bool
 	CName      string
 	Expert     bool // expert prefs are not exposed by the UI
@@ -358,7 +359,7 @@ var (
 		mkField("InvertColors", Bool, false,
 			"if true, TextColor and BackgroundColor will be temporarily swapped").setInternal(),
 		mkField("HideScrollbars", Bool, false,
-			"if true, hides the scrollbars but retain ability to scroll").setInternal(),
+			"if true, hides the scrollbars but retains ability to scroll"),
 	}
 
 	ebookUI = []*Field{

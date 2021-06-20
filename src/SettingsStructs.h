@@ -42,7 +42,7 @@ struct FixedPageUI {
     Vec<COLORREF>* gradientColors;
     // if true, TextColor and BackgroundColor will be temporarily swapped
     bool invertColors;
-    // if true, hides the scrollbars but retain ability to scroll
+    // if true, hides the scrollbars but retains ability to scroll
     bool hideScrollbars;
 };
 
@@ -399,10 +399,11 @@ static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMarginInfo},
     {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
+    {offsetof(FixedPageUI, hideScrollbars), SettingType::Bool, false},
 };
 static const StructInfo gFixedPageUIInfo = {
-    sizeof(FixedPageUI), 6, gFixedPageUIFields,
-    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors"};
+    sizeof(FixedPageUI), 7, gFixedPageUIFields,
+    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0HideScrollbars"};
 
 static const FieldInfo gEbookUIFields[] = {
     {offsetof(EbookUI, fontName), SettingType::String, (intptr_t)L"Georgia"},
