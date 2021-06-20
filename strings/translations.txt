@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a102c5bbf37f707078fff502c3b44a8147187614
+adda8510d4fc0822fd44c23940c1821c41cb9eb1
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -4648,6 +4648,7 @@ uk:Автор:
 uz:Muallif:
 vn:Tác giả
 :Author: %s
+es:Autora: %s
 nl:Auteur: %s
 pl:Autor: %s
 :Automatic
@@ -4788,6 +4789,7 @@ uk:Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
 :Background Color:
+es:Color de fondo
 nl:Achtergrond Kleur
 pl:Kolor tła:
 :Book View
@@ -5764,6 +5766,7 @@ tr:Renk
 tw:颜色
 vn:Tô màu
 :Color:
+es:Color:
 nl:Kleur
 pl:Kolor:
 :Comic books
@@ -7547,6 +7550,7 @@ tw:更暗
 uk:Темніша
 vn:Tối hơn
 :Date:
+es:Fetcha:
 nl:Datum:
 pl:Data:
 :Default &Layout:
@@ -11828,9 +11832,11 @@ ta:கோடு
 tr:Çizgi
 tw:線條
 :Line End:
+es:Fin de Línea:
 nl:Lijn Eind
 pl:Koniec linii:
 :Line Start:
+es:Inicio de Línea:
 nl:Lijn Begin
 pl:Początek linii:
 :MB
@@ -12905,9 +12911,11 @@ uk:Гаразд
 uz:OK
 vn:Đồng ý
 :Opacity:
+es:Opacidad:
 nl:Dekking
 pl:Nieprzezroczystość:
 :Opacity: %d
+es:Opacidad: %d
 nl:Dekking: %d
 pl:Nieprzezroczystość: %d
 :Open
@@ -18141,12 +18149,15 @@ vn:PDF được gắn thẻ
 nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
 :Text Color:
+es:Color de Texto:
 nl:Tekst Kleur
 pl:Kolor tekstu:
 :Text Size:
+es:Tamaño de Texto
 nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 :Text Size: %d
+es:Tamaño de Texto: %d
 nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
 :Text documents
@@ -18801,6 +18812,8 @@ uk:Невідомий файл-джерело (%s)
 uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
+es:Anotaciones no guardadas
+nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
 :Use &tabs
 am:Ավելացնել &ներդիրներ
@@ -19265,6 +19278,7 @@ uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 co:Avete annutazioni micca arregistrate
+es:Tienes anotaciones sin guardar
 id:Kamu memiliki catatan yang belum tersimpan
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje

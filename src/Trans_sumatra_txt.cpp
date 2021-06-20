@@ -6930,7 +6930,7 @@ const char * gTranslations_nl =
   "Verwijderen mislukt\0"\
   "Verwijderen is bezig...\0"\
   "Onbekend bronbestand (%s)\0"\
-  "\0"\
+  "Niet-opgeslagen aantekening\0"\
   "Gebruik &tabs\0"\
   "Gebruik SumatraPDF als &standaard PDF lezer\0"\
   "Beeld\0"\
@@ -19077,10 +19077,10 @@ const char * gTranslations_es =
   "\302\277Asociar con archivos PDF?\0"\
   "Adjunto: %s\0"\
   "Autor:\0"\
-  "\0"\
+  "Autora: %s\0"\
   "Autom\303\241tico\0"\
   "Buscar &actualizaciones autom\303\241ticamente\0"\
-  "\0"\
+  "Color de fondo\0"\
   "Vista de libro\0"\
   "Marcar atajos\0"\
   "Marcar atajo a la p\303\241gina %s de %s\0"\
@@ -19130,7 +19130,7 @@ const char * gTranslations_es =
   "&Zoom personalizado...\tCtrl+Y\0"\
   "Oscuro\0"\
   "M\303\241s oscuro\0"\
-  "\0"\
+  "Fetcha:\0"\
   "Apariencia pre&determinada:\0"\
   "Am&pliaci\303\263n predeterminada:\0"\
   "No se puede cambiar el lector PDF predeterminado en el modo port\303\241til\0"\
@@ -19205,8 +19205,8 @@ const char * gTranslations_es =
   "Mostrar miniaturas en los iconos de documentos &PDF\0"\
   "Claro\0"\
   "L\303\255nea\0"\
-  "\0"\
-  "\0"\
+  "Fin de L\303\255nea:\0"\
+  "Inicio de L\303\255nea:\0"\
   "\0"\
   "\302\277Convertir SumatraPDF en la aplicaci\303\263n predeterminada para archivos PDF?\0"\
   "Convertir SumatraPDF el lector PDF predeterminado\0"\
@@ -19224,8 +19224,8 @@ const char * gTranslations_es =
   "No hay informaci\303\263n de sincronizaci\303\263n en esta posici\303\263n\0"\
   "N\303\272mero de p\303\241ginas:\0"\
   "Aceptar\0"\
-  "\0"\
-  "\0"\
+  "Opacidad:\0"\
+  "Opacidad: %d\0"\
   "Abrir\0"\
   "Abr&ir con PDF-XChange\0"\
   "Abrir PDF adjunto\0"\
@@ -19326,9 +19326,9 @@ const char * gTranslations_es =
   "Etiqueta (peque\303\261a primero)\0"\
   "PDF etiquetado\0"\
   "\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Color de Texto:\0"\
+  "Tama\303\261o de Texto\0"\
+  "Tama\303\261o de Texto: %d\0"\
   "Documentos de texto\0"\
   "\302\241Gracias por elegir RA-MICRO PDF!\0"\
   "\302\241Gracias por elegir a SumatraPDF!\0"\
@@ -19340,7 +19340,7 @@ const char * gTranslations_es =
   "Fall\303\263 la desinstalaci\303\263n\0"\
   "Desinstalaci\303\263n en progreso...\0"\
   "Archivo de origen desconocido (%s)\0"\
-  "\0"\
+  "Anotaciones no guardadas\0"\
   "Usar &pesta\303\261as\0"\
   "Usar SumatraPDF como lector PDF pre&determinado\0"\
   "Visualizaci\303\263n\0"\
@@ -19348,7 +19348,7 @@ const char * gTranslations_es =
   "Advertencia\0"\
   "Documentos XPS\0"\
   "Esta es la \303\272ltima versi\303\263n disponible.\0"\
-  "\0"\
+  "Tienes anotaciones sin guardar\0"\
   "\0"\
   "La versi\303\263n actual es: %s\0"\
   "Ampliar\0"\
