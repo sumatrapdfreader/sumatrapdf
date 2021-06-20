@@ -134,7 +134,7 @@ Cursor position:
 Custom &Zoom...\tCtrl+Y
 Dark
 Darker
-Date: 
+Date:
 Default &Layout:
 Default &Zoom:
 Default PDF reader can't be changed in portable mode
