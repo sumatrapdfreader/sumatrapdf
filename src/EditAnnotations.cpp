@@ -452,7 +452,8 @@ static void DoModificationDate(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     str::Str s;
-    s.Append(_TRU("Date: "));
+    s.Append(_TRU("Date:"));
+    s.Append(" "); // apptranslator doesn't handle spaces at the end of translated string
     AppendPdfDate(s, ModificationDate(annot));
     ew->staticModificationDate->SetText(s.AsView());
     ew->staticModificationDate->SetIsVisible(true);

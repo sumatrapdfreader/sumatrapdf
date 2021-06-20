@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-75e18b725bde77d79a682066b099fc8546681941
+59bd47fb32914ffb4da3f8fba9114835eb8cd857
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -1317,9 +1317,6 @@ tw:求助(&H)
 uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
-:&Highlight\tA
-nl:&Markeer\tA
-pl:&Wyróżnienie\tA
 :&Last Page\tEnd
 af:Laaste Bladsy\tEnd
 am:Վերջին էջը\tEnd
