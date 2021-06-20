@@ -260,7 +260,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotations,       MF_REQ_DISK_ACCESS },
     //{"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
-    { _TRN("Select Annotation"),            CmdSelectAnnotation,      MF_REQ_DISK_ACCESS },
+    { _TRN("Select Annotation in Editor"),  CmdSelectAnnotation,      MF_REQ_DISK_ACCESS },
     { _TRN("Edit Annotations"),             CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
@@ -837,6 +837,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdViewShowHideScrollbars:
         case CmdSaveAnnotations:
         case CmdNewBookmarks:
+            // handle in FrameOnCommand() in SumatraPDF.cpp
             HwndSendCommand(win->hwndFrame, cmd);
             break;
         case CmdSelectAnnotation:

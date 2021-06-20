@@ -10,5 +10,6 @@ const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut);
 Annotation* EnginePdfCreateAnnotation(EngineBase*, AnnotationType type, int pageNo, PointF pos);
 int EnginePdfGetAnnotations(EngineBase*, Vec<Annotation*>*);
 bool EnginePdfHasUnsavedAnnotations(EngineBase*);
-bool EnginePdfSaveUpdated(EngineBase*, std::string_view path);
+bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path,
+                          std::function<void(std::string_view)> showErrorFunc);
 Annotation* EnginePdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, AnnotationType* allowedAnnots);

@@ -34,6 +34,7 @@ struct StackWstrToUtf8 {
     ~StackWstrToUtf8();
     char* Get() const;
     operator char*() const;
+    std::string_view AsView() const;
 };
 
 } // namespace strconv

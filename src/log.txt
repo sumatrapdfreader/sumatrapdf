@@ -37,6 +37,11 @@ use "Background Color" instead of "Color" for Free Text annotation
 win => ew renaming for EditAnnotationsWindow
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1974
 
+recognize _TRU() as translation marker; add new strings for translation
+
+show error when saving annotations fail; properly set incremental saving flag (fixes #1723)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1723
+
 2021-06-18 Fri
 
 hide unused annotation methods

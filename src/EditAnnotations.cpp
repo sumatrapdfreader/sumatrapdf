@@ -321,17 +321,24 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
     if (!ok) {
         return;
     }
-    // TODO: show a notification if saved or error message if failed to save
 }
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     TabInfo* tab = ew->tab;
     EnginePdf* engine = GetEnginePdf(ew);
-    bool ok = EnginePdfSaveUpdated(engine, {});
-    // TODO: show a notification if saved or error message if failed to save
+    strconv::StackWstrToUtf8 path{engine->FileName()};
+    bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+        str::Str msg;
+        // TODO: duplicated message
+        msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
+        tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
+    });
     if (!ok) {
         return;
     }
+    str::Str msg;
+    msg.AppendFmt(_TRU("Saved annotations to '%s'"), path.Get());
+    tab->win->ShowNotification(msg.AsView());
 
     // TODO: hacky: set tab->editAnnotsWindow to nullptr to
     // disable a check in ReloadDocuments. Could pass additional argument
@@ -1165,7 +1172,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         auto w = new ButtonCtrl(parent);
         w->SetInsetsPt(8, 0, 0, 0);
-        w->SetText(_TR("Save changes to new PDF"));
+        w->SetText(_TR("Save changes to a new PDF"));
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enabled if there are changes
@@ -1208,11 +1215,11 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* ew, Annotation* ann
 }
 
 void AddAnnotationToEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
+    HWND hwnd = ew->mainWindow->hwnd;
+    BringWindowToTop(hwnd);
     if (!annot) {
         return;
     }
-    HWND hwnd = ew->mainWindow->hwnd;
-    BringWindowToTop(hwnd);
     ew->skipGoToPage = true;
     bool alreadyExists = SelectAnnotationInListBox(ew, annot);
     if (alreadyExists) {

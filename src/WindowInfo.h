@@ -243,6 +243,8 @@ struct WindowInfo {
     void HideToolTip();
     NotificationWnd* ShowNotification(const WCHAR* msg, NotificationOptions options = NotificationOptions::WithTimeout,
                                       Kind groupId = NG_RESPONSE_TO_ACTION);
+    NotificationWnd* ShowNotification(std::string_view, NotificationOptions options = NotificationOptions::WithTimeout,
+                                      Kind groupId = NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();
 };

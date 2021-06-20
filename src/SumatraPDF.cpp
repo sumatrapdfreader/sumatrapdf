@@ -2245,8 +2245,18 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     if (!ok) {
         return false;
     }
-    AutoFreeStr dstFilePath = strconv::WstrToUtf8(dstFileName);
-    ok = EnginePdfSaveUpdated(engine, dstFilePath.AsView());
+    strconv::StackWstrToUtf8 dstFilePath{dstFileName};
+    ok = EnginePdfSaveUpdated(engine, dstFilePath.AsView(), [&tab, &dstFilePath](std::string_view mupdfErr) {
+        str::Str msg;
+        // TODO: duplicated string
+        msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
+        tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
+    });
+    if (ok) {
+        str::Str msg;
+        msg.AppendFmt(_TRU("Saved annotations to '%s'"), dstFilePath.Get());
+        tab->win->ShowNotification(msg.AsView());
+    }
     return ok;
 }
 
@@ -4232,11 +4242,20 @@ static int TestBigNew()
 
 static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    bool ok = EnginePdfSaveUpdated(engine, {});
-    // TODO: show a notification if saved or error message if failed to save
+    strconv::StackWstrToUtf8 path{engine->FileName()};
+    bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+        str::Str msg;
+        // TODO: duplicated message
+        msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
+        tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
+    });
     if (!ok) {
         return;
     }
+    str::Str msg;
+    msg.AppendFmt(_TRU("Saved annotations to '%s'"), path.Get());
+    tab->win->ShowNotification(msg.AsView());
+
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;
 }

@@ -1,3 +1,11 @@
+For 3.4 (this is a plan, not a promise):
+* switch most ebooks to use mupdf
+* merge TreeModel refactor
+* pdfprint
+* remove as much of unused code
+* make it easy (one-click) to upgrade daily builds (all builds?)
+* tooltip for tabs showing full path of the file
+
 Annotations:
  - cannot move ink attachments (repro file from 1716)
  - save attachment

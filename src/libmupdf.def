@@ -5,7 +5,7 @@ EXPORTS
 
 ; Fitz exports
 
-	; new stuff
+	pdf_can_be_saved_incrementally
 	pdf_annot_page
 	pdf_drop_page_tree
 	pdf_annot_obj

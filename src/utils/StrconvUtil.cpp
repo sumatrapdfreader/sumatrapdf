@@ -197,6 +197,13 @@ char* StackWstrToUtf8::Get() const {
     return (char*)buf;
 }
 
+std::string_view StackWstrToUtf8::AsView() const {
+    if (overflow) {
+        return overflow;
+    }
+    return (char*)buf;
+}
+
 #if 0
 StackWstrToUtf8& StackWstrToUtf8::operator=(const StackWstrToUtf8& other) {
     if (this == &other) {
