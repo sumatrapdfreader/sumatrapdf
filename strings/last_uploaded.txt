@@ -139,6 +139,7 @@ Default &Layout:
 Default &Zoom:
 Default PDF reader can't be changed in portable mode
 Denied Permissions:
+Discard
 DjVu documents
 Document Properties
 Download
