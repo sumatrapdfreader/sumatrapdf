@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-59bd47fb32914ffb4da3f8fba9114835eb8cd857
+a102c5bbf37f707078fff502c3b44a8147187614
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -1317,6 +1317,9 @@ tw:求助(&H)
 uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
+:&Highlight\ta
+nl:&Markeer\ta
+pl:&Wyróżnienie\ta
 :&Last Page\tEnd
 af:Laaste Bladsy\tEnd
 am:Վերջին էջը\tEnd
@@ -7543,6 +7546,9 @@ tr:Kapkaranlık
 tw:更暗
 uk:Темніша
 vn:Tối hơn
+:Date:
+nl:Datum:
+pl:Data:
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -18794,6 +18800,8 @@ tw:未知來源檔案 (%s)
 uk:Невідомий файл-джерело (%s)
 uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
+:Unsaved annotations
+pl:Niezapisane adnotacje
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
