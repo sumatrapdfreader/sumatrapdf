@@ -133,64 +133,64 @@ typedef std::function<void(DropFilesEvent*)> DropFilesHandler;
 struct WindowBase;
 
 struct WindowBase : public ILayout {
-    Kind kind = nullptr;
+    Kind kind{nullptr};
 
     Insets insets{};
     Size childSize{};
     Rect lastBounds{};
 
     // data that can be set before calling Create()
-    Visibility visibility = Visibility::Visible;
+    Visibility visibility{Visibility::Visible};
 
     // either a custom class that we registered or
     // a win32 control class. Assumed static so not freed
-    const WCHAR* winClass = nullptr;
+    const WCHAR* winClass{nullptr};
 
-    HWND parent = nullptr;
+    HWND parent{nullptr};
     Point initialPos{-1, -1};
     Size initialSize{0, 0};
     DWORD dwStyle{0};
     DWORD dwExStyle{0};
-    HFONT hfont = nullptr; // TODO: this should be abstract Font description
+    HFONT hfont{nullptr}; // TODO: this should be abstract Font description
 
     // those tweak WNDCLASSEX for RegisterClass() class
-    HICON hIcon = nullptr;
-    HICON hIconSm = nullptr;
-    LPCWSTR lpszMenuName = nullptr;
+    HICON hIcon{nullptr};
+    HICON hIconSm{nullptr};
+    LPCWSTR lpszMenuName{nullptr};
 
-    int ctrlID = 0;
+    int ctrlID{0};
 
     // called at start of windows proc to allow intercepting messages
     MsgFilter msgFilter;
 
     // allow handling WM_CONTEXTMENU. Must be set before Create()
-    ContextMenuHandler onContextMenu = nullptr;
+    ContextMenuHandler onContextMenu{nullptr};
     // allow handling WM_SIZE
-    SizeHandler onSize = nullptr;
+    SizeHandler onSize{nullptr};
     // for WM_COMMAND
-    WmCommandHandler onWmCommand = nullptr;
+    WmCommandHandler onWmCommand{nullptr};
     // for WM_NCDESTROY
-    DestroyHandler onDestroy = nullptr;
+    DestroyHandler onDestroy{nullptr};
     // for WM_CLOSE
-    CloseHandler onClose = nullptr;
+    CloseHandler onClose{nullptr};
     // for WM_KEYDOWN / WM_KEYUP
-    KeyHandler onKeyDownUp = nullptr;
+    KeyHandler onKeyDownUp{nullptr};
     // for WM_CHAR
-    CharHandler onChar = nullptr;
+    CharHandler onChar{nullptr};
     // for WM_MOUSEWHEEL and WM_MOUSEHWHEEL
-    MouseWheelHandler onMouseWheel = nullptr;
+    MouseWheelHandler onMouseWheel{nullptr};
     // for WM_DROPFILES
     // when set after Create() must also call DragAcceptFiles(hwnd, TRUE);
-    DropFilesHandler onDropFiles = nullptr;
+    DropFilesHandler onDropFiles{nullptr};
 
-    COLORREF textColor = ColorUnset;
-    COLORREF backgroundColor = ColorUnset;
-    HBRUSH backgroundColorBrush = nullptr;
+    COLORREF textColor{ColorUnset};
+    COLORREF backgroundColor{ColorUnset};
+    HBRUSH backgroundColorBrush{nullptr};
 
     str::Str text;
 
-    HWND hwnd = nullptr;
-    UINT_PTR subclassId = 0;
+    HWND hwnd{nullptr};
+    UINT_PTR subclassId{0};
 
     WindowBase() = default;
     WindowBase(HWND p);
@@ -264,6 +264,7 @@ struct Window : WindowBase {
 
 UINT_PTR NextSubclassId();
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
+void RunModalWindow(HWND hwndDialog, HWND hwndParent);
 void PositionCloseTo(WindowBase* w, HWND hwnd);
 int GetNextCtrlID();
 HWND GetCurrentModelessDialog();

@@ -23,6 +23,8 @@
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
+#include "wingui/StaticCtrl.h"
+#include "wingui/ButtonCtrl.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/SplitterWnd.h"
@@ -88,6 +90,8 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "EditAnnotations.h"
+
+using std::placeholders::_1;
 
 // the default is for pre-release version.
 // for release we override BuildConfig.h and set to
@@ -2260,6 +2264,148 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     return ok;
 }
 
+enum class SaveChoice {
+    Discard,
+    SaveNew,
+    SaveExisting,
+};
+
+struct SaveAnnotationsDialog {
+    Window* mainWindow{nullptr};
+    LayoutBase* mainLayout{nullptr};
+    StaticCtrl* staticMsg{nullptr};
+    ButtonCtrl* buttonSaveNew{nullptr};
+    ButtonCtrl* buttonSaveExisting{nullptr};
+    ButtonCtrl* buttonDiscard{nullptr};
+
+    ~SaveAnnotationsDialog();
+};
+
+SaveAnnotationsDialog::~SaveAnnotationsDialog() {
+    delete mainWindow;
+    delete mainLayout;
+}
+
+static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
+    auto w = new StaticCtrl(parent);
+    bool ok = w->Create();
+    CrashIf(!ok);
+    w->SetText(sv);
+    return w;
+}
+
+// https://devblogs.microsoft.com/oldnewthing/20040802-00/?p=38283
+void SetDialogFocus(HWND hdlg, HWND hwndControl) {
+    SendMessage(hdlg, WM_NEXTDLGCTL, (WPARAM)hwndControl, TRUE);
+}
+
+constexpr DWORD dialogStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME);
+
+// TODO: remove close button
+SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
+    SaveChoice choice{SaveChoice::Discard};
+
+    SaveAnnotationsDialog* dlg = new SaveAnnotationsDialog();
+    auto mainWindow = new Window();
+    HMODULE h = GetModuleHandleW(nullptr);
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+    mainWindow->hIcon = LoadIconW(h, iconName);
+    mainWindow->isDialog = true;
+    mainWindow->backgroundColor = MkGray(0xee);
+    mainWindow->SetText(_TR("Warning"));
+    mainWindow->parent = hwndParent;
+    mainWindow->dwStyle = dialogStyle;
+    dlg->mainWindow = mainWindow;
+
+    bool ok = mainWindow->Create();
+    CrashIf(!ok);
+    mainWindow->onClose = [&dlg, &choice](WindowCloseEvent*) {
+        choice = SaveChoice::Discard;
+        PostQuitMessage(0);
+    };
+
+    HWND parent = mainWindow->hwnd;
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    {
+        auto w = CreateStatic(parent);
+        w->SetFont(GetDefaultGuiFont(true, false));
+        w->SetInsetsPt(16, 8, 16, 8);
+        w->SetText(_TRU("You have unsaved annotations. Save them?"));
+        dlg->staticMsg = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        // used to take all available space between the what's above and below
+        auto w = new Spacer(0, 0);
+        vbox->AddChild(w, 1);
+    }
+
+    {
+        auto w = new ButtonCtrl(parent);
+        w->SetInsetsPt(8, 8, 0, 8);
+        w->SetText(_TRU("Save changes to a new PDF"));
+        ok = w->Create();
+        CrashIf(!ok);
+        w->onClicked = [&dlg, &choice]() {
+            choice = SaveChoice::SaveNew;
+            PostQuitMessage(0);
+        };
+        dlg->buttonSaveNew = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        auto w = new ButtonCtrl(parent);
+        w->SetInsetsPt(8, 8, 0, 8);
+        w->SetText(_TRU("Save changes to existing PDF")); // TODO: 'Save to 'foo.pdf'
+        ok = w->Create();
+        CrashIf(!ok);
+        w->onClicked = [&dlg, &choice]() {
+            choice = SaveChoice::SaveExisting;
+            PostQuitMessage(0);
+        };
+        dlg->buttonSaveExisting = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        auto w = new ButtonCtrl(parent);
+        w->SetInsetsPt(8, 8, 8, 8);
+        w->SetText(_TRU("Discard"));
+        ok = w->Create();
+        CrashIf(!ok);
+        w->onClicked = [&dlg, &choice]() {
+            choice = SaveChoice::Discard;
+            PostQuitMessage(0);
+        };
+        dlg->buttonDiscard = w;
+        vbox->AddChild(w);
+    }
+    dlg->mainLayout = vbox;
+
+    int minDx = 480;
+    int minDy = 320;
+    LayoutAndSizeToContent(dlg->mainLayout, minDx, minDy, mainWindow->hwnd);
+    HwndPositionInCenterOf(mainWindow->hwnd, hwndParent);
+
+    // TODO: this doesn't work, is it because we're not running DefDlgProc
+    // in the window?
+    //SetDialogFocus(dlg->mainWindow->hwnd, dlg->buttonSaveExisting->hwnd);
+
+    // important to call this after hooking up onSize to ensure
+    // first layout is triggered
+    mainWindow->SetIsVisible(true);
+
+    RunModalWindow(mainWindow->hwnd, hwndParent);
+    dlg->mainWindow->Destroy();
+    delete dlg;
+    return choice;
+}
+
 static void MaybeSaveAnnotations(TabInfo* tab) {
     if (!tab) {
         return;
@@ -2278,18 +2424,29 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
         return;
     }
     EngineBase* engine = dm->GetEngine();
-    bool confirm = EngineHasUnsavedAnnotations(engine);
-    if (!confirm) {
+    bool shouldConfirm = EngineHasUnsavedAnnotations(engine);
+    if (!shouldConfirm) {
         return;
     }
-    uint type = MB_YESNO | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
-    const WCHAR* title = _TR("Warning");
-    const WCHAR* msg = _TR("You have unsaved annotations. Save them?");
-    int res = MessageBoxW(tab->win->hwndFrame, msg, title, type);
-    if (res == IDNO) {
-        return;
+    auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame);
+    switch (choice) {
+        case SaveChoice::Discard:
+            return;
+        case SaveChoice::SaveNew:
+            SaveAnnotationsToMaybeNewPdfFile(tab);
+            break;
+        case SaveChoice::SaveExisting: {
+            strconv::StackWstrToUtf8 path{engine->FileName()};
+            bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+                str::Str msg;
+                // TODO: duplicated message
+                msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
+                tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
+            });
+        } break;
+        default:
+            CrashIf(true);
     }
-    SaveAnnotationsToMaybeNewPdfFile(tab);
 }
 
 // closes the current tab, selecting the next one

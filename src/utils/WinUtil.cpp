@@ -2251,6 +2251,14 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
+    Rect rHwndRelative = WindowRect(hwndRelative);
+    Rect rHwnd = WindowRect(hwnd);
+    int x = rHwndRelative.x + (rHwndRelative.dx / 2) - (rHwnd.dx / 2);
+    int y = rHwndRelative.y + (rHwndRelative.dy / 2) - (rHwnd.dy / 2);
+    SetWindowPos(hwnd, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
 void HwndSendCommand(HWND hwnd, int cmdId) {
     SendMessageW(hwnd, WM_COMMAND, (WPARAM)cmdId, 0);
 }

@@ -425,6 +425,9 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     if (w->isDialog) {
+        // TODO: should handle more messages as per
+        // https://stackoverflow.com/questions/35688400/set-full-focus-on-a-button-setfocus-is-not-enough
+        // and https://docs.microsoft.com/en-us/windows/win32/dlgbox/dlgbox-programming-considerations
         if (WM_ACTIVATE == msg) {
             if (wp == 0) {
                 // becoming inactive
@@ -814,6 +817,7 @@ Window::Window() {
     kind = kindWindow;
     dwExStyle = 0;
     dwStyle = WS_OVERLAPPEDWINDOW;
+    // TODO: at this point parent cannot be set yet
     if (parent == nullptr) {
         dwStyle |= WS_CLIPCHILDREN;
     } else {
@@ -948,6 +952,42 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
         DispatchMessage(&msg);
     }
     return (int)msg.wParam;
+}
+
+// TODO: support accelerator table?
+// TODO: a better way to stop the loop e.g. via shared
+// atomic int to signal termination and sending WM_IDLE
+// to trigger processing of the loop
+void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
+    if (hwndParent != NULL) {
+        EnableWindow(hwndParent, FALSE);
+    }
+
+    MSG msg;
+    bool isFinished{false};
+    while (!isFinished) {
+        BOOL ok = WaitMessage();
+        if (!ok) {
+            DWORD err = GetLastError();
+            LogLastError(err);
+            isFinished = true;
+            continue;
+        }
+        while (!isFinished && PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                isFinished = true;
+                break;
+            }
+            if (!IsDialogMessage(hwndDialog, &msg)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+    }
+
+    if (hwndParent != NULL) {
+        EnableWindow(hwndParent, TRUE);
+    }
 }
 
 // sets initial position of w within hwnd. Assumes w->initialSize is set.

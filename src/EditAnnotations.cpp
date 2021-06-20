@@ -1153,8 +1153,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         // used to take all available space between the what's above and below
-        auto l = new Spacer(0, 0);
-        vbox->AddChild(l, 1);
+        auto w = new Spacer(0, 0);
+        vbox->AddChild(w, 1);
     }
 
     {

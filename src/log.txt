@@ -45,6 +45,8 @@ https://github.com/sumatrapdfreader/sumatrapdf/issues/1723
 reflect changes to annotations immediately (fixes #1977)
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1977
 
+improve confirmation dialog for saving annotations on close (fixes #1991)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1991
 
 2021-06-18 Fri
 
