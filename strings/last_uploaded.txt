@@ -21,7 +21,7 @@ AppTranslator strings
 &Go To
 &Go to page:
 &Help
-&Highlight\tA
+&Highlight\ta
 &Last Page\tEnd
 &Magnification:
 &Manual
@@ -344,6 +344,7 @@ Uninstall SumatraPDF
 Uninstallation failed
 Uninstallation in progress...
 Unknown source file (%s)
+Unsaved annotations
 Use &tabs
 Use SumatraPDF as the &default PDF reader
 View
