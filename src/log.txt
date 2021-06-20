@@ -42,6 +42,10 @@ recognize _TRU() as translation marker; add new strings for translation
 show error when saving annotations fail; properly set incremental saving flag (fixes #1723)
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1723
 
+reflect changes to annotations immediately (fixes #1977)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1977
+
+
 2021-06-18 Fri
 
 hide unused annotation methods

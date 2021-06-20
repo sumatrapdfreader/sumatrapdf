@@ -27,22 +27,24 @@ struct FitzImagePos {
 };
 
 struct FzPageInfo {
-    int pageNo = 0; // 1-based
-    fz_page* page = nullptr;
+    int pageNo{0}; // 1-based
+    fz_page* page{nullptr};
 
-    fz_link* links = nullptr;
+    fz_link* links{nullptr};
 
     // auto-detected links
     Vec<IPageElement*> autoLinks;
     // comments are made out of annotations
     Vec<IPageElement*> comments;
 
-    RectF mediabox = {};
+    RectF mediabox{};
     Vec<FitzImagePos> images;
 
     // if false, only loaded page (fast)
     // if true, loaded expensive info (extracted text etc.)
-    bool fullyLoaded = false;
+    bool fullyLoaded{false};
+
+    bool commentsNeedRebuilding{false};
 };
 
 struct LinkRectList {

@@ -1172,6 +1172,12 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
         return nullptr;
     }
 
+    if (pageInfo->commentsNeedRebuilding) {
+        DeleteVecMembers(pageInfo->comments);
+        MakePageElementCommentsFromAnnotations(ctx, pageInfo);
+        pageInfo->commentsNeedRebuilding = false;
+    }
+
     if (loadQuick || pageInfo->fullyLoaded) {
         return pageInfo;
     }
@@ -2041,4 +2047,14 @@ Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF p
         return MakeAnnotationPdf(epdf, matched, pageNo);
     }
     return nullptr;
+}
+
+void EnginePdf::InvalideAnnotationsForPage(int pageNo) {
+    ScopedCritSec scope(&pagesAccess);
+    CrashIf(pageNo < 1 || pageNo > pageCount);
+    int pageIdx = pageNo - 1;
+    FzPageInfo* pageInfo = &_pages[pageIdx];
+    if (pageInfo) {
+        pageInfo->commentsNeedRebuilding = true;
+    }
 }

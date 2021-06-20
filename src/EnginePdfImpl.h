@@ -73,6 +73,7 @@ class EnginePdf : public EngineBase {
     WCHAR* ExtractFontList();
 
     std::span<u8> LoadStreamFromPDFFile(const WCHAR* filePath);
+    void InvalideAnnotationsForPage(int pageNo);
 };
 
 EnginePdf* AsEnginePdf(EngineBase* engine);
