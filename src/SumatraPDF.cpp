@@ -2301,7 +2301,7 @@ void SetDialogFocus(HWND hdlg, HWND hwndControl) {
 
 constexpr DWORD dialogStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME);
 
-// TODO: remove close button
+// TODO: remove window close button
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
     SaveChoice choice{SaveChoice::Discard};
 
@@ -2312,7 +2312,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
     mainWindow->hIcon = LoadIconW(h, iconName);
     mainWindow->isDialog = true;
     mainWindow->backgroundColor = MkGray(0xee);
-    mainWindow->SetText(_TR("Warning"));
+    mainWindow->SetText(_TR("Unsaved annotations"));
     mainWindow->parent = hwndParent;
     mainWindow->dwStyle = dialogStyle;
     dlg->mainWindow = mainWindow;
@@ -2387,8 +2387,8 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
     }
     dlg->mainLayout = vbox;
 
-    int minDx = 480;
-    int minDy = 320;
+    int minDx = 420;
+    int minDy = 180;
     LayoutAndSizeToContent(dlg->mainLayout, minDx, minDy, mainWindow->hwnd);
     HwndPositionInCenterOf(mainWindow->hwnd, hwndParent);
 
