@@ -148,23 +148,19 @@ EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEng
     return engine;
 }
 
-bool EngineSupportsAnnotations(EngineBase* engine) {
+static bool IsEnginePdf(EngineBase* engine) {
     if (!engine) {
         return false;
     }
-    Kind kind = engine->kind;
-    if (kind == kindEnginePdf) {
-        return true;
-    }
-    return false;
+    return engine->kind == kindEnginePdf;
+}
+
+bool EngineSupportsAnnotations(EngineBase* engine) {
+    return IsEnginePdf(engine);
 }
 
 bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
-    if (!engine) {
-        return false;
-    }
-    Kind kind = engine->kind;
-    if (kind != kindEnginePdf) {
+    if (!IsEnginePdf(engine)) {
         return false;
     }
     EnginePdfGetAnnotations(engine, annotsOut);
@@ -172,22 +168,14 @@ bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
 }
 
 bool EngineHasUnsavedAnnotations(EngineBase* engine) {
-    if (!engine) {
-        return false;
-    }
-    Kind kind = engine->kind;
-    if (kind != kindEnginePdf) {
+    if (!IsEnginePdf(engine)) {
         return false;
     }
     return EnginePdfHasUnsavedAnnotations(engine);
 }
 
 Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
-    if (!engine) {
-        return nullptr;
-    }
-    Kind kind = engine->kind;
-    if (kind != kindEnginePdf) {
+    if (!IsEnginePdf(engine)) {
         return nullptr;
     }
     return EnginePdfGetAnnotationAtPos(engine, pageNo, pos, allowedAnnots);

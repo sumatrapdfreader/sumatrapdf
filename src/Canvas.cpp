@@ -333,7 +333,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM f
             if (GetCursor()) {
                 SetCursorCached(IDC_IBEAM);
             }
-        /* fall through */
+            [[fallthrough]];
         case MouseAction::Selecting:
             win->selectionRect.dx = x - win->selectionRect.x;
             win->selectionRect.dy = y - win->selectionRect.y;
