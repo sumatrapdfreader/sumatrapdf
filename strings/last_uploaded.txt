@@ -283,12 +283,14 @@ Save Annotations
 Save As
 Save Embedded File...
 Save S&hortcut...\tCtrl+Shift+S
+Save changes to a new PDF
 Save changes to existing PDF
-Save changes to new PDF
+Saved annotations to '%s'
+Saving of '%s' failed with: '%s'
 Searching %d of %d...
 Select &All
 Select &All\tCtrl+A
-Select Annotation
+Select Annotation in Editor
 Select content with Ctrl+left mouse button
 Select the folder where SumatraPDF should be installed:
 Selection:
