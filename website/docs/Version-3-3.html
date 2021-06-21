@@ -35,60 +35,92 @@
                 </mark>
               </strong>
               To test upcoming features, you can try latest
-              <a href="https://www.sumatrapdfreader.org/prerelease.html">
-                pre-release build
+              <a href="https://www.sumatrapdfreader.org/dailybuilds">
+                daily build
               </a>
               .
             </div>
             <ul id="86bc25e9-d8f5-4deb-9a13-fab34ab45267" class="bulleted-list">
               <li>
                 added support for adding / removing / editing annotations in PDF
-                files
+                files. Read
+                <a href="Editing-annotations.html">the tutorial</a>
+              </li>
+              <li>
+                new toolbar
                 <ul
-                  id="1db4c453-4f89-45ed-a599-ad38d2a6119e"
+                  id="23e1f1c3-4918-419f-83a3-22dad457002c"
                   class="bulleted-list"
                 >
                   <li>
-                    right click for context menu and use
-                    <code>Create Annotation</code>
-                    sub-menu
+                    changed toolbar to scale with DPI by using new, vector icons
                   </li>
-                  <li>
-                    select txt and press
-                    <code>a</code>
-                    to create a highlight annotation
-                  </li>
-                  <li>
-                    context menu
-                    <code>Save Annotations</code>
-                    to save annotations back to PDF file
-                  </li>
+                  <li>added rotate left / right to the toolbar</li>
+                  <li>new toolbar:</li>
                 </ul>
+                <img src="img/7774be9e227cefeaf4ad605dabb22ed89d707639.png" />
               </li>
               <li>
-                changed toolbar to scale with DPI by using new, vector icons
+                added ability to hide scrollbar (more screen space for the
+                document)
               </li>
-              <li>added rotate left / right to the toolbar</li>
               <li>
-                added ability to hide scrollbar (to gain more screen space for
-                the document)
+                add
+                <code>-paperkind=${num}</code>
+                printing option (
+                <a
+                  href="https://github.com/sumatrapdfreader/sumatrapdf/pull/1815/commits/2104e6104ea759dc4f839c7e8be5973f5a4f0488"
+                >
+                  checkin
+                </a>
+                )
               </li>
+            </ul>
+            <div id="0bd98b55-6910-4e5d-9cb0-9ddc2d9a52bc" class="">
+              Minor improvements and bug-fixes::
+            </div>
+            <ul id="c972516f-93e7-440b-943c-fc1ad6c7b4d5" class="bulleted-list">
               <li>
                 advanced setting to change font size in bookmarks / favorites
                 tree view e.g.
                 <code>TreeFontSize = 12</code>
               </li>
-            </ul>
-            <div id="0bd98b55-6910-4e5d-9cb0-9ddc2d9a52bc" class="">
-              Bug-fixes::
-            </div>
-            <ul id="3464c4a5-a324-48b4-8c01-c0de4d749e32" class="bulleted-list">
-              <li>restore tooltips</li>
+              <li>
+                support newer versions of ghostscript (≥ 9.54) for opening .ps
+                files
+              </li>
+              <li>support jpeg-xr images in .xps files</li>
+              <li>restore tooltips (regression in 3.2)</li>
+              <li>update mupdf to latest version</li>
               <li>make silent installation always silent</li>
               <li>don&#x27;t crash when attempting to zoom in on home page</li>
               <li>
-                don&#x27;t show &#x27;manga&#x27; view menu item for documents
+                don&#x27;t show &quot;manga&quot; view menu item for documents
                 that are not comic books
+              </li>
+              <li>
+                allow opening
+                <code>fb2.zip</code>
+                files (
+                <a
+                  href="https://github.com/sumatrapdfreader/sumatrapdf/issues/1657"
+                >
+                  #1657
+                </a>
+                )
+              </li>
+              <li>
+                restore ability to save embedded files (fixes
+                <a
+                  href="https://github.com/sumatrapdfreader/sumatrapdf/issues/1557"
+                >
+                  #1557
+                </a>
+                )
+              </li>
+              <li>
+                <code>Alt + Space</code>
+                opens a sys menu
               </li>
             </ul>
             <div id="fb581416-fac3-4812-ae50-3b6b85437f32" class=""></div>

@@ -1,18 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"fmt"
 	"html"
+	"io"
 	"io/ioutil"
-	"net/url"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/kjk/fmthtml"
 	"github.com/kjk/notionapi"
 	"github.com/kjk/notionapi/caching_downloader"
 	"github.com/kjk/notionapi/tohtml"
@@ -68,20 +69,29 @@ func guessExt(fileName string, contentType string) string {
 	panic(fmt.Errorf("didn't find ext for file '%s', content type '%s'", fileName, contentType))
 }
 
-func downloadImage(c *notionapi.Client, uri string) ([]byte, string, error) {
-	img, err := c.DownloadFile(uri)
+func httpGet(uri string) ([]byte, string, error) {
+	resp, err := http.Get(uri)
 	if err != nil {
-		// TODO: getSignedURLs stopped working so we need this workaround
-		// should move this logic down to c.DownloadFile()
-		uri = "https://www.notion.so/image/" + url.PathEscape(uri)
-		img, err = c.DownloadFile(uri)
-	}
-	if err != nil {
-		logf("\n  failed with %s\n", err)
 		return nil, "", err
 	}
-	ext := guessExt(uri, img.Header.Get("Content-Type"))
-	return img.Data, ext, nil
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, "", fmt.Errorf("unexpected status %d (%s)", resp.StatusCode, resp.Status)
+	}
+	contentType := resp.Header.Get("Content-Type")
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, resp.Body)
+	return buf.Bytes(), contentType, err
+}
+
+func downloadImage(c *notionapi.Client, uri string) ([]byte, string, error) {
+	imgData, contentType, err := httpGet(uri)
+	if err != nil {
+		return nil, "", err
+	}
+	// TODO: sniff from content
+	ext := guessExt(uri, contentType)
+	return imgData, ext, nil
 }
 
 // return path of cached image on disk
@@ -232,7 +242,7 @@ func normalizeID(id string) string {
 
 // RenderImage downloads and renders an image
 func (c *HTMLConverter) RenderImage(block *notionapi.Block) bool {
-	link := block.Source
+	link := block.ImageURL
 	path, err := downloadAndCacheImage(c.client, link)
 	if err != nil {
 		logf("genImage: downloadAndCacheImage('%s') from page https://notion.so/%s failed with '%s'\n", link, normalizeID(c.page.ID), err)
@@ -344,9 +354,6 @@ func (c *HTMLConverter) GenerateHTML() []byte {
 	s = strings.Replace(tmpl, "{{InnerHTML}}", s, 1)
 	s = strings.Replace(s, "{{Title}}", title, 1)
 	d := []byte(s)
-	if false {
-		d = fmthtml.Format(d)
-	}
 	return d
 }
 
@@ -360,8 +367,19 @@ func notionToHTML(client *notionapi.Client, page *notionapi.Page, pages []*notio
 	u.WriteFileMust(path, html)
 }
 
+func checkPrettierExist() {
+	cmd := exec.Command("prettier", "-v")
+	err := cmd.Run()
+	if err != nil {
+		logf("prettier doesn't seem to be installed. Install with:\n")
+		logf("npm i -g prettier\n")
+		os.Exit(1)
+	}
+}
+
 func websiteImportNotion() {
 	logf("websiteImportNotion() started\n")
+	checkPrettierExist()
 	must(os.Chdir("website"))
 	client := newNotionClient()
 	cache, err := caching_downloader.NewDirectoryCache(cacheDir)
