@@ -35,6 +35,12 @@ func failIfNoCertPwd() {
 	panicIf(!hasCertPwd(), "CERT_PWD env variable is not set")
 }
 
+func warnIfNoCertPwd() {
+	if !hasCertPwd() {
+		logf("will not sign because CERT_PWD env variable is not set")
+	}
+}
+
 // https://zabkat.com/blog/code-signing-sha1-armageddon.htm
 // signtool sign /n "subject name" /t http://timestamp.comodoca.com/authenticode myInstaller.exe
 // signtool sign /n "subject name" /fd sha256 /tr http://timestamp.comodoca.com/rfc3161 /td sha256 /as myInstaller.exe

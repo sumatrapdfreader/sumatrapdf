@@ -5,16 +5,18 @@ import (
 	"path/filepath"
 )
 
-func buildRelease() {
+func buildRelease(forUpload bool) {
 	detectSigntoolPath() // early exit if missing
 
 	ver := getVerForBuildType(buildTypeRel)
 	s := fmt.Sprintf("buidling release version %s", ver)
 	defer makePrintDuration(s)()
 
-	verifyGitCleanMust()
-	verifyOnReleaseBranchMust()
-	verifyTranslationsMust()
+	if forUpload {
+		verifyGitCleanMust()
+		verifyOnReleaseBranchMust()
+		verifyTranslationsMust()
+	}
 
 	verifyBuildNotInS3ShortMust(buildTypeRel)
 	verifyBuildNotInSpacesShortMust(buildTypeRel)
@@ -40,6 +42,15 @@ func buildRelease() {
 	copyBuiltManifest(dstDir, prefix)
 }
 
+func buildJustInstaller(dir, config, platform string) {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
+	signFilesOptional(dir)
+}
+
 // a faster release build for testing that only does 64-bit installer
 func buildReleaseFast() {
 	detectSigntoolPath() // early exit if missing
@@ -49,9 +60,9 @@ func buildReleaseFast() {
 	defer makePrintDuration(s)()
 
 	if !isGitClean() {
-		logf("%s", "note: unsaved git changes\n")
+		logf("note: unsaved git changes\n")
 	}
-	verifyOnReleaseBranchMust()
+	//verifyOnReleaseBranchMust()
 
 	//verifyBuildNotInS3ShortMust(buildTypeRel)
 	//verifyBuildNotInSpacesShortMust(buildTypeRel)
@@ -78,7 +89,7 @@ func buildRelease32Fast() {
 	if !isGitClean() {
 		logf("%s", "note: unsaved git changes\n")
 	}
-	verifyOnReleaseBranchMust()
+	//verifyOnReleaseBranchMust()
 
 	//verifyBuildNotInS3ShortMust(buildTypeRel)
 	//verifyBuildNotInSpacesShortMust(buildTypeRel)

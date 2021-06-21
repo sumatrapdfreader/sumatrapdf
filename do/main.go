@@ -114,7 +114,6 @@ func main() {
 		flgUploadCiBuild           bool
 		flgBuildLzsa               bool
 		flgBuildPreRelease         bool
-		flgBuildRaMicroPreRelease  bool
 		flgBuildRelease            bool
 		flgBuildReleaseFast        bool
 		flgBuildRelease32Fast      bool
@@ -149,7 +148,6 @@ func main() {
 		flag.BoolVar(&flgUploadCiBuild, "ci-upload", false, "upload the result of ci build to s3 and do spaces")
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
-		flag.BoolVar(&flgBuildRaMicroPreRelease, "build-ramicro-pre-rel", false, "build ramicro pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
 		flag.BoolVar(&flgBuildReleaseFast, "build-release-fast", false, "build only 64-bit release installer, for testing")
 		flag.BoolVar(&flgBuildRelease32Fast, "build-release-32-fast", false, "build only 32-bit release installer, for testing")
@@ -325,8 +323,6 @@ func main() {
 			buildDaily()
 		case githubEventTypeBuildPreRel:
 			buildPreRelease()
-		case githubEventTypeBuildRaMicroPreRel:
-			buildRaMicroPreRelease()
 		default:
 			panic("unkown value from getGitHubEventType()")
 		}
@@ -372,9 +368,11 @@ func main() {
 	}
 
 	if flgBuildRelease {
-		failIfNoCertPwd()
+		if !flgUpload {
+			failIfNoCertPwd()
+		}
 		detectVersions()
-		buildRelease()
+		buildRelease(flgUpload)
 		if flgUpload {
 			s3UploadBuildMust(buildTypeRel)
 			spacesUploadBuildMust(buildTypeRel)
@@ -383,14 +381,14 @@ func main() {
 	}
 
 	if flgBuildReleaseFast {
-		failIfNoCertPwd()
+		warnIfNoCertPwd()
 		detectVersions()
 		buildReleaseFast()
 		return
 	}
 
 	if flgBuildRelease32Fast {
-		failIfNoCertPwd()
+		warnIfNoCertPwd()
 		detectVersions()
 		buildRelease32Fast()
 		return
@@ -403,16 +401,6 @@ func main() {
 		buildPreRelease()
 		s3UploadBuildMust(buildTypePreRel)
 		spacesUploadBuildMust(buildTypePreRel)
-		return
-	}
-
-	if flgBuildRaMicroPreRelease {
-		// make sure we can sign the executables
-		failIfNoCertPwd()
-		detectVersions()
-		buildRaMicroPreRelease()
-		//s3UploadBuildMust(buildTypeRaMicro)
-		//spacesUploadBuildMust(buildTypeRaMicro)
 		return
 	}
 
