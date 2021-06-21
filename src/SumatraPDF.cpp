@@ -4810,10 +4810,13 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             FrameOnChar(win, 'h');
             break;
 
+#if defined(DEBUG) || defined(IS_DAILY_BUILD) || defined(PRE_RELEASE_VER)
         case CmdDebugTestApp:
             extern void TestApp(HINSTANCE hInstance);
             TestApp(GetModuleHandle(nullptr));
             break;
+#endif
+
         case CmdDebugShowNotif: {
             win->ShowNotification(L"This is a notification", NotificationOptions::Warning);
             // TODO: this notification covers previous
