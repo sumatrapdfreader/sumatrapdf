@@ -11,6 +11,9 @@ persist show/hde scrollbar state across launches (fixes #1720)
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1720
 only had to unmark the setting as internal
 
+improve next / prev page with left / right flick (fixes #9)
+https://github.com/sumatrapdfreader/sumatrapdf/issues/9
+
 2021-06-19 Sat
 
 annotation color fixes

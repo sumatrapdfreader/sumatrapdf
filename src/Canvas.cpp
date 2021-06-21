@@ -1205,10 +1205,13 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
                 int deltaY = win->touchState.panPos.y - gi.ptsLocation.y;
                 win->touchState.panPos = gi.ptsLocation;
 
-                if ((!win->AsFixed() || !IsContinuous(win->AsFixed()->GetDisplayMode())) && (gi.dwFlags & GF_INERTIA) &&
-                    abs(deltaX) > abs(deltaY)) {
-                    // Switch pages once we hit inertia in a horizontal direction (only in
-                    // non-continuous modes, cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/9 )
+                // on left / right flick, go to next / prev page
+                // unless this is PDF and horizontal scrollbar is visible,
+                // in which case we want to pan/scroll the document
+                bool isFlick = (gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY);
+                DisplayModel* dm = win->AsFixed();
+                bool enableFlick = !dm || !dm->NeedHScroll();
+                if (isFlick && enableFlick) {
                     if (deltaX < 0) {
                         win->ctrl->GoToPrevPage();
                     } else if (deltaX > 0) {
@@ -1216,12 +1219,12 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
                     }
                     // When we switch pages, go back to the initial scroll position
                     // and prevent further pan movement caused by the inertia
-                    if (win->AsFixed()) {
-                        win->AsFixed()->ScrollXTo(win->touchState.panScrollOrigX);
+                    if (dm) {
+                        dm->ScrollXTo(win->touchState.panScrollOrigX);
                     }
                     win->touchState.panStarted = false;
-                } else if (win->AsFixed()) {
-                    // Pan/Scroll
+                } else if (dm) {
+                    // pan / scroll
                     win->MoveDocBy(deltaX, deltaY);
                 }
             }

@@ -2,6 +2,10 @@
 the release notes, as we make them, to make the release process easier.
 
 Next version:
+3.3 (???)
+* initial support for editing annotations
+* toolbar: new look and DPI scalability
+* toolbar: add rotate buttons
 
 3.2 (2020-03-15)
 * upgraded core PDF parsing rendering to latest version of mupdf. Faster, less bugs.

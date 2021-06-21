@@ -468,6 +468,9 @@ function sumatrapdf_files()
     "regress/Regress.*",
     "*.txt",
   })
+  files_in_dir("docs", {
+    "releasenotes.txt",
+  })
   test_app_files()
 end
 
