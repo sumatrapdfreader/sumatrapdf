@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"fmt"
 	"html"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -69,29 +66,15 @@ func guessExt(fileName string, contentType string) string {
 	panic(fmt.Errorf("didn't find ext for file '%s', content type '%s'", fileName, contentType))
 }
 
-func httpGet(uri string) ([]byte, string, error) {
-	resp, err := http.Get(uri)
+func downloadImage(c *notionapi.Client, uri string) ([]byte, string, error) {
+	resp, err := c.DownloadURL(uri)
 	if err != nil {
 		return nil, "", err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, "", fmt.Errorf("unexpected status %d (%s)", resp.StatusCode, resp.Status)
 	}
 	contentType := resp.Header.Get("Content-Type")
-	var buf bytes.Buffer
-	_, err = io.Copy(&buf, resp.Body)
-	return buf.Bytes(), contentType, err
-}
-
-func downloadImage(c *notionapi.Client, uri string) ([]byte, string, error) {
-	imgData, contentType, err := httpGet(uri)
-	if err != nil {
-		return nil, "", err
-	}
 	// TODO: sniff from content
 	ext := guessExt(uri, contentType)
-	return imgData, ext, nil
+	return resp.Data, ext, nil
 }
 
 // return path of cached image on disk

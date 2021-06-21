@@ -354,7 +354,7 @@ func createManifestMust() {
 	}
 	dirs := []string{rel32Dir, rel64Dir}
 	// in daily build, there's no 32bit build
-	if !pathExists(rel32Dir) {
+	if !u.PathExists(rel32Dir) {
 		dirs = []string{rel64Dir}
 	}
 	for _, dir := range dirs {

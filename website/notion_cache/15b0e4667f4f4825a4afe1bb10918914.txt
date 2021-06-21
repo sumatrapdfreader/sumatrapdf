@@ -1,4 +1,4 @@
-12562 1624236867254 httpcache-v1
+12664 1624263923949 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -10,7 +10,7 @@ Body:+110
     }
   ]
 }
-Response:+12361
+Response:+12463
 {
   "recordMapWithRoles": {
     "block": {
@@ -44,6 +44,7 @@ Response:+12361
             "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
             "f691a0d1-04f1-4edd-a684-d371f830adee",
             "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+            "f6472eeb-fa14-4f16-acbe-98429cb2d327",
             "0cffb196-9b08-4294-8652-385e96a5e286",
             "9d92915b-b903-49ce-bceb-1169467994f6",
             "73ab2f86-933f-430a-96a0-7c1a4ca82230",
@@ -78,7 +79,7 @@ Response:+12361
           "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1624226940000,
+          "last_edited_time": 1624237740000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -90,7 +91,7 @@ Response:+12361
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 144
+          "version": 152
         }
       },
       "57693e37-7cc6-4369-8a52-b098e71e0f1e": {
@@ -259,6 +260,7 @@ Response:+12361
           "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
           "f691a0d1-04f1-4edd-a684-d371f830adee",
           "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+          "f6472eeb-fa14-4f16-acbe-98429cb2d327",
           "0cffb196-9b08-4294-8652-385e96a5e286",
           "9d92915b-b903-49ce-bceb-1169467994f6",
           "73ab2f86-933f-430a-96a0-7c1a4ca82230",
@@ -293,7 +295,7 @@ Response:+12361
         "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1624226940000,
+        "last_edited_time": 1624237740000,
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
@@ -305,12 +307,12 @@ Response:+12361
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
-        "version": 144
+        "version": 152
       }
     }
   ]
 }
-63447 1624236867261 httpcache-v1
+64079 1624263923950 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -323,7 +325,7 @@ Body:+152
   "pageId": "15b0e466-7f4f-4825-a4af-e1bb10918914",
   "verticalColumns": false
 }
-Response:+63206
+Response:+63838
 {
   "cursor": {
     "stack": [
@@ -336,7 +338,7 @@ Response:+63206
       ],
       [
         {
-          "id": "be31408f-9b39-4f7d-9148-c684a2aa476f",
+          "id": "18600efb-3166-4d66-b5ec-721f85d57bb6",
           "index": 0,
           "table": "block"
         }
@@ -484,6 +486,7 @@ Response:+63206
             "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
             "f691a0d1-04f1-4edd-a684-d371f830adee",
             "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+            "f6472eeb-fa14-4f16-acbe-98429cb2d327",
             "0cffb196-9b08-4294-8652-385e96a5e286",
             "9d92915b-b903-49ce-bceb-1169467994f6",
             "73ab2f86-933f-430a-96a0-7c1a4ca82230",
@@ -518,7 +521,7 @@ Response:+63206
           "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1624226940000,
+          "last_edited_time": 1624237740000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -530,7 +533,7 @@ Response:+63206
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 144
+          "version": 152
         }
       },
       "18600efb-3166-4d66-b5ec-721f85d57bb6": {
@@ -1327,7 +1330,7 @@ Response:+63206
           "id": "8d2cd9a8-bb21-422e-bd1a-f0a0214f6c03",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1624215840000,
+          "last_edited_time": 1624237620000,
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
@@ -1344,7 +1347,18 @@ Response:+63206
                 ]
               ],
               [
-                " (upper case), we'll create a highlight annotation from selection (same as lower case "
+                " (upper case i.e. "
+              ],
+              [
+                "Shift-a",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                ") we will create a highlight annotation (same as lower case "
               ],
               [
                 "a",
@@ -1361,7 +1375,7 @@ Response:+63206
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
-          "version": 233
+          "version": 436
         }
       },
       "9006f7f1-6c3e-4b19-b181-0c7b149b3137": {
@@ -1580,23 +1594,45 @@ Response:+63206
           "alive": true,
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1624217820000,
+          "created_time": 1624237380000,
           "id": "a3d0c709-ef40-4b9e-a69a-314e9089122a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1624217880000,
+          "last_edited_time": 1624237740000,
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Other annotation types"
+                "We also copy selected text to a clipboard so that e.g. you can use "
+              ],
+              [
+                "Ctrl-V",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                " to paste it into "
+              ],
+              [
+                "Contents",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                " property of the annotation."
               ]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "type": "sub_header",
-          "version": 163
+          "type": "text",
+          "version": 391
         }
       },
       "ad49667d-ac23-48a9-9650-3bfc75e89849": {
@@ -1731,31 +1767,6 @@ Response:+63206
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
           "version": 21
-        }
-      },
-      "be31408f-9b39-4f7d-9148-c684a2aa476f": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1624218240000,
-          "id": "be31408f-9b39-4f7d-9148-c684a2aa476f",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1624218300000,
-          "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "tell us why. Context is important for prioritizing features. Is new feature / idea something that you absolutely need or is it just a nice improvement"
-              ]
-            ]
-          },
-          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "type": "bulleted_list",
-          "version": 188
         }
       },
       "c258f0eb-0fcc-46d0-bff2-9d84049ceee6": {
@@ -1971,6 +1982,31 @@ Response:+63206
           "version": 14
         }
       },
+      "f6472eeb-fa14-4f16-acbe-98429cb2d327": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1624217820000,
+          "id": "f6472eeb-fa14-4f16-acbe-98429cb2d327",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1624237380000,
+          "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
+          "parent_table": "block",
+          "properties": {
+            "title": [
+              [
+                "Other annotation types"
+              ]
+            ]
+          },
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
+          "type": "sub_header",
+          "version": 3
+        }
+      },
       "f691a0d1-04f1-4edd-a684-d371f830adee": {
         "role": "comment_only",
         "value": {
@@ -2097,7 +2133,7 @@ Response:+63206
     "space": {}
   }
 }
-12199 1624236867262 httpcache-v1
+13126 1624263923951 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+441
@@ -2114,7 +2150,7 @@ Body:+441
       ],
       [
         {
-          "id": "be31408f-9b39-4f7d-9148-c684a2aa476f",
+          "id": "18600efb-3166-4d66-b5ec-721f85d57bb6",
           "index": 0,
           "table": "block"
         }
@@ -2125,7 +2161,7 @@ Body:+441
   "pageId": "15b0e466-7f4f-4825-a4af-e1bb10918914",
   "verticalColumns": false
 }
-Response:+11669
+Response:+12596
 {
   "cursor": {
     "stack": []
@@ -2162,6 +2198,7 @@ Response:+11669
             "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
             "f691a0d1-04f1-4edd-a684-d371f830adee",
             "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+            "f6472eeb-fa14-4f16-acbe-98429cb2d327",
             "0cffb196-9b08-4294-8652-385e96a5e286",
             "9d92915b-b903-49ce-bceb-1169467994f6",
             "73ab2f86-933f-430a-96a0-7c1a4ca82230",
@@ -2196,7 +2233,7 @@ Response:+11669
           "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1624226940000,
+          "last_edited_time": 1624237740000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -2208,7 +2245,32 @@ Response:+11669
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 144
+          "version": 152
+        }
+      },
+      "18600efb-3166-4d66-b5ec-721f85d57bb6": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1624218240000,
+          "id": "18600efb-3166-4d66-b5ec-721f85d57bb6",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1624218240000,
+          "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
+          "parent_table": "block",
+          "properties": {
+            "title": [
+              [
+                "tell us what"
+              ]
+            ]
+          },
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
+          "type": "bulleted_list",
+          "version": 27
         }
       },
       "57693e37-7cc6-4369-8a52-b098e71e0f1e": {
@@ -2411,7 +2473,7 @@ Response:+11669
     "space": {}
   }
 }
-111036 1624236867274 httpcache-v1
+111036 1624263923953 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1694
@@ -5095,7 +5157,7 @@ Response:+109249
     }
   ]
 }
-63111 1624236867283 httpcache-v1
+63111 1624263923954 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1518
