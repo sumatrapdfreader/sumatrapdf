@@ -173,8 +173,8 @@
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
-    <OutDir>..\out\re64_asan\</OutDir>
-    <IntDir>..\out\re64_asan\obj\x64_asan\Release\zlib-opt\</IntDir>
+    <OutDir>..\out\rel64_asan\</OutDir>
+    <IntDir>..\out\rel64_asan\obj\x64_asan\Release\zlib-opt\</IntDir>
     <TargetName>zlib-opt</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>

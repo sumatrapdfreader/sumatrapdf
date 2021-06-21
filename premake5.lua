@@ -144,7 +144,7 @@ workspace "SumatraPDF"
   filter {}
 
   filter {"platforms:x64_asan", "configurations:Release"}
-    targetdir "out/re64_asan"
+    targetdir "out/rel64_asan"
   filter {"platforms:x64_asan", "configurations:ReleaseAnalyze"}
     targetdir "out/rel64_prefast_asan"
   filter {"platforms:x64_asan", "configurations:Debug"}
