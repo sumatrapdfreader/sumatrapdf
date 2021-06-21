@@ -849,11 +849,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);
 
+    /*
     if (false && gIsDebugBuild) {
         int TestLice(HINSTANCE hInstance, int nCmdShow);
         retCode = TestLice(hInstance, nCmdShow);
         goto Exit;
     }
+    */
 
     // TODO: maybe add cmd-line switch to enable debug logging
     gEnableDbgLog = gIsDebugBuild || gIsDailyBuild || gIsPreReleaseBuild;

@@ -1010,10 +1010,11 @@ function test_app_files()
     "TestApp.cpp",
     "TestTab.cpp",
     "TestLayout.cpp",
-    "TestLice.cpp",
+    --"TestLice.cpp",
   })
 end
 
+--[[
 function wdl_files()
   files_in_dir("ext/WDL", {
     "projectcontext.cpp",
@@ -1069,6 +1070,7 @@ function wdl_files()
     "wndsize.*",
   })
 end
+--]]
 
 function gumbo_files()
   files_in_dir("ext/gumbo-parser/src", {

@@ -688,7 +688,6 @@
     <ClCompile Include="..\src\regress\Regress.cpp" />
     <ClCompile Include="..\src\testcode\TestApp.cpp" />
     <ClCompile Include="..\src\testcode\TestLayout.cpp" />
-    <ClCompile Include="..\src\testcode\TestLice.cpp" />
     <ClCompile Include="..\src\testcode\TestTab.cpp" />
     <ClCompile Include="..\src\uia\DocumentProvider.cpp" />
     <ClCompile Include="..\src\uia\PageProvider.cpp" />
@@ -724,9 +723,6 @@
     </ProjectReference>
     <ProjectReference Include="unrar.vcxproj">
       <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="wdl.vcxproj">
-      <Project>{6CBA880B-D8C3-887C-613F-9F7CCD47947C}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -23,9 +23,11 @@ static void LaunchLayout() {
     TestLayout(gHinst, SW_SHOW);
 }
 
+/*
 static void LaunchLice() {
     TestLice(gHinst, SW_SHOW);
 }
+*/
 
 static ILayout* CreateMainLayout(HWND hwnd) {
     auto* vbox = new VBox();
@@ -43,10 +45,12 @@ static ILayout* CreateMainLayout(HWND hwnd) {
         vbox->AddChild(b);
     }
 
+    /*
     {
         auto b = CreateButton(hwnd, "Lice test", LaunchLice);
         vbox->AddChild(b);
     }
+    */
     auto padding = new Padding(vbox, DefaultInsets());
     return padding;
 }
