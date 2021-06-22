@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-adda8510d4fc0822fd44c23940c1821c41cb9eb1
+779c476f18fb4b72e17e56bdfd9c5c672a1b8494
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -435,6 +435,7 @@ vn:Xem dạng sách\tCtrl+8
 :&Caret
 nl:&Merkteken
 pl:&Kareta
+ru:&Каретка
 :&Close\tCtrl+W
 af:Maak Toe\tCtrl+W
 am:&Փակել\tCtrl+W
@@ -3069,8 +3070,10 @@ pl:Pie&częć
 nl:&Doorhalen
 pl:&Skreślenie
 :&Text
+az:Mə&tn
 nl:&Tekst
 pl:&Tekst
+ru:&Текст
 :&Theme
 am:&Ոճը
 ar:&قالب
@@ -4648,9 +4651,11 @@ uk:Автор:
 uz:Muallif:
 vn:Tác giả
 :Author: %s
+az:Müəllif: %s
 es:Autora: %s
 nl:Auteur: %s
 pl:Autor: %s
+ru:Автор: %s
 :Automatic
 af:Outomaties
 am:Ինքնաշխատ
@@ -5766,9 +5771,11 @@ tr:Renk
 tw:颜色
 vn:Tô màu
 :Color:
+az:Rəng:
 es:Color:
 nl:Kleur
 pl:Kolor:
+ru:Цвет:
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -5900,6 +5907,7 @@ uk:Сумісність
 uz:Mosligi
 vn:Tính tương thích
 :Contents:
+az:Məzmun:
 nl:Inhoud
 pl:Zawartość:
 :Continuous
@@ -7550,9 +7558,11 @@ tw:更暗
 uk:Темніша
 vn:Tối hơn
 :Date:
+az:Tarix:
 es:Fetcha:
 nl:Datum:
 pl:Data:
+ru:Дата:
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -7726,7 +7736,7 @@ lv:Noklusējuma PDF lasītāju nevar izmainīt pārnesamam režīmam
 mk:Основниот читач на PDF не може да работи во мобилен режим
 my:Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
 ne:चलायमान मोडमा पूर्वनिर्धारित PDF पाठक परिवर्तन गर्न मिल्दैन
-nl:Als standaard aanwijzen in Portable modus kan niet hier
+nl:Als standaard aanwijzen in Portable modus is hier niet mogelijk!
 nn:Standard PDF-lesar kan ikkje bli endra i flyttbar modus
 no:Standard PDF-leser kan ikke endres i flyttbar modus
 pl:Domyślna przeglądarka PDF nie może być zmieniona w trybie przenośnym
@@ -7813,7 +7823,7 @@ uk:У доступі відмовлено:
 uz:Taqiqlangan huquqlar:
 vn:Các quyền bị từ chối
 :Discard
-nl:Weggooien
+nl:Verwijderen
 pl:Odrzuć
 :DjVu documents
 af:DjVu dokumente
@@ -11835,10 +11845,12 @@ tw:線條
 es:Fin de Línea:
 nl:Lijn Eind
 pl:Koniec linii:
+ru:Конец линии:
 :Line Start:
 es:Inicio de Línea:
 nl:Lijn Begin
 pl:Początek linii:
+ru:Начало линии:
 :MB
 af:MB
 am:ՄԲ
@@ -12886,7 +12898,7 @@ mk:Во ред
 ml:ശരി
 my:OK
 ne:हुन्छ
-nl:OK
+nl:Ok
 nn:OK
 no:OK
 pa:ਠੀਕ ਹੈ
@@ -14548,6 +14560,7 @@ tw:多邊形
 :Popup: %d 0 R
 nl:Popup: %d O R
 pl:Wyskakujące okienko: %d 0 R
+ru:Всплывающее окно: %d 0 R
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -15767,6 +15780,7 @@ uk:Повернути праворуч\tCtrl+Shift++
 uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :S&quiggly
+az:&Dalğa
 nl:Kr&onkelig
 pl:&Falowanie
 :Save Annotations
@@ -15961,14 +15975,19 @@ uk:Зберегти ярлик...\tCtrl+Shift+S
 uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save changes to a new PDF
+az:Dəyişiklikləri yeni PDF-ə yaz
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
+ru:Сохранить изменения в новый PDF
 :Save changes to existing PDF
+az:Dəyişiklikləri mövcud PDF-ə yaz
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
+ru:Сохранить изменения в существующий PDF
 :Saved annotations to '%s'
 nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje do '%s'
+ru:Аннотации сохранены в '%s'
 :Saving of '%s' failed with: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
@@ -16397,7 +16416,7 @@ lv:Nosūtīt pa &e-pastu
 mk:Испрати по &е-пошта...
 my:Hantar melalui &Emel...
 ne:&ई-मेल द्वारा पठाउनुहोस्...
-nl:Verzend per &e-mail...
+nl:Verzend per &E-Mail...
 nn:Send med &E-post...
 no:Send med E-post...
 pl:Dołącz do wiadomości &e-mail...
@@ -18148,18 +18167,24 @@ vn:PDF được gắn thẻ
 :Text Alignment:
 nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
+ru:Выравнивание текста:
 :Text Color:
+az:Mətnin rəngi:
 es:Color de Texto:
 nl:Tekst Kleur
 pl:Kolor tekstu:
+ru:Цвет текста:
 :Text Size:
+az:Mətnin ölçüsü:
 es:Tamaño de Texto
 nl:Tekst Grootte:
 pl:Rozmiar tekstu:
+ru:Размер текста:
 :Text Size: %d
 es:Tamaño de Texto: %d
 nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
+ru:Размер текста: %d
 :Text documents
 am:Տեքստային ֆայլեր
 ar:مستندات نصية
@@ -19282,9 +19307,11 @@ es:Tienes anotaciones sin guardar
 id:Kamu memiliki catatan yang belum tersimpan
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
+ru:Аннотации не сохранены
 :You have unsaved annotations. Save them?
-nl:Je hebt niet-opgeslagen aantekeningen. Opslaan?
+nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
 pl:Masz niezapisane adnotacje. Zapisać je?
+ru:Аннотации не сохранены. Сохранить?
 :You have version %s
 af:Jy Het Weergawe %s
 am:Դուք օգտագործում եք %s տարբերակը
