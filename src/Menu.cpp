@@ -747,13 +747,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::SetEnabled(popup, CmdEditAnnotations, true);
         bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
         win::menu::SetEnabled(popup, CmdSaveAnnotations, enableSaveAnnotations);
-        // if annotations editor visible and mouse over annotation, show
-        // `Select Annotation` instead of `Edit Annotations`
-        if (tab->editAnnotsWindow && annotUnderCursor) {
-            win::menu::Remove(popup, CmdEditAnnotations);
-        } else {
-            win::menu::Remove(popup, CmdSelectAnnotation);
-        }
+        win::menu::SetEnabled(popup, CmdSelectAnnotation, annotUnderCursor != nullptr);
     } else {
         win::menu::Remove(popup, CmdSelectAnnotation);
         win::menu::Remove(popup, CmdEditAnnotations);

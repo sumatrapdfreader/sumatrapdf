@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-06-22 Tue
+
+don't hide 'Select Annotation In Editor`, just disable (for #2002)
+
 2021-06-20 Sun
 
 fix restoring exact scroll position on reload (fixes #1752)
