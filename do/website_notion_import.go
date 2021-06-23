@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/kjk/notionapi"
-	"github.com/kjk/notionapi/caching_downloader"
 	"github.com/kjk/notionapi/tohtml"
 	"github.com/kjk/u"
 )
@@ -110,16 +109,16 @@ func downloadAndCacheImage(c *notionapi.Client, uri string) (string, error) {
 
 func eventObserver(ev interface{}) {
 	switch v := ev.(type) {
-	case *caching_downloader.EventError:
+	case *notionapi.EventError:
 		logf(v.Error)
-	case *caching_downloader.EventDidDownload:
+	case *notionapi.EventDidDownload:
 		nDownloadedPage++
 		logf("%03d '%s' : downloaded in %s\n", nDownloadedPage, v.PageID, v.Duration)
-	case *caching_downloader.EventDidReadFromCache:
+	case *notionapi.EventDidReadFromCache:
 		// TODO: only verbose
 		nDownloadedPage++
 		logf("%03d '%s' : read from cache in %s\n", nDownloadedPage, v.PageID, v.Duration)
-	case *caching_downloader.EventGotVersions:
+	case *notionapi.EventGotVersions:
 		logf("downloaded info about %d versions in %s\n", v.Count, v.Duration)
 	}
 }
@@ -365,9 +364,9 @@ func websiteImportNotion() {
 	checkPrettierExist()
 	must(os.Chdir("website"))
 	client := newNotionClient()
-	cache, err := caching_downloader.NewDirectoryCache(cacheDir)
+	client.DebugLog = true
+	d, err := notionapi.NewCachingClient(cacheDir, client)
 	must(err)
-	d := caching_downloader.New(cache, client)
 	d.EventObserver = eventObserver
 	d.RedownloadNewerVersions = true
 	//d.NoReadCache = flgNoCache

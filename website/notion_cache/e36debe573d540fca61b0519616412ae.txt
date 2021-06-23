@@ -1,16 +1,16 @@
-9023 1624236869350 httpcache-v1
+8783 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
 {
   "requests": [
     {
-      "id": "e36debe5-73d5-40fc-a61b-0519616412ae",
-      "table": "block"
+      "table": "block",
+      "id": "e36debe5-73d5-40fc-a61b-0519616412ae"
     }
   ]
 }
-Response:+8823
+Response:+8584
 {
   "recordMapWithRoles": {
     "block": {
@@ -104,9 +104,7 @@ Response:+8823
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1584057779041,
-          "discussions": [
-            "492e3da7-f60e-435b-a931-96f8603b10c2"
-          ],
+          "discussions": ["492e3da7-f60e-435b-a931-96f8603b10c2"],
           "format": {
             "page_full_width": true,
             "page_small_text": true
@@ -118,11 +116,7 @@ Response:+8823
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Configuring as default PDF viewer on Windows 10"
-              ]
-            ]
+            "title": [["Configuring as default PDF viewer on Windows 10"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -150,9 +144,7 @@ Response:+8823
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -178,11 +170,7 @@ Response:+8823
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -219,9 +207,7 @@ Response:+8823
         "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "created_by_table": "notion_user",
         "created_time": 1584057779041,
-        "discussions": [
-          "492e3da7-f60e-435b-a931-96f8603b10c2"
-        ],
+        "discussions": ["492e3da7-f60e-435b-a931-96f8603b10c2"],
         "format": {
           "page_full_width": true,
           "page_small_text": true
@@ -233,11 +219,7 @@ Response:+8823
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Configuring as default PDF viewer on Windows 10"
-            ]
-          ]
+          "title": [["Configuring as default PDF viewer on Windows 10"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -246,20 +228,20 @@ Response:+8823
     }
   ]
 }
-23970 1624236869352 httpcache-v1
+23081 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
 {
+  "pageId": "e36debe5-73d5-40fc-a61b-0519616412ae",
   "chunkNumber": 0,
+  "limit": 50,
   "cursor": {
     "stack": []
   },
-  "limit": 50,
-  "pageId": "e36debe5-73d5-40fc-a61b-0519616412ae",
   "verticalColumns": false
 }
-Response:+23729
+Response:+22841
 {
   "cursor": {
     "stack": []
@@ -273,9 +255,7 @@ Response:+23729
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1584057960000,
-          "file_ids": [
-            "40f56a33-b24d-4678-8003-6c31cd42b22a"
-          ],
+          "file_ids": ["40f56a33-b24d-4678-8003-6c31cd42b22a"],
           "format": {
             "block_aspect_ratio": 1.3294460641399417,
             "block_full_width": false,
@@ -339,11 +319,7 @@ Response:+23729
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Supported document formats"
-              ]
-            ]
+            "title": [["Supported document formats"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -415,28 +391,10 @@ Response:+23729
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "select "
-              ],
-              [
-                "Open with",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " and then "
-              ],
-              [
-                "Choose another app",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ]
+              ["select "],
+              ["Open with", [["c"]]],
+              [" and then "],
+              ["Choose another app", [["c"]]]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -496,9 +454,7 @@ Response:+23729
                   ]
                 ]
               ],
-              [
-                "."
-              ]
+              ["."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -544,11 +500,7 @@ Response:+23729
           "parent_id": "e36debe5-73d5-40fc-a61b-0519616412ae",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "find a PDF file"
-              ]
-            ]
+            "title": [["find a PDF file"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -642,9 +594,7 @@ Response:+23729
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1584057780000,
-          "file_ids": [
-            "16d1d138-b4b5-4751-90c2-1a3dd48fd9f3"
-          ],
+          "file_ids": ["16d1d138-b4b5-4751-90c2-1a3dd48fd9f3"],
           "format": {
             "block_aspect_ratio": 0.8875,
             "block_full_width": false,
@@ -685,11 +635,7 @@ Response:+23729
           "parent_id": "e36debe5-73d5-40fc-a61b-0519616412ae",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Here's how to make SumatraPDF a default PDF viewer:"
-              ]
-            ]
+            "title": [["Here's how to make SumatraPDF a default PDF viewer:"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
@@ -710,11 +656,7 @@ Response:+23729
           "parent_id": "e36debe5-73d5-40fc-a61b-0519616412ae",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "In Explorer:"
-              ]
-            ]
+            "title": [["In Explorer:"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
@@ -743,9 +685,7 @@ Response:+23729
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1584057779041,
-          "discussions": [
-            "492e3da7-f60e-435b-a931-96f8603b10c2"
-          ],
+          "discussions": ["492e3da7-f60e-435b-a931-96f8603b10c2"],
           "format": {
             "page_full_width": true,
             "page_small_text": true
@@ -757,11 +697,7 @@ Response:+23729
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Configuring as default PDF viewer on Windows 10"
-              ]
-            ]
+            "title": [["Configuring as default PDF viewer on Windows 10"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -789,9 +725,7 @@ Response:+23729
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -817,11 +751,7 @@ Response:+23729
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -842,11 +772,7 @@ Response:+23729
           "parent_id": "e36debe5-73d5-40fc-a61b-0519616412ae",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "right-click to get a context menu"
-              ]
-            ]
+            "title": [["right-click to get a context menu"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -869,7 +795,7 @@ Response:+23729
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "text": [
             [
-              "You should mention that users of Windows 10 should NOT click on Settings - Options - \"Make SumatraPDF my default PDF reader\" because, if they do, Windows file association protection kicks in and resets ALL associations (not just PDF) back to Microsoft's lame-ass defaults such as Edge browser and Snip \u0026 Sketch photo viewer."
+              "You should mention that users of Windows 10 should NOT click on Settings - Options - \"Make SumatraPDF my default PDF reader\" because, if they do, Windows file association protection kicks in and resets ALL associations (not just PDF) back to Microsoft's lame-ass defaults such as Edge browser and Snip & Sketch photo viewer."
             ]
           ],
           "version": 5
@@ -880,9 +806,7 @@ Response:+23729
       "492e3da7-f60e-435b-a931-96f8603b10c2": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "09b2dad7-d92d-436c-96e5-aadb97cf9160"
-          ],
+          "comments": ["09b2dad7-d92d-436c-96e5-aadb97cf9160"],
           "id": "492e3da7-f60e-435b-a931-96f8603b10c2",
           "parent_id": "e36debe5-73d5-40fc-a61b-0519616412ae",
           "parent_table": "block",
@@ -895,87 +819,87 @@ Response:+23729
     "space": {}
   }
 }
-110854 1624236869362 httpcache-v1
+108968 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1606
 {
   "requests": [
     {
-      "id": "06174d1d-7be2-4e10-9666-56261c70ed7f",
-      "table": "block"
+      "table": "block",
+      "id": "06174d1d-7be2-4e10-9666-56261c70ed7f"
     },
     {
-      "id": "0c53a79e-9139-4ecc-b753-5ef6fed0678e",
-      "table": "block"
+      "table": "block",
+      "id": "0c53a79e-9139-4ecc-b753-5ef6fed0678e"
     },
     {
-      "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
-      "table": "block"
+      "table": "block",
+      "id": "15b0e466-7f4f-4825-a4af-e1bb10918914"
     },
     {
-      "id": "15eb2979-c4e4-4782-9647-3898d3ce81fa",
-      "table": "block"
+      "table": "block",
+      "id": "15eb2979-c4e4-4782-9647-3898d3ce81fa"
     },
     {
-      "id": "22cb32cc-e8ad-4fb5-9d47-4ab7f6306988",
-      "table": "block"
+      "table": "block",
+      "id": "22cb32cc-e8ad-4fb5-9d47-4ab7f6306988"
     },
     {
-      "id": "43ae651b-446b-4f09-a725-f2449150a43d",
-      "table": "block"
+      "table": "block",
+      "id": "43ae651b-446b-4f09-a725-f2449150a43d"
     },
     {
-      "id": "638829dc-c8f2-4475-afcd-fa245d411e50",
-      "table": "block"
+      "table": "block",
+      "id": "638829dc-c8f2-4475-afcd-fa245d411e50"
     },
     {
-      "id": "77e191e7-ce13-455b-8b7a-2c50a724317a",
-      "table": "block"
+      "table": "block",
+      "id": "77e191e7-ce13-455b-8b7a-2c50a724317a"
     },
     {
-      "id": "80776e24-fe16-497a-869d-b58ee3de6a7a",
-      "table": "block"
+      "table": "block",
+      "id": "80776e24-fe16-497a-869d-b58ee3de6a7a"
     },
     {
-      "id": "97a8146e-bdbf-4a11-8549-17e1a5668546",
-      "table": "block"
+      "table": "block",
+      "id": "97a8146e-bdbf-4a11-8549-17e1a5668546"
     },
     {
-      "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
-      "table": "block"
+      "table": "block",
+      "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991"
     },
     {
-      "id": "b794dcaa-2cdd-46fb-98cc-ef4323a1398c",
-      "table": "block"
+      "table": "block",
+      "id": "b794dcaa-2cdd-46fb-98cc-ef4323a1398c"
     },
     {
-      "id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
-      "table": "block"
+      "table": "block",
+      "id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4"
     },
     {
-      "id": "d84bb164-99c6-4a85-bf36-1d680db86029",
-      "table": "block"
+      "table": "block",
+      "id": "d84bb164-99c6-4a85-bf36-1d680db86029"
     },
     {
-      "id": "da023536-e977-4982-b099-37c8ed8cf6c1",
-      "table": "block"
+      "table": "block",
+      "id": "da023536-e977-4982-b099-37c8ed8cf6c1"
     },
     {
-      "id": "dde404d7-6f3a-4bb1-ad3f-8fd310bb8e80",
-      "table": "block"
+      "table": "block",
+      "id": "dde404d7-6f3a-4bb1-ad3f-8fd310bb8e80"
     },
     {
-      "id": "edebffa1-9600-441e-adf5-b2ed3a094091",
-      "table": "block"
+      "table": "block",
+      "id": "edebffa1-9600-441e-adf5-b2ed3a094091"
     },
     {
-      "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
-      "table": "block"
+      "table": "block",
+      "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462"
     }
   ]
 }
-Response:+109155
+Response:+107270
 {
   "recordMapWithRoles": {
     "block": {
@@ -1016,11 +940,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Use Sumatra as a pre-viewer for LaTeX editors"
-              ]
-            ]
+            "title": [["Use Sumatra as a pre-viewer for LaTeX editors"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1094,11 +1014,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Command-line arguments"
-              ]
-            ]
+            "title": [["Command-line arguments"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1135,6 +1051,7 @@ Response:+109155
             "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
             "f691a0d1-04f1-4edd-a684-d371f830adee",
             "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+            "f6472eeb-fa14-4f16-acbe-98429cb2d327",
             "0cffb196-9b08-4294-8652-385e96a5e286",
             "9d92915b-b903-49ce-bceb-1169467994f6",
             "73ab2f86-933f-430a-96a0-7c1a4ca82230",
@@ -1169,19 +1086,15 @@ Response:+109155
           "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1624226940000,
+          "last_edited_time": 1624237740000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Editing annotations"
-              ]
-            ]
+            "title": [["Editing annotations"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 144
+          "version": 152
         }
       },
       "15eb2979-c4e4-4782-9647-3898d3ce81fa": {
@@ -1221,11 +1134,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Customize external viewers"
-              ]
-            ]
+            "title": [["Customize external viewers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1257,11 +1166,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Update check doesn't work?"
-              ]
-            ]
+            "title": [["Update check doesn't work?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1302,11 +1207,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "DDE Commands"
-              ]
-            ]
+            "title": [["DDE Commands"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1362,11 +1263,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Keyboard shortcuts"
-              ]
-            ]
+            "title": [["Keyboard shortcuts"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1416,11 +1313,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Customizing eBook UI"
-              ]
-            ]
+            "title": [["Customizing eBook UI"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1443,11 +1336,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Documentation for users"
-              ]
-            ]
+            "title": [["Documentation for users"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -1546,11 +1435,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Uninstalling SumatraPDF"
-              ]
-            ]
+            "title": [["Uninstalling SumatraPDF"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1588,11 +1473,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Installer cmd-line arguments"
-              ]
-            ]
+            "title": [["Installer cmd-line arguments"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1644,11 +1525,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Setting Sumatra as default PDF reader"
-              ]
-            ]
+            "title": [["Setting Sumatra as default PDF reader"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1689,11 +1566,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How to submit bug reports"
-              ]
-            ]
+            "title": [["How to submit bug reports"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1733,11 +1606,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Reporting printing bugs"
-              ]
-            ]
+            "title": [["Reporting printing bugs"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1777,11 +1646,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How to contribute translation"
-              ]
-            ]
+            "title": [["How to contribute translation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1831,11 +1696,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Configure Sumatra for restricted use"
-              ]
-            ]
+            "title": [["Configure Sumatra for restricted use"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2250,11 +2111,7 @@ Response:+109155
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Version history"
-              ]
-            ]
+            "title": [["Version history"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2282,9 +2139,7 @@ Response:+109155
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -2310,11 +2165,7 @@ Response:+109155
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2366,11 +2217,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Use Sumatra as a pre-viewer for LaTeX editors"
-            ]
-          ]
+          "title": [["Use Sumatra as a pre-viewer for LaTeX editors"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2444,11 +2291,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Command-line arguments"
-            ]
-          ]
+          "title": [["Command-line arguments"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2485,6 +2328,7 @@ Response:+109155
           "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
           "f691a0d1-04f1-4edd-a684-d371f830adee",
           "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+          "f6472eeb-fa14-4f16-acbe-98429cb2d327",
           "0cffb196-9b08-4294-8652-385e96a5e286",
           "9d92915b-b903-49ce-bceb-1169467994f6",
           "73ab2f86-933f-430a-96a0-7c1a4ca82230",
@@ -2519,19 +2363,15 @@ Response:+109155
         "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1624226940000,
+        "last_edited_time": 1624237740000,
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Editing annotations"
-            ]
-          ]
+          "title": [["Editing annotations"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
-        "version": 144
+        "version": 152
       }
     },
     {
@@ -2571,11 +2411,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Customize external viewers"
-            ]
-          ]
+          "title": [["Customize external viewers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2607,11 +2443,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Update check doesn't work?"
-            ]
-          ]
+          "title": [["Update check doesn't work?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2652,11 +2484,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "DDE Commands"
-            ]
-          ]
+          "title": [["DDE Commands"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2688,11 +2516,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Keyboard shortcuts"
-            ]
-          ]
+          "title": [["Keyboard shortcuts"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2742,11 +2566,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Customizing eBook UI"
-            ]
-          ]
+          "title": [["Customizing eBook UI"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2769,11 +2589,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Documentation for users"
-            ]
-          ]
+          "title": [["Documentation for users"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -2828,11 +2644,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Uninstalling SumatraPDF"
-            ]
-          ]
+          "title": [["Uninstalling SumatraPDF"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2870,11 +2682,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Installer cmd-line arguments"
-            ]
-          ]
+          "title": [["Installer cmd-line arguments"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2926,11 +2734,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Setting Sumatra as default PDF reader"
-            ]
-          ]
+          "title": [["Setting Sumatra as default PDF reader"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -2971,11 +2775,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How to submit bug reports"
-            ]
-          ]
+          "title": [["How to submit bug reports"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -3015,11 +2815,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Reporting printing bugs"
-            ]
-          ]
+          "title": [["Reporting printing bugs"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -3059,11 +2855,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How to contribute translation"
-            ]
-          ]
+          "title": [["How to contribute translation"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -3113,11 +2905,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Configure Sumatra for restricted use"
-            ]
-          ]
+          "title": [["Configure Sumatra for restricted use"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -3532,11 +3320,7 @@ Response:+109155
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Version history"
-            ]
-          ]
+          "title": [["Version history"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -3545,83 +3329,83 @@ Response:+109155
     }
   ]
 }
-63111 1624236869369 httpcache-v1
+61061 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1518
 {
   "requests": [
     {
-      "id": "180e6679-2b1e-4318-b051-5d6501e3e77a",
-      "table": "block"
+      "table": "block",
+      "id": "180e6679-2b1e-4318-b051-5d6501e3e77a"
     },
     {
-      "id": "23bb0d49-786e-47d2-bb6b-5646d04f77be",
-      "table": "block"
+      "table": "block",
+      "id": "23bb0d49-786e-47d2-bb6b-5646d04f77be"
     },
     {
-      "id": "2b746bfc-9e80-40f7-997f-55a7c4cf89e5",
-      "table": "block"
+      "table": "block",
+      "id": "2b746bfc-9e80-40f7-997f-55a7c4cf89e5"
     },
     {
-      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-      "table": "block"
+      "table": "block",
+      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80"
     },
     {
-      "id": "365a613a-d26e-4be2-875d-afa3f23d2b54",
-      "table": "block"
+      "table": "block",
+      "id": "365a613a-d26e-4be2-875d-afa3f23d2b54"
     },
     {
-      "id": "478e6d95-11ae-4d24-b479-2da4e8809c1f",
-      "table": "block"
+      "table": "block",
+      "id": "478e6d95-11ae-4d24-b479-2da4e8809c1f"
     },
     {
-      "id": "49fadea0-08c1-49d4-808f-e1f4bdbc845a",
-      "table": "block"
+      "table": "block",
+      "id": "49fadea0-08c1-49d4-808f-e1f4bdbc845a"
     },
     {
-      "id": "4e331bd4-4d04-4a8a-9879-410d476f2b20",
-      "table": "block"
+      "table": "block",
+      "id": "4e331bd4-4d04-4a8a-9879-410d476f2b20"
     },
     {
-      "id": "50bd81ac-e105-4654-9e16-5e7eabb865ec",
-      "table": "block"
+      "table": "block",
+      "id": "50bd81ac-e105-4654-9e16-5e7eabb865ec"
     },
     {
-      "id": "5e05d94c-5680-4003-9a70-093cd4bd64df",
-      "table": "block"
+      "table": "block",
+      "id": "5e05d94c-5680-4003-9a70-093cd4bd64df"
     },
     {
-      "id": "764b25da-299d-405f-8801-6ccb26b785d1",
-      "table": "block"
+      "table": "block",
+      "id": "764b25da-299d-405f-8801-6ccb26b785d1"
     },
     {
-      "id": "77900bf4-aedc-4a46-a428-aeb95e6e5988",
-      "table": "block"
+      "table": "block",
+      "id": "77900bf4-aedc-4a46-a428-aeb95e6e5988"
     },
     {
-      "id": "78e2d376-690e-4034-9979-08c0788f038b",
-      "table": "block"
+      "table": "block",
+      "id": "78e2d376-690e-4034-9979-08c0788f038b"
     },
     {
-      "id": "92b6b053-e190-401f-b706-2883a68c8bf9",
-      "table": "block"
+      "table": "block",
+      "id": "92b6b053-e190-401f-b706-2883a68c8bf9"
     },
     {
-      "id": "bdbc614f-7121-444c-b43e-4dcb407c6f51",
-      "table": "block"
+      "table": "block",
+      "id": "bdbc614f-7121-444c-b43e-4dcb407c6f51"
     },
     {
-      "id": "be6ef085-e89f-4903-8c2b-671c0743b690",
-      "table": "block"
+      "table": "block",
+      "id": "be6ef085-e89f-4903-8c2b-671c0743b690"
     },
     {
-      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
-      "table": "block"
+      "table": "block",
+      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba"
     }
   ]
 }
-Response:+61501
+Response:+59452
 {
   "recordMapWithRoles": {
     "block": {
@@ -3650,11 +3434,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Submit crash report"
-              ]
-            ]
+            "title": [["Submit crash report"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3692,11 +3472,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Source code downloads"
-              ]
-            ]
+            "title": [["Source code downloads"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3771,11 +3547,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Our build system"
-              ]
-            ]
+            "title": [["Our build system"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3798,11 +3570,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Information for developers"
-              ]
-            ]
+            "title": [["Information for developers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -3837,11 +3605,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How we store settings"
-              ]
-            ]
+            "title": [["How we store settings"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3894,16 +3658,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Accessibility and Text-to-Speech",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Accessibility and Text-to-Speech", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3942,11 +3697,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Using DrMemory"
-              ]
-            ]
+            "title": [["Using DrMemory"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3986,11 +3737,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Stress testing"
-              ]
-            ]
+            "title": [["Stress testing"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4078,11 +3825,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Release process"
-              ]
-            ]
+            "title": [["Release process"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4121,11 +3864,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Using OpenCppCoverage"
-              ]
-            ]
+            "title": [["Using OpenCppCoverage"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4159,11 +3898,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Is there a virus in Sumatra sources?"
-              ]
-            ]
+            "title": [["Is there a virus in Sumatra sources?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4196,11 +3931,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Why only Windows?"
-              ]
-            ]
+            "title": [["Why only Windows?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4223,11 +3954,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Misc"
-              ]
-            ]
+            "title": [["Misc"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -4279,11 +4006,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Debugging Sumatra"
-              ]
-            ]
+            "title": [["Debugging Sumatra"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4329,11 +4052,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Contribute to SumatraPDF"
-              ]
-            ]
+            "title": [["Contribute to SumatraPDF"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4374,11 +4093,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Info for new developers"
-              ]
-            ]
+            "title": [["Info for new developers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4448,9 +4163,7 @@ Response:+61501
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -4476,11 +4189,7 @@ Response:+61501
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4520,11 +4229,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Submit crash report"
-            ]
-          ]
+          "title": [["Submit crash report"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4562,11 +4267,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Source code downloads"
-            ]
-          ]
+          "title": [["Source code downloads"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4641,11 +4342,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Our build system"
-            ]
-          ]
+          "title": [["Our build system"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4668,11 +4365,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Information for developers"
-            ]
-          ]
+          "title": [["Information for developers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -4707,11 +4400,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How we store settings"
-            ]
-          ]
+          "title": [["How we store settings"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4764,16 +4453,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Accessibility and Text-to-Speech",
-              [
-                [
-                  "b"
-                ]
-              ]
-            ]
-          ]
+          "title": [["Accessibility and Text-to-Speech", [["b"]]]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4812,11 +4492,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Using DrMemory"
-            ]
-          ]
+          "title": [["Using DrMemory"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4856,11 +4532,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Stress testing"
-            ]
-          ]
+          "title": [["Stress testing"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4924,11 +4596,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Release process"
-            ]
-          ]
+          "title": [["Release process"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4967,11 +4635,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Using OpenCppCoverage"
-            ]
-          ]
+          "title": [["Using OpenCppCoverage"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -5005,11 +4669,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Is there a virus in Sumatra sources?"
-            ]
-          ]
+          "title": [["Is there a virus in Sumatra sources?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -5042,11 +4702,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Why only Windows?"
-            ]
-          ]
+          "title": [["Why only Windows?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -5069,11 +4725,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Misc"
-            ]
-          ]
+          "title": [["Misc"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -5125,11 +4777,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Debugging Sumatra"
-            ]
-          ]
+          "title": [["Debugging Sumatra"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -5175,11 +4823,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Contribute to SumatraPDF"
-            ]
-          ]
+          "title": [["Contribute to SumatraPDF"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -5220,11 +4864,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Info for new developers"
-            ]
-          ]
+          "title": [["Info for new developers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",

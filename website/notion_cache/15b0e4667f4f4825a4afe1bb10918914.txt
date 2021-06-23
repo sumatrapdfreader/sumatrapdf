@@ -1,16 +1,16 @@
-12664 1624263923949 httpcache-v1
+12468 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
 {
   "requests": [
     {
-      "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
-      "table": "block"
+      "table": "block",
+      "id": "15b0e466-7f4f-4825-a4af-e1bb10918914"
     }
   ]
 }
-Response:+12463
+Response:+12268
 {
   "recordMapWithRoles": {
     "block": {
@@ -83,11 +83,7 @@ Response:+12463
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Editing annotations"
-              ]
-            ]
+            "title": [["Editing annotations"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -183,9 +179,7 @@ Response:+12463
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -211,11 +205,7 @@ Response:+12463
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -299,11 +289,7 @@ Response:+12463
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Editing annotations"
-            ]
-          ]
+          "title": [["Editing annotations"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -312,20 +298,20 @@ Response:+12463
     }
   ]
 }
-64079 1624263923950 httpcache-v1
+58831 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
 {
+  "pageId": "15b0e466-7f4f-4825-a4af-e1bb10918914",
   "chunkNumber": 0,
+  "limit": 50,
   "cursor": {
     "stack": []
   },
-  "limit": 50,
-  "pageId": "15b0e466-7f4f-4825-a4af-e1bb10918914",
   "verticalColumns": false
 }
-Response:+63838
+Response:+58591
 {
   "cursor": {
     "stack": [
@@ -354,9 +340,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1624216440000,
-          "file_ids": [
-            "b4a1596e-2cc6-4c99-b43b-0b0f57796780"
-          ],
+          "file_ids": ["b4a1596e-2cc6-4c99-b43b-0b0f57796780"],
           "format": {
             "block_aspect_ratio": 0.6681715575620768,
             "block_full_width": false,
@@ -402,28 +386,10 @@ Response:+63838
               [
                 "Another way to open annotation editor is to use context menu (right mouse click or "
               ],
-              [
-                "Shift-F10",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ") and use "
-              ],
-              [
-                "Edit Annotations",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ":"
-              ]
+              ["Shift-F10", [["c"]]],
+              [") and use "],
+              ["Edit Annotations", [["c"]]],
+              [":"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -446,9 +412,7 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "You can also create annotation object at your mouse location:"
-              ]
+              ["You can also create annotation object at your mouse location:"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -525,11 +489,7 @@ Response:+63838
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Editing annotations"
-              ]
-            ]
+            "title": [["Editing annotations"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -550,11 +510,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "tell us what"
-              ]
-            ]
+            "title": [["tell us what"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -579,17 +535,8 @@ Response:+63838
               [
                 "Most common annotation is highlighting of text: select text and press "
               ],
-              [
-                "a",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ". This creates a highlight annotation in yellow color:"
-              ]
+              ["a", [["c"]]],
+              [". This creates a highlight annotation in yellow color:"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -611,11 +558,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Highlight text with highlight annotation"
-              ]
-            ]
+            "title": [["Highlight text with highlight annotation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -636,11 +579,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "squiggly underline"
-              ]
-            ]
+            "title": [["squiggly underline"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -661,11 +600,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Open annotation editor"
-              ]
-            ]
+            "title": [["Open annotation editor"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -687,20 +622,9 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "If you close the dialog or choose "
-              ],
-              [
-                "Discard",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ", annotations will be lost."
-              ]
+              ["If you close the dialog or choose "],
+              ["Discard", [["c"]]],
+              [", annotations will be lost."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -748,17 +672,8 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Save changes to a new PDF",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " will allow you to save as a new file."
-              ]
+              ["Save changes to a new PDF", [["c"]]],
+              [" will allow you to save as a new file."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -780,11 +695,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Other annotations for selected text"
-              ]
-            ]
+            "title": [["Other annotations for selected text"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -805,11 +716,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Moving annotations"
-              ]
-            ]
+            "title": [["Moving annotations"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -831,21 +738,9 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Notice in toolbar (upper right) we show: "
-              ],
-              [
-                "You have unsaved annotations",
-                [
-                  [
-                    "h",
-                    "red"
-                  ]
-                ]
-              ],
-              [
-                "."
-              ]
+              ["Notice in toolbar (upper right) we show: "],
+              ["You have unsaved annotations", [["h", "red"]]],
+              ["."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -868,25 +763,13 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Note:",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ],
+              ["Note:", [["b"]]],
               [
                 " version 3.3 is not yet released, you need to use daily build from "
               ],
               [
                 "https://www.sumatrapdfreader.org/dailybuilds",
-                [
-                  [
-                    "a",
-                    "https://www.sumatrapdfreader.org/dailybuilds"
-                  ]
-                ]
+                [["a", "https://www.sumatrapdfreader.org/dailybuilds"]]
               ]
             ]
           },
@@ -909,11 +792,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "When providing feedback:"
-              ]
-            ]
+            "title": [["When providing feedback:"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
@@ -934,11 +813,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Customize highlight color"
-              ]
-            ]
+            "title": [["Customize highlight color"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -959,11 +834,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "highlight"
-              ]
-            ]
+            "title": [["highlight"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1033,11 +904,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Annotation editor"
-              ]
-            ]
+            "title": [["Annotation editor"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -1058,11 +925,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Saving annotations back to PDF file"
-              ]
-            ]
+            "title": [["Saving annotations back to PDF file"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -1087,17 +950,8 @@ Response:+63838
               [
                 "To select an annotation in the editor, place the mouse cursor over an annotation in the page, right click for context menu and use "
               ],
-              [
-                "Select Annotation in Editor",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "."
-              ]
+              ["Select Annotation in Editor", [["c"]]],
+              ["."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1112,9 +966,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1624215600000,
-          "file_ids": [
-            "545abfa3-2811-410f-a118-5f15fef851c9"
-          ],
+          "file_ids": ["545abfa3-2811-410f-a118-5f15fef851c9"],
           "format": {
             "block_aspect_ratio": 0.5023696682464455,
             "block_full_width": false,
@@ -1156,11 +1008,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Select annotation from page in editor"
-              ]
-            ]
+            "title": [["Select annotation from page in editor"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -1181,11 +1029,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "All those commands will open annotation editor:"
-              ]
-            ]
+            "title": [["All those commands will open annotation editor:"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
@@ -1231,11 +1075,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "free text"
-              ]
-            ]
+            "title": [["free text"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1262,12 +1102,7 @@ Response:+63838
               ],
               [
                 "https://forum.sumatrapdfreader.org/",
-                [
-                  [
-                    "a",
-                    "https://forum.sumatrapdfreader.org/"
-                  ]
-                ]
+                [["a", "https://forum.sumatrapdfreader.org/"]]
               ]
             ]
           },
@@ -1335,42 +1170,13 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "If you press "
-              ],
-              [
-                "A",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " (upper case i.e. "
-              ],
-              [
-                "Shift-a",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ") we will create a highlight annotation (same as lower case "
-              ],
-              [
-                "a",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ") but also open annotation editor window."
-              ]
+              ["If you press "],
+              ["A", [["c"]]],
+              [" (upper case i.e. "],
+              ["Shift-a", [["c"]]],
+              [") we will create a highlight annotation (same as lower case "],
+              ["a", [["c"]]],
+              [") but also open annotation editor window."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1417,11 +1223,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "caret"
-              ]
-            ]
+            "title": [["caret"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1442,11 +1244,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "strike out"
-              ]
-            ]
+            "title": [["strike out"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1460,9 +1258,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1624217940000,
-          "file_ids": [
-            "03136ad1-0024-4b28-8bd5-9a4906b1c8bd"
-          ],
+          "file_ids": ["03136ad1-0024-4b28-8bd5-9a4906b1c8bd"],
           "format": {
             "block_aspect_ratio": 0.8198757763975155,
             "block_full_width": false,
@@ -1497,9 +1293,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1624215180000,
-          "file_ids": [
-            "26006eb3-a8aa-421f-b13b-f464f9b41e40"
-          ],
+          "file_ids": ["26006eb3-a8aa-421f-b13b-f464f9b41e40"],
           "format": {
             "block_aspect_ratio": 0.25891829689298046,
             "block_full_width": false,
@@ -1540,11 +1334,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "text"
-              ]
-            ]
+            "title": [["text"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1558,9 +1348,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1624217520000,
-          "file_ids": [
-            "52adf385-12cf-44bd-a56f-8931f1f6fbc5"
-          ],
+          "file_ids": ["52adf385-12cf-44bd-a56f-8931f1f6fbc5"],
           "format": {
             "block_aspect_ratio": 1.1974865350089767,
             "block_full_width": false,
@@ -1606,28 +1394,10 @@ Response:+63838
               [
                 "We also copy selected text to a clipboard so that e.g. you can use "
               ],
-              [
-                "Ctrl-V",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " to paste it into "
-              ],
-              [
-                "Contents",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " property of the annotation."
-              ]
+              ["Ctrl-V", [["c"]]],
+              [" to paste it into "],
+              ["Contents", [["c"]]],
+              [" property of the annotation."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1642,9 +1412,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1624216080000,
-          "file_ids": [
-            "41d9179d-a274-4aea-8f79-ab1b45b98c48"
-          ],
+          "file_ids": ["41d9179d-a274-4aea-8f79-ab1b45b98c48"],
           "format": {
             "block_aspect_ratio": 0.8631578947368421,
             "block_full_width": false,
@@ -1686,11 +1454,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Here we have a text annotation in the editor."
-              ]
-            ]
+            "title": [["Here we have a text annotation in the editor."]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
@@ -1712,31 +1476,11 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Here I highlighted word "
-              ],
-              [
-                "USAGE",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " and pressed "
-              ],
-              [
-                "a",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "."
-              ]
+              ["Here I highlighted word "],
+              ["USAGE", [["c"]]],
+              [" and pressed "],
+              ["a", [["c"]]],
+              ["."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1758,11 +1502,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "underline"
-              ]
-            ]
+            "title": [["underline"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1784,17 +1524,8 @@ Response:+63838
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Save changes to existing PDF",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " will over-write the PDF with newly added annotations."
-              ]
+              ["Save changes to existing PDF", [["c"]]],
+              [" will over-write the PDF with newly added annotations."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1820,61 +1551,16 @@ Response:+63838
               [
                 "To change default color for highlight annotation (created with keyboard shortcut "
               ],
-              [
-                "a",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "), use "
-              ],
-              [
-                "Settings \\ Advanced Options...",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " menu and change "
-              ],
-              [
-                "Annotations",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " \\ "
-              ],
-              [
-                "HighlightColor",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " value. Default is yellow "
-              ],
-              [
-                "#ffff00",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ")."
-              ]
+              ["a", [["c"]]],
+              ["), use "],
+              ["Settings \\ Advanced Options...", [["c"]]],
+              [" menu and change "],
+              ["Annotations", [["c"]]],
+              [" \\ "],
+              ["HighlightColor", [["c"]]],
+              [" value. Default is yellow "],
+              ["#ffff00", [["c"]]],
+              [")."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1946,11 +1632,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Missing features"
-              ]
-            ]
+            "title": [["Missing features"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -1971,11 +1653,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "stamp"
-              ]
-            ]
+            "title": [["stamp"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1996,11 +1674,7 @@ Response:+63838
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Other annotation types"
-              ]
-            ]
+            "title": [["Other annotation types"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -2014,9 +1688,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1624216620000,
-          "file_ids": [
-            "dec2e8f2-c20f-4adc-a9a9-fcd3283db09a"
-          ],
+          "file_ids": ["dec2e8f2-c20f-4adc-a9a9-fcd3283db09a"],
           "format": {
             "block_aspect_ratio": 0.6589958158995816,
             "block_full_width": false,
@@ -2090,9 +1762,7 @@ Response:+63838
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -2118,11 +1788,7 @@ Response:+63838
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2133,12 +1799,14 @@ Response:+63838
     "space": {}
   }
 }
-13126 1624263923951 httpcache-v1
+12922 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+441
 {
+  "pageId": "15b0e466-7f4f-4825-a4af-e1bb10918914",
   "chunkNumber": 1,
+  "limit": 30,
   "cursor": {
     "stack": [
       [
@@ -2157,11 +1825,9 @@ Body:+441
       ]
     ]
   },
-  "limit": 30,
-  "pageId": "15b0e466-7f4f-4825-a4af-e1bb10918914",
   "verticalColumns": false
 }
-Response:+12596
+Response:+12393
 {
   "cursor": {
     "stack": []
@@ -2237,11 +1903,7 @@ Response:+12596
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Editing annotations"
-              ]
-            ]
+            "title": [["Editing annotations"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2262,11 +1924,7 @@ Response:+12596
           "parent_id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "tell us what"
-              ]
-            ]
+            "title": [["tell us what"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2430,9 +2088,7 @@ Response:+12596
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -2458,11 +2114,7 @@ Response:+12596
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2473,91 +2125,91 @@ Response:+12596
     "space": {}
   }
 }
-111036 1624263923953 httpcache-v1
+108892 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1694
 {
   "requests": [
     {
-      "id": "06174d1d-7be2-4e10-9666-56261c70ed7f",
-      "table": "block"
+      "table": "block",
+      "id": "06174d1d-7be2-4e10-9666-56261c70ed7f"
     },
     {
-      "id": "0b6aad81-5994-4682-9531-ee215f11f2ea",
-      "table": "block"
+      "table": "block",
+      "id": "0b6aad81-5994-4682-9531-ee215f11f2ea"
     },
     {
-      "id": "0c53a79e-9139-4ecc-b753-5ef6fed0678e",
-      "table": "block"
+      "table": "block",
+      "id": "0c53a79e-9139-4ecc-b753-5ef6fed0678e"
     },
     {
-      "id": "15eb2979-c4e4-4782-9647-3898d3ce81fa",
-      "table": "block"
+      "table": "block",
+      "id": "15eb2979-c4e4-4782-9647-3898d3ce81fa"
     },
     {
-      "id": "22cb32cc-e8ad-4fb5-9d47-4ab7f6306988",
-      "table": "block"
+      "table": "block",
+      "id": "22cb32cc-e8ad-4fb5-9d47-4ab7f6306988"
     },
     {
-      "id": "43ae651b-446b-4f09-a725-f2449150a43d",
-      "table": "block"
+      "table": "block",
+      "id": "43ae651b-446b-4f09-a725-f2449150a43d"
     },
     {
-      "id": "638829dc-c8f2-4475-afcd-fa245d411e50",
-      "table": "block"
+      "table": "block",
+      "id": "638829dc-c8f2-4475-afcd-fa245d411e50"
     },
     {
-      "id": "77e191e7-ce13-455b-8b7a-2c50a724317a",
-      "table": "block"
+      "table": "block",
+      "id": "77e191e7-ce13-455b-8b7a-2c50a724317a"
     },
     {
-      "id": "80776e24-fe16-497a-869d-b58ee3de6a7a",
-      "table": "block"
+      "table": "block",
+      "id": "80776e24-fe16-497a-869d-b58ee3de6a7a"
     },
     {
-      "id": "97a8146e-bdbf-4a11-8549-17e1a5668546",
-      "table": "block"
+      "table": "block",
+      "id": "97a8146e-bdbf-4a11-8549-17e1a5668546"
     },
     {
-      "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
-      "table": "block"
+      "table": "block",
+      "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991"
     },
     {
-      "id": "b794dcaa-2cdd-46fb-98cc-ef4323a1398c",
-      "table": "block"
+      "table": "block",
+      "id": "b794dcaa-2cdd-46fb-98cc-ef4323a1398c"
     },
     {
-      "id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
-      "table": "block"
+      "table": "block",
+      "id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4"
     },
     {
-      "id": "d84bb164-99c6-4a85-bf36-1d680db86029",
-      "table": "block"
+      "table": "block",
+      "id": "d84bb164-99c6-4a85-bf36-1d680db86029"
     },
     {
-      "id": "da023536-e977-4982-b099-37c8ed8cf6c1",
-      "table": "block"
+      "table": "block",
+      "id": "da023536-e977-4982-b099-37c8ed8cf6c1"
     },
     {
-      "id": "dde404d7-6f3a-4bb1-ad3f-8fd310bb8e80",
-      "table": "block"
+      "table": "block",
+      "id": "dde404d7-6f3a-4bb1-ad3f-8fd310bb8e80"
     },
     {
-      "id": "e36debe5-73d5-40fc-a61b-0519616412ae",
-      "table": "block"
+      "table": "block",
+      "id": "e36debe5-73d5-40fc-a61b-0519616412ae"
     },
     {
-      "id": "edebffa1-9600-441e-adf5-b2ed3a094091",
-      "table": "block"
+      "table": "block",
+      "id": "edebffa1-9600-441e-adf5-b2ed3a094091"
     },
     {
-      "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
-      "table": "block"
+      "table": "block",
+      "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462"
     }
   ]
 }
-Response:+109249
+Response:+107106
 {
   "recordMapWithRoles": {
     "block": {
@@ -2598,11 +2250,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Use Sumatra as a pre-viewer for LaTeX editors"
-              ]
-            ]
+            "title": [["Use Sumatra as a pre-viewer for LaTeX editors"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2645,11 +2293,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Supported document formats"
-              ]
-            ]
+            "title": [["Supported document formats"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2723,11 +2367,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Command-line arguments"
-              ]
-            ]
+            "title": [["Command-line arguments"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2771,11 +2411,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Customize external viewers"
-              ]
-            ]
+            "title": [["Customize external viewers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2807,11 +2443,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Update check doesn't work?"
-              ]
-            ]
+            "title": [["Update check doesn't work?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2852,11 +2484,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "DDE Commands"
-              ]
-            ]
+            "title": [["DDE Commands"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2912,11 +2540,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Keyboard shortcuts"
-              ]
-            ]
+            "title": [["Keyboard shortcuts"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2966,11 +2590,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Customizing eBook UI"
-              ]
-            ]
+            "title": [["Customizing eBook UI"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -2993,11 +2613,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Documentation for users"
-              ]
-            ]
+            "title": [["Documentation for users"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -3096,11 +2712,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Uninstalling SumatraPDF"
-              ]
-            ]
+            "title": [["Uninstalling SumatraPDF"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3138,11 +2750,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Installer cmd-line arguments"
-              ]
-            ]
+            "title": [["Installer cmd-line arguments"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3194,11 +2802,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Setting Sumatra as default PDF reader"
-              ]
-            ]
+            "title": [["Setting Sumatra as default PDF reader"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3239,11 +2843,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How to submit bug reports"
-              ]
-            ]
+            "title": [["How to submit bug reports"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3283,11 +2883,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Reporting printing bugs"
-              ]
-            ]
+            "title": [["Reporting printing bugs"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3327,11 +2923,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How to contribute translation"
-              ]
-            ]
+            "title": [["How to contribute translation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3381,11 +2973,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Configure Sumatra for restricted use"
-              ]
-            ]
+            "title": [["Configure Sumatra for restricted use"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3414,9 +3002,7 @@ Response:+109249
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1584057779041,
-          "discussions": [
-            "492e3da7-f60e-435b-a931-96f8603b10c2"
-          ],
+          "discussions": ["492e3da7-f60e-435b-a931-96f8603b10c2"],
           "format": {
             "page_full_width": true,
             "page_small_text": true
@@ -3428,11 +3014,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Configuring as default PDF viewer on Windows 10"
-              ]
-            ]
+            "title": [["Configuring as default PDF viewer on Windows 10"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3847,11 +3429,7 @@ Response:+109249
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Version history"
-              ]
-            ]
+            "title": [["Version history"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3879,9 +3457,7 @@ Response:+109249
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -3907,11 +3483,7 @@ Response:+109249
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -3963,11 +3535,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Use Sumatra as a pre-viewer for LaTeX editors"
-            ]
-          ]
+          "title": [["Use Sumatra as a pre-viewer for LaTeX editors"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4010,11 +3578,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Supported document formats"
-            ]
-          ]
+          "title": [["Supported document formats"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4088,11 +3652,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Command-line arguments"
-            ]
-          ]
+          "title": [["Command-line arguments"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4136,11 +3696,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Customize external viewers"
-            ]
-          ]
+          "title": [["Customize external viewers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4172,11 +3728,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Update check doesn't work?"
-            ]
-          ]
+          "title": [["Update check doesn't work?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4217,11 +3769,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "DDE Commands"
-            ]
-          ]
+          "title": [["DDE Commands"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4253,11 +3801,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Keyboard shortcuts"
-            ]
-          ]
+          "title": [["Keyboard shortcuts"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4307,11 +3851,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Customizing eBook UI"
-            ]
-          ]
+          "title": [["Customizing eBook UI"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4334,11 +3874,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Documentation for users"
-            ]
-          ]
+          "title": [["Documentation for users"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -4393,11 +3929,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Uninstalling SumatraPDF"
-            ]
-          ]
+          "title": [["Uninstalling SumatraPDF"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4435,11 +3967,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Installer cmd-line arguments"
-            ]
-          ]
+          "title": [["Installer cmd-line arguments"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4491,11 +4019,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Setting Sumatra as default PDF reader"
-            ]
-          ]
+          "title": [["Setting Sumatra as default PDF reader"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4536,11 +4060,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How to submit bug reports"
-            ]
-          ]
+          "title": [["How to submit bug reports"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4580,11 +4100,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Reporting printing bugs"
-            ]
-          ]
+          "title": [["Reporting printing bugs"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4624,11 +4140,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How to contribute translation"
-            ]
-          ]
+          "title": [["How to contribute translation"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4678,11 +4190,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Configure Sumatra for restricted use"
-            ]
-          ]
+          "title": [["Configure Sumatra for restricted use"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -4711,9 +4219,7 @@ Response:+109249
         "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "created_by_table": "notion_user",
         "created_time": 1584057779041,
-        "discussions": [
-          "492e3da7-f60e-435b-a931-96f8603b10c2"
-        ],
+        "discussions": ["492e3da7-f60e-435b-a931-96f8603b10c2"],
         "format": {
           "page_full_width": true,
           "page_small_text": true
@@ -4725,11 +4231,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Configuring as default PDF viewer on Windows 10"
-            ]
-          ]
+          "title": [["Configuring as default PDF viewer on Windows 10"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -5144,11 +4646,7 @@ Response:+109249
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Version history"
-            ]
-          ]
+          "title": [["Version history"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -5157,83 +4655,83 @@ Response:+109249
     }
   ]
 }
-63111 1624263923954 httpcache-v1
+61061 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1518
 {
   "requests": [
     {
-      "id": "180e6679-2b1e-4318-b051-5d6501e3e77a",
-      "table": "block"
+      "table": "block",
+      "id": "180e6679-2b1e-4318-b051-5d6501e3e77a"
     },
     {
-      "id": "23bb0d49-786e-47d2-bb6b-5646d04f77be",
-      "table": "block"
+      "table": "block",
+      "id": "23bb0d49-786e-47d2-bb6b-5646d04f77be"
     },
     {
-      "id": "2b746bfc-9e80-40f7-997f-55a7c4cf89e5",
-      "table": "block"
+      "table": "block",
+      "id": "2b746bfc-9e80-40f7-997f-55a7c4cf89e5"
     },
     {
-      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-      "table": "block"
+      "table": "block",
+      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80"
     },
     {
-      "id": "365a613a-d26e-4be2-875d-afa3f23d2b54",
-      "table": "block"
+      "table": "block",
+      "id": "365a613a-d26e-4be2-875d-afa3f23d2b54"
     },
     {
-      "id": "478e6d95-11ae-4d24-b479-2da4e8809c1f",
-      "table": "block"
+      "table": "block",
+      "id": "478e6d95-11ae-4d24-b479-2da4e8809c1f"
     },
     {
-      "id": "49fadea0-08c1-49d4-808f-e1f4bdbc845a",
-      "table": "block"
+      "table": "block",
+      "id": "49fadea0-08c1-49d4-808f-e1f4bdbc845a"
     },
     {
-      "id": "4e331bd4-4d04-4a8a-9879-410d476f2b20",
-      "table": "block"
+      "table": "block",
+      "id": "4e331bd4-4d04-4a8a-9879-410d476f2b20"
     },
     {
-      "id": "50bd81ac-e105-4654-9e16-5e7eabb865ec",
-      "table": "block"
+      "table": "block",
+      "id": "50bd81ac-e105-4654-9e16-5e7eabb865ec"
     },
     {
-      "id": "5e05d94c-5680-4003-9a70-093cd4bd64df",
-      "table": "block"
+      "table": "block",
+      "id": "5e05d94c-5680-4003-9a70-093cd4bd64df"
     },
     {
-      "id": "764b25da-299d-405f-8801-6ccb26b785d1",
-      "table": "block"
+      "table": "block",
+      "id": "764b25da-299d-405f-8801-6ccb26b785d1"
     },
     {
-      "id": "77900bf4-aedc-4a46-a428-aeb95e6e5988",
-      "table": "block"
+      "table": "block",
+      "id": "77900bf4-aedc-4a46-a428-aeb95e6e5988"
     },
     {
-      "id": "78e2d376-690e-4034-9979-08c0788f038b",
-      "table": "block"
+      "table": "block",
+      "id": "78e2d376-690e-4034-9979-08c0788f038b"
     },
     {
-      "id": "92b6b053-e190-401f-b706-2883a68c8bf9",
-      "table": "block"
+      "table": "block",
+      "id": "92b6b053-e190-401f-b706-2883a68c8bf9"
     },
     {
-      "id": "bdbc614f-7121-444c-b43e-4dcb407c6f51",
-      "table": "block"
+      "table": "block",
+      "id": "bdbc614f-7121-444c-b43e-4dcb407c6f51"
     },
     {
-      "id": "be6ef085-e89f-4903-8c2b-671c0743b690",
-      "table": "block"
+      "table": "block",
+      "id": "be6ef085-e89f-4903-8c2b-671c0743b690"
     },
     {
-      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
-      "table": "block"
+      "table": "block",
+      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba"
     }
   ]
 }
-Response:+61501
+Response:+59452
 {
   "recordMapWithRoles": {
     "block": {
@@ -5262,11 +4760,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Submit crash report"
-              ]
-            ]
+            "title": [["Submit crash report"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5304,11 +4798,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Source code downloads"
-              ]
-            ]
+            "title": [["Source code downloads"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5383,11 +4873,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Our build system"
-              ]
-            ]
+            "title": [["Our build system"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5410,11 +4896,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Information for developers"
-              ]
-            ]
+            "title": [["Information for developers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -5449,11 +4931,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How we store settings"
-              ]
-            ]
+            "title": [["How we store settings"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5506,16 +4984,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Accessibility and Text-to-Speech",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Accessibility and Text-to-Speech", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5554,11 +5023,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Using DrMemory"
-              ]
-            ]
+            "title": [["Using DrMemory"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5598,11 +5063,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Stress testing"
-              ]
-            ]
+            "title": [["Stress testing"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5690,11 +5151,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Release process"
-              ]
-            ]
+            "title": [["Release process"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5733,11 +5190,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Using OpenCppCoverage"
-              ]
-            ]
+            "title": [["Using OpenCppCoverage"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5771,11 +5224,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Is there a virus in Sumatra sources?"
-              ]
-            ]
+            "title": [["Is there a virus in Sumatra sources?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5808,11 +5257,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Why only Windows?"
-              ]
-            ]
+            "title": [["Why only Windows?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5835,11 +5280,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Misc"
-              ]
-            ]
+            "title": [["Misc"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -5891,11 +5332,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Debugging Sumatra"
-              ]
-            ]
+            "title": [["Debugging Sumatra"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5941,11 +5378,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Contribute to SumatraPDF"
-              ]
-            ]
+            "title": [["Contribute to SumatraPDF"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5986,11 +5419,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Info for new developers"
-              ]
-            ]
+            "title": [["Info for new developers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -6060,9 +5489,7 @@ Response:+61501
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -6088,11 +5515,7 @@ Response:+61501
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -6132,11 +5555,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Submit crash report"
-            ]
-          ]
+          "title": [["Submit crash report"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6174,11 +5593,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Source code downloads"
-            ]
-          ]
+          "title": [["Source code downloads"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6253,11 +5668,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Our build system"
-            ]
-          ]
+          "title": [["Our build system"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6280,11 +5691,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Information for developers"
-            ]
-          ]
+          "title": [["Information for developers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -6319,11 +5726,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How we store settings"
-            ]
-          ]
+          "title": [["How we store settings"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6376,16 +5779,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Accessibility and Text-to-Speech",
-              [
-                [
-                  "b"
-                ]
-              ]
-            ]
-          ]
+          "title": [["Accessibility and Text-to-Speech", [["b"]]]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6424,11 +5818,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Using DrMemory"
-            ]
-          ]
+          "title": [["Using DrMemory"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6468,11 +5858,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Stress testing"
-            ]
-          ]
+          "title": [["Stress testing"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6536,11 +5922,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Release process"
-            ]
-          ]
+          "title": [["Release process"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6579,11 +5961,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Using OpenCppCoverage"
-            ]
-          ]
+          "title": [["Using OpenCppCoverage"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6617,11 +5995,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Is there a virus in Sumatra sources?"
-            ]
-          ]
+          "title": [["Is there a virus in Sumatra sources?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6654,11 +6028,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Why only Windows?"
-            ]
-          ]
+          "title": [["Why only Windows?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6681,11 +6051,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Misc"
-            ]
-          ]
+          "title": [["Misc"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -6737,11 +6103,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Debugging Sumatra"
-            ]
-          ]
+          "title": [["Debugging Sumatra"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6787,11 +6149,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Contribute to SumatraPDF"
-            ]
-          ]
+          "title": [["Contribute to SumatraPDF"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6832,11 +6190,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Info for new developers"
-            ]
-          ]
+          "title": [["Info for new developers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",

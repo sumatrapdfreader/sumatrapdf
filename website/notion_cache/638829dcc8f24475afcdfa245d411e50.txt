@@ -1,16 +1,16 @@
-7921 1622915506868 httpcache-v1
+7777 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
 {
   "requests": [
     {
-      "id": "638829dc-c8f2-4475-afcd-fa245d411e50",
-      "table": "block"
+      "table": "block",
+      "id": "638829dc-c8f2-4475-afcd-fa245d411e50"
     }
   ]
 }
-Response:+7721
+Response:+7578
 {
   "recordMapWithRoles": {
     "block": {
@@ -63,11 +63,7 @@ Response:+7721
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Keyboard shortcuts"
-              ]
-            ]
+            "title": [["Keyboard shortcuts"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -81,8 +77,9 @@ Response:+7721
           "content": [
             "80776e24-fe16-497a-869d-b58ee3de6a7a",
             "638829dc-c8f2-4475-afcd-fa245d411e50",
-            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
+            "15b0e466-7f4f-4825-a4af-e1bb10918914",
             "0c53a79e-9139-4ecc-b753-5ef6fed0678e",
+            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
             "e36debe5-73d5-40fc-a61b-0519616412ae",
             "43ae651b-446b-4f09-a725-f2449150a43d",
             "06174d1d-7be2-4e10-9666-56261c70ed7f",
@@ -109,12 +106,12 @@ Response:+7721
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584077400000,
+          "last_edited_time": 1624218720000,
           "parent_id": "57693e37-7cc6-4369-8a52-b098e71e0f1e",
           "parent_table": "block",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "column",
-          "version": 32
+          "version": 43
         }
       },
       "fed36a56-24d4-43fe-9f7b-e0e410ecd715": {
@@ -138,9 +135,7 @@ Response:+7721
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -150,7 +145,7 @@ Response:+7721
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1590015120000,
+          "last_edited_time": 1624218720000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -166,15 +161,11 @@ Response:+7721
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 67
+          "version": 69
         }
       }
     },
@@ -210,11 +201,7 @@ Response:+7721
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Keyboard shortcuts"
-            ]
-          ]
+          "title": [["Keyboard shortcuts"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -223,20 +210,20 @@ Response:+7721
     }
   ]
 }
-123668 1622915506872 httpcache-v1
+105950 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
 {
+  "pageId": "638829dc-c8f2-4475-afcd-fa245d411e50",
   "chunkNumber": 0,
+  "limit": 50,
   "cursor": {
     "stack": []
   },
-  "limit": 50,
-  "pageId": "638829dc-c8f2-4475-afcd-fa245d411e50",
   "verticalColumns": false
 }
-Response:+123426
+Response:+105709
 {
   "cursor": {
     "stack": [
@@ -289,9 +276,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271460000,
-          "discussions": [
-            "783d1ce8-3896-4bb5-96e4-42b1837516f7"
-          ],
+          "discussions": ["783d1ce8-3896-4bb5-96e4-42b1837516f7"],
           "id": "0059ed69-a779-45dd-93af-81c2748de972",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -300,17 +285,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + B",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Add current page to favorites"
-              ]
+              ["Ctrl + B", [["c"]]],
+              [" - Add current page to favorites"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -325,9 +301,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304124,
-          "discussions": [
-            "3ed73c26-5188-450d-8b9f-78912066c102"
-          ],
+          "discussions": ["3ed73c26-5188-450d-8b9f-78912066c102"],
           "id": "015a63fe-cc50-4f24-9de9-4b64cc1950e0",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -335,19 +309,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + P",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Print"
-              ]
-            ]
+            "title": [["Ctrl + P", [["c"]]], [" - Print"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -368,19 +330,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Alt + Right Arrow",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Forward"
-              ]
-            ]
+            "title": [["Alt + Right Arrow", [["c"]]], [" - Forward"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -402,17 +352,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Alt + Scroll Wheel",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Increase vertical scroll wheel steps (faster)"
-              ]
+              ["Alt + Scroll Wheel", [["c"]]],
+              [" - Increase vertical scroll wheel steps (faster)"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -427,9 +368,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304123,
-          "discussions": [
-            "30d3bee7-3c1d-4c00-89eb-9e0dc2bde669"
-          ],
+          "discussions": ["30d3bee7-3c1d-4c00-89eb-9e0dc2bde669"],
           "id": "0421a147-80f0-47ac-bfd4-25bece25b33d",
           "last_edited_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
           "last_edited_by_table": "notion_user",
@@ -437,16 +376,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Actions",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Actions", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -467,19 +397,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + N",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Open a new window"
-              ]
-            ]
+            "title": [["Ctrl + N", [["c"]]], [" - Open a new window"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -501,17 +419,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Shift + Left",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Open previous document in the directory"
-              ]
+              ["Ctrl + Shift + Left", [["c"]]],
+              [" - Open previous document in the directory"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -551,19 +460,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Shift + space",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Scroll back by screen"
-              ]
-            ]
+            "title": [["Shift + space", [["c"]]], [" - Scroll back by screen"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -585,14 +482,7 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "q",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
+              ["q", [["c"]]],
               [
                 " - Close current document (tab). Close window if last tab. Quit app if last window."
               ]
@@ -617,19 +507,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + W",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Close"
-              ]
-            ]
+            "title": [["Ctrl + W", [["c"]]], [" - Close"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -650,19 +528,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + C",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Copy Selection"
-              ]
-            ]
+            "title": [["Ctrl + C", [["c"]]], [" - Copy Selection"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -684,17 +550,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Shift + S",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Create a link to current document"
-              ]
+              ["Ctrl + Shift + S", [["c"]]],
+              [" - Create a link to current document"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -716,19 +573,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "b",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Flip a page in book mode"
-              ]
-            ]
+            "title": [["b", [["c"]]], [" - Flip a page in book mode"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -749,19 +594,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Left Arrow",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Previous Page"
-              ]
-            ]
+            "title": [["Left Arrow", [["c"]]], [" - Previous Page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -783,17 +616,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "z",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - toggle zoom between Fit Page, Fit Width, Fit Content"
-              ]
+              ["z", [["c"]]],
+              [" - toggle zoom between Fit Page, Fit Width, Fit Content"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -815,16 +639,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Go To menu",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Go To menu", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -838,9 +653,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304124,
-          "discussions": [
-            "3a5bdab1-91da-4053-a8c4-7300024210cd"
-          ],
+          "discussions": ["3a5bdab1-91da-4053-a8c4-7300024210cd"],
           "id": "237aafa9-005e-480c-bb7f-5bd716fb3ded",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -849,17 +662,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Left Mouse",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Select area (can then use with copy, print or +/- zoom)"
-              ]
+              ["Ctrl + Left Mouse", [["c"]]],
+              [" - Select area (can then use with copy, print or +/- zoom)"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -903,19 +707,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Alt + Left Arrow",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Back"
-              ]
-            ]
+            "title": [["Alt + Left Arrow", [["c"]]], [" - Back"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -936,19 +728,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + Y",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Show dropdown zoom control"
-              ]
-            ]
+            "title": [["Ctrl + Y", [["c"]]], [" - Show dropdown zoom control"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -970,17 +750,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Right Mouse",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Grab and pan page in any direction"
-              ]
+              ["Right Mouse", [["c"]]],
+              [" - Grab and pan page in any direction"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1002,19 +773,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "r",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Reload document"
-              ]
-            ]
+            "title": [["r", [["c"]]], [" - Reload document"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1190,17 +949,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "There is a table of these shortcuts posted at "
-              ],
+              ["There is a table of these shortcuts posted at "],
               [
                 "https://www.sumatrapdfreader.org/manual.html",
-                [
-                  [
-                    "a",
-                    "https://www.sumatrapdfreader.org/manual.html"
-                  ]
-                ]
+                [["a", "https://www.sumatrapdfreader.org/manual.html"]]
               ]
             ]
           },
@@ -1224,28 +976,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "j",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " / "
-              ],
-              [
-                "k",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Scroll up / down by line"
-              ]
+              ["j", [["c"]]],
+              [" / "],
+              ["k", [["c"]]],
+              [" - Scroll up / down by line"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1267,19 +1001,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + O",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Open"
-              ]
-            ]
+            "title": [["Ctrl + O", [["c"]]], [" - Open"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1300,19 +1022,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Shift + F3",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Find previous"
-              ]
-            ]
+            "title": [["Shift + F3", [["c"]]], [" - Find previous"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1333,19 +1043,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F12",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Show / Hide Bookmarks"
-              ]
-            ]
+            "title": [["F12", [["c"]]], [" - Show / Hide Bookmarks"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1366,19 +1064,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Home",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - First Page"
-              ]
-            ]
+            "title": [["Home", [["c"]]], [" - First Page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1399,19 +1085,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F11",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Enter / Exit Full Screen"
-              ]
-            ]
+            "title": [["F11", [["c"]]], [" - Enter / Exit Full Screen"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1433,17 +1107,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + F4",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Also close current document"
-              ]
+              ["Ctrl + F4", [["c"]]],
+              [" - Also close current document"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1489,19 +1154,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + W",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Close current document"
-              ]
-            ]
+            "title": [["Ctrl + W", [["c"]]], [" - Close current document"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1522,19 +1175,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "/",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Find text"
-              ]
-            ]
+            "title": [["/", [["c"]]], [" - Find text"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1555,19 +1196,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + 2",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Fit Width"
-              ]
-            ]
+            "title": [["Ctrl + 2", [["c"]]], [" - Fit Width"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1588,19 +1217,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + F",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Find text"
-              ]
-            ]
+            "title": [["Ctrl + F", [["c"]]], [" - Find text"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1622,17 +1239,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Shift + Right",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Open next document in the directory"
-              ]
+              ["Ctrl + Shift + Right", [["c"]]],
+              [" - Open next document in the directory"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1665,11 +1273,7 @@ Response:+123426
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Keyboard shortcuts"
-              ]
-            ]
+            "title": [["Keyboard shortcuts"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -1691,28 +1295,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Page Down",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " / "
-              ],
-              [
-                " Page Up",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Next / previous page"
-              ]
+              ["Page Down", [["c"]]],
+              [" / "],
+              [" Page Up", [["c"]]],
+              [" - Next / previous page"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -1734,19 +1320,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F3",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Find next"
-              ]
-            ]
+            "title": [["F3", [["c"]]], [" - Find next"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1767,19 +1341,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "End",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Go to last page"
-              ]
-            ]
+            "title": [["End", [["c"]]], [" - Go to last page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1793,9 +1355,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304123,
-          "discussions": [
-            "a21463f9-43a3-40c7-b2a9-d1e1c7888ab8"
-          ],
+          "discussions": ["a21463f9-43a3-40c7-b2a9-d1e1c7888ab8"],
           "id": "7d690dec-cc99-4ba5-83da-0b367ce694c7",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -1803,19 +1363,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Alt + Left",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Go back"
-              ]
-            ]
+            "title": [["Alt + Left", [["c"]]], [" - Go back"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1836,19 +1384,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Alt + Right",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Go forward"
-              ]
-            ]
+            "title": [["Alt + Right", [["c"]]], [" - Go forward"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1869,19 +1405,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Right Arrow",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Next Page"
-              ]
-            ]
+            "title": [["Right Arrow", [["c"]]], [" - Next Page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1895,8 +1419,9 @@ Response:+123426
           "content": [
             "80776e24-fe16-497a-869d-b58ee3de6a7a",
             "638829dc-c8f2-4475-afcd-fa245d411e50",
-            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
+            "15b0e466-7f4f-4825-a4af-e1bb10918914",
             "0c53a79e-9139-4ecc-b753-5ef6fed0678e",
+            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
             "e36debe5-73d5-40fc-a61b-0519616412ae",
             "43ae651b-446b-4f09-a725-f2449150a43d",
             "06174d1d-7be2-4e10-9666-56261c70ed7f",
@@ -1923,12 +1448,12 @@ Response:+123426
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584077400000,
+          "last_edited_time": 1624218720000,
           "parent_id": "57693e37-7cc6-4369-8a52-b098e71e0f1e",
           "parent_table": "block",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "column",
-          "version": 32
+          "version": 43
         }
       },
       "8810274f-59da-4b99-a637-225dbd6236d4": {
@@ -1945,19 +1470,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "space",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Scroll by screen"
-              ]
-            ]
+            "title": [["space", [["c"]]], [" - Scroll by screen"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -1978,19 +1491,7 @@ Response:+123426
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + O",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Open a new document"
-              ]
-            ]
+            "title": [["Ctrl + O", [["c"]]], [" - Open a new document"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2011,19 +1512,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F5",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Enter / Exit Presentation"
-              ]
-            ]
+            "title": [["F5", [["c"]]], [" - Enter / Exit Presentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2044,19 +1533,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + Y",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Custom Zoom..."
-              ]
-            ]
+            "title": [["Ctrl + Y", [["c"]]], [" - Custom Zoom..."]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2077,16 +1554,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Navigation",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Navigation", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -2107,19 +1575,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + S",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Save As"
-              ]
-            ]
+            "title": [["Ctrl + S", [["c"]]], [" - Save As"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2140,19 +1596,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + 1",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Actual Size"
-              ]
-            ]
+            "title": [["Ctrl + 1", [["c"]]], [" - Actual Size"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2173,16 +1617,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "View menu",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["View menu", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -2247,28 +1682,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Up",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " / "
-              ],
-              [
-                "Down",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Scroll up/down by line"
-              ]
+              ["Up", [["c"]]],
+              [" / "],
+              ["Down", [["c"]]],
+              [" - Scroll up/down by line"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -2291,28 +1708,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "+",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " / "
-              ],
-              [
-                "-",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - zoom in/out"
-              ]
+              ["+", [["c"]]],
+              [" / "],
+              ["-", [["c"]]],
+              [" - zoom in/out"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -2334,19 +1733,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + scroll wheel",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - zoom in/out"
-              ]
-            ]
+            "title": [["Ctrl + scroll wheel", [["c"]]], [" - zoom in/out"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2367,19 +1754,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + 3",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Fit Content"
-              ]
-            ]
+            "title": [["Ctrl + 3", [["c"]]], [" - Fit Content"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2400,19 +1775,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + 6",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Single Page"
-              ]
-            ]
+            "title": [["Ctrl + 6", [["c"]]], [" - Single Page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2433,16 +1796,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Viewing state",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Viewing state", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -2463,19 +1817,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + F",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Find..."
-              ]
-            ]
+            "title": [["Ctrl + F", [["c"]]], [" - Find..."]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2497,9 +1839,7 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "There is a good list of Windows Keyboard Shortcuts here: "
-              ],
+              ["There is a good list of Windows Keyboard Shortcuts here: "],
               [
                 "https://support.microsoft.com/en-us/help/12445/windows-keyboard-shortcuts",
                 [
@@ -2530,16 +1870,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Zoom menu",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Zoom menu", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -2553,9 +1884,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304120,
-          "discussions": [
-            "3b1a790c-1d77-4f27-a839-2955f95961b2"
-          ],
+          "discussions": ["3b1a790c-1d77-4f27-a839-2955f95961b2"],
           "id": "bb0f8e0a-ec54-4790-a861-f7d759855b32",
           "last_edited_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
           "last_edited_by_table": "notion_user",
@@ -2563,16 +1892,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "File menu",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["File menu", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -2593,19 +1913,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "End",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Last Page"
-              ]
-            ]
+            "title": [["End", [["c"]]], [" - Last Page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2626,19 +1934,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F2",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Rename"
-              ]
-            ]
+            "title": [["F2", [["c"]]], [" - Rename"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2660,17 +1956,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Shift + N",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Open current document in new window"
-              ]
+              ["Ctrl + Shift + N", [["c"]]],
+              [" - Open current document in new window"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -2692,19 +1979,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + 7",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Facing"
-              ]
-            ]
+            "title": [["Ctrl + 7", [["c"]]], [" - Facing"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2726,14 +2001,7 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Alt + F4",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
+              ["Alt + F4", [["c"]]],
               [
                 " - Close window (and all documents in it). Quit app if last window."
               ]
@@ -2759,17 +2027,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Shift + Scroll Wheel",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Pan horizontally with scroll wheel"
-              ]
+              ["Shift + Scroll Wheel", [["c"]]],
+              [" - Pan horizontally with scroll wheel"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -2791,19 +2050,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + 8",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Book View"
-              ]
-            ]
+            "title": [["Ctrl + 8", [["c"]]], [" - Book View"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2825,17 +2072,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + B",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Add current page to favorites"
-              ]
+              ["Ctrl + B", [["c"]]],
+              [" - Add current page to favorites"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -2857,19 +2095,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Home",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Go to first page"
-              ]
-            ]
+            "title": [["Home", [["c"]]], [" - Go to first page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2890,19 +2116,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + G",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Go To Page..."
-              ]
-            ]
+            "title": [["Ctrl + G", [["c"]]], [" - Go To Page..."]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2916,9 +2130,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271280000,
-          "discussions": [
-            "f8a3843e-c05e-4b00-8c39-91c184f5c2fa"
-          ],
+          "discussions": ["f8a3843e-c05e-4b00-8c39-91c184f5c2fa"],
           "id": "d1394e5c-2123-47b4-8b3a-770d5fccb571",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -2926,11 +2138,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Favorites menu"
-              ]
-            ]
+            "title": [["Favorites menu"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -2951,19 +2159,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F8",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Show / Hide Toolbar"
-              ]
-            ]
+            "title": [["F8", [["c"]]], [" - Show / Hide Toolbar"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -2995,9 +2191,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304121,
-          "discussions": [
-            "90c1f011-742d-4e0b-89b0-6630c929d2c8"
-          ],
+          "discussions": ["90c1f011-742d-4e0b-89b0-6630c929d2c8"],
           "id": "d5404b10-6835-4db6-91e1-5259ccf646c4",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -3006,28 +2200,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Shift + +",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ", "
-              ],
-              [
-                "]",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "- Rotate Right (clockwise)"
-              ]
+              ["Ctrl + Shift + +", [["c"]]],
+              [", "],
+              ["]", [["c"]]],
+              ["- Rotate Right (clockwise)"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3049,19 +2225,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + Q",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Quit app"
-              ]
-            ]
+            "title": [["Ctrl + Q", [["c"]]], [" - Quit app"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -3075,9 +2239,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304121,
-          "discussions": [
-            "3ca39aff-7296-4665-9778-622ad010dcdf"
-          ],
+          "discussions": ["3ca39aff-7296-4665-9778-622ad010dcdf"],
           "id": "df263117-3967-4209-8b4c-d01cdd19cc6b",
           "last_edited_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
           "last_edited_by_table": "notion_user",
@@ -3085,19 +2247,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + A",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Select All"
-              ]
-            ]
+            "title": [["Ctrl + A", [["c"]]], [" - Select All"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -3119,17 +2269,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "c",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - toggle between continuous/non-continuous mode"
-              ]
+              ["c", [["c"]]],
+              [" - toggle between continuous/non-continuous mode"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3144,9 +2285,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304121,
-          "discussions": [
-            "c527bb01-a627-4d7f-ba32-09fa9c767b07"
-          ],
+          "discussions": ["c527bb01-a627-4d7f-ba32-09fa9c767b07"],
           "id": "e5c3183e-b35f-491a-9b4c-262c04d2f18d",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -3155,28 +2294,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Shift + -",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ", "
-              ],
-              [
-                "[",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "- Rotate Left (anti-clockwise)"
-              ]
+              ["Ctrl + Shift + -", [["c"]]],
+              [", "],
+              ["[", [["c"]]],
+              ["- Rotate Left (anti-clockwise)"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3199,17 +2320,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Q",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Quit app (close all windows and opened documents)"
-              ]
+              ["Ctrl + Q", [["c"]]],
+              [" - Quit app (close all windows and opened documents)"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3232,17 +2344,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + S",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Save current document as..."
-              ]
+              ["Ctrl + S", [["c"]]],
+              [" - Save current document as..."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3264,19 +2367,7 @@ Response:+123426
           "parent_id": "3c7731bf-3dbd-4f50-a648-c2810528fca9",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + 0",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Fit Page"
-              ]
-            ]
+            "title": [["Ctrl + 0", [["c"]]], [" - Fit Page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -3298,28 +2389,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "n",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " / "
-              ],
-              [
-                "p",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Next / previous page"
-              ]
+              ["n", [["c"]]],
+              [" / "],
+              ["p", [["c"]]],
+              [" - Next / previous page"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3341,19 +2414,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + P",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Print"
-              ]
-            ]
+            "title": [["Ctrl + P", [["c"]]], [" - Print"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -3374,19 +2435,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "g",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Go to page"
-              ]
-            ]
+            "title": [["g", [["c"]]], [" - Go to page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -3408,17 +2457,8 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "F2",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Rename file and reopen with new name"
-              ]
+              ["F2", [["c"]]],
+              [" - Rename file and reopen with new name"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3440,19 +2480,7 @@ Response:+123426
           "parent_id": "a0c3e835-94e2-48c5-81ce-34d380683745",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + D",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Properties"
-              ]
-            ]
+            "title": [["Ctrl + D", [["c"]]], [" - Properties"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -3474,28 +2502,10 @@ Response:+123426
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Down",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " / "
-              ],
-              [
-                "Ctrl + Up",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Next / previous page"
-              ]
+              ["Ctrl + Down", [["c"]]],
+              [" / "],
+              ["Ctrl + Up", [["c"]]],
+              [" - Next / previous page"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -3524,9 +2534,7 @@ Response:+123426
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -3536,7 +2544,7 @@ Response:+123426
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1590015120000,
+          "last_edited_time": 1624218720000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -3552,15 +2560,11 @@ Response:+123426
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 67
+          "version": 69
         }
       },
       "ff3b4fd9-c658-46bc-8760-b67fa92069f3": {
@@ -3599,19 +2603,7 @@ Response:+123426
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + G",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Go to page"
-              ]
-            ]
+            "title": [["Ctrl + G", [["c"]]], [" - Go to page"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -3634,7 +2626,7 @@ Response:+123426
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "text": [
             [
-              "\u003cCtrl\u003e + N open document in a New window\n\u003cCtrl\u003e + n open a new window"
+              "<Ctrl> + N open document in a New window\n<Ctrl> + n open a new window"
             ]
           ],
           "version": 7
@@ -3652,11 +2644,7 @@ Response:+123426
           "parent_id": "c527bb01-a627-4d7f-ba32-09fa9c767b07",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "also [  - Rotate Anticlockwise"
-            ]
-          ],
+          "text": [["also [  - Rotate Anticlockwise"]],
           "version": 5
         }
       },
@@ -3672,11 +2660,7 @@ Response:+123426
           "parent_id": "3ca39aff-7296-4665-9778-622ad010dcdf",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "missing entry F8 - Show Toolbar"
-            ]
-          ],
+          "text": [["missing entry F8 - Show Toolbar"]],
           "version": 5
         }
       },
@@ -3712,11 +2696,7 @@ Response:+123426
           "parent_id": "783d1ce8-3896-4bb5-96e4-42b1837516f7",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "Currently \u003cCtrl\u003e + B - add current page to favorites"
-            ]
-          ],
+          "text": [["Currently <Ctrl> + B - add current page to favorites"]],
           "version": 5
         }
       },
@@ -3732,11 +2712,7 @@ Response:+123426
           "parent_id": "3a5bdab1-91da-4053-a8c4-7300024210cd",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "select area (can then use with copy, print or +/- zoom)"
-            ]
-          ],
+          "text": [["select area (can then use with copy, print or +/- zoom)"]],
           "version": 5
         }
       },
@@ -3753,9 +2729,7 @@ Response:+123426
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "text": [
-            [
-              "Favorites menu \\newline  Ctrl + B - Add page to favorites"
-            ]
+            ["Favorites menu \\newline  Ctrl + B - Add page to favorites"]
           ],
           "version": 5
         }
@@ -3772,11 +2746,7 @@ Response:+123426
           "parent_id": "3ed73c26-5188-450d-8b9f-78912066c102",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "insert F2  - rename file and reopen with new name"
-            ]
-          ],
+          "text": [["insert F2  - rename file and reopen with new name"]],
           "version": 5
         }
       },
@@ -3792,11 +2762,7 @@ Response:+123426
           "parent_id": "a21463f9-43a3-40c7-b2a9-d1e1c7888ab8",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "Go back (Previous view)"
-            ]
-          ],
+          "text": [["Go back (Previous view)"]],
           "version": 5
         }
       },
@@ -3812,11 +2778,7 @@ Response:+123426
           "parent_id": "90c1f011-742d-4e0b-89b0-6630c929d2c8",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "also ]  - Rotate Clockwise"
-            ]
-          ],
+          "text": [["also ]  - Rotate Clockwise"]],
           "version": 5
         }
       }
@@ -3825,14 +2787,8 @@ Response:+123426
       "30d3bee7-3c1d-4c00-89eb-9e0dc2bde669": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "16e9ae30-d352-4741-92df-cb0bc81e9f8c"
-          ],
-          "context": [
-            [
-              "Actions"
-            ]
-          ],
+          "comments": ["16e9ae30-d352-4741-92df-cb0bc81e9f8c"],
+          "context": [["Actions"]],
           "id": "30d3bee7-3c1d-4c00-89eb-9e0dc2bde669",
           "parent_id": "0421a147-80f0-47ac-bfd4-25bece25b33d",
           "parent_table": "block",
@@ -3844,14 +2800,8 @@ Response:+123426
       "3a5bdab1-91da-4053-a8c4-7300024210cd": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "82a162b5-6486-422c-a5c7-a23fdea7303f"
-          ],
-          "context": [
-            [
-              "\u003cCtrl\u003e + Left Mouse - select text or image"
-            ]
-          ],
+          "comments": ["82a162b5-6486-422c-a5c7-a23fdea7303f"],
+          "context": [["<Ctrl> + Left Mouse - select text or image"]],
           "id": "3a5bdab1-91da-4053-a8c4-7300024210cd",
           "parent_id": "237aafa9-005e-480c-bb7f-5bd716fb3ded",
           "parent_table": "block",
@@ -3863,14 +2813,8 @@ Response:+123426
       "3b1a790c-1d77-4f27-a839-2955f95961b2": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "5095fa00-3862-48b3-b22a-f5e008c35c70"
-          ],
-          "context": [
-            [
-              "File menu"
-            ]
-          ],
+          "comments": ["5095fa00-3862-48b3-b22a-f5e008c35c70"],
+          "context": [["File menu"]],
           "id": "3b1a790c-1d77-4f27-a839-2955f95961b2",
           "parent_id": "bb0f8e0a-ec54-4790-a861-f7d759855b32",
           "parent_table": "block",
@@ -3882,14 +2826,8 @@ Response:+123426
       "3ca39aff-7296-4665-9778-622ad010dcdf": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "4c91ae8b-a31b-4cf5-b7d6-b093799cf2d9"
-          ],
-          "context": [
-            [
-              "Ctrl + A - Select All"
-            ]
-          ],
+          "comments": ["4c91ae8b-a31b-4cf5-b7d6-b093799cf2d9"],
+          "context": [["Ctrl + A - Select All"]],
           "id": "3ca39aff-7296-4665-9778-622ad010dcdf",
           "parent_id": "df263117-3967-4209-8b4c-d01cdd19cc6b",
           "parent_table": "block",
@@ -3901,14 +2839,8 @@ Response:+123426
       "3ed73c26-5188-450d-8b9f-78912066c102": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "b2d3b750-eec3-4d55-a214-526e638b276d"
-          ],
-          "context": [
-            [
-              "\u003cCtrl\u003e + P - print"
-            ]
-          ],
+          "comments": ["b2d3b750-eec3-4d55-a214-526e638b276d"],
+          "context": [["<Ctrl> + P - print"]],
           "id": "3ed73c26-5188-450d-8b9f-78912066c102",
           "parent_id": "015a63fe-cc50-4f24-9de9-4b64cc1950e0",
           "parent_table": "block",
@@ -3920,14 +2852,8 @@ Response:+123426
       "783d1ce8-3896-4bb5-96e4-42b1837516f7": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "6e24275a-542a-48a4-8846-69c42698c6d6"
-          ],
-          "context": [
-            [
-              "\u003cCtrl\u003e + B - add current page to bookmarks"
-            ]
-          ],
+          "comments": ["6e24275a-542a-48a4-8846-69c42698c6d6"],
+          "context": [["<Ctrl> + B - add current page to bookmarks"]],
           "id": "783d1ce8-3896-4bb5-96e4-42b1837516f7",
           "parent_id": "0059ed69-a779-45dd-93af-81c2748de972",
           "parent_table": "block",
@@ -3939,14 +2865,8 @@ Response:+123426
       "90c1f011-742d-4e0b-89b0-6630c929d2c8": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "ee4c8905-e1b2-42bd-a57a-7ac036dcef7a"
-          ],
-          "context": [
-            [
-              "Ctrl + Shift + + - Rotate Right"
-            ]
-          ],
+          "comments": ["ee4c8905-e1b2-42bd-a57a-7ac036dcef7a"],
+          "context": [["Ctrl + Shift + + - Rotate Right"]],
           "id": "90c1f011-742d-4e0b-89b0-6630c929d2c8",
           "parent_id": "d5404b10-6835-4db6-91e1-5259ccf646c4",
           "parent_table": "block",
@@ -3958,14 +2878,8 @@ Response:+123426
       "a21463f9-43a3-40c7-b2a9-d1e1c7888ab8": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "e4bbc893-dd6c-481c-a15c-276eb1d3fe0c"
-          ],
-          "context": [
-            [
-              "Alt + Left - Go back"
-            ]
-          ],
+          "comments": ["e4bbc893-dd6c-481c-a15c-276eb1d3fe0c"],
+          "context": [["Alt + Left - Go back"]],
           "id": "a21463f9-43a3-40c7-b2a9-d1e1c7888ab8",
           "parent_id": "7d690dec-cc99-4ba5-83da-0b367ce694c7",
           "parent_table": "block",
@@ -3977,14 +2891,8 @@ Response:+123426
       "c527bb01-a627-4d7f-ba32-09fa9c767b07": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "3bb8a479-f351-4376-874f-9d7d655634b3"
-          ],
-          "context": [
-            [
-              "Ctrl + Shift + - - Rotate Left"
-            ]
-          ],
+          "comments": ["3bb8a479-f351-4376-874f-9d7d655634b3"],
+          "context": [["Ctrl + Shift + - - Rotate Left"]],
           "id": "c527bb01-a627-4d7f-ba32-09fa9c767b07",
           "parent_id": "e5c3183e-b35f-491a-9b4c-262c04d2f18d",
           "parent_table": "block",
@@ -3996,9 +2904,7 @@ Response:+123426
       "f8a3843e-c05e-4b00-8c39-91c184f5c2fa": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "85cdee17-1b50-47fa-b34b-cf182f1ec816"
-          ],
+          "comments": ["85cdee17-1b50-47fa-b34b-cf182f1ec816"],
           "id": "f8a3843e-c05e-4b00-8c39-91c184f5c2fa",
           "parent_id": "d1394e5c-2123-47b4-8b3a-770d5fccb571",
           "parent_table": "block",
@@ -4011,12 +2917,14 @@ Response:+123426
     "space": {}
   }
 }
-41068 1622915506873 httpcache-v1
+36464 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+978
 {
+  "pageId": "638829dc-c8f2-4475-afcd-fa245d411e50",
   "chunkNumber": 1,
+  "limit": 30,
   "cursor": {
     "stack": [
       [
@@ -4059,11 +2967,9 @@ Body:+978
       ]
     ]
   },
-  "limit": 30,
-  "pageId": "638829dc-c8f2-4475-afcd-fa245d411e50",
   "verticalColumns": false
 }
-Response:+40001
+Response:+35398
 {
   "cursor": {
     "stack": []
@@ -4084,19 +2990,7 @@ Response:+40001
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F8",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - show/hide toolbar"
-              ]
-            ]
+            "title": [["F8", [["c"]]], [" - show/hide toolbar"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4118,17 +3012,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Alt + 1",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - go to tab 1. Use 2, 3 etc. up to 8 to go to n-th tab"
-              ]
+              ["Alt + 1", [["c"]]],
+              [" - go to tab 1. Use 2, 3 etc. up to 8 to go to n-th tab"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4150,16 +3035,7 @@ Response:+40001
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Tabs",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Tabs", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_sub_header",
@@ -4220,19 +3096,7 @@ Response:+40001
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + Y",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - Show dropdown zoom control"
-              ]
-            ]
+            "title": [["Ctrl + Y", [["c"]]], [" - Show dropdown zoom control"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4253,19 +3117,7 @@ Response:+40001
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "F9",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - show/hide menu"
-              ]
-            ]
+            "title": [["F9", [["c"]]], [" - show/hide menu"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4286,19 +3138,7 @@ Response:+40001
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Alt + 9",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - go to last tab"
-              ]
-            ]
+            "title": [["Alt + 9", [["c"]]], [" - go to last tab"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4432,19 +3272,7 @@ Response:+40001
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "*",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " on numeric keypad - rotate left"
-              ]
-            ]
+            "title": [["*", [["c"]]], [" on numeric keypad - rotate left"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4500,11 +3328,7 @@ Response:+40001
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Keyboard shortcuts"
-              ]
-            ]
+            "title": [["Keyboard shortcuts"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -4526,17 +3350,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                ".",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - in presentation mode, make whole screen black"
-              ]
+              [".", [["c"]]],
+              [" - in presentation mode, make whole screen black"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4558,19 +3373,7 @@ Response:+40001
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + Shift + -",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - rotate left"
-              ]
-            ]
+            "title": [["Ctrl + Shift + -", [["c"]]], [" - rotate left"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4591,19 +3394,7 @@ Response:+40001
           "parent_id": "43ab78e7-fda9-411c-95d2-598ffa5dc1be",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + Tab",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - go to next tab"
-              ]
-            ]
+            "title": [["Ctrl + Tab", [["c"]]], [" - go to next tab"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4625,17 +3416,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "m",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - show cursor position in document coordinates"
-              ]
+              ["m", [["c"]]],
+              [" - show cursor position in document coordinates"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4650,8 +3432,9 @@ Response:+40001
           "content": [
             "80776e24-fe16-497a-869d-b58ee3de6a7a",
             "638829dc-c8f2-4475-afcd-fa245d411e50",
-            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
+            "15b0e466-7f4f-4825-a4af-e1bb10918914",
             "0c53a79e-9139-4ecc-b753-5ef6fed0678e",
+            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
             "e36debe5-73d5-40fc-a61b-0519616412ae",
             "43ae651b-446b-4f09-a725-f2449150a43d",
             "06174d1d-7be2-4e10-9666-56261c70ed7f",
@@ -4678,12 +3461,12 @@ Response:+40001
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584077400000,
+          "last_edited_time": 1624218720000,
           "parent_id": "57693e37-7cc6-4369-8a52-b098e71e0f1e",
           "parent_table": "block",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "column",
-          "version": 32
+          "version": 43
         }
       },
       "964df75c-5de9-4f4a-812e-e0556d5494c8": {
@@ -4693,9 +3476,7 @@ Response:+40001
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304125,
-          "discussions": [
-            "00fc1b47-b233-4f4a-b618-64b094adb9d0"
-          ],
+          "discussions": ["00fc1b47-b233-4f4a-b618-64b094adb9d0"],
           "id": "964df75c-5de9-4f4a-812e-e0556d5494c8",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -4704,39 +3485,12 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + L",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ", "
-              ],
-              [
-                "F5",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ", "
-              ],
-              [
-                "Shift + F11",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "- Enter / exit presentation mode (minimal full screen mode)"
-              ]
+              ["Ctrl + L", [["c"]]],
+              [", "],
+              ["F5", [["c"]]],
+              [", "],
+              ["Shift + F11", [["c"]]],
+              ["- Enter / exit presentation mode (minimal full screen mode)"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4758,19 +3512,7 @@ Response:+40001
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Ctrl + Shift + +",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - rotate right"
-              ]
-            ]
+            "title": [["Ctrl + Shift + +", [["c"]]], [" - rotate right"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4792,17 +3534,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "F6",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - switch focus between bookmarks window and main window"
-              ]
+              ["F6", [["c"]]],
+              [" - switch focus between bookmarks window and main window"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4825,17 +3558,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "i",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - show page information in full screen/presentation mode"
-              ]
+              ["i", [["c"]]],
+              [" - show page information in full screen/presentation mode"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4858,28 +3582,10 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "F11",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ", "
-              ],
-              [
-                "Ctrl + Shift + L",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "- Enter / Exit full screen mode "
-              ]
+              ["F11", [["c"]]],
+              [", "],
+              ["Ctrl + Shift + L", [["c"]]],
+              ["- Enter / Exit full screen mode "]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4901,19 +3607,7 @@ Response:+40001
           "parent_id": "3db62c2b-ad91-4d5c-bd7c-0a86a04ffb7a",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "/",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " on numeric keypad - rotate left"
-              ]
-            ]
+            "title": [["/", [["c"]]], [" on numeric keypad - rotate left"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
@@ -4935,17 +3629,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "Ctrl + Shift + Tab",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - go to previous tab"
-              ]
+              ["Ctrl + Shift + Tab", [["c"]]],
+              [" - go to previous tab"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -4968,17 +3653,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "F12",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - show/hide bookmarks (table of contents)"
-              ]
+              ["F12", [["c"]]],
+              [" - show/hide bookmarks (table of contents)"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -5001,17 +3677,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "c",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - toggle between continuous/non-continuous mode"
-              ]
+              ["c", [["c"]]],
+              [" - toggle between continuous/non-continuous mode"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -5026,9 +3693,7 @@ Response:+40001
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1582271304125,
-          "discussions": [
-            "c0bc10fe-be01-43c2-b0ad-e940a33296bf"
-          ],
+          "discussions": ["c0bc10fe-be01-43c2-b0ad-e940a33296bf"],
           "id": "fd2207fa-f1ed-44f3-baeb-afa3458f3664",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -5037,17 +3702,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "w",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - in presentation mode, make whole screen white"
-              ]
+              ["w", [["c"]]],
+              [" - in presentation mode, make whole screen white"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -5076,9 +3732,7 @@ Response:+40001
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -5088,7 +3742,7 @@ Response:+40001
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1590015120000,
+          "last_edited_time": 1624218720000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -5104,15 +3758,11 @@ Response:+40001
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 67
+          "version": 69
         }
       },
       "ffff3d45-0e25-4cfb-bdb7-cf655083696d": {
@@ -5130,17 +3780,8 @@ Response:+40001
           "parent_table": "block",
           "properties": {
             "title": [
-              [
-                "ESC",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " - exit full screen or presentation mode"
-              ]
+              ["ESC", [["c"]]],
+              [" - exit full screen or presentation mode"]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
@@ -5182,11 +3823,7 @@ Response:+40001
           "parent_id": "00fc1b47-b233-4f4a-b618-64b094adb9d0",
           "parent_table": "discussion",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "text": [
-            [
-              "same for F5 as for Ctrl L"
-            ]
-          ],
+          "text": [["same for F5 as for Ctrl L"]],
           "version": 5
         }
       }
@@ -5195,13 +3832,9 @@ Response:+40001
       "00fc1b47-b233-4f4a-b618-64b094adb9d0": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "a282bf06-a4da-4240-aab3-15d34617f25b"
-          ],
+          "comments": ["a282bf06-a4da-4240-aab3-15d34617f25b"],
           "context": [
-            [
-              "\u003cCtrl\u003e + L - enter presentation mode (minimal full screen mode)"
-            ]
+            ["<Ctrl> + L - enter presentation mode (minimal full screen mode)"]
           ],
           "id": "00fc1b47-b233-4f4a-b618-64b094adb9d0",
           "parent_id": "964df75c-5de9-4f4a-812e-e0556d5494c8",
@@ -5214,14 +3847,8 @@ Response:+40001
       "c0bc10fe-be01-43c2-b0ad-e940a33296bf": {
         "role": "comment_only",
         "value": {
-          "comments": [
-            "602dbd40-7456-46f4-bc4e-a929a9a86233"
-          ],
-          "context": [
-            [
-              "w - in presentation mode, make whole screen white"
-            ]
-          ],
+          "comments": ["602dbd40-7456-46f4-bc4e-a929a9a86233"],
+          "context": [["w - in presentation mode, make whole screen white"]],
           "id": "c0bc10fe-be01-43c2-b0ad-e940a33296bf",
           "parent_id": "fd2207fa-f1ed-44f3-baeb-afa3458f3664",
           "parent_table": "block",
@@ -5234,87 +3861,91 @@ Response:+40001
     "space": {}
   }
 }
-108382 1622915506876 httpcache-v1
+113582 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
-Body:+1606
+Body:+1694
 {
   "requests": [
     {
-      "id": "06174d1d-7be2-4e10-9666-56261c70ed7f",
-      "table": "block"
+      "table": "block",
+      "id": "06174d1d-7be2-4e10-9666-56261c70ed7f"
     },
     {
-      "id": "0b6aad81-5994-4682-9531-ee215f11f2ea",
-      "table": "block"
+      "table": "block",
+      "id": "0b6aad81-5994-4682-9531-ee215f11f2ea"
     },
     {
-      "id": "0c53a79e-9139-4ecc-b753-5ef6fed0678e",
-      "table": "block"
+      "table": "block",
+      "id": "0c53a79e-9139-4ecc-b753-5ef6fed0678e"
     },
     {
-      "id": "15eb2979-c4e4-4782-9647-3898d3ce81fa",
-      "table": "block"
+      "table": "block",
+      "id": "15b0e466-7f4f-4825-a4af-e1bb10918914"
     },
     {
-      "id": "22cb32cc-e8ad-4fb5-9d47-4ab7f6306988",
-      "table": "block"
+      "table": "block",
+      "id": "15eb2979-c4e4-4782-9647-3898d3ce81fa"
     },
     {
-      "id": "43ae651b-446b-4f09-a725-f2449150a43d",
-      "table": "block"
+      "table": "block",
+      "id": "22cb32cc-e8ad-4fb5-9d47-4ab7f6306988"
     },
     {
-      "id": "77e191e7-ce13-455b-8b7a-2c50a724317a",
-      "table": "block"
+      "table": "block",
+      "id": "43ae651b-446b-4f09-a725-f2449150a43d"
     },
     {
-      "id": "80776e24-fe16-497a-869d-b58ee3de6a7a",
-      "table": "block"
+      "table": "block",
+      "id": "77e191e7-ce13-455b-8b7a-2c50a724317a"
     },
     {
-      "id": "97a8146e-bdbf-4a11-8549-17e1a5668546",
-      "table": "block"
+      "table": "block",
+      "id": "80776e24-fe16-497a-869d-b58ee3de6a7a"
     },
     {
-      "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
-      "table": "block"
+      "table": "block",
+      "id": "97a8146e-bdbf-4a11-8549-17e1a5668546"
     },
     {
-      "id": "b794dcaa-2cdd-46fb-98cc-ef4323a1398c",
-      "table": "block"
+      "table": "block",
+      "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991"
     },
     {
-      "id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
-      "table": "block"
+      "table": "block",
+      "id": "b794dcaa-2cdd-46fb-98cc-ef4323a1398c"
     },
     {
-      "id": "d84bb164-99c6-4a85-bf36-1d680db86029",
-      "table": "block"
+      "table": "block",
+      "id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4"
     },
     {
-      "id": "da023536-e977-4982-b099-37c8ed8cf6c1",
-      "table": "block"
+      "table": "block",
+      "id": "d84bb164-99c6-4a85-bf36-1d680db86029"
     },
     {
-      "id": "dde404d7-6f3a-4bb1-ad3f-8fd310bb8e80",
-      "table": "block"
+      "table": "block",
+      "id": "da023536-e977-4982-b099-37c8ed8cf6c1"
     },
     {
-      "id": "e36debe5-73d5-40fc-a61b-0519616412ae",
-      "table": "block"
+      "table": "block",
+      "id": "dde404d7-6f3a-4bb1-ad3f-8fd310bb8e80"
     },
     {
-      "id": "edebffa1-9600-441e-adf5-b2ed3a094091",
-      "table": "block"
+      "table": "block",
+      "id": "e36debe5-73d5-40fc-a61b-0519616412ae"
     },
     {
-      "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
-      "table": "block"
+      "table": "block",
+      "id": "edebffa1-9600-441e-adf5-b2ed3a094091"
+    },
+    {
+      "table": "block",
+      "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462"
     }
   ]
 }
-Response:+106683
+Response:+111796
 {
   "recordMapWithRoles": {
     "block": {
@@ -5355,11 +3986,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Use Sumatra as a pre-viewer for LaTeX editors"
-              ]
-            ]
+            "title": [["Use Sumatra as a pre-viewer for LaTeX editors"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5402,11 +4029,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Supported document formats"
-              ]
-            ]
+            "title": [["Supported document formats"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5476,19 +4099,91 @@ Response:+106683
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1602062580000,
+          "last_edited_time": 1624218720000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Command-line arguments"
-              ]
-            ]
+            "title": [["Command-line arguments"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 24
+          "version": 27
+        }
+      },
+      "15b0e466-7f4f-4825-a4af-e1bb10918914": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "content": [
+            "56afac31-cfec-49f8-82e3-ff050c290ffa",
+            "4175c6d7-cd94-49b5-a7f7-da6b106f1d1c",
+            "1bdb7843-fdd2-4b0b-afbe-810d1202ca0f",
+            "1bb62df3-3643-4d51-a6d9-4a7213898c49",
+            "9bbeea59-4f07-4002-bfbb-d948eb597bd6",
+            "b5ae019c-4275-481b-8a99-f9061a358887",
+            "64f64ae0-c61c-44b4-bec3-5393f6b7d6b1",
+            "3bbe636a-b05b-4b1b-ad27-93bef717784e",
+            "7227c277-d72e-4ebf-a37e-0f98677fd1dc",
+            "6842d5fb-a26d-4caf-be97-d8e93b9436af",
+            "272e7bf7-cf47-4c0c-a0a5-8cdad108daa8",
+            "c258f0eb-0fcc-46d0-bff2-9d84049ceee6",
+            "29ae598d-0406-45d0-a3b2-bd9fc628fd29",
+            "2527cec8-7b40-4e21-9c5c-5aa59515d197",
+            "8d2cd9a8-bb21-422e-bd1a-f0a0214f6c03",
+            "099002b0-41fb-4b60-995f-642885026ab2",
+            "ad49667d-ac23-48a9-9650-3bfc75e89849",
+            "36a69c19-3891-44d2-9c69-685bc074528a",
+            "da32baa2-7513-4309-9f66-cc81945464fd",
+            "51309cb5-1f95-4377-87d2-f3b800e2db08",
+            "bac18070-9576-4dde-a58d-d5808f400ddf",
+            "981f75cd-5060-45a9-bc9f-55d27dc5af7a",
+            "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
+            "f691a0d1-04f1-4edd-a684-d371f830adee",
+            "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+            "f6472eeb-fa14-4f16-acbe-98429cb2d327",
+            "0cffb196-9b08-4294-8652-385e96a5e286",
+            "9d92915b-b903-49ce-bceb-1169467994f6",
+            "73ab2f86-933f-430a-96a0-7c1a4ca82230",
+            "f1f90980-3af0-4f32-8529-937874ab3737",
+            "975da011-ab37-4bca-95e1-a511953d7743",
+            "0745b5ef-d6aa-488b-92ab-18bca4c0e668",
+            "5b8670fd-1a6d-4452-aada-5a2b8184c141",
+            "70c188c1-4997-4b37-a24a-11b516e4470f",
+            "9eb4abde-ebba-4c0a-9865-e02ed200d068",
+            "b236bfbc-e6cb-407b-b598-324d2a47603f",
+            "f7cbd951-944d-4085-89bf-3300a1dd1c57",
+            "6f5db365-1a44-460b-8d73-387054552fd8",
+            "d3fada03-dae4-43e2-9b12-d31ff9967a98",
+            "6610edf1-d19b-4714-b150-66adb973a9c4",
+            "9a40f9fc-6fa7-4550-9e44-d2eedf8ff8eb",
+            "3b7dcb3c-7688-43cb-8257-482eee67425a",
+            "27649b6f-8e7c-4f98-903d-5eb07300212c",
+            "490d321f-f361-40fb-bfe6-f712b61aadcd",
+            "cd2af7a7-7daa-4d49-bfdb-bd870ace6004",
+            "ea10e176-552f-45e9-85c6-87fa49f63c9e",
+            "9006f7f1-6c3e-4b19-b181-0c7b149b3137",
+            "76b11dd5-d067-42d5-889d-152af94cd76b",
+            "48eb9035-fccb-4f93-8809-1079f9807ae6",
+            "18600efb-3166-4d66-b5ec-721f85d57bb6",
+            "be31408f-9b39-4f7d-9148-c684a2aa476f",
+            "eeacd7a8-59a3-4be0-80c8-5e402818f104",
+            "c3eb62ce-4ee7-4849-93bc-165c69d9bb1c"
+          ],
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1624176357774,
+          "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1624237740000,
+          "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
+          "parent_table": "block",
+          "properties": {
+            "title": [["Editing annotations"]]
+          },
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
+          "type": "page",
+          "version": 152
         }
       },
       "15eb2979-c4e4-4782-9647-3898d3ce81fa": {
@@ -5528,11 +4223,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Customize external viewers"
-              ]
-            ]
+            "title": [["Customize external viewers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5564,11 +4255,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Update check doesn't work?"
-              ]
-            ]
+            "title": [["Update check doesn't work?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5609,11 +4296,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "DDE Commands"
-              ]
-            ]
+            "title": [["DDE Commands"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5687,11 +4370,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Customizing eBook UI"
-              ]
-            ]
+            "title": [["Customizing eBook UI"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5714,11 +4393,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Documentation for users"
-              ]
-            ]
+            "title": [["Documentation for users"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -5732,8 +4407,9 @@ Response:+106683
           "content": [
             "80776e24-fe16-497a-869d-b58ee3de6a7a",
             "638829dc-c8f2-4475-afcd-fa245d411e50",
-            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
+            "15b0e466-7f4f-4825-a4af-e1bb10918914",
             "0c53a79e-9139-4ecc-b753-5ef6fed0678e",
+            "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
             "e36debe5-73d5-40fc-a61b-0519616412ae",
             "43ae651b-446b-4f09-a725-f2449150a43d",
             "06174d1d-7be2-4e10-9666-56261c70ed7f",
@@ -5760,12 +4436,12 @@ Response:+106683
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584077400000,
+          "last_edited_time": 1624218720000,
           "parent_id": "57693e37-7cc6-4369-8a52-b098e71e0f1e",
           "parent_table": "block",
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "column",
-          "version": 32
+          "version": 43
         }
       },
       "97a8146e-bdbf-4a11-8549-17e1a5668546": {
@@ -5816,11 +4492,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Uninstalling SumatraPDF"
-              ]
-            ]
+            "title": [["Uninstalling SumatraPDF"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5854,19 +4526,15 @@ Response:+106683
           "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584176760000,
+          "last_edited_time": 1624218720000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Installer cmd-line arguments"
-              ]
-            ]
+            "title": [["Installer cmd-line arguments"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 84
+          "version": 87
         }
       },
       "b794dcaa-2cdd-46fb-98cc-ef4323a1398c": {
@@ -5914,11 +4582,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Setting Sumatra as default PDF reader"
-              ]
-            ]
+            "title": [["Setting Sumatra as default PDF reader"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -5959,11 +4623,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How to submit bug reports"
-              ]
-            ]
+            "title": [["How to submit bug reports"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -6003,11 +4663,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Reporting printing bugs"
-              ]
-            ]
+            "title": [["Reporting printing bugs"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -6047,11 +4703,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How to contribute translation"
-              ]
-            ]
+            "title": [["How to contribute translation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -6101,11 +4753,7 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Configure Sumatra for restricted use"
-              ]
-            ]
+            "title": [["Configure Sumatra for restricted use"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -6134,6 +4782,7 @@ Response:+106683
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1584057779041,
+          "discussions": ["492e3da7-f60e-435b-a931-96f8603b10c2"],
           "format": {
             "page_full_width": true,
             "page_small_text": true
@@ -6145,15 +4794,11 @@ Response:+106683
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Configuring as default PDF viewer on Windows 10"
-              ]
-            ]
+            "title": [["Configuring as default PDF viewer on Windows 10"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 136
+          "version": 137
         }
       },
       "edebffa1-9600-441e-adf5-b2ed3a094091": {
@@ -6205,6 +4850,8 @@ Response:+106683
           "content": [
             "4003600d-916a-4d7a-bc76-512810eb9f20",
             "964b4736-a8b6-4e97-9213-9753503f47a5",
+            "9e5be771-544b-4181-92f5-36ee19716b88",
+            "8c4da17e-1eb1-4ea2-a566-98678026c690",
             "823ab8f1-10ae-448b-a0b4-6c96f53da80c",
             "4c2cdfca-6d8b-4e4d-9e08-0158caafabe9",
             "167fdd71-bbdf-44d5-af38-7c98490a73da",
@@ -6214,9 +4861,6 @@ Response:+106683
             "96762ab8-1c31-437d-abbc-fa6cebeed282",
             "bdd20a42-e5d1-45b7-ba77-67537d4dc88a",
             "24dadf74-07f0-4d6e-af50-05f43399cd3f",
-            "2824c7df-8167-4227-85af-05e86456de36",
-            "62d9b1c4-3e0f-417b-b5f9-4cd70c216ff4",
-            "b42e99e8-647c-43cf-b7a4-0cb3038dc8bb",
             "62fb706e-40c0-41fb-b3b8-dbdc359f86f8",
             "0a809941-cc62-4d55-a7b3-985b64da4233",
             "db55fb7b-ffa7-42ec-a6e2-24e7b7da0e38",
@@ -6561,19 +5205,15 @@ Response:+106683
           "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1593562320000,
+          "last_edited_time": 1624218900000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Version history"
-              ]
-            ]
+            "title": [["Version history"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 410
+          "version": 422
         }
       },
       "fed36a56-24d4-43fe-9f7b-e0e410ecd715": {
@@ -6597,9 +5237,7 @@ Response:+106683
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -6609,7 +5247,7 @@ Response:+106683
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1590015120000,
+          "last_edited_time": 1624218720000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -6625,15 +5263,11 @@ Response:+106683
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 67
+          "version": 69
         }
       }
     },
@@ -6681,11 +5315,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Use Sumatra as a pre-viewer for LaTeX editors"
-            ]
-          ]
+          "title": [["Use Sumatra as a pre-viewer for LaTeX editors"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6728,11 +5358,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Supported document formats"
-            ]
-          ]
+          "title": [["Supported document formats"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6802,19 +5428,91 @@ Response:+106683
         "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1602062580000,
+        "last_edited_time": 1624218720000,
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Command-line arguments"
-            ]
-          ]
+          "title": [["Command-line arguments"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
-        "version": 24
+        "version": 27
+      }
+    },
+    {
+      "role": "comment_only",
+      "value": {
+        "alive": true,
+        "content": [
+          "56afac31-cfec-49f8-82e3-ff050c290ffa",
+          "4175c6d7-cd94-49b5-a7f7-da6b106f1d1c",
+          "1bdb7843-fdd2-4b0b-afbe-810d1202ca0f",
+          "1bb62df3-3643-4d51-a6d9-4a7213898c49",
+          "9bbeea59-4f07-4002-bfbb-d948eb597bd6",
+          "b5ae019c-4275-481b-8a99-f9061a358887",
+          "64f64ae0-c61c-44b4-bec3-5393f6b7d6b1",
+          "3bbe636a-b05b-4b1b-ad27-93bef717784e",
+          "7227c277-d72e-4ebf-a37e-0f98677fd1dc",
+          "6842d5fb-a26d-4caf-be97-d8e93b9436af",
+          "272e7bf7-cf47-4c0c-a0a5-8cdad108daa8",
+          "c258f0eb-0fcc-46d0-bff2-9d84049ceee6",
+          "29ae598d-0406-45d0-a3b2-bd9fc628fd29",
+          "2527cec8-7b40-4e21-9c5c-5aa59515d197",
+          "8d2cd9a8-bb21-422e-bd1a-f0a0214f6c03",
+          "099002b0-41fb-4b60-995f-642885026ab2",
+          "ad49667d-ac23-48a9-9650-3bfc75e89849",
+          "36a69c19-3891-44d2-9c69-685bc074528a",
+          "da32baa2-7513-4309-9f66-cc81945464fd",
+          "51309cb5-1f95-4377-87d2-f3b800e2db08",
+          "bac18070-9576-4dde-a58d-d5808f400ddf",
+          "981f75cd-5060-45a9-bc9f-55d27dc5af7a",
+          "1e5fb81a-f3e3-4c88-a61c-ae9dbe92be12",
+          "f691a0d1-04f1-4edd-a684-d371f830adee",
+          "a3d0c709-ef40-4b9e-a69a-314e9089122a",
+          "f6472eeb-fa14-4f16-acbe-98429cb2d327",
+          "0cffb196-9b08-4294-8652-385e96a5e286",
+          "9d92915b-b903-49ce-bceb-1169467994f6",
+          "73ab2f86-933f-430a-96a0-7c1a4ca82230",
+          "f1f90980-3af0-4f32-8529-937874ab3737",
+          "975da011-ab37-4bca-95e1-a511953d7743",
+          "0745b5ef-d6aa-488b-92ab-18bca4c0e668",
+          "5b8670fd-1a6d-4452-aada-5a2b8184c141",
+          "70c188c1-4997-4b37-a24a-11b516e4470f",
+          "9eb4abde-ebba-4c0a-9865-e02ed200d068",
+          "b236bfbc-e6cb-407b-b598-324d2a47603f",
+          "f7cbd951-944d-4085-89bf-3300a1dd1c57",
+          "6f5db365-1a44-460b-8d73-387054552fd8",
+          "d3fada03-dae4-43e2-9b12-d31ff9967a98",
+          "6610edf1-d19b-4714-b150-66adb973a9c4",
+          "9a40f9fc-6fa7-4550-9e44-d2eedf8ff8eb",
+          "3b7dcb3c-7688-43cb-8257-482eee67425a",
+          "27649b6f-8e7c-4f98-903d-5eb07300212c",
+          "490d321f-f361-40fb-bfe6-f712b61aadcd",
+          "cd2af7a7-7daa-4d49-bfdb-bd870ace6004",
+          "ea10e176-552f-45e9-85c6-87fa49f63c9e",
+          "9006f7f1-6c3e-4b19-b181-0c7b149b3137",
+          "76b11dd5-d067-42d5-889d-152af94cd76b",
+          "48eb9035-fccb-4f93-8809-1079f9807ae6",
+          "18600efb-3166-4d66-b5ec-721f85d57bb6",
+          "be31408f-9b39-4f7d-9148-c684a2aa476f",
+          "eeacd7a8-59a3-4be0-80c8-5e402818f104",
+          "c3eb62ce-4ee7-4849-93bc-165c69d9bb1c"
+        ],
+        "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+        "created_by_table": "notion_user",
+        "created_time": 1624176357774,
+        "id": "15b0e466-7f4f-4825-a4af-e1bb10918914",
+        "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+        "last_edited_by_table": "notion_user",
+        "last_edited_time": 1624237740000,
+        "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
+        "parent_table": "block",
+        "properties": {
+          "title": [["Editing annotations"]]
+        },
+        "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
+        "type": "page",
+        "version": 152
       }
     },
     {
@@ -6854,11 +5552,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Customize external viewers"
-            ]
-          ]
+          "title": [["Customize external viewers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6890,11 +5584,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Update check doesn't work?"
-            ]
-          ]
+          "title": [["Update check doesn't work?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6935,11 +5625,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "DDE Commands"
-            ]
-          ]
+          "title": [["DDE Commands"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -6989,11 +5675,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Customizing eBook UI"
-            ]
-          ]
+          "title": [["Customizing eBook UI"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -7016,11 +5698,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Documentation for users"
-            ]
-          ]
+          "title": [["Documentation for users"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -7075,11 +5753,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Uninstalling SumatraPDF"
-            ]
-          ]
+          "title": [["Uninstalling SumatraPDF"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -7113,19 +5787,15 @@ Response:+106683
         "id": "b4fb7699-811d-4ac9-95c0-e4c6aca43991",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1584176760000,
+        "last_edited_time": 1624218720000,
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Installer cmd-line arguments"
-            ]
-          ]
+          "title": [["Installer cmd-line arguments"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
-        "version": 84
+        "version": 87
       }
     },
     {
@@ -7173,11 +5843,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Setting Sumatra as default PDF reader"
-            ]
-          ]
+          "title": [["Setting Sumatra as default PDF reader"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -7218,11 +5884,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How to submit bug reports"
-            ]
-          ]
+          "title": [["How to submit bug reports"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -7262,11 +5924,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Reporting printing bugs"
-            ]
-          ]
+          "title": [["Reporting printing bugs"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -7306,11 +5964,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How to contribute translation"
-            ]
-          ]
+          "title": [["How to contribute translation"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -7360,11 +6014,7 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Configure Sumatra for restricted use"
-            ]
-          ]
+          "title": [["Configure Sumatra for restricted use"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -7393,6 +6043,7 @@ Response:+106683
         "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "created_by_table": "notion_user",
         "created_time": 1584057779041,
+        "discussions": ["492e3da7-f60e-435b-a931-96f8603b10c2"],
         "format": {
           "page_full_width": true,
           "page_small_text": true
@@ -7404,15 +6055,11 @@ Response:+106683
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Configuring as default PDF viewer on Windows 10"
-            ]
-          ]
+          "title": [["Configuring as default PDF viewer on Windows 10"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
-        "version": 136
+        "version": 137
       }
     },
     {
@@ -7464,6 +6111,8 @@ Response:+106683
         "content": [
           "4003600d-916a-4d7a-bc76-512810eb9f20",
           "964b4736-a8b6-4e97-9213-9753503f47a5",
+          "9e5be771-544b-4181-92f5-36ee19716b88",
+          "8c4da17e-1eb1-4ea2-a566-98678026c690",
           "823ab8f1-10ae-448b-a0b4-6c96f53da80c",
           "4c2cdfca-6d8b-4e4d-9e08-0158caafabe9",
           "167fdd71-bbdf-44d5-af38-7c98490a73da",
@@ -7473,9 +6122,6 @@ Response:+106683
           "96762ab8-1c31-437d-abbc-fa6cebeed282",
           "bdd20a42-e5d1-45b7-ba77-67537d4dc88a",
           "24dadf74-07f0-4d6e-af50-05f43399cd3f",
-          "2824c7df-8167-4227-85af-05e86456de36",
-          "62d9b1c4-3e0f-417b-b5f9-4cd70c216ff4",
-          "b42e99e8-647c-43cf-b7a4-0cb3038dc8bb",
           "62fb706e-40c0-41fb-b3b8-dbdc359f86f8",
           "0a809941-cc62-4d55-a7b3-985b64da4233",
           "db55fb7b-ffa7-42ec-a6e2-24e7b7da0e38",
@@ -7820,100 +6466,96 @@ Response:+106683
         "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1593562320000,
+        "last_edited_time": 1624218900000,
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Version history"
-            ]
-          ]
+          "title": [["Version history"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
-        "version": 410
+        "version": 422
       }
     }
   ]
 }
-63111 1622915506879 httpcache-v1
+61061 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1518
 {
   "requests": [
     {
-      "id": "180e6679-2b1e-4318-b051-5d6501e3e77a",
-      "table": "block"
+      "table": "block",
+      "id": "180e6679-2b1e-4318-b051-5d6501e3e77a"
     },
     {
-      "id": "23bb0d49-786e-47d2-bb6b-5646d04f77be",
-      "table": "block"
+      "table": "block",
+      "id": "23bb0d49-786e-47d2-bb6b-5646d04f77be"
     },
     {
-      "id": "2b746bfc-9e80-40f7-997f-55a7c4cf89e5",
-      "table": "block"
+      "table": "block",
+      "id": "2b746bfc-9e80-40f7-997f-55a7c4cf89e5"
     },
     {
-      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-      "table": "block"
+      "table": "block",
+      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80"
     },
     {
-      "id": "365a613a-d26e-4be2-875d-afa3f23d2b54",
-      "table": "block"
+      "table": "block",
+      "id": "365a613a-d26e-4be2-875d-afa3f23d2b54"
     },
     {
-      "id": "478e6d95-11ae-4d24-b479-2da4e8809c1f",
-      "table": "block"
+      "table": "block",
+      "id": "478e6d95-11ae-4d24-b479-2da4e8809c1f"
     },
     {
-      "id": "49fadea0-08c1-49d4-808f-e1f4bdbc845a",
-      "table": "block"
+      "table": "block",
+      "id": "49fadea0-08c1-49d4-808f-e1f4bdbc845a"
     },
     {
-      "id": "4e331bd4-4d04-4a8a-9879-410d476f2b20",
-      "table": "block"
+      "table": "block",
+      "id": "4e331bd4-4d04-4a8a-9879-410d476f2b20"
     },
     {
-      "id": "50bd81ac-e105-4654-9e16-5e7eabb865ec",
-      "table": "block"
+      "table": "block",
+      "id": "50bd81ac-e105-4654-9e16-5e7eabb865ec"
     },
     {
-      "id": "5e05d94c-5680-4003-9a70-093cd4bd64df",
-      "table": "block"
+      "table": "block",
+      "id": "5e05d94c-5680-4003-9a70-093cd4bd64df"
     },
     {
-      "id": "764b25da-299d-405f-8801-6ccb26b785d1",
-      "table": "block"
+      "table": "block",
+      "id": "764b25da-299d-405f-8801-6ccb26b785d1"
     },
     {
-      "id": "77900bf4-aedc-4a46-a428-aeb95e6e5988",
-      "table": "block"
+      "table": "block",
+      "id": "77900bf4-aedc-4a46-a428-aeb95e6e5988"
     },
     {
-      "id": "78e2d376-690e-4034-9979-08c0788f038b",
-      "table": "block"
+      "table": "block",
+      "id": "78e2d376-690e-4034-9979-08c0788f038b"
     },
     {
-      "id": "92b6b053-e190-401f-b706-2883a68c8bf9",
-      "table": "block"
+      "table": "block",
+      "id": "92b6b053-e190-401f-b706-2883a68c8bf9"
     },
     {
-      "id": "bdbc614f-7121-444c-b43e-4dcb407c6f51",
-      "table": "block"
+      "table": "block",
+      "id": "bdbc614f-7121-444c-b43e-4dcb407c6f51"
     },
     {
-      "id": "be6ef085-e89f-4903-8c2b-671c0743b690",
-      "table": "block"
+      "table": "block",
+      "id": "be6ef085-e89f-4903-8c2b-671c0743b690"
     },
     {
-      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
-      "table": "block"
+      "table": "block",
+      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba"
     }
   ]
 }
-Response:+61501
+Response:+59452
 {
   "recordMapWithRoles": {
     "block": {
@@ -7942,11 +6584,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Submit crash report"
-              ]
-            ]
+            "title": [["Submit crash report"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -7984,11 +6622,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Source code downloads"
-              ]
-            ]
+            "title": [["Source code downloads"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8063,11 +6697,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Our build system"
-              ]
-            ]
+            "title": [["Our build system"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8090,11 +6720,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Information for developers"
-              ]
-            ]
+            "title": [["Information for developers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -8129,11 +6755,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "How we store settings"
-              ]
-            ]
+            "title": [["How we store settings"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8186,16 +6808,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Accessibility and Text-to-Speech",
-                [
-                  [
-                    "b"
-                  ]
-                ]
-              ]
-            ]
+            "title": [["Accessibility and Text-to-Speech", [["b"]]]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8234,11 +6847,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Using DrMemory"
-              ]
-            ]
+            "title": [["Using DrMemory"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8278,11 +6887,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Stress testing"
-              ]
-            ]
+            "title": [["Stress testing"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8370,11 +6975,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Release process"
-              ]
-            ]
+            "title": [["Release process"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8413,11 +7014,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Using OpenCppCoverage"
-              ]
-            ]
+            "title": [["Using OpenCppCoverage"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8451,11 +7048,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Is there a virus in Sumatra sources?"
-              ]
-            ]
+            "title": [["Is there a virus in Sumatra sources?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8488,11 +7081,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Why only Windows?"
-              ]
-            ]
+            "title": [["Why only Windows?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8515,11 +7104,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Misc"
-              ]
-            ]
+            "title": [["Misc"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "sub_header",
@@ -8571,11 +7156,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Debugging Sumatra"
-              ]
-            ]
+            "title": [["Debugging Sumatra"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8621,11 +7202,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Contribute to SumatraPDF"
-              ]
-            ]
+            "title": [["Contribute to SumatraPDF"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8666,11 +7243,7 @@ Response:+61501
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Info for new developers"
-              ]
-            ]
+            "title": [["Info for new developers"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
@@ -8740,9 +7313,7 @@ Response:+61501
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296667529,
-          "file_ids": [
-            "499bc3f2-8206-4c35-8c19-3828d29a459f"
-          ],
+          "file_ids": ["499bc3f2-8206-4c35-8c19-3828d29a459f"],
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
@@ -8752,7 +7323,7 @@ Response:+61501
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1590015120000,
+          "last_edited_time": 1624218720000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -8768,15 +7339,11 @@ Response:+61501
             }
           ],
           "properties": {
-            "title": [
-              [
-                "SumatraPDF documentation"
-              ]
-            ]
+            "title": [["SumatraPDF documentation"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 67
+          "version": 69
         }
       }
     },
@@ -8812,11 +7379,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Submit crash report"
-            ]
-          ]
+          "title": [["Submit crash report"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -8854,11 +7417,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Source code downloads"
-            ]
-          ]
+          "title": [["Source code downloads"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -8933,11 +7492,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Our build system"
-            ]
-          ]
+          "title": [["Our build system"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -8960,11 +7515,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Information for developers"
-            ]
-          ]
+          "title": [["Information for developers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -8999,11 +7550,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "How we store settings"
-            ]
-          ]
+          "title": [["How we store settings"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9056,16 +7603,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Accessibility and Text-to-Speech",
-              [
-                [
-                  "b"
-                ]
-              ]
-            ]
-          ]
+          "title": [["Accessibility and Text-to-Speech", [["b"]]]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9104,11 +7642,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Using DrMemory"
-            ]
-          ]
+          "title": [["Using DrMemory"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9148,11 +7682,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Stress testing"
-            ]
-          ]
+          "title": [["Stress testing"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9216,11 +7746,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Release process"
-            ]
-          ]
+          "title": [["Release process"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9259,11 +7785,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Using OpenCppCoverage"
-            ]
-          ]
+          "title": [["Using OpenCppCoverage"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9297,11 +7819,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Is there a virus in Sumatra sources?"
-            ]
-          ]
+          "title": [["Is there a virus in Sumatra sources?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9334,11 +7852,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Why only Windows?"
-            ]
-          ]
+          "title": [["Why only Windows?"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9361,11 +7875,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Misc"
-            ]
-          ]
+          "title": [["Misc"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "sub_header",
@@ -9417,11 +7927,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Debugging Sumatra"
-            ]
-          ]
+          "title": [["Debugging Sumatra"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9467,11 +7973,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Contribute to SumatraPDF"
-            ]
-          ]
+          "title": [["Contribute to SumatraPDF"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
@@ -9512,11 +8014,7 @@ Response:+61501
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
-          "title": [
-            [
-              "Info for new developers"
-            ]
-          ]
+          "title": [["Info for new developers"]]
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
