@@ -21,19 +21,30 @@ import (
 )
 
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
-const fasterSubset = false
 const filterNoSymbols = true
-const filterOlderVersions = true
 
 // we don't want want to show crsahes for outdated builds
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
-const lowestCrashingBuildToShow = 13112
+const filterOlderVersions = true
+const lowestCrashingBuildToShow = 13418
+
 const nDaysToKeep = 14
+
+// apparently those are forks of sumatra, crash a lot
+// and didn't bother to turn off crash reporting
+var blacklistedCrashes = []string{
+	"huizhipdf.exe",
+	"einkreader.exe",
+	"jikepdf.exe",
+	"scpdfviewer.exe",
+	"Ver: 3.3 (dbg)",
+}
 
 var (
 	// maps day key as YYYY-MM-DD to a list of crashInfo
 	crashesPerDay   = map[string][]*crashInfo{}
+	muCrashesPerDay sync.Mutex
 	nRemoteFiles    = 0
 	nWritten        = 0
 	tmplCrashParsed *template.Template
@@ -316,26 +327,9 @@ func crashesHTMLDataDir() string {
 func storeDayToDirDay(s string) string {
 	parts := strings.Split(s, "/")
 	panicIf(len(parts) != 3)
-	return strings.Join(parts, "-")
-}
-
-func getCrashInfoForDayName(day, fileNameTxt string) *crashInfo {
-	panicIf(len(day) != len("yyyy-dd-mm"))
-	crashes := crashesPerDay[day]
-	for _, c := range crashes {
-		if c.fileNameTxt == fileNameTxt {
-			return c
-		}
-	}
-	crash := &crashInfo{
-		Day:         day,
-		fileNameTxt: fileNameTxt,
-		// foo.txt => foo.html
-		fileNameHTML: strings.Replace(fileNameTxt, ".txt", ".html", -1),
-	}
-	crashes = append(crashes, crash)
-	crashesPerDay[day] = crashes
-	return crash
+	day := strings.Join(parts, "-")
+	panicIf(len(day) != 10) // "yyyy-dd-mm"
+	return day
 }
 
 // return true if crash in that day is outdated
@@ -350,10 +344,12 @@ func isOutdated(day string) bool {
 // this is to filter out crashes we don't care about
 // like those from other apps
 func shouldDeleteParsedCrash(body []byte) bool {
-	if bytes.Contains(body, []byte("einkreader.exe")) {
-		return true
+	for _, s := range blacklistedCrashes {
+		if bytes.Contains(body, []byte(s)) {
+			return true
+		}
 	}
-	return bytes.Contains(body, []byte("jikepdf.exe"))
+	return false
 }
 
 const nDownloaders = 64
@@ -420,7 +416,7 @@ func downloadOrReadOrDelete(mc *u.MinioClient, ci *crashInfo) {
 	if filterOlderVersions && ci.Ver != nil {
 		build := ci.Ver.Build
 		// filter out outdated builds
-		if build > 0 && build < lowestCrashingBuildToShow {
+		if build > 0 && build <= lowestCrashingBuildToShow {
 			ci.isDeleted = true
 		}
 
@@ -450,14 +446,13 @@ func previewCrashes() {
 	go func() {
 		mc := newMinioClient()
 		client, err := mc.GetClient()
-		panicIfErr(err)
+		must(err)
 
 		doneCh := make(chan struct{})
 		defer close(doneCh)
 
 		remoteFiles := client.ListObjects(mc.Bucket, crashesPrefix, true, doneCh)
 
-		must(err)
 		finished := false
 		for rf := range remoteFiles {
 			if finished {
@@ -466,26 +461,33 @@ func previewCrashes() {
 			nRemoteFiles++
 			must(rf.Err)
 			//logf("key: %s\n", rf.Key)
-			s := strings.TrimPrefix(rf.Key, crashesPrefix)
-			name := path.Base(s)
-			// now day is YYYY/MM/DD/rest
-			day := path.Dir(s)
-			day = storeDayToDirDay(day)
-			crash := getCrashInfoForDayName(day, name)
-			crash.storeKey = rf.Key
 
 			wg.Add(1)
 			sem <- true
-			go func() {
+			go func(key string) {
+				s := strings.TrimPrefix(key, crashesPrefix)
+				fileNameTxt := path.Base(s)
+				// now day is YYYY/MM/DD/rest
+				day := path.Dir(s)
+				day = storeDayToDirDay(day)
+				crash := &crashInfo{
+					Day:         day,
+					fileNameTxt: fileNameTxt,
+					// foo.txt => foo.html
+					fileNameHTML: strings.Replace(fileNameTxt, ".txt", ".html", -1),
+				}
+				crash.storeKey = key
 				downloadOrReadOrDelete(mc, crash)
+				if !crash.isDeleted {
+					muCrashesPerDay.Lock()
+					crashes := crashesPerDay[day]
+					crashes = append(crashes, crash)
+					crashesPerDay[day] = crashes
+					muCrashesPerDay.Unlock()
+				}
 				<-sem
 				wg.Done()
-			}()
-			//
-			if fasterSubset && len(crashesPerDay) > 2 {
-				doneCh <- struct{}{}
-				finished = true
-			}
+			}(rf.Key)
 		}
 		wg.Done()
 	}()
