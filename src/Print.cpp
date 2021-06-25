@@ -868,6 +868,34 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
     }
 }
 
+static short DetectPrinterPaperSize(EngineBase* engine, const WCHAR* printerName) {
+    // get size of first page in tenths of a millimeter in portrait mode
+    RectF mediabox = engine->PageMediabox(1);
+    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
+    Size sizeP = size.dx <= size.dy ? Size(size.dx, size.dy) : Size(size.dy, size.dx);
+
+    // get list of papers and paper sizes supported by printer
+    DWORD count = DeviceCapabilities(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
+    DWORD count2 = DeviceCapabilities(printerName, nullptr, DC_PAPERSIZE, nullptr, nullptr);
+    if (count != count2 || 0 == count || ((DWORD)-1 == count)) {
+        return 0;
+    }
+    ScopedMem<WORD> papers(AllocArray<WORD>(count));
+    ScopedMem<POINT> papersizes(AllocArray<POINT>(count));
+    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, (WCHAR*)papers.Get(), nullptr);
+    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, (WCHAR*)papersizes.Get(), nullptr);
+    // find equivalent paper size with 1mm tolerance
+    for (DWORD i = 0; i < count; i++) {
+        Size paperSizeP = papersizes[i].x <= papersizes[i].y ? Size(papersizes[i].x, papersizes[i].y)
+                                                             : Size(papersizes[i].y, papersizes[i].x);
+        if (abs(sizeP.dx - paperSizeP.dx) <= 10 && abs(sizeP.dy - paperSizeP.dy) <= 10) {
+            return papers[i];
+        }
+    }
+
+    return 0;
+}
+
 bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
     LONG ret;
@@ -947,6 +975,12 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
         Vec<PRINTPAGERANGE> ranges;
 
         ApplyPrintSettings(printerName, settings, engine->PageCount(), ranges, advanced, devMode);
+
+        if (advanced.rotation == PrintRotationAdv::Auto && devMode->dmPaperSize == 0) {
+            if (devMode->dmPaperSize = DetectPrinterPaperSize(engine, printerName)) {
+                devMode->dmFields |= DM_PAPERSIZE;
+            }
+        }
 
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
