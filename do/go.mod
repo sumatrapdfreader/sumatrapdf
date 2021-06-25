@@ -9,7 +9,6 @@ require (
 	github.com/kjk/notionapi v0.0.0-20210625054415-aaaf06a7b439
 	github.com/kjk/u v0.0.0-20210327060556-13ea33918991
 	github.com/smartystreets/goconvey v1.6.4 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
 )
