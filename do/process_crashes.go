@@ -361,6 +361,21 @@ var (
 	nDeleted    = 0
 )
 
+// retry 3 times because processing on GitHub actions often fails due to
+// "An existing connection was forcibly closed by the remote host"
+func downloadAtomicallyRetry(mc *u.MinioClient, path string, key string) {
+	var err error
+	for i := 0; i < 3; i++ {
+		err = mc.DownloadFileAtomically(path, key)
+		if err == nil {
+			return
+		}
+		logf("Downloading '%s' to '%s' failed with '%s'\n", key, path, err)
+		time.Sleep(time.Millisecond * 500)
+	}
+	panicIf(true, "mc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, key, err)
+}
+
 func downloadOrReadOrDelete(mc *u.MinioClient, ci *crashInfo) {
 	dataDir := crashesDataDir()
 	path := filepath.Join(dataDir, ci.Day, ci.fileNameTxt)
@@ -384,8 +399,7 @@ func downloadOrReadOrDelete(mc *u.MinioClient, ci *crashInfo) {
 			logf("read %s for %s %d\n", path, ci.storeKey, nRemoteFiles)
 		}
 	} else {
-		err = mc.DownloadFileAtomically(path, ci.storeKey)
-		panicIf(err != nil, "mc.DownloadFileAtomc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, ci.storeKey, err)
+		downloadAtomicallyRetry(mc, path, ci.storeKey)
 		body, err = ioutil.ReadFile(path)
 		panicIfErr(err)
 		nDownloaded++
