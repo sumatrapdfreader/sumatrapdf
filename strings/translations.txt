@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-779c476f18fb4b72e17e56bdfd9c5c672a1b8494
+1323ade1c181e9dffab07ce190c835935d7402da
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -3071,6 +3071,7 @@ nl:&Doorhalen
 pl:&Skreślenie
 :&Text
 az:Mə&tn
+lv:&Teksts
 nl:&Tekst
 pl:&Tekst
 ru:&Текст
@@ -3130,6 +3131,7 @@ tw:主題(&T)
 uk:&Тема
 vn:&Chủ đề
 :&Underline
+lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
 :&Use original page sizes
@@ -5773,6 +5775,7 @@ vn:Tô màu
 :Color:
 az:Rəng:
 es:Color:
+lv:Krāsa:
 nl:Kleur
 pl:Kolor:
 ru:Цвет:
@@ -7560,6 +7563,7 @@ vn:Tối hơn
 :Date:
 az:Tarix:
 es:Fetcha:
+lv:Datums:
 nl:Datum:
 pl:Data:
 ru:Дата:
@@ -11193,6 +11197,7 @@ uk:Підказка: Для повторного пошуку натисніть
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Icon:
+lv:Ikona:
 nl:Pictogram:
 pl:Ikona:
 :Image files (*.%s)
@@ -12924,10 +12929,12 @@ uz:OK
 vn:Đồng ý
 :Opacity:
 es:Opacidad:
+lv:Necaurspīdīgums:
 nl:Dekking
 pl:Nieprzezroczystość:
 :Opacity: %d
 es:Opacidad: %d
+lv:Necaurspīdīgums: %d
 nl:Dekking: %d
 pl:Nieprzezroczystość: %d
 :Open
@@ -18165,23 +18172,27 @@ uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text Alignment:
+lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
 ru:Выравнивание текста:
 :Text Color:
 az:Mətnin rəngi:
 es:Color de Texto:
+lv:Teksta krāsa:
 nl:Tekst Kleur
 pl:Kolor tekstu:
 ru:Цвет текста:
 :Text Size:
 az:Mətnin ölçüsü:
 es:Tamaño de Texto
+lv:Teksta lielums:
 nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 ru:Размер текста:
 :Text Size: %d
 es:Tamaño de Texto: %d
+lv:Teksta lielums: %d
 nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
 ru:Размер текста: %d

@@ -12477,9 +12477,9 @@ const char * gTranslations_lv =
   "&Izlaist \305\241o versiju\0"\
   "\0"\
   "\0"\
-  "\0"\
+  "&Teksts\0"\
   "&Dizains\0"\
-  "\0"\
+  "&Pasv\304\253trojums\0"\
   "&Lietot s\304\201kotn\304\223jos lappu\305\241u izm\304\223rus\n\0"\
   "&Skats\0"\
   "&Logs\0"\
@@ -12528,7 +12528,7 @@ const char * gTranslations_lv =
   "Aizv\304\223rt\0"\
   "Sak\304\274aut visu\0"\
   "Kr\304\201sa\0"\
-  "\0"\
+  "Kr\304\201sa:\0"\
   "Komiksu gr\304\201matas\0"\
   "Sader\304\253ba\0"\
   "\0"\
@@ -12560,7 +12560,7 @@ const char * gTranslations_lv =
   "Piel\304\201got &t\304\201lummai\305\206u...\tCtrl+Y\0"\
   "Tum\305\241s\0"\
   "Tum\305\241\304\201ks\0"\
-  "\0"\
+  "Datums:\0"\
   "Noklus\304\223juma &izk\304\201rtojums\0"\
   "Noklus\304\223juma &t\304\201lummai\305\206a\0"\
   "Noklus\304\223juma PDF las\304\253t\304\201ju nevar izmain\304\253t p\304\201rnesamam re\305\276\304\253mam\0"\
@@ -12621,7 +12621,7 @@ const char * gTranslations_lv =
   "Pasl\304\223pt &opcijas\0"\
   "Sl\304\223pt bie\305\276\304\201k las\304\253tos\0"\
   "Ieteikums: izmantojiet tausti\305\206u F3, lai atrastu atkal\0"\
-  "\0"\
+  "Ikona:\0"\
   "Att\304\223lu faili (*.%s)\0"\
   "Att\304\223li\0"\
   "Tinte\0"\
@@ -12654,8 +12654,8 @@ const char * gTranslations_lv =
   "Sinhroniz\304\201cijas fails nav atrasts \305\241aj\304\201 poz\304\253cij\304\201\0"\
   "Lappu\305\241u skaits:\0"\
   "Labi\0"\
-  "\0"\
-  "\0"\
+  "Necaursp\304\253d\304\253gums:\0"\
+  "Necaursp\304\253d\304\253gums: %d\0"\
   "Atv\304\223rt\0"\
   "Atv\304\223rt programm\304\201 &PDF-XChange\0"\
   "Atv\304\223rt iegultu PDF\0"\
@@ -12755,10 +12755,10 @@ const char * gTranslations_lv =
   "Atz\304\253me (liel\304\201s vispirms)\0"\
   "Atz\304\253me (maz\304\201s vispirms)\0"\
   "Atz\304\253m\304\223ts PDF\0"\
-  "\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Teksta l\304\253dzin\304\201jums:\0"\
+  "Teksta kr\304\201sa:\0"\
+  "Teksta lielums:\0"\
+  "Teksta lielums: %d\0"\
   "Teksta dokumenti\0"\
   "Paldies, ka izv\304\223l\304\223j\304\201ties RA-MICRO PDF!\0"\
   "Pateicamies par SumatraPDF izv\304\223l\304\223\305\241anos!\0"\
