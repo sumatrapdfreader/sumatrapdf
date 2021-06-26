@@ -556,7 +556,7 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
 
 // skip file:// and maybe file:/// from s. It might be added by mupdf.
 // do not free the result
-const WCHAR* SkipFileProtocol(const WCHAR* s) {
+static const WCHAR* SkipFileProtocol(const WCHAR* s) {
     if (!str::StartsWithI(s, L"file://")) {
         return s;
     }
@@ -565,4 +565,19 @@ const WCHAR* SkipFileProtocol(const WCHAR* s) {
         s += 1;
     }
     return s;
+}
+
+// s could be in format "file://path.pdf#page=1"
+// We only want the "path.pdf"
+// caller must free
+// TODO: could also parse page=1 and return it so that
+// we can go to the right place
+WCHAR* CleanupFileURL(const WCHAR* s) {
+    s = SkipFileProtocol(s);
+    WCHAR* s2 = str::Dup(s);
+    WCHAR* s3 = str::FindChar(s2, L'#');
+    if (s3) {
+        *s3 = 0;
+    }
+    return s2;
 }

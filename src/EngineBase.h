@@ -432,4 +432,4 @@ class PasswordUI {
     }
 };
 
-const WCHAR* SkipFileProtocol(const WCHAR*);
+WCHAR* CleanupFileURL(const WCHAR*);

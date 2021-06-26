@@ -843,8 +843,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             SelectAnnotationInEditWindow(tab->editAnnotsWindow, annotUnderCursor);
             break;
         case CmdCopyLinkTarget: {
-            const WCHAR* tmp = SkipFileProtocol(value);
+            WCHAR* tmp = CleanupFileURL(value);
             CopyTextToClipboard(tmp);
+            str::Free(tmp);
         } break;
         case CmdCopyComment:
             CopyTextToClipboard(value);

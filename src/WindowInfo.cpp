@@ -360,8 +360,9 @@ void LinkHandler::GotoLink(PageDestination* dest) {
         }
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
-        const WCHAR* tmpPath = SkipFileProtocol(path);
+        WCHAR* tmpPath = CleanupFileURL(path);
         LaunchFile(tmpPath, dest);
+        str::Free(tmpPath);
         return;
     }
 
