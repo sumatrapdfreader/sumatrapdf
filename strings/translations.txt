@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1323ade1c181e9dffab07ce190c835935d7402da
+3bcd4859886e773b6ec938400f1de53e1a4ae6fd
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -433,6 +433,8 @@ uk:Книжна розгортка\tCtrl+8
 uz:&Kitob ko'rinishi\tCtrl+8
 vn:Xem dạng sách\tCtrl+8
 :&Caret
+cn:&插入符
+lv:&Norāde
 nl:&Merkteken
 pl:&Kareta
 ru:&Каретка
@@ -1106,6 +1108,8 @@ uk:Припасовувати сторінки до зони друку
 uz:&Betlarni printerga moslash
 vn:Vừa trang in
 :&Free Text
+cn:&自由文本
+lv:&Brīvs teksts
 nl:&Vrije Tekst
 pl:&Dowolny tekst
 :&Go To
@@ -1319,6 +1323,8 @@ uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
 :&Highlight\ta
+cn:&高亮\ta
+lv:&Iezīmēt\ta
 nl:&Markeer\ta
 pl:&Wyróżnienie\ta
 :&Last Page\tEnd
@@ -3064,13 +3070,18 @@ uk:Пропустити цю версію.
 uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
 :&Stamp
+cn:&图章
+lv:&Zīmogs
 nl:&Stempel
 pl:Pie&częć
 :&Strike Out
+cn:&删除线
+lv:&Izsvītrot
 nl:&Doorhalen
 pl:&Skreślenie
 :&Text
 az:Mə&tn
+cn:&文本
 lv:&Teksts
 nl:&Tekst
 pl:&Tekst
@@ -3131,6 +3142,7 @@ tw:主題(&T)
 uk:&Тема
 vn:&Chủ đề
 :&Underline
+cn:&下划线
 lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
@@ -4654,7 +4666,9 @@ uz:Muallif:
 vn:Tác giả
 :Author: %s
 az:Müəllif: %s
+cn:作者: %s
 es:Autora: %s
+lv:Autors: %s
 nl:Auteur: %s
 pl:Autor: %s
 ru:Автор: %s
@@ -4699,7 +4713,7 @@ kr:자동
 ku:خۆکار
 kw:Awtomatek
 lt:Automatinis
-lv:Automātiski
+lv:Automātisks
 mk:Автоматски
 ml:സ്വയമേവ.
 my:Automatik
@@ -4796,7 +4810,9 @@ uk:Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
 :Background Color:
+cn:背景色:
 es:Color de fondo
+lv:Fona krāsa:
 nl:Achtergrond Kleur
 pl:Kolor tła:
 :Book View
@@ -5065,6 +5081,8 @@ uk:Закладки
 uz:Xatcho'plar
 vn:Chỉ dấu sách
 :Border: %d
+cn:边框: %d
+lv:Apmale: %d
 nl:Rand %d
 pl:Obramowanie: %d
 :Bytes
@@ -5774,6 +5792,7 @@ tw:颜色
 vn:Tô màu
 :Color:
 az:Rəng:
+cn:颜色:
 es:Color:
 lv:Krāsa:
 nl:Kleur
@@ -5911,6 +5930,7 @@ uz:Mosligi
 vn:Tính tương thích
 :Contents:
 az:Məzmun:
+lv:Saturs:
 nl:Inhoud
 pl:Zawartość:
 :Continuous
@@ -7176,9 +7196,13 @@ uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation From Selection
+cn:创建注释 (从所选内容)
+lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
 :Create Annotation Under Cursor
+cn:创建注释 (在光标下)
+lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
 pl:Utwórz adnotację pod kursorem
 :Created:
@@ -7562,6 +7586,7 @@ uk:Темніша
 vn:Tối hơn
 :Date:
 az:Tarix:
+cn:日期:
 es:Fetcha:
 lv:Datums:
 nl:Datum:
@@ -7827,6 +7852,8 @@ uk:У доступі відмовлено:
 uz:Taqiqlangan huquqlar:
 vn:Các quyền bị từ chối
 :Discard
+cn:丢弃
+lv:Atmest
 nl:Verwijderen
 pl:Odrzuć
 :DjVu documents
@@ -11197,6 +11224,7 @@ uk:Підказка: Для повторного пошуку натисніть
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Icon:
+cn:图标:
 lv:Ikona:
 nl:Pictogram:
 pl:Ikona:
@@ -11568,6 +11596,7 @@ uk:Встановлення триває...
 uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Interior Color:
+lv:Iekšējā krāsa:
 nl:Interieur Kleur
 pl:Kolor wnętrza:
 :KB
@@ -12928,11 +12957,13 @@ uk:Гаразд
 uz:OK
 vn:Đồng ý
 :Opacity:
+cn:透明度:
 es:Opacidad:
 lv:Necaurspīdīgums:
 nl:Dekking
 pl:Nieprzezroczystość:
 :Opacity: %d
+cn:透明度: %d
 es:Opacidad: %d
 lv:Necaurspīdīgums: %d
 nl:Dekking: %d
@@ -14565,6 +14596,7 @@ ta:பலகோணம்
 tr:Çokgen
 tw:多邊形
 :Popup: %d 0 R
+lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
 pl:Wyskakujące okienko: %d 0 R
 ru:Всплывающее окно: %d 0 R
@@ -15338,6 +15370,7 @@ uk:Перейменувати...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Rect: x=%d y=%d dx=%d dy=%d
+lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 :Redact
@@ -15788,6 +15821,7 @@ uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :S&quiggly
 az:&Dalğa
+lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
 :Save Annotations
@@ -15983,19 +16017,27 @@ uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save changes to a new PDF
 az:Dəyişiklikləri yeni PDF-ə yaz
+cn:保存更改到新的PDF
+lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
 ru:Сохранить изменения в новый PDF
 :Save changes to existing PDF
 az:Dəyişiklikləri mövcud PDF-ə yaz
+cn:保存更改到现有PDf
+lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 :Saved annotations to '%s'
+cn:保存注释到 '%s'
+lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje do '%s'
 ru:Аннотации сохранены в '%s'
 :Saving of '%s' failed with: '%s'
+cn:保存'%s'失败: '%s'
+lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
 :Searching %d of %d...
@@ -16190,6 +16232,8 @@ uk:Вибрати всі\tCtrl+A
 uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
+cn:在编辑器中选择注释
+lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
 :Select content with Ctrl+left mouse button
@@ -18172,12 +18216,14 @@ uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text Alignment:
+cn:文本对齐:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
 ru:Выравнивание текста:
 :Text Color:
 az:Mətnin rəngi:
+cn:文本颜色:
 es:Color de Texto:
 lv:Teksta krāsa:
 nl:Tekst Kleur
@@ -18185,12 +18231,14 @@ pl:Kolor tekstu:
 ru:Цвет текста:
 :Text Size:
 az:Mətnin ölçüsü:
+cn:文本大小:
 es:Tamaño de Texto
 lv:Teksta lielums:
 nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 ru:Размер текста:
 :Text Size: %d
+cn:文本大小: %d
 es:Tamaño de Texto: %d
 lv:Teksta lielums: %d
 nl:Tekst Grootte: %d
@@ -18848,7 +18896,9 @@ uk:Невідомий файл-джерело (%s)
 uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
+cn:未保存的注释
 es:Anotaciones no guardadas
+lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
 :Use &tabs
@@ -19313,13 +19363,17 @@ uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
+cn:存在未保存的注释
 co:Avete annutazioni micca arregistrate
 es:Tienes anotaciones sin guardar
 id:Kamu memiliki catatan yang belum tersimpan
+lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 :You have unsaved annotations. Save them?
+cn:存在未保存的注释. 是否保存?
+lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
 nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
 pl:Masz niezapisane adnotacje. Zapisać je?
 ru:Аннотации не сохранены. Сохранить?
