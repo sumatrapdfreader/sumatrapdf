@@ -181,7 +181,7 @@ static bool IsArgEq(WCHAR* fromCmdLine, const WCHAR* compareAgainst) {
     } else {
         return false;
     }
-    return str::Eq(fromCmdLine, compareAgainst);
+    return str::EqI(fromCmdLine, compareAgainst);
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
