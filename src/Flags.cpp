@@ -17,138 +17,6 @@
 #include "StressTesting.h"
 #include "SumatraConfig.h"
 
-// order must match enum
-static const char* argNames =
-    "register-for-pdf\0"
-    "register\0"
-    "print-to-default\0"
-    "print-dialog\0"
-    "exit-when-done\0"
-    "exit-on-print\0"
-    "restrict\0"
-    "invertcolors\0"
-    "invert-colors\0"
-    "presentation\0"
-    "fullscreen\0"
-    "console\0"
-    "rand\0"
-    "crash-on-open\0"
-    "reuse-instance\0"
-    "esc-to-exit\0"
-    "set-color-range\0"
-    "enum-printers\0"
-    "print-to\0"
-    "print-settings\0"
-    "inverse-search\0"
-    "forward-search\0"
-    "fwdsearch\0"
-    "nameddest\0"
-    "named-dest\0"
-    "page\0"
-    "view\0"
-    "zoom\0"
-    "scroll\0"
-    "appdata\0"
-    "plugin\0"
-    "stress-test\0"
-    "n\0"
-    "render\0"
-    "bench\0"
-    "lang\0"
-    "bgcolor\0"
-    "bg-color\0"
-    "fwdsearch-offset\0"
-    "fwdsearch-width\0"
-    "fwdsearch-color\0"
-    "fwdsearch-permanent\0"
-    "manga-mode\0"
-    "autoupdate\0"
-    "extract-text\0"
-    "install\0"
-    "uninstall\0"
-    "regress\0"
-    "tester\0"
-    "d\0"
-    "h\0"
-    "?\0"
-    "help\0"
-    "with-filter\0"
-    "with-preview\0"
-    "x\0"
-    "ramicro\0"
-    "ra-micro\0"
-    "testapp\0"
-    "new-window\0"
-    "log\0"
-    "s\0"
-    "silent\0";
-
-enum {
-    RegisterForPdf,
-    Register,
-    PrintToDefault,
-    PrintDialog,
-    ExitWhenDone,
-    ExitOnPrint,
-    Restrict,
-    InvertColors1,
-    InvertColors2,
-    Presentation,
-    Fullscreen,
-    Console,
-    Rand,
-    CrashOnOpen,
-    ReuseInstance,
-    EscToExit,
-    SetColorRange,
-    ArgEnumPrinters, // EnumPrinters conflicts with win API EnumPrinters()
-    PrintTo,
-    PrintSettings,
-    InverseSearch,
-    ForwardSearch,
-    FwdSearch,
-    NamedDest,
-    NamedDest2,
-    Page,
-    View,
-    Zoom,
-    Scroll,
-    AppData,
-    Plugin,
-    StressTest,
-    ArgN,
-    Render,
-    Bench,
-    Lang,
-    BgColor,
-    BgColor2,
-    FwdSearchOffset,
-    FwdSearchWidth,
-    FwdSearchColor,
-    FwdSearchPermanent,
-    MangaMode,
-    AutoUpdate,
-    ExtractText,
-    Install,
-    Uninstall,
-    Regress,
-    Tester,
-    InstallDir,
-    Help1,
-    Help2,
-    Help3,
-    WithFilter,
-    WithPreview,
-    ExtractFiles,
-    RaMicro1,
-    RaMicro2,
-    TestApp,
-    NewWindow,
-    Log,
-    Silent2,
-    Silent
-};
-
 Flags::~Flags() {
     free(printerName);
     free(printSettings);
@@ -303,158 +171,128 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     }
 }
 
-static int GetArgNo(const WCHAR* argName) {
-    if (*argName == '-' || *argName == '/') {
-        argName++;
+// order of args matters: first must be from the user, second is from our code
+// fromCmdLine must start with "-" or "/".
+// Ours shouldn't have the prefix
+static bool IsArgEq(WCHAR* fromCmdLine, const WCHAR* compareAgainst) {
+    WCHAR c = *fromCmdLine;
+    if (c == L'-' || c == L'/') {
+        ++fromCmdLine;
     } else {
-        return -1;
+        return false;
     }
-    AutoFreeWstr nameLowerCase = str::ToLower(argName);
-    return seqstrings::StrToIdx(argNames, nameLowerCase);
+    return str::Eq(fromCmdLine, compareAgainst);
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
-    WStrVec argList;
-    ParseCmdLine(cmdLine, argList);
-    size_t argCount = argList.size();
+    WStrVec args;
+    ParseCmdLine(cmdLine, args);
+    size_t argCount = args.size();
 
-#define is_arg_with_param(_argNo) (param && _argNo == arg)
-#define additional_param() argList.at(n + 1)
+#define additional_param() args.at(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
-#define handle_string_param(name) name = str::Dup(argList.at(++n))
-#define handle_int_param(name) name = _wtoi(argList.at(++n))
+#define eatStringParam(name) name = str::Dup(args.at(++n))
+#define eatIntParam(name) name = _wtoi(args.at(++n))
+#define isArg(__name) IsArgEq(argName, __name)
 
+    WCHAR* param = nullptr;
+    WCHAR* argName;
     for (size_t n = 1; n < argCount; n++) {
-        WCHAR* argName = argList.at(n);
-        int arg = GetArgNo(argName);
-        WCHAR* param = nullptr;
+        argName = args.at(n);
+        param = nullptr;
         if (argCount > n + 1) {
-            param = argList.at(n + 1);
+            param = args.at(n + 1);
         }
-        if (RegisterForPdf == arg || Register == arg) {
+        if (isArg(L"register-for-pdf") || isArg(L"register")) {
             i.registerAsDefault = true;
             i.exitImmediately = true;
             return;
-        } else if (Silent == arg || Silent2 == arg) {
+        }
+        if (isArg(L"s") || isArg(L"silent")) {
             // silences errors happening during -print-to and -print-to-default
             i.silent = true;
-        } else if (PrintToDefault == arg) {
+            continue;
+        }
+        if (isArg(L"print-to-default")) {
             i.printerName = GetDefaultPrinterName();
             if (!i.printerName) {
                 i.printDialog = true;
             }
             i.exitWhenDone = true;
-        } else if (is_arg_with_param(PrintTo)) {
-            handle_string_param(i.printerName);
-            i.exitWhenDone = true;
-        } else if (PrintDialog == arg) {
+            continue;
+        }
+        if (isArg(L"print-dialog")) {
             i.printDialog = true;
-        } else if (Help1 == arg || Help2 == arg || Help3 == arg) {
+            continue;
+        }
+        if (isArg(L"h") || isArg(L"?") || isArg(L"help")) {
             i.showHelp = true;
-        } else if (is_arg_with_param(PrintSettings)) {
-            // argument is a comma separated list of page ranges and
-            // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
-            // e.g. -print-settings "1-3,5,10-8,odd,fit"
-            handle_string_param(i.printSettings);
-            str::RemoveChars(i.printSettings, L" ");
-            str::TransChars(i.printSettings, L";", L",");
-        } else if (ExitWhenDone == arg || ExitOnPrint == arg) {
+            continue;
+        }
+        if (isArg(L"exit-when-done") || isArg(L"exit-on-print")) {
             // only affects -print-dialog (-print-to and -print-to-default
             // always exit on print) and -stress-test (useful for profiling)
             i.exitWhenDone = true;
-        } else if (is_arg_with_param(InverseSearch)) {
-            i.inverseSearchCmdLine = str::Dup(argList.at(++n));
-        } else if ((is_arg_with_param(ForwardSearch) || is_arg_with_param(FwdSearch)) && argCount > n + 2) {
-            // -forward-search is for consistency with -inverse-search
-            // -fwdsearch is for consistency with -fwdsearch-*
-            handle_string_param(i.forwardSearchOrigin);
-            handle_int_param(i.forwardSearchLine);
-        } else if (is_arg_with_param(NamedDest) || is_arg_with_param(NamedDest2)) {
-            // -nameddest is for backwards compat (was used pre-1.3)
-            // -named-dest is for consistency
-            handle_string_param(i.destName);
-        } else if (is_arg_with_param(Page)) {
-            handle_int_param(i.pageNumber);
-        } else if (Restrict == arg) {
+            continue;
+        }
+        if (isArg(L"restrict")) {
             i.restrictedUse = true;
-        } else if (RaMicro1 == arg || RaMicro2 == arg) {
+            continue;
+        }
+        if (isArg(L"presentation")) {
+            i.enterPresentation = true;
+            continue;
+        }
+        if (isArg(L"fullscreen")) {
+            i.enterFullScreen = true;
+            continue;
+        }
+        if (isArg(L"ramicro") || isArg(L"ra-micro")) {
             i.ramicro = true;
-        } else if (InvertColors1 == arg || InvertColors2 == arg) {
+            continue;
+        }
+        if (isArg(L"invertcolors") || isArg(L"invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
             // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
             // now it non-permanently swaps textColor and backgroundColor
             i.invertColors = true;
-        } else if (Presentation == arg) {
-            i.enterPresentation = true;
-        } else if (Fullscreen == arg) {
-            i.enterFullScreen = true;
-        } else if (is_arg_with_param(View)) {
-            ParseViewMode(&i.startView, param);
-            ++n;
-        } else if (is_arg_with_param(Zoom)) {
-            ParseZoomValue(&i.startZoom, param);
-            ++n;
-        } else if (is_arg_with_param(Scroll)) {
-            ParseScrollValue(&i.startScroll, param);
-            ++n;
-        } else if (Console == arg) {
+            continue;
+        }
+        if (isArg(L"console")) {
             i.showConsole = true;
-        } else if (is_arg_with_param(AppData)) {
-            i.appdataDir = str::Dup(param);
-            ++n;
-        } else if (is_arg_with_param(Plugin)) {
-            // -plugin [<URL>] <parent HWND>
-            if (argCount > n + 2 && !str::IsDigit(*argList.at(n + 1)) && *argList.at(n + 2) != '-') {
-                handle_string_param(i.pluginURL);
-            }
-            // the argument is a (numeric) window handle to
-            // become the parent of a frameless SumatraPDF
-            // (used e.g. for embedding it into a browser plugin)
-            i.hwndPluginParent = (HWND)(INT_PTR)_wtol(argList.at(++n));
-        } else if (is_arg_with_param(StressTest)) {
-            // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
-            // count>x]
-            // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
-            //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
-            //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
-            //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
-            handle_string_param(i.stressTestPath);
-            int num;
-            if (has_additional_param() && str::FindChar(additional_param(), '*')) {
-                handle_string_param(i.stressTestFilter);
-            }
-            if (has_additional_param() && IsValidPageRange(additional_param())) {
-                handle_string_param(i.stressTestRanges);
-            }
-            if (has_additional_param() && str::Parse(additional_param(), L"%dx%$", &num) && num > 0) {
-                i.stressTestCycles = num;
-                n++;
-            }
-        } else if (is_arg_with_param(ArgN)) {
-            handle_int_param(i.stressParallelCount);
-        } else if (is_arg_with_param(Render)) {
-            handle_int_param(i.pageNumber);
-            i.testRenderPage = true;
-        } else if (is_arg_with_param(ExtractText)) {
-            handle_int_param(i.pageNumber);
-            i.testExtractPage = true;
-        } else if (Install == arg) {
+            continue;
+        }
+        if (isArg(L"install")) {
             i.install = true;
-        } else if (Uninstall == arg) {
+            continue;
+        }
+        if (isArg(L"uninstall")) {
             i.uninstall = true;
-        } else if (WithFilter == arg) {
+            continue;
+        }
+        if (isArg(L"with-filter")) {
             i.withFilter = true;
-        } else if (WithPreview == arg) {
+            continue;
+        }
+        if (isArg(L"with-preview")) {
             i.withPreview = true;
-        } else if (Rand == arg) {
+            continue;
+        }
+        if (isArg(L"rand")) {
             i.stressRandomizeFiles = true;
-        } else if (Regress == arg) {
+            continue;
+        }
+        if (isArg(L"regress")) {
             i.regress = true;
-        } else if (AutoUpdate == arg) {
+            continue;
+        }
+        if (isArg(L"autoupdate")) {
             i.autoUpdate = true;
-        } else if (ExtractFiles == arg) {
+            continue;
+        }
+        if (isArg(L"x")) {
             i.justExtractFiles = true;
             // silently extract files to the current directory
             // (if /d isn't used)
@@ -462,71 +300,206 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             if (!i.installDir) {
                 i.installDir = str::Dup(L".");
             }
-        } else if (Tester == arg) {
+            continue;
+        }
+        if (isArg(L"tester")) {
             i.tester = true;
-        } else if (TestApp == arg) {
+            continue;
+        }
+        if (isArg(L"testapp")) {
             i.testApp = true;
-        } else if (NewWindow == arg) {
+            continue;
+        }
+        if (isArg(L"new-window")) {
             i.inNewWindow = true;
-        } else if (Log == arg) {
+            continue;
+        }
+        if (isArg(L"log")) {
             i.log = true;
-        } else if (is_arg_with_param(Bench)) {
-            WCHAR* s = str::Dup(param);
-            ++n;
-            i.pathsToBenchmark.Append(s);
-            s = nullptr;
-            if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
-                s = str::Dup(argList.at(++n));
-            }
-            i.pathsToBenchmark.Append(s);
-            i.exitImmediately = true;
-        } else if (CrashOnOpen == arg) {
+            continue;
+        }
+        if (isArg(L"crash-on-open")) {
             // to make testing of crash reporting system in pre-release/release
             // builds possible
             i.crashOnOpen = true;
-        } else if (ReuseInstance == arg) {
+            continue;
+        }
+        if (isArg(L"reuse-instance")) {
             // for backwards compatibility, -reuse-instance reuses whatever
             // instance has registered as DDE server
             i.reuseDdeInstance = true;
-        } else if (is_arg_with_param(InstallDir)) {
-            i.installDir = str::Dup(param);
-            ++n;
-        } else if (is_arg_with_param(Lang)) {
-            // TODO: remove the following deprecated options within
-            // a release or two
-            auto tmp = strconv::WstrToUtf8(param);
-            i.lang = (char*)tmp.data();
-            ++n;
-        } else if (EscToExit == arg) {
-            i.globalPrefArgs.Append(str::Dup(argList.at(n)));
-        } else if (is_arg_with_param(BgColor) || is_arg_with_param(BgColor2) || is_arg_with_param(FwdSearchOffset) ||
-                   is_arg_with_param(FwdSearchWidth) || is_arg_with_param(FwdSearchColor) ||
-                   is_arg_with_param(FwdSearchPermanent) || is_arg_with_param(MangaMode)) {
-            i.globalPrefArgs.Append(str::Dup(argList.at(n)));
-            i.globalPrefArgs.Append(str::Dup(argList.at(++n)));
-        } else if (SetColorRange == arg && argCount > n + 2) {
-            i.globalPrefArgs.Append(str::Dup(argList.at(n)));
-            i.globalPrefArgs.Append(str::Dup(argList.at(++n)));
-            i.globalPrefArgs.Append(str::Dup(argList.at(++n)));
-        } else if (gIsDebugBuild && ArgEnumPrinters == arg) {
+            continue;
+        }
+        if (isArg(L"esc-to-exit")) {
+            i.globalPrefArgs.Append(str::Dup(args.at(n)));
+            continue;
+        }
+        if (gIsDebugBuild && isArg(L"enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             i.exitImmediately = true;
             return;
         }
-        // this should have been handled already by AutoUpdateMain
-        else if (is_arg_with_param(AutoUpdate)) {
-            n++;
-        } else {
-            // Remember this argument as a filename to open
-            WCHAR* filePath = nullptr;
-            if (str::EndsWithI(argName, L".lnk")) {
-                filePath = ResolveLnk(argName);
-            }
-            if (!filePath) {
-                filePath = str::Dup(argName);
-            }
-            i.fileNames.Append(filePath);
+
+        // follwing args require at least one param
+        // if no params here, assume this is a file
+        if (!param) {
+            goto CollectFile;
         }
+
+        if (isArg(L"print-to")) {
+            eatStringParam(i.printerName);
+            i.exitWhenDone = true;
+            continue;
+        }
+        if (isArg(L"print-settings")) {
+            // argument is a comma separated list of page ranges and
+            // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
+            // e.g. -print-settings "1-3,5,10-8,odd,fit"
+            eatStringParam(i.printSettings);
+            str::RemoveChars(i.printSettings, L" ");
+            str::TransChars(i.printSettings, L";", L",");
+            continue;
+        }
+        if (isArg(L"inverse-search")) {
+            i.inverseSearchCmdLine = str::Dup(args.at(++n));
+            continue;
+        }
+        if ((isArg(L"forward-search") || isArg(L"fwdsearch")) && argCount > n + 2) {
+            // -forward-search is for consistency with -inverse-search
+            // -fwdsearch is for consistency with -fwdsearch-*
+            eatStringParam(i.forwardSearchOrigin);
+            eatIntParam(i.forwardSearchLine);
+            continue;
+        }
+        if (isArg(L"nameddest") || isArg(L"named-dest")) {
+            // -nameddest is for backwards compat (was used pre-1.3)
+            // -named-dest is for consistency
+            eatStringParam(i.destName);
+            continue;
+        }
+        if (isArg(L"page")) {
+            eatIntParam(i.pageNumber);
+            continue;
+        }
+        if (isArg(L"view")) {
+            ParseViewMode(&i.startView, param);
+            ++n;
+            continue;
+        }
+        if (isArg(L"zoom")) {
+            ParseZoomValue(&i.startZoom, param);
+            ++n;
+            continue;
+        }
+        if (isArg(L"scroll")) {
+            ParseScrollValue(&i.startScroll, param);
+            ++n;
+            continue;
+        }
+        if (isArg(L"appdata")) {
+            i.appdataDir = str::Dup(param);
+            ++n;
+            continue;
+        }
+        if (isArg(L"plugin")) {
+            // -plugin [<URL>] <parent HWND>
+            if (argCount > n + 2 && !str::IsDigit(*args.at(n + 1)) && *args.at(n + 2) != '-') {
+                eatStringParam(i.pluginURL);
+            }
+            // the argument is a (numeric) window handle to
+            // become the parent of a frameless SumatraPDF
+            // (used e.g. for embedding it into a browser plugin)
+            i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.at(++n));
+            continue;
+        }
+        if (isArg(L"stress-test")) {
+            // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
+            // count>x]
+            // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
+            //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
+            //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
+            //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
+            eatStringParam(i.stressTestPath);
+            int num;
+            if (has_additional_param() && str::FindChar(additional_param(), '*')) {
+                eatStringParam(i.stressTestFilter);
+            }
+            if (has_additional_param() && IsValidPageRange(additional_param())) {
+                eatStringParam(i.stressTestRanges);
+            }
+            if (has_additional_param() && str::Parse(additional_param(), L"%dx%$", &num) && num > 0) {
+                i.stressTestCycles = num;
+                n++;
+            }
+            continue;
+        }
+        if (isArg(L"n")) {
+            eatIntParam(i.stressParallelCount);
+            continue;
+        }
+        if (isArg(L"render")) {
+            eatIntParam(i.pageNumber);
+            i.testRenderPage = true;
+            continue;
+        }
+        if (isArg(L"extract-text")) {
+            eatIntParam(i.pageNumber);
+            i.testExtractPage = true;
+            continue;
+        }
+        if (isArg(L"bench")) {
+            WCHAR* s = str::Dup(param);
+            ++n;
+            i.pathsToBenchmark.Append(s);
+            s = nullptr;
+            if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
+                s = str::Dup(args.at(++n));
+            }
+            i.pathsToBenchmark.Append(s);
+            i.exitImmediately = true;
+            continue;
+        }
+        if (isArg(L"d")) {
+            i.installDir = str::Dup(param);
+            ++n;
+            continue;
+        }
+        if (isArg(L"lang")) {
+            // TODO: remove the following deprecated options within
+            // a release or two
+            auto tmp = strconv::WstrToUtf8(param);
+            i.lang = (char*)tmp.data();
+            ++n;
+            continue;
+        }
+        if (isArg(L"bgcolor") || isArg(L"bg-color") || isArg(L"fwdsearch-offset") || isArg(L"fwdsearch-width") ||
+            isArg(L"fwdsearch-color") || isArg(L"fwdsearch-permanent") || isArg(L"manga-mode")) {
+            i.globalPrefArgs.Append(str::Dup(args.at(n)));
+            i.globalPrefArgs.Append(str::Dup(args.at(++n)));
+            continue;
+        }
+        if (isArg(L"set-color-range") && argCount > n + 2) {
+            i.globalPrefArgs.Append(str::Dup(args.at(n)));
+            i.globalPrefArgs.Append(str::Dup(args.at(++n)));
+            i.globalPrefArgs.Append(str::Dup(args.at(++n)));
+            continue;
+        }
+        if (isArg(L"autoupdate")) {
+            // this should have been handled already by AutoUpdateMain
+            n++;
+            continue;
+        }
+
+    CollectFile:
+        // Remember this argument as a filename to open
+        WCHAR* filePath = nullptr;
+        if (str::EndsWithI(argName, L".lnk")) {
+            filePath = ResolveLnk(argName);
+        }
+        if (!filePath) {
+            filePath = str::Dup(argName);
+        }
+        i.fileNames.Append(filePath);
     }
 }
