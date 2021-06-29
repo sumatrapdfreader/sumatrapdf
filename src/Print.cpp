@@ -896,6 +896,18 @@ static short DetectPrinterPaperSize(EngineBase* engine, const WCHAR* printerName
     return 0;
 }
 
+static void SetPrinterCustomPaperSize(EngineBase* engine, LPDEVMODE devMode) {
+    // get size of first page in tenths of a millimeter
+    RectF mediabox = engine->PageMediabox(1);
+    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
+
+    // set custom paper size
+    devMode->dmPaperSize = 0;
+    devMode->dmPaperWidth = size.dx;
+    devMode->dmPaperLength = size.dy;
+    devMode->dmFields |= DM_PAPERSIZE | DM_PAPERWIDTH | DM_PAPERLENGTH;
+}
+
 bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
     LONG ret;
@@ -979,6 +991,8 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
         if (advanced.rotation == PrintRotationAdv::Auto && devMode->dmPaperSize == 0) {
             if (devMode->dmPaperSize = DetectPrinterPaperSize(engine, printerName)) {
                 devMode->dmFields |= DM_PAPERSIZE;
+            } else {
+                SetPrinterCustomPaperSize(engine, devMode);
             }
         }
 
