@@ -221,36 +221,81 @@ static WCHAR* FormatFileSize(size_t size) {
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
 
-PaperFormat GetPaperFormat(SizeF size) {
-    SizeF sizeP = size.dx < size.dy ? size : SizeF(size.dy, size.dx);
+struct PaperSizeDesc {
+    float minDx, maxDx;
+    float minDy, maxDy;
+    PaperFormat paperFormat;
+};
+
+// clang-format off
+static PaperSizeDesc paperSizes[] = {
     // common ISO 216 formats (metric)
-    if (limitValue(sizeP.dx, 16.53f, 16.55f) == sizeP.dx && limitValue(sizeP.dy, 23.38f, 23.40f) == sizeP.dy) {
-        return PaperFormat::A2;
-    }
-    if (limitValue(sizeP.dx, 11.68f, 11.70f) == sizeP.dx && limitValue(sizeP.dy, 16.53f, 16.55f) == sizeP.dy) {
-        return PaperFormat::A3;
-    }
-    if (limitValue(sizeP.dx, 8.26f, 8.28f) == sizeP.dx && limitValue(sizeP.dy, 11.68f, 11.70f) == sizeP.dy) {
-        return PaperFormat::A4;
-    }
-    if (limitValue(sizeP.dx, 5.82f, 5.85f) == sizeP.dx && limitValue(sizeP.dy, 8.26f, 8.28f) == sizeP.dy) {
-        return PaperFormat::A5;
-    }
-    if (limitValue(sizeP.dx, 4.08f, 4.10f) == sizeP.dx && limitValue(sizeP.dy, 5.82f, 5.85f) == sizeP.dy) {
-        return PaperFormat::A6;
-    }
+    {
+        16.53f, 16.55f,
+        23.38f, 23.40f,
+        PaperFormat::A2,
+    },
+    {
+        11.68f, 11.70f,
+        16.53f, 16.55f,
+        PaperFormat::A3,
+    },
+    {
+        8.26f, 8.28f,
+        11.68f, 11.70f,
+        PaperFormat::A4,
+    },
+    {
+        5.82f, 5.85f,
+        8.26f, 8.28f,
+        PaperFormat::A5,
+    },
+    {
+        4.08f, 4.10f,
+        5.82f, 5.85f,
+        PaperFormat::A6,
+    },
     // common US/ANSI formats (imperial)
-    if (limitValue(sizeP.dx, 8.49f, 8.51f) == sizeP.dx && limitValue(sizeP.dy, 10.99f, 11.01f) == sizeP.dy) {
-        return PaperFormat::Letter;
+    {
+        8.49f, 8.51f,
+        10.99f, 11.01f,
+        PaperFormat::Letter,
+    },
+    {
+        8.49f, 8.51f,
+        13.99f, 14.01f,
+        PaperFormat::Legal,
+    },
+    {
+        10.99f, 11.01f,
+        16.99f, 17.01f,
+        PaperFormat::Tabloid,
+    },
+    {
+        5.49f, 5.51f,
+        8.49f, 8.51f,
+        PaperFormat::Statement,
     }
-    if (limitValue(sizeP.dx, 8.49f, 8.51f) == sizeP.dx && limitValue(sizeP.dy, 13.99f, 14.01f) == sizeP.dy) {
-        return PaperFormat::Legal;
+};
+// clang-format on
+
+static bool fInRange(float x, float min, float max) {
+    return x >= min && x <= max;
+}
+
+PaperFormat GetPaperFormat(SizeF size) {
+    float dx = size.dx;
+    float dy = size.dy;
+    if (dx < dy) {
+        std::swap(dx, dy);
     }
-    if (limitValue(sizeP.dx, 10.99f, 11.01f) == sizeP.dx && limitValue(sizeP.dy, 16.99f, 17.01f) == sizeP.dy) {
-        return PaperFormat::Tabloid;
-    }
-    if (limitValue(sizeP.dx, 5.49f, 5.51f) == sizeP.dx && limitValue(sizeP.dy, 8.49f, 8.51f) == sizeP.dy) {
-        return PaperFormat::Statement;
+    size_t n = dimof(paperSizes);
+    for (size_t i = 0; i < n; i++) {
+        auto&& desc = paperSizes[i];
+        bool ok = fInRange(dx, desc.minDx, desc.maxDx) && fInRange(dy, desc.minDy, desc.maxDy);
+        if (ok) {
+            return desc.paperFormat;
+        }
     }
     return PaperFormat::Other;
 }

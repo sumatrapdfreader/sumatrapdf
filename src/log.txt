@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-06-29 Tue
+
+simplify GetPaperFormat()
+
 2021-06-26 Sat
 
 fix inter-links to files like "foo.pdf#page=1" (fixes #1821)
