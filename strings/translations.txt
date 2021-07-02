@@ -1,9 +1,10 @@
 AppTranslator: SumatraPDF
-3bcd4859886e773b6ec938400f1de53e1a4ae6fd
+c6e312e92128c39248c4dd35f7ee938917cee14f
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
 az:%s quraşdırmasını tapmaq mümkün olmadı.
+bn:%s ইন্সটলেশন পাওয়া যায় নি
 br:Instalação do %s não encontrada.
 cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
@@ -305,7 +306,7 @@ am:&Նախորդը\tAlt+Left Arrow
 ar:للخلف&\tAlt+Left Arrow
 az:&Geri\tAlt+Sol ox
 bg:На&зад\tAlt+Лява стрелка
-bn:&ব্যাক\অল্ট+বাম-মুখি অ্যারো 
+bn:&পিছনে\tAlt+Left Arrow 
 br:Voltar\tAlt+<-
 bs:Nazad\tAlt+<-
 by:&Назад\tAlt+Стрэлка налева
@@ -433,6 +434,8 @@ uk:Книжна розгортка\tCtrl+8
 uz:&Kitob ko'rinishi\tCtrl+8
 vn:Xem dạng sách\tCtrl+8
 :&Caret
+am:&Ստեղն
+bn:&Caret
 cn:&插入符
 lv:&Norāde
 nl:&Merkteken
@@ -579,6 +582,7 @@ am:Պատճենել նշվածը\tCtrl+C
 ar:نسخ المحدد&\tCtrl+C
 az:Seçilmiş &sahəni kopyala\tCtrl+C
 bg:&Копиране на избраното\tCtrl+C
+bn:&নির্বাচিত অংশ কপি করুন\tCtrl+C
 br:Copiar seleção\tCtrl+C
 bs:Kopiraj označeno\tCtrl+C
 by:&Капіяваць выбранае\tCtrl+C
@@ -913,6 +917,7 @@ am:&Ինչ գտնել.
 ar:ابحث عن&:
 az:&Axtarılan sətir:
 bg:&Търсене на:
+bn:কি &খুঁজছেন
 br:&Localizar o quê:
 bs:&Traži:
 by:&Узор:
@@ -1108,6 +1113,7 @@ uk:Припасовувати сторінки до зони друку
 uz:&Betlarni printerga moslash
 vn:Vừa trang in
 :&Free Text
+am:&Ազատ գրվածք
 cn:&自由文本
 lv:&Brīvs teksts
 nl:&Vrije Tekst
@@ -1323,6 +1329,7 @@ uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
 :&Highlight\ta
+am:&Գունանշում\ta
 cn:&高亮\ta
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
@@ -1738,6 +1745,7 @@ am:&Ոչ
 ar:لا ، شكر&
 az:&Xeyr, təşəkkür!
 bg:&Не, благодаря
+bn:&না, ধন্যবাদ
 br:&Não, obrigado
 bs:&Ne, hvala
 by:Дзякуй, не
@@ -2128,6 +2136,7 @@ am:&Գաղտնաբառը
 ar:كلمة السر&:
 az:&Parol:
 bg:&Парола
+bn:&পাসওয়ার্ড
 br:&Senha:
 bs:&Lozinka:
 by:&Пароль:
@@ -3091,6 +3100,7 @@ am:&Ոճը
 ar:&قالب
 az:&Tema
 bg:&Тема
+bn:&থিম
 br:&Tema
 by:&Скура
 ca-xv:&Tema
@@ -3744,6 +3754,7 @@ vn:Thêm Ưa thích
 am:Ավելացնել PDF-ը որպես ենթատարր
 ar:أضف pdf كولد
 az:PDF-i törəmə element kimi əlavə et
+bn:PDFকে শাখায় যুক্ত করুন
 br:Adicionar PDF como um filho
 cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
@@ -3788,6 +3799,7 @@ tw:将 PDF 添加为同级项目
 am:Ավելացնել ենթատարր
 ar:أضف ولد
 az:Törəmə element əlavə et
+bn:শাখায় যুক্ত করুন
 br:Adicionar filho
 cn:添加子项目
 co:Aghjunghje un zitellu
@@ -4203,7 +4215,7 @@ uk:Всі файли
 uz:Hamma fayllar
 vn:Mọi tập tin
 :All supported documents
-am:Աջակցվող բոլոր փասթաթղթերը
+am:Աջակցվող բոլոր փաստաթղթերը
 ar:كل المستندات المدعومة
 az:Bütün dəstəklənən sənədlər
 bg:Всички поддържани документи
@@ -4366,6 +4378,7 @@ vn:Ứng dụng:
 am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել %s-ը:
 ar:هل أنت متأكد من إزالة  %s?
 az:Əminsiniz ki, %s silmək istəyirsiniz?
+bn:%s মুছতে আপনি নিশ্চিত?
 br:Você deseja realmente desinstalar o %s?
 cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
@@ -4458,7 +4471,7 @@ uz:SumatraPDF'ni o'chirishga ishonchingiz komilmi?
 vn:Bạn có chắc muốn gỡ bỏ SumatraPDF không?
 :Associate with PDF files?
 af:Assosieer Met PDF lêers?
-am:Ասոցիացնե՞լ PDF ֆայլերի հետ։
+am:Համակցե՞լ PDF ֆայլերի հետ։
 ar:ارتبط بملفات مستندات محمولة ؟
 az:PDF fayllarla əlaqə yaradılsın?
 bg:Указване на програмата като такава по подразбиране за отваряне на PDF файлове?
@@ -4665,7 +4678,9 @@ uk:Автор:
 uz:Muallif:
 vn:Tác giả
 :Author: %s
+am:Հեղինակ՝ %s
 az:Müəllif: %s
+bn:গ্রন্থকার: %s
 cn:作者: %s
 es:Autora: %s
 lv:Autors: %s
@@ -4810,6 +4825,8 @@ uk:Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
 :Background Color:
+am:Խորքի գույնը.
+bn:পটভূমির রং:
 cn:背景色:
 es:Color de fondo
 lv:Fona krāsa:
@@ -5081,6 +5098,8 @@ uk:Закладки
 uz:Xatcho'plar
 vn:Chỉ dấu sách
 :Border: %d
+am:Եզրագիծ. %d
+bn:সীমানা: %d
 cn:边框: %d
 lv:Apmale: %d
 nl:Rand %d
@@ -5633,7 +5652,7 @@ vn:Kiểm tra cập nhật
 am:Շրջան
 ar:دائرة
 az:Dairə
-bn:কেনদ্র
+bn:কেন্দ্র
 br:Círculo
 cn:圆
 co:Chjerchju
@@ -5728,6 +5747,7 @@ am:Կոծկել բոլորը
 ar:طي الكل
 az:Hamısını bağla
 bg:Свиване на всички
+bn:সব বন্ধ করুন
 br:Minimizar tudo
 ca-xv:Replega-ho tot
 ca:Replega-ho tot
@@ -5764,6 +5784,7 @@ uk:Згорнути всі
 am:Գույն
 ar:لون
 az:Rəng
+bn:রং
 br:Cor
 cn:颜色
 co:Culore
@@ -5791,7 +5812,9 @@ tr:Renk
 tw:颜色
 vn:Tô màu
 :Color:
+am:Գույն.
 az:Rəng:
+bn:রং:
 cn:颜色:
 es:Color:
 lv:Krāsa:
@@ -5929,7 +5952,9 @@ uk:Сумісність
 uz:Mosligi
 vn:Tính tương thích
 :Contents:
+am:Բովանդակություններ.
 az:Məzmun:
+bn:বিষয়:
 lv:Saturs:
 nl:Inhoud
 pl:Zawartość:
@@ -6926,6 +6951,7 @@ am:Հնարավոր չեղավ ստեղծել էջի պատկերը
 ar:لا يستطيع أن يعيد الصفحة
 az:Səhifəni əks etdirmək mümkün olmadı
 bg:Страницата не може да се изобрази
+bn:পৃষ্ঠাটি দেখানো যাচ্ছে না
 br:Não foi possível renderizar a página
 bs:Nije moguće iscrtati stranicu
 by:Не атрымаўся сфармаваць малюнак старонкі
@@ -6990,6 +7016,7 @@ am:Հնարավոր չեղավ հեռացնել PDF-ի նախադիտումը
 ar:لا يمكن إلغاء تثبيت معاين المستندات المحمولة
 az:PDF önbaxış alətini silmək mümkün olmadı
 bg:Програмата за преглед на PDF файлове не е премахната.
+bn:PDF previewer সরানো যায় নি
 br:Não foi possível desinstalar o pré-visualizador para PDF
 bs:Neuspješna deinstalacija PDF preglednika
 by:Немагчыма знішчыць перадпрагляд PDF
@@ -7051,6 +7078,7 @@ vn:Không thể gỡ cài đặt bộ xem truớc PDF
 am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զտիչը
 ar:إزالة معيار سومرا للبحث غير ممكن
 az:Sumatra axtarış filtrini silmək mümkün olmadı
+bn:Sumatra search filter ইন্সটল হয়নি
 br:Não foi possível desinstalar o filtro do pesquisa do Sumatra
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
@@ -7076,6 +7104,7 @@ am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադր�
 ar:لا يمكن إلغاء تثبيت متصفح البرنامج المساعد
 az:Brauzer plaginini silmək mümkün olmadı
 bg:Не може да деинсталирате плъгина за браузъра
+bn:ব্রাউজার প্লাগ-ইন সরানো যায় নি
 br:Não foi possível desinstalar o plugin do navegador
 bs:Neuspješna instalacija plugina za browser
 by:Немагчыма знішчыць дадатак браўзера
@@ -7138,6 +7167,7 @@ am:Հնարավոր չէ գրել %s պնակում
 ar: الى القرص %s لا يستطيع ان يكتب
 az:%s diskə yazıla bilmədi
 bg:Не можа да се запише %s на диска
+bn:ডিস্কে %s লেখা যায় নি
 br:Não foi possível gravar %s no disco
 bs:Neuspješno zapisivanje %s na disk
 by:Немагчыма запісаць %s на дыск
@@ -7196,11 +7226,15 @@ uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation From Selection
+am:Ստեղծել ծանոթագրություններ ընտրվածից
+bn:বাছাই থেকে টীকা লিখুন
 cn:创建注释 (从所选内容)
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
 :Create Annotation Under Cursor
+am:Ստգեղծել ծանոթագրություն նշորդի ներքո
+bn:Cursor এর নিচে টীকা লিখুন
 cn:创建注释 (在光标下)
 lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
@@ -7585,7 +7619,9 @@ tw:更暗
 uk:Темніша
 vn:Tối hơn
 :Date:
+am:Ամսաթիվ.
 az:Tarix:
+bn:তারিখ:
 cn:日期:
 es:Fetcha:
 lv:Datums:
@@ -7597,7 +7633,7 @@ am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
 az:Standart &düzüm:
 bg:&Разположение по подразбиране:
-bn:পুর্বনির্ধারিত &লে্‌আউট
+bn:পূর্বনির্ধারিত &লেআউট
 br:&Visualização Padrão
 bs:Izvorni &izgled:
 by:&Кампаноўка па змаўчанні
@@ -7852,6 +7888,8 @@ uk:У доступі відмовлено:
 uz:Taqiqlangan huquqlar:
 vn:Các quyền bị từ chối
 :Discard
+am:Մերժել
+bn:বাতিল করুন
 cn:丢弃
 lv:Atmest
 nl:Verwijderen
@@ -8221,7 +8259,7 @@ vn:Tập tin EPUB
 am:Խմբագրել
 ar:تعديل 
 az:Düzəliş et
-bn:সমপাদন
+bn:সম্পাদনা
 br:Editar
 cn:编辑
 co:Mudificà
@@ -8276,6 +8314,7 @@ tw:編輯評注
 am:Խմբագրել էջանիշերը
 ar:تعديل العلامات المرجعية
 az:Əlfəcinlərə düzəliş et
+bn:বুকমার্ক সম্পাদন করুন
 br:Editar Marcadores
 cn:编辑书签
 co:Mudificà l’indette
@@ -9529,6 +9568,7 @@ vn:Không tìm thấy tập tin %s
 am:Ֆայլի կցորդ
 ar:ملف مرفق
 az:Qoşma fayl
+bn:নথি সংযুক্তি
 br:Anexo de Arquivo
 cn:文件附件
 co:Schedariu attaccatu
@@ -10705,6 +10745,7 @@ am:Տեքստը գտնվել է %s էջում
 ar:تم العثور على النص في صفحة %s
 az:Mətn %s. səhifədə tapıldı
 bg:Текстът е намерен на страница %s
+bn:%s পৃষ্ঠায় পাওয়া গেছে
 br:Texto encontrado na página %s
 bs:Tekst je pronađen na stranici %s
 by:Тэкст знойдзены на стар. %s
@@ -11164,6 +11205,7 @@ am:Որոնումը կրկնելու համար օգտագործեք F3 կոճա
 ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
 az:Məsləhət: Təkrar axtarış üçün F3 düyməsinə basın
 bg:Съвет: Използвайте F3 за повторно търсене
+bn:সঙ্কেত: আবার খুঁজতে F3 চাপুন
 br:Dica: tecle F3 para achar a próxima ocorrência
 bs:Pomoć: upotrijebite tipku F3 za ponovnu pretragu
 by:Падказка: Націсніце F3 каб працягнуць пошук
@@ -11224,6 +11266,8 @@ uk:Підказка: Для повторного пошуку натисніть
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Icon:
+am:Պատկերակ.
+bn:আইকন
 cn:图标:
 lv:Ikona:
 nl:Pictogram:
@@ -11596,6 +11640,7 @@ uk:Встановлення триває...
 uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Interior Color:
+am:Ներքին գույնը.
 lv:Iekšējā krāsa:
 nl:Interieur Kleur
 pl:Kolor wnętrza:
@@ -11876,11 +11921,15 @@ ta:கோடு
 tr:Çizgi
 tw:線條
 :Line End:
+am:Տողի ավարտը.
+bn:লাইন শেষ:
 es:Fin de Línea:
 nl:Lijn Eind
 pl:Koniec linii:
 ru:Конец линии:
 :Line Start:
+am:Տողի մեկնարկը.
+bn:লাইন শুরু:
 es:Inicio de Línea:
 nl:Lijn Begin
 pl:Początek linii:
@@ -12026,7 +12075,7 @@ uz:SumatraPDF PDF-fayllarni ko'rish andoza dasturi sifatida ishlatilsinmi?
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
 :Make SumatraPDF my default PDF reader
 af:Maak Sumatra Die Automatiese PDF Leser
-am:Ասոցիացնել PDF ֆայլերը SumatraPDF-ի հետ
+am:Համակցել PDF ֆայլերը SumatraPDF-ի հետ
 ar:المحمولة  قارئ المستندات المحمولة الافتراضي Sumatra جعل  مستندات 
 az:SumatraPDF-i PDF fayllarla əlaqələndir
 bg:Направи SumatraPDF четец на PDF по подразбиране
@@ -12398,6 +12447,7 @@ vn:Mở cửa sổ mới\tCtrl+N
 am:Նոր էջանիշեր
 ar:إشارات مرجعية جديدة
 az:Yeni əlfəcinlər
+bn:নতুন বুকমার্ক
 br:Novos Marcadores
 cn:新建书签
 co:Nove indette
@@ -12957,12 +13007,16 @@ uk:Гаразд
 uz:OK
 vn:Đồng ý
 :Opacity:
+am:Մգություն.
+bn:অস্বচ্ছতা:
 cn:透明度:
 es:Opacidad:
 lv:Necaurspīdīgums:
 nl:Dekking
 pl:Nieprzezroczystość:
 :Opacity: %d
+am:Մգություն. %d
+bn:অস্বচ্ছতা: %d
 cn:透明度: %d
 es:Opacidad: %d
 lv:Necaurspīdīgums: %d
@@ -14575,6 +14629,7 @@ tw:多線條
 am:Պոլիգոն
 ar:مضلع
 az:Çoxbucaqlı
+bn:বহুভুজ
 br:Polígono
 cn:多边形
 co:Poligonu
@@ -14596,6 +14651,7 @@ ta:பலகோணம்
 tr:Çokgen
 tw:多邊形
 :Popup: %d 0 R
+am:Ելնող. %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
 pl:Wyskakujące okienko: %d 0 R
@@ -15370,6 +15426,7 @@ uk:Перейменувати...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Rect: x=%d y=%d dx=%d dy=%d
+am:Ուղղ. x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
@@ -15820,6 +15877,7 @@ uk:Повернути праворуч\tCtrl+Shift++
 uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :S&quiggly
+am:Ա&լիքավոր
 az:&Dalğa
 lv:&Viļņaina
 nl:Kr&onkelig
@@ -16016,6 +16074,7 @@ uk:Зберегти ярлик...\tCtrl+Shift+S
 uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save changes to a new PDF
+am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
 cn:保存更改到新的PDF
 lv:Saglabāt izmaiņas jaunā PDF failā
@@ -16429,6 +16488,7 @@ am:Ուղարկել &էլ. փոստով
 ar:إرسال ب&البريد الإلكتروني
 az:&E-poçtla göndər...
 bg:Изпрати по &електронната поща
+bn:ই-মেইল দিয়ে পাঠান
 br:Enviar por email...
 bs:Pošalji &e-mailom...
 by:Адаслаць &E-mail...
@@ -17890,7 +17950,7 @@ uk:Встановлений SumatraPDF не було знайдено.
 uz:SumatraPDF o'rnatilganligi topilmadi.
 vn:Không tìm thấy gói cài đặt SumatraPDF.
 :SumatraPDF is your default PDF reader
-am:PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
+am:PDF ֆայլերը համակցված են SumatraPDF-ի հետ
 ar:المحمولة هو قارئ المستندات المحمولة الافتراضي Sumatra مستندات
 az:SumatraPDF PDF faylları ilə əlaqələndirilmişdir
 bg:SumatraPDF е вашият PDF четец по подразбиране
@@ -18223,6 +18283,7 @@ pl:Wyrównanie tekstu:
 ru:Выравнивание текста:
 :Text Color:
 az:Mətnin rəngi:
+bn:লেখার রং:
 cn:文本颜色:
 es:Color de Texto:
 lv:Teksta krāsa:
@@ -18231,6 +18292,7 @@ pl:Kolor tekstu:
 ru:Цвет текста:
 :Text Size:
 az:Mətnin ölçüsü:
+bn:লেখার আকার:
 cn:文本大小:
 es:Tamaño de Texto
 lv:Teksta lielums:
@@ -18238,6 +18300,7 @@ nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 ru:Размер текста:
 :Text Size: %d
+bn:লেখার আকার: %d
 cn:文本大小: %d
 es:Tamaño de Texto: %d
 lv:Teksta lielums: %d
@@ -18582,7 +18645,7 @@ am:Անունը.
 ar:العنوان
 az:Başlıq:
 bg:Заглавие:
-bn:শিরোনাম
+bn:শিরোনাম:
 br:Título:
 bs:Naslov:
 by:Загаловак:
@@ -19099,7 +19162,7 @@ am:Ծրագրի &կայքը
 ar:&زيارة موقع البرنامج
 az:Proqramın &vebsaytına keç
 bg:Посетете &уебсайта
-bn:&আমাদের ওয়েবসাইট ভ্রমণ করুন
+bn:&আমাদের ওয়েবসাইট দেখুন
 br:&Visitar a página do SumatraPDF
 bs:&Posjeti web stranicu
 by:Наведаць сайт
