@@ -29,6 +29,13 @@ enum
 	TOKEN_ENDHDR,
 };
 
+enum
+{
+	ENDIAN_UNKNOWN = 0,
+	ENDIAN_LITTLE,
+	ENDIAN_BIG,
+};
+
 struct info
 {
 	int subimages;
@@ -37,6 +44,8 @@ struct info
 	int maxval, bitdepth;
 	int depth, alpha;
 	int tupletype;
+	int endian;
+	float scale;
 };
 
 static inline int iswhiteeol(int a)
@@ -82,7 +91,7 @@ pnm_read_signature(fz_context *ctx, const unsigned char *p, const unsigned char 
 {
 	if (e - p < 2)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse magic number in pnm image");
-	if (p[0] != 'P' || p[1] < '1' || p[1] > '7')
+	if (p[0] != 'P' || ((p[1] < '1' || p[1] > '7') && p[1] != 'F' && p[1] != 'f'))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "expected signature in pnm image");
 
 	signature[0] = *p++;
@@ -201,10 +210,10 @@ pnm_read_digit(fz_context *ctx, const unsigned char *p, const unsigned char *e, 
 }
 
 static const unsigned char *
-pnm_read_number(fz_context *ctx, const unsigned char *p, const unsigned char *e, int *number)
+pnm_read_int(fz_context *ctx, const unsigned char *p, const unsigned char *e, int *number)
 {
 	if (e - p < 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse number in pnm image");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse integer in pnm image");
 	if (*p < '0' || *p > '9')
 		fz_throw(ctx, FZ_ERROR_GENERIC, "expected integer in pnm image");
 
@@ -214,6 +223,40 @@ pnm_read_number(fz_context *ctx, const unsigned char *p, const unsigned char *e,
 			*number = *number * 10 + *p - '0';
 		p++;
 	}
+
+	return p;
+}
+
+static const unsigned char *
+pnm_read_real(fz_context *ctx, const unsigned char *p, const unsigned char *e, float *number)
+{
+	const unsigned char *orig = p;
+	char *buf, *end;
+	size_t len;
+
+	if (e - p < 1)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse real in pnm image");
+
+	if (*p != '+' && *p != '-' && (*p < '0' || *p > '9'))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "expected numeric field in pnm image");
+
+	while (p < e && (*p == '+' || *p == '-' || *p == '.' || (*p >= '0' && *p <= '9')))
+		p++;
+
+	len = p - orig + 1;
+	end = buf = fz_malloc(ctx, len);
+
+	fz_try(ctx)
+	{
+		memcpy(buf, orig, len - 1);
+		buf[len - 1] = '\0';
+		*number = fz_strtof(buf, &end);
+		p = orig + (end - buf);
+	}
+	fz_always(ctx)
+		fz_free(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	return p;
 }
@@ -300,13 +343,13 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 
 	pnm->width = 0;
 	p = pnm_read_comments(ctx, p, e, 1);
-	p = pnm_read_number(ctx, p, e, &pnm->width);
+	p = pnm_read_int(ctx, p, e, &pnm->width);
 	p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
 	if (bitmap)
 	{
 		pnm->height = 0;
-		p = pnm_read_number(ctx, p, e, &pnm->height);
+		p = pnm_read_int(ctx, p, e, &pnm->height);
 		p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
 		pnm->maxval = 1;
@@ -315,12 +358,12 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 	{
 		pnm->height = 0;
 		p = pnm_read_comments(ctx, p, e, 1);
-		p = pnm_read_number(ctx, p, e, &pnm->height);
+		p = pnm_read_int(ctx, p, e, &pnm->height);
 		p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
 		pnm->maxval = 0;
 		p = pnm_read_comments(ctx, p, e, 1);
-		p = pnm_read_number(ctx, p, e, &pnm->maxval);
+		p = pnm_read_int(ctx, p, e, &pnm->maxval);
 		p = pnm_read_white_or_eol(ctx, p, e);
 	}
 
@@ -362,7 +405,7 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 					for (k = 0; k < n; k++)
 					{
 						p = pnm_read_whites_and_eols(ctx, p, e, 0);
-						p = pnm_read_number(ctx, p, e, NULL);
+						p = pnm_read_int(ctx, p, e, NULL);
 						p = pnm_read_whites_and_eols(ctx, p, e, 0);
 					}
 		}
@@ -402,7 +445,7 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 					{
 						int v = 0;
 						p = pnm_read_whites_and_eols(ctx, p, e, 0);
-						p = pnm_read_number(ctx, p, e, &v);
+						p = pnm_read_int(ctx, p, e, &v);
 						p = pnm_read_whites_and_eols(ctx, p, e, 0);
 						v = fz_clampi(v, 0, pnm->maxval);
 						*dp++ = map_color(ctx, v, pnm->maxval, 255);
@@ -423,13 +466,13 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 
 	pnm->width = 0;
 	p = pnm_read_comments(ctx, p, e, 1);
-	p = pnm_read_number(ctx, p, e, &pnm->width);
+	p = pnm_read_int(ctx, p, e, &pnm->width);
 	p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
 	if (bitmap)
 	{
 		pnm->height = 0;
-		p = pnm_read_number(ctx, p, e, &pnm->height);
+		p = pnm_read_int(ctx, p, e, &pnm->height);
 		p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
 		pnm->maxval = 1;
@@ -438,12 +481,12 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	{
 		pnm->height = 0;
 		p = pnm_read_comments(ctx, p, e, 1);
-		p = pnm_read_number(ctx, p, e, &pnm->height);
+		p = pnm_read_int(ctx, p, e, &pnm->height);
 		p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
 		pnm->maxval = 0;
 		p = pnm_read_comments(ctx, p, e, 1);
-		p = pnm_read_number(ctx, p, e, &pnm->maxval);
+		p = pnm_read_int(ctx, p, e, &pnm->maxval);
 		p = pnm_read_white_or_eol(ctx, p, e);
 	}
 
@@ -563,10 +606,10 @@ pam_binary_read_header(fz_context *ctx, struct info *pnm, const unsigned char *p
 				p = pnm_read_whites(ctx, p, eol, 1);
 				switch (token)
 				{
-				case TOKEN_WIDTH: pnm->width = 0; p = pnm_read_number(ctx, p, eol, &pnm->width); break;
-				case TOKEN_HEIGHT: pnm->height = 0; p = pnm_read_number(ctx, p, eol, &pnm->height); break;
-				case TOKEN_DEPTH: pnm->depth = 0; p = pnm_read_number(ctx, p, eol, &pnm->depth); break;
-				case TOKEN_MAXVAL: pnm->maxval = 0; p = pnm_read_number(ctx, p, eol, &pnm->maxval); break;
+				case TOKEN_WIDTH: pnm->width = 0; p = pnm_read_int(ctx, p, eol, &pnm->width); break;
+				case TOKEN_HEIGHT: pnm->height = 0; p = pnm_read_int(ctx, p, eol, &pnm->height); break;
+				case TOKEN_DEPTH: pnm->depth = 0; p = pnm_read_int(ctx, p, eol, &pnm->depth); break;
+				case TOKEN_MAXVAL: pnm->maxval = 0; p = pnm_read_int(ctx, p, eol, &pnm->maxval); break;
 				case TOKEN_TUPLTYPE: pnm->tupletype = 0; p = pnm_read_tupletype(ctx, p, eol, &pnm->tupletype); break;
 				}
 			}
@@ -790,6 +833,108 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	return img;
 }
 
+static const unsigned char *
+pfm_binary_read_header(fz_context *ctx, struct info *pnm, const unsigned char *p, const unsigned char *e)
+{
+	pnm->width = 0;
+	p = pnm_read_int(ctx, p, e, &pnm->width);
+	p = pnm_read_whites_and_eols(ctx, p, e,1);
+
+	pnm->height = 0;
+	p = pnm_read_int(ctx, p, e, &pnm->height);
+	p = pnm_read_whites_and_eols(ctx, p, e,1);
+
+	p = pnm_read_real(ctx, p, e, &pnm->scale);
+
+	p = pnm_read_white_or_eol(ctx, p, e);
+
+	if (pnm->scale >= 0)
+		pnm->endian = ENDIAN_BIG;
+	else
+	{
+		pnm->endian = ENDIAN_LITTLE;
+		pnm->scale = -pnm->scale;
+	}
+
+	return p;
+}
+
+static fz_pixmap *
+pfm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, const unsigned char *e, int onlymeta, int rgb, const unsigned char **out)
+{
+	fz_pixmap *pix = NULL;
+
+	fz_var(pix);
+
+	p = pfm_binary_read_header(ctx, pnm, p, e);
+	pnm->cs = rgb ? fz_device_rgb(ctx) : fz_device_gray(ctx);
+
+	if (pnm->height <= 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image height must be > 0");
+	if (pnm->width <= 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image width must be > 0");
+	if ((unsigned int)pnm->height > UINT_MAX / pnm->width / fz_colorspace_n(ctx, pnm->cs) / (pnm->bitdepth / 8 + 1))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
+
+	if (onlymeta)
+	{
+		size_t w = pnm->width;
+		size_t h = pnm->height;
+		int n = fz_colorspace_n(ctx, pnm->cs);
+		size_t size = w * h * n * sizeof(float);
+
+		if (e < p || (size_t)(e - p) < size)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "truncated image");
+
+		p += size;
+	}
+	else
+	{
+		float *samples = NULL;
+		float *sample;
+		int w = pnm->width;
+		int h = pnm->height;
+		int n = fz_colorspace_n(ctx, pnm->cs);
+		size_t size = (size_t) w * h * n * sizeof(float);
+		int x, y, k;
+
+		if (e < p || (size_t)(e - p) < size)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "truncated image");
+
+		sample = samples = fz_malloc(ctx, size);
+		fz_try(ctx)
+		{
+			for (y = 0; y < h; y++)
+				for (x = 0; x < w; x++)
+					for (k = 0; k < n; k++)
+					{
+						uint32_t u;
+						float f;
+
+						if (pnm->endian == ENDIAN_LITTLE)
+							u = p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
+						else
+							u = p[3] | (p[2] << 8) | (p[1] << 16) | (p[0] << 24);
+						memcpy(&f, &u, sizeof(float));
+
+						*sample++ = f / pnm->scale;
+						p += sizeof(float);
+					}
+
+			pix = fz_new_pixmap_from_float_data(ctx, pnm->cs, w, h, samples);
+		}
+		fz_always(ctx)
+			fz_free(ctx, samples);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+	}
+
+	if (out)
+		*out = p;
+
+	return pix;
+}
+
 static fz_pixmap *
 pnm_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, size_t total, int onlymeta, int subimage)
 {
@@ -837,6 +982,10 @@ pnm_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, size_t
 		}
 		else if (!strcmp(signature, "P7"))
 			pix = pam_binary_read_image(ctx, pnm, p, e, subonlymeta, &p);
+		else if (!strcmp(signature, "Pf"))
+			pix = pfm_binary_read_image(ctx, pnm, p, e, subonlymeta, 0, &p);
+		else if (!strcmp(signature, "PF"))
+			pix = pfm_binary_read_image(ctx, pnm, p, e, subonlymeta, 1, &p);
 		else
 			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported portable anymap signature (0x%02x, 0x%02x)", signature[0], signature[1]);
 

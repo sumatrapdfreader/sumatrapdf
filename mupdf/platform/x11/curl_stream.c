@@ -126,13 +126,13 @@ static size_t on_curl_header(void *ptr, size_t size, size_t nmemb, void *state_)
 	struct curlstate *state = state_;
 
 	lock(state);
-	if (strncasecmp(ptr, "Accept-Ranges: bytes", 20) == 0)
+	if (fz_strncasecmp(ptr, "Accept-Ranges: bytes", 20) == 0)
 	{
 		DEBUG_MESSAGE(("header arrived with Accept-Ranges!\n"));
 		state->accept_ranges = 1;
 	}
 
-	if (strncasecmp(ptr, "Content-Length:", 15) == 0)
+	if (fz_strncasecmp(ptr, "Content-Length:", 15) == 0)
 	{
 		char *s = ptr;
 		state->content_length = fz_atoi(s + 15);

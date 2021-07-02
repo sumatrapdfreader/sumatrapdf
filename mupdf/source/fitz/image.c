@@ -1158,6 +1158,8 @@ fz_recognize_image_format(fz_context *ctx, unsigned char p[8])
 {
 	if (p[0] == 'P' && p[1] >= '1' && p[1] <= '7')
 		return FZ_IMAGE_PNM;
+	if (p[0] == 'P' && (p[1] == 'F' || p[1] == 'f'))
+		return FZ_IMAGE_PNM;
 	if (p[0] == 0xff && p[1] == 0x4f)
 		return FZ_IMAGE_JPX;
 	if (p[0] == 0x00 && p[1] == 0x00 && p[2] == 0x00 && p[3] == 0x0c &&

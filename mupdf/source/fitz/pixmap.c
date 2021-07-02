@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 
 fz_pixmap *
 fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix)
@@ -1067,6 +1068,148 @@ fz_new_pixmap_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsign
 				bit = 0x80, in++;
 		}
 		out += stride;
+	}
+
+	return pixmap;
+}
+
+static float
+calc_percentile(int *hist, float thr, float scale, float minval, float maxval)
+{
+	float prct;
+	int k = 0, count = 0;
+
+	while (count < thr)
+		count += hist[k++];
+
+	if (k <= 0)
+		prct = k;
+	else
+	{
+		float c0 = count - thr;
+		float c1 = thr - (count - hist[k - 1]);
+		prct = (c1 * k + c0 * (k - 1)) / (c0 + c1);
+	}
+
+	prct /= scale;
+	prct += minval;
+	return fz_clamp(prct, minval, maxval);
+}
+
+static void
+calc_percentiles(fz_context *ctx, int nsamples, float *samples, float *minprct, float *maxprct)
+{
+	float minval, maxval, scale;
+	int *hist, size, k;
+
+	minval = maxval = samples[0];
+	for (k = 1; k < nsamples; k++)
+	{
+		minval = fz_min(minval, samples[k]);
+		maxval = fz_max(maxval, samples[k]);
+	}
+
+	if (minval - maxval == 0)
+	{
+		*minprct = *maxprct = minval;
+		return;
+	}
+
+	size = fz_mini(65535, nsamples);
+	scale = (size - 1) / (maxval - minval);
+
+	hist = fz_calloc(ctx, size, sizeof(int));
+
+	fz_try(ctx)
+	{
+		for (k = 0; k < nsamples; k++)
+			hist[(uint16_t) (scale * (samples[k] - minval))]++;
+
+		*minprct = calc_percentile(hist, 0.01f * nsamples, scale, minval, maxval);
+		*maxprct = calc_percentile(hist, 0.99f * nsamples, scale, minval, maxval);
+	}
+	fz_always(ctx)
+		fz_free(ctx, hist);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+/* Tone mapping according to "Consistent Tone Reproduction" by Min H. Kim and Jan Kautz. */
+fz_pixmap *
+fz_new_pixmap_from_float_data(fz_context *ctx, fz_colorspace *cs, int w, int h, float *samples)
+{
+	fz_pixmap *pixmap = NULL;
+	unsigned char *dp;
+	float *sample;
+	float *lsamples = NULL;
+	float minsample, maxsample, mu;
+	float k1, d0, sigma, sigmasq2;
+	float minprct, maxprct, range;
+	int y, k, n = fz_colorspace_n(ctx, cs);
+	int nsamples = w * h * n;
+#define KIMKAUTZC1 (3.0f)
+#define KIMKAUTZC2 (0.5f)
+#define MAXLD (logf(300.0f))
+#define MINLD (logf(0.3f))
+
+	fz_var(pixmap);
+	fz_var(lsamples);
+
+	fz_try(ctx)
+	{
+		lsamples = fz_malloc(ctx, nsamples * sizeof(float));
+
+		mu = 0;
+		minsample = FLT_MAX;
+		maxsample = -FLT_MAX;
+
+		for (k = 0; k < nsamples; k++)
+		{
+			lsamples[k] = logf(samples[k] == 0 ? FLT_MIN : samples[k]);
+			mu += lsamples[k];
+			minsample = fz_min(minsample, lsamples[k]);
+			maxsample = fz_max(maxsample, lsamples[k]);
+		}
+
+		mu /= nsamples;
+		d0 = maxsample - minsample;
+		k1 = (MAXLD - MINLD) / d0;
+		sigma = d0 / KIMKAUTZC1;
+		sigmasq2 = sigma * sigma * 2;
+
+		for (k = 0; k < nsamples; k++)
+		{
+			float samplemu = samples[k] - mu;
+			float samplemu2 = samplemu * samplemu;
+			float w = expf(-samplemu2 / sigmasq2);
+			float k2 = (1 - k1) * w + k1;
+			samples[k] = expf(KIMKAUTZC2 * k2 * (lsamples[k] - mu) + mu);
+		}
+
+		calc_percentiles(ctx, nsamples, samples, &minprct, &maxprct);
+		range = maxprct - minprct;
+
+		pixmap = fz_new_pixmap(ctx, cs, w, h, NULL, 0);
+
+		dp = pixmap->samples + pixmap->stride * (h - 1);
+		sample = samples;
+
+		for (y = 0; y < h; y++)
+		{
+			unsigned char *dpp = dp;
+
+			for (k = 0; k < w * n; k++)
+				*dpp++ = 255.0f * (fz_clamp(*sample++, minprct, maxprct) - minprct) / range;
+
+			dp -= pixmap->stride;
+		}
+	}
+	fz_always(ctx)
+		fz_free(ctx, lsamples);
+	fz_catch(ctx)
+	{
+		fz_drop_pixmap(ctx, pixmap);
+		fz_rethrow(ctx);
 	}
 
 	return pixmap;

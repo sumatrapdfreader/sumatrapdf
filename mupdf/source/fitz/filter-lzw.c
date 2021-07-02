@@ -74,16 +74,17 @@ next_lzwd(fz_context *ctx, fz_stream *stm, size_t len)
 		if (lzw->eod)
 			return EOF;
 
+		if (fz_is_eof_bits(ctx, lzw->chain))
+		{
+			fz_warn(ctx, "premature end in lzw decode");
+			lzw->eod = 1;
+			break;
+		}
+
 		if (lzw->reverse_bits)
 			code = fz_read_rbits(ctx, lzw->chain, code_bits);
 		else
 			code = fz_read_bits(ctx, lzw->chain, code_bits);
-
-		if (fz_is_eof_bits(ctx, lzw->chain))
-		{
-			lzw->eod = 1;
-			break;
-		}
 
 		if (code == LZW_EOD(lzw))
 		{

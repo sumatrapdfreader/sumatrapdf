@@ -231,6 +231,7 @@ static const char *img_extensions[] =
 	"jxr",
 	"pam",
 	"pbm",
+	"pfm",
 	"pgm",
 	"pkm",
 	"png",
@@ -261,6 +262,7 @@ static const char *img_mimetypes[] =
 	"image/x-portable-bitmap",
 	"image/x-portable-greymap",
 	"image/x-portable-pixmap",
+	"image/x-portable-floatmap",
 	"image/x-tiff",
 	NULL
 };

@@ -25,6 +25,7 @@ void fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, 
 
 fz_pixmap *fz_new_pixmap_from_8bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
 fz_pixmap *fz_new_pixmap_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
+fz_pixmap *fz_new_pixmap_from_float_data(fz_context *ctx, fz_colorspace *cs, int w, int h, float *sp);
 
 #ifdef HAVE_VALGRIND
 int fz_valgrind_pixmap(const fz_pixmap *pix);

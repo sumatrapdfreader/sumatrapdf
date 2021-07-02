@@ -283,7 +283,11 @@ gif_read_tbid(fz_context *ctx, struct info *info, const unsigned char *p, const 
 
 		uncompressed = fz_read_all(ctx, lzwstm, 0);
 		if (uncompressed->len < (size_t)info->image_width * info->image_height)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in compressed table based image data in gif image");
+		{
+			fz_warn(ctx, "premature end in compressed table based image data in gif image");
+			while (uncompressed->len < (size_t)info->image_width * info->image_height)
+				fz_append_byte(ctx, uncompressed, 0x00);
+		}
 
 		if (info->has_lct)
 		{
