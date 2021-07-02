@@ -126,13 +126,13 @@ static size_t on_curl_header(void *ptr, size_t size, size_t nmemb, void *state_)
 	struct curlstate *state = state_;
 
 	lock(state);
-	if (strncmp(ptr, "Accept-Ranges: bytes", 20) == 0)
+	if (strncasecmp(ptr, "Accept-Ranges: bytes", 20) == 0)
 	{
 		DEBUG_MESSAGE(("header arrived with Accept-Ranges!\n"));
 		state->accept_ranges = 1;
 	}
 
-	if (strncmp(ptr, "Content-Length:", 15) == 0)
+	if (strncasecmp(ptr, "Content-Length:", 15) == 0)
 	{
 		char *s = ptr;
 		state->content_length = fz_atoi(s + 15);
@@ -222,6 +222,10 @@ static size_t on_curl_data(void *ptr, size_t size, size_t nmemb, void *state_)
 	 * code this to allow for curl calling us to copy smaller blocks
 	 * as they arrive. */
 	old_start = state->current_fill_start;
+	if (state->current_fill_start + size > state->buffer_max) {
+		unlock(state);
+		return 0;
+	}
 	memcpy(state->buffer + state->current_fill_start, ptr, size);
 	state->current_fill_start += size;
 	/* If we've reached the end, or at least a different block

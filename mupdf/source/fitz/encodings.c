@@ -52,6 +52,16 @@ fz_unicode_from_glyph_name_strict(const char *name)
 	return 0;
 }
 
+static int
+read_num(const char *p, int base)
+{
+	char *e;
+	int v = strtol(p, &e, base);
+	if (*e != 0)
+		return 0;
+	return v;
+}
+
 int
 fz_unicode_from_glyph_name(const char *name)
 {
@@ -82,11 +92,13 @@ fz_unicode_from_glyph_name(const char *name)
 	}
 
 	if (buf[0] == 'u' && buf[1] == 'n' && buf[2] == 'i' && strlen(buf) == 7)
-		code = strtol(buf + 3, NULL, 16);
+		code = read_num(buf+3, 16);
 	else if (buf[0] == 'u')
-		code = strtol(buf + 1, NULL, 16);
+		code = read_num(buf+1, 16);
 	else if (buf[0] == 'a' && buf[1] != 0 && buf[2] != 0)
-		code = strtol(buf + 1, NULL, 10);
+		code = read_num(buf+1, 10);
+	else
+		code = read_num(buf, 10);
 
 	return (code > 0 && code <= 0x10ffff) ? code : FZ_REPLACEMENT_CHARACTER;
 }
