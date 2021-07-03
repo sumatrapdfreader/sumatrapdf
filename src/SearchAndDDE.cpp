@@ -834,10 +834,6 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
 }
 
 static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
-    if (str::IsEmpty(cmd)) {
-        return;
-    }
-
     while (!str::IsEmpty(cmd)) {
         {
             AutoFree tmp = strconv::WstrToUtf8(cmd);
