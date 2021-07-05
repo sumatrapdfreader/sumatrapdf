@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/Log.h"
 
 #if OS_WIN
 #include "utils/ScopedWin.h"
@@ -493,9 +494,14 @@ std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) 
     nRead = fread((void*)d, 1, size, fp);
     if (nRead != size) {
         int err = ferror(fp);
-        CrashIf(err == 0);
         int isEof = feof(fp);
-        CrashIf(isEof != 0);
+        logf("ReadFileWithAllocator: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath, (int)size, (int)nRead,
+             err, isEof);
+        // we should either get eof or err
+        // either way shouldn't happen because we're reading the exact size of file
+        // I've seen this in crash reports so maybe the files are over-written
+        // between the time I do fseek() and fread()
+        CrashIf(!(isEof || (err != 0)));
         goto Error;
     }
 
