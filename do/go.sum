@@ -25,6 +25,8 @@ github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf/go.mod h1:+YlBbo63A
 github.com/kjk/caching_http_client v0.0.0-20190810075619-06ff809674f7/go.mod h1:uZMXWOA3unK8KYdy6aBIel64MMqZwsRFRKIvgSadLAU=
 github.com/kjk/notionapi v0.0.0-20210625054415-aaaf06a7b439 h1:3l6nvCyU5o0zLdpq8ko90kAdDAdJn4oNYrschtuw5SI=
 github.com/kjk/notionapi v0.0.0-20210625054415-aaaf06a7b439/go.mod h1:vqpFS+DYYcK2gMdJllHeWoS9DoIkv1VA1U6Q3H2iXXc=
+github.com/kjk/notionapi v0.0.0-20210703151502-e954b9b9578e h1:LlzmISHW87hpVbqSFr5AckB4XAmqJtC5APP5c+QA6Bg=
+github.com/kjk/notionapi v0.0.0-20210703151502-e954b9b9578e/go.mod h1:vqpFS+DYYcK2gMdJllHeWoS9DoIkv1VA1U6Q3H2iXXc=
 github.com/kjk/siser v0.0.0-20210621233355-17e67ed4384f h1:X3X0zk+W4FIR4LvlT4BQbHMXM3rj2Ba6P4nZ8MkVPqM=
 github.com/kjk/siser v0.0.0-20210621233355-17e67ed4384f/go.mod h1:k2Pzb2Ix2MoXVfVLt3SeCEhwammA4PTgLxjDBhIUHoA=
 github.com/kjk/u v0.0.0-20210327060556-13ea33918991 h1:5YrkYcROqlUoQlE85JkQ8IEXw+92fjfFc+V8WC3GiBo=
