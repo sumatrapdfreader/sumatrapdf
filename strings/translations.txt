@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c6e312e92128c39248c4dd35f7ee938917cee14f
+9d6f6eeb000fa908de3c25b5346772760ce3570a
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -7900,6 +7900,7 @@ am:DjVu ֆայլեր
 ar:DjVu  وثائق
 az:DjVu sənədləri
 bg:DjVu документи
+bn:DjVu নথিসমূহ
 br:Documentos DjVu
 bs:DjVu dokumenti
 by:Дакумент DjVu
@@ -13249,6 +13250,7 @@ am:Բացել %s-ում
 ar:فتح في  %s
 az:%s ilə aç
 bg:Отваряне с %s
+bn:%s এ খুলুন
 br:Abrir em %s
 bs:Otvori u %s
 by:Адкрыць у %s
