@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ae49cafc4c1ce44e934d9a010c0082c7b168a807
+12444f85728bd59f007f3c25bbc3fd3cc1c64f16
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -1333,6 +1333,7 @@ vn:Trợ &giúp
 :&Highlight\ta
 am:&Գունանշում\ta
 cn:&高亮\ta
+kw:&Ughboyntya\ta
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
 pl:&Wyróżnienie\ta
@@ -14675,6 +14676,7 @@ tr:Çokgen
 tw:多邊形
 :Popup: %d 0 R
 am:Ելնող. %d 0 R
+kw:Tardhans: %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
 pl:Wyskakujące okienko: %d 0 R
@@ -15450,6 +15452,7 @@ uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
+kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
@@ -16116,12 +16119,14 @@ pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 :Saved annotations to '%s'
 cn:保存注释到 '%s'
+kw:Notenyansow gwithys dhe '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje do '%s'
 ru:Аннотации сохранены в '%s'
 :Saving of '%s' failed with: '%s'
 cn:保存'%s'失败: '%s'
+kw:Gwitha '%s' re fyllis gans: '%s'
 lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
@@ -16288,7 +16293,7 @@ ja:すべて選択(&A)\tCtrl+A
 ka:ყ&ველას მონიშვნა\tCtrl+A
 kr:모두 선택(&A)\tCtrl+A
 ku:دیاریکردنی &هەمووی\tCtrl+A
-kw:Dewis &Oll|tCtrl+A
+kw:Dewis &Oll\tCtrl+A
 lt:Pažymėti &viską\tCtrl+A
 lv:Atlasīt &visu\tCtrl+A
 mk:Избери сè\tCtrl+A
@@ -19462,12 +19467,14 @@ cn:存在未保存的注释
 co:Avete annutazioni micca arregistrate
 es:Tienes anotaciones sin guardar
 id:Kamu memiliki catatan yang belum tersimpan
+kw:Yma notenyansow anwithys dhis
 lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 :You have unsaved annotations. Save them?
 cn:存在未保存的注释. 是否保存?
+kw:Yma notenyansow anwithys dhis. A vynnydh aga gwitha?
 lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
 nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
 pl:Masz niezapisane adnotacje. Zapisać je?
