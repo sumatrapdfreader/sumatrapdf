@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2021 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -462,7 +462,7 @@ cmsFloat64Number Clip(cmsFloat64Number v)
 }
 
 static
-cmsInt32Number ForwardSampler(cmsContext ContextID, register const cmsUInt16Number In[], cmsUInt16Number Out[], void* Cargo)
+cmsInt32Number ForwardSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], cmsUInt16Number Out[], void* Cargo)
 {
     FakeCMYKParams* p = (FakeCMYKParams*) Cargo;
     cmsFloat64Number rgb[3], cmyk[4];
@@ -492,7 +492,7 @@ cmsInt32Number ForwardSampler(cmsContext ContextID, register const cmsUInt16Numb
 
 
 static
-cmsInt32Number ReverseSampler(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+cmsInt32Number ReverseSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     FakeCMYKParams* p = (FakeCMYKParams*) Cargo;
     cmsFloat64Number c, m, y, k, rgb[3];
@@ -1725,9 +1725,10 @@ cmsUInt16Number Fn8D3(cmsUInt16Number a1, cmsUInt16Number a2, cmsUInt16Number a3
 
 
 static
-cmsInt32Number Sampler3D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler3D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], 0, 0, 0, 0, 0, 3);
@@ -1741,9 +1742,10 @@ cmsInt32Number Sampler3D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler4D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler4D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], 0, 0, 0, 0, 4);
@@ -1756,9 +1758,10 @@ cmsInt32Number Sampler4D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler5D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler5D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], 0, 0, 0, 5);
@@ -1771,9 +1774,10 @@ cmsInt32Number Sampler5D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler6D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler6D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], In[5], 0, 0, 6);
@@ -1786,9 +1790,10 @@ cmsInt32Number Sampler6D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler7D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler7D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], In[5], In[6], 0, 7);
@@ -1801,9 +1806,10 @@ cmsInt32Number Sampler7D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler8D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler8D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], In[5], In[6], In[7], 8);
@@ -3758,6 +3764,73 @@ Error:
 
 
 
+// For educational purposes ONLY. No error checking is performed!
+static
+cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
+{
+    // Color list database
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 0, 10, 4, "PANTONE", "TCX");
+
+    // Containers for names
+    cmsMLU* DescriptionMLU, *CopyrightMLU;
+
+    // Create n empty profile
+    cmsHPROFILE hProfile = cmsOpenProfileFromFile(ContextID, "named.icc", "w");
+
+    // Values
+    cmsCIELab Lab;
+    cmsUInt16Number PCS[3], Colorant[4];
+
+    // Set profile class
+    cmsSetProfileVersion(ContextID, hProfile, 4.3);
+    cmsSetDeviceClass(ContextID, hProfile, cmsSigNamedColorClass);
+    cmsSetColorSpace(ContextID, hProfile, cmsSigCmykData);
+    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
+    cmsSetHeaderRenderingIntent(ContextID, hProfile, INTENT_PERCEPTUAL);
+
+    // Add description and copyright only in english/US
+    DescriptionMLU = cmsMLUalloc(ContextID, 1);
+    CopyrightMLU   = cmsMLUalloc(ContextID, 1);
+
+    cmsMLUsetWide(ContextID, DescriptionMLU, "en", "US", L"Profile description");
+    cmsMLUsetWide(ContextID, CopyrightMLU,   "en", "US", L"Profile copyright");
+
+    cmsWriteTag(ContextID, hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
+    cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag, CopyrightMLU);
+
+    // Set the media white point
+    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ());
+
+
+    // Populate one value, Colorant = CMYK values in 16 bits, PCS[] = Encoded Lab values (in V2 format!!)
+    Lab.L = 50; Lab.a = 10; Lab.b = -10;
+    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
+    Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
+    cmsAppendNamedColor(ContextID, colors, "Hazelnut 14-1315", PCS, Colorant);
+
+    // Another one. Consider to write a routine for that
+    Lab.L = 40; Lab.a = -5; Lab.b = 8;
+    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
+    Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
+    cmsAppendNamedColor(ContextID, colors, "Kale 18-0107", PCS, Colorant);
+
+    // Write the colors database
+    cmsWriteTag(ContextID, hProfile, cmsSigNamedColor2Tag, colors);
+
+    // That will create the file
+    cmsCloseProfile(ContextID, hProfile);
+
+    // Free resources
+    cmsFreeNamedColorList(ContextID, colors);
+    cmsMLUfree(ContextID, DescriptionMLU);
+    cmsMLUfree(ContextID, CopyrightMLU);
+
+    remove("named.icc");
+
+    return 1;
+}
+
+
 // ----------------------------------------------------------------------------------------------------------
 
 // Formatters
@@ -4879,7 +4952,7 @@ cmsBool CheckOneStr(cmsContext ContextID, cmsMLU* mlu, cmsInt32Number n)
 
 
 static
-void SetOneStr(cmsContext ContextID, cmsMLU** mlu, wchar_t* s1, wchar_t* s2)
+void SetOneStr(cmsContext ContextID, cmsMLU** mlu, const wchar_t* s1, const wchar_t* s2)
 {
     *mlu = cmsMLUalloc(ContextID, 0);
     cmsMLUsetWide(ContextID, *mlu, "en", "US", s1);
@@ -8163,29 +8236,200 @@ int CheckEmptyMLUC(cmsContext context)
     cmsToneCurve* toneCurve = cmsBuildParametricToneCurve(context, 1, parameters);
     cmsToneCurve* toneCurves[3] = { toneCurve, toneCurve, toneCurve };
 
-    cmsHPROFILE profile = cmsCreateRGBProfileTHR(context, &white, &primaries, toneCurves);
+    cmsHPROFILE profile = cmsCreateRGBProfile(context, &white, &primaries, toneCurves);
 
-    cmsSetLogErrorHandlerTHR(context, FatalErrorQuit);
+    cmsSetLogErrorHandler(context, FatalErrorQuit);
 
-    cmsFreeToneCurve(toneCurve);
+    cmsFreeToneCurve(context, toneCurve);
 
     // Set an empty copyright tag. This should log an error.
     cmsMLU* mlu = cmsMLUalloc(context, 1);
 
-    cmsMLUsetASCII(mlu, "en", "AU", "");
-    cmsMLUsetWide(mlu,  "en", "EN", L"");
-    cmsWriteTag(profile, cmsSigCopyrightTag, mlu);
-    cmsMLUfree(mlu);
+    cmsMLUsetASCII(context, mlu, "en", "AU", "");
+    cmsMLUsetWide(context, mlu,  "en", "EN", L"");
+    cmsWriteTag(context, profile, cmsSigCopyrightTag, mlu);
+    cmsMLUfree(context, mlu);
 
     // This will cause a crash after setting an empty copyright tag.
-    cmsMD5computeID(profile);
+    cmsMD5computeID(context, profile);
 
     // Cleanup
-    cmsCloseProfile(profile);
+    cmsCloseProfile(context, profile);
     DebugMemDontCheckThis(context);
 
     return 1;
 }
+
+static
+double distance(const cmsUInt16Number* a, const cmsUInt16Number* b)
+{
+    double d1 = a[0] - b[0];
+    double d2 = a[1] - b[1];
+    double d3 = a[2] - b[2];
+
+    return sqrt(d1 * d1 + d2 * d2 + d3 * d3);
+}
+
+/**
+* In 2.12, a report suggest that the built-in sRGB has roundtrip errors that makes color to move
+* when rountripping again and again
+*/
+static
+int Check_sRGB_Rountrips(cmsContext contextID)
+{
+    cmsUInt16Number rgb[3], seed[3];
+    cmsCIELab Lab;
+    int i, r, g, b;
+    double err, maxErr;
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(contextID);
+    cmsHPROFILE hLab = cmsCreateLab4Profile(contextID, NULL);
+
+    cmsHTRANSFORM hBack = cmsCreateTransform(contextID, hLab, TYPE_Lab_DBL, hsRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hForth = cmsCreateTransform(contextID, hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+
+    cmsCloseProfile(contextID, hLab);
+    cmsCloseProfile(contextID, hsRGB);
+
+    maxErr = 0.0;
+    for (r = 0; r <= 255; r += 16)
+        for (g = 0; g <= 255; g += 16)
+            for (b = 0; b <= 255; b += 16)
+            {
+                seed[0] = rgb[0] = ((r << 8) | r);
+                seed[1] = rgb[1] = ((g << 8) | g);
+                seed[2] = rgb[2] = ((b << 8) | b);
+
+                for (i = 0; i < 50; i++)
+                {
+                    cmsDoTransform(contextID, hForth, rgb, &Lab, 1);
+                    cmsDoTransform(contextID, hBack, &Lab, rgb, 1);
+                }
+
+                err = distance(seed, rgb);
+
+                if (err > maxErr)
+                    maxErr = err;
+            }
+
+
+    cmsDeleteTransform(contextID, hBack);
+    cmsDeleteTransform(contextID, hForth);
+
+    if (maxErr > 20.0)
+    {
+        printf("Maximum sRGB roundtrip error %f!\n", maxErr);
+        return 0;
+    }
+
+    return 1;
+}
+
+static
+cmsHPROFILE createRgbGamma(cmsContext contextID, cmsFloat64Number g)
+{
+    cmsCIExyY       D65 = { 0.3127, 0.3290, 1.0 };
+    cmsCIExyYTRIPLE Rec709Primaries = {
+                                {0.6400, 0.3300, 1.0},
+                                {0.3000, 0.6000, 1.0},
+                                {0.1500, 0.0600, 1.0}
+    };
+    cmsToneCurve* Gamma[3];
+    cmsHPROFILE  hRGB;
+
+    Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(0, g);
+    if (Gamma[0] == NULL) return NULL;
+
+    hRGB = cmsCreateRGBProfile(contextID, &D65, &Rec709Primaries, Gamma);
+    cmsFreeToneCurve(contextID, Gamma[0]);
+    return hRGB;
+}
+
+
+static
+int CheckGammaSpaceDetection(cmsContext contextID)
+{
+    cmsFloat64Number i;
+
+    for (i = 0.5; i < 3; i += 0.1)
+    {
+        cmsHPROFILE hProfile = createRgbGamma(contextID, i);
+
+        cmsFloat64Number gamma = cmsDetectRGBProfileGamma(contextID, hProfile, 0.01);
+
+        cmsCloseProfile(contextID, hProfile);
+
+        if (fabs(gamma - i) > 0.1)
+        {
+            Fail("Failed profile gamma detection of %f (got %f)", i, gamma);
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+
+#if 0
+
+// You need to download folowing profilies to execute this test: sRGB-elle-V4-srgbtrc.icc, sRGB-elle-V4-g10.icc
+// The include this line in the checks list:  Check("KInear spaces detection", CheckLinearSpacesOptimization);
+static
+void uint16toFloat(cmsUInt16Number* src, cmsFloat32Number* dst)
+{
+    for (int i = 0; i < 3; i++) {
+        dst[i] = src[i] / 65535.f;
+    }
+}
+
+static
+int CheckLinearSpacesOptimization(cmsContext contextID)
+{
+    cmsHPROFILE lcms_sRGB = cmsCreate_sRGBProfile(contextID);
+    cmsHPROFILE elle_sRGB = cmsOpenProfileFromFile(contextID, "sRGB-elle-V4-srgbtrc.icc", "r");
+    cmsHPROFILE elle_linear = cmsOpenProfileFromFile(contextID, "sRGB-elle-V4-g10.icc", "r");
+    cmsHTRANSFORM transform1 = cmsCreateTransform(contextID, elle_sRGB, TYPE_RGB_16, elle_linear, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM transform2 = cmsCreateTransform(contextID, elle_linear, TYPE_RGB_16, lcms_sRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM transform2a = cmsCreateTransform(contextID, elle_linear, TYPE_RGB_FLT, lcms_sRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+
+    cmsUInt16Number sourceCol[3] = { 43 * 257, 27 * 257, 6 * 257 };
+    cmsUInt16Number linearCol[3] = { 0 };
+    float linearColF[3] = { 0 };
+    cmsUInt16Number finalCol[3] = { 0 };
+    int difR, difG, difB;
+    int difR2, difG2, difB2;
+
+    cmsDoTransform(contextID, transform1, sourceCol, linearCol, 1);
+    cmsDoTransform(contextID, transform2, linearCol, finalCol, 1);
+
+    cmsCloseProfile(contextID, lcms_sRGB); cmsCloseProfile(contextID, elle_sRGB); cmsCloseProfile(contextID, elle_linear);
+
+
+    difR = (int)sourceCol[0] - finalCol[0];
+    difG = (int)sourceCol[1] - finalCol[1];
+    difB = (int)sourceCol[2] - finalCol[2];
+
+
+    uint16toFloat(linearCol, linearColF);
+    cmsDoTransform(contextID, transform2a, linearColF, finalCol, 1);
+
+    difR2 = (int)sourceCol[0] - finalCol[0];
+    difG2 = (int)sourceCol[1] - finalCol[1];
+    difB2 = (int)sourceCol[2] - finalCol[2];
+
+    cmsDeleteTransform(contextID, transform1);
+    cmsDeleteTransform(contextID, transform2);
+    cmsDeleteTransform(contextID, transform2a);
+
+    if (abs(difR2 - difR) > 5 || abs(difG2 - difG) > 5 || abs(difB2 - difB) > 5)
+    {
+        Fail("Linear detection failed");
+        return 0;
+    }
+
+    return 1;
+}
+#endif
+
 
 // --------------------------------------------------------------------------------------------------
 // P E R F O R M A N C E   C H E C K S
@@ -9053,6 +9297,8 @@ int main(int argc, char* argv[])
 
     // Named color
     Check(ctx, "Named color lists", CheckNamedColorList);
+    Check(ctx, "Create named color profile", CreateNamedColorProfile);
+
 
     // Profile I/O (this one is huge!)
     Check(ctx, "Profile creation", CheckProfileCreation);
@@ -9124,6 +9370,8 @@ int main(int argc, char* argv[])
     Check(ctx, "Forged MPE profile", CheckForgedMPE);
     Check(ctx, "Proofing intersection", CheckProofingIntersection);
     Check(ctx, "Empty MLUC", CheckEmptyMLUC);
+    Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
+    Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
     }
 
     if (DoPluginTests)

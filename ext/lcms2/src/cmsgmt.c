@@ -587,3 +587,64 @@ cmsBool CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIELab* Lab,
 
     return TRUE;
 }
+
+// Detect whatever a given ICC profile works in linear (gamma 1.0) space
+// Actually, doing that "well" is quite hard, since every component may behave completely different.
+// Since the true point of this function is to detect suitable optimizations, I am imposing some requirements
+// that simplifies things: only RGB, and only profiles that can got in both directions.
+// The algorith obtains Y from a syntetical gray R=G=B. Then least squares fitting is used to estimate gamma.
+// For gamma close to 1.0, RGB is linear. On profiles not supported, -1 is returned.
+
+cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPROFILE hProfile, cmsFloat64Number thereshold)
+{
+    cmsHPROFILE hXYZ;
+    cmsHTRANSFORM xform;
+    cmsToneCurve* Y_curve;
+    cmsUInt16Number rgb[256][3];
+    cmsCIEXYZ XYZ[256];
+    cmsFloat32Number Y_normalized[256];
+    cmsFloat64Number gamma;
+    cmsProfileClassSignature cl;
+    int i;
+
+    if (cmsGetColorSpace(ContextID, hProfile) != cmsSigRgbData)
+        return -1;
+
+    cl = cmsGetDeviceClass(ContextID, hProfile);
+    if (cl != cmsSigInputClass && cl != cmsSigDisplayClass &&
+        cl != cmsSigOutputClass && cl != cmsSigColorSpaceClass)
+        return -1;
+
+    hXYZ = cmsCreateXYZProfile(ContextID);
+    xform = cmsCreateTransform(ContextID, hProfile, TYPE_RGB_16, hXYZ, TYPE_XYZ_DBL,
+                                    INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE);
+
+    if (xform == NULL) { // If not RGB or forward direction is not supported, regret with the previous error
+
+        cmsCloseProfile(ContextID, hXYZ);
+        return -1;
+    }
+
+    for (i = 0; i < 256; i++) {
+        rgb[i][0] = rgb[i][1] = rgb[i][2] = FROM_8_TO_16(i);
+    }
+
+    cmsDoTransform(ContextID, xform, rgb, XYZ, 256);
+
+    cmsDeleteTransform(ContextID, xform);
+    cmsCloseProfile(ContextID, hXYZ);
+
+    for (i = 0; i < 256; i++) {
+        Y_normalized[i] = (cmsFloat32Number) XYZ[i].Y;
+    }
+
+    Y_curve = cmsBuildTabulatedToneCurveFloat(ContextID, 256, Y_normalized);
+    if (Y_curve == NULL)
+        return -1;
+
+    gamma = cmsEstimateGamma(ContextID, Y_curve, thereshold);
+
+    cmsFreeToneCurve(ContextID, Y_curve);
+
+    return gamma;
+}

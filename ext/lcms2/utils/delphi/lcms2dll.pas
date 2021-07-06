@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2014 Marti Maria Saguer
+//  Copyright (c) 1998-2021 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.6
+// Version 2.13
 //
 
 UNIT lcms2dll;
@@ -1658,6 +1658,9 @@ FUNCTION cmsDetectDestinationBlackPoint( BlackPoint: LPcmsCIEXYZ; hProfile: cmsH
 
 // Estimate total area coverage
 FUNCTION cmsDetectTAC(hProfile: cmsHPROFILE): cmsFloat64Number; StdCall;
+
+// Estimate profile gamma
+FUNCTION cmsDetectRGBProfileGamma(hProfile: cmsHPROFILE): cmsFloat64Number; StdCall;
 
 
 // Poor man's gamut mapping

@@ -29,6 +29,14 @@
 #include "tiffio.h"
 #include "utils.h"
 
+// Fix broken libtiff 4.3.0, thanks to Bob Friesenhahn for uncovering this
+
+#if defined(HAVE_STDINT_H) && (TIFFLIB_VERSION >= 20201219)
+#  undef uint16
+#  define uint16 uint16_t
+#  undef uint32
+#  define uint32 uint32_t
+#endif /* TIFFLIB_VERSION */
 
 // Flags
 
@@ -57,16 +65,15 @@ static const char* SaveEmbedded = NULL;
 static
 void ConsoleWarningHandler(const char* module, const char* fmt, va_list ap)
 {
-    char e[512] = { '\0' };
-    if (module != NULL)
-        strcat(strcpy(e, module), ": ");
-
-    vsprintf(e+strlen(e), fmt, ap);
-    strcat(e, ".");
     if (Verbose) {
 
-        fprintf(stderr, "\nWarning");
-        fprintf(stderr, " %s\n", e);
+        fprintf(stderr, "Warning: ");
+
+        if (module != NULL)
+            fprintf(stderr, "[%s] ", module);
+
+        vfprintf(stderr, fmt, ap);
+        fprintf(stderr, "\n");
         fflush(stderr);
     }
 }
@@ -74,18 +81,18 @@ void ConsoleWarningHandler(const char* module, const char* fmt, va_list ap)
 static
 void ConsoleErrorHandler(const char* module, const char* fmt, va_list ap)
 {
-    char e[512] = { '\0' };
+    if (Verbose) {
 
-    if (module != NULL) {
-        if (strlen(module) < 500)
-               strcat(strcpy(e, module), ": ");
+        fprintf(stderr, "Error: ");
+
+        if (module != NULL)
+            fprintf(stderr, "[%s] ", module);
+
+        vfprintf(stderr, fmt, ap);
+        fprintf(stderr, "\n");
+        fflush(stderr);
     }
 
-    vsprintf(e+strlen(e), fmt, ap);
-    strcat(e, ".");
-    fprintf(stderr, "\nError");
-    fprintf(stderr, " %s\n", e);
-    fflush(stderr);
 }
 
 
@@ -96,7 +103,7 @@ void Warning(const char *frm, ...)
     va_list args;
 
     va_start(args, frm);
-    ConsoleWarningHandler("[tificc]", frm, args);
+    ConsoleWarningHandler("tificc", frm, args);
     va_end(args);
 }
 
@@ -304,6 +311,8 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
 
     case PHOTOMETRIC_RGB:
         pt = PT_RGB;
+        if (ColorChannels < 3)
+            FatalError("Sorry, RGB needs at least 3 samples per pixel");
         break;
 
 
@@ -312,7 +321,6 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
          break;
 
      case PHOTOMETRIC_SEPARATED:
-
          pt = PixelTypeFromChanCount(ColorChannels);
          break;
 
@@ -409,6 +417,9 @@ int TileBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* o
                 BufferIn + (j*BufSizeIn), BufSizeIn) < 0)   goto cleanup;
         }
 
+        if (PixelCount < 0)
+            FatalError("TIFF is corrupted");
+
         cmsDoTransform(ContextID, hXForm, BufferIn, BufferOut, PixelCount);
 
         for (j=0; j < nPlanes; j++) {
@@ -476,6 +487,9 @@ int StripBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* 
 
         PixelCount = (int) sw * (iml < sl ? iml : sl);
         iml -= sl;
+
+        if (PixelCount < 0)
+            FatalError("TIFF is corrupted");
 
         cmsDoTransform(ContextID, hXForm, BufferIn, BufferOut, PixelCount);
 
@@ -926,84 +940,67 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
 
 // Print help
 static
-void Help(int level)
+void Help(cmsContext ContextID, int level)
 {
-    fprintf(stderr, "little cms ICC profile applier for TIFF - v6.2 [LittleCMS %2.2f]\n\n", LCMS_VERSION / 1000.0);
-    fflush(stderr);
+    UTILS_UNUSED_PARAMETER(level);
 
-    switch(level) {
+    fprintf(stderr, "usage: tificc [flags] input.tif output.tif\n");
 
-     default:
-     case 0:
+    fprintf(stderr, "\nflags:\n\n");
+    fprintf(stderr, "-v - Verbose\n");
+    fprintf(stderr, "-i<profile> - Input profile (defaults to sRGB)\n");
+    fprintf(stderr, "-o<profile> - Output profile (defaults to sRGB)\n");
+    fprintf(stderr, "-l<profile> - Transform by device-link profile\n");
 
-         fprintf(stderr, "usage: tificc [flags] input.tif output.tif\n");
+    PrintBuiltins();
 
-         fprintf(stderr, "\nflags:\n\n");
-         fprintf(stderr, "%cv - Verbose\n", SW);
-         fprintf(stderr, "%ci<profile> - Input profile (defaults to sRGB)\n", SW);
-         fprintf(stderr, "%co<profile> - Output profile (defaults to sRGB)\n", SW);
-         fprintf(stderr, "%cl<profile> - Transform by device-link profile\n", SW);
+    PrintRenderingIntents(ContextID);
 
-         PrintRenderingIntents(NULL);
+    fprintf(stderr, "-b - Black point compensation\n");
+    fprintf(stderr, "-d<0..1> - Observer adaptation state (abs.col. only)\n");
 
-         fprintf(stderr, "%cb - Black point compensation\n", SW);
-         fprintf(stderr, "%cd<0..1> - Observer adaptation state (abs.col. only)\n", SW);
+    fprintf(stderr, "-c<0,1,2,3> - Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes)\n");
+    fprintf(stderr, "\n");
 
-         fprintf(stderr, "%cc<0,1,2,3> - Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes)\n", SW);
-         fprintf(stderr, "\n");
+    fprintf(stderr, "-w<8,16,32> - Output depth. Use 32 for floating-point\n\n");
+    fprintf(stderr, "-a - Handle channels > 4 as alpha\n");
 
-         fprintf(stderr, "%cw<8,16,32> - Output depth. Use 32 for floating-point\n\n", SW);
-         fprintf(stderr, "%ca - Handle channels > 4 as alpha\n", SW);
-
-         fprintf(stderr, "%cn - Ignore embedded profile on input\n", SW);
-         fprintf(stderr, "%ce - Embed destination profile\n", SW);
-         fprintf(stderr, "%cs<new profile> - Save embedded profile as <new profile>\n", SW);
-         fprintf(stderr, "\n");
+    fprintf(stderr, "-n - Ignore embedded profile on input\n");
+    fprintf(stderr, "-e - Embed destination profile\n");
+    fprintf(stderr, "-s<new profile> - Save embedded profile as <new profile>\n");
+    fprintf(stderr, "\n");
 
 
-         fprintf(stderr, "%cp<profile> - Soft proof profile\n", SW);
-         fprintf(stderr, "%cm<n> - Soft proof intent\n", SW);
-         fprintf(stderr, "%cg - Marks out-of-gamut colors on softproof\n", SW);
+    fprintf(stderr, "-p<profile> - Soft proof profile\n");
+    fprintf(stderr, "-m<n> - Soft proof intent\n");
+    fprintf(stderr, "-g - Marks out-of-gamut colors on softproof\n");
 
-         fprintf(stderr, "\n");
+    fprintf(stderr, "\n");
 
-         fprintf(stderr, "%ck<0..400> - Ink-limiting in %% (CMYK only)\n", SW);
-         fprintf(stderr, "\n");
-         fprintf(stderr, "%ch<0,1,2,3> - More help\n", SW);
-         break;
+    fprintf(stderr, "-k<0..400> - Ink-limiting in %% (CMYK only)\n");
+    fprintf(stderr, "\n");
 
-     case 1:
 
-         fprintf(stderr, "Examples:\n\n"
-             "To color correct from scanner to sRGB:\n"
-             "\ttificc %ciscanner.icm in.tif out.tif\n"
-             "To convert from monitor1 to monitor2:\n"
-             "\ttificc %cimon1.icm %comon2.icm in.tif out.tif\n"
-             "To make a CMYK separation:\n"
-             "\ttificc %coprinter.icm inrgb.tif outcmyk.tif\n"
-             "To recover sRGB from a CMYK separation:\n"
-             "\ttificc %ciprinter.icm incmyk.tif outrgb.tif\n"
-             "To convert from CIELab TIFF to sRGB\n"
-             "\ttificc %ci*Lab in.tif out.tif\n\n",
-             SW, SW, SW, SW, SW, SW);
-         break;
+    fprintf(stderr, "Examples:\n\n"
+        "To color correct from scanner to sRGB:\n"
+        "\ttificc -iscanner.icm in.tif out.tif\n"
+        "To convert from monitor1 to monitor2:\n"
+        "\ttificc -imon1.icm -omon2.icm in.tif out.tif\n"
+        "To make a CMYK separation:\n"
+        "\ttificc -oprinter.icm inrgb.tif outcmyk.tif\n"
+        "To recover sRGB from a CMYK separation:\n"
+        "\ttificc -iprinter.icm incmyk.tif outrgb.tif\n"
+        "To convert from CIELab TIFF to sRGB\n"
+        "\ttificc -i*Lab in.tif out.tif\n\n");
 
-     case 2:
-         PrintBuiltins();
-         break;
 
-     case 3:
+    fprintf(stderr, "This program is intended to be a demo of the Little CMS\n"
+        "color engine. Both lcms and this program are open source.\n"
+        "You can obtain both in source code at https://www.littlecms.com\n"
+        "For suggestions, comments, bug reports etc. send mail to\n"
+        "info@littlecms.com\n\n");
 
-         fprintf(stderr, "This program is intended to be a demo of the little cms\n"
-             "engine. Both lcms and this program are freeware. You can\n"
-             "obtain both in source code at http://www.littlecms.com\n"
-             "For suggestions, comments, bug reports etc. send mail to\n"
-             "info@littlecms.com\n\n");
 
-         break;
-    }
-
-    fflush(stderr);
     exit(0);
 }
 
@@ -1011,13 +1008,25 @@ void Help(int level)
 // The toggles stuff
 
 static
-void HandleSwitches(int argc, char *argv[])
+void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 {
     int s;
 
-    while ((s=xgetopt(argc,argv,"aAeEbBw:W:nNvVGgh:H:i:I:o:O:P:p:t:T:c:C:l:L:M:m:K:k:S:s:D:d:")) != EOF) {
+    while ((s=xgetopt(argc,argv,"aAeEbBw:W:nNvVGgh:H:i:I:o:O:P:p:t:T:c:C:l:L:M:m:K:k:S:s:D:d:-:")) != EOF) {
 
         switch (s) {
+
+
+        case '-':
+            if (strcmp(xoptarg, "help") == 0)
+            {
+                Help(ContextID, 0);
+            }
+            else
+            {
+                FatalError("Unknown option - run without args to see valid ones.\n");
+            }
+            break;
 
         case 'a':
         case 'A':
@@ -1125,7 +1134,7 @@ void HandleSwitches(int argc, char *argv[])
         case 'h':  {
 
             int a =  atoi(xoptarg);
-            Help(a);
+            Help(ContextID, a);
             }
             break;
 
@@ -1145,17 +1154,22 @@ int main(int argc, char* argv[])
     cmsContext ContextID;
     TIFF *in, *out;
 
+
+    fprintf(stderr, "Little CMS ICC profile applier for TIFF - v6.4 [LittleCMS %2.2f]\n\n", LCMS_VERSION / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2021 Marti Maria Saguer. See COPYING file for details.\n");
+    fflush(stderr);
+
     ContextID = cmsCreateContext(NULL, NULL);
 
     cmsPlugin(ContextID, &TiffLabPlugin);
 
     InitUtils(ContextID, "tificc");
 
-    HandleSwitches(argc, argv);
+    HandleSwitches(ContextID, argc, argv);
 
     if ((argc - xoptind) != 2) {
 
-        Help(0);
+        Help(ContextID, 0);
     }
 
 

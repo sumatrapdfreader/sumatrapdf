@@ -7,6 +7,16 @@ test -z "$srcdir" && srcdir=.
 DIE=0
 ACLOCAL_FLAGS="-I m4"
 
+if [ "$1" = "--distclean" ]; 
+then
+    make distclean
+    rm configure config.guess config.sub depcomp install-sh missing 
+    rm aclocal.m4 compile ltmain.sh m4/libtool.m4 m4/ltoptions.m4 
+    rm m4/ltsugar.m4 m4/lt~obsolete.m4 m4/ltversion.m4 
+    echo done cleaning!
+    exit 0
+fi
+
 (test -f $srcdir/configure.ac) || {
     echo -n "**Error**: Directory $srcdir does not look like the"
     echo " top-level package directory"
@@ -22,7 +32,7 @@ ACLOCAL_FLAGS="-I m4"
 }
 
 (grep "^LT_INIT" $srcdir/configure.ac >/dev/null) && {
-  (libtool --version) < /dev/null > /dev/null 2>&1 || {
+  (libtoolize --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have libtool installed."
     echo "You can get it from: ftp://ftp.gnu.org/pub/gnu/"

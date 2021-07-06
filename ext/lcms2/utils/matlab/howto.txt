@@ -1,0 +1,4 @@
+
+To compile for matlab use:
+
+mex @lcms_rsp

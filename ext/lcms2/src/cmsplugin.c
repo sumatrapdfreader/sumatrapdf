@@ -690,11 +690,11 @@ struct _cmsContext_struct* _cmsGetContext(cmsContext ContextID)
          ctx = ctx ->Next) {
 
             // Found it?
-            if (id == ctx)
+        if (id == ctx)
         {
             _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
             return ctx; // New-style context
-    }
+        }
     }
 
     _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
@@ -1000,4 +1000,32 @@ cmsUInt32Number _cmsAdjustReferenceCount(cmsUInt32Number *rc, int delta)
     _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
 
     return refs;
+}
+
+// Use context mutex to provide thread-safe time
+cmsBool _cmsGetTime(struct tm* ptr_time)
+{
+    struct tm* t;
+#if defined(HAVE_GMTIME_R) || defined(HAVE__GMTIME64_S)
+    struct tm tm;
+#endif
+
+    time_t now = time(NULL);
+
+#ifdef HAVE_GMTIME_R
+    t = gmtime_r(&now, &tm);
+#elif defined(HAVE__GMTIME64_S)
+    t = _gmtime64_s(&tm, &now) == 0 ? &tm : NULL;
+#else
+    _cmsEnterCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
+    t = gmtime(&now);
+    _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
+#endif
+
+    if (t == NULL)
+        return FALSE;
+    else {
+        *ptr_time = *t;
+        return TRUE;
+    }
 }

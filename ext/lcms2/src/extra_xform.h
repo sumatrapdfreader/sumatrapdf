@@ -15,8 +15,8 @@
 // If caching is wanted, define CACHED.
 //
 // To reduce the amount of surplus memory checking done, set INBYTES to the
-// number of bytes in an unpacked data chunk. INBYTES will only have an
-// effect if CACHED or NO_UNPACK
+// number of bytes in an unpacked data chunk (NOT including extras). INBYTES
+// will only have an effect if CACHED or NO_UNPACK.
 //
 // If you know the code to be used to unpack (or pack, or both) data to/from
 // the simple 16 bit transform input/output format, then you can choose
@@ -151,7 +151,11 @@
   #if EXTRABYTES == 0
    #define COPY_EXTRAS(TRANS,FROM,TO) do { } while (0)
   #else
-   #define COPY_EXTRAS(TRANS,FROM,TO) memcpy((TO),(FROM),(EXTRABYTES))
+   #define COPY_EXTRAS(TRANS,FROM,TO) \
+       do { memcpy((TO),(FROM),(EXTRABYTES)); \
+            (TO) += (EXTRABYTES); \
+            (FROM) += (EXTRABYTES); \
+       } while (0)
   #endif
  #else
   #define BULK_COPY_EXTRAS
@@ -189,13 +193,13 @@ void FUNCTION_NAME(cmsContext ContextID,
     XFORM_TYPE wOut[cmsMAXCHANNELS];
 #endif
 #ifdef GAMUTCHECK
-    _cmsOPTeval16Fn evalGamut = core->GamutCheck->Eval16Fn;
+    _cmsPipelineEval16Fn evalGamut = core->GamutCheck->Eval16Fn;
 #endif /* GAMUTCHECK */
 #ifdef XFORM_FLOAT
     _cmsPipelineEvalFloatFn eval = core->Lut->EvalFloatFn;
     const cmsPipeline *data = core->Lut;
 #else
-    _cmsOPTeval16Fn eval = core->Lut->Eval16Fn;
+    _cmsPipelineEval16Fn eval = core->Lut->Eval16Fn;
     void *data = core->Lut->Data;
 #endif
     cmsUInt32Number bppi = Stride->BytesPerPlaneIn;
@@ -273,7 +277,7 @@ void FUNCTION_NAME(cmsContext ContextID,
  #ifdef CACHED
                 prevIn = currIn;
  #endif
-                currIn = (XFORM_TYPE *)(((char *)currIn) + INBYTES);
+                currIn = (XFORM_TYPE *)(((char *)currIn) + INBYTES + EXTRABYTES);
 #else
  #ifdef CACHED
                 {XFORM_TYPE *tmp = currIn; currIn = prevIn; prevIn = tmp;} // SWAP
@@ -296,7 +300,7 @@ void FUNCTION_NAME(cmsContext ContextID,
 #if 0
 #ifdef CACHED
 #ifdef NO_UNPACK
-    memcpy(p->Cache.CacheIn,prevIn,INBYTES);
+    memcpy(p->Cache.CacheIn,prevIn,INBYTES + EXTRABYTES);
 #else
     memcpy(p->Cache.CacheIn, prevIn, sizeof(XFORM_TYPE) * cmsMAXCHANNELS);
 #endif

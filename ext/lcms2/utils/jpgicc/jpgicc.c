@@ -274,7 +274,7 @@ cmsHPROFILE CreatePCS2ITU_ICC(void)
 #define PS_FIXED_TO_FLOAT(h, l) ((float) (h) + ((float) (l)/(1<<16)))
 
 static
-cmsBool ProcessPhotoshopAPP13(JOCTET FAR *data, int datalen)
+cmsBool ProcessPhotoshopAPP13(JOCTET *data, int datalen)
 {
     int i;
 
@@ -298,6 +298,8 @@ cmsBool ProcessPhotoshopAPP13(JOCTET FAR *data, int datalen)
 
         len = ((((GETJOCTET(data[i]<<8) + GETJOCTET(data[i+1]))<<8) +
                          GETJOCTET(data[i+2]))<<8) + GETJOCTET(data[i+3]);
+
+        if (len < 0) return FALSE; // Keep bug hunters away
 
         i += 4; // Size
 
@@ -330,7 +332,7 @@ cmsBool HandlePhotoshopAPP13(jpeg_saved_marker_ptr ptr)
 
         if (ptr -> marker == (JPEG_APP0 + 13) && ptr -> data_length > 9)
         {
-            JOCTET FAR* data = ptr -> data;
+            JOCTET* data = ptr -> data;
 
             if(GETJOCTET(data[0]) == 0x50 &&
                GETJOCTET(data[1]) == 0x68 &&
@@ -363,45 +365,62 @@ typedef unsigned int uint32_t;
 #define YRESOLUTION 0x011b
 #define RESOLUTION_UNIT 0x128
 
+// Abort if crafted file
+static
+void craftedFile(void)
+{
+    FatalError("Corrupted EXIF data");
+}
+
 // Read a 16-bit word
 static
-uint16_t read16(uint8_t* arr, int pos,  int swapBytes)
+uint16_t read16(uint8_t* arr, size_t pos,  int swapBytes, size_t max)
 {
-    uint8_t b1 = arr[pos];
-    uint8_t b2 = arr[pos+1];
+    if (pos + 2 >= max)
+    {
+        craftedFile();
+        return 0;
+    }
+    else
+    {
+        uint8_t b1 = arr[pos];
+        uint8_t b2 = arr[pos + 1];
 
-    return (swapBytes) ?  ((b2 << 8) | b1) : ((b1 << 8) | b2);
+        return (swapBytes) ? ((b2 << 8) | b1) : ((b1 << 8) | b2);
+    }
 }
 
 
 // Read a 32-bit word
 static
-uint32_t read32(uint8_t* arr, int pos,  int swapBytes)
+uint32_t read32(uint8_t* arr, size_t pos, int swapBytes, size_t max)
 {
 
-    if(!swapBytes) {
-
-        return (arr[pos]   << 24) |
-               (arr[pos+1] << 16) |
-               (arr[pos+2] << 8) |
-                arr[pos+3];
+    if (pos + 4 >= max)
+    {
+        craftedFile();
+        return 0;
     }
+    else
+    {
+        if (!swapBytes) {
 
-    return arr[pos] |
-           (arr[pos+1] << 8) |
-           (arr[pos+2] << 16) |
-           (arr[pos+3] << 24);
+            return (arr[pos] << 24) | (arr[pos + 1] << 16) | (arr[pos + 2] << 8) | arr[pos + 3];
+        }
+
+        return arr[pos] | (arr[pos + 1] << 8) | (arr[pos + 2] << 16) | (arr[pos + 3] << 24); 
+    }
 }
 
 
 
 static
-int read_tag(uint8_t* arr, int pos,  int swapBytes, void* dest)
+int read_tag(uint8_t* arr, int pos,  int swapBytes, void* dest, size_t max)
 {
         // Format should be 5 over here (rational)
-    uint32_t format = read16(arr, pos + 2, swapBytes);
+    uint32_t format = read16(arr, pos + 2, swapBytes, max);
     // Components should be 1
-    uint32_t components = read32(arr, pos + 4, swapBytes);
+    uint32_t components = read32(arr, pos + 4, swapBytes, max);
     // Points to the value
     uint32_t offset;
 
@@ -411,20 +430,20 @@ int read_tag(uint8_t* arr, int pos,  int swapBytes, void* dest)
     if (format == 3)
         offset = pos + 8;
     else
-        offset =  read32(arr, pos + 8, swapBytes);
+        offset =  read32(arr, pos + 8, swapBytes, max);
 
     switch (format) {
 
     case 5: // Rational
           {
-          double num = read32(arr, offset, swapBytes);
-          double den = read32(arr, offset + 4, swapBytes);
+          double num = read32(arr, offset, swapBytes, max);
+          double den = read32(arr, offset + 4, swapBytes, max);
           *(double *) dest = num / den;
           }
           break;
 
     case 3: // uint 16
-        *(int*) dest = read16(arr, offset, swapBytes);
+        *(int*) dest = read16(arr, offset, swapBytes, max);
         break;
 
     default:  return 0;
@@ -437,7 +456,7 @@ int read_tag(uint8_t* arr, int pos,  int swapBytes, void* dest)
 
 // Handler for EXIF data
 static
-    cmsBool HandleEXIF(struct jpeg_decompress_struct* cinfo)
+cmsBool HandleEXIF(struct jpeg_decompress_struct* cinfo)
 {
     jpeg_saved_marker_ptr ptr;
     uint32_t ifd_ofs;
@@ -445,12 +464,14 @@ static
     uint32_t i, numEntries;
     double XRes = -1, YRes = -1;
     int Unit = 2; // Inches
-
+    
 
     for (ptr = cinfo ->marker_list; ptr; ptr = ptr ->next) {
 
         if ((ptr ->marker == JPEG_APP0+1) && ptr ->data_length > 6) {
-            JOCTET FAR* data = ptr -> data;
+
+            JOCTET* data = ptr -> data;
+            size_t max = ptr->data_length;
 
             if (memcmp(data, "Exif\0\0", 6) == 0) {
 
@@ -459,7 +480,7 @@ static
                 // 8 byte TIFF header
                 // first two determine byte order
                 pos = 0;
-                if (read16(data, pos, 0) == INTEL_BYTE_ORDER) {
+                if (read16(data, pos, 0, max) == INTEL_BYTE_ORDER) {
                     swapBytes = 1;
                 }
 
@@ -469,28 +490,28 @@ static
                 pos += 2;
 
                 // offset to Image File Directory (includes the previous 8 bytes)
-                ifd_ofs = read32(data, pos, swapBytes);
+                ifd_ofs = read32(data, pos, swapBytes, max);
 
                 // Search the directory for resolution tags
-                numEntries = read16(data, ifd_ofs, swapBytes);
+                numEntries = read16(data, ifd_ofs, swapBytes, max);
 
                 for (i=0; i < numEntries; i++) {
 
                     uint32_t entryOffset = ifd_ofs + 2 + (12 * i);
-                    uint32_t tag = read16(data, entryOffset, swapBytes);
+                    uint32_t tag = read16(data, entryOffset, swapBytes, max);
 
                     switch (tag) {
 
                     case RESOLUTION_UNIT:
-                        if (!read_tag(data, entryOffset, swapBytes, &Unit)) return FALSE;
+                        if (!read_tag(data, entryOffset, swapBytes, &Unit, max)) return FALSE;
                         break;
 
                     case XRESOLUTION:
-                        if (!read_tag(data, entryOffset, swapBytes, &XRes)) return FALSE;
+                        if (!read_tag(data, entryOffset, swapBytes, &XRes, max)) return FALSE;
                         break;
 
                     case YRESOLUTION:
-                        if (!read_tag(data, entryOffset, swapBytes, &YRes)) return FALSE;
+                        if (!read_tag(data, entryOffset, swapBytes, &YRes, max)) return FALSE;
                         break;
 
                     default:;
@@ -1028,96 +1049,88 @@ int TransformImage(cmsContext ContextID, char *cDefInpProf, char *cOutputProf)
 }
 
 
-// Simply print help
-
 static
-void Help(int level)
+void Help(cmsContext ContextID, int level)
 {
-     fprintf(stderr, "little cms ICC profile applier for JPEG - v3.2 [LittleCMS %2.2f]\n\n", LCMS_VERSION / 1000.0);
 
-     switch(level) {
+    UTILS_UNUSED_PARAMETER(level);
 
-     default:
-     case 0:
+    fprintf(stderr, "usage: jpgicc [flags] input.jpg output.jpg\n");
 
-     fprintf(stderr, "usage: jpgicc [flags] input.jpg output.jpg\n");
+    fprintf(stderr, "\nflags:\n\n");
+    fprintf(stderr, "-v - Verbose\n");
+    fprintf(stderr, "-i<profile> - Input profile (defaults to sRGB)\n");
+    fprintf(stderr, "-o<profile> - Output profile (defaults to sRGB)\n");
 
-     fprintf(stderr, "\nflags:\n\n");
-     fprintf(stderr, "%cv - Verbose\n", SW);
-     fprintf(stderr, "%ci<profile> - Input profile (defaults to sRGB)\n", SW);
-     fprintf(stderr, "%co<profile> - Output profile (defaults to sRGB)\n", SW);
+    PrintBuiltins();
 
-     PrintRenderingIntents(NULL);
+    PrintRenderingIntents(ContextID);
 
 
-     fprintf(stderr, "%cb - Black point compensation\n", SW);
-     fprintf(stderr, "%cd<0..1> - Observer adaptation state (abs.col. only)\n", SW);
-     fprintf(stderr, "%cn - Ignore embedded profile\n", SW);
-     fprintf(stderr, "%ce - Embed destination profile\n", SW);
-     fprintf(stderr, "%cs<new profile> - Save embedded profile as <new profile>\n", SW);
+    fprintf(stderr, "-b - Black point compensation\n");
+    fprintf(stderr, "-d<0..1> - Observer adaptation state (abs.col. only)\n");
+    fprintf(stderr, "-n - Ignore embedded profile\n");
+    fprintf(stderr, "-e - Embed destination profile\n");
+    fprintf(stderr, "-s<new profile> - Save embedded profile as <new profile>\n");
 
-     fprintf(stderr, "\n");
+    fprintf(stderr, "\n");
 
-     fprintf(stderr, "%cc<0,1,2,3> - Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes) [defaults to 1]\n", SW);
-     fprintf(stderr, "\n");
+    fprintf(stderr, "-c<0,1,2,3> - Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes) [defaults to 1]\n");
+    fprintf(stderr, "\n");
 
-     fprintf(stderr, "%cp<profile> - Soft proof profile\n", SW);
-     fprintf(stderr, "%cm<0,1,2,3> - SoftProof intent\n", SW);
-     fprintf(stderr, "%cg - Marks out-of-gamut colors on softproof\n", SW);
-     fprintf(stderr, "%c!<r>,<g>,<b> - Out-of-gamut marker channel values\n", SW);
+    fprintf(stderr, "-p<profile> - Soft proof profile\n");
+    fprintf(stderr, "-m<0,1,2,3> - SoftProof intent\n");
+    fprintf(stderr, "-g - Marks out-of-gamut colors on softproof\n");
+    fprintf(stderr, "-!<r>,<g>,<b> - Out-of-gamut marker channel values\n");
 
-     fprintf(stderr, "\n");
-     fprintf(stderr, "%cq<0..100> - Output JPEG quality\n", SW);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "-q<0..100> - Output JPEG quality\n");
 
-     fprintf(stderr, "\n");
-     fprintf(stderr, "%ch<0,1,2,3> - More help\n", SW);
-     break;
+    fprintf(stderr, "Examples:\n\n"
+        "To color correct from scanner to sRGB:\n"
+        "\tjpgicc -iscanner.icm in.jpg out.jpg\n"
+        "To convert from monitor1 to monitor2:\n"
+        "\tjpgicc -imon1.icm -omon2.icm in.jpg out.jpg\n"
+        "To make a CMYK separation:\n"
+        "\tjpgicc -oprinter.icm inrgb.jpg outcmyk.jpg\n"
+        "To recover sRGB from a CMYK separation:\n"
+        "\tjpgicc -iprinter.icm incmyk.jpg outrgb.jpg\n"
+        "To convert from CIELab ITU/Fax JPEG to sRGB\n"
+        "\tjpgicc in.jpg out.jpg\n\n");
 
-     case 1:
 
-     fprintf(stderr, "Examples:\n\n"
-                     "To color correct from scanner to sRGB:\n"
-                     "\tjpgicc %ciscanner.icm in.jpg out.jpg\n"
-                     "To convert from monitor1 to monitor2:\n"
-                     "\tjpgicc %cimon1.icm %comon2.icm in.jpg out.jpg\n"
-                     "To make a CMYK separation:\n"
-                     "\tjpgicc %coprinter.icm inrgb.jpg outcmyk.jpg\n"
-                     "To recover sRGB from a CMYK separation:\n"
-                     "\tjpgicc %ciprinter.icm incmyk.jpg outrgb.jpg\n"
-                     "To convert from CIELab ITU/Fax JPEG to sRGB\n"
-                     "\tjpgicc in.jpg out.jpg\n\n",
-                     SW, SW, SW, SW, SW);
-     break;
+    fprintf(stderr, "This program is intended to be a demo of the Little CMS\n"
+        "color engine. Both lcms and this program are open source.\n"
+        "You can obtain both in source code at https://www.littlecms.com\n"
+        "For suggestions, comments, bug reports etc. send mail to\n"
+        "info@littlecms.com\n\n");
 
-     case 2:
-         PrintBuiltins();
-         break;
-
-     case 3:
-
-     fprintf(stderr, "This program is intended to be a demo of the little cms\n"
-                     "engine. Both lcms and this program are freeware. You can\n"
-                     "obtain both in source code at http://www.littlecms.com\n"
-                     "For suggestions, comments, bug reports etc. send mail to\n"
-                     "marti@littlecms.com\n\n");
-     break;
-     }
-
-     exit(0);
+    exit(0);
 }
 
 
 // The toggles stuff
 
 static
-void HandleSwitches(int argc, char *argv[])
+void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 {
     int s;
 
-    while ((s=xgetopt(argc,argv,"bBnNvVGgh:H:i:I:o:O:P:p:t:T:c:C:Q:q:M:m:L:l:eEs:S:!:D:d:")) != EOF) {
+    while ((s=xgetopt(argc,argv,"bBnNvVGgh:H:i:I:o:O:P:p:t:T:c:C:Q:q:M:m:L:l:eEs:S:!:D:d:-:")) != EOF) {
 
         switch (s)
         {
+
+        case '-':
+            if (strcmp(xoptarg, "help") == 0)
+            {
+                Help(ContextID, 0);
+            }
+            else
+            {
+                FatalError("Unknown option - run without args to see valid ones.\n");
+            }
+            break;
 
         case 'b':
         case 'B':
@@ -1198,7 +1211,7 @@ void HandleSwitches(int argc, char *argv[])
         case 'h':  {
 
             int a =  atoi(xoptarg);
-            Help(a);
+            Help(ContextID, a);
                    }
             break;
 
@@ -1240,12 +1253,16 @@ int main(int argc, char* argv[])
 {
     cmsContext ContextID = cmsCreateContext(NULL, NULL);
 
-    InitUtils(NULL, "jpgicc");
+    fprintf(stderr, "Little CMS ICC profile applier for JPEG - v3.3 [LittleCMS %2.2f]\n\n", LCMS_VERSION / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2020 Marti Maria Saguer. See COPYING file for details.\n");
+    fflush(stderr);
 
-    HandleSwitches(argc, argv);
+    InitUtils(ContextID, "jpgicc");
+
+    HandleSwitches(ContextID, argc, argv);
 
     if ((argc - xoptind) != 2) {
-        Help(0);
+        Help(ContextID, 0);
     }
 
     OpenInput(argv[xoptind]);
@@ -1262,6 +1279,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
-
-

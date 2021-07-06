@@ -81,7 +81,7 @@ void PrintInfo(cmsContext ContextID, cmsHPROFILE h, cmsInfoType Info)
     len = cmsGetProfileInfo(ContextID, h, Info, "en", "US", NULL, 0);
     if (len == 0) return;
 
-    text = _cmsMalloc(id, len);
+    text = (wchar_t*) _cmsMalloc(id, len);
     cmsGetProfileInfo(ContextID, h, Info, "en", "US", text, len);
 
     wprintf(L"%s\n", text);

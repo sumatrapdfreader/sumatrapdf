@@ -67,8 +67,6 @@ void FatalError(const char *frm, ...);
 
 extern int   xoptind;
 extern char *xoptarg;
-extern int   xopterr;
-extern char  SW;
 
 int xgetopt(int argc, char *argv[], char *optionS);
 

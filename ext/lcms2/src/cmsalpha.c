@@ -75,7 +75,7 @@ static
 void from8to16(void* dst, const void* src)
 {
        cmsUInt8Number n = *(cmsUInt8Number*)src;
-       *(cmsUInt16Number*) dst = FROM_8_TO_16(n);
+       *(cmsUInt16Number*) dst = (cmsUInt16Number) FROM_8_TO_16(n);
 }
 
 static
@@ -88,13 +88,13 @@ void from8to16SE(void* dst, const void* src)
 static
 void from8toFLT(void* dst, const void* src)
 {
-       *(cmsFloat32Number*)dst = (*(cmsUInt8Number*)src) / 255.0f;
+       *(cmsFloat32Number*)dst = (cmsFloat32Number) (*(cmsUInt8Number*)src) / 255.0f;
 }
 
 static
 void from8toDBL(void* dst, const void* src)
 {
-       *(cmsFloat64Number*)dst = (*(cmsUInt8Number*)src) / 255.0;
+       *(cmsFloat64Number*)dst = (cmsFloat64Number) (*(cmsUInt8Number*)src) / 255.0;
 }
 
 static
@@ -153,13 +153,13 @@ void from16SEtoFLT(void* dst, const void* src)
 static
 void from16toDBL(void* dst, const void* src)
 {
-       *(cmsFloat64Number*)dst = (*(cmsUInt16Number*)src) / 65535.0f;
+       *(cmsFloat64Number*)dst = (cmsFloat64Number) (*(cmsUInt16Number*)src) / 65535.0;
 }
 
 static
 void from16SEtoDBL(void* dst, const void* src)
 {
-    *(cmsFloat64Number*)dst = (CHANGE_ENDIAN(*(cmsUInt16Number*)src)) / 65535.0f;
+    *(cmsFloat64Number*)dst = (cmsFloat64Number) (CHANGE_ENDIAN(*(cmsUInt16Number*)src)) / 65535.0;
 }
 
 static
@@ -363,10 +363,10 @@ int FormatterPos(cmsUInt32Number frm)
         return 4; // FLT
     if (b == 2 && !T_FLOAT(frm))
     {
-	if (T_ENDIAN16(frm))
-	    return 2; // 16SE
-	else
-	    return 1; // 16
+        if (T_ENDIAN16(frm))
+            return 2; // 16SE
+        else
+            return 1; // 16
     }
     if (b == 1 && !T_FLOAT(frm))
         return 0; // 8

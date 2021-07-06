@@ -178,12 +178,16 @@ cmsBool AddMLUBlock(cmsContext ContextID, cmsMLU* mlu, cmsUInt32Number size, con
 
 // Convert from a 3-char code to a cmsUInt16Number. It is done in this way because some
 // compilers don't properly align beginning of strings
-
 static
 cmsUInt16Number strTo16(const char str[3])
 {
-    const cmsUInt8Number* ptr8 = (const cmsUInt8Number*)str;
-    cmsUInt16Number n = (cmsUInt16Number)(((cmsUInt16Number)ptr8[0] << 8) | ptr8[1]);
+    const cmsUInt8Number* ptr8;
+    cmsUInt16Number n;
+
+    // For non-existent strings
+    if (str == NULL) return 0;
+    ptr8 = (const cmsUInt8Number*)str;
+    n = (cmsUInt16Number)(((cmsUInt16Number)ptr8[0] << 8) | ptr8[1]);
 
     return n;
 }

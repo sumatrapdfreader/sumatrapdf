@@ -96,43 +96,44 @@ void Help(void)
     fprintf(stderr, "usage: transicc [flags] [CGATS input] [CGATS output]\n\n");
 
     fprintf(stderr, "flags:\n\n");
-    fprintf(stderr, "%cv<0..3> - Verbosity level\n", SW);
+    fprintf(stderr, "-v<0..3> - Verbosity level\n");
 
-    fprintf(stderr, "%ce[op] - Encoded representation of numbers\n", SW);
-    fprintf(stderr, "\t%cw - use 16 bits\n", SW);
-    fprintf(stderr, "\t%cx - Hexadecimal\n\n", SW);
+    fprintf(stderr, "-e[op] - Encoded representation of numbers\n");
+    fprintf(stderr, "\t-w - use 16 bits\n");
+    fprintf(stderr, "\t-x - Hexadecimal\n\n");
 
-    fprintf(stderr, "%cs - bounded mode (clip negatives and highlights)\n", SW);
-    fprintf(stderr, "%cq - Quantize (round decimals)\n\n", SW);
+    fprintf(stderr, "-s - bounded mode (clip negatives and highlights)\n");
+    fprintf(stderr, "-q - Quantize (round decimals)\n\n");
 
-    fprintf(stderr, "%ci<profile> - Input profile (defaults to sRGB)\n", SW);
-    fprintf(stderr, "%co<profile> - Output profile (defaults to sRGB)\n", SW);
-    fprintf(stderr, "%cl<profile> - Transform by device-link profile\n", SW);
+    fprintf(stderr, "-i<profile> - Input profile (defaults to sRGB)\n");
+    fprintf(stderr, "-o<profile> - Output profile (defaults to sRGB)\n");
+    fprintf(stderr, "-l<profile> - Transform by device-link profile\n");
 
-    fprintf(stderr, "\nYou can use '*Lab', '*xyz' and others as built-in profiles\n\n");
+    PrintBuiltins();
 
     PrintRenderingIntents(NULL);
 
     fprintf(stderr, "\n");
 
-    fprintf(stderr, "%cd<0..1> - Observer adaptation state (abs.col. only)\n\n", SW);
+    fprintf(stderr, "-d<0..1> - Observer adaptation state (abs.col. only)\n\n");
 
-    fprintf(stderr, "%cb - Black point compensation\n", SW);
+    fprintf(stderr, "-b - Black point compensation\n");
 
-    fprintf(stderr, "%cc<0,1,2,3> Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes)\n\n", SW);
-    fprintf(stderr, "%cn - Terse output, intended for pipe usage\n", SW);
+    fprintf(stderr, "-c<0,1,2,3> Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes)\n\n");
+    fprintf(stderr, "-n - Terse output, intended for pipe usage\n");
 
-    fprintf(stderr, "%cp<profile> - Soft proof profile\n", SW);
-    fprintf(stderr, "%cm<0,1,2,3> - Soft proof intent\n", SW);
-    fprintf(stderr, "%cg - Marks out-of-gamut colors on softproof\n\n", SW);
+    fprintf(stderr, "-p<profile> - Soft proof profile\n");
+    fprintf(stderr, "-m<0,1,2,3> - Soft proof intent\n");
+    fprintf(stderr, "-g - Marks out-of-gamut colors on softproof\n\n");
 
 
 
-    fprintf(stderr, "This program is intended to be a demo of the little cms\n"
-        "engine. Both lcms and this program are freeware. You can\n"
-        "obtain both in source code at http://www.littlecms.com\n"
+    fprintf(stderr, "This program is intended to be a demo of the Little CMS\n"
+        "color engine. Both lcms and this program are open source.\n"
+        "You can obtain both in source code at https://www.littlecms.com\n"
         "For suggestions, comments, bug reports etc. send mail to\n"
         "info@littlecms.com\n\n");
+
 }
 
 
@@ -145,9 +146,21 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
     int s;
 
     while ((s = xgetopt(argc, argv,
-        "bBC:c:d:D:eEgGI:i:L:l:m:M:nNO:o:p:P:QqSsT:t:V:v:WwxX!:")) != EOF) {
+        "bBC:c:d:D:eEgGI:i:L:l:m:M:nNO:o:p:P:QqSsT:t:V:v:WwxX!:-:")) != EOF) {
 
     switch (s){
+
+        case '-':
+            if (strcmp(xoptarg, "help") == 0)
+            {
+                Help();
+                exit(0);
+            }
+            else
+            {
+                FatalError("Unknown option - run without args to see valid ones.\n");
+            }
+            break;
 
         case '!':
             IncludePart = xoptarg;
@@ -457,7 +470,7 @@ cmsBool OpenTransforms(cmsContext ContextID)
 
         if (cmsGetDeviceClass(ContextID, hInput) == cmsSigLinkClass ||
             cmsGetDeviceClass(ContextID, hOutput) == cmsSigLinkClass)
-            FatalError("Use %cl flag for devicelink profiles!\n", SW);
+            FatalError("Use -l flag for devicelink profiles!\n");
 
 
         InputColorSpace   = cmsGetColorSpace(ContextID, hInput);
@@ -858,7 +871,7 @@ cmsFloat64Number GetIT8Val(cmsContext ContextID, const char* Name, cmsFloat64Num
 // Read input values from CGATS file.
 
 static
-    void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
+void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
 {
 
     // At first take the name if SAMPLE_ID is present
@@ -1241,7 +1254,9 @@ int main(int argc, char *argv[])
 
     int nPatch = 0;
 
-    fprintf(stderr, "LittleCMS ColorSpace conversion calculator - 4.3 [LittleCMS %2.2f]\n", LCMS_VERSION / 1000.0);
+    fprintf(stderr, "LittleCMS ColorSpace conversion calculator - 5.0 [LittleCMS %2.2f]\n", LCMS_VERSION / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2020 Marti Maria Saguer. See COPYING file for details.\n");
+    fflush(stderr);
 
     InitUtils(ContextID, "transicc");
 
@@ -1313,5 +1328,3 @@ int main(int argc, char *argv[])
     // All is ok
     return 0;
 }
-
-

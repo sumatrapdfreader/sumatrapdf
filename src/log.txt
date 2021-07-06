@@ -12,6 +12,8 @@ update mupdf
 
 update harfbuzz
 
+update lcms2
+
 2021-06-29 Tue
 
 simplify GetPaperFormat()

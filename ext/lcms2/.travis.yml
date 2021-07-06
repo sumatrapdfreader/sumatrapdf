@@ -191,4 +191,4 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./configure && cat config.log && make && make check
+script: ./autogen.sh && ./configure && cat config.log && make && make check

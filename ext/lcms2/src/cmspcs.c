@@ -668,7 +668,7 @@ cmsFloat64Number CMSEXPORT cmsCIE2000DeltaE(cmsContext ContextID, const cmsCIELa
 
 // This function returns a number of gridpoints to be used as LUT table. It assumes same number
 // of gripdpoints in all dimensions. Flags may override the choice.
-cmsUInt32Number _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags)
+cmsUInt32Number CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags)
 {
     cmsUInt32Number nChannels;
 

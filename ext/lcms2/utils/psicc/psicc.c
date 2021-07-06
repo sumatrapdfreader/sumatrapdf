@@ -37,6 +37,35 @@ static int PrecalcMode = 1;
 static int NumOfGridPoints = 0;
 
 
+
+static
+void Help(void)
+{
+    fprintf(stderr, "usage: psicc [flags] [<Output file>]\n\n");
+
+    fprintf(stderr, "flags:\n\n");
+
+    fprintf(stderr, "-i<profile> - Input profile: Generates Color Space Array (CSA)\n");
+    fprintf(stderr, "-o<profile> - Output profile: Generates Color Rendering Dictionary(CRD)\n");
+
+    fprintf(stderr, "-t<0,1,2,3> - Intent (0=Perceptual, 1=Colorimetric, 2=Saturation, 3=Absolute)\n");
+
+    fprintf(stderr, "-b - Black point compensation (CRD only)\n");
+    fprintf(stderr, "-u - Do NOT generate resource name on CRD\n");
+    fprintf(stderr, "-c<0,1,2> - Precision (0=LowRes, 1=Normal (default), 2=Hi-res) (CRD only)\n");
+    fprintf(stderr, "-n<gridpoints> - Alternate way to set precission, number of CLUT points (CRD only)\n");
+
+    fprintf(stderr, "\n");
+    fprintf(stderr, "If no output file is specified, output goes to stdout.\n\n");
+    fprintf(stderr, "This program is intended to be a demo of the little cms\n"
+        "engine. Both lcms and this program are freeware. You can\n"
+        "obtain both in source code at https://www.littlecms.com\n"
+        "For suggestions, comments, bug reports etc. send mail to\n"
+        "info@littlecms.com\n\n");
+
+    exit(0);
+}
+
 // The toggles stuff
 
 static
@@ -44,10 +73,21 @@ void HandleSwitches(int argc, char *argv[])
 {
        int s;
 
-       while ((s = xgetopt(argc,argv,"uUbBI:i:O:o:T:t:c:C:n:N:")) != EOF) {
+       while ((s = xgetopt(argc,argv,"uUbBI:i:O:o:T:t:c:C:n:N:-:")) != EOF) {
 
-       switch (s){
+       switch (s)
+       {
 
+       case '-':
+           if (strcmp(xoptarg, "help") == 0)
+           {
+               Help();
+           }
+           else
+           {
+               FatalError("Unknown option - run without args to see valid ones.\n");
+           }
+           break;
 
        case 'i':
        case 'I':
@@ -99,34 +139,7 @@ void HandleSwitches(int argc, char *argv[])
     }
 }
 
-static
-void Help(void)
-{
-	 fprintf(stderr, "little CMS ICC PostScript generator - v2.1 [LittleCMS %2.2f]\n", LCMS_VERSION / 1000.0);
 
-     fprintf(stderr, "usage: psicc [flags] [<Output file>]\n\n");
-
-     fprintf(stderr, "flags:\n\n");
-
-     fprintf(stderr, "%ci<profile> - Input profile: Generates Color Space Array (CSA)\n", SW);
-     fprintf(stderr, "%co<profile> - Output profile: Generates Color Rendering Dictionary(CRD)\n", SW);
-
-     fprintf(stderr, "%ct<0,1,2,3> - Intent (0=Perceptual, 1=Colorimetric, 2=Saturation, 3=Absolute)\n", SW);
-
-     fprintf(stderr, "%cb - Black point compensation (CRD only)\n", SW);
-     fprintf(stderr, "%cu - Do NOT generate resource name on CRD\n", SW);
-     fprintf(stderr, "%cc<0,1,2> - Precision (0=LowRes, 1=Normal (default), 2=Hi-res) (CRD only)\n", SW);
-     fprintf(stderr, "%cn<gridpoints> - Alternate way to set precission, number of CLUT points (CRD only)\n", SW);
-
-	 fprintf(stderr, "\n");
-	 fprintf(stderr, "If no output file is specified, output goes to stdout.\n\n");
-     fprintf(stderr, "This program is intended to be a demo of the little cms\n"
-                     "engine. Both lcms and this program are freeware. You can\n"
-                     "obtain both in source code at http://www.littlecms.com\n"
-                     "For suggestions, comments, bug reports etc. send mail to\n"
-                     "info@littlecms.com\n\n");
-     exit(0);
-}
 
 
 static
@@ -200,6 +213,10 @@ int main(int argc, char *argv[])
 	int nargs;
     cmsContext ContextID = NULL;
 
+    fprintf(stderr, "Little CMS ICC PostScript generator - v2.1 [LittleCMS %2.2f]\n", LCMS_VERSION / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2020 Marti Maria Saguer. See COPYING file for details.\n");
+    fflush(stderr);
+
 	// Initialize
 	InitUtils(NULL, "psicc");
 
@@ -229,5 +246,3 @@ int main(int argc, char *argv[])
 
       return 0;
 }
-
-

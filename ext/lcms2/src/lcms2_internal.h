@@ -65,8 +65,8 @@
 # if defined(sparc) || defined(__sparc) || defined(__sparc__)
 #  define CMS_PTR_ALIGNMENT 8
 # else
-# define CMS_PTR_ALIGNMENT sizeof(void *)
-#endif
+#  define CMS_PTR_ALIGNMENT sizeof(void *)
+# endif
 #endif
 
 #define _cmsALIGNMEM(x)  (((x)+(CMS_PTR_ALIGNMENT - 1)) & ~(CMS_PTR_ALIGNMENT - 1))
@@ -117,10 +117,10 @@
 # endif
 
 #if !defined(_MSC_VER) && (defined(__STDC_VERSION__) && __STDC_VERSION__ < 199901L)
-#    if !defined(isinf)
-#       define isinf(x) (!finite((x)))
-#    endif
-#  endif
+        #if !defined(isinf)
+        #define isinf(x) (!finite((x)))
+        #endif
+#endif
 
 
 #endif
@@ -904,13 +904,7 @@ cmsStage*                          _cmsStageClipNegatives(cmsContext ContextID, 
 
 
 // For curve set only
-cmsToneCurve**     _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
-
-
-// Pipeline Evaluator (in floating point)
-typedef void (* _cmsPipelineEvalFloatFn)(cmsContext ContextID, const cmsFloat32Number In[],
-                                         cmsFloat32Number Out[],
-                                         const void* Data);
+cmsToneCurve**  _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
 
 struct _cmsPipeline_struct {
 
@@ -920,7 +914,7 @@ struct _cmsPipeline_struct {
     // Data & evaluators
     void *Data;
 
-   _cmsOPTeval16Fn         Eval16Fn;
+   _cmsPipelineEval16Fn    Eval16Fn;
    _cmsPipelineEvalFloatFn EvalFloatFn;
    _cmsFreeUserDataFn      FreeDataFn;
    _cmsDupUserDataFn       DupDataFn;
@@ -964,14 +958,15 @@ cmsSEQ* _cmsCompileProfileSequence(cmsContext ContextID, cmsUInt32Number nProfil
 // LUT optimization ------------------------------------------------------------------------------------------------
 
 CMSCHECKPOINT cmsUInt16Number  CMSEXPORT _cmsQuantizeVal(cmsFloat64Number i, cmsUInt32Number MaxSamples);
-cmsUInt32Number  _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
+
+CMSAPI cmsUInt32Number  CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
 
 cmsBool          _cmsEndPointsBySpace(cmsColorSpaceSignature Space,
                                       cmsUInt16Number **White,
                                       cmsUInt16Number **Black,
                                       cmsUInt32Number *nOutputs);
 
-cmsBool          _cmsOptimizePipeline(cmsContext ContextID,
+CMSAPI cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
                                       cmsPipeline**    Lut,
                                       cmsUInt32Number  Intent,
                                       cmsUInt32Number* InputFormat,
@@ -1124,6 +1119,9 @@ cmsBool   _cmsBuildRGB2XYZtransferMatrix(cmsContext ContextID, cmsMAT3* r, const
 void _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number OutputFormat, cmsUInt32Number flags);
 
 cmsUInt32Number _cmsAdjustReferenceCount(cmsUInt32Number *rc, int delta);
+
+// thread-safe gettime
+cmsBool _cmsGetTime(struct tm* ptr_time);
 
 #define _lcms_internal_H
 #endif

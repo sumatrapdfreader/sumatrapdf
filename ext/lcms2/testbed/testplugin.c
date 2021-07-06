@@ -236,9 +236,10 @@ void Fake1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
 
 // This fake interpolation just uses scrambled negated indexes for output
 static
-void Fake3D16(cmsContext ContextID, register const cmsUInt16Number Input[],
-              register cmsUInt16Number Output[],
-              register const struct _cms_interp_struc* p)
+void Fake3D16(cmsContext ContextID,
+              CMSREGISTER const cmsUInt16Number Input[],
+              CMSREGISTER cmsUInt16Number Output[],
+              CMSREGISTER const struct _cms_interp_struc* p)
 {
        Output[0] =  0xFFFF - Input[2];
        Output[1] =  0xFFFF - Input[1];
@@ -620,10 +621,11 @@ Error:
 
 #define TYPE_RGB_565  (COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0) | (1 << 23))
 
-cmsUInt8Number* my_Unroll565(cmsContext ContextID, register struct _cmstransform_struct* nfo,
-                            register cmsUInt16Number wIn[],
-                            register cmsUInt8Number* accum,
-                            register cmsUInt32Number Stride)
+cmsUInt8Number* my_Unroll565(cmsContext ContextID,
+                            CMSREGISTER struct _cmstransform_struct* nfo,
+                            CMSREGISTER cmsUInt16Number wIn[],
+                            CMSREGISTER cmsUInt8Number* accum,
+                            CMSREGISTER cmsUInt32Number Stride)
 {
     cmsUInt16Number pixel = *(cmsUInt16Number*) accum;  // Take whole pixel
 
@@ -638,13 +640,14 @@ cmsUInt8Number* my_Unroll565(cmsContext ContextID, register struct _cmstransform
     return accum + 2;
 }
 
-cmsUInt8Number* my_Pack565(cmsContext ContextID, register _cmsTRANSFORM* info,
-                           register cmsUInt16Number wOut[],
-                           register cmsUInt8Number* output,
-                           register cmsUInt32Number Stride)
+cmsUInt8Number* my_Pack565(cmsContext ContextID,
+                           CMSREGISTER _cmsTRANSFORM* info,
+                           CMSREGISTER cmsUInt16Number wOut[],
+                           CMSREGISTER cmsUInt8Number* output,
+                           CMSREGISTER cmsUInt32Number Stride)
 {
 
-    register cmsUInt16Number pixel;
+    CMSREGISTER cmsUInt16Number pixel;
     int r, g, b;
 
     r = (int) floor(( wOut[2] * 31) / 65535.0 + 0.5);
@@ -1085,9 +1088,10 @@ Error:
 // --------------------------------------------------------------------------------------------------
 
 static
-void FastEvaluateCurves(cmsContext ContextID, register const cmsUInt16Number In[],
-                                     register cmsUInt16Number Out[],
-                                     register const void* Data)
+void FastEvaluateCurves(cmsContext ContextID,
+                        CMSREGISTER const cmsUInt16Number In[],
+                        CMSREGISTER cmsUInt16Number Out[],
+                        CMSREGISTER const void* Data)
 {
     Out[0] = In[0];
 }
@@ -1502,4 +1506,3 @@ cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID)
 
     return 1;
 }
-

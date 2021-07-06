@@ -545,23 +545,33 @@ typedef struct {
 // the optimization  search. Or FALSE if it is unable to optimize and want to give a chance
 // to the rest of optimizers.
 
-typedef void     (* _cmsOPTeval16Fn)(cmsContext ContextID,
-                                     CMSREGISTER const cmsUInt16Number In[],
-                                     CMSREGISTER cmsUInt16Number Out[],
-                                     CMSREGISTER const void* Data);
-
-
-typedef cmsBool  (* _cmsOPToptimizeFn)(cmsContext ContextID, cmsPipeline** Lut,
+typedef cmsBool  (* _cmsOPToptimizeFn)(cmsContext ContextID,
+                                       cmsPipeline** Lut,
                                        cmsUInt32Number  Intent,
                                        cmsUInt32Number* InputFormat,
                                        cmsUInt32Number* OutputFormat,
                                        cmsUInt32Number* dwFlags);
 
+// Pipeline Evaluator (in 16 bits)
+typedef void (* _cmsPipelineEval16Fn)(cmsContext ContextID,
+                                     CMSREGISTER const cmsUInt16Number In[],
+                                     CMSREGISTER cmsUInt16Number Out[],
+                                     const void* Data);
+
+// Pipeline Evaluator (in floating point)
+typedef void (* _cmsPipelineEvalFloatFn)(cmsContext ContextID,
+                                         const cmsFloat32Number In[],
+                                         cmsFloat32Number Out[],
+                                         const void* Data);
+
+
 // This function may be used to set the optional evaluator and a block of private data. If private data is being used, an optional
 // duplicator and free functions should also be specified in order to duplicate the LUT construct. Use NULL to inhibit such functionality.
 
-CMSAPI void CMSEXPORT _cmsPipelineSetOptimizationParameters(cmsContext ContextID, cmsPipeline* Lut,
-                                               _cmsOPTeval16Fn Eval16,
+CMSAPI void CMSEXPORT _cmsPipelineSetOptimizationParameters(
+                                               cmsContext ContextID,
+                                               cmsPipeline* Lut,
+                                               _cmsPipelineEval16Fn Eval16,
                                                void* PrivateData,
                                                _cmsFreeUserDataFn FreePrivateDataFn,
                                                _cmsDupUserDataFn DupPrivateDataFn);

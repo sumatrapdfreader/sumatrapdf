@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2021 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.11
+// Version 2.13alpha
 //
 
 #ifndef _lcms2mt_H
@@ -81,12 +81,12 @@ extern "C" {
 #endif
 
 // Version/release
-// Vanilla LCMS2 uses values from 2000-2100. This is
+// Vanilla LCMS2 uses values from 2000-2120. This is
 // used as an unsigned number. We want any attempt to
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2110 - 2000)
+#define LCMS_VERSION              (2120 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -1862,6 +1862,8 @@ CMSAPI cmsBool          CMSEXPORT cmsDetectDestinationBlackPoint(cmsContext Cont
 // Estimate total area coverage
 CMSAPI cmsFloat64Number CMSEXPORT cmsDetectTAC(cmsContext ContextID, cmsHPROFILE hProfile);
 
+// Estimate gamma space, alwasys positive. Returns -1 on error.
+CMSAPI cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPROFILE hProfile, cmsFloat64Number thereshold);
 
 // Poor man's gamut mapping
 CMSAPI cmsBool          CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIELab* Lab,

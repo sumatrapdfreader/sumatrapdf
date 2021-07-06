@@ -87,20 +87,20 @@ void ConsoleErrorHandler(const char* module, const char* fmt, va_list ap)
 static
 void Help()
 {
-    fprintf(stderr, "Little cms TIFF compare utility. v1.0\n\n");
+    fprintf(stderr, "Little CMS TIFF compare utility. v1.1\n\n");
 
     fprintf(stderr, "usage: tiffdiff [flags] input.tif output.tif\n");
 
     fprintf(stderr, "\nflags:\n\n");
 
 
-    fprintf(stderr, "%co<tiff>   - Output TIFF file\n", SW);
-    fprintf(stderr, "%cg<CGATS>  - Output results in CGATS file\n", SW);
+    fprintf(stderr, "-o<tiff>   - Output TIFF file\n");
+    fprintf(stderr, "-g<CGATS>  - Output results in CGATS file\n");
 
     fprintf(stderr, "\n");
 
-    fprintf(stderr, "%cv - Verbose (show warnings)\n", SW);
-    fprintf(stderr, "%ch - This help\n", SW);
+    fprintf(stderr, "-v - Verbose (show warnings)\n");
+    fprintf(stderr, "-h - This help\n");
 
 
     fflush(stderr);
@@ -704,5 +704,3 @@ int main(int argc, char* argv[])
 
       return 0;
 }
-
-

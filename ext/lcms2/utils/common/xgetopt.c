@@ -1,75 +1,100 @@
-/*
-    getopt.c
 
-*/
+//---------------------------------------------------------------------------------
+//
+//  Little Color Management System
+//  Copyright (c) 1998-2020 Marti Maria Saguer
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
+// is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//---------------------------------------------------------------------------------
+//
+//    xgetopt.c  -- loosely based on System V getopt()
+//
+//    option ::= SW [optLetter]* [argLetter space* argument]
+//   
 
-#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 
-int     xoptind = 1;    /* index of which argument is next  */
-char   *xoptarg;        /* pointer to argument of current option */
-int     xopterr = 0;    /* allow error message  */
+int     xoptind = 1;   
+char   *xoptarg;       
 
-static  char   *letP = NULL;    /* remember next option char's location */
-char    SW = '-';				/* DOS switch character, either '-' or '/' */
+static  char   *nextArg = NULL;    
 
-/*
-  Parse the command line options, System V style.
+#define SW '-'
 
-  Standard option syntax is:
 
-    option ::= SW [optLetter]* [argLetter space* argument]
-
-*/
-
-int xgetopt(int argc, char *argv[], char *optionS)
+int xgetopt(int argc, char* argv[], char* optionS)
 {
     unsigned char ch;
-    char *optP;
+    char* optP;
 
-    if (SW == 0) {
-        SW = '/';
-    }
+    if (argc > xoptind)
+    {
 
-    if (argc > xoptind) {
-        if (letP == NULL) {
-            if ((letP = argv[xoptind]) == NULL ||
-                *(letP++) != SW)  goto gopEOF;
-            if (*letP == SW) {
-                xoptind++;  goto gopEOF;
-            }
+        if (nextArg == NULL)
+        {
+            if ((nextArg = argv[xoptind]) == NULL || *(nextArg++) != SW)  goto end_eof;
         }
-        if (0 == (ch = *(letP++))) {
-            xoptind++;  goto gopEOF;
-        }
-        if (':' == ch  ||  (optP = strchr(optionS, ch)) == NULL)
-            goto gopError;
-        if (':' == *(++optP)) {
+
+        if ((ch = *(nextArg++)) == 0)
+        {
             xoptind++;
-            if (0 == *letP) {
-                if (argc <= xoptind)  goto  gopError;
-                letP = argv[xoptind++];
+            goto end_eof;
+        }
+
+        if (ch == ':' || (optP = strchr(optionS, ch)) == NULL)
+            goto end_error;
+
+        if (*(++optP) == ':')
+        {
+            xoptind++;
+
+            if (*nextArg == 0)
+            {
+                if (argc <= xoptind)  goto  end_error;
+                nextArg = argv[xoptind++];
             }
-            xoptarg = letP;
-            letP = NULL;
-        } else {
-            if (0 == *letP) {
+
+            xoptarg = nextArg;
+            nextArg = NULL;
+
+        }
+        else
+        {
+            if (*nextArg == 0)
+            {
                 xoptind++;
-                letP = NULL;
+                nextArg = NULL;
             }
+
             xoptarg = NULL;
         }
+
         return ch;
     }
-gopEOF:
-    xoptarg = letP = NULL;
+
+end_eof:
+    xoptarg = nextArg = NULL;
     return EOF;
 
-gopError:
+end_error:
     xoptarg = NULL;
-    errno  = EINVAL;
-    if (xopterr)
-        perror ("get command line option");
-    return ('?');
+    return '?';
 }

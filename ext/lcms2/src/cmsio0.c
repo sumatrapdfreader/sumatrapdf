@@ -492,7 +492,6 @@ cmsIOHANDLER* CMSEXPORT cmsGetProfileIOhandler(cmsContext ContextID, cmsHPROFILE
 // Creates an empty structure holding all required parameters
 cmsHPROFILE CMSEXPORT cmsCreateProfilePlaceholder(cmsContext ContextID)
 {
-    time_t now = time(NULL);
     _cmsICCPROFILE* Icc = (_cmsICCPROFILE*) _cmsMallocZero(ContextID, sizeof(_cmsICCPROFILE));
     if (Icc == NULL) return NULL;
 
@@ -502,15 +501,20 @@ cmsHPROFILE CMSEXPORT cmsCreateProfilePlaceholder(cmsContext ContextID)
 
     // Set default version
     Icc ->Version =  0x02100000;
-
+    
     // Set creation date/time
-    memmove(&Icc ->Created, gmtime(&now), sizeof(Icc ->Created));
+    if (!_cmsGetTime(&Icc->Created))
+        goto Error;
 
     // Create a mutex if the user provided proper plugin. NULL otherwise
     Icc ->UsrMutex = _cmsCreateMutex(ContextID);
 
     // Return the handle
     return (cmsHPROFILE) Icc;
+
+Error:
+    _cmsFree(ContextID, Icc);
+    return NULL;
 }
 
 // Return the number of tags
@@ -1209,26 +1213,26 @@ cmsBool SaveTags(cmsContext ContextID, _cmsICCPROFILE* Icc, _cmsICCPROFILE* File
 
                 if (FileOrig->IOhandler != NULL)
                 {
-                cmsUInt32Number TagSize   = FileOrig -> TagSizes[i];
-                cmsUInt32Number TagOffset = FileOrig -> TagOffsets[i];
-                void* Mem;
+                    cmsUInt32Number TagSize = FileOrig->TagSizes[i];
+                    cmsUInt32Number TagOffset = FileOrig->TagOffsets[i];
+                    void* Mem;
 
-                if (!FileOrig ->IOhandler->Seek(ContextID, FileOrig ->IOhandler, TagOffset)) return FALSE;
+                    if (!FileOrig ->IOhandler->Seek(ContextID, FileOrig ->IOhandler, TagOffset)) return FALSE;
 
-                Mem = _cmsMalloc(ContextID, TagSize);
-                if (Mem == NULL) return FALSE;
+                    Mem = _cmsMalloc(ContextID, TagSize);
+                    if (Mem == NULL) return FALSE;
 
-                if (FileOrig ->IOhandler->Read(ContextID, FileOrig->IOhandler, Mem, TagSize, 1) != 1) return FALSE;
-                if (!io ->Write(ContextID, io, TagSize, Mem)) return FALSE;
-                _cmsFree(ContextID, Mem);
+                    if (FileOrig ->IOhandler->Read(ContextID, FileOrig->IOhandler, Mem, TagSize, 1) != 1) return FALSE;
+                    if (!io ->Write(ContextID, io, TagSize, Mem)) return FALSE;
+                    _cmsFree(ContextID, Mem);
 
-                Icc -> TagSizes[i] = (io ->UsedSpace - Begin);
+                    Icc->TagSizes[i] = (io->UsedSpace - Begin);
 
 
-                // Align to 32 bit boundary.
-                if (! _cmsWriteAlignment(ContextID, io))
-                    return FALSE;
-            }
+                    // Align to 32 bit boundary.
+                    if (! _cmsWriteAlignment(ContextID, io))
+                        return FALSE;
+                }
             }
 
             continue;
