@@ -16,12 +16,18 @@ const (
 	maxS3Results = 1000
 )
 
-// we should only sign and upload to s3 if this is my repo
-// and a push event
+// we should only sign and upload to s3 if this is my repo and a push event
+// or building locally
+// don't sign if it's a fork or pull requests
 func shouldSignAndUpload() bool {
 	// https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables
 
 	repo := os.Getenv("GITHUB_REPOSITORY")
+	if repo == "" {
+		// building locally e.g. release for final testing
+		// we want to sign it
+		return true
+	}
 	if repo != "sumatrapdfreader/sumatrapdf" {
 		return false
 	}
