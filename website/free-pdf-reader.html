@@ -1,535 +1,399 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-Language" content="en-us" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta
-      name="keywords"
-      content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer"
-    />
-    <meta
-      name="description"
-      content="Sumatra PDF reader and viewer for Windows"
-    />
-    <title>Free PDF Reader - Sumatra PDF</title>
-    <link rel="stylesheet" href="sumatra.css" type="text/css" />
 
-    <script type="text/javascript" src="sumatra.js"></script>
-    <script>
-      function onload() {
-        changeShot("img/homepage.png");
-      }
-      document.addEventListener("DOMContentLoaded", onload);
-    </script>
-  </head>
+<head>
+  <meta http-equiv="Content-Language" content="en-us" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+  <meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+  <title>Free PDF Reader - Sumatra PDF</title>
+  <link rel="stylesheet" href="sumatra.css" type="text/css" />
 
-  <body>
-    <div id="container">
-      <div id="banner">
-        <h1 style="display: inline">
-          Sumatra PDF
-          <font size="-1">
-            is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows
-          </font>
-        </h1>
-        <script type="text/javascript">
-          document.write(navHtml());
-        </script>
-        <a id="donate" href="/backers.html">Donate</a>
-      </div>
+  <script type="text/javascript" src="sumatra.js"></script>
+  <script>
+    function onload() {
+      changeShot("img/homepage.png");
+    }
+    document.addEventListener("DOMContentLoaded", onload);
+  </script>
+</head>
 
-      <div id="center">
-        <table>
-          <tr>
-            <td valign="top">
-              <div class="content">
-                <h2>What is Sumatra PDF?</h2>
+<body>
+  <div id="container">
+    <div id="banner">
+      <h1 style="display: inline">
+        Sumatra PDF
+        <font size="-1">
+          is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows
+        </font>
+      </h1>
+      <script type="text/javascript">
+        document.write(navHtml());
+      </script>
+      <a id="donate" href="/backers.html">Donate</a>
+    </div>
 
-                <p>
-                  Sumatra PDF is a free PDF, eBook (
-                  <a
-                    href="https://blog.kowalczyk.info/articles/epub-ebook-reader-viewer-for-windows.html"
-                  >
-                    ePub
+    <div id="center">
+      <table>
+        <tr>
+          <td valign="top">
+            <div class="content">
+              <h2>What is Sumatra PDF?</h2>
+
+              <p>
+                Sumatra PDF is a free PDF, eBook
+                (<a href="https://blog.kowalczyk.info/articles/epub-ebook-reader-viewer-for-windows.html">ePub</a>, <a
+                  href="https://blog.kowalczyk.info/articles/mobi-ebook-reader-viewer-for-windows.html">Mobi</a>), XPS,
+                DjVu, <a href="https://blog.kowalczyk.info/articles/chm-reader-viewer-for-windows.html">CHM</a>,
+                <a href="https://blog.kowalczyk.info/articles/cbz-cbr-comic-book-reader-viewer-for-windows.html">Comic
+                  Book</a> (CBZ and CBR) reader for Windows.
+              </p>
+              <p>
+                Sumatra PDF is powerful, small, portable and starts up very
+                fast.
+              </p>
+              <p>Simplicity of the user interface has a high priority.</p>
+
+              <h2>Screenshots</h2>
+
+              <div class="img-wrapper-wrapper">
+                <div class="img-wrapper">
+                  <div id="shot-description">Homepage</div>
+                  <img id="main-shot" src="img/homepage.png" />
+                  <a class="for-nav-icon nav-icon-left" href="#" onclick="imgPrev(); return false;">
+                    <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="nav-icon">
+                      <g>
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" class="style-scope yt-icon"></path>
+                      </g>
+                    </svg>
                   </a>
-                  ,
-                  <a
-                    href="https://blog.kowalczyk.info/articles/mobi-ebook-reader-viewer-for-windows.html"
-                  >
-                    Mobi
-                  </a>
-                  ), XPS, DjVu,
-                  <a
-                    href="https://blog.kowalczyk.info/articles/chm-reader-viewer-for-windows.html"
-                  >
-                    CHM
-                  </a>
-                  ,
-                  <a
-                    href="https://blog.kowalczyk.info/articles/cbz-cbr-comic-book-reader-viewer-for-windows.html"
-                  >
-                    Comic Book
-                  </a>
-                  (CBZ and CBR) reader for Windows.
-                </p>
-                <p>
-                  Sumatra PDF is powerful, small, portable and starts up very
-                  fast.
-                </p>
-                <p>Simplicity of the user interface has a high priority.</p>
 
-                <h2>Screenshots</h2>
+                  <a class="for-nav-icon nav-icon-right" href="#" onclick="imgNext(); return false;">
+                    <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="nav-icon"
+                      style="">
+                      <g>
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" class="yt-icon"></path>
+                      </g>
+                    </svg>
+                  </a>
+                </div>
+              </div>
 
-                <div class="img-wrapper-wrapper">
-                  <div class="img-wrapper">
-                    <div id="shot-description">Homepage</div>
-                    <img id="main-shot" src="img/homepage.png" />
-                    <a
-                      class="for-nav-icon nav-icon-left"
-                      href="#"
-                      onclick="imgPrev(); return false;"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        preserveAspectRatio="xMidYMid meet"
-                        focusable="false"
-                        class="nav-icon"
-                      >
-                        <g>
-                          <path
-                            d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"
-                            class="style-scope yt-icon"
-                          ></path>
-                        </g>
-                      </svg>
-                    </a>
+              <div class="center mt3 mb6">
+                <div id="homepage.png" class="pa1 ib">
+                  <a href="#" onclick="changeShot('img/homepage.png'); return false;">
+                    <img src="img/homepage-small.png" width="80" height="80" />
+                  </a>
+                </div>
 
-                    <a
-                      class="for-nav-icon nav-icon-right"
-                      href="#"
-                      onclick="imgNext(); return false;"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        preserveAspectRatio="xMidYMid meet"
-                        focusable="false"
-                        class="nav-icon"
-                        style=""
-                      >
-                        <g>
-                          <path
-                            d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
-                            class="yt-icon"
-                          ></path>
-                        </g>
-                      </svg>
+                <div id="format-pdf.png" class="pa1 ib">
+                  <a href="#" onclick="changeShot('img/format-pdf.png'); return false;">
+                    <img src="img/format-pdf-small.png" width="80" height="80" />
+                  </a>
+                </div>
+
+                <div id="format-epub.png" class="pa1 ib">
+                  <a href="#" onclick="changeShot('img/format-epub.png'); return false;">
+                    <img src="img/format-epub-small.png" width="80" height="80" />
+                  </a>
+                </div>
+
+                <div id="menu-file.png" class="pa1 ib">
+                  <a href="#" onclick="changeShot('img/menu-file.png'); return false;">
+                    <img src="img/menu-file-small.png" width="80" height="80" />
+                  </a>
+                </div>
+
+                <div id="menu-view.png" class="pa1 ib">
+                  <a href="#" onclick="changeShot('img/menu-view.png'); return false;">
+                    <img src="img/menu-view-small.png" width="80" height="80" />
+                  </a>
+                </div>
+
+                <div id="dialog-langs.png" class="pa1 ib">
+                  <a href="#" onclick="changeShot('img/dialog-langs.png'); return false;">
+                    <img src="img/dialog-langs-small.png" width="80" height="80" />
+                  </a>
+                </div>
+              </div>
+
+              <h2 id="download">Download</h2>
+              <p>
+                Download
+                <a href="download.html">from here</a>
+                .
+              </p>
+
+              <h2 id="moreinfo">More information</h2>
+
+              <p>
+                See quickstart
+                <a href="manual.html">manual</a>
+                and
+                <a href="docs/SumatraPDF-documentation.html">
+                  extensive documentation
+                </a>
+                .
+              </p>
+
+              <p>
+                Found a bug? Submit a
+                <a href="docs/How-to-submit-bug-reports.html">bug report</a>
+                .
+              </p>
+
+              <p>
+                Have a question or feedback about Sumatra? Use
+                <a href="https://forum.sumatrapdfreader.org">the forum</a>
+                .
+              </p>
+
+              <p>
+                Want to help translate Sumatra? See
+                <a href="docs/How-to-contribute-translation.html">
+                  this translation guide
+                </a>
+                .
+              </p>
+
+              <p>
+                Are you a developer? The source code is on
+                <a href="https://github.com/sumatrapdfreader/sumatrapdf">
+                  GitHub
+                </a>
+                .
+              </p>
+
+              <h2 id="spread-the-word">Spread the word</h2>
+              Help others discover SumatraPDF:
+              <ul>
+                <li>
+                  <a href="https://twitter.com/intent/tweet?text=SumatraPDF%20by%20%40kjk%20is%20the%20best%20PDF%20reader%20on%20Windows%20Check%20it%20out%20at%20https%3A//www.sumatrapdfreader.org/"
+                    target="_blank">
+                    Share on Twitter
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A//www.sumatrapdfreader.org/"
+                    target="_blank">
+                    Share on Facebook
+                  </a>
+                </li>
+                <li>
+                  <a href="https://alternativeto.net/software/sumatra-pdf/">
+                    Like on Alternative To
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.slant.co/topics/10582/viewpoints/7/~pdf-viewers-for-windows~sumatra-pdf">
+                    Like on Slant
+                  </a>
+                </li>
+              </ul>
+
+              <h2 id="testimonials">Testimonials</h2>
+
+              <div class="testimonials">
+                <div class="testimonial">
+                  <p class="testimonials-text">SumatraPDF is way better.</p>
+                  <div class="testimonial-who">
+                    <a href="https://www.reddit.com/r/assholedesign/comments/io05m4/adobe_survey_wont_let_you_use_acrobat_until_youve/g4bhk4o/"
+                      target="_blank">
+                      u/olioster
                     </a>
                   </div>
                 </div>
 
-                <div class="center mt3 mb6">
-                  <div id="homepage.png" class="pa1 ib">
-                    <a
-                      href="#"
-                      onclick="changeShot('img/homepage.png'); return false;"
-                    >
-                      <img
-                        src="img/homepage-small.png"
-                        width="80"
-                        height="80"
-                      />
-                    </a>
-                  </div>
-
-                  <div id="format-pdf.png" class="pa1 ib">
-                    <a
-                      href="#"
-                      onclick="changeShot('img/format-pdf.png'); return false;"
-                    >
-                      <img
-                        src="img/format-pdf-small.png"
-                        width="80"
-                        height="80"
-                      />
-                    </a>
-                  </div>
-
-                  <div id="format-epub.png" class="pa1 ib">
-                    <a
-                      href="#"
-                      onclick="changeShot('img/format-epub.png'); return false;"
-                    >
-                      <img
-                        src="img/format-epub-small.png"
-                        width="80"
-                        height="80"
-                      />
-                    </a>
-                  </div>
-
-                  <div id="menu-file.png" class="pa1 ib">
-                    <a
-                      href="#"
-                      onclick="changeShot('img/menu-file.png'); return false;"
-                    >
-                      <img
-                        src="img/menu-file-small.png"
-                        width="80"
-                        height="80"
-                      />
-                    </a>
-                  </div>
-
-                  <div id="menu-view.png" class="pa1 ib">
-                    <a
-                      href="#"
-                      onclick="changeShot('img/menu-view.png'); return false;"
-                    >
-                      <img
-                        src="img/menu-view-small.png"
-                        width="80"
-                        height="80"
-                      />
-                    </a>
-                  </div>
-
-                  <div id="dialog-langs.png" class="pa1 ib">
-                    <a
-                      href="#"
-                      onclick="changeShot('img/dialog-langs.png'); return false;"
-                    >
-                      <img
-                        src="img/dialog-langs-small.png"
-                        width="80"
-                        height="80"
-                      />
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    PDF readers have, over the years, managed to earn
+                    themselves something of a reputation for being slow,
+                    lumbering beasts - thanks largely to Adobe Reader. Sumatra
+                    PDF bucks the trend. It is small, svelte, lightweight and
+                    lightning fast.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://twitter.com/EnercoConseils/status/1306843886451666944" target="_blank">
+                      @EnercoConseils
                     </a>
                   </div>
                 </div>
 
-                <h2 id="download">Download</h2>
-                <p>
-                  Download
-                  <a href="download.html">from here</a>
-                  .
-                </p>
-
-                <h2 id="moreinfo">More information</h2>
-
-                <p>
-                  See quickstart
-                  <a href="manual.html">manual</a>
-                  and
-                  <a href="docs/SumatraPDF-documentation.html">
-                    extensive documentation
-                  </a>
-                  .
-                </p>
-
-                <p>
-                  Found a bug? Submit a
-                  <a href="docs/How-to-submit-bug-reports.html">bug report</a>
-                  .
-                </p>
-
-                <p>
-                  Have a question or feedback about Sumatra? Use
-                  <a href="https://forum.sumatrapdfreader.org">the forum</a>
-                  .
-                </p>
-
-                <p>
-                  Want to help translate Sumatra? See
-                  <a href="docs/How-to-contribute-translation.html">
-                    this translation guide
-                  </a>
-                  .
-                </p>
-
-                <p>
-                  Are you a developer? The source code is on
-                  <a href="https://github.com/sumatrapdfreader/sumatrapdf">
-                    GitHub
-                  </a>
-                  .
-                </p>
-
-                <h2 id="spread-the-word">Spread the word</h2>
-                Help others discover SumatraPDF:
-                <ul>
-                  <li>
-                    <a
-                      href="https://twitter.com/intent/tweet?text=SumatraPDF%20by%20%40kjk%20is%20the%20best%20PDF%20reader%20on%20Windows%20Check%20it%20out%20at%20https%3A//www.sumatrapdfreader.org/"
-                      target="_blank"
-                    >
-                      Share on Twitter
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    Always prefer SumatraPDF. Loads nearly instantly.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://www.reddit.com/r/assholedesign/comments/im0rbv/installing_the_last_windows_update_resets_your/g3xkz0h/?context=3"
+                      target="_blank">
+                      u/EagleTG
                     </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://www.facebook.com/sharer/sharer.php?u=https%3A//www.sumatrapdfreader.org/"
-                      target="_blank"
-                    >
-                      Share on Facebook
+                  </div>
+                </div>
+
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    I use SumatraPDF and I love it. The reason I like it is
+                    because it allows for customization I need, remembers
+                    recent location in books and documents, it's free, and
+                    it's open source.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://twitter.com/weitzhandler/status/1299824066904444929" target="_blank">
+                      @weitzhandler
                     </a>
-                  </li>
-                  <li>
-                    <a href="https://alternativeto.net/software/sumatra-pdf/">
-                      Like on Alternative To
+                  </div>
+                </div>
+
+                <div class="testimonial" style="display: none">
+                  <p class="testimonials-text">
+                    I like SumatraPDF. Runs the circles in terms of
+                    performance around the sad piece of crap that Adobe PDF
+                    Reader has become.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=23468998" target="_blank">
+                      burntoutfire
                     </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://www.slant.co/topics/10582/viewpoints/7/~pdf-viewers-for-windows~sumatra-pdf"
-                    >
-                      Like on Slant
+                  </div>
+                </div>
+
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    +1 for SumatraPDF. Fantastic application.
+                    <br />
+                    <br />
+                    Been using it for years, ever since Foxit Reader turned
+                    into whatever it is now.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://www.reddit.com/r/degoogle/comments/iwbb21/good_pdf_reader/g5yo2fk/?context=3"
+                      target="_blank">
+                      u/Jumile
                     </a>
-                  </li>
-                </ul>
-
-                <h2 id="testimonials">Testimonials</h2>
-
-                <div class="testimonials">
-                  <div class="testimonial">
-                    <p class="testimonials-text">SumatraPDF is way better.</p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://www.reddit.com/r/assholedesign/comments/io05m4/adobe_survey_wont_let_you_use_acrobat_until_youve/g4bhk4o/"
-                        target="_blank"
-                      >
-                        u/olioster
-                      </a>
-                    </div>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      PDF readers have, over the years, managed to earn
-                      themselves something of a reputation for being slow,
-                      lumbering beasts - thanks largely to Adobe Reader. Sumatra
-                      PDF bucks the trend. It is small, svelte, lightweight and
-                      lightning fast.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://twitter.com/EnercoConseils/status/1306843886451666944"
-                        target="_blank"
-                      >
-                        @EnercoConseils
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    If your Adobe reader croaks or feels glitchy while
+                    scrolling, try Sumatra PDF instead. It will be almost like
+                    opening a plain text document. Plus you can easily
+                    highlight text.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=6465643" target="_blank">
+                      eksith
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      Always prefer SumatraPDF. Loads nearly instantly.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://www.reddit.com/r/assholedesign/comments/im0rbv/installing_the_last_windows_update_resets_your/g3xkz0h/?context=3"
-                        target="_blank"
-                      >
-                        u/EagleTG
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    I love Sumatra PDF, thank you for making it.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=3327197" target="_blank">
+                      r4vik
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      I use SumatraPDF and I love it. The reason I like it is
-                      because it allows for customization I need, remembers
-                      recent location in books and documents, it's free, and
-                      it's open source.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://twitter.com/weitzhandler/status/1299824066904444929"
-                        target="_blank"
-                      >
-                        @weitzhandler
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    I'm a big fan of SumatraPDF and use it everywhere I can.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=5595328" target="_blank">
+                      tripzilch
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial" style="display: none">
-                    <p class="testimonials-text">
-                      I like SumatraPDF. Runs the circles in terms of
-                      performance around the sad piece of crap that Adobe PDF
-                      Reader has become.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=23468998"
-                        target="_blank"
-                      >
-                        burntoutfire
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    I am pretty happy with SumatraPDF on Windows. Orders of
+                    magnitude faster than Reader too.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=5214372" target="_blank">
+                      pav3l
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      +1 for SumatraPDF. Fantastic application.
-                      <br />
-                      <br />
-                      Been using it for years, ever since Foxit Reader turned
-                      into whatever it is now.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://www.reddit.com/r/degoogle/comments/iwbb21/good_pdf_reader/g5yo2fk/?context=3"
-                        target="_blank"
-                      >
-                        u/Jumile
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">Sumatra PDF is the best.</p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=9690604" target="_blank">
+                      tehwalrus
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      If your Adobe reader croaks or feels glitchy while
-                      scrolling, try Sumatra PDF instead. It will be almost like
-                      opening a plain text document. Plus you can easily
-                      highlight text.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=6465643"
-                        target="_blank"
-                      >
-                        eksith
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    I like Sumatra PDF. It's speedy, lightweight, and gets the
+                    job done.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=9527367" target="_blank">
+                      joshuapants
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      I love Sumatra PDF, thank you for making it.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=3327197"
-                        target="_blank"
-                      >
-                        r4vik
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    I used to use Foxit, but have since turned to SumatraPDF.
+                    It seems to be a little lighter weight than Foxit.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://news.ycombinator.com/item?id=576145" target="_blank">
+                      stcredzero
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      I'm a big fan of SumatraPDF and use it everywhere I can.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=5595328"
-                        target="_blank"
-                      >
-                        tripzilch
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    SumatraPDF is one of those amazing open source programs
+                    that does everything a closed-source and/or commercial
+                    product does, but better in every way.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://twitter.com/Merjia_/status/1310790865539883008" target="_blank">
+                      @Merjia_
+                    </a>
                   </div>
+                </div>
 
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      I am pretty happy with SumatraPDF on Windows. Orders of
-                      magnitude faster than Reader too.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=5214372"
-                        target="_blank"
-                      >
-                        pav3l
-                      </a>
-                    </div>
-                  </div>
-
-                  <div class="testimonial">
-                    <p class="testimonials-text">Sumatra PDF is the best.</p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=9690604"
-                        target="_blank"
-                      >
-                        tehwalrus
-                      </a>
-                    </div>
-                  </div>
-
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      I like Sumatra PDF. It's speedy, lightweight, and gets the
-                      job done.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=9527367"
-                        target="_blank"
-                      >
-                        joshuapants
-                      </a>
-                    </div>
-                  </div>
-
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      I used to use Foxit, but have since turned to SumatraPDF.
-                      It seems to be a little lighter weight than Foxit.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://news.ycombinator.com/item?id=576145"
-                        target="_blank"
-                      >
-                        stcredzero
-                      </a>
-                    </div>
-                  </div>
-
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      SumatraPDF is one of those amazing open source programs
-                      that does everything a closed-source and/or commercial
-                      product does, but better in every way.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://twitter.com/Merjia_/status/1310790865539883008"
-                        target="_blank"
-                      >
-                        @Merjia_
-                      </a>
-                    </div>
-                  </div>
-
-                  <div class="testimonial">
-                    <p class="testimonials-text">
-                      You can customize and read about every possible document
-                      format out there with SumatraPDF, it doesn't take your
-                      resources with useless UI and that's good if we are
-                      thinking about what lightweight means.
-                    </p>
-                    <div class="testimonial-who">
-                      <a
-                        href="https://www.reddit.com/r/software/comments/j215uw/i_just_realized_that_windows_doesnt_have_a/g750ilr/?context=3"
-                        target="_blank"
-                      >
-                        u/Cerebrain
-                      </a>
-                    </div>
+                <div class="testimonial">
+                  <p class="testimonials-text">
+                    You can customize and read about every possible document
+                    format out there with SumatraPDF, it doesn't take your
+                    resources with useless UI and that's good if we are
+                    thinking about what lightweight means.
+                  </p>
+                  <div class="testimonial-who">
+                    <a href="https://www.reddit.com/r/software/comments/j215uw/i_just_realized_that_windows_doesnt_have_a/g750ilr/?context=3"
+                      target="_blank">
+                      u/Cerebrain
+                    </a>
                   </div>
                 </div>
               </div>
-            </td>
-          </tr>
-        </table>
-      </div>
+            </div>
+          </td>
+        </tr>
+      </table>
     </div>
+  </div>
 
-    <hr />
-    <center>
-      <a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a>
-    </center>
-  </body>
+  <hr />
+  <center>
+    <a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a>
+  </center>
+</body>
+
 </html>

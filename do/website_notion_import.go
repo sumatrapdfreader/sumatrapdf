@@ -335,6 +335,7 @@ func (c *HTMLConverter) GenerateHTML() []byte {
 	title := page.Title
 	s = strings.Replace(tmpl, "{{InnerHTML}}", s, 1)
 	s = strings.Replace(s, "{{Title}}", title, 1)
+	s = strings.Replace(s, `<details open="">`, `<details>`, -1)
 	d := []byte(s)
 	return d
 }
@@ -378,7 +379,7 @@ func websiteImportNotion() {
 
 	// to install prettier: npm i -g prettier
 	// TODO: automatically install if not installed
-	cmd := exec.Command("prettier", "--html-whitespace-sensitivity", "ignore", "--write", `*.html`)
+	cmd := exec.Command("prettier", "--html-whitespace-sensitivity", "strict", "--write", `*.html`)
 	cmd.Dir = "docs" // only imported pages from notion
 	u.RunCmdLoggedMust(cmd)
 
