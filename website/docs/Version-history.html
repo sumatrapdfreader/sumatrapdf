@@ -38,139 +38,127 @@
             ><h2 id="964b4736-a8b6-4e97-9213-9753503f47a5" class=""
               ><strong>Version history</strong></h2
             ><div id="8fb4a87f-0d96-4d15-8ac4-85e5be143e95" class=""></div
-            ><ul id="feb8cf60-3258-4d49-9fe4-a0ddd1f1c3a7" class="toggle"
+            ><h3 id="feb8cf60-3258-4d49-9fe4-a0ddd1f1c3a7" class=""
+              >3.3 (2021-07-06)</h3
+            ><ul id="48eda6b9-7565-4beb-92c7-ca5ceeed630c" class="bulleted-list"
+              ><li
+                >added support for adding / removing / editing annotations in
+                PDF files. Read
+                <a href="Editing-annotations.html">the tutorial</a></li
+              ><li
+                >new toolbar<ul
+                  id="9070cbff-b768-4ae2-b25f-0fb7aa006a8b"
+                  class="bulleted-list"
+                  ><li
+                    >changed toolbar to scale with DPI by using new, vector
+                    icons</li
+                  ><li>added rotate left / right to the toolbar</li
+                  ><li>new toolbar:</li></ul
+                ><img
+                  src="img/8fca17dd97ab7d21447e1175d41941e05a469a84.png" /></li
+              ><li
+                >added ability to hide scrollbar (more screen space for the
+                document). Use right-click context menu.</li
+              ><li
+                >add <code>-paperkind=${num}</code> printing option (<a
+                  href="https://github.com/sumatrapdfreader/sumatrapdf/pull/1815/commits/2104e6104ea759dc4f839c7e8be5973f5a4f0488"
+                  >checkin</a
+                >)</li
+              ></ul
+            ><div id="592536e7-4d1b-4dac-84bf-62fedf7f8674" class=""
+              >Minor improvements and bug-fixes::</div
+            ><ul id="603c3b71-2034-4b39-9e98-92931f77d8b1" class="bulleted-list"
+              ><li
+                >advanced setting to change font size in bookmarks / favorites
+                tree view e.g. <code>TreeFontSize = 12</code></li
+              ><li
+                >support newer versions of ghostscript (≥ 9.54) for opening .ps
+                files</li
+              ><li>support jpeg-xr images in .xps files</li
+              ><li>restore tooltips (regression in 3.2)</li
+              ><li>update mupdf to latest version</li
+              ><li>make silent installation always silent</li
+              ><li>don&#x27;t crash when attempting to zoom in on home page</li
+              ><li
+                >don&#x27;t show &quot;manga&quot; view menu item for documents
+                that are not comic books</li
+              ><li
+                >allow opening <code>fb2.zip</code> files (<a
+                  href="https://github.com/sumatrapdfreader/sumatrapdf/issues/1657"
+                  >#1657</a
+                >)</li
+              ><li
+                >restore ability to save embedded files (fixes
+                <a
+                  href="https://github.com/sumatrapdfreader/sumatrapdf/issues/1557"
+                  >#1557</a
+                >)</li
+              ><li><code>Alt + Space</code> opens a sys menu</li></ul
+            ><div id="62abbe99-0dd3-4e59-b27f-439c0e99168f" class=""></div
+            ><ul id="4c2cdfca-6d8b-4e4d-9e08-0158caafabe9" class="toggle"
               ><li
                 ><details
-                  ><summary>Upcoming version 3.3</summary
-                  ><div id="3070e990-e310-4429-b144-826a655621ff" class=""
-                    ><strong
-                      ><mark class="highlight-pink_background"
-                        >Note: 3.3 is not yet released
-                      </mark></strong
-                    >To test upcoming features, you can try latest
-                    <a href="https://www.sumatrapdfreader.org/dailybuilds"
-                      >daily build</a
-                    >.</div
-                  ><ul
-                    id="48eda6b9-7565-4beb-92c7-ca5ceeed630c"
-                    class="bulleted-list"
-                    ><li
-                      >added support for adding / removing / editing annotations
-                      in PDF files. Read
-                      <a href="Editing-annotations.html">the tutorial</a></li
-                    ><li
-                      >new toolbar<ul
-                        id="9070cbff-b768-4ae2-b25f-0fb7aa006a8b"
+                  ><summary><strong>3.2 (2020-03-15)</strong></summary
+                  ><div id="f4d8ffbe-5b5a-43ac-8362-fe20952e7b1b" class=""
+                    >This release upgrades the core PDF parsing and rendering
+                    library mupdf to the latest version. This fixes PDF
+                    rendering bugs and improves performance.</div
+                  ><div id="3fa16907-398e-4e99-8bae-ed3f53a8681a" class=""
+                    >Added support multiple windows with tabs:<div
+                      class="indented"
+                      ><ul
+                        id="7da6278f-7645-4268-bf4a-4850c4169985"
                         class="bulleted-list"
                         ><li
-                          >changed toolbar to scale with DPI by using new,
-                          vector icons</li
-                        ><li>added rotate left / right to the toolbar</li
-                        ><li>new toolbar:</li></ul
-                      ><img
-                        src="img/8fca17dd97ab7d21447e1175d41941e05a469a84.png" /></li
-                    ><li
-                      >added ability to hide scrollbar (more screen space for
-                      the document). Use right-click context menu.</li
-                    ><li
-                      >add <code>-paperkind=${num}</code> printing option (<a
-                        href="https://github.com/sumatrapdfreader/sumatrapdf/pull/1815/commits/2104e6104ea759dc4f839c7e8be5973f5a4f0488"
-                        >checkin</a
-                      >)</li
-                    ></ul
-                  ><div id="592536e7-4d1b-4dac-84bf-62fedf7f8674" class=""
-                    >Minor improvements and bug-fixes::</div
+                          >added
+                          <code>File / New Window</code> (<code>Ctrl-n</code>)
+                          which opens a new window</li
+                        ><li
+                          >to compare the same file side-by-side,
+                          <code>Ctrl-Shift-n</code> shortcut opens current file
+                          a new window. The same file is now opened in 2 windows
+                          that you can re-arrange as needed</li
+                        ><li
+                          ><code>-new-window</code> cmd-line option will open
+                          the document in new window</li
+                        ><li
+                          >if you hold <code>SHIFT</code> when drag&amp;dropping
+                          files from Explorer (and other apps), the file will be
+                          opened in a new window</li
+                        ></ul
+                      ></div
+                    ></div
+                  ><div id="ec0ce4b2-10f2-4c8e-8a98-aaef0170e6ed" class=""
+                    >Improved management of favorites:</div
                   ><ul
-                    id="603c3b71-2034-4b39-9e98-92931f77d8b1"
+                    id="e39c973c-f57f-48ec-be41-677c2bd4e307"
                     class="bulleted-list"
                     ><li
-                      >advanced setting to change font size in bookmarks /
-                      favorites tree view e.g.
-                      <code>TreeFontSize = 12</code></li
+                      >context menu (right mouse click) on the document area
+                      adds menu items for:<ul
+                        id="6edff52c-75f6-4ea7-8c07-01aa8b48b21b"
+                        class="bulleted-list"
+                        ><li>showing / hiding favorites view</li
+                        ><li
+                          >adding current page to favorites (or removing if
+                          already is in favorites)</li
+                        ></ul
+                      ></li
                     ><li
-                      >support newer versions of ghostscript (≥ 9.54) for
-                      opening .ps files</li
-                    ><li>support jpeg-xr images in .xps files</li
-                    ><li>restore tooltips (regression in 3.2)</li
-                    ><li>update mupdf to latest version</li
-                    ><li>make silent installation always silent</li
-                    ><li
-                      >don&#x27;t crash when attempting to zoom in on home
-                      page</li
-                    ><li
-                      >don&#x27;t show &quot;manga&quot; view menu item for
-                      documents that are not comic books</li
-                    ><li
-                      >allow opening <code>fb2.zip</code> files (<a
-                        href="https://github.com/sumatrapdfreader/sumatrapdf/issues/1657"
-                        >#1657</a
-                      >)</li
-                    ><li
-                      >restore ability to save embedded files (fixes
-                      <a
-                        href="https://github.com/sumatrapdfreader/sumatrapdf/issues/1557"
-                        >#1557</a
-                      >)</li
-                    ><li><code>Alt + Space</code> opens a sys menu</li></ul
+                      >context menu in bookmarks view adds menu item for adding
+                      selected page to favorites</li
+                    ></ul
+                  ><div id="d4344311-958e-41d5-a89f-d6521b7e8dc6" class=""
+                    >This release no longer supports Windows XP. Latest version
+                    that support XP is 3.1.2 that you can download from </div
+                  ><div id="b3004c40-924f-4ed5-bb21-595d5da708b2" class=""
+                    ><a
+                      href="https://www.sumatrapdfreader.org/download-prev.html"
+                      >https://www.sumatrapdfreader.org/download-prev.html</a
+                    ></div
                   ></details
                 ></li
               ></ul
-            ><div id="62abbe99-0dd3-4e59-b27f-439c0e99168f" class=""></div
-            ><div id="4c2cdfca-6d8b-4e4d-9e08-0158caafabe9" class=""
-              ><strong>3.2 (2020-03-15)</strong></div
-            ><div id="f4d8ffbe-5b5a-43ac-8362-fe20952e7b1b" class=""
-              >This release upgrades the core PDF parsing and rendering library
-              mupdf to the latest version. This fixes PDF rendering bugs and
-              improves performance.</div
-            ><div id="3fa16907-398e-4e99-8bae-ed3f53a8681a" class=""
-              >Added support multiple windows with tabs:<div class="indented"
-                ><ul
-                  id="7da6278f-7645-4268-bf4a-4850c4169985"
-                  class="bulleted-list"
-                  ><li
-                    >added <code>File / New Window</code> (<code>Ctrl-n</code>)
-                    which opens a new window</li
-                  ><li
-                    >to compare the same file side-by-side,
-                    <code>Ctrl-Shift-n</code> shortcut opens current file a new
-                    window. The same file is now opened in 2 windows that you
-                    can re-arrange as needed</li
-                  ><li
-                    ><code>-new-window</code> cmd-line option will open the
-                    document in new window</li
-                  ><li
-                    >if you hold <code>SHIFT</code> when drag&amp;dropping files
-                    from Explorer (and other apps), the file will be opened in a
-                    new window</li
-                  ></ul
-                ></div
-              ></div
-            ><div id="ec0ce4b2-10f2-4c8e-8a98-aaef0170e6ed" class=""
-              >Improved management of favorites:</div
-            ><ul id="e39c973c-f57f-48ec-be41-677c2bd4e307" class="bulleted-list"
-              ><li
-                >context menu (right mouse click) on the document area adds menu
-                items for:<ul
-                  id="6edff52c-75f6-4ea7-8c07-01aa8b48b21b"
-                  class="bulleted-list"
-                  ><li>showing / hiding favorites view</li
-                  ><li
-                    >adding current page to favorites (or removing if already is
-                    in favorites)</li
-                  ></ul
-                ></li
-              ><li
-                >context menu in bookmarks view adds menu item for adding
-                selected page to favorites</li
-              ></ul
-            ><div id="d4344311-958e-41d5-a89f-d6521b7e8dc6" class=""
-              >This release no longer supports Windows XP. Latest version that
-              support XP is 3.1.2 that you can download from </div
-            ><div id="b3004c40-924f-4ed5-bb21-595d5da708b2" class=""
-              ><a href="https://www.sumatrapdfreader.org/download-prev.html"
-                >https://www.sumatrapdfreader.org/download-prev.html</a
-              ></div
-            ><div id="c1c2da61-d7ee-4a89-a80c-8b4a3b135be8" class=""></div
             ><ul id="24dadf74-07f0-4d6e-af50-05f43399cd3f" class="toggle"
               ><li
                 ><details

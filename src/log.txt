@@ -4,6 +4,8 @@ A daily log of changes and commentary. An experiment of sorts.
 
 don't ask to save unsaved annotations in stress testing
 
+sign when building locally
+
 2021-06-29 Tue
 
 simplify GetPaperFormat()
@@ -57,7 +59,7 @@ in annotations editor, add explicit button for saving to a new PDF instead of ct
 
 make default annotation color yellow (0xffffff00) so it matches value in gColorsValues
 
-add context menu Select annotation when cursor over annotation and edit annotation window is visible (replaces Edit annotations menu) (for #1992)
+add context menuï¿½Select annotationï¿½when cursor over annotation and edit annotation window is visible (replacesï¿½Edit annotationsï¿½menu) (for #1992)
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1992
 
 fix DefaultAppearanceTextColor() (for #1974)
