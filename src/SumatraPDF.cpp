@@ -2424,6 +2424,11 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
         return;
     }
     EngineBase* engine = dm->GetEngine();
+    // shouldn't really happen but did happen.
+    // don't block stress testing if opening a document flags it hasving unsaved annotations
+    if (IsStressTesting()) {
+        return;
+    }
     bool shouldConfirm = EngineHasUnsavedAnnotations(engine);
     if (!shouldConfirm) {
         return;
