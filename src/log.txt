@@ -6,6 +6,8 @@ don't ask to save unsaved annotations in stress testing
 
 sign when building locally
 
+make 3.3 release
+
 2021-06-29 Tue
 
 simplify GetPaperFormat()
