@@ -27,13 +27,30 @@ static void fz_premultiply_row(fz_context *ctx, int n, int c, int w, unsigned ch
 	for (; w > 0; w--)
 	{
 		a = s[n1];
-		for (k = 0; k < c; k++)
-			s[k] = fz_mul255(s[k], a);
+		if (a == 0)
+			memset(s, 0, c);
+		else if (a != 255)
+			for (k = 0; k < c; k++)
+				s[k] = fz_mul255(s[k], a);
 		s += n;
 	}
 }
 
-static void fz_unmultiply_row(fz_context *ctx, int n, int c, int w, unsigned char *s, const unsigned char *in)
+static void fz_premultiply_row_0or1(fz_context *ctx, int n, int c, int w, unsigned char *s)
+{
+	unsigned char a;
+	int n1 = n-1;
+	for (; w > 0; w--)
+	{
+		a = s[n1];
+		if (a == 0)
+			memset(s, 0, c);
+		s += n;
+	}
+}
+
+/* Returns 0 for all the alphas being 0, 1 for them being 0 or 255, 2 otherwise. */
+static int fz_unmultiply_row(fz_context *ctx, int n, int c, int w, unsigned char *s, const unsigned char *in)
 {
 	int a, inva;
 	int k;
@@ -41,15 +58,62 @@ static void fz_unmultiply_row(fz_context *ctx, int n, int c, int w, unsigned cha
 	for (; w > 0; w--)
 	{
 		a = in[n1];
-		inva = a ? 255 * 256 / a : 0;
+		if (a != 0)
+			goto nonzero;
 		for (k = 0; k < c; k++)
-			s[k] = (in[k] * inva) >> 8;
+			s[k] = 0;
 		for (;k < n1; k++)
 			s[k] = in[k];
-		s[n1] = a;
+		s[n1] = 0;
 		s += n;
 		in += n;
 	}
+	return 0;
+	for (; w > 0; w--)
+	{
+		a = in[n1];
+nonzero:
+		if (a != 0 && a != 255)
+			goto varying;
+		k = 0;
+		if (a == 0)
+			for (; k < c; k++)
+				s[k] = 0;
+		for (;k < n; k++)
+			s[k] = in[k];
+		s += n;
+		in += n;
+	}
+	return 1;
+	for (; w > 0; w--)
+	{
+		a = in[n1];
+varying:
+		if (a == 0)
+		{
+			for (k = 0; k < c; k++)
+				s[k] = 0;
+			for (;k < n1; k++)
+				s[k] = in[k];
+			s[k] = 0;
+		}
+		else if (a == 255)
+		{
+			memcpy(s, in, n);
+		}
+		else
+		{
+			inva = 255 * 256 / a;
+			for (k = 0; k < c; k++)
+				s[k] = (in[k] * inva) >> 8;
+			for (;k < n1; k++)
+				s[k] = in[k];
+			s[n1] = a;
+		}
+		s += n;
+		in += n;
+	}
+	return 2;
 }
 
 struct fz_icc_link
@@ -386,9 +450,21 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 		buffer = fz_malloc(ctx, ss);
 		for (; h > 0; h--)
 		{
-			fz_unmultiply_row(ctx, sn, sc, sw, buffer, inputpos);
-			cmsDoTransform(GLO link->handle, buffer, outputpos, sw);
-			fz_premultiply_row(ctx, dn, dc, dw, outputpos);
+			int mult = fz_unmultiply_row(ctx, sn, sc, sw, buffer, inputpos);
+			if (mult == 0)
+			{
+				/* Solid transparent row. No point in doing the transform
+				 * because it will premultiplied back to 0. */
+				memset(outputpos, 0, ds);
+			}
+			else
+			{
+				cmsDoTransform(GLO link->handle, buffer, outputpos, sw);
+				if (mult == 1)
+					fz_premultiply_row_0or1(ctx, dn, dc, dw, outputpos);
+				else if (mult == 2)
+					fz_premultiply_row(ctx, dn, dc, dw, outputpos);
+			}
 			inputpos += ss;
 			outputpos += ds;
 		}

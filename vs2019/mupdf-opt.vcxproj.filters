@@ -37,6 +37,9 @@
     <Filter Include="mupdf\source\pdf">
       <UniqueIdentifier>{2ACCAEFC-16C5-CD4E-3FF7-B2D32B4FAD5A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mupdf\source\reflow">
+      <UniqueIdentifier>{DF97A05A-4BF9-7D68-D466-C41A40C7B427}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mupdf\source\svg">
       <UniqueIdentifier>{40DBAEFC-2CD4-CD4E-5506-B3D3415EAD5A}</UniqueIdentifier>
     </Filter>
@@ -829,6 +832,9 @@
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c">
       <Filter>mupdf\source\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\reflow\reflow-doc.c">
+      <Filter>mupdf\source\reflow</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\svg\svg-color.c">
       <Filter>mupdf\source\svg</Filter>

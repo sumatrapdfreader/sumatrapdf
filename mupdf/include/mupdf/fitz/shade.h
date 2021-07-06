@@ -107,6 +107,10 @@ void fz_drop_shade(fz_context *ctx, fz_shade *shade);
 */
 fz_rect fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm);
 
+typedef struct fz_shade_color_cache fz_shade_color_cache;
+
+void fz_drop_shade_color_cache(fz_context *ctx, fz_shade_color_cache *cache);
+
 /**
 	Render a shade to a given pixmap.
 
@@ -126,7 +130,7 @@ fz_rect fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm);
 
 	op: NULL, or pointer to overprint bitmap.
 */
-void fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *override_cs, fz_matrix ctm, fz_pixmap *dest, fz_color_params color_params, fz_irect bbox, const fz_overprint *eop);
+void fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *override_cs, fz_matrix ctm, fz_pixmap *dest, fz_color_params color_params, fz_irect bbox, const fz_overprint *eop, fz_shade_color_cache **cache);
 
 /**
  *	Handy routine for processing mesh based shades

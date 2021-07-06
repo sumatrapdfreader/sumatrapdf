@@ -814,6 +814,9 @@ function mupdf_files()
     "xps-util.c",
     "xps-zip.c",
   })
+  files_in_dir("mupdf/source/reflow", {
+    "*.c",
+  })
   files {
     "mupdf/include/mupdf/fitz/*.h",
     "mupdf/include/mupdf/helpers/*.h",

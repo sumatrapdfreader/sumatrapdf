@@ -310,6 +310,22 @@ fz_new_stext_page_from_page_number(fz_context *ctx, fz_document *doc, int number
 	return text;
 }
 
+fz_stext_page *
+fz_new_stext_page_from_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int number, const fz_stext_options *options)
+{
+	fz_page *page;
+	fz_stext_page *text = NULL;
+
+	page = fz_load_chapter_page(ctx, doc, chapter, number);
+	fz_try(ctx)
+		text = fz_new_stext_page_from_page(ctx, page, options);
+	fz_always(ctx)
+		fz_drop_page(ctx, page);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return text;
+}
+
 int
 fz_search_display_list(fz_context *ctx, fz_display_list *list, const char *needle, fz_quad *hit_bbox, int hit_max)
 {

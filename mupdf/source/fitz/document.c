@@ -526,8 +526,9 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 	for (page = doc->open; page; page = page->next)
 		if (page->chapter == chapter && page->number == number)
 		{
+			fz_keep_page_locked(ctx, page);
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			return fz_keep_page(ctx, page);
+			return page;
 		}
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 
@@ -644,6 +645,12 @@ fz_page *
 fz_keep_page(fz_context *ctx, fz_page *page)
 {
 	return fz_keep_imp(ctx, page, &page->refs);
+}
+
+fz_page *
+fz_keep_page_locked(fz_context *ctx, fz_page *page)
+{
+	return fz_keep_imp_locked(ctx, page, &page->refs);
 }
 
 void

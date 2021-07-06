@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="cbz">
@@ -30,6 +30,9 @@
     </Filter>
     <Filter Include="generated">
       <UniqueIdentifier>{376c56db-6c04-4f4a-89a8-f63263ea9eb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="reflow">
+      <UniqueIdentifier>{638fa42b-87ba-4063-aace-fb0f14253521}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -605,6 +608,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\fitz\output-pdfocr.c">
       <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\reflow\reflow-doc.c">
+      <Filter>reflow</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

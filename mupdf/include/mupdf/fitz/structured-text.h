@@ -8,6 +8,7 @@
 #include "mupdf/fitz/image.h"
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/device.h"
+#include "mupdf/fitz/document.h"
 
 /**
 	Simple text layout (for use with annotation editing primarily).
@@ -328,5 +329,8 @@ fz_device *fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_st
 */
 fz_device *fz_new_ocr_device(fz_context *ctx, fz_device *target, fz_matrix ctm, fz_rect mediabox, int with_list, const char *language,
 			int (*progress)(fz_context *, void *, int), void *progress_arg);
+
+fz_document *fz_open_reflowed_document(fz_context *ctx, fz_document *underdoc, const fz_stext_options *opts);
+
 
 #endif

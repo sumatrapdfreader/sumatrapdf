@@ -219,6 +219,10 @@ fz_font *load_droid_fallback_font(fz_context *ctx, int script, int language, int
 	case UCDN_SCRIPT_NANDINAGARI: return load_noto_try(ctx, "Nandinagari");
 	case UCDN_SCRIPT_NYIAKENG_PUACHUE_HMONG: return load_noto_try(ctx, "NyiakengPuachueHmong");
 	case UCDN_SCRIPT_WANCHO: return load_noto_try(ctx, "Wancho");
+	case UCDN_SCRIPT_CHORASMIAN: return load_noto_try(ctx, "Chorasmian");
+	case UCDN_SCRIPT_DIVES_AKURU: return load_noto_try(ctx, "DivesAkuru");
+	case UCDN_SCRIPT_KHITAN_SMALL_SCRIPT: return load_noto_try(ctx, "KhitanSmallScript");
+	case UCDN_SCRIPT_YEZIDI: return load_noto_try(ctx, "Yezidi");
 	}
 	return NULL;
 }

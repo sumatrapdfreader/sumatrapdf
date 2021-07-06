@@ -204,7 +204,7 @@ int page_contents_changed = 0;
 int page_annots_changed = 0;
 
 static fz_output *trace_file = NULL;
-static char *reflow_options = 0;
+static char *reflow_options = NULL;
 static int isfullscreen = 0;
 static int showoutline = 0;
 static int showundo = 0;
@@ -1721,9 +1721,7 @@ static void reflow_document(void)
 
 	fz_parse_stext_options(ctx, &opts, reflow_options);
 
-	printf("Converting document to XHTML...\n");
-
-	new_doc = fz_new_xhtml_document_from_document(ctx, doc, &opts);
+	new_doc = fz_open_reflowed_document(ctx, doc, &opts);
 	fz_drop_document(ctx, doc);
 	doc = new_doc;
 	pdf = NULL;

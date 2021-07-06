@@ -56,6 +56,7 @@ typedef struct fz_draw_device
 	fz_draw_state *stack;
 	int stack_cap;
 	fz_draw_state init_stack[STACK_SIZE];
+	fz_shade_color_cache *shade_cache;
 } fz_draw_device;
 
 #ifdef DUMP_GROUP_BLENDS
@@ -1524,7 +1525,7 @@ fz_draw_fill_shade(fz_context *ctx, fz_device *devp, fz_shade *shade, fz_matrix 
 		else
 			eop = NULL;
 
-		fz_paint_shade(ctx, shade, colorspace, ctm, dest, color_params, bbox, eop);
+		fz_paint_shade(ctx, shade, colorspace, ctm, dest, color_params, bbox, eop, &dev->shade_cache);
 		if (shape)
 			fz_clear_pixmap_rect_with_value(ctx, shape, 255, bbox);
 		if (group_alpha)
@@ -2938,6 +2939,7 @@ fz_draw_drop_device(fz_context *ctx, fz_device *devp)
 	fz_drop_scale_cache(ctx, dev->cache_x);
 	fz_drop_scale_cache(ctx, dev->cache_y);
 	fz_drop_rasterizer(ctx, rast);
+	fz_drop_shade_color_cache(ctx, dev->shade_cache);
 }
 
 static fz_device *

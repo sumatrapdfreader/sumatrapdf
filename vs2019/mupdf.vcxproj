@@ -689,6 +689,7 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-write.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xobject.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c" />
+    <ClCompile Include="..\mupdf\source\reflow\reflow-doc.c" />
     <ClCompile Include="..\mupdf\source\svg\svg-color.c" />
     <ClCompile Include="..\mupdf\source\svg\svg-doc.c" />
     <ClCompile Include="..\mupdf\source\svg\svg-parse.c" />

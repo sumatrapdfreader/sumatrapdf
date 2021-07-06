@@ -630,6 +630,21 @@ fz_keep_imp(fz_context *ctx, void *p, int *refs)
 }
 
 static inline void *
+fz_keep_imp_locked(fz_context *ctx, void *p, int *refs)
+{
+	if (p)
+	{
+		(void)Memento_checkIntPointerOrNull(refs);
+		if (*refs > 0)
+		{
+			(void)Memento_takeRef(p);
+			++*refs;
+		}
+	}
+	return p;
+}
+
+static inline void *
 fz_keep_imp8(fz_context *ctx, void *p, int8_t *refs)
 {
 	if (p)
