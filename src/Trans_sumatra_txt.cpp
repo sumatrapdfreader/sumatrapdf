@@ -4782,7 +4782,7 @@ const char * gTranslations_kw =
   "&Mos dhe\0"\
   "&Mos dhe folen:\0"\
   "&Gweres\0"\
-  "\0"\
+  "&Ughboyntya\ta\0"\
   "Diwettha folen\tEnd\0"\
   "&Brasheans:\0"\
   "&Kowethlyver\0"\
@@ -5018,7 +5018,7 @@ const char * gTranslations_kw =
   "Gortos, mar pleg - ow rendra...\0"\
   "Lieslinen\0"\
   "Liestuek\0"\
-  "\0"\
+  "Tardhans: %d 0 R\0"\
   "Skrivennow Postscript\0"\
   "Pr&esentyans\tF5\0"\
   "Folen kyns\0"\
@@ -5031,7 +5031,7 @@ const char * gTranslations_kw =
   "Ow pryntya folen %d a %d...\0"\
   "Kaletter ow pryntya\0"\
   "Dashe&nwel...\tF2\0"\
-  "\0"\
+  "Hirbedrek: x=%d y=%d dx=%d dy=%d\0"\
   "Redaktya\0"\
   "Kovhe restrennow ygerys\0"\
   "Removya Tra\0"\
@@ -5047,11 +5047,11 @@ const char * gTranslations_kw =
   "Gwitha S&kochfordh\tCtrl+Shift+S\0"\
   "Gwitha chanjyow dhe PDF nowydh\0"\
   "Gwitha chanjyow dhe PDF A-Lemmyn\0"\
-  "\0"\
-  "\0"\
+  "Notenyansow gwithys dhe '%s'\0"\
+  "Gwitha '%s' re fyllis gans: '%s'\0"\
   "Ow hwilas %d a %d...\0"\
   "Dewis &Oll\0"\
-  "Dewis &Oll|tCtrl+A\0"\
+  "Dewis &Oll\tCtrl+A\0"\
   "Dewis Notenyans y'n Wolegell\0"\
   "Dewis dalgh gans Ctrl+boton-logosen kledh\0"\
   "Dewis an restren le may fynnydh lea SumatraPDF:\0"\
@@ -5113,8 +5113,8 @@ const char * gTranslations_kw =
   "Gwarnyans\0"\
   "Skrivennow XPS\0"\
   "Yma'n versyon nowyttha genes.\0"\
-  "\0"\
-  "\0"\
+  "Yma notenyansow anwithys dhis\0"\
+  "Yma notenyansow anwithys dhis. A vynnydh aga gwitha?\0"\
   "Yma versyon %s genes\0"\
   "Zoumya\0"\
   "Zoumya a-bervedh\0"\
