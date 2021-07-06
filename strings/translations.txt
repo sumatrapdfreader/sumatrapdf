@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9d6f6eeb000fa908de3c25b5346772760ce3570a
+ae49cafc4c1ce44e934d9a010c0082c7b168a807
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -437,6 +437,7 @@ vn:Xem dạng sách\tCtrl+8
 am:&Ստեղն
 bn:&Caret
 cn:&插入符
+kw:&Karet
 lv:&Norāde
 nl:&Merkteken
 pl:&Kareta
@@ -1115,6 +1116,7 @@ vn:Vừa trang in
 :&Free Text
 am:&Ազատ գրվածք
 cn:&自由文本
+kw:&Tekst Rydh
 lv:&Brīvs teksts
 nl:&Vrije Tekst
 pl:&Dowolny tekst
@@ -3080,17 +3082,20 @@ uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
 :&Stamp
 cn:&图章
+kw:&Stampa
 lv:&Zīmogs
 nl:&Stempel
 pl:Pie&częć
 :&Strike Out
 cn:&删除线
+kw:&Treuslinya
 lv:&Izsvītrot
 nl:&Doorhalen
 pl:&Skreślenie
 :&Text
 az:Mə&tn
 cn:&文本
+kw:&Tekst
 lv:&Teksts
 nl:&Tekst
 pl:&Tekst
@@ -3153,6 +3158,7 @@ uk:&Тема
 vn:&Chủ đề
 :&Underline
 cn:&下划线
+kw:&Islinya
 lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
@@ -4683,6 +4689,7 @@ az:Müəllif: %s
 bn:গ্রন্থকার: %s
 cn:作者: %s
 es:Autora: %s
+kw:Skrifer: %s
 lv:Autors: %s
 nl:Auteur: %s
 pl:Autor: %s
@@ -4829,6 +4836,7 @@ am:Խորքի գույնը.
 bn:পটভূমির রং:
 cn:背景色:
 es:Color de fondo
+kw:Liw Kilva:
 lv:Fona krāsa:
 nl:Achtergrond Kleur
 pl:Kolor tła:
@@ -5101,6 +5109,7 @@ vn:Chỉ dấu sách
 am:Եզրագիծ. %d
 bn:সীমানা: %d
 cn:边框: %d
+kw:Amal: %d
 lv:Apmale: %d
 nl:Rand %d
 pl:Obramowanie: %d
@@ -5817,6 +5826,7 @@ az:Rəng:
 bn:রং:
 cn:颜色:
 es:Color:
+kw:Liw:
 lv:Krāsa:
 nl:Kleur
 pl:Kolor:
@@ -5955,6 +5965,7 @@ vn:Tính tương thích
 am:Բովանդակություններ.
 az:Məzmun:
 bn:বিষয়:
+kw:Dalghow:
 lv:Saturs:
 nl:Inhoud
 pl:Zawartość:
@@ -7229,6 +7240,7 @@ vn:Không thể ghi %s vào đĩa
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
 cn:创建注释 (从所选内容)
+kw:Gwruthyl Notenyans a'th Tewis
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
@@ -7236,6 +7248,7 @@ pl:Utwórz adnotację z zaznaczenia
 am:Ստգեղծել ծանոթագրություն նշորդի ներքո
 bn:Cursor এর নিচে টীকা লিখুন
 cn:创建注释 (在光标下)
+kw:Gwruthyl Notenyans Yn-Dann Resor
 lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
 pl:Utwórz adnotację pod kursorem
@@ -7624,6 +7637,7 @@ az:Tarix:
 bn:তারিখ:
 cn:日期:
 es:Fetcha:
+kw:Dedhyas:
 lv:Datums:
 nl:Datum:
 pl:Data:
@@ -7891,6 +7905,7 @@ vn:Các quyền bị từ chối
 am:Մերժել
 bn:বাতিল করুন
 cn:丢弃
+kw:Hepkor
 lv:Atmest
 nl:Verwijderen
 pl:Odrzuć
@@ -11270,6 +11285,7 @@ vn:Gợi ý: Nhấn phím F3 để tìm lại
 am:Պատկերակ.
 bn:আইকন
 cn:图标:
+kw:Ikon:
 lv:Ikona:
 nl:Pictogram:
 pl:Ikona:
@@ -11642,6 +11658,7 @@ uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Interior Color:
 am:Ներքին գույնը.
+kw:Liw A-Bervedh:
 lv:Iekšējā krāsa:
 nl:Interieur Kleur
 pl:Kolor wnętrza:
@@ -11925,6 +11942,7 @@ tw:線條
 am:Տողի ավարտը.
 bn:লাইন শেষ:
 es:Fin de Línea:
+kw:Diwedh Linen:
 nl:Lijn Eind
 pl:Koniec linii:
 ru:Конец линии:
@@ -11932,6 +11950,7 @@ ru:Конец линии:
 am:Տողի մեկնարկը.
 bn:লাইন শুরু:
 es:Inicio de Línea:
+kw:Dalleth Linen:
 nl:Lijn Begin
 pl:Początek linii:
 ru:Начало линии:
@@ -13012,6 +13031,7 @@ am:Մգություն.
 bn:অস্বচ্ছতা:
 cn:透明度:
 es:Opacidad:
+kw:Disklerder:
 lv:Necaurspīdīgums:
 nl:Dekking
 pl:Nieprzezroczystość:
@@ -13020,6 +13040,7 @@ am:Մգություն. %d
 bn:অস্বচ্ছতা: %d
 cn:透明度: %d
 es:Opacidad: %d
+kw:Disklerder: %d
 lv:Necaurspīdīgums: %d
 nl:Dekking: %d
 pl:Nieprzezroczystość: %d
@@ -15881,6 +15902,7 @@ vn:Quay phải\tCtrl+Shift++
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
+kw:I&gam-ogam
 lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
@@ -16079,6 +16101,7 @@ vn:Lưu lối tắt...\tCtrl+Shift+S
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
 cn:保存更改到新的PDF
+kw:Gwitha chanjyow dhe PDF nowydh
 lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
@@ -16086,6 +16109,7 @@ ru:Сохранить изменения в новый PDF
 :Save changes to existing PDF
 az:Dəyişiklikləri mövcud PDF-ə yaz
 cn:保存更改到现有PDf
+kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
@@ -16294,6 +16318,7 @@ uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
 cn:在编辑器中选择注释
+kw:Dewis Notenyans y'n Wolegell
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
@@ -18279,6 +18304,7 @@ uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text Alignment:
 cn:文本对齐:
+kw:Alinyans Tekst:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
@@ -18288,6 +18314,7 @@ az:Mətnin rəngi:
 bn:লেখার রং:
 cn:文本颜色:
 es:Color de Texto:
+kw:Liw Tekst:
 lv:Teksta krāsa:
 nl:Tekst Kleur
 pl:Kolor tekstu:
@@ -18297,6 +18324,7 @@ az:Mətnin ölçüsü:
 bn:লেখার আকার:
 cn:文本大小:
 es:Tamaño de Texto
+kw:Braster Tekst:
 lv:Teksta lielums:
 nl:Tekst Grootte:
 pl:Rozmiar tekstu:
@@ -18305,6 +18333,7 @@ ru:Размер текста:
 bn:লেখার আকার: %d
 cn:文本大小: %d
 es:Tamaño de Texto: %d
+kw:Braster Tekst: %d
 lv:Teksta lielums: %d
 nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
@@ -18963,6 +18992,7 @@ vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 cn:未保存的注释
 es:Anotaciones no guardadas
+kw:Notenyansow anwithys
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
