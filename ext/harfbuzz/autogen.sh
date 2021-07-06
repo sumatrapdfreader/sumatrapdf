@@ -7,24 +7,24 @@ test -n "$srcdir" || srcdir=.
 olddir=`pwd`
 cd $srcdir
 
-#echo -n "checking for ragel... "
+#printf "checking for ragel... "
 #which ragel || {
 #	echo "You need to install ragel... See http://www.complang.org/ragel/"
 #	exit 1
 #}
 
-echo -n "checking for pkg-config... "
+printf "checking for pkg-config... "
 which pkg-config || {
 	echo "*** No pkg-config found, please install it ***"
 	exit 1
 }
 
-echo -n "checking for libtoolize... "
+printf "checking for libtoolize... "
 which glibtoolize || which libtoolize || {
 	echo "*** No libtoolize (libtool) found, please install it ***"
 	exit 1
 }
-echo -n "checking for gtkdocize... "
+printf "checking for gtkdocize... "
 if which gtkdocize ; then
 	gtkdocize --copy || exit 1
 else
@@ -32,7 +32,7 @@ else
 	echo "EXTRA_DIST = " > gtk-doc.make
 fi
 
-echo -n "checking for autoreconf... "
+printf "checking for autoreconf... "
 which autoreconf || {
 	echo "*** No autoreconf (autoconf) found, please install it ***"
 	exit 1

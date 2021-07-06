@@ -301,7 +301,7 @@ position_mark (const hb_ot_shape_plan_t *plan HB_UNUSED,
       /* Don't shift down "above" marks too much. */
       if ((y_gap > 0) != (pos.y_offset > 0))
       {
-	unsigned int correction = -pos.y_offset / 2;
+	int correction = -pos.y_offset / 2;
 	base_extents.y_bearing += correction;
 	base_extents.height -= correction;
 	pos.y_offset += correction;
@@ -422,12 +422,12 @@ position_cluster (const hb_ot_shape_plan_t *plan,
   /* Find the base glyph */
   hb_glyph_info_t *info = buffer->info;
   for (unsigned int i = start; i < end; i++)
-    if (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&info[i])))
+    if (!_hb_glyph_info_is_unicode_mark (&info[i]))
     {
       /* Find mark glyphs */
       unsigned int j;
       for (j = i + 1; j < end; j++)
-	if (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&info[j])))
+	if (!_hb_glyph_info_is_unicode_mark (&info[j]))
 	  break;
 
       position_around_base (plan, font, buffer, i, j, adjust_offsets_when_zeroing);
@@ -452,7 +452,7 @@ _hb_ot_shape_fallback_mark_position (const hb_ot_shape_plan_t *plan,
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
   for (unsigned int i = 1; i < count; i++)
-    if (likely (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&info[i])))) {
+    if (likely (!_hb_glyph_info_is_unicode_mark (&info[i]))) {
       position_cluster (plan, font, buffer, start, i, adjust_offsets_when_zeroing);
       start = i;
     }

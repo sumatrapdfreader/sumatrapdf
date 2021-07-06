@@ -334,7 +334,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
     {
       unsigned int end;
       for (end = buffer->idx + 1; end < count; end++)
-	if (unlikely (HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->info[end]))))
+	if (unlikely (_hb_glyph_info_is_unicode_mark (&buffer->info[end])))
 	  break;
 
       if (end < count)
@@ -360,7 +360,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
 
       /* Find all the marks now. */
       for (end = buffer->idx + 1; end < count; end++)
-	if (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->info[end])))
+	if (!_hb_glyph_info_is_unicode_mark(&buffer->info[end]))
 	  break;
 
       /* idx to end is one non-simple cluster. */
@@ -373,7 +373,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
 
   /* Second round, reorder (inplace) */
 
-  if (!all_simple)
+  if (!all_simple && buffer->message(font, "start reorder"))
   {
     count = buffer->len;
     for (unsigned int i = 0; i < count; i++)
@@ -399,6 +399,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
 
       i = end;
     }
+    (void) buffer->message(font, "end reorder");
   }
   if (buffer->scratch_flags & HB_BUFFER_SCRATCH_FLAG_HAS_CGJ)
   {
@@ -408,7 +409,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
      */
     for (unsigned int i = 1; i + 1 < buffer->len; i++)
       if (buffer->info[i].codepoint == 0x034Fu/*CGJ*/ &&
-	  info_cc(buffer->info[i-1]) <= info_cc(buffer->info[i+1]))
+	  (info_cc(buffer->info[i+1]) == 0 || info_cc(buffer->info[i-1]) <= info_cc(buffer->info[i+1])))
       {
 	_hb_glyph_info_unhide (&buffer->info[i]);
       }
@@ -435,7 +436,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
 	   * This is both an optimization to avoid trying to compose every two neighboring
 	   * glyphs in most scripts AND a desired feature for Hangul.  Apparently Hangul
 	   * fonts are not designed to mix-and-match pre-composed syllables and Jamo. */
-	  HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->cur())))
+	  _hb_glyph_info_is_unicode_mark(&buffer->cur()))
       {
 	if (/* If there's anything between the starter and this char, they should have CCC
 	     * smaller than this character's. */

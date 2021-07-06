@@ -228,8 +228,6 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
   map->enable_feature (HB_TAG('c','a','l','t'), F_MANUAL_ZWJ);
   map->add_gsub_pause (nullptr);
 
-  /* And undo here. */
-
   /* The spec includes 'cswh'.  Earlier versions of Windows
    * used to enable this by default, but testing suggests
    * that Windows 8 and later do not enable it by default,
@@ -271,7 +269,7 @@ data_create_arabic (const hb_ot_shape_plan_t *plan)
     arabic_plan->mask_array[i] = plan->map.get_1_mask (arabic_features[i]);
     arabic_plan->do_fallback = arabic_plan->do_fallback &&
 			       (FEATURE_IS_SYRIAC (arabic_features[i]) ||
-			        plan->map.needs_fallback (arabic_features[i]));
+				plan->map.needs_fallback (arabic_features[i]));
   }
 
   return arabic_plan;
@@ -292,7 +290,7 @@ arabic_joining (hb_buffer_t *buffer)
 {
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
-  unsigned int prev = (unsigned int) -1, state = 0;
+  unsigned int prev = UINT_MAX, state = 0;
 
   /* Check pre-context */
   for (unsigned int i = 0; i < buffer->context_len[0]; i++)
@@ -318,7 +316,7 @@ arabic_joining (hb_buffer_t *buffer)
 
     const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
 
-    if (entry->prev_action != NONE && prev != (unsigned int) -1)
+    if (entry->prev_action != NONE && prev != UINT_MAX)
     {
       info[prev].arabic_shaping_action() = entry->prev_action;
       buffer->unsafe_to_break (prev, i + 1);
@@ -338,7 +336,7 @@ arabic_joining (hb_buffer_t *buffer)
       continue;
 
     const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
-    if (entry->prev_action != NONE && prev != (unsigned int) -1)
+    if (entry->prev_action != NONE && prev != UINT_MAX)
       info[prev].arabic_shaping_action() = entry->prev_action;
     break;
   }
@@ -604,7 +602,7 @@ postprocess_glyphs_arabic (const hb_ot_shape_plan_t *plan,
   HB_BUFFER_DEALLOCATE_VAR (buffer, arabic_shaping_action);
 }
 
-/* http://www.unicode.org/reports/tr53/ */
+/* https://www.unicode.org/reports/tr53/ */
 
 static hb_codepoint_t
 modifier_combining_marks[] =

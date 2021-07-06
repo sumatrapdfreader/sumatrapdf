@@ -40,17 +40,25 @@ view_cairo_t::render (const font_options_t *font_opts)
   int y_sign = font_opts->font_size_y < 0 ? -1 : +1;
 
   hb_font_t *font = font_opts->get_font();
-  hb_font_extents_t extents;
-  hb_font_get_extents_for_direction (font, direction, &extents);
 
-  double ascent = y_sign * scalbn ((double) extents.ascender, scale_bits);
-  double descent = y_sign * -scalbn ((double) extents.descender, scale_bits);
-  double font_height = y_sign * scalbn ((double) extents.ascender - extents.descender + extents.line_gap, scale_bits);
-  double leading = font_height + view_options.line_space;
+  view_options_t::font_extents_t extents = view_options.font_extents;
+  if (!view_options.have_font_extents)
+  {
+    hb_font_extents_t hb_extents;
+    hb_font_get_extents_for_direction (font, direction, &hb_extents);
+    extents.ascent = scalbn ((double) hb_extents.ascender, scale_bits);
+    extents.descent = -scalbn ((double) hb_extents.descender, scale_bits);
+    extents.line_gap = scalbn ((double) hb_extents.line_gap, scale_bits);
+  }
+
+  double ascent = y_sign * extents.ascent;
+  double descent = y_sign * extents.descent;
+  double line_gap = y_sign * extents.line_gap + view_options.line_space;
+  double leading = ascent + descent + line_gap;
 
   /* Calculate surface size. */
   double w = 0, h = 0;
-  (vertical ? w : h) = (int) lines->len * leading - view_options.line_space;
+  (vertical ? w : h) = (int) lines->len * leading - (extents.line_gap + view_options.line_space);
   (vertical ? h : w) = 0;
   for (unsigned int i = 0; i < lines->len; i++) {
     helper_cairo_line_t &line = g_array_index (lines, helper_cairo_line_t, i);
@@ -79,8 +87,7 @@ view_cairo_t::render (const font_options_t *font_opts)
   cairo_translate (cr, view_options.margin.l, view_options.margin.t);
   if (vertical)
     cairo_translate (cr,
-		     w /* We stack lines right to left */
-		     -font_height * .5 /* "ascent" for vertical */,
+		     w - ascent, /* We currently always stack lines right to left */
 		     y_sign < 0 ? h : 0);
   else
    {

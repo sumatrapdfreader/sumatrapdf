@@ -37,9 +37,9 @@ struct hb_ot_shape_plan_key_t
 {
   unsigned int variations_index[2];
 
-  void init (hb_face_t   *face,
-		    const int   *coords,
-		    unsigned int num_coords)
+  void init (hb_face_t *face,
+	     const int *coords,
+	     unsigned   num_coords)
   {
     for (unsigned int table_index = 0; table_index < 2; table_index++)
       hb_ot_layout_table_find_feature_variations (face,
@@ -99,6 +99,7 @@ struct hb_ot_shape_plan_t
 #else
   static constexpr bool has_frac = false;
 #endif
+  bool has_vert : 1;
   bool has_gpos_mark : 1;
   bool zero_marks : 1;
   bool fallback_glyph_classes : 1;

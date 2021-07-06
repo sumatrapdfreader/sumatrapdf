@@ -1,0 +1,54 @@
+name: linux-ci
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install dependencies
+      run: sudo apt-get install pkg-config gcc ragel gcovr gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python3 python3-setuptools ninja-build gobject-introspection libgirepository1.0-dev
+    - run: sudo pip3 install fonttools
+    - run: sudo pip3 install git+https://github.com/mesonbuild/meson
+    - name: run
+      run: meson build -Db_coverage=true --auto-features=enabled -Dgraphite=enabled -Doptimization=2
+    - name: ci
+      run: meson test --print-errorlogs -Cbuild
+
+    - name: generate documentations
+      run: ninja -Cbuild harfbuzz-doc
+    - name: deploy documentations
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      run: .ci/deploy-docs.sh
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        REVISION: ${{ github.sha }}
+
+    # waiting for https://github.com/rhysd/github-action-benchmark/issues/36 to happen
+    # - name: benchmark
+    #   run: build/perf/perf --benchmark_format=json > perf/result.json
+    # - name: store benchmark result
+    #   uses: rhysd/github-action-benchmark@b2ee598
+    #   if: github.event_name != 'pull_request'
+    #   with:
+    #     name: C++ Benchmark
+    #     tool: 'googlecpp'
+    #     output-file-path: perf/result.json
+    #     gh-pages-branch: gh-pages
+    #     github-token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+    #     auto-push: true
+    #     alert-threshold: '150%'
+    #     comment-on-alert: true
+    #     fail-on-alert: true
+
+    - name: cov
+      run: ninja -Cbuild coverage
+    - uses: codecov/codecov-action@v1
+      with:
+        file: build/meson-logs/coverage.xml

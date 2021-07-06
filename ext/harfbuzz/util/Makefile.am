@@ -6,6 +6,8 @@ CLEANFILES =
 DISTCLEANFILES =
 MAINTAINERCLEANFILES =
 
+EXTRA_DIST += meson.build
+
 include Makefile.sources
 
 # Convenience targets:

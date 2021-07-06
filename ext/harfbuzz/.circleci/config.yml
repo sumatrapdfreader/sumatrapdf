@@ -1,345 +1,199 @@
-version: 2
+version: 2.1
+
+executors:
+  win32-executor:
+    docker:
+      - image: cimg/base:edge-20.04
+  autotools-executor:
+    docker:
+      - image: cimg/base:edge-20.04
 
 jobs:
 
-  macos-10.12.6-aat-fonts:
-    macos:
-      xcode: "9.0.1"
-    steps:
-      - checkout
-      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install wget autoconf automake libtool pkg-config ragel freetype glib cairo
-      - run: ./autogen.sh --with-freetype --with-glib --with-gobject --with-cairo
-      - run: make -j4
-      - run: make check || .ci/fail.sh
-
-  macos-10.13.6-aat-fonts:
+  macos-10_13_6-aat-fonts:
     macos:
       xcode: "10.1.0"
     steps:
       - checkout
-      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install wget autoconf automake libtool pkg-config ragel freetype glib cairo
-      - run: ./autogen.sh --with-freetype --with-glib --with-gobject --with-cairo
-      - run: make -j4
-      - run: make check || .ci/fail.sh
+      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install pkg-config ragel freetype glib cairo python3 ninja
+      - run: pip3 install meson --upgrade
+      - run: meson build
+      - run: meson compile -Cbuild
+      - run: meson test -Cbuild --print-errorlogs
+      - store_artifacts:
+          path: build/meson-logs/
 
-  macos-10.14.4-aat-fonts:
+  macos-10_14_4-aat-fonts:
     macos:
-      xcode: "11.0.0"
+      xcode: "11.1.0"
     steps:
       - checkout
-      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install wget autoconf automake libtool pkg-config ragel freetype glib cairo icu4c graphite2 cmake
-      - run: export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libffi/lib/pkgconfig" && ./autogen.sh --with-freetype --with-glib --with-gobject --with-cairo --with-icu --with-coretext --with-graphite2
-      - run: make -j4
-      - run: make check || .ci/fail.sh
-      - run: cmake -Bbuild -H. -DHB_HAVE_CORETEXT=1 -DHB_BUILD_TESTS=0 && cmake --build build
+      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install pkg-config ragel freetype glib cairo python3 icu4c graphite2 ninja
+      - run: pip3 install meson --upgrade
+      - run: PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libffi/lib/pkgconfig" meson build -Dcoretext=enabled
+      - run: meson compile -Cbuild
+      - run: meson test -Cbuild --print-errorlogs
+      - store_artifacts:
+          path: build/meson-logs/
 
-  distcheck:
-    docker:
-      - image: ubuntu:19.04
+  macos-10_15_3-aat-fonts:
+    macos:
+      xcode: "11.4.0"
     steps:
       - checkout
-      - run: apt update && apt install -y ninja-build binutils libtool autoconf automake make cmake gcc g++ pkg-config ragel gtk-doc-tools libfontconfig1-dev libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
+      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install pkg-config ragel freetype glib cairo python3 icu4c graphite2 gobject-introspection gtk-doc ninja
+      - run: pip3 install meson --upgrade
+      - run: PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libffi/lib/pkgconfig" meson build -Dcoretext=enabled -Dgraphite=enabled -Dauto_features=enabled
+      - run: meson compile -Cbuild
+      - run: meson test -Cbuild --print-errorlogs
+      - store_artifacts:
+          path: build/meson-logs/
+
+  # will be dropped with autotools removal
+  distcheck:
+    executor: autotools-executor
+    steps:
+      - checkout
+      - run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git ninja-build binutils libtool autoconf automake make gcc g++ pkg-config ragel gtk-doc-tools gobject-introspection libfontconfig1-dev libfreetype6-dev libglib2.0-dev libgirepository1.0-dev libcairo2-dev libicu-dev libgraphite2-dev python3 python3-pip cmake
+      - run: pip3 install fonttools meson --upgrade
       - run: ./autogen.sh
       - run: make -j32
-      - run: make distcheck || .ci/fail.sh
-      - run: rm -rf harfbuzz-*
-      - run: make distdir && cd harfbuzz-* && cmake -DHB_CHECK=ON -Bbuild -H. -GNinja && ninja -Cbuild && CTEST_OUTPUT_ON_FAILURE=1 ninja -Cbuild test && ninja -Cbuild install
+      - run: make distcheck
+      - run: rm harfbuzz-* && make distdir
+      - run: cd harfbuzz-* && meson build && ninja -Cbuild test
+      - run: cd harfbuzz-* && cmake -Bcmakebuild -H. && cmake --build cmakebuild
+      - run: make dist
+      - persist_to_workspace:
+          root: .
+          paths: harfbuzz-*.tar.xz
 
-  alpine-O3-Os-NOMMAP:
-    docker:
-      - image: alpine
+  publish-dist:
+    executor: autotools-executor
     steps:
       - checkout
-      - run: apk update && apk add ragel make pkgconfig libtool autoconf automake gettext gcc g++ glib-dev freetype-dev cairo-dev python
-      # C??FLAGS are not needed for a regular build
-      - run: CFLAGS="-O3" CXXFLAGS="-O3 -DHB_NO_MMAP" ./autogen.sh
-      - run: make -j32
-      - run: make check || .ci/fail.sh
-      - run: make clean
-      - run: CFLAGS="-Os -DHB_OPTIMIZE_SIZE" CXXFLAGS="-Os -DHB_NO_MMAP -DHB_OPTIMIZE_SIZE" ./autogen.sh
-      - run: make -j32
-      - run: make check || .ci/fail.sh
+      - attach_workspace:
+          at: .
+      - run: |
+          .ci/publish_release_artifact.sh harfbuzz-$CIRCLE_TAG.tar.xz
 
-  archlinux-py3-all:
-    docker:
-      - image: archlinux/base
-    steps:
-      - checkout
-      - run: pacman --noconfirm -Syu freetype2 cairo icu gettext gobject-introspection gcc gcc-libs glib2 graphite pkg-config ragel python python-pip make which base-devel
-      - run: pip install flake8 fonttools
-      - run: flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
-      # C??FLAGS are not needed for a regular build
-      - run: ./autogen.sh --with-freetype --with-glib --with-gobject --with-cairo --with-icu --with-graphite2
-      - run: make -j32 CPPFLAGS="-Werror"
-      - run: make check CPPFLAGS="-Werror" || .ci/fail.sh
-
-  ## Doesn't play well with CircleCI apparently
-  #void-notest:
-  #  docker:
-  #    - image: voidlinux/voidlinux
-  #  steps:
-  #    - checkout
-  #    - run: xbps-install -Suy freetype gettext gcc glib graphite pkg-config ragel libtool autoconf automake make
-  #    - run: ./autogen.sh && make -j32 && make check
-
-  clang-O3-O0-and-nobuildsystem:
-    docker:
-      - image: ubuntu:18.10
-    steps:
-      - checkout
-      - run: apt update || true
-      - run: apt install -y clang wget autoconf automake libtool pkg-config ragel libfreetype6-dev libfontconfig1-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
-      - run: wget http://download.savannah.gnu.org/releases/freetype/freetype-2.9.tar.bz2 && tar xf freetype-2.9.tar.bz2 && cd freetype-2.9 && ./autogen.sh && ./configure && make -j32 && cd ..
-      - run: CFLAGS="-O3" CXXFLAGS="-O3" CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-fontconfig --with-glib --with-cairo --with-icu --with-graphite2
-      - run: make -j32
-      - run: LD_LIBRARY_PATH="$PWD/freetype-2.9/objs/.libs" make check || .ci/fail.sh
-      - run: CFLAGS="-O0" CXXFLAGS="-O0" CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-fontconfig --with-glib --with-cairo --with-icu --with-graphite2
-      - run: make -j32
-      - run: LD_LIBRARY_PATH="$PWD/freetype-2.9/objs/.libs" make check || .ci/fail.sh
-      - run: make clean
-      - run: make -Csrc CPPFLAGS="-DHB_TINY -DHB_NO_OT_FONT" libharfbuzz-subset.la && make clean
-      - run: clang -c src/hb-*.cc -DHB_NO_MT
-
-  gcc-valgrind:
-    docker:
-      - image: ubuntu:18.10
-    steps:
-      - checkout
-      - run: apt update || true
-      - run: apt install -y gcc binutils libtool autoconf automake make pkg-config gtk-doc-tools ragel libfreetype6-dev libfontconfig1-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip valgrind
-      - run: pip install fonttools
-      - run: ./autogen.sh --with-freetype --with-glib --with-cairo --with-icu --with-graphite2 --with-fontconfig
-      - run: make -j32
-      # run-shape-fuzzer-tests.py automatically runs valgrind if see available
-      # but test/api runs it by request, we probably should normalize the approaches
-      - run: HB_TEST_SHAPE_FUZZER_TIMEOUT=3 HB_TEST_SUBSET_FUZZER_TIMEOUT=30 RUN_VALGRIND=1 make check && make -Ctest/api check-valgrind || .ci/fail.sh
-      # informational for now
-      - run: make -Ctest/api check-symbols || true
-
-  clang-everything:
-    docker:
-      - image: ubuntu:18.10
-    steps:
-      - checkout
-      - run: apt update || true; apt install -y wget gnupg
-      - run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-      - run: echo "deb http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdev.list
-      - run: echo "deb-src http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdevsrc.list
-      - run: apt update || true
-      - run: apt install -y clang lld binutils libtool autoconf automake make pkg-config gtk-doc-tools ragel libfreetype6-dev libfontconfig1-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
-      - run: CFLAGS="-Weverything -Wno-reserved-id-macro -Wno-conversion -Wno-padded -Wno-sign-conversion -Wno-cast-qual -Wno-documentation -Wno-documentation-unknown-command -DHB_WITH_WIN1256" CXXFLAGS="-Weverything -Wno-old-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-c++98-compat -Wno-cast-qual -Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-shorten-64-to-32 -Wno-reserved-id-macro -Wno-float-conversion -Wno-format-pedantic -Wno-shadow -Wno-conversion -Wno-zero-as-null-pointer-constant -Wno-missing-field-initializers -Wno-used-but-marked-unused -Wno-unused-macros -Wno-comma -Wno-float-equal -Wno-disabled-macro-expansion -Wno-weak-vtables -Wno-unused-parameter -Wno-covered-switch-default -Wno-unreachable-code -Wno-unused-template -DHB_WITH_WIN1256" CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-glib --with-cairo --with-icu --with-graphite2 --with-fontconfig
-      - run: make -j32 CPPFLAGS="-Werror"
-      - run: make check CPPFLAGS="-Werror" || .ci/fail.sh
-
-  clang-asan:
-    docker:
-      - image: ubuntu:18.10
-    steps:
-      - checkout
-      - run: apt update || true; apt install -y wget gnupg
-      - run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-      - run: echo "deb http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdev.list
-      - run: echo "deb-src http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdevsrc.list
-      - run: apt update || true
-      - run: apt install -y clang lld binutils libtool autoconf automake make pkg-config gtk-doc-tools ragel libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
-      - run: CPPFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address -O1 -g -fno-omit-frame-pointer" CFLAGS="-fsanitize=address -O1 -g -fno-omit-frame-pointer" CXXFLAGS="-fsanitize=address -O1 -g -fno-omit-frame-pointer" LD=ld.lld CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-glib --with-cairo --with-icu --with-graphite2
-      - run: make -j32
-      - run: make check || .ci/fail.sh | asan_symbolize | c++filt
-
-  clang-msan:
-    docker:
-      - image: ubuntu:18.10
-    steps:
-      - checkout
-      - run: apt update || true; apt install -y wget gnupg
-      - run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-      - run: echo "deb http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdev.list
-      - run: echo "deb-src http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdevsrc.list
-      - run: apt update || true
-      - run: apt install -y clang lld binutils libtool autoconf automake gtk-doc-tools gettext make pkg-config ragel libcairo2-dev libicu-dev libmount-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
-      - run: update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.lld" 10
-      - run: wget https://ftp.gnome.org/pub/gnome/sources/glib/2.58/glib-2.58.1.tar.xz && tar xf glib-2.58.1.tar.xz && cd glib-2.58.1 && ./autogen.sh --with-pcre CPPFLAGS="-fsanitize=memory" LDFLAGS="-fsanitize=memory" CFLAGS="-fsanitize=memory" CXXFLAGS="-fsanitize=memory" LD=ld.lld CC=clang CXX=clang++ && make -j32 && make install && cd ..
-      - run: wget http://download.savannah.gnu.org/releases/freetype/freetype-2.9.tar.bz2 && tar xf freetype-2.9.tar.bz2 && cd freetype-2.9 && ./autogen.sh && ./configure CPPFLAGS="-fsanitize=memory" LDFLAGS="-fsanitize=memory -O1 -g -fno-omit-frame-pointer" CFLAGS="-fsanitize=memory -O1 -g -fno-omit-frame-pointer" CXXFLAGS="-fsanitize=memory -O1 -g -fno-omit-frame-pointer" LD=ld.lld CC=clang CXX=clang++ && make -j32 && make install && cd ..
-      - run: CPPFLAGS="-fsanitize=memory -fsanitize-memory-track-origins" LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -O1 -g -fno-omit-frame-pointer" CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -O1 -g -fno-omit-frame-pointer" CXXFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -O1 -g -fno-omit-frame-pointer" LD=ld.lld CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-glib --without-icu
-      - run: make -j32 && MSAN_OPTIONS=exitcode=42 HB_TEST_SUBSET_FUZZER_TIMEOUT=12 make check || .ci/fail.sh | asan_symbolize | c++filt
-
-  clang-tsan:
-    docker:
-      - image: ubuntu:18.10
-    steps:
-      - checkout
-      - run: apt update || true; apt install -y wget gnupg
-      - run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-      - run: echo "deb http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdev.list
-      - run: echo "deb-src http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdevsrc.list
-      - run: apt update || true
-      - run: apt install -y clang lld binutils libtool autoconf automake make pkg-config ragel libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
-      - run: CPPFLAGS="-fsanitize=thread" LDFLAGS="-fsanitize=thread -O1 -g -fno-omit-frame-pointer" CFLAGS="-fsanitize=thread -O1 -g -fno-omit-frame-pointer" CXXFLAGS="-fsanitize=thread -O1 -g -fno-omit-frame-pointer" LD=ld.lld CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-glib --with-cairo --with-icu --with-graphite2
-      - run: make -j32
-      - run: HB_TEST_SUBSET_FUZZER_TIMEOUT=40 make check || .ci/fail.sh | asan_symbolize | c++filt
-
-  clang-ubsan:
-    docker:
-      - image: ubuntu:18.10
-    steps:
-      - checkout
-      - run: apt update || true; apt install -y wget gnupg
-      - run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-      - run: echo "deb http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdev.list
-      - run: echo "deb-src http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic main" > /etc/apt/sources.list.d/llvmdevsrc.list
-      - run: apt update || true
-      - run: apt install -y clang lld binutils libtool autoconf automake make pkg-config ragel libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
-      - run: CPPFLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined" LDFLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -O1 -g -fno-omit-frame-pointer" CFLAGS="-fsanitize=undefined -O1 -g -fno-omit-frame-pointer" CXXFLAGS="-fsanitize=undefined -O1 -g -fno-omit-frame-pointer" LD=ld.lld CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-glib --with-cairo --with-icu --with-graphite2
-      - run: make -j32
-      - run: UBSAN_OPTIONS=print_stacktrace=1 make check || .ci/fail.sh | asan_symbolize | c++filt
-
-  fedora-O0-debug-outoftreebuild-mingw:
+  fedora-valgrind:
     docker:
       - image: fedora
     steps:
       - checkout
-      - run: dnf install -y pkg-config ragel gcc gcc-c++ automake autoconf libtool make which glib2-devel freetype-devel cairo-devel libicu-devel gobject-introspection-devel graphite2-devel redhat-rpm-config python mingw32-gcc-c++ mingw64-gcc-c++ mingw32-glib2 mingw32-cairo mingw32-freetype mingw64-glib2 mingw64-cairo mingw64-freetype glibc-devel.i686 || true
-      - run: NOCONFIGURE=1 ./autogen.sh
-      - run: mkdir build && cd build && CFLAGS="-O0" CXXFLAGS="-O0" CPPFLAGS="-DHB_DEBUG" ../configure --with-freetype --with-glib --with-gobject --with-cairo --with-icu --with-graphite2 && make -j32 && (make check || ../.ci/fail.sh)
-      - run: pip install pefile
-      - run: mkdir winbuild32 && cd winbuild32 && ../mingw32.sh && make -j32 && make dist-win && cp harfbuzz-*-win32.zip harfbuzz-win32.zip
-      - run: mkdir winbuild64 && cd winbuild64 && ../mingw64.sh && make -j32 && make dist-win && cp harfbuzz-*-win64.zip harfbuzz-win64.zip
+      - run: dnf install -y pkg-config ragel valgrind gcc gcc-c++ meson git glib2-devel freetype-devel cairo-devel libicu-devel gobject-introspection-devel graphite2-devel redhat-rpm-config python python-pip || true
+      - run: meson build --buildtype=debugoptimized
+      - run: ninja -Cbuild -j9
+      # TOOD: increase timeouts and remove --no-suite=slow
+      - run: RUN_VALGRIND=1 meson test -Cbuild --no-suite=slow --wrap='valgrind --leak-check=full --error-exitcode=1' --print-errorlogs
+
+  alpine:
+    docker:
+      - image: alpine
+    steps:
+      - checkout
+      - run: apk update && apk add ragel gcc g++ glib-dev freetype-dev cairo-dev git py3-pip ninja
+      - run: pip3 install meson==0.47.0
+      - run: meson build --buildtype=minsize
+      - run: ninja -Cbuild -j9
+      - run: meson test -Cbuild --print-errorlogs
+
+  archlinux:
+    docker:
+      - image: archlinux/base
+    steps:
+      - checkout
+      - run: pacman --noconfirm -Syu freetype2 meson git clang cairo icu gettext gobject-introspection gcc gcc-libs glib2 graphite pkg-config ragel python python-pip base-devel gtk-doc
+      - run: pip install flake8 fonttools
+      - run: pip install git+https://github.com/mesonbuild/meson
+      - run: flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+      - run: meson build -Dgraphite=enabled -Dauto_features=enabled -Dexperimental_api=true
+      - run: meson compile -Cbuild -j9
+      - run: meson test -Cbuild --print-errorlogs
+      - run: meson dist -Cbuild
+      - run: clang -c src/harfbuzz.cc -DHB_NO_MT
+      - run: clang -c src/hb-*.cc -DHB_NO_MT -DHB_TINY -DHB_NO_OT_FONT
+
+  sanitizers:
+    docker:
+      - image: ubuntu:20.04
+    steps:
+      - checkout
+      - run: apt update || true; DEBIAN_FRONTEND=noninteractive apt install -y wget gnupg
+      #- run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+      #- run: echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" > /etc/apt/sources.list.d/llvmdev.list
+      #- run: echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main" > /etc/apt/sources.list.d/llvmdevsrc.list
+      #- run: apt update || true
+      - run: DEBIAN_FRONTEND=noninteractive apt install -y clang lld git binutils meson pkg-config ragel libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev
+      # asan+ubsan
+      - run: rm -rf build && meson build --default-library=static -Db_sanitize=address,undefined --buildtype=debugoptimized --wrap-mode=nodownload -Dexperimental_api=true
+      - run: ninja -Cbuild -j8 && meson test -Cbuild --print-errorlogs | asan_symbolize | c++filt
+      # tsan
+      - run: rm -rf build && meson build --default-library=static -Db_sanitize=thread --buildtype=debugoptimized --wrap-mode=nodownload -Dexperimental_api=true
+      - run: ninja -Cbuild -j8 && meson test -Cbuild --print-errorlogs | asan_symbolize | c++filt
+      # msan, needs --force-fallback-for=glib,freetype2 also which doesn't work yet but runs fuzzer cases at least
+      - run: rm -rf build && meson build --default-library=static -Db_sanitize=memory --buildtype=debugoptimized --wrap-mode=nodownload -Dauto_features=disabled -Dtests=enabled -Dexperimental_api=true
+      - run: ninja -Cbuild -j8 && meson test -Cbuild --print-errorlogs | asan_symbolize | c++filt
+      # test -std=c++2a and -Weverything of nightly clang builds
+      - run: clang -c src/harfbuzz.cc src/hb-subset*.cc -DHB_NO_MT -Werror -std=c++2a
+      - run: clang -c src/hb-*.cc -DHB_NO_MT -Werror -Weverything -Wno-old-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-c++98-compat -Wno-cast-qual -Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-shorten-64-to-32 -Wno-reserved-id-macro -Wno-float-conversion -Wno-format-pedantic -Wno-shadow -Wno-conversion -Wno-zero-as-null-pointer-constant -Wno-missing-field-initializers -Wno-used-but-marked-unused -Wno-unused-macros -Wno-comma -Wno-float-equal -Wno-disabled-macro-expansion -Wno-weak-vtables -Wno-unused-parameter -Wno-covered-switch-default -Wno-unreachable-code -Wno-unused-template -DHB_WITH_WIN1256
+
+  crossbuild-win32:
+    executor: win32-executor
+    steps:
+      - checkout
+      - run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y ninja-build binutils gcc g++ pkg-config ragel gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python3 python3-pip git g++-mingw-w64-i686 zip
+      - run: pip3 install meson==0.56.0 --upgrade
+      - run: .ci/build-win32.sh
       - store_artifacts:
-          path: winbuild32/harfbuzz-win32.zip
-          destination: harfbuzz-win32.zip
-      - store_artifacts:
-          path: winbuild64/harfbuzz-win64.zip
-          destination: harfbuzz-win64.zip
+          path: harfbuzz-win32.zip
+      - persist_to_workspace:
+          root: .
+          paths: harfbuzz-win32.zip
 
-  cmake-gcc:
-    docker:
-      - image: ubuntu:19.04
+  publish-win32:
+    executor: win32-executor
     steps:
       - checkout
-      - run: apt update && apt install -y ninja-build binutils cmake gcc g++ pkg-config ragel gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
-      - run: pip install fonttools
-      - run: cmake -DHB_CHECK=ON -Bbuild -H. -GNinja
-      - run: ninja -Cbuild
-      - run: CTEST_OUTPUT_ON_FAILURE=1 ninja -Cbuild test
-      - run: ninja -Cbuild install
-
-  #cmake-oracledeveloperstudio:
-  #  docker:
-  #    - image: fedora
-  #  steps:
-  #    - checkout
-  #    - run: dnf install -y gcc ragel cmake make which glib2-devel freetype-devel cairo-devel libicu-devel graphite2-devel wget tar bzip2 python libnsl || true
-  #    - run: wget http://$ODSUSER:$ODSPASS@behdad.org/harfbuzz-private/OracleDeveloperStudio12.6-linux-x86-bin.tar.bz2 && tar xf OracleDeveloperStudio12.6-linux-x86-bin.tar.bz2 --owner root --group root --no-same-owner
-  #    - run: CC=/root/project/OracleDeveloperStudio12.6-linux-x86-bin/developerstudio12.6/bin/suncc CXX=/root/project/OracleDeveloperStudio12.6-linux-x86-bin/developerstudio12.6/bin/sunCC cmake -DHB_HAVE_GRAPHITE2=ON -DHB_HAVE_GLIB=ON -DHB_HAVE_FREETYPE=ON -Bbuild -H.
-  #    - run: make -Cbuild -j32
-  #    - run: CTEST_OUTPUT_ON_FAILURE=1 make -Cbuild test
-  #    - run: make -Cbuild install
-
-  crosscompile-notest-djgpp:
-    docker:
-      # https://gist.github.com/ebraminio/8551fc74f27951e668102baa2f6b1175
-      - image: quay.io/ebraminio/djgpp
-    steps:
-      - checkout
-      - run: apt update && apt install -y ragel pkg-config libtool autoconf
-      - run: CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes" ./autogen.sh --prefix=/usr/local/djgpp --host=i586-pc-msdosdjgpp
-      - run: make -j32
-
-  crosscompile-notest-psvita:
-    docker:
-      - image: dockcross/base
-    steps:
-      - checkout
-      - run: git clone https://github.com/vitasdk/vdpm && cd vdpm && ./bootstrap-vitasdk.sh
-      - run: echo '#!/bin/true' > /usr/bin/ragel && chmod +x /usr/bin/ragel
-      - run: ./autogen.sh --prefix=/usr/local/vitasdk/arm-vita-eabi --host=arm-vita-eabi
-      - run: make -j32
-
-  crosscompile-cmake-notest-android-arm:
-    docker:
-      - image: dockcross/android-arm
-    steps:
-      - checkout
-      - run: cmake -Bbuild -H. -GNinja -DHB_BUILD_TESTS=OFF
-      - run: ninja -Cbuild
-
-  crosscompile-cmake-notest-browser-asmjs-hb_tiny:
-    docker:
-      - image: dockcross/browser-asmjs
-    steps:
-      - checkout
-      - run: cmake -Bbuild -H. -GNinja -DCMAKE_CXX_FLAGS="-DHB_TINY" -DHB_BUILD_TESTS=OFF
-      - run: ninja -Cbuild
-
-  crosscompile-cmake-notest-linux-arm64:
-    docker:
-      - image: dockcross/linux-arm64
-    steps:
-      - checkout
-      - run: cmake -Bbuild -H. -GNinja -DHB_BUILD_TESTS=OFF
-      - run: ninja -Cbuild
-
-  crosscompile-cmake-notest-linux-mips:
-    docker:
-      - image: dockcross/linux-mips
-    steps:
-      - checkout
-      - run: cmake -Bbuild -H. -GNinja -DHB_BUILD_TESTS=OFF
-      - run: ninja -Cbuild
-
-  #crosscompile-cmake-notest-windows-x64:
-  #  docker:
-  #    - image: dockcross/windows-x64
-  #  steps:
-  #    - checkout
-  #    - run: cmake -Bbuild -H. -GNinja
-  #    - run: ninja -Cbuild
+      - attach_workspace:
+          at: .
+      - run: |
+          mv harfbuzz-win32{,-$CIRCLE_TAG}.zip
+          .ci/publish_release_artifact.sh harfbuzz-win32-$CIRCLE_TAG.zip
 
 workflows:
   version: 2
+
   build:
     jobs:
-      # macOS
-      - macos-10.12.6-aat-fonts
-      - macos-10.13.6-aat-fonts
-      - macos-10.14.4-aat-fonts
-
-      # both autotools and cmake
-      - distcheck
-
-      # autotools based builds
-      - alpine-O3-Os-NOMMAP
-      - archlinux-py3-all
-      #- void-notest
-      - gcc-valgrind
-      - clang-O3-O0-and-nobuildsystem
-      - clang-everything
-      - clang-asan
-      - clang-msan
-      - clang-tsan
-      - clang-ubsan
-      - fedora-O0-debug-outoftreebuild-mingw
-
-      # cmake based builds
-      - cmake-gcc
-      #- cmake-oracledeveloperstudio
-
-      # crosscompiles
-      # they can't be test thus are without tests
-      ## autotools
-      - crosscompile-notest-djgpp
-      - crosscompile-notest-psvita
-
-      ## cmake
-      - crosscompile-cmake-notest-android-arm
-      - crosscompile-cmake-notest-browser-asmjs-hb_tiny
-      - crosscompile-cmake-notest-linux-arm64
-      - crosscompile-cmake-notest-linux-mips
-      #- crosscompile-cmake-notest-windows-x64
+      - macos-10_13_6-aat-fonts
+      - macos-10_14_4-aat-fonts
+      - macos-10_15_3-aat-fonts
+      - distcheck: # will be dropped with autotools removal
+          filters:
+            tags:
+              only: /^\d+.\d+.\d+$/
+      - publish-dist:
+          requires:
+            - distcheck
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - fedora-valgrind
+      - alpine
+      - archlinux
+      - sanitizers
+      - crossbuild-win32:
+          filters:
+            tags:
+              only: /^\d+.\d+.\d+$/
+      - publish-win32:
+          requires:
+            - crossbuild-win32
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/

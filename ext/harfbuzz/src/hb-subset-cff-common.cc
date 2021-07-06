@@ -108,7 +108,7 @@ hb_plan_subset_cff_fdselect (const hb_subset_plan_t *plan,
 	fdmap.add (fd);
       hb_set_destroy (set);
       if (unlikely (fdmap.get_population () != subset_fd_count))
-      	return false;
+	return false;
     }
 
     /* update each font dict index stored as "code" in fdselect_ranges */
@@ -158,7 +158,7 @@ serialize_fdselect_3_4 (hb_serialize_context_t *c,
 {
   TRACE_SERIALIZE (this);
   FDSELECT3_4 *p = c->allocate_size<FDSELECT3_4> (size);
-  if (unlikely (p == nullptr)) return_trace (false);
+  if (unlikely (!p)) return_trace (false);
   p->nRanges () = fdselect_ranges.length;
   for (unsigned int i = 0; i < fdselect_ranges.length; i++)
   {
@@ -184,7 +184,7 @@ hb_serialize_cff_fdselect (hb_serialize_context_t *c,
 {
   TRACE_SERIALIZE (this);
   FDSelect *p = c->allocate_min<FDSelect> ();
-  if (unlikely (p == nullptr)) return_trace (false);
+  if (unlikely (!p)) return_trace (false);
   p->format = fdselect_format;
   size -= FDSelect::min_size;
 
@@ -194,7 +194,7 @@ hb_serialize_cff_fdselect (hb_serialize_context_t *c,
   case 0:
   {
     FDSelect0 *p = c->allocate_size<FDSelect0> (size);
-    if (unlikely (p == nullptr)) return_trace (false);
+    if (unlikely (!p)) return_trace (false);
     unsigned int range_index = 0;
     unsigned int fd = fdselect_ranges[range_index++].code;
     for (unsigned int i = 0; i < num_glyphs; i++)

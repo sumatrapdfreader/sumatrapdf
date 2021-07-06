@@ -54,7 +54,7 @@ struct hb_hashmap_t
 
     void clear () { key = kINVALID; value = vINVALID; hash = 0; }
 
-    bool operator == (K o) { return hb_deref (key) == hb_deref (o); }
+    bool operator == (const K &o) { return hb_deref (key) == hb_deref (o); }
     bool operator == (const item_t &o) { return *this == o.key; }
     bool is_unused () const    { return key == kINVALID; }
     bool is_tombstone () const { return key != kINVALID && value == vINVALID; }
@@ -117,9 +117,8 @@ struct hb_hashmap_t
       successful = false;
       return false;
     }
-    + hb_iter (new_items, new_size)
-    | hb_apply (&item_t::clear)
-    ;
+    for (auto &_ : hb_iter (new_items, new_size))
+      _.clear ();
 
     unsigned int old_size = mask + 1;
     item_t *old_items = items;
@@ -135,8 +134,8 @@ struct hb_hashmap_t
       for (unsigned int i = 0; i < old_size; i++)
 	if (old_items[i].is_real ())
 	  set_with_hash (old_items[i].key,
-                         old_items[i].hash,
-                         old_items[i].value);
+			 old_items[i].hash,
+			 old_items[i].value);
 
     free (old_items);
 
@@ -175,9 +174,8 @@ struct hb_hashmap_t
     if (unlikely (hb_object_is_immutable (this)))
       return;
     if (items)
-      + hb_iter (items, mask + 1)
-      | hb_apply (&item_t::clear)
-      ;
+      for (auto &_ : hb_iter (items, mask + 1))
+	_.clear ();
 
     population = occupancy = 0;
   }
@@ -211,7 +209,7 @@ struct hb_hashmap_t
   )
 
   /* Sink interface. */
-  hb_hashmap_t<K, V, kINVALID, vINVALID>& operator << (const hb_pair_t<K, V>& v)
+  hb_hashmap_t& operator << (const hb_pair_t<K, V>& v)
   { set (v.first, v.second); return *this; }
 
   protected:

@@ -7,13 +7,13 @@
  * on file with this header:
  *
  * # emoji-data.txt
- * # Date: 2019-01-15, 12:10:05 GMT
- * # © 2019 Unicode®, Inc.
+ * # Date: 2020-01-28, 20:52:38 GMT
+ * # © 2020 Unicode®, Inc.
  * # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
  * # For terms of use, see http://www.unicode.org/terms_of_use.html
  * #
  * # Emoji Data for UTS #51
- * # Version: 12.0
+ * # Version: 13.0
  * #
  * # For documentation and usage, see http://www.unicode.org/reports/tr51
  */
@@ -36,7 +36,7 @@ _hb_emoji_u8[448] =
     0,  0,  0,  0, 12,  0,  0,  0,  0,  0,  0,  0, 13,  0,  0,  0,
     7,  7,  7, 14, 15, 16, 17, 18, 19, 20,  7,  7,  7,  7,  7, 21,
     7,  7,  7,  7, 22, 23,  7,  7,  7, 24,  7, 14,  0, 25,  0, 26,
-   27, 28, 29, 14, 30, 31,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,
+   27, 28, 29, 14, 30, 31,  7,  7,  7,  7,  7, 14,  0,  0,  0,  0,
     7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7, 22,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,240,  1,  0,  2,  0,  0,
     0,  0,  0,  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,254,  7,  3,

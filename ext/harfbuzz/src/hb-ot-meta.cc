@@ -38,7 +38,7 @@
  **/
 
 /**
- * hb_ot_meta_reference_entry:
+ * hb_ot_meta_get_entry_tags:
  * @face: a face object
  * @start_offset: iteration's start offset
  * @entries_count:(inout) (allow-none): buffer size as input, filled size as output

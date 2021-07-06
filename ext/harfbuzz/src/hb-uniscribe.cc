@@ -55,7 +55,7 @@
  * @short_description: Windows integration
  * @include: hb-uniscribe.h
  *
- * Functions for using HarfBuzz with the Windows fonts.
+ * Functions for using HarfBuzz with Windows fonts.
  **/
 
 typedef HRESULT (WINAPI *SIOT) /*ScriptItemizeOpenType*/(
@@ -453,7 +453,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
 
   hb_blob_destroy (blob);
   return hb_blob_create ((const char *) new_sfnt_data, new_length,
-			 HB_MEMORY_MODE_WRITABLE, nullptr, free);
+			 HB_MEMORY_MODE_WRITABLE, new_sfnt_data, free);
 }
 
 hb_uniscribe_face_data_t *
@@ -583,6 +583,16 @@ _hb_uniscribe_shaper_font_data_destroy (hb_uniscribe_font_data_t *data)
   free (data);
 }
 
+/**
+ * hb_uniscribe_font_get_logfontw:
+ * @font: The #hb_font_t to work upon
+ *
+ * Fetches the LOGFONTW structure that corresponds to the
+ * specified #hb_font_t font.
+ *
+ * Return value: a pointer to the LOGFONTW retrieved
+ *
+ **/
 LOGFONTW *
 hb_uniscribe_font_get_logfontw (hb_font_t *font)
 {
@@ -590,6 +600,16 @@ hb_uniscribe_font_get_logfontw (hb_font_t *font)
   return data ? &data->log_font : nullptr;
 }
 
+/**
+ * hb_uniscribe_font_get_hfont:
+ * @font: The #hb_font_t to work upon
+ *
+ * Fetches the HFONT handle that corresponds to the
+ * specified #hb_font_t font.
+ *
+ * Return value: the HFONT retreieved
+ *
+ **/
 HFONT
 hb_uniscribe_font_get_hfont (hb_font_t *font)
 {

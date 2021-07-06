@@ -229,7 +229,7 @@ block_best (const biimage_t &bi, bool *inverse)
   assert (bi.width  <= CELL_W);
   assert (bi.height <= CELL_H);
 
-  unsigned int score = (unsigned int) -1;
+  unsigned int score = UINT_MAX;
   unsigned int row_sum[CELL_H] = {0};
   unsigned int col_sum[CELL_W] = {0};
   unsigned int row_sum_i[CELL_H] = {0};
@@ -279,7 +279,7 @@ block_best (const biimage_t &bi, bool *inverse)
 
   /* Find best lower line */
   if (1) {
-    unsigned int best_s = (unsigned int) -1;
+    unsigned int best_s = UINT_MAX;
     bool best_inv = false;
     int best_i = 0;
     for (unsigned int i = 0; i < bi.height - 1; i++)
@@ -311,7 +311,7 @@ block_best (const biimage_t &bi, bool *inverse)
 
   /* Find best left line */
   if (1) {
-    unsigned int best_s = (unsigned int) -1;
+    unsigned int best_s = UINT_MAX;
     bool best_inv = false;
     int best_i = 0;
     for (unsigned int i = 0; i < bi.width - 1; i++)

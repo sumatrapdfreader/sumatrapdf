@@ -30,10 +30,8 @@
 
 #include "hb.hh"
 
-#include <float.h>
 
-
-#line 37 "hb-number-parser.hh"
+#line 35 "hb-number-parser.hh"
 static const unsigned char _double_parser_trans_keys[] = {
 	0u, 0u, 43u, 57u, 46u, 57u, 48u, 57u, 43u, 57u, 48u, 57u, 48u, 101u, 48u, 57u, 
 	46u, 101u, 0
@@ -93,12 +91,12 @@ static const int double_parser_error = 0;
 static const int double_parser_en_main = 1;
 
 
-#line 70 "hb-number-parser.rl"
+#line 68 "hb-number-parser.rl"
 
 
 /* Works only for n < 512 */
 static inline double
-_pow10 (unsigned int exponent)
+_pow10 (unsigned exponent)
 {
   static const double _powers_of_10[] =
   {
@@ -112,38 +110,37 @@ _pow10 (unsigned int exponent)
     100.,
     10.
   };
-  unsigned int mask = 1 << (ARRAY_LENGTH (_powers_of_10) - 1);
+  unsigned mask = 1 << (ARRAY_LENGTH (_powers_of_10) - 1);
   double result = 1;
   for (const double *power = _powers_of_10; mask; ++power, mask >>= 1)
     if (exponent & mask) result *= *power;
   return result;
 }
 
+/* a variant of strtod that also gets end of buffer in its second argument */
 static inline double
-strtod_rl (const char *buf, char **end_ptr)
+strtod_rl (const char *p, const char **end_ptr /* IN/OUT */)
 {
-  const char *p, *pe;
   double value = 0;
   double frac = 0;
   double frac_count = 0;
-  unsigned int exp = 0;
+  unsigned exp = 0;
   bool neg = false, exp_neg = false, exp_overflow = false;
-  const unsigned long long MAX_FRACT = 0xFFFFFFFFFFFFFull; /* 1^52-1 */
-  const unsigned int MAX_EXP = 0x7FFu; /* 1^11-1 */
-  p = buf;
-  pe = p + strlen (p);
+  const unsigned long long MAX_FRACT = 0xFFFFFFFFFFFFFull; /* 2^52-1 */
+  const unsigned MAX_EXP = 0x7FFu; /* 2^11-1 */
 
+  const char *pe = *end_ptr;
   while (p < pe && ISSPACE (*p))
     p++;
 
   int cs;
   
-#line 142 "hb-number-parser.hh"
+#line 139 "hb-number-parser.hh"
 	{
 	cs = double_parser_start;
 	}
 
-#line 147 "hb-number-parser.hh"
+#line 144 "hb-number-parser.hh"
 	{
 	int _slen;
 	int _trans;
@@ -169,21 +166,21 @@ _resume:
 
 	switch ( _double_parser_trans_actions[_trans] ) {
 	case 1:
-#line 39 "hb-number-parser.rl"
+#line 37 "hb-number-parser.rl"
 	{ neg = true; }
 	break;
 	case 4:
-#line 40 "hb-number-parser.rl"
+#line 38 "hb-number-parser.rl"
 	{ exp_neg = true; }
 	break;
 	case 2:
-#line 42 "hb-number-parser.rl"
+#line 40 "hb-number-parser.rl"
 	{
 	value = value * 10. + ((*p) - '0');
 }
 	break;
 	case 3:
-#line 45 "hb-number-parser.rl"
+#line 43 "hb-number-parser.rl"
 	{
 	if (likely (frac <= MAX_FRACT / 10))
 	{
@@ -193,7 +190,7 @@ _resume:
 }
 	break;
 	case 5:
-#line 52 "hb-number-parser.rl"
+#line 50 "hb-number-parser.rl"
 	{
 	if (likely (exp * 10 + ((*p) - '0') <= MAX_EXP))
 	  exp = exp * 10 + ((*p) - '0');
@@ -201,7 +198,7 @@ _resume:
 	  exp_overflow = true;
 }
 	break;
-#line 205 "hb-number-parser.hh"
+#line 202 "hb-number-parser.hh"
 	}
 
 _again:
@@ -213,10 +210,10 @@ _again:
 	_out: {}
 	}
 
-#line 116 "hb-number-parser.rl"
+#line 113 "hb-number-parser.rl"
 
 
-  *end_ptr = (char *) p;
+  *end_ptr = p;
 
   if (frac_count) value += frac / _pow10 (frac_count);
   if (neg) value *= -1.;

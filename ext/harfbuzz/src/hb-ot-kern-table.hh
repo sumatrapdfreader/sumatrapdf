@@ -86,21 +86,26 @@ struct KernSubTableFormat3
   }
 
   protected:
-  KernSubTableHeader	header;
-  HBUINT16		glyphCount;	/* The number of glyphs in this font. */
-  HBUINT8		kernValueCount;	/* The number of kerning values. */
-  HBUINT8		leftClassCount;	/* The number of left-hand classes. */
-  HBUINT8		rightClassCount;/* The number of right-hand classes. */
-  HBUINT8		flags;		/* Set to zero (reserved for future use). */
-  UnsizedArrayOf<FWORD>	kernValueZ;	/* The kerning values.
-					 * Length kernValueCount. */
+  KernSubTableHeader
+		header;
+  HBUINT16	glyphCount;	/* The number of glyphs in this font. */
+  HBUINT8	kernValueCount;	/* The number of kerning values. */
+  HBUINT8	leftClassCount;	/* The number of left-hand classes. */
+  HBUINT8	rightClassCount;/* The number of right-hand classes. */
+  HBUINT8	flags;		/* Set to zero (reserved for future use). */
+  UnsizedArrayOf<FWORD>
+		kernValueZ;	/* The kerning values.
+				 * Length kernValueCount. */
 #if 0
-  UnsizedArrayOf<HBUINT8>leftClass;	/* The left-hand classes.
-					 * Length glyphCount. */
-  UnsizedArrayOf<HBUINT8>rightClass;	/* The right-hand classes.
-					 * Length glyphCount. */
-  UnsizedArrayOf<HBUINT8>kernIndex;	/* The indices into the kernValue array.
-					 * Length leftClassCount * rightClassCount */
+  UnsizedArrayOf<HBUINT8>
+		leftClass;	/* The left-hand classes.
+				 * Length glyphCount. */
+  UnsizedArrayOf<HBUINT8>
+		rightClass;	/* The right-hand classes.
+				 * Length glyphCount. */
+  UnsizedArrayOf<HBUINT8>kernIndex;
+				/* The indices into the kernValue array.
+				 * Length leftClassCount * rightClassCount */
 #endif
   public:
   DEFINE_SIZE_ARRAY (KernSubTableHeader::static_size + 6, kernValueZ);
@@ -246,8 +251,8 @@ struct KernAATSubTableHeader
   HBUINT8	coverage;	/* Coverage bits. */
   HBUINT8	format;		/* Subtable format. */
   HBUINT16	tupleIndex;	/* The tuple index (used for variations fonts).
-			       * This value specifies which tuple this subtable covers.
-			       * Note: We don't implement. */
+				 * This value specifies which tuple this subtable covers.
+				 * Note: We don't implement. */
   public:
   DEFINE_SIZE_STATIC (8);
 };

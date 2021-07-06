@@ -6,13 +6,8 @@ you can install that this way:
 sudo apt-get install libgirepository1.0-dev
 ```
 
-And then run `autogen.sh` (if building from git), and then:
-
-```bash
-./configure --with-gobject --enable-introspection
-```
-
-Make sure that gobject-introspection is reported enabled then in the `configure` script output.
+And then run `meson setup` and make sure that `Introspection` is reported
+enabled in output.
 
 Compile and install.
 

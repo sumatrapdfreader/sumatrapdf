@@ -1,9 +1,9 @@
 # Configuring HarfBuzz
 
 Most of the time you will not need any custom configuration.  The configuration
-options provided by `configure` or `cmake` should be enough.  In particular,
-if you just want HarfBuzz library plus hb-shape / hb-view utilities, make sure
-FreeType and Cairo are available and found during configuration.
+options provided by `meson` should be enough.  In particular, if you just want
+HarfBuzz library plus hb-shape / hb-view utilities, make sure FreeType and Cairo
+are available and found during configuration.
 
 If you are building for distribution, you should more carefully consider whether
 you need Glib, ICU, Graphite2, as well as CoreText / Uniscribe / DWrite.  Make
@@ -18,9 +18,9 @@ binary size savings.
 ## Compiler Options
 
 Make sure you build with your compiler's "optimize for size" option.  On `gcc`
-this is `-Os`, and can be enabled by passing `CXXFLAGS=-Os` either to `configure`
-(sticky) or to `make` (non-sticky).  On clang there is an even more extreme flag,
-`-Oz`.
+this is `-Os`, and can be enabled by passing `CXXFLAGS=-Os`.  On clang there
+is an even more extreme flag, `-Oz`.  Meson also provides `--buildtype=minsize`
+for more convenience.
 
 HarfBuzz heavily uses inline functions and the optimize-size flag can make the
 library smaller by 20% or more.  Moreover, sometimes, based on the target CPU,
@@ -32,8 +32,7 @@ optimizations.  Search for `HB_OPTIMIZE_SIZE` for details, if you are using
 other compilers, or continue reading.
 
 Another compiler option to consider is "link-time optimization", also known as
-'lto'.  To enable that, with `gcc` or `clang`, add `-flto` to both `CXXFLAGS`
-and `LDFLAGS`, either on `configure` invocation (sticky) or on `make` (non-sticky).
+'lto'.  To enable that, feel free to use `-Db_lto=true` of meson.
 This, also, can have a huge impact on the final size, 20% or more.
 
 Finally, if you are making a static library build or otherwise linking the

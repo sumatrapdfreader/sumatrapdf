@@ -41,22 +41,6 @@
  * Casts
  */
 
-/* Cast to struct T, reference to reference */
-template<typename Type, typename TObject>
-static inline const Type& CastR(const TObject &X)
-{ return reinterpret_cast<const Type&> (X); }
-template<typename Type, typename TObject>
-static inline Type& CastR(TObject &X)
-{ return reinterpret_cast<Type&> (X); }
-
-/* Cast to struct T, pointer to pointer */
-template<typename Type, typename TObject>
-static inline const Type* CastP(const TObject *X)
-{ return reinterpret_cast<const Type*> (X); }
-template<typename Type, typename TObject>
-static inline Type* CastP(TObject *X)
-{ return reinterpret_cast<Type*> (X); }
-
 /* StructAtOffset<T>(P,Ofs) returns the struct T& that is placed at memory
  * location pointed to by P plus Ofs bytes. */
 template<typename Type>
@@ -70,7 +54,7 @@ static inline const Type& StructAtOffsetUnaligned(const void *P, unsigned int of
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
-  return * reinterpret_cast<Type*> ((char *) P + offset);
+  return * reinterpret_cast<const Type*> ((const char *) P + offset);
 #pragma GCC diagnostic pop
 }
 template<typename Type>
@@ -135,7 +119,7 @@ static inline Type& StructAfter(TObject &X)
 
 #define DEFINE_SIZE_ARRAY(size, array) \
   DEFINE_COMPILES_ASSERTION ((void) (array)[0].static_size) \
-  DEFINE_INSTANCE_ASSERTION (sizeof (*this) == (size) + HB_VAR_ARRAY * sizeof ((array)[0])) \
+  DEFINE_INSTANCE_ASSERTION (sizeof (*this) == (size) + (HB_VAR_ARRAY+0) * sizeof ((array)[0])) \
   static constexpr unsigned null_size = (size); \
   static constexpr unsigned min_size = (size)
 
@@ -250,7 +234,7 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
   static Returned* convert (Stored *p) { return p; }
 
   /* By default null/init/fini the object. */
-  static const Stored* get_null () { return &Null(Stored); }
+  static const Stored* get_null () { return &Null (Stored); }
   static Stored *create (Data *data)
   {
     Stored *p = (Stored *) calloc (1, sizeof (Stored));

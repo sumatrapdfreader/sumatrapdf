@@ -136,10 +136,12 @@
       determine which glyph to return.
     </para>
     <para>
-      The safest approach is to add all of the text available, then
-      use <parameter>item_offset</parameter> and
+      The safest approach is to add all of the text available (even
+      if your text contains a mix of scripts, directions, languages
+      and fonts), then use <parameter>item_offset</parameter> and
       <parameter>item_length</parameter> to indicate which characters you
-      want shaped, so that HarfBuzz has access to any context.
+      want shaped (which must all have the same script, direction,
+      language and font), so that HarfBuzz has access to any context.
     </para>
     <para>
       You can also add Unicode code points directly with
@@ -193,7 +195,7 @@
       hb_buffer_set_language(buf, hb_language_from_string("en", -1));
     </programlisting>
     <para>
-      However, since these properties are often the repeated for
+      However, since these properties are often repeated for
       multiple text runs, you can also save them in a
       <literal>hb_segment_properties_t</literal> for reuse:
     </para>

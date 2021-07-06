@@ -161,8 +161,6 @@ struct khmer_shape_plan_t
 
   mutable hb_codepoint_t virama_glyph;
 
-  hb_indic_would_substitute_feature_t pref;
-
   hb_mask_t mask_array[KHMER_NUM_FEATURES];
 };
 
@@ -174,8 +172,6 @@ data_create_khmer (const hb_ot_shape_plan_t *plan)
     return nullptr;
 
   khmer_plan->virama_glyph = (hb_codepoint_t) -1;
-
-  khmer_plan->pref.init (&plan->map, HB_TAG('p','r','e','f'), true);
 
   for (unsigned int i = 0; i < ARRAY_LENGTH (khmer_plan->mask_array); i++)
     khmer_plan->mask_array[i] = (khmer_features[i].flags & F_GLOBAL) ?
@@ -393,11 +389,13 @@ reorder_khmer (const hb_ot_shape_plan_t *plan,
 	       hb_font_t *font,
 	       hb_buffer_t *buffer)
 {
-  insert_dotted_circles_khmer (plan, font, buffer);
+  if (buffer->message (font, "start reordering khmer")) {
+    insert_dotted_circles_khmer (plan, font, buffer);
 
-  foreach_syllable (buffer, start, end)
-    reorder_syllable_khmer (plan, font->face, buffer, start, end);
-
+    foreach_syllable (buffer, start, end)
+      reorder_syllable_khmer (plan, font->face, buffer, start, end);
+    (void) buffer->message (font, "end reordering khmer");
+  }
   HB_BUFFER_DEALLOCATE_VAR (buffer, khmer_category);
 }
 

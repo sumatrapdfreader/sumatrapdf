@@ -324,10 +324,10 @@ DECLARE_NULL_INSTANCE (hb_unicode_funcs_t);
  * Modify Telugu length marks (ccc=84, ccc=91).
  * These are the only matras in the main Indic scripts range that have
  * a non-zero ccc.  That makes them reorder with the Halant (ccc=9).
- * Assign 5 and 6, which are otherwise unassigned.
+ * Assign 4 and 5, which are otherwise unassigned.
  */
-#define HB_MODIFIED_COMBINING_CLASS_CCC84 5 /* length mark */
-#define HB_MODIFIED_COMBINING_CLASS_CCC91 6 /* ai length mark */
+#define HB_MODIFIED_COMBINING_CLASS_CCC84 4 /* length mark */
+#define HB_MODIFIED_COMBINING_CLASS_CCC91 5 /* ai length mark */
 
 /* Thai
  *

@@ -48,14 +48,14 @@
     <para>
       If a font has a GDEF table, then that is used for
       glyph classes; if not, HarfBuzz will fall back to Unicode
-      categorization by code point. If a font has an AAT "morx" table,
+      categorization by code point. If a font has an AAT <literal>morx</literal> table,
       then it is used for substitutions; if not, but there is a GSUB
       table, then the GSUB table is used. If the font has an AAT
-      "kerx" table, then it is used for positioning; if not, but
+      <literal>kerx</literal> table, then it is used for positioning; if not, but
       there is a GPOS table, then the GPOS table is used. If neither
-      table is found, but there is a "kern" table, then HarfBuzz will
-      use the "kern" table. If there is no "kerx", no GPOS, and no
-      "kern", HarfBuzz will fall back to positioning marks itself.
+      table is found, but there is a <literal>kern</literal> table, then HarfBuzz will
+      use the <literal>kern</literal> table. If there is no <literal>kerx</literal>, no GPOS, and no
+      <literal>kern</literal>, HarfBuzz will fall back to positioning marks itself.
     </para>
     <para>
       With a well-behaved OpenType font, you expect GDEF, GSUB, and
@@ -149,9 +149,39 @@
       also applies the <literal>calt</literal>,
       <literal>clig</literal>, <literal>curs</literal>,
       <literal>dist</literal>, <literal>kern</literal>,
-      <literal>liga</literal>, <literal>rclt</literal>,
-      and <literal>frac</literal> features.
+      <literal>liga</literal> and <literal>rclt</literal>, features.
     </para>
+    <para>
+      Additionally, when HarfBuzz encounters a fraction slash
+      (<literal>U+2044</literal>), it looks backward and forward for decimal
+      digits (Unicode General Category = Nd), and enables features
+      <literal>numr</literal> on the sequence before the fraction slash,
+      <literal>dnom</literal> on the sequence after the fraction slash,
+      and <literal>frac</literal> on the whole sequence including the fraction
+      slash.
+    </para>
+    <para>
+      Some script-specific shaping models
+      (see <xref linkend="opentype-shaping-models" />) disable some of the
+      features listed above:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Hangul: <literal>calt</literal>
+	</para>
+      </listitem>
+      <listitem>
+        <para>
+          Indic: <literal>liga</literal>
+	</para>
+      </listitem>
+      <listitem>
+        <para>
+          Khmer: <literal>liga</literal>
+	</para>
+      </listitem>
+    </itemizedlist>
     <para>
       If the text direction is vertical, HarfBuzz applies
       the <literal>vert</literal> feature by default.

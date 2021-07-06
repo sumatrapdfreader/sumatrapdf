@@ -25,7 +25,6 @@
 
 #include "hb.hh"
 #include "hb-number.hh"
-#include "hb-number-parser.hh"
 
 
 int
@@ -146,11 +145,6 @@ main (int argc, char **argv)
     assert ((int) roundf (pv * 1000.) == 123);
     assert (pp - str == 4);
     assert (end - pp == 1);
-
-    /* Test strtod_rl even if libc's strtod_l is used */
-    char *pend;
-    assert ((int) roundf (strtod_rl (str, &pend) * 1000.) == 123);
-    assert (pend - str == 4);
   }
 
   {
@@ -163,10 +157,6 @@ main (int argc, char **argv)
     assert ((int) roundf (pv * 1000.) == 123);
     assert (pp - str == 5);
     assert (end - pp == 0);
-
-    char *pend;
-    assert ((int) roundf (strtod_rl (str, &pend) * 1000.) == 123);
-    assert (pend - str == 5);
   }
 
   {
@@ -179,10 +169,6 @@ main (int argc, char **argv)
     assert ((int) roundf (pv * 1000.) == 123);
     assert (pp - str == 7);
     assert (end - pp == 0);
-
-    char *pend;
-    assert ((int) roundf (strtod_rl (str, &pend) * 1000.) == 123);
-    assert (pend - str == 7);
   }
 
   {
@@ -195,10 +181,6 @@ main (int argc, char **argv)
     assert ((int) roundf (pv * 1000.) == 123);
     assert (pp - str == 6);
     assert (end - pp == 0);
-
-    char *pend;
-    assert ((int) roundf (strtod_rl (str, &pend) * 1000.) == 123);
-    assert (pend - str == 6);
   }
 
   {
@@ -211,10 +193,6 @@ main (int argc, char **argv)
     assert ((int) roundf (pv * 1000.) == 123);
     assert (pp - str == 10);
     assert (end - pp == 0);
-
-    char *pend;
-    assert ((int) roundf (strtod_rl (str, &pend) * 1000.) == 123);
-    assert (pend - str == 10);
   }
 
   {
@@ -228,9 +206,6 @@ main (int argc, char **argv)
     assert (pp - str == 13);
     assert (end - pp == 0);
 
-    char *pend;
-    assert ((int) roundf (strtod_rl (str, &pend) * 1000.) == -123);
-    assert (pend - str == 13);
   }
 
   {
@@ -243,10 +218,6 @@ main (int argc, char **argv)
     assert ((int) roundf (pv * 1000.) == -123);
     assert (pp - str == 8);
     assert (end - pp == 0);
-
-    char *pend;
-    assert ((int) roundf (strtod_rl (str, &pend) * 1000.) == -123);
-    assert (pend - str == 8);
   }
 
   return 0;

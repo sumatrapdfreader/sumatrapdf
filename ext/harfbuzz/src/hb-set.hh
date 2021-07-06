@@ -89,6 +89,23 @@ struct hb_set_t
       }
     }
 
+    void del_range (hb_codepoint_t a, hb_codepoint_t b)
+    {
+      elt_t *la = &elt (a);
+      elt_t *lb = &elt (b);
+      if (la == lb)
+	*la &= ~((mask (b) << 1) - mask(a));
+      else
+      {
+	*la &= mask (a) - 1;
+	la++;
+
+	memset (la, 0, (char *) lb - (char *) la);
+
+	*lb &= ~((mask (b) << 1) - 1);
+      }
+    }
+
     bool is_equal (const page_t *other) const
     {
       return 0 == hb_memcmp (&v, &other->v, sizeof (v));
@@ -135,7 +152,11 @@ struct hb_set_t
       unsigned int i = m / ELT_BITS;
       unsigned int j = m & ELT_MASK;
 
-      const elt_t vv = v[i] & ((elt_t (1) << (j + 1)) - 1);
+      /* Fancy mask to avoid shifting by elt_t bitsize, which is undefined. */
+      const elt_t mask = j < 8 * sizeof (elt_t) - 1 ?
+			 ((elt_t (1) << (j + 1)) - 1) :
+			 (elt_t) -1;
+      const elt_t vv = v[i] & mask;
       const elt_t *p = &vv;
       while (true)
       {
@@ -258,7 +279,7 @@ struct hb_set_t
     return true;
   }
 
-  void dirty () { population = (unsigned int) -1; }
+  void dirty () { population = UINT_MAX; }
 
   void add (hb_codepoint_t g)
   {
@@ -362,14 +383,56 @@ struct hb_set_t
     dirty ();
     page->del (g);
   }
+
+  private:
+  void del_pages (int ds, int de)
+  {
+    if (ds <= de)
+    {
+      unsigned int write_index = 0;
+      for (unsigned int i = 0; i < page_map.length; i++)
+      {
+	int m = (int) page_map[i].major;
+	if (m < ds || de < m)
+	  page_map[write_index++] = page_map[i];
+      }
+      compact (write_index);
+      resize (write_index);
+    }
+  }
+
+  public:
   void del_range (hb_codepoint_t a, hb_codepoint_t b)
   {
     /* TODO perform op even if !successful. */
-    /* TODO Optimize, like add_range(). */
     if (unlikely (!successful)) return;
-    for (unsigned int i = a; i < b + 1; i++)
-      del (i);
+    if (unlikely (a > b || a == INVALID || b == INVALID)) return;
+    dirty ();
+    unsigned int ma = get_major (a);
+    unsigned int mb = get_major (b);
+    /* Delete pages from ds through de if ds <= de. */
+    int ds = (a == major_start (ma))? (int) ma: (int) (ma + 1);
+    int de = (b + 1 == major_start (mb + 1))? (int) mb: ((int) mb - 1);
+    if (ds > de || (int) ma < ds)
+    {
+      page_t *page = page_for (a);
+      if (page)
+      {
+	if (ma == mb)
+	  page->del_range (a, b);
+	else
+	  page->del_range (a, major_start (ma + 1) - 1);
+      }
+    }
+    if (de < (int) mb && ma != mb)
+    {
+      page_t *page = page_for (b);
+      if (page)
+	page->del_range (major_start (mb), b);
+    }
+    del_pages (ds, de);
   }
+
   bool get (hb_codepoint_t g) const
   {
     const page_t *page = page_for (g);
@@ -387,7 +450,10 @@ struct hb_set_t
   bool operator () (hb_codepoint_t k) const { return has (k); }
 
   /* Sink interface. */
-  hb_set_t& operator << (hb_codepoint_t v) { add (v); return *this; }
+  hb_set_t& operator << (hb_codepoint_t v)
+  { add (v); return *this; }
+  hb_set_t& operator << (const hb_pair_t<hb_codepoint_t, hb_codepoint_t>& range)
+  { add_range (range.first, range.second); return *this; }
 
   bool intersects (hb_codepoint_t first, hb_codepoint_t last) const
   {
@@ -446,6 +512,34 @@ struct hb_set_t
     return true;
   }
 
+  void compact (unsigned int length)
+  {
+    hb_vector_t<uint32_t> old_index_to_page_map_index;
+    old_index_to_page_map_index.resize(pages.length);
+    for (uint32_t i = 0; i < old_index_to_page_map_index.length; i++)
+      old_index_to_page_map_index[i] = 0xFFFFFFFF;
+
+    for (uint32_t i = 0; i < length; i++)
+      old_index_to_page_map_index[page_map[i].index] =  i;
+
+    compact_pages (old_index_to_page_map_index);
+  }
+
+  void compact_pages (const hb_vector_t<uint32_t>& old_index_to_page_map_index)
+  {
+    unsigned int write_index = 0;
+    for (unsigned int i = 0; i < pages.length; i++)
+    {
+      if (old_index_to_page_map_index[i] == 0xFFFFFFFF) continue;
+
+      if (write_index < i)
+	pages[write_index] = pages[i];
+
+      page_map[old_index_to_page_map_index[i]].index = write_index;
+      write_index++;
+    }
+  }
+
   template <typename Op>
   void process (const Op& op, const hb_set_t *other)
   {
@@ -459,10 +553,22 @@ struct hb_set_t
 
     unsigned int count = 0, newCount = 0;
     unsigned int a = 0, b = 0;
+    unsigned int write_index = 0;
     for (; a < na && b < nb; )
     {
       if (page_map[a].major == other->page_map[b].major)
       {
+	if (!Op::passthru_left)
+	{
+	  // Move page_map entries that we're keeping from the left side set
+	  // to the front of the page_map vector. This isn't necessary if
+	  // passthru_left is set since no left side pages will be removed
+	  // in that case.
+	  if (write_index < a)
+	    page_map[write_index] = page_map[a];
+	  write_index++;
+	}
+
 	count++;
 	a++;
 	b++;
@@ -485,9 +591,16 @@ struct hb_set_t
     if (Op::passthru_right)
       count += nb - b;
 
-    if (count > pages.length)
-      if (!resize (count))
-	return;
+    if (!Op::passthru_left)
+    {
+      na  = write_index;
+      next_page = write_index;
+      compact (write_index);
+    }
+
+    if (!resize (count))
+      return;
+
     newCount = count;
 
     /* Process in-place backward. */
@@ -662,7 +775,7 @@ struct hb_set_t
 
   unsigned int get_population () const
   {
-    if (population != (unsigned int) -1)
+    if (population != UINT_MAX)
       return population;
 
     unsigned int pop = 0;
@@ -698,8 +811,15 @@ struct hb_set_t
   struct iter_t : hb_iter_with_fallback_t<iter_t, hb_codepoint_t>
   {
     static constexpr bool is_sorted_iterator = true;
-    iter_t (const hb_set_t &s_ = Null(hb_set_t)) :
-      s (&s_), v (INVALID), l (s->get_population () + 1) { __next__ (); }
+    iter_t (const hb_set_t &s_ = Null (hb_set_t),
+	    bool init = true) : s (&s_), v (INVALID), l(0)
+    {
+      if (init)
+      {
+	l = s->get_population () + 1;
+	__next__ ();
+      }
+    }
 
     typedef hb_codepoint_t __item_t__;
     hb_codepoint_t __item__ () const { return v; }
@@ -707,7 +827,7 @@ struct hb_set_t
     void __next__ () { s->next (&v); if (l) l--; }
     void __prev__ () { s->previous (&v); }
     unsigned __len__ () const { return l; }
-    iter_t end () const { return iter_t (*s); }
+    iter_t end () const { return iter_t (*s, false); }
     bool operator != (const iter_t& o) const
     { return s != o.s || v != o.v; }
 

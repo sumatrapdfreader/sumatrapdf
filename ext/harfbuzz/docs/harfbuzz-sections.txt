@@ -80,6 +80,7 @@ hb_buffer_set_user_data
 hb_buffer_get_user_data
 hb_buffer_get_glyph_infos
 hb_buffer_get_glyph_positions
+hb_buffer_has_positions
 hb_buffer_get_invisible_glyph
 hb_buffer_set_invisible_glyph
 hb_buffer_set_replacement_codepoint
@@ -88,8 +89,11 @@ hb_buffer_normalize_glyphs
 hb_buffer_reverse
 hb_buffer_reverse_range
 hb_buffer_reverse_clusters
+hb_buffer_serialize
 hb_buffer_serialize_glyphs
 hb_buffer_deserialize_glyphs
+hb_buffer_serialize_unicode
+hb_buffer_deserialize_unicode
 hb_buffer_serialize_format_from_string
 hb_buffer_serialize_format_to_string
 hb_buffer_serialize_list_formats
@@ -325,6 +329,7 @@ hb_font_get_scale
 hb_font_get_user_data
 hb_font_get_variation_glyph
 hb_font_get_variation_glyph_func_t
+hb_font_get_var_coords_design
 hb_font_get_var_coords_normalized
 hb_font_glyph_from_string
 hb_font_glyph_to_string
@@ -354,6 +359,8 @@ hb_font_get_font_h_extents_func_t
 hb_font_get_font_v_extents_func_t
 hb_font_get_h_extents
 hb_font_get_v_extents
+hb_font_extents_t
+hb_glyph_extents_t
 </SECTION>
 
 <SECTION>
@@ -365,6 +372,8 @@ hb_ft_font_create
 hb_ft_font_create_referenced
 hb_ft_font_changed
 hb_ft_font_get_face
+hb_ft_font_lock_face
+hb_ft_font_unlock_face
 hb_ft_font_set_load_flags
 hb_ft_font_get_load_flags
 hb_ft_font_set_funcs
@@ -571,6 +580,7 @@ hb_ot_layout_language_get_feature_indexes
 hb_ot_layout_language_get_feature_tags
 hb_ot_layout_language_get_required_feature
 hb_ot_layout_lookup_collect_glyphs
+hb_ot_layout_lookup_get_glyph_alternates
 hb_ot_layout_lookup_substitute_closure
 hb_ot_layout_lookups_substitute_closure
 hb_ot_layout_lookup_would_substitute

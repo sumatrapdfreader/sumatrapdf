@@ -1,0 +1,38 @@
+# HarfBuzz feature options
+option('glib', type: 'feature', value: 'auto',
+  description: 'Enable GLib unicode functions')
+option('gobject', type: 'feature', value: 'auto',
+  description: 'Enable GObject bindings')
+option('cairo', type: 'feature', value: 'auto',
+  description: 'Use Cairo graphics library')
+option('fontconfig', type: 'feature', value: 'auto',
+  description: 'Use fontconfig')
+option('icu', type: 'feature', value: 'auto',
+  description: 'Enable ICU library unicode functions')
+option('graphite', type: 'feature', value: 'disabled',
+  description: 'Enable Graphite2 complementary shaper')
+option('freetype', type: 'feature', value: 'auto',
+  description: 'Enable freetype interop helpers')
+option('gdi', type: 'feature', value: 'disabled',
+  description: 'Enable GDI helpers and Uniscribe shaper backend (Windows only)')
+option('directwrite', type: 'feature', value: 'disabled',
+  description: 'Enable DirectWrite shaper backend on Windows (experimental)')
+option('coretext', type: 'feature', value: 'disabled',
+  description: 'Enable CoreText shaper backend on macOS')
+
+# Common feature options
+option('tests', type: 'feature', value: 'enabled', yield: true,
+  description: 'Enable or disable unit tests')
+option('introspection', type: 'feature', value: 'auto', yield: true,
+  description: 'Generate gobject-introspection bindings (.gir/.typelib files)')
+option('docs', type: 'feature', value: 'auto', yield: true,
+  description: 'Generate documentation with gtk-doc')
+
+option('benchmark', type: 'feature', value: 'auto',
+  description: 'Enable benchmark tests')
+option('icu_builtin', type: 'boolean', value: false,
+  description: 'Don\'t separate ICU support as harfbuzz-icu module')
+option('experimental_api', type: 'boolean', value: false,
+  description: 'Enable experimental APIs')
+option('fuzzer_ldflags', type: 'string',
+  description: 'Extra LDFLAGS used during linking of fuzzing binaries')

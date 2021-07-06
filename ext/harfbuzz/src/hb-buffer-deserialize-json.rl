@@ -52,14 +52,18 @@ action tok {
 	tok = p;
 }
 
-action parse_glyph {
+action ensure_glyphs { if (unlikely (!buffer->ensure_glyphs ())) return false; }
+action ensure_unicode { if (unlikely (!buffer->ensure_unicode ())) return false; }
+
+action parse_glyph_name {
+	/* TODO Unescape \" and \\ if found. */
 	if (!hb_font_glyph_from_string (font,
 					tok, p - tok,
 					&info.codepoint))
 	  return false;
 }
 
-action parse_gid       { if (!parse_uint (tok, p, &info.codepoint)) return false; }
+action parse_codepoint { if (!parse_uint (tok, p, &info.codepoint)) return false; }
 action parse_cluster   { if (!parse_uint (tok, p, &info.cluster )) return false; }
 action parse_x_offset  { if (!parse_int  (tok, p, &pos.x_offset )) return false; }
 action parse_y_offset  { if (!parse_int  (tok, p, &pos.y_offset )) return false; }
@@ -72,20 +76,27 @@ num	= '-'? unum;
 comma = space* ',' space*;
 colon = space* ':' space*;
 
-glyph_id = unum;
-glyph_name = alpha (alnum|'_'|'.'|'-')*;
+codepoint = unum;
+glyph_name = '"' ([^\\"] | '\\' [\\"])* '"';
 
-glyph_string   = '"' (glyph_name >tok %parse_glyph) '"';
-glyph_number = (glyph_id >tok %parse_gid);
+parse_glyph_name   = (glyph_name >tok %parse_glyph_name);
+parse_codepoint = (codepoint >tok %parse_codepoint);
 
-glyph	= "\"g\""  colon (glyph_string | glyph_number);
+glyph	= "\"g\""  colon (parse_glyph_name | parse_codepoint);
+unicode	= "\"u\""  colon parse_codepoint;
 cluster	= "\"cl\"" colon (unum >tok %parse_cluster);
 xoffset	= "\"dx\"" colon (num >tok %parse_x_offset);
 yoffset	= "\"dy\"" colon (num >tok %parse_y_offset);
 xadvance= "\"ax\"" colon (num >tok %parse_x_advance);
 yadvance= "\"ay\"" colon (num >tok %parse_y_advance);
 
-element = glyph | cluster | xoffset | yoffset | xadvance | yadvance;
+element = glyph @ensure_glyphs
+	| unicode @ensure_unicode
+	| cluster
+	| xoffset
+	| yoffset
+	| xadvance
+	| yadvance;
 item	=
 	( '{' space* element (comma element)* space* '}')
 	>clear_item
@@ -97,7 +108,7 @@ main := space* item (comma item)* space* (','|']')?;
 }%%
 
 static hb_bool_t
-_hb_buffer_deserialize_glyphs_json (hb_buffer_t *buffer,
+_hb_buffer_deserialize_json (hb_buffer_t *buffer,
 				    const char *buf,
 				    unsigned int buf_len,
 				    const char **end_ptr,

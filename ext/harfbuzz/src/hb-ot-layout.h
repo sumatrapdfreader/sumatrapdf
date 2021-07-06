@@ -121,7 +121,6 @@ hb_ot_layout_get_glyphs_in_class (hb_face_t                  *face,
 				  hb_ot_layout_glyph_class_t  klass,
 				  hb_set_t                   *glyphs /* OUT */);
 
-
 /* Not that useful.  Provides list of attach points for a glyph that a
  * client may want to cache */
 HB_EXTERN unsigned int
@@ -161,7 +160,7 @@ HB_EXTERN hb_bool_t
 hb_ot_layout_table_find_script (hb_face_t    *face,
 				hb_tag_t      table_tag,
 				hb_tag_t      script_tag,
-				unsigned int *script_index);
+				unsigned int *script_index /* OUT */);
 
 HB_EXTERN hb_bool_t
 hb_ot_layout_table_select_script (hb_face_t      *face,
@@ -199,15 +198,15 @@ hb_ot_layout_language_get_required_feature_index (hb_face_t    *face,
 						  hb_tag_t      table_tag,
 						  unsigned int  script_index,
 						  unsigned int  language_index,
-						  unsigned int *feature_index);
+						  unsigned int *feature_index /* OUT */);
 
 HB_EXTERN hb_bool_t
 hb_ot_layout_language_get_required_feature (hb_face_t    *face,
 					    hb_tag_t      table_tag,
 					    unsigned int  script_index,
 					    unsigned int  language_index,
-					    unsigned int *feature_index,
-					    hb_tag_t     *feature_tag);
+					    unsigned int *feature_index /* OUT */,
+					    hb_tag_t     *feature_tag /* OUT */);
 
 HB_EXTERN unsigned int
 hb_ot_layout_language_get_feature_indexes (hb_face_t    *face,
@@ -233,7 +232,7 @@ hb_ot_layout_language_find_feature (hb_face_t    *face,
 				    unsigned int  script_index,
 				    unsigned int  language_index,
 				    hb_tag_t      feature_tag,
-				    unsigned int *feature_index);
+				    unsigned int *feature_index /* OUT */);
 
 HB_EXTERN unsigned int
 hb_ot_layout_feature_get_lookups (hb_face_t    *face,
@@ -323,6 +322,14 @@ hb_ot_layout_feature_with_variations_get_lookups (hb_face_t    *face,
 
 HB_EXTERN hb_bool_t
 hb_ot_layout_has_substitution (hb_face_t *face);
+
+HB_EXTERN unsigned
+hb_ot_layout_lookup_get_glyph_alternates (hb_face_t      *face,
+					  unsigned        lookup_index,
+					  hb_codepoint_t  glyph,
+					  unsigned        start_offset,
+					  unsigned       *alternate_count /* IN/OUT */,
+					  hb_codepoint_t *alternate_glyphs /* OUT */);
 
 HB_EXTERN hb_bool_t
 hb_ot_layout_lookup_would_substitute (hb_face_t            *face,
@@ -449,7 +456,6 @@ hb_ot_layout_get_baseline (hb_font_t                   *font,
 			   hb_tag_t                     script_tag,
 			   hb_tag_t                     language_tag,
 			   hb_position_t               *coord        /* OUT.  May be NULL. */);
-
 
 HB_END_DECLS
 

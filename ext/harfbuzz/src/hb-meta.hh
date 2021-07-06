@@ -343,7 +343,6 @@ using hb_is_move_assignable = hb_is_assignable<hb_add_lvalue_reference<T>,
 
 template <typename T> union hb_trivial { T value; };
 
-/* Don't know how to do the following. */
 template <typename T>
 using hb_is_trivially_destructible= hb_is_destructible<hb_trivial<T>>;
 #define hb_is_trivially_destructible(T) hb_is_trivially_destructible<T>::value
@@ -396,5 +395,16 @@ using hb_is_trivial= hb_bool_constant<
 >;
 #define hb_is_trivial(T) hb_is_trivial<T>::value
 
+/* hb_unwrap_type (T)
+ * If T has no T::type, returns T. Otherwise calls itself on T::type recursively.
+ */
+
+template <typename T, typename>
+struct _hb_unwrap_type : hb_type_identity_t<T> {};
+template <typename T>
+struct _hb_unwrap_type<T, hb_void_t<typename T::type>> : _hb_unwrap_type<typename T::type, void> {};
+template <typename T>
+using hb_unwrap_type = _hb_unwrap_type<T, void>;
+#define hb_unwrap_type(T) typename hb_unwrap_type<T>::type
 
 #endif /* HB_META_HH */

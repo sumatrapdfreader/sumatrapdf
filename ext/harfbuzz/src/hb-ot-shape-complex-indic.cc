@@ -248,6 +248,7 @@ struct indic_shape_plan_t
   hb_indic_would_substitute_feature_t pref;
   hb_indic_would_substitute_feature_t blwf;
   hb_indic_would_substitute_feature_t pstf;
+  hb_indic_would_substitute_feature_t vatu;
 
   hb_mask_t mask_array[INDIC_NUM_FEATURES];
 };
@@ -286,6 +287,7 @@ data_create_indic (const hb_ot_shape_plan_t *plan)
   indic_plan->pref.init (&plan->map, HB_TAG('p','r','e','f'), zero_context);
   indic_plan->blwf.init (&plan->map, HB_TAG('b','l','w','f'), zero_context);
   indic_plan->pstf.init (&plan->map, HB_TAG('p','s','t','f'), zero_context);
+  indic_plan->vatu.init (&plan->map, HB_TAG('v','a','t','u'), zero_context);
 
   for (unsigned int i = 0; i < ARRAY_LENGTH (indic_plan->mask_array); i++)
     indic_plan->mask_array[i] = (indic_features[i].flags & F_GLOBAL) ?
@@ -315,10 +317,16 @@ consonant_position_from_face (const indic_shape_plan_t *indic_plan,
    * base at 0.  The font however, only has lookups matching
    * 930,94D in 'blwf', not the expected 94D,930 (with new-spec
    * table).  As such, we simply match both sequences.  Seems
-   * to work. */
+   * to work.
+   *
+   * Vatu is done as well, for:
+   * https://github.com/harfbuzz/harfbuzz/issues/1587
+   */
   hb_codepoint_t glyphs[3] = {virama, consonant, virama};
   if (indic_plan->blwf.would_substitute (glyphs  , 2, face) ||
-      indic_plan->blwf.would_substitute (glyphs+1, 2, face))
+      indic_plan->blwf.would_substitute (glyphs+1, 2, face) ||
+      indic_plan->vatu.would_substitute (glyphs  , 2, face) ||
+      indic_plan->vatu.would_substitute (glyphs+1, 2, face))
     return POS_BELOW_C;
   if (indic_plan->pstf.would_substitute (glyphs  , 2, face) ||
       indic_plan->pstf.would_substitute (glyphs+1, 2, face))
@@ -642,7 +650,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
    * is *not* a Halant after last consonant already.  We know that is the
    * case for Kannada, while it reorders unconditionally in other scripts,
    * eg. Malayalam, Bengali, and Devanagari.  We don't currently know about
-   * other scripts, so we blacklist Kannada.
+   * other scripts, so we block Kannada.
    *
    * Kannada test case:
    * U+0C9A,U+0CCD,U+0C9A,U+0CCD
@@ -998,11 +1006,14 @@ initial_reordering_indic (const hb_ot_shape_plan_t *plan,
 			  hb_font_t *font,
 			  hb_buffer_t *buffer)
 {
+  if (!buffer->message (font, "start reordering indic initial"))
+    return;
   update_consonant_positions_indic (plan, font, buffer);
   insert_dotted_circles_indic (plan, font, buffer);
 
   foreach_syllable (buffer, start, end)
     initial_reordering_syllable_indic (plan, font->face, buffer, start, end);
+  (void) buffer->message (font, "end reordering indic initial");
 }
 
 static void
@@ -1325,6 +1336,7 @@ final_reordering_syllable_indic (const hb_ot_shape_plan_t *plan,
 	goto reph_move;
       }
     }
+    /* See https://github.com/harfbuzz/harfbuzz/issues/2298#issuecomment-615318654 */
 
     /*       6. Otherwise, reorder reph to the end of the syllable.
      */
@@ -1476,8 +1488,11 @@ final_reordering_indic (const hb_ot_shape_plan_t *plan,
   unsigned int count = buffer->len;
   if (unlikely (!count)) return;
 
-  foreach_syllable (buffer, start, end)
-    final_reordering_syllable_indic (plan, buffer, start, end);
+  if (buffer->message (font, "start reordering indic final")) {
+    foreach_syllable (buffer, start, end)
+      final_reordering_syllable_indic (plan, buffer, start, end);
+    (void) buffer->message (font, "end reordering indic final");
+  }
 
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_category);
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_position);

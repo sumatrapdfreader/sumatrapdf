@@ -46,10 +46,13 @@ hb_subset_input_create_or_fail ()
   input->glyphs = hb_set_create ();
   input->name_ids = hb_set_create ();
   hb_set_add_range (input->name_ids, 0, 6);
+  input->name_languages = hb_set_create ();
+  hb_set_add (input->name_languages, 0x0409);
   input->drop_tables = hb_set_create ();
   input->drop_hints = false;
   input->desubroutinize = false;
   input->retain_gids = false;
+  input->name_legacy = false;
 
   hb_tag_t default_drop_tables[] = {
     // Layout disabled by default
@@ -77,8 +80,6 @@ hb_subset_input_create_or_fail ()
     HB_TAG ('G', 'l', 'o', 'c'),
     HB_TAG ('S', 'i', 'l', 'f'),
     HB_TAG ('S', 'i', 'l', 'l'),
-    // Colour
-    HB_TAG ('s', 'b', 'i', 'x')
   };
 
   input->drop_tables->add_array (default_drop_tables, ARRAY_LENGTH (default_drop_tables));
@@ -116,6 +117,7 @@ hb_subset_input_destroy (hb_subset_input_t *subset_input)
   hb_set_destroy (subset_input->unicodes);
   hb_set_destroy (subset_input->glyphs);
   hb_set_destroy (subset_input->name_ids);
+  hb_set_destroy (subset_input->name_languages);
   hb_set_destroy (subset_input->drop_tables);
 
   free (subset_input);
@@ -149,6 +151,12 @@ HB_EXTERN hb_set_t *
 hb_subset_input_nameid_set (hb_subset_input_t *subset_input)
 {
   return subset_input->name_ids;
+}
+
+HB_EXTERN hb_set_t *
+hb_subset_input_namelangid_set (hb_subset_input_t *subset_input)
+{
+  return subset_input->name_languages;
 }
 
 HB_EXTERN hb_set_t *
@@ -205,4 +213,17 @@ HB_EXTERN hb_bool_t
 hb_subset_input_get_retain_gids (hb_subset_input_t *subset_input)
 {
   return subset_input->retain_gids;
+}
+
+HB_EXTERN void
+hb_subset_input_set_name_legacy (hb_subset_input_t *subset_input,
+				 hb_bool_t name_legacy)
+{
+  subset_input->name_legacy = name_legacy;
+}
+
+HB_EXTERN hb_bool_t
+hb_subset_input_get_name_legacy (hb_subset_input_t *subset_input)
+{
+  return subset_input->name_legacy;
 }

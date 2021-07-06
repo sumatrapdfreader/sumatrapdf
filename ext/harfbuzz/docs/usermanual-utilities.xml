@@ -18,8 +18,8 @@
     <title>Command-line tools</title>
     <para>
       HarfBuzz include three command-line tools:
-      <program>hb-shape</program>, <program>hb-view</program>, and
-      <program>hb-subset</program>. They can be used to examine
+      <command>hb-shape</command>, <command>hb-view</command>, and
+      <command>hb-subset</command>. They can be used to examine
       HarfBuzz's functionality, debug font binaries, or explore the
       various shaping models and features from a terminal.
     </para>
@@ -27,12 +27,12 @@
     <section id="utilities-command-line-hbshape">
       <title>hb-shape</title>
       <para>
-	<emphasis><program>hb-shape</program></emphasis> allows you to run HarfBuzz's
+	<emphasis><command>hb-shape</command></emphasis> allows you to run HarfBuzz's
 	<function>hb_shape()</function> function on an input string and
 	to examine the outcome, in human-readable form, as terminal
-	output. <program>hb-shape</program> does
+	output. <command>hb-shape</command> does
 	<emphasis>not</emphasis> render the results of the shaping call
-	into rendered text (you can use <program>hb-view</program>, below, for
+	into rendered text (you can use <command>hb-view</command>, below, for
 	that). Instead, it prints out the final glyph indices and
 	positions, taking all shaping operations into account, as if the
 	input string were a HarfBuzz input buffer.
@@ -80,10 +80,10 @@
     <section id="utilities-command-line-hbview">
       <title>hb-view</title>
       <para>
-	<emphasis><program>hb-view</program></emphasis> allows you to
+	<emphasis><command>hb-view</command></emphasis> allows you to
 	see the shaped output of an input string in rendered
-	form. Like <program>hb-shape</program>,
-	<program>hb-view</program> takes a font file and a text string
+	form. Like <command>hb-shape</command>,
+	<command>hb-view</command> takes a font file and a text string
 	as its arguments:
       </para>
       <programlisting>
@@ -92,7 +92,7 @@
 	<parameter>yourinputtext</parameter>
       </programlisting>
       <para>
-	By default, <program>hb-view</program> renders the shaped
+	By default, <command>hb-view</command> renders the shaped
 	text in ASCII block-character images as terminal output. By
 	appending the
 	<command>--output-file=<optional>filename</optional></command>
@@ -100,7 +100,7 @@
 	(among other formats).
       </para>
       <para>
-	As with <program>hb-shape</program>, a lengthy set of options
+	As with <command>hb-shape</command>, a lengthy set of options
 	is available, with which you can  enable or disable
 	specific font features, set variation-font axis values,
 	alter the language, script, direction, and clustering settings
@@ -114,10 +114,10 @@
 	with 
       </para>
       <para>
-	In general, <program>hb-view</program> is a quick way to
+	In general, <command>hb-view</command> is a quick way to
 	verify that the output of HarfBuzz's shaping operation looks
 	correct for a given text-and-font combination, but you may
-	want to use <program>hb-shape</program> to figure out exactly
+	want to use <command>hb-shape</command> to figure out exactly
 	why something does not appear as expected.
       </para>
     </section>
@@ -125,13 +125,13 @@
     <section id="utilities-command-line-hbsubset">
       <title>hb-subset</title>
       <para>
-	<emphasis><program>hb-subset</program></emphasis> allows you
+	<emphasis><command>hb-subset</command></emphasis> allows you
 	to generate a subset of a given font, with a limited set of
 	supported characters, features, and variation settings.
       </para>
       <para>
 	By default, you provide an input font and an input text string
-	as the arguments to <program>hb-subset</program>, and it will
+	as the arguments to <command>hb-subset</command>, and it will
 	generate a font that covers the input text exactly like the
 	input font does, but includes no other characters or features.
       </para>

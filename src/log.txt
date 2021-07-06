@@ -10,6 +10,8 @@ make 3.3 release
 
 update mupdf
 
+update harfbuzz
+
 2021-06-29 Tue
 
 simplify GetPaperFormat()

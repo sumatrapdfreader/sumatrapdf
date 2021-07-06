@@ -46,7 +46,6 @@ struct hb_options_t
   bool unused : 1; /* In-case sign bit is here. */
   bool initialized : 1;
   bool uniscribe_bug_compatible : 1;
-  bool aat : 1;
 };
 
 union hb_options_union_t {
@@ -230,7 +229,7 @@ _hb_debug_msg<0> (const char *what HB_UNUSED,
 		  ...) {}
 
 #define DEBUG_MSG_LEVEL(WHAT, OBJ, LEVEL, LEVEL_DIR, ...)	_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), nullptr,    true, (LEVEL), (LEVEL_DIR), __VA_ARGS__)
-#define DEBUG_MSG(WHAT, OBJ, ...) 				_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), nullptr,    false, 0, 0, __VA_ARGS__)
+#define DEBUG_MSG(WHAT, OBJ, ...)				_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), nullptr,    false, 0, 0, __VA_ARGS__)
 #define DEBUG_MSG_FUNC(WHAT, OBJ, ...)				_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), HB_FUNC, false, 0, 0, __VA_ARGS__)
 
 
@@ -372,10 +371,6 @@ struct hb_no_trace_t {
 
 #ifndef HB_DEBUG_FT
 #define HB_DEBUG_FT (HB_DEBUG+0)
-#endif
-
-#ifndef HB_DEBUG_GET_COVERAGE
-#define HB_DEBUG_GET_COVERAGE (HB_DEBUG+0)
 #endif
 
 #ifndef HB_DEBUG_OBJECT

@@ -48,8 +48,13 @@
  * @short_description: FreeType integration
  * @include: hb-ft.h
  *
- * Functions for using HarfBuzz with the FreeType library to provide face and
+ * Functions for using HarfBuzz with the FreeType library.
+ *
+ * HarfBuzz supports using FreeType to provide face and
  * font data.
+ *
+ * <note>Note that FreeType is not thread-safe, therefore these
+ * functions are not thread-safe either.</note>
  **/
 
 
@@ -87,9 +92,7 @@ static hb_ft_font_t *
 _hb_ft_font_create (FT_Face ft_face, bool symbol, bool unref)
 {
   hb_ft_font_t *ft_font = (hb_ft_font_t *) calloc (1, sizeof (hb_ft_font_t));
-
-  if (unlikely (!ft_font))
-    return nullptr;
+  if (unlikely (!ft_font)) return nullptr;
 
   ft_font->lock.init ();
   ft_font->ft_face = ft_face;
@@ -127,10 +130,13 @@ _hb_ft_font_destroy (void *data)
 
 /**
  * hb_ft_font_set_load_flags:
- * @font:
- * @load_flags:
+ * @font: #hb_font_t to work upon
+ * @load_flags: The FreeType load flags to set
  *
+ * Sets the FT_Load_Glyph load flags for the specified #hb_font_t.
  *
+ * For more information, see 
+ * https://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#ft_load_xxx
  *
  * Since: 1.0.5
  **/
@@ -140,7 +146,7 @@ hb_ft_font_set_load_flags (hb_font_t *font, int load_flags)
   if (hb_object_is_immutable (font))
     return;
 
-  if (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy)
+  if (unlikely (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy))
     return;
 
   hb_ft_font_t *ft_font = (hb_ft_font_t *) font->user_data;
@@ -150,17 +156,21 @@ hb_ft_font_set_load_flags (hb_font_t *font, int load_flags)
 
 /**
  * hb_ft_font_get_load_flags:
- * @font:
+ * @font: #hb_font_t to work upon
  *
+ * Fetches the FT_Load_Glyph load flags of the specified #hb_font_t.
  *
+ * For more information, see 
+ * https://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#ft_load_xxx
  *
- * Return value:
+ * Return value: FT_Load_Glyph flags found
+ *
  * Since: 1.0.5
  **/
 int
 hb_ft_font_get_load_flags (hb_font_t *font)
 {
-  if (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy)
+  if (unlikely (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy))
     return 0;
 
   const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font->user_data;
@@ -168,10 +178,21 @@ hb_ft_font_get_load_flags (hb_font_t *font)
   return ft_font->load_flags;
 }
 
+/**
+ * hb_ft_get_face:
+ * @font: #hb_font_t to work upon
+ *
+ * Fetches the FT_Face associated with the specified #hb_font_t
+ * font object.
+ *
+ * Return value: the FT_Face found
+ *
+ * Since: 0.9.2
+ **/
 FT_Face
 hb_ft_font_get_face (hb_font_t *font)
 {
-  if (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy)
+  if (unlikely (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy))
     return nullptr;
 
   const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font->user_data;
@@ -179,6 +200,47 @@ hb_ft_font_get_face (hb_font_t *font)
   return ft_font->ft_face;
 }
 
+/**
+ * hb_ft_font_lock_face:
+ * @font:
+ *
+ *
+ *
+ * Return value:
+ * Since: 2.6.5
+ **/
+FT_Face
+hb_ft_font_lock_face (hb_font_t *font)
+{
+  if (unlikely (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy))
+    return nullptr;
+
+  const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font->user_data;
+
+  ft_font->lock.lock ();
+
+  return ft_font->ft_face;
+}
+
+/**
+ * hb_ft_font_unlock_face:
+ * @font:
+ *
+ *
+ *
+ * Return value:
+ * Since: 2.6.5
+ **/
+void
+hb_ft_font_unlock_face (hb_font_t *font)
+{
+  if (unlikely (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy))
+    return;
+
+  const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font->user_data;
+
+  ft_font->lock.unlock ();
+}
 
 
 static hb_bool_t
@@ -556,9 +618,12 @@ _hb_ft_font_set_funcs (hb_font_t *font, FT_Face ft_face, bool unref)
 {
   bool symbol = ft_face->charmap && ft_face->charmap->encoding == FT_ENCODING_MS_SYMBOL;
 
+  hb_ft_font_t *ft_font = _hb_ft_font_create (ft_face, symbol, unref);
+  if (unlikely (!ft_font)) return;
+
   hb_font_set_funcs (font,
 		     _hb_ft_get_font_funcs (),
-		     _hb_ft_font_create (ft_face, symbol, unref),
+		     ft_font,
 		     _hb_ft_font_destroy);
 }
 
@@ -595,12 +660,22 @@ _hb_ft_reference_table (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data
 
 /**
  * hb_ft_face_create:
- * @ft_face: (destroy destroy) (scope notified):
- * @destroy:
+ * @ft_face: (destroy destroy) (scope notified): FT_Face to work upon
+ * @destroy: (optional): A callback to call when the face object is not needed anymore
  *
+ * Creates an #hb_face_t face object from the specified FT_Face.
  *
+ * This variant of the function does not provide any life-cycle management.
  *
- * Return value: (transfer full):
+ * Most client programs should use hb_ft_face_create_referenced()
+ * (or, perhaps, hb_ft_face_create_cached()) instead. 
+ *
+ * If you know you have valid reasons not to use hb_ft_face_create_referenced(),
+ * then it is the client program's responsibility to destroy @ft_face 
+ * after the #hb_face_t face object has been destroyed.
+ *
+ * Return value: (transfer full): the new #hb_face_t face object
+ *
  * Since: 0.9.2
  **/
 hb_face_t *
@@ -630,11 +705,20 @@ hb_ft_face_create (FT_Face           ft_face,
 
 /**
  * hb_ft_face_create_referenced:
- * @ft_face:
+ * @ft_face: FT_Face to work upon
  *
+ * Creates an #hb_face_t face object from the specified FT_Face.
  *
+ * This is the preferred variant of the hb_ft_face_create*
+ * function family, because it calls FT_Reference_Face() on @ft_face,
+ * ensuring that @ft_face remains alive as long as the resulting
+ * #hb_face_t face object remains alive. Also calls FT_Done_Face()
+ * when the #hb_face_t face object is destroyed.
  *
- * Return value: (transfer full):
+ * Use this version unless you know you have good reasons not to.
+ *
+ * Return value: (transfer full): the new #hb_face_t face object
+ *
  * Since: 0.9.38
  **/
 hb_face_t *
@@ -652,11 +736,21 @@ hb_ft_face_finalize (FT_Face ft_face)
 
 /**
  * hb_ft_face_create_cached:
- * @ft_face:
+ * @ft_face: FT_Face to work upon
  *
+ * Creates an #hb_face_t face object from the specified FT_Face.
  *
+ * This variant of the function caches the newly created #hb_face_t
+ * face object, using the @generic pointer of @ft_face. Subsequent function
+ * calls that are passed the same @ft_face parameter will have the same
+ * #hb_face_t returned to them, and that #hb_face_t will be correctly
+ * reference counted.
  *
- * Return value: (transfer full):
+ * However, client programs are still responsible for destroying
+ * @ft_face after the last #hb_face_t face object has been destroyed.
+ *
+ * Return value: (transfer full): the new #hb_face_t face object
+ *
  * Since: 0.9.2
  **/
 hb_face_t *
@@ -674,15 +768,34 @@ hb_ft_face_create_cached (FT_Face ft_face)
   return hb_face_reference ((hb_face_t *) ft_face->generic.data);
 }
 
-
 /**
  * hb_ft_font_create:
- * @ft_face: (destroy destroy) (scope notified):
- * @destroy:
+ * @ft_face: (destroy destroy) (scope notified): FT_Face to work upon
+ * @destroy: (optional): A callback to call when the font object is not needed anymore
  *
+ * Creates an #hb_font_t font object from the specified FT_Face.
  *
+ * <note>Note: You must set the face size on @ft_face before calling
+ * hb_ft_font_create() on it. Otherwise, HarfBuzz will not pick up
+ * the face size.</note>
  *
- * Return value: (transfer full):
+ * This variant of the function does not provide any life-cycle management.
+ *
+ * Most client programs should use hb_ft_font_create_referenced()
+ * instead. 
+ *
+ * If you know you have valid reasons not to use hb_ft_font_create_referenced(),
+ * then it is the client program's responsibility to destroy @ft_face 
+ * after the #hb_font_t font object has been destroyed.
+ *
+ * HarfBuzz will use the @destroy callback on the #hb_font_t font object 
+ * if it is supplied when you use this function. However, even if @destroy
+ * is provided, it is the client program's responsibility to destroy @ft_face,
+ * and it is the client program's responsibility to ensure that @ft_face is
+ * destroyed only after the #hb_font_t font object has been destroyed.
+ *
+ * Return value: (transfer full): the new #hb_font_t font object
+ *
  * Since: 0.9.2
  **/
 hb_font_t *
@@ -700,6 +813,16 @@ hb_ft_font_create (FT_Face           ft_face,
   return font;
 }
 
+/**
+ * hb_ft_font_has_changed:
+ * @font: #hb_font_t to work upon
+ *
+ * Refreshes the state of @font when the underlying FT_Face has changed.
+ * This function should be called after changing the size or
+ * variation-axis settings on the FT_Face.
+ *
+ * Since: 1.0.5
+ **/
 void
 hb_ft_font_changed (hb_font_t *font)
 {
@@ -707,6 +830,7 @@ hb_ft_font_changed (hb_font_t *font)
     return;
 
   hb_ft_font_t *ft_font = (hb_ft_font_t *) font->user_data;
+
   FT_Face ft_face = ft_font->ft_face;
 
   hb_font_set_scale (font,
@@ -718,7 +842,7 @@ hb_ft_font_changed (hb_font_t *font)
 		    ft_face->size->metrics.y_ppem);
 #endif
 
-#ifdef HAVE_FT_GET_VAR_BLEND_COORDINATES
+#if defined(HAVE_FT_GET_VAR_BLEND_COORDINATES) && !defined(HB_NO_VAR)
   FT_MM_Var *mm_var = nullptr;
   if (!FT_Get_MM_Var (ft_face, &mm_var))
   {
@@ -755,11 +879,23 @@ hb_ft_font_changed (hb_font_t *font)
 
 /**
  * hb_ft_font_create_referenced:
- * @ft_face:
+ * @ft_face: FT_Face to work upon
  *
+ * Creates an #hb_font_t font object from the specified FT_Face.
  *
+ * <note>Note: You must set the face size on @ft_face before calling
+ * hb_ft_font_create_references() on it. Otherwise, HarfBuzz will not pick up
+ * the face size.</note>
  *
- * Return value: (transfer full):
+ * This is the preferred variant of the hb_ft_font_create*
+ * function family, because it calls FT_Reference_Face() on @ft_face,
+ * ensuring that @ft_face remains alive as long as the resulting
+ * #hb_font_t font object remains alive.
+ *
+ * Use this version unless you know you have good reasons not to.
+ *
+ * Return value: (transfer full): the new #hb_font_t font object
+ *
  * Since: 0.9.38
  **/
 hb_font_t *
@@ -818,6 +954,28 @@ _release_blob (FT_Face ft_face)
   hb_blob_destroy ((hb_blob_t *) ft_face->generic.data);
 }
 
+/**
+ * hb_ft_font_set_funcs:
+ * @font: #hb_font_t to work upon
+ *
+ * Configures the font-functions structure of the specified
+ * #hb_font_t font object to use FreeType font functions.
+ *
+ * In particular, you can use this function to configure an
+ * existing #hb_face_t face object for use with FreeType font
+ * functions even if that #hb_face_t face object was initially
+ * created with hb_face_create(), and therefore was not
+ * initially configured to use FreeType font functions.
+ *
+ * An #hb_face_t face object created with hb_ft_face_create()
+ * is preconfigured for FreeType font functions and does not
+ * require this function to be used.
+ *
+ * <note>Note: Internally, this function creates an FT_Face.
+* </note>
+ *
+ * Since: 1.0.5
+ **/
 void
 hb_ft_font_set_funcs (hb_font_t *font)
 {
@@ -857,7 +1015,7 @@ hb_ft_font_set_funcs (hb_font_t *font)
     FT_Set_Transform (ft_face, &matrix, nullptr);
   }
 
-#ifdef HAVE_FT_SET_VAR_BLEND_COORDINATES
+#if defined(HAVE_FT_GET_VAR_BLEND_COORDINATES) && !defined(HB_NO_VAR)
   unsigned int num_coords;
   const int *coords = hb_font_get_var_coords_normalized (font, &num_coords);
   if (num_coords)

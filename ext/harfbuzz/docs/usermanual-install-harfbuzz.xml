@@ -11,19 +11,13 @@
     <title id="download.title">Downloading HarfBuzz</title>
     <para>
       The HarfBuzz source code is hosted at <ulink
-      url="https://github.com/harfbuzz/harfbuzz">github.com/harfbuzz/harfbuzz</ulink>. The
-      same source tree is also available at the
-      <ulink
-	  url="http://cgit.freedesktop.org/harfbuzz/">Freedesktop.org</ulink>
-      site.
+      url="https://github.com/harfbuzz/harfbuzz">github.com/harfbuzz/harfbuzz</ulink>.
     </para>
     <para>
       Tarball releases and Win32 binary bundles (which include the
       libharfbuzz DLL, hb-view.exe, hb-shape.exe, and all
       dependencies) of HarfBuzz can be downloaded from <ulink
-      url="https://github.com/harfbuzz/harfbuzz">github.com/harfbuzz/harfbuzz/releases</ulink>
-      or from 
-      <ulink url="http://www.freedesktop.org/software/harfbuzz/release/">Freedesktop.org</ulink>.
+      url="https://github.com/harfbuzz/harfbuzz/releases">github.com/harfbuzz/harfbuzz/releases</ulink>.
     </para>
     <para>
       Release notes are posted with each new release to provide an
@@ -56,13 +50,9 @@
     </para>
     <para>
       For example, on an Ubuntu or Debian system, you would run:
-      <programlisting>
-	<command>sudo apt install</command> <package>gcc g++ libfreetype6-dev libglib2.0-dev libcairo2-dev</package>
-      </programlisting>
+      <programlisting><command>sudo apt install</command> <package>gcc g++ libfreetype6-dev libglib2.0-dev libcairo2-dev</package></programlisting>
       On Fedora, RHEL, CentOS, or other Red-Hat&ndash;based systems, you would run:
-      <programlisting>
-	<command>sudo yum install</command> <package>gcc gcc-c++ freetype-devel glib2-devel cairo-devel</package>
-      </programlisting>
+      <programlisting><command>sudo yum install</command> <package>gcc gcc-c++ freetype-devel glib2-devel cairo-devel</package></programlisting>
 
     </para>
     
@@ -77,8 +67,8 @@
     </para>
     <para>
       From a shell in the top-level directory of the extracted source
-      code, you can run <command>./configure</command> followed by
-      <command>make</command> as with any other standard package.
+      code, you can run <command>meson build</command> followed by
+      <command>meson compile -C build</command> as with any other standard package.
     </para>
     <para>
       This should leave you with a shared
@@ -91,25 +81,19 @@
       <emphasis>(2)(b)</emphasis> If you are building from the source in the HarfBuzz git
       repository, rather than installing from a downloaded tarball
       release, then you must install two more auxiliary tools before you 
-      can build for the first time: <package>pkg-config</package> and
-      <ulink url="http://www.complang.org/ragel/">ragel</ulink>.
+      can build for the first time: <package>pkg-config</package>.
     </para>
     <para>
       On Ubuntu or Debian, run:
-      <programlisting>
-	<command>sudo apt-get install</command> <package>autoconf automake libtool pkg-config ragel gtk-doc-tools</package>
-      </programlisting>
+      <programlisting><command>sudo apt-get install</command> <package>meson pkg-config gtk-doc-tools</package></programlisting>
       On Fedora, RHEL, CentOS, run:
-      <programlisting>
-	<command>sudo yum install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
-      </programlisting>
+      <programlisting><command>sudo yum install</command> <package>meson pkgconfig gtk-doc</package></programlisting>
       
     </para>
     <para>
-      With <package>pkg-config</package> and <package>ragel</package>
-      installed, you can now run <command>./autogen.sh</command>,
-      followed by <command>./configure</command> and
-      <command>make</command> to build HarfBuzz.
+      With <package>pkg-config</package> installed, you can now run
+      <command>meson build</command> then
+      <command>meson compile -C build</command> to build HarfBuzz.
     </para>
     </section>
 
@@ -118,18 +102,11 @@
       <title>Building on Windows</title>
 
       <para>
-	On Windows, consider using Microsoft's free <ulink
-	url="https://github.com/Microsoft/vcpkg">vcpkg</ulink> utility
-	to build HarfBuzz, its dependencies, and other open-source
-	libraries. 
-      </para>
-      <para>
-	If you need to build HarfBuzz from source, first put the
-	<package>ragel</package> binary on your
-	<literal>PATH</literal>, then follow the appveyor CI cmake
-	<ulink
-	    url="https://github.com/harfbuzz/harfbuzz/blob/master/appveyor.yml">build
-	instructions</ulink>. 
+        <ulink url="https://mesonbuild.com/Getting-meson.html">Install meson</ulink>
+        and run (from the console) <command>meson build</command> (by default
+        bundled dependencies are not built, <command>--wrap-mode=default</command>
+        overrides this), then <command>meson compile -C build</command> to
+	build HarfBuzz.
       </para>
     </section>
 
@@ -146,15 +123,11 @@
 	<emphasis>(1)</emphasis> You must first install the
 	development packages for FreeType, Cairo, and GLib. If you are
 	using MacPorts, you should run:
-      <programlisting>
-	<command>sudo port install</command> <package>freetype glib2 cairo</package>
-      </programlisting>
+      <programlisting><command>sudo port install</command> <package>freetype glib2 cairo</package></programlisting>
       </para>
       <para>
 	If you are using Homebrew, you should run:
-	<programlisting>	
-	  <command>brew install</command> <package>freetype glib cairo</package>
-	</programlisting>
+	<programlisting><command>brew install</command> <package>freetype glib cairo</package></programlisting>
       </para>
       <para>
 	<emphasis>(2)</emphasis> The next step depends on whether you are building from the
@@ -165,13 +138,9 @@
 	<emphasis>(2)(a)</emphasis> If you are installing HarfBuzz
 	from a downloaded tarball release, extract the tarball and
 	open a Terminal in the extracted source-code directory. Run:
-	<programlisting>
-	  <command>./configure</command>
-	</programlisting>
+	<programlisting><command>meson build</command></programlisting>
 	followed by:
-	<programlisting>	
-	  <command>make</command>
-	</programlisting>
+	<programlisting><command>meson compile -C build</command></programlisting>
 	to build HarfBuzz.
       </para>
       <para>
@@ -182,30 +151,20 @@
       </para>
       <para>If you are
 	using MacPorts, you should run:
-      <programlisting>
-	<command>sudo port install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package> 
-      </programlisting>
+      <programlisting><command>sudo port install</command> <package>meson pkgconfig gtk-doc</package></programlisting>
       to install the build dependencies.
       </para>
       <para>If you are using Homebrew, you should run:
-	<programlisting>	
-	  <command>brew install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
-	</programlisting>
+	<programlisting><command>brew install</command> <package>meson pkgconfig gtk-doc</package></programlisting>
       	Finally, you can run:
-	<programlisting>
-	  <command>./autogen.sh</command>
-	</programlisting>
+	<programlisting><command>meson build</command></programlisting>
       </para>
       <para>
 	<emphasis>(3)</emphasis> You can now build HarfBuzz (on either
 	a MacPorts or a Homebrew system) by running:
-	<programlisting>
-	  <command>./configure</command>
-	</programlisting>
+	<programlisting><command>meson build</command></programlisting>
 	followed by:
-	<programlisting>
-	  <command>make</command>
-	</programlisting>
+	<programlisting><command>meson compile -C build</command></programlisting>
       </para>
       <para>
 	This should leave you with a shared
@@ -227,22 +186,9 @@
       </para>
 
       <variablelist>
-	<?dbfo list-presentation="blocks"?> 
+	<?dbfo list-presentation="blocks"?>	
 	<varlistentry>
-	  <term><command>--with-libstdc++</command></term>
-	  <listitem>
-	    <para>
-	      Allow linking with libstdc++. <emphasis>(Default = no)</emphasis>
-	    </para>
-	    <para>
-	      This option enables or disables linking HarfBuzz to the
-	      system's libstdc++ library.
-	    </para>
-	  </listitem>
-	</varlistentry>
-	
-	<varlistentry>
-	  <term><command>--with-glib</command></term>
+	  <term><command>-Dglib=enabled</command></term>
 	  <listitem>
 	    <para>
 	     Use <ulink url="https://developer.gnome.org/glib/">GLib</ulink>. <emphasis>(Default = auto)</emphasis>
@@ -258,7 +204,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-gobject</command></term>
+	  <term><command>-Dgobject=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use <ulink url="https://developer.gnome.org/gobject/stable/">GObject</ulink>. <emphasis>(Default = no)</emphasis>
@@ -274,7 +220,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-cairo</command></term>
+	  <term><command>-Dcairo=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use <ulink url="https://cairographics.org/">Cairo</ulink>. <emphasis>(Default = auto)</emphasis>
@@ -293,7 +239,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-fontconfig</command></term>
+	  <term><command>-Dfontconfig=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use <ulink url="https://www.freedesktop.org/wiki/Software/fontconfig/">Fontconfig</ulink>. <emphasis>(Default = auto)</emphasis>
@@ -313,7 +259,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-icu</command></term>
+	  <term><command>-Dicu=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use the <ulink url="http://site.icu-project.org/home">ICU</ulink> library. <emphasis>(Default = auto)</emphasis>
@@ -331,7 +277,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-graphite2</command></term>
+	  <term><command>-Dgraphite=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use the <ulink url="http://graphite.sil.org/">Graphite2</ulink> library. <emphasis>(Default = no)</emphasis>
@@ -345,7 +291,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-freetype</command></term>
+	  <term><command>-Dfreetype=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use the <ulink url="https://www.freetype.org/">FreeType</ulink> library. <emphasis>(Default = auto)</emphasis>
@@ -360,7 +306,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-uniscribe</command></term>
+	  <term><command>-Dgdi=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use the <ulink
@@ -378,7 +324,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-directwrite</command></term>
+	  <term><command>-Ddirectwrite=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use the <ulink url="https://docs.microsoft.com/en-us/windows/desktop/directwrite/direct-write-portal">DirectWrite</ulink> library (experimental). <emphasis>(Default = no)</emphasis>
@@ -394,7 +340,7 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>--with-coretext</command></term>
+	  <term><command>-Dcoretext=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use the <ulink url="https://developer.apple.com/documentation/coretext">CoreText</ulink> library. <emphasis>(Default = no)</emphasis>
@@ -407,7 +353,7 @@
 	</varlistentry>	
 
 	<varlistentry>
-	  <term><command>--enable-gtk-doc</command></term>
+	  <term><command>-Ddocs=enabled</command></term>
 	  <listitem>
 	    <para>
 	      Use <ulink url="https://www.gtk.org/gtk-doc/">GTK-Doc</ulink>. <emphasis>(Default = no)</emphasis>

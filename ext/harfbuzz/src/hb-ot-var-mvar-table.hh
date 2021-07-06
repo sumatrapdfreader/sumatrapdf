@@ -77,7 +77,9 @@ struct MVAR
 		 const int *coords, unsigned int coord_count) const
   {
     const VariationValueRecord *record;
-    record = (VariationValueRecord *) hb_bsearch (&tag, valuesZ.arrayZ,
+    record = (VariationValueRecord *) hb_bsearch (tag,
+						  (const VariationValueRecord *)
+						    (const HBUINT8 *) valuesZ,
 						  valueRecordCount, valueRecordSize,
 						  tag_compare);
     if (!record)

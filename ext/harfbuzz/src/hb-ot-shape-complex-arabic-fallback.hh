@@ -92,7 +92,7 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
 				       hb_array (substitutes, num_glyphs));
   c.end_serialize ();
 
-  return ret ? c.copy<OT::SubstLookup> () : nullptr;
+  return ret && !c.in_error () ? c.copy<OT::SubstLookup> () : nullptr;
 }
 
 static OT::SubstLookup *
@@ -170,7 +170,7 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
   c.end_serialize ();
   /* TODO sanitize the results? */
 
-  return ret ? c.copy<OT::SubstLookup> () : nullptr;
+  return ret && !c.in_error () ? c.copy<OT::SubstLookup> () : nullptr;
 }
 
 static OT::SubstLookup *
@@ -292,7 +292,7 @@ arabic_fallback_plan_create (const hb_ot_shape_plan_t *plan,
 {
   arabic_fallback_plan_t *fallback_plan = (arabic_fallback_plan_t *) calloc (1, sizeof (arabic_fallback_plan_t));
   if (unlikely (!fallback_plan))
-    return const_cast<arabic_fallback_plan_t *> (&Null(arabic_fallback_plan_t));
+    return const_cast<arabic_fallback_plan_t *> (&Null (arabic_fallback_plan_t));
 
   fallback_plan->num_lookups = 0;
   fallback_plan->free_lookups = false;
@@ -309,7 +309,7 @@ arabic_fallback_plan_create (const hb_ot_shape_plan_t *plan,
 
   assert (fallback_plan->num_lookups == 0);
   free (fallback_plan);
-  return const_cast<arabic_fallback_plan_t *> (&Null(arabic_fallback_plan_t));
+  return const_cast<arabic_fallback_plan_t *> (&Null (arabic_fallback_plan_t));
 }
 
 static void

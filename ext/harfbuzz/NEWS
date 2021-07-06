@@ -1,3 +1,114 @@
+Overview of changes leading to 2.7.4
+Sunday, December 27, 2020
+====================================
+- Fix missing --enable-introspection configure option from previous release
+  tarball.
+- Documentation updates.
+
+Overview of changes leading to 2.7.3
+Wednesday, December 23, 2020
+====================================
+- Update USE shaper to 2020-08-13 specification, and other improvements.
+- Don’t disable liga feature in myanmar shaper, to match Uniscribe.
+- Improvements to language and script tags handling.
+- Update language system tag registry to OpenType 1.8.4
+- Support for serializing and deserializing Unicode buffers. Serialized buffers
+  are now delimited with `<>` or `[]` based on whether it is a Unicode or
+  glyphs buffer.
+- Increase buffer work limits to handle fonts with many complex lookups.
+- Handle more shaping operations in trace output.
+- Memory access fixes.
+- More OOM fixes.
+- Improved documentation.
+- Build system improvements.
+- New API:
++hb_buffer_has_positions()
++hb_buffer_serialize()
++hb_buffer_serialize_unicode()
++hb_buffer_deserialize_unicode()
+
+
+Overview of changes leading to 2.7.2
+Saturday, August 29, 2020
+====================================
+- Fix a regression in the previous release that caused a crash with Kaithi.
+- More OOM fixes.
+
+
+Overview of changes leading to 2.7.1
+Thursday, August 13, 2020
+====================================
+- ot-funcs now handles variable empty glyphs better when hvar/vvar isn't present.
+- Reverted a GDEF processing regression.
+- A couple of fixes to handle OOM better.
+
+
+Overview of changes leading to 2.7.0
+Saturday, July 25, 2020
+====================================
+- Use an implementation for round that always rounds up, some minor fluctuations
+  are expected on var font specially when hb-ot callback is used.
+- Fix an AAT's `kerx` issue on broken rendering of Devanagari Sangam MN.
+- Remove AAT's `lcar` table support from _get_ligature_carets API, not even much
+  use on macOS installed fonts (only two files).  GDEF support is the recommended
+  one and expected to work properly after issues fixed two releases ago.
+- Minor memory fixes to handle OOM better specially in hb-ft.
+- Minor .so files versioning scheme change and remove stable/unstable scheme
+  differences, was never used in practice (always default to stable scheme).
+- We are now suggesting careful packaging of the library using meson,
+  https://github.com/harfbuzz/harfbuzz/wiki/Notes-on-migration-to-meson
+  for more information.
+- Distribution package URL is changed, either use GitHub generated tarballs,
+  `https://github.com/harfbuzz/harfbuzz/archive/$pkgver.tar.gz`
+  or, even more preferably use commit hash of the release and git checkouts like,
+  `git+https://github.com/harfbuzz/harfbuzz#commit=$commit`
+
+
+Overview of changes leading to 2.6.8
+Monday, June 22, 2020
+====================================
+- New API to fetch glyph alternates from GSUB table.
+- hb-coretext build fix for macOS < 10.10.
+- Meson build fixes, cmake port removal is postponed but please prepare for
+  it and give us feedback.
+  Autotools is still our main build system however please consider
+  experimenting with meson also for packaging the library.
+- New API:
++hb_ot_layout_lookup_get_glyph_alternates()
+
+
+Overview of changes leading to 2.6.7
+Wednesday, June 3, 2020
+====================================
+- Update to Unicode 13.0.0.
+- Fix hb_ot_layout_get_ligature_carets for fonts without lcar table, it was
+  completely broken for all the other fonts since 2.1.2.
+- As a part of our migration to meson, this release will be the last one
+  to provide cmake port files but autotools still is our main build system.
+  There is a possibility that the next version or the after be released
+  using meson.
+
+
+Overview of changes leading to 2.6.6
+Tuesday, May 12, 2020
+====================================
+- A fix in AAT kerning for Geeza Pro.
+- Better support for resource fork fonts on macOS.
+
+
+Overview of changes leading to 2.6.5
+Friday, April 17, 2020
+====================================
+- Add experimental meson build system.  Autotools is still the primary
+  and supported build system.
+- AAT is now always preferred for horizontal scripts when both AAT and OT
+  layout tables exist at the same time.
+- Subsetter improvements.
+- New API:
++hb_ft_font_lock_face()
++hb_ft_font_unlock_face()
+
+
 Overview of changes leading to 2.6.4
 Monday, October 29, 2019
 ====================================

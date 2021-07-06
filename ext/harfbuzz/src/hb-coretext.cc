@@ -278,13 +278,32 @@ _hb_coretext_shaper_face_data_destroy (hb_coretext_face_data_t *data)
   CFRelease ((CGFontRef) data);
 }
 
+/**
+ * hb_coretext_face_create:
+ * @cg_font: The CGFontRef to work upon
+ *
+ * Creates an #hb_face_t face object from the specified
+ * CGFontRef.
+ *
+ * Return value: the new #hb_face_t face object
+ *
+ * Since: 0.9.10
+ */
 hb_face_t *
 hb_coretext_face_create (CGFontRef cg_font)
 {
   return hb_face_create_for_tables (_hb_cg_reference_table, CGFontRetain (cg_font), _hb_cg_font_release);
 }
 
-/*
+/**
+ * hb_coretext_face_get_cg_font:
+ * @face: The #hb_face_t to work upon
+ *
+ * Fetches the CGFontRef associated with an #hb_face_t
+ * face object
+ *
+ * Return value: the CGFontRef found
+ *
  * Since: 0.9.10
  */
 CGFontRef
@@ -351,10 +370,17 @@ retry:
   return font->data.coretext;
 }
 
-
-/*
+/**
+ * hb_coretext_font_create:
+ * @ct_font: The CTFontRef to work upon
+ *
+ * Creates an #hb_font_t font object from the specified
+ * CTFontRef.
+ *
+ * Return value: the new #hb_font_t font object
+ *
  * Since: 1.7.2
- */
+ **/
 hb_font_t *
 hb_coretext_font_create (CTFontRef ct_font)
 {
@@ -375,6 +401,17 @@ hb_coretext_font_create (CTFontRef ct_font)
   return font;
 }
 
+/**
+ * hb_coretext_face_get_ct_font:
+ * @font: #hb_font_t to work upon
+ *
+ * Fetches the CTFontRef associated with the specified
+ * #hb_font_t font object.
+ *
+ * Return value: the CTFontRef found
+ *
+ * Since: 0.9.10
+ */
 CTFontRef
 hb_coretext_font_get_ct_font (hb_font_t *font)
 {
@@ -475,13 +512,19 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     hb_vector_t<feature_event_t> feature_events;
     for (unsigned int i = 0; i < num_features; i++)
     {
+      active_feature_t feature;
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
       const hb_aat_feature_mapping_t * mapping = hb_aat_layout_find_feature_mapping (features[i].tag);
       if (!mapping)
 	continue;
 
-      active_feature_t feature;
       feature.rec.feature = mapping->aatFeatureType;
       feature.rec.setting = features[i].value ? mapping->selectorToEnable : mapping->selectorToDisable;
+#else
+      feature.rec.feature = features[i].tag;
+      feature.rec.setting = features[i].value;
+#endif
       feature.order = i;
 
       feature_event_t *event;
@@ -530,6 +573,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	  /* active_features.qsort (); */
 	  for (unsigned int j = 0; j < active_features.length; j++)
 	  {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
 	    CFStringRef keys[] = {
 	      kCTFontFeatureTypeIdentifierKey,
 	      kCTFontFeatureSelectorIdentifierKey
@@ -538,6 +582,17 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	      CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &active_features[j].rec.feature),
 	      CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &active_features[j].rec.setting)
 	    };
+#else
+	    char tag[5] = {HB_UNTAG (active_features[j].rec.feature)};
+	    CFTypeRef keys[] = {
+	      kCTFontOpenTypeFeatureTag,
+	      kCTFontOpenTypeFeatureValue
+	    };
+	    CFTypeRef values[] = {
+	      CFStringCreateWithCString (kCFAllocatorDefault, tag, kCFStringEncodingASCII),
+	      CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &active_features[j].rec.setting)
+	    };
+#endif
 	    static_assert ((ARRAY_LENGTH_CONST (keys) == ARRAY_LENGTH_CONST (values)), "");
 	    CFDictionaryRef dict = CFDictionaryCreate (kCFAllocatorDefault,
 						       (const void **) keys,
@@ -605,7 +660,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     scratch_size -= _consumed; \
   } while (0)
 
-  ALLOCATE_ARRAY (UniChar, pchars, buffer->len * 2, /*nothing*/);
+  ALLOCATE_ARRAY (UniChar, pchars, buffer->len * 2, ((void)nullptr) /*nothing*/);
   unsigned int chars_len = 0;
   for (unsigned int i = 0; i < buffer->len; i++) {
     hb_codepoint_t c = buffer->info[i].codepoint;
@@ -619,7 +674,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     }
   }
 
-  ALLOCATE_ARRAY (unsigned int, log_clusters, chars_len, /*nothing*/);
+  ALLOCATE_ARRAY (unsigned int, log_clusters, chars_len, ((void)nullptr) /*nothing*/);
   chars_len = 0;
   for (unsigned int i = 0; i < buffer->len; i++)
   {

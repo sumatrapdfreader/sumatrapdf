@@ -139,8 +139,6 @@ hb_shape_full (hb_font_t          *font,
   hb_bool_t res = hb_shape_plan_execute (shape_plan, font, buffer, features, num_features);
   hb_shape_plan_destroy (shape_plan);
 
-  if (res)
-    buffer->content_type = HB_BUFFER_CONTENT_TYPE_GLYPHS;
   return res;
 }
 

@@ -117,7 +117,7 @@ struct hb_vector_t
   {
     unsigned int i = (unsigned int) i_;
     if (unlikely (i >= length))
-      return Null(Type);
+      return Null (Type);
     return arrayZ[i];
   }
 
@@ -165,7 +165,7 @@ struct hb_vector_t
   Type *push ()
   {
     if (unlikely (!resize (length + 1)))
-      return &Crap(Type);
+      return &Crap (Type);
     return &arrayZ[length - 1];
   }
   template <typename T>
@@ -228,7 +228,7 @@ struct hb_vector_t
 
   Type pop ()
   {
-    if (!length) return Null(Type);
+    if (!length) return Null (Type);
     return hb_move (arrayZ[--length]); /* Does this move actually work? */
   }
 
@@ -277,6 +277,9 @@ struct hb_vector_t
   template <typename T>
   const Type *lsearch (const T &x, const Type *not_found = nullptr) const
   { return as_array ().lsearch (x, not_found); }
+  template <typename T>
+  bool lfind (const T &x, unsigned *pos = nullptr) const
+  { return as_array ().lfind (x, pos); }
 };
 
 template <typename Type>

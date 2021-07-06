@@ -1,0 +1,603 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY version SYSTEM "version.xml">
+]>
+<chapter id="integration">
+  <title>Platform Integration Guide</title>
+  <para>
+    HarfBuzz was first developed for use with the GNOME and GTK
+    software stack commonly found in desktop Linux
+    distributions. Nevertheless, it can be used on other operating
+    systems and platforms, from iOS and macOS to Windows. It can also
+    be used with other application frameworks and components, such as
+    Android, Qt, or application-specific widget libraries.
+  </para>
+  <para>
+    This chapter will look at how HarfBuzz fits into a typical
+    text-rendering pipeline, and will discuss the APIs available to
+    integrate HarfBuzz with contemporary Linux, Mac, and Windows
+    software. It will also show how HarfBuzz integrates with popular
+    external libraries like FreeType and International Components for
+    Unicode (ICU) and describe the HarfBuzz language bindings for
+    Python.
+  </para>
+  <para>
+    On a GNOME system, HarfBuzz is designed to tie in with several
+    other common system libraries. The most common architecture uses
+    Pango at the layer directly "above" HarfBuzz; Pango is responsible
+    for text segmentation and for ensuring that each input
+    <type>hb_buffer_t</type> passed to HarfBuzz for shaping contains
+    Unicode code points that share the same segment properties
+    (namely, direction, language, and script, but also higher-level
+    properties like the active font, font style, and so on).
+  </para>
+  <para>
+    The layer directly "below" HarfBuzz is typically FreeType, which
+    is used to rasterize glyph outlines at the necessary optical size,
+    hinting settings, and pixel resolution. FreeType provides APIs for
+    accessing font and face information, so HarfBuzz includes
+    functions to create <type>hb_face_t</type> and
+    <type>hb_font_t</type> objects directly from FreeType
+    objects. HarfBuzz can use FreeType's built-in functions for
+    <structfield>font_funcs</structfield> vtable in an <type>hb_font_t</type>.
+  </para>
+  <para>
+    FreeType's output is bitmaps of the rasterized glyphs; on a
+    typical Linux system these will then be drawn by a graphics
+    library like Cairo, but those details are beyond HarfBuzz's
+    control. On the other hand, at the top end of the stack, Pango is
+    part of the larger GNOME framework, and HarfBuzz does include APIs
+    for working with key components of GNOME's higher-level libraries
+    &mdash; most notably GLib.
+  </para>
+  <para>
+    For other operating systems or application frameworks, the
+    critical integration points are where HarfBuzz gets font and face
+    information about the font used for shaping and where HarfBuzz
+    gets Unicode data about the input-buffer code points.
+  </para>
+  <para>
+    The font and face information is necessary for text shaping
+    because HarfBuzz needs to retrieve the glyph indices for
+    particular code points, and to know the extents and advances of
+    glyphs. Note that, in an OpenType variable font, both of those
+    types of information can change with different variation-axis
+    settings.
+  </para>
+  <para>
+    The Unicode information is necessary for shaping because the
+    properties of a code point (such as its General Category (gc),
+    Canonical Combining Class (ccc), and decomposition) can directly
+    impact the shaping moves that HarfBuzz performs.
+  </para>
+  
+  <section id="integration-glib">
+    <title>GNOME integration, GLib, and GObject</title>
+    <para>
+      As mentioned in the preceding section, HarfBuzz offers
+      integration APIs to help client programs using the
+      GNOME and GTK framework commonly found in desktop Linux
+      distributions. 
+    </para>
+    <para>
+      GLib is the main utility library for GNOME applications. It
+      provides basic data types and conversions, file abstractions,
+      string manipulation, and macros, as well as facilities like
+      memory allocation and the main event loop.
+    </para>
+    <para>
+      Where text shaping is concerned, GLib provides several utilities
+      that HarfBuzz can take advantage of, including a set of
+      Unicode-data functions and a data type for script
+      information. Both are useful when working with HarfBuzz
+      buffers. To make use of them, you will need to include the
+      <filename>hb-glib.h</filename> header file.
+    </para>
+    <para>
+      GLib's <ulink
+      url="https://developer.gnome.org/glib/stable/glib-Unicode-Manipulation.html">Unicode
+      manipulation API</ulink> includes all the functionality
+      necessary to retrieve Unicode data for the
+      <structfield>unicode_funcs</structfield> structure of a HarfBuzz
+      <type>hb_buffer_t</type>. 
+    </para>
+    <para>
+      The function <function>hb_glib_get_unicode_funcs()</function>
+      sets up a <type>hb_unicode_funcs_t</type> structure configured
+      with the GLib Unicode functions and returns a pointer to it.
+    </para>
+    <para>
+      You can attach this Unicode-functions structure to your buffer,
+      and it will be ready for use with GLib:
+    </para>
+    <programlisting language="C">
+      #include &lt;hb-glib.h&gt;
+      ...
+      hb_unicode_funcs_t *glibufunctions;
+      glibufunctions = hb_glib_get_unicode_funcs();
+      hb_buffer_set_unicode_funcs(buf, glibufunctions);
+    </programlisting>
+    <para>
+      For script information, GLib uses the
+      <type>GUnicodeScript</type> type. Like HarfBuzz's own
+      <type>hb_script_t</type>, this data type is an enumeration
+      of Unicode scripts, but text segments passed in from GLib code
+      will be tagged with a <type>GUnicodeScript</type>. Therefore,
+      when setting the script property on a <type>hb_buffer_t</type>,
+      you will need to convert between the <type>GUnicodeScript</type>
+      of the input provided by GLib and HarfBuzz's
+      <type>hb_script_t</type> type.
+    </para>
+    <para>
+      The <function>hb_glib_script_to_script()</function> function
+      takes an <type>GUnicodeScript</type> script identifier as its
+      sole argument and returns the corresponding <type>hb_script_t</type>.
+      The <function>hb_glib_script_from_script()</function> does the
+      reverse, taking an <type>hb_script_t</type> and returning the
+      <type>GUnicodeScript</type> identifier for GLib.
+    </para>
+    <para>
+      Finally, GLib also provides a reference-counted object type called <ulink
+      url="https://developer.gnome.org/glib/stable/glib-Byte-Arrays.html#GBytes"><type>GBytes</type></ulink>
+      that is used for accessing raw memory segments with the benefits
+      of GLib's lifecycle management. HarfBuzz provides a
+      <function>hb_glib_blob_create()</function> function that lets
+      you create an <type>hb_blob_t</type> directly from a
+      <type>GBytes</type> object. This function takes only the
+      <type>GBytes</type> object as its input; HarfBuzz registers the
+      GLib <function>destroy</function> callback automatically.
+    </para>
+    <para>
+      The GNOME platform also features an object system called
+      GObject. For HarfBuzz, the main advantage of GObject is a
+      feature called <ulink
+      url="https://gi.readthedocs.io/en/latest/">GObject
+      Introspection</ulink>. This is a middleware facility that can be
+      used to generate language bindings for C libraries. HarfBuzz uses it
+      to build its Python bindings, which we will look at in a separate section.
+    </para>
+  </section>
+  
+  <section id="integration-freetype">
+    <title>FreeType integration</title>
+    <para>
+      FreeType is the free-software font-rendering engine included in
+      desktop Linux distributions, Android, ChromeOS, iOS, and multiple Unix
+      operating systems, and used by cross-platform programs like
+      Chrome, Java, and GhostScript. Used together, HarfBuzz can
+      perform shaping on Unicode text segments, outputting the glyph
+      IDs that FreeType should rasterize from the active font as well
+      as the positions at which those glyphs should be drawn.
+    </para>
+    <para>
+      HarfBuzz provides integration points with FreeType at the
+      face-object and font-object level and for the font-functions
+      virtual-method structure of a font object. To use the
+      FreeType-integration API, include the
+      <filename>hb-ft.h</filename> header.
+    </para>
+    <para>
+      In a typical client program, you will create your
+      <type>hb_face_t</type> face object and <type>hb_font_t</type>
+      font object from a FreeType <type>FT_Face</type>. HarfBuzz
+      provides a suite of functions for doing this.
+    </para>
+    <para>
+      In the most common case, you will want to use
+      <function>hb_ft_font_create_referenced()</function>, which
+      creates both an <type>hb_face_t</type> face object and
+      <type>hb_font_t</type> font object (linked to that face object),
+      and provides lifecycle management.
+    </para>
+    <para>
+      It is important to note,
+      though, that while HarfBuzz makes a distinction between its face and
+      font objects, FreeType's <type>FT_Face</type> does not. After
+      you create your <type>FT_Face</type>, you must set its size
+      parameter using <function>FT_Set_Char_Size()</function>, because
+      an <type>hb_font_t</type> is defined as an instance of an
+      <type>hb_face_t</type> with size specified.
+    </para>
+    <programlisting language="C">
+      #include &lt;hb-ft.h&gt;
+      ...
+      FT_New_Face(ft_library, font_path, index, &amp;face);
+      FT_Set_Char_Size(face, 0, 1000, 0, 0);
+      hb_font_t *font = hb_ft_font_create(face);
+    </programlisting>
+    <para>
+      <function>hb_ft_font_create_referenced()</function> is
+      the recommended function for creating an <type>hb_face_t</type> face
+      object. This function calls <function>FT_Reference_Face()</function>
+      before using the <type>FT_Face</type> and calls 
+      <function>FT_Done_Face()</function> when it is finished using the
+      <type>FT_Face</type>. Consequently, your client program does not need
+      to worry about destroying the <type>FT_Face</type> while HarfBuzz
+      is still using it.
+    </para>
+    <para>
+      Although <function>hb_ft_font_create_referenced()</function> is
+      the recommended function, there is another variant for client code
+      where special circumstances make it necessary. The simpler
+      version of the function is <function>hb_ft_font_create()</function>,
+      which takes an <type>FT_Face</type> and an optional destroy callback 
+      as its arguments. Because <function>hb_ft_font_create()</function> 
+      does not offer lifecycle management, however, your client code will
+      be responsible for tracking references to the <type>FT_Face</type>
+      objects and destroying them when they are no longer needed. If you
+      do not have a valid reason for doing this, use
+      <function>hb_ft_font_create_referenced()</function>. 
+    </para>
+    <para>
+      After you have created your font object from your
+      <type>FT_Face</type>, you can set or retrieve the
+      <structfield>load_flags</structfield> of the
+      <type>FT_Face</type> through the <type>hb_font_t</type>
+      object. HarfBuzz provides
+      <function>hb_ft_font_set_load_flags()</function> and
+      <function>hb_ft_font_get_load_flags()</function> for this
+      purpose. The ability to set the
+      <structfield>load_flags</structfield> through the font object
+      could be useful for enabling or disabling hinting, for example,
+      or to activate vertical layout.
+    </para>
+    <para>
+      HarfBuzz also provides a utility function called
+      <function>hb_ft_font_has_changed()</function> that you should
+      call whenever you have altered the properties of your underlying
+      <type>FT_Face</type>, as well as a
+      <function>hb_ft_get_face()</function> that you can call on an
+      <type>hb_font_t</type> font object to fetch its underlying <type>FT_Face</type>.
+    </para>
+    <para>
+      With an <type>hb_face_t</type> and <type>hb_font_t</type> both linked
+      to your <type>FT_Face</type>, you will typically also want to
+      use FreeType for the <structfield>font_funcs</structfield>
+      vtable of your <type>hb_font_t</type>. As a reminder, this
+      font-functions structure is the set of methods that HarfBuzz
+      will use to fetch important information from the font, such as
+      the advances and extents of individual glyphs. 
+    </para>
+    <para>
+      All you need to do is call
+    </para>
+    <programlisting language="C">
+      hb_ft_font_set_funcs(font);
+    </programlisting>
+    <para>
+      and HarfBuzz will use FreeType for the font-functions in
+      <literal>font</literal>. 
+    </para>
+    <para>
+      As we noted above, an <type>hb_font_t</type> is derived from an
+      <type>hb_face_t</type> with size (and, perhaps, other
+      parameters, such as variation-axis coordinates)
+      specified. Consequently, you can reuse an <type>hb_face_t</type>
+      with several <type>hb_font_t</type> objects, and HarfBuzz
+      provides functions to simplify this.
+    </para>
+    <para>
+      The <function>hb_ft_face_create_referenced()</function>
+      function creates just an <type>hb_face_t</type> from a FreeType
+      <type>FT_Face</type> and, as with
+      <function>hb_ft_font_create_referenced()</function> above,
+      provides lifecycle management for the <type>FT_Face</type>.
+    </para>
+    <para>
+      Similarly, there is an <function>hb_ft_face_create()</function>
+      function variant that does not provide the lifecycle-management
+      feature. As with the font-object case, if you use this version
+      of the function, it will be your client code's respsonsibility
+      to track usage of the <type>FT_Face</type> objects.
+    </para>
+    <para>
+      A third variant of this function is
+      <function>hb_ft_face_create_cached()</function>, which is the
+      same as <function>hb_ft_face_create()</function> except that it
+      also uses the <structfield>generic</structfield> field of the
+      <type>FT_Face</type> structure to save a pointer to the newly
+      created <type>hb_face_t</type>. Subsequently, function calls
+      that pass the same <type>FT_Face</type> will get the same
+      <type>hb_face_t</type> returned &mdash; and the
+      <type>hb_face_t</type> will be correctly reference
+      counted. Still, as with
+      <function>hb_ft_face_create()</function>, your client code must
+      track references to the <type>FT_Face</type> itself, and destroy
+      it when it is unneeded.
+    </para>
+  </section>
+  
+  <section id="integration-uniscribe">
+    <title>Uniscribe integration</title>
+    <para>
+      If your client program is running on Windows, HarfBuzz offers
+      an additional API that can help integrate with Microsoft's
+      Uniscribe engine and the Windows GDI.
+    </para>
+    <para>
+      Overall, the Uniscribe API covers a broader set of typographic
+      layout functions than HarfBuzz implements, but HarfBuzz's
+      shaping API can serve as a drop-in replacement for Uniscribe's shaping
+      functionality. In fact, one of HarfBuzz's design goals is to
+      accurately reproduce the same output for shaping a given text
+      segment that Uniscribe produces &mdash; even to the point of
+      duplicating known shaping bugs or deviations from the
+      specification &mdash; so you can be confident that your users'
+      documents with their existing fonts will not be affected adversely by
+      switching to HarfBuzz.
+    </para>
+    <para>
+      At a basic level, HarfBuzz's <function>hb_shape()</function>
+      function replaces both the <ulink url=""><function>ScriptShape()</function></ulink>
+      and <ulink
+      url="https://docs.microsoft.com/en-us/windows/desktop/api/Usp10/nf-usp10-scriptplace"><function>ScriptPlace()</function></ulink>
+      functions from Uniscribe. 
+    </para>
+    <para>
+      However, whereas <function>ScriptShape()</function> returns the
+      glyphs and clusters for a shaped sequence and
+      <function>ScriptPlace()</function> returns the advances and
+      offsets for those glyphs, <function>hb_shape()</function>
+      handles both. After <function>hb_shape()</function> shapes a
+      buffer, the output glyph IDs and cluster IDs are returned as
+      an array of <structname>hb_glyph_info_t</structname> structures, and the
+      glyph advances and offsets are returned as an array of
+      <structname>hb_glyph_position_t</structname> structures. 
+    </para>
+    <para>
+      Your client program only needs to ensure that it coverts
+      correctly between HarfBuzz's low-level data types (such as
+      <type>hb_position_t</type>) and Windows's corresponding types
+      (such as <type>GOFFSET</type> and <type>ABC</type>). Be sure you
+      read the <xref linkend="buffers-language-script-and-direction"
+      /> 
+      chapter for a full explanation of how HarfBuzz input buffers are
+      used, and see <xref linkend="shaping-buffer-output" /> for the
+      details of what <function>hb_shape()</function> returns in the
+      output buffer when shaping is complete. 
+    </para>
+    <para>
+      Although <function>hb_shape()</function> itself is functionally
+      equivalent to Uniscribe's shaping routines, there are two
+      additional HarfBuzz functions you may want to use to integrate
+      the libraries in your code. Both are used to link HarfBuzz font
+      objects to the equivalent Windows structures.
+    </para>
+    <para>
+      The <function>hb_uniscribe_font_get_logfontw()</function>
+      function takes a <type>hb_font_t</type> font object and returns
+      a pointer to the <ulink
+      url="https://docs.microsoft.com/en-us/windows/desktop/api/wingdi/ns-wingdi-logfontw"><type>LOGFONTW</type></ulink>
+      "logical font" that corresponds to it. A <type>LOGFONTW</type>
+      structure holds font-wide attributes, including metrics, size,
+      and style information.
+    </para>
+<!--      
+     <para>
+       In Uniscribe's model, the <type>SCRIPT_CACHE</type> holds the
+       device context, including the logical font that the shaping
+       functions apply.
+       https://docs.microsoft.com/en-us/windows/desktop/Intl/script-cache
+    </para>
+-->
+    <para>
+      The <function>hb_uniscribe_font_get_hfont()</function> function
+      also takes a <type>hb_font_t</type> font object, but it returns
+      an <type>HFONT</type> &mdash; a handle to the underlying logical
+      font &mdash; instead.
+    </para>
+    <para>
+      <type>LOGFONTW</type>s and <type>HFONT</type>s are both needed
+      by other Uniscribe functions.
+    </para>
+    <para>
+      As a final note, you may notice a reference to an optional
+      <literal>uniscribe</literal> shaper back-end in the <xref
+      linkend="configuration" /> section of the HarfBuzz manual. This
+      option is not a Uniscribe-integration facility.
+    </para>
+    <para>
+      Instead, it is a internal code path used in the
+      <command>hb-shape</command> command-line utility, which hands
+      shaping functionality over to Uniscribe entirely, when run on a
+      Windows system. That allows testing HarfBuzz's native output
+      against the Uniscribe engine, for tracking compatibility and
+      debugging.
+    </para>
+    <para>
+      Because this back-end is only used when testing HarfBuzz
+      functionality, it is disabled by default when building the
+      HarfBuzz binaries.
+    </para>
+  </section>
+   
+  <section id="integration-coretext">
+    <title>Core Text integration</title>
+    <para>
+      If your client program is running on macOS or iOS, HarfBuzz offers
+      an additional API that can help integrate with Apple's
+      Core Text engine and the underlying Core Graphics
+      framework. HarfBuzz does not attempt to offer the same
+      drop-in-replacement functionality for Core Text that it strives
+      for with Uniscribe on Windows, but you can still use HarfBuzz
+      to perform text shaping in native macOS and iOS applications.
+    </para>
+    <para>
+      Note, though, that if your interest is just in using fonts that
+      contain Apple Advanced Typography (AAT) features, then you do
+      not need to add Core Text integration. HarfBuzz natively
+      supports AAT features and will shape AAT fonts (on any platform)
+      automatically, without requiring additional work on your
+      part. This includes support for AAT-specific TrueType tables
+      such as <literal>mort</literal>, <literal>morx</literal>, and
+      <literal>kerx</literal>, which AAT fonts use instead of
+      <literal>GSUB</literal> and <literal>GPOS</literal>.
+    </para>
+    <para>
+      On a macOS or iOS system, the primary integration points offered
+      by HarfBuzz are for face objects and font objects. 
+    </para>
+    <para>
+      The Apple APIs offer a pair of data structures that map well to
+      HarfBuzz's face and font objects. The Core Graphics API, which
+      is slightly lower-level than Core Text, provides
+      <ulink url="https://developer.apple.com/documentation/coregraphics/cgfontref"><type>CGFontRef</type></ulink>, which enables access to typeface
+      properties, but does not include size information. Core Text's
+      <ulink url="https://developer.apple.com/documentation/coretext/ctfont-q6r"><type>CTFontRef</type></ulink> is analagous to a HarfBuzz font object,
+      with all of the properties required to render text at a specific
+      size and configuration.
+      Consequently, a HarfBuzz <type>hb_font_t</type> font object can
+      be hooked up to a Core Text <type>CTFontRef</type>, and a HarfBuzz
+      <type>hb_face_t</type> face object can be hooked up to a
+      <type>CGFontRef</type>.
+    </para>
+    <para>
+      You can create a <type>hb_face_t</type> from a
+      <type>CGFontRef</type> by using the
+      <function>hb_coretext_face_create()</function>. Subsequently,
+      you can retrieve the <type>CGFontRef</type> from a
+      <type>hb_face_t</type> with <function>hb_coretext_face_get_cg_font()</function>.
+    </para>
+    <para>
+      Likewise, you create a <type>hb_font_t</type> from a
+      <type>CTFontRef</type> by calling
+      <function>hb_coretext_font_create()</function>, and you can
+      fetch the associated <type>CTFontRef</type> from a
+      <type>hb_font_t</type> font object with
+      <function>hb_coretext_face_get_ct_font()</function>. 
+    </para>
+    <para>
+      HarfBuzz also offers a <function>hb_font_set_ptem()</function>
+      that you an use to set the nominal point size on any
+      <type>hb_font_t</type> font object. Core Text uses this value to
+      implement optical scaling. 
+    </para>
+    <para>
+      When integrating your client code with Core Text, it is
+      important to recognize that Core Text <literal>points</literal>
+      are not typographic points (standardized at 72 per inch) as the
+      term is used elsewhere in OpenType. Instead, Core Text points
+      are CSS points, which are standardized at 96 per inch.
+    </para>
+    <para>
+      HarfBuzz's font functions take this distinction into account,
+      but it can be an easy detail to miss in cross-platform
+      code. 
+    </para>
+    <para>
+      As a final note, you may notice a reference to an optional
+      <literal>coretext</literal> shaper back-end in the <xref
+      linkend="configuration" /> section of the HarfBuzz manual. This
+      option is not a Core Text-integration facility.
+    </para>
+    <para>
+      Instead, it is a internal code path used in the
+      <command>hb-shape</command> command-line utility, which hands
+      shaping functionality over to Core Text entirely, when run on a
+      macOS system. That allows testing HarfBuzz's native output
+      against the Core Text engine, for tracking compatibility and debugging.
+    </para>
+    <para>
+      Because this back-end is only used when testing HarfBuzz
+      functionality, it is disabled by default when building the
+      HarfBuzz binaries.
+    </para>
+  </section>
+  
+  <section id="integration-icu">
+    <title>ICU integration</title>
+    <para>
+      Although HarfBuzz includes its own Unicode-data functions, it
+      also provides integration APIs for using the International
+      Components for Unicode (ICU) library as a source of Unicode data
+      on any supported platform.
+    </para>
+    <para>
+      The principal integration point with ICU is the
+      <type>hb_unicode_funcs_t</type> Unicode-functions structure
+      attached to a buffer. This structure holds the virtual methods
+      used for retrieving Unicode character properties, such as
+      General Category, Script, Combining Class, decomposition
+      mappings, and mirroring information.
+    </para>
+    <para>
+      To use ICU in your client program, you need to call
+      <function>hb_icu_get_unicode_funcs()</function>, which creates a
+      Unicode-functions structure populated with the ICU function for
+      each included method. Subsequently, you can attach the
+      Unicode-functions structure to your buffer:
+    </para>
+    <programlisting language="C">
+      hb_unicode_funcs_t *icufunctions;
+      icufunctions = hb_icu_get_unicode_funcs();
+      hb_buffer_set_unicode_funcs(buf, icufunctions);
+    </programlisting>
+    <para>
+      and ICU will be used for Unicode-data access.
+    </para>
+    <para>
+      HarfBuzz also supplies a pair of functions
+      (<function>hb_icu_script_from_script()</function> and
+      <function>hb_icu_script_to_script()</function>) for converting
+      between ICU's and HarfBuzz's internal enumerations of Unicode
+      scripts. The <function>hb_icu_script_from_script()</function>
+      function converts from a HarfBuzz <type>hb_script_t</type> to an
+      ICU <type>UScriptCode</type>. The
+      <function>hb_icu_script_to_script()</function> function does the
+      reverse: converting from a <type>UScriptCode</type> identifier
+      to a <type>hb_script_t</type>.
+    </para>
+    <para>
+      By default, HarfBuzz's ICU support is built as a separate shared
+      library (<filename class="libraryfile">libharfbuzz-icu.so</filename>)
+      when compiling HarfBuzz from source. This allows client programs
+      that do not need ICU to link against HarfBuzz without unnecessarily
+      adding ICU as a dependency. You can also build HarfBuzz with ICU
+      support built directly into the main HarfBuzz shared library
+      (<filename class="libraryfile">libharfbuzz.so</filename>),
+      by specifying the <literal>--with-icu=builtin</literal>
+      compile-time option.
+    </para>
+
+  </section>
+  
+  <section id="integration-python">
+    <title>Python bindings</title>
+    <para>
+      As noted in the <xref linkend="integration-glib" /> section,
+      HarfBuzz uses a feature called <ulink
+      url="https://wiki.gnome.org/Projects/GObjectIntrospection">GObject
+      Introspection</ulink> (GI) to provide bindings for Python.
+    </para>
+    <para>
+      At compile time, the GI scanner analyzes the HarfBuzz C source
+      and builds metadata objects connecting the language bindings to
+      the C library. Your Python code can then use the HarfBuzz binary
+      through its Python interface.
+    </para>
+    <para>
+      HarfBuzz's Python bindings support Python 2 and Python 3. To use
+      them, you will need to have the <literal>pygobject</literal>
+      package installed. Then you should import
+      <literal>HarfBuzz</literal> from
+      <literal>gi.repository</literal>: 
+    </para>
+    <programlisting language="Python">
+      from gi.repository import HarfBuzz
+    </programlisting>
+    <para>
+      and you can call HarfBuzz functions from Python. Sample code can
+      be found in the <filename>sample.py</filename> script in the
+      HarfBuzz <filename>src</filename> directory.
+    </para>
+    <para>
+      Do note, however, that the Python API is subject to change
+      without advance notice. GI allows the bindings to be
+      automatically updated, which is one of its advantages, but you
+      may need to update your Python code.
+    </para>
+  </section>
+  
+</chapter>

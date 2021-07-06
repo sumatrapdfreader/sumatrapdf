@@ -11,8 +11,7 @@
       <title>HarfBuzz</title>
       <graphic fileref="HarfBuzz.png" format="PNG" align="center"/>
       <para>
-        HarfBuzz is an <ulink url="http://www.microsoft.com/typography/otspec/">OpenType</ulink>
-        text shaping engine. Using the HarfBuzz library allows
+        HarfBuzz is a text shaping library. Using the HarfBuzz library allows
 	programs to convert a sequence of Unicode input into
 	properly formatted and positioned glyph output&mdash;for any writing
 	system and language.
@@ -39,6 +38,7 @@
       <xi:include href="usermanual-opentype-features.xml"/>
       <xi:include href="usermanual-clusters.xml"/>
       <xi:include href="usermanual-utilities.xml"/>
+      <xi:include href="usermanual-integration.xml"/>
   </part>
 
   <part>
@@ -104,6 +104,8 @@
         <xi:include href="xml/hb-ot-font.xml"/>
         <xi:include href="xml/hb-ot-layout.xml"/>
         <xi:include href="xml/hb-ot-math.xml"/>
+        <xi:include href="xml/hb-ot-meta.xml"/>
+        <xi:include href="xml/hb-ot-metrics.xml"/>
         <xi:include href="xml/hb-ot-name.xml"/>
         <xi:include href="xml/hb-ot-shape.xml"/>
         <xi:include href="xml/hb-ot-var.xml"/>
@@ -123,6 +125,8 @@
         <xi:include href="xml/hb-graphite2.xml"/>
         <xi:include href="xml/hb-icu.xml"/>
         <xi:include href="xml/hb-uniscribe.xml"/>
+        <xi:include href="xml/hb-gdi.xml"/>
+        <xi:include href="xml/hb-directwrite.xml"/>
       </chapter>
 
       <!--chapter id="object-tree">
@@ -133,6 +137,7 @@
       <index id="api-index-full"><title>API Index</title><xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include></index>
       <index id="deprecated-api-index" role="deprecated"><title>Index of deprecated API</title><xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include></index>
 
+      <index id="api-index-2-7-3" role="2.7.3"><title>Index of new symbols in 2.7.3</title><xi:include href="xml/api-index-2.7.3.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-2-6-0" role="2.6.0"><title>Index of new symbols in 2.6.0</title><xi:include href="xml/api-index-2.6.0.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-2-5-0" role="2.5.0"><title>Index of new symbols in 2.5.0</title><xi:include href="xml/api-index-2.5.0.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-2-4-0" role="2.4.0"><title>Index of new symbols in 2.4.0</title><xi:include href="xml/api-index-2.4.0.xml"><xi:fallback /></xi:include></index>
@@ -151,6 +156,7 @@
       <index id="api-index-1-5-0" role="1.5.0"><title>Index of new symbols in 1.5.0</title><xi:include href="xml/api-index-1.5.0.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-1-4-3" role="1.4.3"><title>Index of new symbols in 1.4.3</title><xi:include href="xml/api-index-1.4.3.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-1-4-2" role="1.4.2"><title>Index of new symbols in 1.4.2</title><xi:include href="xml/api-index-1.4.2.xml"><xi:fallback /></xi:include></index>
+      <index id="api-index-1-4-0" role="1.4.0"><title>Index of new symbols in 1.4.0</title><xi:include href="xml/api-index-1.4.0.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-1-3-3" role="1.3.3"><title>Index of new symbols in 1.3.3</title><xi:include href="xml/api-index-1.3.3.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-1-2-3" role="1.2.3"><title>Index of new symbols in 1.2.3</title><xi:include href="xml/api-index-1.2.3.xml"><xi:fallback /></xi:include></index>
       <index id="api-index-1-1-3" role="1.1.3"><title>Index of new symbols in 1.1.3</title><xi:include href="xml/api-index-1.1.3.xml"><xi:fallback /></xi:include></index>

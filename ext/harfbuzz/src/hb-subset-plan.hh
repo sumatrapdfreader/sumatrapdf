@@ -39,15 +39,23 @@ struct hb_subset_plan_t
 {
   hb_object_header_t header;
 
+  bool successful : 1;
   bool drop_hints : 1;
   bool desubroutinize : 1;
   bool retain_gids : 1;
+  bool name_legacy : 1;
 
   // For each cp that we'd like to retain maps to the corresponding gid.
   hb_set_t *unicodes;
 
   // name_ids we would like to retain
   hb_set_t *name_ids;
+
+  // name_languages we would like to retain
+  hb_set_t *name_languages;
+
+  //glyph ids requested to retain
+  hb_set_t *glyphs_requested;
 
   // Tables which should be dropped.
   hb_set_t *drop_tables;
@@ -67,7 +75,28 @@ struct hb_subset_plan_t
   hb_set_t *_glyphset;
   hb_set_t *_glyphset_gsub;
 
+  //active lookups we'd like to retain
+  hb_map_t *gsub_lookups;
+  hb_map_t *gpos_lookups;
+
+  //active features we'd like to retain
+  hb_map_t *gsub_features;
+  hb_map_t *gpos_features;
+
+  //The set of layout item variation store delta set indices to be retained
+  hb_set_t *layout_variation_indices;
+  //Old -> New layout item variation store delta set index mapping
+  hb_map_t *layout_variation_idx_map;
+
  public:
+
+  bool in_error () const { return !successful; }
+
+  bool check_success(bool success)
+  {
+    successful = (successful && success);
+    return successful;
+  }
 
   /*
    * The set of input glyph ids which will be retained in the subset.

@@ -30,6 +30,7 @@
 
 #include "hb-open-type.hh"
 #include "hb-ot-os2-unicode-ranges.hh"
+#include "hb-ot-cmap-table.hh"
 
 #include "hb-set.hh"
 
@@ -172,12 +173,33 @@ struct OS2
     OS2 *os2_prime = c->serializer->embed (this);
     if (unlikely (!os2_prime)) return_trace (false);
 
+    hb_set_t unicodes;
+    if (!c->plan->glyphs_requested->is_empty ())
+    {
+      hb_map_t unicode_glyphid_map;
+      
+      OT::cmap::accelerator_t cmap;
+      cmap.init (c->plan->source);
+      cmap.collect_mapping (&unicodes, &unicode_glyphid_map);
+      cmap.fini ();
+      
+      if (c->plan->unicodes->is_empty ()) unicodes.clear ();
+      else hb_set_set (&unicodes, c->plan->unicodes);
+  
+      + unicode_glyphid_map.iter ()
+      | hb_filter (c->plan->glyphs_requested, hb_second)
+      | hb_map (hb_first)
+      | hb_sink (unicodes)
+      ;
+    }
+    /* when --gids option is not used, no need to do collect_mapping that is
+       * iterating all codepoints in each subtable, which is not efficient */
     uint16_t min_cp, max_cp;
-    find_min_and_max_codepoint (c->plan->unicodes, &min_cp, &max_cp);
+    find_min_and_max_codepoint (unicodes.is_empty () ? c->plan->unicodes : &unicodes, &min_cp, &max_cp);
     os2_prime->usFirstCharIndex = min_cp;
     os2_prime->usLastCharIndex = max_cp;
 
-    _update_unicode_ranges (c->plan->unicodes, os2_prime->ulUnicodeRange);
+    _update_unicode_ranges (unicodes.is_empty () ? c->plan->unicodes : &unicodes, os2_prime->ulUnicodeRange);
 
     return_trace (true);
   }
@@ -216,19 +238,20 @@ struct OS2
 					  uint16_t *min_cp, /* OUT */
 					  uint16_t *max_cp  /* OUT */)
   {
-    *min_cp = codepoints->get_min ();
-    *max_cp = codepoints->get_max ();
+    *min_cp = hb_min (0xFFFFu, codepoints->get_min ());
+    *max_cp = hb_min (0xFFFFu, codepoints->get_max ());
   }
 
   /* https://github.com/Microsoft/Font-Validator/blob/520aaae/OTFontFileVal/val_OS2.cs#L644-L681 */
-  enum font_page_t {
-    HEBREW_FONT_PAGE		= 0xB100, // Hebrew Windows 3.1 font page
-    SIMP_ARABIC_FONT_PAGE	= 0xB200, // Simplified Arabic Windows 3.1 font page
-    TRAD_ARABIC_FONT_PAGE	= 0xB300, // Traditional Arabic Windows 3.1 font page
-    OEM_ARABIC_FONT_PAGE	= 0xB400, // OEM Arabic Windows 3.1 font page
-    SIMP_FARSI_FONT_PAGE	= 0xBA00, // Simplified Farsi Windows 3.1 font page
-    TRAD_FARSI_FONT_PAGE	= 0xBB00, // Traditional Farsi Windows 3.1 font page
-    THAI_FONT_PAGE		= 0xDE00  // Thai Windows 3.1 font page
+  enum font_page_t
+  {
+    FONT_PAGE_HEBREW		= 0xB100, /* Hebrew Windows 3.1 font page */
+    FONT_PAGE_SIMP_ARABIC	= 0xB200, /* Simplified Arabic Windows 3.1 font page */
+    FONT_PAGE_TRAD_ARABIC	= 0xB300, /* Traditional Arabic Windows 3.1 font page */
+    FONT_PAGE_OEM_ARABIC	= 0xB400, /* OEM Arabic Windows 3.1 font page */
+    FONT_PAGE_SIMP_FARSI	= 0xBA00, /* Simplified Farsi Windows 3.1 font page */
+    FONT_PAGE_TRAD_FARSI	= 0xBB00, /* Traditional Farsi Windows 3.1 font page */
+    FONT_PAGE_THAI		= 0xDE00  /* Thai Windows 3.1 font page */
   };
   font_page_t get_font_page () const
   { return (font_page_t) (version == 0 ? fsSelection & 0xFF00 : 0); }

@@ -51,6 +51,9 @@ DEFINE_NULL_NAMESPACE_BYTES (AAT, SettingName) = {0xFF,0xFF, 0xFF,0xFF};
 const unsigned char _hb_Null_AAT_Lookup[2] = {0xFF, 0xFF};
 
 
+
+/* hb_face_t */
+
 unsigned int
 hb_face_t::load_num_glyphs () const
 {
@@ -72,5 +75,38 @@ hb_face_t::load_upem () const
   upem.set_relaxed (ret);
   return ret;
 }
+
+
+/* hb_user_data_array_t */
+
+bool
+hb_user_data_array_t::set (hb_user_data_key_t *key,
+			   void *              data,
+			   hb_destroy_func_t   destroy,
+			   hb_bool_t           replace)
+{
+  if (!key)
+    return false;
+
+  if (replace) {
+    if (!data && !destroy) {
+      items.remove (key, lock);
+      return true;
+    }
+  }
+  hb_user_data_item_t item = {key, data, destroy};
+  bool ret = !!items.replace_or_insert (item, lock, (bool) replace);
+
+  return ret;
+}
+
+void *
+hb_user_data_array_t::get (hb_user_data_key_t *key)
+{
+  hb_user_data_item_t item = {nullptr, nullptr, nullptr};
+
+  return items.find (key, &item, lock) ? item.data : nullptr;
+}
+
 
 #endif

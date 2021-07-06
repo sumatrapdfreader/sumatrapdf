@@ -1,0 +1,62 @@
+name: msys2
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  msys2:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        include:
+          - MSYSTEM: MINGW32
+            MSYS2_ARCH: i686
+          - MSYSTEM: MINGW64
+            MSYS2_ARCH: x86_64
+    name: ${{ matrix.MSYSTEM }}
+
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.MSYSTEM }}
+          update: true
+          install: >-
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-cairo
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-freetype
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc-libs
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gettext
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-glib2
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gobject-introspection
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-graphite2
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-icu
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-meson
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-ninja
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-pkg-config
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-python3
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-python3-pip
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-ragel
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade fonttools
+      - name: Build
+        run: |
+          meson build \
+            --wrap-mode=nodownload \
+            --auto-features=enabled \
+            -Ddirectwrite=enabled \
+            -Dgdi=enabled \
+            -Dgraphite=enabled
+          ninja -C build
+      - name: Test
+        run: |
+          meson test \
+            --print-errorlogs \
+            --suite=harfbuzz \
+            -C build

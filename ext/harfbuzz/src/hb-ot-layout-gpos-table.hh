@@ -34,6 +34,11 @@
 
 namespace OT {
 
+struct MarkArray;
+static void Markclass_closure_and_remap_indexes (const Coverage  &mark_coverage,
+						 const MarkArray &mark_array,
+						 const hb_set_t  &glyphset,
+						 hb_map_t*        klass_mapping /* INOUT */);
 
 /* buffer **position** var allocations */
 #define attach_chain() var.i16[0] /* glyph to which this attaches to, relative to current glyphs; negative for going back, positive for forward. */
@@ -74,14 +79,14 @@ struct ValueFormat : HBUINT16
 
 /* All fields are options.  Only those available advance the value pointer. */
 #if 0
-  HBINT16		xPlacement;		/* Horizontal adjustment for
+  HBINT16		xPlacement;	/* Horizontal adjustment for
 					 * placement--in design units */
-  HBINT16		yPlacement;		/* Vertical adjustment for
+  HBINT16		yPlacement;	/* Vertical adjustment for
 					 * placement--in design units */
-  HBINT16		xAdvance;		/* Horizontal adjustment for
+  HBINT16		xAdvance;	/* Horizontal adjustment for
 					 * advance--in design units (only used
 					 * for horizontal writing) */
-  HBINT16		yAdvance;		/* Vertical adjustment for advance--in
+  HBINT16		yAdvance;	/* Vertical adjustment for advance--in
 					 * design units (only used for vertical
 					 * writing) */
   OffsetTo<Device>	xPlaDevice;	/* Offset to Device table for
@@ -155,6 +160,60 @@ struct ValueFormat : HBUINT16
     return ret;
   }
 
+  void serialize_copy (hb_serialize_context_t *c, const void *base,
+		       const Value *values, const hb_map_t *layout_variation_idx_map) const
+  {
+    unsigned int format = *this;
+    if (!format) return;
+
+    if (format & xPlacement) c->copy (*values++);
+    if (format & yPlacement) c->copy (*values++);
+    if (format & xAdvance)   c->copy (*values++);
+    if (format & yAdvance)   c->copy (*values++);
+
+    if (format & xPlaDevice) copy_device (c, base, values++, layout_variation_idx_map);
+    if (format & yPlaDevice) copy_device (c, base, values++, layout_variation_idx_map);
+    if (format & xAdvDevice) copy_device (c, base, values++, layout_variation_idx_map);
+    if (format & yAdvDevice) copy_device (c, base, values++, layout_variation_idx_map);
+  }
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c,
+				  const void *base,
+				  const hb_array_t<const Value>& values) const
+  {
+    unsigned format = *this;
+    unsigned i = 0;
+    if (format & xPlacement) i++;
+    if (format & yPlacement) i++;
+    if (format & xAdvance) i++;
+    if (format & yAdvance) i++;
+    if (format & xPlaDevice)
+    {
+      (base + get_device (&(values[i]))).collect_variation_indices (c->layout_variation_indices);
+      i++;
+    }
+
+    if (format & ValueFormat::yPlaDevice)
+    {
+      (base + get_device (&(values[i]))).collect_variation_indices (c->layout_variation_indices);
+      i++;
+    }
+
+    if (format & ValueFormat::xAdvDevice)
+    {
+
+      (base + get_device (&(values[i]))).collect_variation_indices (c->layout_variation_indices);
+      i++;
+    }
+
+    if (format & ValueFormat::yAdvDevice)
+    {
+
+      (base + get_device (&(values[i]))).collect_variation_indices (c->layout_variation_indices);
+      i++;
+    }
+  }
+
   private:
   bool sanitize_value_devices (hb_sanitize_context_t *c, const void *base, const Value *values) const
   {
@@ -173,18 +232,42 @@ struct ValueFormat : HBUINT16
     return true;
   }
 
-  HB_INTERNAL static OffsetTo<Device>& get_device (Value* value)
-  { return *CastP<OffsetTo<Device>> (value); }
-  HB_INTERNAL static const OffsetTo<Device>& get_device (const Value* value, bool *worked=nullptr)
+  static inline OffsetTo<Device>& get_device (Value* value)
+  {
+    return *static_cast<OffsetTo<Device> *> (value);
+  }
+  static inline const OffsetTo<Device>& get_device (const Value* value, bool *worked=nullptr)
   {
     if (worked) *worked |= bool (*value);
-    return *CastP<OffsetTo<Device>> (value);
+    return *static_cast<const OffsetTo<Device> *> (value);
   }
 
-  HB_INTERNAL static const HBINT16& get_short (const Value* value, bool *worked=nullptr)
+  bool copy_device (hb_serialize_context_t *c, const void *base,
+		    const Value *src_value, const hb_map_t *layout_variation_idx_map) const
+  {
+    Value	*dst_value = c->copy (*src_value);
+
+    if (!dst_value) return false;
+    if (*dst_value == 0) return true;
+
+    *dst_value = 0;
+    c->push ();
+    if ((base + get_device (src_value)).copy (c, layout_variation_idx_map))
+    {
+      c->add_link (*dst_value, c->pop_pack ());
+      return true;
+    }
+    else
+    {
+      c->pop_discard ();
+      return false;
+    }
+  }
+
+  static inline const HBINT16& get_short (const Value* value, bool *worked=nullptr)
   {
     if (worked) *worked |= bool (*value);
-    return *CastP<HBINT16> (value);
+    return *reinterpret_cast<const HBINT16 *> (value);
   }
 
   public:
@@ -237,9 +320,11 @@ struct ValueFormat : HBUINT16
 };
 
 template<typename Iterator>
-static inline void SinglePos_serialize (hb_serialize_context_t *c,
-					Iterator it,
-					ValueFormat valFormat);
+static void SinglePos_serialize (hb_serialize_context_t *c,
+				 const void *src,
+				 Iterator it,
+				 ValueFormat valFormat,
+				 const hb_map_t *layout_variation_idx_map);
 
 
 struct AnchorFormat1
@@ -338,15 +423,24 @@ struct AnchorFormat3
     return_trace (c->check_struct (this) && xDeviceTable.sanitize (c, this) && yDeviceTable.sanitize (c, this));
   }
 
-  AnchorFormat3* copy (hb_serialize_context_t *c) const
+  AnchorFormat3* copy (hb_serialize_context_t *c,
+		       const hb_map_t *layout_variation_idx_map) const
   {
     TRACE_SERIALIZE (this);
+    if (!layout_variation_idx_map) return_trace (nullptr);
+
     auto *out = c->embed<AnchorFormat3> (this);
     if (unlikely (!out)) return_trace (nullptr);
 
-    out->xDeviceTable.serialize_copy (c, xDeviceTable, this, out);
-    out->yDeviceTable.serialize_copy (c, yDeviceTable, this, out);
+    out->xDeviceTable.serialize_copy (c, xDeviceTable, this, 0, hb_serialize_context_t::Head, layout_variation_idx_map);
+    out->yDeviceTable.serialize_copy (c, yDeviceTable, this, 0, hb_serialize_context_t::Head, layout_variation_idx_map);
     return_trace (out);
+  }
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    (this+xDeviceTable).collect_variation_indices (c->layout_variation_indices);
+    (this+yDeviceTable).collect_variation_indices (c->layout_variation_indices);
   }
 
   protected:
@@ -391,14 +485,26 @@ struct Anchor
     }
   }
 
-  Anchor* copy (hb_serialize_context_t *c) const
+  Anchor* copy (hb_serialize_context_t *c, const hb_map_t *layout_variation_idx_map) const
   {
     TRACE_SERIALIZE (this);
     switch (u.format) {
     case 1: return_trace (reinterpret_cast<Anchor *> (u.format1.copy (c)));
     case 2: return_trace (reinterpret_cast<Anchor *> (u.format2.copy (c)));
-    case 3: return_trace (reinterpret_cast<Anchor *> (u.format3.copy (c)));
+    case 3: return_trace (reinterpret_cast<Anchor *> (u.format3.copy (c, layout_variation_idx_map)));
     default:return_trace (nullptr);
+    }
+  }
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    switch (u.format) {
+    case 1: case 2:
+      return;
+    case 3:
+      u.format3.collect_variation_indices (c);
+      return;
+    default: return;
     }
   }
 
@@ -420,9 +526,44 @@ struct AnchorMatrix
 			    unsigned int cols, bool *found) const
   {
     *found = false;
-    if (unlikely (row >= rows || col >= cols)) return Null(Anchor);
+    if (unlikely (row >= rows || col >= cols)) return Null (Anchor);
     *found = !matrixZ[row * cols + col].is_null ();
     return this+matrixZ[row * cols + col];
+  }
+
+  template <typename Iterator,
+	    hb_requires (hb_is_iterator (Iterator))>
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c,
+				  Iterator index_iter) const
+  {
+    for (unsigned i : index_iter)
+      (this+matrixZ[i]).collect_variation_indices (c);
+  }
+
+  template <typename Iterator,
+	    hb_requires (hb_is_iterator (Iterator))>
+  bool serialize (hb_serialize_context_t *c,
+		  unsigned                num_rows,
+		  AnchorMatrix const     *offset_matrix,
+		  const hb_map_t         *layout_variation_idx_map,
+		  Iterator                index_iter)
+  {
+    TRACE_SERIALIZE (this);
+    if (!index_iter) return_trace (false);
+    if (unlikely (!c->extend_min ((*this))))  return_trace (false);
+
+    this->rows = num_rows;
+    for (const unsigned i : index_iter)
+    {
+      auto *offset = c->embed (offset_matrix->matrixZ[i]);
+      if (!offset) return_trace (false);
+      offset->serialize_copy (c, offset_matrix->matrixZ[i],
+			      offset_matrix, c->to_bias (this),
+			      hb_serialize_context_t::Head,
+			      layout_variation_idx_map);
+    }
+
+    return_trace (true);
   }
 
   bool sanitize (hb_sanitize_context_t *c, unsigned int cols) const
@@ -438,7 +579,6 @@ struct AnchorMatrix
   }
 
   HBUINT16	rows;			/* Number of rows */
-  protected:
   UnsizedArrayOf<OffsetTo<Anchor>>
 		matrixZ;		/* Matrix of offsets to Anchor tables--
 					 * from beginning of AnchorMatrix table */
@@ -451,10 +591,32 @@ struct MarkRecord
 {
   friend struct MarkArray;
 
+  unsigned get_class () const { return (unsigned) klass; }
   bool sanitize (hb_sanitize_context_t *c, const void *base) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) && markAnchor.sanitize (c, base));
+  }
+
+  MarkRecord *copy (hb_serialize_context_t *c,
+		    const void             *src_base,
+		    unsigned                dst_bias,
+		    const hb_map_t         *klass_mapping,
+		    const hb_map_t         *layout_variation_idx_map) const
+  {
+    TRACE_SERIALIZE (this);
+    auto *out = c->embed (this);
+    if (unlikely (!out)) return_trace (nullptr);
+
+    out->klass = klass_mapping->get (klass);
+    out->markAnchor.serialize_copy (c, markAnchor, src_base, dst_bias, hb_serialize_context_t::Head, layout_variation_idx_map);
+    return_trace (out);
+  }
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c,
+				  const void *src_base) const
+  {
+    (src_base+markAnchor).collect_variation_indices (c);
   }
 
   protected:
@@ -502,6 +664,21 @@ struct MarkArray : ArrayOf<MarkRecord>	/* Array of MarkRecords--in Coverage orde
     return_trace (true);
   }
 
+  template<typename Iterator,
+	   hb_requires (hb_is_source_of (Iterator, MarkRecord))>
+  bool serialize (hb_serialize_context_t *c,
+		  const hb_map_t         *klass_mapping,
+		  const hb_map_t         *layout_variation_idx_map,
+		  const void             *base,
+		  Iterator                it)
+  {
+    TRACE_SERIALIZE (this);
+    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->check_assign (len, it.len ()))) return_trace (false);
+    c->copy_all (it, base, c->to_bias (this), klass_mapping, layout_variation_idx_map);
+    return_trace (true);
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -517,8 +694,22 @@ struct SinglePosFormat1
   bool intersects (const hb_set_t *glyphs) const
   { return (this+coverage).intersects (glyphs); }
 
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    if (!valueFormat.has_device ()) return;
+
+    auto it =
+    + hb_iter (this+coverage)
+    | hb_filter (c->glyph_set)
+    ;
+
+    if (!it) return;
+    valueFormat.collect_variation_indices (c, this, values.as_array (valueFormat.get_len ()));
+  }
+
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  { if (unlikely (!(this+coverage).add_coverage (c->input))) return; }
+  { if (unlikely (!(this+coverage).collect_coverage (c->input))) return; }
 
   const Coverage &get_coverage () const { return this+coverage; }
 
@@ -538,14 +729,20 @@ struct SinglePosFormat1
   template<typename Iterator,
 	   hb_requires (hb_is_iterator (Iterator))>
   void serialize (hb_serialize_context_t *c,
+		  const void *src,
 		  Iterator it,
-		  ValueFormat valFormat)
+		  ValueFormat valFormat,
+		  const hb_map_t *layout_variation_idx_map)
   {
-    if (unlikely (!c->extend_min (*this))) return;
+    auto out = c->extend_min (*this);
+    if (unlikely (!out)) return;
     if (unlikely (!c->check_assign (valueFormat, valFormat))) return;
 
-    for (const auto &_ : hb_second (*it))
-      c->copy (_);
+    + it
+    | hb_map (hb_second)
+    | hb_apply ([&] (hb_array_t<const Value> _)
+		{ valFormat.serialize_copy (c, src, &_, layout_variation_idx_map); })
+    ;
 
     auto glyphs =
     + it
@@ -569,7 +766,7 @@ struct SinglePosFormat1
     ;
 
     bool ret = bool (it);
-    SinglePos_serialize (c->serializer, it, valueFormat);
+    SinglePos_serialize (c->serializer, this, it, valueFormat, c->plan->layout_variation_idx_map);
     return_trace (ret);
   }
 
@@ -600,8 +797,29 @@ struct SinglePosFormat2
   bool intersects (const hb_set_t *glyphs) const
   { return (this+coverage).intersects (glyphs); }
 
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    if (!valueFormat.has_device ()) return;
+
+    auto it =
+    + hb_zip (this+coverage, hb_range ((unsigned) valueCount))
+    | hb_filter (c->glyph_set, hb_first)
+    ;
+
+    if (!it) return;
+
+    unsigned sub_length = valueFormat.get_len ();
+    const hb_array_t<const Value> values_array = values.as_array (valueCount * sub_length);
+
+    for (unsigned i : + it
+		      | hb_map (hb_second))
+      valueFormat.collect_variation_indices (c, this, values_array.sub_array (i * sub_length, sub_length));
+
+  }
+
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  { if (unlikely (!(this+coverage).add_coverage (c->input))) return; }
+  { if (unlikely (!(this+coverage).collect_coverage (c->input))) return; }
 
   const Coverage &get_coverage () const { return this+coverage; }
 
@@ -625,16 +843,21 @@ struct SinglePosFormat2
   template<typename Iterator,
 	   hb_requires (hb_is_iterator (Iterator))>
   void serialize (hb_serialize_context_t *c,
+		  const void *src,
 		  Iterator it,
-		  ValueFormat valFormat)
+		  ValueFormat valFormat,
+		  const hb_map_t *layout_variation_idx_map)
   {
-    if (unlikely (!c->extend_min (*this))) return;
+    auto out = c->extend_min (*this);
+    if (unlikely (!out)) return;
     if (unlikely (!c->check_assign (valueFormat, valFormat))) return;
     if (unlikely (!c->check_assign (valueCount, it.len ()))) return;
 
-    for (const auto iter : it)
-      for (const auto &_ : iter.second)
-	c->copy (_);
+    + it
+    | hb_map (hb_second)
+    | hb_apply ([&] (hb_array_t<const Value> _)
+		{ valFormat.serialize_copy (c, src, &_, layout_variation_idx_map); })
+    ;
 
     auto glyphs =
     + it
@@ -665,7 +888,7 @@ struct SinglePosFormat2
     ;
 
     bool ret = bool (it);
-    SinglePos_serialize (c->serializer, it, valueFormat);
+    SinglePos_serialize (c->serializer, this, it, valueFormat, c->plan->layout_variation_idx_map);
     return_trace (ret);
   }
 
@@ -711,8 +934,10 @@ struct SinglePos
   template<typename Iterator,
 	   hb_requires (hb_is_iterator (Iterator))>
   void serialize (hb_serialize_context_t *c,
+		  const void *src,
 		  Iterator glyph_val_iter_pairs,
-		  ValueFormat valFormat)
+		  ValueFormat valFormat,
+		  const hb_map_t *layout_variation_idx_map)
   {
     if (unlikely (!c->extend_min (u.format))) return;
     unsigned format = 2;
@@ -721,9 +946,9 @@ struct SinglePos
 
     u.format = format;
     switch (u.format) {
-    case 1: u.format1.serialize (c, glyph_val_iter_pairs, valFormat);
+    case 1: u.format1.serialize (c, src, glyph_val_iter_pairs, valFormat, layout_variation_idx_map);
 	    return;
-    case 2: u.format2.serialize (c, glyph_val_iter_pairs, valFormat);
+    case 2: u.format2.serialize (c, src, glyph_val_iter_pairs, valFormat, layout_variation_idx_map);
 	    return;
     default:return;
     }
@@ -750,27 +975,59 @@ struct SinglePos
 };
 
 template<typename Iterator>
-static inline void
+static void
 SinglePos_serialize (hb_serialize_context_t *c,
+		     const void *src,
 		     Iterator it,
-		     ValueFormat valFormat)
-{ c->start_embed<SinglePos> ()->serialize (c, it, valFormat); }
+		     ValueFormat valFormat,
+		     const hb_map_t *layout_variation_idx_map)
+{ c->start_embed<SinglePos> ()->serialize (c, src, it, valFormat, layout_variation_idx_map); }
 
 
 struct PairValueRecord
 {
   friend struct PairSet;
 
+  int cmp (hb_codepoint_t k) const
+  { return secondGlyph.cmp (k); }
+
+  struct serialize_closure_t
+  {
+    const void 		*base;
+    const ValueFormat	*valueFormats;
+    unsigned		len1; /* valueFormats[0].get_len() */
+    const hb_map_t 	*glyph_map;
+    const hb_map_t      *layout_variation_idx_map;
+  };
+
   bool serialize (hb_serialize_context_t *c,
-                  unsigned length,
-                  const hb_map_t &glyph_map) const
+		  serialize_closure_t *closure) const
   {
     TRACE_SERIALIZE (this);
     auto *out = c->start_embed (*this);
     if (unlikely (!c->extend_min (out))) return_trace (false);
-    
-    out->secondGlyph = glyph_map[secondGlyph];
-    return_trace (c->copy (values, length));
+
+    out->secondGlyph = (*closure->glyph_map)[secondGlyph];
+
+    closure->valueFormats[0].serialize_copy (c, closure->base, &values[0], closure->layout_variation_idx_map);
+    closure->valueFormats[1].serialize_copy (c, closure->base, &values[closure->len1], closure->layout_variation_idx_map);
+
+    return_trace (true);
+  }
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c,
+				  const ValueFormat *valueFormats,
+				  const void *base) const
+  {
+    unsigned record1_len = valueFormats[0].get_len ();
+    unsigned record2_len = valueFormats[1].get_len ();
+    const hb_array_t<const Value> values_array = values.as_array (record1_len + record2_len);
+
+    if (valueFormats[0].has_device ())
+      valueFormats[0].collect_variation_indices (c, base, values_array.sub_array (0, record1_len));
+
+    if (valueFormats[1].has_device ())
+      valueFormats[1].collect_variation_indices (c, base, values_array.sub_array (record1_len, record2_len));
   }
 
   protected:
@@ -806,7 +1063,7 @@ struct PairSet
   }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c,
-			      const ValueFormat *valueFormats) const
+		       const ValueFormat *valueFormats) const
   {
     unsigned int len1 = valueFormats[0].get_len ();
     unsigned int len2 = valueFormats[1].get_len ();
@@ -816,9 +1073,27 @@ struct PairSet
     c->input->add_array (&record->secondGlyph, len, record_size);
   }
 
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c,
+				  const ValueFormat *valueFormats) const
+  {
+    unsigned len1 = valueFormats[0].get_len ();
+    unsigned len2 = valueFormats[1].get_len ();
+    unsigned record_size = HBUINT16::static_size * (1 + len1 + len2);
+
+    const PairValueRecord *record = &firstPairValueRecord;
+    unsigned count = len;
+    for (unsigned i = 0; i < count; i++)
+    {
+      if (c->glyph_set->has (record->secondGlyph))
+      { record->collect_variation_indices (c, valueFormats, this); }
+
+      record = &StructAtOffset<const PairValueRecord> (record, record_size);
+    }
+  }
+
   bool apply (hb_ot_apply_context_t *c,
-		     const ValueFormat *valueFormats,
-		     unsigned int pos) const
+	      const ValueFormat *valueFormats,
+	      unsigned int pos) const
   {
     TRACE_APPLY (this);
     hb_buffer_t *buffer = c->buffer;
@@ -826,40 +1101,26 @@ struct PairSet
     unsigned int len2 = valueFormats[1].get_len ();
     unsigned int record_size = HBUINT16::static_size * (1 + len1 + len2);
 
-    unsigned int count = len;
-
-    /* Hand-coded bsearch. */
-    if (unlikely (!count))
-      return_trace (false);
-    hb_codepoint_t x = buffer->info[pos].codepoint;
-    int min = 0, max = (int) count - 1;
-    while (min <= max)
+    const PairValueRecord *record = hb_bsearch (buffer->info[pos].codepoint,
+						&firstPairValueRecord,
+						len,
+						record_size);
+    if (record)
     {
-      int mid = ((unsigned int) min + (unsigned int) max) / 2;
-      const PairValueRecord *record = &StructAtOffset<PairValueRecord> (&firstPairValueRecord, record_size * mid);
-      hb_codepoint_t mid_x = record->secondGlyph;
-      if (x < mid_x)
-	max = mid - 1;
-      else if (x > mid_x)
-	min = mid + 1;
-      else
-      {
-	/* Note the intentional use of "|" instead of short-circuit "||". */
-	if (valueFormats[0].apply_value (c, this, &record->values[0], buffer->cur_pos()) |
-	    valueFormats[1].apply_value (c, this, &record->values[len1], buffer->pos[pos]))
-	  buffer->unsafe_to_break (buffer->idx, pos + 1);
-	if (len2)
-	  pos++;
-	buffer->idx = pos;
-	return_trace (true);
-      }
+      /* Note the intentional use of "|" instead of short-circuit "||". */
+      if (valueFormats[0].apply_value (c, this, &record->values[0], buffer->cur_pos()) |
+	  valueFormats[1].apply_value (c, this, &record->values[len1], buffer->pos[pos]))
+	buffer->unsafe_to_break (buffer->idx, pos + 1);
+      if (len2)
+	pos++;
+      buffer->idx = pos;
+      return_trace (true);
     }
-
     return_trace (false);
   }
 
   bool subset (hb_subset_context_t *c,
-               const ValueFormat valueFormats[2]) const
+	       const ValueFormat valueFormats[2]) const
   {
     TRACE_SUBSET (this);
     auto snap = c->serializer->snapshot ();
@@ -875,12 +1136,21 @@ struct PairSet
     unsigned len2 = valueFormats[1].get_len ();
     unsigned record_size = HBUINT16::static_size + Value::static_size * (len1 + len2);
 
+    PairValueRecord::serialize_closure_t closure =
+    {
+      this,
+      valueFormats,
+      len1,
+      &glyph_map,
+      c->plan->layout_variation_idx_map
+    };
+
     const PairValueRecord *record = &firstPairValueRecord;
     unsigned count = len, num = 0;
     for (unsigned i = 0; i < count; i++)
     {
-      if (!glyphset.has (record->secondGlyph)) continue;
-      if (record->serialize (c->serializer, len1 + len2, glyph_map)) num++;
+      if (glyphset.has (record->secondGlyph)
+	 && record->serialize (c->serializer, &closure)) num++;
       record = &StructAtOffset<const PairValueRecord> (record, record_size);
     }
 
@@ -891,7 +1161,6 @@ struct PairSet
 
   struct sanitize_closure_t
   {
-    const void *base;
     const ValueFormat *valueFormats;
     unsigned int len1; /* valueFormats[0].get_len() */
     unsigned int stride; /* 1 + len1 + len2 */
@@ -908,8 +1177,8 @@ struct PairSet
 
     unsigned int count = len;
     const PairValueRecord *record = &firstPairValueRecord;
-    return_trace (closure->valueFormats[0].sanitize_values_stride_unsafe (c, closure->base, &record->values[0], count, closure->stride) &&
-		  closure->valueFormats[1].sanitize_values_stride_unsafe (c, closure->base, &record->values[closure->len1], count, closure->stride));
+    return_trace (closure->valueFormats[0].sanitize_values_stride_unsafe (c, this, &record->values[0], count, closure->stride) &&
+		  closure->valueFormats[1].sanitize_values_stride_unsafe (c, this, &record->values[closure->len1], count, closure->stride));
   }
 
   protected:
@@ -935,9 +1204,27 @@ struct PairPosFormat1
     ;
   }
 
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    if ((!valueFormat[0].has_device ()) && (!valueFormat[1].has_device ())) return;
+
+    auto it =
+    + hb_zip (this+coverage, pairSet)
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    ;
+
+    if (!it) return;
+    + it
+    | hb_map (hb_add (this))
+    | hb_apply ([&] (const PairSet& _) { _.collect_variation_indices (c, valueFormat); })
+    ;
+  }
+
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+coverage).collect_coverage (c->input))) return;
     unsigned int count = pairSet.len;
     for (unsigned int i = 0; i < count; i++)
       (this+pairSet[i]).collect_glyphs (c, valueFormat);
@@ -981,7 +1268,7 @@ struct PairPosFormat1
 		   auto *o = out->pairSet.serialize_append (c->serializer);
 		   if (unlikely (!o)) return false;
 		   auto snap = c->serializer->snapshot ();
-		   bool ret = o->serialize_subset (c, _, this, out, valueFormat);
+		   bool ret = o->serialize_subset (c, _, this, valueFormat);
 		   if (!ret)
 		   {
 		     out->pairSet.pop ();
@@ -1011,7 +1298,6 @@ struct PairPosFormat1
     unsigned int len2 = valueFormat[1].get_len ();
     PairSet::sanitize_closure_t closure =
     {
-      this,
       valueFormat,
       len1,
       1 + len1 + len2
@@ -1046,10 +1332,43 @@ struct PairPosFormat2
 	   (this+classDef2).intersects (glyphs);
   }
 
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    if ((!valueFormat1.has_device ()) && (!valueFormat2.has_device ())) return;
+
+    hb_set_t class1_set, class2_set;
+    for (const unsigned cp : c->glyph_set->iter ())
+    {
+      unsigned klass1 = (this+classDef1).get (cp);
+      unsigned klass2 = (this+classDef2).get (cp);
+      class1_set.add (klass1);
+      class2_set.add (klass2);
+    }
+
+    if (class1_set.is_empty () || class2_set.is_empty ()) return;
+
+    unsigned len1 = valueFormat1.get_len ();
+    unsigned len2 = valueFormat2.get_len ();
+    const hb_array_t<const Value> values_array = values.as_array ((unsigned)class1Count * (unsigned) class2Count * (len1 + len2));
+    for (const unsigned class1_idx : class1_set.iter ())
+    {
+      for (const unsigned class2_idx : class2_set.iter ())
+      {
+	unsigned start_offset = (class1_idx * (unsigned) class2Count + class2_idx) * (len1 + len2);
+	if (valueFormat1.has_device ())
+	  valueFormat1.collect_variation_indices (c, this, values_array.sub_array (start_offset, len1));
+
+	if (valueFormat2.has_device ())
+	  valueFormat2.collect_variation_indices (c, this, values_array.sub_array (start_offset+len1, len2));
+      }
+    }
+  }
+
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
-    if (unlikely (!(this+classDef2).add_coverage (c->input))) return;
+    if (unlikely (!(this+coverage).collect_coverage (c->input))) return;
+    if (unlikely (!(this+classDef2).collect_coverage (c->input))) return;
   }
 
   const Coverage &get_coverage () const { return this+coverage; }
@@ -1096,32 +1415,33 @@ struct PairPosFormat2
     out->valueFormat2 = valueFormat2;
 
     hb_map_t klass1_map;
-    out->classDef1.serialize_subset (c, classDef1, this, out, &klass1_map);
+    out->classDef1.serialize_subset (c, classDef1, this, &klass1_map);
     out->class1Count = klass1_map.get_population ();
 
     hb_map_t klass2_map;
-    out->classDef2.serialize_subset (c, classDef2, this, out, &klass2_map);
+    out->classDef2.serialize_subset (c, classDef2, this, &klass2_map);
     out->class2Count = klass2_map.get_population ();
 
-    unsigned record_len = valueFormat1.get_len () + valueFormat2.get_len ();
+    unsigned len1 = valueFormat1.get_len ();
+    unsigned len2 = valueFormat2.get_len ();
 
     + hb_range ((unsigned) class1Count)
     | hb_filter (klass1_map)
     | hb_apply ([&] (const unsigned class1_idx)
-                {
-                  + hb_range ((unsigned) class2Count)
-                  | hb_filter (klass2_map)
-                  | hb_apply ([&] (const unsigned class2_idx)
-                              {
-                                unsigned idx = (class1_idx * (unsigned) class2Count + class2_idx) * record_len;
-                                for (unsigned i = 0; i < record_len; i++)
-                                  c->serializer->copy (values[idx+i]);
-                              })
-                  ;
-                })
+		{
+		  + hb_range ((unsigned) class2Count)
+		  | hb_filter (klass2_map)
+		  | hb_apply ([&] (const unsigned class2_idx)
+			      {
+				unsigned idx = (class1_idx * (unsigned) class2Count + class2_idx) * (len1 + len2);
+				valueFormat1.serialize_copy (c->serializer, this, &values[idx], c->plan->layout_variation_idx_map);
+				valueFormat2.serialize_copy (c->serializer, this, &values[idx + len1], c->plan->layout_variation_idx_map);
+			      })
+		  ;
+		})
     ;
 
-    const hb_set_t &glyphset = *c->plan->glyphset ();
+    const hb_set_t &glyphset = *c->plan->_glyphset_gsub;
     const hb_map_t &glyph_map = *c->plan->glyph_map;
 
     auto it =
@@ -1217,16 +1537,24 @@ struct EntryExitRecord
     return_trace (entryAnchor.sanitize (c, base) && exitAnchor.sanitize (c, base));
   }
 
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c,
+				  const void *src_base) const
+  {
+    (src_base+entryAnchor).collect_variation_indices (c);
+    (src_base+exitAnchor).collect_variation_indices (c);
+  }
+
   EntryExitRecord* copy (hb_serialize_context_t *c,
 			 const void *src_base,
-			 const void *dst_base) const
+			 const void *dst_base,
+			 const hb_map_t *layout_variation_idx_map) const
   {
     TRACE_SERIALIZE (this);
     auto *out = c->embed (this);
     if (unlikely (!out)) return_trace (nullptr);
 
-    out->entryAnchor.serialize_copy (c, entryAnchor, src_base, dst_base);
-    out->exitAnchor.serialize_copy (c, exitAnchor, src_base, dst_base);
+    out->entryAnchor.serialize_copy (c, entryAnchor, src_base, c->to_bias (dst_base), hb_serialize_context_t::Head, layout_variation_idx_map);
+    out->exitAnchor.serialize_copy (c, exitAnchor, src_base, c->to_bias (dst_base), hb_serialize_context_t::Head, layout_variation_idx_map);
     return_trace (out);
   }
 
@@ -1251,8 +1579,19 @@ struct CursivePosFormat1
   bool intersects (const hb_set_t *glyphs) const
   { return (this+coverage).intersects (glyphs); }
 
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    + hb_zip (this+coverage, entryExitRecord)
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    | hb_apply ([&] (const EntryExitRecord& record) { record.collect_variation_indices (c, this); })
+    ;
+  }
+
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  { if (unlikely (!(this+coverage).add_coverage (c->input))) return; }
+  { if (unlikely (!(this+coverage).collect_coverage (c->input))) return; }
 
   const Coverage &get_coverage () const { return this+coverage; }
 
@@ -1353,6 +1692,12 @@ struct CursivePosFormat1
     else
       pos[child].x_offset = x_offset;
 
+    /* If parent was attached to child, break them free.
+     * https://github.com/harfbuzz/harfbuzz/issues/2469
+     */
+    if (unlikely (pos[parent].attach_chain() == -pos[child].attach_chain()))
+      pos[parent].attach_chain() = 0;
+
     buffer->idx++;
     return_trace (true);
   }
@@ -1361,7 +1706,8 @@ struct CursivePosFormat1
 	    hb_requires (hb_is_iterator (Iterator))>
   void serialize (hb_serialize_context_t *c,
 		  Iterator it,
-		  const void *src_base)
+		  const void *src_base,
+		  const hb_map_t *layout_variation_idx_map)
   {
     if (unlikely (!c->extend_min ((*this)))) return;
     this->format = 1;
@@ -1369,7 +1715,7 @@ struct CursivePosFormat1
 
     for (const EntryExitRecord& entry_record : + it
 					       | hb_map (hb_second))
-      c->copy (entry_record, src_base, this);
+      c->copy (entry_record, src_base, this, layout_variation_idx_map);
 
     auto glyphs =
     + it
@@ -1396,7 +1742,7 @@ struct CursivePosFormat1
     ;
 
     bool ret = bool (it);
-    out->serialize (c->serializer, it, this);
+    out->serialize (c->serializer, it, this, c->plan->layout_variation_idx_map);
     return_trace (ret);
   }
 
@@ -1444,16 +1790,73 @@ typedef AnchorMatrix BaseArray;		/* base-major--
 					 * mark-minor--
 					 * ordered by class--zero-based. */
 
+static void Markclass_closure_and_remap_indexes (const Coverage  &mark_coverage,
+						 const MarkArray &mark_array,
+						 const hb_set_t  &glyphset,
+						 hb_map_t*        klass_mapping /* INOUT */)
+{
+  hb_set_t orig_classes;
+
+  + hb_zip (mark_coverage, mark_array)
+  | hb_filter (glyphset, hb_first)
+  | hb_map (hb_second)
+  | hb_map (&MarkRecord::get_class)
+  | hb_sink (orig_classes)
+  ;
+
+  unsigned idx = 0;
+  for (auto klass : orig_classes.iter ())
+  {
+    if (klass_mapping->has (klass)) continue;
+    klass_mapping->set (klass, idx);
+    idx++;
+  }
+}
+
 struct MarkBasePosFormat1
 {
   bool intersects (const hb_set_t *glyphs) const
-  { return (this+markCoverage).intersects (glyphs) &&
-	   (this+baseCoverage).intersects (glyphs); }
+  {
+    return (this+markCoverage).intersects (glyphs) &&
+	   (this+baseCoverage).intersects (glyphs);
+  }
+
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    + hb_zip (this+markCoverage, this+markArray)
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    | hb_apply ([&] (const MarkRecord& record) { record.collect_variation_indices (c, &(this+markArray)); })
+    ;
+
+    hb_map_t klass_mapping;
+    Markclass_closure_and_remap_indexes (this+markCoverage, this+markArray, *c->glyph_set, &klass_mapping);
+
+    unsigned basecount = (this+baseArray).rows;
+    auto base_iter =
+    + hb_zip (this+baseCoverage, hb_range (basecount))
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    ;
+
+    hb_sorted_vector_t<unsigned> base_indexes;
+    for (const unsigned row : base_iter)
+    {
+      + hb_range ((unsigned) classCount)
+      | hb_filter (klass_mapping)
+      | hb_map ([&] (const unsigned col) { return row * (unsigned) classCount + col; })
+      | hb_sink (base_indexes)
+      ;
+    }
+    (this+baseArray).collect_variation_indices (c, base_indexes.iter ());
+  }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    if (unlikely (!(this+markCoverage).add_coverage (c->input))) return;
-    if (unlikely (!(this+baseCoverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+markCoverage).collect_coverage (c->input))) return;
+    if (unlikely (!(this+baseCoverage).collect_coverage (c->input))) return;
   }
 
   const Coverage &get_coverage () const { return this+markCoverage; }
@@ -1501,8 +1904,70 @@ struct MarkBasePosFormat1
   bool subset (hb_subset_context_t *c) const
   {
     TRACE_SUBSET (this);
-    // TODO(subset)
-    return_trace (false);
+    const hb_set_t &glyphset = *c->plan->glyphset ();
+    const hb_map_t &glyph_map = *c->plan->glyph_map;
+
+    auto *out = c->serializer->start_embed (*this);
+    if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
+    out->format = format;
+
+    hb_map_t klass_mapping;
+    Markclass_closure_and_remap_indexes (this+markCoverage, this+markArray, glyphset, &klass_mapping);
+
+    if (!klass_mapping.get_population ()) return_trace (false);
+    out->classCount = klass_mapping.get_population ();
+
+    auto mark_iter =
+    + hb_zip (this+markCoverage, this+markArray)
+    | hb_filter (glyphset, hb_first)
+    ;
+
+    hb_sorted_vector_t<hb_codepoint_t> new_coverage;
+    + mark_iter
+    | hb_map (hb_first)
+    | hb_map (glyph_map)
+    | hb_sink (new_coverage)
+    ;
+
+    if (!out->markCoverage.serialize (c->serializer, out)
+			  .serialize (c->serializer, new_coverage.iter ()))
+      return_trace (false);
+
+    out->markArray.serialize (c->serializer, out)
+		  .serialize (c->serializer, &klass_mapping, c->plan->layout_variation_idx_map, &(this+markArray), + mark_iter
+										                                   | hb_map (hb_second));
+
+    unsigned basecount = (this+baseArray).rows;
+    auto base_iter =
+    + hb_zip (this+baseCoverage, hb_range (basecount))
+    | hb_filter (glyphset, hb_first)
+    ;
+
+    new_coverage.reset ();
+    + base_iter
+    | hb_map (hb_first)
+    | hb_map (glyph_map)
+    | hb_sink (new_coverage)
+    ;
+
+    if (!out->baseCoverage.serialize (c->serializer, out)
+			  .serialize (c->serializer, new_coverage.iter ()))
+      return_trace (false);
+
+    hb_sorted_vector_t<unsigned> base_indexes;
+    for (const unsigned row : + base_iter
+			      | hb_map (hb_second))
+    {
+      + hb_range ((unsigned) classCount)
+      | hb_filter (klass_mapping)
+      | hb_map ([&] (const unsigned col) { return row * (unsigned) classCount + col; })
+      | hb_sink (base_indexes)
+      ;
+    }
+    out->baseArray.serialize (c->serializer, out)
+		  .serialize (c->serializer, base_iter.len (), &(this+baseArray), c->plan->layout_variation_idx_map, base_indexes.iter ());
+
+    return_trace (true);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -1568,13 +2033,53 @@ typedef OffsetListOf<LigatureAttach> LigatureArray;
 struct MarkLigPosFormat1
 {
   bool intersects (const hb_set_t *glyphs) const
-  { return (this+markCoverage).intersects (glyphs) &&
-	   (this+ligatureCoverage).intersects (glyphs); }
+  {
+    return (this+markCoverage).intersects (glyphs) &&
+	   (this+ligatureCoverage).intersects (glyphs);
+  }
+
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    + hb_zip (this+markCoverage, this+markArray)
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    | hb_apply ([&] (const MarkRecord& record) { record.collect_variation_indices (c, &(this+markArray)); })
+    ;
+
+    hb_map_t klass_mapping;
+    Markclass_closure_and_remap_indexes (this+markCoverage, this+markArray, *c->glyph_set, &klass_mapping);
+
+    unsigned ligcount = (this+ligatureArray).len;
+    auto lig_iter =
+    + hb_zip (this+ligatureCoverage, hb_range (ligcount))
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    ;
+
+    const LigatureArray& lig_array = this+ligatureArray;
+    for (const unsigned i : lig_iter)
+    {
+      hb_sorted_vector_t<unsigned> lig_indexes;
+      unsigned row_count = lig_array[i].rows;
+      for (unsigned row : + hb_range (row_count))
+      {
+	+ hb_range ((unsigned) classCount)
+	| hb_filter (klass_mapping)
+	| hb_map ([&] (const unsigned col) { return row * (unsigned) classCount + col; })
+	| hb_sink (lig_indexes)
+	;
+      }
+
+      lig_array[i].collect_variation_indices (c, lig_indexes.iter ());
+    }
+  }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    if (unlikely (!(this+markCoverage).add_coverage (c->input))) return;
-    if (unlikely (!(this+ligatureCoverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+markCoverage).collect_coverage (c->input))) return;
+    if (unlikely (!(this+ligatureCoverage).collect_coverage (c->input))) return;
   }
 
   const Coverage &get_coverage () const { return this+markCoverage; }
@@ -1688,13 +2193,47 @@ typedef AnchorMatrix Mark2Array;	/* mark2-major--
 struct MarkMarkPosFormat1
 {
   bool intersects (const hb_set_t *glyphs) const
-  { return (this+mark1Coverage).intersects (glyphs) &&
-	   (this+mark2Coverage).intersects (glyphs); }
+  {
+    return (this+mark1Coverage).intersects (glyphs) &&
+	   (this+mark2Coverage).intersects (glyphs);
+  }
+
+  void closure_lookups (hb_closure_lookups_context_t *c) const {}
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    + hb_zip (this+mark1Coverage, this+mark1Array)
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    | hb_apply ([&] (const MarkRecord& record) { record.collect_variation_indices (c, &(this+mark1Array)); })
+    ;
+
+    hb_map_t klass_mapping;
+    Markclass_closure_and_remap_indexes (this+mark1Coverage, this+mark1Array, *c->glyph_set, &klass_mapping);
+
+    unsigned mark2_count = (this+mark2Array).rows;
+    auto mark2_iter =
+    + hb_zip (this+mark2Coverage, hb_range (mark2_count))
+    | hb_filter (c->glyph_set, hb_first)
+    | hb_map (hb_second)
+    ;
+
+    hb_sorted_vector_t<unsigned> mark2_indexes;
+    for (const unsigned row : mark2_iter)
+    {
+      + hb_range ((unsigned) classCount)
+      | hb_filter (klass_mapping)
+      | hb_map ([&] (const unsigned col) { return row * (unsigned) classCount + col; })
+      | hb_sink (mark2_indexes)
+      ;
+    }
+    (this+mark2Array).collect_variation_indices (c, mark2_indexes.iter ());
+  }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    if (unlikely (!(this+mark1Coverage).add_coverage (c->input))) return;
-    if (unlikely (!(this+mark2Coverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+mark1Coverage).collect_coverage (c->input))) return;
+    if (unlikely (!(this+mark2Coverage).collect_coverage (c->input))) return;
   }
 
   const Coverage &get_coverage () const { return this+mark1Coverage; }
@@ -1721,12 +2260,15 @@ struct MarkMarkPosFormat1
     unsigned int comp1 = _hb_glyph_info_get_lig_comp (&buffer->cur());
     unsigned int comp2 = _hb_glyph_info_get_lig_comp (&buffer->info[j]);
 
-    if (likely (id1 == id2)) {
+    if (likely (id1 == id2))
+    {
       if (id1 == 0) /* Marks belonging to the same base. */
 	goto good;
       else if (comp1 == comp2) /* Marks belonging to the same ligature component. */
 	goto good;
-    } else {
+    }
+    else
+    {
       /* If ligature ids don't match, it may be the case that one of the marks
        * itself is a ligature.  In which case match. */
       if ((id1 > 0 && !comp1) || (id2 > 0 && !comp2))
@@ -1746,8 +2288,70 @@ struct MarkMarkPosFormat1
   bool subset (hb_subset_context_t *c) const
   {
     TRACE_SUBSET (this);
-    // TODO(subset)
-    return_trace (false);
+    const hb_set_t &glyphset = *c->plan->glyphset ();
+    const hb_map_t &glyph_map = *c->plan->glyph_map;
+
+    auto *out = c->serializer->start_embed (*this);
+    if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
+    out->format = format;
+
+    hb_map_t klass_mapping;
+    Markclass_closure_and_remap_indexes (this+mark1Coverage, this+mark1Array, glyphset, &klass_mapping);
+
+    if (!klass_mapping.get_population ()) return_trace (false);
+    out->classCount = klass_mapping.get_population ();
+
+    auto mark1_iter =
+    + hb_zip (this+mark1Coverage, this+mark1Array)
+    | hb_filter (glyphset, hb_first)
+    ;
+
+    hb_sorted_vector_t<hb_codepoint_t> new_coverage;
+    + mark1_iter
+    | hb_map (hb_first)
+    | hb_map (glyph_map)
+    | hb_sink (new_coverage)
+    ;
+
+    if (!out->mark1Coverage.serialize (c->serializer, out)
+			   .serialize (c->serializer, new_coverage.iter ()))
+      return_trace (false);
+
+    out->mark1Array.serialize (c->serializer, out)
+		   .serialize (c->serializer, &klass_mapping, c->plan->layout_variation_idx_map, &(this+mark1Array), + mark1_iter
+										                                     | hb_map (hb_second));
+
+    unsigned mark2count = (this+mark2Array).rows;
+    auto mark2_iter =
+    + hb_zip (this+mark2Coverage, hb_range (mark2count))
+    | hb_filter (glyphset, hb_first)
+    ;
+
+    new_coverage.reset ();
+    + mark2_iter
+    | hb_map (hb_first)
+    | hb_map (glyph_map)
+    | hb_sink (new_coverage)
+    ;
+
+    if (!out->mark2Coverage.serialize (c->serializer, out)
+			   .serialize (c->serializer, new_coverage.iter ()))
+      return_trace (false);
+
+    hb_sorted_vector_t<unsigned> mark2_indexes;
+    for (const unsigned row : + mark2_iter
+			      | hb_map (hb_second))
+    {
+      + hb_range ((unsigned) classCount)
+      | hb_filter (klass_mapping)
+      | hb_map ([&] (const unsigned col) { return row * (unsigned) classCount + col; })
+      | hb_sink (mark2_indexes)
+      ;
+    }
+    out->mark2Array.serialize (c->serializer, out)
+		   .serialize (c->serializer, mark2_iter.len (), &(this+mark2Array), c->plan->layout_variation_idx_map, mark2_indexes.iter ());
+
+    return_trace (true);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -1853,6 +2457,12 @@ struct PosLookupSubTable
     }
   }
 
+  bool intersects (const hb_set_t *glyphs, unsigned int lookup_type) const
+  {
+    hb_intersects_context_t c (glyphs);
+    return dispatch (&c, lookup_type);
+  }
+
   protected:
   union {
   SinglePos		single;
@@ -1897,17 +2507,36 @@ struct PosLookup : Lookup
   hb_collect_glyphs_context_t::return_t collect_glyphs (hb_collect_glyphs_context_t *c) const
   { return dispatch (c); }
 
-  template <typename set_t>
-  void add_coverage (set_t *glyphs) const
+  hb_closure_lookups_context_t::return_t closure_lookups (hb_closure_lookups_context_t *c, unsigned this_index) const
   {
-    hb_add_coverage_context_t<set_t> c (glyphs);
+    if (c->is_lookup_visited (this_index))
+      return hb_closure_lookups_context_t::default_return_value ();
+
+    c->set_lookup_visited (this_index);
+    if (!intersects (c->glyphs))
+    {
+      c->set_lookup_inactive (this_index);
+      return hb_closure_lookups_context_t::default_return_value ();
+    }
+    c->set_recurse_func (dispatch_closure_lookups_recurse_func);
+
+    hb_closure_lookups_context_t::return_t ret = dispatch (c);
+    return ret;
+  }
+
+  template <typename set_t>
+  void collect_coverage (set_t *glyphs) const
+  {
+    hb_collect_coverage_context_t<set_t> c (glyphs);
     dispatch (&c);
   }
 
-  HB_INTERNAL static bool apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index);
+  static inline bool apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index);
 
   template <typename context_t>
   static typename context_t::return_t dispatch_recurse_func (context_t *c, unsigned int lookup_index);
+
+  HB_INTERNAL static hb_closure_lookups_context_t::return_t dispatch_closure_lookups_recurse_func (hb_closure_lookups_context_t *c, unsigned this_index);
 
   template <typename context_t, typename ...Ts>
   typename context_t::return_t dispatch (context_t *c, Ts&&... ds) const
@@ -1930,20 +2559,38 @@ struct GPOS : GSUBGPOS
   static constexpr hb_tag_t tableTag = HB_OT_TAG_GPOS;
 
   const PosLookup& get_lookup (unsigned int i) const
-  { return CastR<PosLookup> (GSUBGPOS::get_lookup (i)); }
+  { return static_cast<const PosLookup &> (GSUBGPOS::get_lookup (i)); }
 
   static inline void position_start (hb_font_t *font, hb_buffer_t *buffer);
   static inline void position_finish_advances (hb_font_t *font, hb_buffer_t *buffer);
   static inline void position_finish_offsets (hb_font_t *font, hb_buffer_t *buffer);
 
   bool subset (hb_subset_context_t *c) const
-  { return GSUBGPOS::subset<PosLookup> (c); }
+  {
+    hb_subset_layout_context_t l (c, tableTag, c->plan->gpos_lookups, c->plan->gpos_features);
+    return GSUBGPOS::subset<PosLookup> (&l);
+  }
 
   bool sanitize (hb_sanitize_context_t *c) const
   { return GSUBGPOS::sanitize<PosLookup> (c); }
 
-  HB_INTERNAL bool is_blacklisted (hb_blob_t *blob,
+  HB_INTERNAL bool is_blocklisted (hb_blob_t *blob,
 				   hb_face_t *face) const;
+
+  void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
+  {
+    for (unsigned i = 0; i < GSUBGPOS::get_lookup_count (); i++)
+    {
+      if (!c->gpos_lookups->has (i)) continue;
+      const PosLookup &l = get_lookup (i);
+      l.dispatch (c);
+    }
+  }
+
+  void closure_lookups (hb_face_t      *face,
+			const hb_set_t *glyphs,
+			hb_set_t       *lookup_indexes /* IN/OUT */) const
+  { GSUBGPOS::closure_lookups<PosLookup> (face, glyphs, lookup_indexes); }
 
   typedef GSUBGPOS::accelerator_t<GPOS> accelerator_t;
 };
@@ -2060,12 +2707,19 @@ struct GPOS_accelerator_t : GPOS::accelerator_t {};
 
 #ifndef HB_NO_OT_LAYOUT
 template <typename context_t>
-/*static*/ inline typename context_t::return_t PosLookup::dispatch_recurse_func (context_t *c, unsigned int lookup_index)
+/*static*/ typename context_t::return_t PosLookup::dispatch_recurse_func (context_t *c, unsigned int lookup_index)
 {
   const PosLookup &l = c->face->table.GPOS.get_relaxed ()->table->get_lookup (lookup_index);
   return l.dispatch (c);
 }
-/*static*/ inline bool PosLookup::apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index)
+
+/*static*/ inline hb_closure_lookups_context_t::return_t PosLookup::dispatch_closure_lookups_recurse_func (hb_closure_lookups_context_t *c, unsigned this_index)
+{
+  const PosLookup &l = c->face->table.GPOS.get_relaxed ()->table->get_lookup (this_index);
+  return l.closure_lookups (c, this_index);
+}
+
+/*static*/ bool PosLookup::apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index)
 {
   const PosLookup &l = c->face->table.GPOS.get_relaxed ()->table->get_lookup (lookup_index);
   unsigned int saved_lookup_props = c->lookup_props;

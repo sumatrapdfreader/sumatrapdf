@@ -120,6 +120,7 @@ struct hb_font_t
   /* Font variation coordinates. */
   unsigned int num_coords;
   int *coords;
+  float *design_coords;
 
   hb_font_funcs_t   *klass;
   void              *user_data;
@@ -286,7 +287,7 @@ struct hb_font_t
   }
 
   hb_bool_t get_glyph_h_origin (hb_codepoint_t glyph,
-			        hb_position_t *x, hb_position_t *y)
+				hb_position_t *x, hb_position_t *y)
   {
     *x = *y = 0;
     return klass->get.f.glyph_h_origin (this, user_data,
@@ -338,7 +339,7 @@ struct hb_font_t
   }
 
   hb_bool_t get_glyph_contour_point (hb_codepoint_t glyph, unsigned int point_index,
-					    hb_position_t *x, hb_position_t *y)
+				     hb_position_t *x, hb_position_t *y)
   {
     *x = *y = 0;
     return klass->get.f.glyph_contour_point (this, user_data,

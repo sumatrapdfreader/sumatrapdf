@@ -244,7 +244,7 @@
       <function>malloc()</function>, you would create the blob using
     </para>
     <programlisting language="C">
-      hb_blob_create (data, length, HB_MEMORY_MODE_WRITABLE, NULL, free)
+      hb_blob_create (data, length, HB_MEMORY_MODE_WRITABLE, data, free)
     </programlisting>
     <para>
       That way, HarfBuzz will call <function>free()</function> on the

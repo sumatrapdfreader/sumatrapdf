@@ -49,5 +49,25 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_default =
   true, /* fallback_position */
 };
 
+/* Same as default but no mark advance zeroing / fallback positioning.
+ * Dumbest shaper ever, basically. */
+const hb_ot_complex_shaper_t _hb_ot_complex_shaper_dumber =
+{
+  nullptr, /* collect_features */
+  nullptr, /* override_features */
+  nullptr, /* data_create */
+  nullptr, /* data_destroy */
+  nullptr, /* preprocess_text */
+  nullptr, /* postprocess_glyphs */
+  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT,
+  nullptr, /* decompose */
+  nullptr, /* compose */
+  nullptr, /* setup_masks */
+  HB_TAG_NONE, /* gpos_tag */
+  nullptr, /* reorder_marks */
+  HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE,
+  false, /* fallback_position */
+};
+
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright (C) 2011  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *

@@ -30,6 +30,7 @@
 
 #include "hb-ot-cff2-table.hh"
 #include "hb-cff2-interp-cs.hh"
+#include "hb-draw.hh"
 
 using namespace CFF;
 
@@ -142,5 +143,73 @@ bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
   return true;
 }
 
+#ifdef HB_EXPERIMENTAL_API
+struct cff2_path_param_t
+{
+  cff2_path_param_t (hb_font_t *font_, draw_helper_t &draw_helper_)
+  {
+    draw_helper = &draw_helper_;
+    font = font_;
+  }
+
+  void move_to (const point_t &p)
+  { draw_helper->move_to (font->em_scalef_x (p.x.to_real ()), font->em_scalef_y (p.y.to_real ())); }
+
+  void line_to (const point_t &p)
+  { draw_helper->line_to (font->em_scalef_x (p.x.to_real ()), font->em_scalef_y (p.y.to_real ())); }
+
+  void cubic_to (const point_t &p1, const point_t &p2, const point_t &p3)
+  {
+    draw_helper->cubic_to (font->em_scalef_x (p1.x.to_real ()), font->em_scalef_y (p1.y.to_real ()),
+			   font->em_scalef_x (p2.x.to_real ()), font->em_scalef_y (p2.y.to_real ()),
+			   font->em_scalef_x (p3.x.to_real ()), font->em_scalef_y (p3.y.to_real ()));
+  }
+
+  protected:
+  draw_helper_t *draw_helper;
+  hb_font_t *font;
+};
+
+struct cff2_path_procs_path_t : path_procs_t<cff2_path_procs_path_t, cff2_cs_interp_env_t, cff2_path_param_t>
+{
+  static void moveto (cff2_cs_interp_env_t &env, cff2_path_param_t& param, const point_t &pt)
+  {
+    param.move_to (pt);
+    env.moveto (pt);
+  }
+
+  static void line (cff2_cs_interp_env_t &env, cff2_path_param_t& param, const point_t &pt1)
+  {
+    param.line_to (pt1);
+    env.moveto (pt1);
+  }
+
+  static void curve (cff2_cs_interp_env_t &env, cff2_path_param_t& param, const point_t &pt1, const point_t &pt2, const point_t &pt3)
+  {
+    param.cubic_to (pt1, pt2, pt3);
+    env.moveto (pt3);
+  }
+};
+
+struct cff2_cs_opset_path_t : cff2_cs_opset_t<cff2_cs_opset_path_t, cff2_path_param_t, cff2_path_procs_path_t> {};
+
+bool OT::cff2::accelerator_t::get_path (hb_font_t *font, hb_codepoint_t glyph, draw_helper_t &draw_helper) const
+{
+#ifdef HB_NO_OT_FONT_CFF
+  /* XXX Remove check when this code moves to .hh file. */
+  return true;
+#endif
+
+  if (unlikely (!is_valid () || (glyph >= num_glyphs))) return false;
+
+  unsigned int fd = fdSelect->get_fd (glyph);
+  cff2_cs_interpreter_t<cff2_cs_opset_path_t, cff2_path_param_t> interp;
+  const byte_str_t str = (*charStrings)[glyph];
+  interp.env.init (str, *this, fd, font->coords, font->num_coords);
+  cff2_path_param_t param (font, draw_helper);
+  if (unlikely (!interp.interpret (param))) return false;
+  return true;
+}
+#endif
 
 #endif

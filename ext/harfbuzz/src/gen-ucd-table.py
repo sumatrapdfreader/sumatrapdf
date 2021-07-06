@@ -1,14 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import print_function, division, absolute_import
+"""usage: ./gen-ucd-table ucd.nounihan.grouped.xml [/path/to/hb-common.h]
 
-import io, os.path, sys, re
+Input file:
+* https://unicode.org/Public/UCD/latest/ucdxml/ucd.nounihan.grouped.zip
+"""
+
+import sys, re
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 if len (sys.argv) not in (2, 3):
-	print("usage: ./gen-ucd-table ucd.nounihan.grouped.xml [/path/to/hb-common.h]", file=sys.stderr)
-	sys.exit(1)
+	sys.exit (__doc__)
 
 # https://github.com/harfbuzz/packtab
 import packTab

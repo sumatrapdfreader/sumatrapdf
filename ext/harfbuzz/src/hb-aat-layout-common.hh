@@ -303,7 +303,7 @@ struct LookupFormat10
   const typename T::type get_value_or_null (hb_codepoint_t glyph_id) const
   {
     if (!(firstGlyph <= glyph_id && glyph_id - firstGlyph < glyphCount))
-      return Null(T);
+      return Null (T);
 
     const HBUINT8 *p = &valueArrayZ[(glyph_id - firstGlyph) * valueSize];
 
@@ -358,7 +358,7 @@ struct Lookup
       case 10: return u.format10.get_value_or_null (glyph_id);
       default:
       const T *v = get_value (glyph_id, num_glyphs);
-      return v ? *v : Null(T);
+      return v ? *v : Null (T);
     }
   }
 
@@ -820,12 +820,11 @@ struct hb_aat_apply_context_t :
 
   /* Unused. For debug tracing only. */
   unsigned int lookup_index;
-  unsigned int debug_depth;
 
   HB_INTERNAL hb_aat_apply_context_t (const hb_ot_shape_plan_t *plan_,
 				      hb_font_t *font_,
 				      hb_buffer_t *buffer_,
-				      hb_blob_t *blob = const_cast<hb_blob_t *> (&Null(hb_blob_t)));
+				      hb_blob_t *blob = const_cast<hb_blob_t *> (&Null (hb_blob_t)));
 
   HB_INTERNAL ~hb_aat_apply_context_t ();
 

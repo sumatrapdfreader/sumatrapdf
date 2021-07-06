@@ -53,13 +53,13 @@ HB_OT_ACCELERATOR (OT, cmap)
 HB_OT_TABLE (OT, hhea)
 HB_OT_ACCELERATOR (OT, hmtx)
 HB_OT_TABLE (OT, OS2)
-#if !defined(HB_NO_OT_FONT_GLYPH_NAMES) || !defined(HB_NO_METRICS)
+#if !defined(HB_NO_OT_FONT_GLYPH_NAMES) || !defined(HB_NO_METRICS) || !defined(HB_NO_STYLE)
 HB_OT_ACCELERATOR (OT, post)
 #endif
 #ifndef HB_NO_NAME
 HB_OT_ACCELERATOR (OT, name)
 #endif
-#ifndef HB_NO_STAT
+#ifndef HB_NO_STYLE
 HB_OT_TABLE (OT, STAT)
 #endif
 #ifndef HB_NO_META
@@ -113,7 +113,6 @@ HB_OT_TABLE (AAT, mort)
 HB_OT_TABLE (AAT, kerx)
 HB_OT_TABLE (AAT, ankr)
 HB_OT_TABLE (AAT, trak)
-HB_OT_TABLE (AAT, lcar)
 HB_OT_TABLE (AAT, ltag)
 HB_OT_TABLE (AAT, feat)
 // HB_OT_TABLE (AAT, opbd)

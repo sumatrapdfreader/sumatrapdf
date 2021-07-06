@@ -1,5 +1,4 @@
-[![Travis Build Status](https://travis-ci.org/harfbuzz/harfbuzz.svg?branch=master)](https://travis-ci.org/harfbuzz/harfbuzz)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/0t0flrxpstj9lb9w?svg=true&branch=master)](https://ci.appveyor.com/project/harfbuzz/harfbuzz)
+[![Linux CI Status](https://github.com/harfbuzz/harfbuzz/workflows/linux-ci/badge.svg)](https://github.com/harfbuzz/harfbuzz/workflows/linux-ci/badge.svg)
 [![CircleCI Build Status](https://circleci.com/gh/harfbuzz/harfbuzz/tree/master.svg?style=svg)](https://circleci.com/gh/harfbuzz/harfbuzz/tree/master)
 [![OSS-Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/harfbuzz.svg)](https://oss-fuzz-build-logs.storage.googleapis.com/index.html)
 [![Coverity Code Health](https://img.shields.io/coverity/scan/5450.svg)](https://scan.coverity.com/projects/behdad-harfbuzz)
@@ -27,8 +26,8 @@ Documentation: https://harfbuzz.github.io
 
 
 <details>
-  <summary>Packaging status of HarfBuzz</summary
+  <summary>Packaging status of HarfBuzz</summary>
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/harfbuzz.svg?header=harfbuzz)](https://repology.org/project/harfbuzz/versions)  
+[![Packaging status](https://repology.org/badge/vertical-allrepos/harfbuzz.svg?header=harfbuzz)](https://repology.org/project/harfbuzz/versions)
 
 </details>

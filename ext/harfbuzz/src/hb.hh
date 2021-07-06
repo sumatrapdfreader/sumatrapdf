@@ -107,6 +107,7 @@
 #pragma GCC diagnostic warning "-Wmaybe-uninitialized"
 #pragma GCC diagnostic warning "-Wmissing-format-attribute"
 #pragma GCC diagnostic warning "-Wundef"
+#pragma GCC diagnostic warning "-Wunused-but-set-variable"
 #endif
 
 /* Ignored currently, but should be fixed at some point. */
@@ -176,6 +177,7 @@
 
 #include <limits.h>
 #include <math.h>
+#include <float.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -188,10 +190,14 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
-#include <windows.h>
 #else
 #include <intrin.h>
 #endif
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#include <winapifamily.h>
 #endif
 
 #define HB_PASTE1(a,b) a##b
@@ -200,10 +206,15 @@
 
 /* Compile-time custom allocator support. */
 
-#if defined(hb_malloc_impl) \
- && defined(hb_calloc_impl) \
- && defined(hb_realloc_impl) \
- && defined(hb_free_impl)
+#if !defined(HB_CUSTOM_MALLOC) \
+  && defined(hb_malloc_impl) \
+  && defined(hb_calloc_impl) \
+  && defined(hb_realloc_impl) \
+  && defined(hb_free_impl)
+#define HB_CUSTOM_MALLOC
+#endif
+
+#ifdef HB_CUSTOM_MALLOC
 extern "C" void* hb_malloc_impl(size_t size);
 extern "C" void* hb_calloc_impl(size_t nmemb, size_t size);
 extern "C" void* hb_realloc_impl(void *ptr, size_t size);
@@ -317,6 +328,18 @@ extern "C" void  hb_free_impl(void *ptr);
 #  define HB_FALLTHROUGH /* FALLTHROUGH */
 #endif
 
+/* A tag to enforce use of return value for a function */
+#if __cplusplus >= 201703L
+#  define HB_NODISCARD [[nodiscard]]
+#elif defined(__GNUC__) || defined(__clang__)
+#  define HB_NODISCARD __attribute__((warn_unused_result))
+#elif defined(_MSC_VER)
+#  define HB_NODISCARD _Check_return_
+#else
+#  define HB_NODISCARD
+#endif
+#define hb_success_t HB_NODISCARD bool
+
 /* https://github.com/harfbuzz/harfbuzz/issues/1852 */
 #if defined(__clang__) && !(defined(_AIX) && (defined(__IBMCPP__) || defined(__ibmxl__)))
 /* Disable certain sanitizer errors. */
@@ -335,7 +358,7 @@ extern "C" void  hb_free_impl(void *ptr);
 #    undef _WIN32_WINNT
 #  endif
 #  ifndef _WIN32_WINNT
-#    if !defined(WINAPI_FAMILY) || !(WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+#    if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #      define _WIN32_WINNT 0x0600
 #    endif
 #  endif
@@ -356,7 +379,7 @@ extern "C" void  hb_free_impl(void *ptr);
 #      define HB_NO_SETLOCALE
 #      define HB_NO_ERRNO
 #    endif
-#  elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+#  elif WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #    ifndef HB_NO_GETENV
 #      define HB_NO_GETENV
 #    endif
@@ -486,14 +509,9 @@ static_assert ((sizeof (hb_var_int_t) == 4), "");
 #define HB_VAR_ARRAY 1
 #endif
 
-static inline double
-_hb_roundf (float x)
-{
-  return x >= 0 ? floor ((double) x + .5) : ceil ((double) x - .5);
-}
-#ifndef HAVE_ROUNDF
+static inline float
+_hb_roundf (float x) { return floorf (x + .5f); }
 #define roundf(x) _hb_roundf(x)
-#endif
 
 /* Endian swap, used in Windows related backends */
 static inline uint16_t hb_uint16_swap (const uint16_t v)

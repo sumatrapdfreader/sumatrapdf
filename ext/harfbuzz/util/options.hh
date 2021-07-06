@@ -125,6 +125,8 @@ struct view_options_t : option_group_t
     fore = nullptr;
     back = nullptr;
     line_space = 0;
+    have_font_extents = false;
+    font_extents.ascent = font_extents.descent = font_extents.line_gap = 0;
     margin.t = margin.r = margin.b = margin.l = DEFAULT_MARGIN;
 
     add_options (parser);
@@ -141,6 +143,10 @@ struct view_options_t : option_group_t
   char *fore;
   char *back;
   double line_space;
+  bool have_font_extents;
+  struct font_extents_t {
+    double ascent, descent, line_gap;
+  } font_extents;
   struct margin_t {
     double t, r, b, l;
   } margin;
@@ -517,7 +523,7 @@ struct text_options_t : option_group_t
     fp = nullptr;
     gs = nullptr;
     line = nullptr;
-    line_len = (unsigned int) -1;
+    line_len = UINT_MAX;
 
     add_options (parser);
   }
@@ -629,9 +635,7 @@ struct format_options_t : option_group_t
 
   void add_options (option_parser_t *parser) override;
 
-  void serialize_unicode (hb_buffer_t  *buffer,
-			  GString      *gs);
-  void serialize_glyphs (hb_buffer_t  *buffer,
+  void serialize (hb_buffer_t  *buffer,
 			 hb_font_t    *font,
 			 hb_buffer_serialize_format_t format,
 			 hb_buffer_serialize_flags_t flags,

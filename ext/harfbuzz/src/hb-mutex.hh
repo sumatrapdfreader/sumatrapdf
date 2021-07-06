@@ -61,10 +61,9 @@ typedef pthread_mutex_t hb_mutex_impl_t;
 
 #elif !defined(HB_NO_MT) && defined(_WIN32)
 
-#include <windows.h>
 typedef CRITICAL_SECTION hb_mutex_impl_t;
 #define HB_MUTEX_IMPL_INIT	{0}
-#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+#if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #define hb_mutex_impl_init(M)	InitializeCriticalSectionEx (M, 0, 0)
 #else
 #define hb_mutex_impl_init(M)	InitializeCriticalSection (M)

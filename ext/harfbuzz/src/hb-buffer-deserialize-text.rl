@@ -52,12 +52,18 @@ action tok {
 	tok = p;
 }
 
+action ensure_glyphs { if (unlikely (!buffer->ensure_glyphs ())) return false; }
+action ensure_unicode { if (unlikely (!buffer->ensure_unicode ())) return false; }
+
 action parse_glyph {
+	/* TODO Unescape delimeters. */
 	if (!hb_font_glyph_from_string (font,
 					tok, p - tok,
 					&info.codepoint))
 	  return false;
 }
+
+action parse_hexdigits  {if (!parse_hex (tok, p, &info.codepoint )) return false; }
 
 action parse_cluster   { if (!parse_uint (tok, p, &info.cluster )) return false; }
 action parse_x_offset  { if (!parse_int  (tok, p, &pos.x_offset )) return false; }
@@ -65,17 +71,18 @@ action parse_y_offset  { if (!parse_int  (tok, p, &pos.y_offset )) return false;
 action parse_x_advance { if (!parse_int  (tok, p, &pos.x_advance)) return false; }
 action parse_y_advance { if (!parse_int  (tok, p, &pos.y_advance)) return false; }
 
-unum	= '0' | [1-9] digit*;
+unum  = '0' | [1-9] digit*;
 num	= '-'? unum;
 
 glyph_id = unum;
-glyph_name = alpha (alnum|'_'|'.'|'-')*;
+glyph_name = ([^\\\]=@+,|] | '\\' [\\\]=@+,|]) *;
 
 glyph	= (glyph_id | glyph_name) >tok %parse_glyph;
 cluster	= '=' (unum >tok %parse_cluster);
 offsets	= '@' (num >tok %parse_x_offset)   ',' (num >tok %parse_y_offset );
 advances= '+' (num >tok %parse_x_advance) (',' (num >tok %parse_y_advance))?;
-item	=
+
+glyph_item	=
 	(
 		glyph
 		cluster?
@@ -83,15 +90,31 @@ item	=
 		advances?
 	)
 	>clear_item
+	@ensure_glyphs
 	%add_item
 	;
 
-main := space* item (space* '|' space* item)* space* ('|'|']')?;
+unicode = 'U' '+' xdigit+ >tok %parse_hexdigits;
+
+unicode_item	=
+	(
+		unicode
+		cluster?
+	)
+	>clear_item
+	@ensure_unicode
+	%add_item
+	;
+
+glyphs = glyph_item (space* '|' space* glyph_item)* space* ('|'|']')?;
+unicodes = unicode_item (space* '|' space* unicode_item)* space* ('|'|'>')?;
+
+main := space* ( ('[' glyphs) | ('<' unicodes) );
 
 }%%
 
 static hb_bool_t
-_hb_buffer_deserialize_glyphs_text (hb_buffer_t *buffer,
+_hb_buffer_deserialize_text (hb_buffer_t *buffer,
 				    const char *buf,
 				    unsigned int buf_len,
 				    const char **end_ptr,
@@ -104,10 +127,6 @@ _hb_buffer_deserialize_glyphs_text (hb_buffer_t *buffer,
 
   while (p < pe && ISSPACE (*p))
     p++;
-  if (p < pe && *p == (buffer->len ? '|' : '['))
-  {
-    *end_ptr = ++p;
-  }
 
   const char *eof = pe, *tok = nullptr;
   int cs;

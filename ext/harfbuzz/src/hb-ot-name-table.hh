@@ -97,15 +97,45 @@ struct NameRecord
     return UNSUPPORTED;
   }
 
-  NameRecord* copy (hb_serialize_context_t *c,
-		    const void *src_base,
-		    const void *dst_base) const
+  NameRecord* copy (hb_serialize_context_t *c, const void *base) const
   {
     TRACE_SERIALIZE (this);
     auto *out = c->embed (this);
     if (unlikely (!out)) return_trace (nullptr);
-    out->offset.serialize_copy (c, offset, src_base, dst_base, length);
+    out->offset.serialize_copy (c, offset, base, 0, hb_serialize_context_t::Tail, length);
     return_trace (out);
+  }
+
+  bool isUnicode () const
+  {
+    unsigned int p = platformID;
+    unsigned int e = encodingID;
+
+    return (p == 0 ||
+	    (p == 3 && (e == 0 || e == 1 || e == 10)));
+  }
+
+  static int cmp (const void *pa, const void *pb)
+  {
+    const NameRecord *a = (const NameRecord *)pa;
+    const NameRecord *b = (const NameRecord *)pb;
+
+    if (a->platformID != b->platformID)
+      return a->platformID - b->platformID;
+
+    if (a->encodingID != b->encodingID)
+      return a->encodingID - b->encodingID;
+
+    if (a->languageID != b->languageID)
+      return a->languageID - b->languageID;
+
+    if (a->nameID != b->nameID)
+      return a->nameID - b->nameID;
+
+    if (a->length != b->length)
+      return a->length - b->length;
+
+    return 0;
   }
 
   bool sanitize (hb_sanitize_context_t *c, const void *base) const
@@ -134,7 +164,7 @@ _hb_ot_name_entry_cmp_key (const void *pa, const void *pb)
   /* Compare by name_id, then language. */
 
   if (a->name_id != b->name_id)
-    return a->name_id < b->name_id ? -1 : +1;
+    return a->name_id - b->name_id;
 
   if (a->language == b->language) return 0;
   if (!a->language) return -1;
@@ -156,10 +186,10 @@ _hb_ot_name_entry_cmp (const void *pa, const void *pb)
   const hb_ot_name_entry_t *b = (const hb_ot_name_entry_t *) pb;
 
   if (a->entry_score != b->entry_score)
-    return a->entry_score < b->entry_score ? -1 : +1;
+    return a->entry_score - b->entry_score;
 
   if (a->entry_index != b->entry_index)
-    return a->entry_index < b->entry_index ? -1 : +1;
+    return a->entry_index - b->entry_index;
 
   return 0;
 }
@@ -184,18 +214,25 @@ struct name
     this->format = 0;
     this->count = it.len ();
 
-    auto snap = c->snapshot ();
-    this->nameRecordZ.serialize (c, this->count);
-    if (unlikely (!c->check_assign (this->stringOffset, c->length ()))) return_trace (false);
-    c->revert (snap);
+    NameRecord *name_records = (NameRecord *) calloc (it.len (), NameRecord::static_size);
+    if (unlikely (!name_records)) return_trace (false);
 
-    const void *dst_string_pool = &(this + this->stringOffset);
+    hb_array_t<NameRecord> records (name_records, it.len ());
 
-    for (const auto &_ : it) c->copy (_, src_string_pool, dst_string_pool);
+    for (const NameRecord& record : it)
+    {
+      memcpy (name_records, &record, NameRecord::static_size);
+      name_records++;
+    }
+
+    records.qsort ();
+
+    c->copy_all (records, src_string_pool);
+    free (records.arrayZ);
 
     if (unlikely (c->ran_out_of_room)) return_trace (false);
 
-    assert (this->stringOffset == c->length ());
+    this->stringOffset = c->length ();
 
     return_trace (true);
   }
@@ -210,6 +247,8 @@ struct name
     auto it =
     + nameRecordZ.as_array (count)
     | hb_filter (c->plan->name_ids, &NameRecord::nameID)
+    | hb_filter (c->plan->name_languages, &NameRecord::languageID)
+    | hb_filter ([&] (const NameRecord& namerecord) { return c->plan->name_legacy || namerecord.isUnicode (); })
     ;
 
     name_prime->serialize (c->serializer, it, hb_addressof (this + stringOffset));
@@ -237,7 +276,7 @@ struct name
   {
     void init (hb_face_t *face)
     {
-      this->table = hb_sanitize_context_t().reference_table<name> (face);
+      this->table = hb_sanitize_context_t ().reference_table<name> (face);
       assert (this->table.get_length () >= this->table->stringOffset);
       this->pool = (const char *) (const void *) (this->table+this->table->stringOffset);
       this->pool_len = this->table.get_length () - this->table->stringOffset;
@@ -281,16 +320,14 @@ struct name
       this->table.destroy ();
     }
 
-    int get_index (hb_ot_name_id_t   name_id,
-			  hb_language_t     language,
-			  unsigned int     *width=nullptr) const
+    int get_index (hb_ot_name_id_t  name_id,
+		   hb_language_t    language,
+		   unsigned int    *width=nullptr) const
     {
       const hb_ot_name_entry_t key = {name_id, {0}, language};
-      const hb_ot_name_entry_t *entry = (const hb_ot_name_entry_t *)
-					hb_bsearch (&key,
-						    (const hb_ot_name_entry_t *) this->names,
+      const hb_ot_name_entry_t *entry = hb_bsearch (key, (const hb_ot_name_entry_t *) this->names,
 						    this->names.length,
-						    sizeof (key),
+						    sizeof (hb_ot_name_entry_t),
 						    _hb_ot_name_entry_cmp_key);
       if (!entry)
 	return -1;
@@ -318,12 +355,12 @@ struct name
   };
 
   /* We only implement format 0 for now. */
-  HBUINT16	format;			/* Format selector (=0/1). */
-  HBUINT16	count;			/* Number of name records. */
+  HBUINT16	format;		/* Format selector (=0/1). */
+  HBUINT16	count;		/* Number of name records. */
   NNOffsetTo<UnsizedArrayOf<HBUINT8>>
-		stringOffset;		/* Offset to start of string storage (from start of table). */
+		stringOffset;	/* Offset to start of string storage (from start of table). */
   UnsizedArrayOf<NameRecord>
-		nameRecordZ;		/* The name records where count is the number of records. */
+		nameRecordZ;	/* The name records where count is the number of records. */
   public:
   DEFINE_SIZE_ARRAY (6, nameRecordZ);
 };
