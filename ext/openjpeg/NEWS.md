@@ -2,6 +2,16 @@
 
 More details in the [CHANGELOG](https://github.com/uclouvain/openjpeg/blob/master/CHANGELOG.md)
 
+## OpenJPEG 2.4.0 (December 2021)
+
+No API/ABI break compared to v2.3.1, but additional symbols for subset of components decoding (hence the MINOR version bump).
+
+* Encoder: add support for multithreading [\#1248](https://github.com/uclouvain/openjpeg/pull/1248)
+* Encoder: add support for generation of PLT markers [\#1246](https://github.com/uclouvain/openjpeg/pull/1246)
+* Encoder: single-threaded performance improvements in forward DWT for 5-3 and 9-7 (and other improvements) [\#1253](https://github.com/uclouvain/openjpeg/pull/1253)
+* Encoder: support IMF profiles [\#1235](https://github.com/uclouvain/openjpeg/pull/1235)
+* Many bug fixes (including security fixes)
+
 ## OpenJPEG 2.3.1 (April 2019)
 
 No API/ABI break compared to v2.3.0

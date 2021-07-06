@@ -1,3 +1,0 @@
-OPJChild16 ICON OPJChild.ico
-OPJViewer16 ICON OPJViewer.ico
-#include "wx/msw/wx.rc"

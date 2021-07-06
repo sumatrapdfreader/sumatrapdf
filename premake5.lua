@@ -325,7 +325,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     regconf()
-    disablewarnings { "4100", "4244", "4310" }
+    disablewarnings { "4100", "4244", "4310", "4389", "4456" }
     -- openjpeg has opj_config_private.h for such over-rides
     -- but we can't change it because we bring openjpeg as submodule
     -- and we can't provide our own in a different directory because
@@ -338,7 +338,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4100", "4244", "4310", "4819" }
+    disablewarnings { "4100", "4244", "4310", "4389", "4456", "4819" }
     -- openjpeg has opj_config_private.h for such over-rides
     -- but we can't change it because we bring openjpeg as submodule
     -- and we can't provide our own in a different directory because
