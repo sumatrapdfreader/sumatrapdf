@@ -67,7 +67,7 @@ static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-HRESULT PdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
+HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     AutoFreeWstr str;
 
     switch (m_state) {

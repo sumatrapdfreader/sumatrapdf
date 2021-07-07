@@ -118,7 +118,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
     return strconv::Utf8ToWstr(text.Get());
 }
 
-HRESULT EpubFilter::GetNextChunkValue(CChunkValue& chunkValue) {
+HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     AutoFreeWstr str;
 
     switch (m_state) {

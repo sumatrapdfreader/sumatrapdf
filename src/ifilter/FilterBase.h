@@ -14,16 +14,16 @@
 #include <filter.h>
 #include <filterr.h>
 
-class CChunkValue
+class ChunkValue
 {
 public:
-    CChunkValue() : m_fIsValid(false), m_pszValue(nullptr)
+    ChunkValue() : m_fIsValid(false), m_pszValue(nullptr)
     {
         PropVariantInit(&m_propVariant);
         Clear();
     }
 
-    ~CChunkValue() { Clear(); };
+    ~ChunkValue() { Clear(); };
 
     void Clear()
     {
@@ -126,7 +126,7 @@ private:
 
 };
 
-inline HRESULT CChunkValue::SetChunk(REFPROPERTYKEY pkey,
+inline HRESULT ChunkValue::SetChunk(REFPROPERTYKEY pkey,
                                      CHUNKSTATE chunkType/*=CHUNK_VALUE*/,
                                      LCID locale /*=0*/,
                                      DWORD cwcLenSource /*=0*/,
@@ -156,7 +156,7 @@ public:
     // When GetNextChunkValue() is called you should fill in the ChunkValue by calling SetXXXValue() with the property.
     // example:  chunkValue.SetTextValue(PKYE_ItemName, L"foo bar");
     // return FILTER_E_END_OF_CHUNKS when there are no more chunks
-    virtual HRESULT GetNextChunkValue(CChunkValue &chunkValue) = 0;
+    virtual HRESULT GetNextChunkValue(ChunkValue &chunkValue) = 0;
 
 protected:
     inline DWORD GetChunkId() const { return m_dwChunkId; }
@@ -324,7 +324,7 @@ private:
     DWORD                       m_dwChunkId;
     DWORD                       m_iText;
 
-    CChunkValue                 m_currentChunk;
+    ChunkValue                 m_currentChunk;
 };
 
 #endif

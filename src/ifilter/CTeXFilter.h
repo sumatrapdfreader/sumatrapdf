@@ -12,7 +12,7 @@ public:
     ~TeXFilter() override { CleanUp(); }
 
     HRESULT OnInit() override;
-    HRESULT GetNextChunkValue(CChunkValue &chunkValue) override;
+    HRESULT GetNextChunkValue(ChunkValue &chunkValue) override;
 
     VOID CleanUp()
     {

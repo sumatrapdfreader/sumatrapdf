@@ -212,7 +212,7 @@ WCHAR* TeXFilter::ExtractBracedBlock() {
     return result;
 }
 
-HRESULT TeXFilter::GetNextChunkValue(CChunkValue& chunkValue) {
+HRESULT TeXFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     WCHAR *start, *end;
 
 ContinueParsing:
