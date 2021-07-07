@@ -74,19 +74,6 @@ static int ColumnsFromDisplayMode(DisplayMode displayMode) {
     return 1;
 }
 
-int NormalizeRotation(int rotation) {
-    CrashIf((rotation % 90) != 0);
-    rotation = rotation % 360;
-    if (rotation < 0) {
-        rotation += 360;
-    }
-    if (rotation < 0 || rotation >= 360 || (rotation % 90) != 0) {
-        CrashIf(true);
-        return 0;
-    }
-    return rotation;
-}
-
 ScrollState::ScrollState(int page, double x, double y) : page(page), x(x), y(y) {
 }
 

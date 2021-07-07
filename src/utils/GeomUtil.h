@@ -144,3 +144,5 @@ RECT ToRECT(const RectF r);
 Rect ToRect(const RectF r);
 Gdiplus::Rect ToGdipRect(const RectF r);
 Gdiplus::RectF ToGdipRectF(const RectF r);
+
+int NormalizeRotation(int rotation);

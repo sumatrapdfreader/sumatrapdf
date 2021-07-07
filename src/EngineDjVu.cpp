@@ -553,7 +553,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     auto pageRect = args.pageRect;
     auto zoom = args.zoom;
     auto pageNo = args.pageNo;
-    auto rotation = args.rotation;
+    auto rotation = NormalizeRotation(args.rotation);
     RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     Rect full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
@@ -563,15 +563,34 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     if (!page) {
         return nullptr;
     }
-    int rotation4 = (((-rotation / 90) % 4) + 4) % 4;
-    ddjvu_page_set_rotation(page, (ddjvu_page_rotation_t)rotation4);
-
     while (!ddjvu_page_decoding_done(page)) {
         gDjVuContext->SpinMessageLoop();
     }
     if (ddjvu_page_decoding_error(page)) {
         return nullptr;
     }
+
+    ddjvu_page_rotation_t rot = DDJVU_ROTATE_0;
+    switch (rotation) {
+        case 0:
+            rot = DDJVU_ROTATE_0;
+            break;
+        // for whatever reason, 90 and 270 are reverased compared to what I expect
+        // maybe I'm doing other parts of the code wrong
+        case 90:
+            rot = DDJVU_ROTATE_270;
+            break;
+        case 180:
+            rot = DDJVU_ROTATE_180;
+            break;
+        case 270:
+            rot = DDJVU_ROTATE_90;
+            break;
+        default:
+            CrashIf("invalid rotation");
+            break;
+    }
+    ddjvu_page_set_rotation(page, rot);
 
     bool isBitonal = DDJVU_PAGETYPE_BITONAL == ddjvu_page_get_type(page);
     ddjvu_format_style_t style = isBitonal ? DDJVU_FORMAT_GREY8 : DDJVU_FORMAT_BGR24;
@@ -618,7 +637,6 @@ RectF EngineDjVu::PageContentBox(int pageNo, [[maybe_unused]] RenderTarget targe
     if (!page) {
         return pageRc;
     }
-    ddjvu_page_set_rotation(page, DDJVU_ROTATE_0);
 
     while (!ddjvu_page_decoding_done(page)) {
         gDjVuContext->SpinMessageLoop();
@@ -626,6 +644,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, [[maybe_unused]] RenderTarget targe
     if (ddjvu_page_decoding_error(page)) {
         return pageRc;
     }
+    ddjvu_page_set_rotation(page, DDJVU_ROTATE_0);
 
     // render the page in 8-bit grayscale up to 250x250 px in size
     ddjvu_format_t* fmt = ddjvu_format_create(DDJVU_FORMAT_GREY8, 0, nullptr);
@@ -710,10 +729,8 @@ PointF EngineDjVu::TransformPoint(PointF pt, int pageNo, float zoom, int rotatio
         zoom = 1.0f / zoom;
     }
 
-    rotation = rotation % 360;
-    while (rotation < 0) {
-        rotation += 360;
-    }
+    rotation = NormalizeRotation(rotation);
+
     PointF res = pt; // for rotation == 0
     if (90 == rotation) {
         res = PointF(page.dy - pt.y, pt.x);
