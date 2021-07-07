@@ -348,64 +348,64 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
     return S_OK;
 }
 
-EngineBase* CPdfPreview::LoadEngine(IStream* stream) {
-    dbglog("PdfPreview: CPdfPreview::LoadEngine()\n");
+EngineBase* PdfPreview::LoadEngine(IStream* stream) {
+    dbglog("PdfPreview: PdfPreview::LoadEngine()\n");
     return CreateEnginePdfFromStream(stream);
 }
 
-EngineBase* CXpsPreview::LoadEngine(IStream* stream) {
+EngineBase* XpsPreview::LoadEngine(IStream* stream) {
     return CreateXpsEngineFromStream(stream);
 }
 
 #include "EngineDjVu.h"
 
-EngineBase* CDjVuPreview::LoadEngine(IStream* stream) {
+EngineBase* DjVuPreview::LoadEngine(IStream* stream) {
     return CreateDjVuEngineFromStream(stream);
 }
 
-CEpubPreview::CEpubPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID) {
+EpubPreview::EpubPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
 
-CEpubPreview::~CEpubPreview() {
+EpubPreview::~EpubPreview() {
     mui::Destroy();
 }
 
-EngineBase* CEpubPreview::LoadEngine(IStream* stream) {
+EngineBase* EpubPreview::LoadEngine(IStream* stream) {
     return CreateEpubEngineFromStream(stream);
 }
 
-CFb2Preview::CFb2Preview(long* plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID) {
+Fb2Preview::Fb2Preview(long* plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
 
-CFb2Preview::~CFb2Preview() {
+Fb2Preview::~Fb2Preview() {
     mui::Destroy();
 }
 
-EngineBase* CFb2Preview::LoadEngine(IStream* stream) {
+EngineBase* Fb2Preview::LoadEngine(IStream* stream) {
     return CreateFb2EngineFromStream(stream);
 }
 
-CMobiPreview::CMobiPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID) {
+MobiPreview::MobiPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
 
-CMobiPreview::~CMobiPreview() {
+MobiPreview::~MobiPreview() {
     mui::Destroy();
 }
 
-EngineBase* CMobiPreview::LoadEngine(IStream* stream) {
+EngineBase* MobiPreview::LoadEngine(IStream* stream) {
     return CreateMobiEngineFromStream(stream);
 }
 
-EngineBase* CCbxPreview::LoadEngine(IStream* stream) {
+EngineBase* CbxPreview::LoadEngine(IStream* stream) {
     return CreateCbxEngineFromStream(stream);
 }
 
-EngineBase* CTgaPreview::LoadEngine(IStream* stream) {
+EngineBase* TgaPreview::LoadEngine(IStream* stream) {
     return CreateImageEngineFromStream(stream);
 }

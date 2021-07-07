@@ -271,27 +271,27 @@ class PreviewBase : public IThumbnailProvider,
     virtual EngineBase* LoadEngine(IStream* stream) = 0;
 };
 
-class CPdfPreview : public PreviewBase {
+class PdfPreview : public PreviewBase {
   public:
-    CPdfPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_PDF_PREVIEW_CLSID) {
+    PdfPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_PDF_PREVIEW_CLSID) {
     }
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-class CXpsPreview : public PreviewBase {
+class XpsPreview : public PreviewBase {
   public:
-    CXpsPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) {
+    XpsPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) {
     }
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-class CDjVuPreview : public PreviewBase {
+class DjVuPreview : public PreviewBase {
   public:
-    CDjVuPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_DJVU_PREVIEW_CLSID) {
+    DjVuPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_DJVU_PREVIEW_CLSID) {
         m_gdiScope = new ScopedGdiPlus();
     }
 
@@ -299,36 +299,36 @@ class CDjVuPreview : public PreviewBase {
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-class CEpubPreview : public PreviewBase {
+class EpubPreview : public PreviewBase {
   public:
-    CEpubPreview(long* plRefCount);
-    ~CEpubPreview();
+    EpubPreview(long* plRefCount);
+    ~EpubPreview();
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-class CFb2Preview : public PreviewBase {
+class Fb2Preview : public PreviewBase {
   public:
-    CFb2Preview(long* plRefCount);
-    ~CFb2Preview();
+    Fb2Preview(long* plRefCount);
+    ~Fb2Preview();
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-class CMobiPreview : public PreviewBase {
+class MobiPreview : public PreviewBase {
   public:
-    CMobiPreview(long* plRefCount);
-    ~CMobiPreview();
+    MobiPreview(long* plRefCount);
+    ~MobiPreview();
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-class CCbxPreview : public PreviewBase {
+class CbxPreview : public PreviewBase {
   public:
-    CCbxPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_CBX_PREVIEW_CLSID) {
+    CbxPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_CBX_PREVIEW_CLSID) {
         m_gdiScope = new ScopedGdiPlus();
     }
 
@@ -336,9 +336,9 @@ class CCbxPreview : public PreviewBase {
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-class CTgaPreview : public PreviewBase {
+class TgaPreview : public PreviewBase {
   public:
-    CTgaPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_TGA_PREVIEW_CLSID) {
+    TgaPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_TGA_PREVIEW_CLSID) {
         m_gdiScope = new ScopedGdiPlus();
     }
 
