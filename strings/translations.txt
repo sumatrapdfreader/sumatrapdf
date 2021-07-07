@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-12444f85728bd59f007f3c25bbc3fd3cc1c64f16
+1b35f5aeed9fc7aacdd4ed60c3a3b489943bc7d7
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -1116,6 +1116,7 @@ vn:Vừa trang in
 :&Free Text
 am:&Ազատ գրվածք
 cn:&自由文本
+de:&Freitext
 kw:&Tekst Rydh
 lv:&Brīvs teksts
 nl:&Vrije Tekst
@@ -3083,6 +3084,7 @@ uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
 :&Stamp
 cn:&图章
+de:&Stempel
 kw:&Stampa
 lv:&Zīmogs
 nl:&Stempel
@@ -3096,6 +3098,7 @@ pl:&Skreślenie
 :&Text
 az:Mə&tn
 cn:&文本
+de:&Text
 kw:&Tekst
 lv:&Teksts
 nl:&Tekst
@@ -3159,6 +3162,7 @@ uk:&Тема
 vn:&Chủ đề
 :&Underline
 cn:&下划线
+de:&Unterstreichen
 kw:&Islinya
 lv:&Pasvītrojums
 nl:&Onderstrepen
@@ -4689,6 +4693,7 @@ am:Հեղինակ՝ %s
 az:Müəllif: %s
 bn:গ্রন্থকার: %s
 cn:作者: %s
+de:Autor: %s
 es:Autora: %s
 kw:Skrifer: %s
 lv:Autors: %s
@@ -4836,6 +4841,7 @@ vn:Tự động kiểm tra cập nhật
 am:Խորքի գույնը.
 bn:পটভূমির রং:
 cn:背景色:
+de:Hintergrundfarbe:
 es:Color de fondo
 kw:Liw Kilva:
 lv:Fona krāsa:
@@ -5826,6 +5832,7 @@ am:Գույն.
 az:Rəng:
 bn:রং:
 cn:颜色:
+de:Farbe:
 es:Color:
 kw:Liw:
 lv:Krāsa:
@@ -5966,6 +5973,7 @@ vn:Tính tương thích
 am:Բովանդակություններ.
 az:Məzmun:
 bn:বিষয়:
+de:Inhalte:
 kw:Dalghow:
 lv:Saturs:
 nl:Inhoud
@@ -7241,6 +7249,7 @@ vn:Không thể ghi %s vào đĩa
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
 cn:创建注释 (从所选内容)
+de:Anmerkung aus Auswahl erstellen
 kw:Gwruthyl Notenyans a'th Tewis
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
@@ -7249,6 +7258,7 @@ pl:Utwórz adnotację z zaznaczenia
 am:Ստգեղծել ծանոթագրություն նշորդի ներքո
 bn:Cursor এর নিচে টীকা লিখুন
 cn:创建注释 (在光标下)
+de:Anmerkung unter dem Cursor erstellen
 kw:Gwruthyl Notenyans Yn-Dann Resor
 lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
@@ -7637,6 +7647,7 @@ am:Ամսաթիվ.
 az:Tarix:
 bn:তারিখ:
 cn:日期:
+de:Datum:
 es:Fetcha:
 kw:Dedhyas:
 lv:Datums:
@@ -7906,6 +7917,7 @@ vn:Các quyền bị từ chối
 am:Մերժել
 bn:বাতিল করুন
 cn:丢弃
+de:Verwerfen
 kw:Hepkor
 lv:Atmest
 nl:Verwijderen
@@ -13031,6 +13043,7 @@ vn:Đồng ý
 am:Մգություն.
 bn:অস্বচ্ছতা:
 cn:透明度:
+de:Deckkraft:
 es:Opacidad:
 kw:Disklerder:
 lv:Necaurspīdīgums:
@@ -13040,6 +13053,7 @@ pl:Nieprzezroczystość:
 am:Մգություն. %d
 bn:অস্বচ্ছতা: %d
 cn:透明度: %d
+de:Deckkraft: %d
 es:Opacidad: %d
 kw:Disklerder: %d
 lv:Necaurspīdīgums: %d
@@ -15905,6 +15919,7 @@ vn:Quay phải\tCtrl+Shift++
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
+de:Verschnörkelt
 kw:I&gam-ogam
 lv:&Viļņaina
 nl:Kr&onkelig
@@ -16104,6 +16119,7 @@ vn:Lưu lối tắt...\tCtrl+Shift+S
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
 cn:保存更改到新的PDF
+de:Änderungen in einer neuen PDF-Datei speichern
 kw:Gwitha chanjyow dhe PDF nowydh
 lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
@@ -16112,6 +16128,7 @@ ru:Сохранить изменения в новый PDF
 :Save changes to existing PDF
 az:Dəyişiklikləri mövcud PDF-ə yaz
 cn:保存更改到现有PDf
+de:Änderungen an vorhandener PDF speichern
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
@@ -16323,6 +16340,7 @@ uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
 cn:在编辑器中选择注释
+de:Anmerkung im Editor auswählen
 kw:Dewis Notenyans y'n Wolegell
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
@@ -18309,6 +18327,7 @@ uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text Alignment:
 cn:文本对齐:
+de:Textausrichtung:
 kw:Alinyans Tekst:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
@@ -18318,6 +18337,7 @@ ru:Выравнивание текста:
 az:Mətnin rəngi:
 bn:লেখার রং:
 cn:文本颜色:
+de:Textfarbe:
 es:Color de Texto:
 kw:Liw Tekst:
 lv:Teksta krāsa:
@@ -18328,6 +18348,7 @@ ru:Цвет текста:
 az:Mətnin ölçüsü:
 bn:লেখার আকার:
 cn:文本大小:
+de:Textgröße:
 es:Tamaño de Texto
 kw:Braster Tekst:
 lv:Teksta lielums:
@@ -18337,6 +18358,7 @@ ru:Размер текста:
 :Text Size: %d
 bn:লেখার আকার: %d
 cn:文本大小: %d
+de:Textgröße: %d
 es:Tamaño de Texto: %d
 kw:Braster Tekst: %d
 lv:Teksta lielums: %d

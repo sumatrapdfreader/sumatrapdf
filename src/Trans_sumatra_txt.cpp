@@ -8793,7 +8793,7 @@ const char * gTranslations_de =
   "&Suchen nach:\0"\
   "&Erste Seite\tPos 1\0"\
   "Seiten in Druckbereich &einpassen\0"\
-  "\0"\
+  "&Freitext\0"\
   "&Gehe zu\0"\
   "&Gehe zu Seite:\0"\
   "&Hilfe\0"\
@@ -8825,11 +8825,11 @@ const char * gTranslations_de =
   "Seiten auf Druckbereich &verkleinern (falls n\303\266tig)\0"\
   "&Einzelne Seite\tStrg+6\0"\
   "&Diese Version \303\274berspringen.\0"\
-  "\0"\
+  "&Stempel\0"\
   "\0"\
   "\0"\
   "Anwendungs&stil\0"\
-  "\0"\
+  "&Unterstreichen\0"\
   "Seitengr\303\266\303\237e &nicht anpassen\0"\
   "&Ansicht\0"\
   "Fe&nster\0"\
@@ -8857,10 +8857,10 @@ const char * gTranslations_de =
   "Mit PDF-Dateien verkn\303\274pfen?\0"\
   "Anhang: %s\0"\
   "Autor:\0"\
-  "\0"\
+  "Autor: %s\0"\
   "Automatisch\0"\
   "&Automatisch nach Updates suchen\0"\
-  "\0"\
+  "Hintergrundfarbe:\0"\
   "Buchansicht\0"\
   "Lesezeichen-Verkn\303\274pfungen\0"\
   "Lesezeichen-Verkn\303\274pfung zu Seite %s von %s\0"\
@@ -8878,10 +8878,10 @@ const char * gTranslations_de =
   "Schlie\303\237en\0"\
   "Alles zuklappen\0"\
   "Farbe\0"\
-  "\0"\
+  "Farbe:\0"\
   "Comicb\303\274cher\0"\
   "Kompatibilit\303\244t\0"\
-  "\0"\
+  "Inhalte:\0"\
   "Fortlaufend\0"\
   "Fortlaufende Buchansicht\0"\
   "Fortlaufende Doppelseiten\0"\
@@ -8902,20 +8902,20 @@ const char * gTranslations_de =
   "Konnte den Sumatra-Suchfilter nicht deinstallieren\0"\
   "Konnte das Browser-Plugin nicht deinstallieren\0"\
   "Konnte %s nicht schreiben\0"\
-  "\0"\
-  "\0"\
+  "Anmerkung aus Auswahl erstellen\0"\
+  "Anmerkung unter dem Cursor erstellen\0"\
   "Erstellt am:\0"\
   "Aktuelle Datei\0"\
   "Cursorposition:\0"\
   "&Zoomfaktor\342\200\246\tStrg+Y\0"\
   "Dunkel\0"\
   "Dunkler\0"\
-  "\0"\
+  "Datum:\0"\
   "&Standardlayout:\0"\
   "Standard&vergr\303\266\303\237erung:\0"\
   "Standardanwendung im portablen Modus nicht ver\303\244nderbar\0"\
   "Einschr\303\244nkungen:\0"\
-  "\0"\
+  "Verwerfen\0"\
   "DjVu-Dokumente\0"\
   "Dokumenteigenschaften\0"\
   "Herunterladen\0"\
@@ -9004,8 +9004,8 @@ const char * gTranslations_de =
   "Keine Synchronisationsinformationen verf\303\274gbar\0"\
   "Anzahl der Seiten:\0"\
   "\0"\
-  "\0"\
-  "\0"\
+  "Deckkraft:\0"\
+  "Deckkraft: %d\0"\
   "\303\226ffnen\342\200\246\0"\
   "Mit PDF-&XChange \303\266ffnen\0"\
   "Eingebettetes PDF \303\266ffnen\0"\
@@ -9055,19 +9055,19 @@ const char * gTranslations_de =
   "Umbenennen zu\0"\
   "&Gegen UZS drehen\tStrg+Umschalt+-\0"\
   "Im &UZS drehen\tStrg+Umschalt++\0"\
-  "\0"\
+  "Verschn\303\266rkelt\0"\
   "Anmerkungen speichern\0"\
   "Speichern unter\342\200\246\0"\
   "Eingebettete Datei speichern...\0"\
   "&Verkn\303\274pfung speichern\342\200\246\tStrg+Umschalt+S\0"\
-  "\0"\
-  "\0"\
+  "\303\204nderungen in einer neuen PDF-Datei speichern\0"\
+  "\303\204nderungen an vorhandener PDF speichern\0"\
   "\0"\
   "\0"\
   "Durchsuche Seite %d von %d\342\200\246\0"\
   "Alles &markieren\tStrg+A\0"\
   "Alles &markieren\tStrg+A\0"\
-  "\0"\
+  "Anmerkung im Editor ausw\303\244hlen\0"\
   "Inhalt mit Strg+linke Maustaste ausw\303\244hlen\0"\
   "W\303\244hlen Sie den Ordner, in dem SumatraPDF installiert werden soll:\0"\
   "Auswahl:\0"\
@@ -9105,10 +9105,10 @@ const char * gTranslations_de =
   "Tag (gro\303\237e zuerst)\0"\
   "Tag (kleine zuerst)\0"\
   "PDF mit Tags\0"\
-  "\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Textausrichtung:\0"\
+  "Textfarbe:\0"\
+  "Textgr\303\266\303\237e:\0"\
+  "Textgr\303\266\303\237e: %d\0"\
   "Textdokumente\0"\
   "Vielen Dank, dass Sie RA-MICRO PDF gew\303\244hlt haben!\0"\
   "Vielen Dank daf\303\274r, dass Sie SumatraPDF verwenden!\0"\

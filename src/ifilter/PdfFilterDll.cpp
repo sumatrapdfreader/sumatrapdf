@@ -64,7 +64,7 @@ class FilterClassFactory : public IClassFactory {
 #endif
 #ifdef BUILD_EPUB_IFILTER
         } else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
-            pFilter = new CEpubFilter(&g_lRefCount);
+            pFilter = new EpubFilter(&g_lRefCount);
 #endif
         } else {
             return E_NOINTERFACE;
