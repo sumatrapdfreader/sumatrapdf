@@ -36,7 +36,7 @@ void FreePtr(WCHAR** s) {
 }
 
 WCHAR* DupN(const WCHAR* s, size_t lenCch) {
-    if (!s || (lenCch == 0)) {
+    if (!s) {
         return nullptr;
     }
     WCHAR* res = AllocArray<WCHAR>(lenCch + 1); // +1 for terminating 0

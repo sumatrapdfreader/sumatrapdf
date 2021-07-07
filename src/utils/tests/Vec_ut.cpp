@@ -81,7 +81,9 @@ static void WStrVecTest() {
         WStrVec v2;
         size_t count = v2.Split(L"a,b,,c,", L",");
         utassert(count == 5 && v2.Find(L"c") == 3);
-        utassert(v2.Find(L"") == 2 && v2.Find(L"", 3) == 4 && v2.Find(L"", 5) == -1);
+        utassert(v2.Find(L"") == 2);
+        utassert(v2.Find(L"", 3) == 4);
+        utassert(v2.Find(L"", 5) == -1);
         utassert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
         AutoFreeWstr joined(v2.Join(L";"));
         utassert(str::Eq(joined, L"a;b;;c;"));
