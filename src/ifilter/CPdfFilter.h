@@ -1,15 +1,14 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-enum PDF_FILTER_STATE { STATE_PDF_START, STATE_PDF_AUTHOR, STATE_PDF_TITLE, STATE_PDF_DATE, STATE_PDF_CONTENT, STATE_PDF_END };
+enum class PdfFilterState { Start, Author, Title, Date, Content, End };
 
 class EngineBase;
 
 class PdfFilter : public FilterBase
 {
 public:
-    PdfFilter(long *plRefCount) : FilterBase(plRefCount),
-        m_state(STATE_PDF_END), m_iPageNo(-1), m_pdfEngine(nullptr) { }
+    PdfFilter(long *plRefCount) : FilterBase(plRefCount) { }
     ~PdfFilter()  override { CleanUp(); }
 
     HRESULT OnInit() override;
@@ -23,7 +22,7 @@ public:
     }
 
 private:
-    PDF_FILTER_STATE m_state;
-    int m_iPageNo;
-    EngineBase *m_pdfEngine;
+    PdfFilterState m_state{PdfFilterState::End};
+    int m_iPageNo{-1};
+    EngineBase *m_pdfEngine{nullptr};
 };

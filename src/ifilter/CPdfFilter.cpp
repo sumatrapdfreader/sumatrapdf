@@ -20,7 +20,7 @@ VOID PdfFilter::CleanUp() {
         delete m_pdfEngine;
         m_pdfEngine = nullptr;
     }
-    m_state = STATE_PDF_END;
+    m_state = PdfFilterState::End;
 }
 
 HRESULT PdfFilter::OnInit() {
@@ -47,7 +47,7 @@ HRESULT PdfFilter::OnInit() {
         return E_FAIL;
     }
 
-    m_state = STATE_PDF_START;
+    m_state = PdfFilterState::Start;
     m_iPageNo = 0;
     return S_OK;
 }
@@ -71,13 +71,13 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     AutoFreeWstr str;
 
     switch (m_state) {
-        case STATE_PDF_START:
-            m_state = STATE_PDF_AUTHOR;
+        case PdfFilterState::Start:
+            m_state = PdfFilterState::Author;
             chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
             return S_OK;
 
-        case STATE_PDF_AUTHOR:
-            m_state = STATE_PDF_TITLE;
+        case PdfFilterState::Author:
+            m_state = PdfFilterState::Title;
             str.Set(m_pdfEngine->GetProperty(DocumentProperty::Author));
             if (!str::IsEmpty(str.Get())) {
                 chunkValue.SetTextValue(PKEY_Author, str);
@@ -85,8 +85,8 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             // fall through
 
-        case STATE_PDF_TITLE:
-            m_state = STATE_PDF_DATE;
+        case PdfFilterState::Title:
+            m_state = PdfFilterState::Date;
             str.Set(m_pdfEngine->GetProperty(DocumentProperty::Title));
             if (!str) {
                 str.Set(m_pdfEngine->GetProperty(DocumentProperty::Subject));
@@ -97,8 +97,8 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             // fall through
 
-        case STATE_PDF_DATE:
-            m_state = STATE_PDF_CONTENT;
+        case PdfFilterState::Date:
+            m_state = PdfFilterState::Content;
             str.Set(m_pdfEngine->GetProperty(DocumentProperty::ModificationDate));
             if (!str) {
                 str.Set(m_pdfEngine->GetProperty(DocumentProperty::CreationDate));
@@ -113,7 +113,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             // fall through
 
-        case STATE_PDF_CONTENT:
+        case PdfFilterState::Content:
             while (++m_iPageNo <= m_pdfEngine->PageCount()) {
                 PageText pageText = m_pdfEngine->ExtractPageText(m_iPageNo);
                 if (str::IsEmpty(pageText.text)) {
@@ -126,10 +126,10 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                 FreePageText(&pageText);
                 return S_OK;
             }
-            m_state = STATE_PDF_END;
+            m_state = PdfFilterState::End;
             // fall through
 
-        case STATE_PDF_END:
+        case PdfFilterState::End:
         default:
             return FILTER_E_END_OF_CHUNKS;
     }
