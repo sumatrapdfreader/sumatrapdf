@@ -20,7 +20,7 @@
 #include "PdfFilter.h"
 #include "CEpubFilter.h"
 
-VOID CEpubFilter::CleanUp() {
+VOID EpubFilter::CleanUp() {
     if (m_epubDoc) {
         delete m_epubDoc;
         m_epubDoc = nullptr;
@@ -28,7 +28,7 @@ VOID CEpubFilter::CleanUp() {
     m_state = STATE_EPUB_END;
 }
 
-HRESULT CEpubFilter::OnInit() {
+HRESULT EpubFilter::OnInit() {
     CleanUp();
 
     // TODO: EpubDoc::CreateFromStream never returns with
@@ -118,7 +118,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
     return strconv::Utf8ToWstr(text.Get());
 }
 
-HRESULT CEpubFilter::GetNextChunkValue(CChunkValue& chunkValue) {
+HRESULT EpubFilter::GetNextChunkValue(CChunkValue& chunkValue) {
     AutoFreeWstr str;
 
     switch (m_state) {

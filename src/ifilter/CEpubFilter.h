@@ -5,12 +5,12 @@ enum EPUB_FILTER_STATE { STATE_EPUB_START, STATE_EPUB_AUTHOR, STATE_EPUB_TITLE, 
 
 class EpubDoc;
 
-class CEpubFilter : public FilterBase
+class EpubFilter : public FilterBase
 {
 public:
-    CEpubFilter(long *plRefCount) : FilterBase(plRefCount),
+    EpubFilter(long *plRefCount) : FilterBase(plRefCount),
         m_state(STATE_EPUB_END), m_epubDoc(nullptr) { }
-    ~CEpubFilter()  override { CleanUp(); }
+    ~EpubFilter()  override { CleanUp(); }
 
     HRESULT OnInit() override;
     HRESULT GetNextChunkValue(CChunkValue &chunkValue) override;
