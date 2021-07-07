@@ -24,6 +24,8 @@ fix DjVu rotation (fixes #1593)
 must process the file before setting rotation
 https://github.com/sumatrapdfreader/sumatrapdf/issues/1593
 
+renaming class CFoo => Foo 
+
 2021-06-29 Tue
 
 simplify GetPaperFormat()

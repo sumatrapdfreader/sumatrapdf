@@ -57,7 +57,7 @@ class FilterClassFactory : public IClassFactory {
 
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
-            pFilter = new CPdfFilter(&g_lRefCount);
+            pFilter = new PdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
         } else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new CTeXFilter(&g_lRefCount);

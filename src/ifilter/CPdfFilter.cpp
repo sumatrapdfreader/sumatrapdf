@@ -15,7 +15,7 @@
 #include "PdfFilter.h"
 #include "CPdfFilter.h"
 
-VOID CPdfFilter::CleanUp() {
+VOID PdfFilter::CleanUp() {
     if (m_pdfEngine) {
         delete m_pdfEngine;
         m_pdfEngine = nullptr;
@@ -23,7 +23,7 @@ VOID CPdfFilter::CleanUp() {
     m_state = STATE_PDF_END;
 }
 
-HRESULT CPdfFilter::OnInit() {
+HRESULT PdfFilter::OnInit() {
     CleanUp();
 
     // TODO: EnginePdf::CreateFromStream never returns with
@@ -67,7 +67,7 @@ static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-HRESULT CPdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
+HRESULT PdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
     AutoFreeWstr str;
 
     switch (m_state) {

@@ -5,12 +5,12 @@ enum PDF_FILTER_STATE { STATE_PDF_START, STATE_PDF_AUTHOR, STATE_PDF_TITLE, STAT
 
 class EngineBase;
 
-class CPdfFilter : public FilterBase
+class PdfFilter : public FilterBase
 {
 public:
-    CPdfFilter(long *plRefCount) : FilterBase(plRefCount),
+    PdfFilter(long *plRefCount) : FilterBase(plRefCount),
         m_state(STATE_PDF_END), m_iPageNo(-1), m_pdfEngine(nullptr) { }
-    ~CPdfFilter()  override { CleanUp(); }
+    ~PdfFilter()  override { CleanUp(); }
 
     HRESULT OnInit() override;
     HRESULT GetNextChunkValue(CChunkValue &chunkValue) override;
