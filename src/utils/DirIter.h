@@ -13,11 +13,11 @@ class DirIter {
     bool recursive = false;
 
     WStrVec dirsToVisit;
-    AutoFreeWstr startDir;
+    std::wstring_view startDir; // we don't own the memory
     AutoFreeWstr currDir;
     bool foundNext = false;
 
-    bool StartDirIter(const WCHAR* dir);
+    bool StartDirIter(std::wstring_view dir);
     bool TryNextDir();
 
   public:
@@ -25,9 +25,8 @@ class DirIter {
     HANDLE currFindHandle = nullptr;
     WIN32_FIND_DATAW currFindData{};
 
-    DirIter(const WCHAR* dir, bool recur = false) {
+    DirIter(std::wstring_view dir, bool recur = false) {
         recursive = recur;
-        startDir.SetCopy(dir);
     }
     ~DirIter() {
         FindClose(currFindHandle);
@@ -38,7 +37,6 @@ class DirIter {
 };
 
 bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles = false);
-// std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR*);
 
 bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
                                const std::function<bool(std::string_view path)>& fileMatches);

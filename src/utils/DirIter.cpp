@@ -6,7 +6,7 @@
 #include "utils/FileUtil.h"
 
 // Start directory traversal in a given dir
-bool DirIter::StartDirIter(const WCHAR* dir) {
+bool DirIter::StartDirIter(std::wstring_view dir) {
     currDir.SetCopy(dir);
     AutoFreeWstr pattern(path::Join(currDir, L"*"));
     currFindHandle = FindFirstFile(pattern, &currFindData);
@@ -21,7 +21,7 @@ bool DirIter::TryNextDir() {
         AutoFreeWstr nextDir(dirsToVisit.Pop());
         // it's ok if we fail, this might be an auth problem,
         // we keep going
-        bool ok = StartDirIter(nextDir);
+        bool ok = StartDirIter(nextDir.AsView());
         if (ok) {
             return true;
         }

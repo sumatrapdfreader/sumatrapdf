@@ -268,12 +268,14 @@ struct AutoFreeWstr {
         data = (WCHAR*)newPtr;
     }
 
-    void SetCopy(const WCHAR* newPtr) {
-        str::Free(data);
-        data = nullptr;
-        if (newPtr) {
-            data = str::Dup(newPtr);
-        }
+    void SetCopy(const WCHAR* newVal) {
+        str::FreePtr(&data);
+        data = str::Dup(newVal);
+    }
+
+    void SetCopy(std::wstring_view newVal) {
+        str::FreePtr(&data);
+        data = str::Dup(newVal);
     }
 
     // for convenince, we calculate the size if wasn't provided

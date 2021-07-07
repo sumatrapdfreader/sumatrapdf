@@ -30,8 +30,26 @@ void FreePtr(const WCHAR** s) {
     *s = nullptr;
 }
 
+void FreePtr(WCHAR** s) {
+    free((void*)*s);
+    *s = nullptr;
+}
+
+WCHAR* DupN(const WCHAR* s, size_t lenCch) {
+    if (!s || (lenCch == 0)) {
+        return nullptr;
+    }
+    WCHAR* res = AllocArray<WCHAR>(lenCch + 1); // +1 for terminating 0
+    memcpy((void*)res, (void*)s, lenCch * sizeof(WCHAR));
+    return res;
+}
+
 WCHAR* Dup(const WCHAR* s) {
     return s ? _wcsdup(s) : nullptr;
+}
+
+WCHAR* Dup(std::wstring_view sv) {
+    return DupN(sv.data(), sv.size());
 }
 
 // return true if s1 == s2, case sensitive
@@ -206,17 +224,6 @@ WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
     memcpy(res + s1Len, s2, s2Len * sizeof(WCHAR));
     memcpy(res + s1Len + s2Len, s3, s3Len * sizeof(WCHAR));
     res[s1Len + s2Len + s3Len] = '\0';
-    return res;
-}
-
-WCHAR* DupN(const WCHAR* s, size_t lenCch) {
-    if (!s) {
-        return nullptr;
-    }
-    WCHAR* res = (WCHAR*)memdup((void*)s, (lenCch + 1) * sizeof(WCHAR));
-    if (res) {
-        res[lenCch] = 0;
-    }
     return res;
 }
 
