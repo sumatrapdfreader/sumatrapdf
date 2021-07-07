@@ -444,3 +444,17 @@ Gdiplus::Rect ToGdipRect(const RectF r) {
 Gdiplus::RectF ToGdipRectF(const RectF r) {
     return Gdiplus::RectF(r.x, r.y, r.dx, r.dy);
 }
+
+int NormalizeRotation(int rotation) {
+    while (rotation < 0) {
+        rotation += 360;
+    }
+    while (rotation >= 360) {
+        rotation -= 360;
+    }
+    if ((rotation % 90) != 0) {
+        CrashIf(true);
+        return 0;
+    }
+    return rotation;
+}

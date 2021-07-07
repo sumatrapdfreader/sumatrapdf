@@ -246,5 +246,3 @@ struct DisplayModel : public Controller {
        resp. number of Back history entries */
     size_t navHistoryIdx{0};
 };
-
-int NormalizeRotation(int rotation);

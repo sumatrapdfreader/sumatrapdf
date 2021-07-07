@@ -499,8 +499,8 @@ std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) 
     if (nRead != size) {
         int err = ferror(fp);
         int isEof = feof(fp);
-        logf("ReadFileWithAllocator: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath, (int)size, (int)nRead,
-             err, isEof);
+        logf("ReadFileWithAllocator: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath,
+             (int)size, (int)nRead, err, isEof);
         // we should either get eof or err
         // either way shouldn't happen because we're reading the exact size of file
         // I've seen this in crash reports so maybe the files are over-written
