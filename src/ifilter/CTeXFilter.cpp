@@ -8,7 +8,7 @@
 #include "PdfFilter.h"
 #include "CTeXFilter.h"
 
-HRESULT CTeXFilter::OnInit() {
+HRESULT TeXFilter::OnInit() {
     if (!m_pData) {
         // load content of LaTeX file into m_pData
         HRESULT res;
@@ -53,7 +53,7 @@ static inline void addsinglespace(WCHAR* base, WCHAR** cur) {
 
 // extracts a text block contained within a pair of braces
 // (may contain nested braces)
-WCHAR* CTeXFilter::ExtractBracedBlock() {
+WCHAR* TeXFilter::ExtractBracedBlock() {
     m_iDepth++;
 
     WCHAR* result = m_pBuffer + (m_pPtr - m_pData);
@@ -212,7 +212,7 @@ WCHAR* CTeXFilter::ExtractBracedBlock() {
     return result;
 }
 
-HRESULT CTeXFilter::GetNextChunkValue(CChunkValue& chunkValue) {
+HRESULT TeXFilter::GetNextChunkValue(CChunkValue& chunkValue) {
     WCHAR *start, *end;
 
 ContinueParsing:

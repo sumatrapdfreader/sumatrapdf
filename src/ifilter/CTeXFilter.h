@@ -3,13 +3,13 @@
 
 enum TEX_FILTER_STATE { STATE_TEX_START, STATE_TEX_PREAMBLE, STATE_TEX_CONTENT, STATE_TEX_END };
 
-class CTeXFilter : public FilterBase
+class TeXFilter : public FilterBase
 {
 public:
-    CTeXFilter(long *plRefCount) : FilterBase(plRefCount),
+    TeXFilter(long *plRefCount) : FilterBase(plRefCount),
         m_state(STATE_TEX_END), m_pData(nullptr), m_pPtr(nullptr),
         m_pBuffer(nullptr), m_iDepth(0) { }
-    ~CTeXFilter() override { CleanUp(); }
+    ~TeXFilter() override { CleanUp(); }
 
     HRESULT OnInit() override;
     HRESULT GetNextChunkValue(CChunkValue &chunkValue) override;

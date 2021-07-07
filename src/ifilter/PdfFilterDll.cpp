@@ -60,7 +60,7 @@ class FilterClassFactory : public IClassFactory {
             pFilter = new PdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
         } else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
-            pFilter = new CTeXFilter(&g_lRefCount);
+            pFilter = new TeXFilter(&g_lRefCount);
 #endif
 #ifdef BUILD_EPUB_IFILTER
         } else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
