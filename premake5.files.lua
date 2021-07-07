@@ -999,8 +999,8 @@ function pdf_filter_files()
 
   filter {"configurations:Debug"}
     files_in_dir("src/ifilter", {
-      "CTeXFilter.*",
-      "CEpubFilter.*",
+      "TeXFilter.*",
+      "EpubFilter.*",
     })
     files {
       "src/EbookDoc.*",

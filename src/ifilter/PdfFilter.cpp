@@ -12,8 +12,8 @@
 #include "EnginePdf.h"
 
 #include "FilterBase.h"
+#include "PdfFilterClsid.h"
 #include "PdfFilter.h"
-#include "CPdfFilter.h"
 
 VOID PdfFilter::CleanUp() {
     if (m_pdfEngine) {

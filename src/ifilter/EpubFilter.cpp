@@ -17,8 +17,8 @@
 #include "EbookDoc.h"
 
 #include "FilterBase.h"
-#include "PdfFilter.h"
-#include "CEpubFilter.h"
+#include "PdfFilterClsid.h"
+#include "EpubFilter.h"
 
 VOID EpubFilter::CleanUp() {
     if (m_epubDoc) {

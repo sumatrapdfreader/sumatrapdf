@@ -7,13 +7,13 @@
 #include "utils/WinUtil.h"
 
 #include "FilterBase.h"
+#include "PdfFilterClsid.h"
 #include "PdfFilter.h"
-#include "CPdfFilter.h"
 #ifdef BUILD_TEX_IFILTER
-#include "CTeXFilter.h"
+#include "TeXFilter.h"
 #endif
 #ifdef BUILD_EPUB_IFILTER
-#include "CEpubFilter.h"
+#include "EpubFilter.h"
 #endif
 
 long g_lRefCount = 0;

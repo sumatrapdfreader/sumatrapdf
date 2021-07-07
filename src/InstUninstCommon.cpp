@@ -30,7 +30,7 @@
 #include "CrashHandler.h"
 #include "Translations.h"
 
-#include "ifilter/PdfFilter.h"
+#include "ifilter/PdfFilterClsid.h"
 #include "previewer/PdfPreview.h"
 
 #include "SumatraConfig.h"

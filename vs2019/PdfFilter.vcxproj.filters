@@ -16,19 +16,16 @@
     <ClInclude Include="..\src\EnginePdf.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
-    <ClInclude Include="..\src\ifilter\CEpubFilter.h">
-      <Filter>ifilter</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ifilter\CPdfFilter.h">
-      <Filter>ifilter</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ifilter\CTeXFilter.h">
+    <ClInclude Include="..\src\ifilter\EpubFilter.h">
       <Filter>ifilter</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ifilter\FilterBase.h">
       <Filter>ifilter</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ifilter\PdfFilter.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ifilter\TeXFilter.h">
       <Filter>ifilter</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\LogDbg.h">
@@ -47,16 +44,16 @@
     <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
+    <ClCompile Include="..\src\ifilter\EpubFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ifilter\CPdfFilter.cpp">
-      <Filter>ifilter</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ifilter\CTeXFilter.cpp">
+    <ClCompile Include="..\src\ifilter\PdfFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ifilter\TeXFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\LogDbg.cpp">

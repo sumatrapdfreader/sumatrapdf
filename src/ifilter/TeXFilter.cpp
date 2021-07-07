@@ -5,8 +5,8 @@
 #include "utils/WinUtil.h"
 
 #include "FilterBase.h"
-#include "PdfFilter.h"
-#include "CTeXFilter.h"
+#include "PdfFilterClsid.h"
+#include "TeXFilter.h"
 
 HRESULT TeXFilter::OnInit() {
     if (!m_pData) {

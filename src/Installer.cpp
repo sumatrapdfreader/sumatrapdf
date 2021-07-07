@@ -43,7 +43,7 @@
 #include "Version.h"
 #include "Installer.h"
 
-#include "ifilter/PdfFilter.h"
+#include "ifilter/PdfFilterClsid.h"
 #include "previewer/PdfPreview.h"
 
 // if 1, adds checkbox to register as default PDF viewer
