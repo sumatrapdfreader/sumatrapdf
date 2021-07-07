@@ -2,7 +2,7 @@ For 3.4 (this is a plan, not a promise):
 * switch most ebooks to use mupdf
 * merge TreeModel refactor
 * pdfprint
-* remove as much of unused code
+* remove unused code
 * make it easy (one-click) to upgrade daily builds (all builds?)
 * tooltip for tabs showing full path of the file
 * https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
@@ -12,103 +12,3 @@ For 3.4 (this is a plan, not a promise):
 * make updates of release easier
 * running installer as admin should install to program files (so that it
   works for non-admin users). Maybe add -for-all cmd-line arg / checkbox
-
-------
-
-- fix: Vec bug (same as Str) where we're not using buf
-- fix: https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state
-  from history)
-- fix: tweak PositionCloseTo() to run after creation and use actual window position
-- cleanup: remove CmdNewBookmarks and related code
-- cleanup: remove .vbkm code
-- cleanup: remove ramicro code
-- crash reporting: use RtlCaptureStackBackTrace
-- crash reporting: on crash re-get list of modules so that we can see modules that were injected
-  after startup
-- cleanup: TocContextMenu: remove code related to showBookmarksMenu
-
-small refactorings:
-- change FileState::filePath to char*
-- use win->tabsCtrl->IsVisible() instead of win->tabsVisible
-- TabPainter:selectedTabIdx should not be necessary
-- make DisplayModel::CvtFromScreen() update pageNo to simplify callers
-- change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
-- use DirIter instead of FindFirstFile in Installer.cpp
-- use DirIter instead of FindFirstFile in FileThumbnails.cpp
-- CloseTab(WindowInfo*) => CloseTab(TabInfo*)
-- EditAnnotationsWindow::skipGoToPage pass this explicitly instead of setting a flag
-
-------
-
-A system to trigger re-layout when e.g. a button text changes.
-Add a way to register function to be called for a given hwnd.
-WindowBaseLayout() registers for its hwnd and calls Relayout().
-Add TriggerRelayout(HWND) which searches for registered function
-for hwnd and its parents.
-
-------
-
-possible refactorings:
-- change DocumentTextCache::GetTextForPage to return PageText
-- extract tab code from Tabs.cpp into a tab control
-- rename PointF, RectF, SizeF -> PointF etc.
-- rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
-- split LoadPage() into LoadPage() and LoadPagePartial()
-returning Rect
- - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
- - UI ideas: https://getcleanshot.com/
-- change how properties are retrieved (in bulk, instead of one-by-one)
-- add arm build (based on https://github.com/ntw-au/sumatrapdf)
-- convert Add Bookmark dialog to new widget / layout system
-- convert hwndTocBox to Window
-- move WindowInfo::tocLoaded into TabInfo
-- change how we handle parent messages to be like in https://github.com/andlabs/libui
-- finish porting LabelWithCloseWnd ⇒ LabelWithCloseCtrl
-- turn PasswordUI class into a callback function
-- use char* instead of WCHAR* for files in Engines
-- turn LinkSaverUI class into a callback function
-- make SaveFileAsPDF non-virtual ([https://codeeval.dev/gist/23710422979e7a7235db96254afd0681](https://codeeval.dev/gist/23710422979e7a7235db96254afd0681))
-- rethink how bitmaps are storied. Preferable store them in sth. similar to fz_pixmap() and just blit when painting, like mupdf viewer. Or make a virtual Blit()
-- ChmDoc -> ChmFile
-- ChmDoc::Load() WCHAR* => std::string_view
-- test icons at different sizes (for toolbar they look bad at some sizes; see if it's toolbar or mupdf)
-- see if can do sth. like https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go
-
-------
-
-Somewhat big items:
-- type-safe string formatter that splits parsing of format string and formatting
-- simplify Caption
-- smaller scrollbar that gets bigger when mouse is closer to it
-- toolbar that is hidden by default by shows when mouse hovers over it
-- better text search UI
-- make home tab always visible
-- load documents in a background thread
-- improve tabs (re-arrange with drag&drop, allow moving between windows)
-
-------
-
-!! sppedup cbr archives
-- unpack images in the background, because that takes most of the time and they don't compress well anyway
-- maybe move blitting to WM_PAINT
-  - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm
-  - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm
-  - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setdibitstodevice
-  - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-stretchdibits
-  - https://stackoverflow.com/questions/1053052/a-generic-error-occurred-in-gdi-jpeg-image-to-memorystream
-  - https://devblogs.microsoft.com/oldnewthing/20090714-00/?p=17503
-  - https://devblogs.microsoft.com/oldnewthing/20090717-00/?p=17443
-  - https://devblogs.microsoft.com/oldnewthing/20180528-00/?p=98845
-  - https://devblogs.microsoft.com/oldnewthing/20090716-00/?p=17463
-  - https://devblogs.microsoft.com/oldnewthing/20090715-00/?p=17483
-
-------
-
-!! associate PDF files on Win 10
-- https://cs.chromium.org/chromium/src/chrome/installer/util/shell_util.cc?type=cs&q="Set+as+default"&sq=package:chromium&g=0&l=802 : chrome code
-- https://docs.microsoft.com/en-us/windows/win32/shell/fa-intro
-- https://docs.microsoft.com/en-us/windows/win32/shell/vista-managing-defaults
-- https://docs.microsoft.com/en-us/windows/win32/shell/default-programs
-- https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ee872123(v=vs.85)
-- https://stackoverflow.com/questions/36270355/file-association-and-thumbnail-preview-in-windows-10?rq=1
-- https://stackoverflow.com/questions/32178986/windows-10-equivalent-of-launchadvancedassociationui/52198802#52198802

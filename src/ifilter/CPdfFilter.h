@@ -5,10 +5,10 @@ enum PDF_FILTER_STATE { STATE_PDF_START, STATE_PDF_AUTHOR, STATE_PDF_TITLE, STAT
 
 class EngineBase;
 
-class CPdfFilter : public CFilterBase
+class CPdfFilter : public FilterBase
 {
 public:
-    CPdfFilter(long *plRefCount) : CFilterBase(plRefCount),
+    CPdfFilter(long *plRefCount) : FilterBase(plRefCount),
         m_state(STATE_PDF_END), m_iPageNo(-1), m_pdfEngine(nullptr) { }
     ~CPdfFilter()  override { CleanUp(); }
 

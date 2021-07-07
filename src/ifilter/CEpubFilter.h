@@ -5,10 +5,10 @@ enum EPUB_FILTER_STATE { STATE_EPUB_START, STATE_EPUB_AUTHOR, STATE_EPUB_TITLE, 
 
 class EpubDoc;
 
-class CEpubFilter : public CFilterBase
+class CEpubFilter : public FilterBase
 {
 public:
-    CEpubFilter(long *plRefCount) : CFilterBase(plRefCount),
+    CEpubFilter(long *plRefCount) : FilterBase(plRefCount),
         m_state(STATE_EPUB_END), m_epubDoc(nullptr) { }
     ~CEpubFilter()  override { CleanUp(); }
 

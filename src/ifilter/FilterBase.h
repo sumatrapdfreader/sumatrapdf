@@ -147,7 +147,7 @@ inline HRESULT CChunkValue::SetChunk(REFPROPERTYKEY pkey,
     return S_OK;
 }
 
-class CFilterBase : public IFilter, public IInitializeWithStream, public IPersistStream, public IPersistFile
+class FilterBase : public IFilter, public IInitializeWithStream, public IPersistStream, public IPersistFile
 {
 public:
     // OnInit() is called when the IFilter is initialized (at the end of IFilter::Init)
@@ -162,12 +162,12 @@ protected:
     inline DWORD GetChunkId() const { return m_dwChunkId; }
 
 public:
-    CFilterBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
+    FilterBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
         m_dwChunkId(0), m_iText(0), m_pStream(nullptr) {
         InterlockedIncrement(m_plModuleRef);
     }
 
-    virtual ~CFilterBase() {
+    virtual ~FilterBase() {
         if (m_pStream)
             m_pStream->Release();
         InterlockedDecrement(m_plModuleRef);
@@ -176,11 +176,11 @@ public:
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) {
         static const QITAB qit[] = {
-            QITABENT(CFilterBase, IPersistStream),
-            QITABENT(CFilterBase, IPersistFile),
-            QITABENTMULTI(CFilterBase, IPersist, IPersistStream),
-            QITABENT(CFilterBase, IInitializeWithStream),
-            QITABENT(CFilterBase, IFilter),
+            QITABENT(FilterBase, IPersistStream),
+            QITABENT(FilterBase, IPersistFile),
+            QITABENTMULTI(FilterBase, IPersist, IPersistStream),
+            QITABENT(FilterBase, IInitializeWithStream),
+            QITABENT(FilterBase, IFilter),
             { 0 }
         };
         return QISearch(this, qit, riid, ppv);
