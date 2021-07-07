@@ -472,9 +472,12 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
 
 static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
     CrashIf(layoutData->hwnd);
-    HWND hwnd = CreateWindow(PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-                             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr,
-                             GetModuleHandle(nullptr), nullptr);
+    auto h = GetModuleHandleW(nullptr);
+    DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    auto clsName = PROPERTIES_CLASS_NAME;
+    auto title = PROPERTIES_WIN_TITLE;
+    HWND hwnd = CreateWindowW(clsName, title, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                              nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         return false;
     }
@@ -494,7 +497,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
     // (as long as they fit into the current monitor's work area)
     Rect wRc = WindowRect(hwnd);
     Rect cRc = ClientRect(hwnd);
-    Rect work = GetWorkAreaRect(WindowRect(hParent));
+    Rect work = GetWorkAreaRect(WindowRect(hParent), hwnd);
     wRc.dx = std::min(rc.dx + wRc.dx - cRc.dx, work.dx);
     wRc.dy = std::min(rc.dy + wRc.dy - cRc.dy, work.dy);
     MoveWindow(hwnd, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);

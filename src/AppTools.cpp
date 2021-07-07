@@ -492,7 +492,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, [[maybe_unused]] LPARAM
 
 void EnsureAreaVisibility(Rect& r) {
     // adjust to the work-area of the current monitor (not necessarily the primary one)
-    Rect work = GetWorkAreaRect(r);
+    Rect work = GetWorkAreaRect(r, nullptr);
 
     // make sure that the window is neither too small nor bigger than the monitor
     if (r.dx < MIN_WIN_DX || r.dx > work.dx) {

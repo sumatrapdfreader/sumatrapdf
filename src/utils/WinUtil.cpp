@@ -687,8 +687,8 @@ bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline) {
 
 /* Ensure that the rectangle is at least partially in the work area on a
    monitor. The rectangle is shifted into the work area if necessary. */
-Rect ShiftRectToWorkArea(Rect rect, bool bFully) {
-    Rect monitor = GetWorkAreaRect(rect);
+Rect ShiftRectToWorkArea(Rect rect, HWND hwnd, bool bFully) {
+    Rect monitor = GetWorkAreaRect(rect, hwnd);
 
     if (rect.y + rect.dy <= monitor.y || bFully && rect.y < monitor.y) {
         /* Rectangle is too far above work area */
@@ -729,9 +729,12 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
 }
 
 // returns available area of the screen i.e. screen minus taskbar area
-Rect GetWorkAreaRect(Rect rect) {
+Rect GetWorkAreaRect(Rect rect, HWND hwnd) {
     RECT tmpRect = ToRECT(rect);
     HMONITOR hmon = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
+    if (hwnd) {
+        hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+    }
     MONITORINFO mi = {0};
     mi.cbSize = sizeof mi;
     BOOL ok = GetMonitorInfo(hmon, &mi);
@@ -878,7 +881,7 @@ void CenterDialog(HWND hDlg, HWND hParent) {
     rcDialog.Offset(rcOwner.x + (rcRect.x - rcDialog.x + rcRect.dx - rcDialog.dx) / 2,
                     rcOwner.y + (rcRect.y - rcDialog.y + rcRect.dy - rcDialog.dy) / 2);
     // ensure that the dialog is fully visible on one monitor
-    rcDialog = ShiftRectToWorkArea(rcDialog, true);
+    rcDialog = ShiftRectToWorkArea(rcDialog, hDlg, true);
 
     SetWindowPos(hDlg, 0, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
@@ -2247,7 +2250,7 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
     if (dyDiff > 0) {
         rHwnd.y += dyDiff / 2;
     }
-    Rect r = ShiftRectToWorkArea(rHwnd, true);
+    Rect r = ShiftRectToWorkArea(rHwnd, hwnd, true);
     SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
@@ -2256,7 +2259,9 @@ void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
     Rect rHwnd = WindowRect(hwnd);
     int x = rHwndRelative.x + (rHwndRelative.dx / 2) - (rHwnd.dx / 2);
     int y = rHwndRelative.y + (rHwndRelative.dy / 2) - (rHwnd.dy / 2);
-    SetWindowPos(hwnd, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
+    Rect r = ShiftRectToWorkArea(Rect{x, y, rHwnd.dx, rHwnd.dy}, hwnd, true);
+    SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 void HwndSendCommand(HWND hwnd, int cmdId) {
