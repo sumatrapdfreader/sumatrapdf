@@ -18,19 +18,19 @@
 
 long g_lRefCount = 0;
 
-class CClassFactory : public IClassFactory {
+class FilterClassFactory : public IClassFactory {
   public:
-    CClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
+    FilterClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
         InterlockedIncrement(&g_lRefCount);
     }
 
-    ~CClassFactory() {
+    ~FilterClassFactory() {
         InterlockedDecrement(&g_lRefCount);
     }
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
-        static const QITAB qit[] = {QITABENT(CClassFactory, IClassFactory), {0}};
+        static const QITAB qit[] = {QITABENT(FilterClassFactory, IClassFactory), {0}};
         return QISearch(this, qit, riid, ppv);
     }
 
@@ -110,7 +110,7 @@ STDAPI DllCanUnloadNow(VOID) {
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     *ppv = nullptr;
-    ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
+    ScopedComPtr<FilterClassFactory> pClassFactory(new FilterClassFactory(rclsid));
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }

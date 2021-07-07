@@ -2,7 +2,7 @@
 the release notes, as we make them, to make the release process easier.
 
 Next version:
-3.3 (???)
+3.3 (2021-07-06)
 * initial support for editing annotations
 * toolbar: new look and DPI scalability
 * toolbar: add rotate buttons

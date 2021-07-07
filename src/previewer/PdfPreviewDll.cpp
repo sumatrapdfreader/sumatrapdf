@@ -58,20 +58,20 @@ static bool gBuildTgaPreview = true;
 static bool gBuildTgaPreview = false;
 #endif
 
-class CClassFactory : public IClassFactory {
+class PreviewClassFactory : public IClassFactory {
   public:
-    CClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
+    PreviewClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
         InterlockedIncrement(&g_lRefCount);
     }
 
-    ~CClassFactory() {
+    ~PreviewClassFactory() {
         InterlockedDecrement(&g_lRefCount);
     }
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
         dbglog("PdfPreview: QueryInterface()\n");
-        static const QITAB qit[] = {QITABENT(CClassFactory, IClassFactory), {0}};
+        static const QITAB qit[] = {QITABENT(PreviewClassFactory, IClassFactory), {0}};
         return QISearch(this, qit, riid, ppv);
     }
 
@@ -181,7 +181,7 @@ STDAPI DllCanUnloadNow(VOID) {
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     *ppv = nullptr;
-    ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
+    ScopedComPtr<PreviewClassFactory> pClassFactory(new PreviewClassFactory(rclsid));
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }

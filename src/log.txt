@@ -16,6 +16,10 @@ update lcms2
 
 update openjpeg
 
+simplify cmd-line arg parsing
+
+rename CClassFactory => FilterClassFactory / PreviewClassFactory
+
 2021-06-29 Tue
 
 simplify GetPaperFormat()

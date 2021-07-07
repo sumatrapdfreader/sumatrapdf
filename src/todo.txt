@@ -6,42 +6,15 @@ For 3.4 (this is a plan, not a promise):
 * make it easy (one-click) to upgrade daily builds (all builds?)
 * tooltip for tabs showing full path of the file
 * https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
-
-Annotations:
- - cannot move ink attachments (repro file from 1716)
- - save attachment
- - add attachment
- - has_redact
- - maybe: text language drop-down
- - maybe: add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
- - maybe: display flags
- - change text selection to use fz_snap_selection and fz_highlight_selection
- - allow drawing of ink annotations
- - allow drawing of line
- - allow drawing of polygon
- - allow drawing of polyline
- - use return value of `pdf_update_annot`
- - no need to redraw when changing contents of most annotations (hard to pull off in current code)
- - maybe; show colors in a drop-down
- - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would
-   show a dialog box for setting a color. Remember the custom colors in settings for future use.
- - figure out why in mupdf color None for highlight is black. Maybe remove None because it doesn't
-  make sense and doesn't seem to work in mupdf either (i.e. it sets the color to black)
+* change how translations work
+* merge pre-release and daily builds (as daily builds)
+* automatic updates for daily builds
+* make updates of release easier
+* running installer as admin should install to program files (so that it
+  works for non-admin users). Maybe add -for-all cmd-line arg / checkbox
 
 ------
 
-- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
-- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1720 (Show scrollbars option aren't saving the preference)
-- https://github.com/sumatrapdfreader/sumatrapdf/issues/1741 ESC to exit change
-- https://github.com/sumatrapdfreader/sumatrapdf/issues/1593 djvu bad rotation
-- add a toggle for thin lines (example PDFs in https://github.com/sumatrapdfreader/sumatrapdf/issues/1732)
-- https://github.com/sumatrapdfreader/sumatrapdf/issues/1752 small scroll after refresh
-- test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
-- refactor: simplify how we layout toolbar. Maybe use layout system.
-- refactor: simplify layout of notifications window
-- installer: maybe when running installer as admin user, install to
-ProgramFiles directory (maybe would fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1502)
 - fix: Vec bug (same as Str) where we're not using buf
 - fix: https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state
   from history)
@@ -105,16 +78,11 @@ returning Rect
 
 Somewhat big items:
 - type-safe string formatter that splits parsing of format string and formatting
-- convert to wdl IBitmap
-- convert epub to use mupdf
-  - start with a test program that just draws every page at a given resolution
 - simplify Caption
 - smaller scrollbar that gets bigger when mouse is closer to it
 - toolbar that is hidden by default by shows when mouse hovers over it
 - better text search UI
-- integrate vld for mem leak detection
 - make home tab always visible
-- better looking notification windows
 - load documents in a background thread
 - improve tabs (re-arrange with drag&drop, allow moving between windows)
 
@@ -144,56 +112,3 @@ Somewhat big items:
 - https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ee872123(v=vs.85)
 - https://stackoverflow.com/questions/36270355/file-association-and-thumbnail-preview-in-windows-10?rq=1
 - https://stackoverflow.com/questions/32178986/windows-10-equivalent-of-launchadvancedassociationui/52198802#52198802
-
-------
-
-icons:
-- file open
-  - https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
-- print
-  - https://github.com/tabler/tabler-icons/blob/master/icons/printer.svg
-- next page, prev page
-  - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-left.svg
-  - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-right.svg
-- continuous layout
-  - https://github.com/tabler/tabler-icons/blob/master/icons/layout-rows.svg
-- single page layout
-  - https://github.com/tabler/tabler-icons/blob/master/icons/square.svg
-- zoom in, zoom out
-  - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-in.svg
-  - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-out.svg
-- find next, find prev
-  - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-left.svg
-  - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-right.svg
-- find match case
-  - https://github.com/tabler/tabler-icons/blob/master/icons/code.svg
-- maybe:
-  - rotate left / right
-  - https://github.com/tabler/tabler-icons/blob/master/icons/home.svg
-
-- possible icon sets
-  https://github.com/tabler/tabler-icons
-  https://github.com/refactoringui/heroicons (no match case and layout)
-  https://feathericons.com/ (no match case and layout)
-  https://thenounproject.com/  lots of icons, needs attribution or pay $99/year for attribution and royalty free license
-  https://icomoon.io/app/#/select
-  https://github.com/microsoft/vscode-codicons
-  https://ionicons.com/
-
-- convert to .ico with https://www.icoconverter.com/
-- online icon editor: https://redketchup.io/icon-editor could be used to improve the low-resolution icons.
-
-- https://docs.microsoft.com/en-us/windows/package-manager/ : info about windows package manager
-- https://devblogs.microsoft.com/commandline/windows-package-manager-preview/
-
-------
-
-Notes / references:
-- https://github.com/andlabs/libui : steal ideas for UI windows wrappers
-- https://github.com/johnfactotum/foliate : gnome epub reader using epub.js. Written in JavaScript / Gtk
-- https://gitlab.com/timofonic/libmobi
-- https://en.bandisoft.com/honeyview/ : steal good UI ideas
-- https://github.com/yue/yue/tree/master/nativeui : has UI code, including full-featured web view
-- https://github.com/neutralinojs/neutralinojs/blob/master/core-windows/src/webview.h : web view code
-- https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-layout?redirectedfrom=MSDN#sizingandspacing
-  info about spacing beween UI elements on windows
