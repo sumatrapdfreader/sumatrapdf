@@ -8,6 +8,8 @@ remove sorting toc items
 
 remove ramicro code
 
+add selection search / translation with Google, Bing and DeepL (for #1280)
+
 2021-07-06 Tue
 
 don't ask to save unsaved annotations in stress testing

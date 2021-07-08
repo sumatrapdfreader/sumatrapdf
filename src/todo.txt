@@ -1,14 +1,18 @@
 For 3.4 (this is a plan, not a promise):
+* https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
 * switch most ebooks to use mupdf
 * merge TreeModel refactor
 * pdfprint
-* remove unused code
 * make it easy (one-click) to upgrade daily builds (all builds?)
 * tooltip for tabs showing full path of the file
-* https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
-* change how translations work
-* merge pre-release and daily builds (as daily builds)
-* automatic updates for daily builds
-* make updates of release easier
+* change how translations work so that user can download latest translations
+  even after the app has been released
+* merge pre-release and daily builds (as pre-release builds)
+* automatic updates for pre-release builds
+* make updates of releases easier (instead of telling people to download the app
+  from website, have them click and download / launch installer automatically)
 * running installer as admin should install to program files (so that it
   works for non-admin users). Maybe add -for-all cmd-line arg / checkbox
+
+Done:
+* remove unused code

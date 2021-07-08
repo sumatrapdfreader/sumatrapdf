@@ -6,20 +6,20 @@ extern bool gAddCrashMeMenu;
 #define SEP_ITEM "-----"
 
 struct MenuDef {
-    const char* title = nullptr;
-    int id = 0;
-    int flags = 0;
+    const char* title{nullptr};
+    int id{0};
+    int flags{0};
 };
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
-    const WCHAR* text = nullptr;
+    const WCHAR* text{nullptr};
     // copy of MENUITEMINFO fields
-    uint fType = 0;
-    uint fState = 0;
-    HBITMAP hbmpChecked = nullptr;
-    HBITMAP hbmpUnchecked = nullptr;
-    HBITMAP hbmpItem = nullptr;
+    uint fType{0};
+    uint fState{0};
+    HBITMAP hbmpChecked{nullptr};
+    HBITMAP hbmpUnchecked{nullptr};
+    HBITMAP hbmpItem{nullptr};
 };
 
 void FreeAllMenuDrawInfos();

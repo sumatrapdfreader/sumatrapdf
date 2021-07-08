@@ -34,6 +34,10 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdViewShowHideScrollbars, "View: Toogle Scrollbars")               \
     V(CmdViewShowHideMenuBar, "View: Toggle Menu Bar")                    \
     V(CmdCopySelection, "Copy Selection")                                 \
+    V(CmdTranslateSelectionWithGoogle, "Translate Selection with Google") \
+    V(CmdTranslateSelectionWithDeepL, "Translate Selection With DeepL")   \
+    V(CmdSearchSelectionWithGoogle, "Search Selection with Google")       \
+    V(CmdSearchSelectionWithBing, "Search Selection with Bing")           \
     V(CmdSelectAll, "Select All")                                         \
     V(CmdNewWindow, "Open New Window")                                    \
     V(CmdDuplicateInNewWindow, "Open Document In New Window")             \

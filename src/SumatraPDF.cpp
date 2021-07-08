@@ -4427,6 +4427,87 @@ extern void SetDebugPaint(bool);
 extern bool IsDebugPaint();
 } // namespace mui
 
+#if 0
+static bool NeedsURLEncoding(WCHAR c) {
+    // TODO: implement me
+    return false;
+}
+#endif
+
+static str::WStr URLEncode(const WCHAR* s) {
+    WCHAR buf[INTERNET_MAX_URL_LENGTH]{0};
+    DWORD cchSizeInOut = dimof(buf) - 1;
+    DWORD flags = URL_ESCAPE_AS_UTF8;
+    UrlEscapeW(s, buf, &cchSizeInOut, flags);
+    return str::WStr(buf);
+#if 0
+    str::WStr res;
+    size_t n = sv.size();
+    const WCHAR* s = sv.data();
+    for (size_t i = 0; i < n; i++) {
+        WCHAR c = s[i];
+        if (NeedsURLEncoding(c)) {
+            // TODO: implement me
+            res.AppendChar(c);
+        }
+        else {
+            res.AppendChar(c);
+        }
+    }
+    return res;
+#endif
+}
+
+static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
+    if (!tab || !HasPermission(Perm_InternetAccess) || !HasPermission(Perm_CopySelection)) {
+        return;
+    }
+
+#if 0 // TODO: get selection from Chm
+    if (tab->AsChm()) {
+        tab->AsChm()->CopySelection();
+        return;
+    }
+#endif
+
+    bool isTextOnlySelectionOut; // if false, a rectangular selection
+    WCHAR* selText = GetSelectedText(tab, L"\n", isTextOnlySelectionOut);
+    if (!selText) {
+        return;
+    }
+    str::WStr encodedSelection = URLEncode(selText);
+    str::WStr url(urlPattern);
+    url.Replace(L"${selection}", encodedSelection.Get());
+    // TODO: auto-detect the language of the user
+    url.Replace(L"${userlang}", L"de");
+    LaunchBrowser(url.Get());
+    str::Free(selText);
+}
+
+// TODO: rather arbitrary divide of responsibility between this and CopySelectionToClipboard()
+static void CopySelectionInTabToClipboard(TabInfo* tab) {
+    // Don't break the shortcut for text boxes
+    if (IsFocused(tab->win->hwndFindBox) || IsFocused(tab->win->hwndPageBox)) {
+        SendMessageW(GetFocus(), WM_COPY, 0, 0);
+        return;
+    }
+    if (!HasPermission(Perm_CopySelection)) {
+        return;
+    }
+    if (tab->AsChm()) {
+        tab->AsChm()->CopySelection();
+        return;
+    }
+    if (tab->selectionOnPage) {
+        CopySelectionToClipboard(tab->win);
+        return;
+    }
+    // TODO: can this be reached?
+    if (tab->AsFixed()) {
+        tab->win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
+    }
+}
+
 static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int wmId = LOWORD(wp);
 
@@ -4471,14 +4552,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    TabInfo* tab = win->currentTab;
     if (!win->IsAboutWindow()) {
         if (CmdOpenWithExternalFirst <= wmId && wmId <= CmdOpenWithExternalLast) {
             size_t idx = (size_t)wmId - (size_t)CmdOpenWithExternalFirst;
-            ViewWithExternalViewer(win->currentTab, idx);
+            ViewWithExternalViewer(tab, idx);
             return 0;
         }
         if (CmdOpenWithFirst < wmId && wmId < CmdOpenWithLast) {
-            ViewWithKnownExternalViewer(win->currentTab, wmId);
+            ViewWithKnownExternalViewer(tab, wmId);
             return 0;
         }
     }
@@ -4603,11 +4685,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSaveAnnotations:
-            SaveAnnotationsAndCloseEditAnnowtationsWindow(win->currentTab);
+            SaveAnnotationsAndCloseEditAnnowtationsWindow(tab);
             break;
 
         case CmdEditAnnotations:
-            StartEditAnnotations(win->currentTab, nullptr);
+            StartEditAnnotations(tab, nullptr);
             break;
 
         case CmdViewShowHideMenuBar:
@@ -4725,7 +4807,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSendByEmail:
-            SendAsEmailAttachment(win->currentTab, win->hwndFrame);
+            SendAsEmailAttachment(tab, win->hwndFrame);
             break;
 
         case CmdProperties:
@@ -4752,27 +4834,24 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdTranslateSelectionWithGoogle:
+            LaunchBrowserWithSelection(tab, L"https://translate.google.com/?sl=auto&op=translate&text=${selection}");
+            break;
+
+        case CmdTranslateSelectionWithDeepL:
+            LaunchBrowserWithSelection(tab, L"https://www.deepl.com/translator#en/${userlang}/${selection}");
+            break;
+
+        case CmdSearchSelectionWithGoogle:
+            LaunchBrowserWithSelection(tab, L"https://www.google.com/search?q=${selection}");
+            break;
+
+        case CmdSearchSelectionWithBing:
+            LaunchBrowserWithSelection(tab, L"https://www.bing.com/search?q=${selection}");
+            break;
+
         case CmdCopySelection:
-            // Don't break the shortcut for text boxes
-            if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
-                SendMessageW(GetFocus(), WM_COPY, 0, 0);
-                break;
-            }
-            if (!HasPermission(Perm_CopySelection)) {
-                break;
-            }
-            if (win->AsChm()) {
-                win->AsChm()->CopySelection();
-                break;
-            }
-            if (win->currentTab && win->currentTab->selectionOnPage) {
-                CopySelectionToClipboard(win);
-                break;
-            }
-            if (win->AsFixed()) {
-                win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
-                break;
-            }
+            CopySelectionInTabToClipboard(tab);
             break;
 
         case CmdSelectAll:

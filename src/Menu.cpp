@@ -245,11 +245,10 @@ static MenuDef menuDefDebug[] = {
 //[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection"),              CmdCopySelection,         MF_REQ_ALLOW_COPY },
+    // Selection sub-menu
     { _TRN("Copy &Link Address"),           CmdCopyLinkTarget,        MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                CmdCopyComment,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  CmdCopyImage,             MF_REQ_ALLOW_COPY },
-    { _TRN("Select &All"),                  CmdSelectAll,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
     { "add",                                CmdFavoriteAdd,           MF_NO_TRANSLATE   },
@@ -270,12 +269,25 @@ static MenuDef menuDefContext[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
 
+//[ ACCESSKEY_GROUP Context Menu (Selection)
+static MenuDef menuDefSelection[] = {
+    { _TRN("&Copy To Clipboard"),      CmdCopySelection,                 MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Translate With Google"),  CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Translate with DeepL"),    CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("&Search With Google"),     CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("&Search With Bing"),       CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Select &All"),             CmdSelectAll,                     MF_REQ_ALLOW_COPY },
+    // TODO: more?
+    { 0, 0, 0 },
+};
+//] ACCESSKEY_GROUP Context Menu (Selection)
+
 //[ ACCESSKEY_GROUP Context Menu (Create annot from selection)
 static MenuDef menuDefCreateAnnotFromSelection[] = {
-    { _TRN("&Highlight\ta"), CmdCreateAnnotHighlight, 0 },
-    { _TRN("&Underline"), CmdCreateAnnotUnderline, 0 },
-    { _TRN("&Strike Out"), CmdCreateAnnotStrikeOut, 0 },
-    { _TRN("S&quiggly"), CmdCreateAnnotSquiggly, 0 },
+    { _TRN("&Highlight\ta"),    CmdCreateAnnotHighlight, 0 },
+    { _TRN("&Underline"),       CmdCreateAnnotUnderline, 0 },
+    { _TRN("&Strike Out"),      CmdCreateAnnotStrikeOut, 0 },
+    { _TRN("S&quiggly"),        CmdCreateAnnotSquiggly,  0 },
     //{ _TRN("Redact"), CmdCreateAnnotRedact, 0 },
     { 0, 0, 0 },
 };
@@ -387,7 +399,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
     }
 
     if (i > 0) {
-        InsertMenu(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+        InsertMenuW(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     }
 }
 
@@ -723,9 +735,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     EngineBase* engine = dm->GetEngine();
     bool annotationsSupported = EngineSupportsAnnotations(engine) && !win->isFullScreen;
     Annotation* annotUnderCursor{nullptr};
+    bool isTextSelected = win->showSelection && tab->selectionOnPage;
     if (annotationsSupported) {
         annotUnderCursor = dm->GetAnnotationAtPos(Point{x, y}, nullptr);
-        bool isTextSelected = win->showSelection && tab->selectionOnPage;
         if (isTextSelected) {
             HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnotFromSelection, CreatePopupMenu());
             uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
@@ -748,6 +760,12 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::Remove(popup, CmdSaveAnnotations);
     }
 
+    if (HasPermission(Perm_InternetAccess) && isTextSelected) {
+        HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefSelection, CreatePopupMenu());
+        uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
+        InsertMenuW(popup, (uint)0, flags, (UINT_PTR)popupCreateAnnot, _TR("&Selection"));
+    }
+
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
         win::menu::Remove(popup, CmdCopyLinkTarget);
     }
@@ -762,7 +780,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!isFullScreen) {
         win::menu::Remove(popup, CmdExitFullScreen);
     }
-    if (!tab->selectionOnPage) {
+    if (!isTextSelected) {
         win::menu::SetEnabled(popup, CmdCopySelection, false);
     }
     MenuUpdatePrintItem(win, popup, true);
@@ -815,6 +833,10 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     Annotation* createdAnnot{nullptr};
     switch (cmd) {
         case CmdCopySelection:
+        case CmdTranslateSelectionWithGoogle:
+        case CmdTranslateSelectionWithDeepL:
+        case CmdSearchSelectionWithGoogle:
+        case CmdSearchSelectionWithBing:
         case CmdSelectAll:
         case CmdSaveAs:
         case CmdPrint:
