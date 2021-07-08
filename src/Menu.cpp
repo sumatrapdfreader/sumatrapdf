@@ -54,7 +54,6 @@ enum {
     MF_NOT_FOR_CHM = 1 << 1,
     MF_NOT_FOR_EBOOK_UI = 1 << 2,
     MF_CBX_ONLY = 1 << 3,
-    MF_NEEDS_ANNOTS = 1 << 6,         // engine needs to support annotations
     MF_REQ_DISK_ACCESS = Perm::DiskAccess << kPermFlagOffset,
     MF_REQ_ALLOW_COPY = Perm::CopySelection << kPermFlagOffset,
 };
@@ -339,11 +338,11 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Bookmarks\tF12"),             CmdViewBookmarks, 0 },
     { _TRN("Show &Toolbar\tF8"),                CmdViewShowHideToolbar, MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show &Scrollbars"),                 CmdViewShowHideScrollbars, MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),                 CmdSaveAnnotations, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS },
-    { _TRN("Select Annotation in Editor"),      CmdSelectAnnotation, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS },
-    { _TRN("Edit Annotations"),                 CmdEditAnnotations, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS },
-    { _TRN("Create Annotation From Selection"), (UINT_PTR)menuDefCreateAnnotFromSelection, MF_NEEDS_ANNOTS },
-    { _TRN("Create Annotation Under Cursor"),   (UINT_PTR)menuDefCreateAnnotUnderCursor, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS },
+    { _TRN("Save Annotations"),                 CmdSaveAnnotations, MF_REQ_DISK_ACCESS },
+    { _TRN("Select Annotation in Editor"),      CmdSelectAnnotation, MF_REQ_DISK_ACCESS },
+    { _TRN("Edit Annotations"),                 CmdEditAnnotations, MF_REQ_DISK_ACCESS },
+    { _TRN("Create Annotation From Selection"), (UINT_PTR)menuDefCreateAnnotFromSelection, },
+    { _TRN("Create Annotation Under Cursor"),   (UINT_PTR)menuDefCreateAnnotUnderCursor, MF_REQ_DISK_ACCESS },
     { _TRN("E&xit Fullscreen"),                 CmdExitFullScreen, 0 },
     { 0, 0, 0 },
 };
@@ -363,7 +362,7 @@ static MenuDef menuDefContextStart[] = {
 
 // clang-format off
 // those menu items will be disabled if no document is opened, enabled otherwise
-static int menusToDisableIfNoDocument[] = {
+static UINT_PTR menusToDisableIfNoDocument[] = {
     CmdViewRotateLeft,
     CmdViewRotateRight,
     CmdGoToNextPage,
@@ -391,7 +390,7 @@ static int menusToDisableIfNoDocument[] = {
     // for broken XPS/CHM documents)
 };
 
-static int menusToDisableIfDirectoryOrBrokenPDF[] = {
+static UINT_PTR menusToDisableIfDirectoryOrBrokenPDF[] = {
     CmdRenameFile,
     CmdSendByEmail,
     CmdOpenWithAcrobat,
@@ -400,7 +399,7 @@ static int menusToDisableIfDirectoryOrBrokenPDF[] = {
     CmdShowInFolder,
 };
 
-static int menusToDisableIfNoSelection[] = {
+static UINT_PTR menusToDisableIfNoSelection[] = {
     CmdCopySelection,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
@@ -408,7 +407,7 @@ static int menusToDisableIfNoSelection[] = {
     CmdSearchSelectionWithGoogle,
 };
 
-static int menusNoTranslate[] = {
+static UINT_PTR menusNoTranslate[] = {
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdZoom6400,
@@ -426,7 +425,7 @@ static int menusNoTranslate[] = {
     CmdZoom8_33,
 };
 
-static int menusNeedInternetAccess[] = {
+static UINT_PTR menusNeedInternetAccess[] = {
     CmdCheckUpdate,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
@@ -436,30 +435,39 @@ static int menusNeedInternetAccess[] = {
     CmdHelpOpenManualInBrowser,
 };
 
-static int menusRequireFullscreeenPerms[] = {
+static UINT_PTR menusRequireFullscreeenPerms[] = {
     CmdViewPresentationMode,
     CmdViewFullScreen,
 };
 
-static int menusRequirePrefsPerms[] = {
+static UINT_PTR menusRequirePrefsPerms[] = {
     CmdOptions,
     CmdAdvancedOptions,
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
 };
+
+static UINT_PTR removeIfAnnotsNotSupported[] = {
+    CmdSaveAnnotations,
+    CmdSelectAnnotation,
+    CmdEditAnnotations,
+    (UINT_PTR)menuDefCreateAnnotFromSelection,
+    (UINT_PTR)menuDefCreateAnnotUnderCursor,
+};
+
 // clang-format on
 
-static bool __menuIdInList(int menuId, int* idsList, int n) {
+static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
     for (int i = 0; i < n; i++) {
         int id = idsList[i];
-        if (id == menuId) {
+        if (id == cmdId) {
             return true;
         }
     }
     return false;
 }
 
-#define menuIdInList(name) __menuIdInList((int)md.idOrSubmenu, name, dimof(name))
+#define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
 
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     CrashIf(!menu);
@@ -479,20 +487,20 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         // hacky but works: small number is command id, large is submenu (a pointer)
         bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
 
-        bool skip = false;
+        bool removeMenu = false;
         if (!HasPermission(Perm::InternetAccess)) {
-            skip |= menuIdInList(menusNeedInternetAccess);
+            removeMenu |= cmdIdInList(menusNeedInternetAccess);
         }
         if (!HasPermission(Perm::FullscreenAccess)) {
-            skip |= menuIdInList(menusRequireFullscreeenPerms);
+            removeMenu |= cmdIdInList(menusRequireFullscreeenPerms);
         }
         if (!HasPermission(Perm::SavePreferences)) {
-            skip |= menuIdInList(menusRequirePrefsPerms);
+            removeMenu |= cmdIdInList(menusRequirePrefsPerms);
         }
         if (!HasPermission(Perm::PrinterAccess)) {
-            skip |= (cmdId == CmdPrint);
+            removeMenu |= (cmdId == CmdPrint);
         }
-        if (skip) {
+        if (removeMenu) {
             continue;
         }
 
@@ -511,27 +519,29 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         wasSeparator = false;
 
         bool disableMenu = false;
-        bool removeMenu = false;
         if (ctx) {
             bool notForChm = MF_NOT_FOR_CHM == (md.flags & MF_NOT_FOR_CHM);
             bool notForEbook = MF_NOT_FOR_EBOOK_UI == (md.flags & MF_NOT_FOR_EBOOK_UI);
             bool cbxOnly = MF_CBX_ONLY == (md.flags & MF_CBX_ONLY);
-            bool needsAnnots = MF_NEEDS_ANNOTS == (md.flags & MF_NEEDS_ANNOTS);
             removeMenu |= (ctx->isChm && notForChm);
             removeMenu |= (ctx->isEbookUI && notForEbook);
             removeMenu |= (cbxOnly && !ctx->isCbx);
-            bool needsSelection = menuIdInList(menusToDisableIfNoSelection);
+            bool needsSelection = cmdIdInList(menusToDisableIfNoSelection);
             disableMenu |= (needsSelection && !ctx->hasSelection);
-            removeMenu |= (needsAnnots && !ctx->supportsAnnotations);
+            removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
             bool needsAnnotUnderCursor = (cmdId == CmdSelectAnnotation);
             disableMenu |= (needsAnnotUnderCursor && !ctx->hasAnnotationUnderCursor);
             disableMenu |= (cmdId == CmdSaveAnnotations) && !ctx->hasUnsavedAnnotations;
-            if (removeMenu) {
-                continue;
-            }
+
+            removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
+            removeMenu |= !ctx->hasSelection && (subMenuDef == menuDefCreateAnnotFromSelection);
+        }
+        removeMenu |= ((subMenuDef == menuDefDebug) && !gShowDebugMenu);
+        if (removeMenu) {
+            continue;
         }
 
-        bool noTranslate = isDebugMenu || menuIdInList(menusNoTranslate);
+        bool noTranslate = isDebugMenu || cmdIdInList(menusNoTranslate);
         noTranslate |= (subMenuDef == menuDefDebug);
         AutoFreeWstr tmp;
         const WCHAR* title = nullptr;
@@ -543,21 +553,13 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         }
 
         if (isSubMenu) {
-            removeMenu |= ((subMenuDef == menuDefDebug) && !gShowDebugMenu);
-            if (ctx && !ctx->hasSelection) {
-                removeMenu |= (subMenuDef == menuDefCreateAnnotFromSelection);
-            }
-            if (ctx && !ctx->isCursorOnPage) {
-                removeMenu |= (subMenuDef == menuDefCreateAnnotUnderCursor);
-            }
-            if (!removeMenu) {
-                HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);
-                AppendMenuW(menu, MF_ENABLED | MF_POPUP, (UINT_PTR)subMenu, title);
-            }
-            continue;
+            HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);
+            UINT flags = MF_POPUP | (disableMenu ? MF_DISABLED : MF_ENABLED);
+            AppendMenuW(menu, flags, (UINT_PTR)subMenu, title);
+        } else {
+            UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
+            AppendMenuW(menu, flags, md.idOrSubmenu, title);
         }
-        UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
-        AppendMenuW(menu, flags, md.idOrSubmenu, title);
     }
 
     // TODO: remove trailing separator if there ever is one

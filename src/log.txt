@@ -10,6 +10,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - replace MF_REQ_PREF_ACCESS and MF_REQ_PRINTER_ACCESS with a list of ids
 - replace MF_NEEDS_SELECTION with  a list of ids
 - replace MF_NEEDS_ANNOT_UNDER_CURSOR and MF_NEEDS_CURSOR_ON_PAGE with a list of ids
+- replace MF_NEEDS_ANNOTS with a list of ids
 
 2021-07-07 Wed
 
