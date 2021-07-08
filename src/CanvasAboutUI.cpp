@@ -78,7 +78,7 @@ static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, [[maybe_un
 
     // remember a link under so that on mouse up we only activate
     // link if mouse up is on the same link as mouse down
-    win->urlOnLastButtonDown = GetStaticLink(win->staticLinks, x, y);
+    win->urlOnLastButtonDown = GetStaticLink(win->staticLinks, x, y, nullptr);
 }
 
 static bool IsLink(const WCHAR* url) {
@@ -97,18 +97,18 @@ static bool IsLink(const WCHAR* url) {
 static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM key) {
     SetFocus(win->hwndFrame);
 
-    const WCHAR* url = GetStaticLink(win->staticLinks, x, y);
+    const WCHAR* url = GetStaticLink(win->staticLinks, x, y, nullptr);
     const WCHAR* prevUrl = win->urlOnLastButtonDown;
     win->urlOnLastButtonDown = nullptr;
     if (!url || url != prevUrl) {
         return;
     }
-    if (str::Eq(url, SLINK_OPEN_FILE)) {
+    if (str::Eq(url, kLinkOpenFile)) {
         HwndSendCommand(win->hwndFrame, CmdOpen);
-    } else if (str::Eq(url, SLINK_LIST_HIDE)) {
+    } else if (str::Eq(url, kLinkHideList)) {
         gGlobalPrefs->showStartPage = false;
         win->RedrawAll(true);
-    } else if (str::Eq(url, SLINK_LIST_SHOW)) {
+    } else if (str::Eq(url, kLinkShowList)) {
         gGlobalPrefs->showStartPage = true;
         win->RedrawAll(true);
     } else if (IsLink(url)) {

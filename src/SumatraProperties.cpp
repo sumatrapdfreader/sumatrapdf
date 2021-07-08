@@ -22,6 +22,7 @@
 #include "WindowInfo.h"
 #include "resource.h"
 #include "Commands.h"
+#include "SumatraAbout.h"
 #include "SumatraProperties.h"
 #include "Translations.h"
 
@@ -406,8 +407,8 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
 }
 
 static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* rect) {
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize));
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate text dimensions for the left side */
@@ -628,8 +629,8 @@ void OnMenuProperties(WindowInfo* win) {
 static void DrawProperties(HWND hwnd, HDC hdc) {
     PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
 
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize));
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 

@@ -264,8 +264,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
     col = GetAppColor(AppColor::MainWindowLink);
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
 
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize));
 
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
@@ -343,8 +343,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
 }
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize));
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
@@ -508,6 +508,8 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     const WCHAR* url;
     Point pt;
 
+    int x = GET_X_LPARAM(lp);
+    int y = GET_Y_LPARAM(lp);
     switch (msg) {
         case WM_CREATE:
             CrashIf(gHwndAbout);
@@ -534,11 +536,11 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_LBUTTONDOWN:
-            gClickedURL = GetStaticLink(gLinkInfo, GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+            gClickedURL = GetStaticLink(gLinkInfo, x, y, nullptr);
             break;
 
         case WM_LBUTTONUP:
-            url = GetStaticLink(gLinkInfo, GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+            url = GetStaticLink(gLinkInfo, x, y, nullptr);
             if (url && url == gClickedURL) {
                 SumatraLaunchBrowser(url);
             }
@@ -617,7 +619,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
         Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
-        win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
+        win->staticLinks.Append(StaticLinkInfo(rect, kLinkShowList));
     }
 }
 
@@ -803,10 +805,10 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);
-    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
+    win->staticLinks.Append(StaticLinkInfo(rect, kLinkOpenFile));
 
     rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
-    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
+    win->staticLinks.Append(StaticLinkInfo(rect, kLinkHideList));
 
     rect = DrawSupportLink(win->hwndCanvas, hdc, _TR("Support SumatraPDF"));
     win->staticLinks.Append(StaticLinkInfo(rect, URL_SUPPORT_SUMATRA));

@@ -86,13 +86,6 @@ enum MenuToolbarFlags {
     MF_REQ_FULLSCREEN = Perm::FullscreenAccess << PERM_FLAG_OFFSET,
 };
 
-/* styling for About/Properties windows */
-
-#define LEFT_TXT_FONT L"Arial"
-#define LEFT_TXT_FONT_SIZE 12
-#define RIGHT_TXT_FONT L"Arial Black"
-#define RIGHT_TXT_FONT_SIZE 12
-
 struct Controller;
 class Favorites;
 struct FileHistory;
