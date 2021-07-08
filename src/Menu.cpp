@@ -56,7 +56,6 @@ enum {
     MF_NOT_FOR_EBOOK_UI = 1 << 2,
     MF_CBX_ONLY = 1 << 3,
     MF_NEEDS_CURSOR_ON_PAGE = 1 << 4, // cursor must be withing page boundaries
-    MF_NEEDS_SELECTION = 1 << 5,      // user must have text selection active
     MF_NEEDS_ANNOTS = 1 << 6,         // engine needs to support annotations
     MF_REQ_DISK_ACCESS = Perm::DiskAccess << kPermFlagOffset,
     MF_REQ_ALLOW_COPY = Perm::CopySelection << kPermFlagOffset,
@@ -344,7 +343,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Save Annotations"),                 CmdSaveAnnotations, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS },
     { _TRN("Select Annotation in Editor"),      CmdSelectAnnotation, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS | MF_NEEDS_ANNOT_UNDER_CURSOR },
     { _TRN("Edit Annotations"),                 CmdEditAnnotations, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS },
-    { _TRN("Create Annotation From Selection"), (UINT_PTR)menuDefCreateAnnotFromSelection, MF_NEEDS_SELECTION | MF_NEEDS_ANNOTS },
+    { _TRN("Create Annotation From Selection"), (UINT_PTR)menuDefCreateAnnotFromSelection, MF_NEEDS_ANNOTS },
     { _TRN("Create Annotation Under Cursor"),   (UINT_PTR)menuDefCreateAnnotUnderCursor, MF_REQ_DISK_ACCESS | MF_NEEDS_ANNOTS | MF_NEEDS_CURSOR_ON_PAGE },
     { _TRN("E&xit Fullscreen"),                 CmdExitFullScreen, 0 },
     { 0, 0, 0 },
@@ -509,11 +508,11 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         }
         wasSeparator = false;
 
+        bool disableMenu = false;
         if (ctx) {
             bool notForChm = MF_NOT_FOR_CHM == (md.flags & MF_NOT_FOR_CHM);
             bool notForEbook = MF_NOT_FOR_EBOOK_UI == (md.flags & MF_NOT_FOR_EBOOK_UI);
             bool cbxOnly = MF_CBX_ONLY == (md.flags & MF_CBX_ONLY);
-            bool needsSelection = MF_NEEDS_SELECTION == (md.flags & MF_NEEDS_SELECTION);
             bool needsAnnots = MF_NEEDS_ANNOTS == (md.flags & MF_NEEDS_ANNOTS);
             bool needsAnnotUnderCursor = MF_NEEDS_ANNOT_UNDER_CURSOR == (md.flags & MF_NEEDS_ANNOT_UNDER_CURSOR);
             bool newsCursorOnPage = MF_NEEDS_CURSOR_ON_PAGE == (md.flags & MF_NEEDS_CURSOR_ON_PAGE);
@@ -526,8 +525,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             if (cbxOnly && !ctx->isCbx) {
                 continue;
             }
+            bool needsSelection = menuIdInList(menusToDisableIfNoSelection);
             if (needsSelection && !ctx->hasSelection) {
-                continue;
+                disableMenu = true;
             }
             if (needsAnnots && !ctx->supportsAnnotations) {
                 continue;
@@ -560,11 +560,17 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
                 }
                 noTranslate = true;
             }
+            if (ctx && !ctx->hasSelection) {
+                if (subMenuDef == menuDefCreateAnnotFromSelection) {
+                    continue;
+                }
+            }
             HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);
             AppendMenuW(menu, MF_ENABLED | MF_POPUP, (UINT_PTR)subMenu, title);
             continue;
         }
-        AppendMenuW(menu, MF_STRING, md.idOrSubmenu, title);
+        UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
+        AppendMenuW(menu, flags, md.idOrSubmenu, title);
     }
 
     // TODO: remove trailing separator if there ever is one
