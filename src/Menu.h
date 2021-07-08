@@ -3,10 +3,6 @@
 
 extern bool gAddCrashMeMenu;
 
-constexpr const char* kMenuSeparator = "-----";
-
-// TODO: maybe move all menu definition inside Menu.cpp
-// and hide MenuToolbarFlags there as well
 constexpr int kPermFlagOffset = 9;
 enum MenuToolbarFlags {
     MF_NO_TRANSLATE = 1 << 0,
@@ -25,32 +21,12 @@ enum MenuToolbarFlags {
     MF_REQ_FULLSCREEN = Perm::FullscreenAccess << kPermFlagOffset,
 };
 
-struct MenuDef {
-    const char* title{nullptr};
-    UINT_PTR idOrSubmenu{0};
-    int flags{0};
-};
+struct BuildMenuCtx;
+struct MenuOwnerDrawInfo;
+struct MenuDef;
 
-struct BuildMenuCtx {
-    bool isChm{false};
-    bool isEbookUI{false};
-    bool isCbx{false};
-    bool hasSelection{false};
-    bool supportsAnnotations{false};
-    bool hasAnnotationUnderCursor{false};
-    bool isCursorOnPage{false};
-};
-
-// value associated with menu item for owner-drawn purposes
-struct MenuOwnerDrawInfo {
-    const WCHAR* text{nullptr};
-    // copy of MENUITEMINFO fields
-    uint fType{0};
-    uint fState{0};
-    HBITMAP hbmpChecked{nullptr};
-    HBITMAP hbmpUnchecked{nullptr};
-    HBITMAP hbmpItem{nullptr};
-};
+extern MenuDef menuDefContextToc[];
+extern MenuDef menuDefContextFav[];
 
 void FreeAllMenuDrawInfos();
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);

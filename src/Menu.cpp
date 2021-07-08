@@ -49,12 +49,40 @@
 // SumatraPDF.cpp
 extern Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
 
+struct BuildMenuCtx {
+    bool isChm{false};
+    bool isEbookUI{false};
+    bool isCbx{false};
+    bool hasSelection{false};
+    bool supportsAnnotations{false};
+    bool hasAnnotationUnderCursor{false};
+    bool isCursorOnPage{false};
+};
+
+// value associated with menu item for owner-drawn purposes
+struct MenuOwnerDrawInfo {
+    const WCHAR* text{nullptr};
+    // copy of MENUITEMINFO fields
+    uint fType{0};
+    uint fState{0};
+    HBITMAP hbmpChecked{nullptr};
+    HBITMAP hbmpUnchecked{nullptr};
+    HBITMAP hbmpItem{nullptr};
+};
+
+struct MenuDef {
+    const char* title{nullptr};
+    UINT_PTR idOrSubmenu{0};
+    int flags{0};
+};
+
+constexpr const char* kMenuSeparator = "-----";
+bool gAddCrashMeMenu = false;
+
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
 static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
-
-bool gAddCrashMeMenu = false;
 
 void MenuUpdateDisplayMode(WindowInfo* win) {
     bool enabled = win->IsDocLoaded();
@@ -87,6 +115,28 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
     }
 }
 
+// clang-format off
+MenuDef menuDefContextToc[] = {
+    {_TRN("Expand All"),            CmdExpandAll,         0 },
+    {_TRN("Collapse All"),          CmdCollapseAll,       0 },
+    {kMenuSeparator,                CmdSeparatorEmbed,    MF_NO_TRANSLATE},
+    {_TRN("Open Embedded PDF"),     CmdOpenEmbeddedPDF,   0 },
+    {_TRN("Save Embedded File..."), CmdSaveEmbeddedFile,  0 },
+    // note: strings cannot be "" or else items are not there
+    {"add",                         CmdFavoriteAdd,       MF_NO_TRANSLATE},
+    {"del",                         CmdFavoriteDel,       MF_NO_TRANSLATE},
+    { 0, 0, 0 },
+};
+// clang-format on      
+
+
+// clang-format off
+MenuDef menuDefContextFav[] = {
+    {_TRN("Remove from favorites"), CmdFavoriteDel, 0},
+    { 0, 0, 0 }
+};
+// clang-format on
+//
 // clang-format off
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {

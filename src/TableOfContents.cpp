@@ -402,20 +402,6 @@ static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
     }
 }
 
-// clang-format off
-static MenuDef menuDefContext[] = {
-    {_TRN("Expand All"),            CmdExpandAll,         0 },
-    {_TRN("Collapse All"),          CmdCollapseAll,       0 },
-    {kMenuSeparator,                CmdSeparatorEmbed,    MF_NO_TRANSLATE},
-    {_TRN("Open Embedded PDF"),     CmdOpenEmbeddedPDF,   0 },
-    {_TRN("Save Embedded File..."), CmdSaveEmbeddedFile,  0 },
-    // note: strings cannot be "" or else items are not there
-    {"add",                         CmdFavoriteAdd,       MF_NO_TRANSLATE},
-    {"del",                         CmdFavoriteDel,       MF_NO_TRANSLATE},
-    { 0, 0, 0 },
-};
-// clang-format on      
-
 static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     int pageNo = 0;
     if (!dti) {
@@ -483,7 +469,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     TabInfo* tab = win->currentTab;
-    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu(), 0);
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), 0);
 
     bool isEmbeddedFile = false;
     PageDestination* dest = nullptr;
