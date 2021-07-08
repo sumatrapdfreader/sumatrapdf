@@ -36,8 +36,7 @@ extern Kind kindFilePalmDoc;
 extern Kind kindFileHTML;
 extern Kind kindFileTxt;
 
-extern Kind kindFileVbkm;
-extern Kind kindFileDir;
+extern Kind kindDirectory;
 
 const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path);
 

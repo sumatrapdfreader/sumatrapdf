@@ -114,9 +114,6 @@
     <ClInclude Include="..\src\PagesLayoutDef.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ParseBKM.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\PdfSync.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -175,12 +172,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Theme.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TocEditTitle.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TocEditor.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Toolbar.h">
@@ -362,9 +353,6 @@
     <ClCompile Include="..\src\PagesLayoutDef.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ParseBKM.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\PdfSync.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -429,12 +417,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Theme.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TocEditTitle.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TocEditor.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Toolbar.cpp">

@@ -220,7 +220,7 @@ struct TocItem : TreeItem {
     TocItem* currChild{nullptr};
     int currChildNo{0};
 
-    // -- only for .vbkm usage (EngineMulti, TocEditor) --
+    // -- only for .EngineMulti
     // marks a node that represents a file
     char* engineFilePath{nullptr};
     int nPages{0};

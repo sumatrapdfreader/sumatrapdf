@@ -61,7 +61,6 @@
 #include "Notifications.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
-#include "TocEditor.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"
@@ -3114,7 +3113,7 @@ static void OnMenuOpen(WindowInfo* win) {
         const WCHAR* filter;
         bool available;
     } fileFormats[] = {
-        {_TR("PDF documents"), L"*.pdf;*.vbkm", true},
+        {_TR("PDF documents"), L"*.pdf", true},
         {_TR("XPS documents"), L"*.xps;*.oxps", true},
         {_TR("DjVu documents"), L"*.djvu", true},
         {_TR("Postscript documents"), L"*.ps;*.eps", IsPsEngineAvailable()},
@@ -3125,7 +3124,7 @@ static void OnMenuOpen(WindowInfo* win) {
         {_TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},
         {_TR("PalmDoc documents"), L"*.pdb;*.prc", true},
         {_TR("Images"), L"*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jxr;*.png;*.tga;*.tif;*.tiff;*.webp", true},
-        {_TR("Text documents"), L"*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr;*.vbkm", true},
+        {_TR("Text documents"), L"*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr", true},
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -4609,10 +4608,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdEditAnnotations:
             StartEditAnnotations(win->currentTab, nullptr);
-            break;
-
-        case CmdNewBookmarks:
-            StartTocEditorForWindowInfo(win);
             break;
 
         case CmdViewShowHideMenuBar:

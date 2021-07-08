@@ -26,7 +26,6 @@
 #include "AppUtil.h"
 #include "Selection.h"
 #include "Translations.h"
-#include "ParseBKM.h"
 #include "EditAnnotations.h"
 
 TabInfo::TabInfo(WindowInfo* win, const WCHAR* filePath) {

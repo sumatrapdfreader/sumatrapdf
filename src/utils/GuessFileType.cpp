@@ -12,7 +12,6 @@
 
 Kind kindFilePDF = "filePDF";
 Kind kindFilePS = "filePS";
-Kind kindFileVbkm = "fileVbkm";
 Kind kindFileXps = "fileXPS";
 Kind kindFileDjVu = "fileDjVu";
 Kind kindFileChm = "fileChm";
@@ -36,7 +35,7 @@ Kind kindFileRar = "fileRar";
 Kind kindFile7Z = "file7Z";
 Kind kindFileTar = "fileTar";
 Kind kindFileFb2 = "fileFb2";
-Kind kindFileDir = "fileDir";
+Kind kindDirectory = "directory";
 Kind kindFileEpub = "fileEpub";
 // TODO: introduce kindFileTealDoc?
 Kind kindFileMobi = "fileMobi";
@@ -64,7 +63,6 @@ Kind kindFileTxt = "fileTxt";
     V(".ps\0", kindFilePS)          \
     V(".ps.gz\0", kindFilePS)       \
     V(".eps\0", kindFilePS)         \
-    V(".vbkm\0", kindFileVbkm)      \
     V(".fb2\0", kindFileFb2)        \
     V(".fb2z\0", kindFileFb2)       \
     V(".zfb2\0", kindFileFb2)       \
@@ -241,7 +239,6 @@ static bool IsPSFileContent(std::span<u8> d) {
 }
 
 // detect file type based on file content
-// we don't support sniffing kindFileVbkm
 Kind GuessFileTypeFromContent(std::span<u8> d) {
     // TODO: sniff .fb2 content
     u8* data = d.data();
@@ -390,7 +387,7 @@ Kind GuessFileTypeFromName(const WCHAR* path) {
         return nullptr;
     }
     if (path::IsDirectory(path)) {
-        return kindFileDir;
+        return kindDirectory;
     }
     Kind res = GetKindByFileExt(path);
     if (res != nullptr) {

@@ -25,7 +25,6 @@
 #include "EngineBase.h"
 #include "EnginePdf.h"
 #include "EngineCreate.h"
-#include "ParseBKM.h"
 
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
@@ -47,7 +46,6 @@
 #include "Translations.h"
 #include "Tabs.h"
 #include "Menu.h"
-#include "TocEditor.h"
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS
@@ -404,28 +402,6 @@ static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
     }
 }
 
-void ShowExportedBookmarksMsg(const WCHAR* path) {
-    str::WStr msg;
-    msg.AppendFmt(L"Exported bookmarks to file %s", path);
-    str::WStr caption;
-    caption.Append(L"Exported bookmarks");
-    uint type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
-    MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
-}
-
-static void ExportBookmarksFromTab(TabInfo* tab) {
-    // TODO: should I set engineFilePath and nPages on root node so that
-    // it's the same as .vbkm?
-    TocTree* tocTree = tab->ctrl->GetToc();
-    str::Str path = strconv::WstrToUtf8(tab->filePath);
-    path.Append(".bkm");
-    bool ok = ExportBookmarksToFile(tocTree, "", path.Get());
-    if (!ok) {
-        log("ExportBookmarsToFile() failed\n");
-    }
-    ShowExportedBookmarksMsg(tab->filePath);
-}
-
 // clang-format off
 static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),                 CmdExpandAll,         0 },
@@ -436,9 +412,6 @@ static MenuDef menuDefContext[] = {
     // note: strings cannot be "" or else items are not there
     {"add",                              CmdFavoriteAdd,            MF_NO_TRANSLATE},
     {"del",                              CmdFavoriteDel,            MF_NO_TRANSLATE},
-    {SEP_ITEM,                           CmdSeparator,         MF_NO_TRANSLATE},
-    {_TRN("Export Bookmarks"),      CmdExportBookmarks,   MF_NO_TRANSLATE},
-    {_TRN("New Bookmarks"),         CmdNewBookmarks,      MF_NO_TRANSLATE},
     { 0, 0, 0 },
 };
 
@@ -691,31 +664,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     TabInfo* tab = win->currentTab;
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
-    bool showBookmarksMenu = false;
-#if 0 // TODO: remove
-    if (showBookmarksMenu) {
-        HMENU popupSort = BuildMenuFromMenuDef(menuDefSortByTag, CreatePopupMenu());
-        uint flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
-        InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, _TR("Sort By"));
-
-        win::menu::SetChecked(popupSort, CmdSortTagSmallFirst, false);
-        win::menu::SetChecked(popupSort, CmdSortTagBigFirst, false);
-        win::menu::SetChecked(popupSort, CmdSortColor, false);
-
-        switch (tab->tocSort) {
-            case TocSort::TagBigFirst:
-                win::menu::SetChecked(popupSort, CmdSortTagBigFirst, true);
-                break;
-            case TocSort::TagSmallFirst:
-                win::menu::SetChecked(popupSort, CmdSortTagSmallFirst, true);
-                break;
-            case TocSort::Color:
-                win::menu::SetChecked(popupSort, CmdSortColor, true);
-                break;
-        }
-    }
-#endif
-
     bool isEmbeddedFile = false;
     PageDestination* dest = nullptr;
     WCHAR* path = nullptr;
@@ -735,18 +683,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         win::menu::Remove(popup, CmdSeparatorEmbed);
         win::menu::Remove(popup, CmdSaveEmbeddedFile);
         win::menu::Remove(popup, CmdOpenEmbeddedPDF);
-    }
-
-    if (!showBookmarksMenu) {
-        win::menu::Remove(popup, CmdSeparator);
-        win::menu::Remove(popup, CmdExportBookmarks);
-        win::menu::Remove(popup, CmdNewBookmarks);
-    } else {
-        path = win->currentTab->filePath.Get();
-        if (str::EndsWithI(path, L".vbkm")) {
-            // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            win::menu::SetText(popup, CmdNewBookmarks, _TR("Edit Bookmarks"));
-        }
     }
 
     if (pageNo > 0) {
@@ -778,12 +714,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     switch (cmd) {
-        case CmdExportBookmarks:
-            ExportBookmarksFromTab(tab);
-            break;
-        case CmdNewBookmarks:
-            StartTocEditorForWindowInfo(win);
-            break;
         case CmdExpandAll:
             win->tocTreeCtrl->ExpandAll();
             break;
@@ -827,12 +757,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             OpenEmbeddedFile(tab, dest);
             break;
     }
-}
-
-// TODO: temporary
-static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, VbkmFile& vbkm) {
-    AutoFreeStr tmp = strconv::WstrToUtf8(baseFileName);
-    return LoadAlterenativeBookmarks(tmp.AsView(), vbkm);
 }
 
 static bool ShouldCustomDraw(WindowInfo* win) {
