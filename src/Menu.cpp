@@ -59,8 +59,6 @@ enum {
     MF_NEEDS_SELECTION = 1 << 5,      // user must have text selection active
     MF_NEEDS_ANNOTS = 1 << 6,         // engine needs to support annotations
     MF_REQ_DISK_ACCESS = Perm::DiskAccess << kPermFlagOffset,
-    MF_REQ_PREF_ACCESS = Perm::SavePreferences << kPermFlagOffset,
-    MF_REQ_PRINTER_ACCESS = Perm::PrinterAccess << kPermFlagOffset,
     MF_REQ_ALLOW_COPY = Perm::CopySelection << kPermFlagOffset,
 };
 
@@ -145,7 +143,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("Re&name...\tF2"),               CmdRenameFile,             MF_REQ_DISK_ACCESS },
 #endif
 //] ACCESSKEY_ALTERNATIVE
-    { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  MF_NOT_FOR_EBOOK_UI },
     { kMenuSeparator,                             0,                         MF_REQ_DISK_ACCESS },
 //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
     { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
@@ -237,8 +235,8 @@ static MenuDef menuDefSettings[] = {
     { _TRN("Contribute Translation"),       CmdContributeTranslation, MF_REQ_DISK_ACCESS },
     { kMenuSeparator,                             0,                        MF_REQ_DISK_ACCESS },
 #endif
-    { _TRN("&Options..."),                  CmdOptions,               MF_REQ_PREF_ACCESS },
-    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    { _TRN("&Options..."),                  CmdOptions,               0 },
+    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Settings Menu
@@ -356,11 +354,12 @@ static MenuDef menuDefContext[] = {
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
-    { _TRN("&Pin Document"),                CmdPinSelectedDocument,    MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { kMenuSeparator,                             0,                   MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { _TRN("&Remove From History"),         CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Pin Document"),                CmdPinSelectedDocument,    MF_REQ_DISK_ACCESS },
+    { kMenuSeparator,                             0,                   MF_REQ_DISK_ACCESS },
+    { _TRN("&Remove From History"),         CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
+
 //] ACCESSKEY_GROUP Context Menu (Start)
 // clang-format on
 
@@ -443,6 +442,13 @@ static int menusRequireFullscreeenPerms[] = {
     CmdViewPresentationMode,
     CmdViewFullScreen,
 };
+
+static int menusRequirePrefsPerms[] = {
+    CmdOptions,
+    CmdAdvancedOptions,
+    CmdPinSelectedDocument,
+    CmdForgetSelectedDocument,
+};
 // clang-format on
 
 static bool __menuIdInList(int menuId, int* idsList, int n) {
@@ -465,24 +471,28 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     int i = 0;
     while (true) {
         MenuDef md = menuDefs[i];
-        if (md.title == nullptr) {
-            // sentinel
+        if (md.title == nullptr) { // sentinel
             break;
         }
         i++;
 
-        if (!HasPermission(Perm::InternetAccess)) {
-            bool skip = menuIdInList(menusNeedInternetAccess);
-            if (skip) {
-                continue;
-            }
-        }
+        int menuId = (int)md.idOrSubmenu;
 
+        bool skip = false;
+        if (!HasPermission(Perm::InternetAccess)) {
+            skip |= menuIdInList(menusNeedInternetAccess);
+        }
         if (!HasPermission(Perm::FullscreenAccess)) {
-            bool skip = menuIdInList(menusRequireFullscreeenPerms);
-            if (skip) {
-                continue;
-            }
+            skip |= menuIdInList(menusRequireFullscreeenPerms);
+        }
+        if (!HasPermission(Perm::SavePreferences)) {
+            skip |= menuIdInList(menusRequirePrefsPerms);
+        }
+        if (!HasPermission(Perm::PrinterAccess)) {
+            skip |= (menuId == CmdPrint);
+        }
+        if (skip) {
+            continue;
         }
 
         if (!HasPermission((Perm)(md.flags >> kPermFlagOffset))) {
@@ -545,6 +555,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         if (isSubMenu) {
             MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
             if (subMenuDef == menuDefDebug) {
+                if (!gShowDebugMenu) {
+                    continue;
+                }
                 noTranslate = true;
             }
             HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);

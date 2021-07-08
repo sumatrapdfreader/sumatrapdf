@@ -6,7 +6,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - make menus more declarative
 - replace use of MF_NO_TRANSLATE with a list of ids
 - replace use of MF_REQ_INET_ACCESS with a list of ids
-- replace use of MF_REQ_FULLSCREEN wiht a list of ids
+- replace use of MF_REQ_FULLSCREEN with a list of ids
+- replace use of MF_REQ_PREF_ACCESS and MF_REQ_PRINTER_ACCESS with a list of ids
 
 2021-07-07 Wed
 
@@ -190,34 +191,29 @@ A daily log of changes and commentary. An experiment of sorts.
 
 2021-05-30 Sun
 
-always enable opening text files
-previously we would only open .txt files if advanced setting
-"open ebooks with mupdf engine" was true.
-
-replace NotificationGroupId with Kind
-
-convert enum NotificationOptions to enum class
+- always enable opening text files
+  previously we would only open .txt files if advanced setting
+  "open ebooks with mupdf engine" was true.
+- replace NotificationGroupId with Kind
+- convert enum NotificationOptions to enum class
 
 2021-05-29 Sat
 
-Refactor StressTest: convert most method to functions.
-
-Remove ImgFormat because it's redundant with kindFile*
-
-Tweak detection of clang-format.exe and msbuild.exe so that
-we consistently start with 2019 Preview.
-
-stress testing: limit number of rendered pages per file to 32 randomly
-picked pages. This speeds up stress testing by avoiding rendering really
-big documents. 
+- Refactor StressTest: convert most method to functions.
+- Remove ImgFormat because it's redundant with kindFile*
+- Tweak detection of clang-format.exe and msbuild.exe so that
+ we consistently start with 2019 Preview.
+- stress testing: limit number of rendered pages per file to 32 randomly
+  picked pages. This speeds up stress testing by avoiding rendering really
+  big documents. 
 
 2021-05-28 Fri
 
-In 3.2 I introduced a regression: when user changed pages I tried to sync
-the treeview selection to match the current page. In 3.1.2 we would limit
-auto-select to currently expanded items. In 3.2 we would auto-expand
-tree item to make selected tree item visible.
-Fixed it in https://github.com/sumatrapdfreader/sumatrapdf/commit/4960ce53950bd9d50500c4141b41b7d4839dc767
+- In 3.2 I introduced a regression: when user changed pages I tried to sync
+  the treeview selection to match the current page. In 3.1.2 we would limit
+  auto-select to currently expanded items. In 3.2 we would auto-expand
+  tree item to make selected tree item visible.
+  Fixed it in https://github.com/sumatrapdfreader/sumatrapdf/commit/4960ce53950bd9d50500c4141b41b7d4839dc767
 
 The TreeCtrl / TreeModel still has problems.
 
@@ -255,8 +251,6 @@ Had to change naming scheme to /settings/settings3-3.html
 
 Fixed Notion HTML generation to not generate files with '.' in them.
 
-
-
 2021-05-27 Thu
 
 Added support for .xps files with jpeg-xr images in them.
@@ -278,46 +272,39 @@ https://github.com/sumatrapdfreader/sumatrapdf/commit/348d27f942a71534e769536d18
 
 2021-01-02 Sat
 
-more work on MinHook.[h|cpp] and MemLeakDetect.[h|cpp]
+- more work on MinHook.[h|cpp] and MemLeakDetect.[h|cpp]
 
 2021-01-01 Fri
 
-start on MinHook.[h|cpp] to be used for mem leak detection
+- start on MinHook.[h|cpp] to be used for mem leak detection
 
 2020-08-17 Mon
 
-fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1733
-
-handle click in favorites tree (fixes #1733)
+- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1733
+- handle click in favorites tree (fixes #1733)
 
 2020-08-16 Sun
 
-fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
-
-change TabState::filePath to char*
-
-disable creation of annotation that cannot be fully edited
-
+- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
+- change TabState::filePath to char*
+- disable creation of annotation that cannot be fully edited
 
 2020-08-15 Sat
 
-fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1730
-
-annotations: don't change page position when annotation is created
-
-updated mupdf to latest version
+- fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1730
+- annotations: don't change page position when annotation is created
+- updated mupdf to latest version
 
 2020-07-26 Sun
 
-Started on converting tab code into TabCtrl.
-Luckily can do it step-by-step.
-
-refactoring old code. Changed some settings from wstr to str.
-change DisplayMode to enum class.
+- Started on converting tab code into TabCtrl.
+  Luckily can do it step-by-step.
+- refactoring old code. Changed some settings from wstr to str.
+  change DisplayMode to enum class.
 
 2020-07-25 Sat
 
-fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1286
+ixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1286
 'i' would show page number only temporarily (persistently with SHIFT)
 and only in full screen.
 Make it work always and toggle the info.
@@ -352,21 +339,16 @@ it was a regression from the fix for saving preferences.
 probably not the best fix, should fix the fact that prefs::Save()
 deletes gGlobalPrefs->sessionData while 're iterating on it
 
-limit which annotations can be moved
-
-refactor dragging logic a bit
-
-make ESC cancel dragging of an annotation
-
-show rect of selected annotation in annotation editor
+- limit which annotations can be moved
+- refactor dragging logic a bit
+- make ESC cancel dragging of an annotation
+- show rect of selected annotation in annotation editor
 
 2020-07-09 Thu
 
-fix regression of not copying rectangular selection as image (fixes #1668)
-
-write DisplayModel::GetAnnotationAtPos(Point) and EngineGetAnnotationAtPos(Engine, Point)
-
-update annotation rect after it's moved
+- fix regression of not copying rectangular selection as image (fixes #1668)
+- write DisplayModel::GetAnnotationAtPos(Point) and EngineGetAnnotationAtPos(Engine, Point)
+- update annotation rect after it's moved
 
 2020-07-08 Wed
 
@@ -379,9 +361,8 @@ update mupdf.
 this was a big one because mupdf switched to using gumbo
 as html/xml parser.
 
-tweak premake definitions
-
-ask to save unsaved annotation when closing a pdf file
+- tweak premake definitions
+- ask to save unsaved annotation when closing a pdf file
 
 2020-07-07 Tue
 
@@ -456,8 +437,7 @@ size_t to u32.
 ---
 
 Optimizing Str. Turns out that after de-templatizing the code
-became easier to understand and opportunities for optimizations
-turn up.
+became easier to understand and opportunities for optimizations turn up.
 The optimizations are pretty nasty (re-using the same memory for
 more than one purpse) but worth doing for such a fundamental type.
 
@@ -466,4 +446,3 @@ more than one purpse) but worth doing for such a fundamental type.
 - adding comments to Commands.h
 - website: add 'Spread the word' section
 - refactor: use DirIter in EngineImageDir::LoadImageDir()
-
