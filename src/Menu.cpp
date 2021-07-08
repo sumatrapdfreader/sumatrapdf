@@ -58,7 +58,6 @@ enum {
     MF_NEEDS_CURSOR_ON_PAGE = 1 << 4, // cursor must be withing page boundaries
     MF_NEEDS_SELECTION = 1 << 5,      // user must have text selection active
     MF_NEEDS_ANNOTS = 1 << 6,         // engine needs to support annotations
-    MF_REQ_INET_ACCESS = Perm::InternetAccess << kPermFlagOffset,
     MF_REQ_DISK_ACCESS = Perm::DiskAccess << kPermFlagOffset,
     MF_REQ_PREF_ACCESS = Perm::SavePreferences << kPermFlagOffset,
     MF_REQ_PRINTER_ACCESS = Perm::PrinterAccess << kPermFlagOffset,
@@ -170,6 +169,16 @@ static int menusNoTranslate[] = {
     CmdZoom25,
     CmdZoom12_5,
     CmdZoom8_33,
+};
+
+static int menusNeedInternetAccess[] = {
+    CmdCheckUpdate,
+    CmdTranslateSelectionWithGoogle,
+    CmdTranslateSelectionWithDeepL,
+    CmdSearchSelectionWithGoogle,
+    CmdSearchSelectionWithBing,
+    CmdHelpVisitWebsite,
+    CmdHelpOpenManualInBrowser,
 };
 // clang-format on
 
@@ -334,10 +343,10 @@ MenuDef menuDefFavorites[] = {
 
 //[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               CmdHelpVisitWebsite,          MF_REQ_DISK_ACCESS },
-    { _TRN("&Manual"),                      CmdHelpOpenManualInBrowser,   MF_REQ_DISK_ACCESS },
-    { _TRN("Check for &Updates"),           CmdCheckUpdate,               MF_REQ_INET_ACCESS },
-    { kMenuSeparator,                             0,                            MF_REQ_DISK_ACCESS },
+    { _TRN("Visit &Website"),               CmdHelpVisitWebsite,          0 },
+    { _TRN("&Manual"),                      CmdHelpOpenManualInBrowser,   0 },
+    { _TRN("Check for &Updates"),           CmdCheckUpdate,               0 },
+    { kMenuSeparator,                       0,                            MF_REQ_DISK_ACCESS },
     { _TRN("&About"),                       CmdHelpAbout,                 0 },
     { 0, 0, 0 },
 };
@@ -358,10 +367,10 @@ static MenuDef menuDefDebug[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     MF_REQ_ALLOW_COPY },
     { 0, 0, 0 },
 };
@@ -370,10 +379,10 @@ static MenuDef menuDefSelection[] = {
 //[ ACCESSKEY_GROUP Menu (Selection)
 static MenuDef menuDefMainSelection[] = {
     { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                 MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     MF_REQ_ALLOW_COPY },
     { 0, 0, 0 },
 };
@@ -456,6 +465,13 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             break;
         }
         i++;
+
+        if (!HasPermission(Perm::InternetAccess)) {
+            bool skip = IsInMenuIdList((int)md.idOrSubmenu, menusNeedInternetAccess, dimof(menusNeedInternetAccess));
+            if (skip) {
+                continue;
+            }
+        }
 
         if (!HasPermission((Perm)(md.flags >> kPermFlagOffset))) {
             continue;
