@@ -132,7 +132,7 @@ static ExternalViewerInfo* FindExternalViewerInfoByCmd(int cmd) {
 }
 
 static bool CanViewExternally(TabInfo* tab) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return false;
     }
     // if tab is nullptr, we're queried for the
@@ -336,7 +336,7 @@ bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
 }
 
 bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
-    if (!HasPermission(Perm_DiskAccess) || !tab || !file::Exists(tab->filePath)) {
+    if (!HasPermission(Perm::DiskAccess) || !tab || !file::Exists(tab->filePath)) {
         return false;
     }
 

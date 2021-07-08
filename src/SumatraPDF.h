@@ -29,26 +29,48 @@
 #define EBOOK_LAYOUT_TIMER_ID 7
 
 // permissions that can be revoked through sumatrapdfrestrict.ini or the -restrict command line flag
-enum {
+enum class Perm : uint {
     // enables Update checks, crash report submitting and hyperlinks
-    Perm_InternetAccess = 1 << 0,
+    InternetAccess = 1 << 0,
     // enables opening and saving documents and launching external viewers
-    Perm_DiskAccess = 1 << 1,
+    DiskAccess = 1 << 1,
     // enables persistence of preferences to disk (includes the Frequently Read page and Favorites)
-    Perm_SavePreferences = 1 << 2,
+    SavePreferences = 1 << 2,
     // enables setting as default viewer
-    Perm_RegistryAccess = 1 << 3,
+    RegistryAccess = 1 << 3,
     // enables printing
-    Perm_PrinterAccess = 1 << 4,
+    PrinterAccess = 1 << 4,
     // enables image/text selections and selection copying (if permitted by the document)
-    Perm_CopySelection = 1 << 5,
+    CopySelection = 1 << 5,
     // enables fullscreen and presentation view modes
-    Perm_FullscreenAccess = 1 << 6,
+    FullscreenAccess = 1 << 6,
     // enables all of the above
-    Perm_All = 0x0FFFFFF,
+    All = 0x0FFFFFF,
     // set if either sumatrapdfrestrict.ini or the -restrict command line flag is present
-    Perm_RestrictedUse = 0x1000000,
+    RestrictedUse = 0x1000000,
 };
+
+inline constexpr Perm operator|(Perm lhs, Perm rhs) {
+    using T = std::underlying_type_t<Perm>;
+    return static_cast<Perm>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+
+inline constexpr Perm operator&(Perm lhs, Perm rhs) {
+    using T = std::underlying_type_t<Perm>;
+    return static_cast<Perm>(static_cast<T>(lhs) & static_cast<T>(rhs));
+}
+
+inline constexpr Perm operator<<(Perm lhs, uint rhs) {
+    using T = std::underlying_type_t<Perm>;
+    return static_cast<Perm>(static_cast<T>(lhs) << static_cast<T>(rhs));
+}
+
+inline constexpr Perm operator~(Perm lhs) {
+    using T = std::underlying_type_t<Perm>;
+    T v = static_cast<T>(lhs);
+    v = ~v;
+    return static_cast<Perm>(v);
+}
 
 enum MenuToolbarFlags {
     MF_NO_TRANSLATE = 1 << 0,
@@ -56,12 +78,12 @@ enum MenuToolbarFlags {
     MF_NOT_FOR_EBOOK_UI = 1 << 2,
     MF_CBX_ONLY = 1 << 3,
 #define PERM_FLAG_OFFSET 7
-    MF_REQ_INET_ACCESS = Perm_InternetAccess << PERM_FLAG_OFFSET,
-    MF_REQ_DISK_ACCESS = Perm_DiskAccess << PERM_FLAG_OFFSET,
-    MF_REQ_PREF_ACCESS = Perm_SavePreferences << PERM_FLAG_OFFSET,
-    MF_REQ_PRINTER_ACCESS = Perm_PrinterAccess << PERM_FLAG_OFFSET,
-    MF_REQ_ALLOW_COPY = Perm_CopySelection << PERM_FLAG_OFFSET,
-    MF_REQ_FULLSCREEN = Perm_FullscreenAccess << PERM_FLAG_OFFSET,
+    MF_REQ_INET_ACCESS = Perm::InternetAccess << PERM_FLAG_OFFSET,
+    MF_REQ_DISK_ACCESS = Perm::DiskAccess << PERM_FLAG_OFFSET,
+    MF_REQ_PREF_ACCESS = Perm::SavePreferences << PERM_FLAG_OFFSET,
+    MF_REQ_PRINTER_ACCESS = Perm::PrinterAccess << PERM_FLAG_OFFSET,
+    MF_REQ_ALLOW_COPY = Perm::CopySelection << PERM_FLAG_OFFSET,
+    MF_REQ_FULLSCREEN = Perm::FullscreenAccess << PERM_FLAG_OFFSET,
 };
 
 /* styling for About/Properties windows */
@@ -100,8 +122,8 @@ extern bool gCrashOnOpen;
 #define gPluginMode (gPluginURL != nullptr)
 
 void InitializePolicies(bool restrict);
-void RestrictPolicies(int revokePermission);
-bool HasPermission(int permission);
+void RestrictPolicies(Perm revokePermission);
+bool HasPermission(Perm permission);
 bool IsUIRightToLeft();
 bool SumatraLaunchBrowser(const WCHAR* url);
 bool OpenFileExternally(const WCHAR* path);

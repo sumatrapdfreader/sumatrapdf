@@ -456,7 +456,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     // - not having CopySelection permission forces dragging
     bool isShift = IsShiftPressed();
     bool isCtrl = IsCtrlPressed();
-    bool canCopy = HasPermission(Perm_CopySelection);
+    bool canCopy = HasPermission(Perm::CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
     Annotation* annot = win->annotationOnLastButtonDown;
     if (annot || !canCopy || (isShift || !isOverText) && !isCtrl) {

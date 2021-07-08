@@ -329,7 +329,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
             continue;
         }
 
-        if (!HasPermission(md.flags >> PERM_FLAG_OFFSET)) {
+        if (!HasPermission((Perm)(md.flags >> PERM_FLAG_OFFSET))) {
             continue;
         }
         if (str::Eq(md.title, SEP_ITEM)) {
@@ -371,7 +371,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
 
@@ -393,7 +393,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
     if (0 == gGlobalPrefs->externalViewers->size()) {
         return;
     }
-    if (!HasPermission(Perm_DiskAccess) || (filePath && !file::Exists(filePath))) {
+    if (!HasPermission(Perm::DiskAccess) || (filePath && !file::Exists(filePath))) {
         return;
     }
 
@@ -664,7 +664,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 }
 
 void OnAboutContextMenu(WindowInfo* win, int x, int y) {
-    if (!HasPermission(Perm_SavePreferences | Perm_DiskAccess) || !gGlobalPrefs->rememberOpenedFiles ||
+    if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !gGlobalPrefs->rememberOpenedFiles ||
         !gGlobalPrefs->showStartPage) {
         return;
     }
@@ -1312,7 +1312,7 @@ HMENU BuildMenu(WindowInfo* win) {
     }
 
     // TODO: implement Favorites for ebooks
-    if (HasPermission(Perm_SavePreferences) && !win->AsEbook()) {
+    if (HasPermission(Perm::SavePreferences) && !win->AsEbook()) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
         m = BuildMenuFromMenuDef(menuDefFavorites, CreateMenu());

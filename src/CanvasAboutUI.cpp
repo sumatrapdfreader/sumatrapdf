@@ -59,7 +59,7 @@ static void OnPaintAbout(WindowInfo* win) {
 
     auto txtCol = GetAppColor(AppColor::MainWindowText);
     auto bgCol = GetAppColor(AppColor::MainWindowBg);
-    if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
+    if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
         gGlobalPrefs->showStartPage) {
         DrawStartPage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);
     } else {

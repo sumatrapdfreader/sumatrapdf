@@ -12,6 +12,8 @@ add selection search / translation with Google, Bing and DeepL (for #1280)
 
 add top level Selection menu (same as context menu) (for #1280)
 
+convert enum Perm_* to enum class Perm
+
 2021-07-06 Tue
 
 don't ask to save unsaved annotations in stress testing

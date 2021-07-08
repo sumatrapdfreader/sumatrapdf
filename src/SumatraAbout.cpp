@@ -315,7 +315,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
     SelectObject(hdc, penLinkLine);
     linkInfo.Reset();
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
+        bool hasUrl = HasPermission(Perm::DiskAccess) && el->url;
         if (hasUrl) {
             col = GetAppColor(AppColor::MainWindowLink);
         } else {
@@ -468,7 +468,7 @@ static void CopyAboutInfoToClipboard([[maybe_unused]] HWND hwnd) {
 }
 
 const WCHAR* GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo* info) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return nullptr;
     }
 
@@ -615,7 +615,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
     Rect rc = ClientRect(win->hwndCanvas);
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
-    if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
+    if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
         Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
         win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }

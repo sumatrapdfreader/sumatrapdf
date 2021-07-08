@@ -417,7 +417,7 @@ void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
 
 // returns true if the double-click was handled and false if it wasn't
 bool OnInverseSearch(WindowInfo* win, int x, int y) {
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
+    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return false;
     }
     TabInfo* tab = win->currentTab;

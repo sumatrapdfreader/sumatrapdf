@@ -507,7 +507,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     Vec<PRINTPAGERANGE> ranges;
     PRINTER_INFO_2W printerInfo{};
 
-    if (!HasPermission(Perm_PrinterAccess)) {
+    if (!HasPermission(Perm::PrinterAccess)) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -517,7 +517,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     if (win->AsChm()) {
         // the Print dialog allows access to the file system, so fall back
         // to printing the entire document without dialog if that isn't desired
-        bool showUI = HasPermission(Perm_DiskAccess);
+        bool showUI = HasPermission(Perm::DiskAccess);
         win->AsChm()->PrintCurrentPage(showUI);
         return;
     }
@@ -551,7 +551,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
 
     // the Print dialog allows access to the file system, so fall back
     // to printing the entire document without dialog if that isn't desired
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         PrintFile(dm->GetEngine());
         return;
     }
@@ -911,7 +911,7 @@ static void SetPrinterCustomPaperSize(EngineBase* engine, LPDEVMODE devMode) {
 bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
     LONG ret;
-    if (!HasPermission(Perm_PrinterAccess)) {
+    if (!HasPermission(Perm::PrinterAccess)) {
         return false;
     }
 

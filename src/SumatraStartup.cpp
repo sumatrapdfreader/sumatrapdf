@@ -350,10 +350,10 @@ static bool SetupPluginMode(Flags& i) {
     }
 
     // don't save preferences for plugin windows (and don't allow fullscreen mode)
-    // TODO: Perm_DiskAccess is required for saving viewed files and printing and
-    //       Perm_InternetAccess is required for crash reports
+    // TODO: Perm::DiskAccess is required for saving viewed files and printing and
+    //       Perm::InternetAccess is required for crash reports
     // (they can still be disabled through sumatrapdfrestrict.ini or -restrict)
-    RestrictPolicies(Perm_SavePreferences | Perm_FullscreenAccess);
+    RestrictPolicies(Perm::SavePreferences | Perm::FullscreenAccess);
 
     i.reuseDdeInstance = i.exitWhenDone = false;
     gGlobalPrefs->reuseInstance = false;
@@ -472,7 +472,7 @@ Error:
 // Registering happens either through the Installer or the Options dialog;
 // here we just make sure that we're still registered
 static bool RegisterForPdfExtentions(HWND hwnd) {
-    if (IsRunningInPortableMode() || !HasPermission(Perm_RegistryAccess) || gPluginMode) {
+    if (IsRunningInPortableMode() || !HasPermission(Perm::RegistryAccess) || gPluginMode) {
         return false;
     }
 
@@ -1117,7 +1117,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     if (i.stressTestPath) {
         // don't save file history and preference changes
-        RestrictPolicies(Perm_SavePreferences);
+        RestrictPolicies(Perm::SavePreferences);
         RebuildMenuBarForWindow(win);
         StartStressTest(&i, win);
         fastExit = true;
@@ -1132,7 +1132,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         gFileExistenceChecker = new FileExistenceChecker();
         gFileExistenceChecker->Start();
     }
-    // call this once it's clear whether Perm_SavePreferences has been granted
+    // call this once it's clear whether Perm::SavePreferences has been granted
     prefs::RegisterForFileChanges();
 
     // Change current directory for 2 reasons:

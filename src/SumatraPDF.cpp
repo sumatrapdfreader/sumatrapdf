@@ -164,10 +164,10 @@ bool gCrashOnOpen = false;
 // in restricted mode, some features can be disabled (such as
 // opening files, printing, following URLs), so that SumatraPDF
 // can be used as a PDF reader on locked down systems
-static int gPolicyRestrictions = Perm_RestrictedUse;
+static Perm gPolicyRestrictions = Perm::RestrictedUse;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
-// if gPolicyRestrictions doesn't contain Perm_DiskAccess)
+// if gPolicyRestrictions doesn't contain Perm::DiskAccess)
 static WStrVec gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
@@ -192,7 +192,7 @@ void SetCurrentLang(const char* langCode) {
 
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
-    CrashIf(gPolicyRestrictions != Perm_RestrictedUse);
+    CrashIf(gPolicyRestrictions != Perm::RestrictedUse);
     CrashIf(gAllowedLinkProtocols.size() != 0 || gAllowedFileTypes.size() != 0);
 
     // the -restrict command line flag overrides any sumatrapdfrestrict.ini configuration
@@ -205,7 +205,7 @@ void InitializePolicies(bool restrict) {
     // (if the file isn't there, everything is allowed)
     AutoFreeWstr restrictPath(path::GetPathOfFileInAppDir(RESTRICTIONS_FILE_NAME));
     if (!file::Exists(restrictPath)) {
-        gPolicyRestrictions = Perm_All;
+        gPolicyRestrictions = Perm::All;
         gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
         gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
         return;
@@ -221,12 +221,12 @@ void InitializePolicies(bool restrict) {
 
     static struct {
         const char* name;
-        int perm;
+        Perm perm;
     } policies[] = {
-        {"InternetAccess", Perm_InternetAccess},     {"DiskAccess", Perm_DiskAccess},
-        {"SavePreferences", Perm_SavePreferences},   {"RegistryAccess", Perm_RegistryAccess},
-        {"PrinterAccess", Perm_PrinterAccess},       {"CopySelection", Perm_CopySelection},
-        {"FullscreenAccess", Perm_FullscreenAccess},
+        {"InternetAccess", Perm::InternetAccess},     {"DiskAccess", Perm::DiskAccess},
+        {"SavePreferences", Perm::SavePreferences},   {"RegistryAccess", Perm::RegistryAccess},
+        {"PrinterAccess", Perm::PrinterAccess},       {"CopySelection", Perm::CopySelection},
+        {"FullscreenAccess", Perm::FullscreenAccess},
     };
 
     // enable policies as indicated in sumatrapdfrestrict.ini
@@ -238,7 +238,7 @@ void InitializePolicies(bool restrict) {
     }
 
     // determine the list of allowed link protocols and perceived file types
-    if ((gPolicyRestrictions & Perm_DiskAccess)) {
+    if ((gPolicyRestrictions & Perm::DiskAccess) != (Perm)0) {
         const char* value;
         if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
             AutoFreeWstr protocols = strconv::Utf8ToWstr(value);
@@ -255,11 +255,11 @@ void InitializePolicies(bool restrict) {
     }
 }
 
-void RestrictPolicies(int revokePermission) {
-    gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~revokePermission;
+void RestrictPolicies(Perm revokePermission) {
+    gPolicyRestrictions = (gPolicyRestrictions | Perm::RestrictedUse) & ~revokePermission;
 }
 
-bool HasPermission(int permission) {
+bool HasPermission(Perm permission) {
     return (permission & gPolicyRestrictions) == permission;
 }
 
@@ -282,7 +282,7 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
         return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return false;
     }
 
@@ -302,7 +302,7 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
 // lets the shell open a file of any supported perceived type
 // in the default application for opening such files
 bool OpenFileExternally(const WCHAR* path) {
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
+    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return false;
     }
 
@@ -591,7 +591,7 @@ void RebuildMenuBarForWindow(WindowInfo* win) {
 
 static bool ShouldSaveThumbnail(DisplayState& ds) {
     // don't create thumbnails if we won't be needing them at all
-    if (!HasPermission(Perm_SavePreferences)) {
+    if (!HasPermission(Perm::SavePreferences)) {
         return false;
     }
 
@@ -1161,7 +1161,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
         win->AsEbook()->StartLayouting(state ? state->reparseIdx : 0, displayMode);
     }
 
-    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == kindEnginePdf) {
+    if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEnginePdf) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
@@ -1409,7 +1409,7 @@ static WindowInfo* CreateWindowInfo() {
     CreateToolbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
-    if (HasPermission(Perm_DiskAccess) && !gPluginMode) {
+    if (HasPermission(Perm::DiskAccess) && !gPluginMode) {
         DragAcceptFiles(win->hwndCanvas, TRUE);
     }
 
@@ -1729,7 +1729,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    if (HasPermission(Perm_DiskAccess) && !gPluginMode && !IsStressTesting()) {
+    if (HasPermission(Perm::DiskAccess) && !gPluginMode && !IsStressTesting()) {
         SHAddToRecentDocs(SHARD_PATH, fullPath);
     }
 
@@ -1906,7 +1906,7 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
 }
 
 void AssociateExeWithPdfExtension() {
-    if (!HasPermission(Perm_RegistryAccess)) {
+    if (!HasPermission(Perm::RegistryAccess)) {
         return;
     }
 
@@ -2022,7 +2022,7 @@ static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpRsp* rsp, bool autoCheck
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
-    if (!HasPermission(Perm_InternetAccess)) {
+    if (!HasPermission(Perm::InternetAccess)) {
         return;
     }
 
@@ -2030,7 +2030,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
     if (autoCheck) {
         // don't check if the timestamp or version to skip can't be updated
         // (mainly in plugin mode, stress testing and restricted settings)
-        if (!HasPermission(Perm_SavePreferences)) {
+        if (!HasPermission(Perm::SavePreferences)) {
             return;
         }
 
@@ -2633,7 +2633,7 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
 }
 
 static void OnMenuSaveAs(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -2823,7 +2823,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 }
 
 static void OnMenuShowInFolder(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -2844,7 +2844,7 @@ static void OnMenuShowInFolder(WindowInfo* win) {
 }
 
 static void OnMenuRenameFile(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -2922,7 +2922,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
 }
 
 static void OnMenuSaveBookmark(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
+    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -3099,7 +3099,7 @@ static void OnMenuOpenFolder(WindowInfo* win) {
 }
 
 static void OnMenuOpen(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
 
@@ -3204,7 +3204,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     if (win->IsAboutWindow()) {
         return;
     }
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
+    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return;
     }
 
@@ -3315,7 +3315,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
     }
 
     // ToC and Favorites sidebars at the left
-    bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && HasPermission(Perm_DiskAccess);
+    bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && HasPermission(Perm::DiskAccess);
     bool tocVisible = win->tocVisible;
     if (tocVisible || showFavorites) {
         Size toc = ClientRect(win->hwndTocBox).Size();
@@ -3441,7 +3441,7 @@ static void OnMenuViewShowHideScrollbars() {
 }
 
 static void OnMenuAdvancedOptions() {
-    if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences)) {
+    if (!HasPermission(Perm::DiskAccess) || !HasPermission(Perm::SavePreferences)) {
         return;
     }
 
@@ -3452,7 +3452,7 @@ static void OnMenuAdvancedOptions() {
 }
 
 static void OnMenuOptions(HWND hwnd) {
-    if (!HasPermission(Perm_SavePreferences)) {
+    if (!HasPermission(Perm::SavePreferences)) {
         return;
     }
 
@@ -3583,7 +3583,7 @@ static void OnMenuGoToPage(WindowInfo* win) {
 }
 
 void EnterFullScreen(WindowInfo* win, bool presentation) {
-    if (!HasPermission(Perm_FullscreenAccess) || gPluginMode) {
+    if (!HasPermission(Perm::FullscreenAccess) || gPluginMode) {
         return;
     }
 
@@ -4299,7 +4299,7 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
 }
 
 void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) {
-    if (gPluginMode || !HasPermission(Perm_DiskAccess)) {
+    if (gPluginMode || !HasPermission(Perm::DiskAccess)) {
         showFavorites = false;
     }
 
@@ -4459,7 +4459,7 @@ static str::WStr URLEncode(const WCHAR* s) {
 }
 
 static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
-    if (!tab || !HasPermission(Perm_InternetAccess) || !HasPermission(Perm_CopySelection)) {
+    if (!tab || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
     }
 
@@ -4491,7 +4491,7 @@ static void CopySelectionInTabToClipboard(TabInfo* tab) {
         SendMessageW(GetFocus(), WM_COPY, 0, 0);
         return;
     }
-    if (!HasPermission(Perm_CopySelection)) {
+    if (!HasPermission(Perm::CopySelection)) {
         return;
     }
     if (tab->AsChm()) {
@@ -4520,7 +4520,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     // recently opened files and load the referenced file if it does
     if ((wmId >= CmdFileHistoryFirst) && (wmId <= CmdFileHistoryLast)) {
         DisplayState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
-        if (state && HasPermission(Perm_DiskAccess)) {
+        if (state && HasPermission(Perm::DiskAccess)) {
             LoadArgs args(state->filePath, win);
             LoadDocument(args);
         }
@@ -5209,7 +5209,7 @@ void GetProgramInfo(str::Str& s) {
 }
 
 bool CrashHandlerCanUseNet() {
-    return HasPermission(Perm_InternetAccess);
+    return HasPermission(Perm::InternetAccess);
 }
 
 void ShowCrashHandlerMessage() {
@@ -5218,8 +5218,8 @@ void ShowCrashHandlerMessage() {
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
-    if (!HasPermission(Perm_DiskAccess)) {
-        dbglog("ShowCrashHandlerMessage: skipping beacuse !HasPermission(Perm_DiskAccess)\n");
+    if (!HasPermission(Perm::DiskAccess)) {
+        dbglog("ShowCrashHandlerMessage: skipping beacuse !HasPermission(Perm::DiskAccess)\n");
         return;
     }
 

@@ -127,7 +127,7 @@ LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
 #endif
 
 bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::span<u8> data) {
-    if (!HasPermission(Perm_DiskAccess)) {
+    if (!HasPermission(Perm::DiskAccess)) {
         return false;
     }
 

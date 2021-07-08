@@ -334,7 +334,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
 }
 
 void OnSelectAll(WindowInfo* win, bool textOnly) {
-    if (!HasPermission(Perm_CopySelection)) {
+    if (!HasPermission(Perm::CopySelection)) {
         return;
     }
 

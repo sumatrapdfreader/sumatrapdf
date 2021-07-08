@@ -185,7 +185,7 @@ static void RememberSessionState() {
 // the list of recently opened documents in sync)
 bool Save() {
     // don't save preferences without the proper permission
-    if (!HasPermission(Perm_SavePreferences)) {
+    if (!HasPermission(Perm::SavePreferences)) {
         return false;
     }
 
@@ -307,7 +307,7 @@ void schedulePrefsReload() {
 }
 
 void RegisterForFileChanges() {
-    if (!HasPermission(Perm_SavePreferences)) {
+    if (!HasPermission(Perm::SavePreferences)) {
         return;
     }
 
