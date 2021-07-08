@@ -26,10 +26,10 @@ class Favorites {
   public:
     Favorites() = default;
 
-    Favorite* GetByMenuId(int menuId, DisplayState** dsOut = nullptr);
+    Favorite* GetByMenuId(int menuId, FileState** dsOut = nullptr);
     void ResetMenuIds();
-    DisplayState* GetFavByFilePath(const WCHAR* filePath);
-    DisplayState* GetByFavorite(Favorite* fn);
+    FileState* GetFavByFilePath(const WCHAR* filePath);
+    FileState* GetByFavorite(Favorite* fn);
     bool IsPageInFavorites(const WCHAR* filePath, int pageNo);
     void AddOrReplace(const WCHAR* filePath, int pageNo, const WCHAR* name, const WCHAR* pageLabel = nullptr);
     void Remove(const WCHAR* filePath, int pageNo);

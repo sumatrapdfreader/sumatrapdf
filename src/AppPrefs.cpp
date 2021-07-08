@@ -109,7 +109,7 @@ bool Load() {
     gprefs->openCountWeek = GetWeekCount();
     if (weekDiff > 0) {
         // "age" openCount statistics (cut in in half after every week)
-        for (DisplayState* ds : *gprefs->fileStates) {
+        for (FileState* ds : *gprefs->fileStates) {
             ds->openCount >>= weekDiff;
         }
     }
@@ -157,7 +157,7 @@ static void RememberSessionState() {
         }
         SessionData* data = NewSessionData();
         for (TabInfo* tab : win->tabs) {
-            DisplayState* ds = NewDisplayState(tab->filePath);
+            FileState* ds = NewDisplayState(tab->filePath);
             if (tab->ctrl) {
                 tab->ctrl->GetDisplayState(ds);
             }
@@ -201,7 +201,7 @@ bool Save() {
     gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
     // update display mode and zoom fields from internal values
     str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
-    ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
+    ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
 
     AutoFreeWstr path = GetSettingsPath();
     DebugCrashIf(!path.data);

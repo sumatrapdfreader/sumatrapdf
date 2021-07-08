@@ -42,8 +42,8 @@ quits.
 
 // sorts the most often used files first
 static int cmpOpenCount(const void* a, const void* b) {
-    DisplayState* dsA = *(DisplayState**)a;
-    DisplayState* dsB = *(DisplayState**)b;
+    FileState* dsA = *(FileState**)a;
+    FileState* dsB = *(FileState**)b;
     // sort pinned documents before unpinned ones
     if (dsA->isPinned != dsB->isPinned) {
         return dsA->isPinned ? -1 : 1;
@@ -60,16 +60,16 @@ static int cmpOpenCount(const void* a, const void* b) {
     return dsA->index < dsB->index ? -1 : 1;
 }
 
-void FileHistory::Append(DisplayState* state) {
+void FileHistory::Append(FileState* state) {
     CrashIf(!state->filePath);
     states->Append(state);
 }
 
-void FileHistory::Remove(DisplayState* state) {
+void FileHistory::Remove(FileState* state) {
     states->Remove(state);
 }
 
-void FileHistory::UpdateStatesSource(Vec<DisplayState*>* states) {
+void FileHistory::UpdateStatesSource(Vec<FileState*>* states) {
     this->states = states;
 }
 
@@ -77,7 +77,7 @@ void FileHistory::Clear(bool keepFavorites) {
     if (!states) {
         return;
     }
-    Vec<DisplayState*> keep;
+    Vec<FileState*> keep;
     for (size_t i = 0; i < states->size(); i++) {
         if (keepFavorites && states->at(i)->favorites->size() > 0) {
             states->at(i)->openCount = 0;
@@ -89,14 +89,14 @@ void FileHistory::Clear(bool keepFavorites) {
     *states = keep;
 }
 
-DisplayState* FileHistory::Get(size_t index) const {
+FileState* FileHistory::Get(size_t index) const {
     if (index < states->size()) {
         return states->at(index);
     }
     return nullptr;
 }
 
-DisplayState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
+FileState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     for (size_t i = 0; i < states->size(); i++) {
         if (str::EqI(states->at(i)->filePath, filePath)) {
             if (idxOut) {
@@ -108,12 +108,12 @@ DisplayState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     return nullptr;
 }
 
-DisplayState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
+FileState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
     CrashIf(!filePath);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
-    DisplayState* state = Find(filePath, nullptr);
+    FileState* state = Find(filePath, nullptr);
     if (!state) {
         state = NewDisplayState(filePath);
         state->useDefaultState = true;
@@ -128,7 +128,7 @@ DisplayState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
 
 bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
     CrashIf(!filePath);
-    DisplayState* state = Find(filePath, nullptr);
+    FileState* state = Find(filePath, nullptr);
     if (!state) {
         return false;
     }
@@ -160,10 +160,10 @@ bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
 // by open count (which has a pre-multiplied recency factor)
 // and with all missing states filtered out
 // caller needs to delete the result (but not the contained states)
-void FileHistory::GetFrequencyOrder(Vec<DisplayState*>& list) const {
+void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
     CrashIf(list.size() > 0);
     size_t i = 0;
-    for (DisplayState* ds : *states) {
+    for (FileState* ds : *states) {
         ds->index = i++;
         if (!ds->isMissing || ds->isPinned) {
             list.Append(ds);
@@ -180,7 +180,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
     // information about the file to be remembered)
     int minOpenCount = 0;
     if (alwaysUseDefaultState) {
-        Vec<DisplayState*> frequencyList;
+        Vec<FileState*> frequencyList;
         GetFrequencyOrder(frequencyList);
         if (frequencyList.size() > FILE_HISTORY_MAX_RECENT) {
             minOpenCount = frequencyList.at(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
@@ -188,7 +188,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
     }
 
     for (size_t j = states->size(); j > 0; j--) {
-        DisplayState* state = states->at(j - 1);
+        FileState* state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
         if (state->isPinned || state->decryptionKey != nullptr || state->favorites->size() > 0) {

@@ -3,8 +3,8 @@
 
 extern GlobalPrefs* gGlobalPrefs;
 
-DisplayState* NewDisplayState(const WCHAR* filePath);
-void DeleteDisplayState(DisplayState* ds);
+FileState* NewDisplayState(const WCHAR* filePath);
+void DeleteDisplayState(FileState* ds);
 
 Favorite* NewFavorite(int pageNo, const WCHAR* name, const WCHAR* pageLabel);
 void DeleteFavorite(Favorite* fav);
@@ -14,5 +14,5 @@ std::span<u8> SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData);
 void DeleteGlobalPrefs(GlobalPrefs* gp);
 
 SessionData* NewSessionData();
-TabState* NewTabState(DisplayState* ds);
+TabState* NewTabState(FileState* ds);
 void ResetSessionState(Vec<SessionData*>* sessionData);

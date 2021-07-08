@@ -124,7 +124,7 @@ struct WindowInfo {
     HWND hwndFavBox{nullptr};
     LabelWithCloseWnd* favLabelWithClose{nullptr};
     TreeCtrl* favTreeCtrl{nullptr};
-    Vec<DisplayState*> expandedFavorites;
+    Vec<FileState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
     SplitterCtrl* sidebarSplitter{nullptr};

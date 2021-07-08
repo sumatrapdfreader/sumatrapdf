@@ -392,7 +392,7 @@ class HwndPasswordUI : public PasswordUI {
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
 WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
-    DisplayState* fileFromHistory = gFileHistory.Find(fileName, nullptr);
+    FileState* fileFromHistory = gFileHistory.Find(fileName, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         AutoFree fingerprint(str::MemToHex(fileDigest, 16));
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
@@ -463,7 +463,7 @@ void RememberDefaultWindowPosition(WindowInfo* win) {
     }
 }
 
-static void UpdateDisplayStateWindowRect(WindowInfo* win, DisplayState& ds, bool updateGlobal = true) {
+static void UpdateDisplayStateWindowRect(WindowInfo* win, FileState& ds, bool updateGlobal = true) {
     if (updateGlobal) {
         RememberDefaultWindowPosition(win);
     }
@@ -473,7 +473,7 @@ static void UpdateDisplayStateWindowRect(WindowInfo* win, DisplayState& ds, bool
     ds.sidebarDx = gGlobalPrefs->sidebarDx;
 }
 
-static void UpdateSidebarDisplayState(TabInfo* tab, DisplayState* ds) {
+static void UpdateSidebarDisplayState(TabInfo* tab, FileState* ds) {
     CrashIf(!tab);
     WindowInfo* win = tab->win;
     ds->showToc = tab->showToc;
@@ -491,7 +491,7 @@ void UpdateTabFileDisplayStateForTab(TabInfo* tab) {
     WindowInfo* win = tab->win;
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
-    DisplayState* ds = gFileHistory.Find(tab->filePath, nullptr);
+    FileState* ds = gFileHistory.Find(tab->filePath, nullptr);
     if (!ds) {
         return;
     }
@@ -589,14 +589,14 @@ void RebuildMenuBarForWindow(WindowInfo* win) {
     DestroyMenu(oldMenu);
 }
 
-static bool ShouldSaveThumbnail(DisplayState& ds) {
+static bool ShouldSaveThumbnail(FileState& ds) {
     // don't create thumbnails if we won't be needing them at all
     if (!HasPermission(Perm::SavePreferences)) {
         return false;
     }
 
     // don't create thumbnails for files that won't need them anytime soon
-    Vec<DisplayState*> list;
+    Vec<FileState*> list;
     gFileHistory.GetFrequencyOrder(list);
     int idx = list.Find(&ds);
     if (idx < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= idx) {
@@ -674,7 +674,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     // cppcheck-suppress memleak
 }
 
-static void CreateThumbnailForFile(WindowInfo* win, DisplayState& ds) {
+static void CreateThumbnailForFile(WindowInfo* win, FileState& ds) {
     if (!ShouldSaveThumbnail(ds)) {
         return;
     }
@@ -1023,7 +1023,7 @@ static bool showTocByDefault(const WCHAR* path) {
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, DisplayState* state) {
+static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileState* state) {
     WindowInfo* win = args.win;
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
@@ -1255,7 +1255,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         return;
     }
 
-    DisplayState* ds = NewDisplayState(tab->filePath);
+    FileState* ds = NewDisplayState(tab->filePath);
     tab->ctrl->GetDisplayState(ds);
     UpdateDisplayStateWindowRect(win, *ds);
     UpdateSidebarDisplayState(tab, ds);
@@ -1287,7 +1287,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
-        DisplayState* state = gFileHistory.Find(ds->filePath, nullptr);
+        FileState* state = gFileHistory.Find(ds->filePath, nullptr);
         if (state) {
             CreateThumbnailForFile(win, *state);
         }
@@ -1298,7 +1298,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         // we don't ask again at the next refresh
         AutoFree decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
-            DisplayState* state = gFileHistory.Find(ds->filePath, nullptr);
+            FileState* state = gFileHistory.Find(ds->filePath, nullptr);
             if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
                 free(state->decryptionKey);
                 state->decryptionKey = decryptionKey.Release();
@@ -1480,7 +1480,7 @@ void DeleteWindowInfo(WindowInfo* win) {
 }
 
 static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
-    DisplayState* ds = gFileHistory.Find(newPath, nullptr);
+    FileState* ds = gFileHistory.Find(newPath, nullptr);
     bool oldIsPinned = false;
     int oldOpenCount = 0;
     if (ds) {
@@ -1716,7 +1716,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->currentTab->filePath));
-        DisplayState* ds = gFileHistory.MarkFileLoaded(fullPath);
+        FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
         }
@@ -4519,7 +4519,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     // check if the menuId belongs to an entry in the list of
     // recently opened files and load the referenced file if it does
     if ((wmId >= CmdFileHistoryFirst) && (wmId <= CmdFileHistoryLast)) {
-        DisplayState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
+        FileState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
         if (state && HasPermission(Perm::DiskAccess)) {
             LoadArgs args(state->filePath, win);
             LoadDocument(args);

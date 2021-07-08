@@ -12,19 +12,19 @@
 
 struct FileHistory {
     // owned by gGlobalPrefs->fileStates
-    Vec<DisplayState*>* states = nullptr;
+    Vec<FileState*>* states = nullptr;
 
     FileHistory() = default;
     ~FileHistory() = default;
 
     void Clear(bool keepFavorites);
-    void Append(DisplayState* state);
-    void Remove(DisplayState* state);
-    DisplayState* Get(size_t index) const;
-    DisplayState* Find(const WCHAR* filePath, size_t* idxOut) const;
-    DisplayState* MarkFileLoaded(const WCHAR* filePath);
+    void Append(FileState* state);
+    void Remove(FileState* state);
+    FileState* Get(size_t index) const;
+    FileState* Find(const WCHAR* filePath, size_t* idxOut) const;
+    FileState* MarkFileLoaded(const WCHAR* filePath);
     bool MarkFileInexistent(const WCHAR* filePath, bool hide = false);
-    void GetFrequencyOrder(Vec<DisplayState*>& list) const;
+    void GetFrequencyOrder(Vec<FileState*>& list) const;
     void Purge(bool alwaysUseDefaultState = false);
-    void UpdateStatesSource(Vec<DisplayState*>* states);
+    void UpdateStatesSource(Vec<FileState*>* states);
 };

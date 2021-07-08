@@ -18,13 +18,13 @@
 
 GlobalPrefs* gGlobalPrefs = nullptr;
 
-DisplayState* NewDisplayState(const WCHAR* filePath) {
-    DisplayState* ds = (DisplayState*)DeserializeStruct(&gFileStateInfo, nullptr);
+FileState* NewDisplayState(const WCHAR* filePath) {
+    FileState* ds = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
     str::ReplacePtr(&ds->filePath, filePath);
     return ds;
 }
 
-void DeleteDisplayState(DisplayState* ds) {
+void DeleteDisplayState(FileState* ds) {
     delete ds->thumbnail;
     FreeStruct(&gFileStateInfo, ds);
 }
@@ -48,7 +48,7 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
 // prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
 std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
-        for (DisplayState* ds : *prefs->fileStates) {
+        for (FileState* ds : *prefs->fileStates) {
             ds->useDefaultState = true;
         }
         // prevent unnecessary settings from being written out
@@ -77,7 +77,7 @@ void DeleteGlobalPrefs(GlobalPrefs* gp) {
         return;
     }
 
-    for (DisplayState* ds : *gp->fileStates) {
+    for (FileState* ds : *gp->fileStates) {
         delete ds->thumbnail;
     }
     FreeStruct(&gGlobalPrefsInfo, gp);
@@ -87,7 +87,7 @@ SessionData* NewSessionData() {
     return (SessionData*)DeserializeStruct(&gSessionDataInfo, nullptr);
 }
 
-TabState* NewTabState(DisplayState* ds) {
+TabState* NewTabState(FileState* ds) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
     AutoFreeStr dsFilePathA = strconv::WstrToUtf8(ds->filePath);
     str::ReplacePtr(&state->filePath, dsFilePathA.Get());

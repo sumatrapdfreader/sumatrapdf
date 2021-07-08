@@ -207,7 +207,7 @@ bool DisplayModel::GetPresentationMode() const {
     return presentationMode;
 }
 
-void DisplayModel::GetDisplayState(DisplayState* ds) {
+void DisplayModel::GetDisplayState(FileState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, engine->FileName())) {
         str::ReplacePtr(&ds->filePath, engine->FileName());
     }

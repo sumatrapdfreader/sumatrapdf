@@ -1,7 +1,7 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-typedef struct FileState DisplayState;
+struct FileState;
 
 enum class DisplayMode {
     // automatic means: the continuous form of single page, facing or
@@ -34,4 +34,4 @@ bool IsValidZoom(float zoomLevel);
 const char* DisplayModeToString(DisplayMode mode);
 DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal);
 float ZoomFromString(const char* s, float defVal);
-void ZoomToString(char** dst, float zoom, DisplayState* stateForIssue2140 = nullptr);
+void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140);

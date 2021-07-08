@@ -582,7 +582,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
     return newZoom;
 }
 
-void ChmModel::GetDisplayState(DisplayState* ds) {
+void ChmModel::GetDisplayState(FileState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, fileName)) {
         str::ReplacePtr(&ds->filePath, fileName);
     }

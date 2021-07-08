@@ -73,7 +73,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
-    Vec<DisplayState*> list;
+    Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.size() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
         AutoFreeWstr bmpPath(GetThumbnailPath(list.at(i)->filePath));
@@ -144,7 +144,7 @@ static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
     return rendered;
 }
 
-bool LoadThumbnail(DisplayState& ds) {
+bool LoadThumbnail(FileState& ds) {
     delete ds.thumbnail;
     ds.thumbnail = nullptr;
 
@@ -163,7 +163,7 @@ bool LoadThumbnail(DisplayState& ds) {
     return true;
 }
 
-bool HasThumbnail(DisplayState& ds) {
+bool HasThumbnail(FileState& ds) {
     if (!ds.thumbnail && !LoadThumbnail(ds)) {
         return false;
     }
@@ -183,7 +183,7 @@ bool HasThumbnail(DisplayState& ds) {
     return ds.thumbnail != nullptr;
 }
 
-void SetThumbnail(DisplayState* ds, RenderedBitmap* bmp) {
+void SetThumbnail(FileState* ds, RenderedBitmap* bmp) {
     CrashIf(bmp && bmp->Size().IsEmpty());
     if (!ds || !bmp || bmp->Size().IsEmpty()) {
         delete bmp;
@@ -194,7 +194,7 @@ void SetThumbnail(DisplayState* ds, RenderedBitmap* bmp) {
     SaveThumbnail(*ds);
 }
 
-void SaveThumbnail(DisplayState& ds) {
+void SaveThumbnail(FileState& ds) {
     if (!ds.thumbnail) {
         return;
     }
@@ -212,7 +212,7 @@ void SaveThumbnail(DisplayState& ds) {
     }
 }
 
-void RemoveThumbnail(DisplayState& ds) {
+void RemoveThumbnail(FileState& ds) {
     if (!HasThumbnail(ds)) {
         return;
     }

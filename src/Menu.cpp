@@ -377,7 +377,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
 
     int i;
     for (i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
-        DisplayState* state = gFileHistory.Get(i);
+        FileState* state = gFileHistory.Get(i);
         if (!state || state->isMissing) {
             break;
         }
@@ -675,7 +675,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    DisplayState* state = gFileHistory.Find(filePath, nullptr);
+    FileState* state = gFileHistory.Find(filePath, nullptr);
     CrashIf(!state);
     if (!state) {
         return;

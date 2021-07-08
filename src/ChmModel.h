@@ -37,7 +37,7 @@ struct ChmModel : Controller {
     void ScrollToLink(PageDestination* link) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 
-    void GetDisplayState(DisplayState* ds) override;
+    void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
     void CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) override;
 

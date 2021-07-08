@@ -63,7 +63,7 @@ struct EbookController : Controller {
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 
-    void GetDisplayState(DisplayState* ds) override;
+    void GetDisplayState(FileState* ds) override;
     void CreateThumbnail(Size size, const onBitmapRenderedCb&) override;
 
     bool GoToNextPage() override;
