@@ -62,7 +62,6 @@ enum {
     MF_REQ_PREF_ACCESS = Perm::SavePreferences << kPermFlagOffset,
     MF_REQ_PRINTER_ACCESS = Perm::PrinterAccess << kPermFlagOffset,
     MF_REQ_ALLOW_COPY = Perm::CopySelection << kPermFlagOffset,
-    MF_REQ_FULLSCREEN = Perm::FullscreenAccess << kPermFlagOffset,
 };
 
 struct BuildMenuCtx {
@@ -107,92 +106,6 @@ static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are 
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
 // clang-format off
-// those menu items will be disabled if no document is opened, enabled otherwise
-static int menusToDisableIfNoDocument[] = {
-    CmdViewRotateLeft,
-    CmdViewRotateRight,
-    CmdGoToNextPage,
-    CmdGoToPrevPage,
-    CmdGoToFirstPage,
-    CmdGoToLastPage,
-    CmdGoToNavBack,
-    CmdGoToNavForward,
-    CmdGoToPage,
-    CmdFindFirst,
-    CmdSaveAs,
-    CmdSaveAsBookmark,
-    CmdSendByEmail,
-    CmdSelectAll,
-    CmdProperties,
-    CmdViewPresentationMode,
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithPdfXchange,
-    CmdRenameFile,
-    CmdShowInFolder,
-    CmdDebugAnnotations,
-    // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
-    // are removed instead of disabled (and can remain enabled
-    // for broken XPS/CHM documents)
-};
-
-static int menusToDisableIfDirectoryOrBrokenPDF[] = {
-    CmdRenameFile,
-    CmdSendByEmail,
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithPdfXchange,
-    CmdShowInFolder,
-};
-
-static int menusToDisableIfNoSelection[] = {
-    CmdCopySelection,
-    CmdTranslateSelectionWithDeepL,
-    CmdTranslateSelectionWithGoogle,
-    CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithGoogle,
-};
-
-static int menusNoTranslate[] = {
-    CmdFavoriteAdd,
-    CmdFavoriteDel,
-    CmdZoom6400,
-    CmdZoom3200,
-    CmdZoom1600,
-    CmdZoom800,
-    CmdZoom400,
-    CmdZoom200,
-    CmdZoom150,
-    CmdZoom125,
-    CmdZoom100,
-    CmdZoom50,
-    CmdZoom25,
-    CmdZoom12_5,
-    CmdZoom8_33,
-};
-
-static int menusNeedInternetAccess[] = {
-    CmdCheckUpdate,
-    CmdTranslateSelectionWithGoogle,
-    CmdTranslateSelectionWithDeepL,
-    CmdSearchSelectionWithGoogle,
-    CmdSearchSelectionWithBing,
-    CmdHelpVisitWebsite,
-    CmdHelpOpenManualInBrowser,
-};
-// clang-format on
-
-static bool IsInMenuIdList(int menuId, int* idsList, int n) {
-    for (int i = 0; i < n; i++) {
-        int id = idsList[i];
-        if (id == menuId) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// clang-format off
 MenuDef menuDefContextToc[] = {
     {_TRN("Expand All"),            CmdExpandAll,         0 },
     {_TRN("Collapse All"),          CmdCollapseAll,       0 },
@@ -205,7 +118,6 @@ MenuDef menuDefContextToc[] = {
     { 0, 0, 0 },
 };
 // clang-format on      
-
 
 // clang-format off
 MenuDef menuDefContextFav[] = {
@@ -266,9 +178,9 @@ static MenuDef menuDefView[] = {
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   CmdViewRotateLeft,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  CmdViewRotateRight,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { kMenuSeparator,                             0,                        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Pr&esentation\tF5"),            CmdViewPresentationMode,  MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("F&ullscreen\tF11"),             CmdViewFullScreen,        MF_REQ_FULLSCREEN },
-    { kMenuSeparator,                             0,                        MF_REQ_FULLSCREEN },
+    { _TRN("Pr&esentation\tF5"),            CmdViewPresentationMode,  MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("F&ullscreen\tF11"),             CmdViewFullScreen,        0 },
+    { kMenuSeparator,                             0,                  0 },
     { _TRN("Show Book&marks\tF12"),         CmdViewBookmarks,         0 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show Scr&ollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
@@ -452,6 +364,99 @@ static MenuDef menuDefContextStart[] = {
 //] ACCESSKEY_GROUP Context Menu (Start)
 // clang-format on
 
+// clang-format off
+// those menu items will be disabled if no document is opened, enabled otherwise
+static int menusToDisableIfNoDocument[] = {
+    CmdViewRotateLeft,
+    CmdViewRotateRight,
+    CmdGoToNextPage,
+    CmdGoToPrevPage,
+    CmdGoToFirstPage,
+    CmdGoToLastPage,
+    CmdGoToNavBack,
+    CmdGoToNavForward,
+    CmdGoToPage,
+    CmdFindFirst,
+    CmdSaveAs,
+    CmdSaveAsBookmark,
+    CmdSendByEmail,
+    CmdSelectAll,
+    CmdProperties,
+    CmdViewPresentationMode,
+    CmdOpenWithAcrobat,
+    CmdOpenWithFoxIt,
+    CmdOpenWithPdfXchange,
+    CmdRenameFile,
+    CmdShowInFolder,
+    CmdDebugAnnotations,
+    // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
+    // are removed instead of disabled (and can remain enabled
+    // for broken XPS/CHM documents)
+};
+
+static int menusToDisableIfDirectoryOrBrokenPDF[] = {
+    CmdRenameFile,
+    CmdSendByEmail,
+    CmdOpenWithAcrobat,
+    CmdOpenWithFoxIt,
+    CmdOpenWithPdfXchange,
+    CmdShowInFolder,
+};
+
+static int menusToDisableIfNoSelection[] = {
+    CmdCopySelection,
+    CmdTranslateSelectionWithDeepL,
+    CmdTranslateSelectionWithGoogle,
+    CmdSearchSelectionWithBing,
+    CmdSearchSelectionWithGoogle,
+};
+
+static int menusNoTranslate[] = {
+    CmdFavoriteAdd,
+    CmdFavoriteDel,
+    CmdZoom6400,
+    CmdZoom3200,
+    CmdZoom1600,
+    CmdZoom800,
+    CmdZoom400,
+    CmdZoom200,
+    CmdZoom150,
+    CmdZoom125,
+    CmdZoom100,
+    CmdZoom50,
+    CmdZoom25,
+    CmdZoom12_5,
+    CmdZoom8_33,
+};
+
+static int menusNeedInternetAccess[] = {
+    CmdCheckUpdate,
+    CmdTranslateSelectionWithGoogle,
+    CmdTranslateSelectionWithDeepL,
+    CmdSearchSelectionWithGoogle,
+    CmdSearchSelectionWithBing,
+    CmdHelpVisitWebsite,
+    CmdHelpOpenManualInBrowser,
+};
+
+static int menusRequireFullscreeenPerms[] = {
+    CmdViewPresentationMode,
+    CmdViewFullScreen,
+};
+// clang-format on
+
+static bool __menuIdInList(int menuId, int* idsList, int n) {
+    for (int i = 0; i < n; i++) {
+        int id = idsList[i];
+        if (id == menuId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+#define menuIdInList(name) __menuIdInList((int)md.idOrSubmenu, name, dimof(name))
+
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     CrashIf(!menu);
     bool wasSeparator = true;
@@ -467,7 +472,14 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         i++;
 
         if (!HasPermission(Perm::InternetAccess)) {
-            bool skip = IsInMenuIdList((int)md.idOrSubmenu, menusNeedInternetAccess, dimof(menusNeedInternetAccess));
+            bool skip = menuIdInList(menusNeedInternetAccess);
+            if (skip) {
+                continue;
+            }
+        }
+
+        if (!HasPermission(Perm::FullscreenAccess)) {
+            bool skip = menuIdInList(menusRequireFullscreeenPerms);
             if (skip) {
                 continue;
             }
@@ -518,8 +530,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             }
         }
 
-        int menuId = (int)md.idOrSubmenu;
-        bool noTranslate = isDebugMenu || IsInMenuIdList(menuId, menusNoTranslate, dimof(menusNoTranslate));
+        bool noTranslate = isDebugMenu || menuIdInList(menusNoTranslate);
         AutoFreeWstr tmp;
         const WCHAR* title = nullptr;
         if (noTranslate) {
