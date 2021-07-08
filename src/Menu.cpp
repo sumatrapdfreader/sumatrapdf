@@ -51,14 +51,13 @@ extern Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType anno
 
 constexpr int kPermFlagOffset = 9;
 enum {
-    MF_NO_TRANSLATE = 1 << 0,
+    MF_NEEDS_ANNOT_UNDER_CURSOR = 1 << 0,
     MF_NOT_FOR_CHM = 1 << 1,
     MF_NOT_FOR_EBOOK_UI = 1 << 2,
     MF_CBX_ONLY = 1 << 3,
     MF_NEEDS_CURSOR_ON_PAGE = 1 << 4, // cursor must be withing page boundaries
     MF_NEEDS_SELECTION = 1 << 5,      // user must have text selection active
     MF_NEEDS_ANNOTS = 1 << 6,         // engine needs to support annotations
-    MF_NEEDS_ANNOT_UNDER_CURSOR = 1 << 7,
     MF_REQ_INET_ACCESS = Perm::InternetAccess << kPermFlagOffset,
     MF_REQ_DISK_ACCESS = Perm::DiskAccess << kPermFlagOffset,
     MF_REQ_PREF_ACCESS = Perm::SavePreferences << kPermFlagOffset,
@@ -108,47 +107,92 @@ bool gShowDebugMenu = false;
 static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
-void MenuUpdateDisplayMode(WindowInfo* win) {
-    bool enabled = win->IsDocLoaded();
-    DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
-    if (enabled) {
-        displayMode = win->ctrl->GetDisplayMode();
-    }
+// clang-format off
+// those menu items will be disabled if no document is opened, enabled otherwise
+static int menusToDisableIfNoDocument[] = {
+    CmdViewRotateLeft,
+    CmdViewRotateRight,
+    CmdGoToNextPage,
+    CmdGoToPrevPage,
+    CmdGoToFirstPage,
+    CmdGoToLastPage,
+    CmdGoToNavBack,
+    CmdGoToNavForward,
+    CmdGoToPage,
+    CmdFindFirst,
+    CmdSaveAs,
+    CmdSaveAsBookmark,
+    CmdSendByEmail,
+    CmdSelectAll,
+    CmdProperties,
+    CmdViewPresentationMode,
+    CmdOpenWithAcrobat,
+    CmdOpenWithFoxIt,
+    CmdOpenWithPdfXchange,
+    CmdRenameFile,
+    CmdShowInFolder,
+    CmdDebugAnnotations,
+    // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
+    // are removed instead of disabled (and can remain enabled
+    // for broken XPS/CHM documents)
+};
 
-    for (int id = CmdViewLayoutFirst; id <= CmdViewLayoutLast; id++) {
-        win::menu::SetEnabled(win->menu, id, enabled);
-    }
+static int menusToDisableIfDirectoryOrBrokenPDF[] = {
+    CmdRenameFile,
+    CmdSendByEmail,
+    CmdOpenWithAcrobat,
+    CmdOpenWithFoxIt,
+    CmdOpenWithPdfXchange,
+    CmdShowInFolder,
+};
 
-    int id = 0;
-    if (IsSingle(displayMode)) {
-        id = CmdViewSinglePage;
-    } else if (IsFacing(displayMode)) {
-        id = CmdViewFacing;
-    } else if (IsBookView(displayMode)) {
-        id = CmdViewBook;
-    } else {
-        CrashIf(win->ctrl || DisplayMode::Automatic != displayMode);
-    }
+static int menusToDisableIfNoSelection[] = {
+    CmdCopySelection,
+    CmdTranslateSelectionWithDeepL,
+    CmdTranslateSelectionWithGoogle,
+    CmdSearchSelectionWithBing,
+    CmdSearchSelectionWithGoogle,
+};
 
-    CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
-    win::menu::SetChecked(win->menu, CmdViewContinuous, IsContinuous(displayMode));
+static int menusNoTranslate[] = {
+    CmdFavoriteAdd,
+    CmdFavoriteDel,
+    CmdZoom6400,
+    CmdZoom3200,
+    CmdZoom1600,
+    CmdZoom800,
+    CmdZoom400,
+    CmdZoom200,
+    CmdZoom150,
+    CmdZoom125,
+    CmdZoom100,
+    CmdZoom50,
+    CmdZoom25,
+    CmdZoom12_5,
+    CmdZoom8_33,
+};
+// clang-format on
 
-    if (win->currentTab && win->currentTab->GetEngineType() == kindEngineComicBooks) {
-        bool mangaMode = win->AsFixed()->GetDisplayR2L();
-        win::menu::SetChecked(win->menu, CmdViewMangaMode, mangaMode);
+static bool IsInMenuIdList(int menuId, int* idsList, int n) {
+    for (int i = 0; i < n; i++) {
+        int id = idsList[i];
+        if (id == menuId) {
+            return true;
+        }
     }
+    return false;
 }
 
 // clang-format off
 MenuDef menuDefContextToc[] = {
     {_TRN("Expand All"),            CmdExpandAll,         0 },
     {_TRN("Collapse All"),          CmdCollapseAll,       0 },
-    {kMenuSeparator,                CmdSeparatorEmbed,    MF_NO_TRANSLATE},
+    {kMenuSeparator,                CmdSeparatorEmbed,    0 },
     {_TRN("Open Embedded PDF"),     CmdOpenEmbeddedPDF,   0 },
     {_TRN("Save Embedded File..."), CmdSaveEmbeddedFile,  0 },
     // note: strings cannot be "" or else items are not there
-    {"add",                         CmdFavoriteAdd,       MF_NO_TRANSLATE},
-    {"del",                         CmdFavoriteDel,       MF_NO_TRANSLATE},
+    {"add",                         CmdFavoriteAdd,       0 },
+    {"del",                         CmdFavoriteDel,       0 },
     { 0, 0, 0 },
 };
 // clang-format on      
@@ -248,19 +292,19 @@ static MenuDef menuDefZoom[] = {
     { _TRN("Fit &Content\tCtrl+3"),         CmdZoomFitContent,       MF_NOT_FOR_CHM },
     { _TRN("Custom &Zoom...\tCtrl+Y"),      CmdZoomCustom,           0 },
     { kMenuSeparator,                             0,                       0 },
-    { "6400%",                              CmdZoom6400,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "3200%",                              CmdZoom3200,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "1600%",                              CmdZoom1600,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "800%",                               CmdZoom800,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "400%",                               CmdZoom400,              MF_NO_TRANSLATE },
-    { "200%",                               CmdZoom200,              MF_NO_TRANSLATE },
-    { "150%",                               CmdZoom150,              MF_NO_TRANSLATE },
-    { "125%",                               CmdZoom125,              MF_NO_TRANSLATE },
-    { "100%",                               CmdZoom100,              MF_NO_TRANSLATE },
-    { "50%",                                CmdZoom50,               MF_NO_TRANSLATE },
-    { "25%",                                CmdZoom25,               MF_NO_TRANSLATE },
-    { "12.5%",                              CmdZoom12_5,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "8.33%",                              CmdZoom8_33,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "6400%",                              CmdZoom6400,             MF_NOT_FOR_CHM },
+    { "3200%",                              CmdZoom3200,             MF_NOT_FOR_CHM },
+    { "1600%",                              CmdZoom1600,             MF_NOT_FOR_CHM },
+    { "800%",                               CmdZoom800,              MF_NOT_FOR_CHM },
+    { "400%",                               CmdZoom400,              0 },
+    { "200%",                               CmdZoom200,              0 },
+    { "150%",                               CmdZoom150,              0 },
+    { "125%",                               CmdZoom125,              0 },
+    { "100%",                               CmdZoom100,              0 },
+    { "50%",                                CmdZoom50,               0 },
+    { "25%",                                CmdZoom25,               0 },
+    { "12.5%",                              CmdZoom12_5,             MF_NOT_FOR_CHM },
+    { "8.33%",                              CmdZoom8_33,             MF_NOT_FOR_CHM },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Zoom Menu
@@ -301,14 +345,13 @@ static MenuDef menuDefHelp[] = {
 
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
-    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
-    { "Highlight links",                    CmdDebugShowLinks,        MF_NO_TRANSLATE },
-    { "Toggle ebook UI",                    CmdDebugEbookUI,          MF_NO_TRANSLATE },
-    { "Mui debug paint",                    CmdDebugMui,              MF_NO_TRANSLATE },
-    { "Annotation from Selection",          CmdDebugAnnotations,      MF_NO_TRANSLATE },
-    { "Download symbols",                   CmdDebugDownloadSymbols,  MF_NO_TRANSLATE },
-    { "Test app",                           CmdDebugTestApp,          MF_NO_TRANSLATE },
-    { "Show notification",                  CmdDebugShowNotif,        MF_NO_TRANSLATE },
+    { "Highlight links",                    CmdDebugShowLinks,        0 },
+    { "Toggle ebook UI",                    CmdDebugEbookUI,          0 },
+    { "Mui debug paint",                    CmdDebugMui,              0 },
+    { "Annotation from Selection",          CmdDebugAnnotations,      0 },
+    { "Download symbols",                   CmdDebugDownloadSymbols,  0 },
+    { "Test app",                           CmdDebugTestApp,          0 },
+    { "Show notification",                  CmdDebugShowNotif,        0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu
@@ -373,8 +416,8 @@ static MenuDef menuDefContext[] = {
     { _TRN("Copy Co&mment"),                    CmdCopyComment, MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                      CmdCopyImage, MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
-    { "add fav placeholder",                    CmdFavoriteAdd, MF_NO_TRANSLATE },
-    { "del fav placeholder",                    CmdFavoriteDel, MF_NO_TRANSLATE },
+    { "add fav placeholder",                    CmdFavoriteAdd, 0 },
+    { "del fav placeholder",                    CmdFavoriteDel, 0 },
     { _TRN("Show &Favorites"),                  CmdFavoriteToggle, 0 },
     { _TRN("Show &Bookmarks\tF12"),             CmdViewBookmarks, 0 },
     { _TRN("Show &Toolbar\tF8"),                CmdViewShowHideToolbar, MF_NOT_FOR_EBOOK_UI },
@@ -393,7 +436,7 @@ static MenuDef menuDefContext[] = {
 static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
     { _TRN("&Pin Document"),                CmdPinSelectedDocument,    MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { kMenuSeparator,                             0,                         MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { kMenuSeparator,                             0,                   MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { _TRN("&Remove From History"),         CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { 0, 0, 0 },
 };
@@ -404,6 +447,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     CrashIf(!menu);
     bool wasSeparator = true;
 
+    bool isDebugMenu = menuDefs == menuDefDebug;
     int i = 0;
     while (true) {
         MenuDef md = menuDefs[i];
@@ -458,7 +502,8 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             }
         }
 
-        bool noTranslate = MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE);
+        int menuId = (int)md.idOrSubmenu;
+        bool noTranslate = isDebugMenu || IsInMenuIdList(menuId, menusNoTranslate, dimof(menusNoTranslate));
         AutoFreeWstr tmp;
         const WCHAR* title = nullptr;
         if (noTranslate) {
@@ -472,6 +517,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
         if (isSubMenu) {
             MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
+            if (subMenuDef == menuDefDebug) {
+                noTranslate = true;
+            }
             HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);
             AppendMenuW(menu, MF_ENABLED | MF_POPUP, (UINT_PTR)subMenu, title);
             continue;
@@ -665,59 +713,42 @@ static bool IsFileCloseMenuEnabled() {
     return false;
 }
 
-// clang-format off
-// those menu items will be disabled if no document is opened, enabled otherwise
-static int menusToDisableIfNoDocument[] = {
-    CmdViewRotateLeft,
-    CmdViewRotateRight,
-    CmdGoToNextPage,
-    CmdGoToPrevPage,
-    CmdGoToFirstPage,
-    CmdGoToLastPage,
-    CmdGoToNavBack,
-    CmdGoToNavForward,
-    CmdGoToPage,
-    CmdFindFirst,
-    CmdSaveAs,
-    CmdSaveAsBookmark,
-    CmdSendByEmail,
-    CmdSelectAll,
-    CmdProperties,
-    CmdViewPresentationMode,
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithPdfXchange,
-    CmdRenameFile,
-    CmdShowInFolder,
-    CmdDebugAnnotations,
-    // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
-    // are removed instead of disabled (and can remain enabled
-    // for broken XPS/CHM documents)
-};
-
-static int menusToDisableIfDirectoryOrBrokenPDF[] = {
-    CmdRenameFile,
-    CmdSendByEmail,
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithPdfXchange,
-    CmdShowInFolder,
-};
-
-static int menusToDisableIfNoSelection[] = {
-    CmdCopySelection,
-    CmdTranslateSelectionWithDeepL,
-    CmdTranslateSelectionWithGoogle,
-    CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithGoogle,
-};
-// clang-format on
-
 static void SetMenuStateForSelection(TabInfo* tab, HMENU menu) {
     bool isTextSelected = tab && tab->win && tab->win->showSelection && tab->selectionOnPage;
     for (int i = 0; i < dimof(menusToDisableIfNoSelection); i++) {
         int id = menusToDisableIfNoSelection[i];
         win::menu::SetEnabled(menu, id, isTextSelected);
+    }
+}
+
+void MenuUpdateDisplayMode(WindowInfo* win) {
+    bool enabled = win->IsDocLoaded();
+    DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
+    if (enabled) {
+        displayMode = win->ctrl->GetDisplayMode();
+    }
+
+    for (int id = CmdViewLayoutFirst; id <= CmdViewLayoutLast; id++) {
+        win::menu::SetEnabled(win->menu, id, enabled);
+    }
+
+    int id = 0;
+    if (IsSingle(displayMode)) {
+        id = CmdViewSinglePage;
+    } else if (IsFacing(displayMode)) {
+        id = CmdViewFacing;
+    } else if (IsBookView(displayMode)) {
+        id = CmdViewBook;
+    } else {
+        CrashIf(win->ctrl || DisplayMode::Automatic != displayMode);
+    }
+
+    CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
+    win::menu::SetChecked(win->menu, CmdViewContinuous, IsContinuous(displayMode));
+
+    if (win->currentTab && win->currentTab->GetEngineType() == kindEngineComicBooks) {
+        bool mangaMode = win->AsFixed()->GetDisplayR2L();
+        win::menu::SetChecked(win->menu, CmdViewMangaMode, mangaMode);
     }
 }
 
