@@ -417,6 +417,16 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             continue;
         }
 
+        // prevent two consecutive separators
+        if (str::Eq(md.title, kMenuSeparator)) {
+            if (!wasSeparator) {
+                AppendMenuW(menu, MF_SEPARATOR, md.idOrSubmenu, nullptr);
+            }
+            wasSeparator = true;
+            continue;
+        }
+        wasSeparator = false;
+
         if (ctx) {
             bool notForChm = MF_NOT_FOR_CHM == (md.flags & MF_NOT_FOR_CHM);
             bool notForEbook = MF_NOT_FOR_EBOOK_UI == (md.flags & MF_NOT_FOR_EBOOK_UI);
@@ -449,34 +459,24 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         }
 
         bool noTranslate = MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE);
+        AutoFreeWstr tmp;
+        const WCHAR* title = nullptr;
+        if (noTranslate) {
+            tmp = strconv::Utf8ToWstr(md.title);
+            title = tmp.Get();
+        } else {
+            title = trans::GetTranslation(md.title);
+        }
 
-        // a bit hacky but works: if id it's a small number
-        // if submenu, it's a large number (a pointer)
-        if (md.idOrSubmenu > CmdLast + 1000) {
+        // hacky but works: small number is command id, large is submenu (a pointer)
+        bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
+        if (isSubMenu) {
             MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
             HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);
-            // TODO: support MF_NO_TRANSLATE
-            CrashIf(noTranslate);
-            const WCHAR* tmp = trans::GetTranslation(md.title);
-            AppendMenuW(menu, MF_ENABLED | MF_POPUP, (UINT_PTR)subMenu, tmp);
+            AppendMenuW(menu, MF_ENABLED | MF_POPUP, (UINT_PTR)subMenu, title);
             continue;
         }
-
-        if (str::Eq(md.title, kMenuSeparator)) {
-            // prevent two consecutive separators
-            if (!wasSeparator) {
-                AppendMenuW(menu, MF_SEPARATOR, md.idOrSubmenu, nullptr);
-            }
-            wasSeparator = true;
-        } else if (noTranslate) {
-            AutoFreeWstr tmp = strconv::Utf8ToWstr(md.title);
-            AppendMenuW(menu, MF_STRING, md.idOrSubmenu, tmp);
-            wasSeparator = false;
-        } else {
-            const WCHAR* tmp = trans::GetTranslation(md.title);
-            AppendMenuW(menu, MF_STRING, md.idOrSubmenu, tmp);
-            wasSeparator = false;
-        }
+        AppendMenuW(menu, MF_STRING, md.idOrSubmenu, title);
     }
 
     // TODO: remove trailing separator if there ever is one
@@ -596,7 +596,7 @@ int MenuIdFromVirtualZoom(float virtualZoom) {
     return CmdZoomCustom;
 }
 
-static float ZoomMenuItemToZoom(int menuItemId) {
+float ZoomMenuItemToZoom(int menuItemId) {
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
         if (menuItemId == gZoomMenuIds[i].itemId) {
             return gZoomMenuIds[i].zoom;
@@ -1072,42 +1072,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     delete pageEl;
 }
 
-/* Zoom document in window 'hwnd' to zoom level 'zoom'.
-   'zoom' is given as a floating-point number, 1.0 is 100%, 2.0 is 200% etc.
-*/
-void OnMenuZoom(WindowInfo* win, int menuId) {
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-
-    float zoom = ZoomMenuItemToZoom(menuId);
-    ZoomToSelection(win, zoom);
-}
-
-void OnMenuCustomZoom(WindowInfo* win) {
-    if (!win->IsDocLoaded() || win->AsEbook()) {
-        return;
-    }
-
-    float zoom = win->ctrl->GetZoomVirtual();
-    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom)) {
-        return;
-    }
-    ZoomToSelection(win, zoom);
-}
-
 static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
-    int filter = 0;
-    if (tab && tab->AsChm()) {
-        filter |= MF_NOT_FOR_CHM;
-    }
-    if (tab && tab->AsEbook()) {
-        filter |= MF_NOT_FOR_EBOOK_UI;
-    }
-    if (!tab || tab->GetEngineType() != kindEngineComicBooks) {
-        filter |= MF_CBX_ONLY;
-    }
-
     win::menu::Empty(menu);
     BuildMenuCtx buildCtx;
     FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
@@ -1257,10 +1222,8 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
     }
 }
 
-enum {
-    kMenuPaddingY = 2,
-    kMenuPaddingX = 2,
-};
+constexpr int kMenuPaddingY = 2;
+constexpr int kMenuPaddingX = 2;
 
 void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     if (ODT_MENU != mis->CtlType) {

@@ -3516,6 +3516,18 @@ static void OnMenuViewMangaMode(WindowInfo* win) {
     dm->SetScrollState(state);
 }
 
+/* Zoom document in window 'hwnd' to zoom level 'zoom'.
+   'zoom' is given as a floating-point number, 1.0 is 100%, 2.0 is 200% etc.
+*/
+static void OnMenuZoom(WindowInfo* win, int menuId) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+
+    float zoom = ZoomMenuItemToZoom(menuId);
+    ZoomToSelection(win, zoom);
+}
+
 static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuously) {
     if (!win->IsDocLoaded()) {
         return;
@@ -4506,6 +4518,18 @@ static void CopySelectionInTabToClipboard(TabInfo* tab) {
     if (tab->AsFixed()) {
         tab->win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
     }
+}
+
+static void OnMenuCustomZoom(WindowInfo* win) {
+    if (!win->IsDocLoaded() || win->AsEbook()) {
+        return;
+    }
+
+    float zoom = win->ctrl->GetZoomVirtual();
+    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom)) {
+        return;
+    }
+    ZoomToSelection(win, zoom);
 }
 
 static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
