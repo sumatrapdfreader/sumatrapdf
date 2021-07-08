@@ -145,9 +145,6 @@ static MenuDef menuDefView[] = {
     { _TRN("Show Book&marks\tF12"),         CmdViewBookmarks,         0 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show Scr&ollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Select &All\tCtrl+A"),          CmdSelectAll,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Copy Selection\tCtrl+C"),      CmdCopySelection,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP View Menu
@@ -249,10 +246,9 @@ static MenuDef menuDefContext[] = {
     { _TRN("Copy &Link Address"),           CmdCopyLinkTarget,        MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                CmdCopyComment,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  CmdCopyImage,             MF_REQ_ALLOW_COPY },
-    { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
-    { "add",                                CmdFavoriteAdd,           MF_NO_TRANSLATE   },
-    { "del",                                CmdFavoriteDel,           MF_NO_TRANSLATE   },
+    { "add fav placeholder",                CmdFavoriteAdd,           MF_NO_TRANSLATE   },
+    { "del fav placeholder",                CmdFavoriteDel,           MF_NO_TRANSLATE   },
     { _TRN("Show &Favorites"),              CmdFavoriteToggle,        0                 },
     { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
@@ -260,10 +256,6 @@ static MenuDef menuDefContext[] = {
     { _TRN("Save Annotations"),             CmdSaveAnnotations,       MF_REQ_DISK_ACCESS },
     { _TRN("Select Annotation in Editor"),  CmdSelectAnnotation,      MF_REQ_DISK_ACCESS },
     { _TRN("Edit Annotations"),             CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
-    { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
-    { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
-    { _TRN("&Print..."),                    CmdPrint,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
-    { _TRN("P&roperties"),                  CmdProperties,            MF_PLUGIN_MODE_ONLY },
     { _TRN("E&xit Fullscreen"),             CmdExitFullScreen,        0 },
     { 0, 0, 0 },
 };
@@ -271,12 +263,12 @@ static MenuDef menuDefContext[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
-    { _TRN("&Copy To Clipboard"),      CmdCopySelection,                 MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Translate With Google"),  CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("Translate with DeepL"),    CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("&Search With Google"),     CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("&Search With Bing"),       CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
-    { _TRN("Select &All"),             CmdSelectAll,                     MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                 MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     MF_REQ_ALLOW_COPY },
     // TODO: more?
     { 0, 0, 0 },
 };
@@ -333,11 +325,6 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
             break;
         }
         i++;
-        if ((md.flags & MF_PLUGIN_MODE_ONLY) != 0) {
-            if (!gPluginMode) {
-                continue;
-            }
-        }
         if (md.flags & flagFilter) {
             continue;
         }
@@ -345,7 +332,6 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
         if (!HasPermission(md.flags >> PERM_FLAG_OFFSET)) {
             continue;
         }
-
         if (str::Eq(md.title, SEP_ITEM)) {
             // prevent two consecutive separators
             if (!wasSeparator) {
@@ -566,7 +552,6 @@ static int menusToDisableIfNoDocument[] = {
     CmdSaveAsBookmark,
     CmdSendByEmail,
     CmdSelectAll,
-    CmdCopySelection,
     CmdProperties,
     CmdViewPresentationMode,
     CmdOpenWithAcrobat,
@@ -588,15 +573,34 @@ static int menusToDisableIfDirectoryOrBrokenPDF[] = {
     CmdOpenWithPdfXchange,
     CmdShowInFolder,
 };
+
+static int menusToDisableIfNoSelection[] = {
+    CmdCopySelection,
+    CmdTranslateSelectionWithDeepL,
+    CmdTranslateSelectionWithGoogle,
+    CmdSearchSelectionWithBing,
+    CmdSearchSelectionWithGoogle,
+};
 // clang-format on
+
+static void SetMenuStateForSelection(TabInfo* tab, HMENU menu) {
+    bool isTextSelected = tab && tab->win && tab->win->showSelection && tab->selectionOnPage;
+    for (int i = 0; i < dimof(menusToDisableIfNoSelection); i++) {
+        int id = menusToDisableIfNoSelection[i];
+        win::menu::SetEnabled(menu, id, isTextSelected);
+    }
+}
 
 static void MenuUpdateStateForWindow(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
 
+    bool hasDocument = tab && tab->IsDocLoaded();
     for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
         int id = menusToDisableIfNoDocument[i];
-        win::menu::SetEnabled(win->menu, id, win->IsDocLoaded());
+        win::menu::SetEnabled(win->menu, id, hasDocument);
     }
+
+    SetMenuStateForSelection(tab, win->menu);
 
     // TODO: happens with UseTabs = false with .pdf files
     SubmitCrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
@@ -728,6 +732,17 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         value = pageEl->GetValue();
     }
 
+    int filter = 0;
+    if (win->AsChm()) {
+        filter |= MF_NOT_FOR_CHM;
+    } else if (win->AsEbook()) {
+        filter |= MF_NOT_FOR_EBOOK_UI;
+    }
+    if (!tab || tab->GetEngineType() != kindEngineComicBooks) {
+        filter |= MF_CBX_ONLY;
+    }
+    bool isTextSelected = tab && win->showSelection && tab->selectionOnPage;
+
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
     int pageNoUnderCursor = dm->GetPageNoByPoint(Point{x, y});
@@ -735,18 +750,18 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     EngineBase* engine = dm->GetEngine();
     bool annotationsSupported = EngineSupportsAnnotations(engine) && !win->isFullScreen;
     Annotation* annotUnderCursor{nullptr};
-    bool isTextSelected = win->showSelection && tab->selectionOnPage;
+    // bool isTextSelected = win->showSelection && tab->selectionOnPage;
     if (annotationsSupported) {
         annotUnderCursor = dm->GetAnnotationAtPos(Point{x, y}, nullptr);
         if (isTextSelected) {
-            HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnotFromSelection, CreatePopupMenu());
+            HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnotFromSelection, CreatePopupMenu(), filter);
             uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
             InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR("Create Annotation From Selection"));
         }
 
         if (pageNoUnderCursor > 0) {
             // those are only valid if mouse cursor is on a page
-            HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnotUnderCursor, CreatePopupMenu());
+            HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnotUnderCursor, CreatePopupMenu(), filter);
             uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
             InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR("Create Annotation Under Cursor"));
         }
@@ -760,11 +775,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::Remove(popup, CmdSaveAnnotations);
     }
 
-    if (HasPermission(Perm_InternetAccess) && isTextSelected) {
-        HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefSelection, CreatePopupMenu());
-        uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
-        InsertMenuW(popup, (uint)0, flags, (UINT_PTR)popupCreateAnnot, _TR("&Selection"));
-    }
+    HMENU popupSelection = BuildMenuFromMenuDef(menuDefSelection, CreatePopupMenu(), filter);
+    uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
+    InsertMenuW(popup, (uint)0, flags, (UINT_PTR)popupSelection, _TR("S&election"));
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
         win::menu::Remove(popup, CmdCopyLinkTarget);
@@ -780,9 +793,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!isFullScreen) {
         win::menu::Remove(popup, CmdExitFullScreen);
     }
-    if (!isTextSelected) {
-        win::menu::SetEnabled(popup, CmdCopySelection, false);
-    }
+    SetMenuStateForSelection(tab, popup);
+
     MenuUpdatePrintItem(win, popup, true);
     win::menu::SetEnabled(popup, CmdViewBookmarks, win->ctrl->HacToc());
     win::menu::SetChecked(popup, CmdViewBookmarks, win->tocVisible);
@@ -824,7 +836,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     MarkMenuOwnerDraw(popup);
-    uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
@@ -1293,6 +1305,10 @@ HMENU BuildMenu(WindowInfo* win) {
     if (!win->AsEbook()) {
         m = BuildMenuFromMenuDef(menuDefZoom, CreateMenu(), filter);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+    }
+    if (!win->AsEbook()) {
+        m = BuildMenuFromMenuDef(menuDefSelection, CreateMenu(), filter);
+        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("S&election"));
     }
 
     // TODO: implement Favorites for ebooks
