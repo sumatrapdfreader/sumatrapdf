@@ -236,7 +236,6 @@ func main() {
 
 	if flgTriggerPreRel {
 		triggerPreRelBuild()
-		//triggerRaMicroPreRelBuild()
 		return
 	}
 
@@ -354,8 +353,6 @@ func main() {
 		case githubEventTypeBuildPreRel:
 			s3UploadBuildMust(buildTypePreRel)
 			spacesUploadBuildMust(buildTypePreRel)
-		case githubEventTypeBuildRaMicroPreRel:
-			spacesUploadBuildMust(buildTypeRaMicro)
 		case githubEventTypeCodeQL:
 			// do nothing
 		default:

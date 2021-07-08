@@ -18,20 +18,16 @@ import (
 // builds to retain
 const nBuildsToRetainPreRel = 16
 const nBuildsToRetainDaily = 64
-const nBuildsToRetaininMicro = 32
 
 const (
-	buildTypeDaily   = "daily"
-	buildTypePreRel  = "prerel"
-	buildTypeRel     = "rel"
-	buildTypeRaMicro = "ramicro"
+	buildTypeDaily  = "daily"
+	buildTypePreRel = "prerel"
+	buildTypeRel    = "rel"
 )
 
 var (
-	rel32Dir   = filepath.Join("out", "rel32")
-	rel32XPDir = filepath.Join("out", "rel32_xp")
-	rel64Dir   = filepath.Join("out", "rel64")
-	rel64RaDir = filepath.Join("out", "rel64ra")
+	rel32Dir = filepath.Join("out", "rel32")
+	rel64Dir = filepath.Join("out", "rel64")
 )
 
 func getRemotePaths(buildType string) []string {
@@ -51,14 +47,6 @@ func getRemotePaths(buildType string) []string {
 		}
 	}
 
-	if buildType == buildTypeRaMicro {
-		return []string{
-			"software/sumatrapdf/ramicrolatest.js",
-			"software/sumatrapdf/ramicro-daily-latest.txt",
-			"software/sumatrapdf/ramicro-daily-update.txt",
-		}
-	}
-
 	if buildType == buildTypeRel {
 		return []string{
 			"software/sumatrapdf/sumarellatest.js",
@@ -73,7 +61,7 @@ func getRemotePaths(buildType string) []string {
 
 func isValidBuildType(buildType string) bool {
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel, buildTypeRel, buildTypeRaMicro:
+	case buildTypeDaily, buildTypePreRel, buildTypeRel:
 		return true
 	}
 	return false
@@ -163,7 +151,6 @@ func getVersionFilesForLatestInfo(buildType string) [][]string {
 	res = append(res, []string{remotePaths[0], s})
 	ver := getVerForBuildType(buildType)
 	res = append(res, []string{remotePaths[1], ver})
-	// TOOD different for ramicro
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	res = append(res, []string{remotePaths[2], s})
 	return res
@@ -214,10 +201,6 @@ func extractVersionFromName(s string) int {
 	// is older naming
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelease-")
 	name = strings.TrimPrefix(name, "SumatraPDF-prerel-")
-
-	name = strings.TrimPrefix(name, "RAMicro-prerelease-")
-	name = strings.TrimPrefix(name, "RAMicro-prerel-")
-	name = strings.TrimPrefix(name, "RAMicroPDFViewer-prerel-")
 
 	// TODO: temporary, for old builds in s3
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelase-")
@@ -275,9 +258,6 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 	if buildType == buildTypePreRel {
 		nBuildsToRetain = nBuildsToRetainPreRel
 	}
-	if buildType == buildTypeRaMicro {
-		nBuildsToRetain = nBuildsToRetaininMicro
-	}
 	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()
@@ -311,5 +291,4 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 func minioDeleteOldBuilds() {
 	minioDeleteOldBuildsPrefix(buildTypePreRel)
 	minioDeleteOldBuildsPrefix(buildTypeDaily)
-	minioDeleteOldBuildsPrefix(buildTypeRaMicro)
 }

@@ -694,9 +694,7 @@ void LogBitmapInfo(HBITMAP hbmp) {
 }
 
 void CreateToolbar(WindowInfo* win) {
-    if (!gIsRaMicroBuild) {
-        kButtonSpacingX = 0;
-    }
+    kButtonSpacingX = 0;
     HINSTANCE hinst = GetModuleHandle(nullptr);
     HWND hwndParent = win->hwndFrame;
     DWORD style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;

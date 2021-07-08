@@ -37,10 +37,9 @@ func triggerCodeQL() {
 }
 
 const (
-	githubEventNone                   = 0
-	githubEventTypeBuildPreRel        = 1
-	githubEventTypeBuildRaMicroPreRel = 2
-	githubEventTypeCodeQL             = 3
+	githubEventNone            = 0
+	githubEventTypeBuildPreRel = 1
+	githubEventTypeCodeQL      = 3
 )
 
 //  "action": "build-pre-rel"
@@ -63,8 +62,6 @@ func getGitHubEventType() int {
 	switch js.Action {
 	case "build-pre-rel":
 		return githubEventTypeBuildPreRel
-	case "build-ramicro-pre-rel":
-		return githubEventTypeBuildRaMicroPreRel
 	case "codeql":
 		return githubEventTypeCodeQL
 	}

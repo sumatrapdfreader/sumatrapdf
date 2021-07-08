@@ -56,7 +56,6 @@ enum MenuToolbarFlags {
     MF_NOT_FOR_CHM = 1 << 2,
     MF_NOT_FOR_EBOOK_UI = 1 << 3,
     MF_CBX_ONLY = 1 << 4,
-    MF_RAMICRO_ONLY = 1 << 5,
 #define PERM_FLAG_OFFSET 6
     MF_REQ_INET_ACCESS = Perm_InternetAccess << PERM_FLAG_OFFSET,
     MF_REQ_DISK_ACCESS = Perm_DiskAccess << PERM_FLAG_OFFSET,

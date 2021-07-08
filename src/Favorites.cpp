@@ -818,13 +818,9 @@ extern void TocTreeKeyDown(TreeKeyDownEvent* ev);
 
 HFONT GetTreeFont() {
     int fntSize = GetSizeOfDefaultGuiFont();
-    if (gIsRaMicroBuild) {
-        fntSize += 2;
-    } else {
-        int fntSizeUser = gGlobalPrefs->treeFontSize;
-        if (fntSizeUser > 5) {
-            fntSize = fntSizeUser;
-        }
+    int fntSizeUser = gGlobalPrefs->treeFontSize;
+    if (fntSizeUser > 5) {
+        fntSize = fntSizeUser;
     }
     HFONT fnt = GetDefaultGuiFontOfSize(fntSize);
     CrashIf(!fnt);

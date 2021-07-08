@@ -92,7 +92,8 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
 static MenuDef menuDefFile[] = {
     { _TRN("New &window\tCtrl+N"),          CmdNewWindow,              MF_REQ_DISK_ACCESS },
     { _TRN("&Open...\tCtrl+O"),             CmdOpen,                   MF_REQ_DISK_ACCESS },
-    { "Open Folder",                        CmdOpenFolder,             MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
+    // TODO: should make it available for everyone?
+    //{ "Open Folder",                        CmdOpenFolder,             MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               CmdClose,                  MF_REQ_DISK_ACCESS },
     { _TRN("Show in &folder"),              CmdShowInFolder,           MF_REQ_DISK_ACCESS },
     { _TRN("&Save As...\tCtrl+S"),          CmdSaveAs,                 MF_REQ_DISK_ACCESS },
@@ -322,11 +323,6 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
         i++;
         if ((md.flags & MF_PLUGIN_MODE_ONLY) != 0) {
             if (!gPluginMode) {
-                continue;
-            }
-        }
-        if ((md.flags & MF_RAMICRO_ONLY) != 0) {
-            if (!gIsRaMicroBuild) {
                 continue;
             }
         }
@@ -957,9 +953,6 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
 
     win::menu::Empty(menu);
     HMENU m = BuildMenuFromMenuDef(menuDefFile, menu, filter);
-    if (gIsRaMicroBuild) {
-        win::menu::Remove(m, CmdOpenFolder);
-    }
     AppendRecentFilesToMenu(menu);
     AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
 
@@ -1290,10 +1283,6 @@ HMENU BuildMenu(WindowInfo* win) {
     }
 
     m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
-    if (gIsRaMicroBuild) {
-        win::menu::Remove(m, CmdChangeLanguage);
-        win::menu::Remove(m, CmdAdvancedOptions);
-    }
 #if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
     MenuDef menuDefTheme[THEME_COUNT + 1];
@@ -1317,9 +1306,7 @@ HMENU BuildMenu(WindowInfo* win) {
 
     if (gShowDebugMenu) {
         m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
-        if (!gIsRaMicroBuild) {
-            win::menu::Remove(m, CmdAdvancedOptions);
-        }
+        win::menu::Remove(m, CmdAdvancedOptions); // TODO: this was removed for !ramicro build
 
         if (!gIsDebugBuild) {
             RemoveMenu(m, CmdDebugTestApp, MF_BYCOMMAND);

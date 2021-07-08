@@ -132,13 +132,9 @@ const WCHAR* gSupportedExtsSumatra[] = {
     L".fb2", L".fb2z", L".prc",  L".tif", L".tiff", L".jp2",  L".png",
     L".jpg",  L".jpeg", L".tga", L".gif",  nullptr
 };
-const WCHAR* gSupportedExtsRaMicro[] = { L".pdf", nullptr };
 // clang-format on
 
 const WCHAR** GetSupportedExts() {
-    if (gIsRaMicroBuild) {
-        return gSupportedExtsRaMicro;
-    }
     return gSupportedExtsSumatra;
 }
 

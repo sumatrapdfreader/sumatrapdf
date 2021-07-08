@@ -58,9 +58,6 @@ static int cmpFloat(const void* a, const void* b) {
 namespace prefs {
 
 const WCHAR* GetSettingsFileNameNoFree() {
-    if (gIsRaMicroBuild) {
-        return L"RAMicroPDF-settings.txt";
-    }
     return L"SumatraPDF-settings.txt";
 }
 

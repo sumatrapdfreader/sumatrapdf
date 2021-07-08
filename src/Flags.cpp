@@ -248,10 +248,6 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             i.enterFullScreen = true;
             continue;
         }
-        if (isArg(L"ramicro") || isArg(L"ra-micro")) {
-            i.ramicro = true;
-            continue;
-        }
         if (isArg(L"invertcolors") || isArg(L"invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency

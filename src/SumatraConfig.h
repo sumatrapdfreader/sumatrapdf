@@ -9,8 +9,6 @@ extern bool gIsDebugBuild;
 extern bool gIsAsanBuild;
 extern bool gIsDailyBuild;
 extern bool gIsPreReleaseBuild;
-extern bool gWithTocEditor;
-extern bool gIsRaMicroBuild;
 extern bool gOwnerDrawMenu;
 extern bool gShowDebugMenu;
 extern bool gDisableDocumentRestrictions;

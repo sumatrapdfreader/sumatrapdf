@@ -95,15 +95,10 @@ workspace "SumatraPDF"
     -- disablewarnings { "4731" }
   filter {}
 
-  filter "platforms:x64 or x64_asan or x64_ramicro"
+  filter "platforms:x64 or x64_asan"
      architecture "x86_64"
      -- strangely this is not set by default for rc.exe
      resdefines { "_WIN64" }
-  filter {}
-
-  filter "platforms:x64_ramicro"
-     resdefines { "RAMICRO" }
-     defines { "RAMICRO"}
   filter {}
 
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
@@ -149,14 +144,6 @@ workspace "SumatraPDF"
     targetdir "out/rel64_prefast_asan"
   filter {"platforms:x64_asan", "configurations:Debug"}
     targetdir "out/dbg64_asan"
-  filter {}
-
-  filter {"platforms:x64_ramicro", "configurations:Release"}
-    targetdir "out/rel64ra"
-  filter {"platforms:x64_ramicro", "configurations:ReleaseAnalyze"}
-    targetdir "out/rel64ra_prefast"
-  filter {"platforms:x64_ramicro", "configurations:Debug"}
-    targetdir "out/dbg64ra"
   filter {}
 
   objdir "%{cfg.targetdir}/obj"
@@ -385,7 +372,7 @@ workspace "SumatraPDF"
        }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
@@ -415,7 +402,7 @@ workspace "SumatraPDF"
         }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
         buildmessage '%{file.relpath}'
         buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
         buildcommands {
@@ -615,7 +602,7 @@ workspace "SumatraPDF"
        }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
       buildmessage 'Compiling %{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
@@ -669,7 +656,7 @@ workspace "SumatraPDF"
     }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
     buildmessage 'Compiling %{file.relpath}'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {

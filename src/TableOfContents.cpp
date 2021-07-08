@@ -864,7 +864,6 @@ void CreateToc(WindowInfo* win) {
     l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
     win->tocLabelWithClose = l;
     l->SetPaddingXY(2, 2);
-    // TODO: only ramicro?
     // TODO: use the same font size as in GetTreeFont()?
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()

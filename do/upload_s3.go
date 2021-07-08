@@ -53,9 +53,6 @@ func createSumatraLatestJs(buildType string) string {
 		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
-	case buildTypeRaMicro:
-		// must match name in spacesUploadBuildMust
-		appName = "RAMicroPDFViewer-prerel"
 	default:
 		panicIf(true, "invalid buildType '%s'", buildType)
 	}
@@ -200,8 +197,6 @@ func getFinalDirForBuildType(buildType string) string {
 		dir = "final-rel"
 	case buildTypePreRel:
 		dir = "final-prerel"
-	case buildTypeRaMicro:
-		dir = "final-ramicro"
 	default:
 		panicIf(true, "invalid buildType '%s'", buildType)
 	}
@@ -211,7 +206,7 @@ func getFinalDirForBuildType(buildType string) string {
 // this returns version to be used in uploaded file names
 func getVerForBuildType(buildType string) string {
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel, buildTypeRaMicro:
+	case buildTypeDaily, buildTypePreRel:
 		// this is linear build number like "12223"
 		return getPreReleaseVer()
 	case buildTypeRel:
@@ -228,7 +223,6 @@ func s3UploadBuildMust(buildType string) {
 	if shouldSkipUpload() {
 		return
 	}
-	panicIf(buildType == buildTypeRaMicro, "only uploading ramicro to spaces")
 
 	timeStart := time.Now()
 	c := newS3Client()
@@ -291,5 +285,4 @@ func s3DeleteOldBuildsPrefix(buildType string) {
 func s3DeleteOldBuilds() {
 	s3DeleteOldBuildsPrefix(buildTypePreRel)
 	s3DeleteOldBuildsPrefix(buildTypeDaily)
-	s3DeleteOldBuildsPrefix(buildTypeRaMicro)
 }

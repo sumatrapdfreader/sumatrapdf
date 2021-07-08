@@ -568,12 +568,6 @@ static void UpdateGlobalPrefs(const Flags& i) {
     }
 }
 
-static bool ExeHasNameOfRaMicro() {
-    AutoFreeWstr exePath = GetExePath();
-    const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
-    return str::FindI(exeName, L"ramicro");
-}
-
 // we're in installer mode if the name of the executable
 // has "install" string in it e.g. SumatraPDF-installer.exe
 static bool ExeHasNameOfInstaller() {
@@ -872,15 +866,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         }
     }
 #endif
-
-    if (i.ramicro) {
-        gIsRaMicroBuild = true;
-        gWithTocEditor = true;
-    }
-    if (ExeHasNameOfRaMicro()) {
-        gIsRaMicroBuild = true;
-        gWithTocEditor = true;
-    }
 
     if (i.showHelp && IsInstallerButNotInstalled()) {
         ShowInstallerHelp();

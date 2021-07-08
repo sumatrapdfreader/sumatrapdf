@@ -66,14 +66,8 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-#if defined(RAMICRO)
-IDI_SUMATRAPDF          ICON        "..\\gfx\\ramicro\\ramicro.ico"
-#else
 IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
-#endif
 IDI_PDFDOC              ICON        "..\\gfx\\PdfDoc.ico"
-IDI_RAMICRO             ICON        "..\\gfx\\ramicro\\ramicro.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -232,8 +226,6 @@ END
 #ifdef INSTALL_PAYLOAD_ZIP
 1                       RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif
-
-IDD_RAMICRO_SPLASH      RCDATA               "..\\gfx\\ramicro\\ramicro-startscreen_310x230.png"
 
 /////////////////////////////////////////////////////////////////////////////
 

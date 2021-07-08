@@ -3,7 +3,7 @@ on:
   push:
   pull_request:
   repository_dispatch:
-    types: [build-pre-rel, build-ramicro-pre-rel]
+    types: [build-pre-rel]
 jobs:
   build:
     name: Build

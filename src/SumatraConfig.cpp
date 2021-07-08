@@ -53,18 +53,6 @@ const char* gitSha1 = QM(GIT_COMMIT_ID);
 const char* gitSha1 = nullptr;
 #endif
 
-#if defined(RAMICRO)
-bool gWithTocEditor = true;
-#else
-bool gWithTocEditor = false;
-#endif
-
-#if defined(RAMICRO)
-bool gIsRaMicroBuild = true;
-#else
-bool gIsRaMicroBuild = false;
-#endif
-
 // experimental, unfinished theme support for menus by making them owner-drawn
 #if defined(EXP_MENU_OWNER_DRAW)
 bool gOwnerDrawMenu = true;
@@ -85,22 +73,13 @@ bool gDisableDocumentRestrictions = false;
 #endif
 
 const WCHAR* GetAppName() {
-    if (gIsRaMicroBuild) {
-        return L"RA-MICRO PDF Viewer";
-    }
     return L"SumatraPDF";
 }
 
 const WCHAR* GetExeName() {
-    if (gIsRaMicroBuild) {
-        return L"RA-MICRO PDF Viewer.exe";
-    }
     return L"SumatraPDF.exe";
 }
 
 int GetAppIconID() {
-    if (gIsRaMicroBuild) {
-        return IDI_RAMICRO;
-    }
     return IDI_SUMATRAPDF;
 }

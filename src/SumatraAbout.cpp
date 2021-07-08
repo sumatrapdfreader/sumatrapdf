@@ -121,14 +121,6 @@ static Vec<StaticLinkInfo> gLinkInfo;
 
 static void DrawAppName(HDC hdc, Point pt) {
     const WCHAR* txt = GetAppName();
-    if (gIsRaMicroBuild) {
-        // simple black-ish version
-        COLORREF col = RGB(0x43, 0x43, 0x43);
-        SetTextColor(hdc, col);
-        TextOutW(hdc, pt.x, pt.y, txt, (int)str::Len(txt));
-        return;
-    }
-
     // colorful version
     COLORREF cols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
     for (size_t i = 0; i < str::Len(txt); i++) {
@@ -651,9 +643,6 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
     int fontSize = 24;
-    if (gIsRaMicroBuild) {
-        fontSize = 20;
-    }
     AutoDeleteFont fontFrequentlyRead(CreateSimpleFont(hdc, L"MS Shell Dlg", fontSize));
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
 
@@ -819,8 +808,6 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
     win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
 
-    if (!gIsRaMicroBuild) {
-        rect = DrawSupportLink(win->hwndCanvas, hdc, _TR("Support SumatraPDF"));
-        win->staticLinks.Append(StaticLinkInfo(rect, URL_SUPPORT_SUMATRA));
-    }
+    rect = DrawSupportLink(win->hwndCanvas, hdc, _TR("Support SumatraPDF"));
+    win->staticLinks.Append(StaticLinkInfo(rect, URL_SUPPORT_SUMATRA));
 }

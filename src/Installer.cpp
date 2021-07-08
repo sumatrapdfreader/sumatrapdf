@@ -80,9 +80,6 @@ static bool gWasPreviewInstaller = false;
 
 int currProgress = 0;
 static void ProgressStep() {
-    if (gIsRaMicroBuild) {
-        return;
-    }
     currProgress++;
     if (gProgressBar) {
         // possibly dangerous as is called on a thread
@@ -369,8 +366,6 @@ static void CreateAppShortcuts() {
     log("did create app shortcuts\n");
 }
 
-void onRaMicroInstallerFinished();
-
 static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
     success = false;
     const WCHAR* appName{nullptr};
@@ -399,17 +394,15 @@ static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
     gWasSearchFilterInstalled = false;
     gWasPreviewInstaller = false;
 
-    if (!gIsRaMicroBuild) {
-        if (gCli->withFilter) {
-            RegisterSearchFilter(false);
-        }
-
-        if (gCli->withPreview) {
-            RegisterPreviewer(false);
-        }
-
-        UninstallBrowserPlugin();
+    if (gCli->withFilter) {
+        RegisterSearchFilter(false);
     }
+
+    if (gCli->withPreview) {
+        RegisterPreviewer(false);
+    }
+
+    UninstallBrowserPlugin();
 
     CreateAppShortcuts();
 
@@ -437,10 +430,6 @@ static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
     ProgressStep();
     log("Installer thread finished\n");
 Error:
-    if (gIsRaMicroBuild) {
-        onRaMicroInstallerFinished();
-        return 0;
-    }
     // TODO: roll back installation on failure (restore previous installation!)
     if (gHwndFrame) {
         if (!gCli->silent) {
@@ -991,8 +980,6 @@ static bool OpenEmbeddedFilesArchive() {
     return true;
 }
 
-int RunInstallerRaMicro();
-
 static char* PickInstallerLogPath() {
     AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
     if (!dir) {
@@ -1041,10 +1028,6 @@ int RunInstaller(Flags* cli) {
     logf(L"Starting installer from '%s'\n", gCli->installDir);
 
     RelaunchElevatedIfNotDebug();
-
-    if (gIsRaMicroBuild) {
-        return RunInstallerRaMicro();
-    }
 
     if (!gCli->silent && !IsProcessAndOsArchSame()) {
         logf("Mismatch of the OS and executable arch\n");
@@ -1130,250 +1113,6 @@ int RunInstaller(Flags* cli) {
         RegisterPreviewer(true);
     }
     log("Installer finished\n");
-Exit:
-    free(firstError);
-
-    return ret;
-}
-
-/* ra-micro installer */
-
-using std::placeholders::_1;
-
-struct RaMicroInstallerWindow {
-    HWND hwnd = nullptr;
-    Window* mainWindow = nullptr;
-    ILayout* mainLayout = nullptr;
-    Gdiplus::Bitmap* bmpSplash = nullptr;
-
-    // not owned by us but by mainLayout
-    ButtonCtrl* btnInstall = nullptr;
-    ButtonCtrl* btnExit = nullptr;
-    StaticCtrl* finishedText = nullptr;
-
-    bool finished = false;
-
-    ~RaMicroInstallerWindow();
-
-    void CloseHandler(WindowCloseEvent*);
-    void SizeHandler(SizeEvent*);
-    void Install();
-    void InstallationFinished();
-    void Exit();
-    void MsgHandler(WndEvent*);
-};
-
-static RaMicroInstallerWindow* gRaMicroInstallerWindow = nullptr;
-
-RaMicroInstallerWindow::~RaMicroInstallerWindow() {
-    delete mainLayout;
-    delete mainWindow;
-    delete bmpSplash;
-}
-
-void RaMicroInstallerWindow::MsgHandler(WndEvent* ev) {
-    if (ev->msg == WM_APP_INSTALLATION_FINISHED) {
-        InstallationFinished();
-        ev->didHandle = true;
-        return;
-    }
-}
-
-void RaMicroInstallerWindow::Install() {
-    if (finished) {
-        if (success) {
-            AutoFreeWstr exePath(GetInstalledExePath());
-            RunNonElevated(exePath);
-        }
-        Exit();
-        return;
-    }
-    hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
-}
-
-static Size layoutAndSize(ILayout* layout, int dx, int dy) {
-    if (dx == 0 || dy == 0) {
-        return {};
-    }
-    return LayoutToSize(layout, {dx, dy});
-}
-
-void RaMicroInstallerWindow::InstallationFinished() {
-    CloseHandle(hThread);
-    hThread = nullptr;
-
-    finished = true;
-    if (success) {
-        btnInstall->SetText("Run RA-Micro");
-    } else {
-        btnInstall->SetText("Exit");
-        finishedText->SetText("Installation failed!");
-    }
-    finishedText->SetIsVisible(true);
-
-    RECT rc = GetClientRect(hwnd);
-    int dx = RectDx(rc);
-    int dy = RectDy(rc);
-    layoutAndSize(mainLayout, dx, dy);
-}
-
-void RaMicroInstallerWindow::Exit() {
-    gRaMicroInstallerWindow->mainWindow->Close();
-}
-
-void RaMicroInstallerWindow::CloseHandler(WindowCloseEvent* ev) {
-    WindowBase* w = (WindowBase*)gRaMicroInstallerWindow->mainWindow;
-    CrashIf(w != ev->w);
-    delete gRaMicroInstallerWindow;
-    gRaMicroInstallerWindow = nullptr;
-    PostQuitMessage(0);
-}
-
-void RaMicroInstallerWindow::SizeHandler(SizeEvent* ev) {
-    int dx = ev->dx;
-    int dy = ev->dy;
-
-    layoutAndSize(mainLayout, dx, dy);
-
-    InvalidateRect(ev->hwnd, nullptr, false);
-    ev->didHandle = true;
-}
-
-void onRaMicroInstallerFinished() {
-    // called on a background thread
-    PostMessageW(gRaMicroInstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
-}
-
-static Gdiplus::Bitmap* LoadRaMicroSplash() {
-    std::span<u8> d = LoadDataResource(IDD_RAMICRO_SPLASH);
-    if (d.empty()) {
-        return nullptr;
-    }
-    return BitmapFromData(d);
-}
-
-static bool CreateRaMicroInstallerWindow() {
-    HMODULE h = GetModuleHandleW(nullptr);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    HICON hIcon = LoadIconW(h, iconName);
-
-    auto win = new RaMicroInstallerWindow();
-    gRaMicroInstallerWindow = win;
-
-    win->bmpSplash = LoadRaMicroSplash();
-    CrashIf(!win->bmpSplash);
-
-    auto w = new Window();
-    w->msgFilter = std::bind(&RaMicroInstallerWindow::MsgHandler, win, _1);
-    w->hIcon = hIcon;
-    // w->backgroundColor = MkColor((u8)0xee, (u8)0xee, (u8)0xee);
-    w->backgroundColor = MkColor((u8)0xff, (u8)0xff, (u8)0xff);
-    w->SetTitle("RA-MICRO Installer");
-    int splashDx = (int)win->bmpSplash->GetWidth();
-    int splashDy = (int)win->bmpSplash->GetHeight();
-    int dx = splashDx + DpiScale(32 + 44); // image + padding
-    int dy = splashDy + DpiScale(104);     // image + buttons
-    w->initialSize = {dx, dy};
-    SIZE winSize = {w->initialSize.dx, w->initialSize.dy};
-    w->initialSize = {winSize.cx, winSize.cy};
-    bool ok = w->Create();
-    CrashIf(!ok);
-    win->hwnd = w->hwnd;
-
-    win->mainWindow = w;
-
-    HWND hwnd = win->hwnd;
-    CrashIf(!hwnd);
-
-    // create layout
-    // TODO: image should be centered, the buttons should be on the edges
-    // Probably need to implement a Center layout
-    HBox* buttons = new HBox();
-    buttons->alignMain = MainAxisAlign::SpaceBetween;
-    buttons->alignCross = CrossAxisAlign::CrossEnd;
-
-    /*
-    {
-        auto [l, b] = CreateButtonLayout(hwnd, "Exit", [win]() { win->Exit(); });
-        buttons->addChild(l);
-        win->btnExit = b;
-    }
-    */
-
-    {
-        auto b = CreateButton(hwnd, "Install", [win]() { win->Install(); });
-        buttons->AddChild(b);
-        win->btnInstall = b;
-    }
-
-    VBox* main = new VBox();
-    main->alignMain = MainAxisAlign::SpaceAround;
-    main->alignCross = CrossAxisAlign::CrossCenter;
-
-    ImageCtrl* splashCtrl = new ImageCtrl(hwnd);
-    splashCtrl->bmp = win->bmpSplash;
-    ok = splashCtrl->Create();
-    CrashIf(!ok);
-    main->AddChild(splashCtrl);
-
-    win->finishedText = new StaticCtrl(hwnd);
-    win->finishedText->SetText("Installation finished!");
-    // TODO: bigger font and maybe bold and different color
-    // win->finishedText->SetFont();
-    win->finishedText->Create();
-    win->finishedText->SetIsVisible(false);
-
-    main->AddChild(win->finishedText);
-
-    main->AddChild(buttons);
-
-    auto padding = new Padding(main, DpiScaledInsets(hwnd, 8));
-    win->mainLayout = padding;
-
-    w->onClose = std::bind(&RaMicroInstallerWindow::CloseHandler, win, _1);
-    w->onSize = std::bind(&RaMicroInstallerWindow::SizeHandler, win, _1);
-    w->SetIsVisible(true);
-    return true;
-}
-
-int RunInstallerRaMicro() {
-    int ret = 0;
-    bool ok = true;
-
-    if (!OpenEmbeddedFilesArchive()) {
-        return 1;
-    }
-    gDefaultMsg = _TR("Thank you for choosing RA-MICRO PDF!");
-
-    if (!gCli->installDir) {
-        gCli->installDir = GetInstallationDir();
-    }
-
-    if (gCli->silent) {
-        InstallerThread(nullptr);
-        ret = success ? 0 : 1;
-        goto Exit;
-    }
-
-    ok = CreateRaMicroInstallerWindow();
-    if (!ok) {
-        goto Exit;
-    }
-
-#if 0
-    if (!RegisterWinClass()) {
-        goto Exit;
-    }
-
-    if (!InstanceInit()) {
-        goto Exit;
-    }
-
-    BringWindowToTop(gHwndFrame);
-#endif
-
-    ret = RunApp();
-
 Exit:
     free(firstError);
 
