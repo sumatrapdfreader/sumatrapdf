@@ -60,12 +60,6 @@ bool gOwnerDrawMenu = true;
 bool gOwnerDrawMenu = false;
 #endif
 
-#if defined(DEBUG) || defined(PRE_RELEASE_VER)
-bool gShowDebugMenu = true;
-#else
-bool gShowDebugMenu = false;
-#endif
-
 #ifdef DISABLE_DOCUMENT_RESTRICTIONS
 bool gDisableDocumentRestrictions = true;
 #else

@@ -1,14 +1,15 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-extern bool gAddCrashMeMenu;
-
 struct BuildMenuCtx;
 struct MenuOwnerDrawInfo;
 struct MenuDef;
 
 extern MenuDef menuDefContextToc[];
 extern MenuDef menuDefContextFav[];
+
+extern bool gShowDebugMenu;
+extern bool gAddCrashMeMenu;
 
 void FreeAllMenuDrawInfos();
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);

@@ -50,7 +50,7 @@
 extern Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
 
 constexpr int kPermFlagOffset = 9;
-enum MenuToolbarFlags {
+enum {
     MF_NO_TRANSLATE = 1 << 0,
     MF_NOT_FOR_CHM = 1 << 1,
     MF_NOT_FOR_EBOOK_UI = 1 << 2,
@@ -96,6 +96,12 @@ struct MenuDef {
 
 constexpr const char* kMenuSeparator = "-----";
 bool gAddCrashMeMenu = false;
+
+#if defined(DEBUG) || defined(PRE_RELEASE_VER)
+bool gShowDebugMenu = true;
+#else
+bool gShowDebugMenu = false;
+#endif
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
@@ -309,16 +315,26 @@ static MenuDef menuDefDebug[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
+    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     MF_REQ_ALLOW_COPY },
+    { 0, 0, 0 },
+};
+//] ACCESSKEY_GROUP Context Menu (Selection)
+
+//[ ACCESSKEY_GROUP Menu (Selection)
+static MenuDef menuDefMainSelection[] = {
     { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                 MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
     { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
     { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
     { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
     { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     MF_REQ_ALLOW_COPY },
-    // TODO: more?
     { 0, 0, 0 },
 };
-//] ACCESSKEY_GROUP Context Menu (Selection)
+//] ACCESSKEY_GROUP Menu (Selection)
 
 //[ ACCESSKEY_GROUP Context Menu (Create annot from selection)
 static MenuDef menuDefCreateAnnotFromSelection[] = {
@@ -351,6 +367,7 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
 //[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
+    { _TRN("&Copy Selection \tCtrl-C"),         CmdCopySelection, MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("S&election"),                       (UINT_PTR)menuDefSelection, 0},
     { _TRN("Copy &Link Address"),               CmdCopyLinkTarget, MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                    CmdCopyComment, MF_REQ_ALLOW_COPY },
