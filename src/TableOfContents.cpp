@@ -404,14 +404,14 @@ static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
 
 // clang-format off
 static MenuDef menuDefContext[] = {
-    {_TRN("Expand All"),                 CmdExpandAll,         0 },
-    {_TRN("Collapse All"),               CmdCollapseAll,       0 },
-    {SEP_ITEM,                           CmdSeparatorEmbed,    MF_NO_TRANSLATE},
-    {_TRN("Open Embedded PDF"),     CmdOpenEmbeddedPDF,      0 },
-    {_TRN("Save Embedded File..."), CmdSaveEmbeddedFile,      0 },
+    {_TRN("Expand All"),            CmdExpandAll,         0 },
+    {_TRN("Collapse All"),          CmdCollapseAll,       0 },
+    {kMenuSeparator,                CmdSeparatorEmbed,    MF_NO_TRANSLATE},
+    {_TRN("Open Embedded PDF"),     CmdOpenEmbeddedPDF,   0 },
+    {_TRN("Save Embedded File..."), CmdSaveEmbeddedFile,  0 },
     // note: strings cannot be "" or else items are not there
-    {"add",                              CmdFavoriteAdd,            MF_NO_TRANSLATE},
-    {"del",                              CmdFavoriteDel,            MF_NO_TRANSLATE},
+    {"add",                         CmdFavoriteAdd,       MF_NO_TRANSLATE},
+    {"del",                         CmdFavoriteDel,       MF_NO_TRANSLATE},
     { 0, 0, 0 },
 };
 // clang-format on      

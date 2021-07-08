@@ -140,7 +140,7 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
     int cmdId = gToolbarButtons[buttonNo].cmdId;
 
     // If restricted, disable
-    if (!HasPermission((Perm)(gToolbarButtons[buttonNo].flags >> PERM_FLAG_OFFSET))) {
+    if (!HasPermission((Perm)(gToolbarButtons[buttonNo].flags >> kPermFlagOffset))) {
         return false;
     }
 

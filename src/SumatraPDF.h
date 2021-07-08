@@ -72,20 +72,6 @@ inline constexpr Perm operator~(Perm lhs) {
     return static_cast<Perm>(v);
 }
 
-enum MenuToolbarFlags {
-    MF_NO_TRANSLATE = 1 << 0,
-    MF_NOT_FOR_CHM = 1 << 1,
-    MF_NOT_FOR_EBOOK_UI = 1 << 2,
-    MF_CBX_ONLY = 1 << 3,
-#define PERM_FLAG_OFFSET 7
-    MF_REQ_INET_ACCESS = Perm::InternetAccess << PERM_FLAG_OFFSET,
-    MF_REQ_DISK_ACCESS = Perm::DiskAccess << PERM_FLAG_OFFSET,
-    MF_REQ_PREF_ACCESS = Perm::SavePreferences << PERM_FLAG_OFFSET,
-    MF_REQ_PRINTER_ACCESS = Perm::PrinterAccess << PERM_FLAG_OFFSET,
-    MF_REQ_ALLOW_COPY = Perm::CopySelection << PERM_FLAG_OFFSET,
-    MF_REQ_FULLSCREEN = Perm::FullscreenAccess << PERM_FLAG_OFFSET,
-};
-
 struct Controller;
 class Favorites;
 struct FileHistory;
