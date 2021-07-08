@@ -55,7 +55,6 @@ struct ToolbarButtonInfo {
     TbIcon bmpIndex;
     int cmdId;
     const char* toolTip;
-    int flags;
 };
 
 // thos are not real commands but we have to refer to toolbar buttons
@@ -65,23 +64,23 @@ constexpr int CmdPageInfo = (int)CmdLast + 16;
 constexpr int CmdInfoText = (int)CmdLast + 17;
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    {TbIcon::Open, CmdOpen, _TRN("Open"), MF_REQ_DISK_ACCESS},
-    {TbIcon::Print, CmdPrint, _TRN("Print"), MF_REQ_PRINTER_ACCESS},
-    {TbIcon::None, CmdPageInfo, nullptr, 0}, // text box for page number + show current page / no of pages
-    {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page"), 0},
-    {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page"), 0},
-    {TbIcon::None, 0, nullptr, 0}, // separator
-    {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously"), 0},
-    {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page"), 0},
-    {TbIcon::RotateLeft, CmdViewRotateLeft, _TRN("Rotate &Left\tCtrl+Shift+-"), 0},
-    {TbIcon::RotateRight, CmdViewRotateRight, _TRN("Rotate &Right\tCtrl+Shift++"), 0},
-    {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out"), 0},
-    {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In"), 0},
-    {TbIcon::None, CmdFindFirst, nullptr, 0},
-    {TbIcon::SearchPrev, CmdFindPrev, _TRN("Find Previous"), 0},
-    {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next"), 0},
-    {TbIcon::MatchCase, CmdFindMatch, _TRN("Match Case"), 0},
-    {TbIcon::None, CmdInfoText, nullptr, 0}, // info text
+    {TbIcon::Open, CmdOpen, _TRN("Open")},
+    {TbIcon::Print, CmdPrint, _TRN("Print")},
+    {TbIcon::None, CmdPageInfo, nullptr}, // text box for page number + show current page / no of pages
+    {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
+    {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page")},
+    {TbIcon::None, 0, nullptr}, // separator
+    {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
+    {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
+    {TbIcon::RotateLeft, CmdViewRotateLeft, _TRN("Rotate &Left\tCtrl+Shift+-")},
+    {TbIcon::RotateRight, CmdViewRotateRight, _TRN("Rotate &Right\tCtrl+Shift++")},
+    {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out")},
+    {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In")},
+    {TbIcon::None, CmdFindFirst, nullptr},
+    {TbIcon::SearchPrev, CmdFindPrev, _TRN("Find Previous")},
+    {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next")},
+    {TbIcon::MatchCase, CmdFindMatch, _TRN("Match Case")},
+    {TbIcon::None, CmdInfoText, nullptr}, // info text
 };
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);
@@ -139,8 +138,16 @@ static bool IsVisibleToolbarButton(WindowInfo* win, int buttonNo) {
 static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
     int cmdId = gToolbarButtons[buttonNo].cmdId;
 
-    // If restricted, disable
-    if (!HasPermission((Perm)(gToolbarButtons[buttonNo].flags >> kPermFlagOffset))) {
+    bool isAllowed = true;
+    switch (cmdId) {
+        case CmdOpen:
+            isAllowed = HasPermission(Perm::DiskAccess);
+            break;
+        case CmdPrint:
+            isAllowed = HasPermission(Perm::PrinterAccess);
+            break;
+    }
+    if (!isAllowed) {
         return false;
     }
 
@@ -733,16 +740,6 @@ void CreateToolbar(WindowInfo* win) {
         LogBitmapInfo(hbmp);
     }
     DeleteObject(hbmp);
-
-#if 0 // we no longer have an icon for save as
-    // in Plugin mode, replace the Open with a Save As button
-    if (gPluginMode && size.dx / size.dy == 13) {
-        gToolbarButtons[0].bmpIndex = TbIcon::MatchCase2;
-        gToolbarButtons[0].cmdId = CmdSaveAs;
-        gToolbarButtons[0].toolTip = _TRN("Save As");
-        gToolbarButtons[0].flags = MF_REQ_DISK_ACCESS;
-    }
-#endif
 
     for (int i = 0; i < kButtonsCount; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
