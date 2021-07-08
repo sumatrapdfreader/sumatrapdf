@@ -53,9 +53,7 @@ constexpr int kPermFlagOffset = 9;
 enum {
     MF_NOT_FOR_CHM = 1 << 1,
     MF_NOT_FOR_EBOOK_UI = 1 << 2,
-    MF_CBX_ONLY = 1 << 3,
     MF_REQ_DISK_ACCESS = Perm::DiskAccess << kPermFlagOffset,
-    MF_REQ_ALLOW_COPY = Perm::CopySelection << kPermFlagOffset,
 };
 
 struct BuildMenuCtx {
@@ -168,7 +166,7 @@ static MenuDef menuDefView[] = {
     { _TRN("&Book View\tCtrl+8"),           CmdViewBook,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show &Pages Continuously"),     CmdViewContinuous,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
-    { _TRN("Man&ga Mode"),                  CmdViewMangaMode,         MF_CBX_ONLY },
+    { _TRN("Man&ga Mode"),                  CmdViewMangaMode,         0 },
     { kMenuSeparator,                             0,                        MF_NOT_FOR_CHM },
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   CmdViewRotateLeft,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  CmdViewRotateRight,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
@@ -274,23 +272,23 @@ static MenuDef menuDefDebug[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     MF_REQ_ALLOW_COPY },
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle, MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL, MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Selection)
 
 //[ ACCESSKEY_GROUP Menu (Selection)
 static MenuDef menuDefMainSelection[] = {
-    { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                 MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,  MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,   MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,     MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                  MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,   MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,    MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                  },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Menu (Selection)
@@ -326,11 +324,11 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
 //[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection \tCtrl-C"),         CmdCopySelection, MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Copy Selection \tCtrl-C"),         CmdCopySelection,  MF_NOT_FOR_EBOOK_UI },
     { _TRN("S&election"),                       (UINT_PTR)menuDefSelection, 0},
-    { _TRN("Copy &Link Address"),               CmdCopyLinkTarget, MF_REQ_ALLOW_COPY },
-    { _TRN("Copy Co&mment"),                    CmdCopyComment, MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Image"),                      CmdCopyImage, MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Link Address"),               CmdCopyLinkTarget, 0 },
+    { _TRN("Copy Co&mment"),                    CmdCopyComment,0 },
+    { _TRN("Copy &Image"),                      CmdCopyImage, 0 },
     // note: strings cannot be "" or else items are not there
     { "add fav placeholder",                    CmdFavoriteAdd, 0 },
     { "del fav placeholder",                    CmdFavoriteDel, 0 },
@@ -447,6 +445,22 @@ static UINT_PTR menusRequirePrefsPerms[] = {
     CmdForgetSelectedDocument,
 };
 
+static UINT_PTR removeIfNoCopyPerms[] = {
+    // TODO: probably those are covered by menuDefSelection
+    CmdTranslateSelectionWithGoogle,
+    CmdTranslateSelectionWithDeepL,
+    CmdSearchSelectionWithGoogle,
+    CmdSearchSelectionWithBing,
+    CmdSelectAll,
+
+    CmdCopySelection,
+    CmdCopyLinkTarget,
+    CmdCopyComment,
+    CmdCopyImage,
+    (UINT_PTR)menuDefSelection,
+    (UINT_PTR)menuDefMainSelection,
+};
+
 static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSelectAnnotation,
@@ -487,6 +501,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         // hacky but works: small number is command id, large is submenu (a pointer)
         bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
 
+        bool disableMenu = false;
         bool removeMenu = false;
         if (!HasPermission(Perm::InternetAccess)) {
             removeMenu |= cmdIdInList(menusNeedInternetAccess);
@@ -518,20 +533,17 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         }
         wasSeparator = false;
 
-        bool disableMenu = false;
         if (ctx) {
             bool notForChm = MF_NOT_FOR_CHM == (md.flags & MF_NOT_FOR_CHM);
             bool notForEbook = MF_NOT_FOR_EBOOK_UI == (md.flags & MF_NOT_FOR_EBOOK_UI);
-            bool cbxOnly = MF_CBX_ONLY == (md.flags & MF_CBX_ONLY);
             removeMenu |= (ctx->isChm && notForChm);
             removeMenu |= (ctx->isEbookUI && notForEbook);
-            removeMenu |= (cbxOnly && !ctx->isCbx);
-            bool needsSelection = cmdIdInList(menusToDisableIfNoSelection);
-            disableMenu |= (needsSelection && !ctx->hasSelection);
+            removeMenu |= (!ctx->isCbx && (cmdId == CmdViewMangaMode));
             removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
-            bool needsAnnotUnderCursor = (cmdId == CmdSelectAnnotation);
-            disableMenu |= (needsAnnotUnderCursor && !ctx->hasAnnotationUnderCursor);
-            disableMenu |= (cmdId == CmdSaveAnnotations) && !ctx->hasUnsavedAnnotations;
+
+            disableMenu |= (!ctx->hasSelection && cmdIdInList(menusToDisableIfNoSelection));
+            disableMenu |= (!ctx->hasAnnotationUnderCursor && (cmdId == CmdSelectAnnotation));
+            disableMenu |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
 
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
             removeMenu |= !ctx->hasSelection && (subMenuDef == menuDefCreateAnnotFromSelection);
