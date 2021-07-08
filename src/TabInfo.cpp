@@ -40,7 +40,6 @@ TabInfo::~TabInfo() {
     }
     delete selectionOnPage;
     delete ctrl;
-    delete tocSorted;
     CloseAndDeleteEditAnnotationsWindow(editAnnotsWindow);
 }
 

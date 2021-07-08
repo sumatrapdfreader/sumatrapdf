@@ -99,9 +99,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdTocEditorAddPdfSibling, "Add PDF Sibling")                       \
     V(CmdExpandAll, "Expand All")                                         \
     V(CmdCollapseAll, "Collapse All")                                     \
-    V(CmdSortTagSmallFirst, "Sort By Tag, Small First")                   \
-    V(CmdSortTagBigFirst, "Sort By Tag, Big First")                       \
-    V(CmdSortColor, "Sort By Color")                                      \
     V(CmdSaveEmbeddedFile, "Save Embedded File...")                       \
     V(CmdOpenEmbeddedPDF, "Open Embedded PDF")                            \
     V(CmdOptions, "Options...")                                           \

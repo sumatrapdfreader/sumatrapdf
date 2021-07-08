@@ -3,11 +3,8 @@
 
 struct SelectionOnPage;
 struct WatchedFile;
-struct VbkmFile;
 struct EditAnnotationsWindow;
 struct WindowInfo;
-
-enum class TocSort { None, TagSmallFirst, TagBigFirst, Color };
 
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on WindowInfo, so that a TabInfo could
@@ -35,10 +32,7 @@ struct TabInfo {
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
     float prevZoomVirtual{INVALID_ZOOM};
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
-    TocSort tocSort{TocSort::None};
     TocTree* currToc{nullptr}; // not owned by us
-    // if sortTag is != SortTag::None, this is a sorted toc tree to be displayed
-    TocTree* tocSorted{nullptr};
     EditAnnotationsWindow* editAnnotsWindow{nullptr};
 
     // TODO: terrible hack
