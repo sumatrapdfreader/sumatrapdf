@@ -483,7 +483,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     TabInfo* tab = win->currentTab;
-    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu(), 0);
 
     bool isEmbeddedFile = false;
     PageDestination* dest = nullptr;

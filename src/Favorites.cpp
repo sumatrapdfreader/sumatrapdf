@@ -373,7 +373,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
         return;
     }
 
-    AppendMenu(m, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
 
     gFavorites.ResetMenuIds();
     int menuId = CmdFavoriteFirst;
@@ -398,7 +398,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
         AppendFavMenuItems(sub, f, menuId, combined, f == currFileFav);
         if (!combined) {
             if (f == currFileFav) {
-                AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
+                AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
                 AutoFreeWstr tmp;
                 tmp.SetCopy(path::GetBaseNameNoFree(filePath));
@@ -756,7 +756,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     if (!ti) {
         return;
     }
-    HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, CreatePopupMenu(), 0);
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);

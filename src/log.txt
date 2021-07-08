@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-08 Thu
+
+allow MenuDef to be recursive
+
 2021-07-07 Wed
 
 remove .vbkm support

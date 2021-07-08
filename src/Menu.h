@@ -7,9 +7,11 @@ extern bool gAddCrashMeMenu;
 
 struct MenuDef {
     const char* title{nullptr};
-    int id{0};
+    UINT_PTR idOrSubmenu{0};
     int flags{0};
 };
+
+struct BuildMenuCtx {};
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
@@ -30,7 +32,8 @@ void MenuOwnerDrawnMesureItem(HWND, MEASUREITEMSTRUCT*);
 void MenuOwnerDrawnDrawItem(HWND, DRAWITEMSTRUCT*);
 HFONT GetMenuFont();
 
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter = 0);
+// TODO: use BuildMenuCtx
+HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, int flagFilter);
 HMENU BuildMenu(WindowInfo* win);
 void OnWindowContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);

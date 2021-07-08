@@ -239,28 +239,6 @@ static MenuDef menuDefDebug[] = {
 };
 //] ACCESSKEY_GROUP Debug Menu
 
-//[ ACCESSKEY_GROUP Context Menu (Content)
-// the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
-static MenuDef menuDefContext[] = {
-    // Selection sub-menu
-    { _TRN("Copy &Link Address"),           CmdCopyLinkTarget,        MF_REQ_ALLOW_COPY },
-    { _TRN("Copy Co&mment"),                CmdCopyComment,           MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Image"),                  CmdCopyImage,             MF_REQ_ALLOW_COPY },
-    // note: strings cannot be "" or else items are not there
-    { "add fav placeholder",                CmdFavoriteAdd,           MF_NO_TRANSLATE   },
-    { "del fav placeholder",                CmdFavoriteDel,           MF_NO_TRANSLATE   },
-    { _TRN("Show &Favorites"),              CmdFavoriteToggle,        0                 },
-    { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
-    { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),             CmdSaveAnnotations,       MF_REQ_DISK_ACCESS },
-    { _TRN("Select Annotation in Editor"),  CmdSelectAnnotation,      MF_REQ_DISK_ACCESS },
-    { _TRN("Edit Annotations"),             CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
-    { _TRN("E&xit Fullscreen"),             CmdExitFullScreen,        0 },
-    { 0, 0, 0 },
-};
-//] ACCESSKEY_GROUP Context Menu (Content)
-
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
     { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                 MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
@@ -302,6 +280,28 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Create annot under cursor)
 
+//[ ACCESSKEY_GROUP Context Menu (Content)
+// the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
+static MenuDef menuDefContext[] = {
+    { _TRN("S&election"),                   (UINT_PTR)menuDefSelection, 0},
+    { _TRN("Copy &Link Address"),           CmdCopyLinkTarget,          MF_REQ_ALLOW_COPY },
+    { _TRN("Copy Co&mment"),                CmdCopyComment,             MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Image"),                  CmdCopyImage,               MF_REQ_ALLOW_COPY },
+    // note: strings cannot be "" or else items are not there
+    { "add fav placeholder",                CmdFavoriteAdd,             MF_NO_TRANSLATE   },
+    { "del fav placeholder",                CmdFavoriteDel,             MF_NO_TRANSLATE   },
+    { _TRN("Show &Favorites"),              CmdFavoriteToggle,          0                 },
+    { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,           0                 },
+    { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,     MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,  MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Save Annotations"),             CmdSaveAnnotations,         MF_REQ_DISK_ACCESS },
+    { _TRN("Select Annotation in Editor"),  CmdSelectAnnotation,        MF_REQ_DISK_ACCESS },
+    { _TRN("Edit Annotations"),             CmdEditAnnotations,         MF_REQ_DISK_ACCESS },
+    { _TRN("E&xit Fullscreen"),             CmdExitFullScreen,          0 },
+    { 0, 0, 0 },
+};
+//] ACCESSKEY_GROUP Context Menu (Content)
+
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
@@ -313,7 +313,7 @@ static MenuDef menuDefContextStart[] = {
 //] ACCESSKEY_GROUP Context Menu (Start)
 // clang-format on
 
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
+HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, int flagFilter) {
     CrashIf(!menu);
     bool wasSeparator = true;
 
@@ -332,19 +332,31 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
         if (!HasPermission((Perm)(md.flags >> PERM_FLAG_OFFSET))) {
             continue;
         }
+
+        // a bit hacky but works: if id it's a small number
+        // if submenu, it's a large number (a pointer)
+        if (md.idOrSubmenu > CmdLast + 1000) {
+            MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
+            HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), flagFilter);
+            // TODO: support MF_NO_TRANSLATE
+            const WCHAR* tmp = trans::GetTranslation(md.title);
+            AppendMenuW(menu, MF_ENABLED | MF_POPUP, (UINT_PTR)subMenu, tmp);
+            continue;
+        }
+
         if (str::Eq(md.title, SEP_ITEM)) {
             // prevent two consecutive separators
             if (!wasSeparator) {
-                AppendMenuW(menu, MF_SEPARATOR, (UINT_PTR)md.id, nullptr);
+                AppendMenuW(menu, MF_SEPARATOR, md.idOrSubmenu, nullptr);
             }
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
             AutoFreeWstr tmp = strconv::Utf8ToWstr(md.title);
-            AppendMenuW(menu, MF_STRING, (UINT_PTR)md.id, tmp);
+            AppendMenuW(menu, MF_STRING, md.idOrSubmenu, tmp);
             wasSeparator = false;
         } else {
             const WCHAR* tmp = trans::GetTranslation(md.title);
-            AppendMenuW(menu, MF_STRING, (UINT_PTR)md.id, tmp);
+            AppendMenuW(menu, MF_STRING, md.idOrSubmenu, tmp);
             wasSeparator = false;
         }
     }
@@ -510,7 +522,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 #endif
 
     int idx;
-    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].id != CmdPrint; idx++) {
+    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].idOrSubmenu != CmdPrint; idx++) {
         // do nothing
     }
     if (idx < dimof(menuDefFile)) {
@@ -681,7 +693,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu(), 0);
     win::menu::SetChecked(popup, CmdPinSelectedDocument, state->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
@@ -743,14 +755,14 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
     bool isTextSelected = tab && win->showSelection && tab->selectionOnPage;
 
-    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu(), filter);
 
     int pageNoUnderCursor = dm->GetPageNoByPoint(Point{x, y});
     PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNoUnderCursor);
     EngineBase* engine = dm->GetEngine();
     bool annotationsSupported = EngineSupportsAnnotations(engine) && !win->isFullScreen;
     Annotation* annotUnderCursor{nullptr};
-    // bool isTextSelected = win->showSelection && tab->selectionOnPage;
+
     if (annotationsSupported) {
         annotUnderCursor = dm->GetAnnotationAtPos(Point{x, y}, nullptr);
         if (isTextSelected) {
@@ -774,10 +786,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::Remove(popup, CmdEditAnnotations);
         win::menu::Remove(popup, CmdSaveAnnotations);
     }
-
-    HMENU popupSelection = BuildMenuFromMenuDef(menuDefSelection, CreatePopupMenu(), filter);
-    uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
-    InsertMenuW(popup, (uint)0, flags, (UINT_PTR)popupSelection, _TR("S&election"));
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
         win::menu::Remove(popup, CmdCopyLinkTarget);
@@ -836,7 +844,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     MarkMenuOwnerDraw(popup);
-    flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
@@ -1297,27 +1305,27 @@ HMENU BuildMenu(WindowInfo* win) {
 
     HMENU m = CreateMenu();
     RebuildFileMenu(tab, m);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
     m = BuildMenuFromMenuDef(menuDefGoTo, CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
     if (!win->AsEbook()) {
         m = BuildMenuFromMenuDef(menuDefZoom, CreateMenu(), filter);
-        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
     }
     if (!win->AsEbook()) {
         m = BuildMenuFromMenuDef(menuDefSelection, CreateMenu(), filter);
-        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("S&election"));
+        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("S&election"));
     }
 
     // TODO: implement Favorites for ebooks
     if (HasPermission(Perm::SavePreferences) && !win->AsEbook()) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
-        m = BuildMenuFromMenuDef(menuDefFavorites, CreateMenu());
+        m = BuildMenuFromMenuDef(menuDefFavorites, CreateMenu(), filter);
         RebuildFavMenu(win, m);
-        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
+        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
 
     m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
@@ -1330,16 +1338,16 @@ HMENU BuildMenu(WindowInfo* win) {
         menuDefTheme[i] = {GetThemeByIndex(i)->name, IDM_CHANGE_THEME_FIRST + i, 0};
     }
     HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, CreateMenu(), filter);
-    AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
+    AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
 #endif
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
 
     m = BuildMenuFromMenuDef(menuDefHelp, CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #if 0
     // see MenuBarAsPopupMenu in Caption.cpp
     m = GetSystemMenu(win->hwndFrame, FALSE);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
 
     if (gShowDebugMenu) {
@@ -1351,11 +1359,11 @@ HMENU BuildMenu(WindowInfo* win) {
         }
 
         if (gAddCrashMeMenu) {
-            AppendMenu(m, MF_SEPARATOR, 0, nullptr);
+            AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
             AppendMenuA(m, MF_STRING, (UINT_PTR)CmdDebugCrashMe, "Crash me");
         }
 
-        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
+        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
     }
 
     MarkMenuOwnerDraw(mainMenu);
@@ -1369,11 +1377,11 @@ void UpdateAppMenu(WindowInfo* win, HMENU m) {
         return;
     }
     int id = (int)GetMenuItemID(m, 0);
-    if (id == menuDefFile[0].id) {
+    if (id == menuDefFile[0].idOrSubmenu) {
         RebuildFileMenu(win->currentTab, m);
-    } else if (id == menuDefFavorites[0].id) {
+    } else if (id == menuDefFavorites[0].idOrSubmenu) {
         win::menu::Empty(m);
-        BuildMenuFromMenuDef(menuDefFavorites, m);
+        BuildMenuFromMenuDef(menuDefFavorites, m, 0);
         RebuildFavMenu(win, m);
     }
     MenuUpdateStateForWindow(win);
