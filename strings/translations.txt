@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1b35f5aeed9fc7aacdd4ed60c3a3b489943bc7d7
+86c70f6bfaed83316701cdb0a57dd45dfe385166
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -437,6 +437,7 @@ vn:Xem dạng sách\tCtrl+8
 am:&Ստեղն
 bn:&Caret
 cn:&插入符
+el:Αγκύλη
 kw:&Karet
 lv:&Norāde
 nl:&Merkteken
@@ -789,7 +790,7 @@ bs:&Dvije stranice\tCtrl+7
 by:Па &дзве старонцы\tCtrl+7
 ca-xv:Pàgina &doble\tCtrl+7
 ca:Pàgina &doble\tCtrl+7
-cn:双页模式(&F)\tCtrl+7
+cn:双页视图(&F)\tCtrl+7
 co:Pagina d&oppia\tCtrl+7
 cy:&Wynebu\tCtrl+7
 cz:&Dvojstránky\tCtrl+7
@@ -1117,6 +1118,7 @@ vn:Vừa trang in
 am:&Ազատ գրվածք
 cn:&自由文本
 de:&Freitext
+el:Ελεύθερο κείμενο
 kw:&Tekst Rydh
 lv:&Brīvs teksts
 nl:&Vrije Tekst
@@ -2671,6 +2673,7 @@ co:&Caccià da a crunulogia
 cy:Tynnu o'&r Hanes
 de:Aus der Historie entfernen
 dk:&Fjern fra historikken
+el:Κατάργηση από το ιστορικό
 es:&Eliminar del historial
 et:&Eemalda Ajaloost
 fr:Supprimer de l'historique
@@ -2960,7 +2963,7 @@ bs:&Jedna stranica\tCtrl+6
 by:&Адна старонка\tCtrl+6
 ca-xv:Pàgina ú&nica\tCtrl+6
 ca:Pàgina ú&nica\tCtrl+6
-cn:单页模式(&S)\tCtrl+6
+cn:单页视图(&S)\tCtrl+6
 co:&Una pagina sola\tCtrl+6
 cy:Tudalen &Unigol\tCtrl+6
 cz:&Jedna stránka\tCtrl+6
@@ -3085,6 +3088,7 @@ vn:Bỏ qua phiên bản này.
 :&Stamp
 cn:&图章
 de:&Stempel
+el:Σφραγίδα
 kw:&Stampa
 lv:&Zīmogs
 nl:&Stempel
@@ -3099,6 +3103,7 @@ pl:&Skreślenie
 az:Mə&tn
 cn:&文本
 de:&Text
+el:Κείμενο
 kw:&Tekst
 lv:&Teksts
 nl:&Tekst
@@ -3163,6 +3168,7 @@ vn:&Chủ đề
 :&Underline
 cn:&下划线
 de:&Unterstreichen
+el:Υπογράμμιση
 kw:&Islinya
 lv:&Pasvītrojums
 nl:&Onderstrepen
@@ -4694,6 +4700,7 @@ az:Müəllif: %s
 bn:গ্রন্থকার: %s
 cn:作者: %s
 de:Autor: %s
+el:Συγγραφέας: %s
 es:Autora: %s
 kw:Skrifer: %s
 lv:Autors: %s
@@ -5116,6 +5123,7 @@ vn:Chỉ dấu sách
 am:Եզրագիծ. %d
 bn:সীমানা: %d
 cn:边框: %d
+el:Περιθώριο: %d
 kw:Amal: %d
 lv:Apmale: %d
 nl:Rand %d
@@ -5470,7 +5478,7 @@ bs:Ne mogu pokrenuti komandu pretraživanja unazad. Molimo da provjerite komandn
 by:Немагчыма здзейсніць зваротны пошук. Калі ласка, праверце камандны радок у наладах.
 ca-xv:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia de comandes a les preferències.
 ca:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia d'ordres a les preferències.
-cn:无法进行逆向搜索。请检查设置数值里的命令栏。
+cn:无法进行逆向搜索，请检查设置数值里的命令栏。
 co:Ùn pò micca lancià a cumanda di ricerca à l’arritrosa. Ci vole à verificà a linea di cumanda in e preferenze.
 cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
@@ -5833,6 +5841,7 @@ az:Rəng:
 bn:রং:
 cn:颜色:
 de:Farbe:
+el:Χρώμα:
 es:Color:
 kw:Liw:
 lv:Krāsa:
@@ -5973,7 +5982,9 @@ vn:Tính tương thích
 am:Բովանդակություններ.
 az:Məzmun:
 bn:বিষয়:
+cn:内容：
 de:Inhalte:
+el:Περιεχόμενα:
 kw:Dalghow:
 lv:Saturs:
 nl:Inhoud
@@ -6128,7 +6139,7 @@ bs:Dvije stranice slijedno
 by:Працягла дзьве старонкі
 ca-xv:Pàgina doble contínua
 ca:Pàgina doble contínua
-cn:连续对页模式
+cn:连续对页视图
 co:Vista in cuntinuu, pagina doppia
 cy:Wynebu'n Ddidor
 cz:Dvojstránky průběžně
@@ -7648,6 +7659,7 @@ az:Tarix:
 bn:তারিখ:
 cn:日期:
 de:Datum:
+el:Ημερομηνία:
 es:Fetcha:
 kw:Dedhyas:
 lv:Datums:
@@ -7918,6 +7930,7 @@ am:Մերժել
 bn:বাতিল করুন
 cn:丢弃
 de:Verwerfen
+el:Απόρριψη
 kw:Hepkor
 lv:Atmest
 nl:Verwijderen
@@ -8350,6 +8363,7 @@ co:Mudificà l’indette
 cy:Golygu Nodau Tudalen
 de:Lesezeichen bearbeiten
 dk:Rediger bogmærker
+el:Επεξεργασία σελιδοδεικτών
 es:Eliminar marcadores
 fr:Éditer les marque-pages
 ga:Cuir leabharmharcanna in eagar
@@ -8682,6 +8696,7 @@ co:Espurtà l’indette
 cy:Allforio Nodau Tudalen
 de:Lesezeichen exportieren
 dk:Eksporter bogmærker
+el:Εξαγωγή σελιδοδεικτών
 es:Exportar marcadores
 fr:Exporter les marque-pages
 ga:Tabhair amach na leabharmharcanna
@@ -8905,7 +8920,7 @@ bs:Dvije stranice
 by:Дзьве старонкі
 ca-xv:Pàgina doble
 ca:Pàgina doble
-cn:双页模式
+cn:双页视图
 co:Pagina doppia
 cy:Wynebu
 cz:Dvojstránky
@@ -9036,7 +9051,7 @@ bs:Neuspješno registriranje kao zadani program na win 10
 by:Немагчыма зарэгістраваць як стандартную праграму ў Win 10
 ca-xv:Ha fallat de registrar-lo com a programa per defecte a win 10
 ca:Ha fallat en registrar com a programa per defecte en Windows 10
-cn:Win 10 下注冊為默认程序失败
+cn:注册为 Win 10 默认程序失败
 co:Fiascu per inscrive cum’è prugramma predefinitu nant’à Windows 10
 cy:Methwyd cofrestru fel rhaglen rhagosodedig ar Win 10
 cz:Nepodařilo se nastavit jako výchozí program na Windows 10
@@ -9604,6 +9619,7 @@ co:Schedariu attaccatu
 cy:Atodiad Ffeil
 de:Dateianhang
 dk:Vedhæftet fil
+el:Συνημμένο αρχείο
 es:Adjuntar archivo
 fr:Pièce jointe
 ga:Ceangaltán comhaid
@@ -10386,7 +10402,7 @@ bs:Uklopi stranicu
 by:Падагнаць старонку
 ca-xv:Ajusta a la pàgina
 ca:Ajusta a la pàgina
-cn:符合页面(&P)
+cn:单页视图(&P)
 co:Pagina sana
 cy:Ffitio'r Dudalen
 cz:Podle stránky
@@ -10588,7 +10604,7 @@ bs:Uklopi jednu stranicu
 by:Размясціць на адной старонцы
 ca-xv:Ajusta a una única pàgina
 ca:Ajusta a una única pàgina
-cn:符合单页(&P)
+cn:单页视图(&P)
 co:Pagina unica
 cy:Ffitio Tudalen Unigol
 cz:Přizpůsobit pro jednu celou stránku v okně
@@ -11298,6 +11314,7 @@ vn:Gợi ý: Nhấn phím F3 để tìm lại
 am:Պատկերակ.
 bn:আইকন
 cn:图标:
+el:Εικονίδιο:
 kw:Ikon:
 lv:Ikona:
 nl:Pictogram:
@@ -11375,6 +11392,7 @@ co:Fiure
 cy:Delweddau
 de:Bilder
 dk:Billeder
+el:Εικόνες
 es:Imágenes
 et:Pildid
 fr:Images
@@ -11617,7 +11635,7 @@ bs:Instalacija u toku...
 by:Ідзе ўсталёўка...
 ca-xv:La instal·lació és en progrés...
 ca:La instal·lació és en progrés...
-cn:安装正在进行中...
+cn:安装中...
 co:Installazione in corsu…
 cy:Wrthi'n gosod
 cz:Probíhá instalace...
@@ -11671,6 +11689,8 @@ uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Interior Color:
 am:Ներքին գույնը.
+cn:填充颜色：
+el:Εσωτερικό Χρώμα:
 kw:Liw A-Bervedh:
 lv:Iekšējā krāsa:
 nl:Interieur Kleur
@@ -11954,6 +11974,8 @@ tw:線條
 :Line End:
 am:Տողի ավարտը.
 bn:লাইন শেষ:
+cn:线段终点
+el:Τέλος γραμμής:
 es:Fin de Línea:
 kw:Diwedh Linen:
 nl:Lijn Eind
@@ -11962,6 +11984,8 @@ ru:Конец линии:
 :Line Start:
 am:Տողի մեկնարկը.
 bn:লাইন শুরু:
+cn:线段起点
+el:Έναρξη γραμμής:
 es:Inicio de Línea:
 kw:Dalleth Linen:
 nl:Lijn Begin
@@ -12050,7 +12074,7 @@ bs:Postavi SumatraPDF za glavnu aplikaciju za PDF fajlove?
 by:Зрабіць SumatraPDF стандартнай праграмай прагляду PDF-файлаў?
 ca-xv:Voleu que el SumatraPDF siga el visor predeterminat dels fitxers PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat dels fitxers PDF?
-cn:把 SumatraPDF 作为默认的 PDF 阅读器?
+cn:将 SumatraPDF 设为默认的 PDF 阅读器?
 co:Fà di SumatraPDF l’appiecazione predefinita per i schedarii PDF ?
 cy:Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 cz:Nastavit SumatraPDF jako výchozí prohlížeč PDF souborů?
@@ -12249,7 +12273,7 @@ bs:Razlikuj velika i mala slova
 by:Улічваць рэгістр
 ca-xv:Distigeix entre majúscules i minúscules
 ca:Distigeix entre majúscules i minúscules
-cn:大小写匹配
+cn:匹配大小写
 co:Rispettà a cassa
 cy:Cydweddu Maint
 cz:Rozlišovat velikost písmen
@@ -12515,7 +12539,7 @@ bs:Dostupna je nova verzija (%s). Preuzeti novu verziju?
 by:Даступная новая версія: %s. Загрузіць яе?
 ca-xv:És disponible la nova versió %s. Voleu baixar-la?
 ca:Es troba disponible una versió nova %s. Voleu baixar-la?
-cn:最新版本 %s。 是否下载新版本?
+cn:最新版本 %s 已发布，是否下载？
 co:A nova versione %s hè dispunibule. Scaricalla ?
 cy:Mae fersiwn newydd o %s ar gael. Llwytho'r fersiwn newydd i lawr??
 cz:Nová verze %s je k dispozici. Stáhnout novou verzi?
@@ -13044,6 +13068,7 @@ am:Մգություն.
 bn:অস্বচ্ছতা:
 cn:透明度:
 de:Deckkraft:
+el:Διαφάνεια:
 es:Opacidad:
 kw:Disklerder:
 lv:Necaurspīdīgums:
@@ -13054,6 +13079,7 @@ am:Մգություն. %d
 bn:অস্বচ্ছতা: %d
 cn:透明度: %d
 de:Deckkraft: %d
+el:Διαφάνεια: %d
 es:Opacidad: %d
 kw:Disklerder: %d
 lv:Necaurspīdīgums: %d
@@ -13228,7 +13254,7 @@ bs:Otvori dokument...
 by:Адкрыць дакумент...
 ca-xv:Obri un document...
 ca:Obre un document...
-cn:打开一个文件...
+cn:打开文件...
 co:Apre un ducumentu…
 cy:Agor dogfen...
 cz:Otevřít dokument...
@@ -13354,7 +13380,7 @@ bs:Otvori u &Adobe Readeru
 by:Адкрыць у &Adobe Reader
 ca-xv:Obre amb l'&Adobe Reader
 ca:Obre amb l'&Adobe Reader
-cn:在 &Adobe Reader 中打开
+cn:在 Adobe Reader 中打开(&A)
 co:Apre cù Ad&obe Reader
 cy:Agor yn &Adobe Reader
 cz:Otevřít v programu &Adobe Reader
@@ -13420,7 +13446,7 @@ bs:Otvori u &Foxit Readeru
 by:Адкрыць у &Foxit Reader
 ca-xv:Obre amb el &Foxit Reader
 ca:Obre amb el &Foxit Reader
-cn:在 &Foxit Reader 中打开
+cn:在 Foxit Reader 中打开(&F)
 co:Apre cù &Foxit Reader
 cy:Agor yn &Foxit Reader
 cz:Otevřít v programu &Foxit Reader
@@ -13484,7 +13510,7 @@ bs:Otvori u Microsoft HTML Help
 by:Адкрыць у Microsoft HTML Help
 ca-xv:Obre amb el Microsoft HTML Help
 ca:Obre amb el Microsoft HTML Help
-cn:在 &Microsoft HTML Help 中打开(&M)
+cn:在 Microsoft HTML Help 中打开(&M)
 co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft HTML Help
 cz:Otevřít v programu Microsoft HTML Help
@@ -13548,7 +13574,7 @@ bs:Otvori u Microsoft XPS-Viewer
 by:Адкрыць у Microsoft XPS-Viewer
 ca-xv:Obre amb el Microsoft XPS-Viewer
 ca:Obre amb el Microsoft XPS-Viewer
-cn:在 &Microsoft XPS-Viewer 中打开
+cn:在 Microsoft XPS-Viewer 中打开(&M)
 co:Apre cù Microsoft &XPS-Viewer
 cy:Agor yn Microsoft XPS-Viewer
 cz:Otevřít v programu Microsoft XPS-Viewer
@@ -13675,7 +13701,7 @@ bs:P&ostavke...\tCtrl+D
 by:Уласцівасці\tCtrl+D
 ca-xv:P&ropietats...\tCtrl+D
 ca:P&ropietats...\tCtrl+D
-cn:属性(&R)...\tCtrl+D
+cn:属性(&R)\tCtrl+D
 co:&Pruprietà\tCtrl+D
 cy:P&riodweddau...\tCtrl+D
 cz:&Vlastnosti...\tCtrl+D
@@ -14586,7 +14612,7 @@ bs:Molim pričekajte, iscrtavam...
 by:Пачакайце - фармуецца малюнак...
 ca-xv:S'està renderitzant...
 ca:S'està renderitzant...
-cn:请稍等——正在渲染...
+cn:请稍等，正在渲染...
 co:Aspittate per piacè ; trasfurmazione…
 cy:Arhoswch, wrthi'n cyflwyno...
 cz:Prosím čekejte, probíhá vykreslování...
@@ -14650,6 +14676,7 @@ co:Linea tronca
 cy:Llinell Poli
 de:Polylinie
 dk:Polylinje
+el:Πολυγραμμή
 es:Polilínea
 ga:Líne iolrach
 gl:Liña polivinílica
@@ -14674,6 +14701,7 @@ co:Poligonu
 cy:Polygon
 de:Polygon
 dk:Polygon
+el:Πολύγωνο
 es:Polígono
 fr:Polygone
 ga:Polagán
@@ -14690,6 +14718,7 @@ tr:Çokgen
 tw:多邊形
 :Popup: %d 0 R
 am:Ելնող. %d 0 R
+cn:弹出：%d 0 R
 kw:Tardhans: %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
@@ -15156,7 +15185,7 @@ bs:Štampanje je još uvijek u toku. Prekini i izađi?
 by:Ідзе друк. Спыніць і выйсці?
 ca-xv:La impressió encara és en procés. Voleu aturar i sortir?
 ca:La impressió encara està en procés. Voleu aturar i sortir?
-cn:打印仍在持续当中。要中止并放弃吗？
+cn:正在打印中，要中止并退出吗？
 co:Stampa sempre in corsu. Interrompe è esce ?
 cy:Dal wrthi'n argraffu. Hepgor a gadael?
 cz:Tisk stále probíhá. Přerušit a odejít?
@@ -15218,7 +15247,7 @@ bs:Štampa je još u toku. Prekini i započni ispočetka?
 by:Ідзе друк. Спыніць і пачаць нанова?
 ca-xv:La impressió encara es troba en progrés. Voleu cancel·lar-la i tornar a començar??
 ca:La impressió encara es troba en progrés. Voleu cancel·lar-la i tornar a començar??
-cn:打印仍在持续当中。要中止并重新设置吗？
+cn:正在打印中，要中止并重新开始吗？
 co:Stampa sempre in corsu. Interrompe è principià torna ?
 cy:Dal wrthi'n argraffu. Hepgor a chychwyn eto?
 cz:Tisk je stále probíhá. Přerušit a začít znovu?
@@ -15466,6 +15495,7 @@ uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
+cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
 kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
@@ -15480,6 +15510,7 @@ co:Redige
 cy:Cuddio
 de:Zensieren
 dk:Udelad
+el:Σύνταξη
 es:Redactar
 fr:Rédiger
 ga:Folaigh
@@ -15567,6 +15598,7 @@ co:Caccià l’elementu
 cy:Tynnu Eitem
 de:Element entfernen
 dk:Fjern element
+el:Αφαίρεση στοιχείου
 es:Eliminar ítem
 fr:Supprimer l'élément
 ga:Bain mír
@@ -15786,7 +15818,7 @@ bs:Rotiraj nalijevo\tCtrl+Shift+-
 by:Павярнуць супраць гадзінніка\tCtrl+Shift+-
 ca-xv:Gira a l'esquerra\tCtrl+Maj+-
 ca:Gira a l'esquerra\tCtrl+Shift+-
-cn:向左旋转(&L)\tCtrl+Shift+-
+cn:逆时针旋转(&L)\tCtrl+Shift+-
 co:Girà à &manca\tCtrl+Maiusc+-
 cy:Troi &Gwrthglocwedd\tCtrl+Shift+-
 cz:Otočit do&leva\tCtrl+Shift+Num-
@@ -15857,7 +15889,7 @@ bs:Rotiraj nadesno\tCtrl+Shift++
 by:Павярнуць па гадзінніку\tCtrl+Shift++
 ca-xv:Gira a la dreta\tCtrl+Maj++
 ca:Gira a la dreta\tCtrl+Shift++
-cn:向右旋转(&R)\tCtrl+Shift++
+cn:顺时针旋转(&R)\tCtrl+Shift++
 co:Girà à &diritta\tCtrl+Maiusc++
 cy:Troi &Clocwedd\tCtrl+Shift++
 cz:Otočit dop&rava\tCtrl+Shift+Num+
@@ -15919,6 +15951,7 @@ vn:Quay phải\tCtrl+Shift++
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
+cn:波浪线(&q)
 de:Verschnörkelt
 kw:I&gam-ogam
 lv:&Viļņaina
@@ -16040,6 +16073,7 @@ co:Arregistrà u schedariu incurpuratu…
 cy:Cadw Ffeil wedi'i Mewnosod...
 de:Eingebettete Datei speichern...
 dk:Gem integreret fil...
+el:Αποθήκευση ενσωματωμένου αρχείου...
 es:Guardar archivo incrustado...
 fr:Enregistrer le fichier incorporé...
 ga:Taisc comhad leabaithe...
@@ -16118,8 +16152,9 @@ vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
-cn:保存更改到新的PDF
+cn:另存为新的 PDF 文件
 de:Änderungen in einer neuen PDF-Datei speichern
+el:Αποθήκευση αλλαγών σε νέο PDF
 kw:Gwitha chanjyow dhe PDF nowydh
 lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
@@ -16127,8 +16162,9 @@ pl:Zapisz zmiany w nowym pliku PDF
 ru:Сохранить изменения в новый PDF
 :Save changes to existing PDF
 az:Dəyişiklikləri mövcud PDF-ə yaz
-cn:保存更改到现有PDf
+cn:保存至当前 PDF 文件
 de:Änderungen an vorhandener PDF speichern
+el:Αποθήκευση αλλαγών σε υπάρχον PDF
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
@@ -16136,6 +16172,7 @@ pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 :Saved annotations to '%s'
 cn:保存注释到 '%s'
+el: Αποθηκεύτηκαν σχόλια στο '%s'
 kw:Notenyansow gwithys dhe '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
@@ -16341,6 +16378,7 @@ vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
 cn:在编辑器中选择注释
 de:Anmerkung im Editor auswählen
+el:Επιλέξτε σχολιασμό στον επεξεργαστή 
 kw:Dewis Notenyans y'n Wolegell
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
@@ -16419,7 +16457,7 @@ bs:Izaberite direktorij gdje bi SumatraPDF trebao biti instaliran:
 by:Абярыце каталог, куды ўсталяваць SumatraPDF:
 ca-xv:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
 ca:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
-cn:选择 SumatraPDF 应被安装的文件夹：
+cn:选择 SumatraPDF 安装目录：
 co:Selezziunà u cartulare induve SumatraPDF serà installatu :
 cy:Dewis y ffolder lle ddylai SumatraPDF gael ei gosod:
 cz:Vyberte adresář, do kterého chcete nainstalovat SumatraPDF:
@@ -16812,6 +16850,7 @@ co:&Affissà e barre di sfilarata
 cy:Dangos Barrau &Sgrolio
 de:Scrollbalken anzeigen
 dk:Vis &rullepaneler
+el:Εμφάνιση μπαρών κύλισης
 es:Mostrar &Barra de desplazamiento
 fr:Afficher les &barres  de défilement
 ga:Taispeáin na barraí &scrollála
@@ -16839,7 +16878,7 @@ bs:Prikaži alatnu traku
 by:Паказваць панэлі прылад
 ca-xv:Mostra la &barra d'eines
 ca:Mostra la &barra d'eines
-cn:显示工具栏(&T)
+cn:显示工具栏(&T)\tF8
 co:Affissà a &barra d’attrezzi\tF8
 cy:Dangos y &Bar Offer
 cz:Zobrazit panel nás&trojů
@@ -17004,6 +17043,7 @@ co:&Affissà e barre di sfilarata
 cy:Dangos Barrau Sgr&olio
 de:Scrollbalken anzeigen
 dk:Vis rul&lepaneler
+el:Εμφάνιση μπαρών κύλισης
 es:Mostrar barras de desplazamientos&
 fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
@@ -17193,7 +17233,7 @@ bs:Jedna stranica
 by:Адна старонка
 ca-xv:Pàgina única
 ca:Pàgina única
-cn:单个页面
+cn:单页视图
 co:Pagina sola
 cy:Tudalen unigol
 cz:Jedna stránka
@@ -17261,7 +17301,7 @@ bs:Oprostite, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam
 by:Даруйqt, гэтага не павінна было здарыцца!\n\nКалі ласка націсніце "Адмена", калі вы хочаце дапамагчы нам выправіць прычыну гэтай памылкі.
 ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
 ca:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'aquest error.
-cn:抱歉，本不应该发生的！\n\n如果你希望帮助我们修复这个崩溃问题，请点击'取消'。
+cn:抱歉，出现错误！\n\n如果你希望帮助我们修复这个问题，请点击“取消”。
 co:Quessu ùn duveria mai accade !\n\nCi vole à sceglie « Abbandunà » s’è voi vulete aiutacci à currege a causa di stu penseru.
 cy:Ymddiheuriadau. Dylai hynny heb fod wedi digwydd!\n\nPwyswch 'Diddymu', os hoffech chi ein cynorthwyo i drwsio achos y gwall.
 cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
@@ -17443,7 +17483,7 @@ bs:Pokreni SumatraPDF
 by:Запуск SumatraPDF
 ca-xv:Inicia el SumatraPDF
 ca:Inicia el SumatraPDF
-cn:启动SumatraPDF
+cn:启动 SumatraPDF
 co:Lancià SumatraPDF
 cy:Cychwyn SumatraPDF
 cz:Spustit SumatraPDF
@@ -17887,7 +17927,7 @@ bs:SumatraPDF je deinstaliran.
 by:SumatraPDF быў знішчаны
 ca-xv:S'ha desinstal·lat el SumatraPDF.
 ca:S'ha desinstal·lat el SumatraPDF.
-cn:已卸载 SumatraPDF 。
+cn:已卸载 SumatraPDF。
 co:SumatraPDF hè statu disinstallatu.
 cy:Mae SumatraPDF wedi ei ddadosod.
 cz:SumatraPDF byl odinstalován.
@@ -18074,7 +18114,7 @@ bs:SumatraPDF bi sad trebao biti vaš glavni čitač PDF fajlova
 by:Зараз SumatraPDF асацыявана з файламі PDF
 ca-xv:El SumatraPDF ha d'esser ara mateix el vostre lector PDF predeterminat
 ca:El SumatraPDF ha d'ésser ara mateix el vostre lector PDF predeterminat
-cn:现在 SumatraPDF 应该是你的默认 PDF 阅读器了
+cn:现在 SumatraPDF 是默认 PDF 阅读器了
 co:Avà SumatraPDF duveria esse u vostru lettore PDF predefinitu
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 cz:SumatraPDF by měl být výchozím PDF prohlížečem
@@ -18273,7 +18313,7 @@ bs:Označeni PDF
 by:Тэгі PDF
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
-cn:已标记PDF
+cn:已标记 PDF
 co:PDF etichettatu
 cy:PDF wedi ei thagio
 cz:Tagované PDF
@@ -18328,6 +18368,7 @@ vn:PDF được gắn thẻ
 :Text Alignment:
 cn:文本对齐:
 de:Textausrichtung:
+el:Ευθυγράμμιση κειμένου:
 kw:Alinyans Tekst:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
@@ -18338,6 +18379,7 @@ az:Mətnin rəngi:
 bn:লেখার রং:
 cn:文本颜色:
 de:Textfarbe:
+el:Text Color: 
 es:Color de Texto:
 kw:Liw Tekst:
 lv:Teksta krāsa:
@@ -18349,6 +18391,7 @@ az:Mətnin ölçüsü:
 bn:লেখার আকার:
 cn:文本大小:
 de:Textgröße:
+el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
 kw:Braster Tekst:
 lv:Teksta lielums:
@@ -18359,6 +18402,7 @@ ru:Размер текста:
 bn:লেখার আকার: %d
 cn:文本大小: %d
 de:Textgröße: %d
+el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 kw:Braster Tekst: %d
 lv:Teksta lielums: %d
@@ -18434,7 +18478,7 @@ am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու հա�
 ar:شكرا لاختيارك RA-MICRO PDF!
 az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
 br:Obrigado por escolher o RA-MICRO PDF!
-cn:感谢您选择 RA-MICRO PDF！
+cn:感谢您选用 RA-MICRO PDF！
 co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
 cy:Diolch am ddewis RA-MICRO PDF!
 de:Vielen Dank, dass Sie RA-MICRO PDF gewählt haben!
@@ -18465,7 +18509,7 @@ bs:Hvala Vam što ste izabrali SumatraPDF!
 by:Дзакуй за тое, што выбралі SumatraPDF!
 ca-xv:Gràcies per triar el SumatraPDF!
 ca:Gràcies per triar el SumatraPDF!
-cn:谢谢您选用 SumatraPDF！
+cn:感谢您选用 SumatraPDF！
 co:Vi ringraziemu d’avè sceltu SumatraPDF !
 cy:Diolch am ddefnyddio SumatraPDF!
 cz:Děkujeme, že jste si vybrali SumatraPDF!
@@ -18900,7 +18944,7 @@ bs:Deinstalacija u toku ...
 by:Ідзе знішчэнне...
 ca-xv:Desinstal·lació en progrés...
 ca:Desinstal·lació en progrés...
-cn:卸载正在进行...
+cn:卸载中...
 co:Disinstallazione in corsu…
 cy:Wrthi'n dadosod...
 cz:Probíhá odinstalace...
@@ -19018,6 +19062,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 cn:未保存的注释
+el:Μη αποθηκευμένα σχόλια
 es:Anotaciones no guardadas
 kw:Notenyansow anwithys
 lv:Nesaglabātās anotācijas
@@ -19093,7 +19138,7 @@ bs:Koristi SumatraPDF kao &izvorni PDF čitač
 by:Выкарыстаць SumatraPDF як &стандартны Чытальнік PDF
 ca-xv:Usa el SumatraPDF com a visor PDF &predeterminat
 ca:Usa el SumatraPDF com a visor PDF &predeterminat
-cn:使用 SumatraPDF 作为默认的 PDF 阅读器(&U)
+cn:将 SumatraPDF 作为默认的 PDF 阅读器(&U)
 co:Impiegà SumatraPDF cum’è u lettore PDF predefinitu
 cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
@@ -19487,6 +19532,7 @@ vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 cn:存在未保存的注释
 co:Avete annutazioni micca arregistrate
+el:Έχετε μη αποθηκευμένα σχόλια
 es:Tienes anotaciones sin guardar
 id:Kamu memiliki catatan yang belum tersimpan
 kw:Yma notenyansow anwithys dhis
@@ -19495,7 +19541,7 @@ nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 :You have unsaved annotations. Save them?
-cn:存在未保存的注释. 是否保存?
+cn:存在未保存的注释，是否保存?
 kw:Yma notenyansow anwithys dhis. A vynnydh aga gwitha?
 lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
 nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
