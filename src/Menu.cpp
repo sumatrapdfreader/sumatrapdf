@@ -1019,7 +1019,7 @@ static UINT_PTR rmoveIfChm[] = {
 
 static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
     for (int i = 0; i < n; i++) {
-        int id = idsList[i];
+        UINT_PTR id = idsList[i];
         if (id == cmdId) {
             return true;
         }
@@ -2010,7 +2010,7 @@ void UpdateAppMenu(WindowInfo* win, HMENU m) {
     if (!win) {
         return;
     }
-    int id = (int)GetMenuItemID(m, 0);
+    UINT_PTR id = (UINT_PTR)GetMenuItemID(m, 0);
     if (id == menuDefFile[0].idOrSubmenu) {
         RebuildFileMenu(win->currentTab, m);
     } else if (id == menuDefFavorites[0].idOrSubmenu) {
