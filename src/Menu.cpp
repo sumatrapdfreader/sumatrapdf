@@ -49,11 +49,9 @@
 // SumatraPDF.cpp
 extern Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
 
-constexpr int kPermFlagOffset = 9;
 enum {
     MF_NOT_FOR_CHM = 1 << 1,
     MF_NOT_FOR_EBOOK_UI = 1 << 2,
-    MF_REQ_DISK_ACCESS = Perm::DiskAccess << kPermFlagOffset,
 };
 
 struct BuildMenuCtx {
@@ -122,36 +120,36 @@ MenuDef menuDefContextFav[] = {
 // clang-format off
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
-    { _TRN("New &window\tCtrl+N"),          CmdNewWindow,              MF_REQ_DISK_ACCESS },
-    { _TRN("&Open...\tCtrl+O"),             CmdOpen,                   MF_REQ_DISK_ACCESS },
+    { _TRN("New &window\tCtrl+N"),          CmdNewWindow,              0 },
+    { _TRN("&Open...\tCtrl+O"),             CmdOpen,                   0 },
     // TODO: should make it available for everyone?
-    //{ "Open Folder",                        CmdOpenFolder,             MF_REQ_DISK_ACCESS },
-    { _TRN("&Close\tCtrl+W"),               CmdClose,                  MF_REQ_DISK_ACCESS },
-    { _TRN("Show in &folder"),              CmdShowInFolder,           MF_REQ_DISK_ACCESS },
-    { _TRN("&Save As...\tCtrl+S"),          CmdSaveAs,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Save Annotations"),             CmdSaveAnnotations,        MF_REQ_DISK_ACCESS },
+    //{ "Open Folder",                        CmdOpenFolder,             0 },
+    { _TRN("&Close\tCtrl+W"),               CmdClose,                  0 },
+    { _TRN("Show in &folder"),              CmdShowInFolder,           0 },
+    { _TRN("&Save As...\tCtrl+S"),          CmdSaveAs,                 0 },
+    { _TRN("Save Annotations"),             CmdSaveAnnotations,        0 },
  //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
-    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), Cmd::SaveAsBookmark,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), Cmd::SaveAsBookmark,    MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
 #else
-    { _TRN("Re&name...\tF2"),               CmdRenameFile,             MF_REQ_DISK_ACCESS },
+    { _TRN("Re&name...\tF2"),               CmdRenameFile,             0 },
 #endif
 //] ACCESSKEY_ALTERNATIVE
     { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  MF_NOT_FOR_EBOOK_UI },
-    { kMenuSeparator,                             0,                         MF_REQ_DISK_ACCESS },
+    { kMenuSeparator,                             0,                   },
 //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,         MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,           MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,       MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,       MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,        MF_NOT_FOR_EBOOK_UI },
 //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
-    { _TRN("Send by &E-mail..."),           CmdSendByEmail,            MF_REQ_DISK_ACCESS },
-    { kMenuSeparator,                             0,                         MF_REQ_DISK_ACCESS },
+    { _TRN("Send by &E-mail..."),           CmdSendByEmail,            0 },
+    { kMenuSeparator,                             0,                         0 },
     { _TRN("P&roperties\tCtrl+D"),          CmdProperties,             0 },
     { kMenuSeparator,                             0,                         0 },
     { _TRN("E&xit\tCtrl+Q"),                CmdExit,                   0 },
@@ -227,11 +225,11 @@ static MenuDef menuDefZoom[] = {
 static MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              CmdChangeLanguage,        0 },
 #if 0
-    { _TRN("Contribute Translation"),       CmdContributeTranslation, MF_REQ_DISK_ACCESS },
-    { kMenuSeparator,                             0,                        MF_REQ_DISK_ACCESS },
+    { _TRN("Contribute Translation"),       CmdContributeTranslation, 0 },
+    { kMenuSeparator,                             0,                        0 },
 #endif
     { _TRN("&Options..."),                  CmdOptions,               0 },
-    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_DISK_ACCESS },
+    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Settings Menu
@@ -241,7 +239,7 @@ static MenuDef menuDefSettings[] = {
 MenuDef menuDefFavorites[] = {
     { _TRN("Add to favorites"),             CmdFavoriteAdd,                0 },
     { _TRN("Remove from favorites"),        CmdFavoriteDel,                0 },
-    { _TRN("Show Favorites"),               CmdFavoriteToggle,             MF_REQ_DISK_ACCESS },
+    { _TRN("Show Favorites"),               CmdFavoriteToggle,             0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Favorites Menu
@@ -251,7 +249,7 @@ static MenuDef menuDefHelp[] = {
     { _TRN("Visit &Website"),               CmdHelpVisitWebsite,          0 },
     { _TRN("&Manual"),                      CmdHelpOpenManualInBrowser,   0 },
     { _TRN("Check for &Updates"),           CmdCheckUpdate,               0 },
-    { kMenuSeparator,                       0,                            MF_REQ_DISK_ACCESS },
+    { kMenuSeparator,                       0,                            0 },
     { _TRN("&About"),                       CmdHelpAbout,                 0 },
     { 0, 0, 0 },
 };
@@ -336,11 +334,11 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Bookmarks\tF12"),             CmdViewBookmarks, 0 },
     { _TRN("Show &Toolbar\tF8"),                CmdViewShowHideToolbar, MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show &Scrollbars"),                 CmdViewShowHideScrollbars, MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),                 CmdSaveAnnotations, MF_REQ_DISK_ACCESS },
-    { _TRN("Select Annotation in Editor"),      CmdSelectAnnotation, MF_REQ_DISK_ACCESS },
-    { _TRN("Edit Annotations"),                 CmdEditAnnotations, MF_REQ_DISK_ACCESS },
-    { _TRN("Create Annotation From Selection"), (UINT_PTR)menuDefCreateAnnotFromSelection, },
-    { _TRN("Create Annotation Under Cursor"),   (UINT_PTR)menuDefCreateAnnotUnderCursor, MF_REQ_DISK_ACCESS },
+    { _TRN("Save Annotations"),                 CmdSaveAnnotations, 0 },
+    { _TRN("Select Annotation in Editor"),      CmdSelectAnnotation, 0 },
+    { _TRN("Edit Annotations"),                 CmdEditAnnotations, 0 },
+    { _TRN("Create Annotation From Selection"), (UINT_PTR)menuDefCreateAnnotFromSelection, 0 },
+    { _TRN("Create Annotation Under Cursor"),   (UINT_PTR)menuDefCreateAnnotUnderCursor, 0 },
     { _TRN("E&xit Fullscreen"),                 CmdExitFullScreen, 0 },
     { 0, 0, 0 },
 };
@@ -348,10 +346,10 @@ static MenuDef menuDefContext[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
-    { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
-    { _TRN("&Pin Document"),                CmdPinSelectedDocument,    MF_REQ_DISK_ACCESS },
-    { kMenuSeparator,                             0,                   MF_REQ_DISK_ACCESS },
-    { _TRN("&Remove From History"),         CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS },
+    { _TRN("&Open Document"),               CmdOpenSelectedDocument,   0 },
+    { _TRN("&Pin Document"),                CmdPinSelectedDocument,    0 },
+    { kMenuSeparator,                             0,                   0 },
+    { _TRN("&Remove From History"),         CmdForgetSelectedDocument, 0 },
     { 0, 0, 0 },
 };
 
@@ -431,6 +429,7 @@ static UINT_PTR menusNeedInternetAccess[] = {
     CmdSearchSelectionWithBing,
     CmdHelpVisitWebsite,
     CmdHelpOpenManualInBrowser,
+    CmdContributeTranslation,
 };
 
 static UINT_PTR menusRequireFullscreeenPerms[] = {
@@ -443,6 +442,9 @@ static UINT_PTR menusRequirePrefsPerms[] = {
     CmdAdvancedOptions,
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
+    CmdFavoriteAdd,
+    CmdFavoriteDel,
+    CmdFavoriteToggle,
 };
 
 static UINT_PTR removeIfNoCopyPerms[] = {
@@ -459,6 +461,38 @@ static UINT_PTR removeIfNoCopyPerms[] = {
     CmdCopyImage,
     (UINT_PTR)menuDefSelection,
     (UINT_PTR)menuDefMainSelection,
+};
+
+// TODO: all prefs params also fall under disk access
+static UINT_PTR removeIfNoDiskAccessPerm[] = {
+    CmdNewWindow, // ???
+    CmdOpen,
+    CmdOpenFolder,
+    CmdClose, // ???
+    CmdShowInFolder,
+    CmdSaveAs,
+    CmdSaveAnnotations,
+    CmdRenameFile,
+    CmdOpenWithAcrobat,
+    CmdOpenWithFoxIt,
+    CmdOpenWithPdfXchange,
+    CmdOpenWithXpsViewer,
+    CmdOpenWithHtmlHelp,
+    CmdSendByEmail, // ???
+    CmdContributeTranslation, // ???
+    CmdAdvancedOptions,
+    CmdFavoriteAdd,
+    CmdFavoriteDel,
+    CmdFavoriteToggle,
+    CmdSaveAnnotations,
+    CmdSelectAnnotation,
+    CmdEditAnnotations,
+    CmdOpenSelectedDocument,
+    CmdPinSelectedDocument,
+    CmdForgetSelectedDocument,
+
+     (UINT_PTR)menuDefCreateAnnotFromSelection,
+     (UINT_PTR)menuDefCreateAnnotUnderCursor,
 };
 
 static UINT_PTR removeIfAnnotsNotSupported[] = {
@@ -515,23 +549,6 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         if (!HasPermission(Perm::PrinterAccess)) {
             removeMenu |= (cmdId == CmdPrint);
         }
-        if (removeMenu) {
-            continue;
-        }
-
-        if (!HasPermission((Perm)(md.flags >> kPermFlagOffset))) {
-            continue;
-        }
-
-        // prevent two consecutive separators
-        if (str::Eq(md.title, kMenuSeparator)) {
-            if (!wasSeparator) {
-                AppendMenuW(menu, MF_SEPARATOR, md.idOrSubmenu, nullptr);
-            }
-            wasSeparator = true;
-            continue;
-        }
-        wasSeparator = false;
 
         if (ctx) {
             bool notForChm = MF_NOT_FOR_CHM == (md.flags & MF_NOT_FOR_CHM);
@@ -552,6 +569,16 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         if (removeMenu) {
             continue;
         }
+
+        // prevent two consecutive separators
+        if (str::Eq(md.title, kMenuSeparator)) {
+            if (!wasSeparator) {
+                AppendMenuW(menu, MF_SEPARATOR, md.idOrSubmenu, nullptr);
+            }
+            wasSeparator = true;
+            continue;
+        }
+        wasSeparator = false;
 
         bool noTranslate = isDebugMenu || cmdIdInList(menusNoTranslate);
         noTranslate |= (subMenuDef == menuDefDebug);
