@@ -312,14 +312,14 @@ struct GlobalPrefs {
     // a list of extensions that SumatraPDF has associated itself with and
     // will reassociate if a different application takes over (e.g. ".pdf
     // .xps .epub")
-    WCHAR* associatedExtensions;
+    char* associatedExtensions;
     // whether file associations should be fixed silently or only after
     // user feedback
     bool associateSilently;
     // if true, we check once a day if an update is available
     bool checkForUpdates;
     // we won't ask again to update to this version
-    WCHAR* versionToSkip;
+    char* versionToSkip;
     // if true, we remember which files we opened and their display
     // settings
     bool rememberOpenedFiles;
@@ -602,10 +602,10 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, uiLanguage), SettingType::Utf8String, 0},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, associatedExtensions), SettingType::String, 0},
+    {offsetof(GlobalPrefs, associatedExtensions), SettingType::Utf8String, 0},
     {offsetof(GlobalPrefs, associateSilently), SettingType::Bool, false},
     {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
+    {offsetof(GlobalPrefs, versionToSkip), SettingType::Utf8String, 0},
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
     {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},

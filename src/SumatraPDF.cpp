@@ -1916,7 +1916,7 @@ void AssociateExeWithPdfExtension() {
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
 
     // Remind the user, when a different application takes over
-    str::ReplacePtr(&gGlobalPrefs->associatedExtensions, L".pdf");
+    str::ReplacePtr(&gGlobalPrefs->associatedExtensions, ".pdf");
     gGlobalPrefs->associateSilently = false;
 }
 
@@ -1960,8 +1960,8 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
 
-    AutoFreeWstr verTxt = strconv::Utf8ToWstr(latest);
-    const WCHAR* myVer = UPDATE_CHECK_VER;
+    AutoFreeStr verTxt = latest;
+    const char* myVer = UPDATE_CHECK_VERA;
     // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
     bool hasUpdate = CompareVersion(verTxt, myVer) > 0;
     if (!hasUpdate) {
@@ -1975,8 +1975,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
 
     if (silent) {
         const char* stable = node->GetValue("Stable");
-        if (stable && IsValidProgramVersion(stable) &&
-            CompareVersion(AutoFreeWstr(strconv::Utf8ToWstr(stable)), myVer) <= 0) {
+        if (stable && IsValidProgramVersion(stable) && CompareVersion(stable, myVer) <= 0) {
             // don't update just yet if the older version is still marked as stable
             return 0;
         }

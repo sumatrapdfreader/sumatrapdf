@@ -201,6 +201,10 @@ struct AutoFree {
         return res;
     }
 
+    [[nodiscard]] char* StealData() {
+        return this->Release();
+    }
+
     void TakeOwnershipOf(const char* s, size_t size = 0) {
         free(data);
         data = (char*)s;

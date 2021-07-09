@@ -484,10 +484,10 @@ static bool RegisterForPdfExtentions(HWND hwnd) {
        see this dialog */
     if (!gGlobalPrefs->associateSilently) {
         INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->associateSilently);
-        str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : nullptr);
+        str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? ".pdf" : nullptr);
     }
     // for now, .pdf is the only choice
-    if (!str::EqI(gGlobalPrefs->associatedExtensions, L".pdf")) {
+    if (!str::EqI(gGlobalPrefs->associatedExtensions, ".pdf")) {
         return false;
     }
 

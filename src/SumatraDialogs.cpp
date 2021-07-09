@@ -490,18 +490,19 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wp, L
     return FALSE;
 }
 
-INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const WCHAR* currentVersion, const WCHAR* newVersion,
+INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const char* currentVersion, const char* newVersion,
                                    bool* skipThisVersion) {
     Dialog_NewVersion_Data data;
-    data.currVersion = currentVersion;
-    data.newVersion = newVersion;
+    data.currVersion = strconv::Utf8ToWstr(currentVersion);
+    data.newVersion = strconv::Utf8ToWstr(newVersion);
     data.skipThisVersion = false;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_NEW_VERSION, hwnd, Dialog_NewVersion_Proc, (LPARAM)&data);
     if (skipThisVersion) {
         *skipThisVersion = data.skipThisVersion;
     }
-
+    str::Free(data.currVersion);
+    str::Free(data.newVersion);
     return res;
 }
 
