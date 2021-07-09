@@ -50,7 +50,7 @@ struct FixedPageUI {
 // UseFixedPageUI is true, FixedPageUI settings apply instead
 struct EbookUI {
     // name of the font. takes effect after re-opening the document
-    WCHAR* fontName;
+    char* fontName;
     // size of the font. takes effect after re-opening the document
     float fontSize;
     // color for text
@@ -406,7 +406,7 @@ static const StructInfo gFixedPageUIInfo = {
     "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0HideScrollbars"};
 
 static const FieldInfo gEbookUIFields[] = {
-    {offsetof(EbookUI, fontName), SettingType::String, (intptr_t)L"Georgia"},
+    {offsetof(EbookUI, fontName), SettingType::Utf8String, (intptr_t) "Georgia"},
     {offsetof(EbookUI, fontSize), SettingType::Float, (intptr_t) "12.5"},
     {offsetof(EbookUI, textColor), SettingType::Color, 0x324b5f},
     {offsetof(EbookUI, backgroundColor), SettingType::Color, 0xd9f0fb},
@@ -570,7 +570,7 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
-     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-3.html"},
+     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-4.html"},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, 0x8000f2ff},
     {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},

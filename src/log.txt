@@ -17,6 +17,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - remove no longer used MenuDef.flags
 - convert main menu to MenuDef
 - match file in history by name to handle files moved (fixes #14)
+- change ebookUI.FontName from WCHAR* to char*
 
 2021-07-07 Wed
 

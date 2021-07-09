@@ -364,7 +364,7 @@ var (
 
 	ebookUI = []*Field{
 		// default serif font, a different font is used for monospaced text (currently always "Courier New")
-		mkField("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
+		mkField("FontName", Utf8String, "Georgia", "name of the font. takes effect after re-opening the document"),
 		mkField("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
 		mkField("TextColor", Color, mkRGB(0x5F, 0x4B, 0x32), "color for text"),
 		mkField("BackgroundColor", Color, mkRGB(0xFB, 0xF0, 0xD9), "color of the background (page)"),

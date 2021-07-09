@@ -33,7 +33,7 @@
 #include "EbookControls.h"
 #include "Translations.h"
 
-static const WCHAR* GetFontName() {
+static const char* GetFontName() {
     // TODO: validate the name?
     return gGlobalPrefs->ebookUI.fontName;
 }
@@ -49,7 +49,8 @@ static float GetFontSize() {
 HtmlFormatterArgs* CreateFormatterArgsDoc(const Doc& doc, int dx, int dy, Allocator* textAllocator) {
     HtmlFormatterArgs* args = CreateFormatterDefaultArgs(dx, dy, textAllocator);
     args->htmlStr = doc.GetHtmlData();
-    args->SetFontName(GetFontName());
+    AutoFreeWstr fontName = strconv::Utf8ToWstr(GetFontName());
+    args->SetFontName(fontName.Get());
     args->fontSize = GetFontSize();
     return args;
 }
