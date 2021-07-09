@@ -1027,12 +1027,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         restoreSession = gGlobalPrefs->restoreSession;
     }
     if (gGlobalPrefs->reopenOnce->size() > 0 && !gPluginURL) {
-        if (gGlobalPrefs->reopenOnce->size() == 1 && str::EqI(gGlobalPrefs->reopenOnce->at(0), L"SessionData")) {
+        if (gGlobalPrefs->reopenOnce->size() == 1 && str::EqI(gGlobalPrefs->reopenOnce->at(0), "SessionData")) {
             gGlobalPrefs->reopenOnce->FreeMembers();
             restoreSession = true;
         }
         while (gGlobalPrefs->reopenOnce->size() > 0) {
-            i.fileNames.Append(gGlobalPrefs->reopenOnce->Pop());
+            char* s = gGlobalPrefs->reopenOnce->Pop();
+            // TODO: is this a leak?
+            WCHAR* sw = strconv::Utf8ToWstr(s);
+            i.fileNames.Append(sw);
         }
     }
 

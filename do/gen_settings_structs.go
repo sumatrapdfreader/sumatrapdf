@@ -644,7 +644,7 @@ var (
 			"information about opened files (in most recently used order)"),
 		mkArray("SessionData", sessionData,
 			"state of the last session, usage depends on RestoreSession").setVersion("3.1"),
-		mkCompactArray("ReopenOnce", String, nil,
+		mkCompactArray("ReopenOnce", Utf8String, nil,
 			"a list of paths for files to be reopened at the next start "+
 				"or the string \"SessionData\" if this data is saved in SessionData "+
 				"(needed for auto-updating)").setDoc("data required for reloading documents after an auto-update").setVersion("3.0"),
