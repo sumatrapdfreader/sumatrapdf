@@ -74,7 +74,6 @@ struct MenuOwnerDrawInfo {
 struct MenuDef {
     const char* title{nullptr};
     UINT_PTR idOrSubmenu{0};
-    int flags{0};
 };
 
 constexpr const char* kMenuSeparator = "-----";
@@ -91,262 +90,689 @@ bool gShowDebugMenu = false;
 static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
-// clang-format off
 MenuDef menuDefContextToc[] = {
-    {_TRN("Expand All"),            CmdExpandAll,         0 },
-    {_TRN("Collapse All"),          CmdCollapseAll,       0 },
-    {kMenuSeparator,                CmdSeparatorEmbed,    0 },
-    {_TRN("Open Embedded PDF"),     CmdOpenEmbeddedPDF,   0 },
-    {_TRN("Save Embedded File..."), CmdSaveEmbeddedFile,  0 },
+    {
+        _TRN("Expand All"),
+        CmdExpandAll,
+    },
+    {
+        _TRN("Collapse All"),
+        CmdCollapseAll,
+    },
+    {
+        kMenuSeparator,
+        CmdSeparatorEmbed,
+    },
+    {
+        _TRN("Open Embedded PDF"),
+        CmdOpenEmbeddedPDF,
+    },
+    {
+        _TRN("Save Embedded File..."),
+        CmdSaveEmbeddedFile,
+    },
     // note: strings cannot be "" or else items are not there
-    {"add",                         CmdFavoriteAdd,       0 },
-    {"del",                         CmdFavoriteDel,       0 },
-    { 0, 0, 0 },
+    {
+        "add",
+        CmdFavoriteAdd,
+    },
+    {
+        "del",
+        CmdFavoriteDel,
+    },
+    {
+        0,
+        0,
+    },
 };
-// clang-format on      
 
-// clang-format off
-MenuDef menuDefContextFav[] = {
-    {_TRN("Remove from favorites"), CmdFavoriteDel, 0},
-    { 0, 0, 0 }
-};
-// clang-format on
-//
-// clang-format off
+MenuDef menuDefContextFav[] = {{_TRN("Remove from favorites"), CmdFavoriteDel},
+                               {
+                                   0,
+                                   0,
+                               }};
+
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
-    { _TRN("New &window\tCtrl+N"),          CmdNewWindow,              0 },
-    { _TRN("&Open...\tCtrl+O"),             CmdOpen,                   0 },
+    {
+        _TRN("New &window\tCtrl+N"),
+        CmdNewWindow,
+    },
+    {
+        _TRN("&Open...\tCtrl+O"),
+        CmdOpen,
+    },
     // TODO: should make it available for everyone?
-    //{ "Open Folder",                        CmdOpenFolder,             0 },
-    { _TRN("&Close\tCtrl+W"),               CmdClose,                  0 },
-    { _TRN("Show in &folder"),              CmdShowInFolder,           0 },
-    { _TRN("&Save As...\tCtrl+S"),          CmdSaveAs,                 0 },
-    { _TRN("Save Annotations"),             CmdSaveAnnotations,        0 },
- //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
+    //{ "Open Folder",                        CmdOpenFolder,             },
+    {
+        _TRN("&Close\tCtrl+W"),
+        CmdClose,
+    },
+    {
+        _TRN("Show in &folder"),
+        CmdShowInFolder,
+    },
+    {
+        _TRN("&Save As...\tCtrl+S"),
+        CmdSaveAs,
+    },
+    {
+        _TRN("Save Annotations"),
+        CmdSaveAnnotations,
+    },
+//[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
-    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), CmdSaveAsBookmark,   0 },
+    {
+        _TRN("Save S&hortcut...\tCtrl+Shift+S"),
+        CmdSaveAsBookmark,
+    },
 //| ACCESSKEY_ALTERNATIVE
 #else
-    { _TRN("Re&name...\tF2"),               CmdRenameFile,             0 },
+    {
+        _TRN("Re&name...\tF2"),
+        CmdRenameFile,
+    },
 #endif
-//] ACCESSKEY_ALTERNATIVE
-    { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  0 },
-    { kMenuSeparator,                             0,                   },
-//[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,         0 },
-    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,           0 },
-    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     0 },
-//| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,       0 },
-//| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,        0 },
-//] ACCESSKEY_ALTERNATIVE
+    //] ACCESSKEY_ALTERNATIVE
+    {
+        _TRN("&Print...\tCtrl+P"),
+        CmdPrint,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
+    {
+        _TRN("Open in &Adobe Reader"),
+        CmdOpenWithAcrobat,
+    },
+    {
+        _TRN("Open in &Foxit Reader"),
+        CmdOpenWithFoxIt,
+    },
+    {
+        _TRN("Open &in PDF-XChange"),
+        CmdOpenWithPdfXchange,
+    },
+    //| ACCESSKEY_ALTERNATIVE
+    {
+        _TRN("Open in &Microsoft XPS-Viewer"),
+        CmdOpenWithXpsViewer,
+    },
+    //| ACCESSKEY_ALTERNATIVE
+    {
+        _TRN("Open in &Microsoft HTML Help"),
+        CmdOpenWithHtmlHelp,
+    },
+    //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
-    { _TRN("Send by &E-mail..."),           CmdSendByEmail,            0 },
-    { kMenuSeparator,                             0,                         0 },
-    { _TRN("P&roperties\tCtrl+D"),          CmdProperties,             0 },
-    { kMenuSeparator,                             0,                         0 },
-    { _TRN("E&xit\tCtrl+Q"),                CmdExit,                   0 },
-    { 0, 0, 0 },
+    {
+        _TRN("Send by &E-mail..."),
+        CmdSendByEmail,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("P&roperties\tCtrl+D"),
+        CmdProperties,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("E&xit\tCtrl+Q"),
+        CmdExit,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP File Menu
 
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
-    { _TRN("&Single Page\tCtrl+6"),         CmdViewSinglePage,        0 },
-    { _TRN("&Facing\tCtrl+7"),              CmdViewFacing,            0 },
-    { _TRN("&Book View\tCtrl+8"),           CmdViewBook,              0  },
-    { _TRN("Show &Pages Continuously"),     CmdViewContinuous,        0 },
+    {
+        _TRN("&Single Page\tCtrl+6"),
+        CmdViewSinglePage,
+    },
+    {
+        _TRN("&Facing\tCtrl+7"),
+        CmdViewFacing,
+    },
+    {
+        _TRN("&Book View\tCtrl+8"),
+        CmdViewBook,
+    },
+    {
+        _TRN("Show &Pages Continuously"),
+        CmdViewContinuous,
+    },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
-    { _TRN("Man&ga Mode"),                  CmdViewMangaMode,         0 },
-    { kMenuSeparator,                             0,                        0 },
-    { _TRN("Rotate &Left\tCtrl+Shift+-"),   CmdViewRotateLeft,        0  },
-    { _TRN("Rotate &Right\tCtrl+Shift++"),  CmdViewRotateRight,       0  },
-    { kMenuSeparator,                             0,                        0 },
-    { _TRN("Pr&esentation\tF5"),            CmdViewPresentationMode,  0 },
-    { _TRN("F&ullscreen\tF11"),             CmdViewFullScreen,        0 },
-    { kMenuSeparator,                             0,                  0 },
-    { _TRN("Show Book&marks\tF12"),         CmdViewBookmarks,         0 },
-    { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   0 },
-    { _TRN("Show Scr&ollbars"),             CmdViewShowHideScrollbars, 0 },
-    { 0, 0, 0 },
+    {
+        _TRN("Man&ga Mode"),
+        CmdViewMangaMode,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("Rotate &Left\tCtrl+Shift+-"),
+        CmdViewRotateLeft,
+    },
+    {
+        _TRN("Rotate &Right\tCtrl+Shift++"),
+        CmdViewRotateRight,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("Pr&esentation\tF5"),
+        CmdViewPresentationMode,
+    },
+    {
+        _TRN("F&ullscreen\tF11"),
+        CmdViewFullScreen,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("Show Book&marks\tF12"),
+        CmdViewBookmarks,
+    },
+    {
+        _TRN("Show &Toolbar\tF8"),
+        CmdViewShowHideToolbar,
+    },
+    {
+        _TRN("Show Scr&ollbars"),
+        CmdViewShowHideScrollbars,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP View Menu
 
 //[ ACCESSKEY_GROUP GoTo Menu
 static MenuDef menuDefGoTo[] = {
-    { _TRN("&Next Page\tRight Arrow"),      CmdGoToNextPage,         0 },
-    { _TRN("&Previous Page\tLeft Arrow"),   CmdGoToPrevPage,         0 },
-    { _TRN("&First Page\tHome"),            CmdGoToFirstPage,        0 },
-    { _TRN("&Last Page\tEnd"),              CmdGoToLastPage,         0 },
-    { _TRN("Pa&ge...\tCtrl+G"),             CmdGoToPage,             0 },
-    { kMenuSeparator,                             0,                       0 },
-    { _TRN("&Back\tAlt+Left Arrow"),        CmdGoToNavBack,          0 },
-    { _TRN("F&orward\tAlt+Right Arrow"),    CmdGoToNavForward,       0 },
-    { kMenuSeparator,                             0,                       0 },
-    { _TRN("Fin&d...\tCtrl+F"),             CmdFindFirst,            0 },
-    { 0, 0, 0 },
+    {
+        _TRN("&Next Page\tRight Arrow"),
+        CmdGoToNextPage,
+    },
+    {
+        _TRN("&Previous Page\tLeft Arrow"),
+        CmdGoToPrevPage,
+    },
+    {
+        _TRN("&First Page\tHome"),
+        CmdGoToFirstPage,
+    },
+    {
+        _TRN("&Last Page\tEnd"),
+        CmdGoToLastPage,
+    },
+    {
+        _TRN("Pa&ge...\tCtrl+G"),
+        CmdGoToPage,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("&Back\tAlt+Left Arrow"),
+        CmdGoToNavBack,
+    },
+    {
+        _TRN("F&orward\tAlt+Right Arrow"),
+        CmdGoToNavForward,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("Fin&d...\tCtrl+F"),
+        CmdFindFirst,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP GoTo Menu
 
 //[ ACCESSKEY_GROUP Zoom Menu
 static MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl+0"),            CmdZoomFitPage,          0 },
-    { _TRN("&Actual Size\tCtrl+1"),         CmdZoomActualSize,       0 },
-    { _TRN("Fit &Width\tCtrl+2"),           CmdZoomFitWidth,         0 },
-    { _TRN("Fit &Content\tCtrl+3"),         CmdZoomFitContent,       0 },
-    { _TRN("Custom &Zoom...\tCtrl+Y"),      CmdZoomCustom,           0 },
-    { kMenuSeparator,                             0,                       0 },
-    { "6400%",                              CmdZoom6400,             0 },
-    { "3200%",                              CmdZoom3200,             0 },
-    { "1600%",                              CmdZoom1600,             0 },
-    { "800%",                               CmdZoom800,              0 },
-    { "400%",                               CmdZoom400,              0 },
-    { "200%",                               CmdZoom200,              0 },
-    { "150%",                               CmdZoom150,              0 },
-    { "125%",                               CmdZoom125,              0 },
-    { "100%",                               CmdZoom100,              0 },
-    { "50%",                                CmdZoom50,               0 },
-    { "25%",                                CmdZoom25,               0 },
-    { "12.5%",                              CmdZoom12_5,             0 },
-    { "8.33%",                              CmdZoom8_33,             8 },
-    { 0, 0, 0 },
+    {
+        _TRN("Fit &Page\tCtrl+0"),
+        CmdZoomFitPage,
+    },
+    {
+        _TRN("&Actual Size\tCtrl+1"),
+        CmdZoomActualSize,
+    },
+    {
+        _TRN("Fit &Width\tCtrl+2"),
+        CmdZoomFitWidth,
+    },
+    {
+        _TRN("Fit &Content\tCtrl+3"),
+        CmdZoomFitContent,
+    },
+    {
+        _TRN("Custom &Zoom...\tCtrl+Y"),
+        CmdZoomCustom,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        "6400%",
+        CmdZoom6400,
+    },
+    {
+        "3200%",
+        CmdZoom3200,
+    },
+    {
+        "1600%",
+        CmdZoom1600,
+    },
+    {
+        "800%",
+        CmdZoom800,
+    },
+    {
+        "400%",
+        CmdZoom400,
+    },
+    {
+        "200%",
+        CmdZoom200,
+    },
+    {
+        "150%",
+        CmdZoom150,
+    },
+    {
+        "125%",
+        CmdZoom125,
+    },
+    {
+        "100%",
+        CmdZoom100,
+    },
+    {
+        "50%",
+        CmdZoom50,
+    },
+    {
+        "25%",
+        CmdZoom25,
+    },
+    {
+        "12.5%",
+        CmdZoom12_5,
+    },
+    {
+        "8.33%",
+        CmdZoom8_33,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Zoom Menu
 
 //[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
-    { _TRN("Change Language"),              CmdChangeLanguage,        0 },
+    {
+        _TRN("Change Language"),
+        CmdChangeLanguage,
+    },
 #if 0
-    { _TRN("Contribute Translation"),       CmdContributeTranslation, 0 },
-    { kMenuSeparator,                             0,                        0 },
+    { _TRN("Contribute Translation"),       CmdContributeTranslation },
+    { kMenuSeparator,                             0                  },
 #endif
-    { _TRN("&Options..."),                  CmdOptions,               0 },
-    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       0 },
-    { 0, 0, 0 },
+    {
+        _TRN("&Options..."),
+        CmdOptions,
+    },
+    {
+        _TRN("&Advanced Options..."),
+        CmdAdvancedOptions,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Settings Menu
 
 //[ ACCESSKEY_GROUP Favorites Menu
 MenuDef menuDefFavorites[] = {
-    { _TRN("Add to favorites"),             CmdFavoriteAdd,                0 },
-    { _TRN("Remove from favorites"),        CmdFavoriteDel,                0 },
-    { _TRN("Show Favorites"),               CmdFavoriteToggle,             0 },
-    { 0, 0, 0 },
+    {
+        _TRN("Add to favorites"),
+        CmdFavoriteAdd,
+    },
+    {
+        _TRN("Remove from favorites"),
+        CmdFavoriteDel,
+    },
+    {
+        _TRN("Show Favorites"),
+        CmdFavoriteToggle,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Favorites Menu
 
 //[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               CmdHelpVisitWebsite,          0 },
-    { _TRN("&Manual"),                      CmdHelpOpenManualInBrowser,   0 },
-    { _TRN("Check for &Updates"),           CmdCheckUpdate,               0 },
-    { kMenuSeparator,                       0,                            0 },
-    { _TRN("&About"),                       CmdHelpAbout,                 0 },
-    { 0, 0, 0 },
+    {
+        _TRN("Visit &Website"),
+        CmdHelpVisitWebsite,
+    },
+    {
+        _TRN("&Manual"),
+        CmdHelpOpenManualInBrowser,
+    },
+    {
+        _TRN("Check for &Updates"),
+        CmdCheckUpdate,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("&About"),
+        CmdHelpAbout,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Help Menu
 
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
-    { "Highlight links",                    CmdDebugShowLinks,        0 },
-    { "Toggle ebook UI",                    CmdDebugEbookUI,          0 },
-    { "Mui debug paint",                    CmdDebugMui,              0 },
-    { "Annotation from Selection",          CmdDebugAnnotations,      0 },
-    { "Download symbols",                   CmdDebugDownloadSymbols,  0 },
-    { "Test app",                           CmdDebugTestApp,          0 },
-    { "Show notification",                  CmdDebugShowNotif,        0 },
-    { 0, 0, 0 },
+    {
+        "Highlight links",
+        CmdDebugShowLinks,
+    },
+    {
+        "Toggle ebook UI",
+        CmdDebugEbookUI,
+    },
+    {
+        "Mui debug paint",
+        CmdDebugMui,
+    },
+    {
+        "Annotation from Selection",
+        CmdDebugAnnotations,
+    },
+    {
+        "Download symbols",
+        CmdDebugDownloadSymbols,
+    },
+    {
+        "Test app",
+        CmdDebugTestApp,
+    },
+    {
+        "Show notification",
+        CmdDebugShowNotif,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Debug Menu
 
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle, 0 },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL, 0 },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      0 },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       0 },
-    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     0 },
-    { 0, 0, 0 },
+    {
+        _TRN("&Translate With Google"),
+        CmdTranslateSelectionWithGoogle,
+    },
+    {
+        _TRN("Translate with &DeepL"),
+        CmdTranslateSelectionWithDeepL,
+    },
+    {
+        _TRN("&Search With Google"),
+        CmdSearchSelectionWithGoogle,
+    },
+    {
+        _TRN("Search With &Bing"),
+        CmdSearchSelectionWithBing,
+    },
+    {
+        _TRN("Select &All\tCtrl+A"),
+        CmdSelectAll,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Context Menu (Selection)
 
 //[ ACCESSKEY_GROUP Menu (Selection)
 static MenuDef menuDefMainSelection[] = {
-    { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                  0 },
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,   0 },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,    0 },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      0 },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       0 },
-    { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                  },
-    { 0, 0, 0 },
+    {
+        _TRN("&Copy To Clipboard\tCtrl-C"),
+        CmdCopySelection,
+    },
+    {
+        _TRN("&Translate With Google"),
+        CmdTranslateSelectionWithGoogle,
+    },
+    {
+        _TRN("Translate with &DeepL"),
+        CmdTranslateSelectionWithDeepL,
+    },
+    {
+        _TRN("&Search With Google"),
+        CmdSearchSelectionWithGoogle,
+    },
+    {
+        _TRN("Search With &Bing"),
+        CmdSearchSelectionWithBing,
+    },
+    {
+        _TRN("Select &All\tCtrl+A"),
+        CmdSelectAll,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Menu (Selection)
 
 //[ ACCESSKEY_GROUP Context Menu (Create annot from selection)
 static MenuDef menuDefCreateAnnotFromSelection[] = {
-    { _TRN("&Highlight\ta"),    CmdCreateAnnotHighlight, 0 },
-    { _TRN("&Underline"),       CmdCreateAnnotUnderline, 0 },
-    { _TRN("&Strike Out"),      CmdCreateAnnotStrikeOut, 0 },
-    { _TRN("S&quiggly"),        CmdCreateAnnotSquiggly,  0 },
-    //{ _TRN("Redact"), CmdCreateAnnotRedact, 0 },
-    { 0, 0, 0 },
+    {
+        _TRN("&Highlight\ta"),
+        CmdCreateAnnotHighlight,
+    },
+    {
+        _TRN("&Underline"),
+        CmdCreateAnnotUnderline,
+    },
+    {
+        _TRN("&Strike Out"),
+        CmdCreateAnnotStrikeOut,
+    },
+    {
+        _TRN("S&quiggly"),
+        CmdCreateAnnotSquiggly,
+    },
+    //{ _TRN("Redact"), CmdCreateAnnotRedact, },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Context Menu (Create annot from selection)
 
 //[ ACCESSKEY_GROUP Context Menu (Create annot under cursor)
 static MenuDef menuDefCreateAnnotUnderCursor[] = {
-    { _TRN("&Text"), CmdCreateAnnotText, 0 },
-    { _TRN("&Free Text"), CmdCreateAnnotFreeText, 0 },
-    { _TRN("&Stamp"), CmdCreateAnnotStamp, 0 },
-    { _TRN("&Caret"), CmdCreateAnnotCaret, 0 },
-    //{ _TRN("Ink"), CmdCreateAnnotInk, 0 },
-    //{ _TRN("Square"), CmdCreateAnnotSquare, 0 },
-    //{ _TRN("Circle"), CmdCreateAnnotCircle, 0 },
-    //{ _TRN("Line"), CmdCreateAnnotLine, 0 },
-    //{ _TRN("Polygon"), CmdCreateAnnotPolygon, 0 },
-    //{ _TRN("Poly Line"), CmdCreateAnnotPolyLine, 0 },
-    //{ _TRN("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
-    { 0, 0, 0 },
+    {
+        _TRN("&Text"),
+        CmdCreateAnnotText,
+    },
+    {
+        _TRN("&Free Text"),
+        CmdCreateAnnotFreeText,
+    },
+    {
+        _TRN("&Stamp"),
+        CmdCreateAnnotStamp,
+    },
+    {
+        _TRN("&Caret"),
+        CmdCreateAnnotCaret,
+    },
+    //{ _TRN("Ink"), CmdCreateAnnotInk, },
+    //{ _TRN("Square"), CmdCreateAnnotSquare, },
+    //{ _TRN("Circle"), CmdCreateAnnotCircle, },
+    //{ _TRN("Line"), CmdCreateAnnotLine, },
+    //{ _TRN("Polygon"), CmdCreateAnnotPolygon, },
+    //{ _TRN("Poly Line"), CmdCreateAnnotPolyLine, },
+    //{ _TRN("File Attachment"), CmdCreateAnnotFileAttachment, },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Context Menu (Create annot under cursor)
 
 //[ ACCESSKEY_GROUP Context Menu (Content)
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection \tCtrl-C"),         CmdCopySelection,  0 },
-    { _TRN("S&election"),                       (UINT_PTR)menuDefSelection, 0},
-    { _TRN("Copy &Link Address"),               CmdCopyLinkTarget, 0 },
-    { _TRN("Copy Co&mment"),                    CmdCopyComment,0 },
-    { _TRN("Copy &Image"),                      CmdCopyImage, 0 },
+    {
+        _TRN("&Copy Selection \tCtrl-C"),
+        CmdCopySelection,
+    },
+    {
+        _TRN("S&election"),
+        (UINT_PTR)menuDefSelection,
+    },
+    {
+        _TRN("Copy &Link Address"),
+        CmdCopyLinkTarget,
+    },
+    {
+        _TRN("Copy Co&mment"),
+        CmdCopyComment,
+    },
+    {
+        _TRN("Copy &Image"),
+        CmdCopyImage,
+    },
     // note: strings cannot be "" or else items are not there
-    { "add fav placeholder",                    CmdFavoriteAdd, 0 },
-    { "del fav placeholder",                    CmdFavoriteDel, 0 },
-    { _TRN("Show &Favorites"),                  CmdFavoriteToggle, 0 },
-    { _TRN("Show &Bookmarks\tF12"),             CmdViewBookmarks, 0 },
-    { _TRN("Show &Toolbar\tF8"),                CmdViewShowHideToolbar, 0 },
-    { _TRN("Show &Scrollbars"),                 CmdViewShowHideScrollbars, 0 },
-    { _TRN("Save Annotations"),                 CmdSaveAnnotations, 0 },
-    { _TRN("Select Annotation in Editor"),      CmdSelectAnnotation, 0 },
-    { _TRN("Edit Annotations"),                 CmdEditAnnotations, 0 },
-    { _TRN("Create Annotation From Selection"), (UINT_PTR)menuDefCreateAnnotFromSelection, 0 },
-    { _TRN("Create Annotation Under Cursor"),   (UINT_PTR)menuDefCreateAnnotUnderCursor, 0 },
-    { _TRN("E&xit Fullscreen"),                 CmdExitFullScreen, 0 },
-    { 0, 0, 0 },
+    {
+        "add fav placeholder",
+        CmdFavoriteAdd,
+    },
+    {
+        "del fav placeholder",
+        CmdFavoriteDel,
+    },
+    {
+        _TRN("Show &Favorites"),
+        CmdFavoriteToggle,
+    },
+    {
+        _TRN("Show &Bookmarks\tF12"),
+        CmdViewBookmarks,
+    },
+    {
+        _TRN("Show &Toolbar\tF8"),
+        CmdViewShowHideToolbar,
+    },
+    {
+        _TRN("Show &Scrollbars"),
+        CmdViewShowHideScrollbars,
+    },
+    {
+        _TRN("Save Annotations"),
+        CmdSaveAnnotations,
+    },
+    {
+        _TRN("Select Annotation in Editor"),
+        CmdSelectAnnotation,
+    },
+    {
+        _TRN("Edit Annotations"),
+        CmdEditAnnotations,
+    },
+    {
+        _TRN("Create Annotation From Selection"),
+        (UINT_PTR)menuDefCreateAnnotFromSelection,
+    },
+    {
+        _TRN("Create Annotation Under Cursor"),
+        (UINT_PTR)menuDefCreateAnnotUnderCursor,
+    },
+    {
+        _TRN("E&xit Fullscreen"),
+        CmdExitFullScreen,
+    },
+    {
+        0,
+        0,
+    },
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
-    { _TRN("&Open Document"),               CmdOpenSelectedDocument,   0 },
-    { _TRN("&Pin Document"),                CmdPinSelectedDocument,    0 },
-    { kMenuSeparator,                             0,                   0 },
-    { _TRN("&Remove From History"),         CmdForgetSelectedDocument, 0 },
-    { 0, 0, 0 },
+    {
+        _TRN("&Open Document"),
+        CmdOpenSelectedDocument,
+    },
+    {
+        _TRN("&Pin Document"),
+        CmdPinSelectedDocument,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("&Remove From History"),
+        CmdForgetSelectedDocument,
+    },
+    {
+        0,
+        0,
+    },
 };
 
 //] ACCESSKEY_GROUP Context Menu (Start)
-// clang-format on
 
 // clang-format off
 // those menu items will be disabled if no document is opened, enabled otherwise
@@ -1200,18 +1626,18 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     delete annotUnderCursor;
 
     /*
-        { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
-        { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
-        { _TR_TODON("Underline"), CmdCreateAnnotUnderline, 0 },
-        { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, 0 },
-        { _TR_TODON("Squiggly"), CmdCreateAnnotSquiggly, 0 },
-        { _TR_TODON("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
-        { _TR_TODON("Redact"), CmdCreateAnnotRedact, 0 },
+        { _TR_TODON("Line"), CmdCreateAnnotLine, },
+        { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, },
+        { _TR_TODON("Underline"), CmdCreateAnnotUnderline, },
+        { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, },
+        { _TR_TODON("Squiggly"), CmdCreateAnnotSquiggly, },
+        { _TR_TODON("File Attachment"), CmdCreateAnnotFileAttachment, },
+        { _TR_TODON("Redact"), CmdCreateAnnotRedact, },
     */
     // TODO: those require creating
     /*
-        { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
-        { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
+        { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, },
+        { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, },
     */
 
     delete pageEl;

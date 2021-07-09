@@ -13,3 +13,4 @@ SpacesBeforeTrailingComments: 1
 BinPackParameters: true
 Cpp11BracedListStyle: true
 SortIncludes: false
+# AlignArrayOfStructures: Left
