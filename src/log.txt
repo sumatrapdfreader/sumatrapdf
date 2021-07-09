@@ -5,6 +5,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - change DefaultPasswords to use char* instead of WCHAR*; add support for Utf8StringArray settings type
 - change ReopenOnce to use char* instead of WCHAR*; add support for Utf8StringArray settings type
 - remove support for no longer needed StringArray settings type
+- fix version comparison regression in ShowAutoUpdateDialog (fixes #2015)
 
 2021-07-08 Thu
 

@@ -1957,15 +1957,14 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
 
     SquareTree tree(data->Get());
     SquareTreeNode* node = tree.root ? tree.root->GetChild("SumatraPDF") : nullptr;
-    const char* latest = node ? node->GetValue("Latest") : nullptr;
-    if (!latest || !IsValidProgramVersion(latest)) {
+    const char* latestVer = node ? node->GetValue("Latest") : nullptr;
+    if (!latestVer || !IsValidProgramVersion(latestVer)) {
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
 
-    AutoFreeStr verTxt = latest;
     const char* myVer = UPDATE_CHECK_VERA;
     // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
-    bool hasUpdate = CompareVersion(verTxt, myVer) > 0;
+    bool hasUpdate = CompareVersion(latestVer, myVer) > 0;
     if (!hasUpdate) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
@@ -1984,7 +1983,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     }
 
     // if automated, respect gGlobalPrefs->versionToSkip
-    if (silent && str::EqI(gGlobalPrefs->versionToSkip, verTxt)) {
+    if (silent && str::EqI(gGlobalPrefs->versionToSkip, latestVer)) {
         return 0;
     }
 
@@ -1992,10 +1991,9 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     // either open the browser, do nothing or don't be reminded of
     // this update ever again
     bool skipThisVersion = false;
-    INT_PTR res = Dialog_NewVersionAvailable(hParent, myVer, verTxt, &skipThisVersion);
+    INT_PTR res = Dialog_NewVersionAvailable(hParent, myVer, latestVer, &skipThisVersion);
     if (skipThisVersion) {
-        free(gGlobalPrefs->versionToSkip);
-        gGlobalPrefs->versionToSkip = verTxt.StealData();
+        str::ReplacePtr(&gGlobalPrefs->versionToSkip, latestVer);
     }
     if (IDYES == res) {
         SumatraLaunchBrowser(WEBSITE_DOWNLOAD_PAGE_URL);
