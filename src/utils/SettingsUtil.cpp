@@ -126,73 +126,6 @@ static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
     return (char*)serialized.StealData();
 }
 
-// string arrays are serialized by quoting strings containing spaces
-// or quotation marks (doubling quotation marks within quotes);
-// this is simpler than full command line serialization as read by ParseCmdLine
-static char* SerializeStringArray(const Vec<WCHAR*>* strArray) {
-    str::WStr serialized;
-
-    for (size_t i = 0; i < strArray->size(); i++) {
-        if (i > 0) {
-            serialized.Append(' ');
-        }
-        const WCHAR* str = strArray->at(i);
-        bool needsQuotes = !*str;
-        for (const WCHAR* c = str; !needsQuotes && *c; c++) {
-            needsQuotes = str::IsWs(*c) || '"' == *c;
-        }
-        if (!needsQuotes) {
-            serialized.Append(str);
-        } else {
-            serialized.Append('"');
-            for (const WCHAR* c = str; *c; c++) {
-                if ('"' == *c) {
-                    serialized.Append('"');
-                }
-                serialized.Append(*c);
-            }
-            serialized.Append('"');
-        }
-    }
-
-    auto tmp = strconv::WstrToUtf8(serialized.Get());
-    return (char*)tmp.data();
-}
-
-static void DeserializeStringArray(Vec<WCHAR*>* strArray, const char* serialized) {
-    AutoFreeWstr str = strconv::Utf8ToWstr(serialized);
-    const WCHAR* s = str.Get();
-
-    for (;;) {
-        while (str::IsWs(*s)) {
-            s++;
-        }
-        if (!*s) {
-            return;
-        }
-        if ('"' == *s) {
-            str::WStr part;
-            for (s++; *s && (*s != '"' || *(s + 1) == '"'); s++) {
-                if ('"' == *s) {
-                    s++;
-                }
-                part.Append(*s);
-            }
-            strArray->Append(part.StealData());
-            if ('"' == *s) {
-                s++;
-            }
-        } else {
-            const WCHAR* e;
-            for (e = s; *e && !str::IsWs(*e); e++) {
-                ;
-            }
-            strArray->Append(str::DupN(s, e - s));
-            s = e;
-        }
-    }
-}
-
 static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* serialized) {
     char* str = (char*)serialized;
     const char* s = str;
@@ -225,14 +158,6 @@ static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* seriali
             s = e;
         }
     }
-}
-
-static void FreeStringArray(Vec<WCHAR*>* strArray) {
-    if (!strArray) {
-        return;
-    }
-    strArray->FreeMembers();
-    delete strArray;
 }
 
 static void FreeUtf8StringArray(Vec<char*>* strArray) {
@@ -337,15 +262,6 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             }
             // prevent empty arrays from being replaced with the defaults
             return (*(Vec<int>**)fieldPtr)->size() > 0 || field.value != 0;
-        case SettingType::StringArray:
-            value.Set(SerializeStringArray(*(Vec<WCHAR*>**)fieldPtr));
-            if (!NeedsEscaping(value)) {
-                out.Append(value);
-            } else {
-                EscapeStr(out, value);
-            }
-            // prevent empty arrays from being replaced with the defaults
-            return (*(Vec<WCHAR*>**)fieldPtr)->size() > 0 || field.value != 0;
         case SettingType::Utf8StringArray:
             value.Set(SerializeUtf8StringArray(*(Vec<char*>**)fieldPtr));
             if (!NeedsEscaping(value)) {
@@ -470,15 +386,6 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
                 for (; str::IsWs(*value); value++) {
                     ;
                 }
-            }
-            break;
-        case SettingType::StringArray:
-            FreeStringArray(*(Vec<WCHAR*>**)fieldPtr);
-            *(Vec<WCHAR*>**)fieldPtr = new Vec<WCHAR*>();
-            if (value) {
-                DeserializeStringArray(*(Vec<WCHAR*>**)fieldPtr, AutoFree(UnescapeStr(value)));
-            } else if (field.value) {
-                DeserializeStringArray(*(Vec<WCHAR*>**)fieldPtr, (const char*)field.value);
             }
             break;
         case SettingType::Utf8StringArray:
@@ -675,8 +582,8 @@ static void FreeStructData(const StructInfo* info, u8* base) {
                    SettingType::IntArray == field.type) {
             Vec<int>* v = *((Vec<int>**)fieldPtr);
             delete v;
-        } else if (SettingType::StringArray == field.type) {
-            FreeStringArray(*(Vec<WCHAR*>**)fieldPtr);
+        } else if (SettingType::Utf8StringArray == field.type) {
+            FreeUtf8StringArray(*(Vec<char*>**)fieldPtr);
         }
     }
 }

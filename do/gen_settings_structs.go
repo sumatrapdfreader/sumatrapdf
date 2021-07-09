@@ -126,12 +126,6 @@ func (f *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, f.Default)
 	}
-	if typeName == "StringArray" {
-		if f.Default == nil {
-			return "0"
-		}
-		return fmt.Sprintf(`(intptr_t)"%s"`, f.Default)
-	}
 	if typeName == "Utf8StringArray" {
 		if f.Default == nil {
 			return "0"
@@ -191,12 +185,6 @@ func (f *Field) initDefault() string {
 	}
 	switch typeName {
 	case "ColorArray", "FloatArray", "IntArray":
-		if f.Default != nil {
-			return fmt.Sprintf("%s = %v", f.Name, f.Default)
-		}
-		return fmt.Sprintf("%s %s =", commentChar, f.Name)
-	}
-	if typeName == "StringArray" {
 		if f.Default != nil {
 			return fmt.Sprintf("%s = %v", f.Name, f.Default)
 		}
