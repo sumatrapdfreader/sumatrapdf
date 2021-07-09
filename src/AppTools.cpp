@@ -320,37 +320,48 @@ static struct {
     HKEY RegRoot;                   // Root of the regkey
     const WCHAR* RegKey;            // Registry key path
     const WCHAR* RegValue;          // Registry value name
-} editor_rules[] = {
-    L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"", BinaryPath, HKEY_LOCAL_MACHINE,
-    REG_WIN_CURR L"\\App Paths\\WinEdt.exe", nullptr, L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"", BinaryDir,
-    HKEY_CURRENT_USER, L"Software\\WinEdt", L"Install Root", L"notepad++.exe", L"-n%l \"%f\"", BinaryPath,
-    HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\notepad++.exe", nullptr, L"notepad++.exe", L"-n%l \"%f\"",
-    BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Notepad++", nullptr, L"notepad++.exe", L"-n%l \"%f\"", BinaryPath,
-    HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Notepad++", L"DisplayIcon", L"sublime_text.exe", L"\"%f:%l\"",
-    BinaryDir, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 3_is1", L"InstallLocation",
-    L"sublime_text.exe", L"\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 3_is1",
-    L"DisplayIcon", L"sublime_text.exe", L"\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE,
-    REG_WIN_CURR L"\\Uninstall\\Sublime Text 2_is1", L"InstallLocation", L"sublime_text.exe", L"\"%f:%l\"", BinaryPath,
-    HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 2_is1", L"DisplayIcon", L"TeXnicCenter.exe",
-    L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenterNT",
-    L"AppPath", L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
-    REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation", L"TeXnicCenter.exe",
-    L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
-    REG_WIN_CURR L"\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation", L"TEXCNTR.exe",
-    L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenter",
-    L"AppPath", L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
-    REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation", L"WinShell.exe", L"-c \"%f\" -l %l", BinaryDir,
-    HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\WinShell_is1", L"InstallLocation", L"gvim.exe", L"\"%f\" +%l",
-    BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
-    // TODO: add this rule only if the latex-suite for ViM is installed
-    // (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
-    L"gvim.exe", L"-c \":RemoteOpen +%l %f\"", BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
-    L"texmaker.exe", L"\"%f\" -line %l", SiblingPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Texmaker",
-    L"UninstallString", L"TeXworks.exe", L"-p=%l \"%f\"", BinaryDir, HKEY_LOCAL_MACHINE,
-    REG_WIN_CURR L"\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
-    // TODO: find a way to detect where emacs is installed
-    // L"emacsclientw.exe",L"+%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, L"???", L"???",
-};
+} editorRules[] = {
+    {L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"", BinaryPath, HKEY_LOCAL_MACHINE,
+     REG_WIN_CURR L"\\App Paths\\WinEdt.exe", nullptr},
+    {L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"", BinaryDir, HKEY_CURRENT_USER, L"Software\\WinEdt",
+     L"Install Root"},
+    {L"notepad++.exe", L"-n%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\notepad++.exe",
+     nullptr},
+    {L"notepad++.exe", L"-n%l \"%f\"", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Notepad++", nullptr},
+    {L"notepad++.exe", L"-n%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Notepad++",
+     L"DisplayIcon"},
+    {L"sublime_text.exe", L"\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 3_is1",
+     L"InstallLocation"},
+    {L"sublime_text.exe", L"\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 3_is1",
+     L"DisplayIcon"},
+    {L"sublime_text.exe", L"\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 2_is1",
+     L"InstallLocation"},
+    {L"sublime_text.exe", L"\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 2_is1",
+     L"DisplayIcon"},
+    {L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
+     L"Software\\ToolsCenter\\TeXnicCenterNT", L"AppPath"},
+    {L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
+     REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation"},
+    {L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
+     REG_WIN_CURR L"\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation"},
+    {L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
+     L"Software\\ToolsCenter\\TeXnicCenter", L"AppPath"},
+    {L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
+     REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation"},
+    {L"WinShell.exe", L"-c \"%f\" -l %l", BinaryDir, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\WinShell_is1",
+     L"InstallLocation"},
+    {L"gvim.exe", L"\"%f\" +%l", BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path"},
+    {// TODO: add this rule only if the latex-suite for ViM is installed
+     // (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
+     L"gvim.exe", L"-c \":RemoteOpen +%l %f\"", BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path"},
+    {L"texmaker.exe", L"\"%f\" -line %l", SiblingPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Texmaker",
+     L"UninstallString"},
+    {
+        L"TeXworks.exe", L"-p=%l \"%f\"", BinaryDir, HKEY_LOCAL_MACHINE,
+        REG_WIN_CURR L"\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
+        // TODO: find a way to detect where emacs is installed
+        // L"emacsclientw.exe",L"+%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, L"???", L"???",
+    }};
 
 // Detect TeX editors installed on the system and construct the
 // corresponding inverse search commands.
@@ -364,19 +375,19 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
     WCHAR* firstEditor = nullptr;
     WStrList foundExes;
 
-    for (int i = 0; i < dimof(editor_rules); i++) {
-        AutoFreeWstr path(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
+    for (int i = 0; i < dimof(editorRules); i++) {
+        AutoFreeWstr path(ReadRegStr(editorRules[i].RegRoot, editorRules[i].RegKey, editorRules[i].RegValue));
         if (!path) {
             continue;
         }
 
         AutoFreeWstr exePath;
-        if (editor_rules[i].Type == SiblingPath) {
+        if (editorRules[i].Type == SiblingPath) {
             // remove file part
             AutoFreeWstr dir(path::GetDir(path));
-            exePath.Set(path::Join(dir, editor_rules[i].BinaryFilename));
-        } else if (editor_rules[i].Type == BinaryDir) {
-            exePath.Set(path::Join(path, editor_rules[i].BinaryFilename));
+            exePath.Set(path::Join(dir, editorRules[i].BinaryFilename));
+        } else if (editorRules[i].Type == BinaryDir) {
+            exePath.Set(path::Join(path, editorRules[i].BinaryFilename));
         } else { // if (editor_rules[i].Type == BinaryPath)
             exePath.Set(path.StealData());
         }
@@ -390,7 +401,7 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
             continue;
         }
 
-        AutoFreeWstr editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), editor_rules[i].InverseSearchArgs));
+        AutoFreeWstr editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), editorRules[i].InverseSearchArgs));
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
