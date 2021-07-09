@@ -13,6 +13,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - replace MF_NEEDS_ANNOTS with a list of ids
 - replace MF_CBX_ONLY and MF_REQ_ALLOW_COPY with a list of ids
 - replace MF_REQ_DISK_ACCESS with a list of ids
+- replace MF_NOT_FOR_CHM and MF_NOT_FOR_EBOOK_UI with a list of ids
 
 2021-07-07 Wed
 

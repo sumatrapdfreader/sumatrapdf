@@ -49,11 +49,6 @@
 // SumatraPDF.cpp
 extern Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
 
-enum {
-    MF_NOT_FOR_CHM = 1 << 1,
-    MF_NOT_FOR_EBOOK_UI = 1 << 2,
-};
-
 struct BuildMenuCtx {
     bool isChm{false};
     bool isEbookUI{false};
@@ -130,22 +125,22 @@ static MenuDef menuDefFile[] = {
     { _TRN("Save Annotations"),             CmdSaveAnnotations,        0 },
  //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
-    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), Cmd::SaveAsBookmark,    MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), CmdSaveAsBookmark,   0 },
 //| ACCESSKEY_ALTERNATIVE
 #else
     { _TRN("Re&name...\tF2"),               CmdRenameFile,             0 },
 #endif
 //] ACCESSKEY_ALTERNATIVE
-    { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  0 },
     { kMenuSeparator,                             0,                   },
 //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,         MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,           MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,         0 },
+    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,           0 },
+    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     0 },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,       MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,       0 },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,        MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,        0 },
 //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
     { _TRN("Send by &E-mail..."),           CmdSendByEmail,            0 },
@@ -159,22 +154,22 @@ static MenuDef menuDefFile[] = {
 
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
-    { _TRN("&Single Page\tCtrl+6"),         CmdViewSinglePage,        MF_NOT_FOR_CHM },
-    { _TRN("&Facing\tCtrl+7"),              CmdViewFacing,            MF_NOT_FOR_CHM },
-    { _TRN("&Book View\tCtrl+8"),           CmdViewBook,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Show &Pages Continuously"),     CmdViewContinuous,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Single Page\tCtrl+6"),         CmdViewSinglePage,        0 },
+    { _TRN("&Facing\tCtrl+7"),              CmdViewFacing,            0 },
+    { _TRN("&Book View\tCtrl+8"),           CmdViewBook,              0  },
+    { _TRN("Show &Pages Continuously"),     CmdViewContinuous,        0 },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
     { _TRN("Man&ga Mode"),                  CmdViewMangaMode,         0 },
-    { kMenuSeparator,                             0,                        MF_NOT_FOR_CHM },
-    { _TRN("Rotate &Left\tCtrl+Shift+-"),   CmdViewRotateLeft,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Rotate &Right\tCtrl+Shift++"),  CmdViewRotateRight,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { kMenuSeparator,                             0,                        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Pr&esentation\tF5"),            CmdViewPresentationMode,  MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { kMenuSeparator,                             0,                        0 },
+    { _TRN("Rotate &Left\tCtrl+Shift+-"),   CmdViewRotateLeft,        0  },
+    { _TRN("Rotate &Right\tCtrl+Shift++"),  CmdViewRotateRight,       0  },
+    { kMenuSeparator,                             0,                        0 },
+    { _TRN("Pr&esentation\tF5"),            CmdViewPresentationMode,  0 },
     { _TRN("F&ullscreen\tF11"),             CmdViewFullScreen,        0 },
     { kMenuSeparator,                             0,                  0 },
     { _TRN("Show Book&marks\tF12"),         CmdViewBookmarks,         0 },
-    { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Show Scr&ollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   0 },
+    { _TRN("Show Scr&ollbars"),             CmdViewShowHideScrollbars, 0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP View Menu
@@ -189,25 +184,24 @@ static MenuDef menuDefGoTo[] = {
     { kMenuSeparator,                             0,                       0 },
     { _TRN("&Back\tAlt+Left Arrow"),        CmdGoToNavBack,          0 },
     { _TRN("F&orward\tAlt+Right Arrow"),    CmdGoToNavForward,       0 },
-    { kMenuSeparator,                             0,                       MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Fin&d...\tCtrl+F"),             CmdFindFirst,            MF_NOT_FOR_EBOOK_UI },
+    { kMenuSeparator,                             0,                       0 },
+    { _TRN("Fin&d...\tCtrl+F"),             CmdFindFirst,            0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP GoTo Menu
 
 //[ ACCESSKEY_GROUP Zoom Menu
-// the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl+0"),            CmdZoomFitPage,          MF_NOT_FOR_CHM },
-    { _TRN("&Actual Size\tCtrl+1"),         CmdZoomActualSize,       MF_NOT_FOR_CHM },
-    { _TRN("Fit &Width\tCtrl+2"),           CmdZoomFitWidth,         MF_NOT_FOR_CHM },
-    { _TRN("Fit &Content\tCtrl+3"),         CmdZoomFitContent,       MF_NOT_FOR_CHM },
+    { _TRN("Fit &Page\tCtrl+0"),            CmdZoomFitPage,          0 },
+    { _TRN("&Actual Size\tCtrl+1"),         CmdZoomActualSize,       0 },
+    { _TRN("Fit &Width\tCtrl+2"),           CmdZoomFitWidth,         0 },
+    { _TRN("Fit &Content\tCtrl+3"),         CmdZoomFitContent,       0 },
     { _TRN("Custom &Zoom...\tCtrl+Y"),      CmdZoomCustom,           0 },
     { kMenuSeparator,                             0,                       0 },
-    { "6400%",                              CmdZoom6400,             MF_NOT_FOR_CHM },
-    { "3200%",                              CmdZoom3200,             MF_NOT_FOR_CHM },
-    { "1600%",                              CmdZoom1600,             MF_NOT_FOR_CHM },
-    { "800%",                               CmdZoom800,              MF_NOT_FOR_CHM },
+    { "6400%",                              CmdZoom6400,             0 },
+    { "3200%",                              CmdZoom3200,             0 },
+    { "1600%",                              CmdZoom1600,             0 },
+    { "800%",                               CmdZoom800,              0 },
     { "400%",                               CmdZoom400,              0 },
     { "200%",                               CmdZoom200,              0 },
     { "150%",                               CmdZoom150,              0 },
@@ -215,8 +209,8 @@ static MenuDef menuDefZoom[] = {
     { "100%",                               CmdZoom100,              0 },
     { "50%",                                CmdZoom50,               0 },
     { "25%",                                CmdZoom25,               0 },
-    { "12.5%",                              CmdZoom12_5,             MF_NOT_FOR_CHM },
-    { "8.33%",                              CmdZoom8_33,             MF_NOT_FOR_CHM },
+    { "12.5%",                              CmdZoom12_5,             0 },
+    { "8.33%",                              CmdZoom8_33,             8 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Zoom Menu
@@ -235,7 +229,6 @@ static MenuDef menuDefSettings[] = {
 //] ACCESSKEY_GROUP Settings Menu
 
 //[ ACCESSKEY_GROUP Favorites Menu
-// the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
     { _TRN("Add to favorites"),             CmdFavoriteAdd,                0 },
     { _TRN("Remove from favorites"),        CmdFavoriteDel,                0 },
@@ -270,10 +263,10 @@ static MenuDef menuDefDebug[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle, MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL, MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle, 0 },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL, 0 },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      0 },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       0 },
     { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                     0 },
     { 0, 0, 0 },
 };
@@ -281,11 +274,11 @@ static MenuDef menuDefSelection[] = {
 
 //[ ACCESSKEY_GROUP Menu (Selection)
 static MenuDef menuDefMainSelection[] = {
-    { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                  MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,   MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,    MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Copy To Clipboard\tCtrl-C"),  CmdCopySelection,                  0 },
+    { _TRN("&Translate With Google"),      CmdTranslateSelectionWithGoogle,   0 },
+    { _TRN("Translate with &DeepL"),       CmdTranslateSelectionWithDeepL,    0 },
+    { _TRN("&Search With Google"),         CmdSearchSelectionWithGoogle,      0 },
+    { _TRN("Search With &Bing"),           CmdSearchSelectionWithBing,       0 },
     { _TRN("Select &All\tCtrl+A"),         CmdSelectAll,                  },
     { 0, 0, 0 },
 };
@@ -320,9 +313,8 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
 //] ACCESSKEY_GROUP Context Menu (Create annot under cursor)
 
 //[ ACCESSKEY_GROUP Context Menu (Content)
-// the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection \tCtrl-C"),         CmdCopySelection,  MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Copy Selection \tCtrl-C"),         CmdCopySelection,  0 },
     { _TRN("S&election"),                       (UINT_PTR)menuDefSelection, 0},
     { _TRN("Copy &Link Address"),               CmdCopyLinkTarget, 0 },
     { _TRN("Copy Co&mment"),                    CmdCopyComment,0 },
@@ -332,8 +324,8 @@ static MenuDef menuDefContext[] = {
     { "del fav placeholder",                    CmdFavoriteDel, 0 },
     { _TRN("Show &Favorites"),                  CmdFavoriteToggle, 0 },
     { _TRN("Show &Bookmarks\tF12"),             CmdViewBookmarks, 0 },
-    { _TRN("Show &Toolbar\tF8"),                CmdViewShowHideToolbar, MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Show &Scrollbars"),                 CmdViewShowHideScrollbars, MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Toolbar\tF8"),                CmdViewShowHideToolbar, 0 },
+    { _TRN("Show &Scrollbars"),                 CmdViewShowHideScrollbars, 0 },
     { _TRN("Save Annotations"),                 CmdSaveAnnotations, 0 },
     { _TRN("Select Annotation in Editor"),      CmdSelectAnnotation, 0 },
     { _TRN("Edit Annotations"),                 CmdEditAnnotations, 0 },
@@ -358,7 +350,7 @@ static MenuDef menuDefContextStart[] = {
 
 // clang-format off
 // those menu items will be disabled if no document is opened, enabled otherwise
-static UINT_PTR menusToDisableIfNoDocument[] = {
+static UINT_PTR disableIfNoDocument[] = {
     CmdViewRotateLeft,
     CmdViewRotateRight,
     CmdGoToNextPage,
@@ -386,7 +378,7 @@ static UINT_PTR menusToDisableIfNoDocument[] = {
     // for broken XPS/CHM documents)
 };
 
-static UINT_PTR menusToDisableIfDirectoryOrBrokenPDF[] = {
+static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
     CmdRenameFile,
     CmdSendByEmail,
     CmdOpenWithAcrobat,
@@ -395,7 +387,7 @@ static UINT_PTR menusToDisableIfDirectoryOrBrokenPDF[] = {
     CmdShowInFolder,
 };
 
-static UINT_PTR menusToDisableIfNoSelection[] = {
+static UINT_PTR disableIfNoSelection[] = {
     CmdCopySelection,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
@@ -421,7 +413,7 @@ static UINT_PTR menusNoTranslate[] = {
     CmdZoom8_33,
 };
 
-static UINT_PTR menusNeedInternetAccess[] = {
+static UINT_PTR removeIfNoInternetPerms[] = {
     CmdCheckUpdate,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
@@ -432,12 +424,12 @@ static UINT_PTR menusNeedInternetAccess[] = {
     CmdContributeTranslation,
 };
 
-static UINT_PTR menusRequireFullscreeenPerms[] = {
+static UINT_PTR removeIfNoFullscreenPerms[] = {
     CmdViewPresentationMode,
     CmdViewFullScreen,
 };
 
-static UINT_PTR menusRequirePrefsPerms[] = {
+static UINT_PTR removeIfNoPrefsPerms[] = {
     CmdOptions,
     CmdAdvancedOptions,
     CmdPinSelectedDocument,
@@ -491,8 +483,8 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
 
-     (UINT_PTR)menuDefCreateAnnotFromSelection,
-     (UINT_PTR)menuDefCreateAnnotUnderCursor,
+    (UINT_PTR)menuDefCreateAnnotFromSelection,
+    (UINT_PTR)menuDefCreateAnnotUnderCursor,
 };
 
 static UINT_PTR removeIfAnnotsNotSupported[] = {
@@ -503,6 +495,55 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     (UINT_PTR)menuDefCreateAnnotUnderCursor,
 };
 
+// TODO: many are in common for ebook and chm
+static UINT_PTR removeIfEbook[] = {
+    CmdSaveAsBookmark, // ???
+    CmdPrint,
+    // TODO: change those to: "for PDFs only"
+    CmdOpenWithAcrobat,
+    CmdOpenWithFoxIt,
+    CmdOpenWithPdfXchange,
+    CmdOpenWithXpsViewer,
+    CmdOpenWithHtmlHelp,
+    // TODO: common with "is chm"
+    CmdViewBook,
+    CmdViewContinuous,
+    CmdViewRotateLeft,
+    CmdViewRotateRight,
+    CmdViewPresentationMode,
+    CmdViewShowHideToolbar,
+    CmdViewShowHideScrollbars,
+    CmdFindFirst,
+
+    (UINT_PTR)menuDefZoom,
+    (UINT_PTR)menuDefFavorites,
+    (UINT_PTR)menuDefSelection,
+    (UINT_PTR)menuDefMainSelection,
+    (UINT_PTR)menuDefContext,
+};
+
+static UINT_PTR rmoveIfChm[] = {
+    CmdSaveAsBookmark, // ???
+    CmdViewSinglePage,
+    CmdViewFacing,
+    CmdViewBook,
+    CmdViewContinuous,
+    CmdViewRotateLeft,
+    CmdViewRotateRight,
+    CmdViewPresentationMode,
+    CmdViewShowHideScrollbars,
+    CmdZoomFitPage,
+    CmdZoomActualSize,
+    CmdZoomFitWidth,
+    CmdZoomFitContent,
+    CmdZoom6400,
+    CmdZoom3200,
+    CmdZoom1600,
+    CmdZoom800,
+    CmdZoom12_5,
+    CmdZoom8_33,
+    (UINT_PTR)menuDefContext,
+};
 // clang-format on
 
 static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
@@ -538,27 +579,25 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         bool disableMenu = false;
         bool removeMenu = false;
         if (!HasPermission(Perm::InternetAccess)) {
-            removeMenu |= cmdIdInList(menusNeedInternetAccess);
+            removeMenu |= cmdIdInList(removeIfNoInternetPerms);
         }
         if (!HasPermission(Perm::FullscreenAccess)) {
-            removeMenu |= cmdIdInList(menusRequireFullscreeenPerms);
+            removeMenu |= cmdIdInList(removeIfNoFullscreenPerms);
         }
         if (!HasPermission(Perm::SavePreferences)) {
-            removeMenu |= cmdIdInList(menusRequirePrefsPerms);
+            removeMenu |= cmdIdInList(removeIfNoPrefsPerms);
         }
         if (!HasPermission(Perm::PrinterAccess)) {
             removeMenu |= (cmdId == CmdPrint);
         }
 
         if (ctx) {
-            bool notForChm = MF_NOT_FOR_CHM == (md.flags & MF_NOT_FOR_CHM);
-            bool notForEbook = MF_NOT_FOR_EBOOK_UI == (md.flags & MF_NOT_FOR_EBOOK_UI);
-            removeMenu |= (ctx->isChm && notForChm);
-            removeMenu |= (ctx->isEbookUI && notForEbook);
+            removeMenu |= (ctx->isChm && cmdIdInList(rmoveIfChm));
+            removeMenu |= (ctx->isEbookUI && cmdIdInList(removeIfEbook));
             removeMenu |= (!ctx->isCbx && (cmdId == CmdViewMangaMode));
             removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
 
-            disableMenu |= (!ctx->hasSelection && cmdIdInList(menusToDisableIfNoSelection));
+            disableMenu |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
             disableMenu |= (!ctx->hasAnnotationUnderCursor && (cmdId == CmdSelectAnnotation));
             disableMenu |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
 
@@ -789,8 +828,8 @@ static bool IsFileCloseMenuEnabled() {
 
 static void SetMenuStateForSelection(TabInfo* tab, HMENU menu) {
     bool isTextSelected = tab && tab->win && tab->win->showSelection && tab->selectionOnPage;
-    for (int i = 0; i < dimof(menusToDisableIfNoSelection); i++) {
-        int id = menusToDisableIfNoSelection[i];
+    for (int i = 0; i < dimof(disableIfNoSelection); i++) {
+        int id = disableIfNoSelection[i];
         win::menu::SetEnabled(menu, id, isTextSelected);
     }
 }
@@ -830,8 +869,8 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
 
     bool hasDocument = tab && tab->IsDocLoaded();
-    for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
-        int id = menusToDisableIfNoDocument[i];
+    for (int i = 0; i < dimof(disableIfNoDocument); i++) {
+        int id = disableIfNoDocument[i];
         win::menu::SetEnabled(win->menu, id, hasDocument);
     }
 
@@ -865,13 +904,13 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     bool fileExists = tab && file::Exists(tab->filePath);
 
     if (tab && tab->ctrl && !fileExists && dir::Exists(tab->filePath)) {
-        for (int i = 0; i < dimof(menusToDisableIfDirectoryOrBrokenPDF); i++) {
-            int id = menusToDisableIfDirectoryOrBrokenPDF[i];
+        for (int i = 0; i < dimof(disableIfDirectoryOrBrokenPDF); i++) {
+            int id = disableIfDirectoryOrBrokenPDF[i];
             win::menu::SetEnabled(win->menu, id, false);
         }
     } else if (fileExists && CouldBePDFDoc(tab)) {
-        for (int i = 0; i < dimof(menusToDisableIfDirectoryOrBrokenPDF); i++) {
-            int id = menusToDisableIfDirectoryOrBrokenPDF[i];
+        for (int i = 0; i < dimof(disableIfDirectoryOrBrokenPDF); i++) {
+            int id = disableIfDirectoryOrBrokenPDF[i];
             win::menu::SetEnabled(win->menu, id, true);
         }
     }
