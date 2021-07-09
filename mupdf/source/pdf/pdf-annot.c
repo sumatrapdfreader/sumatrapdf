@@ -35,22 +35,20 @@ pdf_annot_ap(fz_context *ctx, pdf_annot *annot)
 {
 	int flags = pdf_dict_get_int(ctx, annot->obj, PDF_NAME(F));
 	int readonly = flags & PDF_ANNOT_IS_READ_ONLY;
-	const char *base = "AP/N";
-	pdf_obj *ap;
 
-	/* If we're a active button, we use AP/D. In all other cases
-	 * we use AP/N. */
+	pdf_obj *ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
+	pdf_obj *ap_n = pdf_dict_get(ctx, ap, PDF_NAME(N));
+	pdf_obj *ap_r = pdf_dict_get(ctx, ap, PDF_NAME(R));
+	pdf_obj *ap_d = pdf_dict_get(ctx, ap, PDF_NAME(D));
 
-	if (!readonly && annot->is_hot && annot->is_active)
-		base = "AP/D";
-	else if (!readonly && annot->is_hot)
-		base = "AP/R";
+	if (!readonly && annot->is_hot && annot->is_active && ap_d)
+		ap = ap_d;
+	else if (!readonly && annot->is_hot && ap_r)
+		ap = ap_r;
 	else
-		base = "AP/N";
+		ap = ap_n;
 
-	/* Either AP/N or AP/D can either be streams themselves, or they
-	 * can be a dictionary of streams. */
-	ap = pdf_dict_getp(ctx, annot->obj, base);
+	/* AP/N, AP/R and AP/D may be streams, or dictionaries of streams. */
 
 	/* If it's a stream, we have a winner! */
 	if (pdf_is_indirect(ctx, ap) && pdf_obj_num_is_stream(ctx, annot->page->doc, pdf_to_num(ctx, ap)))
@@ -67,33 +65,6 @@ int pdf_annot_active(fz_context *ctx, pdf_annot *annot)
 	return annot ? annot->is_active : 0;
 }
 
-static void
-check_change(fz_context *ctx, pdf_annot *annot)
-{
-	pdf_obj *ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
-	int flags = pdf_dict_get_int(ctx, annot->obj, PDF_NAME(F));
-	int readonly = flags & PDF_ANNOT_IS_READ_ONLY;
-
-	if (!readonly && annot->is_hot && annot->is_active)
-	{
-		pdf_obj *ap_d = pdf_dict_get(ctx, ap, PDF_NAME(D));
-		if (ap_d)
-			pdf_set_annot_has_changed(ctx, annot);
-	}
-	else if (!readonly && annot->is_hot)
-	{
-		pdf_obj *ap_r = pdf_dict_get(ctx, ap, PDF_NAME(R));
-		if (ap_r)
-			annot->has_new_ap = 1;
-	}
-	else
-	{
-		pdf_obj *ap_n = pdf_dict_get(ctx, ap, PDF_NAME(N));
-		if (ap_n)
-			annot->has_new_ap = 1;
-	}
-}
-
 void pdf_set_annot_active(fz_context *ctx, pdf_annot *annot, int active)
 {
 	int old;
@@ -104,7 +75,7 @@ void pdf_set_annot_active(fz_context *ctx, pdf_annot *annot, int active)
 	old = annot->is_active;
 	annot->is_active = !!active;
 	if (old != annot->is_active)
-		check_change(ctx, annot);
+		pdf_set_annot_has_changed(ctx, annot);
 }
 
 int pdf_annot_hot(fz_context *ctx, pdf_annot *annot)
@@ -122,7 +93,7 @@ void pdf_set_annot_hot(fz_context *ctx, pdf_annot *annot, int hot)
 	old = annot->is_hot;
 	annot->is_hot = !!hot;
 	if (old != annot->is_hot)
-		check_change(ctx, annot);
+		pdf_set_annot_has_changed(ctx, annot);
 }
 
 fz_matrix

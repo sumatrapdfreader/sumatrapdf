@@ -594,7 +594,7 @@ void do_widget_canvas(fz_irect canvas_area)
 
 		if (ui_mouse_inside(canvas_area) && ui_mouse_inside(area))
 		{
-			if (pdf_annot_hot(ctx, widget))
+			if (!pdf_annot_hot(ctx, widget))
 			{
 				trace_action("page.getWidgets()[%d].eventEnter();\n", idx);
 				pdf_annot_event_enter(ctx, widget);

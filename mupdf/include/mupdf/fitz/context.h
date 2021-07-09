@@ -630,7 +630,7 @@ fz_keep_imp(fz_context *ctx, void *p, int *refs)
 }
 
 static inline void *
-fz_keep_imp_locked(fz_context *ctx, void *p, int *refs)
+fz_keep_imp_locked(fz_context *ctx FZ_UNUSED, void *p, int *refs)
 {
 	if (p)
 	{
