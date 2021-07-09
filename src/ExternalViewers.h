@@ -12,3 +12,4 @@ bool CanSendAsEmailAttachment(TabInfo* tab = nullptr);
 bool SendAsEmailAttachment(TabInfo* tab, HWND hwndParent = nullptr);
 
 bool CouldBePDFDoc(TabInfo* tab);
+bool PathMatchFilter(const WCHAR* path, char* filter);

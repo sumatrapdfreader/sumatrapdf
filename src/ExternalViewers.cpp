@@ -335,6 +335,19 @@ bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     return LaunchFile(info->exeFullPath, params);
 }
 
+bool PathMatchFilter(const WCHAR* path, char* filter) {
+    // no filter means matches everything
+    if (str::IsEmpty(filter)) {
+        return true;
+    }
+    if (str::Eq(filter, "*")) {
+        return true;
+    }
+    AutoFreeWstr s = strconv::Utf8ToWstr(filter);
+    bool matches = path::Match(path, s.Get());
+    return matches;
+}
+
 bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     if (!HasPermission(Perm::DiskAccess) || !tab || !file::Exists(tab->filePath)) {
         return false;
@@ -343,7 +356,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && i <= idx; i++) {
         ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
         // see AppendExternalViewersToMenu in Menu.cpp
-        if (!ev->commandLine || ev->filter && !str::Eq(ev->filter, L"*") && !path::Match(tab->filePath, ev->filter)) {
+        if (!ev->commandLine || !PathMatchFilter(tab->filePath, ev->filter)) {
             idx++;
         }
     }
@@ -353,6 +366,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
 
     ExternalViewer* ev = gGlobalPrefs->externalViewers->at(idx);
     WStrVec args;
+
     ParseCmdLine(ev->commandLine, args, 2);
     if (args.size() == 0 || !file::Exists(args.at(0))) {
         return false;

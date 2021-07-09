@@ -1106,12 +1106,12 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         if (!ev->commandLine) {
             continue;
         }
-        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter))) {
+        if (ev->filter && !(filePath && PathMatchFilter(filePath, ev->filter))) {
             continue;
         }
 
         AutoFreeWstr appName;
-        const WCHAR* name = ev->name;
+        const WCHAR* name = strconv::Utf8ToWstr(ev->name);
         if (str::IsEmpty(name)) {
             WStrVec args;
             ParseCmdLine(ev->commandLine, args, 2);

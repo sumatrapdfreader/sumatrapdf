@@ -394,11 +394,11 @@ static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {
    having any extension) */
 bool Match(const WCHAR* path, const WCHAR* filter) {
     path = GetBaseNameNoFree(path);
-    while (str::FindChar(filter, ';')) {
+    while (str::FindChar(filter, L';')) {
         if (MatchWildcardsRec(path, filter)) {
             return true;
         }
-        filter = str::FindChar(filter, ';') + 1;
+        filter = str::FindChar(filter, L';') + 1;
     }
     return MatchWildcardsRec(path, filter);
 }

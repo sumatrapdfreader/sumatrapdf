@@ -89,14 +89,14 @@ struct ExternalViewer {
     // command line with which to call the external viewer, may contain %p
     // for page number and "%1" for the file name (add quotation marks
     // around paths containing spaces)
-    WCHAR* commandLine;
+    char* commandLine;
     // name of the external viewer to be shown in the menu (implied by
     // CommandLine if missing)
-    WCHAR* name;
+    char* name;
     // optional filter for which file types the menu item is to be shown;
     // separate multiple entries using ';' and don't include any spaces
     // (e.g. *.pdf;*.xps for all PDF and XPS documents)
-    WCHAR* filter;
+    char* filter;
 };
 
 // these override the default settings in the Print dialog
@@ -444,9 +444,9 @@ static const FieldInfo gChmUIFields[] = {
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
 
 static const FieldInfo gExternalViewerFields[] = {
-    {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
-    {offsetof(ExternalViewer, name), SettingType::String, 0},
-    {offsetof(ExternalViewer, filter), SettingType::String, 0},
+    {offsetof(ExternalViewer, commandLine), SettingType::Utf8String, 0},
+    {offsetof(ExternalViewer, name), SettingType::Utf8String, 0},
+    {offsetof(ExternalViewer, filter), SettingType::Utf8String, 0},
 };
 static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 3, gExternalViewerFields,
                                                "CommandLine\0Name\0Filter"};

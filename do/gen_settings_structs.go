@@ -388,13 +388,13 @@ var (
 	}
 
 	externalViewer = []*Field{
-		mkField("CommandLine", String, nil,
+		mkField("CommandLine", Utf8String, nil,
 			"command line with which to call the external viewer, may contain "+
 				"%p for page number and \"%1\" for the file name (add quotation "+
 				"marks around paths containing spaces)"),
-		mkField("Name", String, nil,
+		mkField("Name", Utf8String, nil,
 			"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
-		mkField("Filter", String, nil,
+		mkField("Filter", Utf8String, nil,
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 	}
 
