@@ -944,6 +944,37 @@ int DisplayModel::GetPageNextToPoint(Point pt) {
     return closest;
 }
 
+// TODO: try to track down why sometimes zoom on a page is 0
+// like https://github.com/sumatrapdfreader/sumatrapdf/issues/2014
+static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo) {
+    float zoom = pageInfo->zoomReal;
+    if (zoom > 0) {
+        return zoom;
+    }
+    char* name = str::Dup("");
+    const WCHAR* nameW = dm->FilePath();
+    if (nameW) {
+        name = (char*)strconv::WstrToUtf8(nameW).data();
+    }
+    logf(
+        "getZoomSafe: invalid zoom, doc: %s, pageNo: %d, pageInfo->zoomReal: %.2f, dm->zoomReal: %.2f, "
+        "dm->zoomVirtual: %.2f\n",
+        name, pageNo, zoom, pageInfo->zoomReal, dm->zoomReal, dm->zoomVirtual);
+    free(name);
+    DebugCrashIf(true);
+    SendCrashReport("getZoomSafe(): zoom = 0");
+
+    if (dm->zoomReal > 0) {
+        return dm->zoomReal;
+    }
+
+    if (dm->zoomVirtual > 0) {
+        return dm->zoomVirtual;
+    }
+    // hail mary, return 100%
+    return 1.f;
+}
+
 Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     SubmitCrashIf(!pageInfo);
@@ -951,11 +982,8 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
         return Point();
     }
 
-    float zoom = pageInfo->zoomReal;
-    // TODO: must be a better way
-    if (zoom == 0) {
-        zoom = zoomReal;
-    }
+    float zoom = getZoomSafe(this, pageNo, pageInfo);
+
     PointF p = engine->Transform(pt, pageNo, zoom, rotation);
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
@@ -985,11 +1013,8 @@ PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
     PointF p = PointF(pt.x - 0.499 - r.x, pt.y - 0.499 - r.y);
-    float zoom = pageInfo->zoomReal;
-    // TODO: must be a better way
-    if (zoom == 0) {
-        zoom = zoomReal;
-    }
+
+    float zoom = getZoomSafe(this, pageNo, pageInfo);
     return engine->Transform(p, pageNo, zoom, rotation, true);
 }
 

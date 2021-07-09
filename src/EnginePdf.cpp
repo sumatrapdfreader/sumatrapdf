@@ -1272,7 +1272,10 @@ RectF EnginePdf::Transform(const RectF& rect, int pageNo, float zoom, int rotati
         logf("doc: %s, pageNo: %d, zoom: %.2f\n", name, pageNo, zoom);
         free(name);
     }
-    CrashIf(zoom <= 0);
+    DebugCrashIf(zoom <= 0);
+    if (zoom <= 0) {
+        zoom = 1;
+    }
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse) {
         ctm = fz_invert_matrix(ctm);
