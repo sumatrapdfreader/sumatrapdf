@@ -97,15 +97,29 @@ FileState* FileHistory::Get(size_t index) const {
 }
 
 FileState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
-    for (size_t i = 0; i < states->size(); i++) {
-        if (str::EqI(states->at(i)->filePath, filePath)) {
-            if (idxOut) {
-                *idxOut = i;
-            }
-            return states->at(i);
+    int idxExact = -1;
+    int idxFileNameMatch = -1;
+    const WCHAR* fileName = path::GetBaseNameNoFree(filePath);
+    int n = states->isize();
+    for (int i = 0; i < n; i++) {
+        FileState* state = states->at(i);
+        if (str::EqI(state->filePath, filePath)) {
+            idxExact = i;
+        } else if (str::EndsWithI(state->filePath, fileName)) {
+            idxFileNameMatch = i;
         }
     }
-    return nullptr;
+    int idFound = idxExact;
+    if (idFound == -1) {
+        idFound = idxFileNameMatch;
+    }
+    if (idFound == -1) {
+        return nullptr;
+    }
+    if (idxOut) {
+        *idxOut = (size_t)idFound;
+    }
+    return states->at(idFound);
 }
 
 FileState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
