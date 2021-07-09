@@ -152,11 +152,11 @@ static void versioncheck_test() {
     utassert(!IsValidProgramVersion("1..1"));
     utassert(!IsValidProgramVersion("1.1\r\n.1"));
 
-    utassert(CompareVersion(L"0.9.3.900", L"0.9.3") > 0);
-    utassert(CompareVersion(L"1.09.300", L"1.09.3") > 0);
-    utassert(CompareVersion(L"1.9.1", L"1.09.3") < 0);
-    utassert(CompareVersion(L"1.2.0", L"1.2") == 0);
-    utassert(CompareVersion(L"1.3.0", L"2662") < 0);
+    utassert(CompareVersion("0.9.3.900", "0.9.3") > 0);
+    utassert(CompareVersion("1.09.300", "1.09.3") > 0);
+    utassert(CompareVersion("1.9.1", "1.09.3") < 0);
+    utassert(CompareVersion("1.2.0", "1.2") == 0);
+    utassert(CompareVersion("1.3.0", "2662") < 0);
 }
 
 static void hexstrTest() {

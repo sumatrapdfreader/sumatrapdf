@@ -39,31 +39,6 @@ bool IsValidProgramVersion(const char* txt) {
     return true;
 }
 
-// extract the next (positive) number from the string *txt
-static unsigned int ExtractNextNumber(const WCHAR** txt) {
-    unsigned int val = 0;
-    const WCHAR* next = str::Parse(*txt, L"%u%?.", &val);
-    *txt = next ? next : *txt + str::Len(*txt);
-    return val;
-}
-
-// compare two version string. Return 0 if they are the same,
-// > 0 if the first is greater than the second and < 0 otherwise.
-// e.g.
-//   0.9.3.900 is greater than 0.9.3
-//   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
-//   1.2.0 is the same as 1.2
-int CompareVersion(const WCHAR* txt1, const WCHAR* txt2) {
-    while (*txt1 || *txt2) {
-        unsigned int v1 = ExtractNextNumber(&txt1);
-        unsigned int v2 = ExtractNextNumber(&txt2);
-        if (v1 != v2) {
-            return v1 - v2;
-        }
-    }
-    return 0;
-}
-
 static unsigned int ExtractNextNumber(const char** txt) {
     unsigned int val = 0;
     const char* next = str::Parse(*txt, "%u%?.", &val);
