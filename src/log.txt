@@ -15,6 +15,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - replace MF_REQ_DISK_ACCESS with a list of ids
 - replace MF_NOT_FOR_CHM and MF_NOT_FOR_EBOOK_UI with a list of ids
 - remove no longer used MenuDef.flags
+- convert main menu to MenuDef
 
 2021-07-07 Wed
 

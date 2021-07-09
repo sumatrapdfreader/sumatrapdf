@@ -5000,6 +5000,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_INITMENUPOPUP:
+            // TODO: should I just build the menu from scratch every time?
             UpdateAppMenu(win, (HMENU)wp);
             break;
 

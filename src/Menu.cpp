@@ -50,14 +50,14 @@
 extern Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
 
 struct BuildMenuCtx {
-    bool isChm{false};
-    bool isEbookUI{false};
+    TabInfo* tab{nullptr};
     bool isCbx{false};
     bool hasSelection{false};
     bool supportsAnnotations{false};
     bool hasAnnotationUnderCursor{false};
     bool hasUnsavedAnnotations{false};
     bool isCursorOnPage{false};
+    bool canSendEmail{false};
 };
 
 // value associated with menu item for owner-drawn purposes
@@ -612,6 +612,51 @@ static MenuDef menuDefMainSelection[] = {
 };
 //] ACCESSKEY_GROUP Menu (Selection)
 
+//[ ACCESSKEY_GROUP Menubar
+static MenuDef menuDefMenubar[] = {
+    {
+        _TRN("&File"),
+        (UINT_PTR)menuDefFile,
+    },
+    {
+        _TRN("&View"),
+        (UINT_PTR)menuDefView,
+    },
+    {
+        _TRN("&Go To"),
+        (UINT_PTR)menuDefGoTo,
+    },
+    {
+        _TRN("&Zoom"),
+        (UINT_PTR)menuDefZoom,
+    },
+    {
+        _TRN("S&election"),
+        (UINT_PTR)menuDefMainSelection,
+    },
+    {
+        _TRN("F&avorites"),
+        (UINT_PTR)menuDefFavorites,
+    },
+    {
+        _TRN("&Settings"),
+        (UINT_PTR)menuDefSettings,
+    },
+    {
+        _TRN("&Help"),
+        (UINT_PTR)menuDefHelp,
+    },
+    {
+        "Debug",
+        (UINT_PTR)menuDefDebug,
+    },
+    {
+        0,
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Menubar
+
 //[ ACCESSKEY_GROUP Context Menu (Create annot from selection)
 static MenuDef menuDefCreateAnnotFromSelection[] = {
     {
@@ -984,6 +1029,134 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 
 #define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
 
+static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
+    CrashIf(!filePath || !menuFile);
+    if (!filePath || !menuFile) {
+        return;
+    }
+
+    AutoFreeWstr menuString;
+    menuString.SetCopy(path::GetBaseNameNoFree(filePath));
+    auto fileName = win::menu::ToSafeString(menuString);
+    int menuIdx = (int)((index + 1) % 10);
+    menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
+    uint menuId = CmdFileHistoryFirst + index;
+    uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
+    InsertMenuW(menuFile, CmdExit, flags, menuId, menuString);
+}
+
+static void AppendRecentFilesToMenu(HMENU m) {
+    if (!HasPermission(Perm::DiskAccess)) {
+        return;
+    }
+
+    int i;
+    for (i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
+        FileState* state = gFileHistory.Get(i);
+        if (!state || state->isMissing) {
+            break;
+        }
+        AddFileMenuItem(m, state->filePath, i);
+    }
+
+    if (i > 0) {
+        InsertMenuW(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+    }
+}
+
+void FillBuildMenuCtx(TabInfo* tab, BuildMenuCtx* ctx, Point pt) {
+    if (!tab) {
+        return;
+    }
+    ctx->tab = tab;
+    EngineBase* engine = tab->GetEngine();
+    if (engine && (engine->kind == kindEngineComicBooks)) {
+        ctx->isCbx = true;
+    }
+    ctx->supportsAnnotations = EngineSupportsAnnotations(engine) && !tab->win->isFullScreen;
+    ctx->hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
+    ctx->canSendEmail = CanSendAsEmailAttachment(tab);
+
+    DisplayModel* dm = tab->AsFixed();
+    if (dm) {
+        int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+        if (pageNoUnderCursor > 0) {
+            ctx->isCursorOnPage = true;
+        }
+        auto annotUnderCursor = dm->GetAnnotationAtPos(pt, nullptr);
+        if (annotUnderCursor) {
+            ctx->hasAnnotationUnderCursor = true;
+        }
+    }
+    ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
+}
+
+static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
+    if (0 == gGlobalPrefs->externalViewers->size()) {
+        return;
+    }
+    if (!HasPermission(Perm::DiskAccess) || (filePath && !file::Exists(filePath))) {
+        return;
+    }
+
+    int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst + 1;
+    int count = 0;
+    for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && count < maxEntries; i++) {
+        ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
+        if (!ev->commandLine) {
+            continue;
+        }
+        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter))) {
+            continue;
+        }
+
+        AutoFreeWstr appName;
+        const WCHAR* name = ev->name;
+        if (str::IsEmpty(name)) {
+            WStrVec args;
+            ParseCmdLine(ev->commandLine, args, 2);
+            if (args.size() == 0) {
+                continue;
+            }
+            appName.SetCopy(path::GetBaseNameNoFree(args.at(0)));
+            *(WCHAR*)path::GetExtNoFree(appName) = '\0';
+        }
+
+        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.Get() : name));
+        uint menuId = CmdOpenWithExternalFirst + count;
+        InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+        if (!filePath) {
+            win::menu::SetEnabled(menuFile, menuId, false);
+        }
+        count++;
+    }
+}
+
+// shows duplicate separator if no external viewers
+static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
+    AppendRecentFilesToMenu(menu);
+    TabInfo* tab = ctx->tab;
+    AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
+
+    // Suppress menu items that depend on specific software being installed:
+    // e-mail client, Adobe Reader, Foxit, PDF-XChange
+    // Don't hide items here that won't always be hidden
+    // (MenuUpdateStateForWindow() is for that)
+    for (int cmd = CmdOpenWithFirst + 1; cmd < CmdOpenWithLast; cmd++) {
+        if (!CanViewWithKnownExternalViewer(tab, cmd)) {
+            win::menu::Remove(menu, cmd);
+        }
+    }
+}
+
+static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
+    win::menu::Empty(menu);
+    BuildMenuCtx buildCtx;
+    FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
+    BuildMenuFromMenuDef(menuDefFile, menu, &buildCtx);
+    DynamicPartOfFileMenu(menu, &buildCtx);
+}
+
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     CrashIf(!menu);
     bool wasSeparator = true;
@@ -1018,10 +1191,11 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         }
 
         if (ctx) {
-            removeMenu |= (ctx->isChm && cmdIdInList(rmoveIfChm));
-            removeMenu |= (ctx->isEbookUI && cmdIdInList(removeIfEbook));
+            removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(rmoveIfChm));
+            removeMenu |= (ctx->tab && ctx->tab->AsEbook() && cmdIdInList(removeIfEbook));
             removeMenu |= (!ctx->isCbx && (cmdId == CmdViewMangaMode));
             removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
+            removeMenu |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
 
             disableMenu |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
             disableMenu |= (!ctx->hasAnnotationUnderCursor && (cmdId == CmdSelectAnnotation));
@@ -1059,6 +1233,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         if (isSubMenu) {
             HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);
             UINT flags = MF_POPUP | (disableMenu ? MF_DISABLED : MF_ENABLED);
+            if (subMenuDef == menuDefFile) {
+                DynamicPartOfFileMenu(subMenu, ctx);
+            }
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, title);
         } else {
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
@@ -1069,82 +1246,6 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     // TODO: remove trailing separator if there ever is one
     CrashIf(wasSeparator);
     return menu;
-}
-
-static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
-    CrashIf(!filePath || !menuFile);
-    if (!filePath || !menuFile) {
-        return;
-    }
-
-    AutoFreeWstr menuString;
-    menuString.SetCopy(path::GetBaseNameNoFree(filePath));
-    auto fileName = win::menu::ToSafeString(menuString);
-    int menuIdx = (int)((index + 1) % 10);
-    menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
-    uint menuId = CmdFileHistoryFirst + index;
-    uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
-    InsertMenuW(menuFile, CmdExit, flags, menuId, menuString);
-}
-
-static void AppendRecentFilesToMenu(HMENU m) {
-    if (!HasPermission(Perm::DiskAccess)) {
-        return;
-    }
-
-    int i;
-    for (i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
-        FileState* state = gFileHistory.Get(i);
-        if (!state || state->isMissing) {
-            break;
-        }
-        AddFileMenuItem(m, state->filePath, i);
-    }
-
-    if (i > 0) {
-        InsertMenuW(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
-    }
-}
-
-static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
-    if (0 == gGlobalPrefs->externalViewers->size()) {
-        return;
-    }
-    if (!HasPermission(Perm::DiskAccess) || (filePath && !file::Exists(filePath))) {
-        return;
-    }
-
-    int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst + 1;
-    int count = 0;
-    for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && count < maxEntries; i++) {
-        ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
-        if (!ev->commandLine) {
-            continue;
-        }
-        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter))) {
-            continue;
-        }
-
-        AutoFreeWstr appName;
-        const WCHAR* name = ev->name;
-        if (str::IsEmpty(name)) {
-            WStrVec args;
-            ParseCmdLine(ev->commandLine, args, 2);
-            if (args.size() == 0) {
-                continue;
-            }
-            appName.SetCopy(path::GetBaseNameNoFree(args.at(0)));
-            *(WCHAR*)path::GetExtNoFree(appName) = '\0';
-        }
-
-        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.Get() : name));
-        uint menuId = CmdOpenWithExternalFirst + count;
-        InsertMenuW(menuFile, CmdSendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
-        if (!filePath) {
-            win::menu::SetEnabled(menuFile, menuId, false);
-        }
-        count++;
-    }
 }
 
 // clang-format off
@@ -1418,37 +1519,6 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 }
 
-void FillBuildMenuCtx(TabInfo* tab, BuildMenuCtx* ctx, Point pt) {
-    if (!tab) {
-        return;
-    }
-    if (tab->AsChm()) {
-        ctx->isChm = true;
-    }
-    if (tab->AsEbook()) {
-        ctx->isEbookUI = true;
-    }
-    EngineBase* engine = tab->GetEngine();
-    if (engine && (engine->kind == kindEngineComicBooks)) {
-        ctx->isCbx = true;
-    }
-    ctx->supportsAnnotations = EngineSupportsAnnotations(engine) && !tab->win->isFullScreen;
-    ctx->hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
-
-    DisplayModel* dm = tab->AsFixed();
-    if (dm) {
-        int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-        if (pageNoUnderCursor > 0) {
-            ctx->isCursorOnPage = true;
-        }
-        auto annotUnderCursor = dm->GetAnnotationAtPos(pt, nullptr);
-        if (annotUnderCursor) {
-            ctx->hasAnnotationUnderCursor = true;
-        }
-    }
-    ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
-}
-
 void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
@@ -1641,34 +1711,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     */
 
     delete pageEl;
-}
-
-static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
-    win::menu::Empty(menu);
-    BuildMenuCtx buildCtx;
-    FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
-    HMENU m = BuildMenuFromMenuDef(menuDefFile, menu, &buildCtx);
-    AppendRecentFilesToMenu(menu);
-    AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
-
-    // Suppress menu items that depend on specific software being installed:
-    // e-mail client, Adobe Reader, Foxit, PDF-XChange
-    // Don't hide items here that won't always be hidden
-    // (MenuUpdateStateForWindow() is for that)
-    if (!CanSendAsEmailAttachment()) {
-        win::menu::Remove(menu, CmdSendByEmail);
-    }
-
-    for (int cmd = CmdOpenWithFirst + 1; cmd < CmdOpenWithLast; cmd++) {
-        if (!CanViewWithKnownExternalViewer(tab, cmd)) {
-            win::menu::Remove(menu, cmd);
-        }
-    }
-
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
-    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
-    bool enableSaveAnnotations = EngineHasUnsavedAnnotations(engine);
-    win::menu::SetEnabled(menu, CmdSaveAnnotations, enableSaveAnnotations);
 }
 
 // so that we can do free everything at exit
@@ -1939,41 +1981,15 @@ void MenuOwnerDrawnDrawItem([[maybe_unused]] HWND hwnd, DRAWITEMSTRUCT* dis) {
     SelectObject(hdc, prevFont);
 }
 
-//[ ACCESSKEY_GROUP Main Menubar
 HMENU BuildMenu(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
-    HMENU mainMenu = CreateMenu();
 
     BuildMenuCtx buildCtx;
     FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
 
-    HMENU m = CreateMenu();
-    RebuildFileMenu(tab, m);
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    m = BuildMenuFromMenuDef(menuDefView, CreateMenu(), &buildCtx);
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
-    m = BuildMenuFromMenuDef(menuDefGoTo, CreateMenu(), &buildCtx);
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-    if (!win->AsEbook()) {
-        m = BuildMenuFromMenuDef(menuDefZoom, CreateMenu(), &buildCtx);
-        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
-    }
-    if (!win->AsEbook()) {
-        m = BuildMenuFromMenuDef(menuDefSelection, CreateMenu(), &buildCtx);
-        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("S&election"));
-    }
+    HMENU mainMenu = BuildMenuFromMenuDef(menuDefMenubar, CreateMenu(), &buildCtx);
 
-    // TODO: implement Favorites for ebooks
-    if (HasPermission(Perm::SavePreferences) && !win->AsEbook()) {
-        // I think it makes sense to disable favorites in restricted mode
-        // because they wouldn't be persisted, anyway
-        m = BuildMenuFromMenuDef(menuDefFavorites, CreateMenu(), &buildCtx);
-        RebuildFavMenu(win, m);
-        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
-    }
-
-    m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), &buildCtx);
-#if defined(ENABLE_THEME)
+#if defined(ENABLE_THEME) && 0
     // Build the themes sub-menu of the settings menu
     MenuDef menuDefTheme[THEME_COUNT + 1];
     static_assert(IDM_CHANGE_THEME_LAST - IDM_CHANGE_THEME_FIRST + 1 >= THEME_COUNT,
@@ -1984,36 +2000,10 @@ HMENU BuildMenu(WindowInfo* win) {
     HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, CreateMenu(), filter);
     AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
 #endif
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
-
-    m = BuildMenuFromMenuDef(menuDefHelp, CreateMenu(), &buildCtx);
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
-#if 0
-    // see MenuBarAsPopupMenu in Caption.cpp
-    m = GetSystemMenu(win->hwndFrame, FALSE);
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
-#endif
-
-    if (gShowDebugMenu) {
-        m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), &buildCtx);
-        win::menu::Remove(m, CmdAdvancedOptions); // TODO: this was removed for !ramicro build
-
-        if (!gIsDebugBuild) {
-            RemoveMenu(m, CmdDebugTestApp, MF_BYCOMMAND);
-        }
-
-        if (gAddCrashMeMenu) {
-            AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
-            AppendMenuA(m, MF_STRING, (UINT_PTR)CmdDebugCrashMe, "Crash me");
-        }
-
-        AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
-    }
 
     MarkMenuOwnerDraw(mainMenu);
     return mainMenu;
 }
-//] ACCESSKEY_GROUP Main Menubar
 
 void UpdateAppMenu(WindowInfo* win, HMENU m) {
     CrashIf(!win);
