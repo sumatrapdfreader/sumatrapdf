@@ -491,7 +491,6 @@
     <ClCompile Include="..\src\utils\Log.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
-    <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
     <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
     <ClCompile Include="..\src\utils\StringViewUtil.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />

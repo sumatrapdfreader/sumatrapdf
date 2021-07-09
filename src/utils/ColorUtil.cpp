@@ -209,7 +209,6 @@ float GetLightness(COLORREF c) {
     return (M + m) / 2.0f;
 }
 
-#if OS_WIN
 u8 GetRed(COLORREF rgb) {
     rgb = rgb & 0xff;
     return (u8)rgb;
@@ -229,4 +228,3 @@ u8 GetAlpha(COLORREF rgb) {
     rgb = (rgb >> 24) & 0xff;
     return (u8)rgb;
 }
-#endif

@@ -22,7 +22,6 @@ function makelzsa_files()
     "StrconvUtil.*",
     "StringViewUtil.*",
     "StrUtil.*",
-    "StrUtil_win.*",
     "Log.*",
     "WinDynCalls.*",
     "WinUtil.*",
@@ -530,7 +529,6 @@ function utils_files()
     "StringViewUtil.*",
     "StrSlice.*",
     "StrUtil.*",
-    "StrUtil_win.cpp",
     "ThreadUtil.*",
     "TgaReader.*",
     "TrivialHtmlParser.*",
@@ -885,7 +883,6 @@ function efi_files()
     "src/utils/BitManip.h",
     "src/utils/Dict*",
     "src/utils/StrUtil.*",
-    "src/utils/StrUtil_win.cpp",
   }
 end
 
@@ -913,7 +910,6 @@ function test_util_files()
     "StrFormat.*",
     "StringViewUtil.*",
     "StrUtil.*",
-    "StrUtil_win.cpp",
     "SquareTreeParser.*",
     "TrivialHtmlParser.*",
     "UtAssert.*",

@@ -59,10 +59,8 @@ class PdbReader {
     static PdbReader* CreateFromData(std::span<u8>);
     static PdbReader* CreateFromFile(const char* path);
 
-#if OS_WIN
     static PdbReader* CreateFromFile(const WCHAR* path);
     static PdbReader* CreateFromStream(IStream* stream);
-#endif
 };
 
 // stuff for mobi format

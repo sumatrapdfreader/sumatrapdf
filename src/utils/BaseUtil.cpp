@@ -69,7 +69,6 @@ std::string_view Allocator::AllocString(Allocator* a, std::string_view sv) {
     return std::string_view(dst, n);
 }
 
-#if OS_WIN
 WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s) {
     if (!s) {
         return nullptr;
@@ -77,7 +76,6 @@ WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s) {
     size_t n = (str::Len(s) + 1) * sizeof(WCHAR);
     return (WCHAR*)Allocator::MemDup(a, s, n);
 }
-#endif
 
 void PoolAllocator::Free(const void*) {
     // does nothing, we can't free individual pieces of memory

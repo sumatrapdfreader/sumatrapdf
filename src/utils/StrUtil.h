@@ -37,7 +37,6 @@ bool StartsWith(const u8* str, const char* prefix);
 bool StartsWith(std::string_view s, const char* prefix);
 std::span<u8> ToSpan(const char* s);
 
-#if OS_WIN
 size_t Len(const WCHAR*);
 WCHAR* Dup(const WCHAR*);
 void ReplacePtr(WCHAR** s, const WCHAR* snew);
@@ -49,7 +48,6 @@ bool EqN(const WCHAR*, const WCHAR*, size_t);
 bool EqNI(const WCHAR*, const WCHAR*, size_t);
 bool IsEmpty(const WCHAR*);
 bool StartsWith(const WCHAR* str, const WCHAR* prefix);
-#endif
 
 bool StartsWithI(const char* str, const char* prefix);
 bool EndsWith(const char* txt, const char* end);
@@ -65,7 +63,6 @@ char* ToLower(const char*);
 void Free(const char*);
 void Free(const u8*);
 
-#if OS_WIN
 bool StartsWithI(const WCHAR* str, const WCHAR* txt);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
@@ -78,7 +75,6 @@ WCHAR* ToLowerInPlace(WCHAR* s);
 WCHAR* ToLower(const WCHAR* s);
 
 void Utf8Encode(char*& dst, int c);
-#endif
 
 bool IsDigit(char c);
 bool IsWs(char c);
@@ -97,7 +93,6 @@ bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
 char* FmtV(const char* fmt, va_list args);
 char* Format(const char* fmt, ...);
 
-#if OS_WIN
 const WCHAR* FindChar(const WCHAR* str, WCHAR c);
 WCHAR* FindChar(WCHAR* str, WCHAR c);
 const WCHAR* FindCharLast(const WCHAR* str, WCHAR c);
@@ -114,7 +109,6 @@ bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
 
 size_t TrimWS(WCHAR* s, TrimOpt opt);
-#endif
 
 size_t TrimWS(char* s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
@@ -138,7 +132,6 @@ const char* Parse(const char* str, size_t len, const char* format, ...);
 
 int CmpNatural(const char*, const char*);
 
-#if OS_WIN
 size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
 size_t NormalizeWS(WCHAR* str);
@@ -154,20 +147,16 @@ int CmpNatural(const WCHAR*, const WCHAR*);
 
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv);
-
-#endif
 } // namespace str
 
 namespace url {
 
 void DecodeInPlace(char* urlUtf8);
 
-#if OS_WIN
 bool IsAbsolute(const WCHAR* url);
 void DecodeInPlace(WCHAR* url);
 WCHAR* GetFullPath(const WCHAR* url);
 WCHAR* GetFileName(const WCHAR* url);
-#endif
 
 } // namespace url
 
@@ -178,10 +167,8 @@ int StrToIdx(const char* strs, const char* toFind);
 int StrToIdxIS(const char* strs, const char* toFind);
 const char* IdxToStr(const char* strs, int idx);
 
-#if OS_WIN
 int StrToIdx(const char* strs, const WCHAR* toFind);
 const WCHAR* IdxToStr(const WCHAR* strs, int idx);
-#endif
 } // namespace seqstrings
 
 #define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))

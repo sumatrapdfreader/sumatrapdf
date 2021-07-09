@@ -69,10 +69,8 @@
 #define COMPILER_MINGW 0
 #endif
 
-#if OS_WIN
 #ifndef UNICODE
 #define UNICODE
-#endif
 #endif
 
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -81,7 +79,6 @@
 
 #include "BuildConfig.h"
 
-#if OS_WIN
 #define NOMINMAX
 #include <windows.h>
 #include <unknwn.h>
@@ -104,7 +101,6 @@
 #undef max
 
 #include <io.h>
-#endif // OS_WIN
 
 // Most common C includes
 #include <stdlib.h>
@@ -397,9 +393,7 @@ struct Allocator {
     static char* StrDup(Allocator* a, const char* str);
     static std::string_view AllocString(Allocator* a, std::string_view str);
 
-#if OS_WIN
     static WCHAR* StrDup(Allocator* a, const WCHAR* str);
-#endif
 };
 
 // PoolAllocator is for the cases where we need to allocate pieces of memory

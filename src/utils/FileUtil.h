@@ -16,7 +16,6 @@ std::string_view GetDir(std::string_view path);
 bool IsDirectory(std::string_view);
 bool IsDirectory(std::wstring_view);
 
-#if OS_WIN
 bool IsSep(WCHAR c);
 const WCHAR* GetBaseNameNoFree(const WCHAR* path);
 const WCHAR* GetExtNoFree(const WCHAR* path);
@@ -34,7 +33,6 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = n
 
 WCHAR* GetTempPath(const WCHAR* filePrefix = nullptr);
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
-#endif
 } // namespace path
 
 namespace file {
@@ -47,7 +45,6 @@ std::span<u8> ReadFile(std::string_view path);
 
 bool Exists(std::string_view path);
 
-#if OS_WIN
 FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
 std::span<u8> ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
@@ -68,19 +65,14 @@ bool SetZoneIdentifier(const WCHAR* path, int zoneId = URLZONE_INTERNET);
 bool DeleteZoneIdentifier(const WCHAR* path);
 
 HANDLE OpenReadOnly(const WCHAR* path);
-#endif
 } // namespace file
 
 namespace dir {
 
-#if OS_WIN
 bool Exists(const WCHAR* dir);
 bool Create(const WCHAR* dir);
 bool CreateAll(const WCHAR* dir);
 bool RemoveAll(const WCHAR* dir);
-#endif
 } // namespace dir
 
-#if OS_WIN
 bool FileTimeEq(const FILETIME& a, const FILETIME& b);
-#endif

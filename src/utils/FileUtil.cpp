@@ -3,12 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
-#include "utils/Log.h"
-
-#if OS_WIN
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#endif
+#include "utils/Log.h"
 
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
@@ -97,7 +94,6 @@ bool IsDirectory(std::string_view path) {
     return false;
 }
 
-#if OS_WIN
 bool IsSep(WCHAR c) {
     return '\\' == c || '/' == c;
 }
@@ -439,8 +435,6 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
     AutoFreeWstr path = path::Join(moduleDir, fileName);
     return path::Normalize(path);
 }
-
-#endif // OS_WIN
 } // namespace path
 
 namespace file {
@@ -450,12 +444,8 @@ FILE* OpenFILE(const char* path) {
     if (!path) {
         return nullptr;
     }
-#if OS_WIN
     AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
     return OpenFILE(pathW.Get());
-#else
-    return fopen(path, "rb");
-#endif
 }
 
 std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
@@ -534,7 +524,6 @@ bool Exists(std::string_view path) {
     return exists;
 }
 
-#if OS_WIN
 HANDLE OpenReadOnly(const WCHAR* filePath) {
     return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
@@ -687,12 +676,10 @@ bool DeleteZoneIdentifier(const WCHAR* filePath) {
     return !!DeleteFileW(path.Get());
 }
 
-#endif // OS_WIN
 } // namespace file
 
 namespace dir {
 
-#if OS_WIN
 // TODO: duplicate with path::IsDirectory()
 bool Exists(const WCHAR* dir) {
     if (nullptr == dir) {
@@ -743,12 +730,8 @@ bool RemoveAll(const WCHAR* dir) {
     return res == 0;
 }
 
-#endif // OS_WIN
-
 } // namespace dir
 
-#if OS_WIN
 bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
     return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
 }
-#endif

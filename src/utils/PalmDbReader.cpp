@@ -5,6 +5,7 @@
 #include "PalmDbReader.h"
 #include "ByteOrderDecoder.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
 
 // size of PdbHeader
 #define kPdbHeaderLen 78
@@ -137,9 +138,6 @@ PdbReader* PdbReader::CreateFromFile(const char* path) {
     return CreateFromData(ds);
 }
 
-#if OS_WIN
-#include "WinUtil.h"
-
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
     std::span<u8> d = file::ReadFile(filePath);
     return CreateFromData(d);
@@ -149,7 +147,6 @@ PdbReader* PdbReader::CreateFromStream(IStream* stream) {
     std::span<u8> d = GetDataFromStream(stream, nullptr);
     return CreateFromData(d);
 }
-#endif
 
 PdbDocType GetPdbDocType(const char* typeCreator) {
     if (memeq(typeCreator, MOBI_TYPE_CREATOR, 8)) {

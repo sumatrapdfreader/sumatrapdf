@@ -525,7 +525,6 @@
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
-    <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
     <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
     <ClCompile Include="..\src\utils\StringViewUtil.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp" />

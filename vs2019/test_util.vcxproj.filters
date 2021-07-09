@@ -180,9 +180,6 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\StrUtil_win.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\StrconvUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>

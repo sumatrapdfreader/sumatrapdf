@@ -21,9 +21,7 @@ class MultiFormatArchive {
         // internal use
         i64 filePos;
 
-#if OS_WIN
         FILETIME GetWinFileTime() const;
-#endif
     };
 
     MultiFormatArchive(archive_opener_t opener, Format format);
@@ -37,9 +35,7 @@ class MultiFormatArchive {
 
     size_t GetFileId(const char* fileName);
 
-#if OS_WIN
     std::span<u8> GetFileDataByName(const WCHAR* filename);
-#endif
     std::span<u8> GetFileDataByName(const char* filename);
     std::span<u8> GetFileDataById(size_t fileId);
 
@@ -69,16 +65,12 @@ MultiFormatArchive* Open7zArchive(const char* path);
 MultiFormatArchive* OpenTarArchive(const char* path);
 
 // TODO: remove those
-#if OS_WIN
 MultiFormatArchive* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
 MultiFormatArchive* Open7zArchive(const WCHAR* path);
 MultiFormatArchive* OpenTarArchive(const WCHAR* path);
 MultiFormatArchive* OpenRarArchive(const WCHAR* path);
-#endif
 
-#if OS_WIN
 MultiFormatArchive* OpenZipArchive(IStream* stream, bool deflatedOnly);
 MultiFormatArchive* Open7zArchive(IStream* stream);
 MultiFormatArchive* OpenTarArchive(IStream* stream);
 MultiFormatArchive* OpenRarArchive(IStream* stream);
-#endif
