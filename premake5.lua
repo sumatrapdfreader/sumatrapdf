@@ -782,7 +782,19 @@ workspace "SumatraPDF"
     files { "src/tools/signfile.cpp" }
     links { "utils", "mupdf" }
     links { "crypt32", "shlwapi" }
---]]
+
+
+  project "plugin-test"
+    kind "WindowedApp"
+    language "C++"
+    cppdialect "C++latest"
+    regconf()
+    entrypoint "WinMainCRTStartup"
+    includedirs { "src" }
+    files { "src/tools/plugin-test.cpp" }
+    links { "utils", "mupdf" }
+    links { "shlwapi", "version", "comctl32" }
+  --]]
 
   project "enginedump"
     kind "ConsoleApp"
@@ -808,18 +820,6 @@ workspace "SumatraPDF"
     includedirs { "src" }
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
-
-
-  project "plugin-test"
-    kind "WindowedApp"
-    language "C++"
-    cppdialect "C++latest"
-    regconf()
-    entrypoint "WinMainCRTStartup"
-    includedirs { "src" }
-    files { "src/tools/plugin-test.cpp" }
-    links { "utils", "mupdf" }
-    links { "shlwapi", "version", "comctl32" }
 
 
   project "MakeLZSA"

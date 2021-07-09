@@ -662,6 +662,7 @@
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\Trans_sumatra_txt.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />
+    <ClCompile Include="..\src\Translations2.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\WindowInfo.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />

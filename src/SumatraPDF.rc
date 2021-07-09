@@ -58,11 +58,18 @@ BEGIN
     END
 END
 
+/////////////////////////////////////////////////////////////////////////////
+
+// when building fully static, portable executable, INSTALL_PAYLOAD_ZIP is not defined
+// for combined executable / installer, it's an lzsa archive that contains
+// libmupdf.dll, PdfPreview.dll and PdfFilter.dll
+#ifdef INSTALL_PAYLOAD_ZIP
+1                       RCDATA               QM(INSTALL_PAYLOAD_ZIP)
+#endif
+
+2                       RCDATA "..\\strings\\translations.txt"
 
 /////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
@@ -70,16 +77,10 @@ IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
 IDI_PDFDOC              ICON        "..\\gfx\\PdfDoc.ico"
 
 /////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
 
 IDB_RELOADING_CUE       BITMAP                  "reloading.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
 
 IDD_DIALOG_GOTO_PAGE DIALOGEX 0, 0, 158, 45
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -219,13 +220,6 @@ BEGIN
     LTEXT           "Add page %s to favorites with (optional) name:",IDC_ADD_PAGE_STATIC,7,8,222,8
     EDITTEXT        IDC_FAV_NAME_EDIT,7,20,222,14,ES_AUTOHSCROLL
 END
-
-// when building fully static, portable executable, INSTALL_PAYLOAD_ZIP is not defined
-// for combined executable / installer, it's an lzsa archive that contains
-// libmupdf.dll, PdfPreview.dll and PdfFilter.dll
-#ifdef INSTALL_PAYLOAD_ZIP
-1                       RCDATA               QM(INSTALL_PAYLOAD_ZIP)
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 

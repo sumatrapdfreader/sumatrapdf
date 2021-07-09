@@ -428,6 +428,9 @@
     <ClCompile Include="..\src\Translations.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Translations2.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Uninstaller.cpp">
       <Filter>src</Filter>
     </ClCompile>
