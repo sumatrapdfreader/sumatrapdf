@@ -132,6 +132,12 @@ func (f *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, f.Default)
 	}
+	if typeName == "Utf8StringArray" {
+		if f.Default == nil {
+			return "0"
+		}
+		return fmt.Sprintf(`(intptr_t)"%s"`, f.Default)
+	}
 	if typeName == "Comment" {
 		if f.Comment == "" {
 			return "0"
@@ -191,6 +197,12 @@ func (f *Field) initDefault() string {
 		return fmt.Sprintf("%s %s =", commentChar, f.Name)
 	}
 	if typeName == "StringArray" {
+		if f.Default != nil {
+			return fmt.Sprintf("%s = %v", f.Name, f.Default)
+		}
+		return fmt.Sprintf("%s %s =", commentChar, f.Name)
+	}
+	if typeName == "Utf8StringArray" {
 		if f.Default != nil {
 			return fmt.Sprintf("%s = %v", f.Name, f.Default)
 		}
@@ -568,7 +580,7 @@ var (
 				"LaTeX editors)").setExpert(),
 		mkStruct("Annotations", annotations,
 			"default values for annotations in PDF documents").setExpert().setVersion("3.3"),
-		mkCompactArray("DefaultPasswords", String, nil,
+		mkCompactArray("DefaultPasswords", Utf8String, nil,
 			"passwords to try when opening a password protected document").setDoc("a whitespace separated list of passwords to try when opening a password protected document " +
 			"(passwords containing spaces must be quoted)").setExpert().setVersion("2.4"),
 		mkField("CustomScreenDPI", Int, 0,

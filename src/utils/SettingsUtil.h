@@ -38,6 +38,7 @@ enum class SettingType {
     FloatArray,
     IntArray,
     StringArray,
+    Utf8StringArray,
     Comment,
     // same as Type_Struct but won't be written out in release builds
     Prerelease,

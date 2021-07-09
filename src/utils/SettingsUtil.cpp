@@ -97,6 +97,38 @@ static char* UnescapeStr(const char* s) {
 // string arrays are serialized by quoting strings containing spaces
 // or quotation marks (doubling quotation marks within quotes);
 // this is simpler than full command line serialization as read by ParseCmdLine
+static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
+    str::Str serialized;
+
+    for (size_t i = 0; i < strArray->size(); i++) {
+        if (i > 0) {
+            serialized.Append(' ');
+        }
+        const char* str = strArray->at(i);
+        bool needsQuotes = !*str;
+        for (const char* c = str; !needsQuotes && *c; c++) {
+            needsQuotes = str::IsWs(*c) || '"' == *c;
+        }
+        if (!needsQuotes) {
+            serialized.Append(str);
+        } else {
+            serialized.Append('"');
+            for (const char* c = str; *c; c++) {
+                if ('"' == *c) {
+                    serialized.Append('"');
+                }
+                serialized.Append(*c);
+            }
+            serialized.Append('"');
+        }
+    }
+
+    return (char*)serialized.StealData();
+}
+
+// string arrays are serialized by quoting strings containing spaces
+// or quotation marks (doubling quotation marks within quotes);
+// this is simpler than full command line serialization as read by ParseCmdLine
 static char* SerializeStringArray(const Vec<WCHAR*>* strArray) {
     str::WStr serialized;
 
@@ -161,7 +193,49 @@ static void DeserializeStringArray(Vec<WCHAR*>* strArray, const char* serialized
     }
 }
 
+static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* serialized) {
+    char* str = (char*)serialized;
+    const char* s = str;
+
+    for (;;) {
+        while (str::IsWs(*s)) {
+            s++;
+        }
+        if (!*s) {
+            return;
+        }
+        if ('"' == *s) {
+            str::Str part;
+            for (s++; *s && (*s != '"' || *(s + 1) == '"'); s++) {
+                if ('"' == *s) {
+                    s++;
+                }
+                part.Append(*s);
+            }
+            strArray->Append(part.StealData());
+            if ('"' == *s) {
+                s++;
+            }
+        } else {
+            const char* e;
+            for (e = s; *e && !str::IsWs(*e); e++) {
+                ;
+            }
+            strArray->Append(str::DupN(s, e - s));
+            s = e;
+        }
+    }
+}
+
 static void FreeStringArray(Vec<WCHAR*>* strArray) {
+    if (!strArray) {
+        return;
+    }
+    strArray->FreeMembers();
+    delete strArray;
+}
+
+static void FreeUtf8StringArray(Vec<char*>* strArray) {
     if (!strArray) {
         return;
     }
@@ -272,6 +346,15 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             }
             // prevent empty arrays from being replaced with the defaults
             return (*(Vec<WCHAR*>**)fieldPtr)->size() > 0 || field.value != 0;
+        case SettingType::Utf8StringArray:
+            value.Set(SerializeUtf8StringArray(*(Vec<char*>**)fieldPtr));
+            if (!NeedsEscaping(value)) {
+                out.Append(value);
+            } else {
+                EscapeStr(out, value);
+            }
+            // prevent empty arrays from being replaced with the defaults
+            return (*(Vec<char*>**)fieldPtr)->size() > 0 || field.value != 0;
         default:
             CrashIf(true);
             return false;
@@ -396,6 +479,15 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
                 DeserializeStringArray(*(Vec<WCHAR*>**)fieldPtr, AutoFree(UnescapeStr(value)));
             } else if (field.value) {
                 DeserializeStringArray(*(Vec<WCHAR*>**)fieldPtr, (const char*)field.value);
+            }
+            break;
+        case SettingType::Utf8StringArray:
+            FreeUtf8StringArray(*(Vec<char*>**)fieldPtr);
+            *(Vec<char*>**)fieldPtr = new Vec<char*>();
+            if (value) {
+                DeserializeUtf8StringArray(*(Vec<char*>**)fieldPtr, AutoFree(UnescapeStr(value)));
+            } else if (field.value) {
+                DeserializeUtf8StringArray(*(Vec<char*>**)fieldPtr, (const char*)field.value);
             }
             break;
         default:

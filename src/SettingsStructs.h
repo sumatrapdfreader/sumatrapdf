@@ -296,7 +296,7 @@ struct GlobalPrefs {
     // default values for annotations in PDF documents
     Annotations annotations;
     // passwords to try when opening a password protected document
-    Vec<WCHAR*>* defaultPasswords;
+    Vec<char*>* defaultPasswords;
     // actual resolution of the main screen in DPI (if this value isn't
     // positive, the system's UI setting is used)
     int customScreenDPI;
@@ -595,7 +595,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, printerDefaults), SettingType::Struct, (intptr_t)&gPrinterDefaultsInfo},
     {offsetof(GlobalPrefs, forwardSearch), SettingType::Struct, (intptr_t)&gForwardSearchInfo},
     {offsetof(GlobalPrefs, annotations), SettingType::Struct, (intptr_t)&gAnnotationsInfo},
-    {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
+    {offsetof(GlobalPrefs, defaultPasswords), SettingType::Utf8StringArray, 0},
     {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},

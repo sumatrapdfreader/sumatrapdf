@@ -405,7 +405,9 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, u8* fileDigest, u8 dec
 
     // try the list of default passwords before asking the user
     if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {
-        return str::Dup(gGlobalPrefs->defaultPasswords->at(pwdIdx++));
+        char* pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
+        WCHAR* pwdW = strconv::Utf8ToWstr(pwd);
+        return pwdW;
     }
 
     if (IsStressTesting()) {
