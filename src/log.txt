@@ -4,6 +4,8 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - fix CodeQL issues
 - implement Utf8ToWcharBuf() and WstrToUtf8Buf() and StackUtf8ToWstr
+- implement Utf8ToWstrV, Utf8ToWstr, WstrToCodePageV, WstrToUtf8V, WstrToCodePage, WstrToUtf8
+  also re-implement TempToUtf8 and TempToWstr
 
 2021-07-09 Fri
 

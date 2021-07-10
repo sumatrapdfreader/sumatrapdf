@@ -954,7 +954,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
     char* name = str::Dup("");
     const WCHAR* nameW = dm->FilePath();
     if (nameW) {
-        name = (char*)strconv::WstrToUtf8(nameW).data();
+        name = strconv::WstrToUtf8(nameW);
     }
     logf(
         "getZoomSafe: invalid zoom, doc: %s, pageNo: %d, pageInfo->zoomReal: %.2f, dm->zoomReal: %.2f, "

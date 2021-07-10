@@ -334,7 +334,7 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocFileRoot;
-    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
+    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName());
     tocWrapper->engineFilePath = filePath;
     tocWrapper->nPages = nPages;
     tocWrapper->pageNo = 1;

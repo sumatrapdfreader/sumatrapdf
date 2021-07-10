@@ -91,8 +91,8 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
         s = tmp;
     }
     if (str::StartsWith(s, UTF16_BOM)) {
-        auto tmp2 = strconv::WstrToUtf8((WCHAR*)(s + 2));
-        return (char*)tmp2.data();
+        char* tmp2 = strconv::WstrToUtf8((WCHAR*)(s + 2));
+        return tmp2;
     }
     if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
@@ -399,7 +399,7 @@ bool EpubDoc::Load() {
             // load the image lazily
             ImageData2 data = {0};
             auto tmp = strconv::WstrToUtf8(imgPath);
-            data.fileName = (char*)tmp.data();
+            data.fileName = tmp;
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
         } else if (isHtmlMediaType(mediatype)) {
@@ -1262,7 +1262,7 @@ bool HtmlDoc::Load() {
         return false;
     }
 
-    pagePath.Set(strconv::WstrToUtf8(fileName).data());
+    pagePath.Set(strconv::WstrToUtf8(fileName));
     str::TransChars(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData.AsSpan());

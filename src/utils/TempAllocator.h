@@ -88,7 +88,9 @@ struct TempWstr {
 };
 
 TempStr TempStrDup(const char* s, size_t cb = (size_t)-1);
+TempStr TempStrDup(std::string_view);
 TempWstr TempWstrDup(const WCHAR* s, size_t cch = (size_t)-1);
+TempWstr TempWstrDup(std::wstring_view);
 
 TempStr TempToUtf8(const WCHAR* s, size_t cch = (size_t)-1);
 TempStr TempToUtf8(std::wstring_view);

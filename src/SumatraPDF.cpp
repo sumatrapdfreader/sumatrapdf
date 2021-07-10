@@ -860,9 +860,9 @@ static NO_INLINE void VerifyController(Controller* ctrl, const WCHAR* path) {
     if (str::Eq(ctrl->FilePath(), path)) {
         return;
     }
-    auto ctrlFilePath = ctrl->FilePath();
-    auto s1 = ctrlFilePath ? strconv::WstrToUtf8(ctrlFilePath).data() : str::Dup("<null>");
-    auto s2 = path ? strconv::WstrToUtf8(path).data() : str::Dup("<null>");
+    const WCHAR* ctrlFilePath = ctrl->FilePath();
+    char* s1 = ctrlFilePath ? strconv::WstrToUtf8(ctrlFilePath) : str::Dup("<null>");
+    char* s2 = path ? strconv::WstrToUtf8(path) : str::Dup("<null>");
     logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
     CrashIf(true);
     str::Free(s1);
@@ -1027,6 +1027,10 @@ static bool showTocByDefault(const WCHAR* path) {
 //   before (isNewWindow=false)
 static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileState* state) {
     WindowInfo* win = args.win;
+    CrashIf(!win);
+    if (!win) {
+        return;
+    }
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
 
@@ -1187,7 +1191,9 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
         if (args.showWin) {
             ShowWindow(win->hwndFrame, showType);
         }
-        UpdateWindow(win->hwndFrame);
+        if (win) {
+            UpdateWindow(win->hwndFrame);
+        }
     }
 
     // if the window isn't shown and win.canvasRc is still empty, zoom

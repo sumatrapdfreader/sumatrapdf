@@ -1267,7 +1267,7 @@ RectF EnginePdf::Transform(const RectF& rect, int pageNo, float zoom, int rotati
         char* name = str::Dup("");
         const WCHAR* nameW = FileName();
         if (nameW) {
-            name = (char*)strconv::WstrToUtf8(nameW).data();
+            name = strconv::WstrToUtf8(nameW);
         }
         logf("doc: %s, pageNo: %d, zoom: %.2f\n", name, pageNo, zoom);
         free(name);

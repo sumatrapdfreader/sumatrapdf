@@ -43,6 +43,9 @@ TempStr TempStrDup(const char* s, size_t cb) {
     }
     return TempStr(res, cb);
 }
+TempStr TempStrDup(std::string_view sv) {
+    return TempStrDup(sv.data(), sv.size());
+}
 
 TempWstr TempWstrDup(const WCHAR* s, size_t cch) {
     WCHAR* res = str::Dup(gTempAllocator, s, cch);
@@ -52,33 +55,22 @@ TempWstr TempWstrDup(const WCHAR* s, size_t cch) {
     return TempWstr(res, cch);
 }
 
-/*
-Todo: could further optimize by removing memory copy in common
-case by estimating converted size, allocating from temp allocator
-and only re-allocating when estimated buf wasn't big enough
-
-Alternatively, just simplify to always as for size first and
-allocate desired size from allocator.
-By passing temp allocator we get TempTo* for free.
-Going over the source string twice is probably better than 2
-allocations in common case.
-
-Also, the Utf8ToWcharBuf() and others that use buf can probably be
-all replaced by TempTo* functions.
-*/
+TempWstr TempWstrDup(std::wstring_view sv) {
+    return TempWstrDup(sv.data(), sv.size());
+}
 
 TempStr TempToUtf8(const WCHAR* s, size_t cch) {
     if (!s) {
         CrashIf((int)cch > 0);
         return TempStr();
     }
-    strconv::StackWstrToUtf8 buf(s, cch);
-    return TempStrDup(buf.Get(), buf.size());
+    auto v = strconv::WstrToUtf8V(s, cch, gTempAllocator);
+    return TempStr{v.data(), v.size()};
 }
 
 TempStr TempToUtf8(std::wstring_view sv) {
-    strconv::StackWstrToUtf8 buf(sv.data(), sv.size());
-    return TempStrDup(buf.Get(), buf.size());
+    auto v = strconv::WstrToUtf8V(sv, gTempAllocator);
+    return TempStr{v.data(), v.size()};
 }
 
 TempWstr TempToWstr(const char* s, size_t cb) {
@@ -86,11 +78,11 @@ TempWstr TempToWstr(const char* s, size_t cb) {
         CrashIf((int)cb > 0);
         return TempWstr();
     }
-    strconv::StackUtf8ToWstr buf(s, cb);
-    return TempWstrDup(buf.Get(), buf.size());
+    auto v = strconv::Utf8ToWstrV(s, cb, gTempAllocator);
+    return TempWstr{v.data(), v.size()};
 }
 
 TempWstr TempToWstr(std::string_view sv) {
-    strconv::StackUtf8ToWstr buf(sv.data(), sv.size());
-    return TempWstrDup(buf.Get(), buf.size());
+    auto v = strconv::Utf8ToWstrV(sv, gTempAllocator);
+    return TempWstr{v.data(), v.size()};
 }

@@ -464,8 +464,7 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
         if (isArg(L"lang")) {
             // TODO: remove the following deprecated options within
             // a release or two
-            auto tmp = strconv::WstrToUtf8(param);
-            i.lang = (char*)tmp.data();
+            i.lang = strconv::WstrToUtf8(param);
             ++n;
             continue;
         }

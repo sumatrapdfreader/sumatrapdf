@@ -219,7 +219,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             }
             {
                 auto tmp = strconv::WstrToUtf8(*(const WCHAR**)fieldPtr);
-                value.Set(tmp.data());
+                value.Set(tmp);
             }
             if (!NeedsEscaping(value)) {
                 out.Append(value);

@@ -260,7 +260,7 @@ char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
     }
     auto s = strconv::WstrToUtf8(ws);
     str::Free(ws);
-    return (char*)s.data();
+    return s;
 }
 
 WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
