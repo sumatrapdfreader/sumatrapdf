@@ -195,7 +195,7 @@ void* PoolAllocator::At(int i) {
         return nullptr;
     }
     auto curr = firstBlock;
-    while (curr && i >= curr->nAllocs) {
+    while (curr && (size_t)i >= curr->nAllocs) {
         i -= (int)curr->nAllocs;
         curr = curr->next;
     }
@@ -203,7 +203,7 @@ void* PoolAllocator::At(int i) {
     if (!curr) {
         return nullptr;
     }
-    CrashIf(i >= curr->nAllocs);
+    CrashIf((size_t)i >= curr->nAllocs);
     i32* index = (i32*)curr->end;
     // elements are in reverse
     size_t idx = curr->nAllocs - i - 1;

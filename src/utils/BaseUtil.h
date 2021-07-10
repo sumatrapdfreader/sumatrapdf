@@ -399,7 +399,7 @@ struct Allocator {
 struct PoolAllocator : Allocator {
     // we'll allocate block of the minBlockSize unless
     // asked for a block of bigger size
-    int minBlockSize = 4096;
+    size_t minBlockSize = 4096;
 
     // contains allocated data and index of each allocation
     struct Block {
