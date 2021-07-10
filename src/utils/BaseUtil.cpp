@@ -70,39 +70,54 @@ void PoolAllocator::FreeAll() {
     nAllocs = 0;
 }
 
+static size_t BlockHeaderSize(PoolAllocator* a) {
+    int hdrSize = RoundUp((int)sizeof(PoolAllocator::Block), a->allocAlign);
+    return hdrSize;
+}
+
 // for easier debugging, poison the freed data with 0xdd
 // that way if the code tries to used the freed memory,
 // it's more likely to crash
-static void PoisonData(PoolAllocator::Block* curr) {
+static void PoisonData(PoolAllocator* a, PoolAllocator::Block* curr) {
     char* d;
+    size_t hdrSize = BlockHeaderSize(a);
     while (curr) {
         // optimization: don't touch memory if there were not allocations
         if (curr->nAllocs > 0) {
-            d = (char*)curr + sizeof(PoolAllocator::Block);
-            // TODO: maybe optimize to only go up to curr->curr
-            memset(d, 0xdd, curr->dataSize);
+            d = (char*)curr + hdrSize;
+            // the buffer is big so optimize to only poison the data
+            // allocated in this block
+            CrashIf(d > curr->freeSpace);
+            size_t n = (curr->freeSpace - d);
+            memset(d, 0xdd, n);
         }
         curr = curr->next;
     }
+}
+
+static void ResetBlock(PoolAllocator::Block* block, size_t hdrSize) {
+    char* start = (char*)block;
+    block->nAllocs = 0;
+    block->freeSpace = start + hdrSize;
+    block->end = start + block->dataSize;
+    block->next = nullptr;
 }
 
 void PoolAllocator::Reset(bool poisonFreedMemory) {
     // free all but first block to
     // allows for more efficient re-use of PoolAllocator
     // with more effort we could preserve all blocks (not sure if worth it)
-    if (poisonFreedMemory) {
-        PoisonData(firstBlock);
-    }
     Block* first = firstBlock;
     if (!first) {
         return;
     }
+    if (poisonFreedMemory) {
+        PoisonData(this, firstBlock);
+    }
     firstBlock = firstBlock->next;
     FreeAll();
+    ResetBlock(first, BlockHeaderSize(this));
     firstBlock = first;
-    if (!poisonFreedMemory) {
-        return;
-    }
 }
 
 PoolAllocator::~PoolAllocator() {
@@ -122,7 +137,7 @@ static bool BlockHasSpaceFor(PoolAllocator::Block* block, int size, int allocAli
     if (!block) {
         return false;
     }
-    char* d = RoundUp(block->curr, allocAlign);
+    char* d = RoundUp(block->freeSpace, allocAlign);
     // data + i32 index of allocation
     d += (size + sizeof(i32));
     if (d > block->end) {
@@ -137,7 +152,7 @@ static bool BlockHasSpaceFor(PoolAllocator::Block* block, int size, int allocAli
 void* PoolAllocator::Alloc(size_t size) {
     if (!BlockHasSpaceFor(currBlock, (int)size, allocAlign)) {
         int freeSpaceSize = (int)size + sizeof(i32); // + space for index
-        int hdrSize = RoundUp((int)sizeof(PoolAllocator::Block), allocAlign);
+        int hdrSize = BlockHeaderSize(this);
         int blockSize = hdrSize + freeSpaceSize;
         if (blockSize < minBlockSize) {
             blockSize = minBlockSize;
@@ -148,13 +163,8 @@ void* PoolAllocator::Alloc(size_t size) {
         if (!block) {
             return nullptr;
         }
-        char* start = (char*)block;
-
-        block->nAllocs = 0;
-        block->curr = start + hdrSize;
         block->dataSize = freeSpaceSize;
-        block->end = start + block->dataSize;
-        block->next = nullptr;
+        ResetBlock(block, hdrSize);
         if (!firstBlock) {
             firstBlock = block;
         }
@@ -163,8 +173,8 @@ void* PoolAllocator::Alloc(size_t size) {
         }
         currBlock = block;
     }
-    char* res = RoundUp(currBlock->curr, allocAlign);
-    currBlock->curr = res + size;
+    char* res = RoundUp(currBlock->freeSpace, allocAlign);
+    currBlock->freeSpace = res + size;
 
     char* blockStart = (char*)currBlock;
 

@@ -18,8 +18,16 @@ struct TempStr {
     explicit TempStr(char* s) {
         sv = {s, str::Len(s)};
     }
+    explicit TempStr(char* s, size_t cch) {
+        CrashIf((int)cch < 0);
+        sv = {s, cch};
+    }
     explicit TempStr(const char* s) {
         sv = {s, str::Len(s)};
+    }
+    explicit TempStr(const char* s, size_t cch) {
+        CrashIf((int)cch < 0);
+        sv = {s, cch};
     }
     explicit TempStr(std::string_view s) {
         sv = s;
@@ -47,8 +55,14 @@ struct TempWstr {
     explicit TempWstr(WCHAR* s) {
         sv = {s, str::Len(s)};
     }
+    explicit TempWstr(WCHAR* s, size_t cch) {
+        sv = {s, cch};
+    }
     explicit TempWstr(const WCHAR* s) {
         sv = {s, str::Len(s)};
+    }
+    explicit TempWstr(const WCHAR* s, size_t cch) {
+        sv = {s, cch};
     }
     explicit TempWstr(std::wstring_view s) {
         sv = s;
@@ -67,6 +81,9 @@ struct TempWstr {
     }
 };
 
-TempStr TempStrDup(const char* s, size_t lenCch = (size_t)-1);
+TempStr TempStrDup(const char* s, size_t cch = (size_t)-1);
+
+TempStr TempToUtf8(const WCHAR* s, size_t cch = (size_t)-1);
+
 TempWstr TempToWstr(const char* s);
 TempWstr TempToWstr(std::string_view sv);

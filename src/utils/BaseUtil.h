@@ -411,7 +411,8 @@ struct PoolAllocator : Allocator {
         struct Block* next;
         int dataSize; // size of data in block
         int nAllocs;
-        char* curr;
+        // curr points to free space
+        char* freeSpace;
         // from the end, we store index of each allocation relative
         // to start of the block. <end> points at the current
         // reverse end of i32 array of indexes

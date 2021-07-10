@@ -154,7 +154,7 @@ func main() {
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
-		flag.BoolVar(&flgClangFormat, "clang-format", false, "format source files with clang-format")
+		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")

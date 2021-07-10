@@ -165,16 +165,16 @@ size_t Len(const WCHAR* s) {
     return s ? wcslen(s) : 0;
 }
 
-char* Dup(Allocator* a, const char* s, size_t lenCch) {
-    CrashIf(!s && (int)lenCch > 0);
-    if (lenCch == (size_t)-1) {
-        lenCch = str::Len(s);
+char* Dup(Allocator* a, const char* s, size_t cch) {
+    CrashIf(!s && (int)cch > 0);
+    if (cch == (size_t)-1) {
+        cch = str::Len(s);
     }
-    return (char*)Allocator::MemDup(a, s, lenCch * sizeof(char), sizeof(char));
+    return (char*)Allocator::MemDup(a, s, cch * sizeof(char), sizeof(char));
 }
 
-char* Dup(const char* s, size_t lenCch) {
-    return Dup(nullptr, s, lenCch);
+char* Dup(const char* s, size_t cch) {
+    return Dup(nullptr, s, cch);
 }
 
 // allocates a copy of the source string inside the allocator.
@@ -192,15 +192,15 @@ char* Dup(const std::span<u8> d) {
     return Dup(nullptr, (const char*)d.data(), d.size());
 }
 
-WCHAR* Dup(Allocator* a, const WCHAR* s, size_t lenCch) {
-    if (lenCch == (size_t)-1) {
-        lenCch = str::Len(s);
+WCHAR* Dup(Allocator* a, const WCHAR* s, size_t cch) {
+    if (cch == (size_t)-1) {
+        cch = str::Len(s);
     }
-    return (WCHAR*)Allocator::MemDup(a, s, lenCch * sizeof(WCHAR), sizeof(WCHAR));
+    return (WCHAR*)Allocator::MemDup(a, s, cch * sizeof(WCHAR), sizeof(WCHAR));
 }
 
-WCHAR* Dup(const WCHAR* s, size_t lenCch) {
-    return Dup(nullptr, s, lenCch);
+WCHAR* Dup(const WCHAR* s, size_t cch) {
+    return Dup(nullptr, s, cch);
 }
 
 WCHAR* Dup(std::wstring_view sv) {

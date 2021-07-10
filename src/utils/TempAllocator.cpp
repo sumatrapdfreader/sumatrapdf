@@ -31,19 +31,37 @@ void DestroyTempAllocator() {
 }
 
 void ResetTempAllocator() {
-    gTempAllocator->Reset();
+    gTempAllocator->Reset(true);
 }
 
-TempStr TempStrDup(const char* s, size_t lenCch) {
-    // TODO: optimize to remove str::Len()
-    char* res = str::Dup(gTempAllocator, s, lenCch);
-    return TempStr(res);
+TempStr TempStrDup(const char* s, size_t cch) {
+    char* res = str::Dup(gTempAllocator, s, cch);
+    if (cch == (size_t)-1) {
+        // TODO: optimize to remove str::Len(). Add version of str::Dup()
+        // that returns std::string_view
+        cch = str::Len(res);
+    }
+    return TempStr(res, cch);
+}
+
+TempStr TempToUtf8(const WCHAR* s, size_t cch) {
+    if (!s) {
+        CrashIf((int)cch > 0);
+        return TempStr();
+    }
+    if (cch == (size_t)-1) {
+        cch = str::Len(s);
+    }
+    strconv::StackWstrToUtf8 buf(s, cch);
+    return TempStrDup(buf.Get(), buf.size());
 }
 
 TempWstr TempToWstr(const char* s) {
+    CrashIf(true); // NYI
     return TempWstr();
 }
 
 TempWstr TempToWstr(std::string_view sv) {
+    CrashIf(true); // NYI
     return TempWstr();
 }

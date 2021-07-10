@@ -26,13 +26,15 @@ size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, uint cp);
 
 struct StackWstrToUtf8 {
     char buf[128];
-    char* overflow = nullptr;
+    char* overflow{nullptr};
+    size_t convertedSize{(size_t)-1};
 
     StackWstrToUtf8(std::wstring_view);
-    StackWstrToUtf8(const WCHAR*);
+    StackWstrToUtf8(const WCHAR*, size_t cch = (size_t)-1);
     StackWstrToUtf8& operator=(const StackWstrToUtf8&) = delete;
     ~StackWstrToUtf8();
     char* Get() const;
+    size_t size() const;
     operator char*() const;
     std::string_view AsView() const;
 };

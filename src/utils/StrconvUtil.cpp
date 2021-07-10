@@ -112,8 +112,8 @@ std::string_view UnknownToUtf8(const std::string_view& txt) {
 
     if (str::StartsWith(s, UTF16_BOM)) {
         s += 2;
-        int cchLen = (int)((len - 2) / 2);
-        return strconv::WstrToUtf8((const WCHAR*)s, cchLen);
+        int cch = (int)((len - 2) / 2);
+        return strconv::WstrToUtf8((const WCHAR*)s, cch);
     }
 
     // if s is valid utf8, leave it alone
@@ -141,23 +141,23 @@ WCHAR* Utf8ToWstr(std::string_view sv) {
     return ToWideChar(sv.data(), CP_UTF8, (int)sv.size());
 }
 
-std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen) {
-    return WstrToCodePage(src, CP_UTF8, (int)cchSrcLen);
+std::string_view WstrToUtf8(const WCHAR* src, size_t cch) {
+    return WstrToCodePage(src, CP_UTF8, (int)cch);
 }
 
 std::string_view WstrToUtf8(std::wstring_view sv) {
     return WstrToCodePage(sv.data(), CP_UTF8, (int)sv.size());
 }
 
-WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {
-    return ToWideChar(src, CP_ACP, (int)cbSrcLen);
+WCHAR* FromAnsi(const char* src, size_t cbLen) {
+    return ToWideChar(src, CP_ACP, (int)cbLen);
 }
 
 std::string_view WstrToAnsi(const WCHAR* src) {
     return WstrToCodePage(src, CP_ACP);
 }
 
-static void Set(StackWstrToUtf8* o, const WCHAR* s, int cch) {
+static void Convert(StackWstrToUtf8* o, const WCHAR* s, int cch) {
     o->buf[0] = 0;
     if (!s || cch == 0) {
         return;
@@ -167,6 +167,8 @@ static void Set(StackWstrToUtf8* o, const WCHAR* s, int cch) {
     int res = WideCharToMultiByte(CP_UTF8, 0, s, cch, o->buf, cbBufSize, nullptr, nullptr);
     if (res > 0) {
         o->buf[res] = 0;
+        o->convertedSize = res;
+        CrashIf(o->convertedSize != str::Len(o->buf));
         return;
     }
 
@@ -177,20 +179,30 @@ static void Set(StackWstrToUtf8* o, const WCHAR* s, int cch) {
         return;
     }
     res = WideCharToMultiByte(CP_UTF8, 0, s, cch, o->overflow, cbNeeded, nullptr, nullptr);
+    o->convertedSize = (size_t)cbNeeded - 1;
+    CrashIf(o->convertedSize != str::Len(o->overflow));
     CrashIf(res != cbNeeded);
 }
 
-StackWstrToUtf8::StackWstrToUtf8(const WCHAR* s) {
-    int n = (int)str::Len(s);
-    Set(this, s, n);
+StackWstrToUtf8::StackWstrToUtf8(const WCHAR* s, size_t cch) {
+    if (cch == (size_t)-1) {
+        cch = str::Len(s);
+    }
+    Convert(this, s, (int)cch);
 }
 
 StackWstrToUtf8::StackWstrToUtf8(std::wstring_view sv) {
     int cch = (int)sv.size();
-    Set(this, sv.data(), cch);
+    Convert(this, sv.data(), cch);
+}
+
+size_t StackWstrToUtf8::size() const {
+    CrashIf((int)convertedSize < 0);
+    return convertedSize;
 }
 
 char* StackWstrToUtf8::Get() const {
+    CrashIf((int)convertedSize < 0);
     if (overflow) {
         return overflow;
     }
@@ -198,10 +210,8 @@ char* StackWstrToUtf8::Get() const {
 }
 
 std::string_view StackWstrToUtf8::AsView() const {
-    if (overflow) {
-        return overflow;
-    }
-    return (char*)buf;
+    char* d = Get();
+    return {d, convertedSize};
 }
 
 #if 0

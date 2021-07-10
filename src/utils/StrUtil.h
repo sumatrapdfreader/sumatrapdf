@@ -18,13 +18,13 @@ size_t Len(const WCHAR*);
 size_t Len(const char* s);
 
 char* Dup(Allocator*, const char* str, size_t strLen = (size_t)-1);
-char* Dup(const char* s, size_t lenCch = (size_t)-1);
+char* Dup(const char* s, size_t cch = (size_t)-1);
 char* Dup(Allocator*, std::string_view);
 char* Dup(const std::string_view);
 char* Dup(const std::span<u8> d);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t strLen = (size_t)-1);
-WCHAR* Dup(const WCHAR* s, size_t lenCch = (size_t)-1);
+WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
 WCHAR* Dup(const std::wstring_view);
 
 void ReplaceWithCopy(char** s, const char* snew);
