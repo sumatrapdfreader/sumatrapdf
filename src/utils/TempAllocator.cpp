@@ -19,25 +19,25 @@ static PoolAllocator* gTempAllocator{nullptr};
 
 // must call before any calls using temp allocator
 void InitTempAllocator() {
-  CrashIf(gTempAllocator);
-  gTempAllocator = new PoolAllocator();
-  // this can be large because 64k is nothing and it's used frequently
-  gTempAllocator->minBlockSize = 64*1024;
+    CrashIf(gTempAllocator);
+    gTempAllocator = new PoolAllocator();
+    // this can be large because 64k is nothing and it's used frequently
+    gTempAllocator->minBlockSize = 64 * 1024;
 }
 
 void DestroyTempAllocator() {
-  delete gTempAllocator;
-  gTempAllocator = nullptr;
+    delete gTempAllocator;
+    gTempAllocator = nullptr;
 }
 
 void ResetTempAllocator() {
-  gTempAllocator->Reset();
+    gTempAllocator->Reset();
 }
 
 TempWstr TempToWstr(const char* s) {
-  return TempWstr();
+    return TempWstr();
 }
 
 TempWstr TempToWstr(std::string_view sv) {
-  return TempWstr();
+    return TempWstr();
 }

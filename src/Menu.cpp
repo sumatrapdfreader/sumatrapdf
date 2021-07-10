@@ -54,11 +54,16 @@ struct BuildMenuCtx {
     bool isCbx{false};
     bool hasSelection{false};
     bool supportsAnnotations{false};
-    bool hasAnnotationUnderCursor{false};
+    Annotation* annotationUnderCursor{nullptr};
     bool hasUnsavedAnnotations{false};
     bool isCursorOnPage{false};
     bool canSendEmail{false};
+    ~BuildMenuCtx();
 };
+
+BuildMenuCtx::~BuildMenuCtx() {
+    delete annotationUnderCursor;
+}
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
@@ -763,8 +768,8 @@ static MenuDef menuDefContext[] = {
         CmdViewShowHideScrollbars,
     },
     {
-        _TRN("Save Annotations"),
-        CmdSaveAnnotations,
+        kMenuSeparator,
+        CmdAnnotationSep,
     },
     {
         _TRN("Select Annotation in Editor"),
@@ -781,6 +786,10 @@ static MenuDef menuDefContext[] = {
     {
         _TRN("Create Annotation Under Cursor"),
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
+    },
+    {
+        _TRN("Save Annotations"),
+        CmdSaveAnnotations,
     },
     {
         _TRN("E&xit Fullscreen"),
@@ -947,6 +956,7 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdFavoriteToggle,
+    CmdAnnotationSep,
     CmdSaveAnnotations,
     CmdSelectAnnotation,
     CmdEditAnnotations,
@@ -959,6 +969,7 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
 };
 
 static UINT_PTR removeIfAnnotsNotSupported[] = {
+    CmdAnnotationSep,
     CmdSaveAnnotations,
     CmdSelectAnnotation,
     CmdEditAnnotations,
@@ -1083,10 +1094,7 @@ void FillBuildMenuCtx(TabInfo* tab, BuildMenuCtx* ctx, Point pt) {
         if (pageNoUnderCursor > 0) {
             ctx->isCursorOnPage = true;
         }
-        auto annotUnderCursor = dm->GetAnnotationAtPos(pt, nullptr);
-        if (annotUnderCursor) {
-            ctx->hasAnnotationUnderCursor = true;
-        }
+        ctx->annotationUnderCursor = dm->GetAnnotationAtPos(pt, nullptr);
     }
     ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
 }
@@ -1198,7 +1206,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             removeMenu |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
 
             disableMenu |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
-            disableMenu |= (!ctx->hasAnnotationUnderCursor && (cmdId == CmdSelectAnnotation));
+            disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdSelectAnnotation));
             disableMenu |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
 
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
@@ -1541,7 +1549,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNoUnderCursor);
     EngineBase* engine = dm->GetEngine();
     bool annotationsSupported = EngineSupportsAnnotations(engine) && !win->isFullScreen;
-    Annotation* annotUnderCursor{nullptr};
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
         win::menu::Remove(popup, CmdCopyLinkTarget);
@@ -1626,12 +1633,10 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             HwndSendCommand(win->hwndFrame, cmd);
             break;
         case CmdSelectAnnotation:
-            CrashIf(!annotUnderCursor);
-            SelectAnnotationInEditWindow(tab->editAnnotsWindow, annotUnderCursor);
-            break;
+            CrashIf(!buildCtx.annotationUnderCursor);
         case CmdEditAnnotations:
             StartEditAnnotations(tab, nullptr);
-            SelectAnnotationInEditWindow(tab->editAnnotsWindow, annotUnderCursor);
+            SelectAnnotationInEditWindow(tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
             break;
         case CmdCopyLinkTarget: {
             WCHAR* tmp = CleanupFileURL(value);
@@ -1693,7 +1698,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (createdAnnot) {
         StartEditAnnotations(tab, createdAnnot);
     }
-    delete annotUnderCursor;
+    // TODO: should delete it?
+    // delete buildCtx.annotationUnderCursor;
 
     /*
         { _TR_TODON("Line"), CmdCreateAnnotLine, },

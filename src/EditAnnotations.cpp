@@ -1233,6 +1233,7 @@ void AddAnnotationToEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
+    CrashIf(!ew);
     if (!ew || !annot) {
         return;
     }

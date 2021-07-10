@@ -165,6 +165,7 @@ bool EngineHasUnsavedAnnotations(EngineBase* engine) {
     return EnginePdfHasUnsavedAnnotations(engine);
 }
 
+// caller must delete
 Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
     if (!IsEnginePdf(engine)) {
         return nullptr;

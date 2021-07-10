@@ -2021,6 +2021,7 @@ static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
     return false;
 }
 
+// caller must delete
 Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
     EnginePdf* epdf = AsEnginePdf(engine);
     FzPageInfo* pi = epdf->GetFzPageInfo(pageNo, true);
