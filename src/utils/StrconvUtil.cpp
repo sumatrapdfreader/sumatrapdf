@@ -32,6 +32,10 @@ WCHAR* Utf8ToWstr(const char* s, size_t cb, Allocator* a) {
     return (WCHAR*)v.data();
 }
 
+WCHAR* Utf8ToWstr(std::string_view sv) {
+    return Utf8ToWstr(sv.data(), sv.size(), nullptr);
+}
+
 std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     if (cch == (size_t)-1) {
         cch = str::Len(s);
@@ -55,7 +59,7 @@ std::string_view WstrToUtf8V(const WCHAR* s, size_t cch, Allocator* a) {
 }
 
 std::string_view WstrToUtf8V(std::wstring_view sv, Allocator* a) {
-    return WstrToCodePageV(CP_UTF8, sv.data(), sv.size());
+    return WstrToCodePageV(CP_UTF8, sv.data(), sv.size(), a);
 }
 
 char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
@@ -73,86 +77,9 @@ char* WstrToUtf8(std::wstring_view sv, Allocator* a) {
     return (char*)v.data();
 }
 
-size_t WstrToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOut) {
-    CrashIf(!bufOut || (0 == cbBufOut));
-    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, nullptr, 0, nullptr, nullptr);
-    if ((size_t)cbConverted >= cbBufOut) {
-        cbConverted = (int)cbBufOut - 1;
-    }
-    int res = WideCharToMultiByte(CP_UTF8, 0, s, (int)str::Len(s), bufOut, cbConverted, nullptr, nullptr);
-    CrashIf(res > cbConverted);
-    bufOut[res] = '\0';
-    return res;
-}
-
-// a bit tricky: converts s form unicode to utf8 in provided buffer.
-// if buffer is not big enough, will allocate a buffer
-// It returns number of characters of converted string in cchBufInOut
-// if cch is -1 we will str::Len(s)
-//
-// the caller must free if != bufOut
-char* WstrToUtf8Buf(const WCHAR* s, size_t cch, char* bufOut, size_t* cbBufInOut) {
-    char* overflow{nullptr};
-    bufOut[0] = 0;
-    size_t cbBuf = *cbBufInOut - 1; // -1 for terminating zero
-    *cbBufInOut = 0;
-    // nuance: nullptr returns nullptr but empty string returns also empty string
-    if (!s) {
-        CrashIf(*cbBufInOut != 0);
-        return nullptr;
-    }
-    if (cch == 0) {
-        return bufOut;
-    }
-    if (cch == (size_t)-1) {
-        cch = str::Len(s);
-    }
-    CrashIf((int)cch < 0);
-
-    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, bufOut, (int)cbBuf, nullptr, nullptr);
-    if (cbConverted > 0) {
-        // did convert
-        bufOut[cbConverted] = 0;
-        // TODO: change to DebugCrashIf() because expensive
-        CrashIf((size_t)cbConverted != str::Len(bufOut));
-        *cbBufInOut = (size_t)cbConverted;
-        return bufOut;
-    }
-
-    // the buffer wasn't big enough, so measure how much we need and allocate
-    int cbNeeded = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, nullptr, 0, nullptr, nullptr);
-    overflow = AllocArray<char>((size_t)cbNeeded + 1); // +1 for terminating 0
-    if (!overflow) {
-        return nullptr;
-    }
-    cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, overflow, cbNeeded, nullptr, nullptr);
-    CrashIf(cbConverted != cbNeeded);
-    // TODO: change to DebugCrashIf() because expensive
-    CrashIf((size_t)cbConverted != str::Len(overflow));
-    *cbBufInOut = (size_t)cbNeeded;
-    return overflow;
-}
-
-// TODO: write WstrToCodePageBuf, rewrite WstrToUtf8Buf using it, optimize this
-// by using WstrToCodePageBuf (avoid one call WideCharToMultiByte in common case
-// where the string can be converted with a buffer)
+// TODO: rename to WstrToCodePage() and then replace all uses directly
 std::string_view WstrToCodePage(const WCHAR* txt, uint codePage, int cchTxt) {
-    CrashIf(!txt);
-    if (!txt) {
-        return {};
-    }
-
-    int bufSize = WideCharToMultiByte(codePage, 0, txt, cchTxt, nullptr, 0, nullptr, nullptr);
-    if (0 == bufSize) {
-        return {};
-    }
-    char* res = AllocArray<char>(size_t(bufSize) + 1); // +1 for terminating 0
-    if (!res) {
-        return {};
-    }
-    WideCharToMultiByte(codePage, 0, txt, cchTxt, res, bufSize, nullptr, nullptr);
-    size_t resLen = str::Len(res);
-    return {res, resLen};
+    return WstrToCodePage(codePage, txt, cchTxt, nullptr);
 }
 
 /* Caller needs to free() the result */
@@ -241,10 +168,6 @@ size_t FromCodePageBuf(WCHAR* buf, int cchBuf, const char* s, uint cp) {
 
 WCHAR* FromCodePage(const char* src, uint cp) {
     return ToWideChar(src, cp);
-}
-
-WCHAR* Utf8ToWstr(std::string_view sv) {
-    return ToWideChar(sv.data(), CP_UTF8, (int)sv.size());
 }
 
 WCHAR* FromAnsi(const char* src, size_t cbLen) {

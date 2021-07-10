@@ -225,9 +225,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
         dbglog("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 
-    char symDirUtf[512];
-
-    strconv::WstrToUtf8Buf(symDir, symDirUtf, sizeof(symDirUtf));
+    auto symDirUtf = TempToUtf8(symDir);
     bool ok = ExtractSymbols((const u8*)rsp.data.Get(), rsp.data.size(), symDirUtf, gCrashHandlerAllocator);
     if (!ok) {
         dbglog("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
