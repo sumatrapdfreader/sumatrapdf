@@ -486,8 +486,8 @@ static const FieldInfo gFavoriteFields[] = {
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 
 static const FieldInfo gPointFFields[] = {
-    {offsetof(PointF, x), SettingType::Int, 0},
-    {offsetof(PointF, y), SettingType::Int, 0},
+    {offsetof(PointF, x), SettingType::Float, (intptr_t) "0"},
+    {offsetof(PointF, y), SettingType::Float, (intptr_t) "0"},
 };
 static const StructInfo gPointFInfo = {sizeof(PointF), 2, gPointFFields, "X\0Y"};
 
@@ -526,8 +526,8 @@ static StructInfo gFileStateInfo = {
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState"};
 
 static const FieldInfo gPointF_1_Fields[] = {
-    {offsetof(PointF, x), SettingType::Int, 0},
-    {offsetof(PointF, y), SettingType::Int, 0},
+    {offsetof(PointF, x), SettingType::Float, (intptr_t) "0"},
+    {offsetof(PointF, y), SettingType::Float, (intptr_t) "0"},
 };
 static const StructInfo gPointF_1_Info = {sizeof(PointF), 2, gPointF_1_Fields, "X\0Y"};
 
@@ -570,7 +570,7 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
-     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-3.html"},
+     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-3-1.html"},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, 0x8000f2ff},
     {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},
