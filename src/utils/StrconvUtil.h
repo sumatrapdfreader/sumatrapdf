@@ -15,10 +15,7 @@ char* WstrToUtf8(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr
 char* WstrToUtf8(std::wstring_view sv, Allocator* a = nullptr);
 
 // TODO: remove use of this and replace with the improved versions below
-size_t Utf8ToWcharBuf(const char* s, size_t sLen, WCHAR* bufOut, size_t cchBufOut);
 size_t WstrToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOut);
-
-WCHAR* Utf8ToWcharBuf(const char* s, size_t cb, WCHAR* bufOut, size_t* cchBufInOut);
 char* WstrToUtf8Buf(const WCHAR* s, size_t cch, char* bufOut, size_t* cbBufInOut);
 
 std::string_view ToMultiByte(const char* src, uint codePageSrc, uint codePageDest);

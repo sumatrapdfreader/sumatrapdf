@@ -302,8 +302,6 @@ class HtmlFormatter {
     // for detection of cover image duplicates in mobi formatting
     int pageCount{0};
 
-    WCHAR buf[512]{};
-
   public:
     explicit HtmlFormatter(HtmlFormatterArgs* args);
     HtmlFormatter(HtmlFormatter const&) = delete;

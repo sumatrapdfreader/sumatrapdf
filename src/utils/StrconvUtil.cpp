@@ -73,19 +73,6 @@ char* WstrToUtf8(std::wstring_view sv, Allocator* a) {
     return (char*)v.data();
 }
 
-size_t Utf8ToWcharBuf(const char* s, size_t cbLen, WCHAR* bufOut, size_t cchBufOut) {
-    CrashIf(!bufOut || (0 == cchBufOut));
-    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cbLen, bufOut, (int)cchBufOut);
-    if (0 == cchConverted) {
-        // TODO: determine ideal string length so that the conversion succeeds
-        cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cchBufOut / 2, bufOut, (int)cchBufOut);
-    } else if ((size_t)cchConverted >= cchBufOut) {
-        cchConverted = (int)cchBufOut - 1;
-    }
-    bufOut[cchConverted] = '\0';
-    return cchConverted;
-}
-
 size_t WstrToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOut) {
     CrashIf(!bufOut || (0 == cbBufOut));
     int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, nullptr, 0, nullptr, nullptr);
@@ -96,54 +83,6 @@ size_t WstrToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOut) {
     CrashIf(res > cbConverted);
     bufOut[res] = '\0';
     return res;
-}
-
-// a bit tricky: converts s form utf8 to unicode in provided buffer.
-// if buffer is not big enough, will allocate a buffer
-// It returns number of characters of converted string in cchBufInOut
-// if cb is -1 we will str::Len(s)
-//
-// the caller must free if != bufOut
-WCHAR* Utf8ToWcharBuf(const char* s, size_t cb, WCHAR* bufOut, size_t* cchBufInOut) {
-    WCHAR* overflow{nullptr};
-    bufOut[0] = 0;
-    size_t cchBuf = *cchBufInOut - 1; // -1 for terminating zero
-    *cchBufInOut = 0;
-    // nuance: nullptr returns nullptr but empty string returns also empty string
-    if (!s) {
-        CrashIf(*cchBufInOut != 0);
-        return nullptr;
-    }
-    if (cb == 0) {
-        return bufOut;
-    }
-    if (cb == (size_t)-1) {
-        cb = str::Len(s);
-    }
-    CrashIf((int)cb < 0);
-
-    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, bufOut, (int)cchBuf);
-    if (cchConverted > 0) {
-        // did convert
-        bufOut[cchConverted] = 0;
-        *cchBufInOut = (size_t)cchConverted;
-        // TODO: change to DebugCrashIf() because expensive
-        CrashIf(*cchBufInOut != str::Len(bufOut));
-        return bufOut;
-    }
-
-    // the buffer wasn't big enough, so measure how much we need and allocate
-    int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, nullptr, 0);
-    overflow = AllocArray<WCHAR>((size_t)cchNeeded + 1); // +1 for terminating 0
-    if (!overflow) {
-        return nullptr;
-    }
-    cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, overflow, (int)cchNeeded);
-    CrashIf(cchConverted != cchNeeded);
-    // TODO: change to DebugCrashIf() because expensive
-    CrashIf((size_t)cchConverted != str::Len(overflow));
-    *cchBufInOut = (size_t)cchConverted;
-    return overflow;
 }
 
 // a bit tricky: converts s form unicode to utf8 in provided buffer.

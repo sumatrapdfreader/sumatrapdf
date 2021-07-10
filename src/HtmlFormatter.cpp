@@ -724,7 +724,9 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             currReparseIdx = s - htmlParser->Start();
         }
 
-        size_t strLen = strconv::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
+        auto bufTmp = TempToWstr(s, end - s);
+        size_t strLen = bufTmp.size();
+        WCHAR* buf = bufTmp.Get();
         // soft hyphens should not be displayed
         strLen -= str::RemoveChars(buf, L"\xad");
         if (0 == strLen) {
@@ -876,7 +878,9 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("face");
     const WCHAR* faceName = CurrFont()->GetName();
     if (attr) {
-        size_t strLen = strconv::Utf8ToWcharBuf(attr->val, attr->valLen, buf, dimof(buf));
+        auto bufTmp = TempToWstr(attr->val, attr->valLen);
+        WCHAR* buf = bufTmp.Get();
+        size_t strLen = bufTmp.size();
         // multiple font names can be comma separated
         if (strLen > 0 && *buf != ',') {
             str::TransChars(buf, L",", L"\0");
@@ -1402,8 +1406,6 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
     // Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
 
-    WCHAR buf[512];
-
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else
     textDraw->SetTextColor(textColor);
@@ -1416,7 +1418,8 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            size_t strLen = strconv::Utf8ToWcharBuf(i.str.s, i.str.len, buf, dimof(buf));
+            auto buf = TempToWstr(i.str.s, i.str.len);
+            size_t strLen = buf.size();
             // soft hyphens should not be displayed
             strLen -= str::RemoveChars(buf, L"\xad");
             textDraw->Draw(buf, strLen, ToGdipRectF(bbox), DrawInstrType::RtlString == i.type);

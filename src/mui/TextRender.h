@@ -50,7 +50,6 @@ class TextRenderGdi : public ITextRender {
     Gdiplus::Graphics* gfx = nullptr;
     Gdiplus::Color textColor;
     Gdiplus::Color textBgColor;
-    WCHAR txtConvBuf[512] = {0};
 
     HDC memHdc = nullptr;
     HGDIOBJ memHdcPrevFont = nullptr;

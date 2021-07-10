@@ -118,8 +118,8 @@ RectF TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
 }
 
 RectF TextRenderGdi::Measure(const char* s, size_t sLen) {
-    size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return Measure(txtConvBuf, strLen);
+    auto buf = TempToWstr(s, sLen);
+    return Measure(buf, buf.size());
 }
 
 void TextRenderGdi::SetTextColor(Gdiplus::Color col) {
@@ -183,8 +183,8 @@ void TextRenderGdi::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl)
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
-    size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return Draw(txtConvBuf, strLen, bb, isRtl);
+    auto buf = TempToWstr(s, sLen);
+    return Draw(buf, buf.size(), bb, isRtl);
 #endif
 }
 
@@ -276,8 +276,8 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectF bb,
 }
 
 void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return DrawTransparent(txtConvBuf, strLen, bb, isRtl);
+    auto buf = TempToWstr(s, sLen);
+    return DrawTransparent(buf, buf.size(), bb, isRtl);
 }
 
 TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, TextMeasureAlgorithm measureAlgo) {
@@ -310,8 +310,9 @@ RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
 
 RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
-    size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return MeasureText(gfx, currFont->font, txtConvBuf, strLen, measureAlgo);
+    auto buf = TempToWstr(s, sLen);
+    size_t strLen = buf.size();
+    return MeasureText(gfx, currFont->font, buf, strLen, measureAlgo);
 }
 
 TextRenderGdiplus::~TextRenderGdiplus() {
@@ -340,7 +341,8 @@ void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool i
 }
 
 void TextRenderGdiplus::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    auto buf = TempToWstr(s, sLen);
+    size_t strLen = buf.size();
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
@@ -424,7 +426,8 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
 RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     CrashIf(!hdc);
-    size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    auto buf = TempToWstr(s, sLen);
+    size_t strLen = buf.size();
     return Measure(txtConvBuf, strLen);
 }
 
@@ -437,7 +440,8 @@ RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
 }
 
 void TextRenderHdc::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    auto buf = TempToWstr(s, sLen);
+    size_t strLen = buf.size();
     return Draw(txtConvBuf, strLen, bb, isRtl);
 }
 

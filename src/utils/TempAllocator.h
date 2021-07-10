@@ -35,6 +35,9 @@ struct TempStr {
     explicit TempStr(const TempStr& ts) {
         sv = ts.sv;
     }
+    size_t size() {
+        return sv.size();
+    }
     char* Get() {
         return (char*)sv.data();
     }
@@ -72,6 +75,9 @@ struct TempWstr {
     }
     explicit TempWstr(const TempWstr& ts) {
         sv = ts.sv;
+    }
+    size_t size() {
+        return sv.size();
     }
     WCHAR* Get() {
         return (WCHAR*)sv.data();

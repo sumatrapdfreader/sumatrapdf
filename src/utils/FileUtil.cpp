@@ -512,8 +512,7 @@ std::span<u8> ReadFile(const WCHAR* filePath) {
 }
 
 bool WriteFile(const char* filePath, std::span<u8> d) {
-    WCHAR buf[512];
-    strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    auto buf = TempToWstr(filePath);
     return WriteFile(buf, d);
 }
 
