@@ -469,9 +469,22 @@ function sumatrapdf_files()
   files_in_dir("docs", {
     "releasenotes.txt",
   })
-  test_app_files()
+  filter {"configurations:Debug"}
+  files_in_dir("src/testcode", {
+    "test-app.h",
+    "TestApp.cpp",
+    "TestTab.cpp",
+    "TestLayout.cpp",
+    --"TestLice.cpp",
+  })
+  files_in_dir("src/utils/tests", {
+    "*.cpp",
+  })
+  files_in_dir("src/utils", {
+      "UtAssert.*",
+  })
+  filter {}
 end
-
 
 function uia_files()
   files_in_dir("src/uia", {
@@ -1006,15 +1019,6 @@ function pdf_filter_files()
   filter {}
 end
 
-function test_app_files()
-  files_in_dir("src/testcode", {
-    "test-app.h",
-    "TestApp.cpp",
-    "TestTab.cpp",
-    "TestLayout.cpp",
-    --"TestLice.cpp",
-  })
-end
 
 --[[
 function wdl_files()

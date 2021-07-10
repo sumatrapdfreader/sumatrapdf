@@ -857,7 +857,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     // TODO: maybe add cmd-line switch to enable debug logging
     gEnableDbgLog = gIsDebugBuild || gIsDailyBuild || gIsPreReleaseBuild;
 
-#if defined(DEBUG) || defined(IS_DAILY_BUILD) || defined(PRE_RELEASE_VER)
+#if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (i.tester) {
             extern int TesterMain(); // in Tester.cpp
@@ -918,7 +918,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         SetAppDataPath(i.appdataDir);
     }
 
-#if defined(DEBUG) || defined(IS_DAILY_BUILD) || defined(PRE_RELEASE_VER)
+#if defined(DEBUG)
     if (i.testApp) {
         // in TestApp.cpp
         extern void TestApp(HINSTANCE hInstance);
