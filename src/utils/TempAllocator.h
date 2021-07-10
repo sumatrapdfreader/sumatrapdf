@@ -35,6 +35,9 @@ struct TempStr {
     explicit TempStr(const TempStr& ts) {
         sv = ts.sv;
     }
+    char* Get() {
+        return (char*)sv.data();
+    }
     operator const char*() {
         return sv.data();
     }
@@ -70,6 +73,9 @@ struct TempWstr {
     explicit TempWstr(const TempWstr& ts) {
         sv = ts.sv;
     }
+    WCHAR* Get() {
+        return (WCHAR*)sv.data();
+    }
     operator const WCHAR*() {
         return sv.data();
     }
@@ -81,9 +87,10 @@ struct TempWstr {
     }
 };
 
-TempStr TempStrDup(const char* s, size_t cch = (size_t)-1);
+TempStr TempStrDup(const char* s, size_t cb = (size_t)-1);
+TempWstr TempWstrDup(const WCHAR* s, size_t cch = (size_t)-1);
 
 TempStr TempToUtf8(const WCHAR* s, size_t cch = (size_t)-1);
-
-TempWstr TempToWstr(const char* s);
+TempStr TempToUtf8(std::wstring_view);
+TempWstr TempToWstr(const char* s, size_t cb = (size_t)-1);
 TempWstr TempToWstr(std::string_view sv);

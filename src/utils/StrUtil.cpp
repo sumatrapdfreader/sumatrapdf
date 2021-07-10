@@ -165,6 +165,36 @@ size_t Len(const WCHAR* s) {
     return s ? wcslen(s) : 0;
 }
 
+void Free(const char* s) {
+    free((void*)s);
+}
+
+void Free(const u8* s) {
+    free((void*)s);
+}
+
+void Free(std::string_view sv) {
+    free((void*)sv.data());
+}
+
+void Free(const WCHAR* s) {
+    free((void*)s);
+}
+
+void Free(std::wstring_view sv) {
+    free((void*)sv.data());
+}
+
+void FreePtr(const WCHAR** s) {
+    str::Free(*s);
+    *s = nullptr;
+}
+
+void FreePtr(WCHAR** s) {
+    str::Free(*s);
+    *s = nullptr;
+}
+
 char* Dup(Allocator* a, const char* s, size_t cch) {
     CrashIf(!s && (int)cch > 0);
     if (cch == (size_t)-1) {
@@ -389,14 +419,6 @@ const char* FindI(const char* s, const char* toFind) {
         s++;
     }
     return nullptr;
-}
-
-void Free(const char* s) {
-    free((void*)s);
-}
-
-void Free(const u8* s) {
-    free((void*)s);
 }
 
 void ReplaceWithCopy(char** s, const char* snew) {
@@ -1927,20 +1949,6 @@ bool IsDigit(WCHAR c) {
 
 bool IsNonCharacter(WCHAR c) {
     return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
-}
-
-void Free(const WCHAR* s) {
-    free((void*)s);
-}
-
-void FreePtr(const WCHAR** s) {
-    free((void*)*s);
-    *s = nullptr;
-}
-
-void FreePtr(WCHAR** s) {
-    free((void*)*s);
-    *s = nullptr;
 }
 
 // return true if s1 == s2, case sensitive

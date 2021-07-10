@@ -17,6 +17,16 @@ enum class TrimOpt { Left, Right, Both };
 size_t Len(const WCHAR*);
 size_t Len(const char* s);
 
+void Free(const char*);
+void Free(const u8*);
+void Free(std::string_view);
+
+void Free(const WCHAR* s);
+void Free(std::wstring_view);
+
+void FreePtr(const WCHAR** s);
+void FreePtr(WCHAR** s);
+
 char* Dup(Allocator*, const char* str, size_t strLen = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
 char* Dup(Allocator*, std::string_view);
@@ -65,15 +75,9 @@ bool EqNIx(const char* s, size_t len, const char* s2);
 char* ToLowerInPlace(char*);
 char* ToLower(const char*);
 
-void Free(const char*);
-void Free(const u8*);
-
 bool StartsWithI(const WCHAR* str, const WCHAR* txt);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
-void Free(const WCHAR* s);
-void FreePtr(const WCHAR** s);
-void FreePtr(WCHAR** s);
 WCHAR* ToLowerInPlace(WCHAR* s);
 WCHAR* ToLower(const WCHAR* s);
 

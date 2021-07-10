@@ -34,34 +34,63 @@ void ResetTempAllocator() {
     gTempAllocator->Reset(true);
 }
 
-TempStr TempStrDup(const char* s, size_t cch) {
-    char* res = str::Dup(gTempAllocator, s, cch);
-    if (cch == (size_t)-1) {
+TempStr TempStrDup(const char* s, size_t cb) {
+    char* res = str::Dup(gTempAllocator, s, cb);
+    if (cb == (size_t)-1) {
         // TODO: optimize to remove str::Len(). Add version of str::Dup()
         // that returns std::string_view
+        cb = str::Len(res);
+    }
+    return TempStr(res, cb);
+}
+
+TempWstr TempWstrDup(const WCHAR* s, size_t cch) {
+    WCHAR* res = str::Dup(gTempAllocator, s, cch);
+    if (cch == (size_t)-1) {
         cch = str::Len(res);
     }
-    return TempStr(res, cch);
+    return TempWstr(res, cch);
 }
+
+/*
+Todo: could further optimize by removing memory copy in common
+case by estimating converted size, allocating from temp allocator
+and only re-allocating when estimated buf wasn't big enough
+
+Alternatively, just simplify to always as for size first and
+allocate desired size from allocator.
+By passing temp allocator we get TempTo* for free.
+Going over the source string twice is probably better than 2
+allocations in common case.
+
+Also, the Utf8ToWcharBuf() and others that use buf can probably be
+all replaced by TempTo* functions.
+*/
 
 TempStr TempToUtf8(const WCHAR* s, size_t cch) {
     if (!s) {
         CrashIf((int)cch > 0);
         return TempStr();
     }
-    if (cch == (size_t)-1) {
-        cch = str::Len(s);
-    }
     strconv::StackWstrToUtf8 buf(s, cch);
     return TempStrDup(buf.Get(), buf.size());
 }
 
-TempWstr TempToWstr(const char* s) {
-    CrashIf(true); // NYI
-    return TempWstr();
+TempStr TempToUtf8(std::wstring_view sv) {
+    strconv::StackWstrToUtf8 buf(sv.data(), sv.size());
+    return TempStrDup(buf.Get(), buf.size());
+}
+
+TempWstr TempToWstr(const char* s, size_t cb) {
+    if (!s) {
+        CrashIf((int)cb > 0);
+        return TempWstr();
+    }
+    strconv::StackUtf8ToWstr buf(s, cb);
+    return TempWstrDup(buf.Get(), buf.size());
 }
 
 TempWstr TempToWstr(std::string_view sv) {
-    CrashIf(true); // NYI
-    return TempWstr();
+    strconv::StackUtf8ToWstr buf(sv.data(), sv.size());
+    return TempWstrDup(buf.Get(), buf.size());
 }

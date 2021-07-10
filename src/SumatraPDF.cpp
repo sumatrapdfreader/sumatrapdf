@@ -3051,8 +3051,8 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
 }
 
 // TODO: similar to Installer.cpp
-static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption, WCHAR* buf, DWORD cchBufSize) {
-    if (buf == nullptr || cchBufSize < MAX_PATH) {
+static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption, WCHAR* buf, DWORD cchBuf) {
+    if (buf == nullptr || cchBuf < MAX_PATH) {
         return false;
     }
 
@@ -5203,7 +5203,7 @@ void GetProgramInfo(str::Str& s) {
     s.AppendFmt("Crash file: %s\r\n", d.data);
 
     AutoFreeWstr exePathW = GetExePath();
-    strconv::StackWstrToUtf8 exePath = exePathW.Get();
+    TempStr exePath = TempToUtf8(exePathW.AsView());
     s.AppendFmt("Exe: %s\r\n", exePath.Get());
     const char* exeType = IsDllBuild() ? "dll" : "static";
     if (builtOn != nullptr) {

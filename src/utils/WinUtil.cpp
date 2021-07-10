@@ -1439,25 +1439,25 @@ void ToForeground(HWND hwnd) {
 /* return text of window or edit control, nullptr in case of an error.
 caller needs to free() the result */
 WCHAR* GetText(HWND hwnd) {
-    size_t cchTxtLen = GetTextLen(hwnd);
-    WCHAR* txt = AllocArray<WCHAR>(cchTxtLen + 1);
+    size_t cchTxt = GetTextLen(hwnd);
+    WCHAR* txt = AllocArray<WCHAR>(cchTxt + 1);
     if (nullptr == txt) {
         return nullptr;
     }
-    SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
-    txt[cchTxtLen] = 0;
+    SendMessageW(hwnd, WM_GETTEXT, cchTxt + 1, (LPARAM)txt);
+    txt[cchTxt] = 0;
     return txt;
 }
 
 str::Str GetTextUtf8(HWND hwnd) {
-    size_t cchTxtLen = GetTextLen(hwnd);
-    WCHAR* txt = AllocArray<WCHAR>(cchTxtLen + 1);
+    size_t cchTxt = GetTextLen(hwnd);
+    WCHAR* txt = AllocArray<WCHAR>(cchTxt + 1);
     if (nullptr == txt) {
         return str::Str();
     }
-    SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
-    txt[cchTxtLen] = 0;
-    AutoFreeStr od = strconv::WstrToUtf8(txt, cchTxtLen);
+    SendMessageW(hwnd, WM_GETTEXT, cchTxt + 1, (LPARAM)txt);
+    txt[cchTxt] = 0;
+    AutoFreeStr od = strconv::WstrToUtf8(txt, cchTxt);
     free(txt);
     return {od.AsView()};
 }
