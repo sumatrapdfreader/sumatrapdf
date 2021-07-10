@@ -207,7 +207,6 @@ static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintp
 MapStrToInt::MapStrToInt(size_t initialSize) {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
-    allocator.allocAlign = 4;
     h = NewHashTable(initialSize, &allocator);
 }
 

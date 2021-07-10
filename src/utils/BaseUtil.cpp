@@ -54,6 +54,11 @@ void* Allocator::MemDup(Allocator* a, const void* mem, size_t size, size_t extra
     return newMem;
 }
 
+// -------------------------------------
+
+// using the same alignment as windows, to be safe
+constexpr size_t kPoolAllocatorAlign = 16;
+
 void PoolAllocator::Free(const void*) {
     // does nothing, we can't free individual pieces of memory
 }
@@ -70,17 +75,16 @@ void PoolAllocator::FreeAll() {
     nAllocs = 0;
 }
 
-static size_t BlockHeaderSize(PoolAllocator* a) {
-    int hdrSize = RoundUp((int)sizeof(PoolAllocator::Block), a->allocAlign);
-    return hdrSize;
+static constexpr size_t BlockHeaderSize() {
+    return RoundUp(sizeof(PoolAllocator::Block), kPoolAllocatorAlign);
 }
 
 // for easier debugging, poison the freed data with 0xdd
 // that way if the code tries to used the freed memory,
 // it's more likely to crash
-static void PoisonData(PoolAllocator* a, PoolAllocator::Block* curr) {
+static void PoisonData(PoolAllocator::Block* curr) {
     char* d;
-    size_t hdrSize = BlockHeaderSize(a);
+    size_t hdrSize = BlockHeaderSize();
     while (curr) {
         // optimization: don't touch memory if there were not allocations
         if (curr->nAllocs > 0) {
@@ -95,12 +99,14 @@ static void PoisonData(PoolAllocator* a, PoolAllocator::Block* curr) {
     }
 }
 
-static void ResetBlock(PoolAllocator::Block* block, size_t hdrSize) {
+static void ResetBlock(PoolAllocator::Block* block) {
+    size_t hdrSize = BlockHeaderSize();
     char* start = (char*)block;
     block->nAllocs = 0;
     block->freeSpace = start + hdrSize;
     block->end = start + block->dataSize;
     block->next = nullptr;
+    CrashIf(RoundUp(block->freeSpace, kPoolAllocatorAlign) != block->freeSpace);
 }
 
 void PoolAllocator::Reset(bool poisonFreedMemory) {
@@ -112,11 +118,11 @@ void PoolAllocator::Reset(bool poisonFreedMemory) {
         return;
     }
     if (poisonFreedMemory) {
-        PoisonData(this, firstBlock);
+        PoisonData(firstBlock);
     }
     firstBlock = firstBlock->next;
     FreeAll();
-    ResetBlock(first, BlockHeaderSize(this));
+    ResetBlock(first);
     firstBlock = first;
 }
 
@@ -124,7 +130,6 @@ PoolAllocator::~PoolAllocator() {
     FreeAll();
 }
 
-// Allocator methods
 void* PoolAllocator::Realloc(void*, size_t) {
     // TODO: we can't do that because we don't know the original
     // size of memory piece pointed by mem. We could remember it
@@ -133,38 +138,34 @@ void* PoolAllocator::Realloc(void*, size_t) {
     return nullptr;
 }
 
-static bool BlockHasSpaceFor(PoolAllocator::Block* block, int size, int allocAlign) {
-    if (!block) {
-        return false;
-    }
-    char* d = RoundUp(block->freeSpace, allocAlign);
-    // data + i32 index of allocation
-    d += (size + sizeof(i32));
-    if (d > block->end) {
-        return false;
-    }
-    return true;
-}
-
 // we allocate the value at the beginning of current block
 // and we store a pointer to the value at the end of current block
 // that way we can find allocations
 void* PoolAllocator::Alloc(size_t size) {
-    if (!BlockHasSpaceFor(currBlock, (int)size, allocAlign)) {
-        int freeSpaceSize = (int)size + sizeof(i32); // + space for index
-        int hdrSize = BlockHeaderSize(this);
-        int blockSize = hdrSize + freeSpaceSize;
-        if (blockSize < minBlockSize) {
-            blockSize = minBlockSize;
-            freeSpaceSize = minBlockSize - hdrSize;
+    // need rounded size + space for index at the end
+    bool hasSpace = false;
+    size_t sizeRounded = RoundUp(size, kPoolAllocatorAlign);
+    size_t cbNeeded = sizeRounded + sizeof(i32);
+    if (currBlock) {
+        CrashIf(currBlock->freeSpace > currBlock->end);
+        size_t cbAvail = (currBlock->end - currBlock->freeSpace);
+        hasSpace = cbAvail >= cbNeeded;
+    }
+
+    if (!hasSpace) {
+        size_t hdrSize = BlockHeaderSize();
+        size_t dataSize = cbNeeded;
+        size_t allocSize = hdrSize + cbNeeded;
+        if (allocSize < minBlockSize) {
+            allocSize = minBlockSize;
+            dataSize = minBlockSize - hdrSize;
         }
-        // TODO: zero with calloc()? slower but safer
-        auto block = (Block*)malloc(blockSize);
+        auto block = (Block*)AllocZero(nullptr, allocSize);
         if (!block) {
             return nullptr;
         }
-        block->dataSize = freeSpaceSize;
-        ResetBlock(block, hdrSize);
+        block->dataSize = dataSize;
+        ResetBlock(block);
         if (!firstBlock) {
             firstBlock = block;
         }
@@ -173,11 +174,11 @@ void* PoolAllocator::Alloc(size_t size) {
         }
         currBlock = block;
     }
-    char* res = RoundUp(currBlock->freeSpace, allocAlign);
-    currBlock->freeSpace = res + size;
+    char* res = currBlock->freeSpace;
+    currBlock->freeSpace = res + sizeRounded;
+    CrashIf(RoundUp(currBlock->freeSpace, kPoolAllocatorAlign) != currBlock->freeSpace);
 
     char* blockStart = (char*)currBlock;
-
     i32 offset = (i32)(res - blockStart);
     i32* index = (i32*)currBlock->end;
     index -= 1;
@@ -195,7 +196,7 @@ void* PoolAllocator::At(int i) {
     }
     auto curr = firstBlock;
     while (curr && i >= curr->nAllocs) {
-        i -= curr->nAllocs;
+        i -= (int)curr->nAllocs;
         curr = curr->next;
     }
     CrashIf(!curr);
@@ -205,7 +206,7 @@ void* PoolAllocator::At(int i) {
     CrashIf(i >= curr->nAllocs);
     i32* index = (i32*)curr->end;
     // elements are in reverse
-    int idx = curr->nAllocs - i - 1;
+    size_t idx = curr->nAllocs - i - 1;
     i32 offset = index[idx];
     char* d = (char*)curr + offset;
     return (void*)d;
@@ -235,7 +236,7 @@ bool memeq(const void* s1, const void* s2, size_t len) {
     return 0 == memcmp(s1, s2, len);
 }
 
-size_t RoundUp(size_t n, size_t rounding) {
+constexpr size_t RoundUp(size_t n, size_t rounding) {
     return ((n + rounding - 1) / rounding) * rounding;
 }
 
@@ -367,13 +368,13 @@ static bool allocateIndexIfNeeded(VecStr& v) {
         return true;
     }
 
-    // for structures we want aligned allocation. 8 should be good enough for everything
-    v.allocator.allocAlign = 8;
     VecStrIndex* idx = v.allocator.AllocStruct<VecStrIndex>();
 
-    if (!idx && (gAllowAllocFailure.load() > 0)) {
+    if (!idx) {
+        CrashAlwaysIf(gAllowAllocFailure.load() == 0);
         return false;
     }
+
     idx->next = nullptr;
     idx->nStrings = 0;
 
@@ -399,7 +400,6 @@ bool VecStr::Append(std::string_view sv) {
     if (sv.size() > maxLen) {
         return false;
     }
-    allocator.allocAlign = 1; // no need to align allocations for string
     std::string_view res = str::Dup(&allocator, sv);
 
     int n = currIndex->nStrings;

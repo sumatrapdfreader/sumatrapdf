@@ -333,7 +333,7 @@ bool memeq(const void* s1, const void* s2, size_t len);
 size_t RoundToPowerOf2(size_t size);
 u32 MurmurHash2(const void* key, size_t len);
 
-size_t RoundUp(size_t n, size_t rounding);
+constexpr size_t RoundUp(size_t n, size_t rounding);
 int RoundUp(int n, int rounding);
 char* RoundUp(char*, int rounding);
 
@@ -400,17 +400,12 @@ struct PoolAllocator : Allocator {
     // we'll allocate block of the minBlockSize unless
     // asked for a block of bigger size
     int minBlockSize = 4096;
-    // alignment of allocations, must be 2^N or <= 1 to disable
-    // We might apply padding so that allocated memory starts at
-    // multiply of allocAlign. This is sometimes needed to satisfy ABI
-    // requirements or to ensure CPU operations (like SSE) are fast
-    int allocAlign = 8;
 
     // contains allocated data and index of each allocation
     struct Block {
         struct Block* next;
-        int dataSize; // size of data in block
-        int nAllocs;
+        size_t dataSize; // size of data in block
+        size_t nAllocs;
         // curr points to free space
         char* freeSpace;
         // from the end, we store index of each allocation relative
