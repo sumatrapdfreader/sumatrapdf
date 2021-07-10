@@ -1790,7 +1790,7 @@ bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path,
         return false;
     }
     EnginePdf* enginePdf = (EnginePdf*)engine;
-    strconv::StackWstrToUtf8 currPath = engine->FileName();
+    TempStr currPath = TempToUtf8(engine->FileName());
     if (path.empty()) {
         path = {currPath.Get()};
     }

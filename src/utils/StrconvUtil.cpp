@@ -37,13 +37,13 @@ std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allo
         cch = str::Len(s);
     }
     // ask for the size of buffer needed for converted string
-    int cbNeeded = WideCharToMultiByte(codePage, 0, s, cch, nullptr, 0, nullptr, nullptr);
+    int cbNeeded = WideCharToMultiByte(codePage, 0, s, (int)cch, nullptr, 0, nullptr, nullptr);
     size_t cbAlloc = cbNeeded + sizeof(char); // +1 for terminating 0
     char* res = (char*)Allocator::AllocZero(a, cbAlloc);
     if (!res) {
         return {nullptr, 0};
     }
-    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, cch, res, cbNeeded, nullptr, nullptr);
+    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, res, cbNeeded, nullptr, nullptr);
     CrashIf(cbConverted != cbNeeded);
     // TODO: change to DebugCrashIf() because expensive
     CrashIf((size_t)cbConverted != str::Len(res));
@@ -170,7 +170,7 @@ char* WstrToUtf8Buf(const WCHAR* s, size_t cch, char* bufOut, size_t* cbBufInOut
     }
     CrashIf((int)cch < 0);
 
-    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, cch, bufOut, (int)cbBuf, nullptr, nullptr);
+    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, bufOut, (int)cbBuf, nullptr, nullptr);
     if (cbConverted > 0) {
         // did convert
         bufOut[cbConverted] = 0;
@@ -181,12 +181,12 @@ char* WstrToUtf8Buf(const WCHAR* s, size_t cch, char* bufOut, size_t* cbBufInOut
     }
 
     // the buffer wasn't big enough, so measure how much we need and allocate
-    int cbNeeded = WideCharToMultiByte(CP_UTF8, 0, s, cch, nullptr, 0, nullptr, nullptr);
+    int cbNeeded = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, nullptr, 0, nullptr, nullptr);
     overflow = AllocArray<char>((size_t)cbNeeded + 1); // +1 for terminating 0
     if (!overflow) {
         return nullptr;
     }
-    cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, cch, overflow, cbNeeded, nullptr, nullptr);
+    cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, overflow, cbNeeded, nullptr, nullptr);
     CrashIf(cbConverted != cbNeeded);
     // TODO: change to DebugCrashIf() because expensive
     CrashIf((size_t)cbConverted != str::Len(overflow));
@@ -314,110 +314,6 @@ WCHAR* FromAnsi(const char* src, size_t cbLen) {
 
 std::string_view WstrToAnsi(const WCHAR* src) {
     return WstrToCodePage(src, CP_ACP);
-}
-
-StackWstrToUtf8::StackWstrToUtf8(const WCHAR* s, size_t cch) {
-    cbConverted = dimof(buf);
-    overflow = WstrToUtf8Buf(s, cch, buf, &cbConverted);
-}
-
-StackWstrToUtf8::StackWstrToUtf8(std::wstring_view sv) {
-    int cch = (int)sv.size();
-    cbConverted = dimof(buf);
-    overflow = WstrToUtf8Buf(sv.data(), cch, buf, &cbConverted);
-}
-
-size_t StackWstrToUtf8::size() const {
-    CrashIf((int)cbConverted < 0);
-    return cbConverted;
-}
-
-char* StackWstrToUtf8::Get() const {
-    CrashIf((int)cbConverted < 0);
-    if (overflow) {
-        return overflow;
-    }
-    return (char*)buf;
-}
-
-std::string_view StackWstrToUtf8::AsView() const {
-    char* d = Get();
-    return {d, cbConverted};
-}
-
-#if 0
-StackWstrToUtf8& StackWstrToUtf8::operator=(const StackWstrToUtf8& other) {
-    if (this == &other) {
-        return *this;
-    }
-    str::Free(overflow);
-    overflow = nullptr;
-    memcpy(this->buf, other.buf, sizeof(this->buf));
-    this->overflow = str::Dup(other.overflow);
-    return *this;
-}
-#endif
-
-StackWstrToUtf8::operator char*() const {
-    return Get();
-}
-
-StackWstrToUtf8::~StackWstrToUtf8() {
-    if (overflow != buf) {
-        str::Free(overflow);
-    }
-}
-
-StackUtf8ToWstr::StackUtf8ToWstr(const char* s, size_t cb) {
-    cchConverted = dimof(buf);
-    overflow = Utf8ToWcharBuf(s, cb, buf, &cchConverted);
-}
-
-StackUtf8ToWstr::StackUtf8ToWstr(std::string_view sv) {
-    int cb = (int)sv.size();
-    cchConverted = dimof(buf);
-    overflow = Utf8ToWcharBuf(sv.data(), cb, buf, &cchConverted);
-}
-
-size_t StackUtf8ToWstr::size() const {
-    CrashIf((int)cchConverted < 0);
-    return cchConverted;
-}
-
-WCHAR* StackUtf8ToWstr::Get() const {
-    CrashIf((int)cchConverted < 0);
-    if (overflow) {
-        return overflow;
-    }
-    return (WCHAR*)buf;
-}
-
-std::wstring_view StackUtf8ToWstr::AsView() const {
-    WCHAR* d = Get();
-    return {d, cchConverted};
-}
-
-#if 0
-StackUtf8ToWstr& StackUtf8ToWstr::operator=(const StackUtf8ToWstr& other) {
-    if (this == &other) {
-        return *this;
-    }
-    str::Free(overflow);
-    overflow = nullptr;
-    memcpy(this->buf, other.buf, sizeof(this->buf));
-    this->overflow = str::Dup(other.overflow);
-    return *this;
-}
-#endif
-
-StackUtf8ToWstr::operator WCHAR*() const {
-    return Get();
-}
-
-StackUtf8ToWstr::~StackUtf8ToWstr() {
-    if (overflow != buf) {
-        str::Free(overflow);
-    }
 }
 
 } // namespace strconv

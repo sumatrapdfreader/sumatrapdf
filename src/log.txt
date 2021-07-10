@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - implement Utf8ToWcharBuf() and WstrToUtf8Buf() and StackUtf8ToWstr
 - implement Utf8ToWstrV, Utf8ToWstr, WstrToCodePageV, WstrToUtf8V, WstrToCodePage, WstrToUtf8
   also re-implement TempToUtf8 and TempToWstr
+- remove StackWstrToUtf8 and StackUtf8ToWstr
 
 2021-07-09 Fri
 

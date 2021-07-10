@@ -1009,7 +1009,7 @@ static void RelaunchElevatedIfNotDebug() {
         return;
     }
     AutoFreeWstr exePath = GetExePath();
-    strconv::StackWstrToUtf8 exePathA = exePath.AsView();
+    TempStr exePathA = TempToUtf8(exePath.AsView());
     logf("Re-launching '%s' as elevated\n", exePathA.Get());
     WCHAR* cmdline = GetCommandLineW(); // not owning the memory
     LaunchElevated(exePath, cmdline);

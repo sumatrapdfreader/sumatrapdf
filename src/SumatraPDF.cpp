@@ -2253,8 +2253,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     if (!ok) {
         return false;
     }
-    strconv::StackWstrToUtf8 dstFilePath{dstFileName};
-    ok = EnginePdfSaveUpdated(engine, dstFilePath.AsView(), [&tab, &dstFilePath](std::string_view mupdfErr) {
+    TempStr dstFilePath = TempToUtf8(dstFileName);
+    ok = EnginePdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated string
         msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
@@ -2445,7 +2445,7 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
             SaveAnnotationsToMaybeNewPdfFile(tab);
             break;
         case SaveChoice::SaveExisting: {
-            strconv::StackWstrToUtf8 path{engine->FileName()};
+            TempStr path = TempToUtf8(engine->FileName());
             bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
                 str::Str msg;
                 // TODO: duplicated message
@@ -4420,7 +4420,7 @@ static int TestBigNew()
 
 static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    strconv::StackWstrToUtf8 path{engine->FileName()};
+    auto path = TempToUtf8(engine->FileName());
     bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated message

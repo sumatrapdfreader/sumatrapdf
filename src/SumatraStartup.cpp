@@ -839,7 +839,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     // gAddCrashMeMenu = true;
 
     {
-        strconv::StackWstrToUtf8 cmdLineA = GetCommandLineW();
+        TempStr cmdLineA = TempToUtf8(GetCommandLineW());
         logf("CmdLine: %s\n", cmdLineA.Get());
     }
 

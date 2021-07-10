@@ -37,34 +37,4 @@ WCHAR* FromAnsi(const char* src, size_t cbSrc = (size_t)-1);
 size_t ToCodePageBuf(char* buf, int cbBuf, const WCHAR* s, uint cp);
 size_t FromCodePageBuf(WCHAR* buf, int cchBuf, const char* s, uint cp);
 
-struct StackWstrToUtf8 {
-    char buf[128];
-    char* overflow{nullptr};
-    size_t cbConverted{(size_t)-1};
-
-    StackWstrToUtf8(std::wstring_view);
-    StackWstrToUtf8(const WCHAR*, size_t cch = (size_t)-1);
-    StackWstrToUtf8& operator=(const StackWstrToUtf8&) = delete;
-    ~StackWstrToUtf8();
-    char* Get() const;
-    size_t size() const;
-    operator char*() const;
-    std::string_view AsView() const;
-};
-
-struct StackUtf8ToWstr {
-    WCHAR buf[128];
-    WCHAR* overflow{nullptr};
-    size_t cchConverted{(size_t)-1};
-
-    StackUtf8ToWstr(std::string_view);
-    StackUtf8ToWstr(const char*, size_t cb = (size_t)-1);
-    StackUtf8ToWstr& operator=(const StackUtf8ToWstr&) = delete;
-    ~StackUtf8ToWstr();
-    WCHAR* Get() const;
-    size_t size() const;
-    operator WCHAR*() const;
-    std::wstring_view AsView() const;
-};
-
 } // namespace strconv

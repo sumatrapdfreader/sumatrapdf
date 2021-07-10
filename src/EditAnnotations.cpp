@@ -326,7 +326,7 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     TabInfo* tab = ew->tab;
     EnginePdf* engine = GetEnginePdf(ew);
-    strconv::StackWstrToUtf8 path{engine->FileName()};
+    TempStr path = TempToUtf8(engine->FileName());
     bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
