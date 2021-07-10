@@ -76,11 +76,12 @@ class ScopedComPtr {
     T* operator->() const {
         return ptr;
     }
-    T* operator=(T* newPtr) {
+    ScopedComPtr<T>& operator=(T* newPtr) {
         if (ptr) {
             ptr->Release();
         }
-        return (ptr = newPtr);
+        ptr = newPtr;
+        return *this;
     }
 };
 

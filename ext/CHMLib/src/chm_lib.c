@@ -1599,7 +1599,7 @@ LONGINT64 chm_retrieve_object(struct chmFile *h,
         return (Int64)0;
 
     /* starting address must be in correct range */
-    if (addr < 0  ||  addr >= ui->length)
+    if (addr >= ui->length)
         return (Int64)0;
 
     /* clip length */

@@ -191,10 +191,10 @@ void strStrTest() {
         str.Append("blah");
         char* buf2 = str.Get();
         utassert(buf == buf2);
-        str::Eq(buf2, "blah");
+        utassert(str::Eq(buf2, "blah"));
         str.Append("lost");
         buf2 = str.Get();
-        str::Eq(buf2, "blahlost");
+        utassert(str::Eq(buf2, "blahlost"));
         utassert(buf == buf2);
         str.Reset();
         for (int i = 0; i < str::Str::kBufChars + 4; i++) {

@@ -345,23 +345,27 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, TocTree* do
     UpdateDocTocExpansionStateRecur(treeCtrl, tocState, tocItem);
 }
 
+static bool inRange(WCHAR c, WCHAR low, WCHAR hi) {
+    return (low <= c) && (c <= hi);
+}
+
 // copied from mupdf/fitz/dev_text.c
 // clang-format off
 static bool isLeftToRightChar(WCHAR c) {
     return (
-        ((0x0041 <= c) && (c <= 0x005A)) ||
-        ((0x0061 <= c) && (c <= 0x007A)) ||
-        ((0xFB00 <= c) && (c <= 0xFB06))
+        inRange(c, 0x0041, 0x005A) ||
+        inRange(c, 0x0061, 0x007A) ||
+        inRange(c, 0xFB00, 0xFB06)
     );
 }
 
 static bool isRightToLeftChar(WCHAR c) {
     return (
-        ((0x0590 <= c) && (c <= 0x05FF)) ||
-        ((0x0600 <= c) && (c <= 0x06FF)) ||
-        ((0x0750 <= c) && (c <= 0x077F)) ||
-        ((0xFB50 <= c) && (c <= 0xFDFF)) ||
-        ((0xFE70 <= c) && (c <= 0xFEFE))
+        inRange(c, 0x0590, 0x05FF) ||
+        inRange(c, 0x0600, 0x06FF) ||
+        inRange(c, 0x0750, 0x077F) ||
+        inRange(c, 0xFB50, 0xFDFF) ||
+        inRange(c, 0xFE70, 0xFEFE)
     );
 }
 // clang-format off
