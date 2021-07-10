@@ -17,11 +17,11 @@ enum class TrimOpt { Left, Right, Both };
 size_t Len(const WCHAR*);
 size_t Len(const char* s);
 
-char* Dup(const char* s, size_t lenCch = 0);
+char* Dup(const char* s, size_t lenCch = (size_t)-1);
 char* Dup(const std::string_view);
 char* Dup(const std::span<u8> d);
 
-WCHAR* Dup(const WCHAR* s, size_t lenCch = 0);
+WCHAR* Dup(const WCHAR* s, size_t lenCch = (size_t)-1);
 WCHAR* Dup(const std::wstring_view);
 
 void ReplacePtr(char** s, const char* snew);

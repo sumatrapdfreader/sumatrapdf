@@ -166,8 +166,8 @@ size_t Len(const WCHAR* s) {
 }
 
 char* Dup(const char* s, size_t lenCch) {
-    CrashIf(!s && (lenCch > 0));
-    if (lenCch == 0) {
+    CrashIf(!s && (int)lenCch > 0);
+    if (lenCch == (size_t)-1) {
         lenCch = str::Len(s);
     }
     return (char*)memdup(s, lenCch * sizeof(char), sizeof(char));
@@ -182,7 +182,7 @@ char* Dup(const std::span<u8> d) {
 }
 
 WCHAR* Dup(const WCHAR* s, size_t lenCch) {
-    if (lenCch == 0) {
+    if (lenCch == (size_t)-1) {
         lenCch = str::Len(s);
     }
     return (WCHAR*)memdup(s, lenCch * sizeof(WCHAR), sizeof(WCHAR));
