@@ -16,6 +16,11 @@ A daily log of changes and commentary. An experiment of sorts.
   to ensure we never have trailing separator at the end.
   Fixed by adding code to remove trailing separator if we happen to add one
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2018
+- save scroll position in settings as float, not int (fixes #2017)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2017
+  Regression from https://github.com/sumatrapdfreader/sumatrapdf/issues/1752
+  where I changed scroll position from int to float but didn't change
+  the serialization as int
 
 2021-07-08 Thu
 

@@ -293,8 +293,8 @@ var (
 	}
 
 	scrollPos = []*Field{
-		mkField("X", Int, 0, "x coordinate"),
-		mkField("Y", Int, 0, "y coordinate"),
+		mkField("X", Float, 0, "x coordinate"),
+		mkField("Y", Float, 0, "y coordinate"),
 	}
 
 	fileTime = []*Field{
