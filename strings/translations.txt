@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-86c70f6bfaed83316701cdb0a57dd45dfe385166
+d72791cf2a4d73de3f8d4b518320c1115619a423
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -925,7 +925,7 @@ bs:&Traži:
 by:&Узор:
 ca-xv:&Cerca el què:
 ca:&Cerca el text:
-cn:查找(&F):
+cn:查找内容(&F):
 co:&Cosa circà :
 cy:&Canfod beth:
 cz:&Najít:
@@ -3912,7 +3912,7 @@ bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 by:Дадаць старонку %s у лепшыя закладкі з (калі патрэбна) імянем:
 ca-xv:Afegeix la pàgina %s als preferits amb el nom (opcional):
 ca:Afegeix la pàgina %s als preferits amb el nom (opcional):
-cn:以 (可选) 名称添加第 %s 页到收藏夹:
+cn:以 (可选) 名称将第 %s 页添加到收藏夹:
 co:Aghjunghje a pagina %s à i favuriti cù u nome (ozzionale) :
 cy:Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):
 cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
@@ -5544,7 +5544,7 @@ bs:Promijeni jezik (Change Language)
 by:Змяніць мову (Change Language)
 ca-xv:Canvia la llengua (Change Language)
 ca:Canvia la llengua (Change Language)
-cn:更改语言 (Change Language)
+cn:更改语言
 co:Cambià di lingua (Change Language)
 cy:Newid Iaith (Change Language)
 cz:Změnit jazyk... (Change Language)
@@ -7204,7 +7204,7 @@ bs:Neuspješno zapisivanje %s na disk
 by:Немагчыма запісаць %s на дыск
 ca-xv:No es pot escriure %s al disc
 ca:No es pot escriure %s al disc
-cn:无法写入 %s 到磁盘
+cn:无法将 %s 写入磁盘
 co:Impussibule di scrive %s nant’à u discu
 cy:Methwyd ysgrifennu %s i ddisg
 cz:Nelze zapsat %s na disk
@@ -7807,7 +7807,7 @@ bs:Glavni preglednik PDF fajlova se ne može promijeniti u portable režimu
 by:У мабільным рэжыме змяніць PDF-в'юер нельга
 ca-xv:No es pot canviar el lector de PDF predeterminat en mode portable.
 ca:No es pot canviar el lector de PDF predeterminat en mode portable.
-cn:便携模式不能改变默认 PDF 阅读器
+cn:便携模式不能更改默认 PDF 阅读器
 co:U lettore PDF predefinitu ùn pò micca esse cambiatu in modu purtabule
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
@@ -7928,7 +7928,7 @@ vn:Các quyền bị từ chối
 :Discard
 am:Մերժել
 bn:বাতিল করুন
-cn:丢弃
+cn:不保存
 de:Verwerfen
 el:Απόρριψη
 kw:Hepkor
@@ -8242,7 +8242,7 @@ bs:EPUB dokumenti
 by:EPUB ebooks
 ca-xv:Documents EPUB
 ca:Documents EPUB
-cn:EPUB 文档
+cn:EPUB 电子书
 co:Libri elettronichi EPUB
 cy:eLyfrau EPUB
 cz:Dokumenty EPUB
@@ -8850,7 +8850,7 @@ bs:Cijeli ekran\tCtrl+Shift+L
 by:Поўны экран\tCtrl+Shift+L
 ca-xv:Pantalla &complerta\tCtrl+Majus+L
 ca:Pantalla &completa\tCtrl+Shift+L
-cn:全屏显示(&U)\tCtrl+Shift+L
+cn:全屏(&U)\tF11
 co:&Screnu sanu\tF11
 cy:Sgrin Lawn\tCtrl+Shift+L
 cz:&Celá obrazovka\tF11
@@ -8989,7 +8989,7 @@ bs:Neuspješno brisanje registarskih ključeva deinstalera
 by:Немагчыма знішчыць ключы рэестру знішчальніка
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
 ca:No es poden suprimir les claus de registre del desinstal·lador
-cn:删除卸载程序注册项失败。
+cn:删除卸载程序注册项失败
 co:Fiascu per squassà e chjave di registru di u disinstalladore
 cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
@@ -9108,7 +9108,7 @@ bs:Neuspješna promjena naziva faja!
 by:Немагчыма перайменаваць файл!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
 ca:S'ha produït un error en canviar el nom del fitxer!
-cn:无法重命名!
+cn:无法重命名！
 co:Fiascu per rinumà u schedariu !
 cy:Methwyd ailenwi'r ffeil!
 cz:Přejmenování souboru se nezdařilo!
@@ -9241,7 +9241,7 @@ bs:Neuspješno zapisivanje informacije o ekstenziji proširenog fajla u registar
 by:Немагчыма запісаць у рэестр інфармацыю аб пашырэннях файлаў
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
 ca:No es pot escriure la informació d'extensió de fitxer extesa al registre
-cn:写入扩展名信息到注册项失败。
+cn:写入扩展名信息到注册表失败
 co:Fiascu per scrive l’infurmazioni di l’estensione di schedariu ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa
 cz:Nepodařilo se zapsat informace o příponě souboru do registru
@@ -9302,7 +9302,7 @@ bs:Neuspješno zapisivanje deinstalacijske informacije u registar
 by:Немагчыма запісаць у рэестр інфармацыю аб знішчальніку
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
 ca:No es pot escriure la informació de desinstal·lació al registre
-cn:写入卸载信息到注册项失败。
+cn:写入卸载信息到注册表失败
 co:Fiascu per scrive l’infurmazioni di disinstallazione ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
@@ -9922,7 +9922,7 @@ bs:Nađi sljedeće
 by:Найти следующее
 ca-xv:Cerca següent
 ca:Cerca següent
-cn:向下查找
+cn:向后查找
 co:Occurrenza seguente
 cy:Canfod y Nesaf
 cz:Najít další
@@ -9993,7 +9993,7 @@ bs:Nađi prethodno
 by:Знайсці папярэдняе
 ca-xv:Cerca anterior
 ca:Cerca anterior
-cn:向上查找
+cn:向前查找
 co:Occurrenza precedente
 cy:Canfod y Blaenorol
 cz:Najít předchozí
