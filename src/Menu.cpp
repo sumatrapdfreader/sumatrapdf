@@ -1167,10 +1167,11 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
 
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     CrashIf(!menu);
-    bool wasSeparator = true;
 
     bool isDebugMenu = menuDefs == menuDefDebug;
     int i = 0;
+    int nMenus = 0;
+    bool wasSeparator = true; // avoid separators as first item
     while (true) {
         MenuDef md = menuDefs[i];
         if (md.title == nullptr) { // sentinel
@@ -1221,8 +1222,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
         if (str::Eq(md.title, kMenuSeparator)) {
             if (!wasSeparator) {
                 AppendMenuW(menu, MF_SEPARATOR, md.idOrSubmenu, nullptr);
+                nMenus++;
+                wasSeparator = true;
             }
-            wasSeparator = true;
             continue;
         }
         wasSeparator = false;
@@ -1249,10 +1251,12 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
             AppendMenuW(menu, flags, md.idOrSubmenu, title);
         }
+        nMenus++;
     }
-
-    // TODO: remove trailing separator if there ever is one
-    CrashIf(wasSeparator);
+    if (wasSeparator && (nMenus > 0)) {
+        // remove trailing separator
+        RemoveMenu(menu, (UINT)nMenus, MF_BYPOSITION);
+    }
     return menu;
 }
 

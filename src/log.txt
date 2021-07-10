@@ -6,10 +6,16 @@ A daily log of changes and commentary. An experiment of sorts.
 - change ReopenOnce to use char* instead of WCHAR*; add support for Utf8StringArray settings type
 - remove support for no longer needed StringArray settings type
 - fix version comparison regression in ShowAutoUpdateDialog (fixes #2015)
-https://github.com/sumatrapdfreader/sumatrapdf/issues/2015
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2015
 - fix regression crash when selecting annotation under cursor (fixes #2016)
-https://github.com/sumatrapdfreader/sumatrapdf/issues/2016
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2016
 - implement TempToUtf8 and TempStrDup
+- tweak PoolAllocator
+- fix debug crash when opening epub file (fixes #2018)
+  kind of expected regression from menu refactor. In refactor lost ability
+  to ensure we never have trailing separator at the end.
+  Fixed by adding code to remove trailing separator if we happen to add one
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2018
 
 2021-07-08 Thu
 
