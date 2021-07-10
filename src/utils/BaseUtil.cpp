@@ -41,40 +41,41 @@ void* Allocator::Realloc(Allocator* a, void* mem, size_t size) {
     return a->Realloc(mem, size);
 }
 
-void* Allocator::MemDup(Allocator* a, const void* mem, size_t size, size_t padding) {
-    void* newMem = Alloc(a, size + padding);
+// extraBytes will be zero, useful e.g. for creating zero-terminated strings
+// by using extraBytes = sizeof(CHAR)
+void* Allocator::MemDup(Allocator* a, const void* mem, size_t size, size_t extraBytes) {
+    if (!mem) {
+        return nullptr;
+    }
+    void* newMem = AllocZero(a, size + extraBytes);
     if (newMem) {
         memcpy(newMem, mem, size);
     }
     return newMem;
 }
 
-char* Allocator::StrDup(Allocator* a, const char* s) {
-    if (!s) {
-        return nullptr;
+char* Allocator::StrDup(Allocator* a, const char* s, size_t strLen) {
+    if (strLen == 0) {
+        strLen = str::Len(s);
     }
-    size_t n = str::Len(s);
-    return (char*)Allocator::MemDup(a, s, n + 1);
+    return (char*)Allocator::MemDup(a, s, strLen, 1);
+}
+
+WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s, size_t strLen) {
+    if (strLen == 0) {
+        strLen = str::Len(s);
+    }
+    return (WCHAR*)Allocator::MemDup(a, s, strLen * sizeof(WCHAR), sizeof(WCHAR));
 }
 
 // allocates a copy of the source string inside the allocator.
 // it's only safe in PoolAllocator because allocated data
 // never moves in memory
-std::string_view Allocator::AllocString(Allocator* a, std::string_view sv) {
+std::string_view Allocator::StrDup(Allocator* a, std::string_view sv) {
     size_t n = sv.size();
-    char* dst = (char*)Allocator::Alloc(a, n + 1);
-    const char* src = sv.data();
-    memcpy(dst, (const void*)src, n);
-    dst[n] = 0; // we don't assume sv.data() is 0-terminated
-    return std::string_view(dst, n);
-}
-
-WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s) {
-    if (!s) {
-        return nullptr;
-    }
-    size_t n = (str::Len(s) + 1) * sizeof(WCHAR);
-    return (WCHAR*)Allocator::MemDup(a, s, n);
+    char* res = Allocator::StrDup(a, sv.data(), n);
+    n = res ? n : 0; // reset size to 0 if failed to allocate
+    return {res, n};
 }
 
 void PoolAllocator::Free(const void*) {
@@ -152,6 +153,9 @@ void* PoolAllocator::Alloc(size_t size) {
         }
         // TODO: zero with calloc()? slower but safer
         auto block = (Block*)malloc(blockSize);
+        if (!block) {
+            return nullptr;
+        }
         char* start = (char*)block;
 
         block->nAllocs = 0;
@@ -218,12 +222,16 @@ void* AllocZero(size_t count, size_t size) {
     return calloc(count, size);
 }
 
-void* memdup(const void* data, size_t len) {
-    void* dup = malloc(len);
-    if (!dup) {
+// extraBytes will be filled with 0. Useful for copying zero-terminated strings
+void* memdup(const void* data, size_t len, size_t extraBytes) {
+    // to simplify callers, if data is nullptr, ignore the sizes
+    if (!data) {
         return nullptr;
     }
-    memcpy(dup, data, len);
+    void* dup = AllocZero(len + extraBytes, 1);
+    if (dup) {
+        memcpy(dup, data, len);
+    }
     return dup;
 }
 
@@ -396,7 +404,7 @@ bool VecStr::Append(std::string_view sv) {
         return false;
     }
     allocator.allocAlign = 1; // no need to align allocations for string
-    std::string_view res = Allocator::AllocString(&allocator, sv);
+    std::string_view res = Allocator::StrDup(&allocator, sv);
 
     int n = currIndex->nStrings;
     currIndex->offsets[n] = (char*)res.data();

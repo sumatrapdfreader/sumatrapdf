@@ -130,7 +130,7 @@ int Synchronizer::Create(const WCHAR* pdffilename, EngineBase* engine, Synchroni
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    AutoFreeWstr baseName(str::DupN(pdffilename, fileExt - pdffilename));
+    AutoFreeWstr baseName(str::Dup(pdffilename, fileExt - pdffilename));
 
     // Check if a PDFSYNC file is present
     AutoFreeWstr syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
@@ -283,7 +283,7 @@ int Pdfsync::RebuildIndex() {
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"') {
-                    filename.Set(str::DupN(filename + 1, str::Len(filename) - 2));
+                    filename.Set(str::Dup(filename + 1, str::Len(filename) - 2));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransChars(filename, L"*/", L" \\");

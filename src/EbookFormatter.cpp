@@ -145,7 +145,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFree src(str::DupN(attr->val, attr->valLen));
+        AutoFree src(str::Dup(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         ImageData* img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
@@ -163,7 +163,7 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
-        pagePath.Set(str::DupN(attr->val, attr->valLen));
+        pagePath.Set(str::Dup(attr->val, attr->valLen));
         // reset CSS style rules for the new document
         styleRules.Reset();
     }
@@ -187,7 +187,7 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    AutoFree src(str::DupN(attr->val, attr->valLen));
+    AutoFree src(str::Dup(attr->val, attr->valLen));
     url::DecodeInPlace(src);
     AutoFree data(epubDoc->GetFileData(src, pagePath));
     if (data.data) {
@@ -207,7 +207,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     if (!attr) {
         return;
     }
-    AutoFree src(str::DupN(attr->val, attr->valLen));
+    AutoFree src(str::Dup(attr->val, attr->valLen));
     url::DecodeInPlace(src);
     ImageData* img = epubDoc->GetImageData(src, pagePath);
     if (img) {
@@ -269,7 +269,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     ImageData* img = nullptr;
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
-        AutoFree src(str::DupN(attr->val, attr->valLen));
+        AutoFree src(str::Dup(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         img = fb2Doc->GetImageData(src);
     }
@@ -343,7 +343,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFree src(str::DupN(attr->val, attr->valLen));
+        AutoFree src(str::Dup(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         ImageData* img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
@@ -371,7 +371,7 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    AutoFree src(str::DupN(attr->val, attr->valLen));
+    AutoFree src(str::Dup(attr->val, attr->valLen));
     url::DecodeInPlace(src);
     AutoFree data(htmlDoc->GetFileData(src));
     if (data.data) {

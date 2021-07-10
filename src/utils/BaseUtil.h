@@ -331,7 +331,7 @@ inline bool addOverflows(T val, T n) {
     return val > res;
 }
 
-void* memdup(const void* data, size_t len);
+void* memdup(const void* data, size_t len, size_t extraBytes = 0);
 bool memeq(const void* s1, const void* s2, size_t len);
 
 size_t RoundToPowerOf2(size_t size);
@@ -389,11 +389,10 @@ struct Allocator {
     static void* AllocZero(Allocator* a, size_t size);
     static void Free(Allocator* a, void* p);
     static void* Realloc(Allocator* a, void* mem, size_t size);
-    static void* MemDup(Allocator* a, const void* mem, size_t size, size_t padding = 0);
-    static char* StrDup(Allocator* a, const char* str);
-    static std::string_view AllocString(Allocator* a, std::string_view str);
-
-    static WCHAR* StrDup(Allocator* a, const WCHAR* str);
+    static void* MemDup(Allocator* a, const void* mem, size_t size, size_t extraBytes = 0);
+    static char* StrDup(Allocator* a, const char* str, size_t strLen = 0);
+    static std::string_view StrDup(Allocator* a, std::string_view str);
+    static WCHAR* StrDup(Allocator* a, const WCHAR* str, size_t strLen = 0);
 };
 
 // PoolAllocator is for the cases where we need to allocate pieces of memory
@@ -619,6 +618,7 @@ defer { instance->Release(); };
 #include "Vec.h"
 #include "StringViewUtil.h"
 #include "ColorUtil.h"
+#include "TempAllocator.h"
 
 // lstrcpy is dangerous so forbid using it
 #ifdef lstrcpy

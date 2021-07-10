@@ -518,6 +518,7 @@ static int RunMessageLoop() {
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+        ResetTempAllocator();
     }
 
     return (int)msg.wParam;
@@ -809,6 +810,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         MemLeakInit();
         maybeLeak = malloc(10);
     }
+
+    InitTempAllocator();
 
     if (!gIsAsanBuild) {
         SetupCrashHandler();
@@ -1216,6 +1219,7 @@ Exit:
 
     delete gLogBuf;
     delete gLogAllocator;
+    DestroyTempAllocator();
 
     if (gEnableMemLeak) {
         // free(maybeLeak);

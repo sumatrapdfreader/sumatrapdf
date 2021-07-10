@@ -1896,7 +1896,7 @@ std::span<u8> LoadDataResource(int resId) {
     if (!resData) {
         return {};
     }
-    char* s = str::DupN(resData, size);
+    char* s = str::Dup(resData, size);
     UnlockResource(res);
     return {(u8*)s, size};
 }

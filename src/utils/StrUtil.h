@@ -14,8 +14,15 @@ namespace str {
 
 enum class TrimOpt { Left, Right, Both };
 
+size_t Len(const WCHAR*);
 size_t Len(const char* s);
-char* Dup(const char* s);
+
+char* Dup(const char* s, size_t lenCch = 0);
+char* Dup(const std::string_view);
+char* Dup(const std::span<u8> d);
+
+WCHAR* Dup(const WCHAR* s, size_t lenCch = 0);
+WCHAR* Dup(const std::wstring_view);
 
 void ReplacePtr(char** s, const char* snew);
 void ReplacePtr(const char** s, const char* snew);
@@ -37,8 +44,6 @@ bool StartsWith(const u8* str, const char* prefix);
 bool StartsWith(std::string_view s, const char* prefix);
 std::span<u8> ToSpan(const char* s);
 
-size_t Len(const WCHAR*);
-WCHAR* Dup(const WCHAR*);
 void ReplacePtr(WCHAR** s, const WCHAR* snew);
 WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 bool Eq(const WCHAR*, const WCHAR*);
@@ -54,9 +59,6 @@ bool EndsWith(const char* txt, const char* end);
 bool EndsWithI(const char* txt, const char* end);
 bool EqNIx(const char* s, size_t len, const char* s2);
 
-char* DupN(const char* s, size_t lenCch);
-char* Dup(const std::string_view);
-char* DupN(const std::span<u8> d);
 char* ToLowerInPlace(char*);
 char* ToLower(const char*);
 
@@ -66,8 +68,6 @@ void Free(const u8*);
 bool StartsWithI(const WCHAR* str, const WCHAR* txt);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
-WCHAR* DupN(const WCHAR* s, size_t lenCch);
-WCHAR* Dup(const std::wstring_view);
 void Free(const WCHAR* s);
 void FreePtr(const WCHAR** s);
 void FreePtr(WCHAR** s);

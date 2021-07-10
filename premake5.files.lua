@@ -529,6 +529,7 @@ function utils_files()
     "StringViewUtil.*",
     "StrSlice.*",
     "StrUtil.*",
+    "TempAllocator.*",
     "ThreadUtil.*",
     "TgaReader.*",
     "TrivialHtmlParser.*",

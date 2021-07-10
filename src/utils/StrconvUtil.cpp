@@ -101,11 +101,11 @@ std::string_view UnknownToUtf8(const std::string_view& txt) {
     const char* s = txt.data();
 
     if (len < 3) {
-        return str::DupN(s, len);
+        return str::Dup(s, len);
     }
 
     if (str::StartsWith(s, UTF8_BOM)) {
-        return str::DupN(s + 3, len - 3);
+        return str::Dup(s + 3, len - 3);
     }
 
     // TODO: UTF16BE_BOM
@@ -119,7 +119,7 @@ std::string_view UnknownToUtf8(const std::string_view& txt) {
     // if s is valid utf8, leave it alone
     const u8* tmp = (const u8*)s;
     if (isLegalUTF8String(&tmp, tmp + len)) {
-        return str::DupN(s, len);
+        return str::Dup(s, len);
     }
 
     AutoFreeWstr uni = strconv::FromAnsi(s, len);

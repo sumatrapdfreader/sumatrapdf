@@ -418,7 +418,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
             for (size_t k = 0; k < std::min((size_t)2, p->instructions.size()); k++) {
                 DrawInstr& di = p->instructions.at(k);
                 if (DrawInstrType::Anchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
-                    AutoFree basePath(str::DupN(di.str.s, di.str.len));
+                    AutoFree basePath(str::Dup(di.str.s, di.str.len));
                     AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
                     AutoFree absPath(NormalizeURL(relPath, basePath));
                     url.Set(strconv::Utf8ToWstr(absPath.Get()));
@@ -760,7 +760,7 @@ int EbookController::ResolvePageAnchor(const WCHAR* id) {
         return -1;
     }
 
-    AutoFreeWstr chapterPath(str::DupN(id, str::FindChar(id, '#') - id));
+    AutoFreeWstr chapterPath(str::Dup(id, str::FindChar(id, '#') - id));
     idx = pageAnchorIds->Find(chapterPath);
     if (idx != -1) {
         return pageAnchorIdxs->at(idx);

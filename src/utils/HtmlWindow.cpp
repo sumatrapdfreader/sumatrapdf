@@ -380,7 +380,7 @@ static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
     if (str::FindChar(ext, ';')) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
-        AutoFreeWstr newUrl(str::DupN(url, str::FindChar(ext, ';') - url));
+        AutoFreeWstr newUrl(str::Dup(url, str::FindChar(ext, ';') - url));
         return MimeFromUrl(newUrl, imgExt);
     }
 
@@ -1315,7 +1315,7 @@ HtmlMoniker::~HtmlMoniker() {
 
 HRESULT HtmlMoniker::SetHtml(std::span<u8> d) {
     free(htmlData);
-    htmlData = str::DupN(d);
+    htmlData = str::Dup(d);
     if (htmlStream) {
         htmlStream->Release();
     }
@@ -1695,7 +1695,7 @@ void HtmlWindow::NavigateToAboutBlank() {
 
 void HtmlWindow::SetHtml(std::span<u8> d, const WCHAR* url) {
     FreeHtmlSetInProgressData();
-    htmlSetInProgress = str::DupN(d);
+    htmlSetInProgress = str::Dup(d);
     htmlSetInProgressUrl = str::Dup(url);
     NavigateToAboutBlank();
     // the real work will happen in OnDocumentComplete()

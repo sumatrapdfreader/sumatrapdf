@@ -673,7 +673,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
             default:
                 continue;
         }
-        prop.value = str::DupN((char*)(data + d.Offset() - length + 8), length - 8);
+        prop.value = str::Dup((char*)(data + d.Offset() - length + 8), length - 8);
         if (prop.value) {
             props.Append(prop);
         }

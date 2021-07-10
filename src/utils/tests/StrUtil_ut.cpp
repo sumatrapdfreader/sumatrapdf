@@ -299,7 +299,7 @@ void StrTest() {
     str = str::Dup(buf);
     utassert(str::Eq(str, buf));
     str::Free(str);
-    str = str::DupN(buf, 4);
+    str = str::Dup(buf, 4);
     utassert(str::Eq(str, L"a st"));
     str::Free(str);
     str = str::Format(L"%s", buf);

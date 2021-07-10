@@ -182,7 +182,7 @@ const char* ResolveHtmlEntities(const char* s, const char* end, Allocator* alloc
 char* ResolveHtmlEntities(const char* s, size_t len) {
     const char* tmp = ResolveHtmlEntities(s, s + len, nullptr);
     if (tmp == s) {
-        return str::DupN(s, len);
+        return str::Dup(s, len);
     }
     return (char*)tmp;
 }

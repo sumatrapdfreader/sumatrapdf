@@ -37,7 +37,7 @@ std::string_view GetBaseName(std::string_view path) {
             break;
         }
     }
-    const char* res = str::DupN(s, end - s);
+    const char* res = str::Dup(s, end - s);
     return res;
 }
 
@@ -132,18 +132,18 @@ WCHAR* GetDir(const WCHAR* path) {
     }
     if (baseName == path + 1) {
         // relative root
-        return str::DupN(path, 1);
+        return str::Dup(path, 1);
     }
     if (baseName == path + 3 && path[1] == ':') {
         // local drive root
-        return str::DupN(path, 3);
+        return str::Dup(path, 3);
     }
     if (baseName == path + 2 && str::StartsWith(path, L"\\\\")) {
         // server root
         return str::Dup(path);
     }
     // any subdirectory
-    return str::DupN(path, baseName - path - 1);
+    return str::Dup(path, baseName - path - 1);
 }
 
 // caller has to free() the results
@@ -156,18 +156,18 @@ std::string_view GetDir(std::string_view pathSV) {
     }
     if (baseName == path + 1) {
         // relative root
-        return str::DupN(path, 1);
+        return str::Dup(path, 1);
     }
     if (baseName == path + 3 && path[1] == ':') {
         // local drive root
-        return str::DupN(path, 3);
+        return str::Dup(path, 3);
     }
     if (baseName == path + 2 && str::StartsWith(path, "\\\\")) {
         // server root
         return str::Dup(path);
     }
     // any subdirectory
-    return str::DupN(path, baseName - path - 1);
+    return str::Dup(path, baseName - path - 1);
 }
 
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {

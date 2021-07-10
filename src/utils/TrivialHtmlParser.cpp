@@ -291,7 +291,7 @@ HtmlElement* HtmlParser::ParseInPlace(std::span<u8> d, uint codepage) {
 }
 
 HtmlElement* HtmlParser::Parse(std::span<u8> d, uint codepage) {
-    char* s = str::DupN(d);
+    char* s = str::Dup(d);
     HtmlElement* root = ParseInPlace(str::ToSpan(s), codepage);
     freeHtml = true;
     return root;

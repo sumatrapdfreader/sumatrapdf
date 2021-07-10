@@ -154,7 +154,7 @@ static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* seriali
             for (e = s; *e && !str::IsWs(*e); e++) {
                 ;
             }
-            strArray->Append(str::DupN(s, e - s));
+            strArray->Append(str::Dup(s, e - s));
             s = e;
         }
     }

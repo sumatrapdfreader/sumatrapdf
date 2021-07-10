@@ -161,8 +161,35 @@ size_t Len(const char* s) {
     return s ? strlen(s) : 0;
 }
 
-char* Dup(const char* s) {
-    return s ? _strdup(s) : nullptr;
+size_t Len(const WCHAR* s) {
+    return s ? wcslen(s) : 0;
+}
+
+char* Dup(const char* s, size_t lenCch) {
+    CrashIf(!s && (lenCch > 0));
+    if (lenCch == 0) {
+        lenCch = str::Len(s);
+    }
+    return (char*)memdup(s, lenCch * sizeof(char), sizeof(char));
+}
+
+char* Dup(const std::string_view sv) {
+    return (char*)memdup(sv.data(), sv.size() * sizeof(char), sizeof(char));
+}
+
+char* Dup(const std::span<u8> d) {
+    return (char*)memdup(d.data(), d.size() * sizeof(char), sizeof(char));
+}
+
+WCHAR* Dup(const WCHAR* s, size_t lenCch) {
+    if (lenCch == 0) {
+        lenCch = str::Len(s);
+    }
+    return (WCHAR*)memdup(s, lenCch * sizeof(WCHAR), sizeof(WCHAR));
+}
+
+WCHAR* Dup(std::wstring_view sv) {
+    return (WCHAR*)memdup(sv.data(), sv.size() * sizeof(WCHAR), sizeof(WCHAR));
 }
 
 // return true if s1 == s2, case sensitive
@@ -390,27 +417,6 @@ char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator)
     *s = 0;
 
     return res;
-}
-
-// Duplicates N bytes from s, adds one byte for zero-termination
-char* DupN(const char* s, size_t n) {
-    CrashIf(!s && (n > 0));
-    if (!s) {
-        return nullptr;
-    }
-    char* res = (char*)memdup((void*)s, n + 1);
-    if (res) {
-        res[n] = 0;
-    }
-    return res;
-}
-
-char* Dup(const std::string_view sv) {
-    return DupN(sv.data(), sv.size());
-}
-
-char* DupN(const std::span<u8> d) {
-    return DupN((const char*)d.data(), d.size());
 }
 
 char* ToLowerInPlace(char* s) {
@@ -765,7 +771,7 @@ static char* ExtractUntil(const char* pos, char c, const char** endOut) {
     if (!*endOut) {
         return nullptr;
     }
-    return str::DupN(pos, *endOut - pos);
+    return str::Dup(pos, *endOut - pos);
 }
 
 static const char* ParseLimitedNumber(const char* str, const char* format, const char** endOut, void* valueOut) {
@@ -889,7 +895,7 @@ const char* Parse(const char* str, size_t len, const char* fmt, ...) {
     if (len < dimof(buf)) {
         memcpy(buf, str, len);
     } else {
-        s = DupN(str, len);
+        s = Dup(str, len);
     }
 
     va_list args;
@@ -1908,10 +1914,6 @@ bool IsNonCharacter(WCHAR c) {
     return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
 }
 
-size_t Len(const WCHAR* s) {
-    return s ? wcslen(s) : 0;
-}
-
 void Free(const WCHAR* s) {
     free((void*)s);
 }
@@ -1924,23 +1926,6 @@ void FreePtr(const WCHAR** s) {
 void FreePtr(WCHAR** s) {
     free((void*)*s);
     *s = nullptr;
-}
-
-WCHAR* DupN(const WCHAR* s, size_t lenCch) {
-    if (!s) {
-        return nullptr;
-    }
-    WCHAR* res = AllocArray<WCHAR>(lenCch + 1); // +1 for terminating 0
-    memcpy((void*)res, (void*)s, lenCch * sizeof(WCHAR));
-    return res;
-}
-
-WCHAR* Dup(const WCHAR* s) {
-    return s ? _wcsdup(s) : nullptr;
-}
-
-WCHAR* Dup(std::wstring_view sv) {
-    return DupN(sv.data(), sv.size());
 }
 
 // return true if s1 == s2, case sensitive
@@ -2470,7 +2455,7 @@ static WCHAR* ExtractUntil(const WCHAR* pos, WCHAR c, const WCHAR** endOut) {
     if (!*endOut) {
         return nullptr;
     }
-    return str::DupN(pos, *endOut - pos);
+    return str::Dup(pos, *endOut - pos);
 }
 
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...) {

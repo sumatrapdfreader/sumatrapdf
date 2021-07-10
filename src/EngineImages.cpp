@@ -745,7 +745,7 @@ WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
     const WCHAR* path = pageFileNames.at(pageNo - 1);
     const WCHAR* fileName = path::GetBaseNameNoFree(path);
     size_t n = path::GetExtNoFree(fileName) - fileName;
-    return str::DupN(fileName, n);
+    return str::Dup(fileName, n);
 }
 
 int EngineImageDir::GetPageByLabel(const WCHAR* label) const {

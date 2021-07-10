@@ -457,7 +457,7 @@ class WStrVec : public Vec<WCHAR*> {
 
         while ((next = str::Find(s, separator)) != nullptr) {
             if (!collapse || next > s) {
-                Append(str::DupN(s, next - s));
+                Append(str::Dup(s, next - s));
             }
             s = next + str::Len(separator);
         }

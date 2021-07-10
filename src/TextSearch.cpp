@@ -64,7 +64,7 @@ void TextSearch::SetText(const WCHAR* text) {
         for (end = text; isnoncjkwordchar(*end); end++) {
             ;
         }
-        anchor = str::DupN(text, end - text);
+        anchor = str::Dup(text, end - text);
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
@@ -72,7 +72,7 @@ void TextSearch::SetText(const WCHAR* text) {
     else if (*text == '-' || *text == '\'' || *text == '"') {
         anchor = nullptr;
     } else {
-        anchor = str::DupN(text, 1);
+        anchor = str::Dup(text, 1);
     }
 
     if (str::Len(this->findText) >= INT_MAX) {

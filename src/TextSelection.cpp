@@ -166,7 +166,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         }
 
         if (lines) {
-            lines->Append(str::DupN(text + (c0 - coords), c - c0));
+            lines->Append(str::Dup(text + (c0 - coords), c - c0));
             continue;
         }
 

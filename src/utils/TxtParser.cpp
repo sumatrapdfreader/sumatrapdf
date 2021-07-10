@@ -96,14 +96,14 @@ char* TxtNode::KeyDup() const {
     if (!keyStart) {
         return nullptr;
     }
-    return str::DupN(keyStart, KeyLen());
+    return str::Dup(keyStart, KeyLen());
 }
 
 char* TxtNode::ValDup() const {
     if (!valStart) {
         return nullptr;
     }
-    return str::DupN(valStart, ValLen());
+    return str::Dup(valStart, ValLen());
 }
 
 TxtNode* TxtParser::AllocTxtNode(TxtNode::Type nodeType) {
