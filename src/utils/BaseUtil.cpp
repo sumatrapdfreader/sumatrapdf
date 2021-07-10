@@ -57,7 +57,13 @@ void* Allocator::MemDup(Allocator* a, const void* mem, size_t size, size_t extra
 // -------------------------------------
 
 // using the same alignment as windows, to be safe
+// TODO: could use the same alignment everywhere but would have to
+// align start of the Block, couldn't just start at malloc() address
+#if IS_32BIT
+constexpr size_t kPoolAllocatorAlign = 8;
+#else
 constexpr size_t kPoolAllocatorAlign = 16;
+#endif
 
 void PoolAllocator::Free(const void*) {
     // does nothing, we can't free individual pieces of memory
