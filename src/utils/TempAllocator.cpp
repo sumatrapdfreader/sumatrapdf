@@ -34,6 +34,12 @@ void ResetTempAllocator() {
     gTempAllocator->Reset();
 }
 
+TempStr TempStrDup(const char* s, size_t lenCch) {
+    // TODO: optimize to remove str::Len()
+    char* res = str::Dup(gTempAllocator, s, lenCch);
+    return TempStr(res);
+}
+
 TempWstr TempToWstr(const char* s) {
     return TempWstr();
 }

@@ -185,7 +185,7 @@ void SetCurrentLang(const char* langCode) {
         return;
     }
     if (langCode != gGlobalPrefs->uiLanguage) {
-        str::ReplacePtr(&gGlobalPrefs->uiLanguage, langCode);
+        str::ReplaceWithCopy(&gGlobalPrefs->uiLanguage, langCode);
     }
     trans::SetCurrentLangByCode(langCode);
 }
@@ -1497,7 +1497,7 @@ static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
     }
     ds = gFileHistory.Find(oldPath, nullptr);
     if (ds) {
-        str::ReplacePtr(&ds->filePath, newPath);
+        str::ReplaceWithCopy(&ds->filePath, newPath);
         // merge Frequently Read data, so that a file
         // doesn't accidentally vanish from there
         ds->isPinned = ds->isPinned || oldIsPinned;
@@ -1918,7 +1918,7 @@ void AssociateExeWithPdfExtension() {
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
 
     // Remind the user, when a different application takes over
-    str::ReplacePtr(&gGlobalPrefs->associatedExtensions, ".pdf");
+    str::ReplaceWithCopy(&gGlobalPrefs->associatedExtensions, ".pdf");
     gGlobalPrefs->associateSilently = false;
 }
 
@@ -1993,7 +1993,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     bool skipThisVersion = false;
     INT_PTR res = Dialog_NewVersionAvailable(hParent, myVer, latestVer, &skipThisVersion);
     if (skipThisVersion) {
-        str::ReplacePtr(&gGlobalPrefs->versionToSkip, latestVer);
+        str::ReplaceWithCopy(&gGlobalPrefs->versionToSkip, latestVer);
     }
     if (IDYES == res) {
         SumatraLaunchBrowser(WEBSITE_DOWNLOAD_PAGE_URL);
@@ -4560,7 +4560,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     // check if the menuId belongs to a theme
     if ((wmId >= IDM_CHANGE_THEME_FIRST) && (wmId <= IDM_CHANGE_THEME_LAST)) {
         auto newThemeName = GetThemeByIndex(wmId - IDM_CHANGE_THEME_FIRST)->name;
-        str::ReplacePtr(&gGlobalPrefs->themeName, newThemeName);
+        str::ReplaceWithCopy(&gGlobalPrefs->themeName, newThemeName);
         RelayoutWindow(win);    // fix tabbar height
         UpdateDocumentColors(); // update document colors
         RedrawWindow(win->hwndFrame, nullptr, nullptr,

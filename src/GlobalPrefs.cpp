@@ -20,7 +20,7 @@ GlobalPrefs* gGlobalPrefs = nullptr;
 
 FileState* NewDisplayState(const WCHAR* filePath) {
     FileState* ds = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
-    str::ReplacePtr(&ds->filePath, filePath);
+    str::ReplaceWithCopy(&ds->filePath, filePath);
     return ds;
 }
 
@@ -90,10 +90,10 @@ SessionData* NewSessionData() {
 TabState* NewTabState(FileState* ds) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
     AutoFreeStr dsFilePathA = strconv::WstrToUtf8(ds->filePath);
-    str::ReplacePtr(&state->filePath, dsFilePathA.Get());
-    str::ReplacePtr(&state->displayMode, ds->displayMode);
+    str::ReplaceWithCopy(&state->filePath, dsFilePathA.Get());
+    str::ReplaceWithCopy(&state->displayMode, ds->displayMode);
     state->pageNo = ds->pageNo;
-    str::ReplacePtr(&state->zoom, ds->zoom);
+    str::ReplaceWithCopy(&state->zoom, ds->zoom);
     state->rotation = ds->rotation;
     state->scrollPos = ds->scrollPos;
     state->showToc = ds->showToc;

@@ -88,7 +88,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
 }
 
 void Button::SetText(const WCHAR* s) {
-    str::ReplacePtr(&text, s);
+    str::ReplaceWithCopy(&text, s);
     RecalculateSize(true);
 }
 

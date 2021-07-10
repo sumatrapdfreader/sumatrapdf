@@ -258,7 +258,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
             do {
                 unique.Set(str::Format(L"%s.%d", dups.at(i), ++counter));
             } while (labels->Contains(unique));
-            str::ReplacePtr(&labels->at(idx), unique);
+            str::ReplaceWithCopy(&labels->at(idx), unique);
         }
         nDups = dups.isize();
         for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {

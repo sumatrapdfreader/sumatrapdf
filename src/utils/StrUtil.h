@@ -17,15 +17,18 @@ enum class TrimOpt { Left, Right, Both };
 size_t Len(const WCHAR*);
 size_t Len(const char* s);
 
+char* Dup(Allocator*, const char* str, size_t strLen = (size_t)-1);
 char* Dup(const char* s, size_t lenCch = (size_t)-1);
+char* Dup(Allocator*, std::string_view);
 char* Dup(const std::string_view);
 char* Dup(const std::span<u8> d);
 
+WCHAR* Dup(Allocator*, const WCHAR* str, size_t strLen = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t lenCch = (size_t)-1);
 WCHAR* Dup(const std::wstring_view);
 
-void ReplacePtr(char** s, const char* snew);
-void ReplacePtr(const char** s, const char* snew);
+void ReplaceWithCopy(char** s, const char* snew);
+void ReplaceWithCopy(const char** s, const char* snew);
 
 char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
 char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator);
@@ -44,7 +47,7 @@ bool StartsWith(const u8* str, const char* prefix);
 bool StartsWith(std::string_view s, const char* prefix);
 std::span<u8> ToSpan(const char* s);
 
-void ReplacePtr(WCHAR** s, const WCHAR* snew);
+void ReplaceWithCopy(WCHAR** s, const WCHAR* snew);
 WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 bool Eq(const WCHAR*, const WCHAR*);
 bool EqI(const WCHAR*, const WCHAR*);

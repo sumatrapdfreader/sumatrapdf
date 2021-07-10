@@ -54,30 +54,6 @@ void* Allocator::MemDup(Allocator* a, const void* mem, size_t size, size_t extra
     return newMem;
 }
 
-char* Allocator::StrDup(Allocator* a, const char* s, size_t strLen) {
-    if (strLen == 0) {
-        strLen = str::Len(s);
-    }
-    return (char*)Allocator::MemDup(a, s, strLen, 1);
-}
-
-WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s, size_t strLen) {
-    if (strLen == 0) {
-        strLen = str::Len(s);
-    }
-    return (WCHAR*)Allocator::MemDup(a, s, strLen * sizeof(WCHAR), sizeof(WCHAR));
-}
-
-// allocates a copy of the source string inside the allocator.
-// it's only safe in PoolAllocator because allocated data
-// never moves in memory
-std::string_view Allocator::StrDup(Allocator* a, std::string_view sv) {
-    size_t n = sv.size();
-    char* res = Allocator::StrDup(a, sv.data(), n);
-    n = res ? n : 0; // reset size to 0 if failed to allocate
-    return {res, n};
-}
-
 void PoolAllocator::Free(const void*) {
     // does nothing, we can't free individual pieces of memory
 }
@@ -94,26 +70,39 @@ void PoolAllocator::FreeAll() {
     nAllocs = 0;
 }
 
-// optimization: frees all but first block
-// allows for more efficient re-use of PoolAllocator
-// with more effort we could preserve all blocks (not sure if worth it)
-void PoolAllocator::Reset() {
-    FreeAll();
+// for easier debugging, poison the freed data with 0xdd
+// that way if the code tries to used the freed memory,
+// it's more likely to crash
+static void PoisonData(PoolAllocator::Block* curr) {
+    char* d;
+    while (curr) {
+        // optimization: don't touch memory if there were not allocations
+        if (curr->nAllocs > 0) {
+            d = (char*)curr + sizeof(PoolAllocator::Block);
+            // TODO: maybe optimize to only go up to curr->curr
+            memset(d, 0xdd, curr->dataSize);
+        }
+        curr = curr->next;
+    }
+}
 
-    // TODO: optimize by not freeing the first block, to speed up re-use
-#if 0
-    if (!firstBlock) {
-        return;
+void PoolAllocator::Reset(bool poisonFreedMemory) {
+    // free all but first block to
+    // allows for more efficient re-use of PoolAllocator
+    // with more effort we could preserve all blocks (not sure if worth it)
+    if (poisonFreedMemory) {
+        PoisonData(firstBlock);
     }
     Block* first = firstBlock;
-    firstBlock = first->next;
+    if (!first) {
+        return;
+    }
+    firstBlock = firstBlock->next;
     FreeAll();
-
     firstBlock = first;
-    first->next = nullptr;
-    first->nAllocs = 0;
-    // TODO: properly reset first
-#endif
+    if (!poisonFreedMemory) {
+        return;
+    }
 }
 
 PoolAllocator::~PoolAllocator() {
@@ -142,6 +131,9 @@ static bool BlockHasSpaceFor(PoolAllocator::Block* block, int size, int allocAli
     return true;
 }
 
+// we allocate the value at the beginning of current block
+// and we store a pointer to the value at the end of current block
+// that way we can find allocations
 void* PoolAllocator::Alloc(size_t size) {
     if (!BlockHasSpaceFor(currBlock, (int)size, allocAlign)) {
         int freeSpaceSize = (int)size + sizeof(i32); // + space for index
@@ -208,12 +200,6 @@ void* PoolAllocator::At(int i) {
     char* d = (char*)curr + offset;
     return (void*)d;
 }
-
-#if !OS_WIN
-void ZeroMemory(void* p, size_t len) {
-    memset(p, 0, len);
-}
-#endif
 
 // This exits so that I can add temporary instrumentation
 // to catch allocations of a given size and it won't cause
@@ -404,7 +390,7 @@ bool VecStr::Append(std::string_view sv) {
         return false;
     }
     allocator.allocAlign = 1; // no need to align allocations for string
-    std::string_view res = Allocator::StrDup(&allocator, sv);
+    std::string_view res = str::Dup(&allocator, sv);
 
     int n = currIndex->nStrings;
     currIndex->offsets[n] = (char*)res.data();

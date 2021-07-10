@@ -49,9 +49,9 @@ class TextSearch : public TextSelection {
     PageAndOffset MatchEnd(const WCHAR* start) const;
 
     void Clear() {
-        str::ReplacePtr(&findText, nullptr);
-        str::ReplacePtr(&anchor, nullptr);
-        str::ReplacePtr(&lastText, nullptr);
+        str::ReplaceWithCopy(&findText, nullptr);
+        str::ReplaceWithCopy(&anchor, nullptr);
+        str::ReplaceWithCopy(&lastText, nullptr);
         Reset();
     }
     void Reset();

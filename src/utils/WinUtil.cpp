@@ -234,7 +234,7 @@ TryAgainWOW64:
             val = AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1);
             res = RegQueryValueEx(hKey, valName, nullptr, nullptr, (LPBYTE)val, &valLen);
             if (ERROR_SUCCESS != res) {
-                str::ReplacePtr(&val, nullptr);
+                str::ReplaceWithCopy(&val, nullptr);
             }
         }
         RegCloseKey(hKey);

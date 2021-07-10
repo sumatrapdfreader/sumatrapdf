@@ -875,7 +875,7 @@ int EbookController::CurrentTocPageNo() const {
 
 void EbookController::GetDisplayState(FileState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, doc.GetFilePath())) {
-        str::ReplacePtr(&ds->filePath, doc.GetFilePath());
+        str::ReplaceWithCopy(&ds->filePath, doc.GetFilePath());
     }
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
@@ -885,7 +885,7 @@ void EbookController::GetDisplayState(FileState* ds) {
     // FileState settings can also be used for EngineEbook;
     // we get reasonable defaults from FileState's constructor anyway
     ds->reparseIdx = currPageReparseIdx;
-    str::ReplacePtr(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
+    str::ReplaceWithCopy(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
 }
 
 void EbookController::SetViewPortSize([[maybe_unused]] Size size) {

@@ -340,8 +340,8 @@ class ChmTocBuilder : public EbookTocVisitor {
 
     void Visit(const WCHAR* name, const WCHAR* url, int level) override {
         int pageNo = CreatePageNoForURL(url);
-        name = Allocator::StrDup(allocator, name);
-        url = Allocator::StrDup(allocator, url);
+        name = str::Dup(allocator, name);
+        url = str::Dup(allocator, url);
         auto item = ChmTocTraceItem{name, url, level, pageNo};
         tocTrace->Append(item);
     }
@@ -445,7 +445,7 @@ std::span<u8> ChmModel::GetDataForUrl(const WCHAR* url) {
     AutoFreeWstr plainUrl(url::GetFullPath(url));
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
-        e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
+        e = new ChmCacheEntry(str::Dup(&poolAlloc, plainUrl));
         AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
         e->data = doc->GetData(urlUtf8.Get());
         if (e->data.empty()) {
@@ -584,12 +584,12 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
 
 void ChmModel::GetDisplayState(FileState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, fileName)) {
-        str::ReplacePtr(&ds->filePath, fileName);
+        str::ReplaceWithCopy(&ds->filePath, fileName);
     }
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplacePtr(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
+    str::ReplaceWithCopy(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
     ZoomToString(&ds->zoom, GetZoomVirtual(), ds);
 
     ds->pageNo = CurrentPageNo();

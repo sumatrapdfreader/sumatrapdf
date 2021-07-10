@@ -284,10 +284,6 @@ inline void DebugCrashIfFunc(bool) {
         SendCrashIfFunc(cond, #cond); \
     } while (0)
 
-#if !OS_WIN
-void ZeroMemory(void* p, size_t len);
-#endif
-
 void* AllocZero(size_t count, size_t size);
 
 template <typename T>
@@ -390,9 +386,6 @@ struct Allocator {
     static void Free(Allocator* a, void* p);
     static void* Realloc(Allocator* a, void* mem, size_t size);
     static void* MemDup(Allocator* a, const void* mem, size_t size, size_t extraBytes = 0);
-    static char* StrDup(Allocator* a, const char* str, size_t strLen = 0);
-    static std::string_view StrDup(Allocator* a, std::string_view str);
-    static WCHAR* StrDup(Allocator* a, const WCHAR* str, size_t strLen = 0);
 };
 
 // PoolAllocator is for the cases where we need to allocate pieces of memory
@@ -416,7 +409,7 @@ struct PoolAllocator : Allocator {
     // contains allocated data and index of each allocation
     struct Block {
         struct Block* next;
-        int dataSize; // for debugging, not used
+        int dataSize; // size of data in block
         int nAllocs;
         char* curr;
         // from the end, we store index of each allocation relative
@@ -439,7 +432,7 @@ struct PoolAllocator : Allocator {
     void* Alloc(size_t size) override;
 
     void FreeAll();
-    void Reset();
+    void Reset(bool poisonFreedMemory = false);
     void* At(int i);
 
     // only valid for structs, could alloc objects with
@@ -452,7 +445,7 @@ struct PoolAllocator : Allocator {
     // Iterator for easily traversing allocated memory as array
     // of values of type T. The caller has to enforce the fact
     // that the values stored are indeed values of T
-    // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    // see http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     template <typename T>
     class Iter {
         PoolAllocator* self;

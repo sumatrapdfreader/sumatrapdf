@@ -98,7 +98,7 @@ bool Load() {
 
     if (!gprefs->uiLanguage || !trans::ValidateLangCode(gprefs->uiLanguage)) {
         // guess the ui language on first start
-        str::ReplacePtr(&gprefs->uiLanguage, trans::DetectUserLang());
+        str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
     }
     gprefs->lastPrefUpdate = file::GetModificationTime(path.Get());
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
@@ -201,7 +201,7 @@ bool Save() {
     // remove entries which should (no longer) be remembered
     gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
     // update display mode and zoom fields from internal values
-    str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
+    str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
 
     AutoFreeWstr path = GetSettingsPath();

@@ -165,31 +165,46 @@ size_t Len(const WCHAR* s) {
     return s ? wcslen(s) : 0;
 }
 
-char* Dup(const char* s, size_t lenCch) {
+char* Dup(Allocator* a, const char* s, size_t lenCch) {
     CrashIf(!s && (int)lenCch > 0);
     if (lenCch == (size_t)-1) {
         lenCch = str::Len(s);
     }
-    return (char*)memdup(s, lenCch * sizeof(char), sizeof(char));
+    return (char*)Allocator::MemDup(a, s, lenCch * sizeof(char), sizeof(char));
+}
+
+char* Dup(const char* s, size_t lenCch) {
+    return Dup(nullptr, s, lenCch);
+}
+
+// allocates a copy of the source string inside the allocator.
+// it's only safe in PoolAllocator because allocated data
+// never moves in memory
+char* Dup(Allocator* a, std::string_view sv) {
+    return Dup(a, sv.data(), sv.size());
 }
 
 char* Dup(const std::string_view sv) {
-    return (char*)memdup(sv.data(), sv.size() * sizeof(char), sizeof(char));
+    return Dup(nullptr, sv.data(), sv.size());
 }
 
 char* Dup(const std::span<u8> d) {
-    return (char*)memdup(d.data(), d.size() * sizeof(char), sizeof(char));
+    return Dup(nullptr, (const char*)d.data(), d.size());
 }
 
-WCHAR* Dup(const WCHAR* s, size_t lenCch) {
+WCHAR* Dup(Allocator* a, const WCHAR* s, size_t lenCch) {
     if (lenCch == (size_t)-1) {
         lenCch = str::Len(s);
     }
-    return (WCHAR*)memdup(s, lenCch * sizeof(WCHAR), sizeof(WCHAR));
+    return (WCHAR*)Allocator::MemDup(a, s, lenCch * sizeof(WCHAR), sizeof(WCHAR));
+}
+
+WCHAR* Dup(const WCHAR* s, size_t lenCch) {
+    return Dup(nullptr, s, lenCch);
 }
 
 WCHAR* Dup(std::wstring_view sv) {
-    return (WCHAR*)memdup(sv.data(), sv.size() * sizeof(WCHAR), sizeof(WCHAR));
+    return Dup(nullptr, sv.data(), sv.size());
 }
 
 // return true if s1 == s2, case sensitive
@@ -384,12 +399,12 @@ void Free(const u8* s) {
     free((void*)s);
 }
 
-void ReplacePtr(char** s, const char* snew) {
+void ReplaceWithCopy(char** s, const char* snew) {
     free(*s);
     *s = str::Dup(snew);
 }
 
-void ReplacePtr(const char** s, const char* snew) {
+void ReplaceWithCopy(const char** s, const char* snew) {
     free((char*)*s);
     *s = str::Dup(snew);
 }
@@ -2084,7 +2099,7 @@ const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
     return nullptr;
 }
 
-void ReplacePtr(WCHAR** s, const WCHAR* snew) {
+void ReplaceWithCopy(WCHAR** s, const WCHAR* snew) {
     free(*s);
     *s = str::Dup(snew);
 }

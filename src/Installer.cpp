@@ -467,7 +467,7 @@ static void OnButtonInstall() {
 
     WCHAR* userInstallDir = win::GetText(gTextboxInstDir->hwnd);
     if (!str::IsEmpty(userInstallDir)) {
-        str::ReplacePtr(&gCli->installDir, userInstallDir);
+        str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
     free(userInstallDir);
 

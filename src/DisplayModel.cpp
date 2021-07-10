@@ -209,12 +209,12 @@ bool DisplayModel::GetPresentationMode() const {
 
 void DisplayModel::GetDisplayState(FileState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, engine->FileName())) {
-        str::ReplacePtr(&ds->filePath, engine->FileName());
+        str::ReplaceWithCopy(&ds->filePath, engine->FileName());
     }
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplacePtr(&ds->displayMode, DisplayModeToString(presentationMode ? presDisplayMode : GetDisplayMode()));
+    str::ReplaceWithCopy(&ds->displayMode, DisplayModeToString(presentationMode ? presDisplayMode : GetDisplayMode()));
     ZoomToString(&ds->zoom, presentationMode ? presZoomVirtual : zoomVirtual, ds);
 
     ScrollState ss = GetScrollState();

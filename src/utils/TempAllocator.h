@@ -67,5 +67,6 @@ struct TempWstr {
     }
 };
 
+TempStr TempStrDup(const char* s, size_t lenCch = (size_t)-1);
 TempWstr TempToWstr(const char* s);
 TempWstr TempToWstr(std::string_view sv);

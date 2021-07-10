@@ -84,7 +84,7 @@ static void PoolAllocatorStringsTest(PoolAllocator& a, int nRounds) {
         for (int j = 0; j < nStrings; j++) {
             const char* s = strings[j];
             std::string_view sv = s;
-            std::string_view got = Allocator::StrDup(&a, sv);
+            std::string_view got = str::Dup(&a, sv);
             utassert(str::Eq(sv, got.data()));
         }
     }

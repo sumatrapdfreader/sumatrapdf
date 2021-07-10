@@ -172,7 +172,7 @@ void PageControl::NotifyMouseMove(int x, int y) {
         SetCursorCached(IDC_ARROW);
         if (toolTip) {
             Control::NotifyMouseLeave();
-            str::ReplacePtr(&toolTip, nullptr);
+            str::ReplaceWithCopy(&toolTip, nullptr);
         }
         return;
     }
@@ -181,7 +181,7 @@ void PageControl::NotifyMouseMove(int x, int y) {
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (toolTip && (!url::IsAbsolute(url) || !str::Eq(toolTip, url))) {
         Control::NotifyMouseLeave();
-        str::ReplacePtr(&toolTip, nullptr);
+        str::ReplaceWithCopy(&toolTip, nullptr);
     }
     if (!toolTip && url::IsAbsolute(url)) {
         toolTip = url.StealData();
