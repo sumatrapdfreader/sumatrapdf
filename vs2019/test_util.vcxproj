@@ -491,6 +491,7 @@
     <ClInclude Include="..\src\utils\StrUtil.h" />
     <ClInclude Include="..\src\utils\StrconvUtil.h" />
     <ClInclude Include="..\src\utils\StringViewUtil.h" />
+    <ClInclude Include="..\src\utils\TempAllocator.h" />
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="..\src\utils\UtAssert.h" />
     <ClInclude Include="..\src\utils\Vec.h" />
@@ -502,7 +503,7 @@
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
-    <ClCompile Include="..\src\UnitTests.cpp" />
+    <ClCompile Include="..\src\SumatraUnitTests.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
     <ClCompile Include="..\src\mui\SvgPath_ut.cpp" />
     <ClCompile Include="..\src\tools\test_util.cpp" />
@@ -527,6 +528,7 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
     <ClCompile Include="..\src\utils\StringViewUtil.cpp" />
+    <ClCompile Include="..\src\utils\TempAllocator.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="..\src\utils\UtAssert.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />

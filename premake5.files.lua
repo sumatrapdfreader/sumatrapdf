@@ -926,6 +926,7 @@ function test_util_files()
     "StrUtil.*",
     "SquareTreeParser.*",
     "TrivialHtmlParser.*",
+    "TempAllocator.*",
     "UtAssert.*",
     --"VarintGob*",
     "Vec.*",
@@ -941,7 +942,7 @@ function test_util_files()
     "Flags.*",
     "SumatraConfig.*",
     "SettingsStructs.*",
-    "UnitTests.cpp",
+    "SumatraUnitTests.cpp",
     "mui/SvgPath*",
     "tools/test_util.cpp"
   })

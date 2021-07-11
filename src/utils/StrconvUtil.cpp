@@ -6,8 +6,15 @@
 namespace strconv {
 
 std::wstring_view Utf8ToWstrV(const char* s, size_t cb, Allocator* a) {
+    // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
+    if (!s) {
+        return {};
+    }
     if (cb == (size_t)-1) {
         cb = str::Len(s);
+    }
+    if (cb == 0) {
+        return {(const WCHAR*)Allocator::AllocZero(a, sizeof(WCHAR)), 0};
     }
     // ask for the size of buffer needed for converted string
     int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, nullptr, 0);
@@ -37,11 +44,21 @@ WCHAR* Utf8ToWstr(std::string_view sv) {
 }
 
 std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
+    // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
+    if (!s) {
+        return {};
+    }
     if (cch == (size_t)-1) {
         cch = str::Len(s);
     }
+    if (cch == 0) {
+        return {(const char*)Allocator::AllocZero(a, sizeof(char)), 0};
+    }
     // ask for the size of buffer needed for converted string
     int cbNeeded = WideCharToMultiByte(codePage, 0, s, (int)cch, nullptr, 0, nullptr, nullptr);
+    if (cbNeeded == 0) {
+        return {};
+    }
     size_t cbAlloc = cbNeeded + sizeof(char); // +1 for terminating 0
     char* res = (char*)Allocator::AllocZero(a, cbAlloc);
     if (!res) {
@@ -77,11 +94,6 @@ char* WstrToUtf8(std::wstring_view sv, Allocator* a) {
     return (char*)v.data();
 }
 
-// TODO: rename to WstrToCodePage() and then replace all uses directly
-std::string_view WstrToCodePage(const WCHAR* txt, uint codePage, int cchTxt) {
-    return WstrToCodePage(codePage, txt, cchTxt, nullptr);
-}
-
 /* Caller needs to free() the result */
 WCHAR* ToWideChar(const char* src, uint codePage, int cbSrc) {
     CrashIf(!src);
@@ -91,7 +103,7 @@ WCHAR* ToWideChar(const char* src, uint codePage, int cbSrc) {
 
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrc, nullptr, 0);
     if (0 == requiredBufSize) {
-        return str::Dup(L"");
+        return nullptr;
     }
     WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
     if (!res) {
@@ -123,7 +135,7 @@ std::string_view ToMultiByte(const char* src, uint codePageSrc, uint codePageDes
         return {};
     }
 
-    return WstrToCodePage(tmp.Get(), codePageDest);
+    return WstrToCodePageV(codePageDest, tmp.Get(), tmp.size());
 }
 
 // tries to convert a string in unknown encoding to utf8, as best
@@ -175,7 +187,7 @@ WCHAR* FromAnsi(const char* src, size_t cbLen) {
 }
 
 std::string_view WstrToAnsi(const WCHAR* src) {
-    return WstrToCodePage(src, CP_ACP);
+    return WstrToCodePageV(CP_ACP, src);
 }
 
 } // namespace strconv

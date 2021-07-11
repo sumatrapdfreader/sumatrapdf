@@ -202,7 +202,7 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
     }
 
     if (dx <= memBmpDx && dy <= memBmpDy) {
-        ZeroMemory(memBmpData, memBmpDx * memBmpDy * 4);
+        ZeroMemory(memBmpData, (size_t)memBmpDx * (size_t)memBmpDy * 4);
         return;
     }
     if (!memHdc) {
@@ -225,7 +225,7 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
         return;
     }
 
-    ZeroMemory(memBmpData, memBmpDx * memBmpDy * 4);
+    ZeroMemory(memBmpData, (size_t)memBmpDx * (size_t)memBmpDy * 4);
 
     RestoreMemHdcPrevBitmap();
     memHdcPrevBitmap = SelectObject(memHdc, memBmp);

@@ -545,7 +545,7 @@ bool MobiDoc::ParseHeader() {
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Metadata prop;
         prop.prop = DocumentProperty::UnsupportedFeatures;
-        auto tmp = strconv::WstrToCodePage(L"DRM", mobiHdr.textEncoding);
+        auto tmp = strconv::WstrToCodePageV(mobiHdr.textEncoding, L"DRM");
         prop.value = (char*)tmp.data();
         props.Append(prop);
     }
@@ -560,7 +560,7 @@ bool MobiDoc::ParseHeader() {
             imagesCount = pdbReader->GetRecordCount() - imageFirstRec;
         }
     }
-    if (kPalmDocHeaderLen + mobiHdr.hdrLen > recSize) {
+    if (kPalmDocHeaderLen + (size_t)mobiHdr.hdrLen > recSize) {
         logf("MobiHeader too big\n");
         return false;
     }

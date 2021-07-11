@@ -36,6 +36,9 @@ extern void StrFormatTest();
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     printf("Running unit tests\n");
+
+    InitTempAllocator();
+
     InitDynCalls();
     BaseUtilTest();
     ByteOrderTests();
@@ -60,5 +63,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     StrFormatTest();
 
     int res = utassert_print_results();
+    DestroyTempAllocator();
     return res;
 }

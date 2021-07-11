@@ -9,6 +9,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - remove StackWstrToUtf8 and StackUtf8ToWstr
 - remove Utf8ToWcharBuf
 - remove WstrToUtf8Buf
+- rename WstrToCodePage => WstrToCodePageV
 
 2021-07-09 Fri
 

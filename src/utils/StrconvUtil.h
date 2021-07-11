@@ -22,7 +22,6 @@ std::string_view UnknownToUtf8(const std::string_view&);
 
 WCHAR* FromCodePage(const char* src, uint cp);
 
-std::string_view WstrToCodePage(const WCHAR* txt, uint codePage, int cchTxt = -1);
 std::string_view WstrToAnsi(const WCHAR*);
 
 WCHAR* FromAnsi(const char* src, size_t cbSrc = (size_t)-1);
