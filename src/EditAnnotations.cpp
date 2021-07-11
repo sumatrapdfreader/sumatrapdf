@@ -186,7 +186,14 @@ struct EditAnnotationsWindow {
 };
 
 static EnginePdf* GetEnginePdf(EditAnnotationsWindow* ew) {
+    // TODO: shouldn't happen but seen in crash report
+    if (!ew || !ew->tab) {
+        return nullptr;
+    }
     DisplayModel* dm = ew->tab->AsFixed();
+    if (!dm) {
+        return nullptr;
+    }
     return AsEnginePdf(dm->GetEngine());
 }
 

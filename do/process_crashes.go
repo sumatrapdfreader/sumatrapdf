@@ -37,6 +37,7 @@ var blacklistedCrashes = []string{
 	"huizhipdf.exe",
 	"einkreader.exe",
 	"jikepdf.exe",
+	"JiKepdf.exe",
 	"scpdfviewer.exe",
 	"Ver: 3.3 (dbg)",
 }
