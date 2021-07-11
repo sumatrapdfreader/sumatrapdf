@@ -27,7 +27,7 @@ const filterNoSymbols = true
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
 const filterOlderVersions = true
-const lowestCrashingBuildToShow = 13418
+const lowestCrashingBuildToShow = 13598
 
 const nDaysToKeep = 14
 
@@ -39,6 +39,8 @@ var blacklistedCrashes = []string{
 	"jikepdf.exe",
 	"scpdfviewer.exe",
 	"Ver: 3.3 (dbg)",
+	"Ver: 3.2",
+	"Ver: 3.2 64-bit",
 }
 
 var (
