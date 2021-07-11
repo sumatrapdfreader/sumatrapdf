@@ -724,7 +724,7 @@ HICON WindowBase::GetIcon() const {
 }
 
 void WindowBase::SetText(const WCHAR* s) {
-    AutoFree str = strconv::WstrToUtf8(s);
+    auto str = TempToUtf8(s);
     SetText(str.AsView());
 }
 
@@ -848,7 +848,7 @@ bool Window::Create() {
     if (initialSize.dy > 0) {
         dy = initialSize.dy;
     }
-    AutoFreeWstr title = strconv::Utf8ToWstr(this->text.AsView());
+    auto title = TempToWstr(this->text.AsView());
     HINSTANCE hinst = GetInstance();
     hwnd = CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
     CrashIf(!hwnd);

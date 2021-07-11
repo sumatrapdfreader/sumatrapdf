@@ -14,6 +14,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - change TextRenderMethod to enum class
 - rename WstrToAnsi => WstrToAnsiV and UnknownToUtf8 => UnknownToUtf8V
 - change GetZoneIdentifier, SetZoneIdentifier and DeleteZoneIdentifier from WCHAR* to char*
+- replace strconv::WstrToUtf8 with TempToUtf8 and strconv::Utf8ToWstr with TempToWstr
+- properly remove trailing separator menu item
 
 2021-07-09 Fri
 

@@ -35,19 +35,22 @@ struct TempStr {
     explicit TempStr(const TempStr& ts) {
         sv = ts.sv;
     }
-    size_t size() {
+    size_t size() const {
         return sv.size();
     }
-    char* Get() {
+    char* Get() const {
         return (char*)sv.data();
     }
-    operator const char*() {
+    std::string_view AsView() const {
+        return sv;
+    }
+    operator const char*() const {
         return sv.data();
     }
-    operator char*() {
+    operator char*() const {
         return (char*)sv.data();
     }
-    operator std::string_view() {
+    operator std::string_view() const {
         return sv;
     }
 };
@@ -76,19 +79,22 @@ struct TempWstr {
     explicit TempWstr(const TempWstr& ts) {
         sv = ts.sv;
     }
-    size_t size() {
+    size_t size() const {
         return sv.size();
     }
-    WCHAR* Get() {
+    WCHAR* Get() const {
         return (WCHAR*)sv.data();
     }
-    operator const WCHAR*() {
+    std::wstring_view AsView() const {
+        return sv;
+    }
+    operator const WCHAR*() const {
         return sv.data();
     }
-    operator WCHAR*() {
+    operator WCHAR*() const {
         return (WCHAR*)sv.data();
     }
-    operator std::wstring_view() {
+    operator std::wstring_view() const {
         return sv;
     }
 };

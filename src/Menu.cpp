@@ -1255,7 +1255,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
     }
     if (wasSeparator && (nMenus > 0)) {
         // remove trailing separator
-        RemoveMenu(menu, (UINT)nMenus, MF_BYPOSITION);
+        RemoveMenu(menu, (UINT)(nMenus-1), MF_BYPOSITION);
     }
     return menu;
 }

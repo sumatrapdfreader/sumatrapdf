@@ -47,7 +47,7 @@ static void FillWithItems(ListBoxCtrl* w, ListBoxModel* model) {
     ListBox_ResetContent(hwnd);
     for (int i = 0; i < model->ItemsCount(); i++) {
         auto sv = model->Item(i);
-        AutoFreeWstr ws = strconv::Utf8ToWstr(sv);
+        auto ws = TempToWstr(sv);
         ListBox_AddString(hwnd, ws.Get());
     }
 }

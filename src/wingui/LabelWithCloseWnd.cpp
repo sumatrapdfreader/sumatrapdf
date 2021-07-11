@@ -290,7 +290,7 @@ void LabelWithCloseCtrl::SetPaddingXY(int x, int y) {
 }
 
 Size LabelWithCloseCtrl::GetIdealSize() {
-    AutoFreeWstr s = strconv::Utf8ToWstr(text.AsView());
+    auto s = TempToWstr(text.AsView());
     Size size = TextSizeInHwnd(hwnd, s);
     int btnDx = DpiScale(hwnd, CLOSE_BTN_DX);
     int btnDy = DpiScale(hwnd, CLOSE_BTN_DY);

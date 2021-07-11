@@ -283,8 +283,9 @@ NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, NotificationOpti
     notifications->Add(wnd, groupId);
     return wnd;
 }
+
 NotificationWnd* WindowInfo::ShowNotification(std::string_view sv, NotificationOptions opts, Kind groupId) {
-    AutoFreeWstr msg = strconv::Utf8ToWstr(sv);
+    auto msg = TempToWstr(sv);
     return this->ShowNotification(msg.Get(), opts, groupId);
 }
 

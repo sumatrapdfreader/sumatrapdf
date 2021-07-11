@@ -27,9 +27,8 @@ DropDownCtrl::~DropDownCtrl() {
 static void SetDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
     ComboBox_ResetContent(hwnd);
     for (std::string_view s : items) {
-        WCHAR* ws = strconv::Utf8ToWstr(s);
+        auto ws = TempToWstr(s);
         ComboBox_AddString(hwnd, ws);
-        free(ws);
     }
 }
 
@@ -87,7 +86,7 @@ void DropDownCtrl::SetCurrentSelection(int n) {
 }
 
 void DropDownCtrl::SetCueBanner(std::string_view sv) {
-    AutoFreeWstr ws = strconv::Utf8ToWstr(sv);
+    auto ws = TempToWstr(sv);
     ComboBox_SetCueBannerText(hwnd, ws.Get());
 }
 
@@ -116,11 +115,10 @@ void DropDownCtrl::SetItemsSeqStrings(const char* items) {
 Size DropDownCtrl::GetIdealSize() {
     Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
     for (std::string_view s : items) {
-        WCHAR* ws = strconv::Utf8ToWstr(s);
+        auto ws = TempToWstr(s);
         Size s2 = TextSizeInHwnd(hwnd, ws, hfont);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);
-        free(ws);
     }
     // TODO: not sure if I want scrollbar. Only needed if a lot of items
     int dxPad = GetSystemMetrics(SM_CXVSCROLL);
