@@ -42,6 +42,7 @@ var blacklistedCrashes = []string{
 	"Ver: 3.3 (dbg)",
 	"Ver: 3.2",
 	"Ver: 3.2 64-bit",
+	"nviewh64.dll!DestroyThreadFeatureManager",
 }
 
 var (
