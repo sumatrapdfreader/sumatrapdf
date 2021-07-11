@@ -18,11 +18,11 @@ char* WstrToUtf8(std::wstring_view sv, Allocator* a = nullptr);
 std::string_view ToMultiByteV(const char* src, uint codePageSrc, uint codePageDest);
 WCHAR* ToWideChar(const char* src, uint codePage, int cbSrc = -1);
 
-std::string_view UnknownToUtf8(const std::string_view&);
+std::string_view UnknownToUtf8V(const std::string_view&);
 
 WCHAR* FromCodePage(const char* src, uint cp);
 
-std::string_view WstrToAnsi(const WCHAR*);
+std::string_view WstrToAnsiV(const WCHAR*);
 
 WCHAR* FromAnsi(const char* src, size_t cbSrc = (size_t)-1);
 size_t ToCodePageBuf(char* buf, int cbBuf, const WCHAR* s, uint cp);

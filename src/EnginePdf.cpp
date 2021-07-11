@@ -650,7 +650,7 @@ bool EnginePdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
-            AutoFree pwd_ansi(strconv::WstrToAnsi(pwd));
+            AutoFree pwd_ansi(strconv::WstrToAnsiV(pwd));
             AutoFreeWstr pwd_cp1252(strconv::FromCodePage(pwd_ansi.Get(), 1252));
             pwd_utf8 = strconv::WstrToUtf8(pwd_cp1252);
             ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());

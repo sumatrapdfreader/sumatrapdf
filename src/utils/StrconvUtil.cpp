@@ -141,7 +141,7 @@ std::string_view ToMultiByteV(const char* src, uint codePageSrc, uint codePageDe
 // tries to convert a string in unknown encoding to utf8, as best
 // as it can
 // caller has to free() it
-std::string_view UnknownToUtf8(const std::string_view& txt) {
+std::string_view UnknownToUtf8V(const std::string_view& txt) {
     size_t len = txt.size();
     const char* s = txt.data();
 
@@ -186,7 +186,7 @@ WCHAR* FromAnsi(const char* src, size_t cbLen) {
     return ToWideChar(src, CP_ACP, (int)cbLen);
 }
 
-std::string_view WstrToAnsi(const WCHAR* src) {
+std::string_view WstrToAnsiV(const WCHAR* src) {
     return WstrToCodePageV(CP_ACP, src);
 }
 

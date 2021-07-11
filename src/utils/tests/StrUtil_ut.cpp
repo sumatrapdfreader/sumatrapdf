@@ -477,7 +477,7 @@ void StrTest() {
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    AutoFree strA = strconv::WstrToAnsi(TEXT(TEST_STRING));
+    AutoFree strA = strconv::WstrToAnsiV(TEXT(TEST_STRING));
     utassert(str::Eq(strA.Get(), TEST_STRING));
     str = strconv::FromAnsi(strA.Get());
     utassert(str::Eq(str, TEXT(TEST_STRING)));

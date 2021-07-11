@@ -12,6 +12,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - rename WstrToCodePage => WstrToCodePageV
 - rename ToMultiByte => ToMultiByteV
 - change TextRenderMethod to enum class
+- rename WstrToAnsi => WstrToAnsiV and UnknownToUtf8 => UnknownToUtf8V
 
 2021-07-09 Fri
 
