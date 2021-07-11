@@ -113,7 +113,7 @@ WCHAR* ToWideChar(const char* src, uint codePage, int cbSrc) {
     return res;
 }
 
-std::string_view ToMultiByte(const char* src, uint codePageSrc, uint codePageDest) {
+std::string_view ToMultiByteV(const char* src, uint codePageSrc, uint codePageDest) {
     CrashIf(!src);
     if (!src) {
         return {};

@@ -619,7 +619,7 @@ void StrTest() {
     }
 
     {
-        AutoFree tmp = strconv::ToMultiByte("abc", 9876, 123456);
+        AutoFree tmp = strconv::ToMultiByteV("abc", 9876, 123456);
         utassert(!tmp.Get());
     }
     {

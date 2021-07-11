@@ -85,12 +85,12 @@ char* ChmDoc::ToUtf8(const u8* text, uint overrideCP) {
         return str::Dup(s + 3);
     }
     if (overrideCP) {
-        return (char*)strconv::ToMultiByte(s, overrideCP, CP_UTF8).data();
+        return (char*)strconv::ToMultiByteV(s, overrideCP, CP_UTF8).data();
     }
     if (CP_UTF8 == codepage) {
         return str::Dup(s);
     }
-    return (char*)strconv::ToMultiByte(s, codepage, CP_UTF8).data();
+    return (char*)strconv::ToMultiByteV(s, codepage, CP_UTF8).data();
 }
 
 WCHAR* ChmDoc::ToStr(const char* text) {

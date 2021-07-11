@@ -15,7 +15,7 @@ char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, All
 char* WstrToUtf8(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
 char* WstrToUtf8(std::wstring_view sv, Allocator* a = nullptr);
 
-std::string_view ToMultiByte(const char* src, uint codePageSrc, uint codePageDest);
+std::string_view ToMultiByteV(const char* src, uint codePageSrc, uint codePageDest);
 WCHAR* ToWideChar(const char* src, uint codePage, int cbSrc = -1);
 
 std::string_view UnknownToUtf8(const std::string_view&);

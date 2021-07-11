@@ -10,6 +10,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - remove Utf8ToWcharBuf
 - remove WstrToUtf8Buf
 - rename WstrToCodePage => WstrToCodePageV
+- rename ToMultiByte => ToMultiByteV
 
 2021-07-09 Fri
 
