@@ -143,15 +143,15 @@ void BenchEbookLayout(const WCHAR* filePath) {
     double timeMs = TimeSinceInMs(t);
     logf(L"load: %.2f ms", timeMs);
 
-    int nPages = TimeOneMethod(doc, TextRenderMethodGdi, L"gdi       ");
-    TimeOneMethod(doc, TextRenderMethodGdiplus, L"gdi+      ");
-    TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
+    int nPages = TimeOneMethod(doc, TextRenderMethod::Gdi, L"gdi       ");
+    TimeOneMethod(doc, TextRenderMethod::Gdiplus, L"gdi+      ");
+    TimeOneMethod(doc, TextRenderMethod::GdiplusQuick, L"gdi+ quick");
 
     // do it twice because the first run is very unfair to the first version that runs
     // (probably because of font caching)
-    TimeOneMethod(doc, TextRenderMethodGdi, L"gdi       ");
-    TimeOneMethod(doc, TextRenderMethodGdiplus, L"gdi+      ");
-    TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
+    TimeOneMethod(doc, TextRenderMethod::Gdi, L"gdi       ");
+    TimeOneMethod(doc, TextRenderMethod::Gdiplus, L"gdi+      ");
+    TimeOneMethod(doc, TextRenderMethod::GdiplusQuick, L"gdi+ quick");
 
     doc.Delete();
 

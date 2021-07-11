@@ -1489,7 +1489,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
     }
 }
 
-static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethodGdi;
+static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethod::Gdi;
 // static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethodGdiplus;
 
 mui::TextRenderMethod GetTextRenderMethod() {

@@ -165,7 +165,7 @@ struct HtmlFormatterArgs {
        used to allocate this text. */
     Allocator* textAllocator{nullptr};
 
-    mui::TextRenderMethod textRenderMethod = mui::TextRenderMethodGdiplus;
+    mui::TextRenderMethod textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
     std::span<u8> htmlStr;
 

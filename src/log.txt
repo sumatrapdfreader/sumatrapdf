@@ -11,6 +11,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - remove WstrToUtf8Buf
 - rename WstrToCodePage => WstrToCodePageV
 - rename ToMultiByte => ToMultiByteV
+- change TextRenderMethod to enum class
 
 2021-07-09 Fri
 

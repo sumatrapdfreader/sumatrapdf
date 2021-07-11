@@ -466,16 +466,16 @@ TextRenderHdc::~TextRenderHdc() {
 
 ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, int dy) {
     ITextRender* res = nullptr;
-    if (TextRenderMethodGdiplus == method) {
+    if (TextRenderMethod::Gdiplus == method) {
         res = TextRenderGdiplus::Create(gfx);
     }
-    if (TextRenderMethodGdiplusQuick == method) {
+    if (TextRenderMethod::GdiplusQuick == method) {
         res = TextRenderGdiplus::Create(gfx, MeasureTextQuick);
     }
-    if (TextRenderMethodGdi == method) {
+    if (TextRenderMethod::Gdi == method) {
         res = TextRenderGdi::Create(gfx);
     }
-    if (TextRenderMethodHdc == method) {
+    if (TextRenderMethod::Hdc == method) {
         res = TextRenderHdc::Create(gfx, dx, dy);
     }
     CrashIf(!res);

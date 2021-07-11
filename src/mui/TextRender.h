@@ -1,11 +1,11 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-enum TextRenderMethod {
-    TextRenderMethodGdiplus,      // uses MeasureTextAccurate, which is slower than MeasureTextQuick
-    TextRenderMethodGdiplusQuick, // uses MeasureTextQuick
-    TextRenderMethodGdi,
-    TextRenderMethodHdc,
+enum class TextRenderMethod {
+    Gdiplus,      // uses MeasureTextAccurate, which is slower than MeasureTextQuick
+    GdiplusQuick, // uses MeasureTextQuick
+    Gdi,
+    Hdc,
     // TODO: implement TextRenderDirectDraw
     // TextRenderDirectDraw
 };
