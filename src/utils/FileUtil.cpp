@@ -663,20 +663,23 @@ bool StartsWith(const WCHAR* filePath, const char* s) {
     return file::StartsWithN(filePath, s, str::Len(s));
 }
 
-int GetZoneIdentifier(const WCHAR* filePath) {
-    AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
-    return GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, path);
+int GetZoneIdentifier(const char* filePath) {
+    AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
+    auto pathW = TempToWstr(path.AsView());
+    return GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, pathW);
 }
 
-bool SetZoneIdentifier(const WCHAR* filePath, int zoneId) {
-    AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
+bool SetZoneIdentifier(const char* filePath, int zoneId) {
+    AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
     AutoFreeWstr id(str::Format(L"%d", zoneId));
-    return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", id, path);
+    auto pathW = TempToWstr(path.AsView());
+    return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", id, pathW);
 }
 
-bool DeleteZoneIdentifier(const WCHAR* filePath) {
-    AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
-    return !!DeleteFileW(path.Get());
+bool DeleteZoneIdentifier(const char* filePath) {
+    AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
+    auto pathW = TempToWstr(path.AsView());
+    return !!DeleteFileW(pathW);
 }
 
 } // namespace file

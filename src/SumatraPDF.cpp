@@ -2819,7 +2819,8 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
 
     if (ok && IsUntrustedFile(win->ctrl->FilePath(), gPluginURL) && !convertToTXT) {
-        file::SetZoneIdentifier(realDstFileName);
+        auto realDstFileNameA = TempToUtf8(realDstFileName);
+        file::SetZoneIdentifier(realDstFileNameA);
     }
 
     if (realDstFileName != dstFileName) {

@@ -156,7 +156,8 @@ bool CopySelfToDir(const WCHAR* destDir) {
     // strip zone identifier (if exists) to avoid windows
     // complaining when launching the file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
-    file::DeleteZoneIdentifier(dstPath);
+    auto dstPathA = TempToUtf8(dstPath);
+    file::DeleteZoneIdentifier(dstPathA);
     free(dstPath);
     return ok;
 }
