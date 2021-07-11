@@ -175,12 +175,16 @@ std::string_view GetDir(std::string_view pathSV) {
 }
 
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
+    // TODO: not sure if should allow null path
     if (IsSep(*fileName)) {
         fileName++;
     }
     const WCHAR* sepStr = nullptr;
-    if (!IsSep(path[str::Len(path) - 1])) {
-        sepStr = L"\\";
+    size_t pathLen = str::Len(path);
+    if (pathLen > 0) {
+        if (!IsSep(path[pathLen - 1])) {
+            sepStr = L"\\";
+        }
     }
     WCHAR* res = str::Join(path, sepStr, fileName);
     if (fileName2) {

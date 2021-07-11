@@ -168,8 +168,16 @@ static void CopySettingsFile() {
     // up to 3.1.2 we stored settings in %APPDATA%
     // after that we use %LOCALAPPDATA%
     // copy the settings from old directory
+
+    // seen a crash when running elevated
     AutoFreeWstr srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
+    if (srcDir.empty()) {
+        return;
+    }
     AutoFreeWstr dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
+    if (dstDir.empty()) {
+        return;
+    }
 
     const WCHAR* appName = GetAppName();
     const WCHAR* prefsFileName = prefs::GetSettingsFileNameNoFree();
