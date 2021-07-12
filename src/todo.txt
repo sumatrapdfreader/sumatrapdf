@@ -1,4 +1,4 @@
-For 3.4 (this is a plan, not a promise):
+For 3.4 (a plan, not a promise):
 * https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
 * switch most ebooks to use mupdf
 * merge TreeModel refactor
@@ -7,7 +7,6 @@ For 3.4 (this is a plan, not a promise):
 * tooltip for tabs showing full path of the file
 * change how translations work so that user can download latest translations
   even after the app has been released
-* merge pre-release and daily builds (as pre-release builds)
 * automatic updates for pre-release builds
 * make updates of releases easier (instead of telling people to download the app
   from website, have them click and download / launch installer automatically)
@@ -16,3 +15,4 @@ For 3.4 (this is a plan, not a promise):
 
 Done:
 * remove unused code
+* merge pre-release and daily builds (as pre-release builds)

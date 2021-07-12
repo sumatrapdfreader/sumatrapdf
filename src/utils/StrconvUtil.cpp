@@ -28,7 +28,7 @@ std::wstring_view Utf8ToWstrV(const char* s, size_t cb, Allocator* a) {
     // TODO: change to DebugCrashIf() because expensive
     // TODO: not sure if invalid test or it's more subtle
     // triggers in Dune.epub
-    //CrashIf((size_t)cchConverted != str::Len(res));
+    // CrashIf((size_t)cchConverted != str::Len(res));
     return {res, (size_t)cchConverted};
 }
 

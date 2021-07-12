@@ -182,8 +182,8 @@ void* PoolAllocator::Alloc(size_t size) {
     }
     char* res = currBlock->freeSpace;
     currBlock->freeSpace = res + sizeRounded;
-    //TODO: figure out why this hits
-    //CrashIf(RoundUp(currBlock->freeSpace, kPoolAllocatorAlign) != currBlock->freeSpace);
+    // TODO: figure out why this hits
+    // CrashIf(RoundUp(currBlock->freeSpace, kPoolAllocatorAlign) != currBlock->freeSpace);
 
     char* blockStart = (char*)currBlock;
     i32 offset = (i32)(res - blockStart);

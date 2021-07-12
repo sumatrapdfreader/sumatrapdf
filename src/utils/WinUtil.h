@@ -50,7 +50,7 @@ bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false)
 WCHAR* GetSpecialFolder(int csidl, bool createIfMissing = false);
 
 void DisableDataExecution();
-void RedirectIOToConsole();
+bool RedirectIOToConsole();
 WCHAR* GetExePath();
 WCHAR* GetExeDir();
 WCHAR* GetSystem32Dir();

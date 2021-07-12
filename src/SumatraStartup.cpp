@@ -466,9 +466,6 @@ Error:
     goto Retry;
 }
 
-// TODO(port)
-// extern "C" void fz_redirect_dll_io_to_console();
-
 // Registering happens either through the Installer or the Options dialog;
 // here we just make sure that we're still registered
 static bool RegisterForPdfExtentions(HWND hwnd) {
@@ -945,10 +942,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     goto Exit;
 #endif
 
+    bool didAllocateConsole{false};
     if (i.showConsole) {
-        RedirectIOToConsole();
-        // TODO(port)
-        // fz_redirect_dll_io_to_console();
+        didAllocateConsole = RedirectIOToConsole();
     }
 
     if (i.registerAsDefault) {
@@ -957,7 +953,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     if (i.pathsToBenchmark.size() > 0) {
         BenchFileOrDir(i.pathsToBenchmark);
-        if (i.showConsole) {
+        if (i.showConsole && didAllocateConsole) {
             system("pause");
         }
     }

@@ -357,10 +357,21 @@ void DisableDataExecution() {
 
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
 // See https://github.com/benvanik/xenia/issues/228 for the VS2015 fix
-void RedirectIOToConsole() {
+bool RedirectIOToConsole() {
     CONSOLE_SCREEN_BUFFER_INFO coninfo;
 
-    AllocConsole();
+    // first we try to attach to the console of the parent process
+    // which could be a cmd shell. If that succeeds, we'll print to
+    // shell's console like non-gui program
+    // if that fails, assume we were not launched from a shell and
+    // will allocate a console of our own
+    // TODO: this is not perfect because after Sumatra finishes,
+    // the cursor is not at end of text. Could be unsolvable
+    constexpr DWORD kParentProcess = (DWORD)-1;
+    bool ok = !!AttachConsole(kParentProcess);
+    if (!ok) {
+        AllocConsole();
+    }
 
     // make buffer big enough to allow scrolling
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
@@ -388,6 +399,8 @@ void RedirectIOToConsole() {
     setvbuf(stdin, nullptr, _IONBF, 0);
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
+
+    return !ok; // allocated if AttachConsole failed
 }
 
 /* Return the full exe path of my own executable.
