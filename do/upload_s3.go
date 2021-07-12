@@ -204,7 +204,7 @@ func getFinalDirForBuildType(buildType string) string {
 // this returns version to be used in uploaded file names
 func getVerForBuildType(buildType string) string {
 	switch buildType {
-	case buildTypePreRel:
+	case buildTypePreRel, buildTypeDaily:
 		// this is linear build number like "12223"
 		return getPreReleaseVer()
 	case buildTypeRel:

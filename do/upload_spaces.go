@@ -119,7 +119,9 @@ func minioUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
 	return nil
 }
 
-func verifyBuildNotInSpacesShortMust(buildType string) {
+// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
+// consider a pre-release build already present in s3 if manifest file exists
+func verifyBuildNotInSpacesMust(buildType string) {
 	dirRemote := getRemoteDir(buildType)
 	ver := getVerForBuildType(buildType)
 	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
@@ -128,33 +130,37 @@ func verifyBuildNotInSpacesShortMust(buildType string) {
 	panicIf(minioExists(c, remotePath), "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
-// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
-// consider a pre-release build already present in s3 if manifest file exists
-func verifyBuildNotInSpacesMust(c *u.MinioClient, buildType string) {
-	if !flgUpload {
-		return
-	}
-	dirRemote := getRemoteDir(buildType)
-	dirLocal := getFinalDirForBuildType(buildType)
-	files, err := ioutil.ReadDir(dirLocal)
-	must(err)
-	for _, f := range files {
-		fname := f.Name()
-		remotePath := path.Join(dirRemote, fname)
-		panicIf(minioExists(c, remotePath), "build from dir %s already exists in s3 because file '%s' exists\n", dirLocal, remotePath)
-	}
-}
-
 func getVersionFilesForLatestInfo(buildType string) [][]string {
 	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
-	s := createSumatraLatestJs(buildType)
-	res = append(res, []string{remotePaths[0], s})
+
+	{
+		// *latest.js : for the website
+		s := createSumatraLatestJs(buildType)
+		res = append(res, []string{remotePaths[0], s})
+	}
+
 	ver := getVerForBuildType(buildType)
-	res = append(res, []string{remotePaths[1], ver})
-	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	res = append(res, []string{remotePaths[2], s})
+	{
+		// *-latest.txt : for older build
+		res = append(res, []string{remotePaths[1], ver})
+	}
+
+	{
+		// TODO: add the following information
+		// InstallerUrl64 : url for 64-bit installer
+		// InstallerUrl32 : url for 32-bit installer
+		// PortableUrl64 : url for 64-bit version of portable binary
+		// PortableUrl32 : url for 32-bit version of portable binary
+		// *-update.txt : for current builds
+		s := `[SumatraPDF]
+Latest %s
+`
+		s = strings.Replace(s, "${ver}", ver, -1)
+		res = append(res, []string{remotePaths[2], s})
+	}
+
 	return res
 }
 

@@ -193,7 +193,7 @@ func main() {
 	}
 
 	if flgWebsiteRun {
-		websiteRunLocally()
+		websiteRunLocally("website")
 		return
 	}
 
@@ -310,7 +310,7 @@ func main() {
 		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
-		case githubEventTypeCodeQL:
+		case githubEventPush, githubEventTypeCodeQL:
 			// code ql is just a regular build, I assume intercepted by
 			// by their tooling
 			buildPreRelease()

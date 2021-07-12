@@ -404,9 +404,7 @@ func websiteImportNotion() {
 	}()
 
 	if true {
-		// using https://github.com/netlify/cli
-		cmd := exec.Command("netlify", "dev", "--dir", ".")
-		u.RunCmdLoggedMust(cmd)
+		websiteRunLocally(".")
 	}
 
 	if false {

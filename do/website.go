@@ -12,9 +12,9 @@ import (
 	"github.com/kjk/u"
 )
 
-func websiteRunLocally() {
+func websiteRunLocally(dir string) {
 	// using https://github.com/netlify/cli
-	cmd := exec.Command("netlify", "dev", "--dir", "website")
+	cmd := exec.Command("netlify", "dev", "--dir", dir)
 	u.RunCmdLoggedMust(cmd)
 }
 

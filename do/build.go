@@ -450,7 +450,7 @@ func buildRelease(forUpload bool) {
 	}
 
 	verifyBuildNotInS3ShortMust(buildTypeRel)
-	verifyBuildNotInSpacesShortMust(buildTypeRel)
+	verifyBuildNotInSpacesMust(buildTypeRel)
 
 	clean()
 	setBuildConfigRelease()
@@ -496,7 +496,7 @@ func buildReleaseFast() {
 	//verifyOnReleaseBranchMust()
 
 	//verifyBuildNotInS3ShortMust(buildTypeRel)
-	//verifyBuildNotInSpacesShortMust(buildTypeRel)
+	//verifyBuildNotInSpacesMust(buildTypeRel)
 
 	clean()
 	setBuildConfigRelease()
@@ -523,7 +523,7 @@ func buildRelease32Fast() {
 	//verifyOnReleaseBranchMust()
 
 	//verifyBuildNotInS3ShortMust(buildTypeRel)
-	//verifyBuildNotInSpacesShortMust(buildTypeRel)
+	//verifyBuildNotInSpacesMust(buildTypeRel)
 
 	clean()
 	setBuildConfigRelease()
