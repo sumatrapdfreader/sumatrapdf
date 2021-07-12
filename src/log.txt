@@ -4,6 +4,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - on crash re-get list of modules so that we can see modules that were injected after startup
 - implement SendDebugReport
+- tweak temp allocator to be created on demand
 
 2021-07-11 Sun
 

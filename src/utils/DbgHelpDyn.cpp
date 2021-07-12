@@ -107,7 +107,7 @@ static bool CanStackWalk() {
 constexpr int kMaxSymLen = 512;
 
 // check if has access to valid .pdb symbols file by trying to resolve a symbol
-__declspec(noinline) bool CanSymbolizeAddress(DWORD64 addr) {
+NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
     char buf[sizeof(SYMBOL_INFO) + kMaxSymLen * sizeof(char)];
     SYMBOL_INFO* symInfo = (SYMBOL_INFO*)buf;
 
@@ -219,10 +219,10 @@ void WriteMiniDump(const WCHAR* crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
     CloseHandle(hFile);
 }
 
-// note: without __declspec(noinline) it would be mis-compiled to return false in release builds
+// note: without NO_INLINE it would be mis-compiled to return false in release builds
 // making GetAddressInfo() not provide info about address
-__declspec(noinline) static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen, DWORD& sectionOut,
-                                             DWORD_PTR& offsetOut) {
+NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen, DWORD& sectionOut,
+                                  DWORD_PTR& offsetOut) {
     MEMORY_BASIC_INFORMATION mbi;
     if (0 == VirtualQuery(addr, &mbi, sizeof(mbi))) {
         return false;
@@ -419,7 +419,7 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
 // from local buffer overrun because optimizations are disabled in function)"
 #pragma warning(push)
 #pragma warning(disable : 4748)
-__declspec(noinline) bool GetCurrentThreadCallstack(str::Str& s) {
+NO_INLINE bool GetCurrentThreadCallstack(str::Str& s) {
     // not available under Win2000
     if (!DynRtlCaptureContext) {
         return false;

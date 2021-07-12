@@ -17,12 +17,15 @@ A safe place to call it is inside message windows loop.
 
 static PoolAllocator* gTempAllocator{nullptr};
 
-// must call before any calls using temp allocator
-void InitTempAllocator() {
-    CrashIf(gTempAllocator);
+// forbid inlinining to not blow out the size of callers
+static NO_INLINE PoolAllocator* GetAllocator() {
+    if (gTempAllocator) {
+        return gTempAllocator;
+    }
     gTempAllocator = new PoolAllocator();
     // this can be large because 64k is nothing and it's used frequently
     gTempAllocator->minBlockSize = 64 * 1024;
+    return gTempAllocator;
 }
 
 void DestroyTempAllocator() {
@@ -31,11 +34,14 @@ void DestroyTempAllocator() {
 }
 
 void ResetTempAllocator() {
-    gTempAllocator->Reset(true);
+    auto a = GetAllocator();
+    if (a) {
+        a->Reset(true);
+    }
 }
 
 TempStr TempStrDup(const char* s, size_t cb) {
-    char* res = str::Dup(gTempAllocator, s, cb);
+    char* res = str::Dup(GetAllocator(), s, cb);
     if (cb == (size_t)-1) {
         // TODO: optimize to remove str::Len(). Add version of str::Dup()
         // that returns std::string_view
@@ -48,7 +54,7 @@ TempStr TempStrDup(std::string_view sv) {
 }
 
 TempWstr TempWstrDup(const WCHAR* s, size_t cch) {
-    WCHAR* res = str::Dup(gTempAllocator, s, cch);
+    WCHAR* res = str::Dup(GetAllocator(), s, cch);
     if (cch == (size_t)-1) {
         cch = str::Len(res);
     }
@@ -64,12 +70,12 @@ TempStr TempToUtf8(const WCHAR* s, size_t cch) {
         CrashIf((int)cch > 0);
         return TempStr();
     }
-    auto v = strconv::WstrToUtf8V(s, cch, gTempAllocator);
+    auto v = strconv::WstrToUtf8V(s, cch, GetAllocator());
     return TempStr{v.data(), v.size()};
 }
 
 TempStr TempToUtf8(std::wstring_view sv) {
-    auto v = strconv::WstrToUtf8V(sv, gTempAllocator);
+    auto v = strconv::WstrToUtf8V(sv, GetAllocator());
     return TempStr{v.data(), v.size()};
 }
 
@@ -78,11 +84,11 @@ TempWstr TempToWstr(const char* s, size_t cb) {
         CrashIf((int)cb > 0);
         return TempWstr();
     }
-    auto v = strconv::Utf8ToWstrV(s, cb, gTempAllocator);
+    auto v = strconv::Utf8ToWstrV(s, cb, GetAllocator());
     return TempWstr{v.data(), v.size()};
 }
 
 TempWstr TempToWstr(std::string_view sv) {
-    auto v = strconv::Utf8ToWstrV(sv, gTempAllocator);
+    auto v = strconv::Utf8ToWstrV(sv, GetAllocator());
     return TempWstr{v.data(), v.size()};
 }

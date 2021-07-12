@@ -809,8 +809,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     }
     // maybeLeak = malloc(10);
 
-    InitTempAllocator();
-
     if (!gIsAsanBuild) {
         SetupCrashHandler();
     }
