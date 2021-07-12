@@ -413,7 +413,6 @@ static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
         int offsetY = rScreen.y - pt.y;
         win->annotationBeingMovedOffset = Point{offsetX, offsetY};
         DrawMovePattern(win, pt, win->annotationBeingMovedSize);
-        delete annot;
     }
 
     IPageElement* pageEl = dm->GetElementAtPos(pt);

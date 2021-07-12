@@ -153,7 +153,7 @@ AnnotationType Type(Annotation* annot) {
 }
 
 int PageNo(Annotation* annot) {
-    CrashIf(annot->pageNo < 0);
+    CrashIf(annot->pageNo < 1);
     return annot->pageNo;
 }
 
@@ -624,6 +624,7 @@ Annotation* MakeAnnotationPdf(EnginePdf* engine, pdf_annot* annot, int pageNo) {
         return nullptr;
     }
 
+    CrashIf(pageNo < 1);
     Annotation* res = new Annotation();
     res->engine = engine;
     res->pageNo = pageNo;

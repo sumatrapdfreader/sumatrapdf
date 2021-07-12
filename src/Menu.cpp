@@ -784,7 +784,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefCreateAnnotFromSelection,
     },
     {
-        _TRN("Create Annotation Under Cursor"),
+        _TRN("Create Annotation &Under Cursor"),
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
     },
     {

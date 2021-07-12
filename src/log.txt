@@ -83,6 +83,10 @@ A daily log of changes and commentary. An experiment of sorts.
 - add top level Selection menu (same as context menu) (for #1280)
 - convert enum Perm_* to enum class Perm
 - code cleanup: remove unnecessary DisplayState typedef
+- add keyboard accelerator for 'Create Annotation &Under Cursor' context menu item (fixes #2023)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2023
+  also fixed moving annotations - a regression caused a crash because I deleted annotation
+  prematurely
 
 2021-07-06 Tue
 

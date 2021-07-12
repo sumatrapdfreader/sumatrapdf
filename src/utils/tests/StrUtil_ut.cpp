@@ -239,10 +239,10 @@ void strWStrTest() {
         str.Append(L"blah");
         WCHAR* buf2 = str.Get();
         utassert(buf == buf2);
-        str::Eq(buf2, L"blah");
+        utassert(str::Eq(buf2, L"blah"));
         str.Append(L"lost");
         buf2 = str.Get();
-        str::Eq(buf2, L"blahlost");
+        utassert(str::Eq(buf2, L"blahlost"));
         utassert(buf == buf2);
         str.Reset();
         for (int i = 0; i < str::Str::kBufChars + 4; i++) {
