@@ -96,6 +96,38 @@ WCHAR* gCrashFilePath = nullptr;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = {0};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
+// returns true if running on wine (winex11.drv is present)
+// it's not a logical, but convenient place to do it
+static bool GetModules(str::Str& s, bool additionalOnly) {
+    bool isWine = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snap == INVALID_HANDLE_VALUE) {
+        return true;
+    }
+
+    MODULEENTRY32 mod;
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    while (cont) {
+        auto nameA = TempToUtf8(mod.szModule);
+        if (str::EqI(nameA.Get(), "winex11.drv")) {
+            isWine = true;
+        }
+        auto pathA = TempToUtf8(mod.szExePath);
+        if (additionalOnly && gModulesInfo) {
+            auto pos = str::FindI(gModulesInfo, pathA);
+            if (!pos) {
+                s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
+            }
+        } else {
+            s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
+        }
+        cont = Module32Next(snap, &mod);
+    }
+    CloseHandle(snap);
+    return isWine;
+}
+
 static std::span<u8> BuildCrashInfoText() {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (gSystemInfo) {
@@ -109,6 +141,8 @@ static std::span<u8> BuildCrashInfoText() {
     dbghelp::GetAllThreadsCallstacks(s);
     s.Append("\n");
     s.Append(gModulesInfo);
+    s.Append("\nModules loaded later:\n");
+    GetModules(s, true);
 
     s.Append("\n\n-------- Log -----------------\n\n");
     s.AppendView(gLogBuf->AsView());
@@ -504,35 +538,10 @@ static void GetSystemInfo(str::Str& s) {
     // * processor capabilities (mmx, sse, sse2 etc.)
 }
 
-// returns true if running on wine (winex11.drv is present)
-// it's not a logical, but convenient place to do it
-static bool GetModules(str::Str& s) {
-    bool isWine = false;
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap == INVALID_HANDLE_VALUE) {
-        return true;
-    }
-
-    MODULEENTRY32 mod;
-    mod.dwSize = sizeof(mod);
-    BOOL cont = Module32First(snap, &mod);
-    while (cont) {
-        AutoFree nameA(strconv::WstrToUtf8(mod.szModule));
-        if (str::EqI(nameA.Get(), "winex11.drv")) {
-            isWine = true;
-        }
-        AutoFree pathA(strconv::WstrToUtf8(mod.szExePath));
-        s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
-        cont = Module32Next(snap, &mod);
-    }
-    CloseHandle(snap);
-    return isWine;
-}
-
 // returns true if running on wine
 static bool BuildModulesInfo() {
     str::Str s(1024);
-    bool isWine = GetModules(s);
+    bool isWine = GetModules(s, false);
     gModulesInfo = s.StealData();
     return isWine;
 }

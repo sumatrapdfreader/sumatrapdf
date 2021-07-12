@@ -807,7 +807,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         MemLeakInit();
         maybeLeak = malloc(10);
     }
-    //maybeLeak = malloc(10);
+    // maybeLeak = malloc(10);
 
     InitTempAllocator();
 
