@@ -357,6 +357,7 @@ void DisableDataExecution() {
 
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
 // See https://github.com/benvanik/xenia/issues/228 for the VS2015 fix
+// https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
 bool RedirectIOToConsole() {
     CONSOLE_SCREEN_BUFFER_INFO coninfo;
 
@@ -367,40 +368,55 @@ bool RedirectIOToConsole() {
     // will allocate a console of our own
     // TODO: this is not perfect because after Sumatra finishes,
     // the cursor is not at end of text. Could be unsolvable
-    constexpr DWORD kParentProcess = (DWORD)-1;
-    bool ok = !!AttachConsole(kParentProcess);
+    bool ok = !!AttachConsole(ATTACH_PARENT_PROCESS);
     if (!ok) {
         AllocConsole();
+        // make buffer big enough to allow scrolling
+        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+        coninfo.dwSize.Y = 500;
+        SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
     }
 
-    // make buffer big enough to allow scrolling
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
-    coninfo.dwSize.Y = 500;
-    SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
-
-// redirect STDIN, STDOUT and STDERR to the console
-#if _MSC_VER < 1900
-    int hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
-    *stdout = *_fdopen(hConHandle, "w");
-
-    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
-    *stderr = *_fdopen(hConHandle, "w");
-
-    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
-    *stdin = *_fdopen(hConHandle, "r");
-#else
     FILE* con;
-    freopen_s(&con, "CONOUT$", "w", stdout);
-    freopen_s(&con, "CONOUT$", "w", stderr);
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (h != INVALID_HANDLE_VALUE) {
+        freopen_s(&con, "CONOUT$", "w", stdout);
+        // make them unbuffered
+        setvbuf(stdin, nullptr, _IONBF, 0);
+    }
+    h = GetStdHandle(STD_ERROR_HANDLE);
+    if (h != INVALID_HANDLE_VALUE) {
+        freopen_s(&con, "CONOUT$", "w", stderr);
+        setvbuf(stderr, nullptr, _IONBF, 0);
+    }
+
+#if 0 // probably don't need stdin
     freopen_s(&con, "CONIN$", "r", stdin);
+    setvbuf(stdout, nullptr, _IONBF, 0);
 #endif
 
-    // make them unbuffered
-    setvbuf(stdin, nullptr, _IONBF, 0);
-    setvbuf(stdout, nullptr, _IONBF, 0);
-    setvbuf(stderr, nullptr, _IONBF, 0);
-
     return !ok; // allocated if AttachConsole failed
+}
+
+void SendEnterKeyToConsole() {
+    if (GetConsoleWindow() != GetForegroundWindow()) {
+        return;
+    }
+    INPUT ip;
+    // Set up a generic keyboard event.
+    ip.type = INPUT_KEYBOARD;
+    ip.ki.wScan = 0; // hardware scan code for key
+    ip.ki.time = 0;
+    ip.ki.dwExtraInfo = 0;
+
+    // Send the "Enter" key
+    ip.ki.wVk = 0x0D;  // virtual-key code for the "Enter" key
+    ip.ki.dwFlags = 0; // 0 for key press
+    SendInput(1, &ip, sizeof(INPUT));
+
+    // Release the "Enter" key
+    ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+    SendInput(1, &ip, sizeof(INPUT));
 }
 
 /* Return the full exe path of my own executable.

@@ -953,9 +953,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     if (i.pathsToBenchmark.size() > 0) {
         BenchFileOrDir(i.pathsToBenchmark);
-        if (i.showConsole && didAllocateConsole) {
-            system("pause");
-        }
     }
 
     if (i.exitImmediately) {
@@ -1161,6 +1158,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
 Exit:
     prefs::UnregisterForFileChanges();
+
+    if (i.showConsole) {
+        if (didAllocateConsole) {
+            // wait for user to press any key to close the console window
+            system("pause");
+        } else {
+            // simulate releasing console. the cursor still doesn't show up
+            // at the end of output, but it's better than nothing
+            SendEnterKeyToConsole();
+        }
+    }
 
     if (fastExit) {
         // leave all the remaining clean-up to the OS
