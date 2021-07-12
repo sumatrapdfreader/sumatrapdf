@@ -51,7 +51,7 @@ func detectExeMust(name string) string {
 		return path
 	}
 	fmt.Printf("Couldn't find '%s'\n", name)
-	panicIfErr(err)
+	must(err)
 	// TODO: could also try known locations for WinMerge in $env["ProgramFiles(x86)"]/WinMerge/WinMergeU.exe
 	return ""
 }
@@ -72,7 +72,7 @@ func getWinTempDirMust() string {
 		return dir
 	}
 	dir = os.Getenv("TMP")
-	fatalIf(dir == "", "env variable TEMP and TMP are not set\n")
+	panicIf(dir == "", "env variable TEMP and TMP are not set\n")
 	return dir
 }
 
@@ -81,7 +81,7 @@ func createTempDirMust() {
 	// we want a stable name so that we can clean up old junk
 	tempDir = filepath.Join(dir, "sum-diff-preview")
 	err := os.MkdirAll(tempDir, 0755)
-	panicIfErr(err)
+	must(err)
 }
 
 func runCmd(exePath string, args ...string) ([]byte, error) {
@@ -99,7 +99,7 @@ func runCmdNoWait(exePath string, args ...string) error {
 func parseGitStatusLineMust(s string) *GitChange {
 	c := &GitChange{}
 	parts := strings.SplitN(s, " ", 2)
-	fatalIf(len(parts) != 2, "invalid line: '%s'\n", s)
+	panicIf(len(parts) != 2, "invalid line: '%s'\n", s)
 	switch parts[0] {
 	case "M":
 		c.Type = Modified
@@ -114,7 +114,7 @@ func parseGitStatusLineMust(s string) *GitChange {
 		// RM tools/diff-preview.go -> do/diff_preview.go
 		return nil
 	default:
-		fatalIf(true, "invalid line: '%s'\n", s)
+		panicIf(true, "invalid line: '%s'\n", s)
 	}
 	c.Path = strings.TrimSpace(parts[1])
 	c.Name = filepath.Base(c.Path)
@@ -139,21 +139,21 @@ func parseGitStatusMust(out []byte, includeNotCheckedIn bool) []*GitChange {
 
 func gitStatusMust() []*GitChange {
 	out, err := runCmd(gitPath, "status", "--porcelain")
-	panicIfErr(err)
+	must(err)
 	return parseGitStatusMust(out, false)
 }
 
 func gitGetFileContentHeadMust(path string) []byte {
 	loc := "HEAD:" + path
 	out, err := runCmd(gitPath, "show", loc)
-	panicIfErr(err)
+	must(err)
 	return out
 }
 
 // delete directories older than 1 day in tempDir
 func deleteOldDirs() {
 	files, err := ioutil.ReadDir(tempDir)
-	panicIfErr(err)
+	must(err)
 	for _, fi := range files {
 		if !fi.IsDir() {
 			// we shouldn't create anything but dirs
@@ -164,7 +164,7 @@ func deleteOldDirs() {
 		if age > time.Hour*24 {
 			fmt.Printf("Deleting %s because older than 1 day\n", path)
 			err = os.RemoveAll(path)
-			panicIfErr(err)
+			must(err)
 		} else {
 			fmt.Printf("Not deleting %s because younger than 1 day (%s)\n", path, age)
 		}
@@ -187,22 +187,22 @@ func runWinMerge(dir string) {
 		/r : recursive compare
 	*/
 	err := runCmdNoWait(winMergePath, "/u", "/wl", "/wr", dirBefore, dirAfter)
-	panicIfErr(err)
+	must(err)
 }
 
 func catGitHeadToFileMust(dst, gitPath string) {
 	fmt.Printf("catGitHeadToFileMust: %s => %s\n", gitPath, dst)
 	d := gitGetFileContentHeadMust(gitPath)
 	f, err := os.Create(dst)
-	panicIfErr(err)
+	must(err)
 	defer f.Close()
 	_, err = f.Write(d)
-	panicIfErr(err)
+	must(err)
 }
 
 func createEmptyFileMust(path string) {
 	f, err := os.Create(path)
-	panicIfErr(err)
+	must(err)
 	f.Close()
 }
 
@@ -212,13 +212,13 @@ func copyFileMust(dst, src string) {
 	src = strings.Replace(src, "/", "\\", -1)
 
 	fdst, err := os.Create(dst)
-	panicIfErr(err)
+	must(err)
 	defer fdst.Close()
 	fsrc, err := os.Open(src)
-	panicIfErr(err)
+	must(err)
 	defer fsrc.Close()
 	_, err = io.Copy(fdst, fsrc)
-	panicIfErr(err)
+	must(err)
 }
 
 func copyFileAddedMust(dirBefore, dirAfter string, change *GitChange) {
@@ -257,16 +257,16 @@ func copyFileChangeMust(dir string, change *GitChange) {
 	case Deleted:
 		copyFileModifiedMust(dirBefore, dirAfter, change)
 	default:
-		fatalIf(true, "unknown change %+v\n", change)
+		panicIf(true, "unknown change %+v\n", change)
 	}
 }
 
 func copyFiles(dir string, changes []*GitChange) {
 	dirBefore, dirAfter := getBeforeAfterDirs(dir)
 	err := os.MkdirAll(dirBefore, 0755)
-	panicIfErr(err)
+	must(err)
 	err = os.MkdirAll(dirAfter, 0755)
-	panicIfErr(err)
+	must(err)
 	for _, change := range changes {
 		copyFileChangeMust(dir, change)
 	}
@@ -274,7 +274,7 @@ func copyFiles(dir string, changes []*GitChange) {
 
 func hasGitDirMust(dir string) bool {
 	files, err := ioutil.ReadDir(dir)
-	panicIfErr(err)
+	must(err)
 	for _, fi := range files {
 		if strings.ToLower(fi.Name()) == ".git" {
 			return fi.IsDir()
@@ -287,13 +287,13 @@ func hasGitDirMust(dir string) bool {
 func cdToGitRoot() {
 	var newDir string
 	dir, err := os.Getwd()
-	panicIfErr(err)
+	must(err)
 	for {
 		if hasGitDirMust(dir) {
 			break
 		}
 		newDir = filepath.Dir(dir)
-		fatalIf(dir == newDir, "dir == newDir (%s == %s)", dir, newDir)
+		panicIf(dir == newDir, "dir == newDir (%s == %s)", dir, newDir)
 		dir = newDir
 	}
 	if newDir != "" {
@@ -320,7 +320,7 @@ func winmergeDiffPreview() {
 	subDir := time.Now().Format("2006-01-02_15_04_05")
 	dir := filepath.Join(tempDir, subDir)
 	err := os.MkdirAll(dir, 0755)
-	panicIfErr(err)
+	must(err)
 	copyFiles(dir, changes)
 	runWinMerge(dir)
 }

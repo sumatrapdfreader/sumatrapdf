@@ -124,17 +124,17 @@ func parseAnalyzeLine(s string) AnalyzeLine {
 	sOrig := s
 	// remove " [C:\Users\kjk\src\sumatrapdf\vs2017\Installer.vcxproj]" from the end
 	end := strings.LastIndex(s, " [")
-	fatalIf(end == -1, "invalid line '%s'\n", sOrig)
+	panicIfend == -1, "invalid line '%s'\n", sOrig)
 	s = s[:end]
 	parts := strings.SplitN(s, "): ", 2)
-	fatalIf(len(parts) != 2, "invalid line '%s'\n", sOrig)
+	panicIflen(parts) != 2, "invalid line '%s'\n", sOrig)
 	res := AnalyzeLine{
 		OrigLine: sOrig,
 		Message:  parts[1],
 	}
 	s = parts[0]
 	end = strings.LastIndex(s, "(")
-	fatalIf(end == -1, "invalid line '%s'\n", sOrig)
+	panicIfend == -1, "invalid line '%s'\n", sOrig)
 	// change
 	// c:\users\kjk\src\sumatrapdf\ext\unarr\rar\uncompress-rar.c
 	// =>

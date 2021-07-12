@@ -49,7 +49,7 @@ func execTextTemplate(tmplText string, data interface{}) string {
 func createSumatraLatestJs(buildType string) string {
 	var appName string
 	switch buildType {
-	case buildTypePreRel, buildTypeDaily:
+	case buildTypePreRel:
 		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
@@ -90,7 +90,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 func s3ListPreReleaseFilesMust(c *S3Client, prefix string) []string {
 	bucket := c.GetBucket()
 	resp, err := bucket.List(prefix, "", "", maxS3Results)
-	panicIfErr(err)
+	must(err)
 	//fatalIf(resp.IsTruncated, "truncated response! implement reading all the files\n")
 	var res []string
 	for _, key := range resp.Contents {
@@ -119,7 +119,7 @@ func verifyBuildNotInS3Must(c *S3Client, buildType string) {
 	dirRemote := getRemoteDir(buildType)
 	dirLocal := getFinalDirForBuildType(buildType)
 	files, err := ioutil.ReadDir(dirLocal)
-	panicIfErr(err)
+	must(err)
 	for _, f := range files {
 		fname := f.Name()
 		remotePath := path.Join(dirRemote, fname)
@@ -191,8 +191,6 @@ func s3UploadDir(c *S3Client, dirRemote string, dirLocal string) error {
 func getFinalDirForBuildType(buildType string) string {
 	var dir string
 	switch buildType {
-	case buildTypeDaily:
-		dir = "final-daily"
 	case buildTypeRel:
 		dir = "final-rel"
 	case buildTypePreRel:
@@ -206,7 +204,7 @@ func getFinalDirForBuildType(buildType string) string {
 // this returns version to be used in uploaded file names
 func getVerForBuildType(buildType string) string {
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel:
+	case buildTypePreRel:
 		// this is linear build number like "12223"
 		return getPreReleaseVer()
 	case buildTypeRel:
@@ -225,6 +223,9 @@ func s3UploadBuildMust(buildType string) {
 	}
 
 	timeStart := time.Now()
+	defer func() {
+		logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
+	}()
 	c := newS3Client()
 	c.VerifyHasSecrets()
 
@@ -233,22 +234,34 @@ func s3UploadBuildMust(buildType string) {
 	verifyBuildNotInS3Must(c, buildType)
 
 	err := s3UploadDir(c, dirRemote, dirLocal)
-	panicIfErr(err)
+	must(err)
 
 	// for release build we don't upload files with version info
 	if buildType == buildTypeRel {
 		return
 	}
+	s3UploadBuildUpdateInfoMust(buildType)
+	// TODO: for now, we also update daily version
+	// to get people to switch to pre-release
+	if buildType == buildTypePreRel {
+		s3UploadBuildUpdateInfoMust(buildTypeDaily)
+	}
+}
 
+func s3UploadBuildUpdateInfoMust(buildType string) {
+	if shouldSkipUpload() {
+		return
+	}
+
+	c := newS3Client()
+	c.VerifyHasSecrets()
 	files := getVersionFilesForLatestInfo(buildType)
 	for _, f := range files {
 		remotePath := f[0]
-		err = c.UploadString(remotePath, f[1], true)
-		panicIfErr(err)
+		err := c.UploadString(remotePath, f[1], true)
+		must(err)
 		logf("Uploaded to s3: '%s'\n", remotePath)
 	}
-
-	logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
 }
 
 func s3DeleteOldBuildsPrefix(buildType string) {
@@ -284,5 +297,6 @@ func s3DeleteOldBuildsPrefix(buildType string) {
 
 func s3DeleteOldBuilds() {
 	s3DeleteOldBuildsPrefix(buildTypePreRel)
-	s3DeleteOldBuildsPrefix(buildTypeDaily)
+	// TODO: we can remove them completely
+	//s3DeleteOldBuildsPrefix(buildTypeDaily)
 }

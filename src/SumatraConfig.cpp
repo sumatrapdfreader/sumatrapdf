@@ -20,13 +20,6 @@ bool gIsAsanBuild = true;
 bool gIsAsanBuild = false;
 #endif
 
-// those are set in BuildConfig.h by build.go
-#if defined(IS_DAILY_BUILD)
-bool gIsDailyBuild = true;
-#else
-bool gIsDailyBuild = false;
-#endif
-
 #if defined(PRE_RELEASE_VER)
 bool gIsPreReleaseBuild = true;
 #else

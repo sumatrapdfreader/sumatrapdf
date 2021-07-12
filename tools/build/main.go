@@ -17,7 +17,7 @@ func verifyReleaseNotInS3Must(ver string) {
 		return
 	}
 	s3Path := s3RelDir + fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
-	fatalIf(s3Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", ver, s3Path)
+	panicIfs3Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", ver, s3Path)
 }
 
 func buildAnalyze() {

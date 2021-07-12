@@ -7,7 +7,6 @@
 // the code compiles
 extern bool gIsDebugBuild;
 extern bool gIsAsanBuild;
-extern bool gIsDailyBuild;
 extern bool gIsPreReleaseBuild;
 extern bool gOwnerDrawMenu;
 extern bool gDisableDocumentRestrictions;

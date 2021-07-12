@@ -98,7 +98,7 @@ func fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func fatalIf(cond bool, format string, args ...interface{}) {
+func panicIfcond bool, format string, args ...interface{}) {
 	if cond {
 		if inFatal {
 			os.Exit(1)
@@ -139,12 +139,12 @@ func readSecretsMust() *Secrets {
 	}
 	path := pj("scripts", "secrets.json")
 	d, err := ioutil.ReadFile(path)
-	fatalIf(err != nil, "readSecretsMust(): error %s reading file '%s'\n", err, path)
+	panicIferr != nil, "readSecretsMust(): error %s reading file '%s'\n", err, path)
 	var s Secrets
 	err = json.Unmarshal(d, &s)
-	fatalIf(err != nil, "readSecretsMust(): failed to json-decode file '%s'. err: %s, data:\n%s\n", path, err, string(d))
-	fatalIf(s.AwsAccess == "", "AwsAccess in secrets.json missing")
-	fatalIf(s.AwsSecret == "", "AwsSecret in secrets.json missing")
+	panicIferr != nil, "readSecretsMust(): failed to json-decode file '%s'. err: %s, data:\n%s\n", path, err, string(d))
+	panicIfs.AwsAccess == "", "AwsAccess in secrets.json missing")
+	panicIfs.AwsSecret == "", "AwsSecret in secrets.json missing")
 	cachedSecrets = &s
 	return cachedSecrets
 }
@@ -153,7 +153,7 @@ func readSecretsMust() *Secrets {
 // xx/yy/zzzzzzzzzzz..
 // This gives 256 files in the leaf for 16 million total files
 func sha1HexToS3Path(sha1Hex string) string {
-	fatalIf(len(sha1Hex) != 40, "invalid sha1Hex '%s'", sha1Hex)
+	panicIflen(sha1Hex) != 40, "invalid sha1Hex '%s'", sha1Hex)
 	return fmt.Sprintf("%s/%s/%s", sha1Hex[:2], sha1Hex[2:4], sha1Hex[4:])
 }
 
@@ -169,9 +169,9 @@ func removeExt(s string) string {
 func s3PathToSha1Hex(s string) string {
 	s = removeExt(s)
 	s = s[len(s)-42:]
-	fatalIf(s[2] != '/', "s[2] is '%c', should be '/'", s[2])
+	panicIfs[2] != '/', "s[2] is '%c', should be '/'", s[2])
 	s = strings.Replace(s, "/", "", -1)
-	fatalIf(len(s) != 40, "len(s) is %d, should be 40", len(s))
+	panicIflen(s) != 40, "len(s) is %d, should be 40", len(s))
 	return s
 }
 
@@ -195,7 +195,7 @@ func calcFileInfo(fi *FileInfo) {
 		}
 		d := buf[:n]
 		fatalIfErr(err)
-		fatalIf(n == 0, "n is 0")
+		panicIfn == 0, "n is 0")
 		fi.Size += int64(n)
 		_, err = sha1.Write(d)
 		fatalIfErr(err)
@@ -228,7 +228,7 @@ func sha1ExistsInS3Must(sha1 string) bool {
 	resp, err := bucket.List(prefix, "", "", maxS3Results)
 	fatalIfErr(err)
 	keys := resp.Contents
-	fatalIf(len(keys) > 1, "len(keys) == %d (should be 0 or 1)", len(keys))
+	panicIflen(keys) > 1, "len(keys) == %d (should be 0 or 1)", len(keys))
 	return len(keys) == 1
 }
 
@@ -322,7 +322,7 @@ func s3GetBucket() *s3.Bucket {
 // surrounded with double-quotes.
 func keyEtagToMd5Hex(s string) string {
 	res := strings.Trim(s, `"`)
-	fatalIf(len(res) != 32, "len(res) = %d (should be 32)", len(res))
+	panicIflen(res) != 32, "len(res) = %d (should be 32)", len(res))
 	return res
 }
 

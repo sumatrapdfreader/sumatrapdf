@@ -33,7 +33,7 @@ func openForAppend(name string) (*os.File, error) {
 
 func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
 	f, err := openForAppend(path)
-	panicIfErr(err)
+	must(err)
 	defer f.Close()
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
@@ -126,7 +126,6 @@ func main() {
 		flgCrashes                 bool
 		flgCheckAccessKeys         bool
 		flgBuildNo                 bool
-		flgTriggerPreRel           bool
 		flgTriggerCodeQL           bool
 		flgWebsiteRun              bool
 		flgWebsiteDeployCloudflare bool
@@ -164,7 +163,6 @@ func main() {
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
-		flag.BoolVar(&flgTriggerPreRel, "trigger-pre-rel", false, "trigger pre-release build")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy", false, "deploy website to cloudflare")
@@ -182,7 +180,7 @@ func main() {
 
 	if false {
 		detectVersions()
-		buildDaily()
+		buildPreRelease()
 		return
 	}
 
@@ -230,12 +228,7 @@ func main() {
 	}
 
 	if flgTriggerCodeQL {
-		triggerCodeQL()
-		return
-	}
-
-	if flgTriggerPreRel {
-		triggerPreRelBuild()
+		triggerBuildWebHook(githubEventTypeCodeQL)
 		return
 	}
 
@@ -317,10 +310,9 @@ func main() {
 		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
-		case githubEventNone, githubEventTypeCodeQL:
-			// daily build on push
-			buildDaily()
-		case githubEventTypeBuildPreRel:
+		case githubEventTypeCodeQL:
+			// code ql is just a regular build, I assume intercepted by
+			// by their tooling
 			buildPreRelease()
 		default:
 			panic("unkown value from getGitHubEventType()")
@@ -346,11 +338,8 @@ func main() {
 
 		gev := getGitHubEventType()
 		switch gev {
-		case githubEventNone:
-			// daily build on push
-			s3UploadBuildMust(buildTypeDaily)
-			spacesUploadBuildMust(buildTypeDaily)
-		case githubEventTypeBuildPreRel:
+		case githubEventPush:
+			// pre-release build on push
 			s3UploadBuildMust(buildTypePreRel)
 			spacesUploadBuildMust(buildTypePreRel)
 		case githubEventTypeCodeQL:

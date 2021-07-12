@@ -36,7 +36,7 @@ func validateVer(ver string) {
 	panicIf(len(parts) > 3)
 	for _, p := range parts {
 		n, err := strconv.Atoi(p)
-		panicIfErr(err)
+		must(err)
 		panicIf(n < 0 || n > 19)
 	}
 }
@@ -52,12 +52,12 @@ Latest %s
 	{
 		remotePath := "sumatrapdf/sumpdf-update.txt"
 		err := c.UploadString(remotePath, s, true)
-		panicIfErr(err)
+		must(err)
 	}
 	{
 		remotePath := "sumatrapdf/sumpdf-latest.txt"
 		err := c.UploadString(remotePath, s, true)
-		panicIfErr(err)
+		must(err)
 	}
 
 	path := filepath.Join("website", "update-check-rel.txt")

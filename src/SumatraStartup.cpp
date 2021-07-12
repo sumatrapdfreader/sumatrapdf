@@ -855,7 +855,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     */
 
     // TODO: maybe add cmd-line switch to enable debug logging
-    gEnableDbgLog = gIsDebugBuild || gIsDailyBuild || gIsPreReleaseBuild;
+    gEnableDbgLog = gIsDebugBuild || gIsPreReleaseBuild;
 
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {

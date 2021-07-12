@@ -15,7 +15,7 @@ const (
 	filesDir = `C:\Users\kjk\Downloads\SumatraPeter_3.2.11061_Filename_Sort_Failure_Test_Archives`
 )
 
-func panicIfErr(err error) {
+func must(err error) {
 	if err != nil {
 		panic(err.Error())
 	}
@@ -23,14 +23,14 @@ func panicIfErr(err error) {
 
 func printZipFiles(zipPath string) {
 	st, err := os.Stat(zipPath)
-	panicIfErr(err)
+	must(err)
 	fileSize := st.Size()
 	f, err := os.Open(zipPath)
-	panicIfErr(err)
+	must(err)
 	defer f.Close()
 
 	zr, err := zip.NewReader(f, fileSize)
-	panicIfErr(err)
+	must(err)
 
 	for _, fi := range zr.File {
 		if fi.FileInfo().IsDir() {
@@ -55,7 +55,7 @@ func printFiles(path string) {
 
 func main() {
 	files, err := ioutil.ReadDir(filesDir)
-	panicIfErr(err)
+	must(err)
 	for _, fi := range files {
 		if fi.IsDir() {
 			continue

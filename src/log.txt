@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-11 Sun
+
+- merge daily builds into pre-release
+- update website from notion
+
 2021-07-10 Sat
 
 - fix CodeQL issues

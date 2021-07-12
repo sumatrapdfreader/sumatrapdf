@@ -20,19 +20,19 @@ func translationsPath() string {
 func translationsSha1HexMust(d []byte) string {
 	lines := toTrimmedLines(d)
 	sha1 := lines[1]
-	fatalIf(len(sha1) != 40, "lastTranslationsSha1HexMust: '%s' doesn't look like sha1", sha1)
+	panicIf(len(sha1) != 40, "lastTranslationsSha1HexMust: '%s' doesn't look like sha1", sha1)
 	return sha1
 }
 
 func lastTranslationsSha1HexMust() string {
 	d, err := ioutil.ReadFile(translationsPath())
-	panicIfErr(err)
+	must(err)
 	return translationsSha1HexMust(d)
 }
 
 func saveTranslationsMust(d []byte) {
 	err := ioutil.WriteFile(translationsPath(), d, 0644)
-	panicIfErr(err)
+	must(err)
 }
 
 func verifyTranslationsMust() {
@@ -43,7 +43,7 @@ func verifyTranslationsMust() {
 	url := fmt.Sprintf("%s/dltrans?app=SumatraPDF&sha1=%s", translationServer, sha1)
 	d := httpDlMust(url)
 	lines := toTrimmedLines(d)
-	fatalIf(lines[1] != "No change", "translations changed, run ./doit.bat -trans-dl\n")
+	panicIf(lines[1] != "No change", "translations changed, run ./doit.bat -trans-dl\n")
 }
 
 func validSha1(s string) bool {

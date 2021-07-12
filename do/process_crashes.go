@@ -340,7 +340,7 @@ func storeDayToDirDay(s string) string {
 // return true if crash in that day is outdated
 func isOutdated(day string) bool {
 	d1, err := time.Parse("2006-01-02", day)
-	panicIfErr(err)
+	must(err)
 	diff := time.Since(d1)
 	return diff > time.Hour*24*nDaysToKeep
 }
@@ -406,7 +406,7 @@ func downloadOrReadOrDelete(mc *u.MinioClient, ci *crashInfo) {
 	} else {
 		downloadAtomicallyRetry(mc, path, ci.storeKey)
 		body, err = ioutil.ReadFile(path)
-		panicIfErr(err)
+		must(err)
 		nDownloaded++
 		if nDownloaded < 50 || nDownloaded%200 == 0 {
 			logf("downloaded '%s' => '%s' %d\n", ci.storeKey, path, nRemoteFiles)

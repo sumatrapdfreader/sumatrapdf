@@ -17,11 +17,10 @@ import (
 )
 
 var (
-	must       = u.Must
-	logf       = u.Logf
-	fatalIf    = u.PanicIf
-	panicIf    = u.PanicIf
-	panicIfErr = u.PanicIfErr
+	must    = u.Must
+	logf    = u.Logf
+	fatalIf = u.PanicIf
+	panicIf = u.PanicIf
 )
 
 func absPathMust(path string) string {
@@ -83,7 +82,7 @@ func fileSizeMust(path string) int64 {
 
 func removeDirMust(dir string) {
 	err := os.RemoveAll(dir)
-	panicIfErr(err)
+	must(err)
 }
 
 func removeFileMust(path string) {
@@ -91,7 +90,7 @@ func removeFileMust(path string) {
 		return
 	}
 	err := os.Remove(path)
-	panicIfErr(err)
+	must(err)
 }
 
 func listExeFiles(dir string) {
@@ -185,17 +184,17 @@ func fileSha1Hex(path string) (string, error) {
 
 func httpDlMust(uri string) []byte {
 	res, err := http.Get(uri)
-	panicIfErr(err)
+	must(err)
 	d, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
-	panicIfErr(err)
+	must(err)
 	return d
 }
 
 func httpDlToFileMust(uri string, path string, sha1Hex string) {
 	if u.FileExists(path) {
 		sha1File, err := fileSha1Hex(path)
-		panicIfErr(err)
+		must(err)
 		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 		return
 	}
@@ -204,7 +203,7 @@ func httpDlToFileMust(uri string, path string, sha1Hex string) {
 	sha1File := dataSha1Hex(d)
 	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
 	err := ioutil.WriteFile(path, d, 0755)
-	panicIfErr(err)
+	must(err)
 }
 
 func evalTmpl(s string, v interface{}) string {

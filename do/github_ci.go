@@ -28,18 +28,9 @@ func triggerBuildWebHook(typ string) {
 	u.PanicIf(rsp.StatusCode >= 400)
 }
 
-func triggerPreRelBuild() {
-	triggerBuildWebHook("build-pre-rel")
-}
-
-func triggerCodeQL() {
-	triggerBuildWebHook("codeql")
-}
-
 const (
-	githubEventNone            = 0
-	githubEventTypeBuildPreRel = 1
-	githubEventTypeCodeQL      = 3
+	githubEventTypeCodeQL = "codeql"
+	githubEventPush       = "push"
 )
 
 //  "action": "build-pre-rel"
@@ -47,26 +38,25 @@ type gitHubEventJSON struct {
 	Action string `json:"action"`
 }
 
-func getGitHubEventType() int {
+func getGitHubEventType() string {
 	v := os.Getenv("GITHUB_EVENT_NAME")
 	isWebhookDispatch := v == "repository_dispatch"
 	if !isWebhookDispatch {
-		return githubEventNone
+		return githubEventPush
 	}
 	path := os.Getenv("GITHUB_EVENT_PATH")
 	d, err := ioutil.ReadFile(path)
-	panicIfErr(err)
+	must(err)
 	var js gitHubEventJSON
 	err = json.Unmarshal(d, &js)
-	panicIfErr(err)
+	must(err)
+	// validate this is an action we understand
 	switch js.Action {
-	case "build-pre-rel":
-		return githubEventTypeBuildPreRel
-	case "codeql":
-		return githubEventTypeCodeQL
+	case githubEventTypeCodeQL:
+		return js.Action
 	}
 	panicIf(true, "invalid js.Action of '%s'", js.Action)
-	return githubEventNone
+	return ""
 }
 
 // https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
