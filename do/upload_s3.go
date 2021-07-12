@@ -49,7 +49,7 @@ func execTextTemplate(tmplText string, data interface{}) string {
 func createSumatraLatestJs(buildType string) string {
 	var appName string
 	switch buildType {
-	case buildTypePreRel:
+	case buildTypeDaily, buildTypePreRel:
 		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
