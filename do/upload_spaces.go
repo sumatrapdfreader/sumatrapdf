@@ -103,6 +103,47 @@ func minioExists(c *u.MinioClient, remotePath string) bool {
 	return err == nil
 }
 
+type DownloadUrls struct {
+	installer64   string
+	portableExe64 string
+	portableZip64 string
+
+	installer32   string
+	portableExe32 string
+	portableZip32 string
+}
+
+func getDownloadUrls(storage string, buildType string, ver string) *DownloadUrls {
+	prefix := "sfo2.digitaloceanspaces.com/"
+	switch storage {
+	case "spaces":
+		// do nothing
+	case "s3":
+		prefix = "kjkpub.s3.amazonaws.com/"
+	}
+	prefix += getRemoteDir(buildType)
+	// zip is like .exe but can be half the size due to compression
+	res := &DownloadUrls{
+		installer64:   prefix + "SumatraPDF-${buildType}-${ver}-64-install.exe",
+		portableExe64: prefix + "SumatraPDF-${buildType}-${ver}-64.exe",
+		portableZip64: prefix + "SumatraPDF-${buildType}-${ver}-64.zip",
+		installer32:   prefix + "SumatraPDF-${buildType}-${ver}-install.exe",
+		portableExe32: prefix + "SumatraPDF-${buildType}-${ver}.exe",
+		portableZip32: prefix + "SumatraPDF-${buildType}-${ver}.zip",
+	}
+	rplc := func(s *string) {
+		*s = strings.Replace(*s, "${ver}", ver, -1)
+		*s = strings.Replace(*s, "${buildType}", buildType, -1)
+	}
+	rplc(&res.installer64)
+	rplc(&res.portableExe64)
+	rplc(&res.portableZip64)
+	rplc(&res.installer32)
+	rplc(&res.portableExe32)
+	rplc(&res.portableZip32)
+	return res
+}
+
 func minioUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
 	files, err := ioutil.ReadDir(dirLocal)
 	must(err)
@@ -130,7 +171,7 @@ func verifyBuildNotInSpacesMust(buildType string) {
 	panicIf(minioExists(c, remotePath), "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
-func getVersionFilesForLatestInfo(buildType string) [][]string {
+func getVersionFilesForLatestInfo(storage string, buildType string) [][]string {
 	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
@@ -147,17 +188,30 @@ func getVersionFilesForLatestInfo(buildType string) [][]string {
 		res = append(res, []string{remotePaths[1], ver})
 	}
 
+	// TODO: maybe provide download urls for both storage services
 	{
-		// TODO: add the following information
-		// InstallerUrl64 : url for 64-bit installer
-		// InstallerUrl32 : url for 32-bit installer
-		// PortableUrl64 : url for 64-bit version of portable binary
-		// PortableUrl32 : url for 32-bit version of portable binary
 		// *-update.txt : for current builds
+		urls := getDownloadUrls(storage, buildType, ver)
 		s := `[SumatraPDF]
-Latest %s
+Latest ${ver}
+Installer64 ${inst64}
+Installer32 ${inst32}
+PortableExe64 ${exe64}
+PortableExe32 ${exe32}
+PortableZip64 ${zip64}
+PortableZip32 ${zip32}
 `
-		s = strings.Replace(s, "${ver}", ver, -1)
+		rplc := func(old, new string) {
+			s = strings.Replace(s, old, new, -1)
+		}
+		rplc("${ver}", ver)
+		rplc("${inst64}", urls.installer64)
+		rplc("${inst32}", urls.installer32)
+		rplc("${exe64}", urls.portableExe64)
+		rplc("${exe32}", urls.portableExe32)
+		rplc("${zip64}", urls.portableZip64)
+		rplc("${zip32}", urls.portableZip32)
+
 		res = append(res, []string{remotePaths[2], s})
 	}
 
@@ -190,28 +244,22 @@ func spacesUploadBuildMust(buildType string) {
 	if buildType == buildTypeRel {
 		return
 	}
+
+	spacesUploadBuildUpdateInfoMust := func(buildType string) {
+		files := getVersionFilesForLatestInfo("spaces", buildType)
+		for _, f := range files {
+			remotePath := f[0]
+			err := c.UploadDataPublic(remotePath, []byte(f[1]))
+			must(err)
+			logf("Uploaded to spaces: '%s'\n", remotePath)
+		}
+	}
+
 	spacesUploadBuildUpdateInfoMust(buildType)
 	// TODO: for now, we also update daily version
 	// to get people to switch to pre-release
 	if buildType == buildTypePreRel {
 		spacesUploadBuildUpdateInfoMust(buildTypeDaily)
-	}
-}
-
-func spacesUploadBuildUpdateInfoMust(buildType string) {
-	if shouldSkipUpload() {
-		return
-	}
-	if !hasSpacesCreds() {
-		return
-	}
-	c := newMinioClient()
-	files := getVersionFilesForLatestInfo(buildType)
-	for _, f := range files {
-		remotePath := f[0]
-		err := c.UploadDataPublic(remotePath, []byte(f[1]))
-		must(err)
-		logf("Uploaded to spaces: '%s'\n", remotePath)
 	}
 }
 

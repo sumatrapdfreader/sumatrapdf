@@ -4,6 +4,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - merge daily builds into pre-release
 - update website from notion
+- add download urls to auto-update info
 
 2021-07-10 Sat
 

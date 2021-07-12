@@ -240,27 +240,22 @@ func s3UploadBuildMust(buildType string) {
 	if buildType == buildTypeRel {
 		return
 	}
+
+	s3UploadBuildUpdateInfoMust := func(buildType string) {
+		files := getVersionFilesForLatestInfo("s3", buildType)
+		for _, f := range files {
+			remotePath := f[0]
+			err := c.UploadString(remotePath, f[1], true)
+			must(err)
+			logf("Uploaded to s3: '%s'\n", remotePath)
+		}
+	}
+
 	s3UploadBuildUpdateInfoMust(buildType)
 	// TODO: for now, we also update daily version
 	// to get people to switch to pre-release
 	if buildType == buildTypePreRel {
 		s3UploadBuildUpdateInfoMust(buildTypeDaily)
-	}
-}
-
-func s3UploadBuildUpdateInfoMust(buildType string) {
-	if shouldSkipUpload() {
-		return
-	}
-
-	c := newS3Client()
-	c.VerifyHasSecrets()
-	files := getVersionFilesForLatestInfo(buildType)
-	for _, f := range files {
-		remotePath := f[0]
-		err := c.UploadString(remotePath, f[1], true)
-		must(err)
-		logf("Uploaded to s3: '%s'\n", remotePath)
 	}
 }
 
