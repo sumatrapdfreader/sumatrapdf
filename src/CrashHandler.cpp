@@ -128,7 +128,7 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     return isWine;
 }
 
-static std::span<u8> BuildCrashInfoText() {
+static std::string_view BuildCrashInfoText(bool forCrash) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -137,7 +137,9 @@ static std::span<u8> BuildCrashInfoText() {
     GetStressTestInfo(&s);
     s.Append("\n");
 
-    dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
+    if (forCrash) {
+        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
+    }
     dbghelp::GetAllThreadsCallstacks(s);
     s.Append("\n");
     s.Append(gModulesInfo);
@@ -152,7 +154,7 @@ static std::span<u8> BuildCrashInfoText() {
         s.Append(gSettingsFile);
     }
 
-    return s.StealAsSpan();
+    return s.StealAsView();
 }
 
 static void SaveCrashInfo(std::span<u8> d) {
@@ -298,32 +300,60 @@ bool CrashHandlerDownloadSymbols() {
     return true;
 }
 
-// If we can't resolve the symbols, we assume it's because we don't have symbols
-// so we'll try to download them and retry. If we can resolve symbols, we'll
-// get the callstacks etc. and submit to our server for analysis.
-void SubmitCrashInfo() {
-    dbglog("SubmitCrashInfo()\n");
+// like crash report, but can be triggered without a crash
+void SubmitDebugReport(const char* condStr) {
+    dbglog("SubmitDebugReport()\n");
     if (!CrashHandlerCanUseNet()) {
-        dbglog("SubmitCrashInfo(): skipping because !CrashHandlerCanUseNet()\n");
+        dbglog("SubmitDebugReport(): skipping because !CrashHandlerCanUseNet()\n");
         return;
     }
 
-    dbglogf(L"SubmitCrashInfo: gSymbolPathW: '%s'\n", gSymbolPathW);
+    dbglogf(L"SubmitDebugReport: gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
     if (!ok) {
-        dbglog("SubmitCrashInfo(): CrashHandlerDownloadSymbols() failed\n");
+        dbglog("SubmitDebugReport(): CrashHandlerDownloadSymbols() failed\n");
     }
 
-    std::span<u8> d = BuildCrashInfoText();
-    if (d.empty()) {
-        dbglog("SubmitCrashInfo(): skipping because !BuildCrashInfoText()\n");
+    auto sv = BuildCrashInfoText(false);
+    if (sv.empty()) {
+        dbglog("SubmitDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
+    auto d = ToSpanU8(sv);
+    // SaveCrashInfo(d);
+    SendCrashInfo(d);
+    // gCrashHandlerAllocator->Free((const void*)d.data());
+    dbglog("SubmitDebugReport() finished\n");
+}
+
+// If we can't resolve the symbols, we assume it's because we don't have symbols
+// so we'll try to download them and retry. If we can resolve symbols, we'll
+// get the callstacks etc. and submit to our server for analysis.
+void SubmitCrashReport() {
+    dbglog("SubmitCrashReport()\n");
+    if (!CrashHandlerCanUseNet()) {
+        dbglog("SubmitCrashReport(): skipping because !CrashHandlerCanUseNet()\n");
+        return;
+    }
+
+    dbglogf(L"SubmitCrashReport: gSymbolPathW: '%s'\n", gSymbolPathW);
+
+    bool ok = CrashHandlerDownloadSymbols();
+    if (!ok) {
+        dbglog("SubmitCrashReport(): CrashHandlerDownloadSymbols() failed\n");
+    }
+
+    auto sv = BuildCrashInfoText(true);
+    if (sv.empty()) {
+        dbglog("SubmitCrashReport(): skipping because !BuildCrashInfoText()\n");
+        return;
+    }
+    auto d = ToSpanU8(sv);
     SaveCrashInfo(d);
     SendCrashInfo(d);
-    gCrashHandlerAllocator->Free((const void*)d.data());
-    dbglog("SubmitCrashInfo() finished\n");
+    // gCrashHandlerAllocator->Free((const void*)d.data());
+    dbglog("SubmitCrashReport() finished\n");
 }
 
 static DWORD WINAPI CrashDumpThread([[maybe_unused]] LPVOID data) {
@@ -332,7 +362,7 @@ static DWORD WINAPI CrashDumpThread([[maybe_unused]] LPVOID data) {
         return 0;
     }
 
-    SubmitCrashInfo();
+    SubmitCrashReport();
 
     // always write a MiniDump (for the latest crash only)
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
@@ -552,10 +582,6 @@ static void BuildSystemInfo() {
     GetOsVersion(s);
     GetSystemInfo(s);
     gSystemInfo = s.StealData();
-}
-
-void SendCrashReport(const char* condStr) {
-    // TODO: implement me
 }
 
 /* Setting symbol path:

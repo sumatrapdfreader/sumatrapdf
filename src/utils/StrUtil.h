@@ -232,7 +232,6 @@ struct Str {
     std::string_view AsView() const;
     std::span<u8> AsSpan() const;
     std::string_view StealAsView();
-    std::span<u8> StealAsSpan();
     bool AppendChar(char c);
     bool Append(const u8* src, size_t size = -1);
     bool AppendView(const std::string_view sv);
@@ -310,7 +309,6 @@ struct WStr {
     std::wstring_view AsView() const;
     std::span<WCHAR> AsSpan() const;
     std::wstring_view StealAsView();
-    std::span<WCHAR> StealAsSpan();
     bool AppendChar(WCHAR c);
     bool AppendSpan(std::span<WCHAR> d);
     bool AppendView(const std::wstring_view sv);
@@ -340,3 +338,5 @@ struct WStr {
     }
 };
 } // namespace str
+
+std::span<u8> ToSpanU8(std::string_view sv);

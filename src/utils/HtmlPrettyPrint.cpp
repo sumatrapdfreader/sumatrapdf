@@ -86,5 +86,6 @@ std::span<u8> PrettyPrintHtml(std::span<u8> d) {
             }
         }
     }
-    return res.StealAsSpan();
+    auto sv = res.StealAsView();
+    return ToSpan(sv);
 }

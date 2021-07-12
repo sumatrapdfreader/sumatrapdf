@@ -559,7 +559,8 @@ std::span<u8> SerializeStruct(const StructInfo* info, const void* strct, const c
     out.Append(UTF8_BOM);
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);
-    return out.StealAsSpan();
+    auto sv = out.StealAsView();
+    return ToSpanU8(sv);
 }
 
 void* DeserializeStruct(const StructInfo* info, const char* data, void* strct) {

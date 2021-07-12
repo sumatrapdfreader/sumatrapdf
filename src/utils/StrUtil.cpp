@@ -1482,12 +1482,6 @@ std::string_view Str::StealAsView() {
     return {d, len};
 }
 
-std::span<u8> Str::StealAsSpan() {
-    size_t len = size();
-    char* d = StealData();
-    return {(u8*)d, len};
-}
-
 bool Str::AppendChar(char c) {
     return InsertAt(len, c);
 }
@@ -1859,12 +1853,6 @@ std::span<WCHAR> WStr::AsSpan() const {
 }
 
 std::wstring_view WStr::StealAsView() {
-    size_t len = size();
-    WCHAR* d = StealData();
-    return {d, len};
-}
-
-std::span<WCHAR> WStr::StealAsSpan() {
     size_t len = size();
     WCHAR* d = StealData();
     return {d, len};
@@ -2671,3 +2659,7 @@ const WCHAR* IdxToStr(const WCHAR* strs, int idx) {
 }
 
 } // namespace seqstrings
+
+std::span<u8> ToSpanU8(std::string_view sv) {
+    return {(u8*)sv.data(), sv.size()};
+}

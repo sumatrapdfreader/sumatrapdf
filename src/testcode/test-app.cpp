@@ -51,7 +51,7 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     return padding;
 }
 
-void __cdecl SendCrashReport(char const*) {
+void __cdecl SubmitDebugReport(char const*) {
     // a dummy implementation
 }
 
