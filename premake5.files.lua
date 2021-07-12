@@ -464,10 +464,7 @@ function sumatrapdf_files()
 
     "Tests.cpp",
     "regress/Regress.*",
-    "*.txt",
-  })
-  files_in_dir("docs", {
-    "releasenotes.txt",
+    "docs/*.txt",
   })
   filter {"configurations:Debug"}
   files_in_dir("src/testcode", {
