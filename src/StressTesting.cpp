@@ -77,23 +77,23 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     bool ok = engine->BenchLoadPage(pagenum);
 
     if (!ok) {
-        logf(L"Error: failed to load page %d", pagenum);
+        logf(L"Error: failed to load page %d\n", pagenum);
         return;
     }
     double timeMs = TimeSinceInMs(t);
-    logf(L"pageload   %3d: %.2f ms", pagenum, timeMs);
+    logf(L"pageload   %3d: %.2f ms\n", pagenum, timeMs);
 
     t = TimeGet();
     RenderPageArgs args(pagenum, 1.0, 0);
     RenderedBitmap* rendered = engine->RenderPage(args);
 
     if (!rendered) {
-        logf(L"Error: failed to render page %d", pagenum);
+        logf(L"Error: failed to render page %d\n", pagenum);
         return;
     }
     delete rendered;
     timeMs = TimeSinceInMs(t);
-    logf(L"pagerender %3d: %.2f ms", pagenum, timeMs);
+    logf(L"pagerender %3d: %.2f ms\n", pagenum, timeMs);
 }
 
 static int FormatWholeDoc(Doc& doc) {
@@ -119,7 +119,7 @@ static int TimeOneMethod(Doc& doc, TextRenderMethod method, const WCHAR* methodN
     auto t = TimeGet();
     int nPages = FormatWholeDoc(doc);
     double timesms = TimeSinceInMs(t);
-    logf(L"%s: %.2f ms", methodName, timesms);
+    logf(L"%s: %.2f ms\n", methodName, timesms);
     return nPages;
 }
 
@@ -128,20 +128,20 @@ static int TimeOneMethod(Doc& doc, TextRenderMethod method, const WCHAR* methodN
 // dominated by text measure)
 void BenchEbookLayout(const WCHAR* filePath) {
     gLogBuf->Reset();
-    logf(L"Starting: %s", filePath);
+    logf(L"Starting: %s\n", filePath);
     if (!file::Exists(filePath)) {
-        logf(L"Error: file doesn't exist");
+        logf(L"Error: file doesn't exist\n");
         return;
     }
     auto t = TimeGet();
     Doc doc = Doc::CreateFromFile(filePath);
     if (doc.LoadingFailed()) {
-        logf(L"Error: failed to load the file as doc");
+        logf(L"Error: failed to load the file as doc\n");
         doc.Delete();
         return;
     }
     double timeMs = TimeSinceInMs(t);
-    logf(L"load: %.2f ms", timeMs);
+    logf(L"load: %.2f ms\n", timeMs);
 
     int nPages = TimeOneMethod(doc, TextRenderMethod::Gdi, L"gdi       ");
     TimeOneMethod(doc, TextRenderMethod::Gdiplus, L"gdi+      ");
@@ -155,26 +155,26 @@ void BenchEbookLayout(const WCHAR* filePath) {
 
     doc.Delete();
 
-    logf(L"pages: %d", nPages);
+    logf(L"pages: %d\n", nPages);
 }
 
 static void BenchChmLoadOnly(const WCHAR* filePath) {
     auto total = TimeGet();
-    logf(L"Starting: %s", filePath);
+    logf(L"Starting: %s\n", filePath);
 
     auto t = TimeGet();
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
-        logf(L"Error: failed to load %s", filePath);
+        logf(L"Error: failed to load %s\n", filePath);
         return;
     }
 
     double timeMs = TimeSinceInMs(t);
-    logf(L"load: %.2f ms", timeMs);
+    logf(L"load: %.2f ms\n", timeMs);
 
     delete chmModel;
 
-    logf(L"Finished (in %.2f ms): %s", TimeSinceInMs(total), filePath);
+    logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
 static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
@@ -201,19 +201,19 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     }
 
     auto total = TimeGet();
-    logf(L"Starting: %s", filePath);
+    logf(L"Starting: %s\n", filePath);
 
     auto t = TimeGet();
     EngineBase* engine = CreateEngine(filePath);
     if (!engine) {
-        logf(L"Error: failed to load %s", filePath);
+        logf(L"Error: failed to load %s\n", filePath);
         return;
     }
 
     double timeMs = TimeSinceInMs(t);
-    logf(L"load: %.2f ms", timeMs);
+    logf("load: %.2f ms\n", timeMs);
     int pages = engine->PageCount();
-    logf(L"page count: %d", pages);
+    logf("page count: %d\n", pages);
 
     if (nullptr == pagesSpec) {
         for (int i = 1; i <= pages; i++) {
@@ -235,7 +235,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
 
     delete engine;
 
-    logf(L"Finished (in %.2f ms): %s", TimeSinceInMs(total), filePath);
+    logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
 static bool IsFileToBench(const WCHAR* path) {
