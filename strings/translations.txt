@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-361a6078f72ba9269e378f53a0292d7f8f2ccb5f
+f9f7460528f369d794d6de75d208b0584c8c3835
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -11,6 +11,7 @@ co:Installazione di %s micca trova.
 cy:Ni chanfuwyd gosodiad %s.
 de:%s Installation nicht gefunden.
 dk:%s installation blev ikke fundet.
+el:Η εγκατάσταση %s δεν βρέθηκε.
 es:%s instalación no encontrada.
 fr:%s installation non trouvée
 ga:Níor aimsíodh an tsuiteáil %s.
@@ -437,6 +438,7 @@ vn:Xem dạng sách\tCtrl+8
 am:&Ստեղն
 bn:&Caret
 cn:&插入符
+de:&Cursor
 el:Αγκύλη
 kw:&Karet
 lv:&Norāde
@@ -1336,6 +1338,8 @@ vn:Trợ &giúp
 :&Highlight\ta
 am:&Գունանշում\ta
 cn:&高亮\ta
+de:&Hervorheben\ta
+el:Επισήμανση
 kw:&Ughboyntya\ta
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
@@ -3095,6 +3099,8 @@ nl:&Stempel
 pl:Pie&częć
 :&Strike Out
 cn:&删除线
+de:Durchstreichen
+el:Εξάλειψη
 kw:&Treuslinya
 lv:&Izsvītrot
 nl:&Doorhalen
@@ -3778,6 +3784,7 @@ co:Aghjunghje un PDF cum’è un zitellu
 cy:Ychwanegu PDF fel plentyn
 de:PDF als untergeordnetes Element hinzufügen
 dk:Tilføj PDF som underordnet
+el:Προσθήκη PDF ως παιδιού
 es:Añadir pdf como hijo
 ga:Cuir PDF leis mar leanbh
 gl:Engadir PDF como secundario
@@ -3800,6 +3807,7 @@ co:Aghjunghje un PDF cum’è un fratellu
 cy:Ychwanegu PDF fel chwaer
 de:PDF als gleichgeordnetes Element hinzufügen
 dk:Tilføj PDF som en forgænger
+el:Προσθήκη PDF ως αδελφού
 es:Añadir PDF como un hermano
 ga:Cuir PDF leis mar dheirfiúr
 gl:Engadir PDF como relacionado
@@ -3823,6 +3831,7 @@ co:Aghjunghje un zitellu
 cy:Ychwanegu plentyn
 de:Untergeordnetes Element hinzufügen
 dk:Tilføj underordnet
+el:Προσθήκη παιδιού
 es:Añadir hijo
 ga:Cuir leanbh leis
 gl:Engadir secundario
@@ -4014,6 +4023,7 @@ co:Aghjunghje un fratellu
 cy:Ychwanegu chwaer
 de:Gleichgeordnetes Element hinzufügen
 dk:Tilføj forgænger
+el:Προσθήκη αδελφού
 es:Añadir hermano
 ga:Cuir deirfiúr leis
 gl:Engadir relacionado
@@ -4402,6 +4412,7 @@ co:Site sicuru di vulè disinstallà %s ?
 cy:Wyt ti'n bendant eisiau dadosod %s?
 de:Sind Sie sicher, dass Sie %s deinstallieren möchten?
 dk:Er du sikker på du vil afinstallere %s?
+el:Είστε βέβαιοι ότι θέλετε να απεγκαταστήσετε το %s;
 es:¿Estás seguro que quiere desinstalar %s?
 fr:Voulez-vous vraiment désinstaller %s ?
 ga:An bhfuil tú cinnte gur mian leat %s a dhíshuiteáil?
@@ -4849,6 +4860,7 @@ am:Խորքի գույնը.
 bn:পটভূমির রং:
 cn:背景色:
 de:Hintergrundfarbe:
+el:Χρώμα φόντου:
 es:Color de fondo
 kw:Liw Kilva:
 lv:Fona krāsa:
@@ -5123,6 +5135,7 @@ vn:Chỉ dấu sách
 am:Եզրագիծ. %d
 bn:সীমানা: %d
 cn:边框: %d
+de:Umrandung: %d
 el:Περιθώριο: %d
 kw:Amal: %d
 lv:Apmale: %d
@@ -6868,7 +6881,7 @@ cy:Methwyd gosod hidl chwilio PDF
 cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF-Suchfilter nicht installieren
 dk:Installation af PDF-søgefilter mislykkedes
-el:Δεν μπόρεσε να γίνει εγκατάσταση του φίλτρου αναζήτησης PDF
+el: Δεν ήταν δυνατή η εγκατάσταση του φίλτρου αναζήτησης PDF
 es:No se pudo instalar el filtro de búsqueda PDF
 et:Ei suudetud paigaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
@@ -7116,6 +7129,7 @@ co:Impussibule di disinstallà u filtru di ricerca di Sumatra
 cy:Methwyd gosod hidl chwilio Sumatra
 de:Konnte den Sumatra-Suchfilter nicht deinstallieren
 dk:Sumatra-søgefilter kunne ikke afinstalleres
+el:Δεν ήταν δυνατή η κατάργηση της εγκατάστασης του φίλτρου αναζήτησης Sumatra
 es:No se pudo desinstalar el filtro de búsqueda de Sumatra.
 fr:Impossible de désinstaller le filtre de recherche de Sumatra
 ga:Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
@@ -7147,7 +7161,7 @@ cy:Methwyd dadosod ategyn porwr
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
 dk:Det var ikke muligt at afinstallere browser-plugin
-el:Δε μπόρεσε να γίνει απεγκατάσταση του πρόσθετου προγράμματος περιήγησης
+el:Δεν ήταν δυνατή η  απεγκατάσταση του πρόσθετου προγράμματος περιήγησης
 es:No se pudo desinstalar el complemento del navegador
 et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
@@ -7261,6 +7275,7 @@ am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
 cn:创建注释 (从所选内容)
 de:Anmerkung aus Auswahl erstellen
+el:Δημιουργία σχολιασμού από επιλογή
 kw:Gwruthyl Notenyans a'th Tewis
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
@@ -7270,6 +7285,7 @@ am:Ստգեղծել ծանոթագրություն նշորդի ներքո
 bn:Cursor এর নিচে টীকা লিখুন
 cn:创建注释 (在光标下)
 de:Anmerkung unter dem Cursor erstellen
+el:Δημιουργία σχολιασμού κάτω από το δρομέα
 kw:Gwruthyl Notenyans Yn-Dann Resor
 lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
@@ -8663,7 +8679,7 @@ cy:Ehangu Popeth
 cz:Rozbalit vše
 de:Alles aufklappen
 dk:Udvid
-el:Ανάπτυξη Όλων
+el:Ανάπτυξη όλων
 es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
@@ -11314,6 +11330,7 @@ vn:Gợi ý: Nhấn phím F3 để tìm lại
 am:Պատկերակ.
 bn:আইকন
 cn:图标:
+de:Icon:
 el:Εικονίδιο:
 kw:Ikon:
 lv:Ikona:
@@ -11420,6 +11437,7 @@ co:Inchjostru
 cy:Inc
 de:Tinte
 dk:Blæk
+el:Μελάνι
 es:Tinta
 ga:Dúch
 gl:Trazo
@@ -11690,6 +11708,7 @@ vn:Đang cài đặt...
 :Interior Color:
 am:Ներքին գույնը.
 cn:填充颜色：
+de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
 kw:Liw A-Bervedh:
 lv:Iekšējā krāsa:
@@ -11975,6 +11994,7 @@ tw:線條
 am:Տողի ավարտը.
 bn:লাইন শেষ:
 cn:线段终点
+de:Zeilenende:
 el:Τέλος γραμμής:
 es:Fin de Línea:
 kw:Diwedh Linen:
@@ -11985,6 +12005,7 @@ ru:Конец линии:
 am:Տողի մեկնարկը.
 bn:লাইন শুরু:
 cn:线段起点
+de:Zeilenstart:
 el:Έναρξη γραμμής:
 es:Inicio de Línea:
 kw:Dalleth Linen:
@@ -12511,6 +12532,7 @@ co:Nove indette
 cy:Nodau Tudalen Newydd
 de:Neue Lesezeichen
 dk:Nye bogmærker
+el:Νέοι σελιδοδείκτες
 es:Nuevo marcadores
 et:Uued Järjehoidjad
 fr:Nouveaux marque-pages
@@ -13230,6 +13252,7 @@ co:Apre u PDF incurpuratu
 cy:Agor PDF wedi'i Mewnosod
 de:Eingebettetes PDF öffnen
 dk:Åbn integreret PDF
+el:Άνοιγμα ενσωματωμένου PDF 
 es:Abrir PDF adjunto
 fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
@@ -14719,6 +14742,8 @@ tw:多邊形
 :Popup: %d 0 R
 am:Ելնող. %d 0 R
 cn:弹出：%d 0 R
+de:Pop-up: %d 0 R
+el:Αναδυόμενο παράθυρο: %d 0 R
 kw:Tardhans: %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
@@ -15496,6 +15521,8 @@ vn:Đổi tê&n...\tF2
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
 cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
+de:Rechteck: x=%d y=%d dx=%d dy=%d
+el:Τετρ: x=%d y=%d dx=%dy=%d
 kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
@@ -15953,6 +15980,7 @@ am:Ա&լիքավոր
 az:&Dalğa
 cn:波浪线(&Q)
 de:Verschnörkelt
+el:Στριφογυριστό
 kw:I&gam-ogam
 lv:&Viļņaina
 nl:Kr&onkelig
@@ -16172,6 +16200,7 @@ pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 :Saved annotations to '%s'
 cn:保存注释到 '%s'
+de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 kw:Notenyansow gwithys dhe '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
@@ -16180,6 +16209,8 @@ pl:Zapisano adnotacje do '%s'
 ru:Аннотации сохранены в '%s'
 :Saving of '%s' failed with: '%s'
 cn:保存 '%s' 失败: '%s'
+de:Speichern von '%s' fehlgeschlagen mit: '%s'
+el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 kw:Gwitha '%s' re fyllis gans: '%s'
 lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
@@ -18268,6 +18299,7 @@ co:Etichetta (prima maiò)
 cy:Tag (mawr cyntaf)
 de:Tag (große zuerst)
 dk:Etikettér (størst først)
+el:Ετικέτα (μεγάλη πρώτα)
 es:Etiqueta (grande primero)
 fr:Étiquette (grande en premier)
 ga:Clib (ceann mór ar dtús)
@@ -18290,6 +18322,7 @@ co:Etichetta (prima chjuca)
 cy:Tag (bach cyntaf)
 de:Tag (kleine zuerst)
 dk:Etikettér (små først)
+el:Ετικέτα (μικρή πρώτα)
 es:Etiqueta (pequeña primero)
 fr:Étiquette (petite en premier)
 ga:Clib (ceann beag ar dtús)
@@ -19062,6 +19095,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 cn:未保存的注释
+de:Nicht gespeicherte Anmerkungen
 el:Μη αποθηκευμένα σχόλια
 es:Anotaciones no guardadas
 kw:Notenyansow anwithys
@@ -19532,6 +19566,7 @@ vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 cn:存在未保存的注释
 co:Avete annutazioni micca arregistrate
+de:Sie haben ungespeicherte Anmerkungen.
 el:Έχετε μη αποθηκευμένα σχόλια
 es:Tienes anotaciones sin guardar
 id:Kamu memiliki catatan yang belum tersimpan
@@ -19542,6 +19577,8 @@ pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 :You have unsaved annotations. Save them?
 cn:存在未保存的注释，是否保存？
+de:Sie haben ungespeicherte Anmerkungen. Wollen Sie sie speichern?
+el:Έχετε μη αποθηκευμένους σχολιασμούς. Να γίνει αποθήκευση;
 kw:Yma notenyansow anwithys dhis. A vynnydh aga gwitha?
 lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
 nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
