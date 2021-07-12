@@ -482,6 +482,19 @@ func buildJustInstaller(dir, config, platform string) {
 	signFilesOptional(dir)
 }
 
+func buildJustPortableExe(dir, config, platform string) {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF`, p, `/m`)
+	signFilesOptional(dir)
+}
+
+func buildPortableExe64() {
+	buildJustPortableExe(rel64Dir, "Release", "x64")
+}
+
 // a faster release build for testing that only does 64-bit installer
 func buildReleaseFast() {
 	detectSigntoolPath() // early exit if missing

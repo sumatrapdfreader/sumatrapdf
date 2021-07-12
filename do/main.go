@@ -139,6 +139,7 @@ func main() {
 		flgDiff                    bool
 		flgGenStructs              bool
 		flgUpdateVer               string
+		flgDrMem                   bool
 	)
 
 	{
@@ -175,6 +176,7 @@ func main() {
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.BoolVar(&flgGenStructs, "gen-structs", false, "re-generate src/SettingsStructs.h")
 		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
+		flag.BoolVar(&flgDrMem, "drmem", false, "run drmemory of rel 64")
 		flag.Parse()
 	}
 
@@ -392,6 +394,16 @@ func main() {
 
 	if flgUpdateVer != "" {
 		updateAutoUpdateVer(flgUpdateVer)
+		return
+	}
+
+	if flgDrMem {
+		buildPortableExe64()
+		//cmd := exec.Command("drmemory.exe", "-light", "-check_leaks", "-possible_leaks", "-count_leaks", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
+		cmd := exec.Command("drmemory.exe", "-leaks_only", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
+		cmd.Run()
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 		return
 	}
 

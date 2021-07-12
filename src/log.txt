@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - update website from notion
 - add download urls to auto-update info
 - with -console, write to console of shell that started sumatra, if possible
+- add -drmem to run drmemory on rel 64 build to find memory leaks
 
 2021-07-10 Sat
 

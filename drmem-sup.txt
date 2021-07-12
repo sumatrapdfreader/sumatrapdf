@@ -72,3 +72,33 @@ UNADDRESSABLE ACCESS
 name=ddjvu_context_create #2
 ...
 SumatraPDF.exe!ddjvu_context_create
+
+# reading register
+UNINITIALIZED READ
+name=FindFirstFileExW
+...
+KERNELBASE.dll!FindFirstFileExW
+
+# LocalBaseRegQueryValue
+UNINITIALIZED READ
+name=LocalBaseRegQueryValue
+...
+KERNELBASE.dll!LocalBaseRegQueryValue
+
+# NtUserCreateWindowEx
+UNINITIALIZED READ
+name=NtUserCreateWindowEx
+...
+USER32.dll!VerNtUserCreateWindowEx
+
+# DeferWindowPos
+UNINITIALIZED READ
+name=DeferWindowPos
+...
+USER32.dll!DeferWindowPos
+
+# INVALID HEAP ARGUMENT
+INVALID HEAP ARGUMENT
+name=invalid heap
+...
+*
