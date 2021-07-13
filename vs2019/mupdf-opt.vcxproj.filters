@@ -43,6 +43,9 @@
     <Filter Include="ext\freetype\src\type1">
       <UniqueIdentifier>{029212EA-EE8B-3B3C-D7F8-D14CC391A1A8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\mujs">
+      <UniqueIdentifier>{046F1FD9-F03B-7AE4-1955-688C0581AF72}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mupdf">
       <UniqueIdentifier>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</UniqueIdentifier>
     </Filter>
@@ -87,6 +90,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\mujs\mujs.h">
+      <Filter>ext\mujs</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\fitz.h">
       <Filter>mupdf\include\mupdf</Filter>
     </ClInclude>
@@ -421,6 +427,9 @@
     </ClCompile>
     <ClCompile Include="..\ext\freetype\src\type1\type1.c">
       <Filter>ext\freetype\src\type1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\mujs\one.c">
+      <Filter>ext\mujs</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mupdf_load_system_font.c">
       <Filter>ext</Filter>

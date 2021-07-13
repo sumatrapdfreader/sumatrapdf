@@ -290,6 +290,22 @@ workspace "SumatraPDF"
     includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
     freetype_files()
 
+  project "mujs"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
+  project "mujs-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 --]]
 
   project "unarrlib"
@@ -499,24 +515,6 @@ workspace "SumatraPDF"
     harfbuzz_files()
 
 
-  project "mujs"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
-
-  project "mujs-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-
-    includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
-
-
   project "gumbo"
     kind "StaticLib"
     language "C"
@@ -596,8 +594,13 @@ workspace "SumatraPDF"
     }
     disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
 
+    -- for mujs
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
     mupdf_files()
-    links { "zlib", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs", "gumbo" }
+    links { "zlib", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "gumbo" }
 
   project "mupdf-opt"
     kind "StaticLib"
@@ -659,8 +662,13 @@ workspace "SumatraPDF"
     }
     disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
 
+    -- for mujs
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
     mupdf_files()
-    links { "zlib-opt", "libjpeg-turbo-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "mujs-opt", "gumbo-opt" }
+    links { "zlib-opt", "libjpeg-turbo-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "gumbo-opt" }
 
 
   -- regular build with distinct debug / release builds
