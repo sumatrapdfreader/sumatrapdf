@@ -249,7 +249,7 @@ NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen,
         if (section->SizeOfRawData > section->Misc.VirtualSize) {
             endAddr += section->SizeOfRawData;
         } else {
-            section->Misc.VirtualSize;
+            endAddr += section->Misc.VirtualSize;
         }
 
         if (lAddr >= startAddr && lAddr <= endAddr) {
@@ -526,10 +526,10 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
         "RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\r\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\r\n"
         "R8: %016I64X\r\nR9: "
         "%016I64X\r\nR10:%016I64X\r\nR11:%016I64X\r\nR12:%016I64X\r\nR13:%016I64X\r\nR14:%016I64X\r\nR15:%016I64X\r\n",
-        ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi, ctx->R9, ctx->R10, ctx->R11, ctx->R12, ctx->R13,
-        ctx->R14, ctx->R15);
+        ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi, ctx->R8, ctx->R9, ctx->R10, ctx->R11, ctx->R12,
+        ctx->R13, ctx->R14, ctx->R15);
     s.AppendFmt("CS:RIP:%04X:%016I64X\r\n", ctx->SegCs, ctx->Rip);
-    s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\r\n", ctx->SegSs, ctx->Rsp, ctx->Rbp);
+    s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\r\n", ctx->SegSs, (unsigned int)ctx->Rsp, (unsigned int)ctx->Rbp);
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
     s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
 #else

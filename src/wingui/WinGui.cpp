@@ -350,5 +350,6 @@ void DbgLogMsg(const char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (!prefix) {
         prefix = "";
     }
-    dbglogf("%shwnd: 0x%4p, msg: 0x%03x (%s), wp: 0x%x, lp: 0x%x\n", prefix, hwnd, msg, msgName, wp, lp);
+    dbglogf("%shwnd: 0x%4p, msg: 0x%03x (%s), wp: 0x%x, lp: 0x%x\n", prefix, hwnd, msg, msgName, (unsigned int)wp,
+            (unsigned int)lp);
 }

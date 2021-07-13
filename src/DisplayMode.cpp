@@ -109,7 +109,7 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
             AutoFree extA(strconv::WstrToUtf8(ext));
             logf("File type: %s\n", extA.Get());
         }
-        logf("DisplayMode: %S\n", stateForIssue2140->displayMode);
+        logf("DisplayMode: %s\n", stateForIssue2140->displayMode);
         logf("PageNo: %d\n", stateForIssue2140->pageNo);
     }
     CrashIf(!IsValidZoom(zoom));

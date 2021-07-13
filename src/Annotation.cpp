@@ -644,4 +644,3 @@ Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) 
     return result;
 }
 #endif
-

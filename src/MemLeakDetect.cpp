@@ -469,7 +469,6 @@ void* __cdecl _recalloc_base_hook(void* _Block, size_t _Count, size_t _Size) {
 HOOK_ENTRY gHooks[kMaxHooks] = {0};
 int gHooksCount = 0;
 
-
 #if 0
 static void* GetDllProcAddr(const char* dll, const char* name) {
     HMODULE mod = GetModuleHandleA(dll);
