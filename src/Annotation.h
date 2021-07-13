@@ -67,8 +67,6 @@ RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 // Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
-PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a);
-void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
 PdfColor GetAnnotationHighlightColor();
 PdfColor GetAnnotationTextIconColor();
 char* GetAnnotationTextIcon();

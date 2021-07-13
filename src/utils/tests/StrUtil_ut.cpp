@@ -551,67 +551,67 @@ void StrTest() {
     {
         size_t trimmed;
         WCHAR* s = str::Dup(L"");
-        trimmed = str::TrimWS(s, str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L""));
-        trimmed = str::TrimWS(s, str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L""));
-        trimmed = str::TrimWS(s, str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L""));
 
         free(s);
         s = str::Dup(L"  \n\t  ");
-        trimmed = str::TrimWS(s, str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 6);
         utassert(str::Eq(s, L""));
 
         free(s);
         s = str::Dup(L"  \n\t  ");
-        trimmed = str::TrimWS(s, str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 6);
         utassert(str::Eq(s, L""));
 
         free(s);
         s = str::Dup(L"  \n\t  ");
-        trimmed = str::TrimWS(s, str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 6);
         utassert(str::Eq(s, L""));
 
         free(s);
         s = str::Dup(L"  lola");
-        trimmed = str::TrimWS(s, str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
         free(s);
         s = str::Dup(L"  lola");
-        trimmed = str::TrimWS(s, str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
         free(s);
         s = str::Dup(L"  lola");
-        trimmed = str::TrimWS(s, str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L"  lola"));
 
         free(s);
         s = str::Dup(L"lola\r\t");
-        trimmed = str::TrimWS(s, str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
         free(s);
         s = str::Dup(L"lola\r\t");
-        trimmed = str::TrimWS(s, str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
         free(s);
         s = str::Dup(L"lola\r\t");
-        trimmed = str::TrimWS(s, str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L"lola\r\t"));
 

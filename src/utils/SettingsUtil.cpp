@@ -196,7 +196,6 @@ static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
 static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field) {
     const u8* fieldPtr = base + field.offset;
     AutoFree value;
-    COLORREF c;
 
     switch (field.type) {
         case SettingType::Bool:
@@ -207,10 +206,6 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             return true;
         case SettingType::Float:
             out.AppendFmt("%g", *(float*)fieldPtr);
-            return true;
-        case SettingType::Color:
-            c = *(COLORREF*)fieldPtr;
-            SerializeColor(c, out);
             return true;
         case SettingType::String:
             if (!*(const WCHAR**)fieldPtr) {
@@ -228,6 +223,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             }
             return true;
         case SettingType::Utf8String:
+        case SettingType::Color:
             if (!*(const char**)fieldPtr) {
                 CrashIf(field.value);
                 return false; // skip empty strings
@@ -322,14 +318,6 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             break;
         }
 
-        case SettingType::Color:
-            if (!value) {
-                *colPtr = (COLORREF)field.value;
-            } else {
-                ParseColor(colPtr, value);
-            }
-            break;
-
         case SettingType::String:
             free(*wstrPtr);
             if (value) {
@@ -339,6 +327,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
                 *wstrPtr = str::Dup((const WCHAR*)field.value);
             }
             break;
+        case SettingType::Color:
         case SettingType::Utf8String:
             free(*strPtr);
             if (value) {

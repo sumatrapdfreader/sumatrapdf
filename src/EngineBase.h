@@ -43,8 +43,7 @@ enum class DocumentProperty {
     PdfFileStructure,
 };
 
-class RenderedBitmap {
-  public:
+struct RenderedBitmap {
     HBITMAP hbmp{nullptr};
     Size size = {};
     AutoCloseHandle hMap = {};

@@ -176,7 +176,8 @@ void PaintSelection(WindowInfo* win, HDC hdc) {
         }
     }
 
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs->fixedPageUI.selectionColor);
+    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col);
 }
 
 void UpdateTextSelection(WindowInfo* win, bool select) {

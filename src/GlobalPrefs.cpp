@@ -111,3 +111,11 @@ void ResetSessionState(Vec<SessionData*>* sessionData) {
     }
     sessionData->Reset();
 }
+
+ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed) {
+    if (parsed.wasParsed) {
+        return &parsed;
+    }
+    ParseColor(parsed, s);
+    return &parsed;
+}

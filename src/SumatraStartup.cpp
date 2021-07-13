@@ -530,6 +530,16 @@ static void ShutdownCommon() {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 }
 
+// TODO: need testing
+static void ReplaceColor(char** col, WCHAR* maybeColor) {
+    ParsedColor c;
+    ParseColor(c, TempToUtf8(maybeColor).Get());
+    if (c.parsedOk) {
+        char* colNewStr = SerializeColor(c.col);
+        str::ReplacePtr(&gGlobalPrefs->mainWindowBackground, colNewStr);
+    }
+}
+
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
         str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
@@ -543,10 +553,10 @@ static void UpdateGlobalPrefs(const Flags& i) {
         } else if (str::EqI(i.globalPrefArgs.at(n), L"-bgcolor") || str::EqI(i.globalPrefArgs.at(n), L"-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
-            ParseColor(&gGlobalPrefs->mainWindowBackground, i.globalPrefArgs.at(++n));
+            ReplaceColor(&gGlobalPrefs->mainWindowBackground, i.globalPrefArgs.at(++n));
         } else if (str::EqI(i.globalPrefArgs.at(n), L"-set-color-range")) {
-            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, i.globalPrefArgs.at(++n));
-            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, i.globalPrefArgs.at(++n));
+            ReplaceColor(&gGlobalPrefs->fixedPageUI.textColor, i.globalPrefArgs.at(++n));
+            ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, i.globalPrefArgs.at(++n));
         } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-offset")) {
             gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(i.globalPrefArgs.at(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
@@ -554,7 +564,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
             gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(i.globalPrefArgs.at(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-color")) {
-            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, i.globalPrefArgs.at(++n));
+            ReplaceColor(&gGlobalPrefs->forwardSearch.highlightColor, i.globalPrefArgs.at(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-permanent")) {
             gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(i.globalPrefArgs.at(++n));

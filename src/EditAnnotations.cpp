@@ -365,26 +365,6 @@ static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* string
     }
 }
 
-static void SerializePdfColor(PdfColor c, str::Str& out) {
-    u8 r, g, b, a;
-    UnpackPdfColor(c, r, g, b, a);
-    out.AppendFmt("#%02x%02x%02x", r, g, b);
-}
-
-static bool ParsePdfColor(PdfColor* destColor, std::string_view sv) {
-    CrashIf(!destColor);
-    const char* txt = sv.data();
-    if (str::StartsWith(txt, "0x")) {
-        txt += 2;
-    } else if (str::StartsWith(txt, "#")) {
-        txt += 1;
-    }
-    unsigned int r, g, b;
-    bool ok = str::Parse(txt, "%2x%2x%2x%$", &r, &g, &b);
-    *destColor = MkPdfColor(r, g, b, 0xff);
-    return ok;
-}
-
 static void DropDownFillColors(DropDownCtrl* w, PdfColor col, str::Str& customColor) {
     Vec<std::string_view> items;
     ItemsFromSeqstrings(items, gColors);
@@ -410,9 +390,9 @@ static PdfColor GetDropDownColor(std::string_view sv) {
         }
         return 0;
     }
-    PdfColor col{0};
-    ParsePdfColor(&col, sv);
-    return col;
+    ParsedColor col;
+    ParseColor(col, sv.data());
+    return col.pdfCol;
 }
 
 // TODO: mupdf shows it in 1.6 but not 1.7. Why?
@@ -1307,26 +1287,14 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     delete annot;
 }
 
-static PdfColor ToPdfColor(COLORREF c) {
-    u8 r, g, b, a;
-    UnpackColor(c, r, g, b, a);
-    // COLORREF has a of 0 for opaque but for PDF use
-    // opaque is 0xff
-    if (a == 0) {
-        a = 0xff;
-    }
-    auto res = MkPdfColor(r, g, b, a);
-    return res;
-}
-
 PdfColor GetAnnotationHighlightColor() {
-    COLORREF col = gGlobalPrefs->annotations.highlightColor;
-    return ToPdfColor(col);
+    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->annotations.highlightColor);
+    return parsedCol->pdfCol;
 }
 
 PdfColor GetAnnotationTextIconColor() {
-    COLORREF col = gGlobalPrefs->annotations.textIconColor;
-    return ToPdfColor(col);
+    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->annotations.textIconColor);
+    return parsedCol->pdfCol;
 }
 
 // caller needs to free()

@@ -74,36 +74,7 @@ Gdiplus::Color FromColor(COLORREF c) {
     return Gdiplus::Color(c);
 }
 
-static COLORREF colorSetHelper(COLORREF c, u8 col, int n) {
-    CrashIf(n > 3);
-    DWORD mask = 0xff;
-    DWORD cmask = (DWORD)col;
-    for (int i = 0; i < n; i++) {
-        mask = mask << 8;
-        cmask = cmask << 8;
-    }
-    c = c & ~mask;
-    c = c | cmask;
-    return c;
-}
-
-COLORREF ColorSetRed(COLORREF c, u8 red) {
-    return colorSetHelper(c, red, 0);
-}
-
-COLORREF ColorSetGreen(COLORREF c, u8 green) {
-    return colorSetHelper(c, green, 1);
-}
-
-COLORREF ColorSetBlue(COLORREF c, u8 blue) {
-    return colorSetHelper(c, blue, 2);
-}
-
-COLORREF ColorSetAlpha(COLORREF c, u8 alpha) {
-    return colorSetHelper(c, alpha, 3);
-}
-
-void SerializeColor(COLORREF c, str::Str& out) {
+char* SerializeColor(COLORREF c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
     char* s = nullptr;
@@ -112,55 +83,91 @@ void SerializeColor(COLORREF c, str::Str& out) {
     } else {
         s = str::Format("#%02x%02x%02x", r, g, b);
     }
+    return s;
+}
+
+void SerializeColor(COLORREF c, str::Str& out) {
+    char* s = SerializeColor(c);
     out.Append(s);
     free(s);
 }
 
-/* Parse 'txt' as hex color and return the result in 'destColor' */
-bool ParseColor(COLORREF* destColor, const WCHAR* txt) {
-    CrashIf(!destColor);
-    if (str::StartsWith(txt, L"0x")) {
-        txt += 2;
-    } else if (str::StartsWith(txt, L"#")) {
-        txt += 1;
+void ParseColor(ParsedColor& parsed, const char* txt) {
+    if (parsed.wasParsed) {
+        return;
     }
-
-    unsigned int r, g, b;
-    bool ok = str::Parse(txt, L"%2x%2x%2x%$", &r, &g, &b);
-    *destColor = RGB(r, g, b);
-    return ok;
-}
-
-/* Parse 'txt' as hex color and return the result in 'destColor' */
-bool ParseColor(COLORREF* destColor, std::string_view sv) {
-    CrashIf(!destColor);
-    const char* txt = sv.data();
-    size_t n = sv.size();
-    if (str::StartsWith(txt, "0x")) {
-        txt += 2;
-        n -= 2;
-    } else if (str::StartsWith(txt, "#")) {
-        txt += 1;
-        n -= 1;
+    parsed.wasParsed = true;
+    parsed.parsedOk = false;
+    if (!txt) {
+        return;
     }
-
+    char* s = TempStrDup(txt).Get();
+    str::TrimWSInPlace(s, str::TrimOpt::Both);
+    if (str::StartsWith(s, "0x")) {
+        s += 2;
+    } else if (str::StartsWith(s, "#")) {
+        s += 1;
+    }
+    size_t n = str::Len(s);
     unsigned int r, g, b, a;
-    bool ok = str::Parse(txt, n, "%2x%2x%2x%2x", &a, &r, &g, &b);
+    bool ok = str::Parse(s, n, "%2x%2x%2x%2x", &a, &r, &g, &b);
     if (ok) {
-        *destColor = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
-        return true;
+        parsed.col = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
+        parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b, (u8)a);
+        parsed.parsedOk = true;
+        return;
     }
-    ok = str::Parse(txt, n, "%2x%2x%2x", &r, &g, &b);
-    if (ok) {
-        *destColor = MkColor((u8)r, (u8)g, (u8)b);
+
+    ok = str::Parse(s, n, "%2x%2x%2x", &r, &g, &b);
+    if (!ok) {
+        return;
     }
-    return ok;
+    parsed.col = MkColor((u8)r, (u8)g, (u8)b);
+    parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b);
+    parsed.parsedOk = true;
 }
 
-/* Parse 'txt' as hex color and return the result in 'destColor' */
-bool ParseColor(COLORREF* destColor, const char* txt) {
-    std::string_view sv(txt);
-    return ParseColor(destColor, sv);
+/* Parse 's' as hex color and return the result in 'destColor' */
+bool ParseColor(COLORREF* destColor, const char* s) {
+    CrashIf(!destColor);
+    ParsedColor p;
+    ParseColor(p, s);
+    *destColor = p.col;
+    return p.parsedOk;
+}
+
+void SerializePdfColor(PdfColor c, str::Str& out) {
+    u8 r, g, b, a;
+    UnpackPdfColor(c, r, g, b, a);
+    out.AppendFmt("#%02x%02x%02x", r, g, b);
+}
+
+COLORREF ParseColor(const char* s, COLORREF defCol) {
+    COLORREF c;
+    if (ParseColor(&c, s)) {
+        return c;
+    }
+    return defCol;
+}
+
+// return argb
+PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a) {
+    PdfColor b2 = (PdfColor)b;
+    PdfColor g2 = (PdfColor)g << 8;
+    PdfColor r2 = (PdfColor)r << 16;
+    PdfColor a2 = (PdfColor)a << 24;
+    return a2 | r2 | g2 | b2;
+}
+
+// argb
+void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
+    b = (u8)(c & 0xff);
+    c = c >> 8;
+    g = (u8)(c & 0xff);
+    c = c >> 8;
+    r = (u8)(c & 0xff);
+    c = c >> 8;
+    a = (u8)(c & 0xff);
 }
 
 COLORREF AdjustLightness(COLORREF c, float factor) {

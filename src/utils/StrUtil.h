@@ -37,6 +37,7 @@ WCHAR* Dup(Allocator*, const WCHAR* str, size_t strLen = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
 WCHAR* Dup(const std::wstring_view);
 
+void ReplacePtr(char** s, const char* snew);
 void ReplaceWithCopy(char** s, const char* snew);
 void ReplaceWithCopy(const char** s, const char* snew);
 
@@ -115,9 +116,8 @@ bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
 
-size_t TrimWS(WCHAR* s, TrimOpt opt);
-
-size_t TrimWS(char* s, TrimOpt opt);
+size_t TrimWSInPlace(char* s, TrimOpt opt);
+size_t TrimWSInPlace(WCHAR* s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
 
 size_t TransChars(char* str, const char* oldChars, const char* newChars);

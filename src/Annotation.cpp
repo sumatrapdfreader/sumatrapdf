@@ -116,26 +116,6 @@ std::string_view AnnotationName(AnnotationType tp) {
 }
 */
 
-// return argb
-PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a) {
-    PdfColor b2 = (PdfColor)b;
-    PdfColor g2 = (PdfColor)g << 8;
-    PdfColor r2 = (PdfColor)r << 16;
-    PdfColor a2 = (PdfColor)a << 24;
-    return a2 | r2 | g2 | b2;
-}
-
-// argb
-void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
-    b = (u8)(c & 0xff);
-    c = c >> 8;
-    g = (u8)(c & 0xff);
-    c = c >> 8;
-    r = (u8)(c & 0xff);
-    c = c >> 8;
-    a = (u8)(c & 0xff);
-}
-
 std::string_view AnnotationReadableName(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {

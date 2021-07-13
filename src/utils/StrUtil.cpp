@@ -421,6 +421,11 @@ const char* FindI(const char* s, const char* toFind) {
     return nullptr;
 }
 
+void ReplacePtr(char** s, const char* snew) {
+    free(*s);
+    *s = (char*)snew;
+}
+
 void ReplaceWithCopy(char** s, const char* snew) {
     free(*s);
     *s = str::Dup(snew);
@@ -612,7 +617,7 @@ void TrimWsEnd(char* s, char*& e) {
 
 // Trim whitespace characters, in-place, inside s.
 // Returns number of trimmed characters.
-size_t TrimWS(char* s, TrimOpt opt) {
+size_t TrimWSInPlace(char* s, TrimOpt opt) {
     size_t sLen = str::Len(s);
     char* ns = s;
     char* e = s + sLen;
@@ -2192,7 +2197,7 @@ WCHAR* Format(const WCHAR* fmt, ...) {
 
 // Trim whitespace characters, in-place, inside s.
 // Returns number of trimmed characters.
-size_t TrimWS(WCHAR* s, TrimOpt opt) {
+size_t TrimWSInPlace(WCHAR* s, TrimOpt opt) {
     size_t sLen = str::Len(s);
     WCHAR* ns = s;
     WCHAR* e = s + sLen;

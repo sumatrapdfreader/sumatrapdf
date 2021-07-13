@@ -933,7 +933,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         WORD cmd = LOWORD(wp);
         if (IDOK == cmd) {
             AutoFreeWstr name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
-            str::TrimWS(name, str::TrimOpt::Both);
+            str::TrimWSInPlace(name, str::TrimOpt::Both);
             if (!str::IsEmpty(name.Get())) {
                 data->favName = name.StealData();
             } else {
