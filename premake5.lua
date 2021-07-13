@@ -262,7 +262,35 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4100", "4244", "4505", "4456", "4457", "4245", "4505", "4701", "4706", "4996" }
     characterset "MBCS"
     wdl_files()
-  --]]
+
+  project "freetype"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    defines {
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
+    freetype_files()
+
+  project "freetype-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+
+    defines {
+        "FT2_BUILD_LIBRARY",
+        "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+        "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
+    freetype_files()
+
+--]]
 
   project "unarrlib"
     kind "StaticLib"
@@ -412,34 +440,6 @@ workspace "SumatraPDF"
     libjpeg_turbo_files()
 
 
-  project "freetype"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    defines {
-      "FT2_BUILD_LIBRARY",
-      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-    }
-    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
-    freetype_files()
-
-  project "freetype-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-
-    defines {
-        "FT2_BUILD_LIBRARY",
-        "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-        "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-    }
-    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
-    freetype_files()
-
-
   project "lcms2"
     kind "StaticLib"
     language "C"
@@ -557,12 +557,12 @@ workspace "SumatraPDF"
 
     includedirs {
       "mupdf/include",
+      "mupdf/scripts/freetype",
       "mupdf/generated",
       "ext/jbig2dec",
       "ext/libjpeg-turbo",
       "ext/openjpeg/src/lib/openjp2",
       "ext/zlib",
-      "mupdf/scripts/freetype",
       "ext/freetype/include",
       "ext/mujs",
       "ext/harfbuzz/src",
@@ -587,8 +587,17 @@ workspace "SumatraPDF"
       }
     filter {}
 
+    -- for freetype
+    freetype_files()
+    defines {
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+
     mupdf_files()
-    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs", "gumbo" }
+    links { "zlib", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs", "gumbo" }
 
   project "mupdf-opt"
     kind "StaticLib"
@@ -640,8 +649,18 @@ workspace "SumatraPDF"
         '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
     }
     filter {}
+
+    -- for freetype
+    freetype_files()
+    defines {
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+
     mupdf_files()
-    links { "zlib-opt", "libjpeg-turbo-opt", "freetype-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "mujs-opt", "gumbo-opt" }
+    links { "zlib-opt", "libjpeg-turbo-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "mujs-opt", "gumbo-opt" }
 
 
   -- regular build with distinct debug / release builds

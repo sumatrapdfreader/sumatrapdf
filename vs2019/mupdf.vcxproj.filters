@@ -4,6 +4,45 @@
     <Filter Include="ext">
       <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\freetype">
+      <UniqueIdentifier>{E95366C0-D5B6-F564-7E3C-2E1B6A7EC1E7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src">
+      <UniqueIdentifier>{80DEEB71-6CD7-0AC4-9509-F0488161EACF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\base">
+      <UniqueIdentifier>{2AD72464-9643-E05E-5F37-78BCCB6202C7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\cff">
+      <UniqueIdentifier>{FE96D229-EA25-5CF3-9344-70EE7FB26C99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\cid">
+      <UniqueIdentifier>{5F97D229-4B26-5CF3-F444-70EEE0B26C99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\psaux">
+      <UniqueIdentifier>{40A8C6E9-2CA2-EF3B-150F-864C01A855A8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\pshinter">
+      <UniqueIdentifier>{BC35C047-28F8-F3D1-71A8-825EDDA9CCAF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\psnames">
+      <UniqueIdentifier>{E6DDF176-D202-41F7-FB4D-2687E7D13F15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\raster">
+      <UniqueIdentifier>{00210A26-6C58-52BD-7562-B6E0E11879B6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\sfnt">
+      <UniqueIdentifier>{4A3E2E64-B6AA-E95E-7F9E-81BCEBC90BC7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\smooth">
+      <UniqueIdentifier>{C92A3629-3562-7EC0-3E6C-E2E3AA22A5B9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\truetype">
+      <UniqueIdentifier>{915BDBC9-FD1D-0F54-46CE-9DE0B2CFE731}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\freetype\src\type1">
+      <UniqueIdentifier>{029212EA-EE8B-3B3C-D7F8-D14CC391A1A8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mupdf">
       <UniqueIdentifier>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</UniqueIdentifier>
     </Filter>
@@ -317,6 +356,72 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\freetype\src\base\ftbase.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftbbox.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftbitmap.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftdebug.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftgasp.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftglyph.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftinit.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftotval.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftstroke.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftsynth.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftsystem.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\fttype1.c">
+      <Filter>ext\freetype\src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\cff\cff.c">
+      <Filter>ext\freetype\src\cff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\cid\type1cid.c">
+      <Filter>ext\freetype\src\cid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\psaux\psaux.c">
+      <Filter>ext\freetype\src\psaux</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\pshinter\pshinter.c">
+      <Filter>ext\freetype\src\pshinter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\psnames\psnames.c">
+      <Filter>ext\freetype\src\psnames</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\raster\raster.c">
+      <Filter>ext\freetype\src\raster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\sfnt\sfnt.c">
+      <Filter>ext\freetype\src\sfnt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\smooth\smooth.c">
+      <Filter>ext\freetype\src\smooth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\truetype\truetype.c">
+      <Filter>ext\freetype\src\truetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\type1\type1.c">
+      <Filter>ext\freetype\src\type1</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf_load_system_font.c">
       <Filter>ext</Filter>
     </ClCompile>
