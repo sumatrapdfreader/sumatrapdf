@@ -517,29 +517,6 @@ workspace "SumatraPDF"
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
 
-  project "chm"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
-    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
-    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
-
-
-  project "engines"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++latest"
-    regconf()
-    disablewarnings {
-      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
-      "4701", "4706", "4819", "4838"
-    }
-    includedirs { "src", "src/wingui" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
-    engines_files()
-    links { "chm" }
-
   project "gumbo"
     kind "StaticLib"
     language "C"
@@ -794,17 +771,53 @@ workspace "SumatraPDF"
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
     links { "shlwapi", "version", "comctl32" }
-  --]]
+
+
+  project "engines"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++latest"
+    regconf()
+    disablewarnings {
+      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
+      "4701", "4706", "4819", "4838"
+    }
+    includedirs { "src", "src/wingui" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
+    engines_files()
+    links { "chm" }
+
+
+  project "chm"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
+    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
+    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
+
+--]]
 
   project "enginedump"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
     regconf()
+
     includedirs { "src", "src/wingui", "mupdf/include" }
+    -- for engine files
+    includedirs { "ext/libdjvu", "ext/CHMLib/src", "ext/zlib" }
+  
     disablewarnings { "4100", "4267", "4457" }
+    -- for chm files
+    -- TODO: fix chm warnings in chm code
+    disablewarnings { "4018", "4057", "4244", "4267", "4295", "4996", "4701", "4706" }
+
+    chm_files()
+    engines_files()
     engine_dump_files()
-    links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
+
+    links { "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
       "version", "windowscodecs"
@@ -858,7 +871,14 @@ workspace "SumatraPDF"
       "src", "src/wingui", "mupdf/include",
       "ext/libdjvu", "ext/CHMLib/src", "ext/zlib"
     }
+
+    -- TODO: only add chm_files in debug build?
+    chm_files()
     pdf_preview_files()
+    -- for chm files
+    -- TODO: fix chm warnings in chm code
+    disablewarnings { "4018", "4057", "4244", "4267", "4295", "4996", "4701", "4706" }
+
     filter {"configurations:Debug"}
       defines {
         "BUILD_XPS_PREVIEW", "BUILD_DJVU_PREVIEW", "BUILD_EPUB_PREVIEW",
@@ -867,9 +887,7 @@ workspace "SumatraPDF"
         "BUILD_TGA_PREVIEW"
       }
     filter {}
-    -- TODO: "chm" should only be for Debug config but doing links { "chm" }
-    -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "utils", "unrar", "libmupdf", "chm" }
+    links { "utils", "unrar", "libmupdf" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
 
 
@@ -881,11 +899,14 @@ workspace "SumatraPDF"
     regconf()
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
+
     includedirs { "src", "mupdf/include" }
 
     synctex_files()
     mui_files()
     uia_files()
+    chm_files()
+    engines_files()
     sumatrapdf_files()
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -905,11 +926,16 @@ workspace "SumatraPDF"
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
-    -- for wdl
-    disablewarnings { "4505" }
+    -- for engine_files
+    includedirs { "src/wingui" } -- TODO: is this needed?
+    includedirs { "ext/libdjvu", "ext/CHMLib/src" }
+
+    -- for chm files
+    -- TODO: fix chm warnings in chm code
+    disablewarnings { "4018", "4057", "4267", "4295", "4996", "4701" }
 
     links {
-      "engines", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
+      "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -934,6 +960,8 @@ workspace "SumatraPDF"
     synctex_files()
     mui_files()
     uia_files()
+    chm_files()
+    engines_files()
     sumatrapdf_files()
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -953,15 +981,20 @@ workspace "SumatraPDF"
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
-    -- for wdl
-    disablewarnings { "4505" }
+    -- for engine_files
+    includedirs { "src/wingui" } -- TODO: is this needed?
+    includedirs { "ext/libdjvu", "ext/CHMLib/src" }
+
+    -- for chm files
+    -- TODO: fix chm warnings in chm code
+    disablewarnings { "4018", "4057", "4295", "4996", "4701" }
 
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
 
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "unrar", "unarrlib", "utils", "engines"
+      "libmupdf", "unrar", "unarrlib", "utils"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

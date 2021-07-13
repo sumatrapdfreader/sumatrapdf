@@ -65,15 +65,6 @@ static int gAllocs = 0;
 static int gFrees = 0;
 static PVOID gHeap = nullptr;
 
-static void* GetDllProcAddr(const char* dll, const char* name) {
-    HMODULE mod = GetModuleHandleA(dll);
-    if (mod == NULL)
-        return nullptr;
-
-    void* pTarget = (LPVOID)GetProcAddress(mod, name);
-    return pTarget;
-}
-
 static void* AllocPrivate(size_t n) {
     // note: HeapAlloc and RtlHeapAlloc seem to be the same
     if (gRtlAllocateHeapOrig) {
@@ -478,12 +469,26 @@ void* __cdecl _recalloc_base_hook(void* _Block, size_t _Count, size_t _Size) {
 HOOK_ENTRY gHooks[kMaxHooks] = {0};
 int gHooksCount = 0;
 
+
+#if 0
+static void* GetDllProcAddr(const char* dll, const char* name) {
+    HMODULE mod = GetModuleHandleA(dll);
+    if (mod == NULL)
+        return nullptr;
+
+    void* pTarget = (LPVOID)GetProcAddress(mod, name);
+    return pTarget;
+}
+#endif
+
+#if 0
 static void AddDllFunc(const char* dllName, const char* funcName, LPVOID func, LPVOID* ppOrig) {
     HOOK_ENTRY* pHook = &(gHooks[gHooksCount++]);
     pHook->pTarget = GetDllProcAddr(dllName, funcName);
     pHook->pDetour = func;
     pHook->ppOrig = ppOrig;
 }
+#endif
 
 static void AddFunc(LPVOID pTarget, LPVOID func, LPVOID* ppOrig) {
     HOOK_ENTRY* pHook = &(gHooks[gHooksCount++]);

@@ -204,15 +204,6 @@ static bool ExtractInstallerFiles() {
     return ExtractFiles(&gArchive, gCli->installDir);
 }
 
-/* Caller needs to free() the result. */
-static WCHAR* GetDefaultPdfViewer() {
-    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID);
-    if (buf) {
-        return buf.StealData();
-    }
-    return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
-}
-
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(const WCHAR* dir) {
     AutoFreeWstr dirPattern = path::Join(dir, L"*");
@@ -691,6 +682,17 @@ static bool InstallerOnWmCommand(WPARAM wp) {
     }
     return true;
 }
+
+#if ENABLE_REGISTER_DEFAULT
+/* Caller needs to free() the result. */
+static WCHAR* GetDefaultPdfViewer() {
+    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID);
+    if (buf) {
+        return buf.StealData();
+    }
+    return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
+}
+#endif
 
 //[ ACCESSKEY_GROUP Installer
 static void OnCreateWindow(HWND hwnd) {

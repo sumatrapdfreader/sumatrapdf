@@ -1,27 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="mui">
-      <UniqueIdentifier>{1092880B-7C9B-887C-0517-9F7C711F947C}</UniqueIdentifier>
+    <Filter Include="ext">
+      <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\CHMLib">
+      <UniqueIdentifier>{F4C77F39-E07F-C186-4987-9AE2355E5C77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\CHMLib\src">
+      <UniqueIdentifier>{0B606603-F72D-5A09-E0C1-CA2FCC2E366E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mui">
+      <UniqueIdentifier>{A71E30A9-13FE-AE44-1C16-3A1B887415A6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utils">
+      <UniqueIdentifier>{6DAA42B6-D914-F72C-2253-A8D28EFCD481}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\SumatraConfig.h" />
+    <ClInclude Include="..\src\Annotation.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ChmDoc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EbookDoc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EbookFormatter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineBase.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineCreate.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineDjVu.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineEbook.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineFzUtil.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineImages.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineMulti.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineMupdf.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EnginePdf.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EnginePdfImpl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EnginePs.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineXps.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\HtmlFormatter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MobiDoc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PdfCreator.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SumatraConfig.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\mui\MiniMui.h">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\TextRender.h">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\PalmDbReader.h">
+      <Filter>src\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\EngineDump.cpp" />
-    <ClCompile Include="..\src\SumatraConfig.cpp" />
+    <ClCompile Include="..\ext\CHMLib\src\chm_lib.c">
+      <Filter>ext\CHMLib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\CHMLib\src\lzx.c">
+      <Filter>ext\CHMLib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Annotation.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ChmDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EbookDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EbookFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineBase.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineCreate.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineDjVu.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineDump.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineEbook.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineFzUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineImages.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineMulti.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineMupdf.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EnginePdf.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EnginePs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineXps.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\HtmlFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MobiDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PdfCreator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SumatraConfig.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\mui\MiniMui.cpp">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\TextRender.cpp">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\PalmDbReader.cpp">
+      <Filter>src\utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

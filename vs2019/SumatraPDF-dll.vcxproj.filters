@@ -4,6 +4,12 @@
     <Filter Include="ext">
       <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\CHMLib">
+      <UniqueIdentifier>{F4C77F39-E07F-C186-4987-9AE2355E5C77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\CHMLib\src">
+      <UniqueIdentifier>{0B606603-F72D-5A09-E0C1-CA2FCC2E366E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext\synctex">
       <UniqueIdentifier>{73E6124D-DF9B-8B42-6890-8519D4448246}</UniqueIdentifier>
     </Filter>
@@ -39,6 +45,9 @@
     <ClInclude Include="..\src\Actions.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Annotation.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\AppColors.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -55,6 +64,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Caption.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ChmDoc.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ChmModel.h">
@@ -81,7 +93,49 @@
     <ClInclude Include="..\src\EbookControls.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\EbookDoc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EbookFormatter.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\EditAnnotations.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineBase.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineCreate.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineDjVu.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineEbook.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineFzUtil.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineImages.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineMulti.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineMupdf.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EnginePdf.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EnginePdfImpl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EnginePs.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineXps.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ExternalViewers.h">
@@ -105,10 +159,16 @@
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\HtmlFormatter.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Installer.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Menu.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MobiDoc.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\MuiEbookPageDef.h">
@@ -118,6 +178,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PagesLayoutDef.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PdfCreator.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PdfSync.h">
@@ -258,11 +321,20 @@
     <ClInclude Include="..\src\uia\TextRange.h">
       <Filter>src\uia</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\PalmDbReader.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\UtAssert.h">
       <Filter>src\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\CHMLib\src\chm_lib.c">
+      <Filter>ext\CHMLib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\CHMLib\src\lzx.c">
+      <Filter>ext\CHMLib\src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\synctex\synctex_parser.c">
       <Filter>ext\synctex</Filter>
     </ClCompile>
@@ -273,6 +345,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Actions.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Annotation.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AppColors.cpp">
@@ -296,6 +371,9 @@
     <ClCompile Include="..\src\Caption.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ChmDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ChmModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -317,7 +395,49 @@
     <ClCompile Include="..\src\EbookControls.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\EbookDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EbookFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\EditAnnotations.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineBase.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineCreate.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineDjVu.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineDump.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineEbook.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineFzUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineImages.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineMulti.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineMupdf.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EnginePdf.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EnginePs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineXps.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ExternalViewers.cpp">
@@ -341,6 +461,9 @@
     <ClCompile Include="..\src\GlobalPrefs.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\HtmlFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\InstUninstCommon.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -353,6 +476,9 @@
     <ClCompile Include="..\src\Menu.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\MobiDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\MuPDF_Exports.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -363,6 +489,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PagesLayoutDef.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PdfCreator.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfSync.cpp">
@@ -520,6 +649,9 @@
     </ClCompile>
     <ClCompile Include="..\src\uia\TextRange.cpp">
       <Filter>src\uia</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\PalmDbReader.cpp">
+      <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\UtAssert.cpp">
       <Filter>src\utils</Filter>

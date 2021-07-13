@@ -1306,3 +1306,108 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
 
     delete annot;
 }
+
+static PdfColor ToPdfColor(COLORREF c) {
+    u8 r, g, b, a;
+    UnpackColor(c, r, g, b, a);
+    // COLORREF has a of 0 for opaque but for PDF use
+    // opaque is 0xff
+    if (a == 0) {
+        a = 0xff;
+    }
+    auto res = MkPdfColor(r, g, b, a);
+    return res;
+}
+
+PdfColor GetAnnotationHighlightColor() {
+    COLORREF col = gGlobalPrefs->annotations.highlightColor;
+    return ToPdfColor(col);
+}
+
+PdfColor GetAnnotationTextIconColor() {
+    COLORREF col = gGlobalPrefs->annotations.textIconColor;
+    return ToPdfColor(col);
+}
+
+// caller needs to free()
+char* GetAnnotationTextIcon() {
+    char* s = str::Dup(gGlobalPrefs->annotations.textIconType);
+    // this way user can use "new paragraph" and we'll match "NewParagraph"
+    str::RemoveCharsInPlace(s, " ");
+    int idx = seqstrings::StrToIdxIS(gAnnotationTextIcons, s);
+    if (idx < 0) {
+        str::ReplaceWithCopy(&s, "Note");
+    } else {
+        const char* real = seqstrings::IdxToStr(gAnnotationTextIcons, idx);
+        str::ReplaceWithCopy(&s, real);
+    }
+    return s;
+}
+
+static const char* getuser(void) {
+    const char* u;
+    u = getenv("USER");
+    if (!u)
+        u = getenv("USERNAME");
+    if (!u)
+        u = "user";
+    return u;
+}
+
+Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
+    EnginePdf* epdf = AsEnginePdf(engine);
+    fz_context* ctx = epdf->ctx;
+
+    auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
+
+    ScopedCritSec cs(epdf->ctxAccess);
+
+    auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
+    enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
+
+    auto annot = pdf_create_annot(ctx, page, atyp);
+
+    pdf_set_annot_modification_date(ctx, annot, time(NULL));
+    if (pdf_annot_has_author(ctx, annot)) {
+        pdf_set_annot_author(ctx, annot, getuser());
+    }
+
+    switch (typ) {
+        case AnnotationType::Text:
+        case AnnotationType::FreeText:
+        case AnnotationType::Stamp:
+        case AnnotationType::Caret:
+        case AnnotationType::Square:
+        case AnnotationType::Circle: {
+            fz_rect trect = pdf_annot_rect(ctx, annot);
+            float dx = trect.x1 - trect.x0;
+            trect.x0 = pos.x;
+            trect.x1 = trect.x0 + dx;
+            float dy = trect.y1 - trect.y0;
+            trect.y0 = pos.y;
+            trect.y1 = trect.y0 + dy;
+            pdf_set_annot_rect(ctx, annot, trect);
+        } break;
+        case AnnotationType::Line: {
+            fz_point a{pos.x, pos.y};
+            fz_point b{pos.x + 100, pos.y + 50};
+            pdf_set_annot_line(ctx, annot, a, b);
+        } break;
+    }
+    if (typ == AnnotationType::FreeText) {
+        pdf_set_annot_contents(ctx, annot, "This is a text...");
+        pdf_set_annot_border(ctx, annot, 1);
+    }
+
+    pdf_update_annot(ctx, annot);
+    auto res = MakeAnnotationPdf(epdf, annot, pageNo);
+    if (typ == AnnotationType::Text) {
+        AutoFreeStr iconName = GetAnnotationTextIcon();
+        if (!str::EqI(iconName, "Note")) {
+            SetIconName(res, iconName.AsView());
+        }
+        auto col = GetAnnotationTextIconColor();
+        SetColor(res, col);
+    }
+    return res;
+}

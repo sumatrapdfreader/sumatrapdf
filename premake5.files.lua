@@ -595,6 +595,13 @@ function engines_files()
   })
 end
 
+function chm_files()
+  files_in_dir("ext/CHMLib/src", {
+    "chm_lib.c",
+    "lzx.c" ,
+  })
+end
+
 function mupdf_files()
   --[[ files {
     "mupdf/font_base14.asm",

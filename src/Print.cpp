@@ -704,6 +704,7 @@ static short GetPaperSize(EngineBase* engine) {
     }
 }
 
+#if 0
 static short GetPaperByName(const WCHAR* papername) {
     if (str::EqI(papername, L"letter")) {
         return DMPAPER_LETTER;
@@ -734,6 +735,7 @@ static short GetPaperByName(const WCHAR* papername) {
     }
     return 0;
 }
+#endif
 
 static short GetPaperByName(const WCHAR* printerName, const WCHAR* paperName, LPDEVMODE devMode) {
     CrashIf(!(devMode->dmFields & DM_PAPERSIZE));
