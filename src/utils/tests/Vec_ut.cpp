@@ -297,7 +297,12 @@ void VecTest() {
     {
         Vec<int> v;
         v.InsertAt(2, 2);
-        utassert(v.size() == 3 && v.at(0) == 0 && v.at(2) == 2);
+        auto size = v.size();
+        utassert(size == 3);
+        auto el0 = v.at(0);
+        utassert(el0 == 0);
+        auto el2 = v.at(2);
+        utassert(el2 == 2);
     }
 
     {

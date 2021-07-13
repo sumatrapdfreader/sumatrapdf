@@ -7,10 +7,6 @@
 store pointer types or POD types
 (http://stackoverflow.com/questions/146452/what-are-pod-types-in-c).
 
-We always pad the elements with a single 0 value. This makes
-Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
-not useful for other types, the code is simpler if we always do it
-(rather than have it an optional behavior).
 */
 template <typename T>
 class Vec {
@@ -22,21 +18,15 @@ class Vec {
     T* els{nullptr};
     T buf[16];
 
+    // We always pad the elements with a single 0 value. This makes
+    // Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
+    // not useful for other types, the code is simpler if we always do it
+    // (rather than have it an optional behavior).
     static constexpr size_t kPadding = 1;
-    static constexpr size_t kBufSize = sizeof(buf);
     static constexpr size_t kElSize = sizeof(T);
 
   protected:
-    bool EnsureCap(size_t needed) {
-        // this is frequent, fast path that should be inlined
-        if (cap >= needed) {
-            return true;
-        }
-        // slow path
-        return EnsureCapSlow(needed);
-    }
-
-    bool EnsureCapSlow(size_t needed) {
+    NO_INLINE bool EnsureCapSlow(size_t needed) {
         size_t newCap = cap * 2;
         if (needed > newCap) {
             newCap = needed;
@@ -72,6 +62,15 @@ class Vec {
         return true;
     }
 
+    inline bool EnsureCap(size_t capNeeded) {
+        // this is frequent, fast path that should be inlined
+        if (cap >= capNeeded) {
+            return true;
+        }
+        // slow path
+        return EnsureCapSlow(capNeeded);
+    }
+
     T* MakeSpaceAt(size_t idx, size_t count) {
         size_t newLen = std::max(len, idx) + count;
         bool ok = EnsureCap(newLen);
@@ -91,29 +90,63 @@ class Vec {
     void FreeEls() {
         if (els != buf) {
             Allocator::Free(allocator, els);
+            els = nullptr;
         }
     }
 
   public:
-    // allocator is not owned by Vec and must outlive it
-    explicit Vec(size_t capHint = 0, Allocator* allocator = nullptr) : allocator(allocator), capacityHint(capHint) {
+    void Reset() {
+        FreeEls();
+        len = 0;
+        cap = dimof(buf) - kPadding;
         els = buf;
-        Reset();
+        memset(buf, 0, sizeof(buf));
     }
 
-    ~Vec() {
-        FreeEls();
+    bool SetSize(size_t newSize) {
+        Reset();
+        return MakeSpaceAt(0, newSize);
+    }
+
+    // allocator is not owned by Vec and must outlive it
+    explicit Vec(size_t capHint = 0, Allocator* a = nullptr) {
+        allocator = a;
+        capacityHint = capHint;
+        els = buf;
+        Reset();
     }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
-    Vec(const Vec& orig) {
+    Vec(const Vec& other) {
         els = buf;
         Reset();
-        EnsureCap(orig.cap);
-        len = orig.len;
+
+        EnsureCap(other.len);
+        len = other.len;
         // using memcpy, as Vec only supports POD types
-        memcpy(els, orig.els, kElSize * (orig.len));
+        memcpy(els, other.els, kElSize * (other.len));
+    }
+
+    // TODO: write Vec(const Vec&& other)
+
+    Vec& operator=(const Vec& other) {
+        els = buf;
+        Reset();
+
+        if (this == &other) {
+            return *this;
+        }
+        EnsureCap(other.len);
+        // using memcpy, as Vec only supports POD types
+        len = other.len;
+        memcpy(els, other.els, kElSize * len);
+        memset(els + len, 0, kElSize * (cap - len));
+        return *this;
+    }
+
+    ~Vec() {
+        FreeEls();
     }
 
     // this frees all elements and clears the array.
@@ -124,16 +157,6 @@ class Vec {
             free(s);
         }
         Reset();
-    }
-
-    Vec& operator=(const Vec& that) {
-        if (this != &that) {
-            EnsureCap(that.cap);
-            // using memcpy, as Vec only supports POD types
-            memcpy(els, that.els, kElSize * (len = that.len));
-            memset(els + len, 0, kElSize * (cap - len));
-        }
-        return *this;
     }
 
     [[nodiscard]] T& operator[](size_t idx) const {
@@ -156,19 +179,6 @@ class Vec {
         CrashIf(idx < 0);
         CrashIf((size_t)idx >= len);
         return els[idx];
-    }
-
-    void Reset() {
-        len = 0;
-        cap = dimof(buf) - kPadding;
-        FreeEls();
-        els = buf;
-        memset(buf, 0, kBufSize);
-    }
-
-    bool SetSize(size_t newSize) {
-        Reset();
-        return MakeSpaceAt(0, newSize);
     }
 
     [[nodiscard]] T& at(size_t idx) const {
@@ -376,12 +386,15 @@ inline void DeleteVecMembers(Vec<T>& v) {
     v.Reset();
 }
 
+// TOOD: smarter WStrVec class which uses str::Wstr for the buffer
+// and stores str::wstring_view in an array
+
 // WStrVec owns the strings in the list
 class WStrVec : public Vec<WCHAR*> {
   public:
     WStrVec() : Vec() {
     }
-    WStrVec(const WStrVec& orig) : Vec(orig) {
+    WStrVec(const WStrVec& other) : Vec(other) {
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++) {
             if (at(i)) {
@@ -393,14 +406,16 @@ class WStrVec : public Vec<WCHAR*> {
         FreeMembers();
     }
 
-    WStrVec& operator=(const WStrVec& that) {
-        if (this != &that) {
-            FreeMembers();
-            Vec::operator=(that);
-            for (size_t i = 0; i < that.len; i++) {
-                if (at(i)) {
-                    at(i) = str::Dup(at(i));
-                }
+    WStrVec& operator=(const WStrVec& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        FreeMembers();
+        Vec::operator=(other);
+        for (size_t i = 0; i < other.len; i++) {
+            if (at(i)) {
+                at(i) = str::Dup(at(i));
             }
         }
         return *this;
