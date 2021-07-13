@@ -43,8 +43,26 @@
     <Filter Include="ext\freetype\src\type1">
       <UniqueIdentifier>{029212EA-EE8B-3B3C-D7F8-D14CC391A1A8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\gumbo-parser">
+      <UniqueIdentifier>{B9B91D7E-A5B2-3CD0-CEE4-2155BA3C1CDC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\gumbo-parser\src">
+      <UniqueIdentifier>{50AC8165-3C3B-0B2F-E559-1F2AD1C71BD5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\harfbuzz">
+      <UniqueIdentifier>{112FA79A-FD91-363F-A617-6FF5925902C2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\harfbuzz\src">
+      <UniqueIdentifier>{A80DF6E9-9406-153C-BD38-FAC0A990F447}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext\jbig2dec">
       <UniqueIdentifier>{1F231EAB-0B86-AD4F-B40B-E605A04D79D2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\lcms2">
+      <UniqueIdentifier>{2665F1FC-92CF-A573-DB0D-571947B783C8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\lcms2\src">
+      <UniqueIdentifier>{3D46E733-A906-636A-7241-ACE7DEC0A746}</UniqueIdentifier>
     </Filter>
     <Filter Include="ext\mujs">
       <UniqueIdentifier>{046F1FD9-F03B-7AE4-1955-688C0581AF72}</UniqueIdentifier>
@@ -105,6 +123,66 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\gumbo-parser\src\attribute.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\char_ref.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\error.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\gumbo.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\insertion_mode.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\parser.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\string_buffer.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\string_piece.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_enum.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_gperf.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_sizes.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_strings.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\token_type.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\tokenizer.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\tokenizer_states.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\utf8.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\util.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\gumbo-parser\src\vector.h">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\lcms2\src\extra_xform.h">
+      <Filter>ext\lcms2\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\lcms2\src\lcms2_internal.h">
+      <Filter>ext\lcms2\src</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\mujs\mujs.h">
       <Filter>ext\mujs</Filter>
     </ClInclude>
@@ -545,6 +623,198 @@
     <ClCompile Include="..\ext\freetype\src\type1\type1.c">
       <Filter>ext\freetype\src\type1</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\attribute.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\char_ref.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\error.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\parser.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\string_buffer.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\string_piece.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\tag.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\tokenizer.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\utf8.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\util.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\vector.c">
+      <Filter>ext\gumbo-parser\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-aat-layout.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-aat-map.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-blob.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-buffer-serialize.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-buffer.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-common.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-face.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-fallback-shape.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-font.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ft.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-map.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-number.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-cff1-table.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-cff2-table.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-color.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-face.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-font.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-layout.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-map.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-math.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-meta.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-metrics.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-name.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-arabic.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-default.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-hangul.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-hebrew.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-indic-table.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-indic.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-khmer.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-myanmar.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-thai.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-use-table.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-use.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-vowel-constraints.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-fallback.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-normalize.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-tag.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-var.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-set.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-shape-plan.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-shape.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-shaper.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-static.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff-common.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff1.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff2.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-input.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-plan.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ucd.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-unicode.cc">
+      <Filter>ext\harfbuzz\src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\jbig2dec\jbig2.c">
       <Filter>ext\jbig2dec</Filter>
     </ClCompile>
@@ -589,6 +859,84 @@
     </ClCompile>
     <ClCompile Include="..\ext\jbig2dec\jbig2_text.c">
       <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsalpha.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmscam02.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmscgats.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmscnvrt.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmserr.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsgamma.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsgmt.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmshalf.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsintrp.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsio0.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsio1.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmslut.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsmd5.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsmtrx.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsnamed.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsopt.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmspack.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmspcs.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsplugin.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsps2.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmssamp.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmssm.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmstypes.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsvirt.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmswtpnt.c">
+      <Filter>ext\lcms2\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsxform.c">
+      <Filter>ext\lcms2\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mujs\one.c">
       <Filter>ext\mujs</Filter>

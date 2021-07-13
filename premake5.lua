@@ -350,7 +350,83 @@ workspace "SumatraPDF"
     -- because #include "opj_config_private.h" searches current directory first
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
- --]]
+
+  project "lcms2"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    disablewarnings { "4100" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
+
+  project "lcms2-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4100" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
+
+
+  project "harfbuzz"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "HAVE_FALLBACK=1",
+      "HAVE_OT",
+      "HAVE_UCDN",
+      "HAVE_FREETYPE",
+      "HB_NO_MT",
+      "hb_malloc_impl=fz_hb_malloc",
+      "hb_calloc_impl=fz_hb_calloc",
+      "hb_realloc_impl=fz_hb_realloc",
+      "hb_free_impl=fz_hb_free"
+    }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
+    harfbuzz_files()
+
+  project "harfbuzz-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+        "_CRT_SECURE_NO_WARNINGS",
+        "HAVE_FALLBACK=1",
+        "HAVE_OT",
+        "HAVE_UCDN",
+        "HAVE_FREETYPE",
+        "HB_NO_MT",
+        "hb_malloc_impl=fz_hb_malloc",
+        "hb_calloc_impl=fz_hb_calloc",
+        "hb_realloc_impl=fz_hb_realloc",
+        "hb_free_impl=fz_hb_free"
+      }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
+    harfbuzz_files()
+
+  project "gumbo"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
+
+    project "gumbo-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
+--]]
 
   project "unarrlib"
     kind "StaticLib"
@@ -453,84 +529,6 @@ workspace "SumatraPDF"
     libjpeg_turbo_files()
 
 
-  project "lcms2"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    disablewarnings { "4100" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
-
-  project "lcms2-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    disablewarnings { "4100" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
-
-
-  project "harfbuzz"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
-    defines {
-      "_CRT_SECURE_NO_WARNINGS",
-      "HAVE_FALLBACK=1",
-      "HAVE_OT",
-      "HAVE_UCDN",
-      "HAVE_FREETYPE",
-      "HB_NO_MT",
-      "hb_malloc_impl=fz_hb_malloc",
-      "hb_calloc_impl=fz_hb_calloc",
-      "hb_realloc_impl=fz_hb_realloc",
-      "hb_free_impl=fz_hb_free"
-    }
-    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
-    harfbuzz_files()
-
-  project "harfbuzz-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
-    defines {
-        "_CRT_SECURE_NO_WARNINGS",
-        "HAVE_FALLBACK=1",
-        "HAVE_OT",
-        "HAVE_UCDN",
-        "HAVE_FREETYPE",
-        "HB_NO_MT",
-        "hb_malloc_impl=fz_hb_malloc",
-        "hb_calloc_impl=fz_hb_calloc",
-        "hb_realloc_impl=fz_hb_realloc",
-        "hb_free_impl=fz_hb_free"
-      }
-    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
-    harfbuzz_files()
-
-
-  project "gumbo"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
-    "4305", "4306", "4389", "4456", "4701" }
-    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
-    gumbo_files()
-
-    project "gumbo-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
-    "4305", "4306", "4389", "4456", "4701" }
-    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
-    gumbo_files()
-
-
   project "mupdf"
     kind "StaticLib"
     language "C"
@@ -608,8 +606,37 @@ workspace "SumatraPDF"
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
 
+    -- for lcms2
+    disablewarnings { "4100" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
+
+    -- for harfbuzz
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "HAVE_FALLBACK=1",
+      "HAVE_OT",
+      "HAVE_UCDN",
+      "HAVE_FREETYPE",
+      "HB_NO_MT",
+      "hb_malloc_impl=fz_hb_malloc",
+      "hb_calloc_impl=fz_hb_calloc",
+      "hb_realloc_impl=fz_hb_realloc",
+      "hb_free_impl=fz_hb_free"
+    }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
+    harfbuzz_files()
+
+    -- for gumbo
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
+
     mupdf_files()
     links { "zlib", "libjpeg-turbo" }
+
 
   project "mupdf-opt"
     kind "StaticLib"
@@ -688,8 +715,36 @@ workspace "SumatraPDF"
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS"}
     openjpeg_files()
 
+    -- for lcms2
+    disablewarnings { "4100" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
+
+    -- for harfbuzz
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "HAVE_FALLBACK=1",
+      "HAVE_OT",
+      "HAVE_UCDN",
+      "HAVE_FREETYPE",
+      "HB_NO_MT",
+      "hb_malloc_impl=fz_hb_malloc",
+      "hb_calloc_impl=fz_hb_calloc",
+      "hb_realloc_impl=fz_hb_realloc",
+      "hb_free_impl=fz_hb_free"
+    }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
+    harfbuzz_files()
+
+    -- for gumbo
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
+
     mupdf_files()
-    links { "zlib-opt", "libjpeg-turbo-opt", "lcms2-opt", "harfbuzz-opt", "gumbo-opt" }
+    links { "zlib-opt", "libjpeg-turbo-opt" }
 
 
   -- regular build with distinct debug / release builds
