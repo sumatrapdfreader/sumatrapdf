@@ -8,6 +8,17 @@ function files_in_dir(dir, files_in_dir)
   files(paths)
 end
 
+function logview_files()
+  files_in_dir("src/utils", {
+    "BaseUtil.*",
+    "StrUtil.*",
+    "StrconvUtil.*",
+  })
+  files {
+    "src/tools/logview.cpp",
+  }
+end
+
 function makelzsa_files()
   files_in_dir("src/utils", {
     "BaseUtil.*",
@@ -429,7 +440,6 @@ function sumatrapdf_files()
     "MuiEbookPageDef.*",
     "Notifications.*",
     "PagesLayoutDef.*",
-    "ParseBKM.*",
     "PdfSync.*",
     "Print.*",
     "ProgressUpdateUI.*",
@@ -463,24 +473,26 @@ function sumatrapdf_files()
     "Version.h",
     "WindowInfo.*",
 
-    "Tests.cpp",
-    "regress/Regress.*",
     "docs/*.txt",
   })
   filter {"configurations:Debug"}
-  files_in_dir("src/testcode", {
-    "test-app.h",
-    "TestApp.cpp",
-    "TestTab.cpp",
-    "TestLayout.cpp",
-    --"TestLice.cpp",
-  })
-  files_in_dir("src/utils/tests", {
-    "*.cpp",
-  })
-  files_in_dir("src/utils", {
-      "UtAssert.*",
-  })
+    files_in_dir("src", {
+      "Tests.cpp",
+      "regress/Regress.*",  
+    })
+    files_in_dir("src/testcode", {
+      "test-app.h",
+      "TestApp.cpp",
+      "TestTab.cpp",
+      "TestLayout.cpp",
+      --"TestLice.cpp",
+    })
+    files_in_dir("src/utils/tests", {
+      "*.cpp",
+    })
+    files_in_dir("src/utils", {
+        "UtAssert.*",
+    })
   filter {}
 end
 

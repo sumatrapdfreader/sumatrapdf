@@ -566,7 +566,7 @@ static MenuDef menuDefSelection[] = {
         CmdTranslateSelectionWithDeepL,
     },
     {
-        _TRN("&Search With Google"),
+        _TRN("Search With &Google"),
         CmdSearchSelectionWithGoogle,
     },
     {

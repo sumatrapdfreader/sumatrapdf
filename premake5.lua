@@ -937,6 +937,14 @@ workspace "SumatraPDF"
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
+  project "logview"
+  kind "ConsoleApp"
+  language "C++"
+  cppdialect "C++latest"
+  regconf()
+  logview_files()
+  includedirs { "src" }
+  links { "shlwapi", "version", "comctl32" }
 
   project "MakeLZSA"
     kind "ConsoleApp"

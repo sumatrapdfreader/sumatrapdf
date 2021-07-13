@@ -4,6 +4,7 @@ the release notes, as we make them, to make the release process easier.
 Next version:
 3.4 (???)
 * fix rotation of DjVu files
+* add ability to search / translate selected text with web services
 * add Annotations.TextIconColor and TextIconType advanced settings
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
 

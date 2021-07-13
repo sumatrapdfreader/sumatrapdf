@@ -521,16 +521,15 @@ static int RunMessageLoop() {
     return (int)msg.wParam;
 }
 
+#if defined(DEBUG)
 static void ShutdownCommon() {
     mui::Destroy();
     uitask::Destroy();
     UninstallCrashHandler();
     dbghelp::FreeCallstackLogs();
-    // output leaks after all destructors of static objects have run
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 }
+#endif
 
-// TODO: need testing
 static void ReplaceColor(char** col, WCHAR* maybeColor) {
     ParsedColor c;
     ParseColor(c, TempToUtf8(maybeColor).Get());
@@ -908,6 +907,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     EnsureNotInstaller();
 
+#if defined(DEBUG)
     if (i.testRenderPage) {
         TestRenderPage(i);
         ShutdownCommon();
@@ -919,6 +919,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         ShutdownCommon();
         return 0;
     }
+#endif
 
     if (i.appdataDir) {
         SetAppDataPath(i.appdataDir);
