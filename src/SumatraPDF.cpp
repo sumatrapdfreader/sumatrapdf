@@ -174,6 +174,10 @@ static WStrVec gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static WStrVec gAllowedFileTypes;
 
+// workaround for OnMenuExit
+// if this flag is set, CloseWindow will not save prefs before closing the window.
+static bool gDontSavePrefs = false;
+
 static void CloseDocumentInTab(WindowInfo*, bool keepUIEnabled = false, bool deleteModel = false);
 static void UpdatePageInfoHelper(WindowInfo*, NotificationWnd* wnd = nullptr, int pageNo = -1);
 static void OnSidebarSplitterMove(SplitterMoveEvent*);
@@ -2152,6 +2156,14 @@ static void OnMenuExit() {
         }
     }
 
+    // we want to preserve the session state of all windows,
+    // so we save it now
+    // since we are closing the windows one by one,
+    // CloseWindow() must not save the session state every time
+    // (or we will end up with just the last window)
+    prefs::Save();
+    gDontSavePrefs = true;
+
     // CloseWindow removes the WindowInfo from gWindows,
     // so use a stable copy for iteration
     Vec<WindowInfo*> toClose = gWindows;
@@ -2555,7 +2567,13 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
     if (!lastWindow || quitIfLast) {
         ShowWindow(win->hwndFrame, SW_HIDE);
     }
-    prefs::Save();
+    if (!gDontSavePrefs) {
+        // if we are exiting the application by File->Exit,
+        // OnMenuExit will have called prefs::Save() already
+        // and we skip the call here to avoid saving incomplete session info
+        // (because some windows might have been closed already)
+        prefs::Save();
+    }
     TabsOnCloseWindow(win);
 
     if (forceClose) {
