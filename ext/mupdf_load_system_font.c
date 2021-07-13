@@ -653,6 +653,9 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
             return NULL;
         }
         cached_font* f = (cached_font*)malloc(sizeof(cached_font));
+        if (!f) {
+            return NULL;
+        }
         f->fi = found;
         f->ctx = ctx;
         f->buffer = buffer;
@@ -696,14 +699,13 @@ static fz_font* pdf_load_windows_font(fz_context* ctx, const char* fontname, int
 }
 
 static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname, int ros, int serif) {
-    fz_font* font;
+    fz_font* font = NULL;
 
     /* try to find a matching system font before falling back to an approximate one */
     fz_try(ctx) {
         font = pdf_load_windows_font_by_name(ctx, fontname);
     }
     fz_catch(ctx) {
-        font = NULL;
     }
     if (font)
         return font;

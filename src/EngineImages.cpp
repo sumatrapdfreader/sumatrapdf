@@ -288,6 +288,9 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* ipel) {
     PageElement* pel = (PageElement*)ipel;
     int pageNo = pel->imageID;
     auto page = GetPage(pageNo);
+    if (!page) {
+        return nullptr;
+    }
 
     HBITMAP hbmp;
     auto bmp = page->bmp;

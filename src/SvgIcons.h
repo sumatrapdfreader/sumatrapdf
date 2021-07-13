@@ -6,7 +6,7 @@ HBITMAP BuildIconsBitmap(int dx, int dy);
 // must match order in gAllIcons
 enum class TbIcon {
     None = -1,
-    Open = 0,
+    Open,
     Print,
     PagePrev,
     PageNext,

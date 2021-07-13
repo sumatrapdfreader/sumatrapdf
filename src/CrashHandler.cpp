@@ -401,7 +401,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static const char* OsNameFromVer(OSVERSIONINFOEX ver) {
+static const char* OsNameFromVer(const OSVERSIONINFOEX& ver) {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId) {
         return "9x";
     }

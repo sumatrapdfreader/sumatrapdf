@@ -8,6 +8,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - add Annotations.TextIconColor and TextIconType advanced settings (fixes #2025)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
 - simplify visual studio project files by merging libraries into libraries using them
+- fix CodeQL warnings
 
 2021-07-11 Sun
 

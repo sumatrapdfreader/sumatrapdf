@@ -331,6 +331,8 @@ EngineXps::~EngineXps() {
     fz_drop_document(ctx, _doc);
     fz_drop_context(ctx);
 
+    delete tocTree;
+
     for (size_t i = 0; i < dimof(mutexes); i++) {
         LeaveCriticalSection(&mutexes[i]);
         DeleteCriticalSection(&mutexes[i]);

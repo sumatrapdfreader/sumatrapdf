@@ -38,6 +38,8 @@ const char* gAnnotationTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0No
 // clang-format on
 
 // clang format-off
+
+#if 0
 // must match the order of enum class AnnotationType
 static const char* gAnnotNames =
     "Text\0"
@@ -68,6 +70,7 @@ static const char* gAnnotNames =
     "Watermark\0"
     "3D\0"
     "Projection\0";
+#endif
 
 static const char* gAnnotReadableNames =
     "Text\0"

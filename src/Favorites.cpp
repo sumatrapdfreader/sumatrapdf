@@ -565,6 +565,10 @@ static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
     GetSortedFilePaths(filePathsSorted);
     for (size_t i = 0; i < filePathsSorted.size(); i++) {
         FileState* f = gFavorites.GetFavByFilePath(filePathsSorted.at(i));
+        CrashIf(!f);
+        if (!f) {
+            continue;
+        }
         bool isExpanded = win->expandedFavorites.Contains(f);
         FavTreeItem* ti = MakeFavTopLevelItem(f, isExpanded);
         res->children.Append(ti);
