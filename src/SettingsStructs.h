@@ -472,7 +472,7 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
 
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, 0x00ffff},
-    {offsetof(Annotations, textIconColor), SettingType::Color, 0x0000ff},
+    {offsetof(Annotations, textIconColor), SettingType::Color, 0x00ffff},
     {offsetof(Annotations, textIconType), SettingType::Utf8String, (intptr_t) ""},
 };
 static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 3, gAnnotationsFields,

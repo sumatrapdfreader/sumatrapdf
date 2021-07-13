@@ -401,7 +401,7 @@ var (
 	annotations = []*Field{
 		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x0),
 			"color used for highlight annotations"),
-		mkField("TextIconColor", Color, mkRGBA(0xff, 0, 0, 0), "color used for text icon annotation"),
+		mkField("TextIconColor", Color, mkRGB(0xFF, 0xFF, 0x0), "color used for text icon annotation"),
 		mkField("TextIconType", Utf8String, "", "type of text annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note."),
 	}
 
