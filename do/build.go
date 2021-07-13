@@ -496,7 +496,7 @@ func buildPortableExe64() {
 }
 
 // a faster release build for testing that only does 64-bit installer
-func buildReleaseFast() {
+func buildRelease64Fast() {
 	detectSigntoolPath() // early exit if missing
 
 	ver := getVerForBuildType(buildTypeRel)

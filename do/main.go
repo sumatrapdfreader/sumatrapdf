@@ -115,8 +115,8 @@ func main() {
 		flgBuildLzsa               bool
 		flgBuildPreRelease         bool
 		flgBuildRelease            bool
-		flgBuildReleaseFast        bool
-		flgBuildRelease32Fast      bool
+		flgBuildRel64Fast          bool
+		flgBuildRel32Fast          bool
 		flgWc                      bool
 		flgDownloadTranslations    bool
 		flgRegenerateTranslattions bool
@@ -149,8 +149,8 @@ func main() {
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
-		flag.BoolVar(&flgBuildReleaseFast, "build-release-fast", false, "build only 64-bit release installer, for testing")
-		flag.BoolVar(&flgBuildRelease32Fast, "build-release-32-fast", false, "build only 32-bit release installer, for testing")
+		flag.BoolVar(&flgBuildRel64Fast, "build-rel64-fast", false, "build only 64-bit release installer, for testing")
+		flag.BoolVar(&flgBuildRel32Fast, "build-rel32-fast", false, "build only 32-bit release installer, for testing")
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
@@ -312,10 +312,12 @@ func main() {
 		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
-		case githubEventPush, githubEventTypeCodeQL:
+		case githubEventPush:
+			buildPreRelease()
+		case githubEventTypeCodeQL:
 			// code ql is just a regular build, I assume intercepted by
 			// by their tooling
-			buildPreRelease()
+			buildRelease64Fast()
 		default:
 			panic("unkown value from getGitHubEventType()")
 		}
@@ -368,14 +370,14 @@ func main() {
 		return
 	}
 
-	if flgBuildReleaseFast {
+	if flgBuildRel64Fast {
 		warnIfNoCertPwd()
 		detectVersions()
-		buildReleaseFast()
+		buildRelease64Fast()
 		return
 	}
 
-	if flgBuildRelease32Fast {
+	if flgBuildRel32Fast {
 		warnIfNoCertPwd()
 		detectVersions()
 		buildRelease32Fast()
