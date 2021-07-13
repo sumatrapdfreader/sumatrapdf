@@ -14,6 +14,9 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EnginePdfImpl.h"
+#include "DisplayMode.h"
+#include "SettingsStructs.h"
+#include "GlobalPrefs.h"
 
 /*
 void SetLineEndingStyles(Annotation*, int start, int end);
@@ -29,6 +32,10 @@ static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
 static_assert((int)AnnotationType::ThreeD == (int)PDF_ANNOT_3D);
 static_assert((int)AnnotationType::Sound == (int)PDF_ANNOT_SOUND);
 static_assert((int)AnnotationType::Unknown == (int)PDF_ANNOT_UNKNOWN);
+
+// clang-format off
+const char* gAnnotationTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
+// clang-format on
 
 AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
     return (AnnotationType)tp;
@@ -656,4 +663,41 @@ Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) 
         }
     }
     return result;
+}
+
+static PdfColor ToPdfColor(COLORREF c) {
+    u8 r, g, b, a;
+    UnpackColor(c, r, g, b, a);
+    // COLORREF has a of 0 for opaque but for PDF use
+    // opaque is 0xff
+    if (a == 0) {
+        a = 0xff;
+    }
+    auto res = MkPdfColor(r, g, b, a);
+    return res;
+}
+
+PdfColor GetAnnotationHighlightColor() {
+    COLORREF col = gGlobalPrefs->annotations.highlightColor;
+    return ToPdfColor(col);
+}
+
+PdfColor GetAnnotationTextIconColor() {
+    COLORREF col = gGlobalPrefs->annotations.textIconColor;
+    return ToPdfColor(col);
+}
+
+// caller needs to free()
+char* GetAnnotationTextIcon() {
+    char* s = str::Dup(gGlobalPrefs->annotations.textIconType);
+    // this way user can use "new paragraph" and we'll match "NewParagraph"
+    str::RemoveCharsInPlace(s, " ");
+    int idx = seqstrings::StrToIdxIS(gAnnotationTextIcons, s);
+    if (idx < 0) {
+        str::ReplaceWithCopy(&s, "Note");
+    } else {
+        const char* real = seqstrings::IdxToStr(gAnnotationTextIcons, idx);
+        str::ReplaceWithCopy(&s, real);
+    }
+    return s;
 }

@@ -1992,6 +1992,14 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
 
     pdf_update_annot(ctx, annot);
     auto res = MakeAnnotationPdf(epdf, annot, pageNo);
+    if (typ == AnnotationType::Text) {
+        AutoFreeStr iconName = GetAnnotationTextIcon();
+        if (!str::EqI(iconName, "Note")) {
+            SetIconName(res, iconName.AsView());
+        }
+        auto col = GetAnnotationTextIconColor();
+        SetColor(res, col);
+    }
     return res;
 }
 

@@ -340,7 +340,7 @@ void StrTest() {
     utassert(str::Eq(buf, L"AbC") && count == 0);
 
     str::BufSet(buf, dimof(buf), L"blogarapato");
-    count = str::RemoveChars(buf, L"bo");
+    count = str::RemoveCharsInPlace(buf, L"bo");
     utassert(3 == count);
     utassert(str::Eq(buf, L"lgarapat"));
 

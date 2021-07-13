@@ -5,6 +5,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - on crash re-get list of modules so that we can see modules that were injected after startup
 - implement SendDebugReport
 - tweak temp allocator to be created on demand
+- add Annotations.TextIconColor and TextIconType advanced settings (fixes #2025)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
 
 2021-07-11 Sun
 

@@ -56,7 +56,6 @@ constexpr int borderWidthMax = 12;
 // clang-format off
 static const char *gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
 static const char *gSoundIcons = "Speaker\0Mic\0";
-static const char* gTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
 static const char *gStampIcons = "Approved\0AsIs\0Confidential\0Departmental\0Draft\0Experimental\0Expired\0Final\0ForComment\0ForPublicRelease\0NotApproved\0NotForPublicRelease\0Sold\0TopSecret\0";
 static const char *gLineEndingStyles = "None\0Square\0Circle\0Diamond\0OpenArrow\0ClosedArrow\0Butt\0ROpenArrow\0RClosedArrow\0Slash\0";
 static const char* gColors = "Transparent\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
@@ -631,7 +630,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
     const char* items = nullptr;
     switch (Type(annot)) {
         case AnnotationType::Text:
-            items = gTextIcons;
+            items = gAnnotationTextIcons;
             break;
         case AnnotationType::FileAttachment:
             items = gFileAttachmentUcons;
@@ -1306,21 +1305,4 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     mainWindow->SetIsVisible(true);
 
     delete annot;
-}
-
-static PdfColor ToPdfColor(COLORREF c) {
-    u8 r, g, b, a;
-    UnpackColor(c, r, g, b, a);
-    // COLORREF has a of 0 for opaque but for PDF use
-    // opaque is 0xff
-    if (a == 0) {
-        a = 0xff;
-    }
-    auto res = MkPdfColor(r, g, b, a);
-    return res;
-}
-
-PdfColor GetAnnotationHighlightColor() {
-    COLORREF col = gGlobalPrefs->annotations.highlightColor;
-    return ToPdfColor(col);
 }

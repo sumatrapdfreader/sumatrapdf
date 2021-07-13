@@ -18,7 +18,7 @@ A safe place to call it is inside message windows loop.
 static PoolAllocator* gTempAllocator{nullptr};
 
 // forbid inlinining to not blow out the size of callers
-static NO_INLINE PoolAllocator* GetAllocator() {
+NO_INLINE Allocator* GetTempAllocator() {
     if (gTempAllocator) {
         return gTempAllocator;
     }
@@ -34,14 +34,13 @@ void DestroyTempAllocator() {
 }
 
 void ResetTempAllocator() {
-    auto a = GetAllocator();
-    if (a) {
-        a->Reset(true);
+    if (gTempAllocator) {
+        gTempAllocator->Reset(true);
     }
 }
 
 TempStr TempStrDup(const char* s, size_t cb) {
-    char* res = str::Dup(GetAllocator(), s, cb);
+    char* res = str::Dup(GetTempAllocator(), s, cb);
     if (cb == (size_t)-1) {
         // TODO: optimize to remove str::Len(). Add version of str::Dup()
         // that returns std::string_view
@@ -54,7 +53,7 @@ TempStr TempStrDup(std::string_view sv) {
 }
 
 TempWstr TempWstrDup(const WCHAR* s, size_t cch) {
-    WCHAR* res = str::Dup(GetAllocator(), s, cch);
+    WCHAR* res = str::Dup(GetTempAllocator(), s, cch);
     if (cch == (size_t)-1) {
         cch = str::Len(res);
     }
@@ -70,12 +69,12 @@ TempStr TempToUtf8(const WCHAR* s, size_t cch) {
         CrashIf((int)cch > 0);
         return TempStr();
     }
-    auto v = strconv::WstrToUtf8V(s, cch, GetAllocator());
+    auto v = strconv::WstrToUtf8V(s, cch, GetTempAllocator());
     return TempStr{v.data(), v.size()};
 }
 
 TempStr TempToUtf8(std::wstring_view sv) {
-    auto v = strconv::WstrToUtf8V(sv, GetAllocator());
+    auto v = strconv::WstrToUtf8V(sv, GetTempAllocator());
     return TempStr{v.data(), v.size()};
 }
 
@@ -84,11 +83,11 @@ TempWstr TempToWstr(const char* s, size_t cb) {
         CrashIf((int)cb > 0);
         return TempWstr();
     }
-    auto v = strconv::Utf8ToWstrV(s, cb, GetAllocator());
+    auto v = strconv::Utf8ToWstrV(s, cb, GetTempAllocator());
     return TempWstr{v.data(), v.size()};
 }
 
 TempWstr TempToWstr(std::string_view sv) {
-    auto v = strconv::Utf8ToWstrV(sv, GetAllocator());
+    auto v = strconv::Utf8ToWstrV(sv, GetTempAllocator());
     return TempWstr{v.data(), v.size()};
 }

@@ -4,6 +4,8 @@ the release notes, as we make them, to make the release process easier.
 Next version:
 3.4 (???)
 * fix rotation of DjVu files
+* add Annotations.TextIconColor and TextIconType advanced settings
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
 
 3.3 (2021-07-06)
 * initial support for editing annotations

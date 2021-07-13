@@ -723,11 +723,28 @@ size_t NormalizeNewlinesInPlace(char* s) {
 
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
-size_t RemoveChars(char* str, const char* toRemove) {
+size_t RemoveCharsInPlace(char* str, const char* toRemove) {
     size_t removed = 0;
     char* dst = str;
     while (*str) {
         char c = *str++;
+        if (!str::FindChar(toRemove, c)) {
+            *dst++ = c;
+        } else {
+            ++removed;
+        }
+    }
+    *dst = '\0';
+    return removed;
+}
+
+// Remove all characters in "toRemove" from "str", in place.
+// Returns number of removed characters.
+size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove) {
+    size_t removed = 0;
+    WCHAR* dst = str;
+    while (*str) {
+        WCHAR c = *str++;
         if (!str::FindChar(toRemove, c)) {
             *dst++ = c;
         } else {
@@ -2255,21 +2272,6 @@ size_t NormalizeWS(WCHAR* str) {
     *dst = '\0';
 
     return src - dst;
-}
-
-size_t RemoveChars(WCHAR* str, const WCHAR* toRemove) {
-    size_t removed = 0;
-    WCHAR* dst = str;
-    while (*str) {
-        WCHAR c = *str++;
-        if (!str::FindChar(toRemove, c)) {
-            *dst++ = c;
-        } else {
-            ++removed;
-        }
-    }
-    *dst = '\0';
-    return removed;
 }
 
 size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src) {

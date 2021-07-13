@@ -3,6 +3,7 @@
 
 // note: include BaseUtil.h instead of including directly
 
+Allocator* GetTempAllocator();
 void DestroyTempAllocator();
 void ResetTempAllocator();
 

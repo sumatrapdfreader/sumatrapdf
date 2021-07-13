@@ -728,7 +728,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         size_t strLen = bufTmp.size();
         WCHAR* buf = bufTmp.Get();
         // soft hyphens should not be displayed
-        strLen -= str::RemoveChars(buf, L"\xad");
+        strLen -= str::RemoveCharsInPlace(buf, L"\xad");
         if (0 == strLen) {
             break;
         }
@@ -1421,7 +1421,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             auto buf = TempToWstr(i.str.s, i.str.len);
             size_t strLen = buf.size();
             // soft hyphens should not be displayed
-            strLen -= str::RemoveChars(buf, L"\xad");
+            strLen -= str::RemoveCharsInPlace(buf, L"\xad");
             textDraw->Draw(buf, strLen, ToGdipRectF(bbox), DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
             textDraw->SetFont(i.font);

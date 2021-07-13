@@ -125,6 +125,11 @@ struct ForwardSearch {
 struct Annotations {
     // color used for highlight annotations
     COLORREF highlightColor;
+    // color used for text icon annotation
+    COLORREF textIconColor;
+    // type of text annotation icon: comment, help, insert, key, new
+    // paragraph, note, paragraph. If not set: note.
+    char* textIconType;
 };
 
 // Values which are persisted for bookmarks/favorites
@@ -467,8 +472,11 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
 
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, 0x00ffff},
+    {offsetof(Annotations, textIconColor), SettingType::Color, 0x0000ff},
+    {offsetof(Annotations, textIconType), SettingType::Utf8String, (intptr_t) ""},
 };
-static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 1, gAnnotationsFields, "HighlightColor"};
+static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 3, gAnnotationsFields,
+                                            "HighlightColor\0TextIconColor\0TextIconType"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},

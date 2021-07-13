@@ -126,7 +126,8 @@ char* Replace(const char* s, const char* toReplace, const char* replaceWith);
 size_t NormalizeWS(char* str);
 size_t NormalizeNewlinesInPlace(char* s, char* e);
 size_t NormalizeNewlinesInPlace(char* s);
-size_t RemoveChars(char* str, const char* toRemove);
+size_t RemoveCharsInPlace(char* str, const char* toRemove);
+size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 
 size_t BufSet(char* dst, size_t dstCchSize, const char* src);
 size_t BufAppend(char* dst, size_t dstCchSize, const char* s);
@@ -142,7 +143,6 @@ int CmpNatural(const char*, const char*);
 size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
 size_t NormalizeWS(WCHAR* str);
-size_t RemoveChars(WCHAR* str, const WCHAR* toRemove);
 size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src);
 size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s);
 

@@ -37,6 +37,8 @@ enum class AnnotationType {
 class EnginePdf;
 extern "C" struct pdf_annot;
 
+extern const char* gAnnotationTextIcons;
+
 // an user annotation on page
 // It abstracts over pdf_annot so that we don't have to
 // inlude mupdf to include Annotation
@@ -56,8 +58,6 @@ struct Annotation {
     Annotation() = default;
     ~Annotation() = default;
 };
-
-PdfColor GetAnnotationHighlightColor();
 
 Annotation* MakeAnnotationPdf(EnginePdf*, pdf_annot*, int pageNo);
 
@@ -101,3 +101,7 @@ Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
 
 PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a);
 void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
+
+PdfColor GetAnnotationHighlightColor();
+PdfColor GetAnnotationTextIconColor();
+char* GetAnnotationTextIcon();

@@ -353,7 +353,7 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             eatStringParam(i.printSettings);
-            str::RemoveChars(i.printSettings, L" ");
+            str::RemoveCharsInPlace(i.printSettings, L" ");
             str::TransChars(i.printSettings, L";", L",");
             continue;
         }
