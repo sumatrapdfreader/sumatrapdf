@@ -494,6 +494,8 @@ pdf_load_raw_stream_number(fz_context *ctx, pdf_document *doc, int num)
 static int
 pdf_guess_filter_length(int len, const char *filter)
 {
+	if (len < 0)
+		len = 0;
 	if (!strcmp(filter, "ASCIIHexDecode"))
 		return len / 2;
 	if (!strcmp(filter, "ASCII85Decode"))

@@ -302,7 +302,7 @@ void ui_init_open_file(const char *dir, int (*filter)(const char *fn))
 	load_dir(dir);
 }
 
-int ui_open_file(char filename[PATH_MAX], const char *label)
+int ui_open_file(char *filename, const char *label)
 {
 	static int last_click_time = 0;
 	static int last_click_sel = -1;
@@ -456,7 +456,7 @@ static int ui_save_file_confirm(char *filename)
 	return rv;
 }
 
-int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void), const char *label)
+int ui_save_file(char *filename, void (*extra_panel)(void), const char *label)
 {
 	int i, rv = 0;
 

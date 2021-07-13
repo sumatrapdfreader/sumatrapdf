@@ -213,9 +213,9 @@ int ui_popup_item_aux(const char *title, int flags);
 void ui_popup_end(void);
 
 void ui_init_open_file(const char *dir, int (*filter)(const char *fn));
-int ui_open_file(char filename[], const char *label);
+int ui_open_file(char *filename, const char *label);
 void ui_init_save_file(const char *path, int (*filter)(const char *fn));
-int ui_save_file(char filename[], void (*extra_panel)(void), const char *label);
+int ui_save_file(char *filename, void (*extra_panel)(void), const char *label);
 
 void ui_show_warning_dialog(const char *fmt, ...);
 void ui_show_error_dialog(const char *fmt, ...);

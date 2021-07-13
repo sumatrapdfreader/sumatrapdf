@@ -317,7 +317,7 @@ fz_buffer *
 fz_new_icc_data_from_cal(fz_context *ctx,
 	float wp[3],
 	float bp[3],
-	float gamma[3],
+	float *gamma,
 	float matrix[9],
 	int n)
 {

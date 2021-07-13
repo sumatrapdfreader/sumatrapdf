@@ -61,7 +61,7 @@ int ft_name_index(void *face, const char *name)
 			}
 			if (code == 0)
 			{
-				char buf[10];
+				char buf[12];
 				sprintf(buf, "uni%04X", unicode);
 				code = FT_Get_Name_Index(face, buf);
 			}

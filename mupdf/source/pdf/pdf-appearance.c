@@ -1480,7 +1480,7 @@ static const char *full_font_name(const char **name)
 static void
 write_variable_text(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res,
 	fz_text_language lang, const char *text,
-	const char *fontname, float size, int n, float color[4], int q,
+	const char *fontname, float size, int n, float *color, int q,
 	float w, float h, float padding, float baseline, float lineheight,
 	int multiline, int comb, int adjust_baseline)
 {
@@ -2006,7 +2006,7 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 }
 
 static pdf_obj *draw_push_button(fz_context *ctx, pdf_annot *annot, fz_rect bbox, fz_matrix matrix, float w, float h,
-	const char *caption, const char *font, float size, int n, float color[4],
+	const char *caption, const char *font, float size, int n, float *color,
 	int down)
 {
 	pdf_obj *ap, *res = NULL;
