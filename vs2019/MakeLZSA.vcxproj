@@ -475,6 +475,7 @@
     <ClInclude Include="..\src\utils\StrUtil.h" />
     <ClInclude Include="..\src\utils\StrconvUtil.h" />
     <ClInclude Include="..\src\utils\StringViewUtil.h" />
+    <ClInclude Include="..\src\utils\TempAllocator.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
   </ItemGroup>
@@ -493,6 +494,7 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
     <ClCompile Include="..\src\utils\StringViewUtil.cpp" />
+    <ClCompile Include="..\src\utils\TempAllocator.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
   </ItemGroup>

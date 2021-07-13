@@ -291,7 +291,6 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
 
     char** strPtr = (char**)fieldPtr;
     WCHAR** wstrPtr = (WCHAR**)fieldPtr;
-    COLORREF* colPtr = (COLORREF*)fieldPtr;
     bool* boolPtr = (bool*)fieldPtr;
     int* intPtr = (int*)fieldPtr;
 

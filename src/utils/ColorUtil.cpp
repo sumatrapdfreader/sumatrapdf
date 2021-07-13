@@ -86,12 +86,6 @@ char* SerializeColor(COLORREF c) {
     return s;
 }
 
-void SerializeColor(COLORREF c, str::Str& out) {
-    char* s = SerializeColor(c);
-    out.Append(s);
-    free(s);
-}
-
 void ParseColor(ParsedColor& parsed, const char* txt) {
     if (parsed.wasParsed) {
         return;

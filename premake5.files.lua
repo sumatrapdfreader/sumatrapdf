@@ -22,6 +22,7 @@ function makelzsa_files()
     "StrconvUtil.*",
     "StringViewUtil.*",
     "StrUtil.*",
+    "TempAllocator.*",
     "Log.*",
     "WinDynCalls.*",
     "WinUtil.*",

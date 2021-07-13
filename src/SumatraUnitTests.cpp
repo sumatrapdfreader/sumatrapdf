@@ -183,10 +183,9 @@ static void hexstrTest() {
 }
 
 static void assertSerializedColor(COLORREF c, const char* s) {
-    str::Str out;
-    SerializeColor(c, out);
-    auto s2 = out.Get();
+    char* s2 = SerializeColor(c);
     utassert(str::Eq(s2, s));
+    str::Free(s2);
 }
 
 static void colorTest() {
@@ -202,8 +201,11 @@ static void colorTest() {
     COLORREF c2 = MkColor(2, 3, 4, 1);
     assertSerializedColor(c2, "#01020304");
     utassert(c == c2);
+
     c2 = MkColor(5, 7, 6, 8);
     assertSerializedColor(c2, "#08050706");
+    ok = ParseColor(&c, "#08050706");
+    utassert(ok);
     utassert(c == c2);
 }
 
