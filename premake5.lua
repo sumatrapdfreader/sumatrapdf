@@ -80,6 +80,21 @@ function optconf()
   defines { "NDEBUG" }
 end
 
+-- config for stable libraries where debug build is done with optimization
+function mixedOptConf()
+  optimize "On"
+  undefines { "DEBUG" }
+  defines { "NDEBUG" }
+
+  -- no ltcg in asan builds
+  filter { "configurations:Release*", "platforms:x32 or x64" }
+    flags {
+      "LinkTimeOptimization",
+    }
+
+  filter {}
+end
+
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
   platforms { "x32", "x64", "x64_asan" }
@@ -254,15 +269,6 @@ workspace "SumatraPDF"
     libdjvu_files()
 
   --[[
-  project "wdl"
-    kind "StaticLib"
-    language "C++"
-    regconf()
-    includedirs  { "ext/WDL" }
-    disablewarnings { "4018", "4100", "4244", "4505", "4456", "4457", "4245", "4505", "4701", "4706", "4996" }
-    characterset "MBCS"
-    wdl_files()
-
   project "freetype"
     kind "StaticLib"
     language "C"
@@ -298,6 +304,15 @@ workspace "SumatraPDF"
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
+  project "mujs-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
   project "jbig2dec"
     kind "StaticLib"
     language "C"
@@ -315,15 +330,6 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
-
-  project "mujs-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-
-    includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
   project "openjpeg"
     kind "StaticLib"
@@ -459,15 +465,6 @@ workspace "SumatraPDF"
     disablewarnings { "4204", "4244", "4057", "4245", "4310" }
     includedirs { "ext/libwebp" }
     libwebp_files()
-
-  project "libwebp-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    disablewarnings { "4204", "4244", "4057", "4245", "4310" }
-    includedirs { "ext/libwebp" }
-    libwebp_files()
-
 
   project "libjpeg-turbo"
     kind "StaticLib"
@@ -784,7 +781,7 @@ workspace "SumatraPDF"
     -- TODO: is there a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
-    links { "mupdf-opt", "libdjvu-opt", "unarrlib-opt", "libwebp-opt" }
+    links { "mupdf-opt", "libdjvu-opt", "unarrlib-opt", "libwebp" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
