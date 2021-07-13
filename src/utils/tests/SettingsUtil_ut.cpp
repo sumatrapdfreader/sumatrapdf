@@ -15,7 +15,7 @@ static const StructInfo gSutPointIInfo = {sizeof(Point), 2, gSutPointIFields, "X
 
 struct SutStructNested {
     Point point;
-    Vec<COLORREF>* colorArray;
+    Vec<char*>* colorArray;
 };
 
 static const FieldInfo gSutStructNestedFields[] = {
@@ -156,7 +156,7 @@ Key = Value";
         free(reserialized);
         data->internal++;
     }
-    utassert(str::Eq(data->color, "0xffcc9933"));
+    utassert(str::Eq(data->color, "#abcdef"));
     utassert(str::Eq(data->escapedString, L"\t\r\n$ "));
     utassert(str::Eq(data->escapedUtf8String, "\r\n[]\t"));
     utassert(2 == data->intArray->size() && 3 == data->intArray->at(0));
@@ -169,7 +169,8 @@ Key = Value";
     utassert(0 == data->sutStructItems->at(0)->nested.colorArray->size());
     utassert(0 == data->sutStructItems->at(1)->floatArray->size());
     utassert(2 == data->sutStructItems->at(1)->nested.colorArray->size());
-    utassert(0x12785634 == data->sutStructItems->at(1)->nested.colorArray->at(0));
+    utassert(str::Eq("#12345678", data->sutStructItems->at(1)->nested.colorArray->at(0)));
+    utassert(str::Eq("#987654", data->sutStructItems->at(1)->nested.colorArray->at(1)));
     utassert(!data->internalString);
     utassert(!str::Eq(serialized, AutoFree(SerializeStruct(&gSutStructInfo, data))));
     data->sutStructItems->at(0)->nested.point.x++;
@@ -181,7 +182,7 @@ Key = Value";
     if (!data) {
         return;
     }
-    // utassert(data->boolean && 0xffcc9933 == data->color);
+    utassert(data->boolean && str::Eq("0xffcc9933", data->color));
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
     utassert(str::Eq(data->string, L"String") && !data->nullString && str::Eq(data->escapedString, L"$\nstring "));
     utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String &&
