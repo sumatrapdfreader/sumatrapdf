@@ -298,6 +298,24 @@ workspace "SumatraPDF"
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
+  project "jbig2dec"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
+    includedirs { "ext/jbig2dec" }
+    jbig2dec_files()
+
+  project "jbig2dec-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
+    includedirs { "ext/jbig2dec" }
+    jbig2dec_files()
+
   project "mujs-opt"
     kind "StaticLib"
     language "C"
@@ -331,25 +349,6 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
     unarr_files()
-
-
-  project "jbig2dec"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
-    includedirs { "ext/jbig2dec" }
-    jbig2dec_files()
-
-  project "jbig2dec-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
-    includedirs { "ext/jbig2dec" }
-    jbig2dec_files()
 
 
   project "openjpeg"
@@ -599,8 +598,14 @@ workspace "SumatraPDF"
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
+    -- for jbig2dec
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
+    includedirs { "ext/jbig2dec" }
+    jbig2dec_files()
+
     mupdf_files()
-    links { "zlib", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "gumbo" }
+    links { "zlib", "libjpeg-turbo", "openjpeg", "lcms2", "harfbuzz", "gumbo" }
 
   project "mupdf-opt"
     kind "StaticLib"
@@ -667,8 +672,14 @@ workspace "SumatraPDF"
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
+    -- for jbig2dec
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
+    includedirs { "ext/jbig2dec" }
+    jbig2dec_files()
+
     mupdf_files()
-    links { "zlib-opt", "libjpeg-turbo-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "gumbo-opt" }
+    links { "zlib-opt", "libjpeg-turbo-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "gumbo-opt" }
 
 
   -- regular build with distinct debug / release builds

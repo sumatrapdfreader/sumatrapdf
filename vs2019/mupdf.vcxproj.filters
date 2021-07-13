@@ -43,6 +43,9 @@
     <Filter Include="ext\freetype\src\type1">
       <UniqueIdentifier>{029212EA-EE8B-3B3C-D7F8-D14CC391A1A8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\jbig2dec">
+      <UniqueIdentifier>{1F231EAB-0B86-AD4F-B40B-E605A04D79D2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext\mujs">
       <UniqueIdentifier>{046F1FD9-F03B-7AE4-1955-688C0581AF72}</UniqueIdentifier>
     </Filter>
@@ -427,6 +430,51 @@
     </ClCompile>
     <ClCompile Include="..\ext\freetype\src\type1\type1.c">
       <Filter>ext\freetype\src\type1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_arith.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_arith_iaid.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_arith_int.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_generic.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_halftone.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_huffman.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_hufftab.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_image.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_mmr.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_page.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_refinement.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_segment.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_symbol_dict.c">
+      <Filter>ext\jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\jbig2dec\jbig2_text.c">
+      <Filter>ext\jbig2dec</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mujs\one.c">
       <Filter>ext\mujs</Filter>
