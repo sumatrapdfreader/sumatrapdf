@@ -1,6 +1,9 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// TODO: not quite happy how those functions are split among
+// Annotation.cpp, EnginePdf.cpp and EditAnnotations.cpp
+
 // for fast conversions, must match the order of pdf_annot_type enum in annot.h
 enum class AnnotationType {
     Text,
@@ -59,13 +62,18 @@ struct Annotation {
     ~Annotation() = default;
 };
 
-Annotation* MakeAnnotationPdf(EnginePdf*, pdf_annot*, int pageNo);
-
 int PageNo(Annotation*);
 RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
+void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
+// Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
+PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a);
+void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
+PdfColor GetAnnotationHighlightColor();
+PdfColor GetAnnotationTextIconColor();
+char* GetAnnotationTextIcon();
 
-/* EditAnnotations.cpp */
+// EditAnnotations.cpp
 std::string_view Author(Annotation*);
 time_t ModificationDate(Annotation*);
 int PopupId(Annotation*); // -1 if not exist
@@ -95,13 +103,5 @@ void Delete(Annotation*);
 bool SetContents(Annotation*, std::string_view sv);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
-void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
-
-Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
-
-PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a);
-void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
-
-PdfColor GetAnnotationHighlightColor();
-PdfColor GetAnnotationTextIconColor();
-char* GetAnnotationTextIcon();
+// EnginePdf.cpp
+Annotation* MakeAnnotationPdf(EnginePdf*, pdf_annot*, int pageNo);
