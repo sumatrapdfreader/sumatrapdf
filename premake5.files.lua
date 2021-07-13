@@ -204,7 +204,7 @@ function openjpeg_files()
     "mqc.c",
     "openjpeg.c",
     "opj_clock.c",
-    "opj_malloc.c",
+    --"opj_malloc.c",
     "phix_manager.c",
     "pi.c",
     "ppix_manager.c",

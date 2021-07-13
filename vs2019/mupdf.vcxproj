@@ -205,8 +205,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -227,8 +227,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -249,8 +249,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -272,8 +272,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -298,8 +298,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -324,8 +324,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -350,8 +350,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -376,8 +376,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -402,8 +402,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4389;4457;4703;4312;4996;4090;4310;4702;4706;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4057;4115;4130;4204;4206;4245;4295;4305;4457;4703;4312;4996;4090;4702;4706;4018;4146;4267;4701;4100;4244;4310;4389;4456;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;TOFU;TOFU_CJK_LANG;SHARE_JPEG;HAVE_LCMS2MT=1;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\scripts\freetype;..\mupdf\generated;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;..\ext\mujs;..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -427,6 +427,40 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\mujs\mujs.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\bio.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\cidx_manager.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\cio.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\dwt.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\event.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\function_list.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\image.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\indexbox_manager.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\invert.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\j2k.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\jp2.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\mct.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\mqc.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\mqc_inl.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\openjpeg.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_clock.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_codec.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_common.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_config.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_config_private.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_includes.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_intmath.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_inttypes.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_malloc.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_stdint.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\pi.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\sparse_array.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1_luts.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t2.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\tcd.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\tgt.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\thread.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\tls_keys.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\archive.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\band-writer.h" />
@@ -557,6 +591,31 @@
     <ClCompile Include="..\ext\jbig2dec\jbig2_text.c" />
     <ClCompile Include="..\ext\mujs\one.c" />
     <ClCompile Include="..\ext\mupdf_load_system_font.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\bio.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\cidx_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\cio.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\dwt.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\event.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\function_list.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\image.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\invert.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\j2k.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\jp2.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\mct.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\mqc.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\openjpeg.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\opj_clock.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\phix_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\pi.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\ppix_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\sparse_array.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\t1.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\t2.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tcd.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tgt.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\thix_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\thread.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tpix_manager.c" />
     <ClCompile Include="..\mupdf\source\cbz\mucbz.c" />
     <ClCompile Include="..\mupdf\source\cbz\muimg.c" />
     <ClCompile Include="..\mupdf\source\fitz\archive.c" />
@@ -615,7 +674,9 @@
     <ClCompile Include="..\mupdf\source\fitz\halftone.c" />
     <ClCompile Include="..\mupdf\source\fitz\harfbuzz.c" />
     <ClCompile Include="..\mupdf\source\fitz\hash.c" />
-    <ClCompile Include="..\mupdf\source\fitz\image.c" />
+    <ClCompile Include="..\mupdf\source\fitz\image.c">
+      <ObjectFileName>$(IntDir)\image1.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\jmemcust.c" />
     <ClCompile Include="..\mupdf\source\fitz\link.c" />
     <ClCompile Include="..\mupdf\source\fitz\list-device.c" />
@@ -787,18 +848,6 @@
     </ProjectReference>
     <ProjectReference Include="libjpeg-turbo.vcxproj">
       <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>
-    </ProjectReference>
-    <ProjectReference Include="openjpeg.vcxproj">
-      <Project>{FDC4548D-E991-AF98-12AB-9D40FED6E426}</Project>
-    </ProjectReference>
-    <ProjectReference Include="lcms2.vcxproj">
-      <Project>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="harfbuzz.vcxproj">
-      <Project>{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}</Project>
-    </ProjectReference>
-    <ProjectReference Include="gumbo.vcxproj">
-      <Project>{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

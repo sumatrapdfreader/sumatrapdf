@@ -324,32 +324,6 @@ workspace "SumatraPDF"
     includedirs { "ext/mujs" }
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
---]]
-
-  project "unarrlib"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
-    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
-    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
-    -- TODO: most of these warnings are due to bzip2 and lzma
-    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
-    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
-    unarr_files()
-
-  project "unarrlib-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
-    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
-    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
-    -- TODO: most of these warnings are due to bzip2 and lzma
-    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
-    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
-    unarr_files()
-
 
   project "openjpeg"
     kind "StaticLib"
@@ -376,7 +350,31 @@ workspace "SumatraPDF"
     -- because #include "opj_config_private.h" searches current directory first
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
+ --]]
 
+  project "unarrlib"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
+    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
+    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
+    -- TODO: most of these warnings are due to bzip2 and lzma
+    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
+    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
+    unarr_files()
+
+  project "unarrlib-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
+    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
+    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
+    -- TODO: most of these warnings are due to bzip2 and lzma
+    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
+    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
+    unarr_files()
 
   project "libwebp"
     kind "StaticLib"
@@ -537,13 +535,9 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     regconf()
-    -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
-    -- so we can't double-define it
-    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
-    defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
-    defines { "TOFU", "TOFU_CJK_LANG" }
+    defines { "TOFU", "TOFU_CJK_LANG", "SHARE_JPEG", "HAVE_LCMS2MT=1"  }
 
     disablewarnings {
       "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4245", "4267",
@@ -604,21 +598,27 @@ workspace "SumatraPDF"
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
 
+    -- for openjpeg
+    disablewarnings { "4100", "4244", "4310", "4389", "4456" }
+    -- openjpeg has opj_config_private.h for such over-rides
+    -- but we can't change it because we bring openjpeg as submodule
+    -- and we can't provide our own in a different directory because
+    -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
+    -- because #include "opj_config_private.h" searches current directory first
+    defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
+    openjpeg_files()
+
     mupdf_files()
-    links { "zlib", "libjpeg-turbo", "openjpeg", "lcms2", "harfbuzz", "gumbo" }
+    links { "zlib", "libjpeg-turbo" }
 
   project "mupdf-opt"
     kind "StaticLib"
     language "C"
     optconf()
 
-    -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
-    -- so we can't double-define it
-    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
-    defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
-    defines { "TOFU", "TOFU_CJK_LANG" }
+    defines { "TOFU", "TOFU_CJK_LANG", "SHARE_JPEG", "HAVE_LCMS2MT=1"  }
     disablewarnings {
         "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4245", "4267",
         "4295", "4305", "4389", "4456", "4457", "4703", "4706"
@@ -678,8 +678,18 @@ workspace "SumatraPDF"
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
 
+    -- for openjpeg
+    disablewarnings { "4100", "4244", "4310", "4389", "4456" }
+    -- openjpeg has opj_config_private.h for such over-rides
+    -- but we can't change it because we bring openjpeg as submodule
+    -- and we can't provide our own in a different directory because
+    -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
+    -- because #include "opj_config_private.h" searches current directory first
+    defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS"}
+    openjpeg_files()
+
     mupdf_files()
-    links { "zlib-opt", "libjpeg-turbo-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "gumbo-opt" }
+    links { "zlib-opt", "libjpeg-turbo-opt", "lcms2-opt", "harfbuzz-opt", "gumbo-opt" }
 
 
   -- regular build with distinct debug / release builds

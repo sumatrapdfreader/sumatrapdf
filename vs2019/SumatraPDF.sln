@@ -49,10 +49,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf", "mupdf.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf-opt", "mupdf-opt.vcxproj", "{C1BD3D23-2D28-F299-7666-A33FE20FD0EE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "openjpeg", "openjpeg.vcxproj", "{FDC4548D-E991-AF98-12AB-9D40FED6E426}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "openjpeg-opt", "openjpeg-opt.vcxproj", "{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_util", "test_util.vcxproj", "{22AB719A-8E15-2611-D753-D7B643FD0366}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unarrlib", "unarrlib.vcxproj", "{C45AE373-B027-3E7F-D940-2C27C56C730D}"
@@ -476,42 +472,6 @@ Global
 		{C1BD3D23-2D28-F299-7666-A33FE20FD0EE}.Release|x64.Build.0 = Release|x64
 		{C1BD3D23-2D28-F299-7666-A33FE20FD0EE}.Release|x64_asan.ActiveCfg = Release x64_asan|x64
 		{C1BD3D23-2D28-F299-7666-A33FE20FD0EE}.Release|x64_asan.Build.0 = Release x64_asan|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Debug|Win32.ActiveCfg = Debug|Win32
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Debug|Win32.Build.0 = Debug|Win32
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Debug|x64.ActiveCfg = Debug|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Debug|x64.Build.0 = Debug|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Debug|x64_asan.ActiveCfg = Debug x64_asan|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Debug|x64_asan.Build.0 = Debug x64_asan|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.ReleaseAnalyze|Win32.ActiveCfg = ReleaseAnalyze|Win32
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.ReleaseAnalyze|Win32.Build.0 = ReleaseAnalyze|Win32
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.ReleaseAnalyze|x64.ActiveCfg = ReleaseAnalyze|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.ReleaseAnalyze|x64.Build.0 = ReleaseAnalyze|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.ReleaseAnalyze|x64_asan.ActiveCfg = ReleaseAnalyze x64_asan|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.ReleaseAnalyze|x64_asan.Build.0 = ReleaseAnalyze x64_asan|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Release|Win32.ActiveCfg = Release|Win32
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Release|Win32.Build.0 = Release|Win32
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Release|x64.ActiveCfg = Release|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Release|x64.Build.0 = Release|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Release|x64_asan.ActiveCfg = Release x64_asan|x64
-		{FDC4548D-E991-AF98-12AB-9D40FED6E426}.Release|x64_asan.Build.0 = Release x64_asan|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Debug|Win32.ActiveCfg = Debug|Win32
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Debug|Win32.Build.0 = Debug|Win32
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Debug|x64.ActiveCfg = Debug|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Debug|x64.Build.0 = Debug|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Debug|x64_asan.ActiveCfg = Debug x64_asan|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Debug|x64_asan.Build.0 = Debug x64_asan|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.ReleaseAnalyze|Win32.ActiveCfg = ReleaseAnalyze|Win32
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.ReleaseAnalyze|Win32.Build.0 = ReleaseAnalyze|Win32
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.ReleaseAnalyze|x64.ActiveCfg = ReleaseAnalyze|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.ReleaseAnalyze|x64.Build.0 = ReleaseAnalyze|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.ReleaseAnalyze|x64_asan.ActiveCfg = ReleaseAnalyze x64_asan|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.ReleaseAnalyze|x64_asan.Build.0 = ReleaseAnalyze x64_asan|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Release|Win32.ActiveCfg = Release|Win32
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Release|Win32.Build.0 = Release|Win32
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Release|x64.ActiveCfg = Release|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Release|x64.Build.0 = Release|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Release|x64_asan.ActiveCfg = Release x64_asan|x64
-		{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}.Release|x64_asan.Build.0 = Release x64_asan|x64
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|Win32.ActiveCfg = Debug|Win32
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|Win32.Build.0 = Debug|Win32
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|x64.ActiveCfg = Debug|x64
