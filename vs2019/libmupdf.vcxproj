@@ -524,8 +524,8 @@
     <ProjectReference Include="unarrlib-opt.vcxproj">
       <Project>{E4B0F517-D013-85BC-7999-BD7265DB503F}</Project>
     </ProjectReference>
-    <ProjectReference Include="libwebp.vcxproj">
-      <Project>{0A466F79-7625-EE14-7F3D-79EBEB9B5476}</Project>
+    <ProjectReference Include="libwebp-opt.vcxproj">
+      <Project>{2ACF718C-9684-EA81-1F79-E4588B2DE185}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

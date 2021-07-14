@@ -223,9 +223,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -237,7 +237,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;INSTALL_PAYLOAD_ZIP=.\../out/dbg32\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -257,9 +257,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -271,7 +271,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/dbg64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -291,9 +291,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -306,7 +306,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/dbg64_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -326,9 +326,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -343,7 +343,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;INSTALL_PAYLOAD_ZIP=.\../out/rel32\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -364,9 +364,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -381,7 +381,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -402,9 +402,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -420,7 +420,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -440,9 +440,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -458,7 +458,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;INSTALL_PAYLOAD_ZIP=.\../out/rel32_prefast\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -479,9 +479,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -497,7 +497,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64_prefast\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -518,9 +518,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4244;4267;4702;4706;4302;4311;4838;4018;4057;4295;4996;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4244;4267;4702;4706;4302;4311;4838;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -536,7 +536,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64_prefast_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;..\src\wingui;..\ext\libdjvu;..\ext\CHMLib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -556,14 +556,12 @@
   <ItemGroup>
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\Actions.h" />
-    <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppColors.h" />
     <ClInclude Include="..\src\AppPrefs.h" />
     <ClInclude Include="..\src\AppTools.h" />
     <ClInclude Include="..\src\AppUtil.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\Caption.h" />
-    <ClInclude Include="..\src\ChmDoc.h" />
     <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
@@ -572,21 +570,7 @@
     <ClInclude Include="..\src\Doc.h" />
     <ClInclude Include="..\src\EbookController.h" />
     <ClInclude Include="..\src\EbookControls.h" />
-    <ClInclude Include="..\src\EbookDoc.h" />
-    <ClInclude Include="..\src\EbookFormatter.h" />
     <ClInclude Include="..\src\EditAnnotations.h" />
-    <ClInclude Include="..\src\EngineBase.h" />
-    <ClInclude Include="..\src\EngineCreate.h" />
-    <ClInclude Include="..\src\EngineDjVu.h" />
-    <ClInclude Include="..\src\EngineEbook.h" />
-    <ClInclude Include="..\src\EngineFzUtil.h" />
-    <ClInclude Include="..\src\EngineImages.h" />
-    <ClInclude Include="..\src\EngineMulti.h" />
-    <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\EnginePdf.h" />
-    <ClInclude Include="..\src\EnginePdfImpl.h" />
-    <ClInclude Include="..\src\EnginePs.h" />
-    <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FileHistory.h" />
@@ -594,14 +578,11 @@
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\GetDocumentOutlines.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
-    <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\Menu.h" />
-    <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\MuiEbookPageDef.h" />
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\PagesLayoutDef.h" />
-    <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\Print.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
@@ -648,17 +629,13 @@
     <ClInclude Include="..\src\uia\Provider.h" />
     <ClInclude Include="..\src\uia\StartPageProvider.h" />
     <ClInclude Include="..\src\uia\TextRange.h" />
-    <ClInclude Include="..\src\utils\PalmDbReader.h" />
     <ClInclude Include="..\src\utils\UtAssert.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\CHMLib\src\chm_lib.c" />
-    <ClCompile Include="..\ext\CHMLib\src\lzx.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\Actions.cpp" />
-    <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppColors.cpp" />
     <ClCompile Include="..\src\AppPrefs.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />
@@ -666,7 +643,6 @@
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\Caption.cpp" />
-    <ClCompile Include="..\src\ChmDoc.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
@@ -674,21 +650,7 @@
     <ClCompile Include="..\src\Doc.cpp" />
     <ClCompile Include="..\src\EbookController.cpp" />
     <ClCompile Include="..\src\EbookControls.cpp" />
-    <ClCompile Include="..\src\EbookDoc.cpp" />
-    <ClCompile Include="..\src\EbookFormatter.cpp" />
     <ClCompile Include="..\src\EditAnnotations.cpp" />
-    <ClCompile Include="..\src\EngineBase.cpp" />
-    <ClCompile Include="..\src\EngineCreate.cpp" />
-    <ClCompile Include="..\src\EngineDjVu.cpp" />
-    <ClCompile Include="..\src\EngineDump.cpp" />
-    <ClCompile Include="..\src\EngineEbook.cpp" />
-    <ClCompile Include="..\src\EngineFzUtil.cpp" />
-    <ClCompile Include="..\src\EngineImages.cpp" />
-    <ClCompile Include="..\src\EngineMulti.cpp" />
-    <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\EnginePdf.cpp" />
-    <ClCompile Include="..\src\EnginePs.cpp" />
-    <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />
@@ -696,17 +658,14 @@
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\GetDocumentOutlines.cpp" />
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
-    <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\InstUninstCommon.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\MemLeakDetect.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
-    <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
     <ClCompile Include="..\src\MuiEbookPageDef.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\PagesLayoutDef.cpp" />
-    <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />
@@ -794,7 +753,6 @@
     <ClCompile Include="..\src\uia\Provider.cpp" />
     <ClCompile Include="..\src\uia\StartPageProvider.cpp" />
     <ClCompile Include="..\src\uia\TextRange.cpp" />
-    <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\UtAssert.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -968,6 +926,9 @@
     </ProjectReference>
     <ProjectReference Include="utils.vcxproj">
       <Project>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="engines.vcxproj">
+      <Project>{CE5B946A-3A3B-1306-4353-9EDCAFB17967}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

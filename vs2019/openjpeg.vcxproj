@@ -467,7 +467,6 @@
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\mqc.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\openjpeg.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\opj_clock.c" />
-    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\opj_malloc.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\phix_manager.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\pi.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\ppix_manager.c" />

@@ -214,7 +214,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_XPS_PREVIEW;BUILD_DJVU_PREVIEW;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;BUILD_CBZ_PREVIEW;BUILD_CBR_PREVIEW;BUILD_CB7_PREVIEW;BUILD_CBT_PREVIEW;BUILD_TGA_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -244,7 +244,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_XPS_PREVIEW;BUILD_DJVU_PREVIEW;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;BUILD_CBZ_PREVIEW;BUILD_CBR_PREVIEW;BUILD_CB7_PREVIEW;BUILD_CBT_PREVIEW;BUILD_TGA_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -274,7 +274,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_XPS_PREVIEW;BUILD_DJVU_PREVIEW;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;BUILD_CBZ_PREVIEW;BUILD_CBR_PREVIEW;BUILD_CB7_PREVIEW;BUILD_CBT_PREVIEW;BUILD_TGA_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -305,7 +305,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -339,7 +339,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -373,7 +373,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -407,7 +407,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -441,7 +441,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -475,7 +475,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;4018;4057;4244;4267;4295;4996;4701;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -530,8 +530,6 @@
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\CHMLib\src\chm_lib.c" />
-    <ClCompile Include="..\ext\CHMLib\src\lzx.c" />
     <ClCompile Include="..\src\ChmDoc.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
@@ -566,6 +564,9 @@
     </ProjectReference>
     <ProjectReference Include="libmupdf.vcxproj">
       <Project>{B812ACA6-A4DF-06B2-CDF8-F459B9243C40}</Project>
+    </ProjectReference>
+    <ProjectReference Include="chm.vcxproj">
+      <Project>{DD65880B-496F-887C-D2EA-9E7C3EF3937C}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

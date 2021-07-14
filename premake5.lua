@@ -269,49 +269,40 @@ workspace "SumatraPDF"
     libdjvu_files()
 
   --[[
-  project "freetype"
+  project "wdl"
+    kind "StaticLib"
+    language "C++"
+    regconf()
+    includedirs  { "ext/WDL" }
+    disablewarnings { "4018", "4100", "4244", "4505", "4456", "4457", "4245", "4505", "4701", "4706", "4996" }
+    characterset "MBCS"
+    wdl_files()
+  --]]
+
+  project "unarrlib"
     kind "StaticLib"
     language "C"
     regconf()
-    defines {
-      "FT2_BUILD_LIBRARY",
-      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-    }
-    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
-    freetype_files()
+    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
+    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
+    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
+    -- TODO: most of these warnings are due to bzip2 and lzma
+    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
+    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
+    unarr_files()
 
-  project "freetype-opt"
+  project "unarrlib-opt"
     kind "StaticLib"
     language "C"
     optconf()
+    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
+    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
+    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
+    -- TODO: most of these warnings are due to bzip2 and lzma
+    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
+    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
+    unarr_files()
 
-    defines {
-        "FT2_BUILD_LIBRARY",
-        "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-        "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-    }
-    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
-    freetype_files()
-
-  project "mujs"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
-
-  project "mujs-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-
-    includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
   project "jbig2dec"
     kind "StaticLib"
@@ -330,6 +321,7 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
+
 
   project "openjpeg"
     kind "StaticLib"
@@ -357,106 +349,6 @@ workspace "SumatraPDF"
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
 
-  project "lcms2"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    disablewarnings { "4100" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
-
-  project "lcms2-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    disablewarnings { "4100" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
-
-
-  project "harfbuzz"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
-    defines {
-      "_CRT_SECURE_NO_WARNINGS",
-      "HAVE_FALLBACK=1",
-      "HAVE_OT",
-      "HAVE_UCDN",
-      "HAVE_FREETYPE",
-      "HB_NO_MT",
-      "hb_malloc_impl=fz_hb_malloc",
-      "hb_calloc_impl=fz_hb_calloc",
-      "hb_realloc_impl=fz_hb_realloc",
-      "hb_free_impl=fz_hb_free"
-    }
-    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
-    harfbuzz_files()
-
-  project "harfbuzz-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
-    defines {
-        "_CRT_SECURE_NO_WARNINGS",
-        "HAVE_FALLBACK=1",
-        "HAVE_OT",
-        "HAVE_UCDN",
-        "HAVE_FREETYPE",
-        "HB_NO_MT",
-        "hb_malloc_impl=fz_hb_malloc",
-        "hb_calloc_impl=fz_hb_calloc",
-        "hb_realloc_impl=fz_hb_realloc",
-        "hb_free_impl=fz_hb_free"
-      }
-    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
-    harfbuzz_files()
-
-  project "gumbo"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
-    "4305", "4306", "4389", "4456", "4701" }
-    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
-    gumbo_files()
-
-    project "gumbo-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
-    "4305", "4306", "4389", "4456", "4701" }
-    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
-    gumbo_files()
---]]
-
-  project "unarrlib"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
-    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
-    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
-    -- TODO: most of these warnings are due to bzip2 and lzma
-    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
-    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
-    unarr_files()
-
-  project "unarrlib-opt"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
-    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
-    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
-    -- TODO: most of these warnings are due to bzip2 and lzma
-    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
-    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
-    unarr_files()
 
   project "libwebp"
     kind "StaticLib"
@@ -465,6 +357,15 @@ workspace "SumatraPDF"
     disablewarnings { "4204", "4244", "4057", "4245", "4310" }
     includedirs { "ext/libwebp" }
     libwebp_files()
+
+  project "libwebp-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4204", "4244", "4057", "4245", "4310" }
+    includedirs { "ext/libwebp" }
+    libwebp_files()
+
 
   project "libjpeg-turbo"
     kind "StaticLib"
@@ -526,13 +427,164 @@ workspace "SumatraPDF"
     libjpeg_turbo_files()
 
 
+  project "freetype"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    defines {
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
+    freetype_files()
+
+  project "freetype-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+
+    defines {
+        "FT2_BUILD_LIBRARY",
+        "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+        "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
+    freetype_files()
+
+
+  project "lcms2"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    disablewarnings { "4100" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
+
+  project "lcms2-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4100" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
+
+
+  project "harfbuzz"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "HAVE_FALLBACK=1",
+      "HAVE_OT",
+      "HAVE_UCDN",
+      "HAVE_FREETYPE",
+      "HB_NO_MT",
+      "hb_malloc_impl=fz_hb_malloc",
+      "hb_calloc_impl=fz_hb_calloc",
+      "hb_realloc_impl=fz_hb_realloc",
+      "hb_free_impl=fz_hb_free"
+    }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
+    harfbuzz_files()
+
+  project "harfbuzz-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+        "_CRT_SECURE_NO_WARNINGS",
+        "HAVE_FALLBACK=1",
+        "HAVE_OT",
+        "HAVE_UCDN",
+        "HAVE_FREETYPE",
+        "HB_NO_MT",
+        "hb_malloc_impl=fz_hb_malloc",
+        "hb_calloc_impl=fz_hb_calloc",
+        "hb_realloc_impl=fz_hb_realloc",
+        "hb_free_impl=fz_hb_free"
+      }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
+    harfbuzz_files()
+
+
+  project "mujs"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
+  project "mujs-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
+
+  project "chm"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
+    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
+    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
+
+
+  project "engines"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++latest"
+    regconf()
+    disablewarnings {
+      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
+      "4701", "4706", "4819", "4838"
+    }
+    includedirs { "src", "src/wingui" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
+    engines_files()
+    links { "chm" }
+
+  project "gumbo"
+    kind "StaticLib"
+    language "C"
+    regconf()
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
+
+    project "gumbo-opt"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
+
+
   project "mupdf"
     kind "StaticLib"
     language "C"
     regconf()
+    -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
+    -- so we can't double-define it
+    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
+    defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
-    defines { "TOFU", "TOFU_CJK_LANG", "SHARE_JPEG", "HAVE_LCMS2MT=1"  }
+    defines { "TOFU", "TOFU_CJK_LANG" }
 
     disablewarnings {
       "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4245", "4267",
@@ -543,12 +595,12 @@ workspace "SumatraPDF"
 
     includedirs {
       "mupdf/include",
-      "mupdf/scripts/freetype",
       "mupdf/generated",
       "ext/jbig2dec",
       "ext/libjpeg-turbo",
       "ext/openjpeg/src/lib/openjp2",
       "ext/zlib",
+      "mupdf/scripts/freetype",
       "ext/freetype/include",
       "ext/mujs",
       "ext/harfbuzz/src",
@@ -573,76 +625,21 @@ workspace "SumatraPDF"
       }
     filter {}
 
-    -- for freetype
-    freetype_files()
-    defines {
-      "FT2_BUILD_LIBRARY",
-      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-    }
-    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
-
-    -- for mujs
-    includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
-
-    -- for jbig2dec
-    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
-    includedirs { "ext/jbig2dec" }
-    jbig2dec_files()
-
-    -- for openjpeg
-    disablewarnings { "4100", "4244", "4310", "4389", "4456" }
-    -- openjpeg has opj_config_private.h for such over-rides
-    -- but we can't change it because we bring openjpeg as submodule
-    -- and we can't provide our own in a different directory because
-    -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
-    -- because #include "opj_config_private.h" searches current directory first
-    defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
-    openjpeg_files()
-
-    -- for lcms2
-    disablewarnings { "4100" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
-
-    -- for harfbuzz
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
-    defines {
-      "_CRT_SECURE_NO_WARNINGS",
-      "HAVE_FALLBACK=1",
-      "HAVE_OT",
-      "HAVE_UCDN",
-      "HAVE_FREETYPE",
-      "HB_NO_MT",
-      "hb_malloc_impl=fz_hb_malloc",
-      "hb_calloc_impl=fz_hb_calloc",
-      "hb_realloc_impl=fz_hb_realloc",
-      "hb_free_impl=fz_hb_free"
-    }
-    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
-    harfbuzz_files()
-
-    -- for gumbo
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
-    "4305", "4306", "4389", "4456", "4701" }
-    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
-    gumbo_files()
-
     mupdf_files()
-    links { "zlib", "libjpeg-turbo" }
-
+    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs", "gumbo" }
 
   project "mupdf-opt"
     kind "StaticLib"
     language "C"
     optconf()
 
+    -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
+    -- so we can't double-define it
+    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
+    defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
-    defines { "TOFU", "TOFU_CJK_LANG", "SHARE_JPEG", "HAVE_LCMS2MT=1"  }
+    defines { "TOFU", "TOFU_CJK_LANG" }
     disablewarnings {
         "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4245", "4267",
         "4295", "4305", "4389", "4456", "4457", "4703", "4706"
@@ -681,67 +678,8 @@ workspace "SumatraPDF"
         '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
     }
     filter {}
-
-    -- for freetype
-    freetype_files()
-    defines {
-      "FT2_BUILD_LIBRARY",
-      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-    }
-    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
-
-    -- for mujs
-    includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
-
-    -- for jbig2dec
-    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
-    includedirs { "ext/jbig2dec" }
-    jbig2dec_files()
-
-    -- for openjpeg
-    disablewarnings { "4100", "4244", "4310", "4389", "4456" }
-    -- openjpeg has opj_config_private.h for such over-rides
-    -- but we can't change it because we bring openjpeg as submodule
-    -- and we can't provide our own in a different directory because
-    -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
-    -- because #include "opj_config_private.h" searches current directory first
-    defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS"}
-    openjpeg_files()
-
-    -- for lcms2
-    disablewarnings { "4100" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
-
-    -- for harfbuzz
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
-    defines {
-      "_CRT_SECURE_NO_WARNINGS",
-      "HAVE_FALLBACK=1",
-      "HAVE_OT",
-      "HAVE_UCDN",
-      "HAVE_FREETYPE",
-      "HB_NO_MT",
-      "hb_malloc_impl=fz_hb_malloc",
-      "hb_calloc_impl=fz_hb_calloc",
-      "hb_realloc_impl=fz_hb_realloc",
-      "hb_free_impl=fz_hb_free"
-    }
-    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
-    harfbuzz_files()
-
-    -- for gumbo
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
-    "4305", "4306", "4389", "4456", "4701" }
-    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
-    gumbo_files()
-
     mupdf_files()
-    links { "zlib-opt", "libjpeg-turbo-opt" }
+    links { "zlib-opt", "libjpeg-turbo-opt", "freetype-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "mujs-opt", "gumbo-opt" }
 
 
   -- regular build with distinct debug / release builds
@@ -781,7 +719,7 @@ workspace "SumatraPDF"
     -- TODO: is there a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
-    links { "mupdf-opt", "libdjvu-opt", "unarrlib-opt", "libwebp" }
+    links { "mupdf-opt", "libdjvu-opt", "unarrlib-opt", "libwebp-opt" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -871,53 +809,17 @@ workspace "SumatraPDF"
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
     links { "shlwapi", "version", "comctl32" }
-
-
-  project "engines"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++latest"
-    regconf()
-    disablewarnings {
-      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
-      "4701", "4706", "4819", "4838"
-    }
-    includedirs { "src", "src/wingui" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
-    engines_files()
-    links { "chm" }
-
-
-  project "chm"
-    kind "StaticLib"
-    language "C"
-    regconf()
-    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
-    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
-    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
-
---]]
+  --]]
 
   project "enginedump"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
     regconf()
-
     includedirs { "src", "src/wingui", "mupdf/include" }
-    -- for engine files
-    includedirs { "ext/libdjvu", "ext/CHMLib/src", "ext/zlib" }
-  
     disablewarnings { "4100", "4267", "4457" }
-    -- for chm files
-    -- TODO: fix chm warnings in chm code
-    disablewarnings { "4018", "4057", "4244", "4267", "4295", "4996", "4701", "4706" }
-
-    chm_files()
-    engines_files()
     engine_dump_files()
-
-    links { "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
+    links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
       "version", "windowscodecs"
@@ -935,13 +837,14 @@ workspace "SumatraPDF"
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
   project "logview"
-  kind "ConsoleApp"
-  language "C++"
-  cppdialect "C++latest"
-  regconf()
-  logview_files()
-  includedirs { "src" }
-  links { "shlwapi", "version", "comctl32" }
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    regconf()
+    disablewarnings { "4838" }
+    includedirs { "src" }
+    logview_files()
+    links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
   project "MakeLZSA"
     kind "ConsoleApp"
@@ -979,14 +882,7 @@ workspace "SumatraPDF"
       "src", "src/wingui", "mupdf/include",
       "ext/libdjvu", "ext/CHMLib/src", "ext/zlib"
     }
-
-    -- TODO: only add chm_files in debug build?
-    chm_files()
     pdf_preview_files()
-    -- for chm files
-    -- TODO: fix chm warnings in chm code
-    disablewarnings { "4018", "4057", "4244", "4267", "4295", "4996", "4701", "4706" }
-
     filter {"configurations:Debug"}
       defines {
         "BUILD_XPS_PREVIEW", "BUILD_DJVU_PREVIEW", "BUILD_EPUB_PREVIEW",
@@ -995,7 +891,9 @@ workspace "SumatraPDF"
         "BUILD_TGA_PREVIEW"
       }
     filter {}
-    links { "utils", "unrar", "libmupdf" }
+    -- TODO: "chm" should only be for Debug config but doing links { "chm" }
+    -- in the filter breaks linking by setting LinkLibraryDependencies to false
+    links { "utils", "unrar", "libmupdf", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
 
 
@@ -1007,14 +905,11 @@ workspace "SumatraPDF"
     regconf()
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-
     includedirs { "src", "mupdf/include" }
 
     synctex_files()
     mui_files()
     uia_files()
-    chm_files()
-    engines_files()
     sumatrapdf_files()
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -1034,16 +929,11 @@ workspace "SumatraPDF"
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
-    -- for engine_files
-    includedirs { "src/wingui" } -- TODO: is this needed?
-    includedirs { "ext/libdjvu", "ext/CHMLib/src" }
-
-    -- for chm files
-    -- TODO: fix chm warnings in chm code
-    disablewarnings { "4018", "4057", "4267", "4295", "4996", "4701" }
+    -- for wdl
+    disablewarnings { "4505" }
 
     links {
-      "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
+      "engines", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1068,8 +958,6 @@ workspace "SumatraPDF"
     synctex_files()
     mui_files()
     uia_files()
-    chm_files()
-    engines_files()
     sumatrapdf_files()
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -1089,20 +977,15 @@ workspace "SumatraPDF"
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
-    -- for engine_files
-    includedirs { "src/wingui" } -- TODO: is this needed?
-    includedirs { "ext/libdjvu", "ext/CHMLib/src" }
-
-    -- for chm files
-    -- TODO: fix chm warnings in chm code
-    disablewarnings { "4018", "4057", "4295", "4996", "4701" }
+    -- for wdl
+    disablewarnings { "4505" }
 
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
 
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "unrar", "unarrlib", "utils"
+      "libmupdf", "unrar", "unarrlib", "utils", "engines"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

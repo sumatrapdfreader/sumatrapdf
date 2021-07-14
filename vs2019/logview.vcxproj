@@ -214,7 +214,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -230,7 +230,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -239,7 +239,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -255,7 +255,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -264,7 +264,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -281,7 +281,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -290,7 +290,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -310,7 +310,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -319,7 +319,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -339,7 +339,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -348,7 +348,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -369,7 +369,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -377,7 +377,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -398,7 +398,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -406,7 +406,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -427,7 +427,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -435,7 +435,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -457,7 +457,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
