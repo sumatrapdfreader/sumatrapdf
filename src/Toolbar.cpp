@@ -700,6 +700,7 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 void CreateToolbar(WindowInfo* win) {
     kButtonSpacingX = 0;
     HINSTANCE hinst = GetModuleHandle(nullptr);
@@ -712,24 +713,25 @@ void CreateToolbar(WindowInfo* win) {
     win->hwndToolbar = hwndToolbar;
     SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-    ShowWindow(hwndToolbar, SW_SHOW);
     TBBUTTON tbButtons[kButtonsCount];
 
     int dpi = DpiGet(win->hwndFrame);
 
     HBITMAP hbmp = nullptr;
 
-    Size size{-1, -1};
-    // TODO: bitmap is skewed for dxDpi of 20, 24 etc.
-    int dxDpi = 16;
-    int scale = (int)ceilf((float)dpi / 96.f);
-    int dx = dxDpi * scale;
-    size.dx = dx;
-    size.dy = dx;
+    int dx = DpiScale(20);
+    // icon sizes must be multiple of 4 or else they are sheared
+    // I think I've read on Old New Thing it's multiple of 8 but
+    // can't find a reference. MSDN docs about toolbar
+    dx = RoundUp(dx, 4);
     hbmp = BuildIconsBitmap(dx, dx);
 
+    // this doesn't seem to be required and doesn't help with wierd sizes like 22
+    // but the docs say to do it
+    SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
+
     // assume square icons
-    HIMAGELIST himl = ImageList_Create(size.dy, size.dy, ILC_COLORDDB | ILC_MASK, 0, 0);
+    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLORDDB | ILC_MASK, kButtonsCount, 0);
     COLORREF mask = RGB(0xff, 0xff, 0xff);
     if (true) {
         ImageList_AddMasked(himl, hbmp, mask);
@@ -772,6 +774,7 @@ void CreateToolbar(WindowInfo* win) {
         rc.left = rc.right = rc.top = rc.bottom = 0;
     }
 
+    ShowWindow(hwndToolbar, SW_SHOW);
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | RBS_BANDBORDERS;
     dwStyle |= CCS_NODIVIDER | CCS_NOPARENTALIGN | WS_VISIBLE;
     win->hwndReBar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, dwStyle, 0, 0, 0, 0, hwndParent,
