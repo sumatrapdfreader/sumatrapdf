@@ -1,6 +1,14 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-14 Wed
+
+- show full path of a file in a tab tooltip (fixes #1188)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/1188
+  Tooltips are very annoying to use. Underdocumented and insane API.
+  Tab code is also very annoying currently.
+
 2021-07-13 Tue
+
 - remove test code from release builds
   https://github.com/sumatrapdfreader/sumatrapdf/issues/1528
 - better approach to mixed debug/release builds

@@ -53,6 +53,9 @@ void SetFont(TabsCtrl*, HFONT);
 struct TabsCtrl2 : WindowBase {
     str::WStr lastTabText;
     bool createToolTipsHwnd{false};
+    str::WStr currTooltipText;
+
+    WStrVec tooltips;
 
     // for all WM_NOTIFY messages
     WmNotifyHandler onNotify{nullptr};
@@ -74,6 +77,9 @@ struct TabsCtrl2 : WindowBase {
     void SetTabText(int idx, std::string_view sv);
     void SetTabText(int idx, const WCHAR* ws);
 
+    void SetTooltip(int idx, std::wstring_view sv);
+    const WCHAR* GetTooltip(int idx);
+
     WCHAR* GetTabText(int idx);
 
     int GetSelectedTabIndex();
@@ -84,4 +90,7 @@ struct TabsCtrl2 : WindowBase {
 
     void SetToolTipsHwnd(HWND);
     HWND GetToolTipsHwnd();
+
+    void MaybeUpdateTooltip();
+    void MaybeUpdateTooltipText(int idx);
 };

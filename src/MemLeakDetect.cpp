@@ -536,7 +536,7 @@ bool MemLeakInit() {
     }
 #endif
 
-#if 0 //defined(DEBUG)
+#if 0 // defined(DEBUG)
     AddFunc(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
     AddFunc(_calloc_dbg, _calloc_dbg_hook, (void**)&g_calloc_dbg_orig);
     AddFunc(_free_dbg, _free_dbg_hook, (void**)&g_free_dbg_orig);

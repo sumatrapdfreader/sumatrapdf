@@ -351,6 +351,8 @@ static void SetTabTitle(TabInfo* tab) {
     int idx = win->tabs.Find(tab);
     WCHAR* title = (WCHAR*)tab->GetTabTitle();
     win->tabsCtrl->SetTabText(idx, title);
+    auto tooltip = tab->filePath.AsView();
+    win->tabsCtrl->SetTooltip(idx, tooltip);
 }
 
 static void NO_INLINE SwapTabs(WindowInfo* win, int tab1, int tab2) {
@@ -524,9 +526,11 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, [[
 
             bool inX = false;
             int hl = wp == 0xFF ? -1 : tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
+            bool didChangeTabs = false;
             if (tab->isDragging && hl == -1) {
                 // preserve the highlighted tab if it's dragged outside the tabs' area
                 hl = tab->highlighted;
+                didChangeTabs = true;
             }
             if (tab->highlighted != hl) {
                 if (tab->isDragging) {
@@ -539,6 +543,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, [[
                 tab->Invalidate(hl);
                 tab->Invalidate(tab->highlighted);
                 tab->highlighted = hl;
+                didChangeTabs = true;
             }
             int xHl = inX && !tab->isDragging ? hl : -1;
             if (tab->xHighlighted != xHl) {
@@ -548,6 +553,11 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, [[
             }
             if (!inX) {
                 tab->xClicked = -1;
+            }
+            if (didChangeTabs && tab->highlighted >= 0) {
+                int idx = tab->highlighted;
+                auto tabsCtrl = tab->tabsCtrl;
+                tabsCtrl->MaybeUpdateTooltipText(idx);
             }
         }
             return 0;
@@ -642,6 +652,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, [[
 void CreateTabbar(WindowInfo* win) {
     TabsCtrl2* tabsCtrl = new TabsCtrl2(win->hwndFrame);
     tabsCtrl->ctrlID = IDC_TABBAR;
+    tabsCtrl->createToolTipsHwnd = true;
     tabsCtrl->Create();
 
     HWND hwndTabBar = tabsCtrl->hwnd;
@@ -826,6 +837,10 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
         case T_DRAG:
             SwapTabs(win, tab1, tab2);
             break;
+        case TTN_GETDISPINFOA:
+        case TTN_GETDISPINFOW:
+            logf("TabsOnNotify TTN_GETDISPINFO\n");
+            break;
     }
     return TRUE;
 }
@@ -853,6 +868,7 @@ void UpdateTabWidth(WindowInfo* win) {
     auto maxDx = (rect.dx - 3) / count;
     tabSize.dx = std::min(tabSize.dx, maxDx);
     win->tabsCtrl->SetItemSize(tabSize);
+    win->tabsCtrl->MaybeUpdateTooltip();
 }
 
 void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar) {

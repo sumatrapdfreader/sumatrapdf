@@ -95,8 +95,8 @@ struct WindowInfo {
 
     HWND hwndFrame{nullptr};
     HWND hwndCanvas{nullptr};
-    HWND hwndToolbar{nullptr};
     HWND hwndReBar{nullptr};
+    HWND hwndToolbar{nullptr};
     HWND hwndFindText{nullptr};
     HWND hwndFindBox{nullptr};
     HWND hwndFindBg{nullptr};
