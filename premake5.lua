@@ -63,7 +63,7 @@ function regconf()
 
   filter "configurations:Release*"
     defines { "NDEBUG" }
-    optimize "On"
+    optimize "Size"
 
   -- no ltcg in asan builds
   filter { "configurations:Release*", "platforms:x32 or x64" }
@@ -77,7 +77,7 @@ end
 
 -- config for stable libraries where debug build is done with optimization
 function optconf()
-  optimize "On"
+  optimize "Size"
   undefines { "DEBUG" }
   defines { "NDEBUG" }
 
