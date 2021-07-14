@@ -1,5 +1,12 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-13 Tue
+- remove test code from release builds
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/1528
+- better approach to mixed debug/release builds
+  in retrospect, we didn't need to split projects into
+  "foo" and "foo-opt"
+
 2021-07-12 Mon
 
 - on crash re-get list of modules so that we can see modules that were injected after startup

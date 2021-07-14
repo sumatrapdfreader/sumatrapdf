@@ -202,7 +202,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -230,7 +230,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -258,7 +258,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -287,7 +287,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -314,7 +314,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -341,7 +341,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -368,7 +368,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -395,7 +395,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -422,7 +422,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4018;4057;4100;4115;4130;4204;4206;4245;4267;4295;4305;4389;4456;4457;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;SHARE_JPEG;TOFU;TOFU_CJK_LANG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;..\ext\gumbo-parser\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -763,32 +763,32 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="zlib-opt.vcxproj">
-      <Project>{36FE9988-22CB-F493-4BE4-E23B37102A22}</Project>
+    <ProjectReference Include="zlib.vcxproj">
+      <Project>{16CFA17C-0206-A30D-ABF2-881097081F0F}</Project>
     </ProjectReference>
-    <ProjectReference Include="libjpeg-turbo-opt.vcxproj">
-      <Project>{7BE018D5-E7F6-166B-306E-A28C9CC3E7F2}</Project>
+    <ProjectReference Include="libjpeg-turbo.vcxproj">
+      <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>
     </ProjectReference>
-    <ProjectReference Include="freetype-opt.vcxproj">
-      <Project>{29BAC146-151D-51EB-BEA2-89A1AAE41C6E}</Project>
+    <ProjectReference Include="freetype.vcxproj">
+      <Project>{89895BD8-7556-B6E3-9E6F-A48B8A9BEB71}</Project>
     </ProjectReference>
-    <ProjectReference Include="jbig2dec-opt.vcxproj">
-      <Project>{5F349A5A-4B97-29FF-F41C-62B5E05EF581}</Project>
+    <ProjectReference Include="jbig2dec.vcxproj">
+      <Project>{BF5813C3-AB25-6ECE-D43E-5C76C06AA35C}</Project>
     </ProjectReference>
-    <ProjectReference Include="openjpeg-opt.vcxproj">
-      <Project>{9D8F1304-89F2-A2A8-3278-DB5E1EBA6E2B}</Project>
+    <ProjectReference Include="openjpeg.vcxproj">
+      <Project>{FDC4548D-E991-AF98-12AB-9D40FED6E426}</Project>
     </ProjectReference>
-    <ProjectReference Include="lcms2-opt.vcxproj">
-      <Project>{E605824A-5270-36C1-9BAE-E76607581416}</Project>
+    <ProjectReference Include="lcms2.vcxproj">
+      <Project>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</Project>
     </ProjectReference>
-    <ProjectReference Include="harfbuzz-opt.vcxproj">
-      <Project>{51E9CBBE-3D4C-5B63-E6D1-9319D21327E6}</Project>
+    <ProjectReference Include="harfbuzz.vcxproj">
+      <Project>{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}</Project>
     </ProjectReference>
-    <ProjectReference Include="mujs-opt.vcxproj">
-      <Project>{C41A9741-B0E7-F14C-D900-E0F4C52C27DB}</Project>
+    <ProjectReference Include="mujs.vcxproj">
+      <Project>{A4D49A7C-900B-9C0D-39F8-8110250E180F}</Project>
     </ProjectReference>
-    <ProjectReference Include="gumbo-opt.vcxproj">
-      <Project>{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}</Project>
+    <ProjectReference Include="gumbo.vcxproj">
+      <Project>{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

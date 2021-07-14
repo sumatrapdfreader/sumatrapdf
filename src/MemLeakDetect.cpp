@@ -293,7 +293,7 @@ static bool InitializeSymbols() {
     return true;
 }
 
-#if defined(DEBUG)
+#if 0 // defined(DEBUG) 
 decltype(_malloc_dbg)* g_malloc_dbg_orig = nullptr;
 decltype(_calloc_dbg)* g_calloc_dbg_orig = nullptr;
 decltype(_free_dbg)* g_free_dbg_orig = nullptr;
@@ -536,7 +536,7 @@ bool MemLeakInit() {
     }
 #endif
 
-#if defined(DEBUG)
+#if 0 //defined(DEBUG)
     AddFunc(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
     AddFunc(_calloc_dbg, _calloc_dbg_hook, (void**)&g_calloc_dbg_orig);
     AddFunc(_free_dbg, _free_dbg_hook, (void**)&g_free_dbg_orig);
