@@ -715,11 +715,9 @@ void CreateToolbar(WindowInfo* win) {
 
     TBBUTTON tbButtons[kButtonsCount];
 
-    int dpi = DpiGet(win->hwndFrame);
-
     HBITMAP hbmp = nullptr;
 
-    int dx = DpiScale(20);
+    int dx = DpiScale(18);
     // icon sizes must be multiple of 4 or else they are sheared
     // I think I've read on Old New Thing it's multiple of 8 but
     // can't find a reference. MSDN docs about toolbar
@@ -767,6 +765,8 @@ void CreateToolbar(WindowInfo* win) {
     SendMessageW(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
     BOOL ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
     CrashIf(!ok);
+
+    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(dx, dx));
 
     RECT rc;
     LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);

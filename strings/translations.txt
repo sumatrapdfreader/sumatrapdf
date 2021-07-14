@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f9f7460528f369d794d6de75d208b0584c8c3835
+518a79bad2763eef14da3f5ac901f48ac45768a1
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -313,7 +313,7 @@ bs:Nazad\tAlt+<-
 by:&Назад\tAlt+Стрэлка налева
 ca-xv:Arrere\tAlt+Fletxa esquerra
 ca:Enrere\tAlt+Left Arrow
-cn:向前翻(&B)\tAlt+左箭头
+cn:向前翻(&B)\tAlt+左方向键
 co:&Nanzu\tAlt+Fleccia manca
 cy:Nôl\tAlt+Saeth Chwith
 cz:Z&pět\tAlt+Šipka vlevo
@@ -1337,7 +1337,7 @@ uz:&Yordam
 vn:Trợ &giúp
 :&Highlight\ta
 am:&Գունանշում\ta
-cn:&高亮\ta
+cn:&高亮\tA
 de:&Hervorheben\ta
 el:Επισήμανση
 kw:&Ughboyntya\ta
@@ -8800,7 +8800,7 @@ bs:Naprijed\tAlt+->
 by:У&перад\tAlt+Стрэлка направа
 ca-xv:Endavan&t\tAlt+Fletxa Dreta
 ca:En&davant\tAlt+Right Arrow
-cn:向后翻(&O)\tAlt+右箭头
+cn:向后翻(&O)\tAlt+右方向键
 co:&Dopu\tAlt+Fleccia diritta
 cy:Ymlaen\tAlt+Saeth Dde
 cz:V&před\tAlt+Šipka vpravo
