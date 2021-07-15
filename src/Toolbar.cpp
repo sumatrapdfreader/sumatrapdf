@@ -713,17 +713,11 @@ void CreateToolbar(WindowInfo* win) {
     win->hwndToolbar = hwndToolbar;
     SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-    TBBUTTON tbButtons[kButtonsCount];
-
-    HBITMAP hbmp = nullptr;
-
     int dx = DpiScale(18);
     // icon sizes must be multiple of 4 or else they are sheared
-    // I think I've read on Old New Thing it's multiple of 8 but
-    // can't find a reference. MSDN docs about toolbar
+    // TODO: I must be doing something wrong, any size should be ok
+    // it might be about size of buttons / bitmaps
     dx = RoundUp(dx, 4);
-    hbmp = BuildIconsBitmap(dx, dx);
-
     // this doesn't seem to be required and doesn't help with wierd sizes like 22
     // but the docs say to do it
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
@@ -731,6 +725,7 @@ void CreateToolbar(WindowInfo* win) {
     // assume square icons
     HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLORDDB | ILC_MASK, kButtonsCount, 0);
     COLORREF mask = RGB(0xff, 0xff, 0xff);
+    HBITMAP hbmp = BuildIconsBitmap(dx, dx);
     if (true) {
         ImageList_AddMasked(himl, hbmp, mask);
     } else {
@@ -740,13 +735,6 @@ void CreateToolbar(WindowInfo* win) {
         LogBitmapInfo(hbmp);
     }
     DeleteObject(hbmp);
-
-    for (int i = 0; i < kButtonsCount; i++) {
-        tbButtons[i] = TbButtonFromButtonInfo(i);
-        if (gToolbarButtons[i].cmdId == CmdFindMatch) {
-            tbButtons[i].fsStyle = BTNS_CHECK;
-        }
-    }
     SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 
     TBMETRICS tbMetrics{};
@@ -763,6 +751,14 @@ void CreateToolbar(WindowInfo* win) {
     LRESULT exstyle = SendMessageW(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
     SendMessageW(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
+
+    TBBUTTON tbButtons[kButtonsCount];
+    for (int i = 0; i < kButtonsCount; i++) {
+        tbButtons[i] = TbButtonFromButtonInfo(i);
+        if (gToolbarButtons[i].cmdId == CmdFindMatch) {
+            tbButtons[i].fsStyle = BTNS_CHECK;
+        }
+    }
     BOOL ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
     CrashIf(!ok);
 

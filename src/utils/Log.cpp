@@ -77,8 +77,8 @@ static void logPipe(std::string_view sv) {
     if (didConnect) {
         // logview accepts logging from anyone, so announce ourselves
         // TODO: this should be different fro PdfFilter and PdfPreview
-        const char* initialMsg = "This is SumatraPDF logging\n";
-        WriteFile(hLogPipe, initialMsg, str::Len(initialMsg), &cbWritten, nullptr);
+        const char* initialMsg = "app: SumatraPDF\n";
+        WriteFile(hLogPipe, initialMsg, (DWORD)str::Len(initialMsg), &cbWritten, nullptr);
     }
 
     DWORD cb = (DWORD)sv.size();
