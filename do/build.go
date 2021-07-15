@@ -505,6 +505,16 @@ func buildLogview() {
 	runExeLoggedMust(msbuildPath, slnPath, `/t:logview:Rebuild`, p, `/m`)
 }
 
+func buildTestUtil() {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+
+	config := "Release"
+	platform := "x64"
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
+}
+
 // a faster release build for testing that only does 64-bit installer
 func buildRelease64Fast() {
 	detectSigntoolPath() // early exit if missing

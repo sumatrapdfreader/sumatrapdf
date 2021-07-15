@@ -121,7 +121,6 @@ func main() {
 		flgRegenerateTranslattions bool
 		flgUploadTranslations      bool
 		flgClean                   bool
-		flgDeleteOldBuilds         bool
 		flgCrashes                 bool
 		flgCheckAccessKeys         bool
 		flgBuildNo                 bool
@@ -140,6 +139,7 @@ func main() {
 		flgUpdateVer               string
 		flgDrMem                   bool
 		flgLogView                 bool
+		flgRunTests                bool
 	)
 
 	{
@@ -160,7 +160,6 @@ func main() {
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
 		flag.BoolVar(&flgUploadTranslations, "trans-upload", false, "upload translations to apptranslators.org if changed")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
-		flag.BoolVar(&flgDeleteOldBuilds, "delete-old-builds", false, "delete old builds")
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
@@ -178,6 +177,7 @@ func main() {
 		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
 		flag.BoolVar(&flgDrMem, "drmem", false, "run drmemory of rel 64")
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
+		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
 		flag.Parse()
 	}
 
@@ -331,13 +331,6 @@ func main() {
 		return
 	}
 
-	if flgDeleteOldBuilds {
-		logf("delete old builds\n")
-		minioDeleteOldBuilds()
-		s3DeleteOldBuilds()
-		return
-	}
-
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
 		if shouldSkipUpload() {
@@ -425,6 +418,15 @@ func main() {
 			buildLogview()
 		}
 		cmd := exec.Command(".\\logview.exe")
+		cmd.Dir = dir
+		u.RunCmdLoggedMust(cmd)
+		return
+	}
+
+	if flgRunTests {
+		buildTestUtil()
+		dir := filepath.Join("out", "rel64")
+		cmd := exec.Command(".\\test_util.exe")
 		cmd.Dir = dir
 		u.RunCmdLoggedMust(cmd)
 		return

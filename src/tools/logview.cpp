@@ -40,6 +40,7 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
             continue;
         }
         err = GetLastError();
+        // TODO: handle ERROR_MORE_DATA ?
         if (err == ERROR_BROKEN_PIPE) {
             log("broken pipe\n");
         } else {
