@@ -285,3 +285,14 @@ func dumpEnv() {
 	}
 	logf("\n")
 }
+
+// return true if file in path1 is newer than file in path2
+// also returns true if one or both files don't exist
+func fileNewerThan(path1, path2 string) bool {
+	stat1, err1 := os.Stat(path1)
+	stat2, err2 := os.Stat(path2)
+	if err1 != nil || err2 != nil {
+		return true
+	}
+	return stat1.ModTime().After(stat2.ModTime())
+}

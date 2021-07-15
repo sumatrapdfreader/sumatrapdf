@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/1188
   Tooltips are very annoying to use. Underdocumented and insane API.
   Tab code is also very annoying currently.
+- start on logview.exe
 
 2021-07-13 Tue
 
