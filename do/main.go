@@ -362,6 +362,8 @@ func main() {
 	if flgBuildRelease {
 		if !flgUpload {
 			failIfNoCertPwd()
+		} else {
+			os.RemoveAll("out")
 		}
 		detectVersions()
 		buildRelease(flgUpload)
