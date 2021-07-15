@@ -494,6 +494,7 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
     if (!excPointers) {
         return;
     }
+
     EXCEPTION_RECORD* excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
     s.AppendFmt("Exception: %08X %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));

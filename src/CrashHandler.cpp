@@ -130,6 +130,9 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
 
 static std::string_view BuildCrashInfoText(bool forCrash) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
+    if (!forCrash) {
+        s.Append("Type: deubg report (not crash)");
+    }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
     }
@@ -139,7 +142,12 @@ static std::string_view BuildCrashInfoText(bool forCrash) {
 
     if (forCrash) {
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
+    } else {
+        // This is not a crash but debug report, we don't have an exception
+        s.Append("\r\nCrashed thread:\r\n");
+        dbghelp::GetCurrentThreadCallstack(s);
     }
+
     dbghelp::GetAllThreadsCallstacks(s);
     s.Append("\n");
     s.Append(gModulesInfo);

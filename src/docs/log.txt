@@ -9,6 +9,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - start on logview.exe
 - log from SumatraPDF to logview via pipe
 - rename str::NormalizeWS() => NormalizeWSInPlace(); use more of TempToWstr()
+- fix SubmitCrashReport to have callstack for current thread
 
 2021-07-13 Tue
 
