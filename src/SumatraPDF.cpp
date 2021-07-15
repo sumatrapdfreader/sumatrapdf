@@ -4237,8 +4237,12 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'i':
             // experimental "page info" tip: make figuring out current page and
             // total pages count a one-key action (unless they're already visible)
-            if (dm) {
+            if (isShift && dm) {
                 TogglePageInfoHelper(win);
+            }
+            if (!isShift) {
+                gGlobalPrefs->fixedPageUI.invertColors ^= true;
+                UpdateDocumentColors();
             }
             break;
         case 'm':
