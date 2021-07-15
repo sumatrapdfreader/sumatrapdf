@@ -156,7 +156,7 @@ func clean() {
 			}
 		}
 	}
-	fmt.Printf("clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
+	logf("clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
 }
 
 func runTestUtilMust(dir string) {
@@ -366,7 +366,7 @@ func createManifestMust() {
 // https://docs.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-packaging-dot-net
 func makeAppx() {
 	appExePath := detectMakeAppxPath()
-	fmt.Printf("makeAppx: '%s'\n", appExePath)
+	logf("makeAppx: '%s'\n", appExePath)
 }
 
 var (

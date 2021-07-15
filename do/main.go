@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -38,7 +37,7 @@ func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
 	cmd.Stderr = io.MultiWriter(f, os.Stderr)
-	fmt.Printf("> %s\n", u.FmtCmdShort(*cmd))
+	logf("> %s\n", u.FmtCmdShort(*cmd))
 	return cmd.Run()
 }
 
@@ -105,7 +104,7 @@ func main() {
 	logf("Current directory: %s\n", u.CurrDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
-		fmt.Printf("Finished in %s\n", time.Since(timeStart))
+		logf("Finished in %s\n", time.Since(timeStart))
 	}()
 
 	var (
@@ -168,7 +167,7 @@ func main() {
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy", false, "deploy website to cloudflare")
-		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
+		flag.BoolVar(&flgWebsiteImportNotion, "website-import", false, "import docs from notion")
 		flag.BoolVar(&flgWebsiteBuildCloudflare, "website-build-cf", false, "build the website (download Sumatra files)")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
@@ -315,6 +314,12 @@ func main() {
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
+			out := runExeMust("git", "branch")
+			currBranch := getCurrentBranch(out)
+			if currBranch == "website-cf" {
+				logf("skipping build because on branch '%s'\n", currBranch)
+				return
+			}
 			buildPreRelease()
 		case githubEventTypeCodeQL:
 			// code ql is just a regular build, I assume intercepted by
@@ -327,7 +332,7 @@ func main() {
 	}
 
 	if flgDeleteOldBuilds {
-		fmt.Printf("delete old builds\n")
+		logf("delete old builds\n")
 		minioDeleteOldBuilds()
 		s3DeleteOldBuilds()
 		return
@@ -336,7 +341,7 @@ func main() {
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
 		if shouldSkipUpload() {
-			fmt.Printf("Skipping upload\n")
+			logf("Skipping upload\n")
 			return
 		}
 		flgUpload = true
