@@ -663,7 +663,7 @@ char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
-size_t NormalizeWS(char* str) {
+size_t NormalizeWSInPlace(char* str) {
     char *src = str, *dst = str;
     bool addedSpace = true;
 
@@ -2257,7 +2257,7 @@ WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith)
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
-size_t NormalizeWS(WCHAR* str) {
+size_t NormalizeWSInPlace(WCHAR* str) {
     WCHAR *src = str, *dst = str;
     bool addedSpace = true;
 

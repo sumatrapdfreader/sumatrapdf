@@ -656,8 +656,8 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
             if (!text) {
                 continue;
             }
-            AutoFreeWstr itemText(strconv::Utf8ToWstr(text.Get()));
-            str::NormalizeWS(itemText);
+            auto itemText = TempToWstr(text.Get());
+            str::NormalizeWSInPlace(itemText);
             AutoFreeWstr itemSrc;
             if (href) {
                 href.Set(NormalizeURL(href, pagePath));
@@ -905,7 +905,7 @@ bool Fb2Doc::Load() {
                 }
             }
             if (docAuthor) {
-                str::NormalizeWS(docAuthor);
+                str::NormalizeWSInPlace(docAuthor);
                 if (!str::IsEmpty(docAuthor.Get())) {
                     props.Set(DocumentProperty::Author, docAuthor.Release(), inTitleInfo != 0);
                 }
@@ -1030,7 +1030,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) {
             titleCount++;
         } else if (tok->IsEndTag() && Tag_Title == tok->tag) {
             if (itemText) {
-                str::NormalizeWS(itemText);
+                str::NormalizeWSInPlace(itemText);
             }
             if (!str::IsEmpty(itemText.Get())) {
                 AutoFreeWstr url(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));

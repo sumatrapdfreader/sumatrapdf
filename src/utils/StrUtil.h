@@ -121,38 +121,37 @@ size_t TrimWSInPlace(WCHAR* s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
 
 size_t TransChars(char* str, const char* oldChars, const char* newChars);
-char* Replace(const char* s, const char* toReplace, const char* replaceWith);
+size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 
-size_t NormalizeWS(char* str);
+char* Replace(const char* s, const char* toReplace, const char* replaceWith);
+WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
+
+size_t NormalizeWSInPlace(char* str);
+size_t NormalizeWSInPlace(WCHAR* str);
 size_t NormalizeNewlinesInPlace(char* s, char* e);
 size_t NormalizeNewlinesInPlace(char* s);
 size_t RemoveCharsInPlace(char* str, const char* toRemove);
 size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 
 size_t BufSet(char* dst, size_t dstCchSize, const char* src);
+size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src);
 size_t BufAppend(char* dst, size_t dstCchSize, const char* s);
+size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s);
 
 char* MemToHex(const u8* buf, size_t len);
 bool HexToMem(const char* s, u8* buf, size_t bufLen);
 
 const char* Parse(const char* str, const char* format, ...);
 const char* Parse(const char* str, size_t len, const char* format, ...);
+const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 
 int CmpNatural(const char*, const char*);
-
-size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
-WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
-size_t NormalizeWS(WCHAR* str);
-size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src);
-size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s);
+int CmpNatural(const WCHAR*, const WCHAR*);
 
 WCHAR* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAULT);
 WCHAR* FormatNumWithThousandSep(size_t num, LCID locale = LOCALE_USER_DEFAULT);
 WCHAR* FormatRomanNumeral(int number);
 
-int CmpNatural(const WCHAR*, const WCHAR*);
-
-const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv);
 } // namespace str
 

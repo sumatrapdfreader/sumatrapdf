@@ -8,6 +8,7 @@ A daily log of changes and commentary. An experiment of sorts.
   Tab code is also very annoying currently.
 - start on logview.exe
 - log from SumatraPDF to logview via pipe
+- rename str::NormalizeWS() => NormalizeWSInPlace(); use more of TempToWstr()
 
 2021-07-13 Tue
 

@@ -114,7 +114,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     CopySelection(sel);
 
     AutoFreeWstr selection(ExtractText(L" "));
-    str::NormalizeWS(selection);
+    str::NormalizeWSInPlace(selection);
     SetText(selection);
 
     searchHitStartAt = findPage = std::min(startPage, endPage);

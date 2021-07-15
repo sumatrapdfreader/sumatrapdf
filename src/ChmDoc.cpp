@@ -325,7 +325,7 @@ WCHAR* ChmDoc::GetProperty(DocumentProperty prop) {
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {
         // TODO: original code called str::RemoveCharsInPlace(result, "\n\r\t")
-        str::NormalizeWS(result);
+        str::NormalizeWSInPlace(result);
     }
     return result.StealData();
 }

@@ -82,7 +82,7 @@ void OnMenuFind(WindowInfo* win) {
     DisplayModel* dm = win->AsFixed();
     if (dm->textSelection->result.len > 0 && Edit_GetTextLength(win->hwndFindBox) == 0) {
         AutoFreeWstr selection(dm->textSelection->ExtractText(L" "));
-        str::NormalizeWS(selection);
+        str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
             win::SetText(win->hwndFindBox, selection);
             Edit_SetModify(win->hwndFindBox, TRUE);
@@ -162,7 +162,7 @@ void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
     }
 
     AutoFreeWstr selection(dm->textSelection->ExtractText(L" "));
-    str::NormalizeWS(selection);
+    str::NormalizeWSInPlace(selection);
     if (str::IsEmpty(selection.Get())) {
         return;
     }

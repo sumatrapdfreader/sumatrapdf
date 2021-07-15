@@ -345,16 +345,16 @@ void StrTest() {
     utassert(str::Eq(buf, L"lgarapat"));
 
     str::BufSet(buf, dimof(buf), L"one\r\ntwo\t\v\f\tthree");
-    count = str::NormalizeWS(buf);
+    count = str::NormalizeWSInPlace(buf);
     utassert(4 == count);
     utassert(str::Eq(buf, L"one two three"));
 
     str::BufSet(buf, dimof(buf), L" one    two three ");
-    count = str::NormalizeWS(buf);
+    count = str::NormalizeWSInPlace(buf);
     utassert(5 == count);
     utassert(str::Eq(buf, L"one two three"));
 
-    count = str::NormalizeWS(buf);
+    count = str::NormalizeWSInPlace(buf);
     utassert(0 == count);
     utassert(str::Eq(buf, L"one two three"));
 

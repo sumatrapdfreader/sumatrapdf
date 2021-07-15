@@ -509,7 +509,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
 static WCHAR* NormalizeFuzzy(const WCHAR* str) {
     WCHAR* dup = str::Dup(str);
     CharLower(dup);
-    str::NormalizeWS(dup);
+    str::NormalizeWSInPlace(dup);
     // cf. AddTocItemToView
     return dup;
 }

@@ -61,7 +61,7 @@ WCHAR* pdf_to_wstr(fz_context* ctx, pdf_obj* obj) {
 }
 
 // some PDF documents contain control characters in outline titles or /Info properties
-// we replace them with spaces and cleanup for display with NormalizeWS()
+// we replace them with spaces and cleanup for display with NormalizeWSInPlace()
 WCHAR* pdf_clean_string(WCHAR* s) {
     if (!s) {
         return nullptr;
@@ -74,7 +74,7 @@ WCHAR* pdf_clean_string(WCHAR* s) {
         }
         curr++;
     }
-    str::NormalizeWS(s);
+    str::NormalizeWSInPlace(s);
     return s;
 }
 

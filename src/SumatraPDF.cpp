@@ -965,7 +965,7 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
     if (tab->ctrl) {
         WCHAR* title = tab->ctrl->GetProperty(DocumentProperty::Title);
         if (title != nullptr) {
-            str::NormalizeWS(title);
+            str::NormalizeWSInPlace(title);
             docTitle.Set(title);
             if (!str::IsEmpty(title)) {
                 docTitle.Set(str::Format(L"- [%s] ", title));
