@@ -149,7 +149,7 @@ int CmpNatural(const char*, const char*);
 int CmpNatural(const WCHAR*, const WCHAR*);
 
 WCHAR* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAULT);
-WCHAR* FormatNumWithThousandSep(size_t num, LCID locale = LOCALE_USER_DEFAULT);
+WCHAR* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
 WCHAR* FormatRomanNumeral(int number);
 
 bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv);

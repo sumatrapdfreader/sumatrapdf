@@ -20,6 +20,7 @@
 #include "DisplayMode.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
+#include "AppUtil.h"
 #include "CrashHandler.h"
 #include "Version.h"
 #include "SumatraConfig.h"
@@ -217,7 +218,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, char* dstDir,
         if (!uncompressed) {
             return false;
         }
-        char* filePath = path::JoinUtf(dstDir, name, allocator);
+        char* filePath = path::Join(dstDir, name, allocator);
         if (!filePath) {
             return false;
         }
@@ -310,7 +311,6 @@ bool CrashHandlerDownloadSymbols() {
 
 // like crash report, but can be triggered without a crash
 void SubmitDebugReport(const char* condStr) {
-    dbglog("SubmitDebugReport()\n");
     if (!CrashHandlerCanUseNet()) {
         dbglog("SubmitDebugReport(): skipping because !CrashHandlerCanUseNet()\n");
         return;

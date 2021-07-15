@@ -997,7 +997,7 @@ static char* PickInstallerLogPath() {
         return nullptr;
     }
     auto dirA = TempToUtf8(dir);
-    return path::JoinUtf(dirA, "sumatra-install-log.txt", nullptr);
+    return path::Join(dirA, "sumatra-install-log.txt", nullptr);
 }
 
 static void StartInstallerLogging() {

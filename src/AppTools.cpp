@@ -661,3 +661,44 @@ const WCHAR* ExractUnrarDll() {
     return ret;
 }
 #endif
+
+constexpr double KB = 1024;
+constexpr double MB = 1024 * 1024;
+constexpr double GB = 1024 * 1024 * 1024;
+
+// Format the file size in a short form that rounds to the largest size unit
+// e.g. "3.48 GB", "12.38 MB", "23 KB"
+// Caller needs to free the result.
+static WCHAR* FormatSizeSuccint(i64 size) {
+    const WCHAR* unit = nullptr;
+    double s = (double)size;
+
+    if (s > GB) {
+        s = s / GB;
+        unit = _TR("GB");
+    } else if (s > MB) {
+        s = s / MB;
+        unit = _TR("MB");
+    } else {
+        s = s / KB;
+        unit = _TR("KB");
+    }
+
+    AutoFreeWstr sizestr = str::FormatFloatWithThousandSep(s);
+    if (!unit) {
+        return sizestr.StealData();
+    }
+    return str::Format(L"%s %s", sizestr.Get(), unit);
+}
+
+// format file size in a readable way e.g. 1348258 is shown
+// as "1.29 MB (1,348,258 Bytes)"
+// Caller needs to free the result
+WCHAR* FormatFileSize(i64 size) {
+    if (size <= 0) {
+        return str::Format(L"%d", (int)size);
+    }
+    AutoFreeWstr n1(FormatSizeSuccint(size));
+    AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
+    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
+}

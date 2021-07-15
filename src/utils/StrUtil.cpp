@@ -2309,12 +2309,12 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-WCHAR* FormatNumWithThousandSep(size_t num, LCID locale) {
+WCHAR* FormatNumWithThousandSep(i64 num, LCID locale) {
     WCHAR thousandSep[4] = {0};
     if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep))) {
         str::BufSet(thousandSep, dimof(thousandSep), L",");
     }
-    AutoFreeWstr buf(str::Format(L"%Iu", num));
+    AutoFreeWstr buf(str::Format(L"%Iu", (size_t)num));
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
     WCHAR* res = AllocArray<WCHAR>(resLen);
@@ -2338,7 +2338,7 @@ WCHAR* FormatNumWithThousandSep(size_t num, LCID locale) {
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
 WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
-    size_t num = (size_t)(number * 100 + 0.5);
+    i64 num = (i64)(number * 100 + 0.5);
 
     AutoFreeWstr tmp(FormatNumWithThousandSep(num / 100, locale));
     WCHAR decimal[4];

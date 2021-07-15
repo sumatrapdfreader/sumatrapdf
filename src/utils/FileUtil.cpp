@@ -60,7 +60,7 @@ const char* GetExtNoFree(const char* path) {
     return ext;
 }
 
-char* JoinUtf(const char* path, const char* fileName, Allocator* allocator) {
+char* Join(const char* path, const char* fileName, Allocator* allocator) {
     if (IsSep(*fileName)) {
         fileName++;
     }

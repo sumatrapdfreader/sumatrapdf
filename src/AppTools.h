@@ -19,3 +19,5 @@ void SaveCallstackLogs();
 #if 0
 WCHAR* PathForFileInAppDataDir(const WCHAR* fileName);
 #endif
+
+WCHAR* FormatFileSize(i64 size);

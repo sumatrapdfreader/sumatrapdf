@@ -506,7 +506,7 @@ static char* PickUnInstallerLogPath() {
         return nullptr;
     }
     AutoFreeStr dira = strconv::WstrToUtf8(dir);
-    return path::JoinUtf(dira, "sumatra-uninstall-log.txt", nullptr);
+    return path::Join(dira, "sumatra-uninstall-log.txt", nullptr);
 }
 
 static void StartUnInstallerLogging() {

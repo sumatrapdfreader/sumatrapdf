@@ -163,7 +163,7 @@ bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
         isFile = IsRegularFile(fdata.dwFileAttributes);
         if (isFile) {
             auto name = TempToUtf8(fdata.cFileName);
-            AutoFreeStr filePath = path::JoinUtf(dir.data(), name.Get(), nullptr);
+            AutoFreeStr filePath = path::Join(dir.data(), name.Get(), nullptr);
             bool matches = true;
             if (fileMatchesFn) {
                 matches = fileMatchesFn(filePath.AsView());

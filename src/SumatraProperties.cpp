@@ -8,6 +8,7 @@
 
 #include "wingui/TreeModel.h"
 
+#include "AppTools.h"
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
@@ -30,10 +31,6 @@
 #define PROPERTIES_RECT_PADDING 8
 #define PROPERTIES_TXT_DY_PADDING 2
 #define PROPERTIES_WIN_TITLE _TR("Document Properties")
-
-constexpr double KB = 1024;
-constexpr double MB = 1024 * 1024;
-constexpr double GB = 1024 * 1024 * 1024;
 
 class PropertyEl {
   public:
@@ -185,41 +182,6 @@ static void ConvDateToDisplay(WCHAR** s, bool (*DateParse)(const WCHAR* date, SY
         free(*s);
         *s = formatted;
     }
-}
-
-// Format the file size in a short form that rounds to the largest size unit
-// e.g. "3.48 GB", "12.38 MB", "23 KB"
-// Caller needs to free the result.
-static WCHAR* FormatSizeSuccint(size_t size) {
-    const WCHAR* unit = nullptr;
-    double s = (double)size;
-
-    if (s > GB) {
-        s = s / GB;
-        unit = _TR("GB");
-    } else if (s > MB) {
-        s = s / MB;
-        unit = _TR("MB");
-    } else {
-        s = s / KB;
-        unit = _TR("KB");
-    }
-
-    AutoFreeWstr sizestr = str::FormatFloatWithThousandSep(s);
-    if (!unit) {
-        return sizestr.StealData();
-    }
-    return str::Format(L"%s %s", sizestr.Get(), unit);
-}
-
-// format file size in a readable way e.g. 1348258 is shown
-// as "1.29 MB (1,348,258 Bytes)"
-// Caller needs to free the result
-static WCHAR* FormatFileSize(size_t size) {
-    AutoFreeWstr n1(FormatSizeSuccint(size));
-    AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
-
-    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
 
 struct PaperSizeDesc {
@@ -555,7 +517,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, [[maybe_unu
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
-    AutoFreeStr path = strconv::WstrToUtf8(ctrl->FilePath());
+    auto path = TempToUtf8(ctrl->FilePath());
     i64 fileSize = file::GetSize(path.AsView());
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
