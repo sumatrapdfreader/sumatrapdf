@@ -3,12 +3,14 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 3.4 (???)
-* fix rotation of DjVu files
 * add ability to search / translate selected text with web services
 * add Annotations.TextIconColor and TextIconType advanced settings
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
 * 'i' keyboard shortucts inverts document colors
    Shift + 'i' does what 'i' used to do i.e. show page numberinfo
+
+3.3.1 (2021-07-14)
+* fix rotation of DjVu files
 
 3.3 (2021-07-06)
 * initial support for editing annotations

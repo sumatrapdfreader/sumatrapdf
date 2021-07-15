@@ -5,9 +5,9 @@ A daily log of changes and commentary. An experiment of sorts.
 - in crash report, also include the size of .exe and libmupdf.dll
 - make translate selection with Google/DeepL a bit smarter
   take into account the language of user
-* 'i' keyboard shortucts inverts document colors (for #275)
+- 'i' keyboard shortucts inverts document colors (for #275)
   Shift + 'i' does what 'i' used to do i.e. show page number info
-
+- combine 9 projects for mupdf libs (freetype, mujs etc.) into single project mupdf-libs
 
 2021-07-14 Wed
 

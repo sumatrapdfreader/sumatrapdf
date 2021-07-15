@@ -196,15 +196,6 @@ workspace "SumatraPDF"
     "_WIN32_WINNT=0x0603"
   }
 
-
-  project "zlib"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    zlib_files()
-
-
   project "unrar"
     kind "StaticLib"
     language "C++"
@@ -241,6 +232,28 @@ workspace "SumatraPDF"
     includedirs { "ext/libjpeg-turbo" }
     libdjvu_files()
 
+  project "chm"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
+    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
+    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
+
+  project "engines"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++latest"
+    optconf()
+    disablewarnings {
+      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
+      "4701", "4706", "4819", "4838"
+    }
+    includedirs { "src", "src/wingui" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
+    engines_files()
+    links { "chm" }
+
   project "unarrlib"
     kind "StaticLib"
     language "C"
@@ -253,19 +266,53 @@ workspace "SumatraPDF"
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
     unarr_files()
 
-  project "jbig2dec"
+  project "libwebp"
     kind "StaticLib"
     language "C"
     optconf()
+    disablewarnings { "4204", "4244", "4057", "4245", "4310" }
+    includedirs { "ext/libwebp" }
+    libwebp_files()
+
+  -- to make Visual Studio solution smaller
+  -- combine 9 libs only used by mupdf into a single project
+  -- instead of having 9 projects
+  project "mupdf-libs"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    -- zlib
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    zlib_files()
+    -- libjpeg-turbo
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4018", "4100", "4244", "4245" }
+    includedirs { "ext/libjpeg-turbo", "ext/libjpeg-turbo/simd" }
+    -- nasm.exe -I .\ext\libjpeg-turbo\simd\
+    -- -I .\ext\libjpeg-turbo\win\ -f win32
+    -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
+    -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
+    filter {'files:**.asm', 'platforms:x32 or x32_asan'}
+       buildmessage '%{file.relpath}'
+       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+       buildcommands {
+          '..\\bin\\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+       }
+    filter {}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
+      buildmessage '%{file.relpath}'
+      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+      buildcommands {
+        '..\\bin\\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+      }
+    filter {}
+    libjpeg_turbo_files()
+    -- jbig2dec
     defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
     disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
-
-  project "openjpeg"
-    kind "StaticLib"
-    language "C"
-    optconf()
+    -- openjpeg
     disablewarnings { "4100", "4244", "4310", "4389", "4456" }
     -- openjpeg has opj_config_private.h for such over-rides
     -- but we can't change it because we bring openjpeg as submodule
@@ -274,14 +321,52 @@ workspace "SumatraPDF"
     -- because #include "opj_config_private.h" searches current directory first
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
+    -- freetype
+    defines {
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
+    freetype_files()
+    -- lcms2
+    disablewarnings { "4100" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
+    -- harfbuzz
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "HAVE_FALLBACK=1",
+      "HAVE_OT",
+      "HAVE_UCDN",
+      "HAVE_FREETYPE",
+      "HB_NO_MT",
+      "hb_malloc_impl=fz_hb_malloc",
+      "hb_calloc_impl=fz_hb_calloc",
+      "hb_realloc_impl=fz_hb_realloc",
+      "hb_free_impl=fz_hb_free"
+    }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
+    harfbuzz_files()
+    -- mujs
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+    -- gumbo
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
 
-  project "libwebp"
+--[[
+  project "zlib"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4204", "4244", "4057", "4245", "4310" }
-    includedirs { "ext/libwebp" }
-    libwebp_files()
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    zlib_files()
 
   project "libjpeg-turbo"
     kind "StaticLib"
@@ -312,7 +397,29 @@ workspace "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
-  project "freetype"
+  project "jbig2dec"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
+    includedirs { "ext/jbig2dec" }
+    jbig2dec_files()
+
+  project "openjpeg"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4100", "4244", "4310", "4389", "4456" }
+    -- openjpeg has opj_config_private.h for such over-rides
+    -- but we can't change it because we bring openjpeg as submodule
+    -- and we can't provide our own in a different directory because
+    -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
+    -- because #include "opj_config_private.h" searches current directory first
+    defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
+    openjpeg_files()
+
+    project "freetype"
     kind "StaticLib"
     language "C"
     optconf()
@@ -361,28 +468,6 @@ workspace "SumatraPDF"
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
-  project "chm"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
-    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
-    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
-
-  project "engines"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++latest"
-    optconf()
-    disablewarnings {
-      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
-      "4701", "4706", "4819", "4838"
-    }
-    includedirs { "src", "src/wingui" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
-    engines_files()
-    links { "chm" }
-
   project "gumbo"
     kind "StaticLib"
     language "C"
@@ -391,6 +476,7 @@ workspace "SumatraPDF"
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
+--]]
 
   project "mupdf"
     kind "StaticLib"
@@ -444,7 +530,8 @@ workspace "SumatraPDF"
     filter {}
 
     mupdf_files()
-    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs", "gumbo" }
+    links { "mupdf-libs" }
+    -- links { "mupdf-libs", "zlib", "freetype", "openjpeg", "libjpeg-turbo", "jbig2dec", "lcms2", "harfbuzz", "mujs", "gumbo" }
 
   project "libmupdf"
     kind "SharedLib"
@@ -592,7 +679,12 @@ workspace "SumatraPDF"
     regconf()
     makelzsa_files()
     includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
-    links { "unarrlib", "zlib" }
+
+    -- for zlib
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    zlib_files()
+
+    links { "unarrlib" }
     links { "shlwapi", "version", "comctl32" }
 
   project "PdfFilter"
