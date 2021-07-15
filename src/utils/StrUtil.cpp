@@ -1544,15 +1544,14 @@ bool Str::AppendAndFree(const char* s) {
 }
 
 // returns true if was replaced
-// TODO: should be a stand-alone function
-bool Str::Replace(const char* toReplace, const char* replaceWith) {
+bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
     // fast path: nothing to replace
-    if (!str::Find(els, toReplace)) {
+    if (!str::Find(s.els, toReplace)) {
         return false;
     }
-    char* newStr = str::Replace(els, toReplace, replaceWith);
-    Reset();
-    AppendAndFree(newStr);
+    char* newStr = str::Replace(s.els, toReplace, replaceWith);
+    s.Reset();
+    s.AppendAndFree(newStr);
     return true;
 }
 
@@ -1916,15 +1915,14 @@ bool WStr::AppendAndFree(const WCHAR* s) {
 }
 
 // returns true if was replaced
-// TODO: should be a stand-alone function
-bool WStr::Replace(const WCHAR* toReplace, const WCHAR* replaceWith) {
+bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith) {
     // fast path: nothing to replace
-    if (!str::Find(els, toReplace)) {
+    if (!str::Find(s.els, toReplace)) {
         return false;
     }
-    WCHAR* newStr = str::Replace(els, toReplace, replaceWith);
-    Reset();
-    AppendAndFree(newStr);
+    WCHAR* newStr = str::Replace(s.els, toReplace, replaceWith);
+    s.Reset();
+    s.AppendAndFree(newStr);
     return true;
 }
 

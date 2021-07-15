@@ -188,9 +188,7 @@ void SetCurrentLang(const char* langCode) {
     if (!langCode) {
         return;
     }
-    if (langCode != gGlobalPrefs->uiLanguage) {
-        str::ReplaceWithCopy(&gGlobalPrefs->uiLanguage, langCode);
-    }
+    str::ReplaceWithCopy(&gGlobalPrefs->uiLanguage, langCode);
     trans::SetCurrentLangByCode(langCode);
 }
 
@@ -4494,6 +4492,9 @@ static str::WStr URLEncode(const WCHAR* s) {
 #endif
 }
 
+constexpr const WCHAR* kUserLangStr = L"${userlang}";
+constexpr const WCHAR* kSelectionStr = L"${selection}";
+
 static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
     if (!tab || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
@@ -4513,9 +4514,24 @@ static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
     }
     str::WStr encodedSelection = URLEncode(selText);
     str::WStr url(urlPattern);
-    url.Replace(L"${selection}", encodedSelection.Get());
-    // TODO: auto-detect the language of the user
-    url.Replace(L"${userlang}", L"de");
+    // assume that user might typo and use e.g. ${userLang} in url
+    // so replace with cannonical lower-cased version
+    const WCHAR* pos = str::FindI(url.LendData(), kUserLangStr);
+    if (pos) {
+        memcpy((void*)pos, (void*)kUserLangStr, str::Len(kUserLangStr) * sizeof(kUserLangStr[0]));
+    }
+    Replace(url, kSelectionStr, encodedSelection.Get());
+    const char* lang = trans::GetCurrentLangCode();
+    if (str::Eq(lang, "en")) {
+        // no point to translate from en => en
+        // a hack for google translate: instead of translating to forced language
+        // leave dest lang unspecified which presumably will select whatever
+        // language the user used last
+        Replace(url, L"&tl=${userlang}", L"");
+        lang = "de";
+    }
+    auto langW = TempToWstr(lang);
+    Replace(url, kUserLangStr, langW);
     LaunchBrowser(url.Get());
     str::Free(selText);
 }
@@ -4883,7 +4899,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdTranslateSelectionWithGoogle:
-            LaunchBrowserWithSelection(tab, L"https://translate.google.com/?sl=auto&op=translate&text=${selection}");
+            LaunchBrowserWithSelection(
+                tab, L"https://translate.google.com/?sl=auto&tl=${userlang}&op=translate&text=${selection}");
             break;
 
         case CmdTranslateSelectionWithDeepL:

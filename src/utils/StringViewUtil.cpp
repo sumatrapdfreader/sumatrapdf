@@ -52,8 +52,8 @@ std::string_view NormalizeNewlines(std::string_view s) {
         return {};
     }
     str::Str tmp(s);
-    tmp.Replace("\r\n", "\n");
-    tmp.Replace("\r", "\n");
+    Replace(tmp, "\r\n", "\n");
+    Replace(tmp, "\r", "\n");
     return tmp.StealAsView();
 }
 

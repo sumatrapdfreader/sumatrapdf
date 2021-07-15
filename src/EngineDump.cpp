@@ -400,7 +400,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             }
             FreePageText(&pageText);
         }
-        text.Replace(L"\n", L"\r\n");
+        Replace(text, L"\n", L"\r\n");
         if (silent) {
             return true;
         }

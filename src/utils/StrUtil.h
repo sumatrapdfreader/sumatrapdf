@@ -237,7 +237,6 @@ struct Str {
     bool AppendSpan(std::span<u8> d);
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
-    bool Replace(const char* toReplace, const char* replaceWith);
     void Set(std::string_view sv);
     char* Get() const;
     char LastChar() const;
@@ -260,6 +259,8 @@ struct Str {
         return &(els[len]);
     }
 };
+
+bool Replace(Str& s, const char* toReplace, const char* replaceWith);
 
 struct WStr {
     // allocator is not owned by Vec and must outlive it
@@ -313,7 +314,6 @@ struct WStr {
     bool AppendView(const std::wstring_view sv);
     void AppendFmt(const WCHAR* fmt, ...);
     bool AppendAndFree(const WCHAR* s);
-    bool Replace(const WCHAR* toReplace, const WCHAR* replaceWith);
     void Set(std::wstring_view sv);
     WCHAR* Get() const;
     WCHAR LastChar() const;
@@ -336,6 +336,9 @@ struct WStr {
         return &(els[len]);
     }
 };
+
+bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
+
 } // namespace str
 
 std::span<u8> ToSpanU8(std::string_view sv);

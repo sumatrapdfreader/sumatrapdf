@@ -3,6 +3,8 @@ A daily log of changes and commentary. An experiment of sorts.
 2021-07-15 Thu
 
 - in crash report, also include the size of .exe and libmupdf.dll
+- make translate selection with Google/DeepL a bit smarter
+  take into account the language of user
 
 2021-07-14 Wed
 

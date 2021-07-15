@@ -459,7 +459,7 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
     str::Str s = Contents(annot);
     // TODO: don't replace if already is "\r\n"
-    s.Replace("\n", "\r\n");
+    Replace(s, "\n", "\r\n");
     ew->editContents->SetText(s.AsView());
     ew->staticContents->SetIsVisible(true);
     ew->editContents->SetIsVisible(true);
