@@ -1806,15 +1806,22 @@ double GetProcessRunningTime() {
     return timeInMs;
 }
 
+bool IsValidHandle(HANDLE h) {
+    if (h == nullptr || h == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    return true;
+}
+
 // This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine
 // but /analyze complains anyway
-BOOL SafeCloseHandle(HANDLE* h) {
+bool SafeCloseHandle(HANDLE* h) {
     if (!*h) {
-        return TRUE;
+        return true;
     }
     BOOL ok = CloseHandle(*h);
     *h = nullptr;
-    return ok;
+    return !!ok;
 }
 
 // based on http://mdb-blog.blogspot.com/2013/01/nsis-lunch-program-as-user-from-uac.html

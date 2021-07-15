@@ -7,6 +7,7 @@ A daily log of changes and commentary. An experiment of sorts.
   Tooltips are very annoying to use. Underdocumented and insane API.
   Tab code is also very annoying currently.
 - start on logview.exe
+- log from SumatraPDF to logview via pipe
 
 2021-07-13 Tue
 

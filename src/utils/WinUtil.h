@@ -22,7 +22,8 @@ Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo);
 void Edit_SelectAll(HWND hwnd);
 void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt);
 
-BOOL SafeCloseHandle(HANDLE* h);
+bool IsValidHandle(HANDLE);
+bool SafeCloseHandle(HANDLE*);
 void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc);
 void MoveWindow(HWND hwnd, Rect rect);
 void MoveWindow(HWND hwnd, RECT* r);

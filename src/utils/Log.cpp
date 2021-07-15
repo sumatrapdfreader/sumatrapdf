@@ -3,6 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ThreadUtil.h"
+#include "utils/WinUtil.h"
+
+constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\SumatraPDFLogger";
 
 Mutex gLogMutex;
 
@@ -13,24 +16,92 @@ HeapAllocator* gLogAllocator = nullptr;
 str::Str* gLogBuf = nullptr;
 bool logToStderr = false;
 bool logToDebugger = false;
+bool logToPipe = true;
+HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 
 static char* logFilePath;
 
 // 1 MB - 128 to stay under 1 MB even after appending (an estimate)
 constexpr int kMaxLogBuf = 1024 * 1024 - 128;
 
-static bool shouldLog() {
-    gLogMutex.Lock();
-    bool bufFull = gLogBuf && gLogBuf->isize() > kMaxLogBuf;
-    gLogMutex.Unlock();
-    return !bufFull;
+#if 0
+// TODO: add more codes
+static const char* getWinError(DWORD errCode) {
+#define V(err) \
+    case err:  \
+        return #err
+    switch (errCode) {
+        V(ERROR_PIPE_LOCAL);
+        V(ERROR_BAD_PIPE);
+        V(ERROR_PIPE_BUSY);
+        V(ERROR_NO_DATA);
+        V(ERROR_PIPE_NOT_CONNECTED);
+        V(ERROR_MORE_DATA);
+        V(ERROR_NO_WORK_DONE);
+    }
+    return "error code unknown";
+#undef V
 }
+#endif
 
-void log(std::string_view s) {
-    if (!shouldLog()) {
+static void logPipe(std::string_view sv) {
+    if (!logToPipe) {
+        return;
+    }
+    if (sv.empty()) {
         return;
     }
 
+    DWORD cbWritten{0};
+    BOOL ok{false};
+    bool didConnect{false};
+    if (!IsValidHandle(hLogPipe)) {
+        // try open pipe for logging
+        hLogPipe = CreateFileW(kPipeName, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+        if (!IsValidHandle(hLogPipe)) {
+            // TODO: retry if ERROR_PIPE_BUSY ?
+            // TODO: maybe remember when last we tried to open it and don't try to open for the
+            // next 10 secs, to minimize CreateFileW() calls
+            return;
+        }
+        didConnect = true;
+    }
+
+    // TODO: do I need this if I don't read from the pipe?
+    DWORD mode = PIPE_READMODE_MESSAGE;
+    ok = SetNamedPipeHandleState(hLogPipe, &mode, nullptr, nullptr);
+    if (!ok) {
+        OutputDebugStringA("logPipe: SetNamedPipeHandleState() failed\n");
+    }
+
+    if (didConnect) {
+        // logview accepts logging from anyone, so announce ourselves
+        // TODO: this should be different fro PdfFilter and PdfPreview
+        const char* initialMsg = "This is SumatraPDF logging\n";
+        WriteFile(hLogPipe, initialMsg, str::Len(initialMsg), &cbWritten, nullptr);
+    }
+
+    DWORD cb = (DWORD)sv.size();
+    // TODO: what happens when we write more than the server can read?
+    // should I loop if cbWritten < cb?
+    ok = WriteFile(hLogPipe, sv.data(), cb, &cbWritten, nullptr);
+    if (!ok) {
+#if 0
+        DWORD err = GetLastError();
+        OutputDebugStringA("logPipe: WriteFile() failed with error: ");
+        char buf[256]{0};
+        snprintf(buf, sizeof(buf) - 1, "%d %s\n", (int)err, getWinError(err));
+        OutputDebugStringA(buf);
+#endif
+        CloseHandle(hLogPipe);
+        hLogPipe = INVALID_HANDLE_VALUE;
+    }
+}
+
+void log(std::string_view s) {
+    if (logToDebugger) {
+        OutputDebugStringA(s.data());
+    }
     gLogMutex.Lock();
 
     gAllowAllocFailure++;
@@ -41,7 +112,13 @@ void log(std::string_view s) {
     if (!gLogBuf) {
         gLogAllocator = new HeapAllocator();
         gLogBuf = new str::Str(32 * 1024, gLogAllocator);
+    } else {
+        if (gLogBuf->isize() > kMaxLogBuf) {
+            // TODO: use gLogBuf->Clear(), which doesn't free the allocated space
+            gLogBuf->Reset();
+        }
     }
+
     gLogBuf->Append(s.data(), s.size());
     if (logToStderr) {
         fwrite(s.data(), 1, s.size(), stderr);
@@ -56,9 +133,7 @@ void log(std::string_view s) {
             fclose(f);
         }
     }
-    if (logToDebugger) {
-        OutputDebugStringA(s.data());
-    }
+    logPipe(s);
     gLogMutex.Unlock();
 }
 
@@ -68,9 +143,6 @@ void log(const char* s) {
 }
 
 void logf(const char* fmt, ...) {
-    if (!shouldLog()) {
-        return;
-    }
     va_list args;
     va_start(args, fmt);
     AutoFree s = str::FmtV(fmt, args);
@@ -87,18 +159,11 @@ void log(const WCHAR* s) {
     if (!s) {
         return;
     }
-    if (!shouldLog()) {
-        return;
-    }
-    AutoFree tmp = strconv::WstrToUtf8(s);
-    auto sv = tmp.AsView();
-    log(sv);
+    auto tmp = TempToUtf8(s);
+    log(tmp.AsView());
 }
 
 void logf(const WCHAR* fmt, ...) {
-    if (!shouldLog()) {
-        return;
-    }
     va_list args;
     va_start(args, fmt);
     AutoFreeWstr s = str::FmtV(fmt, args);

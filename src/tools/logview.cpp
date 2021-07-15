@@ -3,9 +3,14 @@
 constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\SumatraPDFLogger";
 constexpr DWORD kBufSize = 1024 * 16;
 
-void log(const char* s) {
+void log(const char* s, __unused int cb) {
     OutputDebugStringA(s);
     printf("%s", s);
+}
+
+void log(const char* s) {
+    int cb = (int)str::Len(s);
+    log(s, cb);
 }
 
 bool IsValidHandle(HANDLE h) {
@@ -30,7 +35,8 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
     while (err == 0) {
         ok = ReadFile(hPipe, bufRequest, sizeof(bufRequest) - 1, &cbBytesRead, nullptr);
         if (ok && cbBytesRead > 0) {
-            log(bufRequest);
+            bufRequest[cbBytesRead] = 0;
+            log(bufRequest, (int)cbBytesRead);
             continue;
         }
         err = GetLastError();
