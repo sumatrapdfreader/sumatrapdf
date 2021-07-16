@@ -314,8 +314,7 @@ func main() {
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
-			out := runExeMust("git", "branch")
-			currBranch := getCurrentBranch(out)
+			currBranch := getCurrentBranchMust()
 			if currBranch == "website-cf" {
 				logf("skipping build because on branch '%s'\n", currBranch)
 				return

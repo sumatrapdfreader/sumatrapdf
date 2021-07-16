@@ -412,7 +412,8 @@ func buildPreRelease() {
 	defer makePrintDuration(s)()
 
 	verifyGitCleanMust()
-	verifyOnMasterBranchMust()
+	// TODO: remove. We should built on non-master branches
+	//verifyOnMasterBranchMust()
 	verifyTranslationsMust()
 
 	clean()

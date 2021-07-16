@@ -48,7 +48,8 @@ master
 Return active branch marked with "*" ('rel3.1working' in this case) or empty
 string if no current branch.
 */
-func getCurrentBranch(d []byte) string {
+func getCurrentBranchMust() string {
+	d := runExeMust("git", "branch")
 	// "(HEAD detached at b5adf8738)" is what we get on GitHub CI
 	s := string(d)
 	if strings.Contains(s, "(HEAD detached") {
@@ -68,8 +69,7 @@ func getCurrentBranch(d []byte) string {
 // i.e. we allow 3.1.1 and 3.1.2 from branch 3.1 but not from 3.0 or 3.2
 func verifyOnReleaseBranchMust() {
 	// 'git branch' return branch name in format: '* master'
-	out := runExeMust("git", "branch")
-	currBranch := getCurrentBranch(out)
+	currBranch := getCurrentBranchMust()
 	prefix := "rel"
 	suffix := "working"
 	u.PanicIf(!strings.HasPrefix(currBranch, prefix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
@@ -83,7 +83,12 @@ func verifyOnReleaseBranchMust() {
 
 func verifyOnMasterBranchMust() {
 	// 'git branch' return branch name in format: '* master'
-	out := runExeMust("git", "branch")
-	currBranch := getCurrentBranch(out)
-	u.PanicIf(currBranch != "master", "not on master branch. out: '%s', currBranch: '%s'\n", string(out), currBranch)
+	currBranch := getCurrentBranchMust()
+	u.PanicIf(currBranch != "master", "not on master branch, currBranch: '%s'\n", currBranch)
+}
+
+func isOnMasterBranchMust() bool {
+	// 'git branch' return branch name in format: '* master'
+	currBranch := getCurrentBranchMust()
+	return currBranch == "master"
 }

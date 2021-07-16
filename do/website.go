@@ -26,8 +26,7 @@ func fileDownload(uri string, dstPath string) error {
 
 // needed during cloudflare build: download executables to be served from /dl2
 func websiteBuildCloudflare() {
-	out := runExeMust("git", "branch")
-	currBranch := getCurrentBranch(out)
+	currBranch := getCurrentBranchMust()
 	fmt.Printf("websiteBuildCloudflare: branch '%s'\n", currBranch)
 	if currBranch != "website-cf" {
 		fmt.Printf("Skipping downloading executables because not 'website-cf' branch\n")
