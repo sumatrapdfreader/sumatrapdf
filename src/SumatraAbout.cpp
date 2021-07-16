@@ -14,7 +14,6 @@
 #include "wingui/TooltipCtrl.h"
 
 #include "SumatraConfig.h"
-#include "Annotation.h"
 #include "EngineBase.h"
 #include "DisplayMode.h"
 #include "SettingsStructs.h"

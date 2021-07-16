@@ -26,6 +26,8 @@ struct TreeCtrl;
 struct TooltipCtrl;
 struct DropDownCtrl;
 
+struct Annotation;
+
 /* Describes actions which can be performed by mouse */
 // clang-format off
 enum class MouseAction {

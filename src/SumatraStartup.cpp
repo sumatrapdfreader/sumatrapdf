@@ -32,7 +32,6 @@
 #include "wingui/TreeModel.h"
 
 #include "Accelerators.h"
-#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
 #include "DisplayMode.h"
@@ -50,6 +49,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
+#include "AutoUpdate.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"

@@ -51,6 +51,9 @@
     <ClInclude Include="..\src\AppUtil.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AutoUpdate.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -285,6 +288,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AppUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AutoUpdate.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp">
