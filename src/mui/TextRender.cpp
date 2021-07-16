@@ -118,7 +118,7 @@ RectF TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
 }
 
 RectF TextRenderGdi::Measure(const char* s, size_t sLen) {
-    auto buf = TempToWstr(s, sLen);
+    auto buf = ToWstrTemp(s, sLen);
     return Measure(buf, buf.size());
 }
 
@@ -183,7 +183,7 @@ void TextRenderGdi::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl)
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
-    auto buf = TempToWstr(s, sLen);
+    auto buf = ToWstrTemp(s, sLen);
     return Draw(buf, buf.size(), bb, isRtl);
 #endif
 }
@@ -276,7 +276,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectF bb,
 }
 
 void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    auto buf = TempToWstr(s, sLen);
+    auto buf = ToWstrTemp(s, sLen);
     return DrawTransparent(buf, buf.size(), bb, isRtl);
 }
 
@@ -310,7 +310,7 @@ RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
 
 RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
-    auto buf = TempToWstr(s, sLen);
+    auto buf = ToWstrTemp(s, sLen);
     size_t strLen = buf.size();
     return MeasureText(gfx, currFont->font, buf, strLen, measureAlgo);
 }
@@ -341,7 +341,7 @@ void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool i
 }
 
 void TextRenderGdiplus::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    auto buf = TempToWstr(s, sLen);
+    auto buf = ToWstrTemp(s, sLen);
     size_t strLen = buf.size();
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
@@ -426,7 +426,7 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
 RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     CrashIf(!hdc);
-    auto buf = TempToWstr(s, sLen);
+    auto buf = ToWstrTemp(s, sLen);
     size_t strLen = buf.size();
     return Measure(txtConvBuf, strLen);
 }
@@ -440,7 +440,7 @@ RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
 }
 
 void TextRenderHdc::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    auto buf = TempToWstr(s, sLen);
+    auto buf = ToWstrTemp(s, sLen);
     size_t strLen = buf.size();
     return Draw(txtConvBuf, strLen, bb, isRtl);
 }

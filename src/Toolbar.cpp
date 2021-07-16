@@ -190,7 +190,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
         info.iBitmap = (int)btInfo.bmpIndex;
         info.fsState = TBSTATE_ENABLED;
         info.fsStyle = TBSTYLE_BUTTON;
-        info.iString = (INT_PTR)trans::GetTranslation(btInfo.toolTip);
+        info.iString = (INT_PTR)trans::GetTranslationTemp(btInfo.toolTip);
     }
     return info;
 }
@@ -205,7 +205,7 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win) {
         if (nullptr == txt) {
             continue;
         }
-        const WCHAR* translation = trans::GetTranslation(txt);
+        const WCHAR* translation = trans::GetTranslationTemp(txt);
         binfo.cbSize = sizeof(TBBUTTONINFO);
         binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
         binfo.pszText = (WCHAR*)translation;

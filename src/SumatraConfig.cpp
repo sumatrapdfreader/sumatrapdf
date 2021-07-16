@@ -63,7 +63,7 @@ const WCHAR* GetAppNameTemp() {
     return L"SumatraPDF";
 }
 
-const WCHAR* GetExeName() {
+const WCHAR* GetExeNameTemp() {
     return L"SumatraPDF.exe";
 }
 

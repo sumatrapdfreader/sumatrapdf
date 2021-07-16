@@ -998,7 +998,7 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     const char* isValidPage = dm->ValidPageNo(pageNo) ? "yes" : "no";
     auto r = pageEl->GetRect();
     // trying to debug bad page no in CvtToScreen()
-    auto textA = TempToUtf8(text);
+    auto textA = ToUtf8Temp(text);
     logf("OnSetCursorMouseIdle: page element '%s' on page %d, valid pageNo: %s\n", textA.Get(), pageNo, isValidPage);
     Rect rc = dm->CvtToScreen(pageNo, r);
     win->ShowToolTip(text, rc, true);

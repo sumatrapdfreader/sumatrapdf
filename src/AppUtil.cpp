@@ -103,7 +103,7 @@ bool IsUntrustedFile(const WCHAR* filePath, const WCHAR* fileURL) {
         }
     }
 
-    auto filePathA = TempToUtf8(filePath);
+    auto filePathA = ToUtf8Temp(filePath);
     if (file::GetZoneIdentifier(filePathA) >= URLZONE_INTERNET) {
         return true;
     }
@@ -112,7 +112,7 @@ bool IsUntrustedFile(const WCHAR* filePath, const WCHAR* fileURL) {
     AutoFreeWstr path(str::Dup(filePath));
     while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
         *str::FindCharLast(path, ':') = '\0';
-        auto pathA = TempToUtf8(path);
+        auto pathA = ToUtf8Temp(path);
         if (file::GetZoneIdentifier(pathA) >= URLZONE_INTERNET) {
             return true;
         }

@@ -532,7 +532,7 @@ static void ShutdownCommon() {
 
 static void ReplaceColor(char** col, WCHAR* maybeColor) {
     ParsedColor c;
-    ParseColor(c, TempToUtf8(maybeColor).Get());
+    ParseColor(c, ToUtf8Temp(maybeColor).Get());
     if (c.parsedOk) {
         char* colNewStr = SerializeColor(c.col);
         str::ReplacePtr(&gGlobalPrefs->mainWindowBackground, colNewStr);
@@ -619,13 +619,25 @@ static bool IsInstallerButNotInstalled() {
 // libmupdf.dll. We try to detect that case and show an error message instead.
 // TODO: I still see crashes due to delay loading of libmupdf.dll
 static void EnsureNotInstaller() {
-    if (IsInstallerButNotInstalled()) {
-        MessageBoxA(nullptr,
-                    "This is a SumatraPDF installer.\nEither install it with -install option or use portable "
-                    "version.\nDownload portable from https://www.sumatrapdfreader.org\n",
-                    "Error", MB_OK);
-        ::ExitProcess(1);
+    if (!ExeHasInstallerResources()) {
+        // this is not an installer
+        return;
     }
+    // TODO: this check is probably redundant with loading of libmupdf.dll
+    if (IsOurExeInstalled()) {
+        return;
+    }
+    // if we can load libmupdf.dll, then it's fine too. someone extracted libmupdf.dll
+    // as well or this could be VS build I'm debugging
+    HMODULE h = LoadLibraryA("libmupdf.dll");
+    if (IsValidHandle(h)) {
+        return;
+    }
+    MessageBoxA(nullptr,
+                "This is a SumatraPDF installer.\nEither install it with -install option or use portable "
+                "version.\nDownload portable from https://www.sumatrapdfreader.org\n",
+                "Error", MB_OK);
+    ::ExitProcess(1);
 }
 
 constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
@@ -646,8 +658,9 @@ constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
 )";
 
 // TODO: maybe could set font on TDN_CREATED to Consolas, to better show the message
-HRESULT Pftaskdialogcallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LONG_PTR lpRefData) {
-    switch (msg) { case TDN_HYPERLINK_CLICKED:
+HRESULT CALLBACK Pftaskdialogcallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LONG_PTR lpRefData) {
+    switch (msg) {
+        case TDN_HYPERLINK_CLICKED:
             WCHAR* s = (WCHAR*)lParam;
             LaunchBrowser(s);
             break;
@@ -657,7 +670,7 @@ HRESULT Pftaskdialogcallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    const char* appName = TempToUtf8(GetAppNameTemp());
+    const char* appName = ToUtf8Temp(GetAppNameTemp());
     str::Str msg{kInstallerHelpTmpl};
     str::Replace(msg, "${appName}", appName);
 
@@ -677,7 +690,7 @@ static void ShowInstallerHelp() {
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = title.Get();
-    dialogConfig.pszMainInstruction = TempToWstr(msg.Get());
+    dialogConfig.pszMainInstruction = ToWstrTemp(msg.Get());
     dialogConfig.pszContent =
         LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";
     dialogConfig.nDefaultButton = IDOK;
@@ -877,7 +890,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     // gAddCrashMeMenu = true;
 
     {
-        TempStr cmdLineA = TempToUtf8(GetCommandLineW());
+        TempStr cmdLineA = ToUtf8Temp(GetCommandLineW());
         logf("CmdLine: %s\n", cmdLineA.Get());
     }
 
@@ -908,7 +921,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     }
 #endif
 
-    i.showHelp = true;
     if (i.showHelp && IsInstallerButNotInstalled()) {
         ShowInstallerHelp();
         HandleRedirectedConsoleOnShutdown();
@@ -939,7 +951,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)
     InitializePolicies(i.restrictedUse);
-
 
     EnsureNotInstaller();
 
@@ -1203,7 +1214,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
 Exit:
     prefs::UnregisterForFileChanges();
-    
+
     TryAutoUpdateSelf();
     HandleRedirectedConsoleOnShutdown();
 

@@ -516,7 +516,7 @@ std::span<u8> ReadFile(const WCHAR* filePath) {
 }
 
 bool WriteFile(const char* filePath, std::span<u8> d) {
-    auto buf = TempToWstr(filePath);
+    auto buf = ToWstrTemp(filePath);
     return WriteFile(buf, d);
 }
 
@@ -665,20 +665,20 @@ bool StartsWith(const WCHAR* filePath, const char* s) {
 
 int GetZoneIdentifier(const char* filePath) {
     AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
-    auto pathW = TempToWstr(path.AsView());
+    auto pathW = ToWstrTemp(path.AsView());
     return GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, pathW);
 }
 
 bool SetZoneIdentifier(const char* filePath, int zoneId) {
     AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
     AutoFreeWstr id(str::Format(L"%d", zoneId));
-    auto pathW = TempToWstr(path.AsView());
+    auto pathW = ToWstrTemp(path.AsView());
     return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", id, pathW);
 }
 
 bool DeleteZoneIdentifier(const char* filePath) {
     AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
-    auto pathW = TempToWstr(path.AsView());
+    auto pathW = ToWstrTemp(path.AsView());
     return !!DeleteFileW(pathW);
 }
 

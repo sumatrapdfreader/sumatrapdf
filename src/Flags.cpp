@@ -122,7 +122,7 @@ bool IsBenchPagesInfo(const WCHAR* s) {
 
 // -view [continuous][singlepage|facing|bookview]
 static void ParseViewMode(DisplayMode* mode, const WCHAR* txt) {
-    auto s = TempToUtf8(txt);
+    auto s = ToUtf8Temp(txt);
     *mode = DisplayModeFromString(s.Get(), DisplayMode::Automatic);
 }
 
@@ -134,7 +134,7 @@ static const char* zoomValues =
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
 static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
-    auto txtDup = TempToUtf8(txtOrig);
+    auto txtDup = ToUtf8Temp(txtOrig);
     char* txt = str::ToLowerInPlace(txtDup.Get());
     int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
     if (zoomVal != -1) {

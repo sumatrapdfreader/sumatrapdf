@@ -69,7 +69,7 @@ const WCHAR** GetSupportedExts();
 WCHAR* GetShortcutPath(int csidl);
 
 WCHAR* GetExistingInstallationDir();
-WCHAR* GetInstallDirNoFree();
+WCHAR* GetInstallDirTemp();
 WCHAR* GetInstalledExePath();
 
 WCHAR* GetInstallationFilePath(const WCHAR* name);

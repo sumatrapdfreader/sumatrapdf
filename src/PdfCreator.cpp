@@ -292,7 +292,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
         return false;
     }
 
-    auto val = TempToUtf8(value);
+    auto val = ToUtf8Temp(value);
 
     pdf_obj* obj = nullptr;
     fz_var(obj);

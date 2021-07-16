@@ -1674,7 +1674,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
     } else {
         win->currentTab->filePath.SetCopy(fullPath);
-        auto path = TempToUtf8(fullPath);
+        auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.Get());
     }
 
@@ -1690,7 +1690,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     auto currTab = win->currentTab;
-    auto path = TempToUtf8(currTab->filePath);
+    auto path = ToUtf8Temp(currTab->filePath);
     int nPages = 0;
     if (currTab->ctrl) {
         nPages = currTab->ctrl->PageCount();
@@ -2105,16 +2105,16 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     if (!ok) {
         return false;
     }
-    TempStr dstFilePath = TempToUtf8(dstFileName);
+    TempStr dstFilePath = ToUtf8Temp(dstFileName);
     ok = EnginePdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated string
-        msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
+        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
         tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
     });
     if (ok) {
         str::Str msg;
-        msg.AppendFmt(_TRU("Saved annotations to '%s'"), dstFilePath.Get());
+        msg.AppendFmt(_TRA("Saved annotations to '%s'"), dstFilePath.Get());
         tab->win->ShowNotification(msg.AsView());
     }
     return ok;
@@ -2189,7 +2189,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
         auto w = CreateStatic(parent);
         w->SetFont(GetDefaultGuiFont(true, false));
         w->SetInsetsPt(16, 8, 16, 8);
-        w->SetText(_TRU("You have unsaved annotations. Save them?"));
+        w->SetText(_TRA("You have unsaved annotations. Save them?"));
         dlg->staticMsg = w;
         vbox->AddChild(w);
     }
@@ -2203,7 +2203,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
     {
         auto w = new ButtonCtrl(parent);
         w->SetInsetsPt(8, 8, 0, 8);
-        w->SetText(_TRU("Save changes to a new PDF"));
+        w->SetText(_TRA("Save changes to a new PDF"));
         ok = w->Create();
         CrashIf(!ok);
         w->onClicked = [&dlg, &choice]() {
@@ -2217,7 +2217,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
     {
         auto w = new ButtonCtrl(parent);
         w->SetInsetsPt(8, 8, 0, 8);
-        w->SetText(_TRU("Save changes to existing PDF")); // TODO: 'Save to 'foo.pdf'
+        w->SetText(_TRA("Save changes to existing PDF")); // TODO: 'Save to 'foo.pdf'
         ok = w->Create();
         CrashIf(!ok);
         w->onClicked = [&dlg, &choice]() {
@@ -2231,7 +2231,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
     {
         auto w = new ButtonCtrl(parent);
         w->SetInsetsPt(8, 8, 8, 8);
-        w->SetText(_TRU("Discard"));
+        w->SetText(_TRA("Discard"));
         ok = w->Create();
         CrashIf(!ok);
         w->onClicked = [&dlg, &choice]() {
@@ -2297,11 +2297,11 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
             SaveAnnotationsToMaybeNewPdfFile(tab);
             break;
         case SaveChoice::SaveExisting: {
-            TempStr path = TempToUtf8(engine->FileName());
+            TempStr path = ToUtf8Temp(engine->FileName());
             bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
                 str::Str msg;
                 // TODO: duplicated message
-                msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
+                msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
                 tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
             });
         } break;
@@ -2677,7 +2677,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
 
     if (ok && IsUntrustedFile(win->ctrl->FilePath(), gPluginURL) && !convertToTXT) {
-        auto realDstFileNameA = TempToUtf8(realDstFileName);
+        auto realDstFileNameA = ToUtf8Temp(realDstFileName);
         file::SetZoneIdentifier(realDstFileNameA);
     }
 
@@ -4283,18 +4283,18 @@ static int TestBigNew()
 
 static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    auto path = TempToUtf8(engine->FileName());
+    auto path = ToUtf8Temp(engine->FileName());
     bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
-        msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
+        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
         tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
     });
     if (!ok) {
         return;
     }
     str::Str msg;
-    msg.AppendFmt(_TRU("Saved annotations to '%s'"), path.Get());
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path.Get());
     tab->win->ShowNotification(msg.AsView());
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
@@ -4376,7 +4376,7 @@ static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
         Replace(url, L"&tl=${userlang}", L"");
         lang = "de";
     }
-    auto langW = TempToWstr(lang);
+    auto langW = ToWstrTemp(lang);
     Replace(url, kUserLangStr, langW);
     LaunchBrowser(url.Get());
     str::Free(selText);
@@ -5084,15 +5084,15 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 static TempStr GetFileSizeAsStrTemp(std::string_view path) {
     i64 fileSize = file::GetSize(path);
     AutoFreeWstr fileSizeStr = FormatFileSize(fileSize);
-    return TempToUtf8(fileSizeStr);
+    return ToUtf8Temp(fileSizeStr);
 }
 
 void GetProgramInfo(str::Str& s) {
-    auto d = TempToUtf8(gCrashFilePath);
+    auto d = ToUtf8Temp(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.Get());
 
     AutoFreeWstr exePathW = GetExePath();
-    auto exePath = TempToUtf8(exePathW.AsView());
+    auto exePath = ToUtf8Temp(exePathW.AsView());
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath.AsView());
     s.AppendFmt("Exe: %s (%s)\r\n", exePath.Get(), fileSizeExe.Get());
     if (IsDllBuild()) {

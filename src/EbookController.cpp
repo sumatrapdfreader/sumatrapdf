@@ -48,7 +48,7 @@ static float GetFontSize() {
 HtmlFormatterArgs* CreateFormatterArgsDoc(const Doc& doc, int dx, int dy, Allocator* textAllocator) {
     HtmlFormatterArgs* args = CreateFormatterDefaultArgs(dx, dy, textAllocator);
     args->htmlStr = doc.GetHtmlData();
-    auto fontName = TempToWstr(GetFontName());
+    auto fontName = ToWstrTemp(GetFontName());
     args->SetFontName(fontName.Get());
     args->fontSize = GetFontSize();
     return args;
@@ -707,7 +707,7 @@ void EbookController::ExtractPageAnchors() {
             attr = tok->GetAttrByName("name");
         }
         if (attr) {
-            auto id = TempToWstr({attr->val, attr->valLen});
+            auto id = ToWstrTemp({attr->val, attr->valLen});
             pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath.Get() : L"", id.Get()));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }

@@ -109,7 +109,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
         }
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION));
-    const WCHAR* exeName = GetExeName();
+    const WCHAR* exeName = GetExeNameTemp();
     if (str::EqI(buf, exeName)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION);
         if (res != ERROR_SUCCESS) {
@@ -147,7 +147,7 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 static void RemoveOwnRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = GetAppNameTemp();
-    const WCHAR* exeName = GetExeName();
+    const WCHAR* exeName = GetExeNameTemp();
     AutoFreeWstr regClassApp = GetRegClassesApp(appName);
     DeleteRegKey(hkey, regClassApp);
     AutoFreeWstr regClassApps = GetRegClassesApps(appName);

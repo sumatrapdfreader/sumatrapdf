@@ -38,7 +38,7 @@ enum class Tab {
 };
 
 static str::WStr wstrFromUtf8(const str::Str& str) {
-    auto s = TempToWstr(str.AsView());
+    auto s = ToWstrTemp(str.AsView());
     return str::WStr(s.AsView());
 }
 
@@ -576,7 +576,7 @@ int TabsCtrl2::InsertTab(int idx, std::string_view sv) {
 
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
-    auto s = TempToWstr(sv);
+    auto s = ToWstrTemp(sv);
     item.pszText = s.Get();
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
     return insertedIdx;
@@ -610,7 +610,7 @@ void TabsCtrl2::SetTabText(int idx, std::string_view sv) {
 
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
-    auto s = TempToWstr(sv);
+    auto s = ToWstrTemp(sv);
     item.pszText = s.Get();
     TabCtrl_SetItem(hwnd, idx, &item);
 }

@@ -242,7 +242,7 @@ static int GetEnglishStringIndex(const char* txt) {
     return -1;
 }
 
-const char* GetTranslationUtf8(const char* s) {
+const char* GetTranslationATemp(const char* s) {
     if (nullptr == gCurrLangCode) {
         SetCurrentLangByCode("en");
     }
@@ -260,7 +260,7 @@ const char* GetTranslationUtf8(const char* s) {
     return trans;
 }
 
-const WCHAR* GetTranslation(const char* s) {
+const WCHAR* GetTranslationTemp(const char* s) {
     if (nullptr == gCurrLangCode) {
         SetCurrentLangByCode("en");
     }
@@ -296,9 +296,9 @@ void Destroy() {
 } // namespace trans
 
 const WCHAR* _TR(const char* s) {
-    return trans::GetTranslation(s);
+    return trans::GetTranslationTemp(s);
 }
 
-const char* _TRU(const char* s) {
-    return trans::GetTranslationUtf8(s);
+const char* _TRA(const char* s) {
+    return trans::GetTranslationATemp(s);
 }

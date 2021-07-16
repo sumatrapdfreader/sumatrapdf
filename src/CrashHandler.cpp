@@ -110,11 +110,11 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        auto nameA = TempToUtf8(mod.szModule);
+        auto nameA = ToUtf8Temp(mod.szModule);
         if (str::EqI(nameA.Get(), "winex11.drv")) {
             isWine = true;
         }
-        auto pathA = TempToUtf8(mod.szExePath);
+        auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             auto pos = str::FindI(gModulesInfo, pathA);
             if (!pos) {
@@ -265,7 +265,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
         dbglog("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 
-    auto symDirUtf = TempToUtf8(symDir);
+    auto symDirUtf = ToUtf8Temp(symDir);
     bool ok = ExtractSymbols((const u8*)rsp.data.Get(), rsp.data.size(), symDirUtf, gCrashHandlerAllocator);
     if (!ok) {
         dbglog("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");

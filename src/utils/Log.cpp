@@ -159,7 +159,7 @@ void log(const WCHAR* s) {
     if (!s) {
         return;
     }
-    auto tmp = TempToUtf8(s);
+    auto tmp = ToUtf8Temp(s);
     log(tmp.AsView());
 }
 

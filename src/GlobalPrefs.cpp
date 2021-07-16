@@ -88,7 +88,7 @@ SessionData* NewSessionData() {
 
 TabState* NewTabState(FileState* ds) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
-    auto dsFilePathA = TempToUtf8(ds->filePath);
+    auto dsFilePathA = ToUtf8Temp(ds->filePath);
     str::ReplaceWithCopy(&state->filePath, dsFilePathA);
     str::ReplaceWithCopy(&state->displayMode, ds->displayMode);
     state->pageNo = ds->pageNo;

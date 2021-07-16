@@ -64,7 +64,7 @@ TempWstr TempWstrDup(std::wstring_view sv) {
     return TempWstrDup(sv.data(), sv.size());
 }
 
-TempStr TempToUtf8(const WCHAR* s, size_t cch) {
+TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
     if (!s) {
         CrashIf((int)cch > 0);
         return TempStr();
@@ -73,12 +73,12 @@ TempStr TempToUtf8(const WCHAR* s, size_t cch) {
     return TempStr{v.data(), v.size()};
 }
 
-TempStr TempToUtf8(std::wstring_view sv) {
+TempStr ToUtf8Temp(std::wstring_view sv) {
     auto v = strconv::WstrToUtf8V(sv, GetTempAllocator());
     return TempStr{v.data(), v.size()};
 }
 
-TempWstr TempToWstr(const char* s, size_t cb) {
+TempWstr ToWstrTemp(const char* s, size_t cb) {
     if (!s) {
         CrashIf((int)cb > 0);
         return TempWstr();
@@ -87,7 +87,7 @@ TempWstr TempToWstr(const char* s, size_t cb) {
     return TempWstr{v.data(), v.size()};
 }
 
-TempWstr TempToWstr(std::string_view sv) {
+TempWstr ToWstrTemp(std::string_view sv) {
     auto v = strconv::Utf8ToWstrV(sv, GetTempAllocator());
     return TempWstr{v.data(), v.size()};
 }

@@ -192,7 +192,7 @@ WCHAR* GetExistingInstallationFilePath(const WCHAR* name) {
     return path::Join(dir, name);
 }
 
-WCHAR* GetInstallDirNoFree() {
+WCHAR* GetInstallDirTemp() {
     return gCli->installDir;
 }
 
@@ -201,8 +201,8 @@ WCHAR* GetInstallationFilePath(const WCHAR* name) {
 }
 
 WCHAR* GetInstalledExePath() {
-    WCHAR* dir = GetInstallDirNoFree();
-    return path::Join(dir, GetExeName());
+    WCHAR* dir = GetInstallDirTemp();
+    return path::Join(dir, GetExeNameTemp());
 }
 
 WCHAR* GetShortcutPath(int csidl) {
@@ -418,7 +418,7 @@ static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bo
 // modulePath
 // returns -1 on error, 0 if no matching processes
 int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
-    auto modulePathA = TempToUtf8(modulePath);
+    auto modulePathA = ToUtf8Temp(modulePath);
     logf("KillProcessesWithModule: '%s'\n", modulePathA.Get());
     AutoCloseHandle hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == hProcSnapshot) {
@@ -527,7 +527,7 @@ static const WCHAR* readableProcessNames[] = {
 // clang-format on
 
 static const WCHAR* ReadableProcName(const WCHAR* procPath) {
-    const WCHAR* exeName = GetExeName();
+    const WCHAR* exeName = GetExeNameTemp();
     const WCHAR* appName = GetAppNameTemp();
     readableProcessNames[0] = exeName;
     readableProcessNames[1] = appName;

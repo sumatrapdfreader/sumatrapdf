@@ -68,8 +68,8 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
             fontDy = bbox.dy;
             float diff = fontDy + maxDiff - bbox.dy;
             if (diff < 0) {
-                auto fontName = TempToUtf8(s->fontName);
-                auto tmp = TempToUtf8(text);
+                auto fontName = ToUtf8Temp(s->fontName);
+                auto tmp = ToUtf8Temp(text);
                 logf("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'\n", fontDy, bbox.dy,
                      diff, fontName.Get(), tmp.Get());
                 CrashIf(true);

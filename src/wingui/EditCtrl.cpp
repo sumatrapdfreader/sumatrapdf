@@ -81,7 +81,7 @@ static bool EditSetCueText(HWND hwnd, std::string_view s) {
     if (!hwnd) {
         return false;
     }
-    auto ws = TempToWstr(s);
+    auto ws = ToWstrTemp(s);
     bool ok = Edit_SetCueBannerText(hwnd, ws.Get()) == TRUE;
     return ok;
 }

@@ -516,7 +516,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, [[maybe_unu
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
-    auto path = TempToUtf8(ctrl->FilePath());
+    auto path = ToUtf8Temp(ctrl->FilePath());
     i64 fileSize = file::GetSize(path.AsView());
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();

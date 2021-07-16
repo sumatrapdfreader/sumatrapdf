@@ -56,12 +56,12 @@ static int cmpFloat(const void* a, const void* b) {
 
 namespace prefs {
 
-const WCHAR* GetSettingsFileNameNoFree() {
+const WCHAR* GetSettingsFileNameTemp() {
     return L"SumatraPDF-settings.txt";
 }
 
 WCHAR* GetSettingsPath() {
-    return AppGenDataFilename(GetSettingsFileNameNoFree());
+    return AppGenDataFilename(GetSettingsFileNameTemp());
 }
 
 /* Caller needs to prefs::CleanUp() */
@@ -124,7 +124,7 @@ bool Load() {
 
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
-    auto fontName = TempToWstr(gprefs->ebookUI.fontName);
+    auto fontName = ToWstrTemp(gprefs->ebookUI.fontName);
     SetDefaultEbookFont(fontName.Get(), gprefs->ebookUI.fontSize);
 
     if (!file::Exists(path.Get())) {

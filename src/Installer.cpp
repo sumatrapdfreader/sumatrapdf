@@ -149,14 +149,14 @@ static bool CreateInstallationDirectory() {
 
 bool CopySelfToDir(const WCHAR* destDir) {
     auto exePath = GetExePath();
-    auto exeName = GetExeName();
+    auto exeName = GetExeNameTemp();
     auto* dstPath = path::Join(destDir, exeName);
     BOOL failIfExists = FALSE;
     BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
     // strip zone identifier (if exists) to avoid windows
     // complaining when launching the file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
-    auto dstPathA = TempToUtf8(dstPath);
+    auto dstPathA = ToUtf8Temp(dstPath);
     file::DeleteZoneIdentifier(dstPathA);
     free(dstPath);
     return ok;
@@ -178,7 +178,7 @@ static void CopySettingsFile() {
     }
 
     const WCHAR* appName = GetAppNameTemp();
-    const WCHAR* prefsFileName = prefs::GetSettingsFileNameNoFree();
+    const WCHAR* prefsFileName = prefs::GetSettingsFileNameTemp();
     AutoFreeWstr srcPath = path::Join(srcDir.data, appName, prefsFileName);
     AutoFreeWstr dstPath = path::Join(dstDir.data, appName, prefsFileName);
 
@@ -194,7 +194,7 @@ static bool ExtractInstallerFiles() {
         return false;
     }
 
-    bool ok = CopySelfToDir(GetInstallDirNoFree());
+    bool ok = CopySelfToDir(GetInstallDirTemp());
     if (!ok) {
         return false;
     }
@@ -238,9 +238,9 @@ static WCHAR* GetInstallDate() {
 static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     bool ok = true;
 
-    AutoFreeWstr installedExePath = GetInstallationFilePath(GetExeName());
+    AutoFreeWstr installedExePath = GetInstallationFilePath(GetExeNameTemp());
     AutoFreeWstr installDate = GetInstallDate();
-    WCHAR* installDir = GetInstallDirNoFree();
+    WCHAR* installDir = GetInstallDirTemp();
     WCHAR* uninstallerPath = installedExePath; // same as
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath);
 
@@ -288,7 +288,7 @@ static bool WriteUninstallerRegistryInfos() {
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
 
-    const WCHAR* exeName = GetExeName();
+    const WCHAR* exeName = GetExeNameTemp();
     AutoFreeWstr exePath = GetInstalledExePath();
     if (HKEY_LOCAL_MACHINE == hkey) {
         AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
@@ -421,7 +421,7 @@ static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
     }
 
     appName = GetAppNameTemp();
-    exeName = GetExeName();
+    exeName = GetExeNameTemp();
     if (!ListAsDefaultProgramWin10(appName, exeName, GetSupportedExts())) {
         log("Failed to register as default program on win 10\n");
         NotifyFailed(_TR("Failed to register as default program on win 10"));
@@ -996,7 +996,7 @@ static char* PickInstallerLogPath() {
     if (!dir) {
         return nullptr;
     }
-    auto dirA = TempToUtf8(dir);
+    auto dirA = ToUtf8Temp(dir);
     return path::Join(dirA, "sumatra-install-log.txt", nullptr);
 }
 
@@ -1020,7 +1020,7 @@ static void RelaunchElevatedIfNotDebug() {
         return;
     }
     AutoFreeWstr exePath = GetExePath();
-    TempStr exePathA = TempToUtf8(exePath.AsView());
+    TempStr exePathA = ToUtf8Temp(exePath.AsView());
     logf("Re-launching '%s' as elevated\n", exePathA.Get());
     WCHAR* cmdline = GetCommandLineW(); // not owning the memory
     LaunchElevated(exePath, cmdline);

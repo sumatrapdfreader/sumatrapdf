@@ -16,6 +16,6 @@ extern const char* gitSha1;
 extern const char* preReleaseVersion;
 
 const WCHAR* GetAppNameTemp();
-const WCHAR* GetExeName();
+const WCHAR* GetExeNameTemp();
 
 int GetAppIconID();

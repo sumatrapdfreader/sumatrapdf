@@ -27,7 +27,7 @@ DropDownCtrl::~DropDownCtrl() {
 static void SetDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
     ComboBox_ResetContent(hwnd);
     for (std::string_view s : items) {
-        auto ws = TempToWstr(s);
+        auto ws = ToWstrTemp(s);
         ComboBox_AddString(hwnd, ws);
     }
 }
@@ -86,7 +86,7 @@ void DropDownCtrl::SetCurrentSelection(int n) {
 }
 
 void DropDownCtrl::SetCueBanner(std::string_view sv) {
-    auto ws = TempToWstr(sv);
+    auto ws = ToWstrTemp(sv);
     ComboBox_SetCueBannerText(hwnd, ws.Get());
 }
 
@@ -115,7 +115,7 @@ void DropDownCtrl::SetItemsSeqStrings(const char* items) {
 Size DropDownCtrl::GetIdealSize() {
     Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
     for (std::string_view s : items) {
-        auto ws = TempToWstr(s);
+        auto ws = ToWstrTemp(s);
         Size s2 = TextSizeInHwnd(hwnd, ws, hfont);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);

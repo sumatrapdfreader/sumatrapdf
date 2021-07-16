@@ -61,7 +61,8 @@ The format of update information downloaded from the server:
 
 [SumatraPDF]
 Latest: 13682
-Installer64: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-64-install.exe
+Installer64:
+https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-64-install.exe
 Installer32: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-install.exe
 PortableExe64: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-64.exe
 PortableExe32: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682.exe
@@ -141,7 +142,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
             goto AskUser;
         }
         logf("dlURLA: '%s'\n", dlURLA);
-        WCHAR* dlURL = TempToWstr(dlURLA);
+        WCHAR* dlURL = ToWstrTemp(dlURLA);
         WCHAR* installerPath = path::GetTempFilePath(L"sumatra-installer");
         RunAsync([dlURL, installerPath, isDll] { // NOLINT
             bool ok = HttpGetToFile(dlURL, installerPath);
@@ -249,6 +250,6 @@ void TryAutoUpdateSelf() {
     }
     logf(L"TryAutoUpdateSelf: '%s'\n", autoUpdateExitCmd);
     // TODO: write me
-    //LaunchProcess(autoUpdateExitCmd);
+    // LaunchProcess(autoUpdateExitCmd);
     str::Free(autoUpdateExitCmd);
 }

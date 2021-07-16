@@ -104,7 +104,7 @@ TempStr TempStrDup(std::string_view);
 TempWstr TempWstrDup(const WCHAR* s, size_t cch = (size_t)-1);
 TempWstr TempWstrDup(std::wstring_view);
 
-TempStr TempToUtf8(const WCHAR* s, size_t cch = (size_t)-1);
-TempStr TempToUtf8(std::wstring_view);
-TempWstr TempToWstr(const char* s, size_t cb = (size_t)-1);
-TempWstr TempToWstr(std::string_view sv);
+TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);
+TempStr ToUtf8Temp(std::wstring_view);
+TempWstr ToWstrTemp(const char* s, size_t cb = (size_t)-1);
+TempWstr ToWstrTemp(std::string_view sv);

@@ -53,7 +53,7 @@ static void SetMaxWidthForText(HWND hwnd, const WCHAR* text, bool multiline) {
 }
 
 void TooltipCtrl::Show(std::string_view s, Rect& rc, bool multiline) {
-    auto ws = TempToWstr(s);
+    auto ws = ToWstrTemp(s);
     Show(ws, rc, multiline);
 }
 

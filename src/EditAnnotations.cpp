@@ -332,18 +332,18 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     TabInfo* tab = ew->tab;
     EnginePdf* engine = GetEnginePdf(ew);
-    TempStr path = TempToUtf8(engine->FileName());
+    TempStr path = ToUtf8Temp(engine->FileName());
     bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
-        msg.AppendFmt(_TRU("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
+        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
         tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
     });
     if (!ok) {
         return;
     }
     str::Str msg;
-    msg.AppendFmt(_TRU("Saved annotations to '%s'"), path.Get());
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path.Get());
     tab->win->ShowNotification(msg.AsView());
 
     // TODO: hacky: set tab->editAnnotsWindow to nullptr to
@@ -408,7 +408,7 @@ static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
     int y = (int)rect.y;
     int dx = (int)rect.dx;
     int dy = (int)rect.dy;
-    s.AppendFmt(_TRU("Rect: x=%d y=%d dx=%d dy=%d"), x, y, dx, dy);
+    s.AppendFmt(_TRA("Rect: x=%d y=%d dx=%d dy=%d"), x, y, dx, dy);
     ew->staticRect->SetText(s.AsView());
     ew->staticRect->SetIsVisible(true);
 }
@@ -419,7 +419,7 @@ static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     str::Str s;
-    s.AppendFmt(_TRU("Author: %s"), Author(annot).data());
+    s.AppendFmt(_TRA("Author: %s"), Author(annot).data());
     ew->staticAuthor->SetText(s.AsView());
     ew->staticAuthor->SetIsVisible(true);
 }
@@ -438,7 +438,7 @@ static void DoModificationDate(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     str::Str s;
-    s.Append(_TRU("Date:"));
+    s.Append(_TRA("Date:"));
     s.Append(" "); // apptranslator doesn't handle spaces at the end of translated string
     AppendPdfDate(s, ModificationDate(annot));
     ew->staticModificationDate->SetText(s.AsView());
@@ -451,7 +451,7 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     str::Str s;
-    s.AppendFmt(_TRU("Popup: %d 0 R"), popupId);
+    s.AppendFmt(_TRA("Popup: %d 0 R"), popupId);
     ew->staticPopup->SetText(s.AsView());
     ew->staticPopup->SetIsVisible(true);
 }
@@ -513,7 +513,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int fontSize = DefaultAppearanceTextSize(annot);
-    AutoFreeStr s = str::Format(_TRU("Text Size: %d"), fontSize);
+    AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
     ew->staticTextSize->SetText(s.AsView());
     SetDefaultAppearanceTextSize(ew->annot, fontSize);
     ew->trackbarTextSize->SetValue(fontSize);
@@ -525,7 +525,7 @@ static void TextFontSizeChanging(EditAnnotationsWindow* ew, TrackbarPosChangingE
     ev->didHandle = true;
     int fontSize = ev->pos;
     SetDefaultAppearanceTextSize(ew->annot, fontSize);
-    AutoFreeStr s = str::Format(_TRU("Text Size: %d"), fontSize);
+    AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
     ew->staticTextSize->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -556,7 +556,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     int borderWidth = BorderWidth(annot);
     borderWidth = std::clamp(borderWidth, borderWidthMin, borderWidthMax);
-    AutoFreeStr s = str::Format(_TRU("Border: %d"), borderWidth);
+    AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
     ew->staticBorder->SetText(s.AsView());
     ew->trackbarBorder->SetValue(borderWidth);
     ew->staticBorder->SetIsVisible(true);
@@ -567,7 +567,7 @@ static void BorderWidthChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEv
     ev->didHandle = true;
     int borderWidth = ev->pos;
     SetBorderWidth(ew->annot, borderWidth);
-    AutoFreeStr s = str::Format(_TRU("Border: %d"), borderWidth);
+    AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
     ew->staticBorder->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -688,7 +688,7 @@ static void DoOpacity(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int opacity = Opacity(ew->annot);
-    AutoFreeStr s = str::Format(_TRU("Opacity: %d"), opacity);
+    AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
     ew->staticOpacity->SetText(s.AsView());
     ew->staticOpacity->SetIsVisible(true);
     ew->trackbarOpacity->SetIsVisible(true);
@@ -707,7 +707,7 @@ static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent*
     ev->didHandle = true;
     int opacity = ev->pos;
     SetOpacity(ew->annot, opacity);
-    AutoFreeStr s = str::Format(_TRU("Opacity: %d"), opacity);
+    AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
     ew->staticOpacity->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -890,7 +890,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Contents:"));
+        auto w = CreateStatic(parent, _TRA("Contents:"));
         ew->staticContents = w;
         w->SetInsetsPt(4, 0, 0, 0);
         vbox->AddChild(w);
@@ -909,7 +909,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Text Alignment:"));
+        auto w = CreateStatic(parent, _TRA("Text Alignment:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticTextAlignment = w;
         vbox->AddChild(w);
@@ -945,7 +945,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Text Size:"));
+        auto w = CreateStatic(parent, _TRA("Text Size:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticTextSize = w;
         vbox->AddChild(w);
@@ -964,7 +964,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Text Color:"));
+        auto w = CreateStatic(parent, _TRA("Text Color:"));
         ew->staticTextColor = w;
         vbox->AddChild(w);
     }
@@ -981,7 +981,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Line Start:"));
+        auto w = CreateStatic(parent, _TRA("Line Start:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticLineStart = w;
         vbox->AddChild(w);
@@ -998,7 +998,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Line End:"));
+        auto w = CreateStatic(parent, _TRA("Line End:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticLineEnd = w;
         vbox->AddChild(w);
@@ -1015,7 +1015,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Icon:"));
+        auto w = CreateStatic(parent, _TRA("Icon:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticIcon = w;
         vbox->AddChild(w);
@@ -1050,7 +1050,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Color:"));
+        auto w = CreateStatic(parent, _TRA("Color:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticColor = w;
         vbox->AddChild(w);
@@ -1068,7 +1068,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Interior Color:"));
+        auto w = CreateStatic(parent, _TRA("Interior Color:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticInteriorColor = w;
         vbox->AddChild(w);
@@ -1086,7 +1086,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRU("Opacity:"));
+        auto w = CreateStatic(parent, _TRA("Opacity:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticOpacity = w;
         vbox->AddChild(w);

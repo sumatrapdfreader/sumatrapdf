@@ -285,7 +285,7 @@ NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, NotificationOpti
 }
 
 NotificationWnd* WindowInfo::ShowNotification(std::string_view sv, NotificationOptions opts, Kind groupId) {
-    auto msg = TempToWstr(sv);
+    auto msg = ToWstrTemp(sv);
     return this->ShowNotification(msg.Get(), opts, groupId);
 }
 
