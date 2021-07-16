@@ -195,13 +195,13 @@ func getVersionFilesForLatestInfo(storage string, buildType string) [][]string {
 		// *-update.txt : for current builds
 		urls := getDownloadUrls(storage, buildType, ver)
 		s := `[SumatraPDF]
-Latest ${ver}
-Installer64 ${inst64}
-Installer32 ${inst32}
-PortableExe64 ${exe64}
-PortableExe32 ${exe32}
-PortableZip64 ${zip64}
-PortableZip32 ${zip32}
+Latest: ${ver}
+Installer64: ${inst64}
+Installer32: ${inst32}
+PortableExe64: ${exe64}
+PortableExe32: ${exe32}
+PortableZip64: ${zip64}
+PortableZip32: ${zip32}
 `
 		rplc := func(old, new string) {
 			s = strings.Replace(s, old, new, -1)
