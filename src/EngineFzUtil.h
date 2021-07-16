@@ -73,7 +73,7 @@ WCHAR* fz_text_page_to_str(fz_stext_page* text, Rect** coordsOut);
 
 LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
 int is_external_link(const char* uri);
-int resolve_link(const char* uri, float* xp, float* yp);
+int resolve_link(const char* uri, float* xp, float* yp, float *zoomp);
 TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest);
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx);
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline);

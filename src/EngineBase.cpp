@@ -106,6 +106,11 @@ RectF PageDestination::GetRect() const {
     return rect;
 }
 
+// optional zoom level on the above returned page
+float PageDestination::GetZoom() const {
+    return zoom;
+}
+
 // string value associated with the destination (e.g. a path or a URL)
 WCHAR* PageDestination::GetValue() const {
     return value;

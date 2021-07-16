@@ -1873,10 +1873,13 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     Point scroll(-1, 0);
     RectF rect = dest->GetRect();
     int pageNo = dest->GetPageNo();
+    float zoom = dest->GetZoom();
 
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
-        // PDF: /XYZ top left
+        // PDF: /XYZ top left zoom
         // scroll to rect.TL()
+        dbglogf("DisplayModel::ScrollToLink /XYZ [zoomReal] %f -> %f\n", zoomReal, zoom);
+        zoomReal = zoom; zoomVirtual = GetZoomVirtual(true); CalcZoomReal(zoomVirtual); // TODO: cleanup
         PointF scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
         scroll = ToPoint(scrollD);
 
