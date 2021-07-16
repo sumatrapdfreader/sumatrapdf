@@ -119,7 +119,7 @@ static Vec<StaticLinkInfo> gLinkInfo;
 #define COL5 RGB(112, 115, 207)
 
 static void DrawAppName(HDC hdc, Point pt) {
-    const WCHAR* txt = GetAppName();
+    const WCHAR* txt = GetAppNameTemp();
     // colorful version
     COLORREF cols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
     for (size_t i = 0; i < str::Len(txt); i++) {
@@ -153,7 +153,7 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 
     SIZE txtSize{};
     /* calculate minimal top box size */
-    const WCHAR* txt = GetAppName();
+    const WCHAR* txt = GetAppNameTemp();
 
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + DpiScale(hwnd, ABOUT_BOX_MARGIN_DY * 2);
@@ -180,7 +180,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const WCHAR* txt = GetAppName();
+    const WCHAR* txt = GetAppNameTemp();
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawAppName(hdc, mainRect.TL());
@@ -446,7 +446,7 @@ static void OnPaintAbout(HWND hwnd) {
 static void CopyAboutInfoToClipboard([[maybe_unused]] HWND hwnd) {
     str::WStr info(512);
     AutoFreeWstr ver = GetAppVersion();
-    info.AppendFmt(L"%s %s\r\n", GetAppName(), ver.Get());
+    info.AppendFmt(L"%s %s\r\n", GetAppNameTemp(), ver.Get());
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');
     }

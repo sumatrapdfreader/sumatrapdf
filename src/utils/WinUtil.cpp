@@ -355,29 +355,17 @@ void DisableDataExecution() {
     }
 }
 
-// Code from http://www.halcyon.com/~ast/dload/guicon.htm
-// See https://github.com/benvanik/xenia/issues/228 for the VS2015 fix
+enum class ConsoleRedirectStatus {
+    NotRedirected,
+    RedirectedToExistingConsole,
+    RedirectedToAllocatedConsole,
+};
+
+static ConsoleRedirectStatus gConsoleRedirectStatus{ConsoleRedirectStatus::NotRedirected};
+
 // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
-bool RedirectIOToConsole() {
-    CONSOLE_SCREEN_BUFFER_INFO coninfo;
-
-    // first we try to attach to the console of the parent process
-    // which could be a cmd shell. If that succeeds, we'll print to
-    // shell's console like non-gui program
-    // if that fails, assume we were not launched from a shell and
-    // will allocate a console of our own
-    // TODO: this is not perfect because after Sumatra finishes,
-    // the cursor is not at end of text. Could be unsolvable
-    bool ok = !!AttachConsole(ATTACH_PARENT_PROCESS);
-    if (!ok) {
-        AllocConsole();
-        // make buffer big enough to allow scrolling
-        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
-        coninfo.dwSize.Y = 500;
-        SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
-    }
-
-    FILE* con;
+static void redirectIOToConsole() {
+    FILE* con{nullptr};
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h != INVALID_HANDLE_VALUE) {
         freopen_s(&con, "CONOUT$", "w", stdout);
@@ -389,19 +377,54 @@ bool RedirectIOToConsole() {
         freopen_s(&con, "CONOUT$", "w", stderr);
         setvbuf(stderr, nullptr, _IONBF, 0);
     }
-
 #if 0 // probably don't need stdin
     freopen_s(&con, "CONIN$", "r", stdin);
     setvbuf(stdout, nullptr, _IONBF, 0);
 #endif
-
-    return !ok; // allocated if AttachConsole failed
 }
 
-void SendEnterKeyToConsole() {
-    if (GetConsoleWindow() != GetForegroundWindow()) {
-        return;
+bool RedirectIOToExistingConsole() {
+    if (gConsoleRedirectStatus != ConsoleRedirectStatus::NotRedirected) {
+        return true;
     }
+    BOOL ok = AttachConsole(ATTACH_PARENT_PROCESS);
+    if (!ok) {
+        return false;
+    }
+    gConsoleRedirectStatus = ConsoleRedirectStatus::RedirectedToExistingConsole;
+    redirectIOToConsole();
+    return true;
+}
+// returns true if had to allocate new console (i.e. show console window)
+// false if redirected to existing console, which means it was launched from a shell
+bool RedirectIOToConsole() {
+    if (gConsoleRedirectStatus != ConsoleRedirectStatus::NotRedirected) {
+        return gConsoleRedirectStatus == ConsoleRedirectStatus::RedirectedToAllocatedConsole;
+    }
+
+    // first we try to attach to the console of the parent process
+    // which could be a cmd shell. If that succeeds, we'll print to
+    // shell's console like non-gui program
+    // if that fails, assume we were not launched from a shell and
+    // will allocate a console of our own
+    // TODO: this is not perfect because after Sumatra finishes,
+    // the cursor is not at end of text. Could be unsolvable
+    gConsoleRedirectStatus = ConsoleRedirectStatus::RedirectedToExistingConsole;
+    BOOL ok = AttachConsole(ATTACH_PARENT_PROCESS);
+    if (!ok) {
+        AllocConsole();
+        gConsoleRedirectStatus = ConsoleRedirectStatus::RedirectedToAllocatedConsole;
+        // make buffer big enough to allow scrolling
+        CONSOLE_SCREEN_BUFFER_INFO coninfo;
+        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+        coninfo.dwSize.Y = 500;
+        SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+    }
+    redirectIOToConsole();
+    return gConsoleRedirectStatus == ConsoleRedirectStatus::RedirectedToAllocatedConsole;
+}
+
+static void SendEnterKeyToConsole() {
     INPUT ip;
     // Set up a generic keyboard event.
     ip.type = INPUT_KEYBOARD;
@@ -417,6 +440,22 @@ void SendEnterKeyToConsole() {
     // Release the "Enter" key
     ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
     SendInput(1, &ip, sizeof(INPUT));
+}
+
+void HandleRedirectedConsoleOnShutdown() {
+    switch (gConsoleRedirectStatus) {
+        case ConsoleRedirectStatus::NotRedirected:
+            return;
+        case ConsoleRedirectStatus::RedirectedToAllocatedConsole:
+            // wait for user to press any key to close the console window
+            system("pause");
+            break;
+        case ConsoleRedirectStatus::RedirectedToExistingConsole:
+            // simulate releasing console. the cursor still doesn't show up
+            // at the end of output, but it's better than nothing
+            SendEnterKeyToConsole();
+            break;
+    }
 }
 
 /* Return the full exe path of my own executable.

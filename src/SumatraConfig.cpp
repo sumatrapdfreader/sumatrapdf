@@ -59,7 +59,7 @@ bool gDisableDocumentRestrictions = true;
 bool gDisableDocumentRestrictions = false;
 #endif
 
-const WCHAR* GetAppName() {
+const WCHAR* GetAppNameTemp() {
     return L"SumatraPDF";
 }
 

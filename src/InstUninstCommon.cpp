@@ -170,7 +170,7 @@ void InitInstallerUninstaller() {
 }
 
 WCHAR* GetExistingInstallationDir() {
-    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());
+    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppNameTemp());
     AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
     if (!dir) {
         return nullptr;
@@ -210,7 +210,7 @@ WCHAR* GetShortcutPath(int csidl) {
     if (!dir) {
         return nullptr;
     }
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr lnkName = str::Join(appName, L".lnk");
     return path::Join(dir, lnkName);
 }
@@ -528,7 +528,7 @@ static const WCHAR* readableProcessNames[] = {
 
 static const WCHAR* ReadableProcName(const WCHAR* procPath) {
     const WCHAR* exeName = GetExeName();
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     readableProcessNames[0] = exeName;
     readableProcessNames[1] = appName;
     const WCHAR* procName = path::GetBaseNameNoFree(procPath);

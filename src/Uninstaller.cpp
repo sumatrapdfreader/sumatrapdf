@@ -67,10 +67,10 @@ static void CreateButtonExit(HWND hwndParent) {
 }
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
-    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());
+    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppNameTemp());
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     // legacy, this key was added by installers up to version 1.8
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr key = str::Join(L"Software\\", appName);
     bool ok2 = DeleteRegKey(hkey, key);
     return ok1 && ok2;
@@ -85,9 +85,9 @@ static bool RemoveUninstallerRegistryInfo() {
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     AutoFreeWstr curr = ReadRegStr(hkey, REG_CLASSES_PDF, nullptr);
-    AutoFreeWstr REG_CLASSES_APP = GetRegClassesApp(GetAppName());
+    AutoFreeWstr REG_CLASSES_APP = GetRegClassesApp(GetAppNameTemp());
     AutoFreeWstr prev = ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf");
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     if (!curr || !str::Eq(curr, appName)) {
         // not the default, do nothing
     } else if (prev) {
@@ -146,7 +146,7 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 
 static void RemoveOwnRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeName();
     AutoFreeWstr regClassApp = GetRegClassesApp(appName);
     DeleteRegKey(hkey, regClassApp);
@@ -357,7 +357,7 @@ static void CreateMainWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr caption = str::Join(appName, L" Uninstaller Usage");
     AutoFreeWstr msg = str::Format(
         L"uninstall.exe [/s][/d <path>]\n\

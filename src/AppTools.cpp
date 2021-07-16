@@ -20,7 +20,7 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr regPathUninst = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
     AutoFreeWstr installedPath = ReadRegStr2(regPathUninst, L"InstallLocation");
     if (!installedPath) {
@@ -109,7 +109,7 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     if (!path) {
         return nullptr;
     }
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     path = path::Join(path, appName);
     if (!path) {
         return nullptr;
@@ -188,14 +188,14 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
         return;
     }
 
-    AutoFreeWstr REG_CLASSES_APP = str::Join(L"Software\\Classes\\", GetAppName());
+    AutoFreeWstr REG_CLASSES_APP = str::Join(L"Software\\Classes\\", GetAppNameTemp());
 
     AutoFreeWstr prevHandler(nullptr);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
 
     bool ok = false;
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     if (prevHandler && !str::Eq(prevHandler, appName)) {
         WriteRegStr(hkey, REG_CLASSES_APP, L"previous.pdf", prevHandler);
     }
@@ -254,7 +254,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension() {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
 
     AutoFreeWstr tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
     if (tmp && !str::Eq(tmp, appName)) {

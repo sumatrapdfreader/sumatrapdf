@@ -598,26 +598,20 @@ static bool IsInstallerAndNamedAsSuch() {
     return ExeHasNameOfInstaller();
 }
 
-// if we can load "libmupdf.dll" this is likely an installed executable
-static bool SeemsInstalled() {
-    HMODULE h = LoadLibraryW(L"libmupdf.dll");
-    // technically this is leaking but we don't care
-    // because libmupdf.dll must be loaded anyway
-    // cppcheck-suppress resourceLeak
-    return h != nullptr;
+static bool IsOurExeInstalled() {
+    AutoFreeWstr installedDir = GetExistingInstallationDir();
+    if (!installedDir.Get()) {
+        return false;
+    }
+    AutoFreeWstr exeDir = GetExeDir();
+    return str::EqI(installedDir.Get(), exeDir.Get());
 }
 
 static bool IsInstallerButNotInstalled() {
     if (!ExeHasInstallerResources()) {
         return false;
     }
-    if (ExeHasNameOfInstaller()) {
-        return true;
-    }
-    if (SeemsInstalled()) {
-        return false;
-    }
-    return true;
+    return !IsOurExeInstalled();
 }
 
 // I see people trying to use installer as a portable
@@ -634,27 +628,66 @@ static void EnsureNotInstaller() {
     }
 }
 
-// TODO: autoupdate, was it ever working?
-// [/autoupdate]
-//     /autoupdate\tperforms an update with visible UI and minimal user interaction.
+constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
+[-s] [-d <path>] [-with-filter] [-with-preview] [-x]
+
+-s
+    installs ${appName} silently (without user interaction)
+-d
+    set installation directory
+-with-filter
+    install search filter
+-with-preview
+    install shell preview
+-x
+    extracts the files, doesn't install
+-log
+    writes installation log to %LOCALAPPDATA%\sumatra-install-log.txt
+)";
+
+// TODO: maybe could set font on TDN_CREATED to Consolas, to better show the message
+HRESULT Pftaskdialogcallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LONG_PTR lpRefData) {
+    switch (msg) { case TDN_HYPERLINK_CLICKED:
+            WCHAR* s = (WCHAR*)lParam;
+            LaunchBrowser(s);
+            break;
+    }
+    return S_OK;
+}
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    const WCHAR* appName = GetAppName();
+    const char* appName = TempToUtf8(GetAppNameTemp());
+    str::Str msg{kInstallerHelpTmpl};
+    str::Replace(msg, "${appName}", appName);
 
-    AutoFreeWstr msg = str::Format(
-        L"%s installer options:\n\
-    [-s][-d <path>][-with-filter][-with-preview][-x]\n\
-    \n\
-    -s\tinstalls %s silently (without user interaction).\n\
-    -d\tchanges the directory where %s will be installed.\n\
-    -with-filter\tinstall search filter\n\
-    -with-preview\tinstall shell preview\n\
-    -x\tjust extracts the files contained within the installer.\n\
-",
-        appName, appName, appName);
-    AutoFreeWstr caption = str::Join(appName, L" Installer Usage");
-    MessageBoxW(nullptr, msg, caption, MB_OK);
+    bool ok = RedirectIOToExistingConsole();
+    if (ok) {
+        // if we're launched from console, print help to consle window
+        printf("%s\n%s\n", msg.Get(), "See more at https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments");
+        return;
+    }
+
+    AutoFreeWstr title = str::Join(GetAppNameTemp(), L" installer usage");
+    TASKDIALOGCONFIG dialogConfig{};
+
+    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = title.Get();
+    dialogConfig.pszMainInstruction = TempToWstr(msg.Get());
+    dialogConfig.pszContent =
+        LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.cxWidth = 320; // TODO: TDF_SIZE_TO_CONTENT doesn't seem to work
+    dialogConfig.pfCallback = Pftaskdialogcallback;
+    dialogConfig.dwCommonButtons = TDCBF_OK_BUTTON;
+    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
+
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
 // in Installer.cpp
@@ -875,14 +908,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     }
 #endif
 
+    i.showHelp = true;
     if (i.showHelp && IsInstallerButNotInstalled()) {
         ShowInstallerHelp();
+        HandleRedirectedConsoleOnShutdown();
         return 0;
     }
-
-    // do this before running installer etc. so that we have disk / net permissions
-    // (default policy is to disallow everything)
-    InitializePolicies(i.restrictedUse);
 
     if (i.justExtractFiles) {
         ExtractInstallerFiles();
@@ -904,6 +935,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         retCode = RunUninstaller(&i);
         ::ExitProcess(retCode);
     }
+
+    // do this before running installer etc. so that we have disk / net permissions
+    // (default policy is to disallow everything)
+    InitializePolicies(i.restrictedUse);
+
 
     EnsureNotInstaller();
 
@@ -952,9 +988,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     goto Exit;
 #endif
 
-    bool didAllocateConsole{false};
     if (i.showConsole) {
-        didAllocateConsole = RedirectIOToConsole();
+        RedirectIOToConsole();
     }
 
     if (i.registerAsDefault) {
@@ -1168,19 +1203,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
 Exit:
     prefs::UnregisterForFileChanges();
-
-    if (i.showConsole) {
-        if (didAllocateConsole) {
-            // wait for user to press any key to close the console window
-            system("pause");
-        } else {
-            // simulate releasing console. the cursor still doesn't show up
-            // at the end of output, but it's better than nothing
-            SendEnterKeyToConsole();
-        }
-    }
-
+    
     TryAutoUpdateSelf();
+    HandleRedirectedConsoleOnShutdown();
 
     if (fastExit) {
         // leave all the remaining clean-up to the OS

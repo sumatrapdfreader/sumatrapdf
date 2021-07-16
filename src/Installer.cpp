@@ -177,7 +177,7 @@ static void CopySettingsFile() {
         return;
     }
 
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     const WCHAR* prefsFileName = prefs::GetSettingsFileNameNoFree();
     AutoFreeWstr srcPath = path::Join(srcDir.data, appName, prefsFileName);
     AutoFreeWstr dstPath = path::Join(dstDir.data, appName, prefsFileName);
@@ -244,7 +244,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     WCHAR* uninstallerPath = installedExePath; // same as
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath);
 
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr regPathUninst = GetRegPathUninst(appName);
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= WriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
@@ -294,7 +294,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
         ok &= WriteRegStr(hkey, key, nullptr, exePath);
     }
-    AutoFreeWstr REG_CLASSES_APPS = GetRegClassesApps(GetAppName());
+    AutoFreeWstr REG_CLASSES_APPS = GetRegClassesApps(GetAppNameTemp());
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     AutoFreeWstr iconPath = str::Join(exePath, L",1");
@@ -420,7 +420,7 @@ static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 
-    appName = GetAppName();
+    appName = GetAppNameTemp();
     exeName = GetExeName();
     if (!ListAsDefaultProgramWin10(appName, exeName, GetSupportedExts())) {
         log("Failed to register as default program on win 10\n");
@@ -661,7 +661,7 @@ static void OnButtonBrowse() {
     AutoFreeWstr installPath = str::Dup(path);
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr end = str::Join(L"\\", appName);
     if (!str::EndsWithI(path, end)) {
         installPath = path::Join(path, appName);
@@ -747,7 +747,7 @@ static void OnCreateWindow(HWND hwnd) {
 
 #if ENABLE_REGISTER_DEFAULT
     AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     BOOL hasOtherViewer = !str::EqI(defaultViewer, appName);
 
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
@@ -824,7 +824,7 @@ static void CreateMainWindow() {
 }
 
 static WCHAR* GetInstallationDir() {
-    const WCHAR* appName = GetAppName();
+    const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr regPath = GetRegPathUninst(appName);
     AutoFreeWstr dir = ReadRegStr2(regPath, L"InstallLocation");
     if (dir) {

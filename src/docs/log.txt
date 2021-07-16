@@ -3,6 +3,7 @@ A daily log of changes and commentary. An experiment of sorts.
 2021-07-16 Fri
 
 - progress on auto-update
+- improve handling of -help cmd-line option for the installer
 
 2021-07-15 Thu
 
