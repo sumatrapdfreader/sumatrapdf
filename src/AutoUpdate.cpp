@@ -24,17 +24,20 @@
 #include "WindowInfo.h"
 #include "SumatraDialogs.h"
 
-#define SECS_IN_DAY 60 * 60 * 24
+constexpr int kSecondsInDay = 60 * 60 * 24;
+
+// this is a command to run on exit to auto-update ourselves
+const WCHAR* autoUpdateExitCmd{nullptr};
 
 // the default is for pre-release version.
 // for release we override BuildConfig.h and set to
 // clang-format off
 #if defined(SUMATRA_UPDATE_INFO_URL)
-static const WCHAR* gUpdateInfoURL = SUMATRA_UPDATE_INFO_URL;
+constexpr const WCHAR* kUpdateInfoURL = SUMATRA_UPDATE_INFO_URL;
 #else
-static const WCHAR* gUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
+constexpr const WCHAR* kUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
 
-//static const WCHAR* gUpdateInfoURL = L"https://www.sumatrapdfreader.org/update-check-rel.txt";
+//static const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/api/updatecheck";
 #endif
 #ifndef WEBSITE_DOWNLOAD_PAGE_URL
 #if defined(PRE_RELEASE_VER)
@@ -45,8 +48,11 @@ static const WCHAR* gUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.
 #endif
 // clang-format on
 
-/* The format used for SUMATRA_UPDATE_INFO_URL looks as follows:
+// prevent multiple update tasks from happening simultaneously
+// (this might e.g. happen if a user checks manually very quickly after startup)
+bool gUpdateTaskInProgress = false;
 
+/* The format used for SUMATRA_UPDATE_INFO_URL looks as follows:
 [SumatraPDF]
 # the first line must start with SumatraPDF (optionally as INI header)
 Latest 2.6
@@ -62,7 +68,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (rsp->httpStatusCode != 200) {
         return ERROR_INTERNET_INVALID_URL;
     }
-    if (!str::StartsWith(rsp->url.Get(), gUpdateInfoURL)) {
+    if (!str::StartsWith(rsp->url.Get(), kUpdateInfoURL)) {
         return ERROR_INTERNET_INVALID_URL;
     }
     str::Str* data = &rsp->data;
@@ -146,10 +152,6 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     return 0;
 }
 
-// prevent multiple update tasks from happening simultaneously
-// (this might e.g. happen if a user checks manually very quickly after startup)
-bool gUpdateTaskInProgress = false;
-
 static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpRsp* rsp, bool autoCheck) {
     DWORD error = ShowAutoUpdateDialog(hwnd, rsp, autoCheck);
     if (error != 0 && !autoCheck) {
@@ -187,7 +189,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
         // if secs < 0 => somethings wrong, so ignore that case
-        if ((secs >= 0) && (secs < SECS_IN_DAY)) {
+        if ((secs >= 0) && (secs < kSecondsInDay)) {
             return;
         }
     }
@@ -198,11 +200,15 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
     }
     gUpdateTaskInProgress = true;
     HWND hwnd = win->hwndFrame;
-    str::WStr url = gUpdateInfoURL;
+    str::WStr url = kUpdateInfoURL;
     url.Append(L"?v=");
     url.Append(UPDATE_CHECK_VER);
     HttpGetAsync(url.Get(), [=](HttpRsp* rsp) {
         gUpdateTaskInProgress = false;
         uitask::Post([=] { ProcessAutoUpdateCheckResult(hwnd, rsp, autoCheck); });
     });
+}
+
+void TryAutoUpdateSelf() {
+  // TODO: write me
 }
