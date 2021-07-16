@@ -183,7 +183,6 @@ func s3UploadDir(c *S3Client, dirRemote string, dirLocal string) error {
 		if err != nil {
 			return fmt.Errorf("failed s3 upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
 		}
-		logf("Uploaded to s3: '%s' as '%s'\n", pathLocal, pathRemote)
 	}
 	return nil
 }

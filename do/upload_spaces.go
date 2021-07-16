@@ -153,11 +153,14 @@ func minioUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
 		fname := f.Name()
 		pathLocal := filepath.Join(dirLocal, fname)
 		pathRemote := path.Join(dirRemote, fname)
+		logf("Uploading to spaces: '%s' as '%s'. ", pathLocal, pathRemote)
+		timeStart := time.Now()
 		err := c.UploadFilePublic(pathRemote, pathLocal)
 		if err != nil {
-			return fmt.Errorf("failed spaces upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
+			logf("Failed with '%s'\n", err)
+			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
 		}
-		logf("Uploaded to spaces: '%s' as '%s'\n", pathLocal, pathRemote)
+		logf("Done in %s\n", time.Since(timeStart))
 	}
 	return nil
 }
