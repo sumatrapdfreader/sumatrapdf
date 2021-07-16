@@ -25,6 +25,9 @@
 #include "WindowInfo.h"
 #include "SumatraDialogs.h"
 
+// if true, forces downloading and installation of auto-update
+bool gTestAutoUpdate{false};
+
 constexpr int kSecondsInDay = 60 * 60 * 24;
 
 // this is a command to run on exit to auto-update ourselves
@@ -53,14 +56,18 @@ constexpr const WCHAR* kUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspac
 // (this might e.g. happen if a user checks manually very quickly after startup)
 bool gUpdateTaskInProgress = false;
 
-/* The format used for SUMATRA_UPDATE_INFO_URL looks as follows:
+/*
+The format of update information downloaded from the server:
+
 [SumatraPDF]
-# the first line must start with SumatraPDF (optionally as INI header)
-Latest 2.6
-# Latest must be the version number of the version currently offered for download
-Stable 2.5.3
-# Stable is optional and indicates the oldest version for which automated update
-# checks don't yet report the available update
+Latest: 13682
+Installer64: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-64-install.exe
+Installer32: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-install.exe
+PortableExe64: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-64.exe
+PortableExe32: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682.exe
+PortableZip64: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682-64.zip
+PortableZip32: https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerel-13682.zip
+
 */
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (rsp->error != 0) {
@@ -104,22 +111,14 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return 0;
     }
 
-    if (silent) {
-        const char* stable = node->GetValue("Stable");
-        if (stable && IsValidProgramVersion(stable) && CompareVersion(stable, myVer) <= 0) {
-            // don't update just yet if the older version is still marked as stable
-            return 0;
-        }
-    }
-
     // if automated, respect gGlobalPrefs->versionToSkip
     if (silent && str::EqI(gGlobalPrefs->versionToSkip, latestVer)) {
         return 0;
     }
     // if silent we do auto-update. for now only in pre-release builds
-    if (silent && (gIsPreReleaseBuild || gIsDebugBuild)) {
+    if (gTestAutoUpdate && silent && (gIsPreReleaseBuild || gIsDebugBuild)) {
         // figure out which executable to download
-        const char* dlLink{nullptr};
+        const char* dlURLA{nullptr};
         const char* dlKey{nullptr};
         bool isDll = IsDllBuild();
         if (IsProcess64()) {
@@ -136,9 +135,13 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
             }
         }
 
-        dlLink = node->GetValue(dlKey);
-        logf("dlLink: '%s'\n", dlLink);
-        WCHAR* dlURL = TempToWstr(dlLink);
+        dlURLA = node->GetValue(dlKey);
+        if (!dlURLA) {
+            // shouldn't happen
+            goto AskUser;
+        }
+        logf("dlURLA: '%s'\n", dlURLA);
+        WCHAR* dlURL = TempToWstr(dlURLA);
         WCHAR* installerPath = path::GetTempFilePath(L"sumatra-installer");
         RunAsync([dlURL, installerPath, isDll] { // NOLINT
             bool ok = HttpGetToFile(dlURL, installerPath);
@@ -157,13 +160,13 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
                 // technically should protect with a mutex or sth.
                 autoUpdateExitCmd = cmd.StealData();
             }
-            str::Free(dlURL);
             str::Free(installerPath);
         });
 
         return 0;
     }
 
+AskUser:
     // ask whether to download the new version and allow the user to
     // either open the browser, do nothing or don't be reminded of
     // this update ever again
@@ -199,26 +202,29 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
     }
 
     // For auto-check, only check if at least a day passed since last check
-    if (false && autoCheck) {
+    if (autoCheck) {
         // don't check if the timestamp or version to skip can't be updated
         // (mainly in plugin mode, stress testing and restricted settings)
         if (!HasPermission(Perm::SavePreferences)) {
             return;
         }
 
-        // don't check for updates at the first start, so that privacy
-        // sensitive users can disable the update check in time
-        FILETIME never = {0};
-        if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never)) {
-            return;
-        }
+        // when testing, ignore the time check
+        if (!gTestAutoUpdate) {
+            // don't check for updates at the first start, so that privacy
+            // sensitive users can disable the update check in time
+            FILETIME never = {0};
+            if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never)) {
+                return;
+            }
 
-        FILETIME currentTimeFt;
-        GetSystemTimeAsFileTime(&currentTimeFt);
-        int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
-        // if secs < 0 => somethings wrong, so ignore that case
-        if ((secs >= 0) && (secs < kSecondsInDay)) {
-            return;
+            FILETIME currentTimeFt;
+            GetSystemTimeAsFileTime(&currentTimeFt);
+            int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
+            // if secs < 0 => somethings wrong, so ignore that case
+            if ((secs >= 0) && (secs < kSecondsInDay)) {
+                return;
+            }
         }
     }
 
