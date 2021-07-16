@@ -10,6 +10,7 @@
 #include "utils/FileUtil.h"
 #include "utils/Log.h"
 
+#include "SumatraConfig.h"
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
@@ -115,26 +116,53 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (silent && str::EqI(gGlobalPrefs->versionToSkip, latestVer)) {
         return 0;
     }
+    // if silent we do auto-update. for now only in pre-release builds
+    if (silent && (gIsPreReleaseBuild || gIsDebugBuild)) {
+        // figure out which executable to download
+        const char* dlLink{nullptr};
+        const char* dlKey{nullptr};
+        bool isDll = IsDllBuild();
+        if (IsProcess64()) {
+            if (isDll) {
+                dlKey = "Installer64";
+            } else {
+                dlKey = "PortableExe64";
+            }
+        } else {
+            if (isDll) {
+                dlKey = "Installer32";
+            } else {
+                dlKey = "PortableExe32";
+            }
+        }
 
-    // figure out which executable to download
-    const char* dlLink{nullptr};
-    const char* dlKey{nullptr};
-    if (IsProcess64()) {
-        if (IsDllBuild()) {
-            dlKey = "Installer64";
-        } else {
-            dlKey = "PortableExe64";
-        }
-    } else {
-        if (IsDllBuild()) {
-            dlKey = "Installer32";
-        } else {
-            dlKey = "PortableExe32";
-        }
+        dlLink = node->GetValue(dlKey);
+        logf("dlLink: '%s'\n", dlLink);
+        WCHAR* dlURL = TempToWstr(dlLink);
+        WCHAR* installerPath = path::GetTempFilePath(L"sumatra-installer");
+        RunAsync([dlURL, installerPath, isDll] { // NOLINT
+            bool ok = HttpGetToFile(dlURL, installerPath);
+            logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d\n", (int)ok);
+            if (ok) {
+                str::WStr cmd(installerPath);
+                if (isDll) {
+                    // this should be an installer
+                    cmd.Append(L" -install -silent");
+                } else {
+                    AutoFreeWstr selfPath = GetExePath();
+                    cmd.Append(L" -copy-self-to \"");
+                    cmd.Append(selfPath);
+                    cmd.Append(L"\"");
+                }
+                // technically should protect with a mutex or sth.
+                autoUpdateExitCmd = cmd.StealData();
+            }
+            str::Free(dlURL);
+            str::Free(installerPath);
+        });
+
+        return 0;
     }
-
-    dlLink = node->GetValue(dlKey);
-    logf("dlLink: '%s'\n", dlLink);
 
     // ask whether to download the new version and allow the user to
     // either open the browser, do nothing or don't be reminded of
@@ -210,5 +238,11 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 }
 
 void TryAutoUpdateSelf() {
-  // TODO: write me
+    if (!autoUpdateExitCmd) {
+        return;
+    }
+    logf(L"TryAutoUpdateSelf: '%s'\n", autoUpdateExitCmd);
+    // TODO: write me
+    //LaunchProcess(autoUpdateExitCmd);
+    str::Free(autoUpdateExitCmd);
 }

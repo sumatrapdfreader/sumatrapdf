@@ -409,7 +409,7 @@ bool IsAbsolute(const WCHAR* path) {
 
 // returns the path to either the %TEMP% directory or a
 // non-existing file inside whose name starts with filePrefix
-WCHAR* GetTempPath(const WCHAR* filePrefix) {
+WCHAR* GetTempFilePath(const WCHAR* filePrefix) {
     WCHAR tempDir[MAX_PATH - 14] = {0};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     if (!res || res >= dimof(tempDir)) {
