@@ -114,12 +114,14 @@ type DownloadUrls struct {
 }
 
 func getDownloadUrls(storage string, buildType string, ver string) *DownloadUrls {
-	prefix := "sfo2.digitaloceanspaces.com/"
+	var prefix string
 	switch storage {
 	case "spaces":
-		// do nothing
+		prefix = "https://kjkpubsf.sfo2.digitaloceanspaces.com/"
 	case "s3":
-		prefix = "kjkpub.s3.amazonaws.com/"
+		prefix = "https://kjkpub.s3.amazonaws.com/"
+	default:
+		panic(fmt.Sprintf("unknown storage '%s'", storage))
 	}
 	prefix += getRemoteDir(buildType)
 	// zip is like .exe but can be half the size due to compression
