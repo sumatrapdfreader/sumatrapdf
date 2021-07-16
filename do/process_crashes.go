@@ -27,7 +27,7 @@ const filterNoSymbols = true
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
 const filterOlderVersions = true
-const lowestCrashingBuildToShow = 13598
+const lowestCrashingBuildToShow = 13663
 
 const nDaysToKeep = 14
 
@@ -97,15 +97,37 @@ type crashInfo struct {
 	storeKey string
 }
 
+// "000000007791A365 01:0000000000029365 ntdll.dll!RtlFreeHeap+0x1a5"
+// =>
+// "dll!RtlFreeHeap+0x1a5"
+// also filters non-interesting lines from SubmitDebugReport callstack
 func (ci *crashInfo) ShortCrashLine() string {
 	if len(ci.CrashLines) == 0 {
 		return "(none)"
 	}
-	s := ci.CrashLines[0]
-	// "000000007791A365 01:0000000000029365 ntdll.dll!RtlFreeHeap+0x1a5" => "dll!RtlFreeHeap+0x1a5"
-	parts := strings.Split(s, " ")
+	// get first crsah line that shouldn't be filtered
+	shouldFilterLine := func(s string) bool {
+		toFilter := []string{
+			"dbghelp::GetCurrentThreadCallstack", "BuildCrashInfoText", "SubmitDebugReport",
+		}
+		for _, txt := range toFilter {
+			if strings.Contains(s, txt) {
+				return true
+			}
+		}
+		return false
+	}
+	line := ci.CrashLines[0]
+	for _, s := range ci.CrashLines {
+		if !shouldFilterLine(s) {
+			line = s
+			break
+		}
+	}
+	line = strings.Replace(line, `D:\a\sumatrapdf\sumatrapdf\`, "", -1)
+	parts := strings.Split(line, " ")
 	if len(parts) <= 2 {
-		return s
+		return line
 	}
 	return strings.Join(parts[2:], " ")
 }
@@ -123,6 +145,7 @@ func (ci *crashInfo) URL() string {
 
 func symbolicateCrashLine(s string, gitSha1 string) crashLine {
 	if strings.HasPrefix(s, "GetStackFrameInfo()") {
+		// this happens when Sumatra couldn't symoblicate the callstack
 		return crashLine{
 			Text: s,
 		}
@@ -135,6 +158,8 @@ func symbolicateCrashLine(s string, gitSha1 string) crashLine {
 	}
 	parts = parts[2:]
 	text := strings.Join(parts, " ")
+	// remove redundant info
+	text = strings.Replace(text, `D:\a\sumatrapdf\sumatrapdf\`, "", -1)
 	uri := ""
 	if len(parts) == 2 {
 		s = parts[1]
@@ -449,14 +474,14 @@ func hasNoSymbols(ci *crashInfo) bool {
 	return strings.HasSuffix(s, ".exe")
 }
 
-func previewCrashes() {
+func downloadCrashesAndGenerateHTML() {
 	panicIf(!hasSpacesCreds())
 	if true {
 		panicIf(os.Getenv("NETLIFY_AUTH_TOKEN") == "", "missing NETLIFY_AUTH_TOKEN env variable")
 		panicIf(os.Getenv("NETLIFY_SITE_ID") == "", "missing NETLIFY_SITE_ID env variable")
 	}
 	dataDir := crashesDataDir()
-	logf("previewCrashes: data dir: '%s'\n", dataDir)
+	logf("downloadCrashesAndGenerateHTML: data dir: '%s'\n", dataDir)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -630,6 +655,10 @@ const tmplCrash = `
 								margin: 1em;
 								padding: 0;
 								}
+						.hili {
+							font-weight: bold;
+							color: red;
+						}
         </style>
     </head>
     <body>
@@ -665,12 +694,14 @@ func genCrashHTML(dir string, ci *crashInfo) {
 	path := filepath.Join(dir, name)
 	body := u.ReadFileMust(ci.pathTxt)
 	var buf bytes.Buffer
+	bodyStr := template.HTMLEscapeString(string(body))
+	bodyStr = highlightInjectedModules(bodyStr)
 	v := struct {
-		CrashBody        string
+		CrashBody        template.HTML
 		CrashLinesLinked []crashLine
 	}{
 		CrashLinesLinked: ci.CrashLinesLinked,
-		CrashBody:        string(body),
+		CrashBody:        template.HTML(bodyStr),
 	}
 	err := getTmplCrash().Execute(&buf, v)
 	must(err)
@@ -786,4 +817,31 @@ func getDaysSorted() []string {
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(days)))
 	return days
+}
+
+func highlightInjectedModules(s string) string {
+	lines := strings.Split(s, "\n")
+
+	lineNotSuspect := func(txt string) bool {
+		for _, isOk := range []string{"sumatrapdf.exe", "sumatrapdf-prerel-", "libmupdf.dll", `\windows\system32`, `\windows\winsxs`} {
+			if strings.Contains(txt, isOk) {
+				return true
+			}
+		}
+		return false
+	}
+	for i, l := range lines {
+		l = strings.ToLower(l)
+		if !strings.HasPrefix(l, "module:") {
+			continue
+		}
+		if lineNotSuspect(l) {
+			continue
+		}
+		// those look like injected dlls so we want
+		// to highlight them in html
+		l = `<span class="hili">` + l + `</span>`
+		lines[i] = l
+	}
+	return strings.Join(lines, "\n")
 }

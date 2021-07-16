@@ -246,7 +246,7 @@ func main() {
 	}
 
 	if flgCrashes {
-		previewCrashes()
+		downloadCrashesAndGenerateHTML()
 		return
 	}
 
