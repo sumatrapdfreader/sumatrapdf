@@ -10,6 +10,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - combine 9 projects for mupdf libs (freetype, mujs etc.) into single project mupdf-libs
 - improve crash processing for SubmitDebugReport
 - only submit debug report once per session
+- more logging for DisplayModel::CvtToScreen debug report
 
 2021-07-14 Wed
 

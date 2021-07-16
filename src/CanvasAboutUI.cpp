@@ -8,7 +8,6 @@
 #include "utils/Timer.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
-#include "AppColors.h"
 #include "utils/ScopedWin.h"
 
 #include "wingui/WinGui.h"
@@ -18,6 +17,7 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
+#include "AppColors.h"
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"

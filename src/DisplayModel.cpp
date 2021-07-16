@@ -977,8 +977,10 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
 
 Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
-    SubmitBugReportIf(!pageInfo);
     if (!pageInfo) {
+        const char* isValid = ValidPageNo(pageNo) ? "yes" : "no";
+        logf("DisplayModel::CvtToScreen: GetPageInfo(%d) failed, is valid page: %s\n", pageNo, isValid);
+        SubmitBugReportIf(!pageInfo);
         return Point();
     }
 

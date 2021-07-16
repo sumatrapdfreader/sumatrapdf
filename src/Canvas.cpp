@@ -9,8 +9,8 @@
 #include "utils/Timer.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
-#include "AppColors.h"
 #include "utils/ScopedWin.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -19,6 +19,7 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
+#include "AppColors.h"
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
@@ -994,7 +995,11 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     }
     WCHAR* text = pageEl->GetValue();
     int pageNo = pageEl->GetPageNo();
+    const char* isValidPage = dm->ValidPageNo(pageNo) ? "yes" : "no";
     auto r = pageEl->GetRect();
+    // trying to debug bad page no in CvtToScreen()
+    auto textA = TempToUtf8(text);
+    logf("OnSetCursorMouseIdle: page element '%s' on page %d, valid pageNo: %s\n", textA.Get(), pageNo, isValidPage);
     Rect rc = dm->CvtToScreen(pageNo, r);
     win->ShowToolTip(text, rc, true);
 

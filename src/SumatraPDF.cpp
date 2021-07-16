@@ -1695,7 +1695,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
     } else {
         win->currentTab->filePath.SetCopy(fullPath);
-        AutoFree path = strconv::WstrToUtf8(fullPath);
+        auto path = TempToUtf8(fullPath);
         logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.Get());
     }
 
@@ -1711,8 +1711,13 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     auto currTab = win->currentTab;
-    AutoFree path = strconv::WstrToUtf8(currTab->filePath);
-    logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s'\n", currTab, path.Get());
+    auto path = TempToUtf8(currTab->filePath);
+    int nPages = 0;
+    if (currTab->ctrl) {
+        nPages = currTab->ctrl->PageCount();
+    }
+    logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s', %d pages\n", currTab,
+         path.Get(), nPages);
 
     // TODO: figure why we hit this.
     // happens when opening 3 files via "Open With"

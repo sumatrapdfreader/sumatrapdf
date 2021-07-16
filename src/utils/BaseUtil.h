@@ -288,8 +288,8 @@ inline void DebugCrashIfFunc(bool) {
     } while (0)
 
 #define SubmitBugReportIf(cond)               \
-    do {                                          \
-        __analysis_assume(!(cond));               \
+    do {                                      \
+        __analysis_assume(!(cond));           \
         SubmitDebugReportIfFunc(cond, #cond); \
     } while (0)
 
