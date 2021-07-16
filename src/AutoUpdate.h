@@ -2,3 +2,4 @@
    License: GPLv3 */
 
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck);
+void TryAutoUpdateSelf();
