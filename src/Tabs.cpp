@@ -347,6 +347,9 @@ int TabPainter::Count() {
 }
 
 static void SetTabTitle(TabInfo* tab) {
+    if (!tab) {
+        return;
+    }
     WindowInfo* win = tab->win;
     int idx = win->tabs.Find(tab);
     WCHAR* title = (WCHAR*)tab->GetTabTitle();
