@@ -12,7 +12,6 @@
 #include "Flags.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
-#include "Annotation.h"
 #include "WindowInfo.h"
 #include "StressTesting.h"
 #include "SumatraConfig.h"

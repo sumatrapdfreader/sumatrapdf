@@ -7,7 +7,6 @@
 
 #include "wingui/TreeModel.h"
 
-#include "Annotation.h"
 #include "EngineBase.h"
 #include "uia/TextRange.h"
 #include "DisplayMode.h"

@@ -18,7 +18,6 @@
 #include "wingui/FrameRateWnd.h"
 
 #include "AppColors.h"
-#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
 #include "Doc.h"

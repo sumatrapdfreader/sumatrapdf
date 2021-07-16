@@ -6,7 +6,6 @@
 
 #include "wingui/TreeModel.h"
 
-#include "Annotation.h"
 #include "EngineBase.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"

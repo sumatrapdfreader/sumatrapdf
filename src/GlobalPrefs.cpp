@@ -9,7 +9,6 @@
 
 #include "wingui/TreeModel.h"
 
-#include "Annotation.h"
 #include "EngineBase.h"
 #include "DisplayMode.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA

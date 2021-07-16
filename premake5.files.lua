@@ -412,6 +412,7 @@ function sumatrapdf_files()
     "AppPrefs.*",
     "AppTools.*",
     "AppUtil.*",
+    "AutoUpdate.*",
     "Caption.*",
     "Canvas.*",
     "CanvasAboutUI.*",
