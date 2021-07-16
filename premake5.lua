@@ -128,10 +128,6 @@ workspace "SumatraPDF"
     location "vs2019"
   filter {}
 
-  filter "action:gmake"
-    location "gmake"
-  filter {}
-
   filter {"platforms:x32", "configurations:Release"}
     targetdir "out/rel32"
   filter {"platforms:x32", "configurations:ReleaseAnalyze"}
@@ -672,21 +668,6 @@ workspace "SumatraPDF"
     logview_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
-  project "MakeLZSA"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++latest"
-    regconf()
-    makelzsa_files()
-    includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
-
-    -- for zlib
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    zlib_files()
-
-    links { "unarrlib" }
-    links { "shlwapi", "version", "comctl32" }
-
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
@@ -822,3 +803,87 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     dependson { "PdfFilter", "PdfPreview", "test_util" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
+
+workspace "MakeLZSA"
+  configurations { "Debug", "Release" }
+  platforms { "x32", "x64" }
+  startproject "MakeLZSA"
+
+  filter "platforms:x32"
+      architecture "x86"
+  filter {}
+
+  filter "platforms:x64"
+      architecture "x86_64"
+      -- strangely this is not set by default for rc.exe
+      resdefines { "_WIN64" }
+  filter {}
+
+  disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
+  warnings "Extra"
+
+  location "this_is_invalid_location"
+
+  filter "action:vs2019"
+    location "vs2019"
+  filter {}
+
+  filter {"platforms:x32", "configurations:Release"}
+    targetdir "out/rel32"
+  filter {"platforms:x32", "configurations:Debug"}
+    targetdir "out/dbg32"
+  filter {}
+
+  filter {"platforms:x64", "configurations:Release"}
+    targetdir "out/rel64"
+  filter {"platforms:x64", "configurations:Debug"}
+    targetdir "out/dbg64"
+  filter {}
+
+  objdir "%{cfg.targetdir}/obj"
+
+  -- https://github.com/premake/premake-core/wiki/symbols
+  -- https://blogs.msdn.microsoft.com/vcblog/2016/10/05/faster-c-build-cycle-in-vs-15-with-debugfastlink/
+  symbols "Full"
+  staticruntime  "On"
+  -- https://github.com/premake/premake-core/wiki/flags
+  flags {
+    "MultiProcessorCompile",
+    "Maps", -- generate map file
+    --"Unicode",
+    "FatalCompileWarnings"
+  }
+  exceptionhandling "Off"
+  rtti "Off"
+
+  defines {
+    "WIN32",
+    "_WIN32",
+    -- https://docs.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=vs-2019
+    "WINVER=0x0605", -- latest Windows SDK
+    "_WIN32_WINNT=0x0603"
+  }
+
+  project "MakeLZSA"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    regconf()
+
+    makelzsa_files()
+    includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
+
+    -- for zlib
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    zlib_files()
+
+    -- unarrlib
+    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
+    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
+    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
+    -- TODO: most of these warnings are due to bzip2 and lzma
+    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
+    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
+    unarr_files()
+
+    links { "shlwapi", "version", "comctl32" }

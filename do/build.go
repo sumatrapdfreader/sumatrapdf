@@ -173,10 +173,11 @@ func buildLzsa() {
 	clean()
 
 	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
+	runExeLoggedMust(msbuildPath, `vs2019\MakeLZSA.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
+	logf("build and signed '%s'\n", path)
 }
 
 // smoke build is meant to be run locally to check that we can build everything

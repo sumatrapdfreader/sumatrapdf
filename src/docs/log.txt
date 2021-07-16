@@ -5,6 +5,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - progress on auto-update
 - improve handling of -help cmd-line option for the installer
 - naming: *NoFre() => *Temp(); TempToWstr() => ToWstrTemp(); TempToUtf8() => ToUtf8Temp()
+- move MakeLZSA project to its own solution, for less clutter in SumatraPDF.sln
 
 2021-07-15 Thu
 
