@@ -106,7 +106,7 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
         logf("Invalid ds->zoom: %g\n", zoom);
         const WCHAR* ext = path::GetExtNoFree(stateForIssue2140->filePath);
         if (!str::IsEmpty(ext)) {
-            AutoFree extA(strconv::WstrToUtf8(ext));
+            auto extA(ToUtf8Temp(ext));
             logf("File type: %s\n", extA.Get());
         }
         logf("DisplayMode: %s\n", stateForIssue2140->displayMode);

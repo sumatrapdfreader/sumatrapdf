@@ -397,8 +397,7 @@ bool EpubDoc::Load() {
             }
             // load the image lazily
             ImageData2 data = {0};
-            auto tmp = strconv::WstrToUtf8(imgPath);
-            data.fileName = tmp;
+            data.fileName = strconv::WstrToUtf8(imgPath);
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
         } else if (isHtmlMediaType(mediatype)) {
@@ -463,10 +462,10 @@ bool EpubDoc::Load() {
         }
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        AutoFree utf8_path = strconv::WstrToUtf8(fullPath);
-        DebugCrashIf(str::FindChar(utf8_path.Get(), '"'));
-        str::TransChars(utf8_path.Get(), "\"", "'");
-        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path.Get());
+        auto pathA = ToUtf8Temp(fullPath);
+        DebugCrashIf(str::FindChar(pathA.Get(), '"'));
+        str::TransChars(pathA.Get(), "\"", "'");
+        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", pathA.Get());
         htmlData.Append(html.data);
     }
 
@@ -733,7 +732,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
     }
 
-    AutoFree pagePath(strconv::WstrToUtf8(tocPath));
+    auto pagePath(ToUtf8Temp(tocPath));
     if (isNcxToc) {
         return ParseNcxToc(tocData, tocDataLen, pagePath.Get(), visitor);
     }

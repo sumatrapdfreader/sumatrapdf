@@ -184,10 +184,10 @@ struct DjVuContext {
 
     ddjvu_document_t* OpenFile(const WCHAR* fileName) {
         ScopedCritSec scope(&lock);
-        AutoFree fileNameUtf8(strconv::WstrToUtf8(fileName));
+        auto fileNameA(ToUtf8Temp(fileName));
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
-        return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8.Get(), /* cache */ FALSE);
+        return ddjvu_document_create_by_filename_utf8(ctx, fileNameA.Get(), /* cache */ FALSE);
     }
 
     ddjvu_document_t* OpenStream(IStream* stream) {
@@ -1119,10 +1119,10 @@ WCHAR* EngineDjVu::GetPageLabel(int pageNo) const {
 }
 
 int EngineDjVu::GetPageByLabel(const WCHAR* label) const {
-    AutoFree labelUtf8(strconv::WstrToUtf8(label));
+    auto labelA(ToUtf8Temp(label));
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
-        if (str::EqI(info.title, labelUtf8.Get()) && !str::Eq(info.title, info.id)) {
+        if (str::EqI(info.title, labelA.Get()) && !str::Eq(info.title, info.id)) {
             return info.pageno + 1;
         }
     }

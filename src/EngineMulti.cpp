@@ -456,7 +456,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
         return isValid;
     };
     VecStr files;
-    AutoFreeStr dir = strconv::WstrToUtf8(dirW);
+    auto dir = ToUtf8Temp(dirW);
     bool ok = CollectFilesFromDirectory(dir.AsView(), files, isValidFunc);
     if (!ok) {
         // TODO: show error message
