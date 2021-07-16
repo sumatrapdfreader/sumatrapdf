@@ -31,7 +31,7 @@ bool IsAbsolute(const WCHAR* path);
 WCHAR* GetDir(const WCHAR* path);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
-WCHAR* GetTempPath(const WCHAR* filePrefix = nullptr);
+WCHAR* GetTempFilePath(const WCHAR* filePrefix = nullptr);
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 } // namespace path
 

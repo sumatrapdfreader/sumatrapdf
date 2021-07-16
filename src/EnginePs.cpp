@@ -137,7 +137,7 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 static EngineBase* ps2pdf(const WCHAR* path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     AutoFreeWstr shortPath(path::ShortPath(path));
-    AutoFreeWstr tmpFile(path::GetTempPath(L"PsE"));
+    AutoFreeWstr tmpFile(path::GetTempFilePath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     AutoFreeWstr gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c) {
@@ -201,7 +201,7 @@ static EngineBase* ps2pdf(const WCHAR* path) {
 }
 
 static EngineBase* psgz2pdf(const WCHAR* fileName) {
-    AutoFreeWstr tmpFile(path::GetTempPath(L"PsE"));
+    AutoFreeWstr tmpFile(path::GetTempFilePath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;
