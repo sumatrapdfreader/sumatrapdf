@@ -977,7 +977,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
 
 Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
-    SubmitCrashIf(!pageInfo);
+    SubmitBugReportIf(!pageInfo);
     if (!pageInfo) {
         return Point();
     }
@@ -1185,7 +1185,7 @@ Point DisplayModel::GetContentStart(int pageNo) {
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX) {
     if (!ValidPageNo(pageNo)) {
         logf("DisplayModel::GoToPage: invalid pageNo: %d, nPages: %d\n", pageNo, engine->PageCount());
-        SubmitCrashIf(ValidPageNo(pageNo));
+        SubmitBugReportIf(ValidPageNo(pageNo));
         return;
     }
 

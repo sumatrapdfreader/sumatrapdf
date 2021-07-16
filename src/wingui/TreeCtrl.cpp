@@ -264,7 +264,7 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         a.treeItem = w->GetTreeItemByHandle(hItem);
         // TODO: seeing this in crash reports because GetTVITEM() returns nullptr
         // should log more info
-        // SubmitCrashIf(!a.treeItem);
+        // SubmitBugReportIf(!a.treeItem);
         if (!a.treeItem) {
             return;
         }

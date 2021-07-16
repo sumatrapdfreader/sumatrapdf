@@ -312,7 +312,6 @@ bool CrashHandlerDownloadSymbols() {
 // like crash report, but can be triggered without a crash
 void SubmitDebugReport(const char* condStr) {
     if (!CrashHandlerCanUseNet()) {
-        dbglog("SubmitDebugReport(): skipping because !CrashHandlerCanUseNet()\n");
         return;
     }
 
@@ -321,6 +320,7 @@ void SubmitDebugReport(const char* condStr) {
     bool ok = CrashHandlerDownloadSymbols();
     if (!ok) {
         dbglog("SubmitDebugReport(): CrashHandlerDownloadSymbols() failed\n");
+        return;
     }
 
     auto sv = BuildCrashInfoText(false);

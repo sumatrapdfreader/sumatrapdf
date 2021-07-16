@@ -233,10 +233,16 @@ inline void CrashIfFunc(bool cond) {
 // For sumatra, it's in CrashHandler.cpp
 void SubmitDebugReport(const char*);
 
-inline void SendCrashIfFunc(bool cond, [[maybe_unused]] const char* condStr) {
-    if (!cond) {
+// we want to avoid submitting multiple reports for the same
+// condition. I'm too lazy to implement tracking this granuarly
+// so only allow once submition in a given session
+static bool didSubmitDebugReport = false;
+
+inline void SubmitDebugReportIfFunc(bool cond, __unused const char* condStr) {
+    if (!cond || didSubmitDebugReport) {
         return;
     }
+    didSubmitDebugReport = true;
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
     SubmitDebugReport(condStr);
 #endif
@@ -281,10 +287,10 @@ inline void DebugCrashIfFunc(bool) {
         CrashIfFunc(cond);          \
     } while (0)
 
-#define SubmitCrashIf(cond)           \
-    do {                              \
-        __analysis_assume(!(cond));   \
-        SendCrashIfFunc(cond, #cond); \
+#define SubmitBugReportIf(cond)               \
+    do {                                          \
+        __analysis_assume(!(cond));               \
+        SubmitDebugReportIfFunc(cond, #cond); \
     } while (0)
 
 void* AllocZero(size_t count, size_t size);

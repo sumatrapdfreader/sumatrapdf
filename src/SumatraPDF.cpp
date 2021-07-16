@@ -1683,7 +1683,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         if (!args.forceReuse && !openNewTab) {
             logf("LoadDocument: got !args.forceReuse && !openNewTab\n");
         }
-        SubmitCrashIf(!args.forceReuse && !openNewTab);
+        SubmitBugReportIf(!args.forceReuse && !openNewTab);
         if (openNewTab) {
             SaveCurrentTabInfo(args.win);
         }

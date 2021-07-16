@@ -1416,7 +1416,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     SetMenuStateForSelection(tab, win->menu);
 
     // TODO: happens with UseTabs = false with .pdf files
-    SubmitCrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
+    SubmitBugReportIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
     win::menu::SetEnabled(win->menu, CmdClose, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win->menu);

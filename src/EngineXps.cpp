@@ -868,7 +868,7 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     }
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
-        // SubmitCrashIf(true);
+        // SubmitBugReportIf(true);
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
     }

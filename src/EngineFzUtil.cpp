@@ -867,7 +867,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
         if (pageNo == -1) {
             // TODO: figure out what it could be
             logf("CalcDestKind(): unknown uri: '%s'\n", uri);
-            // SubmitCrashIf(true);
+            // SubmitBugReportIf(true);
             return nullptr;
         }
         return kindDestinationScrollTo;
@@ -884,7 +884,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
 
     logf("CalcDestKind(): unknown uri: '%s'\n", uri);
     // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
-    // SubmitCrashIf(true);
+    // SubmitBugReportIf(true);
     return nullptr;
 #if 0
     switch (link->kind) {
@@ -950,7 +950,7 @@ static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
     float y = 0;
     int pageNo = resolve_link(uri, &x, &y);
     if (pageNo == -1) {
-        // SubmitCrashIf(pageNo == -1);
+        // SubmitBugReportIf(pageNo == -1);
         return result;
     }
 

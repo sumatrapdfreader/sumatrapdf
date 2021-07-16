@@ -9,6 +9,7 @@ A daily log of changes and commentary. An experiment of sorts.
   Shift + 'i' does what 'i' used to do i.e. show page number info
 - combine 9 projects for mupdf libs (freetype, mujs etc.) into single project mupdf-libs
 - improve crash processing for SubmitDebugReport
+- only submit debug report once per session
 
 2021-07-14 Wed
 
