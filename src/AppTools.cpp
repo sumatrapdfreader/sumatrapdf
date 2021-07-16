@@ -78,6 +78,11 @@ bool IsRunningInPortableMode() {
     return true;
 }
 
+bool IsDllBuild() {
+    HRSRC resSrc = FindResourceW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+    return resSrc != nullptr;
+}
+
 static AutoFreeWstr gAppDataDir;
 
 void SetAppDataPath(const WCHAR* path) {

@@ -3,6 +3,8 @@
 
 bool HasBeenInstalled();
 bool IsRunningInPortableMode();
+bool IsDllBuild();
+
 WCHAR* AppGenDataFilename(const WCHAR* pFilename);
 void SetAppDataPath(const WCHAR* path);
 
