@@ -23,11 +23,11 @@ import (
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
 const filterNoSymbols = true
 
-// we don't want want to show crsahes for outdated builds
+// we don't want want to show crashes for outdated builds
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
 const filterOlderVersions = true
-const lowestCrashingBuildToShow = 13663
+const lowestCrashingBuildToShow = 13674
 
 const nDaysToKeep = 14
 

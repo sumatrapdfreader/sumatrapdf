@@ -132,7 +132,7 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
 static std::string_view BuildCrashInfoText(bool forCrash) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (!forCrash) {
-        s.Append("Type: deubg report (not crash)");
+        s.Append("Type: deubg report (not crash)\n");
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
