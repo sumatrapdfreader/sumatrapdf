@@ -2000,6 +2000,26 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return 0;
     }
 
+    // figure out which executable to download
+    const char* dlLink{nullptr};
+    const char* dlKey{nullptr};
+    if (IsProcess64()) {
+        if (IsDllBuild()) {
+            dlKey = "Installer64";
+        } else {
+            dlKey = "PortableExe64";
+        }
+    } else {
+        if (IsDllBuild()) {
+            dlKey = "Installer32";
+        } else {
+            dlKey = "PortableExe32";
+        }
+    }
+
+    dlLink = node->GetValue(dlKey);
+    logf("dlLink: '%s'\n", dlLink);
+
     // ask whether to download the new version and allow the user to
     // either open the browser, do nothing or don't be reminded of
     // this update ever again
@@ -2039,7 +2059,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
     }
 
     // For auto-check, only check if at least a day passed since last check
-    if (autoCheck) {
+    if (false && autoCheck) {
         // don't check if the timestamp or version to skip can't be updated
         // (mainly in plugin mode, stress testing and restricted settings)
         if (!HasPermission(Perm::SavePreferences)) {
@@ -5242,11 +5262,6 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return DefWindowProc(hwnd, msg, wp, lp);
     }
     return 0;
-}
-
-bool IsDllBuild() {
-    HRSRC resSrc = FindResourceW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
-    return resSrc != nullptr;
 }
 
 static TempStr GetFileSizeAsStrTemp(std::string_view path) {

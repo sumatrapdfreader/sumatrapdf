@@ -680,9 +680,6 @@ int __cdecl _purecall() {
     return 0;
 }
 
-// in SumatraPDF.cpp
-extern bool IsDllBuild();
-
 void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath, const WCHAR* symDir) {
     CrashIf(gDumpEvent || gDumpThread);
 
