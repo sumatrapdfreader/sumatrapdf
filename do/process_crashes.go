@@ -542,6 +542,17 @@ func downloadCrashesAndGenerateHTML() {
 	filterBigCrashes()
 
 	days := getDaysSorted()
+
+	// those version should show up at the top
+	/*
+		isPriorityVersion := func(v string) bool {
+			switch v {
+			case "Ver: 3.3", "Ver: 3.3 64-bit":
+				return true
+			}
+			return false
+		}
+	*/
 	for idx, day := range days {
 		a := crashesPerDay[day]
 		logf("%s: %d\n", day, len(a))
@@ -556,7 +567,16 @@ func downloadCrashesAndGenerateHTML() {
 				}
 				return len(c1) > len(c2)
 			}
-			return v1 > v2
+			/*
+				if isPriorityVersion(v1) {
+					logf("pri v1: '%s' v2: '%s'\n", v1, v2)
+					if isPriorityVersion(v2) {
+						return v1 > v2
+					}
+					return true
+				}
+			*/
+			return v2 > v1
 		})
 		crashesPerDay[day] = a
 
