@@ -1055,7 +1055,7 @@ int CmpNatural(const char* a, const char* b) {
     return diff;
 }
 
-bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv) {
+bool EmptyOrWhiteSpaceOnly(std::string_view sv) {
     size_t n = sv.size();
     if (n == 0) {
         return true;

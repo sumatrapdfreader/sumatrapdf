@@ -143,9 +143,14 @@ static bool CanViewExternally(TabInfo* tab) {
 }
 
 static bool DetectExternalViewer(ExternalViewerInfo* info) {
+    const WCHAR* partialPath = info->exePartialPath;
+    if (!partialPath || !*partialPath) {
+        return false;
+    }
+
     {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
-        WCHAR* path = path::Join(dir, info->exePartialPath);
+        WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
             return true;
@@ -154,7 +159,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
     }
     {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
-        WCHAR* path = path::Join(dir, info->exePartialPath);
+        WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
             return true;
@@ -163,7 +168,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
     }
     {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_WINDOWS);
-        WCHAR* path = path::Join(dir, info->exePartialPath);
+        WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
             return true;
@@ -172,7 +177,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
     }
     {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_SYSTEM);
-        WCHAR* path = path::Join(dir, info->exePartialPath);
+        WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
             return true;

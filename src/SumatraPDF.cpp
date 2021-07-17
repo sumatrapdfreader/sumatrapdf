@@ -2389,7 +2389,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
     for (auto& tab : win->tabs) {
         if (tab->AsFixed()) {
             tab->AsFixed()->dontRenderFlag = true;
-        } else if (win->AsEbook()) {
+        } else if (tab->AsEbook()) {
             tab->AsEbook()->EnableMessageHandling(false);
         }
     }

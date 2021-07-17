@@ -27,7 +27,7 @@ const filterNoSymbols = true
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
 const filterOlderVersions = true
-const lowestCrashingBuildToShow = 13674
+const lowestCrashingBuildToShow = 13707
 
 const nDaysToKeep = 14
 
@@ -97,6 +97,18 @@ type crashInfo struct {
 	storeKey string
 }
 
+func shouldFilterCrashLine(s string) bool {
+	toFilter := []string{
+		"dbghelp::GetCurrentThreadCallstack", "BuildCrashInfoText", "SubmitDebugReport",
+	}
+	for _, txt := range toFilter {
+		if strings.Contains(s, txt) {
+			return true
+		}
+	}
+	return false
+}
+
 // "000000007791A365 01:0000000000029365 ntdll.dll!RtlFreeHeap+0x1a5"
 // =>
 // "dll!RtlFreeHeap+0x1a5"
@@ -105,21 +117,10 @@ func (ci *crashInfo) ShortCrashLine() string {
 	if len(ci.CrashLines) == 0 {
 		return "(none)"
 	}
-	// get first crsah line that shouldn't be filtered
-	shouldFilterLine := func(s string) bool {
-		toFilter := []string{
-			"dbghelp::GetCurrentThreadCallstack", "BuildCrashInfoText", "SubmitDebugReport",
-		}
-		for _, txt := range toFilter {
-			if strings.Contains(s, txt) {
-				return true
-			}
-		}
-		return false
-	}
 	line := ci.CrashLines[0]
+	// get first crash line that shouldn't be filtered
 	for _, s := range ci.CrashLines {
-		if !shouldFilterLine(s) {
+		if !shouldFilterCrashLine(s) {
 			line = s
 			break
 		}
@@ -188,6 +189,9 @@ func symbolicateCrashLine(s string, gitSha1 string) crashLine {
 
 func symbolicateCrashInfoLines(ci *crashInfo) {
 	for _, s := range ci.CrashLines {
+		if shouldFilterCrashLine(s) {
+			continue
+		}
 		cl := symbolicateCrashLine(s, ci.GitSha1)
 		ci.CrashLinesLinked = append(ci.CrashLinesLinked, cl)
 	}

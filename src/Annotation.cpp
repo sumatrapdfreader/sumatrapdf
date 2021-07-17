@@ -176,7 +176,7 @@ std::string_view Author(Annotation* annot) {
     fz_catch(e->ctx) {
         s = nullptr;
     }
-    if (!s || str::IsStringEmptyOrWhiteSpaceOnly(s)) {
+    if (!s || str::EmptyOrWhiteSpaceOnly(s)) {
         return {};
     }
     return s;

@@ -152,7 +152,7 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAU
 WCHAR* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
 WCHAR* FormatRomanNumeral(int number);
 
-bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv);
+bool EmptyOrWhiteSpaceOnly(std::string_view sv);
 } // namespace str
 
 namespace url {
