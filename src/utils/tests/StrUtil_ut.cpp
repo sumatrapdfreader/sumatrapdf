@@ -335,6 +335,7 @@ void StrTest() {
     size_t count = str::TransCharsInPlace(buf, L"ace", L"ACE");
     utassert(str::Eq(buf, L"AbC\1Efg\1") && count == 3);
     count = str::TransCharsInPlace(buf, L"\1", L"\0");
+    utassert(count == 2);
     utassert(str::Eq(buf, L"AbC") && str::Eq(buf + 4, L"Efg") && count == 2);
     count = str::TransCharsInPlace(buf, L"", L"X");
     utassert(str::Eq(buf, L"AbC") && count == 0);

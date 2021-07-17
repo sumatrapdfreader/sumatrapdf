@@ -422,7 +422,7 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
     WIN32_FIND_DATA FileData;
     HANDLE hList;
 
-    GetFullPathName(path, nelem(szPath), szPath, &lpFileName);
+    GetFullPathNameW(path, nelem(szPath), szPath, &lpFileName);
 
     hList = FindFirstFile(szPath, &FileData);
     if (hList == INVALID_HANDLE_VALUE) {
@@ -481,7 +481,7 @@ static void create_system_font_list(fz_context* ctx) {
         szFile[0] = '\0';
         GetModuleFileName(CURRENT_HMODULE, szFontDir, MAX_PATH);
         szFontDir[nelem(szFontDir) - 1] = '\0';
-        GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
+        GetFullPathNameW(szFontDir, MAX_PATH, szFile, &lpFileName);
         lstrcpyn(lpFileName, L"DroidSansFallback.ttf", szFile + MAX_PATH - lpFileName);
         extend_system_font_list(ctx, szFile);
     }

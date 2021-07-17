@@ -211,13 +211,13 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
 WCHAR* Normalize(const WCHAR* path) {
     // convert to absolute path, change slashes into backslashes
-    DWORD cch = GetFullPathName(path, 0, nullptr, nullptr);
+    DWORD cch = GetFullPathNameW(path, 0, nullptr, nullptr);
     if (!cch) {
         return str::Dup(path);
     }
 
     AutoFreeWstr fullpath(AllocArray<WCHAR>(cch));
-    GetFullPathName(path, cch, fullpath, nullptr);
+    GetFullPathNameW(path, cch, fullpath, nullptr);
     // convert to long form
     cch = GetLongPathName(fullpath, nullptr, 0);
     if (!cch) {

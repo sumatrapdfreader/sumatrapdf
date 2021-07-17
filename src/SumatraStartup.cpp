@@ -209,7 +209,7 @@ static bool InstanceInit() {
 static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool isFirstWin) {
     // delegate file opening to a previously running instance by sending a DDE message
     WCHAR fullpath[MAX_PATH];
-    GetFullPathName(filePath, dimof(fullpath), fullpath, nullptr);
+    GetFullPathNameW(filePath, dimof(fullpath), fullpath, nullptr);
 
     str::WStr cmd;
     int newWindow = 0;

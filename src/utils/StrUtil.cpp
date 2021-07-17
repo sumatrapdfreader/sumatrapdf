@@ -2221,17 +2221,18 @@ size_t TrimWSInPlace(WCHAR* s, TrimOpt opt) {
 }
 
 size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {
-    size_t findCount = 0;
+    size_t nReplaced = 0;
 
     for (WCHAR* c = str; *c; c++) {
-        const WCHAR* found = str::FindChar(oldChars, *c);
-        if (found) {
-            *c = newChars[found - oldChars];
-            findCount++;
+        const WCHAR* pos = str::FindChar(oldChars, *c);
+        if (pos) {
+            size_t idx = pos - oldChars;
+            *c = newChars[idx];
+            nReplaced++;
         }
     }
 
-    return findCount;
+    return nReplaced;
 }
 
 // free() the result

@@ -225,14 +225,14 @@ void InitializePolicies(bool restrict) {
         if (value != nullptr) {
             auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransCharsInPlace(protocols, L":; ", L",,,");
+            str::TransCharsInPlace(protocols, L" :;", L",,,");
             gAllowedLinkProtocols.Split(protocols, L",", true);
         }
         value = polsec->GetValue("SafeFileTypes");
         if (value != nullptr) {
             auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransCharsInPlace(protocols, L":; ", L",,,");
+            str::TransCharsInPlace(protocols, L" :;", L",,,");
             gAllowedFileTypes.Split(protocols, L",", true);
         }
     }
