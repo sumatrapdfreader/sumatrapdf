@@ -107,9 +107,12 @@ struct TempWstr {
 
 namespace str {
 TempStr DupTemp(const char* s, size_t cb = (size_t)-1);
-TempStr DupTemp(std::string_view);
 TempWstr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
+
+TempStr DupTemp(std::string_view);
 TempWstr DupTemp(std::wstring_view);
+
+TempStr JoinTemp(const char* s1, const char* s2, const char* s3 = nullptr);
 } // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);

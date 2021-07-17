@@ -27,34 +27,30 @@ bool ChmDoc::HasData(const char* fileName) {
         return false;
     }
 
-    AutoFree tmpName;
     if (!str::StartsWith(fileName, "/")) {
-        tmpName.Set(str::Join("/", fileName));
-        fileName = tmpName;
+        fileName = str::JoinTemp("/", fileName);
     } else if (str::StartsWith(fileName, "///")) {
         fileName += 2;
     }
 
-    struct chmUnitInfo info;
+    struct chmUnitInfo info {};
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-std::span<u8> ChmDoc::GetData(const char* fileNameIn) {
-    AutoFree fileName;
-    if (!str::StartsWith(fileNameIn, "/")) {
-        fileName = str::Join("/", fileNameIn);
-    } else if (str::StartsWith(fileNameIn, "///")) {
-        fileName = str::Dup(fileNameIn + 2);
-    } else {
-        fileName = str::Dup(fileNameIn);
+std::span<u8> ChmDoc::GetData(const char* fileName) {
+    if (!str::StartsWith(fileName, "/")) {
+        fileName = str::JoinTemp("/", fileName);
+    } else if (str::StartsWith(fileName, "///")) {
+        fileName = fileName + 2;
     }
 
     struct chmUnitInfo info;
     int res = chm_resolve_object(chmHandle, fileName, &info);
     if (CHM_RESOLVE_SUCCESS != res && str::FindChar(fileName, '\\')) {
         // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
-        str::TransCharsInPlace(fileName, "\\", "/");
-        res = chm_resolve_object(chmHandle, fileName, &info);
+        auto fileNameTemp = str::DupTemp(fileName);
+        str::TransCharsInPlace(fileNameTemp, "\\", "/");
+        res = chm_resolve_object(chmHandle, fileNameTemp, &info);
     }
 
     if (CHM_RESOLVE_SUCCESS != res) {

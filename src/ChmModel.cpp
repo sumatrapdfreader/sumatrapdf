@@ -535,7 +535,7 @@ TocTree* ChmModel::GetToc() {
         }
         nextChild = &item->child;
     }
-    if (foundRoot) {
+    if (!foundRoot) {
         return nullptr;
     }
     tocTree = new TocTree(root);
