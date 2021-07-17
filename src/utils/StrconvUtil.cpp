@@ -66,7 +66,7 @@ std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allo
     if (!res) {
         return {nullptr, 0};
     }
-    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, (int)cch, res, cbNeeded, nullptr, nullptr);
+    int cbConverted = WideCharToMultiByte(codePage, 0, s, (int)cch, res, cbNeeded, nullptr, nullptr);
     CrashIf(cbConverted != cbNeeded);
     // TODO: change to DebugCrashIf() because expensive
     CrashIf((size_t)cbConverted != str::Len(res));
