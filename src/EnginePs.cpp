@@ -159,9 +159,9 @@ static EngineBase* ps2pdf(const WCHAR* path) {
         gswin32c.Get(), tmpFile.Get(), shortPath.Get());
 
     {
-        const char* fileName = path::GetBaseNameNoFree(__FILE__);
+        const char* fileName = path::GetBaseNameTemp(__FILE__);
         auto gswin = ToUtf8Temp(gswin32c.Get());
-        auto tmpFileName = ToUtf8Temp(path::GetBaseNameNoFree(tmpFile));
+        auto tmpFileName = ToUtf8Temp(path::GetBaseNameTemp(tmpFile));
         logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.Get(), tmpFileName.Get());
     }
 

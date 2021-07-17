@@ -19,7 +19,7 @@ bool IsSep(char c) {
 }
 
 // do not free, returns pointer inside <path>
-const char* GetBaseNameNoFree(const char* path) {
+const char* GetBaseNameTemp(const char* path) {
     const char* s = path + str::Len(path);
     for (; s > path; s--) {
         if (IsSep(s[-1])) {
@@ -42,7 +42,7 @@ std::string_view GetBaseName(std::string_view path) {
 }
 
 // do not free, returns pointer inside <path>
-const char* GetExtNoFree(const char* path) {
+const char* GetExtNoFreeTemp(const char* path) {
     const char* ext = nullptr;
     char c = *path;
     while (c) {
@@ -99,7 +99,7 @@ bool IsSep(WCHAR c) {
 }
 
 // do not free, returns pointer inside <path>
-const WCHAR* GetBaseNameNoFree(const WCHAR* path) {
+const WCHAR* GetBaseNameTemp(const WCHAR* path) {
     const WCHAR* end = path + str::Len(path);
     while (end > path) {
         if (IsSep(end[-1])) {
@@ -112,7 +112,7 @@ const WCHAR* GetBaseNameNoFree(const WCHAR* path) {
 
 // returns extension e.g. ".pdf"
 // do not free, returns pointer inside <path>
-const WCHAR* GetExtNoFree(const WCHAR* path) {
+const WCHAR* GetExtNoFreeTemp(const WCHAR* path) {
     const WCHAR* ext = path + str::Len(path);
     while ((ext > path) && !IsSep(*ext)) {
         if (*ext == '.') {
@@ -125,7 +125,7 @@ const WCHAR* GetExtNoFree(const WCHAR* path) {
 
 // caller has to free() the results
 WCHAR* GetDir(const WCHAR* path) {
-    const WCHAR* baseName = GetBaseNameNoFree(path);
+    const WCHAR* baseName = GetBaseNameTemp(path);
     if (baseName == path) {
         // relative directory
         return str::Dup(L".");
@@ -149,7 +149,7 @@ WCHAR* GetDir(const WCHAR* path) {
 // caller has to free() the results
 std::string_view GetDir(std::string_view pathSV) {
     const char* path = pathSV.data();
-    const char* baseName = GetBaseNameNoFree(path);
+    const char* baseName = GetBaseNameTemp(path);
     if (baseName == path) {
         // relative directory
         return str::Dup(".");
@@ -235,10 +235,10 @@ WCHAR* Normalize(const WCHAR* path) {
     if (cch && cch <= MAX_PATH) {
         AutoFreeWstr shortpath(AllocArray<WCHAR>(cch));
         GetShortPathName(fullpath, shortpath, cch);
-        if (str::Len(path::GetBaseNameNoFree(normpath)) + path::GetBaseNameNoFree(shortpath) - shortpath < MAX_PATH) {
+        if (str::Len(path::GetBaseNameTemp(normpath)) + path::GetBaseNameTemp(shortpath) - shortpath < MAX_PATH) {
             // keep the long filename if possible
-            *(WCHAR*)path::GetBaseNameNoFree(shortpath) = '\0';
-            return str::Join(shortpath, path::GetBaseNameNoFree(normpath));
+            *(WCHAR*)path::GetBaseNameTemp(shortpath) = '\0';
+            return str::Join(shortpath, path::GetBaseNameTemp(normpath));
         }
         return shortpath.StealData();
     }
@@ -302,8 +302,8 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
     }
 
     // we assume that if the last part doesn't match, they can't be the same
-    const WCHAR* base1 = path::GetBaseNameNoFree(path1);
-    const WCHAR* base2 = path::GetBaseNameNoFree(path2);
+    const WCHAR* base1 = path::GetBaseNameTemp(path1);
+    const WCHAR* base2 = path::GetBaseNameTemp(path2);
     if (!str::EqI(base1, base2)) {
         return false;
     }
@@ -393,7 +393,7 @@ static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {
    all filenames consisting of only a single character and
    having any extension) */
 bool Match(const WCHAR* path, const WCHAR* filter) {
-    path = GetBaseNameNoFree(path);
+    path = GetBaseNameTemp(path);
     while (str::FindChar(filter, L';')) {
         if (MatchWildcardsRec(path, filter)) {
             return true;
@@ -511,8 +511,8 @@ std::span<u8> ReadFile(std::string_view path) {
 }
 
 std::span<u8> ReadFile(const WCHAR* filePath) {
-    AutoFree path = strconv::WstrToUtf8(filePath);
-    return ReadFileWithAllocator(path.data, nullptr);
+    auto path = ToUtf8Temp(filePath);
+    return ReadFileWithAllocator(path.Get(), nullptr);
 }
 
 bool WriteFile(const char* filePath, std::span<u8> d) {
@@ -583,8 +583,8 @@ i64 GetSize(std::string_view filePath) {
 }
 
 std::span<u8> ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
-    AutoFree pathUtf8 = strconv::WstrToUtf8(path);
-    return ReadFileWithAllocator(pathUtf8.data, allocator);
+    auto pathA = ToUtf8Temp(path);
+    return ReadFileWithAllocator(pathA.Get(), allocator);
 }
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)

@@ -579,7 +579,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
 // has "install" string in it e.g. SumatraPDF-installer.exe
 static bool ExeHasNameOfInstaller() {
     AutoFreeWstr exePath = GetExePath();
-    const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
+    const WCHAR* exeName = path::GetBaseNameTemp(exePath);
     if (str::FindI(exeName, L"uninstall")) {
         return false;
     }
@@ -780,11 +780,11 @@ static void LogDpiAwareness() {
 
 #if 0
 static void testLogf() {
-    const char* fileName = path::GetBaseNameNoFree(__FILE__);
+    const char* fileName = path::GetBaseNameTemp(__FILE__);
     WCHAR* gswin32c = L"this is a path";
     WCHAR* tmpFile = L"c:\foo\bar.txt";
     auto gswin = ToUtf8Temp(gswin32c);
-    auto tmpFileName = ToUtf8Temp(path::GetBaseNameNoFree(tmpFile));
+    auto tmpFileName = ToUtf8Temp(path::GetBaseNameTemp(tmpFile));
     logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.Get(), tmpFileName.Get());
 }
 #endif

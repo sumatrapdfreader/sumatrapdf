@@ -113,7 +113,7 @@ static void GetFileState(const WCHAR* filePath, FileWatcherState* fs) {
     // copy f.pdf f2.pdf will change lastAccessTime of f.pdf)
     // So I'm sticking with lastWriteTime
     fs->time = file::GetModificationTime(filePath);
-    AutoFreeStr path = strconv::WstrToUtf8(filePath);
+    auto path = ToUtf8Temp(filePath);
     fs->size = file::GetSize(path.AsView());
 }
 
@@ -154,7 +154,7 @@ static void NotifyAboutFile(WatchedDir* d, const WCHAR* fileName) {
         if (wf->watchedDir != d) {
             continue;
         }
-        const WCHAR* wfFileName = path::GetBaseNameNoFree(wf->filePath);
+        const WCHAR* wfFileName = path::GetBaseNameTemp(wf->filePath);
 
         if (!str::EqI(fileName, wfFileName)) {
             continue;

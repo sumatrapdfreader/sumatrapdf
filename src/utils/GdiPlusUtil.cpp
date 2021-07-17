@@ -126,7 +126,7 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
         if (!s) {
             s = L"<null>";
         }
-        AutoFree s2 = strconv::WstrToUtf8(s, (size_t)len);
+        auto s2 = ToUtf8Temp(s, (size_t)len);
         logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2.Get());
         CrashIf(status != Ok);
     }

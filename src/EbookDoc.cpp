@@ -812,7 +812,7 @@ static std::span<u8> loadFromFile(Fb2Doc* doc) {
     // .url files in addition (TODO: anything else?)
     for (auto&& fileInfo : fileInfos) {
         auto fileName = fileInfo->name;
-        const char* ext = path::GetExtNoFree(fileName.data());
+        const char* ext = path::GetExtNoFreeTemp(fileName.data());
         if (str::EqI(ext, ".fb2") && data.empty()) {
             data = archive->GetFileDataById(fileInfo->fileId);
         } else if (!str::EqI(ext, ".url")) {
@@ -1519,7 +1519,7 @@ bool TxtDoc::Load() {
     }
 
     int rfc;
-    isRFC = str::Parse(path::GetBaseNameNoFree(fileName), L"rfc%d.txt%$", &rfc) != nullptr;
+    isRFC = str::Parse(path::GetBaseNameTemp(fileName), L"rfc%d.txt%$", &rfc) != nullptr;
 
     const char* linkEnd = nullptr;
     bool rfcHeader = false;

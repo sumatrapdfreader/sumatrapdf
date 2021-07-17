@@ -2556,11 +2556,11 @@ void DecodeInPlace(WCHAR* url) {
         return;
     }
     // URLs are usually UTF-8 encoded
-    AutoFree urlUtf8(strconv::WstrToUtf8(url));
-    DecodeInPlace(urlUtf8.Get());
+    auto urlA(ToUtf8Temp(url));
+    DecodeInPlace(urlA.Get());
     // convert back in place
     CrashIf(str::Len(url) >= INT_MAX);
-    MultiByteToWideChar(CP_UTF8, 0, urlUtf8.Get(), -1, url, (int)str::Len(url) + 1);
+    MultiByteToWideChar(CP_UTF8, 0, urlA.Get(), -1, url, (int)str::Len(url) + 1);
 }
 
 WCHAR* GetFullPath(const WCHAR* url) {

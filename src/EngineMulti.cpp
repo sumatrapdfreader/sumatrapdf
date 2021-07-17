@@ -329,7 +329,7 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     }
 
     int nPages = engine->PageCount();
-    const WCHAR* title = path::GetBaseNameNoFree(engine->FileName());
+    const WCHAR* title = path::GetBaseNameTemp(engine->FileName());
     TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocFileRoot;

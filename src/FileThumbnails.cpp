@@ -79,7 +79,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
         if (!bmpPath) {
             continue;
         }
-        int idx = files.Find(path::GetBaseNameNoFree(bmpPath));
+        int idx = files.Find(path::GetBaseNameTemp(bmpPath));
         if (idx != -1) {
             CrashIf(idx < 0 || files.size() <= (size_t)idx);
             free(files.PopAt(idx));

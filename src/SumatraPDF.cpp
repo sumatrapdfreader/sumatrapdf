@@ -288,7 +288,7 @@ bool OpenFileExternally(const WCHAR* path) {
     }
 
     // check if this file's perceived type is allowed
-    const WCHAR* ext = path::GetExtNoFree(path);
+    const WCHAR* ext = path::GetExtNoFreeTemp(path);
     AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml")) {
@@ -404,7 +404,7 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, u8* fileDigest, u8 dec
             fileName = urlName;
         }
     }
-    fileName = path::GetBaseNameNoFree(fileName);
+    fileName = path::GetBaseNameTemp(fileName);
 
     // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd)) {
@@ -935,7 +935,7 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
 static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
     const WCHAR* titlePath = tab->filePath;
     if (!gGlobalPrefs->fullPathInTitle) {
-        titlePath = path::GetBaseNameNoFree(titlePath);
+        titlePath = path::GetBaseNameTemp(titlePath);
     }
 
     AutoFreeWstr docTitle(str::Dup(L""));
@@ -2562,7 +2562,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameNoFree(srcFileName));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcFileName));
     if (str::FindChar(dstFileName, ':')) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
@@ -2736,7 +2736,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameNoFree(srcFileName));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcFileName));
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2798,7 +2798,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
 
     WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameNoFree(ctrl->FilePath()));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(ctrl->FilePath()));
     str::TransChars(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2848,7 +2848,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
                                     viewMode.Get(), ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
-    const WCHAR* srcFileName = path::GetBaseNameNoFree(ctrl->FilePath());
+    const WCHAR* srcFileName = path::GetBaseNameTemp(ctrl->FilePath());
     AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -5188,8 +5188,8 @@ static void DownloadDebugSymbols() {
     bool ok = CrashHandlerDownloadSymbols();
     char* msg = nullptr;
     if (ok) {
-        AutoFree symDirA = strconv::WstrToUtf8(symDir);
-        msg = str::Format("Downloaded symbols! to %s", symDirA.data);
+        auto symDirA = ToUtf8Temp(symDir);
+        msg = str::Format("Downloaded symbols! to %s", symDirA.Get());
     } else {
         msg = str::Dup("Failed to download symbols.");
     }

@@ -576,7 +576,7 @@ static WCHAR* GetSelfDeleteBatchPathInTemp() {
 // we create a bash script that deletes us
 static void InitSelfDelete() {
     AutoFreeWstr exePath = GetExePath();
-    AutoFreeStr exePathA = strconv::WstrToUtf8(exePath);
+    auto exePathA = ToUtf8Temp(exePath);
     str::Str script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,

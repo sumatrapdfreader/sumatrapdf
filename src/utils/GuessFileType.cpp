@@ -115,7 +115,7 @@ static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
 static Kind GetKindByFileExt(const WCHAR* path) {
-    AutoFree pathA = strconv::WstrToUtf8(path);
+    auto pathA = ToUtf8Temp(path);
     int idx = 0;
     const char* curr = gFileExts;
     while (curr && *curr) {

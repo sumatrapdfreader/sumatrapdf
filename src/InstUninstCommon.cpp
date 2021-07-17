@@ -531,7 +531,7 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
     const WCHAR* appName = GetAppNameTemp();
     readableProcessNames[0] = exeName;
     readableProcessNames[1] = appName;
-    const WCHAR* procName = path::GetBaseNameNoFree(procPath);
+    const WCHAR* procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
         if (str::EqI(procName, readableProcessNames[i])) {
             return readableProcessNames[i + 1];

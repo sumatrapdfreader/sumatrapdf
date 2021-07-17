@@ -730,7 +730,7 @@ WCHAR* EngineXps::ExtractFontList() {
     for (xps_font_cache* font = _doc->font_table; font; font = font->next) {
         AutoFreeWstr path(strconv::FromUtf8(font->name));
         AutoFreeWstr name(strconv::FromUtf8(font->font->name));
-        fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseNameNoFree(path)));
+        fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseNameTemp(path)));
     }
 #endif
     if (fonts.size() == 0) {

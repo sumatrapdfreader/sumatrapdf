@@ -35,7 +35,7 @@ bool HasBeenInstalled() {
 
     WCHAR* toFree = nullptr;
     if (!str::EndsWithI(installedPath, L".exe")) {
-        WCHAR* tmp = path::Join(installedPath, path::GetBaseNameNoFree(exePath));
+        WCHAR* tmp = path::Join(installedPath, path::GetBaseNameTemp(exePath));
         installedPath.Set(tmp);
     }
     return path::IsSame(installedPath, exePath);
@@ -67,7 +67,7 @@ bool IsRunningInPortableMode() {
     // check if one of the exePath's parent directories is "Program Files"
     // (or a junction to it)
     WCHAR* baseName;
-    while ((baseName = (WCHAR*)path::GetBaseNameNoFree(exePath)) > exePath) {
+    while ((baseName = (WCHAR*)path::GetBaseNameTemp(exePath)) > exePath) {
         baseName[-1] = '\0';
         if (path::IsSame(programFilesDir, exePath)) {
             sCacheIsPortable = 0;

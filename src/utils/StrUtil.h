@@ -157,7 +157,7 @@ bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv);
 
 namespace url {
 
-void DecodeInPlace(char* urlUtf8);
+void DecodeInPlace(char* urlA);
 
 bool IsAbsolute(const WCHAR* url);
 void DecodeInPlace(WCHAR* url);

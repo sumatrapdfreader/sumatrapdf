@@ -76,7 +76,7 @@ const WCHAR* TabInfo::GetTabTitle() const {
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
     }
-    return path::GetBaseNameNoFree(filePath);
+    return path::GetBaseNameTemp(filePath);
 }
 
 void TabInfo::MoveDocBy(int dx, int dy) {

@@ -485,7 +485,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
     if (isEmbeddedFile) {
         auto embeddedName = dest->GetName();
-        const WCHAR* ext = path::GetExtNoFree(embeddedName);
+        const WCHAR* ext = path::GetExtNoFreeTemp(embeddedName);
         bool canOpenEmbedded = str::EqI(ext, L".pdf");
         if (!canOpenEmbedded) {
             win::menu::Remove(popup, CmdOpenEmbeddedPDF);

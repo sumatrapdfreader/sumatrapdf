@@ -477,8 +477,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     ParseCmdLine(GetCommandLine(), argList);
     if (argList.size() < 2) {
     Usage:
-        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
-               path::GetBaseNameNoFree(argList.at(0)));
+        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>", path::GetBaseNameTemp(argList.at(0)));
         return 2;
     }
 
@@ -563,7 +562,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     }
 #endif
     if (!engine) {
-        ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameNoFree(filePath));
+        ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(filePath));
         return 1;
     }
     if (!loadOnly) {

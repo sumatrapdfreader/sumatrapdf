@@ -7,8 +7,8 @@ bool IsSep(char c);
 
 std::string_view GetBaseName(std::string_view path);
 
-const char* GetBaseNameNoFree(const char* path);
-const char* GetExtNoFree(const char* path);
+const char* GetBaseNameTemp(const char* path);
+const char* GetExtNoFreeTemp(const char* path);
 
 char* Join(const char* path, const char* fileName, Allocator* allocator);
 
@@ -17,8 +17,8 @@ bool IsDirectory(std::string_view);
 bool IsDirectory(std::wstring_view);
 
 bool IsSep(WCHAR c);
-const WCHAR* GetBaseNameNoFree(const WCHAR* path);
-const WCHAR* GetExtNoFree(const WCHAR* path);
+const WCHAR* GetBaseNameTemp(const WCHAR* path);
+const WCHAR* GetExtNoFreeTemp(const WCHAR* path);
 
 WCHAR* Normalize(const WCHAR* path);
 WCHAR* ShortPath(const WCHAR* path);

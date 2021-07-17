@@ -49,7 +49,7 @@ static int cmpOpenCount(const void* a, const void* b) {
     }
     // sort pinned documents alphabetically
     if (dsA->isPinned) {
-        return str::CmpNatural(path::GetBaseNameNoFree(dsA->filePath), path::GetBaseNameNoFree(dsB->filePath));
+        return str::CmpNatural(path::GetBaseNameTemp(dsA->filePath), path::GetBaseNameTemp(dsB->filePath));
     }
     // sort often opened documents first
     if (dsA->openCount != dsB->openCount) {
@@ -98,7 +98,7 @@ FileState* FileHistory::Get(size_t index) const {
 FileState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
-    const WCHAR* fileName = path::GetBaseNameNoFree(filePath);
+    const WCHAR* fileName = path::GetBaseNameTemp(filePath);
     int n = states->isize();
     for (int i = 0; i < n; i++) {
         FileState* state = states->at(i);

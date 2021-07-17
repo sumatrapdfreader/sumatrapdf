@@ -760,7 +760,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 rect.x -= iconSpace;
             }
             rTmp = ToRECT(rect);
-            DrawText(hdc, path::GetBaseNameNoFree(state->filePath), -1, &rTmp,
+            DrawText(hdc, path::GetBaseNameTemp(state->filePath), -1, &rTmp,
                      DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
             // note: this crashes asan build in windows code

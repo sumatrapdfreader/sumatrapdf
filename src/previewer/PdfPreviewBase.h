@@ -168,7 +168,7 @@ class PreviewBase : public IThumbnailProvider,
 
     // IPersistFile (for Windows XP)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, [[maybe_unused]] DWORD dwMode) {
-        AutoFreeStr fileName = strconv::WstrToUtf8V(pszFileName);
+        auto fileName = ToUtf8Temp(pszFileName);
         dbglogf("PdfPreview: PreviewBase::Load('%s')\n", fileName.Get());
 
         HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,

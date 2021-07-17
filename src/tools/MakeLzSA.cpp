@@ -235,7 +235,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
         return mainVerify(args.at(1));
 
     FailIf(args.size() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]",
-           path::GetBaseNameNoFree(args.at(0)));
+           path::GetBaseNameTemp(args.at(0)));
     errorStep++;
 
     bool ok = lzsa::CreateArchive(args.at(1), args, 2);

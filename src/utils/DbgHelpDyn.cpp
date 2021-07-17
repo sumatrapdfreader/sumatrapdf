@@ -290,7 +290,7 @@ void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
     ok = GetAddrInfo((void*)addr, moduleName, sizeof(moduleName), section, offset);
     if (ok) {
         str::ToLowerInPlace(moduleName);
-        const char* moduleShort = path::GetBaseNameNoFree(moduleName);
+        const char* moduleShort = path::GetBaseNameTemp(moduleName);
         if (compact) {
             s.Append(moduleShort);
         } else {

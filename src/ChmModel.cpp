@@ -446,8 +446,8 @@ std::span<u8> ChmModel::GetDataForUrl(const WCHAR* url) {
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(str::Dup(&poolAlloc, plainUrl));
-        AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
-        e->data = doc->GetData(urlUtf8.Get());
+        AutoFree urlA(strconv::WstrToUtf8(plainUrl));
+        e->data = doc->GetData(urlA.Get());
         if (e->data.empty()) {
             delete e;
             return {};
@@ -472,23 +472,23 @@ void ChmModel::OnLButtonDown() {
 // named destinations are either in-document URLs or Alias topic IDs
 PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     AutoFreeWstr plainUrl(url::GetFullPath(name));
-    AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
-    if (!doc->HasData(urlUtf8.Get())) {
+    AutoFree urlA(strconv::WstrToUtf8(plainUrl));
+    if (!doc->HasData(urlA.Get())) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
-            urlUtf8.TakeOwnershipOf(doc->ResolveTopicID(topicID));
-            if (urlUtf8.Get() && doc->HasData(urlUtf8.Get())) {
-                plainUrl.Set(strconv::Utf8ToWstr(urlUtf8.Get()));
+            urlA.TakeOwnershipOf(doc->ResolveTopicID(topicID));
+            if (urlA.Get() && doc->HasData(urlA.Get())) {
+                plainUrl.Set(strconv::Utf8ToWstr(urlA.Get()));
                 name = plainUrl;
             } else {
-                urlUtf8.Reset();
+                urlA.Reset();
             }
         } else {
-            urlUtf8.Reset();
+            urlA.Reset();
         }
     }
     int pageNo = pages.Find(plainUrl) + 1;
-    if (!pageNo && !str::IsEmpty(urlUtf8.Get())) {
+    if (!pageNo && !str::IsEmpty(urlA.Get())) {
         // some documents use redirection URLs which aren't listed in the ToC
         // return pageNo=1 for these, as ScrollToLink will ignore that anyway
         // but LinkHandler::ScrollTo doesn't
@@ -662,8 +662,8 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     std::span<u8> GetDataForUrl(const WCHAR* url) override {
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
-        AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
-        auto d = doc->GetData(urlUtf8.Get());
+        auto urlA(ToUtf8Temp(plainUrl));
+        auto d = doc->GetData(urlA.Get());
         data.Append(d);
         return d;
     }

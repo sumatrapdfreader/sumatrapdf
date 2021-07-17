@@ -928,14 +928,14 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
         miniexp_t anno = miniexp_cdr(links[i]);
 
         miniexp_t url = miniexp_car(anno);
-        const char* urlUtf8 = nullptr;
+        const char* urlA = nullptr;
         if (miniexp_stringp(url)) {
-            urlUtf8 = miniexp_to_str(url);
+            urlA = miniexp_to_str(url);
         } else if (miniexp_consp(url) && miniexp_car(url) == miniexp_symbol("url") &&
                    miniexp_stringp(miniexp_cadr(url)) && miniexp_stringp(miniexp_caddr(url))) {
-            urlUtf8 = miniexp_to_str(miniexp_cadr(url));
+            urlA = miniexp_to_str(miniexp_cadr(url));
         }
-        if (!urlUtf8) {
+        if (!urlA) {
             continue;
         }
 
@@ -982,10 +982,10 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
         }
         Rect rect(x, page.dy - y - h, w, h);
 
-        AutoFree link = ResolveNamedDest(urlUtf8);
+        AutoFree link = ResolveNamedDest(urlA);
         const char* tmp = link.Get();
         if (!tmp) {
-            tmp = urlUtf8;
+            tmp = urlA;
         }
         auto el = newDjVuLink(pageNo, rect, tmp, commentUtf8);
         els->Append(el);
@@ -1037,12 +1037,12 @@ char* EngineDjVu::ResolveNamedDest(const char* name) {
 }
 
 PageDestination* EngineDjVu::GetNamedDest(const WCHAR* name) {
-    AutoFree nameUtf8 = strconv::WstrToUtf8(name);
-    if (!str::StartsWith(nameUtf8.Get(), "#")) {
-        nameUtf8.TakeOwnershipOf(str::Join("#", nameUtf8.Get()));
+    AutoFree nameA = strconv::WstrToUtf8(name);
+    if (!str::StartsWith(nameA.Get(), "#")) {
+        nameA.TakeOwnershipOf(str::Join("#", nameA.Get()));
     }
 
-    AutoFree link = ResolveNamedDest(nameUtf8.Get());
+    AutoFree link = ResolveNamedDest(nameA.Get());
     if (link) {
         return newDjVuDestination(link);
     }

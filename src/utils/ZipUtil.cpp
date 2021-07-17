@@ -192,13 +192,13 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
     }
 
     if (!nameInZip) {
-        nameInZip = path::IsAbsolute(filePath) ? path::GetBaseNameNoFree(filePath) : filePath;
+        nameInZip = path::IsAbsolute(filePath) ? path::GetBaseNameTemp(filePath) : filePath;
     }
 
-    AutoFree nameUtf8 = strconv::WstrToUtf8(nameInZip);
-    str::TransChars(nameUtf8.Get(), "\\", "/");
+    auto nameA = ToUtf8Temp(nameInZip);
+    str::TransChars(nameA.Get(), "\\", "/");
 
-    return AddFileData(nameUtf8.Get(), fileData.Get(), fileData.size(), dosdatetime);
+    return AddFileData(nameA.Get(), fileData.Get(), fileData.size(), dosdatetime);
 }
 
 // we use the filePath relative to dir as the zip name

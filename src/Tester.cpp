@@ -181,7 +181,7 @@ static void MobiTestFile(const WCHAR* filePath) {
         // remove the file extension
         const WCHAR* dir = MOBI_SAVE_DIR;
         dir::CreateAll(dir);
-        AutoFreeWstr fileName(str::Dup(path::GetBaseNameNoFree(filePath)));
+        AutoFreeWstr fileName(str::Dup(path::GetBaseNameTemp(filePath)));
         AutoFreeWstr filePathBase(path::Join(dir, fileName));
         WCHAR* ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
         *ext = 0;

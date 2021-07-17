@@ -745,15 +745,15 @@ WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
     }
 
     const WCHAR* path = pageFileNames.at(pageNo - 1);
-    const WCHAR* fileName = path::GetBaseNameNoFree(path);
-    size_t n = path::GetExtNoFree(fileName) - fileName;
+    const WCHAR* fileName = path::GetBaseNameTemp(path);
+    size_t n = path::GetExtNoFreeTemp(fileName) - fileName;
     return str::Dup(fileName, n);
 }
 
 int EngineImageDir::GetPageByLabel(const WCHAR* label) const {
     for (size_t i = 0; i < pageFileNames.size(); i++) {
-        const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(i));
-        const WCHAR* fileExt = path::GetExtNoFree(fileName);
+        const WCHAR* fileName = path::GetBaseNameTemp(pageFileNames.at(i));
+        const WCHAR* fileExt = path::GetExtNoFreeTemp(fileName);
         if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0')) {
             return (int)i + 1;
@@ -793,7 +793,7 @@ bool EngineImageDir::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool 
     bool ok = true;
     for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR* filePathOld = pageFileNames.at(i);
-        AutoFreeWstr filePathNew(path::Join(dstPath, path::GetBaseNameNoFree(filePathOld)));
+        AutoFreeWstr filePathNew(path::Join(dstPath, path::GetBaseNameTemp(filePathOld)));
         ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
     }
     return ok;
@@ -1018,7 +1018,7 @@ bool EngineCbx::FinishLoading() {
         Kind kind = GuessFileTypeFromName(fileNameW);
         if (IsImageEngineSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
-            !str::StartsWith(path::GetBaseNameNoFree(fileName), ".")) {
+            !str::StartsWith(path::GetBaseNameTemp(fileName), ".")) {
             pageFiles.Append(fileInfo);
         }
     }
@@ -1053,7 +1053,7 @@ bool EngineCbx::FinishLoading() {
     for (int i = 0; i < pageCount; i++) {
         std::string_view fname = pageFiles[i]->name;
         AutoFreeWstr name = strconv::Utf8ToWstr(fname);
-        const WCHAR* baseName = path::GetBaseNameNoFree(name.Get());
+        const WCHAR* baseName = path::GetBaseNameTemp(name.Get());
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
             root = ti;

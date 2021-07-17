@@ -288,7 +288,7 @@ static WCHAR* FavCompactReadableName(FileState* fav, Favorite* fn, bool isCurren
     if (isCurrent) {
         return str::Format(L"%s : %s", _TR("Current file"), rn.Get());
     }
-    const WCHAR* fp = path::GetBaseNameNoFree(fav->filePath);
+    const WCHAR* fp = path::GetBaseNameTemp(fav->filePath);
     return str::Format(L"%s : %s", fp, rn.Get());
 }
 
@@ -317,8 +317,8 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
 static int SortByBaseFileName(const void* a, const void* b) {
     const WCHAR* filePathA = *(const WCHAR**)a;
     const WCHAR* filePathB = *(const WCHAR**)b;
-    const WCHAR* baseA = path::GetBaseNameNoFree(filePathA);
-    const WCHAR* baseB = path::GetBaseNameNoFree(filePathB);
+    const WCHAR* baseA = path::GetBaseNameTemp(filePathA);
+    const WCHAR* baseB = path::GetBaseNameTemp(filePathB);
     return str::CmpNatural(baseA, baseB);
 }
 
@@ -393,7 +393,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
                 AutoFreeWstr tmp;
-                tmp.SetCopy(path::GetBaseNameNoFree(filePath));
+                tmp.SetCopy(path::GetBaseNameTemp(filePath));
                 auto fileName = win::menu::ToSafeString(tmp);
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
             }
@@ -541,7 +541,7 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fav, bool isExpanded) {
     if (isCollapsed) {
         res->text = FavCompactReadableName(fav, fn);
     } else {
-        res->text = str::Dup(path::GetBaseNameNoFree(fav->filePath));
+        res->text = str::Dup(path::GetBaseNameTemp(fav->filePath));
     }
     return res;
 }

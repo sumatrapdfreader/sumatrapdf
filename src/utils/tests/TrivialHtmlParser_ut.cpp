@@ -215,7 +215,7 @@ static void HtmlParserFile() {
     // We assume we're being run from obj-[dbg|rel], so the test
     // files are in ..\src\utils directory relative to exe's dir
     AutoFreeWstr exePath(GetExePath());
-    const WCHAR* exeDir = path::GetBaseNameNoFree(exePath);
+    const WCHAR* exeDir = path::GetBaseNameTemp(exePath);
     AutoFreeWstr p1(path::Join(exeDir, L"..\\src\\utils"));
     AutoFreeWstr p2(path::Join(p1, fileName));
     AutoFree d(file::ReadFile(p2));

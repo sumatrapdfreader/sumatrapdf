@@ -91,8 +91,8 @@ size_t MultiFormatArchive::GetFileId(const char* fileName) {
 }
 
 std::span<u8> MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
-    AutoFree fileNameUtf8 = strconv::WstrToUtf8(fileName);
-    return GetFileDataByName(fileNameUtf8);
+    auto fileNameA = ToUtf8Temp(fileName);
+    return GetFileDataByName(fileNameA);
 }
 
 std::span<u8> MultiFormatArchive::GetFileDataByName(const char* fileName) {
@@ -171,8 +171,8 @@ static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
 }
 
 static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
-    AutoFree pathUtf = strconv::WstrToUtf8(path);
-    bool ok = archive->Open(ar_open_file_w(path), pathUtf);
+    auto pathA = ToUtf8Temp(path);
+    bool ok = archive->Open(ar_open_file_w(path), pathA.Get());
     if (!ok) {
         delete archive;
         return nullptr;
@@ -377,7 +377,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
         }
 
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        AutoFree name = strconv::WstrToUtf8(rarHeader.FileNameW);
+        auto name = ToUtf8Temp(rarHeader.FileNameW);
 
         FileInfo* i = allocator_.AllocStruct<FileInfo>();
         i->fileId = fileId;

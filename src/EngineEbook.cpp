@@ -1498,9 +1498,9 @@ PageDestination* EngineChm::GetNamedDest(const WCHAR* name) {
     }
     unsigned int topicID;
     if (str::Parse(name, L"%u%$", &topicID)) {
-        AutoFree urlUtf8(doc->ResolveTopicID(topicID));
-        if (urlUtf8) {
-            AutoFreeWstr url = strconv::Utf8ToWstr(urlUtf8.Get());
+        AutoFree urlA(doc->ResolveTopicID(topicID));
+        if (urlA) {
+            AutoFreeWstr url = strconv::Utf8ToWstr(urlA.Get());
             dest = EngineEbook::GetNamedDest(url);
         }
     }
@@ -1532,7 +1532,7 @@ TocTree* EngineChm::GetToc() {
 static PageDestination* newChmEmbeddedDest(const char* path) {
     auto res = new PageDestination();
     res->kind = kindDestinationLaunchEmbedded;
-    res->value = strconv::Utf8ToWstr(path::GetBaseNameNoFree(path));
+    res->value = strconv::Utf8ToWstr(path::GetBaseNameTemp(path));
     return res;
 }
 
@@ -1713,7 +1713,7 @@ bool EngineTxt::Load(const WCHAR* fileName) {
 
     SetFileName(fileName);
 
-    defaultFileExt = path::GetExtNoFree(fileName);
+    defaultFileExt = path::GetExtNoFreeTemp(fileName);
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc) {

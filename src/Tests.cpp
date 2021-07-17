@@ -33,8 +33,8 @@ void TestRenderPage(const Flags& i) {
         zoom = i.startZoom;
     }
     for (auto fileName : files) {
-        AutoFree fileNameUtf(strconv::WstrToUtf8(fileName));
-        printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameUtf.Get(), zoom);
+        auto fileNameA(ToUtf8Temp(fileName));
+        printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameA.Get(), zoom);
         auto engine = CreateEngine(fileName);
         if (engine == nullptr) {
             printf("failed to create engine\n");
@@ -82,10 +82,10 @@ void TestExtractPage(const Flags& ci) {
         return;
     }
     for (auto fileName : files) {
-        AutoFree fileNameUtf(strconv::WstrToUtf8(fileName));
+        auto fileNameA(ToUtf8Temp(fileName));
         auto engine = CreateEngine(fileName);
         if (engine == nullptr) {
-            printf("failed to create engine for file '%s'\n", fileNameUtf.Get());
+            printf("failed to create engine for file '%s'\n", fileNameA.Get());
             continue;
         }
         if (pageNo < 0) {

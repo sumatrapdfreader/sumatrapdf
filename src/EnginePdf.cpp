@@ -1007,12 +1007,12 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
 
     pdf_document* doc = (pdf_document*)_doc;
 
-    AutoFree name_utf8(strconv::WstrToUtf8(name));
+    auto nameA(ToUtf8Temp(name));
     pdf_obj* dest = nullptr;
 
     fz_var(dest);
     fz_try(ctx) {
-        pdf_obj* nameobj = pdf_new_string(ctx, name_utf8.Get(), (int)name_utf8.size());
+        pdf_obj* nameobj = pdf_new_string(ctx, nameA.Get(), (int)nameA.size());
         dest = pdf_lookup_dest(ctx, doc, nameobj);
         pdf_drop_obj(ctx, nameobj);
     }

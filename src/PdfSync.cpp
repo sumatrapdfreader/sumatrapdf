@@ -124,7 +124,7 @@ int Synchronizer::Create(const WCHAR* pdffilename, EngineBase* engine, Synchroni
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    const WCHAR* fileExt = path::GetExtNoFree(pdffilename);
+    const WCHAR* fileExt = path::GetExtNoFreeTemp(pdffilename);
     if (!str::EqI(fileExt, L".pdf")) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
@@ -287,7 +287,7 @@ int Pdfsync::RebuildIndex() {
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransChars(filename, L"*/", L" \\");
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (str::IsEmpty(path::GetExtNoFree(filename))) {
+                if (str::IsEmpty(path::GetExtNoFreeTemp(filename))) {
                     filename.Set(str::Join(filename, L".tex"));
                 }
                 // ensure that the path is absolute
