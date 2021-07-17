@@ -95,7 +95,7 @@ void ParseColor(ParsedColor& parsed, const char* txt) {
     if (!txt) {
         return;
     }
-    char* s = TempStrDup(txt).Get();
+    char* s = str::DupTemp(txt).Get();
     str::TrimWSInPlace(s, str::TrimOpt::Both);
     if (str::StartsWith(s, "0x")) {
         s += 2;

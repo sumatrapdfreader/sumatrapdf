@@ -99,10 +99,12 @@ struct TempWstr {
     }
 };
 
-TempStr TempStrDup(const char* s, size_t cb = (size_t)-1);
-TempStr TempStrDup(std::string_view);
-TempWstr TempWstrDup(const WCHAR* s, size_t cch = (size_t)-1);
-TempWstr TempWstrDup(std::wstring_view);
+namespace str {
+TempStr DupTemp(const char* s, size_t cb = (size_t)-1);
+TempStr DupTemp(std::string_view);
+TempWstr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
+TempWstr DupTemp(std::wstring_view);
+}
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);
 TempStr ToUtf8Temp(std::wstring_view);

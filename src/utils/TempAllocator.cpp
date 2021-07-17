@@ -39,7 +39,8 @@ void ResetTempAllocator() {
     }
 }
 
-TempStr TempStrDup(const char* s, size_t cb) {
+namespace str {
+TempStr DupTemp(const char* s, size_t cb) {
     char* res = str::Dup(GetTempAllocator(), s, cb);
     if (cb == (size_t)-1) {
         // TODO: optimize to remove str::Len(). Add version of str::Dup()
@@ -48,11 +49,11 @@ TempStr TempStrDup(const char* s, size_t cb) {
     }
     return TempStr(res, cb);
 }
-TempStr TempStrDup(std::string_view sv) {
-    return TempStrDup(sv.data(), sv.size());
+TempStr DupTemp(std::string_view sv) {
+    return DupTemp(sv.data(), sv.size());
 }
 
-TempWstr TempWstrDup(const WCHAR* s, size_t cch) {
+TempWstr DupTemp(const WCHAR* s, size_t cch) {
     WCHAR* res = str::Dup(GetTempAllocator(), s, cch);
     if (cch == (size_t)-1) {
         cch = str::Len(res);
@@ -60,8 +61,9 @@ TempWstr TempWstrDup(const WCHAR* s, size_t cch) {
     return TempWstr(res, cch);
 }
 
-TempWstr TempWstrDup(std::wstring_view sv) {
-    return TempWstrDup(sv.data(), sv.size());
+TempWstr DupTemp(std::wstring_view sv) {
+    return DupTemp(sv.data(), sv.size());
+}
 }
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
