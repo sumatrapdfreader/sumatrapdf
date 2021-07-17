@@ -48,7 +48,7 @@ bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD
 bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value);
 bool CreateRegKey(HKEY keySub, const WCHAR* keyName);
 bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
-WCHAR* GetSpecialFolder(int csidl, bool createIfMissing = false);
+TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 
 void DisableDataExecution();
 bool RedirectIOToConsole();

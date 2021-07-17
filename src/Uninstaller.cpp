@@ -501,11 +501,11 @@ static int RunApp() {
 }
 
 static char* PickUnInstallerLogPath() {
-    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    if (!dir) {
+    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    if (!dir.Get()) {
         return nullptr;
     }
-    auto dirA = ToUtf8Temp(dir);
+    auto dirA = ToUtf8Temp(dir.AsView());
     return path::Join(dirA, "sumatra-uninstall-log.txt", nullptr);
 }
 

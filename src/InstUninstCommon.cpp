@@ -206,8 +206,8 @@ WCHAR* GetInstalledExePath() {
 }
 
 WCHAR* GetShortcutPath(int csidl) {
-    AutoFreeWstr dir = GetSpecialFolder(csidl, false);
-    if (!dir) {
+    TempWstr dir = GetSpecialFolderTemp(csidl, false);
+    if (!dir.Get()) {
         return nullptr;
     }
     const WCHAR* appName = GetAppNameTemp();

@@ -168,24 +168,24 @@ static void CopySettingsFile() {
     // copy the settings from old directory
 
     // seen a crash when running elevated
-    AutoFreeWstr srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
+    TempWstr srcDir = GetSpecialFolderTemp(CSIDL_APPDATA, false);
     if (srcDir.empty()) {
         return;
     }
-    AutoFreeWstr dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
+    TempWstr dstDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (dstDir.empty()) {
         return;
     }
 
     const WCHAR* appName = GetAppNameTemp();
     const WCHAR* prefsFileName = prefs::GetSettingsFileNameTemp();
-    AutoFreeWstr srcPath = path::Join(srcDir.data, appName, prefsFileName);
-    AutoFreeWstr dstPath = path::Join(dstDir.data, appName, prefsFileName);
+    AutoFreeWstr srcPath = path::Join(srcDir.Get(), appName, prefsFileName);
+    AutoFreeWstr dstPath = path::Join(dstDir.Get(), appName, prefsFileName);
 
     // don't over-write
     BOOL failIfExists = true;
     // don't care if it fails or not
-    ::CopyFileW(srcPath.data, dstPath.data, failIfExists);
+    ::CopyFileW(srcPath.Get(), dstPath.Get(), failIfExists);
     log("did copy settings file\n");
 }
 
@@ -837,10 +837,9 @@ static WCHAR* GetInstallationDir() {
     }
 
     // fall back to %APPLOCALDATA%\SumatraPDF
-    WCHAR* dataDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
     if (dataDir) {
         WCHAR* res = path::Join(dataDir, appName);
-        str::Free(dataDir);
         return res;
     }
 
@@ -992,11 +991,11 @@ static bool OpenEmbeddedFilesArchive() {
 }
 
 static char* PickInstallerLogPath() {
-    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    if (!dir) {
+    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    if (!dir.Get()) {
         return nullptr;
     }
-    auto dirA = ToUtf8Temp(dir);
+    auto dirA = ToUtf8Temp(dir.AsView());
     return path::Join(dirA, "sumatra-install-log.txt", nullptr);
 }
 

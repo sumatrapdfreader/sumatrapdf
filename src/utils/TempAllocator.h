@@ -35,6 +35,9 @@ struct TempStr {
     explicit TempStr(const TempStr& ts) {
         sv = ts.sv;
     }
+    bool empty() const {
+        return sv.empty();
+    }
     size_t size() const {
         return sv.size();
     }
@@ -79,6 +82,9 @@ struct TempWstr {
     explicit TempWstr(const TempWstr& ts) {
         sv = ts.sv;
     }
+    bool empty() const {
+        return sv.empty();
+    }
     size_t size() const {
         return sv.size();
     }
@@ -104,7 +110,7 @@ TempStr DupTemp(const char* s, size_t cb = (size_t)-1);
 TempStr DupTemp(std::string_view);
 TempWstr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
 TempWstr DupTemp(std::wstring_view);
-}
+} // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);
 TempStr ToUtf8Temp(std::wstring_view);

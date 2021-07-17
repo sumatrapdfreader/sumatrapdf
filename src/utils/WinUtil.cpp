@@ -328,16 +328,16 @@ bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst) {
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-WCHAR* GetSpecialFolder(int csidl, bool createIfMissing) {
+TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
     if (createIfMissing) {
         csidl = csidl | CSIDL_FLAG_CREATE;
     }
     WCHAR path[MAX_PATH] = {0};
     HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
     if (S_OK != res) {
-        return nullptr;
+        return TempWstr(); // TODO: why {} doesn't work?
     }
-    return str::Dup(path);
+    return str::DupTemp(path);
 }
 
 void DisableDataExecution() {

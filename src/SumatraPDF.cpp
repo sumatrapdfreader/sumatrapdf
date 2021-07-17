@@ -5178,8 +5178,8 @@ static WCHAR* GetSymbolsDir() {
         /* Use the same path as the binary */
         return GetExeDir();
     }
-    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    return path::Join(dir, GetAppNameTemp(), L"crashinfo");
+    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    return path::Join(dir.Get(), GetAppNameTemp(), L"crashinfo");
 }
 
 static void DownloadDebugSymbols() {

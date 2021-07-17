@@ -64,7 +64,7 @@ TempWstr DupTemp(const WCHAR* s, size_t cch) {
 TempWstr DupTemp(std::wstring_view sv) {
     return DupTemp(sv.data(), sv.size());
 }
-}
+} // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
     if (!s) {

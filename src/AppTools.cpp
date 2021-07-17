@@ -58,7 +58,7 @@ bool IsRunningInPortableMode() {
     }
 
     AutoFreeWstr exePath(GetExePath());
-    AutoFreeWstr programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
+    WCHAR* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES).Get();
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
         return true;
@@ -105,7 +105,7 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
         return path::GetPathOfFileInAppDir(fileName);
     }
 
-    AutoFreeWstr path = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    WCHAR* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
     if (!path) {
         return nullptr;
     }
@@ -128,8 +128,8 @@ WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
     }
 
     /* Use local (non-roaming) app data directory */
-    AutoFreeWstr dataDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    AutoFreeWstr dir = path::Join(dataDir, APP_NAME_STR);
+    TempWstr dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    AutoFreeWstr dir = path::Join(dataDir.Get(), APP_NAME_STR);
     bool ok = dir::Create(dir);
     if (!ok) {
         return nullptr;

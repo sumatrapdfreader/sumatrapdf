@@ -144,7 +144,7 @@ static bool CanViewExternally(TabInfo* tab) {
 
 static bool DetectExternalViewer(ExternalViewerInfo* info) {
     {
-        AutoFreeWstr dir = GetSpecialFolder(CSIDL_PROGRAM_FILES);
+        TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
         WCHAR* path = path::Join(dir, info->exePartialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
@@ -153,7 +153,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
         str::Free(path);
     }
     {
-        AutoFreeWstr dir = GetSpecialFolder(CSIDL_PROGRAM_FILESX86);
+        TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
         WCHAR* path = path::Join(dir, info->exePartialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
@@ -162,7 +162,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
         str::Free(path);
     }
     {
-        AutoFreeWstr dir = GetSpecialFolder(CSIDL_WINDOWS);
+        TempWstr dir = GetSpecialFolderTemp(CSIDL_WINDOWS);
         WCHAR* path = path::Join(dir, info->exePartialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
@@ -171,7 +171,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
         str::Free(path);
     }
     {
-        AutoFreeWstr dir = GetSpecialFolder(CSIDL_SYSTEM);
+        TempWstr dir = GetSpecialFolderTemp(CSIDL_SYSTEM);
         WCHAR* path = path::Join(dir, info->exePartialPath);
         if (file::Exists(path)) {
             info->exeFullPath = path;
