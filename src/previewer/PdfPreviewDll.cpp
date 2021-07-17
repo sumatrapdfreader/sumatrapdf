@@ -352,7 +352,7 @@ STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
     if (str::StartsWithI(pszCmdLine, L"exts:")) {
         AutoFreeWstr extsList(str::Dup(pszCmdLine + 5));
         str::ToLowerInPlace(extsList);
-        str::TransChars(extsList, L";. :", L",,,\0");
+        str::TransCharsInPlace(extsList, L";. :", L",,,\0");
         WStrVec exts;
         exts.Split(extsList, L",", true);
         for (int i = 0; i < dimof(gPreviewers); i++) {

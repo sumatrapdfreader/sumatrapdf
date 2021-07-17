@@ -196,7 +196,7 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
     }
 
     auto nameA = ToUtf8Temp(nameInZip);
-    str::TransChars(nameA.Get(), "\\", "/");
+    str::TransCharsInPlace(nameA.Get(), "\\", "/");
 
     return AddFileData(nameA.Get(), fileData.Get(), fileData.size(), dosdatetime);
 }

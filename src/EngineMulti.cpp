@@ -348,7 +348,7 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
         std::string_view path = files.at(i);
-        AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
+        auto pathW = ToWstrTemp(path);
         EngineBase* engine = CreateEngine(pathW);
         if (!engine) {
             continue;
@@ -371,12 +371,12 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     }
     UpdatePagesForEngines(enginesInfo);
 
-    AutoFreeWstr dirW = strconv::Utf8ToWstr(dir);
+    auto dirW = ToWstrTemp(dir);
     TocItem* root = new TocItem(nullptr, dirW, 0);
     root->child = tocFiles;
     tocTree = new TocTree(root);
 
-    AutoFreeWstr fileName = strconv::Utf8ToWstr(dir);
+    auto fileName = ToWstrTemp(dir);
     SetFileName(fileName);
 
     return true;

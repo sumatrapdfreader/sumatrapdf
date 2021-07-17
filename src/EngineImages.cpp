@@ -310,7 +310,7 @@ std::span<u8> EngineImages::GetFileData() {
 
 bool EngineImages::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
     const WCHAR* srcPath = FileName();
-    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
+    auto dstPath = ToWstrTemp(copyFileName);
     if (srcPath) {
         BOOL ok = CopyFileW(srcPath, dstPath, FALSE);
         if (ok) {
@@ -786,7 +786,7 @@ TocTree* EngineImageDir::GetToc() {
 
 bool EngineImageDir::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
     // only copy the files if the target directory doesn't exist yet
-    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
+    auto dstPath = ToWstrTemp(copyFileName);
     if (!CreateDirectoryW(dstPath, nullptr)) {
         return false;
     }
@@ -1014,7 +1014,7 @@ bool EngineCbx::FinishLoading() {
             return false;
         }
 
-        AutoFreeWstr fileNameW = strconv::Utf8ToWstr(fileName);
+        auto fileNameW = ToWstrTemp(fileName);
         Kind kind = GuessFileTypeFromName(fileNameW);
         if (IsImageEngineSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
@@ -1052,7 +1052,7 @@ bool EngineCbx::FinishLoading() {
     TocItem* curr = nullptr;
     for (int i = 0; i < pageCount; i++) {
         std::string_view fname = pageFiles[i]->name;
-        AutoFreeWstr name = strconv::Utf8ToWstr(fname);
+        auto name = ToWstrTemp(fname);
         const WCHAR* baseName = path::GetBaseNameTemp(name.Get());
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {

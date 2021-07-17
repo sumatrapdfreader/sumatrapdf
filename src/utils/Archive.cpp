@@ -286,7 +286,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
         if (0 != res) {
             return false;
         }
-        str::TransChars(rarHeader->FileNameW, L"\\", L"/");
+        str::TransCharsInPlace(rarHeader->FileNameW, L"\\", L"/");
         if (str::EqI(rarHeader->FileNameW, fileName)) {
             // don't support files whose uncompressed size is greater than 4GB
             return rarHeader->UnpSizeHigh == 0;
@@ -376,7 +376,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
             break;
         }
 
-        str::TransChars(rarHeader.FileNameW, L"\\", L"/");
+        str::TransCharsInPlace(rarHeader.FileNameW, L"\\", L"/");
         auto name = ToUtf8Temp(rarHeader.FileNameW);
 
         FileInfo* i = allocator_.AllocStruct<FileInfo>();

@@ -119,7 +119,7 @@ static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const c
 }
 
 static TocItem* newDjVuTocItem(TocItem* parent, const char* title, const char* link) {
-    AutoFreeWstr s = strconv::Utf8ToWstr(title);
+    auto s = ToWstrTemp(title);
     auto res = new TocItem(parent, s, 0);
     res->dest = newDjVuDestination(link);
     res->pageNo = res->dest->GetPageNo();
@@ -754,7 +754,7 @@ std::span<u8> EngineDjVu::GetFileData() {
 }
 
 bool EngineDjVu::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
-    AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
+    auto path = ToWstrTemp(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(path, d.AsSpan());
@@ -766,7 +766,7 @@ bool EngineDjVu::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool incl
     if (!fileName) {
         return false;
     }
-    return CopyFile(fileName, path, FALSE);
+    return CopyFileW(fileName, path, FALSE);
 }
 
 static void AppendNewline(str::WStr& extracted, Vec<Rect>& coords, const WCHAR* lineSep) {

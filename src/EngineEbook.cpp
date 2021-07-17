@@ -212,7 +212,7 @@ bool EngineEbook::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool inc
     if (!fileName) {
         return false;
     }
-    AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
+    auto path = ToWstrTemp(copyFileName);
     auto res = CopyFileW(fileName, path, FALSE);
     return res != 0;
 }
@@ -783,8 +783,7 @@ std::span<u8> EngineEpub::GetFileData() {
 }
 
 bool EngineEpub::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
-    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
-
+    auto dstPath = ToWstrTemp(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(dstPath, d.AsSpan());
@@ -1500,7 +1499,7 @@ PageDestination* EngineChm::GetNamedDest(const WCHAR* name) {
     if (str::Parse(name, L"%u%$", &topicID)) {
         AutoFree urlA(doc->ResolveTopicID(topicID));
         if (urlA) {
-            AutoFreeWstr url = strconv::Utf8ToWstr(urlA.Get());
+            auto url = ToWstrTemp(urlA.Get());
             dest = EngineEbook::GetNamedDest(url);
         }
     }

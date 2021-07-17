@@ -464,7 +464,7 @@ bool EpubDoc::Load() {
         // an anchor with the file name at the top (for internal links)
         auto pathA = ToUtf8Temp(fullPath);
         DebugCrashIf(str::FindChar(pathA.Get(), '"'));
-        str::TransChars(pathA.Get(), "\"", "'");
+        str::TransCharsInPlace(pathA.Get(), "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", pathA.Get());
         htmlData.Append(html.data);
     }
@@ -548,7 +548,7 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     AutoFree url(NormalizeURL(fileName, pagePath));
     // some EPUB producers use wrong path separators
     if (str::FindChar(url, '\\')) {
-        str::TransChars(url, "\\", "/");
+        str::TransCharsInPlace(url, "\\", "/");
     }
     for (size_t i = 0; i < images.size(); i++) {
         ImageData2* img = &images.at(i);
@@ -1261,7 +1261,7 @@ bool HtmlDoc::Load() {
     }
 
     pagePath.Set(strconv::WstrToUtf8(fileName));
-    str::TransChars(pagePath, "\\", "/");
+    str::TransCharsInPlace(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData.AsSpan());
     HtmlToken* tok;
@@ -1330,8 +1330,8 @@ std::span<u8> HtmlDoc::LoadURL(const char* url) {
     if (str::FindChar(url, ':')) {
         return {};
     }
-    AutoFreeWstr path(strconv::Utf8ToWstr(url));
-    str::TransChars(path, L"/", L"\\");
+    auto path(ToWstrTemp(url));
+    str::TransCharsInPlace(path, L"/", L"\\");
     return file::ReadFile(path);
 }
 

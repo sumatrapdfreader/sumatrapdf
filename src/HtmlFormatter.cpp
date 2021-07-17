@@ -883,7 +883,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
         size_t strLen = bufTmp.size();
         // multiple font names can be comma separated
         if (strLen > 0 && *buf != ',') {
-            str::TransChars(buf, L",", L"\0");
+            str::TransCharsInPlace(buf, L",", L"\0");
             faceName = buf;
         }
     }

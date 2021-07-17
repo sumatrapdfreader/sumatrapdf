@@ -353,7 +353,7 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             eatStringParam(i.printSettings);
             str::RemoveCharsInPlace(i.printSettings, L" ");
-            str::TransChars(i.printSettings, L";", L",");
+            str::TransCharsInPlace(i.printSettings, L";", L",");
             continue;
         }
         if (isArg(L"inverse-search")) {

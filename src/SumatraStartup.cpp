@@ -380,7 +380,7 @@ static bool SetupPluginMode(Flags& i) {
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
         AutoFreeWstr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
-        str::TransChars(args, L"#", L"&");
+        str::TransCharsInPlace(args, L"#", L"&");
         WStrVec parts;
         parts.Split(args, L"&", true);
         for (size_t k = 0; k < parts.size(); k++) {

@@ -332,11 +332,11 @@ void StrTest() {
     str::Free(str);
 
     str::BufSet(buf, dimof(buf), L"abc\1efg\1");
-    size_t count = str::TransChars(buf, L"ace", L"ACE");
+    size_t count = str::TransCharsInPlace(buf, L"ace", L"ACE");
     utassert(str::Eq(buf, L"AbC\1Efg\1") && count == 3);
-    count = str::TransChars(buf, L"\1", L"\0");
+    count = str::TransCharsInPlace(buf, L"\1", L"\0");
     utassert(str::Eq(buf, L"AbC") && str::Eq(buf + 4, L"Efg") && count == 2);
-    count = str::TransChars(buf, L"", L"X");
+    count = str::TransCharsInPlace(buf, L"", L"X");
     utassert(str::Eq(buf, L"AbC") && count == 0);
 
     str::BufSet(buf, dimof(buf), L"blogarapato");

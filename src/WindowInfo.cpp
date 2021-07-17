@@ -337,7 +337,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
             if (hash) {
                 *hash = '\0';
             }
-            str::TransChars(path, L"/", L"\\");
+            str::TransCharsInPlace(path, L"/", L"\\");
             url::DecodeInPlace(path);
             // LaunchFile will reject unsupported file types
             LaunchFile(path, nullptr);

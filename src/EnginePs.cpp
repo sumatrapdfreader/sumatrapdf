@@ -283,7 +283,7 @@ class EnginePs : public EngineBase {
         if (!FileName()) {
             return false;
         }
-        AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
+        auto dstPath = ToWstrTemp(copyFileName);
         return CopyFileW(FileName(), dstPath, FALSE);
     }
 

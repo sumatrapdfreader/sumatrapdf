@@ -120,8 +120,8 @@ size_t TrimWSInPlace(char* s, TrimOpt opt);
 size_t TrimWSInPlace(WCHAR* s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
 
-size_t TransChars(char* str, const char* oldChars, const char* newChars);
-size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
+size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars);
+size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 
 char* Replace(const char* s, const char* toReplace, const char* replaceWith);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);

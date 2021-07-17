@@ -165,7 +165,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
             utf8Name = strconv::WstrToUtf8(filePath);
         }
 
-        str::TransChars(utf8Name, "/", "\\");
+        str::TransCharsInPlace(utf8Name, "/", "\\");
         if ('/' == *utf8Name || str::Find(utf8Name, "../")) {
             fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name.Get());
             return false;

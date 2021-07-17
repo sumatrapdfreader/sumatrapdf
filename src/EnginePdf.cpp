@@ -1078,7 +1078,7 @@ static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_
     if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
         s = label;
     }
-    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
+    auto ws = ToWstrTemp(s);
     RectF rd = ToRectFl(rect);
     return newFzComment(ws, pageNo, rd);
 }
@@ -1621,9 +1621,9 @@ WCHAR* EnginePdf::ExtractFontList() {
             info.Append(")");
         }
 
-        AutoFreeWstr fontInfo = strconv::Utf8ToWstr(info.LendData());
-        if (fontInfo && !fonts.Contains(fontInfo)) {
-            fonts.Append(fontInfo.StealData());
+        auto fontInfo = ToWstrTemp(info.LendData());
+        if (fontInfo.Get() && !fonts.Contains(fontInfo)) {
+            fonts.Append(fontInfo.Get());
         }
     }
     if (fonts.size() == 0) {
@@ -1743,7 +1743,7 @@ std::span<u8> EnginePdf::GetFileData() {
 
 // TODO: proper support for includeUserAnnots or maybe just remove it
 bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
+    auto dstPath = ToWstrTemp(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.AsSpan());

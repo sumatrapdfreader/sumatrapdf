@@ -199,14 +199,14 @@ int Pdfsync::RebuildIndex() {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
     // convert the file data into a list of zero-terminated strings
-    str::TransChars(data.data, "\r\n", "\0\0");
+    str::TransCharsInPlace(data.data, "\r\n", "\0\0");
 
     // parse preamble (jobname and version marker)
     char* line = data.data;
     char* dataEnd = data.data + data.size();
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
-    str::TransChars(line, "*/", " \\");
+    str::TransCharsInPlace(line, "*/", " \\");
     AutoFreeWstr jobName(strconv::FromAnsi(line));
     jobName.Set(str::Join(jobName, L".tex"));
     jobName.Set(PrependDir(jobName));
@@ -285,7 +285,7 @@ int Pdfsync::RebuildIndex() {
                     filename.Set(str::Dup(filename + 1, str::Len(filename) - 2));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
-                str::TransChars(filename, L"*/", L" \\");
+                str::TransCharsInPlace(filename, L"*/", L" \\");
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExtNoFreeTemp(filename))) {
                     filename.Set(str::Join(filename, L".tex"));
@@ -559,7 +559,7 @@ TryAgainAnsi:
     }
 
     // undecorate the filepath: replace * by space and / by \ (backslash)
-    str::TransChars(filename, L"*/", L" \\");
+    str::TransCharsInPlace(filename, L"*/", L" \\");
     // Convert the source filepath to an absolute path
     if (PathIsRelative(filename)) {
         filename.Set(PrependDir(filename));

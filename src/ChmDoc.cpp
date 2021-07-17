@@ -53,7 +53,7 @@ std::span<u8> ChmDoc::GetData(const char* fileNameIn) {
     int res = chm_resolve_object(chmHandle, fileName, &info);
     if (CHM_RESOLVE_SUCCESS != res && str::FindChar(fileName, '\\')) {
         // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
-        str::TransChars(fileName, "\\", "/");
+        str::TransCharsInPlace(fileName, "\\", "/");
         res = chm_resolve_object(chmHandle, fileName, &info);
     }
 

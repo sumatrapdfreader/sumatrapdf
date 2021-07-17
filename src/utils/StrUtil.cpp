@@ -590,7 +590,7 @@ char* Format(const char* fmt, ...) {
 /* replace in <str> the chars from <oldChars> with their equivalents
    from <newChars> (similar to UNIX's tr command)
    Returns the number of replaced characters. */
-size_t TransChars(char* str, const char* oldChars, const char* newChars) {
+size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars) {
     size_t findCount = 0;
 
     for (char* c = str; *c; c++) {
@@ -2220,7 +2220,7 @@ size_t TrimWSInPlace(WCHAR* s, TrimOpt opt) {
     return trimmed;
 }
 
-size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {
+size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {
     size_t findCount = 0;
 
     for (WCHAR* c = str; *c; c++) {
@@ -2565,14 +2565,14 @@ void DecodeInPlace(WCHAR* url) {
 
 WCHAR* GetFullPath(const WCHAR* url) {
     WCHAR* path = str::Dup(url);
-    str::TransChars(path, L"#?", L"\0\0");
+    str::TransCharsInPlace(path, L"#?", L"\0\0");
     DecodeInPlace(path);
     return path;
 }
 
 WCHAR* GetFileName(const WCHAR* url) {
     AutoFreeWstr path(str::Dup(url));
-    str::TransChars(path, L"#?", L"\0\0");
+    str::TransCharsInPlace(path, L"#?", L"\0\0");
     WCHAR* base = path + str::Len(path);
     for (; base > path; base--) {
         if ('/' == base[-1] || '\\' == base[-1]) {

@@ -225,14 +225,14 @@ void InitializePolicies(bool restrict) {
         if (value != nullptr) {
             auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransChars(protocols, L":; ", L",,,");
+            str::TransCharsInPlace(protocols, L":; ", L",,,");
             gAllowedLinkProtocols.Split(protocols, L",", true);
         }
         value = polsec->GetValue("SafeFileTypes");
         if (value != nullptr) {
             auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransChars(protocols, L":; ", L",,,");
+            str::TransCharsInPlace(protocols, L":; ", L",,,");
             gAllowedFileTypes.Split(protocols, L",", true);
         }
     }
@@ -2085,7 +2085,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     fileFilter.Append(_TR("PDF documents"));
     fileFilter.Append(L"\1*.pdf\1");
     fileFilter.Append(L"\1*.*\1");
-    str::TransChars(fileFilter.Get(), L"\1", L"\0");
+    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
@@ -2561,7 +2561,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
     fileFilter.Append(_TR("All files"));
     fileFilter.Append(L"\1*.*\1");
-    str::TransChars(fileFilter.Get(), L"\1", L"\0");
+    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcFileName));
@@ -2570,7 +2570,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
         WCHAR* colon = (WCHAR*)str::FindChar(dstFileName, ':');
-        str::TransChars(colon, L":", L"_");
+        str::TransCharsInPlace(colon, L":", L"_");
         WCHAR* ext;
         for (ext = colon; ext > dstFileName && *ext != '.'; ext--) {
             // no-op
@@ -2735,7 +2735,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     CrashIf(!ok);
     fileFilter.AppendFmt(L"\1*%s\1", defExt);
-    str::TransChars(fileFilter.Get(), L"\1", L"\0");
+    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcFileName));
@@ -2801,7 +2801,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(ctrl->FilePath()));
-    str::TransChars(dstFileName, L":", L"_");
+    str::TransCharsInPlace(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
     }
@@ -2810,7 +2810,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     AutoFreeWstr fileFilter = str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts"));
-    str::TransChars(fileFilter, L"\1", L"\0");
+    str::TransCharsInPlace(fileFilter, L"\1", L"\0");
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
@@ -3016,7 +3016,7 @@ static void OnMenuOpen(WindowInfo* win) {
     }
     fileFilter.Append(_TR("All files"));
     fileFilter.Append(L"\1*.*\1");
-    str::TransChars(fileFilter.Get(), L"\1", L"\0");
+    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
