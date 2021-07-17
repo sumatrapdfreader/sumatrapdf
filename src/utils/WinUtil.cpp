@@ -1252,7 +1252,11 @@ void SetText(HMENU m, int id, const WCHAR* s) {
     mii.dwTypeData = (WCHAR*)s;
     mii.cch = (uint)str::Len(s);
     BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
-    CrashIf(!ok);
+    if (!ok) {
+        logf(L"SetText(): id=%d, s='%s'\n", id, s ? s : L"(null)");
+        LogLastError();
+        SubmitBugReportIf(true);
+    }
 }
 
 /* Make a string safe to be displayed as a menu item
