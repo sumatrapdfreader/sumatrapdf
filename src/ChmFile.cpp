@@ -89,7 +89,7 @@ char* ChmFile::ToUtf8(const u8* text, uint overrideCP) {
 }
 
 WCHAR* ChmFile::ToStr(const char* text) {
-    return strconv::FromCodePage(text, codepage);
+    return strconv::StrToWstr(text, codepage);
 }
 
 static char* GetCharZ(std::span<u8> d, size_t off) {
@@ -367,7 +367,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             AutoFree bytes(strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal));
-            attrVal.Set(strconv::FromCodePage(bytes.Get(), cp));
+            attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;
@@ -415,7 +415,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             AutoFree bytes(strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal));
-            attrVal.Set(strconv::FromCodePage(bytes.Get(), cp));
+            attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;

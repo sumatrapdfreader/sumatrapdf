@@ -906,7 +906,7 @@ std::span<u8> MobiDoc::GetHtmlData() const {
 WCHAR* MobiDoc::GetProperty(DocumentProperty prop) {
     for (size_t i = 0; i < props.size(); i++) {
         if (props.at(i).prop == prop) {
-            return strconv::FromCodePage(props.at(i).value, textEncoding);
+            return strconv::StrToWstr(props.at(i).value, textEncoding);
         }
     }
     return nullptr;

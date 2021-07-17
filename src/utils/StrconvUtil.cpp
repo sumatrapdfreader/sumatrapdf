@@ -97,7 +97,7 @@ char* WstrToUtf8(std::wstring_view sv, Allocator* a) {
 }
 
 /* Caller needs to free() the result */
-WCHAR* ToWideChar(const char* src, uint codePage, int cbSrc) {
+WCHAR* StrToWstr(const char* src, uint codePage, int cbSrc) {
     CrashIf(!src);
     if (!src) {
         return nullptr;
@@ -132,7 +132,7 @@ std::string_view ToMultiByteV(const char* src, uint codePageSrc, uint codePageDe
         return std::string_view(str::Dup(src));
     }
 
-    AutoFreeWstr tmp(ToWideChar(src, codePageSrc));
+    AutoFreeWstr tmp(StrToWstr(src, codePageSrc));
     if (!tmp) {
         return {};
     }
@@ -169,23 +169,12 @@ std::string_view UnknownToUtf8V(const std::string_view& txt) {
         return str::Dup(s, len);
     }
 
-    AutoFreeWstr uni = strconv::FromAnsi(s, len);
+    AutoFreeWstr uni = strconv::AnsiToWstr(s, len);
     return strconv::WstrToUtf8V(uni.Get());
 }
 
-size_t ToCodePageBuf(char* buf, int cbBuf, const WCHAR* s, uint cp) {
-    return WideCharToMultiByte(cp, 0, s, -1, buf, cbBuf, nullptr, nullptr);
-}
-size_t FromCodePageBuf(WCHAR* buf, int cchBuf, const char* s, uint cp) {
-    return MultiByteToWideChar(cp, 0, s, -1, buf, cchBuf);
-}
-
-WCHAR* FromCodePage(const char* src, uint cp) {
-    return ToWideChar(src, cp);
-}
-
-WCHAR* FromAnsi(const char* src, size_t cbLen) {
-    return ToWideChar(src, CP_ACP, (int)cbLen);
+WCHAR* AnsiToWstr(const char* src, size_t cbLen) {
+    return StrToWstr(src, CP_ACP, (int)cbLen);
 }
 
 std::string_view WstrToAnsiV(const WCHAR* src) {

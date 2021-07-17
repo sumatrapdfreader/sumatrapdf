@@ -213,7 +213,7 @@ SquareTree::SquareTree(const char* data) : root(nullptr) {
         auto tmp = strconv::WstrToUtf8((const WCHAR*)(data + 2));
         dataUtf8.Set(tmp);
     } else if (data) {
-        AutoFreeWstr tmp(strconv::FromAnsi(data));
+        AutoFreeWstr tmp(strconv::AnsiToWstr(data));
         auto tmp2 = strconv::WstrToUtf8(tmp.Get());
         dataUtf8.Set(tmp2);
     }

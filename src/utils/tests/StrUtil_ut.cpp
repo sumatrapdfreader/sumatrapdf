@@ -480,7 +480,7 @@ void StrTest() {
 #define TEST_STRING "aBc"
     AutoFree strA = strconv::WstrToAnsiV(TEXT(TEST_STRING));
     utassert(str::Eq(strA.Get(), TEST_STRING));
-    str = strconv::FromAnsi(strA.Get());
+    str = strconv::AnsiToWstr(strA.Get());
     utassert(str::Eq(str, TEXT(TEST_STRING)));
     str::Free(str);
 #undef TEST_STRING
@@ -628,7 +628,7 @@ void StrTest() {
         utassert(!tmp.Get());
     }
     {
-        AutoFreeWstr tmp(strconv::FromCodePage("abc", 12345));
+        AutoFreeWstr tmp(strconv::StrToWstr("abc", 12345));
         utassert(str::IsEmpty(tmp.Get()));
     }
     {

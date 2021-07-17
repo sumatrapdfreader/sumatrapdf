@@ -516,7 +516,7 @@ static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     if (Ok != ok) {
         /* property didn't exist */;
     } else if (PropertyTagTypeASCII == item->type) {
-        value = strconv::FromAnsi((char*)item->value);
+        value = strconv::AnsiToWstr((char*)item->value);
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
                !((WCHAR*)item->value)[item->length / 2 - 1]) {
         value = str::Dup((WCHAR*)item->value);

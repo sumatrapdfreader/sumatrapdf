@@ -877,7 +877,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
     if (IsWindowUnicode((HWND)wp)) {
         cmd = str::Dup((WCHAR*)command);
     } else {
-        cmd = strconv::FromAnsi((const char*)command);
+        cmd = strconv::AnsiToWstr((const char*)command);
     }
     HandleDdeCmds(hwnd, cmd, ack);
     GlobalUnlock((HGLOBAL)hi);

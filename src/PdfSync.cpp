@@ -207,7 +207,7 @@ int Pdfsync::RebuildIndex() {
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransCharsInPlace(line, "*/", " \\");
-    AutoFreeWstr jobName(strconv::FromAnsi(line));
+    AutoFreeWstr jobName(strconv::AnsiToWstr(line));
     jobName.Set(str::Join(jobName, L".tex"));
     jobName.Set(PrependDir(jobName));
 
@@ -278,7 +278,7 @@ int Pdfsync::RebuildIndex() {
                 break;
 
             case '(': {
-                AutoFreeWstr filename(strconv::FromAnsi(line + 1));
+                AutoFreeWstr filename(strconv::AnsiToWstr(line + 1));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"') {
@@ -568,7 +568,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && !file::Exists(filename)) {
         isUtf8 = false;
-        filename.Set(strconv::FromAnsi(name));
+        filename.Set(strconv::AnsiToWstr(name));
         goto TryAgainAnsi;
     }
 

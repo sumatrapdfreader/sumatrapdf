@@ -141,7 +141,7 @@ bool Initialize(const WCHAR* symPathW, bool force) {
 
     bool needsCleanup = gSymInitializeOk;
 
-    if (!DynSymInitializeW && !DynSymInitialize) {
+    if (!DynSymInitializeW) {
         // plog("dbghelp::Initialize(): SymInitializeW() and SymInitialize() not present in dbghelp.dll");
         return false;
     }
@@ -150,15 +150,7 @@ bool Initialize(const WCHAR* symPathW, bool force) {
         DynSymCleanup(GetCurrentProcess());
     }
 
-    if (DynSymInitializeW) {
-        gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW, TRUE);
-    } else {
-        // SymInitializeW() is not present on some XP systems
-        char symPathA[MAX_PATH];
-        if (0 != strconv::ToCodePageBuf(symPathA, dimof(symPathA), symPathW, CP_ACP)) {
-            gSymInitializeOk = DynSymInitialize(GetCurrentProcess(), symPathA, TRUE);
-        }
-    }
+    gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW, TRUE);
 
     if (!gSymInitializeOk) {
         // plog("dbghelp::Initialize(): _SymInitialize() failed");

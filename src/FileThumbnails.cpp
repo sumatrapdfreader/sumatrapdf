@@ -45,7 +45,7 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     if (!thumbsPath) {
         return nullptr;
     }
-    AutoFreeWstr fname(strconv::FromAnsi(fingerPrint));
+    AutoFreeWstr fname(strconv::AnsiToWstr(fingerPrint));
 
     return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());
 }

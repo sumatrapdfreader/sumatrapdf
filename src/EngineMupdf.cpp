@@ -273,7 +273,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
             AutoFree pwd_ansi(strconv::WstrToAnsi(pwd));
-            AutoFreeWstr pwd_cp1252(strconv::FromCodePage(pwd_ansi.Get(), 1252));
+            AutoFreeWstr pwd_cp1252(strconv::StrToWstr(pwd_ansi.Get(), 1252));
             pwdA = strconv::WstrToUtf8(pwd_cp1252);
             ok = pdf_authenticate_password(ctx, doc, pwdA.Get());
         }

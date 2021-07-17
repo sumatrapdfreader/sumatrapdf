@@ -111,7 +111,6 @@ DWMAPI_API_LIST(API_DECLARATION2)
 #define DBGHELP_API_LIST(V)     \
     V(MiniDumpWriteDump)        \
     V(SymInitializeW)           \
-    V(SymInitialize)            \
     V(SymCleanup)               \
     V(SymGetOptions)            \
     V(SymSetOptions)            \

@@ -355,7 +355,7 @@ bool ChmModel::Load(const WCHAR* fileName) {
     }
 
     // always make the document's homepage page 1
-    pages.Append(strconv::FromAnsi(doc->GetHomePath()));
+    pages.Append(strconv::AnsiToWstr(doc->GetHomePath()));
 
     // parse the ToC here, since page numbering depends on it
     tocTrace = new Vec<ChmTocTraceItem>();
@@ -629,7 +629,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
 
     void CreateThumbnail(HtmlWindow* hw) {
         this->hw = hw;
-        homeUrl.Set(strconv::FromAnsi(doc->GetHomePath()));
+        homeUrl.Set(strconv::AnsiToWstr(doc->GetHomePath()));
         if (*homeUrl == '/') {
             homeUrl.SetCopy(homeUrl + 1);
         }
