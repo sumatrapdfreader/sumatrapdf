@@ -144,6 +144,11 @@ static bool CanViewExternally(TabInfo* tab) {
 }
 
 static bool DetectExternalViewer(ExternalViewerInfo* info) {
+    const WCHAR* partialPath = info->exePartialPath;
+     if (!partialPath || !*partialPath) {
+         return false;
+    }
+
     {
         AutoFreeWstr dir = GetSpecialFolder(CSIDL_PROGRAM_FILES);
         WCHAR* path = path::Join(dir, info->exePartialPath);
