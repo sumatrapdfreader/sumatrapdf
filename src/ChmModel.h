@@ -1,7 +1,7 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct ChmDoc;
+struct ChmFile;
 struct ChmTocTraceItem;
 class HtmlWindow;
 class HtmlWindowCallback;
@@ -67,7 +67,7 @@ struct ChmModel : Controller {
     static bool IsSupportedFileType(Kind);
 
     AutoFreeWstr fileName;
-    ChmDoc* doc = nullptr;
+    ChmFile* doc = nullptr;
     TocTree* tocTree = nullptr;
     CRITICAL_SECTION docAccess;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;

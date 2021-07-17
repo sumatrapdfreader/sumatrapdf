@@ -12,7 +12,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
-#include "ChmDoc.h"
+#include "ChmFile.h"
 
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
@@ -296,7 +296,7 @@ float ChmModel::GetZoomVirtual(__unused bool absolute) const {
 }
 
 class ChmTocBuilder : public EbookTocVisitor {
-    ChmDoc* doc = nullptr;
+    ChmFile* doc = nullptr;
 
     WStrList* pages = nullptr;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
@@ -325,7 +325,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     }
 
   public:
-    ChmTocBuilder(ChmDoc* doc, WStrList* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
+    ChmTocBuilder(ChmFile* doc, WStrList* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
         this->doc = doc;
         this->pages = pages;
         this->tocTrace = tocTrace;
@@ -349,7 +349,7 @@ class ChmTocBuilder : public EbookTocVisitor {
 
 bool ChmModel::Load(const WCHAR* fileName) {
     this->fileName.SetCopy(fileName);
-    doc = ChmDoc::CreateFromFile(fileName);
+    doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return false;
     }
@@ -597,7 +597,7 @@ void ChmModel::GetDisplayState(FileState* ds) {
 }
 
 class ChmThumbnailTask : public HtmlWindowCallback {
-    ChmDoc* doc = nullptr;
+    ChmFile* doc = nullptr;
     HWND hwnd = nullptr;
     HtmlWindow* hw = nullptr;
     Size size;
@@ -607,7 +607,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     CRITICAL_SECTION docAccess;
 
   public:
-    ChmThumbnailTask(ChmDoc* doc, HWND hwnd, Size size, const onBitmapRenderedCb& saveThumbnail) {
+    ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const onBitmapRenderedCb& saveThumbnail) {
         this->doc = doc;
         this->hwnd = hwnd;
         this->size = size;
@@ -676,7 +676,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
 // its first page to a hwnd specially created for it.
 void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked
-    ChmDoc* doc = ChmDoc::CreateFromFile(fileName);
+    ChmFile* doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return;
     }
@@ -706,7 +706,7 @@ void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnai
 }
 
 bool ChmModel::IsSupportedFileType(Kind kind) {
-    return ChmDoc::IsSupportedFileType(kind);
+    return ChmFile::IsSupportedFileType(kind);
 }
 
 ChmModel* ChmModel::Create(const WCHAR* fileName, ControllerCallback* cb) {

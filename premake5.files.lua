@@ -597,7 +597,7 @@ function engines_files()
   files_in_dir("src", {
     "Annotation.*",
     "Engine*",
-    "ChmDoc.*",
+    "ChmFile.*",
     "EbookDoc.*",
     "EbookFormatter.*",
     "HtmlFormatter.*",
@@ -992,7 +992,7 @@ function pdf_preview_files()
     "EnginePdf.*",
     "EnginePdfImpl.*",
     "EngineXps.*",
-    "ChmDoc.*",
+    "ChmFile.*",
     "EbookDoc.*",
     "EngineEbook.*",
     "EngineDjVu.*",

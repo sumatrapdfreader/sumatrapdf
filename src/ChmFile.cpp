@@ -16,13 +16,13 @@
 
 #include "EngineBase.h"
 #include "EbookBase.h"
-#include "ChmDoc.h"
+#include "ChmFile.h"
 
-ChmDoc::~ChmDoc() {
+ChmFile::~ChmFile() {
     chm_close(chmHandle);
 }
 
-bool ChmDoc::HasData(const char* fileName) {
+bool ChmFile::HasData(const char* fileName) {
     if (!fileName) {
         return false;
     }
@@ -37,7 +37,7 @@ bool ChmDoc::HasData(const char* fileName) {
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-std::span<u8> ChmDoc::GetData(const char* fileName) {
+std::span<u8> ChmFile::GetData(const char* fileName) {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp("/", fileName);
     } else if (str::StartsWith(fileName, "///")) {
@@ -74,7 +74,7 @@ std::span<u8> ChmDoc::GetData(const char* fileName) {
     return {data, len};
 }
 
-char* ChmDoc::ToUtf8(const u8* text, uint overrideCP) {
+char* ChmFile::ToUtf8(const u8* text, uint overrideCP) {
     const char* s = (char*)text;
     if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
@@ -88,7 +88,7 @@ char* ChmDoc::ToUtf8(const u8* text, uint overrideCP) {
     return (char*)strconv::ToMultiByteV(s, codepage, CP_UTF8).data();
 }
 
-WCHAR* ChmDoc::ToStr(const char* text) {
+WCHAR* ChmFile::ToStr(const char* text) {
     return strconv::FromCodePage(text, codepage);
 }
 
@@ -107,7 +107,7 @@ static char* GetCharZ(std::span<u8> d, size_t off) {
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
-void ChmDoc::ParseWindowsData() {
+void ChmFile::ParseWindowsData() {
     AutoFree windowsData = GetData("/#WINDOWS");
     auto stringsData = GetData("/#STRINGS");
     AutoFree stringsDataFree(stringsData);
@@ -169,7 +169,7 @@ static uint LcidToCodepage(DWORD lcid) {
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
-bool ChmDoc::ParseSystemData() {
+bool ChmFile::ParseSystemData() {
     auto data = GetData("/#SYSTEM");
     if (data.empty()) {
         return false;
@@ -230,7 +230,7 @@ bool ChmDoc::ParseSystemData() {
     return true;
 }
 
-char* ChmDoc::ResolveTopicID(unsigned int id) {
+char* ChmFile::ResolveTopicID(unsigned int id) {
     AutoFree ivbData = GetData("/#IVB");
     size_t ivbLen = ivbData.size();
     ByteReader br(ivbData.AsView());
@@ -247,7 +247,7 @@ char* ChmDoc::ResolveTopicID(unsigned int id) {
     return nullptr;
 }
 
-void ChmDoc::FixPathCodepage(AutoFree& path, uint& fileCP) {
+void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
     if (!path || HasData(path)) {
         return;
     }
@@ -265,7 +265,7 @@ void ChmDoc::FixPathCodepage(AutoFree& path, uint& fileCP) {
     }
 }
 
-bool ChmDoc::Load(const WCHAR* fileName) {
+bool ChmFile::Load(const WCHAR* fileName) {
     chmHandle = chm_open((WCHAR*)fileName);
     if (!chmHandle) {
         return false;
@@ -310,7 +310,7 @@ bool ChmDoc::Load(const WCHAR* fileName) {
     return true;
 }
 
-WCHAR* ChmDoc::GetProperty(DocumentProperty prop) {
+WCHAR* ChmFile::GetProperty(DocumentProperty prop) {
     AutoFreeWstr result;
     if (DocumentProperty::Title == prop && title) {
         result.Set(ToStr(title));
@@ -325,7 +325,7 @@ WCHAR* ChmDoc::GetProperty(DocumentProperty prop) {
     return result.StealData();
 }
 
-const char* ChmDoc::GetHomePath() {
+const char* ChmFile::GetHomePath() {
     return homePath;
 }
 
@@ -338,7 +338,7 @@ static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info
     return CHM_ENUMERATOR_CONTINUE;
 }
 
-Vec<char*>* ChmDoc::GetAllPaths() {
+Vec<char*>* ChmFile::GetAllPaths() {
     Vec<char*>* paths = new Vec<char*>();
     chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, paths);
     return paths;
@@ -506,7 +506,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, uin
     return hadOne;
 }
 
-bool ChmDoc::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) {
+bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) {
     if (!path) {
         return false;
     }
@@ -540,28 +540,28 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool is
     return true;
 }
 
-bool ChmDoc::HasToc() const {
+bool ChmFile::HasToc() const {
     return tocPath != nullptr;
 }
 
-bool ChmDoc::ParseToc(EbookTocVisitor* visitor) {
+bool ChmFile::ParseToc(EbookTocVisitor* visitor) {
     return ParseTocOrIndex(visitor, tocPath, false);
 }
 
-bool ChmDoc::HasIndex() const {
+bool ChmFile::HasIndex() const {
     return indexPath != nullptr;
 }
 
-bool ChmDoc::ParseIndex(EbookTocVisitor* visitor) {
+bool ChmFile::ParseIndex(EbookTocVisitor* visitor) {
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 
-bool ChmDoc::IsSupportedFileType(Kind kind) {
+bool ChmFile::IsSupportedFileType(Kind kind) {
     return kind == kindFileChm;
 }
 
-ChmDoc* ChmDoc::CreateFromFile(const WCHAR* path) {
-    ChmDoc* doc = new ChmDoc();
+ChmFile* ChmFile::CreateFromFile(const WCHAR* path) {
+    ChmFile* doc = new ChmFile();
     if (!doc || !doc->Load(path)) {
         delete doc;
         return nullptr;

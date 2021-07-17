@@ -1,7 +1,7 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct ChmDoc {
+struct ChmFile {
     struct chmFile* chmHandle = nullptr;
 
     // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
@@ -19,8 +19,8 @@ struct ChmDoc {
 
     bool Load(const WCHAR* fileName);
 
-    ChmDoc() = default;
-    ~ChmDoc();
+    ChmFile() = default;
+    ~ChmFile();
 
     bool HasData(const char* fileName);
     std::span<u8> GetData(const char* fileName);
@@ -39,5 +39,5 @@ struct ChmDoc {
     bool ParseIndex(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind);
-    static ChmDoc* CreateFromFile(const WCHAR* path);
+    static ChmFile* CreateFromFile(const WCHAR* path);
 };

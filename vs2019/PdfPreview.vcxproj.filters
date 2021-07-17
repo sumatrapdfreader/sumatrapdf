@@ -12,7 +12,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ChmDoc.h" />
+    <ClInclude Include="..\src\ChmFile.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
     <ClInclude Include="..\src\EngineBase.h" />
@@ -47,7 +47,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\ChmDoc.cpp" />
+    <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />

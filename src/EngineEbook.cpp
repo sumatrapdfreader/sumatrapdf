@@ -1194,15 +1194,15 @@ EngineBase* CreatePdbEngineFromFile(const WCHAR* fileName) {
 
 /* formatting extensions for CHM */
 
-#include "ChmDoc.h"
+#include "ChmFile.h"
 
 class ChmDataCache {
-    ChmDoc* doc = nullptr; // owned by creator
+    ChmFile* doc = nullptr; // owned by creator
     AutoFree html;
     Vec<ImageData2> images;
 
   public:
-    ChmDataCache(ChmDoc* doc, char* html) : doc(doc), html(html) {
+    ChmDataCache(ChmFile* doc, char* html) : doc(doc), html(html) {
     }
 
     ~ChmDataCache() {
@@ -1349,7 +1349,7 @@ class EngineChm : public EngineEbook {
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
-    ChmDoc* doc = nullptr;
+    ChmFile* doc = nullptr;
     ChmDataCache* dataCache = nullptr;
     TocTree* tocTree = nullptr;
 
@@ -1401,12 +1401,12 @@ static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
 }
 
 class ChmHtmlCollector : public EbookTocVisitor {
-    ChmDoc* doc{nullptr};
+    ChmFile* doc{nullptr};
     WStrList added;
     str::Str html;
 
   public:
-    explicit ChmHtmlCollector(ChmDoc* doc) : doc(doc) {
+    explicit ChmHtmlCollector(ChmFile* doc) : doc(doc) {
         // can be big
     }
 
@@ -1463,7 +1463,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
 
 bool EngineChm::Load(const WCHAR* fileName) {
     SetFileName(fileName);
-    doc = ChmDoc::CreateFromFile(fileName);
+    doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return false;
     }
