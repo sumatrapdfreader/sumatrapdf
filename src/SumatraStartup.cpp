@@ -783,8 +783,8 @@ static void testLogf() {
     const char* fileName = path::GetBaseNameNoFree(__FILE__);
     WCHAR* gswin32c = L"this is a path";
     WCHAR* tmpFile = L"c:\foo\bar.txt";
-    AutoFree gswin = strconv::WstrToUtf8(gswin32c);
-    AutoFree tmpFileName = strconv::WstrToUtf8(path::GetBaseNameNoFree(tmpFile));
+    auto gswin = ToUtf8Temp(gswin32c);
+    auto tmpFileName = ToUtf8Temp(path::GetBaseNameNoFree(tmpFile));
     logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.Get(), tmpFileName.Get());
 }
 #endif
@@ -1122,7 +1122,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         if (restoreSession && FindWindowInfoByFile(filePath, false)) {
             continue;
         }
-        AutoFree path = strconv::WstrToUtf8(filePath);
+        auto path = ToUtf8Temp(filePath);
         win = LoadOnStartup(filePath, i, !win);
         if (!win) {
             retCode++;
@@ -1140,7 +1140,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
             if (restoreSession && FindWindowInfoByFile(filePath, false)) {
                 continue;
             }
-            AutoFree path = strconv::WstrToUtf8(filePath);
+            auto path = ToUtf8Temp(filePath);
             win = LoadOnStartup(filePath, i, !win);
             if (!win) {
                 retCode++;

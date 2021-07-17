@@ -257,16 +257,16 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        AutoFree pwd_utf8(strconv::WstrToUtf8(pwd));
-        ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
+        AutoFree pwdA(strconv::WstrToUtf8(pwd));
+        ok = pdf_authenticate_password(ctx, doc, pwdA.Get());
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
             // TODO: this is only part of SASLprep
             pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
             if (pwd) {
-                pwd_utf8 = strconv::WstrToUtf8(pwd);
-                ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
+                pwdA = strconv::WstrToUtf8(pwd);
+                ok = pdf_authenticate_password(ctx, doc, pwdA.Get());
             }
         }
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
@@ -274,8 +274,8 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         if (!ok && GetACP() != 1252) {
             AutoFree pwd_ansi(strconv::WstrToAnsi(pwd));
             AutoFreeWstr pwd_cp1252(strconv::FromCodePage(pwd_ansi.Get(), 1252));
-            pwd_utf8 = strconv::WstrToUtf8(pwd_cp1252);
-            ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
+            pwdA = strconv::WstrToUtf8(pwd_cp1252);
+            ok = pdf_authenticate_password(ctx, doc, pwdA.Get());
         }
     }
 

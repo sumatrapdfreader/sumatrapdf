@@ -56,13 +56,13 @@ static void extractPageText(EngineBase* engine, int pageNo) {
         return;
     }
     AutoFreeWstr uni = str::Replace(pageText.text, L"\n", L"_");
-    AutoFree utf = strconv::WstrToUtf8(uni);
+    auto uniA = ToUtf8Temp(uni);
     printf("text on page %d: '", pageNo);
     // print characters as hex because I don't know what kind of locale-specific mangling
     // printf() might do
     int idx = 0;
-    while (utf.Get()[idx] != 0) {
-        char c = utf.Get()[idx++];
+    while (uniA.Get()[idx] != 0) {
+        char c = uniA.Get()[idx++];
         printf("%02x ", (u8)c);
     }
     printf("'\n");

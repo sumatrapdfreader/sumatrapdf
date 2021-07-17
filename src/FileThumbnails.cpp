@@ -31,14 +31,14 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     if (!filePath) {
         return nullptr;
     }
-    AutoFree pathU(strconv::WstrToUtf8(filePath));
-    if (!pathU.Get()) {
+    auto pathA(ToUtf8Temp(filePath));
+    if (!pathA.Get()) {
         return nullptr;
     }
     if (path::HasVariableDriveLetter(filePath)) {
-        pathU.Get()[0] = '?'; // ignore the drive letter, if it might change
+        pathA.Get()[0] = '?'; // ignore the drive letter, if it might change
     }
-    CalcMD5Digest((u8*)pathU.Get(), str::Len(pathU.Get()), digest);
+    CalcMD5Digest((u8*)pathA.Get(), str::Len(pathA.Get()), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
 
     AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));

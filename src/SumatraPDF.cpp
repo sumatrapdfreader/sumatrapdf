@@ -255,11 +255,11 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        AutoFree urlUtf8(strconv::WstrToUtf8(url));
-        if (!parent || !urlUtf8.Get() || (urlUtf8.size() > 4096)) {
+        auto urlA(ToUtf8Temp(url));
+        if (!parent || !urlA.Get() || (urlA.size() > 4096)) {
             return false;
         }
-        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlUtf8.size() + 1, urlUtf8.Get()};
+        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlA.size() + 1, urlA.Get()};
         return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
@@ -1555,7 +1555,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     AutoFreeWstr fullPath(path::Normalize(args.fileName));
     WindowInfo* win = args.win;
     {
-        AutoFree path = strconv::WstrToUtf8(fullPath);
+        auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: '%s', tid=%d\n", path.Get(), threadID);
     }
 
@@ -2618,7 +2618,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 
     // TODO: just remove it
     bool saveAnnotsInDoc = true;
-    AutoFree pathUtf8(strconv::WstrToUtf8(realDstFileName));
+    auto pathA(ToUtf8Temp(realDstFileName));
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
@@ -2632,24 +2632,24 @@ static void OnMenuSaveAs(WindowInfo* win) {
             FreePageText(&pageText);
         }
 
-        AutoFree textUTF8 = strconv::WstrToUtf8(text.LendData());
-        AutoFree textUTF8BOM = str::Join(UTF8_BOM, textUTF8.Get());
+        auto textA = ToUtf8Temp(text.LendData());
+        AutoFree textUTF8BOM = str::Join(UTF8_BOM, textA.Get());
         ok = file::WriteFile(realDstFileName, textUTF8BOM.AsSpan());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         AutoFreeWstr producerName = str::Join(GetAppNameTemp(), L" ", CURR_VERSION_STR);
         PdfCreator::SetProducerName(producerName);
-        ok = engine->SaveFileAsPDF(pathUtf8.Get(), saveAnnotsInDoc);
+        ok = engine->SaveFileAsPDF(pathA.Get(), saveAnnotsInDoc);
         if (!ok && gIsDebugBuild) {
             // rendering includes all page annotations
-            ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
+            ok = PdfCreator::RenderToFile(pathA.Get(), engine);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
-        ok = engine->SaveFileAs(pathUtf8.Get(), saveAnnotsInDoc);
+        ok = engine->SaveFileAs(pathA.Get(), saveAnnotsInDoc);
     } else if (saveAnnotsInDoc && EngineSupportsAnnotations(engine)) {
         // ... as well as files containing annotations ...
-        ok = engine->SaveFileAs(pathUtf8.Get(), true);
+        ok = engine->SaveFileAs(pathA.Get(), true);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
         // ... else just copy the file
         WCHAR* msgBuf;

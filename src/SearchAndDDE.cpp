@@ -811,7 +811,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    AutoFreeStr viewModeWstr = strconv::WstrToUtf8(viewMode);
+    auto viewModeWstr = ToUtf8Temp(viewMode);
     DisplayMode mode = DisplayModeFromString(viewModeWstr.Get(), DisplayMode::Automatic);
     if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
@@ -836,7 +836,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
 static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
     while (!str::IsEmpty(cmd)) {
         {
-            AutoFree tmp = strconv::WstrToUtf8(cmd);
+            auto tmp = ToUtf8Temp(cmd);
             logf("HandleDdeCmds: '%s'\n", tmp.Get());
         }
 

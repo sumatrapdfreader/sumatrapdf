@@ -909,7 +909,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
         return;
     }
     win->currentTab = win->tabs.at(tabIndex);
-    AutoFree path = strconv::WstrToUtf8(win->currentTab->filePath);
+    auto path = ToUtf8Temp(win->currentTab->filePath);
     dbglogf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
     int prevIdx = win->tabsCtrl->SetSelectedTabByIndex(tabIndex);
     if (prevIdx != -1) {

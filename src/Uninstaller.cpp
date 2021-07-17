@@ -505,8 +505,8 @@ static char* PickUnInstallerLogPath() {
     if (!dir) {
         return nullptr;
     }
-    AutoFreeStr dira = strconv::WstrToUtf8(dir);
-    return path::Join(dira, "sumatra-uninstall-log.txt", nullptr);
+    auto dirA = ToUtf8Temp(dir);
+    return path::Join(dirA, "sumatra-uninstall-log.txt", nullptr);
 }
 
 static void StartUnInstallerLogging() {
@@ -589,7 +589,7 @@ static void InitSelfDelete() {
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
 
     AutoFreeWstr scriptPath = GetSelfDeleteBatchPathInTemp();
-    AutoFreeStr scriptPathA = strconv::WstrToUtf8(scriptPath.AsView());
+    auto scriptPathA = ToUtf8Temp(scriptPath.AsView());
     bool ok = file::WriteFile(scriptPathA, script.AsSpan());
     if (!ok) {
         logf("Failed to write '%s'\n", scriptPathA.Get());
