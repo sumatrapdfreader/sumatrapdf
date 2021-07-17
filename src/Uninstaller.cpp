@@ -232,7 +232,7 @@ static void RemoveInstalledFiles() {
     size_t n = dimof(gInstalledFiles);
     for (size_t i = 0; i < n; i++) {
         const char* s = gInstalledFiles[i];
-        AutoFreeWstr relPath = strconv::Utf8ToWstr(s);
+        auto relPath = ToWstrTemp(s);
         AutoFreeWstr path = path::Join(dir, relPath);
         BOOL ok = DeleteFileW(path);
         if (ok) {

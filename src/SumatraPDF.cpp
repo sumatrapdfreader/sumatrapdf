@@ -221,14 +221,16 @@ void InitializePolicies(bool restrict) {
     // determine the list of allowed link protocols and perceived file types
     if ((gPolicyRestrictions & Perm::DiskAccess) != (Perm)0) {
         const char* value;
-        if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
-            AutoFreeWstr protocols = strconv::Utf8ToWstr(value);
+        value = polsec->GetValue("LinkProtocols");
+        if (value != nullptr) {
+            auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedLinkProtocols.Split(protocols, L",", true);
         }
-        if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
-            AutoFreeWstr protocols = strconv::Utf8ToWstr(value);
+        value = polsec->GetValue("SafeFileTypes");
+        if (value != nullptr) {
+            auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedFileTypes.Split(protocols, L",", true);
@@ -2844,7 +2846,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     }
 
     AutoFreeWstr exePath = GetExePath();
-    AutoFreeWstr viewMode = strconv::Utf8ToWstr(viewModeStr);
+    auto viewMode = ToWstrTemp(viewModeStr);
     AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
                                     viewMode.Get(), ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeWstr label = ctrl->GetPageLabel(ss.page);

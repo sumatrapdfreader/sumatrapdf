@@ -342,7 +342,7 @@ bool PathMatchFilter(const WCHAR* path, char* filter) {
     if (str::Eq(filter, "*")) {
         return true;
     }
-    AutoFreeWstr s = strconv::Utf8ToWstr(filter);
+    auto s = ToWstrTemp(filter);
     bool matches = path::Match(path, s.Get());
     return matches;
 }

@@ -227,7 +227,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
-        AutoFreeWstr viewMode = strconv::Utf8ToWstr(viewModeStr);
+        auto viewMode = ToWstrTemp(viewModeStr);
         cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode.Get(), i.startZoom,
                       i.startScroll.x, i.startScroll.y);
     }

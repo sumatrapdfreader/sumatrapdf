@@ -701,7 +701,7 @@ std::span<u8> EngineXps::GetFileData() {
 }
 
 bool EngineXps::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
-    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
+    auto dstPath = ToWstrTemp(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.AsSpan());

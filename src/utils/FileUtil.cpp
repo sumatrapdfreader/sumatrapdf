@@ -83,7 +83,7 @@ bool IsDirectory(std::wstring_view path) {
 }
 
 bool IsDirectory(std::string_view path) {
-    AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
+    auto pathW = ToWstrTemp(path);
     DWORD attrs = GetFileAttributesW(pathW);
     if (INVALID_FILE_ATTRIBUTES == attrs) {
         return false;
@@ -448,7 +448,7 @@ FILE* OpenFILE(const char* path) {
     if (!path) {
         return nullptr;
     }
-    AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
+    auto pathW = ToWstrTemp(path);
     return OpenFILE(pathW.Get());
 }
 
@@ -521,19 +521,18 @@ bool WriteFile(const char* filePath, std::span<u8> d) {
 }
 
 bool Exists(std::string_view path) {
-    WCHAR* wpath = strconv::Utf8ToWstr(path);
+    WCHAR* wpath = ToWstrTemp(path);
     bool exists = Exists(wpath);
-    free(wpath);
     return exists;
 }
 
 HANDLE OpenReadOnly(const WCHAR* filePath) {
-    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    return CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
 HANDLE OpenReadOnly(std::string_view path) {
-    AutoFreeWstr filePath = strconv::Utf8ToWstr(path);
-    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    auto filePath = ToWstrTemp(path);
+    return CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
 FILE* OpenFILE(const WCHAR* path) {

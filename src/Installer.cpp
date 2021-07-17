@@ -119,7 +119,7 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
                 _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
         }
-        AutoFreeWstr fileName = strconv::Utf8ToWstr(fi->name);
+        auto fileName = ToWstrTemp(fi->name);
         AutoFreeWstr filePath = path::Join(destDir, fileName);
 
         std::span<u8> d = {uncompressed, fi->uncompressedSize};

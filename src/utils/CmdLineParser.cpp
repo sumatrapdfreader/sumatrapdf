@@ -8,7 +8,7 @@ void ParseCmdLine(const char* cmdLine, WStrVec& out, int maxParts) {
     if (!cmdLine) {
         return;
     }
-    AutoFreeWstr s = strconv::Utf8ToWstr(cmdLine);
+    auto s = ToWstrTemp(cmdLine);
     return ParseCmdLine(s.Get(), out, maxParts);
 }
 

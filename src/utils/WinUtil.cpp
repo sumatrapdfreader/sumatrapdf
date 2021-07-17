@@ -2252,7 +2252,7 @@ void HwndSetText(HWND hwnd, std::string_view sv) {
         SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
         return;
     }
-    AutoFreeWstr ws = strconv::Utf8ToWstr(sv);
+    auto ws = ToWstrTemp(sv);
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws.Get());
 }
 

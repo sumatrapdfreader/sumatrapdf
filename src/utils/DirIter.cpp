@@ -149,7 +149,7 @@ std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
 
 bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
                                const std::function<bool(std::string_view)>& fileMatchesFn) {
-    AutoFreeWstr dirW = strconv::Utf8ToWstr(dir);
+    auto dirW = ToWstrTemp(dir);
     AutoFreeWstr pattern = path::Join(dirW, L"*");
 
     WIN32_FIND_DATA fdata;

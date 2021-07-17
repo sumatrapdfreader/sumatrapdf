@@ -21,12 +21,12 @@ DBGHELP_API_LIST(API_DECLARATION)
 
 // Loads a DLL explicitly from the system's library collection
 static HMODULE SafeLoadLibrary(const char* dllNameA) {
-    AutoFreeWstr dllName = strconv::Utf8ToWstr(dllNameA);
     WCHAR dllPath[MAX_PATH];
     uint res = GetSystemDirectoryW(dllPath, dimof(dllPath));
     if (!res || res >= dimof(dllPath)) {
         return nullptr;
     }
+    auto dllName = ToWstrTemp(dllNameA);
     BOOL ok = PathAppendW(dllPath, dllName);
     if (!ok) {
         return nullptr;

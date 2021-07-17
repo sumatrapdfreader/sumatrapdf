@@ -298,7 +298,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
 std::span<u8> MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
-    AutoFreeWstr rarPath = strconv::Utf8ToWstr(rarFilePath_);
+    auto rarPath = ToWstrTemp(rarFilePath_);
 
     str::Slice uncompressedBuf;
 
@@ -318,7 +318,7 @@ std::span<u8> MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     char* data = nullptr;
     size_t size = 0;
-    AutoFreeWstr fileName = strconv::Utf8ToWstr(fileInfo->name.data());
+    auto fileName = ToWstrTemp(fileInfo->name.data());
     RARHeaderDataEx rarHeader = {0};
     int res;
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());
@@ -352,15 +352,15 @@ Exit:
 
 // asan build crashes in UnRAR code
 // see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
-bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
-    if (!rarPathUtf) {
+bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
+    if (!rarPath) {
         return false;
     }
     CrashIf(rarFilePath_);
-    AutoFreeWstr rarPath = strconv::Utf8ToWstr(rarPathUtf);
+    auto rarPathW = ToWstrTemp(rarPath);
 
     RAROpenArchiveDataEx arcData = {0};
-    arcData.ArcNameW = (WCHAR*)rarPath;
+    arcData.ArcNameW = (WCHAR*)rarPathW;
     arcData.OpenMode = RAR_OM_EXTRACT;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
@@ -394,6 +394,6 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
 
     RARCloseArchive(hArc);
 
-    rarFilePath_ = str::Dup(&allocator_, rarPathUtf);
+    rarFilePath_ = str::Dup(&allocator_, rarPath);
     return true;
 }

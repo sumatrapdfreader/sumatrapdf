@@ -367,7 +367,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         for (int i = 0; i < trans::GetLangsCount(); i++) {
             const char* name = trans::GetLangNameByIdx(i);
             const char* langCode = trans::GetLangCodeByIdx(i);
-            AutoFreeWstr langName = strconv::Utf8ToWstr(name);
+            auto langName = ToWstrTemp(name);
             ListBox_AppendString_NoSort(langList, langName);
             if (str::Eq(langCode, data->langCode)) {
                 itemToSelect = i;
