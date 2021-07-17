@@ -421,3 +421,23 @@ void VecStr::Reset() {
     firstIndex = nullptr;
     currIndex = nullptr;
 }
+
+// must be implemented for each project
+// could be an empty implementation
+// For SumatraPDF, it's in CrashHandler.cpp
+extern void _submitDebugReport(const char*);
+
+// we want to avoid submitting multiple reports for the same
+// condition. I'm too lazy to implement tracking this granuarly
+// so only allow once submition in a given session
+static bool didSubmitDebugReport = false;
+
+void _submitDebugReportIfFunc(bool cond, __unused const char* condStr) {
+    if (!cond || didSubmitDebugReport) {
+        return;
+    }
+    didSubmitDebugReport = true;
+#if defined(PRE_RELEASE_VER)
+    _submitDebugReport(condStr);
+#endif
+}

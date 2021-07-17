@@ -994,11 +994,13 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     }
     WCHAR* text = pageEl->GetValue();
     int pageNo = pageEl->GetPageNo();
-    const char* isValidPage = dm->ValidPageNo(pageNo) ? "yes" : "no";
+    if (!dm->ValidPageNo(pageNo)) {
+        const char* kind = pageEl->GetKind();
+        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", ToUtf8Temp(text).Get(), kind, pageNo);
+        SubmitBugReportIf(true);
+        return TRUE;
+    }
     auto r = pageEl->GetRect();
-    // trying to debug bad page no in CvtToScreen()
-    auto textA = ToUtf8Temp(text);
-    logf("OnSetCursorMouseIdle: page element '%s' on page %d, valid pageNo: %s\n", textA.Get(), pageNo, isValidPage);
     Rect rc = dm->CvtToScreen(pageNo, r);
     win->ShowToolTip(text, rc, true);
 

@@ -310,29 +310,29 @@ bool CrashHandlerDownloadSymbols() {
 }
 
 // like crash report, but can be triggered without a crash
-void SubmitDebugReport(const char* condStr) {
+void _submitDebugReport(const char* condStr) {
     if (!CrashHandlerCanUseNet()) {
         return;
     }
 
-    dbglogf(L"SubmitDebugReport: gSymbolPathW: '%s'\n", gSymbolPathW);
+    dbglogf(L"_submitDebugReport: gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
     if (!ok) {
-        dbglog("SubmitDebugReport(): CrashHandlerDownloadSymbols() failed\n");
+        dbglog("_submitDebugReport(): CrashHandlerDownloadSymbols() failed\n");
         return;
     }
 
     auto sv = BuildCrashInfoText(false);
     if (sv.empty()) {
-        dbglog("SubmitDebugReport(): skipping because !BuildCrashInfoText()\n");
+        dbglog("_submitDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
     auto d = ToSpanU8(sv);
     // SaveCrashInfo(d);
     SendCrashInfo(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());
-    dbglog("SubmitDebugReport() finished\n");
+    dbglog("_submitDebugReport() finished\n");
 }
 
 // If we can't resolve the symbols, we assume it's because we don't have symbols

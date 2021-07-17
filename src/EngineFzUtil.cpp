@@ -1004,10 +1004,12 @@ PageDestination* newFzDestination(fz_outline* outline) {
     dest->value = CalcValue(link, outline);
     dest->name = CalcDestName(link, outline);
     dest->pageNo = CalcDestPageNo(link, outline);
+    SubmitBugReportIf(dest->pageNo <= 0);
     return dest;
 }
 
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
+    SubmitBugReportIf(pageNo <= 0);
     auto res = new PageElement();
     res->kind_ = kindPageElementDest;
 
@@ -1023,7 +1025,8 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
     dest->rect = CalcDestRect(link, outline);
     dest->value = str::Dup(res->GetValue());
     dest->name = CalcDestName(link, outline);
-    dest->pageNo = CalcDestPageNo(link, outline);
+    //dest->pageNo = CalcDestPageNo(link, outline);
+    dest->pageNo = pageNo;
     res->dest = dest;
 
     return res;

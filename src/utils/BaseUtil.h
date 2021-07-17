@@ -223,28 +223,8 @@ inline void CrashIfFunc(bool cond) {
     if (!cond) {
         return;
     }
-#if defined(PRE_RELEASE_VER) || defined(DEBUG)
+#if defined(PRE_RELEASE_VER)
     CrashMe();
-#endif
-}
-
-// must be provided somewhere else
-// could be a dummy implementation
-// For sumatra, it's in CrashHandler.cpp
-void SubmitDebugReport(const char*);
-
-// we want to avoid submitting multiple reports for the same
-// condition. I'm too lazy to implement tracking this granuarly
-// so only allow once submition in a given session
-static bool didSubmitDebugReport = false;
-
-inline void SubmitDebugReportIfFunc(bool cond, __unused const char* condStr) {
-    if (!cond || didSubmitDebugReport) {
-        return;
-    }
-    didSubmitDebugReport = true;
-#if defined(PRE_RELEASE_VER) || defined(DEBUG)
-    SubmitDebugReport(condStr);
 #endif
 }
 
@@ -287,10 +267,12 @@ inline void DebugCrashIfFunc(bool) {
         CrashIfFunc(cond);          \
     } while (0)
 
+void _submitDebugReportIfFunc(bool cond, __unused const char* condStr);
+
 #define SubmitBugReportIf(cond)               \
     do {                                      \
         __analysis_assume(!(cond));           \
-        SubmitDebugReportIfFunc(cond, #cond); \
+        _submitDebugReportIfFunc(cond, #cond); \
     } while (0)
 
 void* AllocZero(size_t count, size_t size);
