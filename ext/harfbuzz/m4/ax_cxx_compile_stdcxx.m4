@@ -675,7 +675,7 @@ namespace cxx17
 
     [[nodiscard]] int f2()
     {
-      [[maybe_unused]] auto unused = f1();
+      __unused auto unused = f1();
 
       switch (f1())
       {
@@ -774,7 +774,7 @@ namespace cxx17
 
       for (auto i : r)
       {
-        [[maybe_unused]] auto v = i;
+        __unused auto v = i;
       }
     }
 
@@ -872,7 +872,7 @@ namespace cxx17
 
     void f()
     {
-      [[maybe_unused]] auto p = pair{13, 42u};
+      __unused auto p = pair{13, 42u};
     }
 
   }

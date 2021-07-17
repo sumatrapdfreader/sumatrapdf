@@ -352,9 +352,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
     }
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute([[maybe_unused]] TEXTATTRIBUTEID attr,
-                                                                      [[maybe_unused]] VARIANT val,
-                                                                      [[maybe_unused]] BOOL backward,
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(__unused TEXTATTRIBUTEID attr,
+                                                                      __unused VARIANT val, __unused BOOL backward,
                                                                       ITextRangeProvider** found) {
     if (found == nullptr) {
         return E_POINTER;
@@ -368,10 +367,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute([[maybe_un
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText([[maybe_unused]] BSTR text,
-                                                                 [[maybe_unused]] BOOL backward,
-                                                                 [[maybe_unused]] BOOL ignoreCase,
-                                                                 ITextRangeProvider** found) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(__unused BSTR text, __unused BOOL backward,
+                                                                 __unused BOOL ignoreCase, ITextRangeProvider** found) {
     if (found == nullptr) {
         return E_POINTER;
     }
@@ -383,7 +380,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText([[maybe_unused]
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue([[maybe_unused]] TEXTATTRIBUTEID attr,
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(__unused TEXTATTRIBUTEID attr,
                                                                           VARIANT* value) {
     if (value == nullptr) {
         return E_POINTER;

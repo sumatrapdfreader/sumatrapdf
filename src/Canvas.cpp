@@ -294,7 +294,7 @@ bool IsDrag(int x1, int x2, int y1, int y2) {
     return false;
 }
 
-static void OnMouseMove(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM flags) {
+static void OnMouseMove(WindowInfo* win, int x, int y, __unused WPARAM flags) {
     CrashIf(!win->AsFixed());
 
     if (win->presentation != PM_DISABLED) {
@@ -595,7 +595,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     delete pageEl;
 }
 
-static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM key) {
+static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, __unused WPARAM key) {
     // Handle message by recording placement then moving document as mouse moves.
 
     switch (win->mouseAction) {
@@ -709,8 +709,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
 }
 #else
-static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, [[maybe_unused]] Rect& pageRect,
-                                    [[maybe_unused]] bool presentation) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, __unused Rect& pageRect, __unused bool presentation) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
     auto col = GetAppColor(AppColor::MainWindowBg);
     AutoDeleteBrush brush(CreateSolidBrush(col));

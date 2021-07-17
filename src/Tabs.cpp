@@ -401,8 +401,8 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
     }
 }
 
-static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
-                                         [[maybe_unused]] UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __unused UINT_PTR uIdSubclass,
+                                         DWORD_PTR dwRefData) {
     if (msg == WM_NOTIFY && wp == IDC_TABBAR) {
         WindowInfo* win = (WindowInfo*)dwRefData;
         if (win) {
@@ -413,8 +413,8 @@ static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, [[maybe_unused]] UINT_PTR uIdSubclass,
-                                   [[maybe_unused]] DWORD_PTR dwRefData) {
+static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __unused UINT_PTR uIdSubclass,
+                                   __unused DWORD_PTR dwRefData) {
     PAINTSTRUCT ps;
     HDC hdc;
     int index;

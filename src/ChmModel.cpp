@@ -123,7 +123,7 @@ int ChmModel::CurrentPageNo() const {
     return currentPageNo;
 }
 
-void ChmModel::GoToPage(int pageNo, [[maybe_unused]] bool addNavPoint) {
+void ChmModel::GoToPage(int pageNo, __unused bool addNavPoint) {
     // TODO: not sure if crashing here is warranted
     // I've seen a crash with call from RestoreTabOnStartup() which doesn't validate pageNo
     SubmitBugReportIf(!ValidPageNo(pageNo));
@@ -255,23 +255,23 @@ void ChmModel::Navigate(int dir) {
     }
 }
 
-void ChmModel::SetDisplayMode([[maybe_unused]] DisplayMode mode, [[maybe_unused]] bool keepContinuous) {
+void ChmModel::SetDisplayMode(__unused DisplayMode mode, __unused bool keepContinuous) {
 }
 
 DisplayMode ChmModel::GetDisplayMode() const {
     return DisplayMode::SinglePage;
 }
-void ChmModel::SetPresentationMode([[maybe_unused]] bool enable) {
+void ChmModel::SetPresentationMode(__unused bool enable) {
 }
 
-void ChmModel::SetViewPortSize([[maybe_unused]] Size size) {
+void ChmModel::SetViewPortSize(__unused Size size) {
 }
 
 ChmModel* ChmModel::AsChm() {
     return this;
 }
 
-void ChmModel::SetZoomVirtual(float zoom, [[maybe_unused]] Point* fixPt) {
+void ChmModel::SetZoomVirtual(float zoom, __unused Point* fixPt) {
     if (zoom > 0) {
         zoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
     }
@@ -288,7 +288,7 @@ void ChmModel::ZoomTo(float zoomLevel) {
     }
 }
 
-float ChmModel::GetZoomVirtual([[maybe_unused]] bool absolute) const {
+float ChmModel::GetZoomVirtual(__unused bool absolute) const {
     if (!htmlWindow) {
         return 100;
     }
@@ -636,7 +636,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         hw->NavigateToDataUrl(homeUrl);
     }
 
-    bool OnBeforeNavigate([[maybe_unused]] const WCHAR* url, bool newWindow) override {
+    bool OnBeforeNavigate(__unused const WCHAR* url, bool newWindow) override {
         return !newWindow;
     }
 
@@ -668,7 +668,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         return d;
     }
 
-    void DownloadData([[maybe_unused]] const WCHAR* url, [[maybe_unused]] std::span<u8> data) override {
+    void DownloadData(__unused const WCHAR* url, __unused std::span<u8> data) override {
     }
 };
 

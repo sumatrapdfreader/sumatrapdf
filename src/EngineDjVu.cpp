@@ -338,16 +338,16 @@ RectF EngineDjVu::PageMediabox(int pageNo) {
     return mediaboxes[pageNo - 1];
 }
 
-bool EngineDjVu::HasClipOptimizations([[maybe_unused]] int pageNo) {
+bool EngineDjVu::HasClipOptimizations(__unused int pageNo) {
     return false;
 }
 
-WCHAR* EngineDjVu::GetProperty([[maybe_unused]] DocumentProperty prop) {
+WCHAR* EngineDjVu::GetProperty(__unused DocumentProperty prop) {
     return nullptr;
 }
 
 // we currently don't load pages lazily, so there's nothing to do here
-bool EngineDjVu::BenchLoadPage([[maybe_unused]] int pageNo) {
+bool EngineDjVu::BenchLoadPage(__unused int pageNo) {
     return true;
 }
 
@@ -628,7 +628,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     return bmp;
 }
 
-RectF EngineDjVu::PageContentBox(int pageNo, [[maybe_unused]] RenderTarget target) {
+RectF EngineDjVu::PageContentBox(int pageNo, __unused RenderTarget target) {
     ScopedCritSec scope(&gDjVuContext->lock);
 
     RectF pageRc = PageMediabox(pageNo);
@@ -753,7 +753,7 @@ std::span<u8> EngineDjVu::GetFileData() {
     return GetStreamOrFileData(stream, FileName());
 }
 
-bool EngineDjVu::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
+bool EngineDjVu::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
     auto path = ToWstrTemp(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);

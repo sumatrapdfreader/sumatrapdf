@@ -21,6 +21,6 @@ extern "C" {
 
 /* This is for debugging: gets document outlines for known document types */
 
-bool GetDocumentOutlines([[maybe_unused]] const WCHAR* path, [[maybe_unused]] Vec<OutlineEntry*>& entries) {
+bool GetDocumentOutlines(__unused const WCHAR* path, __unused Vec<OutlineEntry*>& entries) {
     return false;
 }

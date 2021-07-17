@@ -84,8 +84,7 @@ WCHAR* GetSumatraExePath() {
     return path.StealData();
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance, [[maybe_unused]] LPSTR lpCmdLineA,
-                     int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR lpCmdLineA, int nCmdShow) {
     WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
 

@@ -1083,7 +1083,7 @@ PalmDoc::~PalmDoc() {
 
 // cf. http://wiki.mobileread.com/wiki/TealDoc
 static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, const char* text, size_t len,
-                                    [[maybe_unused]] uint codePage) {
+                                    __unused uint codePage) {
     if (len < 9) {
     Fallback:
         builder.Append("&lt;");
@@ -1205,7 +1205,7 @@ std::span<u8> PalmDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 
-WCHAR* PalmDoc::GetProperty([[maybe_unused]] DocumentProperty prop) const {
+WCHAR* PalmDoc::GetProperty(__unused DocumentProperty prop) const {
     return nullptr;
 }
 
@@ -1586,7 +1586,7 @@ std::span<u8> TxtDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 
-WCHAR* TxtDoc::GetProperty([[maybe_unused]] DocumentProperty prop) const {
+WCHAR* TxtDoc::GetProperty(__unused DocumentProperty prop) const {
     return nullptr;
 }
 

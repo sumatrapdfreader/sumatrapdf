@@ -50,7 +50,7 @@ class Control : public ILayout {
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
-    virtual void NotifyMouseMove([[maybe_unused]] int x, [[maybe_unused]] int y) {
+    virtual void NotifyMouseMove(__unused int x, __unused int y) {
     }
 
     bool WantsMouseClick() const;

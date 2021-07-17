@@ -90,7 +90,7 @@ class FilterClassFactory : public IClassFactory {
     CLSID m_clsid;
 };
 
-STDAPI_(BOOL) DllMain([[maybe_unused]] HINSTANCE hInstance, DWORD dwReason, [[maybe_unused]] LPVOID lpReserved) {
+STDAPI_(BOOL) DllMain(__unused HINSTANCE hInstance, DWORD dwReason, __unused LPVOID lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         CrashIf(hInstance != GetInstance());
     }

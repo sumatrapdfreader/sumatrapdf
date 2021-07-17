@@ -364,7 +364,7 @@ void SubmitCrashReport() {
     dbglog("SubmitCrashReport() finished\n");
 }
 
-static DWORD WINAPI CrashDumpThread([[maybe_unused]] LPVOID data) {
+static DWORD WINAPI CrashDumpThread(__unused LPVOID data) {
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed) {
         return 0;
@@ -659,7 +659,7 @@ bool SetSymbolsDir(const WCHAR* symDir) {
     return true;
 }
 
-void __cdecl onSignalAbort([[maybe_unused]] int code) {
+void __cdecl onSignalAbort(__unused int code) {
     // put the signal back because can be called many times
     // (from multiple threads) and raise() resets the handler
     signal(SIGABRT, onSignalAbort);

@@ -3253,7 +3253,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
     }
 }
 
-static void FrameOnSize(WindowInfo* win, [[maybe_unused]] int dx, [[maybe_unused]] int dy) {
+static void FrameOnSize(WindowInfo* win, __unused int dx, __unused int dy) {
     RelayoutFrame(win);
 
     if (win->presentation || win->isFullScreen) {

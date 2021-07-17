@@ -174,7 +174,7 @@ bool Initialize(const WCHAR* symPathW, bool force) {
     return true;
 }
 
-static BOOL CALLBACK OpenMiniDumpCallback([[maybe_unused]] void* param, PMINIDUMP_CALLBACK_INPUT input,
+static BOOL CALLBACK OpenMiniDumpCallback(__unused void* param, PMINIDUMP_CALLBACK_INPUT input,
                                           PMINIDUMP_CALLBACK_OUTPUT output) {
     if (!input || !output) {
         return FALSE;

@@ -286,16 +286,15 @@ char* Fmt::GetDup() {
     return str::Dup(Get());
 }
 
-std::string_view Format([[maybe_unused]] const char* s, [[maybe_unused]] Arg& a1) {
+std::string_view Format(__unused const char* s, __unused Arg& a1) {
     return {};
 }
 
-std::string_view Format([[maybe_unused]] const char* s, [[maybe_unused]] Arg& a1, [[maybe_unused]] Arg& a2) {
+std::string_view Format(__unused const char* s, __unused Arg& a1, __unused Arg& a2) {
     return {};
 }
 
-std::string_view Format([[maybe_unused]] const char* s, [[maybe_unused]] Arg& a1, [[maybe_unused]] Arg& a2,
-                        [[maybe_unused]] Arg& a3) {
+std::string_view Format(__unused const char* s, __unused Arg& a1, __unused Arg& a2, __unused Arg& a3) {
     return {};
 }
 

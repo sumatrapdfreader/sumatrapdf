@@ -443,7 +443,7 @@ static void OnPaintAbout(HWND hwnd) {
     EndPaint(hwnd, &ps);
 }
 
-static void CopyAboutInfoToClipboard([[maybe_unused]] HWND hwnd) {
+static void CopyAboutInfoToClipboard(__unused HWND hwnd) {
     str::WStr info(512);
     AutoFreeWstr ver = GetAppVersion();
     info.AppendFmt(L"%s %s\r\n", GetAppNameTemp(), ver.Get());

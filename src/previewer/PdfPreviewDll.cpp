@@ -160,7 +160,7 @@ static const char* GetReason(DWORD dwReason) {
     return "Unknown reason";
 }
 
-STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, [[maybe_unused]] LPVOID lpReserved) {
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, __unused LPVOID lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         CrashIf(hInstance != GetInstance());
     }

@@ -279,7 +279,7 @@ class EnginePs : public EngineBase {
         return file::ReadFile(fileName);
     }
 
-    bool SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots = false) override {
+    bool SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots = false) override {
         if (!FileName()) {
             return false;
         }

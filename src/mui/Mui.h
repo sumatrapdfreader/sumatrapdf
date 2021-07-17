@@ -83,7 +83,7 @@ class WndFilter {
     virtual ~WndFilter() {
     }
 
-    virtual bool Matches([[maybe_unused]] Control* w, [[maybe_unused]] int offX, [[maybe_unused]] int offY) {
+    virtual bool Matches(__unused Control* w, __unused int offX, __unused int offY) {
         return true;
     }
 };

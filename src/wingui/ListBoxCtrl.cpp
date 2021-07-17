@@ -21,7 +21,7 @@ int ListBoxModelStrings::ItemsCount() {
     return strings.Size();
 }
 
-Size ListBoxModelStrings::Draw([[maybe_unused]] bool measure) {
+Size ListBoxModelStrings::Draw(__unused bool measure) {
     CrashIf(true);
     return Size{};
 }

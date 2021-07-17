@@ -366,7 +366,7 @@ static void CreateAppShortcuts() {
     log("did create app shortcuts\n");
 }
 
-static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
+static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     success = false;
     const WCHAR* appName{nullptr};
     const WCHAR* exeName{nullptr};

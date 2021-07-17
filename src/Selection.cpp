@@ -412,7 +412,7 @@ void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
     }
 }
 
-void OnSelectionStart(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM key) {
+void OnSelectionStart(WindowInfo* win, int x, int y, __unused WPARAM key) {
     CrashIf(!win->AsFixed());
     DeleteOldSelectionInfo(win, true);
 

@@ -102,7 +102,7 @@ struct Controller {
         GoToPage(CurrentPageNo() + 1, false);
         return true;
     }
-    virtual bool GoToPrevPage([[maybe_unused]] bool toBottom = false) {
+    virtual bool GoToPrevPage(__unused bool toBottom = false) {
         if (CurrentPageNo() == 1) {
             return false;
         }

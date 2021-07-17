@@ -57,7 +57,7 @@ class PreviewBase : public IThumbnailProvider,
     IFACEMETHODIMP GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha);
 
     // IInitializeWithStream
-    IFACEMETHODIMP Initialize(IStream* pStm, [[maybe_unused]] DWORD grfMode) {
+    IFACEMETHODIMP Initialize(IStream* pStm, __unused DWORD grfMode) {
         m_pStream = pStm;
         if (!m_pStream) {
             return E_INVALIDARG;
@@ -157,7 +157,7 @@ class PreviewBase : public IThumbnailProvider,
         *phwnd = m_hwndParent;
         return S_OK;
     }
-    IFACEMETHODIMP ContextSensitiveHelp([[maybe_unused]] BOOL fEnterMode) {
+    IFACEMETHODIMP ContextSensitiveHelp(__unused BOOL fEnterMode) {
         return E_NOTIMPL;
     }
 
@@ -167,7 +167,7 @@ class PreviewBase : public IThumbnailProvider,
     }
 
     // IPersistFile (for Windows XP)
-    IFACEMETHODIMP Load(LPCOLESTR pszFileName, [[maybe_unused]] DWORD dwMode) {
+    IFACEMETHODIMP Load(LPCOLESTR pszFileName, __unused DWORD dwMode) {
         auto fileName = ToUtf8Temp(pszFileName);
         dbglogf("PdfPreview: PreviewBase::Load('%s')\n", fileName.Get());
 
@@ -202,13 +202,13 @@ class PreviewBase : public IThumbnailProvider,
     IFACEMETHODIMP IsDirty() {
         return E_NOTIMPL;
     }
-    IFACEMETHODIMP Save([[maybe_unused]] LPCOLESTR pszFileName, [[maybe_unused]] BOOL bRemember) {
+    IFACEMETHODIMP Save(__unused LPCOLESTR pszFileName, __unused BOOL bRemember) {
         return E_NOTIMPL;
     }
-    IFACEMETHODIMP SaveCompleted([[maybe_unused]] LPCOLESTR pszFileName) {
+    IFACEMETHODIMP SaveCompleted(__unused LPCOLESTR pszFileName) {
         return E_NOTIMPL;
     }
-    IFACEMETHODIMP GetCurFile([[maybe_unused]] LPOLESTR* ppszFileName) {
+    IFACEMETHODIMP GetCurFile(__unused LPOLESTR* ppszFileName) {
         return E_NOTIMPL;
     }
 
@@ -221,9 +221,8 @@ class PreviewBase : public IThumbnailProvider,
         WTS_ALPHATYPE dummy;
         return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
     }
-    IFACEMETHODIMP GetLocation([[maybe_unused]] LPWSTR pszPathBuffer, [[maybe_unused]] DWORD cch,
-                               [[maybe_unused]] DWORD* pdwPriority, const SIZE* prgSize,
-                               [[maybe_unused]] DWORD dwRecClrDepth, DWORD* pdwFlags) {
+    IFACEMETHODIMP GetLocation(__unused LPWSTR pszPathBuffer, __unused DWORD cch, __unused DWORD* pdwPriority,
+                               const SIZE* prgSize, __unused DWORD dwRecClrDepth, DWORD* pdwFlags) {
         if (!prgSize || !pdwFlags) {
             return E_INVALIDARG;
         }

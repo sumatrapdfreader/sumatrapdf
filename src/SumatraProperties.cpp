@@ -469,7 +469,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
     return true;
 }
 
-static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, [[maybe_unused]] bool extended) {
+static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, __unused bool extended) {
     CrashIf(!ctrl);
 
     WCHAR* str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());

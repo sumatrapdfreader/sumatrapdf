@@ -199,11 +199,11 @@ class HtmlFormatter {
     void HandleText(HtmlToken* t);
     void HandleText(const char* s, size_t sLen);
     // blank convenience methods to override
-    virtual void HandleTagImg([[maybe_unused]] HtmlToken* t) {
+    virtual void HandleTagImg(__unused HtmlToken* t) {
     }
-    virtual void HandleTagPagebreak([[maybe_unused]] HtmlToken* t) {
+    virtual void HandleTagPagebreak(__unused HtmlToken* t) {
     }
-    virtual void HandleTagLink([[maybe_unused]] HtmlToken* t) {
+    virtual void HandleTagLink(__unused HtmlToken* t) {
     }
 
     float CurrLineDx();

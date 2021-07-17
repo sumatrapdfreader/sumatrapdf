@@ -129,7 +129,7 @@ Graphics* AllocGraphicsForMeasureText() {
     return &gGraphicsHack->gfx;
 }
 
-void FreeGraphicsForMeasureText([[maybe_unused]] Graphics* g) {
+void FreeGraphicsForMeasureText(__unused Graphics* g) {
     /* deallocation happens in mui::Destroy */
 }
 

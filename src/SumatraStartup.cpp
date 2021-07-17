@@ -815,8 +815,8 @@ static void ForceStartupLeaks() {
     }
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance, [[maybe_unused]] LPSTR cmdLine,
-                     [[maybe_unused]] int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR cmdLine,
+                     __unused int nCmdShow) {
     int retCode{1}; // by default it's error
     int nWithDde{0};
     WindowInfo* win{nullptr};

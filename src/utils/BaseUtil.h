@@ -77,7 +77,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-// make it look a bit saner. Unfortunately Windows headers use _unused
+// Windows headers use _unused
 #define __unused [[maybe_unused]]
 
 #include "BuildConfig.h"

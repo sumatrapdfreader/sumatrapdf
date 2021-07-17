@@ -445,7 +445,7 @@ void TextRenderHdc::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl)
     return Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
-void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectF bb, [[maybe_unused]] bool isRtl) {
+void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectF bb, __unused bool isRtl) {
     CrashIf(!hdc);
     int x = (int)bb.x;
     int y = (int)bb.y;

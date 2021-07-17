@@ -45,16 +45,16 @@ struct EbookController : Controller {
     DisplayMode GetDisplayMode() const override {
         return IsDoublePage() ? DisplayMode::Facing : DisplayMode::SinglePage;
     }
-    void SetPresentationMode([[maybe_unused]] bool enable) override {
+    void SetPresentationMode(__unused bool enable) override {
         /* not supported */
     }
-    void SetZoomVirtual([[maybe_unused]] float zoom, [[maybe_unused]] Point* fixPt) override {
+    void SetZoomVirtual(__unused float zoom, __unused Point* fixPt) override {
         /* not supported */
     }
-    float GetZoomVirtual([[maybe_unused]] bool absolute = false) const override {
+    float GetZoomVirtual(__unused bool absolute = false) const override {
         return 100;
     }
-    float GetNextZoomStep([[maybe_unused]] float towards) const override {
+    float GetNextZoomStep(__unused float towards) const override {
         return 100;
     }
     void SetViewPortSize(Size size) override;

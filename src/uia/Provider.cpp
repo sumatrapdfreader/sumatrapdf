@@ -70,7 +70,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release() {
     return res;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPatternProvider([[maybe_unused]] PATTERNID patternId,
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPatternProvider(__unused PATTERNID patternId,
                                                                           IUnknown** pRetVal) {
     *pRetVal = nullptr;
     return S_OK;

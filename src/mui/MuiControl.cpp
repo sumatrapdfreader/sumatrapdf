@@ -275,7 +275,7 @@ void Control::MapRootToMyPos(int& x, int& y) const {
 // Requests the window to draw itself on a Graphics canvas.
 // offX and offY is a position of this window within
 // Graphics canvas (pos is relative to that offset)
-void Control::Paint([[maybe_unused]] Graphics* gfx, [[maybe_unused]] int offX, [[maybe_unused]] int offY) {
+void Control::Paint(__unused Graphics* gfx, __unused int offX, __unused int offY) {
     CrashIf(!IsVisible());
 }
 

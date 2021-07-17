@@ -97,10 +97,10 @@ class EngineImages : public EngineBase {
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    PageText ExtractPageText([[maybe_unused]] int pageNo) override {
+    PageText ExtractPageText(__unused int pageNo) override {
         return {};
     }
-    bool HasClipOptimizations([[maybe_unused]] int pageNo) override {
+    bool HasClipOptimizations(__unused int pageNo) override {
         return false;
     }
 
@@ -308,7 +308,7 @@ std::span<u8> EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
-bool EngineImages::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
+bool EngineImages::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
     const WCHAR* srcPath = FileName();
     auto dstPath = ToWstrTemp(copyFileName);
     if (srcPath) {
@@ -599,7 +599,7 @@ RectF EngineImage::LoadMediabox(int pageNo) {
     return mbox;
 }
 
-bool EngineImage::SaveFileAsPDF(const char* pdfFileName, [[maybe_unused]] bool includeUserAnnots) {
+bool EngineImage::SaveFileAsPDF(const char* pdfFileName, __unused bool includeUserAnnots) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     auto dpi = GetFileDPI();
@@ -688,7 +688,7 @@ class EngineImageDir : public EngineImages {
     }
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
 
-    WCHAR* GetProperty([[maybe_unused]] DocumentProperty prop) override {
+    WCHAR* GetProperty(__unused DocumentProperty prop) override {
         return nullptr;
     }
 
@@ -784,7 +784,7 @@ TocTree* EngineImageDir::GetToc() {
     return tocTree;
 }
 
-bool EngineImageDir::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
+bool EngineImageDir::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
     // only copy the files if the target directory doesn't exist yet
     auto dstPath = ToWstrTemp(copyFileName);
     if (!CreateDirectoryW(dstPath, nullptr)) {
@@ -818,7 +818,7 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName, [[maybe_unused]] bool includeUserAnnots) {
+bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName, __unused bool includeUserAnnots) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
@@ -842,7 +842,7 @@ EngineBase* EngineImageDir::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-bool IsImageDirEngineSupportedFile(const WCHAR* fileName, [[maybe_unused]] bool sniff) {
+bool IsImageDirEngineSupportedFile(const WCHAR* fileName, __unused bool sniff) {
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }
@@ -1176,7 +1176,7 @@ bool EngineCbx::Visit(const char* path, const char* value, json::Type type) {
            str::FindChar(propDate, '/') <= propDate;
 }
 
-bool EngineCbx::SaveFileAsPDF(const char* pdfFileName, [[maybe_unused]] bool includeUserAnnots) {
+bool EngineCbx::SaveFileAsPDF(const char* pdfFileName, __unused bool includeUserAnnots) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {

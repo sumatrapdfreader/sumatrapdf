@@ -259,7 +259,7 @@ static void RemoveShortcuts() {
     logf("removed shortcuts\n");
 }
 
-static DWORD WINAPI UninstallerThread([[maybe_unused]] LPVOID data) {
+static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
