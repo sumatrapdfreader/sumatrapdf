@@ -1027,7 +1027,6 @@ static void RelaunchElevatedIfNotDebug() {
 }
 
 int RunInstaller(Flags* cli) {
-    logToDebugger = true;
     gCli = cli;
     if (gCli->log) {
         StartInstallerLogging();

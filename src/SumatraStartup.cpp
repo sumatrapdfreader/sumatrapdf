@@ -876,10 +876,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     // logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
 
-    if (gIsDebugBuild) {
-        logToDebugger = true;
-    }
-
     log("Starting SumatraPDF\n");
 
     // testLogf();

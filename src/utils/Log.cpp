@@ -15,6 +15,8 @@ HeapAllocator* gLogAllocator = nullptr;
 
 str::Str* gLogBuf = nullptr;
 bool logToStderr = false;
+// we always log if IsDebuggerPresent()
+// this forces logging to debuger always
 bool logToDebugger = false;
 bool logToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
@@ -99,7 +101,7 @@ static void logPipe(std::string_view sv) {
 }
 
 void log(std::string_view s) {
-    if (logToDebugger) {
+    if (logToDebugger || IsDebuggerPresent()) {
         OutputDebugStringA(s.data());
     }
     gLogMutex.Lock();

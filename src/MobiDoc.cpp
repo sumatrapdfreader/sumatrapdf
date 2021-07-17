@@ -856,7 +856,6 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
 }
 
 bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
-    logToDebugger = true;
     this->pdbReader = pdbReader;
     if (!ParseHeader()) {
         return false;

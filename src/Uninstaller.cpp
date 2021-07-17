@@ -602,7 +602,6 @@ static void InitSelfDelete() {
 }
 
 int RunUninstaller(Flags* cli) {
-    logToDebugger = true;
     gCli = cli;
     if (gCli->log) {
         StartUnInstallerLogging();
