@@ -4810,7 +4810,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             FrameOnChar(win, 'h');
             break;
 
-#if defined(DEBUG) || defined(IS_DAILY_BUILD) || defined(PRE_RELEASE_VER)
+#if defined(DEBUG)
         case CmdDebugTestApp:
             extern void TestApp(HINSTANCE hInstance);
             TestApp(GetModuleHandle(nullptr));
