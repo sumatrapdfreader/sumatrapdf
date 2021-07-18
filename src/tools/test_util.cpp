@@ -33,6 +33,10 @@ extern void VecTest();
 extern void WinUtilTest();
 extern void StrFormatTest();
 
+void _submitDebugReport(const char*) {
+    // no-op
+}
+
 int main(__unused int argc, __unused char** argv) {
     printf("Running unit tests\n");
 
