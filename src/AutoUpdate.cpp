@@ -261,6 +261,11 @@ void TryAutoUpdateSelf() {
 void CopySelfTo(const WCHAR* path) {
     CrashIf(!path);
     logf(L"CopySelfTo: '%s'\n", path);
+    // sleeping for a bit to make sure that the program that launched us
+    // had time to exit
+    // TODO: maybe do a loop if copy fails
+    Sleep(1000 * 5);
+
     if (!file::Exists(path)) {
         logf("CopySelfTo: failed because destination doesn't exist\n");
         return;
