@@ -336,6 +336,10 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             i.exitImmediately = true;
             return;
         }
+        if (isArg(L"test-auto-update")) {
+            i.testAutoUpdate = true;
+            continue;
+        }
 
         // follwing args require at least one param
         // if no params here, assume this is a file
@@ -488,10 +492,6 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
         if (isArg(L"autoupdate")) {
             // this should have been handled already by AutoUpdateMain
             n++;
-            continue;
-        }
-        if (isArg(L"test-auto-update")) {
-            i.testAutoUpdate = true;
             continue;
         }
 

@@ -12,7 +12,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - hopefully fix invalid pageNo in newFzLink (for #2035)
   don't send crash reports from debug builds
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2035
-
+- implement auto-update for portable version
 
 2021-07-16 Fri
 
