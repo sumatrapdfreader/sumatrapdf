@@ -103,6 +103,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
     bool hasUpdate = CompareVersion(latestVer, myVer) > 0;
     if (!hasUpdate) {
+        logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, latestVer);
         /* if automated => don't notify that there is no new version */
         if (!silent) {
             uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
@@ -113,6 +114,10 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
 
     // if automated, respect gGlobalPrefs->versionToSkip
     if (silent && str::EqI(gGlobalPrefs->versionToSkip, latestVer)) {
+        logf(
+            "ShowAutoUpdateDialog: skipping because silent and gGlobalPrefs->versionToSkip == latestVer ('%s' == "
+            "'%s')\n",
+            gGlobalPrefs->versionToSkip, latestVer);
         return 0;
     }
     // if silent we do auto-update. for now only in pre-release builds
@@ -138,6 +143,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         dlURLA = node->GetValue(dlKey);
         if (!dlURLA) {
             // shouldn't happen
+            logf("ShowAutoUpdateDialog: didn't find valud for key '%s'\nAuto update data:\n%s\n", dlKey, data->Get());
             goto AskUser;
         }
         logf("ShowAutoUpdateDialog: starting to download '%s'\n", dlURLA);
