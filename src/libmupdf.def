@@ -3,7 +3,7 @@
 LIBRARY libmupdf
 EXPORTS
 
-; Fitz exports
+	version_check_3_4
 
 	pdf_can_be_saved_incrementally
 	pdf_annot_page

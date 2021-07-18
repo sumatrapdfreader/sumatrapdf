@@ -9,6 +9,9 @@
 #define CURR_VERSION_COMMA 3,4,0
 #endif
 
+// this is sth. like "3.4"
+#define CURR_VERSION_MAJOR_STRA QM(CURR_VERSION)
+
 // VER_QUALIFIER allows people who recompile SumatraPDF to add
 // a distinguishing string at the end of the version number
 // (e.g. version 2.3.2z or 2.4opt)

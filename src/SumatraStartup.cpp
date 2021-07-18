@@ -614,29 +614,79 @@ static bool IsInstallerButNotInstalled() {
     return !IsOurExeInstalled();
 }
 
-// I see people trying to use installer as a portable
-// version. This crashes because it can't load
-// libmupdf.dll. We try to detect that case and show an error message instead.
-// TODO: I still see crashes due to delay loading of libmupdf.dll
-static void EnsureNotInstaller() {
-    if (!ExeHasInstallerResources()) {
-        // this is not an installer
-        return;
+// TODO: maybe could set font on TDN_CREATED to Consolas, to better show the message
+static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+                                                      LONG_PTR lpRefData) {
+    switch (msg) {
+        case TDN_HYPERLINK_CLICKED:
+            WCHAR* s = (WCHAR*)lParam;
+            LaunchBrowser(s);
+            break;
     }
-    // TODO: this check is probably redundant with loading of libmupdf.dll
-    if (IsOurExeInstalled()) {
+    return S_OK;
+}
+
+// verify that libmupdf.dll matches the .exe
+static void VerifyNoLibmupdfMismatch() {
+    char* versionCheckFuncName{nullptr};
+    FARPROC addr{nullptr};
+
+    if (!ExeHasInstallerResources()) {
+        // this is not a version that needs libmupdf.dll
         return;
     }
     // if we can load libmupdf.dll, then it's fine too. someone extracted libmupdf.dll
     // as well or this could be VS build I'm debugging
     HMODULE h = LoadLibraryA("libmupdf.dll");
-    if (IsValidHandle(h)) {
-        return;
+    if (!IsValidHandle(h)) {
+        goto Error;
     }
-    MessageBoxA(nullptr,
-                "This is a SumatraPDF installer.\nEither install it with -install option or use portable "
-                "version.\nDownload portable from https://www.sumatrapdfreader.org\n",
-                "Error", MB_OK);
+    versionCheckFuncName = str::Join("version_check_", CURR_VERSION_MAJOR_STRA);
+    // change "3.4" => "3_4"
+    str::TransCharsInPlace(versionCheckFuncName, ".", "_");
+    addr = GetProcAddress(h, versionCheckFuncName);
+    str::Free(versionCheckFuncName);
+    if (!addr) {
+        goto Error;
+    }
+
+    return;
+Error:
+    constexpr const char* corruptedInstallationConsole = R"(
+Looks like corrupted installation of SumatraPDF.
+
+Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
+)";
+    constexpr const char* corruptedInstallation =
+        R"(Looks like corrupted installation of SumatraPDF.
+)";
+    bool ok = RedirectIOToExistingConsole();
+    if (ok) {
+        // if we're launched from console, print help to consle window
+        printf("%s", corruptedInstallationConsole);
+    }
+
+    AutoFreeWstr title = str::Join(GetAppNameTemp(), L" installer");
+    TASKDIALOGCONFIG dialogConfig{};
+
+    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = title.Get();
+    dialogConfig.pszMainInstruction = ToWstrTemp(corruptedInstallation);
+    dialogConfig.pszContent =
+        LR"(Learn more at <a href="https://www.sumatrapdfreader.org/docs/Corrupted-installation">www.sumatrapdfreader.org/docs/Corrupted-installation</a>.)";
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.cxWidth = 0;
+    dialogConfig.pfCallback = TaskdialogHandleLinkscallback;
+    dialogConfig.dwCommonButtons = TDCBF_CLOSE_BUTTON;
+    dialogConfig.pszMainIcon = TD_ERROR_ICON;
+
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    HandleRedirectedConsoleOnShutdown();
     ::ExitProcess(1);
 }
 
@@ -656,17 +706,6 @@ constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
 -log
     writes installation log to %LOCALAPPDATA%\sumatra-install-log.txt
 )";
-
-// TODO: maybe could set font on TDN_CREATED to Consolas, to better show the message
-HRESULT CALLBACK Pftaskdialogcallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LONG_PTR lpRefData) {
-    switch (msg) {
-        case TDN_HYPERLINK_CLICKED:
-            WCHAR* s = (WCHAR*)lParam;
-            LaunchBrowser(s);
-            break;
-    }
-    return S_OK;
-}
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
@@ -696,7 +735,7 @@ static void ShowInstallerHelp() {
     dialogConfig.nDefaultButton = IDOK;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 320; // TODO: TDF_SIZE_TO_CONTENT doesn't seem to work
-    dialogConfig.pfCallback = Pftaskdialogcallback;
+    dialogConfig.pfCallback = TaskdialogHandleLinkscallback;
     dialogConfig.dwCommonButtons = TDCBF_OK_BUTTON;
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
 
@@ -957,7 +996,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     log("Starting SumatraPDF\n");
 
-    EnsureNotInstaller();
+    VerifyNoLibmupdfMismatch();
 
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)
