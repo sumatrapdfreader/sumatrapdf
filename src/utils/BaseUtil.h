@@ -406,11 +406,12 @@ struct PoolAllocator : Allocator {
         // data follows here
     };
 
-    Block* currBlock = nullptr;
-    Block* firstBlock = nullptr;
-    int nAllocs = 0;
+    Block* currBlock{nullptr};
+    Block* firstBlock{nullptr};
+    int nAllocs{0};
+    CRITICAL_SECTION cs{};
 
-    PoolAllocator() = default;
+    PoolAllocator();
 
     // Allocator methods
     ~PoolAllocator() override;

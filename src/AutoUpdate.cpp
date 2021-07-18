@@ -95,6 +95,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     SquareTreeNode* node = tree.root ? tree.root->GetChild("SumatraPDF") : nullptr;
     const char* latestVer = node ? node->GetValue("Latest") : nullptr;
     if (!latestVer || !IsValidProgramVersion(latestVer)) {
+        logf("ShowAutoUpdateDialog: '%s' is not a valid version\n", latestVer ? latestVer : "");
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
 
@@ -120,10 +121,6 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         const char* dlURLA{nullptr};
         const char* dlKey{nullptr};
         bool isDll = IsDllBuild();
-        if (isDll) {
-            logf("ShowAutoUpdateDialog: skipping auto-update because isDll\n");
-            return 0;
-        }
         if (IsProcess64()) {
             if (isDll) {
                 dlKey = "Installer64";
@@ -143,13 +140,14 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
             // shouldn't happen
             goto AskUser;
         }
-        logf("dlURLA: '%s'\n", dlURLA);
-        WCHAR* dlURL = ToWstrTemp(dlURLA);
-        WCHAR* installerPath = path::GetTempFilePath(L"sumatra-installer");
-        RunAsync([dlURL, installerPath, isDll] { // NOLINT
+        logf("ShowAutoUpdateDialog: starting to download '%s'\n", dlURLA);
+        WCHAR* dlURL = strconv::Utf8ToWstr(dlURLA); // must make a copy to be valid in a thread
+        RunAsync([dlURL, isDll] {                   // NOLINT
+            AutoFreeWstr installerPath = str::Dup(path::GetTempFilePath(L"sumatra-installer"));
             bool ok = HttpGetToFile(dlURL, installerPath);
             logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok,
                  ToUtf8Temp(installerPath).Get());
+            str::Free(dlURL);
             if (ok) {
                 str::WStr cmd(installerPath);
                 if (isDll) {
