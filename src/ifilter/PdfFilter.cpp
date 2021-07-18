@@ -15,6 +15,10 @@
 #include "PdfFilterClsid.h"
 #include "PdfFilter.h"
 
+void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+    // no-op implementation to satisfy SubmitBugReport()
+}
+
 VOID PdfFilter::CleanUp() {
     if (m_pdfEngine) {
         delete m_pdfEngine;

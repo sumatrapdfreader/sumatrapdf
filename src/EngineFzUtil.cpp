@@ -1025,7 +1025,7 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
     dest->rect = CalcDestRect(link, outline);
     dest->value = str::Dup(res->GetValue());
     dest->name = CalcDestName(link, outline);
-    //dest->pageNo = CalcDestPageNo(link, outline);
+    // dest->pageNo = CalcDestPageNo(link, outline);
     dest->pageNo = pageNo;
     res->dest = dest;
 

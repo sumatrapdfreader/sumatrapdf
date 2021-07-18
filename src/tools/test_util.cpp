@@ -33,8 +33,8 @@ extern void VecTest();
 extern void WinUtilTest();
 extern void StrFormatTest();
 
-void _submitDebugReport(const char*) {
-    // no-op
+void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+    // no-op implementation to satisfy SubmitBugReport()
 }
 
 int main(__unused int argc, __unused char** argv) {

@@ -269,9 +269,9 @@ inline void DebugCrashIfFunc(bool) {
 
 void _submitDebugReportIfFunc(bool cond, __unused const char* condStr);
 
-#define SubmitBugReportIf(cond)               \
-    do {                                      \
-        __analysis_assume(!(cond));           \
+#define SubmitBugReportIf(cond)                \
+    do {                                       \
+        __analysis_assume(!(cond));            \
         _submitDebugReportIfFunc(cond, #cond); \
     } while (0)
 

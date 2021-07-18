@@ -996,7 +996,8 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     int pageNo = pageEl->GetPageNo();
     if (!dm->ValidPageNo(pageNo)) {
         const char* kind = pageEl->GetKind();
-        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", ToUtf8Temp(text).Get(), kind, pageNo);
+        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", ToUtf8Temp(text).Get(), kind,
+             pageNo);
         SubmitBugReportIf(true);
         return TRUE;
     }

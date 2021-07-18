@@ -961,7 +961,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
         name, pageNo, zoom, pageInfo->zoomReal, dm->zoomReal, dm->zoomVirtual);
     free(name);
     DebugCrashIf(true);
-    
+
     SubmitBugReportIf(true);
 
     if (dm->zoomReal > 0) {

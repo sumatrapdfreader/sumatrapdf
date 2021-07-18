@@ -18,6 +18,10 @@
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 
+void _submitDebugReportIfFunc(bool cond, __unused const char* condStr) {
+    // no-op implementation to satisfy SubmitBugReport()
+}
+
 IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
     EngineBase* engine = GetEngine();
     if (!engine) {
