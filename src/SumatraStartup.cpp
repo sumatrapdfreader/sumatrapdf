@@ -874,16 +874,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     mui::Initialize();
     uitask::Initialize();
 
-    // logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
-
-    log("Starting SumatraPDF\n");
-
-    // testLogf();
-
     // LogDpiAwareness();
-
-    // TODO: temporary, to test crash reporting
-    // gAddCrashMeMenu = true;
 
     {
         TempStr cmdLineA = ToUtf8Temp(GetCommandLineW());
@@ -893,14 +884,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);
     gCli = &i;
-
-    /*
-    if (false && gIsDebugBuild) {
-        int TestLice(HINSTANCE hInstance, int nCmdShow);
-        retCode = TestLice(hInstance, nCmdShow);
-        goto Exit;
-    }
-    */
 
     // TODO: maybe add cmd-line switch to enable debug logging
     gEnableDbgLog = gIsDebugBuild || gIsPreReleaseBuild;
@@ -950,11 +933,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         ::ExitProcess(0);
     }
 
+    log("Starting SumatraPDF\n");
+
+    EnsureNotInstaller();
+
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)
     InitializePolicies(i.restrictedUse);
-
-    EnsureNotInstaller();
 
 #if defined(DEBUG)
     if (i.testRenderPage) {

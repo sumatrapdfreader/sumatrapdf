@@ -39,7 +39,7 @@ constexpr const WCHAR* kUpdateInfoURL = SUMATRA_UPDATE_INFO_URL;
 #else
 constexpr const WCHAR* kUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
 
-//static const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/api/updatecheck";
+//constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/api/updatecheck";
 #endif
 #ifndef WEBSITE_DOWNLOAD_PAGE_URL
 #if defined(PRE_RELEASE_VER)

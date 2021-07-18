@@ -603,6 +603,7 @@ static void InitSelfDelete() {
 }
 
 int RunUninstaller() {
+    log("RunUninstaller()\n");
     if (gCli->log) {
         StartUnInstallerLogging();
     }

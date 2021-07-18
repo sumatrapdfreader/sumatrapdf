@@ -1028,6 +1028,7 @@ static void RelaunchElevatedIfNotDebug() {
 }
 
 int RunInstaller() {
+    log("RunInstaller()\n");
     if (gCli->log) {
         StartInstallerLogging();
     }
