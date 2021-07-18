@@ -261,7 +261,7 @@ bool Reload() {
         return true;
     }
 
-    AutoFree uiLanguage = str::Dup(gGlobalPrefs->uiLanguage);
+    const char* uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
     bool showToolbar = gGlobalPrefs->showToolbar;
     bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
@@ -280,7 +280,7 @@ bool Reload() {
         gWindows.at(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(uiLanguage.Get(), gGlobalPrefs->uiLanguage)) {
+    if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage)) {
         SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
     }
 

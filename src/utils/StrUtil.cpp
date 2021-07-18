@@ -422,16 +422,25 @@ const char* FindI(const char* s, const char* toFind) {
 }
 
 void ReplacePtr(char** s, const char* snew) {
+    if (*s == snew) {
+        return;
+    }
     free(*s);
     *s = (char*)snew;
 }
 
 void ReplaceWithCopy(char** s, const char* snew) {
+    if (*s == snew) {
+        return;
+    }
     free(*s);
     *s = str::Dup(snew);
 }
 
 void ReplaceWithCopy(const char** s, const char* snew) {
+    if (*s == snew) {
+        return;
+    }
     free((char*)*s);
     *s = str::Dup(snew);
 }
