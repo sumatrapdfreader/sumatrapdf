@@ -914,17 +914,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     EnsureNotInstaller();
 
+#if defined(DEBUG)
     if (i.testRenderPage) {
         TestRenderPage(i);
         ShutdownCommon();
         return 0;
     }
-
     if (i.testExtractPage) {
         TestExtractPage(i);
         ShutdownCommon();
         return 0;
     }
+#endif
 
     if (i.appdataDir) {
         SetAppDataPath(i.appdataDir);

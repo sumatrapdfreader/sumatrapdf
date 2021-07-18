@@ -464,14 +464,29 @@ function sumatrapdf_files()
     "Version.h",
     "WindowInfo.*",
 
-    "Tests.cpp",
-    "regress/Regress.*",
     "*.txt",
   })
   files_in_dir("docs", {
     "releasenotes.txt",
   })
-  test_app_files()
+  filter {"configurations:Debug"}
+    files_in_dir("src", {
+      "Tests.cpp",
+      "regress/Regress.*",  
+    })
+    files_in_dir("src/testcode", {
+      "test-app.h",
+      "TestApp.cpp",
+      "TestTab.cpp",
+      "TestLayout.cpp",
+      --"TestLice.cpp",
+    })
+    files_in_dir("src/utils/tests", {
+      "*.cpp",
+    })
+    files_in_dir("src/utils", {
+        "UtAssert.*",
+    })
 end
 
 
@@ -1005,16 +1020,6 @@ function pdf_filter_files()
       "src/utils/PalmDbReader.*",
     }
   filter {}
-end
-
-function test_app_files()
-  files_in_dir("src/testcode", {
-    "test-app.h",
-    "TestApp.cpp",
-    "TestTab.cpp",
-    "TestLayout.cpp",
-    --"TestLice.cpp",
-  })
 end
 
 --[[

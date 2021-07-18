@@ -892,6 +892,8 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     regconf()
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
@@ -900,9 +902,6 @@ workspace "SumatraPDF"
     mui_files()
     uia_files()
     sumatrapdf_files()
-
-    defines { "_CRT_SECURE_NO_WARNINGS" }
-    defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
@@ -940,6 +939,8 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     regconf()
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
@@ -948,9 +949,6 @@ workspace "SumatraPDF"
     mui_files()
     uia_files()
     sumatrapdf_files()
-
-    defines { "_CRT_SECURE_NO_WARNINGS" }
-    defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
