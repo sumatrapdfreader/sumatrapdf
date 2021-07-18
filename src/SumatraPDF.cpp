@@ -5096,14 +5096,14 @@ void GetProgramInfo(str::Str& s) {
     AutoFreeWstr exePathW = GetExePath();
     auto exePath = ToUtf8Temp(exePathW.AsView());
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath.AsView());
-    s.AppendFmt("Exe: %s (%s)\r\n", exePath.Get(), fileSizeExe.Get());
+    s.AppendFmt("Exe: %s %s\r\n", exePath.Get(), fileSizeExe.Get());
     if (IsDllBuild()) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
         AutoFreeStr dir = path::GetDir(exePath);
         AutoFreeStr dllPath = path::Join(dir.Get(), "libmupdf.dll", nullptr);
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath.AsView());
-        s.AppendFmt("Dll: %s (%s)\r\n", dllPath.Get(), fileSizeDll.Get());
+        s.AppendFmt("Dll: %s %s\r\n", dllPath.Get(), fileSizeDll.Get());
     }
 
     const char* exeType = IsDllBuild() ? "dll" : "static";

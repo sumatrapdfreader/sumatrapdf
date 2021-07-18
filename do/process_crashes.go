@@ -27,7 +27,7 @@ const filterNoSymbols = true
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
 const filterOlderVersions = true
-const lowestCrashingBuildToShow = 13707
+const lowestCrashingBuildToShow = 13722
 
 const nDaysToKeep = 14
 
@@ -99,7 +99,7 @@ type crashInfo struct {
 
 func shouldFilterCrashLine(s string) bool {
 	toFilter := []string{
-		"dbghelp::GetCurrentThreadCallstack", "BuildCrashInfoText", "SubmitDebugReport",
+		"dbghelp::GetCurrentThreadCallstack", "BuildCrashInfoText", "SubmitDebugReport", "_submitDebugReport",
 	}
 	for _, txt := range toFilter {
 		if strings.Contains(s, txt) {
@@ -548,15 +548,10 @@ func downloadCrashesAndGenerateHTML() {
 	days := getDaysSorted()
 
 	// those version should show up at the top
-	/*
-		isPriorityVersion := func(v string) bool {
-			switch v {
-			case "Ver: 3.3", "Ver: 3.3 64-bit":
-				return true
-			}
-			return false
-		}
-	*/
+	isPriorityVersion := func(v string) bool {
+		return strings.HasPrefix(v, "Ver: 3.3")
+	}
+
 	for idx, day := range days {
 		a := crashesPerDay[day]
 		logf("%s: %d\n", day, len(a))
@@ -571,16 +566,17 @@ func downloadCrashesAndGenerateHTML() {
 				}
 				return len(c1) > len(c2)
 			}
-			/*
-				if isPriorityVersion(v1) {
-					logf("pri v1: '%s' v2: '%s'\n", v1, v2)
-					if isPriorityVersion(v2) {
-						return v1 > v2
-					}
-					return true
+			priRes := true
+			if isPriorityVersion(v1) {
+				if isPriorityVersion(v2) {
+					return v1 > v2
 				}
-			*/
-			return v2 > v1
+				return priRes
+			}
+			if isPriorityVersion(v2) {
+				return !priRes
+			}
+			return v2 < v1
 		})
 		crashesPerDay[day] = a
 

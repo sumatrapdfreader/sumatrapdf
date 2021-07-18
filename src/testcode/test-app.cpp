@@ -51,8 +51,8 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     return padding;
 }
 
-void __cdecl SubmitDebugReport(char const*) {
-    // a dummy implementation
+void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+    // no-op implementation to satisfy SubmitBugReport()
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, __unused  HINSTANCE hPrevInstance, __unused  LPSTR lpCmdLine,
