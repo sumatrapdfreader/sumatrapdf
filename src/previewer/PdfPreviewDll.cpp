@@ -5,7 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/LogDbg.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 
@@ -69,7 +69,7 @@ class PreviewClassFactory : public IClassFactory {
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
-        dbglog("PdfPreview: QueryInterface()\n");
+        log("PdfPreview: QueryInterface()\n");
         static const QITAB qit[] = {QITABENT(PreviewClassFactory, IClassFactory), {0}};
         return QISearch(this, qit, riid, ppv);
     }
@@ -88,7 +88,7 @@ class PreviewClassFactory : public IClassFactory {
 
     // IClassFactory
     IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
-        dbglog("PdfPreview: CreateInstance()\n");
+        log("PdfPreview: CreateInstance()\n");
 
         *ppv = nullptr;
         if (punkOuter) {
@@ -164,7 +164,8 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, __unused LPVOID lpRes
     if (dwReason == DLL_PROCESS_ATTACH) {
         CrashIf(hInstance != GetInstance());
     }
-    dbglogf("PdfPreview: DllMain %s\n", GetReason(dwReason));
+    gLogAppName = "PdfPreview";
+    logf("PdfPreview: DllMain %s\n", GetReason(dwReason));
     return TRUE;
 }
 
@@ -184,7 +185,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }
-    dbglog("PdfPreview: DllGetClassObject\n");
+    log("PdfPreview: DllGetClassObject\n");
     return pClassFactory->QueryInterface(riid, ppv);
 }
 
@@ -237,7 +238,7 @@ static struct {
 };
 
 STDAPI DllRegisterServer() {
-    dbglog("PdfPreview: DllRegisterServer\n");
+    log("DllRegisterServer\n");
     AutoFreeWstr dllPath = path::GetPathOfFileInAppDir();
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
@@ -298,7 +299,7 @@ STDAPI DllRegisterServer() {
 }
 
 STDAPI DllUnregisterServer() {
-    dbglog("PdfPreview: DllUnregisterServer\n");
+    log("DllUnregisterServer\n");
     HRESULT hr = S_OK;
 
 #define DeleteOrFail_(key)                     \

@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/LogDbg.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 
@@ -28,7 +28,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
         return E_FAIL;
     }
 
-    dbglogf("PdfPreview: PreviewBase::GetThumbnail(cx=%d)\n", (int)cx);
+    logf("PreviewBase::GetThumbnail(cx=%d)\n", (int)cx);
 
     RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
@@ -79,41 +79,33 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 #define UWM_PAINT_AGAIN (WM_USER + 101)
 
 class PageRenderer {
-    EngineBase* engine;
-    HWND hwnd;
+    EngineBase* engine{nullptr};
+    HWND hwnd{nullptr};
 
-    int currPage;
-    RenderedBitmap* currBmp;
+    int currPage{0};
+    RenderedBitmap* currBmp{nullptr};
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
     Size currSize;
-    int reqPage;
-    float reqZoom;
+    int reqPage{0};
+    float reqZoom{0.f};
     Size reqSize;
-    bool reqAbort;
-    AbortCookie* abortCookie;
+    bool reqAbort{false};
+    AbortCookie* abortCookie{nullptr};
 
     CRITICAL_SECTION currAccess;
-    HANDLE thread;
+    HANDLE thread{nullptr};
 
     // seeking inside an IStream spins an inner event loop
     // which can cause reentrance in OnPaint and leave an
     // engine semi-initialized when it's called recursively
     // (this only applies for the UI thread where the critical
     // sections can't prevent recursion without the risk of deadlock)
-    bool preventRecursion;
+    bool preventRecursion{false};
 
   public:
-    PageRenderer(EngineBase* engine, HWND hwnd)
-        : engine(engine),
-          hwnd(hwnd),
-          currPage(0),
-          currBmp(nullptr),
-          reqPage(0),
-          reqZoom(0),
-          reqAbort(false),
-          abortCookie(nullptr),
-          thread(nullptr),
-          preventRecursion(false) {
+    PageRenderer(EngineBase* engine, HWND hwnd) {
+        this->engine = engine;
+        this->hwnd = hwnd;
         InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {
@@ -138,7 +130,7 @@ class PageRenderer {
     }
 
     void Render(HDC hdc, Rect target, int pageNo, float zoom) {
-        dbglog("PdfPreview: PageRenderer::Render()\n");
+        log("PageRenderer::Render()\n");
 
         ScopedCritSec scope(&currAccess);
         if (currBmp && currPage == pageNo && currSize == target.Size()) {
@@ -314,7 +306,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 }
 
 IFACEMETHODIMP PreviewBase::DoPreview() {
-    dbglog("PdfPreview: PreviewBase::DoPreview()\n");
+    log("PreviewBase::DoPreview()\n");
 
     WNDCLASSEX wcex = {0};
     wcex.cbSize = sizeof(wcex);
@@ -356,7 +348,7 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
 }
 
 EngineBase* PdfPreview::LoadEngine(IStream* stream) {
-    dbglog("PdfPreview: PdfPreview::LoadEngine()\n");
+    log("PdfPreview::LoadEngine()\n");
     return CreateEnginePdfFromStream(stream);
 }
 

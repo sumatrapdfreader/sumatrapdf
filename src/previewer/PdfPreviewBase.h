@@ -169,19 +169,19 @@ class PreviewBase : public IThumbnailProvider,
     // IPersistFile (for Windows XP)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, __unused DWORD dwMode) {
         auto fileName = ToUtf8Temp(pszFileName);
-        dbglogf("PdfPreview: PreviewBase::Load('%s')\n", fileName.Get());
+        logf("PdfPreview: PreviewBase::Load('%s')\n", fileName.Get());
 
         HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                                   FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE) {
-            dbglog("PdfPreview: PreviewBase::Load() failed, no file\n");
+            log("PdfPreview: PreviewBase::Load() failed, no file\n");
             return E_INVALIDARG;
         }
         DWORD size = GetFileSize(hFile, nullptr), read;
         HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
         if (!data) {
             CloseHandle(hFile);
-            dbglog("PdfPreview: PreviewBase::Load() failed, not enough memory\n");
+            log("PdfPreview: PreviewBase::Load() failed, not enough memory\n");
             return E_OUTOFMEMORY;
         }
         BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, nullptr);
@@ -192,7 +192,7 @@ class PreviewBase : public IThumbnailProvider,
         IStream* pStm;
         if (!ok || FAILED(CreateStreamOnHGlobal(data, TRUE, &pStm))) {
             GlobalFree(data);
-            dbglog("PdfPreview: PreviewBase::Load() failed, couldn't create stream\n");
+            log("PdfPreview: PreviewBase::Load() failed, couldn't create stream\n");
             return E_FAIL;
         }
         HRESULT res = Initialize(pStm, 0);
@@ -217,7 +217,7 @@ class PreviewBase : public IThumbnailProvider,
         if (!phBmpThumbnail || !m_extractCx) {
             return E_INVALIDARG;
         }
-        dbglog("PdfPreview: PreviewBase::Extract()\n");
+        log("PdfPreview: PreviewBase::Extract()\n");
         WTS_ALPHATYPE dummy;
         return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
     }
@@ -226,7 +226,7 @@ class PreviewBase : public IThumbnailProvider,
         if (!prgSize || !pdwFlags) {
             return E_INVALIDARG;
         }
-        dbglog("PdfPreview: PreviewBase::GetLocation()\n");
+        log("PdfPreview: PreviewBase::GetLocation()\n");
         // cheap implementation: ignore anything that isn't useful for IThumbnailProvider::GetThumbnail
         m_extractCx = std::min(prgSize->cx, prgSize->cy);
         *pdwFlags |= IEIFLAG_CACHE;
@@ -236,7 +236,7 @@ class PreviewBase : public IThumbnailProvider,
         if (!m_dateStamp.dwLowDateTime && !m_dateStamp.dwHighDateTime) {
             return E_FAIL;
         }
-        dbglog("PdfPreview: PreviewBase::GetDateStamp()\n");
+        log("PdfPreview: PreviewBase::GetDateStamp()\n");
         *pDateStamp = m_dateStamp;
         return S_OK;
     }

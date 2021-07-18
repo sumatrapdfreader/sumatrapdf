@@ -7,6 +7,8 @@
 
 constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\SumatraPDFLogger";
 
+const char* gLogAppName = "SumatraPDF";
+
 Mutex gLogMutex;
 
 // we use HeapAllocator because we can do logging during crash handling
@@ -14,10 +16,10 @@ Mutex gLogMutex;
 HeapAllocator* gLogAllocator = nullptr;
 
 str::Str* gLogBuf = nullptr;
-bool logToStderr = false;
+bool gLogToStderr = false;
 // we always log if IsDebuggerPresent()
 // this forces logging to debuger always
-bool logToDebugger = false;
+bool gLogToDebugger = false;
 bool logToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 
@@ -78,9 +80,9 @@ static void logPipe(std::string_view sv) {
 
     if (didConnect) {
         // logview accepts logging from anyone, so announce ourselves
-        // TODO: this should be different fro PdfFilter and PdfPreview
-        const char* initialMsg = "app: SumatraPDF\n";
+        char* initialMsg = str::Format("app: %s\n", gLogAppName);
         WriteFile(hLogPipe, initialMsg, (DWORD)str::Len(initialMsg), &cbWritten, nullptr);
+        str::Free(initialMsg);
     }
 
     DWORD cb = (DWORD)sv.size();
@@ -101,7 +103,7 @@ static void logPipe(std::string_view sv) {
 }
 
 void log(std::string_view s) {
-    if (logToDebugger || IsDebuggerPresent()) {
+    if (gLogToDebugger || IsDebuggerPresent()) {
         OutputDebugStringA(s.data());
     }
     gLogMutex.Lock();
@@ -122,7 +124,7 @@ void log(std::string_view s) {
     }
 
     gLogBuf->Append(s.data(), s.size());
-    if (logToStderr) {
+    if (gLogToStderr) {
         fwrite(s.data(), 1, s.size(), stderr);
         fflush(stderr);
     }

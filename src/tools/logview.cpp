@@ -41,7 +41,7 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
         err = GetLastError();
         // TODO: handle ERROR_MORE_DATA ?
         if (err == ERROR_BROKEN_PIPE) {
-            //log("broken pipe\n");
+            // log("broken pipe\n");
         } else {
             // TODO: log the error
             // TODO: could this be non-error?

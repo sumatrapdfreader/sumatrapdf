@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "FilterBase.h"
 #include "PdfFilterClsid.h"
@@ -48,6 +49,8 @@ class FilterClassFactory : public IClassFactory {
 
     // IClassFactory
     IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
+        log("FilterClassFactory::CreateInstance()\n");
+
         *ppv = nullptr;
         if (punkOuter) {
             return CLASS_E_NOAGGREGATION;
@@ -94,7 +97,9 @@ STDAPI_(BOOL) DllMain(__unused HINSTANCE hInstance, DWORD dwReason, __unused LPV
     if (dwReason == DLL_PROCESS_ATTACH) {
         CrashIf(hInstance != GetInstance());
     }
-
+    gLogAppName = "PdfFilter";
+    gLogToStderr = false;
+    log("DllMain\n");
     return TRUE;
 }
 
@@ -120,6 +125,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
 #pragma warning(pop)
 
 STDAPI DllRegisterServer() {
+    log("DllRegisterServer\n");
     AutoFreeWstr dllPath(path::GetPathOfFileInAppDir());
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
@@ -173,6 +179,7 @@ STDAPI DllRegisterServer() {
 }
 
 STDAPI DllUnregisterServer() {
+    log("DllUnregisterServer\n");
     const WCHAR* regKeys[] = {
         L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,  L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
         L"Software\\Classes\\.pdf\\PersistentHandler",

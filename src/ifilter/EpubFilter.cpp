@@ -8,6 +8,7 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 
@@ -20,6 +21,7 @@
 #include "EpubFilter.h"
 
 VOID EpubFilter::CleanUp() {
+    log("EpubFilter::Cleanup()\n");
     if (m_epubDoc) {
         delete m_epubDoc;
         m_epubDoc = nullptr;
@@ -28,6 +30,8 @@ VOID EpubFilter::CleanUp() {
 }
 
 HRESULT EpubFilter::OnInit() {
+    log("EpubFilter::OnInit()\n");
+
     CleanUp();
 
     // TODO: EpubDoc::CreateFromStream never returns with
@@ -68,6 +72,8 @@ static bool IsoDateParse(const WCHAR* isoDate, SYSTEMTIME* timeOut) {
 }
 
 static WCHAR* ExtractHtmlText(EpubDoc* doc) {
+    log("ExtractHtmlText()\n");
+
     auto d = doc->GetHtmlData();
     size_t len = d.size();
 
@@ -118,6 +124,8 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
 }
 
 HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
+    log("EpubFilter::GetNextChunkValue()\n");
+
     AutoFreeWstr str;
 
     switch (m_state) {

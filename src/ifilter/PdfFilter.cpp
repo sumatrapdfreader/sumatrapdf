@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 
@@ -20,6 +21,7 @@ void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) 
 }
 
 VOID PdfFilter::CleanUp() {
+    logf("PdfFilter::Cleanup()\n");
     if (m_pdfEngine) {
         delete m_pdfEngine;
         m_pdfEngine = nullptr;
@@ -28,6 +30,7 @@ VOID PdfFilter::CleanUp() {
 }
 
 HRESULT PdfFilter::OnInit() {
+    logf("PdfFilter::OnInit()\n");
     CleanUp();
 
     // TODO: EnginePdf::CreateFromStream never returns with
@@ -72,6 +75,7 @@ static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
 }
 
 HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
+    logf("PdfFilter::GetNextChunkValue()\n");
     AutoFreeWstr str;
 
     switch (m_state) {

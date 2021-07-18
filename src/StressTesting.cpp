@@ -266,7 +266,7 @@ static void BenchDir(WCHAR* dir) {
 }
 
 void BenchFileOrDir(WStrVec& pathsToBench) {
-    logToStderr = true;
+    gLogToStderr = true;
 
     size_t n = pathsToBench.size() / 2;
     for (size_t i = 0; i < n; i++) {

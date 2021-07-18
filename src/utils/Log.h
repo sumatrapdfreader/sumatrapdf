@@ -3,8 +3,9 @@
 
 extern HeapAllocator* gLogAllocator;
 extern str::Str* gLogBuf;
-extern bool logToStderr;
-extern bool logToDebugger;
+extern bool gLogToStderr;
+extern bool gLogToDebugger;
+extern const char* gLogAppName;
 void StartLogToFile(const char* path);
 
 /*
