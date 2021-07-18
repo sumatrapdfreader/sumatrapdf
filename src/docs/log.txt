@@ -4,6 +4,9 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - add -delete-file arg; sketch CmdLineArgsIter; add logging to -x installer option
 - fix potential corruption in str::ReplacePtr() and str::ReplaceWithCopy()
+- IPageElment::GetPageNo() is an optional page fo rthe destination, not page on which it is
+  was causing debug crashes because I assumed it was a valid page number
+  and probably was causing tooltips to not show up properly
 
 2021-07-17 Sat
 

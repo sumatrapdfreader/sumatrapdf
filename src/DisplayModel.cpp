@@ -1032,7 +1032,7 @@ RectF DisplayModel::CvtFromScreen(Rect r, int pageNo) {
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
    a link or nullptr if there is no link at this position. */
-IPageElement* DisplayModel::GetElementAtPos(Point pt) {
+IPageElement* DisplayModel::GetElementAtPos(Point pt, int* pageNoOut) {
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo)) {
         return nullptr;
@@ -1041,7 +1041,9 @@ IPageElement* DisplayModel::GetElementAtPos(Point pt) {
     if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
         return nullptr;
     }
-
+    if (pageNoOut) {
+        *pageNoOut = pageNo;
+    }
     PointF pos = CvtFromScreen(pt, pageNo);
     return engine->GetElementAtPos(pageNo, pos);
 }

@@ -160,7 +160,7 @@ struct DisplayModel : public Controller {
 
     WCHAR* GetTextInRegion(int pageNo, RectF region);
     bool IsOverText(Point pt);
-    IPageElement* GetElementAtPos(Point pt);
+    IPageElement* GetElementAtPos(Point pt, int* pageNoOut);
     Annotation* GetAnnotationAtPos(Point pt, AnnotationType* allowedAnnots);
 
     int GetPageNoByPoint(Point pt);

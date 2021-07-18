@@ -1004,7 +1004,6 @@ PageDestination* newFzDestination(fz_outline* outline) {
     dest->value = CalcValue(link, outline);
     dest->name = CalcDestName(link, outline);
     dest->pageNo = CalcDestPageNo(link, outline);
-    SubmitBugReportIf(dest->pageNo <= 0);
     return dest;
 }
 

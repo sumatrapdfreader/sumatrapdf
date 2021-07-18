@@ -416,7 +416,7 @@ static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
         DrawMovePattern(win, pt, win->annotationBeingMovedSize);
     }
 
-    IPageElement* pageEl = dm->GetElementAtPos(pt);
+    IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
     if (pageEl) {
         if (pageEl->Is(kindPageElementDest)) {
             win->linkOnLastButtonDown = pageEl;
@@ -579,7 +579,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y));
+    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y), nullptr);
     if (pageEl && pageEl->Is(kindPageElementDest)) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
@@ -986,14 +986,14 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
         return TRUE;
     }
 
-    IPageElement* pageEl = dm->GetElementAtPos(pt);
+    int pageNo{0};
+    IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
     if (!pageEl) {
         SetTextOrArrorCursor(dm, pt);
         win->HideToolTip();
         return TRUE;
     }
     WCHAR* text = pageEl->GetValue();
-    int pageNo = pageEl->GetPageNo();
     if (!dm->ValidPageNo(pageNo)) {
         const char* kind = pageEl->GetKind();
         logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", ToUtf8Temp(text).Get(), kind,

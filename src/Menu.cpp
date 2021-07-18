@@ -1539,7 +1539,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     TabInfo* tab = win->currentTab;
-    IPageElement* pageEl = dm->GetElementAtPos({x, y});
+    IPageElement* pageEl = dm->GetElementAtPos({x, y}, nullptr);
     WCHAR* value = nullptr;
     if (pageEl) {
         value = pageEl->GetValue();
