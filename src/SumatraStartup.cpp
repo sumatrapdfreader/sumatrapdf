@@ -910,7 +910,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     if (i.justExtractFiles) {
         RedirectIOToExistingConsole();
         ExtractInstallerFiles();
-        HandleRedirectedConsoleOnShutdown();        
+        HandleRedirectedConsoleOnShutdown();
         ::ExitProcess(0);
     }
 

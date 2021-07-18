@@ -164,7 +164,6 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
                 auto s = ToUtf8Temp(autoUpdateExitCmd);
                 logf("ShowAutoUpdateDialog: set exit cmd to '%s'\n", s.Get());
             }
-            str::Free(installerPath);
         });
 
         return 0;
