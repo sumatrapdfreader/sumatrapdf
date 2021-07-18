@@ -754,10 +754,10 @@ std::span<u8> EngineDjVu::GetFileData() {
 }
 
 bool EngineDjVu::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
-    auto path = ToWstrTemp(copyFileName);
+    auto dstPath = ToWstrTemp(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(path, d.AsSpan());
+        bool ok = !d.empty() && file::WriteFile(dstPath, d.AsSpan());
         if (ok) {
             return true;
         }
@@ -766,7 +766,7 @@ bool EngineDjVu::SaveFileAs(const char* copyFileName, __unused bool includeUserA
     if (!fileName) {
         return false;
     }
-    return CopyFileW(fileName, path, FALSE);
+    return file::Copy(dstPath, fileName, FALSE);
 }
 
 static void AppendNewline(str::WStr& extracted, Vec<Rect>& coords, const WCHAR* lineSep) {

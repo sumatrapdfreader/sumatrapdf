@@ -284,7 +284,7 @@ class EnginePs : public EngineBase {
             return false;
         }
         auto dstPath = ToWstrTemp(copyFileName);
-        return CopyFileW(FileName(), dstPath, FALSE);
+        return file::Copy(dstPath, FileName(), false);
     }
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override {

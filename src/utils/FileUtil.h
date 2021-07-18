@@ -65,6 +65,9 @@ bool SetZoneIdentifier(const char* path, int zoneId = URLZONE_INTERNET);
 bool DeleteZoneIdentifier(const char* path);
 
 HANDLE OpenReadOnly(const WCHAR* path);
+
+bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite);
+
 } // namespace file
 
 namespace dir {

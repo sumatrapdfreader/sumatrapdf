@@ -1753,7 +1753,7 @@ bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     if (!path) {
         return false;
     }
-    bool ok = CopyFileW(path, dstPath, FALSE);
+    bool ok = file::Copy(dstPath, path, false);
     if (!ok) {
         return false;
     }

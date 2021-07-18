@@ -17,17 +17,18 @@
 #include "SumatraConfig.h"
 
 Flags::~Flags() {
-    free(printerName);
-    free(printSettings);
-    free(forwardSearchOrigin);
-    free(destName);
-    free(pluginURL);
-    free(appdataDir);
-    free(inverseSearchCmdLine);
-    free(stressTestPath);
-    free(stressTestFilter);
-    free(stressTestRanges);
-    free(lang);
+    str::Free(printerName);
+    str::Free(printSettings);
+    str::Free(forwardSearchOrigin);
+    str::Free(destName);
+    str::Free(pluginURL);
+    str::Free(appdataDir);
+    str::Free(inverseSearchCmdLine);
+    str::Free(stressTestPath);
+    str::Free(stressTestFilter);
+    str::Free(stressTestRanges);
+    str::Free(lang);
+    str::Free(copySelfToPath);
 }
 
 static void EnumeratePrinters() {
@@ -467,6 +468,11 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             ++n;
             continue;
         }
+        if (isArg(L"copy-self-to")) {
+            i.copySelfToPath = str::Dup(param);
+            ++n;
+            continue;
+        }
         if (isArg(L"bgcolor") || isArg(L"bg-color") || isArg(L"fwdsearch-offset") || isArg(L"fwdsearch-width") ||
             isArg(L"fwdsearch-color") || isArg(L"fwdsearch-permanent") || isArg(L"manga-mode")) {
             i.globalPrefArgs.Append(str::Dup(args.at(n)));
@@ -484,10 +490,8 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             n++;
             continue;
         }
-
         if (isArg(L"test-auto-update")) {
             i.testAutoUpdate = true;
-            n++;
             continue;
         }
 

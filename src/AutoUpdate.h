@@ -3,3 +3,4 @@
 
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck);
 void TryAutoUpdateSelf();
+void CopySelfTo(const WCHAR* path);

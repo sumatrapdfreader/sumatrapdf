@@ -945,6 +945,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         ::ExitProcess(retCode);
     }
 
+    if (i.copySelfToPath != nullptr) {
+        CopySelfTo(i.copySelfToPath);
+        ::ExitProcess(0);
+    }
+
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)
     InitializePolicies(i.restrictedUse);

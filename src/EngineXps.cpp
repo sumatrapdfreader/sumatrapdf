@@ -713,7 +713,7 @@ bool EngineXps::SaveFileAs(const char* copyFileName, __unused bool includeUserAn
     if (!path) {
         return false;
     }
-    return CopyFileW(path, dstPath, FALSE);
+    return file::Copy(dstPath, path, false);
 }
 
 WCHAR* EngineXps::ExtractFontList() {

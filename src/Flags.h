@@ -77,6 +77,7 @@ struct Flags {
     bool registerAsDefault{false};
     bool log{false};
 
+    WCHAR* copySelfToPath{nullptr};
     // TODO: temporary, for testing, force auto-update
     bool testAutoUpdate{false};
 

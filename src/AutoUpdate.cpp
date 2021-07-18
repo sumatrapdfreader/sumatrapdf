@@ -120,6 +120,10 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         const char* dlURLA{nullptr};
         const char* dlKey{nullptr};
         bool isDll = IsDllBuild();
+        if (isDll) {
+            logf("ShowAutoUpdateDialog: skipping auto-update because isDll\n");
+            return 0;
+        }
         if (IsProcess64()) {
             if (isDll) {
                 dlKey = "Installer64";
@@ -144,7 +148,8 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         WCHAR* installerPath = path::GetTempFilePath(L"sumatra-installer");
         RunAsync([dlURL, installerPath, isDll] { // NOLINT
             bool ok = HttpGetToFile(dlURL, installerPath);
-            logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d\n", (int)ok);
+            logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok,
+                 ToUtf8Temp(installerPath).Get());
             if (ok) {
                 str::WStr cmd(installerPath);
                 if (isDll) {
@@ -158,6 +163,8 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
                 }
                 // technically should protect with a mutex or sth.
                 autoUpdateExitCmd = cmd.StealData();
+                auto s = ToUtf8Temp(autoUpdateExitCmd);
+                logf("ShowAutoUpdateDialog: set exit cmd to '%s'\n", s.Get());
             }
             str::Free(installerPath);
         });
@@ -246,8 +253,25 @@ void TryAutoUpdateSelf() {
     if (!autoUpdateExitCmd) {
         return;
     }
-    logf(L"TryAutoUpdateSelf: '%s'\n", autoUpdateExitCmd);
-    // TODO: write me
-    // LaunchProcess(autoUpdateExitCmd);
+    logf(L"TryAutoUpdateSelf: launching '%s'\n", autoUpdateExitCmd);
+    LaunchProcess(autoUpdateExitCmd);
     str::Free(autoUpdateExitCmd);
+}
+
+void CopySelfTo(const WCHAR* path) {
+    CrashIf(!path);
+    logf(L"CopySelfTo: '%s'\n", path);
+    if (!file::Exists(path)) {
+        logf("CopySelfTo: failed because destination doesn't exist\n");
+        return;
+    }
+
+    const WCHAR* src = GetExePath();
+    bool ok = file::Copy(path, src, false);
+    str::Free(src);
+    if (!ok) {
+        logf("CopySelfTo: failed to copy self to file\n");
+    } else {
+        logf("CopySelfTo: copied self to file\n");
+    }
 }

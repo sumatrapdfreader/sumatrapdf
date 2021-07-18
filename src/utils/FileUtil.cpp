@@ -624,7 +624,21 @@ bool WriteFile(const WCHAR* filePath, std::span<u8> d) {
 // Return true if the file wasn't there or was successfully deleted
 bool Delete(const WCHAR* filePath) {
     BOOL ok = DeleteFileW(filePath);
-    return ok || GetLastError() == ERROR_FILE_NOT_FOUND;
+    ok |= (GetLastError() == ERROR_FILE_NOT_FOUND);
+    if (!ok) {
+        LogLastError();
+        return false;
+    }
+    return true;
+}
+
+bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite) {
+    BOOL ok = CopyFileW(src, dst, (BOOL)dontOverwrite);
+    if (!ok) {
+        LogLastError();
+        return false;
+    }
+    return true;
 }
 
 FILETIME GetModificationTime(const WCHAR* filePath) {

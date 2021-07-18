@@ -312,7 +312,7 @@ bool EngineImages::SaveFileAs(const char* copyFileName, __unused bool includeUse
     const WCHAR* srcPath = FileName();
     auto dstPath = ToWstrTemp(copyFileName);
     if (srcPath) {
-        BOOL ok = CopyFileW(srcPath, dstPath, FALSE);
+        bool ok = file::Copy(dstPath, srcPath, false);
         if (ok) {
             return true;
         }
@@ -794,7 +794,7 @@ bool EngineImageDir::SaveFileAs(const char* copyFileName, __unused bool includeU
     for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR* filePathOld = pageFileNames.at(i);
         AutoFreeWstr filePathNew(path::Join(dstPath, path::GetBaseNameTemp(filePathOld)));
-        ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
+        ok = ok && file::Copy(filePathNew, filePathOld, true);
     }
     return ok;
 }

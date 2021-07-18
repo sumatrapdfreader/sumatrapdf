@@ -152,8 +152,8 @@ bool CopySelfToDir(const WCHAR* destDir) {
     auto exePath = GetExePath();
     auto exeName = GetExeNameTemp();
     auto* dstPath = path::Join(destDir, exeName);
-    BOOL failIfExists = FALSE;
-    BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
+    bool failIfExists = false;
+    bool ok = file::Copy(dstPath, exePath, failIfExists);
     // strip zone identifier (if exists) to avoid windows
     // complaining when launching the file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
@@ -184,9 +184,9 @@ static void CopySettingsFile() {
     AutoFreeWstr dstPath = path::Join(dstDir.Get(), appName, prefsFileName);
 
     // don't over-write
-    BOOL failIfExists = true;
+    bool failIfExists = true;
     // don't care if it fails or not
-    ::CopyFileW(srcPath.Get(), dstPath.Get(), failIfExists);
+    file::Copy(dstPath.Get(), srcPath.Get(), failIfExists);
     log("did copy settings file\n");
 }
 

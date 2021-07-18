@@ -207,13 +207,13 @@ std::span<u8> EngineEbook::GetFileData() {
     return file::ReadFile(fileName);
 }
 
-bool EngineEbook::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
-    const WCHAR* fileName = FileName();
-    if (!fileName) {
+bool EngineEbook::SaveFileAs(const char* dstPath, __unused bool includeUserAnnots) {
+    const WCHAR* srcPath = FileName();
+    if (!srcPath) {
         return false;
     }
-    auto path = ToWstrTemp(copyFileName);
-    auto res = CopyFileW(fileName, path, FALSE);
+    auto dstPathW = ToWstrTemp(dstPath);
+    auto res = file::Copy(dstPathW, srcPath, FALSE);
     return res != 0;
 }
 
@@ -795,7 +795,7 @@ bool EngineEpub::SaveFileAs(const char* copyFileName, __unused bool includeUserA
     if (!fileName) {
         return false;
     }
-    return CopyFileW(fileName, dstPath, FALSE);
+    return file::Copy(dstPath, fileName, false);
 }
 
 TocTree* EngineEpub::GetToc() {
