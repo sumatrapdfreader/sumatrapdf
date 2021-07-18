@@ -7,6 +7,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - IPageElment::GetPageNo() is an optional page fo rthe destination, not page on which it is
   was causing debug crashes because I assumed it was a valid page number
   and probably was causing tooltips to not show up properly
+- don't try to access favorites menus if they were removed due to lack of prefs or disk access
+  seen debug crashes from win::menu::SetText() for non-existent menu items
 
 2021-07-17 Sat
 

@@ -1580,27 +1580,30 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
 
     const WCHAR* filePath = win->ctrl->FilePath();
-    if (pageNoUnderCursor > 0) {
-        AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNoUnderCursor);
-        bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNoUnderCursor);
-        if (isBookmarked) {
-            win::menu::Remove(popup, CmdFavoriteAdd);
+    bool favsSupported = HasPermission(Perm::SavePreferences) && HasPermission(Perm::DiskAccess);
+    if (favsSupported) {
+        if (pageNoUnderCursor > 0) {
+            AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNoUnderCursor);
+            bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNoUnderCursor);
+            if (isBookmarked) {
+                win::menu::Remove(popup, CmdFavoriteAdd);
 
-            // %s and not %d because re-using translation from RebuildFavMenu()
-            auto tr = _TR("Remove page %s from favorites");
-            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, CmdFavoriteDel, s);
+                // %s and not %d because re-using translation from RebuildFavMenu()
+                auto tr = _TR("Remove page %s from favorites");
+                AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+                win::menu::SetText(popup, CmdFavoriteDel, s);
+            } else {
+                win::menu::Remove(popup, CmdFavoriteDel);
+
+                // %s and not %d because re-using translation from RebuildFavMenu()
+                auto tr = _TR("Add page %s to favorites\tCtrl+B");
+                AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+                win::menu::SetText(popup, CmdFavoriteAdd, s);
+            }
         } else {
+            win::menu::Remove(popup, CmdFavoriteAdd);
             win::menu::Remove(popup, CmdFavoriteDel);
-
-            // %s and not %d because re-using translation from RebuildFavMenu()
-            auto tr = _TR("Add page %s to favorites\tCtrl+B");
-            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, CmdFavoriteAdd, s);
         }
-    } else {
-        win::menu::Remove(popup, CmdFavoriteAdd);
-        win::menu::Remove(popup, CmdFavoriteDel);
     }
 
     // if toolbar is not shown, add option to show it
