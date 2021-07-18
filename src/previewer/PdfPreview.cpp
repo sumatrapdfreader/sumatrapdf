@@ -18,6 +18,11 @@
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 
+
+constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
+constexpr int kPreviewMargin = 2;
+constexpr UINT kUwmPaintAgain = (WM_USER + 101);
+
 void _submitDebugReportIfFunc(bool cond, __unused const char* condStr) {
     // no-op implementation to satisfy SubmitBugReport()
 }
@@ -73,10 +78,6 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 
     return hthumb ? S_OK : E_NOTIMPL;
 }
-
-#define COL_WINDOW_BG RGB(0x99, 0x99, 0x99)
-#define PREVIEW_MARGIN 2
-#define UWM_PAINT_AGAIN (WM_USER + 101)
 
 class PageRenderer {
     EngineBase* engine{nullptr};
@@ -175,7 +176,7 @@ class PageRenderer {
 
         HANDLE th = pr->thread;
         pr->thread = nullptr;
-        PostMessageW(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
+        PostMessageW(pr->hwnd, kUwmPaintAgain, 0, 0);
 
         CloseHandle(th);
         return 0;
@@ -186,7 +187,7 @@ static LRESULT OnPaint(HWND hwnd) {
     Rect rect = ClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rect);
     HDC hdc = buffer.GetDC();
-    HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
+    HBRUSH brushBg = CreateSolidBrush(kColWindowBg);
     HBRUSH brushWhite = GetStockBrush(WHITE_BRUSH);
     RECT rcClient = ToRECT(rect);
     FillRect(hdc, &rcClient, brushBg);
@@ -196,7 +197,7 @@ static LRESULT OnPaint(HWND hwnd) {
         int pageNo = GetScrollPos(hwnd, SB_VERT);
         RectF page = preview->renderer->GetPageRect(pageNo);
         if (!page.IsEmpty()) {
-            rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
+            rect.Inflate(-kPreviewMargin, -kPreviewMargin);
             float zoom = (float)std::min(rect.dx / page.dx, rect.dy / page.dy) - 0.001f;
             Rect onScreen = RectF((float)rect.x, (float)rect.y, (float)page.dx * zoom, (float)page.dy * zoom).Round();
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
@@ -296,7 +297,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             return OnVScroll(hwnd, GET_WHEEL_DELTA_WPARAM(wp) > 0 ? SB_LINEUP : SB_LINEDOWN);
         case WM_DESTROY:
             return OnDestroy(hwnd);
-        case UWM_PAINT_AGAIN:
+        case kUwmPaintAgain:
             InvalidateRect(hwnd, nullptr, TRUE);
             UpdateWindow(hwnd);
             return 0;
