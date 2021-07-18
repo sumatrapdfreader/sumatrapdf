@@ -29,7 +29,6 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
         log("PipeHandlingThread: not a valid handle!\n");
         return (DWORD)-1;
     }
-    log("new client connected to our pipe\n");
     BOOL ok{false};
     DWORD err{0};
     while (err == 0) {
@@ -42,7 +41,7 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
         err = GetLastError();
         // TODO: handle ERROR_MORE_DATA ?
         if (err == ERROR_BROKEN_PIPE) {
-            log("broken pipe\n");
+            //log("broken pipe\n");
         } else {
             // TODO: log the error
             // TODO: could this be non-error?
@@ -53,7 +52,7 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
     // FlushFileBuffers(hPipe);
     DisconnectNamedPipe(hPipe);
     CloseHandle(hPipe);
-    log("PipeHandlingThread: exited\n");
+    log("client exited\n");
     return 0;
 }
 

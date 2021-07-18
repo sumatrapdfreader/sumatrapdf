@@ -17,7 +17,7 @@ struct ChmFile {
     bool ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex);
     void FixPathCodepage(AutoFree& path, uint& fileCP);
 
-    bool Load(const WCHAR* fileName);
+    bool Load(const char* fileName);
 
     ChmFile() = default;
     ~ChmFile();

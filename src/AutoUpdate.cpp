@@ -52,7 +52,7 @@ constexpr const WCHAR* kUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspac
 
 // prevent multiple update tasks from happening simultaneously
 // (this might e.g. happen if a user checks manually very quickly after startup)
-bool gUpdateTaskInProgress = false;
+bool gUpdateCheckInProgress = false;
 
 /*
 The format of update information downloaded from the server:
@@ -201,7 +201,13 @@ static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpRsp* rsp, bool autoCheck
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
+    if (gUpdateCheckInProgress) {
+        logf("UpdateCheckAsync: skipping because gUpdateCheckInProgress\n");
+        return;
+    }
+
     if (!HasPermission(Perm::InternetAccess)) {
+        logf("UpdateCheckAsync: skipping because no internet access\n");
         return;
     }
 
@@ -210,6 +216,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
         // don't check if the timestamp or version to skip can't be updated
         // (mainly in plugin mode, stress testing and restricted settings)
         if (!HasPermission(Perm::SavePreferences)) {
+            logf("UpdateCheckAsync: skipping auto check because no prefs access\n");
             return;
         }
 
@@ -233,16 +240,13 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
     }
 
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
-    if (gUpdateTaskInProgress) {
-        return;
-    }
-    gUpdateTaskInProgress = true;
+    gUpdateCheckInProgress = true;
     HWND hwnd = win->hwndFrame;
     str::WStr url = kUpdateInfoURL;
     url.Append(L"?v=");
     url.Append(UPDATE_CHECK_VER);
     HttpGetAsync(url.Get(), [=](HttpRsp* rsp) {
-        gUpdateTaskInProgress = false;
+        gUpdateCheckInProgress = false;
         uitask::Post([=] { ProcessAutoUpdateCheckResult(hwnd, rsp, autoCheck); });
     });
 }

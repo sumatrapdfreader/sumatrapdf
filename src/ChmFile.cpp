@@ -265,7 +265,8 @@ void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
     }
 }
 
-bool ChmFile::Load(const WCHAR* fileName) {
+bool ChmFile::Load(const char* fileNameA) {
+    WCHAR* fileName = ToWstrTemp(fileNameA);
     chmHandle = chm_open((WCHAR*)fileName);
     if (!chmHandle) {
         return false;
@@ -561,10 +562,11 @@ bool ChmFile::IsSupportedFileType(Kind kind) {
 }
 
 ChmFile* ChmFile::CreateFromFile(const WCHAR* path) {
-    ChmFile* doc = new ChmFile();
-    if (!doc || !doc->Load(path)) {
-        delete doc;
+    ChmFile* chmFile = new ChmFile();
+    char* pathA = ToUtf8Temp(path);
+    if (!chmFile || !chmFile->Load(pathA)) {
+        delete chmFile;
         return nullptr;
     }
-    return doc;
+    return chmFile;
 }
