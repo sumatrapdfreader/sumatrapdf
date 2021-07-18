@@ -31,7 +31,6 @@ extern int gButtonDy;
 struct ButtonCtrl;
 
 extern WCHAR* firstError;
-extern Flags* gCli;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
 extern HFONT gFontDefault;

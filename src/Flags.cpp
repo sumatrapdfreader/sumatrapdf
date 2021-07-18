@@ -66,10 +66,10 @@ static void EnumeratePrinters() {
         } else {
             ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
             DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
-            AutoFreeWstr binNameValues(AllocArray<WCHAR>(24 * binNames));
+            AutoFreeWstr binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
             DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), nullptr);
             for (DWORD j = 0; j < bins; j++) {
-                output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * j, binValues.Get()[j]);
+                output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * (size_t)j, binValues.Get()[j]);
             }
         }
     }
@@ -481,6 +481,12 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
         }
         if (isArg(L"autoupdate")) {
             // this should have been handled already by AutoUpdateMain
+            n++;
+            continue;
+        }
+
+        if (isArg(L"test-auto-update")) {
+            i.testAutoUpdate = true;
             n++;
             continue;
         }

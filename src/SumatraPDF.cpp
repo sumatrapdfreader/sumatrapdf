@@ -4847,7 +4847,7 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
     return 0;
 }
 
-LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
     // DbgLogMsg("frame:", hwnd, msg, wp, lp);

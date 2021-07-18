@@ -20,13 +20,11 @@
 #include "Version.h"
 #include "Translations.h"
 #include "SumatraPDF.h"
+#include "Flags.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "WindowInfo.h"
 #include "SumatraDialogs.h"
-
-// if true, forces downloading and installation of auto-update
-bool gTestAutoUpdate{false};
 
 constexpr int kSecondsInDay = 60 * 60 * 24;
 
@@ -117,7 +115,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return 0;
     }
     // if silent we do auto-update. for now only in pre-release builds
-    if (gTestAutoUpdate && silent && (gIsPreReleaseBuild || gIsDebugBuild)) {
+    if (gCli->testAutoUpdate && silent) {
         // figure out which executable to download
         const char* dlURLA{nullptr};
         const char* dlKey{nullptr};
@@ -211,7 +209,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
         }
 
         // when testing, ignore the time check
-        if (!gTestAutoUpdate) {
+        if (!gCli->testAutoUpdate) {
             // don't check for updates at the first start, so that privacy
             // sensitive users can disable the update check in time
             FILETIME never = {0};

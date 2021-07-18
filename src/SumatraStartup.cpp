@@ -174,7 +174,7 @@ static bool RegisterWinClass() {
 
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcFrame);
+    FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcSumatraFrame);
     wcex.hIcon = LoadIconW(h, iconName);
     CrashIf(!wcex.hIcon);
     // For the extended translucent frame to be visible, we need black background.
@@ -704,10 +704,10 @@ static void ShowInstallerHelp() {
 }
 
 // in Installer.cpp
-extern int RunInstaller(Flags*);
+extern int RunInstaller();
 extern void ShowInstallerHelp();
 // in Uninstaller.cpp
-extern int RunUninstaller(Flags*);
+extern int RunUninstaller();
 
 // In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
 // In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.
@@ -892,6 +892,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);
+    gCli = &i;
 
     /*
     if (false && gIsDebugBuild) {
@@ -933,14 +934,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             ShowNotValidInstallerError();
             return 1;
         }
-        retCode = RunInstaller(&i);
+        retCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libmupdf.dll which we don't have access to in the installer
         ::ExitProcess(retCode);
     }
 
     if (i.uninstall) {
-        retCode = RunUninstaller(&i);
+        retCode = RunUninstaller();
         ::ExitProcess(retCode);
     }
 

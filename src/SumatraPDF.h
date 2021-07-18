@@ -82,8 +82,10 @@ struct TabInfo;
 struct LabelWithCloseWnd;
 struct SessionData;
 struct DropDownCtrl;
+struct Flags;
 
 // all defined in SumatraPDF.cpp
+extern Flags* gCli;
 extern bool gDebugShowLinks;
 extern bool gShowFrameRate;
 
@@ -185,7 +187,5 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck);
 void DeleteWindowInfo(WindowInfo* win);
 void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
 void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = false);
-
-LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
-
+LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();

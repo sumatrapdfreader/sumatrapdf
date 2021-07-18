@@ -43,6 +43,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
+#include "SumatraPDF.h"
 #include "Installer.h"
 #include "AppUtil.h"
 
@@ -380,7 +381,7 @@ static WCHAR* GetInstallationDir() {
 }
 #endif
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     bool handled;
 
     LRESULT res = 0;
@@ -438,7 +439,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 static bool RegisterWinClass() {
     WNDCLASSEX wcex{};
 
-    FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
+    FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcUninstallerFrame);
     auto h = GetModuleHandle(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, iconName);
@@ -601,8 +602,7 @@ static void InitSelfDelete() {
     LaunchProcess(cmdLine, nullptr, flags);
 }
 
-int RunUninstaller(Flags* cli) {
-    gCli = cli;
+int RunUninstaller() {
     if (gCli->log) {
         StartUnInstallerLogging();
     }
@@ -628,7 +628,7 @@ int RunUninstaller(Flags* cli) {
         goto Exit;
     }
 
-    RelaunchElevatedFromTempDirectory(cli);
+    RelaunchElevatedFromTempDirectory(gCli);
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
     if (gWasSearchFilterInstalled) {

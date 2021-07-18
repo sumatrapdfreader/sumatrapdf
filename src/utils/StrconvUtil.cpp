@@ -107,7 +107,7 @@ WCHAR* StrToWstr(const char* src, uint codePage, int cbSrc) {
     if (0 == requiredBufSize) {
         return nullptr;
     }
-    WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
+    WCHAR* res = AllocArray<WCHAR>((size_t)requiredBufSize + 1);
     if (!res) {
         return nullptr;
     }

@@ -39,6 +39,7 @@
 #include "GlobalPrefs.h"
 #include "AppUtil.h"
 #include "Flags.h"
+#include "SumatraPDF.h"
 #include "resource.h"
 #include "Version.h"
 #include "Installer.h"
@@ -847,7 +848,7 @@ static WCHAR* GetInstallationDir() {
     return str::Join(L"C:\\", appName);
 }
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     bool handled;
 
     LRESULT res = 0;
@@ -908,7 +909,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 static bool RegisterWinClass() {
     WNDCLASSEX wcex{};
 
-    FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
+    FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcInstallerFrame);
     auto h = GetModuleHandleW(nullptr);
     WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, resName);
@@ -1026,8 +1027,7 @@ static void RelaunchElevatedIfNotDebug() {
     ::ExitProcess(0);
 }
 
-int RunInstaller(Flags* cli) {
-    gCli = cli;
+int RunInstaller() {
     if (gCli->log) {
         StartInstallerLogging();
     }
