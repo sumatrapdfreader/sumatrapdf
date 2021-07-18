@@ -133,6 +133,7 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
             free(msg);
             return false;
         }
+        logf(L"Extracted '%s'\n", fileName.Get());
         ProgressStep();
     }
 

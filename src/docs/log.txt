@@ -1,5 +1,8 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-18 Sun
+- add -delete-file arg; sketch CmdLineArgsIter; add logging to -x installer option
+
 2021-07-17 Sat
 - fix debug crash in chm file (fixes #2033)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2033

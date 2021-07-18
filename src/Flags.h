@@ -78,6 +78,7 @@ struct Flags {
     bool log{false};
 
     WCHAR* copySelfToPath{nullptr};
+    WCHAR* deleteFilePath{nullptr};
     // TODO: temporary, for testing, force auto-update
     bool testAutoUpdate{false};
 

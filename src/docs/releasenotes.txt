@@ -11,6 +11,7 @@ Next version:
 
 3.3.2 (???)
 * fix crashes
+* restore showing Table Of Contents for .chm files
 
 3.3.1 (2021-07-14)
 * fix rotation of DjVu files

@@ -18,7 +18,6 @@
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 
-
 constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;
 constexpr UINT kUwmPaintAgain = (WM_USER + 101);

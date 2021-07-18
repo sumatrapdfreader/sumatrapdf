@@ -908,7 +908,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     }
 
     if (i.justExtractFiles) {
+        RedirectIOToExistingConsole();
         ExtractInstallerFiles();
+        HandleRedirectedConsoleOnShutdown();        
         ::ExitProcess(0);
     }
 
@@ -928,8 +930,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         ::ExitProcess(retCode);
     }
 
-    if (i.copySelfToPath != nullptr) {
+    if (i.copySelfToPath) {
+        RedirectIOToExistingConsole();
+        // sleeping for a bit to make sure that the program that launched us
+        // had time to exit so that we can overwrite it
+        Sleep(3 * 1000);
         CopySelfTo(i.copySelfToPath);
+        HandleRedirectedConsoleOnShutdown();
+        ::ExitProcess(0);
+    }
+
+    if (i.deleteFilePath) {
+        RedirectIOToExistingConsole();
+        // sleeping for a bit to make sure that the program that launched us
+        // had time to exit so that we can overwrite it
+        Sleep(3 * 1000);
+        bool ok = file::Delete(i.deleteFilePath);
+        if (ok) {
+            logf(L"Deleted '%s'\n", i.deleteFilePath);
+        } else {
+            logf(L"Failed to delete '%s'\n", i.deleteFilePath);
+        }
+        HandleRedirectedConsoleOnShutdown();
         ::ExitProcess(0);
     }
 

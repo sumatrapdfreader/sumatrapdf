@@ -29,6 +29,7 @@ Flags::~Flags() {
     str::Free(stressTestRanges);
     str::Free(lang);
     str::Free(copySelfToPath);
+    str::Free(deleteFilePath);
 }
 
 static void EnumeratePrinters() {
@@ -184,9 +185,58 @@ static bool IsArgEq(WCHAR* fromCmdLine, const WCHAR* compareAgainst) {
     return str::EqI(fromCmdLine, compareAgainst);
 }
 
+// TODO: work in progress
+struct CmdLineArgsIter {
+    WStrVec& args;
+    int curr{0};
+    int nArgs{0};
+
+    CmdLineArgsIter(WStrVec& v);
+    const WCHAR* Next();
+    const WCHAR* GetParam();
+    int GetIntParam();
+    int MaxParams() const;
+    bool HasParam() const;
+};
+
+CmdLineArgsIter::CmdLineArgsIter(WStrVec& v) : args(v) {
+    nArgs = args.isize();
+}
+
+const WCHAR* CmdLineArgsIter::Next() {
+    if (curr >= nArgs) {
+        return nullptr;
+    }
+    const WCHAR* res = args[curr];
+    curr++;
+    return res;
+}
+
+const WCHAR* CmdLineArgsIter::GetParam() {
+    return Next();
+}
+
+int CmdLineArgsIter::GetIntParam() {
+    const WCHAR* s = GetParam();
+    CrashIf(!s);
+    if (!s) {
+        return 0;
+    }
+    return _wtoi(s);
+}
+
+int CmdLineArgsIter::MaxParams() const {
+    return nArgs - curr;
+}
+
+bool CmdLineArgsIter::HasParam() const {
+    return curr < nArgs;
+}
+
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
     WStrVec args;
+    // TODO: use CommandLineToArgvW() instead of ParseCmdLine
     ParseCmdLine(cmdLine, args);
     size_t argCount = args.size();
 
@@ -474,6 +524,11 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
         }
         if (isArg(L"copy-self-to")) {
             i.copySelfToPath = str::Dup(param);
+            ++n;
+            continue;
+        }
+        if (isArg(L"delete-file")) {
+            i.deleteFilePath = str::Dup(param);
             ++n;
             continue;
         }
