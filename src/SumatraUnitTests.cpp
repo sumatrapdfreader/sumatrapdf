@@ -1,19 +1,35 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
+}
+
 #include "utils/BaseUtil.h"
 #include "AppUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/StrFormat.h"
+#include "utils/ScopedWin.h"
 
+#include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "DisplayMode.h"
+#include "EngineBase.h"
+#include "EngineFzUtil.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
 
+#include <float.h>
+#include <math.h>
+
 // must be last to over-write assert()
 #include "utils/UtAssert.h"
+
+#define utassert_fequal(a, b) utassert(fabs(a - b) < FLT_EPSILON);
 
 static void ParseCommandLineTest() {
     {
@@ -209,9 +225,31 @@ static void colorTest() {
     utassert(c == c2);
 }
 
+void EngineFzUtilTest() {
+    float x, y, zoom = 0;
+    int page;
+    {
+        page = resolve_link("#1", &x, &y, &zoom);
+        utassert(page == 0);
+
+        page = resolve_link("#1,2,3", &x, &y, &zoom);
+        utassert(page == 0);
+        utassert_fequal(x, 2);
+        utassert_fequal(y, 3);
+        utassert_fequal(zoom, 0);
+
+        page = resolve_link("#1,2,3,4.56", &x, &y, &zoom);
+        utassert(page == 0);
+        utassert_fequal(x, 2);
+        utassert_fequal(y, 3);
+        utassert_fequal(zoom, 4.56);
+    }
+}
+
 void SumatraPDF_UnitTests() {
     colorTest();
     BenchRangeTest();
+    EngineFzUtilTest();
     ParseCommandLineTest();
     versioncheck_test();
     hexstrTest();

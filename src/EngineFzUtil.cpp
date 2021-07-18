@@ -823,6 +823,7 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
     }
 
     res->dest = newPageDestination(link, outline);
+    res->dest->pageNo = pageNo;
     res->value = str::Dup(res->dest->value);
 
     return res;

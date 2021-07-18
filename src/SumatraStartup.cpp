@@ -912,8 +912,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     mui::Initialize();
     uitask::Initialize();
 
-    // LogDpiAwareness();
-
     {
         TempStr cmdLineA = ToUtf8Temp(GetCommandLineW());
         logf("CmdLine: %s\n", cmdLineA.Get());

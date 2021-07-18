@@ -652,11 +652,10 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     regconf()
-    disablewarnings { "4838" }
-    defines { "NO_LIBMUPDF" }
-    includedirs { "src" }
+    disablewarnings { "4100", "4838" }
+    includedirs { "src", "mupdf/include" }
     test_util_files()
-    links { "gdiplus", "comctl32", "shlwapi", "Version" }
+    links { "engines", "gdiplus", "comctl32", "mupdf", "shlwapi", "windowscodecs", "Version" }
 
   project "logview"
     kind "ConsoleApp"

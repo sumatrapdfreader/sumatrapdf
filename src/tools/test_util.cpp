@@ -19,7 +19,6 @@ extern void CmdLineParserTest();
 extern void CryptoUtilTest();
 extern void CssParser_UnitTests();
 extern void DictTest();
-extern void EngineFzUtilTest();
 extern void FileUtilTest();
 extern void HtmlPrettyPrintTest();
 extern void HtmlPullParser_UnitTests();
@@ -48,7 +47,6 @@ int main(__unused int argc, __unused char** argv) {
     CryptoUtilTest();
     CssParser_UnitTests();
     DictTest();
-    EngineFzUtilTest();
     FileUtilTest();
     HtmlPrettyPrintTest();
     HtmlPullParser_UnitTests();

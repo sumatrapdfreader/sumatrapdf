@@ -222,9 +222,6 @@
     <ClCompile Include="..\src\utils\tests\Dict_ut.cpp">
       <Filter>utils\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\tests\EngineFzUtil_ut.cpp">
-      <Filter>utils\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\tests\FileUtil_ut.cpp">
       <Filter>utils\tests</Filter>
     </ClCompile>
