@@ -87,6 +87,8 @@ struct PageText {
 
 void FreePageText(PageText*);
 
+int resolve_link(const char* uri, float* xp, float* yp, float *zoomp);
+
 // a link destination
 struct PageDestination {
     Kind kind{nullptr};

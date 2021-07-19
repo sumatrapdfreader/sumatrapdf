@@ -540,27 +540,6 @@ int is_external_link(const char* uri) {
     return uri[0] == ':';
 }
 
-// copy of pdf_resolve_link in pdf-link.c without ctx and doc
-// returns page number and location on the page
-int resolve_link(const char* uri, float* xp, float* yp, float *zoomp) {
-    if (uri && uri[0] == '#') {
-        int page = fz_atoi(uri + 1) - 1;
-        if (xp || yp) {
-            const char *x, *y, *zoom;
-            x = strchr(uri, ',');
-            y = x ? strchr(x + 1, ',') : NULL;
-            if (x && y) {
-                if (xp) *xp = fz_atoi(x + 1);
-                if (yp) *yp = fz_atoi(y + 1);
-                zoom = strchr(y + 1, ',');
-                if (zoom && zoomp) *zoomp = fz_atof(zoom + 1);
-            }
-        }
-        return page;
-    }
-    return -1;
-}
-
 static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, Rect* coords) {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
@@ -812,18 +791,16 @@ PageDestination* newFzDestination(fz_outline* outline) {
     return newPageDestination(nullptr, outline);
 }
 
-PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
-    SubmitBugReportIf(pageNo <= 0);
+static PageElement* newFzLink(fz_link* link, fz_outline* outline) {
     auto res = new PageElement();
     res->kind_ = kindPageElementDest;
 
-    res->pageNo = pageNo;
     if (link) {
         res->rect = ToRectFl(link->rect);
     }
 
     res->dest = newPageDestination(link, outline);
-    res->dest->pageNo = pageNo;
+    res->pageNo = res->dest->pageNo;
     res->value = str::Dup(res->dest->value);
 
     return res;
@@ -853,7 +830,7 @@ IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     fz_point p = {(float)pt.x, (float)pt.y};
     while (link) {
         if (fz_is_pt_in_rect(link->rect, p)) {
-            return newFzLink(pageNo, link, nullptr);
+            return newFzLink(link, nullptr);
         }
         link = link->next;
     }
@@ -902,7 +879,7 @@ void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
 
     fz_link* link = pageInfo->links;
     while (link) {
-        auto el = newFzLink(pageNo, link, nullptr);
+        auto el = newFzLink(link, nullptr);
         els->Append(el);
         link = link->next;
     }
