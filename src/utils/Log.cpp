@@ -20,7 +20,11 @@ bool gLogToStderr = false;
 // we always log if IsDebuggerPresent()
 // this forces logging to debuger always
 bool gLogToDebugger = false;
-bool logToPipe = true;
+// meant to avoid doing stuff during crash reporting
+// will log to debugger (if no need for formatting)
+bool gReducedLogging = false;
+
+bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 
 static char* logFilePath;
@@ -48,8 +52,8 @@ static const char* getWinError(DWORD errCode) {
 }
 #endif
 
-static void logPipe(std::string_view sv) {
-    if (!logToPipe) {
+static void logToPipe(std::string_view sv) {
+    if (!gLogToPipe) {
         return;
     }
     if (sv.empty()) {
@@ -103,8 +107,18 @@ static void logPipe(std::string_view sv) {
 }
 
 void log(std::string_view s) {
-    if (gLogToDebugger || IsDebuggerPresent()) {
+    // in reduced logging mode, we do want to log to at least the debugger
+    if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
         OutputDebugStringA(s.data());
+    }
+    if (gReducedLogging) {
+        // if the pipe already connected, do log to it even if disabled
+        // we do want easy logging, just want to reduce doing stuff
+        // that can break crash handling
+        if (gLogToPipe && IsValidHandle(hLogPipe)) {
+            logToPipe(s);
+        }
+        return;
     }
     gLogMutex.Lock();
 
@@ -137,7 +151,7 @@ void log(std::string_view s) {
             fclose(f);
         }
     }
-    logPipe(s);
+    logToPipe(s);
     gLogMutex.Unlock();
 }
 
@@ -147,6 +161,10 @@ void log(const char* s) {
 }
 
 void logf(const char* fmt, ...) {
+    if (gReducedLogging) {
+        return;
+    }
+
     va_list args;
     va_start(args, fmt);
     AutoFree s = str::FmtV(fmt, args);
@@ -168,6 +186,10 @@ void log(const WCHAR* s) {
 }
 
 void logf(const WCHAR* fmt, ...) {
+    if (gReducedLogging) {
+        return;
+    }
+
     va_list args;
     va_start(args, fmt);
     AutoFreeWstr s = str::FmtV(fmt, args);

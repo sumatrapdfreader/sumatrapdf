@@ -1178,7 +1178,7 @@ again2:
     }
     id = GetMenuItemID(menu, nMenus - 1);
     if (id == kMenuSeparatorID) {
-        RemoveMenu(menu, nMenus-1, MF_BYPOSITION);
+        RemoveMenu(menu, nMenus - 1, MF_BYPOSITION);
         goto again2;
     }
     // remove 2 or more consequitive separator items

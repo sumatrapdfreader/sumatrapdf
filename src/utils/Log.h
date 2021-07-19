@@ -5,6 +5,8 @@ extern HeapAllocator* gLogAllocator;
 extern str::Str* gLogBuf;
 extern bool gLogToStderr;
 extern bool gLogToDebugger;
+extern bool gReducedLogging;
+extern bool gLogToPipe;
 extern const char* gLogAppName;
 void StartLogToFile(const char* path);
 
