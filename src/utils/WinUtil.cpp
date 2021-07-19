@@ -1522,7 +1522,7 @@ TempWstr GetTextTemp(HWND hwnd) {
     if (nullptr == txt) {
         return TempWstr();
     }
-    SendMessageW(hwnd, WM_GETTEXT, cch+1, (LPARAM)txt);
+    SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)txt);
     return TempWstr(txt, cch);
 }
 

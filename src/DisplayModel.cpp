@@ -1878,8 +1878,9 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
         // PDF: /XYZ top left zoom
         // scroll to rect.TL()
-        //logf("DisplayModel::ScrollToLink /XYZ START [dest] pageNo=%d rect.x=%f rect.y=%f zoom=%f\n", pageNo, rect.x, rect.y, zoom);
-        //logf("DisplayModel::ScrollToLink /XYZ START [zoom] real=%f virtual=%f\n", zoomReal, zoomVirtual);
+        // logf("DisplayModel::ScrollToLink /XYZ START [dest] pageNo=%d rect.x=%f rect.y=%f zoom=%f\n", pageNo, rect.x,
+        // rect.y, zoom); logf("DisplayModel::ScrollToLink /XYZ START [zoom] real=%f virtual=%f\n", zoomReal,
+        // zoomVirtual);
         if (zoom) {
             SetZoomVirtual(100 * zoom, nullptr);
             CalcZoomReal(zoomVirtual);
@@ -1895,8 +1896,8 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
             PageInfo* pageInfo = GetPageInfo(CurrentPageNo());
             scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
         }
-        //logf("DisplayModel::ScrollToLink /XYZ END [zoom] real=%f virtual=%f\n", zoomReal, zoomVirtual);
-        //logf("DisplayModel::ScrollToLink /XYZ END [scroll] x=%d y=%d\n", scroll.x, scroll.y);
+        // logf("DisplayModel::ScrollToLink /XYZ END [zoom] real=%f virtual=%f\n", zoomReal, zoomVirtual);
+        // logf("DisplayModel::ScrollToLink /XYZ END [scroll] x=%d y=%d\n", scroll.x, scroll.y);
     } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
         RectF rectD = engine->Transform(rect, pageNo, zoomReal, rotation);
