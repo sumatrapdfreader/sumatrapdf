@@ -431,7 +431,6 @@ function sumatrapdf_files()
     "FileHistory.*",
     "FileThumbnails.*",
     "Flags.*",
-    "GetDocumentOutlines.*",
     "GlobalPrefs.*",
     "Installer.h",
     "Installer.cpp",

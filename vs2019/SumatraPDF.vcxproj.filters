@@ -102,9 +102,6 @@
     <ClInclude Include="..\src\Flags.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\GetDocumentOutlines.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -339,9 +336,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Flags.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\GetDocumentOutlines.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GlobalPrefs.cpp">

@@ -550,7 +550,6 @@
     <ClInclude Include="..\src\FileHistory.h" />
     <ClInclude Include="..\src\FileThumbnails.h" />
     <ClInclude Include="..\src\Flags.h" />
-    <ClInclude Include="..\src\GetDocumentOutlines.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\Menu.h" />
@@ -631,7 +630,6 @@
     <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
-    <ClCompile Include="..\src\GetDocumentOutlines.cpp" />
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
     <ClCompile Include="..\src\InstUninstCommon.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
