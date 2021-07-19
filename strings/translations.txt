@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-373cb8231d42f74da8fd2e09a6baf7f61b25a59b
+0e727eadf1adb9933196f3bb6f5d57a11704a24f
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -171,7 +171,7 @@ uk:Справжній розмір\tCtrl+1
 uz:&Haqiqiy o'lchami\tCtrl+1
 vn:Kích thướ&c thật\tCtrl+1
 :&Advanced Options...
-am:&Ընդլայնված կարգավորումներ..
+am:&Ընդլայնված ընտրանքներ..
 ar:خيارات &متقدمة
 az:&Əlavə seçimlər...
 bg:Разширени опции
@@ -4246,7 +4246,7 @@ uk:Всі файли
 uz:Hamma fayllar
 vn:Mọi tập tin
 :All supported documents
-am:Աջակցվող բոլոր փաստաթղթերը
+am:Բոլոր աջակցվող փաստաթղթերը
 ar:كل المستندات المدعومة
 az:Bütün dəstəklənən sənədlər
 bg:Всички поддържани документи
@@ -5215,7 +5215,7 @@ uz:Bayt
 vn:Bytes
 :CHM documents
 af:CHM dokumente
-am:CHM ֆայլեր
+am:CHM փաստաթղթեր
 ar:CHM ملفات 
 az:CHM sənədləri
 bg:CHM документи
@@ -8860,7 +8860,7 @@ uz:&Oldinga\tAlt+->
 vn:Tiếp tục\tAlt+Mũi tên phải
 :F&ullscreen\tF11
 af:Volskerm\tCtrl+Shift+L
-am:Ամ&բողջ էկրանով\tCtrl+Shift+L
+am:Լ&իաէկրան\tCtrl+Shift+L
 ar:ملء الشاشة \tF11 
 az:Tam ek&ran\tCtrl+Shift+L
 bg:На &цял екран\tCtrl+Shift+L / F11
@@ -11458,7 +11458,7 @@ tr:Mürekkep
 tw:墨迹
 :Install SumatraPDF
 af:Installeer SumatraPDF
-am:Տեղակայել SumatraPDF-ը
+am:Տեղադրել SumatraPDF-ը
 ar:المحمولة Sumatra تثبيت مستندات
 az:SumatraPDF-i quraşdır
 bg:Инсталиране на SumatraPDF
@@ -12089,7 +12089,7 @@ uz:MB
 vn:MB
 :Make SumatraPDF default application for PDF files?
 af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
-am:Հաստատե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
+am:Դարձնե՞լ SumatraPDF-ը սկզբնադիր ծրագիր PDF ֆայլերը բացելու համար:
 ar: المحمولة الافتراضي  لملفات المستندات المحمولة؟ Sumatra  جعل تطبيق مستندات
 az:SumatraPDF PDF faylların görüntülənməsi üçün standart proqram edilsin?
 bg:Искате ли да зададете SumatraPDF като основното си приложение за отваряне на PDF файлове?
@@ -19175,7 +19175,7 @@ uk:Використовувати вкладки
 uz:&Ilovalarni qo'llash
 vn:Dùng &thẻ
 :Use SumatraPDF as the &default PDF reader
-am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
+am:Օգտ. SumatraPDF-ը որպես &սկզբնադիր PDF ընթերցիչ
 ar: المحمولة باسم& قارئ مستندات محمولة افتراضي Sumatra استخدم مستندات
 az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
 bg:Използване на SumatraPDF като основен четец на PDF файлове
