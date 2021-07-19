@@ -656,7 +656,7 @@ workspace "SumatraPDF"
     defines { "NO_LIBMUPDF" }
     includedirs { "src" }
     test_util_files()
-    links { "engines", "gdiplus", "comctl32", "shlwapi", "Version" }
+    links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
   project "logview"
     kind "ConsoleApp"
@@ -750,7 +750,7 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
-    dependson { "PdfFilter", "PdfPreview", "test_util" }
+    -- dependson { "PdfFilter", "PdfPreview", "test_util" }
 
 
   -- a dll version where most functionality is in libmupdf.dll
