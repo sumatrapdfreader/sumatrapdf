@@ -8,6 +8,8 @@ Next version:
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
 * 'i' keyboard shortucts inverts document colors
    Shift + 'i' does what 'i' used to do i.e. show page numberinfo
+* respect zoom level in PDF destination links
+  https://github.com/sumatrapdfreader/sumatrapdf/commit/3aa18aaf89caef7dd28529682d9344ef89422100
 
 3.3.2 (???)
 * fix crashes
