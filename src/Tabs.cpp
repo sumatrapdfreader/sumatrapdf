@@ -674,7 +674,10 @@ void CreateTabbar(WindowInfo* win) {
 static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
     CrashIf(!tdata || !win || tdata->ctrl != win->ctrl);
     AutoFreeWstr winTitle(win::GetText(win->hwndFrame));
-    SubmitBugReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
+    if (!!str::Eq(winTitle.Get(), tdata->frameTitle)) {
+        logf(L"VerifyTabInfo: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle);
+        SubmitBugReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
+    }
     bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
     if (PM_DISABLED != win->presentation) {
         expectedTocVisibility = false; // PM_BLACK_SCREEN, PM_WHITE_SCREEN
