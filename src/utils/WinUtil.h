@@ -161,7 +161,6 @@ void ToForeground(HWND hwnd);
 
 size_t GetTextLen(HWND hwnd);
 TempWstr GetTextTemp(HWND hwnd);
-str::Str GetTextUtf8(HWND hwnd);
 
 void SetText(HWND hwnd, const WCHAR* txt);
 void SetVisibility(HWND hwnd, bool visible);

@@ -1520,19 +1520,6 @@ TempWstr GetTextTemp(HWND hwnd) {
     return TempWstr(txt, cch);
 }
 
-str::Str GetTextUtf8(HWND hwnd) {
-    size_t cchTxt = GetTextLen(hwnd);
-    WCHAR* txt = AllocArray<WCHAR>(cchTxt + 1);
-    if (nullptr == txt) {
-        return str::Str();
-    }
-    SendMessageW(hwnd, WM_GETTEXT, cchTxt + 1, (LPARAM)txt);
-    txt[cchTxt] = 0;
-    auto od = ToUtf8Temp(txt, cchTxt);
-    free(txt);
-    return {od.AsView()};
-}
-
 size_t GetTextLen(HWND hwnd) {
     return (size_t)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
 }

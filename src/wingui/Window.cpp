@@ -736,7 +736,9 @@ void WindowBase::SetText(std::string_view sv) {
 }
 
 std::string_view WindowBase::GetText() {
-    text = win::GetTextUtf8(hwnd);
+    auto sw = win::GetTextTemp(hwnd);
+    auto sa = ToUtf8Temp(sw.AsView());
+    text.Set(sa.AsView());
     return text.AsView();
 }
 

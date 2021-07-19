@@ -13,6 +13,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - add gReducedLogging mode to be used during crash handling; switch CrashHandler.cpp from LogDbg.h to Log.h
 - convert win::GetText() => win::GetTextTemp()
 - progress on new translation code
+- remove GetTextUtf8()
 
 2021-07-17 Sat
 
