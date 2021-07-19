@@ -470,7 +470,6 @@ function sumatrapdf_files()
     "Theme.*",
     "Toolbar.*",
     "Translations.*",
-    "Translations2.*",
     "Trans_sumatra_txt.cpp",
     "Version.h",
     "WindowInfo.*",

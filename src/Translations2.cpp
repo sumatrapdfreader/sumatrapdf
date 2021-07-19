@@ -6,10 +6,6 @@
 #include "utils/Log.h"
 #include "Translations.h"
 
-// TODO: those will be auto-generated
-#define LANGS_COUNT 61
-#define STRINGS_COUNT 363
-
 struct StringsParser {
     std::string_view orig{};
     std::string_view rest{};

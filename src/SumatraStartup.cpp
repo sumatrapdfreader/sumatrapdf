@@ -1035,9 +1035,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     UpdateGlobalPrefs(i);
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
 
-    extern void ParseTranslationsFromResources(); // in Translations2.cpp
-    ParseTranslationsFromResources();
-
     // This allows ad-hoc comparison of gdi, gdi+ and gdi+ quick when used
     // in layout
 #if 0

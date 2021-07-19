@@ -10,8 +10,6 @@
 #define ADD_EN_RTL_TEST_LANGUAGE
 #endif
 
-// Note: this code is intentionally optimized for (small) size, not speed
-
 namespace trans {
 
 // defined in Trans*_txt.cpp
@@ -19,9 +17,19 @@ extern int gLangsCount;
 extern int gStringsCount;
 extern const char* gLangNames;
 extern const char* gLangCodes;
-const LANGID* GetLangIds();
-bool IsLangRtl(int langIdx);
-const char** GetOriginalStrings();
+extern const LANGID* GetLangIds();
+extern bool IsLangRtl(int langIdx);
+extern const char** GetOriginalStrings();
+} // namespace trans
+
+// set to 1 to use new translation code
+#define USE_OLD_TRANS 1
+
+#if USE_OLD_TRANS
+
+// Note: this code is intentionally optimized for (small) size, not speed
+
+namespace trans {
 
 // used locally, gCurrLangCode points into gLangCodes
 static const char* gCurrLangCode = nullptr;
@@ -302,3 +310,230 @@ const WCHAR* _TR(const char* s) {
 const char* _TRA(const char* s) {
     return trans::GetTranslationATemp(s);
 }
+
+#else
+
+#include "utils/WinUtil.h"
+
+namespace trans {
+
+// used locally, gCurrLangCode points into gLangCodes
+static const char* gCurrLangCode = nullptr;
+
+struct StringsParser {
+    std::string_view orig{};
+    std::string_view rest{};
+    char* currOrig{nullptr};
+};
+
+std::string_view SkipPast(std::string_view sv, char c) {
+    const char* s = sv.data();
+    const char* e = s + sv.size();
+    while (s < e) {
+        if (*s == c) {
+            s++;
+            size_t len = (e - s);
+            return {s, len};
+        }
+        s++;
+    }
+    return {};
+}
+
+char* GetLineUnescaped(char* s, char* e) {
+    char* w = s;
+    while (s < e) {
+        if (*s == '\n') {
+            *s = 0;
+            return s + 1;
+        }
+        if (*s != '\\') {
+            *w++ = *s++;
+        } else {
+            // TODO: implement me
+            //&&(s + 1 < e) && (*s)
+        }
+    }
+    return nullptr;
+}
+
+void SkipPast(StringsParser& p, char c) {
+    p.rest = SkipPast(p.rest, c);
+}
+
+bool ParseOrigString(StringsParser& p) {
+    // TODO: write me
+    // store parsed string in p.orig
+    std::string_view sv = p.rest;
+    if (sv.empty()) {
+        // TODO: need to detect a valid eof
+        return false;
+    }
+    // starts with ':'
+    char* s = (char*)sv.data();
+    char* e = s + sv.size();
+    if (*s != ':') {
+        return false;
+    }
+    s++;
+    p.currOrig = s;
+    while (s < e) {
+        // TODO; write me
+    }
+    return false;
+}
+
+bool ParseTranslations(StringsParser& p) {
+    // TODO: write me
+    // parses $lang: $translation\n
+    return false;
+}
+
+void ParseTranslationsTxt(std::string_view s) {
+    StringsParser p{};
+    p.orig = s;
+    p.rest = s;
+    // skip AppTranslator: SumatraPDF
+    SkipPast(p, '\n');
+    // skip 1b35f5aeed9fc7aacdd4ed60c3a3b489943bc7d7
+    SkipPast(p, '\n');
+}
+
+void ParseTranslationsFromResources() {
+    std::span<u8> d = LoadDataResource(2);
+    if (d.empty()) {
+        return;
+    }
+    ParseTranslationsTxt({(const char*)d.data(), d.size()});
+    free(d.data());
+}
+
+int GetLangsCount() {
+    return gLangsCount;
+}
+
+const char* GetCurrentLangCode() {
+    return gCurrLangCode;
+}
+
+// translation info about a single string
+// we set str/trans once by parsing translations.txt file
+// after the user changes the language
+struct Translation {
+    // english string from translations.txt file
+    // we lazily match it to origStr
+    char* str{nullptr};
+    // translation of str/origStr in gCurrLangCode
+    WCHAR* trans{nullptr};
+};
+
+static Translation* gTranslations{nullptr};
+static int gCurrLangIdx{0};
+
+static void FreeTranslations() {
+    if (!gTranslations) {
+        return;
+    }
+    for (int i = 0; i < gLangsCount; i++) {
+        str::Free(gTranslations[i].str);
+        str::Free(gTranslations[i].trans);
+    }
+}
+
+void BuildTranslationsForLang(int langIdx, const char* langCode) {
+    if (langIdx == 0) {
+        // if english, do nothing
+        return;
+    }
+    // TODO: write me
+}
+
+void SetCurrentLangByCode(const char* langCode) {
+    if (str::Eq(langCode, gCurrLangCode)) {
+        return;
+    }
+    FreeTranslations();
+
+    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+    if (-1 == idx) {
+        logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode);
+        // set to English
+        idx = 0;
+    }
+    CrashIf(-1 == idx);
+    gCurrLangIdx = idx;
+    gCurrLangCode = GetLangCodeByIdx(idx);
+    BuildTranslationsForLang(gCurrLangIdx, gCurrLangCode);
+}
+
+const char* ValidateLangCode(const char* langCode) {
+    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+    if (-1 == idx) {
+        return nullptr;
+    }
+    return GetLangCodeByIdx(idx);
+}
+
+const WCHAR* GetTranslationTemp(const char* s) {
+    return ToWstrTemp(s);
+}
+
+const char* GetTranslationATemp(const char* s) {
+    return s;
+}
+
+const char* GetLangCodeByIdx(int idx) {
+    return seqstrings::IdxToStr(gLangCodes, idx);
+}
+
+const char* GetLangNameByIdx(int idx) {
+    return seqstrings::IdxToStr(gLangNames, idx);
+}
+
+bool IsCurrLangRtl() {
+    return IsLangRtl(gCurrLangIdx);
+}
+
+const char* DetectUserLang() {
+    const LANGID* langIds = GetLangIds();
+    LANGID langId = GetUserDefaultUILanguage();
+    // try the exact match
+    for (int i = 0; i < gLangsCount; i++) {
+        if (langId == langIds[i]) {
+            return GetLangCodeByIdx(i);
+        }
+    }
+
+    // see if we have a translation in a language that has the same
+    // primary id as user's language and neutral sublang
+    LANGID userLangIdNeutral = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
+    for (int i = 0; i < gLangsCount; i++) {
+        if (userLangIdNeutral == langIds[i]) {
+            return GetLangCodeByIdx(i);
+        }
+    }
+
+    return "en";
+}
+
+void Destroy() {
+    if (!gCurrLangCode) {
+        // no need for clean-up if translations were never initialized
+        return;
+    }
+    FreeTranslations();
+    free((void*)gTranslations);
+    gTranslations = nullptr;
+}
+
+} // namespace trans
+
+const WCHAR* _TR(const char* s) {
+    return trans::GetTranslationTemp(s);
+}
+
+const char* _TRA(const char* s) {
+    return trans::GetTranslationATemp(s);
+}
+
+#endif
