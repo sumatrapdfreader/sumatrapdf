@@ -185,6 +185,16 @@ void Free(std::wstring_view sv) {
     free((void*)sv.data());
 }
 
+void FreePtr(const char** s) {
+    str::Free(*s);
+    *s = nullptr;
+}
+
+void FreePtr(char** s) {
+    str::Free(*s);
+    *s = nullptr;
+}
+
 void FreePtr(const WCHAR** s) {
     str::Free(*s);
     *s = nullptr;

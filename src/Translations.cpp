@@ -23,7 +23,7 @@ extern const char** GetOriginalStrings();
 } // namespace trans
 
 // set to 1 to use new translation code
-#define USE_OLD_TRANS 1
+#define USE_OLD_TRANS 0
 
 #if USE_OLD_TRANS
 
@@ -317,95 +317,170 @@ const char* _TRA(const char* s) {
 
 namespace trans {
 
-// used locally, gCurrLangCode points into gLangCodes
-static const char* gCurrLangCode = nullptr;
-
-struct StringsParser {
-    std::string_view orig{};
-    std::string_view rest{};
-    char* currOrig{nullptr};
+// translation info about a single string
+// we set str/trans once by parsing translations.txt file
+// after the user changes the language
+struct Translation {
+    // english string from translations.txt file
+    // we lazily match it to origStr
+    char* str{nullptr};
+    // translation of str/origStr in gCurrLangCode
+    char* trans{nullptr};
 };
 
-std::string_view SkipPast(std::string_view sv, char c) {
-    const char* s = sv.data();
-    const char* e = s + sv.size();
-    while (s < e) {
-        if (*s == c) {
+// used locally, gCurrLangCode points into gLangCodes
+static const char* gCurrLangCode = nullptr;
+static int gCurrLangIdx{0};
+static int gTranslationsCount{0};
+static Translation* gTranslations{nullptr};
+static int gUntranslatedCount{0};
+
+char* UnescapeString(char* s) {
+    str::Str str;
+    for (; *s; s++) {
+        if (*s == '\\') {
+            char c = s[1];
+            switch (c) {
+                case 't':
+                    str.AppendChar('\t');
+                    break;
+                case 'n':
+                    str.AppendChar('\n');
+                    break;
+                case 'r':
+                    str.AppendChar('\r');
+                    break;
+                default:
+                    str.AppendChar(c);
+                    break;
+            }
             s++;
-            size_t len = (e - s);
-            return {s, len};
-        }
-        s++;
-    }
-    return {};
-}
-
-char* GetLineUnescaped(char* s, char* e) {
-    char* w = s;
-    while (s < e) {
-        if (*s == '\n') {
-            *s = 0;
-            return s + 1;
-        }
-        if (*s != '\\') {
-            *w++ = *s++;
         } else {
-            // TODO: implement me
-            //&&(s + 1 < e) && (*s)
+            str.AppendChar(*s);
         }
     }
-    return nullptr;
+    return str.StealData();
 }
 
-void SkipPast(StringsParser& p, char c) {
-    p.rest = SkipPast(p.rest, c);
-}
-
-bool ParseOrigString(StringsParser& p) {
-    // TODO: write me
-    // store parsed string in p.orig
-    std::string_view sv = p.rest;
-    if (sv.empty()) {
-        // TODO: need to detect a valid eof
-        return false;
+int FindChar(char* s, int sLen, char c) {
+    int i = 0;
+    char c2;
+    while (i < sLen) {
+        c2 = *s++;
+        if (c == c2) {
+            return i;
+        }
+        i++;
     }
-    // starts with ':'
-    char* s = (char*)sv.data();
-    char* e = s + sv.size();
-    if (*s != ':') {
-        return false;
-    }
-    s++;
-    p.currOrig = s;
-    while (s < e) {
-        // TODO; write me
-    }
-    return false;
+    return sLen;
 }
 
-bool ParseTranslations(StringsParser& p) {
-    // TODO: write me
-    // parses $lang: $translation\n
-    return false;
-}
-
-void ParseTranslationsTxt(std::string_view s) {
-    StringsParser p{};
-    p.orig = s;
-    p.rest = s;
-    // skip AppTranslator: SumatraPDF
-    SkipPast(p, '\n');
-    // skip 1b35f5aeed9fc7aacdd4ed60c3a3b489943bc7d7
-    SkipPast(p, '\n');
-}
-
-void ParseTranslationsFromResources() {
-    std::span<u8> d = LoadDataResource(2);
-    if (d.empty()) {
+static void FreeTranslations() {
+    if (!gTranslations) {
         return;
     }
-    ParseTranslationsTxt({(const char*)d.data(), d.size()});
-    free(d.data());
+    for (int i = 0; i < gTranslationsCount; i++) {
+        str::FreePtr(&gTranslations[i].str);
+        str::FreePtr(&gTranslations[i].trans);
+    }
+    free(gTranslations);
+    gTranslations = nullptr;
+    gTranslationsCount = 0;
+    gUntranslatedCount = 0;
+}
+
+void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
+    langCode = str::JoinTemp(langCode, ":");
+    int nLangCode = str::Len(langCode);
+
+    // parse into lines
+    char* s = (char*)sv.data();
+    int sLen = (int)sv.size();
+    Vec<char*> lines;
+    int n;
+    int nStrings = 0;
+    while (sLen > 0) {
+        n = FindChar(s, sLen, '\n');
+        if (n < 2) {
+            break;
+        }
+        s[n] = 0;
+        lines.Append(s);
+        if (s[0] == ':') {
+            nStrings++;
+        }
+        n++; // skip '\n'
+        s += n;
+        sLen -= n;
+        CrashIf(sLen < 0);
+    }
+    int nLines = lines.isize();
+    logf("%d lines, nStrings: %d, gStringsCount: %d\n", nLines, nStrings, gStringsCount);
+    // CrashIf(nStrings != gStringsCount);
+
+    FreeTranslations();
+    gTranslationsCount = nStrings;
+    gTranslations = AllocArray<Translation>(gTranslationsCount);
+    gUntranslatedCount = 0;
+
+    char* orig;
+    char* trans;
+    char* line;
+    int i = 2; // skip first 2 header lines
+    int nTrans = 0;
+    while (i < nLines) {
+        orig = lines[i];
+        CrashIf(*orig != ':');
+        orig += 1; // skip the ':' at the beginning
+        i++;
+        trans = nullptr;
+        while (i < nLines && lines[i][0] != ':') {
+            if (!trans) {
+                line = lines[i];
+                if (str::StartsWith(line, langCode)) {
+                    trans = line + nLangCode;
+                }
+            }
+            i++;
+        }
+        if (!trans) {
+            gUntranslatedCount++;
+        }
+        Translation& translation = gTranslations[nTrans++];
+        translation.str = UnescapeString(orig);
+        translation.trans = nullptr;
+        if (trans) {
+            translation.trans = UnescapeString(trans);
+        }
+    }
+    CrashIf(nTrans != gTranslationsCount);
+    if (gUntranslatedCount > 0) {
+        logf("Untranslated strings: %d for lang '%s'\n", gUntranslatedCount, langCode);
+    }
+}
+
+const char* GetTranslationATemp(const char* s) {
+    CrashIf(!s);
+    if (!gTranslations) {
+        return s;
+    }
+    for (int i = 0; i < gTranslationsCount; i++) {
+        Translation& trans = gTranslations[i];
+        if (str::Eq(s, trans.str)) {
+            if (!trans.trans) {
+                return s;
+            }
+            return (const char*)trans.trans;
+        }
+    }
+    logf("Didn't find translation for '%s'\n", s);
+    // CrashIf(true);
+    return s;
+}
+
+const WCHAR* GetTranslationTemp(const char* s) {
+    auto trans = GetTranslationATemp(s);
+    return ToWstrTemp(trans);
 }
 
 int GetLangsCount() {
@@ -416,43 +491,25 @@ const char* GetCurrentLangCode() {
     return gCurrLangCode;
 }
 
-// translation info about a single string
-// we set str/trans once by parsing translations.txt file
-// after the user changes the language
-struct Translation {
-    // english string from translations.txt file
-    // we lazily match it to origStr
-    char* str{nullptr};
-    // translation of str/origStr in gCurrLangCode
-    WCHAR* trans{nullptr};
-};
-
-static Translation* gTranslations{nullptr};
-static int gCurrLangIdx{0};
-
-static void FreeTranslations() {
-    if (!gTranslations) {
-        return;
-    }
-    for (int i = 0; i < gLangsCount; i++) {
-        str::Free(gTranslations[i].str);
-        str::Free(gTranslations[i].trans);
-    }
-}
-
 void BuildTranslationsForLang(int langIdx, const char* langCode) {
     if (langIdx == 0) {
         // if english, do nothing
+        FreeTranslations();
         return;
     }
-    // TODO: write me
+    std::span<u8> d = LoadDataResource(2);
+    if (d.empty()) {
+        return;
+    }
+    std::string_view sv{(const char*)d.data(), d.size()};
+    ParseTranslationsTxt(sv, langCode);
+    free(d.data());
 }
 
 void SetCurrentLangByCode(const char* langCode) {
     if (str::Eq(langCode, gCurrLangCode)) {
         return;
     }
-    FreeTranslations();
 
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
     if (-1 == idx) {
@@ -472,14 +529,6 @@ const char* ValidateLangCode(const char* langCode) {
         return nullptr;
     }
     return GetLangCodeByIdx(idx);
-}
-
-const WCHAR* GetTranslationTemp(const char* s) {
-    return ToWstrTemp(s);
-}
-
-const char* GetTranslationATemp(const char* s) {
-    return s;
 }
 
 const char* GetLangCodeByIdx(int idx) {
@@ -517,13 +566,7 @@ const char* DetectUserLang() {
 }
 
 void Destroy() {
-    if (!gCurrLangCode) {
-        // no need for clean-up if translations were never initialized
-        return;
-    }
     FreeTranslations();
-    free((void*)gTranslations);
-    gTranslations = nullptr;
 }
 
 } // namespace trans

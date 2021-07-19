@@ -1,5 +1,8 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-19 Mon
+- new code for doing translations that parses translations.txt
+
 2021-07-18 Sun
 
 - add -delete-file arg; sketch CmdLineArgsIter; add logging to -x installer option

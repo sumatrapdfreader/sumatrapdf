@@ -24,6 +24,8 @@ void Free(std::string_view);
 void Free(const WCHAR* s);
 void Free(std::wstring_view);
 
+void FreePtr(const char** s);
+void FreePtr(char** s);
 void FreePtr(const WCHAR** s);
 void FreePtr(WCHAR** s);
 
