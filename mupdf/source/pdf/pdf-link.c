@@ -86,11 +86,13 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 	{
 		pdf_obj *xo = NULL;
 		pdf_obj *yo = NULL;
+		pdf_obj *zoomo = NULL;
 
 		if (pdf_name_eq(ctx, obj, PDF_NAME(XYZ)))
 		{
 			xo = pdf_array_get(ctx, dest, 2);
 			yo = pdf_array_get(ctx, dest, 3);
+			zoomo = pdf_array_get(ctx, dest, 4);
 		}
 		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitR)))
 		{
@@ -108,7 +110,7 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 
 		if (xo || yo)
 		{
-			int x, y, h;
+			float x, y, zoom, h;
 			fz_rect mediabox;
 			fz_matrix pagectm;
 
@@ -118,9 +120,15 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 			mediabox = fz_transform_rect(mediabox, pagectm);
 			h = mediabox.y1 - mediabox.y0;
 
-			x = xo ? pdf_to_int(ctx, xo) : 0;
-			y = yo ? h - pdf_to_int(ctx, yo) : 0;
-			return fz_asprintf(ctx, "#%d,%d,%d", page + 1, x, y);
+			x = xo ? pdf_to_real(ctx, xo) : 0;
+			y = yo ? h - pdf_to_real(ctx, yo) : 0;
+			zoom = zoomo ? pdf_to_real(ctx, zoomo) : 0;
+
+			if (zoom) {
+				return fz_asprintf(ctx, "#%d,%f,%f,%.2f", page + 1, x, y, zoom);
+			} else {
+				return fz_asprintf(ctx, "#%d,%f,%f", page + 1, x, y);
+			}
 		}
 	}
 	return fz_asprintf(ctx, "#%d", page + 1);

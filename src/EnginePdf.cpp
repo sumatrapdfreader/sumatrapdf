@@ -1039,11 +1039,14 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
         return nullptr;
     }
 
-    float x, y;
-    int pageNo = resolve_link(uri, &x, &y);
+    float x, y, zoom = 0;
+    int pageNo = resolve_link(uri, &x, &y, &zoom);
 
     RectF r{x, y, 0, 0};
     pageDest = newSimpleDest(pageNo, r);
+    if (zoom) {
+        pageDest->zoom = zoom;
+    }
     fz_free(ctx, uri);
     return pageDest;
 }

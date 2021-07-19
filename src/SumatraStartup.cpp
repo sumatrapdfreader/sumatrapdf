@@ -912,7 +912,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     mui::Initialize();
     uitask::Initialize();
 
-    // LogDpiAwareness();
+    // StartLogToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
 
     {
         TempStr cmdLineA = ToUtf8Temp(GetCommandLineW());
