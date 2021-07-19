@@ -94,12 +94,14 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
     }
     //] ACCESSKEY_GROUP Password Dialog
 
+    TempWstr tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    data->pwdOut = win::GetText(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    data->pwdOut = str::Dup(tmp.AsView());
                     if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     }
@@ -171,13 +173,15 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
     }
     //] ACCESSKEY_GROUP GoTo Page Dialog
 
+    TempWstr tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    data->newPageLabel = win::GetText(editPageNo);
+                    tmp = win::GetTextTemp(editPageNo);
+                    data->newPageLabel = str::Dup(tmp.AsView());
                     EndDialog(hDlg, IDOK);
                     return TRUE;
 
@@ -221,6 +225,8 @@ static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wp, LP
 static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_Find_Data* data;
 
+    TempWstr tmp;
+
     switch (msg) {
         case WM_INITDIALOG:
             //[ ACCESSKEY_GROUP Find Dialog
@@ -245,12 +251,14 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             CenterDialog(hDlg);
             SetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
             return FALSE;
-        //] ACCESSKEY_GROUP Find Dialog
+            //] ACCESSKEY_GROUP Find Dialog
+
         case WM_COMMAND:
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    data->searchTerm = win::GetText(GetDlgItem(hDlg, IDC_FIND_EDIT));
+                    tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_FIND_EDIT));
+                    data->searchTerm = str::Dup(tmp.AsView());
                     data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
@@ -566,7 +574,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
 
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
-        AutoFreeWstr customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
+        WCHAR* customZoom = win::GetTextTemp(GetDlgItem(hDlg, idComboBox));
         float zoom = (float)_wtof(customZoom);
         if (zoom > 0) {
             newZoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
@@ -771,7 +779,8 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
                     if (prefs->enableTeXEnhancements && HasPermission(Perm::DiskAccess)) {
                         free(prefs->inverseSearchCmdLine);
-                        prefs->inverseSearchCmdLine = win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
+                        auto tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
+                        prefs->inverseSearchCmdLine = str::Dup(tmp.AsView());
                     }
                     EndDialog(hDlg, IDOK);
                     return TRUE;
@@ -933,10 +942,10 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
         WORD cmd = LOWORD(wp);
         if (IDOK == cmd) {
-            AutoFreeWstr name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
+            auto name = win::GetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
             if (!str::IsEmpty(name.Get())) {
-                data->favName = name.StealData();
+                data->favName = str::Dup(name.AsView());
             } else {
                 data->favName = nullptr;
             }

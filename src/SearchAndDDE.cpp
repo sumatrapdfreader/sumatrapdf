@@ -98,7 +98,7 @@ void OnMenuFind(WindowInfo* win) {
         return;
     }
 
-    AutoFreeWstr previousFind(win::GetText(win->hwndFindBox));
+    WCHAR* previousFind = win::GetTextTemp(win->hwndFindBox).Get();
     WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
@@ -210,22 +210,20 @@ static void UpdateFindStatusTask(WindowInfo* win, NotificationWnd* wnd, int curr
 }
 
 struct FindThreadData : public ProgressUpdateUI {
-    WindowInfo* win;
-    TextSearchDirection direction;
-    bool wasModified;
+    WindowInfo* win{nullptr};
+    TextSearchDirection direction{TextSearchDirection::Forward};
+    bool wasModified{false};
     AutoFreeWstr text;
     // owned by win->notifications, as FindThreadData
     // can be deleted before the notification times out
-    NotificationWnd* wnd;
-    HANDLE thread;
+    NotificationWnd* wnd{nullptr};
+    HANDLE thread{nullptr};
 
-    FindThreadData(WindowInfo* win, TextSearchDirection direction, HWND findBox)
-        : win(win),
-          direction(direction),
-          text(win::GetText(findBox)),
-          wasModified(Edit_GetModify(findBox)),
-          wnd(nullptr),
-          thread(nullptr) {
+    FindThreadData(WindowInfo* win, TextSearchDirection direction, HWND findBox) {
+        this->win = win;
+        this->direction = direction;
+        this->text = str::Dup(win::GetTextTemp(findBox).AsView());
+        this->wasModified = Edit_GetModify(findBox);
     }
     ~FindThreadData() {
         CloseHandle(thread);

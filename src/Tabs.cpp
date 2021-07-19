@@ -384,19 +384,19 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
         return;
     }
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
-    if (T_CLOSING == code) {
+    if ((UINT)T_CLOSING == code) {
         // if we have permission to close the tab
         tab->Invalidate(tab->nextTab);
         tab->xClicked = tab->nextTab;
         return;
     }
-    if (TCN_SELCHANGING == code) {
+    if ((UINT)TCN_SELCHANGING == code) {
         // if we have permission to select the tab
         tab->Invalidate(tab->selectedTabIdx);
         tab->Invalidate(tab->nextTab);
         tab->selectedTabIdx = tab->nextTab;
         // send notification that the tab is selected
-        nmhdr.code = TCN_SELCHANGE;
+        nmhdr.code = (UINT)TCN_SELCHANGE;
         TabsOnNotify(win, (LPARAM)&nmhdr);
     }
 }
@@ -571,12 +571,12 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send request to close the tab
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, T_CLOSING, next, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSING, next, -1); });
             } else if (tab->nextTab != -1) {
                 if (tab->nextTab != tab->selectedTabIdx) {
                     // send request to select tab
                     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-                    uitask::Post([=] { TabNotification(win, TCN_SELCHANGING, -1, -1); });
+                    uitask::Post([=] { TabNotification(win, (UINT)TCN_SELCHANGING, -1, -1); });
                 }
                 tab->isDragging = true;
                 SetCapture(hwnd);
@@ -588,7 +588,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send notification that the tab is closed
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, T_CLOSE, clicked, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSE, clicked, -1); });
                 tab->Invalidate(clicked);
                 tab->xClicked = -1;
             }
@@ -605,7 +605,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send request to close the tab
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, T_CLOSING, next, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSING, next, -1); });
             }
             return 0;
 
@@ -614,7 +614,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send notification that the tab is closed
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, T_CLOSE, clicked, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSE, clicked, -1); });
                 tab->Invalidate(clicked);
                 tab->xClicked = -1;
             }
@@ -673,9 +673,9 @@ void CreateTabbar(WindowInfo* win) {
 // verifies that TabInfo state is consistent with WindowInfo state
 static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
     CrashIf(!tdata || !win || tdata->ctrl != win->ctrl);
-    AutoFreeWstr winTitle(win::GetText(win->hwndFrame));
-    if (!!str::Eq(winTitle.Get(), tdata->frameTitle)) {
-        logf(L"VerifyTabInfo: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle);
+    auto winTitle = win::GetTextTemp(win->hwndFrame);
+    if (!!str::Eq(winTitle.Get(), tdata->frameTitle.Get())) {
+        logf(L"VerifyTabInfo: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle.Get());
         SubmitBugReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
     }
     bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
@@ -907,7 +907,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
     if (count < 2 || tabIndex < 0 || tabIndex >= count) {
         return;
     }
-    NMHDR ntd = {nullptr, 0, TCN_SELCHANGING};
+    NMHDR ntd = {nullptr, 0, (UINT)TCN_SELCHANGING};
     if (TabsOnNotify(win, (LPARAM)&ntd)) {
         return;
     }
@@ -916,7 +916,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
     dbglogf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
     int prevIdx = win->tabsCtrl->SetSelectedTabByIndex(tabIndex);
     if (prevIdx != -1) {
-        ntd.code = TCN_SELCHANGE;
+        ntd.code = (UINT)TCN_SELCHANGE;
         TabsOnNotify(win, (LPARAM)&ntd);
     }
 }

@@ -11,6 +11,7 @@ A daily log of changes and commentary. An experiment of sorts.
   seen debug crashes from win::menu::SetText() for non-existent menu items
 - better way of removing bad menu separators
 - add gReducedLogging mode to be used during crash handling; switch CrashHandler.cpp from LogDbg.h to Log.h
+- convert win::GetText() => win::GetTextTemp()
 
 2021-07-17 Sat
 

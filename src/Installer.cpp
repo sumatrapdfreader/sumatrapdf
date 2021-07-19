@@ -467,11 +467,10 @@ static void OnButtonInstall() {
         return;
     }
 
-    WCHAR* userInstallDir = win::GetText(gTextboxInstDir->hwnd);
+    WCHAR* userInstallDir = win::GetTextTemp(gTextboxInstDir->hwnd).Get();
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
-    free(userInstallDir);
 
 #if ENABLE_REGISTER_DEFAULT
     // note: this checkbox isn't created if we're already registered as default
@@ -644,12 +643,13 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
 }
 
 static void OnButtonBrowse() {
-    AutoFreeWstr installDir = win::GetText(gTextboxInstDir->hwnd);
+    WCHAR* installDir = win::GetTextTemp(gTextboxInstDir->hwnd).Get();
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {
         WCHAR* tmp = path::GetDir(installDir);
-        installDir = tmp;
+        installDir = str::DupTemp(tmp);
+        str::Free(tmp);
     }
 
     WCHAR path[MAX_PATH] = {};

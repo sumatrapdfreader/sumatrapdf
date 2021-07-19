@@ -1509,15 +1509,15 @@ void ToForeground(HWND hwnd) {
 
 /* return text of window or edit control, nullptr in case of an error.
 caller needs to free() the result */
-WCHAR* GetText(HWND hwnd) {
-    size_t cchTxt = GetTextLen(hwnd);
-    WCHAR* txt = AllocArray<WCHAR>(cchTxt + 1);
+TempWstr GetTextTemp(HWND hwnd) {
+    size_t cch = GetTextLen(hwnd);
+    size_t nBytes = (cch + 1) * sizeof(WCHAR);
+    WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
     if (nullptr == txt) {
-        return nullptr;
+        return TempWstr();
     }
-    SendMessageW(hwnd, WM_GETTEXT, cchTxt + 1, (LPARAM)txt);
-    txt[cchTxt] = 0;
-    return txt;
+    SendMessageW(hwnd, WM_GETTEXT, cch, (LPARAM)txt);
+    return TempWstr(txt, cch);
 }
 
 str::Str GetTextUtf8(HWND hwnd) {

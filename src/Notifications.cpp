@@ -223,7 +223,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     if (wnd->hasClose) {
         rectMsg.dx -= CLOSE_LEFT_MARGIN;
     }
-    AutoFreeWstr text(win::GetText(hwnd));
+    WCHAR* text = win::GetTextTemp(hwnd).Get();
     rTmp = ToRECT(rectMsg);
     DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 

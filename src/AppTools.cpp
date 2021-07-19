@@ -475,7 +475,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, __unused LPARAM lp) {
             return true;
 
         case UWM_DELAYED_CTRL_BACK: {
-            AutoFreeWstr text(win::GetText(hwnd));
+            WCHAR* text = win::GetTextTemp(hwnd).Get();
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {

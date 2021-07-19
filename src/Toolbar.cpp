@@ -108,9 +108,8 @@ static bool NeedsRotateUI(WindowInfo* win) {
 }
 
 static bool NeedsInfo(WindowInfo* win) {
-    WCHAR* s = win::GetText(win->hwndTbInfoText);
+    WCHAR* s = win::GetTextTemp(win->hwndTbInfoText);
     bool show = str::Len(s) > 0;
-    str::Free(s);
     return show;
 }
 
@@ -528,7 +527,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     } else if (WM_CHAR == msg) {
         switch (wp) {
             case VK_RETURN: {
-                AutoFreeWstr buf(win::GetText(win->hwndPageBox));
+                auto buf = win::GetTextTemp(win->hwndPageBox);
                 int newPageNo = win->ctrl->GetPageByLabel(buf);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
@@ -583,7 +582,8 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     Size size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
-        buf = win::GetText(win->hwndPageTotal);
+        auto tmp = win::GetTextTemp(win->hwndPageTotal);
+        buf = str::Dup(tmp.AsView());
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= DpiScale(win->hwndFrame, kTextPaddingRight);
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
@@ -603,7 +603,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     }
     size2.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
     size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
-    free(buf);
+    str::Free(buf);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX;
