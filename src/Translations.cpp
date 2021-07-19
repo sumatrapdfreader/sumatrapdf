@@ -30,12 +30,16 @@ struct Translation {
     char* trans{nullptr};
 };
 
+struct TranslationCache {
+    Translation* translations{nullptr};
+    int nTranslations{0};
+    int nUntranslated{0};
+};
+
 // used locally, gCurrLangCode points into gLangCodes
 static const char* gCurrLangCode = nullptr;
 static int gCurrLangIdx{0};
-static int gTranslationsCount{0};
-static Translation* gTranslations{nullptr};
-static int gUntranslatedCount{0};
+static TranslationCache* gTranslationCache{nullptr};
 
 static char* UnescapeString(char* s) {
     str::Str str;
@@ -78,17 +82,16 @@ static int FindChar(char* s, int sLen, char c) {
 }
 
 static void FreeTranslations() {
-    if (!gTranslations) {
+    if (!gTranslationCache) {
         return;
     }
-    for (int i = 0; i < gTranslationsCount; i++) {
-        str::FreePtr(&gTranslations[i].str);
-        str::FreePtr(&gTranslations[i].trans);
+    auto c = gTranslationCache;
+    for (int i = 0; i < c->nTranslations; i++) {
+        str::FreePtr(&c->translations[i].str);
+        str::FreePtr(&c->translations[i].trans);
     }
-    free(gTranslations);
-    gTranslations = nullptr;
-    gTranslationsCount = 0;
-    gUntranslatedCount = 0;
+    free(gTranslationCache);
+    gTranslationCache = nullptr;
 }
 
 static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
@@ -120,9 +123,11 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
     logf("%d lines, nStrings: %d\n", nLines, nStrings);
 
     FreeTranslations();
-    gTranslationsCount = nStrings;
-    gTranslations = AllocArray<Translation>(gTranslationsCount);
-    gUntranslatedCount = 0;
+    gTranslationCache = AllocStruct<TranslationCache>();
+    auto c = gTranslationCache;
+    c->nTranslations = nStrings;
+    c->translations = AllocArray<Translation>(c->nTranslations);
+    c->nUntranslated = 0;
 
     char* orig;
     char* trans;
@@ -145,28 +150,29 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
             i++;
         }
         if (!trans) {
-            gUntranslatedCount++;
+            c->nUntranslated++;
         }
-        Translation& translation = gTranslations[nTrans++];
+        Translation& translation = c->translations[nTrans++];
         translation.str = UnescapeString(orig);
         translation.trans = nullptr;
         if (trans) {
             translation.trans = UnescapeString(trans);
         }
     }
-    CrashIf(nTrans != gTranslationsCount);
-    if (gUntranslatedCount > 0) {
-        logf("Untranslated strings: %d for lang '%s'\n", gUntranslatedCount, langCode);
+    CrashIf(nTrans != c->nTranslations);
+    if (c->nUntranslated > 0) {
+        logf("Untranslated strings: %d for lang '%s'\n", c->nUntranslated, langCode);
     }
 }
 
 const char* GetTranslationATemp(const char* s) {
     CrashIf(!s);
-    if (!gTranslations) {
+    if (!gTranslationCache) {
         return s;
     }
-    for (int i = 0; i < gTranslationsCount; i++) {
-        Translation& trans = gTranslations[i];
+    auto c = gTranslationCache;
+    for (int i = 0; i < c->nTranslations; i++) {
+        Translation& trans = c->translations[i];
         if (str::Eq(s, trans.str)) {
             if (!trans.trans) {
                 return s;

@@ -7,6 +7,8 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2038
   a case where should have double-checked after changing what looked like incorrect code
   (but was correct)
+- maybe fix a crash seen in crash reports
+- pack translation info into TranslationCache
 
 2021-07-18 Sun
 
