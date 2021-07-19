@@ -220,7 +220,10 @@ static void colorTest() {
 
 void EngineUtilitiesTest() {
     float x, y, zoom = 0;
-    int page = resolve_link("#1", &x, &y, &zoom);
+    int page = resolve_link("https://www.google.com", &x, &y, &zoom);
+    utassert(page == -1);
+
+    page = resolve_link("#1", &x, &y, &zoom);
     utassert(page == 0);
 
     page = resolve_link("#1,2,3", &x, &y, &zoom);
@@ -229,11 +232,20 @@ void EngineUtilitiesTest() {
     utassert_fequal(y, 3);
     utassert_fequal(zoom, 0);
 
+    page = resolve_link("#1,2.5,3.01", &x, &y, &zoom);
+    utassert(page == 0);
+    utassert_fequal(x, 2.5);
+    utassert_fequal(y, 3.01);
+    utassert_fequal(zoom, 0);
+
     page = resolve_link("#1,2,3,4.56", &x, &y, &zoom);
     utassert(page == 0);
     utassert_fequal(x, 2);
     utassert_fequal(y, 3);
     utassert_fequal(zoom, 4.56);
+
+    page = resolve_link("#1,2,3,4.56", NULL, NULL, NULL);
+    utassert(page == 0);
 }
 
 void SumatraPDF_UnitTests() {
