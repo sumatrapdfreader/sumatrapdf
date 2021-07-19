@@ -791,9 +791,10 @@ PageDestination* newFzDestination(fz_outline* outline) {
     return newPageDestination(nullptr, outline);
 }
 
-static PageElement* newFzLink(fz_link* link, fz_outline* outline) {
+static PageElement* newFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
     auto res = new PageElement();
     res->kind_ = kindPageElementDest;
+    res->pageNo = srcPageNo;
 
     if (link) {
         res->rect = ToRectFl(link->rect);
@@ -830,7 +831,7 @@ IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     fz_point p = {(float)pt.x, (float)pt.y};
     while (link) {
         if (fz_is_pt_in_rect(link->rect, p)) {
-            return newFzLink(link, nullptr);
+            return newFzLink(pageNo, link, nullptr);
         }
         link = link->next;
     }
@@ -879,7 +880,7 @@ void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
 
     fz_link* link = pageInfo->links;
     while (link) {
-        auto el = newFzLink(link, nullptr);
+        auto el = newFzLink(pageNo, link, nullptr);
         els->Append(el);
         link = link->next;
     }

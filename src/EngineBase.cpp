@@ -597,10 +597,10 @@ int resolve_link(const char* uri, float* xp, float* yp, float *zoomp) {
             x = strchr(uri, ',');
             y = x ? strchr(x + 1, ',') : NULL;
             if (x && y) {
-                if (xp) *xp = atoi(x + 1);
-                if (yp) *yp = atoi(y + 1);
+                if (xp) *xp = (float)atof(x + 1);
+                if (yp) *yp = (float)atof(y + 1);
                 zoom = strchr(y + 1, ',');
-                if (zoom && zoomp) *zoomp = atof(zoom + 1);
+                if (zoom && zoomp) *zoomp = (float)atof(zoom + 1);
             }
         }
         return page;

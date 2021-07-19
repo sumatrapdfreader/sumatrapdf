@@ -218,31 +218,28 @@ static void colorTest() {
     utassert(c == c2);
 }
 
-void EngineFzUtilTest() {
+void EngineUtilitiesTest() {
     float x, y, zoom = 0;
-    int page;
-    {
-        page = resolve_link("#1", &x, &y, &zoom);
-        utassert(page == 0);
+    int page = resolve_link("#1", &x, &y, &zoom);
+    utassert(page == 0);
 
-        page = resolve_link("#1,2,3", &x, &y, &zoom);
-        utassert(page == 0);
-        utassert_fequal(x, 2);
-        utassert_fequal(y, 3);
-        utassert_fequal(zoom, 0);
+    page = resolve_link("#1,2,3", &x, &y, &zoom);
+    utassert(page == 0);
+    utassert_fequal(x, 2);
+    utassert_fequal(y, 3);
+    utassert_fequal(zoom, 0);
 
-        page = resolve_link("#1,2,3,4.56", &x, &y, &zoom);
-        utassert(page == 0);
-        utassert_fequal(x, 2);
-        utassert_fequal(y, 3);
-        utassert_fequal(zoom, 4.56);
-    }
+    page = resolve_link("#1,2,3,4.56", &x, &y, &zoom);
+    utassert(page == 0);
+    utassert_fequal(x, 2);
+    utassert_fequal(y, 3);
+    utassert_fequal(zoom, 4.56);
 }
 
 void SumatraPDF_UnitTests() {
     colorTest();
     BenchRangeTest();
-    EngineFzUtilTest();
+    EngineUtilitiesTest();
     ParseCommandLineTest();
     versioncheck_test();
     hexstrTest();
