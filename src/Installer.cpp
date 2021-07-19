@@ -1010,7 +1010,7 @@ static void StartInstallerLogging() {
     free(dir);
 }
 
-static void RelaunchElevatedIfNotDebug() {
+void RelaunchElevatedIfNotDebug() {
     if (gIsDebugBuild) {
         // for easier debugging, we don't require
         // elevation in debug build
@@ -1037,7 +1037,7 @@ int RunInstaller() {
     }
     logf(L"Starting installer from '%s'\n", gCli->installDir);
 
-    //RelaunchElevatedIfNotDebug();
+    RelaunchElevatedIfNotDebug();
 
     if (!gCli->silent && !IsProcessAndOsArchSame()) {
         logf("Mismatch of the OS and executable arch\n");

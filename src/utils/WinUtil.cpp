@@ -663,7 +663,7 @@ DWORD GetFileVersion(const WCHAR* path) {
 }
 
 bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool hidden) {
-    if (!path) {
+    if (str::IsEmpty(path)) {
         return false;
     }
 
@@ -674,7 +674,14 @@ bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool 
     sei.lpFile = path;
     sei.lpParameters = params;
     sei.nShow = hidden ? SW_HIDE : SW_SHOWNORMAL;
-    return !!ShellExecuteExW(&sei);
+    BOOL ok = ShellExecuteExW(&sei);
+    if (!ok) {
+        DWORD err = GetLastError();
+        logf(L"LaunchFile: ShellExecuteExW path: '%s' params: '%s' verb: '%s'\n", path, params, verb);
+        LogLastError(err);
+        return false;
+    }
+    return true;
 }
 
 bool LaunchBrowser(const WCHAR* url) {
