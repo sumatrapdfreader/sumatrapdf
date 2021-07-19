@@ -57,7 +57,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFindMatch, "Find: Match Case")                                   \
     V(CmdFindNextSel, "Find: Next Selection")                             \
     V(CmdFindPrevSel, "Find: Previous Selection")                         \
-    V(CmdAnnotationSep, "sep")                                            \
     V(CmdSaveAnnotations, "Save Annotations")                             \
     V(CmdEditAnnotations, "Edit Annotations")                             \
     V(CmdSelectAnnotation, "Select Annotation in Editor")                 \
@@ -167,7 +166,6 @@ enum {
     // at some number higher than 0
     CmdFirst = 200,
     CmdSeparator = CmdFirst,
-    CmdSeparatorEmbed,
 
     COMMANDS(DEF_CMD)
 

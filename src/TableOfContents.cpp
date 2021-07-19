@@ -491,7 +491,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             win::menu::Remove(popup, CmdOpenEmbeddedPDF);
         }
     } else {
-        win::menu::Remove(popup, CmdSeparatorEmbed);
         win::menu::Remove(popup, CmdSaveEmbeddedFile);
         win::menu::Remove(popup, CmdOpenEmbeddedPDF);
     }

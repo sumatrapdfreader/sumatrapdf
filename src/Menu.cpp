@@ -82,6 +82,8 @@ struct MenuDef {
 };
 
 constexpr const char* kMenuSeparator = "-----";
+constexpr UINT kMenuSeparatorID = (UINT)-13;
+
 bool gAddCrashMeMenu = false;
 
 #if defined(DEBUG) || defined(PRE_RELEASE_VER)
@@ -106,7 +108,7 @@ MenuDef menuDefContextToc[] = {
     },
     {
         kMenuSeparator,
-        CmdSeparatorEmbed,
+        0,
     },
     {
         _TRN("Open Embedded PDF"),
@@ -769,7 +771,7 @@ static MenuDef menuDefContext[] = {
     },
     {
         kMenuSeparator,
-        CmdAnnotationSep,
+        0,
     },
     {
         _TRN("Select Annotation in Editor"),
@@ -956,7 +958,6 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdFavoriteToggle,
-    CmdAnnotationSep,
     CmdSaveAnnotations,
     CmdSelectAnnotation,
     CmdEditAnnotations,
@@ -969,7 +970,6 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
 };
 
 static UINT_PTR removeIfAnnotsNotSupported[] = {
-    CmdAnnotationSep,
     CmdSaveAnnotations,
     CmdSelectAnnotation,
     CmdEditAnnotations,
@@ -1157,12 +1157,50 @@ static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     }
 }
 
+void RemoveBadMenuSeparators(HMENU menu) {
+    int nMenus;
+    // remove separator items at the beginning
+again1:
+    nMenus = GetMenuItemCount(menu);
+    if (nMenus = 0) {
+        return;
+    }
+    UINT id = GetMenuItemID(menu, 0);
+    if (id == kMenuSeparatorID) {
+        RemoveMenu(menu, 0, MF_BYPOSITION);
+        goto again1;
+    }
+    // remove separator items at the end
+again2:
+    nMenus = GetMenuItemCount(menu);
+    if (nMenus = 0) {
+        return;
+    }
+    id = GetMenuItemID(menu, nMenus - 1);
+    if (id == kMenuSeparatorID) {
+        RemoveMenu(menu, nMenus-1, MF_BYPOSITION);
+        goto again2;
+    }
+    // remove 2 or more consequitive separator items
+again3:
+    nMenus = GetMenuItemCount(menu);
+    for (int i = 1; i < nMenus; i++) {
+        id = GetMenuItemID(menu, i);
+        UINT idPrev = GetMenuItemID(menu, i - 1);
+        if ((id == idPrev) && (id == kMenuSeparatorID)) {
+            RemoveMenu(menu, i, MF_BYPOSITION);
+            goto again3;
+        }
+    }
+}
+
 static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     win::menu::Empty(menu);
     BuildMenuCtx buildCtx;
     FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
     BuildMenuFromMenuDef(menuDefFile, menu, &buildCtx);
     DynamicPartOfFileMenu(menu, &buildCtx);
+    RemoveBadMenuSeparators(menu);
 }
 
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
@@ -1170,8 +1208,6 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
 
     bool isDebugMenu = menuDefs == menuDefDebug;
     int i = 0;
-    int nMenus = 0;
-    bool wasSeparator = true; // avoid separators as first item
     while (true) {
         MenuDef md = menuDefs[i];
         if (md.title == nullptr) { // sentinel
@@ -1220,14 +1256,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
 
         // prevent two consecutive separators
         if (str::Eq(md.title, kMenuSeparator)) {
-            if (!wasSeparator) {
-                AppendMenuW(menu, MF_SEPARATOR, md.idOrSubmenu, nullptr);
-                nMenus++;
-                wasSeparator = true;
-            }
+            AppendMenuW(menu, MF_SEPARATOR, kMenuSeparatorID, nullptr);
             continue;
         }
-        wasSeparator = false;
 
         bool noTranslate = isDebugMenu || cmdIdInList(menusNoTranslate);
         noTranslate |= (subMenuDef == menuDefDebug);
@@ -1251,12 +1282,8 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
             AppendMenuW(menu, flags, md.idOrSubmenu, title);
         }
-        nMenus++;
     }
-    if (wasSeparator && (nMenus > 0)) {
-        // remove trailing separator
-        RemoveMenu(menu, (UINT)(nMenus - 1), MF_BYPOSITION);
-    }
+    RemoveBadMenuSeparators(menu);
     return menu;
 }
 

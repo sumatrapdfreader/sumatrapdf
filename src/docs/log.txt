@@ -9,6 +9,7 @@ A daily log of changes and commentary. An experiment of sorts.
   and probably was causing tooltips to not show up properly
 - don't try to access favorites menus if they were removed due to lack of prefs or disk access
   seen debug crashes from win::menu::SetText() for non-existent menu items
+- better way of removing bad menu separators
 
 2021-07-17 Sat
 
