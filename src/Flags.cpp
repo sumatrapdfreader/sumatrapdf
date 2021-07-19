@@ -339,13 +339,10 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (isArg(L"x")) {
+            // silently extract files to directory given if /d
+            // or current directory if no /d given
             i.justExtractFiles = true;
-            // silently extract files to the current directory
-            // (if /d isn't used)
             i.silent = true;
-            if (!i.installDir) {
-                i.installDir = str::Dup(L".");
-            }
             continue;
         }
         if (isArg(L"tester")) {
@@ -560,5 +557,11 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             filePath = str::Dup(argName);
         }
         i.fileNames.Append(filePath);
+    }
+
+    if (i.justExtractFiles) {
+        if (!i.installDir) {
+            i.installDir = str::Dup(L".");
+        }
     }
 }
