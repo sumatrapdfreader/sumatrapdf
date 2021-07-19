@@ -70,6 +70,11 @@ TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
     return TempStr(s);
 }
 
+TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
+    WCHAR* s = Join(s1, s2, s3, GetTempAllocator());
+    return TempWstr(s);
+}
+
 } // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {

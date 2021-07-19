@@ -455,12 +455,6 @@ void ReplaceWithCopy(const char** s, const char* snew) {
     *s = str::Dup(snew);
 }
 
-/* Concatenate 2 strings. Any string can be nullptr.
-   Caller needs to free() memory. */
-char* Join(const char* s1, const char* s2, const char* s3) {
-    return Join(s1, s2, s3, nullptr);
-}
-
 char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator) {
     size_t s1Len = str::Len(s1);
     size_t s2Len = str::Len(s2);
@@ -478,6 +472,31 @@ char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator)
     *s = 0;
 
     return res;
+}
+
+/* Concatenate 2 strings. Any string can be nullptr.
+   Caller needs to free() memory. */
+char* Join(const char* s1, const char* s2, const char* s3) {
+    return Join(s1, s2, s3, nullptr);
+}
+
+/* Concatenate 2 strings. Any string can be nullptr.
+   Caller needs to free() memory. */
+WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3, Allocator* allocator) {
+    // don't use str::Format(L"%s%s%s", s1, s2, s3) since the strings
+    // might contain non-characters which str::Format fails to handle
+    size_t s1Len = str::Len(s1), s2Len = str::Len(s2), s3Len = str::Len(s3);
+    size_t len = s1Len + s2Len + s3Len + 1;
+    WCHAR* res = (WCHAR*)Allocator::Alloc(allocator, len * sizeof(WCHAR));
+    memcpy(res, s1, s1Len * sizeof(WCHAR));
+    memcpy(res + s1Len, s2, s2Len * sizeof(WCHAR));
+    memcpy(res + s1Len + s2Len, s3, s3Len * sizeof(WCHAR));
+    res[s1Len + s2Len + s3Len] = '\0';
+    return res;
+}
+
+WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
+    return Join(s1, s2, s3, nullptr);
 }
 
 char* ToLowerInPlace(char* s) {
@@ -2137,20 +2156,6 @@ const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
 void ReplaceWithCopy(WCHAR** s, const WCHAR* snew) {
     free(*s);
     *s = str::Dup(snew);
-}
-
-/* Concatenate 2 strings. Any string can be nullptr.
-   Caller needs to free() memory. */
-WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
-    // don't use str::Format(L"%s%s%s", s1, s2, s3) since the strings
-    // might contain non-characters which str::Format fails to handle
-    size_t s1Len = str::Len(s1), s2Len = str::Len(s2), s3Len = str::Len(s3);
-    WCHAR* res = AllocArray<WCHAR>(s1Len + s2Len + s3Len + 1);
-    memcpy(res, s1, s1Len * sizeof(WCHAR));
-    memcpy(res + s1Len, s2, s2Len * sizeof(WCHAR));
-    memcpy(res + s1Len + s2Len, s3, s3Len * sizeof(WCHAR));
-    res[s1Len + s2Len + s3Len] = '\0';
-    return res;
 }
 
 WCHAR* ToLowerInPlace(WCHAR* s) {

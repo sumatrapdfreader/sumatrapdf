@@ -44,7 +44,9 @@ void ReplaceWithCopy(char** s, const char* snew);
 void ReplaceWithCopy(const char** s, const char* snew);
 
 char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
+WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator);
+WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3, Allocator* allocator);
 
 bool Eq(const char* s1, const char* s2);
 bool Eq(std::string_view s1, const char* s2);
@@ -61,7 +63,6 @@ bool StartsWith(std::string_view s, const char* prefix);
 std::span<u8> ToSpan(const char* s);
 
 void ReplaceWithCopy(WCHAR** s, const WCHAR* snew);
-WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 bool Eq(const WCHAR*, const WCHAR*);
 bool EqI(const WCHAR*, const WCHAR*);
 bool EqIS(const WCHAR*, const WCHAR*);

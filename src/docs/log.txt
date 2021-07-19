@@ -2,6 +2,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 2021-07-19 Mon
 - new code for doing translations that parses translations.txt
+- make temp installer in auto-update process end with .exe
 
 2021-07-18 Sun
 

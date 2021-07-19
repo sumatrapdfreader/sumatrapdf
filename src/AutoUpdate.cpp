@@ -149,7 +149,10 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         logf("ShowAutoUpdateDialog: starting to download '%s'\n", dlURLA);
         WCHAR* dlURL = strconv::Utf8ToWstr(dlURLA); // must make a copy to be valid in a thread
         RunAsync([dlURL, isDll] {                   // NOLINT
-            AutoFreeWstr installerPath = str::Dup(path::GetTempFilePath(L"sumatra-installer"));
+            auto installerPath = path::GetTempFilePath(L"sumatra-installer");
+            // the installer must be named .exe or it won't be able to self-elevate
+            // with "runas"
+            installerPath = str::JoinTemp(installerPath, L".exe");
             bool ok = HttpGetToFile(dlURL, installerPath);
             logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok,
                  ToUtf8Temp(installerPath).Get());
