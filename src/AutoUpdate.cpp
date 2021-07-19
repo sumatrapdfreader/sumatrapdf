@@ -121,7 +121,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return 0;
     }
     // if silent we do auto-update. for now only in pre-release builds
-    if (gCli->testAutoUpdate && silent) {
+    if (gCli->testAutoUpdate && gIsPreReleaseBuild && silent) {
         // figure out which executable to download
         const char* dlURLA{nullptr};
         const char* dlKey{nullptr};
@@ -158,9 +158,10 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
                 str::WStr cmd(installerPath);
                 if (isDll) {
                     // this should be an installer
-                    cmd.Append(L" -install -silent");
+                    // TODO: add -silent when tested that it's working
+                    cmd.Append(L" -install");
                 } else {
-                    AutoFreeWstr selfPath = GetExePath();
+                    auto selfPath = GetExePathTemp();
                     cmd.Append(L" -copy-self-to \"");
                     cmd.Append(selfPath);
                     cmd.Append(L"\"");
@@ -274,11 +275,10 @@ void CopySelfTo(const WCHAR* path) {
         return;
     }
 
-    const WCHAR* src = GetExePath();
+    const WCHAR* src = GetExePathTemp().Get();
     bool ok = file::Copy(path, src, false);
     // TODO: maybe retry if copy fails under the theory that the file
     // might be temporarily locked
-    str::Free(src);
     if (!ok) {
         logf("CopySelfTo: failed to copy self to file\n");
     } else {

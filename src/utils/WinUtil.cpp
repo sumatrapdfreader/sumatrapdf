@@ -460,18 +460,17 @@ void HandleRedirectedConsoleOnShutdown() {
 
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
-WCHAR* GetExePath() {
+TempWstr GetExePathTemp() {
     WCHAR buf[MAX_PATH] = {0};
-    GetModuleFileName(nullptr, buf, dimof(buf));
-    // TODO: is normalization needed here at all?
-    return path::Normalize(buf);
+    GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
+    return str::DupTemp(buf);
 }
 
 /* Return directory where this executable is located.
 Caller needs to free()
 */
 WCHAR* GetExeDir() {
-    AutoFreeWstr path = GetExePath();
+    auto path = GetExePathTemp();
     WCHAR* dir = path::GetDir(path);
     return dir;
 }

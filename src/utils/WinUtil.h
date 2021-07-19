@@ -55,7 +55,7 @@ bool RedirectIOToConsole();
 bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
 
-WCHAR* GetExePath();
+TempWstr GetExePathTemp();
 WCHAR* GetExeDir();
 WCHAR* GetSystem32Dir();
 WCHAR* GetCurrentDir();

@@ -150,7 +150,7 @@ static bool CreateInstallationDirectory() {
 }
 
 bool CopySelfToDir(const WCHAR* destDir) {
-    auto exePath = GetExePath();
+    auto exePath = GetExePathTemp();
     auto exeName = GetExeNameTemp();
     auto* dstPath = path::Join(destDir, exeName);
     bool failIfExists = false;
@@ -1020,11 +1020,10 @@ static void RelaunchElevatedIfNotDebug() {
         log("Already running elevated\n");
         return;
     }
-    AutoFreeWstr exePath = GetExePath();
-    TempStr exePathA = ToUtf8Temp(exePath.AsView());
-    logf("Re-launching '%s' as elevated\n", exePathA.Get());
-    WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-    LaunchElevated(exePath, cmdline);
+    auto exePath = GetExePathTemp();
+    WCHAR* cmdLine = GetCommandLineW(); // not owning the memory
+    logf(L"Re-launching '%s' with args '%s' as elevated\n", exePath.Get(), cmdLine);
+    LaunchElevated(exePath, cmdLine);
     ::ExitProcess(0);
 }
 

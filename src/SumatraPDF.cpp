@@ -2845,13 +2845,13 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
         ZoomVirtual.SetCopy(L"fitcontent");
     }
 
-    AutoFreeWstr exePath = GetExePath();
     auto viewMode = ToWstrTemp(viewModeStr);
     AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
                                     viewMode.Get(), ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
     const WCHAR* srcFileName = path::GetBaseNameTemp(ctrl->FilePath());
     AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
+    auto exePath = GetExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
 
@@ -5093,7 +5093,7 @@ void GetProgramInfo(str::Str& s) {
     auto d = ToUtf8Temp(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.Get());
 
-    AutoFreeWstr exePathW = GetExePath();
+    auto exePathW = GetExePathTemp();
     auto exePath = ToUtf8Temp(exePathW.AsView());
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath.AsView());
     s.AppendFmt("Exe: %s %s\r\n", exePath.Get(), fileSizeExe.Get());

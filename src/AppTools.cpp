@@ -27,13 +27,11 @@ bool HasBeenInstalled() {
         return false;
     }
 
-    AutoFreeWstr exePath = GetExePath();
-
-    if (!exePath) {
+    auto exePath = GetExePathTemp();
+    if (exePath.empty()) {
         return false;
     }
 
-    WCHAR* toFree = nullptr;
     if (!str::EndsWithI(installedPath, L".exe")) {
         WCHAR* tmp = path::Join(installedPath, path::GetBaseNameTemp(exePath));
         installedPath.Set(tmp);
@@ -57,7 +55,7 @@ bool IsRunningInPortableMode() {
         return false;
     }
 
-    AutoFreeWstr exePath(GetExePath());
+    auto exePath = GetExePathTemp().Get();
     WCHAR* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES).Get();
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
@@ -183,8 +181,8 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 */
 
 void DoAssociateExeWithPdfExtension(HKEY hkey) {
-    AutoFreeWstr exePath(GetExePath());
-    if (!exePath) {
+    auto exePath = GetExePathTemp();
+    if (exePath.empty()) {
         return;
     }
 
@@ -300,7 +298,7 @@ bool IsExeAssociatedWithPdfExtension() {
 
     WStrVec argList;
     ParseCmdLine(tmp, argList);
-    AutoFreeWstr exePath(GetExePath());
+    auto exePath = GetExePathTemp().Get();
     if (!exePath || !argList.Contains(L"%1") || !str::Find(tmp, L"\"%1\"")) {
         return false;
     }
@@ -562,7 +560,7 @@ static const WCHAR* Md5OfAppExe() {
         return str::Dup(gAppMd5.Get());
     }
 
-    AutoFreeWstr appPath = GetExePath();
+    auto appPath = GetExePathTemp();
     if (appPath.empty()) {
         return {};
     }

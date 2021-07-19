@@ -483,10 +483,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     }
     if (!str::IsEmpty(cmdline.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
-        AutoFreeWstr appDir(GetExePath());
-        if (appDir) {
-            appDir.Set(path::GetDir(appDir));
-        }
+        AutoFreeWstr appDir = GetExeDir();
         AutoCloseHandle process(LaunchProcess(cmdline, appDir));
         if (!process) {
             win->ShowNotification(

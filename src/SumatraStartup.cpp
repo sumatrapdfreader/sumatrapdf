@@ -411,7 +411,7 @@ static void SetupCrashHandler() {
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
-    AutoFreeWstr exePath = GetExePath();
+    auto exePath = GetExePathTemp();
     str::ToLowerInPlace(exePath);
     u32 hash = MurmurHash2(exePath, str::Len(exePath) * sizeof(WCHAR));
     AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
@@ -578,7 +578,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
 // we're in installer mode if the name of the executable
 // has "install" string in it e.g. SumatraPDF-installer.exe
 static bool ExeHasNameOfInstaller() {
-    AutoFreeWstr exePath = GetExePath();
+    auto exePath = GetExePathTemp();
     const WCHAR* exeName = path::GetBaseNameTemp(exePath);
     if (str::FindI(exeName, L"uninstall")) {
         return false;
@@ -846,9 +846,8 @@ static void ForceStartupLeaks() {
     struct tm buf_not_used;
     gmtime_s(&buf_not_used, &secs);
     gmtime(&secs);
-    WCHAR* path = GetExePath();
+    WCHAR* path = GetExePathTemp();
     FILE* fp = _wfopen(path, L"rb");
-    str::Free(path);
     if (fp) {
         fclose(fp);
     }

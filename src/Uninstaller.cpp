@@ -265,7 +265,7 @@ static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     AutoFreeWstr exePath = GetInstalledExePath();
-    AutoFreeWstr ownPath = GetExePath();
+    auto ownPath = GetExePathTemp();
     if (!path::IsSame(exePath, ownPath)) {
         KillProcessesWithModule(exePath, true);
     }
@@ -376,7 +376,7 @@ static WCHAR* GetInstallationDir() {
         return dir;
     }
     // fall back to the uninstaller's path
-    AutoFreeWstr exePath = GetExePath();
+    auto exePath = GetExePathTemp();
     return path::GetDir(exePath);
 }
 #endif
@@ -536,7 +536,7 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
     }
 
     AutoFreeWstr installerTempPath = GetUninstallerPathInTemp();
-    AutoFreeWstr ownPath = GetExePath();
+    auto ownPath = GetExePathTemp();
     if (str::EqI(installerTempPath, ownPath)) {
         if (IsProcessRunningElevated()) {
             log("Already running elevated and from temp dir\n");
@@ -576,8 +576,8 @@ static WCHAR* GetSelfDeleteBatchPathInTemp() {
 // a hack to allow deleting our own executable
 // we create a bash script that deletes us
 static void InitSelfDelete() {
-    AutoFreeWstr exePath = GetExePath();
-    auto exePathA = ToUtf8Temp(exePath);
+    auto exePath = GetExePathTemp();
+    auto exePathA = ToUtf8Temp(exePath.AsView());
     str::Str script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,
@@ -610,7 +610,7 @@ int RunUninstaller() {
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
     WCHAR* cmdLine = GetCommandLineW();
-    WCHAR* exePath = GetExePath();
+    WCHAR* exePath = GetExePathTemp();
     logf(L"Starting uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
 
     int ret = 1;

@@ -14,6 +14,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - convert win::GetText() => win::GetTextTemp()
 - progress on new translation code
 - remove GetTextUtf8()
+- convert GetExePath() => GetExePathTemp()
 
 2021-07-17 Sat
 

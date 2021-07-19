@@ -651,10 +651,9 @@ static void BuildSymbolPath() {
 
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe
-    WCHAR* exePath = GetExePath();
+    WCHAR* exePath = GetExePathTemp().Get();
     path.Append(L";");
     path.Append(exePath);
-    free(exePath);
 #endif
 
     free(gSymbolPathW);
