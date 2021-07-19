@@ -23,14 +23,21 @@ namespace trans {
 // we set str/trans once by parsing translations.txt file
 // after the user changes the language
 struct Translation {
-    // english string from translations.txt file
-    // we lazily match it to origStr
-    char* str{nullptr};
+    // index points inside allStrings;
+    u16 strIdx{0};
     // translation of str/origStr in gCurrLangCode
-    char* trans{nullptr};
+    // index points inside allTranslations
+    u16 transIdx{0};
 };
 
 struct TranslationCache {
+    // english string from translations.txt file
+    // we lazily match it to origStr
+    str::Str allStrings;
+    str::Str allTranslations;
+    // TODO: maybe also cache str::WStr allTranslationsW
+    // we currently return a temp converted string but there's a chance their
+    // lifetime could survive temp allocator lifetime
     Translation* translations{nullptr};
     int nTranslations{0};
     int nUntranslated{0};
@@ -41,8 +48,7 @@ static const char* gCurrLangCode = nullptr;
 static int gCurrLangIdx{0};
 static TranslationCache* gTranslationCache{nullptr};
 
-static char* UnescapeString(char* s) {
-    str::Str str;
+static void UnescapeStringIntoStr(char* s, str::Str& str) {
     for (; *s; s++) {
         if (*s == '\\') {
             char c = s[1];
@@ -65,7 +71,7 @@ static char* UnescapeString(char* s) {
             str.AppendChar(*s);
         }
     }
-    return str.StealData();
+    str.AppendChar(0);
 }
 
 static int FindChar(char* s, int sLen, char c) {
@@ -85,12 +91,7 @@ static void FreeTranslations() {
     if (!gTranslationCache) {
         return;
     }
-    auto c = gTranslationCache;
-    for (int i = 0; i < c->nTranslations; i++) {
-        str::FreePtr(&c->translations[i].str);
-        str::FreePtr(&c->translations[i].trans);
-    }
-    free(gTranslationCache);
+    delete gTranslationCache;
     gTranslationCache = nullptr;
 }
 
@@ -123,7 +124,10 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
     logf("%d lines, nStrings: %d\n", nLines, nStrings);
 
     FreeTranslations();
-    gTranslationCache = AllocStruct<TranslationCache>();
+    gTranslationCache = new TranslationCache();
+    // make index of first string to be 1 so that 0 can be
+    // "missing" value in transIdx
+    gTranslationCache->allTranslations.AppendChar(' ');
     auto c = gTranslationCache;
     c->nTranslations = nStrings;
     c->translations = AllocArray<Translation>(c->nTranslations);
@@ -153,10 +157,16 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
             c->nUntranslated++;
         }
         Translation& translation = c->translations[nTrans++];
-        translation.str = UnescapeString(orig);
-        translation.trans = nullptr;
+        size_t idx = c->allStrings.size();
+        // when this fires, we'll have to bump strIdx form u16 to u32
+        CrashIf(idx > 64 * 1024);
+        translation.strIdx = (u16)idx;
+        UnescapeStringIntoStr(orig, c->allStrings);
         if (trans) {
-            translation.trans = UnescapeString(trans);
+            idx = c->allTranslations.size();
+            CrashIf(idx > 64 * 1024);
+            translation.transIdx = (u16)idx;
+            UnescapeStringIntoStr(trans, c->allTranslations);
         }
     }
     CrashIf(nTrans != c->nTranslations);
@@ -173,11 +183,15 @@ const char* GetTranslationATemp(const char* s) {
     auto c = gTranslationCache;
     for (int i = 0; i < c->nTranslations; i++) {
         Translation& trans = c->translations[i];
-        if (str::Eq(s, trans.str)) {
-            if (!trans.trans) {
+        size_t idx = trans.strIdx;
+        const char* s2 = c->allStrings.LendData() + idx;
+        if (str::Eq(s, s2)) {
+            if (trans.transIdx == 0) {
                 return s;
             }
-            return (const char*)trans.trans;
+            idx = trans.transIdx;
+            s2 = c->allTranslations.LendData() + idx;
+            return s2;
         }
     }
     logf("Didn't find translation for '%s'\n", s);
