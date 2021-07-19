@@ -1517,12 +1517,12 @@ void ToForeground(HWND hwnd) {
 caller needs to free() the result */
 TempWstr GetTextTemp(HWND hwnd) {
     size_t cch = GetTextLen(hwnd);
-    size_t nBytes = (cch + 1) * sizeof(WCHAR);
+    size_t nBytes = (cch + 2) * sizeof(WCHAR);
     WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
     if (nullptr == txt) {
         return TempWstr();
     }
-    SendMessageW(hwnd, WM_GETTEXT, cch, (LPARAM)txt);
+    SendMessageW(hwnd, WM_GETTEXT, cch+1, (LPARAM)txt);
     return TempWstr(txt, cch);
 }
 
