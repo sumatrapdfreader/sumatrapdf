@@ -1037,7 +1037,7 @@ int RunInstaller() {
     }
     logf(L"Starting installer from '%s'\n", gCli->installDir);
 
-    RelaunchElevatedIfNotDebug();
+    //RelaunchElevatedIfNotDebug();
 
     if (!gCli->silent && !IsProcessAndOsArchSame()) {
         logf("Mismatch of the OS and executable arch\n");
