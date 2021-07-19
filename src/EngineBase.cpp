@@ -595,7 +595,7 @@ int resolve_link(const char* uri, float* xp, float* yp, float *zoomp) {
     }
     int page = atoi(uri + 1) - 1;
     if (xp || yp) {
-        const char *x, *y, *zoom;
+        const char *x, *y, *zoom = NULL;
         x = strchr(uri, ',');
         y = x ? strchr(x + 1, ',') : NULL;
         if (x && y) {
@@ -604,6 +604,7 @@ int resolve_link(const char* uri, float* xp, float* yp, float *zoomp) {
             zoom = strchr(y + 1, ',');
             if (zoom && zoomp) *zoomp = (float)atof(zoom + 1);
         }
+        // logf("resolve_link OUT: page=%d x=%f y=%f zoom=%f\n", page, (xp && x) ? (*xp) : INFINITY, (yp && y) ? (*yp) : INFINITY, (zoomp && zoom) ? (*zoomp) : INFINITY);
     }
     return page;
 }
