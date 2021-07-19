@@ -1,11 +1,6 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-extern "C" {
-#include <mupdf/fitz.h>
-#include <mupdf/pdf.h>
-}
-
 #include "utils/BaseUtil.h"
 #include "AppUtil.h"
 #include "utils/FileUtil.h"
@@ -15,10 +10,8 @@ extern "C" {
 
 #include "wingui/TreeModel.h"
 
-#include "Annotation.h"
 #include "DisplayMode.h"
 #include "EngineBase.h"
-#include "EngineFzUtil.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"

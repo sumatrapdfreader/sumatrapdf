@@ -656,7 +656,7 @@ workspace "SumatraPDF"
     defines { "NO_LIBMUPDF" }
     includedirs { "src" }
     test_util_files()
-    links { "gdiplus", "comctl32", "shlwapi", "Version" }
+    links { "engines", "gdiplus", "comctl32", "shlwapi", "Version" }
 
   project "logview"
     kind "ConsoleApp"

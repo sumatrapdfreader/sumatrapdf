@@ -552,6 +552,11 @@
     <ClCompile Include="..\src\utils\tests\Vec_ut.cpp" />
     <ClCompile Include="..\src\utils\tests\WinUtil_ut.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="engines.vcxproj">
+      <Project>{CE5B946A-3A3B-1306-4353-9EDCAFB17967}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
