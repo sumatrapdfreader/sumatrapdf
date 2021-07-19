@@ -1217,6 +1217,12 @@ RectF EnginePdf::PageMediabox(int pageNo) {
 
 RectF EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    if (!pageInfo) {
+        // maybe should return a dummy size. not sure how this
+        // will play with layout. The page should fail to render
+        // since the doc is broken and page is missing
+        return RectF();
+    }
 
     ScopedCritSec scope(ctxAccess);
 
