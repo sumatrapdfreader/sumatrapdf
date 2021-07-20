@@ -9,6 +9,8 @@ A daily log of changes and commentary. An experiment of sorts.
   (but was correct)
 - maybe fix a crash seen in crash reports
 - pack translation info into TranslationCache
+- optimize translation cache
+- redo auto-update code to work for portable versions
 
 2021-07-18 Sun
 

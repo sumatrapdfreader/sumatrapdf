@@ -4483,12 +4483,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdNewWindow:
             OnMenuNewWindow();
             break;
+
         case CmdDuplicateInNewWindow:
             OnDuplicateInNewWindow(win);
             break;
+
         case CmdOpen:
             OnMenuOpen(win);
             break;
+
         case CmdOpenFolder:
             OnMenuOpenFolder(win);
             break;
@@ -4564,6 +4567,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdZoomActualSize:
             OnMenuZoom(win, wmId);
             break;
+
         case CmdZoomCustom:
             OnMenuCustomZoom(win);
             break;
@@ -4707,7 +4711,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdCheckUpdate:
-            UpdateCheckAsync(win, false);
+            CheckForUpdateAsync(win, UpdateCheck::UserInitiated);
             break;
 
         case CmdOptions:

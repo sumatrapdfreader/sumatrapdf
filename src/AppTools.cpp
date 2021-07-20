@@ -666,8 +666,8 @@ const WCHAR* ExractUnrarDll() {
 #endif
 
 constexpr double KB = 1024;
-constexpr double MB = 1024 * 1024;
-constexpr double GB = 1024 * 1024 * 1024;
+constexpr double MB = (double)1024 * (double)1024;
+constexpr double GB = (double)1024 * (double)1024 * (double)1024;
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"

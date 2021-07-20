@@ -9,7 +9,6 @@
 #define IDD_DIALOG_PDF_ASSOCIATE        131
 #define IDC_CURSORDRAG                  132
 #define IDD_DIALOG_CHANGE_LANGUAGE      134
-#define IDD_DIALOG_NEW_VERSION          135
 #define IDD_DIALOG_SETTINGS             136
 #define IDD_DIALOG_FIND                 137 
 #define IDD_DIALOG_CUSTOM_ZOOM          138

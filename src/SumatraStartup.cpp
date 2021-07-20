@@ -669,7 +669,8 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     AutoFreeWstr title = str::Join(GetAppNameTemp(), L" installer");
     TASKDIALOGCONFIG dialogConfig{};
 
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
+    DWORD flags =
+        TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
     if (trans::IsCurrLangRtl()) {
         flags |= TDF_RTL_LAYOUT;
     }
@@ -685,7 +686,8 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     dialogConfig.dwCommonButtons = TDCBF_CLOSE_BUTTON;
     dialogConfig.pszMainIcon = TD_ERROR_ICON;
 
-    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    CrashIf(hr == E_INVALIDARG);
     HandleRedirectedConsoleOnShutdown();
     ::ExitProcess(1);
 }
@@ -723,7 +725,8 @@ static void ShowInstallerHelp() {
     AutoFreeWstr title = str::Join(GetAppNameTemp(), L" installer usage");
     TASKDIALOGCONFIG dialogConfig{};
 
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
+    DWORD flags =
+        TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
     if (trans::IsCurrLangRtl()) {
         flags |= TDF_RTL_LAYOUT;
     }
@@ -734,12 +737,12 @@ static void ShowInstallerHelp() {
         LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";
     dialogConfig.nDefaultButton = IDOK;
     dialogConfig.dwFlags = flags;
-    dialogConfig.cxWidth = 320; // TODO: TDF_SIZE_TO_CONTENT doesn't seem to work
     dialogConfig.pfCallback = TaskdialogHandleLinkscallback;
     dialogConfig.dwCommonButtons = TDCBF_OK_BUTTON;
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
 
-    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    CrashIf(hr == E_INVALIDARG);
 }
 
 // in Installer.cpp
@@ -968,14 +971,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         ::ExitProcess(retCode);
     }
 
-    if (i.copySelfToPath) {
+    if (i.updateSelfTo) {
         RedirectIOToExistingConsole();
-        // sleeping for a bit to make sure that the program that launched us
-        // had time to exit so that we can overwrite it
-        Sleep(3 * 1000);
-        CopySelfTo(i.copySelfToPath);
+        UpdateSelfTo(i.updateSelfTo);
         HandleRedirectedConsoleOnShutdown();
-        ::ExitProcess(0);
+        goto Exit;
     }
 
     if (i.deleteFilePath) {
@@ -1225,10 +1225,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         fastExit = true;
     }
 
-    if (gGlobalPrefs->checkForUpdates) {
-        UpdateCheckAsync(win, true);
-    }
-
     // only hide newly missing files when showing the start page on startup
     if (showStartPage && gFileHistory.Get(0)) {
         gFileExistenceChecker = new FileExistenceChecker();
@@ -1250,6 +1246,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     //  c:\windows\system32 is a good directory to use
     ChangeCurrDirToSystem32();
 
+    CheckForUpdateAsync(win, UpdateCheck::Automatic);
+
     BringWindowToTop(win->hwndFrame);
 
     retCode = RunMessageLoop();
@@ -1259,7 +1257,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 Exit:
     prefs::UnregisterForFileChanges();
 
-    TryAutoUpdateSelf();
     HandleRedirectedConsoleOnShutdown();
 
     if (fastExit) {

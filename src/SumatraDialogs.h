@@ -8,8 +8,6 @@ WCHAR* Dialog_Find(HWND hwnd, const WCHAR* previousSearch, bool* matchCase);
 WCHAR* Dialog_GetPassword(HWND hwnd, const WCHAR* fileName, bool* rememberPassword);
 INT_PTR Dialog_PdfAssociate(HWND hwnd, bool* dontAskAgainOut);
 const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode);
-INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const char* currentVersion, const char* newVersion,
-                                   bool* skipThisVersion);
 bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
 bool Dialog_AddFavorite(HWND hwnd, const WCHAR* pageNo, AutoFreeWstr& favName);

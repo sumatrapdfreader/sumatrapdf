@@ -77,10 +77,12 @@ struct Flags {
     bool registerAsDefault{false};
     bool log{false};
 
-    WCHAR* copySelfToPath{nullptr};
+    WCHAR* updateSelfTo{nullptr};
     WCHAR* deleteFilePath{nullptr};
-    // TODO: temporary, for testing, force auto-update
-    bool testAutoUpdate{false};
+
+    // for some commands, will sleep for sleepMs milliseconds
+    // before proceeding
+    int sleepMs{0};
 
     Flags() = default;
     ~Flags();
