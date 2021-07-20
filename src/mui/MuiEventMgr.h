@@ -50,7 +50,7 @@ class EventMgr {
     EventMgr(HwndWrapper* wndRoot);
     ~EventMgr();
 
-    LRESULT OnMessage(UINT msg, WPARAM wp, LPARAM lp, bool& handledOut);
+    LRESULT OnMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled);
 
     ControlEvents* EventsForControl(Control* c);
     NamedEvents* EventsForName(const char* name);

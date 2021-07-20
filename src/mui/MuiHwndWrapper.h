@@ -26,8 +26,8 @@ class HwndWrapper : public Control {
     HwndWrapper(HWND hwnd = nullptr);
     ~HwndWrapper() override;
 
-    void SetMinSize(Size minSize) const;
-    void SetMaxSize(Size maxSize) const;
+    void SetMinSize(Size s) const;
+    void SetMaxSize(Size s) const;
 
     void RequestLayout();
     void MarkForRepaint() {

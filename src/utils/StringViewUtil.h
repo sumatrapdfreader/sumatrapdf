@@ -10,7 +10,7 @@ struct ParsedKV {
 
     ParsedKV() = default;
     ParsedKV(ParsedKV&&) noexcept;
-    ParsedKV& operator=(ParsedKV&& other) noexcept;
+    ParsedKV& operator=(ParsedKV&& that) noexcept;
     ParsedKV& operator=(ParsedKV& other) = delete;
     ~ParsedKV();
 };
@@ -33,7 +33,7 @@ void AppendQuoted(std::string_view sv, str::Str& out);
 bool AppendMaybeQuoted(std::string_view sv, str::Str& out);
 bool ParseMaybeQuoted(std::string_view& sv, str::Str& out, bool full);
 ParsedKV ParseKV(std::string_view& sv, bool full);
-ParsedKV ParseValueOfKey(std::string_view& sv, std::string_view key, bool full);
+ParsedKV ParseValueOfKey(std::string_view& str, std::string_view key, bool full);
 ParsedKV TryParseValueOfKey(std::string_view& str, std::string_view key, bool full);
 
 } // namespace sv

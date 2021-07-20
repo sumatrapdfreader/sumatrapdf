@@ -8,7 +8,7 @@ struct AttrInfo {
     size_t valLen;
 
     bool NameIs(const char* s) const;
-    bool NameIsNS(const char* s, const char* ns) const;
+    bool NameIsNS(const char* nameToCheck, const char* ns) const;
     bool ValIs(const char* s) const;
 };
 

@@ -107,7 +107,7 @@ void Initialize();
 void Destroy();
 void SetDebugPaint(bool debug);
 bool IsDebugPaint();
-size_t CollectWindowsAt(Control* wndRoot, int x, int y, u16 wantedInputMask, Vec<CtrlAndOffset>* ctrls);
+size_t CollectWindowsAt(Control* wndRoot, int x, int y, u16 wantedInputMask, Vec<CtrlAndOffset>* controls);
 void CollectWindowsBreathFirst(Control* c, int offX, int offY, WndFilter* wndFilter, Vec<CtrlAndOffset>* ctrls);
 void RequestRepaint(Control* c, const Rect* r1 = nullptr, const Rect* r2 = nullptr);
 void RequestLayout(Control* c);

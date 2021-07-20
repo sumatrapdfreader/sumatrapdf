@@ -199,7 +199,7 @@ class Style {
         gen = 1; // so that we can use 0 for nullptr
     }
 
-    void SetName(const char* n);
+    void SetName(const char* styleName);
 
     Vec<Prop*> props;
 

@@ -9,7 +9,7 @@ class ByteOrderDecoder {
     ByteOrderDecoder(const char* d, size_t len, ByteOrder order);
     ByteOrderDecoder(const u8* d, size_t len, ByteOrder order);
 
-    void Bytes(char* dest, size_t len);
+    void Bytes(char* dst, size_t len);
 
     u8 UInt8();
     char Char() {

@@ -16,5 +16,5 @@ void TabsSelect(WindowInfo* win, int tabIndex);
 void TabsOnCtrlTab(WindowInfo* win, bool reverse);
 // also shows/hides the tabbar when necessary
 void UpdateTabWidth(WindowInfo* win);
-void SetTabsInTitlebar(WindowInfo* win, bool set);
+void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar);
 void UpdateCurrentTabBgColor(WindowInfo* win);

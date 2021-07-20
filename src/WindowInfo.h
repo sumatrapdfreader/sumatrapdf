@@ -243,9 +243,9 @@ struct WindowInfo {
 
     void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false);
     void HideToolTip() const;
-    NotificationWnd* ShowNotification(const WCHAR* msg, NotificationOptions options = NotificationOptions::WithTimeout,
+    NotificationWnd* ShowNotification(const WCHAR* msg, NotificationOptions opts = NotificationOptions::WithTimeout,
                                       Kind groupId = NG_RESPONSE_TO_ACTION);
-    NotificationWnd* ShowNotification(std::string_view, NotificationOptions options = NotificationOptions::WithTimeout,
+    NotificationWnd* ShowNotification(std::string_view, NotificationOptions opts = NotificationOptions::WithTimeout,
                                       Kind groupId = NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();

@@ -57,8 +57,8 @@ bool WriteFile(const WCHAR* path, std::span<u8>);
 bool Delete(const WCHAR* path);
 FILETIME GetModificationTime(const WCHAR* path);
 bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
-bool StartsWithN(const WCHAR* path, const char* magicNumber, size_t len);
-bool StartsWith(const WCHAR* path, const char* magicNumber);
+bool StartsWithN(const WCHAR* path, const char* s, size_t len);
+bool StartsWith(const WCHAR* path, const char* s);
 
 int GetZoneIdentifier(const char* path);
 bool SetZoneIdentifier(const char* path, int zoneId = URLZONE_INTERNET);

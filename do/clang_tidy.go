@@ -185,6 +185,7 @@ func runClangTidy(fix bool) {
 			"EngineEbook.cpp",
 			"HtmlFormatter.cpp",
 			"StressTesting.cpp",
+			"Tester.cpp",
 		}
 		s = strings.ToLower(s)
 

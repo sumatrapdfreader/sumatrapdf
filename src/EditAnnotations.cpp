@@ -316,7 +316,6 @@ static void WndCloseHandler(EditAnnotationsWindow* ew, WindowCloseEvent* ev) {
     delete ew;
 }
 
-
 extern bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab);
 static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, TabInfo* tab);
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo);

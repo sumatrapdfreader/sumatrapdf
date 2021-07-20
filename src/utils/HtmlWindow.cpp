@@ -1213,7 +1213,7 @@ class HtmlMoniker : public IMoniker {
     HRESULT SetHtml(std::span<u8>);
     HRESULT SetBaseUrl(const WCHAR* baseUrl);
 
-  public:
+  
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override;
     ULONG STDMETHODCALLTYPE AddRef() override;

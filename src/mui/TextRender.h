@@ -172,5 +172,5 @@ class TextRenderHdc : public ITextRender {
 
 ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, int dy);
 
-size_t StringLenForWidth(ITextRender* textRender, const WCHAR* s, size_t len, float dx);
-float GetSpaceDx(ITextRender* textRender);
+size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, float dx);
+float GetSpaceDx(ITextRender* textMeasure);

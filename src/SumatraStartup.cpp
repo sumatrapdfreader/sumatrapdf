@@ -748,7 +748,7 @@ static void ShowInstallerHelp() {
 
 // in Installer.cpp
 extern int RunInstaller();
-extern void ShowInstallerHelp();
+
 // in Uninstaller.cpp
 extern int RunUninstaller();
 

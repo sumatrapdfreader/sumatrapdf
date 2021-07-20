@@ -22,6 +22,6 @@ std::string_view UnknownToUtf8V(const std::string_view&);
 
 std::string_view WstrToAnsiV(const WCHAR*);
 
-WCHAR* AnsiToWstr(const char* src, size_t cbSrc = (size_t)-1);
+WCHAR* AnsiToWstr(const char* src, size_t cbLen = (size_t)-1);
 
 } // namespace strconv

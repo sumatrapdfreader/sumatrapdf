@@ -29,13 +29,13 @@ void FreePtr(char** s);
 void FreePtr(const WCHAR** s);
 void FreePtr(WCHAR** s);
 
-char* Dup(Allocator*, const char* str, size_t strLen = (size_t)-1);
+char* Dup(Allocator*, const char* str, size_t cch = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
 char* Dup(Allocator*, std::string_view);
 char* Dup(std::string_view);
 char* Dup(std::span<u8> d);
 
-WCHAR* Dup(Allocator*, const WCHAR* str, size_t strLen = (size_t)-1);
+WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
 WCHAR* Dup(std::wstring_view);
 
@@ -79,7 +79,7 @@ bool EqNIx(const char* s, size_t len, const char* s2);
 char* ToLowerInPlace(char*);
 char* ToLower(const char*);
 
-bool StartsWithI(const WCHAR* str, const WCHAR* txt);
+bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* ToLowerInPlace(WCHAR* s);
@@ -144,8 +144,8 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s);
 char* MemToHex(const u8* buf, size_t len);
 bool HexToMem(const char* s, u8* buf, size_t bufLen);
 
-const char* Parse(const char* str, const char* format, ...);
-const char* Parse(const char* str, size_t len, const char* format, ...);
+const char* Parse(const char* str, const char* fmt, ...);
+const char* Parse(const char* str, size_t len, const char* fmt, ...);
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 
 int CmpNatural(const char*, const char*);
@@ -200,7 +200,7 @@ struct Str {
     static constexpr size_t kBufChars = dimof(buf);
 
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
-    Str(const Str& orig);
+    Str(const Str& that);
     Str(std::string_view s);
     Str& operator=(const Str& that);
     ~Str();
