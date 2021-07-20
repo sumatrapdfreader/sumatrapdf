@@ -857,7 +857,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         CrashIf(!ok);
         ew->lbModel = new ListBoxModelStrings();
         w->SetModel(ew->lbModel);
-        w->onSelectionChanged = std::bind(ListBoxSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return ListBoxSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->listBox = w;
         vbox->AddChild(w);
     }
@@ -902,7 +904,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->maxDx = 150;
-        w->onTextChanged = std::bind(ContentsChanged, ew, _1);
+        w->onTextChanged = [ew](auto&& PH1) { return ContentsChanged(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->editContents = w;
         vbox->AddChild(w);
     }
@@ -920,7 +922,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = std::bind(TextAlignmentSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return TextAlignmentSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->dropDownTextAlignment = w;
         vbox->AddChild(w);
     }
@@ -938,7 +942,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = std::bind(TextFontSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return TextFontSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->dropDownTextFont = w;
         vbox->AddChild(w);
     }
@@ -957,7 +963,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->rangeMax = 36;
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onPosChanging = std::bind(TextFontSizeChanging, ew, _1);
+        w->onPosChanging = [ew](auto&& PH1) { return TextFontSizeChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarTextSize = w;
         vbox->AddChild(w);
     }
@@ -974,7 +980,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = std::bind(TextColorSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return TextColorSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->dropDownTextColor = w;
         vbox->AddChild(w);
     }
@@ -991,7 +999,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return LineStartEndSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->dropDownLineStart = w;
         vbox->AddChild(w);
     }
@@ -1008,7 +1018,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return LineStartEndSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->dropDownLineEnd = w;
         vbox->AddChild(w);
     }
@@ -1025,7 +1037,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onSelectionChanged = std::bind(IconSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) { return IconSelectionChanged(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->dropDownIcon = w;
         vbox->AddChild(w);
     }
@@ -1043,7 +1055,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->rangeMax = borderWidthMax;
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onPosChanging = std::bind(BorderWidthChanging, ew, _1);
+        w->onPosChanging = [ew](auto&& PH1) { return BorderWidthChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarBorder = w;
         vbox->AddChild(w);
     }
@@ -1061,7 +1073,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = std::bind(ColorSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return ColorSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->dropDownColor = w;
         vbox->AddChild(w);
     }
@@ -1079,7 +1093,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = std::bind(InteriorColorSelectionChanged, ew, _1);
+        w->onSelectionChanged = [ew](auto&& PH1) {
+            return InteriorColorSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
+        };
         ew->dropDownInteriorColor = w;
         vbox->AddChild(w);
     }
@@ -1097,7 +1113,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->rangeMax = 255;
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onPosChanging = std::bind(OpacityChanging, ew, _1);
+        w->onPosChanging = [ew](auto&& PH1) { return OpacityChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarOpacity = w;
         vbox->AddChild(w);
     }
@@ -1108,7 +1124,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetText("Save...");
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onClicked = std::bind(&ButtonSaveAttachment, ew);
+        w->onClicked = [ew] { return ButtonSaveAttachment(ew); };
         ew->buttonSaveAttachment = w;
         vbox->AddChild(w);
     }
@@ -1119,7 +1135,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetText("Embed...");
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onClicked = std::bind(&ButtonEmbedAttachment, ew);
+        w->onClicked = [ew] { return ButtonEmbedAttachment(ew); };
         ew->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
@@ -1132,7 +1148,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetTextColor(MkColor(0xff, 0, 0));
         bool ok = w->Create();
         CrashIf(!ok);
-        w->onClicked = std::bind(&ButtonDeleteHandler, ew);
+        w->onClicked = [ew] { return ButtonDeleteHandler(ew); };
         ew->buttonDelete = w;
         vbox->AddChild(w);
     }
@@ -1150,7 +1166,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClicked = std::bind(&ButtonSaveToCurrentPDFHandler, ew);
+        w->onClicked = [ew] { return ButtonSaveToCurrentPDFHandler(ew); };
         ew->buttonSaveToCurrentFile = w;
         vbox->AddChild(w);
     }
@@ -1162,7 +1178,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClicked = std::bind(&ButtonSaveToNewFileHandler, ew);
+        w->onClicked = [ew] { return ButtonSaveToNewFileHandler(ew); };
         ew->buttonSaveToNewFile = w;
         vbox->AddChild(w);
     }
@@ -1251,8 +1267,8 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     // w->initialSize = {winSize.cx, winSize.cy};
     bool ok = mainWindow->Create();
     CrashIf(!ok);
-    mainWindow->onClose = std::bind(WndCloseHandler, ew, _1);
-    mainWindow->onSize = std::bind(WndSizeHandler, ew, _1);
+    mainWindow->onClose = [ew](auto&& PH1) { return WndCloseHandler(ew, std::forward<decltype(PH1)>(PH1)); };
+    mainWindow->onSize = [ew](auto&& PH1) { return WndSizeHandler(ew, std::forward<decltype(PH1)>(PH1)); };
 
     ew->mainWindow = mainWindow;
     CreateMainLayout(ew);

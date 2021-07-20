@@ -104,12 +104,14 @@ modernize-return-braced-init-list
 modernize-pass-by-value
 modernize-loop-convert
 modernize-deprecated-headers
-modernize-concat-nested-namespaces
-modernize-avoid-c-arrays
 modernize-avoid-bind
 modernize-use-auto
 readability-redundant-preprocessor
 readability-string-compare
+
+maybe not:
+modernize-concat-nested-namespaces
+modernize-avoid-c-arrays
 */
 
 /*
@@ -124,7 +126,7 @@ modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,readability-make-member-function-const",
+		"--checks=-*,modernize-avoid-bind,modernize-return-braced-init-list",
 		"-p",
 		".",
 		"--header-filter=src/",

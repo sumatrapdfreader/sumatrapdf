@@ -300,7 +300,8 @@ struct PageTreeStackItem {
     int len = 0;
     int next_page_no = 0;
 
-    PageTreeStackItem()= default;;
+    PageTreeStackItem() = default;
+    ;
     explicit PageTreeStackItem(fz_context* ctx, pdf_obj* kids, int next_page_no = 0) {
         this->kids = kids;
         this->len = pdf_array_len(ctx, kids);

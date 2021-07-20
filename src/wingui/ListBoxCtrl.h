@@ -2,7 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ListBoxModel {
-    virtual ~ListBoxModel()= default;;
+    virtual ~ListBoxModel() = default;
+    ;
     virtual int ItemsCount() = 0;
     virtual Size Draw(bool measure) = 0;
     virtual std::string_view Item(int) = 0;

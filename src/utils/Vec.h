@@ -392,7 +392,7 @@ inline void DeleteVecMembers(Vec<T>& v) {
 // WStrVec owns the strings in the list
 class WStrVec : public Vec<WCHAR*> {
   public:
-    WStrVec()  = default;
+    WStrVec() = default;
     WStrVec(const WStrVec& other) : Vec(other) {
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++) {
