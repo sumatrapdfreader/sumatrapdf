@@ -21,8 +21,7 @@ DropDownCtrl::DropDownCtrl(HWND parent) : WindowBase(parent) {
     kind = kindDropDown;
 }
 
-DropDownCtrl::~DropDownCtrl() {
-}
+DropDownCtrl::~DropDownCtrl() = default;
 
 static void SetDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
     ComboBox_ResetContent(hwnd);

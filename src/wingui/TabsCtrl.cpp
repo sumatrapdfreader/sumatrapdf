@@ -495,8 +495,7 @@ TabsCtrl2::TabsCtrl2(HWND p) : WindowBase(p) {
     kind = kindTabs;
 }
 
-TabsCtrl2::~TabsCtrl2() {
-}
+TabsCtrl2::~TabsCtrl2() = default;
 
 static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
     CrashIf(ev->msg != WM_NOTIFY);

@@ -278,8 +278,7 @@ LabelWithCloseCtrl::LabelWithCloseCtrl(HWND p) {
     textColor = GetSysColor(COLOR_BTNTEXT);
 }
 
-LabelWithCloseCtrl::~LabelWithCloseCtrl() {
-}
+LabelWithCloseCtrl::~LabelWithCloseCtrl() = default;
 
 void LabelWithCloseCtrl::SetPaddingXY(int x, int y) {
     padX = x;

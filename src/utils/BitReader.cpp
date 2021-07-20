@@ -11,8 +11,7 @@ BitReader::BitReader(u8* data, size_t len) : data(data), dataLen(len) {
     bitsCount = len * 8;
 }
 
-BitReader::~BitReader() {
-}
+BitReader::~BitReader() = default;
 
 u8 BitReader::GetByte(size_t pos) const {
     if (pos >= dataLen) {

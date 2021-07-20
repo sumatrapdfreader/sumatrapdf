@@ -29,8 +29,7 @@ CheckboxCtrl::CheckboxCtrl(HWND parent) : WindowBase(parent) {
     kind = kindCheckbox;
 }
 
-CheckboxCtrl::~CheckboxCtrl() {
-}
+CheckboxCtrl::~CheckboxCtrl() = default;
 
 static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (CheckboxCtrl*)user;

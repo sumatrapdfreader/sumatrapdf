@@ -602,8 +602,7 @@ class ThumbnailRenderingTask : public RenderingCallback {
     explicit ThumbnailRenderingTask(const std::function<void(RenderedBitmap*)>& saveThumbnail)
         : saveThumbnail(saveThumbnail) {
     }
-    ~ThumbnailRenderingTask() override {
-    }
+    ~ThumbnailRenderingTask() override = default;
 
     void Callback(RenderedBitmap* bmp) override {
         saveThumbnail(bmp);
@@ -617,8 +616,7 @@ struct ControllerCallbackHandler : ControllerCallback {
   public:
     ControllerCallbackHandler(WindowInfo* win) : win(win) {
     }
-    ~ControllerCallbackHandler() override {
-    }
+    ~ControllerCallbackHandler() override = default;
 
     void Repaint() override {
         RepaintAsync(win, 0);

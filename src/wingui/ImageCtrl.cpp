@@ -20,8 +20,7 @@ ImageCtrl::ImageCtrl(HWND p) : WindowBase(p) {
     kind = kindImage;
 }
 
-ImageCtrl::~ImageCtrl() {
-}
+ImageCtrl::~ImageCtrl() = default;
 
 using Gdiplus::Color;
 using Gdiplus::ImageAttributes;

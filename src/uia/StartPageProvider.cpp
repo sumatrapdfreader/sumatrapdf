@@ -14,8 +14,7 @@ SumatraUIAutomationStartPageProvider::SumatraUIAutomationStartPageProvider(HWND 
     // root->AddRef(); Don't add refs to our parent & owner.
 }
 
-SumatraUIAutomationStartPageProvider::~SumatraUIAutomationStartPageProvider() {
-}
+SumatraUIAutomationStartPageProvider::~SumatraUIAutomationStartPageProvider() = default;
 
 // IUnknown
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(REFIID riid, void** ppv) {

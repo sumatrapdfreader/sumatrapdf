@@ -232,12 +232,10 @@ static const GUID CLSID_HW_IInternetProtocol = {0xf1ec293f,
 
 class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
   public:
-    HW_IInternetProtocolInfo() {
-    }
+    HW_IInternetProtocolInfo() = default;
 
   protected:
-    virtual ~HW_IInternetProtocolInfo() {
-    }
+    virtual ~HW_IInternetProtocolInfo() = default;
 
   public:
     // IUnknown
@@ -291,12 +289,10 @@ STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void** ppv) {
 
 class HW_IInternetProtocol : public IInternetProtocol {
   public:
-    HW_IInternetProtocol() {
-    }
+    HW_IInternetProtocol() = default;
 
   protected:
-    virtual ~HW_IInternetProtocol() {
-    }
+    virtual ~HW_IInternetProtocol() = default;
 
   public:
     // IUnknown
@@ -489,12 +485,10 @@ STDMETHODIMP HW_IInternetProtocol::Seek(LARGE_INTEGER /*dlibMove*/, DWORD /*dwOr
 
 class HW_IInternetProtocolFactory : public IClassFactory {
   protected:
-    virtual ~HW_IInternetProtocolFactory() {
-    }
+    virtual ~HW_IInternetProtocolFactory() = default;
 
   public:
-    HW_IInternetProtocolFactory() {
-    }
+    HW_IInternetProtocolFactory() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override;
@@ -581,8 +575,7 @@ class HW_IOleInPlaceFrame : public IOleInPlaceFrame {
   public:
     explicit HW_IOleInPlaceFrame(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IOleInPlaceFrame() {
-    }
+    ~HW_IOleInPlaceFrame() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -639,8 +632,7 @@ class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless {
   public:
     explicit HW_IOleInPlaceSiteWindowless(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IOleInPlaceSiteWindowless() {
-    }
+    ~HW_IOleInPlaceSiteWindowless() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -733,8 +725,7 @@ class HW_IOleClientSite : public IOleClientSite {
   public:
     explicit HW_IOleClientSite(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IOleClientSite() {
-    }
+    ~HW_IOleClientSite() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -773,8 +764,7 @@ class HW_IOleControlSite : public IOleControlSite {
   public:
     explicit HW_IOleControlSite(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IOleControlSite() {
-    }
+    ~HW_IOleControlSite() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -814,8 +804,7 @@ class HW_IOleCommandTarget : public IOleCommandTarget {
   public:
     explicit HW_IOleCommandTarget(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IOleCommandTarget() {
-    }
+    ~HW_IOleCommandTarget() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -842,8 +831,7 @@ class HW_IOleItemContainer : public IOleItemContainer {
   public:
     explicit HW_IOleItemContainer(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IOleItemContainer() {
-    }
+    ~HW_IOleItemContainer() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -886,8 +874,7 @@ class HW_DWebBrowserEvents2 : public DWebBrowserEvents2 {
   public:
     explicit HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) {
     }
-    ~HW_DWebBrowserEvents2() {
-    }
+    ~HW_DWebBrowserEvents2() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -919,8 +906,7 @@ class HW_IAdviseSink2 : public IAdviseSink2, public IAdviseSinkEx {
   public:
     explicit HW_IAdviseSink2(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IAdviseSink2() {
-    }
+    ~HW_IAdviseSink2() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -963,8 +949,7 @@ class HW_IDocHostUIHandler : public IDocHostUIHandler {
   public:
     explicit HW_IDocHostUIHandler(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IDocHostUIHandler() {
-    }
+    ~HW_IDocHostUIHandler() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -1055,8 +1040,7 @@ class HW_IDropTarget : public IDropTarget {
   public:
     explicit HW_IDropTarget(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IDropTarget() {
-    }
+    ~HW_IDropTarget() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -1113,10 +1097,8 @@ class HW_IDownloadManager : public IDownloadManager {
     LONG refCount{1};
 
   public:
-    HW_IDownloadManager() {
-    }
-    ~HW_IDownloadManager() {
-    }
+    HW_IDownloadManager() = default;
+    ~HW_IDownloadManager() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
@@ -1181,8 +1163,7 @@ class HW_IServiceProvider : public IServiceProvider {
   public:
     explicit HW_IServiceProvider(FrameSite* fs) : fs(fs) {
     }
-    ~HW_IServiceProvider() {
-    }
+    ~HW_IServiceProvider() = default;
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override {
@@ -1298,8 +1279,7 @@ class HtmlMoniker : public IMoniker {
     WCHAR* baseUrl{nullptr};
 };
 
-HtmlMoniker::HtmlMoniker() {
-}
+HtmlMoniker::HtmlMoniker() = default;
 
 HtmlMoniker::~HtmlMoniker() {
     if (htmlStream) {

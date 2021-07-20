@@ -21,8 +21,7 @@ StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
     kind = kindStatic;
 }
 
-StaticCtrl::~StaticCtrl() {
-}
+StaticCtrl::~StaticCtrl() = default;
 
 static void Handle_WM_COMMAND(__unused void* user, WndEvent* ev) {
     // auto w = (StaticCtrl*)user;

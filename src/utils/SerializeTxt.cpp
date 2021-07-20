@@ -194,8 +194,7 @@ class DecodeState {
   public:
     // data being decoded
     TxtParser parser;
-    DecodeState() {
-    }
+    DecodeState() = default;
 };
 
 static bool ParseUInt(char* s, char* e, u64* nOut) {

@@ -19,8 +19,7 @@ ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
     kind = kindButton;
 }
 
-ButtonCtrl::~ButtonCtrl() {
-}
+ButtonCtrl::~ButtonCtrl() = default;
 
 static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (ButtonCtrl*)user;

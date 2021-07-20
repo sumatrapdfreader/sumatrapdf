@@ -980,8 +980,7 @@ Align::Align(ILayout* c) {
     kind = kindAlign;
 }
 
-Align::~Align() {
-}
+Align::~Align() = default;
 
 Size Align::Layout(const Constraints bc) {
     dbglayoutf("Align::Layout() ");

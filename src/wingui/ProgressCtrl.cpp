@@ -20,8 +20,7 @@ ProgressCtrl::ProgressCtrl(HWND p, int initialMax) : WindowBase(p) {
     max = initialMax;
 }
 
-ProgressCtrl::~ProgressCtrl() {
-}
+ProgressCtrl::~ProgressCtrl() = default;
 
 bool ProgressCtrl::Create() {
     bool ok = WindowBase::Create();

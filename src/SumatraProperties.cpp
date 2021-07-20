@@ -52,8 +52,7 @@ class PropertyEl {
 
 class PropertiesLayout : public Vec<PropertyEl*> {
   public:
-    PropertiesLayout() {
-    }
+    PropertiesLayout() = default;
     ~PropertiesLayout() {
         DeleteVecMembers(*this);
     }

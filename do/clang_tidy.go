@@ -90,6 +90,10 @@ modernize-use-equals-default
 readability-inconsistent-declaration-parameter-name
 readability-redundant-declaration
 readability-redundant-access-specifiers
+readability-redundant-control-flow
+readability-misplaced-array-index
+readability-redundant-member-init
+readability-redundant-string-init
 
 */
 
@@ -111,11 +115,7 @@ readability-string-compare
 /*
 TODO:
 modernize-raw-string-literal
-readability-redundant-control-flow
-readability-misplaced-array-index
 readability-redundant-function-ptr-dereference
-readability-redundant-member-init
-readability-redundant-string-init
 readability-redundant-string-cst
 
 modernize-use-nodiscard
@@ -124,7 +124,7 @@ modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,readability-redundant-control-flow,readability-misplaced-array-index,readability-redundant-member-init,readability-redundant-string-init",
+		"--checks=-*,readability-make-member-function-const",
 		"-p",
 		".",
 		"--header-filter=src/",

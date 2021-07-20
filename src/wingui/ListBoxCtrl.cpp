@@ -14,8 +14,7 @@
 
 Kind kindListBox = "listbox";
 
-ListBoxModelStrings::~ListBoxModelStrings() {
-}
+ListBoxModelStrings::~ListBoxModelStrings() = default;
 
 int ListBoxModelStrings::ItemsCount() {
     return strings.Size();
@@ -39,8 +38,7 @@ ListBoxCtrl::ListBoxCtrl(HWND p) : WindowBase(p), idealSize({DpiScale(p, 120), D
     ctrlID = 0;
 }
 
-ListBoxCtrl::~ListBoxCtrl() {
-}
+ListBoxCtrl::~ListBoxCtrl() = default;
 
 static void FillWithItems(ListBoxCtrl* w, ListBoxModel* model) {
     HWND hwnd = w->hwnd;

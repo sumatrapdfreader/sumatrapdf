@@ -3,8 +3,7 @@
 
 class SquareTreeNode {
   public:
-    SquareTreeNode() {
-    }
+    SquareTreeNode() = default;
     ~SquareTreeNode();
 
     struct DataItem {

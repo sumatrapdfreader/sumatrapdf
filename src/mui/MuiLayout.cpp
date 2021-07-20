@@ -9,8 +9,7 @@
 
 namespace mui {
 
-DirectionalLayout::~DirectionalLayout() {
-}
+DirectionalLayout::~DirectionalLayout() = default;
 
 DirectionalLayout& DirectionalLayout::Add(const DirectionalLayoutData& ld) {
     els.Append(ld);

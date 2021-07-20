@@ -108,8 +108,7 @@ WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
 
 HtmlParser::HtmlParser()
 
-{
-}
+= default;
 
 HtmlParser::~HtmlParser() {
     if (freeHtml) {

@@ -868,8 +868,7 @@ bool Window::Create() {
     return true;
 }
 
-Window::~Window() {
-}
+Window::~Window() = default;
 
 void Window::SetTitle(std::string_view title) {
     SetText(title);

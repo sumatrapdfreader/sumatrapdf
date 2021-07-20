@@ -93,8 +93,7 @@ bool TrackbarCtrl::Create() {
     return true;
 }
 
-TrackbarCtrl::~TrackbarCtrl() {
-}
+TrackbarCtrl::~TrackbarCtrl() = default;
 
 Size TrackbarCtrl::GetIdealSize() {
     return {idealSize.dx, idealSize.dy};
