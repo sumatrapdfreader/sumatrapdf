@@ -62,13 +62,13 @@ struct Rect {
     int dy{0};
 
     Rect() = default;
-    Rect(const RECT r);
-    Rect(const Gdiplus::RectF r);
+    Rect(RECT r);
+    Rect(Gdiplus::RectF r);
     Rect(int x, int y, int dx, int dy);
     // TODO: why not working if in .cpp? Confused by Size also being a method?
     Rect(const Point pt, const Size sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {
     }
-    Rect(const Point min, const Point max);
+    Rect(Point min, Point max);
 
     [[nodiscard]] bool EqSize(int otherDx, int otherDy) const;
     [[nodiscard]] int Right() const;
@@ -99,8 +99,8 @@ struct RectF {
 
     RectF() = default;
 
-    RectF(const RECT r);
-    RectF(const Gdiplus::RectF r);
+    RectF(RECT r);
+    RectF(Gdiplus::RectF r);
     RectF(float x, float y, float dx, float dy);
     RectF(PointF pt, SizeF size);
     RectF(PointF min, PointF max);
@@ -125,24 +125,24 @@ struct RectF {
     bool operator!=(const RectF& other) const;
 };
 
-PointF ToPointFl(const Point p);
-Gdiplus::Point ToGdipPoint(const Point p);
-Point ToPoint(const PointF p);
-Gdiplus::PointF ToGdipPointF(const PointF p);
+PointF ToPointFl(Point p);
+Gdiplus::Point ToGdipPoint(Point p);
+Point ToPoint(PointF p);
+Gdiplus::PointF ToGdipPointF(PointF p);
 
-SIZE ToSIZE(const Size s);
-SizeF ToSizeFl(const Size s);
-Size ToSize(const SizeF s);
+SIZE ToSIZE(Size s);
+SizeF ToSizeFl(Size s);
+Size ToSize(SizeF s);
 
-RectF ToRectFl(const Rect r);
-RECT ToRECT(const Rect r);
+RectF ToRectFl(Rect r);
+RECT ToRECT(Rect r);
 RECT RECTFromRect(Gdiplus::Rect r);
-Gdiplus::Rect ToGdipRect(const Rect r);
-Gdiplus::RectF ToGdipRectF(const Rect r);
+Gdiplus::Rect ToGdipRect(Rect r);
+Gdiplus::RectF ToGdipRectF(Rect r);
 
-RECT ToRECT(const RectF r);
-Rect ToRect(const RectF r);
-Gdiplus::Rect ToGdipRect(const RectF r);
-Gdiplus::RectF ToGdipRectF(const RectF r);
+RECT ToRECT(RectF r);
+Rect ToRect(RectF r);
+Gdiplus::Rect ToGdipRect(RectF r);
+Gdiplus::RectF ToGdipRectF(RectF r);
 
 int NormalizeRotation(int rotation);

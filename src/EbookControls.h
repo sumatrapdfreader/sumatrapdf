@@ -76,8 +76,8 @@ class PagesLayout : public ILayout {
         return desiredSize;
     }
 
-    Size Measure(const Size availableSize) override;
-    void Arrange(const Rect finalRect) override;
+    Size Measure(Size availableSize) override;
+    void Arrange(Rect finalRect) override;
 
     [[nodiscard]] PageControl* GetPage1() const {
         return page1;

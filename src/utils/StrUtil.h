@@ -32,12 +32,12 @@ void FreePtr(WCHAR** s);
 char* Dup(Allocator*, const char* str, size_t strLen = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
 char* Dup(Allocator*, std::string_view);
-char* Dup(const std::string_view);
-char* Dup(const std::span<u8> d);
+char* Dup(std::string_view);
+char* Dup(std::span<u8> d);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t strLen = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
-WCHAR* Dup(const std::wstring_view);
+WCHAR* Dup(std::wstring_view);
 
 void ReplacePtr(char** s, const char* snew);
 void ReplaceWithCopy(char** s, const char* snew);
@@ -236,7 +236,7 @@ struct Str {
     std::string_view StealAsView();
     bool AppendChar(char c);
     bool Append(const u8* src, size_t size = -1);
-    bool AppendView(const std::string_view sv);
+    bool AppendView(std::string_view sv);
     bool AppendSpan(std::span<u8> d);
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
@@ -317,7 +317,7 @@ struct WStr {
     std::wstring_view StealAsView();
     bool AppendChar(WCHAR c);
     bool AppendSpan(std::span<WCHAR> d);
-    bool AppendView(const std::wstring_view sv);
+    bool AppendView(std::wstring_view sv);
     void AppendFmt(const WCHAR* fmt, ...);
     bool AppendAndFree(const WCHAR* s);
     void Set(std::wstring_view sv);

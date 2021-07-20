@@ -81,6 +81,7 @@ func clangTidyFile(path string) {
 /*
 Done:
 readability-make-member-function-const
+readability-avoid-const-params-in-decls
 */
 
 /*
@@ -114,7 +115,6 @@ readability-string-compare
 
 /*
 TODO:
-readability-avoid-const-params-in-decls
 modernize-use-override
 modernize-raw-string-literal
 modernize-use-nullptr
@@ -126,7 +126,7 @@ modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,readability-make-member-function-const",
+		"--checks=-*,readability-avoid-const-params-in-decls",
 		"-p",
 		".",
 		"--header-filter=src/",
@@ -165,21 +165,21 @@ func runClangTidy(fix bool) {
 	os.Remove(clangTidyLogFile)
 	files := []string{
 		`src\*.cpp`,
-		`src\*.h`,
+		//`src\*.h`,
 		`src\mui\*.cpp`,
-		`src\mui\*.h`,
+		//`src\mui\*.h`,
 		`src\utils\*.cpp`,
-		`src\utils\*.h`,
-		`src\utils\tests\*.cpp`,
-		`src\utils\tests\*.h`,
+		//`src\utils\*.h`,
+		//`src\utils\tests\*.cpp`,
+		//`src\utils\tests\*.h`,
 		`src\wingui\*.cpp`,
-		`src\wingui\*.h`,
+		//`src\wingui\*.h`,
 		`src\uia\*.cpp`,
-		`src\uia\*.h`,
-		`src\tools\*.cpp`,
-		`src\previewer\*.h`,
+		//`src\uia\*.h`,
+		//`src\tools\*.cpp`,
+		//`src\previewer\*.h`,
 		`src\previewer\*.cpp`,
-		`src\ifilter\*.h`,
+		//`src\ifilter\*.h`,
 		`src\ifilter\*.cpp`,
 		//`ext\mupdf_load_system_font.c`,
 	}

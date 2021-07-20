@@ -34,13 +34,13 @@ class Control : public ILayout {
     [[nodiscard]] Control* GetChild(size_t idx) const;
     [[nodiscard]] size_t GetChildCount() const;
 
-    void SetPosition(const Rect p);
+    void SetPosition(Rect p);
 
     virtual void Paint(Graphics* gfx, int offX, int offY);
 
     // ILayout
-    Size Measure(const Size availableSize) override;
-    void Arrange(const Rect finalRect) override;
+    Size Measure(Size availableSize) override;
+    void Arrange(Rect finalRect) override;
     Size DesiredSize() override;
 
     // mouse enter/leave are used e.g. by a button to change the look when mouse

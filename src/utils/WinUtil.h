@@ -89,9 +89,9 @@ bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
 bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
 
-void PaintRect(HDC, const Rect);
-void PaintLine(HDC, const Rect);
-void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL = false);
+void PaintRect(HDC, Rect);
+void PaintLine(HDC, Rect);
+void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
@@ -204,7 +204,7 @@ class DeferWinPosHelper {
     DeferWinPosHelper();
     ~DeferWinPosHelper();
     void End();
-    void SetWindowPos(HWND hwnd, const Rect rc);
+    void SetWindowPos(HWND hwnd, Rect rc);
     void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
     void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
     void MoveWindow(HWND hWnd, Rect r);

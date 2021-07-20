@@ -1,7 +1,7 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-Gdiplus::RectF RectToRectF(const Gdiplus::Rect r);
+Gdiplus::RectF RectToRectF(Gdiplus::Rect r);
 
 typedef RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 

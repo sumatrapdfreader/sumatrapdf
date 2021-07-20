@@ -5,7 +5,7 @@
 
 const int Inf = std::numeric_limits<int>::max();
 
-RECT RectToRECT(const Rect);
+RECT RectToRECT(Rect);
 
 int Clamp(int v, int vmin, int vmax);
 int Scale(int v, i64 num, i64 den);
@@ -15,8 +15,8 @@ struct Constraints {
     Size min{};
     Size max{};
 
-    [[nodiscard]] Size Constrain(const Size) const;
-    [[nodiscard]] Size ConstrainAndAttemptToPreserveAspectRatio(const Size) const;
+    [[nodiscard]] Size Constrain(Size) const;
+    [[nodiscard]] Size ConstrainAndAttemptToPreserveAspectRatio(Size) const;
     [[nodiscard]] int ConstrainHeight(int height) const;
     [[nodiscard]] int ConstrainWidth(int width) const;
     [[nodiscard]] bool HasBoundedHeight() const;
@@ -40,8 +40,8 @@ struct Constraints {
 Constraints ExpandInf();
 Constraints ExpandHeight(int width);
 Constraints ExpandWidth(int height);
-Constraints Loose(const Size size);
-Constraints Tight(const Size size);
+Constraints Loose(Size size);
+Constraints Tight(Size size);
 Constraints TightHeight(int height);
 
 typedef std::function<void()> NeedLayout;
@@ -62,7 +62,7 @@ struct ILayout {
     virtual Visibility GetVisibility() = 0;
     virtual int MinIntrinsicHeight(int width) = 0;
     virtual int MinIntrinsicWidth(int height) = 0;
-    virtual Size Layout(const Constraints bc) = 0;
+    virtual Size Layout(Constraints bc) = 0;
     virtual void SetBounds(Rect) = 0;
 };
 
@@ -105,7 +105,7 @@ struct Padding : LayoutBase {
 
     Padding(ILayout*, const Insets&);
     ~Padding() override;
-    Size Layout(const Constraints bc) override;
+    Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
@@ -159,7 +159,7 @@ struct VBox : LayoutBase {
 
     VBox();
     ~VBox() override;
-    Size Layout(const Constraints bc) override;
+    Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
@@ -182,7 +182,7 @@ struct HBox : LayoutBase {
     int totalFlex = 0;
 
     ~HBox() override;
-    Size Layout(const Constraints bc) override;
+    Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
@@ -213,7 +213,7 @@ struct Align : LayoutBase {
 
     Align(ILayout*);
     ~Align() override;
-    Size Layout(const Constraints bc) override;
+    Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
@@ -227,14 +227,14 @@ struct Spacer : LayoutBase {
 
     Spacer(int, int);
     ~Spacer() override;
-    Size Layout(const Constraints bc) override;
+    Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
 };
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
-Size LayoutToSize(ILayout* layout, const Size size);
+Size LayoutToSize(ILayout* layout, Size size);
 
 void dbglayoutf(const char* fmt, ...);
 void LogConstraints(Constraints c, const char* suffix);

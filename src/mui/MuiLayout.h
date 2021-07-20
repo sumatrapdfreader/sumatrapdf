@@ -22,9 +22,9 @@ class ILayout {
         return str::EqI(name.Get(), s);
     }
     virtual ~ILayout(){};
-    virtual Size Measure(const Size availableSize) = 0;
+    virtual Size Measure(Size availableSize) = 0;
     virtual Size DesiredSize() = 0;
-    virtual void Arrange(const Rect finalRect) = 0;
+    virtual void Arrange(Rect finalRect) = 0;
 };
 
 #define SizeSelf 666.f
@@ -104,7 +104,7 @@ class DirectionalLayout : public ILayout {
 
     DirectionalLayout& Add(const DirectionalLayoutData& ld);
 
-    Size Measure(const Size availableSize) override;
+    Size Measure(Size availableSize) override;
     void Arrange(__unused const Rect finalRect) override {
         CrashIf(true);
     }
@@ -115,7 +115,7 @@ class HorizontalLayout : public DirectionalLayout {
     HorizontalLayout() {
     }
 
-    void Arrange(const Rect finalRect) override;
+    void Arrange(Rect finalRect) override;
 };
 
 class VerticalLayout : public DirectionalLayout {
@@ -123,5 +123,5 @@ class VerticalLayout : public DirectionalLayout {
     VerticalLayout() {
     }
 
-    void Arrange(const Rect finalRect) override;
+    void Arrange(Rect finalRect) override;
 };

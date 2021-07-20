@@ -207,7 +207,7 @@ struct WindowBase : public ILayout {
     Visibility GetVisibility() override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
-    Size Layout(const Constraints bc) override;
+    Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
     void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
 

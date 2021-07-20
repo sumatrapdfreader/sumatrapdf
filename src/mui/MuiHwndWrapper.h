@@ -38,8 +38,8 @@ class HwndWrapper : public Control {
     void OnPaint(HWND hwnd);
 
     // ILayout
-    Size Measure(const Size availableSize) override;
-    void Arrange(const Rect finalRect) override;
+    Size Measure(Size availableSize) override;
+    void Arrange(Rect finalRect) override;
 
     void TopLevelLayout();
 

@@ -263,7 +263,7 @@ CachedStyle* CacheStyle(Style* style, bool* changedOut);
 CachedStyle* CachedStyleByName(const char* name);
 Style* StyleByName(const char* name);
 
-Brush* BrushFromColorData(ColorData* color, const RectF r);
+Brush* BrushFromColorData(ColorData* color, RectF r);
 
 ARGB ParseCssColor(const char* color);
 Size GetBorderAndPaddingSize(CachedStyle* s);

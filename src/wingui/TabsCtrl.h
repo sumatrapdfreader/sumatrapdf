@@ -9,7 +9,7 @@ typedef std::function<void(TabsCtrl*, TabsCtrlState*, int)> TabClosedCb;
 
 class TabItem {
   public:
-    TabItem(const std::string_view title, const std::string_view toolTip);
+    TabItem(std::string_view title, std::string_view toolTip);
 
     str::Str title;
     str::Str toolTip;

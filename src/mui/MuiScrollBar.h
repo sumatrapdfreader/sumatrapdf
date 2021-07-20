@@ -35,7 +35,7 @@ class ScrollBar : public Control {
     ScrollBar(int onOverDy = 12, int inactiveDy = 5);
     ~ScrollBar() {
     }
-    Size Measure(const Size availableSize) override;
+    Size Measure(Size availableSize) override;
     void Paint(Graphics* gfx, int offX, int offY) override;
 
     void NotifyMouseEnter() override;
