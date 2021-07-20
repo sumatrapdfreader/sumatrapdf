@@ -1162,7 +1162,7 @@ void RemoveBadMenuSeparators(HMENU menu) {
     // remove separator items at the beginning
 again1:
     nMenus = GetMenuItemCount(menu);
-    if (nMenus = 0) {
+    if (nMenus == 0) {
         return;
     }
     UINT id = GetMenuItemID(menu, 0);
@@ -1173,7 +1173,7 @@ again1:
     // remove separator items at the end
 again2:
     nMenus = GetMenuItemCount(menu);
-    if (nMenus = 0) {
+    if (nMenus == 0) {
         return;
     }
     id = GetMenuItemID(menu, nMenus - 1);
@@ -1637,6 +1637,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (gGlobalPrefs->showToolbar) {
         win::menu::Remove(popup, CmdViewShowHideToolbar);
     }
+    RemoveBadMenuSeparators(popup);
 
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);

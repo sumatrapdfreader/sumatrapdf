@@ -348,6 +348,10 @@ void _submitDebugReportIfFunc(bool cond, __unused const char* condStr) {
         return;
     }
     didSubmitDebugReport = true;
+    // if this is me debugging, don't send report, just crash
+    if (IsDebuggerPresent()) {
+        CrashMe();
+    }
 #if defined(PRE_RELEASE_VER)
     _submitDebugReport(condStr);
 #endif

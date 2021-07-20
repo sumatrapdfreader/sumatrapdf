@@ -12,6 +12,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - optimize translation cache
 - redo auto-update code to work for portable versions
 - fix -x to respect extraction directory when -install wasn't also given
+- fix RemoveBadMenuSeparators()
 
 2021-07-18 Sun
 
