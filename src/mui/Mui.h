@@ -95,7 +95,7 @@ class WndInputWantedFilter : public WndFilter {
   public:
     WndInputWantedFilter(int x, int y, u16 wantedInputMask) : x(x), y(y), wantedInputMask(wantedInputMask) {
     }
-    virtual ~WndInputWantedFilter() {
+    ~WndInputWantedFilter() override {
     }
     bool Matches(Control* c, int offX, int offY) override {
         if ((c->wantedInputBits & wantedInputMask) != 0) {

@@ -16,7 +16,7 @@ struct DropDownCtrl : WindowBase {
     DropDownSelectionChangedHandler onSelectionChanged = nullptr;
 
     DropDownCtrl(HWND parent);
-    ~DropDownCtrl();
+    ~DropDownCtrl() override;
     bool Create() override;
 
     Size GetIdealSize() override;

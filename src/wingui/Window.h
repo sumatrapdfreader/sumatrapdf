@@ -194,7 +194,7 @@ struct WindowBase : public ILayout {
 
     WindowBase() = default;
     WindowBase(HWND p);
-    virtual ~WindowBase();
+    ~WindowBase() override;
 
     virtual bool Create();
     virtual Size GetIdealSize();

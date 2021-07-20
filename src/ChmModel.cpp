@@ -615,7 +615,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         InitializeCriticalSection(&docAccess);
     }
 
-    ~ChmThumbnailTask() {
+    ~ChmThumbnailTask() override {
         EnterCriticalSection(&docAccess);
         delete hw;
         DestroyWindow(hwnd);

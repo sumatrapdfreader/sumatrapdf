@@ -247,7 +247,6 @@ struct Str {
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = char*;
-    using const_iterator = const char*;
 
     [[nodiscard]] iterator begin() const {
         return &(els[0]);
@@ -255,15 +254,6 @@ struct Str {
     [[nodiscard]] iterator end() const {
         return &(els[len]);
     }
-
-#if 0
-    [[nodiscard]] const_iterator begin() const {
-        return &(els[0]);
-    }
-    [[nodiscard]] const_iterator end() const {
-        return &(els[len]);
-    }
-#endif
 };
 
 bool Replace(Str& s, const char* toReplace, const char* replaceWith);
@@ -327,7 +317,6 @@ struct WStr {
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = WCHAR*;
-    using const_iterator = const WCHAR*;
 
     [[nodiscard]] iterator begin() const {
         return &(els[0]);
@@ -335,14 +324,6 @@ struct WStr {
     [[nodiscard]] iterator end() const {
         return &(els[len]);
     }
-#if 0
-    [[nodiscard]] const_iterator begin() const {
-        return &(els[0]);
-    }
-    [[nodiscard]] const_iterator end() const {
-        return &(els[len]);
-    }
-#endif
 };
 
 bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);

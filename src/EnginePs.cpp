@@ -241,7 +241,7 @@ class EnginePs : public EngineBase {
         defaultFileExt = L".ps";
     }
 
-    virtual ~EnginePs() {
+    ~EnginePs() override {
         delete pdfEngine;
     }
 

@@ -113,7 +113,7 @@ class EbookFormattingThread : public ThreadBase {
 
     EbookFormattingThread(const Doc& doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
                           ControllerCallback* cb);
-    virtual ~EbookFormattingThread();
+    ~EbookFormattingThread() override;
 
     // ThreadBase
     void Run() override;

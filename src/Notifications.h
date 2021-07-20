@@ -40,7 +40,7 @@ struct NotificationWnd : public ProgressUpdateUI {
     // Note: in most cases use WindowInfo::ShowNotification()
     explicit NotificationWnd(HWND parent, int timeoutInMS);
 
-    virtual ~NotificationWnd();
+    ~NotificationWnd() override;
 
     void UpdateMessage(const WCHAR* message, int timeoutInMS = 0, bool highlight = false);
 

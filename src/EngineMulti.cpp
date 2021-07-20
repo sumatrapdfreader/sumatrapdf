@@ -43,7 +43,7 @@ Kind kindEngineMulti = "enginePdfMulti";
 class EngineMulti : public EngineBase {
   public:
     EngineMulti();
-    virtual ~EngineMulti();
+    ~EngineMulti() override;
     EngineBase* Clone() override;
 
     RectF PageMediabox(int pageNo) override;

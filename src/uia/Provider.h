@@ -31,27 +31,28 @@ class SumatraUIAutomationProvider : public IRawElementProviderSimple,
     void OnSelectionChanged();
 
     // IUnknown
-    HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
-    ULONG STDMETHODCALLTYPE AddRef();
-    ULONG STDMETHODCALLTYPE Release();
+    HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**) override;
+    ULONG STDMETHODCALLTYPE AddRef() override;
+    ULONG STDMETHODCALLTYPE Release() override;
 
     // IRawElementProviderSimple
-    HRESULT STDMETHODCALLTYPE GetPatternProvider(PATTERNID patternId, IUnknown** pRetVal);
-    HRESULT STDMETHODCALLTYPE GetPropertyValue(PROPERTYID propertyId, VARIANT* pRetVal);
-    HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple** pRetVal);
-    HRESULT STDMETHODCALLTYPE get_ProviderOptions(ProviderOptions* pRetVal);
+    HRESULT STDMETHODCALLTYPE GetPatternProvider(PATTERNID patternId, IUnknown** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE GetPropertyValue(PROPERTYID propertyId, VARIANT* pRetVal) override;
+    HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE get_ProviderOptions(ProviderOptions* pRetVal) override;
 
     // IRawElementProviderFragment
-    HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction, IRawElementProviderFragment** pRetVal);
-    HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY** pRetVal);
-    HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal);
-    HRESULT STDMETHODCALLTYPE SetFocus();
-    HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect* pRetVal);
-    HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal);
+    HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction,
+                                       IRawElementProviderFragment** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE SetFocus() override;
+    HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect* pRetVal) override;
+    HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal) override;
 
     // IRawElementProviderFragmentRoot
-    HRESULT STDMETHODCALLTYPE ElementProviderFromPoint(double, double, IRawElementProviderFragment**);
-    HRESULT STDMETHODCALLTYPE GetFocus(IRawElementProviderFragment**);
+    HRESULT STDMETHODCALLTYPE ElementProviderFromPoint(double, double, IRawElementProviderFragment**) override;
+    HRESULT STDMETHODCALLTYPE GetFocus(IRawElementProviderFragment**) override;
 
   private:
     IRawElementProviderFragment* GetElementFromPoint(double, double, IRawElementProviderFragment*);

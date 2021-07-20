@@ -28,11 +28,11 @@ git commit -am "clang-tidy fix some readability-inconsistent-declaration-paramet
 
 
 ad-hoc execution:
-clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value -extra-arg=-std=c++20 .\src\*.cpp -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
+clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value -extra-arg=-std=c++20 .\src\*.cpp -- -I mupdf/include -I src -I src/utils -I src/wingui -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
 
 ls src\utils\*.cpp | select Name
 
-clang-tidy src/*.cpp -fix -header-filter=src/ -checks="-*,readability-inconsistent-declaration-parameter-name" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
+clang-tidy src/*.cpp -fix -header-filter=src/ -checks="-*,readability-inconsistent-declaration-parameter-name" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
 */
 
 const clangTidyLogFile = "clangtidy.out.txt"
@@ -55,7 +55,6 @@ func clangTidyFile(path string) {
 		"-I", "src",
 		"-I", "src/utils",
 		"-I", "src/wingui",
-		"-I", "ext/WDL",
 		"-I", "ext/CHMLib/src",
 		"-I", "ext/libdjvu",
 		"-I", "ext/zlib",
@@ -82,25 +81,21 @@ func clangTidyFile(path string) {
 Done:
 readability-make-member-function-const
 readability-avoid-const-params-in-decls
+modernize-use-override
 */
 
 /*
 TODO fixes:
 modernize-use-default-member-init
 modernize-return-braced-init-list
-modernize-raw-string-literal
 modernize-pass-by-value
 modernize-loop-convert
 modernize-deprecated-headers
 modernize-concat-nested-namespaces
 modernize-avoid-c-arrays
 modernize-avoid-bind
-modernize-use-override
-modernize-use-nullptr
 modernize-use-auto
-modernize-use-nodiscard
 readability-inconsistent-declaration-parameter-name
-readability-make-member-function-const
 readability-misplaced-array-index
 readability-redundant-access-specifiers
 readability-redundant-control-flow
@@ -115,18 +110,18 @@ readability-string-compare
 
 /*
 TODO:
-modernize-use-override
+modernize-use-nodiscard
+readability-simplify-boolean-expr
 modernize-raw-string-literal
 modernize-use-nullptr
 modernize-use-equals-default
-readability-simplify-boolean-expr
 readability-braces-around-statements¶
 modernize-use-using : needs to figure out how to not run in ext
 */
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,readability-avoid-const-params-in-decls",
+		"--checks=-*,modernize-use-override",
 		"-p",
 		".",
 		"--header-filter=src/",
@@ -138,7 +133,6 @@ func clangTidyFix(path string) {
 		"-I", "src",
 		"-I", "src/utils",
 		"-I", "src/wingui",
-		"-I", "ext/WDL",
 		"-I", "ext/CHMLib/src",
 		"-I", "ext/libdjvu",
 		"-I", "ext/zlib",
@@ -165,21 +159,13 @@ func runClangTidy(fix bool) {
 	os.Remove(clangTidyLogFile)
 	files := []string{
 		`src\*.cpp`,
-		//`src\*.h`,
 		`src\mui\*.cpp`,
-		//`src\mui\*.h`,
 		`src\utils\*.cpp`,
-		//`src\utils\*.h`,
 		//`src\utils\tests\*.cpp`,
-		//`src\utils\tests\*.h`,
 		`src\wingui\*.cpp`,
-		//`src\wingui\*.h`,
 		`src\uia\*.cpp`,
-		//`src\uia\*.h`,
 		//`src\tools\*.cpp`,
-		//`src\previewer\*.h`,
 		`src\previewer\*.cpp`,
-		//`src\ifilter\*.h`,
 		`src\ifilter\*.cpp`,
 		//`ext\mupdf_load_system_font.c`,
 	}

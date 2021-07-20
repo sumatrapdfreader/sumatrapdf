@@ -225,7 +225,7 @@ struct FindThreadData : public ProgressUpdateUI {
         this->text = str::Dup(win::GetTextTemp(findBox).AsView());
         this->wasModified = Edit_GetModify(findBox);
     }
-    ~FindThreadData() {
+    ~FindThreadData() override {
         CloseHandle(thread);
     }
 

@@ -387,7 +387,7 @@ class PrintThreadData : public ProgressUpdateUI {
     PrintThreadData(PrintThreadData const&) = delete;
     PrintThreadData& operator=(PrintThreadData const&) = delete;
 
-    ~PrintThreadData() {
+    ~PrintThreadData() override {
         CloseHandle(thread);
         delete data;
         RemoveNotification(wnd);

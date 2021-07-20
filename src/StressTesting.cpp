@@ -407,7 +407,7 @@ class FilesProvider : public TestFileProvider {
         provided = 0;
     }
 
-    virtual ~FilesProvider() {
+    ~FilesProvider() override {
     }
 
     WCHAR* NextFile() override {
@@ -434,7 +434,7 @@ class DirFileProvider : public TestFileProvider {
 
   public:
     DirFileProvider(const WCHAR* path, const WCHAR* filter);
-    virtual ~DirFileProvider();
+    ~DirFileProvider() override;
     WCHAR* NextFile() override;
     void Restart() override;
 };

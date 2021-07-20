@@ -23,7 +23,7 @@ struct TrackbarCtrl : WindowBase {
     TrackbarPoschangingHandler onPosChanging = nullptr;
 
     TrackbarCtrl(HWND parent);
-    ~TrackbarCtrl();
+    ~TrackbarCtrl() override;
 
     bool Create() override;
 

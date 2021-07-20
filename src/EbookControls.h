@@ -36,7 +36,7 @@ class PageControl : public Control {
 
   public:
     PageControl();
-    virtual ~PageControl();
+    ~PageControl() override;
 
     void SetPage(HtmlPage* newPage);
     [[nodiscard]] HtmlPage* GetPage() const {
@@ -70,7 +70,7 @@ class PagesLayout : public ILayout {
         CrashIf(dx < 0);
         spaceDx = dx;
     }
-    virtual ~PagesLayout() {
+    ~PagesLayout() override {
     }
     Size DesiredSize() override {
         return desiredSize;

@@ -234,7 +234,7 @@ void CleanupDjVuEngine() {
 class EngineDjVu : public EngineBase {
   public:
     EngineDjVu();
-    virtual ~EngineDjVu();
+    ~EngineDjVu() override;
     EngineBase* Clone() override;
 
     RectF PageMediabox(int pageNo) override;

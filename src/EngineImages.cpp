@@ -87,7 +87,7 @@ struct ImagePage {
 class EngineImages : public EngineBase {
   public:
     EngineImages();
-    virtual ~EngineImages();
+    ~EngineImages() override;
 
     RectF PageMediabox(int pageNo) override;
 
@@ -388,7 +388,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
 class EngineImage : public EngineImages {
   public:
     EngineImage();
-    virtual ~EngineImage();
+    ~EngineImage() override;
 
     EngineBase* Clone() override;
 
@@ -672,7 +672,7 @@ class EngineImageDir : public EngineImages {
         hasPageLabels = true;
     }
 
-    virtual ~EngineImageDir() {
+    ~EngineImageDir() override {
         delete tocTree;
     }
 

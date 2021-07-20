@@ -602,7 +602,7 @@ class ThumbnailRenderingTask : public RenderingCallback {
     explicit ThumbnailRenderingTask(const std::function<void(RenderedBitmap*)>& saveThumbnail)
         : saveThumbnail(saveThumbnail) {
     }
-    ~ThumbnailRenderingTask() {
+    ~ThumbnailRenderingTask() override {
     }
 
     void Callback(RenderedBitmap* bmp) override {

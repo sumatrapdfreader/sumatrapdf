@@ -33,7 +33,7 @@ class ScrollBar : public Control {
 
   public:
     ScrollBar(int onOverDy = 12, int inactiveDy = 5);
-    ~ScrollBar() {
+    ~ScrollBar() override {
     }
     Size Measure(Size availableSize) override;
     void Paint(Graphics* gfx, int offX, int offY) override;

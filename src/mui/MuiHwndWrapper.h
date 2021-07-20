@@ -24,7 +24,7 @@ class HwndWrapper : public Control {
     FrameRateWnd* frameRateWnd = nullptr;
 
     HwndWrapper(HWND hwnd = nullptr);
-    virtual ~HwndWrapper();
+    ~HwndWrapper() override;
 
     void SetMinSize(Size minSize) const;
     void SetMaxSize(Size maxSize) const;

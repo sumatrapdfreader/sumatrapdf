@@ -14,7 +14,7 @@ class Button : public Control {
   public:
     Button(const WCHAR* s, Style* def, Style* mouseOver);
 
-    virtual ~Button();
+    ~Button() override;
 
     void SetText(const WCHAR* s);
 
@@ -48,7 +48,7 @@ class ButtonVector : public Control {
     ButtonVector();
     ButtonVector(GraphicsPath* gp);
 
-    virtual ~ButtonVector();
+    ~ButtonVector() override;
 
     void SetGraphicsPath(GraphicsPath* gp);
 

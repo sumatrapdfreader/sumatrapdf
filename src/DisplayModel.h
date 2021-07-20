@@ -66,7 +66,7 @@ struct DisplayModel : public Controller {
     DisplayModel(DisplayModel const&) = delete;
     DisplayModel& operator=(DisplayModel const&) = delete;
 
-    ~DisplayModel();
+    ~DisplayModel() override;
 
     // meta data
     [[nodiscard]] const WCHAR* FilePath() const override;

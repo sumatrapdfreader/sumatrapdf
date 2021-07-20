@@ -13,7 +13,7 @@ struct CheckboxCtrl : WindowBase {
     OnCheckStateChanged onCheckStateChanged = nullptr;
 
     CheckboxCtrl(HWND parent);
-    ~CheckboxCtrl();
+    ~CheckboxCtrl() override;
     bool Create() override;
 
     Size GetIdealSize() override;

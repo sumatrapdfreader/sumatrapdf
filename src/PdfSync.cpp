@@ -69,7 +69,7 @@ class SyncTex : public Synchronizer {
         : Synchronizer(syncfilename), engine(engine), scanner(nullptr) {
         CrashIf(!str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
-    virtual ~SyncTex() {
+    ~SyncTex() override {
         synctex_scanner_free(scanner);
     }
 

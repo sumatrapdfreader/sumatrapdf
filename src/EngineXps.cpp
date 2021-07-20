@@ -193,7 +193,7 @@ static xps_document* xps_document_from_fz_document(fz_document* doc) {
 class EngineXps : public EngineBase {
   public:
     EngineXps();
-    virtual ~EngineXps();
+    ~EngineXps() override;
     EngineBase* Clone() override;
 
     RectF PageMediabox(int pageNo) override;

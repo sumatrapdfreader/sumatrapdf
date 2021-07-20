@@ -161,7 +161,7 @@ struct TreeCtrl : WindowBase {
     TVITEMW item{};
 
     TreeCtrl(HWND parent);
-    ~TreeCtrl();
+    ~TreeCtrl() override;
 
     Size GetIdealSize() override;
     void WndProc(WndEvent*) override;

@@ -26,7 +26,7 @@ class Control : public ILayout {
     };
 
     Control(Control* newParent = nullptr);
-    virtual ~Control();
+    ~Control() override;
 
     void SetParent(Control* newParent);
     void AddChild(Control* c, int pos = -1);

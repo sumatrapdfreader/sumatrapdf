@@ -34,7 +34,7 @@ struct EditCtrl : WindowBase {
     bool hasBorder = false;
 
     EditCtrl(HWND parent);
-    ~EditCtrl();
+    ~EditCtrl() override;
     bool Create() override;
     Size GetIdealSize() override;
 

@@ -79,7 +79,7 @@ class EbookAbortCookie : public AbortCookie {
 class EngineEbook : public EngineBase {
   public:
     EngineEbook();
-    virtual ~EngineEbook();
+    ~EngineEbook() override;
 
     RectF PageMediabox(int pageNo) override;
     RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
@@ -677,7 +677,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
 class EngineEpub : public EngineEbook {
   public:
     EngineEpub();
-    virtual ~EngineEpub();
+    ~EngineEpub() override;
     EngineBase* Clone() override;
 
     std::span<u8> GetFileData() override;
@@ -846,7 +846,7 @@ class EngineFb2 : public EngineEbook {
         kind = kindEngineFb2;
         defaultFileExt = L".fb2";
     }
-    virtual ~EngineFb2() {
+    ~EngineFb2() override {
         delete tocTree;
         delete doc;
     }
@@ -1114,7 +1114,7 @@ class EnginePdb : public EngineEbook {
         kind = kindEnginePdb;
         defaultFileExt = L".pdb";
     }
-    virtual ~EnginePdb() {
+    ~EnginePdb() override {
         delete tocTree;
         delete doc;
     }
@@ -1326,7 +1326,7 @@ class EngineChm : public EngineEbook {
         kind = kindEngineChm;
         defaultFileExt = L".chm";
     }
-    virtual ~EngineChm() {
+    ~EngineChm() override {
         delete dataCache;
         delete doc;
         delete tocTree;
@@ -1576,7 +1576,7 @@ class EngineHtml : public EngineEbook {
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         defaultFileExt = L".html";
     }
-    virtual ~EngineHtml() {
+    ~EngineHtml() override {
         delete doc;
     }
     EngineBase* Clone() override {
@@ -1678,7 +1678,7 @@ class EngineTxt : public EngineEbook {
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         defaultFileExt = L".txt";
     }
-    virtual ~EngineTxt() {
+    ~EngineTxt() override {
         delete tocTree;
         delete doc;
     }
