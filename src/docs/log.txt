@@ -9,6 +9,7 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2040
   stupidly removed code when fixing -x extraction
   should review code more carefully
+- for pre-release, only do auto-update check every 1 week
 
 2021-07-19 Mon
 

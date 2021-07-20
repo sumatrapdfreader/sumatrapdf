@@ -64,7 +64,7 @@ func (c *S3Client) GetBucket() *s3.Bucket {
 
 // UploadFileReader uploads file from a reader
 func (c *S3Client) UploadFileReader(pathRemote, pathLocal string, public bool) error {
-	logf("Uploading '%s' as '%s'. ", pathLocal, pathRemote)
+	logf("Uploading to s3 '%s' as '%s'. ", pathLocal, pathRemote)
 	timeStart := time.Now()
 	opts := s3.Options{}
 	opts.ContentMD5 = md5B64OfFile(pathLocal)
@@ -92,7 +92,7 @@ func (c *S3Client) UploadFileReader(pathRemote, pathLocal string, public bool) e
 
 // UploadFile uploads a file
 func (c *S3Client) UploadFile(pathRemote, pathLocal string, public bool) error {
-	logf("Uploading '%s' as '%s'\n", pathLocal, pathRemote)
+	logf("Uploading to s3 '%s' as '%s'\n", pathLocal, pathRemote)
 	bucket := c.GetBucket()
 	d, err := ioutil.ReadFile(pathLocal)
 	if err != nil {

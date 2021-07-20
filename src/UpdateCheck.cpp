@@ -27,8 +27,6 @@
 #include "SumatraDialogs.h"
 #include "UpdateCheck.h"
 
-constexpr int kSecondsInDay = 60 * 60 * 24;
-
 // for testing. if true will ignore version checks etc. and act like there's an update
 constexpr bool gForceAutoUpdate = false;
 
@@ -183,6 +181,11 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     FILETIME currentTimeFt;
     GetSystemTimeAsFileTime(&currentTimeFt);
     int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
+
+    constexpr int kSecondsInDay = 60 * 60 * 24;
+    constexpr int kSecondsInWeek = 7 * 60 * 60 * 24;
+
+    int timeDiff = gIsPreReleaseBuild ? kSecondsInWeek : kSecondsInDay;
     // if secs < 0 => somethings wrong, so ignore that case
     if ((secs >= 0) && (secs < kSecondsInDay)) {
         return false;
