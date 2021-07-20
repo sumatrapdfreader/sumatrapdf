@@ -238,7 +238,7 @@ struct WindowBase : public ILayout {
     std::string_view GetText();
 
     void SetPos(RECT* r) const;
-    void SetBounds(const RECT& r);
+    //void SetBounds(const RECT& r) const;
     void SetTextColor(COLORREF);
     void SetBackgroundColor(COLORREF);
     void SetColors(COLORREF bg, COLORREF txt);

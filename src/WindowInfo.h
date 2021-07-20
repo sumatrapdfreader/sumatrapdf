@@ -241,7 +241,7 @@ struct WindowInfo {
     void ToggleZoom() const;
     void MoveDocBy(int dx, int dy) const;
 
-    void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false);
+    void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false) const;
     void HideToolTip() const;
     NotificationWnd* ShowNotification(const WCHAR* msg, NotificationOptions opts = NotificationOptions::WithTimeout,
                                       Kind groupId = NG_RESPONSE_TO_ACTION);

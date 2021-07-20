@@ -690,14 +690,6 @@ bool WindowBase::IsVisible() const {
     return visibility == Visibility::Visible;
 }
 
-void WindowBase::SetPos(RECT* r) const {
-    ::MoveWindow(hwnd, r);
-}
-
-void WindowBase::SetBounds(const RECT& r) {
-    SetPos((RECT*)&r);
-}
-
 void WindowBase::SetFont(HFONT f) {
     hfont = f;
     HwndSetFont(hwnd, f);
@@ -924,6 +916,10 @@ int WindowBase::MinIntrinsicWidth(int) {
 #endif
 }
 
+void WindowBase::SetPos(RECT* r) const {
+    ::MoveWindow(hwnd, r);
+}
+
 void WindowBase::SetBounds(Rect bounds) {
     dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", GetKind(), bounds.x, bounds.y, bounds.dx, bounds.dy);
 
@@ -939,6 +935,12 @@ void WindowBase::SetBounds(Rect bounds) {
     // TODO: optimize if doesn't change position
     ::InvalidateRect(hwnd, nullptr, TRUE);
 }
+
+#if 0
+void WindowBase::SetBounds(const RECT& r) const {
+    SetPos((RECT*)&r);
+}
+#endif
 
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
     MSG msg;

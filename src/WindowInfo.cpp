@@ -257,7 +257,7 @@ void WindowInfo::MoveDocBy(int dx, int dy) const {
     currentTab->MoveDocBy(dx, dy);
 }
 
-void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) {
+void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) const {
     if (str::IsEmpty(text)) {
         HideToolTip();
         return;

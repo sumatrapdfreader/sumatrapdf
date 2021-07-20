@@ -545,7 +545,7 @@ bool ChmFile::HasToc() const {
     return tocPath != nullptr;
 }
 
-bool ChmFile::ParseToc(EbookTocVisitor* visitor) {
+bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
     return ParseTocOrIndex(visitor, tocPath, false);
 }
 
@@ -553,7 +553,7 @@ bool ChmFile::HasIndex() const {
     return indexPath != nullptr;
 }
 
-bool ChmFile::ParseIndex(EbookTocVisitor* visitor) {
+bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 

@@ -123,9 +123,9 @@ struct TabPainter {
     TabPainter(TabsCtrl2* ctrl, Size tabSize);
     ~TabPainter();
     bool Reshape(int dx, int dy);
-    int IndexFromPoint(int x, int y, bool* inXbutton = nullptr);
+    int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) const;
     void Invalidate(int index) const;
-    void Paint(HDC hdc, RECT& rc);
+    void Paint(HDC hdc, RECT& rc) const;
     int Count() const;
 };
 
@@ -177,7 +177,7 @@ bool TabPainter::Reshape(int dx, int dy) {
 }
 
 // Finds the index of the tab, which contains the given point.
-int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) {
+int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
     Gdiplus::Point point(x, y);
     Graphics gfx(hwnd);
     GraphicsPath shapes(data->Points, data->Types, data->Count);
@@ -228,7 +228,7 @@ void TabPainter::Invalidate(int index) const {
 }
 
 // Paints the tabs that intersect the window's update rectangle.
-void TabPainter::Paint(HDC hdc, RECT& rc) {
+void TabPainter::Paint(HDC hdc, RECT& rc) const {
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 #if 0
         // paint the background
