@@ -164,11 +164,11 @@ struct VBox : LayoutBase {
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
 
-    void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2);
+    void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) const;
 
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
-    int ChildrenCount();
+    int ChildrenCount() const;
     int NonCollapsedChildrenCount();
 };
 
@@ -187,10 +187,10 @@ struct HBox : LayoutBase {
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
 
-    void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2);
+    void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) const;
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
-    int ChildrenCount();
+    int ChildrenCount() const;
     int NonCollapsedChildrenCount();
 };
 

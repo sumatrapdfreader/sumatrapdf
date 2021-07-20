@@ -39,7 +39,7 @@ DocumentTextCache::~DocumentTextCache() {
     DeleteCriticalSection(&access);
 }
 
-bool DocumentTextCache::HasTextForPage(int pageNo) {
+bool DocumentTextCache::HasTextForPage(int pageNo) const {
     CrashIf(pageNo < 1 || pageNo > nPages);
     PageText* pageText = &pagesText[pageNo - 1];
     return pageText->text != nullptr;

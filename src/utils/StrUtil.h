@@ -228,8 +228,8 @@ struct Str {
     [[nodiscard]] int Find(char el, size_t startAt = 0) const;
     [[nodiscard]] bool Contains(char el) const;
     int Remove(char el);
-    void Reverse();
-    char& FindEl(const std::function<bool(char&)>& check);
+    void Reverse() const;
+    char& FindEl(const std::function<bool(char&)>& check) const;
     [[nodiscard]] bool IsEmpty() const;
     [[nodiscard]] std::string_view AsView() const;
     [[nodiscard]] std::span<u8> AsSpan() const;
@@ -309,8 +309,8 @@ struct WStr {
     [[nodiscard]] int Find(const WCHAR& el, size_t startAt = 0) const;
     [[nodiscard]] bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
-    void Reverse();
-    WCHAR& FindEl(const std::function<bool(WCHAR&)>& check);
+    void Reverse() const;
+    WCHAR& FindEl(const std::function<bool(WCHAR&)>& check) const;
     [[nodiscard]] bool IsEmpty() const;
     [[nodiscard]] std::wstring_view AsView() const;
     [[nodiscard]] std::span<WCHAR> AsSpan() const;

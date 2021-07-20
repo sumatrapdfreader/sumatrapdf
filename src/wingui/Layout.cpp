@@ -346,7 +346,7 @@ VBox::~VBox() {
     }
 }
 
-int VBox::ChildrenCount() {
+int VBox::ChildrenCount() const {
     return children.isize();
 }
 
@@ -619,7 +619,7 @@ void VBox::SetBounds(Rect bounds) {
     }
 }
 
-void VBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) {
+void VBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) const {
     auto dx = children[i].size.dx;
     Rect r{};
     switch (alignCross) {
@@ -673,7 +673,7 @@ HBox::~HBox() {
     }
 }
 
-int HBox::ChildrenCount() {
+int HBox::ChildrenCount() const {
     return children.isize();
 }
 
@@ -928,7 +928,7 @@ void HBox::SetBounds(Rect bounds) {
     }
 }
 
-void HBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) {
+void HBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) const {
     auto dy = children[i].size.dy;
     switch (alignCross) {
         case CrossAxisAlign::CrossStart:

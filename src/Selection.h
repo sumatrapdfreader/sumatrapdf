@@ -13,7 +13,7 @@ struct SelectionOnPage {
     RectF rect; // position of selection rectangle on page (in page coordinates)
 
     // position of selection rectangle in the view port
-    Rect GetRect(DisplayModel* dm);
+    Rect GetRect(DisplayModel* dm) const;
 
     static Vec<SelectionOnPage>* FromRectangle(DisplayModel* dm, Rect rect);
     static Vec<SelectionOnPage>* FromTextSelect(TextSel* textSel);

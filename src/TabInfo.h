@@ -52,8 +52,8 @@ struct TabInfo {
 
     [[nodiscard]] const WCHAR* GetTabTitle() const;
     [[nodiscard]] bool IsDocLoaded() const;
-    void MoveDocBy(int dx, int dy);
-    void ToggleZoom();
+    void MoveDocBy(int dx, int dy) const;
+    void ToggleZoom() const;
 };
 
 bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::span<u8> data);

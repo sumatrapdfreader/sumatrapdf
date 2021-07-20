@@ -124,9 +124,9 @@ struct TabPainter {
     ~TabPainter();
     bool Reshape(int dx, int dy);
     int IndexFromPoint(int x, int y, bool* inXbutton = nullptr);
-    void Invalidate(int index);
+    void Invalidate(int index) const;
     void Paint(HDC hdc, RECT& rc);
-    int Count();
+    int Count() const;
 };
 
 TabPainter::TabPainter(TabsCtrl2* ctrl, Size tabSize) {
@@ -207,7 +207,7 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) {
 }
 
 // Invalidates the tab's region in the client area.
-void TabPainter::Invalidate(int index) {
+void TabPainter::Invalidate(int index) const {
     if (index < 0) {
         return;
     }
@@ -340,7 +340,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) {
     }
 }
 
-int TabPainter::Count() {
+int TabPainter::Count() const {
     int n = tabsCtrl->GetTabCount();
     return n;
 }

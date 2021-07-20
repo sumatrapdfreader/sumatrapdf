@@ -29,7 +29,7 @@ HwndWrapper::~HwndWrapper() {
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMinSize(Size s) {
+void HwndWrapper::SetMinSize(Size s) const {
     evtMgr->SetMinSize(s);
 }
 
@@ -38,7 +38,7 @@ void HwndWrapper::SetMinSize(Size s) {
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMaxSize(Size s) {
+void HwndWrapper::SetMaxSize(Size s) const {
     evtMgr->SetMaxSize(s);
 }
 

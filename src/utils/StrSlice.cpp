@@ -126,7 +126,7 @@ size_t Slice::Skip(int n) {
     return toSkip;
 }
 
-void Slice::ZeroCurr() {
+void Slice::ZeroCurr() const {
     if (curr < end) {
         *curr = 0;
     }

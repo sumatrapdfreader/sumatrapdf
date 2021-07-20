@@ -181,7 +181,7 @@ static void SetIfNotZero(LONG& l, int i, bool& didSet) {
     }
 }
 
-LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled) {
+LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled) const {
     SetIfNotZero(info->ptMinTrackSize.x, minSize.dx, wasHandled);
     SetIfNotZero(info->ptMinTrackSize.y, minSize.dy, wasHandled);
     SetIfNotZero(info->ptMaxTrackSize.x, maxSize.dx, wasHandled);

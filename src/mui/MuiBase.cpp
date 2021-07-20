@@ -63,7 +63,7 @@ struct GraphicsCacheEntry {
     BYTE data[bmpDx * bmpDy * 4];
 
     bool Create();
-    void Free();
+    void Free() const;
 };
 
 static Vec<GraphicsCacheEntry>* gGraphicsCache = nullptr;
@@ -96,7 +96,7 @@ bool GraphicsCacheEntry::Create() {
     return true;
 }
 
-void GraphicsCacheEntry::Free() {
+void GraphicsCacheEntry::Free() const {
     CrashIf(0 != refCount);
     ::delete gfx;
     ::delete bmp;

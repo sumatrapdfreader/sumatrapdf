@@ -1175,7 +1175,7 @@ RectF DisplayModel::GetContentBox(int pageNo) const {
 
 /* get the (screen) coordinates of the point where a page's actual
    content begins (relative to the page's top left corner) */
-Point DisplayModel::GetContentStart(int pageNo) {
+Point DisplayModel::GetContentStart(int pageNo) const {
     RectF contentBox = GetContentBox(pageNo);
     if (contentBox.IsEmpty()) {
         return Point(0, 0);

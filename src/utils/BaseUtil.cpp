@@ -345,11 +345,11 @@ u32 MurmurHash2(const void* key, size_t len) {
     return h;
 }
 
-int VecStrIndex::ItemsLeft() {
+int VecStrIndex::ItemsLeft() const {
     return kVecStrIndexSize - nStrings;
 }
 
-int VecStr::Size() {
+int VecStr::Size() const {
     VecStrIndex* idx = firstIndex;
     int n = 0;
     while (idx) {
@@ -359,7 +359,7 @@ int VecStr::Size() {
     return n;
 }
 
-std::string_view VecStr::at(int i) {
+std::string_view VecStr::at(int i) const {
     CrashIf(i < 0);
     VecStrIndex* idx = firstIndex;
     while (idx) {

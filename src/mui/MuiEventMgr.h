@@ -44,7 +44,7 @@ class EventMgr {
     LRESULT OnSetCursor(int x, int y, bool& wasHandled);
     LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled);
     LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled);
-    LRESULT OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled);
+    LRESULT OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled) const;
 
   public:
     EventMgr(HwndWrapper* wndRoot);

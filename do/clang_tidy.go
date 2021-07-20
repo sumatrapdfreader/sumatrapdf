@@ -33,36 +33,6 @@ clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unuse
 ls src\utils\*.cpp | select Name
 
 clang-tidy src/*.cpp -fix -header-filter=src/ -checks="-*,readability-inconsistent-declaration-parameter-name" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
-
-*/
-
-/*
-TODO fixes:
-modernize-use-default-member-init
-modernize-return-braced-init-list
-modernize-raw-string-literal
-modernize-pass-by-value
-modernize-loop-convert
-modernize-deprecated-headers
-modernize-concat-nested-namespaces
-modernize-avoid-c-arrays
-modernize-avoid-bind
-modernize-use-override
-modernize-use-nullptr
-modernize-use-auto
-modernize-use-nodiscard
-readability-inconsistent-declaration-parameter-name
-readability-make-member-function-const
-readability-misplaced-array-index
-readability-redundant-access-specifiers
-readability-redundant-control-flow
-readability-redundant-declaration
-readability-redundant-function-ptr-dereference
-readability-redundant-member-init
-readability-redundant-preprocessor
-readability-redundant-string-init
-readability-redundant-string-cst
-readability-string-compare
 */
 
 const clangTidyLogFile = "clangtidy.out.txt"
@@ -108,14 +78,51 @@ func clangTidyFile(path string) {
 	must(err)
 }
 
-// modernize-raw-string-literal
-// modernize-use-nullptr
-// modernize-use-override
-// modernize-use-equals-default
-// readability-avoid-const-params-in-decls
-// readability-simplify-boolean-expr
-// modernize-use-using : needs to figure out how to not run in ext
-// readability-braces-around-statements¶
+/*
+Done:
+readability-make-member-function-const
+*/
+
+/*
+TODO fixes:
+modernize-use-default-member-init
+modernize-return-braced-init-list
+modernize-raw-string-literal
+modernize-pass-by-value
+modernize-loop-convert
+modernize-deprecated-headers
+modernize-concat-nested-namespaces
+modernize-avoid-c-arrays
+modernize-avoid-bind
+modernize-use-override
+modernize-use-nullptr
+modernize-use-auto
+modernize-use-nodiscard
+readability-inconsistent-declaration-parameter-name
+readability-make-member-function-const
+readability-misplaced-array-index
+readability-redundant-access-specifiers
+readability-redundant-control-flow
+readability-redundant-declaration
+readability-redundant-function-ptr-dereference
+readability-redundant-member-init
+readability-redundant-preprocessor
+readability-redundant-string-init
+readability-redundant-string-cst
+readability-string-compare
+*/
+
+/*
+TODO:
+readability-avoid-const-params-in-decls
+modernize-use-override
+modernize-raw-string-literal
+modernize-use-nullptr
+modernize-use-equals-default
+readability-simplify-boolean-expr
+readability-braces-around-statements¶
+modernize-use-using : needs to figure out how to not run in ext
+*/
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
@@ -174,7 +181,7 @@ func runClangTidy(fix bool) {
 		`src\previewer\*.cpp`,
 		`src\ifilter\*.h`,
 		`src\ifilter\*.cpp`,
-		`ext\mupdf_load_system_font.c`,
+		//`ext\mupdf_load_system_font.c`,
 	}
 
 	isWhiteListed := func(s string) bool {

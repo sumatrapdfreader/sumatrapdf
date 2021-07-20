@@ -6,12 +6,12 @@ struct LabelWithCloseWnd {
     ~LabelWithCloseWnd() = default;
 
     bool Create(HWND parent, int cmd);
-    void SetLabel(const WCHAR*);
+    void SetLabel(const WCHAR*) const;
     void SetFont(HFONT);
     void SetBgCol(COLORREF);
     void SetTextCol(COLORREF);
     void SetPaddingXY(int x, int y);
-    Size GetIdealSize();
+    Size GetIdealSize() const;
 
     HWND hwnd = 0;
     HFONT font = 0;

@@ -105,15 +105,15 @@ struct RectF {
     RectF(PointF pt, SizeF size);
     RectF(PointF min, PointF max);
 
-    bool EqSize(float otherDx, float otherDy);
+    bool EqSize(float otherDx, float otherDy) const;
     [[nodiscard]] float Right() const;
     [[nodiscard]] float Bottom() const;
     static RectF FromXY(float xs, float ys, float xe, float ye);
     static RectF FromXY(PointF TL, PointF BR);
     [[nodiscard]] Rect Round() const;
     [[nodiscard]] bool IsEmpty() const;
-    bool Contains(PointF pt);
-    RectF Intersect(RectF other);
+    bool Contains(PointF pt) const;
+    RectF Intersect(RectF other) const;
     RectF Union(RectF other);
     void Offset(float _x, float _y);
     void Inflate(float _x, float _y);

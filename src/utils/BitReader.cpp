@@ -14,7 +14,7 @@ BitReader::BitReader(u8* data, size_t len) : data(data), dataLen(len) {
 BitReader::~BitReader() {
 }
 
-u8 BitReader::GetByte(size_t pos) {
+u8 BitReader::GetByte(size_t pos) const {
     if (pos >= dataLen) {
         return 0;
     }
@@ -28,7 +28,7 @@ bool BitReader::Eat(size_t bitsCount) {
     return (currBitPos <= bitsCount);
 }
 
-size_t BitReader::BitsLeft() {
+size_t BitReader::BitsLeft() const {
     if (currBitPos < bitsCount) {
         return bitsCount - currBitPos;
     }

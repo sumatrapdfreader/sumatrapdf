@@ -251,7 +251,7 @@ RectF::RectF(PointF pt, SizeF size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy)
 RectF::RectF(PointF min, PointF max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
 }
 
-bool RectF::EqSize(float otherDx, float otherDy) {
+bool RectF::EqSize(float otherDx, float otherDy) const {
     return (dx == otherDx) && (dy == otherDy);
 }
 
@@ -286,7 +286,7 @@ bool RectF::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
-bool RectF::Contains(PointF pt) {
+bool RectF::Contains(PointF pt) const {
     if (pt.x < this->x) {
         return false;
     }
@@ -303,7 +303,7 @@ bool RectF::Contains(PointF pt) {
 }
 
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
-RectF RectF::Intersect(RectF other) {
+RectF RectF::Intersect(RectF other) const {
     /* The intersection starts with the larger of the start coordinates
         and ends with the smaller of the end coordinates */
     float _x = std::max(this->x, other.x);

@@ -71,7 +71,7 @@ struct PdfMerger {
     ~PdfMerger();
     bool MergeAndSave(TocItem*, char* dstPath);
     bool MergePdfFile(std::string_view);
-    void MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map);
+    void MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map) const;
 };
 
 PdfMerger::~PdfMerger() {
@@ -80,7 +80,7 @@ PdfMerger::~PdfMerger() {
     fz_drop_context(ctx);
 }
 
-void PdfMerger::MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map) {
+void PdfMerger::MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map) const {
     pdf_obj* page_ref = nullptr;
     pdf_obj* page_dict = nullptr;
     pdf_obj* obj = nullptr;

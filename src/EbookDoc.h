@@ -86,7 +86,7 @@ class Fb2Doc {
     [[nodiscard]] std::span<u8> GetXmlData() const;
 
     ImageData* GetImageData(const char* fileName) const;
-    ImageData* GetCoverImage();
+    ImageData* GetCoverImage() const;
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
     [[nodiscard]] const WCHAR* GetFileName() const;

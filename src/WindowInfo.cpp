@@ -173,7 +173,7 @@ void WindowInfo::UpdateCanvasSize() {
     }
 }
 
-Size WindowInfo::GetViewPortSize() {
+Size WindowInfo::GetViewPortSize() const {
     Size size = canvasRc.Size();
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
@@ -188,7 +188,7 @@ Size WindowInfo::GetViewPortSize() {
     return size;
 }
 
-void WindowInfo::RedrawAll(bool update) {
+void WindowInfo::RedrawAll(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (this->AsEbook()) {
         this->AsEbook()->RequestRepaint();
@@ -198,7 +198,7 @@ void WindowInfo::RedrawAll(bool update) {
     }
 }
 
-void WindowInfo::RedrawAllIncludingNonClient(bool update) {
+void WindowInfo::RedrawAllIncludingNonClient(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (this->AsEbook()) {
         this->AsEbook()->RequestRepaint();
@@ -235,7 +235,7 @@ static HWND FindModalOwnedBy(HWND hwndParent) {
     return nullptr;
 }
 
-void WindowInfo::Focus() {
+void WindowInfo::Focus() const {
     win::ToForeground(hwndFrame);
     // set focus to an owned modal dialog if there is one
     HWND hwnd = FindModalOwnedBy(hwndFrame);
@@ -246,13 +246,13 @@ void WindowInfo::Focus() {
     SetFocus(hwndFrame);
 }
 
-void WindowInfo::ToggleZoom() {
+void WindowInfo::ToggleZoom() const {
     if (currentTab) {
         currentTab->ToggleZoom();
     }
 }
 
-void WindowInfo::MoveDocBy(int dx, int dy) {
+void WindowInfo::MoveDocBy(int dx, int dy) const {
     CrashIf(!currentTab);
     currentTab->MoveDocBy(dx, dy);
 }
@@ -265,7 +265,7 @@ void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) {
     infotip->Show(text, rc, multiline);
 }
 
-void WindowInfo::HideToolTip() {
+void WindowInfo::HideToolTip() const {
     infotip->Hide();
 }
 
@@ -444,7 +444,7 @@ void LinkHandler::ScrollTo(PageDestination* dest) {
     }
 }
 
-void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
+void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) const {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)

@@ -249,7 +249,7 @@ bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const ch
     return true;
 }
 
-bool MapStrToInt::Remove(const char* key, int* removedValOut) {
+bool MapStrToInt::Remove(const char* key, int* removedValOut) const {
     uintptr_t removedVal;
     bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
     if (removed && removedValOut) {
@@ -258,7 +258,7 @@ bool MapStrToInt::Remove(const char* key, int* removedValOut) {
     return removed;
 }
 
-bool MapStrToInt::Get(const char* key, int* valOut) {
+bool MapStrToInt::Get(const char* key, int* valOut) const {
     StrKeyHasherComparator hc;
     bool newEntry;
     HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
@@ -299,7 +299,7 @@ bool MapWStrToInt::Insert(const WCHAR* key, int val, int* prevVal) {
     return true;
 }
 
-bool MapWStrToInt::Remove(const WCHAR* key, int* removedValOut) {
+bool MapWStrToInt::Remove(const WCHAR* key, int* removedValOut) const {
     uintptr_t removedVal;
     bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
     if (removed && removedValOut) {
@@ -308,7 +308,7 @@ bool MapWStrToInt::Remove(const WCHAR* key, int* removedValOut) {
     return removed;
 }
 
-bool MapWStrToInt::Get(const WCHAR* key, int* valOut) {
+bool MapWStrToInt::Get(const WCHAR* key, int* valOut) const {
     WStrKeyHasherComparator hc;
     bool newEntry;
     HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);

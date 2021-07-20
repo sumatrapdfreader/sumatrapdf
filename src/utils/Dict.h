@@ -28,8 +28,8 @@ class MapStrToInt {
 
     bool Insert(const char* key, int val, int* existingValOut = nullptr, const char** existingKeyOut = nullptr);
 
-    bool Remove(const char* key, int* removedValOut);
-    bool Get(const char* key, int* valOut);
+    bool Remove(const char* key, int* removedValOut) const;
+    bool Get(const char* key, int* valOut) const;
 };
 
 class MapWStrToInt {
@@ -45,8 +45,8 @@ class MapWStrToInt {
     // if a key doesn't exist, inserts a key with a given value and return true
     // if a key exists, returns false and sets prevValOut to existing value
     bool Insert(const WCHAR* key, int val, int* prevValOut);
-    bool Remove(const WCHAR* key, int* removedValOut);
-    bool Get(const WCHAR* key, int* valOut);
+    bool Remove(const WCHAR* key, int* removedValOut) const;
+    bool Get(const WCHAR* key, int* valOut) const;
 };
 
 } // namespace dict

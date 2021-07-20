@@ -150,7 +150,7 @@ struct Prop {
     Prop(PropType type) : type(type) {
     }
 
-    void Free();
+    void Free() const;
 
     PropType type;
 

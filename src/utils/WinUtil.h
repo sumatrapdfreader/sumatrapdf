@@ -194,7 +194,7 @@ struct DoubleBuffer {
     ~DoubleBuffer();
 
     [[nodiscard]] HDC GetDC() const;
-    void Flush(HDC hdc);
+    void Flush(HDC hdc) const;
 };
 
 class DeferWinPosHelper {

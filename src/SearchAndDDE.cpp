@@ -247,7 +247,7 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindMatch, disable);
     }
 
-    void HideUI(bool success, bool loopedAround) {
+    void HideUI(bool success, bool loopedAround) const {
         LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindPrev, enable);

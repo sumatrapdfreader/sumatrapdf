@@ -230,19 +230,19 @@ struct WindowInfo {
     SumatraUIAutomationProvider* uiaProvider{nullptr};
 
     void UpdateCanvasSize();
-    Size GetViewPortSize();
-    void RedrawAll(bool update = false);
-    void RedrawAllIncludingNonClient(bool update = false);
+    Size GetViewPortSize() const;
+    void RedrawAll(bool update = false) const;
+    void RedrawAllIncludingNonClient(bool update = false) const;
 
     void ChangePresentationMode(PresentationMode mode);
 
-    void Focus();
+    void Focus() const;
 
-    void ToggleZoom();
-    void MoveDocBy(int dx, int dy);
+    void ToggleZoom() const;
+    void MoveDocBy(int dx, int dy) const;
 
     void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false);
-    void HideToolTip();
+    void HideToolTip() const;
     NotificationWnd* ShowNotification(const WCHAR* msg, NotificationOptions options = NotificationOptions::WithTimeout,
                                       Kind groupId = NG_RESPONSE_TO_ACTION);
     NotificationWnd* ShowNotification(std::string_view, NotificationOptions options = NotificationOptions::WithTimeout,
@@ -255,7 +255,7 @@ struct LinkHandler {
     WindowInfo* owner{nullptr};
 
     void ScrollTo(PageDestination* dest);
-    void LaunchFile(const WCHAR* path, PageDestination* link);
+    void LaunchFile(const WCHAR* path, PageDestination* link) const;
     PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially = false);
 
     explicit LinkHandler(WindowInfo* win) {

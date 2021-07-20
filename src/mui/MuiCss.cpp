@@ -310,7 +310,7 @@ int ElAlignData::CalcOffset(int elSize, int containerSize) const {
     return cp - ep;
 }
 
-void Prop::Free() {
+void Prop::Free() const {
     if (PropFontName == type) {
         free(fontName);
     } else if (PropStyleName == type) {

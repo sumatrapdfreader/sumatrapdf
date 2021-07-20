@@ -79,7 +79,7 @@ const WCHAR* TabInfo::GetTabTitle() const {
     return path::GetBaseNameTemp(filePath);
 }
 
-void TabInfo::MoveDocBy(int dx, int dy) {
+void TabInfo::MoveDocBy(int dx, int dy) const {
     if (!ctrl) {
         return;
     }
@@ -100,7 +100,7 @@ void TabInfo::MoveDocBy(int dx, int dy) {
     }
 }
 
-void TabInfo::ToggleZoom() {
+void TabInfo::ToggleZoom() const {
     CrashIf(!ctrl);
     if (!IsDocLoaded()) {
         return;

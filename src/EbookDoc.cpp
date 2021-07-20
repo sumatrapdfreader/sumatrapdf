@@ -986,7 +986,7 @@ ImageData* Fb2Doc::GetImageData(const char* fileName) const {
     return nullptr;
 }
 
-ImageData* Fb2Doc::GetCoverImage() {
+ImageData* Fb2Doc::GetCoverImage() const {
     if (!coverImage) {
         return nullptr;
     }

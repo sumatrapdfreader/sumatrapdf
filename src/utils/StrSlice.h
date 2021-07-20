@@ -27,7 +27,7 @@ struct Slice {
     size_t SkipUntil(char toFind);
     size_t SkipNonWs();
     size_t Skip(int n);
-    void ZeroCurr();
+    void ZeroCurr() const;
 };
 
 } // namespace str

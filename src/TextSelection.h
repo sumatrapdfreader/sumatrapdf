@@ -12,7 +12,7 @@ struct DocumentTextCache {
     explicit DocumentTextCache(EngineBase* engine);
     ~DocumentTextCache();
 
-    bool HasTextForPage(int pageNo);
+    bool HasTextForPage(int pageNo) const;
     const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
 };
 

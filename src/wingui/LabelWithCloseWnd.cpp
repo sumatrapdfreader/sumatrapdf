@@ -208,7 +208,7 @@ static void RegisterLabelWithCloseWnd() {
     CrashIf(!atom);
 }
 
-void LabelWithCloseWnd::SetLabel(const WCHAR* label) {
+void LabelWithCloseWnd::SetLabel(const WCHAR* label) const {
     win::SetText(this->hwnd, label);
     ScheduleRepaint(this->hwnd);
 }
@@ -241,7 +241,7 @@ bool LabelWithCloseWnd::Create(HWND parent, int cmd) {
     return this->hwnd != nullptr;
 }
 
-Size LabelWithCloseWnd::GetIdealSize() {
+Size LabelWithCloseWnd::GetIdealSize() const {
     WCHAR* s = win::GetTextTemp(this->hwnd);
     Size size = TextSizeInHwnd(this->hwnd, s);
     int btnDx = DpiScale(this->hwnd, CLOSE_BTN_DX);

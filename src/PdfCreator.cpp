@@ -240,7 +240,7 @@ bool PdfCreator::AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi) {
     return ok;
 }
 
-bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi) {
+bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi) const {
     CrashIf(!ctx || !doc);
     if (!ctx || !doc || !data || len == 0) {
         return false;
@@ -326,7 +326,7 @@ static DocumentProperty propsToCopy[] = {
 };
 // clang-format on
 
-bool PdfCreator::CopyProperties(EngineBase* engine) {
+bool PdfCreator::CopyProperties(EngineBase* engine) const {
     bool ok;
     for (int i = 0; i < dimof(propsToCopy); i++) {
         AutoFreeWstr value = engine->GetProperty(propsToCopy[i]);
@@ -360,7 +360,7 @@ const pdf_write_options pdf_default_write_options2 = {
     "", /* upwd_utf8[128] */
 };
 
-bool PdfCreator::SaveToFile(const char* filePath) {
+bool PdfCreator::SaveToFile(const char* filePath) const {
     if (!ctx || !doc) {
         return false;
     }

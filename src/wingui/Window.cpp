@@ -621,31 +621,31 @@ bool WindowBase::Create() {
     return true;
 }
 
-void WindowBase::SuspendRedraw() {
+void WindowBase::SuspendRedraw() const {
     SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
 }
 
-void WindowBase::ResumeRedraw() {
+void WindowBase::ResumeRedraw() const {
     SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
 }
 
-void WindowBase::SetFocus() {
+void WindowBase::SetFocus() const {
     ::SetFocus(hwnd);
 }
 
-bool WindowBase::IsFocused() {
+bool WindowBase::IsFocused() const {
     BOOL isFocused = ::IsFocused(hwnd);
     return tobool(isFocused);
 }
 
-void WindowBase::SetIsEnabled(bool isEnabled) {
+void WindowBase::SetIsEnabled(bool isEnabled) const {
     // TODO: make it work even if not yet created?
     CrashIf(!hwnd);
     BOOL enabled = isEnabled ? TRUE : FALSE;
     ::EnableWindow(hwnd, enabled);
 }
 
-bool WindowBase::IsEnabled() {
+bool WindowBase::IsEnabled() const {
     BOOL enabled = ::IsWindowEnabled(hwnd);
     return tobool(enabled);
 }
@@ -690,7 +690,7 @@ bool WindowBase::IsVisible() const {
     return visibility == Visibility::Visible;
 }
 
-void WindowBase::SetPos(RECT* r) {
+void WindowBase::SetPos(RECT* r) const {
     ::MoveWindow(hwnd, r);
 }
 
@@ -778,7 +778,7 @@ void WindowBase::SetColors(COLORREF bg, COLORREF txt) {
     SetTextColor(txt);
 }
 
-void WindowBase::SetRtl(bool isRtl) {
+void WindowBase::SetRtl(bool isRtl) const {
     SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 

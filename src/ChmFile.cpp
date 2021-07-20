@@ -230,7 +230,7 @@ bool ChmFile::ParseSystemData() {
     return true;
 }
 
-char* ChmFile::ResolveTopicID(unsigned int id) {
+char* ChmFile::ResolveTopicID(unsigned int id) const {
     AutoFree ivbData = GetData("/#IVB");
     size_t ivbLen = ivbData.size();
     ByteReader br(ivbData.AsView());
@@ -311,7 +311,7 @@ bool ChmFile::Load(const char* fileNameA) {
     return true;
 }
 
-WCHAR* ChmFile::GetProperty(DocumentProperty prop) {
+WCHAR* ChmFile::GetProperty(DocumentProperty prop) const {
     AutoFreeWstr result;
     if (DocumentProperty::Title == prop && title) {
         result.Set(ToStr(title));
@@ -507,7 +507,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, uin
     return hadOne;
 }
 
-bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) {
+bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) const {
     if (!path) {
         return false;
     }

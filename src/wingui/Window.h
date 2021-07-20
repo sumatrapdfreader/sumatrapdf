@@ -215,17 +215,17 @@ struct WindowBase : public ILayout {
     void Subclass();
     void Unsubclass();
 
-    void SetIsEnabled(bool);
-    bool IsEnabled();
+    void SetIsEnabled(bool) const;
+    bool IsEnabled() const;
 
     void SetIsVisible(bool);
     [[nodiscard]] bool IsVisible() const;
 
-    void SuspendRedraw();
-    void ResumeRedraw();
+    void SuspendRedraw() const;
+    void ResumeRedraw() const;
 
-    void SetFocus();
-    bool IsFocused();
+    void SetFocus() const;
+    bool IsFocused() const;
 
     void SetFont(HFONT f);
     [[nodiscard]] HFONT GetFont() const;
@@ -237,12 +237,12 @@ struct WindowBase : public ILayout {
     void SetText(std::string_view);
     std::string_view GetText();
 
-    void SetPos(RECT* r);
+    void SetPos(RECT* r) const;
     void SetBounds(const RECT& r);
     void SetTextColor(COLORREF);
     void SetBackgroundColor(COLORREF);
     void SetColors(COLORREF bg, COLORREF txt);
-    void SetRtl(bool);
+    void SetRtl(bool) const;
 };
 
 void Handle_WM_CONTEXTMENU(WindowBase* w, WndEvent* ev);

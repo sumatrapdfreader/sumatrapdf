@@ -39,7 +39,7 @@ SelectionOnPage::SelectionOnPage(int pageNo, RectF* rect) {
     }
 }
 
-Rect SelectionOnPage::GetRect(DisplayModel* dm) {
+Rect SelectionOnPage::GetRect(DisplayModel* dm) const {
     // if the page is not visible, we return an empty rectangle
     PageInfo* pageInfo = dm->GetPageInfo(pageNo);
     if (!pageInfo || pageInfo->visibleRatio <= 0.0) {

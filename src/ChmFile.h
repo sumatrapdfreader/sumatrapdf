@@ -14,7 +14,7 @@ struct ChmFile {
 
     void ParseWindowsData();
     bool ParseSystemData();
-    bool ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex);
+    bool ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) const;
     void FixPathCodepage(AutoFree& path, uint& fileCP);
 
     bool Load(const char* fileName);
@@ -24,12 +24,12 @@ struct ChmFile {
 
     bool HasData(const char* fileName) const;
     std::span<u8> GetData(const char* fileName) const;
-    char* ResolveTopicID(unsigned int id);
+    char* ResolveTopicID(unsigned int id) const;
 
     char* ToUtf8(const u8* text, uint overrideCP = 0) const;
     WCHAR* ToStr(const char* text) const;
 
-    WCHAR* GetProperty(DocumentProperty prop);
+    WCHAR* GetProperty(DocumentProperty prop) const;
     const char* GetHomePath() const;
     Vec<char*>* GetAllPaths() const;
 
