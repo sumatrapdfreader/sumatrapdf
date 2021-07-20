@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0e727eadf1adb9933196f3bb6f5d57a11704a24f
+5ca208bc682283175d5008636b23cfd42b68373d
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -440,6 +440,7 @@ bn:&Caret
 cn:&插入符
 de:&Cursor
 el:Αγκύλη
+es:&Cursor
 kw:&Karet
 lv:&Norāde
 nl:&Merkteken
@@ -1121,6 +1122,7 @@ am:&Ազատ գրվածք
 cn:&自由文本
 de:&Freitext
 el:Ελεύθερο κείμενο
+es:&Texto Libre
 kw:&Tekst Rydh
 lv:&Brīvs teksts
 nl:&Vrije Tekst
@@ -1340,6 +1342,7 @@ am:&Գունանշում\ta
 cn:&高亮\tA
 de:&Hervorheben\ta
 el:Επισήμανση
+es:&Resaltar\ta
 kw:&Ughboyntya\ta
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
@@ -3094,6 +3097,7 @@ am:&Կնիք
 cn:&图章
 de:&Stempel
 el:Σφραγίδα
+es:&Estampa
 kw:&Stampa
 lv:&Zīmogs
 nl:&Stempel
@@ -3103,6 +3107,7 @@ am:&Ջնջած
 cn:&删除线
 de:Durchstreichen
 el:Εξάλειψη
+es:&Tachar
 kw:&Treuslinya
 lv:&Izsvītrot
 nl:&Doorhalen
@@ -3113,6 +3118,7 @@ az:Mə&tn
 cn:&文本
 de:&Text
 el:Κείμενο
+es:&Texto
 kw:&Tekst
 lv:&Teksts
 nl:&Tekst
@@ -3179,6 +3185,7 @@ am:&Ընդգծված
 cn:&下划线
 de:&Unterstreichen
 el:Υπογράμμιση
+es:&Subrayar
 kw:&Islinya
 lv:&Pasvītrojums
 nl:&Onderstrepen
@@ -5141,6 +5148,7 @@ bn:সীমানা: %d
 cn:边框: %d
 de:Umrandung: %d
 el:Περιθώριο: %d
+es:Borde: %d
 kw:Amal: %d
 lv:Apmale: %d
 nl:Rand %d
@@ -6002,6 +6010,7 @@ bn:বিষয়:
 cn:内容：
 de:Inhalte:
 el:Περιεχόμενα:
+es:Contenido:
 kw:Dalghow:
 lv:Saturs:
 nl:Inhoud
@@ -7280,6 +7289,7 @@ bn:বাছাই থেকে টীকা লিখুন
 cn:创建注释 (从所选内容)
 de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
+es:Crear Anotación Desde Selección
 kw:Gwruthyl Notenyans a'th Tewis
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
@@ -7290,6 +7300,7 @@ bn:Cursor এর নিচে টীকা লিখুন
 cn:创建注释 (在光标下)
 de:Anmerkung unter dem Cursor erstellen
 el:Δημιουργία σχολιασμού κάτω από το δρομέα
+es:Crear Anotación Debajo del Cursor
 kw:Gwruthyl Notenyans Yn-Dann Resor
 lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
@@ -7951,6 +7962,7 @@ bn:বাতিল করুন
 cn:不保存
 de:Verwerfen
 el:Απόρριψη
+es:Descartar
 kw:Hepkor
 lv:Atmest
 nl:Verwijderen
@@ -11336,6 +11348,7 @@ bn:আইকন
 cn:图标:
 de:Icon:
 el:Εικονίδιο:
+es:Icono:
 kw:Ikon:
 lv:Ikona:
 nl:Pictogram:
@@ -11714,6 +11727,7 @@ am:Ներքին գույնը.
 cn:填充颜色：
 de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
+es:Color Interior
 kw:Liw A-Bervedh:
 lv:Iekšējā krāsa:
 nl:Interieur Kleur
@@ -14748,6 +14762,7 @@ am:Ելնող. %d 0 R
 cn:弹出：%d 0 R
 de:Pop-up: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
+es:Ventana Emergente: %d 0 R
 kw:Tardhans: %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
@@ -15527,6 +15542,7 @@ am:Ուղղ. x=%d y=%d dx=%d dy=%d
 cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
 de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
+es:Rectangulo: x=%d y=%d dx=%d dy=%d
 kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
@@ -15985,6 +16001,7 @@ az:&Dalğa
 cn:波浪线(&Q)
 de:Verschnörkelt
 el:Στριφογυριστό
+es:S&erpenteante
 kw:I&gam-ogam
 lv:&Viļņaina
 nl:Kr&onkelig
@@ -16187,6 +16204,7 @@ az:Dəyişiklikləri yeni PDF-ə yaz
 cn:另存为新的 PDF 文件
 de:Änderungen in einer neuen PDF-Datei speichern
 el:Αποθήκευση αλλαγών σε νέο PDF
+es:Guardar cambios en un nuevo PDF
 kw:Gwitha chanjyow dhe PDF nowydh
 lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
@@ -16198,6 +16216,7 @@ az:Dəyişiklikləri mövcud PDF-ə yaz
 cn:保存至当前 PDF 文件
 de:Änderungen an vorhandener PDF speichern
 el:Αποθήκευση αλλαγών σε υπάρχον PDF
+es:Guardar cambios en un PDF existente
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
@@ -16208,6 +16227,7 @@ am:Պահված մեկնաբանություններ '%s'-ում
 cn:保存注释到 '%s'
 de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
+es:Anotaciones guardadas en '%s'
 kw:Notenyansow gwithys dhe '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
@@ -16218,6 +16238,7 @@ am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
 cn:保存 '%s' 失败: '%s'
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
+es:El proceso de guardado de '%s' fallo por: '%s'
 kw:Gwitha '%s' re fyllis gans: '%s'
 lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
@@ -16418,6 +16439,7 @@ am:Ընտրեք մեկնաբանությունը Խմբագրիչում
 cn:在编辑器中选择注释
 de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
+es:Seleccionar Anotación en el Editor
 kw:Dewis Notenyans y'n Wolegell
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
@@ -18411,6 +18433,7 @@ am:Գրվածքի հավասարեցում
 cn:文本对齐:
 de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
+es:Alineación de Texto:
 kw:Alinyans Tekst:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
@@ -19594,6 +19617,7 @@ am:Դուք ունեք չպահված մեկնաբանություններ: Պա
 cn:存在未保存的注释，是否保存？
 de:Sie haben ungespeicherte Anmerkungen. Wollen Sie sie speichern?
 el:Έχετε μη αποθηκευμένους σχολιασμούς. Να γίνει αποθήκευση;
+es:Tienes anotaciones sin guardar. Quieres guardarlas? 
 kw:Yma notenyansow anwithys dhis. A vynnydh aga gwitha?
 lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
 nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
