@@ -350,10 +350,7 @@ bool EngineMupdf::FinishLoading() {
 #endif
 
 bool IsMupdfEngineSupportedFileType(Kind kind) {
-    if (kind == kindFileEpub) {
-        return true;
-    }
-    return false;
+    return kind == kindFileEpub;
 }
 
 EngineBase* CreateEngineMupdfFromFile(__unused const WCHAR* path) {

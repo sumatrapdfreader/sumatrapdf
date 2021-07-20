@@ -82,6 +82,7 @@ Done:
 readability-make-member-function-const
 readability-avoid-const-params-in-decls
 modernize-use-override
+readability-simplify-boolean-expr : dangerous, removes if (false) / if (true) debug code
 */
 
 /*
@@ -110,18 +111,17 @@ readability-string-compare
 
 /*
 TODO:
-modernize-use-nodiscard
-readability-simplify-boolean-expr
 modernize-raw-string-literal
 modernize-use-nullptr
 modernize-use-equals-default
 readability-braces-around-statements¶
+modernize-use-nodiscard
 modernize-use-using : needs to figure out how to not run in ext
 */
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,modernize-use-override",
+		"--checks=-*,readability-simplify-boolean-expr",
 		"-p",
 		".",
 		"--header-filter=src/",

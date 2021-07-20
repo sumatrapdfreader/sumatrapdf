@@ -733,7 +733,7 @@ bool TreeCtrl::UpdateItem(TreeItem* ti) {
         tvitem.pszText = LPSTR_TEXTCALLBACK;
     }
     BOOL ok = TreeView_SetItem(hwnd, &tvitem);
-    return ok ? true : false;
+    return ok != 0;
 }
 
 // complicated because it inserts items backwards, as described in

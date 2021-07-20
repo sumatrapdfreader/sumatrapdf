@@ -16,10 +16,7 @@
 bool PdbReader::Parse(std::span<u8> d) {
     data = d.data();
     dataSize = d.size();
-    if (!ParseHeader()) {
-        return false;
-    }
-    return true;
+    return ParseHeader();
 }
 
 PdbReader::~PdbReader() {

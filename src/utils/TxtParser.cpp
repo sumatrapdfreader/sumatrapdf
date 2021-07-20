@@ -384,10 +384,7 @@ Failed:
 
 bool ParseTxt(TxtParser& parser) {
     ParseNodes(parser);
-    if (parser.failed) {
-        return false;
-    }
-    return true;
+    return !parser.failed;
 }
 
 static void AppendNest(str::Str& s, int nest) {

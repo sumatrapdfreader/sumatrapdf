@@ -632,7 +632,7 @@ IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd) {
 bool IsKeyPressed(int key) {
     SHORT state = GetKeyState(key);
     SHORT isDown = state & 0x8000;
-    return isDown ? true : false;
+    return isDown != 0;
 }
 
 bool IsShiftPressed() {
@@ -1844,10 +1844,7 @@ double GetProcessRunningTime() {
 }
 
 bool IsValidHandle(HANDLE h) {
-    if (h == nullptr || h == INVALID_HANDLE_VALUE) {
-        return false;
-    }
-    return true;
+    return !(h == nullptr || h == INVALID_HANDLE_VALUE);
 }
 
 // This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine

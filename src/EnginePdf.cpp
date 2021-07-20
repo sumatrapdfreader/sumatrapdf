@@ -1763,10 +1763,7 @@ bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
         return false;
     }
     bool ok = file::Copy(dstPath, path, false);
-    if (!ok) {
-        return false;
-    }
-    return true;
+    return ok;
 }
 
 const pdf_write_options pdf_default_write_options2 = {

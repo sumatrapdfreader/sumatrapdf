@@ -288,10 +288,7 @@ bool IsDrag(int x1, int x2, int y1, int y2) {
 
     int dy = abs(y1 - y2);
     int dragDy = GetSystemMetrics(SM_CYDRAG);
-    if (dy > dragDy) {
-        return true;
-    }
-    return false;
+    return dy > dragDy;
 }
 
 static void OnMouseMove(WindowInfo* win, int x, int y, __unused WPARAM flags) {

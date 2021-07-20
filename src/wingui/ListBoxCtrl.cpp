@@ -128,10 +128,7 @@ bool ListBoxCtrl::SetCurrentSelection(int n) {
         return false;
     }
     LRESULT res = ListBox_SetCurSel(hwnd, n);
-    if (res == LB_ERR) {
-        return false;
-    }
-    return true;
+    return res != LB_ERR;
 }
 
 void ListBoxCtrl::SetModel(ListBoxModel* model) {

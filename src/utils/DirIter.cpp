@@ -10,10 +10,7 @@ bool DirIter::StartDirIter(std::wstring_view dir) {
     currDir.SetCopy(dir);
     AutoFreeWstr pattern(path::Join(currDir, L"*"));
     currFindHandle = FindFirstFile(pattern, &currFindData);
-    if (INVALID_HANDLE_VALUE == currFindHandle) {
-        return false;
-    }
-    return true;
+    return INVALID_HANDLE_VALUE != currFindHandle;
 }
 
 bool DirIter::TryNextDir() {
@@ -61,10 +58,7 @@ static bool IsRegularFile(DWORD fileAttr) {
 }
 
 bool IsDirectory(DWORD fileAttr) {
-    if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
-        return true;
-    }
-    return false;
+    return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
 // "." and ".." are special

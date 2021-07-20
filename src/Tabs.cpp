@@ -194,7 +194,7 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) {
         if (shape.IsVisible(pt, &gfx)) {
             iterator.NextMarker(&shape);
             if (inXbutton) {
-                *inXbutton = shape.IsVisible(pt, &gfx) ? true : false;
+                *inXbutton = shape.IsVisible(pt, &gfx) != 0;
             }
             return i;
         }

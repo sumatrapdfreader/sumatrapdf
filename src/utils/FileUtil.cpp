@@ -76,10 +76,7 @@ bool IsDirectory(std::wstring_view path) {
     if (INVALID_FILE_ATTRIBUTES == attrs) {
         return false;
     }
-    if ((attrs & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-        return true;
-    }
-    return false;
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
 bool IsDirectory(std::string_view path) {
@@ -88,10 +85,7 @@ bool IsDirectory(std::string_view path) {
     if (INVALID_FILE_ATTRIBUTES == attrs) {
         return false;
     }
-    if ((attrs & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-        return true;
-    }
-    return false;
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
 bool IsSep(WCHAR c) {
@@ -711,10 +705,7 @@ bool Exists(const WCHAR* dir) {
         return false;
     }
 
-    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        return true;
-    }
-    return false;
+    return (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
 // Return true if a directory already exists or has been successfully created

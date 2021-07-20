@@ -557,10 +557,7 @@ static bool ShouldCustomDraw(WindowInfo* win) {
         return false;
     }
     Kind kind = dm->GetEngineType();
-    if (kind == kindEnginePdf || kind == kindEngineMulti) {
-        return true;
-    }
-    return false;
+    return kind == kindEnginePdf || kind == kindEngineMulti;
 }
 
 void OnTocCustomDraw(TreeItemCustomDrawEvent*);

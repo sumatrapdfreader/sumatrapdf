@@ -187,10 +187,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
     int timeDiff = gIsPreReleaseBuild ? kSecondsInWeek : kSecondsInDay;
     // if secs < 0 => somethings wrong, so ignore that case
-    if ((secs >= 0) && (secs < kSecondsInDay)) {
-        return false;
-    }
-    return true;
+    return !((secs >= 0) && (secs < timeDiff));
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {

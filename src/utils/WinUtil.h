@@ -148,11 +148,11 @@ inline BOOL toBOOL(bool b) {
 }
 
 inline bool fromBOOL(BOOL b) {
-    return b ? true : false;
+    return b != 0;
 }
 
 inline bool tobool(BOOL b) {
-    return b ? true : false;
+    return b != 0;
 }
 
 namespace win {

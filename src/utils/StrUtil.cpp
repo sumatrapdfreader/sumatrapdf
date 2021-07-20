@@ -117,11 +117,7 @@ static bool isLegalUTF8(const u8* source, int length) {
             }
     }
 
-    if (*source > 0xF4) {
-        return false;
-    }
-
-    return true;
+    return *source <= 0xF4;
 }
 
 /* --------------------------------------------------------------------- */
@@ -575,10 +571,7 @@ const char* Find(const char* str, const char* find) {
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
     int count = vsnprintf(buf, bufCchSize, fmt, args);
     buf[bufCchSize - 1] = 0;
-    if ((count >= 0) && ((size_t)count < bufCchSize)) {
-        return true;
-    }
-    return false;
+    return (count >= 0) && ((size_t)count < bufCchSize);
 }
 
 // TODO: need to finish StrFormat and use it instead.
@@ -2174,10 +2167,7 @@ WCHAR* ToLower(const WCHAR* s) {
 bool BufFmtV(WCHAR* buf, size_t bufCchSize, const WCHAR* fmt, va_list args) {
     int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
     buf[bufCchSize - 1] = 0;
-    if ((count >= 0) && ((size_t)count < bufCchSize)) {
-        return true;
-    }
-    return false;
+    return (count >= 0) && ((size_t)count < bufCchSize);
 }
 
 WCHAR* FmtV(const WCHAR* fmt, va_list args) {

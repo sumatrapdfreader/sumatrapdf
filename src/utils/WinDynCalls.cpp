@@ -106,10 +106,7 @@ BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGe
 namespace theme {
 
 bool IsAppThemed() {
-    if (DynIsAppThemed && DynIsAppThemed()) {
-        return true;
-    }
-    return false;
+    return DynIsAppThemed && DynIsAppThemed();
 }
 
 HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList) {

@@ -63,10 +63,7 @@ other base element(s) with less functionality and less overhead).
 */
 
 bool ValidReparseIdx(ptrdiff_t idx, HtmlPullParser* parser) {
-    if ((idx < 0) || (idx > (int)parser->Len())) {
-        return false;
-    }
-    return true;
+    return !((idx < 0) || (idx > (int)parser->Len()));
 }
 
 DrawInstr DrawInstr::Str(const char* s, size_t len, RectF bbox, bool rtl) {
@@ -230,10 +227,7 @@ void HtmlFormatter::SetFontBasedOn(mui::CachedFont* font, FontStyle fs, float fo
 }
 
 bool ValidStyleForChangeFontStyle(FontStyle fs) {
-    if ((FontStyleBold == fs) || (FontStyleItalic == fs) || (FontStyleUnderline == fs) || (FontStyleStrikeout == fs)) {
-        return true;
-    }
-    return false;
+    return (FontStyleBold == fs) || (FontStyleItalic == fs) || (FontStyleUnderline == fs) || (FontStyleStrikeout == fs);
 }
 
 // change the current font by adding (if addStyle is true) or removing
@@ -700,10 +694,7 @@ static bool CanBreakWordOnChar(WCHAR c) {
     // https://github.com/sumatrapdfreader/sumatrapdf/pull/1057
     // There are other  ranges, but far less common
     // https://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
-    if (c >= 0x2E80 && c <= 0xA4CF) {
-        return true;
-    }
-    return false;
+    return c >= 0x2E80 && c <= 0xA4CF;
 }
 
 // a text run is a string of consecutive text with uniform style
