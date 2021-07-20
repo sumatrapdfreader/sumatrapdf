@@ -360,8 +360,8 @@ class Vec {
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
-    typedef T* iterator;
-    typedef const T* const_iterator;
+    using iterator = T*;
+    using const_iterator = const T*;
 
     iterator begin() {
         return &(els[0]);

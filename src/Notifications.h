@@ -3,7 +3,7 @@
 
 struct NotificationWnd;
 
-typedef std::function<void(NotificationWnd*)> NotificationWndRemovedCallback;
+using NotificationWndRemovedCallback = std::function<void(NotificationWnd*)>;
 
 enum class NotificationOptions {
     WithTimeout = 0, // timeout after 3 seconds, no highlight

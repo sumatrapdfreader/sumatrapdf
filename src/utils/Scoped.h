@@ -217,7 +217,7 @@ struct AutoFree {
 };
 
 // TODO: replace most of AutoFree with AutoFreeStr
-typedef AutoFree AutoFreeStr;
+using AutoFreeStr = AutoFree;
 
 struct AutoFreeWstr {
     WCHAR* data = nullptr;

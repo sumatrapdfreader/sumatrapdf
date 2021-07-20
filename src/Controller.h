@@ -7,7 +7,7 @@ struct DisplayModel;
 struct EbookController;
 struct EbookFormattingData;
 
-typedef std::function<void(RenderedBitmap*)> onBitmapRenderedCb;
+using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
 
 struct ControllerCallback {
     virtual ~ControllerCallback() {

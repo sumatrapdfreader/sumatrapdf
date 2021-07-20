@@ -12,7 +12,7 @@
 
 // PdfColor is aarrggbb, where 0xff alpha is opaque and 0x0 alpha is transparent
 // this is different than COLORREF, which ggrrbb and no alpha
-typedef uint64_t PdfColor;
+using PdfColor = uint64_t;
 
 struct ParsedColor {
     bool wasParsed{false};

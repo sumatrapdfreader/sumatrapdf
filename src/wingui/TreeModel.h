@@ -35,6 +35,6 @@ struct TreeModel {
 
 // function called for every item in the TreeModel
 // return false to stop iteration
-typedef std::function<bool(TreeItem*)> TreeItemVisitor;
+using TreeItemVisitor = std::function<bool(TreeItem*)>;
 
 bool VisitTreeModelItems(TreeModel* tm, const TreeItemVisitor& visitor);

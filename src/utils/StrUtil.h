@@ -246,8 +246,8 @@ struct Str {
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
-    typedef char* iterator;
-    typedef const char* const_iterator;
+    using iterator = char*;
+    using const_iterator = const char*;
 
     iterator begin() {
         return &(els[0]);
@@ -323,8 +323,8 @@ struct WStr {
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
-    typedef WCHAR* iterator;
-    typedef const WCHAR* const_iterator;
+    using iterator = WCHAR*;
+    using const_iterator = const WCHAR*;
 
     iterator begin() {
         return &(els[0]);

@@ -165,9 +165,9 @@ class ScopedGdiObj {
         return obj;
     }
 };
-typedef ScopedGdiObj<HFONT> AutoDeleteFont;
-typedef ScopedGdiObj<HPEN> AutoDeletePen;
-typedef ScopedGdiObj<HBRUSH> AutoDeleteBrush;
+using AutoDeleteFont = ScopedGdiObj<HFONT>;
+using AutoDeletePen = ScopedGdiObj<HPEN>;
+using AutoDeleteBrush = ScopedGdiObj<HBRUSH>;
 
 class ScopedGetDC {
     HDC hdc = nullptr;
