@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-518a79bad2763eef14da3f5ac901f48ac45768a1
+5ca208bc682283175d5008636b23cfd42b68373d
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -171,7 +171,7 @@ uk:Справжній розмір\tCtrl+1
 uz:&Haqiqiy o'lchami\tCtrl+1
 vn:Kích thướ&c thật\tCtrl+1
 :&Advanced Options...
-am:&Ընդլայնված կարգավորումներ..
+am:&Ընդլայնված ընտրանքներ..
 ar:خيارات &متقدمة
 az:&Əlavə seçimlər...
 bg:Разширени опции
@@ -440,6 +440,7 @@ bn:&Caret
 cn:&插入符
 de:&Cursor
 el:Αγκύλη
+es:&Cursor
 kw:&Karet
 lv:&Norāde
 nl:&Merkteken
@@ -1121,6 +1122,7 @@ am:&Ազատ գրվածք
 cn:&自由文本
 de:&Freitext
 el:Ελεύθερο κείμενο
+es:&Texto Libre
 kw:&Tekst Rydh
 lv:&Brīvs teksts
 nl:&Vrije Tekst
@@ -1340,6 +1342,7 @@ am:&Գունանշում\ta
 cn:&高亮\tA
 de:&Hervorheben\ta
 el:Επισήμανση
+es:&Resaltar\ta
 kw:&Ughboyntya\ta
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
@@ -2695,7 +2698,7 @@ ta:வரலாற்றிலிருந்து நீக்கு
 tr:Geçmişten &Kaldır
 tw:从历史记录删除
 :&Save As...
-am:&Պահպանել որպես
+am:&Պահել որպես
 ar:&حفظ باسم...
 az:&Fərqli adla yadda saxla...
 bg:За&пис като...
@@ -2760,7 +2763,7 @@ uz:&Quyidagicha saqlash...
 vn:Lưu thành...
 :&Save As...\tCtrl+S
 af:&Stoor As\tCtrl+S
-am:&Պահպանել որպես\tCtrl+S
+am:&Պահել որպես\tCtrl+S
 ar:&حفظ باسم...\tCtrl+S
 az:Fərqli adla &yadda saxla...\tCtrl+S
 bg:За&пис като...\tCtrl+S
@@ -3090,26 +3093,32 @@ uk:Пропустити цю версію.
 uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
 :&Stamp
+am:&Կնիք
 cn:&图章
 de:&Stempel
 el:Σφραγίδα
+es:&Estampa
 kw:&Stampa
 lv:&Zīmogs
 nl:&Stempel
 pl:Pie&częć
 :&Strike Out
+am:&Ջնջած
 cn:&删除线
 de:Durchstreichen
 el:Εξάλειψη
+es:&Tachar
 kw:&Treuslinya
 lv:&Izsvītrot
 nl:&Doorhalen
 pl:&Skreślenie
 :&Text
+am:&Գրվածք
 az:Mə&tn
 cn:&文本
 de:&Text
 el:Κείμενο
+es:&Texto
 kw:&Tekst
 lv:&Teksts
 nl:&Tekst
@@ -3172,9 +3181,11 @@ tw:主題(&T)
 uk:&Тема
 vn:&Chủ đề
 :&Underline
+am:&Ընդգծված
 cn:&下划线
 de:&Unterstreichen
 el:Υπογράμμιση
+es:&Subrayar
 kw:&Islinya
 lv:&Pasvītrojums
 nl:&Onderstrepen
@@ -4242,7 +4253,7 @@ uk:Всі файли
 uz:Hamma fayllar
 vn:Mọi tập tin
 :All supported documents
-am:Աջակցվող բոլոր փաստաթղթերը
+am:Բոլոր աջակցվող փաստաթղթերը
 ar:كل المستندات المدعومة
 az:Bütün dəstəklənən sənədlər
 bg:Всички поддържани документи
@@ -5137,6 +5148,7 @@ bn:সীমানা: %d
 cn:边框: %d
 de:Umrandung: %d
 el:Περιθώριο: %d
+es:Borde: %d
 kw:Amal: %d
 lv:Apmale: %d
 nl:Rand %d
@@ -5211,7 +5223,7 @@ uz:Bayt
 vn:Bytes
 :CHM documents
 af:CHM dokumente
-am:CHM ֆայլեր
+am:CHM փաստաթղթեր
 ar:CHM ملفات 
 az:CHM sənədləri
 bg:CHM документи
@@ -5998,6 +6010,7 @@ bn:বিষয়:
 cn:内容：
 de:Inhalte:
 el:Περιεχόμενα:
+es:Contenido:
 kw:Dalghow:
 lv:Saturs:
 nl:Inhoud
@@ -6477,7 +6490,7 @@ uk:Копіювати коментар
 uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copying text was denied (copying as image only)
-am:Տեքստի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
+am:Գրվածքի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
 ar:(ناسخ النص رفض (ناسخ باسم صورة فقط 
 az:Mətni kopyalamaq mümkün olmadı (şəkil kimi kopyalanır)
 bg:Текстът не може да бъде копиран (затова беше копиран само като картинка)
@@ -7276,6 +7289,7 @@ bn:বাছাই থেকে টীকা লিখুন
 cn:创建注释 (从所选内容)
 de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
+es:Crear Anotación Desde Selección
 kw:Gwruthyl Notenyans a'th Tewis
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
@@ -7286,6 +7300,7 @@ bn:Cursor এর নিচে টীকা লিখুন
 cn:创建注释 (在光标下)
 de:Anmerkung unter dem Cursor erstellen
 el:Δημιουργία σχολιασμού κάτω από το δρομέα
+es:Crear Anotación Debajo del Cursor
 kw:Gwruthyl Notenyans Yn-Dann Resor
 lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
@@ -7947,6 +7962,7 @@ bn:বাতিল করুন
 cn:不保存
 de:Verwerfen
 el:Απόρριψη
+es:Descartar
 kw:Hepkor
 lv:Atmest
 nl:Verwijderen
@@ -8856,7 +8872,7 @@ uz:&Oldinga\tAlt+->
 vn:Tiếp tục\tAlt+Mũi tên phải
 :F&ullscreen\tF11
 af:Volskerm\tCtrl+Shift+L
-am:Ամ&բողջ էկրանով\tCtrl+Shift+L
+am:Լ&իաէկրան\tCtrl+Shift+L
 ar:ملء الشاشة \tF11 
 az:Tam ek&ran\tCtrl+Shift+L
 bg:На &цял екран\tCtrl+Shift+L / F11
@@ -9179,7 +9195,7 @@ uz:Fayl nomini o'zgartirish muvaffaqiyatsiz tugadi!
 vn:Không thể đổi tên tập tin!
 :Failed to save a file
 af:Kon nie die lêer stoor nie!
-am:Հնարավոր չէ պահպանել ֆայլում
+am:Հնարավոր չէ պահել ֆայլում
 ar:فشل في حفظ الملف
 az:Faylı yadda saxlamaq mümkün olmadı
 bg:Грешка при запаметяване на файла
@@ -10802,7 +10818,7 @@ uk:Форматується книга... %d сторінок
 uz:Kitob format qilinmoqda... %d bet
 vn:Đang định dạng sách... %d trang
 :Found text at page %s
-am:Տեքստը գտնվել է %s էջում
+am:Գրվածքը գտնվել է %s էջում
 ar:تم العثور على النص في صفحة %s
 az:Mətn %s. səhifədə tapıldı
 bg:Текстът е намерен на страница %s
@@ -10867,7 +10883,7 @@ uk:Знайти текст на %s сторінці
 uz:%s betda matn topildi
 vn:Tìm thấy từ ở trang %s
 :Found text at page %s (again)
-am:Գտնել տեքստ %s էջում (կրկին)
+am:Գտնել գրվածքը %s էջում (կրկին)
 ar:وُجد النص في الصفحة %s (مرة أخرى)
 az:Mətn %s. səhifədə (təkrar) tapıldı
 bg:Текстът е намерен на страница %s (отново)
@@ -11332,6 +11348,7 @@ bn:আইকন
 cn:图标:
 de:Icon:
 el:Εικονίδιο:
+es:Icono:
 kw:Ikon:
 lv:Ikona:
 nl:Pictogram:
@@ -11454,7 +11471,7 @@ tr:Mürekkep
 tw:墨迹
 :Install SumatraPDF
 af:Installeer SumatraPDF
-am:Տեղակայել SumatraPDF-ը
+am:Տեղադրել SumatraPDF-ը
 ar:المحمولة Sumatra تثبيت مستندات
 az:SumatraPDF-i quraşdır
 bg:Инсталиране на SumatraPDF
@@ -11710,6 +11727,7 @@ am:Ներքին գույնը.
 cn:填充颜色：
 de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
+es:Color Interior
 kw:Liw A-Bervedh:
 lv:Iekšējā krāsa:
 nl:Interieur Kleur
@@ -12085,7 +12103,7 @@ uz:MB
 vn:MB
 :Make SumatraPDF default application for PDF files?
 af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
-am:Հաստատե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
+am:Դարձնե՞լ SumatraPDF-ը սկզբնադիր ծրագիր PDF ֆայլերը բացելու համար:
 ar: المحمولة الافتراضي  لملفات المستندات المحمولة؟ Sumatra  جعل تطبيق مستندات
 az:SumatraPDF PDF faylların görüntülənməsi üçün standart proqram edilsin?
 bg:Искате ли да зададете SumatraPDF като основното си приложение за отваряне на PDF файлове?
@@ -14744,6 +14762,7 @@ am:Ելնող. %d 0 R
 cn:弹出：%d 0 R
 de:Pop-up: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
+es:Ventana Emergente: %d 0 R
 kw:Tardhans: %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
@@ -15523,6 +15542,7 @@ am:Ուղղ. x=%d y=%d dx=%d dy=%d
 cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
 de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
+es:Rectangulo: x=%d y=%d dx=%d dy=%d
 kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
@@ -15981,12 +16001,13 @@ az:&Dalğa
 cn:波浪线(&Q)
 de:Verschnörkelt
 el:Στριφογυριστό
+es:S&erpenteante
 kw:I&gam-ogam
 lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
 :Save Annotations
-am:Պահպանել ծանոթագրությունը
+am:Պահել ծանոթագրությունը
 ar:حفظ الحواشي
 az:Qeydləri yadda saxla
 bg:Запази анотациите
@@ -16022,7 +16043,7 @@ tw:儲存評注
 uk:Зберегти аннотації
 :Save As
 af:Stoor As
-am:Պահպանել որպես
+am:Պահել որպես
 ar:حفظ باسم
 az:Fərqli adla yadda saxla
 bg:Запис като
@@ -16092,7 +16113,7 @@ uk:Зберегти як
 uz:Quyidagicha saqlash
 vn:Lưu thành
 :Save Embedded File...
-am:Պահպանել ներկառուցված ֆայլը...
+am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
 az:İç faylı yadda saxla...
 br:Salvar Arquivo Embutido...
@@ -16116,7 +16137,7 @@ ru:Сохранить вложенный файл...
 tr:Gömülü Dosyayı Kaydet...
 tw:儲存內嵌的檔案...
 :Save S&hortcut...\tCtrl+Shift+S
-am:Պահպանել պ&իտակը...\tCtrl+Shift+S
+am:Պահել դ&յուրանցումը...\tCtrl+Shift+S
 ar:حفظ الاختصار...\tCtrl+Shift+S
 az:Yarlı&ğı yadda saxla...\tCtrl+Shift+S
 bg:Запамети &кратък път към файла...\tCtrl+Shift+S
@@ -16183,34 +16204,41 @@ az:Dəyişiklikləri yeni PDF-ə yaz
 cn:另存为新的 PDF 文件
 de:Änderungen in einer neuen PDF-Datei speichern
 el:Αποθήκευση αλλαγών σε νέο PDF
+es:Guardar cambios en un nuevo PDF
 kw:Gwitha chanjyow dhe PDF nowydh
 lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
 ru:Сохранить изменения в новый PDF
 :Save changes to existing PDF
+am:Պահել փոփոխությունները առկա PDF-ում
 az:Dəyişiklikləri mövcud PDF-ə yaz
 cn:保存至当前 PDF 文件
 de:Änderungen an vorhandener PDF speichern
 el:Αποθήκευση αλλαγών σε υπάρχον PDF
+es:Guardar cambios en un PDF existente
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 :Saved annotations to '%s'
+am:Պահված մեկնաբանություններ '%s'-ում
 cn:保存注释到 '%s'
 de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
+es:Anotaciones guardadas en '%s'
 kw:Notenyansow gwithys dhe '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje do '%s'
 ru:Аннотации сохранены в '%s'
 :Saving of '%s' failed with: '%s'
+am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
 cn:保存 '%s' 失败: '%s'
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
+es:El proceso de guardado de '%s' fallo por: '%s'
 kw:Gwitha '%s' re fyllis gans: '%s'
 lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
@@ -16407,9 +16435,11 @@ uk:Вибрати всі\tCtrl+A
 uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
+am:Ընտրեք մեկնաբանությունը Խմբագրիչում
 cn:在编辑器中选择注释
 de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
+es:Seleccionar Anotación en el Editor
 kw:Dewis Notenyans y'n Wolegell
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
@@ -18399,15 +18429,18 @@ uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text Alignment:
+am:Գրվածքի հավասարեցում
 cn:文本对齐:
 de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
+es:Alineación de Texto:
 kw:Alinyans Tekst:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
 ru:Выравнивание текста:
 :Text Color:
+am:Գրվածքի գույն
 az:Mətnin rəngi:
 bn:লেখার রং:
 cn:文本颜色:
@@ -18420,6 +18453,7 @@ nl:Tekst Kleur
 pl:Kolor tekstu:
 ru:Цвет текста:
 :Text Size:
+am:Գրվածքի չափ.
 az:Mətnin ölçüsü:
 bn:লেখার আকার:
 cn:文本大小:
@@ -18432,6 +18466,7 @@ nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 ru:Размер текста:
 :Text Size: %d
+am:Գրվածքի չափը՝ %d
 bn:লেখার আকার: %d
 cn:文本大小: %d
 de:Textgröße: %d
@@ -18443,7 +18478,7 @@ nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
 ru:Размер текста: %d
 :Text documents
-am:Տեքստային ֆայլեր
+am:Գրվածքային փաստաթղթեր
 ar:مستندات نصية
 az:Mətn sənədləri
 bg:Текстови документи
@@ -19094,6 +19129,7 @@ uk:Невідомий файл-джерело (%s)
 uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
+am:Չպահված մեկնաբանություններ
 cn:未保存的注释
 de:Nicht gespeicherte Anmerkungen
 el:Μη αποθηκευμένα σχόλια
@@ -19162,7 +19198,7 @@ uk:Використовувати вкладки
 uz:&Ilovalarni qo'llash
 vn:Dùng &thẻ
 :Use SumatraPDF as the &default PDF reader
-am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
+am:Օգտ. SumatraPDF-ը որպես &սկզբնադիր PDF ընթերցիչ
 ar: المحمولة باسم& قارئ مستندات محمولة افتراضي Sumatra استخدم مستندات
 az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
 bg:Използване на SumatraPDF като основен четец на PDF файлове
@@ -19564,6 +19600,7 @@ uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
+am:Դուք ունեք չպահված մեկնաբանություններ
 cn:存在未保存的注释
 co:Avete annutazioni micca arregistrate
 de:Sie haben ungespeicherte Anmerkungen.
@@ -19576,9 +19613,11 @@ nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 :You have unsaved annotations. Save them?
+am:Դուք ունեք չպահված մեկնաբանություններ: Պահե՞լ դրանք:
 cn:存在未保存的注释，是否保存？
 de:Sie haben ungespeicherte Anmerkungen. Wollen Sie sie speichern?
 el:Έχετε μη αποθηκευμένους σχολιασμούς. Να γίνει αποθήκευση;
+es:Tienes anotaciones sin guardar. Quieres guardarlas? 
 kw:Yma notenyansow anwithys dhis. A vynnydh aga gwitha?
 lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
 nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
@@ -19992,7 +20031,7 @@ uk:[Знайдено зміни; оновлення] %s
 uz:[O'zgarishlar aniqlangan; yangilanmoqda] %s
 vn:[Phát hiện thay đổi; đang cập nhật] %s
 :copying text
-am:Տեքստը պատճենվում է
+am:գրվածքի պատճենվում
 ar:ناسخ النص
 az:mətnin kopyalanması
 bg:копиране на текст
