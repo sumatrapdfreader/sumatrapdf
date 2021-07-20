@@ -364,6 +364,11 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     const WCHAR* appName{nullptr};
     const WCHAR* exeName{nullptr};
 
+    if (!ExtractInstallerFiles()) {
+        log("ExtractInstallerFiles() failed\n");
+        goto Error;
+    }
+
     CopySettingsFile();
 
 #if ENABLE_REGISTER_DEFAULT
@@ -411,6 +416,7 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     ProgressStep();
     log("Installer thread finished\n");
+Error:
     // TODO: roll back installation on failure (restore previous installation!)
     if (gHwndFrame) {
         if (!gCli->silent) {
