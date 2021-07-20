@@ -16,7 +16,7 @@ Mutex gLogMutex;
 HeapAllocator* gLogAllocator = nullptr;
 
 str::Str* gLogBuf = nullptr;
-bool gLogToStderr = false;
+bool gLogToConsole = false;
 // we always log if IsDebuggerPresent()
 // this forces logging to debuger always
 bool gLogToDebugger = false;
@@ -138,9 +138,9 @@ void log(std::string_view s) {
     }
 
     gLogBuf->Append(s.data(), s.size());
-    if (gLogToStderr) {
-        fwrite(s.data(), 1, s.size(), stderr);
-        fflush(stderr);
+    if (gLogToConsole) {
+        fwrite(s.data(), 1, s.size(), stdout);
+        fflush(stdout);
     }
 
     if (logFilePath) {

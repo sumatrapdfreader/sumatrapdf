@@ -774,29 +774,6 @@ static void ShowNotValidInstallerError() {
     MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
 }
 
-// in Installer.cpp
-extern bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir);
-extern bool CopySelfToDir(const WCHAR* destDir);
-
-static void ExtractInstallerFiles() {
-    auto [data, size, res] = LockDataResource(1);
-    if (data == nullptr) {
-        ShowNotValidInstallerError();
-        return;
-    }
-
-    lzma::SimpleArchive archive = {};
-    bool ok = lzma::ParseSimpleArchive(data, size, &archive);
-    if (!ok) {
-        ShowNotValidInstallerError();
-        return;
-    }
-    AutoFreeWstr dir = GetExeDir();
-    if (ExtractFiles(&archive, dir.data)) {
-        CopySelfToDir(dir);
-    }
-}
-
 #if 0
 static void LogDpiAwareness() {
     if (!DynGetThreadDpiAwarenessContext) {
@@ -915,12 +892,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     mui::Initialize();
     uitask::Initialize();
 
-    // StartLogToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
-
-    {
-        TempStr cmdLineA = ToUtf8Temp(GetCommandLineW());
-        logf("CmdLine: %s\n", cmdLineA.Get());
-    }
+    gLogToConsole = true;
 
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);
@@ -950,12 +922,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     if (i.justExtractFiles) {
         RedirectIOToExistingConsole();
-        ExtractInstallerFiles();
+        logf("starting ExeHasInstallerResources()\n");
+        if (!ExeHasInstallerResources()) {
+            log("this is not an installer, -x option not available\n");
+            retCode = 1;
+        } else {
+            if (!ExtractInstallerFiles()) {
+                log("failed to extract files");
+                LogLastError();
+                retCode = 1;
+            }
+        }
         HandleRedirectedConsoleOnShutdown();
-        ::ExitProcess(0);
+        return retCode;
     }
 
-    if ((i.install || i.justExtractFiles) || IsInstallerAndNamedAsSuch()) {
+    if (i.install || IsInstallerAndNamedAsSuch()) {
         if (!ExeHasInstallerResources()) {
             ShowNotValidInstallerError();
             return 1;
@@ -963,7 +945,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         retCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libmupdf.dll which we don't have access to in the installer
-        ::ExitProcess(retCode);
+        return retCode;
     }
 
     if (i.uninstall) {
@@ -982,7 +964,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us
         // had time to exit so that we can overwrite it
-        Sleep(3 * 1000);
+        if (i.sleepMs > 0) {
+            ::Sleep(i.sleepMs);
+        }
+        // TODO: retry if file busy?
         bool ok = file::Delete(i.deleteFilePath);
         if (ok) {
             logf(L"Deleted '%s'\n", i.deleteFilePath);

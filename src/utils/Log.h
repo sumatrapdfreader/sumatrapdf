@@ -3,7 +3,7 @@
 
 extern HeapAllocator* gLogAllocator;
 extern str::Str* gLogBuf;
-extern bool gLogToStderr;
+extern bool gLogToConsole;
 extern bool gLogToDebugger;
 extern bool gReducedLogging;
 extern bool gLogToPipe;

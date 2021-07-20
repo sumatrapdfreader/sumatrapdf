@@ -253,24 +253,16 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         return;
     }
 
-    // TODO: remove after few days. just need -update-self-to action to work
-    // in builds we're downloading
-    if (!IsDllBuild()) {
-        SumatraLaunchBrowser(WEBSITE_DOWNLOAD_PAGE_URL);
-        return;
-    }
-
     // TODO: we don't really handle a case when it's a dll build but not installed
     // maybe in that case go to website
-
     str::WStr cmd;
     if (IsDllBuild()) {
         // no need for sleep because it shows the installer dialog anyway
         cmd.Append(L" -install");
     } else {
-        // we're asking to over-write over ourselves, so also wait 3 secs to allow
+        // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(LR"( -sleep-ms 3000 -update-self-to "%s")", GetExePathTemp().Get());
+        cmd.AppendFmt(LR"( -sleep-ms 2000 -update-self-to "%s")", GetExePathTemp().Get());
     }
     logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.AsView()).Get());
     CreateProcessHelper(installerPath, cmd.Get());

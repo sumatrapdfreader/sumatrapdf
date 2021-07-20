@@ -98,7 +98,7 @@ STDAPI_(BOOL) DllMain(__unused HINSTANCE hInstance, DWORD dwReason, __unused LPV
         CrashIf(hInstance != GetInstance());
     }
     gLogAppName = "PdfFilter";
-    gLogToStderr = false;
+    gLogToConsole = false;
     log("DllMain\n");
     return TRUE;
 }

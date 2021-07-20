@@ -149,7 +149,7 @@ static bool CreateInstallationDirectory() {
     return ok;
 }
 
-bool CopySelfToDir(const WCHAR* destDir) {
+static bool CopySelfToDir(const WCHAR* destDir) {
     auto exePath = GetExePathTemp();
     auto exeName = GetExeNameTemp();
     auto* dstPath = path::Join(destDir, exeName);
@@ -189,21 +189,6 @@ static void CopySettingsFile() {
     // don't care if it fails or not
     file::Copy(dstPath.Get(), srcPath.Get(), failIfExists);
     log("did copy settings file\n");
-}
-
-static bool ExtractInstallerFiles() {
-    if (!CreateInstallationDirectory()) {
-        return false;
-    }
-
-    bool ok = CopySelfToDir(GetInstallDirTemp());
-    if (!ok) {
-        return false;
-    }
-    ProgressStep();
-
-    // on error, ExtractFiles() shows error message itself
-    return ExtractFiles(&gArchive, gCli->installDir);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
@@ -373,18 +358,7 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     const WCHAR* appName{nullptr};
     const WCHAR* exeName{nullptr};
 
-    if (!ExtractInstallerFiles()) {
-        log("ExtractInstallerFiles() failed\n");
-        goto Error;
-    }
-
     CopySettingsFile();
-
-    // all files have been extracted at this point
-    if (gCli->justExtractFiles) {
-        log("InstallerThread: finishing early because justExtractFiles\n");
-        return 0;
-    }
 
 #if ENABLE_REGISTER_DEFAULT
     if (gInstallerGlobals.registerAsDefault) {
@@ -431,7 +405,6 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     ProgressStep();
     log("Installer thread finished\n");
-Error:
     // TODO: roll back installation on failure (restore previous installation!)
     if (gHwndFrame) {
         if (!gCli->silent) {
@@ -973,11 +946,18 @@ static int RunApp() {
 }
 
 static void ShowNoEmbeddedFiles(const WCHAR* msg) {
+    if (gCli->silent) {
+        log(msg);
+        return;
+    }
     const WCHAR* caption = L"Error";
     MessageBoxW(nullptr, msg, caption, MB_OK);
 }
 
 static bool OpenEmbeddedFilesArchive() {
+    if (gArchive.filesCount > 0) {
+        return true;
+    }
     auto [data, size, res] = LockDataResource(1);
     if (data == nullptr) {
         ShowNoEmbeddedFiles(L"No embbedded files");
@@ -990,6 +970,25 @@ static bool OpenEmbeddedFilesArchive() {
         return false;
     }
     return true;
+}
+
+bool ExtractInstallerFiles() {
+    if (!CreateInstallationDirectory()) {
+        return false;
+    }
+
+    bool ok = CopySelfToDir(GetInstallDirTemp());
+    if (!ok) {
+        return false;
+    }
+    ProgressStep();
+
+    ok = OpenEmbeddedFilesArchive();
+    if (!ok) {
+        return false;
+    }
+    // on error, ExtractFiles() shows error message itself
+    return ExtractFiles(&gArchive, gCli->installDir);
 }
 
 static char* PickInstallerLogPath() {
@@ -1052,9 +1051,6 @@ int RunInstaller() {
             return 0;
         }
     }
-
-    // just when testing
-    // CrashMe();
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
     if (gWasSearchFilterInstalled) {

@@ -67,6 +67,7 @@ const WCHAR** GetSupportedExts();
 
 WCHAR* GetShortcutPath(int csidl);
 
+bool ExtractInstallerFiles();
 WCHAR* GetExistingInstallationDir();
 WCHAR* GetInstallDirTemp();
 WCHAR* GetInstalledExePath();
