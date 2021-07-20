@@ -76,6 +76,7 @@
 #include "SumatraConfig.h"
 #include "EngineEbook.h"
 #include "ExternalViewers.h"
+#include "AppColors.h"
 
 // gFileExistenceChecker is initialized at startup and should
 // terminate and delete itself asynchronously while the UI is

@@ -122,7 +122,7 @@ modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,modernize-use-equals-default",
+		"--checks=-*,readability-inconsistent-declaration-parameter-name,readability-redundant-declaration,readability-redundant-access-specifiers",
 		"-p",
 		".",
 		"--header-filter=src/",
@@ -177,6 +177,14 @@ func runClangTidy(fix bool) {
 			"Version.h",
 			"TranslationsInfo.cpp",
 			"signfile.cpp",
+			// those fail due to DrawInstr
+			"Doc.cpp",
+			"EbookController.cpp",
+			"EbookControls.cpp",
+			"EbookFormatter.cpp",
+			"EngineEbook.cpp",
+			"HtmlFormatter.cpp",
+			"StressTesting.cpp",
 		}
 		s = strings.ToLower(s)
 

@@ -225,7 +225,7 @@ class EngineXps : public EngineBase {
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
-  public:
+  
     // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION* ctxAccess;

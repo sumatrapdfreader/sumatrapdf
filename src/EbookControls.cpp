@@ -25,6 +25,7 @@
 #include "EbookControls.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
+#include "AppColors.h"
 
 constexpr const char ebookWinDesc[] = R"data(
 Style [

@@ -94,7 +94,7 @@ extern Favorites gFavorites;
 extern FileHistory gFileHistory;
 extern WNDPROC DefWndProcCloseButton;
 extern RenderCache gRenderCache;
-extern bool gShowFrameRate;
+
 extern bool gSuppressAltKey;
 extern HBITMAP gBitmapReloadingCue;
 extern HCURSOR gCursorDrag;
@@ -180,8 +180,6 @@ bool DocumentPathExists(const WCHAR* path);
 void EnterFullScreen(WindowInfo* win, bool presentation = false);
 void ExitFullScreen(WindowInfo* win);
 void SetCurrentLang(const char* langCode);
-void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
-void GetEbookUiColors(COLORREF& text, COLORREF& bg);
 void RebuildMenuBarForWindow(WindowInfo* win);
 void DeleteWindowInfo(WindowInfo* win);
 void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
