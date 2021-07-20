@@ -22,6 +22,7 @@ var (
 	preReleaseVerCached string
 	gitSha1Cached       string
 	sumatraVersion      string
+	versionCheckVer     string
 )
 
 func getGitSha1() string {
@@ -97,8 +98,8 @@ func build(dir, config, platform string) {
 
 func extractSumatraVersionMust() string {
 	path := filepath.Join("src", "Version.h")
-	d := u.ReadFileMust(path)
-	lines := toTrimmedLines(d)
+	lines, err := u.ReadLinesFromFile(path)
+	must(err)
 	s := "#define CURR_VERSION "
 	for _, l := range lines {
 		if strings.HasPrefix(l, s) {
@@ -110,14 +111,53 @@ func extractSumatraVersionMust() string {
 	panic(fmt.Sprintf("couldn't extract CURR_VERSION from %s\n", path))
 }
 
+// extract version_check_${VER}
+// convert from "3_4" => "3.4"
+func extractVersionCheckVerPathMust(path string) string {
+	lines, err := u.ReadLinesFromFile(path)
+	must(err)
+	s := "version_check_"
+	for _, l := range lines {
+		idx := strings.Index(l, s)
+		if idx < 0 {
+			continue
+		}
+		l = l[idx+len(s):]
+		idx = strings.Index(l, "(")
+		if idx <= 0 {
+			idx = len(l)
+		}
+		ver := l[:idx]
+		ver = strings.Replace(ver, "_", ".", -1)
+		verifyCorrectVersionMust(ver)
+		return ver
+	}
+	panic(fmt.Sprintf("couldn't extract version_check_${VER} from %s\n", path))
+}
+
+func extractVersionCheckVerMust() string {
+	path := filepath.Join("ext", "mupdf_load_system_font.c")
+	ver1 := extractVersionCheckVerPathMust(path)
+	path = filepath.Join("src", "libmupdf.def")
+	ver2 := extractVersionCheckVerPathMust(path)
+	panicIf(ver1 != ver2, "ver1 != ver2 ('%s' != '%s')", ver1, ver2)
+	return ver1
+}
+
 func detectVersions() {
 	ver := getGitLinearVersionMust()
 	preReleaseVerCached = strconv.Itoa(ver)
 	gitSha1Cached = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
+	versionCheckVer = extractVersionCheckVerMust()
 	logf("preReleaseVer: '%s'\n", preReleaseVerCached)
 	logf("gitSha1: '%s'\n", gitSha1Cached)
 	logf("sumatraVersion: '%s'\n", sumatraVersion)
+	logf("versionCheckVer: '%s'\n", versionCheckVer)
+	parts := strings.Split(versionCheckVer, ".")
+	panicIf(len(parts) != 2, "invalid versionCheckVer (%s), must be x.y", versionCheckVer)
+	ok := strings.HasPrefix(sumatraVersion, versionCheckVer)
+	panicIf(!ok, "invalid versionCheckVer compared to sumatraVersion")
 }
 
 // remove all files and directories under out/ except settings files
