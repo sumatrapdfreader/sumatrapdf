@@ -352,9 +352,6 @@ func main() {
 		default:
 			panic("unkown value from getGitHubEventType()")
 		}
-
-		minioDeleteOldBuilds()
-		s3DeleteOldBuilds()
 		return
 	}
 
@@ -443,11 +440,13 @@ func uploadToStorage(buildType string) {
 	wg.Add(2)
 	go func() {
 		s3UploadBuildMust(buildType)
+		s3DeleteOldBuilds()
 		wg.Done()
 	}()
 
 	go func() {
 		spacesUploadBuildMust(buildType)
+		spacesDeleteOldBuilds()
 		wg.Done()
 	}()
 	wg.Wait()

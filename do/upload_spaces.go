@@ -146,7 +146,7 @@ func getDownloadUrls(storage string, buildType string, ver string) *DownloadUrls
 	return res
 }
 
-func minioUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
+func spacesUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
 	files, err := ioutil.ReadDir(dirLocal)
 	must(err)
 	for _, f := range files {
@@ -242,7 +242,7 @@ func spacesUploadBuildMust(buildType string) {
 	dirLocal := getFinalDirForBuildType(buildType)
 	//verifyBuildNotInSpaces(c, buildType)
 
-	err := minioUploadDir(c, dirRemote, dirLocal)
+	err := spacesUploadDir(c, dirRemote, dirLocal)
 	must(err)
 
 	// for release build we don't upload files with version info
@@ -328,7 +328,7 @@ func groupFilesByVersion(files []string) []*filesByVer {
 	return res
 }
 
-func minioDeleteOldBuildsPrefix(buildType string) {
+func spacesDeleteOldBuildsPrefix(buildType string) {
 	panicIf(buildType == buildTypeRel, "can't delete release builds")
 
 	nBuildsToRetain := nBuildsToRetainDaily
@@ -365,7 +365,7 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 	}
 }
 
-func minioDeleteOldBuilds() {
-	minioDeleteOldBuildsPrefix(buildTypePreRel)
-	//minioDeleteOldBuildsPrefix(buildTypeDaily)
+func spacesDeleteOldBuilds() {
+	spacesDeleteOldBuildsPrefix(buildTypePreRel)
+	//spacesDeleteOldBuildsPrefix(buildTypeDaily)
 }
