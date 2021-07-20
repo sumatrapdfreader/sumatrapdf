@@ -17,14 +17,14 @@ struct FileHistory {
     FileHistory() = default;
     ~FileHistory() = default;
 
-    void Clear(bool keepFavorites);
-    void Append(FileState* state);
-    void Remove(FileState* state);
+    void Clear(bool keepFavorites) const;
+    void Append(FileState* state) const;
+    void Remove(FileState* state) const;
     [[nodiscard]] FileState* Get(size_t index) const;
     FileState* Find(const WCHAR* filePath, size_t* idxOut) const;
-    FileState* MarkFileLoaded(const WCHAR* filePath);
-    bool MarkFileInexistent(const WCHAR* filePath, bool hide = false);
+    FileState* MarkFileLoaded(const WCHAR* filePath) const;
+    bool MarkFileInexistent(const WCHAR* filePath, bool hide = false) const;
     void GetFrequencyOrder(Vec<FileState*>& list) const;
-    void Purge(bool alwaysUseDefaultState = false);
+    void Purge(bool alwaysUseDefaultState = false) const;
     void UpdateStatesSource(Vec<FileState*>* states);
 };

@@ -166,7 +166,7 @@ pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, c
 }
 
 // based on create_page in pdfcreate.c
-bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) {
+bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) const {
     CrashIf(!ctx || !doc);
     if (!ctx || !doc) {
         return false;
@@ -264,7 +264,7 @@ bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi
     return ok;
 }
 
-bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
+bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
     if (!ctx || !doc) {
         return false;
     }

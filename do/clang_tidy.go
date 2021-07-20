@@ -108,12 +108,14 @@ func clangTidyFile(path string) {
 	must(err)
 }
 
-// modernize-
+// modernize-raw-string-literal
+// modernize-use-nullptr
 // modernize-use-override
 // modernize-use-equals-default
 // readability-avoid-const-params-in-decls
 // readability-simplify-boolean-expr
 // modernize-use-using : needs to figure out how to not run in ext
+// readability-braces-around-statements¶
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one

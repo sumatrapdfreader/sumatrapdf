@@ -78,12 +78,12 @@ struct EbookController : Controller {
     [[nodiscard]] DocType GetDocType() const {
         return doc.Type();
     }
-    LRESULT HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled);
+    LRESULT HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled) const;
     void EnableMessageHandling(bool enable) {
         handleMsgs = enable;
     }
-    void UpdateDocumentColors();
-    void RequestRepaint();
+    void UpdateDocumentColors() const;
+    void RequestRepaint() const;
     void HandlePagesFromEbookLayout(EbookFormattingData* ft);
     void TriggerLayout();
     void StartLayouting(int startReparseIdxArg = -1, DisplayMode displayMode = DisplayMode::Automatic);
@@ -131,8 +131,8 @@ struct EbookController : Controller {
     Vec<int> navHistory;
     size_t navHistoryIdx = 0;
 
-    Vec<HtmlPage*>* GetPages();
-    void UpdateStatus();
+    Vec<HtmlPage*>* GetPages() const;
+    void UpdateStatus() const;
     [[nodiscard]] bool FormattingInProgress() const {
         return formattingThread != nullptr;
     }

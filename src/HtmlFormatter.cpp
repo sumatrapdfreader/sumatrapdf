@@ -309,7 +309,7 @@ float HtmlFormatter::CurrLineDy() {
 
 // return the width of the left margin (used for paragraph
 // indentation inside lists)
-float HtmlFormatter::NewLineX() {
+float HtmlFormatter::NewLineX() const {
     // TODO: indent based on font size instead?
     float x = 15.f * listDepth;
     if (x < pageDx - 20.f) {

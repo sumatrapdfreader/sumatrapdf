@@ -220,7 +220,7 @@ class EngineXps : public EngineBase {
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
-    void ResolveLinks(Vec<IPageElement*>* els, fz_link* links);
+    void ResolveLinks(Vec<IPageElement*>* els, fz_link* links) const;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -255,7 +255,7 @@ class EngineXps : public EngineBase {
         const fz_rect tmpRect = To_fz_rect(PageMediabox(pageNo));
         return fz_create_view_ctm(tmpRect, zoom, rotation);
     }
-    fz_matrix viewctm(fz_page* page, float zoom, int rotation) {
+    fz_matrix viewctm(fz_page* page, float zoom, int rotation) const {
         fz_rect r = fz_bound_page(ctx, page);
         return fz_create_view_ctm(r, zoom, rotation);
     }
@@ -772,7 +772,7 @@ IPageElement* EngineXps::GetElementAtPos(int pageNo, PointF pt) {
 
 // TODO: probably need to use fz_resolve_link(ctx, _doc, link->uri, &x, &y)
 // in FzGetElements().
-void EngineXps::ResolveLinks(Vec<IPageElement*>* els, fz_link* link) {
+void EngineXps::ResolveLinks(Vec<IPageElement*>* els, fz_link* link) const {
     float x, y;
     fz_location loc;
     while (link) {

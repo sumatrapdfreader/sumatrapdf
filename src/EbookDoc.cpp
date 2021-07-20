@@ -977,7 +977,7 @@ std::span<u8> Fb2Doc::GetXmlData() const {
     return {(u8*)xmlData.Get(), xmlData.size()};
 }
 
-ImageData* Fb2Doc::GetImageData(const char* fileName) {
+ImageData* Fb2Doc::GetImageData(const char* fileName) const {
     for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).fileName, fileName)) {
             return &images.at(i).base;
@@ -1009,7 +1009,7 @@ bool Fb2Doc::HasToc() const {
     return hasToc;
 }
 
-bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) {
+bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     AutoFreeWstr itemText;
     bool inTitle = false;
     int titleCount = 0;

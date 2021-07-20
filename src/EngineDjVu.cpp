@@ -164,7 +164,7 @@ struct DjVuContext {
         DeleteCriticalSection(&lock);
     }
 
-    void SpinMessageLoop(bool wait = true) {
+    void SpinMessageLoop(bool wait = true) const {
         const ddjvu_message_t* msg = nullptr;
         if (wait) {
             ddjvu_message_wait(ctx);

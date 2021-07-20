@@ -158,12 +158,12 @@ struct DisplayModel : public Controller {
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
     void RotateBy(int rotation);
 
-    WCHAR* GetTextInRegion(int pageNo, RectF region);
+    WCHAR* GetTextInRegion(int pageNo, RectF region) const;
     bool IsOverText(Point pt);
     IPageElement* GetElementAtPos(Point pt, int* pageNoOut);
     Annotation* GetAnnotationAtPos(Point pt, AnnotationType* allowedAnnots);
 
-    int GetPageNoByPoint(Point pt);
+    int GetPageNoByPoint(Point pt) const;
     Point CvtToScreen(int pageNo, PointF pt);
     Rect CvtToScreen(int pageNo, RectF r);
     PointF CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
@@ -180,7 +180,7 @@ struct DisplayModel : public Controller {
     void SetDisplayR2L(bool r2l);
     [[nodiscard]] bool GetDisplayR2L() const;
 
-    bool ShouldCacheRendering(int pageNo);
+    bool ShouldCacheRendering(int pageNo) const;
     // called when we decide that the display needs to be redrawn
     void RepaintDisplay();
 
@@ -194,14 +194,14 @@ struct DisplayModel : public Controller {
     [[nodiscard]] SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
     void ChangeStartPage(int startPage);
     Point GetContentStart(int pageNo);
-    void RecalcVisibleParts();
+    void RecalcVisibleParts() const;
     void RenderVisibleParts();
     void AddNavPoint();
-    RectF GetContentBox(int pageNo);
+    RectF GetContentBox(int pageNo) const;
     void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
     bool GoToPrevPage(int scrollY);
-    int GetPageNextToPoint(Point pt);
+    int GetPageNextToPoint(Point pt) const;
 
     EngineBase* engine{nullptr};
 

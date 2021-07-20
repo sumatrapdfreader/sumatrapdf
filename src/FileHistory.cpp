@@ -59,12 +59,12 @@ static int cmpOpenCount(const void* a, const void* b) {
     return dsA->index < dsB->index ? -1 : 1;
 }
 
-void FileHistory::Append(FileState* state) {
+void FileHistory::Append(FileState* state) const {
     CrashIf(!state->filePath);
     states->Append(state);
 }
 
-void FileHistory::Remove(FileState* state) {
+void FileHistory::Remove(FileState* state) const {
     states->Remove(state);
 }
 
@@ -72,7 +72,7 @@ void FileHistory::UpdateStatesSource(Vec<FileState*>* states) {
     this->states = states;
 }
 
-void FileHistory::Clear(bool keepFavorites) {
+void FileHistory::Clear(bool keepFavorites) const {
     if (!states) {
         return;
     }
@@ -121,7 +121,7 @@ FileState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     return states->at(idFound);
 }
 
-FileState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
+FileState* FileHistory::MarkFileLoaded(const WCHAR* filePath) const {
     CrashIf(!filePath);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
@@ -139,7 +139,7 @@ FileState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
     return state;
 }
 
-bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
+bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) const {
     CrashIf(!filePath);
     FileState* state = Find(filePath, nullptr);
     if (!state) {
@@ -187,7 +187,7 @@ void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
 
 // removes file history entries which shouldn't be saved anymore
 // (see the loop below for the details)
-void FileHistory::Purge(bool alwaysUseDefaultState) {
+void FileHistory::Purge(bool alwaysUseDefaultState) const {
     // minOpenCount is set to the number of times a file must have been
     // opened to be kept (provided that there is no other valuable
     // information about the file to be remembered)

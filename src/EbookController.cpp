@@ -296,7 +296,7 @@ static int PageForReparsePoint(Vec<HtmlPage*>* pages, int reparseIdx) {
 
 // gets pages as formatted from beginning, either from a temporary state
 // when layout is in progress or final formatted pages
-Vec<HtmlPage*>* EbookController::GetPages() {
+Vec<HtmlPage*>* EbookController::GetPages() const {
     return pages;
 }
 
@@ -475,7 +475,7 @@ int EbookController::GetMaxPageCount() const {
 }
 
 // show the status text based on current state
-void EbookController::UpdateStatus() {
+void EbookController::UpdateStatus() const {
     int pageCount = GetMaxPageCount();
     if (FormattingInProgress()) {
         AutoFreeWstr s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
@@ -892,7 +892,7 @@ void EbookController::SetViewPortSize(__unused Size size) {
     ctrls->mainWnd->RequestLayout();
 }
 
-LRESULT EbookController::HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled) {
+LRESULT EbookController::HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled) const {
     if (!handleMsgs) {
         wasHandled = false;
         return 0;
@@ -902,7 +902,7 @@ LRESULT EbookController::HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& was
 
 // TODO: also needs to update for font name/size changes, but it's more complicated
 // because requires re-layout
-void EbookController::UpdateDocumentColors() {
+void EbookController::UpdateDocumentColors() const {
     SetMainWndBgCol(ctrls);
     // changing background will repaint mainWnd control but changing
     // of text color will not, so we request uncoditional repaint
@@ -911,7 +911,7 @@ void EbookController::UpdateDocumentColors() {
     ::RequestRepaint(ctrls->mainWnd);
 }
 
-void EbookController::RequestRepaint() {
+void EbookController::RequestRepaint() const {
     ctrls->mainWnd->MarkForRepaint();
 }
 

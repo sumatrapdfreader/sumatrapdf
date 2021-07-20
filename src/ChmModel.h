@@ -51,11 +51,11 @@ struct ChmModel : Controller {
     bool SetParentHwnd(HWND hwnd);
     void RemoveParentHwnd();
 
-    void PrintCurrentPage(bool showUI);
-    void FindInCurrentPage();
-    void SelectAll();
-    void CopySelection();
-    LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp);
+    void PrintCurrentPage(bool showUI) const;
+    void FindInCurrentPage() const;
+    void SelectAll() const;
+    void CopySelection() const;
+    LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 
     // for HtmlWindowCallback (called through htmlWindowCb)
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
@@ -86,7 +86,7 @@ struct ChmModel : Controller {
     bool Load(const WCHAR* fileName);
     void DisplayPage(const WCHAR* pageUrl);
 
-    ChmCacheEntry* FindDataForUrl(const WCHAR* url);
+    ChmCacheEntry* FindDataForUrl(const WCHAR* url) const;
 
-    void ZoomTo(float zoomLevel);
+    void ZoomTo(float zoomLevel) const;
 };

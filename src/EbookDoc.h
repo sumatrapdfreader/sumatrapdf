@@ -85,7 +85,7 @@ class Fb2Doc {
 
     [[nodiscard]] std::span<u8> GetXmlData() const;
 
-    ImageData* GetImageData(const char* fileName);
+    ImageData* GetImageData(const char* fileName) const;
     ImageData* GetCoverImage();
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
@@ -93,7 +93,7 @@ class Fb2Doc {
     [[nodiscard]] bool IsZipped() const;
 
     [[nodiscard]] bool HasToc() const;
-    bool ParseToc(EbookTocVisitor* visitor);
+    bool ParseToc(EbookTocVisitor* visitor) const;
 
     static bool IsSupportedFileType(Kind kind);
 

@@ -38,7 +38,7 @@ class ByteOrderDecoder {
         return curr - data;
     }
 
-    bool IsOk() {
+    bool IsOk() const {
         return ok;
     };
 

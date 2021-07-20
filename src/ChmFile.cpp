@@ -22,7 +22,7 @@ ChmFile::~ChmFile() {
     chm_close(chmHandle);
 }
 
-bool ChmFile::HasData(const char* fileName) {
+bool ChmFile::HasData(const char* fileName) const {
     if (!fileName) {
         return false;
     }
@@ -37,7 +37,7 @@ bool ChmFile::HasData(const char* fileName) {
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-std::span<u8> ChmFile::GetData(const char* fileName) {
+std::span<u8> ChmFile::GetData(const char* fileName) const {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp("/", fileName);
     } else if (str::StartsWith(fileName, "///")) {
@@ -74,7 +74,7 @@ std::span<u8> ChmFile::GetData(const char* fileName) {
     return {data, len};
 }
 
-char* ChmFile::ToUtf8(const u8* text, uint overrideCP) {
+char* ChmFile::ToUtf8(const u8* text, uint overrideCP) const {
     const char* s = (char*)text;
     if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
@@ -88,7 +88,7 @@ char* ChmFile::ToUtf8(const u8* text, uint overrideCP) {
     return (char*)strconv::ToMultiByteV(s, codepage, CP_UTF8).data();
 }
 
-WCHAR* ChmFile::ToStr(const char* text) {
+WCHAR* ChmFile::ToStr(const char* text) const {
     return strconv::StrToWstr(text, codepage);
 }
 
@@ -326,7 +326,7 @@ WCHAR* ChmFile::GetProperty(DocumentProperty prop) {
     return result.StealData();
 }
 
-const char* ChmFile::GetHomePath() {
+const char* ChmFile::GetHomePath() const {
     return homePath;
 }
 
@@ -339,7 +339,7 @@ static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info
     return CHM_ENUMERATOR_CONTINUE;
 }
 
-Vec<char*>* ChmFile::GetAllPaths() {
+Vec<char*>* ChmFile::GetAllPaths() const {
     Vec<char*>* paths = new Vec<char*>();
     chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, paths);
     return paths;

@@ -18,7 +18,7 @@ class FrameTimeoutCalculator {
     }
 
     // in seconds, as a double
-    double ElapsedTotal() {
+    double ElapsedTotal() const {
         LARGE_INTEGER timeCurr;
         QueryPerformanceCounter(&timeCurr);
         LONGLONG elapsedTicks = timeCurr.QuadPart - timeStart.QuadPart;
@@ -26,7 +26,7 @@ class FrameTimeoutCalculator {
         return res;
     }
 
-    DWORD GetTimeoutInMilliseconds() {
+    DWORD GetTimeoutInMilliseconds() const {
         LARGE_INTEGER timeCurr;
         LONGLONG elapsedTicks;
         QueryPerformanceCounter(&timeCurr);

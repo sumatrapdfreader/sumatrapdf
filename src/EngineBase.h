@@ -245,7 +245,7 @@ struct TocItem : TreeItem {
     void OpenSingleNode();
     void DeleteJustSelf();
 
-    PageDestination* GetPageDestination();
+    PageDestination* GetPageDestination() const;
 
     // TreeItem
     TreeItem* Parent() override;

@@ -865,7 +865,7 @@ void DisplayModel::ChangeStartPage(int newStartPage) {
    coordinates of a current view into that large sheet, calculate which
    parts of each page is visible on the screen.
    Needs to be recalucated after scrolling the view. */
-void DisplayModel::RecalcVisibleParts() {
+void DisplayModel::RecalcVisibleParts() const {
     CrashIf(!pagesInfo);
     if (!pagesInfo) {
         return;
@@ -892,7 +892,7 @@ void DisplayModel::RecalcVisibleParts() {
     }
 }
 
-int DisplayModel::GetPageNoByPoint(Point pt) {
+int DisplayModel::GetPageNoByPoint(Point pt) const {
     // no reasonable answer possible, if zoom hasn't been set yet
     if (zoomReal <= 0) {
         return -1;
@@ -913,7 +913,7 @@ int DisplayModel::GetPageNoByPoint(Point pt) {
     return -1;
 }
 
-int DisplayModel::GetPageNextToPoint(Point pt) {
+int DisplayModel::GetPageNextToPoint(Point pt) const {
     if (zoomReal <= 0) {
         return startPage;
     }
@@ -1157,7 +1157,7 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     }
 }
 
-RectF DisplayModel::GetContentBox(int pageNo) {
+RectF DisplayModel::GetContentBox(int pageNo) const {
     RectF cbox{};
     // we cache the contentBox
     PageInfo* pageInfo = GetPageInfo(pageNo);
@@ -1659,7 +1659,7 @@ void DisplayModel::RotateBy(int newRotation) {
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
-WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) {
+WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
     const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText)) {
@@ -1849,7 +1849,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     }
 }
 
-bool DisplayModel::ShouldCacheRendering(int pageNo) {
+bool DisplayModel::ShouldCacheRendering(int pageNo) const {
     // recommend caching for all documents which are non-trivial to render
     if (!engine->IsImageCollection()) {
         return true;

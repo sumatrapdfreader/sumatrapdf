@@ -153,7 +153,7 @@ struct HtmlFormatterArgs {
         fontName.SetCopy(s);
     }
 
-    const WCHAR* GetFontName() {
+    const WCHAR* GetFontName() const {
         return fontName;
     }
 
@@ -208,7 +208,7 @@ class HtmlFormatter {
 
     float CurrLineDx();
     float CurrLineDy();
-    float NewLineX();
+    float NewLineX() const;
     void LayoutLeftStartingAt(float offX);
     void JustifyLineBoth();
     void JustifyCurrLine(AlignAttr align);

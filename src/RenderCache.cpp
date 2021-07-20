@@ -321,7 +321,7 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
 }
 
 // determine the count of tiles required for a page at a given zoom level
-USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) {
+USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
     auto engine = dm->GetEngine();
     RectF mediabox = engine->PageMediabox(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
