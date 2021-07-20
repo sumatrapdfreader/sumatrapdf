@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/kjk/u"
@@ -345,8 +346,7 @@ func main() {
 		switch gev {
 		case githubEventPush:
 			// pre-release build on push
-			s3UploadBuildMust(buildTypePreRel)
-			spacesUploadBuildMust(buildTypePreRel)
+			uploadToStorage(buildTypePreRel)
 		case githubEventTypeCodeQL:
 			// do nothing
 		default:
@@ -367,8 +367,7 @@ func main() {
 		detectVersions()
 		buildRelease(flgUpload)
 		if flgUpload {
-			s3UploadBuildMust(buildTypeRel)
-			spacesUploadBuildMust(buildTypeRel)
+			uploadToStorage(buildTypeRel)
 		}
 		return
 	}
@@ -392,8 +391,7 @@ func main() {
 		failIfNoCertPwd()
 		detectVersions()
 		buildPreRelease()
-		s3UploadBuildMust(buildTypePreRel)
-		spacesUploadBuildMust(buildTypePreRel)
+		uploadToStorage(buildTypePreRel)
 		return
 	}
 
@@ -434,4 +432,23 @@ func main() {
 	}
 
 	flag.Usage()
+}
+
+func uploadToStorage(buildType string) {
+	timeStart := time.Now()
+	defer func() {
+		logf("uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
+	}()
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		s3UploadBuildMust(buildType)
+		wg.Done()
+	}()
+
+	go func() {
+		spacesUploadBuildMust(buildType)
+		wg.Done()
+	}()
+	wg.Wait()
 }
