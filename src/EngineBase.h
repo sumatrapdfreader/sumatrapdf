@@ -126,7 +126,8 @@ extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
 struct IPageElement {
-    virtual ~IPageElement(){};
+    virtual ~IPageElement() = default;
+    ;
 
     // the type of this page element
     bool Is(Kind expectedKind);
@@ -280,8 +281,7 @@ void SetTocTreeParents(TocItem* treeRoot);
 // a helper that allows for rendering interruptions in an engine-agnostic way
 class AbortCookie {
   public:
-    virtual ~AbortCookie() {
-    }
+    virtual ~AbortCookie() = default;
     // aborts a rendering request (as far as possible)
     // note: must be thread-safe
     virtual void Abort() = 0;
@@ -432,8 +432,7 @@ class EngineBase {
 class PasswordUI {
   public:
     virtual WCHAR* GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
-    virtual ~PasswordUI() {
-    }
+    virtual ~PasswordUI() = default;
 };
 
 WCHAR* CleanupFileURL(const WCHAR*);

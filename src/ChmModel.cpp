@@ -57,8 +57,7 @@ class HtmlWindowHandler : public HtmlWindowCallback {
   public:
     HtmlWindowHandler(ChmModel* cm) : cm(cm) {
     }
-    ~HtmlWindowHandler() override {
-    }
+    ~HtmlWindowHandler() override = default;
 
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow) override {
         return cm->OnBeforeNavigate(url, newWindow);

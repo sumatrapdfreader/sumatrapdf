@@ -28,8 +28,7 @@ class HtmlWindowCallback {
     // called when a file can't be displayed and has to be downloaded instead
     virtual void DownloadData(const WCHAR* url, std::span<u8> data) = 0;
 
-    virtual ~HtmlWindowCallback() {
-    }
+    virtual ~HtmlWindowCallback() = default;
 };
 
 // HtmlWindow embeds a web browser (Internet Explorer) control

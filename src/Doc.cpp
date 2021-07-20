@@ -39,8 +39,7 @@ Doc& Doc::operator=(const Doc& other) {
     return *this;
 }
 
-Doc::~Doc() {
-}
+Doc::~Doc() = default;
 
 // delete underlying object
 void Doc::Delete() {

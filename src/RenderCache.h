@@ -16,8 +16,7 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 class RenderingCallback {
   public:
     virtual void Callback(RenderedBitmap* bmp = nullptr) = 0;
-    virtual ~RenderingCallback() {
-    }
+    virtual ~RenderingCallback() = default;
 };
 
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.

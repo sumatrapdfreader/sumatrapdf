@@ -336,9 +336,9 @@ bool ListRemove(T** root, T* el) {
 // (and potentially others). Needed because e.g. in crash handler
 // we want to use Vec but not use standard malloc()/free() functions
 struct Allocator {
-    Allocator() {
-    }
-    virtual ~Allocator(){};
+    Allocator() = default;
+    virtual ~Allocator() = default;
+    ;
     virtual void* Alloc(size_t size) = 0;
     virtual void* Realloc(void* mem, size_t size) = 0;
     virtual void Free(const void* mem) = 0;

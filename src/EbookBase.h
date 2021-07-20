@@ -7,6 +7,5 @@
 class EbookTocVisitor {
   public:
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) = 0;
-    virtual ~EbookTocVisitor() {
-    }
+    virtual ~EbookTocVisitor() = default;
 };

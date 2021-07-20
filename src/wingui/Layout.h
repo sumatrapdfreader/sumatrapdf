@@ -56,7 +56,8 @@ enum class Visibility {
 };
 
 struct ILayout {
-    virtual ~ILayout(){};
+    virtual ~ILayout() = default;
+    ;
     virtual Kind GetKind() = 0;
     virtual void SetVisibility(Visibility) = 0;
     virtual Visibility GetVisibility() = 0;

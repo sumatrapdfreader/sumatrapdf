@@ -122,7 +122,7 @@ modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,modernize-use-nullptr,readability-braces-around-statements",
+		"--checks=-*,modernize-use-equals-default",
 		"-p",
 		".",
 		"--header-filter=src/",

@@ -56,8 +56,7 @@ class StringInterner {
     Vec<const char*> intToStr;
 
   public:
-    StringInterner() {
-    }
+    StringInterner() = default;
 
     int Intern(const char* s, bool* alreadyPresent = nullptr);
     [[nodiscard]] size_t StringsCount() const {

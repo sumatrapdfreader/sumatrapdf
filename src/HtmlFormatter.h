@@ -88,8 +88,7 @@ struct DrawInstr {
     };
     RectF bbox{}; // common to most instructions
 
-    DrawInstr() {
-    }
+    DrawInstr() = default;
 
     explicit DrawInstr(DrawInstrType t, RectF bbox = {}) : type(t), bbox(bbox) {
     }

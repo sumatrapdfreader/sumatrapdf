@@ -36,7 +36,8 @@ class ITextRender {
     virtual void Draw(const char* s, size_t sLen, RectF bb, bool isRtl) = 0;
     virtual void Draw(const WCHAR* s, size_t sLen, RectF bb, bool isRtl) = 0;
 
-    virtual ~ITextRender(){};
+    virtual ~ITextRender() = default;
+    ;
 
     TextRenderMethod method;
 };

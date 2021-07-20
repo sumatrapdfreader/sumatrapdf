@@ -23,8 +23,7 @@ class EngineBase;
 class Synchronizer {
   public:
     explicit Synchronizer(const WCHAR* syncfilepath);
-    virtual ~Synchronizer() {
-    }
+    virtual ~Synchronizer() = default;
 
     // Inverse-search:
     //  - pageNo: page number in the PDF (starting from 1)

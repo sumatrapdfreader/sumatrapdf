@@ -8,8 +8,7 @@ class HttpRsp {
     DWORD error = (DWORD)-1;
     DWORD httpStatusCode = (DWORD)-1;
 
-    HttpRsp() {
-    }
+    HttpRsp() = default;
 };
 
 bool HttpRspOk(const HttpRsp*);

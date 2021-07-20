@@ -10,8 +10,7 @@ struct EbookFormattingData;
 using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
 
 struct ControllerCallback {
-    virtual ~ControllerCallback() {
-    }
+    virtual ~ControllerCallback() = default;
     // tell the UI to show the pageNo as current page (which also syncs
     // the toc with the curent page). Needed for when a page change happens
     // indirectly or is initiated from within the model
@@ -42,8 +41,7 @@ struct Controller {
     explicit Controller(ControllerCallback* cb) : cb(cb) {
         CrashIf(!cb);
     }
-    virtual ~Controller() {
-    }
+    virtual ~Controller() = default;
 
     // meta data
     [[nodiscard]] virtual const WCHAR* FilePath() const = 0;

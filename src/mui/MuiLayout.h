@@ -21,7 +21,8 @@ class ILayout {
     bool IsNamed(const char* s) const {
         return str::EqI(name.Get(), s);
     }
-    virtual ~ILayout(){};
+    virtual ~ILayout() = default;
+    ;
     virtual Size Measure(Size availableSize) = 0;
     virtual Size DesiredSize() = 0;
     virtual void Arrange(Rect finalRect) = 0;
@@ -74,14 +75,7 @@ struct DirectionalLayoutData {
     }
 
     // TODO: use default
-    DirectionalLayoutData& operator=(const DirectionalLayoutData& other) {
-        element = other.element;
-        sizeLayoutAxis = other.sizeLayoutAxis;
-        sizeNonLayoutAxis = other.sizeNonLayoutAxis;
-        alignNonLayoutAxis = other.alignNonLayoutAxis;
-        desiredSize = other.desiredSize;
-        return *this;
-    }
+    DirectionalLayoutData& operator=(const DirectionalLayoutData& other) = default;
 
     void Set(ILayout* el, float sla, float snla, const ElAlignData& a) {
         element = el;
@@ -112,16 +106,14 @@ class DirectionalLayout : public ILayout {
 
 class HorizontalLayout : public DirectionalLayout {
   public:
-    HorizontalLayout() {
-    }
+    HorizontalLayout() = default;
 
     void Arrange(Rect finalRect) override;
 };
 
 class VerticalLayout : public DirectionalLayout {
   public:
-    VerticalLayout() {
-    }
+    VerticalLayout() = default;
 
     void Arrange(Rect finalRect) override;
 };

@@ -5,7 +5,8 @@
 struct TreeItem {
     HTREEITEM hItem{nullptr};
 
-    virtual ~TreeItem(){};
+    virtual ~TreeItem() = default;
+    ;
 
     // TODO: convert to char*
     virtual WCHAR* Text() = 0;
@@ -27,7 +28,8 @@ struct TreeItem {
 
 // TreeModel provides data to TreeCtrl
 struct TreeModel {
-    virtual ~TreeModel(){};
+    virtual ~TreeModel() = default;
+    ;
 
     virtual int RootCount() = 0;
     virtual TreeItem* RootAt(int) = 0;

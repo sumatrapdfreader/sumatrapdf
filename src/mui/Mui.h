@@ -77,11 +77,9 @@ class WndFilter {
   public:
     bool skipInvisibleSubtrees{true};
 
-    WndFilter() {
-    }
+    WndFilter() = default;
 
-    virtual ~WndFilter() {
-    }
+    virtual ~WndFilter() = default;
 
     virtual bool Matches(__unused Control* w, __unused int offX, __unused int offY) {
         return true;
@@ -95,8 +93,7 @@ class WndInputWantedFilter : public WndFilter {
   public:
     WndInputWantedFilter(int x, int y, u16 wantedInputMask) : x(x), y(y), wantedInputMask(wantedInputMask) {
     }
-    ~WndInputWantedFilter() override {
-    }
+    ~WndInputWantedFilter() override = default;
     bool Matches(Control* c, int offX, int offY) override {
         if ((c->wantedInputBits & wantedInputMask) != 0) {
             Rect r = Rect(offX, offY, c->pos.dx, c->pos.dy);
