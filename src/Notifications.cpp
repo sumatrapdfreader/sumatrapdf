@@ -126,7 +126,7 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     DWORD exStyle = WS_EX_TOPMOST;
     int x = TOP_LEFT_MARGIN;
     int y = TOP_LEFT_MARGIN;
-    this->hwnd = CreateWindowExW(exStyle, clsName, msg, style, x, y, 0, 0, parent, (HMENU)0, h, nullptr);
+    this->hwnd = CreateWindowExW(exStyle, clsName, msg, style, x, y, 0, 0, parent, (HMENU) nullptr, h, nullptr);
     if (this->hwnd == nullptr) {
         return false;
     }
@@ -188,7 +188,7 @@ using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
-    PAINTSTRUCT ps = {0};
+    PAINTSTRUCT ps = {nullptr};
     HDC hdcWnd = BeginPaint(hwnd, &ps);
 
     Rect rect = ClientRect(hwnd);

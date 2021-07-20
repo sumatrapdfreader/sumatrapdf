@@ -1909,7 +1909,7 @@ void AssociateExeWithPdfExtension() {
     DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
     DoAssociateExeWithPdfExtension(HKEY_LOCAL_MACHINE);
 
-    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, nullptr, nullptr);
 
     // Remind the user, when a different application takes over
     str::ReplaceWithCopy(&gGlobalPrefs->associatedExtensions, ".pdf");
@@ -2158,7 +2158,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
     dialogConfig.nDefaultButton = kBtnIdDiscard;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;
-    dialogConfig.pfCallback = 0;
+    dialogConfig.pfCallback = nullptr;
     dialogConfig.dwCommonButtons = 0;
     dialogConfig.cButtons = dimof(buttons);
     dialogConfig.pButtons = &buttons[0];
@@ -2845,7 +2845,7 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
         return false;
     }
 
-    BROWSEINFO bi = {0};
+    BROWSEINFO bi = {nullptr};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = caption;

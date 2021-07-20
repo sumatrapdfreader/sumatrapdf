@@ -752,7 +752,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     if (!ti) {
         return;
     }
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextFav, CreatePopupMenu(), 0);
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextFav, CreatePopupMenu(), nullptr);
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
@@ -827,7 +827,7 @@ void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
-    win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU)0, h, nullptr);
+    win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
 
     auto* l = new LabelWithCloseWnd();
     l->Create(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);

@@ -617,7 +617,7 @@ CachedStyle* CacheStyle(Style* style, bool* changedOut) {
     }
 
     *changedOut = true;
-    Prop* props[PropsCount] = {0};
+    Prop* props[PropsCount] = {nullptr};
     if (!GetAllProps(style, props)) {
         GetAllProps(gStyleDefault, props);
     }

@@ -691,7 +691,7 @@ bool LaunchBrowser(const WCHAR* url) {
 }
 
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
-    PROCESS_INFORMATION pi = {0};
+    PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si = {0};
     si.cb = sizeof(si);
 
@@ -720,7 +720,7 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
 // https://social.msdn.microsoft.com/Forums/vstudio/en-US/f64ff4cb-d21b-4d72-b513-fb8eb39f4a3a/how-to-determine-if-a-user-that-created-a-process-doesnt-belong-to-administrators-group?forum=windowssecurity
 bool IsProcessRunningElevated() {
     BOOL isAdmin = FALSE;
-    PSID administratorsGroup = NULL;
+    PSID administratorsGroup = nullptr;
 
     // Allocate and initialize a SID of the administrators group
     SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
@@ -958,7 +958,7 @@ void CenterDialog(HWND hDlg, HWND hParent) {
     // ensure that the dialog is fully visible on one monitor
     rcDialog = ShiftRectToWorkArea(rcDialog, hDlg, true);
 
-    SetWindowPos(hDlg, 0, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    SetWindowPos(hDlg, nullptr, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 /* Get the name of default printer or nullptr if not exists.
@@ -1219,7 +1219,7 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL
     if (!bRepaint) {
         uFlags |= SWP_NOREDRAW;
     }
-    this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
+    this->SetWindowPos(hWnd, nullptr, x, y, cx, cy, uFlags);
 }
 
 void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
@@ -1974,7 +1974,7 @@ std::span<u8> LoadDataResource(int resId) {
 static HDDEDATA CALLBACK DdeCallback(__unused UINT uType, __unused UINT uFmt, __unused HCONV hconv, __unused HSZ hsz1,
                                      __unused HSZ hsz2, __unused HDDEDATA hdata, __unused ULONG_PTR dwData1,
                                      __unused ULONG_PTR dwData2) {
-    return 0;
+    return nullptr;
 }
 
 bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
@@ -2010,7 +2010,7 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
     }
 
     cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
-    answer = DdeClientTransaction((BYTE*)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
+    answer = DdeClientTransaction((BYTE*)command, cbLen, hconv, nullptr, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
     if (answer) {
         DdeFreeDataHandle(answer);
         ok = true;
@@ -2125,7 +2125,7 @@ void DeleteCachedCursors() {
         HCURSOR cur = cachedCursors[i];
         if (cur) {
             DestroyCursor(cur);
-            cachedCursors[i] = NULL;
+            cachedCursors[i] = nullptr;
         }
     }
 }
@@ -2320,7 +2320,7 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
         rHwnd.y += dyDiff / 2;
     }
     Rect r = ShiftRectToWorkArea(rHwnd, hwnd, true);
-    SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
@@ -2330,7 +2330,7 @@ void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
     int y = rHwndRelative.y + (rHwndRelative.dy / 2) - (rHwnd.dy / 2);
 
     Rect r = ShiftRectToWorkArea(Rect{x, y, rHwnd.dx, rHwnd.dy}, hwnd, true);
-    SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 void HwndSendCommand(HWND hwnd, int cmdId) {

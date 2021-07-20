@@ -803,7 +803,7 @@ static void RegisterWindowClass(Window* w) {
     WNDCLASSEXW wcex = {};
     wcex.cbSize = sizeof(wcex);
     wcex.hIcon = w->hIcon;
-    wcex.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     wcex.hIconSm = w->hIconSm;
     wcex.lpfnWndProc = wndProcCustom;
     wcex.lpszClassName = w->winClass;
@@ -961,7 +961,7 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
 // atomic int to signal termination and sending WM_IDLE
 // to trigger processing of the loop
 void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
-    if (hwndParent != NULL) {
+    if (hwndParent != nullptr) {
         EnableWindow(hwndParent, FALSE);
     }
 
@@ -975,7 +975,7 @@ void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
             isFinished = true;
             continue;
         }
-        while (!isFinished && PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+        while (!isFinished && PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
                 isFinished = true;
                 break;
@@ -987,7 +987,7 @@ void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
         }
     }
 
-    if (hwndParent != NULL) {
+    if (hwndParent != nullptr) {
         EnableWindow(hwndParent, TRUE);
     }
 }

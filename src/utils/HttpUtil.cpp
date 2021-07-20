@@ -204,7 +204,7 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
         goto Exit;
     }
 
-    HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &respHttpCode, &respHttpCodeSize, 0);
+    HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &respHttpCode, &respHttpCodeSize, nullptr);
 
     do {
         char buf[1024];

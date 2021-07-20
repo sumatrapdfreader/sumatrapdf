@@ -123,7 +123,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
    Caller needs to free() the result.
 */
 WCHAR* Dialog_GetPassword(HWND hwndParent, const WCHAR* fileName, bool* rememberPassword) {
-    Dialog_GetPassword_Data data = {0};
+    Dialog_GetPassword_Data data = {nullptr};
     data.fileName = fileName;
     data.remember = rememberPassword;
 

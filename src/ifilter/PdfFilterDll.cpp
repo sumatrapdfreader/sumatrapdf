@@ -31,7 +31,7 @@ class FilterClassFactory : public IClassFactory {
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
-        static const QITAB qit[] = {QITABENT(FilterClassFactory, IClassFactory), {0}};
+        static const QITAB qit[] = {QITABENT(FilterClassFactory, IClassFactory), {nullptr}};
         return QISearch(this, qit, riid, ppv);
     }
 

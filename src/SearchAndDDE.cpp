@@ -377,7 +377,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showP
 
     ftd->ShowUI(showProgress);
     win->findThread = nullptr;
-    win->findThread = CreateThread(nullptr, 0, FindThread, ftd, 0, 0);
+    win->findThread = CreateThread(nullptr, 0, FindThread, ftd, 0, nullptr);
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
 }
 

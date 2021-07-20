@@ -495,7 +495,7 @@ static bool RegisterForPdfExtentions(HWND hwnd) {
 static int RunMessageLoop() {
     HACCEL accTable = CreateSumatraAcceleratorTable();
 
-    MSG msg{0};
+    MSG msg{nullptr};
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
         // dispatch the accelerator to the correct window

@@ -208,7 +208,7 @@ struct Align : LayoutBase {
     Alignment VAlign = AlignStart; // Vertical alignment of child widget.
     float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
     float HeightFactor = 0;        // If greater than zero, ratio of container height to child height.
-    ILayout* Child = 0;
+    ILayout* Child = nullptr;
     Size childSize{};
 
     Align(ILayout*);

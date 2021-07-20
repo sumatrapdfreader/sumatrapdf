@@ -57,7 +57,7 @@ static const char* ExceptionNameFromCode(DWORD excCode) {
     static char buf[512] = {0};
 
     FormatMessageA(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_HMODULE, GetModuleHandleA("ntdll.dll"), excCode,
-                   0, buf, sizeof(buf), 0);
+                   0, buf, sizeof(buf), nullptr);
 
     return buf;
 }
@@ -221,7 +221,7 @@ NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen,
     }
 
     HMODULE hMod = (HMODULE)mbi.AllocationBase;
-    if (0 == hMod) {
+    if (nullptr == hMod) {
         return false;
     }
 

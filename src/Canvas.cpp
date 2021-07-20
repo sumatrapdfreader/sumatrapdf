@@ -192,7 +192,7 @@ static void DrawMovePattern(WindowInfo* win, Point pt, Size size) {
     auto [dx, dy] = size;
     x += win->annotationBeingMovedOffset.x;
     y += win->annotationBeingMovedOffset.y;
-    SetBrushOrgEx(hdc, x, y, 0);
+    SetBrushOrgEx(hdc, x, y, nullptr);
     HBRUSH hbrushOld = (HBRUSH)SelectObject(hdc, win->brMovePattern);
     PatBlt(hdc, x, y, dx, dy, PATINVERT);
     SelectObject(hdc, hbrushOld);
@@ -1564,7 +1564,7 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
 
 static void OnDropFiles(HDROP hDrop, bool dragFinish) {
     WCHAR filePath[MAX_PATH] = {0};
-    int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
+    int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
 
     bool isShift = IsShiftPressed();
     WindowInfo* win = nullptr;

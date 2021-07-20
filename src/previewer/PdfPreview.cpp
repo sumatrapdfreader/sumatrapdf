@@ -140,7 +140,7 @@ class PageRenderer {
             reqZoom = zoom;
             reqSize = target.Size();
             reqAbort = false;
-            thread = CreateThread(nullptr, 0, RenderThread, this, 0, 0);
+            thread = CreateThread(nullptr, 0, RenderThread, this, 0, nullptr);
         } else if (reqPage != pageNo || reqSize != target.Size()) {
             if (abortCookie) {
                 abortCookie->Abort();

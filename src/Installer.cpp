@@ -502,7 +502,7 @@ static void OnButtonInstall() {
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
-    hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
+    hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
 }
 
 static void OnInstallationFinished() {
@@ -585,7 +585,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
         case BFFM_SELCHANGED: {
             WCHAR path[MAX_PATH];
             if (SHGetPathFromIDList((LPITEMIDLIST)lp, path) && dir::Exists(path)) {
-                SHFILEINFO sfi = {0};
+                SHFILEINFO sfi = {nullptr};
                 SHGetFileInfo((LPCWSTR)lp, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK)) {
                     break;
@@ -603,7 +603,7 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
         return false;
     }
 
-    BROWSEINFO bi = {0};
+    BROWSEINFO bi = {nullptr};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = caption;
@@ -931,7 +931,7 @@ static int RunApp() {
         const DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;
         if (timeout > 0) {
-            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLINPUT);
+            res = MsgWaitForMultipleObjects(0, nullptr, TRUE, timeout, QS_ALLINPUT);
         }
         if (res == WAIT_TIMEOUT) {
             AnimStep();

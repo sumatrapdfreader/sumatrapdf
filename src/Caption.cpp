@@ -394,7 +394,8 @@ void CreateCaption(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_CHILDWINDOW | WS_CLIPCHILDREN;
     HWND hwndParent = win->hwndFrame;
-    win->hwndCaption = CreateWindow(CUSTOM_CAPTION_CLASS_NAME, L"", dwStyle, 0, 0, 0, 0, hwndParent, 0, h, nullptr);
+    win->hwndCaption =
+        CreateWindow(CUSTOM_CAPTION_CLASS_NAME, L"", dwStyle, 0, 0, 0, 0, hwndParent, nullptr, h, nullptr);
 
     win->caption = new CaptionInfo(win->hwndCaption);
 
@@ -594,7 +595,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
         HICON hIcon = (HICON)GetClassLongPtr(win->hwndFrame, GCLP_HICONSM);
         int x = (rButton.dx - xIcon) / 2;
         int y = (rButton.dy - yIcon) / 2;
-        DrawIconEx(memDC, x, y, hIcon, xIcon, yIcon, 0, NULL, DI_NORMAL);
+        DrawIconEx(memDC, x, y, hIcon, xIcon, yIcon, 0, nullptr, DI_NORMAL);
     }
 
     buffer.Flush(item->hDC);

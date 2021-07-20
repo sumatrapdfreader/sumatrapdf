@@ -313,7 +313,7 @@ static void OnButtonUninstall() {
     SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
-    hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
+    hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, nullptr);
 }
 
 void OnUninstallationFinished() {
@@ -474,7 +474,7 @@ static int RunApp() {
         const DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;
         if (timeout > 0) {
-            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLINPUT);
+            res = MsgWaitForMultipleObjects(0, nullptr, TRUE, timeout, QS_ALLINPUT);
         }
         if (res == WAIT_TIMEOUT) {
             AnimStep();

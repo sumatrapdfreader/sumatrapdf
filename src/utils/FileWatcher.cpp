@@ -86,10 +86,10 @@ struct WatchedFile {
     FileWatcherState fileState;
 };
 
-static HANDLE g_threadHandle = 0;
+static HANDLE g_threadHandle = nullptr;
 static DWORD g_threadId = 0;
 
-static HANDLE g_threadControlHandle = 0;
+static HANDLE g_threadControlHandle = nullptr;
 
 // protects data structures shared between ui thread and file
 // watcher thread i.e. g_watchedDirs, g_watchedFiles
@@ -327,7 +327,7 @@ static void StartThreadIfNecessary() {
     InitializeCriticalSection(&g_threadCritSec);
     g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
-    g_threadHandle = CreateThread(nullptr, 0, FileWatcherThread, 0, 0, &g_threadId);
+    g_threadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &g_threadId);
     SetThreadName(g_threadId, "FileWatcherThread");
 }
 

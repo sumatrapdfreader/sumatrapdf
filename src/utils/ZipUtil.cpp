@@ -31,7 +31,7 @@ class FileWriteStream : public ISequentialStream {
     }
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
-        static const QITAB qit[] = {QITABENT(FileWriteStream, ISequentialStream), {0}};
+        static const QITAB qit[] = {QITABENT(FileWriteStream, ISequentialStream), {nullptr}};
         return QISearch(this, qit, riid, ppv);
     }
     IFACEMETHODIMP_(ULONG) AddRef() {
@@ -78,7 +78,7 @@ bool ZipCreator::WriteData(const void* data, size_t size) {
 }
 
 static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
-    z_stream stream = {0};
+    z_stream stream = {nullptr};
     stream.next_in = (Bytef*)src;
     stream.avail_in = srclen;
     stream.next_out = (Bytef*)dst;

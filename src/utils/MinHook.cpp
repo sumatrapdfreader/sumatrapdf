@@ -11,8 +11,8 @@
 
 LPVOID GetProcInDll(const char* dllName, const char* procName) {
     HMODULE hModule = GetModuleHandleA(dllName);
-    if (hModule == NULL) {
-        return NULL;
+    if (hModule == nullptr) {
+        return nullptr;
     }
     return (LPVOID)GetProcAddress(hModule, procName);
 }
@@ -87,7 +87,7 @@ VOID InitializeBuffer(VOID) {
 
 VOID UninitializeBuffer(VOID) {
     MEMORY_BLOCK* pBlock = g_pMemoryBlocks;
-    g_pMemoryBlocks = NULL;
+    g_pMemoryBlocks = nullptr;
 
     while (pBlock) {
         MEMORY_BLOCK* pNext = pBlock->pNext;
@@ -108,19 +108,22 @@ static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAlloc
 
     while (tryAddr >= (ULONG_PTR)pMinAddr) {
         MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0)
+        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0) {
             break;
+        }
 
-        if (mbi.State == MEM_FREE)
+        if (mbi.State == MEM_FREE) {
             return (LPVOID)tryAddr;
+        }
 
-        if ((ULONG_PTR)mbi.AllocationBase < dwAllocationGranularity)
+        if ((ULONG_PTR)mbi.AllocationBase < dwAllocationGranularity) {
             break;
+        }
 
         tryAddr = (ULONG_PTR)mbi.AllocationBase - dwAllocationGranularity;
     }
 
-    return NULL;
+    return nullptr;
 }
 #endif
 
@@ -136,11 +139,13 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
 
     while (tryAddr <= (ULONG_PTR)pMaxAddr) {
         MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0)
+        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0) {
             break;
+        }
 
-        if (mbi.State == MEM_FREE)
+        if (mbi.State == MEM_FREE) {
             return (LPVOID)tryAddr;
+        }
 
         tryAddr = (ULONG_PTR)mbi.BaseAddress + mbi.RegionSize;
 
@@ -149,7 +154,7 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
         tryAddr -= tryAddr % dwAllocationGranularity;
     }
 
-    return NULL;
+    return nullptr;
 }
 #endif
 
@@ -165,26 +170,30 @@ static MEMORY_BLOCK* GetMemoryBlock(LPVOID pOrigin) {
     maxAddr = (ULONG_PTR)si.lpMaximumApplicationAddress;
 
     // pOrigin ± 512MB
-    if ((ULONG_PTR)pOrigin > MAX_MEMORY_RANGE && minAddr < (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE)
+    if ((ULONG_PTR)pOrigin > MAX_MEMORY_RANGE && minAddr < (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE) {
         minAddr = (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE;
+    }
 
-    if (maxAddr > (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE)
+    if (maxAddr > (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE) {
         maxAddr = (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE;
+    }
 
     // Make room for MEMORY_BLOCK_SIZE bytes.
     maxAddr -= MEMORY_BLOCK_SIZE - 1;
 #endif
 
     // Look the registered blocks for a reachable one.
-    for (pBlock = g_pMemoryBlocks; pBlock != NULL; pBlock = pBlock->pNext) {
+    for (pBlock = g_pMemoryBlocks; pBlock != nullptr; pBlock = pBlock->pNext) {
 #if defined(_M_X64) || defined(__x86_64__)
         // Ignore the blocks too far.
-        if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr)
+        if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr) {
             continue;
+        }
 #endif
         // The block has at least one unused slot.
-        if (pBlock->pFree != NULL)
+        if (pBlock->pFree != nullptr) {
             return pBlock;
+        }
     }
 
 #if defined(_M_X64) || defined(__x86_64__)
@@ -193,28 +202,32 @@ static MEMORY_BLOCK* GetMemoryBlock(LPVOID pOrigin) {
         LPVOID pAlloc = pOrigin;
         while ((ULONG_PTR)pAlloc >= minAddr) {
             pAlloc = FindPrevFreeRegion(pAlloc, (LPVOID)minAddr, si.dwAllocationGranularity);
-            if (pAlloc == NULL)
+            if (pAlloc == nullptr) {
                 break;
+            }
 
             pBlock = (MEMORY_BLOCK*)VirtualAlloc(pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE,
                                                  PAGE_EXECUTE_READWRITE);
-            if (pBlock != NULL)
+            if (pBlock != nullptr) {
                 break;
+            }
         }
     }
 
     // Alloc a new block below if not found.
-    if (pBlock == NULL) {
+    if (pBlock == nullptr) {
         LPVOID pAlloc = pOrigin;
         while ((ULONG_PTR)pAlloc <= maxAddr) {
             pAlloc = FindNextFreeRegion(pAlloc, (LPVOID)maxAddr, si.dwAllocationGranularity);
-            if (pAlloc == NULL)
+            if (pAlloc == nullptr) {
                 break;
+            }
 
             pBlock = (MEMORY_BLOCK*)VirtualAlloc(pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE,
                                                  PAGE_EXECUTE_READWRITE);
-            if (pBlock != NULL)
+            if (pBlock != nullptr) {
                 break;
+            }
         }
     }
 #else
@@ -222,10 +235,10 @@ static MEMORY_BLOCK* GetMemoryBlock(LPVOID pOrigin) {
     pBlock = (MEMORY_BLOCK*)VirtualAlloc(NULL, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 #endif
 
-    if (pBlock != NULL) {
+    if (pBlock != nullptr) {
         // Build a linked list of all the slots.
         PMEMORY_SLOT pSlot = (PMEMORY_SLOT)pBlock + 1;
-        pBlock->pFree = NULL;
+        pBlock->pFree = nullptr;
         pBlock->usedCount = 0;
         do {
             pSlot->pNext = pBlock->pFree;
@@ -243,8 +256,9 @@ static MEMORY_BLOCK* GetMemoryBlock(LPVOID pOrigin) {
 static LPVOID AllocateBuffer(LPVOID pOrigin) {
     PMEMORY_SLOT pSlot;
     MEMORY_BLOCK* pBlock = GetMemoryBlock(pOrigin);
-    if (pBlock == NULL)
-        return NULL;
+    if (pBlock == nullptr) {
+        return nullptr;
+    }
 
     // Remove an unused slot from the list.
     pSlot = pBlock->pFree;
@@ -259,10 +273,10 @@ static LPVOID AllocateBuffer(LPVOID pOrigin) {
 
 static VOID FreeBuffer(LPVOID pBuffer) {
     MEMORY_BLOCK* pBlock = g_pMemoryBlocks;
-    MEMORY_BLOCK* pPrev = NULL;
+    MEMORY_BLOCK* pPrev = nullptr;
     ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MEMORY_BLOCK_SIZE) * MEMORY_BLOCK_SIZE;
 
-    while (pBlock != NULL) {
+    while (pBlock != nullptr) {
         if ((ULONG_PTR)pBlock == pTargetBlock) {
             PMEMORY_SLOT pSlot = (PMEMORY_SLOT)pBuffer;
 #ifdef _DEBUG
@@ -276,10 +290,11 @@ static VOID FreeBuffer(LPVOID pBuffer) {
 
             // Free if unused.
             if (pBlock->usedCount == 0) {
-                if (pPrev)
+                if (pPrev) {
                     pPrev->pNext = pBlock->pNext;
-                else
+                } else {
                     g_pMemoryBlocks = pBlock->pNext;
+                }
 
                 VirtualFree(pBlock, 0, MEM_RELEASE);
             }
@@ -453,7 +468,7 @@ static unsigned int hde64_disasm(const void* code, hde64s* hs) {
 
     memset(hs, 0, sizeof(hde64s));
 
-    for (x = 16; x; x--)
+    for (x = 16; x; x--) {
         switch (c = *p++) {
             case 0xf3:
                 hs->p_rep = c;
@@ -487,18 +502,21 @@ static unsigned int hde64_disasm(const void* code, hde64s* hs) {
             default:
                 goto pref_done;
         }
+    }
 pref_done:
 
     hs->flags = (uint32_t)pref << 23;
 
-    if (!pref)
+    if (!pref) {
         pref |= PRE_NONE;
+    }
 
     if ((c & 0xf0) == 0x40) {
         hs->flags |= F_PREFIX_REX;
         hs->rex_w = ((c & 0xf) >> 3) && (*p & 0xf8);
-        if (hs->rex_w == 0xb8)
+        if (hs->rex_w == 0xb8) {
             op64++;
+        }
         hs->rex_r = (c & 7) >> 2;
         hs->rex_x = (c & 3) >> 1;
         hs->rex_b = c & 1;
@@ -513,10 +531,11 @@ pref_done:
         ht += DELTA_OPCODES;
     } else if (c >= 0xa0 && c <= 0xa3) {
         op64++;
-        if (pref & PRE_67)
+        if (pref & PRE_67) {
             pref |= PRE_66;
-        else
+        } else {
             pref &= ~PRE_66;
+        }
     }
 
     opcode = c;
@@ -526,8 +545,9 @@ pref_done:
     error_opcode:
         hs->flags |= F_ERROR | F_ERROR_OPCODE;
         cflags = 0;
-        if ((opcode & -3) == 0x24)
+        if ((opcode & -3) == 0x24) {
             cflags++;
+        }
     }
 
     x = 0;
@@ -540,8 +560,9 @@ pref_done:
 
     if (hs->opcode2) {
         ht = hde64_table + DELTA_PREFIXES;
-        if (ht[ht[opcode / 4] + (opcode % 4)] & pref)
+        if (ht[ht[opcode / 4] + (opcode % 4)] & pref) {
             hs->flags |= F_ERROR | F_ERROR_OPCODE;
+        }
     }
 
     if (cflags & C_MODRM) {
@@ -551,8 +572,9 @@ pref_done:
         hs->modrm_rm = m_rm = c & 7;
         hs->modrm_reg = m_reg = (c & 0x3f) >> 3;
 
-        if (x && ((x << m_reg) & 0x80))
+        if (x && ((x << m_reg) & 0x80)) {
             hs->flags |= F_ERROR | F_ERROR_OPCODE;
+        }
 
         if (!hs->opcode2 && opcode >= 0xd9 && opcode <= 0xdf) {
             uint8_t t = opcode - 0xd9;
@@ -563,8 +585,9 @@ pref_done:
                 ht = hde64_table + DELTA_FPU_REG;
                 t = ht[t] << m_reg;
             }
-            if (t & 0x80)
+            if (t & 0x80) {
                 hs->flags |= F_ERROR | F_ERROR_OPCODE;
+            }
         }
 
         if (pref & PRE_LOCK) {
@@ -580,13 +603,15 @@ pref_done:
                     table_end = ht + DELTA_OP2_LOCK_OK - DELTA_OP_LOCK_OK;
                     op &= -2;
                 }
-                for (; ht != table_end; ht++)
+                for (; ht != table_end; ht++) {
                     if (*ht++ == op) {
-                        if (!((*ht << m_reg) & 0x80))
+                        if (!((*ht << m_reg) & 0x80)) {
                             goto no_lock_error;
-                        else
+                        } else {
                             break;
+                        }
                     }
+                }
                 hs->flags |= F_ERROR | F_ERROR_LOCK;
             no_lock_error:;
             }
@@ -597,30 +622,34 @@ pref_done:
                 case 0x20:
                 case 0x22:
                     m_mod = 3;
-                    if (m_reg > 4 || m_reg == 1)
+                    if (m_reg > 4 || m_reg == 1) {
                         goto error_operand;
-                    else
+                    } else {
                         goto no_error_operand;
+                    }
                 case 0x21:
                 case 0x23:
                     m_mod = 3;
-                    if (m_reg == 4 || m_reg == 5)
+                    if (m_reg == 4 || m_reg == 5) {
                         goto error_operand;
-                    else
+                    } else {
                         goto no_error_operand;
+                    }
             }
         } else {
             switch (opcode) {
                 case 0x8c:
-                    if (m_reg > 5)
+                    if (m_reg > 5) {
                         goto error_operand;
-                    else
+                    } else {
                         goto no_error_operand;
+                    }
                 case 0x8e:
-                    if (m_reg == 1 || m_reg > 5)
+                    if (m_reg == 1 || m_reg > 5) {
                         goto error_operand;
-                    else
+                    } else {
                         goto no_error_operand;
+                    }
             }
         }
 
@@ -633,32 +662,37 @@ pref_done:
                 ht = hde64_table + DELTA_OP_ONLY_MEM;
                 table_end = ht + DELTA_OP2_ONLY_MEM - DELTA_OP_ONLY_MEM;
             }
-            for (; ht != table_end; ht += 2)
+            for (; ht != table_end; ht += 2) {
                 if (*ht++ == opcode) {
-                    if (*ht++ & pref && !((*ht << m_reg) & 0x80))
+                    if (*ht++ & pref && !((*ht << m_reg) & 0x80)) {
                         goto error_operand;
-                    else
+                    } else {
                         break;
+                    }
                 }
+            }
             goto no_error_operand;
         } else if (hs->opcode2) {
             switch (opcode) {
                 case 0x50:
                 case 0xd7:
                 case 0xf7:
-                    if (pref & (PRE_NONE | PRE_66))
+                    if (pref & (PRE_NONE | PRE_66)) {
                         goto error_operand;
+                    }
                     break;
                 case 0xd6:
-                    if (pref & (PRE_F2 | PRE_F3))
+                    if (pref & (PRE_F2 | PRE_F3)) {
                         goto error_operand;
+                    }
                     break;
                 case 0xc5:
                     goto error_operand;
             }
             goto no_error_operand;
-        } else
+        } else {
             goto no_error_operand;
+        }
 
     error_operand:
         hs->flags |= F_ERROR | F_ERROR_OPERAND;
@@ -666,27 +700,31 @@ pref_done:
 
         c = *p++;
         if (m_reg <= 1) {
-            if (opcode == 0xf6)
+            if (opcode == 0xf6) {
                 cflags |= C_IMM8;
-            else if (opcode == 0xf7)
+            } else if (opcode == 0xf7) {
                 cflags |= C_IMM_P66;
+            }
         }
 
         switch (m_mod) {
             case 0:
                 if (pref & PRE_67) {
-                    if (m_rm == 6)
+                    if (m_rm == 6) {
                         disp_size = 2;
-                } else if (m_rm == 5)
+                    }
+                } else if (m_rm == 5) {
                     disp_size = 4;
+                }
                 break;
             case 1:
                 disp_size = 1;
                 break;
             case 2:
                 disp_size = 2;
-                if (!(pref & PRE_67))
+                if (!(pref & PRE_67)) {
                     disp_size <<= 1;
+                }
         }
 
         if (m_mod != 3 && m_rm == 4) {
@@ -695,8 +733,9 @@ pref_done:
             hs->sib = c;
             hs->sib_scale = c >> 6;
             hs->sib_index = (c & 0x3f) >> 3;
-            if ((hs->sib_base = c & 7) == 5 && !(m_mod & 1))
+            if ((hs->sib_base = c & 7) == 5 && !(m_mod & 1)) {
                 disp_size = 4;
+            }
         }
 
         p--;
@@ -714,8 +753,9 @@ pref_done:
                 hs->disp.disp32 = *(uint32_t*)p;
         }
         p += disp_size;
-    } else if (pref & PRE_LOCK)
+    } else if (pref & PRE_LOCK) {
         hs->flags |= F_ERROR | F_ERROR_LOCK;
+    }
 
     if (cflags & C_IMM_P66) {
         if (cflags & C_REL32) {
@@ -735,8 +775,9 @@ pref_done:
             hs->flags |= F_IMM32;
             hs->imm.imm32 = *(uint32_t*)p;
             p += 4;
-        } else
+        } else {
             goto imm16_ok;
+        }
     }
 
     if (cflags & C_IMM16) {
@@ -852,12 +893,14 @@ typedef struct _TRAMPOLINE {
 static BOOL IsCodePadding(LPBYTE pInst, UINT size) {
     UINT i;
 
-    if (pInst[0] != 0x00 && pInst[0] != 0x90 && pInst[0] != 0xCC)
+    if (pInst[0] != 0x00 && pInst[0] != 0x90 && pInst[0] != 0xCC) {
         return FALSE;
+    }
 
     for (i = 1; i < size; ++i) {
-        if (pInst[i] != pInst[0])
+        if (pInst[i] != pInst[0]) {
             return FALSE;
+        }
     }
     return TRUE;
 }
@@ -918,8 +961,9 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
         ULONG_PTR pNewInst = (ULONG_PTR)ct->pTrampoline + newPos;
 
         copySize = HDE_DISASM((LPVOID)pOldInst, &hs);
-        if (hs.flags & F_ERROR)
+        if (hs.flags & F_ERROR) {
             return FALSE;
+        }
 
         pCopySrc = (LPVOID)pOldInst;
         if (oldPos >= sizeof(JMP_REL)) {
@@ -955,8 +999,9 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
             *pRelAddr = (UINT32)((pOldInst + hs.len + (INT32)hs.disp.disp32) - (pNewInst + hs.len));
 
             // Complete the function if JMP (FF /4).
-            if (hs.opcode == 0xFF && hs.modrm_reg == 4)
+            if (hs.opcode == 0xFF && hs.modrm_reg == 4) {
                 finished = TRUE;
+            }
         }
 #endif
         else if (hs.opcode == 0xE8) {
@@ -973,15 +1018,17 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
             // Direct relative JMP (EB or E9)
             ULONG_PTR dest = pOldInst + hs.len;
 
-            if (hs.opcode == 0xEB) // isShort jmp
+            if (hs.opcode == 0xEB) { // isShort jmp
                 dest += (INT8)hs.imm.imm8;
-            else
+            } else {
                 dest += (INT32)hs.imm.imm32;
+            }
 
             // Simply copy an internal jump.
             if ((ULONG_PTR)ct->pTarget <= dest && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL))) {
-                if (jmpDest < dest)
+                if (jmpDest < dest) {
                     jmpDest = dest;
+                }
             } else {
 #if defined(_M_X64) || defined(__x86_64__)
                 jmp.address = dest;
@@ -998,16 +1045,18 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
             // Direct relative Jcc
             ULONG_PTR dest = pOldInst + hs.len;
 
-            if ((hs.opcode & 0xF0) == 0x70     // Jcc
-                || (hs.opcode & 0xFC) == 0xE0) // LOOPNZ/LOOPZ/LOOP/JECXZ
+            if ((hs.opcode & 0xF0) == 0x70       // Jcc
+                || (hs.opcode & 0xFC) == 0xE0) { // LOOPNZ/LOOPZ/LOOP/JECXZ
                 dest += (INT8)hs.imm.imm8;
-            else
+            } else {
                 dest += (INT32)hs.imm.imm32;
+            }
 
             // Simply copy an internal jump.
             if ((ULONG_PTR)ct->pTarget <= dest && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL))) {
-                if (jmpDest < dest)
+                if (jmpDest < dest) {
                     jmpDest = dest;
+                }
             } else if ((hs.opcode & 0xFC) == 0xE0) {
                 // LOOPNZ/LOOPZ/LOOP/JCXZ/JECXZ to the outside are not supported.
                 return FALSE;
@@ -1032,16 +1081,19 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
         }
 
         // Can't alter the instruction length in a branch.
-        if (pOldInst < jmpDest && copySize != hs.len)
+        if (pOldInst < jmpDest && copySize != hs.len) {
             return FALSE;
+        }
 
         // Trampoline function is too large.
-        if ((newPos + copySize) > TRAMPOLINE_MAX_SIZE)
+        if ((newPos + copySize) > TRAMPOLINE_MAX_SIZE) {
             return FALSE;
+        }
 
         // Trampoline function has too many instructions.
-        if (ct->nIP >= dimof(ct->oldIPs))
+        if (ct->nIP >= dimof(ct->oldIPs)) {
             return FALSE;
+        }
 
         ct->oldIPs[ct->nIP] = oldPos;
         ct->newIPs[ct->nIP] = newPos;
@@ -1061,11 +1113,13 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
         }
 
         // Can we place the long jump above the function?
-        if (!IsExecutableAddress((LPBYTE)ct->pTarget - sizeof(JMP_REL)))
+        if (!IsExecutableAddress((LPBYTE)ct->pTarget - sizeof(JMP_REL))) {
             return FALSE;
+        }
 
-        if (!IsCodePadding((LPBYTE)ct->pTarget - sizeof(JMP_REL), sizeof(JMP_REL)))
+        if (!IsCodePadding((LPBYTE)ct->pTarget - sizeof(JMP_REL), sizeof(JMP_REL))) {
             return FALSE;
+        }
 
         ct->patchAbove = TRUE;
     }
@@ -1112,10 +1166,11 @@ static VOID EnterSpinLock(VOID) {
         // generates a full memory barrier itself.
 
         // Prevent the loop from being too busy.
-        if (spinCount < 32)
+        if (spinCount < 32) {
             Sleep(0);
-        else
+        } else {
             Sleep(1);
+        }
 
         spinCount++;
     }
@@ -1151,18 +1206,21 @@ static VOID EnumerateThreads(FROZEN_THREADS* pThreads) {
 static DWORD_PTR FindOldIP(HOOK_ENTRY* pHook, DWORD_PTR ip) {
     UINT i;
 
-    if (pHook->patchAbove && ip == ((DWORD_PTR)pHook->pTarget - sizeof(JMP_REL)))
+    if (pHook->patchAbove && ip == ((DWORD_PTR)pHook->pTarget - sizeof(JMP_REL))) {
         return (DWORD_PTR)pHook->pTarget;
+    }
 
     for (i = 0; i < pHook->nIP; ++i) {
-        if (ip == ((DWORD_PTR)pHook->pTrampoline + pHook->newIPs[i]))
+        if (ip == ((DWORD_PTR)pHook->pTrampoline + pHook->newIPs[i])) {
             return (DWORD_PTR)pHook->pTarget + pHook->oldIPs[i];
+        }
     }
 
 #if defined(_M_X64) || defined(__x86_64__)
     // Check relay function.
-    if (ip == (DWORD_PTR)pHook->pDetour)
+    if (ip == (DWORD_PTR)pHook->pDetour) {
         return (DWORD_PTR)pHook->pTarget;
+    }
 #endif
 
     return 0;
@@ -1171,8 +1229,9 @@ static DWORD_PTR FindOldIP(HOOK_ENTRY* pHook, DWORD_PTR ip) {
 static DWORD_PTR FindNewIP(HOOK_ENTRY* pHook, DWORD_PTR ip) {
     UINT i;
     for (i = 0; i < pHook->nIP; ++i) {
-        if (ip == ((DWORD_PTR)pHook->pTarget + pHook->oldIPs[i]))
+        if (ip == ((DWORD_PTR)pHook->pTarget + pHook->oldIPs[i])) {
             return (DWORD_PTR)pHook->pTrampoline + pHook->newIPs[i];
+        }
     }
 
     return 0;
@@ -1189,8 +1248,9 @@ static void ProcessThreadIPs(HANDLE hThread, HOOK_ENTRY* pHooks, int nHooks, UIN
 #endif
 
     c.ContextFlags = CONTEXT_CONTROL;
-    if (!GetThreadContext(hThread, &c))
+    if (!GetThreadContext(hThread, &c)) {
         return;
+    }
 
     for (int pos = 0; pos < nHooks; ++pos) {
         HOOK_ENTRY* pHook = &(pHooks[pos]);
@@ -1210,13 +1270,15 @@ static void ProcessThreadIPs(HANDLE hThread, HOOK_ENTRY* pHooks, int nHooks, UIN
                 enable = pHook->queueEnable;
                 break;
         }
-        if (pHook->isEnabled == enable)
+        if (pHook->isEnabled == enable) {
             continue;
+        }
 
-        if (enable)
+        if (enable) {
             ip = FindNewIP(pHook, *pIP);
-        else
+        } else {
             ip = FindOldIP(pHook, *pIP);
+        }
 
         if (ip != 0) {
             *pIP = ip;
@@ -1232,7 +1294,7 @@ static VOID Freeze(FROZEN_THREADS* pThreads, HOOK_ENTRY* pHooks, int nHooks, UIN
     UINT i;
     for (i = 0; i < pThreads->size; ++i) {
         HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
-        if (hThread != NULL) {
+        if (hThread != nullptr) {
             SuspendThread(hThread);
             ProcessThreadIPs(hThread, pHooks, nHooks, action);
             CloseHandle(hThread);
@@ -1244,7 +1306,7 @@ static VOID Unfreeze(FROZEN_THREADS* pThreads) {
     UINT i;
     for (i = 0; i < pThreads->size; ++i) {
         HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
-        if (hThread != NULL) {
+        if (hThread != nullptr) {
             ResumeThread(hThread);
             CloseHandle(hThread);
         }
@@ -1261,8 +1323,9 @@ static MH_STATUS EnableHookLL(HOOK_ENTRY* pHook, BOOL enable) {
         patchSize += sizeof(JMP_REL_SHORT);
     }
 
-    if (!VirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect))
+    if (!VirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect)) {
         return MH_ERROR_MEMORY_PROTECT;
+    }
 
     if (enable) {
         PJMP_REL pJmp = (PJMP_REL)pPatchTarget;
@@ -1276,10 +1339,11 @@ static MH_STATUS EnableHookLL(HOOK_ENTRY* pHook, BOOL enable) {
             pShortJmp->operand = (u8)(0 - (int)tmp);
         }
     } else {
-        if (pHook->patchAbove)
+        if (pHook->patchAbove) {
             memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
-        else
+        } else {
             memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL));
+        }
     }
 
     VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
@@ -1314,8 +1378,9 @@ static MH_STATUS EnableOrDisableHooksLL(HOOK_ENTRY* pHooks, int nHooks, BOOL ena
         HOOK_ENTRY* pHook = &(pHooks[i]);
         if (pHook->isEnabled != enable) {
             status = EnableHookLL(pHook, enable);
-            if (status != MH_OK)
+            if (status != MH_OK) {
                 break;
+            }
         }
     }
 
@@ -1356,7 +1421,7 @@ static MH_STATUS CreateOneHook(HOOK_ENTRY* pHook) {
     EnterSpinLock();
 
     LPVOID pBuffer = AllocateBuffer(pTarget);
-    if (pBuffer != NULL) {
+    if (pBuffer != nullptr) {
         TRAMPOLINE ct;
 
         ct.pTarget = pTarget;
@@ -1451,8 +1516,9 @@ MH_STATUS WINAPI MH_ApplyQueued(HOOK_ENTRY* pHooks, int nHooks) {
             HOOK_ENTRY* pHook = &(pHooks[i]);
             if (pHook->isEnabled != pHook->queueEnable) {
                 status = EnableHookLL(pHook, pHook->queueEnable);
-                if (status != MH_OK)
+                if (status != MH_OK) {
                     break;
+                }
             }
         }
         Unfreeze(&threads);

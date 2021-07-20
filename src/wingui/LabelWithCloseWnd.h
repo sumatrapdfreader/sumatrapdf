@@ -13,8 +13,8 @@ struct LabelWithCloseWnd {
     void SetPaddingXY(int x, int y);
     Size GetIdealSize() const;
 
-    HWND hwnd = 0;
-    HFONT font = 0;
+    HWND hwnd = nullptr;
+    HFONT font = nullptr;
     int cmd = 0;
 
     Rect closeBtnPos = {};

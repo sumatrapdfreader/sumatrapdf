@@ -1315,10 +1315,12 @@ char* GetAnnotationTextIcon() {
 static const char* getuser(void) {
     const char* u;
     u = getenv("USER");
-    if (!u)
+    if (!u) {
         u = getenv("USERNAME");
-    if (!u)
+    }
+    if (!u) {
         u = "user";
+    }
     return u;
 }
 
@@ -1335,7 +1337,7 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
 
     auto annot = pdf_create_annot(ctx, page, atyp);
 
-    pdf_set_annot_modification_date(ctx, annot, time(NULL));
+    pdf_set_annot_modification_date(ctx, annot, time(nullptr));
     if (pdf_annot_has_author(ctx, annot)) {
         pdf_set_annot_author(ctx, annot, getuser());
     }

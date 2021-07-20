@@ -70,7 +70,7 @@ class PreviewClassFactory : public IClassFactory {
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
         log("PdfPreview: QueryInterface()\n");
-        static const QITAB qit[] = {QITABENT(PreviewClassFactory, IClassFactory), {0}};
+        static const QITAB qit[] = {QITABENT(PreviewClassFactory, IClassFactory), {nullptr}};
         return QISearch(this, qit, riid, ppv);
     }
 

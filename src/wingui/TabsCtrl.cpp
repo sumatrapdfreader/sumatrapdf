@@ -98,8 +98,8 @@ static HWND CreateTooltipForRect(HWND parent, const WCHAR* s, RECT& r) {
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyleEx = WS_EX_TOPMOST;
     DWORD dwStyle = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
-    HWND hwnd = CreateWindowExW(dwStyleEx, TOOLTIPS_CLASSW, NULL, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                                CW_USEDEFAULT, parent, NULL, h, NULL);
+    HWND hwnd = CreateWindowExW(dwStyleEx, TOOLTIPS_CLASSW, nullptr, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT, parent, nullptr, h, nullptr);
 
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 

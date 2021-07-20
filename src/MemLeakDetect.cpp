@@ -394,7 +394,7 @@ void* __cdecl _malloc_base_hook(size_t _Size) {
 
     void* res = g_malloc_base_orig(_Size);
     if ((res != nullptr) && (gRecurCount == 1)) {
-        RecordAllocOrFree(TYPE_ALLOC, 0, res, _Size);
+        RecordAllocOrFree(TYPE_ALLOC, nullptr, res, _Size);
     }
     gRecurCount--;
     Unlock();
@@ -409,7 +409,7 @@ void* __cdecl _calloc_base_hook(size_t _Count, size_t _Size) {
     void* res = g_calloc_base_orig(_Count, _Size);
     if ((res != nullptr) && (gRecurCount == 1)) {
         size_t size = _Count * _Size;
-        RecordAllocOrFree(TYPE_ALLOC, 0, res, size);
+        RecordAllocOrFree(TYPE_ALLOC, nullptr, res, size);
     }
     gRecurCount--;
     Unlock();
@@ -423,7 +423,7 @@ void __cdecl _free_base_hook(void* _Block) {
     g_free_base_orig(_Block);
     if (gRecurCount == 1) {
         gFrees++;
-        RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
+        RecordAllocOrFree(TYPE_FREE, nullptr, _Block, 0);
     }
     gRecurCount--;
     Unlock();
@@ -435,9 +435,9 @@ void* __cdecl _realloc_base_hook(void* _Block, size_t _Size) {
 
     void* res = g_realloc_base_orig(_Block, _Size);
     if (gRecurCount == 1) {
-        RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
+        RecordAllocOrFree(TYPE_FREE, nullptr, _Block, 0);
         if (res != nullptr) {
-            RecordAllocOrFree(TYPE_ALLOC, 0, res, _Size);
+            RecordAllocOrFree(TYPE_ALLOC, nullptr, res, _Size);
         }
     }
     gRecurCount--;
@@ -451,10 +451,10 @@ void* __cdecl _recalloc_base_hook(void* _Block, size_t _Count, size_t _Size) {
 
     void* res = g_recalloc_base_orig(_Block, _Count, _Size);
     if (gRecurCount == 1) {
-        RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
+        RecordAllocOrFree(TYPE_FREE, nullptr, _Block, 0);
         if (res != nullptr) {
             size_t size = _Count * _Size;
-            RecordAllocOrFree(TYPE_ALLOC, 0, res, size);
+            RecordAllocOrFree(TYPE_ALLOC, nullptr, res, size);
         }
     }
     gRecurCount--;
@@ -466,7 +466,7 @@ void* __cdecl _recalloc_base_hook(void* _Block, size_t _Count, size_t _Size) {
 //       (calc hash and bisect + linear search to find the callstack)
 
 #define kMaxHooks 32
-HOOK_ENTRY gHooks[kMaxHooks] = {0};
+HOOK_ENTRY gHooks[kMaxHooks] = {nullptr};
 int gHooksCount = 0;
 
 #if 0

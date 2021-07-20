@@ -302,7 +302,7 @@ std::span<u8> MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     str::Slice uncompressedBuf;
 
-    RAROpenArchiveDataEx arcData = {0};
+    RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = rarPath.Get();
     arcData.OpenMode = RAR_OM_EXTRACT;
     arcData.Callback = unrarCallback;
@@ -359,7 +359,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
     CrashIf(rarFilePath_);
     auto rarPathW = ToWstrTemp(rarPath);
 
-    RAROpenArchiveDataEx arcData = {0};
+    RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = (WCHAR*)rarPathW;
     arcData.OpenMode = RAR_OM_EXTRACT;
 

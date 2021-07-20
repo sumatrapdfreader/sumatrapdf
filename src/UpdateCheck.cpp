@@ -221,7 +221,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     dialogConfig.nDefaultButton = kBtnIdInstall;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;
-    dialogConfig.pfCallback = 0;
+    dialogConfig.pfCallback = nullptr;
     dialogConfig.dwCommonButtons = 0;
     dialogConfig.cButtons = dimof(buttons);
     dialogConfig.pButtons = &buttons[0];

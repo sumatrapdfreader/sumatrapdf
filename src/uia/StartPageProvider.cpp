@@ -21,7 +21,7 @@ SumatraUIAutomationStartPageProvider::~SumatraUIAutomationStartPageProvider() {
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(REFIID riid, void** ppv) {
     static const QITAB qit[] = {QITABENT(SumatraUIAutomationStartPageProvider, IRawElementProviderSimple),
                                 QITABENT(SumatraUIAutomationStartPageProvider, IRawElementProviderFragment),
-                                {0}};
+                                {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
 

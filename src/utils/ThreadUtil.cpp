@@ -75,7 +75,7 @@ DWORD WINAPI ThreadBase::ThreadProc(void* data) {
 
 void ThreadBase::Start() {
     CrashIf(hThread);
-    hThread = CreateThread(nullptr, 0, ThreadProc, this, 0, 0);
+    hThread = CreateThread(nullptr, 0, ThreadProc, this, 0, nullptr);
 }
 
 bool ThreadBase::Join(DWORD waitMs) {
@@ -97,5 +97,5 @@ static DWORD WINAPI ThreadFunc(void* data) {
 
 void RunAsync(const std::function<void()>& func) {
     auto fp = new std::function<void()>(func);
-    AutoCloseHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, 0));
+    AutoCloseHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, nullptr));
 }

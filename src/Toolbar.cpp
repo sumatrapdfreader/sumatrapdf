@@ -476,15 +476,15 @@ static void CreateFindBox(WindowInfo* win) {
     HWND p = win->hwndToolbar;
     DWORD style = WS_VISIBLE | WS_CHILD;
 
-    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", style, 0, 1, findBoxDx, minIconSize + 4, p, (HMENU)0,
-                                 hmod, nullptr);
+    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", style, 0, 1, findBoxDx, minIconSize + 4, p,
+                                 (HMENU) nullptr, hmod, nullptr);
 
     int dx = findBoxDx - 2 * GetSystemMetrics(SM_CXEDGE);
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
-    HWND find = CreateWindowExW(0, WC_EDIT, L"", style, 0, 1, dx, minIconSize + 2, p, (HMENU)0, hmod, nullptr);
+    HWND find = CreateWindowExW(0, WC_EDIT, L"", style, 0, 1, dx, minIconSize + 2, p, (HMENU) nullptr, hmod, nullptr);
 
     style = WS_VISIBLE | WS_CHILD;
-    HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, p, (HMENU)0, hmod, nullptr);
+    HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, p, (HMENU) nullptr, hmod, nullptr);
 
     HFONT hfont = GetDefaultGuiFont();
     SetWindowFont(label, hfont, FALSE);
@@ -508,7 +508,8 @@ static void CreateFindBox(WindowInfo* win) {
 static void CreateInfoText(WindowInfo* win) {
     HMODULE hmod = GetModuleHandleW(nullptr);
     DWORD style = WS_VISIBLE | WS_CHILD;
-    HWND labelInfo = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hmod, nullptr);
+    HWND labelInfo =
+        CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, win->hwndToolbar, (HMENU) nullptr, hmod, nullptr);
     SetWindowFont(labelInfo, GetDefaultGuiFont(), FALSE);
 
     win->hwndTbInfoText = labelInfo;
@@ -661,14 +662,15 @@ static void CreatePageBox(WindowInfo* win) {
     int dx = boxWidth;
     int dy = minIconSize + 4;
     DWORD exStyle = WS_EX_STATICEDGE;
-    HWND pageBg = CreateWindowExW(exStyle, WC_STATIC, L"", style, 0, 1, dx, dy, hwndToolbar, (HMENU)0, h, nullptr);
-    HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU)0, h, nullptr);
-    HWND total = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU)0, h, nullptr);
+    HWND pageBg =
+        CreateWindowExW(exStyle, WC_STATIC, L"", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
+    HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
+    HWND total = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
 
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
     dx = boxWidth - 2 * GetSystemMetrics(SM_CXEDGE);
     dy = minIconSize + 2;
-    HWND page = CreateWindowExW(0, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU)0, h, nullptr);
+    HWND page = CreateWindowExW(0, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
 
     auto font = GetDefaultGuiFont();
     SetWindowFont(label, font, FALSE);

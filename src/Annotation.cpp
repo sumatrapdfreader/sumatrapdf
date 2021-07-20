@@ -363,7 +363,7 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
     }
     if (n == 4) {
         float rgb[4]{0};
-        fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, NULL, fz_default_color_params);
+        fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, nullptr, fz_default_color_params);
         return MkPdfColorFromFloat(rgb[0], rgb[1], rgb[2]);
     }
     CrashIf(true);

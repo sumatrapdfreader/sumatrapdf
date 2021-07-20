@@ -336,7 +336,7 @@ Gdiplus::Bitmap* ImageFromData(std::span<u8> d) {
         return nullptr;
     }
 
-    ReadState s = {0};
+    ReadState s = {nullptr};
     const TgaHeader* headerLE = (const TgaHeader*)d.data();
     s.data = data + sizeof(TgaHeader) + headerLE->idLength;
     s.end = data + len;

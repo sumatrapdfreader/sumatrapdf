@@ -490,8 +490,8 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
 
     fz_page* page = pageInfo->page;
     fz_rect bounds;
-    fz_display_list* list = NULL;
-    fz_device* dev = NULL;
+    fz_display_list* list = nullptr;
+    fz_device* dev = nullptr;
     fz_cookie cookie = {0};
     fz_var(list);
     fz_var(dev);
@@ -516,7 +516,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
         if (list) {
             fz_drop_display_list(ctx, list);
         }
-        dev = NULL;
+        dev = nullptr;
     }
     fz_catch(ctx) {
         fz_drop_display_list(ctx, list);

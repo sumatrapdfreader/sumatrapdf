@@ -244,7 +244,7 @@ void EngineUtilitiesTest() {
     utassert_fequal(y, 3);
     utassert_fequal(zoom, 4.56);
 
-    page = resolve_link("#1,2,3,4.56", NULL, NULL, NULL);
+    page = resolve_link("#1,2,3,4.56", nullptr, nullptr, nullptr);
     utassert(page == 0);
 }
 

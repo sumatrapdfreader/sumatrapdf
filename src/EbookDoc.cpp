@@ -396,7 +396,7 @@ bool EpubDoc::Load() {
                 continue;
             }
             // load the image lazily
-            ImageData2 data = {0};
+            ImageData2 data = {nullptr};
             data.fileName = strconv::WstrToUtf8(imgPath);
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
@@ -565,7 +565,7 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     }
 
     // try to also load images which aren't registered in the manifest
-    ImageData2 data = {0};
+    ImageData2 data = {nullptr};
     data.fileId = zip->GetFileId(url);
     if (data.fileId != (size_t)-1) {
         auto res = zip->GetFileDataById(data.fileId);
@@ -963,7 +963,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
         return;
     }
 
-    ImageData2 data = {0};
+    ImageData2 data = {nullptr};
     data.base.data = Base64Decode(tok->s, tok->sLen, &data.base.len);
     if (!data.base.data) {
         return;
@@ -1305,7 +1305,7 @@ ImageData* HtmlDoc::GetImageData(const char* fileName) {
         }
     }
 
-    ImageData2 data = {0};
+    ImageData2 data = {nullptr};
     auto urlData = LoadURL(url);
     if (urlData.empty()) {
         return nullptr;

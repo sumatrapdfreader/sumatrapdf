@@ -128,14 +128,14 @@ MenuDef menuDefContextToc[] = {
         CmdFavoriteDel,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
 
 MenuDef menuDefContextFav[] = {{_TRN("Remove from favorites"), CmdFavoriteDel},
                                {
-                                   0,
+                                   nullptr,
                                    0,
                                }};
 
@@ -235,7 +235,7 @@ static MenuDef menuDefFile[] = {
         CmdExit,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -305,7 +305,7 @@ static MenuDef menuDefView[] = {
         CmdViewShowHideScrollbars,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -354,7 +354,7 @@ static MenuDef menuDefGoTo[] = {
         CmdFindFirst,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -439,7 +439,7 @@ static MenuDef menuDefZoom[] = {
         CmdZoom8_33,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -464,7 +464,7 @@ static MenuDef menuDefSettings[] = {
         CmdAdvancedOptions,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -485,7 +485,7 @@ MenuDef menuDefFavorites[] = {
         CmdFavoriteToggle,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -514,7 +514,7 @@ static MenuDef menuDefHelp[] = {
         CmdHelpAbout,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -551,7 +551,7 @@ static MenuDef menuDefDebug[] = {
         CmdDebugShowNotif,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -580,7 +580,7 @@ static MenuDef menuDefSelection[] = {
         CmdSelectAll,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -613,7 +613,7 @@ static MenuDef menuDefMainSelection[] = {
         CmdSelectAll,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -658,7 +658,7 @@ static MenuDef menuDefMenubar[] = {
         (UINT_PTR)menuDefDebug,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -684,7 +684,7 @@ static MenuDef menuDefCreateAnnotFromSelection[] = {
     },
     //{ _TRN("Redact"), CmdCreateAnnotRedact, },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -716,7 +716,7 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
     //{ _TRN("Poly Line"), CmdCreateAnnotPolyLine, },
     //{ _TRN("File Attachment"), CmdCreateAnnotFileAttachment, },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -798,7 +798,7 @@ static MenuDef menuDefContext[] = {
         CmdExitFullScreen,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -823,7 +823,7 @@ static MenuDef menuDefContextStart[] = {
         CmdForgetSelectedDocument,
     },
     {
-        0,
+        nullptr,
         0,
     },
 };
@@ -1521,7 +1521,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu(), 0);
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu(), nullptr);
     win::menu::SetChecked(popup, CmdPinSelectedDocument, state->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
@@ -2056,7 +2056,7 @@ void UpdateAppMenu(WindowInfo* win, HMENU m) {
         RebuildFileMenu(win->currentTab, m);
     } else if (id == menuDefFavorites[0].idOrSubmenu) {
         win::menu::Empty(m);
-        BuildMenuFromMenuDef(menuDefFavorites, m, 0);
+        BuildMenuFromMenuDef(menuDefFavorites, m, nullptr);
         RebuildFavMenu(win, m);
     }
     MenuUpdateStateForWindow(win);

@@ -382,7 +382,7 @@ class PrintThreadData : public ProgressUpdateUI {
 
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
-        win->notifications->Add(wnd, 0);
+        win->notifications->Add(wnd, nullptr);
     }
     PrintThreadData(PrintThreadData const&) = delete;
     PrintThreadData& operator=(PrintThreadData const&) = delete;

@@ -83,6 +83,8 @@ readability-make-member-function-const
 readability-avoid-const-params-in-decls
 modernize-use-override
 readability-simplify-boolean-expr : dangerous, removes if (false) / if (true) debug code
+modernize-use-nullptr
+readability-braces-around-statements
 */
 
 /*
@@ -96,32 +98,31 @@ modernize-concat-nested-namespaces
 modernize-avoid-c-arrays
 modernize-avoid-bind
 modernize-use-auto
-readability-inconsistent-declaration-parameter-name
-readability-misplaced-array-index
-readability-redundant-access-specifiers
-readability-redundant-control-flow
-readability-redundant-declaration
-readability-redundant-function-ptr-dereference
-readability-redundant-member-init
 readability-redundant-preprocessor
-readability-redundant-string-init
-readability-redundant-string-cst
 readability-string-compare
 */
 
 /*
 TODO:
 modernize-raw-string-literal
-modernize-use-nullptr
 modernize-use-equals-default
-readability-braces-around-statements¶
+readability-inconsistent-declaration-parameter-name
+readability-redundant-declaration
+readability-redundant-control-flow
+readability-misplaced-array-index
+readability-redundant-access-specifiers
+readability-redundant-function-ptr-dereference
+readability-redundant-member-init
+readability-redundant-string-init
+readability-redundant-string-cst
+
 modernize-use-nodiscard
 modernize-use-using : needs to figure out how to not run in ext
 */
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,readability-simplify-boolean-expr",
+		"--checks=-*,modernize-use-nullptr,readability-braces-around-statements",
 		"-p",
 		".",
 		"--header-filter=src/",

@@ -37,7 +37,7 @@ class AutoCloseHandle {
     }
 
     [[nodiscard]] bool IsValid() const {
-        return handle != NULL && handle != INVALID_HANDLE_VALUE;
+        return handle != nullptr && handle != INVALID_HANDLE_VALUE;
     }
 };
 

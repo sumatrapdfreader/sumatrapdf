@@ -751,7 +751,7 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
         log("InstallCrashHandler: skipping because !gDumpEvent\n");
         return;
     }
-    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, 0);
+    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, nullptr);
     if (!gDumpThread) {
         log("InstallCrashHandler: skipping because !gDumpThread\n");
         return;

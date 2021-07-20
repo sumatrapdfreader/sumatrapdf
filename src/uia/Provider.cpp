@@ -53,7 +53,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(REFIID rii
     static const QITAB qit[] = {QITABENT(SumatraUIAutomationProvider, IRawElementProviderSimple),
                                 QITABENT(SumatraUIAutomationProvider, IRawElementProviderFragment),
                                 QITABENT(SumatraUIAutomationProvider, IRawElementProviderFragmentRoot),
-                                {0}};
+                                {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
 

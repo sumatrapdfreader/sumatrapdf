@@ -112,7 +112,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(RE
                                 QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderFragment),
                                 QITABENT(SumatraUIAutomationDocumentProvider, ITextProvider),
                                 QITABENT(SumatraUIAutomationDocumentProvider, IAccIdentity),
-                                {0}};
+                                {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
 

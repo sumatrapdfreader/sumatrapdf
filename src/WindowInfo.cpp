@@ -204,7 +204,7 @@ void WindowInfo::RedrawAllIncludingNonClient(bool update) const {
         this->AsEbook()->RequestRepaint();
     }
     if (update) {
-        RedrawWindow(this->hwndCanvas, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
+        RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
     }
 }
 
@@ -557,7 +557,7 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     // 3. Fuzzy match on a part of a ToC item title
     // 4. Exact match on page label
     PageDestination* dest = ctrl->GetNamedDest(name);
-    bool hasDest = dest != NULL;
+    bool hasDest = dest != nullptr;
     if (dest) {
         ScrollTo(dest);
         delete dest;

@@ -44,7 +44,7 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
     InitializeCriticalSection(&requestAccess);
 
     startRendering = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    renderThread = CreateThread(nullptr, 0, RenderCacheThread, this, 0, 0);
+    renderThread = CreateThread(nullptr, 0, RenderCacheThread, this, 0, nullptr);
     CrashIf(nullptr == renderThread);
 }
 

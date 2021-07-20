@@ -285,7 +285,7 @@ ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release() {
 }
 
 STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void** ppv) {
-    static const QITAB qit[] = {QITABENT(HW_IInternetProtocolInfo, IInternetProtocolInfo), {0}};
+    static const QITAB qit[] = {QITABENT(HW_IInternetProtocolInfo, IInternetProtocolInfo), {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
 
@@ -352,8 +352,9 @@ ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release() {
 }
 
 STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
-    static const QITAB qit[] = {
-        QITABENT(HW_IInternetProtocol, IInternetProtocol), QITABENT(HW_IInternetProtocol, IInternetProtocolRoot), {0}};
+    static const QITAB qit[] = {QITABENT(HW_IInternetProtocol, IInternetProtocol),
+                                QITABENT(HW_IInternetProtocol, IInternetProtocolRoot),
+                                {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
 
@@ -522,7 +523,7 @@ STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release() {
 }
 
 STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void** ppv) {
-    static const QITAB qit[] = {QITABENT(HW_IInternetProtocolFactory, IClassFactory), {0}};
+    static const QITAB qit[] = {QITABENT(HW_IInternetProtocolFactory, IClassFactory), {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
 
@@ -1119,7 +1120,7 @@ class HW_IDownloadManager : public IDownloadManager {
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
-        static const QITAB qit[] = {QITABENT(HW_IDownloadManager, IDownloadManager), {0}};
+        static const QITAB qit[] = {QITABENT(HW_IDownloadManager, IDownloadManager), {nullptr}};
         return QISearch(this, qit, riid, ppv);
     }
     ULONG STDMETHODCALLTYPE AddRef() override {
@@ -1357,8 +1358,10 @@ STDMETHODIMP HtmlMoniker::ParseDisplayName(__unused IBindCtx* pbc, __unused __un
 }
 
 STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void** ppv) {
-    static const QITAB qit[] = {
-        QITABENT(HtmlMoniker, IMoniker), QITABENT(HtmlMoniker, IPersistStream), QITABENT(HtmlMoniker, IPersist), {0}};
+    static const QITAB qit[] = {QITABENT(HtmlMoniker, IMoniker),
+                                QITABENT(HtmlMoniker, IPersistStream),
+                                QITABENT(HtmlMoniker, IPersist),
+                                {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
 
@@ -1635,7 +1638,7 @@ void HtmlWindow::NavigateToUrl(const WCHAR* url) {
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
     currentURL.Reset();
-    webBrowser->Navigate2(&urlVar, 0, 0, 0, 0);
+    webBrowser->Navigate2(&urlVar, nullptr, nullptr, nullptr, nullptr);
     VariantClear(&urlVar);
 }
 

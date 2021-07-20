@@ -1229,7 +1229,7 @@ class ChmDataCache {
             return nullptr;
         }
 
-        ImageData2 data = {0};
+        ImageData2 data = {nullptr};
         data.base.data = (char*)tmp.data();
         data.base.len = tmp.size();
 

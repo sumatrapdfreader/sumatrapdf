@@ -473,7 +473,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     TabInfo* tab = win->currentTab;
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), 0);
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
     bool isEmbeddedFile = false;
     PageDestination* dest = nullptr;
@@ -844,7 +844,7 @@ void CreateToc(WindowInfo* win) {
     int dx = gGlobalPrefs->sidebarDx;
     DWORD style = WS_CHILD | WS_CLIPCHILDREN;
     HWND parent = win->hwndFrame;
-    win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, 0, hmod, nullptr);
+    win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
     auto* l = new LabelWithCloseWnd();
     l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
