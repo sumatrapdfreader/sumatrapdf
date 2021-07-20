@@ -132,6 +132,9 @@
     <ClInclude Include="..\src\SaveAsPdf.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Scratch.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SearchAndDDE.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -372,6 +375,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SaveAsPdf.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Scratch.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SearchAndDDE.cpp">
