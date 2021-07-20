@@ -4,6 +4,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - add build step to verify version_check__ matches sumatra version
 - parallelize upload of builds to storage
+- redo 'Save annotations' dialog with TaskDialog; replace CrashIf() with ReportIf()
 
 2021-07-19 Mon
 
@@ -19,7 +20,6 @@ A daily log of changes and commentary. An experiment of sorts.
 - redo auto-update code to work for portable versions
 - fix -x to respect extraction directory when -install wasn't also given
 - fix RemoveBadMenuSeparators()
-- redo 'Save annotations' dialog with TaskDialog; replace CrashIf() with ReportIf()
 
 2021-07-18 Sun
 
