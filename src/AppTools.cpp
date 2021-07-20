@@ -188,7 +188,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
 
     AutoFreeWstr REG_CLASSES_APP = str::Join(L"Software\\Classes\\", GetAppNameTemp());
 
-    AutoFreeWstr prevHandler(nullptr);
+    AutoFreeWstr prevHandler;
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
 

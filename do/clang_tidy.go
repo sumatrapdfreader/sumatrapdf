@@ -86,7 +86,6 @@ readability-simplify-boolean-expr : dangerous, removes if (false) / if (true) de
 modernize-use-nullptr
 readability-braces-around-statements
 modernize-use-equals-default
-
 readability-inconsistent-declaration-parameter-name
 readability-redundant-declaration
 readability-redundant-access-specifiers
@@ -94,17 +93,26 @@ readability-redundant-control-flow
 readability-misplaced-array-index
 readability-redundant-member-init
 readability-redundant-string-init
+modernize-avoid-bind
 
 */
 
 /*
 TODO fixes:
+
+google-explicit-constructor
+modernize-use-bool-literals
+
+cppcoreguidelines-prefer-member-initializer
+bugprone-copy-constructor-init
+bugprone-bool-pointer-implicit-conversion
+
+performance-move-const-arg
 modernize-use-default-member-init
 modernize-return-braced-init-list
 modernize-pass-by-value
 modernize-loop-convert
 modernize-deprecated-headers
-modernize-avoid-bind
 modernize-use-auto
 readability-redundant-preprocessor
 readability-string-compare
@@ -126,7 +134,7 @@ modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,modernize-avoid-bind,modernize-return-braced-init-list",
+		"--checks=-*,modernize-use-bool-literals,google-explicit-constructor",
 		"-p",
 		".",
 		"--header-filter=src/",

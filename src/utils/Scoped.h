@@ -27,7 +27,7 @@ class ScopedMem {
         ptr = nullptr;
         return tmp;
     }
-    operator T*() const {
+    [[nodiscard]] operator T*() const { // NOLINT
         return ptr;
     }
 };
@@ -49,7 +49,7 @@ class ScopedPtr {
         obj = nullptr;
         return tmp;
     }
-    operator T*() const {
+    explicit operator T*() const {
         return obj;
     }
     T* operator->() const {
@@ -66,7 +66,7 @@ template <typename T>
 struct AutoDelete {
     T* o = nullptr;
     AutoDelete() = default;
-    AutoDelete(T* p) {
+    AutoDelete(T* p) { // NOLINT
         o = p;
     }
     ~AutoDelete() {
@@ -78,10 +78,10 @@ struct AutoDelete {
     AutoDelete& operator=(const AutoDelete& other) = delete;
     AutoDelete& operator=(const AutoDelete&& other) = delete;
 
-    operator T*() const {
+    [[nodiscard]] operator T*() const { // NOLINT
         return o;
     }
-    T* operator->() const {
+    [[nodiscard]] T* operator->() const { // NOLINT
         return o;
     }
 
@@ -101,22 +101,22 @@ struct AutoFree {
     AutoFree(AutoFree& other) = delete;
     AutoFree(AutoFree&& other) = delete;
 
-    AutoFree(const char* p) {
+    AutoFree(const char* p) { // NOLINT
         data = (char*)p;
         len = str::Len(data);
     }
 
-    AutoFree(const u8* p) {
+    AutoFree(const u8* p) { // NOLINT
         data = (char*)p;
         len = str::Len(data);
     }
 
-    AutoFree(std::string_view s) {
+    AutoFree(std::string_view s) { // NOLINT
         data = (char*)s.data();
         len = s.size();
     }
 
-    AutoFree(std::span<u8> s) {
+    AutoFree(std::span<u8> s) { // NOLINT
         data = (char*)s.data();
         len = s.size();
     }
@@ -166,7 +166,7 @@ struct AutoFree {
         return data;
     }
 
-    [[nodiscard]] operator char*() const {
+    [[nodiscard]] operator char*() const { // NOLINT
         return data;
     }
 
@@ -233,8 +233,12 @@ struct AutoFreeWstr {
     AutoFreeWstr(AutoFreeWstr& other) = delete;
     AutoFreeWstr(AutoFreeWstr&& other) = delete;
 
-    AutoFreeWstr(const WCHAR* p) {
+    AutoFreeWstr(const WCHAR* p) { // NOLINT
         data = (WCHAR*)p;
+    }
+
+    AutoFreeWstr(WCHAR* p) { // NOLINT
+        data = p;
     }
 
     ~AutoFreeWstr() {
@@ -263,7 +267,7 @@ struct AutoFreeWstr {
         return data;
     }
 
-    operator WCHAR*() const {
+    [[nodiscard]] operator WCHAR*() const { // NOLINT
         return data;
     }
 

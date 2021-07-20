@@ -339,7 +339,7 @@ bool EpubDoc::Load() {
         return false;
     }
     AutoFreeWstr contentPath(node->GetAttribute("full-path"));
-    if (!contentPath) {
+    if (contentPath.empty()) {
         return false;
     }
     url::DecodeInPlace(contentPath);
@@ -769,7 +769,7 @@ const char* FB2_XLINK_NS = "http://www.w3.org/1999/xlink";
 Fb2Doc::Fb2Doc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {
 }
 
-Fb2Doc::Fb2Doc(IStream* stream) : fileName(nullptr), stream(stream) {
+Fb2Doc::Fb2Doc(IStream* stream) : stream(stream) {
     stream->AddRef();
 }
 

@@ -453,7 +453,7 @@ struct PoolAllocator : Allocator {
 struct HeapAllocator : Allocator {
     HANDLE allocHeap = nullptr;
 
-    HeapAllocator(size_t initialSize = 128 * 1024) {
+    explicit HeapAllocator(size_t initialSize = 128 * 1024) {
         allocHeap = HeapCreate(0, initialSize, 0);
     }
     ~HeapAllocator() override {
@@ -543,7 +543,7 @@ extern Kind kindNone; // unknown kind
 template <typename T>
 struct ExitScope {
     T lambda;
-    ExitScope(T lambda) : lambda(lambda) {
+    ExitScope(T lambda) : lambda(lambda) { // NOLINT
     }
     ~ExitScope() {
         lambda();

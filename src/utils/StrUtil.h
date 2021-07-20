@@ -201,7 +201,7 @@ struct Str {
 
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& that);
-    Str(std::string_view s);
+    Str(std::string_view s); // NOLINT
     Str& operator=(const Str& that);
     ~Str();
     void Reset();
@@ -271,8 +271,8 @@ struct WStr {
 
     explicit WStr(size_t capHint = 0, Allocator* allocator = nullptr);
     WStr(const WStr&);
-    WStr(std::wstring_view);
-    WStr(const WCHAR*);
+    explicit WStr(std::wstring_view);
+    WStr(const WCHAR*); // NOLINT
     WStr& operator=(const WStr& that);
     ~WStr();
     void Reset();

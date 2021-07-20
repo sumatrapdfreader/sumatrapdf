@@ -30,7 +30,7 @@ struct TempStr {
     explicit TempStr(std::string_view s) {
         sv = s;
     }
-    explicit TempStr(const TempStr& ts) {
+    TempStr(const TempStr& ts) {
         sv = ts.sv;
     }
     [[nodiscard]] bool empty() const {
@@ -45,13 +45,13 @@ struct TempStr {
     [[nodiscard]] std::string_view AsView() const {
         return sv;
     }
-    operator const char*() const {
+    [[nodiscard]] operator const char*() const { // NOLINT
         return sv.data();
     }
-    operator char*() const {
+    [[nodiscard]] operator char*() const { // NOLINT
         return (char*)sv.data();
     }
-    operator std::string_view() const {
+    [[nodiscard]] operator std::string_view() const { // NOLINT
         return sv;
     }
 };
@@ -75,7 +75,7 @@ struct TempWstr {
     explicit TempWstr(std::wstring_view s) {
         sv = s;
     }
-    explicit TempWstr(const TempWstr& ts) {
+    TempWstr(const TempWstr& ts) {
         sv = ts.sv;
     }
     [[nodiscard]] bool empty() const {
@@ -90,13 +90,13 @@ struct TempWstr {
     [[nodiscard]] std::wstring_view AsView() const {
         return sv;
     }
-    operator const WCHAR*() const {
+    [[nodiscard]] operator const WCHAR*() const { // NOLINT
         return sv.data();
     }
-    operator WCHAR*() const {
+    [[nodiscard]] operator WCHAR*() const { // NOLINT
         return (WCHAR*)sv.data();
     }
-    operator std::wstring_view() const {
+    explicit operator std::wstring_view() const {
         return sv;
     }
 };
