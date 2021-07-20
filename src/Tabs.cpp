@@ -676,7 +676,7 @@ static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
     auto winTitle = win::GetTextTemp(win->hwndFrame);
     if (!!str::Eq(winTitle.Get(), tdata->frameTitle.Get())) {
         logf(L"VerifyTabInfo: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle.Get());
-        SubmitBugReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
+        ReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
     }
     bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
     if (PM_DISABLED != win->presentation) {
@@ -685,8 +685,8 @@ static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
             expectedTocVisibility = tdata->showTocPresentation;
         }
     }
-    SubmitBugReportIf(win->tocVisible != expectedTocVisibility);
-    SubmitBugReportIf(tdata->canvasRc != win->canvasRc);
+    ReportIf(win->tocVisible != expectedTocVisibility);
+    ReportIf(tdata->canvasRc != win->canvasRc);
 }
 
 // Must be called when the active tab is losing selection.

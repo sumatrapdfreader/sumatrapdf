@@ -463,7 +463,7 @@ bool EpubDoc::Load() {
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
         auto pathA = ToUtf8Temp(fullPath);
-        DebugCrashIf(str::FindChar(pathA.Get(), '"'));
+        ReportIf(str::FindChar(pathA.Get(), '"'));
         str::TransCharsInPlace(pathA.Get(), "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", pathA.Get());
         htmlData.Append(html.data);

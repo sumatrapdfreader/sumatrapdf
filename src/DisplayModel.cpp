@@ -960,9 +960,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
         "dm->zoomVirtual: %.2f\n",
         name, pageNo, zoom, pageInfo->zoomReal, dm->zoomReal, dm->zoomVirtual);
     free(name);
-    DebugCrashIf(true);
-
-    SubmitBugReportIf(true);
+    ReportIf(true);
 
     if (dm->zoomReal > 0) {
         return dm->zoomReal;
@@ -980,7 +978,7 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     if (!pageInfo) {
         const char* isValid = ValidPageNo(pageNo) ? "yes" : "no";
         logf("DisplayModel::CvtToScreen: GetPageInfo(%d) failed, is valid page: %s\n", pageNo, isValid);
-        SubmitBugReportIf(!pageInfo);
+        ReportIf(!pageInfo);
         return Point();
     }
 
@@ -1189,7 +1187,7 @@ Point DisplayModel::GetContentStart(int pageNo) {
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX) {
     if (!ValidPageNo(pageNo)) {
         logf("DisplayModel::GoToPage: invalid pageNo: %d, nPages: %d\n", pageNo, engine->PageCount());
-        SubmitBugReportIf(ValidPageNo(pageNo));
+        ReportIf(ValidPageNo(pageNo));
         return;
     }
 

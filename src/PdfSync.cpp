@@ -315,7 +315,7 @@ int Pdfsync::RebuildIndex() {
     }
 
     fileIndex.at(0).end = lines.size();
-    SubmitBugReportIf(filestack.size() != 1);
+    ReportIf(filestack.size() != 1);
 
     return Synchronizer::RebuildIndex();
 }

@@ -1664,7 +1664,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         if (!args.forceReuse && !openNewTab) {
             logf("LoadDocument: got !args.forceReuse && !openNewTab\n");
         }
-        SubmitBugReportIf(!args.forceReuse && !openNewTab);
+        ReportIf(!args.forceReuse && !openNewTab);
         if (openNewTab) {
             SaveCurrentTabInfo(args.win);
         }
@@ -2128,140 +2128,62 @@ enum class SaveChoice {
     SaveExisting,
 };
 
-struct SaveAnnotationsDialog {
-    Window* mainWindow{nullptr};
-    LayoutBase* mainLayout{nullptr};
-    StaticCtrl* staticMsg{nullptr};
-    ButtonCtrl* buttonSaveNew{nullptr};
-    ButtonCtrl* buttonSaveExisting{nullptr};
-    ButtonCtrl* buttonDiscard{nullptr};
+SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
+    auto fileName = path::GetBaseNameTemp(filePath);
+    auto mainInstr = str::Format(_TR("Unsaved annotations in '%s'"), fileName);
+    auto content = _TR("Save annoations?");
 
-    ~SaveAnnotationsDialog();
-};
+    constexpr int kBtnIdDiscard = 100;
+    constexpr int kBtnIdSaveToExisting = 101;
+    constexpr int kBtnIdSaveToNew = 102;
+    TASKDIALOGCONFIG dialogConfig{};
+    TASKDIALOG_BUTTON buttons[3];
 
-SaveAnnotationsDialog::~SaveAnnotationsDialog() {
-    delete mainWindow;
-    delete mainLayout;
-}
+    buttons[0].nButtonID = kBtnIdSaveToExisting;
+    buttons[0].pszButtonText = _TR("&Save to existing PDF");
+    buttons[1].nButtonID = kBtnIdSaveToNew;
+    buttons[1].pszButtonText = _TR("Save to &new PDF");
+    buttons[2].nButtonID = kBtnIdDiscard;
+    buttons[2].pszButtonText = _TR("&Discard");
 
-static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
-    auto w = new StaticCtrl(parent);
-    bool ok = w->Create();
-    CrashIf(!ok);
-    w->SetText(sv);
-    return w;
-}
-
-// https://devblogs.microsoft.com/oldnewthing/20040802-00/?p=38283
-void SetDialogFocus(HWND hdlg, HWND hwndControl) {
-    SendMessage(hdlg, WM_NEXTDLGCTL, (WPARAM)hwndControl, TRUE);
-}
-
-constexpr DWORD dialogStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME);
-
-// TODO: remove window close button
-SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent) {
-    SaveChoice choice{SaveChoice::Discard};
-
-    SaveAnnotationsDialog* dlg = new SaveAnnotationsDialog();
-    auto mainWindow = new Window();
-    HMODULE h = GetModuleHandleW(nullptr);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    mainWindow->hIcon = LoadIconW(h, iconName);
-    mainWindow->isDialog = true;
-    mainWindow->backgroundColor = MkGray(0xee);
-    mainWindow->SetText(_TR("Unsaved annotations"));
-    mainWindow->parent = hwndParent;
-    mainWindow->dwStyle = dialogStyle;
-    dlg->mainWindow = mainWindow;
-
-    bool ok = mainWindow->Create();
-    CrashIf(!ok);
-    mainWindow->onClose = [&dlg, &choice](WindowCloseEvent*) {
-        choice = SaveChoice::Discard;
-        PostQuitMessage(0);
-    };
-
-    HWND parent = mainWindow->hwnd;
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
-
-    {
-        auto w = CreateStatic(parent);
-        w->SetFont(GetDefaultGuiFont(true, false));
-        w->SetInsetsPt(16, 8, 16, 8);
-        w->SetText(_TRA("You have unsaved annotations. Save them?"));
-        dlg->staticMsg = w;
-        vbox->AddChild(w);
+    DWORD flags =
+        TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
     }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = _TR("Unsaved annotations");
+    dialogConfig.pszMainInstruction = mainInstr;
+    dialogConfig.pszContent = content;
+    dialogConfig.nDefaultButton = kBtnIdDiscard;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.cxWidth = 0;
+    dialogConfig.pfCallback = 0;
+    dialogConfig.dwCommonButtons = 0;
+    dialogConfig.cButtons = dimof(buttons);
+    dialogConfig.pButtons = &buttons[0];
+    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
+    dialogConfig.hwndParent = hwndParent;
 
-    {
-        // used to take all available space between the what's above and below
-        auto w = new Spacer(0, 0);
-        vbox->AddChild(w, 1);
+    int buttonPressedId{0};
+
+    auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
+    CrashIf(hr == E_INVALIDARG);
+    bool discard = (hr != S_OK) || (buttonPressedId == kBtnIdDiscard);
+    if (discard) {
+        return SaveChoice::Discard;
     }
-
-    {
-        auto w = new ButtonCtrl(parent);
-        w->SetInsetsPt(8, 8, 0, 8);
-        w->SetText(_TRA("Save changes to a new PDF"));
-        ok = w->Create();
-        CrashIf(!ok);
-        w->onClicked = [&dlg, &choice]() {
-            choice = SaveChoice::SaveNew;
-            PostQuitMessage(0);
-        };
-        dlg->buttonSaveNew = w;
-        vbox->AddChild(w);
+    switch (buttonPressedId) {
+        case kBtnIdSaveToExisting:
+            return SaveChoice::SaveExisting;
+        case kBtnIdSaveToNew:
+            return SaveChoice::SaveNew;
+        case IDCANCEL:
+            // closed window
+            return SaveChoice::Discard;
     }
-
-    {
-        auto w = new ButtonCtrl(parent);
-        w->SetInsetsPt(8, 8, 0, 8);
-        w->SetText(_TRA("Save changes to existing PDF")); // TODO: 'Save to 'foo.pdf'
-        ok = w->Create();
-        CrashIf(!ok);
-        w->onClicked = [&dlg, &choice]() {
-            choice = SaveChoice::SaveExisting;
-            PostQuitMessage(0);
-        };
-        dlg->buttonSaveExisting = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto w = new ButtonCtrl(parent);
-        w->SetInsetsPt(8, 8, 8, 8);
-        w->SetText(_TRA("Discard"));
-        ok = w->Create();
-        CrashIf(!ok);
-        w->onClicked = [&dlg, &choice]() {
-            choice = SaveChoice::Discard;
-            PostQuitMessage(0);
-        };
-        dlg->buttonDiscard = w;
-        vbox->AddChild(w);
-    }
-    dlg->mainLayout = vbox;
-
-    int minDx = 420;
-    int minDy = 180;
-    LayoutAndSizeToContent(dlg->mainLayout, minDx, minDy, mainWindow->hwnd);
-    HwndPositionInCenterOf(mainWindow->hwnd, hwndParent);
-
-    // TODO: this doesn't work, is it because we're not running DefDlgProc
-    // in the window?
-    // SetDialogFocus(dlg->mainWindow->hwnd, dlg->buttonSaveExisting->hwnd);
-
-    // important to call this after hooking up onSize to ensure
-    // first layout is triggered
-    mainWindow->SetIsVisible(true);
-
-    RunModalWindow(mainWindow->hwnd, hwndParent);
-    dlg->mainWindow->Destroy();
-    delete dlg;
-    return choice;
+    ReportIf(true);
+    return SaveChoice::Discard;
 }
 
 static void MaybeSaveAnnotations(TabInfo* tab) {
@@ -2291,7 +2213,7 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
     if (!shouldConfirm) {
         return;
     }
-    auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame);
+    auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame, dm->FilePath());
     switch (choice) {
         case SaveChoice::Discard:
             return;

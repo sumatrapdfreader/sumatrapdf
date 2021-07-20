@@ -204,7 +204,7 @@ bool Save() {
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
 
     AutoFreeWstr path = GetSettingsPath();
-    DebugCrashIf(!path.data);
+    ReportIf(!path.data);
     if (!path.data) {
         return false;
     }

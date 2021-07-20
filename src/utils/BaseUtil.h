@@ -228,30 +228,10 @@ inline void CrashIfFunc(bool cond) {
 #endif
 }
 
-// Sometimes we want to assert only in debug build (not in pre-release)
-#if defined(DEBUG)
-inline void DebugCrashIfFunc(bool cond) {
-    if (!cond) {
-        return;
-    }
-    CrashMe();
-}
-#else
-inline void DebugCrashIfFunc(bool) {
-    // no-op
-}
-#endif
-
 // __analysis_assume is defined by msvc for prefast analysis
 #if !defined(__analysis_assume)
 #define __analysis_assume(x)
 #endif
-
-#define DebugCrashIf(cond)          \
-    do {                            \
-        __analysis_assume(!(cond)); \
-        DebugCrashIfFunc(cond);     \
-    } while (0)
 
 #define CrashAlwaysIf(cond)         \
     do {                            \
@@ -269,7 +249,7 @@ inline void DebugCrashIfFunc(bool) {
 
 void _submitDebugReportIfFunc(bool cond, __unused const char* condStr);
 
-#define SubmitBugReportIf(cond)                \
+#define ReportIf(cond)                         \
     do {                                       \
         __analysis_assume(!(cond));            \
         _submitDebugReportIfFunc(cond, #cond); \
@@ -300,7 +280,7 @@ inline void ZeroArray(T& a) {
 
 template <typename T>
 inline T limitValue(T val, T min, T max) {
-    DebugCrashIf(min > max);
+    CrashIf(min > max);
     if (val < min) {
         return min;
     }

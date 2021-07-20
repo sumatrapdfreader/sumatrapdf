@@ -1263,7 +1263,7 @@ void SetText(HMENU m, int id, const WCHAR* s) {
     if (!ok) {
         logf(L"SetText(): id=%d, s='%s'\n", id, s ? s : L"(null)");
         LogLastError();
-        SubmitBugReportIf(true);
+        ReportIf(true);
     }
 }
 

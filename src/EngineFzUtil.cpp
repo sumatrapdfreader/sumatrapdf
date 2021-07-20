@@ -746,7 +746,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
         if (pageNo == -1) {
             // TODO: figure out what it could be
             logf("CalcDestKind(): unknown uri: '%s'\n", uri);
-            // SubmitBugReportIf(true);
+            // ReportIf(true);
             return nullptr;
         }
         return kindDestinationScrollTo;
@@ -763,7 +763,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
 
     logf("CalcDestKind(): unknown uri: '%s'\n", uri);
     // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
-    // SubmitBugReportIf(true);
+    // ReportIf(true);
     return nullptr;
 }
 
@@ -783,7 +783,7 @@ static PageDestination* newPageDestination(fz_link* link, fz_outline* outline) {
         dest->name = strconv::Utf8ToWstr(uri);
         dest->zoom = zoom;
     }
-    SubmitBugReportIf(dest->pageNo <= 0);
+    ReportIf(dest->pageNo <= 0);
     return dest;
 }
 

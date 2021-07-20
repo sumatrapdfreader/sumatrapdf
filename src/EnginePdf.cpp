@@ -1283,7 +1283,7 @@ RectF EnginePdf::Transform(const RectF& rect, int pageNo, float zoom, int rotati
         logf("doc: %s, pageNo: %d, zoom: %.2f\n", name, pageNo, zoom);
         free(name);
     }
-    DebugCrashIf(zoom <= 0);
+    ReportIf(zoom <= 0);
     if (zoom <= 0) {
         zoom = 1;
     }

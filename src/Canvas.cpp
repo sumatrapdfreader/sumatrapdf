@@ -438,8 +438,8 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     }
 
     // happened e.g. in crash 50539
-    DebugCrashIf(win->mouseAction != MouseAction::Idle);
-    CrashIf(!win->AsFixed());
+    ReportIf(win->mouseAction != MouseAction::Idle);
+    ReportIf(!win->AsFixed());
 
     SetFocus(win->hwndFrame);
 
@@ -998,7 +998,7 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
         const char* kind = pageEl->GetKind();
         logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", ToUtf8Temp(text).Get(), kind,
              pageNo);
-        SubmitBugReportIf(true);
+        ReportIf(true);
         return TRUE;
     }
     auto r = pageEl->GetRect();

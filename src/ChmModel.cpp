@@ -126,7 +126,7 @@ int ChmModel::CurrentPageNo() const {
 void ChmModel::GoToPage(int pageNo, __unused bool addNavPoint) {
     // TODO: not sure if crashing here is warranted
     // I've seen a crash with call from RestoreTabOnStartup() which doesn't validate pageNo
-    SubmitBugReportIf(!ValidPageNo(pageNo));
+    ReportIf(!ValidPageNo(pageNo));
     if (!ValidPageNo(pageNo)) {
         return;
     }

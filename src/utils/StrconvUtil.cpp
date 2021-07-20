@@ -24,11 +24,10 @@ std::wstring_view Utf8ToWstrV(const char* s, size_t cb, Allocator* a) {
         return {nullptr, 0};
     }
     int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, res, (int)cchNeeded);
-    CrashIf(cchConverted != cchNeeded);
-    // TODO: change to DebugCrashIf() because expensive
+    ReportIf(cchConverted != cchNeeded);
     // TODO: not sure if invalid test or it's more subtle
     // triggers in Dune.epub
-    // CrashIf((size_t)cchConverted != str::Len(res));
+    // ReportIf((size_t)cchConverted != str::Len(res));
     return {res, (size_t)cchConverted};
 }
 
@@ -67,9 +66,8 @@ std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allo
         return {nullptr, 0};
     }
     int cbConverted = WideCharToMultiByte(codePage, 0, s, (int)cch, res, cbNeeded, nullptr, nullptr);
-    CrashIf(cbConverted != cbNeeded);
-    // TODO: change to DebugCrashIf() because expensive
-    CrashIf((size_t)cbConverted != str::Len(res));
+    ReportIf(cbConverted != cbNeeded);
+    ReportIf((size_t)cbConverted != str::Len(res));
     return {res, (size_t)cbConverted};
 }
 
