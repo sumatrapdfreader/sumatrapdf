@@ -86,6 +86,11 @@ readability-simplify-boolean-expr : dangerous, removes if (false) / if (true) de
 modernize-use-nullptr
 readability-braces-around-statements
 modernize-use-equals-default
+
+readability-inconsistent-declaration-parameter-name
+readability-redundant-declaration
+readability-redundant-access-specifiers
+
 */
 
 /*
@@ -106,11 +111,8 @@ readability-string-compare
 /*
 TODO:
 modernize-raw-string-literal
-readability-inconsistent-declaration-parameter-name
-readability-redundant-declaration
 readability-redundant-control-flow
 readability-misplaced-array-index
-readability-redundant-access-specifiers
 readability-redundant-function-ptr-dereference
 readability-redundant-member-init
 readability-redundant-string-init
@@ -122,7 +124,7 @@ modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,readability-inconsistent-declaration-parameter-name,readability-redundant-declaration,readability-redundant-access-specifiers",
+		"--checks=-*,readability-redundant-control-flow,readability-misplaced-array-index,readability-redundant-member-init,readability-redundant-string-init",
 		"-p",
 		".",
 		"--header-filter=src/",

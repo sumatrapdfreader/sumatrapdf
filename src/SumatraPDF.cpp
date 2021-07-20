@@ -5096,7 +5096,6 @@ void ShowCrashHandlerMessage() {
     LaunchFile(gCrashFilePath, nullptr, L"open");
     auto url = L"https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
     LaunchFile(url, nullptr, L"open");
-    return;
 }
 
 static WCHAR* GetSymbolsDir() {

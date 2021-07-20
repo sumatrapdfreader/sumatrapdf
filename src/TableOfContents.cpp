@@ -662,8 +662,7 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
         }
         return;
     }
-    return;
-}
+    }
 
 static void TocTreeClick(TreeClickEvent* ev) {
     ev->didHandle = true;

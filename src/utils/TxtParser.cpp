@@ -339,7 +339,6 @@ Again:
     slice.curr = origEnd;
     slice.ZeroCurr();
     slice.Skip(1);
-    return;
 }
 
 static void ParseNodes(TxtParser& parser) {
