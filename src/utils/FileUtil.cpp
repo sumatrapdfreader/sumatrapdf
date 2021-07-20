@@ -561,7 +561,7 @@ i64 GetSize(std::string_view filePath) {
     }
 
     AutoCloseHandle h = OpenReadOnly(filePath);
-    if (h == INVALID_HANDLE_VALUE) {
+    if (!h.IsValid()) {
         return -1;
     }
 

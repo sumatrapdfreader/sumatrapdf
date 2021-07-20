@@ -265,7 +265,7 @@ struct TocTree : TreeModel {
     TocItem* root{nullptr};
 
     TocTree() = default;
-    TocTree(TocItem* root);
+    explicit TocTree(TocItem* root);
     ~TocTree() override;
 
     // TreeModel
