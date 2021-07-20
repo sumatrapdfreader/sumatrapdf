@@ -184,7 +184,7 @@ func main() {
 		flag.Parse()
 	}
 
-	if true {
+	if false {
 		detectVersions()
 		//buildPreRelease()
 		return
