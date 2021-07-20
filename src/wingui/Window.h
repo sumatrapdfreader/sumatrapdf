@@ -219,7 +219,7 @@ struct WindowBase : public ILayout {
     bool IsEnabled();
 
     void SetIsVisible(bool);
-    bool IsVisible() const;
+    [[nodiscard]] bool IsVisible() const;
 
     void SuspendRedraw();
     void ResumeRedraw();
@@ -228,10 +228,10 @@ struct WindowBase : public ILayout {
     bool IsFocused();
 
     void SetFont(HFONT f);
-    HFONT GetFont() const;
+    [[nodiscard]] HFONT GetFont() const;
 
     void SetIcon(HICON);
-    HICON GetIcon() const;
+    [[nodiscard]] HICON GetIcon() const;
 
     void SetText(const WCHAR* s);
     void SetText(std::string_view);

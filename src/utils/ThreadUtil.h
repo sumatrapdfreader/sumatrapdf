@@ -58,7 +58,7 @@ class ThreadBase {
 
     // get a unique number that identifies a thread and unlike an
     // address of the object, will not be reused
-    LONG GetNo() const {
+    [[nodiscard]] LONG GetNo() const {
         return threadNo;
     }
 

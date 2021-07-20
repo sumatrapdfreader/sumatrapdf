@@ -36,7 +36,7 @@ class AutoCloseHandle {
         return handle;
     }
 
-    bool IsValid() const {
+    [[nodiscard]] bool IsValid() const {
         return handle != NULL && handle != INVALID_HANDLE_VALUE;
     }
 };
@@ -64,7 +64,7 @@ class ScopedComPtr {
         HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
-    T* Get() const {
+    [[nodiscard]] T* Get() const {
         return ptr;
     }
     operator T*() const {

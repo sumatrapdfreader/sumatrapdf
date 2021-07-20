@@ -135,7 +135,7 @@ class RenderCache {
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
     bool ReduceTileSize();
 
-    bool IsRenderQueueFull() const {
+    [[nodiscard]] bool IsRenderQueueFull() const {
         return requestCount == MAX_PAGE_REQUESTS;
     }
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);

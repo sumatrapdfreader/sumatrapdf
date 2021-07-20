@@ -715,14 +715,14 @@ miniobj_t {
   /* classname: a symbol characterizing this class. */
   static const miniexp_t classname;
   /* classof: class name symbol for this object. */
-  virtual miniexp_t classof() const = 0;
+  [[nodiscard]] virtual miniexp_t classof() const = 0;
   /* isa -- tests if this is an instance of <classname>. */
   virtual bool isa(miniexp_t classname) const;
 
   /* --- optional stuff --- */
   /* pname: returns a printable name for this object.
      The caller must deallocate the result with delete[]. */
-  virtual char *pname() const;
+  [[nodiscard]] virtual char *pname() const;
   /* stringp, doublep: tells whether this object should be
      interpreted/printed as a generic string (for miniexp_strinp) 
      or a double (for miniexp_doublep). */

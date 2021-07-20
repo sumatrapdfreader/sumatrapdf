@@ -33,9 +33,9 @@ struct ChmFile {
     const char* GetHomePath();
     Vec<char*>* GetAllPaths();
 
-    bool HasToc() const;
+    [[nodiscard]] bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
-    bool HasIndex() const;
+    [[nodiscard]] bool HasIndex() const;
     bool ParseIndex(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind);

@@ -24,7 +24,7 @@ struct VecSegmented {
         return reinterpret_cast<T*>(p);
     }
 
-    size_t Size() const {
+    [[nodiscard]] size_t Size() const {
         return allocator.nAllocs;
     }
 

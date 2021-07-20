@@ -69,7 +69,7 @@ struct ElAlignData {
     float containerPoint{0};
 
     bool operator==(const ElAlignData& other) const;
-    int CalcOffset(int elSize, int containerSize) const;
+    [[nodiscard]] int CalcOffset(int elSize, int containerSize) const;
 };
 
 extern struct ElAlignData g_ElAlignVals[5];
@@ -134,7 +134,7 @@ struct ColorData {
     };
 
     bool operator==(const ColorData& other) const;
-    bool IsTransparent() const {
+    [[nodiscard]] bool IsTransparent() const {
         return type == ColorSolid && solid.color == 0;
     }
 };
@@ -213,11 +213,11 @@ class Style {
     void SetPadding(int topBottom, int leftRight);
     void SetPadding(int top, int right, int bottom, int left);
 
-    Style* GetInheritsFrom() const;
+    [[nodiscard]] Style* GetInheritsFrom() const;
     void SetInheritsFrom(Style* parent) {
         inheritsFrom = parent;
     }
-    size_t GetIdentity() const;
+    [[nodiscard]] size_t GetIdentity() const;
 };
 
 struct BorderWidth {

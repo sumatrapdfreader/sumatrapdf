@@ -399,7 +399,7 @@ Size VBox::Layout(const Constraints bc) {
     if (alignMain == MainAxisAlign::Homogeneous) {
         auto count = (i64)NonCollapsedChildrenCount();
         auto gap = CalculateVGap(nullptr, nullptr);
-        cbc.TightenHeight(Scale(cbc.max.dy, 1, count) - Scale(gap, count - 1, count));
+        cbc = cbc.TightenHeight(Scale(cbc.max.dy, 1, count) - Scale(gap, count - 1, count));
     } else {
         cbc.min.dy = 0;
         cbc.max.dy = Inf;
@@ -703,7 +703,7 @@ Size HBox::Layout(const Constraints bc) {
         auto count = (i64)NonCollapsedChildrenCount();
         auto gap = CalculateHGap(nullptr, nullptr);
         auto maxw = cbc.max.dx;
-        cbc.TightenWidth(Scale(maxw, 1, count) - Scale(gap, count - 1, count));
+        cbc = cbc.TightenWidth(Scale(maxw, 1, count) - Scale(gap, count - 1, count));
     } else {
         cbc.min.dx = 0;
         cbc.max.dx = Inf;

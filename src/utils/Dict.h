@@ -24,7 +24,7 @@ class MapStrToInt {
     explicit MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapStrToInt();
 
-    size_t Count() const;
+    [[nodiscard]] size_t Count() const;
 
     bool Insert(const char* key, int val, int* existingValOut = nullptr, const char** existingKeyOut = nullptr);
 
@@ -40,7 +40,7 @@ class MapWStrToInt {
     explicit MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapWStrToInt();
 
-    size_t Count() const;
+    [[nodiscard]] size_t Count() const;
 
     // if a key doesn't exist, inserts a key with a given value and return true
     // if a key exists, returns false and sets prevValOut to existing value
@@ -60,10 +60,10 @@ class StringInterner {
     }
 
     int Intern(const char* s, bool* alreadyPresent = nullptr);
-    size_t StringsCount() const {
+    [[nodiscard]] size_t StringsCount() const {
         return intToStr.size();
     }
-    const char* GetByIndex(size_t n) const {
+    [[nodiscard]] const char* GetByIndex(size_t n) const {
         return intToStr.at(n);
     }
 

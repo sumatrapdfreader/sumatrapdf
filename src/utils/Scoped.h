@@ -19,7 +19,7 @@ class ScopedMem {
         free(ptr);
         ptr = newPtr;
     }
-    T* Get() const {
+    [[nodiscard]] T* Get() const {
         return ptr;
     }
     T* StealData() {
@@ -85,7 +85,7 @@ struct AutoDelete {
         return o;
     }
 
-    T* Get() const {
+    [[nodiscard]] T* Get() const {
         return o;
     }
 };
@@ -259,7 +259,7 @@ struct AutoFreeWstr {
     AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
 #endif
 
-    WCHAR* Get() const {
+    [[nodiscard]] WCHAR* Get() const {
         return data;
     }
 

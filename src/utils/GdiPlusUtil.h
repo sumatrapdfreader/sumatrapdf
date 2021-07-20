@@ -28,8 +28,8 @@ struct ImageData {
     char* data{nullptr};
     size_t len{0};
 
-    size_t size() const;
-    std::span<u8> AsSpan() const;
+    [[nodiscard]] size_t size() const;
+    [[nodiscard]] std::span<u8> AsSpan() const;
 };
 
 struct ImageData2 {

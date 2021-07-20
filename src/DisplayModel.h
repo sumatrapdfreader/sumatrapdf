@@ -69,24 +69,24 @@ struct DisplayModel : public Controller {
     ~DisplayModel();
 
     // meta data
-    const WCHAR* FilePath() const override;
-    const WCHAR* DefaultFileExt() const override;
-    int PageCount() const override;
+    [[nodiscard]] const WCHAR* FilePath() const override;
+    [[nodiscard]] const WCHAR* DefaultFileExt() const override;
+    [[nodiscard]] int PageCount() const override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
     // page navigation (stateful)
-    int CurrentPageNo() const override;
+    [[nodiscard]] int CurrentPageNo() const override;
     void GoToPage(int pageNo, bool addNavPoint) override;
-    bool CanNavigate(int dir) const override;
+    [[nodiscard]] bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
 
     // view settings
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
-    DisplayMode GetDisplayMode() const override;
+    [[nodiscard]] DisplayMode GetDisplayMode() const override;
     void SetPresentationMode(bool enable) override;
     void SetZoomVirtual(float zoom, Point* fixPt) override;
-    float GetZoomVirtual(bool absolute = false) const override;
-    float GetNextZoomStep(float towards) const override;
+    [[nodiscard]] float GetZoomVirtual(bool absolute = false) const override;
+    [[nodiscard]] float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;
 
     // table of contents
@@ -99,12 +99,12 @@ struct DisplayModel : public Controller {
     void CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) override;
 
     // page labels (optional)
-    bool HasPageLabels() const override;
-    WCHAR* GetPageLabel(int pageNo) const override;
+    [[nodiscard]] bool HasPageLabels() const override;
+    [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
     // common shortcuts
-    bool ValidPageNo(int pageNo) const override;
+    [[nodiscard]] bool ValidPageNo(int pageNo) const override;
     bool GoToNextPage() override;
     bool GoToPrevPage(bool toBottom = false) override;
     bool GoToFirstPage() override;
@@ -115,8 +115,8 @@ struct DisplayModel : public Controller {
 
     // the following is specific to DisplayModel
 
-    EngineBase* GetEngine() const;
-    Kind GetEngineType() const;
+    [[nodiscard]] EngineBase* GetEngine() const;
+    [[nodiscard]] Kind GetEngineType() const;
 
     // controller-specific data (easier to save here than on WindowInfo)
     Kind engineType{nullptr};
@@ -128,26 +128,26 @@ struct DisplayModel : public Controller {
     // access only from Search thread
     TextSearch* textSearch{nullptr};
 
-    PageInfo* GetPageInfo(int pageNo) const;
+    [[nodiscard]] PageInfo* GetPageInfo(int pageNo) const;
 
     /* current rotation selected by user */
-    int GetRotation() const;
-    float GetZoomReal(int pageNo) const;
+    [[nodiscard]] int GetRotation() const;
+    [[nodiscard]] float GetZoomReal(int pageNo) const;
     void Relayout(float zoomVirtual, int rotation);
 
-    Rect GetViewPort() const;
-    bool IsHScrollbarVisible() const;
-    bool IsVScrollbarVisible() const;
-    bool NeedHScroll() const;
-    bool NeedVScroll() const;
-    Size GetCanvasSize() const;
+    [[nodiscard]] Rect GetViewPort() const;
+    [[nodiscard]] bool IsHScrollbarVisible() const;
+    [[nodiscard]] bool IsVScrollbarVisible() const;
+    [[nodiscard]] bool NeedHScroll() const;
+    [[nodiscard]] bool NeedVScroll() const;
+    [[nodiscard]] Size GetCanvasSize() const;
 
-    bool PageShown(int pageNo) const;
-    bool PageVisible(int pageNo) const;
-    bool PageVisibleNearby(int pageNo) const;
-    int FirstVisiblePageNo() const;
-    bool FirstBookPageVisible() const;
-    bool LastBookPageVisible() const;
+    [[nodiscard]] bool PageShown(int pageNo) const;
+    [[nodiscard]] bool PageVisible(int pageNo) const;
+    [[nodiscard]] bool PageVisibleNearby(int pageNo) const;
+    [[nodiscard]] int FirstVisiblePageNo() const;
+    [[nodiscard]] bool FirstBookPageVisible() const;
+    [[nodiscard]] bool LastBookPageVisible() const;
 
     void ScrollXTo(int xOff);
     void ScrollXBy(int dx);
@@ -178,7 +178,7 @@ struct DisplayModel : public Controller {
 
     void SetInitialViewSettings(DisplayMode displayMode, int newStartPage, Size viewPort, int screenDPI);
     void SetDisplayR2L(bool r2l);
-    bool GetDisplayR2L() const;
+    [[nodiscard]] bool GetDisplayR2L() const;
 
     bool ShouldCacheRendering(int pageNo);
     // called when we decide that the display needs to be redrawn
@@ -187,11 +187,11 @@ struct DisplayModel : public Controller {
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool dontRenderFlag = false;
 
-    bool GetPresentationMode() const;
+    [[nodiscard]] bool GetPresentationMode() const;
 
     void BuildPagesInfo();
-    float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
-    SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
+    [[nodiscard]] float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
+    [[nodiscard]] SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
     void ChangeStartPage(int startPage);
     Point GetContentStart(int pageNo);
     void RecalcVisibleParts();

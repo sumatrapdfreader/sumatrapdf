@@ -51,9 +51,9 @@ struct RenderedBitmap {
     RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
     }
     ~RenderedBitmap();
-    RenderedBitmap* Clone() const;
-    HBITMAP GetBitmap() const;
-    Size Size() const;
+    [[nodiscard]] RenderedBitmap* Clone() const;
+    [[nodiscard]] HBITMAP GetBitmap() const;
+    [[nodiscard]] Size Size() const;
     bool StretchDIBits(HDC hdc, Rect target) const;
 };
 
@@ -101,18 +101,18 @@ struct PageDestination {
     PageDestination() = default;
 
     ~PageDestination();
-    Kind Kind() const;
+    [[nodiscard]] Kind Kind() const;
     // page the destination points to (0 for external destinations such as URLs)
-    int GetPageNo() const;
+    [[nodiscard]] int GetPageNo() const;
     // rectangle of the destination on the above returned page
-    RectF GetRect() const;
+    [[nodiscard]] RectF GetRect() const;
     // optional zoom level on the above returned page
-    float GetZoom() const;
+    [[nodiscard]] float GetZoom() const;
     // string value associated with the destination (e.g. a path or a URL)
-    WCHAR* GetValue() const;
+    [[nodiscard]] WCHAR* GetValue() const;
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    WCHAR* GetName() const;
+    [[nodiscard]] WCHAR* GetName() const;
 };
 
 PageDestination* newSimpleDest(int pageNo, RectF rect, const WCHAR* value = nullptr);
@@ -255,7 +255,7 @@ struct TocItem : TreeItem {
     bool IsChecked() override;
     WCHAR* Text() override;
 
-    bool PageNumbersMatch() const;
+    [[nodiscard]] bool PageNumbersMatch() const;
 };
 
 TocItem* CloneTocItemRecur(TocItem*, bool);
@@ -324,7 +324,7 @@ class EngineBase {
     virtual EngineBase* Clone() = 0;
 
     // number of pages the loaded document contains
-    int PageCount() const;
+    [[nodiscard]] int PageCount() const;
 
     // the box containing the visible page content (usually RectF(0, 0, pageWidth, pageHeight))
     virtual RectF PageMediabox(int pageNo) = 0;
@@ -363,21 +363,21 @@ class EngineBase {
     // the layout type this document's author suggests (if the user doesn't care)
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
-    bool IsImageCollection() const;
+    [[nodiscard]] bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
-    bool AllowsPrinting() const;
+    [[nodiscard]] bool AllowsPrinting() const;
 
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    bool AllowsCopyingText() const;
+    [[nodiscard]] bool AllowsCopyingText() const;
 
     // the DPI for a file is needed when converting internal measures to physical ones
-    float GetFileDPI() const;
+    [[nodiscard]] float GetFileDPI() const;
 
     // returns a list of all available elements for this page
     // caller must delete the result (including all elements contained in the Vec)
@@ -399,29 +399,29 @@ class EngineBase {
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
-    bool HasPageLabels() const;
+    [[nodiscard]] bool HasPageLabels() const;
 
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    virtual WCHAR* GetPageLabel(int pageNo) const;
+    [[nodiscard]] virtual WCHAR* GetPageLabel(int pageNo) const;
 
     // reverts GetPageLabel by returning the first page number having the given label
     virtual int GetPageByLabel(const WCHAR* label) const;
 
     // whether this document required a password in order to be loaded
-    bool IsPasswordProtected() const;
+    [[nodiscard]] bool IsPasswordProtected() const;
 
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
-    char* GetDecryptionKey() const;
+    [[nodiscard]] char* GetDecryptionKey() const;
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    const WCHAR* FileName() const;
+    [[nodiscard]] const WCHAR* FileName() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 

@@ -14,17 +14,17 @@ struct ByteReader {
     ByteReader(const char* data, size_t len);
     ByteReader(const u8* data, size_t len);
 
-    u8 Byte(size_t off) const;
-    u16 WordLE(size_t off) const;
-    u16 WordBE(size_t off) const;
-    u16 Word(size_t off, bool isBE) const;
-    u32 DWordLE(size_t off) const;
-    u32 DWordBE(size_t off) const;
-    u32 DWord(size_t off, bool isBE) const;
-    u64 QWordLE(size_t off) const;
-    u64 QWordBE(size_t off) const;
-    u64 QWord(size_t off, bool isBE) const;
-    const u8* Find(size_t off, u8 byte) const;
+    [[nodiscard]] u8 Byte(size_t off) const;
+    [[nodiscard]] u16 WordLE(size_t off) const;
+    [[nodiscard]] u16 WordBE(size_t off) const;
+    [[nodiscard]] u16 Word(size_t off, bool isBE) const;
+    [[nodiscard]] u32 DWordLE(size_t off) const;
+    [[nodiscard]] u32 DWordBE(size_t off) const;
+    [[nodiscard]] u32 DWord(size_t off, bool isBE) const;
+    [[nodiscard]] u64 QWordLE(size_t off) const;
+    [[nodiscard]] u64 QWordBE(size_t off) const;
+    [[nodiscard]] u64 QWord(size_t off, bool isBE) const;
+    [[nodiscard]] const u8* Find(size_t off, u8 byte) const;
     bool UnpackLE(void* strct, size_t size, const char* format, size_t off = 0) const;
     bool UnpackBE(void* strct, size_t size, const char* format, size_t off = 0) const;
     bool Unpack(void* strct, size_t size, const char* format, bool isBE, size_t off = 0) const;

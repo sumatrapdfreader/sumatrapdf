@@ -21,28 +21,28 @@ struct EbookController : Controller {
     EbookController(const Doc& doc, EbookControls* ctrls, ControllerCallback* cb);
     ~EbookController() override;
 
-    const WCHAR* FilePath() const override {
+    [[nodiscard]] const WCHAR* FilePath() const override {
         return doc.GetFilePath();
     }
-    const WCHAR* DefaultFileExt() const override {
+    [[nodiscard]] const WCHAR* DefaultFileExt() const override {
         return doc.GetDefaultFileExt();
     }
-    int PageCount() const override {
+    [[nodiscard]] int PageCount() const override {
         return GetMaxPageCount();
     }
     WCHAR* GetProperty(DocumentProperty prop) override {
         return doc.GetProperty(prop);
     }
 
-    int CurrentPageNo() const override {
+    [[nodiscard]] int CurrentPageNo() const override {
         return currPageNo;
     }
     void GoToPage(int pageNo, bool addNavPoint) override;
-    bool CanNavigate(int dir) const override;
+    [[nodiscard]] bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
 
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
-    DisplayMode GetDisplayMode() const override {
+    [[nodiscard]] DisplayMode GetDisplayMode() const override {
         return IsDoublePage() ? DisplayMode::Facing : DisplayMode::SinglePage;
     }
     void SetPresentationMode(__unused bool enable) override {
@@ -51,10 +51,10 @@ struct EbookController : Controller {
     void SetZoomVirtual(__unused float zoom, __unused Point* fixPt) override {
         /* not supported */
     }
-    float GetZoomVirtual(__unused bool absolute = false) const override {
+    [[nodiscard]] float GetZoomVirtual(__unused bool absolute = false) const override {
         return 100;
     }
-    float GetNextZoomStep(__unused float towards) const override {
+    [[nodiscard]] float GetNextZoomStep(__unused float towards) const override {
         return 100;
     }
     void SetViewPortSize(Size size) override;
@@ -75,7 +75,7 @@ struct EbookController : Controller {
 
     // the following is specific to EbookController
 
-    DocType GetDocType() const {
+    [[nodiscard]] DocType GetDocType() const {
         return doc.Type();
     }
     LRESULT HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled);
@@ -89,7 +89,7 @@ struct EbookController : Controller {
     void StartLayouting(int startReparseIdxArg = -1, DisplayMode displayMode = DisplayMode::Automatic);
     int ResolvePageAnchor(const WCHAR* id);
     void CopyNavHistory(EbookController& orig);
-    int CurrentTocPageNo() const;
+    [[nodiscard]] int CurrentTocPageNo() const;
 
     // call StartLayouting before using this EbookController
     static EbookController* Create(const Doc& doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd*);
@@ -133,13 +133,13 @@ struct EbookController : Controller {
 
     Vec<HtmlPage*>* GetPages();
     void UpdateStatus();
-    bool FormattingInProgress() const {
+    [[nodiscard]] bool FormattingInProgress() const {
         return formattingThread != nullptr;
     }
     void StopFormattingThread();
     void CloseCurrentDocument();
-    int GetMaxPageCount() const;
-    bool IsDoublePage() const;
+    [[nodiscard]] int GetMaxPageCount() const;
+    [[nodiscard]] bool IsDoublePage() const;
     void ExtractPageAnchors();
     void AddNavPoint();
     void OnClickedLink(int pageNo, DrawInstr* link);

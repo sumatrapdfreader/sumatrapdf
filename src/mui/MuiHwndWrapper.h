@@ -43,5 +43,5 @@ class HwndWrapper : public Control {
 
     void TopLevelLayout();
 
-    bool IsInSizeMove() const;
+    [[nodiscard]] bool IsInSizeMove() const;
 };

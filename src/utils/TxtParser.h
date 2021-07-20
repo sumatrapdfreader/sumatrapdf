@@ -30,16 +30,16 @@ struct TxtNode {
 
     void AddChild(TxtNode*);
 
-    size_t KeyLen() const;
-    size_t ValLen() const;
-    bool IsArray() const;
-    bool IsStruct() const;
+    [[nodiscard]] size_t KeyLen() const;
+    [[nodiscard]] size_t ValLen() const;
+    [[nodiscard]] bool IsArray() const;
+    [[nodiscard]] bool IsStruct() const;
     bool IsStructWithName(const char* name, size_t nameLen) const;
     bool IsStructWithName(const char* name) const;
-    bool IsText() const;
+    [[nodiscard]] bool IsText() const;
     bool IsTextWithKey(const char* name) const;
-    char* KeyDup() const;
-    char* ValDup() const;
+    [[nodiscard]] char* KeyDup() const;
+    [[nodiscard]] char* ValDup() const;
 };
 
 struct Token {

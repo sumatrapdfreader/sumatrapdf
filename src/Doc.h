@@ -43,7 +43,7 @@ class Doc {
         PalmDoc* palmDoc;
     };
 
-    const WCHAR* GetFilePathFromDoc() const;
+    [[nodiscard]] const WCHAR* GetFilePathFromDoc() const;
 
   public:
     Doc(const Doc& other);
@@ -62,30 +62,30 @@ class Doc {
     void Delete();
 
     // note: find a better name, if possible
-    bool IsNone() const {
+    [[nodiscard]] bool IsNone() const {
         return DocType::None == type;
     }
-    bool IsDocLoaded() const {
+    [[nodiscard]] bool IsDocLoaded() const {
         return !IsNone();
     }
-    DocType Type() const {
+    [[nodiscard]] DocType Type() const {
         return type;
     }
 
-    bool LoadingFailed() const {
+    [[nodiscard]] bool LoadingFailed() const {
         CrashIf((error != DocError::None) && !IsNone());
         return error != DocError::None;
     }
 
     // instead of adding these to Doc, they could also be part
     // of a virtual EbookDoc interface that *Doc implement
-    const WCHAR* GetFilePath() const;
-    const WCHAR* GetDefaultFileExt() const;
-    WCHAR* GetProperty(DocumentProperty prop) const;
-    std::span<u8> GetHtmlData() const;
+    [[nodiscard]] const WCHAR* GetFilePath() const;
+    [[nodiscard]] const WCHAR* GetDefaultFileExt() const;
+    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
+    [[nodiscard]] std::span<u8> GetHtmlData() const;
 
-    ImageData* GetCoverImage() const;
-    bool HasToc() const;
+    [[nodiscard]] ImageData* GetCoverImage() const;
+    [[nodiscard]] bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
     HtmlFormatter* CreateFormatter(HtmlFormatterArgs* args) const;
 

@@ -9,11 +9,11 @@ char* NormalizeURL(const char* url, const char* base);
 class PropertyMap {
     AutoFree values[(int)DocumentProperty::PdfVersion];
 
-    int Find(DocumentProperty prop) const;
+    [[nodiscard]] int Find(DocumentProperty prop) const;
 
   public:
     void Set(DocumentProperty prop, char* valueUtf8, bool replace = false);
-    WCHAR* Get(DocumentProperty prop) const;
+    [[nodiscard]] WCHAR* Get(DocumentProperty prop) const;
 };
 
 /* ********** EPUB ********** */
@@ -42,16 +42,16 @@ class EpubDoc {
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
-    std::span<u8> GetHtmlData() const;
+    [[nodiscard]] std::span<u8> GetHtmlData() const;
 
     ImageData* GetImageData(const char* fileName, const char* pagePath);
     std::span<u8> GetFileData(const char* relPath, const char* pagePath);
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
-    bool IsRTL() const;
+    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
+    [[nodiscard]] const WCHAR* GetFileName() const;
+    [[nodiscard]] bool IsRTL() const;
 
-    bool HasToc() const;
+    [[nodiscard]] bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
@@ -83,16 +83,16 @@ class Fb2Doc {
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
-    std::span<u8> GetXmlData() const;
+    [[nodiscard]] std::span<u8> GetXmlData() const;
 
     ImageData* GetImageData(const char* fileName);
     ImageData* GetCoverImage();
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
-    bool IsZipped() const;
+    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
+    [[nodiscard]] const WCHAR* GetFileName() const;
+    [[nodiscard]] bool IsZipped() const;
 
-    bool HasToc() const;
+    [[nodiscard]] bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
@@ -116,12 +116,12 @@ class PalmDoc {
     explicit PalmDoc(const WCHAR* path);
     ~PalmDoc();
 
-    std::span<u8> GetHtmlData() const;
+    [[nodiscard]] std::span<u8> GetHtmlData() const;
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
+    [[nodiscard]] const WCHAR* GetFileName() const;
 
-    bool HasToc() const;
+    [[nodiscard]] bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
@@ -149,8 +149,8 @@ class HtmlDoc {
     ImageData* GetImageData(const char* fileName);
     std::span<u8> GetFileData(const char* relPath);
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
+    [[nodiscard]] const WCHAR* GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
     static HtmlDoc* CreateFromFile(const WCHAR* fileName);
@@ -168,13 +168,13 @@ class TxtDoc {
   public:
     explicit TxtDoc(const WCHAR* fileName);
 
-    std::span<u8> GetHtmlData() const;
+    [[nodiscard]] std::span<u8> GetHtmlData() const;
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
+    [[nodiscard]] const WCHAR* GetFileName() const;
 
-    bool IsRFC() const;
-    bool HasToc() const;
+    [[nodiscard]] bool IsRFC() const;
+    [[nodiscard]] bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);

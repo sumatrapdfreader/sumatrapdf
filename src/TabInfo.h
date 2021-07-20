@@ -41,17 +41,17 @@ struct TabInfo {
     TabInfo(WindowInfo* win, const WCHAR* filePath);
     ~TabInfo();
 
-    DisplayModel* AsFixed() const;
+    [[nodiscard]] DisplayModel* AsFixed() const;
 
     // only if AsFixed()
-    EngineBase* GetEngine() const;
-    Kind GetEngineType() const;
+    [[nodiscard]] EngineBase* GetEngine() const;
+    [[nodiscard]] Kind GetEngineType() const;
 
-    ChmModel* AsChm() const;
-    EbookController* AsEbook() const;
+    [[nodiscard]] ChmModel* AsChm() const;
+    [[nodiscard]] EbookController* AsEbook() const;
 
-    const WCHAR* GetTabTitle() const;
-    bool IsDocLoaded() const;
+    [[nodiscard]] const WCHAR* GetTabTitle() const;
+    [[nodiscard]] bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy);
     void ToggleZoom();
 };

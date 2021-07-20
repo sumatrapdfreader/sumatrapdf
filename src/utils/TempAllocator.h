@@ -35,16 +35,16 @@ struct TempStr {
     explicit TempStr(const TempStr& ts) {
         sv = ts.sv;
     }
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return sv.empty();
     }
-    size_t size() const {
+    [[nodiscard]] size_t size() const {
         return sv.size();
     }
-    char* Get() const {
+    [[nodiscard]] char* Get() const {
         return (char*)sv.data();
     }
-    std::string_view AsView() const {
+    [[nodiscard]] std::string_view AsView() const {
         return sv;
     }
     operator const char*() const {
@@ -82,16 +82,16 @@ struct TempWstr {
     explicit TempWstr(const TempWstr& ts) {
         sv = ts.sv;
     }
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return sv.empty();
     }
-    size_t size() const {
+    [[nodiscard]] size_t size() const {
         return sv.size();
     }
-    WCHAR* Get() const {
+    [[nodiscard]] WCHAR* Get() const {
         return (WCHAR*)sv.data();
     }
-    std::wstring_view AsView() const {
+    [[nodiscard]] std::wstring_view AsView() const {
         return sv;
     }
     operator const WCHAR*() const {

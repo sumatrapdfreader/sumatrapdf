@@ -31,8 +31,8 @@ class Control : public ILayout {
     void SetParent(Control* newParent);
     void AddChild(Control* c, int pos = -1);
     void AddChild(Control* c1, Control* c2, Control* c3 = nullptr);
-    Control* GetChild(size_t idx) const;
-    size_t GetChildCount() const;
+    [[nodiscard]] Control* GetChild(size_t idx) const;
+    [[nodiscard]] size_t GetChildCount() const;
 
     void SetPosition(const Rect p);
 
@@ -53,12 +53,12 @@ class Control : public ILayout {
     virtual void NotifyMouseMove(__unused int x, __unused int y) {
     }
 
-    bool WantsMouseClick() const;
-    bool WantsMouseMove() const;
-    bool IsMouseOver() const;
+    [[nodiscard]] bool WantsMouseClick() const;
+    [[nodiscard]] bool WantsMouseMove() const;
+    [[nodiscard]] bool IsMouseOver() const;
     void SetIsMouseOver(bool isOver);
 
-    bool IsVisible() const;
+    [[nodiscard]] bool IsVisible() const;
     void Hide();
     void Show();
 

@@ -48,7 +48,7 @@ class Synchronizer {
     struct _stat syncfileTimestamp; // time stamp of sync file when index was last built
 
   protected:
-    bool IsIndexDiscarded() const;
+    [[nodiscard]] bool IsIndexDiscarded() const;
     int RebuildIndex();
     WCHAR* PrependDir(const WCHAR* filename) const;
 

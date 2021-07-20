@@ -17,11 +17,11 @@ struct Slice {
 
     void Set(char* s, size_t len);
 
-    size_t Left() const;
-    bool Finished() const;
+    [[nodiscard]] size_t Left() const;
+    [[nodiscard]] bool Finished() const;
 
-    char PrevChar() const;
-    char CurrChar() const;
+    [[nodiscard]] char PrevChar() const;
+    [[nodiscard]] char CurrChar() const;
     size_t AdvanceCurrTo(char* s);
     size_t SkipWsUntilNewline();
     size_t SkipUntil(char toFind);

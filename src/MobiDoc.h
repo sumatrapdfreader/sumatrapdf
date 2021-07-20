@@ -47,17 +47,17 @@ class MobiDoc {
 
     ~MobiDoc();
 
-    std::span<u8> GetHtmlData() const;
-    size_t GetHtmlDataSize() const {
+    [[nodiscard]] std::span<u8> GetHtmlData() const;
+    [[nodiscard]] size_t GetHtmlDataSize() const {
         return doc->size();
     }
     ImageData* GetCoverImage();
-    ImageData* GetImage(size_t imgRecIndex) const;
-    const WCHAR* GetFileName() const {
+    [[nodiscard]] ImageData* GetImage(size_t imgRecIndex) const;
+    [[nodiscard]] const WCHAR* GetFileName() const {
         return fileName;
     }
     WCHAR* GetProperty(DocumentProperty prop);
-    PdbDocType GetDocType() const {
+    [[nodiscard]] PdbDocType GetDocType() const {
         return docType;
     }
 

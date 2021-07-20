@@ -8,9 +8,9 @@ import (
 )
 
 /*
-https://github.com/derceg/explorerplusplus/blob/master/.clang-tidy
-
 https://clang.llvm.org/extra/clang-tidy/checks/list.html
+
+https://github.com/derceg/explorerplusplus/blob/master/.clang-tidy
 https://codeyarns.com/2019/01/28/how-to-use-clang-tidy/
 https://www.reddit.com/r/cpp/comments/ezn21f/which_checks_do_you_use_for_clangtidy/
 https://www.reddit.com/r/cpp/comments/5bqkk5/good_clangtidy_files/
@@ -158,7 +158,7 @@ func clangTidyFile(path string) {
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,modernize-use-using",
+		"--checks=-*,modernize-use-nodiscard",
 		"--header-filter=.*",
 		"--fix",
 		"-extra-arg=-std=c++20",
@@ -191,7 +191,7 @@ func clangTidyFix(path string) {
 	must(err)
 }
 
-func runClangTidy() {
+func runClangTidy(fix bool) {
 	os.Remove(clangTidyLogFile)
 	files := []string{
 		`src\*.cpp`,
@@ -243,8 +243,11 @@ func runClangTidy() {
 			if isWhiteListed(path) {
 				continue
 			}
-			//clangTidyFix(path)
-			clangTidyFile(path)
+			if fix {
+				clangTidyFix(path)
+			} else {
+				clangTidyFile(path)
+			}
 		}
 	}
 	logf("\nLogged output to '%s'\n", clangTidyLogFile)

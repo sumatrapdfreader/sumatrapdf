@@ -70,7 +70,7 @@ class EngineMulti : public EngineBase {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
-    WCHAR* GetPageLabel(int pageNo) const override;
+    [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI);

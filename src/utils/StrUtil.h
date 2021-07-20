@@ -231,8 +231,8 @@ struct Str {
     void Reverse();
     char& FindEl(const std::function<bool(char&)>& check);
     [[nodiscard]] bool IsEmpty() const;
-    std::string_view AsView() const;
-    std::span<u8> AsSpan() const;
+    [[nodiscard]] std::string_view AsView() const;
+    [[nodiscard]] std::span<u8> AsSpan() const;
     std::string_view StealAsView();
     bool AppendChar(char c);
     bool Append(const u8* src, size_t size = -1);
@@ -241,8 +241,8 @@ struct Str {
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
     void Set(std::string_view sv);
-    char* Get() const;
-    char LastChar() const;
+    [[nodiscard]] char* Get() const;
+    [[nodiscard]] char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
@@ -252,13 +252,13 @@ struct Str {
     iterator begin() {
         return &(els[0]);
     }
-    const_iterator begin() const {
+    [[nodiscard]] const_iterator begin() const {
         return &(els[0]);
     }
     iterator end() {
         return &(els[len]);
     }
-    const_iterator end() const {
+    [[nodiscard]] const_iterator end() const {
         return &(els[len]);
     }
 };
@@ -309,8 +309,8 @@ struct WStr {
     void Reverse();
     WCHAR& FindEl(const std::function<bool(WCHAR&)>& check);
     [[nodiscard]] bool IsEmpty() const;
-    std::wstring_view AsView() const;
-    std::span<WCHAR> AsSpan() const;
+    [[nodiscard]] std::wstring_view AsView() const;
+    [[nodiscard]] std::span<WCHAR> AsSpan() const;
     std::wstring_view StealAsView();
     bool AppendChar(WCHAR c);
     bool AppendSpan(std::span<WCHAR> d);
@@ -318,8 +318,8 @@ struct WStr {
     void AppendFmt(const WCHAR* fmt, ...);
     bool AppendAndFree(const WCHAR* s);
     void Set(std::wstring_view sv);
-    WCHAR* Get() const;
-    WCHAR LastChar() const;
+    [[nodiscard]] WCHAR* Get() const;
+    [[nodiscard]] WCHAR LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
@@ -329,13 +329,13 @@ struct WStr {
     iterator begin() {
         return &(els[0]);
     }
-    const_iterator begin() const {
+    [[nodiscard]] const_iterator begin() const {
         return &(els[0]);
     }
     iterator end() {
         return &(els[len]);
     }
-    const_iterator end() const {
+    [[nodiscard]] const_iterator end() const {
         return &(els[len]);
     }
 };

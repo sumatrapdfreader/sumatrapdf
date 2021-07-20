@@ -61,7 +61,7 @@ class EventMgr {
     void NotifySizeChanged(Control* c, int dx, int dy);
     void NotifyNamedEventClicked(Control* c, int x, int y);
 
-    bool IsInSizeMove() const {
+    [[nodiscard]] bool IsInSizeMove() const {
         return inSizeMove;
     }
 

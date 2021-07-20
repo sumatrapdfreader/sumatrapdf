@@ -366,13 +366,13 @@ class Vec {
     iterator begin() {
         return &(els[0]);
     }
-    const_iterator begin() const {
+    [[nodiscard]] const_iterator begin() const {
         return &(els[0]);
     }
     iterator end() {
         return &(els[len]);
     }
-    const_iterator end() const {
+    [[nodiscard]] const_iterator end() const {
         return &(els[len]);
     }
 };
@@ -540,15 +540,15 @@ class WStrList {
         }
     }
 
-    const WCHAR* at(size_t idx) const {
+    [[nodiscard]] const WCHAR* at(size_t idx) const {
         return items.at(idx).string;
     }
 
-    const WCHAR* Last() const {
+    [[nodiscard]] const WCHAR* Last() const {
         return items.Last().string;
     }
 
-    size_t size() const {
+    [[nodiscard]] size_t size() const {
         return count;
     }
 

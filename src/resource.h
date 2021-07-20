@@ -32,9 +32,6 @@
 #define IDC_DONT_ASK_ME_AGAIN           1014
 #define IDC_ADD_PAGE_STATIC             1015
 #define IDC_CHANGE_LANG_LANG_LIST       1017
-#define IDC_YOU_HAVE                    1018
-#define IDC_NEW_AVAILABLE               1019
-#define IDC_SKIP_THIS_VERSION           1020
 #define IDC_SECTION_VIEW                1021
 #define IDC_DEFAULT_LAYOUT_LABEL        1022
 #define IDC_DEFAULT_LAYOUT              1023

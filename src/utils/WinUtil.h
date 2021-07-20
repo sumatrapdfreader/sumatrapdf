@@ -193,7 +193,7 @@ struct DoubleBuffer {
     DoubleBuffer& operator=(const DoubleBuffer&) = delete;
     ~DoubleBuffer();
 
-    HDC GetDC() const;
+    [[nodiscard]] HDC GetDC() const;
     void Flush(HDC hdc);
 };
 

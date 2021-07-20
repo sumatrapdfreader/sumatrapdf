@@ -692,7 +692,7 @@ class EngineImageDir : public EngineImages {
         return nullptr;
     }
 
-    WCHAR* GetPageLabel(int pageNo) const override;
+    [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
     TocTree* GetToc() override;
@@ -864,7 +864,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    const WCHAR* GetDefaultFileExt() const;
+    [[nodiscard]] const WCHAR* GetDefaultFileExt() const;
 
     TocTree* GetToc() override;
 

@@ -21,7 +21,7 @@ class MultiFormatArchive {
         // internal use
         i64 filePos;
 
-        FILETIME GetWinFileTime() const;
+        [[nodiscard]] FILETIME GetWinFileTime() const;
     };
 
     MultiFormatArchive(archive_opener_t opener, Format format);
@@ -55,7 +55,7 @@ class MultiFormatArchive {
 
     bool OpenUnrarFallback(const char* rarPathUtf);
     std::span<u8> GetFileDataByIdUnarrDll(size_t fileId);
-    bool LoadedUsingUnrarDll() const {
+    [[nodiscard]] bool LoadedUsingUnrarDll() const {
         return rarFilePath_ != nullptr;
     }
 };

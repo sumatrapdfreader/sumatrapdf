@@ -85,8 +85,8 @@ class Grid : public Control {
     int* maxRowHeight{nullptr};
 
     void RebuildCellDataIfNeeded();
-    Cell* GetCell(int row, int col) const;
-    Point GetCellPos(int row, int col) const;
+    [[nodiscard]] Cell* GetCell(int row, int col) const;
+    [[nodiscard]] Point GetCellPos(int row, int col) const;
     Rect GetCellBbox(Grid::CellData* d);
 
   public:

@@ -10,7 +10,7 @@ struct Point {
     Point() = default;
     Point(int x, int y);
 
-    bool IsEmpty() const;
+    [[nodiscard]] bool IsEmpty() const;
     bool operator==(const Point& other) const;
     bool operator!=(const Point& other) const;
 };
@@ -23,7 +23,7 @@ struct PointF {
 
     PointF(float x, float y);
 
-    bool IsEmpty() const;
+    [[nodiscard]] bool IsEmpty() const;
     bool operator==(const PointF& other) const;
     bool operator!=(const PointF& other) const;
 };
@@ -35,9 +35,9 @@ struct Size {
     Size() = default;
     Size(int dx, int dy);
 
-    bool IsEmpty() const;
+    [[nodiscard]] bool IsEmpty() const;
 
-    bool Equals(const Size& other) const;
+    [[nodiscard]] bool Equals(const Size& other) const;
     bool operator==(const Size& other) const;
     bool operator!=(const Size& other) const;
 };
@@ -49,7 +49,7 @@ struct SizeF {
     SizeF() = default;
     SizeF(float dx, float dy);
 
-    bool IsEmpty() const;
+    [[nodiscard]] bool IsEmpty() const;
 
     bool operator==(const SizeF& other) const;
     bool operator!=(const SizeF& other) const;
@@ -70,23 +70,23 @@ struct Rect {
     }
     Rect(const Point min, const Point max);
 
-    bool EqSize(int otherDx, int otherDy) const;
-    int Right() const;
-    int Bottom() const;
+    [[nodiscard]] bool EqSize(int otherDx, int otherDy) const;
+    [[nodiscard]] int Right() const;
+    [[nodiscard]] int Bottom() const;
     static Rect FromXY(int xs, int ys, int xe, int ye);
     static Rect FromXY(Point TL, Point BR);
-    bool IsEmpty() const;
-    bool Contains(int x, int y) const;
-    bool Contains(Point pt) const;
-    Rect Intersect(Rect other) const;
-    Rect Union(Rect other) const;
+    [[nodiscard]] bool IsEmpty() const;
+    [[nodiscard]] bool Contains(int x, int y) const;
+    [[nodiscard]] bool Contains(Point pt) const;
+    [[nodiscard]] Rect Intersect(Rect other) const;
+    [[nodiscard]] Rect Union(Rect other) const;
     void Offset(int _x, int _y);
     void Inflate(int _x, int _y);
-    Point TL() const;
-    Point BR() const;
-    Size Size() const;
+    [[nodiscard]] Point TL() const;
+    [[nodiscard]] Point BR() const;
+    [[nodiscard]] Size Size() const;
     static Rect FromRECT(const RECT& rect);
-    bool Equals(const Rect& other) const;
+    [[nodiscard]] bool Equals(const Rect& other) const;
     bool operator==(const Rect& other) const;
     bool operator!=(const Rect& other) const;
 };
@@ -106,20 +106,20 @@ struct RectF {
     RectF(PointF min, PointF max);
 
     bool EqSize(float otherDx, float otherDy);
-    float Right() const;
-    float Bottom() const;
+    [[nodiscard]] float Right() const;
+    [[nodiscard]] float Bottom() const;
     static RectF FromXY(float xs, float ys, float xe, float ye);
     static RectF FromXY(PointF TL, PointF BR);
-    Rect Round() const;
-    bool IsEmpty() const;
+    [[nodiscard]] Rect Round() const;
+    [[nodiscard]] bool IsEmpty() const;
     bool Contains(PointF pt);
     RectF Intersect(RectF other);
     RectF Union(RectF other);
     void Offset(float _x, float _y);
     void Inflate(float _x, float _y);
-    PointF TL() const;
-    PointF BR() const;
-    SizeF Size() const;
+    [[nodiscard]] PointF TL() const;
+    [[nodiscard]] PointF BR() const;
+    [[nodiscard]] SizeF Size() const;
     static RectF FromRECT(const RECT& rect);
     bool operator==(const RectF& other) const;
     bool operator!=(const RectF& other) const;
