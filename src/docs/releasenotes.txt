@@ -11,9 +11,9 @@ Next version:
 * respect zoom level in PDF destination links
   https://github.com/sumatrapdfreader/sumatrapdf/commit/3aa18aaf89caef7dd28529682d9344ef89422100
 
-3.3.2 (???)
-* fix crashes
+3.3.2 (2021-07-19)
 * restore showing Table Of Contents for .chm files
+* fix crashes
 
 3.3.1 (2021-07-14)
 * fix rotation of DjVu files
