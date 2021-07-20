@@ -1445,7 +1445,6 @@ WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form) {
     return res.StealData();
 }
 
-// http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
 bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args) {
     if (FAILED(OleInitialize(nullptr))) {
         return false;

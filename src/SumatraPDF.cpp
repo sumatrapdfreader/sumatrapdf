@@ -4307,6 +4307,9 @@ static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
 // TODO: rather arbitrary divide of responsibility between this and CopySelectionToClipboard()
 static void CopySelectionInTabToClipboard(TabInfo* tab) {
     // Don't break the shortcut for text boxes
+    if (!tab || !tab->win) {
+        return;
+    }
     if (IsFocused(tab->win->hwndFindBox) || IsFocused(tab->win->hwndPageBox)) {
         SendMessageW(GetFocus(), WM_COPY, 0, 0);
         return;
