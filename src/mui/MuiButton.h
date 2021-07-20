@@ -46,7 +46,7 @@ class ButtonVector : public Control {
 
   public:
     ButtonVector();
-    ButtonVector(GraphicsPath* gp);
+    explicit ButtonVector(GraphicsPath* gp);
 
     ~ButtonVector() override;
 

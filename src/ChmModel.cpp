@@ -55,7 +55,7 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     ChmModel* cm;
 
   public:
-    HtmlWindowHandler(ChmModel* cm) : cm(cm) {
+    explicit HtmlWindowHandler(ChmModel* cm) : cm(cm) {
     }
     ~HtmlWindowHandler() override = default;
 

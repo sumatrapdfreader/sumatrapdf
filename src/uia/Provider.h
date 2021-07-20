@@ -20,7 +20,7 @@ class SumatraUIAutomationProvider : public IRawElementProviderSimple,
     SumatraUIAutomationDocumentProvider* document;
 
   public:
-    SumatraUIAutomationProvider(HWND hwnd);
+    explicit SumatraUIAutomationProvider(HWND hwnd);
 
   private: // ensure no accidental destruction of this class and bypassing refcounting
     ~SumatraUIAutomationProvider();

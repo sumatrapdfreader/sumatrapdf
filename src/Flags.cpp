@@ -191,7 +191,7 @@ struct CmdLineArgsIter {
     int curr{0};
     int nArgs{0};
 
-    CmdLineArgsIter(WStrVec& v);
+    explicit CmdLineArgsIter(WStrVec& v);
     const WCHAR* Next();
     const WCHAR* GetParam();
     int GetIntParam();

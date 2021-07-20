@@ -62,7 +62,7 @@ class TabItemInfo {
 
 class TabsCtrlPrivate {
   public:
-    TabsCtrlPrivate(HWND hwnd) {
+    explicit TabsCtrlPrivate(HWND hwnd) {
         this->hwnd = hwnd;
     }
     ~TabsCtrlPrivate() {

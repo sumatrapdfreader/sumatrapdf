@@ -104,7 +104,7 @@ enum class PathInstr {
 static const char* svgInstructions = "MmLlHhVvCcSsQqTtAaZz";
 
 struct SvgPathInstr {
-    SvgPathInstr(PathInstr type) {
+    explicit SvgPathInstr(PathInstr type) {
         this->type = type;
     }
 

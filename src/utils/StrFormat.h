@@ -78,15 +78,15 @@ struct Arg {
         const WCHAR* ws;
     };
     Arg() = default;
-    Arg(int arg) {
+    explicit Arg(int arg) {
         t = Type::Int;
         i = arg;
     }
-    Arg(const char* arg) {
+    explicit Arg(const char* arg) {
         t = Type::Str;
         s = arg;
     }
-    Arg(const WCHAR* arg) {
+    explicit Arg(const WCHAR* arg) {
         t = Type::WStr;
         ws = arg;
     }
@@ -94,7 +94,7 @@ struct Arg {
 
 class Fmt {
   public:
-    Fmt(const char* fmt);
+    explicit Fmt(const char* fmt);
     Fmt& i(int);
     Fmt& s(const char*);
     Fmt& s(const WCHAR*);

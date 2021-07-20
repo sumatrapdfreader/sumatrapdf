@@ -36,7 +36,7 @@ struct SplitterCtrl : public Window {
     // parent and restore it when we're done
     bool parentClipsChildren{false};
 
-    SplitterCtrl(HWND parent);
+    explicit SplitterCtrl(HWND parent);
     ~SplitterCtrl() override;
 
     bool Create() override;

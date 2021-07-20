@@ -193,7 +193,7 @@ struct WindowBase : public ILayout {
     UINT_PTR subclassId{0};
 
     WindowBase() = default;
-    WindowBase(HWND p);
+    explicit WindowBase(HWND p);
     ~WindowBase() override;
 
     virtual bool Create();

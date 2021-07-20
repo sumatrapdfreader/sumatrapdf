@@ -12,7 +12,7 @@ typedef std::function<void(CheckState)> OnCheckStateChanged;
 struct CheckboxCtrl : WindowBase {
     OnCheckStateChanged onCheckStateChanged = nullptr;
 
-    CheckboxCtrl(HWND parent);
+    explicit CheckboxCtrl(HWND parent);
     ~CheckboxCtrl() override;
     bool Create() override;
 

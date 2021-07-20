@@ -13,7 +13,7 @@ class Painter {
     void PaintBackground(Graphics* g, Rect r);
 
   public:
-    Painter(HwndWrapper* wnd);
+    explicit Painter(HwndWrapper* wnd);
     ~Painter();
 
     void Paint(HWND hwnd, bool isDirty);

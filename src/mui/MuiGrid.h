@@ -92,7 +92,7 @@ class Grid : public Control {
   public:
     Vec<CellData> els;
 
-    Grid(Style* style = nullptr);
+    explicit Grid(Style* style = nullptr);
     ~Grid() override;
 
     Grid& Add(CellData&);

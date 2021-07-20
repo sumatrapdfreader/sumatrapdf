@@ -160,7 +160,7 @@ struct TreeCtrl : WindowBase {
     // private
     TVITEMW item{};
 
-    TreeCtrl(HWND parent);
+    explicit TreeCtrl(HWND parent);
     ~TreeCtrl() override;
 
     Size GetIdealSize() override;

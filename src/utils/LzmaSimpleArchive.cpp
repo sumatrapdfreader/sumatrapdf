@@ -32,7 +32,7 @@ struct ISzAllocatorAlloc : ISzAlloc {
         Allocator::Free(a->allocator, address);
     }
 
-    ISzAllocatorAlloc(Allocator* allocator) {
+    explicit ISzAllocatorAlloc(Allocator* allocator) {
         this->Alloc = _Alloc;
         this->Free = _Free;
         this->allocator = allocator;

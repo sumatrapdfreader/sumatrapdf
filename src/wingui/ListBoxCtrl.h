@@ -35,7 +35,7 @@ struct ListBoxCtrl : WindowBase {
     Size idealSize{};
     int idealSizeLines = 0;
 
-    ListBoxCtrl(HWND parent);
+    explicit ListBoxCtrl(HWND parent);
     ~ListBoxCtrl() override;
     bool Create() override;
 

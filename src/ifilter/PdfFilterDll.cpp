@@ -21,7 +21,7 @@ long g_lRefCount = 0;
 
 class FilterClassFactory : public IClassFactory {
   public:
-    FilterClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
+    explicit FilterClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
         InterlockedIncrement(&g_lRefCount);
     }
 

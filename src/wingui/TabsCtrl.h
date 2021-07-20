@@ -60,7 +60,7 @@ struct TabsCtrl2 : WindowBase {
     // for all WM_NOTIFY messages
     WmNotifyHandler onNotify{nullptr};
 
-    TabsCtrl2(HWND parent);
+    explicit TabsCtrl2(HWND parent);
     ~TabsCtrl2() override;
     bool Create() override;
 

@@ -27,7 +27,7 @@ struct LabelWithCloseWnd {
 };
 
 struct LabelWithCloseCtrl : public Window {
-    LabelWithCloseCtrl(HWND);
+    explicit LabelWithCloseCtrl(HWND);
     ~LabelWithCloseCtrl() override;
 
     bool Create(const WCHAR*);

@@ -47,7 +47,7 @@ class EventMgr {
     LRESULT OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled) const;
 
   public:
-    EventMgr(HwndWrapper* wndRoot);
+    explicit EventMgr(HwndWrapper* wndRoot);
     ~EventMgr();
 
     LRESULT OnMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled);

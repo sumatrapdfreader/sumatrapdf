@@ -78,7 +78,7 @@ struct LayoutBase : public ILayout {
     Rect lastBounds{};
 
     LayoutBase() = default;
-    LayoutBase(Kind);
+    explicit LayoutBase(Kind);
 
     Kind GetKind() override;
     void SetVisibility(Visibility) override;
@@ -212,7 +212,7 @@ struct Align : LayoutBase {
     ILayout* Child = nullptr;
     Size childSize{};
 
-    Align(ILayout*);
+    explicit Align(ILayout*);
     ~Align() override;
     Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;

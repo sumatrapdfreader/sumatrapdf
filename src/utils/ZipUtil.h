@@ -16,8 +16,8 @@ class ZipCreator {
     bool AddFileData(const char* nameUtf8, const void* data, size_t size, u32 dosdate = 0);
 
   public:
-    ZipCreator(const WCHAR* zipFilePath);
-    ZipCreator(ISequentialStream* stream);
+    explicit ZipCreator(const WCHAR* zipFilePath);
+    explicit ZipCreator(ISequentialStream* stream);
     ~ZipCreator();
 
     ZipCreator(ZipCreator const&) = delete;

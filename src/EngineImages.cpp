@@ -855,7 +855,7 @@ EngineBase* CreateImageDirEngineFromFile(const WCHAR* fileName) {
 
 class EngineCbx : public EngineImages, public json::ValueVisitor {
   public:
-    EngineCbx(MultiFormatArchive* arch);
+    explicit EngineCbx(MultiFormatArchive* arch);
     ~EngineCbx() override;
 
     EngineBase* Clone() override;

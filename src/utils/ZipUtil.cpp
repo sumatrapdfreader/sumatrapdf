@@ -22,7 +22,7 @@ class FileWriteStream : public ISequentialStream {
     LONG refCount;
 
   public:
-    FileWriteStream(const WCHAR* filePath) : refCount(1) {
+    explicit FileWriteStream(const WCHAR* filePath) : refCount(1) {
         hFile = CreateFileW(filePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
                             nullptr);
     }

@@ -25,7 +25,7 @@ class Control : public ILayout {
         StateBitLast
     };
 
-    Control(Control* newParent = nullptr);
+    explicit Control(Control* newParent = nullptr);
     ~Control() override;
 
     void SetParent(Control* newParent);

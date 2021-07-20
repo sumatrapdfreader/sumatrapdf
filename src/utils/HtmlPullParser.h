@@ -89,7 +89,7 @@ class HtmlPullParser {
     }
     HtmlPullParser(const char* s, const char* end) : currPos(s), end(end), start(s), len(end - s) {
     }
-    HtmlPullParser(std::span<u8> d)
+    explicit HtmlPullParser(std::span<u8> d)
         : currPos((char*)d.data()), end((char*)d.data() + d.size()), start((char*)d.data()), len(d.size()) {
     }
 

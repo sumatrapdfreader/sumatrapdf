@@ -614,7 +614,7 @@ struct ControllerCallbackHandler : ControllerCallback {
     WindowInfo* win;
 
   public:
-    ControllerCallbackHandler(WindowInfo* win) : win(win) {
+    explicit ControllerCallbackHandler(WindowInfo* win) : win(win) {
     }
     ~ControllerCallbackHandler() override = default;
 

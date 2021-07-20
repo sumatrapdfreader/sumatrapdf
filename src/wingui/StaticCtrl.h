@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct StaticCtrl : WindowBase {
-    StaticCtrl(HWND parent);
+    explicit StaticCtrl(HWND parent);
     ~StaticCtrl() override;
 
     bool Create() override;

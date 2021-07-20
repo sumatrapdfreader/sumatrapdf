@@ -59,7 +59,7 @@ static bool gBuildTgaPreview = false;
 
 class PreviewClassFactory : public IClassFactory {
   public:
-    PreviewClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
+    explicit PreviewClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
         InterlockedIncrement(&g_lRefCount);
     }
 

@@ -7,7 +7,7 @@ struct ButtonCtrl : WindowBase {
     ClickedHandler onClicked = nullptr;
     bool isDefault = false;
 
-    ButtonCtrl(HWND parent);
+    explicit ButtonCtrl(HWND parent);
     ~ButtonCtrl() override;
     bool Create() override;
 

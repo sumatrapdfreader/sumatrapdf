@@ -5,7 +5,7 @@ struct ImageCtrl : WindowBase {
     // we don't own it
     Gdiplus::Bitmap* bmp = nullptr;
 
-    ImageCtrl(HWND parent);
+    explicit ImageCtrl(HWND parent);
     ~ImageCtrl() override;
     bool Create() override;
 

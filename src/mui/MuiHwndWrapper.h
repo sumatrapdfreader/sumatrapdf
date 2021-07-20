@@ -23,7 +23,7 @@ class HwndWrapper : public Control {
 
     FrameRateWnd* frameRateWnd = nullptr;
 
-    HwndWrapper(HWND hwnd = nullptr);
+    explicit HwndWrapper(HWND hwnd = nullptr);
     ~HwndWrapper() override;
 
     void SetMinSize(Size s) const;

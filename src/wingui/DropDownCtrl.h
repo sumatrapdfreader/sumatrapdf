@@ -15,7 +15,7 @@ struct DropDownCtrl : WindowBase {
     Vec<std::string_view> items;
     DropDownSelectionChangedHandler onSelectionChanged = nullptr;
 
-    DropDownCtrl(HWND parent);
+    explicit DropDownCtrl(HWND parent);
     ~DropDownCtrl() override;
     bool Create() override;
 

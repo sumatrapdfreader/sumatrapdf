@@ -4,7 +4,7 @@
 struct TooltipCtrl : WindowBase {
     bool isShowing = false;
 
-    TooltipCtrl(HWND parent);
+    explicit TooltipCtrl(HWND parent);
     ~TooltipCtrl() override;
     bool Create() override;
 

@@ -147,7 +147,7 @@ struct Padding {
 };
 
 struct Prop {
-    Prop(PropType type) : type(type) {
+    explicit Prop(PropType type) : type(type) {
     }
 
     void Free() const;
@@ -195,7 +195,7 @@ class Style {
     size_t gen;
 
   public:
-    Style(Style* inheritsFrom = nullptr) : inheritsFrom(inheritsFrom) {
+    explicit Style(Style* inheritsFrom = nullptr) : inheritsFrom(inheritsFrom) {
         gen = 1; // so that we can use 0 for nullptr
     }
 
