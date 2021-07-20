@@ -1,0 +1,22 @@
+---
+Checks: >
+  -*,
+  boost-*,
+  bugprone-*,
+  clang-analyzer-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -performance-no-int-to-ptr,
+  -readability-magic-numbers
+CheckOptions:
+  - key: readability-implicit-bool-conversion.AllowIntegerConditions
+    value: 1
+  - key: readability-implicit-bool-conversion.AllowPointerConditions
+    value: 1
+...

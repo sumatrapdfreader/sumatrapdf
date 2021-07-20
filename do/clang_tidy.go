@@ -8,6 +8,8 @@ import (
 )
 
 /*
+https://github.com/derceg/explorerplusplus/blob/master/.clang-tidy
+
 https://clang.llvm.org/extra/clang-tidy/checks/list.html
 https://codeyarns.com/2019/01/28/how-to-use-clang-tidy/
 https://www.reddit.com/r/cpp/comments/ezn21f/which_checks_do_you_use_for_clangtidy/
@@ -80,12 +82,51 @@ readability-string-compare
 
 const clangTidyLogFile = "clangtidy.out.txt"
 
+/*
+  -*,
+  boost-*,
+  bugprone-*,
+  clang-analyzer-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-use-trailing-return-type
+*/
+
 // TODO: maybe re-enable clang-diagnostic-switch, for now it's too many false positives
 func clangTidyFile(path string) {
+	/*
+		"-clang-diagnostic-microsoft-goto",
+		"-clang-diagnostic-unused-value",
+		"-clang-diagnostic-ignored-pragma-optimize",
+		"-clang-diagnostic-pragma-pack",
+		"-clang-diagnostic-switch",
+	*/
+	/*
+		checks := []string{
+			"-*",
+			"bugprone-*",
+			"clang-analyzer-*",
+			"misc-*",
+			"modernize-*",
+			"performance-*",
+			"portability-*",
+			"readability-*",
+			"-readability-magic-numbers",
+			"-readability-implicit-bool-conversion",
+			"-modernize-avoid-c-arrays",
+			"-modernize-use-trailing-return-type",
+			"-performance-no-int-to-ptr",
+		}
+	*/
 	args := []string{
-		"--checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value,-clang-diagnostic-ignored-pragma-optimize,-clang-diagnostic-pragma-pack,-clang-diagnostic-switch",
+		//"--checks=" + strings.Join(checks, ","),
+		"--header-filter=.*",
 		"-extra-arg=-std=c++20",
-		"", // file
+		path,
 		"--",
 		"-I", "mupdf/include",
 		"-I", "src",
@@ -109,9 +150,45 @@ func clangTidyFile(path string) {
 		"-D_WIN32_WINNT=0x0a00",
 		"-DPRE_RELEASE_VER=3.3",
 	}
-	args[2] = path
 	cmd := exec.Command("clang-tidy", args...)
-	_ = runCmdShowProgressAndLog(cmd, clangTidyLogFile)
+	err := runCmdShowProgressAndLog(cmd, clangTidyLogFile)
+	must(err)
+}
+
+func clangTidyFix(path string) {
+	args := []string{
+		// fix one-by-one
+		"--checks=-*,modernize-use-using",
+		"--header-filter=.*",
+		"--fix",
+		"-extra-arg=-std=c++20",
+		path,
+		"--",
+		"-I", "mupdf/include",
+		"-I", "src",
+		"-I", "src/utils",
+		"-I", "src/wingui",
+		"-I", "ext/WDL",
+		"-I", "ext/CHMLib/src",
+		"-I", "ext/libdjvu",
+		"-I", "ext/zlib",
+		"-I", "ext/synctex",
+		"-I", "ext/unarr",
+		"-I", "ext/lzma/C",
+		"-I", "ext/libwebp/src",
+		"-I", "ext/freetype/include",
+
+		"-DUNICODE",
+		"-DWIN32",
+		"-D_WIN32",
+		"-D_CRT_SECURE_NO_WARNINGS",
+		"-DWINVER=0x0a00",
+		"-D_WIN32_WINNT=0x0a00",
+		"-DPRE_RELEASE_VER=3.3",
+	}
+	cmd := exec.Command("clang-tidy", args...)
+	err := runCmdShowProgressAndLog(cmd, clangTidyLogFile)
+	must(err)
 }
 
 func runClangTidy() {
@@ -166,6 +243,7 @@ func runClangTidy() {
 			if isWhiteListed(path) {
 				continue
 			}
+			//clangTidyFix(path)
 			clangTidyFile(path)
 		}
 	}
