@@ -94,17 +94,18 @@ readability-misplaced-array-index
 readability-redundant-member-init
 readability-redundant-string-init
 modernize-avoid-bind
+modernize-use-bool-literals
+google-explicit-constructor
+modernize-raw-string-literal
+bugprone-copy-constructor-init
 
 */
 
 /*
 TODO fixes:
+readability-redundant-function-ptr-dereference
+readability-redundant-string-cst
 
-google-explicit-constructor
-modernize-use-bool-literals
-
-cppcoreguidelines-prefer-member-initializer
-bugprone-copy-constructor-init
 bugprone-bool-pointer-implicit-conversion
 
 performance-move-const-arg
@@ -118,23 +119,16 @@ readability-redundant-preprocessor
 readability-string-compare
 
 maybe not:
+cppcoreguidelines-prefer-member-initializer ??
 modernize-concat-nested-namespaces
 modernize-avoid-c-arrays
-*/
-
-/*
-TODO:
-modernize-raw-string-literal
-readability-redundant-function-ptr-dereference
-readability-redundant-string-cst
-
 modernize-use-nodiscard
-modernize-use-using : needs to figure out how to not run in ext
+modernize-use-using : needs to figure out how to not run on WinDynCalls.h
 */
+
 func clangTidyFix(path string) {
 	args := []string{
-		// fix one-by-one
-		"--checks=-*,modernize-use-bool-literals,google-explicit-constructor",
+		"--checks=-*,modernize-use-default-member-init",
 		"-p",
 		".",
 		"--header-filter=src/",

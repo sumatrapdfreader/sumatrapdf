@@ -45,7 +45,8 @@ The intent is to standardize how we do it.
 /* enable "NX" execution prevention for XP, 2003
  * cf. http://www.uninformed.org/?v=2&a=4 */
 typedef HRESULT(WINAPI* Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT ProcessInformationClass,
-                                                     PVOID ProcessInformation, ULONG ProcessInformationLength);
+                                                     PVOID ProcessInformation,
+                                                     ULONG ProcessInformationLength); // NOLINT
 
 #define NTDLL_API_LIST(V) V(NtSetInformationProcess)
 
