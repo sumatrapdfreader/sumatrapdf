@@ -37,21 +37,6 @@ clang-tidy src/*.cpp -fix -header-filter=src/ -checks="-*,readability-inconsiste
 */
 
 /*
-Done:
-src
-src/utils
-src/wingui
-src/mui
-src/uia
-src/ifilter
-src/previewer
-
-Fix warnings:
-* clang-analyzer-deadcode.DeadStores
-* clang-analyzer-cplusplus.NewDeleteLeaks
-* clang-analyzer-unix.Malloc
-* clang-analyzer-core.uninitialized.Assign
-
 TODO fixes:
 modernize-use-default-member-init
 modernize-return-braced-init-list
@@ -82,44 +67,12 @@ readability-string-compare
 
 const clangTidyLogFile = "clangtidy.out.txt"
 
-/*
-  -*,
-  boost-*,
-  bugprone-*,
-  clang-analyzer-*,
-  misc-*,
-  modernize-*,
-  performance-*,
-  portability-*,
-  readability-*,
-  -misc-non-private-member-variables-in-classes,
-  -modernize-use-trailing-return-type
-*/
-
 // TODO: maybe re-enable clang-diagnostic-switch, for now it's too many false positives
 func clangTidyFile(path string) {
-	/*
-		"-clang-diagnostic-microsoft-goto",
-		"-clang-diagnostic-unused-value",
-		"-clang-diagnostic-ignored-pragma-optimize",
-		"-clang-diagnostic-pragma-pack",
-		"-clang-diagnostic-switch",
-	*/
 	/*
 		checks := []string{
 			"-*",
 			"bugprone-*",
-			"clang-analyzer-*",
-			"misc-*",
-			"modernize-*",
-			"performance-*",
-			"portability-*",
-			"readability-*",
-			"-readability-magic-numbers",
-			"-readability-implicit-bool-conversion",
-			"-modernize-avoid-c-arrays",
-			"-modernize-use-trailing-return-type",
-			"-performance-no-int-to-ptr",
 		}
 	*/
 	args := []string{
@@ -155,11 +108,19 @@ func clangTidyFile(path string) {
 	must(err)
 }
 
+// modernize-
+// modernize-use-override
+// modernize-use-equals-default
+// readability-avoid-const-params-in-decls
+// readability-simplify-boolean-expr
+// modernize-use-using : needs to figure out how to not run in ext
 func clangTidyFix(path string) {
 	args := []string{
 		// fix one-by-one
-		"--checks=-*,modernize-use-nodiscard",
-		"--header-filter=.*",
+		"--checks=-*,readability-make-member-function-const",
+		"-p",
+		".",
+		"--header-filter=src/",
 		"--fix",
 		"-extra-arg=-std=c++20",
 		path,

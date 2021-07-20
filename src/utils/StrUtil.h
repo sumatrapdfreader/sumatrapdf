@@ -249,18 +249,21 @@ struct Str {
     using iterator = char*;
     using const_iterator = const char*;
 
-    iterator begin() {
+    [[nodiscard]] iterator begin() const {
         return &(els[0]);
     }
+    [[nodiscard]] iterator end() const {
+        return &(els[len]);
+    }
+
+#if 0
     [[nodiscard]] const_iterator begin() const {
         return &(els[0]);
-    }
-    iterator end() {
-        return &(els[len]);
     }
     [[nodiscard]] const_iterator end() const {
         return &(els[len]);
     }
+#endif
 };
 
 bool Replace(Str& s, const char* toReplace, const char* replaceWith);
@@ -326,18 +329,20 @@ struct WStr {
     using iterator = WCHAR*;
     using const_iterator = const WCHAR*;
 
-    iterator begin() {
+    [[nodiscard]] iterator begin() const {
         return &(els[0]);
     }
+    [[nodiscard]] iterator end() const {
+        return &(els[len]);
+    }
+#if 0
     [[nodiscard]] const_iterator begin() const {
         return &(els[0]);
-    }
-    iterator end() {
-        return &(els[len]);
     }
     [[nodiscard]] const_iterator end() const {
         return &(els[len]);
     }
+#endif
 };
 
 bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);

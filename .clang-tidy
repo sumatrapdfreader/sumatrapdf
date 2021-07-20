@@ -12,6 +12,7 @@ Checks: >
   -misc-non-private-member-variables-in-classes,
   -modernize-use-trailing-return-type,
   -modernize-avoid-c-arrays,
+  -modernize-use-using,
   -performance-no-int-to-ptr,
   -readability-magic-numbers
 CheckOptions:
