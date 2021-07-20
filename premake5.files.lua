@@ -413,7 +413,6 @@ function sumatrapdf_files()
     "AppPrefs.*",
     "AppTools.*",
     "AppUtil.*",
-    "AutoUpdate.*",
     "Caption.*",
     "Canvas.*",
     "CanvasAboutUI.*",
@@ -469,7 +468,8 @@ function sumatrapdf_files()
     "Theme.*",
     "Toolbar.*",
     "Translations.*",
-    "Trans_sumatra_txt.cpp",
+    "TranslationsInfo.cpp",
+    "UpdateCheck.*",
     "Version.h",
     "WindowInfo.*",
 

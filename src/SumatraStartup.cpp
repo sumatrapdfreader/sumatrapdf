@@ -49,7 +49,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
-#include "AutoUpdate.h"
+#include "UpdateCheck.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"

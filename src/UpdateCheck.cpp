@@ -25,7 +25,7 @@
 #include "Notifications.h"
 #include "WindowInfo.h"
 #include "SumatraDialogs.h"
-#include "AutoUpdate.h"
+#include "UpdateCheck.h"
 
 constexpr int kSecondsInDay = 60 * 60 * 24;
 
@@ -199,7 +199,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
     constexpr int kBtnIdDontInstall = 100;
     constexpr int kBtnIdInstall = 101;
-    auto title = _TR("SumatraPDF update check");
+    auto title = _TR("SumatraPDF Update");
     TASKDIALOGCONFIG dialogConfig{};
     TASKDIALOG_BUTTON buttons[2];
 

@@ -141,8 +141,7 @@ func runClangTidy() {
 		whitelisted := []string{
 			"resource.h",
 			"Version.h",
-			"Trans_sumatra_txt.cpp",
-			"Trans_installer_txt.cpp",
+			"TranslationsInfo.cpp",
 			"signfile.cpp",
 		}
 		s = strings.ToLower(s)

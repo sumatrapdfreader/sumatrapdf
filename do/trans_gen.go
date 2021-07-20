@@ -185,15 +185,7 @@ func cEscapeForCompact(txt string) string {
 }
 
 func fileNameFromDirName(dirName string) string {
-	// strip "src/"" from dir_name
-	s := strings.TrimPrefix(dirName, "src")
-	if len(s) > 0 {
-		s = s[1:]
-	}
-	if s == "" {
-		return "Trans_sumatra_txt.cpp"
-	}
-	return fmt.Sprintf("Trans_%s_txt.cpp", s)
+	return "TranslationsInfo.cpp"
 }
 
 func buildTranslations(langs []*Lang) {

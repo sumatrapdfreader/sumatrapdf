@@ -51,9 +51,6 @@
     <ClInclude Include="..\src\AppUtil.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AutoUpdate.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -186,6 +183,9 @@
     <ClInclude Include="..\src\Translations.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\UpdateCheck.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Version.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -285,9 +285,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AppUtil.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\AutoUpdate.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp">
@@ -434,13 +431,16 @@
     <ClCompile Include="..\src\Toolbar.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Trans_sumatra_txt.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Translations.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TranslationsInfo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Uninstaller.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UpdateCheck.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\WindowInfo.cpp">

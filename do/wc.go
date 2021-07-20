@@ -1,13 +1,12 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/kjk/u"
 )
 
+// return false to exclude a file
 func excludeFiles(s string) bool {
-	return !strings.Contains(s, "Trans_sumatra_txt.cpp")
+	return true
 }
 
 var srcFiles = u.MakeAllowedFileFilterForExts(".go", ".cpp", ".h")
