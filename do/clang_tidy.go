@@ -85,6 +85,7 @@ modernize-use-override
 readability-simplify-boolean-expr : dangerous, removes if (false) / if (true) debug code
 modernize-use-nullptr
 readability-braces-around-statements
+modernize-use-equals-default
 */
 
 /*
@@ -105,7 +106,6 @@ readability-string-compare
 /*
 TODO:
 modernize-raw-string-literal
-modernize-use-equals-default
 readability-inconsistent-declaration-parameter-name
 readability-redundant-declaration
 readability-redundant-control-flow

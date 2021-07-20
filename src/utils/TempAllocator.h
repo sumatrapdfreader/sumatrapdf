@@ -12,9 +12,7 @@ void ResetTempAllocator();
 struct TempStr {
     std::string_view sv{};
 
-    explicit TempStr(){
-        // do nothing
-    };
+    TempStr() = default;
     explicit TempStr(char* s) {
         sv = {s, str::Len(s)};
     }
@@ -61,9 +59,7 @@ struct TempStr {
 struct TempWstr {
     std::wstring_view sv{};
 
-    explicit TempWstr() {
-        // do nothing
-    }
+    TempWstr() = default;
     explicit TempWstr(WCHAR* s) {
         sv = {s, str::Len(s)};
     }
