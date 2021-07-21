@@ -40,6 +40,7 @@ WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
 WCHAR* Dup(std::wstring_view);
 
 void ReplacePtr(char** s, const char* snew);
+void ReplacePtr(WCHAR** s, const WCHAR* snew);
 void ReplaceWithCopy(char** s, const char* snew);
 void ReplaceWithCopy(const char** s, const char* snew);
 

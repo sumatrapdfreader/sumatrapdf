@@ -1,7 +1,8 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-enum class PdfFilterState { Start, Author, Title, Date, Content, End };
+constexpr const char* kPdfFilterStateStrs = "start\0author\0title\0data\0content\0end\0";
+enum class PdfFilterState { Start = 0, Author, Title, Date, Content, End };
 
 class EngineBase;
 

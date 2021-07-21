@@ -435,6 +435,14 @@ void ReplacePtr(char** s, const char* snew) {
     *s = (char*)snew;
 }
 
+void ReplacePtr(WCHAR** s, const WCHAR* snew) {
+    if (*s == snew) {
+        return;
+    }
+    free(*s);
+    *s = (WCHAR*)snew;
+}
+
 void ReplaceWithCopy(char** s, const char* snew) {
     if (*s == snew) {
         return;

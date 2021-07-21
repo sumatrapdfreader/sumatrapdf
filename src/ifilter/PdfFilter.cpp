@@ -74,9 +74,17 @@ static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
+// Start, Author, Title, Date, Content, End
+
+static const char* PdfFilterStateToStr(PdfFilterState state) {
+    const char* res = seqstrings::IdxToStr(kPdfFilterStateStrs, (int)state);
+    return res ? res : "uknown";
+}
+
 HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
-    logf("PdfFilter::GetNextChunkValue()\n");
-    AutoFreeWstr str;
+    const char* stateStr = PdfFilterStateToStr(m_state);
+    logf("PdfFilter::GetNextChunkValue(), state: %s (%d)\n", stateStr, (int)m_state);
+    WCHAR* prop{nullptr};
 
     switch (m_state) {
         case PdfFilterState::Start:
@@ -86,40 +94,49 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Author:
             m_state = PdfFilterState::Title;
-            str.Set(m_pdfEngine->GetProperty(DocumentProperty::Author));
-            if (!str::IsEmpty(str.Get())) {
-                chunkValue.SetTextValue(PKEY_Author, str);
+            prop = m_pdfEngine->GetProperty(DocumentProperty::Author);
+            if (!str::IsEmpty(prop)) {
+                chunkValue.SetTextValue(PKEY_Author, prop);
+                str::FreePtr(&prop);
                 return S_OK;
             }
-            // fall through
+            str::FreePtr(&prop);
+
+            [[fallthrough]];
 
         case PdfFilterState::Title:
             m_state = PdfFilterState::Date;
-            str.Set(m_pdfEngine->GetProperty(DocumentProperty::Title));
-            if (!str) {
-                str.Set(m_pdfEngine->GetProperty(DocumentProperty::Subject));
+            prop = m_pdfEngine->GetProperty(DocumentProperty::Title);
+            if (!prop) {
+                prop = m_pdfEngine->GetProperty(DocumentProperty::Subject);
             }
-            if (!str::IsEmpty(str.Get())) {
-                chunkValue.SetTextValue(PKEY_Title, str);
+            if (!str::IsEmpty(prop)) {
+                chunkValue.SetTextValue(PKEY_Title, prop);
+                str::FreePtr(&prop);
                 return S_OK;
             }
-            // fall through
+            str::FreePtr(&prop);
+
+            [[fallthrough]];
 
         case PdfFilterState::Date:
             m_state = PdfFilterState::Content;
-            str.Set(m_pdfEngine->GetProperty(DocumentProperty::ModificationDate));
-            if (!str) {
-                str.Set(m_pdfEngine->GetProperty(DocumentProperty::CreationDate));
+            prop = m_pdfEngine->GetProperty(DocumentProperty::ModificationDate);
+            if (!prop) {
+                prop = m_pdfEngine->GetProperty(DocumentProperty::CreationDate);
             }
-            if (!str::IsEmpty(str.Get())) {
+            if (!str::IsEmpty(prop)) {
                 SYSTEMTIME systime;
                 FILETIME filetime;
-                if (PdfDateParse(str, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
+                if (PdfDateParse(prop, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
                     chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
+                    str::FreePtr(&prop);
                     return S_OK;
                 }
             }
-            // fall through
+            str::FreePtr(&prop);
+
+            [[fallthrough]];
 
         case PdfFilterState::Content:
             while (++m_iPageNo <= m_pdfEngine->PageCount()) {
@@ -128,14 +145,16 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                     FreePageText(&pageText);
                     continue;
                 }
-                str.Set(pageText.text);
-                AutoFreeWstr str2 = str::Replace(str.Get(), L"\n", L"\r\n");
-                chunkValue.SetTextValue(PKEY_Search_Contents, str2.Get(), CHUNK_TEXT);
+                prop = pageText.text;
+                WCHAR* str = str::Replace(prop, L"\n", L"\r\n");
+                chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
+                str::FreePtr(&str);
                 FreePageText(&pageText);
                 return S_OK;
             }
             m_state = PdfFilterState::End;
-            // fall through
+
+            [[fallthrough]];
 
         case PdfFilterState::End:
         default:
