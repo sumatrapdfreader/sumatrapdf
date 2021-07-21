@@ -44,14 +44,14 @@ static ExternalViewerInfo gExternalViewers[] = {
         "Acrobat Reader",
         CmdOpenWithAcrobat,
         L".pdf",
-        L"Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
+        LR"(Adobe\Acrobat Reader DC\Reader\AcroRd32.exe)",
         // Command line format for version 6 and later:
         //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
         //   /P <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
         // TODO: Also set zoom factor and scroll to current position?
-        L"/A page=%p \"%1\"",
+        LR"(/A page=%p "%1")",
         kindEnginePdf,
         nullptr
     },
@@ -71,8 +71,8 @@ static ExternalViewerInfo gExternalViewers[] = {
         "Foxit PhantomPDF",
         CmdOpenWithFoxItPhantom,
         L".pdf",
-        L"Foxit Software\\Foxit PhantomPDF\\FoxitPhantomPDF.exe",
-        L"\"%1\" /A page=%p",
+        LR"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)",
+        LR"("%1" /A page=%p)",
         kindEnginePdf,
         nullptr
     },
@@ -80,11 +80,11 @@ static ExternalViewerInfo gExternalViewers[] = {
         "PDF-XChange Editor",
         CmdOpenWithPdfXchange,
         L".pdf",
-        L"Tracker Software\\PDF Editor\\PDFXEdit.exe",
+        LR"(Tracker Software\PDF Editor\PDFXEdit.exe)",
         // PDFXChange cmd-line format:
         // [/A "param=value [&param2=value ..."] [PDF filename]
         // /A params: page=<page number>
-        L"/A page=%p \"%1\"",
+        LR"(/A page=%p "%1")",
         kindEnginePdf,
         nullptr
     },
@@ -199,9 +199,9 @@ void FreeExternalViewers() {
 static WCHAR* GetAcrobatPath() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
     AutoFreeWstr path = ReadRegStr(HKEY_LOCAL_MACHINE,
-                                   L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", nullptr);
+                                   LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
     if (!path) {
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe",
+        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)",
                             nullptr));
     }
     if (path && file::Exists(path)) {
@@ -212,18 +212,18 @@ static WCHAR* GetAcrobatPath() {
 
 static WCHAR* GetFoxitPath() {
     AutoFreeWstr path = ReadRegStr(
-        HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader", L"DisplayIcon");
+        HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)", L"DisplayIcon");
     if (path && file::Exists(path)) {
         return path.StealData();
     }
     // Registry value for Foxit 5 (and maybe later)
     path.Set(ReadRegStr(HKEY_LOCAL_MACHINE,
-                        L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1", L"DisplayIcon"));
+                        LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)", L"DisplayIcon"));
     if (path && file::Exists(path)) {
         return path.StealData();
     }
     // Registry value for Foxit 5.5 MSI installer
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Foxit Software\\Foxit Reader", L"InstallPath"));
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Foxit Software\Foxit Reader)", L"InstallPath"));
     if (path) {
         path.Set(path::Join(path, L"Foxit Reader.exe"));
     }
@@ -234,9 +234,9 @@ static WCHAR* GetFoxitPath() {
 }
 
 static WCHAR* GetPDFXChangePath() {
-    AutoFreeWstr path = ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Tracker Software\\PDFViewer", L"InstallPath");
+    AutoFreeWstr path = ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath");
     if (!path) {
-        path.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
+        path.Set(ReadRegStr(HKEY_CURRENT_USER, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath"));
     }
     if (!path) {
         return nullptr;
@@ -313,7 +313,7 @@ static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
     // if it contains %1, it's replaced with the file path (else the file path is appended)
     AutoFreeWstr params;
     if (cmdLine == nullptr) {
-        cmdLine = L"\"%1\"";
+        cmdLine = LR"("%1")";
     }
     if (str::Find(cmdLine, L"%p")) {
         AutoFreeWstr pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
@@ -323,7 +323,7 @@ static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
     if (str::Find(cmdLine, L"%1")) {
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
     } else {
-        params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
+        params.Set(str::Format(LR"(%s "%s")", cmdLine, tab->filePath.Get()));
     }
     return params.StealData();
 }
