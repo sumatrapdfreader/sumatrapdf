@@ -203,8 +203,12 @@ struct Str {
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& that);
     Str(std::string_view s); // NOLINT
+    Str(const char*);        // NOLINT
+
     Str& operator=(const Str& that);
+
     ~Str();
+
     void Reset();
     [[nodiscard]] char& at(size_t idx) const;
     [[nodiscard]] char& at(int idx) const;

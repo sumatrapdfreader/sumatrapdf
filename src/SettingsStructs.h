@@ -88,6 +88,19 @@ struct ChmUI {
     bool useFixedPageUI;
 };
 
+// list of handlers for selected text, shown in context menu when text
+// selection is active
+struct SelectionHandler {
+    // url to invoke for the selection. ${selection} will be replaced with
+    // current selection and ${userlang} with language code for current UI
+    // (e.g. 'de' for German)
+    char* url;
+    // name shown in context menu
+    char* name;
+    //
+    int cmdID;
+};
+
 // list of additional external viewers for various file types (can have
 // multiple entries for the same format)
 struct ExternalViewer {
@@ -284,6 +297,9 @@ struct GlobalPrefs {
     // customization options for CHM UI. If UseFixedPageUI is true,
     // FixedPageUI settings apply instead
     ChmUI chmUI;
+    // list of handlers for selected text, shown in context menu when text
+    // selection is active
+    Vec<SelectionHandler*>* selectionHandlers;
     // list of additional external viewers for various file types (can have
     // multiple entries for the same format)
     Vec<ExternalViewer*>* externalViewers;
@@ -457,6 +473,12 @@ static const FieldInfo gChmUIFields[] = {
 };
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
 
+static const FieldInfo gSelectionHandlerFields[] = {
+    {offsetof(SelectionHandler, url), SettingType::Utf8String, 0},
+    {offsetof(SelectionHandler, name), SettingType::Utf8String, 0},
+};
+static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 2, gSelectionHandlerFields, "URL\0Name"};
+
 static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::Utf8String, 0},
     {offsetof(ExternalViewer, name), SettingType::Utf8String, 0},
@@ -600,6 +622,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, ebookUI), SettingType::Struct, (intptr_t)&gEbookUIInfo},
     {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
     {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
+    {offsetof(GlobalPrefs, selectionHandlers), SettingType::Array, (intptr_t)&gSelectionHandlerInfo},
     {offsetof(GlobalPrefs, externalViewers), SettingType::Array, (intptr_t)&gExternalViewerInfo},
     {offsetof(GlobalPrefs, showMenubar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, reloadModifiedDocuments), SettingType::Bool, true},
@@ -647,13 +670,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 56, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0EbookUI"
-    "\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncr"
-    "ement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocumen"
-    "t\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip"
-    "\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0"
-    "WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce"
-    "\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "\0ComicBookUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0Z"
+    "oomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0\0Reme"
+    "mberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpd"
+    "ates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0Default"
+    "Zoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0Sessi"
+    "onData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

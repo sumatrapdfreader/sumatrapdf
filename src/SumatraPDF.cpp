@@ -4366,7 +4366,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
-    static_assert(CmdFavoriteLast - CmdFavoriteFirst == 200, "wrong number of favorite menu ids");
+    static_assert(CmdFavoriteLast - CmdFavoriteFirst == 256, "wrong number of favorite menu ids");
     if ((wmId >= CmdFavoriteFirst) && (wmId <= CmdFavoriteLast)) {
         GoToFavoriteByMenuId(win, wmId);
     }
@@ -4401,6 +4401,25 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ViewWithKnownExternalViewer(tab, wmId);
             return 0;
         }
+    }
+
+    if (CmdSelectionHandlerFirst <= wmId && wmId < CmdSelectionHandlerLast) {
+        SelectionHandler* selectedSH{nullptr};
+        for (auto& sh : *gGlobalPrefs->selectionHandlers) {
+            if (sh->cmdID == wmId) {
+                selectedSH = sh;
+                break;
+            }
+        }
+        ReportIf(!selectedSH);
+        WCHAR* url = ToWstrTemp(selectedSH->url);
+        // try to auto-fix url
+        bool isValidURL = str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://");
+        if (!isValidURL) {
+            url = str::JoinTemp(url, L"https://");
+        }
+        LaunchBrowserWithSelection(tab, url);
+        return 0;
     }
 
     auto* ctrl = win->ctrl;

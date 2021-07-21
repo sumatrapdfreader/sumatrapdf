@@ -171,15 +171,19 @@ enum {
 
     /* range for "external viewers" setting */
     CmdOpenWithExternalFirst,
-    CmdOpenWithExternalLast = CmdOpenWithExternalFirst + 20,
+    CmdOpenWithExternalLast = CmdOpenWithExternalFirst + 32,
+
+    /* range for "SelectionHandlers" setting */
+    CmdSelectionHandlerFirst,
+    CmdSelectionHandlerLast = CmdSelectionHandlerFirst + 32,
 
     /* range for file history */
     CmdFileHistoryFirst,
-    CmdFileHistoryLast = CmdFileHistoryFirst + 20,
+    CmdFileHistoryLast = CmdFileHistoryFirst + 32,
 
     /* range for favorites */
     CmdFavoriteFirst,
-    CmdFavoriteLast = CmdFavoriteFirst + 200,
+    CmdFavoriteLast = CmdFavoriteFirst + 256,
 
     /* range for themes. We don't have themes yet. */
     CmdThemeFirst,

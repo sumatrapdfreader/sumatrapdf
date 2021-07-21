@@ -1099,6 +1099,30 @@ void FillBuildMenuCtx(TabInfo* tab, BuildMenuCtx* ctx, Point pt) {
     ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
 }
 
+static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
+    if (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
+        // TODO: when we add exe handlers, only filter the URL ones
+        return;
+    }
+    int maxEntries = CmdSelectionHandlerLast - CmdSelectionHandlerFirst;
+    UINT_PTR n = 0;
+    for (auto& sh : *gGlobalPrefs->selectionHandlers) {
+        if (str::EmptyOrWhiteSpaceOnly(sh->url) || str::EmptyOrWhiteSpaceOnly(sh->name)) {
+            continue;
+        }
+        if (n >= maxEntries) {
+            break;
+        }
+        WCHAR* name = ToWstrTemp(sh->name);
+        UINT_PTR cmdID = (UINT_PTR)CmdSelectionHandlerFirst + n;
+        sh->cmdID = (int)cmdID;
+        UINT flags = MF_BYCOMMAND | MF_STRING;
+        flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
+        AppendMenuW(m, flags, cmdID, name);
+        n++;
+    }
+}
+
 static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
     if (0 == gGlobalPrefs->externalViewers->size()) {
         return;
@@ -1107,8 +1131,9 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         return;
     }
 
-    int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst + 1;
+    int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst;
     int count = 0;
+
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && count < maxEntries; i++) {
         ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
         if (!ev->commandLine) {
@@ -1203,19 +1228,29 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     RemoveBadMenuSeparators(menu);
 }
 
-HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx) {
+HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
     CrashIf(!menu);
 
-    bool isDebugMenu = menuDefs == menuDefDebug;
+    bool isDebugMenu = menuDef == menuDefDebug;
     int i = 0;
+
+    // insert before built-in selection handlers
+    if (menuDef == menuDefSelection) {
+        AppendSelectionHandlersToMenu(menu, ctx->hasSelection);
+    }
+
     while (true) {
-        MenuDef md = menuDefs[i];
+        MenuDef md = menuDef[i];
         if (md.title == nullptr) { // sentinel
             break;
         }
         i++;
 
         int cmdId = (int)md.idOrSubmenu;
+        if (menuDef == menuDefMainSelection && cmdId == CmdTranslateSelectionWithGoogle) {
+            AppendSelectionHandlersToMenu(menu, ctx->hasSelection);
+        }
+
         MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
         // hacky but works: small number is command id, large is submenu (a pointer)
         bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
@@ -1566,7 +1601,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     TabInfo* tab = win->currentTab;
-    IPageElement* pageEl = dm->GetElementAtPos({x, y}, nullptr);
+    AutoDelete<IPageElement> pageEl = dm->GetElementAtPos({x, y}, nullptr);
+
     WCHAR* value = nullptr;
     if (pageEl) {
         value = pageEl->GetValue();
@@ -1646,6 +1682,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
+
+    if (cmd >= CmdSelectionHandlerFirst && cmd < CmdSelectionHandlerLast) {
+        HwndSendCommand(win->hwndFrame, cmd);
+        return;
+    }
 
     AnnotationType annotType = (AnnotationType)(cmd - CmdCreateAnnotText);
     Annotation* createdAnnot{nullptr};
@@ -1750,8 +1791,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, },
         { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, },
     */
-
-    delete pageEl;
 }
 
 // so that we can do free everything at exit

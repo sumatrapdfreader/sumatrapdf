@@ -195,7 +195,7 @@ void VecTest() {
 
     {
         char buf[2] = {'a', '\0'};
-        str::Str v(0);
+        str::Str v(0, nullptr);
         for (int i = 0; i < 7; i++) {
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
@@ -229,7 +229,7 @@ void VecTest() {
     }
 
     {
-        str::Str v(0);
+        str::Str v(0, nullptr);
         for (size_t i = 0; i < 32; i++) {
             utassert(v.size() == i * 6);
             v.Append("lambd", 5);

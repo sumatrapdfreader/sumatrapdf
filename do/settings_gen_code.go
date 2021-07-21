@@ -200,8 +200,13 @@ func (f *Field) initDefault() string {
 	return ""
 }
 
-func toCName(s string) string {
-	return s
+// TODO: maybe don't change C name so that we can search the code
+// using the same name across C and Go
+func toCName(name string) string {
+	if name == "URL" {
+		return "url"
+	}
+	return strings.ToLower(name[0:1]) + name[1:]
 }
 
 func mkField(name string, typ *Type, def interface{}, comment string) *Field {
@@ -214,7 +219,7 @@ func mkField(name string, typ *Type, def interface{}, comment string) *Field {
 		Version:    "2.3",
 	}
 	if name != "" {
-		res.CName = strings.ToLower(name[0:1]) + name[1:]
+		res.CName = toCName(name)
 	}
 	return res
 }

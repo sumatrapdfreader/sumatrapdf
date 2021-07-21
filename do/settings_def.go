@@ -116,6 +116,12 @@ var (
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 	}
 
+	selectionHandler = []*Field{
+		mkField("URL", Utf8String, nil, "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)"),
+		mkField("Name", Utf8String, nil, "name shown in context menu"),
+		mkField("CmdID", Int, 0, "").setInternal(),
+	}
+
 	annotations = []*Field{
 		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x0),
 			"color used for highlight annotations"),
@@ -260,6 +266,7 @@ var (
 			"customization options for Comic Book and images UI").setExpert(),
 		mkStruct("ChmUI", chmUI,
 			"customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
+		mkArray("SelectionHandlers", selectionHandler, "list of handlers for selected text, shown in context menu when text selection is active"),
 		mkArray("ExternalViewers", externalViewer,
 			"list of additional external viewers for various file types "+
 				"(can have multiple entries for the same format)").setExpert(),

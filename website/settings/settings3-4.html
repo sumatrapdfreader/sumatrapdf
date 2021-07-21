@@ -165,7 +165,19 @@ ChmUI [
     <span class="cm" id="ChmUI_UseFixedPageUI">if true, the UI used for PDF documents will be used for CHM documents as well</span>
     UseFixedPageUI = false
 ]
+</div>
+<span class="cm" id="SelectionHandlers">list of handlers for selected text, shown in context menu when text selection is active</span>
+SelectionHandlers [
+  [
+    <span class="cm" id="SelectionHandlers_URL">url to invoke for the selection. ${selection} will be replaced with current selection and
+    ${userlang} with language code for current UI (e.g. &#39;de&#39; for German)</span>
+    URL =
 
+    <span class="cm" id="SelectionHandlers_Name">name shown in context menu</span>
+    Name =
+  ]
+]
+<div>
 <span class="cm" id="ExternalViewers">list of additional external viewers for various file types (can have multiple entries for the same
 format)</span>
 ExternalViewers [

@@ -1354,6 +1354,11 @@ Str::Str(std::string_view s) {
     AppendView(s);
 }
 
+Str::Str(const char* s) {
+    Reset();
+    Append(s);
+}
+
 Str& Str::operator=(const Str& that) {
     if (this == &that) {
         return *this;

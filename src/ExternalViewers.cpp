@@ -198,8 +198,8 @@ void FreeExternalViewers() {
 
 static WCHAR* GetAcrobatPath() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    AutoFreeWstr path = ReadRegStr(HKEY_LOCAL_MACHINE,
-                                   LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
+    AutoFreeWstr path =
+        ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
     if (!path) {
         path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)",
                             nullptr));
@@ -217,8 +217,8 @@ static WCHAR* GetFoxitPath() {
         return path.StealData();
     }
     // Registry value for Foxit 5 (and maybe later)
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE,
-                        LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)", L"DisplayIcon"));
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)",
+                        L"DisplayIcon"));
     if (path && file::Exists(path)) {
         return path.StealData();
     }
