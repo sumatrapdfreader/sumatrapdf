@@ -5,6 +5,7 @@ EXPORTS
 
 	version_check_3_4
 
+	pdf_has_unsaved_changes
 	pdf_can_be_saved_incrementally
 	pdf_annot_page
 	pdf_drop_page_tree

@@ -332,8 +332,6 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Repair failed already - not trying again");
 	doc->repair_attempted = 1;
 
-	doc->dirty = 1;
-
 	pdf_forget_xref(ctx, doc);
 
 	fz_seek(ctx, doc->file, 0, 0);

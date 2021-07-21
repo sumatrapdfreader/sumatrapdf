@@ -365,7 +365,6 @@ struct pdf_document
 	pdf_js *js;
 
 	int recalculate;
-	int dirty;
 	int redacted;
 
 	pdf_doc_event_cb *event_cb;

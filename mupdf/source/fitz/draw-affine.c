@@ -3885,7 +3885,6 @@ fz_paint_image_imp(fz_context *ctx,
 	const byte *color,
 	int alpha,
 	int lerp_allowed,
-	int as_tiled,
 	const fz_overprint *eop)
 {
 	byte *dp, *sp, *hp, *gp;
@@ -3899,9 +3898,6 @@ fz_paint_image_imp(fz_context *ctx,
 
 	if (alpha == 0)
 		return;
-
-	/* grid fit the image */
-	ctm = fz_gridfit_matrix(as_tiled, ctm);
 
 	/* turn on interpolation for upscaled and non-rectilinear transforms */
 	dolerp = 0;
@@ -4089,14 +4085,14 @@ fz_paint_image_imp(fz_context *ctx,
 }
 
 void
-fz_paint_image_with_color(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, const fz_irect * FZ_RESTRICT scissor, fz_pixmap * FZ_RESTRICT shape, fz_pixmap * FZ_RESTRICT group_alpha, fz_pixmap * FZ_RESTRICT img, fz_matrix ctm, const byte * FZ_RESTRICT color, int lerp_allowed, int as_tiled, const fz_overprint * FZ_RESTRICT eop)
+fz_paint_image_with_color(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, const fz_irect * FZ_RESTRICT scissor, fz_pixmap * FZ_RESTRICT shape, fz_pixmap * FZ_RESTRICT group_alpha, fz_pixmap * FZ_RESTRICT img, fz_matrix ctm, const byte * FZ_RESTRICT color, int lerp_allowed, const fz_overprint * FZ_RESTRICT eop)
 {
 	assert(img->n == 1);
-	fz_paint_image_imp(ctx, dst, scissor, shape, group_alpha, img, ctm, color, 255, lerp_allowed, as_tiled, eop);
+	fz_paint_image_imp(ctx, dst, scissor, shape, group_alpha, img, ctm, color, 255, lerp_allowed, eop);
 }
 
 void
-fz_paint_image(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, const fz_irect * FZ_RESTRICT scissor, fz_pixmap * FZ_RESTRICT shape, fz_pixmap * FZ_RESTRICT group_alpha, fz_pixmap * FZ_RESTRICT img, fz_matrix ctm, int alpha, int lerp_allowed, int as_tiled, const fz_overprint * FZ_RESTRICT eop)
+fz_paint_image(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, const fz_irect * FZ_RESTRICT scissor, fz_pixmap * FZ_RESTRICT shape, fz_pixmap * FZ_RESTRICT group_alpha, fz_pixmap * FZ_RESTRICT img, fz_matrix ctm, int alpha, int lerp_allowed, const fz_overprint * FZ_RESTRICT eop)
 {
-	fz_paint_image_imp(ctx, dst, scissor, shape, group_alpha, img, ctm, NULL, alpha, lerp_allowed, as_tiled, eop);
+	fz_paint_image_imp(ctx, dst, scissor, shape, group_alpha, img, ctm, NULL, alpha, lerp_allowed, eop);
 }

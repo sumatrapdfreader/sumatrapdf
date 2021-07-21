@@ -487,6 +487,7 @@ pdf_token_from_keyword(char *key)
 		break;
 	case 'n':
 		if (!strcmp(key, "null")) return PDF_TOK_NULL;
+		if (!strcmp(key, "newobj")) return PDF_TOK_NEWOBJ;
 		break;
 	case 'o':
 		if (!strcmp(key, "obj")) return PDF_TOK_OBJ;

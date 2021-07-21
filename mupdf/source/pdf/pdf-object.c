@@ -105,6 +105,7 @@ typedef struct pdf_journal_fragment
 	struct pdf_journal_fragment *prev;
 
 	int obj_num;
+	int newobj;
 	pdf_obj *inactive;
 	fz_buffer *stream;
 } pdf_journal_fragment;
@@ -980,10 +981,14 @@ swap_fragments(fz_context *ctx, pdf_document *doc, pdf_journal_entry *entry)
 		pdf_xref_entry *xre;
 		pdf_obj *old;
 		fz_buffer *obuf;
-		xre = pdf_get_xref_entry(ctx, doc, frag->obj_num);
+		int type;
+		xre = pdf_get_incremental_xref_entry(ctx, doc, frag->obj_num);
 		old = xre->obj;
 		obuf = xre->stm_buf;
 		xre->obj = frag->inactive;
+		type = xre->type;
+		xre->type = frag->newobj ? 0 : 'o';
+		frag->newobj = type == 0;
 		xre->stm_buf = frag->stream;
 		frag->inactive = old;
 		frag->stream = obuf;
@@ -1073,7 +1078,7 @@ pdf_fingerprint_file(fz_context *ctx, pdf_document *doc, unsigned char digest[16
 	fz_md5 state;
 
 	fz_md5_init(&state);
-	fz_md5_update_int64(&state, doc->num_xref_sections);
+	fz_md5_update_int64(&state, doc->num_xref_sections-i);
 	for (; i < doc->num_xref_sections; i++)
 	{
 		pdf_xref_subsec *subsec = doc->xref_sections[i].subsec;
@@ -1095,18 +1100,23 @@ pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
 	int currentpos = 0;
 	unsigned char digest[16];
 	int i;
+	int nis = doc->num_incremental_sections;
 
-	pdf_fingerprint_file(ctx, doc, digest, doc->num_incremental_sections);
+	pdf_fingerprint_file(ctx, doc, digest, nis);
+
+	if (!pdf_has_unsaved_changes(ctx, doc))
+		nis = 0;
 
 	fz_write_printf(ctx, out, "%!MuPDF-Journal-100\n");
 	fz_write_string(ctx, out, "\njournal\n<<\n");
-	fz_write_printf(ctx, out, "/NumSections %d\n", doc->num_incremental_sections);
+	fz_write_printf(ctx, out, "/NumSections %d\n", nis);
 	fz_write_printf(ctx, out, "/FileSize %ld\n", doc->file_size);
 	fz_write_printf(ctx, out, "/Fingerprint <");
 	for (i = 0; i < 16; i++)
 		fz_write_printf(ctx, out, "%02x", digest[i]);
 	fz_write_printf(ctx, out, ">\n");
 
+	if (doc->journal->current != NULL)
 	for (entry = doc->journal->head; entry != NULL; entry = entry->next)
 	{
 		currentpos++;
@@ -1122,7 +1132,12 @@ pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
 		fz_write_printf(ctx, out, "entry\n%(\n", entry->title);
 		for (frag = entry->head; frag != NULL; frag = frag->next)
 		{
-			fz_write_printf(ctx, out, "%d 0 obj\n", frag->obj_num, 0);
+			if (frag->newobj)
+			{
+				fz_write_printf(ctx, out, "%d 0 newobj\n", frag->obj_num);
+				continue;
+			}
+			fz_write_printf(ctx, out, "%d 0 obj\n", frag->obj_num);
 			pdf_print_encrypted_obj(ctx, out, frag->inactive, 1, 0, NULL, frag->obj_num, 0);
 			if (frag->stream)
 			{
@@ -1137,7 +1152,7 @@ pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
 }
 
 static void
-add_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_buffer *copy_stream)
+add_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_buffer *copy_stream, int newobj)
 {
 	pdf_journal_entry *entry = doc->journal->current;
 	pdf_journal_fragment *frag;
@@ -1168,6 +1183,7 @@ add_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_b
 			entry->tail->next = frag;
 		}
 		entry->tail = frag;
+		frag->newobj = newobj;
 		frag->inactive = copy;
 		frag->stream = copy_stream;
 	}
@@ -1252,6 +1268,7 @@ void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
 
 	while (1)
 	{
+		int newobj;
 		fz_skip_space(ctx, stm);
 
 		if (fz_skip_string(ctx, stm, "entry\n") == 0)
@@ -1276,9 +1293,9 @@ void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Badly formed journal");
 
 		/* Read the object/stream for the next fragment. */
-		obj = pdf_parse_journal_obj(ctx, doc, stm, &num, &buffer);
+		obj = pdf_parse_journal_obj(ctx, doc, stm, &num, &buffer, &newobj);
 
-		add_fragment(ctx, doc, num, obj, buffer);
+		add_fragment(ctx, doc, num, obj, buffer, newobj);
 	}
 
 	fz_skip_space(ctx, stm);
@@ -1297,6 +1314,14 @@ void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
 
 	doc->file_size = file_size;
 	doc->num_incremental_sections = nis;
+
+	if (nis > 0)
+	{
+		/* Ditch the trailer object out of the xref. Keep the direct
+		 * trailer reference. */
+		pdf_delete_object(ctx, doc, pdf_obj_parent_num(ctx, doc->xref_sections[0].trailer));
+		pdf_set_obj_parent(ctx, doc->xref_sections[0].trailer, 0);
+	}
 }
 
 static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj *val)
@@ -1308,6 +1333,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 	pdf_obj *copy = NULL;
 	pdf_obj *orig;
 	fz_buffer *copy_stream = NULL;
+	int was_empty;
 
 	/*
 		obj should be a dict or an array. We don't care about
@@ -1373,31 +1399,29 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 		}
 	}
 
-	/*
-		Otherwise we need to ensure that the containing hierarchy of objects
-		has been moved to the incremental xref section.
-	*/
-	pdf_xref_ensure_incremental_object(ctx, doc, parent);
-
-	if (doc->journal == NULL)
-		return;
-
-	entry = doc->journal->current;
-	if (entry == NULL)
-	{
-		/* We are adding to an implicit entry being the first
-		 * one on the list. i.e. we just bin anything, it's not
-		 * undoable. */
-		return;
-	}
+	/* Find the journal entry to which we will add this object, if there is one. */
+	entry = doc->journal ? doc->journal->current : NULL;
 
 	/* We are about to add a fragment. Everything after this in the
 	 * history must be thrown away. */
+	if (entry)
 	discard_journal_entries(ctx, &entry->next);
 
 	for (frag = entry->head; frag != NULL; frag = frag->next)
 		if (frag->obj_num == parent)
-			return; /* Already stashed this one! */
+		{
+			entry = NULL;
+			break; /* Already stashed this one! */
+		}
+
+	/*
+		We need to ensure that the containing hierarchy of objects
+		has been moved to the incremental xref section.
+	*/
+	was_empty = pdf_xref_ensure_incremental_object(ctx, doc, parent);
+
+	if (entry == NULL)
+		return;
 
 	orig = pdf_load_object(ctx, doc, parent);
 
@@ -1406,11 +1430,19 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 
 	fz_try(ctx)
 	{
+		if (was_empty)
+		{
+			copy = NULL;
+			copy_stream = NULL;
+		}
+		else
+	{
 		copy = pdf_deep_copy_obj(ctx, orig);
 		pdf_set_obj_parent(ctx, copy, parent);
 		if (pdf_obj_num_is_stream(ctx, doc, parent))
 			copy_stream = pdf_load_raw_stream_number(ctx, doc, parent);
-		add_fragment(ctx, doc, parent, copy, copy_stream);
+		}
+		add_fragment(ctx, doc, parent, copy, copy_stream, was_empty);
 	}
 	fz_always(ctx)
 	{

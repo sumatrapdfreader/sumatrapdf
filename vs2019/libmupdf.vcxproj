@@ -240,7 +240,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg32\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -274,7 +275,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
@@ -309,7 +311,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64_asan\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -342,7 +345,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -375,7 +379,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
@@ -409,7 +414,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_asan\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
@@ -442,7 +448,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32_prefast\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
@@ -475,7 +482,8 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
@@ -509,11 +517,15 @@
       <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast_asan\libmupdf.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalOptions>/DEF:..\src\libmupdf.def -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
+      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
+      <AdditionalOptions>-IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\no_op_for_premake.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\libmupdf.def" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\libmupdf.rc" />

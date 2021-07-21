@@ -281,8 +281,6 @@ void
 pdf_dirty_annot(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_annot_request_resynthesis(ctx, annot);
-	if (annot->page && annot->page->doc)
-		annot->page->doc->dirty = 1;
 }
 
 const char *
@@ -464,8 +462,6 @@ pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 			*page->annot_tailp = annot;
 			page->annot_tailp = &annot->next;
 		}
-
-		doc->dirty = 1;
 	}
 	fz_always(ctx)
 	{
@@ -549,8 +545,6 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 			linkp = &(*linkp)->next;
 
 		*linkp = link;
-
-		doc->dirty = 1;
 	}
 	fz_always(ctx)
 	{
@@ -856,8 +850,6 @@ pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 
 		/* And free it. */
 		pdf_drop_annot(ctx, annot);
-
-		doc->dirty = 1;
 	}
 	fz_always(ctx)
 		pdf_end_operation(ctx, page->doc);
@@ -2730,14 +2722,14 @@ pdf_set_annot_appearance(fz_context *ctx, pdf_annot *annot, const char *appearan
 			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
 
 		if (!state)
-			pdf_dict_put(ctx, ap, pdf_new_name(ctx, appearance), form);
+			pdf_dict_puts(ctx, ap, appearance, form);
 		else
 		{
 			if (strcmp(appearance, "N") && strcmp(appearance, "R") && strcmp(appearance, "D"))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Unknown annotation appearance");
 
 			app = pdf_dict_put_dict(ctx, ap, pdf_new_name(ctx, appearance), 2);
-			pdf_dict_put(ctx, app, pdf_new_name(ctx, state), form);
+			pdf_dict_puts(ctx, app, state, form);
 		}
 	}
 	fz_always(ctx)

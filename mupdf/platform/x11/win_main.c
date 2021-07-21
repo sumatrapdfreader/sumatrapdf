@@ -960,6 +960,7 @@ static void handlekey(int c)
 {
 	int modifier = (GetAsyncKeyState(VK_SHIFT) < 0);
 	modifier |= ((GetAsyncKeyState(VK_CONTROL) < 0)<<2);
+	modifier |= ((GetAsyncKeyState(VK_MENU) < 0)<<3);
 
 	if (timer_pending)
 		killtimer(&gapp);
@@ -1186,6 +1187,18 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case VK_DOWN:
 		case VK_NEXT:
 		case VK_ESCAPE:
+			handlekey(wParam + 256);
+			handlemouse(oldx, oldy, 0, 0);	/* update cursor */
+			return 0;
+		}
+		return 1;
+
+	case WM_SYSKEYDOWN:
+		/* alt keys */
+		switch (wParam)
+		{
+		case VK_LEFT:
+		case VK_RIGHT:
 			handlekey(wParam + 256);
 			handlemouse(oldx, oldy, 0, 0);	/* update cursor */
 			return 0;

@@ -717,8 +717,8 @@ pdf_parse_stm_obj(fz_context *ctx, pdf_document *doc, fz_stream *file, pdf_lexbu
 }
 
 pdf_obj *
-pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *file,
-	int *onum, int *ogen, int64_t *ostmofs, int *try_repair)
+pdf_parse_ind_obj_or_newobj(fz_context *ctx, pdf_document *doc, fz_stream *file,
+	int *onum, int *ogen, int64_t *ostmofs, int *try_repair, int *newobj)
 {
 	pdf_obj *obj = NULL;
 	int num = 0, gen = 0;
@@ -757,6 +757,14 @@ pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *file,
 	}
 
 	tok = pdf_lex(ctx, file, buf);
+	if (tok == PDF_TOK_NEWOBJ && newobj)
+	{
+		*newobj = 1;
+		if (onum) *onum = num;
+		if (ogen) *ogen = gen;
+		if (ostmofs) *ostmofs = 0;
+		return NULL;
+	}
 	if (tok != PDF_TOK_OBJ)
 	{
 		if (try_repair)
@@ -858,15 +866,23 @@ pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *file,
 }
 
 pdf_obj *
+pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *file,
+	int *onum, int *ogen, int64_t *ostmofs, int *try_repair)
+{
+	return pdf_parse_ind_obj_or_newobj(ctx, doc, file, onum, ogen, ostmofs, try_repair, NULL);
+}
+
+pdf_obj *
 pdf_parse_journal_obj(fz_context *ctx, pdf_document *doc, fz_stream *stm,
-	int *onum, fz_buffer **ostm)
+	int *onum, fz_buffer **ostm, int *newobj)
 {
 	pdf_obj *obj = NULL;
 	pdf_token tok;
 	pdf_lexbuf *buf = &doc->lexbuf.base;
 	int64_t stmofs;
 
-	obj = pdf_parse_ind_obj(ctx, doc, stm, onum, NULL, &stmofs, NULL);
+	*newobj = 0;
+	obj = pdf_parse_ind_obj_or_newobj(ctx, doc, stm, onum, NULL, &stmofs, NULL, newobj);
 	/* This will have consumed either the stream or the endobj keywords. */
 
 	*ostm = NULL;

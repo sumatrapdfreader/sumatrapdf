@@ -537,11 +537,11 @@ workspace "SumatraPDF"
     defines { "FZ_ENABLE_SVG" }
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
-    files { "src/libmupdf.rc", "src/no_op_for_premake.cpp" }
+    files { "src/libmupdf.rc", "src/libmupdf.def", "src/no_op_for_premake.cpp" }
     implibname "libmupdf"
     -- TODO: is thre a better way to do it?
-    -- TODO: only for windows
-    linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
+    -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
+    linkoptions { "-IGNORE:4702" }
     links { "mupdf", "libdjvu", "libwebp", "unarrlib" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",

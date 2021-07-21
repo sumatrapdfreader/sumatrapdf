@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-21 Wed
+
+- update mupdf
+
 2021-07-20 Tue
 
 - add build step to verify version_check__ matches sumatra version

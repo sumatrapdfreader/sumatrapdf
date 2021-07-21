@@ -783,7 +783,8 @@ static PageDestination* newPageDestination(fz_link* link, fz_outline* outline) {
         dest->name = strconv::Utf8ToWstr(uri);
         dest->zoom = zoom;
     }
-    if ((dest->pageNo <= 0) && (dest->kind != kindDestinationNone) && (dest->kind != kindDestinationLaunchFile)) {
+    if ((dest->pageNo <= 0) && (dest->kind != kindDestinationNone) && (dest->kind != kindDestinationLaunchFile) &&
+        (dest->kind != kindDestinationLaunchURL) && (dest->kind != kindDestinationLaunchEmbedded)) {
         logf("dest->kind: %s, dest->pageNo: %d\n", dest->kind, dest->pageNo);
         ReportIf(dest->pageNo <= 0);
     }

@@ -890,11 +890,6 @@ bool EnginePdf::FinishLoading() {
     // TODO: support javascript
     CrashIf(pdf_js_supported(ctx, doc));
 
-    // TODO: better implementation
-    // we use this to check if has unsaved annotations to show a 'unsaved annotations'
-    // message on close. reset this the case of damaged documents that
-    // were fixed up by mupdf. Hopefully this doesn't mess something else
-    doc->dirty = 0;
     return true;
 }
 
@@ -1952,7 +1947,8 @@ int EnginePdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
 bool EnginePdfHasUnsavedAnnotations(EngineBase* engine) {
     EnginePdf* epdf = AsEnginePdf(engine);
     pdf_document* pdfdoc = pdf_document_from_fz_document(epdf->ctx, epdf->_doc);
-    return pdfdoc->dirty;
+    int res = pdf_has_unsaved_changes(epdf->ctx, pdfdoc);
+    return res != 0;
 }
 
 static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {

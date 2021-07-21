@@ -12,6 +12,7 @@ typedef enum
 	PDF_TOK_OBJ, PDF_TOK_ENDOBJ,
 	PDF_TOK_STREAM, PDF_TOK_ENDSTREAM,
 	PDF_TOK_XREF, PDF_TOK_TRAILER, PDF_TOK_STARTXREF,
+	PDF_TOK_NEWOBJ,
 	PDF_NUM_TOKENS
 } pdf_token;
 
@@ -26,7 +27,7 @@ pdf_obj *pdf_parse_array(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_l
 pdf_obj *pdf_parse_dict(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
 pdf_obj *pdf_parse_stm_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
 pdf_obj *pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, int *num, int *gen, int64_t *stm_ofs, int *try_repair);
-pdf_obj *pdf_parse_journal_obj(fz_context *ctx, pdf_document *doc, fz_stream *stm, int *onum, fz_buffer **ostm);
+pdf_obj *pdf_parse_journal_obj(fz_context *ctx, pdf_document *doc, fz_stream *stm, int *onum, fz_buffer **ostm, int *newobj);
 
 /*
 	print a lexed token to a buffer, growing if necessary

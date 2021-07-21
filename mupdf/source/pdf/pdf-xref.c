@@ -463,7 +463,7 @@ static void ensure_incremental_xref(fz_context *ctx, pdf_document *doc)
 }
 
 /* Used when altering a document */
-static pdf_xref_entry *pdf_get_incremental_xref_entry(fz_context *ctx, pdf_document *doc, int i)
+pdf_xref_entry *pdf_get_incremental_xref_entry(fz_context *ctx, pdf_document *doc, int i)
 {
 	pdf_xref *xref;
 	pdf_xref_subsec *sub;
@@ -577,7 +577,7 @@ void pdf_ensure_solid_xref(fz_context *ctx, pdf_document *doc, int num)
 	ensure_solid_xref(ctx, doc, num, doc->num_xref_sections-1);
 }
 
-void pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int num)
+int pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int num)
 {
 	pdf_xref_entry *new_entry, *old_entry;
 	pdf_xref_subsec *sub = NULL;
@@ -605,26 +605,20 @@ void pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int 
 
 	/* If we don't find it, or it's already in the incremental section, return */
 	if (i == 0 || sub == NULL)
-		return;
+		return 0;
 
 	/* Move the object to the incremental section */
 	doc->xref_index[num] = 0;
 	old_entry = &sub->table[num - sub->start];
 	new_entry = pdf_get_incremental_xref_entry(ctx, doc, num);
 	*new_entry = *old_entry;
-	if (i < doc->num_incremental_sections)
-	{
-		/* old entry is incremental and may have changes.
-		 * Better keep a copy. We must override the old entry with
+	/* Better keep a copy. We must override the old entry with
 		 * the copy because the caller may be holding a reference to
 		 * the original and expect it to end up in the new entry */
 		old_entry->obj = pdf_deep_copy_obj(ctx, old_entry->obj);
-	}
-	else
-	{
-		old_entry->obj = NULL;
-	}
 	old_entry->stm_buf = NULL;
+
+	return 1;
 }
 
 void pdf_xref_ensure_local_object(fz_context *ctx, pdf_document *doc, int num)
@@ -1257,6 +1251,7 @@ pdf_read_new_xref(fz_context *ctx, pdf_document *doc)
 		pdf_drop_obj(ctx, entry->obj);
 		entry->obj = pdf_keep_obj(ctx, trailer);
 		entry->type = 'n';
+		pdf_set_obj_parent(ctx, trailer, num);
 	}
 	fz_always(ctx)
 	{
@@ -2450,6 +2445,8 @@ void
 pdf_delete_object(fz_context *ctx, pdf_document *doc, int num)
 {
 	pdf_xref_entry *x;
+	pdf_xref *xref;
+	int j;
 
 	if (doc->local_xref && doc->local_xref_nesting > 0)
 	{
@@ -2475,6 +2472,47 @@ pdf_delete_object(fz_context *ctx, pdf_document *doc, int num)
 	x->stm_ofs = 0;
 	x->stm_buf = NULL;
 	x->obj = NULL;
+
+	/* Currently we've left a 'free' object in the incremental
+	 * section. This is enough to cause us to think that the
+	 * document has changes. Check back in the non-incremental
+	 * sections to see if the last instance of the object there
+	 * was free (or if this object never appeared). If so, we
+	 * can mark this object as non-existent in the incremental
+	 * xref. This is important so we can 'undo' back to emptiness
+	 * after we save/when we reload a snapshot. */
+	for (j = 1; j < doc->num_xref_sections; j++)
+	{
+		xref = &doc->xref_sections[j];
+
+		if (num < xref->num_objects)
+		{
+			pdf_xref_subsec *sub;
+			for (sub = xref->subsec; sub != NULL; sub = sub->next)
+			{
+				pdf_xref_entry *entry;
+
+				if (num < sub->start || num >= sub->start + sub->len)
+					continue;
+
+				entry = &sub->table[num - sub->start];
+				if (entry->type)
+				{
+					if (entry->type == 'f')
+					{
+						/* It was free already! */
+						x->type = 0;
+						x->gen = 0;
+					}
+					/* It was a real object. */
+					return;
+				}
+			}
+		}
+	}
+	/* It never appeared before. */
+	x->type = 0;
+	x->gen = 0;
 }
 
 static void

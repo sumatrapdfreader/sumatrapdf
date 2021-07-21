@@ -244,9 +244,6 @@ static void reset_form_field(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 			break;
 		}
 	}
-
-	if (pdf_field_dirties_document(ctx, doc, field))
-		doc->dirty = 1;
 }
 
 void pdf_field_reset(fz_context *ctx, pdf_document *doc, pdf_obj *field)
@@ -497,8 +494,6 @@ static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 
 		pdf_dict_put(ctx, grp, PDF_NAME(V), val);
 		set_check_grp(ctx, doc, grp, val);
-		if (pdf_field_dirties_document(ctx, doc, field))
-			doc->dirty = 1;
 		doc->recalculate = 1;
 	}
 	fz_always(ctx)
@@ -511,7 +506,15 @@ static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 
 int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc)
 {
-	return doc->dirty;
+	int i;
+
+	if (doc->num_incremental_sections == 0)
+		return 0;
+
+	for (i = 0; i < doc->xref_sections->num_objects; i++)
+		if (doc->xref_sections->subsec->table[i].type != 0)
+			break;
+	return i != doc->xref_sections->num_objects;
 }
 
 int pdf_was_repaired(fz_context *ctx, pdf_document *doc)
@@ -601,8 +604,6 @@ static int set_validated_field_value(fz_context *ctx, pdf_document *doc, pdf_obj
 			return 0;
 	}
 
-	if (pdf_field_dirties_document(ctx, doc, field))
-		doc->dirty = 1;
 	update_field_value(ctx, doc, field, text);
 
 	return 1;
@@ -636,8 +637,6 @@ static int set_checkbox_value(fz_context *ctx, pdf_document *doc, pdf_obj *field
 {
 	update_checkbox_selector(ctx, doc, field, val);
 	update_field_value(ctx, doc, field, val);
-	if (pdf_field_dirties_document(ctx, doc, field))
-		doc->dirty = 1;
 	return 1;
 }
 
@@ -1212,8 +1211,6 @@ void pdf_choice_widget_set_value(fz_context *ctx, pdf_widget *tw, int n, const c
 		pdf_dict_del(ctx, annot->obj, PDF_NAME(I));
 
 		pdf_field_mark_dirty(ctx, annot->obj);
-		if (pdf_field_dirties_document(ctx, annot->page->doc, annot->obj))
-			annot->page->doc->dirty = 1;
 	}
 	fz_always(ctx)
 		end_annot_op(ctx, annot);

@@ -10,32 +10,15 @@ extern "C" {
 
 #include "tessocr.h"
 
-/* Non-overridden leptonica alloc functions. These should never
- * actually be used. */
-void *leptonica_malloc(size_t blocksize)
-{
-	void *ret = malloc(blocksize);
-#ifdef DEBUG_ALLOCS
-	printf("%d LEPTONICA_MALLOC %d -> %p\n", event++, (int)blocksize, ret);
-	fflush(stdout);
-#endif
-	return ret;
-}
+/* Now the actual allocations to be used for leptonica. Unfortunately
+ * we have to use a nasty global here. */
+static fz_context *leptonica_mem = NULL;
 
-void *leptonica_calloc(size_t numelm, size_t elemsize)
+void *leptonica_malloc(size_t size)
 {
-	void *ret = calloc(numelm, elemsize);
+	void *ret = Memento_label(fz_malloc_no_throw(leptonica_mem, size), "leptonica_malloc");
 #ifdef DEBUG_ALLOCS
-	printf("%d LEPTONICA_CALLOC %d,%d -> %p\n", event++, (int)numelm, (int)elem> fflush(stdout);
-#endif
-	return ret;
-}
-
-void *leptonica_realloc(void *ptr, size_t blocksize)
-{
-	void *ret = realloc(ptr, blocksize);
-#ifdef DEBUG_ALLOCS
-	printf("%d LEPTONICA_REALLOC %p,%d -> %p\n", event++, ptr, (int)blocksize, ret);
+	printf("%d LEPTONICA_MALLOC(%p) %d -> %p\n", event++, leptonica_mem, (int)size, ret);
 	fflush(stdout);
 #endif
 	return ret;
@@ -44,33 +27,35 @@ void *leptonica_realloc(void *ptr, size_t blocksize)
 void leptonica_free(void *ptr)
 {
 #ifdef DEBUG_ALLOCS
-	printf("%d LEPTONICA_FREE %p\n", event++, ptr);
+	printf("%d LEPTONICA_FREE(%p) %p\n", event++, leptonica_mem, ptr);
 	fflush(stdout);
 #endif
-	free(ptr);
+	fz_free(leptonica_mem, ptr);
 }
 
-/* Now the actual allocations to be used for leptonica. Unfortunately
- * we have to use a nasty global here. */
-static fz_context *leptonica_mem;
-
-static void *my_leptonica_malloc(size_t size)
+void *leptonica_calloc(size_t numelm, size_t elemsize)
 {
-	void *ret = Memento_label(fz_malloc_no_throw(leptonica_mem, size), "leptonica_malloc");
+	void *ret = leptonica_malloc(numelm * elemsize);
+
+	if (ret)
+		memset(ret, 0, numelm * elemsize);
 #ifdef DEBUG_ALLOCS
-	printf("%d MY_LEPTONICA_MALLOC(%p) %d -> %p\n", event++, leptonica_mem, (int)size, ret);
+	printf("%d LEPTONICA_CALLOC %d,%d -> %p\n", event++, (int)numelm, (int)elemsize, ret);
 	fflush(stdout);
 #endif
 	return ret;
 }
 
-static void my_leptonica_free(void *ptr)
+/* Not currently actually used */
+void *leptonica_realloc(void *ptr, size_t blocksize)
 {
+	void *ret = fz_realloc_no_throw(leptonica_mem, ptr, blocksize);
+
 #ifdef DEBUG_ALLOCS
-	printf("%d MY_LEPTONICA_FREE(%p) %p\n", event++, leptonica_mem, ptr);
+	printf("%d LEPTONICA_REALLOC %p,%d -> %p\n", event++, ptr, (int)blocksize, ret);
 	fflush(stdout);
 #endif
-	fz_free(leptonica_mem, ptr);
+	return NULL;
 }
 
 #if TESSERACT_MAJOR_VERSION >= 5
@@ -177,7 +162,7 @@ void *ocr_init(fz_context *ctx, const char *language)
 	tesseract::TessBaseAPI *api;
 
 	set_leptonica_mem(ctx);
-	setPixMemoryManager(my_leptonica_malloc, my_leptonica_free);
+	setPixMemoryManager(leptonica_malloc, leptonica_free);
 	api = new tesseract::TessBaseAPI();
 
 	if (api == NULL)
