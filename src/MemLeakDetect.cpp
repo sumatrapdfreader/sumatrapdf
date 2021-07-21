@@ -5,8 +5,9 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "utils/WinDynCalls.h"
 #include "utils/DbgHelpDyn.h"
 #include "utils/WinUtil.h"
-#include "utils/LogDbg.h"
 #include "utils/MinHook.h"
+
+#include "utils/Log.h"
 
 /*
 TODO:
@@ -272,22 +273,22 @@ BOOL WINAPI HeapFreeHook(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem) {
 static bool InitializeSymbols() {
     AutoFreeWstr symbolPath = GetExeDir();
     if (!dbghelp::Initialize(symbolPath.Get(), false)) {
-        dbglog("InitializeSymbols: dbghelp::Initialize() failed\n");
+        log("InitializeSymbols: dbghelp::Initialize() failed\n");
         return false;
     }
 
     if (dbghelp::HasSymbols()) {
-        dbglog("InitializeSymbols(): skipping because dbghelp::HasSymbols()\n");
+        log("InitializeSymbols(): skipping because dbghelp::HasSymbols()\n");
         return true;
     }
 
     if (!dbghelp::Initialize(symbolPath.Get(), true)) {
-        dbglog("InitializeSymbols: second dbghelp::Initialize() failed\n");
+        log("InitializeSymbols: second dbghelp::Initialize() failed\n");
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        dbglog("InitializeSymbols: HasSymbols() false after downloading symbols\n");
+        log("InitializeSymbols: HasSymbols() false after downloading symbols\n");
         return false;
     }
     return true;
@@ -581,7 +582,7 @@ static void DumpAllocEntry(AllocFreeEntry* e) {
         return;
     }
     nDumped++;
-    dbglogf("\nunfreed entry: 0x%p, size: %d, n: %d\n", e->addr, (int)e->size, nDumped);
+    logf("\nunfreed entry: 0x%p, size: %d, n: %d\n", e->addr, (int)e->size, nDumped);
     str::Str s;
     CallstackInfoShort* cis = e->callstackInfo;
     if (!cis) {
@@ -593,7 +594,7 @@ static void DumpAllocEntry(AllocFreeEntry* e) {
         DWORD64 addr = cis->frame[i];
         s.Reset();
         dbghelp::GetAddressInfo(s, addr, true);
-        dbglogf("  %s", s.Get());
+        logf("  %s", s.Get());
     }
 }
 
@@ -602,7 +603,6 @@ void DumpMemLeaks() {
         return;
     }
     MH_Uninitialize(gHooks, gHooksCount);
-    gEnableDbgLog = true;
 
     int nAllocs = gAllocs;
     int nFrees = gFrees;
@@ -623,7 +623,7 @@ void DumpMemLeaks() {
         }
         b = b->next;
     }
-    dbglogf("allocs: %d, frees: %d\n", nAllocs, nFrees);
-    dbglogf("%d unfreed\n", nUnfreed);
+    logf("allocs: %d, frees: %d\n", nAllocs, nFrees);
+    logf("%d unfreed\n", nUnfreed);
     HeapDestroy(gHeap);
 }

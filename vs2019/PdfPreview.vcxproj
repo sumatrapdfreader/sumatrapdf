@@ -526,7 +526,6 @@
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
     <ClInclude Include="..\src\previewer\PdfPreviewBase.h" />
-    <ClInclude Include="..\src\utils\LogDbg.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
@@ -549,7 +548,6 @@
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
-    <ClCompile Include="..\src\utils\LogDbg.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
   </ItemGroup>
   <ItemGroup>

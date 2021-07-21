@@ -14,6 +14,7 @@
 #include "utils/TgaReader.h"
 #include "utils/WebpReader.h"
 #include "utils/WinUtil.h"
+
 #include "utils/Log.h"
 
 // using namespace Gdiplus;

@@ -15,7 +15,6 @@
 #include "utils/CmdLineParser.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/Log.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/RegistryPaths.h"
@@ -41,6 +40,8 @@
 #include "resource.h"
 #include "Version.h"
 #include "Installer.h"
+
+#include "utils/Log.h"
 
 // define to 1 to enable shadow effect, to 0 to disable
 #define DRAW_TEXT_SHADOW 1

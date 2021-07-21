@@ -12,12 +12,9 @@
 #include "utils/TrivialHtmlParser.h"
 #include "utils/TxtParser.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
-// rendering engines
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
-// ui
 #include "DisplayMode.h"
 #include "SumatraPDF.h"
 #include "resource.h"
@@ -26,6 +23,8 @@
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #include "AppColors.h"
+
+#include "utils/Log.h"
 
 constexpr const char ebookWinDesc[] = R"data(
 Style [

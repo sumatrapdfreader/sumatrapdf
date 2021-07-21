@@ -10,8 +10,6 @@
 #include "utils/FileUtil.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/LogDbg.h"
-#include "utils/Log.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
 #include "utils/CmdLineParser.h"
@@ -46,6 +44,8 @@
 
 #include "ifilter/PdfFilterClsid.h"
 #include "previewer/PdfPreview.h"
+
+#include "utils/Log.h"
 
 // if 1, adds checkbox to register as default PDF viewer
 #define ENABLE_REGISTER_DEFAULT 0

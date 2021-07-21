@@ -4,7 +4,6 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
-#include "utils/Log.h"
 #include "utils/BitManip.h"
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
@@ -46,6 +45,8 @@
 #include "Translations.h"
 #include "Tabs.h"
 #include "Menu.h"
+
+#include "utils/Log.h"
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS

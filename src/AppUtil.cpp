@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+
 #include "utils/Log.h"
 
 // this file should have no further dependencies on src/* so that adding

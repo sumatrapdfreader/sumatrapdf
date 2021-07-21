@@ -12,7 +12,6 @@
 #include "utils/ThreadUtil.h"
 #include "utils/Timer.h"
 #include "utils/TrivialHtmlParser.h"
-#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 
@@ -31,6 +30,8 @@
 
 #include "EbookControls.h"
 #include "Translations.h"
+
+#include "utils/Log.h"
 
 static const char* GetFontName() {
     // TODO: validate the name?

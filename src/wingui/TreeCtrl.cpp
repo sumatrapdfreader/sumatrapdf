@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/Log.h"
 #include "utils/WinUtil.h"
 #include "utils/WinDynCalls.h"
 #include "utils/BitManip.h"
@@ -12,6 +11,8 @@
 #include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
+
+#include "utils/Log.h"
 
 /*
 - https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-reference

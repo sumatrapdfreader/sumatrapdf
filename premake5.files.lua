@@ -538,7 +538,6 @@ function utils_files()
     "HttpUtil.*",
     "JsonParser.*",
     "Log.*",
-    "LogDbg.*",
     "LzmaSimpleArchive.*",
     "MinHook.*",
     "PEB.h",

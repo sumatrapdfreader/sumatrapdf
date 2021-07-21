@@ -4,12 +4,13 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
-#include "utils/LogDbg.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/DropDownCtrl.h"
+
+#include "utils/Log.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/combo-boxes
 

@@ -9,15 +9,13 @@ extern "C" {
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/GdiPlusUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "PdfCreator.h"
 
-// using namespace Gdiplus;
+#include "utils/Log.h"
 
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;

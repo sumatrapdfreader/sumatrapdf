@@ -5,6 +5,7 @@
 #include "utils/FileUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+
 #include "utils/Log.h"
 
 // we pad data read with 3 zeros for convenience. That way returned

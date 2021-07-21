@@ -38,7 +38,6 @@
 #include "Tabs.h"
 
 #include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
@@ -913,7 +912,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
     }
     win->currentTab = win->tabs.at(tabIndex);
     auto path = ToUtf8Temp(win->currentTab->filePath);
-    dbglogf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
+    logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
     int prevIdx = win->tabsCtrl->SetSelectedTabByIndex(tabIndex);
     if (prevIdx != -1) {
         ntd.code = (UINT)TCN_SELCHANGE;

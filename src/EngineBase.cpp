@@ -5,11 +5,11 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
+
+#include "utils/Log.h"
 
 void FreePageText(PageText* pageText) {
     str::Free(pageText->text);

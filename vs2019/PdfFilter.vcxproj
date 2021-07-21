@@ -517,7 +517,6 @@
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
     <ClInclude Include="..\src\ifilter\TeXFilter.h" />
-    <ClInclude Include="..\src\utils\LogDbg.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
@@ -560,7 +559,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\utils\LogDbg.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
   </ItemGroup>
   <ItemGroup>

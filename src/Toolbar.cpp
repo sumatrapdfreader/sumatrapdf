@@ -6,10 +6,8 @@
 #include "utils/WinDynCalls.h"
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
-#include "utils/LogDbg.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EngineCreate.h"
 #include "DisplayMode.h"
@@ -34,6 +32,8 @@
 #include "Translations.h"
 #include "SvgIcons.h"
 #include "SumatraConfig.h"
+
+#include "utils/Log.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 
@@ -691,13 +691,13 @@ static void CreatePageBox(WindowInfo* win) {
 void LogBitmapInfo(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    dbglogf("dx: %d, dy: %d, stride: %d, bitsPerPixel: %d\n", (int)bmpInfo.bmWidth, (int)bmpInfo.bmHeight,
-            (int)bmpInfo.bmWidthBytes, (int)bmpInfo.bmBitsPixel);
+    logf("dx: %d, dy: %d, stride: %d, bitsPerPixel: %d\n", (int)bmpInfo.bmWidth, (int)bmpInfo.bmHeight,
+         (int)bmpInfo.bmWidthBytes, (int)bmpInfo.bmBitsPixel);
     u8* bits = (u8*)bmpInfo.bmBits;
     u8* d;
     for (int y = 0; y < 5; y++) {
         d = bits + (size_t)bmpInfo.bmWidthBytes * y;
-        dbglogf("y: %d, d: 0x%p\n", y, d);
+        logf("y: %d, d: 0x%p\n", y, d);
     }
 }
 
@@ -732,7 +732,7 @@ void CreateToolbar(WindowInfo* win) {
     } else {
         int amres = ImageList_AddMasked(himl, hbmp, mask);
         int nImages = ImageList_GetImageCount(himl);
-        dbglogf("res: %d, nImages: %d\n", amres, nImages);
+        logf("res: %d, nImages: %d\n", amres, nImages);
         LogBitmapInfo(hbmp);
     }
     DeleteObject(hbmp);

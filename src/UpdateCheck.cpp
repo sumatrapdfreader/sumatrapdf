@@ -8,7 +8,6 @@
 #include "utils/HttpUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
-#include "utils/Log.h"
 
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
@@ -26,6 +25,8 @@
 #include "WindowInfo.h"
 #include "SumatraDialogs.h"
 #include "UpdateCheck.h"
+
+#include "utils/Log.h"
 
 // for testing. if true will ignore version checks etc. and act like there's an update
 constexpr bool gForceAutoUpdate = false;

@@ -8,14 +8,14 @@
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
-
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EnginePdf.h"
 #include "EnginePs.h"
+
+#include "utils/Log.h"
 
 Kind kindEnginePostScript = "enginePostScript";
 

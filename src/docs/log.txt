@@ -11,6 +11,7 @@ A daily log of changes and commentary. An experiment of sorts.
   should review code more carefully
 - for pre-release, only do auto-update check every 1 week
 - clang-tidy fixes
+- replace dbglogf() with logf()
 
 2021-07-19 Mon
 

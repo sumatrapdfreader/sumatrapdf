@@ -4,13 +4,13 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ImageCtrl.h"
+
+#include "utils/Log.h"
 
 Kind kindImage = "image";
 
@@ -81,7 +81,7 @@ static void ImageCtrlWndProc(WndEvent* ev) {
 
     // HWND hwnd = ev->hwnd;
     // auto msgName = GetWinMessageName(msg);
-    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, ev->wp);
+    // logf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, ev->wp);
 }
 
 bool ImageCtrl::Create() {

@@ -6,13 +6,13 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/Log.h"
-#include "utils/LogDbg.h"
 #include "utils/VecSegmented.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
+
+#include "utils/Log.h"
 
 // TODO: call RemoveWindowSubclass in WM_NCDESTROY as per
 // https://devblogs.microsoft.com/oldnewthing/20031111-00/?p=41883
@@ -369,7 +369,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
 
 static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // auto msgName = GetWinMessageName(msg);
-    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
+    // logf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
 
     if (WM_NCCREATE == msg) {
         CREATESTRUCT* cs = (CREATESTRUCT*)lp;
@@ -457,7 +457,7 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
     res = DefWindowProcW(hwnd, msg, wp, lp);
     // auto msgName = GetWinMessageName(msg);
-    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, res: 0x%x\n", hwnd, msg, msgName, wp, res);
+    // logf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, res: 0x%x\n", hwnd, msg, msgName, wp, res);
     return res;
 }
 

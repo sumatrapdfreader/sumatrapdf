@@ -10,12 +10,10 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlWindow.h"
 #include "mui/Mui.h"
-#include "utils/Log.h"
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EngineCreate.h"
 #include "EbookBase.h"
@@ -41,6 +39,8 @@
 #include "Flags.h"
 #include "SearchAndDDE.h"
 #include "StressTesting.h"
+
+#include "utils/Log.h"
 
 #define FIRST_STRESS_TIMER_ID 101
 

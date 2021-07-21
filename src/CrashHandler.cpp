@@ -14,7 +14,6 @@
 #include "utils/HttpUtil.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "DisplayMode.h"
 #include "SumatraPDF.h"
@@ -24,6 +23,8 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "AppPrefs.h"
+
+#include "utils/Log.h"
 
 // TODO: when gReducedLogging is set to true, logf() no longer log
 // decide if will risk it and enable logf() calls or convert

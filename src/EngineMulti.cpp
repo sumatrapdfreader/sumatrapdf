@@ -17,16 +17,16 @@ extern "C" {
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
-#include "utils/Log.h"
 
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
-
 #include "SumatraConfig.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EngineCreate.h"
 #include "EngineMulti.h"
+
+#include "utils/Log.h"
 
 struct EngineInfo {
     TocItem* tocRoot = nullptr;

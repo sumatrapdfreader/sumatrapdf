@@ -6,13 +6,13 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/CssParser.h"
 #include "utils/HtmlPullParser.h"
-#include "utils/Log.h"
 #include "mui/Mui.h"
 #include "utils/Timer.h"
 
-// rendering engines
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
+
+#include "utils/Log.h"
 
 /*
 Given size of a page, we format html into a set of pages. We handle only a small

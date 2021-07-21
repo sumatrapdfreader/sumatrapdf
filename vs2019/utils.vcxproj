@@ -465,7 +465,6 @@
     <ClInclude Include="..\src\utils\HttpUtil.h" />
     <ClInclude Include="..\src\utils\JsonParser.h" />
     <ClInclude Include="..\src\utils\Log.h" />
-    <ClInclude Include="..\src\utils\LogDbg.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\MinHook.h" />
     <ClInclude Include="..\src\utils\PEB.h" />
@@ -541,7 +540,6 @@
     <ClCompile Include="..\src\utils\HttpUtil.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
     <ClCompile Include="..\src\utils\Log.cpp" />
-    <ClCompile Include="..\src\utils\LogDbg.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\MinHook.cpp" />
     <ClCompile Include="..\src\utils\RegistryPaths.cpp" />

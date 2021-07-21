@@ -5,12 +5,13 @@
 #include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/TabsCtrl.h"
+
+#include "utils/Log.h"
 
 #define COL_BLACK RGB(0x00, 0x00, 0x00)
 #define COL_WHITE RGB(0xff, 0xff, 0xff)

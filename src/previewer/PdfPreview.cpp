@@ -4,10 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
-
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EnginePdf.h"
@@ -16,6 +14,9 @@
 #include "EngineEbook.h"
 #include "EngineImages.h"
 #include "PdfPreview.h"
+
+#include "utils/Log.h"
+// TODO: move code to PdfPreviewBase.cpp
 #include "PdfPreviewBase.h"
 
 constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);

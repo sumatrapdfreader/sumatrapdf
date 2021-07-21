@@ -14,7 +14,6 @@
 #include "Commands.h"
 
 #include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 static HFONT gDefaultGuiFont = nullptr;
 static HFONT gDefaultGuiFontBold = nullptr;
@@ -2087,7 +2086,7 @@ static const char* GetCursorName(LPWSTR cursorId) {
 static void LogCursor(LPWSTR cursorId) {
     static int n = 0;
     const char* name = GetCursorName(cursorId);
-    dbglogf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
+    logf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
     n++;
 }
 #else

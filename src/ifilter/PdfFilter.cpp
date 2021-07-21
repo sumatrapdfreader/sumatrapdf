@@ -4,17 +4,16 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
-
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EnginePdf.h"
-
 #include "FilterBase.h"
 #include "PdfFilterClsid.h"
 #include "PdfFilter.h"
+
+#include "utils/Log.h"
 
 void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
     // no-op implementation to satisfy SubmitBugReport()

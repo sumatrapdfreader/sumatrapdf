@@ -14,10 +14,10 @@
 #include "utils/TrivialHtmlParser.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"
+
 #include "utils/Log.h"
 
 constexpr size_t kInvalidSize = (size_t)-1;

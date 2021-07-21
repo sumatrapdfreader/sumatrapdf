@@ -4,7 +4,6 @@
 #include "utils/BaseUtil.h"
 #include "utils/CmdLineParser.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
@@ -15,6 +14,8 @@
 #include "WindowInfo.h"
 #include "StressTesting.h"
 #include "SumatraConfig.h"
+
+#include "utils/Log.h"
 
 Flags::~Flags() {
     str::Free(printerName);

@@ -16,8 +16,6 @@ extern "C" {
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
-#include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
@@ -27,6 +25,8 @@ extern "C" {
 #include "EngineFzUtil.h"
 #include "EnginePdfImpl.h"
 #include "EnginePdf.h"
+
+#include "utils/Log.h"
 
 // in mupdf_load_system_font.c
 extern "C" void drop_cached_fonts_for_ctx(fz_context*);
@@ -1107,7 +1107,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
         int flags = pdf_annot_field_flags(ctx, annot);
 
         if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
-            dbglogf("found file attachment annotation\n");
+            logf("found file attachment annotation\n");
 
             pdf_obj* fs = pdf_dict_get(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(FS));
             const char* attname = pdf_embedded_file_name(ctx, fs);
@@ -1116,7 +1116,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
                 continue;
             }
 
-            dbglogf("attachement: %s\n", attname);
+            logf("attachement: %s\n", attname);
 
             PageElement* el = new PageElement();
             el->kind_ = kindPageElementDest;

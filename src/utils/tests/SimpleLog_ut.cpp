@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+
 #include "utils/Log.h"
 
 // must be last due to assert() over-write

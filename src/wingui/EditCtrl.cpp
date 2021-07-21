@@ -5,13 +5,13 @@
 #include "utils/WinUtil.h"
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
-#include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/EditCtrl.h"
+
+#include "utils/Log.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
 
@@ -150,10 +150,10 @@ static void NcCalcSize(HWND hwnd, NCCALCSIZE_PARAMS* params) {
 
 Size EditCtrl::GetIdealSize() {
     Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
-    // dbglogf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
+    // logf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
     auto txt = win::GetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
-    // dbglogf("EditCtrl::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
+    // logf("EditCtrl::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
     int dx = std::max(s1.dx, s2.dx);
     if (maxDx > 0 && dx > maxDx) {
@@ -166,7 +166,7 @@ Size EditCtrl::GetIdealSize() {
         dy = std::max(s1.dy, s2.dy);
     }
     dy = dy * idealSizeLines;
-    // dbglogf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
+    // logf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 
     LRESULT margins = SendMessageW(hwnd, EM_GETMARGINS, 0, 0);
     int lm = (int)LOWORD(margins);

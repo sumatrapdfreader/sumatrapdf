@@ -3,11 +3,12 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
-#include "utils/Log.h"
 
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
+
+#include "utils/Log.h"
 
 bool IsSingle(DisplayMode mode) {
     return DisplayMode::SinglePage == mode || DisplayMode::Continuous == mode;

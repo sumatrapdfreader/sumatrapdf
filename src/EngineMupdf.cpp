@@ -16,8 +16,6 @@ extern "C" {
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
-#include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
@@ -25,6 +23,8 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EngineMupdf.h"
+
+#include "utils/Log.h"
 
 #if 0
 // in mupdf_load_system_font.c

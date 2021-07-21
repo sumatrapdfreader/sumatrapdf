@@ -8,22 +8,20 @@ extern "C" {
 
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
-#include "utils/Log.h"
 #include "utils/FileUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
 #include "wingui/TreeModel.h"
-
 #include "resource.h"
 #include "Commands.h"
 #include "Translations.h"
-
 #include "EngineBase.h"
 #include "EngineCreate.h"
-
 #include "SaveAsPdf.h"
+
+#include "utils/Log.h"
 
 // based on pdfmerge.c in mupdf
 

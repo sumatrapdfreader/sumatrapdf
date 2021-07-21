@@ -3,8 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 #include "Translations.h"
+
+#include "utils/Log.h"
 
 namespace trans {
 

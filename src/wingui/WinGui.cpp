@@ -3,12 +3,12 @@ License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
+
+#include "utils/Log.h"
 
 // TODDO: add rest of messages:
 // https://codeeval.dev/gist/9f8b444a5a181fbb6391d304b2dace52
@@ -350,6 +350,6 @@ void DbgLogMsg(const char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (!prefix) {
         prefix = "";
     }
-    dbglogf("%shwnd: 0x%4p, msg: 0x%03x (%s), wp: 0x%x, lp: 0x%x\n", prefix, hwnd, msg, msgName, (unsigned int)wp,
-            (unsigned int)lp);
+    logf("%shwnd: 0x%4p, msg: 0x%03x (%s), wp: 0x%x, lp: 0x%x\n", prefix, hwnd, msg, msgName, (unsigned int)wp,
+         (unsigned int)lp);
 }

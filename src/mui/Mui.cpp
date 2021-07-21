@@ -4,8 +4,9 @@
 #include "utils/BaseUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/GdiPlusUtil.h"
-#include "utils/Log.h"
 #include "Mui.h"
+
+#include "utils/Log.h"
 
 /*
 MUI is a simple UI library for win32.

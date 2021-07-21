@@ -18,8 +18,6 @@
 #include "utils/WinUtil.h"
 #include "utils/Archive.h"
 #include "utils/LzmaSimpleArchive.h"
-#include "utils/LogDbg.h"
-#include "utils/Log.h"
 
 #include "SumatraConfig.h"
 
@@ -77,6 +75,8 @@
 #include "EngineEbook.h"
 #include "ExternalViewers.h"
 #include "AppColors.h"
+
+#include "utils/Log.h"
 
 // gFileExistenceChecker is initialized at startup and should
 // terminate and delete itself asynchronously while the UI is
@@ -898,9 +898,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);
     gCli = &i;
-
-    // TODO: maybe add cmd-line switch to enable debug logging
-    gEnableDbgLog = gIsDebugBuild || gIsPreReleaseBuild;
 
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {

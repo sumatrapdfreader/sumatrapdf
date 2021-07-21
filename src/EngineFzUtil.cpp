@@ -16,13 +16,13 @@ extern "C" {
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
-#include "utils/Log.h"
 
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
+
+#include "utils/Log.h"
 
 // extensions to Fitz that are usable for both PDF and XPS
 

@@ -16,8 +16,6 @@
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
-#include "utils/LogDbg.h"
-#include "utils/Log.h"
 #include "utils/GdiPlusUtil.h"
 
 #include "wingui/WinGui.h"
@@ -90,6 +88,8 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "EditAnnotations.h"
+
+#include "utils/Log.h"
 
 using std::placeholders::_1;
 
@@ -5068,13 +5068,13 @@ bool CrashHandlerCanUseNet() {
 }
 
 void ShowCrashHandlerMessage() {
-    dbglog("ShowCrashHandlerMessage()\n");
+    log("ShowCrashHandlerMessage()\n");
     // don't show a message box in restricted use, as the user most likely won't be
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
     if (!HasPermission(Perm::DiskAccess)) {
-        dbglog("ShowCrashHandlerMessage: skipping beacuse !HasPermission(Perm::DiskAccess)\n");
+        log("ShowCrashHandlerMessage: skipping beacuse !HasPermission(Perm::DiskAccess)\n");
         return;
     }
 
@@ -5094,7 +5094,7 @@ void ShowCrashHandlerMessage() {
         return;
     }
     if (!gCrashFilePath) {
-        dbglog("ShowCrashHandlerMessage: !gCrashFilePath\n");
+        log("ShowCrashHandlerMessage: !gCrashFilePath\n");
         return;
     }
     LaunchFile(gCrashFilePath, nullptr, L"open");

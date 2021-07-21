@@ -5,12 +5,10 @@
 #include "utils/WinDynCalls.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
-#include "utils/LogDbg.h"
 #include "utils/Timer.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -54,6 +52,8 @@
 #include "Tabs.h"
 #include "Toolbar.h"
 #include "Translations.h"
+
+#include "utils/Log.h"
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
@@ -234,8 +234,8 @@ static bool StopDraggingAnnotation(WindowInfo* win, int x, int y, bool aborted) 
         RectF ar = GetRect(annot);
         r.dx = ar.dx;
         r.dy = ar.dy;
-        // dbglogf("prev rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", ar.x, ar.y, ar.dx, ar.dy);
-        // dbglogf(" new rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", r.x, r.y, r.dx, r.dy);
+        // logf("prev rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", ar.x, ar.y, ar.dx, ar.dy);
+        // logf(" new rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", r.x, r.y, r.dx, r.dy);
         SetRect(annot, r);
         WindowInfoRerender(win);
         ToolbarUpdateStateForWindow(win, true);
