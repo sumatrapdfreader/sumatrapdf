@@ -91,6 +91,7 @@
 #include <windowsx.h>
 #include <winsafer.h>
 #include <wininet.h>
+#include <versionhelpers.h>
 
 // nasty but necessary
 #if defined(min) || defined(max)

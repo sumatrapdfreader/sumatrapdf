@@ -519,7 +519,7 @@ bool TreeCtrl::Create() {
         TreeView_SetImageList(hwnd, himl, TVSIL_NORMAL);
     }
 
-    if (IsVistaOrGreater()) {
+    if (IsWindowsVistaOrGreater()) {
         SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
     }
     if (DynSetWindowTheme) {

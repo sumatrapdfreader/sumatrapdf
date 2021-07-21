@@ -537,7 +537,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, __unused bo
 
     if (dm) {
         str = FormatPageSize(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());
-        if (IsUIRightToLeft() && IsVistaOrGreater()) {
+        if (IsUIRightToLeft() && IsWindowsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
             WCHAR* tmp = str;

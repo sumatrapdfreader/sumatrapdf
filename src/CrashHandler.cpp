@@ -434,58 +434,15 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static const char* OsNameFromVer(const OSVERSIONINFOEX& ver) {
-    if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId) {
-        return "9x";
-    }
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 3) {
-        return "8.1"; // or Server 2012 R2
-    }
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 2) {
-        return "8"; // or Server 2012
-    }
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
-        return "7"; // or Server 2008 R2
-    }
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0) {
-        return "Vista"; // or Server 2008
-    }
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2) {
-        return "Server 2003";
-    }
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1) {
-        return "XP";
-    }
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0) {
-        return "2000";
-    }
-    if (ver.dwMajorVersion == 10) {
-        // ver.dwMinorVersion seems to always be 0
-        return "10";
-    }
-
-    // either a newer or an older NT version, neither of which we support
-    static char osVerStr[32];
-    wsprintfA(osVerStr, "NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
-    return osVerStr;
-}
-
 static void GetOsVersion(str::Str& s) {
     OSVERSIONINFOEX ver = {0};
+    bool ok = GetOsVersion(ver);
     ver.dwOSVersionInfoSize = sizeof(ver);
-#pragma warning(push)
-#pragma warning(disable : 4996)  // 'GetVersionEx': was declared deprecated
-#pragma warning(disable : 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
-    // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
-    // starting with Windows 8.1, GetVersionEx will report a wrong version number
-    // unless the OS's GUID has been explicitly added to the compatibility manifest
-    BOOL ok = GetVersionExW((OSVERSIONINFO*)&ver); // NOLINT
-#pragma warning(pop)
     if (!ok) {
         return;
     }
 
-    const char* os = OsNameFromVer(ver);
+    const char* os = OsNameFromVerTemp(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
     int buildNumber = ver.dwBuildNumber & 0xFFFF;

@@ -436,7 +436,8 @@ void RelayoutCaption(WindowInfo* win) {
         bool isClassicStyle = win->caption->theme == nullptr;
         // Under WIN XP GetSystemMetrics(SM_CXSIZE) returns wrong (previous) value, after theme change
         // or font size change. For this to work, I assume that SM_CXSIZE == SM_CYSIZE.
-        int btnDx = GetSystemMetrics(IsVistaOrGreater() ? SM_CXSIZE : SM_CYSIZE) - xEdge * (isClassicStyle ? 1 : 2);
+        int btnDx =
+            GetSystemMetrics(IsWindowsVistaOrGreater() ? SM_CXSIZE : SM_CYSIZE) - xEdge * (isClassicStyle ? 1 : 2);
         int btnDy = GetSystemMetrics(SM_CYSIZE) - yEdge * 2;
         bool maximized = IsZoomed(win->hwndFrame);
         int yPosBtn = rc.y + (maximized ? 0 : yEdge);

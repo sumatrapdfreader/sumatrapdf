@@ -32,10 +32,10 @@ bool IsOs64();
 bool IsProcess64();
 bool IsRunningInWow64();
 bool IsProcessAndOsArchSame();
-bool IsVistaOrGreater();
-void GetOsVersion(OSVERSIONINFOEX& ver);
-bool IsWin10();
-bool IsWin7();
+
+bool GetOsVersion(OSVERSIONINFOEX& ver);
+const char* OsNameFromVerTemp(const OSVERSIONINFOEX& ver);
+const char* GetWindowsVerTemp();
 
 void LogLastError(DWORD err = 0);
 void DbgOutLastError(DWORD err = 0);

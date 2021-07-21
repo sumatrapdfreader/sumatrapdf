@@ -12,6 +12,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - for pre-release, only do auto-update check every 1 week
 - clang-tidy fixes
 - replace dbglogf() with logf()
+- cleanup os version detection
 
 2021-07-19 Mon
 

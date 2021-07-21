@@ -246,8 +246,8 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     ok &= WriteRegStr(hkey, regPathUninst, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
-    if (!IsVistaOrGreater()) {
-        AutoFreeWstr key = str::Join(appName, L" ", CURR_VERSION_STR);
+    if (!IsWindowsVistaOrGreater()) {
+        auto key = str::JoinTemp(appName, L" ", CURR_VERSION_STR);
         ok &= WriteRegStr(hkey, regPathUninst, L"DisplayName", key);
     }
     DWORD size = GetDirSize(gCli->installDir) / 1024;

@@ -274,7 +274,7 @@ STDAPI DllRegisterServer() {
             WriteOrFail_(key, nullptr, clsid);
         }
         // IExtractImage (for Windows XP)
-        if (!IsVistaOrGreater()) {
+        if (!IsWindowsVistaOrGreater()) {
             // don't register for IExtractImage on systems which accept IThumbnailProvider
             // (because it doesn't offer anything beyond what IThumbnailProvider does)
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext));
