@@ -1405,6 +1405,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 	/* We are about to add a fragment. Everything after this in the
 	 * history must be thrown away. */
 	if (entry)
+	{
 	discard_journal_entries(ctx, &entry->next);
 
 	for (frag = entry->head; frag != NULL; frag = frag->next)
@@ -1413,6 +1414,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 			entry = NULL;
 			break; /* Already stashed this one! */
 		}
+	}
 
 	/*
 		We need to ensure that the containing hierarchy of objects
