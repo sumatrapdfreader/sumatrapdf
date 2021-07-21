@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5ca208bc682283175d5008636b23cfd42b68373d
+1ccce2d729f6ffbe351eaac78b057a60997d221b
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -6696,7 +6696,7 @@ bs:Neuspješno kreiranje instalacijskog direktorija
 by:Немагчыма стварыць каталог для ўсталёўкі
 ca-xv:No es pot crear el directori d'instal·lació
 ca:No es pot crear el directori d'instal·lació
-cn:无法创建安装文件夹
+cn:无法创建安装目录
 co:Impussibule di creà u cartulare d’installazione
 cy:Methwyd creu'r cyfeiriadur gosod
 cz:Nepodařilo se vytvořit adresář pro instalaci
@@ -11544,7 +11544,7 @@ bs:Instaliraj SumatraPDF u &direktorij:
 by:Усталяваць SumatraPDF у &каталог:
 ca-xv:Instal·la el SumatraPDF a la &carpeta:
 ca:Instal·la el SumatraPDF a la &carpeta:
-cn:安装 SumatraPDF 于文件夹(&F):
+cn:SumatraPDF 安装位置(&F):
 co:Installà SumatraPDF in u &cartulare :
 cy:Gosod SumatraPDF yn &ffolder:
 cz:Nainstalovat SumatraPDF do &složky:
