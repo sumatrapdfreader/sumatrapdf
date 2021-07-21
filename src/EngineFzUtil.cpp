@@ -767,21 +767,102 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
     return nullptr;
 }
 
+static WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    if (!uri) {
+        return nullptr;
+    }
+    if (!is_external_link(uri)) {
+        // other values: #1,115,208
+        return nullptr;
+    }
+    WCHAR* path = strconv::Utf8ToWstr(uri);
+    return path;
+}
+
+static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    if (!uri) {
+        return nullptr;
+    }
+    if (is_external_link(uri)) {
+        return nullptr;
+    }
+    // TODO(port): test with more stuff
+    // figure out what PDF_NAME(GoToR) ends up being
+    return strconv::Utf8ToWstr(uri);
+}
+
+static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    // TODO: happened in ug_logodesign.pdf. investigate
+    // CrashIf(!uri);
+    if (!uri) {
+        return 0;
+    }
+    if (is_external_link(uri)) {
+        return 0;
+    }
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y, nullptr);
+    if (pageNo == -1) {
+        return 0;
+    }
+    return pageNo + 1; // TODO(port): or is it just pageNo?
+#if 0
+    if (link && FZ_LINK_GOTO == link->kind)
+        return link->ld.gotor.page + 1;
+    if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
+        return link->ld.gotor.page + 1;
+#endif
+    return 0;
+}
+
+static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
+    RectF result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    char* uri = PdfLinkGetURI(link, outline);
+    // TODO: this happens in pdf/ug_logodesign.pdf, there's only outline without
+    // pageno. need to investigate
+    // CrashIf(!uri);
+    if (!uri) {
+        return result;
+    }
+
+    if (is_external_link(uri)) {
+        return result;
+    }
+    float x = 0;
+    float y = 0;
+    int pageNo = resolve_link(uri, &x, &y, nullptr);
+    if (pageNo == -1) {
+        // SubmitBugReportIf(pageNo == -1);
+        return result;
+    }
+
+    result.x = (double)x;
+    result.y = (double)y;
+    return result;
+}
+
 static PageDestination* newPageDestination(fz_link* link, fz_outline* outline) {
     auto dest = new PageDestination();
     dest->kind = CalcDestKind(link, outline);
     CrashIf(!dest->kind);
-    dest->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     if (dest->kind == kindDestinationScrollTo) {
         char* uri = PdfLinkGetURI(link, outline);
         float x = 0, y = 0, zoom = 0;
         int pageNo = resolve_link(uri, &x, &y, &zoom);
         dest->pageNo = pageNo + 1;
-        dest->rect.x = (double)x;
-        dest->rect.y = (double)y;
+        dest->rect = RectF(x, y, x, y);
         dest->value = strconv::Utf8ToWstr(uri);
         dest->name = strconv::Utf8ToWstr(uri);
         dest->zoom = zoom;
+    } else {
+        // TODO: clean this up
+        dest->rect = CalcDestRect(link, outline);
+        dest->value = CalcValue(link, outline);
+        dest->name = CalcDestName(link, outline);
+        dest->pageNo = CalcDestPageNo(link, outline);
     }
     if ((dest->pageNo <= 0) && (dest->kind != kindDestinationNone) && (dest->kind != kindDestinationLaunchFile) &&
         (dest->kind != kindDestinationLaunchURL) && (dest->kind != kindDestinationLaunchEmbedded)) {

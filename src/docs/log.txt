@@ -3,6 +3,9 @@ A daily log of changes and commentary. An experiment of sorts.
 2021-07-21 Wed
 
 - update mupdf
+- fix handling of links (fixes #2039)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2039
+  didn't notice this in code review
 
 2021-07-20 Tue
 

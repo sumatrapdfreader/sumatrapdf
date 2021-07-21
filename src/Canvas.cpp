@@ -486,7 +486,9 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
 
     win->mouseAction = MouseAction::Idle;
 
-    PointF ptPage = dm->CvtFromScreen(Point(x, y));
+    Point pt(x, y);
+    int pageNo = dm->GetPageNoByPoint(pt);
+    PointF ptPage = dm->CvtFromScreen(pt, pageNo);
 
     // TODO: win->linkHandler->GotoLink might spin the event loop
     IPageElement* link = win->linkOnLastButtonDown;
@@ -513,8 +515,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (kindDestinationLaunchURL == dest->Kind() || kindDestinationLaunchFile == dest->Kind())) {
             DeleteOldSelectionInfo(win, true);
-            tab->selectionOnPage =
-                SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
+            tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(pageNo, link->GetRect()));
             win->showSelection = tab->selectionOnPage != nullptr;
             RepaintAsync(win, 0);
         }
