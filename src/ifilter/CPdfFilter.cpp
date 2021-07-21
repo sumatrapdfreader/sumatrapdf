@@ -120,8 +120,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
                     FreePageText(&pageText);
                     continue;
                 }
-                str.Set(pageText.text);
-                AutoFreeWstr str2 = str::Replace(str.Get(), L"\n", L"\r\n");
+                AutoFreeWstr str2 = str::Replace(pageText.text, L"\n", L"\r\n");
                 chunkValue.SetTextValue(PKEY_Search_Contents, str2.Get(), CHUNK_TEXT);
                 FreePageText(&pageText);
                 return S_OK;
