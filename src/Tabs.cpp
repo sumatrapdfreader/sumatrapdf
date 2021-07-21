@@ -674,7 +674,7 @@ void CreateTabbar(WindowInfo* win) {
 static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
     CrashIf(!tdata || !win || tdata->ctrl != win->ctrl);
     auto winTitle = win::GetTextTemp(win->hwndFrame);
-    if (!!str::Eq(winTitle.Get(), tdata->frameTitle.Get())) {
+    if (!str::Eq(winTitle.Get(), tdata->frameTitle.Get())) {
         logf(L"VerifyTabInfo: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle.Get());
         ReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
     }

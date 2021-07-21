@@ -27,7 +27,7 @@ const filterNoSymbols = true
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
 const filterOlderVersions = true
-const lowestCrashingBuildToShow = 13730
+const lowestCrashingBuildToShow = 13790
 
 const nDaysToKeep = 14
 

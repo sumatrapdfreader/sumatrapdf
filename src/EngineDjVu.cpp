@@ -93,7 +93,6 @@ static PageDestination* newDjVuDestination(const char* link) {
     if (!res->kind) {
         logf("unsupported djvu link: '%s'\n", link);
     }
-    CrashIf(!res->kind);
 
     res->kind = kindDestinationNone;
     return res;
@@ -104,6 +103,7 @@ static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const c
     res->rect = ToRectFl(rect);
     res->pageNo = pageNo;
     res->dest = newDjVuDestination(link);
+
     if (!str::IsEmpty(comment)) {
         res->value = strconv::Utf8ToWstr(comment);
     }
@@ -988,6 +988,10 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
             tmp = urlA;
         }
         auto el = newDjVuLink(pageNo, rect, tmp, commentUtf8);
+        if (el->GetKind() == kindDestinationNone) {
+            logf("invalid link '%s', pages in document: %d\n", tmp ? tmp : "", PageCount());
+            ReportIf(true);
+        }
         els->Append(el);
     }
     ddjvu_free(links);

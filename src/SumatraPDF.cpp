@@ -823,7 +823,8 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
 
 static Controller* CreateControllerForEngine(EngineBase* engine, const WCHAR* filePath, PasswordUI* pwdUI,
                                              WindowInfo* win) {
-    logf(L"CreateControllerForEngine: '%s'\n", filePath);
+    int nPages = engine ? engine->PageCount() : 0;
+    logf(L"CreateControllerForEngine: '%s', %d pages\n", filePath), nPages;
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
@@ -889,7 +890,6 @@ static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo
 }
 
 static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI, WindowInfo* win) {
-    logf(L"CreateControllerForFile: '%s'\n", path);
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
@@ -906,12 +906,14 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
         ctrl = new DisplayModel(engine, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
         VerifyController(ctrl, path);
+        logf(L"CreateControllerForFile: '%s', %d pages\n", path, engine->PageCount());
         return ctrl;
     }
 
     if (!chmInFixedUI) {
         ctrl = CreateForChm(path, pwdUI, win);
         if (ctrl) {
+            logf(L"CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
             return ctrl;
         }
     }
@@ -929,6 +931,7 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
     }
     CrashIf(!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm());
     VerifyController(ctrl, path);
+    logf(L"CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
     return ctrl;
 }
 
@@ -1556,7 +1559,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     WindowInfo* win = args.win;
     {
         auto path = ToUtf8Temp(fullPath);
-        logf("LoadDocument: '%s', tid=%d\n", path.Get(), threadID);
+        logf("LoadDocument: '%s' tid=%d\n", path.Get(), threadID);
     }
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
