@@ -217,6 +217,8 @@ class EngineXps : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
+    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
+    }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;

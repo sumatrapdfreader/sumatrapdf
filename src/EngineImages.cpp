@@ -106,6 +106,8 @@ class EngineImages : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
+    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
+    }
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 

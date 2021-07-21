@@ -201,6 +201,10 @@ IPageElement* clonePageElement(IPageElement* el) {
     return el->Clone();
 }
 
+void PageElementAction::LaunchURL(__unused const char* url) {
+    // TODO: write me
+}
+
 Kind kindTocFzOutline = "tocFzOutline";
 Kind kindTocFzOutlineAttachment = "tocFzOutlineAttachment";
 Kind kindTocFzLink = "tocFzLink";

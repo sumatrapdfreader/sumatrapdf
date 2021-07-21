@@ -321,6 +321,10 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }
 
+    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
+        pdfEngine->PerformPageAction(el, action);
+    }
+
     PageDestination* GetNamedDest(const WCHAR* name) override {
         return pdfEngine->GetNamedDest(name);
     }

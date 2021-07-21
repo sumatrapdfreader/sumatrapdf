@@ -146,6 +146,10 @@ struct IPageElement {
     virtual IPageElement* Clone() = 0;
 };
 
+struct PageElementAction {
+    void LaunchURL(const char* url);
+};
+
 // hoverable (and maybe interactable) element on a single page
 struct PageElement : IPageElement {
     Kind kind_{nullptr};
@@ -424,6 +428,8 @@ class EngineBase {
     [[nodiscard]] const WCHAR* FileName() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
+
+    virtual void PerformPageAction(IPageElement* el, PageElementAction* action) = 0;
 
     // protected:
     void SetFileName(const WCHAR* s);
