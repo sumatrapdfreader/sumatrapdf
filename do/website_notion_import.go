@@ -148,7 +148,7 @@ func fileNameForPage(page *notionapi.Page) string {
 }
 
 func afterPageDownload(page *notionapi.Page) error {
-	logf("Downloaded page %sn\n", page.ID)
+	//logf("Downloaded page %sn\n", page.ID)
 	return nil
 }
 

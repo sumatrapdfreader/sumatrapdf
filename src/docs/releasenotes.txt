@@ -3,11 +3,13 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 3.4 (???)
-* add ability to search / translate selected text with web services
-* add Annotations.TextIconColor and TextIconType advanced settings
+* added ability to search / translate selected text with web services
+  we have few built-in and you can add your own via
+  https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers
+* added Annotations.TextIconColor and TextIconType advanced settings
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
-* 'i' keyboard shortucts inverts document colors
-   Shift + 'i' does what 'i' used to do i.e. show page numberinfo
+* 'i' keyboard shortcuts inverts document colors
+   Shift + 'i' does what 'i' used to do i.e. show page number
 * respect zoom level in PDF destination links
   https://github.com/sumatrapdfreader/sumatrapdf/commit/3aa18aaf89caef7dd28529682d9344ef89422100
 
