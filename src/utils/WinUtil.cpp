@@ -744,6 +744,10 @@ bool LaunchBrowser(const WCHAR* url) {
     return LaunchFile(url, nullptr, L"open");
 }
 
+bool LaunchBrowser(const char* url) {
+    return LaunchFile(ToWstrTemp(url), nullptr, L"open");
+}
+
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si = {0};

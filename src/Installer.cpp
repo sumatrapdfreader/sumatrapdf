@@ -1085,7 +1085,7 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     CrashIf(hr == E_INVALIDARG);
     if (buttonPressedId == kBtnIdDownload) {
-        LaunchBrowser(L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html");
+        LaunchBrowser("https://www.sumatrapdfreader.org/download-free-pdf-viewer.html");
         return true;
     }
     return false;

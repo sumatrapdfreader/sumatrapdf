@@ -10,6 +10,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - lots of WCHAR* => char* changes
 - remove supoort for StringW in serialization code
 - moved '32-bit on 64-bit OS' installer MessageBox to TaskDialog
+- better way to poison freed allocator memory
 
 2021-07-21 Wed
 

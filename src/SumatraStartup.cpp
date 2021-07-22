@@ -970,8 +970,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     if (i.updateSelfTo) {
         RedirectIOToExistingConsole();
         UpdateSelfTo(i.updateSelfTo);
-        HandleRedirectedConsoleOnShutdown();
         if (i.exitWhenDone) {
+            fastExit = !gIsDebugBuild;
             goto Exit;
         }
     }
@@ -990,8 +990,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         } else {
             logf(L"Failed to delete '%s'\n", i.deleteFile);
         }
-        HandleRedirectedConsoleOnShutdown();
         if (i.exitWhenDone) {
+            HandleRedirectedConsoleOnShutdown();
             ::ExitProcess(0);
         }
     }

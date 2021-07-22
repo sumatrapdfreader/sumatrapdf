@@ -105,7 +105,22 @@ static void PoisonData(PoolAllocator::Block* curr) {
             // allocated in this block
             CrashIf(d > curr->freeSpace);
             size_t n = (curr->freeSpace - d);
-            memset(d, 0xdd, n);
+            const char* dead = "dea_";
+            const char* dea0 = "dea\0";
+            u32 u32dead = *((u32*)dead);
+            u32 u32dea0 = *((u32*)dea0);
+            n = n / sizeof(u32);
+            u32* w = (u32*)d;
+            // fill with "dead", and every 4-th is 0-terminated
+            // so that if it's shown in the debugger as a string
+            // it shows as "dea_dea_dea_dea"
+            for (size_t i = 0; i < n; i++) {
+                if ((i & 0x3) == 0x3) {
+                    *w++ = u32dea0;
+                } else {
+                    *w++ = u32dead;
+                }
+            }
         }
         curr = curr->next;
     }
