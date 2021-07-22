@@ -77,7 +77,7 @@ struct Flags {
     bool log{false};
 
     WCHAR* updateSelfTo{nullptr};
-    WCHAR* deleteFilePath{nullptr};
+    WCHAR* deleteFile{nullptr};
 
     // for some commands, will sleep for sleepMs milliseconds
     // before proceeding

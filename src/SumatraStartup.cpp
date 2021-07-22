@@ -970,10 +970,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         RedirectIOToExistingConsole();
         UpdateSelfTo(i.updateSelfTo);
         HandleRedirectedConsoleOnShutdown();
-        goto Exit;
+        if (i.exitWhenDone) {
+            goto Exit;
+        }
     }
 
-    if (i.deleteFilePath) {
+    if (i.deleteFile) {
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us
         // had time to exit so that we can overwrite it
@@ -981,14 +983,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             ::Sleep(i.sleepMs);
         }
         // TODO: retry if file busy?
-        bool ok = file::Delete(i.deleteFilePath);
+        bool ok = file::Delete(i.deleteFile);
         if (ok) {
-            logf(L"Deleted '%s'\n", i.deleteFilePath);
+            logf(L"Deleted '%s'\n", i.deleteFile);
         } else {
-            logf(L"Failed to delete '%s'\n", i.deleteFilePath);
+            logf(L"Failed to delete '%s'\n", i.deleteFile);
         }
         HandleRedirectedConsoleOnShutdown();
-        ::ExitProcess(0);
+        if (i.exitWhenDone) {
+            ::ExitProcess(0);
+        }
     }
 
     log("Starting SumatraPDF\n");
@@ -1308,8 +1312,7 @@ Exit:
         UninstallCrashHandler();
     }
 
-    delete gLogBuf;
-    delete gLogAllocator;
+    DestroyLogging();
     DestroyTempAllocator();
 
     if (gEnableMemLeak) {

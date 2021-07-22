@@ -23,6 +23,9 @@ bool gLogToDebugger = false;
 // meant to avoid doing stuff during crash reporting
 // will log to debugger (if no need for formatting)
 bool gReducedLogging = false;
+// when main thread exists other threads might still
+// try to log. when true, this stops logging
+bool gStopLogging = false;
 
 bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
@@ -111,6 +114,9 @@ void log(std::string_view s) {
     if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
         OutputDebugStringA(s.data());
     }
+    if (gStopLogging) {
+        return;
+    }
     if (gReducedLogging) {
         // if the pipe already connected, do log to it even if disabled
         // we do want easy logging, just want to reduce doing stuff
@@ -161,7 +167,7 @@ void log(const char* s) {
 }
 
 void logf(const char* fmt, ...) {
-    if (gReducedLogging) {
+    if (gReducedLogging || gStopLogging) {
         return;
     }
 
@@ -178,7 +184,7 @@ void StartLogToFile(const char* path) {
 }
 
 void log(const WCHAR* s) {
-    if (!s) {
+    if (gStopLogging || !s) {
         return;
     }
     auto tmp = ToUtf8Temp(s);
@@ -186,7 +192,7 @@ void log(const WCHAR* s) {
 }
 
 void logf(const WCHAR* fmt, ...) {
-    if (gReducedLogging) {
+    if (gReducedLogging || gStopLogging) {
         return;
     }
 
@@ -195,4 +201,14 @@ void logf(const WCHAR* fmt, ...) {
     AutoFreeWstr s = str::FmtV(fmt, args);
     log(s);
     va_end(args);
+}
+
+void DestroyLogging() {
+    gStopLogging = true;
+    gLogMutex.Lock();
+    delete gLogBuf;
+    gLogBuf = nullptr;
+    delete gLogAllocator;
+    gLogAllocator = nullptr;
+    gLogMutex.Unlock();
 }

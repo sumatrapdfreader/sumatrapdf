@@ -7,6 +7,7 @@ extern bool gLogToConsole;
 extern bool gLogToDebugger;
 extern bool gReducedLogging;
 extern bool gLogToPipe;
+extern bool gStopLogging;
 extern const char* gLogAppName;
 void StartLogToFile(const char* path);
 
@@ -43,3 +44,5 @@ void logf(const char* fmt, ...);
 void log(const WCHAR* s);
 void logf(const WCHAR* fmt, ...);
 #endif
+
+void DestroyLogging();

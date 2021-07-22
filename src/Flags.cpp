@@ -30,7 +30,7 @@ Flags::~Flags() {
     str::Free(stressTestRanges);
     str::Free(lang);
     str::Free(updateSelfTo);
-    str::Free(deleteFilePath);
+    str::Free(deleteFile);
 }
 
 #if defined(DEBUG)
@@ -547,7 +547,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::ArgDeleteFile) {
-            i.deleteFilePath = str::Dup(param);
+            i.deleteFile = str::Dup(param);
             continue;
         }
         if (arg == Arg::BgCol || arg == Arg::BgCol2 || arg == Arg::FwdSearchOffset || arg == Arg::FwdSearchWidth ||

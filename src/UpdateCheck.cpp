@@ -263,7 +263,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(LR"( -sleep-ms 2000 -update-self-to "%s")", GetExePathTemp().Get());
+        cmd.AppendFmt(LR"( -sleep-ms 2000 -exit-when-done -update-self-to "%s")", GetExePathTemp().Get());
     }
     logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.AsView()).Get());
     CreateProcessHelper(installerPath, cmd.Get());
