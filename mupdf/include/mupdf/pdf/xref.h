@@ -218,4 +218,8 @@ pdf_xref *pdf_new_local_xref(fz_context *ctx, pdf_document *doc);
 
 void pdf_drop_local_xref(fz_context *ctx, pdf_xref *xref);
 
+/* Debug call to dump the incremental/local xrefs to the
+ * debug channel. */
+void pdf_debug_doc_changes(fz_context *ctx, pdf_document *doc);
+
 #endif

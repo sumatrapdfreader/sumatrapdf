@@ -5,6 +5,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - change inverseSearchCmdLine seeting from WCHAR* => char*
 - change FileSettings.FilePath from WCHAR* => char*
 - when auto-updating portable, re-launch after update
+- update mupdf
 
 2021-07-21 Wed
 

@@ -2780,6 +2780,4 @@ pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, co
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
-
-	pdf_dirty_annot(ctx, annot);
 }

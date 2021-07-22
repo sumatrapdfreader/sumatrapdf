@@ -181,56 +181,23 @@ static int reflow_lookup_metadata(fz_context *ctx, reflow_document *doc, const c
 	return fz_lookup_metadata(ctx, doc->underdoc, key, buf, size);
 }
 
+static void *reflow_layout_page(fz_context *ctx, fz_page *page_, void *state)
+{
+	reflow_page *page = (reflow_page *) page_;
+	reflow_document *doc = (reflow_document *) page->base.doc;
+	fz_layout_document(ctx, page->html_doc, doc->w, 0, doc->em);
+	return NULL;
+}
+
 static void reflow_layout(fz_context *ctx, reflow_document *doc, float w, float h, float em)
 {
-	reflow_page *page;
-	fz_page *kept = NULL;
-	fz_page *dropme = NULL;
-
 	if (doc->w == w && doc->h == h && doc->em == em)
 		return;
 	doc->w = w;
 	doc->h = h;
 	doc->em = em;
 
-	fz_var(kept);
-	fz_var(dropme);
-	fz_var(page);
-	fz_try(ctx)
-	{
-		/* We can only walk the page list while the alloc lock is taken, so gymnastics are required. */
-		/* Loop invariant: at any point where we might throw, kept != NULL iff we are unlocked. */
-		fz_lock(ctx, FZ_LOCK_ALLOC);
-		for (page = (reflow_page *)doc->base.open; page != NULL; page = (reflow_page *)page->base.next)
-		{
-			/* Keep an extra reference to the page so that no other thread can remove it. */
-			kept = fz_keep_page_locked(ctx, (fz_page *)page);
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			/* Drop any extra reference we might still have to a previous page. */
-			fz_drop_page(ctx, dropme);
-			dropme = NULL;
-			/* Layout the page. */
-			fz_layout_document(ctx, page->html_doc, doc->w, 0, doc->em);
-			/* We can't drop kept here, because that would give us a race condition with
-			 * us taking the lock and hoping that 'page' would still be valid. So remember it
-			 * for dropping later. */
-			dropme = kept;
-			kept = NULL;
-			fz_lock(ctx, FZ_LOCK_ALLOC);
-		}
-		/* unlock (and final drop of dropme) happens in the always. */
-	}
-	fz_always(ctx)
-	{
-		if (kept == NULL)
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
-		fz_drop_page(ctx, kept);
-		fz_drop_page(ctx, dropme);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
-	}
+	(void) fz_process_opened_pages(ctx, (fz_document *) doc, reflow_layout_page, NULL);
 }
 
 fz_document *

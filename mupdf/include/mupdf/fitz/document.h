@@ -316,6 +316,12 @@ typedef fz_document *(fz_document_open_accel_with_stream_fn)(fz_context *ctx, fz
 typedef int (fz_document_recognize_fn)(fz_context *ctx, const char *magic);
 
 /**
+	Type for a function to be called when processing an already opened page.
+	See fz_process_opened_pages.
+*/
+typedef void *(fz_process_opened_page_fn)(fz_context *ctx, fz_page *page, void *state);
+
+/**
 	Register a handler for a document type.
 
 	handler: The handler to register.
@@ -760,6 +766,20 @@ int fz_page_uses_overprint(fz_context *ctx, fz_page *page);
 	Create a new link on a page.
 */
 fz_link *fz_create_link(fz_context *ctx, fz_page *page, fz_rect bbox, const char *uri);
+
+/**
+	Iterates over all opened pages of the document, calling the
+	provided callback for each page for processing. If the callback
+	returns non-NULL then the iteration stops and that value is returned
+	to the called of fz_process_opened_pages().
+
+	The state pointer provided to fz_process_opened_pages() is
+	passed on to the callback but is owned by the caller.
+
+	Returns the first non-NULL value returned by the callback,
+	or NULL if the callback returned NULL for all opened pages.
+*/
+void *fz_process_opened_pages(fz_context *ctx, fz_document *doc, fz_process_opened_page_fn *process_openend_page, void *state);
 
 /* Implementation details: subject to change. */
 

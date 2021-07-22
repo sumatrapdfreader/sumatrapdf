@@ -99,3 +99,18 @@ pdf_empty_store(fz_context *ctx, pdf_document *doc)
 {
 	fz_filter_store(ctx, pdf_filter_store, doc, &pdf_obj_store_type);
 }
+
+static int
+pdf_filter_locals(fz_context *ctx, void *doc_, void *key)
+{
+	pdf_document *doc = (pdf_document *)doc_;
+	pdf_obj *obj = (pdf_obj *)key;
+	pdf_document *key_doc = pdf_get_bound_document(ctx, obj);
+
+	return (doc == key_doc && pdf_is_local_object(ctx, doc, obj));
+}
+
+void pdf_purge_locals_from_store(fz_context *ctx, pdf_document *doc)
+{
+	fz_filter_store(ctx, pdf_filter_locals, doc, &pdf_obj_store_type);
+}

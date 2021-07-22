@@ -12,6 +12,8 @@
 
 #include "annotation-icons.h"
 
+/* #define PDF_DEBUG_APPEARANCE_SYNTHESIS */
+
 #define REPLACEMENT 0xB7
 #define CIRCLE_MAGIC 0.551915f
 
@@ -2567,6 +2569,10 @@ pdf_annot_push_local_xref(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_document *doc = annot->page->doc;
 
+#ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
+	if (doc->local_xref_nesting == 0 && doc->local_xref)
+		fz_write_printf(ctx, fz_stddbg(ctx), "push local_xref for annot\n");
+#endif
 	doc->local_xref_nesting++;
 }
 
@@ -2577,6 +2583,10 @@ pdf_annot_ensure_local_xref(fz_context *ctx, pdf_annot *annot)
 
 	if (doc->local_xref != NULL)
 		return;
+
+#ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
+	fz_write_printf(ctx, fz_stddbg(ctx), "creating local_xref\n");
+#endif
 
 	/* We have no local_xref, but we want to be using one. */
 	/* First off, create one. */
@@ -2589,12 +2599,21 @@ pdf_annot_pop_local_xref(fz_context *ctx, pdf_annot *annot)
 	pdf_document *doc = annot->page->doc;
 
 	--doc->local_xref_nesting;
+#ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
+	if (doc->local_xref_nesting == 0 && doc->local_xref)
+		fz_write_printf(ctx, fz_stddbg(ctx), "pop local_xref for annot\n");
+#endif
 }
 
 void pdf_annot_pop_and_discard_local_xref(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_document *doc = annot->page->doc;
 
+#ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
+	if (doc->local_xref)
+		fz_write_printf(ctx, fz_stddbg(ctx), "pop and discard local_xref for annot\n");
+#endif
+	pdf_purge_locals_from_store(ctx, doc);
 	--doc->local_xref_nesting;
 	assert(doc->local_xref_nesting == 0);
 	pdf_purge_local_font_resources(ctx, doc);
@@ -2602,7 +2621,7 @@ void pdf_annot_pop_and_discard_local_xref(fz_context *ctx, pdf_annot *annot)
 	doc->local_xref = NULL;
 }
 
-void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
+static void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_obj *subtype;
 	pdf_obj *ft = NULL;
@@ -2703,18 +2722,15 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 
 			pdf_set_annot_resynthesised(ctx, annot);
 
-			/* Special case for Btn widgets that need multiple appearance streams. */
 			if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Btn))
 			{
+			/* Special case for Btn widgets that need multiple appearance streams. */
 				pdf_update_button_appearance(ctx, annot);
-				pdf_clean_obj(ctx, annot->obj);
-				break; /* all done here */
 			}
-
+			else if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Sig))
+			{
 			/* Special case for unsigned signature widgets,
 			 * which are most easily created via a display list. */
-			if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Sig))
-			{
 				rect = pdf_annot_rect(ctx, annot);
 				dlist = pdf_signature_appearance_unsigned(ctx, rect, pdf_annot_language(ctx, annot));
 				fz_try(ctx)
@@ -2723,10 +2739,9 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 					fz_drop_display_list(ctx, dlist);
 				fz_catch(ctx)
 					fz_rethrow(ctx);
-				pdf_clean_obj(ctx, annot->obj);
-				break; /* all done here */
 			}
-
+			else
+			{
 			buf = fz_new_buffer(ctx, 1024);
 			fz_try(ctx)
 			{
@@ -2746,6 +2761,15 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 			{
 				fz_warn(ctx, "cannot create appearance stream");
 			}
+		}
+
+#ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
+			fz_write_printf(ctx, fz_stddbg(ctx), "Annot obj after synthesis\n");
+			pdf_debug_obj(ctx, annot->obj);
+			fz_write_printf(ctx, fz_stddbg(ctx), "\nAppearance after synthesis\n");
+			pdf_debug_obj(ctx, pdf_dict_getp(ctx, annot->obj, "AP/N"));
+			fz_write_printf(ctx, fz_stddbg(ctx), "\n");
+#endif
 		}
 
 		pdf_clean_obj(ctx, annot->obj);
