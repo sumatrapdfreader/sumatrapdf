@@ -212,9 +212,6 @@
     <ClCompile Include="..\src\utils\tests\ByteOrderDecoder_ut.cpp">
       <Filter>utils\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\tests\CmdLineParser_ut.cpp">
-      <Filter>utils\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\tests\CryptoUtil_ut.cpp">
       <Filter>utils\tests</Filter>
     </ClCompile>

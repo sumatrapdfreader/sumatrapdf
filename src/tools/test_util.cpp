@@ -15,7 +15,6 @@ extern void SvgPath_UnitTests();
 
 extern void BaseUtilTest();
 extern void ByteOrderTests();
-extern void CmdLineParserTest();
 extern void CryptoUtilTest();
 extern void CssParser_UnitTests();
 extern void DictTest();
@@ -43,7 +42,6 @@ int main(__unused int argc, __unused char** argv) {
     InitDynCalls();
     BaseUtilTest();
     ByteOrderTests();
-    CmdLineParserTest();
     CryptoUtilTest();
     CssParser_UnitTests();
     DictTest();
