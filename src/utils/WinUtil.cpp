@@ -1260,18 +1260,18 @@ namespace menu {
 
 void SetChecked(HMENU m, int id, bool isChecked) {
     CrashIf(id < 0);
-    CheckMenuItem(m, (uint)id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(m, (UINT)id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
 }
 
 bool SetEnabled(HMENU m, int id, bool isEnabled) {
     CrashIf(id < 0);
-    BOOL ret = EnableMenuItem(m, (uint)id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
+    BOOL ret = EnableMenuItem(m, (UINT)id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
     return ret != -1;
 }
 
 void Remove(HMENU m, int id) {
     CrashIf(id < 0);
-    RemoveMenu(m, (uint)id, MF_BYCOMMAND);
+    RemoveMenu(m, (UINT)id, MF_BYCOMMAND);
 }
 
 void Empty(HMENU m) {

@@ -4416,7 +4416,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         // try to auto-fix url
         bool isValidURL = str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://");
         if (!isValidURL) {
-            url = str::JoinTemp(url, L"https://");
+            url = str::JoinTemp(L"https://", url);
         }
         LaunchBrowserWithSelection(tab, url);
         return 0;

@@ -1115,7 +1115,7 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
         }
         WCHAR* name = ToWstrTemp(sh->name);
         sh->cmdID = (int)CmdSelectionHandlerFirst + n;
-        UINT flags = MF_BYCOMMAND | MF_STRING;
+        UINT flags = MF_STRING;
         flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
         AppendMenuW(m, flags, (UINT_PTR)sh->cmdID, name);
         n++;
@@ -1240,7 +1240,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
     // insert before built-in selection handlers
     if (menuDef == menuDefSelection) {
-        AppendSelectionHandlersToMenu(menu, ctx->hasSelection);
+        AppendSelectionHandlersToMenu(menu, ctx ? ctx->hasSelection : false);
     }
 
     while (true) {
@@ -1252,7 +1252,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         int cmdId = (int)md.idOrSubmenu;
         if (menuDef == menuDefMainSelection && cmdId == CmdTranslateSelectionWithGoogle) {
-            AppendSelectionHandlersToMenu(menu, ctx->hasSelection);
+            AppendSelectionHandlersToMenu(menu, true);
         }
 
         MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
@@ -1435,6 +1435,9 @@ static void SetMenuStateForSelection(TabInfo* tab, HMENU menu) {
     bool isTextSelected = tab && tab->win && tab->win->showSelection && tab->selectionOnPage;
     for (int i = 0; i < dimof(disableIfNoSelection); i++) {
         int id = disableIfNoSelection[i];
+        win::menu::SetEnabled(menu, id, isTextSelected);
+    }
+    for (int id = CmdSelectionHandlerFirst; id < CmdSelectionHandlerLast; id++) {
         win::menu::SetEnabled(menu, id, isTextSelected);
     }
 }
