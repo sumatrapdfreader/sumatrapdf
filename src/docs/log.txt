@@ -9,6 +9,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - start on PageElementAction
 - support custom selectoin handlers defined in advanced settings (fixes #2046)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2046
+- redo cmd-line handling
 
 2021-07-20 Tue
 

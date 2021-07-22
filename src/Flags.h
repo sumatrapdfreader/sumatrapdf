@@ -73,7 +73,6 @@ struct Flags {
     bool withFilter{false};
     bool withPreview{false};
     bool justExtractFiles{false};
-    bool autoUpdate{false};
     bool registerAsDefault{false};
     bool log{false};
 

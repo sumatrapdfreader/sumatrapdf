@@ -33,19 +33,23 @@ Flags::~Flags() {
     str::Free(deleteFilePath);
 }
 
+#if defined(DEBUG)
 static void EnumeratePrinters() {
     str::WStr output;
 
     PRINTER_INFO_5* info5Arr = nullptr;
-    DWORD bufSize = 0, printersCount;
-    bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr, bufSize, &bufSize,
+    DWORD bufSize{0};
+    DWORD printersCount{0};
+    BOOL ok = EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr, 0, &bufSize,
                             &printersCount);
-    if (fOk || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+    if (ok != 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
         info5Arr = (PRINTER_INFO_5*)malloc(bufSize);
-        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, (LPBYTE)info5Arr, bufSize,
-                           &bufSize, &printersCount);
+        if (info5Arr != nullptr) {
+            ok = EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, (LPBYTE)info5Arr, bufSize,
+                               &bufSize, &printersCount);
+        }
     }
-    if (!fOk || !info5Arr) {
+    if (ok == 0 || !info5Arr) {
         output.AppendFmt(L"Call to EnumPrinters failed with error %#x", GetLastError());
         MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
         free(info5Arr);
@@ -79,6 +83,7 @@ static void EnumeratePrinters() {
     free(info5Arr);
     MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
+#endif
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
@@ -173,99 +178,182 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     }
 }
 
-// order of args matters: first must be from the user, second is from our code
-// fromCmdLine must start with "-" or "/".
-// Ours shouldn't have the prefix
-static bool IsArgEq(WCHAR* fromCmdLine, const WCHAR* compareAgainst) {
-    WCHAR c = *fromCmdLine;
-    if (c == L'-' || c == L'/') {
-        ++fromCmdLine;
-    } else {
-        return false;
-    }
-    return str::EqI(fromCmdLine, compareAgainst);
+static bool CouldBeArg(const WCHAR* s) {
+    WCHAR c = *s;
+    return (c == L'-') || (c == L'/');
 }
 
-// TODO: work in progress
-struct CmdLineArgsIter {
+struct ArgsIter {
     WStrVec& args;
-    int curr{0};
+    int curr{1}; // first argument is exe path, which we skip
     int nArgs{0};
+    const WCHAR* currArg{nullptr};
 
-    explicit CmdLineArgsIter(WStrVec& v);
-    const WCHAR* Next();
-    const WCHAR* GetParam();
-    int GetIntParam();
-    int MaxParams() const;
-    bool HasParam() const;
+    explicit ArgsIter(WStrVec& v);
+
+    const WCHAR* NextArg();
+    const WCHAR* EatParam();
+    void RewindParam();
+    const WCHAR* AdditionalParam(int n) const;
 };
 
-CmdLineArgsIter::CmdLineArgsIter(WStrVec& v) : args(v) {
+ArgsIter::ArgsIter(WStrVec& v) : args(v) {
     nArgs = args.isize();
 }
 
-const WCHAR* CmdLineArgsIter::Next() {
+const WCHAR* ArgsIter::NextArg() {
     if (curr >= nArgs) {
         return nullptr;
     }
-    const WCHAR* res = args[curr];
-    curr++;
-    return res;
+    currArg = args[curr++];
+    return currArg;
 }
 
-const WCHAR* CmdLineArgsIter::GetParam() {
-    return Next();
-}
-
-int CmdLineArgsIter::GetIntParam() {
-    const WCHAR* s = GetParam();
-    CrashIf(!s);
-    if (!s) {
-        return 0;
+const WCHAR* ArgsIter::EatParam() {
+    // doesn't change currArg
+    if (curr >= nArgs) {
+        return nullptr;
     }
-    return _wtoi(s);
+    return args[curr++];
 }
 
-int CmdLineArgsIter::MaxParams() const {
-    return nArgs - curr;
+void ArgsIter::RewindParam() {
+    // undo EatParam()
+    --curr;
+    ReportIf(curr < 1);
 }
 
-bool CmdLineArgsIter::HasParam() const {
-    return curr < nArgs;
+// additional param is one in addition to the default first param
+// they start at 1
+// returns nullptr if no additional param
+const WCHAR* ArgsIter::AdditionalParam(int n) const {
+    ReportIf(n < 1);
+    if (curr + n - 1 >= nArgs) {
+        return nullptr;
+    }
+
+    // we assume that param cannot be args (i.e. start with - or /
+    for (int i = 0; i < n; i++) {
+        const WCHAR* s = args[curr + i];
+        if (CouldBeArg(s)) {
+            return nullptr;
+        }
+    }
+    return args[curr + n - 1];
+}
+
+#define ARGS(V)                                  \
+    V(RegisterForPdf, "register-for-pdf")        \
+    V(RegisterForPdf2, "register")               \
+    V(Silent, "s")                               \
+    V(Silent2, "silent")                         \
+    V(PrintToDefault, "print-to-default")        \
+    V(PrintDialog, "print-dialog")               \
+    V(Help, "h")                                 \
+    V(Help2, "?")                                \
+    V(Help3, "help")                             \
+    V(ExitWhenDone, "exit-when-done")            \
+    V(ExitOnPrint, "exit-on-print")              \
+    V(Restrict, "restrict")                      \
+    V(Presentation, "presentation")              \
+    V(FullScreen, "fullscreen")                  \
+    V(InvertColors, "invertcolors")              \
+    V(InvertColors2, "invert-colors")            \
+    V(Console, "console")                        \
+    V(Install, "install")                        \
+    V(UnInstall, "uninstall")                    \
+    V(WithFilter, "with-filter")                 \
+    V(WithPreview, "with-preview")               \
+    V(Rand, "rand")                              \
+    V(Regress, "regress")                        \
+    V(Extract, "x")                              \
+    V(Tester, "tester")                          \
+    V(TestApp, "testapp")                        \
+    V(NewWindow, "new-window")                   \
+    V(Log, "log")                                \
+    V(CrashOnOpen, "crash-on-open")              \
+    V(ReuseInstance, "reuse-instance")           \
+    V(EscToExit, "esc-to-exit")                  \
+    V(ArgEnumPrinters, "enum-printers")          \
+    V(SleepMs, "sleep-ms")                       \
+    V(PrintTo, "print-to")                       \
+    V(PrintSettings, "print-settings")           \
+    V(InverseSearch, "inverse-search")           \
+    V(ForwardSearch1, "forward-search")          \
+    V(ForwardSearch2, "fwdsearch")               \
+    V(NamedDest, "nameddest")                    \
+    V(NamedDest2, "named-dest")                  \
+    V(Page, "page")                              \
+    V(View, "view")                              \
+    V(Zoom, "zoom")                              \
+    V(Scroll, "scroll")                          \
+    V(AppData, "appdata")                        \
+    V(Plugin, "plugin")                          \
+    V(ArgStressTest, "stress-test")              \
+    V(N, "n")                                    \
+    V(Render, "render")                          \
+    V(ExtractText, "extract-text")               \
+    V(Bench, "bench")                            \
+    V(Dir, "d")                                  \
+    V(Lang, "lang")                              \
+    V(UpdateSelfTo, "update-self-to")            \
+    V(ArgDeleteFile, "delete-file")              \
+    V(BgCol, "bgcolor")                          \
+    V(BgCol2, "bg-color")                        \
+    V(FwdSearchOffset, "fwdsearch-offset")       \
+    V(FwdSearchWidth, "fwdsearch-width")         \
+    V(FwdSearchColor, "fwdsearch-color")         \
+    V(FwdSearchPermanent, "fwdsearch-permanent") \
+    V(MangaMode, "manga-mode")                   \
+    V(SetColorRange, "set-color-range")
+
+#define MAKE_ARG(__arg, __name) __arg,
+#define MAKE_STR(__arg, __name) __name "\0"
+
+enum class Arg { Unknown = -1, ARGS(MAKE_ARG) };
+
+static const char* gArgNames = ARGS(MAKE_STR);
+
+static Arg GetArg(const WCHAR* s) {
+    if (!CouldBeArg(s)) {
+        return Arg::Unknown;
+    }
+    char* arg = ToUtf8Temp(s + 1);
+    int idx = seqstrings::StrToIdxIS(gArgNames, arg);
+    if (idx < 0) {
+        return Arg::Unknown;
+    }
+    return (Arg)idx;
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
-    WStrVec args;
+    WStrVec parsedArgs;
     // TODO: use CommandLineToArgvW() instead of ParseCmdLine
-    ParseCmdLine(cmdLine, args);
-    size_t argCount = args.size();
+    ParseCmdLine(cmdLine, parsedArgs);
 
-#define additional_param() args.at(n + 1)
-#define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
-#define eatStringParam(name) name = str::Dup(args.at(++n))
-#define eatIntParam(name) name = _wtoi(args.at(++n))
-#define isArg(__name) IsArgEq(argName, __name)
+    const WCHAR* param{nullptr};
+    int paramInt{0};
 
-    WCHAR* param = nullptr;
-    WCHAR* argName;
-    for (size_t n = 1; n < argCount; n++) {
-        argName = args.at(n);
-        param = nullptr;
-        if (argCount > n + 1) {
-            param = args.at(n + 1);
+    ArgsIter args(parsedArgs);
+    for (auto argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
+        Arg arg = GetArg(argName);
+        if (arg == Arg::Unknown) {
+            goto CollectFile;
         }
-        if (isArg(L"register-for-pdf") || isArg(L"register")) {
+
+        if (arg == Arg::RegisterForPdf || arg == Arg::RegisterForPdf2) {
             i.registerAsDefault = true;
             i.exitImmediately = true;
             return;
         }
-        if (isArg(L"s") || isArg(L"silent")) {
+
+        if (arg == Arg::Silent || arg == Arg::Silent2) {
             // silences errors happening during -print-to and -print-to-default
             i.silent = true;
             continue;
         }
-        if (isArg(L"print-to-default")) {
+        if (arg == Arg::PrintToDefault) {
             i.printerName = GetDefaultPrinterName();
             if (!i.printerName) {
                 i.printDialog = true;
@@ -273,33 +361,33 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             i.exitWhenDone = true;
             continue;
         }
-        if (isArg(L"print-dialog")) {
+        if (arg == Arg::PrintDialog) {
             i.printDialog = true;
             continue;
         }
-        if (isArg(L"h") || isArg(L"?") || isArg(L"help")) {
+        if (arg == Arg::Help || arg == Arg::Help2 || arg == Arg::Help3) {
             i.showHelp = true;
             continue;
         }
-        if (isArg(L"exit-when-done") || isArg(L"exit-on-print")) {
+        if (arg == Arg::ExitWhenDone || arg == Arg::ExitOnPrint) {
             // only affects -print-dialog (-print-to and -print-to-default
             // always exit on print) and -stress-test (useful for profiling)
             i.exitWhenDone = true;
             continue;
         }
-        if (isArg(L"restrict")) {
+        if (arg == Arg::Restrict) {
             i.restrictedUse = true;
             continue;
         }
-        if (isArg(L"presentation")) {
+        if (arg == Arg::Presentation) {
             i.enterPresentation = true;
             continue;
         }
-        if (isArg(L"fullscreen")) {
+        if (arg == Arg::FullScreen) {
             i.enterFullScreen = true;
             continue;
         }
-        if (isArg(L"invertcolors") || isArg(L"invert-colors")) {
+        if (arg == Arg::InvertColors || arg == Arg::InvertColors2) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
             // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
@@ -307,247 +395,246 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
             i.invertColors = true;
             continue;
         }
-        if (isArg(L"console")) {
+        if (arg == Arg::Console) {
             i.showConsole = true;
             continue;
         }
-        if (isArg(L"install")) {
+        if (arg == Arg::Install) {
             i.install = true;
             continue;
         }
-        if (isArg(L"uninstall")) {
+        if (arg == Arg::UnInstall) {
             i.uninstall = true;
             continue;
         }
-        if (isArg(L"with-filter")) {
+        if (arg == Arg::WithFilter) {
             i.withFilter = true;
             continue;
         }
-        if (isArg(L"with-preview")) {
+        if (arg == Arg::WithPreview) {
             i.withPreview = true;
             continue;
         }
-        if (isArg(L"rand")) {
+        if (arg == Arg::Rand) {
             i.stressRandomizeFiles = true;
             continue;
         }
-        if (isArg(L"regress")) {
+        if (arg == Arg::Regress) {
             i.regress = true;
             continue;
         }
-        if (isArg(L"autoupdate")) {
-            i.autoUpdate = true;
-            continue;
-        }
-        if (isArg(L"x")) {
+        if (arg == Arg::Extract) {
             i.justExtractFiles = true;
             continue;
         }
-        if (isArg(L"tester")) {
+        if (arg == Arg::Tester) {
             i.tester = true;
             continue;
         }
-        if (isArg(L"testapp")) {
+        if (arg == Arg::TestApp) {
             i.testApp = true;
             continue;
         }
-        if (isArg(L"new-window")) {
+        if (arg == Arg::NewWindow) {
             i.inNewWindow = true;
             continue;
         }
-        if (isArg(L"log")) {
+        if (arg == Arg::Log) {
             i.log = true;
             continue;
         }
-        if (isArg(L"crash-on-open")) {
+        if (arg == Arg::CrashOnOpen) {
             // to make testing of crash reporting system in pre-release/release
             // builds possible
             i.crashOnOpen = true;
             continue;
         }
-        if (isArg(L"reuse-instance")) {
+        if (arg == Arg::ReuseInstance) {
             // for backwards compatibility, -reuse-instance reuses whatever
             // instance has registered as DDE server
             i.reuseDdeInstance = true;
             continue;
         }
-        if (isArg(L"esc-to-exit")) {
-            i.globalPrefArgs.Append(str::Dup(args.at(n)));
+        if (arg == Arg::EscToExit) {
+            i.globalPrefArgs.Append(str::Dup(argName));
             continue;
         }
-        if (gIsDebugBuild && isArg(L"enum-printers")) {
+#if defined(DEBUG)
+        if (arg == Arg::ArgEnumPrinters) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             i.exitImmediately = true;
             return;
         }
-
+#endif
+        param = args.EatParam();
         // follwing args require at least one param
         // if no params here, assume this is a file
-        if (!param) {
+        if (nullptr == param) {
+            // argName starts with '-' but there are no params after that and it's not
+            // one of the args without params, so assume this is a file that starts with '-'
             goto CollectFile;
         }
+        paramInt = _wtoi(param);
 
-        if (isArg(L"sleep-ms")) {
-            eatIntParam(i.sleepMs);
+        if (arg == Arg::SleepMs) {
+            i.sleepMs = paramInt;
             continue;
         }
-        if (isArg(L"print-to")) {
-            eatStringParam(i.printerName);
+
+        if (arg == Arg::PrintTo) {
+            i.printerName = str::Dup(param);
             i.exitWhenDone = true;
             continue;
         }
-        if (isArg(L"print-settings")) {
+        if (arg == Arg::PrintSettings) {
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
-            eatStringParam(i.printSettings);
+            i.printSettings = str::Dup(param);
             str::RemoveCharsInPlace(i.printSettings, L" ");
             str::TransCharsInPlace(i.printSettings, L";", L",");
             continue;
         }
-        if (isArg(L"inverse-search")) {
-            i.inverseSearchCmdLine = str::Dup(args.at(++n));
+        if (arg == Arg::InverseSearch) {
+            i.inverseSearchCmdLine = str::Dup(param);
             continue;
         }
-        if ((isArg(L"forward-search") || isArg(L"fwdsearch")) && argCount > n + 2) {
+        if ((arg == Arg::ForwardSearch1 || arg == Arg::ForwardSearch2) && args.AdditionalParam(1)) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
-            eatStringParam(i.forwardSearchOrigin);
-            eatIntParam(i.forwardSearchLine);
+            i.forwardSearchOrigin = str::Dup(param);
+            i.forwardSearchLine = _wtoi(args.EatParam());
             continue;
         }
-        if (isArg(L"nameddest") || isArg(L"named-dest")) {
+        if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
-            eatStringParam(i.destName);
+            i.destName = str::Dup(param);
             continue;
         }
-        if (isArg(L"page")) {
-            eatIntParam(i.pageNumber);
+        if (arg == Arg::Page) {
+            i.pageNumber = paramInt;
             continue;
         }
-        if (isArg(L"view")) {
+        if (arg == Arg::View) {
             ParseViewMode(&i.startView, param);
-            ++n;
             continue;
         }
-        if (isArg(L"zoom")) {
+        if (arg == Arg::Zoom) {
             ParseZoomValue(&i.startZoom, param);
-            ++n;
             continue;
         }
-        if (isArg(L"scroll")) {
+        if (arg == Arg::Scroll) {
             ParseScrollValue(&i.startScroll, param);
-            ++n;
             continue;
         }
-        if (isArg(L"appdata")) {
+        if (arg == Arg::AppData) {
             i.appdataDir = str::Dup(param);
-            ++n;
             continue;
         }
-        if (isArg(L"plugin")) {
+        if (arg == Arg::Plugin) {
             // -plugin [<URL>] <parent HWND>
-            if (argCount > n + 2 && !str::IsDigit(*args.at(n + 1)) && *args.at(n + 2) != '-') {
-                eatStringParam(i.pluginURL);
+            if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
+                i.pluginURL = str::Dup(param);
             }
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.at(++n));
+            i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.EatParam());
             continue;
         }
-        if (isArg(L"stress-test")) {
+
+        if (arg == Arg::ArgStressTest) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
             // count>x]
             // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
-            eatStringParam(i.stressTestPath);
+            i.stressTestPath = str::Dup(param);
             int num;
-            if (has_additional_param() && str::FindChar(additional_param(), '*')) {
-                eatStringParam(i.stressTestFilter);
+            const WCHAR* s = args.AdditionalParam(1);
+            if (s && str::FindChar(s, '*')) {
+                i.stressTestFilter = str::Dup(args.EatParam());
+                s = args.AdditionalParam(1);
             }
-            if (has_additional_param() && IsValidPageRange(additional_param())) {
-                eatStringParam(i.stressTestRanges);
+            if (s && IsValidPageRange(s)) {
+                i.stressTestRanges = str::Dup(args.EatParam());
+                s = args.AdditionalParam(1);
             }
-            if (has_additional_param() && str::Parse(additional_param(), L"%dx%$", &num) && num > 0) {
+            if (s && str::Parse(s, L"%dx%$", &num) && num > 0) {
                 i.stressTestCycles = num;
-                n++;
+                args.EatParam();
             }
-            continue;
-        }
-        if (isArg(L"n")) {
-            eatIntParam(i.stressParallelCount);
-            continue;
-        }
-        if (isArg(L"render")) {
-            eatIntParam(i.pageNumber);
-            i.testRenderPage = true;
-            continue;
-        }
-        if (isArg(L"extract-text")) {
-            eatIntParam(i.pageNumber);
-            i.testExtractPage = true;
-            continue;
-        }
-        if (isArg(L"bench")) {
-            WCHAR* s = str::Dup(param);
-            ++n;
-            i.pathsToBenchmark.Append(s);
-            s = nullptr;
-            if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
-                s = str::Dup(args.at(++n));
-            }
-            i.pathsToBenchmark.Append(s);
-            i.exitImmediately = true;
-            continue;
-        }
-        if (isArg(L"d")) {
-            i.installDir = str::Dup(param);
-            ++n;
-            continue;
-        }
-        if (isArg(L"lang")) {
-            // TODO: remove the following deprecated options within
-            // a release or two
-            i.lang = strconv::WstrToUtf8(param);
-            ++n;
-            continue;
-        }
-        if (isArg(L"-update-self-to")) {
-            i.updateSelfTo = str::Dup(param);
-            ++n;
-            continue;
-        }
-        if (isArg(L"delete-file")) {
-            i.deleteFilePath = str::Dup(param);
-            ++n;
-            continue;
-        }
-        if (isArg(L"bgcolor") || isArg(L"bg-color") || isArg(L"fwdsearch-offset") || isArg(L"fwdsearch-width") ||
-            isArg(L"fwdsearch-color") || isArg(L"fwdsearch-permanent") || isArg(L"manga-mode")) {
-            i.globalPrefArgs.Append(str::Dup(args.at(n)));
-            i.globalPrefArgs.Append(str::Dup(args.at(++n)));
-            continue;
-        }
-        if (isArg(L"set-color-range") && argCount > n + 2) {
-            i.globalPrefArgs.Append(str::Dup(args.at(n)));
-            i.globalPrefArgs.Append(str::Dup(args.at(++n)));
-            i.globalPrefArgs.Append(str::Dup(args.at(++n)));
-            continue;
-        }
-        if (isArg(L"autoupdate")) {
-            // this should have been handled already by AutoUpdateMain
-            n++;
             continue;
         }
 
+        if (arg == Arg::N) {
+            i.stressParallelCount = paramInt;
+            continue;
+        }
+        if (arg == Arg::Render) {
+            i.testRenderPage = true;
+            i.pageNumber = paramInt;
+            continue;
+        }
+        if (arg == Arg::ExtractText) {
+            i.testExtractPage = true;
+            i.pageNumber = paramInt;
+            continue;
+        }
+        if (arg == Arg::Bench) {
+            i.pathsToBenchmark.Append(str::Dup(param));
+            const WCHAR* s = args.AdditionalParam(1);
+            if (s && IsBenchPagesInfo(s)) {
+                s = str::Dup(args.EatParam());
+                i.pathsToBenchmark.Append((WCHAR*)s);
+            } else {
+                // pathsToBenchmark are always in pairs
+                // i.e. path + page spec
+                // if page spec is missing, we do nullptr
+                i.pathsToBenchmark.Append(nullptr);
+            }
+            i.exitImmediately = true;
+            continue;
+        }
+        if (arg == Arg::Dir) {
+            i.installDir = str::Dup(param);
+            continue;
+        }
+        if (arg == Arg::Lang) {
+            // TODO: remove the following deprecated options within
+            // a release or two
+            i.lang = strconv::WstrToUtf8(param);
+            continue;
+        }
+        if (arg == Arg::UpdateSelfTo) {
+            i.updateSelfTo = str::Dup(param);
+            continue;
+        }
+        if (arg == Arg::ArgDeleteFile) {
+            i.deleteFilePath = str::Dup(param);
+            continue;
+        }
+        if (arg == Arg::BgCol || arg == Arg::BgCol2 || arg == Arg::FwdSearchOffset || arg == Arg::FwdSearchWidth ||
+            arg == Arg::FwdSearchColor || arg == Arg::FwdSearchPermanent || arg == Arg::MangaMode) {
+            i.globalPrefArgs.Append(str::Dup(argName));
+            i.globalPrefArgs.Append(str::Dup(param));
+            continue;
+        }
+        if (arg == Arg::SetColorRange && args.AdditionalParam(1)) {
+            i.globalPrefArgs.Append(str::Dup(argName));
+            i.globalPrefArgs.Append(str::Dup(param));
+            i.globalPrefArgs.Append(str::Dup(args.EatParam()));
+            continue;
+        }
+        // again, argName is any of the known args, so assume it's a file starting with '-'
+        args.RewindParam();
+
     CollectFile:
-        // Remember this argument as a filename to open
         WCHAR* filePath = nullptr;
+        // TODO: resolve .lnk when opening file
         if (str::EndsWithI(argName, L".lnk")) {
             filePath = ResolveLnk(argName);
         }
