@@ -11,6 +11,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - remove supoort for StringW in serialization code
 - moved '32-bit on 64-bit OS' installer MessageBox to TaskDialog
 - better way to poison freed allocator memory
+- show notification while checking for update
 
 2021-07-21 Wed
 

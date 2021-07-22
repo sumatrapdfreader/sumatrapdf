@@ -28,6 +28,8 @@
 
 #include "utils/Log.h"
 
+static const char* kindNotifUpdateCheckInProgress = "notifUpdateCheckInProgress";
+
 // for testing. if true will ignore version checks etc. and act like there's an update
 constexpr bool gForceAutoUpdate = false;
 
@@ -207,7 +209,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     buttons[0].nButtonID = kBtnIdDontInstall;
     buttons[0].pszButtonText = _TR("Don't install");
     buttons[1].nButtonID = kBtnIdInstall;
-    buttons[1].pszButtonText = _TR("Download and install");
+    buttons[1].pszButtonText = _TR("Install and relaunch");
 
     DWORD flags =
         TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -313,6 +315,8 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
             if (updateCheckType == UpdateCheck::UserInitiated) {
                 uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
                 MessageBoxW(hwndParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
+                auto win = FindWindowInfoByHwnd(hwndParent);
+                win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
             }
             return 0;
         }
@@ -330,6 +334,8 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     if (!updateInfo->dlURL) {
         // shouldn't happen but it's fine, we just tell the user
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
+        auto win = FindWindowInfoByHwnd(hwndParent);
+        win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         return 0;
     }
@@ -354,6 +360,8 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
 
         // process the rest on ui thread to avoid threading issues
         uitask::Post([updateInfo] {
+            auto win = FindWindowInfoByHwnd(updateInfo->hwndParent);
+            win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
             NotifyUserOfUpdate(updateInfo);
             gUpdateCheckInProgress = false;
             delete updateInfo;
@@ -371,6 +379,9 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
         return;
     }
 
+    if (UpdateCheck::UserInitiated == updateCheckType) {
+        win->ShowNotification(_TR("Checking for update..."), NotificationOptions::Warning, kindNotifUpdateCheckInProgress);
+    }
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
     gUpdateCheckInProgress = true;
     HWND hwnd = win->hwndFrame;
@@ -384,6 +395,7 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
         uitask::Post([=] {
             DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
             if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
+                win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
                 // notify the user about network error during a manual update check
                 AutoFreeWstr msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), err));
                 MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
