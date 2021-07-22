@@ -207,21 +207,6 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
         case SettingType::Float:
             out.AppendFmt("%g", *(float*)fieldPtr);
             return true;
-        case SettingType::StringW:
-            if (!*(const WCHAR**)fieldPtr) {
-                CrashIf(field.value);
-                return false; // skip empty strings
-            }
-            {
-                auto tmp = strconv::WstrToUtf8(*(const WCHAR**)fieldPtr);
-                value.Set(tmp);
-            }
-            if (!NeedsEscaping(value)) {
-                out.Append(value);
-            } else {
-                EscapeStr(out, value);
-            }
-            return true;
         case SettingType::String:
         case SettingType::Color:
             if (!*(const char**)fieldPtr) {
@@ -318,15 +303,6 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             break;
         }
 
-        case SettingType::StringW:
-            free(*wstrPtr);
-            if (value) {
-                AutoFree tmp = UnescapeStr(value);
-                *wstrPtr = strconv::Utf8ToWstr(tmp.AsView());
-            } else {
-                *wstrPtr = str::Dup((const WCHAR*)field.value);
-            }
-            break;
         case SettingType::Color:
         case SettingType::String:
             free(*strPtr);
@@ -565,7 +541,7 @@ static void FreeStructData(const StructInfo* info, u8* base) {
             FreeStructData(GetSubstruct(field), fieldPtr);
         } else if (SettingType::Array == field.type) {
             FreeArray(*(Vec<void*>**)fieldPtr, field);
-        } else if (SettingType::StringW == field.type || SettingType::String == field.type) {
+        } else if (SettingType::String == field.type) {
             void* m = *((void**)fieldPtr);
             free(m);
         } else if (SettingType::FloatArray == field.type || SettingType::IntArray == field.type) {

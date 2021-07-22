@@ -45,9 +45,9 @@ struct SutStruct {
     char* color;
     float floatingPoint;
     int integer;
-    WCHAR* string;
-    WCHAR* nullString;
-    WCHAR* escapedString;
+    char* string;
+    char* nullString;
+    char* escapedString;
     char* utf8String;
     char* nullUtf8String;
     char* escapedUtf8String;
@@ -65,9 +65,9 @@ static const FieldInfo gSutStructFields[] = {
     {offsetof(SutStruct, color), SettingType::Color, (intptr_t) "0xffcc9933"},
     {offsetof(SutStruct, floatingPoint), SettingType::Float, (intptr_t) "-3.14"},
     {offsetof(SutStruct, integer), SettingType::Int, 27},
-    {offsetof(SutStruct, string), SettingType::StringW, (intptr_t)L"String"},
+    {offsetof(SutStruct, string), SettingType::String, (intptr_t) "String"},
     {offsetof(SutStruct, nullString), SettingType::String, 0},
-    {offsetof(SutStruct, escapedString), SettingType::StringW, (intptr_t)L"$\nstring "},
+    {offsetof(SutStruct, escapedString), SettingType::String, (intptr_t) "$\nstring "},
     {offsetof(SutStruct, utf8String), SettingType::String, (intptr_t) "Utf-8 String"},
     {offsetof(SutStruct, nullUtf8String), SettingType::String, 0},
     {offsetof(SutStruct, escapedUtf8String), SettingType::String, (intptr_t) "$\nstring "},
@@ -157,7 +157,7 @@ Key = Value";
         data->internal++;
     }
     utassert(str::Eq(data->color, "#abcdef"));
-    utassert(str::Eq(data->escapedString, L"\t\r\n$ "));
+    utassert(str::Eq(data->escapedString, "\t\r\n$ "));
     utassert(str::Eq(data->escapedUtf8String, "\r\n[]\t"));
     utassert(2 == data->intArray->size() && 3 == data->intArray->at(0));
     utassert(3 == data->strArray->size() && 0 == data->emptyStrArray->size());
@@ -184,7 +184,7 @@ Key = Value";
     }
     utassert(data->boolean && str::Eq("0xffcc9933", data->color));
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
-    utassert(str::Eq(data->string, L"String") && !data->nullString && str::Eq(data->escapedString, L"$\nstring "));
+    utassert(str::Eq(data->string, "String") && !data->nullString && str::Eq(data->escapedString, "$\nstring "));
     utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String &&
              str::Eq(data->escapedUtf8String, "$\nstring "));
     utassert(data->intArray);

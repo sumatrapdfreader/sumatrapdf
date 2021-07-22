@@ -25,8 +25,6 @@ var (
 	Float = &Type{"Float", "float"}
 	// Int defines an int
 	Int = &Type{"Int", "int"}
-	// StringW defines a UNICODE string
-	StringW = &Type{"StringW", "WCHAR*"}
 	// String defines a utf8 string
 	String = &Type{"String", "char*"}
 	// Comment defines a comment
@@ -97,12 +95,6 @@ func (f *Field) cdefault(built map[string]int) string {
 	if f.Type == Int {
 		return fmt.Sprintf("%d", f.Default)
 	}
-	if f.Type == StringW {
-		if f.Default == nil {
-			return "0"
-		}
-		return fmt.Sprintf(`(intptr_t)L"%s"`, f.Default)
-	}
 	if f.Type == String {
 		if f.Default == nil {
 			return "0"
@@ -159,12 +151,6 @@ func (f *Field) initDefault() string {
 	}
 	if f.Type == Int {
 		return fmt.Sprintf("%s = %d", f.Name, f.Default)
-	}
-	if f.Type == StringW {
-		if f.Default != nil {
-			return fmt.Sprintf(`%s = %s`, f.Name, f.Default)
-		}
-		return fmt.Sprintf(`%s %s =`, commentChar, f.Name)
 	}
 	if f.Type == String {
 		if f.Default != nil {

@@ -8,6 +8,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - update mupdf
 - rename CmdLineParser.[cpp|h] => CmdLineArgsIter.[cpp|h]
 - lots of WCHAR* => char* changes
+- remove supoort for StringW in serialization code
 
 2021-07-21 Wed
 
