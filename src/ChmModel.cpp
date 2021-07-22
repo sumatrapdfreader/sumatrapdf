@@ -582,8 +582,9 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
 }
 
 void ChmModel::GetDisplayState(FileState* ds) {
-    if (!ds->filePath || !str::EqI(ds->filePath, fileName)) {
-        str::ReplaceWithCopy(&ds->filePath, fileName);
+    char* fp = ToUtf8Temp(fileName);
+    if (!ds->filePath || !str::EqI(ds->filePath, fp)) {
+        str::ReplaceWithCopy(&ds->filePath, fp);
     }
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;

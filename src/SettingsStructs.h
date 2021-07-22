@@ -169,7 +169,7 @@ struct Favorite {
 // information about opened files (in most recently used order)
 struct FileState {
     // path of the document
-    WCHAR* filePath;
+    char* filePath;
     // Values which are persisted for bookmarks/favorites
     Vec<Favorite*>* favorites;
     // a document can be "pinned" to the Frequently Read list so that it
@@ -539,7 +539,7 @@ static const FieldInfo gRect_1_Fields[] = {
 static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFileStateFields[] = {
-    {offsetof(FileState, filePath), SettingType::StringW, 0},
+    {offsetof(FileState, filePath), SettingType::String, 0},
     {offsetof(FileState, favorites), SettingType::Array, (intptr_t)&gFavoriteInfo},
     {offsetof(FileState, isPinned), SettingType::Bool, false},
     {offsetof(FileState, isMissing), SettingType::Bool, false},

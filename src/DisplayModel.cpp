@@ -207,8 +207,9 @@ bool DisplayModel::GetPresentationMode() const {
 }
 
 void DisplayModel::GetDisplayState(FileState* ds) {
-    if (!ds->filePath || !str::EqI(ds->filePath, engine->FileName())) {
-        str::ReplaceWithCopy(&ds->filePath, engine->FileName());
+    char* fp = ToUtf8Temp(engine->FileName());
+    if (!ds->filePath || !str::EqI(ds->filePath, fp)) {
+        str::ReplaceWithCopy(&ds->filePath, fp);
     }
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;

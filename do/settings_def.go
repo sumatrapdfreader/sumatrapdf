@@ -141,7 +141,7 @@ var (
 	}
 
 	fileSettings = []*Field{
-		mkField("FilePath", StringW, nil,
+		mkField("FilePath", String, nil,
 			"path of the document"),
 		mkArray("Favorites", favorite,
 			"Values which are persisted for bookmarks/favorites"),

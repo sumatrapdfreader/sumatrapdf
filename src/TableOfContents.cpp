@@ -155,7 +155,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 
         SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));
         SetBkColor(ncd->hdc, GetSysColor(COLOR_WINDOW));
-        DrawText(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+        DrawTextW(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 
         // Reduce the size of the label and cut off the page number
         rcItem.right = std::max(rcItem.right - txtSize.cx, 0);
@@ -173,7 +173,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
         DrawFocusRect(ncd->hdc, &rcItem);
 
     InflateRect(&rcItem, -2, -1);
-    DrawText(ncd->hdc, szText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
+    DrawTextW(ncd->hdc, szText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
 }
 #endif
 

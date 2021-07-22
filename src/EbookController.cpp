@@ -874,8 +874,9 @@ int EbookController::CurrentTocPageNo() const {
 }
 
 void EbookController::GetDisplayState(FileState* ds) {
-    if (!ds->filePath || !str::EqI(ds->filePath, doc.GetFilePath())) {
-        str::ReplaceWithCopy(&ds->filePath, doc.GetFilePath());
+    char* fp = ToUtf8Temp(doc.GetFilePath());
+    if (!ds->filePath || !str::EqI(ds->filePath, fp)) {
+        str::ReplaceWithCopy(&ds->filePath, fp);
     }
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;

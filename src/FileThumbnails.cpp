@@ -74,8 +74,13 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
 
     Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
-    for (size_t i = 0; i < list.size() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
-        AutoFreeWstr bmpPath(GetThumbnailPath(list.at(i)->filePath));
+    int n{0};
+    for (auto& fs : list) {
+        if (n++ < kFileHistoryMaxFrequent * 2) {
+            break;
+        }
+        WCHAR* fp = ToWstrTemp(fs->filePath);
+        AutoFreeWstr bmpPath(GetThumbnailPath(fp));
         if (!bmpPath) {
             continue;
         }
@@ -147,7 +152,8 @@ bool LoadThumbnail(FileState& ds) {
     delete ds.thumbnail;
     ds.thumbnail = nullptr;
 
-    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
+    WCHAR* fp = ToWstrTemp(ds.filePath);
+    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
     if (!bmpPath) {
         return false;
     }
@@ -167,12 +173,13 @@ bool HasThumbnail(FileState& ds) {
         return false;
     }
 
-    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
+    WCHAR* fp = ToWstrTemp(ds.filePath);
+    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
     if (!bmpPath) {
         return true;
     }
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
-    FILETIME fileTime = file::GetModificationTime(ds.filePath);
+    FILETIME fileTime = file::GetModificationTime(fp);
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
         delete ds.thumbnail;
@@ -198,7 +205,8 @@ void SaveThumbnail(FileState& ds) {
         return;
     }
 
-    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
+    WCHAR* fp = ToWstrTemp(ds.filePath);
+    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
     if (!bmpPath) {
         return;
     }
@@ -216,7 +224,8 @@ void RemoveThumbnail(FileState& ds) {
         return;
     }
 
-    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
+    WCHAR* fp = ToWstrTemp(ds.filePath);
+    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
     if (bmpPath) {
         file::Delete(bmpPath);
     }

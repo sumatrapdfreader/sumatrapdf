@@ -584,7 +584,7 @@ static bool ShouldSaveThumbnail(FileState& ds) {
     Vec<FileState*> list;
     gFileHistory.GetFrequencyOrder(list);
     int idx = list.Find(&ds);
-    if (idx < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= idx) {
+    if (idx < 0 || kFileHistoryMaxFrequent * 2 <= idx) {
         return false;
     }
 
@@ -1278,8 +1278,9 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     tab->reloadOnFocus = false;
 
     if (gGlobalPrefs->showStartPage) {
+        WCHAR* fp = ToWstrTemp(ds->filePath);
         // refresh the thumbnail for this file
-        FileState* state = gFileHistory.Find(ds->filePath, nullptr);
+        FileState* state = gFileHistory.Find(fp, nullptr);
         if (state) {
             CreateThumbnailForFile(win, *state);
         }
@@ -1290,7 +1291,8 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         // we don't ask again at the next refresh
         AutoFree decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
-            FileState* state = gFileHistory.Find(ds->filePath, nullptr);
+            WCHAR* fp = ToWstrTemp(ds->filePath);
+            FileState* state = gFileHistory.Find(fp, nullptr);
             if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
                 free(state->decryptionKey);
                 state->decryptionKey = decryptionKey.Release();
@@ -1487,7 +1489,8 @@ static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
     }
     ds = gFileHistory.Find(oldPath, nullptr);
     if (ds) {
-        str::ReplaceWithCopy(&ds->filePath, newPath);
+        char* fp = strconv::WstrToUtf8(newPath);
+        str::ReplacePtr(&ds->filePath, fp);
         // merge Frequently Read data, so that a file
         // doesn't accidentally vanish from there
         ds->isPinned = ds->isPinned || oldIsPinned;

@@ -105,10 +105,9 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
     if (!IsValidZoom(zoom) && stateForIssue2140) {
         // TODO: does issue 2140 still occur?
         logf("Invalid ds->zoom: %g\n", zoom);
-        const WCHAR* ext = path::GetExtNoFreeTemp(stateForIssue2140->filePath);
+        const char* ext = path::GetExtNoFreeTemp(stateForIssue2140->filePath);
         if (!str::IsEmpty(ext)) {
-            auto extA(ToUtf8Temp(ext));
-            logf("File type: %s\n", extA.Get());
+            logf("File type: %s\n", ext);
         }
         logf("DisplayMode: %s\n", stateForIssue2140->displayMode);
         logf("PageNo: %d\n", stateForIssue2140->pageNo);

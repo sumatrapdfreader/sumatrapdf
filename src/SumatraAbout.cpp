@@ -214,7 +214,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     int y = rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING;
     Rect rect(x, y, txtSize.cx, txtSize.cy);
     RECT rTmp = ToRECT(rect);
-    DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
+    DrawTextW(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
         PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
@@ -242,7 +242,7 @@ static Rect DrawSupportLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     Rect rect(ABOUT_INNER_PADDING, y, txtSize.cx, txtSize.cy);
 
     RECT rTmp = ToRECT(rect);
-    DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
+    DrawTextW(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
         PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
@@ -688,7 +688,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     int width = limitValue(dx, 1, DOCLIST_MAX_THUMBNAILS_X);
     int dy = (rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) /
              (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y);
-    int height = std::min(dy, FILE_HISTORY_MAX_FREQUENT / width);
+    int height = std::min(dy, kFileHistoryMaxFrequent / width);
     int x = rc.x + DOCLIST_MARGIN_LEFT +
             (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
              DOCLIST_MARGIN_RIGHT) /
@@ -709,7 +709,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
     rTmp = ToRECT(headerRect);
-    DrawText(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
+    DrawTextW(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
@@ -760,17 +760,18 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 rect.x -= iconSpace;
             }
             rTmp = ToRECT(rect);
-            DrawText(hdc, path::GetBaseNameTemp(state->filePath), -1, &rTmp,
-                     DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
+            WCHAR* fp = ToWstrTemp(state->filePath);
+            DrawTextW(hdc, path::GetBaseNameTemp(fp), -1, &rTmp,
+                      DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
             // note: this crashes asan build in windows code
             // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
             SHFILEINFO sfi = {nullptr};
             uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(state->filePath, 0, &sfi, sizeof(sfi), flags);
+            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(fp, 0, &sfi, sizeof(sfi), flags);
             x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
             ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
-            win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
+            win->staticLinks.Append(StaticLinkInfo(rect.Union(page), fp, fp));
         }
     }
 
@@ -799,7 +800,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
         rect.x = rectIcon.x - rect.dx - 3;
     }
     rTmp = ToRECT(rect);
-    DrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
+    DrawTextW(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
     PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger
     rect = rect.Union(rectIcon);

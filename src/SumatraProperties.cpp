@@ -378,7 +378,7 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
         PropertyEl* el = layoutData->at(i);
         const WCHAR* txt = el->leftTxt;
         RECT rc = {0};
-        DrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->leftPos.dx = rc.right - rc.left;
         // el->leftPos.dy is set below to be equal to el->rightPos.dy
 
@@ -396,7 +396,7 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
         PropertyEl* el = layoutData->at(i);
         const WCHAR* txt = el->rightTxt;
         RECT rc = {0};
-        DrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->rightPos.dx = rc.right - rc.left;
         el->leftPos.dy = el->rightPos.dy = rc.bottom - rc.top;
         textDy += el->rightPos.dy;
@@ -611,7 +611,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
         PropertyEl* el = layoutData->at(i);
         const WCHAR* txt = el->leftTxt;
         rTmp = ToRECT(el->leftPos);
-        DrawText(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
+        DrawTextW(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
     }
 
     /* render text on the right */
@@ -625,7 +625,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
         }
         rTmp = ToRECT(rc);
         uint format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
-        DrawText(hdc, txt, -1, &rTmp, format);
+        DrawTextW(hdc, txt, -1, &rTmp, format);
     }
 
     SelectObject(hdc, origFont);

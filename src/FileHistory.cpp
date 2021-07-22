@@ -102,9 +102,10 @@ FileState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     int n = states->isize();
     for (int i = 0; i < n; i++) {
         FileState* state = states->at(i);
-        if (str::EqI(state->filePath, filePath)) {
+        WCHAR* fp = ToWstrTemp(state->filePath);
+        if (str::EqI(fp, filePath)) {
             idxExact = i;
-        } else if (str::EndsWithI(state->filePath, fileName)) {
+        } else if (str::EndsWithI(fp, fileName)) {
             idxFileNameMatch = i;
         }
     }
@@ -150,7 +151,7 @@ bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) const {
     // so that the user could still try opening it again
     // and so that we don't completely forget the settings,
     // should the file reappear later on
-    int newIdx = hide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
+    int newIdx = hide ? INT_MAX : kFileHistoryMaxRecent - 1;
     int idx = states->Find(state);
     if (idx < newIdx && state != states->Last()) {
         states->Remove(state);
@@ -195,8 +196,8 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
     if (alwaysUseDefaultState) {
         Vec<FileState*> frequencyList;
         GetFrequencyOrder(frequencyList);
-        if (frequencyList.size() > FILE_HISTORY_MAX_RECENT) {
-            minOpenCount = frequencyList.at(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
+        if (frequencyList.size() > kFileHistoryMaxRecent) {
+            minOpenCount = frequencyList.at(kFileHistoryMaxFrequent)->openCount / 2;
         }
     }
 
@@ -213,7 +214,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         } else if (j > FILE_HISTORY_MAX_FILES) {
             // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
             states->RemoveAt(j - 1);
-        } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > FILE_HISTORY_MAX_RECENT) {
+        } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > kFileHistoryMaxRecent) {
             // forget about files that were hardly used (and without valuable state)
             states->RemoveAt(j - 1);
         } else {

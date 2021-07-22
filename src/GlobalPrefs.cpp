@@ -19,7 +19,8 @@ GlobalPrefs* gGlobalPrefs = nullptr;
 
 FileState* NewDisplayState(const WCHAR* filePath) {
     FileState* ds = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
-    str::ReplaceWithCopy(&ds->filePath, filePath);
+    char* fp = ToUtf8Temp(filePath);
+    str::ReplaceWithCopy(&ds->filePath, fp);
     return ds;
 }
 
@@ -88,8 +89,8 @@ SessionData* NewSessionData() {
 
 TabState* NewTabState(FileState* ds) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
-    auto dsFilePathA = ToUtf8Temp(ds->filePath);
-    str::ReplaceWithCopy(&state->filePath, dsFilePathA);
+    auto dsFilePath = ds->filePath;
+    str::ReplaceWithCopy(&state->filePath, dsFilePath);
     str::ReplaceWithCopy(&state->displayMode, ds->displayMode);
     state->pageNo = ds->pageNo;
     str::ReplaceWithCopy(&state->zoom, ds->zoom);

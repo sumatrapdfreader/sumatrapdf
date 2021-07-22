@@ -1062,12 +1062,13 @@ static void AppendRecentFilesToMenu(HMENU m) {
     }
 
     int i;
-    for (i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
+    for (i = 0; i < kFileHistoryMaxRecent; i++) {
         FileState* state = gFileHistory.Get(i);
         if (!state || state->isMissing) {
             break;
         }
-        AddFileMenuItem(m, state->filePath, i);
+        WCHAR* fp = ToWstrTemp(state->filePath);
+        AddFileMenuItem(m, fp, i);
     }
 
     if (i > 0) {
@@ -1588,7 +1589,8 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     if (CmdForgetSelectedDocument == cmd) {
         if (state->favorites->size() > 0) {
             // just hide documents with favorites
-            gFileHistory.MarkFileInexistent(state->filePath, true);
+            WCHAR* fp = ToWstrTemp(state->filePath);
+            gFileHistory.MarkFileInexistent(fp, true);
         } else {
             gFileHistory.Remove(state);
             DeleteDisplayState(state);

@@ -99,19 +99,23 @@ static FileExistenceChecker* gFileExistenceChecker = nullptr;
 
 void FileExistenceChecker::GetFilePathsToCheck() {
     FileState* state;
-    for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)) != nullptr; i++) {
+    for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (state = gFileHistory.Get(i)) != nullptr; i++) {
         if (!state->isMissing) {
-            paths.Append(str::Dup(state->filePath));
+            WCHAR* fp = strconv::Utf8ToWstr(state->filePath);
+            paths.Append(fp);
         }
     }
     // add missing paths from the list of most frequently opened documents
     Vec<FileState*> frequencyList;
     gFileHistory.GetFrequencyOrder(frequencyList);
-    size_t iMax = std::min<size_t>(2 * FILE_HISTORY_MAX_FREQUENT, frequencyList.size());
+    size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
     for (size_t i = 0; i < iMax; i++) {
         state = frequencyList.at(i);
-        if (!paths.Contains(state->filePath)) {
-            paths.Append(str::Dup(state->filePath));
+        WCHAR* fp = strconv::Utf8ToWstr(state->filePath);
+        if (!paths.Contains(fp)) {
+            paths.Append(fp);
+        } else {
+            str::Free(fp);
         }
     }
 }

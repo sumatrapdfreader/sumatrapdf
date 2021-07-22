@@ -52,7 +52,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
 
     HDC hdc = GetDC(wnd->hwnd);
     HFONT oldfnt = SelectFont(hdc, wnd->font);
-    DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
+    DrawTextW(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
     SelectFont(hdc, oldfnt);
     ReleaseDC(wnd->hwnd, hdc);
 
@@ -225,7 +225,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     }
     WCHAR* text = win::GetTextTemp(hwnd).Get();
     rTmp = ToRECT(rectMsg);
-    DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
+    DrawTextW(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 
     if (wnd->hasClose) {
         rTmp = ToRECT(GetCloseRect(hwnd));
