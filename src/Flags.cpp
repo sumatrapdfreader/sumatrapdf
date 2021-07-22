@@ -40,8 +40,8 @@ static void EnumeratePrinters() {
     PRINTER_INFO_5* info5Arr = nullptr;
     DWORD bufSize{0};
     DWORD printersCount{0};
-    BOOL ok = EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr, 0, &bufSize,
-                            &printersCount);
+    BOOL ok =
+        EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr, 0, &bufSize, &printersCount);
     if (ok != 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
         info5Arr = (PRINTER_INFO_5*)malloc(bufSize);
         if (info5Arr != nullptr) {
@@ -178,70 +178,6 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     }
 }
 
-static bool CouldBeArg(const WCHAR* s) {
-    WCHAR c = *s;
-    return (c == L'-') || (c == L'/');
-}
-
-struct ArgsIter {
-    WStrVec& args;
-    int curr{1}; // first argument is exe path, which we skip
-    int nArgs{0};
-    const WCHAR* currArg{nullptr};
-
-    explicit ArgsIter(WStrVec& v);
-
-    const WCHAR* NextArg();
-    const WCHAR* EatParam();
-    void RewindParam();
-    const WCHAR* AdditionalParam(int n) const;
-};
-
-ArgsIter::ArgsIter(WStrVec& v) : args(v) {
-    nArgs = args.isize();
-}
-
-const WCHAR* ArgsIter::NextArg() {
-    if (curr >= nArgs) {
-        return nullptr;
-    }
-    currArg = args[curr++];
-    return currArg;
-}
-
-const WCHAR* ArgsIter::EatParam() {
-    // doesn't change currArg
-    if (curr >= nArgs) {
-        return nullptr;
-    }
-    return args[curr++];
-}
-
-void ArgsIter::RewindParam() {
-    // undo EatParam()
-    --curr;
-    ReportIf(curr < 1);
-}
-
-// additional param is one in addition to the default first param
-// they start at 1
-// returns nullptr if no additional param
-const WCHAR* ArgsIter::AdditionalParam(int n) const {
-    ReportIf(n < 1);
-    if (curr + n - 1 >= nArgs) {
-        return nullptr;
-    }
-
-    // we assume that param cannot be args (i.e. start with - or /
-    for (int i = 0; i < n; i++) {
-        const WCHAR* s = args[curr + i];
-        if (CouldBeArg(s)) {
-            return nullptr;
-        }
-    }
-    return args[curr + n - 1];
-}
-
 #define ARGS(V)                                  \
     V(RegisterForPdf, "register-for-pdf")        \
     V(RegisterForPdf2, "register")               \
@@ -327,15 +263,12 @@ static Arg GetArg(const WCHAR* s) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
-    WStrVec parsedArgs;
-    // TODO: use CommandLineToArgvW() instead of ParseCmdLine
-    ParseCmdLine(cmdLine, parsedArgs);
+void ParseFlags(const WCHAR* cmdLine, Flags& i) {
+    ArgsIter args(cmdLine);
 
     const WCHAR* param{nullptr};
     int paramInt{0};
 
-    ArgsIter args(parsedArgs);
     for (auto argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
         Arg arg = GetArg(argName);
         if (arg == Arg::Unknown) {

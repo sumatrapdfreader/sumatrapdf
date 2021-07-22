@@ -87,7 +87,7 @@ struct Flags {
     ~Flags();
 };
 
-void ParseCommandLine(const WCHAR* cmdLine, Flags&);
+void ParseFlags(const WCHAR* cmdLine, Flags&);
 
 bool IsValidPageRange(const WCHAR* ranges);
 bool IsBenchPagesInfo(const WCHAR* s);
