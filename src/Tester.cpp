@@ -254,7 +254,7 @@ int TesterMain() {
     WCHAR* dirOrFile = nullptr;
 
     bool mobiTest = false;
-    size_t i = 2; // skip program name and "/tester"
+    int i = 2; // skip program name and "/tester"
     while (i < nArgs) {
         WCHAR* arg = argv.at(i);
         if (str::Eq(arg, L"-mobi")) {
