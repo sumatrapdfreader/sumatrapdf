@@ -357,27 +357,27 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
         return false;
     }
 
-    for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && i <= idx; i++) {
-        ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
+    auto& viewers = gGlobalPrefs->externalViewers;
+    for (size_t i = 0; i < viewers->size() && i <= idx; i++) {
+        ExternalViewer* ev = viewers->at(i);
         // see AppendExternalViewersToMenu in Menu.cpp
         if (!ev->commandLine || !PathMatchFilter(tab->filePath, ev->filter)) {
             idx++;
         }
     }
-    if (idx >= gGlobalPrefs->externalViewers->size() || !gGlobalPrefs->externalViewers->at(idx)->commandLine) {
+    if (idx >= viewers->size() || !viewers->at(idx)->commandLine) {
         return false;
     }
 
-    ExternalViewer* ev = gGlobalPrefs->externalViewers->at(idx);
-    WStrVec args;
-
-    ParseCmdLine(ev->commandLine, args, 2);
-    if (args.size() == 0 || !file::Exists(args.at(0))) {
+    ExternalViewer* ev = viewers->at(idx);
+    ArgsIter args(ToWstrTemp(ev->commandLine));
+    int nArgs = args.nArgs - 2;
+    if (nArgs == 0 || !file::Exists(args.at(2 + 0))) {
         return false;
     }
 
     const WCHAR* exePath = args.at(0);
-    const WCHAR* cmdLine = args.size() > 1 ? args.at(1) : nullptr;
+    const WCHAR* cmdLine = args.nArgs > 1 ? args.at(2 + 1) : nullptr;
     AutoFreeWstr params = FormatParams(cmdLine, tab);
     return LaunchFile(exePath, params);
 }

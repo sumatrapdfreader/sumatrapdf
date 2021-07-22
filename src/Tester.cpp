@@ -244,8 +244,8 @@ int TesterMain() {
 
     WCHAR* cmdLine = GetCommandLine();
 
-    WStrVec argv;
-    ParseCmdLine(cmdLine, argv);
+    ArgsIter argv(cmdLine);
+    int nArgs = argv.nArgs;
 
     // InitAllCommonControls();
     // ScopedGdiPlus gdi;
@@ -255,28 +255,29 @@ int TesterMain() {
 
     bool mobiTest = false;
     size_t i = 2; // skip program name and "/tester"
-    while (i < argv.size()) {
-        if (str::Eq(argv[i], L"-mobi")) {
+    while (i < nArgs) {
+        WCHAR* arg = argv.at(i);
+        if (str::Eq(arg, L"-mobi")) {
             ++i;
-            if (i == argv.size()) {
+            if (i == nArgs) {
                 return Usage();
             }
             mobiTest = true;
-            dirOrFile = argv[i];
+            dirOrFile = argv.at(i);
             ++i;
-        } else if (str::Eq(argv[i], L"-layout")) {
+        } else if (str::Eq(arg, L"-layout")) {
             gLayout = true;
             ++i;
-        } else if (str::Eq(argv[i], L"-save-html")) {
+        } else if (str::Eq(arg, L"-save-html")) {
             gSaveHtml = true;
             ++i;
-        } else if (str::Eq(argv[i], L"-save-images")) {
+        } else if (str::Eq(arg, L"-save-images")) {
             gSaveImages = true;
             ++i;
-        } else if (str::Eq(argv[i], L"-zip-create")) {
+        } else if (str::Eq(arg, L"-zip-create")) {
             ZipCreateTest();
             ++i;
-        } else if (str::Eq(argv[i], L"-bench-md5")) {
+        } else if (str::Eq(arg, L"-bench-md5")) {
             BenchMD5();
             ++i;
         } else {

@@ -1146,12 +1146,12 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
 
         WCHAR* name = ToWstrTemp(ev->name);
         if (str::IsEmpty(name)) {
-            WStrVec args;
-            ParseCmdLine(ev->commandLine, args, 2);
-            if (args.size() == 0) {
+            ArgsIter args(ToWstrTemp(ev->commandLine));
+            int nArgs = args.nArgs - 2;
+            if (nArgs == 0) {
                 continue;
             }
-            WCHAR* arg0 = args[0];
+            WCHAR* arg0 = args.at(2 + 0);
             name = str::DupTemp(path::GetBaseNameTemp(arg0));
             WCHAR* ext = (WCHAR*)path::GetExtNoFreeTemp(name);
             if (ext) {

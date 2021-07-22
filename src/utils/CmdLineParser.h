@@ -2,8 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 bool CouldBeArg(const WCHAR*);
-void ParseCmdLine(const WCHAR* cmdLine, WStrVec& out, int maxParts = -1);
-void ParseCmdLine(const char* cmdLine, WStrVec& out, int maxParts = -1);
 
 struct ArgsIter {
     WCHAR** args{nullptr};
@@ -18,4 +16,6 @@ struct ArgsIter {
     const WCHAR* EatParam();
     void RewindParam();
     const WCHAR* AdditionalParam(int n) const;
+
+    WCHAR* at(int) const;
 };

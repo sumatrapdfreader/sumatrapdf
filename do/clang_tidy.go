@@ -128,7 +128,7 @@ modernize-use-using : needs to figure out how to not run on WinDynCalls.h
 
 func clangTidyFix(path string) {
 	args := []string{
-		"--checks=-*,modernize-use-default-member-init",
+		"--checks=-*,modernize-raw-string-literal",
 		"-p",
 		".",
 		"--header-filter=src/",

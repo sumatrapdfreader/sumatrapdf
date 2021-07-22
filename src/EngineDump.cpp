@@ -477,11 +477,13 @@ int main(__unused int argc, __unused char** argv) {
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
-    WStrVec argList;
-    ParseCmdLine(GetCommandLine(), argList);
-    if (argList.size() < 2) {
+    ArgsIter argList(GetCommandLine());
+    int nArgs = argList.nArgs;
+
+    if (nArgs < 2) {
     Usage:
-        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>", path::GetBaseNameTemp(argList.at(0)));
+        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
+               path::GetBaseNameTemp(argList.args[0]));
         return 2;
     }
 
@@ -491,17 +493,16 @@ int main(__unused int argc, __unused char** argv) {
     WCHAR* renderPath = nullptr;
     float renderZoom = 1.f;
     bool loadOnly = false, silent = false;
-    int breakAlloc = 0;
 
-    for (size_t i = 1; i < argList.size(); i++) {
-        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < argList.size() && !password) {
+    for (size_t i = 1; i < nArgs; i++) {
+        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < nArgs && !password) {
             password = argList.at(++i);
         } else if (str::Eq(argList.at(i), L"-quick")) {
             fullDump = false;
-        } else if (str::Eq(argList.at(i), L"-render") && i + 1 < argList.size() && !renderPath) {
+        } else if (str::Eq(argList.at(i), L"-render") && i + 1 < nArgs && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
-            if (i + 2 < argList.size() && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
+            if (i + 2 < nArgs && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
                 renderZoom = zoom / 100.f;
                 i++;
             }
@@ -514,8 +515,6 @@ int main(__unused int argc, __unused char** argv) {
         } else if (str::Eq(argList.at(i), L"-full")) {
             // -full is for backward compatibility
             fullDump = true;
-        } else if (str::Eq(argList.at(i), L"-breakalloc") && i + 1 < argList.size()) {
-            breakAlloc = _wtoi(argList.at(++i));
         } else if (!filePath) {
             filePath.SetCopy(argList.at(i));
         } else {
@@ -526,14 +525,6 @@ int main(__unused int argc, __unused char** argv) {
         goto Usage;
     }
 
-    if (breakAlloc) {
-#ifdef DEBUG
-        _CrtSetBreakAlloc(breakAlloc);
-        if (!IsDebuggerPresent())
-            MessageBox(nullptr, L"Keep your debugger ready for the allocation breakpoint...", L"EngineDump",
-                       MB_ICONINFORMATION);
-#endif
-    }
     if (silent) {
         FILE* nul;
         freopen_s(&nul, "NUL", "w", stdout);
