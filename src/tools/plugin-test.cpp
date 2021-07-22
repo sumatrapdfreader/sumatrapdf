@@ -5,7 +5,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"

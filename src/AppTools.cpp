@@ -3,7 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinDynCalls.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/DbgHelpDyn.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
@@ -301,7 +301,7 @@ bool IsExeAssociatedWithPdfExtension() {
         return false;
     }
 
-    ArgsIter argList(tmp);
+    CmdLineArgsIter argList(tmp);
     bool hasPerc1 = false;
     for (int i = 1; i < argList.nArgs; i++) {
         if (str::Eq(argList.args[i], L"%1")) {

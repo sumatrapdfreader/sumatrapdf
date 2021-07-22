@@ -3,14 +3,14 @@
 
 bool CouldBeArg(const WCHAR*);
 
-struct ArgsIter {
+struct CmdLineArgsIter {
     WCHAR** args{nullptr};
     int curr{1}; // first argument is exe path, which we skip
     int nArgs{0};
     const WCHAR* currArg{nullptr};
 
-    explicit ArgsIter(const WCHAR* cmdLine);
-    ~ArgsIter();
+    explicit CmdLineArgsIter(const WCHAR* cmdLine);
+    ~CmdLineArgsIter();
 
     const WCHAR* NextArg();
     const WCHAR* EatParam();

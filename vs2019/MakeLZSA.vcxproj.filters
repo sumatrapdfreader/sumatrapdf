@@ -84,7 +84,7 @@
     <ClInclude Include="..\src\utils\ByteWriter.h">
       <Filter>src\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\CmdLineParser.h">
+    <ClInclude Include="..\src\utils\CmdLineArgsIter.h">
       <Filter>src\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\ColorUtil.h">
@@ -287,7 +287,7 @@
     <ClCompile Include="..\src\utils\ByteWriter.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\CmdLineParser.cpp">
+    <ClCompile Include="..\src\utils\CmdLineArgsIter.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\ColorUtil.cpp">

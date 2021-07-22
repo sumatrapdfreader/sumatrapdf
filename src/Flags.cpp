@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/WinUtil.h"
 
 #include "DisplayMode.h"
@@ -264,7 +264,7 @@ static Arg GetArg(const WCHAR* s) {
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 void ParseFlags(const WCHAR* cmdLine, Flags& i) {
-    ArgsIter args(cmdLine);
+    CmdLineArgsIter args(cmdLine);
 
     const WCHAR* param{nullptr};
     int paramInt{0};

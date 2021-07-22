@@ -3,7 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "mui/MiniMui.h"
@@ -477,7 +477,7 @@ int main(__unused int argc, __unused char** argv) {
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
-    ArgsIter argList(GetCommandLine());
+    CmdLineArgsIter argList(GetCommandLine());
     int nArgs = argList.nArgs;
 
     if (nArgs < 2) {

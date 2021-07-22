@@ -21,7 +21,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/Timer.h"
 #include "Version.h"
 #include "utils/WinUtil.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "CrashHandler.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"

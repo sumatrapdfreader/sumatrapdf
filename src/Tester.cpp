@@ -7,7 +7,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/CryptoUtil.h"
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
@@ -244,7 +244,7 @@ int TesterMain() {
 
     WCHAR* cmdLine = GetCommandLine();
 
-    ArgsIter argv(cmdLine);
+    CmdLineArgsIter argv(cmdLine);
     int nArgs = argv.nArgs;
 
     // InitAllCommonControls();

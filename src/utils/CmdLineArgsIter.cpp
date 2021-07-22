@@ -2,22 +2,22 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 
 bool CouldBeArg(const WCHAR* s) {
     WCHAR c = *s;
     return (c == L'-') || (c == L'/');
 }
 
-ArgsIter::~ArgsIter() {
+CmdLineArgsIter::~CmdLineArgsIter() {
     LocalFree(args);
 }
 
-ArgsIter::ArgsIter(const WCHAR* cmdLine) {
+CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
     args = CommandLineToArgvW(cmdLine, &nArgs);
 }
 
-const WCHAR* ArgsIter::NextArg() {
+const WCHAR* CmdLineArgsIter::NextArg() {
     if (curr >= nArgs) {
         return nullptr;
     }
@@ -25,7 +25,7 @@ const WCHAR* ArgsIter::NextArg() {
     return currArg;
 }
 
-const WCHAR* ArgsIter::EatParam() {
+const WCHAR* CmdLineArgsIter::EatParam() {
     // doesn't change currArg
     if (curr >= nArgs) {
         return nullptr;
@@ -33,7 +33,7 @@ const WCHAR* ArgsIter::EatParam() {
     return args[curr++];
 }
 
-void ArgsIter::RewindParam() {
+void CmdLineArgsIter::RewindParam() {
     // undo EatParam()
     --curr;
     ReportIf(curr < 1);
@@ -42,7 +42,7 @@ void ArgsIter::RewindParam() {
 // additional param is one in addition to the default first param
 // they start at 1
 // returns nullptr if no additional param
-const WCHAR* ArgsIter::AdditionalParam(int n) const {
+const WCHAR* CmdLineArgsIter::AdditionalParam(int n) const {
     ReportIf(n < 1);
     if (curr + n - 1 >= nArgs) {
         return nullptr;
@@ -58,6 +58,6 @@ const WCHAR* ArgsIter::AdditionalParam(int n) const {
     return args[curr + n - 1];
 }
 
-WCHAR* ArgsIter::at(int n) const {
+WCHAR* CmdLineArgsIter::at(int n) const {
     return args[n];
 }

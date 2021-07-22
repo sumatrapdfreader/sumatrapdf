@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/DbgHelpDyn.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"

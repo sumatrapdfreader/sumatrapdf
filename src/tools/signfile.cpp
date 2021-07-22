@@ -14,7 +14,7 @@
 // sumatra-app.cer
 
 #include "utils/BaseUtil.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/CryptoUtil.h"
 #include "utils/FileUtil.h"
 

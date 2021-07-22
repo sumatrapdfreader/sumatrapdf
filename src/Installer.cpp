@@ -12,7 +12,7 @@
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"

@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
@@ -371,7 +371,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     }
 
     ExternalViewer* ev = viewers->at(idx);
-    ArgsIter args(ToWstrTemp(ev->commandLine));
+    CmdLineArgsIter args(ToWstrTemp(ev->commandLine));
     int nArgs = args.nArgs - 2;
     if (nArgs == 0 || !file::Exists(args.at(2 + 0))) {
         return false;

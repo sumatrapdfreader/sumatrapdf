@@ -3,7 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/CmdLineParser.h"
+#include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/BitManip.h"
@@ -1147,7 +1147,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
 
         WCHAR* name = ToWstrTemp(ev->name);
         if (str::IsEmpty(name)) {
-            ArgsIter args(ToWstrTemp(ev->commandLine));
+            CmdLineArgsIter args(ToWstrTemp(ev->commandLine));
             int nArgs = args.nArgs - 2;
             if (nArgs == 0) {
                 continue;
