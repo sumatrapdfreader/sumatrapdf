@@ -1041,6 +1041,56 @@ void RelaunchElevatedIfNotDebug() {
     ::ExitProcess(0);
 }
 
+// returns true if should exit the installer
+bool MaybeMismatchedOSDialog(HWND hwndParent) {
+    if (IsProcessAndOsArchSame()) {
+        return false;
+    }
+    logf("Mismatch of the OS and executable arch\n");
+
+    const char* content =
+        "You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download "
+        "64-bit version?";
+
+    constexpr int kBtnIdContinue = 100;
+    constexpr int kBtnIdDownload = 101;
+    TASKDIALOGCONFIG dialogConfig{};
+    TASKDIALOG_BUTTON buttons[2];
+
+    buttons[0].nButtonID = kBtnIdDownload;
+    buttons[0].pszButtonText = _TR("Download 64-bit version");
+    buttons[1].nButtonID = kBtnIdContinue;
+    buttons[1].pszButtonText = _TR("&Continue installing 32-bit version");
+
+    DWORD flags = TDF_SIZE_TO_CONTENT | TDF_POSITION_RELATIVE_TO_WINDOW;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = L"Installing 32-bit SumatraPDF on 64-bit OS";
+    // dialogConfig.pszMainInstruction = mainInstr;
+    dialogConfig.pszContent = ToWstrTemp(content);
+    dialogConfig.nDefaultButton = kBtnIdContinue;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.cxWidth = 0;
+    dialogConfig.pfCallback = nullptr;
+    dialogConfig.dwCommonButtons = 0;
+    dialogConfig.cButtons = dimof(buttons);
+    dialogConfig.pButtons = &buttons[0];
+    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
+    dialogConfig.hwndParent = hwndParent;
+
+    int buttonPressedId{0};
+
+    auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
+    CrashIf(hr == E_INVALIDARG);
+    if (buttonPressedId == kBtnIdDownload) {
+        LaunchBrowser(L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html");
+        return true;
+    }
+    return false;
+}
+
 int RunInstaller() {
     if (gCli->log) {
         StartInstallerLogging();
@@ -1052,16 +1102,8 @@ int RunInstaller() {
 
     RelaunchElevatedIfNotDebug();
 
-    if (!gCli->silent && !IsProcessAndOsArchSame()) {
-        logf("Mismatch of the OS and executable arch\n");
-        const char* msg =
-            "You're installing 32-bit SumatraPDF on 64-bit OS. Are you sure?\nPress 'Ok' to proceed.\nPress 'Cancel' "
-            "to download 64-bit version.";
-        uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL;
-        flags |= MB_SETFOREGROUND | MB_TOPMOST;
-        int res = MessageBoxA(nullptr, msg, "SumatraPDF Installer", flags);
-        if (IDCANCEL == res) {
-            LaunchBrowser(L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html");
+    if (!gCli->silent) {
+        if (MaybeMismatchedOSDialog(nullptr)) {
             return 0;
         }
     }
