@@ -354,7 +354,7 @@ struct GlobalPrefs {
     // settings
     bool rememberOpenedFiles;
     // pattern used to launch the LaTeX editor when doing inverse search
-    WCHAR* inverseSearchCmdLine;
+    char* inverseSearchCmdLine;
     // if true, we expose the SyncTeX inverse search command line in
     // Settings -> Options
     bool enableTeXEnhancements;
@@ -647,7 +647,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
     {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::StringW, 0},
+    {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
     {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t) "automatic"},
     {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t) "fit page"},

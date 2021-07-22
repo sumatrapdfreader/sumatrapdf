@@ -323,7 +323,7 @@ var (
 			"we won't ask again to update to this version"),
 		mkField("RememberOpenedFiles", Bool, true,
 			"if true, we remember which files we opened and their display settings"),
-		mkField("InverseSearchCmdLine", StringW, nil,
+		mkField("InverseSearchCmdLine", String, nil,
 			"pattern used to launch the LaTeX editor when doing inverse search"),
 		mkField("EnableTeXEnhancements", Bool, false,
 			"if true, we expose the SyncTeX inverse search command line in Settings -> Options"),

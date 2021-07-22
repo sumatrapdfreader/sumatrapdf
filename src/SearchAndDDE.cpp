@@ -471,10 +471,12 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         }
     }
 
-    WCHAR* inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
+    WCHAR* inverseSearch = ToWstrTemp(gGlobalPrefs->inverseSearchCmdLine);
+    WCHAR* toFree{nullptr};
     if (!inverseSearch) {
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands(nullptr);
+        toFree = inverseSearch;
     }
 
     AutoFreeWstr cmdline;
@@ -494,8 +496,8 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
             _TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
 
-    if (inverseSearch != gGlobalPrefs->inverseSearchCmdLine) {
-        free(inverseSearch);
+    if (toFree) {
+        str::Free(toFree);
     }
 
     return true;

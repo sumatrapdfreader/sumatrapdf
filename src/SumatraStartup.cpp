@@ -542,7 +542,8 @@ static void ReplaceColor(char** col, WCHAR* maybeColor) {
 
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
-        str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
+        char* cmdLine = str::Dup(ToUtf8Temp(i.inverseSearchCmdLine).AsView());
+        str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }
     gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;

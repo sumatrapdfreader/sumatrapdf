@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-22 Thu
+
+- change inverseSearchCmdLine seeting from WCHAR* => char*
+
 2021-07-21 Wed
 
 - update mupdf
@@ -11,6 +15,7 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2046
 - redo cmd-line handling
 - use CommandLineToArgvW() instead of my own ParseCmdLine()
+- rename settings types String => StringW, Utf8String => String
 
 2021-07-20 Tue
 

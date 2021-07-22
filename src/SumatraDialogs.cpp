@@ -654,7 +654,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             if (prefs->enableTeXEnhancements && HasPermission(Perm::DiskAccess)) {
                 // Fill the combo with the list of possible inverse search commands
                 // Try to select a correct default when first showing this dialog
-                const WCHAR* cmdLine = prefs->inverseSearchCmdLine;
+                const WCHAR* cmdLine = ToWstrTemp(prefs->inverseSearchCmdLine);
                 AutoFreeWstr inverseSearch;
                 if (!cmdLine) {
                     HWND hwnd = GetDlgItem(hDlg, IDC_CMDLINE);
@@ -699,9 +699,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->checkForUpdates = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_CHECK_FOR_UPDATES));
                     prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
                     if (prefs->enableTeXEnhancements && HasPermission(Perm::DiskAccess)) {
-                        free(prefs->inverseSearchCmdLine);
                         auto tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
-                        prefs->inverseSearchCmdLine = str::Dup(tmp.AsView());
+                        char* cmdLine = str::Dup(ToUtf8Temp(tmp).AsView());
+                        str::ReplacePtr(&prefs->inverseSearchCmdLine, cmdLine);
                     }
                     EndDialog(hDlg, IDOK);
                     return TRUE;
