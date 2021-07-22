@@ -1105,7 +1105,7 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
         return;
     }
     int maxEntries = CmdSelectionHandlerLast - CmdSelectionHandlerFirst;
-    UINT_PTR n = 0;
+    int n = 0;
     for (auto& sh : *gGlobalPrefs->selectionHandlers) {
         if (str::EmptyOrWhiteSpaceOnly(sh->url) || str::EmptyOrWhiteSpaceOnly(sh->name)) {
             continue;
@@ -1114,11 +1114,10 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
             break;
         }
         WCHAR* name = ToWstrTemp(sh->name);
-        UINT_PTR cmdID = (UINT_PTR)CmdSelectionHandlerFirst + n;
-        sh->cmdID = (int)cmdID;
+        sh->cmdID = (int)CmdSelectionHandlerFirst + n;
         UINT flags = MF_BYCOMMAND | MF_STRING;
         flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
-        AppendMenuW(m, flags, cmdID, name);
+        AppendMenuW(m, flags, (UINT_PTR)sh->cmdID, name);
         n++;
     }
 }
@@ -1134,8 +1133,10 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
     int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst;
     int count = 0;
 
-    for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && count < maxEntries; i++) {
-        ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
+    for (auto& ev : *gGlobalPrefs->externalViewers) {
+        if (count >= maxEntries) {
+            break;
+        }
         if (!ev->commandLine) {
             continue;
         }
@@ -1143,19 +1144,22 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             continue;
         }
 
-        AutoFreeWstr appName;
-        const WCHAR* name = strconv::Utf8ToWstr(ev->name);
+        WCHAR* name = ToWstrTemp(ev->name);
         if (str::IsEmpty(name)) {
             WStrVec args;
             ParseCmdLine(ev->commandLine, args, 2);
             if (args.size() == 0) {
                 continue;
             }
-            appName.SetCopy(path::GetBaseNameTemp(args.at(0)));
-            *(WCHAR*)path::GetExtNoFreeTemp(appName) = '\0';
+            WCHAR* arg0 = args[0];
+            name = str::DupTemp(path::GetBaseNameTemp(arg0));
+            WCHAR* ext = (WCHAR*)path::GetExtNoFreeTemp(name);
+            if (ext) {
+                *ext = 0;
+            }
         }
 
-        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.Get() : name));
+        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), name));
         uint menuId = CmdOpenWithExternalFirst + count;
         InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
