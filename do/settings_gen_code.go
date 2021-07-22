@@ -25,10 +25,10 @@ var (
 	Float = &Type{"Float", "float"}
 	// Int defines an int
 	Int = &Type{"Int", "int"}
-	// String defines a UNICODE string
-	String = &Type{"String", "WCHAR*"}
-	// Utf8String defines a utf8 string
-	Utf8String = &Type{"Utf8String", "char*"}
+	// StringW defines a UNICODE string
+	StringW = &Type{"StringW", "WCHAR*"}
+	// String defines a utf8 string
+	String = &Type{"String", "char*"}
 	// Comment defines a comment
 	Comment = &Type{"Comment", ""}
 )
@@ -97,13 +97,13 @@ func (f *Field) cdefault(built map[string]int) string {
 	if f.Type == Int {
 		return fmt.Sprintf("%d", f.Default)
 	}
-	if f.Type == String {
+	if f.Type == StringW {
 		if f.Default == nil {
 			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)L"%s"`, f.Default)
 	}
-	if f.Type == Utf8String {
+	if f.Type == String {
 		if f.Default == nil {
 			return "0"
 		}
@@ -126,7 +126,7 @@ func (f *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, f.Default)
 	}
-	if typeName == "Utf8StringArray" {
+	if typeName == "StringArray" {
 		if f.Default == nil {
 			return "0"
 		}
@@ -138,6 +138,7 @@ func (f *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, f.Comment)
 	}
+	logf("Unkonwn type name: '%s'\n", typeName)
 	panicIf(true)
 	return ""
 }
@@ -159,13 +160,13 @@ func (f *Field) initDefault() string {
 	if f.Type == Int {
 		return fmt.Sprintf("%s = %d", f.Name, f.Default)
 	}
-	if f.Type == String {
+	if f.Type == StringW {
 		if f.Default != nil {
 			return fmt.Sprintf(`%s = %s`, f.Name, f.Default)
 		}
 		return fmt.Sprintf(`%s %s =`, commentChar, f.Name)
 	}
-	if f.Type == Utf8String {
+	if f.Type == String {
 		if f.Default != nil {
 			return fmt.Sprintf(`%s = %s`, f.Name, f.Default)
 		}
@@ -190,7 +191,7 @@ func (f *Field) initDefault() string {
 		}
 		return fmt.Sprintf("%s %s =", commentChar, f.Name)
 	}
-	if typeName == "Utf8StringArray" {
+	if typeName == "StringArray" {
 		if f.Default != nil {
 			return fmt.Sprintf("%s = %v", f.Name, f.Default)
 		}

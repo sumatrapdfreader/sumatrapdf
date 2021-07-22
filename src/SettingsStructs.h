@@ -436,7 +436,7 @@ static const StructInfo gFixedPageUIInfo = {
     "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0HideScrollbars"};
 
 static const FieldInfo gEbookUIFields[] = {
-    {offsetof(EbookUI, fontName), SettingType::Utf8String, (intptr_t) "Georgia"},
+    {offsetof(EbookUI, fontName), SettingType::String, (intptr_t) "Georgia"},
     {offsetof(EbookUI, fontSize), SettingType::Float, (intptr_t) "12.5"},
     {offsetof(EbookUI, textColor), SettingType::Color, (intptr_t) "#5f4b32"},
     {offsetof(EbookUI, backgroundColor), SettingType::Color, (intptr_t) "#fbf0d9"},
@@ -474,21 +474,21 @@ static const FieldInfo gChmUIFields[] = {
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
 
 static const FieldInfo gSelectionHandlerFields[] = {
-    {offsetof(SelectionHandler, url), SettingType::Utf8String, 0},
-    {offsetof(SelectionHandler, name), SettingType::Utf8String, 0},
+    {offsetof(SelectionHandler, url), SettingType::String, 0},
+    {offsetof(SelectionHandler, name), SettingType::String, 0},
 };
 static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 2, gSelectionHandlerFields, "URL\0Name"};
 
 static const FieldInfo gExternalViewerFields[] = {
-    {offsetof(ExternalViewer, commandLine), SettingType::Utf8String, 0},
-    {offsetof(ExternalViewer, name), SettingType::Utf8String, 0},
-    {offsetof(ExternalViewer, filter), SettingType::Utf8String, 0},
+    {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
+    {offsetof(ExternalViewer, name), SettingType::String, 0},
+    {offsetof(ExternalViewer, filter), SettingType::String, 0},
 };
 static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 3, gExternalViewerFields,
                                                "CommandLine\0Name\0Filter"};
 
 static const FieldInfo gPrinterDefaultsFields[] = {
-    {offsetof(PrinterDefaults, printScale), SettingType::Utf8String, (intptr_t) "shrink"},
+    {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t) "shrink"},
 };
 static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 1, gPrinterDefaultsFields, "PrintScale"};
 
@@ -504,7 +504,7 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t) "#ffff00"},
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t) "#ffff00"},
-    {offsetof(Annotations, textIconType), SettingType::Utf8String, (intptr_t) ""},
+    {offsetof(Annotations, textIconType), SettingType::String, (intptr_t) ""},
 };
 static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 3, gAnnotationsFields,
                                             "HighlightColor\0TextIconColor\0TextIconType"};
@@ -518,9 +518,9 @@ static const FieldInfo gRectFields[] = {
 static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFavoriteFields[] = {
-    {offsetof(Favorite, name), SettingType::String, 0},
+    {offsetof(Favorite, name), SettingType::StringW, 0},
     {offsetof(Favorite, pageNo), SettingType::Int, 0},
-    {offsetof(Favorite, pageLabel), SettingType::String, 0},
+    {offsetof(Favorite, pageLabel), SettingType::StringW, 0},
 };
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 
@@ -539,17 +539,17 @@ static const FieldInfo gRect_1_Fields[] = {
 static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFileStateFields[] = {
-    {offsetof(FileState, filePath), SettingType::String, 0},
+    {offsetof(FileState, filePath), SettingType::StringW, 0},
     {offsetof(FileState, favorites), SettingType::Array, (intptr_t)&gFavoriteInfo},
     {offsetof(FileState, isPinned), SettingType::Bool, false},
     {offsetof(FileState, isMissing), SettingType::Bool, false},
     {offsetof(FileState, openCount), SettingType::Int, 0},
-    {offsetof(FileState, decryptionKey), SettingType::Utf8String, 0},
+    {offsetof(FileState, decryptionKey), SettingType::String, 0},
     {offsetof(FileState, useDefaultState), SettingType::Bool, false},
-    {offsetof(FileState, displayMode), SettingType::Utf8String, (intptr_t) "automatic"},
+    {offsetof(FileState, displayMode), SettingType::String, (intptr_t) "automatic"},
     {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointFInfo},
     {offsetof(FileState, pageNo), SettingType::Int, 1},
-    {offsetof(FileState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
+    {offsetof(FileState, zoom), SettingType::String, (intptr_t) "fit page"},
     {offsetof(FileState, rotation), SettingType::Int, 0},
     {offsetof(FileState, windowState), SettingType::Int, 0},
     {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_1_Info},
@@ -571,10 +571,10 @@ static const FieldInfo gPointF_1_Fields[] = {
 static const StructInfo gPointF_1_Info = {sizeof(PointF), 2, gPointF_1_Fields, "X\0Y"};
 
 static const FieldInfo gTabStateFields[] = {
-    {offsetof(TabState, filePath), SettingType::Utf8String, 0},
-    {offsetof(TabState, displayMode), SettingType::Utf8String, (intptr_t) "automatic"},
+    {offsetof(TabState, filePath), SettingType::String, 0},
+    {offsetof(TabState, displayMode), SettingType::String, (intptr_t) "automatic"},
     {offsetof(TabState, pageNo), SettingType::Int, 1},
-    {offsetof(TabState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
+    {offsetof(TabState, zoom), SettingType::String, (intptr_t) "fit page"},
     {offsetof(TabState, rotation), SettingType::Int, 0},
     {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
     {offsetof(TabState, showToc), SettingType::Bool, true},
@@ -635,22 +635,22 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, printerDefaults), SettingType::Struct, (intptr_t)&gPrinterDefaultsInfo},
     {offsetof(GlobalPrefs, forwardSearch), SettingType::Struct, (intptr_t)&gForwardSearchInfo},
     {offsetof(GlobalPrefs, annotations), SettingType::Struct, (intptr_t)&gAnnotationsInfo},
-    {offsetof(GlobalPrefs, defaultPasswords), SettingType::Utf8StringArray, 0},
+    {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
     {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, uiLanguage), SettingType::Utf8String, 0},
+    {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, associatedExtensions), SettingType::Utf8String, 0},
+    {offsetof(GlobalPrefs, associatedExtensions), SettingType::String, 0},
     {offsetof(GlobalPrefs, associateSilently), SettingType::Bool, false},
     {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, versionToSkip), SettingType::Utf8String, 0},
+    {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
+    {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::StringW, 0},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::Utf8String, (intptr_t) "automatic"},
-    {offsetof(GlobalPrefs, defaultZoom), SettingType::Utf8String, (intptr_t) "fit page"},
+    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t) "automatic"},
+    {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t) "fit page"},
     {offsetof(GlobalPrefs, windowState), SettingType::Int, 1},
     {offsetof(GlobalPrefs, windowPos), SettingType::Compact, (intptr_t)&gRectInfo},
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
@@ -662,7 +662,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo},
     {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo},
-    {offsetof(GlobalPrefs, reopenOnce), SettingType::Utf8StringArray, 0},
+    {offsetof(GlobalPrefs, reopenOnce), SettingType::StringArray, 0},
     {offsetof(GlobalPrefs, timeOfLastUpdateCheck), SettingType::Compact, (intptr_t)&gFILETIMEInfo},
     {offsetof(GlobalPrefs, openCountWeek), SettingType::Int, 0},
     {(size_t)-1, SettingType::Comment, 0},

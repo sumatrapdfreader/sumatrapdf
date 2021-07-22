@@ -21,7 +21,7 @@ var (
 	}
 
 	printerDefaults = []*Field{
-		mkField("PrintScale", Utf8String, "shrink", "default value for scaling (shrink, fit, none)"),
+		mkField("PrintScale", String, "shrink", "default value for scaling (shrink, fit, none)"),
 	}
 
 	forwardSearch = []*Field{
@@ -82,7 +82,7 @@ var (
 
 	ebookUI = []*Field{
 		// default serif font, a different font is used for monospaced text (currently always "Courier New")
-		mkField("FontName", Utf8String, "Georgia", "name of the font. takes effect after re-opening the document"),
+		mkField("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
 		mkField("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
 		mkField("TextColor", Color, mkRGB(0x5F, 0x4B, 0x32), "color for text"),
 		mkField("BackgroundColor", Color, mkRGB(0xFB, 0xF0, 0xD9), "color of the background (page)"),
@@ -106,19 +106,19 @@ var (
 	}
 
 	externalViewer = []*Field{
-		mkField("CommandLine", Utf8String, nil,
+		mkField("CommandLine", String, nil,
 			"command line with which to call the external viewer, may contain "+
 				"%p for page number and \"%1\" for the file name (add quotation "+
 				"marks around paths containing spaces)"),
-		mkField("Name", Utf8String, nil,
+		mkField("Name", String, nil,
 			"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
-		mkField("Filter", Utf8String, nil,
+		mkField("Filter", String, nil,
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 	}
 
 	selectionHandler = []*Field{
-		mkField("URL", Utf8String, nil, "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)"),
-		mkField("Name", Utf8String, nil, "name shown in context menu"),
+		mkField("URL", String, nil, "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)"),
+		mkField("Name", String, nil, "name shown in context menu"),
 		mkField("CmdID", Int, 0, "").setInternal(),
 	}
 
@@ -126,22 +126,22 @@ var (
 		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x0),
 			"color used for highlight annotations"),
 		mkField("TextIconColor", Color, mkRGB(0xFF, 0xFF, 0x0), "color used for text icon annotation"),
-		mkField("TextIconType", Utf8String, "", "type of text annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note."),
+		mkField("TextIconType", String, "", "type of text annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note."),
 	}
 
 	favorite = []*Field{
-		mkField("Name", String, nil,
+		mkField("Name", StringW, nil,
 			"name of this favorite as shown in the menu"),
 		mkField("PageNo", Int, 0,
 			"number of the bookmarked page"),
-		mkField("PageLabel", String, nil,
+		mkField("PageLabel", StringW, nil,
 			"label for this page (only present if logical and physical page numbers are not the same)"),
 		mkField("MenuId", Int, 0,
 			"id of this favorite in the menu (assigned by AppendFavMenuItems)").setInternal(),
 	}
 
 	fileSettings = []*Field{
-		mkField("FilePath", String, nil,
+		mkField("FilePath", StringW, nil,
 			"path of the document"),
 		mkArray("Favorites", favorite,
 			"Values which are persisted for bookmarks/favorites"),
@@ -156,7 +156,7 @@ var (
 				"but used to be opened very frequently constantly remain in top positions, "+
 				"the openCount will be cut in half after every week, so that the "+
 				"Frequently Read list hopefully better reflects the currently relevant documents").setDoc("number of times this document has been opened recently"),
-		mkField("DecryptionKey", Utf8String, nil,
+		mkField("DecryptionKey", String, nil,
 			"Hex encoded MD5 fingerprint of file content (32 chars) followed by "+
 				"crypt key (64 chars) - only applies for PDF documents").setDoc("data required to open a password protected document without having to " +
 			"ask for the password again"),
@@ -164,7 +164,7 @@ var (
 			"if true, we use global defaults when opening this file (instead of "+
 				"the values below)"),
 		// NOTE: fields below UseDefaultState aren't serialized if UseDefaultState is true!
-		mkField("DisplayMode", Utf8String, "automatic",
+		mkField("DisplayMode", String, "automatic",
 			"how pages should be laid out for this document, needs to be synchronized with "+
 				"DefaultDisplayMode after deserialization and before serialization").setDoc("layout of pages. valid values: automatic, single page, facing, book view, " +
 			"continuous, continuous facing, continuous book view"),
@@ -172,7 +172,7 @@ var (
 			"how far this document has been scrolled (in x and y direction)").setStructName("PointF"),
 		mkField("PageNo", Int, 1,
 			"number of the last read page"),
-		mkField("Zoom", Utf8String, "fit page",
+		mkField("Zoom", String, "fit page",
 			"zoom (in %) or one of those values: fit page, fit width, fit content"),
 		mkField("Rotation", Int, 0,
 			"how far pages have been rotated as a multiple of 90 degrees"),
@@ -209,13 +209,13 @@ var (
 	rememberedDisplayState = []string{"DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"}
 
 	tabState = []*Field{
-		mkField("FilePath", Utf8String, nil,
+		mkField("FilePath", String, nil,
 			"path of the document"),
-		mkField("DisplayMode", Utf8String, "automatic",
+		mkField("DisplayMode", String, "automatic",
 			"same as FileStates -> DisplayMode"),
 		mkField("PageNo", Int, 1,
 			"number of the last read page"),
-		mkField("Zoom", Utf8String, "fit page",
+		mkField("Zoom", String, "fit page",
 			"same as FileStates -> Zoom"),
 		mkField("Rotation", Int, 0,
 			"same as FileStates -> Rotation"),
@@ -244,7 +244,7 @@ var (
 		mkField("MainWindowBackground", Color, mkRGBA(0xFF, 0xF2, 0x00, 0x80),
 			"background color of the non-document windows, traditionally yellow").setExpert(),
 
-		//MkField("ThemeName", Utf8String, "light", "the name of the theme to use"),
+		//MkField("ThemeName", String, "light", "the name of the theme to use"),
 
 		mkField("EscToExit", Bool, false,
 			"if true, Esc key closes SumatraPDF").setExpert(),
@@ -295,7 +295,7 @@ var (
 				"LaTeX editors)").setExpert(),
 		mkStruct("Annotations", annotations,
 			"default values for annotations in PDF documents").setExpert().setVersion("3.3"),
-		mkCompactArray("DefaultPasswords", Utf8String, nil,
+		mkCompactArray("DefaultPasswords", String, nil,
 			"passwords to try when opening a password protected document").setDoc("a whitespace separated list of passwords to try when opening a password protected document " +
 			"(passwords containing spaces must be quoted)").setExpert().setVersion("2.4"),
 		mkField("CustomScreenDPI", Int, 0,
@@ -306,32 +306,32 @@ var (
 		mkField("RememberStatePerDocument", Bool, true,
 			"if true, we store display settings for each document separately (i.e. everything "+
 				"after UseDefaultState in FileStates)"),
-		mkField("UiLanguage", Utf8String, nil,
+		mkField("UiLanguage", String, nil,
 			"ISO code of the current UI language").setDoc("[ISO code](langs.html) of the current UI language"),
 		mkField("ShowToolbar", Bool, true,
 			"if true, we show the toolbar at the top of the window"),
 		mkField("ShowFavorites", Bool, false,
 			"if true, we show the Favorites sidebar"),
-		mkField("AssociatedExtensions", Utf8String, nil,
+		mkField("AssociatedExtensions", String, nil,
 			"a list of extensions that SumatraPDF has associated itself with and will "+
 				"reassociate if a different application takes over (e.g. \".pdf .xps .epub\")"),
 		mkField("AssociateSilently", Bool, false,
 			"whether file associations should be fixed silently or only after user feedback"),
 		mkField("CheckForUpdates", Bool, true,
 			"if true, we check once a day if an update is available"),
-		mkField("VersionToSkip", Utf8String, nil,
+		mkField("VersionToSkip", String, nil,
 			"we won't ask again to update to this version"),
 		mkField("RememberOpenedFiles", Bool, true,
 			"if true, we remember which files we opened and their display settings"),
-		mkField("InverseSearchCmdLine", String, nil,
+		mkField("InverseSearchCmdLine", StringW, nil,
 			"pattern used to launch the LaTeX editor when doing inverse search"),
 		mkField("EnableTeXEnhancements", Bool, false,
 			"if true, we expose the SyncTeX inverse search command line in Settings -> Options"),
-		mkField("DefaultDisplayMode", Utf8String, "automatic",
+		mkField("DefaultDisplayMode", String, "automatic",
 			"how pages should be laid out by default, needs to be synchronized with "+
 				"DefaultDisplayMode after deserialization and before serialization").setDoc("default layout of pages. valid values: automatic, single page, facing, " +
 			"book view, continuous, continuous facing, continuous book view"),
-		mkField("DefaultZoom", Utf8String, "fit page",
+		mkField("DefaultZoom", String, "fit page",
 			"default zoom (in %) or one of those values: fit page, fit width, fit content"),
 		mkField("WindowState", Int, 1,
 			"default state of new windows (same as the last closed)").setDoc("default state of the window. 1 is normal, 2 is maximized, " +
@@ -359,7 +359,7 @@ var (
 			"information about opened files (in most recently used order)"),
 		mkArray("SessionData", sessionData,
 			"state of the last session, usage depends on RestoreSession").setVersion("3.1"),
-		mkCompactArray("ReopenOnce", Utf8String, nil,
+		mkCompactArray("ReopenOnce", String, nil,
 			"a list of paths for files to be reopened at the next start "+
 				"or the string \"SessionData\" if this data is saved in SessionData "+
 				"(needed for auto-updating)").setDoc("data required for reloading documents after an auto-update").setVersion("3.0"),
