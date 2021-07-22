@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/Log.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
@@ -10,6 +10,8 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/TrackbarCtrl.h"
+
+#include "utils/Log.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/trackbar-control-reference
 

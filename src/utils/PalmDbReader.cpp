@@ -2,10 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "ScopedWin.h"
+#include "WinUtil.h"
+#include "FileUtil.h"
 #include "PalmDbReader.h"
 #include "ByteOrderDecoder.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
 
 // size of PdbHeader
 #define kPdbHeaderLen 78

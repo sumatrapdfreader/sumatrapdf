@@ -2,18 +2,21 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#if COMPILER_MSVC
-#pragma warning(disable : 4668)
-#endif
-#include <wincodec.h>
+
 #include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/ByteReader.h"
 #include "utils/FzImgReader.h"
 #include "utils/TgaReader.h"
 #include "utils/WebpReader.h"
 #include "utils/WinUtil.h"
+#include "utils/GdiPlusUtil.h"
+
+#if COMPILER_MSVC
+#pragma warning(disable : 4668)
+#endif
+#include <wincodec.h>
 
 #include "utils/Log.h"
 
@@ -602,4 +605,32 @@ size_t ImageData::size() const {
 
 std::span<u8> ImageData::AsSpan() const {
     return {(u8*)data, len};
+}
+
+RenderedBitmap* LoadRenderedBitmap(const WCHAR* path) {
+    if (!path) {
+        return nullptr;
+    }
+    AutoFree data(file::ReadFile(path));
+    if (!data.data) {
+        return nullptr;
+    }
+    Gdiplus::Bitmap* bmp = BitmapFromData(data.AsSpan());
+    if (!bmp) {
+        return nullptr;
+    }
+
+    HBITMAP hbmp;
+    RenderedBitmap* rendered = nullptr;
+    if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
+        rendered = new RenderedBitmap(hbmp, Size(bmp->GetWidth(), bmp->GetHeight()));
+    }
+    delete bmp;
+
+    return rendered;
+}
+
+RenderedBitmap* LoadRenderedBitmap(const char* path) {
+    WCHAR* tmp = ToWstrTemp(path);
+    return LoadRenderedBitmap(tmp);
 }

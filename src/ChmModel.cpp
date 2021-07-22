@@ -6,6 +6,7 @@
 #include "utils/HtmlWindow.h"
 #include "utils/UITask.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
 
@@ -581,19 +582,19 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
     return newZoom;
 }
 
-void ChmModel::GetDisplayState(FileState* ds) {
-    char* fp = ToUtf8Temp(fileName);
-    if (!ds->filePath || !str::EqI(ds->filePath, fp)) {
-        str::ReplaceWithCopy(&ds->filePath, fp);
+void ChmModel::GetDisplayState(FileState* fs) {
+    char* fileNameA = ToUtf8Temp(fileName);
+    if (!fs->filePath || !str::EqI(fs->filePath, fileNameA)) {
+        SetFileStatePath(fs, fileNameA);
     }
 
-    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+    fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplaceWithCopy(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
-    ZoomToString(&ds->zoom, GetZoomVirtual(), ds);
+    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
+    ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
 
-    ds->pageNo = CurrentPageNo();
-    ds->scrollPos = PointF();
+    fs->pageNo = CurrentPageNo();
+    fs->scrollPos = PointF();
 }
 
 class ChmThumbnailTask : public HtmlWindowCallback {

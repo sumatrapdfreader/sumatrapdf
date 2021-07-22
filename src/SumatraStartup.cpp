@@ -98,10 +98,10 @@ class FileExistenceChecker : public ThreadBase {
 static FileExistenceChecker* gFileExistenceChecker = nullptr;
 
 void FileExistenceChecker::GetFilePathsToCheck() {
-    FileState* state;
-    for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (state = gFileHistory.Get(i)) != nullptr; i++) {
-        if (!state->isMissing) {
-            WCHAR* fp = strconv::Utf8ToWstr(state->filePath);
+    FileState* fs;
+    for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
+        if (!fs->isMissing) {
+            WCHAR* fp = strconv::Utf8ToWstr(fs->filePath);
             paths.Append(fp);
         }
     }
@@ -110,8 +110,8 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     gFileHistory.GetFrequencyOrder(frequencyList);
     size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
     for (size_t i = 0; i < iMax; i++) {
-        state = frequencyList.at(i);
-        WCHAR* fp = strconv::Utf8ToWstr(state->filePath);
+        fs = frequencyList.at(i);
+        WCHAR* fp = strconv::Utf8ToWstr(fs->filePath);
         if (!paths.Contains(fp)) {
             paths.Append(fp);
         } else {
@@ -122,7 +122,8 @@ void FileExistenceChecker::GetFilePathsToCheck() {
 
 void FileExistenceChecker::HideMissingFiles() {
     for (const WCHAR* path : paths) {
-        gFileHistory.MarkFileInexistent(path, true);
+        char* fp = ToUtf8Temp(path);
+        gFileHistory.MarkFileInexistent(fp, true);
     }
     // update the Frequently Read page in case it's been displayed already
     if (paths.size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {

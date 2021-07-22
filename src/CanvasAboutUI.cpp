@@ -136,9 +136,9 @@ static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, __unused WP
 static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     Point pt;
     if (GetCursorPosInHwnd(hwnd, pt)) {
-        StaticLinkInfo linkInfo;
+        StaticLinkInfo* linkInfo;
         if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
-            win->ShowToolTip(linkInfo.infotip, linkInfo.rect);
+            win->ShowToolTip(linkInfo->infotip, linkInfo->rect);
             SetCursorCached(IDC_HAND);
         } else {
             win->HideToolTip();

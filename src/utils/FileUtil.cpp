@@ -330,6 +330,23 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
     return npath1 && str::EqI(npath1, npath2);
 }
 
+bool HasVariableDriveLetter(const char* path) {
+    char root[] = R"(?:\)";
+    root[0] = (char)toupper(path[0]);
+    if (root[0] < 'A' || 'Z' < root[0]) {
+        return false;
+    }
+
+    uint driveType = GetDriveTypeA(root);
+    switch (driveType) {
+        case DRIVE_REMOVABLE:
+        case DRIVE_CDROM:
+        case DRIVE_NO_ROOT_DIR:
+            return true;
+    }
+    return false;
+}
+
 bool HasVariableDriveLetter(const WCHAR* path) {
     WCHAR root[] = L"?:\\";
     root[0] = towupper(path[0]);
@@ -337,7 +354,7 @@ bool HasVariableDriveLetter(const WCHAR* path) {
         return false;
     }
 
-    uint driveType = GetDriveType(root);
+    uint driveType = GetDriveTypeW(root);
     switch (driveType) {
         case DRIVE_REMOVABLE:
         case DRIVE_CDROM:
@@ -627,6 +644,20 @@ bool Delete(const WCHAR* filePath) {
     return true;
 }
 
+bool Delete(const char* filePathA) {
+    if (!filePathA) {
+        return false;
+    }
+    WCHAR* filePath = ToWstrTemp(filePathA);
+    BOOL ok = DeleteFileW(filePath);
+    ok |= (GetLastError() == ERROR_FILE_NOT_FOUND);
+    if (!ok) {
+        LogLastError();
+        return false;
+    }
+    return true;
+}
+
 bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite) {
     BOOL ok = CopyFileW(src, dst, (BOOL)dontOverwrite);
     if (!ok) {
@@ -637,6 +668,15 @@ bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite) {
 }
 
 FILETIME GetModificationTime(const WCHAR* filePath) {
+    FILETIME lastMod = {0};
+    AutoCloseHandle h(OpenReadOnly(filePath));
+    if (h.IsValid()) {
+        GetFileTime(h, nullptr, nullptr, &lastMod);
+    }
+    return lastMod;
+}
+
+FILETIME GetModificationTime(const char* filePath) {
     FILETIME lastMod = {0};
     AutoCloseHandle h(OpenReadOnly(filePath));
     if (h.IsValid()) {

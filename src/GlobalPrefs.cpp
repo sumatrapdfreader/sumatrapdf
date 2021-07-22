@@ -3,37 +3,35 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/SettingsUtil.h"
-#include "utils/Log.h"
 
-#include "wingui/TreeModel.h"
-
-#include "EngineBase.h"
 #include "DisplayMode.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 
+#include "utils/Log.h"
+
 GlobalPrefs* gGlobalPrefs = nullptr;
 
-FileState* NewDisplayState(const WCHAR* filePath) {
-    FileState* ds = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
-    char* fp = ToUtf8Temp(filePath);
-    str::ReplaceWithCopy(&ds->filePath, fp);
-    return ds;
+FileState* NewDisplayState(const char* filePath) {
+    FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
+    SetFileStatePath(fs, filePath);
+    return fs;
 }
 
-void DeleteDisplayState(FileState* ds) {
-    delete ds->thumbnail;
-    FreeStruct(&gFileStateInfo, ds);
+void DeleteDisplayState(FileState* fs) {
+    delete fs->thumbnail;
+    FreeStruct(&gFileStateInfo, fs);
 }
 
 Favorite* NewFavorite(int pageNo, const WCHAR* name, const WCHAR* pageLabel) {
     Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, nullptr);
     fav->pageNo = pageNo;
-    fav->name = str::Dup(name);
-    fav->pageLabel = str::Dup(pageLabel);
+    fav->name = strconv::WstrToUtf8(name);
+    fav->pageLabel = strconv::WstrToUtf8(pageLabel);
     return fav;
 }
 
@@ -48,8 +46,8 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
 // prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
 std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
-        for (FileState* ds : *prefs->fileStates) {
-            ds->useDefaultState = true;
+        for (FileState* fs : *prefs->fileStates) {
+            fs->useDefaultState = true;
         }
         // prevent unnecessary settings from being written out
         u16 fieldCount = 0;
@@ -87,17 +85,16 @@ SessionData* NewSessionData() {
     return (SessionData*)DeserializeStruct(&gSessionDataInfo, nullptr);
 }
 
-TabState* NewTabState(FileState* ds) {
+TabState* NewTabState(FileState* fs) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
-    auto dsFilePath = ds->filePath;
-    str::ReplaceWithCopy(&state->filePath, dsFilePath);
-    str::ReplaceWithCopy(&state->displayMode, ds->displayMode);
-    state->pageNo = ds->pageNo;
-    str::ReplaceWithCopy(&state->zoom, ds->zoom);
-    state->rotation = ds->rotation;
-    state->scrollPos = ds->scrollPos;
-    state->showToc = ds->showToc;
-    *state->tocState = *ds->tocState;
+    str::ReplaceWithCopy(&state->filePath, fs->filePath);
+    str::ReplaceWithCopy(&state->displayMode, fs->displayMode);
+    state->pageNo = fs->pageNo;
+    str::ReplaceWithCopy(&state->zoom, fs->zoom);
+    state->rotation = fs->rotation;
+    state->scrollPos = fs->scrollPos;
+    state->showToc = fs->showToc;
+    *state->tocState = *fs->tocState;
     return state;
 }
 
@@ -118,4 +115,16 @@ ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed) {
     }
     ParseColor(parsed, s);
     return &parsed;
+}
+
+void SetFileStatePath(FileState* fs, const char* path) {
+    if (fs->filePath && str::EqI(fs->filePath, path)) {
+        return;
+    }
+    str::ReplaceWithCopy(&fs->filePath, path);
+}
+
+void SetFileStatePath(FileState* fs, const WCHAR* path) {
+    char* pathA = ToUtf8Temp(path);
+    SetFileStatePath(fs, pathA);
 }

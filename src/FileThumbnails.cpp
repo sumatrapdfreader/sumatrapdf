@@ -18,10 +18,10 @@
 #include "AppTools.h"
 #include "FileThumbnails.h"
 
-#define THUMBNAILS_DIR_NAME L"sumatrapdfcache"
+constexpr const char* kThumbnailsDirName = "sumatrapdfcache";
+constexpr const char* kPngExt = "*.png";
 
-// TODO: create in TEMP directory instead?
-static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
+static char* GetThumbnailPathTemp(const char* filePath) {
     // create a fingerprint of a (normalized) path for the file name
     // I'd have liked to also include the file's last modification time
     // in the fingerprint (much quicker than hashing the entire file's
@@ -31,37 +31,35 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     if (!filePath) {
         return nullptr;
     }
-    auto pathA(ToUtf8Temp(filePath));
-    if (!pathA.Get()) {
-        return nullptr;
-    }
     if (path::HasVariableDriveLetter(filePath)) {
-        pathA.Get()[0] = '?'; // ignore the drive letter, if it might change
+        // ignore the drive letter, if it might change
+        char* tmp = (char*)filePath;
+        tmp[0] = '?';
     }
-    CalcMD5Digest((u8*)pathA.Get(), str::Len(pathA.Get()), digest);
+    CalcMD5Digest((u8*)filePath, str::Len(filePath), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
 
-    AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
     if (!thumbsPath) {
         return nullptr;
     }
-    AutoFreeWstr fname(strconv::AnsiToWstr(fingerPrint));
 
-    return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());
+    char* tmp = str::Format(R"(%s\%s.png)", thumbsPath, fingerPrint.Get());
+    char* res = str::DupTemp(tmp);
+    str::Free(tmp);
+    return res;
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(const FileHistory& fileHistory) {
-    AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    if (!thumbsPath) {
-        return;
-    }
-    AutoFreeWstr pattern(path::Join(thumbsPath, L"*.png"));
+    char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
+    AutoFreeStr pattern(path::Join(thumbsPath, kPngExt, nullptr));
 
     WStrVec files;
     WIN32_FIND_DATA fdata;
 
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    WCHAR* pw = ToWstrTemp(pattern);
+    HANDLE hfind = FindFirstFileW(pw, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
         return;
     }
@@ -72,88 +70,40 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
+    // remove files that should not be deleted
     Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
     int n{0};
     for (auto& fs : list) {
-        if (n++ < kFileHistoryMaxFrequent * 2) {
+        if (n++ > kFileHistoryMaxFrequent * 2) {
             break;
         }
-        WCHAR* fp = ToWstrTemp(fs->filePath);
-        AutoFreeWstr bmpPath(GetThumbnailPath(fp));
+        char* bmpPath = GetThumbnailPathTemp(fs->filePath);
         if (!bmpPath) {
             continue;
         }
-        int idx = files.Find(path::GetBaseNameTemp(bmpPath));
-        if (idx != -1) {
-            CrashIf(idx < 0 || files.size() <= (size_t)idx);
-            free(files.PopAt(idx));
+        WCHAR* fileName = ToWstrTemp(path::GetBaseNameTemp(bmpPath));
+        int idx = files.Find(fileName);
+        if (idx < 0) {
+            continue;
         }
+        WCHAR* path = files.PopAt(idx);
+        str::Free(path);
     }
 
-    for (size_t i = 0; i < files.size(); i++) {
-        AutoFreeWstr bmpPath(path::Join(thumbsPath, files.at(i)));
+    for (auto& pathW : files) {
+        char* pathA = ToUtf8Temp(pathW);
+        char* bmpPath = path::Join(thumbsPath, pathA, nullptr);
         file::Delete(bmpPath);
+        str::Free(bmpPath);
     }
-}
-
-// using namespace Gdiplus;
-
-using Gdiplus::ARGB;
-using Gdiplus::Bitmap;
-using Gdiplus::Brush;
-using Gdiplus::Color;
-using Gdiplus::Font;
-using Gdiplus::FontStyle;
-using Gdiplus::FontStyleRegular;
-using Gdiplus::FontStyleUnderline;
-using Gdiplus::Graphics;
-using Gdiplus::LinearGradientBrush;
-using Gdiplus::LinearGradientMode;
-using Gdiplus::Ok;
-using Gdiplus::Pen;
-using Gdiplus::SolidBrush;
-using Gdiplus::Status;
-
-using Gdiplus::CombineModeReplace;
-using Gdiplus::CompositingQualityHighQuality;
-using Gdiplus::GraphicsPath;
-using Gdiplus::Image;
-using Gdiplus::Matrix;
-using Gdiplus::PenAlignmentInset;
-using Gdiplus::Region;
-using Gdiplus::SmoothingModeAntiAlias;
-using Gdiplus::StringFormat;
-using Gdiplus::StringFormatFlagsDirectionRightToLeft;
-using Gdiplus::TextRenderingHintClearTypeGridFit;
-using Gdiplus::UnitPixel;
-
-static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
-    AutoFree data(file::ReadFile(filePath));
-    if (!data.data) {
-        return nullptr;
-    }
-    Gdiplus::Bitmap* bmp = BitmapFromData(data.AsSpan());
-    if (!bmp) {
-        return nullptr;
-    }
-
-    HBITMAP hbmp;
-    RenderedBitmap* rendered = nullptr;
-    if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
-        rendered = new RenderedBitmap(hbmp, Size(bmp->GetWidth(), bmp->GetHeight()));
-    }
-    delete bmp;
-
-    return rendered;
 }
 
 bool LoadThumbnail(FileState& ds) {
     delete ds.thumbnail;
     ds.thumbnail = nullptr;
 
-    WCHAR* fp = ToWstrTemp(ds.filePath);
-    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
+    char* bmpPath = GetThumbnailPathTemp(ds.filePath);
     if (!bmpPath) {
         return false;
     }
@@ -173,13 +123,12 @@ bool HasThumbnail(FileState& ds) {
         return false;
     }
 
-    WCHAR* fp = ToWstrTemp(ds.filePath);
-    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
+    char* bmpPath = GetThumbnailPathTemp(ds.filePath);
     if (!bmpPath) {
         return true;
     }
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
-    FILETIME fileTime = file::GetModificationTime(fp);
+    FILETIME fileTime = file::GetModificationTime(ds.filePath);
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
         delete ds.thumbnail;
@@ -206,16 +155,17 @@ void SaveThumbnail(FileState& ds) {
     }
 
     WCHAR* fp = ToWstrTemp(ds.filePath);
-    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
-    if (!bmpPath) {
+    char* bmpPathA = GetThumbnailPathTemp(ds.filePath);
+    if (!bmpPathA) {
         return;
     }
+    WCHAR* bmpPath = ToWstrTemp(bmpPathA);
     AutoFreeWstr thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
         Gdiplus::Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
-        bmp.Save(bmpPath.Get(), &tmpClsid, nullptr);
+        bmp.Save(bmpPath, &tmpClsid, nullptr);
     }
 }
 
@@ -224,8 +174,7 @@ void RemoveThumbnail(FileState& ds) {
         return;
     }
 
-    WCHAR* fp = ToWstrTemp(ds.filePath);
-    AutoFreeWstr bmpPath(GetThumbnailPath(fp));
+    char* bmpPath = GetThumbnailPathTemp(ds.filePath);
     if (bmpPath) {
         file::Delete(bmpPath);
     }

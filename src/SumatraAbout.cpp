@@ -110,7 +110,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #endif
     {nullptr, nullptr, nullptr}};
 
-static Vec<StaticLinkInfo> gLinkInfo;
+static Vec<StaticLinkInfo*> gStaticLinks;
 
 #define COL1 RGB(196, 64, 50)
 #define COL2 RGB(227, 107, 35)
@@ -256,7 +256,7 @@ static Rect DrawSupportLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
 /* Draws the about screen and remembers some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkInfo) {
+static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& staticLinks) {
     auto col = GetAppColor(AppColor::MainWindowText);
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
@@ -312,7 +312,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
     SelectObject(hdc, penLinkLine);
-    linkInfo.Reset();
+    DeleteVecMembers(staticLinks);
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm::DiskAccess) && el->url;
         if (hasUrl) {
@@ -331,7 +331,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
             PaintLine(hdc, Rect(el->rightPos.x, underlineY, el->rightPos.dx, 0));
-            linkInfo.Append(StaticLinkInfo(el->rightPos, el->url, el->url));
+            auto sl = new StaticLinkInfo(el->rightPos, el->url, el->url);
+            staticLinks.Append(sl);
         }
     }
 
@@ -439,7 +440,7 @@ static void OnPaintAbout(HWND hwnd) {
     HDC hdc = BeginPaint(hwnd, &ps);
     SetLayout(hdc, LAYOUT_LTR);
     UpdateAboutLayoutInfo(hwnd, hdc, &rc);
-    DrawAbout(hwnd, hdc, rc, gLinkInfo);
+    DrawAbout(hwnd, hdc, rc, gStaticLinks);
     EndPaint(hwnd, &ps);
 }
 
@@ -466,32 +467,32 @@ static void CopyAboutInfoToClipboard(__unused HWND hwnd) {
     CopyTextToClipboard(info.LendData());
 }
 
-const WCHAR* GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo* info) {
+const WCHAR* GetStaticLink(Vec<StaticLinkInfo*>& staticLinks, int x, int y, StaticLinkInfo** linkOut) {
     if (!HasPermission(Perm::DiskAccess)) {
         return nullptr;
     }
 
     Point pt(x, y);
-    for (size_t i = 0; i < linkInfo.size(); i++) {
-        if (linkInfo.at(i).rect.Contains(pt)) {
-            if (info) {
-                *info = linkInfo.at(i);
+    for (size_t i = 0; i < staticLinks.size(); i++) {
+        if (staticLinks.at(i)->rect.Contains(pt)) {
+            if (linkOut) {
+                *linkOut = staticLinks.at(i);
             }
-            return linkInfo.at(i).target;
+            return staticLinks.at(i)->target;
         }
     }
 
     return nullptr;
 }
 
-static void CreateInfotipForLink(StaticLinkInfo& linkInfo) {
+static void CreateInfotipForLink(StaticLinkInfo* linkInfo) {
     if (gAboutTooltip != nullptr) {
         return;
     }
 
     gAboutTooltip = new TooltipCtrl(gHwndAbout);
     gAboutTooltip->Create();
-    gAboutTooltip->Show(linkInfo.infotip, linkInfo.rect, false);
+    gAboutTooltip->Show(linkInfo->infotip, linkInfo->rect, false);
 }
 
 static void DeleteInfotip() {
@@ -524,8 +525,8 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_SETCURSOR:
             if (GetCursorPosInHwnd(hwnd, pt)) {
-                StaticLinkInfo linkInfo;
-                if (GetStaticLink(gLinkInfo, pt.x, pt.y, &linkInfo)) {
+                StaticLinkInfo* linkInfo;
+                if (GetStaticLink(gStaticLinks, pt.x, pt.y, &linkInfo)) {
                     CreateInfotipForLink(linkInfo);
                     SetCursorCached(IDC_HAND);
                     return TRUE;
@@ -535,11 +536,11 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_LBUTTONDOWN:
-            gClickedURL = GetStaticLink(gLinkInfo, x, y, nullptr);
+            gClickedURL = GetStaticLink(gStaticLinks, x, y, nullptr);
             break;
 
         case WM_LBUTTONUP:
-            url = GetStaticLink(gLinkInfo, x, y, nullptr);
+            url = GetStaticLink(gStaticLinks, x, y, nullptr);
             if (url && url == gClickedURL) {
                 SumatraLaunchBrowser(url);
             }
@@ -618,7 +619,8 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
         Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
-        win->staticLinks.Append(StaticLinkInfo(rect, kLinkShowList));
+        auto sl = new StaticLinkInfo(rect, kLinkShowList);
+        win->staticLinks.Append(sl);
     }
 }
 
@@ -760,18 +762,21 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 rect.x -= iconSpace;
             }
             rTmp = ToRECT(rect);
-            WCHAR* fp = ToWstrTemp(state->filePath);
-            DrawTextW(hdc, path::GetBaseNameTemp(fp), -1, &rTmp,
-                      DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
+            WCHAR* filePath = ToWstrTemp(state->filePath);
+            const WCHAR* fileName = path::GetBaseNameTemp(filePath);
+            UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
+            DrawTextW(hdc, fileName, -1, &rTmp, fmt);
 
             // note: this crashes asan build in windows code
             // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
             SHFILEINFO sfi = {nullptr};
             uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(fp, 0, &sfi, sizeof(sfi), flags);
+            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePath, 0, &sfi, sizeof(sfi), flags);
             x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
             ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
-            win->staticLinks.Append(StaticLinkInfo(rect.Union(page), fp, fp));
+
+            auto sl = new StaticLinkInfo(rect.Union(page), filePath, filePath);
+            win->staticLinks.Append(sl);
         }
     }
 
@@ -805,11 +810,14 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);
-    win->staticLinks.Append(StaticLinkInfo(rect, kLinkOpenFile));
+    auto sl = new StaticLinkInfo(rect, kLinkOpenFile);
+    win->staticLinks.Append(sl);
 
     rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
-    win->staticLinks.Append(StaticLinkInfo(rect, kLinkHideList));
+    sl = new StaticLinkInfo(rect, kLinkHideList);
+    win->staticLinks.Append(sl);
 
     rect = DrawSupportLink(win->hwndCanvas, hdc, _TR("Support SumatraPDF"));
-    win->staticLinks.Append(StaticLinkInfo(rect, URL_SUPPORT_SUMATRA));
+    sl = new StaticLinkInfo(rect, URL_SUPPORT_SUMATRA);
+    win->staticLinks.Append(sl);
 }

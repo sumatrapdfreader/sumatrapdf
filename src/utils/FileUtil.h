@@ -11,6 +11,7 @@ const char* GetBaseNameTemp(const char* path);
 const char* GetExtNoFreeTemp(const char* path);
 
 char* Join(const char* path, const char* fileName, Allocator* allocator);
+WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
 std::string_view GetDir(std::string_view path);
 bool IsDirectory(std::string_view);
@@ -24,12 +25,12 @@ WCHAR* Normalize(const WCHAR* path);
 WCHAR* ShortPath(const WCHAR* path);
 bool IsSame(const WCHAR* path1, const WCHAR* path2);
 bool HasVariableDriveLetter(const WCHAR* path);
+bool HasVariableDriveLetter(const char* path);
 bool IsOnFixedDrive(const WCHAR* path);
 bool Match(const WCHAR* path, const WCHAR* filter);
 bool IsAbsolute(const WCHAR* path);
 
 WCHAR* GetDir(const WCHAR* path);
-WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
 WCHAR* GetTempFilePath(const WCHAR* filePrefix = nullptr);
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
@@ -55,7 +56,9 @@ i64 GetSize(std::string_view path);
 int ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteFile(const WCHAR* path, std::span<u8>);
 bool Delete(const WCHAR* path);
+bool Delete(const char* path);
 FILETIME GetModificationTime(const WCHAR* path);
+FILETIME GetModificationTime(const char* path);
 bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
 bool StartsWithN(const WCHAR* path, const char* s, size_t len);
 bool StartsWith(const WCHAR* path, const char* s);

@@ -54,6 +54,33 @@ Vec<WindowInfo*> gWindows;
 Kind NG_CURSOR_POS_HELPER = "cursorPosHelper";
 Kind NG_RESPONSE_TO_ACTION = "responseToAction";
 
+StaticLinkInfo::StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip) {
+    this->rect = rect;
+    this->target = str::Dup(target);
+    this->infotip = str::Dup(infotip);
+}
+
+StaticLinkInfo::StaticLinkInfo(const StaticLinkInfo& other) {
+    rect = other.rect;
+    target = str::Dup(other.target);
+    infotip = str::Dup(other.infotip);
+}
+
+StaticLinkInfo& StaticLinkInfo::operator=(const StaticLinkInfo& other) {
+    if (this == &other) {
+        return *this;
+    }
+    rect = other.rect;
+    str::ReplaceWithCopy(&target, other.target);
+    str::ReplaceWithCopy(&infotip, other.infotip);
+    return *this;
+}
+
+StaticLinkInfo::~StaticLinkInfo() {
+    str::Free(target);
+    str::Free(infotip);
+}
+
 WindowInfo::WindowInfo(HWND hwnd) {
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
@@ -100,6 +127,7 @@ WindowInfo::~WindowInfo() {
     delete tabSelectionHistory;
     DeleteCaption(caption);
     DeleteVecMembers(tabs);
+    DeleteVecMembers(staticLinks);
     delete tabsCtrl;
     // cbHandler is passed into Controller and must be deleted afterwards
     // (all controllers should have been deleted prior to WindowInfo, though)

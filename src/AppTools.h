@@ -5,7 +5,8 @@ bool HasBeenInstalled();
 bool IsRunningInPortableMode();
 bool IsDllBuild();
 
-WCHAR* AppGenDataFilename(const WCHAR* pFilename);
+WCHAR* AppGenDataFilename(const WCHAR* fileName);
+char* AppGenDataFilenameTemp(const char* fileName);
 void SetAppDataPath(const WCHAR* path);
 
 void DoAssociateExeWithPdfExtension(HKEY hkey);

@@ -6,6 +6,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - change FileSettings.FilePath from WCHAR* => char*
 - when auto-updating portable, re-launch after update
 - update mupdf
+- rename CmdLineParser.[cpp|h] => CmdLineArgsIter.[cpp|h]
+- lots of WCHAR* => char* changes
 
 2021-07-21 Wed
 
@@ -19,7 +21,6 @@ A daily log of changes and commentary. An experiment of sorts.
 - redo cmd-line handling
 - use CommandLineToArgvW() instead of my own ParseCmdLine()
 - rename settings types String => StringW, Utf8String => String
-- rename CmdLineParser.[cpp|h] => CmdLineArgsIter.[cpp|h]
 
 2021-07-20 Tue
 

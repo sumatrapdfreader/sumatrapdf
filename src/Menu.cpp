@@ -1063,11 +1063,11 @@ static void AppendRecentFilesToMenu(HMENU m) {
 
     int i;
     for (i = 0; i < kFileHistoryMaxRecent; i++) {
-        FileState* state = gFileHistory.Get(i);
-        if (!state || state->isMissing) {
+        FileState* fs = gFileHistory.Get(i);
+        if (!fs || fs->isMissing) {
             break;
         }
-        WCHAR* fp = ToWstrTemp(state->filePath);
+        WCHAR* fp = ToWstrTemp(fs->filePath);
         AddFileMenuItem(m, fp, i);
     }
 
@@ -1552,20 +1552,21 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    const WCHAR* filePath = GetStaticLink(win->staticLinks, x, y, nullptr);
-    if (!filePath || *filePath == '<' || str::StartsWith(filePath, L"http://") ||
-        str::StartsWith(filePath, L"https://")) {
+    const WCHAR* filePathW = GetStaticLink(win->staticLinks, x, y, nullptr);
+    char* filePath = ToUtf8Temp(filePathW);
+    if (!filePath || *filePath == '<' || str::StartsWith(filePath, "http://") ||
+        str::StartsWith(filePath, "https://")) {
         return;
     }
 
-    FileState* state = gFileHistory.Find(filePath, nullptr);
-    CrashIf(!state);
-    if (!state) {
+    FileState* fs = gFileHistory.Find(filePath, nullptr);
+    CrashIf(!fs);
+    if (!fs) {
         return;
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu(), nullptr);
-    win::menu::SetChecked(popup, CmdPinSelectedDocument, state->isPinned);
+    win::menu::SetChecked(popup, CmdPinSelectedDocument, fs->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     MarkMenuOwnerDraw(popup);
@@ -1580,20 +1581,19 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 
     if (CmdPinSelectedDocument == cmd) {
-        state->isPinned = !state->isPinned;
+        fs->isPinned = !fs->isPinned;
         win->HideToolTip();
         win->RedrawAll(true);
         return;
     }
 
     if (CmdForgetSelectedDocument == cmd) {
-        if (state->favorites->size() > 0) {
+        if (fs->favorites->size() > 0) {
             // just hide documents with favorites
-            WCHAR* fp = ToWstrTemp(state->filePath);
-            gFileHistory.MarkFileInexistent(fp, true);
+            gFileHistory.MarkFileInexistent(fs->filePath, true);
         } else {
-            gFileHistory.Remove(state);
-            DeleteDisplayState(state);
+            gFileHistory.Remove(fs);
+            DeleteDisplayState(fs);
         }
         CleanUpThumbnailCache(gFileHistory);
         win->HideToolTip();

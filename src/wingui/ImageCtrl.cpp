@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"

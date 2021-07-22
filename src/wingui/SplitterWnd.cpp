@@ -3,8 +3,8 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
-#include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"

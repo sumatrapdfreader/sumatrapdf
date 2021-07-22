@@ -156,12 +156,12 @@ struct Annotations {
 // Values which are persisted for bookmarks/favorites
 struct Favorite {
     // name of this favorite as shown in the menu
-    WCHAR* name;
+    char* name;
     // number of the bookmarked page
     int pageNo;
     // label for this page (only present if logical and physical page
     // numbers are not the same)
-    WCHAR* pageLabel;
+    char* pageLabel;
     // id of this favorite in the menu (assigned by AppendFavMenuItems)
     int menuId;
 };
@@ -518,9 +518,9 @@ static const FieldInfo gRectFields[] = {
 static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFavoriteFields[] = {
-    {offsetof(Favorite, name), SettingType::StringW, 0},
+    {offsetof(Favorite, name), SettingType::String, 0},
     {offsetof(Favorite, pageNo), SettingType::Int, 0},
-    {offsetof(Favorite, pageLabel), SettingType::StringW, 0},
+    {offsetof(Favorite, pageLabel), SettingType::String, 0},
 };
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 

@@ -119,6 +119,17 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     return path::Join(path, fileName);
 }
 
+char* AppGenDataFilenameTemp(const char* fileName) {
+    if (!fileName) {
+        return nullptr;
+    }
+    WCHAR* tmp = ToWstrTemp(fileName);
+    WCHAR* path = AppGenDataFilename(tmp);
+    char* res = ToUtf8Temp(path);
+    str::Free(path);
+    return res;
+}
+
 #if 0
 WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
     if (!fileName) {

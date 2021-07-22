@@ -43,20 +43,6 @@ enum class DocumentProperty {
     PdfFileStructure,
 };
 
-struct RenderedBitmap {
-    HBITMAP hbmp{nullptr};
-    Size size = {};
-    AutoCloseHandle hMap = {};
-
-    RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
-    }
-    ~RenderedBitmap();
-    [[nodiscard]] RenderedBitmap* Clone() const;
-    [[nodiscard]] HBITMAP GetBitmap() const;
-    [[nodiscard]] Size Size() const;
-    bool StretchDIBits(HDC hdc, Rect target) const;
-};
-
 extern Kind kindDestinationNone;
 extern Kind kindDestinationScrollTo;
 extern Kind kindDestinationLaunchURL;

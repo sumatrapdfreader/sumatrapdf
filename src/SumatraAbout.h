@@ -12,7 +12,7 @@ void OnMenuAbout();
 
 void DrawAboutPage(WindowInfo* win, HDC hdc);
 
-const WCHAR* GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo* info);
+const WCHAR* GetStaticLink(Vec<StaticLinkInfo*>& linkInfo, int x, int y, StaticLinkInfo** info);
 
 constexpr const WCHAR* kLinkOpenFile = L"<File,Open>";
 constexpr const WCHAR* kLinkShowList = L"<View,ShowList>";

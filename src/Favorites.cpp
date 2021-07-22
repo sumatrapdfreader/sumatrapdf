@@ -152,12 +152,12 @@ void Favorites::ResetMenuIds() {
 FileState* Favorites::GetFavByFilePath(const WCHAR* filePath) {
     // it's likely that we'll ask about the info for the same
     // file as in previous call, so use one element cache
-    FileState* ds = gFileHistory.Get(idxCache);
-    char* fp = ToUtf8Temp(filePath);
-    if (!ds || !str::Eq(ds->filePath, fp)) {
-        ds = gFileHistory.Find(filePath, &idxCache);
+    FileState* fs = gFileHistory.Get(idxCache);
+    char* filePathA = ToUtf8Temp(filePath);
+    if (!fs || !str::Eq(fs->filePath, filePathA)) {
+        fs = gFileHistory.Find(filePathA, &idxCache);
     }
-    return ds;
+    return fs;
 }
 
 bool Favorites::IsPageInFavorites(const WCHAR* filePath, int pageNo) {
@@ -173,13 +173,14 @@ bool Favorites::IsPageInFavorites(const WCHAR* filePath, int pageNo) {
     return false;
 }
 
-static Favorite* FindByPage(FileState* ds, int pageNo, const WCHAR* pageLabel = nullptr) {
+static Favorite* FindByPage(FileState* ds, int pageNo, const WCHAR* pageLabelW = nullptr) {
     if (!ds || !ds->favorites) {
         return nullptr;
     }
     auto favs = ds->favorites;
     int n = favs->isize();
-    if (pageLabel) {
+    if (pageLabelW) {
+        char* pageLabel = ToUtf8Temp(pageLabelW);
         for (int i = 0; i < n; i++) {
             auto fav = favs->at(i);
             if (str::Eq(fav->pageLabel, pageLabel)) {
@@ -203,18 +204,20 @@ static int SortByPageNo(const void* a, const void* b) {
     return na->pageNo - nb->pageNo;
 }
 
-void Favorites::AddOrReplace(const WCHAR* filePath, int pageNo, const WCHAR* name, const WCHAR* pageLabel) {
-    FileState* fav = GetFavByFilePath(filePath);
+void Favorites::AddOrReplace(const WCHAR* filePathW, int pageNo, const WCHAR* name, const WCHAR* pageLabel) {
+    FileState* fav = GetFavByFilePath(filePathW);
     if (!fav) {
         CrashIf(gGlobalPrefs->rememberOpenedFiles);
+        char* filePath = ToUtf8Temp(filePathW);
         fav = NewDisplayState(filePath);
         gFileHistory.Append(fav);
     }
 
     Favorite* fn = FindByPage(fav, pageNo, pageLabel);
     if (fn) {
-        str::ReplaceWithCopy(&fn->name, name);
-        CrashIf(fn->pageLabel && !str::Eq(fn->pageLabel, pageLabel));
+        char* nameA = strconv::WstrToUtf8(name);
+        str::ReplacePtr(&fn->name, nameA);
+        CrashIf(fn->pageLabel && !str::Eq(fn->pageLabel, ToUtf8Temp(pageLabel)));
     } else {
         fn = NewFavorite(pageNo, name, pageLabel);
         fav->favorites->Append(fn);
@@ -274,13 +277,21 @@ bool HasFavorites() {
 
 // caller has to free() the result
 static WCHAR* FavReadableName(Favorite* fn) {
-    AutoFreeWstr plainLabel(str::Format(L"%d", fn->pageNo));
-    const WCHAR* label = fn->pageLabel ? fn->pageLabel : plainLabel.Get();
+    const WCHAR* toFree{nullptr};
+    const WCHAR* label = ToWstrTemp(fn->pageLabel);
+    if (!label) {
+        label = str::Format(L"%d", fn->pageNo);
+        toFree = label;
+    }
+    WCHAR* res{nullptr};
     if (fn->name) {
         AutoFreeWstr pageNo(str::Format(_TR("(page %s)"), label));
-        return str::Join(fn->name, L" ", pageNo);
+        res = str::Join(ToWstrTemp(fn->name), L" ", pageNo);
+    } else {
+        res = str::Format(_TR("Page %s"), label);
     }
-    return str::Format(_TR("Page %s"), label);
+    str::Free(toFree);
+    return res;
 }
 
 // caller has to free() the result
@@ -324,10 +335,11 @@ static int SortByBaseFileName(const void* a, const void* b) {
 }
 
 static void GetSortedFilePaths(Vec<const WCHAR*>& filePathsSortedOut, FileState* toIgnore = nullptr) {
-    FileState* ds;
-    for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        if (ds->favorites->size() > 0 && ds != toIgnore) {
-            filePathsSortedOut.Append(ToWstrTemp(ds->filePath));
+    FileState* fs;
+    for (size_t i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
+        if (fs->favorites->size() > 0 && fs != toIgnore) {
+            const WCHAR* s = strconv::Utf8ToWstr(fs->filePath);
+            filePathsSortedOut.Append(s);
         }
     }
     filePathsSortedOut.Sort(SortByBaseFileName);
@@ -456,13 +468,13 @@ static void GoToFavorite(WindowInfo* win, int pageNo) {
 // Going to a bookmark within current file scrolls to a given page.
 // Going to a bookmark in another file, loads the file and scrolls to a page
 // (similar to how invoking one of the recently opened files works)
-static void GoToFavorite(WindowInfo* win, FileState* f, Favorite* fn) {
-    CrashIf(!f || !fn);
-    if (!f || !fn) {
+static void GoToFavorite(WindowInfo* win, FileState* fs, Favorite* fn) {
+    CrashIf(!fs || !fn);
+    if (!fs || !fn) {
         return;
     }
 
-    WCHAR* fp = ToWstrTemp(f->filePath);
+    WCHAR* fp = ToWstrTemp(fs->filePath);
     WindowInfo* existingWin = FindWindowInfoByFile(fp, true);
     if (existingWin) {
         int pageNo = fn->pageNo;
@@ -479,14 +491,14 @@ static void GoToFavorite(WindowInfo* win, FileState* f, Favorite* fn) {
     // A hacky solution because I don't want to add even more parameters to
     // LoadDocument() and LoadDocumentInto()
     int pageNo = fn->pageNo;
-    FileState* ds = gFileHistory.Find(fp, nullptr);
+    FileState* ds = gFileHistory.Find(fs->filePath, nullptr);
     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
         ds->pageNo = fn->pageNo;
         ds->scrollPos = PointF(-1, -1); // don't scroll the page
         pageNo = -1;
     }
 
-    LoadArgs args(f->filePath, win);
+    LoadArgs args(fs->filePath, win);
     win = LoadDocument(args);
     if (win) {
         uitask::Post([=] { GoToFavorite(win, pageNo); });

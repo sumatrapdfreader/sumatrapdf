@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
 #include "utils/Archive.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
@@ -11,7 +12,6 @@
 #include "utils/PalmDbReader.h"
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
 
 #include "wingui/TreeModel.h"
 

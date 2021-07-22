@@ -374,7 +374,8 @@ class HwndPasswordUI : public PasswordUI {
 /* Get password for a given 'fileName', can be nullptr if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
+WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileNameW, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
+    char* fileName = ToUtf8Temp(fileNameW);
     FileState* fileFromHistory = gFileHistory.Find(fileName, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         AutoFree fingerprint(str::MemToHex(fileDigest, 16));
@@ -403,10 +404,10 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, u8* fileDigest, u8 dec
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
         if (urlName) {
-            fileName = urlName;
+            fileNameW = urlName;
         }
     }
-    fileName = path::GetBaseNameTemp(fileName);
+    fileNameW = path::GetBaseNameTemp(fileNameW);
 
     // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd)) {
@@ -417,7 +418,7 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, u8* fileDigest, u8 dec
     win::ToForeground(hwnd);
 
     bool* rememberPwd = gGlobalPrefs->rememberOpenedFiles ? saveKey : nullptr;
-    return Dialog_GetPassword(hwnd, fileName, rememberPwd);
+    return Dialog_GetPassword(hwnd, fileNameW, rememberPwd);
 }
 
 // update global windowState for next default launch when either
@@ -448,25 +449,25 @@ void RememberDefaultWindowPosition(WindowInfo* win) {
     }
 }
 
-static void UpdateDisplayStateWindowRect(WindowInfo* win, FileState& ds, bool updateGlobal = true) {
+static void UpdateDisplayStateWindowRect(WindowInfo* win, FileState* fs, bool updateGlobal = true) {
     if (updateGlobal) {
         RememberDefaultWindowPosition(win);
     }
 
-    ds.windowState = gGlobalPrefs->windowState;
-    ds.windowPos = gGlobalPrefs->windowPos;
-    ds.sidebarDx = gGlobalPrefs->sidebarDx;
+    fs->windowState = gGlobalPrefs->windowState;
+    fs->windowPos = gGlobalPrefs->windowPos;
+    fs->sidebarDx = gGlobalPrefs->sidebarDx;
 }
 
-static void UpdateSidebarDisplayState(TabInfo* tab, FileState* ds) {
+static void UpdateSidebarDisplayState(TabInfo* tab, FileState* fs) {
     CrashIf(!tab);
     WindowInfo* win = tab->win;
-    ds->showToc = tab->showToc;
+    fs->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
         TocTree* tocTree = tab->ctrl->GetToc();
         UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
     }
-    *ds->tocState = tab->tocState;
+    *fs->tocState = tab->tocState;
 }
 
 void UpdateTabFileDisplayStateForTab(TabInfo* tab) {
@@ -476,13 +477,14 @@ void UpdateTabFileDisplayStateForTab(TabInfo* tab) {
     WindowInfo* win = tab->win;
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
-    FileState* ds = gFileHistory.Find(tab->filePath, nullptr);
-    if (!ds) {
+    char* fp = ToUtf8Temp(tab->filePath);
+    FileState* fs = gFileHistory.Find(fp, nullptr);
+    if (!fs) {
         return;
     }
-    tab->ctrl->GetDisplayState(ds);
-    UpdateDisplayStateWindowRect(win, *ds, false);
-    UpdateSidebarDisplayState(tab, ds);
+    tab->ctrl->GetDisplayState(fs);
+    UpdateDisplayStateWindowRect(win, fs, false);
+    UpdateSidebarDisplayState(tab, fs);
 }
 
 bool IsUIRightToLeft() {
@@ -684,7 +686,8 @@ static void CreateThumbnailForFile(WindowInfo* win, FileState& ds) {
     win->ctrl->CreateThumbnail(Size(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
         uitask::Post([=] {
             if (bmp) {
-                SetThumbnail(gFileHistory.Find(filePath, nullptr), bmp);
+                char* filePathA = ToUtf8Temp(filePath);
+                SetThumbnail(gFileHistory.Find(filePathA, nullptr), bmp);
             }
             free(filePath);
         });
@@ -1009,7 +1012,7 @@ static bool showTocByDefault(const WCHAR* path) {
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileState* state) {
+static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileState* fs) {
     WindowInfo* win = args.win;
     CrashIf(!win);
     if (!win) {
@@ -1020,17 +1023,18 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
 
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
-    if (!state && gGlobalPrefs->rememberStatePerDocument) {
-        state = gFileHistory.Find(args.fileName, nullptr);
-        if (state) {
-            if (state->windowPos.IsEmpty()) {
-                state->windowPos = gGlobalPrefs->windowPos;
+    if (!fs && gGlobalPrefs->rememberStatePerDocument) {
+        char* fn = ToUtf8Temp(args.fileName);
+        fs = gFileHistory.Find(fn, nullptr);
+        if (fs) {
+            if (fs->windowPos.IsEmpty()) {
+                fs->windowPos = gGlobalPrefs->windowPos;
             }
-            EnsureAreaVisibility(state->windowPos);
+            EnsureAreaVisibility(fs->windowPos);
         }
     }
-    if (state && state->useDefaultState) {
-        state = nullptr;
+    if (fs && fs->useDefaultState) {
+        fs = nullptr;
     }
 
     DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
@@ -1044,18 +1048,18 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
         showType = SW_MAXIMIZE;
     }
 
-    if (state) {
-        ss.page = state->pageNo;
-        displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
-        showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
-        if (state->windowState == WIN_STATE_NORMAL) {
+    if (fs) {
+        ss.page = fs->pageNo;
+        displayMode = DisplayModeFromString(fs->displayMode, DisplayMode::Automatic);
+        showAsFullScreen = WIN_STATE_FULLSCREEN == fs->windowState;
+        if (fs->windowState == WIN_STATE_NORMAL) {
             showType = SW_NORMAL;
-        } else if (state->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
+        } else if (fs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
             showType = SW_MAXIMIZE;
-        } else if (state->windowState == WIN_STATE_MINIMIZED) {
+        } else if (fs->windowState == WIN_STATE_MINIMIZED) {
             showType = SW_MINIMIZE;
         }
-        showToc = state->showToc;
+        showToc = fs->showToc;
         if (win->ctrl && win->presentation) {
             showToc = tab->showTocPresentation;
         }
@@ -1085,7 +1089,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
             if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir) {
-                dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
+                dm->SetDisplayR2L(fs ? fs->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
             }
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
@@ -1108,25 +1112,25 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
             CrashIf(true);
         }
     } else {
-        state = nullptr;
+        fs = nullptr;
     }
     delete prevCtrl;
 
-    if (state) {
+    if (fs) {
         CrashIf(!win->IsDocLoaded());
-        zoomVirtual = ZoomFromString(state->zoom, ZOOM_FIT_PAGE);
+        zoomVirtual = ZoomFromString(fs->zoom, ZOOM_FIT_PAGE);
         if (win->ctrl->ValidPageNo(ss.page)) {
             if (ZOOM_FIT_CONTENT != zoomVirtual) {
-                ss.x = state->scrollPos.x;
-                ss.y = state->scrollPos.y;
+                ss.x = fs->scrollPos.x;
+                ss.y = fs->scrollPos.y;
             }
             // else let win->AsFixed()->Relayout() scroll to fit the page (again)
         } else if (win->ctrl->PageCount() > 0) {
             ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
         }
         // else let win->ctrl->GoToPage(ss.page, false) verify the page number
-        rotation = state->rotation;
-        tab->tocState = *state->tocState;
+        rotation = fs->rotation;
+        tab->tocState = *fs->tocState;
     }
 
     // DisplayModel needs a valid zoom value before any relayout
@@ -1148,7 +1152,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
     if (win->AsEbook()) {
         // start ebook UI layout after UpdateUiForCurrentTab
         // (prevents the need for an instant re-layout)
-        win->AsEbook()->StartLayouting(state ? state->reparseIdx : 0, displayMode);
+        win->AsEbook()->StartLayouting(fs ? fs->reparseIdx : 0, displayMode);
     }
 
     if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEnginePdf) {
@@ -1160,14 +1164,14 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
         }
     }
 
-    bool shouldPlace = args.isNewWindow || args.placeWindow && state;
+    bool shouldPlace = args.isNewWindow || args.placeWindow && fs;
     if (args.noPlaceWindow) {
         shouldPlace = false;
     }
     if (shouldPlace) {
-        if (args.isNewWindow && state && !state->windowPos.IsEmpty()) {
+        if (args.isNewWindow && fs && !fs->windowPos.IsEmpty()) {
             // Make sure it doesn't have a position like outside of the screen etc.
-            Rect rect = ShiftRectToWorkArea(state->windowPos);
+            Rect rect = ShiftRectToWorkArea(fs->windowPos);
             // This shouldn't happen until !win.IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame, rect);
@@ -1247,10 +1251,11 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         return;
     }
 
-    FileState* ds = NewDisplayState(tab->filePath);
-    tab->ctrl->GetDisplayState(ds);
-    UpdateDisplayStateWindowRect(win, *ds);
-    UpdateSidebarDisplayState(tab, ds);
+    char* tabFilePath = ToUtf8Temp(tab->filePath);
+    FileState* fs = NewDisplayState(tabFilePath);
+    tab->ctrl->GetDisplayState(fs);
+    UpdateDisplayStateWindowRect(win, fs);
+    UpdateSidebarDisplayState(tab, fs);
     // Set the windows state based on the actual window's placement
     int wstate = WIN_STATE_NORMAL;
     if (win->isFullScreen) {
@@ -1262,27 +1267,26 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
             wstate = WIN_STATE_MINIMIZED;
         }
     }
-    ds->windowState = wstate;
-    ds->useDefaultState = false;
+    fs->windowState = wstate;
+    fs->useDefaultState = false;
 
     LoadArgs args(tab->filePath, win);
     args.showWin = true;
     args.placeWindow = false;
-    LoadDocIntoCurrentTab(args, ctrl, ds);
+    LoadDocIntoCurrentTab(args, ctrl, fs);
 
     if (!ctrl) {
-        DeleteDisplayState(ds);
+        DeleteDisplayState(fs);
         return;
     }
 
     tab->reloadOnFocus = false;
 
     if (gGlobalPrefs->showStartPage) {
-        WCHAR* fp = ToWstrTemp(ds->filePath);
         // refresh the thumbnail for this file
-        FileState* state = gFileHistory.Find(fp, nullptr);
-        if (state) {
-            CreateThumbnailForFile(win, *state);
+        fs = gFileHistory.Find(fs->filePath, nullptr);
+        if (fs) {
+            CreateThumbnailForFile(win, *fs);
         }
     }
 
@@ -1291,16 +1295,15 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         // we don't ask again at the next refresh
         AutoFree decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
-            WCHAR* fp = ToWstrTemp(ds->filePath);
-            FileState* state = gFileHistory.Find(fp, nullptr);
-            if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
-                free(state->decryptionKey);
-                state->decryptionKey = decryptionKey.Release();
+            fs = gFileHistory.Find(fs->filePath, nullptr);
+            if (fs && !str::Eq(fs->decryptionKey, decryptionKey)) {
+                free(fs->decryptionKey);
+                fs->decryptionKey = decryptionKey.Release();
             }
         }
     }
 
-    DeleteDisplayState(ds);
+    DeleteDisplayState(fs);
 }
 
 static void CreateSidebar(WindowInfo* win) {
@@ -1474,30 +1477,32 @@ void DeleteWindowInfo(WindowInfo* win) {
 }
 
 static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
-    FileState* ds = gFileHistory.Find(newPath, nullptr);
+    char* newPathA = ToUtf8Temp(newPath);
+    FileState* fs = gFileHistory.Find(newPathA, nullptr);
     bool oldIsPinned = false;
     int oldOpenCount = 0;
-    if (ds) {
-        oldIsPinned = ds->isPinned;
-        oldOpenCount = ds->openCount;
-        gFileHistory.Remove(ds);
+    if (fs) {
+        oldIsPinned = fs->isPinned;
+        oldOpenCount = fs->openCount;
+        gFileHistory.Remove(fs);
         // TODO: merge favorites as well?
-        if (ds->favorites->size() > 0) {
+        if (fs->favorites->size() > 0) {
             UpdateFavoritesTreeForAllWindows();
         }
-        DeleteDisplayState(ds);
+        DeleteDisplayState(fs);
     }
-    ds = gFileHistory.Find(oldPath, nullptr);
-    if (ds) {
-        char* fp = strconv::WstrToUtf8(newPath);
-        str::ReplacePtr(&ds->filePath, fp);
+    char* oldPathA = ToUtf8Temp(oldPath);
+    fs = gFileHistory.Find(oldPathA, nullptr);
+    if (fs) {
+        char* filePathA = ToUtf8Temp(newPath);
+        SetFileStatePath(fs, filePathA);
         // merge Frequently Read data, so that a file
         // doesn't accidentally vanish from there
-        ds->isPinned = ds->isPinned || oldIsPinned;
-        ds->openCount += oldOpenCount;
+        fs->isPinned = fs->isPinned || oldIsPinned;
+        fs->openCount += oldOpenCount;
         // the thumbnail is recreated by LoadDocument
-        delete ds->thumbnail;
-        ds->thumbnail = nullptr;
+        delete fs->thumbnail;
+        fs->thumbnail = nullptr;
     }
 }
 
@@ -1568,11 +1573,13 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
-    if (failEarly && gFileHistory.Find(fullPath, nullptr)) {
+    char* fullPathA = ToUtf8Temp(fullPath);
+    if (failEarly && gFileHistory.Find(fullPathA, nullptr)) {
         AutoFreeWstr adjPath(str::Dup(fullPath));
         if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
             fullPath.Set(adjPath.StealData());
+            fullPathA = ToUtf8Temp(fullPath);
             failEarly = false;
         }
     }
@@ -1585,7 +1592,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
-        if (gFileHistory.MarkFileInexistent(fullPath)) {
+        if (gFileHistory.MarkFileInexistent(fullPathA)) {
             // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
             if (!args.noSavePrefs) {
                 prefs::Save();
@@ -1645,7 +1652,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
-        if (gFileHistory.MarkFileInexistent(fullPath)) {
+        fullPathA = ToUtf8Temp(fullPath);
+        if (gFileHistory.MarkFileInexistent(fullPathA)) {
             // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
             if (!args.noSavePrefs) {
                 prefs::Save();
@@ -1716,7 +1724,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->currentTab->filePath));
-        FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
+        fullPathA = ToUtf8Temp(fullPath);
+        FileState* ds = gFileHistory.MarkFileLoaded(fullPathA);
         if (gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
         }
@@ -3013,8 +3022,9 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     for (size_t i = files.size(); i > 0; i--) {
         WCHAR* path = files.at(i - 1);
         Kind kind = GuessFileTypeFromName(path);
+        char* pathA = ToUtf8Temp(path);
         if (!IsSupportedFileType(kind, gGlobalPrefs->ebookUI.useFixedPageUI) && !Doc::IsSupportedFileType(kind) &&
-            !gFileHistory.Find(path, nullptr)) {
+            !gFileHistory.Find(pathA, nullptr)) {
             free(files.PopAt(i - 1));
         }
     }

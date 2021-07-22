@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 #include "utils/Archive.h"
 #include "utils/PalmDbReader.h"
 #include "utils/GdiPlusUtil.h"
@@ -14,7 +15,6 @@
 #include "utils/TrivialHtmlParser.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
@@ -873,20 +873,18 @@ int EbookController::CurrentTocPageNo() const {
     return currPageReparseIdx + 1;
 }
 
-void EbookController::GetDisplayState(FileState* ds) {
-    char* fp = ToUtf8Temp(doc.GetFilePath());
-    if (!ds->filePath || !str::EqI(ds->filePath, fp)) {
-        str::ReplaceWithCopy(&ds->filePath, fp);
-    }
+void EbookController::GetDisplayState(FileState* fs) {
+    char* filePathA = ToUtf8Temp(doc.GetFilePath());
+    SetFileStatePath(fs, filePathA);
 
-    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+    fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
     // don't modify any of the other FileState values
     // as long as they're not used, so that the same
     // FileState settings can also be used for EngineEbook;
     // we get reasonable defaults from FileState's constructor anyway
-    ds->reparseIdx = currPageReparseIdx;
-    str::ReplaceWithCopy(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
+    fs->reparseIdx = currPageReparseIdx;
+    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
 }
 
 void EbookController::SetViewPortSize(__unused Size size) {

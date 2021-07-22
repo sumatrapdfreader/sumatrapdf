@@ -3,9 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "TextSelection.h"
 

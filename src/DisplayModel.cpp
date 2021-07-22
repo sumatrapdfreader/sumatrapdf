@@ -206,28 +206,26 @@ bool DisplayModel::GetPresentationMode() const {
     return presentationMode;
 }
 
-void DisplayModel::GetDisplayState(FileState* ds) {
-    char* fp = ToUtf8Temp(engine->FileName());
-    if (!ds->filePath || !str::EqI(ds->filePath, fp)) {
-        str::ReplaceWithCopy(&ds->filePath, fp);
-    }
+void DisplayModel::GetDisplayState(FileState* fs) {
+    char* fileNameA = ToUtf8Temp(engine->FileName());
+    SetFileStatePath(fs, fileNameA);
 
-    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+    fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplaceWithCopy(&ds->displayMode, DisplayModeToString(presentationMode ? presDisplayMode : GetDisplayMode()));
-    ZoomToString(&ds->zoom, presentationMode ? presZoomVirtual : zoomVirtual, ds);
+    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(presentationMode ? presDisplayMode : GetDisplayMode()));
+    ZoomToString(&fs->zoom, presentationMode ? presZoomVirtual : zoomVirtual, fs);
 
     ScrollState ss = GetScrollState();
-    ds->pageNo = ss.page;
-    ds->scrollPos = PointF();
+    fs->pageNo = ss.page;
+    fs->scrollPos = PointF();
     if (!presentationMode) {
-        ds->scrollPos = PointF((float)ss.x, (float)ss.y);
+        fs->scrollPos = PointF((float)ss.x, (float)ss.y);
     }
-    ds->rotation = rotation;
-    ds->displayR2L = displayR2L;
+    fs->rotation = rotation;
+    fs->displayR2L = displayR2L;
 
-    free(ds->decryptionKey);
-    ds->decryptionKey = engine->GetDecryptionKey();
+    free(fs->decryptionKey);
+    fs->decryptionKey = engine->GetDecryptionKey();
 }
 
 SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {

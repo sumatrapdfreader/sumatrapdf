@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ThreadUtil.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
 constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\SumatraPDFLogger";

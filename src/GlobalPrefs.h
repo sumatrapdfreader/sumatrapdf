@@ -3,8 +3,8 @@
 
 extern GlobalPrefs* gGlobalPrefs;
 
-FileState* NewDisplayState(const WCHAR* filePath);
-void DeleteDisplayState(FileState* ds);
+FileState* NewDisplayState(const char* filePath);
+void DeleteDisplayState(FileState* fs);
 
 Favorite* NewFavorite(int pageNo, const WCHAR* name, const WCHAR* pageLabel);
 void DeleteFavorite(Favorite* fav);
@@ -14,8 +14,11 @@ std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData);
 void DeleteGlobalPrefs(GlobalPrefs* gp);
 
 SessionData* NewSessionData();
-TabState* NewTabState(FileState* ds);
+TabState* NewTabState(FileState* fs);
 void ResetSessionState(Vec<SessionData*>* sessionData);
 ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed);
+
+void SetFileStatePath(FileState* fs, const char* path);
+void SetFileStatePath(FileState* fs, const WCHAR* path);
 
 #define GetPrefsColor(name) GetParsedColor(name, name##Parsed)

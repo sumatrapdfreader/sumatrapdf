@@ -1,12 +1,12 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "utils/HttpUtil.h"
-
+#include "utils/BaseUtil.h"
 #include "utils/ThreadUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/HttpUtil.h"
 
 #include "utils/Log.h"
 

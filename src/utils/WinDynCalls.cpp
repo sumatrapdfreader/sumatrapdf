@@ -2,8 +2,9 @@
 License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/WinDynCalls.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/WinDynCalls.h"
 
 #define API_DECLARATION(name) Sig_##name Dyn##name = nullptr;
 

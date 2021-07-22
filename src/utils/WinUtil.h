@@ -222,6 +222,20 @@ struct BitmapPixels {
     HDC hdc;
 };
 
+struct RenderedBitmap {
+    HBITMAP hbmp{nullptr};
+    Size size = {};
+    HANDLE hMap = {};
+
+    RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
+    }
+    ~RenderedBitmap();
+    [[nodiscard]] RenderedBitmap* Clone() const;
+    [[nodiscard]] HBITMAP GetBitmap() const;
+    [[nodiscard]] Size Size() const;
+    bool StretchDIBits(HDC hdc, Rect target) const;
+};
+
 void InitAllCommonControls();
 Size GetBitmapSize(HBITMAP hbmp);
 BitmapPixels* GetBitmapPixels(HBITMAP hbmp);

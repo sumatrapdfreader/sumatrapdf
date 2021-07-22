@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
 #include "utils/GdiPlusUtil.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"

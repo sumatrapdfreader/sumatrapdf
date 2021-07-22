@@ -130,11 +130,11 @@ var (
 	}
 
 	favorite = []*Field{
-		mkField("Name", StringW, nil,
+		mkField("Name", String, nil,
 			"name of this favorite as shown in the menu"),
 		mkField("PageNo", Int, 0,
 			"number of the bookmarked page"),
-		mkField("PageLabel", StringW, nil,
+		mkField("PageLabel", String, nil,
 			"label for this page (only present if logical and physical page numbers are not the same)"),
 		mkField("MenuId", Int, 0,
 			"id of this favorite in the menu (assigned by AppendFavMenuItems)").setInternal(),

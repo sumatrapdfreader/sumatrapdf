@@ -19,29 +19,6 @@ void FreePageText(PageText* pageText) {
     pageText->len = 0;
 }
 
-RenderedBitmap::~RenderedBitmap() {
-    DeleteObject(hbmp);
-}
-
-RenderedBitmap* RenderedBitmap::Clone() const {
-    HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
-    return new RenderedBitmap(hbmp2, size);
-}
-
-// render the bitmap into the target rectangle (streching and skewing as requird)
-bool RenderedBitmap::StretchDIBits(HDC hdc, Rect target) const {
-    return BlitHBITMAP(hbmp, hdc, target);
-}
-
-// callers must not delete this (use Clone if you have to modify it)
-HBITMAP RenderedBitmap::GetBitmap() const {
-    return hbmp;
-}
-
-Size RenderedBitmap::Size() const {
-    return size;
-}
-
 Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";
 Kind kindPageElementComment = "comment";

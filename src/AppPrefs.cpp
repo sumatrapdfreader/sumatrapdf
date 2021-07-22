@@ -6,6 +6,7 @@
 #include "utils/FileWatcher.h"
 #include "utils/UITask.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
 
@@ -108,8 +109,8 @@ bool Load() {
     gprefs->openCountWeek = GetWeekCount();
     if (weekDiff > 0) {
         // "age" openCount statistics (cut in in half after every week)
-        for (FileState* ds : *gprefs->fileStates) {
-            ds->openCount >>= weekDiff;
+        for (FileState* fs : *gprefs->fileStates) {
+            fs->openCount >>= weekDiff;
         }
     }
 
@@ -157,18 +158,19 @@ static void RememberSessionState() {
         }
         SessionData* data = NewSessionData();
         for (TabInfo* tab : win->tabs) {
-            FileState* ds = NewDisplayState(tab->filePath);
+            char* fp = ToUtf8Temp(tab->filePath);
+            FileState* fs = NewDisplayState(fp);
             if (tab->ctrl) {
-                tab->ctrl->GetDisplayState(ds);
+                tab->ctrl->GetDisplayState(fs);
             }
             // TODO: pageNo should be good enough, as canvas size is restored as well
             if (tab->AsEbook() && tab->ctrl) {
-                ds->pageNo = tab->ctrl->CurrentPageNo();
+                fs->pageNo = tab->ctrl->CurrentPageNo();
             }
-            ds->showToc = tab->showToc;
-            *ds->tocState = tab->tocState;
-            data->tabStates->Append(NewTabState(ds));
-            DeleteDisplayState(ds);
+            fs->showToc = tab->showToc;
+            *fs->tocState = tab->tocState;
+            data->tabStates->Append(NewTabState(fs));
+            DeleteDisplayState(fs);
         }
         data->tabIndex = win->tabs.Find(win->currentTab) + 1;
         // TODO: allow recording this state without changing gGlobalPrefs

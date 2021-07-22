@@ -2,13 +2,13 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include <OleAcc.h>
 #include "utils/ScopedWin.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "DisplayMode.h"
 #include "SettingsStructs.h"

@@ -4,9 +4,9 @@ License: GPLv3 */
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
@@ -59,13 +59,13 @@ static int cmpOpenCount(const void* a, const void* b) {
     return dsA->index < dsB->index ? -1 : 1;
 }
 
-void FileHistory::Append(FileState* state) const {
-    CrashIf(!state->filePath);
-    states->Append(state);
+void FileHistory::Append(FileState* fs) const {
+    CrashIf(!fs->filePath);
+    states->Append(fs);
 }
 
-void FileHistory::Remove(FileState* state) const {
-    states->Remove(state);
+void FileHistory::Remove(FileState* fs) const {
+    states->Remove(fs);
 }
 
 void FileHistory::UpdateStatesSource(Vec<FileState*>* states) {
@@ -95,17 +95,16 @@ FileState* FileHistory::Get(size_t index) const {
     return nullptr;
 }
 
-FileState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
+FileState* FileHistory::Find(const char* filePath, size_t* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
-    const WCHAR* fileName = path::GetBaseNameTemp(filePath);
+    const char* fileName = path::GetBaseNameTemp(filePath);
     int n = states->isize();
     for (int i = 0; i < n; i++) {
-        FileState* state = states->at(i);
-        WCHAR* fp = ToWstrTemp(state->filePath);
-        if (str::EqI(fp, filePath)) {
+        FileState* fs = states->at(i);
+        if (str::EqI(fs->filePath, filePath)) {
             idxExact = i;
-        } else if (str::EndsWithI(fp, fileName)) {
+        } else if (str::EndsWithI(fs->filePath, fileName)) {
             idxFileNameMatch = i;
         }
     }
@@ -122,25 +121,25 @@ FileState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     return states->at(idFound);
 }
 
-FileState* FileHistory::MarkFileLoaded(const WCHAR* filePath) const {
+FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
     CrashIf(!filePath);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
-    FileState* state = Find(filePath, nullptr);
-    if (!state) {
-        state = NewDisplayState(filePath);
-        state->useDefaultState = true;
+    FileState* fs = Find(filePath, nullptr);
+    if (!fs) {
+        fs = NewDisplayState(filePath);
+        fs->useDefaultState = true;
     } else {
-        states->Remove(state);
-        state->isMissing = false;
+        states->Remove(fs);
+        fs->isMissing = false;
     }
-    states->InsertAt(0, state);
-    state->openCount++;
-    return state;
+    states->InsertAt(0, fs);
+    fs->openCount++;
+    return fs;
 }
 
-bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) const {
+bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
     CrashIf(!filePath);
     FileState* state = Find(filePath, nullptr);
     if (!state) {

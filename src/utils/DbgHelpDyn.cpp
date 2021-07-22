@@ -11,6 +11,7 @@
 #include "utils/WinDynCalls.h"
 #include "utils/DbgHelpDyn.h"
 #include "utils/FileUtil.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules

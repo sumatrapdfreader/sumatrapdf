@@ -62,13 +62,14 @@ struct TouchState {
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
     Rect rect;
-    const WCHAR* target{nullptr};
-    const WCHAR* infotip{nullptr};
+    WCHAR* target{nullptr};
+    WCHAR* infotip{nullptr};
 
+    explicit StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip = nullptr);
     StaticLinkInfo() = default;
-    explicit StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip = nullptr)
-        : rect(rect), target(target), infotip(infotip) {
-    }
+    StaticLinkInfo(const StaticLinkInfo&);
+    StaticLinkInfo& operator=(const StaticLinkInfo& other);
+    ~StaticLinkInfo();
 };
 
 /* Describes information related to one window with (optional) a document
@@ -177,7 +178,7 @@ struct WindowInfo {
     SizeF selectionMeasure;
 
     // a list of static links (mainly used for About and Frequently Read pages)
-    Vec<StaticLinkInfo> staticLinks;
+    Vec<StaticLinkInfo*> staticLinks;
 
     bool isFullScreen{false};
     PresentationMode presentation{PM_DISABLED};

@@ -1,6 +1,8 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+struct RenderedBitmap;
+
 Gdiplus::RectF RectToRectF(Gdiplus::Rect r);
 
 typedef RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
@@ -22,6 +24,8 @@ bool IsGdiPlusNativeFormat(std::span<u8>);
 Gdiplus::Bitmap* BitmapFromData(std::span<u8>);
 Size BitmapSizeFromData(std::span<u8>);
 CLSID GetEncoderClsid(const WCHAR* format);
+RenderedBitmap* LoadRenderedBitmap(const WCHAR* path);
+RenderedBitmap* LoadRenderedBitmap(const char* path);
 
 // TODO: for the lack of a better place
 struct ImageData {

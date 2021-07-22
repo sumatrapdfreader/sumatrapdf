@@ -8,6 +8,7 @@ extern "C" {
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 #include "TreeModel.h"
 #include "Annotation.h"

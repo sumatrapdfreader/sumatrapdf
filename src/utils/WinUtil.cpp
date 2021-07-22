@@ -3,15 +3,15 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
-#include <mlang.h>
-
 #include "utils/BitManip.h"
-#include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinDynCalls.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 // TODO: move function that need Cmd to ResourceIds.h
 #include "Commands.h"
+
+#include <mlang.h>
 
 #include "utils/Log.h"
 
@@ -19,6 +19,31 @@ static HFONT gDefaultGuiFont = nullptr;
 static HFONT gDefaultGuiFontBold = nullptr;
 static HFONT gDefaultGuiFontItalic = nullptr;
 static HFONT gDefaultGuiFontBoldItalic = nullptr;
+
+RenderedBitmap::~RenderedBitmap() {
+    if (IsValidHandle(hbmp)) {
+        DeleteObject(hbmp);
+    }
+}
+
+RenderedBitmap* RenderedBitmap::Clone() const {
+    HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
+    return new RenderedBitmap(hbmp2, size);
+}
+
+// render the bitmap into the target rectangle (streching and skewing as requird)
+bool RenderedBitmap::StretchDIBits(HDC hdc, Rect target) const {
+    return BlitHBITMAP(hbmp, hdc, target);
+}
+
+// callers must not delete this (use Clone if you have to modify it)
+HBITMAP RenderedBitmap::GetBitmap() const {
+    return hbmp;
+}
+
+Size RenderedBitmap::Size() const {
+    return size;
+}
 
 int RectDx(const RECT& r) {
     return r.right - r.left;

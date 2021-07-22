@@ -6,19 +6,18 @@
 #define MINILISPAPI /**/
 
 #include "utils/BaseUtil.h"
-#include <ddjvuapi.h>
-#include <miniexp.h>
+#include "utils/ScopedWin.h"
 #include "utils/ByteReader.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/Log.h"
 
 #include "SumatraConfig.h"
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
+#include <ddjvuapi.h>
+#include <miniexp.h>
 #include "EngineDjVu.h"
 
 Kind kindEngineDjVu = "engineDjVu";
