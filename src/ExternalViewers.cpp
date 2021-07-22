@@ -25,9 +25,9 @@
 struct ExternalViewerInfo {
     const char* name; // shown to the user
     int cmd;
-    const WCHAR* exts; // valid extensions
-    const WCHAR* exePartialPath;
-    const WCHAR* launchArgs;
+    const char* exts; // valid extensions
+    const char* exePartialPath;
+    const char* launchArgs;
     Kind engineKind;
     // set by DetectExternalViewers()
     const WCHAR* exeFullPath; // if found, full path to the executable
@@ -43,56 +43,56 @@ static ExternalViewerInfo gExternalViewers[] = {
     {
         "Acrobat Reader",
         CmdOpenWithAcrobat,
-        L".pdf",
-        LR"(Adobe\Acrobat Reader DC\Reader\AcroRd32.exe)",
+        ".pdf",
+        R"(Adobe\Acrobat Reader DC\Reader\AcroRd32.exe)",
         // Command line format for version 6 and later:
         //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
         //   /P <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
         // TODO: Also set zoom factor and scroll to current position?
-        LR"(/A page=%p "%1")",
+        R"(/A page=%p "%1")",
         kindEnginePdf,
         nullptr
     },
     {
         "Foxit Reader",
         CmdOpenWithFoxIt,
-        L".pdf",
-        L"Foxit Software\\Foxit Reader\\FoxitReader.exe",
+        ".pdf",
+        R"(Foxit Software\Foxit Reader\FoxitReader.exe)",
         // Foxit cmd-line format:
         // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
         // TODO: Foxit allows passing password and zoom
-        L"\"%1\" /A page=%p",
+        R"("%1" /A page=%p)",
         kindEnginePdf,
         nullptr
     },
     {
         "Foxit PhantomPDF",
         CmdOpenWithFoxItPhantom,
-        L".pdf",
-        LR"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)",
-        LR"("%1" /A page=%p)",
+        ".pdf",
+        R"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)",
+        R"("%1" /A page=%p)",
         kindEnginePdf,
         nullptr
     },
     {
         "PDF-XChange Editor",
         CmdOpenWithPdfXchange,
-        L".pdf",
-        LR"(Tracker Software\PDF Editor\PDFXEdit.exe)",
+        ".pdf",
+        R"(Tracker Software\PDF Editor\PDFXEdit.exe)",
         // PDFXChange cmd-line format:
         // [/A "param=value [&param2=value ..."] [PDF filename]
         // /A params: page=<page number>
-        LR"(/A page=%p "%1")",
+        R"(/A page=%p "%1")",
         kindEnginePdf,
         nullptr
     },
     {
         "Pdf & Djvu Bookmarker",
         CmdOpenWithPdfDjvuBookmarker,
-        L".pdf;.djvu",
-        L"Pdf & Djvu Bookmarker\\PdfDjvuBookmarker.exe",
+        ".pdf;.djvu",
+        R"(Pdf & Djvu Bookmarker\PdfDjvuBookmarker.exe)",
         nullptr,
         nullptr,
         nullptr
@@ -100,8 +100,8 @@ static ExternalViewerInfo gExternalViewers[] = {
     {
         "XPS Viewer",
         CmdOpenWithXpsViewer,
-        L".xps;.oxps",
-        L"xpsrchvw.exe",
+        ".xps;.oxps",
+        "xpsrchvw.exe",
         nullptr,
         kindEngineXps,
         nullptr
@@ -109,8 +109,8 @@ static ExternalViewerInfo gExternalViewers[] = {
     {
         "HTML Help",
         CmdOpenWithHtmlHelp,
-        L".chm",
-        L"hh.exe",
+        ".chm",
+        "hh.exe",
         nullptr,
         kindEngineChm,
         nullptr
@@ -142,8 +142,8 @@ static bool CanViewExternally(TabInfo* tab) {
     return file::Exists(tab->filePath);
 }
 
-static bool DetectExternalViewer(ExternalViewerInfo* info) {
-    const WCHAR* partialPath = info->exePartialPath;
+static bool DetectExternalViewer(ExternalViewerInfo* ev) {
+    const WCHAR* partialPath = ToWstrTemp(ev->exePartialPath);
     if (!partialPath || !*partialPath) {
         return false;
     }
@@ -152,7 +152,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
         WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
-            info->exeFullPath = path;
+            ev->exeFullPath = path;
             return true;
         }
         str::Free(path);
@@ -161,7 +161,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
         WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
-            info->exeFullPath = path;
+            ev->exeFullPath = path;
             return true;
         }
         str::Free(path);
@@ -170,7 +170,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_WINDOWS);
         WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
-            info->exeFullPath = path;
+            ev->exeFullPath = path;
             return true;
         }
         str::Free(path);
@@ -179,7 +179,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* info) {
         TempWstr dir = GetSpecialFolderTemp(CSIDL_SYSTEM);
         WCHAR* path = path::Join(dir, partialPath);
         if (file::Exists(path)) {
-            info->exeFullPath = path;
+            ev->exeFullPath = path;
             return true;
         }
         str::Free(path);
@@ -281,21 +281,22 @@ bool CanViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     if (!tab || !CanViewExternally(tab)) {
         return false;
     }
-    ExternalViewerInfo* info = FindExternalViewerInfoByCmd(cmd);
-    if (!info || info->exeFullPath == nullptr) {
+    ExternalViewerInfo* ev = FindExternalViewerInfoByCmd(cmd);
+    if (!ev || ev->exeFullPath == nullptr) {
         return false;
     }
     // must match file extension
     const WCHAR* filePath = tab->filePath.Get();
     const WCHAR* ext = path::GetExtNoFreeTemp(filePath);
-    const WCHAR* pos = str::FindI(info->exts, ext);
+    WCHAR* exts = ToWstrTemp(ev->exts);
+    const WCHAR* pos = str::FindI(exts, ext);
     if (!pos) {
         return false;
     }
     Kind engineKind = tab->GetEngineType();
     if (engineKind != nullptr) {
-        if (info->engineKind != nullptr) {
-            if (info->engineKind != engineKind) {
+        if (ev->engineKind != nullptr) {
+            if (ev->engineKind != engineKind) {
                 return false;
             }
         }
@@ -331,12 +332,12 @@ static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
 bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     bool canView = CanViewWithKnownExternalViewer(tab, cmd);
     CrashIf(!canView);
-    ExternalViewerInfo* info = FindExternalViewerInfoByCmd(cmd);
-    if (!canView || info->exeFullPath == nullptr) {
+    ExternalViewerInfo* ev = FindExternalViewerInfoByCmd(cmd);
+    if (!canView || ev->exeFullPath == nullptr) {
         return false;
     }
-    AutoFreeWstr params = FormatParams(info->launchArgs, tab);
-    return LaunchFile(info->exeFullPath, params);
+    AutoFreeWstr params = FormatParams(ToWstrTemp(ev->launchArgs), tab);
+    return LaunchFile(ev->exeFullPath, params);
 }
 
 bool PathMatchFilter(const WCHAR* path, char* filter) {
