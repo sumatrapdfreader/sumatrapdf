@@ -5,6 +5,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - make temp allocator be per-thread. the only sane thing to do
 - fix toc tree on all document types
 - convert typedef std::function to using
+- tweak build script
 
 2021-07-22 Thu
 

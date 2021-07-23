@@ -13,10 +13,7 @@ import (
 )
 
 var (
-	flgNoCleanCheck          bool
-	flgSmoke                 bool
-	flgUpload                bool
-	flgSkipTranslationVerify bool
+	flgSkipSign bool
 )
 
 func regenPremake() {
@@ -95,6 +92,43 @@ func runCppCheck(all bool) {
 	logf("\nLogged output to '%s'\n", cppcheckLogFile)
 }
 
+type BuildOptions struct {
+	sign                      bool
+	upload                    bool
+	verifyTranslationUpToDate bool
+	doCleanCheck              bool
+	releaseBuild              bool
+}
+
+func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
+	logf("upload: %v\n", opts.upload)
+	logf("sign: %v\n", opts.sign)
+	logf("verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
+
+	if opts.upload {
+		panicIf(!hasSpacesCreds())
+		panicIf(!hasS3Creds())
+	}
+
+	if opts.sign {
+		panicIf(!hasCertPwd(), "CERT_PWD env variable is not set")
+	}
+	if opts.verifyTranslationUpToDate {
+		verifyTranslationsMust()
+	}
+	if opts.doCleanCheck {
+		u.PanicIf(!isGitClean(), "git has unsaved changes\n")
+	}
+	if opts.releaseBuild {
+		verifyOnReleaseBranchMust()
+		os.RemoveAll("out")
+	}
+
+	if !opts.sign {
+		flgSkipSign = true
+	}
+}
+
 func main() {
 	if u.DirExists("/opt/buildhome/repo") {
 		// on Cloudflare pages build machine
@@ -110,13 +144,12 @@ func main() {
 
 	var (
 		flgRegenPremake            bool
+		flgUpload                  bool
 		flgCIBuild                 bool
 		flgUploadCiBuild           bool
 		flgBuildLzsa               bool
 		flgBuildPreRelease         bool
 		flgBuildRelease            bool
-		flgBuildRel64Fast          bool
-		flgBuildRel32Fast          bool
 		flgWc                      bool
 		flgDownloadTranslations    bool
 		flgRegenerateTranslattions bool
@@ -142,6 +175,7 @@ func main() {
 		flgDrMem                   bool
 		flgLogView                 bool
 		flgRunTests                bool
+		flgSmoke                   bool
 	)
 
 	{
@@ -151,10 +185,7 @@ func main() {
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
-		flag.BoolVar(&flgBuildRel64Fast, "build-rel64-fast", false, "build only 64-bit release installer, for testing")
-		flag.BoolVar(&flgBuildRel32Fast, "build-rel32-fast", false, "build only 32-bit release installer, for testing")
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
-		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
@@ -190,13 +221,33 @@ func main() {
 		return
 	}
 
-	// early check so we don't find it out only after 20 minutes of building
-	if flgUpload || flgUploadCiBuild {
-		if shouldSignAndUpload() {
-			panicIf(!hasSpacesCreds())
-			panicIf(!hasS3Creds())
-		}
+	opts := &BuildOptions{}
+	if flgUploadCiBuild {
+		// triggered via -ci-upload from .github workflow file
+		// only sign / upload if this is my repo (not a fork)
+		// master branch (not work branches) and on push (not pull requests etc.)
+		onGitHubMaster := isGithubMyMasterBranch()
+		opts.sign = onGitHubMaster
+		opts.upload = onGitHubMaster
 	}
+
+	if flgUpload {
+		// given by me from cmd-line
+		opts.sign = true
+		opts.upload = true
+	}
+
+	if flgBuildPreRelease || flgBuildRelease {
+		// only when building locally, not on GitHub CI
+		opts.verifyTranslationUpToDate = true
+		opts.doCleanCheck = true
+	}
+	//opts.doCleanCheck = false // for ad-hoc testing
+	if flgBuildRelease {
+		opts.releaseBuild = true
+	}
+
+	ensureBuildOptionsPreRequesites(opts)
 
 	if flgWebsiteRun {
 		websiteRunLocally("website")
@@ -294,7 +345,8 @@ func main() {
 	}
 
 	if flgSmoke {
-		smokeBuild()
+		detectVersions()
+		buildSmoke()
 		return
 	}
 
@@ -304,15 +356,6 @@ func main() {
 	}
 
 	if flgCIBuild {
-		// TODO: temporary
-		//dumpEnv()
-		//dumpWebHookEventPayload()
-
-		// ci build does the same thing as pre-release
-		if shouldSignAndUpload() {
-			failIfNoCertPwd()
-		}
-		flgSkipTranslationVerify = true
 		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
@@ -326,7 +369,7 @@ func main() {
 		case githubEventTypeCodeQL:
 			// code ql is just a regular build, I assume intercepted by
 			// by their tooling
-			buildRelease64Fast()
+			buildSmoke()
 		default:
 			panic("unkown value from getGitHubEventType()")
 		}
@@ -335,18 +378,11 @@ func main() {
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
-		if shouldSkipUpload() {
-			logf("Skipping upload\n")
-			return
-		}
-		flgUpload = true
-		detectVersions()
-
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
 			// pre-release build on push
-			uploadToStorage(buildTypePreRel)
+			uploadToStorage(opts, buildTypePreRel)
 		case githubEventTypeCodeQL:
 			// do nothing
 		default:
@@ -356,39 +392,17 @@ func main() {
 	}
 
 	if flgBuildRelease {
-		if !flgUpload {
-			failIfNoCertPwd()
-		} else {
-			os.RemoveAll("out")
-		}
 		detectVersions()
-		buildRelease(flgUpload)
-		if flgUpload {
-			uploadToStorage(buildTypeRel)
-		}
-		return
-	}
-
-	if flgBuildRel64Fast {
-		warnIfNoCertPwd()
-		detectVersions()
-		buildRelease64Fast()
-		return
-	}
-
-	if flgBuildRel32Fast {
-		warnIfNoCertPwd()
-		detectVersions()
-		buildRelease32Fast()
+		buildRelease()
+		uploadToStorage(opts, buildTypeRel)
 		return
 	}
 
 	if flgBuildPreRelease {
 		// make sure we can sign the executables
-		failIfNoCertPwd()
 		detectVersions()
 		buildPreRelease()
-		uploadToStorage(buildTypePreRel)
+		uploadToStorage(opts, buildTypePreRel)
 		return
 	}
 
@@ -398,7 +412,7 @@ func main() {
 	}
 
 	if flgDrMem {
-		buildPortableExe64()
+		buildJustPortableExe(rel64Dir, "Release", "x64")
 		//cmd := exec.Command("drmemory.exe", "-light", "-check_leaks", "-possible_leaks", "-count_leaks", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
 		cmd := exec.Command("drmemory.exe", "-leaks_only", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
 		u.RunCmdLoggedMust(cmd)
@@ -431,7 +445,12 @@ func main() {
 	flag.Usage()
 }
 
-func uploadToStorage(buildType string) {
+func uploadToStorage(opts *BuildOptions, buildType string) {
+	if !opts.upload {
+		logf("Skipping uploadToStorage() because opts.upload = false\n")
+		return
+	}
+
 	timeStart := time.Now()
 	defer func() {
 		logf("uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))

@@ -32,13 +32,6 @@ func isGitClean() bool {
 	return len(s) == 0
 }
 
-func verifyGitCleanMust() {
-	if flgNoCleanCheck || flgSmoke {
-		return
-	}
-	u.PanicIf(!isGitClean(), "git has unsaved changes\n")
-}
-
 /*
 Given result of git btranch that looks like:
 
@@ -79,16 +72,4 @@ func verifyOnReleaseBranchMust() {
 	ver = ver[:len(ver)-len(suffix)]
 
 	u.PanicIf(!strings.HasPrefix(sumatraVersion, ver), "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
-}
-
-func verifyOnMasterBranchMust() {
-	// 'git branch' return branch name in format: '* master'
-	currBranch := getCurrentBranchMust()
-	u.PanicIf(currBranch != "master", "not on master branch, currBranch: '%s'\n", currBranch)
-}
-
-func isOnMasterBranchMust() bool {
-	// 'git branch' return branch name in format: '* master'
-	currBranch := getCurrentBranchMust()
-	return currBranch == "master"
 }

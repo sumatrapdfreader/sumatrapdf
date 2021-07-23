@@ -11,13 +11,6 @@ import (
 	"github.com/kjk/u"
 )
 
-func runCmdLogged(cmd *exec.Cmd) error {
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	fmt.Printf("> %s\n", cmd)
-	return cmd.Run()
-}
-
 func runCmdLoggedRedacted(cmd *exec.Cmd, redact string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -29,16 +22,6 @@ func runCmdLoggedRedacted(cmd *exec.Cmd, redact string) error {
 
 func hasCertPwd() bool {
 	return strings.TrimSpace(os.Getenv("CERT_PWD")) != ""
-}
-
-func failIfNoCertPwd() {
-	panicIf(!hasCertPwd(), "CERT_PWD env variable is not set")
-}
-
-func warnIfNoCertPwd() {
-	if !hasCertPwd() {
-		logf("will not sign because CERT_PWD env variable is not set")
-	}
 }
 
 // https://zabkat.com/blog/code-signing-sha1-armageddon.htm
@@ -58,13 +41,11 @@ func signMust(path string) {
 
 	certPwd := os.Getenv("CERT_PWD")
 	if certPwd == "" {
-		// to make it easy on others, skip signing if
-		if !shouldSignAndUpload() {
-			logf("skipped signing of '%s' because CERT_PWD not set\n", path)
+		if flgSkipSign {
 			return
 		}
-		panic("my repo but no CERT_PWD")
 	}
+	panicIf(certPwd == "", "CERT_PWD env variable not set")
 
 	// retry 3 times because signing might fail due to temorary error
 	// ("The specified timestamp server either could not be reached or")

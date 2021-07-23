@@ -225,13 +225,6 @@ PortableZip32: ${zip32}
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
 func spacesUploadBuildMust(buildType string) {
-	if shouldSkipUpload() {
-		return
-	}
-	if !hasSpacesCreds() {
-		return
-	}
-
 	timeStart := time.Now()
 	defer func() {
 		logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))

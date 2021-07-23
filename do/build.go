@@ -76,7 +76,7 @@ func copyBuiltFiles(dstDir string, srcDir string, prefix string) {
 }
 
 func copyBuiltManifest(dstDir string, prefix string) {
-	srcPath := filepath.Join(artifactsDir, "manifest.txt")
+	srcPath := filepath.Join("out", "artifacts", "manifest.txt")
 	dstName := prefix + "-manifest.txt"
 	dstPath := filepath.Join(dstDir, dstName)
 	u.CopyFileMust(dstPath, srcPath)
@@ -223,7 +223,7 @@ func buildLzsa() {
 // smoke build is meant to be run locally to check that we can build everything
 // it does full installer build of 64-bit release build
 // We don't build other variants for speed. It takes about 5 mins locally
-func smokeBuild() {
+func buildSmoke() {
 	detectSigntoolPath()
 	defer makePrintDuration("smoke build")()
 	clean()
@@ -396,6 +396,7 @@ func createManifestMust() {
 	}
 
 	s := strings.Join(lines, "\n")
+	artifactsDir := filepath.Join("out", "artifacts")
 	u.CreateDirMust(artifactsDir)
 	path := filepath.Join(artifactsDir, "manifest.txt")
 	u.WriteFileMust(path, []byte(s))
@@ -410,25 +411,7 @@ func makeAppx() {
 	logf("makeAppx: '%s'\n", appExePath)
 }
 
-var (
-	artifactsDir = filepath.Join("out", "artifacts")
-)
-
-var (
-	artifactFiles = []string{
-		"SumatraPDF.exe",
-		"SumatraPDF.zip",
-		"SumatraPDF-dll.exe",
-		"SumatraPDF.pdb.lzsa",
-		"SumatraPDF.pdb.zip",
-	}
-)
-
 func signFilesMust(dir string) {
-	if !shouldSignAndUpload() {
-		logf("Skipping signing in dir '%s'\n", dir)
-		return
-	}
 	if u.FileExists(filepath.Join(dir, "SumatraPDF.exe")) {
 		signMust(filepath.Join(dir, "SumatraPDF.exe"))
 	}
@@ -452,11 +435,6 @@ func buildPreRelease() {
 	s := fmt.Sprintf("buidling pre-release version %s", ver)
 	defer makePrintDuration(s)()
 
-	verifyGitCleanMust()
-	// TODO: remove. We should built on non-master branches
-	//verifyOnMasterBranchMust()
-	verifyTranslationsMust()
-
 	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
@@ -478,18 +456,12 @@ func buildPreRelease() {
 	copyBuiltManifest(dstDir, prefix)
 }
 
-func buildRelease(forUpload bool) {
+func buildRelease() {
 	detectSigntoolPath() // early exit if missing
 
 	ver := getVerForBuildType(buildTypeRel)
 	s := fmt.Sprintf("buidling release version %s", ver)
 	defer makePrintDuration(s)()
-
-	if forUpload {
-		verifyGitCleanMust()
-		verifyOnReleaseBranchMust()
-		verifyTranslationsMust()
-	}
 
 	verifyBuildNotInS3ShortMust(buildTypeRel)
 	verifyBuildNotInSpacesMust(buildTypeRel)
@@ -515,15 +487,6 @@ func buildRelease(forUpload bool) {
 	copyBuiltManifest(dstDir, prefix)
 }
 
-func buildJustInstaller(dir, config, platform string) {
-	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
-
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
-	signFilesOptional(dir)
-}
-
 func buildJustPortableExe(dir, config, platform string) {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
@@ -531,10 +494,6 @@ func buildJustPortableExe(dir, config, platform string) {
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF`, p, `/m`)
 	signFilesOptional(dir)
-}
-
-func buildPortableExe64() {
-	buildJustPortableExe(rel64Dir, "Release", "x64")
 }
 
 func buildLogview() {
@@ -555,58 +514,4 @@ func buildTestUtil() {
 	platform := "x64"
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
-}
-
-// a faster release build for testing that only does 64-bit installer
-func buildRelease64Fast() {
-	detectSigntoolPath() // early exit if missing
-
-	ver := getVerForBuildType(buildTypeRel)
-	s := fmt.Sprintf("buidling release version %s", ver)
-	defer makePrintDuration(s)()
-
-	if !isGitClean() {
-		logf("note: unsaved git changes\n")
-	}
-	//verifyOnReleaseBranchMust()
-
-	//verifyBuildNotInS3ShortMust(buildTypeRel)
-	//verifyBuildNotInSpacesMust(buildTypeRel)
-
-	clean()
-	setBuildConfigRelease()
-	defer revertBuildConfig()
-
-	buildJustInstaller(rel64Dir, "Release", "x64")
-
-	dstDir := filepath.Join("out", "final-rel-fast")
-	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
-	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
-}
-
-// a faster release build for testing that only does 32-bit installer
-func buildRelease32Fast() {
-	detectSigntoolPath() // early exit if missing
-
-	ver := getVerForBuildType(buildTypeRel)
-	s := fmt.Sprintf("buidling release version %s", ver)
-	defer makePrintDuration(s)()
-
-	if !isGitClean() {
-		logf("%s", "note: unsaved git changes\n")
-	}
-	//verifyOnReleaseBranchMust()
-
-	//verifyBuildNotInS3ShortMust(buildTypeRel)
-	//verifyBuildNotInSpacesMust(buildTypeRel)
-
-	clean()
-	setBuildConfigRelease()
-	defer revertBuildConfig()
-
-	buildJustInstaller(rel32Dir, "Release", "Win32")
-
-	dstDir := filepath.Join("out", "final-rel32-fast")
-	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
-	copyBuiltFiles(dstDir, rel32Dir, prefix+"-32")
 }

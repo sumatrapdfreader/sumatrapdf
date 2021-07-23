@@ -19,16 +19,15 @@ const (
 // we should only sign and upload to s3 if this is my repo and a push event
 // or building locally
 // don't sign if it's a fork or pull requests
-func shouldSignAndUpload() bool {
+func isGithubMyMasterBranch() bool {
 	// https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables
-
 	repo := os.Getenv("GITHUB_REPOSITORY")
-	if repo == "" {
-		// building locally e.g. release for final testing
-		// we want to sign it
-		return true
-	}
 	if repo != "sumatrapdfreader/sumatrapdf" {
+		return false
+	}
+	ref := os.Getenv("GITHUB_REF")
+	if ref != "refs/heads/master" {
+		logf("GITHUB_REF: '%s'\n", ref)
 		return false
 	}
 	event := os.Getenv("GITHUB_EVENT_NAME")
@@ -113,9 +112,6 @@ func verifyBuildNotInS3ShortMust(buildType string) {
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
 func verifyBuildNotInS3Must(c *S3Client, buildType string) {
-	if !flgUpload {
-		return
-	}
 	dirRemote := getRemoteDir(buildType)
 	dirLocal := getFinalDirForBuildType(buildType)
 	files, err := ioutil.ReadDir(dirLocal)
@@ -125,30 +121,6 @@ func verifyBuildNotInS3Must(c *S3Client, buildType string) {
 		remotePath := path.Join(dirRemote, fname)
 		fatalIf(c.Exists(remotePath), "build from dir %s already exists in s3 because file '%s' exists\n", dirLocal, remotePath)
 	}
-}
-
-func isMaster() bool {
-	ref := os.Getenv("GITHUB_REF")
-	return ref == "refs/heads/master"
-}
-
-func shouldSkipUpload() bool {
-	if flgUpload {
-		return false
-	}
-	logf("shouldSkipUpload: -upload flag not given\n")
-
-	if !isMaster() {
-		logf("Skipping pre-release upload to s3 because not on master branch\n")
-		logf("GITHUB_REF: '%s'\n", os.Getenv("GITHUB_REF"))
-		return true
-	}
-
-	if !shouldSignAndUpload() {
-		logf("skipping upload beacuse not my repo\n")
-		return true
-	}
-	return false
 }
 
 func newS3Client() *S3Client {
@@ -217,10 +189,6 @@ func getVerForBuildType(buildType string) string {
 // upload as:
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
 func s3UploadBuildMust(buildType string) {
-	if shouldSkipUpload() {
-		return
-	}
-
 	timeStart := time.Now()
 	defer func() {
 		logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))

@@ -36,9 +36,6 @@ func saveTranslationsMust(d []byte) {
 }
 
 func verifyTranslationsMust() {
-	if flgSkipTranslationVerify {
-		return
-	}
 	sha1 := lastTranslationsSha1HexMust()
 	url := fmt.Sprintf("%s/dltrans?app=SumatraPDF&sha1=%s", translationServer, sha1)
 	d := httpDlMust(url)
