@@ -265,7 +265,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(LR"( -sleep-ms 2000 -exit-when-done -update-self-to "%s")", GetExePathTemp().Get());
+        cmd.AppendFmt(LR"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp().Get());
     }
     logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.AsView()).Get());
     CreateProcessHelper(installerPath, cmd.Get());
@@ -431,6 +431,6 @@ void UpdateSelfTo(const WCHAR* path) {
     }
     logf("UpdateSelfTo: copied self to file\n");
 
-    AutoFreeWstr args = str::Format(LR"(-sleep-ms 2000 -delete-file "%s")", GetExePathTemp().Get());
+    AutoFreeWstr args = str::Format(LR"(-sleep-ms 500 -delete-file "%s")", GetExePathTemp().Get());
     CreateProcessHelper(path, args.Get());
 }
