@@ -14,7 +14,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - show notification while checking for update
 - refactor TreeModel
 - replace TreeModel::RootCount() and RootAt() with Root()
-
+- shorten TreeModel methods
 
 2021-07-21 Wed
 

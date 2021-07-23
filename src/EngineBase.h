@@ -259,12 +259,12 @@ struct TocTree : TreeModel {
     // TreeModel
     TreeItem Root() override;
 
-    WCHAR* ItemText(TreeItem) override;
-    TreeItem ItemParent(TreeItem) override;
-    int ItemChildCount(TreeItem) override;
-    TreeItem ItemChildAt(TreeItem, int index) override;
-    bool ItemIsExpanded(TreeItem) override;
-    bool ItemIsChecked(TreeItem) override;
+    WCHAR* Text(TreeItem) override;
+    TreeItem Parent(TreeItem) override;
+    int ChildCount(TreeItem) override;
+    TreeItem ChildAt(TreeItem, int index) override;
+    bool IsExpanded(TreeItem) override;
+    bool IsChecked(TreeItem) override;
 
     void SetHandle(TreeItem, HTREEITEM) override;
     HTREEITEM GetHandle(TreeItem) override;

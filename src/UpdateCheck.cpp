@@ -313,10 +313,10 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
             logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, latestVer);
             /* if automated => don't notify that there is no new version */
             if (updateCheckType == UpdateCheck::UserInitiated) {
-                uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
-                MessageBoxW(hwndParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
                 auto win = FindWindowInfoByHwnd(hwndParent);
                 win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
+                uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
+                MessageBoxW(hwndParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
             }
             return 0;
         }

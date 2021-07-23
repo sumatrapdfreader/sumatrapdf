@@ -667,13 +667,13 @@ void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti, bool withCheckbox
 
     uint stateMask = TVIS_EXPANDED;
     uint state = 0;
-    if (tm->ItemIsExpanded(ti)) {
+    if (tm->IsExpanded(ti)) {
         state = TVIS_EXPANDED;
     }
 
     if (withCheckboxes) {
         stateMask |= TVIS_STATEIMAGEMASK;
-        bool isChecked = tm->ItemIsChecked(ti);
+        bool isChecked = tm->IsChecked(ti);
         uint imgIdx = isChecked ? 2 : 1;
         uint imgState = INDEXTOSTATEIMAGEMASK(imgIdx);
         state |= imgState;
@@ -682,7 +682,7 @@ void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti, bool withCheckbox
     tvitem->state = state;
     tvitem->stateMask = stateMask;
     tvitem->lParam = static_cast<LPARAM>(ti);
-    auto title = tm->ItemText(ti);
+    auto title = tm->Text(ti);
     tvitem->pszText = title;
 }
 
@@ -745,7 +745,7 @@ bool TreeCtrl::UpdateItem(TreeItem ti) {
 void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
 #if 0
     auto tm = treeCtrl->treeModel;
-    int n = tm->ItemChildCount(item);
+    int n = tm->ChildCount(item);
     for (int i = 0; i < n; i++) {
         auto ti = tm->ItemChildAt(item, i);
         HTREEITEM h = insertItem(treeCtrl, parent, ti);
@@ -754,7 +754,7 @@ void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
     }
 #else
     auto tm = treeCtrl->treeModel;
-    int n = tm->ItemChildCount(item);
+    int n = tm->ChildCount(item);
     TreeItem tmp[256];
     TreeItem* a = &tmp[0];
     if (n > dimof(tmp)) {
@@ -770,7 +770,7 @@ void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
     // ChildAt() is optimized for sequential access and we need to
     // insert backwards, so gather the items in v first
     for (int i = 0; i < n; i++) {
-        auto ti = tm->ItemChildAt(item, i);
+        auto ti = tm->ChildAt(item, i);
         CrashIf(ti == 0);
         a[n - 1 - i] = ti;
     }
@@ -780,7 +780,7 @@ void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
         HTREEITEM h = insertItemFront(treeCtrl, ti, parent);
         tm->SetHandle(ti, h);
         // avoid recursing if not needed because we use a lot of stack space
-        if (tm->ItemChildCount(ti) > 0) {
+        if (tm->ChildCount(ti) > 0) {
             PopulateTreeItem(treeCtrl, ti, h);
         }
     }

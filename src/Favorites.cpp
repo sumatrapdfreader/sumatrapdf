@@ -64,12 +64,12 @@ struct FavTreeModel : public TreeModel {
 
     TreeItem Root() override;
 
-    WCHAR* ItemText(TreeItem) override;
-    TreeItem ItemParent(TreeItem) override;
-    int ItemChildCount(TreeItem) override;
-    TreeItem ItemChildAt(TreeItem, int index) override;
-    bool ItemIsExpanded(TreeItem) override;
-    bool ItemIsChecked(TreeItem) override;
+    WCHAR* Text(TreeItem) override;
+    TreeItem Parent(TreeItem) override;
+    int ChildCount(TreeItem) override;
+    TreeItem ChildAt(TreeItem, int index) override;
+    bool IsExpanded(TreeItem) override;
+    bool IsChecked(TreeItem) override;
     void SetHandle(TreeItem, HTREEITEM) override;
     HTREEITEM GetHandle(TreeItem) override;
 
@@ -84,17 +84,17 @@ TreeItem FavTreeModel::Root() {
     return (TreeItem)root;
 }
 
-WCHAR* FavTreeModel::ItemText(TreeItem ti) {
+WCHAR* FavTreeModel::Text(TreeItem ti) {
     auto fti = (FavTreeItem*)ti;
     return fti->text;
 }
 
-TreeItem FavTreeModel::ItemParent(TreeItem ti) {
+TreeItem FavTreeModel::Parent(TreeItem ti) {
     auto fti = (FavTreeItem*)ti;
     return (TreeItem)fti->parent;
 }
 
-int FavTreeModel::ItemChildCount(TreeItem ti) {
+int FavTreeModel::ChildCount(TreeItem ti) {
     auto fti = (FavTreeItem*)ti;
     if (!fti) {
         return 0;
@@ -103,18 +103,18 @@ int FavTreeModel::ItemChildCount(TreeItem ti) {
     return (int)n;
 }
 
-TreeItem FavTreeModel::ItemChildAt(TreeItem ti, int idx) {
+TreeItem FavTreeModel::ChildAt(TreeItem ti, int idx) {
     auto fti = (FavTreeItem*)ti;
     auto res = fti->children[idx];
     return (TreeItem)res;
 }
 
-bool FavTreeModel::ItemIsExpanded(TreeItem ti) {
+bool FavTreeModel::IsExpanded(TreeItem ti) {
     auto fti = (FavTreeItem*)ti;
     return fti->isExpanded;
 }
 
-bool FavTreeModel::ItemIsChecked(TreeItem ti) {
+bool FavTreeModel::IsChecked(TreeItem ti) {
     return false;
 }
 
@@ -627,7 +627,7 @@ void UpdateFavoritesTree(WindowInfo* win) {
 
     // hide the favorites tree if we've removed the last favorite
     TreeItem root = newModel->Root();
-    bool show = newModel->ItemChildCount(root) > 0;
+    bool show = newModel->ChildCount(root) > 0;
     if (show) {
         SetSidebarVisibility(win, win->tocVisible, false);
     }
@@ -729,9 +729,9 @@ void RememberFavTreeExpansionState(WindowInfo* win) {
         return;
     }
     TreeItem root = tm->Root();
-    int n = tm->ItemChildCount(root);
+    int n = tm->ChildCount(root);
     for (int i = 0; i < n; i++) {
-        TreeItem ti = tm->ItemChildAt(root, i);
+        TreeItem ti = tm->ChildAt(root, i);
         bool isExpanded = treeCtrl->IsExpanded(ti);
         if (isExpanded) {
             FavTreeItem* fti = (FavTreeItem*)ti;

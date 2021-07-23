@@ -12,9 +12,9 @@ static bool VisitTreeItemRec(TreeModel* tm, TreeItem ti, const TreeItemVisitor& 
     if (!cont) {
         return false;
     }
-    int n = tm->ItemChildCount(ti);
+    int n = tm->ChildCount(ti);
     for (int i = 0; i < n; i++) {
-        auto child = tm->ItemChildAt(ti, i);
+        auto child = tm->ChildAt(ti, i);
         cont = VisitTreeItemRec(tm, child, visitor);
         if (!cont) {
             return false;

@@ -366,32 +366,32 @@ TreeItem TocTree::Root() {
     return (TreeItem)root;
 }
 
-WCHAR* TocTree::ItemText(TreeItem ti) {
+WCHAR* TocTree::Text(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return tocItem->title;
 }
 
-TreeItem TocTree::ItemParent(TreeItem ti) {
+TreeItem TocTree::Parent(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return (TreeItem)tocItem->parent;
 }
 
-int TocTree::ItemChildCount(TreeItem ti) {
+int TocTree::ChildCount(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return tocItem->ChildCount();
 }
 
-TreeItem TocTree::ItemChildAt(TreeItem ti, int idx) {
+TreeItem TocTree::ChildAt(TreeItem ti, int idx) {
     auto tocItem = (TocItem*)ti;
     return (TreeItem)tocItem->ChildAt(idx);
 }
 
-bool TocTree::ItemIsExpanded(TreeItem ti) {
+bool TocTree::IsExpanded(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return tocItem->IsExpanded();
 }
 
-bool TocTree::ItemIsChecked(TreeItem ti) {
+bool TocTree::IsChecked(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return !tocItem->isUnchecked;
 }
