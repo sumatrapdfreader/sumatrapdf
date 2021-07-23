@@ -159,6 +159,10 @@ func s3UploadDir(c *S3Client, dirRemote string, dirLocal string) error {
 	return nil
 }
 
+func s3UploadFilePublic(c *S3Client, dstRemotePath string, srcPath string) error {
+	return c.UploadFileReader(dstRemotePath, srcPath, true)
+}
+
 func getFinalDirForBuildType(buildType string) string {
 	var dir string
 	switch buildType {

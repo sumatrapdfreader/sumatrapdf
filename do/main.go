@@ -100,14 +100,18 @@ type BuildOptions struct {
 	releaseBuild              bool
 }
 
+func ensureCanUpload() {
+	panicIf(!hasSpacesCreds())
+	panicIf(!hasS3Creds())
+}
+
 func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 	logf("upload: %v\n", opts.upload)
 	logf("sign: %v\n", opts.sign)
 	logf("verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
 
 	if opts.upload {
-		panicIf(!hasSpacesCreds())
-		panicIf(!hasS3Creds())
+		ensureCanUpload()
 	}
 
 	if opts.sign {
@@ -176,9 +180,13 @@ func main() {
 		flgLogView                 bool
 		flgRunTests                bool
 		flgSmoke                   bool
+		flgFileUpload              string
+		flgFilesList               bool
 	)
 
 	{
+		flag.StringVar(&flgFileUpload, "file-upload", "", "upload a test file to s3 / spaces")
+		flag.BoolVar(&flgFilesList, "files-list", false, "list uploaded files in s3 / spaces")
 		flag.BoolVar(&flgRegenPremake, "premake", false, "regenerate premake*.lua files")
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgUploadCiBuild, "ci-upload", false, "upload the result of ci build to s3 and do spaces")
@@ -218,6 +226,16 @@ func main() {
 	if false {
 		detectVersions()
 		//buildPreRelease()
+		return
+	}
+
+	if flgFileUpload != "" {
+		fileUpload(flgFileUpload)
+		return
+	}
+
+	if flgFilesList {
+		filesList()
 		return
 	}
 

@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - fix toc tree on all document types
 - convert typedef std::function to using
 - tweak build script
+- add -file-upload and -files-list
 
 2021-07-22 Thu
 
