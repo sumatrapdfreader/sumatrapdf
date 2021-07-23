@@ -78,10 +78,12 @@ static void open_browser(const char *uri)
 		char buf_base[PATH_MAX];
 		char buf_cwd[PATH_MAX];
 		fz_dirname(buf_base, filename, sizeof buf_base);
-		getcwd(buf_cwd, sizeof buf_cwd);
-		fz_snprintf(buf, sizeof buf, "file://%s/%s/%s", buf_cwd, buf_base, uri+7);
-		fz_cleanname(buf+7);
-		uri = buf;
+		if (getcwd(buf_cwd, sizeof buf_cwd))
+		{
+			fz_snprintf(buf, sizeof buf, "file://%s/%s/%s", buf_cwd, buf_base, uri+7);
+			fz_cleanname(buf+7);
+			uri = buf;
+		}
 	}
 
 #ifdef _WIN32
@@ -1889,7 +1891,7 @@ static void do_app(void)
 	if (ui.mod == GLUT_ACTIVE_ALT)
 	{
 		if (ui.key == KEY_F4)
-		quit();
+			quit();
 
 		if (ui.key == KEY_LEFT)
 			ui.key = 't', ui.mod = 0, ui.plain = 1;

@@ -1758,8 +1758,8 @@ fz_draw_fill_image(fz_context *ctx, fz_device *devp, fz_image *image, fz_matrix 
 	local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
 
 	src_area = find_src_area_required(local_ctm, image, clip);
-		if (fz_is_empty_irect(src_area))
-			return;
+	if (fz_is_empty_irect(src_area))
+		return;
 
 	pixmap = fz_get_pixmap_from_image(ctx, image, &src_area, &local_ctm, &dx, &dy);
 	src_cs = fz_default_colorspace(ctx, dev->default_cs, pixmap->colorspace);
@@ -1875,8 +1875,8 @@ fz_draw_fill_image_mask(fz_context *ctx, fz_device *devp, fz_image *image, fz_ma
 	local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
 
 	src_area = find_src_area_required(local_ctm, image, clip);
-		if (fz_is_empty_irect(src_area))
-			return;
+	if (fz_is_empty_irect(src_area))
+		return;
 
 	pixmap = fz_get_pixmap_from_image(ctx, image, &src_area, &local_ctm, &dx, &dy);
 
@@ -1955,7 +1955,14 @@ fz_draw_clip_image_mask(fz_context *ctx, fz_device *devp, fz_image *image, fz_ma
 
 	src_area = find_src_area_required(local_ctm, image, clip);
 	if (fz_is_empty_irect(src_area))
+	{
+#ifdef DUMP_GROUP_BLENDS
+		dump_spaces(dev->top-1, "Clip (image mask) (empty source area) begin\n");
+#endif
+		state[1].scissor = fz_empty_irect;
+		state[1].mask = NULL;
 		return;
+	}
 
 	bbox = fz_irect_from_rect(fz_transform_rect(fz_unit_rect, local_ctm));
 	bbox = fz_intersect_irect(bbox, state->scissor);

@@ -394,13 +394,14 @@ static void doc_calculateNow(js_State *J)
 
 static void console_println(js_State *J)
 {
+	pdf_js *js = js_getcontext(J);
 	int i, top = js_gettop(J);
 	for (i = 1; i < top; ++i) {
 		const char *s = js_tostring(J, i);
-		if (i > 1) putchar(' ');
-		fputs(s, stdout);
+		if (i > 1) fz_write_byte(js->ctx, fz_stddbg(js->ctx), ' ');
+		fz_write_string(js->ctx, fz_stddbg(js->ctx), s);
 	}
-	putchar('\n');
+	fz_write_byte(js->ctx, fz_stddbg(js->ctx), '\n');
 	js_pushundefined(J);
 }
 
