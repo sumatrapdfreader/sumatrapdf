@@ -401,6 +401,7 @@ func main() {
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
+		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
