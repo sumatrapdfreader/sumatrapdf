@@ -15,6 +15,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - refactor TreeModel
 - replace TreeModel::RootCount() and RootAt() with Root()
 - shorten TreeModel methods
+- basic implementation of StrVec
 
 2021-07-21 Wed
 

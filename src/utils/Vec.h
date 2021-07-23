@@ -610,3 +610,19 @@ struct VecStr {
 
     std::string_view at(int) const;
 };
+
+// implementation in StrUtil.cpp
+struct StrVec {
+    static const u32 kNullIdx = (u32)-2;
+    str::Str str;
+    Vec<u32> index;
+
+    StrVec();
+    ~StrVec() = default;
+    void Reset();
+
+    int size();
+    std::string_view at(int idx);
+
+    void Append(const char* s);
+};

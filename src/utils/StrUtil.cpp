@@ -2696,3 +2696,133 @@ const WCHAR* IdxToStr(const WCHAR* strs, int idx) {
 std::span<u8> ToSpanU8(std::string_view sv) {
     return {(u8*)sv.data(), sv.size()};
 }
+
+int VecStrIndex::ItemsLeft() const {
+    return kVecStrIndexSize - nStrings;
+}
+
+int VecStr::Size() const {
+    VecStrIndex* idx = firstIndex;
+    int n = 0;
+    while (idx) {
+        n += idx->nStrings;
+        idx = idx->next;
+    }
+    return n;
+}
+
+std::string_view VecStr::at(int i) const {
+    CrashIf(i < 0);
+    VecStrIndex* idx = firstIndex;
+    while (idx) {
+        if (idx->nStrings > i) {
+            break;
+        }
+        i -= idx->nStrings;
+        idx = idx->next;
+    }
+    if (idx == nullptr) {
+        CrashMe();
+        return {};
+    }
+    CrashIf(idx->nStrings <= i);
+    if (idx->nStrings <= i) {
+        return {};
+    }
+    const char* s = (const char*)idx->offsets[i];
+    i32 size = idx->sizes[i];
+    return {s, (size_t)size};
+}
+
+static bool allocateIndexIfNeeded(VecStr& v) {
+    if (v.currIndex && v.currIndex->ItemsLeft() > 0) {
+        return true;
+    }
+
+    VecStrIndex* idx = v.allocator.AllocStruct<VecStrIndex>();
+
+    if (!idx) {
+        CrashAlwaysIf(gAllowAllocFailure.load() == 0);
+        return false;
+    }
+
+    idx->next = nullptr;
+    idx->nStrings = 0;
+
+    if (!v.firstIndex) {
+        v.firstIndex = idx;
+        v.currIndex = idx;
+    } else {
+        CrashIf(!v.firstIndex);
+        CrashIf(!v.currIndex);
+        v.currIndex->next = idx;
+        v.currIndex = idx;
+    }
+    return true;
+}
+
+bool VecStr::Append(std::string_view sv) {
+    bool ok = allocateIndexIfNeeded(*this);
+    if (!ok) {
+        return false;
+    }
+    constexpr size_t maxLen = (size_t)std::numeric_limits<i32>::max();
+    CrashIf(sv.size() > maxLen);
+    if (sv.size() > maxLen) {
+        return false;
+    }
+    std::string_view res = str::Dup(&allocator, sv);
+
+    int n = currIndex->nStrings;
+    currIndex->offsets[n] = (char*)res.data();
+    currIndex->sizes[n] = (i32)res.size();
+    currIndex->nStrings++;
+    return true;
+}
+
+void VecStr::Reset() {
+    allocator.Reset();
+    firstIndex = nullptr;
+    currIndex = nullptr;
+}
+
+StrVec::StrVec() {
+    // add one character so that we can use index 0 as "not found"
+    str.AppendChar(0);
+}
+
+void StrVec::Reset() {
+    str.Reset();
+    str.AppendChar(0);
+    index.Reset();
+}
+
+void StrVec::Append(const char* s) {
+    u32 idx = kNullIdx;
+    size_t sLen;
+    if (s == nullptr) {
+        goto Append;
+    }
+    sLen = str::Len(s);
+    idx = (u32)str.size();
+    str.Append(s, sLen + 1);
+Append:
+    index.Append(idx);
+}
+
+int StrVec::size() {
+    return index.isize();
+}
+
+std::string_view StrVec::at(int idx) {
+    int n = size();
+    ReportIf(idx < 0 || idx >= n);
+    u32 start = index.at(idx);
+    u32 end = (u32)str.size();
+    if (idx + 1 < n) {
+        end = (u32)index.at(idx + 1);
+    }
+    const char* s = str.LendData() + start;
+    size_t len = (size_t)(end - start - 1);
+    return {s, len};
+}
