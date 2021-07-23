@@ -62,8 +62,7 @@ FavTreeItem::~FavTreeItem() {
 struct FavTreeModel : public TreeModel {
     ~FavTreeModel() override;
 
-    int RootCount() override;
-    TreeItem RootAt(int) override;
+    TreeItem Root() override;
 
     WCHAR* ItemText(TreeItem) override;
     TreeItem ItemParent(TreeItem) override;
@@ -71,24 +70,18 @@ struct FavTreeModel : public TreeModel {
     TreeItem ItemChildAt(TreeItem, int index) override;
     bool ItemIsExpanded(TreeItem) override;
     bool ItemIsChecked(TreeItem) override;
-    TreeItem ItemNull() override;
     void SetHandle(TreeItem, HTREEITEM) override;
     HTREEITEM GetHandle(TreeItem) override;
 
-    Vec<FavTreeItem*> children;
+    FavTreeItem* root{nullptr};
 };
 
 FavTreeModel::~FavTreeModel() {
-    DeleteVecMembers(children);
+    delete root;
 }
 
-int FavTreeModel::RootCount() {
-    size_t n = children.size();
-    return (int)n;
-}
-
-TreeItem FavTreeModel::RootAt(int n) {
-    return (TreeItem)children[n];
+TreeItem FavTreeModel::Root() {
+    return (TreeItem)root;
 }
 
 WCHAR* FavTreeModel::ItemText(TreeItem ti) {
@@ -103,6 +96,9 @@ TreeItem FavTreeModel::ItemParent(TreeItem ti) {
 
 int FavTreeModel::ItemChildCount(TreeItem ti) {
     auto fti = (FavTreeItem*)ti;
+    if (!fti) {
+        return 0;
+    }
     size_t n = fti->children.size();
     return (int)n;
 }
@@ -120,10 +116,6 @@ bool FavTreeModel::ItemIsExpanded(TreeItem ti) {
 
 bool FavTreeModel::ItemIsChecked(TreeItem ti) {
     return false;
-}
-
-TreeItem FavTreeModel::ItemNull() {
-    return 0;
 }
 
 void FavTreeModel::SetHandle(TreeItem ti, HTREEITEM hItem) {
@@ -598,6 +590,7 @@ static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
 
 static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
     auto* res = new FavTreeModel();
+    res->root = new FavTreeItem();
     Vec<const WCHAR*> filePathsSorted;
     GetSortedFilePaths(filePathsSorted);
     for (size_t i = 0; i < filePathsSorted.size(); i++) {
@@ -608,7 +601,7 @@ static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
         }
         bool isExpanded = win->expandedFavorites.Contains(f);
         FavTreeItem* ti = MakeFavTopLevelItem(f, isExpanded);
-        res->children.Append(ti);
+        res->root->children.Append(ti);
         if (f->favorites->size() > 1) {
             MakeFavSecondLevel(ti, f);
         }
@@ -633,7 +626,9 @@ void UpdateFavoritesTree(WindowInfo* win) {
     delete prevModel;
 
     // hide the favorites tree if we've removed the last favorite
-    if (0 == newModel->RootCount()) {
+    TreeItem root = newModel->Root();
+    bool show = newModel->ItemChildCount(root) > 0;
+    if (show) {
         SetSidebarVisibility(win, win->tocVisible, false);
     }
 }
@@ -733,9 +728,10 @@ void RememberFavTreeExpansionState(WindowInfo* win) {
         // TODO: remember all favorites as expanded
         return;
     }
-    int n = tm->RootCount();
+    TreeItem root = tm->Root();
+    int n = tm->ItemChildCount(root);
     for (int i = 0; i < n; i++) {
-        TreeItem ti = tm->RootAt(i);
+        TreeItem ti = tm->ItemChildAt(root, i);
         bool isExpanded = treeCtrl->IsExpanded(ti);
         if (isExpanded) {
             FavTreeItem* fti = (FavTreeItem*)ti;

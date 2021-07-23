@@ -5,7 +5,7 @@
 #include "wingui/TreeModel.h"
 
 static bool VisitTreeItemRec(TreeModel* tm, TreeItem ti, const TreeItemVisitor& visitor) {
-    if (ti == tm->ItemNull()) {
+    if (ti == TreeModel::kNullItem) {
         return true;
     }
     bool cont = visitor(tm, ti);
@@ -24,12 +24,6 @@ static bool VisitTreeItemRec(TreeModel* tm, TreeItem ti, const TreeItemVisitor& 
 }
 
 bool VisitTreeModelItems(TreeModel* tm, const TreeItemVisitor& visitor) {
-    int n = tm->RootCount();
-    for (int i = 0; i < n; i++) {
-        auto ti = tm->RootAt(i);
-        if (!VisitTreeItemRec(tm, ti, visitor)) {
-            return false;
-        }
-    }
-    return true;
+    TreeItem root = tm->Root();
+    return VisitTreeItemRec(tm, root, visitor);
 }

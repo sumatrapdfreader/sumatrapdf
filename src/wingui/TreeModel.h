@@ -4,14 +4,13 @@
 // TreeItem represents an item in a TreeView control
 typedef UINT_PTR TreeItem;
 
-constexpr TreeItem kRootItem = (UINT_PTR)-2;
-
 // TreeModel provides data to TreeCtrl
 struct TreeModel {
+    static const TreeItem kNullItem = 0;
+
     virtual ~TreeModel() = default;
 
-    virtual int RootCount() = 0;
-    virtual TreeItem RootAt(int) = 0;
+    virtual TreeItem Root() = 0;
 
     // TODO: convert to char*
     virtual WCHAR* ItemText(TreeItem) = 0;
@@ -22,10 +21,6 @@ struct TreeModel {
     virtual bool ItemIsExpanded(TreeItem) = 0;
     // when showing checkboxes
     virtual bool ItemIsChecked(TreeItem) = 0;
-
-    // returns a value that represents non-existent (null) item
-    virtual TreeItem ItemNull() = 0;
-
     virtual void SetHandle(TreeItem, HTREEITEM) = 0;
     virtual HTREEITEM GetHandle(TreeItem) = 0;
 };

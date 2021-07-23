@@ -124,7 +124,6 @@ struct TreeCtrl : WindowBase {
 
     // treeModel not owned by us
     TreeModel* treeModel{nullptr};
-    TreeItem treeModelItemNull{0}; // cached for the last treeModel
 
     // for all WM_NOTIFY messages
     WmNotifyHandler onNotify{nullptr};

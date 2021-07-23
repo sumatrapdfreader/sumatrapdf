@@ -81,8 +81,8 @@ static void DragEnd(TreeCtrl* w) {
     // ShowCursor(TRUE);
     w->isDragging = false;
     auto tm = w->treeModel;
-    w->draggedItem = tm->ItemNull();
-    w->dragTargetItem = tm->ItemNull();
+    w->draggedItem = TreeModel::kNullItem;
+    w->dragTargetItem = TreeModel::kNullItem;
     HWND hwndParent = GetParent(w->hwnd);
     UnregisterHandlerForMessage(hwndParent, WM_MOUSEMOVE);
     UnregisterHandlerForMessage(hwndParent, WM_LBUTTONUP);
@@ -569,7 +569,7 @@ TreeItem TreeCtrl::GetSelection() {
 
 bool TreeCtrl::SelectItem(TreeItem ti) {
     HTREEITEM hi{nullptr};
-    if (ti != treeModelItemNull) {
+    if (ti != TreeModel::kNullItem) {
         hi = GetHandleByTreeItem(ti);
     }
     BOOL ok = TreeView_SelectItem(hwnd, hi);
@@ -632,7 +632,7 @@ str::WStr TreeCtrl::GetDefaultTooltip(TreeItem ti) {
 // get the item at a given (x,y) position in the window
 TreeItem TreeCtrl::GetItemAt(int x, int y) {
     if (x < 0 || y < 0) {
-        return treeModelItemNull;
+        return TreeModel::kNullItem;
     }
     TVHITTESTINFO ht{};
     ht.pt.x = x;
@@ -640,7 +640,7 @@ TreeItem TreeCtrl::GetItemAt(int x, int y) {
 
     TreeView_HitTest(hwnd, &ht);
     if ((ht.flags & TVHT_ONITEM) == 0) {
-        return treeModelItemNull;
+        return TreeModel::kNullItem;
     }
     return GetTreeItemByHandle(ht.hItem);
 }
@@ -651,11 +651,11 @@ HTREEITEM TreeCtrl::GetHandleByTreeItem(TreeItem item) {
 
 TreeItem TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
     if (item == nullptr) {
-        return treeModelItemNull;
+        return TreeModel::kNullItem;
     }
     auto tvi = GetTVITEM(this, item);
     if (!tvi) {
-        return treeModelItemNull;
+        return TreeModel::kNullItem;
     }
     TreeItem res = (TreeItem)(tvi->lParam);
     return res;
@@ -686,6 +686,7 @@ void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti, bool withCheckbox
     tvitem->pszText = title;
 }
 
+#if 0
 static HTREEITEM insertItem(TreeCtrl* treeCtrl, HTREEITEM parent, TreeItem ti) {
     TVINSERTSTRUCTW toInsert{};
 
@@ -701,6 +702,7 @@ static HTREEITEM insertItem(TreeCtrl* treeCtrl, HTREEITEM parent, TreeItem ti) {
     HTREEITEM res = TreeView_InsertItem(treeCtrl->hwnd, &toInsert);
     return res;
 }
+#endif
 
 // inserting in front is faster:
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
@@ -790,14 +792,8 @@ void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
 }
 
 static void PopulateTree(TreeCtrl* treeCtrl, TreeModel* tm) {
-    HTREEITEM parent = nullptr;
-    int n = tm->RootCount();
-    for (int i = 0; i < n; i++) {
-        auto ti = tm->RootAt(i);
-        HTREEITEM h = insertItem(treeCtrl, parent, ti);
-        tm->SetHandle(ti, h);
-        PopulateTreeItem(treeCtrl, ti, h);
-    }
+    TreeItem root = tm->Root();
+    PopulateTreeItem(treeCtrl, root, nullptr);
 }
 
 void TreeCtrl::SetTreeModel(TreeModel* tm) {
@@ -808,7 +804,6 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
     TreeView_DeleteAllItems(hwnd);
 
     treeModel = tm;
-    treeModelItemNull = tm->ItemNull();
     PopulateTree(this, tm);
     ResumeRedraw();
 
@@ -869,14 +864,14 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
     TreeModel* tm = treeCtrl->treeModel;
     HWND hwnd = treeCtrl->hwnd;
 
-    TreeItem ti = tm->ItemNull();
+    TreeItem ti = TreeModel::kNullItem;
     pt = {args->mouseWindow.x, args->mouseWindow.y};
     if (pt.x == -1 || pt.y == -1) {
         // no mouse position when launched via keyboard shortcut
         // use position of selected item to show menu
         ti = treeCtrl->GetSelection();
-        if (ti == tm->ItemNull()) {
-            return tm->ItemNull();
+        if (ti == TreeModel::kNullItem) {
+            return TreeModel::kNullItem;
         }
         RECT rcItem;
         if (treeCtrl->GetItemRect(ti, true, rcItem)) {
@@ -887,9 +882,9 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
         }
     } else {
         ti = treeCtrl->GetItemAt(pt.x, pt.y);
-        if (ti == tm->ItemNull()) {
+        if (ti == TreeModel::kNullItem) {
             // only show context menu if over a node in tree
-            return tm->ItemNull();
+            return TreeModel::kNullItem;
         }
         // context menu acts on this item so select it
         // for better visual feedback to the user

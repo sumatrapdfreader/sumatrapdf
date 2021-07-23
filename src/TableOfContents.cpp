@@ -468,7 +468,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     TreeCtrl* treeCtrl = (TreeCtrl*)ev->w;
     TreeModel* tm = treeCtrl->treeModel;
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
-    if (ti == tm->ItemNull()) {
+    if (ti == TreeModel::kNullItem) {
         pt = {ev->mouseGlobal.x, ev->mouseGlobal.y};
     }
     int pageNo = 0;

@@ -362,23 +362,8 @@ TocTree::~TocTree() {
     delete root;
 }
 
-int TocTree::RootCount() {
-    int n = 0;
-    auto node = root;
-    while (node) {
-        n++;
-        node = node->next;
-    }
-    return n;
-}
-
-TreeItem TocTree::RootAt(int n) {
-    auto node = root;
-    while (n > 0) {
-        n--;
-        node = node->next;
-    }
-    return (TreeItem)node;
+TreeItem TocTree::Root() {
+    return (TreeItem)root;
 }
 
 WCHAR* TocTree::ItemText(TreeItem ti) {
@@ -409,10 +394,6 @@ bool TocTree::ItemIsExpanded(TreeItem ti) {
 bool TocTree::ItemIsChecked(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return !tocItem->isUnchecked;
-}
-
-TreeItem TocTree::ItemNull() {
-    return 0;
 }
 
 void TocTree::SetHandle(TreeItem ti, HTREEITEM hItem) {

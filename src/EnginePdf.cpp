@@ -977,23 +977,26 @@ TocTree* EnginePdf::GetToc() {
     int idCounter = 0;
 
     TocItem* root = nullptr;
+    TocItem* att = nullptr;
     if (outline) {
         root = BuildTocTree(nullptr, outline, idCounter, false);
     }
     if (!attachments) {
-        if (!root) {
-            return nullptr;
-        }
-        tocTree = new TocTree(root);
-        return tocTree;
+        goto MakeTree;
     }
-    TocItem* att = BuildTocTree(nullptr, attachments, idCounter, true);
+    att = BuildTocTree(nullptr, attachments, idCounter, true);
+    if (root) {
+        root->AddSiblingAtEnd(att);
+    } else {
+        root = att;
+    }
+MakeTree:
     if (!root) {
-        tocTree = new TocTree(att);
-        return tocTree;
+        return nullptr;
     }
-    root->AddSiblingAtEnd(att);
-    tocTree = new TocTree(root);
+    TocItem* realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 

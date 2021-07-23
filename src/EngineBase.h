@@ -257,8 +257,7 @@ struct TocTree : TreeModel {
     ~TocTree() override;
 
     // TreeModel
-    int RootCount() override;
-    TreeItem RootAt(int n) override;
+    TreeItem Root() override;
 
     WCHAR* ItemText(TreeItem) override;
     TreeItem ItemParent(TreeItem) override;
@@ -266,7 +265,6 @@ struct TocTree : TreeModel {
     TreeItem ItemChildAt(TreeItem, int index) override;
     bool ItemIsExpanded(TreeItem) override;
     bool ItemIsChecked(TreeItem) override;
-    TreeItem ItemNull() override;
 
     void SetHandle(TreeItem, HTREEITEM) override;
     HTREEITEM GetHandle(TreeItem) override;
