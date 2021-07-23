@@ -782,7 +782,9 @@ TocTree* EngineImageDir::GetToc() {
         item->id = i;
         root->AddSiblingAtEnd(item);
     }
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 
@@ -1065,7 +1067,11 @@ bool EngineCbx::FinishLoading() {
             curr = ti;
         }
     }
-    tocTree = new TocTree(root);
+    if (root) {
+        auto realRoot = new TocItem();
+        realRoot->child = root;
+        tocTree = new TocTree(realRoot);
+    }
 
     for (int i = 0; i < pageCount; i++) {
         size_t fileId = files[i]->fileId;

@@ -377,7 +377,9 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     auto dirW = ToWstrTemp(dir);
     TocItem* root = new TocItem(nullptr, dirW, 0);
     root->child = tocFiles;
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
 
     auto fileName = ToWstrTemp(dir);
     SetFileName(fileName);

@@ -810,7 +810,9 @@ TocTree* EngineEpub::GetToc() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 
@@ -926,7 +928,9 @@ TocTree* EngineFb2::GetToc() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 
@@ -1078,7 +1082,9 @@ TocTree* EngineMobi::GetToc() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 
@@ -1177,7 +1183,9 @@ TocTree* EnginePdb::GetToc() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 
@@ -1526,7 +1534,9 @@ TocTree* EngineChm::GetToc() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 
@@ -1753,7 +1763,9 @@ TocTree* EngineTxt::GetToc() {
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
 
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 

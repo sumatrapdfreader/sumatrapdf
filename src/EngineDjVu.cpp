@@ -1109,7 +1109,9 @@ TocTree* EngineDjVu::GetToc() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new TocTree(root);
+    auto realRoot = new TocItem();
+    realRoot->child = root;
+    tocTree = new TocTree(realRoot);
     return tocTree;
 }
 
