@@ -9,7 +9,7 @@ struct TreeItmGetTooltipEvent : WndEvent {
     NMTVGETINFOTIPW* info{nullptr};
 };
 
-typedef std::function<void(TreeItmGetTooltipEvent*)> TreeItemGetTooltipHandler;
+using TreeItemGetTooltipHandler = std::function<void(TreeItmGetTooltipEvent*)>;
 
 struct TreeSelectionChangedEvent : WndEvent {
     TreeCtrl* treeCtrl{nullptr};
@@ -20,7 +20,7 @@ struct TreeSelectionChangedEvent : WndEvent {
     bool byMouse{false};
 };
 
-typedef std::function<void(TreeSelectionChangedEvent*)> TreeSelectionChangedHandler;
+using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent*)>;
 
 struct TreeItemExpandedEvent : WndEvent {
     TreeCtrl* treeCtrl{nullptr};
@@ -28,7 +28,7 @@ struct TreeItemExpandedEvent : WndEvent {
     bool isExpanded{false};
 };
 
-typedef std::function<void(TreeItemExpandedEvent*)> TreeItemExpandedHandler;
+using TreeItemExpandedHandler = std::function<void(TreeItemExpandedEvent*)>;
 
 struct TreeItemState {
     bool isSelected{false};
@@ -50,7 +50,7 @@ struct TreeItemChangedEvent : WndEvent {
     TreeItemState newState{};
 };
 
-typedef std::function<void(TreeItemChangedEvent*)> TreeItemChangedHandler;
+using TreeItemChangedHandler = std::function<void(TreeItemChangedEvent*)>;
 
 struct TreeItemCustomDrawEvent : WndEvent {
     TreeCtrl* treeCtrl{nullptr};
@@ -58,7 +58,7 @@ struct TreeItemCustomDrawEvent : WndEvent {
     NMTVCUSTOMDRAW* nm{nullptr};
 };
 
-typedef std::function<void(TreeItemCustomDrawEvent*)> TreeItemCustomDrawHandler;
+using TreeItemCustomDrawHandler = std::function<void(TreeItemCustomDrawEvent*)>;
 
 struct TreeClickEvent : WndEvent {
     TreeCtrl* treeCtrl{nullptr};
@@ -71,7 +71,7 @@ struct TreeClickEvent : WndEvent {
     Point mouseGlobal{};
 };
 
-typedef std::function<void(TreeClickEvent*)> TreeClickHandler;
+using TreeClickHandler = std::function<void(TreeClickEvent*)>;
 
 struct TreeKeyDownEvent : WndEvent {
     TreeCtrl* treeCtrl{nullptr};
@@ -80,7 +80,7 @@ struct TreeKeyDownEvent : WndEvent {
     u32 flags{0};
 };
 
-typedef std::function<void(TreeKeyDownEvent*)> TreeKeyDownHandler;
+using TreeKeyDownHandler = std::function<void(TreeKeyDownEvent*)>;
 
 struct TreeGetDispInfoEvent : WndEvent {
     TreeCtrl* treeCtrl{nullptr};
@@ -88,7 +88,7 @@ struct TreeGetDispInfoEvent : WndEvent {
     NMTVDISPINFOEXW* dispInfo{nullptr};
 };
 
-typedef std::function<void(TreeGetDispInfoEvent*)> TreeGetDispInfoHandler;
+using TreeGetDispInfoHandler = std::function<void(TreeGetDispInfoEvent*)>;
 
 struct TreeItemDraggeddEvent {
     TreeCtrl* treeCtrl{nullptr};
@@ -97,7 +97,7 @@ struct TreeItemDraggeddEvent {
     bool isStart{false};
 };
 
-typedef std::function<void(TreeItemDraggeddEvent*)> TreeItemDraggedHandler;
+using TreeItemDraggedHandler = std::function<void(TreeItemDraggeddEvent*)>;
 
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()

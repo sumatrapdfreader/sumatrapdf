@@ -4,8 +4,8 @@
 struct TabsCtrl;
 class TabsCtrlState;
 
-typedef std::function<void(TabsCtrl*, TabsCtrlState*, int)> TabSelectedCb;
-typedef std::function<void(TabsCtrl*, TabsCtrlState*, int)> TabClosedCb;
+using TabSelectedCb = std::function<void(TabsCtrl*, TabsCtrlState*, int)>;
+using TabClosedCb = std::function<void(TabsCtrl*, TabsCtrlState*, int)>;
 
 class TabItem {
   public:

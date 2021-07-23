@@ -7,7 +7,7 @@ enum class CheckState {
     Indeterminate = BST_INDETERMINATE,
 };
 
-typedef std::function<void(CheckState)> OnCheckStateChanged;
+using OnCheckStateChanged = std::function<void(CheckState)>;
 
 struct CheckboxCtrl : WindowBase {
     OnCheckStateChanged onCheckStateChanged = nullptr;

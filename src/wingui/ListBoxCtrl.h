@@ -26,7 +26,7 @@ struct ListBoxSelectionChangedEvent : WndEvent {
     std::string_view item;
 };
 
-typedef std::function<void(ListBoxSelectionChangedEvent*)> ListBoxSelectionChangedHandler;
+using ListBoxSelectionChangedHandler = std::function<void(ListBoxSelectionChangedEvent*)>;
 
 struct ListBoxCtrl : WindowBase {
     ListBoxModel* model = nullptr;

@@ -56,14 +56,14 @@ struct CopyWndEvent {
     ~CopyWndEvent();
 };
 
-typedef std::function<void(WndEvent*)> MsgFilter;
+using MsgFilter = std::function<void(WndEvent*)>;
 
 struct SizeEvent : WndEvent {
     int dx = 0;
     int dy = 0;
 };
 
-typedef std::function<void(SizeEvent*)> SizeHandler;
+using SizeHandler = std::function<void(SizeEvent*)>;
 
 struct ContextMenuEvent : WndEvent {
     // mouse x,y position relative to the window
@@ -72,7 +72,7 @@ struct ContextMenuEvent : WndEvent {
     Point mouseGlobal{};
 };
 
-typedef std::function<void(ContextMenuEvent*)> ContextMenuHandler;
+using ContextMenuHandler = std::function<void(ContextMenuEvent*)>;
 
 struct WindowCloseEvent : WndEvent {
     bool cancel = false;
@@ -83,27 +83,27 @@ struct WmCommandEvent : WndEvent {
     int ev = 0;
 };
 
-typedef std::function<void(WmCommandEvent*)> WmCommandHandler;
+using WmCommandHandler = std::function<void(WmCommandEvent*)>;
 
 struct WmNotifyEvent : WndEvent {
     NMTREEVIEWW* treeView = nullptr;
 };
 
-typedef std::function<void(WmNotifyEvent*)> WmNotifyHandler;
+using WmNotifyHandler = std::function<void(WmNotifyEvent*)>;
 
-typedef std::function<void(WindowCloseEvent*)> CloseHandler;
+using CloseHandler = std::function<void(WindowCloseEvent*)>;
 
 struct WindowDestroyEvent : WndEvent {
     Window* window = nullptr;
 };
 
-typedef std::function<void(WindowDestroyEvent*)> DestroyHandler;
+using DestroyHandler = std::function<void(WindowDestroyEvent*)>;
 
 struct CharEvent : WndEvent {
     int keyCode = 0;
 };
 
-typedef std::function<void(CharEvent*)> CharHandler;
+using CharHandler = std::function<void(CharEvent*)>;
 
 // TODO: extract data from LPARAM
 struct KeyEvent : WndEvent {
@@ -111,7 +111,7 @@ struct KeyEvent : WndEvent {
     int keyVirtCode = 0;
 };
 
-typedef std::function<void(KeyEvent*)> KeyHandler;
+using KeyHandler = std::function<void(KeyEvent*)>;
 
 struct MouseWheelEvent : WndEvent {
     bool isVertical = false;
@@ -121,14 +121,14 @@ struct MouseWheelEvent : WndEvent {
     int y = 0;
 };
 
-typedef std::function<void(MouseWheelEvent*)> MouseWheelHandler;
+using MouseWheelHandler = std::function<void(MouseWheelEvent*)>;
 
 // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-dragacceptfiles
 struct DropFilesEvent : WndEvent {
     HDROP hdrop = nullptr;
 };
 
-typedef std::function<void(DropFilesEvent*)> DropFilesHandler;
+using DropFilesHandler = std::function<void(DropFilesEvent*)>;
 
 struct WindowBase;
 

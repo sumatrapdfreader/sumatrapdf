@@ -6,7 +6,7 @@ struct EditTextChangedEvent : WndEvent {
     std::string_view text{};
 };
 
-typedef std::function<void(EditTextChangedEvent*)> OnTextChanged;
+using OnTextChanged = std::function<void(EditTextChangedEvent*)>;
 
 // pass to SetColor() function to indicate this color should not change
 #define NO_CHANGE (COLORREF)(-2) // -1 is taken by NO_COLOR in windows headers

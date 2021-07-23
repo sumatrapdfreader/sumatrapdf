@@ -9,7 +9,7 @@ struct TrackbarPosChangingEvent : WndEvent {
     NMTRBTHUMBPOSCHANGING* info = nullptr;
 };
 
-typedef std::function<void(TrackbarPosChangingEvent*)> TrackbarPoschangingHandler;
+using TrackbarPoschangingHandler = std::function<void(TrackbarPosChangingEvent*)>;
 
 struct TrackbarCtrl : WindowBase {
     // set before Create()

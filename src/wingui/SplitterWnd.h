@@ -18,7 +18,7 @@ struct SplitterMoveEvent {
     bool resizeAllowed{true};
 };
 
-typedef std::function<void(SplitterMoveEvent*)> SplitterMoveHandler;
+using SplitterMoveHandler = std::function<void(SplitterMoveEvent*)>;
 
 // TODO: maybe derive from WindowBase and allow registering custom classes
 // for WindowBase
