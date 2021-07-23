@@ -348,7 +348,7 @@ static DWORD WINAPI FindThread(LPVOID data) {
     } else {
         uitask::Post([=] { FindEndTask(win, ftd, nullptr, win->findCanceled, false); });
     }
-
+    DestroyTempAllocator();
     return 0;
 }
 

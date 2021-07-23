@@ -15,13 +15,14 @@ to free memory used by allocator.
 A safe place to call it is inside message windows loop.
 */
 
-static PoolAllocator* gTempAllocator{nullptr};
+thread_local static PoolAllocator* gTempAllocator{nullptr};
 
 // forbid inlinining to not blow out the size of callers
 NO_INLINE Allocator* GetTempAllocator() {
     if (gTempAllocator) {
         return gTempAllocator;
     }
+
     gTempAllocator = new PoolAllocator();
     // this can be large because 64k is nothing and it's used frequently
     gTempAllocator->minBlockSize = 64 * 1024;

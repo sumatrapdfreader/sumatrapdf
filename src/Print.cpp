@@ -434,6 +434,7 @@ static DWORD WINAPI PrintThread(LPVOID data) {
         }
         delete threadData;
     });
+    DestroyTempAllocator();
     return 0;
 }
 

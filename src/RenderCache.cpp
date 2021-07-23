@@ -690,7 +690,9 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
             cache->Add(req, bmp);
             req.dm->RepaintDisplay();
         }
+        ResetTempAllocator();
     }
+    DestroyTempAllocator();
 }
 
 // TODO: conceptually, RenderCache is not the right place for code that paints

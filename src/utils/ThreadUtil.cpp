@@ -92,6 +92,7 @@ static DWORD WINAPI ThreadFunc(void* data) {
     auto* func = reinterpret_cast<std::function<void()>*>(data);
     (*func)();
     delete func;
+    DestroyTempAllocator();
     return 0;
 }
 

@@ -293,6 +293,7 @@ static DWORD WINAPI FileWatcherThread(__unused void* param) {
     BOOL alertable = TRUE;
 
     for (;;) {
+        ResetTempAllocator();
         handles[0] = g_threadControlHandle;
         DWORD timeout = GetTimeoutInMs();
         DWORD obj = WaitForMultipleObjectsEx(1, handles, FALSE, timeout, alertable);
@@ -318,6 +319,7 @@ static DWORD WINAPI FileWatcherThread(__unused void* param) {
             CrashIf(true);
         }
     }
+    DestroyTempAllocator();
 }
 
 static void StartThreadIfNecessary() {

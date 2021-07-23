@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-23 Fri
+
+- make temp allocator be per-thread. the only sane thing to do
+
 2021-07-22 Thu
 
 - change inverseSearchCmdLine seeting from WCHAR* => char*
