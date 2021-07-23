@@ -224,11 +224,16 @@ func main() {
 	opts := &BuildOptions{}
 	if flgUploadCiBuild {
 		// triggered via -ci-upload from .github workflow file
-		// only sign / upload if this is my repo (not a fork)
+		// only upload if this is my repo (not a fork)
 		// master branch (not work branches) and on push (not pull requests etc.)
-		onGitHubMaster := isGithubMyMasterBranch()
-		opts.sign = onGitHubMaster
-		opts.upload = onGitHubMaster
+		opts.upload = isGithubMyMasterBranch()
+	}
+
+	if flgCIBuild {
+		// triggered via -ci from .github workflow file
+		// only sign if this is my repo (not a fork)
+		// master branch (not work branches) and on push (not pull requests etc.)
+		opts.sign = isGithubMyMasterBranch()
 	}
 
 	if flgUpload {
