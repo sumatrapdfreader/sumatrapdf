@@ -301,14 +301,6 @@ TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     return res;
 }
 
-WCHAR* TocItem::Text() {
-    return title;
-}
-
-TreeItem* TocItem::Parent() {
-    return parent;
-}
-
 int TocItem::ChildCount() {
     int n = 0;
     auto node = child;
@@ -319,7 +311,7 @@ int TocItem::ChildCount() {
     return n;
 }
 
-TreeItem* TocItem::ChildAt(int n) {
+TocItem* TocItem::ChildAt(int n) {
     if (n == 0) {
         currChild = child;
         currChildNo = 0;
@@ -351,10 +343,6 @@ bool TocItem::IsExpanded() {
     return isOpenDefault != isOpenToggled;
 }
 
-bool TocItem::IsChecked() {
-    return !isUnchecked;
-}
-
 bool TocItem::PageNumbersMatch() const {
     if (!dest || dest->pageNo == 0) {
         return true;
@@ -384,13 +372,59 @@ int TocTree::RootCount() {
     return n;
 }
 
-TreeItem* TocTree::RootAt(int n) {
+TreeItem TocTree::RootAt(int n) {
     auto node = root;
     while (n > 0) {
         n--;
         node = node->next;
     }
-    return node;
+    return (TreeItem)node;
+}
+
+WCHAR* TocTree::ItemText(TreeItem ti) {
+    auto tocItem = (TocItem*)ti;
+    return tocItem->title;
+}
+
+TreeItem TocTree::ItemParent(TreeItem ti) {
+    auto tocItem = (TocItem*)ti;
+    return (TreeItem)tocItem->parent;
+}
+
+int TocTree::ItemChildCount(TreeItem ti) {
+    auto tocItem = (TocItem*)ti;
+    return tocItem->ChildCount();
+}
+
+TreeItem TocTree::ItemChildAt(TreeItem ti, int idx) {
+    auto tocItem = (TocItem*)ti;
+    return (TreeItem)tocItem->ChildAt(idx);
+}
+
+bool TocTree::ItemIsExpanded(TreeItem ti) {
+    auto tocItem = (TocItem*)ti;
+    return tocItem->IsExpanded();
+}
+
+bool TocTree::ItemIsChecked(TreeItem ti) {
+    auto tocItem = (TocItem*)ti;
+    return !tocItem->isUnchecked;
+}
+
+TreeItem TocTree::ItemNull() {
+    return 0;
+}
+
+void TocTree::SetHandle(TreeItem ti, HTREEITEM hItem) {
+    CrashIf(ti < 0);
+    TocItem* tocItem = (TocItem*)ti;
+    tocItem->hItem = hItem;
+}
+
+HTREEITEM TocTree::GetHandle(TreeItem ti) {
+    CrashIf(ti < 0);
+    TocItem* tocItem = (TocItem*)ti;
+    return tocItem->hItem;
 }
 
 TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
