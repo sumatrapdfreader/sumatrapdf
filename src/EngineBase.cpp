@@ -343,7 +343,6 @@ bool TocItem::IsExpanded() {
     return isOpenDefault != isOpenToggled;
 }
 
-
 bool TocItem::PageNumbersMatch() const {
     if (!dest || dest->pageNo == 0) {
         return true;
@@ -414,6 +413,18 @@ bool TocTree::ItemIsChecked(TreeItem ti) {
 
 TreeItem TocTree::ItemNull() {
     return 0;
+}
+
+void TocTree::SetHandle(TreeItem ti, HTREEITEM hItem) {
+    CrashIf(ti < 0);
+    TocItem* tocItem = (TocItem*)ti;
+    tocItem->hItem = hItem;
+}
+
+HTREEITEM TocTree::GetHandle(TreeItem ti) {
+    CrashIf(ti < 0);
+    TocItem* tocItem = (TocItem*)ti;
+    return tocItem->hItem;
 }
 
 TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {

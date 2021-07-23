@@ -4,6 +4,8 @@
 // TreeItem represents an item in a TreeView control
 typedef UINT_PTR TreeItem;
 
+constexpr TreeItem kRootItem = (UINT_PTR)-2;
+
 // TreeModel provides data to TreeCtrl
 struct TreeModel {
     virtual ~TreeModel() = default;
@@ -23,6 +25,9 @@ struct TreeModel {
 
     // returns a value that represents non-existent (null) item
     virtual TreeItem ItemNull() = 0;
+
+    virtual void SetHandle(TreeItem, HTREEITEM) = 0;
+    virtual HTREEITEM GetHandle(TreeItem) = 0;
 };
 
 // function called for every item in the TreeModel

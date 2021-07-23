@@ -172,6 +172,8 @@ extern Kind kindTocDjvu;
 
 // an item in a document's Table of Content
 struct TocItem {
+    HTREEITEM hItem{nullptr};
+
     // each engine has a raw representation of the toc item which
     // we want to access. Not (yet) supported by all engines
     // other values come from parsing this value
@@ -265,6 +267,9 @@ struct TocTree : TreeModel {
     bool ItemIsExpanded(TreeItem) override;
     bool ItemIsChecked(TreeItem) override;
     TreeItem ItemNull() override;
+
+    void SetHandle(TreeItem, HTREEITEM) override;
+    HTREEITEM GetHandle(TreeItem) override;
 };
 
 TocTree* CloneTocTree(TocTree*, bool removeUnchecked);

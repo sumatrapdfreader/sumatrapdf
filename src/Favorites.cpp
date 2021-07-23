@@ -40,9 +40,10 @@
 #include "Tabs.h"
 #include "Translations.h"
 
-struct FavTreeItem  {
+struct FavTreeItem {
     ~FavTreeItem();
 
+    HTREEITEM hItem{nullptr};
     FavTreeItem* parent{nullptr};
     WCHAR* text{nullptr};
     bool isExpanded{false};
@@ -58,7 +59,6 @@ FavTreeItem::~FavTreeItem() {
     DeleteVecMembers(children);
 }
 
-
 struct FavTreeModel : public TreeModel {
     ~FavTreeModel() override;
 
@@ -72,6 +72,9 @@ struct FavTreeModel : public TreeModel {
     bool ItemIsExpanded(TreeItem) override;
     bool ItemIsChecked(TreeItem) override;
     TreeItem ItemNull() override;
+    void SetHandle(TreeItem, HTREEITEM) override;
+    HTREEITEM GetHandle(TreeItem) override;
+
     Vec<FavTreeItem*> children;
 };
 
@@ -121,6 +124,18 @@ bool FavTreeModel::ItemIsChecked(TreeItem ti) {
 
 TreeItem FavTreeModel::ItemNull() {
     return 0;
+}
+
+void FavTreeModel::SetHandle(TreeItem ti, HTREEITEM hItem) {
+    CrashIf(ti < 0);
+    FavTreeItem* treeItem = (FavTreeItem*)ti;
+    treeItem->hItem = hItem;
+}
+
+HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
+    CrashIf(ti < 0);
+    FavTreeItem* treeItem = (FavTreeItem*)ti;
+    return treeItem->hItem;
 }
 
 Favorite* Favorites::GetByMenuId(int menuId, FileState** dsOut) {

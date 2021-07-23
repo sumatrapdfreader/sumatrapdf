@@ -646,11 +646,7 @@ TreeItem TreeCtrl::GetItemAt(int x, int y) {
 }
 
 HTREEITEM TreeCtrl::GetHandleByTreeItem(TreeItem item) {
-    CrashIf(true);
-    // TODO: how to do this?
-    //HTREEITEM res = item->GetHandle();
-    //return res;
-    return nullptr;
+    return treeModel->GetHandle(item);
 }
 
 TreeItem TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
@@ -708,7 +704,7 @@ static HTREEITEM insertItem(TreeCtrl* treeCtrl, HTREEITEM parent, TreeItem ti) {
 
 // inserting in front is faster:
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
-HTREEITEM insertItemFront(TreeCtrl* treeCtrl, HTREEITEM parent, TreeItem ti) {
+HTREEITEM insertItemFront(TreeCtrl* treeCtrl, TreeItem ti, HTREEITEM parent) {
     TVINSERTSTRUCTW toInsert{};
 
     toInsert.hParent = parent;
@@ -745,24 +741,23 @@ bool TreeCtrl::UpdateItem(TreeItem ti) {
 // complicated because it inserts items backwards, as described in
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
 void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
+#if 0
     auto tm = treeCtrl->treeModel;
     int n = tm->ItemChildCount(item);
     for (int i = 0; i < n; i++) {
         auto ti = tm->ItemChildAt(item, i);
         HTREEITEM h = insertItem(treeCtrl, parent, ti);
-        // auto v = std::make_tuple(ti, h);
-        // treeCtrl->insertedItems.Append(v);
+        tm->SetHandle(ti, h);
         PopulateTreeItem(treeCtrl, ti, h);
     }
-#if 0
+#else
     auto tm = treeCtrl->treeModel;
     int n = tm->ItemChildCount(item);
-    TreeItem* tmp[256];
-    TreeItem** a = &tmp[0];
-    int n = parent->ChildCount();
+    TreeItem tmp[256];
+    TreeItem* a = &tmp[0];
     if (n > dimof(tmp)) {
-        size_t nBytes = (size_t)n * sizeof(TreeItem*);
-        a = (TreeItem**)malloc(nBytes);
+        size_t nBytes = (size_t)n * sizeof(TreeItem);
+        a = (TreeItem*)malloc(nBytes);
         nBytes = (size_t)n * sizeof(HTREEITEM);
         if (a == nullptr) {
             free(a);
@@ -773,18 +768,18 @@ void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
     // ChildAt() is optimized for sequential access and we need to
     // insert backwards, so gather the items in v first
     for (int i = 0; i < n; i++) {
-        auto ti = parent->ChildAt(i);
-        CrashIf(ti == nullptr);
+        auto ti = tm->ItemChildAt(item, i);
+        CrashIf(ti == 0);
         a[n - 1 - i] = ti;
     }
 
     for (int i = 0; i < n; i++) {
         auto ti = a[i];
-        HTREEITEM h = insertItemFront(tree, hParent, ti);
-        ti->SetHandle(h);
+        HTREEITEM h = insertItemFront(treeCtrl, ti, parent);
+        tm->SetHandle(ti, h);
         // avoid recursing if not needed because we use a lot of stack space
-        if (ti->ChildCount() > 0) {
-            PopulateTreeItem(tree, ti, h);
+        if (tm->ItemChildCount(ti) > 0) {
+            PopulateTreeItem(treeCtrl, ti, h);
         }
     }
 
@@ -800,13 +795,8 @@ static void PopulateTree(TreeCtrl* treeCtrl, TreeModel* tm) {
     for (int i = 0; i < n; i++) {
         auto ti = tm->RootAt(i);
         HTREEITEM h = insertItem(treeCtrl, parent, ti);
+        tm->SetHandle(ti, h);
         PopulateTreeItem(treeCtrl, ti, h);
-#if 0
-        auto ti = tm->RootAt(i);
-        HTREEITEM h = insertItem(tree, parent, ti);
-        ti->SetHandle(h);
-        PopulateTreeItem(tree, ti, h);
-#endif
     }
 }
 
