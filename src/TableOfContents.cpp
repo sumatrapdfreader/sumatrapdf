@@ -58,9 +58,10 @@
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
 static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
-    auto* w = ev->treeCtrl;
-    auto* ti = ev->treeItem;
-    auto* nm = ev->info;
+    auto treeCtrl = ev->treeCtrl;
+    auto tm = treeCtrl->treeModel;
+    auto ti = ev->treeItem;
+    auto nm = ev->info;
     TocItem* tocItem = (TocItem*)ti;
     PageDestination* link = tocItem->GetPageDestination();
     if (!link) {
@@ -89,11 +90,11 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
 
     // Display the item's full label, if it's overlong
     RECT rcLine, rcLabel;
-    w->GetItemRect(ev->treeItem, false, rcLine);
-    w->GetItemRect(ev->treeItem, true, rcLabel);
+    treeCtrl->GetItemRect(ev->treeItem, false, rcLine);
+    treeCtrl->GetItemRect(ev->treeItem, true, rcLabel);
 
     if (rcLine.right + 2 < rcLabel.right) {
-        str::WStr currInfoTip = ti->Text();
+        str::WStr currInfoTip = tm->ItemText(ti);
         infotip.Append(currInfoTip.Get());
         infotip.Append(L"\r\n");
     }
@@ -205,7 +206,7 @@ static bool IsScrollToLink(PageDestination* link) {
     return kind == kindDestinationScrollTo;
 }
 
-static void GoToTocTreeItem(WindowInfo* win, TreeItem* ti, bool allowExternal) {
+static void GoToTocTreeItem(WindowInfo* win, TreeItem ti, bool allowExternal) {
     if (!ti) {
         return;
     }
@@ -246,28 +247,28 @@ void ToggleTocBox(WindowInfo* win) {
 }
 
 // find the closest item in tree view to a given page number
-static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
+static TocItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     TocItem* bestMatch = nullptr;
     int bestMatchPageNo = 0;
 
     TreeModel* tm = treeCtrl->treeModel;
     if (!tm) {
-        return nullptr;
+        return 0;
     }
     int nItems = 0;
-    VisitTreeModelItems(tm, [&](TreeItem* ti) {
-        auto* docItem = (TocItem*)ti;
-        if (!docItem) {
+    VisitTreeModelItems(tm, [&](TreeModel* tm, TreeItem ti) {
+        auto tocItem = (TocItem*)ti;
+        if (!tocItem) {
             return true;
         }
         if (!bestMatch) {
             // if nothing else matches, match the root node
-            bestMatch = docItem;
+            bestMatch = tocItem;
         }
         ++nItems;
-        int page = docItem->pageNo;
+        int page = tocItem->pageNo;
         if ((page <= pageNo) && (page >= bestMatchPageNo) && (page >= 1)) {
-            bestMatch = docItem;
+            bestMatch = tocItem;
             bestMatchPageNo = page;
             if (pageNo == bestMatchPageNo) {
                 // we can stop earlier if we found the exact match
@@ -279,24 +280,24 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     // if there's only one item, we want to unselect it so that it can
     // be selected by the user
     if (nItems < 2) {
-        return nullptr;
+        return 0;
     }
     return bestMatch;
 }
 
 // TODO: I can't use TreeItem->IsExpanded() because it's not in sync with
 // the changes user makes to TreeCtrl
-static TreeItem* FindVisibleParentTreeItem(TreeCtrl* treeCtrl, TreeItem* ti) {
+static TocItem* FindVisibleParentTreeItem(TreeCtrl* treeCtrl, TocItem* ti) {
     if (!ti) {
         return nullptr;
     }
     while (true) {
-        auto parent = ti->Parent();
+        auto parent = ti->parent;
         if (parent == nullptr) {
             // ti is a root node
             return ti;
         }
-        if (treeCtrl->IsExpanded(parent)) {
+        if (treeCtrl->IsExpanded((TreeItem)parent)) {
             return ti;
         }
         ti = parent;
@@ -310,10 +311,10 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     }
 
     auto treeCtrl = win->tocTreeCtrl;
-    TreeItem* item = TreeItemForPageNo(treeCtrl, currPageNo);
+    auto item = TreeItemForPageNo(treeCtrl, currPageNo);
     // only select the items that are visible i.e. are top nodes or
     // children of expanded node
-    TreeItem* toSelect = FindVisibleParentTreeItem(treeCtrl, item);
+    TreeItem toSelect = (TreeItem)FindVisibleParentTreeItem(treeCtrl, item);
     treeCtrl->SelectItem(toSelect);
 }
 
@@ -325,7 +326,7 @@ static void UpdateDocTocExpansionStateRecur(TreeCtrl* treeCtrl, Vec<int>& tocSta
             // isOpenToggled is not kept in sync
             // TODO: keep toggle state on TocItem in sync
             // by subscribing to the right notifications
-            bool isExpanded = treeCtrl->IsExpanded(tocItem);
+            bool isExpanded = treeCtrl->IsExpanded((TreeItem)tocItem);
             bool wasToggled = isExpanded != tocItem->isOpenDefault;
             if (wasToggled) {
                 tocState.Append(tocItem->id);
@@ -463,8 +464,11 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     const WCHAR* filePath = win->ctrl->FilePath();
 
     POINT pt{};
-    TreeItem* ti = GetOrSelectTreeItemAtPos(ev, pt);
-    if (!ti) {
+
+    TreeCtrl* treeCtrl = (TreeCtrl*)ev->w;
+    TreeModel* tm = treeCtrl->treeModel;
+    TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
+    if (ti == tm->ItemNull()) {
         pt = {ev->mouseGlobal.x, ev->mouseGlobal.y};
     }
     int pageNo = 0;

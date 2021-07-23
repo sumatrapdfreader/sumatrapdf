@@ -2,41 +2,31 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // TreeItem represents an item in a TreeView control
-struct TreeItem {
-    HTREEITEM hItem{nullptr};
-
-    virtual ~TreeItem() = default;
-    ;
-
-    // TODO: convert to char*
-    virtual WCHAR* Text() = 0;
-    virtual TreeItem* Parent() = 0;
-    virtual int ChildCount() = 0;
-    virtual TreeItem* ChildAt(int index) = 0;
-    // true if this tree item should be expanded i.e. showing children
-    virtual bool IsExpanded() = 0;
-    // when showing checkboxes
-    virtual bool IsChecked() = 0;
-
-    virtual void SetHandle(HTREEITEM h) {
-        hItem = h;
-    }
-    virtual HTREEITEM GetHandle() {
-        return hItem;
-    }
-};
+typedef UINT_PTR TreeItem;
 
 // TreeModel provides data to TreeCtrl
 struct TreeModel {
     virtual ~TreeModel() = default;
-    ;
 
     virtual int RootCount() = 0;
-    virtual TreeItem* RootAt(int) = 0;
+    virtual TreeItem RootAt(int) = 0;
+
+    // TODO: convert to char*
+    virtual WCHAR* ItemText(TreeItem) = 0;
+    virtual TreeItem ItemParent(TreeItem) = 0;
+    virtual int ItemChildCount(TreeItem) = 0;
+    virtual TreeItem ItemChildAt(TreeItem, int index) = 0;
+    // true if this tree item should be expanded i.e. showing children
+    virtual bool ItemIsExpanded(TreeItem) = 0;
+    // when showing checkboxes
+    virtual bool ItemIsChecked(TreeItem) = 0;
+
+    // returns a value that represents non-existent (null) item
+    virtual TreeItem ItemNull() = 0;
 };
 
 // function called for every item in the TreeModel
 // return false to stop iteration
-using TreeItemVisitor = std::function<bool(TreeItem*)>;
+using TreeItemVisitor = std::function<bool(TreeModel*, TreeItem)>;
 
-bool VisitTreeModelItems(TreeModel* tm, const TreeItemVisitor& visitor);
+bool VisitTreeModelItems(TreeModel*, const TreeItemVisitor& visitor);

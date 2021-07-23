@@ -40,25 +40,15 @@
 #include "Tabs.h"
 #include "Translations.h"
 
-struct FavTreeItem : public TreeItem {
-    ~FavTreeItem() override;
+struct FavTreeItem  {
+    ~FavTreeItem();
 
-    // TODO: convert to char*
-    WCHAR* Text() override;
-    TreeItem* Parent() override;
-    int ChildCount() override;
-    TreeItem* ChildAt(int index) override;
-    // true if this tree item should be expanded i.e. showing children
-    bool IsExpanded() override;
-    // when showing checkboxes
-    bool IsChecked() override;
-
-    FavTreeItem* parent = nullptr;
-    WCHAR* text = nullptr;
-    bool isExpanded = false;
+    FavTreeItem* parent{nullptr};
+    WCHAR* text{nullptr};
+    bool isExpanded{false};
 
     // not owned by us
-    Favorite* favorite = nullptr;
+    Favorite* favorite{nullptr};
 
     Vec<FavTreeItem*> children;
 };
@@ -68,37 +58,20 @@ FavTreeItem::~FavTreeItem() {
     DeleteVecMembers(children);
 }
 
-WCHAR* FavTreeItem::Text() {
-    return text;
-}
-
-TreeItem* FavTreeItem::Parent() {
-    return nullptr;
-}
-
-int FavTreeItem::ChildCount() {
-    size_t n = children.size();
-    return (int)n;
-}
-
-TreeItem* FavTreeItem::ChildAt(int index) {
-    return children[index];
-}
-
-bool FavTreeItem::IsExpanded() {
-    return isExpanded;
-}
-
-bool FavTreeItem::IsChecked() {
-    return false;
-}
 
 struct FavTreeModel : public TreeModel {
     ~FavTreeModel() override;
 
     int RootCount() override;
-    TreeItem* RootAt(int) override;
+    TreeItem RootAt(int) override;
 
+    WCHAR* ItemText(TreeItem) override;
+    TreeItem ItemParent(TreeItem) override;
+    int ItemChildCount(TreeItem) override;
+    TreeItem ItemChildAt(TreeItem, int index) override;
+    bool ItemIsExpanded(TreeItem) override;
+    bool ItemIsChecked(TreeItem) override;
+    TreeItem ItemNull() override;
     Vec<FavTreeItem*> children;
 };
 
@@ -111,8 +84,43 @@ int FavTreeModel::RootCount() {
     return (int)n;
 }
 
-TreeItem* FavTreeModel::RootAt(int n) {
-    return children[n];
+TreeItem FavTreeModel::RootAt(int n) {
+    return (TreeItem)children[n];
+}
+
+WCHAR* FavTreeModel::ItemText(TreeItem ti) {
+    auto fti = (FavTreeItem*)ti;
+    return fti->text;
+}
+
+TreeItem FavTreeModel::ItemParent(TreeItem ti) {
+    auto fti = (FavTreeItem*)ti;
+    return (TreeItem)fti->parent;
+}
+
+int FavTreeModel::ItemChildCount(TreeItem ti) {
+    auto fti = (FavTreeItem*)ti;
+    size_t n = fti->children.size();
+    return (int)n;
+}
+
+TreeItem FavTreeModel::ItemChildAt(TreeItem ti, int idx) {
+    auto fti = (FavTreeItem*)ti;
+    auto res = fti->children[idx];
+    return (TreeItem)res;
+}
+
+bool FavTreeModel::ItemIsExpanded(TreeItem ti) {
+    auto fti = (FavTreeItem*)ti;
+    return fti->isExpanded;
+}
+
+bool FavTreeModel::ItemIsChecked(TreeItem ti) {
+    return false;
+}
+
+TreeItem FavTreeModel::ItemNull() {
+    return 0;
 }
 
 Favorite* Favorites::GetByMenuId(int menuId, FileState** dsOut) {
@@ -513,7 +521,7 @@ void GoToFavoriteByMenuId(WindowInfo* win, int wmId) {
     }
 }
 
-static void GoToFavForTreeItem(WindowInfo* win, TreeItem* ti) {
+static void GoToFavForTreeItem(WindowInfo* win, TreeItem ti) {
     if (!ti) {
         return;
     }
@@ -531,7 +539,7 @@ static void GoToFavForTreeItem(WindowInfo* win, TreeItem* ti) {
 
 #if 0
 static void GoToFavForTVItem(WindowInfo* win, TreeCtrl* treeCtrl, HTREEITEM hItem = nullptr) {
-    TreeItem* ti = nullptr;
+    TreeItem ti = nullptr;
     if (nullptr == hItem) {
         ti = treeCtrl->GetSelection();
     } else {
@@ -712,7 +720,7 @@ void RememberFavTreeExpansionState(WindowInfo* win) {
     }
     int n = tm->RootCount();
     for (int i = 0; i < n; i++) {
-        TreeItem* ti = tm->RootAt(i);
+        TreeItem ti = tm->RootAt(i);
         bool isExpanded = treeCtrl->IsExpanded(ti);
         if (isExpanded) {
             FavTreeItem* fti = (FavTreeItem*)ti;
@@ -763,7 +771,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     // WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
     POINT pt{};
-    TreeItem* ti = GetOrSelectTreeItemAtPos(ev, pt);
+    TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (!ti) {
         return;
     }
