@@ -31,9 +31,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf", "mupdf.vcxproj", "{2181F50F-8D95-1DC1-5617-C120C2EA19F2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf-libs", "mupdf-libs.vcxproj", "{18B1F38A-0469-35D8-6D70-0E345947D0C8}"
-	ProjectSection(ProjectDependencies) = postProject
-		{584D90B6-C42C-0F52-CD44-9A2839A375B3} = {584D90B6-C42C-0F52-CD44-9A2839A375B3}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_util", "test_util.vcxproj", "{22AB719A-8E15-2611-D753-D7B643FD0366}"
 EndProject

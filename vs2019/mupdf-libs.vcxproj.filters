@@ -82,9 +82,6 @@
     <Filter Include="openjpeg\src\lib\openjp2">
       <UniqueIdentifier>{471EE19F-3343-3020-5C8E-15B048122F3E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="zlib">
-      <UniqueIdentifier>{16CFA17C-0206-A30D-ABF2-881097081F0F}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\gumbo-parser\src\attribute.h">
@@ -817,45 +814,6 @@
     </ClCompile>
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tpix_manager.c">
       <Filter>openjpeg\src\lib\openjp2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\adler32.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\compress.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\crc32.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\deflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzclose.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzlib.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzread.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzwrite.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inffast.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inftrees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\trees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\zutil.c">
-      <Filter>zlib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

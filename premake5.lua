@@ -246,7 +246,7 @@ workspace "SumatraPDF"
       "4701", "4706", "4819", "4838"
     }
     includedirs { "src", "src/wingui" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib-ng", "mupdf/include" }
     engines_files()
     links { "chm" }
 
@@ -259,7 +259,7 @@ workspace "SumatraPDF"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
     -- TODO: most of these warnings are due to bzip2 and lzma
     disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
-    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
+    includedirs { "ext/zlib-ng", "ext/bzip2", "ext/lzma/C" }
     unarr_files()
 
   project "libwebp"
@@ -379,7 +379,6 @@ workspace "SumatraPDF"
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
-    links { "zlib-ng" }
 
 --[[
   project "zlib"
@@ -524,7 +523,7 @@ workspace "SumatraPDF"
       "ext/jbig2dec",
       "ext/libjpeg-turbo",
       "ext/openjpeg/src/lib/openjp2",
-      "ext/zlib",
+      "ext/zlib-ng",
       "mupdf/scripts/freetype",
       "ext/freetype/include",
       "ext/mujs",
@@ -567,7 +566,7 @@ workspace "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4702" }
-    links { "mupdf", "libdjvu", "libwebp", "unarrlib" }
+    links { "mupdf", "zlib-ng", "libdjvu", "libwebp", "unarrlib" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -589,7 +588,7 @@ workspace "SumatraPDF"
 
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
     disablewarnings { "4100", "4267", "4457", "4838" }
-    includedirs { "src", "ext/zlib", "ext/lzma/C" }
+    includedirs { "src", "ext/zlib-ng", "ext/lzma/C" }
     includedirs { "ext/libwebp/src", "ext/unarr", "mupdf/include" }
     utils_files()
 
@@ -715,7 +714,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4838" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
-      "ext/libdjvu", "ext/CHMLib/src", "ext/zlib"
+      "ext/libdjvu", "ext/CHMLib/src", "ext/zlib-ng"
     }
     pdf_preview_files()
     filter {"configurations:Debug"}
@@ -759,13 +758,13 @@ workspace "SumatraPDF"
 
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
-    includedirs { "ext/zlib", "ext/synctex" }
+    includedirs { "ext/zlib-ng", "ext/synctex" }
 
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
     links {
-      "engines", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
+      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -805,7 +804,7 @@ workspace "SumatraPDF"
 
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
-    includedirs { "ext/zlib", "ext/synctex" }
+    includedirs { "ext/zlib-ng", "ext/synctex" }
 
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
@@ -896,7 +895,7 @@ workspace "MakeLZSA"
     regconf()
 
     makelzsa_files()
-    includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
+    includedirs { "src", "ext/zlib-ng", "ext/lzma/C", "ext/unarr" }
 
     -- for zlib
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
@@ -908,7 +907,7 @@ workspace "MakeLZSA"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
     -- TODO: most of these warnings are due to bzip2 and lzma
     disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
-    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
+    includedirs { "ext/zlib-ng", "ext/bzip2", "ext/lzma/C" }
     unarr_files()
 
     links { "shlwapi", "version", "comctl32" }

@@ -7,6 +7,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - convert typedef std::function to using
 - tweak build script
 - add -file-upload and -files-list
+- use zlib-ng instead of zlib for faster .zip decompression
 
 2021-07-22 Thu
 

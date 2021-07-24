@@ -66,6 +66,7 @@ function zlib_ng_files()
     "deflate_huff.c",
     "deflate_medium.c",
     "deflate_quick.c",
+    "deflate_rle.c",
     "deflate_slow.c",
     "deflate_stored.c",
     "functable.c",
@@ -82,7 +83,10 @@ function zlib_ng_files()
     "trees.c",
     "uncompr.c",
     "zutil.c",
-    "arch/*.c",
+  })
+
+  files_in_dir("ext/zlib-ng/arch/x86", {
+    "*.c",
   })
 end
 
