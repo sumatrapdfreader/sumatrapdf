@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1ccce2d729f6ffbe351eaac78b057a60997d221b
+a5c96b4603d329feb275eaacebeaf767a4000999
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -20,6 +20,7 @@ id:%s instalasi tidak ditemukan.
 it:%s installazione non trovata.
 ka:ინსტალირებული %s ვერ მოიძებნა.
 kw:Ny gevir leans %s.
+lt:%s instaliacija nerasta.
 lv:%s instalācija netika atrasta.
 nl:%s installatie niet gevonden.
 pa:%s ਦੀ ਸਥਾਪਤੀ ਨਹੀਂ ਲੱਭੀ।
@@ -407,7 +408,7 @@ ka:&წიგნის რეჟიმი\tCtrl+8
 kr:책처럼 보기(&B)\tCtrl+8
 ku:شێوازی پەرتووک&\tCtrl+8
 kw:&Gwel-lyver\tCtrl+8
-lt:Knyga\tCtrl+8
+lt:Kn&yga\tCtrl+8
 lv:&Grāmatas skats\tCtrl+8
 mk:Книга\tCtrl+8
 my:Lihat &buku\tCtrl+8
@@ -442,6 +443,7 @@ de:&Cursor
 el:Αγκύλη
 es:&Cursor
 kw:&Karet
+lt:&Intarpas
 lv:&Norāde
 nl:&Merkteken
 pl:&Kareta
@@ -1124,6 +1126,7 @@ de:&Freitext
 el:Ελεύθερο κείμενο
 es:&Texto Libre
 kw:&Tekst Rydh
+lt:&Laisvas tekstas
 lv:&Brīvs teksts
 nl:&Vrije Tekst
 pl:&Dowolny tekst
@@ -1344,6 +1347,7 @@ de:&Hervorheben\ta
 el:Επισήμανση
 es:&Resaltar\ta
 kw:&Ughboyntya\ta
+lt:Pa&ryškinti
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
 pl:&Wyróżnienie\ta
@@ -2690,6 +2694,7 @@ id:&Hapus dari Riwayat
 it:&Rimuovi Dalla Cronologia
 ka:&ისტორიიდან წაშლა
 kw:&Removya A Istori
+lt:&Pašalinti iš istorijos
 lv:&Izņemt no vēstures
 nl:V&erwijder uit Geschiedenis
 pl:&Usuń z historii
@@ -3099,6 +3104,7 @@ de:&Stempel
 el:Σφραγίδα
 es:&Estampa
 kw:&Stampa
+lt:&Antspaudas
 lv:&Zīmogs
 nl:&Stempel
 pl:Pie&częć
@@ -3109,6 +3115,7 @@ de:Durchstreichen
 el:Εξάλειψη
 es:&Tachar
 kw:&Treuslinya
+lt:&Išbraukti
 lv:&Izsvītrot
 nl:&Doorhalen
 pl:&Skreślenie
@@ -3120,6 +3127,7 @@ de:&Text
 el:Κείμενο
 es:&Texto
 kw:&Tekst
+lt:&Tekstas
 lv:&Teksts
 nl:&Tekst
 pl:&Tekst
@@ -3187,6 +3195,7 @@ de:&Unterstreichen
 el:Υπογράμμιση
 es:&Subrayar
 kw:&Islinya
+lt:Pa&braukti
 lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
@@ -3754,7 +3763,7 @@ ka:რჩეულებში დამატება
 kr:즐겨찾기 추가.
 ku:زیادکردنی بۆ لیستی پەسەندەکان
 kw:Keworra Tra Drudh
-lt:Sukurti žymą
+lt:Sukurti žymę
 lv:Pievienošana izlasei
 mk:Додај омилен
 ml:പ്രീയപ്പെട്ടതായി ചേര്‍ക്കുക
@@ -3802,6 +3811,7 @@ gl:Engadir PDF como secundario
 it:Aggiungi PDF come figlio
 ka:დავამატოთ PDF შვილობილად
 kw:Keworra PDF avel flogh
+lt:Pridėti PDF kaip vaiką
 lv:Pievienot PDF kā bērnelementu
 nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
@@ -3825,6 +3835,7 @@ gl:Engadir PDF como relacionado
 it:Aggiungi PDF come fratello
 ka:PDF-ის მოძმედ დამატება
 kw:Keworra PDF avel hwor
+lt:Pridėti PDF kaip brolį
 lv:Pievienot PDF kā atvasi
 nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
@@ -3849,6 +3860,7 @@ gl:Engadir secundario
 it:Aggiungi figlio
 ka:შვილობილის დამატება
 kw:Keworra flogh
+lt:Pridėti vaiką
 lv:Pievienot bērnelementu
 nl:Child toevoegen
 pl:Dodaj potomka
@@ -3893,7 +3905,7 @@ ka:%s გვერდის რჩეულებში დამატება
 kr:%s 페이지를 즐겨찾기에 추가
 ku:بۆ پەسەندەکان %s زیادکردنی پەڕەی
 kw:Keworra folen %s dhe daklow drudh
-lt:Sukurti žymą į %s puslapį
+lt:Sukurti žymę į %s puslapį
 lv:Pievienot %s lappusi izlasei
 mk:Додај страница %s во омилени
 mm:စာမျက်နှာ %s ကို စိတ်ကြိုက်မှာသိမ်းပါ
@@ -3959,7 +3971,7 @@ ka:%s გვერდის დამატება რჩეულებში
 kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (선택 사항) :
 ku:(بۆ پەسەندەکان بەناوی (ئارەزوومەندانە %s زیادکردنی پەڕەی :
 kw:Keworra folen %s dhe daklow drudh gans hanow (dewisel):
-lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
+lt:Sukurti žymę į %s puslapį, suteikiant jai pavadinimą (neprivalomas):
 lv:Pievienot %s lappusi izlasei ar (neobligātu) nosaukumu:
 mk:Додај страница %s во омилени со име по избор:
 mm:စာမျက်နှာ %s ကို စိတ်ကြိုက်(နှစ်သက်ရာ) name: သို့ထည့်ပါ
@@ -4012,6 +4024,7 @@ it:Aggiungi pagina %s ai preferiti\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
 ka:გვერდი %s-ის დამატება რჩეულებში\tCtrl+B
 kw:Keworra folen %s dhe daklow drudh\tCtrl+B
+lt:Pridėti %s puslapį prie mėgstamų\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 no:Legg side %s til i favoritter\tCtrl+B
@@ -4041,6 +4054,7 @@ gl:Engadir relacionado
 it:Aggiungi fratello
 ka:მოძმე ელემენტის დამატება
 kw:Keworra hwor
+lt:Pridėti brolį
 lv:Pievienot atvasi
 nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
@@ -4338,6 +4352,7 @@ id:Catatan
 it:Annotazioni
 ka:ანოტაციები
 kw:Notenyans
+lt:Anotacijos
 lv:Anotācijas
 nl:Aantekeningen
 pl:Adnotacje
@@ -4432,6 +4447,7 @@ id:Apakah kamu yakin ingin mencopot aplikasi %s?
 it:Sei sicuro di voler disinstallare %s?
 ka:დარწმუნებული ხართ, რომ გსურთ %s-ის წაშლა?
 kw:Os ta sur bos hwans dhis anlea %s?
+lt:Ar tikrai norite pašalinti %s?
 lv:Vai tiešām vēlaties atinstalēt %s?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pa:ਕੀ ਤੁਸੀਂ %s ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
@@ -4725,6 +4741,7 @@ de:Autor: %s
 el:Συγγραφέας: %s
 es:Autora: %s
 kw:Skrifer: %s
+lt:Autorius: %s
 lv:Autors: %s
 nl:Auteur: %s
 pl:Autor: %s
@@ -4874,6 +4891,7 @@ de:Hintergrundfarbe:
 el:Χρώμα φόντου:
 es:Color de fondo
 kw:Liw Kilva:
+lt:Fono spalva:
 lv:Fona krāsa:
 nl:Achtergrond Kleur
 pl:Kolor tła:
@@ -5150,6 +5168,7 @@ de:Umrandung: %d
 el:Περιθώριο: %d
 es:Borde: %d
 kw:Amal: %d
+lt:Kraštas: %d
 lv:Apmale: %d
 nl:Rand %d
 pl:Obramowanie: %d
@@ -5716,6 +5735,7 @@ gl:Círculo
 id:Lingkaran
 ka:წრე
 kw:Kylgh
+lt:Apskritimas
 lv:Aplis
 nl:Cirkel
 no:Sirkel
@@ -5818,6 +5838,7 @@ it:Comprimi tutto
 ja:すべて折り畳む
 ka:ყველას ჩაკეცვა
 kw:Byghanhe Oll
+lt:Suskleisti viską
 lv:Sakļaut visu
 nl:Alle Samenvouwen
 pl:Zwiń wszystko
@@ -5850,6 +5871,7 @@ id:Warna
 it:Colore
 ka:ფერი
 kw:Liw
+lt:Spalva
 lv:Krāsa
 nl:Kleur
 no:Farge
@@ -5869,6 +5891,7 @@ de:Farbe:
 el:Χρώμα:
 es:Color:
 kw:Liw:
+lt:Spalva:
 lv:Krāsa:
 nl:Kleur
 pl:Kolor:
@@ -6012,6 +6035,7 @@ de:Inhalte:
 el:Περιεχόμενα:
 es:Contenido:
 kw:Dalghow:
+lt:Turinys:
 lv:Saturs:
 nl:Inhoud
 pl:Zawartość:
@@ -7150,6 +7174,7 @@ gl:Non se pode desinstalar o filtro de busca do Sumatra
 id:Tidak bisa mencopot filter pencarian Sumatra 
 ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
 kw:Ny yllir anlea sythel hwilas Sumatra
+lt:Nepavyko pašalinti Sumatra paieškos filtro
 lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
@@ -7291,6 +7316,7 @@ de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
 es:Crear Anotación Desde Selección
 kw:Gwruthyl Notenyans a'th Tewis
+lt:Sukurti anotaciją iš pažymėtos vietos
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
@@ -7302,6 +7328,7 @@ de:Anmerkung unter dem Cursor erstellen
 el:Δημιουργία σχολιασμού κάτω από το δρομέα
 es:Crear Anotación Debajo del Cursor
 kw:Gwruthyl Notenyans Yn-Dann Resor
+lt:Sukurti anotaciją žymeklio vietoje
 lv:Veidot anotāciju zem kursora
 nl:Aantekening maken Onder Cursor
 pl:Utwórz adnotację pod kursorem
@@ -7693,6 +7720,7 @@ de:Datum:
 el:Ημερομηνία:
 es:Fetcha:
 kw:Dedhyas:
+lt:Data:
 lv:Datums:
 nl:Datum:
 pl:Data:
@@ -7964,6 +7992,7 @@ de:Verwerfen
 el:Απόρριψη
 es:Descartar
 kw:Hepkor
+lt:Atmesti
 lv:Atmest
 nl:Verwijderen
 pl:Odrzuć
@@ -8184,6 +8213,7 @@ gl:Sa&ír da pantalla completa
 id:Keluar dari layar penuh
 ka:სრულ&ეკრანიანიდან გამოსვლა
 kw:Kwytya Skrin-leun
+lt:&Išeiti iš pilno ekrano režimo
 lv:&Iziet no pilnekrāna
 nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
@@ -8349,6 +8379,7 @@ id:Edit
 it:Modifica
 ka:რედაქტირება
 kw:Golegi
+lt:Redaguoti
 lv:Rediģēt
 nl:Bewerken
 no:Rediger
@@ -8378,6 +8409,7 @@ id:Tambah catatan
 it:Modifica Annotazioni
 ka:ანოტაციის რედაქტირება
 kw:Golegi notenyans
+lt:Redaguoti anotacijas
 lv:Rediģēt anotācijas
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
@@ -8404,6 +8436,7 @@ id:Edit penanda buku
 it:Modifica Segnalibri
 ka:სანიშნის რედაქტირება
 kw:Golegi Folennotennow
+lt:Redaguoti žymes
 lv:Rediģēt grāmatzīmes
 nl:Bewerk Bladwijzers
 no:Rediger bokmerker
@@ -8707,6 +8740,7 @@ it:Espandi tutto
 ja:すべて展開
 ka:ყველას ამოკეცვა
 kw:Lesa Oll
+lt:Išplėsti viską
 lv:Izvērst visu
 nl:Alle Uitvouwen
 pl:Rozwiń wszystko
@@ -8737,6 +8771,7 @@ id:Ekspor penanda buku
 it:Esporta Segnalibri
 ka:სანიშნეების ექსპორტი
 kw:Esperthi Folennotennow
+lt:Eksportuoti žymes
 lv:Eksportēt grāmatzīmes
 nl:Exporteer Bladwijzers
 pl:Eksportuj zakładki
@@ -9660,6 +9695,7 @@ id:Lampiran File
 it:Allega File
 ka:მიმაგრებული ფაილი
 kw:Stagel Restren
+lt:Failo priedas
 lv:Faila pielikums
 nl:Bestands Bijlage
 pl:Załącznik
@@ -11350,6 +11386,7 @@ de:Icon:
 el:Εικονίδιο:
 es:Icono:
 kw:Ikon:
+lt:Ikona:
 lv:Ikona:
 nl:Pictogram:
 pl:Ikona:
@@ -11436,6 +11473,7 @@ id:Gambar
 it:Immagini
 ka:სურათები
 kw:Skeusennow
+lt:Vaizdai
 lv:Attēli
 nl:Afbeeldingen
 pl:Obrazy
@@ -11461,6 +11499,7 @@ gl:Trazo
 id:Tinta
 ka:მელანი
 kw:Ynk
+lt:Rašalas
 lv:Tinte
 nl:Snelkoppeling
 no:Blekk
@@ -11729,6 +11768,7 @@ de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
 es:Color Interior
 kw:Liw A-Bervedh:
+lt:Vidaus spalva:
 lv:Iekšējā krāsa:
 nl:Interieur Kleur
 pl:Kolor wnętrza:
@@ -12000,6 +12040,7 @@ id:Garis
 it:Linea
 ka:ხაზი
 kw:Linen
+lt:Linija
 lv:Līnija
 nl:Regel
 no:Linje
@@ -12016,6 +12057,7 @@ de:Zeilenende:
 el:Τέλος γραμμής:
 es:Fin de Línea:
 kw:Diwedh Linen:
+lt:Linijos pabaiga:
 nl:Lijn Eind
 pl:Koniec linii:
 ru:Конец линии:
@@ -12027,6 +12069,7 @@ de:Zeilenstart:
 el:Έναρξη γραμμής:
 es:Inicio de Línea:
 kw:Dalleth Linen:
+lt:Linijos pradžia:
 nl:Lijn Begin
 pl:Początek linii:
 ru:Начало линии:
@@ -12528,6 +12571,7 @@ it:Nuova &fiestra\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
 ka:ახალი &ფანჯარა\tCtrl+N
 kw:&Fenester nowydh\tCtrl+N
+lt:&Naujas langas\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
 pl:Nowe &okno\tCtrl+N
@@ -12560,6 +12604,7 @@ id:Tambah penanda buku
 it:Nuovo Segnalibro
 ka:ახალი სანიშნე
 kw:Folennotennow Nowydh
+lt:Naujos žymės
 lv:Jaunas grāmatzīmes
 nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
@@ -13111,6 +13156,7 @@ de:Deckkraft:
 el:Διαφάνεια:
 es:Opacidad:
 kw:Disklerder:
+lt:Nepermatomumas:
 lv:Necaurspīdīgums:
 nl:Dekking
 pl:Nieprzezroczystość:
@@ -13122,6 +13168,7 @@ de:Deckkraft: %d
 el:Διαφάνεια: %d
 es:Opacidad: %d
 kw:Disklerder: %d
+lt:Nepermatomumas: %d
 lv:Necaurspīdīgums: %d
 nl:Dekking: %d
 pl:Nieprzezroczystość: %d
@@ -13278,6 +13325,7 @@ gl:Abrir PDF inserido
 id:Buka PDF yang disematkan
 ka:ჩაშენებული PDF-ის გახსნა
 kw:Ygeri PDF Neythys
+lt:Atidaryti įdėtą PDF
 lv:Atvērt iegultu PDF
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
@@ -14724,6 +14772,7 @@ gl:Liña polivinílica
 id:Garis Poli
 ka:ტეხილი ხაზი
 kw:Lieslinen
+lt:Laužtė
 lv:Lauzta līnija
 nl:Poly Regel
 pl:Polilinia
@@ -14750,6 +14799,7 @@ gl:Polígono
 id:Poligon
 ka:მრავალკუთხედი
 kw:Liestuek
+lt:Daugiakampis
 lv:Daudzstūris
 nl:Veelhoek
 pl:Wielokąt
@@ -14764,6 +14814,7 @@ de:Pop-up: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
 kw:Tardhans: %d 0 R
+lt:Pranešimas: %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
 pl:Wyskakujące okienko: %d 0 R
@@ -15544,6 +15595,7 @@ de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
 kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
+lt:Stačiakampis: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
@@ -15565,6 +15617,7 @@ gl:Redactar
 id:Menyunting
 ka:რედაქტირება
 kw:Redaktya
+lt:Redaguoti
 lv:Rediģēt
 nl:Redigeren
 pl:Redaguj
@@ -15654,6 +15707,7 @@ id:Hapus Item
 it:Rimuovi Oggetto
 ka:ელემენტის წაშლა
 kw:Removya Tra
+lt:Pašalinti elementą
 lv:Noņemt vienumu
 nl:Verwijder Item
 pl:Usuń element
@@ -15964,7 +16018,7 @@ ka:მარ&ჯვნივ გადაბრუნება\tCtrl+Shift++
 kr:시계 방향으로 회전(&R)\tCtrl+Shift++
 ku:سوڕانەوە بۆلای &ڕاست\tCtrl+Shift++
 kw:Treylya a-dhyhow\tCtrl+Shift++
-lt:Pasukti į &dešinę\tCtrl+Shift++
+lt:Pasukti į d&ešinę\tCtrl+Shift++
 lv:Pagriezt pa &labi\tCtrl+Shift++
 mk:Ротирај на десно\tCtrl+Shift++
 ml:വലത്തേക്കു ചരിക്കുക\tCtrl+Shift++
@@ -16003,6 +16057,7 @@ de:Verschnörkelt
 el:Στριφογυριστό
 es:S&erpenteante
 kw:I&gam-ogam
+lt:Pabraukti &vingiuota linija
 lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
@@ -16031,6 +16086,7 @@ it:Salva annotazioni
 ja:注釈を保存
 ka:ანოტაციების შენახვა
 kw:Gwitha Notennow
+lt:Išsaugoti anotacijas
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
 pl:Zapisz adnotacje
@@ -16130,6 +16186,7 @@ gl:Gardar ficheiro inserido...
 id:Simpan File Tersemat
 ka:მიმაგრებული ფაილის შენახვა...
 kw:Gwitha Restren Neythys...
+lt:Išsaugoti įdėtą failą...
 lv:Saglabāt iegultu failu
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
@@ -16206,6 +16263,7 @@ de:Änderungen in einer neuen PDF-Datei speichern
 el:Αποθήκευση αλλαγών σε νέο PDF
 es:Guardar cambios en un nuevo PDF
 kw:Gwitha chanjyow dhe PDF nowydh
+lt:Išsaugoti pakeitimus į naują PDF failą
 lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
@@ -16218,6 +16276,7 @@ de:Änderungen an vorhandener PDF speichern
 el:Αποθήκευση αλλαγών σε υπάρχον PDF
 es:Guardar cambios en un PDF existente
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
+lt:Išsaugoti pakeitimus į esamą PDF failą
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
@@ -16229,6 +16288,7 @@ de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
 kw:Notenyansow gwithys dhe '%s'
+lt:Anotacijos išsaugotos į '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje do '%s'
@@ -16240,6 +16300,7 @@ de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
 kw:Gwitha '%s' re fyllis gans: '%s'
+lt:%s išsaugojimas nepavyko: '%s'
 lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
@@ -16441,6 +16502,7 @@ de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
 es:Seleccionar Anotación en el Editor
 kw:Dewis Notenyans y'n Wolegell
+lt:Pasirinkti anotaciją redaktoriuje
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
@@ -16792,6 +16854,7 @@ it:Visualizza &Segnalibri\tF12
 ja:ブックマークを表示(&B)\tF12
 ka:სანიშნეების &ჩვენება\tF12
 kw:Diskwedhes &Folennotennow\tF12
+lt:Rodyti ž&ymes\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
 pl:Pokaż za&kładki\tF12
@@ -16827,6 +16890,7 @@ it:Visualizza &Preferiti
 ja:お気に入りを表示(&F)
 ka:რჩეულების &ჩვენება
 kw:Diskwedhes &Taklow Drudh
+lt:Rodyti &mėgstamus
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
 pl:Pokaż &ulubione
@@ -16919,6 +16983,7 @@ gl:Amosr barra&s de desprazamento
 id:Tampilkan &Scrollbars
 ka:საცოცი &პანელის ჩვენება
 kw:Diskwedhes &Skrolvarrys
+lt:Rodyti &slinkties juostas
 lv:Rādīt &ritjoslas
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
@@ -17022,6 +17087,7 @@ it:Visualizza Segna&libri\tF12
 ja:ブックマークを表示 (&M)\tF12
 ka:სანიშნეების &ჩვენება\tF12
 kw:Diskwedhes Folen&notennow\tF12
+lt:Rodyti ž&ymes\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
 pl:Pokaż za&kładki\tF12
@@ -17112,6 +17178,7 @@ gl:Amosar barras de desprazament&o
 id:Tampilkan Scr&ollbars
 ka:საცოცი პან&ელის ჩვენება
 kw:Diskwedhes Skr&olvarrys
+lt:Rodyti &slinkties juostas
 lv:Rādīt rit&joslas
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
@@ -17208,6 +17275,7 @@ it:Visualizza nella &cartella
 ja:フォルダを表示(&F)
 ka:ჩვენება &საკეცში
 kw:Diskwedhes yn &restren
+lt:Rodyti ap&lankale
 lv:Rādīt &mapē
 nl:Toon in &map
 pl:Pokaż w &folderze
@@ -17436,6 +17504,7 @@ id:Urut berdasarkan
 it:Ordina Per
 ka:დალაგების ტიპი:
 kw:Digemyska Gans
+lt:Rūšiuoti pagal
 lv:Kārtot pēc
 nl:Sorteer Op
 pl:Sortuj według
@@ -17527,6 +17596,7 @@ gl:Cadrado
 id:Persegi
 ka:კვადრატი
 kw:Pedrek
+lt:Kvadratas
 lv:Kvadrāts
 nl:Vierkant
 pl:Kwadrat
@@ -18248,6 +18318,7 @@ gl:Asistencia do SumatraPDF
 id:Dukung SumatraPDF
 ka: SumatraPDF-ის დახმარება
 kw:Skoodhya SumatraPDF
+lt:Paremti SumatraPDF
 lv:Atbalstīt SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
@@ -18336,6 +18407,7 @@ ga:Clib (ceann mór ar dtús)
 gl:Etiqueta (grande primeiro)
 ka:ტეგირება (ჯერ დიდები)
 kw:Tagg (meur kynsa)
+lt:Žymėti (didelis pirma)
 lv:Atzīme (lielās vispirms)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
@@ -18359,6 +18431,7 @@ ga:Clib (ceann beag ar dtús)
 gl:Etiqueta (pequena primeiro)
 ka:ტეგირება (ჯერ პატარები)
 kw:Tagg (byghan kynsa)
+lt:Žymėti (mažas pirma)
 lv:Atzīme (mazās vispirms)
 nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
@@ -18435,6 +18508,7 @@ de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
 kw:Alinyans Tekst:
+lt:Teksto lygiavimas:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
@@ -18448,6 +18522,7 @@ de:Textfarbe:
 el:Text Color: 
 es:Color de Texto:
 kw:Liw Tekst:
+lt:Teksto spalva:
 lv:Teksta krāsa:
 nl:Tekst Kleur
 pl:Kolor tekstu:
@@ -18461,6 +18536,7 @@ de:Textgröße:
 el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
 kw:Braster Tekst:
+lt:Teksto dydis:
 lv:Teksta lielums:
 nl:Tekst Grootte:
 pl:Rozmiar tekstu:
@@ -18473,6 +18549,7 @@ de:Textgröße: %d
 el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 kw:Braster Tekst: %d
+lt:Teksto dydis: %d
 lv:Teksta lielums: %d
 nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
@@ -18559,6 +18636,7 @@ gl:Grazas por escoller RA-MICRO PDF!
 id:Terima kasih sudah menggunakan RA-MICRO PDF!
 ka:მადლობა რომ აირჩიეთ RA-MICRO PDF!
 kw:Meur ras a dhewis RA-MICRO PDF!
+lt:Ačiū, kad pasirinkote RA-MICRO PDF!
 lv:Paldies, ka izvēlējāties RA-MICRO PDF!
 nl:Dank u voor het kiezen van RA-MICRO PDF!
 pl:Dziękujemy za wybranie RA-MICRO PDF!
@@ -19135,6 +19213,7 @@ de:Nicht gespeicherte Anmerkungen
 el:Μη αποθηκευμένα σχόλια
 es:Anotaciones no guardadas
 kw:Notenyansow anwithys
+lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
@@ -19608,6 +19687,7 @@ el:Έχετε μη αποθηκευμένα σχόλια
 es:Tienes anotaciones sin guardar
 id:Kamu memiliki catatan yang belum tersimpan
 kw:Yma notenyansow anwithys dhis
+lt:Turite neišsaugotų anotacijų
 lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
@@ -19619,6 +19699,7 @@ de:Sie haben ungespeicherte Anmerkungen. Wollen Sie sie speichern?
 el:Έχετε μη αποθηκευμένους σχολιασμούς. Να γίνει αποθήκευση;
 es:Tienes anotaciones sin guardar. Quieres guardarlas? 
 kw:Yma notenyansow anwithys dhis. A vynnydh aga gwitha?
+lt:Turite neišsaugotų anotacijų. Išsaugoti?
 lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
 nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
 pl:Masz niezapisane adnotacje. Zapisać je?
