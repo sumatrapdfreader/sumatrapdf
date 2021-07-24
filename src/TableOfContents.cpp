@@ -522,7 +522,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         win::menu::Remove(popup, CmdFavoriteAdd);
         win::menu::Remove(popup, CmdFavoriteDel);
     }
-
+    RemoveBadMenuSeparators(popup);
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);

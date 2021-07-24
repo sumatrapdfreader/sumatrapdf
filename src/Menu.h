@@ -20,6 +20,7 @@ void MenuOwnerDrawnDrawItem(HWND, DRAWITEMSTRUCT*);
 HFONT GetMenuFont();
 
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx);
+void RemoveBadMenuSeparators(HMENU menu);
 HMENU BuildMenu(WindowInfo* win);
 void OnWindowContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);
