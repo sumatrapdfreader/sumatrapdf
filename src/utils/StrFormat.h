@@ -79,14 +79,39 @@ struct Arg {
 
     Arg() = default;
 
+    Arg(char c) {
+        t = Type::Char;
+        u.c = c;
+    }
+
     Arg(int arg) {
         t = Type::Int;
         u.i = arg;
     }
 
+    Arg(float f) {
+        t = Type::Float;
+        u.f = f;
+    }
+
+    Arg(double d) {
+        t = Type::Double;
+        u.d = d;
+    }
+
+    Arg(std::string_view arg) {
+        t = Type::Str;
+        u.sv = arg;
+    }
+
     Arg(const char* arg) {
         t = Type::Str;
         u.sv = arg;
+    }
+
+    Arg(std::wstring_view arg) {
+        t = Type::WStr;
+        u.wsv = arg;
     }
 
     Arg(const WCHAR* arg) {
@@ -111,16 +136,6 @@ class Fmt {
     char* GetDup();
 
     bool isOk{false}; // true if mismatch between formatting instruction and args
-
-    Fmt& addArg(const Arg& arg);
-
-  private:
-    const char* parseArgDef(const char* fmt);
-    void addFormatStr(const char* s, size_t len);
-    const char* parseArgDefPerc(const char*);
-    const char* parseArgDefPositional(const char*);
-    Fmt& addArgType(Type t);
-    void serializeInst(int n);
 
     DWORD threadId;
     const char* format;

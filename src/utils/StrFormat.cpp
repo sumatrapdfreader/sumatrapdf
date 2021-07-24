@@ -26,46 +26,54 @@ Fmt::Fmt(const char* fmt) {
     ParseFormat(fmt);
 }
 
-void Fmt::addFormatStr(const char* s, size_t len) {
+/*
+void addFormatStr(const char* s, size_t len);
+const char* parseArgDefPerc(const char*);
+const char* parseArgDefPositional(const char*);
+Fmt& addArgType(Type t);
+void serializeInst(int n);
+*/
+
+static void addFormatStr(Fmt& fmt, const char* s, size_t len) {
     if (len == 0) {
         return;
     }
-    CrashIf(nInst >= MaxInstructions);
-    instructions[nInst].t = Type::FormatStr;
-    instructions[nInst].argNo = currArgFromFormatNo;
-    ++nInst;
+    CrashIf(fmt.nInst >= MaxInstructions);
+    fmt.instructions[fmt.nInst].t = Type::FormatStr;
+    fmt.instructions[fmt.nInst].argNo = fmt.currArgFromFormatNo;
+    ++fmt.nInst;
 
-    CrashIf(nArgsUsed >= MaxArgs);
-    args[currArgFromFormatNo].t = Type::FormatStr;
-    args[currArgFromFormatNo].u.sv = {s, len};
-    nArgsUsed++;
-    --currArgFromFormatNo;
+    CrashIf(fmt.nArgsUsed >= MaxArgs);
+    fmt.args[fmt.currArgFromFormatNo].t = Type::FormatStr;
+    fmt.args[fmt.currArgFromFormatNo].u.sv = {s, len};
+    fmt.nArgsUsed++;
+    --fmt.currArgFromFormatNo;
 }
 
-const char* Fmt::parseArgDefPositional(const char* fmt) {
-    CrashIf(*fmt != '{');
-    ++fmt;
+static const char* parseArgDefPositional(Fmt& fmt, const char* s) {
+    CrashIf(*s != '{');
+    ++s;
     int n = 0;
-    while (*fmt != '}') {
+    while (*s != '}') {
         // TODO: this could be more featurful
-        CrashIf(!str::IsDigit(*fmt));
-        n = n * 10 + (*fmt - '0');
-        ++fmt;
+        CrashIf(!str::IsDigit(*s));
+        n = n * 10 + (*s - '0');
+        ++s;
     }
-    instructions[nInst].t = Type::Any;
-    instructions[nInst].argNo = n;
-    ++nInst;
-    return fmt + 1;
+    fmt.instructions[fmt.nInst].t = Type::Any;
+    fmt.instructions[fmt.nInst].argNo = n;
+    ++fmt.nInst;
+    return s + 1;
 }
 
-const char* Fmt::parseArgDefPerc(const char* fmt) {
-    CrashIf(*fmt != '%');
+static const char* parseArgDefPerc(Fmt& fmt, const char* s) {
+    CrashIf(*s != '%');
     // TODO: more features
-    instructions[nInst].t = typeFromChar(fmt[1]);
-    instructions[nInst].argNo = currPercArgNo;
-    ++nInst;
-    ++currPercArgNo;
-    return fmt + 2;
+    fmt.instructions[fmt.nInst].t = typeFromChar(s[1]);
+    fmt.instructions[fmt.nInst].argNo = fmt.currPercArgNo;
+    ++fmt.nInst;
+    ++fmt.currPercArgNo;
+    return s + 2;
 }
 
 static bool hasInstructionWithArgNo(Inst* insts, int nInst, int argNo) {
@@ -110,7 +118,7 @@ Fmt& Fmt::ParseFormat(const char* fmt) {
         if ('\\' == c) {
             // handle \{
             if ('{' == fmt[1]) {
-                addFormatStr(start, fmt - start);
+                addFormatStr(*this, start, fmt - start);
                 start = fmt + 1;
                 fmt += 2; // skip '{'
                 continue;
@@ -118,27 +126,27 @@ Fmt& Fmt::ParseFormat(const char* fmt) {
             continue;
         }
         if ('{' == c) {
-            addFormatStr(start, fmt - start);
-            fmt = parseArgDefPositional(fmt);
+            addFormatStr(*this, start, fmt - start);
+            fmt = parseArgDefPositional(*this, fmt);
             start = fmt;
             continue;
         }
         if ('%' == c) {
             // handle %%
             if ('%' == fmt[1]) {
-                addFormatStr(start, fmt - start);
+                addFormatStr(*this, start, fmt - start);
                 start = fmt + 1;
                 fmt += 2; // skip '%'
                 continue;
             }
-            addFormatStr(start, fmt - start);
-            fmt = parseArgDefPerc(fmt);
+            addFormatStr(*this, start, fmt - start);
+            fmt = parseArgDefPerc(*this, fmt);
             start = fmt;
             continue;
         }
         ++fmt;
     }
-    addFormatStr(start, fmt - start);
+    addFormatStr(*this, start, fmt - start);
 
     // check that arg numbers in {$n} makes sense
     for (int i = 0; i < nInst; i++) {
@@ -163,51 +171,42 @@ Fmt& Fmt::ParseFormat(const char* fmt) {
     return *this;
 }
 
-Fmt& Fmt::addArg(const Arg& arg) {
+void addArg(Fmt& fmt, const Arg& arg) {
     if (arg.t == Type::Empty) {
-        return *this;
+        return;
     }
-    args[nArgs] = arg;
-    nArgs++;
-    return *this;
-}
-
-Fmt& Fmt::addArgType(Type t) {
-    CrashIf(nArgsUsed >= MaxArgs);
-    args[nArgs].t = t;
-    nArgs++;
-    nArgsUsed++;
-    return *this;
+    fmt.args[fmt.nArgs] = arg;
+    fmt.nArgs++;
 }
 
 Fmt& Fmt::i(int i) {
-    args[nArgs].u.i = i;
-    return addArgType(Type::Int);
+    addArg(*this, Arg(i));
+    return *this;
 }
 
 Fmt& Fmt::s(const char* s) {
-    args[nArgs].u.sv = s;
-    return addArgType(Type::Str);
+    addArg(*this, Arg(s));
+    return *this;
 }
 
 Fmt& Fmt::s(const WCHAR* s) {
-    args[nArgs].u.wsv = s;
-    return addArgType(Type::WStr);
+    addArg(*this, Arg(s));
+    return *this;
 }
 
 Fmt& Fmt::c(char c) {
-    args[nArgs].u.c = c;
-    return addArgType(Type::Char);
+    addArg(*this, Arg(c));
+    return *this;
 }
 
 Fmt& Fmt::f(float f) {
-    args[nArgs].u.f = f;
-    return addArgType(Type::Float);
+    addArg(*this, Arg(f));
+    return *this;
 }
 
 Fmt& Fmt::f(double d) {
-    args[nArgs].u.d = d;
-    return addArgType(Type::Double);
+    addArg(*this, Arg(d));
+    return *this;
 }
 
 static bool validArgTypes(Type instType, Type argType) {
@@ -232,46 +231,46 @@ static bool validArgTypes(Type instType, Type argType) {
     return false;
 }
 
-void Fmt::serializeInst(int n) {
-    CrashIf(n >= dimof(instructions));
-    CrashIf(n >= nInst);
+static void serializeInst(Fmt& fmt, int n) {
+    CrashIf(n >= dimof(fmt.instructions));
+    CrashIf(n >= fmt.nInst);
 
-    Type tInst = instructions[n].t;
-    int argNo = instructions[n].argNo;
-    Arg arg = args[argNo];
+    Type tInst = fmt.instructions[n].t;
+    int argNo = fmt.instructions[n].argNo;
+    Arg arg = fmt.args[argNo];
     Type tArg = arg.t;
-    isOk = validArgTypes(tInst, tArg);
-    CrashIf(!isOk);
-    if (!isOk) {
+    fmt.isOk = validArgTypes(tInst, tArg);
+    CrashIf(!fmt.isOk);
+    if (!fmt.isOk) {
         return;
     }
     switch (tArg) {
         case Type::Char:
-            res.AppendChar(arg.u.c);
+            fmt.res.AppendChar(arg.u.c);
             break;
         case Type::Int:
             // TODO: using AppendFmt is cheating
-            res.AppendFmt("%d", arg.u.i);
+            fmt.res.AppendFmt("%d", arg.u.i);
             break;
         case Type::Float:
             // TODO: using AppendFmt is cheating
             // Note: %G, unlike %f, avoid trailing '0'
-            res.AppendFmt("%G", arg.u.f);
+            fmt.res.AppendFmt("%G", arg.u.f);
             break;
         case Type::Double:
             // TODO: using AppendFmt is cheating
             // Note: %G, unlike %f, avoid trailing '0'
-            res.AppendFmt("%G", arg.u.d);
+            fmt.res.AppendFmt("%G", arg.u.d);
             break;
         case Type::FormatStr:
-            res.AppendView(arg.u.sv);
+            fmt.res.AppendView(arg.u.sv);
             break;
         case Type::Str:
-            res.AppendView(arg.u.sv);
+            fmt.res.AppendView(arg.u.sv);
             break;
         case Type::WStr:
             auto sUtf8 = strconv::WstrToUtf8(arg.u.wsv);
-            res.AppendAndFree(sUtf8);
+            fmt.res.AppendAndFree(sUtf8);
             break;
     };
 }
@@ -279,7 +278,7 @@ void Fmt::serializeInst(int n) {
 char* Fmt::Get() {
     CrashIf(nArgs != maxArgNo + 1);
     for (int i = 0; isOk && i < nInst; i++) {
-        serializeInst(i);
+        serializeInst(*this, i);
     }
     if (!isOk) {
         res.Reset();
@@ -295,9 +294,9 @@ char* Fmt::GetDup() {
 
 std::string_view Format(const char* s, __unused const Arg& a1, __unused const Arg& a2, __unused const Arg& a3) {
     Fmt fmt(s);
-    fmt.addArg(a1);
-    fmt.addArg(a2);
-    fmt.addArg(a3);
+    addArg(fmt, a1);
+    addArg(fmt, a2);
+    addArg(fmt, a3);
     auto res = fmt.GetDup();
     return {res, str::Len(res)};
 }
