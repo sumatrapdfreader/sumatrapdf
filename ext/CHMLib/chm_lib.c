@@ -314,7 +314,7 @@ static int _unmarshal_itsp_header(uint8_t** pData, unsigned int* pDataLen, struc
 }
 
 /* structure of PMGL headers */
-static const char _chm_pmgl_marker[4] = "PMGL";
+static const char* _chm_pmgl_marker = "PMGL";
 #define _CHM_PMGL_LEN (0x14)
 struct chmPmglHeader {
     char signature[4];     /*  0 (PMGL) */
@@ -351,7 +351,7 @@ static int _unmarshal_pmgl_header(uint8_t** pData, unsigned int* pDataLen, unsig
 }
 
 /* structure of PMGI headers */
-static const char _chm_pmgi_marker[4] = "PMGI";
+static const char* _chm_pmgi_marker = "PMGI";
 #define _CHM_PMGI_LEN (0x08)
 struct chmPmgiHeader {
     char signature[4];   /*  0 (PMGI) */
@@ -525,7 +525,7 @@ struct chmFile* chm_open(const char* d, size_t len) {
 #if 0
     struct chmUnitInfo          uiSpan;
 #endif
-    struct chmUnitInfo uiLzxc;
+    struct chmUnitInfo uiLzxc = {0};
     struct chmLzxcControlData ctlData;
 
     /* allocate handle */
@@ -848,7 +848,7 @@ static uint8_t* _chm_find_in_PMGL(uint8_t* page_buf, uint32_t block_len, const c
             return NULL;
 
         /* check if it is the right name */
-        if (!strcasecmp(buffer, objPath))
+        if (!_stricmp(buffer, objPath))
             return temp;
 
         _chm_skip_PMGL_entry_data(&cur);
