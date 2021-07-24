@@ -232,7 +232,8 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4018", "4244", "4267", "4996" }
     files { "ext/CHMLib/*.c", "ext/CHMLib/*.h" }
 
   project "engines"
