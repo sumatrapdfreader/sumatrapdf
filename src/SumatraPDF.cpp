@@ -1284,9 +1284,9 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
-        fs = gFileHistory.Find(fs->filePath, nullptr);
-        if (fs) {
-            CreateThumbnailForFile(win, *fs);
+        FileState* state = gFileHistory.Find(fs->filePath, nullptr);
+        if (state) {
+            CreateThumbnailForFile(win, *state);
         }
     }
 
@@ -1295,10 +1295,10 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         // we don't ask again at the next refresh
         AutoFree decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
-            fs = gFileHistory.Find(fs->filePath, nullptr);
-            if (fs && !str::Eq(fs->decryptionKey, decryptionKey)) {
-                free(fs->decryptionKey);
-                fs->decryptionKey = decryptionKey.Release();
+            FileState* fs2 = gFileHistory.Find(fs->filePath, nullptr);
+            if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
+                free(fs2->decryptionKey);
+                fs2->decryptionKey = decryptionKey.Release();
             }
         }
     }
