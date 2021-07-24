@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - progress on fmt::Format
 - tweak project for zlib-ng
 - shorten api of Fmt class
+- rework StrFormat.cpp to be smaller
 
 2021-07-23 Fri
 
