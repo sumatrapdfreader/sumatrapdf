@@ -4,6 +4,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - chmlib cleanups
 - progress on fmt::Format
+- tweak project for zlib-ng
 
 2021-07-23 Fri
 

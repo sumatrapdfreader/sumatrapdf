@@ -98,6 +98,25 @@ function optconf()
   filter {}
 end
 
+function zlib_ng_defines()
+  defines { 
+    "_CRT_SECURE_NO_DEPRECATE",
+    "_CRT_NONSTDC_NO_DEPRECATE",
+    "X86_FEATURES", 
+    "X86_PCLMULQDQ_CRC",
+    "X86_SSE2",
+    "X86_SSE42_CRC_INTRIN",
+    "X86_SSE42_CRC_HASH",
+    "X86_AVX2",
+    "X86_AVX_CHUNKSET",
+    "X86_SSE2_CHUNKSET",
+    "UNALIGNED_OK",
+    "UNALIGNED64_OK",
+    "WITH_GZFILEOP",
+    "ZLIB_COMPAT"
+  }
+end
+
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
   platforms { "x32", "x64", "x64_asan" }
@@ -246,6 +265,7 @@ workspace "SumatraPDF"
       "4701", "4706", "4819", "4838"
     }
     includedirs { "src", "src/wingui" }
+    zlib_ng_defines()
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib", "ext/zlib-ng", "mupdf/include" }
     engines_files()
     links { "chm" }
@@ -259,6 +279,7 @@ workspace "SumatraPDF"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
     -- TODO: most of these warnings are due to bzip2 and lzma
     disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
+    zlib_ng_defines()
     includedirs { "ext/zlib-ng", "ext/bzip2", "ext/lzma/C" }
     unarr_files()
 
@@ -275,22 +296,7 @@ workspace "SumatraPDF"
     language "C"
     optconf()
     includedirs { "ext/zlib-ng" }
-    defines { 
-      "_CRT_SECURE_NO_DEPRECATE",
-      "_CRT_NONSTDC_NO_DEPRECATE",
-      "X86_FEATURES", 
-      "X86_PCLMULQDQ_CRC",
-      "X86_SSE2",
-      "X86_SSE42_CRC_INTRIN",
-      "X86_SSE42_CRC_HASH",
-      "X86_AVX2",
-      "X86_AVX_CHUNKSET",
-      "X86_SSE2_CHUNKSET",
-      "UNALIGNED_OK",
-      "UNALIGNED64_OK",
-      "WITH_GZFILEOP",
-      "ZLIB_COMPAT"
-    }
+    zlib_ng_defines()
     disablewarnings { "4244", "4267" }
     zlib_ng_files()
     
@@ -517,6 +523,7 @@ workspace "SumatraPDF"
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
 
+    zlib_ng_defines()
     includedirs {
       "mupdf/include",
       "mupdf/generated",
@@ -588,6 +595,7 @@ workspace "SumatraPDF"
 
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
     disablewarnings { "4100", "4267", "4457", "4838" }
+    zlib_ng_defines()
     includedirs { "src", "ext/zlib-ng", "ext/lzma/C" }
     includedirs { "ext/libwebp/src", "ext/unarr", "mupdf/include" }
     utils_files()
@@ -758,6 +766,7 @@ workspace "SumatraPDF"
 
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    zlib_ng_defines()
     includedirs { "ext/zlib-ng", "ext/synctex" }
 
     -- for uia
@@ -804,6 +813,7 @@ workspace "SumatraPDF"
 
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    zlib_ng_defines()
     includedirs { "ext/zlib-ng", "ext/synctex" }
 
     -- for uia
@@ -895,11 +905,12 @@ workspace "MakeLZSA"
     regconf()
 
     makelzsa_files()
+    zlib_ng_defines()
     includedirs { "src", "ext/zlib-ng", "ext/lzma/C", "ext/unarr" }
 
     -- for zlib
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    zlib_files()
+    -- disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    -- zlib_files()
 
     -- unarrlib
     -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
@@ -907,7 +918,7 @@ workspace "MakeLZSA"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
     -- TODO: most of these warnings are due to bzip2 and lzma
     disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
-    includedirs { "ext/zlib-ng", "ext/bzip2", "ext/lzma/C" }
+    includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
     unarr_files()
 
-    links { "shlwapi", "version", "comctl32" }
+    links { "shlwapi", "version", "comctl32", "zlib-ng" }

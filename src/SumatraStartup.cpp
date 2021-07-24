@@ -652,6 +652,10 @@ static void VerifyNoLibmupdfMismatch() {
         // this is not a version that needs libmupdf.dll
         return;
     }
+    if (gIsAsanBuild) {
+        return;
+    }
+
     // if we can load libmupdf.dll, then it's fine too. someone extracted libmupdf.dll
     // as well or this could be VS build I'm debugging
     HMODULE h = LoadLibraryA("libmupdf.dll");

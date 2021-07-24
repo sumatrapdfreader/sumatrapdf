@@ -34,9 +34,6 @@
     <Filter Include="ext\unarr\zip">
       <UniqueIdentifier>{2FA091D9-9B60-0D10-649B-568DD01A52EC}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ext\zlib">
-      <UniqueIdentifier>{766926D9-6236-81E4-8B4F-6F8C777BB672}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
@@ -235,45 +232,6 @@
     </ClCompile>
     <ClCompile Include="..\ext\unarr\zip\zip.c">
       <Filter>ext\unarr\zip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\adler32.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\compress.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\crc32.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\deflate.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzclose.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzlib.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzread.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzwrite.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inffast.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inflate.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inftrees.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\trees.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\zutil.c">
-      <Filter>ext\zlib</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">
       <Filter>src\tools</Filter>
