@@ -53,6 +53,39 @@ function zlib_files()
   })
 end
 
+function zlib_ng_files()
+  files_in_dir("ext/zlib-ng", {
+    "adler32.c", 
+    "chunkset.c",
+    "compare258.c",
+    "compress.c",
+    "crc32.c",
+    "crc32_comb.c",
+    "deflate.c",
+    "deflate_fast.c",
+    "deflate_huff.c",
+    "deflate_medium.c",
+    "deflate_quick.c",
+    "deflate_slow.c",
+    "deflate_stored.c",
+    "functable.c",
+    "gzlib.c",
+    "gzread.c",
+    "gzwrite.c",
+    "infback.c",
+    "inffast.c",
+    "inflate.c",
+    "inftrees.c",
+    "insert_string.c",
+    "insert_string_roll.c",
+    "slide_hash.c",
+    "trees.c",
+    "uncompr.c",
+    "zutil.c",
+    "arch/*.c",
+  })
+end
+
 function unrar_files()
   files_in_dir("ext/unrar", {
     "archive.*",
