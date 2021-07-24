@@ -245,8 +245,16 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
             }
         }
     }
-
-    win->ctrl->SetZoomVirtual(factor * (relative ? win->ctrl->GetZoomVirtual(true) : 1), zoomToPt ? &pt : nullptr);
+    float zoom = factor;
+    if (relative) {
+        auto zoomVirt = win->ctrl->GetZoomVirtual(true);
+        zoom = factor * zoomVirt;
+    }
+    Point* ptPtr = nullptr;
+    if (zoomToPt) {
+        ptPtr = &pt;
+    }
+    win->ctrl->SetZoomVirtual(zoom, ptPtr);
     UpdateToolbarState(win);
 }
 

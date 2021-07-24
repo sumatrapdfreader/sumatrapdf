@@ -4496,13 +4496,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdZoomIn:
             if (win->IsDocLoaded()) {
-                ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
+                auto zoom = ctrl->GetNextZoomStep(ZOOM_MAX);
+                ZoomToSelection(win, zoom, false);
             }
             break;
 
         case CmdZoomOut:
             if (win->IsDocLoaded()) {
-                ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
+                auto zoom = ctrl->GetNextZoomStep(ZOOM_MIN);
+                ZoomToSelection(win, zoom, false);
             }
             break;
 
