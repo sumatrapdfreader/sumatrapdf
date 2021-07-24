@@ -18,7 +18,7 @@ static Type typeFromChar(char c) {
             return Type::Float;
     }
     CrashIf(true);
-    return Type::Invalid;
+    return Type::Empty;
 }
 
 Fmt::Fmt(const char* fmt) {
@@ -37,8 +37,7 @@ void Fmt::addFormatStr(const char* s, size_t len) {
 
     CrashIf(nArgsUsed >= MaxArgs);
     args[currArgFromFormatNo].t = Type::FormatStr;
-    args[currArgFromFormatNo].s = s;
-    args[currArgFromFormatNo].len = len;
+    args[currArgFromFormatNo].u.sv = {s, len};
     nArgsUsed++;
     --currArgFromFormatNo;
 }
@@ -164,6 +163,15 @@ Fmt& Fmt::ParseFormat(const char* fmt) {
     return *this;
 }
 
+Fmt& Fmt::addArg(const Arg& arg) {
+    if (arg.t == Type::Empty) {
+        return *this;
+    }
+    args[nArgs] = arg;
+    nArgs++;
+    return *this;
+}
+
 Fmt& Fmt::addArgType(Type t) {
     CrashIf(nArgsUsed >= MaxArgs);
     args[nArgs].t = t;
@@ -173,32 +181,32 @@ Fmt& Fmt::addArgType(Type t) {
 }
 
 Fmt& Fmt::i(int i) {
-    args[nArgs].i = i;
+    args[nArgs].u.i = i;
     return addArgType(Type::Int);
 }
 
 Fmt& Fmt::s(const char* s) {
-    args[nArgs].s = s;
+    args[nArgs].u.sv = s;
     return addArgType(Type::Str);
 }
 
 Fmt& Fmt::s(const WCHAR* s) {
-    args[nArgs].ws = s;
+    args[nArgs].u.wsv = s;
     return addArgType(Type::WStr);
 }
 
 Fmt& Fmt::c(char c) {
-    args[nArgs].c = c;
+    args[nArgs].u.c = c;
     return addArgType(Type::Char);
 }
 
 Fmt& Fmt::f(float f) {
-    args[nArgs].f = f;
+    args[nArgs].u.f = f;
     return addArgType(Type::Float);
 }
 
 Fmt& Fmt::f(double d) {
-    args[nArgs].d = d;
+    args[nArgs].u.d = d;
     return addArgType(Type::Double);
 }
 
@@ -239,31 +247,30 @@ void Fmt::serializeInst(int n) {
     }
     switch (tArg) {
         case Type::Char:
-            res.AppendChar(arg.c);
+            res.AppendChar(arg.u.c);
             break;
         case Type::Int:
             // TODO: using AppendFmt is cheating
-            res.AppendFmt("%d", arg.i);
+            res.AppendFmt("%d", arg.u.i);
             break;
         case Type::Float:
             // TODO: using AppendFmt is cheating
             // Note: %G, unlike %f, avoid trailing '0'
-            res.AppendFmt("%G", arg.f);
+            res.AppendFmt("%G", arg.u.f);
             break;
         case Type::Double:
             // TODO: using AppendFmt is cheating
             // Note: %G, unlike %f, avoid trailing '0'
-            res.AppendFmt("%G", arg.d);
+            res.AppendFmt("%G", arg.u.d);
             break;
         case Type::FormatStr:
-            CrashIf(arg.len == 0);
-            res.Append(arg.s, arg.len);
+            res.AppendView(arg.u.sv);
             break;
         case Type::Str:
-            res.Append(arg.s);
+            res.AppendView(arg.u.sv);
             break;
         case Type::WStr:
-            auto sUtf8 = strconv::WstrToUtf8(arg.ws);
+            auto sUtf8 = strconv::WstrToUtf8(arg.u.wsv);
             res.AppendAndFree(sUtf8);
             break;
     };
@@ -286,16 +293,22 @@ char* Fmt::GetDup() {
     return str::Dup(Get());
 }
 
-std::string_view Format(__unused const char* s, __unused Arg& a1) {
+std::string_view Format(const char* s, __unused const Arg& a1, __unused const Arg& a2, __unused const Arg& a3) {
+    Fmt fmt(s);
+    fmt.addArg(a1);
+    fmt.addArg(a2);
+    fmt.addArg(a3);
+    auto res = fmt.GetDup();
+    return {res, str::Len(res)};
+}
+
+std::string_view Format(const char* s, const Arg& a1, const Arg& a2) {
+    return Format(s, a1, a2, Arg());
     return {};
 }
 
-std::string_view Format(__unused const char* s, __unused Arg& a1, __unused Arg& a2) {
-    return {};
-}
-
-std::string_view Format(__unused const char* s, __unused Arg& a1, __unused Arg& a2, __unused Arg& a3) {
-    return {};
+std::string_view Format(const char* s, const Arg& a1) {
+    return Format(s, a1, Arg(), Arg());
 }
 
 } // namespace fmt

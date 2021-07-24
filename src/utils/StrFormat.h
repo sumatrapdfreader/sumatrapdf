@@ -54,7 +54,7 @@ enum class Type {
     Str,
     WStr,
     Any,
-    Invalid,
+    Empty,
 };
 
 // formatting instruction
@@ -67,28 +67,31 @@ struct Inst {
 // at the front are arguments given with i(), s() etc.
 // at the end are FormatStr arguments from format string
 struct Arg {
-    Type t = Type::Invalid;
-    size_t len = 0; // for s when FormatStr
+    Type t{Type::Empty};
     union {
         char c;
         int i;
         float f;
         double d;
-        const char* s;
-        const WCHAR* ws;
-    };
+        std::string_view sv;
+        std::wstring_view wsv;
+    } u = {0};
+
     Arg() = default;
-    explicit Arg(int arg) {
+
+    Arg(int arg) {
         t = Type::Int;
-        i = arg;
+        u.i = arg;
     }
-    explicit Arg(const char* arg) {
+
+    Arg(const char* arg) {
         t = Type::Str;
-        s = arg;
+        u.sv = arg;
     }
-    explicit Arg(const WCHAR* arg) {
+
+    Arg(const WCHAR* arg) {
         t = Type::WStr;
-        ws = arg;
+        u.wsv = arg;
     }
 };
 
@@ -107,7 +110,9 @@ class Fmt {
     char* Get();
     char* GetDup();
 
-    bool isOk; // true if mismatch between formatting instruction and args
+    bool isOk{false}; // true if mismatch between formatting instruction and args
+
+    Fmt& addArg(const Arg& arg);
 
   private:
     const char* parseArgDef(const char* fmt);
@@ -130,7 +135,7 @@ class Fmt {
     str::Str res;
 };
 
-std::string_view Format(const char* s, Arg& a1);
-std::string_view Format(const char* s, Arg& a1, Arg& a2);
-std::string_view Format(const char* s, Arg& a1, Arg& a2, Arg& a3);
+std::string_view Format(const char* s, const Arg& a1);
+std::string_view Format(const char* s, const Arg& a1, const Arg& a2);
+std::string_view Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3);
 } // namespace fmt

@@ -7,7 +7,9 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-#define check(got, expected) utassert(str::Eq(got, expected))
+void check(const char* got, const char* expected) {
+    utassert(str::Eq(got, expected));
+}
 
 void StrFormatTest() {
     fmt::Fmt f("int: %d, s: %s");
@@ -33,5 +35,9 @@ void StrFormatTest() {
     check(s,
           "c: x, i: -18, f: 3.45, d: -18.38, s: str, ws: wstr, c: x, i: -18, f: 3.45, d: -18.38, s: str, ws: wstr, i: "
           "-18");
-    free(s);
+    str::Free(s);
+
+    const char* s2 = fmt::Format("foo %s bar %d %s", "sa", 5, L"sab").data();
+    check(s2, "foo sa bar 5 sab");
+    str::Free(s2);
 }
