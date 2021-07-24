@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#define PPC_BSTR
 #include <chm_lib.h>
 #include "utils/ByteReader.h"
 #include "utils/FileUtil.h"
@@ -267,7 +266,8 @@ void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
 
 bool ChmFile::Load(const char* fileNameA) {
     WCHAR* fileName = ToWstrTemp(fileNameA);
-    chmHandle = chm_open((WCHAR*)fileName);
+    data = file::ReadFile(fileName);
+    chmHandle = chm_open((const char*)data.Get(), data.size());
     if (!chmHandle) {
         return false;
     }
