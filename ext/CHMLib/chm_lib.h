@@ -1,4 +1,3 @@
-/* $Id: chm_lib.h,v 1.10 2002/10/09 01:16:33 jedwin Exp $ */
 /***************************************************************************
  *             chm_lib.h - CHM archive manipulation routines               *
  *                           -------------------                           *
@@ -46,17 +45,6 @@
 extern "C" {
 #endif
 
-#ifdef WIN32
-#ifdef __MINGW32__
-#define __int64 long long
-#endif
-typedef unsigned __int64 LONGUINT64;
-typedef __int64 LONGINT64;
-#else
-typedef unsigned long long LONGUINT64;
-typedef long long LONGINT64;
-#endif
-
 /* the two available spaces in a CHM file                      */
 /* N.B.: The format supports arbitrarily many spaces, but only */
 /*       two appear to be used at present.                     */
@@ -69,8 +57,8 @@ struct chmFile;
 /* structure representing an element from an ITS file stream   */
 #define CHM_MAX_PATHLEN (512)
 struct chmUnitInfo {
-    LONGUINT64 start;
-    LONGUINT64 length;
+    uint64_t start;
+    uint64_t length;
     int space;
     int flags;
     char path[CHM_MAX_PATHLEN + 1];
@@ -92,8 +80,7 @@ void chm_set_param(struct chmFile* h, int paramType, int paramVal);
 int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInfo* ui);
 
 /* retrieve part of an object from the archive */
-LONGINT64 chm_retrieve_object(struct chmFile* h, struct chmUnitInfo* ui, unsigned char* buf, LONGUINT64 addr,
-                              LONGINT64 len);
+int64_t chm_retrieve_object(struct chmFile* h, struct chmUnitInfo* ui, uint8_t* buf, uint64_t addr, int64_t len);
 
 /* enumerate the objects in the .chm archive */
 typedef int (*CHM_ENUMERATOR)(struct chmFile* h, struct chmUnitInfo* ui, void* context);
