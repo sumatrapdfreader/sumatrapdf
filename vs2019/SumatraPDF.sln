@@ -31,6 +31,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf", "mupdf.vcxproj", "{2181F50F-8D95-1DC1-5617-C120C2EA19F2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf-libs", "mupdf-libs.vcxproj", "{18B1F38A-0469-35D8-6D70-0E345947D0C8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3} = {584D90B6-C42C-0F52-CD44-9A2839A375B3}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_util", "test_util.vcxproj", "{22AB719A-8E15-2611-D753-D7B643FD0366}"
 EndProject
@@ -39,6 +42,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unrar", "unrar.vcxproj", "{AD768210-198B-AAC1-E20C-4E214EE0A6F2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utils", "utils.vcxproj", "{169C8510-82B0-ADC1-4B32-5121B705AAF2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib-ng", "zlib-ng.vcxproj", "{584D90B6-C42C-0F52-CD44-9A2839A375B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -359,6 +364,24 @@ Global
 		{169C8510-82B0-ADC1-4B32-5121B705AAF2}.Release|x64.Build.0 = Release|x64
 		{169C8510-82B0-ADC1-4B32-5121B705AAF2}.Release|x64_asan.ActiveCfg = Release x64_asan|x64
 		{169C8510-82B0-ADC1-4B32-5121B705AAF2}.Release|x64_asan.Build.0 = Release x64_asan|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Debug|Win32.Build.0 = Debug|Win32
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Debug|x64.ActiveCfg = Debug|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Debug|x64.Build.0 = Debug|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Debug|x64_asan.ActiveCfg = Debug x64_asan|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Debug|x64_asan.Build.0 = Debug x64_asan|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.ReleaseAnalyze|Win32.ActiveCfg = ReleaseAnalyze|Win32
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.ReleaseAnalyze|Win32.Build.0 = ReleaseAnalyze|Win32
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.ReleaseAnalyze|x64.ActiveCfg = ReleaseAnalyze|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.ReleaseAnalyze|x64.Build.0 = ReleaseAnalyze|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.ReleaseAnalyze|x64_asan.ActiveCfg = ReleaseAnalyze x64_asan|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.ReleaseAnalyze|x64_asan.Build.0 = ReleaseAnalyze x64_asan|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Release|Win32.ActiveCfg = Release|Win32
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Release|Win32.Build.0 = Release|Win32
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Release|x64.ActiveCfg = Release|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Release|x64.Build.0 = Release|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Release|x64_asan.ActiveCfg = Release x64_asan|x64
+		{584D90B6-C42C-0F52-CD44-9A2839A375B3}.Release|x64_asan.Build.0 = Release x64_asan|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
