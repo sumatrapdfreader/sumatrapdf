@@ -224,7 +224,7 @@ inline void CrashIfFunc(bool cond) {
     if (!cond) {
         return;
     }
-#if defined(PRE_RELEASE_VER)
+#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
     CrashMe();
 #endif
 }
@@ -390,7 +390,7 @@ struct PoolAllocator : Allocator {
     Block* currBlock{nullptr};
     Block* firstBlock{nullptr};
     int nAllocs{0};
-    DWORD threadID{0};
+    CRITICAL_SECTION cs;
 
     PoolAllocator();
 

@@ -67,7 +67,7 @@ constexpr size_t kPoolAllocatorAlign = 16;
 #endif
 
 PoolAllocator::PoolAllocator() {
-    threadID = GetCurrentThreadId();
+    InitializeCriticalSection(&cs);
 }
 
 void PoolAllocator::Free(const void*) {
@@ -75,7 +75,7 @@ void PoolAllocator::Free(const void*) {
 }
 
 void PoolAllocator::FreeAll() {
-    CrashIf(threadID != GetCurrentThreadId());
+    ScopedCritSec scs(&cs);
     Block* curr = firstBlock;
     while (curr) {
         Block* next = curr->next;
@@ -137,7 +137,7 @@ static void ResetBlock(PoolAllocator::Block* block) {
 }
 
 void PoolAllocator::Reset(bool poisonFreedMemory) {
-    CrashIf(threadID != GetCurrentThreadId());
+    ScopedCritSec scs(&cs);
     // free all but first block to
     // allows for more efficient re-use of PoolAllocator
     // with more effort we could preserve all blocks (not sure if worth it)
@@ -155,8 +155,8 @@ void PoolAllocator::Reset(bool poisonFreedMemory) {
 }
 
 PoolAllocator::~PoolAllocator() {
-    CrashIf(threadID != GetCurrentThreadId());
     FreeAll();
+    DeleteCriticalSection(&cs);
 }
 
 void* PoolAllocator::Realloc(void*, size_t) {
@@ -171,7 +171,7 @@ void* PoolAllocator::Realloc(void*, size_t) {
 // and we store a pointer to the value at the end of current block
 // that way we can find allocations
 void* PoolAllocator::Alloc(size_t size) {
-    CrashIf(threadID != GetCurrentThreadId());
+    ScopedCritSec scs(&cs);
 
     // need rounded size + space for index at the end
     bool hasSpace = false;
@@ -222,7 +222,7 @@ void* PoolAllocator::Alloc(size_t size) {
 }
 
 void* PoolAllocator::At(int i) {
-    CrashIf(threadID != GetCurrentThreadId());
+    ScopedCritSec scs(&cs);
 
     CrashIf(i < 0 || i >= nAllocs);
     if (i < 0 || i >= nAllocs) {

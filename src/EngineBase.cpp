@@ -202,10 +202,10 @@ TocItem::~TocItem() {
         delete next;
         next = tmp;
     }
-    free(title);
-    free(rawVal1);
-    free(rawVal2);
-    free(engineFilePath);
+    str::Free(title);
+    str::Free(rawVal1);
+    str::Free(rawVal2);
+    str::Free(engineFilePath);
 }
 
 void TocItem::AddSibling(TocItem* sibling) {
