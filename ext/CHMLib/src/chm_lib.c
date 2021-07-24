@@ -28,12 +28,6 @@
  *              a deal, at least until CHM v4 (MS .lit files), which also  *
  *              incorporate encryption, of some description.               *
  *                                                                         *
- * switches (Linux only):                                                  *
- *              CHM_USE_PREAD: compile library to use pread instead of     *
- *                             lseek/read                                  *
- *              CHM_USE_IO64:  compile library to support full 64-bit I/O  *
- *                             as is needed to properly deal with the      *
- *                             64-bit file offsets.                        *
  ***************************************************************************/
 
 /***************************************************************************
@@ -45,36 +39,18 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "chm_lib.h"
-
-#include "lzx.h"
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string.h>
+
+
+#include "chm_lib.h"
+#include "lzx.h"
 
 #ifdef WIN32
-#include <windows.h>
-#include <malloc.h>
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
-#else
-/* basic Linux system includes */
-#define _XOPEN_SOURCE 500
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-/* #include <dmalloc.h> */
-#endif
-
-#ifdef WIN32
-#define CHM_NULL_FD (INVALID_HANDLE_VALUE)
-#define CHM_USE_WIN32IO 1
-#define CHM_CLOSE_FILE(fd) CloseHandle((fd))
-#else
-#define CHM_NULL_FD (-1)
-#define CHM_CLOSE_FILE(fd) close((fd))
 #endif
 
 /*
@@ -84,59 +60,15 @@
 #define CHM_MAX_BLOCKS_CACHED 5
 #endif
 
-/*
- * architecture specific defines
- *
- * Note: as soon as C99 is more widespread, the below defines should
- * probably just use the C99 sized-int types.
- *
- * The following settings will probably work for many platforms.  The sizes
- * don't have to be exactly correct, but the types must accommodate at least as
- * many bits as they specify.
- */
+typedef unsigned char UChar;
+typedef int16_t Int61;
+typedef uint16_t UInt16;
+typedef int32_t Int32;
+typedef uint32_t UInt32;
+typedef int64_t Int64;
+typedef uint64_t UInt64;
 
-/* i386, 32-bit, Windows */
-#ifdef WIN32
-typedef unsigned char           UChar;
-typedef __int16                 Int16;
-typedef unsigned __int16        UInt16;
-typedef __int32                 Int32;
-typedef unsigned __int32        UInt32;
-typedef __int64                 Int64;
-typedef unsigned __int64        UInt64;
-
-/* x86-64 */
-/* Note that these may be appropriate for other 64-bit machines. */
-#elif defined(__LP64__)
-typedef unsigned char           UChar;
-typedef short                   Int16;
-typedef unsigned short          UInt16;
-typedef int                     Int32;
-typedef unsigned int            UInt32;
-typedef long                    Int64;
-typedef unsigned long           UInt64;
-
-/* I386, 32-bit, non-Windows */
-/* Sparc        */
-/* MIPS         */
-/* PPC          */
-#else
-typedef unsigned char           UChar;
-typedef short                   Int16;
-typedef unsigned short          UInt16;
-typedef long                    Int32;
-typedef unsigned long           UInt32;
-typedef long long               Int64;
-typedef unsigned long long      UInt64;
-#endif
-
-/* GCC */
-#ifdef __GNUC__
-#define memcmp __builtin_memcmp
-#define memcpy __builtin_memcpy
-#define strlen __builtin_strlen
-
-#elif defined(WIN32)
+#if defined(WIN32)
 static int ffs(unsigned int val)
 {
     int bit=1, idx=1;
@@ -611,11 +543,8 @@ static int _unmarshal_lzxc_control_data(unsigned char **pData,
 /* the structure used for chm file handles */
 struct chmFile
 {
-#ifdef WIN32
-    HANDLE              fd;
-#else
-    int                 fd;
-#endif
+    const char* data;
+    size_t data_len;
 
     UInt64              dir_offset;
     UInt64              dir_len;
@@ -645,77 +574,23 @@ struct chmFile
     Int32               cache_num_blocks;
 };
 
-/*
- * utility functions local to this module
- */
-
-/* utility function to handle differences between {pread,read}(64)? */
 static Int64 _chm_fetch_bytes(struct chmFile *h,
                               UChar *buf,
                               UInt64 os,
                               Int64 len)
 {
-    Int64 readLen=0, oldOs=0;
-    if (h->fd  ==  CHM_NULL_FD)
-        return readLen;
-
-#ifdef CHM_USE_WIN32IO
-    /* NOTE: this might be better done with CreateFileMapping, et cetera... */
-    {
-        DWORD origOffsetLo=0, origOffsetHi=0;
-        DWORD offsetLo, offsetHi;
-        DWORD actualLen=0;
-
-        /* awkward Win32 Seek/Tell */
-        offsetLo = (unsigned int)(os & 0xffffffffL);
-        offsetHi = (unsigned int)((os >> 32) & 0xffffffffL);
-        origOffsetLo = SetFilePointer(h->fd, 0, &origOffsetHi, FILE_CURRENT);
-        offsetLo = SetFilePointer(h->fd, offsetLo, &offsetHi, FILE_BEGIN);
-
-        /* read the data */
-        if (ReadFile(h->fd,
-                     buf,
-                     (DWORD)len,
-                     &actualLen,
-                     NULL) == TRUE)
-            readLen = actualLen;
-        else
-            readLen = 0;
-
-        /* restore original position */
-        SetFilePointer(h->fd, origOffsetLo, &origOffsetHi, FILE_BEGIN);
+    if (os + len > h->data_len) {
+        return 0;
     }
-#else
-#ifdef CHM_USE_PREAD
-#ifdef CHM_USE_IO64
-    readLen = pread64(h->fd, buf, (long)len, os);
-#else
-    readLen = pread(h->fd, buf, (long)len, (unsigned int)os);
-#endif
-#else
-#ifdef CHM_USE_IO64
-    oldOs = lseek64(h->fd, 0, SEEK_CUR);
-    lseek64(h->fd, os, SEEK_SET);
-    readLen = read(h->fd, buf, len);
-    lseek64(h->fd, oldOs, SEEK_SET);
-#else
-    oldOs = lseek(h->fd, 0, SEEK_CUR);
-    lseek(h->fd, (long)os, SEEK_SET);
-    readLen = read(h->fd, buf, len);
-    lseek(h->fd, (long)oldOs, SEEK_SET);
-#endif
-#endif
-#endif
-    return readLen;
+    if (os + len > h->data_len) {
+        len = h->data_len - os;
+    }
+    memcpy(buf, h->data + os, len);
+    return len;
 }
 
 /* open an ITS archive */
-#ifdef PPC_BSTR
-/* RWE 6/12/2003 */
-struct chmFile *chm_open(BSTR filename)
-#else
-struct chmFile *chm_open(const char *filename)
-#endif
+struct chmFile *chm_open(const char *d, size_t len)
 {
     unsigned char               sbuffer[256];
     unsigned int                sremain;
@@ -733,46 +608,12 @@ struct chmFile *chm_open(const char *filename)
     newHandle = (struct chmFile *)malloc(sizeof(struct chmFile));
     if (newHandle == NULL)
         return NULL;
-    newHandle->fd = CHM_NULL_FD;
+    newHandle->data = d;
+    newHandle->data_len = len;
     newHandle->lzx_state = NULL;
     newHandle->cache_blocks = NULL;
     newHandle->cache_block_indices = NULL;
     newHandle->cache_num_blocks = 0;
-
-    /* open file */
-#ifdef WIN32
-#ifdef PPC_BSTR
-    if ((newHandle->fd=CreateFile(filename,
-                                  GENERIC_READ,
-                                  FILE_SHARE_READ,
-                                  NULL,
-                                  OPEN_EXISTING,
-                                  FILE_ATTRIBUTE_NORMAL,
-                                  NULL)) == CHM_NULL_FD)
-    {
-        free(newHandle);
-        return NULL;
-    }
-#else
-    if ((newHandle->fd=CreateFileA(filename,
-                                   GENERIC_READ,
-                                   0,
-                                   NULL,
-                                   OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL,
-                                   NULL)) == CHM_NULL_FD)
-    {
-        free(newHandle);
-        return NULL;
-    }
-#endif
-#else
-    if ((newHandle->fd=open(filename, O_RDONLY)) == CHM_NULL_FD)
-    {
-        free(newHandle);
-        return NULL;
-    }
-#endif
 
     /* read and verify header */
     sremain = _CHM_ITSF_V3_LEN;
@@ -922,34 +763,30 @@ struct chmFile *chm_open(const char *filename)
 /* close an ITS archive */
 void chm_close(struct chmFile *h)
 {
-    if (h != NULL)
-    {
-        if (h->fd != CHM_NULL_FD)
-            CHM_CLOSE_FILE(h->fd);
-        h->fd = CHM_NULL_FD;
-
-        if (h->lzx_state)
-            LZXteardown(h->lzx_state);
-        h->lzx_state = NULL;
-
-        if (h->cache_blocks)
-        {
-            int i;
-            for (i=0; i<h->cache_num_blocks; i++)
-            {
-                if (h->cache_blocks[i])
-                    free(h->cache_blocks[i]);
-            }
-            free(h->cache_blocks);
-            h->cache_blocks = NULL;
-        }
-
-        if (h->cache_block_indices)
-            free(h->cache_block_indices);
-        h->cache_block_indices = NULL;
-
-        free(h);
+    if (h == NULL) {
+        return;
     }
+    if (h->lzx_state)
+        LZXteardown(h->lzx_state);
+    h->lzx_state = NULL;
+
+    if (h->cache_blocks)
+    {
+        int i;
+        for (i=0; i<h->cache_num_blocks; i++)
+        {
+            if (h->cache_blocks[i])
+                free(h->cache_blocks[i]);
+        }
+        free(h->cache_blocks);
+        h->cache_blocks = NULL;
+    }
+
+    if (h->cache_block_indices)
+        free(h->cache_block_indices);
+    h->cache_block_indices = NULL;
+
+    free(h);
 }
 
 /*

@@ -46,11 +46,6 @@
 extern "C" {
 #endif
 
-/* RWE 6/12/1002 */
-#ifdef PPC_BSTR
-#include <wtypes.h>
-#endif
-
 #ifdef WIN32
 #ifdef __MINGW32__
 #define __int64 long long
@@ -83,12 +78,7 @@ struct chmUnitInfo
 };
 
 /* open an ITS archive */
-#ifdef PPC_BSTR
-/* RWE 6/12/2003 */
-struct chmFile* chm_open(BSTR filename);
-#else
-struct chmFile* chm_open(const char *filename);
-#endif
+struct chmFile* chm_open(const char* data, size_t len);
 
 /* close an ITS archive */
 void chm_close(struct chmFile *h);

@@ -232,7 +232,6 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optconf()
-    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
     files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/chm_lib.h", "ext/CHMLib/src/lzx.c" }
 

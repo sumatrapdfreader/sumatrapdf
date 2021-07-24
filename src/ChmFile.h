@@ -10,6 +10,7 @@ struct ChmFile {
     AutoFree indexPath;
     AutoFree homePath;
     AutoFree creator;
+    AutoFree data;
     uint codepage = 0;
 
     void ParseWindowsData();
