@@ -343,7 +343,7 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, TocTree* do
         return;
     }
     tocState.Reset();
-    TocItem* tocItem = docTree->root;
+    TocItem* tocItem = docTree->root->child;
     UpdateDocTocExpansionStateRecur(treeCtrl, tocState, tocItem);
 }
 
