@@ -1,4 +1,3 @@
-/* $Id: lzx.c,v 1.5 2002/10/09 01:16:33 jedwin Exp $ */
 /***************************************************************************
  *                        lzx.c - LZX decompression routines               *
  *                           -------------------                           *
@@ -29,17 +28,15 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "lzx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
-#ifdef __GNUC__
-#define memcpy __builtin_memcpy
-#endif
+#include "lzx.h"
 
 /* sized types */
-typedef unsigned char UBYTE;  /* 8 bits exactly    */
+typedef uint8_t UBYTE;        /* 8 bits exactly    */
 typedef unsigned short UWORD; /* 16 bits (or more) */
 typedef unsigned int ULONG;   /* 32 bits (or more) */
 typedef signed int LONG;      /* 32 bits (or more) */
@@ -487,7 +484,7 @@ static int lzx_read_lens(struct LZXstate* pState, UBYTE* lens, ULONG first, ULON
     return 0;
 }
 
-int LZXdecompress(struct LZXstate* pState, unsigned char* inpos, unsigned char* outpos, int inlen, int outlen) {
+int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int inlen, int outlen) {
     UBYTE* endinp = inpos + inlen;
     UBYTE* window = pState->window;
     UBYTE *runsrc, *rundest;

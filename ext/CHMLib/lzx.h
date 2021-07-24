@@ -1,4 +1,3 @@
-/* $Id: lzx.h,v 1.5 2002/10/08 03:43:33 jedwin Exp $ */
 /***************************************************************************
  *                        lzx.h - LZX decompression routines               *
  *                           -------------------                           *
@@ -49,7 +48,7 @@ void LZXteardown(struct LZXstate* pState);
 int LZXreset(struct LZXstate* pState);
 
 /* decompress an LZX compressed block */
-int LZXdecompress(struct LZXstate* pState, unsigned char* inpos, unsigned char* outpos, int inlen, int outlen);
+int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int inlen, int outlen);
 
 #ifdef __cplusplus
 }

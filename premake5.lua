@@ -233,7 +233,7 @@ workspace "SumatraPDF"
     language "C"
     optconf()
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
-    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/chm_lib.h", "ext/CHMLib/src/lzx.c" }
+    files { "ext/CHMLib/*.c", "ext/CHMLib/*.h" }
 
   project "engines"
     kind "StaticLib"
@@ -245,7 +245,7 @@ workspace "SumatraPDF"
       "4701", "4706", "4819", "4838"
     }
     includedirs { "src", "src/wingui" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib-ng", "mupdf/include" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib", "ext/zlib-ng", "mupdf/include" }
     engines_files()
     links { "chm" }
 
@@ -713,7 +713,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4838" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
-      "ext/libdjvu", "ext/CHMLib/src", "ext/zlib-ng"
+      "ext/libdjvu", "ext/CHMLib", "ext/zlib-ng"
     }
     pdf_preview_files()
     filter {"configurations:Debug"}

@@ -441,11 +441,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ext\CHMLib\src\chm_lib.h" />
+    <ClInclude Include="..\ext\CHMLib\chm_lib.h" />
+    <ClInclude Include="..\ext\CHMLib\lzx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\CHMLib\src\chm_lib.c" />
-    <ClCompile Include="..\ext\CHMLib\src\lzx.c" />
+    <ClCompile Include="..\ext\CHMLib\chm_lib.c" />
+    <ClCompile Include="..\ext\CHMLib\lzx.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
