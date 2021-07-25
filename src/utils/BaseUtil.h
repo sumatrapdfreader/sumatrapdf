@@ -220,12 +220,18 @@ inline void CrashMe() {
 // Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
 
+// TODO: maybe change to NO_INLINE since now I can filter callstack
+// on the server
 inline void CrashIfFunc(bool cond) {
     if (!cond) {
         return;
     }
 #if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
-    CrashMe();
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+    } else {
+        CrashMe();
+    }
 #endif
 }
 
