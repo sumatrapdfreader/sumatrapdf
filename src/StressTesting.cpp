@@ -307,7 +307,7 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR* dirPath, const WCHAR* filter, WStrVec& paths) {
     bool hasFiles = false;
-    DirIter di(dirPath);
+    DirIter di(dirPath, true);
     for (const WCHAR* filePath = di.First(); filePath; filePath = di.Next()) {
         if (IsStressTestSupportedFile(filePath, filter)) {
             paths.Append(str::Dup(filePath));

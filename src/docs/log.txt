@@ -14,6 +14,14 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2056
   needs unit tests for PoolAllocator
 
+- fix PalmDoc overwrite of WStrVec allocator in debug build (fixes #2057)
+I think str::Str was compiled in DEBUG but EbookDoc.cpp in release
+and there was a mismatch between what the layout of str::Str in PalmDoc struct
+was vs. what the code in str::Str thought it was. str::Str has nRealloc
+variable which was within #if defined(DEBUG) but due to mismatch shared memory
+with the first word of the next object, which happened to be WStrVec::allocator.
+Changing nRealloc would over-write allocator, leading to crashes.
+
 2021-07-23 Fri
 
 - make temp allocator be per-thread. the only sane thing to do

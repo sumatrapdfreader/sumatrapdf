@@ -178,7 +178,7 @@ static void printSize(const char* s, size_t size) {
 // that way we can find allocations
 void* PoolAllocator::Alloc(size_t size) {
     ScopedCritSec scs(&cs);
-    //printSize("PoolAllocator: ", size);
+    // printSize("PoolAllocator: ", size);
 
     // need rounded size + space for index at the end
     size_t hdrSize = BlockHeaderSize();

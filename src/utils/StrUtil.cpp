@@ -1272,9 +1272,7 @@ static char* EnsureCap(Str* s, size_t needed) {
 
     size_t newElCount = newCap + kPadding;
 
-#if defined(DEBUG)
     s->nReallocs++;
-#endif
 
     size_t allocSize = newElCount;
     char* newEls;
@@ -1336,6 +1334,7 @@ void Str::Reset() {
     static_assert(nFiller == Str::kBufChars);
     memcpy(buf, kFillerStr, kBufChars);
 #endif
+
     buf[0] = 0;
 }
 
@@ -1704,6 +1703,7 @@ void WStr::Reset() {
     len = 0;
     cap = 0;
     els = buf;
+
 #if defined(DEBUG)
 #define kFillerWStr L"01234567890123456789012345678901"
     // to catch mistakes earlier, fill the buffer with a known string
@@ -1711,6 +1711,7 @@ void WStr::Reset() {
     static_assert(nFiller == Str::kBufChars);
     memcpy(buf, kFillerWStr, nFiller * kElSize);
 #endif
+
     buf[0] = 0;
 }
 

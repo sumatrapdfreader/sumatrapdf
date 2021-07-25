@@ -1073,7 +1073,8 @@ Fb2Doc* Fb2Doc::CreateFromStream(IStream* stream) {
 
 /* ********** PalmDOC (and TealDoc) ********** */
 
-PalmDoc::PalmDoc(const WCHAR* path) : fileName(str::Dup(path)) {
+PalmDoc::PalmDoc(const WCHAR* path) {
+    this->fileName = str::Dup(path);
 }
 
 PalmDoc::~PalmDoc() {
@@ -1084,6 +1085,7 @@ PalmDoc::~PalmDoc() {
 // cf. http://wiki.mobileread.com/wiki/TealDoc
 static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, const char* text, size_t len,
                                     __unused uint codePage) {
+    CrashIf((size_t)tocEntries.allocator > 0 && (size_t)tocEntries.allocator < 0xffff);
     if (len < 9) {
     Fallback:
         builder.Append("&lt;");

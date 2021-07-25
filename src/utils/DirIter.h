@@ -26,6 +26,7 @@ class DirIter {
     WIN32_FIND_DATAW currFindData{};
 
     explicit DirIter(std::wstring_view dir, bool recur = false) {
+        startDir = dir;
         recursive = recur;
     }
     ~DirIter() {

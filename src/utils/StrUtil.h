@@ -195,9 +195,7 @@ struct Str {
     u32 cap{0};
     char buf[32];
 
-#if defined(DEBUG)
     int nReallocs{0};
-#endif
 
     static constexpr size_t kBufChars = dimof(buf);
 
