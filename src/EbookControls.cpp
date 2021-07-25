@@ -251,7 +251,7 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
 
     double durAll = TimeSinceInMs(timerAll);
     if (gLogEbook) {
-        logf("all: %.2f, fill: %.2f, draw html: %.2f\n", durAll, durFill, durDraw);
+        logf("all: %.2f ms, fill: %.2f ms, draw html: %.2f ms\n", durAll, durFill, durDraw);
     }
 }
 

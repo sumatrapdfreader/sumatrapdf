@@ -772,7 +772,7 @@ static bool GoToNextFile(StressTest* st) {
 
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
-    AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", st->currPageNo, (int)pageRenderTime));
+    AutoFreeWstr s(str::Format(L"Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime));
     st->win->ShowNotification(s, NotificationOptions::WithTimeout, NG_STRESS_TEST_BENCHMARK);
 
     if (st->pagesToRender.size() == 0) {

@@ -178,7 +178,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("EngineImages::RenderPage() in %.2f\n", dur);
+        logf("EngineImages::RenderPage() in %.2f ms\n", dur);
     };
 
     RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
@@ -992,7 +992,7 @@ bool EngineCbx::FinishLoading() {
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("EngineCbx::FinisHLoading() in %.2f\n", dur);
+        logf("EngineCbx::FinisHLoading() in %.2f ms\n", dur);
     };
 
     // not using the resolution of the contained images seems to be
@@ -1227,7 +1227,7 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f\n", pageNo, dur);
+        logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
     };
     ImageData img = GetImageData(pageNo);
     if (img.data) {

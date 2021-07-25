@@ -449,6 +449,9 @@ Bitmap* BitmapFromData(std::span<u8> bmpData) {
     return bmp;
 }
 
+#define JP2_JP2H 0x6a703268 /**< JP2 header box (super-box) */
+#define JP2_IHDR 0x69686472 /**< Image header box */
+
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 Size BitmapSizeFromData(std::span<u8> d) {
     Size result;
@@ -551,17 +554,27 @@ Size BitmapSizeFromData(std::span<u8> d) {
         if (len >= 32) {
             size_t ix = 0;
             while (ix < len - 32) {
-                u32 lbox = r.DWordBE(ix);
-                u32 tbox = r.DWordBE(ix + 4);
-                if (0x6A703268 /* jp2h */ == tbox) {
+                u32 boxLen = r.DWordBE(ix);
+                u32 boxType = r.DWordBE(ix + 4);
+                if (JP2_JP2H == boxType) {
                     ix += 8;
-                    if (r.DWordBE(ix) == 24 && r.DWordBE(ix + 4) == 0x69686472 /* ihdr */) {
-                        result.dx = r.DWordBE(ix + 16);
-                        result.dy = r.DWordBE(ix + 12);
+                    u32 boxLen2 = r.DWordBE(ix);
+                    u32 boxType2 = r.DWordBE(ix + 4);
+                    bool isIhdr = boxType2 == JP2_IHDR;
+                    ix += 8;
+                    if (isIhdr && boxLen2 <= (boxLen - 8)) {
+                        result.dx = r.DWordBE(ix);
+                        result.dy = r.DWordBE(ix + 4);
+                        if (result.dx > 64 * 1024 || result.dy > 64 * 1024) {
+                            // sanity check, assuming that images that big can't
+                            // possibly be valid
+                            result.dx = 0;
+                            result.dy = 0;
+                        }
                     }
                     break;
-                } else if (lbox != 0 && ix < UINT32_MAX - lbox) {
-                    ix += lbox;
+                } else if (boxLen != 0 && ix < UINT32_MAX - boxLen) {
+                    ix += boxLen;
                 } else {
                     break;
                 }
