@@ -266,7 +266,6 @@ func setBuildConfigPreRelease() {
 
 func setBuildConfigRelease() {
 	s := getBuildConfigCommon()
-	s += "#define SUMATRA_UPDATE_INFO_URL L\"https://www.sumatrapdfreader.org/update-check-rel.txt\"\n"
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 0644)
 	must(err)
 }

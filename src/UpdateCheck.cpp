@@ -33,16 +33,15 @@ static const char* kindNotifUpdateCheckInProgress = "notifUpdateCheckInProgress"
 // for testing. if true will ignore version checks etc. and act like there's an update
 constexpr bool gForceAutoUpdate = false;
 
-// the default is for pre-release version.
-// for release we override BuildConfig.h and set to
 // clang-format off
-#if defined(SUMATRA_UPDATE_INFO_URL)
-constexpr const WCHAR* kUpdateInfoURL = SUMATRA_UPDATE_INFO_URL;
+#if defined(PRE_RELEASE_VER)
+constexpr const WCHAR* kUpdateInfoURL =  L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
+//constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/api/updatecheck/pre-release.txt";
 #else
-constexpr const WCHAR* kUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
-
-//constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/api/updatecheck";
+constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/update-check-rel.txt";
+//constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/api/updatecheck/release.txt";
 #endif
+
 #ifndef WEBSITE_DOWNLOAD_PAGE_URL
 #if defined(PRE_RELEASE_VER)
 #define WEBSITE_DOWNLOAD_PAGE_URL L"https://www.sumatrapdfreader.org/prerelease"

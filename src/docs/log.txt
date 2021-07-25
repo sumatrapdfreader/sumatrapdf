@@ -8,6 +8,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - shorten api of Fmt class
 - rework StrFormat.cpp to be smaller
 - fix crash regression in reloading 'r' (fixes #2055)
+- use RemoveBadMenuSeparators() in TocContextMenu()
+- add website-api
 
 2021-07-23 Fri
 
