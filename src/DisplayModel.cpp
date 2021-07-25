@@ -46,10 +46,9 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/Log.h"
+#include "utils/Timer.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EngineCreate.h"
 
@@ -62,6 +61,8 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+
+#include "utils/Log.h"
 
 // if true, we pre-render the pages right before and after the visible pages
 static bool gPredictiveRender = true;
@@ -364,6 +365,13 @@ void DisplayModel::BuildPagesInfo() {
     CrashIf(pagesInfo);
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
+
+    log("DisplayModel::BuildPagesInfo started\n");
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("DisplayModel::BuildPagesInfo took %.2f ms\n", dur);
+    };
 
     RectF defaultRect;
     float fileDPI = engine->GetFileDPI();

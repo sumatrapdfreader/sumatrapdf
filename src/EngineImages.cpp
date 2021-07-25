@@ -1238,7 +1238,12 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 RectF EngineCbx::LoadMediabox(int pageNo) {
-    // fill the cache to prevent the first few images from being unpacked twice
+    ImageData img = GetImageData(pageNo);
+    if (img.data) {
+        Size size = BitmapSizeFromData(img.AsSpan());
+        return RectF(0, 0, (float)size.dx, (float)size.dy);
+    }
+
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
         RectF mbox(0, 0, (float)page->bmp->GetWidth(), (float)page->bmp->GetHeight());
@@ -1246,11 +1251,6 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
         return mbox;
     }
 
-    ImageData img = GetImageData(pageNo);
-    if (img.data) {
-        Size size = BitmapSizeFromData(img.AsSpan());
-        return RectF(0, 0, (float)size.dx, (float)size.dy);
-    }
     return RectF();
 }
 

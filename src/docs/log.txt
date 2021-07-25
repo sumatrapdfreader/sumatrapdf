@@ -3,6 +3,7 @@ A daily log of changes and commentary. An experiment of sorts.
 2021-07-25 Sun
 
 - fix BitmapSizeFromData for jpeg2000 (for #2058)
+- massively speed up opening of .zip files with .jp2 images (fixes #2058)
 
 2021-07-24 Sat
 
