@@ -62,8 +62,8 @@ StaticLinkInfo::StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* info
 
 StaticLinkInfo::StaticLinkInfo(const StaticLinkInfo& other) {
     rect = other.rect;
-    target = str::Dup(other.target);
-    infotip = str::Dup(other.infotip);
+    str::ReplaceWithCopy(&target, other.target);
+    str::ReplaceWithCopy(&infotip, other.infotip);
 }
 
 StaticLinkInfo& StaticLinkInfo::operator=(const StaticLinkInfo& other) {

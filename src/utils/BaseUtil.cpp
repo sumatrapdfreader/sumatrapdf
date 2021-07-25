@@ -143,15 +143,18 @@ void PoolAllocator::Reset(bool poisonFreedMemory) {
     // with more effort we could preserve all blocks (not sure if worth it)
     Block* first = firstBlock;
     if (!first) {
+        CrashIf(currBlock);
         return;
     }
     if (poisonFreedMemory) {
         PoisonData(firstBlock);
     }
     firstBlock = firstBlock->next;
+    first->next = nullptr;
     FreeAll();
     ResetBlock(first);
     firstBlock = first;
+    currBlock = first;
 }
 
 PoolAllocator::~PoolAllocator() {
@@ -206,9 +209,9 @@ void* PoolAllocator::Alloc(size_t size) {
         block->dataSize = dataSize;
         ResetBlock(block);
         if (!firstBlock) {
+            CrashIf(currBlock);
             firstBlock = block;
-        }
-        if (currBlock) {
+        } else {
             currBlock->next = block;
         }
         currBlock = block;

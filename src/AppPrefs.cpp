@@ -277,9 +277,10 @@ bool Reload() {
 
     // TODO: about window doesn't have to be at position 0
     if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
-        gWindows.at(0)->HideToolTip();
-        gWindows.at(0)->staticLinks.Reset();
-        gWindows.at(0)->RedrawAll(true);
+        WindowInfo* win = gWindows.at(0);
+        win->HideToolTip();
+        DeleteVecMembers(win->staticLinks);
+        win->RedrawAll(true);
     }
 
     if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage)) {

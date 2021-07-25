@@ -844,8 +844,9 @@ bool gEnableMemLeak = false;
 // don't show up
 static void ForceStartupLeaks() {
     time_t secs{0};
-    struct tm buf_not_used;
-    gmtime_s(&buf_not_used, &secs);
+    struct tm tm;
+    secs = mktime(&tm);
+    gmtime_s(&tm, &secs);
     gmtime(&secs);
     WCHAR* path = GetExePathTemp();
     FILE* fp = _wfopen(path, L"rb");
@@ -894,10 +895,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     srand((unsigned int)time(nullptr));
 
+    ForceStartupLeaks();
+
     // for testing mem leak detection
     void* maybeLeak{nullptr};
     if (gEnableMemLeak) {
-        ForceStartupLeaks();
         MemLeakInit();
         maybeLeak = malloc(10);
     }
