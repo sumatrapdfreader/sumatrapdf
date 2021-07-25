@@ -34,16 +34,18 @@ which must be then deployed.
 func validateVer(ver string) {
 	parts := strings.Split(ver, ".")
 	panicIf(len(parts) > 3)
-	for _, p := range parts {
+	for i, p := range parts {
 		n, err := strconv.Atoi(p)
 		must(err)
 		panicIf(n < 0 || n > 19)
+		panicIf(i == 0 && n != 3, "major version must be 3")
 	}
 }
 
 func updateAutoUpdateVer(ver string) {
 	validateVer(ver)
 	// TODO: verify it's bigger than the current vresion
+	// TODO: add download links
 	s := fmt.Sprintf(`[SumatraPDF]
 Latest %s
 `, ver)

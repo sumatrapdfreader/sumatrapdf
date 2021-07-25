@@ -431,6 +431,7 @@ func main() {
 	}
 
 	if flgUpdateVer != "" {
+		ensureCanUpload()
 		updateAutoUpdateVer(flgUpdateVer)
 		return
 	}

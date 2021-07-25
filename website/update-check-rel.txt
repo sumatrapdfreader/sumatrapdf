@@ -1,2 +1,2 @@
 [SumatraPDF]
-Latest 3.2
+Latest 3.3.3
