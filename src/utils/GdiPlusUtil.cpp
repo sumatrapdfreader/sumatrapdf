@@ -130,9 +130,12 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
         if (!s) {
             s = L"<null>";
         }
-        auto s2 = ToUtf8Temp(s, (size_t)len);
-        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2.Get());
-        CrashIf(status != Ok);
+        char* s2 = ToUtf8Temp(s, (size_t)len);
+        if (len > 256) {
+            s2[256] = 0;
+        }
+        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2);
+        //CrashIf(status != Ok);
     }
     Gdiplus::RectF bbox;
     r.GetBounds(&bbox, g);

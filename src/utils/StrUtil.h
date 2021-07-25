@@ -102,6 +102,7 @@ const char* FindI(const char* str, const char* find);
 bool Contains(std::string_view s, const char* txt);
 
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
+bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...);
 char* FmtV(const char* fmt, va_list args);
 char* Format(const char* fmt, ...);
 

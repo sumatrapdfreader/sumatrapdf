@@ -10,6 +10,9 @@ A daily log of changes and commentary. An experiment of sorts.
 - fix crash regression in reloading 'r' (fixes #2055)
 - use RemoveBadMenuSeparators() in TocContextMenu()
 - add website-api
+- fixed PoolAllocator when allocating large chunks (fixes #2056)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2056
+  needs unit tests for PoolAllocator
 
 2021-07-23 Fri
 

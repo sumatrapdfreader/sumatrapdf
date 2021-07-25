@@ -167,13 +167,21 @@ void* PoolAllocator::Realloc(void*, size_t) {
     return nullptr;
 }
 
+static void printSize(const char* s, size_t size) {
+    char buf[512]{0};
+    str::BufFmt(buf, dimof(buf), "%s%d\n", s, (int)size);
+    OutputDebugStringA(buf);
+}
+
 // we allocate the value at the beginning of current block
 // and we store a pointer to the value at the end of current block
 // that way we can find allocations
 void* PoolAllocator::Alloc(size_t size) {
     ScopedCritSec scs(&cs);
+    //printSize("PoolAllocator: ", size);
 
     // need rounded size + space for index at the end
+    size_t hdrSize = BlockHeaderSize();
     bool hasSpace = false;
     size_t sizeRounded = RoundUp(size, kPoolAllocatorAlign);
     size_t cbNeeded = sizeRounded + sizeof(i32);
@@ -184,7 +192,7 @@ void* PoolAllocator::Alloc(size_t size) {
     }
 
     if (!hasSpace) {
-        size_t hdrSize = BlockHeaderSize();
+        cbNeeded += hdrSize;
         size_t dataSize = cbNeeded;
         size_t allocSize = hdrSize + cbNeeded;
         if (allocSize < minBlockSize) {
@@ -207,7 +215,13 @@ void* PoolAllocator::Alloc(size_t size) {
     }
     char* res = currBlock->freeSpace;
     currBlock->freeSpace = res + sizeRounded;
-    // TODO: figure out why this hits
+    if (currBlock->freeSpace > currBlock->end) {
+        size_t cbOvershot = currBlock->freeSpace - currBlock->end;
+        printSize("PoolAllocator: ", size);
+        printSize("overshot: ", cbOvershot);
+        printSize("hdrSizet: ", hdrSize);
+        CrashIf(true);
+    }
     CrashIf(RoundUp(currBlock->freeSpace, kPoolAllocatorAlign) != currBlock->freeSpace);
 
     char* blockStart = (char*)currBlock;

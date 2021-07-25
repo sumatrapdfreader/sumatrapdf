@@ -582,6 +582,14 @@ bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
     return (count >= 0) && ((size_t)count < bufCchSize);
 }
 
+bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    auto res = BufFmtV(buf, bufCchSize, fmt, args);
+    va_end(args);
+    return res;
+}
+
 // TODO: need to finish StrFormat and use it instead.
 char* FmtV(const char* fmt, va_list args) {
     char message[256] = {0};
