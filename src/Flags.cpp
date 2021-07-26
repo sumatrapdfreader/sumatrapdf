@@ -468,13 +468,15 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::Plugin) {
             // -plugin [<URL>] <parent HWND>
-            if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
-                i.pluginURL = str::Dup(param);
-            }
-            // the argument is a (numeric) window handle to
+            // <parent HWND> is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.EatParam());
+            if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
+                i.pluginURL = str::Dup(param);
+                i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.EatParam());
+            } else {
+                i.hwndPluginParent = (HWND)(INT_PTR)_wtol(param);
+            }
             continue;
         }
 
