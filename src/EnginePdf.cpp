@@ -1331,7 +1331,6 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
 
     fz_colorspace* colorspace = fz_device_rgb(ctx);
     fz_irect ibounds = bbox;
-    fz_rect cliprect = fz_rect_from_irect(bbox);
 
     fz_pixmap* pix = nullptr;
     fz_device* dev = nullptr;
@@ -1354,9 +1353,9 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
         // TODO: in printing different style. old code use pdf_run_page_with_usage(), with usage ="View"
         // or "Print". "Export" is not used
-        dev = fz_new_draw_device(ctx, fz_identity, pix);
+        dev = fz_new_draw_device(ctx, ctm, pix);
         pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-        pdf_run_page_with_usage(ctx, pdfpage, dev, ctm, usage, fzcookie);
+        pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usage, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
         fz_close_device(ctx, dev);
     }

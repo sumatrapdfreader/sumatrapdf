@@ -32,9 +32,19 @@ extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
 Kind kindEngineMupdf = "engineMupdf";
 
-static float layout_w = (float)FZ_DEFAULT_LAYOUT_W;
-static float layout_h = (float)FZ_DEFAULT_LAYOUT_H;
-static float layout_em = 28.f;
+/* 148 x 210 mm */
+// FZ_LAYOUT_A5_W = 420
+// FZ_LAYOUT_A5_H = 595
+// FZ_LAYOUT_A5_EM = 11,
+
+
+// I'm a monkey, no idea why kZoom level, just know it's good
+// maybe for reflowable should reflow at desired pixel size with
+// identity ctm when rendering
+constexpr float kZoom = 2.5f;
+static float layout_w = 420.f * kZoom;
+static float layout_h = 595.f * kZoom;
+static float layout_em = 11.f * kZoom;
 
 class EngineMupdf : public EngineBase {
   public:
@@ -718,16 +728,16 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     ScopedCritSec cs(ctxAccess);
 
     auto pageRect = args.pageRect;
-    auto zoom = args.zoom * 120;
+    auto zoom = args.zoom;
     auto rotation = args.rotation;
-    //fz_rect pRect;
+    fz_rect pRect;
     fz_rect page_bounds;
     if (pageRect) {
-        //pRect = To_fz_rect(*pageRect);
+        pRect = To_fz_rect(*pageRect);
         page_bounds = To_fz_rect(*pageRect);
     } else {
         // TODO(port): use pageInfo->mediabox?
-        //pRect = fz_bound_page(ctx, page);
+        pRect = fz_bound_page(ctx, page);
         page_bounds = fz_bound_page(ctx, page);
     }
 
@@ -735,13 +745,19 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     fz_matrix draw_page_ctm = fz_transform_page(page_bounds, zoom, rotation);
     fz_rect draw_page_bounds = fz_transform_rect(page_bounds, draw_page_ctm);
 
-    //fz_matrix ctm = viewctm(page, zoom, rotation);
-    //fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
-
+    fz_matrix ctm = viewctm(page, zoom, rotation);
+    fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
 
     fz_colorspace* colorspace = fz_device_rgb(ctx);
-    //fz_irect ibounds = bbox;
-    //fz_rect cliprect = fz_rect_from_irect(bbox);
+    fz_irect ibounds = bbox;
+
+    /*
+    if (fz_is_document_reflowable(ctx, _doc)) {
+        float lw = bbox.x1 - bbox.x0;
+        float lh = bbox.y1 - bbox.y0;
+        fz_layout_document(ctx, _doc, lw, lh, layout_em);
+    }
+    */
 
     fz_pixmap* pix = nullptr;
     fz_device* dev = nullptr;
@@ -765,23 +781,23 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     fz_try(ctx) {
 
         {
-            fz_irect bbox = fz_round_rect(fz_transform_rect(fz_bound_page(ctx, fzpage), draw_page_ctm));
-            page_contents = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), bbox, seps, 0);
-            // pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
-            // initialize with white background
-            // fz_clear_pixmap_with_value(ctx, pix, 0xff);
+            //bbox = fz_round_rect(fz_transform_rect(fz_bound_page(ctx, fzpage), draw_page_ctm));
+            //page_contents = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), bbox, seps, 0);
+            pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
+            fz_clear_pixmap_with_value(ctx, pix, 0xff);
 
-            fz_clear_pixmap(ctx, page_contents);
+            //fz_clear_pixmap(ctx, page_contents);
 
             // TODO: in printing different style. old code use pdf_run_page_with_usage(), with usage ="View"
             // or "Print". "Export" is not used
-            // dev = fz_new_draw_device(ctx, fz_identity, pix);
-            dev = fz_new_draw_device(ctx, draw_page_ctm, page_contents);
+            dev = fz_new_draw_device(ctx, ctm, pix);
+            //dev = fz_new_draw_device(ctx, draw_page_ctm, page_contents);
             fz_run_page_contents(ctx, fzpage, dev, fz_identity, NULL);
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
         }
 
+        /*
     	pix = fz_clone_pixmap_area_with_different_seps(ctx, page_contents, NULL, fz_device_rgb(ctx), NULL,
                                                        fz_default_color_params, NULL);
         {
@@ -791,6 +807,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
         }
+        */
 
         //bitmap = new_rendered_fz_pixmap(ctx, page_contents);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
