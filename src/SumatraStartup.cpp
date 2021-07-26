@@ -51,6 +51,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"
+#include "Scratch.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Canvas.h"
@@ -1224,6 +1225,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     // if the user has explicitly told us to be
     if (gGlobalPrefs->associatedExtensions) {
         RegisterForPdfExtentions(win->hwndFrame);
+    }
+
+    if (i.newEpub) {
+        NewEpub(i.newEpub);
+        fastExit = true;
+        goto Exit;
     }
 
     if (i.stressTestPath) {

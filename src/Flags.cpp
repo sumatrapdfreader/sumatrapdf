@@ -241,6 +241,7 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(FwdSearchColor, "fwdsearch-color")         \
     V(FwdSearchPermanent, "fwdsearch-permanent") \
     V(MangaMode, "manga-mode")                   \
+    V(NewEpub, "new-epub")                       \
     V(SetColorRange, "set-color-range")
 
 #define MAKE_ARG(__arg, __name) __arg,
@@ -464,6 +465,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::AppData) {
             i.appdataDir = str::Dup(param);
+            continue;
+        }
+        if (arg == Arg::NewEpub) {
+            i.newEpub = str::Dup(param);
             continue;
         }
         if (arg == Arg::Plugin) {
