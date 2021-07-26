@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - massively speed up opening of .zip files with .jp2 images (fixes #2058)
 - CrashIfFunc: when running under debugger, do DebugBreak(), not crash
 - fix memory leaks (PoolAllocator, WindowInfo::staticLinks)
+- work on EngineMupdf
 
 2021-07-24 Sat
 
