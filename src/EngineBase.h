@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 extern Kind kindEnginePdf;
+extern Kind kindEngineMupdf;
 extern Kind kindEngineMulti;
 extern Kind kindEngineXps;
 extern Kind kindEngineDjVu;

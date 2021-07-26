@@ -2,5 +2,5 @@
    License: GPLv3 */
 
 bool IsMupdfEngineSupportedFileType(Kind);
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path);
-EngineBase* CreateEngineMupdfFromStream(IStream* stream);
+EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, PasswordUI* pwdU);
+EngineBase* CreateEngineMupdfFromStream(IStream* stream, PasswordUI* pwdU);

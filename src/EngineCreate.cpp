@@ -100,7 +100,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     } else if (kind == kindFileTxt) {
         engine = CreateTxtEngineFromFile(path);
     } else if (gEnableMupdfEngine && kind == kindFileEpub) {
-        engine = CreateEngineMupdfFromFile(path);
+        engine = CreateEngineMupdfFromFile(path, pwdUI);
     }
 
     if (!enableEngineEbooks) {
