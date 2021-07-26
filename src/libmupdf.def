@@ -5,6 +5,21 @@ EXPORTS
 
 	version_check_3_4
 
+	fz_set_use_document_css
+	fz_count_chapter_pages
+	fz_run_page_annots
+	fz_string_from_buffer
+	fz_open_document
+	fz_drop_separations
+	fz_set_user_css
+	fz_clone_pixmap_area_with_different_seps
+	fz_layout_document
+	fz_run_page_widgets
+	fz_register_document_handlers
+	fz_count_chapters
+	fz_transform_page
+	fz_load_chapter_page
+	fz_run_page_contents
 	pdf_has_unsaved_changes
 	pdf_can_be_saved_incrementally
 	pdf_annot_page
