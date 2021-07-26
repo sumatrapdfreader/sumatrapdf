@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9a911f05e958aa1f5856f885dcda9a1271b357e4
+c1b2e8993c393192cd8f28c607e9a842863d0554
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -1131,6 +1131,7 @@ hr:&Slobodni tekst
 kw:&Tekst Rydh
 lt:&Laisvas tekstas
 lv:&Brīvs teksts
+my:&Teks Bebas
 nl:&Vrije Tekst
 pl:&Dowolny tekst
 :&Go To
@@ -3137,6 +3138,7 @@ hr:&Tekst
 kw:&Tekst
 lt:&Tekstas
 lv:&Teksts
+my:&Teks
 nl:&Tekst
 pl:&Tekst
 ru:&Текст
@@ -5893,6 +5895,7 @@ ka:ფერი
 kw:Liw
 lt:Spalva
 lv:Krāsa
+my:Warna
 nl:Kleur
 no:Farge
 pa:ਰੰਗ
@@ -5914,6 +5917,7 @@ hr:Boja:
 kw:Liw:
 lt:Spalva:
 lv:Krāsa:
+my:Warna:
 nl:Kleur
 pl:Kolor:
 ru:Цвет:
@@ -7199,6 +7203,7 @@ ka:ვერ მოხერხდა Sumatra-ს საძიებო ფი�
 kw:Ny yllir anlea sythel hwilas Sumatra
 lt:Nepavyko pašalinti Sumatra paieškos filtro
 lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
+my:Tidak dapat membuang penapis carian Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 ru:Не удалось удалить фильтр поиска Sumatra
@@ -18590,6 +18595,7 @@ hr:Boja teksta:
 kw:Liw Tekst:
 lt:Teksto spalva:
 lv:Teksta krāsa:
+my:Warna Teks:
 nl:Tekst Kleur
 pl:Kolor tekstu:
 ru:Цвет текста:
@@ -18605,6 +18611,7 @@ hr:Veličina teksta:
 kw:Braster Tekst:
 lt:Teksto dydis:
 lv:Teksta lielums:
+my:Saiz Teks:
 nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 ru:Размер текста:
@@ -18619,6 +18626,7 @@ hr:Veličina teksta: %d
 kw:Braster Tekst: %d
 lt:Teksto dydis: %d
 lv:Teksta lielums: %d
+my:Saiz Teks: %d
 nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
 ru:Размер текста: %d
