@@ -1,35 +1,5 @@
 AppTranslator: SumatraPDF
-fd20617b65d30e78858d7b7c41a67a7be416a1b9
-:%s installation not found.
-am:%s-ի տեղադրումը չի գտնվել:
-ar:%s التثبيت غير موجود
-az:%s quraşdırmasını tapmaq mümkün olmadı.
-bn:%s ইন্সটলেশন পাওয়া যায় নি
-br:Instalação do %s não encontrada.
-cn:未找到 %s 安装。
-co:Installazione di %s micca trova.
-cy:Ni chanfuwyd gosodiad %s.
-de:%s Installation nicht gefunden.
-dk:%s installation blev ikke fundet.
-el:Η εγκατάσταση %s δεν βρέθηκε.
-es:%s instalación no encontrada.
-fr:%s installation non trouvée
-ga:Níor aimsíodh an tsuiteáil %s.
-gl:%s instalación non atopada.
-hr:%s instalacija nije pronađena.
-id:%s instalasi tidak ditemukan.
-it:Installazione %s non trovata.
-ka:ინსტალირებული %s ვერ მოიძებნა.
-kw:Ny gevir leans %s.
-lt:%s instaliacija nerasta.
-lv:%s instalācija netika atrasta.
-nl:%s installatie niet gevonden.
-pa:%s ਦੀ ਸਥਾਪਤੀ ਨਹੀਂ ਲੱਭੀ।
-pl:Nie znaleziono instalacji %s.
-ru:Не удалось найти установку %s.
-tr:%s kurulumu bulunamadı.
-tw:未有安裝 %s
-vn:Không tìm thấy bản cài đặt đặt %s.
+27831d954e69174d8855e7f84df61348f0d724b7
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -522,137 +492,6 @@ tw:關閉(&C)\tCtrl+W
 uk:&Закрити\tCtrl+W
 uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
-:&Copy Selection
-am:&Պատճենել նշվածը
-ar:نسخ المحدد&
-az:Seçilmiş sahəni &kopyala
-bg:&Копиране на избраното
-bn:&নির্বাচিত অংশ কপি করুন
-br:&Copiar seleção
-bs:&Kopiraj označeno
-by:&Капіяваць выбранае
-ca-xv:&Copia la selecció
-ca:&Copia la selecció
-cn:复制选定范围(&C)
-co:Cupià a sele&zzione
-cy:Copïo &Dewis
-cz:&Kopírovat výběr
-de:Auswahl &kopieren
-dk:&Kopier markering
-el:&Αντιγραφή επιλογής
-es:&Copiar selección
-et:&Kopeeri valik
-eu:&Kopiatu Hautapena
-fa:&رونوشت از قسمت انتخاب شده
-fi:Kopioi &valinta
-fr:&Copier la sélection
-ga:&Macasamhlaigh an Roghnúchán
-gl:&Copiar a selección
-he:העתק בחירה
-hi:च&यनित का नक़ल करें
-hr:&Kopiraj obilježeno
-hu:Kijelölés &másolása
-id:&Salin Seleksi
-it:&Copia selezione
-ja:選択範囲をコピー(&C)
-ka:მონიშნულის &კოპირება
-kr:선택한 부분 복사(&C)
-ku:لەبەرگرتنەوەی دیاریکراو&
-kw:&Kopia Dewis
-lt:&Kopijuoti pažymėtą sritį
-lv:&Kopēt atlasi
-mk:&Копирај селекција
-my:&Salin Pilihan
-ne:चयनको प्रति&लिपि बनाउनुहोस्
-nl:Selectie kopiëren
-nn:&Kopier utval
-no:&Kopier valgt område
-pa:&ਚੋਣ ਦੀ ਕਾਪੀ ਕਰੋ
-pl:Kopiuj &zaznaczenie
-pt:&Copiar seleção
-ro:&Copiază selecția
-ru:С&копировать выделенное
-si:ලකුනුකල ‌කොටස ‌කොපිකරන්න
-sk:&Kopírovať vybrané
-sl:Kopiraj izbor
-sp-rs:Kopiraj izabrano
-sq:&Kopjoj materialin
-sr-rs:Копирај изабрано
-sv:&Kopiera markering
-ta:தேர்ந்தெடுத்தவற்றை நகலெடு
-th:&คัดลอกตำแหน่งที่เลือก
-tl:Kopyahin ang napili
-tr:Seçimi &Kopyala
-tw:複製選取範圍(&C)
-uk:Скопіювати вибране
-uz:&Tanlanganni nusxa olish
-vn:&Chép phần đã chọn
-:&Copy Selection\tCtrl+C
-am:Պատճենել նշվածը\tCtrl+C
-ar:نسخ المحدد&\tCtrl+C
-az:Seçilmiş &sahəni kopyala\tCtrl+C
-bg:&Копиране на избраното\tCtrl+C
-bn:&নির্বাচিত অংশ কপি করুন\tCtrl+C
-br:Copiar seleção\tCtrl+C
-bs:Kopiraj označeno\tCtrl+C
-by:&Капіяваць выбранае\tCtrl+C
-ca-xv:&Copia la selecció\tCtrl+C
-ca:&Copia la selecció\tCtrl+C
-cn:复制选定范围(&C)\tCtrl+C
-co:&Cupià a selezzione\tCtrl+C
-cy:Copïo'r Dewis\tCtrl+C
-cz:&Kopírovat výběr\tCtrl+C
-de:Auswahl &kopieren\tStrg+C
-dk:&Kopier markering\tCtrl+C
-el:Αντιγραφή επι&λεγμένων\tCtrl+C
-es:&Copiar selección\tCtrl+C
-et:&Kopeeri valik\tCtrl+C
-eu:&Kopiatu Hautapena\tKtrl+C
-fa:&رونوشت از قسمت انتخاب شده\tCtrl+C
-fi:Ko&pioi valinta\tCtrl+C
-fr:&Copier la sélection
-fy-nl:Kopiearje seleksje\tCtrl+C
-ga:&Macasamhlaigh an Roghnúchán\tCtrl+C
-gl:&Copiar selección\tCtrl+C
-he:העתק בחירה\tCtrl+C
-hi:च&यनित का नक़ल करें\tCtrl+C
-hr:Kopiraj odabir\tCtrl+C
-hu:Kijelölés másolása\tCtrl+C
-id:Salin Hasil Seleksi\tCtrl+C
-it:&Copia selezione\tCtrl+C
-ja:選択範囲のコピー(&C)\tCtrl+C
-ka:მონიშნულის &კოპირება\tCtrl+C
-kr:선택한 부분 복사(&C)\tCtrl+C
-ku:لەبەرگرتنەوەی دیاریکراو&\tCtrl+C
-kw:Dasskrifa Dewis\tCtrl+C
-lt:&Kopijuoti pažymėtą sritį\tCtrl+C
-lv:&Kopēt atlasi\tCtrl+C
-mk:Копирај селекција\tCtrl+C
-my:&Salin pilihan\tCtrl+C
-ne:चयनको प्रति&लिपि बनाउनुहोस्\tCtrl+C
-nl:Kopieer selectie\tCtrl+C
-nn:&Kopier utval\tCtrl+C
-no:Kopier merket tekst\tCtrl+C
-pa:&ਚੋਣ ਦੀ ਕਾਪੀ ਕਰੋ\tCtrl+C
-pl:Kopiuj &zaznaczenie\tCtrl+C
-pt:&Copiar seleção\tCtrl+C
-ro:&Copiere selecție\tCtrl+C
-ru:С&копировать выделенное\tCtrl+C
-si:තේරූ සියල්ල &පිටපත්කරන්න\tCtrl+C
-sk:&Kopírovať vybrané\tCtrl+C
-sl:Kopiraj izbor\tCtrl+C
-sp-rs:Kopiraj izabrano
-sq:&Kopjoj materialin\tCtrl+C
-sr-rs:Копирај изабрано
-sv:Kopiera markering\tCtrl+C
-ta:தேர்வை நகலெடு 
-th:&คัดลอกตำแหน่งที่เลือก Ctrl+C
-tl:&Kopyahin ang Napili\tCtrl+C
-tr:Seçimi &Kopyala\tCtrl+C
-tw:複製選取範圍(&C)\tCtrl+C
-uk:Скопіювати вибране\tCtrl+C
-uz:&Tanlanganni nusxa olish\tCtrl+C
-vn:&Chép phần đã chọn\tCtrl+C
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
 am:&Այլևս չհարցնել
@@ -1764,73 +1603,6 @@ tw:否(&N)
 uk:Ні
 uz:&Yo'q
 vn:Không
-:&No, thanks
-af:&Nee dankie
-am:&Ոչ
-ar:لا ، شكر&
-az:&Xeyr, təşəkkür!
-bg:&Не, благодаря
-bn:&না, ধন্যবাদ
-br:&Não, obrigado
-bs:&Ne, hvala
-by:Дзякуй, не
-ca-xv:&No, gràcies
-ca:&No, gràcies
-cn:不，谢谢(&N)
-co:&Innò, vi ringraziu
-cy:&Dim diolch
-cz:&Ne, děkuji
-de:&Nein danke
-dk:&Nej, tak
-el:&Όχι, ευχαριστώ
-es:&No, gracias
-et:&Tänan, ei
-eu:&Ez, eskerrik asko
-fa:&نه، متشکرم
-fi:&Ei kiitos
-fr:&Non, merci
-fy-nl:&Nee, tankewol
-ga:&Níl, go raibh maith agat
-gl:&Non, grazas
-he:לא, תודה
-hi:नहीं, धन्यवाद(&N)
-hr:&Ne, hvala
-hu:Köszönöm,&nem
-id:&Tidak, terima kasih
-it:&No, grazie
-ja:いいえ(&N)
-jv:&Ora, matur nuwun
-ka:&არა, გმადლობთ
-kr:아니오(&N)
-ku:نەخێر، سوپاس&
-kw:&Na, meur ras
-lt:Ačiū, &ne
-lv:&Nē, paldies
-mk:&Не, благодарам
-my:&Tidak, terima kasih
-ne:धन्यबाद, तर &पर्दैन
-nl:&Nee, bedankt
-nn:&Nei takk
-no:&Nei, takk
-pl:Nie, &dziękuję
-pt:&Não, obrigado(a)
-ro:&Nu, mulțumesc
-ru:&Нет, спасибо
-si:&එපා, ස්තූතියි
-sk:&Nie, ďakujem
-sl:&Ne, hvala
-sp-rs:Ne, hvala
-sq:&Jo, faleminderit
-sr-rs:Не, хвала
-sv:&Nej, tack
-ta:இல்லை, நன்றி
-th:&ไม่เป็นไรขอบคุณ
-tl:'Di bale na lang
-tr:&Hayır, teşekkürler
-tw:不用了，謝謝(&N)
-uk:Ні, дякую
-uz:&Yo'q, rahmat
-vn:Không, cảm ơn
 :&Odd pages only
 am:&Միայն կենտ էջերը
 ar:&الصفحات الفردية فقط
@@ -2355,71 +2127,6 @@ tw:上一頁(&P)\t左箭頭
 uk:Попередня сторінка\t<-
 uz:&Oldingi bet\t<-
 vn:Trang trước\tMũi tên trái
-:&Print...
-am:&Տպել...
-ar:&طباعة...
-az:&Çap et...
-bg:&Отпечатване...
-bn:&প্রিন্ট
-br:Im&primir...
-bs:Š&tampaj...
-by:Д&рукаваць...
-ca-xv:Im&primeix...
-ca:Im&primeix...
-cn:打印(&P)...
-co:&Stampà…
-cy:&Argraffu...
-cz:&Tisk...
-de:&Drucken…
-dk:&Udskriv ...
-el:&Εκτύπωση
-es:&Imprimir...
-et:&Prindi...
-eu:&Irarkitu...
-fa:&چاپ...
-fi:&Tulosta...
-fr:Im&primer...
-ga:&Clóbhuail...
-gl:&Imprimir...
-he:הדפס...
-hi:&छापें...
-hr:Is&pis...
-hu:&Nyomtatás
-id:&Cetak...
-it:&Stampa
-ja:印刷(&P)...
-jv:&Nyithak
-ka:&ამობეჭდვა...
-kr:인쇄(&P)...
-ku:چاپکردن...&
-kw:&Pryntya...
-lt:&Spausdinti...
-lv:&Drukāt...
-mk:&Печати...
-my:&Cetak...
-ne:&छाप्नुहोस् ...
-nl:Afdrukken...
-nn:&Skriv ut
-no:&Skriv ut...
-pl:&Drukuj...
-pt:&Imprimir...
-ro:&Tipărește...
-ru:Пе&чать...
-si:මුද්‍රණය...
-sk:&Tlač...
-sl:&Natisni …
-sp-rs:Štampaj...
-sq:&Printoj...
-sr-rs:Штампај...
-sv:&Skriv ut...
-ta:அச்சிடு...
-th:&พิมพ์...
-tl:I-&print
-tr:&Yazdır...
-tw:列印(&P)...
-uk:Друк...
-uz:&Chop etish...
-vn:In...
 :&Print... (denied)
 am:&Տպել... (մերժված)
 ar:&تم رفض الطباعة
@@ -2711,70 +2418,6 @@ ru:&Удалить из истории
 ta:வரலாற்றிலிருந்து நீக்கு 
 tr:Geçmişten &Kaldır
 tw:从历史记录删除
-:&Save As...
-am:&Պահել որպես
-ar:&حفظ باسم...
-az:&Fərqli adla yadda saxla...
-bg:За&пис като...
-br:&Salvar como...
-bs:&Spasi kao...
-by:&Захаваць як...
-ca-xv:Anomena i al&ça...
-ca:Anomena i de&sa...
-cn:另存为(&S)...
-co:Arregistrà cù u &nome…
-cy:&Cadw fel...
-cz:&Uložit jako...
-de:&Speichern unter…
-dk:&Gem som ...
-el:&Αποθήκευση ως...
-es:&Guardar como...
-et:Salvesta &kui...
-eu:&Gorde Honela...
-fa:&ذخیره کردن با نام...
-fi:Tallenna &nimellä...
-fr:&Enregistrer sous...
-ga:&Cuir i dtaisce mar...
-gl:&Gardar como...
-he:שמור בשם...
-hi:सहेजें &जैसे...
-hr:&Spremi kao...
-hu:&Mentés másként...
-id:Si&mpan Sebagai...
-it:&Salva come...
-ja:名前を付けて保存(&S)...
-jv:&Simpen Dadi...
-ka:შენახვა &როგორც...
-kr:다른 이름으로 저장(&S)...
-ku:پاراستن وەکو...&
-kw:&Gwitha Avel...
-lt:Į&rašyti kaip...
-lv:&Saglabāt kā...
-mk:&Зачувај како...
-my:&Simpan Sebagai...
-ne:ब&चत गर्नुहोस्...
-nl:Op&slaan als...
-nn:&Lagre som...
-no:&Lagre som...
-pl:Zapisz &jako...
-pt:&Gravar como...
-ro:&Salvează ca...
-ru:Сохранить &как...
-si:ලෙස &සුරකින්න
-sk:&Uložiť ako...
-sl:Shrani &kot …
-sp-rs:Sačuvaj kao...
-sq:&Ruaj si...
-sr-rs:Сачувај као...
-sv:&Spara som...
-ta:எனச் சேமி...
-th:&บันทึกเป็น...
-tl:I-&save bilang...
-tr:&Farklı Kaydet...
-tw:另存為(&S)...
-uk:Зберегти як...
-uz:&Quyidagicha saqlash...
-vn:Lưu thành...
 :&Save As...\tCtrl+S
 af:&Stoor As\tCtrl+S
 am:&Պահել որպես\tCtrl+S
@@ -3036,76 +2679,6 @@ tw:單頁模式(&S)\tCtrl+6
 uk:Одна сторінка\tCtrl+6
 uz:&Bitta betdan\tCtrl+6
 vn:Trang đơn\tCtrl+6
-:&Skip this version
-af:Slaan Dié Weergawe Oor.
-am:&Բաց թողնել այս տարբերակը
-ar:&تخطي هذا الإصدار
-az:Bu &versiyanı burax
-bg:&Пропусни тази версия
-bn:এই সংস্করণটি পরিহার করুন
-br:Ignorar esta versão
-bs:&Propusti ovu verziju.
-by:Прапусціць гэту версію.
-ca-xv:&Omet aquesta versió
-ca:&Omet aquesta versió
-cn:忽略此版本(&S)
-co:&Tralascià sta versione
-cy:&Hepgor y fersiwn yma.
-cz:&Přeskočit tuto verzi
-de:&Diese Version überspringen.
-dk:&Spring over denne version
-el:&Παράβλεψη αυτής της έκδοσης
-es:&Ignorar esta versión
-et:&Jäta see versioon vahele
-eu:&Ahaztu bertsio hau
-fa:از این نسخه &چشم‌پوشی کن
-fi:&Ohita tämä versio
-fr:&Ignorer cette version
-fy-nl:Dizze ferzje oerslaan
-ga:&Ná bac leis an leagan seo
-gl:Ignorar esta versión
-he:דלג על גרסה זו
-hi:इस संसकरण को छोडो
-hr:&Propusti ovu inačicu.
-hu:Verzió kihagyása
-id:&Lewatkan versi ini
-it:&Ignora questa versione
-ja:このバージョンをスキップする(&S)
-jv:&Lewati versi iki
-ka:ამ ვერსიის გამოტოვება
-kr:이 버전 건너뛰기(&S)
-ku:فەرامۆشکردنی ئەم وەشانە&
-kw:&Tremena an versyon ma
-lt:Pralei&sti šią versiją
-lv:&Izlaist šo versiju
-mk:&Прескокни ја оваа верзија
-mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
-my:&Langkau versi ini
-ne:यो संस्करणलाई & छोड्नुहोस्
-nl:Deze versie overslaan
-nn:Hopp over denne versjonen
-no:&Ignorer denne versjonen
-pa:ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
-pl:&Pomiń tę wersję
-pt:Ignorar &esta versão
-ro:&Sari peste această versiune
-ru:Пропустить эту версию
-si:මෙම වෙළුම &මගහරින්න
-sk:&Preskočiť túto verziu
-sl:&Preskoči to različico
-sn:Siyana neversion irori.
-sp-rs:Preskoči ovu verziju
-sq:&Shmang këtë versionin
-sr-rs:Прескочи ову верзију
-sv:Hoppa över denna version
-ta:இப்பதிப்பை தவிர்
-th:&ข้ามรุ่นนี้ไป
-tl:Laktawan ang bersyong ito
-tr:Bu s&ürümü atla
-tw:略過此版本(&S)
-uk:Пропустити цю версію.
-uz:&Ushbu versiyani o'tkazib yuborish
-vn:Bỏ qua phiên bản này.
 :&Stamp
 am:&Կնիք
 cn:&图章
@@ -3811,83 +3384,6 @@ tw:加到最愛
 uk:Додати закладку
 uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa thích
-:Add PDF as a child
-am:Ավելացնել PDF-ը որպես ենթատարր
-ar:أضف pdf كولد
-az:PDF-i törəmə element kimi əlavə et
-bn:PDFকে শাখায় যুক্ত করুন
-br:Adicionar PDF como um filho
-cn:将 PDF 添加为子项目
-co:Aghjunghje un PDF cum’è un zitellu
-cy:Ychwanegu PDF fel plentyn
-de:PDF als untergeordnetes Element hinzufügen
-dk:Tilføj PDF som underordnet
-el:Προσθήκη PDF ως παιδιού
-es:Añadir pdf como hijo
-ga:Cuir PDF leis mar leanbh
-gl:Engadir PDF como secundario
-hr:Dodaj PDF kao potomak
-it:Aggiungi PDF come figlio
-ka:დავამატოთ PDF შვილობილად
-kw:Keworra PDF avel flogh
-lt:Pridėti PDF kaip vaiką
-lv:Pievienot PDF kā bērnelementu
-nl:Voeg PDF als child toe
-pl:Dodaj PDF jako potomka
-ru:Добавить PDF как дочерний элемент
-tr:PDF'yi çocuk olarak ekle
-tw:将 PDF 添加为子项目
-:Add PDF as a sibling
-am:Ավելացնել PDF-ը որպես ժառանգ
-ar:أضف البي.دي.أف كأخ
-az:PDF-i eynisəviyyəli element kimi əlavə et
-br:Adicionar PDF como um irmão
-cn:将 PDF 添加为同级项目
-co:Aghjunghje un PDF cum’è un fratellu
-cy:Ychwanegu PDF fel chwaer
-de:PDF als gleichgeordnetes Element hinzufügen
-dk:Tilføj PDF som en forgænger
-el:Προσθήκη PDF ως αδελφού
-es:Añadir PDF como un hermano
-ga:Cuir PDF leis mar dheirfiúr
-gl:Engadir PDF como relacionado
-hr:Dodaj PDF kao srodnika
-it:Aggiungi PDF come fratello
-ka:PDF-ის მოძმედ დამატება
-kw:Keworra PDF avel hwor
-lt:Pridėti PDF kaip brolį
-lv:Pievienot PDF kā atvasi
-nl:Voeg PDF als verwant toe
-pl:Dodaj PDF jako rodzeństwo
-ru:Добавить PDF как одноуровневый элемент
-tr:PDF'yi kardeş olarak ekle
-tw:将 PDF 添加为同级项目
-:Add child
-am:Ավելացնել ենթատարր
-ar:أضف ولد
-az:Törəmə element əlavə et
-bn:শাখায় যুক্ত করুন
-br:Adicionar filho
-cn:添加子项目
-co:Aghjunghje un zitellu
-cy:Ychwanegu plentyn
-de:Untergeordnetes Element hinzufügen
-dk:Tilføj underordnet
-el:Προσθήκη παιδιού
-es:Añadir hijo
-ga:Cuir leanbh leis
-gl:Engadir secundario
-hr:Dodaj potomka
-it:Aggiungi figlio
-ka:შვილობილის დამატება
-kw:Keworra flogh
-lt:Pridėti vaiką
-lv:Pievienot bērnelementu
-nl:Child toevoegen
-pl:Dodaj potomka
-ru:Добавить дочерний элемент
-tr:Çocuk ekle
-tw:添加子项目
 :Add page %s to favorites
 am:Ավելացնել %s էջը ընտրյալներին
 ar:الى المفضلة %s اضافة صفحة
@@ -4058,31 +3554,6 @@ tr:%s. sayfayı sık kullanılanlara ekle\tCtrl+B
 tw:將第 %s 頁加到最愛\tCtrl+B
 uk:Додати %s сторінку до закладок\tCtrl+B
 vn:Thêm trang %s vào mục ưa thích\tCtrl+B
-:Add sibling
-am:Ավելացնել ժառանգ
-ar:أضف أخ
-az:Eynisəviyyəli element əlavə et
-br:Adicionar irmão
-cn:添加同级项目
-co:Aghjunghje un fratellu
-cy:Ychwanegu chwaer
-de:Gleichgeordnetes Element hinzufügen
-dk:Tilføj forgænger
-el:Προσθήκη αδελφού
-es:Añadir hermano
-ga:Cuir deirfiúr leis
-gl:Engadir relacionado
-hr:Dodaj srodnika
-it:Aggiungi fratello
-ka:მოძმე ელემენტის დამატება
-kw:Keworra hwor
-lt:Pridėti brolį
-lv:Pievienot atvasi
-nl:Voeg verwant toe
-pl:Dodaj rodzeństwo
-ru:Добавить одноуровневый элемент
-tr:Kardeş ekle
-tw:添加同级项目
 :Add to favorites
 am:Ավելացնել ընտրյալներին
 ar:اضافة للمفضلة
@@ -4450,37 +3921,6 @@ tw:應用程式:
 uk:Прикладна програма:
 uz:Dastur:
 vn:Ứng dụng:
-:Are you sure you want to uninstall %s?
-am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել %s-ը:
-ar:هل أنت متأكد من إزالة  %s?
-az:Əminsiniz ki, %s silmək istəyirsiniz?
-bn:%s মুছতে আপনি নিশ্চিত?
-br:Você deseja realmente desinstalar o %s?
-cn:您确定要卸载 %s 吗？
-co:Site sicuru di vulè disinstallà %s ?
-cy:Wyt ti'n bendant eisiau dadosod %s?
-de:Sind Sie sicher, dass Sie %s deinstallieren möchten?
-dk:Er du sikker på du vil afinstallere %s?
-el:Είστε βέβαιοι ότι θέλετε να απεγκαταστήσετε το %s;
-es:¿Estás seguro que quiere desinstalar %s?
-fr:Voulez-vous vraiment désinstaller %s ?
-ga:An bhfuil tú cinnte gur mian leat %s a dhíshuiteáil?
-gl:Estás seguro de desinstalar %s?
-hr:Jeste li sigurni da želite deinstalirati %s?
-id:Apakah kamu yakin ingin mencopot aplikasi %s?
-it:Sei sicuro di voler disinstallare %s?
-ka:დარწმუნებული ხართ, რომ გსურთ %s-ის წაშლა?
-kw:Os ta sur bos hwans dhis anlea %s?
-lt:Ar tikrai norite pašalinti %s?
-lv:Vai tiešām vēlaties atinstalēt %s?
-nl:Weet u zeker dat u %s wilt dé-installeren?
-pa:ਕੀ ਤੁਸੀਂ %s ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
-pl:Czy na pewno chcesz odinstalować %s?
-ru:Уверены, что хотите удалить %s?
-ta:%s நிறுவகற்றுவதில் தவறாது உள்ளீரா?
-tr:%s kaldırılsın istiyor musunuz?
-tw:確定要卸除 %s 嗎？
-vn:Bạn có chắc chắn muốn gỡ cài đặt %s?
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
@@ -4756,22 +4196,6 @@ tw:作者:
 uk:Автор:
 uz:Muallif:
 vn:Tác giả
-:Author: %s
-am:Հեղինակ՝ %s
-az:Müəllif: %s
-bn:গ্রন্থকার: %s
-cn:作者: %s
-de:Autor: %s
-el:Συγγραφέας: %s
-es:Autora: %s
-hr:Autor: %s
-it:Autore: %s
-kw:Skrifer: %s
-lt:Autorius: %s
-lv:Autors: %s
-nl:Auteur: %s
-pl:Autor: %s
-ru:Автор: %s
 :Automatic
 af:Outomaties
 am:Ինքնաշխատ
@@ -5188,20 +4612,6 @@ tw:書籤
 uk:Закладки
 uz:Xatcho'plar
 vn:Chỉ dấu sách
-:Border: %d
-am:Եզրագիծ. %d
-bn:সীমানা: %d
-cn:边框: %d
-de:Umrandung: %d
-el:Περιθώριο: %d
-es:Borde: %d
-hr:Rub: %d
-it:Bordo: %d
-kw:Amal: %d
-lt:Kraštas: %d
-lv:Apmale: %d
-nl:Rand %d
-pl:Obramowanie: %d
 :Bytes
 am:Բայթ
 ar:بايت
@@ -5882,40 +5292,6 @@ th:ยุบทั้งหมด
 tr:Tümünü Katla
 tw:全部摺疊
 uk:Згорнути всі
-:Color
-am:Գույն
-ar:لون
-az:Rəng
-bn:রং
-br:Cor
-cn:颜色
-co:Culore
-cy:Lliwio
-de:Farbe
-dk:Farve
-el:Χρώμα
-es:Color
-et:Värv
-fr:Couleur
-ga:Dath
-gl:Cor
-hr:Boja
-id:Warna
-it:Colore
-ka:ფერი
-kw:Liw
-lt:Spalva
-lv:Krāsa
-my:Warna
-nl:Kleur
-no:Farge
-pa:ਰੰਗ
-pl:Kolor
-ru:Цвет
-ta:நிறம்
-tr:Renk
-tw:颜色
-vn:Tô màu
 :Color:
 am:Գույն.
 az:Rəng:
@@ -6063,21 +5439,6 @@ tw:相容性
 uk:Сумісність
 uz:Mosligi
 vn:Tính tương thích
-:Contents:
-am:Բովանդակություններ.
-az:Məzmun:
-bn:বিষয়:
-cn:内容：
-de:Inhalte:
-el:Περιεχόμενα:
-es:Contenido:
-hr:Sadržaj:
-it:Contenuti:
-kw:Dalghow:
-lt:Turinys:
-lv:Saturs:
-nl:Inhoud
-pl:Zawartość:
 :Continuous
 af:Aanmekaar
 am:Անդադար
@@ -7364,20 +6725,6 @@ lt:Sukurti anotaciją iš pažymėtos vietos
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
-:Create Annotation Under Cursor
-am:Ստգեղծել ծանոթագրություն նշորդի ներքո
-bn:Cursor এর নিচে টীকা লিখুন
-cn:创建注释 (在光标下)
-de:Anmerkung unter dem Cursor erstellen
-el:Δημιουργία σχολιασμού κάτω από το δρομέα
-es:Crear Anotación Debajo del Cursor
-hr:Napravite bilješku pod pokazivačem
-it:Crea annotazione sotto al cursore
-kw:Gwruthyl Notenyans Yn-Dann Resor
-lt:Sukurti anotaciją žymeklio vietoje
-lv:Veidot anotāciju zem kursora
-nl:Maak Aantekening Onder Cursor
-pl:Utwórz adnotację pod kursorem
 :Created:
 af:Geskep
 am:Ստեղծված`
@@ -7757,22 +7104,6 @@ tr:Kapkaranlık
 tw:更暗
 uk:Темніша
 vn:Tối hơn
-:Date:
-am:Ամսաթիվ.
-az:Tarix:
-bn:তারিখ:
-cn:日期:
-de:Datum:
-el:Ημερομηνία:
-es:Fetcha:
-hr:Datum:
-it:Data:
-kw:Dedhyas:
-lt:Data:
-lv:Datums:
-nl:Datum:
-pl:Data:
-ru:Дата:
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -8032,20 +7363,6 @@ tw:權限不足:
 uk:У доступі відмовлено:
 uz:Taqiqlangan huquqlar:
 vn:Các quyền bị từ chối
-:Discard
-am:Մերժել
-bn:বাতিল করুন
-cn:不保存
-de:Verwerfen
-el:Απόρριψη
-es:Descartar
-hr:Odbaciti
-it:Scarica
-kw:Hepkor
-lt:Atmesti
-lv:Atmest
-nl:Verwijderen
-pl:Odrzuć
 :DjVu documents
 af:DjVu dokumente
 am:DjVu ֆայլեր
@@ -8177,73 +7494,6 @@ tw:文件特性
 uk:Властивості документа
 uz:Hujjat xossalari
 vn:Thuộc tính tập tin
-:Download
-am:Ներբեռնել
-ar:تحميل
-az:Bəli
-bg:Свали
-bn:ডাউনলোড
-br:Baixar
-bs:Preuzmi
-by:Загрузка
-ca-xv:Baixa
-ca:Baixa
-cn:下载
-co:Scaricà
-cy:Llwytho i Lawr
-cz:Stáhnout
-de:Herunterladen
-dk:Hent
-el:Λήψη
-es:Descargar
-et:Laadi alla
-eu:Jeitsi
-fa:دریافت
-fi:Lataa
-fr:Télécharger
-fy-nl:Ynlade
-ga:Íosluchtaigh
-gl:Descargar
-he:הורד
-hi:डाउनलोड
-hr:Preuzmi
-hu:Letöltés
-id:Unduh
-it:Scarica
-ja:ダウンロード
-jv:Ngunduh
-ka:ჩამოტვირთვა
-kr:예
-ku:داگرتن
-kw:Iskarga
-lt:Atsisiųsti
-lv:Lejupielādēt
-mk:Преземи
-my:Muat turun
-ne:डाउनलोड
-nl:Downloaden
-nn:Last ned
-no:Nedlasting
-pa:ਡਾਊਨਲੋਡ ਕਰੋ
-pl:Pobierz
-pt:Transferir
-ro:Descarcă
-ru:Загрузка
-si:භාගතකිරීම
-sk:Stiahnuť
-sl:Prenesi
-sp-rs:Preuzmi
-sq:Shkarkoj
-sr-rs:Преузми
-sv:&Hämta
-ta:பதிவிற்க்கம்
-th:ดาวน์โหลด
-tl:I-download
-tr:İndir
-tw:下載
-uk:Завантажити
-uz:Yuklab olish
-vn:Tải xuống
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
@@ -8411,37 +7661,6 @@ tw:EPUB 文件
 uk:Документи EPUB
 uz:EPUB kitoblari
 vn:Tập tin EPUB
-:Edit
-am:Խմբագրել
-ar:تعديل 
-az:Düzəliş et
-bn:সম্পাদনা
-br:Editar
-cn:编辑
-co:Mudificà
-cy:Golygu
-de:Bearbeiten
-dk:Rediger
-el:Επεξεργασία
-es:Editar
-fr:Éditer
-ga:Eagar
-gl:Editar
-hr:Uredi
-id:Edit
-it:Modifica
-ka:რედაქტირება
-kw:Golegi
-lt:Redaguoti
-lv:Rediģēt
-nl:Bewerken
-no:Rediger
-pa:ਸੋਧੋ
-pl:Edytuj
-ru:Изменить
-ta:தொகு 
-tr:Düzenle
-tw:編輯
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 ar:تعديل الشرح و التوضيح 
@@ -8470,36 +7689,6 @@ pl:Edytuj adnotacje
 ru:Изменить аннотации
 tr:Notları Düzenle
 tw:編輯評注
-:Edit Bookmarks
-am:Խմբագրել էջանիշերը
-ar:تعديل العلامات المرجعية
-az:Əlfəcinlərə düzəliş et
-bn:বুকমার্ক সম্পাদন করুন
-br:Editar Marcadores
-cn:编辑书签
-co:Mudificà l’indette
-cy:Golygu Nodau Tudalen
-de:Lesezeichen bearbeiten
-dk:Rediger bogmærker
-el:Επεξεργασία σελιδοδεικτών
-es:Eliminar marcadores
-fr:Éditer les marque-pages
-ga:Cuir leabharmharcanna in eagar
-gl:Editar marcadores
-hr:Uredi favorite
-id:Edit penanda buku
-it:Modifica Segnalibri
-ka:სანიშნის რედაქტირება
-kw:Golegi Folennotennow
-lt:Redaguoti žymes
-lv:Rediģēt grāmatzīmes
-nl:Bewerk Bladwijzers
-no:Rediger bokmerker
-pl:Edytuj zakładki
-ru:Изменить закладки
-tr:Yer İmlerini Düzenle
-tw:編輯書籤
-vn:Sửa Dấu trang
 :Enter password
 af:Tik Wagwoord In
 am:Գրեք գաղտնաբառը
@@ -8807,33 +7996,6 @@ th:ขยายทั้งหมด
 tr:Tümünü Yay
 tw:全部展開
 uk:Розгорнути всі
-:Export Bookmarks
-am:Արտահանել էջանիշերը
-ar:تصدير العلامات المرجعية
-az:Əlfəcinləri ixrac et
-br:Exportar Marcadores
-cn:导出书签
-co:Espurtà l’indette
-cy:Allforio Nodau Tudalen
-de:Lesezeichen exportieren
-dk:Eksporter bogmærker
-el:Εξαγωγή σελιδοδεικτών
-es:Exportar marcadores
-fr:Exporter les marque-pages
-ga:Tabhair amach na leabharmharcanna
-gl:Exportar marcadores
-hr:Izvezi favorite
-id:Ekspor penanda buku
-it:Esporta Segnalibri
-ka:სანიშნეების ექსპორტი
-kw:Esperthi Folennotennow
-lt:Eksportuoti žymes
-lv:Eksportēt grāmatzīmes
-nl:Exporteer Bladwijzers
-pl:Eksportuj zakładki
-ru:Экспорт закладок
-tr:Yer İmlerini Dışa Aktar
-tw:匯出書籤
 :F&avorites
 am:Ը&նտրյալներ
 ar:المفضلة
@@ -11435,20 +10597,6 @@ tw:提示: 按 F3 重新尋找。
 uk:Підказка: Для повторного пошуку натисніть F3
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
-:Icon:
-am:Պատկերակ.
-bn:আইকন
-cn:图标:
-de:Icon:
-el:Εικονίδιο:
-es:Icono:
-hr:Ikona:
-it:Icona:
-kw:Ikon:
-lt:Ikona:
-lv:Ikona:
-nl:Pictogram:
-pl:Ikona:
 :Image files (*.%s)
 am:Պատկերի ֆայլեր (*.%s)
 ar:ملفات الصور (*.%s)
@@ -11823,19 +10971,6 @@ tw:安裝正在進行...
 uk:Встановлення триває...
 uz:O'rnatilmoqda...
 vn:Đang cài đặt...
-:Interior Color:
-am:Ներքին գույնը.
-cn:填充颜色：
-de:Innenfarbe:
-el:Εσωτερικό Χρώμα:
-es:Color Interior
-hr:Unutarnja boja:
-it:Colore interno:
-kw:Liw A-Bervedh:
-lt:Vidaus spalva:
-lv:Iekšējā krāsa:
-nl:Interieur Kleur
-pl:Kolor wnętrza:
 :KB
 af:KB
 am:ԿԲ
@@ -12114,34 +11249,6 @@ ru:Линия
 ta:கோடு 
 tr:Çizgi
 tw:線條
-:Line End:
-am:Տողի ավարտը.
-bn:লাইন শেষ:
-cn:线段终点
-de:Zeilenende:
-el:Τέλος γραμμής:
-es:Fin de Línea:
-hr:Kraj linije:
-it:Fine linea:
-kw:Diwedh Linen:
-lt:Linijos pabaiga:
-nl:Lijn Eind
-pl:Koniec linii:
-ru:Конец линии:
-:Line Start:
-am:Տողի մեկնարկը.
-bn:লাইন শুরু:
-cn:线段起点
-de:Zeilenstart:
-el:Έναρξη γραμμής:
-es:Inicio de Línea:
-hr:Početak linije:
-it:Inizio linea:
-kw:Dalleth Linen:
-lt:Linijos pradžia:
-nl:Lijn Begin
-pl:Początek linii:
-ru:Начало линии:
 :MB
 af:MB
 am:ՄԲ
@@ -12652,105 +11759,6 @@ th:เปิด &หน้าต่างใหม่ Ctrl+N
 tr:Yeni &pencere\tCtrl+N
 tw:新增視窗(&W)\tCtrl+N
 vn:Mở cửa sổ mới\tCtrl+N
-:New Bookmarks
-am:Նոր էջանիշեր
-ar:إشارات مرجعية جديدة
-az:Yeni əlfəcinlər
-bn:নতুন বুকমার্ক
-br:Novos Marcadores
-cn:新建书签
-co:Nove indette
-cy:Nodau Tudalen Newydd
-de:Neue Lesezeichen
-dk:Nye bogmærker
-el:Νέοι σελιδοδείκτες
-es:Nuevo marcadores
-et:Uued Järjehoidjad
-fr:Nouveaux marque-pages
-ga:Leabharmharcanna nua
-gl:Novos marcadores
-hr:Novi favoriti
-id:Tambah penanda buku
-it:Nuovo Segnalibro
-ka:ახალი სანიშნე
-kw:Folennotennow Nowydh
-lt:Naujos žymės
-lv:Jaunas grāmatzīmes
-nl:Nieuwe Bladwijzers
-pl:Nowe zakładki
-ru:Новые закладки
-tr:Yeni Yer İmleri
-tw:新增書籤
-vn:Thêm Dấu trang mới
-:New version %s is available. Download new version?
-af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
-am:Հասանելի է նոր՝ %s տարբերակը։ Ներբեռնե՞լ նոր տարբերակը։
-ar:يوجد نسخة جديدة    %s . هل تريد تحميلها؟
-az:Yeni versiya %s mövcuddur. Endirilsin?
-bg:Достъпна е нова версия %s. Искате ли да я свалите?
-bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
-br:A versão %s está disponível. Baixar a nova versão?
-bs:Dostupna je nova verzija (%s). Preuzeti novu verziju?
-by:Даступная новая версія: %s. Загрузіць яе?
-ca-xv:És disponible la nova versió %s. Voleu baixar-la?
-ca:Es troba disponible una versió nova %s. Voleu baixar-la?
-cn:新版本 %s 已发布，是否下载？
-co:A nova versione %s hè dispunibule. Scaricalla ?
-cy:Mae fersiwn newydd o %s ar gael. Llwytho'r fersiwn newydd i lawr??
-cz:Nová verze %s je k dispozici. Stáhnout novou verzi?
-de:Neue Version %s ist verfügbar. Möchten Sie diese herunterladen?
-dk:Ny version %s er tilgængelig. Hent ny version?
-el:Η νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
-es:Está disponible la nueva versión %s. ¿Desea descargarla?
-et:Uus %s versioon on saadaval. Kas laadin alla uue versiooni?
-eu:%s bertsio berria eskuragarri dago. Jeitsi bertsio berria?
-fa:نسخه جدید %s موجود است. آن را دریافت می‌کنید؟
-fi:Uudempi versio %s saatavilla. Ladataanko uudempi versio?
-fr:La version %s est disponible. Télécharger la nouvelle version ?
-fy-nl:Nije ferzje %s is beskikber. Wolle jo dizze ynlade?
-ga:Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
-gl:A nova versión %s está dispoñible. ¿Desexa obtela?
-he:גרסה חדשה (%s) זמינה. ברצונך להורידה?
-hi:संसकरण %s उपलब्ध है । डाउनलोड करूँ ?
-hr:Dostupna je nova inačica (%s). Preuzeti novu inačicu?
-hu:Új verzió érhető el: (%s). Kívánja letölteni?
-id:Versi baru %s telah tersedia. Unduh versi baru ini?
-it:È disponibile la versione %s. Scaricare la nuova versione?
-ja:新しいバージョン %s が利用可能です。新しいバージョンをダウンロードしますか？
-jv:Ono versi anyar %s. Download versi anyar?
-ka:ხელმიწვდომია ახალი ვერსია %s. გსურთ მისი ჩამოტვირთვა?
-kr:새 버전 %s (이)가 사용 가능합니다.  다운로드할까요?
-ku:وەشانی نوێی %s ئامادەیە. داگرتنی وەشانی نوێ؟
-kw:Versyon nowyth %s yw parys. Iskarga versyon nowyth?
-lt:Yra nauja %s versija. Atsiųsti naują versiją?
-lv:Ir pieejama jauna versija %s. Vai lejupielādēt jauno versiju?
-mk:Нова верзија %s е достапна. Сакате да ја преземам?
-my:Versi terbaru %s tersedia. Muat turun versi terbaru?
-ne:नया संस्करण %s उपलब्ध छ | डाउनलोड गर्ने?
-nl:Nieuwe versie %s is beschikbaar. Wilt u deze downloaden?
-nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
-no:En ny versjon %s er tilgjenglig. Vil du laste den ned nå?
-pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋਡ ਕਰਾਂ ?
-pl:Nowa wersja %s jest dostępna. Pobrać nową wersję?
-pt:Está disponível a nova versão %s. Transferir?
-ro:O nouă versiune %s este disponibilă. Descărcați versiunea nouă?
-ru:Доступна новая версия: %s. Загрузить её?
-si:%s නව වෙලුමක්  ඇත. නව වෙළුම බාගතකරන්නද?
-sk:Nová verzia %s je k dispozícii. Stiahnuť novú verziu?
-sl:Na voljo je nova različica %s. Jo želite prenesti?
-sn:Version %s ririkuwanika. Unoda here version idzva?
-sp-rs:Dostupna je verzija %s. Želite li da preuzmete novu verziju?
-sq:Ka dalë versioni i ri %s. Do e shkarkoni?
-sr-rs:Доступна је верзија %s. Желите ли да преузмете нову верзију?
-sv:Ny version %s finns tillgänglig. Hämta ny version?
-ta:புதிய பதிப்பு %s பதிவிறக்க இருக்கிறது. பதிவிரக்கம் செய்யவா?
-th:รุ่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่?
-tl:May bagong bersyon: %s. I-download?
-tr:Yeni sürüm %s dağıtıma sunulmuştur. İndirmek ister misiniz?
-tw:有最新版本 %s 提供。是否下載新版本?
-uk:Нова версія %s є доступною. Завантажити нову версію?
-uz:Yangi versiya mavjud: %s. Yuklab olinsinmi?
-vn:Đã có phiên bản mới %s. Tải về phiên bản mới?
 :Next Page
 af:Volgende Bladsy
 am:Հաջորդ էջը
@@ -13218,34 +12226,6 @@ tw:確定(&O)
 uk:Гаразд
 uz:OK
 vn:Đồng ý
-:Opacity:
-am:Մգություն.
-bn:অস্বচ্ছতা:
-cn:透明度:
-de:Deckkraft:
-el:Διαφάνεια:
-es:Opacidad:
-hr:Neprozirnost:
-it:Opacità:
-kw:Disklerder:
-lt:Nepermatomumas:
-lv:Necaurspīdīgums:
-nl:Dekking
-pl:Nieprzezroczystość:
-:Opacity: %d
-am:Մգություն. %d
-bn:অস্বচ্ছতা: %d
-cn:透明度: %d
-de:Deckkraft: %d
-el:Διαφάνεια: %d
-es:Opacidad: %d
-hr:Neprozirnost: %d
-it:Opacità: %d
-kw:Disklerder: %d
-lt:Nepermatomumas: %d
-lv:Necaurspīdīgums: %d
-nl:Dekking: %d
-pl:Nieprzezroczystość: %d
 :Open
 af:Maak Oop
 am:Բացել
@@ -13793,69 +12773,6 @@ tw:開啟於 Microsoft XPS-Viewer(&W)
 uk:Відкрити у Microsoft XPS-Viewer
 uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
-:P&roperties
-am:Հ&ատկություններ
-ar:الخصائص
-az:&Xüsusiyyətlər
-bg:&Свойства
-br:P&ropriedades
-bs:&Postavke
-by:Уласцівасці
-ca-xv:P&ropietats
-ca:P&ropietats
-cn:属性(&R)
-co:&Pruprietà
-cy:&Priodweddau
-cz:&Vlastnosti
-de:Ei&genschaften
-dk:Egenskabe&r
-el:&Ιδιότητες
-es:P&ropiedades
-et:O&madused
-eu:Eza&ugarriak
-fa:م&شخصات
-fi:Ominaisuudet
-fr:P&ropriétés
-ga:Ai&ríonna
-gl:P&ropiedades
-he:מאפיינים
-hi:&गुण
-hr:&Svojstva
-hu:&Tulajdonságok
-id:P&roperti
-it:P&roprietà
-ja:プロパティ(&R)
-ka:&თვისებები...
-kr:속성(&R)
-ku:تایبە&تمەندییەکان
-kw:&Gnasow
-lt:&Savybės
-lv:&Rekvizīti
-mk:&Својства
-my:P&roperties
-ne:&गुणहरु
-nl:E&igenschappen
-nn:E&genskaper
-no:E&genskaper
-pl:&Właściwości
-pt:&Propriedades
-ro:P&roprietăți
-ru:Сво&йства...
-si:ග&තිගුණ
-sk:&Vlastnosti
-sl:Lastnosti
-sp-rs:Osobine
-sq:V&eti
-sr-rs:Особине
-sv:E&genskaper
-ta:பண்புகள்
-th:&คุณสมบัติ
-tl:Mga katangian
-tr:Ö&zellikler
-tw:特性(&R)...
-uk:Властивості
-uz:&Xossalari
-vn:Thuộc tính
 :P&roperties\tCtrl+D
 am:Հ&ատկություններ...\tCtrl+D
 ar:الخصائص...\tCtrl+D
@@ -14887,20 +13804,6 @@ ru:Многоугольник
 ta:பலகோணம் 
 tr:Çokgen
 tw:多邊形
-:Popup: %d 0 R
-am:Ելնող. %d 0 R
-cn:弹出：%d 0 R
-de:Pop-up: %d 0 R
-el:Αναδυόμενο παράθυρο: %d 0 R
-es:Ventana Emergente: %d 0 R
-hr:Skočna obavijest: %d 0 R
-it:Popup: %d 0 R
-kw:Tardhans: %d 0 R
-lt:Pranešimas: %d 0 R
-lv:Uznirstošs: %d 0 R
-nl:Popup: %d O R
-pl:Wyskakujące okienko: %d 0 R
-ru:Всплывающее окно: %d 0 R
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -15670,19 +14573,6 @@ tw:重新命名(&N)...\tF2
 uk:Перейменувати...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
-:Rect: x=%d y=%d dx=%d dy=%d
-am:Ուղղ. x=%d y=%d dx=%d dy=%d
-cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
-de:Rechteck: x=%d y=%d dx=%d dy=%d
-el:Τετρ: x=%d y=%d dx=%dy=%d
-es:Rectangulo: x=%d y=%d dx=%d dy=%d
-hr:Pravokutnik: x=%d y=%d dx=%d dy=%d
-it:Rettangolo: x=%d Y=%d dx=%d dy=%d
-kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
-lt:Stačiakampis: x=%d y=%d dx=%d dy=%d
-lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
-nl:Rect: x=%d y=%d dx=%d dy=%d
-pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 :Redact
 am:Փոփոխել
 ar:تنقيح
@@ -15774,34 +14664,6 @@ tw:記憶最近開啟的檔案(&O)
 uk:Запам'ятати відкриті файли
 uz:&Ochilgan fayllarni eslab qolish
 vn:Nhớ các tập tin đã mở
-:Remove Item
-am:Հեռացնել միույթը
-ar:إزالة عنصر
-az:Elementi sil
-br:Remover Item
-cn:移除项目
-co:Caccià l’elementu
-cy:Tynnu Eitem
-de:Element entfernen
-dk:Fjern element
-el:Αφαίρεση στοιχείου
-es:Eliminar ítem
-fr:Supprimer l'élément
-ga:Bain mír
-gl:Borrar elemento
-hr:Ukloni stavku
-id:Hapus Item
-it:Rimuovi Oggetto
-ka:ელემენტის წაშლა
-kw:Removya Tra
-lt:Pašalinti elementą
-lv:Noņemt vienumu
-nl:Verwijder Item
-pl:Usuń element
-ru:Удалить элемент
-ta:உருப்படியை நீக்கு 
-tr:Ögeyi Kaldır
-tw:移除項目
 :Remove from favorites
 af:Verwyder van gunstelinge
 am:Հեռացնել ընտրյալներից
@@ -16186,77 +15048,6 @@ th:บันทึกคำอธิบายประกอบ
 tr:Notları Kaydet
 tw:儲存評注
 uk:Зберегти аннотації
-:Save As
-af:Stoor As
-am:Պահել որպես
-ar:حفظ باسم
-az:Fərqli adla yadda saxla
-bg:Запис като
-bn:সংরক্ষণ এই রূপে
-br:Salvar como
-bs:Spasi kao
-by:Захаваць як
-ca-xv:Anomena i guarda
-ca:Anomena i desa
-cn:另存为
-co:Arregistrà cù u nome
-cy:Cadw fel
-cz:Uložit jako...
-de:Speichern unter…
-dk:Gem som
-el:Αποθήκευση ως
-es:Guardar como
-et:Salvesta kui...
-eu:Gorde Honela
-fa:ذخیره کردن با نام
-fi:Tallenna nimellä
-fr:Enregistrer sous
-fy-nl:Bewarje as
-ga:Cuir i dtaisce mar
-gl:Gardar como
-he:שמירה בשם
-hi:इस तरह संभालें
-hr:Spremi kao
-hu:Mentés másként
-id:Simpan Sebagai
-it:Salva come
-ja:名前を付けて保存
-jv:Simpen Dadi
-ka:შენახვა როგორც
-kr:다른 이름으로 저장
-ku:پاراستن وەکو
-kw:Gwitha avel
-lt:Įrašyti kaip
-lv:Saglabāt kā
-mk:Зачувај како
-ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക
-mm:ကဲ့သို့ သိမ်းပါ..
-my:Simpan sebagai
-ne:बचत गर्नुहोस्
-nl:Opslaan als
-nn:Lagre som
-no:Lagre som
-pa:ਇੰਝ ਸੰਬਾਲੋ
-pl:Zapisz jako
-pt:Gravar como
-ro:Salvează ca
-ru:Сохранить как
-si:ලෙස සුරකින්න
-sk:Uložiť ako
-sl:Shrani kot …
-sn:Sevha se
-sp-rs:Sačuvaj kao
-sq:Ruaj si
-sr-rs:Сачувај као
-sv:Spara som
-ta:எனச் சேமி
-th:บันทึกเป็น
-tl:I-save bilang
-tr:Farklı Kaydet
-tw:另存為
-uk:Зберегти як
-uz:Quyidagicha saqlash
-vn:Lưu thành
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
@@ -16376,33 +15167,6 @@ lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
-:Saved annotations to '%s'
-am:Պահված մեկնաբանություններ '%s'-ում
-cn:保存注释到 '%s'
-de:Gespeicherte Anmerkungen zu '%s'
-el: Αποθηκεύτηκαν σχόλια στο '%s'
-es:Anotaciones guardadas en '%s'
-hr:Bilješke spremljene u '%s'
-it:Annotazioni salvate in '%s'
-kw:Notenyansow gwithys dhe '%s'
-lt:Anotacijos išsaugotos į '%s'
-lv:Anotācijas ir saglabātas šeit: '%s'
-nl:Aantekeningen opgeslagen in '%s'
-pl:Zapisano adnotacje do '%s'
-ru:Аннотации сохранены в '%s'
-:Saving of '%s' failed with: '%s'
-am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
-cn:保存 '%s' 失败: '%s'
-de:Speichern von '%s' fehlgeschlagen mit: '%s'
-el:Η αποθήκευση του '%s' απέτυχε με: '%s'
-es:El proceso de guardado de '%s' fallo por: '%s'
-hr:Spremanje '%s' neuspjelo sa: '%s'
-it:Salvataggio di '%s' fallito con: '%s'
-kw:Gwitha '%s' re fyllis gans: '%s'
-lt:%s išsaugojimas nepavyko: '%s'
-lv:'%s' saglabāšana neizdevās ar: '%s'
-nl:Opslaan van '%s' mislukt met: '%s'
-pl:Zapisywanie '%s' nie powiodło się z: '%s'
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -16467,70 +15231,6 @@ tw:正在搜尋第 %d 頁 (共 %d 頁)
 uk:Пошук %d з %d...
 uz:%d %d dan qidirilmoqda...
 vn:Đang tìm %d trên %d
-:Select &All
-am:Նշել &բոլորը
-ar:حدد &الكل
-az:&Hamısını seç
-bg:Избери всичко
-bn:বাছাই করুন & সবগুলো
-br:Selecion&ar tudo
-bs:Označi &sve
-by:Выбраць &усё
-ca-xv:Selecciona-ho &tot
-ca:Selecciona-ho &tot
-cn:全选(&A)
-co:&Tuttu selezziunà
-cy:Dewis &Popeth
-cz:Vybrat &vše
-de:Alles &markieren\tStrg+A
-dk:Marker &alt
-el:Επιλογή ό&λων
-es:Seleccionar &todo
-et:V&ali kõik
-eu:Hautatu G&uztiak
-fa:انتخاب &همه
-fi:V&alitse kaikki
-fr:&Tout sélectionner
-ga:Roghnaigh Uile
-gl:Seleccion&ar todo
-he:בחר הכל
-hi:सब &चुनें
-hr:Obilježi &sve
-hu:&Összes kijelölése
-id:Pilih Semu&a
-it:Seleziona &tutto
-ja:すべて選択(&A)
-ka:ყ&ველას მონიშვნა
-kr:모두 선택(&A)
-ku:دیاریکردنی &هەمووی
-kw:Dewis &Oll
-lt:Pažymėti &viską
-lv:Atlasīt &visu
-mk:Избери сè
-my:Pilih &Semua
-ne:सबै &चयन गर्नुहोस्
-nl:&Alles selecteren
-nn:Vel &alle
-no:Merk &alt
-pl:Zaznacz &wszystko
-pt:&Selecionar tudo
-ro:Selecte&ază Tot
-ru:В&ыделить все
-si:සියල්ල &තෝරන්න
-sk:Vybrať &všetko
-sl:Izberi vse
-sp-rs:Izaberi sve
-sq:Seleksionoj të &gjithë
-sr-rs:Изабери све
-sv:Markera &allt
-ta:அனைத்தையும் தேர்வு செய்
-th:เลือก &ทั้งหมด
-tl:Piliin lahat
-tr:&Tümünü Seç
-tw:全選(&A)
-uk:Вибрати всі
-uz:&Hammasini tanlash
-vn:Chọn hết
 :Select &All\tCtrl+A
 am:Նշել &բոլորը\tCtrl+A
 ar:حدد&الكل\tCtrl+A
@@ -17588,37 +16288,6 @@ tw:抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯�
 uk:Вибачте, але це не мало статись!\n\nНатисніть "Скасувати", якщо ви бажаєте допомогти нам виправити причину збою.
 uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yordam bermoqchi bo'lsaniz 'Bekor qilish' tugmasini bosing.
 vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
-:Sort By
-am:Տեսակավորել ըստ՝
-ar:الترتيب بـ
-az:Sırala
-bn:খুজুন এভাবে
-br:Ordenar Por
-cn:排序
-co:Classificà da
-cy:Trefnu yn Ôl
-de:Sortieren nach
-dk:Sorter efter
-el:Ταξινόμηση κατά
-es:Ordenar por
-et:Järjesta
-fr:Classer
-ga:Sórtáil de réir
-gl:Ordenar por
-hr:Sortiraj po
-id:Urut berdasarkan
-it:Ordina Per
-ka:დალაგების ტიპი:
-kw:Digemyska Gans
-lt:Rūšiuoti pagal
-lv:Kārtot pēc
-nl:Sorteer Op
-pl:Sortuj według
-ru:Сортировать по
-ta:வகைப்படுத்தல் 
-tr:Şuna Göre Sırala
-tw:排序
-vn:Sắp xếp theo
 :Source file %s has no synchronization point
 am:%s ֆայլը չունի համաժամեցման կետ
 ar:الملف المصدر %s لم تتم مزامنته عند هذه النقطة
@@ -18500,58 +17169,6 @@ tw:無法開啟同步檔案
 uk:Неможливо відкрити файл синхронізації
 uz:Sinxronlanish faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
-:Tag (big first)
-am:Պիտակ (նախ մեծը)
-ar:علامة (الكبير أولا)
-az:Teq (əvvəl böyüklər)
-br:Tag (grande primeiro)
-cn:标签 (大的在前)
-co:Etichetta (prima maiò)
-cy:Tag (mawr cyntaf)
-de:Tag (große zuerst)
-dk:Etikettér (størst først)
-el:Ετικέτα (μεγάλη πρώτα)
-es:Etiqueta (grande primero)
-fr:Étiquette (grande en premier)
-ga:Clib (ceann mór ar dtús)
-gl:Etiqueta (grande primeiro)
-hr:Oznaka (prvo velika)
-it:Etichetta (grande prima)
-ka:ტეგირება (ჯერ დიდები)
-kw:Tagg (meur kynsa)
-lt:Žymėti (didelis pirma)
-lv:Atzīme (lielās vispirms)
-nl:Tag (eerst groot)
-pl:Tag (najpierw duży)
-ru:Разметка (сначала большие)
-tr:Etiket (önce büyük)
-tw:标签（大的在前）
-:Tag (small first)
-am:Պիտակ (նախ փոքրը)
-ar:علامة (الصغير أولا)
-az:Teq (əvvəl kiçiklər)
-br:Tag (pequena primeiro)
-cn:标签 (小的在前)
-co:Etichetta (prima chjuca)
-cy:Tag (bach cyntaf)
-de:Tag (kleine zuerst)
-dk:Etikettér (små først)
-el:Ετικέτα (μικρή πρώτα)
-es:Etiqueta (pequeña primero)
-fr:Étiquette (petite en premier)
-ga:Clib (ceann beag ar dtús)
-gl:Etiqueta (pequena primeiro)
-hr:Oznaka (prvo mala)
-it:Etichetta (piccola prima)
-ka:ტეგირება (ჯერ პატარები)
-kw:Tagg (byghan kynsa)
-lt:Žymėti (mažas pirma)
-lv:Atzīme (mazās vispirms)
-nl:Tag (eerst klein)
-pl:Tag (najpierw mały)
-ru:Разметка (сначала маленькие)
-tr:Etiket (önce küçük)
-tw:标签（小的在前）
 :Tagged PDF
 am:Կցված PDF
 ar:المستندات المحمولة موسومة
@@ -18615,70 +17232,6 @@ tw:已標示的 PDF
 uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
-:Text Alignment:
-am:Գրվածքի հավասարեցում
-cn:文本对齐:
-de:Textausrichtung:
-el:Ευθυγράμμιση κειμένου:
-es:Alineación de Texto:
-hr:Poravnavanje teksta:
-it:Allineamento testo:
-kw:Alinyans Tekst:
-lt:Teksto lygiavimas:
-lv:Teksta līdzinājums:
-nl:Tekst Uitlijning:
-pl:Wyrównanie tekstu:
-ru:Выравнивание текста:
-:Text Color:
-am:Գրվածքի գույն
-az:Mətnin rəngi:
-bn:লেখার রং:
-cn:文本颜色:
-de:Textfarbe:
-el:Text Color: 
-es:Color de Texto:
-hr:Boja teksta:
-it:Colore testo:
-kw:Liw Tekst:
-lt:Teksto spalva:
-lv:Teksta krāsa:
-my:Warna Teks:
-nl:Tekst Kleur
-pl:Kolor tekstu:
-ru:Цвет текста:
-:Text Size:
-am:Գրվածքի չափ.
-az:Mətnin ölçüsü:
-bn:লেখার আকার:
-cn:文本大小:
-de:Textgröße:
-el:Μέγεθος κειμένου: 
-es:Tamaño de Texto
-hr:Veličina teksta:
-it:Dimensione testo:
-kw:Braster Tekst:
-lt:Teksto dydis:
-lv:Teksta lielums:
-my:Saiz Teks:
-nl:Tekst Grootte:
-pl:Rozmiar tekstu:
-ru:Размер текста:
-:Text Size: %d
-am:Գրվածքի չափը՝ %d
-bn:লেখার আকার: %d
-cn:文本大小: %d
-de:Textgröße: %d
-el:Μέγεθος κειμένου: %d
-es:Tamaño de Texto: %d
-hr:Veličina teksta: %d
-it:Dimensione testo: %d
-kw:Braster Tekst: %d
-lt:Teksto dydis: %d
-lv:Teksta lielums: %d
-my:Saiz Teks: %d
-nl:Tekst Grootte: %d
-pl:Rozmiar tekstu: %d
-ru:Размер текста: %d
 :Text documents
 am:Գրվածքային փաստաթղթեր
 ar:مستندات نصية
@@ -18743,34 +17296,6 @@ tw:文字文件
 uk:Текстові документи
 uz:Matn hujjatlari
 vn:Tập tin văn bản
-:Thank you for choosing RA-MICRO PDF!
-am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու համար:
-ar:شكرا لاختيارك RA-MICRO PDF!
-az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
-br:Obrigado por escolher o RA-MICRO PDF!
-cn:感谢您选用 RA-MICRO PDF！
-co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
-cy:Diolch am ddewis RA-MICRO PDF!
-de:Vielen Dank, dass Sie RA-MICRO PDF gewählt haben!
-dk:Tak fordi du valgte RA-MICRO PDF!
-el:Ευχαριστουμε που επιλεξατε  το RA-MICRO PDF!
-es:¡Gracias por elegir RA-MICRO PDF!
-fr:Merci d'avoir choisi RA6MICRO PDF !
-ga:Go raibh maith agat as ucht RA-MICRO PDF a roghnú!
-gl:Grazas por escoller RA-MICRO PDF!
-hr:Zahvaljujemo na odabiru RA-MICRO PDF!
-id:Terima kasih sudah menggunakan RA-MICRO PDF!
-it:Grazie per aver scelto RA-MICRO PDF!
-ka:მადლობა რომ აირჩიეთ RA-MICRO PDF!
-kw:Meur ras a dhewis RA-MICRO PDF!
-lt:Ačiū, kad pasirinkote RA-MICRO PDF!
-lv:Paldies, ka izvēlējāties RA-MICRO PDF!
-nl:Dank u voor het kiezen van RA-MICRO PDF!
-pl:Dziękujemy za wybranie RA-MICRO PDF!
-ru:Спасибо, что выбрали RA-MICRO PDF!
-ta:ரா-மைக்ரோ பி.டி.எஃப் ஐ தேர்வு செய்தமைக்கு நன்றி! 
-tr:RA-MICRO PDF'yi seçtiğiniz için teşekkürler!
-tw:感謝您選用 RA-MICRO PDF！
 :Thank you for choosing SumatraPDF!
 am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
 ar:نشكركم لاختياركم مستندات Sumatra المحمولة  
@@ -19823,89 +18348,6 @@ lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
-:You have unsaved annotations. Save them?
-am:Դուք ունեք չպահված մեկնաբանություններ: Պահե՞լ դրանք:
-cn:存在未保存的注释，是否保存？
-de:Sie haben ungespeicherte Anmerkungen. Wollen Sie sie speichern?
-el:Έχετε μη αποθηκευμένους σχολιασμούς. Να γίνει αποθήκευση;
-es:Tienes anotaciones sin guardar. Quieres guardarlas? 
-hr:Imate nespremljene bilješke. Spremite ih?
-it:Hai delle annotazioni non salvate. Vuoi salvarle?
-kw:Yma notenyansow anwithys dhis. A vynnydh aga gwitha?
-lt:Turite neišsaugotų anotacijų. Išsaugoti?
-lv:Jums ir nesaglabātas anotācijas. Vai saglabāt tās?
-nl:U heeft niet-opgeslagen aantekeningen. Opslaan?
-pl:Masz niezapisane adnotacje. Zapisać je?
-ru:Аннотации не сохранены. Сохранить?
-:You have version %s
-af:Jy Het Weergawe %s
-am:Դուք օգտագործում եք %s տարբերակը
-ar:لديك النسخة %s
-az:Siz proqramın %s versiyasını istifadə edirsiniz.
-bg:Вашата версия е %s
-bn:আপনার সংস্করণটি হল %s
-br:Você tem a versão %s
-bs:Imate verziju %s
-by:Вы выкарыстоўваеце версію %s
-ca-xv:Teniu la versió %s
-ca:Teniu la versió %s
-cn:目前版本为 %s
-co:Avete a versione %s
-cy:Mae fersiwn %s gennych
-cz:Používáte verzi %s
-de:Sie haben Version %s.
-dk:Du har version %s
-el:Έχετε την έκδοση %s
-es:La versión actual es: %s
-et:Kasutusel on versioon %s
-eu:%s bertsioa duzu
-fa:شما نسخه‌ی %s را دارید
-fi:Sinulla on versio %s
-fr:Votre version est la %s
-fy-nl:Jo hawwe ferzje %s
-ga:Tá leagan %s agat
-gl:A versión actual é %s
-he:הגרסה שברשותך: %s.
-hi:आपके पास  %s संसकरण है
-hr:Imate inačicu %s
-hu:Jelenlegi verzió: %s
-id:Anda memiliki versi %s
-it:Versione attuale: %s
-ja:バージョン %s です
-ka:თქვენ იყენებთ %s ვერსიას
-kr:현재 버전은 %s 입니다.
-ku:تۆ وەشانی %s ت هەیە
-kw:Yma versyon %s genes
-lt:Jūsų naudojama laida: %s
-lv:Jums ir versija %s
-mk:Ја имате верзијата %s
-mm:သင့်အမျိုးအစားသည် %s
-my:Versi anda %s
-ne:तपाई संग %s संस्करण छ
-nl:U heeft versie %s
-nn:Du har versjon %s
-no:Du har versjon %s
-pa:ਤੁਹਾਡੇ ਕੋਲ ਸੰਸਕਰਨ %s ਹੈ
-pl:Masz wersję %s
-pt:Tem a versão %s
-ro:Aveți versiunea %s
-ru:Вы используете версию %s
-si:ඔබගේ වෙළුම %s
-sk:Používate verziu %s
-sl:Imate različico %s
-sn:Pane version %s
-sp-rs:Imate verziju %s
-sq:Keni versionin %s
-sr-rs:Имате верзију %s
-sv:Du har version %s
-ta:உங்களின் பதிப்பு %s
-th:คุณมีรุ่น %s
-tl:Ang bersyong nasa iyo ay %s
-tr:Kullandığınız sürüm: %s
-tw:你的版本為 %s
-uk:Ви використовуєте версію %s
-uz:Sizdagi versiya %s
-vn:Bạn đang dùng phiên bản %s
 :Zoom
 am:Դիտափոխել
 ar:تكبير/تصغير
