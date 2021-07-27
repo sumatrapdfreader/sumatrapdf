@@ -867,7 +867,7 @@ static PageDestination* newPageDestination(fz_link* link, fz_outline* outline) {
     if ((dest->pageNo <= 0) && (dest->kind != kindDestinationNone) && (dest->kind != kindDestinationLaunchFile) &&
         (dest->kind != kindDestinationLaunchURL) && (dest->kind != kindDestinationLaunchEmbedded)) {
         logf("dest->kind: %s, dest->pageNo: %d\n", dest->kind, dest->pageNo);
-        //ReportIf(dest->pageNo <= 0);
+        // ReportIf(dest->pageNo <= 0);
     }
     return dest;
 }

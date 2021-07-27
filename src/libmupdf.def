@@ -5,6 +5,7 @@ EXPORTS
 
 	version_check_3_4
 
+	pdf_drop_annot
 	fz_open_document_with_stream
 	fz_authenticate_password
 	fz_set_use_document_css

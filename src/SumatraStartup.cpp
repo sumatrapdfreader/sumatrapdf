@@ -1227,12 +1227,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         RegisterForPdfExtentions(win->hwndFrame);
     }
 
-    if (i.newEpub) {
-        NewEpub(i.newEpub);
-        fastExit = true;
-        goto Exit;
-    }
-
     if (i.stressTestPath) {
         // don't save file history and preference changes
         RestrictPolicies(Perm::SavePreferences);

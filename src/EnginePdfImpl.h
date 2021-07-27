@@ -49,17 +49,18 @@ class EnginePdf : public EngineBase {
 
     RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
 
-    fz_context* ctx = nullptr;
+    fz_context* ctx{nullptr};
     fz_locks_context fz_locks_ctx;
-    fz_document* _doc = nullptr;
-    fz_stream* _docStream = nullptr;
+    fz_document* _doc{nullptr};
+    pdf_document* pdfdoc{nullptr};
+    fz_stream* _docStream{nullptr};
     Vec<FzPageInfo> _pages;
-    fz_outline* outline = nullptr;
-    fz_outline* attachments = nullptr;
-    pdf_obj* _info = nullptr;
-    WStrVec* _pageLabels = nullptr;
+    fz_outline* outline{nullptr};
+    fz_outline* attachments{nullptr};
+    pdf_obj* _info{nullptr};
+    WStrVec* _pageLabels{nullptr};
 
-    TocTree* tocTree = nullptr;
+    TocTree* tocTree{nullptr};
 
     bool Load(const WCHAR* filePath, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);

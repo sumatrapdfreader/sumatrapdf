@@ -58,7 +58,6 @@ struct Flags {
     bool testExtractPage{false};
     int testPageNo{0};
     bool testApp{false};
-    WCHAR* newEpub{nullptr};
 
     bool crashOnOpen{false};
 

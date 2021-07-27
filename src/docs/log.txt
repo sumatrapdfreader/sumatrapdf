@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-27 Tue
+
+- update mupdf
+- make EnginePdf accept .epub et al, delete EngineMupdf
+
 2021-07-25 Sun
 
 - fix BitmapSizeFromData for jpeg2000 (for #2058)

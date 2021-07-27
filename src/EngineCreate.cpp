@@ -18,12 +18,9 @@
 #include "EnginePs.h"
 #include "EngineXps.h"
 #include "EngineMulti.h"
-#include "EngineMupdf.h"
 #include "EngineCreate.h"
 
-// still working on EngineMupdf, so this is an easy way
-// to enable / disable it
-static bool gEnableMupdfEngine = true;
+static bool gEnableEpubWithPdfEngine = true;
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     if (IsPdfEngineSupportedFileType(kind)) {
@@ -40,8 +37,6 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     } else if (IsCbxEngineSupportedFileType(kind)) {
         return true;
     } else if (IsPsEngineSupportedFileType(kind)) {
-        return true;
-    } else if (gEnableMupdfEngine && IsMupdfEngineSupportedFileType(kind)) {
         return true;
     }
 
@@ -73,13 +68,21 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
         engine = CreateEnginePdfFromFile(path, pwdUI);
-    } else if (IsXpsEngineSupportedFileType(kind)) {
+        return engine;
+    }
+    if (IsXpsEngineSupportedFileType(kind)) {
         engine = CreateXpsEngineFromFile(path);
-    } else if (IsDjVuEngineSupportedFileType(kind)) {
+        return engine;
+    }
+    if (IsDjVuEngineSupportedFileType(kind)) {
         engine = CreateDjVuEngineFromFile(path);
-    } else if (IsImageEngineSupportedFileType(kind)) {
+        return engine;
+    }
+    if (IsImageEngineSupportedFileType(kind)) {
         engine = CreateImageEngineFromFile(path);
-    } else if (kind == kindDirectory) {
+        return engine;
+    }
+    if (kind == kindDirectory) {
         if (IsXpsDirectory(path)) {
             engine = CreateXpsEngineFromFile(path);
         }
@@ -91,16 +94,30 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         if (!engine) {
             engine = CreateImageDirEngineFromFile(path);
         }
-    } else if (IsCbxEngineSupportedFileType(kind)) {
+        return engine;
+    }
+
+    if (IsCbxEngineSupportedFileType(kind)) {
         engine = CreateCbxEngineFromFile(path);
-    } else if (IsPsEngineSupportedFileType(kind)) {
+        return engine;
+    }
+    if (IsPsEngineSupportedFileType(kind)) {
         engine = CreatePsEngineFromFile(path);
-    } else if (enableChmEngine && (kind == kindFileChm)) {
+        return engine;
+    }
+    if (enableChmEngine && (kind == kindFileChm)) {
         engine = CreateChmEngineFromFile(path);
-    } else if (kind == kindFileTxt) {
+        return engine;
+    }
+    if (kind == kindFileTxt) {
         engine = CreateTxtEngineFromFile(path);
-    } else if (gEnableMupdfEngine && kind == kindFileEpub) {
-        engine = CreateEngineMupdfFromFile(path, pwdUI);
+        return engine;
+    }
+
+    if (gEnableEpubWithPdfEngine) {
+        if (kind == kindFileEpub || kind == kindFileFb2) {
+            engine = CreateEnginePdfFromFile(path, pwdUI);
+        }
     }
 
     if (!enableEngineEbooks) {
@@ -109,16 +126,25 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
 
     if (kind == kindFileEpub) {
         engine = CreateEpubEngineFromFile(path);
-    } else if (kind == kindFileFb2) {
-        engine = CreateFb2EngineFromFile(path);
-    } else if (kind == kindFileMobi) {
-        engine = CreateMobiEngineFromFile(path);
-    } else if (kind == kindFilePalmDoc) {
-        engine = CreatePdbEngineFromFile(path);
-    } else if (kind == kindFileHTML) {
-        engine = CreatePdbEngineFromFile(path);
+        return engine;
     }
-    return engine;
+    if (kind == kindFileFb2) {
+        engine = CreateFb2EngineFromFile(path);
+        return engine;
+    }
+    if (kind == kindFileMobi) {
+        engine = CreateMobiEngineFromFile(path);
+        return engine;
+    }
+    if (kind == kindFilePalmDoc) {
+        engine = CreatePdbEngineFromFile(path);
+        return engine;
+    }
+    if (kind == kindFileHTML) {
+        engine = CreatePdbEngineFromFile(path);
+        return engine;
+    }
+    return nullptr;
 }
 
 EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine, bool enableEngineEbooks) {
