@@ -1048,10 +1048,6 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
     }
     logf("Mismatch of the OS and executable arch\n");
 
-    const char* content =
-        "You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download "
-        "64-bit version?";
-
     constexpr int kBtnIdContinue = 100;
     constexpr int kBtnIdDownload = 101;
     TASKDIALOGCONFIG dialogConfig{};
@@ -1067,9 +1063,10 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = L"Installing 32-bit SumatraPDF on 64-bit OS";
+    dialogConfig.pszWindowTitle = _TR("Installing 32-bit SumatraPDF on 64-bit OS");
     // dialogConfig.pszMainInstruction = mainInstr;
-    dialogConfig.pszContent = ToWstrTemp(content);
+    dialogConfig.pszContent =
+        _TR("You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?");
     dialogConfig.nDefaultButton = kBtnIdContinue;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;

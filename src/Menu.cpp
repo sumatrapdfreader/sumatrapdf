@@ -1787,7 +1787,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     // delete buildCtx.annotationUnderCursor;
 
     /*
-        { _TR_TODON("Line"), CmdCreateAnnotLine, },
+        { _TR("Line"), CmdCreateAnnotLine, },
         { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, },
         { _TR_TODON("Underline"), CmdCreateAnnotUnderline, },
         { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, },
