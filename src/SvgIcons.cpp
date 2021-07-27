@@ -304,7 +304,7 @@ HBITMAP BuildIconsBitmap(int dx, int dy) {
     // ClearPixmap(pixmap);
 #if 1
 #if 0
-    RenderedBitmap* rbmp = new_rendered_fz_pixmap(muctx->ctx, pixmap);
+    RenderedBitmap* rbmp = NewRenderedFzPixmap(muctx->ctx, pixmap);
     HBITMAP bmp = rbmp->hbmp;
 #else
     HBITMAP bmp = CreateBitmapFromPixmap(pixmap);

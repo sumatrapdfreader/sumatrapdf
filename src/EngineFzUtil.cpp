@@ -40,11 +40,11 @@ fz_rect To_fz_rect(RectF rect) {
     return result;
 }
 
-bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
+bool IsPointInRect(fz_rect rect, fz_point pt) {
     return ToRectFl(rect).Contains(PointF(pt.x, pt.y));
 }
 
-float fz_calc_overlap(fz_rect r1, fz_rect r2) {
+float FzRectOverlap(fz_rect r1, fz_rect r2) {
     if (fz_is_empty_rect(r1)) {
         return 0.0f;
     }
@@ -52,7 +52,7 @@ float fz_calc_overlap(fz_rect r1, fz_rect r2) {
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
-WCHAR* pdf_to_wstr(fz_context* ctx, pdf_obj* obj) {
+WCHAR* PdfToWstr(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
     WCHAR* res = strconv::Utf8ToWstr(s);
     fz_free(ctx, s);
@@ -61,7 +61,7 @@ WCHAR* pdf_to_wstr(fz_context* ctx, pdf_obj* obj) {
 
 // some PDF documents contain control characters in outline titles or /Info properties
 // we replace them with spaces and cleanup for display with NormalizeWSInPlace()
-WCHAR* pdf_clean_string(WCHAR* s) {
+WCHAR* PdfCleanString(WCHAR* s) {
     if (!s) {
         return nullptr;
     }
@@ -77,7 +77,7 @@ WCHAR* pdf_clean_string(WCHAR* s) {
     return s;
 }
 
-fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation) {
+fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
     fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
     CrashIf(0 != mediabox.x0 || 0 != mediabox.y0);
@@ -139,7 +139,7 @@ extern "C" void drop_istream(fz_context* ctx, void* state_) {
     fz_free(ctx, state);
 }
 
-fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
+fz_stream* FzOpenIStream(fz_context* ctx, IStream* stream) {
     if (!stream) {
         return nullptr;
     }
@@ -159,7 +159,7 @@ fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
     return stm;
 }
 
-void* fz_memdup(fz_context* ctx, void* p, size_t size) {
+static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
     void* res = fz_malloc_no_throw(ctx, size);
     if (!res) {
         return nullptr;
@@ -168,7 +168,7 @@ void* fz_memdup(fz_context* ctx, void* p, size_t size) {
     return res;
 }
 
-fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
+fz_stream* FzOpenFile2(fz_context* ctx, const WCHAR* filePath) {
     fz_stream* stm = nullptr;
     auto path = ToUtf8Temp(filePath);
     i64 fileSize = file::GetSize(path.AsView());
@@ -187,7 +187,7 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
         // and free the data on the side or create Allocator that
         // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
         size_t size = dataTmp.size();
-        void* data = fz_memdup(ctx, (void*)dataTmp.data(), size);
+        void* data = FzMemdup(ctx, (void*)dataTmp.data(), size);
         if (!data) {
             return nullptr;
         }
@@ -216,7 +216,7 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     return stm;
 }
 
-std::span<u8> fz_extract_stream_data(fz_context* ctx, fz_stream* stream) {
+std::span<u8> FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
     fz_seek(ctx, stream, 0, 2);
     i64 fileLen = fz_tell(ctx, stream);
     fz_seek(ctx, stream, 0, 0);
@@ -236,7 +236,7 @@ std::span<u8> fz_extract_stream_data(fz_context* ctx, fz_stream* stream) {
     return {res, size};
 }
 
-void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) {
+void FzStreamFingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) {
     i64 fileLen = -1;
     fz_buffer* buf = nullptr;
 
@@ -264,7 +264,7 @@ void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) {
 }
 
 // try to produce an 8-bit palette for saving some memory
-static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
+static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
     int w = pixmap->w;
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
@@ -340,7 +340,7 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
 }
 
 // had to create a copy of fz_convert_pixmap to ensure we always get the alpha
-fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
+fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
                               fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
     fz_pixmap* cvt;
 
@@ -371,9 +371,9 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
     return cvt;
 }
 
-RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
+RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     if (pixmap->n == 4 && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
-        RenderedBitmap* res = try_render_as_palette_image(pixmap);
+        RenderedBitmap* res = TryRenderAsPaletteImage(pixmap);
         if (res) {
             return res;
         }
@@ -388,7 +388,7 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     fz_try(ctx) {
         fz_colorspace* csdest = fz_device_bgr(ctx);
         fz_color_params cp = fz_default_color_params;
-        bgrPixmap = fz_convert_pixmap2(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
+        bgrPixmap = FzConvertPixmap2(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
     }
     fz_catch(ctx) {
         return nullptr;
@@ -434,7 +434,7 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
-static inline int wchars_per_rune(int rune) {
+static inline int WcharsPerRune(int rune) {
     if (rune & 0x1F0000) {
         return 2;
     }
@@ -445,7 +445,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rec
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectFl(bbox).Round();
 
-    int n = wchars_per_rune(c->c);
+    int n = WcharsPerRune(c->c);
     if (n == 2) {
         WCHAR tmp[2];
         tmp[0] = 0xD800 | ((c->c - 0x10000) >> 10) & 0x3FF;
@@ -494,7 +494,7 @@ static void AddLineSep(str::WStr& s, Vec<Rect>& rects, const WCHAR* lineSep, siz
     }
 }
 
-WCHAR* fz_text_page_to_str(fz_stext_page* text, Rect** coordsOut) {
+WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut) {
     const WCHAR* lineSep = L"\n";
 
     size_t lineSepLen = str::Len(lineSep);
@@ -533,7 +533,7 @@ WCHAR* fz_text_page_to_str(fz_stext_page* text, Rect** coordsOut) {
 }
 
 // copy of fz_is_external_link without ctx
-int is_external_link(const char* uri) {
+int IsExternalLink(const char* uri) {
     while (*uri >= 'a' && *uri <= 'z') {
         ++uri;
     }
@@ -740,7 +740,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
     if (!uri) {
         return kindDestinationNone;
     }
-    if (!is_external_link(uri)) {
+    if (!IsExternalLink(uri)) {
         float x = 0, y = 0, zoom = 0;
         int pageNo = resolve_link(uri, &x, &y, &zoom);
         if (pageNo == -1) {
@@ -772,7 +772,7 @@ static WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
     if (!uri) {
         return nullptr;
     }
-    if (!is_external_link(uri)) {
+    if (!IsExternalLink(uri)) {
         // other values: #1,115,208
         return nullptr;
     }
@@ -785,7 +785,7 @@ static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
     if (!uri) {
         return nullptr;
     }
-    if (is_external_link(uri)) {
+    if (IsExternalLink(uri)) {
         return nullptr;
     }
     // TODO(port): test with more stuff
@@ -800,7 +800,7 @@ static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
     if (!uri) {
         return 0;
     }
-    if (is_external_link(uri)) {
+    if (IsExternalLink(uri)) {
         return 0;
     }
     float x, y;
@@ -828,7 +828,7 @@ static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
         return result;
     }
 
-    if (is_external_link(uri)) {
+    if (IsExternalLink(uri)) {
         return result;
     }
     float x = 0;
@@ -844,7 +844,7 @@ static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
     return result;
 }
 
-static PageDestination* newPageDestination(fz_link* link, fz_outline* outline) {
+static PageDestination* NewPageDestination(fz_link* link, fz_outline* outline) {
     auto dest = new PageDestination();
     dest->kind = CalcDestKind(link, outline);
     CrashIf(!dest->kind);
@@ -872,11 +872,11 @@ static PageDestination* newPageDestination(fz_link* link, fz_outline* outline) {
     return dest;
 }
 
-PageDestination* newFzDestination(fz_outline* outline) {
-    return newPageDestination(nullptr, outline);
+PageDestination* NewFzDestination(fz_outline* outline) {
+    return NewPageDestination(nullptr, outline);
 }
 
-static PageElement* newFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
+static PageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
     auto res = new PageElement();
     res->kind_ = kindPageElementDest;
     res->pageNo = srcPageNo;
@@ -885,14 +885,14 @@ static PageElement* newFzLink(int srcPageNo, fz_link* link, fz_outline* outline)
         res->rect = ToRectFl(link->rect);
     }
 
-    res->dest = newPageDestination(link, outline);
+    res->dest = NewPageDestination(link, outline);
     res->pageNo = res->dest->pageNo;
     res->value = str::Dup(res->dest->value);
 
     return res;
 }
 
-PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
+PageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
     auto res = new PageElement();
     res->kind_ = kindPageElementImage;
     res->pageNo = pageNo;
@@ -901,7 +901,7 @@ PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
     return res;
 }
 
-TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest) {
+TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest) {
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     return res;
@@ -915,29 +915,29 @@ IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     fz_link* link = pageInfo->links;
     fz_point p = {(float)pt.x, (float)pt.y};
     while (link) {
-        if (fz_is_pt_in_rect(link->rect, p)) {
-            return newFzLink(pageNo, link, nullptr);
+        if (IsPointInRect(link->rect, p)) {
+            return NewFzLink(pageNo, link, nullptr);
         }
         link = link->next;
     }
 
     for (auto* pel : pageInfo->autoLinks) {
         if (pel->GetRect().Contains(pt)) {
-            return clonePageElement(pel);
+            return ClonePageElement(pel);
         }
     }
 
     for (auto* pel : pageInfo->comments) {
         if (pel->GetRect().Contains(pt)) {
-            return clonePageElement(pel);
+            return ClonePageElement(pel);
         }
     }
 
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
-        if (fz_is_pt_in_rect(ir, p)) {
-            return newFzImage(pageNo, ir, imageIdx);
+        if (IsPointInRect(ir, p)) {
+            return NewFzImage(pageNo, ir, imageIdx);
         }
         imageIdx++;
     }
@@ -958,25 +958,25 @@ void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
-        auto image = newFzImage(pageNo, ir, imageIdx);
+        auto image = NewFzImage(pageNo, ir, imageIdx);
         els->Append(image);
         imageIdx++;
     }
 
     fz_link* link = pageInfo->links;
     while (link) {
-        auto el = newFzLink(pageNo, link, nullptr);
+        auto el = NewFzLink(pageNo, link, nullptr);
         els->Append(el);
         link = link->next;
     }
 
     for (auto&& pel : pageInfo->autoLinks) {
-        auto el = clonePageElement(pel);
+        auto el = ClonePageElement(pel);
         els->Append(el);
     }
 
     for (auto* comment : pageInfo->comments) {
-        auto el = clonePageElement(comment);
+        auto el = ClonePageElement(comment);
         els->Append(el);
     }
 
@@ -989,7 +989,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     }
 
     Rect* coords;
-    WCHAR* pageText = fz_text_page_to_str(stext, &coords);
+    WCHAR* pageText = FzTextPageToStr(stext, &coords);
     if (!pageText) {
         return;
     }
@@ -1003,7 +1003,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         bool overlaps = false;
         fz_link* link = pageInfo->links;
         while (link && !overlaps) {
-            overlaps = fz_calc_overlap(bbox, link->rect) >= 0.25f;
+            overlaps = FzRectOverlap(bbox, link->rect) >= 0.25f;
             link = link->next;
         }
         if (overlaps) {
@@ -1030,7 +1030,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     free(coords);
 }
 
-void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext) {
+void FzFindImagePositions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext) {
     if (!stext) {
         return;
     }
@@ -1053,7 +1053,7 @@ void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stex
     }
 }
 
-fz_image* fz_find_image_at_idx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
+fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
     fz_stext_options opts{};
     opts.flags = FZ_STEXT_PRESERVE_IMAGES;
     fz_stext_page* stext = nullptr;

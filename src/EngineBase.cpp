@@ -171,7 +171,7 @@ IPageElement* PageElement::Clone() {
     return res;
 }
 
-IPageElement* clonePageElement(IPageElement* el) {
+IPageElement* ClonePageElement(IPageElement* el) {
     if (!el) {
         return nullptr;
     }

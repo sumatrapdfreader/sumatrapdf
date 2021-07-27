@@ -158,7 +158,7 @@ struct PageElement : IPageElement {
     IPageElement* Clone() override;
 };
 
-IPageElement* clonePageElement(IPageElement*);
+IPageElement* ClonePageElement(IPageElement*);
 
 // those are the same as F font bitmask in PDF docs
 // for TocItem::fontFlags

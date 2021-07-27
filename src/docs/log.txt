@@ -4,6 +4,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - update mupdf
 - make EnginePdf accept .epub et al, delete EngineMupdf
+- naming cleanups in EnginePdf
 
 2021-07-25 Sun
 

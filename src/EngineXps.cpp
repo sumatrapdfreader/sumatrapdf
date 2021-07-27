@@ -254,11 +254,11 @@ class EngineXps : public EngineBase {
     int GetPageNo(fz_page* page);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRect = To_fz_rect(PageMediabox(pageNo));
-        return fz_create_view_ctm(tmpRect, zoom, rotation);
+        return FzCreateViewCtm(tmpRect, zoom, rotation);
     }
     fz_matrix viewctm(fz_page* page, float zoom, int rotation) const {
         fz_rect r = fz_bound_page(ctx, page);
-        return fz_create_view_ctm(r, zoom, rotation);
+        return FzCreateViewCtm(r, zoom, rotation);
     }
 
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter);
@@ -379,7 +379,7 @@ bool EngineXps::Load(const WCHAR* fileName) {
 
     fz_stream* stm = nullptr;
     fz_try(ctx) {
-        stm = fz_open_file2(ctx, fileName);
+        stm = FzOpenFile2(ctx, fileName);
     }
     fz_catch(ctx) {
         return false;
@@ -395,7 +395,7 @@ bool EngineXps::Load(IStream* stream) {
 
     fz_stream* stm = nullptr;
     fz_try(ctx) {
-        stm = fz_open_istream(ctx, stream);
+        stm = FzOpenIStream(ctx, stream);
     }
     fz_catch(ctx) {
         return false;
@@ -541,7 +541,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
         return pageInfo;
     }
     FzLinkifyPageText(pageInfo, stext);
-    fz_find_image_positions(ctx, pageInfo->images, stext);
+    FzFindImagePositions(ctx, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
 
     return pageInfo;
@@ -662,7 +662,7 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
         fz_run_page(ctx, page, dev, ctm, fzcookie);
-        bitmap = new_rendered_fz_pixmap(ctx, pix);
+        bitmap = NewRenderedFzPixmap(ctx, pix);
         fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
@@ -684,7 +684,7 @@ std::span<u8> EngineXps::GetFileData() {
 
     fz_var(res);
     fz_try(ctx) {
-        res = fz_extract_stream_data(ctx, _docStream);
+        res = FzExtractStreamData(ctx, _docStream);
     }
     fz_catch(ctx) {
         res = {};
@@ -841,7 +841,7 @@ PageText EngineXps::ExtractPageText(int pageNo) {
         return {};
     }
     PageText res;
-    res.text = fz_text_page_to_str(stext, &res.coords);
+    res.text = FzTextPageToStr(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
     res.len = (int)str::Len(res.text);
     return res;
@@ -861,7 +861,7 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     }
 
     ScopedCritSec scope(ctxAccess);
-    fz_image* image = fz_find_image_at_idx(ctx, pageInfo, imageIdx);
+    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx);
     CrashIf(!image);
     if (!image) {
         return nullptr;
@@ -875,7 +875,7 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     fz_catch(ctx) {
         return nullptr;
     }
-    RenderedBitmap* bmp = new_rendered_fz_pixmap(ctx, pixmap);
+    RenderedBitmap* bmp = NewRenderedFzPixmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
 
     return bmp;
@@ -905,15 +905,15 @@ TocItem* EngineXps::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
         WCHAR* name = nullptr;
         if (outline->title) {
             name = strconv::Utf8ToWstr(outline->title);
-            name = pdf_clean_string(name);
+            name = PdfCleanString(name);
         }
         if (!name) {
             name = str::Dup(L"");
         }
         int pageNo = outline->page + 1;
-        auto dest = newFzDestination(outline);
+        auto dest = NewFzDestination(outline);
 
-        TocItem* item = newTocItemWithDestination(parent, name, dest);
+        TocItem* item = NewTocItemWithDestination(parent, name, dest);
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
@@ -967,7 +967,7 @@ bool EngineXps::HasClipOptimizations(int pageNo) {
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
-        if (fz_calc_overlap(mbox, ir) >= 0.9f) {
+        if (FzRectOverlap(mbox, ir) >= 0.9f) {
             return false;
         }
     }

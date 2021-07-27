@@ -80,7 +80,7 @@ static fz_link* FixupPageLinks(fz_link* root) {
     return new_root;
 }
 
-pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
+pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
         pdf_obj* val = pdf_dict_get_val(ctx, copy, i);
@@ -96,7 +96,7 @@ pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     return copy;
 }
 
-static int pdf_stream_no(fz_context* ctx, pdf_obj* ref) {
+static int PdfStreamNo(fz_context* ctx, pdf_obj* ref) {
     pdf_document* doc = pdf_get_indirect_document(ctx, ref);
     if (doc) {
         return pdf_to_num(ctx, ref);
@@ -105,7 +105,7 @@ static int pdf_stream_no(fz_context* ctx, pdf_obj* ref) {
 }
 
 // Note: make sure to only call with ctxAccess
-static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
+static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc) {
     pdf_obj* dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
     if (!dict) {
         return nullptr;
@@ -121,7 +121,7 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
             continue;
         }
         pdf_obj* fs = pdf_embedded_file_stream(ctx, dest);
-        int streamNo = pdf_stream_no(ctx, fs);
+        int streamNo = PdfStreamNo(ctx, fs);
         const char* nameStr = pdf_embedded_file_name(ctx, dest);
         if (str::IsEmpty(nameStr)) {
             continue;
@@ -241,7 +241,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         if (i < n - 1 && data.at(i + 1).startAt <= pageCount) {
             secLen = data.at(i + 1).startAt - pli.startAt;
         }
-        AutoFreeWstr prefix(pdf_to_wstr(ctx, data.at(i).prefix));
+        AutoFreeWstr prefix(PdfToWstr(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
             int idx = pli.startAt + j - 1;
             free(labels->at(idx));
@@ -279,6 +279,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     return labels;
 }
 
+#if 0
 void fz_find_images(fz_stext_page* text, Vec<FitzImagePos>& images) {
     if (!text) {
         return;
@@ -301,6 +302,7 @@ void fz_find_images(fz_stext_page* text, Vec<FitzImagePos>& images) {
         block = block->next;
     }
 }
+#endif
 
 struct PageTreeStackItem {
     pdf_obj* kids = nullptr;
@@ -345,7 +347,7 @@ static void fz_print_cb(void* user, const char* msg) {
     }
 }
 
-static void installFitzErrorCallbacks(fz_context* ctx) {
+static void InstallFitzErrorCallbacks(fz_context* ctx) {
     fz_set_warning_callback(ctx, fz_print_cb, nullptr);
     fz_set_error_callback(ctx, fz_print_cb, nullptr);
 }
@@ -365,7 +367,7 @@ EnginePdf::EnginePdf() {
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
-    installFitzErrorCallbacks(ctx);
+    InstallFitzErrorCallbacks(ctx);
 
     pdf_install_load_system_font_funcs(ctx);
     fz_register_document_handlers(ctx);
@@ -502,7 +504,7 @@ std::span<u8> EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     }
     fz_stream* file = nullptr;
     fz_try(ctx) {
-        file = fz_open_file2(ctx, fnCopy);
+        file = FzOpenFile2(ctx, fnCopy);
     }
     fz_catch(ctx) {
         file = nullptr;
@@ -549,7 +551,7 @@ bool EnginePdf::Load(const WCHAR* filePath, PasswordUI* pwdUI) {
 
     fz_stream* file = nullptr;
     fz_try(ctx) {
-        file = fz_open_file2(ctx, fnCopy);
+        file = FzOpenFile2(ctx, fnCopy);
     }
     fz_catch(ctx) {
         file = nullptr;
@@ -601,7 +603,7 @@ bool EnginePdf::Load(IStream* stream, PasswordUI* pwdUI) {
 
     fz_stream* stm = nullptr;
     fz_try(ctx) {
-        stm = fz_open_istream(ctx, stream);
+        stm = FzOpenIStream(ctx, stream);
     }
     fz_catch(ctx) {
         return false;
@@ -646,7 +648,7 @@ bool EnginePdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     // TODO: make this work for non-PDF formats?
     u8 digest[16 + 32] = {0};
     if (pdfdoc) {
-        fz_stream_fingerprint(ctx, pdfdoc->file, digest);
+        FzStreamFingerprint(ctx, pdfdoc->file, digest);
     }
 
     bool ok = false;
@@ -893,7 +895,7 @@ bool EnginePdf::FinishLoading() {
     }
 
     fz_try(ctx) {
-        attachments = pdf_load_attachments(ctx, pdfdoc);
+        attachments = PdfLoadAttachments(ctx, pdfdoc);
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load attachments");
@@ -907,7 +909,7 @@ bool EnginePdf::FinishLoading() {
         orig_info = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Info");
 
         if (orig_info) {
-            _info = pdf_copy_str_dict(ctx, pdfdoc, orig_info);
+            _info = PdfCopyStrDict(ctx, pdfdoc, orig_info);
         }
         if (!_info) {
             _info = pdf_new_dict(ctx, pdfdoc, 4);
@@ -967,7 +969,7 @@ bool EnginePdf::FinishLoading() {
     return true;
 }
 
-PageDestination* destFromAttachment(EnginePdf* engine, fz_outline* outline) {
+static PageDestination* DestFromAttachment(EnginePdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
     // WCHAR* path = strconv::Utf8ToWstr(outline->uri);
@@ -985,7 +987,7 @@ TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
         WCHAR* name = nullptr;
         if (outline->title) {
             name = strconv::Utf8ToWstr(outline->title);
-            name = pdf_clean_string(name);
+            name = PdfCleanString(name);
         }
         if (!name) {
             name = str::Dup(L"");
@@ -996,13 +998,13 @@ TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
         Kind kindRaw = nullptr;
         if (isAttachment) {
             kindRaw = kindTocFzOutlineAttachment;
-            dest = destFromAttachment(this, outline);
+            dest = DestFromAttachment(this, outline);
         } else {
             kindRaw = kindTocFzOutline;
-            dest = newFzDestination(outline);
+            dest = NewFzDestination(outline);
         }
 
-        TocItem* item = newTocItemWithDestination(parent, name, dest);
+        TocItem* item = NewTocItemWithDestination(parent, name, dest);
         item->kindRaw = kindRaw;
         item->rawVal1 = str::Dup(outline->title);
         item->rawVal2 = str::Dup(outline->uri);
@@ -1137,7 +1139,7 @@ FzPageInfo* EnginePdf::GetFzPageInfoFast(int pageNo) {
     return pageInfo;
 }
 
-static PageElement* newFzComment(const WCHAR* comment, int pageNo, RectF rect) {
+static PageElement* NewFzComment(const WCHAR* comment, int pageNo, RectF rect) {
     auto res = new PageElement();
     res->kind_ = kindPageElementComment;
     res->pageNo = pageNo;
@@ -1146,7 +1148,7 @@ static PageElement* newFzComment(const WCHAR* comment, int pageNo, RectF rect) {
     return res;
 }
 
-static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
+static PageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_annot_rect(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
     const char* contents = pdf_annot_contents(ctx, annot);
@@ -1158,7 +1160,7 @@ static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_
     }
     auto ws = ToWstrTemp(s);
     RectF rd = ToRectFl(rect);
-    return newFzComment(ws, pageNo, rd);
+    return NewFzComment(ws, pageNo, rd);
 }
 
 static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
@@ -1209,14 +1211,14 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
         }
 
         if (!isContentsEmpty && tp != PDF_ANNOT_FREE_TEXT) {
-            auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+            auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
             comments.Append(comment);
             continue;
         }
 
         if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
             if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
-                auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+                auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
                 comments.Append(comment);
             }
         }
@@ -1288,7 +1290,7 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     }
 
     FzLinkifyPageText(pageInfo, stext);
-    fz_find_image_positions(ctx, pageInfo->images, stext);
+    FzFindImagePositions(ctx, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
     return pageInfo;
 }
@@ -1434,7 +1436,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
             // or "Print". "Export" is not used
             dev = fz_new_draw_device(ctx, ctm, pix);
             pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usage, fzcookie);
-            bitmap = new_rendered_fz_pixmap(ctx, pix);
+            bitmap = NewRenderedFzPixmap(ctx, pix);
             fz_close_device(ctx, dev);
         }
         fz_always(ctx) {
@@ -1456,7 +1458,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
             fz_run_page_contents(ctx, page, dev, fz_identity, NULL);
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
-            bitmap = new_rendered_fz_pixmap(ctx, pix);
+            bitmap = NewRenderedFzPixmap(ctx, pix);
         }
         fz_always(ctx) {
             fz_drop_pixmap(ctx, pix);
@@ -1504,11 +1506,11 @@ bool EnginePdf::BenchLoadPage(int pageNo) {
 
 fz_matrix EnginePdf::viewctm(int pageNo, float zoom, int rotation) {
     const fz_rect tmpRc = To_fz_rect(PageMediabox(pageNo));
-    return fz_create_view_ctm(tmpRc, zoom, rotation);
+    return FzCreateViewCtm(tmpRc, zoom, rotation);
 }
 
 fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) const {
-    return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
+    return FzCreateViewCtm(fz_bound_page(ctx, page), zoom, rotation);
 }
 
 RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
@@ -1528,7 +1530,7 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
 
     ScopedCritSec scope(ctxAccess);
 
-    fz_image* image = fz_find_image_at_idx(ctx, pageInfo, imageIdx);
+    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx);
     CrashIf(!image);
     if (!image) {
         return nullptr;
@@ -1542,7 +1544,7 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     fz_try(ctx) {
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
-        bmp = new_rendered_fz_pixmap(ctx, pixmap);
+        bmp = NewRenderedFzPixmap(ctx, pixmap);
     }
     fz_always(ctx) {
         fz_drop_pixmap(ctx, pixmap);
@@ -1575,7 +1577,7 @@ PageText EnginePdf::ExtractPageText(int pageNo) {
     }
     PageText res;
     // TODO: convert to return PageText
-    WCHAR* text = fz_text_page_to_str(stext, &res.coords);
+    WCHAR* text = FzTextPageToStr(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
     res.text = text;
     res.len = (int)str::Len(text);
@@ -1813,8 +1815,8 @@ WCHAR* EnginePdf::GetProperty(DocumentProperty prop) {
             if (!obj) {
                 return nullptr;
             }
-            WCHAR* s = pdf_to_wstr(ctx, obj);
-            return pdf_clean_string(s);
+            WCHAR* s = PdfToWstr(ctx, obj);
+            return PdfCleanString(s);
         }
     }
     return nullptr;
@@ -1830,7 +1832,7 @@ std::span<u8> EnginePdf::GetFileData() {
 
     fz_var(res);
     fz_try(ctx) {
-        res = fz_extract_stream_data(ctx, pdfdoc->file);
+        res = FzExtractStreamData(ctx, pdfdoc->file);
     }
     fz_catch(ctx) {
         res = {};
@@ -1967,7 +1969,7 @@ bool EnginePdf::HasClipOptimizations(int pageNo) {
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
-        if (fz_calc_overlap(mbox, ir) >= 0.9f) {
+        if (FzRectOverlap(mbox, ir) >= 0.9f) {
             return false;
         }
     }
