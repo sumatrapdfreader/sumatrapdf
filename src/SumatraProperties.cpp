@@ -488,7 +488,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, __unused bo
 
     DisplayModel* dm = ctrl->AsFixed();
     str = ctrl->GetProperty(DocumentProperty::CreationDate);
-    if (str && dm && kindEnginePdf == dm->engineType) {
+    if (str && dm && kindEngineMupdf == dm->engineType) {
         ConvDateToDisplay(&str, PdfDateParse);
     } else {
         ConvDateToDisplay(&str, IsoDateParse);
@@ -496,7 +496,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, __unused bo
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::ModificationDate);
-    if (str && dm && kindEnginePdf == dm->engineType) {
+    if (str && dm && kindEngineMupdf == dm->engineType) {
         ConvDateToDisplay(&str, PdfDateParse);
     } else {
         ConvDateToDisplay(&str, IsoDateParse);

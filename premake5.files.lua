@@ -1026,8 +1026,8 @@ function pdf_preview_files()
     "MUPDF_Exports.cpp",
     "EngineBase.*",
     "EngineFzUtil.*",
-    "EnginePdf.*",
-    "EnginePdfImpl.*",
+    "EngineMupdf.*",
+    "EngineMupdfImpl.*",
     "EngineXps.*",
     "ChmFile.*",
     "EbookDoc.*",
@@ -1055,7 +1055,7 @@ function pdf_filter_files()
     "MUPDF_Exports.cpp",
     "EngineBase.*",
     "EngineFzUtil.*",
-    "EnginePdf.*",
+    "EngineMupdf.*",
     "EngineXps.*"
   })
 

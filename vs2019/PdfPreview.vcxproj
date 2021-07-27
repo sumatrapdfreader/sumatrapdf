@@ -515,8 +515,7 @@
     <ClInclude Include="..\src\EngineEbook.h" />
     <ClInclude Include="..\src\EngineFzUtil.h" />
     <ClInclude Include="..\src\EngineImages.h" />
-    <ClInclude Include="..\src\EnginePdf.h" />
-    <ClInclude Include="..\src\EnginePdfImpl.h" />
+    <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
@@ -537,7 +536,7 @@
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineFzUtil.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
-    <ClCompile Include="..\src\EnginePdf.cpp" />
+    <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />

@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // TODO: not quite happy how those functions are split among
-// Annotation.cpp, EnginePdf.cpp and EditAnnotations.cpp
+// Annotation.cpp, EngineMupdf.cpp and EditAnnotations.cpp
 
 // for fast conversions, must match the order of pdf_annot_type enum in annot.h
 enum class AnnotationType {
@@ -37,7 +37,7 @@ enum class AnnotationType {
     Unknown = -1
 };
 
-class EnginePdf;
+class EngineMupdf;
 extern "C" struct pdf_annot;
 
 extern const char* gAnnotationTextIcons;
@@ -55,7 +55,7 @@ struct Annotation {
     // deleted are not shown but can be undeleted
     bool isDeleted{false};
 
-    EnginePdf* engine{nullptr};
+    EngineMupdf* engine{nullptr};
     pdf_annot* pdfannot{nullptr};
 
     Annotation() = default;
@@ -101,5 +101,5 @@ void Delete(Annotation*);
 bool SetContents(Annotation*, std::string_view sv);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
-// EnginePdf.cpp
-Annotation* MakeAnnotationPdf(EnginePdf*, pdf_annot*, int pageNo);
+// EngineMupdf.cpp
+Annotation* MakeAnnotationPdf(EngineMupdf*, pdf_annot*, int pageNo);

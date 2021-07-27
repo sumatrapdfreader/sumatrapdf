@@ -419,7 +419,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         return false;
     }
     TabInfo* tab = win->currentTab;
-    if (!tab || tab->GetEngineType() != kindEnginePdf) {
+    if (!tab || tab->GetEngineType() != kindEngineMupdf) {
         return false;
     }
     DisplayModel* dm = tab->AsFixed();
@@ -630,7 +630,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    if (!win || !win->currentTab || win->currentTab->GetEngineType() != kindEnginePdf) {
+    if (!win || !win->currentTab || win->currentTab->GetEngineType() != kindEngineMupdf) {
         return next;
     }
 

@@ -14,7 +14,7 @@
 #include "EngineDjVu.h"
 #include "EngineEbook.h"
 #include "EngineImages.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 #include "EnginePs.h"
 #include "EngineXps.h"
 #include "EngineMulti.h"
@@ -23,20 +23,20 @@
 static bool gEnableEpubWithPdfEngine = true;
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
-    if (IsPdfEngineSupportedFileType(kind)) {
+    if (IsEngineMupdfSupportedFileType(kind)) {
         return true;
-    } else if (IsXpsEngineSupportedFileType(kind)) {
+    } else if (IsEngineXpsSupportedFileType(kind)) {
         return true;
-    } else if (IsDjVuEngineSupportedFileType(kind)) {
+    } else if (IsEngineDjVuSupportedFileType(kind)) {
         return true;
-    } else if (IsImageEngineSupportedFileType(kind)) {
+    } else if (IsEngineImageSupportedFileType(kind)) {
         return true;
     } else if (kind == kindDirectory) {
         // TODO: more complex
         return false;
-    } else if (IsCbxEngineSupportedFileType(kind)) {
+    } else if (IsEngineCbxSupportedFileType(kind)) {
         return true;
-    } else if (IsPsEngineSupportedFileType(kind)) {
+    } else if (IsEnginePsSupportedFileType(kind)) {
         return true;
     }
 
@@ -67,57 +67,55 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     }
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
-        engine = CreateEnginePdfFromFile(path, pwdUI);
+        engine = CreateEngineMupdfFromFile(path, pwdUI);
         return engine;
     }
-    if (IsXpsEngineSupportedFileType(kind)) {
-        engine = CreateXpsEngineFromFile(path);
+    if (IsEngineXpsSupportedFileType(kind)) {
+        engine = CreateEngineXpsFromFile(path);
         return engine;
     }
-    if (IsDjVuEngineSupportedFileType(kind)) {
-        engine = CreateDjVuEngineFromFile(path);
+    if (IsEngineDjVuSupportedFileType(kind)) {
+        engine = CreateEngineDjVuFromFile(path);
         return engine;
     }
-    if (IsImageEngineSupportedFileType(kind)) {
-        engine = CreateImageEngineFromFile(path);
+    if (IsEngineImageSupportedFileType(kind)) {
+        engine = CreateEngineImageFromFile(path);
         return engine;
     }
     if (kind == kindDirectory) {
         if (IsXpsDirectory(path)) {
-            engine = CreateXpsEngineFromFile(path);
+            engine = CreateEngineXpsFromFile(path);
         }
-        // TODO: in 3.1.2 we open folder of images (IsImageDirEngineSupportedFile)
+        // TODO: in 3.1.2 we open folder of images (IsEngineImageDirSupportedFile)
         // To avoid changing behavior, we open pdfs only in ramicro build
         // this should be controlled via cmd-line flag e.g. -folder-open-pdf
         // Then we could have more options, like -folder-open-images (default)
         // -folder-open-all (show all files we support in toc)
         if (!engine) {
-            engine = CreateImageDirEngineFromFile(path);
+            engine = CreateEngineImageDirFromFile(path);
         }
         return engine;
     }
 
-    if (IsCbxEngineSupportedFileType(kind)) {
-        engine = CreateCbxEngineFromFile(path);
+    if (IsEngineCbxSupportedFileType(kind)) {
+        engine = CreateEngineCbxFromFile(path);
         return engine;
     }
-    if (IsPsEngineSupportedFileType(kind)) {
-        engine = CreatePsEngineFromFile(path);
+    if (IsEnginePsSupportedFileType(kind)) {
+        engine = CreateEnginePsFromFile(path);
         return engine;
     }
     if (enableChmEngine && (kind == kindFileChm)) {
-        engine = CreateChmEngineFromFile(path);
+        engine = CreateEngineChmFromFile(path);
         return engine;
     }
     if (kind == kindFileTxt) {
-        engine = CreateTxtEngineFromFile(path);
+        engine = CreateEngineTxtFromFile(path);
         return engine;
     }
 
-    if (gEnableEpubWithPdfEngine) {
-        if (kind == kindFileEpub || kind == kindFileFb2) {
-            engine = CreateEnginePdfFromFile(path, pwdUI);
-        }
+    if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
+        engine = CreateEngineMupdfFromFile(path, pwdUI);
     }
 
     if (!enableEngineEbooks) {
@@ -125,23 +123,23 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     }
 
     if (kind == kindFileEpub) {
-        engine = CreateEpubEngineFromFile(path);
+        engine = CreateEngineEpubFromFile(path);
         return engine;
     }
     if (kind == kindFileFb2) {
-        engine = CreateFb2EngineFromFile(path);
+        engine = CreateEngineFb2FromFile(path);
         return engine;
     }
     if (kind == kindFileMobi) {
-        engine = CreateMobiEngineFromFile(path);
+        engine = CreateEngineMobiFromFile(path);
         return engine;
     }
     if (kind == kindFilePalmDoc) {
-        engine = CreatePdbEngineFromFile(path);
+        engine = CreateEnginePdbFromFile(path);
         return engine;
     }
     if (kind == kindFileHTML) {
-        engine = CreatePdbEngineFromFile(path);
+        engine = CreateEnginePdbFromFile(path);
         return engine;
     }
     return nullptr;
@@ -165,36 +163,36 @@ EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEng
     return engine;
 }
 
-static bool IsEnginePdf(EngineBase* engine) {
+static bool IsEngineMupdf(EngineBase* engine) {
     if (!engine) {
         return false;
     }
-    return engine->kind == kindEnginePdf;
+    return engine->kind == kindEngineMupdf;
 }
 
 bool EngineSupportsAnnotations(EngineBase* engine) {
-    return IsEnginePdf(engine);
+    return IsEngineMupdf(engine);
 }
 
 bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
-    if (!IsEnginePdf(engine)) {
+    if (!IsEngineMupdf(engine)) {
         return false;
     }
-    EnginePdfGetAnnotations(engine, annotsOut);
+    EngineMupdfGetAnnotations(engine, annotsOut);
     return true;
 }
 
 bool EngineHasUnsavedAnnotations(EngineBase* engine) {
-    if (!IsEnginePdf(engine)) {
+    if (!IsEngineMupdf(engine)) {
         return false;
     }
-    return EnginePdfHasUnsavedAnnotations(engine);
+    return EngineMupdfHasUnsavedAnnotations(engine);
 }
 
 // caller must delete
 Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
-    if (!IsEnginePdf(engine)) {
+    if (!IsEngineMupdf(engine)) {
         return nullptr;
     }
-    return EnginePdfGetAnnotationAtPos(engine, pageNo, pos, allowedAnnots);
+    return EngineMupdfGetAnnotationAtPos(engine, pageNo, pos, allowedAnnots);
 }

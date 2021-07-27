@@ -221,7 +221,7 @@ static void ReleaseDjVuContext() {
     }
 }
 
-void CleanupDjVuEngine() {
+void CleanupEngineDjVu() {
     if (gDjVuContext) {
         CrashIf(gDjVuContext->refCount != 0);
         delete gDjVuContext;
@@ -1154,14 +1154,14 @@ EngineBase* EngineDjVu::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-bool IsDjVuEngineSupportedFileType(Kind kind) {
+bool IsEngineDjVuSupportedFileType(Kind kind) {
     return kind == kindFileDjVu;
 }
 
-EngineBase* CreateDjVuEngineFromFile(const WCHAR* path) {
+EngineBase* CreateEngineDjVuFromFile(const WCHAR* path) {
     return EngineDjVu::CreateFromFile(path);
 }
 
-EngineBase* CreateDjVuEngineFromStream(IStream* stream) {
+EngineBase* CreateEngineDjVuFromStream(IStream* stream) {
     return EngineDjVu::CreateFromStream(stream);
 }

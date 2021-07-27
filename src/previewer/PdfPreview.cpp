@@ -8,7 +8,7 @@
 #include "wingui/TreeModel.h"
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 #include "EngineXps.h"
 #include "mui/MiniMui.h"
 #include "EngineEbook.h"
@@ -351,17 +351,17 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
 
 EngineBase* PdfPreview::LoadEngine(IStream* stream) {
     log("PdfPreview::LoadEngine()\n");
-    return CreateEnginePdfFromStream(stream);
+    return CreateEngineMupdfFromStream(stream);
 }
 
 EngineBase* XpsPreview::LoadEngine(IStream* stream) {
-    return CreateXpsEngineFromStream(stream);
+    return CreateEngineXpsFromStream(stream);
 }
 
 #include "EngineDjVu.h"
 
 EngineBase* DjVuPreview::LoadEngine(IStream* stream) {
-    return CreateDjVuEngineFromStream(stream);
+    return CreateEngineDjVuFromStream(stream);
 }
 
 EpubPreview::EpubPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID) {
@@ -374,7 +374,7 @@ EpubPreview::~EpubPreview() {
 }
 
 EngineBase* EpubPreview::LoadEngine(IStream* stream) {
-    return CreateEpubEngineFromStream(stream);
+    return CreateEngineEpubFromStream(stream);
 }
 
 Fb2Preview::Fb2Preview(long* plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID) {
@@ -387,7 +387,7 @@ Fb2Preview::~Fb2Preview() {
 }
 
 EngineBase* Fb2Preview::LoadEngine(IStream* stream) {
-    return CreateFb2EngineFromStream(stream);
+    return CreateEngineFb2FromStream(stream);
 }
 
 MobiPreview::MobiPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID) {
@@ -400,13 +400,13 @@ MobiPreview::~MobiPreview() {
 }
 
 EngineBase* MobiPreview::LoadEngine(IStream* stream) {
-    return CreateMobiEngineFromStream(stream);
+    return CreateEngineMobiFromStream(stream);
 }
 
 EngineBase* CbxPreview::LoadEngine(IStream* stream) {
-    return CreateCbxEngineFromStream(stream);
+    return CreateEngineCbxFromStream(stream);
 }
 
 EngineBase* TgaPreview::LoadEngine(IStream* stream) {
-    return CreateImageEngineFromStream(stream);
+    return CreateEngineImageFromStream(stream);
 }

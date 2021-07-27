@@ -648,16 +648,16 @@ static Kind imageEngineKinds[] = {
     kindFileJxr, kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2,
 };
 
-bool IsImageEngineSupportedFileType(Kind kind) {
+bool IsEngineImageSupportedFileType(Kind kind) {
     int n = dimof(imageEngineKinds);
     return KindInArray(imageEngineKinds, n, kind);
 }
 
-EngineBase* CreateImageEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineImageFromFile(const WCHAR* fileName) {
     return EngineImage::CreateFromFile(fileName);
 }
 
-EngineBase* CreateImageEngineFromStream(IStream* stream) {
+EngineBase* CreateEngineImageFromStream(IStream* stream) {
     return EngineImage::CreateFromStream(stream);
 }
 
@@ -718,7 +718,7 @@ static bool LoadImageDir(EngineImageDir* e, const WCHAR* dir) {
     DirIter di(dir, false);
     for (const WCHAR* path = di.First(); path; path = di.Next()) {
         Kind kind = GuessFileTypeFromName(path);
-        if (IsImageEngineSupportedFileType(kind)) {
+        if (IsEngineImageSupportedFileType(kind)) {
             WCHAR* pathCopy = str::Dup(path);
             e->pageFileNames.Append(pathCopy);
         }
@@ -846,12 +846,12 @@ EngineBase* EngineImageDir::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-bool IsImageDirEngineSupportedFile(const WCHAR* fileName, __unused bool sniff) {
+bool IsEngineImageDirSupportedFile(const WCHAR* fileName, __unused bool sniff) {
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }
 
-EngineBase* CreateImageDirEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineImageDirFromFile(const WCHAR* fileName) {
     return EngineImageDir::CreateFromFile(fileName);
 }
 
@@ -1020,7 +1020,7 @@ bool EngineCbx::FinishLoading() {
 
         auto fileNameW = ToWstrTemp(fileName);
         Kind kind = GuessFileTypeFromName(fileNameW);
-        if (IsImageEngineSupportedFileType(kind) &&
+        if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameTemp(fileName), ".")) {
             pageFiles.Append(fileInfo);
@@ -1329,15 +1329,15 @@ static Kind cbxKinds[] = {
     kindFileCbz, kindFileCbr, kindFileCb7, kindFileCbt, kindFileZip, kindFileRar, kindFile7Z, kindFileTar,
 };
 
-bool IsCbxEngineSupportedFileType(Kind kind) {
+bool IsEngineCbxSupportedFileType(Kind kind) {
     int n = dimof(cbxKinds);
     return KindInArray(cbxKinds, n, kind);
 }
 
-EngineBase* CreateCbxEngineFromFile(const WCHAR* path) {
+EngineBase* CreateEngineCbxFromFile(const WCHAR* path) {
     return EngineCbx::CreateFromFile(path);
 }
 
-EngineBase* CreateCbxEngineFromStream(IStream* stream) {
+EngineBase* CreateEngineCbxFromStream(IStream* stream) {
     return EngineCbx::CreateFromStream(stream);
 }

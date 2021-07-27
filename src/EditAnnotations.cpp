@@ -26,9 +26,9 @@ extern "C" {
 
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 #include "EngineFzUtil.h"
-#include "EnginePdfImpl.h"
+#include "EngineMupdfImpl.h"
 #include "EngineMulti.h"
 #include "EngineCreate.h"
 
@@ -184,7 +184,7 @@ struct EditAnnotationsWindow {
     ~EditAnnotationsWindow();
 };
 
-static EnginePdf* GetEnginePdf(EditAnnotationsWindow* ew) {
+static EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
     // TODO: shouldn't happen but seen in crash report
     if (!ew || !ew->tab) {
         return nullptr;
@@ -193,7 +193,7 @@ static EnginePdf* GetEnginePdf(EditAnnotationsWindow* ew) {
     if (!dm) {
         return nullptr;
     }
-    return AsEnginePdf(dm->GetEngine());
+    return AsEngineMupdf(dm->GetEngine());
 }
 
 static void HidePerAnnotControls(EditAnnotationsWindow* ew) {
@@ -275,8 +275,8 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
 }
 
 static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
-    EnginePdf* engine = GetEnginePdf(ew);
-    return EnginePdfHasUnsavedAnnotations(engine);
+    EngineMupdf* engine = GetEngineMupdf(ew);
+    return EngineMupdfHasUnsavedAnnotations(engine);
 }
 
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
@@ -330,9 +330,9 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     TabInfo* tab = ew->tab;
-    EnginePdf* engine = GetEnginePdf(ew);
+    EngineMupdf* engine = GetEngineMupdf(ew);
     TempStr path = ToUtf8Temp(engine->FileName());
-    bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
@@ -1190,7 +1190,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
 static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, TabInfo* tab) {
     Vec<Annotation*>* annots = new Vec<Annotation*>();
-    EnginePdf* engine = GetEnginePdf(ew);
+    EngineMupdf* engine = GetEngineMupdf(ew);
     EngineGetAnnotations(engine, annots);
 
     ew->tab = tab;
@@ -1339,8 +1339,8 @@ static const char* getuser(void) {
     return u;
 }
 
-Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
-    EnginePdf* epdf = AsEnginePdf(engine);
+Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
     fz_context* ctx = epdf->ctx;
 
     auto pageInfo = epdf->GetFzPageInfo(pageNo, true);

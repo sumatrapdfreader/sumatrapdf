@@ -38,7 +38,7 @@
 #include "EngineCreate.h"
 #include "EngineMulti.h"
 #include "EngineImages.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 #include "Doc.h"
 #include "PdfCreator.h"
 #include "DisplayMode.h"
@@ -1002,7 +1002,7 @@ static bool showTocByDefault(const WCHAR* path) {
     }
     // we don't want to show toc by default for comic book files
     Kind kind = GuessFileTypeFromName(path);
-    bool showByDefault = !IsCbxEngineSupportedFileType(kind);
+    bool showByDefault = !IsEngineCbxSupportedFileType(kind);
     return showByDefault;
 }
 
@@ -1155,7 +1155,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
         win->AsEbook()->StartLayouting(fs ? fs->reparseIdx : 0, displayMode);
     }
 
-    if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEnginePdf) {
+    if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEngineMupdf) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
@@ -2121,7 +2121,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
         return false;
     }
     TempStr dstFilePath = ToUtf8Temp(dstFileName);
-    ok = EnginePdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](std::string_view mupdfErr) {
+    ok = EngineMupdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated string
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
@@ -2235,7 +2235,7 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
             break;
         case SaveChoice::SaveExisting: {
             TempStr path = ToUtf8Temp(engine->FileName());
-            bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+            bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
                 str::Str msg;
                 // TODO: duplicated message
                 msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
@@ -2457,7 +2457,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win->currentTab->GetEngineType() != kindEngineTxt;
-    bool canConvertToPDF = engine && win->currentTab->GetEngineType() != kindEnginePdf;
+    bool canConvertToPDF = engine && win->currentTab->GetEngineType() != kindEngineMupdf;
 #ifndef DEBUG
     // not ready for document types other than PS and image collections
     if (canConvertToPDF && win->currentTab->GetEngineType() != kindEnginePostScript && !engine->IsImageCollection()) {
@@ -2476,7 +2476,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 #endif
     CrashIf(canConvertToTXT &&
             (!engine || engine->IsImageCollection() || kindEngineTxt == win->currentTab->GetEngineType()));
-    CrashIf(canConvertToPDF && (!engine || kindEnginePdf == win->currentTab->GetEngineType()));
+    CrashIf(canConvertToPDF && (!engine || kindEngineMupdf == win->currentTab->GetEngineType()));
 
     const WCHAR* defExt = ctrl->DefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -2917,7 +2917,7 @@ static void OnMenuOpen(WindowInfo* win) {
         {_TR("PDF documents"), L"*.pdf", true},
         {_TR("XPS documents"), L"*.xps;*.oxps", true},
         {_TR("DjVu documents"), L"*.djvu", true},
-        {_TR("Postscript documents"), L"*.ps;*.eps", IsPsEngineAvailable()},
+        {_TR("Postscript documents"), L"*.ps;*.eps", IsEnginePsAvailable()},
         {_TR("Comic books"), L"*.cbz;*.cbr;*.cb7;*.cbt", true},
         {_TR("CHM documents"), L"*.chm", true},
         {_TR("EPUB ebooks"), L"*.epub", true},
@@ -3856,7 +3856,7 @@ Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) 
         // TODO: show an error message
         return nullptr;
     }
-    Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
+    Annotation* annot = EngineMupdfCreateAnnotation(engine, annotType, pageNo, PointF{});
     SetQuadPointsAsRect(annot, rects);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
@@ -4222,7 +4222,7 @@ static int TestBigNew()
 static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     auto path = ToUtf8Temp(engine->FileName());
-    bool ok = EnginePdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());

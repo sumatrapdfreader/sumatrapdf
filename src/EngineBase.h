@@ -1,7 +1,7 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-extern Kind kindEnginePdf;
+extern Kind kindEngineMupdf;
 extern Kind kindEngineMupdf;
 extern Kind kindEngineMulti;
 extern Kind kindEngineXps;

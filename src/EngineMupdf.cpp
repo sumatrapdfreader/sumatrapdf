@@ -23,8 +23,8 @@ extern "C" {
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
-#include "EnginePdfImpl.h"
-#include "EnginePdf.h"
+#include "EngineMupdfImpl.h"
+#include "EngineMupdf.h"
 
 #include "utils/Log.h"
 
@@ -44,13 +44,13 @@ AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
     return (AnnotationType)tp;
 }
 
-Kind kindEnginePdf = "enginePdf";
+Kind kindEngineMupdf = "enginePdf";
 
-EnginePdf* AsEnginePdf(EngineBase* engine) {
-    if (!engine || !IsOfKind(engine, kindEnginePdf)) {
+EngineMupdf* AsEngineMupdf(EngineBase* engine) {
+    if (!engine || !IsOfKind(engine, kindEngineMupdf)) {
         return nullptr;
     }
-    return (EnginePdf*)engine;
+    return (EngineMupdf*)engine;
 }
 
 static fz_link* FixupPageLinks(fz_link* root) {
@@ -331,12 +331,12 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
 #endif
 
 static void fz_lock_context_cs(void* user, int lock) {
-    EnginePdf* e = (EnginePdf*)user;
+    EngineMupdf* e = (EngineMupdf*)user;
     EnterCriticalSection(&e->mutexes[lock]);
 }
 
 static void fz_unlock_context_cs(void* user, int lock) {
-    EnginePdf* e = (EnginePdf*)user;
+    EngineMupdf* e = (EngineMupdf*)user;
     LeaveCriticalSection(&e->mutexes[lock]);
 }
 
@@ -352,8 +352,8 @@ static void InstallFitzErrorCallbacks(fz_context* ctx) {
     fz_set_error_callback(ctx, fz_print_cb, nullptr);
 }
 
-EnginePdf::EnginePdf() {
-    kind = kindEnginePdf;
+EngineMupdf::EngineMupdf() {
+    kind = kindEngineMupdf;
     defaultFileExt = L".pdf";
     fileDPI = 72.0f;
 
@@ -373,7 +373,7 @@ EnginePdf::EnginePdf() {
     fz_register_document_handlers(ctx);
 }
 
-EnginePdf::~EnginePdf() {
+EngineMupdf::~EngineMupdf() {
     EnterCriticalSection(&pagesAccess);
 
     // TODO: remove this lock and see what happens
@@ -433,7 +433,7 @@ class PasswordCloner : public PasswordUI {
     }
 };
 
-EngineBase* EnginePdf::Clone() {
+EngineBase* EngineMupdf::Clone() {
     ScopedCritSec scope(ctxAccess);
     if (!FileName()) {
         // before port we could clone streams but it's no longer possible
@@ -448,7 +448,7 @@ EngineBase* EnginePdf::Clone() {
         }
     }
 
-    EnginePdf* clone = new EnginePdf();
+    EngineMupdf* clone = new EngineMupdf();
     bool ok = clone->Load(FileName(), pwdUI);
     if (!ok) {
         delete clone;
@@ -490,13 +490,13 @@ const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
 // inside pdf file
 // TODO: provide PasswordUI?
 std::span<u8> LoadEmbeddedPDFFile(const WCHAR* filePath) {
-    EnginePdf* engine = new EnginePdf();
+    EngineMupdf* engine = new EngineMupdf();
     auto res = engine->LoadStreamFromPDFFile(filePath);
     delete engine;
     return res;
 }
 
-std::span<u8> EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
+std::span<u8> EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     int streamNo = -1;
     AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
     if (streamNo < 0) {
@@ -539,7 +539,7 @@ std::span<u8> EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     return {data, dataSize};
 }
 
-bool EnginePdf::Load(const WCHAR* filePath, PasswordUI* pwdUI) {
+bool EngineMupdf::Load(const WCHAR* filePath, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
     SetFileName(filePath);
     if (!ctx) {
@@ -595,7 +595,7 @@ bool EnginePdf::Load(const WCHAR* filePath, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-bool EnginePdf::Load(IStream* stream, PasswordUI* pwdUI) {
+bool EngineMupdf::Load(IStream* stream, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
     if (!ctx) {
         return false;
@@ -614,7 +614,7 @@ bool EnginePdf::Load(IStream* stream, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-bool EnginePdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
+bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
     }
@@ -735,7 +735,7 @@ static PageLayoutType GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     return layout;
 }
 
-static bool IsLinearizedFile(EnginePdf* e) {
+static bool IsLinearizedFile(EngineMupdf* e) {
     if (!e->pdfdoc) {
         return false;
     }
@@ -751,7 +751,7 @@ static bool IsLinearizedFile(EnginePdf* e) {
     return isLinear;
 }
 
-static void FinishNonPDFLoading(EnginePdf* e) {
+static void FinishNonPDFLoading(EngineMupdf* e) {
     ScopedCritSec scope(e->ctxAccess);
 
     auto ctx = e->ctx;
@@ -788,7 +788,7 @@ static void FinishNonPDFLoading(EnginePdf* e) {
     }
 }
 
-bool EnginePdf::FinishLoading() {
+bool EngineMupdf::FinishLoading() {
     pdfdoc = pdf_specifics(ctx, _doc);
 
     pageCount = 0;
@@ -969,7 +969,7 @@ bool EnginePdf::FinishLoading() {
     return true;
 }
 
-static PageDestination* DestFromAttachment(EnginePdf* engine, fz_outline* outline) {
+static PageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
     // WCHAR* path = strconv::Utf8ToWstr(outline->uri);
@@ -979,7 +979,7 @@ static PageDestination* DestFromAttachment(EnginePdf* engine, fz_outline* outlin
     return dest;
 }
 
-TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
+TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
 
@@ -1042,7 +1042,7 @@ TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
 }
 
 // TODO: maybe build in FinishLoading
-TocTree* EnginePdf::GetToc() {
+TocTree* EngineMupdf::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1076,7 +1076,7 @@ MakeTree:
     return tocTree;
 }
 
-PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
+PageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -1129,7 +1129,7 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
 }
 
 // return a page but only if is fully loaded
-FzPageInfo* EnginePdf::GetFzPageInfoFast(int pageNo) {
+FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
     ScopedCritSec scope(&pagesAccess);
     CrashIf(pageNo < 1 || pageNo > pageCount);
     FzPageInfo* pageInfo = &_pages[pageNo - 1];
@@ -1232,7 +1232,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 // (I don't think we read from network now).
 // Maybe: when loading fully, cache extracted text in FzPageInfo
 // so that we don't have to re-do fz_new_stext_page_from_page() when doing search
-FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
+FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     // TODO: minimize time spent under pagesAccess when fully loading
     ScopedCritSec scope(&pagesAccess);
 
@@ -1295,12 +1295,12 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     return pageInfo;
 }
 
-RectF EnginePdf::PageMediabox(int pageNo) {
+RectF EngineMupdf::PageMediabox(int pageNo) {
     FzPageInfo* pi = &_pages[pageNo - 1];
     return pi->mediabox;
 }
 
-RectF EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     if (!pageInfo) {
         // maybe should return a dummy size. not sure how this
@@ -1353,7 +1353,7 @@ RectF EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     return rect2.Intersect(mediabox);
 }
 
-RectF EnginePdf::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
         char* name = str::Dup("");
         const WCHAR* nameW = FileName();
@@ -1376,7 +1376,7 @@ RectF EnginePdf::Transform(const RectF& rect, int pageNo, float zoom, int rotati
     return ToRectFl(rect2);
 }
 
-RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
+RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
@@ -1472,12 +1472,12 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
-IPageElement* EnginePdf::GetElementAtPos(int pageNo, PointF pt) {
+IPageElement* EngineMupdf::GetElementAtPos(int pageNo, PointF pt) {
     FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
-Vec<IPageElement*>* EnginePdf::GetElements(int pageNo) {
+Vec<IPageElement*>* EngineMupdf::GetElements(int pageNo) {
     auto pageInfo = GetFzPageInfoFast(pageNo);
     auto res = new Vec<IPageElement*>();
     FzGetElements(res, pageInfo);
@@ -1488,7 +1488,7 @@ Vec<IPageElement*>* EnginePdf::GetElements(int pageNo) {
     return res;
 }
 
-RenderedBitmap* EnginePdf::GetImageForPageElement(IPageElement* ipel) {
+RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
     PageElement* pel = (PageElement*)ipel;
     auto r = pel->rect;
     int pageNo = pel->pageNo;
@@ -1496,24 +1496,24 @@ RenderedBitmap* EnginePdf::GetImageForPageElement(IPageElement* ipel) {
     return GetPageImage(pageNo, r, imageID);
 }
 
-bool EnginePdf::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
+bool EngineMupdf::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
     return SaveFileAs(pdfFileName, includeUserAnnots);
 }
 
-bool EnginePdf::BenchLoadPage(int pageNo) {
+bool EngineMupdf::BenchLoadPage(int pageNo) {
     return GetFzPageInfo(pageNo, false) != nullptr;
 }
 
-fz_matrix EnginePdf::viewctm(int pageNo, float zoom, int rotation) {
+fz_matrix EngineMupdf::viewctm(int pageNo, float zoom, int rotation) {
     const fz_rect tmpRc = To_fz_rect(PageMediabox(pageNo));
     return FzCreateViewCtm(tmpRc, zoom, rotation);
 }
 
-fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) const {
+fz_matrix EngineMupdf::viewctm(fz_page* page, float zoom, int rotation) const {
     return FzCreateViewCtm(fz_bound_page(ctx, page), zoom, rotation);
 }
 
-RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
+RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     if (!pageInfo->page) {
         return nullptr;
@@ -1556,7 +1556,7 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     return bmp;
 }
 
-PageText EnginePdf::ExtractPageText(int pageNo) {
+PageText EngineMupdf::ExtractPageText(int pageNo) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
     if (!pageInfo) {
         return {};
@@ -1606,7 +1606,7 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     }
 }
 
-WCHAR* EnginePdf::ExtractFontList() {
+WCHAR* EngineMupdf::ExtractFontList() {
     Vec<pdf_obj*> fontList;
     Vec<pdf_obj*> resList;
 
@@ -1742,7 +1742,7 @@ WCHAR* EnginePdf::ExtractFontList() {
 }
 
 // TODO: convert to use fz_lookup_metadata
-WCHAR* EnginePdf::GetProperty(DocumentProperty prop) {
+WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -1822,7 +1822,7 @@ WCHAR* EnginePdf::GetProperty(DocumentProperty prop) {
     return nullptr;
 };
 
-std::span<u8> EnginePdf::GetFileData() {
+std::span<u8> EngineMupdf::GetFileData() {
     if (!pdfdoc) {
         return {};
     }
@@ -1850,7 +1850,7 @@ std::span<u8> EnginePdf::GetFileData() {
 }
 
 // TODO: proper support for includeUserAnnots or maybe just remove it
-bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineMupdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     auto dstPath = ToWstrTemp(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
@@ -1890,13 +1890,13 @@ const pdf_write_options pdf_default_write_options2 = {
 // annotations).
 // if filePath is not given, we save under the same name
 // TODO: if the file is locked, this might fail.
-bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path,
-                          std::function<void(std::string_view)> showErrorFunc) {
+bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
+                            std::function<void(std::string_view)> showErrorFunc) {
     CrashIf(!engine);
     if (!engine) {
         return false;
     }
-    EnginePdf* epdf = (EnginePdf*)engine;
+    EngineMupdf* epdf = (EngineMupdf*)engine;
     if (!epdf->pdfdoc) {
         return false;
     }
@@ -1935,7 +1935,7 @@ bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path,
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
-bool EnginePdf::SaveEmbedded(LinkSaverUI& saveUI, int num) {
+bool EngineMupdf::SaveEmbedded(LinkSaverUI& saveUI, int num) {
     ScopedCritSec scope(ctxAccess);
 
     fz_buffer* buf = nullptr;
@@ -1955,7 +1955,7 @@ bool EnginePdf::SaveEmbedded(LinkSaverUI& saveUI, int num) {
 }
 #endif
 
-bool EnginePdf::HasClipOptimizations(int pageNo) {
+bool EngineMupdf::HasClipOptimizations(int pageNo) {
     if (!pdfdoc) {
         return false;
     }
@@ -1976,7 +1976,7 @@ bool EnginePdf::HasClipOptimizations(int pageNo) {
     return true;
 }
 
-WCHAR* EnginePdf::GetPageLabel(int pageNo) const {
+WCHAR* EngineMupdf::GetPageLabel(int pageNo) const {
     if (!_pageLabels || pageNo < 1 || PageCount() < pageNo) {
         return EngineBase::GetPageLabel(pageNo);
     }
@@ -1984,7 +1984,7 @@ WCHAR* EnginePdf::GetPageLabel(int pageNo) const {
     return str::Dup(_pageLabels->at(pageNo - 1));
 }
 
-int EnginePdf::GetPageByLabel(const WCHAR* label) const {
+int EngineMupdf::GetPageByLabel(const WCHAR* label) const {
     if (!pdfdoc) {
         return 0;
     }
@@ -2000,7 +2000,7 @@ int EnginePdf::GetPageByLabel(const WCHAR* label) const {
     return pageNo;
 }
 
-int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
+int EngineMupdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     if (!pdfdoc) {
         return 0;
     }
@@ -2021,11 +2021,11 @@ int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     return nAnnots;
 }
 
-EngineBase* EnginePdf::CreateFromFile(const WCHAR* path, PasswordUI* pwdUI) {
+EngineBase* EngineMupdf::CreateFromFile(const WCHAR* path, PasswordUI* pwdUI) {
     if (str::IsEmpty(path)) {
         return nullptr;
     }
-    EnginePdf* engine = new EnginePdf();
+    EngineMupdf* engine = new EngineMupdf();
     if (!engine->Load(path, pwdUI)) {
         delete engine;
         return nullptr;
@@ -2033,8 +2033,8 @@ EngineBase* EnginePdf::CreateFromFile(const WCHAR* path, PasswordUI* pwdUI) {
     return engine;
 }
 
-EngineBase* EnginePdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
-    EnginePdf* engine = new EnginePdf();
+EngineBase* EngineMupdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
+    EngineMupdf* engine = new EngineMupdf();
     if (!engine->Load(stream, pwdUI)) {
         delete engine;
         return nullptr;
@@ -2042,7 +2042,7 @@ EngineBase* EnginePdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
     return engine;
 }
 
-bool IsPdfEngineSupportedFileType(Kind kind) {
+bool IsEngineMupdfSupportedFileType(Kind kind) {
     if (kind == kindFilePDF) {
         return true;
     }
@@ -2052,24 +2052,27 @@ bool IsPdfEngineSupportedFileType(Kind kind) {
     if (kind == kindFileFb2) {
         return true;
     }
+    if (kind == kindFileHTML) {
+        return true;
+    }
     return false;
 }
 
-EngineBase* CreateEnginePdfFromFile(const WCHAR* path, PasswordUI* pwdUI) {
-    return EnginePdf::CreateFromFile(path, pwdUI);
+EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, PasswordUI* pwdUI) {
+    return EngineMupdf::CreateFromFile(path, pwdUI);
 }
 
-EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI) {
-    return EnginePdf::CreateFromStream(stream, pwdUI);
+EngineBase* CreateEngineMupdfFromStream(IStream* stream, PasswordUI* pwdUI) {
+    return EngineMupdf::CreateFromStream(stream, pwdUI);
 }
 
-int EnginePdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
-    EnginePdf* epdf = AsEnginePdf(engine);
+int EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
     return epdf->GetAnnotations(annotsOut);
 }
 
-bool EnginePdfHasUnsavedAnnotations(EngineBase* engine) {
-    EnginePdf* epdf = AsEnginePdf(engine);
+bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return false;
     }
@@ -2093,8 +2096,8 @@ static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
 }
 
 // caller must delete
-Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
-    EnginePdf* epdf = AsEnginePdf(engine);
+Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return nullptr;
     }
@@ -2127,7 +2130,7 @@ Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF p
     return nullptr;
 }
 
-void EnginePdf::InvalideAnnotationsForPage(int pageNo) {
+void EngineMupdf::InvalideAnnotationsForPage(int pageNo) {
     ScopedCritSec scope(&pagesAccess);
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
@@ -2137,7 +2140,7 @@ void EnginePdf::InvalideAnnotationsForPage(int pageNo) {
     }
 }
 
-Annotation* MakeAnnotationPdf(EnginePdf* engine, pdf_annot* annot, int pageNo) {
+Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
     CrashIf(!engine->pdfdoc);
     ScopedCritSec cs(engine->ctxAccess);
 

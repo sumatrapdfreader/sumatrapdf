@@ -8,7 +8,7 @@
 #include "wingui/TreeModel.h"
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 #include "FilterBase.h"
 #include "PdfFilterClsid.h"
 #include "PdfFilter.h"
@@ -32,7 +32,7 @@ HRESULT PdfFilter::OnInit() {
     logf("PdfFilter::OnInit()\n");
     CleanUp();
 
-    // TODO: EnginePdf::CreateFromStream never returns with
+    // TODO: EngineMupdf::CreateFromStream never returns with
     //       m_pStream instead of a clone - why?
 
     // load content of PDF document into a seekable stream
@@ -48,7 +48,7 @@ HRESULT PdfFilter::OnInit() {
         return E_FAIL;
     }
 
-    m_pdfEngine = CreateEnginePdfFromStream(stream);
+    m_pdfEngine = CreateEngineMupdfFromStream(stream);
     if (!m_pdfEngine) {
         return E_FAIL;
     }

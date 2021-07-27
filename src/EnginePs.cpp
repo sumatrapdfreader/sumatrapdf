@@ -12,7 +12,7 @@
 #include "wingui/TreeModel.h"
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 #include "EnginePs.h"
 
 #include "utils/Log.h"
@@ -197,7 +197,7 @@ static EngineBase* ps2pdf(const WCHAR* path) {
         return nullptr;
     }
 
-    return CreateEnginePdfFromStream(stream);
+    return CreateEngineMupdfFromStream(stream);
 }
 
 static EngineBase* psgz2pdf(const WCHAR* fileName) {
@@ -379,18 +379,18 @@ EngineBase* EnginePs::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-bool IsPsEngineAvailable() {
+bool IsEnginePsAvailable() {
     AutoFreeWstr gswin32c(GetGhostscriptPath());
     return gswin32c.Get() != nullptr;
 }
 
-bool IsPsEngineSupportedFileType(Kind kind) {
-    if (!IsPsEngineAvailable()) {
+bool IsEnginePsSupportedFileType(Kind kind) {
+    if (!IsEnginePsAvailable()) {
         return false;
     }
     return kind == kindFilePS;
 }
 
-EngineBase* CreatePsEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEnginePsFromFile(const WCHAR* fileName) {
     return EnginePs::CreateFromFile(fileName);
 }

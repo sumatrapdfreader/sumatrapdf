@@ -52,7 +52,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
         // TODO: Also set zoom factor and scroll to current position?
         R"(/A page=%p "%1")",
-        kindEnginePdf,
+        kindEngineMupdf,
         nullptr
     },
     {
@@ -64,7 +64,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
         // TODO: Foxit allows passing password and zoom
         R"("%1" /A page=%p)",
-        kindEnginePdf,
+        kindEngineMupdf,
         nullptr
     },
     {
@@ -73,7 +73,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         ".pdf",
         R"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)",
         R"("%1" /A page=%p)",
-        kindEnginePdf,
+        kindEngineMupdf,
         nullptr
     },
     {
@@ -85,7 +85,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         // [/A "param=value [&param2=value ..."] [PDF filename]
         // /A params: page=<page number>
         R"(/A page=%p "%1")",
-        kindEnginePdf,
+        kindEngineMupdf,
         nullptr
     },
     {
@@ -306,7 +306,7 @@ bool CanViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
 
 bool CouldBePDFDoc(TabInfo* tab) {
     // consider any error state a potential PDF document
-    return !tab || !tab->ctrl || tab->GetEngineType() == kindEnginePdf;
+    return !tab || !tab->ctrl || tab->GetEngineType() == kindEngineMupdf;
 }
 
 static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {

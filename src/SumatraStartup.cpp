@@ -1284,8 +1284,8 @@ Exit:
     DeleteObject(GetDefaultGuiFont());
     DeleteBitmap(gBitmapReloadingCue);
 
-    extern void CleanupDjVuEngine(); // in EngineDjVu.cpp
-    CleanupDjVuEngine();
+    extern void CleanupEngineDjVu(); // in EngineDjVu.cpp
+    CleanupEngineDjVu();
     destroy_system_font_list();
 
     // wait for FileExistenceChecker to terminate

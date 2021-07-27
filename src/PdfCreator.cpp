@@ -268,7 +268,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
         return false;
     }
 
-    // adapted from EnginePdf::GetProperty
+    // adapted from EngineMupdf::GetProperty
     static struct {
         DocumentProperty prop;
         const char* name;

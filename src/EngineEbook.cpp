@@ -834,11 +834,11 @@ EngineBase* EngineEpub::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-EngineBase* CreateEpubEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineEpubFromFile(const WCHAR* fileName) {
     return EngineEpub::CreateFromFile(fileName);
 }
 
-EngineBase* CreateEpubEngineFromStream(IStream* stream) {
+EngineBase* CreateEngineEpubFromStream(IStream* stream) {
     return EngineEpub::CreateFromStream(stream);
 }
 
@@ -952,11 +952,11 @@ EngineBase* EngineFb2::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-EngineBase* CreateFb2EngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineFb2FromFile(const WCHAR* fileName) {
     return EngineFb2::CreateFromFile(fileName);
 }
 
-EngineBase* CreateFb2EngineFromStream(IStream* stream) {
+EngineBase* CreateEngineFb2FromStream(IStream* stream) {
     return EngineFb2::CreateFromStream(stream);
 }
 
@@ -1106,11 +1106,11 @@ EngineBase* EngineMobi::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-EngineBase* CreateMobiEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineMobiFromFile(const WCHAR* fileName) {
     return EngineMobi::CreateFromFile(fileName);
 }
 
-EngineBase* CreateMobiEngineFromStream(IStream* stream) {
+EngineBase* CreateEngineMobiFromStream(IStream* stream) {
     return EngineMobi::CreateFromStream(stream);
 }
 
@@ -1198,7 +1198,7 @@ EngineBase* EnginePdb::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* CreatePdbEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEnginePdbFromFile(const WCHAR* fileName) {
     return EnginePdb::CreateFromFile(fileName);
 }
 
@@ -1574,7 +1574,7 @@ EngineBase* EngineChm::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* CreateChmEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineChmFromFile(const WCHAR* fileName) {
     return EngineChm::CreateFromFile(fileName);
 }
 
@@ -1676,7 +1676,7 @@ EngineBase* EngineHtml::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* CreateHtmlEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineHtmlFromFile(const WCHAR* fileName) {
     return EngineHtml::CreateFromFile(fileName);
 }
 
@@ -1778,7 +1778,7 @@ EngineBase* EngineTxt::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* CreateTxtEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineTxtFromFile(const WCHAR* fileName) {
     return EngineTxt::CreateFromFile(fileName);
 }
 

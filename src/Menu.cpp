@@ -17,7 +17,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
@@ -1757,7 +1757,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
-            createdAnnot = EnginePdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+            createdAnnot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
             if (createdAnnot) {
                 WindowInfoRerender(win);
                 ToolbarUpdateStateForWindow(win, true);

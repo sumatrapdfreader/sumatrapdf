@@ -1,8 +1,8 @@
 
-class EnginePdf : public EngineBase {
+class EngineMupdf : public EngineBase {
   public:
-    EnginePdf();
-    ~EnginePdf() override;
+    EngineMupdf();
+    ~EngineMupdf() override;
     EngineBase* Clone() override;
 
     RectF PageMediabox(int pageNo) override;
@@ -80,4 +80,4 @@ class EnginePdf : public EngineBase {
     void InvalideAnnotationsForPage(int pageNo);
 };
 
-EnginePdf* AsEnginePdf(EngineBase* engine);
+EngineMupdf* AsEngineMupdf(EngineBase* engine);

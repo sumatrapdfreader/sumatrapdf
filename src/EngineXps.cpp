@@ -998,14 +998,14 @@ bool IsXpsDirectory(const WCHAR* path) {
     return file::Exists(relsPath) || dir::Exists(relsPath);
 }
 
-bool IsXpsEngineSupportedFileType(Kind kind) {
+bool IsEngineXpsSupportedFileType(Kind kind) {
     return kind == kindFileXps;
 }
 
-EngineBase* CreateXpsEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineXpsFromFile(const WCHAR* fileName) {
     return EngineXps::CreateFromFile(fileName);
 }
 
-EngineBase* CreateXpsEngineFromStream(IStream* stream) {
+EngineBase* CreateEngineXpsFromStream(IStream* stream) {
     return EngineXps::CreateFromStream(stream);
 }

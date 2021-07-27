@@ -341,7 +341,7 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
 
 // had to create a copy of fz_convert_pixmap to ensure we always get the alpha
 fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
-                              fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
+                            fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
     fz_pixmap* cvt;
 
     if (!ds && !keep_alpha) {

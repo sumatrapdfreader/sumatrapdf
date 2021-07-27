@@ -3,8 +3,9 @@ A daily log of changes and commentary. An experiment of sorts.
 2021-07-27 Tue
 
 - update mupdf
-- make EnginePdf accept .epub et al, delete EngineMupdf
+- make EngineMupdf accept .epub et al, delete EngineMupdf
 - naming cleanups in EnginePdf
+- rename EnginePdf = > EngineMupdf; enable opening HTML with EngineMupdf
 
 2021-07-25 Sun
 
@@ -364,7 +365,7 @@ Changing nRealloc would over-write allocator, leading to crashes.
 
 2021-06-13 Sun
 
-- Split EnginePdfImpl.h from EnginePdf.cpp
+- Split EngineMupdfImpl.h from EngineMupdf.cpp
 
 2021-06-12 Sat
 
@@ -604,7 +605,7 @@ deletes gGlobalPrefs->sessionData while 're iterating on it
 
 Parallelized doit -clang-format. Go concurrency is a joy.
 
-implement EnginePdfHasUnsavedAnnotations() and bug-fix detection
+implement EngineMupdfHasUnsavedAnnotations() and bug-fix detection
 of when to show 'Save PDF' button in annotations editor.
 
 update mupdf.
@@ -619,7 +620,7 @@ as html/xml parser.
 Added creation of highlight, squiggly, strikeout and underline
 annotations.
 
-Replaced EnginePdf::IsLinearizedFile() with mupdf's pdf_doc_was_linearized.
+Replaced EngineMupdf::IsLinearizedFile() with mupdf's pdf_doc_was_linearized.
 It didn't exist when IsLinearizedFile() was written.
 Removing code feels good.
 

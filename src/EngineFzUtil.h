@@ -1,7 +1,7 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Common for EnginePdf.cpp and EngineXps.cpp
+// Common for EngineMupdf.cpp and EngineXps.cpp
 
 // maximum amount of memory that MuPDF should use per fz_context store
 #define MAX_CONTEXT_MEMORY (256 * 1024 * 1024)
@@ -80,7 +80,7 @@ IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);
 fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
-                              fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
+                            fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
 fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx);
 void FzFindImagePositions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext);
 

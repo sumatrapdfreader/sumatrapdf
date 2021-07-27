@@ -22,7 +22,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EnginePdf.h"
+#include "EngineMupdf.h"
 #include "EngineCreate.h"
 
 #include "SumatraConfig.h"
@@ -562,7 +562,7 @@ static bool ShouldCustomDraw(WindowInfo* win) {
         return false;
     }
     Kind kind = dm->GetEngineType();
-    return kind == kindEnginePdf || kind == kindEngineMulti;
+    return kind == kindEngineMupdf || kind == kindEngineMulti;
 }
 
 void OnTocCustomDraw(TreeItemCustomDrawEvent*);
