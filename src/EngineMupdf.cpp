@@ -2055,6 +2055,9 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
     if (kind == kindFileHTML) {
         return true;
     }
+    if (kind == kindFileSvg) {
+        return true;
+    }
     return false;
 }
 

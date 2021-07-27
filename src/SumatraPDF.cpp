@@ -2920,6 +2920,7 @@ static void OnMenuOpen(WindowInfo* win) {
         {_TR("Postscript documents"), L"*.ps;*.eps", IsEnginePsAvailable()},
         {_TR("Comic books"), L"*.cbz;*.cbr;*.cb7;*.cbt", true},
         {_TR("CHM documents"), L"*.chm", true},
+        {_TR("SVG documents"), L"*.svg", true},
         {_TR("EPUB ebooks"), L"*.epub", true},
         {_TR("Mobi documents"), L"*.mobi", true},
         {_TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},

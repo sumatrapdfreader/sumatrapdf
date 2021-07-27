@@ -34,6 +34,7 @@ extern Kind kindFileEpub;
 extern Kind kindFileMobi;
 extern Kind kindFilePalmDoc;
 extern Kind kindFileHTML;
+extern Kind kindFileSvg;
 extern Kind kindFileTxt;
 
 extern Kind kindDirectory;

@@ -42,6 +42,7 @@ Kind kindFileMobi = "fileMobi";
 Kind kindFilePalmDoc = "filePalmDoc";
 Kind kindFileHTML = "fileHTML";
 Kind kindFileTxt = "fileTxt";
+Kind kindFileSvg = "fileSvg";
 
 // http://en.wikipedia.org/wiki/.nfo
 // http://en.wikipedia.org/wiki/FILE_ID.DIZ
@@ -97,6 +98,7 @@ Kind kindFileTxt = "fileTxt";
     V(".html\0", kindFileHTML)      \
     V(".htm\0", kindFileHTML)       \
     V(".xhtml\0", kindFileHTML)     \
+    V(".svg\0", kindFileSvg)        \
     V(".djvu\0", kindFileDjVu)      \
     V(".jp2\0", kindFileJp2)        \
     V(".zip\0", kindFileZip)        \

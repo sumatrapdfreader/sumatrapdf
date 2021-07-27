@@ -12,6 +12,7 @@ Next version:
    Shift + 'i' does what 'i' used to do i.e. show page number
 * respect zoom level in PDF destination links
   https://github.com/sumatrapdfreader/sumatrapdf/commit/3aa18aaf89caef7dd28529682d9344ef89422100
+* support .svg files
 
 3.3.3 (2021-07-20)
 * fix a crash in PdfFilter.dll
