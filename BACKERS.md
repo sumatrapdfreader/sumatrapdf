@@ -50,3 +50,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Derek K
 - Rainer Großmann
 - Bird Talking
+- Tree of life
