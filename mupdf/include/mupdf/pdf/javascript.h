@@ -8,6 +8,7 @@ void pdf_drop_js(fz_context *ctx, pdf_js *js);
 
 void pdf_js_event_init(pdf_js *js, pdf_obj *target, const char *value, int willCommit);
 int pdf_js_event_result(pdf_js *js);
+int pdf_js_event_result_validate(pdf_js *js, char **newvalue);
 char *pdf_js_event_value(pdf_js *js);
 void pdf_js_event_init_keystroke(pdf_js *js, pdf_obj *target, pdf_keystroke_event *evt);
 int pdf_js_event_result_keystroke(pdf_js *js, pdf_keystroke_event *evt);

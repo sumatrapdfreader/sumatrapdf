@@ -613,9 +613,9 @@ int pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int n
 	new_entry = pdf_get_incremental_xref_entry(ctx, doc, num);
 	*new_entry = *old_entry;
 	/* Better keep a copy. We must override the old entry with
-		 * the copy because the caller may be holding a reference to
-		 * the original and expect it to end up in the new entry */
-		old_entry->obj = pdf_deep_copy_obj(ctx, old_entry->obj);
+	 * the copy because the caller may be holding a reference to
+	 * the original and expect it to end up in the new entry */
+	old_entry->obj = pdf_deep_copy_obj(ctx, old_entry->obj);
 	old_entry->stm_buf = NULL;
 
 	return 1;
@@ -723,6 +723,8 @@ void pdf_replace_xref(fz_context *ctx, pdf_document *doc, pdf_xref_entry *entrie
 void pdf_forget_xref(fz_context *ctx, pdf_document *doc)
 {
 	pdf_obj *trailer = pdf_keep_obj(ctx, pdf_trailer(ctx, doc));
+
+	pdf_drop_local_xref_and_resources(ctx, doc);
 
 	if (doc->saved_xref_sections)
 		pdf_drop_xref_sections_imp(ctx, doc, doc->saved_xref_sections, doc->saved_num_xref_sections);
@@ -4598,6 +4600,14 @@ void pdf_drop_local_xref(fz_context *ctx, pdf_xref *xref)
 	pdf_drop_xref_subsec(ctx, xref);
 
 	fz_free(ctx, xref);
+}
+
+void pdf_drop_local_xref_and_resources(fz_context *ctx, pdf_document *doc)
+{
+	pdf_purge_local_font_resources(ctx, doc);
+	pdf_purge_locals_from_store(ctx, doc);
+	pdf_drop_local_xref(ctx, doc->local_xref);
+	doc->local_xref = NULL;
 }
 
 void

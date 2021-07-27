@@ -122,8 +122,28 @@ static void ui_input_delete_selection(struct input *input)
 	input->p = input->q = p;
 }
 
-static void ui_input_paste(struct input *input, const char *buf, int n)
+static void ui_input_paste(struct input *input, const char *buf)
 {
+	int n = (int)strlen(buf);
+	if (input->widget)
+	{
+		char *newtext;
+		int selStart = input->p - input->text;
+		int selEnd = input->q - input->text;
+		if (pdf_edit_text_field_value(ctx, input->widget, input->text, buf, &selStart, &selEnd, &newtext))
+		{
+			size_t len = strlen(newtext);
+			if (len > sizeof(input->text)-1)
+				len = sizeof(input->text)-1;
+			memcpy(input->text, newtext, len);
+			input->text[len] = 0;
+			fz_free(ctx, newtext);
+			input->p = input->text + selStart;
+			input->q = input->p;
+			input->end = input->text + len;
+		}
+		return;
+	}
 	if (input->p != input->q)
 		ui_input_delete_selection(input);
 	if (input->end + n + 1 < input->text + sizeof(input->text))
@@ -163,7 +183,7 @@ static void ui_do_paste(struct input *input)
 {
 	const char *buf = ui_get_clipboard();
 	if (buf)
-		ui_input_paste(input, buf, (int)strlen(buf));
+		ui_input_paste(input, buf);
 }
 
 static int ui_input_key(struct input *input, int multiline)
@@ -281,7 +301,7 @@ static int ui_input_key(struct input *input, int multiline)
 			ui.focus = NULL;
 			return UI_INPUT_ACCEPT;
 		}
-		ui_input_paste(input, "\n", 1);
+		ui_input_paste(input, "\n");
 		break;
 	case KEY_BACKSPACE:
 		if (input->p != input->q)
@@ -335,9 +355,10 @@ static int ui_input_key(struct input *input, int multiline)
 			int cat = ucdn_get_general_category(ui.key);
 			if (ui.key == ' ' || (cat >= UCDN_GENERAL_CATEGORY_LL && cat < UCDN_GENERAL_CATEGORY_ZL))
 			{
-				char buf[8];
+				char buf[9];
 				int n = fz_runetochar(buf, ui.key);
-				ui_input_paste(input, buf, n);
+				buf[n] = 0;
+				ui_input_paste(input, buf);
 			}
 		}
 		break;

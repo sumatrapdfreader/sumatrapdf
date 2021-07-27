@@ -278,6 +278,29 @@ util.printx = function (fmt, val) {
 	return res;
 }
 
+// To the best of my understanding, events are called with:
+// if (willCommit == false) {
+//   event.value = <current value of field>
+//   event.change = <text selection to drop into the selected area>
+//   event.selStart = <index of start of selected area, <= 0 means start of string>
+//   event.selEnd = <index of end of selected area, <= 0 means end of string>
+//   If the routine can't rationalise the proposed input to something sane it should
+//   return false, and the caller won't change anything. Otherwise, the routine
+//   can update value/change/selStart/selEnd as required, and should return true.
+//   The routine should accept 'partial' values (i.e. values that do not entirely
+//   fulfill the requirements as they are being typed).
+// } else {
+//   event.value = <proposed value>
+//   event.change = ''
+//   event.selStart = -1
+//   event.selEnd = -1
+//   The routine can rewrite the proposed value if required (by changing value, not
+//   change or the selection). It should accept (return 1) or reject (return 0) the
+//   value it returns.
+// }
+//
+// The following is a helper function to form the proposed 'changed' string that
+// various handlers use.
 function AFMergeChange(event) {
 	var prefix, postfix;
 	var value = event.value;
@@ -498,8 +521,9 @@ var AFDate_oldFormats = [
 ];
 
 function AFDate_KeystrokeEx(fmt) {
-	if (event.willCommit && !AFParseDateEx(event.value, fmt)) {
-		app.alert('The date/time entered ('+event.value+') does not match the format ('+fmt+') of the field [ '+event.target.name+' ]');
+	var value = AFMergeChange(event);
+	if (event.willCommit && !AFParseDateEx(value, fmt)) {
+		app.alert('The date/time entered ('+value+') does not match the format ('+fmt+') of the field [ '+event.target.name+' ]');
 		event.rc = false;
 	}
 }
@@ -539,12 +563,22 @@ function AFSpecial_KeystrokeEx(fmt) {
 	function toLower(str) { return str.toLowerCase(); }
 	function toSame(str) { return str; }
 	var convertCase = toSame;
-	var val = event.value;
+	var val = AFMergeChange(event);
 	var res = '';
 	var i = 0;
 	var m;
 	var length = fmt ? fmt.length : 0;
+
+	// We always accept reverting to an empty string.
+	if (!val || val == "") {
+		event.rc = true;
+		return;
+	}
+
 	while (i < length) {
+		// In the !willCommit case, we'll exit nicely if we run out of value.
+		if (!event.willCommit && (!val || val.length == 0))
+				break;
 		switch (fmt.charAt(i)) {
 		case '\\':
 			i++;
@@ -591,10 +625,6 @@ function AFSpecial_KeystrokeEx(fmt) {
 			break;
 
 		case '?':
-			if (val === '') {
-				event.rc = false;
-				break;
-			}
 			res += convertCase(val.charAt(0));
 			val = val.substring(1);
 			break;
@@ -619,13 +649,24 @@ function AFSpecial_KeystrokeEx(fmt) {
 		i++;
 	}
 
+	// If we didn't make it through the fmt string then this is a failure
+	// in the willCommit case.
+	if (i < length && event.willCommit)
+		event.rc = false;
+
 	//  If there are characters left over in the value, it's not a match.
 	if (val.length > 0)
 		event.rc = false;
 
-	if (event.rc)
-		event.value = res;
-	else if (event.willCommit)
+	if (event.rc) {
+		if (event.willCommit)
+			event.value = res;
+		else {
+			event.change = res;
+			event.selStart = 0;
+			event.selEnd = event.value.length;
+		}
+	} else if (event.willCommit)
 		app.alert('The value entered ('+event.value+') does not match the format of the field [ '+event.target.name+' ] should be '+fmt);
 }
 
@@ -675,18 +716,19 @@ function AFSpecial_Format(index) {
 }
 
 function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {
+	value = AFMergeChange(event);
 	if (sepStyle & 2) {
-		if (!event.value.match(/^[+-]?\d*[,.]?\d*$/))
+		if (!value.match(/^[+-]?\d*[,.]?\d*$/))
 			event.rc = false;
 	} else {
-		if (!event.value.match(/^[+-]?\d*\.?\d*$/))
+		if (!value.match(/^[+-]?\d*\.?\d*$/))
 			event.rc = false;
 	}
 	if (event.willCommit) {
-		if (!event.value.match(/\d/))
+		if (!value.match(/\d/))
 			event.rc = false;
 		if (!event.rc)
-			app.alert('The value entered ('+event.value+') does not match the format of the field [ '+event.target.name+' ]');
+			app.alert('The value entered ('+value+') does not match the format of the field [ '+event.target.name+' ]');
 	}
 }
 

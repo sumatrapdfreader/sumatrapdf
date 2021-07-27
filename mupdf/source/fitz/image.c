@@ -543,6 +543,7 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image
 	fz_var(tile);
 	fz_var(samples);
 	fz_var(sstream);
+	fz_var(unpstream);
 	fz_var(l2stream);
 
 	fz_try(ctx)

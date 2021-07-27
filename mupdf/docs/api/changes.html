@@ -39,6 +39,17 @@ changes that may be require to update between versions.
 Note, that we only list changes in existing APIs here, not all additions
 to the API.
 
+<h2>Changes from 1.18 to 1.19</h2>
+
+<p>We were inconsistent with the behaviour of fz_create_ and pdf_create_
+functions, in that sometimes they returned a borrowed reference, rather
+than a reference that the caller had to drop. We now always return a
+reference that the caller owns and must drop.</p>
+
+<h2>Changes from 1.17 to 1.18</h2>
+
+<p>None worth mentioning.</p>
+
 <h2>Changes from 1.16 to 1.17</h2>
 
 <p>

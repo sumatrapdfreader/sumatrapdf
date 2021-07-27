@@ -474,7 +474,7 @@ pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 		fz_rethrow(ctx);
 	}
 
-	return annot;
+	return pdf_keep_annot(ctx, annot);
 }
 
 fz_link *
@@ -558,7 +558,7 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 		fz_rethrow(ctx);
 	}
 
-	return link;
+	return fz_keep_link(ctx, link);
 }
 
 static pdf_obj *
@@ -723,7 +723,10 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 	fz_always(ctx)
 		pdf_end_operation(ctx, page->doc);
 	fz_catch(ctx)
+	{
+		pdf_drop_annot(ctx, annot);
 		fz_rethrow(ctx);
+	}
 
 	return annot;
 }

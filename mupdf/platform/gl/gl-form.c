@@ -498,6 +498,7 @@ static void tx_dialog(void)
 	{
 		ui_layout(T, X, NW, ui.padsize, ui.padsize);
 		ui_label("%s", label);
+		tx_input.widget = tx_widget;
 		is = ui_input(&tx_input, 200, tx_h);
 
 		ui_layout(B, X, NW, ui.padsize, ui.padsize);
@@ -607,15 +608,15 @@ void do_widget_canvas(fz_irect canvas_area)
 				ui.active = widget;
 				trace_action("page.getWidgets()[%d].eventDown();\n", idx);
 				pdf_annot_event_down(ctx, widget);
-				if (selected_annot != widget)
+				if (ui.selected_annot != widget)
 				{
-					if (selected_annot && pdf_annot_type(ctx, selected_annot) == PDF_ANNOT_WIDGET)
+					if (ui.selected_annot && pdf_annot_type(ctx, ui.selected_annot) == PDF_ANNOT_WIDGET)
 					{
 						trace_action("widget.eventBlur();\n", idx);
-						pdf_annot_event_blur(ctx, selected_annot);
+						pdf_annot_event_blur(ctx, ui.selected_annot);
 					}
 					trace_action("widget = page.getWidgets()[%d];\n", idx);
-					selected_annot = widget;
+					ui_select_annot(pdf_keep_annot(ctx, widget));
 					trace_action("widget.eventFocus();\n");
 					pdf_annot_event_focus(ctx, widget);
 				}

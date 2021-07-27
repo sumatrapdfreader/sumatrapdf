@@ -51,7 +51,6 @@ stat_mtime(const char *path)
 fz_context *ctx = NULL;
 pdf_document *pdf = NULL;
 pdf_page *page = NULL;
-pdf_annot *selected_annot = NULL;
 fz_stext_page *page_text = NULL;
 fz_matrix draw_page_ctm, view_page_ctm, view_page_inv_ctm;
 fz_rect page_bounds, draw_page_bounds, view_page_bounds;
@@ -796,9 +795,9 @@ void transform_page(void)
 static void clear_selected_annot(void)
 {
 	/* clear all editor selections */
-	if (selected_annot && pdf_annot_type(ctx, selected_annot) == PDF_ANNOT_WIDGET)
-		pdf_annot_event_blur(ctx, selected_annot);
-	selected_annot = NULL;
+	if (ui.selected_annot && pdf_annot_type(ctx, ui.selected_annot) == PDF_ANNOT_WIDGET)
+		pdf_annot_event_blur(ctx, ui.selected_annot);
+	ui_select_annot(NULL);
 }
 
 void load_page(void)
@@ -1561,6 +1560,33 @@ reload_or_start_journalling(fz_context *ctx, pdf_document *pdf)
 	pdf_enable_journal(ctx, pdf);
 }
 
+static void alert_box(const char *fmt, const char *str)
+{
+#ifdef _WIN32
+	MessageBoxA(NULL, str, "MuPDF Alert", MB_ICONERROR);
+#else
+	fprintf(stderr, "MuPDF Alert: %s\n", str);
+#endif
+}
+
+
+static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *evt, void *data)
+{
+	switch (evt->type)
+	{
+	case PDF_DOCUMENT_EVENT_ALERT:
+		{
+			pdf_alert_event *alert = pdf_access_alert_event(ctx, evt);
+			alert_box("%s", alert->message);
+		}
+		break;
+
+	default:
+		fz_throw(ctx, FZ_ERROR_GENERIC, "event not yet implemented");
+		break;
+	}
+}
+
 static void load_document(void)
 {
 	char accelpath[PATH_MAX];
@@ -1708,6 +1734,9 @@ static void load_document(void)
 	anchor = NULL;
 
 	oldpage = currentpage = fz_clamp_location(ctx, doc, currentpage);
+
+	if (pdf)
+		pdf_set_doc_event_callback(ctx, pdf, event_cb, NULL);
 }
 
 static void reflow_document(void)
@@ -1909,7 +1938,7 @@ static void do_app(void)
 	{
 		switch (ui.key)
 		{
-		case KEY_ESCAPE: clear_search(); selected_annot = NULL; break;
+		case KEY_ESCAPE: clear_search(); ui_select_annot(NULL); break;
 		case KEY_F1: ui.dialog = help_dialog; break;
 		case 'a': toggle_annotate(ANNOTATE_MODE_NORMAL); break;
 		case 'R': toggle_annotate(ANNOTATE_MODE_REDACT); break;

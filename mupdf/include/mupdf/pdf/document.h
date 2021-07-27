@@ -44,7 +44,7 @@ typedef struct pdf_doc_event pdf_doc_event;
 	the type of function via which the app receives
 	document events.
 */
-typedef void (pdf_doc_event_cb)(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, void *data);
+typedef void (pdf_doc_event_cb)(fz_context *ctx, pdf_document *doc, pdf_doc_event *evt, void *data);
 
 /*
 	Open a PDF document.

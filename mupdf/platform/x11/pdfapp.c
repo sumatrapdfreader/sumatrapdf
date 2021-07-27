@@ -253,15 +253,15 @@ void pdfapp_reloadfile(pdfapp_t *app)
 	pdfapp_open(app, filename, 1);
 }
 
-static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, void *data)
+static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *evt, void *data)
 {
 	pdfapp_t *app = (pdfapp_t *)data;
 
-	switch (event->type)
+	switch (evt->type)
 	{
 	case PDF_DOCUMENT_EVENT_ALERT:
 		{
-			pdf_alert_event *alert = pdf_access_alert_event(ctx, event);
+			pdf_alert_event *alert = pdf_access_alert_event(ctx, evt);
 			winalert(app, alert);
 		}
 		break;
@@ -272,7 +272,7 @@ static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, v
 
 	case PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM:
 		{
-			const char *item = pdf_access_exec_menu_item_event(ctx, event);
+			const char *item = pdf_access_exec_menu_item_event(ctx, evt);
 
 			if (!strcmp(item, "Print"))
 				winprint(app);
@@ -283,7 +283,7 @@ static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, v
 
 	case PDF_DOCUMENT_EVENT_LAUNCH_URL:
 		{
-			pdf_launch_url_event *launch_url = pdf_access_launch_url_event(ctx, event);
+			pdf_launch_url_event *launch_url = pdf_access_launch_url_event(ctx, evt);
 
 			pdfapp_warn(app, "The document attempted to open url: %s. (Not supported by app)", launch_url->url);
 		}
@@ -291,7 +291,7 @@ static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, v
 
 	case PDF_DOCUMENT_EVENT_MAIL_DOC:
 		{
-			pdf_mail_doc_event *mail_doc = pdf_access_mail_doc_event(ctx, event);
+			pdf_mail_doc_event *mail_doc = pdf_access_mail_doc_event(ctx, evt);
 
 			pdfapp_warn(app, "The document attempted to mail the document%s%s%s%s%s%s%s%s (Not supported)",
 				mail_doc->to[0]?", To: ":"", mail_doc->to,

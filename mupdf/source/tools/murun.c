@@ -4548,16 +4548,16 @@ struct event_cb_data
 	const char *listener;
 };
 
-static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, void *data)
+static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *evt, void *data)
 {
 	js_State *J = ((struct event_cb_data *) data)->J;
 	const char *listener = ((struct event_cb_data *) data)->listener;
 
-	switch (event->type)
+	switch (evt->type)
 	{
 	case PDF_DOCUMENT_EVENT_ALERT:
 		{
-			pdf_alert_event *alert = pdf_access_alert_event(ctx, event);
+			pdf_alert_event *alert = pdf_access_alert_event(ctx, evt);
 
 			if (js_try(J))
 				rethrow_as_fz(J);
@@ -5185,7 +5185,7 @@ static void ffi_PDFPage_createAnnotation(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 	js_getregistry(J, "pdf_annot");
-	js_newuserdata(J, "pdf_annot", pdf_keep_annot(ctx, annot), ffi_gc_pdf_annot);
+	js_newuserdata(J, "pdf_annot", annot, ffi_gc_pdf_annot);
 }
 
 static void ffi_PDFPage_deleteAnnotation(js_State *J)

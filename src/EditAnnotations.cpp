@@ -1394,5 +1394,6 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
         auto col = GetAnnotationTextIconColor();
         SetColor(res, col);
     }
+    pdf_drop_annot(ctx, annot);
     return res;
 }

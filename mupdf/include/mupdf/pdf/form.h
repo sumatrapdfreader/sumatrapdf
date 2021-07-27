@@ -32,8 +32,12 @@ int pdf_update_widget(fz_context *ctx, pdf_widget *widget);
 
 /*
 	create a new signature widget on the specified page, with the
-	specified name. The returned pdf_widget structure is owned by
-	the page and does not need to be freed
+	specified name.
+
+	The returns pdf_widget reference must be dropped by the caller.
+	This is a change from releases up to an including 1.18, where
+	the returned reference was owned by the page and did not need
+	to be freed by the caller.
 */
 pdf_widget *pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name);
 
@@ -156,6 +160,7 @@ int pdf_set_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, cons
 */
 int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
 int pdf_set_choice_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
+int pdf_edit_text_field_value(fz_context *ctx, pdf_widget *widget, const char *value, const char *change, int *selStart, int *selEnd, char **newvalue);
 
 typedef struct
 {
@@ -316,10 +321,11 @@ typedef struct
 	int selStart, selEnd;
 	int willCommit;
 	char *newChange;
+	char *newValue;
 } pdf_keystroke_event;
 
 int pdf_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_keystroke_event *evt);
-int pdf_field_event_validate(fz_context *ctx, pdf_document *doc, pdf_obj *field, const char *value);
+int pdf_field_event_validate(fz_context *ctx, pdf_document *doc, pdf_obj *field, const char *value, char **newvalue);
 void pdf_field_event_calculate(fz_context *ctx, pdf_document *doc, pdf_obj *field);
 char *pdf_field_event_format(fz_context *ctx, pdf_document *doc, pdf_obj *field);
 

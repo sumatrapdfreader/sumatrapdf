@@ -972,10 +972,7 @@ swap_fragments(fz_context *ctx, pdf_document *doc, pdf_journal_entry *entry)
 	if (doc->local_xref_nesting != 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't undo/redo within an operation");
 
-	pdf_purge_local_font_resources(ctx, doc);
-	pdf_purge_locals_from_store(ctx, doc);
-	pdf_drop_local_xref(ctx, doc->local_xref);
-	doc->local_xref = NULL;
+	pdf_drop_local_xref_and_resources(ctx, doc);
 
 	for (frag = entry->head; frag != NULL; frag = frag->next)
 	{
@@ -1118,12 +1115,12 @@ pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
 	fz_write_printf(ctx, out, ">\n");
 
 	if (doc->journal->current != NULL)
-	for (entry = doc->journal->head; entry != NULL; entry = entry->next)
-	{
-		currentpos++;
-		if (entry == doc->journal->current)
-			break;
-	}
+		for (entry = doc->journal->head; entry != NULL; entry = entry->next)
+		{
+			currentpos++;
+			if (entry == doc->journal->current)
+				break;
+		}
 	fz_write_printf(ctx, out, "/HistoryPos %d\n", currentpos);
 	fz_write_string(ctx, out, ">>\n");
 
@@ -1394,10 +1391,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 			/* The local xref isn't in force, and we're about
 			 * to edit the document. This invalidates it, so
 			 * throw it away. */
-			pdf_purge_local_font_resources(ctx, doc);
-			pdf_purge_locals_from_store(ctx, doc);
-			pdf_drop_local_xref(ctx, doc->local_xref);
-			doc->local_xref = NULL;
+			pdf_drop_local_xref_and_resources(ctx, doc);
 		}
 	}
 
@@ -1408,14 +1402,14 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 	 * history must be thrown away. */
 	if (entry)
 	{
-	discard_journal_entries(ctx, &entry->next);
+		discard_journal_entries(ctx, &entry->next);
 
-	for (frag = entry->head; frag != NULL; frag = frag->next)
-		if (frag->obj_num == parent)
-		{
-			entry = NULL;
-			break; /* Already stashed this one! */
-		}
+		for (frag = entry->head; frag != NULL; frag = frag->next)
+			if (frag->obj_num == parent)
+			{
+				entry = NULL;
+				break; /* Already stashed this one! */
+			}
 	}
 
 	/*
@@ -1440,11 +1434,11 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 			copy_stream = NULL;
 		}
 		else
-	{
-		copy = pdf_deep_copy_obj(ctx, orig);
-		pdf_set_obj_parent(ctx, copy, parent);
-		if (pdf_obj_num_is_stream(ctx, doc, parent))
-			copy_stream = pdf_load_raw_stream_number(ctx, doc, parent);
+		{
+			copy = pdf_deep_copy_obj(ctx, orig);
+			pdf_set_obj_parent(ctx, copy, parent);
+			if (pdf_obj_num_is_stream(ctx, doc, parent))
+				copy_stream = pdf_load_raw_stream_number(ctx, doc, parent);
 		}
 		add_fragment(ctx, doc, parent, copy, copy_stream, was_empty);
 	}

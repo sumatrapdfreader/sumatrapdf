@@ -102,6 +102,8 @@ struct ui
 	GLuint overlay_list;
 
 	void (*dialog)(void);
+
+	pdf_annot *selected_annot;
 };
 
 extern struct ui ui;
@@ -152,6 +154,7 @@ struct input
 	char text[16*1024];
 	char *end, *p, *q;
 	int scroll;
+	pdf_widget *widget;
 };
 
 struct list
@@ -220,6 +223,8 @@ int ui_save_file(char *filename, void (*extra_panel)(void), const char *label);
 void ui_show_warning_dialog(const char *fmt, ...);
 void ui_show_error_dialog(const char *fmt, ...);
 
+void ui_select_annot(pdf_annot *annot);
+
 /* Theming */
 
 enum
@@ -250,7 +255,6 @@ extern fz_context *ctx;
 extern pdf_document *pdf;
 extern pdf_page *page;
 extern fz_stext_page *page_text;
-extern pdf_annot *selected_annot;
 extern fz_matrix draw_page_ctm, view_page_ctm, view_page_inv_ctm;
 extern fz_rect page_bounds, draw_page_bounds, view_page_bounds;
 extern fz_irect view_page_area;

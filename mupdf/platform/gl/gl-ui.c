@@ -1264,3 +1264,9 @@ int ui_select_aux(const void *id, const char *current, const char *options[], in
 	}
 	return choice;
 }
+
+void ui_select_annot(pdf_annot *annot)
+{
+	pdf_drop_annot(ctx, ui.selected_annot);
+	ui.selected_annot = annot;
+}

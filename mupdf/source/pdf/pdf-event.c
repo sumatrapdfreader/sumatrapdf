@@ -7,12 +7,12 @@ typedef struct
 	pdf_alert_event alert;
 } pdf_alert_event_internal;
 
-pdf_alert_event *pdf_access_alert_event(fz_context *ctx, pdf_doc_event *event)
+pdf_alert_event *pdf_access_alert_event(fz_context *ctx, pdf_doc_event *evt)
 {
 	pdf_alert_event *alert = NULL;
 
-	if (event->type == PDF_DOCUMENT_EVENT_ALERT)
-		alert = &((pdf_alert_event_internal *)event)->alert;
+	if (evt->type == PDF_DOCUMENT_EVENT_ALERT)
+		alert = &((pdf_alert_event_internal *)evt)->alert;
 
 	return alert;
 }
@@ -47,12 +47,12 @@ typedef struct
 	const char *item;
 } pdf_exec_menu_item_event_internal;
 
-const char *pdf_access_exec_menu_item_event(fz_context *ctx, pdf_doc_event *event)
+const char *pdf_access_exec_menu_item_event(fz_context *ctx, pdf_doc_event *evt)
 {
 	const char *item = NULL;
 
-	if (event->type == PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM)
-		item = ((pdf_exec_menu_item_event_internal *)event)->item;
+	if (evt->type == PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM)
+		item = ((pdf_exec_menu_item_event_internal *)evt)->item;
 
 	return item;
 }
@@ -75,12 +75,12 @@ typedef struct
 	pdf_launch_url_event launch_url;
 } pdf_launch_url_event_internal;
 
-pdf_launch_url_event *pdf_access_launch_url_event(fz_context *ctx, pdf_doc_event *event)
+pdf_launch_url_event *pdf_access_launch_url_event(fz_context *ctx, pdf_doc_event *evt)
 {
 	pdf_launch_url_event *launch_url = NULL;
 
-	if (event->type == PDF_DOCUMENT_EVENT_LAUNCH_URL)
-		launch_url = &((pdf_launch_url_event_internal *)event)->launch_url;
+	if (evt->type == PDF_DOCUMENT_EVENT_LAUNCH_URL)
+		launch_url = &((pdf_launch_url_event_internal *)evt)->launch_url;
 
 	return launch_url;
 }
@@ -104,24 +104,24 @@ typedef struct
 	pdf_mail_doc_event mail_doc;
 } pdf_mail_doc_event_internal;
 
-pdf_mail_doc_event *pdf_access_mail_doc_event(fz_context *ctx, pdf_doc_event *event)
+pdf_mail_doc_event *pdf_access_mail_doc_event(fz_context *ctx, pdf_doc_event *evt)
 {
 	pdf_mail_doc_event *mail_doc = NULL;
 
-	if (event->type == PDF_DOCUMENT_EVENT_MAIL_DOC)
-		mail_doc = &((pdf_mail_doc_event_internal *)event)->mail_doc;
+	if (evt->type == PDF_DOCUMENT_EVENT_MAIL_DOC)
+		mail_doc = &((pdf_mail_doc_event_internal *)evt)->mail_doc;
 
 	return mail_doc;
 }
 
-void pdf_event_issue_mail_doc(fz_context *ctx, pdf_document *doc, pdf_mail_doc_event *event)
+void pdf_event_issue_mail_doc(fz_context *ctx, pdf_document *doc, pdf_mail_doc_event *evt)
 {
 	if (doc->event_cb)
 	{
 		pdf_mail_doc_event_internal e;
 
 		e.base.type = PDF_DOCUMENT_EVENT_MAIL_DOC;
-		e.mail_doc = *event;
+		e.mail_doc = *evt;
 
 		doc->event_cb(ctx, doc, (pdf_doc_event *)&e, doc->event_cb_data);
 	}
