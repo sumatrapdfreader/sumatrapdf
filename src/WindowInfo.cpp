@@ -54,10 +54,11 @@ struct LinkHandler : ILinkHandler {
 
     explicit LinkHandler(WindowInfo* win) {
         owner = win;
+        ctrl = win->ctrl;
     }
     ~LinkHandler() override;
 
-    void GotoLink(IPageDestination*, Controller*) override;
+    void GotoLink(IPageDestination*) override;
     void GotoNamedDest(const WCHAR*) override;
     void ScrollTo(IPageDestination*) override;
     void LauncURL(const char*) override;
@@ -352,7 +353,7 @@ bool WindowInfo::CreateUIAProvider() {
     return true;
 }
 
-void LinkHandler::GotoLink(IPageDestination* dest, Controller* ctrl) {
+void LinkHandler::GotoLink(IPageDestination* dest) {
     CrashIf(!owner || owner->linkHandler != this);
     if (!dest || !owner || !owner->IsDocLoaded()) {
         return;

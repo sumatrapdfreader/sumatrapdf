@@ -264,7 +264,7 @@ class EngineDjVu : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(IPageDestination*, ILinkHandler*, Controller*) override;
+    bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
     IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
@@ -1033,7 +1033,7 @@ IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     return el;
 }
 
-bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler, Controller* ctrl) {
+bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
     auto kind = dest->GetKind();
     if (kind != kindDestinationDjVu) {
         return false;
@@ -1042,6 +1042,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler, C
 
     const char* link = ddest->link;
 
+    auto ctrl = linkHandler->ctrl;
     if (str::Eq(link, "#+1")) {
         ctrl->GoToNextPage();
         return true;

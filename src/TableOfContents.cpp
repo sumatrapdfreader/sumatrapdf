@@ -189,8 +189,8 @@ static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
     int pageNo = tocItem->pageNo;
     IPageDestination* dest = tocItem->GetPageDestination();
     if (dest) {
-        ctrl->HandleLink(dest, win->linkHandler, ctrl);
-        // win->linkHandler->GotoLink(dest, ctrl);
+        ctrl->HandleLink(dest, win->linkHandler);
+        // win->linkHandler->GotoLink(dest);
     } else if (pageNo) {
         ctrl->GoToPage(pageNo, true);
     }

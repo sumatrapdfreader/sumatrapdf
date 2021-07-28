@@ -517,7 +517,7 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
     return rect.TL();
 }
 
-bool EngineBase::HandleLink(IPageDestination*, ILinkHandler*, Controller*) {
+bool EngineBase::HandleLink(IPageDestination*, ILinkHandler*) {
     // if not implemented in derived classes
     return false;
 }

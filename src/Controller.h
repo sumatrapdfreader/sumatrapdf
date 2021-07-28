@@ -31,8 +31,10 @@ enum class DocumentProperty {
 };
 
 struct ILinkHandler {
+    Controller* ctrl{nullptr};
+
     virtual ~ILinkHandler(){};
-    virtual void GotoLink(IPageDestination*, Controller*) = 0;
+    virtual void GotoLink(IPageDestination*) = 0;
     virtual void GotoNamedDest(const WCHAR*) = 0;
     virtual void ScrollTo(IPageDestination*) = 0;
     virtual void LauncURL(const char*) = 0;
@@ -47,7 +49,7 @@ struct ControllerCallback {
     // indirectly or is initiated from within the model
     virtual void PageNoChanged(Controller* ctrl, int pageNo) = 0;
     // tell the UI to open the linked document or URL
-    virtual void GotoLink(IPageDestination*, Controller*) = 0;
+    virtual void GotoLink(IPageDestination*) = 0;
     // DisplayModel //
     virtual void Repaint() = 0;
     virtual void UpdateScrollbars(Size canvas) = 0;
@@ -154,7 +156,7 @@ struct Controller {
         return true;
     }
 
-    virtual bool HandleLink(IPageDestination*, ILinkHandler*, Controller*) {
+    virtual bool HandleLink(IPageDestination*, ILinkHandler*) {
         // TODO: over-ride in ChmModel and EbookController
         return false;
     }

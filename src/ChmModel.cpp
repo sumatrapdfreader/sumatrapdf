@@ -188,7 +188,7 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
         if (cb) {
             // TODO: optimize, create just destination
             auto item = newChmTocItem(nullptr, nullptr, 0, pageUrl);
-            cb->GotoLink(item->dest, this);
+            cb->GotoLink(item->dest);
             delete item;
         }
         return;
@@ -437,7 +437,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
     if (url && cb) {
         // TODO: optimize, create just destination
         auto item = newChmTocItem(nullptr, nullptr, 0, url);
-        cb->GotoLink(item->dest, this);
+        cb->GotoLink(item->dest);
         delete item;
     }
     return false;

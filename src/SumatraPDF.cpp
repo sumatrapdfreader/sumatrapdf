@@ -628,8 +628,8 @@ struct ControllerCallbackHandler : ControllerCallback {
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
     void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb&) override;
-    void GotoLink(IPageDestination* dest, Controller* ctrl) override {
-        win->linkHandler->GotoLink(dest, ctrl);
+    void GotoLink(IPageDestination* dest) override {
+        win->linkHandler->GotoLink(dest);
     }
     void FocusFrame(bool always) override;
     void SaveDownload(const WCHAR* url, std::span<u8> data) override;

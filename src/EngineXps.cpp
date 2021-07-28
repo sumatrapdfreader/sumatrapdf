@@ -218,7 +218,7 @@ class EngineXps : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(IPageDestination*, ILinkHandler*, Controller*) override {
+    bool HandleLink(IPageDestination*, ILinkHandler*) override {
         CrashIf(true);
         return false;
     }

@@ -524,7 +524,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
             RepaintAsync(win, 0);
         }
         SetCursorCached(IDC_ARROW);
-        win->ctrl->HandleLink(dest, win->linkHandler, win->ctrl);
+        win->ctrl->HandleLink(dest, win->linkHandler);
         // win->linkHandler->GotoLink(dest);
         return;
     }
