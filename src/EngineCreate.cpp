@@ -173,7 +173,10 @@ static bool IsEngineMupdf(EngineBase* engine) {
 }
 
 bool EngineSupportsAnnotations(EngineBase* engine) {
-    return IsEngineMupdf(engine);
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfSupportsAnnotations(engine);
 }
 
 bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {

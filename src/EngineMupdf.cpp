@@ -2088,6 +2088,11 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     return res != 0;
 }
 
+bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    return (epdf->pdfdoc != nullptr);
+}
+
 static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
     if (!allowed) {
         return true;
