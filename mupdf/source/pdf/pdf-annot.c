@@ -159,14 +159,6 @@ pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots)
 				continue;
 
 			annot = pdf_new_annot(ctx, page, obj);
-			pdf_begin_implicit_operation(ctx, page->doc);
-			fz_try(ctx)
-				pdf_update_annot(ctx, annot);
-			fz_always(ctx)
-				pdf_end_operation(ctx, page->doc);
-			fz_catch(ctx)
-				fz_warn(ctx, "could not update appearance for annotation");
-
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(Widget)))
 			{
 				*page->widget_tailp = annot;
@@ -179,6 +171,13 @@ pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots)
 			}
 		}
 	}
+
+	/* We need to run a resynth pass on the annotations on this
+	 * page. That means rerunning it on the complete document. */
+	page->doc->resynth_required = 1;
+	/* And actually update the page so that any annotations required
+	 * get synthesised. */
+	pdf_update_page(ctx, page);
 }
 
 pdf_annot *
@@ -252,6 +251,7 @@ pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot)
 	}
 
 	annot->needs_new_ap = 1;
+	annot->page->doc->resynth_required = 1;
 }
 
 int

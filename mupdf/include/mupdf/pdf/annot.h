@@ -582,22 +582,6 @@ void pdf_annot_pop_and_discard_local_xref(fz_context *ctx, pdf_annot *annot);
 
 	Returns true if the annotation appearance has changed since the last time
 	pdf_update_annot was called or the annotation was first loaded.
-
-	Note that if you update an annotation and it causes a change (due to the
-	appearance stream being updated), that may invalidate the appearance stream
-	for other (earlier) annotations (specifically for those that have a
-	'local' appearance stream that has not been written back to the document
-	proper - such as unsigned signature fields). In order to work properly
-	therefore, if you get informed of a change to an annotation, you should
-	"reupdate" the previous annotations in a list. In practice it's probably
-	simplest to completely run the loop over the annotations and reupdate a
-	second time.
-
-	This may seem like it might go into an infinite loop of needing to update
-	multiple times, but in practice at worst every annotation needs to be
-	updated twice. The second pass through calling pdf_update_annot may have
-	calls returning true, but a third pass through would never have any calls
-	return true.
 */
 int pdf_update_annot(fz_context *ctx, pdf_annot *annot);
 

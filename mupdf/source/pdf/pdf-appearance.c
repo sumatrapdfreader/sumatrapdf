@@ -2198,7 +2198,6 @@ static void pdf_update_button_appearance(fz_context *ctx, pdf_annot *annot)
 			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 2);
 			pdf_dict_put(ctx, ap, PDF_NAME(N), ap_n);
 			pdf_dict_put(ctx, ap, PDF_NAME(D), ap_d);
-			pdf_set_annot_has_changed(ctx, annot);
 		}
 		fz_always(ctx)
 		{
@@ -2250,7 +2249,6 @@ static void pdf_update_button_appearance(fz_context *ctx, pdf_annot *annot)
 			ap_n = pdf_dict_put_dict(ctx, ap, PDF_NAME(N), 2);
 			pdf_dict_put(ctx, ap_n, PDF_NAME(Off), ap_off);
 			pdf_dict_put(ctx, ap_n, as_yes, ap_yes);
-			pdf_set_annot_has_changed(ctx, annot);
 		}
 		fz_always(ctx)
 		{
@@ -2263,6 +2261,7 @@ static void pdf_update_button_appearance(fz_context *ctx, pdf_annot *annot)
 			fz_rethrow(ctx);
 		}
 	}
+	pdf_set_annot_resynthesised(ctx, annot);
 }
 
 static void draw_logo(fz_context *ctx, fz_path *path)
@@ -2717,17 +2716,15 @@ static void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 				pop_local_xref = 0;
 			}
 
-			pdf_set_annot_resynthesised(ctx, annot);
-
 			if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Btn))
 			{
-			/* Special case for Btn widgets that need multiple appearance streams. */
+				/* Special case for Btn widgets that need multiple appearance streams. */
 				pdf_update_button_appearance(ctx, annot);
 			}
 			else if (subtype == PDF_NAME(Widget) && ft == PDF_NAME(Sig))
 			{
-			/* Special case for unsigned signature widgets,
-			 * which are most easily created via a display list. */
+				/* Special case for unsigned signature widgets,
+				 * which are most easily created via a display list. */
 				rect = pdf_annot_rect(ctx, annot);
 				dlist = pdf_signature_appearance_unsigned(ctx, rect, pdf_annot_language(ctx, annot));
 				fz_try(ctx)
@@ -2739,26 +2736,26 @@ static void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 			}
 			else
 			{
-			buf = fz_new_buffer(ctx, 1024);
-			fz_try(ctx)
-			{
-				fz_matrix matrix = fz_identity;
-				rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-				pdf_write_appearance(ctx, annot, buf, &rect, &bbox, &matrix, &res);
-				pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(Rect), rect);
-				pdf_set_annot_appearance(ctx, annot, "N", NULL, matrix, bbox, res, buf);
+				buf = fz_new_buffer(ctx, 1024);
+				fz_try(ctx)
+				{
+					fz_matrix matrix = fz_identity;
+					rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+					pdf_write_appearance(ctx, annot, buf, &rect, &bbox, &matrix, &res);
+					pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(Rect), rect);
+					pdf_set_annot_appearance(ctx, annot, "N", NULL, matrix, bbox, res, buf);
+				}
+				fz_always(ctx)
+				{
+					fz_drop_buffer(ctx, buf);
+					pdf_drop_obj(ctx, res);
+					pdf_drop_obj(ctx, new_ap_n);
+				}
+				fz_catch(ctx)
+				{
+					fz_warn(ctx, "cannot create appearance stream");
+				}
 			}
-			fz_always(ctx)
-			{
-				fz_drop_buffer(ctx, buf);
-				pdf_drop_obj(ctx, res);
-				pdf_drop_obj(ctx, new_ap_n);
-			}
-			fz_catch(ctx)
-			{
-				fz_warn(ctx, "cannot create appearance stream");
-			}
-		}
 
 #ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
 			fz_write_printf(ctx, fz_stddbg(ctx), "Annot obj after synthesis\n");
@@ -2781,12 +2778,54 @@ static void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 		fz_rethrow(ctx);
 }
 
+static void *
+update_appearances(fz_context *ctx, fz_page *page_, void *state)
+{
+	pdf_page *page = (pdf_page *)page_;
+	pdf_annot *annot;
+
+	for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
+		pdf_update_appearance(ctx, annot);
+	for (annot = pdf_first_widget(ctx, page); annot; annot = pdf_next_widget(ctx, annot))
+		pdf_update_appearance(ctx, annot);
+
+	return NULL;
+}
+
+static void
+update_all_appearances(fz_context *ctx, pdf_page *page)
+{
+	pdf_document *doc = page->doc;
+
+	/* Update all the annotations on all the pages open in the document.
+	 * At least one annotation should be resynthesised because we'll
+	 * only reach here if resynth_required was set. Any such resynthesis
+	 * that changes the document will throw away any local_xref. */
+	fz_process_opened_pages(ctx, &doc->super, update_appearances, NULL);
+	/* If the page isn't linked in yet (as is the case whilst loading
+	 * the annots for a page), process that too. */
+	if (page->super.prev == NULL && page->super.next == NULL)
+		update_appearances(ctx, &page->super, NULL);
+
+	/* Run it a second time, so that any annotations whose synthesised
+	 * appearances live in the local_xref (such as unsigned sigs) can
+	 * be regenerated too. Running this for annots which are up to date
+	 * should be fast. */
+	fz_process_opened_pages(ctx, &doc->super, update_appearances, NULL);
+	/* And cope with a non-linked in page again. */
+	if (page->super.prev == NULL && page->super.next == NULL)
+		update_appearances(ctx, &page->super, NULL);
+
+	doc->resynth_required = 0;
+}
+
 int
 pdf_update_annot(fz_context *ctx, pdf_annot *annot)
 {
 	int changed;
 
-	pdf_update_appearance(ctx, annot);
+	if (annot->page->doc->resynth_required)
+		update_all_appearances(ctx, annot->page);
 
 	changed = annot->has_new_ap;
 	annot->has_new_ap = 0;

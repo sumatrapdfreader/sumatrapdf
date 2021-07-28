@@ -450,6 +450,7 @@ void ui_init(int w, int h, const char *title)
 
 void ui_finish(void)
 {
+	pdf_drop_annot(ctx, ui.selected_annot);
 	glDeleteLists(ui.overlay_list, 1);
 	ui_finish_fonts();
 	glutExit();

@@ -47,6 +47,12 @@ typedef struct pdf_doc_event pdf_doc_event;
 typedef void (pdf_doc_event_cb)(fz_context *ctx, pdf_document *doc, pdf_doc_event *evt, void *data);
 
 /*
+	the type of function via which the app frees
+	the data provided to the event callback pdf_doc_event_cb.
+*/
+typedef void (pdf_free_doc_event_data_cb)(fz_context *ctx, void *data);
+
+/*
 	Open a PDF document.
 
 	Open a PDF document by reading its cross reference table, so
@@ -366,8 +372,10 @@ struct pdf_document
 
 	int recalculate;
 	int redacted;
+	int resynth_required;
 
 	pdf_doc_event_cb *event_cb;
+	pdf_free_doc_event_data_cb *free_event_data_cb;
 	void *event_cb_data;
 
 	int num_type3_fonts;

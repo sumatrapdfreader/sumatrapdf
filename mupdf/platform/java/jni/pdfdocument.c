@@ -1,5 +1,21 @@
 /* PDFDocument interface */
 
+static void free_event_cb_data(fz_context *ctx, void *data)
+{
+	jobject jlistener = (jobject)data;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+
+	env = jni_attach_thread(ctx, &detach);
+	if (env == NULL)
+		fz_warn(ctx, "cannot attach to JVM in free_event_cb_data");
+	else
+	{
+		(*env)->DeleteGlobalRef(env, jlistener);
+		jni_detach_thread(detach);
+	}
+}
+
 static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, void *data)
 {
 	jobject jlistener = (jobject)data;
@@ -58,11 +74,7 @@ FUN(PDFDocument_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_document *pdf = from_PDFDocument_safe(env, self);
-	void *data = NULL;
 	if (!ctx || !pdf) return;
-	data = pdf_get_doc_event_callback_data(ctx, pdf);
-	if (data)
-		(*env)->DeleteGlobalRef(env, data);
 	FUN(Document_finalize)(env, self); /* Call super.finalize() */
 }
 
@@ -886,7 +898,6 @@ FUN(PDFDocument_setJsEventListener)(JNIEnv *env, jobject self, jobject jlistener
 {
 	fz_context *ctx = get_context(env);
 	pdf_document *pdf = from_PDFDocument_safe(env, self);
-	void *data = NULL;
 
 	if (!ctx || !pdf) return;
 	if (!jlistener) jni_throw_arg_void(env, "listener must not be null");
@@ -895,12 +906,7 @@ FUN(PDFDocument_setJsEventListener)(JNIEnv *env, jobject self, jobject jlistener
 	if (!jlistener) jni_throw_arg_void(env, "unable to get reference to listener");
 
 	fz_try(ctx)
-	{
-		data = pdf_get_doc_event_callback_data(ctx, pdf);
-		if (data)
-			(*env)->DeleteGlobalRef(env, data);
-		pdf_set_doc_event_callback(ctx, pdf, event_cb, jlistener);
-	}
+		pdf_set_doc_event_callback(ctx, pdf, event_cb, free_event_cb_data, jlistener);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }

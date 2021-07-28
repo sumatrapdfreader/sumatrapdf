@@ -1269,11 +1269,13 @@ static void do_undo(void)
 		page_contents_changed = 1;
 		while (pos > desired)
 		{
+			trace_action("doc.undo();\n");
 			pdf_undo(ctx, pdf);
 			pos--;
 		}
 		while (pos < desired)
 		{
+			trace_action("doc.redo();\n");
 			pdf_redo(ctx, pdf);
 			pos++;
 		}
@@ -1557,6 +1559,7 @@ reload_or_start_journalling(fz_context *ctx, pdf_document *pdf)
 	{
 		/* Ignore any failures here. */
 	}
+	trace_action("doc.enableJournal();\n");
 	pdf_enable_journal(ctx, pdf);
 }
 
@@ -1736,7 +1739,7 @@ static void load_document(void)
 	oldpage = currentpage = fz_clamp_location(ctx, doc, currentpage);
 
 	if (pdf)
-		pdf_set_doc_event_callback(ctx, pdf, event_cb, NULL);
+		pdf_set_doc_event_callback(ctx, pdf, event_cb, NULL, NULL);
 }
 
 static void reflow_document(void)
@@ -2588,6 +2591,8 @@ static void cleanup(void)
 
 	ui_finish();
 
+	fz_drop_pixmap(ctx, page_contents);
+	page_contents = NULL;
 #ifndef NDEBUG
 	if (fz_atoi(getenv("FZ_DEBUG_STORE")))
 		fz_debug_store(ctx, fz_stdout(ctx));

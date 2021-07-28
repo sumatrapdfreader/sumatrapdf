@@ -476,7 +476,7 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int kbps
 		fz_try(ctx)
 		{
 			pdf_enable_js(ctx, idoc);
-			pdf_set_doc_event_callback(ctx, idoc, event_cb, app);
+			pdf_set_doc_event_callback(ctx, idoc, event_cb, NULL, app);
 		}
 		fz_catch(ctx)
 		{

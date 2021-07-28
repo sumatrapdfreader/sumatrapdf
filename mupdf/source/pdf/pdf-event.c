@@ -127,9 +127,12 @@ void pdf_event_issue_mail_doc(fz_context *ctx, pdf_document *doc, pdf_mail_doc_e
 	}
 }
 
-void pdf_set_doc_event_callback(fz_context *ctx, pdf_document *doc, pdf_doc_event_cb *fn, void *data)
+void pdf_set_doc_event_callback(fz_context *ctx, pdf_document *doc, pdf_doc_event_cb *event_cb, pdf_free_doc_event_data_cb *free_event_data_cb, void *data)
 {
-	doc->event_cb = fn;
+	if (doc->free_event_data_cb)
+		doc->free_event_data_cb(ctx, doc->event_cb_data);
+	doc->event_cb = event_cb;
+	doc->free_event_data_cb = free_event_data_cb;
 	doc->event_cb_data = data;
 }
 

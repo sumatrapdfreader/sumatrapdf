@@ -1719,6 +1719,7 @@ pdf_drop_document_imp(fz_context *ctx, pdf_document *doc)
 		/* Swallow error, but continue dropping */
 	}
 
+	pdf_set_doc_event_callback(ctx, doc, NULL, NULL, NULL);
 	pdf_drop_js(ctx, doc->js);
 
 	pdf_drop_journal(ctx, doc->journal);
@@ -4608,6 +4609,7 @@ void pdf_drop_local_xref_and_resources(fz_context *ctx, pdf_document *doc)
 	pdf_purge_locals_from_store(ctx, doc);
 	pdf_drop_local_xref(ctx, doc->local_xref);
 	doc->local_xref = NULL;
+	doc->resynth_required = 1;
 }
 
 void

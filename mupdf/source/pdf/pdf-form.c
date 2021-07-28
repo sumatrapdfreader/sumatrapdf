@@ -585,16 +585,6 @@ pdf_update_page(fz_context *ctx, pdf_page *page)
 		for (widget = page->widgets; widget; widget = widget->next)
 			if (pdf_update_annot(ctx, widget))
 				changed = 1;
-		if (changed)
-		{
-			for (annot = page->annots; annot; annot = annot->next)
-				pdf_update_annot(ctx, annot);
-			for (widget = page->widgets; widget; widget = widget->next)
-				pdf_update_annot(ctx, widget);
-			/* These pdf_update_annots may return true (but only if they
-			 * did the first time, and a third run through will never
-			 * get any changes. */
-		}
 	}
 	fz_always(ctx)
 	{
@@ -1100,12 +1090,14 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *up
 	pdf_keystroke_event evt = { 0 };
 	char *new_change = NULL;
 	char *new_value = NULL;
+	char *merged_value = NULL;
 	int rc = 1;
 
 	pdf_begin_operation(ctx, doc, "Edit text field");
 
 	fz_var(new_value);
 	fz_var(new_change);
+	fz_var(merged_value);
 	fz_try(ctx)
 	{
 		if (!widget->ignore_trigger_events)
@@ -1122,7 +1114,8 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *up
 			evt.newChange = NULL;
 			if (rc)
 			{
-				evt.value = merge_changes(ctx, new_value, evt.selStart, evt.selEnd, new_change);
+				merged_value = merge_changes(ctx, new_value, evt.selStart, evt.selEnd, new_change);
+				evt.value = merged_value;
 				evt.change = "";
 				evt.selStart = -1;
 				evt.selEnd = -1;
@@ -1144,6 +1137,7 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *up
 		fz_free(ctx, evt.newValue);
 		fz_free(ctx, new_change);
 		fz_free(ctx, evt.newChange);
+		fz_free(ctx, merged_value);
 	}
 	fz_catch(ctx)
 	{
