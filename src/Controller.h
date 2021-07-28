@@ -7,7 +7,7 @@ struct DisplayModel;
 struct EbookController;
 struct EbookFormattingData;
 struct IPageElement;
-struct PageDestination;
+struct IPageDestination;
 struct TocTree;
 struct TocItem;
 struct WindowInfo;
@@ -31,11 +31,11 @@ enum class DocumentProperty {
 
 struct ILinkHandler {
     virtual ~ILinkHandler(){};
-    virtual void GotoLink(PageDestination* dest) = 0;
+    virtual void GotoLink(IPageDestination* dest) = 0;
     virtual void GotoNamedDest(const WCHAR* name) = 0;
-    virtual void ScrollTo(PageDestination* dest) = 0;
-    virtual void LaunchFile(const WCHAR* path, PageDestination* link) = 0;
-    virtual PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) = 0;
+    virtual void ScrollTo(IPageDestination* dest) = 0;
+    virtual void LaunchFile(const WCHAR* path, IPageDestination* link) = 0;
+    virtual IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) = 0;
 };
 
 struct ControllerCallback {
@@ -45,7 +45,7 @@ struct ControllerCallback {
     // indirectly or is initiated from within the model
     virtual void PageNoChanged(Controller* ctrl, int pageNo) = 0;
     // tell the UI to open the linked document or URL
-    virtual void GotoLink(PageDestination* dest) = 0;
+    virtual void GotoLink(IPageDestination* dest) = 0;
     // DisplayModel //
     virtual void Repaint() = 0;
     virtual void UpdateScrollbars(Size canvas) = 0;
@@ -99,8 +99,10 @@ struct Controller {
         return tree != nullptr;
     }
     virtual TocTree* GetToc() = 0;
-    virtual void ScrollToLink(PageDestination* dest) = 0;
-    virtual PageDestination* GetNamedDest(const WCHAR* name) = 0;
+    virtual void ScrollToLink(IPageDestination* dest) = 0;
+    virtual void ScrollTo(int pageNo, RectF rect, float zoom) = 0;
+
+    virtual IPageDestination* GetNamedDest(const WCHAR* name) = 0;
 
     // get display state (pageNo, zoom, scroll etc. of the document)
     virtual void GetDisplayState(FileState* ds) = 0;
@@ -151,7 +153,7 @@ struct Controller {
         return true;
     }
 
-    virtual bool HandleLink(__unused IPageElement* pel, __unused ILinkHandler* h) {
+    virtual bool HandleLink(__unused IPageElement* pel, __unused ILinkHandler* h, __unused Controller* ctrl) {
         // TODO: over-ride in ChmModel and EbookController
         return false;
     }

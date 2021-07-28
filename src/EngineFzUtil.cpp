@@ -744,7 +744,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
     }
     if (!IsExternalLink(uri)) {
         float x = 0, y = 0, zoom = 0;
-        int pageNo = resolve_link(uri, &x, &y, &zoom);
+        int pageNo = ResolveLink(uri, &x, &y, &zoom);
         if (pageNo == -1) {
             // TODO: figure out what it could be
             logf("CalcDestKind(): unknown uri: '%s'\n", uri);
@@ -806,7 +806,7 @@ static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
         return 0;
     }
     float x, y;
-    int pageNo = resolve_link(uri, &x, &y, nullptr);
+    int pageNo = ResolveLink(uri, &x, &y, nullptr);
     if (pageNo == -1) {
         return 0;
     }
@@ -835,7 +835,7 @@ static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
     }
     float x = 0;
     float y = 0;
-    int pageNo = resolve_link(uri, &x, &y, nullptr);
+    int pageNo = ResolveLink(uri, &x, &y, nullptr);
     if (pageNo == -1) {
         // SubmitBugReportIf(pageNo == -1);
         return result;
@@ -846,14 +846,17 @@ static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
     return result;
 }
 
-static PageDestination* NewPageDestination(fz_link* link, fz_outline* outline) {
+static IPageDestination* NewPageDestination(fz_link* link, fz_outline* outline) {
     auto dest = new PageDestination();
     dest->kind = CalcDestKind(link, outline);
+    dest->link = link;
+    dest->outline = outline;
+
     CrashIf(!dest->kind);
     if (dest->kind == kindDestinationScrollTo) {
         char* uri = PdfLinkGetURI(link, outline);
         float x = 0, y = 0, zoom = 0;
-        int pageNo = resolve_link(uri, &x, &y, &zoom);
+        int pageNo = ResolveLink(uri, &x, &y, &zoom);
         dest->pageNo = pageNo + 1;
         dest->rect = RectF(x, y, x, y);
         dest->value = strconv::Utf8ToWstr(uri);
@@ -874,11 +877,11 @@ static PageDestination* NewPageDestination(fz_link* link, fz_outline* outline) {
     return dest;
 }
 
-PageDestination* NewFzDestination(fz_outline* outline) {
+IPageDestination* NewFzDestination(fz_outline* outline) {
     return NewPageDestination(nullptr, outline);
 }
 
-static PageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
+static IPageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
     auto res = new PageElement();
     res->kind_ = kindPageElementDest;
     res->pageNo = srcPageNo;
@@ -888,13 +891,13 @@ static PageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline)
     }
 
     res->dest = NewPageDestination(link, outline);
-    res->pageNo = res->dest->pageNo;
-    res->value = str::Dup(res->dest->value);
+    res->pageNo = res->dest->GetPageNo();
+    res->value = str::Dup(res->dest->GetValue());
 
     return res;
 }
 
-PageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
+IPageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
     auto res = new PageElement();
     res->kind_ = kindPageElementImage;
     res->pageNo = pageNo;
@@ -903,7 +906,7 @@ PageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
     return res;
 }
 
-TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest) {
+TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDestination* dest) {
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     return res;
@@ -1020,10 +1023,11 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         // TODO: those leak on xps
         PageElement* pel = new PageElement();
         pel->kind_ = kindPageElementDest;
-        pel->dest = new PageDestination();
-        pel->dest->kind = kindDestinationLaunchURL;
-        pel->dest->pageNo = 0;
-        pel->dest->value = str::Dup(uri);
+        auto dest = new PageDestination();
+        dest->kind = kindDestinationLaunchURL;
+        dest->pageNo = 0;
+        dest->value = str::Dup(uri);
+        pel->dest = dest;
         pel->value = str::Dup(uri);
         pel->rect = ToRectFl(bbox);
         pageInfo->autoLinks.Append(pel);

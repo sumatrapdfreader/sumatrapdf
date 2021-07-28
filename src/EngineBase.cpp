@@ -71,41 +71,42 @@ PageDestination::~PageDestination() {
     free(name);
 }
 
-Kind PageDestination::Kind() const {
+Kind PageDestination::GetKind() {
     return kind;
 }
 
 // page the destination points to (0 for external destinations such as URLs)
-int PageDestination::GetPageNo() const {
+int PageDestination::GetPageNo() {
     return pageNo;
 }
 
 // rectangle of the destination on the above returned page
-RectF PageDestination::GetRect() const {
+RectF PageDestination::GetRect() {
     return rect;
 }
 
 // optional zoom level on the above returned page
-float PageDestination::GetZoom() const {
+float PageDestination::GetZoom() {
     return zoom;
 }
 
 // string value associated with the destination (e.g. a path or a URL)
-WCHAR* PageDestination::GetValue() const {
+WCHAR* PageDestination::GetValue() {
     return value;
 }
 
 // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
 // (mainly applicable for links of type "LaunchFile" to PDF documents)
-WCHAR* PageDestination::GetName() const {
+WCHAR* PageDestination::GetName() {
     return name;
 }
 
-PageDestination* newSimpleDest(int pageNo, RectF rect, const WCHAR* value) {
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, const WCHAR* value) {
     auto res = new PageDestination();
     res->pageNo = pageNo;
     res->rect = rect;
     res->kind = kindDestinationScrollTo;
+    res->zoom = zoom;
     if (value) {
         res->kind = kindDestinationLaunchURL;
         res->value = str::Dup(value);
@@ -113,18 +114,22 @@ PageDestination* newSimpleDest(int pageNo, RectF rect, const WCHAR* value) {
     return res;
 }
 
-PageDestination* clonePageDestination(PageDestination* dest) {
+IPageDestination* PageDestination::Clone() {
+    auto res = new PageDestination();
+    CrashIf(!kind);
+    res->kind = kind;
+    res->pageNo = GetPageNo();
+    res->rect = GetRect();
+    res->value = str::Dup(GetValue());
+    res->name = str::Dup(GetName());
+    return res;
+}
+
+IPageDestination* ClonePageDestination(IPageDestination* dest) {
     if (!dest) {
         return nullptr;
     }
-    auto res = new PageDestination();
-    CrashIf(!dest->kind);
-    res->kind = dest->kind;
-    res->pageNo = dest->GetPageNo();
-    res->rect = dest->GetRect();
-    res->value = str::Dup(dest->GetValue());
-    res->name = str::Dup(dest->GetName());
-    return res;
+    return dest->Clone();
 }
 
 bool IPageElement::Is(Kind expectedKind) {
@@ -159,7 +164,7 @@ WCHAR* PageElement::GetValue() {
 
 // if this element is a link, this returns information about the link's destination
 // (the result is owned by the PageElement and MUST NOT be deleted)
-PageDestination* PageElement::AsLink() {
+IPageDestination* PageElement::AsLink() {
     return dest;
 }
 
@@ -173,7 +178,7 @@ IPageElement* PageElement::Clone() {
     res->pageNo = pageNo;
     res->rect = rect;
     res->value = str::Dup(value);
-    res->dest = clonePageDestination(dest);
+    res->dest = ClonePageDestination(dest);
     return res;
 }
 
@@ -266,7 +271,7 @@ void TocItem::DeleteJustSelf() {
 // returns the destination this ToC item points to or nullptr
 // (the result is owned by the TocItem and MUST NOT be deleted)
 // TODO: rename to GetDestination()
-PageDestination* TocItem::GetPageDestination() const {
+IPageDestination* TocItem::GetPageDestination() const {
     return dest;
 }
 
@@ -291,7 +296,7 @@ TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     res->id = ti->id;
     res->fontFlags = ti->fontFlags;
     res->color = ti->color;
-    res->dest = clonePageDestination(ti->dest);
+    res->dest = ClonePageDestination(ti->dest);
     res->child = CloneTocItemRecur(ti->child, removeUnchecked);
 
     res->nPages = ti->nPages;
@@ -350,11 +355,11 @@ bool TocItem::IsExpanded() {
 }
 
 bool TocItem::PageNumbersMatch() const {
-    if (!dest || dest->pageNo == 0) {
+    if (!dest || dest->GetPageNo() == 0) {
         return true;
     }
-    if (pageNo != dest->pageNo) {
-        logf("pageNo: %d, dest->pageNo: %d\n", pageNo, dest->pageNo);
+    if (pageNo != dest->GetPageNo()) {
+        logf("pageNo: %d, dest->pageNo: %d\n", pageNo, dest->GetPageNo());
         return false;
     }
     return true;
@@ -508,7 +513,7 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-PageDestination* EngineBase::GetNamedDest(__unused const WCHAR* name) {
+IPageDestination* EngineBase::GetNamedDest(const WCHAR*) {
     return nullptr;
 }
 
@@ -560,7 +565,7 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
     return rect.TL();
 }
 
-bool EngineBase::HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) {
+bool EngineBase::HandleLink(IPageElement*, ILinkHandler*, Controller*) {
     // if not implemented in derived classes
     return false;
 }
@@ -595,7 +600,7 @@ WCHAR* CleanupFileURL(const WCHAR* s) {
 
 // copy of pdf_resolve_link in pdf-link.c without ctx and doc
 // returns page number and location on the page
-int resolve_link(const char* uri, float* xp, float* yp, float* zoomp) {
+int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp) {
     if (!uri || uri[0] != '#') {
         return -1;
     }

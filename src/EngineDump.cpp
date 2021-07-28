@@ -154,7 +154,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 }
 
 // caller must free() the result
-char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
+static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
     WCHAR* destName = dest->GetName();
     if (destName) {
         AutoFree name = Escape(destName);
@@ -195,7 +195,7 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
             Out(" Id=\"%d\"", item->id);
         }
         if (item->GetPageDestination()) {
-            PageDestination* dest = item->GetPageDestination();
+            IPageDestination* dest = item->GetPageDestination();
             AutoFree target = Escape(dest->GetValue());
             if (target.Get()) {
                 Out(" Target=\"%s\"", target.Get());
@@ -290,10 +290,10 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
             RectF rect = els->at(i)->GetRect();
             Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", ElementTypeToStr(els->at(i)),
                 rect.x, rect.y, rect.dx, rect.dy);
-            PageDestination* dest = els->at(i)->AsLink();
+            IPageDestination* dest = els->at(i)->AsLink();
             if (dest) {
-                if (dest->Kind() != nullptr) {
-                    Out("\t\t\t\tLinkType=\"%s\"\n", dest->Kind());
+                if (dest->GetKind() != nullptr) {
+                    Out("\t\t\t\tLinkType=\"%s\"\n", dest->GetKind());
                 }
                 AutoFree value(Escape(dest->GetValue()));
                 if (value.Get()) {

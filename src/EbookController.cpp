@@ -55,17 +55,19 @@ HtmlFormatterArgs* CreateFormatterArgsDoc(const Doc& doc, int dx, int dy, Alloca
 
 static TocItem* newEbookTocDest(TocItem* parent, const WCHAR* title, int reparseIdx) {
     auto res = new TocItem(parent, title, reparseIdx);
-    res->dest = new PageDestination();
-    res->dest->kind = kindDestinationScrollTo;
-    res->dest->pageNo = reparseIdx;
+    auto dest = new PageDestination();
+    dest->kind = kindDestinationScrollTo;
+    dest->pageNo = reparseIdx;
+    dest = dest;
     return res;
 }
 
 static TocItem* newEbookTocDest(TocItem* parent, const WCHAR* title, const WCHAR* url) {
     auto res = new TocItem(parent, title, 0);
-    res->dest = new PageDestination();
-    res->dest->kind = kindDestinationLaunchURL;
-    res->dest->value = str::Dup(url);
+    auto dest = new PageDestination();
+    dest->kind = kindDestinationLaunchURL;
+    dest->value = str::Dup(url);
+    res->dest = dest;
     return res;
 }
 
@@ -836,7 +838,7 @@ TocTree* EbookController::GetToc() {
     return tocTree;
 }
 
-void EbookController::ScrollToLink(PageDestination* dest) {
+void EbookController::ScrollToLink(IPageDestination* dest) {
     int reparseIdx = dest->GetPageNo() - 1;
     int pageNo = PageForReparsePoint(pages, reparseIdx);
     if (pageNo > 0) {
@@ -846,7 +848,11 @@ void EbookController::ScrollToLink(PageDestination* dest) {
     }
 }
 
-PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
+void EbookController::ScrollTo(int, RectF, float) {
+    CrashIf(true);
+}
+
+IPageDestination* EbookController::GetNamedDest(const WCHAR* name) {
     int reparseIdx = -1;
     auto d = doc.GetHtmlData();
     if (DocType::Mobi == doc.Type() && str::Parse(name, L"%d%$", &reparseIdx) && 0 <= reparseIdx &&

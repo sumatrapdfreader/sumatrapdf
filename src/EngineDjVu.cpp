@@ -114,7 +114,7 @@ static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const c
     if (!str::IsEmpty(comment)) {
         res->value = strconv::Utf8ToWstr(comment);
     } else {
-        if (kindDestinationLaunchURL == res->dest->Kind()) {
+        if (kindDestinationLaunchURL == res->dest->GetKind()) {
             res->value = str::Dup(res->dest->GetValue());
         }
     }
@@ -260,13 +260,13 @@ class EngineDjVu : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) override {
+    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh, __unused Controller* ctrl) override {
         CrashIf(true);
         // TODO: implement me
         return false;
     }
 
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
     [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
@@ -1048,7 +1048,7 @@ char* EngineDjVu::ResolveNamedDest(const char* name) {
     return nullptr;
 }
 
-PageDestination* EngineDjVu::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineDjVu::GetNamedDest(const WCHAR* name) {
     AutoFree nameA = strconv::WstrToUtf8(name);
     if (!str::StartsWith(nameA.Get(), "#")) {
         nameA.TakeOwnershipOf(str::Join("#", nameA.Get()));

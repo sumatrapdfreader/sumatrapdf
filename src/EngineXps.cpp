@@ -218,12 +218,12 @@ class EngineXps : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) override {
+    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler*, Controller*) override {
         CrashIf(true);
         return false;
     }
 
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
     void ResolveLinks(Vec<IPageElement*>* els, fz_link* links) const;
 
@@ -884,7 +884,7 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     return bmp;
 }
 
-PageDestination* EngineXps::GetNamedDest(const WCHAR* nameW) {
+IPageDestination* EngineXps::GetNamedDest(const WCHAR* nameW) {
     AutoFree name = strconv::WstrToUtf8(nameW);
     if (!str::StartsWith(name, "#")) {
         name.Set(str::Join("#", name));
@@ -893,7 +893,7 @@ PageDestination* EngineXps::GetNamedDest(const WCHAR* nameW) {
     xps_target* dest = doc->target;
     while (dest) {
         if (str::EndsWithI(dest->name, name)) {
-            return newSimpleDest(dest->page + 1, RectF{});
+            return NewSimpleDest(dest->page + 1, RectF{});
         }
         dest = dest->next;
     }

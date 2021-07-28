@@ -60,8 +60,10 @@ struct EbookController : Controller {
     void SetViewPortSize(Size size) override;
 
     TocTree* GetToc() override;
-    void ScrollToLink(PageDestination* dest) override;
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    void ScrollToLink(IPageDestination* dest) override;
+    void ScrollTo(int pageNo, RectF rect, float zoom) override;
+
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
 
     void GetDisplayState(FileState* ds) override;
     void CreateThumbnail(Size size, const onBitmapRenderedCb&) override;

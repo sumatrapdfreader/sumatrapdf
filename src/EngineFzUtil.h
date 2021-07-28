@@ -73,9 +73,9 @@ WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut);
 
 LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
 int IsExternalLink(const char* uri);
-TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest);
-PageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx);
-PageDestination* NewFzDestination(fz_outline*);
+TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDestination* dest);
+IPageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx);
+IPageDestination* NewFzDestination(fz_outline*);
 IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);

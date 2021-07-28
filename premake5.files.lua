@@ -1054,6 +1054,7 @@ function pdf_filter_files()
     "EngineBase.*",
     "EngineFzUtil.*",
     "EngineMupdf.*",
+    "EngineMupdfImpl.*",
     "EngineXps.*",
     "PalmDbReader.*",
   })

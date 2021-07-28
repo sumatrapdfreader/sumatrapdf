@@ -613,7 +613,7 @@ class ThumbnailRenderingTask : public RenderingCallback {
 };
 
 struct ControllerCallbackHandler : ControllerCallback {
-    WindowInfo* win;
+    WindowInfo* win{nullptr};
 
   public:
     explicit ControllerCallbackHandler(WindowInfo* win) : win(win) {
@@ -628,7 +628,7 @@ struct ControllerCallbackHandler : ControllerCallback {
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
     void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb&) override;
-    void GotoLink(PageDestination* dest) override {
+    void GotoLink(IPageDestination* dest) override {
         win->linkHandler->GotoLink(dest);
     }
     void FocusFrame(bool always) override;

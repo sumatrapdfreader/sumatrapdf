@@ -61,7 +61,7 @@ class Synchronizer;
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
-struct DisplayModel : public Controller {
+struct DisplayModel : Controller {
     DisplayModel(EngineBase* engine, ControllerCallback* cb);
     DisplayModel(DisplayModel const&) = delete;
     DisplayModel& operator=(DisplayModel const&) = delete;
@@ -91,8 +91,9 @@ struct DisplayModel : public Controller {
 
     // table of contents
     TocTree* GetToc() override;
-    void ScrollToLink(PageDestination* dest) override;
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    void ScrollToLink(IPageDestination* dest) override;
+    void ScrollTo(int pageNo, RectF rect, float zoom) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
@@ -110,7 +111,7 @@ struct DisplayModel : public Controller {
     bool GoToFirstPage() override;
     bool GoToLastPage() override;
 
-    bool HandleLink(IPageElement*, ILinkHandler*) override;
+    bool HandleLink(IPageElement*, ILinkHandler*, Controller* ctrl) override;
 
     // for quick type determination and type-safe casting
     DisplayModel* AsFixed() override;

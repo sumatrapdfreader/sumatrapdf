@@ -61,7 +61,7 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
     auto ti = ev->treeItem;
     auto nm = ev->info;
     TocItem* tocItem = (TocItem*)ti;
-    PageDestination* link = tocItem->GetPageDestination();
+    IPageDestination* link = tocItem->GetPageDestination();
     if (!link) {
         return;
     }
@@ -72,7 +72,7 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
     if (!path) {
         return;
     }
-    auto k = link->Kind();
+    auto k = link->GetKind();
     // TODO: TocItem from Chm contain other types
     // we probably shouldn't set TocItem::dest there
     if (k == kindDestinationScrollTo) {
@@ -187,7 +187,7 @@ static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
     // isn't unselected in UpdateTocSelection right again
     win->tocKeepSelection = true;
     int pageNo = tocItem->pageNo;
-    PageDestination* dest = tocItem->GetPageDestination();
+    IPageDestination* dest = tocItem->GetPageDestination();
     if (dest) {
         win->linkHandler->GotoLink(dest);
     } else if (pageNo) {
@@ -196,11 +196,11 @@ static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
     win->tocKeepSelection = false;
 }
 
-static bool IsScrollToLink(PageDestination* link) {
+static bool IsScrollToLink(IPageDestination* link) {
     if (!link) {
         return false;
     }
-    auto kind = link->Kind();
+    auto kind = link->GetKind();
     return kind == kindDestinationScrollTo;
 }
 
@@ -419,7 +419,7 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
 }
 
-static void OpenEmbeddedFile(TabInfo* tab, PageDestination* dest) {
+static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     CrashIf(!tab || !dest);
     if (!tab || !dest) {
         return;
@@ -439,7 +439,7 @@ static void OpenEmbeddedFile(TabInfo* tab, PageDestination* dest) {
     }
 }
 
-static void SaveEmbeddedFile(TabInfo* tab, PageDestination* dest) {
+static void SaveEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     CrashIf(!tab || !dest);
     if (!tab || !dest) {
         return;
@@ -479,12 +479,12 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
     bool isEmbeddedFile = false;
-    PageDestination* dest = nullptr;
+    IPageDestination* dest = nullptr;
     WCHAR* path = nullptr;
     if (dti && dti->dest) {
         dest = dti->dest;
         path = dest->GetValue();
-        isEmbeddedFile = (path != nullptr) && (dest->kind == kindDestinationLaunchEmbedded);
+        isEmbeddedFile = (path != nullptr) && (dest->GetKind() == kindDestinationLaunchEmbedded);
     }
     if (isEmbeddedFile) {
         auto embeddedName = dest->GetName();

@@ -511,16 +511,20 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
 
     if (link && link->GetRect().Contains(ptPage)) {
         /* follow an active link */
-        PageDestination* dest = link->AsLink();
+        IPageDestination* dest = link->AsLink();
         // highlight the clicked link (as a reminder of the last action once the user returns)
-        if (dest && (kindDestinationLaunchURL == dest->Kind() || kindDestinationLaunchFile == dest->Kind())) {
+        Kind kind = nullptr;
+        if (dest) {
+            kind = dest->GetKind();
+        }
+        if ((kindDestinationLaunchURL == kind || kindDestinationLaunchFile == kind)) {
             DeleteOldSelectionInfo(win, true);
             tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(pageNo, link->GetRect()));
             win->showSelection = tab->selectionOnPage != nullptr;
             RepaintAsync(win, 0);
         }
         SetCursorCached(IDC_ARROW);
-        win->ctrl->HandleLink(link, win->linkHandler);
+        win->ctrl->HandleLink(link, win->linkHandler, win->ctrl);
         // win->linkHandler->GotoLink(dest);
         return;
     }
@@ -578,13 +582,14 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y), nullptr);
+    int pageNo{-1};
+    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y), &pageNo);
     if (pageEl && pageEl->Is(kindPageElementDest)) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
     } else if (pageEl && pageEl->Is(kindPageElementImage)) {
         // select an image that could be copied to the clipboard
-        Rect rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+        Rect rc = dm->CvtToScreen(pageNo, pageEl->GetRect());
 
         DeleteOldSelectionInfo(win, true);
         win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);

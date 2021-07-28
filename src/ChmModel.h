@@ -34,8 +34,10 @@ struct ChmModel : Controller {
 
     // table of contents
     TocTree* GetToc() override;
-    void ScrollToLink(PageDestination* link) override;
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    void ScrollToLink(IPageDestination* link) override;
+    void ScrollTo(int pageNo, RectF rect, float zoom) override;
+
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)

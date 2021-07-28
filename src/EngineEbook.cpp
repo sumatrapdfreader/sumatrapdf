@@ -98,13 +98,13 @@ class EngineEbook : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) override {
+    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh, __unused Controller* ctrl) override {
         CrashIf(true);
         // TODO: implement me
         return false;
     }
 
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
 
     bool BenchLoadPage(int pageNo) override;
@@ -127,13 +127,13 @@ class EngineEbook : public EngineBase {
     bool ExtractPageAnchors();
     WCHAR* ExtractFontList();
 
-    virtual PageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo);
+    virtual IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo);
 
     Vec<DrawInstr>* GetHtmlPage(int pageNo);
 };
 
-static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* dest, int pageNo = 0,
-                                 bool showUrl = false) {
+static IPageElement* newEbookLink(DrawInstr* link, Rect rect, IPageDestination* dest, int pageNo = 0,
+                                  bool showUrl = false) {
     auto res = new PageElement();
     res->pageNo = pageNo;
 
@@ -145,12 +145,13 @@ static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* de
     }
 
     if (!dest) {
-        dest = new PageDestination();
-        dest->kind = kindDestinationLaunchURL;
+        auto dest2 = new PageDestination();
+        dest2->kind = kindDestinationLaunchURL;
         // TODO: not sure about this
-        dest->value = str::Dup(res->value);
-        dest->pageNo = 0;
-        dest->rect = ToRectFl(rect);
+        dest2->value = str::Dup(res->value);
+        dest2->pageNo = 0;
+        dest2->rect = ToRectFl(rect);
+        dest = dest2;
     }
     res->dest = dest;
     return res;
@@ -165,7 +166,7 @@ static PageElement* newImageDataElement(int pageNo, Rect bbox, int imageID) {
     return res;
 }
 
-static TocItem* newEbookTocItem(TocItem* parent, const WCHAR* title, PageDestination* dest) {
+static TocItem* newEbookTocItem(TocItem* parent, const WCHAR* title, IPageDestination* dest) {
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     if (dest) {
@@ -428,7 +429,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     return res;
 }
 
-PageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
+IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         return newEbookLink(link, rect, nullptr, pageNo);
@@ -442,7 +443,7 @@ PageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
         url.Set(strconv::Utf8ToWstr(absPath.Get()));
     }
 
-    PageDestination* dest = GetNamedDest(url);
+    IPageDestination* dest = GetNamedDest(url);
     if (!dest) {
         return nullptr;
     }
@@ -515,7 +516,7 @@ IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
     return el;
 }
 
-PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
     auto nameA(ToUtf8Temp(name));
     const char* id = nameA.Get();
     if (str::FindChar(id, '#')) {
@@ -553,7 +554,7 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
         if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str.s, id_len)) {
             RectF rect(0, anchor->instr->bbox.y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
-            return newSimpleDest(anchor->pageNo, rect);
+            return NewSimpleDest(anchor->pageNo, rect);
         }
     }
 
@@ -561,7 +562,7 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
     if (basePageNo != 0) {
         RectF rect(0, pageBorder, pageRect.dx, 10);
         rect.Inflate(-pageBorder, 0);
-        return newSimpleDest(basePageNo, rect);
+        return NewSimpleDest(basePageNo, rect);
     }
 
     return nullptr;
@@ -654,11 +655,11 @@ class EbookTocBuilder : public EbookTocVisitor {
 };
 
 void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
-    PageDestination* dest;
+    IPageDestination* dest;
     if (!url) {
         dest = nullptr;
     } else if (url::IsAbsolute(url)) {
-        dest = newSimpleDest(0, RectF(), str::Dup(url));
+        dest = NewSimpleDest(0, RectF(), 0.f, str::Dup(url));
     } else {
         dest = engine->GetNamedDest(url);
         if (!dest && str::FindChar(url, '%')) {
@@ -990,7 +991,7 @@ class EngineMobi : public EngineEbook {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
@@ -1039,7 +1040,7 @@ bool EngineMobi::FinishLoading() {
     return pageCount > 0;
 }
 
-PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
     int filePos = _wtoi(name);
     if (filePos < 0 || 0 == filePos && *name != '0') {
         return nullptr;
@@ -1073,7 +1074,7 @@ PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
     }
     RectF rect(0, currY + pageBorder, pageRect.dx, 10);
     rect.Inflate(-pageBorder, 0);
-    return newSimpleDest(pageNo, rect);
+    return NewSimpleDest(pageNo, rect);
 }
 
 TocTree* EngineMobi::GetToc() {
@@ -1357,7 +1358,7 @@ class EngineChm : public EngineEbook {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
@@ -1369,7 +1370,7 @@ class EngineChm : public EngineEbook {
 
     bool Load(const WCHAR* fileName);
 
-    PageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
+    IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
@@ -1504,8 +1505,8 @@ bool EngineChm::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-PageDestination* EngineChm::GetNamedDest(const WCHAR* name) {
-    PageDestination* dest = EngineEbook::GetNamedDest(name);
+IPageDestination* EngineChm::GetNamedDest(const WCHAR* name) {
+    IPageDestination* dest = EngineEbook::GetNamedDest(name);
     if (dest) {
         return dest;
     }
@@ -1544,15 +1545,15 @@ TocTree* EngineChm::GetToc() {
     return tocTree;
 }
 
-static PageDestination* newChmEmbeddedDest(const char* path) {
+static IPageDestination* newChmEmbeddedDest(const char* path) {
     auto res = new PageDestination();
     res->kind = kindDestinationLaunchEmbedded;
     res->value = strconv::Utf8ToWstr(path::GetBaseNameTemp(path));
     return res;
 }
 
-PageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
-    PageElement* linkEl = EngineEbook::CreatePageLink(link, rect, pageNo);
+IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
+    IPageElement* linkEl = EngineEbook::CreatePageLink(link, rect, pageNo);
     if (linkEl) {
         return linkEl;
     }
@@ -1565,7 +1566,7 @@ PageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
         return nullptr;
     }
 
-    PageDestination* dest = newChmEmbeddedDest(url);
+    IPageDestination* dest = newChmEmbeddedDest(url);
     return newEbookLink(link, rect, dest, pageNo);
 }
 
@@ -1614,7 +1615,7 @@ class EngineHtml : public EngineEbook {
 
     bool Load(const WCHAR* fileName);
 
-    PageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
+    IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
 
 bool EngineHtml::Load(const WCHAR* fileName) {
@@ -1644,7 +1645,7 @@ bool EngineHtml::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-static PageDestination* newRemoteHtmlDest(const WCHAR* relativeURL) {
+static IPageDestination* newRemoteHtmlDest(const WCHAR* relativeURL) {
     auto* res = new PageDestination();
     const WCHAR* id = str::FindChar(relativeURL, '#');
     if (id) {
@@ -1657,7 +1658,7 @@ static PageDestination* newRemoteHtmlDest(const WCHAR* relativeURL) {
     return res;
 }
 
-PageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
+IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
     if (0 == link->str.len) {
         return nullptr;
     }
@@ -1667,7 +1668,7 @@ PageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
         return EngineEbook::CreatePageLink(link, rect, pageNo);
     }
 
-    PageDestination* dest = newRemoteHtmlDest(url);
+    IPageDestination* dest = newRemoteHtmlDest(url);
     return newEbookLink(link, rect, dest, pageNo, true);
 }
 

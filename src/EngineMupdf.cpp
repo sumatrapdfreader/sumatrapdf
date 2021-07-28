@@ -995,7 +995,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         }
         int pageNo = outline->page + 1;
 
-        PageDestination* dest = nullptr;
+        IPageDestination* dest = nullptr;
         Kind kindRaw = nullptr;
         if (isAttachment) {
             kindRaw = kindTocFzOutlineAttachment;
@@ -1077,7 +1077,7 @@ MakeTree:
     return tocTree;
 }
 
-PageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -1102,7 +1102,7 @@ PageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
         return nullptr;
     }
 
-    PageDestination* pageDest = nullptr;
+    IPageDestination* pageDest = nullptr;
     char* uri = nullptr;
 
     fz_var(uri);
@@ -1118,13 +1118,10 @@ PageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
     }
 
     float x, y, zoom = 0;
-    int pageNo = resolve_link(uri, &x, &y, &zoom);
+    int pageNo = ResolveLink(uri, &x, &y, &zoom);
 
     RectF r{x, y, 0, 0};
-    pageDest = newSimpleDest(pageNo, r);
-    if (zoom) {
-        pageDest->zoom = zoom;
-    }
+    pageDest = NewSimpleDest(pageNo, r, zoom);
     fz_free(ctx, uri);
     return pageDest;
 }
@@ -1200,10 +1197,12 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
             el->pageNo = pageNo;
             el->rect = ToRectFl(rect);
             el->value = strconv::Utf8ToWstr(attname);
-            el->dest = new PageDestination();
-            el->dest->kind = kindDestinationLaunchEmbedded;
-            el->dest->value = strconv::Utf8ToWstr(attname);
-            el->dest->pageNo = pageNo;
+            auto dest = new PageDestination();
+            dest->kind = kindDestinationLaunchEmbedded;
+            dest->value = strconv::Utf8ToWstr(attname);
+            dest->pageNo = pageNo;
+            el->dest = dest;
+
             comments.Append(el);
             // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
             // for saving the attachment to a file
@@ -1489,7 +1488,7 @@ Vec<IPageElement*>* EngineMupdf::GetElements(int pageNo) {
     return res;
 }
 
-bool EngineMupdf::HandleLink(IPageElement* el, ILinkHandler* linkHandler) {
+bool EngineMupdf::HandleLink(IPageElement* el, ILinkHandler* linkHandler, Controller* ctrl) {
     auto dest = el->AsLink();
     linkHandler->GotoLink(dest);
     return true;

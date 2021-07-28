@@ -70,7 +70,7 @@ class EngineMulti : public EngineBase {
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
     [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
@@ -178,7 +178,7 @@ RenderedBitmap* EngineMulti::GetImageForPageElement(IPageElement* ipel) {
     return e->GetImageForPageElement(pel);
 }
 
-PageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
     for (auto&& pe : pageToEngine) {
         EngineBase* e = pe.engine;
         auto dest = e->GetNamedDest(name);
@@ -190,11 +190,11 @@ PageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-static bool IsPageNavigationDestination(PageDestination* dest) {
+static bool IsPageNavigationDestination(IPageDestination* dest) {
     if (!dest) {
         return false;
     }
-    if (dest->kind == kindDestinationScrollTo) {
+    if (dest->GetKind() == kindDestinationScrollTo) {
         return true;
     }
     // TODO: possibly more kinds
@@ -211,7 +211,8 @@ static void updateTocItemsPageNo(TocItem* ti, int nPageNoAdd, bool root) {
     auto curr = ti;
     while (curr) {
         if (IsPageNavigationDestination(curr->dest)) {
-            curr->dest->pageNo += nPageNoAdd;
+            auto dest = (PageDestination*)curr->dest;
+            dest->pageNo += nPageNoAdd;
             curr->pageNo += nPageNoAdd;
         }
 

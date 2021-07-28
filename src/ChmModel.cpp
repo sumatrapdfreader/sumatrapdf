@@ -219,8 +219,12 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
     }
 }
 
-void ChmModel::ScrollToLink(PageDestination* link) {
-    CrashIf(link->Kind() != kindDestinationScrollTo);
+void ChmModel::ScrollTo(int, RectF, float) {
+    CrashIf(true);
+}
+
+void ChmModel::ScrollToLink(IPageDestination* link) {
+    CrashIf(link->GetKind() != kindDestinationScrollTo);
     WCHAR* url = link->GetName();
     if (url) {
         DisplayPage(url);
@@ -468,7 +472,7 @@ void ChmModel::OnLButtonDown() {
 }
 
 // named destinations are either in-document URLs or Alias topic IDs
-PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
+IPageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     AutoFreeWstr plainUrl(url::GetFullPath(name));
     AutoFree urlA(strconv::WstrToUtf8(plainUrl));
     if (!doc->HasData(urlA.Get())) {

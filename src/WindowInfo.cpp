@@ -57,11 +57,11 @@ struct LinkHandler : ILinkHandler {
     }
     ~LinkHandler() override;
 
-    void GotoLink(PageDestination* dest) override;
+    void GotoLink(IPageDestination* dest) override;
     void GotoNamedDest(const WCHAR* name) override;
-    void ScrollTo(PageDestination* dest) override;
-    void LaunchFile(const WCHAR* path, PageDestination* link) override;
-    PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
+    void ScrollTo(IPageDestination* dest) override;
+    void LaunchFile(const WCHAR* path, IPageDestination* link) override;
+    IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
 };
 
 LinkHandler::~LinkHandler() {
@@ -351,7 +351,7 @@ bool WindowInfo::CreateUIAProvider() {
     return true;
 }
 
-void LinkHandler::GotoLink(PageDestination* dest) {
+void LinkHandler::GotoLink(IPageDestination* dest) {
     CrashIf(!owner || owner->linkHandler != this);
     if (!dest || !owner || !owner->IsDocLoaded()) {
         return;
@@ -360,7 +360,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     HWND hwndFrame = owner->hwndFrame;
     TabInfo* tab = owner->currentTab;
     WCHAR* path = dest->GetValue();
-    Kind kind = dest->Kind();
+    Kind kind = dest->GetKind();
     if (kindDestinationNone == kind) {
         return;
     }
@@ -479,7 +479,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     CrashIf(nullptr != kind);
 }
 
-void LinkHandler::ScrollTo(PageDestination* dest) {
+void LinkHandler::ScrollTo(IPageDestination* dest) {
     CrashIf(!owner || owner->linkHandler != this);
     if (!dest || !owner || !owner->IsDocLoaded()) {
         return;
@@ -491,7 +491,7 @@ void LinkHandler::ScrollTo(PageDestination* dest) {
     }
 }
 
-void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
+void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
@@ -501,9 +501,9 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     }
 
     // TODO: link is deleted when opening the document in a new tab
-    PageDestination* remoteLink = nullptr;
+    IPageDestination* remoteLink = nullptr;
     if (link) {
-        remoteLink = clonePageDestination(link);
+        remoteLink = link->Clone();
     }
     AutoDelete deleteRemoteLink(remoteLink);
 
@@ -541,7 +541,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
 
     WCHAR* destName = remoteLink->GetName();
     if (destName) {
-        PageDestination* dest = newWin->ctrl->GetNamedDest(destName);
+        IPageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
             newWin->linkHandler->ScrollTo(dest);
             delete dest;
@@ -577,13 +577,13 @@ static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially) {
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-PageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, bool partially) {
+IPageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, bool partially) {
     for (; item; item = item->next) {
         AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
         if (MatchFuzzy(fuzTitle, name, partially)) {
             return item->GetPageDestination();
         }
-        PageDestination* dest = FindTocItem(item->child, name, partially);
+        IPageDestination* dest = FindTocItem(item->child, name, partially);
         if (dest) {
             return dest;
         }
@@ -603,7 +603,7 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     // 2. Fuzzy match on full ToC item title
     // 3. Fuzzy match on a part of a ToC item title
     // 4. Exact match on page label
-    PageDestination* dest = ctrl->GetNamedDest(name);
+    IPageDestination* dest = ctrl->GetNamedDest(name);
     bool hasDest = dest != nullptr;
     if (dest) {
         ScrollTo(dest);

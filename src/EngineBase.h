@@ -1,6 +1,9 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct fz_outline;
+struct fz_link;
+
 extern Kind kindEngineMupdf;
 extern Kind kindEngineMupdf;
 extern Kind kindEngineMulti;
@@ -59,10 +62,29 @@ struct PageText {
 
 void FreePageText(PageText*);
 
-int resolve_link(const char* uri, float* xp, float* yp, float* zoomp);
+int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp);
 
 // a link destination
-struct PageDestination {
+struct IPageDestination {
+    IPageDestination() = default;
+    virtual ~IPageDestination(){};
+
+    [[nodiscard]] virtual Kind GetKind() = 0;
+    // page the destination points to (0 for external destinations such as URLs)
+    [[nodiscard]] virtual int GetPageNo() = 0;
+    // rectangle of the destination on the above returned page
+    [[nodiscard]] virtual RectF GetRect() = 0;
+    // optional zoom level on the above returned page
+    [[nodiscard]] virtual float GetZoom() = 0;
+    // string value associated with the destination (e.g. a path or a URL)
+    [[nodiscard]] virtual WCHAR* GetValue() = 0;
+    // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
+    // (mainly applicable for links of type "LaunchFile" to PDF documents)
+    [[nodiscard]] virtual WCHAR* GetName() = 0;
+    [[nodiscard]] virtual IPageDestination* Clone() = 0;
+};
+
+struct PageDestination : IPageDestination {
     Kind kind{nullptr};
     int pageNo{0};
     RectF rect{};
@@ -70,25 +92,31 @@ struct PageDestination {
     WCHAR* value{nullptr};
     WCHAR* name{nullptr};
 
+    // TODO: should be private to EngineMupdf
+    fz_outline* outline{nullptr};
+    fz_link* link{nullptr};
+    const char* uri{nullptr};
+
     PageDestination() = default;
 
-    ~PageDestination();
-    [[nodiscard]] Kind Kind() const;
+    ~PageDestination() override;
+    [[nodiscard]] Kind GetKind() override;
     // page the destination points to (0 for external destinations such as URLs)
-    [[nodiscard]] int GetPageNo() const;
+    [[nodiscard]] int GetPageNo() override;
     // rectangle of the destination on the above returned page
-    [[nodiscard]] RectF GetRect() const;
+    [[nodiscard]] RectF GetRect() override;
     // optional zoom level on the above returned page
-    [[nodiscard]] float GetZoom() const;
+    [[nodiscard]] float GetZoom() override;
     // string value associated with the destination (e.g. a path or a URL)
-    [[nodiscard]] WCHAR* GetValue() const;
+    [[nodiscard]] WCHAR* GetValue() override;
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    [[nodiscard]] WCHAR* GetName() const;
+    [[nodiscard]] WCHAR* GetName() override;
+    [[nodiscard]] IPageDestination* Clone() override;
 };
 
-PageDestination* newSimpleDest(int pageNo, RectF rect, const WCHAR* value = nullptr);
-PageDestination* clonePageDestination(PageDestination* dest);
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const WCHAR* value = nullptr);
+IPageDestination* ClonePageDestination(IPageDestination* dest);
 
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9f
@@ -99,7 +127,6 @@ extern Kind kindPageElementComment;
 
 struct IPageElement {
     virtual ~IPageElement() = default;
-    ;
 
     // the type of this page element
     bool Is(Kind expectedKind);
@@ -114,7 +141,7 @@ struct IPageElement {
     virtual WCHAR* GetValue() = 0;
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
-    virtual PageDestination* AsLink() = 0;
+    virtual IPageDestination* AsLink() = 0;
     virtual bool IsLink() = 0;
     virtual IPageElement* Clone() = 0;
 };
@@ -130,7 +157,7 @@ struct PageElement : IPageElement {
     RectF rect{};
     WCHAR* value{nullptr};
     // only set if kindPageElementDest
-    PageDestination* dest{nullptr};
+    IPageDestination* dest{nullptr};
 
     int imageID{0};
 
@@ -140,7 +167,8 @@ struct PageElement : IPageElement {
     int GetPageNo() override;
     RectF GetRect() override;
     WCHAR* GetValue() override;
-    PageDestination* AsLink() override;
+
+    IPageDestination* AsLink() override;
     bool IsLink() override;
     IPageElement* Clone() override;
 };
@@ -194,7 +222,7 @@ struct TocItem {
     int fontFlags{0}; // fontBitBold, fontBitItalic
     COLORREF color{ColorUnset};
 
-    PageDestination* dest{nullptr};
+    IPageDestination* dest{nullptr};
 
     // first child item
     TocItem* child{nullptr};
@@ -226,7 +254,7 @@ struct TocItem {
     void OpenSingleNode();
     void DeleteJustSelf();
 
-    PageDestination* GetPageDestination() const;
+    IPageDestination* GetPageDestination() const;
 
     int ChildCount();
     TocItem* ChildAt(int n);
@@ -373,7 +401,7 @@ class EngineBase {
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
-    virtual PageDestination* GetNamedDest(const WCHAR* name);
+    virtual IPageDestination* GetNamedDest(const WCHAR* name);
 
     // checks whether this document has an associated Table of Contents
     bool HacToc();
@@ -412,7 +440,7 @@ class EngineBase {
 
     // returns false if didn't perform action (temporary until we move
     // all code there)
-    virtual bool HandleLink(IPageElement*, ILinkHandler*);
+    virtual bool HandleLink(IPageElement*, ILinkHandler*, Controller*);
 
     // protected:
     void SetFileName(const WCHAR* s);

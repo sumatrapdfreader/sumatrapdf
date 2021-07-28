@@ -24,11 +24,11 @@ class EngineMupdf : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(IPageElement*, ILinkHandler*) override;
+    bool HandleLink(IPageElement*, ILinkHandler*, Controller*) override;
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
-    PageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
     [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;

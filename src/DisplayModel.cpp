@@ -114,7 +114,7 @@ TocTree* DisplayModel::GetToc() {
     return engine->GetToc();
 }
 
-PageDestination* DisplayModel::GetNamedDest(const WCHAR* name) {
+IPageDestination* DisplayModel::GetNamedDest(const WCHAR* name) {
     return engine->GetNamedDest(name);
 }
 
@@ -1424,8 +1424,8 @@ bool DisplayModel::GoToFirstPage() {
     return true;
 }
 
-bool DisplayModel::HandleLink(IPageElement* pel, ILinkHandler* lh) {
-    return engine->HandleLink(pel, lh);
+bool DisplayModel::HandleLink(IPageElement* pel, ILinkHandler* lh, Controller* ctrl) {
+    return engine->HandleLink(pel, lh, ctrl);
 }
 
 void DisplayModel::ScrollXTo(int xOff) {
@@ -1872,17 +1872,19 @@ bool DisplayModel::ShouldCacheRendering(int pageNo) const {
     return info->page.dx * info->page.dy > 1024 * 1024 || info->pageOnScreen.dx * info->pageOnScreen.dy > 1024 * 1024;
 }
 
-void DisplayModel::ScrollToLink(PageDestination* dest) {
+void DisplayModel::ScrollToLink(IPageDestination* dest) {
     CrashIf(!dest || dest->GetPageNo() <= 0);
     if (!dest) {
         return;
     }
-
-    Point scroll(-1, 0);
-    RectF rect = dest->GetRect();
     int pageNo = dest->GetPageNo();
+    RectF rect = dest->GetRect();
     float zoom = dest->GetZoom();
+    ScrollTo(pageNo, rect, zoom);
+}
 
+void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
+    Point scroll(-1, 0);
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
         // PDF: /XYZ top left zoom
         // scroll to rect.TL()
