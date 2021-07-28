@@ -57,10 +57,10 @@ struct LinkHandler : ILinkHandler {
     }
     ~LinkHandler() override;
 
-    void GotoLink(IPageDestination* dest) override;
-    void GotoNamedDest(const WCHAR* name) override;
-    void ScrollTo(IPageDestination* dest) override;
-    void LaunchFile(const WCHAR* path, IPageDestination* link) override;
+    void GotoLink(IPageDestination*, Controller*) override;
+    void GotoNamedDest(const WCHAR*) override;
+    void ScrollTo(IPageDestination*) override;
+    void LaunchFile(const WCHAR* path, IPageDestination*) override;
     IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
 };
 
@@ -351,14 +351,13 @@ bool WindowInfo::CreateUIAProvider() {
     return true;
 }
 
-void LinkHandler::GotoLink(IPageDestination* dest) {
+void LinkHandler::GotoLink(IPageDestination* dest, Controller* ctrl) {
     CrashIf(!owner || owner->linkHandler != this);
     if (!dest || !owner || !owner->IsDocLoaded()) {
         return;
     }
 
     HWND hwndFrame = owner->hwndFrame;
-    TabInfo* tab = owner->currentTab;
     WCHAR* path = dest->GetValue();
     Kind kind = dest->GetKind();
     if (kindDestinationNone == kind) {
@@ -416,22 +415,22 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
 
     if (kindDestinationNextPage == kind) {
         // predefined named actions
-        tab->ctrl->GoToNextPage();
+        ctrl->GoToNextPage();
         return;
     }
 
     if (kindDestinationPrevPage == kind) {
-        tab->ctrl->GoToPrevPage();
+        ctrl->GoToPrevPage();
         return;
     }
 
     if (kindDestinationFirstPage == kind) {
-        tab->ctrl->GoToFirstPage();
+        ctrl->GoToFirstPage();
         return;
     }
 
     if (kindDestinationLastPage == kind) {
-        tab->ctrl->GoToLastPage();
+        ctrl->GoToLastPage();
         // Adobe Reader extensions to the spec, see http://www.tug.org/applications/hyperref/manual.html
         return;
     }
@@ -447,12 +446,12 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     }
 
     if (kindDestinationGoBack == kind) {
-        tab->ctrl->Navigate(-1);
+        ctrl->Navigate(-1);
         return;
     }
 
     if (kindDestinationGoForward == kind) {
-        tab->ctrl->Navigate(1);
+        ctrl->Navigate(1);
         return;
     }
 

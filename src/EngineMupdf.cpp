@@ -1488,8 +1488,8 @@ Vec<IPageElement*>* EngineMupdf::GetElements(int pageNo) {
     return res;
 }
 
-bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler, Controller*) {
-    linkHandler->GotoLink(dest);
+bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler, Controller* ctrl) {
+    linkHandler->GotoLink(dest, ctrl);
     return true;
 }
 

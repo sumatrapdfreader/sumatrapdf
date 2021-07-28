@@ -405,7 +405,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
     if (url::IsAbsolute(url)) {
         // TODO: optimize: create just the destination
         auto dest = newEbookTocDest(nullptr, nullptr, url);
-        cb->GotoLink(dest->GetPageDestination());
+        cb->GotoLink(dest->GetPageDestination(), this);
         delete dest;
         return;
     }
@@ -437,7 +437,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
     if (idx != -1) {
         // TODO: optimize, create just a destination
         auto dest = newEbookTocDest(nullptr, nullptr, idx);
-        cb->GotoLink(dest->GetPageDestination());
+        cb->GotoLink(dest->GetPageDestination(), this);
         delete dest;
     }
 }

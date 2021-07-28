@@ -31,10 +31,10 @@ enum class DocumentProperty {
 
 struct ILinkHandler {
     virtual ~ILinkHandler(){};
-    virtual void GotoLink(IPageDestination* dest) = 0;
-    virtual void GotoNamedDest(const WCHAR* name) = 0;
-    virtual void ScrollTo(IPageDestination* dest) = 0;
-    virtual void LaunchFile(const WCHAR* path, IPageDestination* link) = 0;
+    virtual void GotoLink(IPageDestination*, Controller*) = 0;
+    virtual void GotoNamedDest(const WCHAR*) = 0;
+    virtual void ScrollTo(IPageDestination*) = 0;
+    virtual void LaunchFile(const WCHAR* path, IPageDestination*) = 0;
     virtual IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) = 0;
 };
 
@@ -45,7 +45,7 @@ struct ControllerCallback {
     // indirectly or is initiated from within the model
     virtual void PageNoChanged(Controller* ctrl, int pageNo) = 0;
     // tell the UI to open the linked document or URL
-    virtual void GotoLink(IPageDestination* dest) = 0;
+    virtual void GotoLink(IPageDestination*, Controller*) = 0;
     // DisplayModel //
     virtual void Repaint() = 0;
     virtual void UpdateScrollbars(Size canvas) = 0;
