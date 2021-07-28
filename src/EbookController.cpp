@@ -838,6 +838,7 @@ TocTree* EbookController::GetToc() {
     return tocTree;
 }
 
+#if 0
 void EbookController::ScrollToLink(IPageDestination* dest) {
     int reparseIdx = dest->GetPageNo() - 1;
     int pageNo = PageForReparsePoint(pages, reparseIdx);
@@ -847,6 +848,7 @@ void EbookController::ScrollToLink(IPageDestination* dest) {
         GoToLastPage();
     }
 }
+#endif
 
 void EbookController::ScrollTo(int, RectF, float) {
     CrashIf(true);

@@ -99,7 +99,6 @@ struct Controller {
         return tree != nullptr;
     }
     virtual TocTree* GetToc() = 0;
-    virtual void ScrollToLink(IPageDestination* dest) = 0;
     virtual void ScrollTo(int pageNo, RectF rect, float zoom) = 0;
 
     virtual IPageDestination* GetNamedDest(const WCHAR* name) = 0;

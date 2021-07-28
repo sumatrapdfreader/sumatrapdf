@@ -91,7 +91,6 @@ struct DisplayModel : Controller {
 
     // table of contents
     TocTree* GetToc() override;
-    void ScrollToLink(IPageDestination* dest) override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
     IPageDestination* GetNamedDest(const WCHAR* name) override;
 

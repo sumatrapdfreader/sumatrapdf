@@ -434,9 +434,12 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     }
 
     int pageNo = dest->GetPageNo();
-    if (pageNo > 0) {
-        owner->ctrl->ScrollToLink(dest);
+    if (pageNo <= 0) {
+        return;
     }
+    RectF rect = dest->GetRect();
+    float zoom = dest->GetZoom();
+    owner->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 
 void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {

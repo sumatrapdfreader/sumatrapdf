@@ -1872,6 +1872,7 @@ bool DisplayModel::ShouldCacheRendering(int pageNo) const {
     return info->page.dx * info->page.dy > 1024 * 1024 || info->pageOnScreen.dx * info->pageOnScreen.dy > 1024 * 1024;
 }
 
+#if 0
 void DisplayModel::ScrollToLink(IPageDestination* dest) {
     CrashIf(!dest || dest->GetPageNo() <= 0);
     if (!dest) {
@@ -1882,6 +1883,7 @@ void DisplayModel::ScrollToLink(IPageDestination* dest) {
     float zoom = dest->GetZoom();
     ScrollTo(pageNo, rect, zoom);
 }
+#endif
 
 void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     Point scroll(-1, 0);

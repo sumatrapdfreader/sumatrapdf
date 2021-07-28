@@ -55,29 +55,42 @@ int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp);
 
 // a link destination
 struct IPageDestination {
+    Kind kind{nullptr};
+
+    int pageNo{-1};
+    RectF rect{};
+    float zoom{0.f};
+
     IPageDestination() = default;
     virtual ~IPageDestination(){};
 
-    [[nodiscard]] virtual Kind GetKind() = 0;
-    // page the destination points to (0 for external destinations such as URLs)
-    [[nodiscard]] virtual int GetPageNo() = 0;
+    [[nodiscard]] Kind GetKind() {
+        return kind;
+    }
+
+    // page the destination points to (-1 for external destinations such as URLs)
+    [[nodiscard]] virtual int GetPageNo() {
+        return pageNo;
+    }
     // rectangle of the destination on the above returned page
-    [[nodiscard]] virtual RectF GetRect() = 0;
+    [[nodiscard]] virtual RectF GetRect() {
+        return rect;
+    }
     // optional zoom level on the above returned page
-    [[nodiscard]] virtual float GetZoom() = 0;
+    [[nodiscard]] virtual float GetZoom() {
+        return zoom;
+    }
+
     // string value associated with the destination (e.g. a path or a URL)
     [[nodiscard]] virtual WCHAR* GetValue() = 0;
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
     [[nodiscard]] virtual WCHAR* GetName() = 0;
+    // creates a copy
     [[nodiscard]] virtual IPageDestination* Clone() = 0;
 };
 
 struct PageDestination : IPageDestination {
-    Kind kind{nullptr};
-    int pageNo{0};
-    RectF rect{};
-    float zoom{0};
     WCHAR* value{nullptr};
     WCHAR* name{nullptr};
 
@@ -89,17 +102,8 @@ struct PageDestination : IPageDestination {
     PageDestination() = default;
 
     ~PageDestination() override;
-    [[nodiscard]] Kind GetKind() override;
-    // page the destination points to (0 for external destinations such as URLs)
-    [[nodiscard]] int GetPageNo() override;
-    // rectangle of the destination on the above returned page
-    [[nodiscard]] RectF GetRect() override;
-    // optional zoom level on the above returned page
-    [[nodiscard]] float GetZoom() override;
-    // string value associated with the destination (e.g. a path or a URL)
+
     [[nodiscard]] WCHAR* GetValue() override;
-    // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
-    // (mainly applicable for links of type "LaunchFile" to PDF documents)
     [[nodiscard]] WCHAR* GetName() override;
     [[nodiscard]] IPageDestination* Clone() override;
 };

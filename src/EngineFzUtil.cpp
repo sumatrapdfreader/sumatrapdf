@@ -891,9 +891,7 @@ static IPageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline
     }
 
     res->dest = NewPageDestination(link, outline);
-    res->pageNo = res->dest->GetPageNo();
     res->value = str::Dup(res->dest->GetValue());
-
     return res;
 }
 

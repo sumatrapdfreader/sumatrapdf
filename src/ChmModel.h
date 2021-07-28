@@ -34,7 +34,6 @@ struct ChmModel : Controller {
 
     // table of contents
     TocTree* GetToc() override;
-    void ScrollToLink(IPageDestination* link) override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
 
     IPageDestination* GetNamedDest(const WCHAR* name) override;

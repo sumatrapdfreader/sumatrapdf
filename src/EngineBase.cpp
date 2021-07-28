@@ -44,25 +44,6 @@ PageDestination::~PageDestination() {
     free(name);
 }
 
-Kind PageDestination::GetKind() {
-    return kind;
-}
-
-// page the destination points to (0 for external destinations such as URLs)
-int PageDestination::GetPageNo() {
-    return pageNo;
-}
-
-// rectangle of the destination on the above returned page
-RectF PageDestination::GetRect() {
-    return rect;
-}
-
-// optional zoom level on the above returned page
-float PageDestination::GetZoom() {
-    return zoom;
-}
-
 // string value associated with the destination (e.g. a path or a URL)
 WCHAR* PageDestination::GetValue() {
     return value;

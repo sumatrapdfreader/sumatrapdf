@@ -223,6 +223,7 @@ void ChmModel::ScrollTo(int, RectF, float) {
     CrashIf(true);
 }
 
+#if 0
 void ChmModel::ScrollToLink(IPageDestination* link) {
     CrashIf(link->GetKind() != kindDestinationScrollTo);
     WCHAR* url = link->GetName();
@@ -230,6 +231,7 @@ void ChmModel::ScrollToLink(IPageDestination* link) {
         DisplayPage(url);
     }
 }
+#endif
 
 bool ChmModel::CanNavigate(int dir) const {
     if (!htmlWindow) {
