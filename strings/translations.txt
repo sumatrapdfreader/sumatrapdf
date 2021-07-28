@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-27831d954e69174d8855e7f84df61348f0d724b7
+7a571128cfbf1e6f83512b42b8b6a0b256f18414
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -173,7 +173,7 @@ hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
-it:Opzioni &Avanzate...
+it:Opzioni &avanzate...
 ja:詳細設定(&A)
 jv:&Pilihan Terusan...
 ka:&გაფართოებული გაწყობები...
@@ -306,7 +306,7 @@ hi:&वापस\t Alt+बायाँ तीर
 hr:Natrag\tAlt+<-
 hu:Ugrás vissza\tAlt+<-
 id:&Kembali\tAlt+<-
-it:&Indietro\tAlt+Freccia Sinistra
+it:&Indietro\tAlt+freccia sinistra
 ja:前に戻る(&B)\tAlt+←
 jv:&Mbalik\tAlt+Arah Kiri
 ka:&უკან\tAlt+მარცხენა ისარი
@@ -492,6 +492,18 @@ tw:關閉(&C)\tCtrl+W
 uk:&Закрити\tCtrl+W
 uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
+:&Continue installing 32-bit version
+am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
+it:Continua installazione versione 32bit
+:&Copy Selection \tCtrl-C
+am:&Պատճենել ընտրումը \tCtrl-C
+it:&Copia selezione\tCtrl-C
+:&Copy To Clipboard\tCtrl-C
+am:&Պատճենել սեղմատախտգակ\tCtrl-C
+it:&Copia negli Appunti\tCtrl-C
+:&Discard
+am:&Մերժել
+it:Scarica
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
 am:&Այլևս չհարցնել
@@ -928,7 +940,7 @@ hi:पृष्ठों को &छापने योग्य क्षेत
 hr:Namjesti stranice do područja za ispis
 hu:Oldalméret illesztése a nyomtatható területhez
 id:&Sesuaikan halaman ke area cetakan
-it:&Adatta pagine alla zona stampabile
+it:&Adatta pagine a zona stampabile
 ja:ページを印刷可能領域に合わせる(&F)
 ka:გვერდების ბეჭდვად არეში &განთავსება
 kr:인쇄 영역에 페이지 맞추기(&F)
@@ -1497,7 +1509,7 @@ hi:अगले पृष्ठ पर\t->
 hr:Sljedeća stranica\t->
 hu:Következő oldal\t->
 id:Halaman Berikutnya\t->
-it:Pagi&na successiva\tFreccia Destra
+it:Pagi&na successiva\tFreccia destra
 ja:次のページ(&N)\t→
 ka:შ&ემდეგი გვერდი\tმარჯვენა ისარი
 kr:다음 페이지(&N)\t오른쪽 방향키
@@ -2090,7 +2102,7 @@ hi:पिछले पृष्ठ पर\t<-
 hr:Prethodna stranica\t<-
 hu:Előző oldal\t<-
 id:Halaman Sebelumnya\t<-
-it:&Pagina precedente\tFreccia Sinistra
+it:&Pagina precedente\tFreccia sinistra
 ja:前のページ(&P)\t←
 ka:წი&ნა გვერდი\tმარცხენა ისარი
 kr:이전 페이지(&P)\t왼쪽 방향키
@@ -2157,7 +2169,7 @@ hi:&छपाई...(अस्वीकृत)
 hr:&Ispis... (nije dopušteno)
 hu:Nyomtatás... (tiltott)
 id:&Cetak... (ditolak)
-it:Stam&pa... (rifiutato)
+it:Stam&pa... (rifiutata)
 ja:印刷... (拒否されました)(&P)
 jv:&Nyithak... (dibatalno)
 ka:&ამობეჭდვა... (გაუქმდა)
@@ -2407,7 +2419,7 @@ ga:&Bain ón stair
 gl:Elimina&r do historial
 hr:&Ukloni iz povijesti
 id:&Hapus dari Riwayat
-it:&Rimuovi Dalla Cronologia
+it:&Rimuovi dalla cronologia
 ka:&ისტორიიდან წაშლა
 kw:&Removya A Istori
 lt:&Pašalinti iš istorijos
@@ -2489,6 +2501,12 @@ tw:另存為(&S)...\tCtrl+S
 uk:Зб&ерегти як...\tCtrl+S
 uz:&Quyidagicha saqlash...\tCtrl+S
 vn:Lưu thành...\tCtrl+S
+:&Save to existing PDF
+am:&Պահել առկա PDF-ում
+it:&Salva in un PDF esistente
+:&Search With Google
+am:&Որոնել Google-ով
+it:Cerca con Google
 :&Settings
 am:&Կարգավորումներ
 ar:&الإعدادات
@@ -2686,7 +2704,7 @@ de:&Stempel
 el:Σφραγίδα
 es:&Estampa
 hr:&Pečat
-it:Francobollo
+it:&Stamp
 kw:&Stampa
 lt:&Antspaudas
 lv:&Zīmogs
@@ -2777,6 +2795,9 @@ tr:&Tema
 tw:主題(&T)
 uk:&Тема
 vn:&Chủ đề
+:&Translate With Google
+am:&Թարգմանել Google-ով
+it:&Traduci con Google
 :&Underline
 am:&Ընդգծված
 cn:&下划线
@@ -2820,7 +2841,7 @@ hi:वास्तविक पृष्ठ आकार का उपयोग(
 hr:Koristi &originalne veličine stranica
 hu:Eredeti oldalméret használata
 id:&Gunakan ukuran halaman asli
-it:&Usa larghezza pagina originale
+it:&Usa dimensioni pagina originale
 ja:元のページ サイズを使用する(&U)
 ka:&გვერდების ორიგინალი ზომის გამოყენება
 kr:원래 페이지 크기 사용(&U)
@@ -3082,7 +3103,7 @@ hi:&बडा करें
 hr:&Uvećaj
 hu:&Nagyítás
 id:&Perbesar
-it:&Ingrandimento
+it:&Zoom
 ja:ズーム(&Z)
 ka:მას&შტაბი
 kr:배율(&Z)
@@ -3537,7 +3558,7 @@ gl:Engadir páxina %s aos favoritos\tCtrl+B
 he:הוסף את עמוד מס' %s למועדפים\tCtrl+B
 hr:Dodaj stranicu %s u favorite\tCtrl+B
 id:Tambah halaman %s ke favorit\tCtrl+B
-it:Aggiungi pagina %s ai preferiti\tCtrl+B
+it:Aggiungi pagina %s ai Preferiti\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
 ka:გვერდი %s-ის დამატება რჩეულებში\tCtrl+B
 kw:Keworra folen %s dhe daklow drudh\tCtrl+B
@@ -3953,7 +3974,7 @@ hi:अस्थायी निर्देशिका नहीं बना �
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
 id:Anda yakin ingin menghapus instalasi SumatraPDF?
-it:Siete sicuri di voler disinstallare SumatraPDF?
+it:Sei  sicuro di voler disinstallare SumatraPDF?
 ja:SumatraPDFを本当にアンインストールしますか？
 jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
 ka:დარწმუნებული ხართ, რომ გსურთ SumatraPDF-ის წაშლა?
@@ -4021,7 +4042,7 @@ hi:PDF फाईलों से संबंध बनाइए?
 hr:Asocirati sa PDF datotekama?
 hu:Társítás a PDF fájlokkal?
 id:Asosiasikan dengan berkas PDF?
-it:Associare ai file PDF?
+it:Vuoi associare SumatraPDF ai file PDF?
 ja:PDF ファイルと関連付けますか？
 jv:Asosiasi karo berkas PDF?
 ka:გსურთ PDF ფაილებთან ასოცირება?
@@ -4983,7 +5004,7 @@ hi:उलटा खोज कमांड शुरू हो पा रहा �
 hr:Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredbeni redak u postavkama.
 hu:Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorban a beállításokat.
 id:Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.
-it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.
+it:Impossibile eseguire il comando di ricerca inversa.\nControlla la riga di comando usata nelle impostazioni.
 ja:逆順検索コマンドを開始できません。設定でコマンド ラインをチェックしてください。
 ka:შებრუნებული ძებნის ბრძანების გაშვება ვერ მოხერხდა. გთხოვთ შეამოწმეთ ბრძანებების სტრიქონის პარამეტრები.
 kr:역방향 검색 명령을 시작할 수 없습니다.  설정에서 명령줄을 확인하세요.
@@ -5049,7 +5070,7 @@ hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
 id:Ubah Bahasa (Change Language)
-it:Cambia Lingua
+it:Cambia lingua
 ja:言語の変更 (Change Language)
 jv:Ganti Basa
 ka:ენის შეცვლა (Change Language)
@@ -5156,6 +5177,9 @@ tw:檢查是否有新版本(&U)
 uk:Перевірити, чи є нова версія
 uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
+:Checking for update...
+am:Արդիացումների ստուգում...
+it:Controllo aggiornamenti...
 :Circle
 am:Շրջան
 ar:دائرة
@@ -5748,7 +5772,7 @@ hi:&छवि नक़ल करें
 hr:Kopiraj Sl&iku
 hu:&Kép másolása
 id:Sal&in Gambar
-it:Copia &Immagine
+it:Copia &immagine
 ja:画像をコピー(&I)
 jv:Nyalin &Gambar
 ka:სურათის &კოპირება
@@ -5944,7 +5968,7 @@ hi:टेक्स्ट कि प्रतियां बनाने से 
 hr:Kopiranje teksta je nemoguće (kopirano kao slika)
 hu:Szöveg másolása tiltott (csak képként másolva)
 id:Menyalin teks ditolak (menyalin sebagai gambar saja)
-it:Impossibile copiare il testo (copiare solo come immagine)
+it:Impossibile copiare il testo (copia solo come immagine)
 ja:テキストのコピーは拒否されました (イメージとしてのコピーのみ)
 jv:Nyalin teks dibatalno (mung iso nyalin gambar)
 ka:ტექსტის კოპირება აკრძალულია (კოპირდება როგორც სურათი)
@@ -6459,7 +6483,7 @@ hi:पेज रेंडर नहीं कर सका
 hr:Nije moguće iscrtati stranicu
 hu:Oldalfeldolgozási hiba
 id:Gagal menampilkan halaman
-it:Impossibile presentare la pagina
+it:Impossibile renderizzare la pagina
 ja:ページを描画できませんでした
 ka:გვერდის რენდერი ვერ მოხერხდა
 kr:페이지를 렌더링할 수 없습니다.
@@ -6711,6 +6735,9 @@ tw:無法將 %s 寫入磁碟
 uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
+:Create Annotation &Under Cursor
+am:Ստեղծել մեկնաբանություն &նշորդի ներքո
+it:Crea annotazione sotto al c&ursore
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
@@ -7136,7 +7163,7 @@ hi:मूलभूत लेआउट :(&L)
 hr:Pretpostavljeni &izgled:
 hu:Oldalmegjelenítési mód:
 id:Tata letak &Standar
-it:&Vista predefinita:
+it:&Layout predefinito:
 ja:既定のレイアウト(&L):
 ka:&საწყისი განლაგება:
 kr:기본 구성(&L):
@@ -7461,7 +7488,7 @@ hi:दस्तावेज़ गुण
 hr:Svojstva dokumenta
 hu:A dokumentum tulajdonságai
 id:Properti Dokumen
-it:Proprietà del documento
+it:Proprietà documento
 ja:ドキュメントのプロパティ
 ka:დოკუმენტის თვისებები
 kr:문서 속성
@@ -7494,6 +7521,12 @@ tw:文件特性
 uk:Властивості документа
 uz:Hujjat xossalari
 vn:Thuộc tính tập tin
+:Don't install
+am:Չտեղադրել
+it:Non installare
+:Download 64-bit version
+am:Ներբեռնել 64 բիթային տարբերակը
+it:Download versione a 64bit
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
@@ -7679,7 +7712,7 @@ ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
 hr:Uredi bilješke
 id:Tambah catatan
-it:Modifica Annotazioni
+it:Modifica annotazioni
 ka:ანოტაციის რედაქტირება
 kw:Golegi notenyans
 lt:Redaguoti anotacijas
@@ -7860,7 +7893,7 @@ hi:पीडीएफ दस्तावेज़ पर डबल क्लि�
 hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
-it:Inserire la linea di comando da eseguire quando si fa doppio clic su un documento PDF:
+it:Inserisci linea di comando da eseguire quando si fa doppio clic su un documento PDF:
 ja:PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力:
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
@@ -8090,7 +8123,7 @@ hi:अग&ला\tAlt+दायाँ तीर
 hr:Naprijed\tAlt+->
 hu:Ugrás előre\tAlt+->
 id:Berikutnya\tAlt+->
-it:A&vanti\tAlt+Freccia Destra
+it:A&vanti\tAlt+freccia destra
 ja:次に進む(&O)\tAlt+→
 ka:&წინ\tAlt+ისარი მარჯვნივ
 kr:이후에 본 페이지(&O)\tAlt+오른쪽 방향키
@@ -8355,7 +8388,7 @@ hi:इस प्रोग्राम को विंडोज १० पर �
 hr:Neuspješno registriranje kao zadani program na Windows 10
 hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
 id:Gagal mengatur sebagai aplikasi Windows 10
-it:Impossibile registrare come programma predefinito su Win 10\n
+it:Impossibile registrare come programma predefinito in Windows 10\r\n
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
 ka:ვერ მოხერხდა Windows 10-ის საწყის პროგრამად დარეგისტრირება
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
@@ -8911,7 +8944,7 @@ ga:Ceangaltán comhaid
 gl:Ficheiro anexo
 hr:Prilog
 id:Lampiran File
-it:Allega File
+it:File allegato
 ka:მიმაგრებული ფაილი
 kw:Stagel Restren
 lt:Failo priedas
@@ -9576,7 +9609,7 @@ hi:चौड़ाई के अनुसार(&h)\tCtrl+2
 hr:&Namjesti po širini\tCtrl+2
 hu:Oldal&szélesség\tCtrl+2
 id:Sesuaikan Dengan &Lebar\tCtrl+2
-it:Adatta alla &larghezza della pagina\tCtrl+2
+it:Adatta a &larghezza pagina\tCtrl+2
 ja:幅に合わせる(&W)\tCtrl+2
 ka:&სიგანეზე მორგება\tCtrl+2
 kr:너비(가로) 맞춤(&H)\tCtrl+2
@@ -10564,7 +10597,7 @@ hi:सुझाव: फिर से खोजने के लिए F3 कु�
 hr:Pomoć: upotrijebite tipku F3 za ponovnu pretragu
 hu:Tipp: Nyomja meg az F3 gombot a következő találathoz
 id:Tips : Gunakan tombol F3 untuk mengulangi pencarian
-it:Consiglio: usare F3 per trovare il successivo
+it:Consiglio: usa F3 per trovare il successivo
 ja:ヒント: 再び検索するには F3 キーを使用します
 ka:ქარაგმა: ძებნის განმეორებისთვის გამოიყენეთ ღიალკი "F3"
 kr:힌트: 다시 찾으려면, F3 키를 누르세요.
@@ -10845,6 +10878,9 @@ tw:安裝 SumatraPDF 於資料夾(&F):
 uk:Встановити SumatraPDF у папку
 uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
+:Install and relaunch
+am:Տեղադրել և վեաթողարկել
+it:Installa e ri-esegui
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
 ar:!فشل التثبيت
@@ -10971,6 +11007,9 @@ tw:安裝正在進行...
 uk:Встановлення триває...
 uz:O'rnatilmoqda...
 vn:Đang cài đặt...
+:Installing 32-bit SumatraPDF on 64-bit OS
+am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
+it:Installa SumatraPDF a 32bit in S.O. a 64bit
 :KB
 af:KB
 am:ԿԲ
@@ -11759,6 +11798,9 @@ th:เปิด &หน้าต่างใหม่ Ctrl+N
 tr:Yeni &pencere\tCtrl+N
 tw:新增視窗(&W)\tCtrl+N
 vn:Mở cửa sổ mới\tCtrl+N
+:New version available
+am:Մատչելի է նոր տարբերակ
+it:Nuova versione disponibile
 :Next Page
 af:Volgende Bladsy
 am:Հաջորդ էջը
@@ -13651,7 +13693,7 @@ hi:जारी रखने के लिए %s को बंद करे!
 hr:Molim zatvorite %s za nastavak!
 hu:A(z) %s bezárása szükséges a folytatáshoz!
 id:Silakan tutup %s untuk melanjutkan.
-it:Chiudi %s per continuare!
+it:Per continuare chiudi %s!
 ja:%s を閉じてください
 ka:გასაგრძელებლად, გთხოვთ, დაუხუროთ %s!
 kr:진행하려면, %s (을)를 닫으세요!
@@ -13715,7 +13757,7 @@ hi:कृपया प्रतीक्षा करें - प्रतिप
 hr:Molim pričekajte, iscrtavam...
 hu:Feldolgozás, kérem várjon
 id:Harap tunggu - sedang proses rendering...
-it:Rendering in corso - attendere...
+it:Rendering...
 ja:描画中...
 ka:მიმდინარეობს რენდერი, გთხოვთ მოიცადეთ...
 kr:렌더링 중입니다, 기다리세요...
@@ -14095,7 +14137,7 @@ hi:छपाई सीमा
 hr:Ispiši raspon
 hu:Nyomtatási tartomány
 id:Rentang cetakan
-it:Stampa intervallo
+it:Intervallo stampa
 ja:印刷範囲
 ka:ბეჭდვის დიაპაზონი
 kr:인쇄 범위
@@ -14221,7 +14263,7 @@ hi:छपाई में प्रगति.
 hr:Ispis u tijeku.
 hu:Nyomtatás folyamatban.
 id:Dalam proses mencetak
-it:Stampa in corso...
+it:Stampa...
 ja:印刷を実行中です。
 jv:Lagi nyithak.
 ka:მიმდინარეობს ბეჭდვა.
@@ -14285,7 +14327,7 @@ hi:छपाई अभी भी प्रगति पर है | रद्द
 hr:Ispis u tijeku. Prekinite i izađite?
 hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
 id:Sedang dalam proses mencetak. Batalkan dan keluar?
-it:La stampa è ancora in corso. Interrompere e uscire?
+it:La stampa è ancora in corso.\nVuoi interrompere e uscire?
 ja:印刷を実行中です。中止して終了しますか？
 ka:ბეჭდვა ჯერ გრძელდება. გსურთ შეწყვეტა და გამოსვლა?
 kr:아직 인쇄가 진행 중입니다.  중단하고 끝낼까요?
@@ -14347,7 +14389,7 @@ hi:छपाई अभी भी प्रगति में है | बन्
 hr:Ispis je još u tijeku. Prekini i započni ponovno?
 hu:A nyomtatás még folyamatban van. Megszakítás és újrakezdés?
 id:Sedang dalam proses mencetak. Batalkan dan ulangi lagi?
-it:La stampa è ancora in corso. Interrompere e ricominciare?
+it:La stampa è ancora in corso.\nVuoi interrompere e ricominciare?
 ja:印刷は既に実行されています。中止または再実行しますか？
 ka:მიმდინარეობს ამობეჭდვა. გსურთ გაუქმება და ხელახლა დაწყება?
 kr:아직 인쇄가 진행 중입니다.  중단하고 다시 시작할까요?
@@ -14758,7 +14800,7 @@ hi:पसंदीदा से %s पृष्ठ को निकालें
 hr:Ukloni stranicu %s iz favorita
 hu:%s. oldal eltávolítása a kedvencek közül
 id:Hapus halaman %s dari favorit
-it:Rimuovi la pagina %s dai Preferiti
+it:Rimuovi pagina %s dai Preferiti
 ja:ページ %s をお気に入りから削除
 ka:%s გვერდის წაშლა რჩეულებიდან
 kr:즐겨찾기에서 %s 페이지 제거
@@ -14998,6 +15040,9 @@ tw:頁面右旋(&R)\tCtrl+Shift++
 uk:Повернути праворуч\tCtrl+Shift++
 uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
+:S&election
+am:Ը&նտրում
+it:S&elezione
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
@@ -15137,6 +15182,9 @@ tw:儲存捷徑(&H)...\tCtrl+Shift+S
 uk:Зберегти ярлик...\tCtrl+Shift+S
 uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
+:Save annoations?
+am:Պահե՞լ մեկնաբանությունը:
+it:Vuoi salvare le annotazioni?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
@@ -15167,6 +15215,15 @@ lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
+:Save to &new PDF
+am:Պահել &նոր PDF-ում
+it:Salva in un &nuovo PDF
+:Search With &Bing
+am:Որոնել &Bing-ով
+it:Cerca con &Bing
+:Search With &Google
+am:Որոնել &Google-ով
+it:Cerca con &Google
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -15651,7 +15708,7 @@ gl:Amosar &marcadores\tF12
 he:הצג סימניות\tCtrl+F12
 hr:Prikaži &oznake\tF12
 id:Tampilkan &Markah\tF12
-it:Visualizza &Segnalibri\tF12
+it:Visualizza &segnalibri\tF12
 ja:ブックマークを表示(&B)\tF12
 ka:სანიშნეების &ჩვენება\tF12
 kw:Diskwedhes &Folennotennow\tF12
@@ -15886,7 +15943,7 @@ gl:Amosar &marcadores\tF12
 he:הצג סימניות\tF12
 hr:Prikaži oznake\tF12
 id:Tampilkan &Markah\tF12
-it:Visualizza Segna&libri\tF12
+it:Visualizza segna&libri\tF12
 ja:ブックマークを表示 (&M)\tF12
 ka:სანიშნეების &ჩვენება\tF12
 kw:Diskwedhes Folen&notennow\tF12
@@ -16122,7 +16179,7 @@ hi:जब बुकमार्क साइडबार उपलब्ध ह�
 hr:Prikaži traku &oznaka kad je dostupna
 hu:Dokumentumba ágyazott könyvjelzők mutatása
 id:Tampilkan kolom &markah jika tersedia
-it:Visualizza la &barra laterale dei segnalibri quando disponibile
+it:Visualizza &barra laterale segnalibri quando disponibile
 ja:利用可能ならブックマーク サイド バーを表示(&B)
 ka:&სანიშნეთა ზოლის ჩვენება (თუ შესაძლებელია)
 kr:사용 가능하면, 책갈피 옆구리 표시줄 보이기(&B)
@@ -16225,6 +16282,9 @@ tw:單頁模式
 uk:Одна сторінка
 uz:Bitta bet
 vn:Trang đơn
+:Skip this version
+am:Բաց թողնել այս տարբերակը
+it:Salta questa versione
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:الرجاء اضغط 'إلغاء الأمر'، إذا كنت ترغب في مساعدتنا على إصلاح هذا الحادث \n\n !آسف، أنه لا ينبغي أن يكون قد حدث
@@ -16540,7 +16600,7 @@ he:התקנת SumatraPDF %s
 hr:SumatraPDF %s instaler
 hu:SumatraPDF %s telepítő
 id:Pemasang instalasi SumatraPDF %s
-it:Installazione SumatraPDF %s
+it:Installazione di SumatraPDF v. %s
 ja:SumatraPDF %s インストーラ
 ka:SumatraPDF-ის ინსტალატორი %s
 kr:SumatraPDF %s 설치 관리자
@@ -16601,7 +16661,7 @@ he:הסרת SumatraPDF %s
 hr:SumatraPDF %s deinstaler
 hu:SumatraPDF %s eltávolító
 id:Penghapus instalasi SumatraPDF %s
-it:Disinstallazione SumatraPDF %s
+it:Disinstallazione di SumatraPDF v. %s
 ja:SumatraPDF %s アンインストーラ
 ka:SumatraPDF-ის დეინსტალატორი %s 
 kr:SumatraPDF %s 제거 관리자
@@ -17449,7 +17509,7 @@ he:קובץ ההתקנה פגום. אנא הורד שוב.
 hr:Instaler je oštećen. Molim Vas preuzmite ga ponovno.\nIsprika za tu neugodnost!
 hu:A telepítő sérült. Kérjük, töltse le újra.\nElnézést kérünk a kellemetlenségért!
 id:Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!
-it:Il programma di installazione è danneggiato. Riscaricalo nuovamente.\nSiamo spiacenti per l'inconveniente!
+it:Il programma di installazione è danneggiato.\nRiscaricalo nuovamente.\nSiamo spiacenti per l'inconveniente!
 ja:インストーラが破損しています。もう一度ダウンロードしてください。\nご不便をおかけし、申し訳ありません。
 ka:ინსტალატორი დაზიანებულია. გთხოვთ, ხელახლა ჩამოტვირთეთ.\n ბოდიში უხერხულობისთვის!
 kr:설치 관리자가 손상됐습니다.  다시 다운로드하세요.\n불편하게 해서 미안합니다!
@@ -17609,6 +17669,9 @@ tw:標題:
 uk:Заголовок:
 uz:Sarlavha:
 vn:Tựa đề
+:Translate with &DeepL
+am:Թարգմանել &DeepL-ով
+it:Traduci con &DeepL
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
@@ -17761,7 +17824,7 @@ he:מסיר את SumatraPDF...
 hr:Deinstaliranje...
 hu:Eltávolítás folyamatban...
 id:Proses uninstall sedang berlangsung...
-it:Disinstallazione in corso...
+it:Disinstallazione...
 ja:アンインストール中…
 ka:მიმდინარეობს დეინსტალაცია...
 kr:제거하는 중...
@@ -17871,6 +17934,9 @@ lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
+:Unsaved annotations in '%s'
+am:Չպահված մեկնաբանություններ '%s'-ում
+it:Annotazioni non salvate in '%s'
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
@@ -18341,13 +18407,19 @@ el:Έχετε μη αποθηκευμένα σχόλια
 es:Tienes anotaciones sin guardar
 hr:Imate nespremljene bilješke
 id:Kamu memiliki catatan yang belum tersimpan
-it:Hai delle annotazioni non salvate
+it:Ci sono delle annotazioni non salvate
 kw:Yma notenyansow anwithys dhis
 lt:Turite neišsaugotų anotacijų
 lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
+:You have version '%s' and version '%s' is available.\nDo you want to install new version?
+am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
+it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
+:You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
+am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
+it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi scaricare SumatraPDF a 64bit?
 :Zoom
 am:Դիտափոխել
 ar:تكبير/تصغير
@@ -18446,7 +18518,7 @@ hi:ब​ङा करें
 hr:Uvećaj
 hu:Nagyítás
 id:Perbesar
-it:Ingrandimento
+it:Zoom +
 ja:拡大
 jv:Nggedhekake
 ka:გადიდება
@@ -18517,7 +18589,7 @@ hi:छोटा करें
 hr:Umanji
 hu:Kicsinyítés
 id:Perkecil
-it:Riduzione
+it:Zoom -
 ja:縮小
 jv:Nyilikake
 ka:დაპატარავება
@@ -18587,7 +18659,7 @@ hi:ज़ूम गुणक
 hr:Faktor uvećanja
 hu:Nagyítás mértéke
 id:Faktor pembesaran
-it:Fattore di ingrandimento
+it:Fattore ingrandimento
 ja:拡大率
 ka:მასშტაბი
 kr:배율 계수
@@ -18717,7 +18789,7 @@ hi:पाठ छापना
 hr:kopiram tekst
 hu:Szöveg vágólapra
 id:menyalin teks
-it:Copia del testo...
+it:Copia testo...
 ja:コピーするテキスト
 jv:nyalin text
 ka:ტექსტი კოპირდება
