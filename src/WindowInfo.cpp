@@ -470,11 +470,6 @@ void LinkHandler::GotoLink(IPageDestination* dest, Controller* ctrl) {
         return;
     }
 
-    if (kindDestinationZoomToDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, CmdZoomCustom, 0);
-        return;
-    }
-
     CrashIf(nullptr != kind);
 }
 

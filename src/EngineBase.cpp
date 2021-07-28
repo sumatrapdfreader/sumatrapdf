@@ -41,15 +41,12 @@ Kind kindDestinationGoForward = "goForward";
 Kind kindDestinationGoToPageDialog = "goToPageDialog";
 Kind kindDestinationPrintDialog = "printDialog";
 Kind kindDestinationSaveAsDialog = "saveAsDialog";
-Kind kindDestinationZoomToDialog = "zoomToDialog";
 
 static Kind destKinds[] = {
-    kindDestinationNone,           kindDestinationScrollTo,       kindDestinationLaunchURL,
-    kindDestinationLaunchEmbedded, kindDestinationLaunchFile,     kindDestinationNextPage,
-    kindDestinationPrevPage,       kindDestinationFirstPage,      kindDestinationLastPage,
-    kindDestinationFindDialog,     kindDestinationFullScreen,     kindDestinationGoBack,
-    kindDestinationGoForward,      kindDestinationGoToPageDialog, kindDestinationPrintDialog,
-    kindDestinationSaveAsDialog,   kindDestinationZoomToDialog,
+    kindDestinationNone,       kindDestinationScrollTo,       kindDestinationLaunchURL,   kindDestinationLaunchEmbedded,
+    kindDestinationLaunchFile, kindDestinationNextPage,       kindDestinationPrevPage,    kindDestinationFirstPage,
+    kindDestinationLastPage,   kindDestinationFindDialog,     kindDestinationFullScreen,  kindDestinationGoBack,
+    kindDestinationGoForward,  kindDestinationGoToPageDialog, kindDestinationPrintDialog, kindDestinationSaveAsDialog,
 };
 
 Kind resolveDestKind(char* s) {

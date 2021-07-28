@@ -48,7 +48,6 @@ extern Kind kindDestinationGoForward;
 extern Kind kindDestinationGoToPageDialog;
 extern Kind kindDestinationPrintDialog;
 extern Kind kindDestinationSaveAsDialog;
-extern Kind kindDestinationZoomToDialog;
 
 Kind resolveDestKind(char* s);
 
