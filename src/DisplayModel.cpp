@@ -49,12 +49,11 @@
 #include "utils/Timer.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
-
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "PdfSync.h"
@@ -1423,6 +1422,10 @@ bool DisplayModel::GoToFirstPage() {
     }
     GoToPage(1, 0, true);
     return true;
+}
+
+bool DisplayModel::HandleLink(IPageElement* pel, ILinkHandler* lh) {
+    return engine->HandleLink(pel, lh);
 }
 
 void DisplayModel::ScrollXTo(int xOff) {

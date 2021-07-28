@@ -33,6 +33,8 @@
 #include "wingui/TabsCtrl.h"
 
 #include "Annotation.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EnginePs.h"
 #include "EngineCreate.h"
@@ -41,9 +43,7 @@
 #include "EngineMupdf.h"
 #include "Doc.h"
 #include "PdfCreator.h"
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"

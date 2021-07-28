@@ -16,13 +16,12 @@
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
-
 #include "SumatraConfig.h"
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"

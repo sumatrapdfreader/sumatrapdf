@@ -8,16 +8,14 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/TreeModel.h"
-
 #include "Annotation.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
-
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 

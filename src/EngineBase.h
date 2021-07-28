@@ -29,21 +29,6 @@ enum PageLayoutType {
     Layout_NonContinuous = 32
 };
 
-enum class DocumentProperty {
-    Title,
-    Author,
-    Copyright,
-    Subject,
-    CreationDate,
-    ModificationDate,
-    CreatorApp,
-    UnsupportedFeatures,
-    FontList,
-    PdfVersion,
-    PdfProducer,
-    PdfFileStructure,
-};
-
 extern Kind kindDestinationNone;
 extern Kind kindDestinationScrollTo;
 extern Kind kindDestinationLaunchURL;
@@ -130,6 +115,7 @@ struct IPageElement {
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
     virtual PageDestination* AsLink() = 0;
+    virtual bool IsLink() = 0;
     virtual IPageElement* Clone() = 0;
 };
 
@@ -155,6 +141,7 @@ struct PageElement : IPageElement {
     RectF GetRect() override;
     WCHAR* GetValue() override;
     PageDestination* AsLink() override;
+    bool IsLink() override;
     IPageElement* Clone() override;
 };
 
@@ -423,7 +410,9 @@ class EngineBase {
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
-    virtual void PerformPageAction(IPageElement* el, PageElementAction* action) = 0;
+    // returns false if didn't perform action (temporary until we move
+    // all code there)
+    virtual bool HandleLink(IPageElement*, ILinkHandler*);
 
     // protected:
     void SetFileName(const WCHAR* s);

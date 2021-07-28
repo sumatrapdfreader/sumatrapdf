@@ -18,6 +18,8 @@
 #include "utils/ZipUtil.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineEbook.h"
 #include "EbookBase.h"
@@ -96,7 +98,10 @@ class EngineEbook : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
+    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) override {
+        CrashIf(true);
+        // TODO: implement me
+        return false;
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;

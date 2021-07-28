@@ -11,7 +11,8 @@ extern "C" {
 #include "utils/ScopedWin.h"
 
 #include "wingui/TreeModel.h"
-
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 

@@ -9,10 +9,10 @@
 #include "utils/ScopedWin.h"
 
 #include "wingui/TreeModel.h"
-#include "EngineBase.h"
 #include "DisplayMode.h"
-#include "SettingsStructs.h"
 #include "Controller.h"
+#include "EngineBase.h"
+#include "SettingsStructs.h"
 #include "EngineCreate.h"
 #include "DisplayModel.h"
 #include "uia/PageProvider.h"

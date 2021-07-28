@@ -17,9 +17,11 @@ extern "C" {
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 
-#include "AppColors.h"
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
+#include "AppColors.h"
 #include "EngineFzUtil.h"
 
 #include "utils/Log.h"

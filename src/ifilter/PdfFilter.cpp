@@ -5,10 +5,13 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/TreeModel.h"
 #include "Annotation.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
+
 #include "FilterBase.h"
 #include "PdfFilterClsid.h"
 #include "PdfFilter.h"

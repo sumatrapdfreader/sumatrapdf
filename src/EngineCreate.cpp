@@ -6,10 +6,11 @@
 #include "utils/WinUtil.h"
 #include "utils/GuessFileType.h"
 
-#include "wingui/TreeModel.h"
-
 #include "SumatraConfig.h"
 #include "Annotation.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineDjVu.h"
 #include "EngineEbook.h"

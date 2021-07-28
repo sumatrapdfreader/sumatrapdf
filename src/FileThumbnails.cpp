@@ -9,9 +9,9 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
-
-#include "EngineBase.h"
 #include "DisplayMode.h"
+#include "Controller.h"
+#include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 

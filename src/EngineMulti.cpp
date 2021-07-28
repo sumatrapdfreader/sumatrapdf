@@ -19,8 +19,10 @@ extern "C" {
 #include "utils/ZipUtil.h"
 
 #include "AppColors.h"
-#include "wingui/TreeModel.h"
 #include "SumatraConfig.h"
+#include "DisplayMode.h"
+#include "Controller.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EngineCreate.h"
@@ -65,8 +67,6 @@ class EngineMulti : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
-    }
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 

@@ -6,8 +6,37 @@ struct ChmModel;
 struct DisplayModel;
 struct EbookController;
 struct EbookFormattingData;
+struct IPageElement;
+struct PageDestination;
+struct TocTree;
+struct TocItem;
+struct WindowInfo;
 
 using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
+
+enum class DocumentProperty {
+    Title,
+    Author,
+    Copyright,
+    Subject,
+    CreationDate,
+    ModificationDate,
+    CreatorApp,
+    UnsupportedFeatures,
+    FontList,
+    PdfVersion,
+    PdfProducer,
+    PdfFileStructure,
+};
+
+struct ILinkHandler {
+    virtual ~ILinkHandler(){};
+    virtual void GotoLink(PageDestination* dest) = 0;
+    virtual void GotoNamedDest(const WCHAR* name) = 0;
+    virtual void ScrollTo(PageDestination* dest) = 0;
+    virtual void LaunchFile(const WCHAR* path, PageDestination* link) = 0;
+    virtual PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) = 0;
+};
 
 struct ControllerCallback {
     virtual ~ControllerCallback() = default;
@@ -120,6 +149,11 @@ struct Controller {
         }
         GoToPage(PageCount(), true);
         return true;
+    }
+
+    virtual bool HandleLink(__unused IPageElement* pel, __unused ILinkHandler* h) {
+        // TODO: over-ride in ChmModel and EbookController
+        return false;
     }
 
     // for quick type determination and type-safe casting

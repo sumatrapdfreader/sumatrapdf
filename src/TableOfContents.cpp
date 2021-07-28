@@ -6,6 +6,7 @@
 #include "utils/Dpi.h"
 #include "utils/BitManip.h"
 #include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
@@ -18,17 +19,14 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/DropDownCtrl.h"
 
-#include "utils/GdiPlusUtil.h"
-
 #include "Annotation.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
 #include "EngineCreate.h"
-
 #include "SumatraConfig.h"
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
 #include "ProgressUpdateUI.h"

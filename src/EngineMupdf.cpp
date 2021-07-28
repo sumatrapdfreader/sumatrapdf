@@ -18,9 +18,10 @@ extern "C" {
 #include "utils/ZipUtil.h"
 
 #include "AppColors.h"
-#include "wingui/TreeModel.h"
-
 #include "Annotation.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EngineMupdfImpl.h"
@@ -1486,6 +1487,12 @@ Vec<IPageElement*>* EngineMupdf::GetElements(int pageNo) {
         return nullptr;
     }
     return res;
+}
+
+bool EngineMupdf::HandleLink(IPageElement* el, ILinkHandler* linkHandler) {
+    auto dest = el->AsLink();
+    linkHandler->GotoLink(dest);
+    return true;
 }
 
 RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {

@@ -27,6 +27,7 @@ struct TooltipCtrl;
 struct DropDownCtrl;
 
 struct Annotation;
+struct ILinkHandler;
 
 /* Describes actions which can be performed by mouse */
 // clang-format off
@@ -201,7 +202,7 @@ struct WindowInfo {
     HANDLE findThread{nullptr};
     bool findCanceled{false};
 
-    LinkHandler* linkHandler{nullptr};
+    ILinkHandler* linkHandler{nullptr};
     IPageElement* linkOnLastButtonDown{nullptr};
     const WCHAR* urlOnLastButtonDown{nullptr};
     Annotation* annotationOnLastButtonDown{nullptr};
@@ -250,21 +251,6 @@ struct WindowInfo {
                                       Kind groupId = NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();
-};
-
-struct LinkHandler {
-    WindowInfo* owner{nullptr};
-
-    void ScrollTo(PageDestination* dest);
-    void LaunchFile(const WCHAR* path, PageDestination* link) const;
-    PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially = false);
-
-    explicit LinkHandler(WindowInfo* win) {
-        owner = win;
-    }
-
-    void GotoLink(PageDestination* dest);
-    void GotoNamedDest(const WCHAR* name);
 };
 
 void UpdateTreeCtrlColors(WindowInfo*);

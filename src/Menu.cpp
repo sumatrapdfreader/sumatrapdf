@@ -12,16 +12,14 @@
 #include "mui/Mui.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/TreeModel.h"
-
 #include "Annotation.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
 #include "EngineMupdf.h"
-
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "Theme.h"

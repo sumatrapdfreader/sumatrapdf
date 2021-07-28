@@ -9,8 +9,10 @@
 #include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/TreeModel.h"
 #include "Annotation.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
 #include "EnginePs.h"
@@ -321,8 +323,8 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }
 
-    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
-        pdfEngine->PerformPageAction(el, action);
+    bool HandleLink(IPageElement* el, ILinkHandler* lh) override {
+        return pdfEngine->HandleLink(el, lh);
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override {

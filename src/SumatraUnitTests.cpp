@@ -9,8 +9,8 @@
 #include "utils/ScopedWin.h"
 
 #include "wingui/TreeModel.h"
-
 #include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"

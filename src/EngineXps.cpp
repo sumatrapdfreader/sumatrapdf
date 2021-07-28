@@ -20,8 +20,9 @@ extern "C" {
 #include "utils/Log.h"
 
 #include "AppColors.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EngineXps.h"
@@ -217,7 +218,9 @@ class EngineXps : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
+    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) override {
+        CrashIf(true);
+        return false;
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;

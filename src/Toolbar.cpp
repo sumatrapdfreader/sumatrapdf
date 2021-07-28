@@ -8,11 +8,11 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "DisplayModel.h"
 #include "AppColors.h"
 #include "GlobalPrefs.h"

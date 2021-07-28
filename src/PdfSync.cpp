@@ -8,6 +8,8 @@
 #include "utils/FileUtil.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "PdfSync.h"
 

@@ -9,14 +9,12 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
-
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineEbook.h"
-
 #include "SumatraConfig.h"
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"

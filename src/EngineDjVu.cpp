@@ -5,20 +5,24 @@
 #define DDJVUAPI    /**/
 #define MINILISPAPI /**/
 
+#include <ddjvuapi.h>
+#include <miniexp.h>
+
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/ByteReader.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "SumatraConfig.h"
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
-#include <ddjvuapi.h>
-#include <miniexp.h>
 #include "EngineDjVu.h"
+
+#include "utils/Log.h"
 
 Kind kindEngineDjVu = "engineDjVu";
 
@@ -256,7 +260,10 @@ class EngineDjVu : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    void PerformPageAction(IPageElement* el, PageElementAction* action) override {
+    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) override {
+        CrashIf(true);
+        // TODO: implement me
+        return false;
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;

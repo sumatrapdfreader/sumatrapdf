@@ -21,12 +21,12 @@
 #include "wingui/FrameRateWnd.h"
 
 #include "Annotation.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
 #include "Doc.h"
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
 #include "ChmModel.h"
@@ -48,6 +48,25 @@
 #include "StressTesting.h"
 #include "Translations.h"
 #include "uia/Provider.h"
+
+struct LinkHandler : ILinkHandler {
+    WindowInfo* owner{nullptr};
+
+    explicit LinkHandler(WindowInfo* win) {
+        owner = win;
+    }
+    ~LinkHandler() override;
+
+    void GotoLink(PageDestination* dest) override;
+    void GotoNamedDest(const WCHAR* name) override;
+    void ScrollTo(PageDestination* dest) override;
+    void LaunchFile(const WCHAR* path, PageDestination* link) override;
+    PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
+};
+
+LinkHandler::~LinkHandler() {
+    // do nothing
+}
 
 Vec<WindowInfo*> gWindows;
 
@@ -472,7 +491,7 @@ void LinkHandler::ScrollTo(PageDestination* dest) {
     }
 }
 
-void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) const {
+void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
@@ -542,7 +561,7 @@ static WCHAR* NormalizeFuzzy(const WCHAR* str) {
     return dup;
 }
 
-static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially = false) {
+static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially) {
     if (!partially) {
         return str::Eq(s1, s2);
     }
@@ -593,7 +612,7 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
         auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
         AutoFreeWstr fuzName(NormalizeFuzzy(name));
-        dest = FindTocItem(root, fuzName);
+        dest = FindTocItem(root, fuzName, false);
         if (!dest) {
             dest = FindTocItem(root, fuzName, true);
         }

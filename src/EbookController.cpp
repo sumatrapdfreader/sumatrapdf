@@ -14,6 +14,8 @@
 #include "utils/TrivialHtmlParser.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
@@ -21,13 +23,9 @@
 #include "MobiDoc.h"
 #include "HtmlFormatter.h"
 #include "Doc.h"
-
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "EbookController.h"
 #include "GlobalPrefs.h"
-
 #include "EbookControls.h"
 #include "Translations.h"
 

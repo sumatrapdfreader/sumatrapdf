@@ -10,12 +10,13 @@ extern "C" {
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
 #include "Annotation.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EngineMupdfImpl.h"
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 

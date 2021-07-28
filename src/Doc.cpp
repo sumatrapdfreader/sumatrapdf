@@ -11,6 +11,8 @@
 #include "mui/Mui.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

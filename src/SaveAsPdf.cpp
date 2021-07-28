@@ -13,11 +13,13 @@ extern "C" {
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
-#include "wingui/TreeModel.h"
 #include "resource.h"
 #include "Commands.h"
-#include "Translations.h"
+#include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
+#include "Translations.h"
 #include "EngineCreate.h"
 #include "SaveAsPdf.h"
 

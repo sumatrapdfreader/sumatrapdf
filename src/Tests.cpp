@@ -4,15 +4,15 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+
+#include "wingui/TreeModel.h"
 #include "DisplayMode.h"
+#include "Controller.h"
+#include "EngineBase.h"
+#include "EngineCreate.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
-
-#include "wingui/TreeModel.h"
-
-#include "EngineBase.h"
-#include "EngineCreate.h"
 
 void TestRenderPage(const Flags& i) {
     if (i.showConsole) {

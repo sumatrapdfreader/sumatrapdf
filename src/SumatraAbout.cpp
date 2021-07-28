@@ -8,14 +8,15 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
-#include "wingui/TreeModel.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/TooltipCtrl.h"
 
-#include "SumatraConfig.h"
-#include "EngineBase.h"
+#include "wingui/TreeModel.h"
 #include "DisplayMode.h"
+#include "Controller.h"
+#include "EngineBase.h"
+#include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "AppColors.h"

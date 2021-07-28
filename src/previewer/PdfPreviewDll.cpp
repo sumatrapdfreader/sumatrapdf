@@ -7,6 +7,8 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "PdfPreview.h"
 

@@ -18,13 +18,12 @@
 #include "wingui/FrameRateWnd.h"
 
 #include "AppColors.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
 #include "Doc.h"
-
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
 #include "Theme.h"

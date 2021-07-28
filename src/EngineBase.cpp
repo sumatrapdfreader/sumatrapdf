@@ -7,6 +7,8 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
+#include "DisplayMode.h"
+#include "Controller.h"
 #include "EngineBase.h"
 
 #include "utils/Log.h"
@@ -159,6 +161,10 @@ WCHAR* PageElement::GetValue() {
 // (the result is owned by the PageElement and MUST NOT be deleted)
 PageDestination* PageElement::AsLink() {
     return dest;
+}
+
+bool PageElement::IsLink() {
+    return dest != nullptr;
 }
 
 IPageElement* PageElement::Clone() {
@@ -552,6 +558,11 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
     RectF rc = RectF(pt, SizeF());
     RectF rect = Transform(rc, pageNo, zoom, rotation, inverse);
     return rect.TL();
+}
+
+bool EngineBase::HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh) {
+    // if not implemented in derived classes
+    return false;
 }
 
 // skip file:// and maybe file:/// from s. It might be added by mupdf.

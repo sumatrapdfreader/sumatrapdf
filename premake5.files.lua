@@ -455,6 +455,7 @@ function sumatrapdf_files()
     "CanvasAboutUI.*",
     "ChmModel.*",
     "Commands.*",
+    "Controller.h",
     "CrashHandler.*",
     "DisplayModel.*",
     "DisplayMode.*",
