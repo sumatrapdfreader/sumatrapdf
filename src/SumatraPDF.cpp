@@ -682,7 +682,7 @@ static void CreateThumbnailForFile(WindowInfo* win, FileState& ds) {
         }
     }
 
-    WCHAR* filePath = str::Dup(win->ctrl->FilePath());
+    WCHAR* filePath = str::Dup(win->ctrl->GetFilePath());
     win->ctrl->CreateThumbnail(Size(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
         uitask::Post([=] {
             if (bmp) {
@@ -837,15 +837,15 @@ static Controller* CreateControllerForEngine(EngineBase* engine, const WCHAR* fi
     return ctrl;
 }
 
-// TODO: remove when we figure out why this ctrl->FilePath() is not always same as path
+// TODO: remove when we figure out why this ctrl->GetFilePath() is not always same as path
 static NO_INLINE void VerifyController(Controller* ctrl, const WCHAR* path) {
     if (!ctrl) {
         return;
     }
-    if (str::Eq(ctrl->FilePath(), path)) {
+    if (str::Eq(ctrl->GetFilePath(), path)) {
         return;
     }
-    const WCHAR* ctrlFilePath = ctrl->FilePath();
+    const WCHAR* ctrlFilePath = ctrl->GetFilePath();
     char* s1 = ctrlFilePath ? strconv::WstrToUtf8(ctrlFilePath) : str::Dup("<null>");
     char* s2 = path ? strconv::WstrToUtf8(path) : str::Dup("<null>");
     logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
@@ -1091,7 +1091,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
             if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir) {
                 dm->SetDisplayR2L(fs ? fs->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
             }
-            if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
+            if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->GetFilePath(), prevCtrl->GetFilePath())) {
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
                 dm->CopyNavHistory(*prevCtrl->AsFixed());
             }
@@ -1105,7 +1105,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
             ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
             win->ctrl->GoToPage(ss.page, false);
         } else if (win->AsEbook()) {
-            if (prevCtrl && prevCtrl->AsEbook() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
+            if (prevCtrl && prevCtrl->AsEbook() && str::Eq(win->ctrl->GetFilePath(), prevCtrl->GetFilePath())) {
                 win->ctrl->AsEbook()->CopyNavHistory(*prevCtrl->AsEbook());
             }
         } else {
@@ -2226,7 +2226,7 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
     if (!shouldConfirm) {
         return;
     }
-    auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame, dm->FilePath());
+    auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame, dm->GetFilePath());
     switch (choice) {
         case SaveChoice::Discard:
             return;
@@ -2409,7 +2409,7 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
     } else if (type == kindEngineComicBooks) {
         fileFilter.Append(_TR("Comic books"));
     } else if (type == kindEngineImage) {
-        fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->DefaultFileExt() + 1);
+        fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->GetDefaultFileExt() + 1);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
@@ -2441,7 +2441,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
 
     auto* ctrl = win->ctrl;
-    const WCHAR* srcFileName = ctrl->FilePath();
+    const WCHAR* srcFileName = ctrl->GetFilePath();
     AutoFreeWstr urlName;
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
@@ -2478,7 +2478,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
             (!engine || engine->IsImageCollection() || kindEngineTxt == win->currentTab->GetEngineType()));
     CrashIf(canConvertToPDF && (!engine || kindEngineMupdf == win->currentTab->GetEngineType()));
 
-    const WCHAR* defExt = ctrl->DefaultFileExt();
+    const WCHAR* defExt = ctrl->GetDefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
@@ -2613,7 +2613,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         MessageBoxWarning(win->hwndFrame, msg);
     }
 
-    if (ok && IsUntrustedFile(win->ctrl->FilePath(), gPluginURL) && !convertToTXT) {
+    if (ok && IsUntrustedFile(win->ctrl->GetFilePath(), gPluginURL) && !convertToTXT) {
         auto realDstFileNameA = ToUtf8Temp(realDstFileName);
         file::SetZoneIdentifier(realDstFileNameA);
     }
@@ -2634,7 +2634,7 @@ static void OnMenuShowInFolder(WindowInfo* win) {
         return;
     }
     auto* ctrl = win->ctrl;
-    auto srcFileName = ctrl->FilePath();
+    auto srcFileName = ctrl->GetFilePath();
     if (!srcFileName) {
         return;
     }
@@ -2656,7 +2656,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     }
 
     auto* ctrl = win->ctrl;
-    AutoFreeWstr srcFileName = str::Dup(ctrl->FilePath());
+    AutoFreeWstr srcFileName = str::Dup(ctrl->GetFilePath());
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcFileName)) {
         return;
@@ -2665,7 +2665,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    const WCHAR* defExt = ctrl->DefaultFileExt();
+    const WCHAR* defExt = ctrl->GetDefaultFileExt();
     str::WStr fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     CrashIf(!ok);
@@ -2731,11 +2731,11 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     }
 
     auto* ctrl = win->ctrl;
-    const WCHAR* defExt = ctrl->DefaultFileExt();
+    const WCHAR* defExt = ctrl->GetDefaultFileExt();
 
     WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(ctrl->FilePath()));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(ctrl->GetFilePath()));
     str::TransCharsInPlace(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2781,10 +2781,10 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     }
 
     auto viewMode = ToWstrTemp(viewModeStr);
-    AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
-                                    viewMode.Get(), ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
+    AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(),
+                                    ss.page, viewMode.Get(), ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
-    const WCHAR* srcFileName = path::GetBaseNameTemp(ctrl->FilePath());
+    const WCHAR* srcFileName = path::GetBaseNameTemp(ctrl->GetFilePath());
     AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
     auto exePath = GetExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
@@ -4790,7 +4790,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdFavoriteDel:
             if (win->IsDocLoaded()) {
-                DelFavorite(ctrl->FilePath(), win->currPageNo);
+                DelFavorite(ctrl->GetFilePath(), win->currPageNo);
             }
             break;
 

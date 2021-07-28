@@ -21,10 +21,10 @@ struct EbookController : Controller {
     EbookController(const Doc& doc, EbookControls* ctrls, ControllerCallback* cb);
     ~EbookController() override;
 
-    [[nodiscard]] const WCHAR* FilePath() const override {
+    [[nodiscard]] const WCHAR* GetFilePath() const override {
         return doc.GetFilePath();
     }
-    [[nodiscard]] const WCHAR* DefaultFileExt() const override {
+    [[nodiscard]] const WCHAR* GetDefaultFileExt() const override {
         return doc.GetDefaultFileExt();
     }
     [[nodiscard]] int PageCount() const override {

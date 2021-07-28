@@ -80,11 +80,11 @@ bool ScrollState::operator==(const ScrollState& other) const {
     return page == other.page && x == other.x && y == other.y;
 }
 
-const WCHAR* DisplayModel::FilePath() const {
+const WCHAR* DisplayModel::GetFilePath() const {
     return engine->FileName();
 }
 
-const WCHAR* DisplayModel::DefaultFileExt() const {
+const WCHAR* DisplayModel::GetDefaultFileExt() const {
     return engine->defaultFileExt;
 }
 
@@ -957,7 +957,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
         return zoom;
     }
     char* name = str::Dup("");
-    const WCHAR* nameW = dm->FilePath();
+    const WCHAR* nameW = dm->GetFilePath();
     if (nameW) {
         name = strconv::WstrToUtf8(nameW);
     }

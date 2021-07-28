@@ -460,7 +460,7 @@ static void SaveEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
 
 static void TocContextMenu(ContextMenuEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
-    const WCHAR* filePath = win->ctrl->FilePath();
+    const WCHAR* filePath = win->ctrl->GetFilePath();
 
     POINT pt{};
 

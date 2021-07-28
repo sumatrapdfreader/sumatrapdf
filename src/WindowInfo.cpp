@@ -452,7 +452,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {
     }
     AutoDelete deleteRemoteLink(remoteLink);
 
-    AutoFreeWstr fullPath(path::GetDir(owner->ctrl->FilePath()));
+    AutoFreeWstr fullPath(path::GetDir(owner->ctrl->GetFilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?

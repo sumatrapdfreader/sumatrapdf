@@ -470,7 +470,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
 static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, __unused bool extended) {
     CrashIf(!ctrl);
 
-    WCHAR* str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
+    WCHAR* str = str::Dup(gPluginMode ? gPluginURL : ctrl->GetFilePath());
     layoutData->AddProperty(_TR("File:"), str, true);
 
     str = ctrl->GetProperty(DocumentProperty::Title);
@@ -514,7 +514,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, __unused bo
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
-    auto path = ToUtf8Temp(ctrl->FilePath());
+    auto path = ToUtf8Temp(ctrl->GetFilePath());
     i64 fileSize = file::GetSize(path.AsView());
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();

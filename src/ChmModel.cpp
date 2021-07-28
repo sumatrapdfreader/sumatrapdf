@@ -101,11 +101,11 @@ ChmModel::~ChmModel() {
     DeleteCriticalSection(&docAccess);
 }
 
-const WCHAR* ChmModel::FilePath() const {
+const WCHAR* ChmModel::GetFilePath() const {
     return fileName;
 }
 
-const WCHAR* ChmModel::DefaultFileExt() const {
+const WCHAR* ChmModel::GetDefaultFileExt() const {
     return L".chm";
 }
 

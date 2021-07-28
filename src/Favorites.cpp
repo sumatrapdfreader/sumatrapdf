@@ -442,7 +442,7 @@ void RebuildFavMenu(WindowInfo* win, HMENU menu) {
         AppendFavMenus(menu, nullptr);
     } else {
         AutoFreeWstr label(win->ctrl->GetPageLabel(win->currPageNo));
-        bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->FilePath(), win->currPageNo);
+        bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
         if (isBookmarked) {
             win::menu::SetEnabled(menu, CmdFavoriteAdd, false);
             AutoFreeWstr s(str::Format(_TR("Remove page %s from favorites"), label.Get()));
@@ -452,7 +452,7 @@ void RebuildFavMenu(WindowInfo* win, HMENU menu) {
             AutoFreeWstr s(str::Format(_TR("Add page %s to favorites\tCtrl+B"), label.Get()));
             win::menu::SetText(menu, CmdFavoriteAdd, s);
         }
-        AppendFavMenus(menu, win->ctrl->FilePath());
+        AppendFavMenus(menu, win->ctrl->GetFilePath());
     }
     win::menu::SetEnabled(menu, CmdFavoriteToggle, HasFavorites());
 }

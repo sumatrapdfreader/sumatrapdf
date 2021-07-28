@@ -12,8 +12,8 @@ struct ChmModel : Controller {
     ~ChmModel() override;
 
     // meta data
-    [[nodiscard]] const WCHAR* FilePath() const override;
-    [[nodiscard]] const WCHAR* DefaultFileExt() const override;
+    [[nodiscard]] const WCHAR* GetFilePath() const override;
+    [[nodiscard]] const WCHAR* GetDefaultFileExt() const override;
     [[nodiscard]] int PageCount() const override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
