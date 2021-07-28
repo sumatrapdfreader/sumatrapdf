@@ -37,8 +37,6 @@ extern Kind kindDestinationScrollTo;
 extern Kind kindDestinationLaunchURL;
 extern Kind kindDestinationLaunchEmbedded;
 extern Kind kindDestinationLaunchFile;
-extern Kind kindDestinationNextPage;
-extern Kind kindDestinationPrevPage;
 extern Kind kindDestinationDjVu;
 
 // text on a page
@@ -82,10 +80,14 @@ struct IPageDestination {
     }
 
     // string value associated with the destination (e.g. a path or a URL)
-    [[nodiscard]] virtual WCHAR* GetValue() = 0;
+    [[nodiscard]] virtual WCHAR* GetValue() {
+        return nullptr;
+    }
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    [[nodiscard]] virtual WCHAR* GetName() = 0;
+    [[nodiscard]] virtual WCHAR* GetName() {
+        return nullptr;
+    }
     // creates a copy
     [[nodiscard]] virtual IPageDestination* Clone() = 0;
 };

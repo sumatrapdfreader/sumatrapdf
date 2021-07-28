@@ -31,79 +31,85 @@ Kind kindEngineDjVu = "engineDjVu";
 //       DataPool::OpenFiles::global_ptr, FCPools::global_ptr
 //       cf. http://sourceforge.net/projects/djvu/forums/forum/103286/topic/3553602
 
-static bool IsPageLink(const char* link) {
-    return link && link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
+// parses "123", "#123", "# 123"
+// returns -1 for invalid page
+static int ParsePageLink(const char* link) {
+    if (!link) {
+        return -1;
+    }
+    if (link[0] == '#') {
+        ++link;
+    }
+    if (link[0] == ' ') {
+        ++link;
+    }
+    int n = atoi(link);
+    return n;
 }
 
-struct PageDestinationDjVu : IPageDestination {};
+static bool CouldBeURL(const char* link) {
+    if (!link) {
+        return false;
+    }
+
+    if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
+        return true;
+    }
+
+    // very lenient heuristic
+    return str::Contains(link, ".");
+}
+
+struct PageDestinationDjVu : IPageDestination {
+    const char* link{nullptr};
+    WCHAR* value{nullptr};
+
+    ~PageDestinationDjVu() {
+        str::Free(link);
+        str::Free(value);
+    }
+
+    WCHAR* GetValue() {
+        if (value) {
+            return value;
+        }
+        if (!CouldBeURL(link)) {
+            return nullptr;
+        }
+        value = strconv::Utf8ToWstr(link);
+        return value;
+    }
+    IPageDestination* Clone() {
+        auto res = new PageDestinationDjVu();
+        res->kind = kind;
+        res->pageNo = pageNo;
+        res->rect = rect;
+        res->zoom = zoom;
+        res->link = str::Dup(link);
+        res->value = str::Dup(value);
+        return res;
+    }
+};
 
 // the link format can be any of
 //   #[ ]<pageNo>      e.g. #1 for FirstPage and # 13 for page 13
 //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
 //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
 //   http://example.net/#hyperlink
-static PageDestination* newDjVuDestination(const char* link) {
-    auto res = new PageDestination();
+static IPageDestination* newDjVuDestination(const char* link) {
+    auto res = new PageDestinationDjVu();
     res->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
 
-    if (str::IsEmpty(link)) {
+    if (str::IsEmpty(link) || str::Eq(link, "#")) {
         res->kind = kindDestinationNone;
         return res;
     }
-
-    // invalid but seen in a crash report
-    if (str::Eq(link, "#")) {
-        res->kind = kindDestinationNone;
-        return res;
-    }
-
-    if (str::Eq(link, "#+1")) {
-        res->kind = kindDestinationNextPage;
-        return res;
-    }
-
-    if (str::Eq(link, "#-1")) {
-        res->kind = kindDestinationPrevPage;
-        return res;
-    }
-
-    if (IsPageLink(link)) {
-        res->kind = kindDestinationScrollTo;
-        res->pageNo = atoi(link + 1);
-        return res;
-    }
-
-    // there are links like: "#Here"
-    if (str::StartsWith(link, "#")) {
-        // TODO: don't know how to handle those
-        // Probably need to use ResolveNamedDest()
-        res->kind = kindDestinationNone;
-        return res;
-    }
-
-    if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
-        res->kind = kindDestinationLaunchURL;
-        res->value = strconv::Utf8ToWstr(link);
-        return res;
-    }
-
-    // very lenient heuristic
-    bool couldBeURL = str::Contains(link, ".");
-    if (couldBeURL) {
-        res->kind = kindDestinationLaunchURL;
-        res->value = strconv::Utf8ToWstr(link);
-        return res;
-    }
-
-    if (!res->kind) {
-        logf("unsupported djvu link: '%s'\n", link);
-    }
-
-    res->kind = kindDestinationNone;
+    res->pageNo = ParsePageLink(link);
+    res->link = str::Dup(link);
     return res;
 }
 
-static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
+static IPageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
     auto res = new PageElement();
     res->rect = ToRectFl(rect);
     res->pageNo = pageNo;
@@ -113,12 +119,8 @@ static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const c
         res->value = strconv::Utf8ToWstr(comment);
     }
     res->kind_ = kindPageElementDest;
-    if (!str::IsEmpty(comment)) {
-        res->value = strconv::Utf8ToWstr(comment);
-    } else {
-        if (kindDestinationLaunchURL == res->dest->GetKind()) {
-            res->value = str::Dup(res->dest->GetValue());
-        }
+    if (!res->value) {
+        res->value = str::Dup(res->dest->GetValue());
     }
     return res;
 }
@@ -262,11 +264,7 @@ class EngineDjVu : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(IPageDestination*, ILinkHandler*, Controller*) override {
-        CrashIf(true);
-        // TODO: implement me
-        return false;
-    }
+    bool HandleLink(IPageDestination*, ILinkHandler*, Controller*) override;
 
     IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
@@ -1033,6 +1031,55 @@ IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     delete els;
 
     return el;
+}
+
+bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler, Controller* ctrl) {
+    auto kind = dest->GetKind();
+    if (kind != kindDestinationDjVu) {
+        return false;
+    }
+    PageDestinationDjVu* ddest = (PageDestinationDjVu*)dest;
+
+    const char* link = ddest->link;
+
+    if (str::Eq(link, "#+1")) {
+        ctrl->GoToNextPage();
+        return true;
+    }
+
+    if (str::Eq(link, "#-1")) {
+        ctrl->GoToPrevPage();
+        return true;
+    }
+
+    int pageNo = ParsePageLink(link);
+    if (pageNo < 0) {
+        ctrl->GoToPage(pageNo, true);
+        return true;
+    }
+
+    // there are links like: "#Here"
+    if (str::StartsWith(link, "#")) {
+        // TODO: don't know how to handle those
+        // Probably need to use ResolveNamedDest()
+        return true;
+    }
+
+    if (CouldBeURL(link)) {
+        linkHandler->LauncURL(link);
+        return true;
+    }
+
+#if 0
+    if (!res->kind) {
+        logf("unsupported djvu link: '%s'\n", link);
+    }
+
+    res->kind = kindDestinationNone;
+    return res;
+#endif
+
+    return true;
 }
 
 // returns a numeric DjVu link to a named page (if the name resolves)

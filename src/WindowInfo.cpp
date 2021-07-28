@@ -60,6 +60,7 @@ struct LinkHandler : ILinkHandler {
     void GotoLink(IPageDestination*, Controller*) override;
     void GotoNamedDest(const WCHAR*) override;
     void ScrollTo(IPageDestination*) override;
+    void LauncURL(const char*) override;
     void LaunchFile(const WCHAR* path, IPageDestination*) override;
     IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
 };
@@ -371,27 +372,6 @@ void LinkHandler::GotoLink(IPageDestination* dest, Controller* ctrl) {
     }
 
     if (kindDestinationLaunchURL == kind) {
-        if (!path) {
-            /* ignore missing URLs */;
-            return;
-        }
-
-        WCHAR* colon = str::FindChar(path, ':');
-        WCHAR* hash = str::FindChar(path, '#');
-        if (!colon || (hash && colon > hash)) {
-            // treat relative URIs as file paths (without fragment identifier)
-            if (hash) {
-                *hash = '\0';
-            }
-            str::TransCharsInPlace(path, L"/", L"\\");
-            url::DecodeInPlace(path);
-            // LaunchFile will reject unsupported file types
-            LaunchFile(path, nullptr);
-        } else {
-            // LaunchBrowser will reject unsupported URI schemes
-            // TODO: support file URIs?
-            SumatraLaunchBrowser(path);
-        }
         return;
     }
 
@@ -413,17 +393,6 @@ void LinkHandler::GotoLink(IPageDestination* dest, Controller* ctrl) {
         return;
     }
 
-    if (kindDestinationNextPage == kind) {
-        // predefined named actions
-        ctrl->GoToNextPage();
-        return;
-    }
-
-    if (kindDestinationPrevPage == kind) {
-        ctrl->GoToPrevPage();
-        return;
-    }
-
     CrashIf(nullptr != kind);
 }
 
@@ -440,6 +409,31 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     RectF rect = dest->GetRect();
     float zoom = dest->GetZoom();
     owner->ctrl->ScrollTo(pageNo, rect, zoom);
+}
+
+void LinkHandler::LauncURL(const char* uri) {
+    if (!uri) {
+        /* ignore missing URLs */;
+        return;
+    }
+
+    WCHAR* path = ToWstrTemp(uri);
+    WCHAR* colon = str::FindChar(path, ':');
+    WCHAR* hash = str::FindChar(path, '#');
+    if (!colon || (hash && colon > hash)) {
+        // treat relative URIs as file paths (without fragment identifier)
+        if (hash) {
+            *hash = '\0';
+        }
+        str::TransCharsInPlace(path, L"/", L"\\");
+        url::DecodeInPlace(path);
+        // LaunchFile will reject unsupported file types
+        LaunchFile(path, nullptr);
+    } else {
+        // LaunchBrowser will reject unsupported URI schemes
+        // TODO: support file URIs?
+        SumatraLaunchBrowser(path);
+    }
 }
 
 void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {

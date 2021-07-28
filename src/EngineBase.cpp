@@ -30,13 +30,11 @@ Kind kindDestinationScrollTo = "scrollTo";
 Kind kindDestinationLaunchURL = "launchURL";
 Kind kindDestinationLaunchEmbedded = "launchEmbedded";
 Kind kindDestinationLaunchFile = "launchFile";
-Kind kindDestinationNextPage = "nextPage";
-Kind kindDestinationPrevPage = "prevPage";
 Kind kindDestinationDjVu = "destinationDjVu";
 
 static Kind destKinds[] = {
-    kindDestinationNone,       kindDestinationScrollTo, kindDestinationLaunchURL, kindDestinationLaunchEmbedded,
-    kindDestinationLaunchFile, kindDestinationNextPage, kindDestinationPrevPage,  kindDestinationDjVu,
+    kindDestinationNone,           kindDestinationScrollTo,   kindDestinationLaunchURL,
+    kindDestinationLaunchEmbedded, kindDestinationLaunchFile, kindDestinationDjVu,
 };
 
 PageDestination::~PageDestination() {
