@@ -10,12 +10,12 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
-#include "utils/PalmDbReader.h"
 #include "utils/TrivialHtmlParser.h"
 
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
+#include "PalmDbReader.h"
 #include "MobiDoc.h"
 
 #include "utils/Log.h"

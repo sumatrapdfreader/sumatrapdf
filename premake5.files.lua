@@ -638,10 +638,8 @@ function engines_files()
     "EbookFormatter.*",
     "HtmlFormatter.*",
     "MobiDoc.*",
-    "ParseBKM.*",
     "PdfCreator.*",
-
-    "utils/PalmDbReader.*",
+    "PalmDbReader.*",
   })
 end
 
@@ -1005,7 +1003,7 @@ end
 function engine_dump_files()
   files_in_dir("src", {
     "EngineDump.cpp",
-    "SumatraConfig.*",
+    "SumatraConfig.*",    
     "mui/MiniMui.*",
     "mui/TextRender.*"
   })
@@ -1020,7 +1018,6 @@ function pdf_preview_files()
 
   files_in_dir("src", {
     "utils/LogDbg.*",
-    "utils/PalmDbReader.*",
     "mui/MiniMui.*",
     "mui/TextRender.*",
     "MUPDF_Exports.cpp",
@@ -1030,6 +1027,7 @@ function pdf_preview_files()
     "EngineMupdfImpl.*",
     "EngineXps.*",
     "ChmFile.*",
+    "PalmDbReader.*",
     "EbookDoc.*",
     "EngineEbook.*",
     "EngineDjVu.*",
@@ -1051,12 +1049,12 @@ function pdf_filter_files()
   })
   files_in_dir("src", {
     "utils/LogDbg.*",
-    "utils/PalmDbReader.*",
     "MUPDF_Exports.cpp",
     "EngineBase.*",
     "EngineFzUtil.*",
     "EngineMupdf.*",
-    "EngineXps.*"
+    "EngineXps.*",
+    "PalmDbReader.*",
   })
 
   filter {"configurations:Debug"}
@@ -1067,7 +1065,7 @@ function pdf_filter_files()
     files {
       "src/EbookDoc.*",
       "src/MobiDoc.*",
-      "src/utils/PalmDbReader.*",
+      "src/PalmDbReader.*",
     }
   filter {}
 end

@@ -7,6 +7,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - naming cleanups in EnginePdf
 - rename EnginePdf = > EngineMupdf; enable opening HTML with EngineMupdf
 - support .svg files via EngineMupdf
+- move PalmDbReader.[cpp|h] from src/utils/ => src/
 
 2021-07-25 Sun
 

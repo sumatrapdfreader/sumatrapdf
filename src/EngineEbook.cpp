@@ -13,16 +13,15 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "mui/Mui.h"
-#include "utils/PalmDbReader.h"
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EngineEbook.h"
 #include "EbookBase.h"
+#include "PalmDbReader.h"
 #include "EbookDoc.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"

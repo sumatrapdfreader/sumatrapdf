@@ -513,11 +513,11 @@
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
+    <ClInclude Include="..\src\PalmDbReader.h" />
     <ClInclude Include="..\src\ifilter\EpubFilter.h" />
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
     <ClInclude Include="..\src\ifilter\TeXFilter.h" />
-    <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\EbookDoc.cpp">
@@ -541,6 +541,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\ifilter\EpubFilter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -559,7 +560,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\ifilter\PdfFilter.rc" />

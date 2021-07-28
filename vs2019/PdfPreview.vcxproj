@@ -516,16 +516,17 @@
     <ClInclude Include="..\src\EngineFzUtil.h" />
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
+    <ClInclude Include="..\src\EngineMupdfImpl.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
+    <ClInclude Include="..\src\PalmDbReader.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\MiniMui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
     <ClInclude Include="..\src\previewer\PdfPreviewBase.h" />
-    <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChmFile.cpp" />
@@ -541,13 +542,13 @@
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
+    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\MiniMui.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
-    <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\previewer\PdfPreview.rc" />

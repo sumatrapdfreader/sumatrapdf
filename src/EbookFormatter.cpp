@@ -6,16 +6,15 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/Archive.h"
-#include "utils/PalmDbReader.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "mui/Mui.h"
 
 #include "wingui/TreeModel.h"
-
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
+#include "PalmDbReader.h"
 #include "MobiDoc.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"

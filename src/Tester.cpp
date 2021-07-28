@@ -12,7 +12,6 @@
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
-#include "utils/PalmDbReader.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPrettyPrint.h"
@@ -25,6 +24,7 @@
 
 #include "EngineBase.h"
 #include "EbookBase.h"
+#include "PalmDbReader.h"
 #include "MobiDoc.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
