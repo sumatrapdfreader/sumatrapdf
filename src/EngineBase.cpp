@@ -32,36 +32,12 @@ Kind kindDestinationLaunchEmbedded = "launchEmbedded";
 Kind kindDestinationLaunchFile = "launchFile";
 Kind kindDestinationNextPage = "nextPage";
 Kind kindDestinationPrevPage = "prevPage";
-Kind kindDestinationFirstPage = "firstPage";
-Kind kindDestinationLastPage = "lastPage";
-Kind kindDestinationFindDialog = "findDialog";
-Kind kindDestinationFullScreen = "fullscreen";
-Kind kindDestinationGoBack = "goBack";
-Kind kindDestinationGoForward = "goForward";
-Kind kindDestinationGoToPageDialog = "goToPageDialog";
-Kind kindDestinationPrintDialog = "printDialog";
-Kind kindDestinationSaveAsDialog = "saveAsDialog";
+Kind kindDestinationDjVu = "destinationDjVu";
 
 static Kind destKinds[] = {
-    kindDestinationNone,       kindDestinationScrollTo,       kindDestinationLaunchURL,   kindDestinationLaunchEmbedded,
-    kindDestinationLaunchFile, kindDestinationNextPage,       kindDestinationPrevPage,    kindDestinationFirstPage,
-    kindDestinationLastPage,   kindDestinationFindDialog,     kindDestinationFullScreen,  kindDestinationGoBack,
-    kindDestinationGoForward,  kindDestinationGoToPageDialog, kindDestinationPrintDialog, kindDestinationSaveAsDialog,
+    kindDestinationNone,       kindDestinationScrollTo, kindDestinationLaunchURL, kindDestinationLaunchEmbedded,
+    kindDestinationLaunchFile, kindDestinationNextPage, kindDestinationPrevPage,  kindDestinationDjVu,
 };
-
-Kind resolveDestKind(char* s) {
-    if (str::IsEmpty(s)) {
-        return nullptr;
-    }
-    for (Kind kind : destKinds) {
-        if (str::Eq(s, kind)) {
-            return kind;
-        }
-    }
-    logf("resolveDestKind: unknown kind '%s'\n", s);
-    CrashIf(true);
-    return nullptr;
-}
 
 PageDestination::~PageDestination() {
     free(value);

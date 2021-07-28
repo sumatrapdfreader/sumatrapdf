@@ -424,52 +424,6 @@ void LinkHandler::GotoLink(IPageDestination* dest, Controller* ctrl) {
         return;
     }
 
-    if (kindDestinationFirstPage == kind) {
-        ctrl->GoToFirstPage();
-        return;
-    }
-
-    if (kindDestinationLastPage == kind) {
-        ctrl->GoToLastPage();
-        // Adobe Reader extensions to the spec, see http://www.tug.org/applications/hyperref/manual.html
-        return;
-    }
-
-    if (kindDestinationFindDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, CmdFindFirst, 0);
-        return;
-    }
-
-    if (kindDestinationFullScreen == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, CmdViewPresentationMode, 0);
-        return;
-    }
-
-    if (kindDestinationGoBack == kind) {
-        ctrl->Navigate(-1);
-        return;
-    }
-
-    if (kindDestinationGoForward == kind) {
-        ctrl->Navigate(1);
-        return;
-    }
-
-    if (kindDestinationGoToPageDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, CmdGoToPage, 0);
-        return;
-    }
-
-    if (kindDestinationPrintDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, CmdPrint, 0);
-        return;
-    }
-
-    if (kindDestinationSaveAsDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, CmdSaveAs, 0);
-        return;
-    }
-
     CrashIf(nullptr != kind);
 }
 

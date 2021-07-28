@@ -39,17 +39,7 @@ extern Kind kindDestinationLaunchEmbedded;
 extern Kind kindDestinationLaunchFile;
 extern Kind kindDestinationNextPage;
 extern Kind kindDestinationPrevPage;
-extern Kind kindDestinationFirstPage;
-extern Kind kindDestinationLastPage;
-extern Kind kindDestinationFindDialog;
-extern Kind kindDestinationFullScreen;
-extern Kind kindDestinationGoBack;
-extern Kind kindDestinationGoForward;
-extern Kind kindDestinationGoToPageDialog;
-extern Kind kindDestinationPrintDialog;
-extern Kind kindDestinationSaveAsDialog;
-
-Kind resolveDestKind(char* s);
+extern Kind kindDestinationDjVu;
 
 // text on a page
 // a character and its bounding box in page coordinates

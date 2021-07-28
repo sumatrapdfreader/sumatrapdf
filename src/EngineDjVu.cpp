@@ -35,6 +35,8 @@ static bool IsPageLink(const char* link) {
     return link && link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
 }
 
+struct PageDestinationDjVu : IPageDestination {};
+
 // the link format can be any of
 //   #[ ]<pageNo>      e.g. #1 for FirstPage and # 13 for page 13
 //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
