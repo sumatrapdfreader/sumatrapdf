@@ -111,7 +111,7 @@ struct DisplayModel : Controller {
     bool GoToFirstPage() override;
     bool GoToLastPage() override;
 
-    bool HandleLink(IPageElement*, ILinkHandler*, Controller* ctrl) override;
+    bool HandleLink(IPageDestination*, ILinkHandler*, Controller* ctrl) override;
 
     // for quick type determination and type-safe casting
     DisplayModel* AsFixed() override;

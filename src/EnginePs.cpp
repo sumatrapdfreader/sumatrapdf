@@ -323,8 +323,8 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }
 
-    bool HandleLink(IPageElement* el, ILinkHandler* lh, Controller* ctrl) override {
-        return pdfEngine->HandleLink(el, lh, ctrl);
+    bool HandleLink(IPageDestination* dest, ILinkHandler* lh, Controller* ctrl) override {
+        return pdfEngine->HandleLink(dest, lh, ctrl);
     }
 
     IPageDestination* GetNamedDest(const WCHAR* name) override {

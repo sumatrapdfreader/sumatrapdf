@@ -98,7 +98,7 @@ class EngineEbook : public EngineBase {
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(__unused IPageElement* el, __unused ILinkHandler* lh, __unused Controller* ctrl) override {
+    bool HandleLink(IPageDestination*, ILinkHandler*, Controller*) override {
         CrashIf(true);
         // TODO: implement me
         return false;

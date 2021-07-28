@@ -440,7 +440,7 @@ class EngineBase {
 
     // returns false if didn't perform action (temporary until we move
     // all code there)
-    virtual bool HandleLink(IPageElement*, ILinkHandler*, Controller*);
+    virtual bool HandleLink(IPageDestination*, ILinkHandler*, Controller*);
 
     // protected:
     void SetFileName(const WCHAR* s);

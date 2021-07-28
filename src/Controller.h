@@ -153,7 +153,7 @@ struct Controller {
         return true;
     }
 
-    virtual bool HandleLink(__unused IPageElement* pel, __unused ILinkHandler* h, __unused Controller* ctrl) {
+    virtual bool HandleLink(IPageDestination*, ILinkHandler*, Controller*) {
         // TODO: over-ride in ChmModel and EbookController
         return false;
     }

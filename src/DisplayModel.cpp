@@ -1424,8 +1424,8 @@ bool DisplayModel::GoToFirstPage() {
     return true;
 }
 
-bool DisplayModel::HandleLink(IPageElement* pel, ILinkHandler* lh, Controller* ctrl) {
-    return engine->HandleLink(pel, lh, ctrl);
+bool DisplayModel::HandleLink(IPageDestination* dest, ILinkHandler* lh, Controller* ctrl) {
+    return engine->HandleLink(dest, lh, ctrl);
 }
 
 void DisplayModel::ScrollXTo(int xOff) {
