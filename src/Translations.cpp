@@ -25,10 +25,12 @@ namespace trans {
 // after the user changes the language
 struct Translation {
     // index points inside allStrings;
-    u16 strIdx{0};
+    u16 idxStr{0};
     // translation of str/origStr in gCurrLangCode
     // index points inside allTranslations
-    u16 transIdx{0};
+    u16 idxTrans{0};
+    // translation in WCHAR*, points inside allTranslationsW
+    u16 idxTransW{0};
 };
 
 struct TranslationCache {
@@ -36,6 +38,7 @@ struct TranslationCache {
     // we lazily match it to origStr
     str::Str allStrings;
     str::Str allTranslations;
+    str::WStr allTranslationsW;
     // TODO: maybe also cache str::WStr allTranslationsW
     // we currently return a temp converted string but there's a chance their
     // lifetime could survive temp allocator lifetime
@@ -122,13 +125,15 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
         CrashIf(sLen < 0);
     }
     int nLines = lines.isize();
-    logf("%d lines, nStrings: %d\n", nLines, nStrings);
+    logf("ParseTranslationsTxt: %d lines, nStrings: %d\n", nLines, nStrings);
 
     FreeTranslations();
     gTranslationCache = new TranslationCache();
     // make index of first string to be 1 so that 0 can be
     // "missing" value in transIdx
+    gTranslationCache->allStrings.AppendChar(' ');
     gTranslationCache->allTranslations.AppendChar(' ');
+    gTranslationCache->allTranslationsW.AppendChar(' ');
     auto c = gTranslationCache;
     c->nTranslations = nStrings;
     c->translations = AllocArray<Translation>(c->nTranslations);
@@ -158,17 +163,25 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
             c->nUntranslated++;
         }
         Translation& translation = c->translations[nTrans++];
-        size_t idx = c->allStrings.size();
+        size_t idxStr = c->allStrings.size();
         // when this fires, we'll have to bump strIdx form u16 to u32
-        CrashIf(idx > 64 * 1024);
-        translation.strIdx = (u16)idx;
+        CrashIf(idxStr > 64 * 1024);
+        translation.idxStr = (u16)idxStr;
         UnescapeStringIntoStr(orig, c->allStrings);
+        char* toConvert = c->allStrings.LendData() + idxStr; // after insertion because could re-allocate
         if (trans) {
-            idx = c->allTranslations.size();
-            CrashIf(idx > 64 * 1024);
-            translation.transIdx = (u16)idx;
+            size_t idxTrans = c->allTranslations.size();
+            CrashIf(idxTrans > 64 * 1024);
+            translation.idxTrans = (u16)idxTrans;
             UnescapeStringIntoStr(trans, c->allTranslations);
+            toConvert = c->allTranslations.LendData() + idxTrans; // after insertion because could re-allocate
         }
+        // if we don't have a translation, we cache WCHAR* version from original string
+        auto ws = ToWstrTemp(toConvert);
+        size_t idxTransW = c->allTranslationsW.size();
+        CrashIf(idxTransW > 64 * 1024);
+        translation.idxTransW = (u16)idxTransW;
+        c->allTranslationsW.Append(ws.Get(), ws.size() + 1);
     }
     CrashIf(nTrans != c->nTranslations);
     if (c->nUntranslated > 0) {
@@ -176,33 +189,43 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
     }
 }
 
-const char* GetTranslationATemp(const char* s) {
+static Translation* FindTranslation(const char* s) {
     CrashIf(!s);
-    if (!gTranslationCache) {
-        return s;
-    }
+    CrashIf(!gTranslationCache);
     auto c = gTranslationCache;
     for (int i = 0; i < c->nTranslations; i++) {
         Translation& trans = c->translations[i];
-        size_t idx = trans.strIdx;
+        size_t idx = trans.idxStr;
         const char* s2 = c->allStrings.LendData() + idx;
         if (str::Eq(s, s2)) {
-            if (trans.transIdx == 0) {
-                return s;
-            }
-            idx = trans.transIdx;
-            s2 = c->allTranslations.LendData() + idx;
-            return s2;
+            return &trans;
         }
     }
-    logf("Didn't find translation for '%s'\n", s);
-    // CrashIf(true);
-    return s;
+    return nullptr;
 }
 
-const WCHAR* GetTranslationTemp(const char* s) {
-    auto trans = GetTranslationATemp(s);
-    return ToWstrTemp(trans);
+const char* GetTranslationA(const char* s) {
+    Translation* trans = FindTranslation(s);
+    // we don't have a translation for this string
+    if (!trans || trans->idxTrans == 0) {
+        logf("Didn't find translation for '%s'\n", s);
+        return s;
+    }
+    auto idx = trans->idxTrans;
+    return gTranslationCache->allTranslations.LendData() + idx;
+}
+
+const WCHAR* GetTranslation(const char* s) {
+    Translation* trans = FindTranslation(s);
+    // we don't have a translation for this string
+    if (!trans || trans->idxTransW == 0) {
+        logf("GetTranslatin: didn't find translation for '%s'\n", s);
+        // shouldn't happen
+        ReportIf(true);
+        return ToWstrTemp(s);
+    }
+    auto idx = trans->idxTransW;
+    return gTranslationCache->allTranslationsW.LendData() + idx;
 }
 
 int GetLangsCount() {
@@ -211,21 +234,6 @@ int GetLangsCount() {
 
 const char* GetCurrentLangCode() {
     return gCurrLangCode;
-}
-
-static void BuildTranslationsForLang(int langIdx, const char* langCode) {
-    if (langIdx == 0) {
-        // if english, do nothing
-        FreeTranslations();
-        return;
-    }
-    std::span<u8> d = LoadDataResource(2);
-    if (d.empty()) {
-        return;
-    }
-    std::string_view sv{(const char*)d.data(), d.size()};
-    ParseTranslationsTxt(sv, langCode);
-    free(d.data());
 }
 
 void SetCurrentLangByCode(const char* langCode) {
@@ -242,7 +250,12 @@ void SetCurrentLangByCode(const char* langCode) {
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
-    BuildTranslationsForLang(gCurrLangIdx, gCurrLangCode);
+
+    std::span<u8> d = LoadDataResource(2);
+    CrashIf(d.empty());
+    std::string_view sv{(const char*)d.data(), d.size()};
+    ParseTranslationsTxt(sv, langCode);
+    free(d.data());
 }
 
 const char* ValidateLangCode(const char* langCode) {
@@ -294,9 +307,9 @@ void Destroy() {
 } // namespace trans
 
 const WCHAR* _TR(const char* s) {
-    return trans::GetTranslationTemp(s);
+    return trans::GetTranslation(s);
 }
 
 const char* _TRA(const char* s) {
-    return trans::GetTranslationATemp(s);
+    return trans::GetTranslationA(s);
 }

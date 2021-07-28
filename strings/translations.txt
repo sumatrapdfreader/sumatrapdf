@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7a571128cfbf1e6f83512b42b8b6a0b256f18414
+a807a2e58d9e556cfb0a8606ebd35a793202be50
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -51,7 +51,7 @@ nl:&Over...
 nn:&Om
 no:&Om
 pa:ਇਸ &ਬਾਰੇ
-pl:&O SumatraPDF
+pl:&O programie SumatraPDF
 pt:&Acerca
 ro:&Despre
 ru:&О программе...
@@ -495,15 +495,19 @@ vn:Đóng tập tin\tCtrl+W
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
 it:Continua installazione versione 32bit
+pl:&Kontynuuj instalację wersji 32-bitowej
 :&Copy Selection \tCtrl-C
 am:&Պատճենել ընտրումը \tCtrl-C
 it:&Copia selezione\tCtrl-C
+pl:&Kopiuj zaznaczenie\tCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
+pl:&Kopiuj do schowka\tCtrl-C
 :&Discard
 am:&Մերժել
 it:Scarica
+pl:O&drzuć
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
 am:&Այլևս չհարցնել
@@ -1794,7 +1798,7 @@ nl:&Openen...\tCtrl+O
 nn:&Opne...\tCtrl+O
 no:&Åpne...\tCtrl+O
 pa:ਫਾਇਲ ਖੋਲੋ(&O)...\tCtrl+O
-pl:&Otwórz…\tCtrl+O
+pl:&Otwórz...\tCtrl+O
 pt:&Abrir...\tCtrl+O
 ro:&Deschidere...\tCtrl+O
 ru:&Открыть...\tCtrl+O
@@ -2504,9 +2508,11 @@ vn:Lưu thành...\tCtrl+S
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
 it:&Salva in un PDF esistente
+pl:&Zapisz w istniejącym pliku PDF
 :&Search With Google
 am:&Որոնել Google-ով
 it:Cerca con Google
+pl:&Szukaj za pomocą Google
 :&Settings
 am:&Կարգավորումներ
 ar:&الإعدادات
@@ -2798,6 +2804,7 @@ vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
 it:&Traduci con Google
+pl:&Tłumacz za pomocą Google
 :&Underline
 am:&Ընդգծված
 cn:&下划线
@@ -3317,7 +3324,7 @@ nl:Over SumatraPDF
 nn:Om SumatraPDF
 no:Om SumatraPDF
 pa:SumatraPDF ਬਾਰੇ
-pl:O SumatraPDF
+pl:O programie SumatraPDF
 pt:Acerca de SumatraPDF
 ro:Despre SumatraPDF
 ru:О программе SumatraPDF
@@ -4267,7 +4274,7 @@ nl:Automatisch
 nn:Automatisk
 no:Automatisk
 pa:ਆਪਣੇ-ਆਪ
-pl:Automatycznie
+pl:Automatyczny
 pt:Automático
 ro:Automat
 ru:Автоматически
@@ -5180,6 +5187,7 @@ vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
 it:Controllo aggiornamenti...
+pl:Szukanie aktualizacji...
 :Circle
 am:Շրջան
 ar:دائرة
@@ -6738,6 +6746,7 @@ vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
 it:Crea annotazione sotto al c&ursore
+pl:Utwórz adnotację &pod kursorem
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
@@ -7524,9 +7533,11 @@ vn:Thuộc tính tập tin
 :Don't install
 am:Չտեղադրել
 it:Non installare
+pl:Nie instaluj
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
 it:Download versione a 64bit
+pl:Pobierz wersję 64-bitową
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
@@ -7608,7 +7619,7 @@ nl:&Afsluiten\tCtrl+Q
 nn:&Avslutt\tCtrl+Q
 no:A&vslutt\tCtrl+Q
 pa:ਬੰਦ ਕਰੋ(&x)\tCtrl+Q
-pl:&Wyjście\tCtrl+Q
+pl:&Wyjdź\tCtrl+Q
 pt:&Sair\tCtrl+Q
 ro:&Ieșire\tCtrl+Q
 ru:В&ыход\tCtrl+Q
@@ -10263,7 +10274,7 @@ hi:अक्सर पढ़ें जाने वाले
 hr:Najčešće čitano
 hu:Leggyakrabban olvasott fájlok
 id:Yang Sering Dibaca
-it:Letti frequentemente
+it:Aperti recentemente
 ja:よく読むファイル
 ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일
@@ -10418,7 +10429,7 @@ nl:Ga naar pagina
 nn:Gå til side
 no:Gå til side
 pa:ਪੰਨੇ ਤੇ ਜਾਓ
-pl:Przejdź do strony
+pl:Idź do strony
 pt:Ir para a página
 ro:Salt la pagina
 ru:Перейти на страницу
@@ -10881,6 +10892,7 @@ vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 am:Տեղադրել և վեաթողարկել
 it:Installa e ri-esegui
+pl:Zainstaluj i uruchom ponownie
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
 ar:!فشل التثبيت
@@ -11010,6 +11022,7 @@ vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
+pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 :KB
 af:KB
 am:ԿԲ
@@ -11392,7 +11405,7 @@ hi:सभी PDF फाईलें SumatraPDF में खोलें ?
 hr:Postaviti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 id:Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?
-it:Impostare SumatraPDF come programma predefinito per i file PDF?
+it:Vuoi impostare SumatraPDF come programma predefinito per i file PDF?
 ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
 ka:გსურთ SumatraPDF-ის დაყენება PDF-ისთვის საწყის აპლიკაციად?
 kr:SumatraPDF를 PDF 파일의 기본 프로그램으로 만들까요?
@@ -11477,7 +11490,7 @@ nl:SumatraPDF als standaard PDF-lezer instellen
 nn:Bruk SumatraPDF som standard PDF-lesar
 no:Bruk SumatraPDF som standard PDF-leser
 pa:ਸਾਰੀਂਆ  PDF ਫਾਈਲਾ SumatraPDF ਵਿਚ ਖੋਲੋ
-pl:Ustaw SumatraPDF jako domyślną przeglądarkę PDF
+pl:Ustaw program SumatraPDF jako domyślną przeglądarkę PDF
 pt:Tornar SumatraPDF o leitor principal dos PDF
 ro:Setați SumatraPDF ca cititor implicit de PDF
 ru:Ассоциировать SumatraPDF с файлами PDF
@@ -11801,6 +11814,7 @@ vn:Mở cửa sổ mới\tCtrl+N
 :New version available
 am:Մատչելի է նոր տարբերակ
 it:Nuova versione disponibile
+pl:Dostępna nowa wersja
 :Next Page
 af:Volgende Bladsy
 am:Հաջորդ էջը
@@ -15043,6 +15057,7 @@ vn:Quay phải\tCtrl+Shift++
 :S&election
 am:Ը&նտրում
 it:S&elezione
+pl:Z&aznaczenie
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
@@ -15185,6 +15200,7 @@ vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save annoations?
 am:Պահե՞լ մեկնաբանությունը:
 it:Vuoi salvare le annotazioni?
+pl:Zapisać adnotacje?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
@@ -15218,12 +15234,15 @@ ru:Сохранить изменения в существующий PDF
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
 it:Salva in un &nuovo PDF
+pl:Zapisz w &nowym pliku PDF
 :Search With &Bing
 am:Որոնել &Bing-ով
 it:Cerca con &Bing
+pl:Szukaj za pomocą &Bing
 :Search With &Google
 am:Որոնել &Google-ով
 it:Cerca con &Google
+pl:Szukaj za pomocą &Google
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -16285,6 +16304,7 @@ vn:Trang đơn
 :Skip this version
 am:Բաց թողնել այս տարբերակը
 it:Salta questa versione
+pl:Pomiń tę wersję
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:الرجاء اضغط 'إلغاء الأمر'، إذا كنت ترغب في مساعدتنا على إصلاح هذا الحادث \n\n !آسف، أنه لا ينبغي أن يكون قد حدث
@@ -17672,6 +17692,7 @@ vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
 it:Traduci con &DeepL
+pl:Tłumacz za pomocą &DeepL
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
@@ -17937,6 +17958,7 @@ pl:Niezapisane adnotacje
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
 it:Annotazioni non salvate in '%s'
+pl:Niezapisane adnotacje w '%s'
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
@@ -18417,9 +18439,11 @@ ru:Аннотации не сохранены
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
+pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
-it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi scaricare SumatraPDF a 64bit?
+it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
+pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
 :Zoom
 am:Դիտափոխել
 ar:تكبير/تصغير
@@ -18466,7 +18490,7 @@ ne:आकार परिवर्तन
 nl:Zoom
 nn:Zoom
 no:Zoom
-pl:Powiększenie
+pl:Powiększ
 pt:Ajustar
 ro:Mărire
 ru:Масштаб

@@ -1306,7 +1306,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             tmp = strconv::Utf8ToWstr(md.title);
             title = tmp.Get();
         } else {
-            title = trans::GetTranslationTemp(md.title);
+            title = trans::GetTranslation(md.title);
         }
 
         if (isSubMenu) {
@@ -1409,7 +1409,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
         // do nothing
     }
     if (idx < dimof(menuDefFile)) {
-        const WCHAR* printItem = trans::GetTranslationTemp(menuDefFile[idx].title);
+        const WCHAR* printItem = trans::GetTranslation(menuDefFile[idx].title);
         if (!filePrintAllowed) {
             printItem = _TR("&Print... (denied)");
         }

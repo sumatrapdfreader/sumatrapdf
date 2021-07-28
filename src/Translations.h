@@ -10,8 +10,8 @@ const char* GetCurrentLangCode();
 void SetCurrentLangByCode(const char* langCode);
 const char* ValidateLangCode(const char* langCode);
 
-const WCHAR* GetTranslationTemp(const char* s);
-const char* GetTranslationATemp(const char* s);
+const WCHAR* GetTranslation(const char* s);
+const char* GetTranslationA(const char* s);
 const char* GetLangCodeByIdx(int idx);
 const char* GetLangNameByIdx(int idx);
 bool IsCurrLangRtl();
