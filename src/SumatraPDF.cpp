@@ -5050,7 +5050,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
 static TempStr GetFileSizeAsStrTemp(std::string_view path) {
     i64 fileSize = file::GetSize(path);
-    AutoFreeWstr fileSizeStr = FormatFileSize(fileSize);
+    AutoFreeWstr fileSizeStr = FormatFileSizeNoTrans(fileSize);
     return ToUtf8Temp(fileSizeStr);
 }
 

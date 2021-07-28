@@ -731,7 +731,7 @@ static char* PdfLinkGetURI(fz_link* link, fz_outline* outline) {
     return nullptr;
 }
 
-static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
+Kind CalcDestKind(fz_link* link, fz_outline* outline) {
     // outline entries with page set to -1 go nowhere
     // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1352
     if (outline && outline->page == -1) {
@@ -769,7 +769,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
     return nullptr;
 }
 
-static WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
+WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
     char* uri = PdfLinkGetURI(link, outline);
     if (!uri) {
         return nullptr;
@@ -782,7 +782,7 @@ static WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
     return path;
 }
 
-static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
+WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
     char* uri = PdfLinkGetURI(link, outline);
     if (!uri) {
         return nullptr;
@@ -795,7 +795,7 @@ static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
     return strconv::Utf8ToWstr(uri);
 }
 
-static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
+int CalcDestPageNo(fz_link* link, fz_outline* outline) {
     char* uri = PdfLinkGetURI(link, outline);
     // TODO: happened in ug_logodesign.pdf. investigate
     // CrashIf(!uri);
@@ -820,7 +820,7 @@ static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
     return 0;
 }
 
-static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
+RectF CalcDestRect(fz_link* link, fz_outline* outline) {
     RectF result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     char* uri = PdfLinkGetURI(link, outline);
     // TODO: this happens in pdf/ug_logodesign.pdf, there's only outline without
@@ -846,12 +846,9 @@ static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
     return result;
 }
 
-static IPageDestination* NewPageDestination(fz_link* link, fz_outline* outline) {
-    auto dest = new PageDestination();
-    dest->kind = CalcDestKind(link, outline);
-    dest->link = link;
-    dest->outline = outline;
-
+IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
+    auto dest = new PageDestinationMupdf(link, outline);
+#if 0
     CrashIf(!dest->kind);
     if (dest->kind == kindDestinationScrollTo) {
         char* uri = PdfLinkGetURI(link, outline);
@@ -874,33 +871,20 @@ static IPageDestination* NewPageDestination(fz_link* link, fz_outline* outline) 
         logf("dest->kind: %s, dest->pageNo: %d\n", dest->kind, dest->pageNo);
         // ReportIf(dest->pageNo <= 0);
     }
+#endif
     return dest;
 }
 
-IPageDestination* NewFzDestination(fz_outline* outline) {
-    return NewPageDestination(nullptr, outline);
-}
-
 static IPageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
-    auto res = new PageElement();
-    res->kind_ = kindPageElementDest;
+    auto dest = NewPageDestinationMupdf(link, outline);
+
+    auto res = new PageElementDestination(dest);
     res->pageNo = srcPageNo;
 
     if (link) {
         res->rect = ToRectFl(link->rect);
     }
 
-    res->dest = NewPageDestination(link, outline);
-    res->value = str::Dup(res->dest->GetValue());
-    return res;
-}
-
-IPageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
-    auto res = new PageElement();
-    res->kind_ = kindPageElementImage;
-    res->pageNo = pageNo;
-    res->rect = ToRectFl(rect);
-    res->imageID = (int)imageIdx;
     return res;
 }
 
@@ -926,13 +910,13 @@ IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
 
     for (auto* pel : pageInfo->autoLinks) {
         if (pel->GetRect().Contains(pt)) {
-            return ClonePageElement(pel);
+            return pel->Clone();
         }
     }
 
     for (auto* pel : pageInfo->comments) {
         if (pel->GetRect().Contains(pt)) {
-            return ClonePageElement(pel);
+            return pel->Clone();
         }
     }
 
@@ -940,7 +924,7 @@ IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
         if (IsPointInRect(ir, p)) {
-            return NewFzImage(pageNo, ir, imageIdx);
+            return img.imageElement->Clone();
         }
         imageIdx++;
     }
@@ -961,7 +945,7 @@ void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
-        auto image = NewFzImage(pageNo, ir, imageIdx);
+        auto image = img.imageElement->Clone();
         els->Append(image);
         imageIdx++;
     }
@@ -974,12 +958,12 @@ void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
     }
 
     for (auto&& pel : pageInfo->autoLinks) {
-        auto el = ClonePageElement(pel);
+        auto el = pel->Clone();
         els->Append(el);
     }
 
     for (auto* comment : pageInfo->comments) {
-        auto el = ClonePageElement(comment);
+        auto el = comment->Clone();
         els->Append(el);
     }
 
@@ -1019,14 +1003,12 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         }
 
         // TODO: those leak on xps
-        PageElement* pel = new PageElement();
-        pel->kind_ = kindPageElementDest;
         auto dest = new PageDestination();
         dest->kind = kindDestinationLaunchURL;
-        dest->pageNo = 0;
         dest->value = str::Dup(uri);
+
+        auto pel = new PageElementDestination(dest);
         pel->dest = dest;
-        pel->value = str::Dup(uri);
         pel->rect = ToRectFl(bbox);
         pageInfo->autoLinks.Append(pel);
     }
@@ -1034,7 +1016,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     free(coords);
 }
 
-void FzFindImagePositions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext) {
+void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageInfo>& images, fz_stext_page* stext) {
     if (!stext) {
         return;
     }
@@ -1050,7 +1032,12 @@ void FzFindImagePositions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_p
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
             // fz_convert_pixmap_samples doesn't handle src without colorspace
             // TODO: this is probably not right
-            FitzImagePos img = {block->bbox, block->u.i.transform};
+            FitzPageImageInfo img = {block->bbox, block->u.i.transform};
+            auto pel = new PageElementImage();
+            pel->pageNo = pageNo;
+            pel->rect = ToRectFl(block->bbox);
+            pel->imageID = images.isize();
+            img.imageElement = pel;
             images.Append(img);
         }
         block = block->next;
@@ -1070,6 +1057,7 @@ fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
     if (!stext) {
         return nullptr;
     }
+    // kind a hacky
     fz_stext_block* block = stext->first_block;
     while (block) {
         if (block->type != FZ_STEXT_BLOCK_IMAGE) {

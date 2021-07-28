@@ -31,11 +31,11 @@ Kind kindDestinationLaunchURL = "launchURL";
 Kind kindDestinationLaunchEmbedded = "launchEmbedded";
 Kind kindDestinationLaunchFile = "launchFile";
 Kind kindDestinationDjVu = "destinationDjVu";
+Kind kindDestinationMupdf = "destinationMupdf";
 
-static Kind destKinds[] = {
-    kindDestinationNone,           kindDestinationScrollTo,   kindDestinationLaunchURL,
-    kindDestinationLaunchEmbedded, kindDestinationLaunchFile, kindDestinationDjVu,
-};
+static Kind destKinds[] = {kindDestinationNone,           kindDestinationScrollTo,   kindDestinationLaunchURL,
+                           kindDestinationLaunchEmbedded, kindDestinationLaunchFile, kindDestinationDjVu,
+                           kindDestinationMupdf};
 
 PageDestination::~PageDestination() {
     free(value);
@@ -94,55 +94,20 @@ PageElement::~PageElement() {
     delete dest;
 }
 
-Kind PageElement::GetKind() {
-    return kind_;
-}
-
-// page this element lives on (0 for elements in a ToC)
-int PageElement::GetPageNo() {
-    return pageNo;
-}
-
-// rectangle that can be interacted with
-RectF PageElement::GetRect() {
-    return rect;
-}
-
 // string value associated with this element (e.g. displayed in an infotip)
 // caller must free() the result
 WCHAR* PageElement::GetValue() {
     return value;
 }
 
-// if this element is a link, this returns information about the link's destination
-// (the result is owned by the PageElement and MUST NOT be deleted)
-IPageDestination* PageElement::AsLink() {
-    return dest;
-}
-
-bool PageElement::IsLink() {
-    return dest != nullptr;
-}
-
 IPageElement* PageElement::Clone() {
     auto* res = new PageElement();
-    res->kind_ = kind_;
+    res->kind = kind;
     res->pageNo = pageNo;
     res->rect = rect;
     res->value = str::Dup(value);
     res->dest = ClonePageDestination(dest);
     return res;
-}
-
-IPageElement* ClonePageElement(IPageElement* el) {
-    if (!el) {
-        return nullptr;
-    }
-    return el->Clone();
-}
-
-void PageElementAction::LaunchURL(__unused const char* url) {
-    // TODO: write me
 }
 
 Kind kindTocFzOutline = "tocFzOutline";

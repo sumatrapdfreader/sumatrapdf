@@ -5,6 +5,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - go back to GetTranslation*() returning non-temp strings (fixes #2067)
 - support metadata for all EngineMupdf files
 - don't pass Controller* to HandleLink()
+- progress on IPageElement refactor
 
 2021-07-27 Tue
 

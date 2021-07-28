@@ -64,6 +64,13 @@ struct PageDestinationDjVu : IPageDestination {
     const char* link{nullptr};
     WCHAR* value{nullptr};
 
+    PageDestinationDjVu(const char* l, const char* comment) {
+        kind = kindDestinationDjVu;
+        link = str::Dup(l);
+        if (comment) {
+            value = strconv::Utf8ToWstr(comment);
+        }
+    }
     ~PageDestinationDjVu() {
         str::Free(link);
         str::Free(value);
@@ -80,12 +87,10 @@ struct PageDestinationDjVu : IPageDestination {
         return value;
     }
     IPageDestination* Clone() {
-        auto res = new PageDestinationDjVu();
-        res->kind = kind;
+        auto res = new PageDestinationDjVu(link, nullptr);
         res->pageNo = pageNo;
         res->rect = rect;
         res->zoom = zoom;
-        res->link = str::Dup(link);
         res->value = str::Dup(value);
         return res;
     }
@@ -96,39 +101,31 @@ struct PageDestinationDjVu : IPageDestination {
 //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
 //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
 //   http://example.net/#hyperlink
-static IPageDestination* newDjVuDestination(const char* link) {
-    auto res = new PageDestinationDjVu();
-    res->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-
+static IPageDestination* NewDjVuDestination(const char* link, const char* comment) {
     if (str::IsEmpty(link) || str::Eq(link, "#")) {
-        res->kind = kindDestinationNone;
-        return res;
+        return nullptr;
     }
+    auto res = new PageDestinationDjVu(link, comment);
+    res->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     res->pageNo = ParsePageLink(link);
-    res->link = str::Dup(link);
     return res;
 }
 
 static IPageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
-    auto res = new PageElement();
+    auto dest = NewDjVuDestination(link, comment);
+    if (!dest) {
+        return nullptr;
+    }
+    auto res = new PageElementDestination(dest);
     res->rect = ToRectFl(rect);
     res->pageNo = pageNo;
-    res->dest = newDjVuDestination(link);
-
-    if (!str::IsEmpty(comment)) {
-        res->value = strconv::Utf8ToWstr(comment);
-    }
-    res->kind_ = kindPageElementDest;
-    if (!res->value) {
-        res->value = str::Dup(res->dest->GetValue());
-    }
     return res;
 }
 
-static TocItem* newDjVuTocItem(TocItem* parent, const char* title, const char* link) {
+static TocItem* NewDjVuTocItem(TocItem* parent, const char* title, const char* link) {
     auto s = ToWstrTemp(title);
     auto res = new TocItem(parent, s, 0);
-    res->dest = newDjVuDestination(link);
+    res->dest = NewDjVuDestination(link, nullptr);
     res->pageNo = res->dest->GetPageNo();
     return res;
 }
@@ -1106,7 +1103,7 @@ IPageDestination* EngineDjVu::GetNamedDest(const WCHAR* name) {
 
     AutoFree link = ResolveNamedDest(nameA.Get());
     if (link) {
-        return newDjVuDestination(link);
+        return NewDjVuDestination(link, nullptr);
     }
     return nullptr;
 }
@@ -1129,9 +1126,9 @@ TocItem* EngineDjVu::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCount
         TocItem* tocItem = nullptr;
         AutoFree linkNo = ResolveNamedDest(link);
         if (!linkNo) {
-            tocItem = newDjVuTocItem(parent, name, link);
+            tocItem = NewDjVuTocItem(parent, name, link);
         } else if (!str::IsEmpty(name) && !str::Eq(name, link + 1)) {
-            tocItem = newDjVuTocItem(parent, name, linkNo);
+            tocItem = NewDjVuTocItem(parent, name, linkNo);
         } else {
             // ignore generic (name-less) entries
             auto* tocTree = BuildTocTree(nullptr, miniexp_cddr(item), idCounter);

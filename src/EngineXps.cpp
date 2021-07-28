@@ -544,7 +544,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
         return pageInfo;
     }
     FzLinkifyPageText(pageInfo, stext);
-    FzFindImagePositions(ctx, pageInfo->images, stext);
+    FzFindImagePositions(ctx, pageNo, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
 
     return pageInfo;
@@ -818,7 +818,8 @@ Vec<IPageElement*>* EngineXps::GetElements(int pageNo) {
 }
 
 RenderedBitmap* EngineXps::GetImageForPageElement(IPageElement* ipel) {
-    PageElement* pel = (PageElement*)ipel;
+    CrashIf(kindPageElementImage != ipel->GetKind());
+    auto pel = (PageElementImage*)ipel;
     auto r = pel->rect;
     int pageNo = pel->pageNo;
     int imageID = pel->imageID;
@@ -856,7 +857,7 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectF rect, int imageIdx) {
         return nullptr;
     }
 
-    Vec<FitzImagePos> positions;
+    Vec<FitzPageImageInfo> positions;
 
     if (imageIdx >= positions.isize() || ToRectFl(positions.at(imageIdx).rect) != rect) {
         CrashIf(true);
@@ -914,7 +915,7 @@ TocItem* EngineXps::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
             name = str::Dup(L"");
         }
         int pageNo = outline->page + 1;
-        auto dest = NewFzDestination(outline);
+        auto dest = NewPageDestinationMupdf(nullptr, outline);
 
         TocItem* item = NewTocItemWithDestination(parent, name, dest);
         free(name);

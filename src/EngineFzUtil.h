@@ -21,9 +21,10 @@ class FitzAbortCookie : public AbortCookie {
     }
 };
 
-struct FitzImagePos {
+struct FitzPageImageInfo {
     fz_rect rect = fz_unit_rect;
     fz_matrix transform;
+    IPageElement* imageElement{nullptr};
 };
 
 struct FzPageInfo {
@@ -38,7 +39,7 @@ struct FzPageInfo {
     Vec<IPageElement*> comments;
 
     RectF mediabox{};
-    Vec<FitzImagePos> images;
+    Vec<FitzPageImageInfo> images;
 
     // if false, only loaded page (fast)
     // if true, loaded expensive info (extracted text etc.)
@@ -74,15 +75,40 @@ WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut);
 LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
 int IsExternalLink(const char* uri);
 TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDestination* dest);
-IPageElement* NewFzImage(int pageNo, fz_rect rect, size_t imageIdx);
-IPageDestination* NewFzDestination(fz_outline*);
+IPageDestination* NewPageDestinationMupdf(fz_link*, fz_outline*);
 IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);
 fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
                             fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
 fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx);
-void FzFindImagePositions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext);
+void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageInfo>& images, fz_stext_page* stext);
 
 // float is in range 0...1
 COLORREF ColorRefFromPdfFloat(fz_context* ctx, int n, float color[4]);
+
+struct PageDestinationMupdf : IPageDestination {
+    // TODO: should be private to EngineMupdf
+    fz_outline* outline{nullptr};
+    fz_link* link{nullptr};
+    const char* uri{nullptr};
+
+    PageDestinationMupdf(fz_link* l, fz_outline* o) {
+        kind = kindDestinationMupdf;
+        link = l;
+        outline = o;
+    }
+    ~PageDestinationMupdf() override {
+    }
+
+    WCHAR* GetValue() override {
+        return nullptr;
+    }
+    WCHAR* GetName() override {
+        return nullptr;
+    }
+    IPageDestination* Clone() override {
+        // TODO: remove or implement
+        return nullptr;
+    }
+};

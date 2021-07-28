@@ -134,32 +134,28 @@ class EngineEbook : public EngineBase {
 
 static IPageElement* newEbookLink(DrawInstr* link, Rect rect, IPageDestination* dest, int pageNo = 0,
                                   bool showUrl = false) {
-    auto res = new PageElement();
-    res->pageNo = pageNo;
+    if (!dest) {
+        dest = new PageDestination();
+        dest->kind = kindDestinationLaunchURL;
+        // TODO: not sure about this
+        //dest->value = str::Dup(res->value);
+        dest->rect = ToRectFl(rect);
+    }
 
-    res->kind_ = kindPageElementDest;
+    auto res = new PageElementDestination(dest);
+    res->pageNo = pageNo;
     res->rect = ToRectFl(rect);
 
-    if (!dest || showUrl) {
+#if 0 // TODO: figure out
+    if (showUrl) {
         res->value = strconv::FromHtmlUtf8(link->str.s, link->str.len);
     }
-
-    if (!dest) {
-        auto dest2 = new PageDestination();
-        dest2->kind = kindDestinationLaunchURL;
-        // TODO: not sure about this
-        dest2->value = str::Dup(res->value);
-        dest2->pageNo = 0;
-        dest2->rect = ToRectFl(rect);
-        dest = dest2;
-    }
-    res->dest = dest;
+#endif
     return res;
 }
 
-static PageElement* newImageDataElement(int pageNo, Rect bbox, int imageID) {
-    auto res = new PageElement();
-    res->kind_ = kindPageElementImage;
+static IPageElement* NewImageDataElement(int pageNo, Rect bbox, int imageID) {
+    auto res = new PageElementImage();
     res->pageNo = pageNo;
     res->rect = ToRectFl(bbox);
     res->imageID = imageID;
@@ -459,7 +455,7 @@ Vec<IPageElement*>* EngineEbook::GetElements(int pageNo) {
         DrawInstr& i = pageInstrs->at(idx);
         if (DrawInstrType::Image == i.type) {
             auto box = GetInstrBbox(i, pageBorder);
-            auto el = newImageDataElement(pageNo, box, (int)idx);
+            auto el = NewImageDataElement(pageNo, box, (int)idx);
             els->Append(el);
         } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmpty()) {
             IPageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
@@ -485,7 +481,8 @@ static RenderedBitmap* getImageFromData(ImageData imageData) {
 }
 
 RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
-    PageElement* el = (PageElement*)iel;
+    CrashIf(iel->GetKind() != kindPageElementImage);
+    PageElementImage* el = (PageElementImage*)iel;
     int pageNo = el->pageNo;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);

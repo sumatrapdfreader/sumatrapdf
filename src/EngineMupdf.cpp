@@ -1002,7 +1002,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
             dest = DestFromAttachment(this, outline);
         } else {
             kindRaw = kindTocFzOutline;
-            dest = NewFzDestination(outline);
+            dest = NewPageDestinationMupdf(nullptr, outline);
         }
 
         TocItem* item = NewTocItemWithDestination(parent, name, dest);
@@ -1137,16 +1137,14 @@ FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
     return pageInfo;
 }
 
-static PageElement* NewFzComment(const WCHAR* comment, int pageNo, RectF rect) {
-    auto res = new PageElement();
-    res->kind_ = kindPageElementComment;
+static IPageElement* NewFzComment(const WCHAR* comment, int pageNo, RectF rect) {
+    auto res = new PageElementComment(comment);
     res->pageNo = pageNo;
     res->rect = rect;
-    res->value = str::Dup(comment);
     return res;
 }
 
-static PageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
+static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_annot_rect(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
     const char* contents = pdf_annot_contents(ctx, annot);
@@ -1192,16 +1190,13 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 
             logf("attachement: %s\n", attname);
 
-            PageElement* el = new PageElement();
-            el->kind_ = kindPageElementDest;
-            el->pageNo = pageNo;
-            el->rect = ToRectFl(rect);
-            el->value = strconv::Utf8ToWstr(attname);
             auto dest = new PageDestination();
             dest->kind = kindDestinationLaunchEmbedded;
             dest->value = strconv::Utf8ToWstr(attname);
-            dest->pageNo = pageNo;
-            el->dest = dest;
+
+            auto el = new PageElementDestination(dest);
+            el->pageNo = pageNo;
+            el->rect = ToRectFl(rect);
 
             comments.Append(el);
             // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
@@ -1290,7 +1285,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     }
 
     FzLinkifyPageText(pageInfo, stext);
-    FzFindImagePositions(ctx, pageInfo->images, stext);
+    FzFindImagePositions(ctx, pageNo, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
     return pageInfo;
 }
@@ -1494,7 +1489,8 @@ bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) 
 }
 
 RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
-    PageElement* pel = (PageElement*)ipel;
+    CrashIf(kindPageElementImage != ipel->GetKind());
+    auto pel = (PageElementImage*)ipel;
     auto r = pel->rect;
     int pageNo = pel->pageNo;
     int imageID = pel->imageID;

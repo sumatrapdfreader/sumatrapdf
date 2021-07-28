@@ -245,9 +245,8 @@ RectF EngineImages::Transform(const RectF& rect, int pageNo, float zoom, int rot
     return res;
 }
 
-static PageElement* newImageElement(ImagePage* page) {
-    auto res = new PageElement();
-    res->kind_ = kindPageElementImage;
+static IPageElement* NewImageElement(ImagePage* page) {
+    auto res = new PageElementImage();
     res->pageNo = page->pageNo;
     int dx = page->bmp->GetWidth();
     int dy = page->bmp->GetHeight();
@@ -265,7 +264,7 @@ Vec<IPageElement*>* EngineImages::GetElements(int pageNo) {
     }
 
     auto els = new Vec<IPageElement*>();
-    auto el = newImageElement(page);
+    auto el = NewImageElement(page);
     els->Append(el);
     DropPage(page, false);
     return els;
@@ -279,14 +278,15 @@ IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
     if (!page) {
         return nullptr;
     }
-    auto res = newImageElement(page);
+    auto res = NewImageElement(page);
     DropPage(page, false);
     return res;
 }
 
-RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* ipel) {
-    PageElement* pel = (PageElement*)ipel;
-    int pageNo = pel->imageID;
+RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
+    CrashIf(pel->GetKind() != kindPageElementImage);
+    auto ipel = (PageElementImage*)pel;
+    int pageNo = ipel->pageNo;
     auto page = GetPage(pageNo);
     if (!page) {
         return nullptr;

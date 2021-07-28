@@ -38,6 +38,7 @@ extern Kind kindDestinationLaunchURL;
 extern Kind kindDestinationLaunchEmbedded;
 extern Kind kindDestinationLaunchFile;
 extern Kind kindDestinationDjVu;
+extern Kind kindDestinationMupdf;
 
 // text on a page
 // a character and its bounding box in page coordinates
@@ -96,11 +97,6 @@ struct PageDestination : IPageDestination {
     WCHAR* value{nullptr};
     WCHAR* name{nullptr};
 
-    // TODO: should be private to EngineMupdf
-    fz_outline* outline{nullptr};
-    fz_link* link{nullptr};
-    const char* uri{nullptr};
-
     PageDestination() = default;
 
     ~PageDestination() override;
@@ -121,54 +117,130 @@ extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
 struct IPageElement {
+    Kind kind{nullptr};
+    // position of the element on the page
+    RectF rect{};
+    int pageNo{-1};
+
     virtual ~IPageElement() = default;
 
     // the type of this page element
     bool Is(Kind expectedKind);
 
-    virtual Kind GetKind() = 0;
-    // page this element lives on (0 for elements in a ToC)
-    virtual int GetPageNo() = 0;
-    // rectangle that can be interacted with
-    virtual RectF GetRect() = 0;
+    Kind GetKind() {
+        return kind;
+    }
+    // page this element lives on (-1 for elements in a ToC)
+    int GetPageNo() {
+        return pageNo;
+    }
+
+    // position of the element on page, in page coordinates
+    RectF GetRect() {
+        return rect;
+    }
+
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
-    virtual WCHAR* GetValue() = 0;
+    virtual WCHAR* GetValue() {
+        return nullptr;
+    }
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
-    virtual IPageDestination* AsLink() = 0;
-    virtual bool IsLink() = 0;
+    virtual IPageDestination* AsLink() {
+        return nullptr;
+    }
+    bool IsLink() {
+        return AsLink() != nullptr;
+    }
     virtual IPageElement* Clone() = 0;
 };
 
-struct PageElementAction {
-    void LaunchURL(const char* url);
+struct PageElementImage : IPageElement {
+    int imageID{-1};
+
+    PageElementImage() {
+        kind = kindPageElementImage;
+    }
+    IPageElement* Clone() {
+        auto res = new PageElementImage();
+        res->kind = kind;
+        res->imageID = imageID;
+        res->rect = rect;
+        res->pageNo = pageNo;
+        return res;
+    }
+};
+
+struct PageElementComment : IPageElement {
+    WCHAR* comment{nullptr};
+
+    PageElementComment(const WCHAR* comment_) {
+        kind = kindPageElementComment;
+        comment = str::Dup(comment_);
+    }
+
+    ~PageElementComment() override {
+        str::Free(comment);
+    }
+
+    WCHAR* GetValue() override {
+        return comment;
+    }
+
+    IPageElement* Clone() override {
+        auto res = new PageElementComment(comment);
+        res->pageNo = pageNo;
+        res->rect = rect;
+        return res;
+    }
+};
+
+struct PageElementDestination : IPageElement {
+    IPageDestination* dest;
+
+    PageElementDestination(IPageDestination* d) {
+        kind = kindPageElementDest;
+        dest = d;
+    }
+
+    ~PageElementDestination() override {
+        delete dest;
+    }
+
+    WCHAR* GetValue() override {
+        if (dest) {
+            return dest->GetValue();
+        }
+        return nullptr;
+    }
+
+    IPageElement* Clone() override {
+        auto res = new PageElementDestination(nullptr);
+        if (dest) {
+            res->dest = dest->Clone();
+        }
+        res->pageNo = pageNo;
+        res->rect = rect;
+        return res;
+    }
 };
 
 // hoverable (and maybe interactable) element on a single page
 struct PageElement : IPageElement {
-    Kind kind_{nullptr};
-    int pageNo{0};
-    RectF rect{};
     WCHAR* value{nullptr};
     // only set if kindPageElementDest
     IPageDestination* dest{nullptr};
 
-    int imageID{0};
-
     ~PageElement() override;
 
-    Kind GetKind() override;
-    int GetPageNo() override;
-    RectF GetRect() override;
     WCHAR* GetValue() override;
 
-    IPageDestination* AsLink() override;
-    bool IsLink() override;
+    IPageDestination* AsLink() {
+        return dest;
+    }
     IPageElement* Clone() override;
 };
-
-IPageElement* ClonePageElement(IPageElement*);
 
 // those are the same as F font bitmask in PDF docs
 // for TocItem::fontFlags
@@ -205,7 +277,7 @@ struct TocItem {
 
     bool isUnchecked{false};
 
-    // page this item points to (0 for non-page destinations)
+    // page this item points to (-1 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
     int pageNo{0};
 
