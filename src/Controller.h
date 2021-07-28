@@ -14,6 +14,7 @@ struct WindowInfo;
 
 using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
 
+// TODO: "format", "encryption", "info::Keywords" as in fz_lookup_metadata
 enum class DocumentProperty {
     Title,
     Author,

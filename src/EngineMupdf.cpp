@@ -1746,8 +1746,42 @@ WCHAR* EngineMupdf::ExtractFontList() {
     return fonts.Join(L"\n");
 }
 
-// TODO: convert to use fz_lookup_metadata
+static const char* DocumentPropertyToMupdfMetadataKey(DocumentProperty prop) {
+    switch (prop) {
+        case DocumentProperty::Title:
+            return FZ_META_INFO_TITLE;
+        case DocumentProperty::Author:
+            return FZ_META_INFO_AUTHOR;
+        case DocumentProperty::Subject:
+            return "info:Subject";
+        case DocumentProperty::PdfProducer:
+            return FZ_META_INFO_PRODUCER;
+        case DocumentProperty::CreatorApp:
+            return "info:Creator"; // not sure if the same meaning
+        case DocumentProperty::CreationDate:
+            return "info:CreationDate";
+        case DocumentProperty::ModificationDate:
+            return "info:ModDate";
+    }
+    return nullptr;
+}
+
 WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
+    const char* key = DocumentPropertyToMupdfMetadataKey(prop);
+    if (key) {
+        char buf[1024]{};
+        int bufSize = (int)dimof(buf);
+        int n = fz_lookup_metadata(ctx, _doc, key, buf, bufSize);
+        if (n > 0) {
+            if (n > bufSize) {
+                // can be bigger if output truncated
+                n = bufSize - 1;
+                buf[bufSize - 1] = 0; // not sure if necessary
+            }
+            WCHAR* s = strconv::Utf8ToWstr(buf, (size_t)n - 1);
+            return s;
+        }
+    }
     if (!pdfdoc) {
         return nullptr;
     }
