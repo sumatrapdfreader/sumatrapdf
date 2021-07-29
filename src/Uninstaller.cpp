@@ -450,8 +450,6 @@ static bool RegisterWinClass() {
 }
 
 static BOOL InstanceInit() {
-    InitInstallerUninstaller();
-
     CreateMainWindow();
     if (!gHwndFrame) {
         return FALSE;
@@ -603,10 +601,12 @@ static void InitSelfDelete() {
 }
 
 int RunUninstaller() {
-    log("RunUninstaller()\n");
+    InitInstallerUninstaller();
+
     if (gCli->log) {
         StartUnInstallerLogging();
     }
+    log("RunUninstaller()\n");
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
     WCHAR* cmdLine = GetCommandLineW();

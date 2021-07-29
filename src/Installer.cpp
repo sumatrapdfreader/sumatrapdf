@@ -907,7 +907,6 @@ static bool RegisterWinClass() {
 }
 
 static BOOL InstanceInit() {
-    InitInstallerUninstaller();
 
     CreateMainWindow();
     if (!gHwndFrame) {
@@ -1089,6 +1088,7 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
 }
 
 int RunInstaller() {
+    InitInstallerUninstaller();
     if (gCli->log) {
         StartInstallerLogging();
     }
