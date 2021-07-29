@@ -15,7 +15,8 @@ extern "C" {
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineFzUtil.h"
+#include "Annotation.h"
+#include "EngineMupdfImpl.h"
 #include "PdfCreator.h"
 
 #include "utils/Log.h"

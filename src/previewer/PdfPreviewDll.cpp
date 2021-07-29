@@ -110,7 +110,7 @@ class PreviewClassFactory : public IClassFactory {
         }
 #endif
         else if (gBuildDjVuPreview && SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) &&
-                   IsEqualCLSID(m_clsid, clsid)) {
+                 IsEqualCLSID(m_clsid, clsid)) {
             pObject = new DjVuPreview(&g_lRefCount);
         } else if (gBuildEpubPreview && SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) &&
                    IsEqualCLSID(m_clsid, clsid)) {

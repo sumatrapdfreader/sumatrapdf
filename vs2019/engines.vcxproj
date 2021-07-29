@@ -467,7 +467,6 @@
     <ClInclude Include="..\src\EngineCreate.h" />
     <ClInclude Include="..\src\EngineDjVu.h" />
     <ClInclude Include="..\src\EngineEbook.h" />
-    <ClInclude Include="..\src\EngineFzUtil.h" />
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EngineMulti.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
@@ -487,7 +486,6 @@
     <ClCompile Include="..\src\EngineCreate.cpp" />
     <ClCompile Include="..\src\EngineDjVu.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
-    <ClCompile Include="..\src\EngineFzUtil.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMulti.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />

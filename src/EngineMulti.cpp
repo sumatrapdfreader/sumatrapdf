@@ -24,7 +24,7 @@ extern "C" {
 #include "Controller.h"
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
-#include "EngineFzUtil.h"
+#include "EngineMupdfImpl.h"
 #include "EngineCreate.h"
 #include "EngineMulti.h"
 

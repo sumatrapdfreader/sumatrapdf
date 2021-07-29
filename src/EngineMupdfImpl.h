@@ -1,3 +1,34 @@
+/* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+struct Annotation;
+
+struct FitzPageImageInfo {
+    fz_rect rect = fz_unit_rect;
+    fz_matrix transform;
+    IPageElement* imageElement{nullptr};
+};
+
+struct FzPageInfo {
+    int pageNo{0}; // 1-based
+    fz_page* page{nullptr};
+
+    fz_link* links{nullptr};
+
+    // auto-detected links
+    Vec<IPageElement*> autoLinks;
+    // comments are made out of annotations
+    Vec<IPageElement*> comments;
+
+    RectF mediabox{};
+    Vec<FitzPageImageInfo> images;
+
+    // if false, only loaded page (fast)
+    // if true, loaded expensive info (extracted text etc.)
+    bool fullyLoaded{false};
+
+    bool commentsNeedRebuilding{false};
+};
 
 class EngineMupdf : public EngineBase {
   public:
@@ -80,3 +111,7 @@ class EngineMupdf : public EngineBase {
 };
 
 EngineMupdf* AsEngineMupdf(EngineBase* engine);
+
+fz_rect To_fz_rect(RectF rect);
+RectF ToRectFl(fz_rect rect);
+RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap);

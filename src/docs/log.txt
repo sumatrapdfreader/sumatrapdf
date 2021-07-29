@@ -6,6 +6,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - support metadata for all EngineMupdf files
 - don't pass Controller* to HandleLink()
 - progress on IPageElement refactor
+- remove EngineXps and use EngineMupdf for .xps files
+- merge EngineFzUtil.cpp into EngineMupdf.cpp
 
 2021-07-27 Tue
 

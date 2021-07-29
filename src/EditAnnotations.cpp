@@ -29,7 +29,6 @@ extern "C" {
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
-#include "EngineFzUtil.h"
 #include "EngineMupdfImpl.h"
 #include "EngineMulti.h"
 #include "EngineCreate.h"
