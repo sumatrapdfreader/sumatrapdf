@@ -1639,6 +1639,12 @@ bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) 
         HandleLinkMupdf(this, dest, linkHandler);
         return true;
     }
+    if (k == kindDestinationLaunchURL) {
+        auto d = (PageDestinationURL*)dest;
+        char* urlA = ToUtf8Temp(d->url);
+        linkHandler->LauncURL(urlA);
+        return true;
+    }
     linkHandler->GotoLink(dest);
     return true;
 }
