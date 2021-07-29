@@ -138,7 +138,7 @@ static IPageElement* newEbookLink(DrawInstr* link, Rect rect, IPageDestination* 
         dest = new PageDestination();
         dest->kind = kindDestinationLaunchURL;
         // TODO: not sure about this
-        //dest->value = str::Dup(res->value);
+        // dest->value = str::Dup(res->value);
         dest->rect = ToRectFl(rect);
     }
 

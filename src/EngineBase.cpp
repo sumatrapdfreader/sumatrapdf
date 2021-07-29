@@ -272,7 +272,7 @@ bool TocItem::IsExpanded() {
 }
 
 bool TocItem::PageNumbersMatch() const {
-    if (!dest || dest->GetPageNo() == 0) {
+    if (!dest || dest->GetPageNo() <= 0) {
         return true;
     }
     if (pageNo != dest->GetPageNo()) {

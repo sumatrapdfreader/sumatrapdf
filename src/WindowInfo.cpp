@@ -50,14 +50,17 @@
 #include "uia/Provider.h"
 
 struct LinkHandler : ILinkHandler {
-    WindowInfo* owner{nullptr};
+    WindowInfo* win{nullptr};
 
-    explicit LinkHandler(WindowInfo* win) {
-        owner = win;
-        ctrl = win->ctrl;
+    explicit LinkHandler(WindowInfo* w) {
+        CrashIf(!w);
+        win = w;
     }
     ~LinkHandler() override;
 
+    Controller* GetController() override {
+        return win->ctrl;
+    }
     void GotoLink(IPageDestination*) override;
     void GotoNamedDest(const WCHAR*) override;
     void ScrollTo(IPageDestination*) override;
@@ -354,12 +357,12 @@ bool WindowInfo::CreateUIAProvider() {
 }
 
 void LinkHandler::GotoLink(IPageDestination* dest) {
-    CrashIf(!owner || owner->linkHandler != this);
-    if (!dest || !owner || !owner->IsDocLoaded()) {
+    CrashIf(!win || win->linkHandler != this);
+    if (!dest || !win || !win->IsDocLoaded()) {
         return;
     }
 
-    HWND hwndFrame = owner->hwndFrame;
+    HWND hwndFrame = win->hwndFrame;
     WCHAR* path = dest->GetValue();
     Kind kind = dest->GetKind();
     if (kindDestinationNone == kind) {
@@ -398,8 +401,8 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
 }
 
 void LinkHandler::ScrollTo(IPageDestination* dest) {
-    CrashIf(!owner || owner->linkHandler != this);
-    if (!dest || !owner || !owner->IsDocLoaded()) {
+    CrashIf(!win || win->linkHandler != this);
+    if (!dest || !win || !win->IsDocLoaded()) {
         return;
     }
 
@@ -409,7 +412,7 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     }
     RectF rect = dest->GetRect();
     float zoom = dest->GetZoom();
-    owner->ctrl->ScrollTo(pageNo, rect, zoom);
+    win->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 
 void LinkHandler::LauncURL(const char* uri) {
@@ -453,14 +456,14 @@ void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {
     }
     AutoDelete deleteRemoteLink(remoteLink);
 
-    AutoFreeWstr fullPath(path::GetDir(owner->ctrl->GetFilePath()));
+    AutoFreeWstr fullPath(path::GetDir(win->ctrl->GetFilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
     WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
-        LoadArgs args(fullPath, owner);
+        LoadArgs args(fullPath, win);
         newWin = LoadDocument(args);
         if (!newWin) {
             return;
@@ -475,7 +478,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
             AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.Get()));
-            owner->ShowNotification(msg, NotificationOptions::Highlight);
+            win->ShowNotification(msg, NotificationOptions::Highlight);
         }
         return;
     }
@@ -538,8 +541,8 @@ IPageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, boo
 }
 
 void LinkHandler::GotoNamedDest(const WCHAR* name) {
-    CrashIf(!owner || owner->linkHandler != this);
-    Controller* ctrl = owner->ctrl;
+    CrashIf(!win || win->linkHandler != this);
+    Controller* ctrl = win->ctrl;
     if (!ctrl) {
         return;
     }

@@ -970,7 +970,7 @@ bool EngineMupdf::FinishLoading() {
     return true;
 }
 
-static PageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
+static IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
     // WCHAR* path = strconv::Utf8ToWstr(outline->uri);
@@ -1483,7 +1483,185 @@ Vec<IPageElement*>* EngineMupdf::GetElements(int pageNo) {
     return res;
 }
 
+#if 0
+static char* PdfLinkGetURI(fz_link* link, fz_outline* outline) {
+    if (link) {
+        return link->uri;
+    }
+    if (outline) {
+        return outline->uri;
+    }
+    return nullptr;
+}
+
+Kind CalcDestKind(fz_link* link, fz_outline* outline) {
+    // outline entries with page set to -1 go nowhere
+    // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1352
+    if (outline && outline->page == -1) {
+        return kindDestinationNone;
+    }
+    char* uri = PdfLinkGetURI(link, outline);
+    // some outline entries are bad (issue 1245)
+    if (!uri) {
+        return kindDestinationNone;
+    }
+    if (!IsExternalLink(uri)) {
+        float x = 0, y = 0, zoom = 0;
+        int pageNo = ResolveLink(uri, &x, &y, &zoom);
+        if (pageNo == -1) {
+            // TODO: figure out what it could be
+            logf("CalcDestKind(): unknown uri: '%s'\n", uri);
+            // ReportIf(true);
+            return nullptr;
+        }
+        return kindDestinationScrollTo;
+    }
+    if (str::StartsWith(uri, "file:")) {
+        // TODO: investigate more, happens in pier-EsugAwards2007.pdf
+        return kindDestinationLaunchFile;
+    }
+    // TODO: hackish way to detect uris of various kinds
+    // like http:, news:, mailto:, tel: etc.
+    if (str::FindChar(uri, ':') != nullptr) {
+        return kindDestinationLaunchURL;
+    }
+
+    logf("CalcDestKind(): unknown uri: '%s'\n", uri);
+    // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
+    // ReportIf(true);
+    return nullptr;
+}
+
+WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    if (!uri) {
+        return nullptr;
+    }
+    if (!IsExternalLink(uri)) {
+        // other values: #1,115,208
+        return nullptr;
+    }
+    WCHAR* path = strconv::Utf8ToWstr(uri);
+    return path;
+}
+
+WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    if (!uri) {
+        return nullptr;
+    }
+    if (IsExternalLink(uri)) {
+        return nullptr;
+    }
+    // TODO(port): test with more stuff
+    // figure out what PDF_NAME(GoToR) ends up being
+    return strconv::Utf8ToWstr(uri);
+}
+
+int CalcDestPageNo(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    // TODO: happened in ug_logodesign.pdf. investigate
+    // CrashIf(!uri);
+    if (!uri) {
+        return 0;
+    }
+    if (IsExternalLink(uri)) {
+        return 0;
+    }
+    float x, y;
+    int pageNo = ResolveLink(uri, &x, &y, nullptr);
+    if (pageNo == -1) {
+        return 0;
+    }
+    return pageNo + 1; // TODO(port): or is it just pageNo?
+
+    return 0;
+}
+
+RectF CalcDestRect(fz_link* link, fz_outline* outline) {
+    RectF result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    char* uri = PdfLinkGetURI(link, outline);
+    // TODO: this happens in pdf/ug_logodesign.pdf, there's only outline without
+    // pageno. need to investigate
+    // CrashIf(!uri);
+    if (!uri) {
+        return result;
+    }
+
+    if (IsExternalLink(uri)) {
+        return result;
+    }
+    float x = 0;
+    float y = 0;
+    int pageNo = ResolveLink(uri, &x, &y, nullptr);
+    if (pageNo == -1) {
+        // SubmitBugReportIf(pageNo == -1);
+        return result;
+    }
+
+    result.x = (double)x;
+    result.y = (double)y;
+    return result;
+}
+
+IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
+    auto dest = new PageDestinationMupdf(link, outline);
+    CrashIf(!dest->kind);
+    if (dest->kind == kindDestinationScrollTo) {
+        char* uri = PdfLinkGetURI(link, outline);
+        float x = 0, y = 0, zoom = 0;
+        int pageNo = ResolveLink(uri, &x, &y, &zoom);
+        dest->pageNo = pageNo + 1;
+        dest->rect = RectF(x, y, x, y);
+        dest->value = strconv::Utf8ToWstr(uri);
+        dest->name = strconv::Utf8ToWstr(uri);
+        dest->zoom = zoom;
+    } else {
+        // TODO: clean this up
+        dest->rect = CalcDestRect(link, outline);
+        dest->value = CalcValue(link, outline);
+        dest->name = CalcDestName(link, outline);
+        dest->pageNo = CalcDestPageNo(link, outline);
+    }
+    if ((dest->pageNo <= 0) && (dest->kind != kindDestinationNone) && (dest->kind != kindDestinationLaunchFile) &&
+        (dest->kind != kindDestinationLaunchURL) && (dest->kind != kindDestinationLaunchEmbedded)) {
+        logf("dest->kind: %s, dest->pageNo: %d\n", dest->kind, dest->pageNo);
+        // ReportIf(dest->pageNo <= 0);
+    }
+    return dest;
+}
+#endif
+
+void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
+    CrashIf(kindDestinationMupdf != dest->GetKind());
+    PageDestinationMupdf* link = (PageDestinationMupdf*)dest;
+    CrashIf(!(link->outline || link->link));
+    const char* uri = link->outline ? link->outline->uri : nullptr;
+    if (!link->outline) {
+        uri = link->link->uri;
+    }
+    float x, y;
+    fz_location loc = fz_resolve_link(e->ctx, e->_doc, uri, &x, &y);
+    int pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
+    auto ctrl = linkHandler->GetController();
+    if (pageNo != -1) {
+        ctrl->GoToPage(pageNo + 1, true);
+        return;
+    }
+    if (IsExternalLink(uri)) {
+        linkHandler->LauncURL(uri);
+        return;
+    }
+    // TODO: more?
+    CrashIf(true);
+}
+
 bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
+    Kind k = dest->GetKind();
+    if (k == kindDestinationMupdf) {
+        HandleLinkMupdf(this, dest, linkHandler);
+        return true;
+    }
     linkHandler->GotoLink(dest);
     return true;
 }

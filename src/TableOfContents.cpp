@@ -82,7 +82,9 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
         return;
     }
 
-    CrashIf(k != kindDestinationLaunchURL && k != kindDestinationLaunchFile && k != kindDestinationLaunchEmbedded);
+    bool isOk = (k == kindDestinationLaunchURL) || (k == kindDestinationLaunchFile) ||
+                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf);
+    CrashIf(!isOk);
 
     str::WStr infotip;
 

@@ -5,6 +5,7 @@ EXPORTS
 
 	version_check_3_4
 
+	fz_page_number_from_location
 	fz_lookup_metadata
 	pdf_drop_annot
 	fz_open_document_with_stream

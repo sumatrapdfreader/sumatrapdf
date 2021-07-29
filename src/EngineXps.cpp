@@ -80,8 +80,7 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
 }
 #endif
 
-class xps_doc_props {
-  public:
+struct xps_doc_props {
     AutoFreeWstr title;
     AutoFreeWstr author;
     AutoFreeWstr subject;

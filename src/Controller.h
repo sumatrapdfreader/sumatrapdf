@@ -31,9 +31,8 @@ enum class DocumentProperty {
 };
 
 struct ILinkHandler {
-    Controller* ctrl{nullptr};
-
     virtual ~ILinkHandler(){};
+    virtual Controller* GetController() = 0;
     virtual void GotoLink(IPageDestination*) = 0;
     virtual void GotoNamedDest(const WCHAR*) = 0;
     virtual void ScrollTo(IPageDestination*) = 0;

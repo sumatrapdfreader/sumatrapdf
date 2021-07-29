@@ -49,7 +49,6 @@ struct PageText {
 };
 
 void FreePageText(PageText*);
-
 int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp);
 
 // a link destination
@@ -213,6 +212,9 @@ struct PageElementDestination : IPageElement {
             return dest->GetValue();
         }
         return nullptr;
+    }
+    IPageDestination* AsLink() override {
+        return dest;
     }
 
     IPageElement* Clone() override {

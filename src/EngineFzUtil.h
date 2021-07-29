@@ -75,7 +75,6 @@ WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut);
 LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
 int IsExternalLink(const char* uri);
 TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDestination* dest);
-IPageDestination* NewPageDestinationMupdf(fz_link*, fz_outline*);
 IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);
@@ -83,32 +82,39 @@ fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, 
                             fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
 fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx);
 void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageInfo>& images, fz_stext_page* stext);
+IPageDestination* NewPageDestinationMupdf(fz_link*, fz_outline*);
 
 // float is in range 0...1
 COLORREF ColorRefFromPdfFloat(fz_context* ctx, int n, float color[4]);
 
 struct PageDestinationMupdf : IPageDestination {
-    // TODO: should be private to EngineMupdf
     fz_outline* outline{nullptr};
     fz_link* link{nullptr};
-    const char* uri{nullptr};
+
+    WCHAR* value{nullptr};
+    WCHAR* name{nullptr};
 
     PageDestinationMupdf(fz_link* l, fz_outline* o) {
+        // exactly one must be provided
+        CrashIf(l && o);
+        CrashIf(!l && !o);
         kind = kindDestinationMupdf;
         link = l;
         outline = o;
     }
     ~PageDestinationMupdf() override {
+        str::Free(value);
+        str::Free(name);
     }
 
-    WCHAR* GetValue() override {
-        return nullptr;
-    }
-    WCHAR* GetName() override {
-        return nullptr;
-    }
+    WCHAR* GetValue() override;
+    WCHAR* GetName() override;
     IPageDestination* Clone() override {
-        // TODO: remove or implement
-        return nullptr;
+        auto res = new PageDestinationMupdf(link, outline);
+        res->pageNo = pageNo;
+        res->rect = rect;
+        res->value = str::Dup(value);
+        res->name = str::Dup(name);
+        return res;
     }
 };
