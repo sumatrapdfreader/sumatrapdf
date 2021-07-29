@@ -725,7 +725,15 @@ WCHAR* PageDestinationMupdf ::GetValue() {
     if (value) {
         return value;
     }
-    return nullptr;
+
+    const char* uri = outline ? outline->uri : nullptr;
+    if (!outline) {
+        uri = link->uri;
+    }
+    if (uri && IsExternalLink(uri)) {
+        value = strconv::Utf8ToWstr(uri);
+    }
+    return value;
 }
 
 WCHAR* PageDestinationMupdf ::GetName() {

@@ -61,6 +61,7 @@ struct EbookController : Controller {
 
     TocTree* GetToc() override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
+    bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
     IPageDestination* GetNamedDest(const WCHAR* name) override;
 

@@ -92,6 +92,35 @@ struct IPageDestination {
     [[nodiscard]] virtual IPageDestination* Clone() = 0;
 };
 
+struct PageDestinationURL : IPageDestination {
+    WCHAR* url{nullptr};
+
+    PageDestinationURL(const WCHAR* u) {
+        CrashIf(!u);
+        kind = kindDestinationLaunchURL;
+        url = str::Dup(u);
+    }
+
+    PageDestinationURL(const char* u) {
+        CrashIf(!u);
+        kind = kindDestinationLaunchURL;
+        url = strconv::Utf8ToWstr(u);
+    }
+
+    ~PageDestinationURL() override {
+        str::Free(url);
+    }
+
+    WCHAR* GetValue() override {
+        return url;
+    }
+
+    IPageDestination* Clone() override {
+        auto res = new PageDestinationURL(url);
+        return res;
+    }
+};
+
 struct PageDestination : IPageDestination {
     WCHAR* value{nullptr};
     WCHAR* name{nullptr};
@@ -115,6 +144,8 @@ extern Kind kindPageElementDest;
 extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
+
+// an element on a page. Might be clicked, provides tooltip info for hoover
 struct IPageElement {
     Kind kind{nullptr};
     // position of the element on the page
@@ -226,22 +257,6 @@ struct PageElementDestination : IPageElement {
         res->rect = rect;
         return res;
     }
-};
-
-// hoverable (and maybe interactable) element on a single page
-struct PageElement : IPageElement {
-    WCHAR* value{nullptr};
-    // only set if kindPageElementDest
-    IPageDestination* dest{nullptr};
-
-    ~PageElement() override;
-
-    WCHAR* GetValue() override;
-
-    IPageDestination* AsLink() {
-        return dest;
-    }
-    IPageElement* Clone() override;
 };
 
 // those are the same as F font bitmask in PDF docs

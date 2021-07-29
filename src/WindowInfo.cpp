@@ -449,12 +449,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {
         return;
     }
 
-    // TODO: link is deleted when opening the document in a new tab
-    IPageDestination* remoteLink = nullptr;
-    if (link) {
-        remoteLink = link->Clone();
-    }
-    AutoDelete deleteRemoteLink(remoteLink);
+    IPageDestination* remoteLink = link;
 
     AutoFreeWstr fullPath(path::GetDir(win->ctrl->GetFilePath()));
     fullPath.Set(path::Join(fullPath, path));

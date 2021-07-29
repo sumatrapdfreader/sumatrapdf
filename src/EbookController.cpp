@@ -850,6 +850,17 @@ void EbookController::ScrollToLink(IPageDestination* dest) {
 }
 #endif
 
+bool EbookController::HandleLink(IPageDestination* dest, ILinkHandler*) {
+    int reparseIdx = dest->GetPageNo() - 1;
+    int pageNo = PageForReparsePoint(pages, reparseIdx);
+    if (pageNo > 0) {
+        GoToPage(pageNo, true);
+    } else if (0 == pageNo) {
+        GoToLastPage();
+    }
+    return true;
+}
+
 void EbookController::ScrollTo(int, RectF, float) {
     CrashIf(true);
 }

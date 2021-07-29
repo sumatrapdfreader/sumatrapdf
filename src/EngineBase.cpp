@@ -89,27 +89,6 @@ bool IPageElement::Is(Kind expectedKind) {
     return kind == expectedKind;
 }
 
-PageElement::~PageElement() {
-    free(value);
-    delete dest;
-}
-
-// string value associated with this element (e.g. displayed in an infotip)
-// caller must free() the result
-WCHAR* PageElement::GetValue() {
-    return value;
-}
-
-IPageElement* PageElement::Clone() {
-    auto* res = new PageElement();
-    res->kind = kind;
-    res->pageNo = pageNo;
-    res->rect = rect;
-    res->value = str::Dup(value);
-    res->dest = ClonePageDestination(dest);
-    return res;
-}
-
 Kind kindTocFzOutline = "tocFzOutline";
 Kind kindTocFzOutlineAttachment = "tocFzOutlineAttachment";
 Kind kindTocFzLink = "tocFzLink";
@@ -406,11 +385,11 @@ int EngineBase::PageCount() const {
     return pageCount;
 }
 
-RectF EngineBase::PageContentBox(int pageNo, __unused RenderTarget target) {
+RectF EngineBase::PageContentBox(int pageNo, RenderTarget) {
     return PageMediabox(pageNo);
 }
 
-bool EngineBase::SaveFileAsPDF(__unused const char* pdfFileName, __unused bool includeUserAnnots) {
+bool EngineBase::SaveFileAsPDF(const char*,bool) {
     return false;
 }
 

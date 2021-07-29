@@ -173,7 +173,8 @@ IPageElement* EngineMulti::GetElementAtPos(int pageNo, PointF pt) {
 }
 
 RenderedBitmap* EngineMulti::GetImageForPageElement(IPageElement* ipel) {
-    PageElement* pel = (PageElement*)ipel;
+    CrashIf(kindPageElementImage != ipel->GetKind());
+    PageElementImage* pel = (PageElementImage*)ipel;
     EngineBase* e = PageToEngine(pel->pageNo);
     return e->GetImageForPageElement(pel);
 }
@@ -282,48 +283,6 @@ void CalcEndPageNo(TocItem* root, int nPages) {
     prev->endPageNo = nPages;
 }
 
-#if 0
-static void MarkAsInvisibleRecur(TocItem* ti, bool markInvisible, Vec<bool>& visible) {
-    while (ti) {
-        if (markInvisible) {
-            for (int i = ti->pageNo; i < ti->endPageNo; i++) {
-                visible[i - 1] = false;
-            }
-        }
-        bool childMarkInvisible = markInvisible;
-        if (!childMarkInvisible) {
-            childMarkInvisible = ti->isUnchecked;
-        }
-        MarkAsInvisibleRecur(ti->child, childMarkInvisible, visible);
-        ti = ti->next;
-    }
-}
-
-static void MarkAsVisibleRecur(TocItem* ti, bool markVisible, Vec<bool>& visible) {
-    if (!markVisible) {
-        return;
-    }
-    while (ti) {
-        for (int i = ti->pageNo; i < ti->endPageNo; i++) {
-            visible[i - 1] = true;
-        }
-        MarkAsInvisibleRecur(ti->child, ti->isUnchecked, visible);
-        ti = ti->next;
-    }
-}
-
-static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
-    int nPages = (int)visible.size();
-    CalcEndPageNo(root, nPages);
-    // in the first pass we mark the pages under unchecked nodes as invisible
-    MarkAsInvisibleRecur(root, root->isUnchecked, visible);
-
-    // in the second pass we mark back pages that are visible
-    // from nodes that are not unchecked
-    MarkAsVisibleRecur(root, !root->isUnchecked, visible);
-}
-#endif
-
 TocItem* CreateWrapperItem(EngineBase* engine) {
     TocItem* tocFileRoot = nullptr;
     TocTree* tocTree = engine->GetToc();
@@ -396,31 +355,12 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
             continue;
         }
         int nPages = ei.engine->PageCount();
-#if 0
-        Vec<bool> visiblePages;
-        for (int i = 0; i < nPages; i++) {
-            visiblePages.Append(true);
-        }
-        CalcRemovedPages(child, visiblePages);
-        int nPage = 0;
-        for (int i = 0; i < nPages; i++) {
-            if (!visiblePages[i]) {
-                continue;
-            }
-            EnginePage ep{i + 1, ei.engine};
-            pageToEngine.Append(ep);
-            nPage++;
-        }
-        updateTocItemsPageNo(child, nTotalPages);
-        nTotalPages += nPage;
-#else
         for (int i = 1; i <= nPages; i++) {
             EnginePage ep{i, ei.engine};
             pageToEngine.Append(ep);
         }
         updateTocItemsPageNo(ei.tocRoot, nTotalPages, true);
         nTotalPages += nPages;
-#endif
     }
     pageCount = nTotalPages;
     CrashIf((size_t)pageCount != pageToEngine.size());

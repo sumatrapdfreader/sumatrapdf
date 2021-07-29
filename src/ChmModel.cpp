@@ -223,15 +223,14 @@ void ChmModel::ScrollTo(int, RectF, float) {
     CrashIf(true);
 }
 
-#if 0
-void ChmModel::ScrollToLink(IPageDestination* link) {
+bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* linkHandler) {
     CrashIf(link->GetKind() != kindDestinationScrollTo);
     WCHAR* url = link->GetName();
     if (url) {
         DisplayPage(url);
     }
+    return false;
 }
-#endif
 
 bool ChmModel::CanNavigate(int dir) const {
     if (!htmlWindow) {
@@ -259,23 +258,27 @@ void ChmModel::Navigate(int dir) {
     }
 }
 
-void ChmModel::SetDisplayMode(__unused DisplayMode mode, __unused bool keepContinuous) {
+void ChmModel::SetDisplayMode(DisplayMode, bool) {
+    // no-op
 }
 
 DisplayMode ChmModel::GetDisplayMode() const {
     return DisplayMode::SinglePage;
 }
-void ChmModel::SetPresentationMode(__unused bool enable) {
+
+void ChmModel::SetPresentationMode(bool) {
+    // no-op
 }
 
-void ChmModel::SetViewPortSize(__unused Size size) {
+void ChmModel::SetViewPortSize(Size) {
+    // no-op
 }
 
 ChmModel* ChmModel::AsChm() {
     return this;
 }
 
-void ChmModel::SetZoomVirtual(float zoom, __unused Point* fixPt) {
+void ChmModel::SetZoomVirtual(float zoom, Point*) {
     if (zoom > 0) {
         zoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
     }
@@ -292,7 +295,7 @@ void ChmModel::ZoomTo(float zoomLevel) const {
     }
 }
 
-float ChmModel::GetZoomVirtual(__unused bool absolute) const {
+float ChmModel::GetZoomVirtual(bool) const {
     if (!htmlWindow) {
         return 100;
     }
@@ -494,7 +497,7 @@ IPageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     int pageNo = pages.Find(plainUrl) + 1;
     if (!pageNo && !str::IsEmpty(urlA.Get())) {
         // some documents use redirection URLs which aren't listed in the ToC
-        // return pageNo=1 for these, as ScrollToLink will ignore that anyway
+        // return pageNo=1 for these, as HandleLink will ignore that anyway
         // but LinkHandler::ScrollTo doesn't
         pageNo = 1;
     }

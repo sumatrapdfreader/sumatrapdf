@@ -547,16 +547,6 @@ int main(__unused int argc, __unused char** argv) {
 
     PasswordHolder pwdUI(password);
     EngineBase* engine = CreateEngine(filePath, &pwdUI);
-#if 0
-    bool isEngineDjVu = IsOfKind(engine, kindEngineDjVu);
-    bool couldLeak = isEngineDjVu || IsDjVuEngineSupportedFile(filePath) || IsDjVuEngineSupportedFile(filePath, true);
-    if (!couldLeak) {
-        // report memory leaks on stderr for engines that shouldn't leak
-        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-        _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    }
-#endif
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(filePath));
         return 1;

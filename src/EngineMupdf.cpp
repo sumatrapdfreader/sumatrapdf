@@ -279,32 +279,6 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
 
     return labels;
 }
-
-#if 0
-void fz_find_images(fz_stext_page* text, Vec<FitzImagePos>& images) {
-    if (!text) {
-        return;
-    }
-    fz_stext_block* block = text->first_block;
-    fz_image* image;
-    while (block) {
-        if (block->type != FZ_STEXT_BLOCK_IMAGE) {
-            block = block->next;
-            continue;
-        }
-        image = block->u.i.image;
-        if (image->colorspace != nullptr) {
-            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
-            // fz_convert_pixmap_samples doesn't handle src without colorspace
-            // TODO: this is probably not right
-            FitzImagePos img = {block->bbox, block->u.i.transform};
-            images.Append(img);
-        }
-        block = block->next;
-    }
-}
-#endif
-
 struct PageTreeStackItem {
     pdf_obj* kids = nullptr;
     int i = -1;

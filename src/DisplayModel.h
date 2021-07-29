@@ -92,6 +92,7 @@ struct DisplayModel : Controller {
     // table of contents
     TocTree* GetToc() override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
+    bool HandleLink(IPageDestination*, ILinkHandler*) override;
     IPageDestination* GetNamedDest(const WCHAR* name) override;
 
     void GetDisplayState(FileState* ds) override;
@@ -110,7 +111,6 @@ struct DisplayModel : Controller {
     bool GoToFirstPage() override;
     bool GoToLastPage() override;
 
-    bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
     // for quick type determination and type-safe casting
     DisplayModel* AsFixed() override;
