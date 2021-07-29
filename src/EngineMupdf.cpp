@@ -1615,11 +1615,14 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         uri = link->link->uri;
     }
     float x, y;
+    float zoom = 0.f;
+    ResolveLink(uri, &x, &y, &zoom);
     fz_location loc = fz_resolve_link(e->ctx, e->_doc, uri, &x, &y);
     int pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
     auto ctrl = linkHandler->GetController();
     if (pageNo != -1) {
-        ctrl->GoToPage(pageNo + 1, true);
+        RectF r(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+        ctrl->ScrollTo(pageNo + 1, r, zoom);
         return;
     }
     if (IsExternalLink(uri)) {
