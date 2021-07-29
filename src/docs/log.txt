@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-29 Thu
+
+- initialize translations earlier in installer / uninstaller to fix a crash
+- fix not translating 'add / remove favorites'
+
 2021-07-28 Wed
 
 - go back to GetTranslation*() returning non-temp strings (fixes #2067)

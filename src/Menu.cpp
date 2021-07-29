@@ -118,11 +118,11 @@ MenuDef menuDefContextToc[] = {
     },
     // note: strings cannot be "" or else items are not there
     {
-        "add",
+        "Add to favorites",
         CmdFavoriteAdd,
     },
     {
-        "del",
+        "Remove from favorites",
         CmdFavoriteDel,
     },
     {
@@ -744,11 +744,11 @@ static MenuDef menuDefContext[] = {
     },
     // note: strings cannot be "" or else items are not there
     {
-        "add fav placeholder",
+        "Add to favorites",
         CmdFavoriteAdd,
     },
     {
-        "del fav placeholder",
+        "Remove from favorites",
         CmdFavoriteDel,
     },
     {
@@ -876,8 +876,6 @@ static UINT_PTR disableIfNoSelection[] = {
 };
 
 static UINT_PTR menusNoTranslate[] = {
-    CmdFavoriteAdd,
-    CmdFavoriteDel,
     CmdZoom6400,
     CmdZoom3200,
     CmdZoom1600,

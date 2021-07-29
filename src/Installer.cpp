@@ -907,7 +907,6 @@ static bool RegisterWinClass() {
 }
 
 static BOOL InstanceInit() {
-
     CreateMainWindow();
     if (!gHwndFrame) {
         return FALSE;
