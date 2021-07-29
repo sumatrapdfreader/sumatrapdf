@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-433834fb4367110caf831c33a264e76f4b8fc103
+c7564f21fab1be284df7c0a65acb6f46ea7b7ac2
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -495,24 +495,28 @@ uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
+cn:继续安装 32 位版本(&C)
 es:&Continuar con la instalación de la versión de 32 bits
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
 pl:&Kontynuuj instalację wersji 32-bitowej
 :&Copy Selection \tCtrl-C
 am:&Պատճենել ընտրումը \tCtrl-C
+cn:复制所选内容(&C)\tCtrl+C
 es:&Copiar la selección \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
+cn:复制到剪贴板(&C)\tCtrl+C
 es:&Copiar al portapapeles\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
 pl:&Kopiuj do schowka\tCtrl-C
 :&Discard
 am:&Մերժել
+cn:取消(&D)
 it:Scarica
 kr:무시(&D)
 pl:O&drzuć
@@ -932,7 +936,7 @@ bs:Uklopi stranice na područje za štampu
 by:Па&дагнаць старонкі да вобласці друку
 ca-xv:Ajusta les pàgines a l'àrea imprimible
 ca:Ajusta les pàgines a l'àrea imprimible
-cn:符合页面以可打印区域(&F)
+cn:调整页面至可打印区域(&F)
 co:&Adattà e pagine à l’aghja di stampa
 cy:&Ffitio tudalennau i ardal argraffu
 cz:Přizpůsobit &stránky na tisknutelnou plochu
@@ -2516,11 +2520,13 @@ uz:&Quyidagicha saqlash...\tCtrl+S
 vn:Lưu thành...\tCtrl+S
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
+cn:保存到当前 PDF 文件(&S)
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
 pl:&Zapisz w istniejącym pliku PDF
 :&Search With Google
 am:&Որոնել Google-ով
+cn:使用谷歌搜索(&S)
 it:Cerca con Google
 pl:&Szukaj za pomocą Google
 :&Settings
@@ -2814,6 +2820,7 @@ uk:&Тема
 vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
+cn:使用谷歌翻译(&T)
 it:&Traduci con Google
 kr:Google로 번역(&T)
 pl:&Tłumacz za pomocą Google
@@ -3170,7 +3177,7 @@ bs:(od %d)
 by:(з %d)
 ca-xv:(de %d)
 ca:(de %d)
-cn:(%d 页中的)
+cn:(共 %d 页)
 co:(di %d)
 cy:(o %d)
 cz:(z %d)
@@ -3368,7 +3375,7 @@ bs:Dodaj favorit
 by:Дадаць у Лепшыя Закладкі
 ca-xv:Afegeix un preferit
 ca:Afegeix un preferit
-cn:添加到收藏夹(&A)
+cn:添加到收藏夹
 co:Aghjunghje à i favuriti
 cy:Ychwanegu Ffefryn
 cz:Přidat oblíbenou položku
@@ -4535,7 +4542,7 @@ bs:Kratica zabilješke na stranicu %s od %s
 by:Спасылак закладкі да старонкі %s з %s
 ca-xv:Drecera del marcador a la pàgina %s de %s
 ca:Drecera del marcador a la pàgina %s de %s
-cn:书签快捷方式指向第 %s 页 (文件 %s)
+cn:书签快捷方式：第 %s 页/共 %s 页
 co:Accurtatoghju di l’indetta di a pagina %s di %s
 cy:Llwybr byr nod tudalen i dudalen %s o %s
 cz:Zástupce záložky na straně %s souboru %s
@@ -4869,7 +4876,7 @@ bs:Otkaži
 by:Адмена
 ca-xv:Cancel·la
 ca:Cancel·la
-cn:取消(&C)
+cn:取消
 co:Abbandunà
 cy:Diddymu
 cz:Zrušit
@@ -5202,6 +5209,7 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
+cn:正在检查更新...
 es:Buscando actualizaciones...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
@@ -5313,7 +5321,7 @@ bn:সব বন্ধ করুন
 br:Minimizar tudo
 ca-xv:Replega-ho tot
 ca:Replega-ho tot
-cn:全部折叠(&C)
+cn:全部折叠
 co:Tuttu piegà
 cy:Lleihau Popeth
 cz:Sbalit vše
@@ -6767,13 +6775,14 @@ uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
+cn:在光标位置创建标注(&U)
 it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
 pl:Utwórz adnotację &pod kursorem
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
-cn:创建注释 (从所选内容)
+cn:对所选内容创建标注
 de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
 es:Crear Anotación Desde Selección
@@ -7058,7 +7067,7 @@ bs:Hi
 by:Цёмны
 ca-xv:Fosc
 ca:Fosc
-cn:暗(&D)
+cn:暗
 co:Oscuru
 cy:Tywyll
 cz:Tmavý
@@ -7116,7 +7125,7 @@ br:Muito escuro
 by:Больш цёмны
 ca-xv:Més fosc
 ca:Molt fosc
-cn:更暗(&R)
+cn:更暗
 co:Più oscuru
 cy:Tywyllach
 cz:Tmavší
@@ -7556,11 +7565,13 @@ uz:Hujjat xossalari
 vn:Thuộc tính tập tin
 :Don't install
 am:Չտեղադրել
+cn:不安装
 it:Non installare
 kr:설치하지 마십시오
 pl:Nie instaluj
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
+cn:下载 64 位版本
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
 pl:Pobierz wersję 64-bitową
@@ -7912,7 +7923,7 @@ bs:Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF doku
 by:Увядзіце каманду для выкліку пры падвойнай пстрычцы па дакуменце PDF:
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 ca:Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
-cn:请输入您双击 PDF 文件后调用的命令行(&E):
+cn:请输入您双击 PDF 文件后调用的命令行:
 co:Scrivite a linea di cumanda à eseguisce quandu ci hè un doppiu-cliccu nant’à u ducumentu PDF :
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
@@ -9494,7 +9505,7 @@ bs:Uklopi s&adržaj\tCtrl+3
 by:Падагнаць &змест\tCtrl+3
 ca-xv:Ajusta el &contingut\tCtrl+3
 ca:Ajusta el &contingut\tCtrl+3
-cn:符合内容(&C)\tCtrl+3
+cn:适合内容(&C)\tCtrl+3
 co:&Adattà à u cuntenutu\tCtrl+3
 cy:Ffitio'r &Cynnwys\tCtrl+3
 cz:Přizpůsobit &obsah\tCtrl+3
@@ -9559,7 +9570,7 @@ bs:Uklopi &stranicu\tCtrl+0
 by:Падагнаць старонку\tCtrl+0
 ca-xv:Ajusta a la &pàgina\tCtrl+0
 ca:Ajusta a la &pàgina\tCtrl+0
-cn:符合页面(&P)\tCtrl+0
+cn:适合页面(&P)\tCtrl+0
 co:&Pagina sana\tCtrl+0
 cy:&Ffitio'r Dudalen\tCtrl+0
 cz:Podle &stránky\tCtrl+0
@@ -9629,7 +9640,7 @@ bs:&Uklopi po širini\tCtrl+2
 by:Падагнаць па шырыне
 ca-xv:Ajusta a l'am&plada\tCtrl+2
 ca:Ajusta a l'am&plada\tCtrl+2
-cn:符合宽度(&W)\tCtrl+2
+cn:适合宽度(&W)\tCtrl+2
 co:&Larghezza sana\tCtrl+2
 cy:&Fitio'r Lled\tCtrl+2
 cz:&Podle šířky\tCtrl+2
@@ -9697,7 +9708,7 @@ bs:Uklopi sadržaj
 by:Падагнаць змест
 ca-xv:Ajusta el contingut
 ca:Ajusta el contingut
-cn:符合内容(&T)
+cn:适合内容
 co:Adattà à u cuntenutu
 cy:Ffitio'r Cynnwys
 cz:Přizpůsobit obsah
@@ -9763,7 +9774,7 @@ bs:Uklopi stranicu
 by:Падагнаць старонку
 ca-xv:Ajusta a la pàgina
 ca:Ajusta a la pàgina
-cn:单页视图(&P)
+cn:单页视图
 co:Pagina sana
 cy:Ffitio'r Dudalen
 cz:Podle stránky
@@ -9833,7 +9844,7 @@ bs:Uklopi po širini
 by:Падагнаць па шырыне
 ca-xv:Ajusta a l'amplada
 ca:Ajusta a l'amplada
-cn:符合宽度(&W)
+cn:适合宽度
 co:Larghezza sana
 cy:Fitio'r Lled
 cz:Podle šířky
@@ -9901,7 +9912,7 @@ bs:Uklopi po širini i prikaži stranice slijedno
 by:Падагнаць па шырыне і Паказаць бесперапынную старонку
 ca-xv:Ajusta l'amplada i mostra les pàgines de forma contínua
 ca:Ajusta l'amplada i mostra les pàgines de forma contínua
-cn:符合宽度连续模式(&W)
+cn:适合宽度连续页面模式(&W)
 co:Larghezza sana è vista in cuntinuu
 cy:Ffitio'r Lled a Dangos Tudalennau'n Barhaus
 cz:Přizpůsobit šířce okna a zobrazit stránky průběžně
@@ -9965,7 +9976,7 @@ bs:Uklopi jednu stranicu
 by:Размясціць на адной старонцы
 ca-xv:Ajusta a una única pàgina
 ca:Ajusta a una única pàgina
-cn:单页视图(&P)
+cn:单页视图
 co:Pagina unica
 cy:Ffitio Tudalen Unigol
 cz:Přizpůsobit pro jednu celou stránku v okně
@@ -10030,7 +10041,7 @@ bs:Fontovi:
 by:Шрыфт:
 ca-xv:Tipus de lletra:
 ca:Tipus de lletra:
-cn:字体(&F):
+cn:字体:
 co:Grafie :
 cy:Ffontiau:
 cz:Písma:
@@ -10923,6 +10934,7 @@ uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 am:Տեղադրել և վեաթողարկել
+cn:安装并启动
 it:Installa e ri-esegui
 kr:설치 후 재실행
 pl:Zainstaluj i uruchom ponownie
@@ -11054,6 +11066,7 @@ uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
+cn:在 64 位操作系统上安装 32 位 SumatraPDF
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
@@ -11138,7 +11151,7 @@ bs:Omogući Windows Desktop Search-u da &pretražuje PDF dokumente
 by:Шукаць дакументы PDF ў Windows Desktop Search
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
 ca:Permet al Windows Desktop Search &cercar als documents PDF
-cn:让 Windows “桌面搜索”搜索 PDF 文件
+cn:让 Windows “桌面搜索”搜索 PDF 文件(&S)
 co:Permette à Windows Desktop Search di &ricercà in i ducumenti PDF
 cy:Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF
 cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
@@ -11849,6 +11862,7 @@ tw:新增視窗(&W)\tCtrl+N
 vn:Mở cửa sổ mới\tCtrl+N
 :New version available
 am:Մատչելի է նոր տարբերակ
+cn:有新版本
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
 pl:Dostępna nowa wersja
@@ -12261,7 +12275,7 @@ bs:OK
 by:ДА
 ca-xv:D'acord
 ca:D'acord
-cn:确定(&O)
+cn:确定
 co:Vai
 cy:Iawn
 cz:OK
@@ -15096,6 +15110,7 @@ uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :S&election
 am:Ը&նտրում
+cn:选择(&E)
 it:S&elezione
 kr:선택(&e)
 pl:Z&aznaczenie
@@ -15121,7 +15136,7 @@ bg:Запази анотациите
 br:Salvar anotações
 ca-xv:Desa les anotacions
 ca:Desa les anotacions
-cn:保存注释
+cn:保存标注
 co:Arregistrà l’ann&utazioni
 cy:Cadw anodiadau
 de:Anmerkungen speichern
@@ -15242,6 +15257,7 @@ uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save annoations?
 am:Պահե՞լ մեկնաբանությունը:
+cn:是否保存标注？
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
 pl:Zapisać adnotacje?
@@ -15279,16 +15295,19 @@ pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
+cn:保存至新的 PDF 文件(&N)
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
 pl:Zapisz w &nowym pliku PDF
 :Search With &Bing
 am:Որոնել &Bing-ով
+cn:使用必应搜索(&B)
 it:Cerca con &Bing
 kr:Bing으로 검색(&B)
 pl:Szukaj za pomocą &Bing
 :Search With &Google
 am:Որոնել &Google-ով
+cn:使用谷歌搜索(&G)
 it:Cerca con &Google
 kr:Google로 검색(&G)
 pl:Szukaj za pomocą &Google
@@ -15421,7 +15440,7 @@ uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
 am:Ընտրեք մեկնաբանությունը Խմբագրիչում
-cn:在编辑器中选择注释
+cn:在编辑器中选择标注
 de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
 es:Seleccionar Anotación en el Editor
@@ -16353,6 +16372,7 @@ uz:Bitta bet
 vn:Trang đơn
 :Skip this version
 am:Բաց թողնել այս տարբերակը
+cn:跳过该版本
 it:Salta questa versione
 kr:이 버전 건너뛰기
 pl:Pomiń tę wersję
@@ -17744,6 +17764,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
+cn:使用 DeepL 翻译(&D)
 it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
 pl:Tłumacz za pomocą &DeepL
@@ -17998,7 +18019,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 am:Չպահված մեկնաբանություններ
-cn:未保存的注释
+cn:未保存的标注
 de:Nicht gespeicherte Anmerkungen
 el:Μη αποθηκευμένα σχόλια
 es:Anotaciones no guardadas
@@ -18012,6 +18033,7 @@ nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
+cn:'%s' 中有未保存的标注
 it:Annotazioni non salvate in '%s'
 pl:Niezapisane adnotacje w '%s'
 :Use &tabs
@@ -18477,7 +18499,7 @@ uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 am:Դուք ունեք չպահված մեկնաբանություններ
-cn:存在未保存的注释
+cn:存在未保存的标注
 co:Avete annutazioni micca arregistrate
 de:Sie haben ungespeicherte Anmerkungen.
 el:Έχετε μη αποθηκευμένα σχόλια
@@ -18494,10 +18516,12 @@ pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
+cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
+cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
 :Zoom
