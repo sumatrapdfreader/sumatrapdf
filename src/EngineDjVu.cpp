@@ -1024,7 +1024,6 @@ IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     if (el) {
         els->Remove(el);
     }
-    DeleteVecMembers(*els);
     delete els;
 
     return el;

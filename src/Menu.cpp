@@ -1608,7 +1608,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     TabInfo* tab = win->currentTab;
-    AutoDelete<IPageElement> pageEl = dm->GetElementAtPos({x, y}, nullptr);
+    IPageElement* pageEl = dm->GetElementAtPos({x, y}, nullptr);
 
     WCHAR* value = nullptr;
     if (pageEl) {

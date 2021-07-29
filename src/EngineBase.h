@@ -184,7 +184,6 @@ struct IPageElement {
     bool IsLink() {
         return AsLink() != nullptr;
     }
-    virtual IPageElement* Clone() = 0;
 };
 
 struct PageElementImage : IPageElement {
@@ -192,14 +191,6 @@ struct PageElementImage : IPageElement {
 
     PageElementImage() {
         kind = kindPageElementImage;
-    }
-    IPageElement* Clone() {
-        auto res = new PageElementImage();
-        res->kind = kind;
-        res->imageID = imageID;
-        res->rect = rect;
-        res->pageNo = pageNo;
-        return res;
     }
 };
 
@@ -217,13 +208,6 @@ struct PageElementComment : IPageElement {
 
     WCHAR* GetValue() override {
         return comment;
-    }
-
-    IPageElement* Clone() override {
-        auto res = new PageElementComment(comment);
-        res->pageNo = pageNo;
-        res->rect = rect;
-        return res;
     }
 };
 
@@ -247,16 +231,6 @@ struct PageElementDestination : IPageElement {
     }
     IPageDestination* AsLink() override {
         return dest;
-    }
-
-    IPageElement* Clone() override {
-        auto res = new PageElementDestination(nullptr);
-        if (dest) {
-            res->dest = dest->Clone();
-        }
-        res->pageNo = pageNo;
-        res->rect = rect;
-        return res;
     }
 };
 
@@ -476,10 +450,10 @@ class EngineBase {
     [[nodiscard]] float GetFileDPI() const;
 
     // returns a list of all available elements for this page
-    // caller must delete the result (including all elements contained in the Vec)
+    // caller must delete the Vec but not the elements inside the vector
     virtual Vec<IPageElement*>* GetElements(int pageNo) = 0;
+
     // returns the element at a given point or nullptr if there's none
-    // caller must delete the result
     virtual IPageElement* GetElementAtPos(int pageNo, PointF pt) = 0;
 
     // creates a PageDestination from a name (or nullptr for invalid names)

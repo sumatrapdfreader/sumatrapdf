@@ -198,6 +198,15 @@ static float FzRectOverlap(fz_rect r1, fz_rect r2) {
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
+static float FzRectOverlap(fz_rect r1, RectF r2f) {
+    if (fz_is_empty_rect(r1)) {
+        return 0.0f;
+    }
+    fz_rect r2 = To_fz_rect(r2f);
+    fz_rect isect = fz_intersect_rect(r1, r2);
+    return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
+}
+
 static WCHAR* PdfToWstr(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
     WCHAR* res = strconv::Utf8ToWstr(s);
@@ -864,7 +873,7 @@ RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
-static IPageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
+static PageElementDestination* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
     auto dest = NewPageDestinationMupdf(link, outline);
     auto res = new PageElementDestination(dest);
     res->pageNo = srcPageNo;
@@ -883,40 +892,36 @@ static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
         return nullptr;
     }
     int pageNo = pageInfo->pageNo;
-    fz_link* link = pageInfo->links;
-    fz_point p = {(float)pt.x, (float)pt.y};
-    while (link) {
-        if (IsPointInRect(link->rect, p)) {
-            return NewFzLink(pageNo, link, nullptr);
+    for (auto pel : pageInfo->links) {
+        if (pel->GetRect().Contains(pt)) {
+            return pel;
         }
-        link = link->next;
     }
 
     for (auto* pel : pageInfo->autoLinks) {
         if (pel->GetRect().Contains(pt)) {
-            return pel->Clone();
+            return pel;
         }
     }
 
     for (auto* pel : pageInfo->comments) {
         if (pel->GetRect().Contains(pt)) {
-            return pel->Clone();
+            return pel;
         }
     }
 
     size_t imageIdx = 0;
+    fz_point p = {(float)pt.x, (float)pt.y};
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
         if (IsPointInRect(ir, p)) {
-            return img.imageElement->Clone();
+            return img.imageElement;
         }
         imageIdx++;
     }
     return nullptr;
 }
 
-// TODO: construct this only once per page and change the API
-// to not free the result of GetElements()
 static void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
     if (!pageInfo) {
         return;
@@ -928,27 +933,21 @@ static void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
 
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
-        fz_rect ir = img.rect;
-        auto image = img.imageElement->Clone();
+        auto image = img.imageElement;
         els->Append(image);
         imageIdx++;
     }
 
-    fz_link* link = pageInfo->links;
-    while (link) {
-        auto el = NewFzLink(pageNo, link, nullptr);
-        els->Append(el);
-        link = link->next;
+    for (auto& pel : pageInfo->links) {
+        els->Append(pel);
     }
 
-    for (auto&& pel : pageInfo->autoLinks) {
-        auto el = pel->Clone();
-        els->Append(el);
+    for (auto& pel : pageInfo->autoLinks) {
+        els->Append(pel);
     }
 
-    for (auto* comment : pageInfo->comments) {
-        auto el = comment->Clone();
-        els->Append(el);
+    for (auto& comment : pageInfo->comments) {
+        els->Append(comment);
     }
 
     els->Reverse();
@@ -967,15 +966,12 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
 
     LinkRectList* list = LinkifyText(pageText, coords);
     free(pageText);
-    // fz_page* page = pageInfo->page;
 
     for (size_t i = 0; i < list->links.size(); i++) {
         fz_rect bbox = list->coords.at(i);
         bool overlaps = false;
-        fz_link* link = pageInfo->links;
-        while (link && !overlaps) {
-            overlaps = FzRectOverlap(bbox, link->rect) >= 0.25f;
-            link = link->next;
+        for (auto pel : pageInfo->links) {
+            overlaps = FzRectOverlap(bbox, pel->GetRect()) >= 0.25f;
         }
         if (overlaps) {
             continue;
@@ -988,7 +984,6 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
 
         // TODO: those leak on xps
         auto dest = new PageDestinationURL(uri);
-
         auto pel = new PageElementDestination(dest);
         pel->rect = ToRectFl(bbox);
         pageInfo->autoLinks.Append(pel);
@@ -1366,14 +1361,15 @@ EngineMupdf::~EngineMupdf() {
 
     for (auto& piRef : _pages) {
         FzPageInfo* pi = &piRef;
-        if (pi->links) {
-            fz_drop_link(ctx, pi->links);
+        DeleteVecMembers(pi->links);
+        DeleteVecMembers(pi->autoLinks);
+        DeleteVecMembers(pi->comments);
+        if (pi->retainedLinks) {
+            fz_drop_link(ctx, pi->retainedLinks);
         }
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
         }
-        DeleteVecMembers(pi->autoLinks);
-        DeleteVecMembers(pi->comments);
     }
 
     fz_drop_outline(ctx, outline);
@@ -2258,9 +2254,14 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     fz_catch(ctx) {
     }
 
-    auto links = fz_load_links(ctx, page);
+    fz_link* link = fz_load_links(ctx, page);
+    pageInfo->retainedLinks = FixupPageLinks(link); // TOOD: is this necessary?
+    while (link) {
+        auto pel = NewFzLink(pageNo, link, nullptr);
+        pageInfo->links.Append(pel);
+        link = link->next;
+    }
 
-    pageInfo->links = FixupPageLinks(links);
     if (pdfdoc) {
         MakePageElementCommentsFromAnnotations(ctx, pageInfo);
     }

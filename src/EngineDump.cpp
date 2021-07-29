@@ -314,7 +314,6 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
             Out1("\t\t\t/>\n");
         }
         Out1("\t\t</PageElements>\n");
-        DeleteVecMembers(*els);
     }
     delete els;
 

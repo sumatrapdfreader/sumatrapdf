@@ -258,6 +258,7 @@ static IPageElement* NewImageElement(ImagePage* page) {
 Vec<IPageElement*>* EngineImages::GetElements(int pageNo) {
     // TODO: this is inefficient because we don't need to
     // decompress the image. just need to know the size
+    // TODO: use mediaboxes
     ImagePage* page = GetPage(pageNo);
     if (!page) {
         return nullptr;

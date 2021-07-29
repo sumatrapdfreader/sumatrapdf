@@ -8,6 +8,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - progress on IPageElement refactor
 - remove EngineXps and use EngineMupdf for .xps files
 - merge EngineFzUtil.cpp into EngineMupdf.cpp
+- remove IPageElement::Clone() and change GetElementAtPos() and GetElements() to return objects that don't require deleting
 
 2021-07-27 Tue
 

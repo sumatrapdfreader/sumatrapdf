@@ -417,8 +417,6 @@ static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
     if (pageEl) {
         if (pageEl->Is(kindPageElementDest)) {
             win->linkOnLastButtonDown = pageEl;
-        } else {
-            delete pageEl;
         }
     }
 }
@@ -493,9 +491,6 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     // TODO: win->linkHandler->GotoLink might spin the event loop
     IPageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
-    defer {
-        delete link;
-    };
 
     TabInfo* tab = win->currentTab;
     if (didDragMouse) {
@@ -596,7 +591,6 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         win->showSelection = win->currentTab->selectionOnPage != nullptr;
         RepaintAsync(win, 0);
     }
-    delete pageEl;
 }
 
 static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM) {
@@ -754,7 +748,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
                 PaintRect(hdc, isect);
             }
         }
-        DeleteVecMembers(*els);
+        // we don't own the members
         delete els;
     }
 
@@ -1010,7 +1004,6 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     win->ShowToolTip(text, rc, true);
 
     bool isLink = pageEl->Is(kindPageElementDest);
-    delete pageEl;
 
     if (isLink) {
         SetCursorCached(IDC_HAND);

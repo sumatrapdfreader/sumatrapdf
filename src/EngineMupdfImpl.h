@@ -13,7 +13,10 @@ struct FzPageInfo {
     int pageNo{0}; // 1-based
     fz_page* page{nullptr};
 
-    fz_link* links{nullptr};
+    // each containz fz_link for this page
+    Vec<PageElementDestination*> links;
+    // have to keep them alive because they are reverenced in links
+    fz_link* retainedLinks{nullptr};
 
     // auto-detected links
     Vec<IPageElement*> autoLinks;
