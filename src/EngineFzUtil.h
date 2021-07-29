@@ -3,13 +3,6 @@
 
 // Common for EngineMupdf.cpp and EngineXps.cpp
 
-// maximum amount of memory that MuPDF should use per fz_context store
-#define MAX_CONTEXT_MEMORY (256 * 1024 * 1024)
-// number of page content trees to cache for quicker rendering
-#define MAX_PAGE_RUN_CACHE 8
-// maximum estimated memory requirement allowed for the run cache of one document
-#define MAX_PAGE_RUN_MEMORY (40 * 1024 * 1024)
-
 class FitzAbortCookie : public AbortCookie {
   public:
     fz_cookie cookie;

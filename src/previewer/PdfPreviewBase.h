@@ -279,6 +279,7 @@ class PdfPreview : public PreviewBase {
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
+#if 0
 class XpsPreview : public PreviewBase {
   public:
     XpsPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) {
@@ -287,6 +288,7 @@ class XpsPreview : public PreviewBase {
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
 };
+#endif
 
 class DjVuPreview : public PreviewBase {
   public:

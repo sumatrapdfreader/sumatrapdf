@@ -11,7 +11,6 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
-#include "EngineXps.h"
 #include "mui/MiniMui.h"
 #include "EngineEbook.h"
 #include "EngineImages.h"
@@ -356,9 +355,11 @@ EngineBase* PdfPreview::LoadEngine(IStream* stream) {
     return CreateEngineMupdfFromStream(stream);
 }
 
+#if 0
 EngineBase* XpsPreview::LoadEngine(IStream* stream) {
-    return CreateEngineXpsFromStream(stream);
+    return CreateEngineXpFromStream(stream);
 }
+#endif
 
 #include "EngineDjVu.h"
 

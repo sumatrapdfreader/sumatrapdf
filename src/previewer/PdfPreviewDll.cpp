@@ -102,10 +102,14 @@ class PreviewClassFactory : public IClassFactory {
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pObject = new PdfPreview(&g_lRefCount);
-        } else if (gBuildXpsPreview && SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) &&
+        }
+#if 0
+        else if (gBuildXpsPreview && SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) &&
                    IsEqualCLSID(m_clsid, clsid)) {
             pObject = new XpsPreview(&g_lRefCount);
-        } else if (gBuildDjVuPreview && SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) &&
+        }
+#endif
+        else if (gBuildDjVuPreview && SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) &&
                    IsEqualCLSID(m_clsid, clsid)) {
             pObject = new DjVuPreview(&g_lRefCount);
         } else if (gBuildEpubPreview && SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) &&

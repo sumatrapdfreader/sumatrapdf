@@ -726,8 +726,10 @@ workspace "SumatraPDF"
     }
     pdf_preview_files()
     filter {"configurations:Debug"}
+      -- defines { "BUILD_XPS_PREVIEW" }
+      -- TODO: use EngineMupdf for XPS
       defines {
-        "BUILD_XPS_PREVIEW", "BUILD_DJVU_PREVIEW", "BUILD_EPUB_PREVIEW",
+        "BUILD_DJVU_PREVIEW", "BUILD_EPUB_PREVIEW",
         "BUILD_FB2_PREVIEW", "BUILD_MOBI_PREVIEW", "BUILD_CBZ_PREVIEW",
         "BUILD_CBR_PREVIEW", "BUILD_CB7_PREVIEW", "BUILD_CBT_PREVIEW",
         "BUILD_TGA_PREVIEW"

@@ -46,6 +46,7 @@ AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
 }
 
 Kind kindEngineMupdf = "enginePdf";
+Kind kindEngineXps = "engineXps";
 
 EngineMupdf* AsEngineMupdf(EngineBase* engine) {
     if (!engine || !IsOfKind(engine, kindEngineMupdf)) {
@@ -2252,6 +2253,9 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
         return true;
     }
     if (kind == kindFileSvg) {
+        return true;
+    }
+    if (kind == kindFileXps) {
         return true;
     }
     return false;

@@ -17,7 +17,6 @@
 #include "EngineImages.h"
 #include "EngineMupdf.h"
 #include "EnginePs.h"
-#include "EngineXps.h"
 #include "EngineMulti.h"
 #include "EngineCreate.h"
 
@@ -25,8 +24,6 @@ static bool gEnableEpubWithPdfEngine = true;
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     if (IsEngineMupdfSupportedFileType(kind)) {
-        return true;
-    } else if (IsEngineXpsSupportedFileType(kind)) {
         return true;
     } else if (IsEngineDjVuSupportedFileType(kind)) {
         return true;
@@ -71,10 +68,6 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEngineMupdfFromFile(path, pwdUI);
         return engine;
     }
-    if (IsEngineXpsSupportedFileType(kind)) {
-        engine = CreateEngineXpsFromFile(path);
-        return engine;
-    }
     if (IsEngineDjVuSupportedFileType(kind)) {
         engine = CreateEngineDjVuFromFile(path);
         return engine;
@@ -84,9 +77,6 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         return engine;
     }
     if (kind == kindDirectory) {
-        if (IsXpsDirectory(path)) {
-            engine = CreateEngineXpsFromFile(path);
-        }
         // TODO: in 3.1.2 we open folder of images (IsEngineImageDirSupportedFile)
         // To avoid changing behavior, we open pdfs only in ramicro build
         // this should be controlled via cmd-line flag e.g. -folder-open-pdf
