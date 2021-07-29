@@ -389,7 +389,7 @@ RectF EngineBase::PageContentBox(int pageNo, RenderTarget) {
     return PageMediabox(pageNo);
 }
 
-bool EngineBase::SaveFileAsPDF(const char*,bool) {
+bool EngineBase::SaveFileAsPDF(const char*) {
     return false;
 }
 

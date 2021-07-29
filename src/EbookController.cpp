@@ -372,7 +372,7 @@ void EbookController::TriggerLayout() {
     UpdateStatus();
 }
 
-void EbookController::SizeChangedPage(Control* c, __unused int dx, __unused int dy) {
+void EbookController::SizeChangedPage(Control* c, int, int) {
     CrashIf(!(c == ctrls->pagesLayout->GetPage1() || c == ctrls->pagesLayout->GetPage2()));
     // delay re-layout so that we don't unnecessarily do the
     // work as long as the user is still resizing the window
@@ -381,18 +381,18 @@ void EbookController::SizeChangedPage(Control* c, __unused int dx, __unused int 
     cb->RequestDelayedLayout(200);
 }
 
-void EbookController::ClickedNext(__unused Control* c, __unused int x, __unused int y) {
+void EbookController::ClickedNext(Control*, int, int) {
     // CrashIf(c != ctrls->next);
     GoToNextPage();
 }
 
-void EbookController::ClickedPrev(__unused Control* c, __unused int x, __unused int y) {
+void EbookController::ClickedPrev(Control*, int, int) {
     // CrashIf(c != ctrls->prev);
     GoToPrevPage();
 }
 
 // (x, y) is in the coordinates of c
-void EbookController::ClickedProgress(__unused Control* c, __unused int x, __unused int y) {
+void EbookController::ClickedProgress(Control* c, int x, int) {
     CrashIf(c != ctrls->progress);
     float perc = ctrls->progress->GetPercAt(x);
     int pageCount = (int)GetPages()->size();
@@ -550,7 +550,7 @@ bool EbookController::GoToNextPage() {
     return true;
 }
 
-bool EbookController::GoToPrevPage(__unused bool toBottom) {
+bool EbookController::GoToPrevPage(bool) {
     int dist = IsDoublePage() ? 2 : 1;
     if (currPageNo <= dist) {
         // seen a crash were currPageNo here was 0
@@ -671,7 +671,7 @@ void EbookController::CreateThumbnail(Size size, const onBitmapRenderedCb& saveT
     saveThumbnail(bmp);
 }
 
-void EbookController::SetDisplayMode(DisplayMode mode, __unused bool keepContinuous) {
+void EbookController::SetDisplayMode(DisplayMode mode, bool) {
     bool newDouble = !IsSingle(mode);
     if (IsDoublePage() == newDouble) {
         return;
@@ -906,7 +906,7 @@ void EbookController::GetDisplayState(FileState* fs) {
     str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
 }
 
-void EbookController::SetViewPortSize(__unused Size size) {
+void EbookController::SetViewPortSize(Size) {
     // relayouting gets the size from the canvas hwnd
     ctrls->mainWnd->RequestLayout();
 }

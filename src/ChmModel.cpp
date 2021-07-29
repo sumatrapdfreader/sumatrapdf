@@ -121,7 +121,7 @@ int ChmModel::CurrentPageNo() const {
     return currentPageNo;
 }
 
-void ChmModel::GoToPage(int pageNo, __unused bool addNavPoint) {
+void ChmModel::GoToPage(int pageNo, bool) {
     // TODO: not sure if crashing here is warranted
     // I've seen a crash with call from RestoreTabOnStartup() which doesn't validate pageNo
     ReportIf(!ValidPageNo(pageNo));
@@ -646,7 +646,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         hw->NavigateToDataUrl(homeUrl);
     }
 
-    bool OnBeforeNavigate(__unused const WCHAR* url, bool newWindow) override {
+    bool OnBeforeNavigate(const WCHAR*, bool newWindow) override {
         return !newWindow;
     }
 
@@ -678,7 +678,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         return d;
     }
 
-    void DownloadData(__unused const WCHAR* url, __unused std::span<u8> data) override {
+    void DownloadData(const WCHAR*, std::span<u8>) override {
     }
 };
 

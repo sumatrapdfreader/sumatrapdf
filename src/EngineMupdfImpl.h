@@ -13,8 +13,8 @@ class EngineMupdf : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
-    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
+    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAsPDF(const char* pdfFileName) override;
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;

@@ -331,7 +331,7 @@ const char* ChmFile::GetHomePath() const {
     return homePath;
 }
 
-static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, __unused void* data) {
+static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
     if (str::IsEmpty(info->path)) {
         return CHM_ENUMERATOR_CONTINUE;
     }

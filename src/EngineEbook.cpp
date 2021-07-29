@@ -91,7 +91,7 @@ class EngineEbook : public EngineBase {
 
     std::span<u8> GetFileData() override;
 
-    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
@@ -210,7 +210,7 @@ std::span<u8> EngineEbook::GetFileData() {
     return file::ReadFile(fileName);
 }
 
-bool EngineEbook::SaveFileAs(const char* dstPath, __unused bool includeUserAnnots) {
+bool EngineEbook::SaveFileAs(const char* dstPath) {
     const WCHAR* srcPath = FileName();
     if (!srcPath) {
         return false;
@@ -685,7 +685,7 @@ class EngineEpub : public EngineEbook {
     EngineBase* Clone() override;
 
     std::span<u8> GetFileData() override;
-    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAs(const char* copyFileName) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
@@ -786,7 +786,7 @@ std::span<u8> EngineEpub::GetFileData() {
     return GetStreamOrFileData(stream, fileName);
 }
 
-bool EngineEpub::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
+bool EngineEpub::SaveFileAs(const char* copyFileName) {
     auto dstPath = ToWstrTemp(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);

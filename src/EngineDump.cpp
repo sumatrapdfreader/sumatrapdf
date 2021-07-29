@@ -420,7 +420,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         }
         AutoFreeWstr pdfFilePath(str::Format(renderPath, 0));
         auto pathA(ToUtf8Temp(pdfFilePath.Get()));
-        if (engine->SaveFileAsPDF(pathA.Get(), true)) {
+        if (engine->SaveFileAsPDF(pathA.Get())) {
             return true;
         }
         return PdfCreator::RenderToFile(pathA.Get(), engine);

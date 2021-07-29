@@ -281,7 +281,7 @@ class EnginePs : public EngineBase {
         return file::ReadFile(fileName);
     }
 
-    bool SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots = false) override {
+    bool SaveFileAs(const char* copyFileName) override {
         if (!FileName()) {
             return false;
         }
@@ -289,8 +289,8 @@ class EnginePs : public EngineBase {
         return file::Copy(dstPath, FileName(), false);
     }
 
-    bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override {
-        return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
+    bool SaveFileAsPDF(const char* pdfFileName) override {
+        return pdfEngine->SaveFileAs(pdfFileName);
     }
 
     PageText ExtractPageText(int pageNo) override {

@@ -111,7 +111,6 @@ struct DisplayModel : Controller {
     bool GoToFirstPage() override;
     bool GoToLastPage() override;
 
-
     // for quick type determination and type-safe casting
     DisplayModel* AsFixed() override;
 

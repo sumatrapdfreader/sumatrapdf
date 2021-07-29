@@ -1084,8 +1084,7 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // cf. http://wiki.mobileread.com/wiki/TealDoc
-static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, const char* text, size_t len,
-                                    __unused uint codePage) {
+static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, const char* text, size_t len, uint) {
     CrashIf((size_t)tocEntries.allocator > 0 && (size_t)tocEntries.allocator < 0xffff);
     if (len < 9) {
     Fallback:
@@ -1208,7 +1207,7 @@ std::span<u8> PalmDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 
-WCHAR* PalmDoc::GetProperty(__unused DocumentProperty prop) const {
+WCHAR* PalmDoc::GetProperty(DocumentProperty) const {
     return nullptr;
 }
 
@@ -1589,7 +1588,7 @@ std::span<u8> TxtDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 
-WCHAR* TxtDoc::GetProperty(__unused DocumentProperty prop) const {
+WCHAR* TxtDoc::GetProperty(DocumentProperty) const {
     return nullptr;
 }
 

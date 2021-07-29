@@ -97,7 +97,7 @@ class EngineImages : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
-    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(__unused int pageNo) override {
         return {};
     }
@@ -309,7 +309,7 @@ std::span<u8> EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
-bool EngineImages::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
+bool EngineImages::SaveFileAs(const char* copyFileName) {
     const WCHAR* srcPath = FileName();
     auto dstPath = ToWstrTemp(copyFileName);
     if (srcPath) {
@@ -395,7 +395,7 @@ class EngineImage : public EngineImages {
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAsPDF(const char* pdfFileName) override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -600,7 +600,7 @@ RectF EngineImage::LoadMediabox(int pageNo) {
     return mbox;
 }
 
-bool EngineImage::SaveFileAsPDF(const char* pdfFileName, __unused bool includeUserAnnots) {
+bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     auto dpi = GetFileDPI();
@@ -687,9 +687,9 @@ class EngineImageDir : public EngineImages {
     std::span<u8> GetFileData() override {
         return {};
     }
-    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAs(const char* copyFileName) override;
 
-    WCHAR* GetProperty(__unused DocumentProperty prop) override {
+    WCHAR* GetProperty(DocumentProperty) override {
         return nullptr;
     }
 
@@ -698,7 +698,7 @@ class EngineImageDir : public EngineImages {
 
     TocTree* GetToc() override;
 
-    bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAsPDF(const char* pdfFileName) override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
@@ -787,7 +787,7 @@ TocTree* EngineImageDir::GetToc() {
     return tocTree;
 }
 
-bool EngineImageDir::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
+bool EngineImageDir::SaveFileAs(const char* copyFileName) {
     // only copy the files if the target directory doesn't exist yet
     auto dstPath = ToWstrTemp(copyFileName);
     if (!CreateDirectoryW(dstPath, nullptr)) {
@@ -821,7 +821,7 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName, __unused bool includeUserAnnots) {
+bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
@@ -863,7 +863,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
     EngineBase* Clone() override;
 
-    bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAsPDF(const char* pdfFileName) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
@@ -1183,7 +1183,7 @@ bool EngineCbx::Visit(const char* path, const char* value, json::Type type) {
            str::FindChar(propDate, '/') <= propDate;
 }
 
-bool EngineCbx::SaveFileAsPDF(const char* pdfFileName, __unused bool includeUserAnnots) {
+bool EngineCbx::SaveFileAsPDF(const char* pdfFileName) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {

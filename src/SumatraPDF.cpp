@@ -2553,8 +2553,6 @@ static void OnMenuSaveAs(WindowInfo* win) {
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
-    // TODO: just remove it
-    bool saveAnnotsInDoc = true;
     auto pathA(ToUtf8Temp(realDstFileName));
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
@@ -2576,17 +2574,17 @@ static void OnMenuSaveAs(WindowInfo* win) {
         // Convert the file into a PDF one
         AutoFreeWstr producerName = str::Join(GetAppNameTemp(), L" ", CURR_VERSION_STR);
         PdfCreator::SetProducerName(producerName);
-        ok = engine->SaveFileAsPDF(pathA.Get(), saveAnnotsInDoc);
+        ok = engine->SaveFileAsPDF(pathA.Get());
         if (!ok && gIsDebugBuild) {
             // rendering includes all page annotations
             ok = PdfCreator::RenderToFile(pathA.Get(), engine);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
-        ok = engine->SaveFileAs(pathA.Get(), saveAnnotsInDoc);
-    } else if (saveAnnotsInDoc && EngineSupportsAnnotations(engine)) {
+        ok = engine->SaveFileAs(pathA.Get());
+    } else if (EngineSupportsAnnotations(engine)) {
         // ... as well as files containing annotations ...
-        ok = engine->SaveFileAs(pathA.Get(), true);
+        ok = engine->SaveFileAs(pathA.Get());
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
         // ... else just copy the file
         WCHAR* msgBuf;

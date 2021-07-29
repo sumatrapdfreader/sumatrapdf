@@ -144,7 +144,6 @@ extern Kind kindPageElementDest;
 extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
-
 // an element on a page. Might be clicked, provides tooltip info for hoover
 struct IPageElement {
     Kind kind{nullptr};
@@ -444,11 +443,9 @@ class EngineBase {
     virtual std::span<u8> GetFileData() = 0;
 
     // saves a copy of the current file under a different name (overwriting an existing file)
-    // (includeUserAnnots only has an effect if SupportsAnnotation(true) returns true)
-    virtual bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) = 0;
+    virtual bool SaveFileAs(const char* copyFileName) = 0;
     // converts the current file to a PDF file and saves it (overwriting an existing file),
-    // (includeUserAnnots should always have an effect)
-    virtual bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false);
+    virtual bool SaveFileAsPDF(const char* pdfFileName);
 
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)

@@ -1649,8 +1649,8 @@ RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
     return GetPageImage(pageNo, r, imageID);
 }
 
-bool EngineMupdf::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
-    return SaveFileAs(pdfFileName, includeUserAnnots);
+bool EngineMupdf::SaveFileAsPDF(const char* pdfFileName) {
+    return SaveFileAs(pdfFileName);
 }
 
 bool EngineMupdf::BenchLoadPage(int pageNo) {
@@ -2037,7 +2037,7 @@ std::span<u8> EngineMupdf::GetFileData() {
 }
 
 // TODO: proper support for includeUserAnnots or maybe just remove it
-bool EngineMupdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineMupdf::SaveFileAs(const char* copyFileName) {
     auto dstPath = ToWstrTemp(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {

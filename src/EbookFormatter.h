@@ -82,7 +82,7 @@ class HtmlFileFormatter : public HtmlFormatter {
 
 class TxtFormatter : public HtmlFormatter {
   protected:
-    void HandleTagPagebreak(__unused HtmlToken* t) override {
+    void HandleTagPagebreak(HtmlToken*) override {
         ForceNewPage();
     }
 

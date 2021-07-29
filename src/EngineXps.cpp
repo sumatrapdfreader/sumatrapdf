@@ -204,7 +204,7 @@ class EngineXps : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
-    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -703,7 +703,7 @@ std::span<u8> EngineXps::GetFileData() {
     return file::ReadFile(path);
 }
 
-bool EngineXps::SaveFileAs(const char* copyFileName, __unused bool includeUserAnnots) {
+bool EngineXps::SaveFileAs(const char* copyFileName) {
     auto dstPath = ToWstrTemp(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
