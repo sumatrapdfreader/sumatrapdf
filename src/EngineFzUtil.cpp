@@ -535,7 +535,10 @@ WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut) {
 }
 
 // copy of fz_is_external_link without ctx
-int IsExternalLink(const char* uri) {
+bool IsExternalLink(const char* uri) {
+    if (!uri) {
+        return false;
+    }
     while (*uri >= 'a' && *uri <= 'z') {
         ++uri;
     }

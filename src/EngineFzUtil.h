@@ -73,7 +73,7 @@ RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap);
 WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut);
 
 LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
-int IsExternalLink(const char* uri);
+bool IsExternalLink(const char* uri);
 TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDestination* dest);
 IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
