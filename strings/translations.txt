@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a807a2e58d9e556cfb0a8606ebd35a793202be50
+433834fb4367110caf831c33a264e76f4b8fc103
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -415,6 +415,7 @@ el:Αγκύλη
 es:&Cursor
 hr:&Znak za umetanje
 it:&Cursore
+kr:캐럿(&C)
 kw:&Karet
 lt:&Intarpas
 lv:&Norāde
@@ -494,19 +495,26 @@ uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
+es:&Continuar con la instalación de la versión de 32 bits
 it:Continua installazione versione 32bit
+kr:32비트 버전 설치를 계속합니다(&C)
 pl:&Kontynuuj instalację wersji 32-bitowej
 :&Copy Selection \tCtrl-C
 am:&Պատճենել ընտրումը \tCtrl-C
+es:&Copiar la selección \tCtrl-C
 it:&Copia selezione\tCtrl-C
+kr:선택한 내용 복사(&C)\tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
+es:&Copiar al portapapeles\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
+kr:클립보드에 복사(&C)\tCtrl-C
 pl:&Kopiuj do schowka\tCtrl-C
 :&Discard
 am:&Մերժել
 it:Scarica
+kr:무시(&D)
 pl:O&drzuć
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
@@ -2425,6 +2433,7 @@ hr:&Ukloni iz povijesti
 id:&Hapus dari Riwayat
 it:&Rimuovi dalla cronologia
 ka:&ისტორიიდან წაშლა
+kr:히스토리에서 제거(&R)
 kw:&Removya A Istori
 lt:&Pašalinti iš istorijos
 lv:&Izņemt no vēstures
@@ -2508,6 +2517,7 @@ vn:Lưu thành...\tCtrl+S
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
 it:&Salva in un PDF esistente
+kr:기존 PDF에 저장(&S)
 pl:&Zapisz w istniejącym pliku PDF
 :&Search With Google
 am:&Որոնել Google-ով
@@ -2738,6 +2748,7 @@ el:Κείμενο
 es:&Texto
 hr:&Tekst
 it:&Testo
+kr:문자열(&T)
 kw:&Tekst
 lt:&Tekstas
 lv:&Teksts
@@ -2804,6 +2815,7 @@ vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
 it:&Traduci con Google
+kr:Google로 번역(&T)
 pl:&Tłumacz za pomocą Google
 :&Underline
 am:&Ընդգծված
@@ -2813,6 +2825,7 @@ el:Υπογράμμιση
 es:&Subrayar
 hr:Podv&ući
 it:Sottolineato
+kr:밑줄(&U)
 kw:&Islinya
 lt:Pa&braukti
 lv:&Pasvītrojums
@@ -3568,6 +3581,7 @@ id:Tambah halaman %s ke favorit\tCtrl+B
 it:Aggiungi pagina %s ai Preferiti\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
 ka:გვერდი %s-ის დამატება რჩეულებში\tCtrl+B
+kr:%s 페이지를 즐겨찾기에 추가\tCtrl+B
 kw:Keworra folen %s dhe daklow drudh\tCtrl+B
 lt:Pridėti %s puslapį prie mėgstamų\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
@@ -3873,6 +3887,7 @@ hr:Bilješke
 id:Catatan
 it:Annotazioni
 ka:ანოტაციები
+kr:주석
 kw:Notenyans
 lt:Anotacijos
 lv:Anotācijas
@@ -3968,7 +3983,7 @@ cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 dk:Er du sikker på, at du vil afinstallere SumatraPDF?
 el:Είστε σίγουροι πως επιθυμείτε την απεγκατάσταση του SumatraPDF ;
-es:¿Está seguro de querer desinstalar SumatraPDF?
+es:¿Seguro quiere desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fa:آیا برای پاک کردن برنامه‌ی سوماترا پی‌دی‌اف مطمئن هستید؟
@@ -4370,6 +4385,7 @@ el:Χρώμα φόντου:
 es:Color de fondo
 hr:Boja pozadine:
 it:Colore sfondo:
+kr:배경색
 kw:Liw Kilva:
 lt:Fono spalva:
 lv:Fona krāsa:
@@ -5186,7 +5202,9 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
+es:Buscando actualizaciones...
 it:Controllo aggiornamenti...
+kr:업데이트를 확인 중입니다...
 pl:Szukanie aktualizacji...
 :Circle
 am:Շրջան
@@ -5208,6 +5226,7 @@ hr:Krug
 id:Lingkaran
 it:Cerchio
 ka:წრე
+kr:원
 kw:Kylgh
 lt:Apskritimas
 lv:Aplis
@@ -5311,6 +5330,7 @@ id:Tutup Semua
 it:Comprimi tutto
 ja:すべて折り畳む
 ka:ყველას ჩაკეცვა
+kr:모두 접기
 kw:Byghanhe Oll
 lt:Suskleisti viską
 lv:Sakļaut visu
@@ -5334,6 +5354,7 @@ el:Χρώμα:
 es:Color:
 hr:Boja:
 it:Colore:
+kr:색상
 kw:Liw:
 lt:Spalva:
 lv:Krāsa:
@@ -6607,6 +6628,7 @@ hr:Nije moguće deinstalirati Sumatra filtar za pretraživanje
 id:Tidak bisa mencopot filter pencarian Sumatra 
 it:Impossibile disinstallare filtro ricerca Sumatra
 ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
+kr:Sumatra 검색 필터를 제거할 수 없습니다
 kw:Ny yllir anlea sythel hwilas Sumatra
 lt:Nepavyko pašalinti Sumatra paieškos filtro
 lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
@@ -6746,6 +6768,7 @@ vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
 it:Crea annotazione sotto al c&ursore
+kr:커서 아래 주석 생성(&U)
 pl:Utwórz adnotację &pod kursorem
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
@@ -6756,6 +6779,7 @@ el:Δημιουργία σχολιασμού από επιλογή
 es:Crear Anotación Desde Selección
 hr:Napravite bilješku iz odabira
 it:Crea annotazione dalla selezione
+kr:선택한 곳에 주석 생성
 kw:Gwruthyl Notenyans a'th Tewis
 lt:Sukurti anotaciją iš pažymėtos vietos
 lv:Veidot anotāciju no atlases
@@ -7533,10 +7557,12 @@ vn:Thuộc tính tập tin
 :Don't install
 am:Չտեղադրել
 it:Non installare
+kr:설치하지 마십시오
 pl:Nie instaluj
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
 it:Download versione a 64bit
+kr:64비트 버전 다운로드
 pl:Pobierz wersję 64-bitową
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
@@ -7558,6 +7584,7 @@ hr:I&zlaz iz cijelog ekrana
 id:Keluar dari layar penuh
 it:Esci da schermo pieno
 ka:სრულ&ეკრანიანიდან გამოსვლა
+kr:전체화면 종료(&x)
 kw:Kwytya Skrin-leun
 lt:&Išeiti iš pilno ekrano režimo
 lv:&Iziet no pilnekrāna
@@ -7725,6 +7752,7 @@ hr:Uredi bilješke
 id:Tambah catatan
 it:Modifica annotazioni
 ka:ანოტაციის რედაქტირება
+kr:주석 편집
 kw:Golegi notenyans
 lt:Redaguoti anotacijas
 lv:Rediģēt anotācijas
@@ -8027,6 +8055,7 @@ id:Buka Semua
 it:Espandi tutto
 ja:すべて展開
 ka:ყველას ამოკეცვა
+kr:모두 확대하기
 kw:Lesa Oll
 lt:Išplėsti viską
 lv:Izvērst visu
@@ -8957,6 +8986,7 @@ hr:Prilog
 id:Lampiran File
 it:File allegato
 ka:მიმაგრებული ფაილი
+kr:파일 첨부
 kw:Stagel Restren
 lt:Failo priedas
 lv:Faila pielikums
@@ -10724,6 +10754,7 @@ hr:Slike
 id:Gambar
 it:Immagini
 ka:სურათები
+kr:이미지
 kw:Skeusennow
 lt:Vaizdai
 lv:Attēli
@@ -10752,6 +10783,7 @@ hr:Tinta
 id:Tinta
 it:Inchiostro
 ka:მელანი
+kr:잉크
 kw:Ynk
 lt:Rašalas
 lv:Tinte
@@ -10892,6 +10924,7 @@ vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 am:Տեղադրել և վեաթողարկել
 it:Installa e ri-esegui
+kr:설치 후 재실행
 pl:Zainstaluj i uruchom ponownie
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
@@ -11022,6 +11055,7 @@ vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
+kr:64비트 운영체제에 32비트 SumatraPDF 설치
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 :KB
 af:KB
@@ -11291,6 +11325,7 @@ hr:Linija
 id:Garis
 it:Linea
 ka:ხაზი
+kr:선
 kw:Linen
 lt:Linija
 lv:Līnija
@@ -11798,6 +11833,7 @@ id:&Jendela Baru\tCtrl+N
 it:Nuova &finestra\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
 ka:ახალი &ფანჯარა\tCtrl+N
+kr:새 창(&w)\tCtrl+N
 kw:&Fenester nowydh\tCtrl+N
 lt:&Naujas langas\tCtrl+N
 lv:Jauns &logs\tCtrl+N
@@ -11814,6 +11850,7 @@ vn:Mở cửa sổ mới\tCtrl+N
 :New version available
 am:Մատչելի է նոր տարբերակ
 it:Nuova versione disponibile
+kr:새 버전이 있습니다
 pl:Dostępna nowa wersja
 :Next Page
 af:Volgende Bladsy
@@ -12436,6 +12473,7 @@ hr:Otvori ugrađeni PDF
 id:Buka PDF yang disematkan
 it:Apri PDF incorporato:
 ka:ჩაშენებული PDF-ის გახსნა
+kr:임베딩된 PDF 열기
 kw:Ygeri PDF Neythys
 lt:Atidaryti įdėtą PDF
 lv:Atvērt iegultu PDF
@@ -13822,6 +13860,7 @@ hr:Poli-linija
 id:Garis Poli
 it:Poli linea
 ka:ტეხილი ხაზი
+kr:다중 선형
 kw:Lieslinen
 lt:Laužtė
 lv:Lauzta līnija
@@ -13851,6 +13890,7 @@ hr:Poligon
 id:Poligon
 it:Poligono
 ka:მრავალკუთხედი
+kr:다각형
 kw:Liestuek
 lt:Daugiakampis
 lv:Daudzstūris
@@ -15057,6 +15097,7 @@ vn:Quay phải\tCtrl+Shift++
 :S&election
 am:Ը&նտրում
 it:S&elezione
+kr:선택(&e)
 pl:Z&aznaczenie
 :S&quiggly
 am:Ա&լիքավոր
@@ -15096,6 +15137,7 @@ id:Simpan Catatan
 it:Salva annotazioni
 ja:注釈を保存
 ka:ანოტაციების შენახვა
+kr:주석 저장
 kw:Gwitha Notennow
 lt:Išsaugoti anotacijas
 lv:Saglabāt anotācijas
@@ -15127,6 +15169,7 @@ hr:Spremi ugrađenu datoteku...
 id:Simpan File Tersemat
 it:Salva file incorporato...
 ka:მიმაგრებული ფაილის შენახვა...
+kr:임베딩된 파일 저장...
 kw:Gwitha Restren Neythys...
 lt:Išsaugoti įdėtą failą...
 lv:Saglabāt iegultu failu
@@ -15200,6 +15243,7 @@ vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save annoations?
 am:Պահե՞լ մեկնաբանությունը:
 it:Vuoi salvare le annotazioni?
+kr:주석을 저장할까요?
 pl:Zapisać adnotacje?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
@@ -15210,6 +15254,7 @@ el:Αποθήκευση αλλαγών σε νέο PDF
 es:Guardar cambios en un nuevo PDF
 hr:Spremi promjene u novi PDF
 it:Salva modifiche in un nuovo PDF
+kr:새 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF nowydh
 lt:Išsaugoti pakeitimus į naują PDF failą
 lv:Saglabāt izmaiņas jaunā PDF failā
@@ -15225,6 +15270,7 @@ el:Αποθήκευση αλλαγών σε υπάρχον PDF
 es:Guardar cambios en un PDF existente
 hr:Spremi promjene u postojeći PDF
 it:Salva modifiche in un PDF esistente
+kr:기존 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lt:Išsaugoti pakeitimus į esamą PDF failą
 lv:Saglabāt izmaiņas esošajā PDF failā
@@ -15234,14 +15280,17 @@ ru:Сохранить изменения в существующий PDF
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
 it:Salva in un &nuovo PDF
+kr:새(&n) PDF에 저장하기
 pl:Zapisz w &nowym pliku PDF
 :Search With &Bing
 am:Որոնել &Bing-ով
 it:Cerca con &Bing
+kr:Bing으로 검색(&B)
 pl:Szukaj za pomocą &Bing
 :Search With &Google
 am:Որոնել &Google-ով
 it:Cerca con &Google
+kr:Google로 검색(&G)
 pl:Szukaj za pomocą &Google
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
@@ -16058,6 +16107,7 @@ hr:Prikaži &klizače
 id:Tampilkan Scr&ollbars
 it:Visualizza barre sc&orrimento
 ka:საცოცი პან&ელის ჩვენება
+kr:스크롤바 보이기(&o)
 kw:Diskwedhes Skr&olvarrys
 lt:Rodyti &slinkties juostas
 lv:Rādīt rit&joslas
@@ -16304,6 +16354,7 @@ vn:Trang đơn
 :Skip this version
 am:Բաց թողնել այս տարբերակը
 it:Salta questa versione
+kr:이 버전 건너뛰기
 pl:Pomiń tę wersję
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
@@ -16452,6 +16503,7 @@ hr:Kvadrat
 id:Persegi
 it:Piazza
 ka:კვადრატი
+kr:사각형
 kw:Pedrek
 lt:Kvadratas
 lv:Kvadrāts
@@ -17176,6 +17228,7 @@ hr:Podrži SumatraPDF
 id:Dukung SumatraPDF
 it:Supporta SumatraPDF
 ka: SumatraPDF-ის დახმარება
+kr:SumatraPDF 지원하기
 kw:Skoodhya SumatraPDF
 lt:Paremti SumatraPDF
 lv:Atbalstīt SumatraPDF
@@ -17692,6 +17745,7 @@ vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
 it:Traduci con &DeepL
+kr:DeepL로 번역(&D)
 pl:Tłumacz za pomocą &DeepL
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
@@ -17950,6 +18004,7 @@ el:Μη αποθηκευμένα σχόλια
 es:Anotaciones no guardadas
 hr:Nespremljene bilješke
 it:Annotazioni non salvate
+kr:저장되지 않은 주석
 kw:Notenyansow anwithys
 lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
@@ -18430,6 +18485,7 @@ es:Tienes anotaciones sin guardar
 hr:Imate nespremljene bilješke
 id:Kamu memiliki catatan yang belum tersimpan
 it:Ci sono delle annotazioni non salvate
+kr:저장하지 않은 주석이 있습니다.
 kw:Yma notenyansow anwithys dhis
 lt:Turite neišsaugotų anotacijų
 lv:Jums ir nesaglabātas anotācijas
@@ -18528,7 +18584,7 @@ cz:Zvětšit
 de:Vergrößern
 dk:Zoom ind
 el:Μεγέθυνση
-es:Acercar
+es:Ampliar
 et:Suurenda
 eu:Zooma Handitu
 fa:بزرگ نمایی
