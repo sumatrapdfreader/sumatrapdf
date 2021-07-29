@@ -54,15 +54,14 @@ WCHAR* PageDestination::GetName() {
 }
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, const WCHAR* value) {
+    if (value) {
+        return new PageDestinationURL(value);
+    }
     auto res = new PageDestination();
     res->pageNo = pageNo;
     res->rect = rect;
     res->kind = kindDestinationScrollTo;
     res->zoom = zoom;
-    if (value) {
-        res->kind = kindDestinationLaunchURL;
-        res->value = str::Dup(value);
-    }
     return res;
 }
 

@@ -29,14 +29,15 @@ static TocItem* newChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, c
         return res;
     }
 
-    auto dest = new PageDestination();
+    IPageDestination* dest{nullptr};
     dest->pageNo = pageNo;
     if (IsExternalUrl(url)) {
-        dest->kind = kindDestinationLaunchURL;
-        dest->value = str::Dup(url);
+        dest = new PageDestinationURL(url);
     } else {
-        dest->kind = kindDestinationScrollTo;
-        dest->name = str::Dup(url);
+        auto pdest = new PageDestination();
+        pdest->kind = kindDestinationScrollTo;
+        pdest->name = str::Dup(url);
+        dest = pdest;
     }
     CrashIf(!dest->kind);
 

@@ -64,10 +64,7 @@ static TocItem* newEbookTocDest(TocItem* parent, const WCHAR* title, int reparse
 
 static TocItem* newEbookTocDest(TocItem* parent, const WCHAR* title, const WCHAR* url) {
     auto res = new TocItem(parent, title, 0);
-    auto dest = new PageDestination();
-    dest->kind = kindDestinationLaunchURL;
-    dest->value = str::Dup(url);
-    res->dest = dest;
+    res->dest = new PageDestinationURL(url);
     return res;
 }
 

@@ -132,9 +132,10 @@ class EngineEbook : public EngineBase {
     Vec<DrawInstr>* GetHtmlPage(int pageNo);
 };
 
-static IPageElement* newEbookLink(DrawInstr* link, Rect rect, IPageDestination* dest, int pageNo = 0,
+static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* dest, int pageNo = 0,
                                   bool showUrl = false) {
     if (!dest) {
+        // TODO: this doesn't make sense
         dest = new PageDestination();
         dest->kind = kindDestinationLaunchURL;
         // TODO: not sure about this
@@ -428,7 +429,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
 IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
-        return newEbookLink(link, rect, nullptr, pageNo);
+        return NewEbookLink(link, rect, nullptr, pageNo);
     }
 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
@@ -443,7 +444,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     if (!dest) {
         return nullptr;
     }
-    return newEbookLink(link, rect, dest, pageNo);
+    return NewEbookLink(link, rect, dest, pageNo);
 }
 
 Vec<IPageElement*>* EngineEbook::GetElements(int pageNo) {
@@ -1564,7 +1565,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     }
 
     IPageDestination* dest = newChmEmbeddedDest(url);
-    return newEbookLink(link, rect, dest, pageNo);
+    return NewEbookLink(link, rect, dest, pageNo);
 }
 
 EngineBase* EngineChm::CreateFromFile(const WCHAR* fileName) {
@@ -1666,7 +1667,7 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
     }
 
     IPageDestination* dest = newRemoteHtmlDest(url);
-    return newEbookLink(link, rect, dest, pageNo, true);
+    return NewEbookLink(link, rect, dest, pageNo, true);
 }
 
 EngineBase* EngineHtml::CreateFromFile(const WCHAR* fileName) {

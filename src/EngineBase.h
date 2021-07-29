@@ -95,6 +95,8 @@ struct IPageDestination {
 struct PageDestinationURL : IPageDestination {
     WCHAR* url{nullptr};
 
+    PageDestinationURL() = delete;
+
     PageDestinationURL(const WCHAR* u) {
         CrashIf(!u);
         kind = kindDestinationLaunchURL;
@@ -204,9 +206,9 @@ struct PageElementImage : IPageElement {
 struct PageElementComment : IPageElement {
     WCHAR* comment{nullptr};
 
-    PageElementComment(const WCHAR* comment_) {
+    PageElementComment(const WCHAR* c) {
         kind = kindPageElementComment;
-        comment = str::Dup(comment_);
+        comment = str::Dup(c);
     }
 
     ~PageElementComment() override {

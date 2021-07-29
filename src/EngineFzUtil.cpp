@@ -760,7 +760,6 @@ IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
 
 static IPageElement* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
     auto dest = NewPageDestinationMupdf(link, outline);
-
     auto res = new PageElementDestination(dest);
     res->pageNo = srcPageNo;
     res->rect = dest->rect;
@@ -882,12 +881,9 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         }
 
         // TODO: those leak on xps
-        auto dest = new PageDestination();
-        dest->kind = kindDestinationLaunchURL;
-        dest->value = str::Dup(uri);
+        auto dest = new PageDestinationURL(uri);
 
         auto pel = new PageElementDestination(dest);
-        pel->dest = dest;
         pel->rect = ToRectFl(bbox);
         pageInfo->autoLinks.Append(pel);
     }
