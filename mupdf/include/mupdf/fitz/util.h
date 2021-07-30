@@ -110,4 +110,13 @@ void fz_write_pixmap_as_data_uri(fz_context *ctx, fz_output *out, fz_pixmap *pix
 */
 fz_document *fz_new_xhtml_document_from_document(fz_context *ctx, fz_document *old_doc, const fz_stext_options *opts);
 
+/**
+	Returns an fz_buffer containing a page after conversion to specified format.
+
+	page: The page to convert.
+	format, options: Passed to fz_new_document_writer_with_output() internally.
+	transform, cookie: Passed to fz_run_page() internally.
+*/
+fz_buffer *fz_new_buffer_from_page_with_format(fz_context *ctx, fz_page *page, const char *format, const char *options, fz_matrix transform, fz_cookie *cookie);
+
 #endif

@@ -577,3 +577,39 @@ fz_new_xhtml_document_from_document(fz_context *ctx, fz_document *old_doc, const
 
 	return new_doc;
 }
+
+fz_buffer *
+fz_new_buffer_from_page_with_format(fz_context *ctx, fz_page *page, const char *format, const char *options, fz_matrix transform, fz_cookie *cookie)
+{
+	fz_buffer *buf = NULL;
+	fz_output *out = NULL;
+	fz_document_writer *writer = NULL;
+	fz_device *dev = NULL;
+
+	fz_var(buf);
+	fz_var(out);
+	fz_var(writer);
+	fz_var(dev);
+
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer(ctx, 0);
+		out = fz_new_output_with_buffer(ctx, buf);
+		writer = fz_new_document_writer_with_output(ctx, out, format, options);
+		dev = fz_begin_page(ctx, writer, fz_bound_page(ctx, page));
+		fz_run_page(ctx, page, dev, transform, cookie);
+		fz_end_page(ctx, writer);
+		fz_close_document_writer(ctx, writer);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_document_writer(ctx, writer);
+		fz_drop_output(ctx, out);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		fz_rethrow(ctx);
+	}
+	return buf;
+}

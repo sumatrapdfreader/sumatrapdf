@@ -142,12 +142,6 @@ def mupdf_version():
     return ret
 
 
-# Set MUPDF_SETUP_MINIMAL=1 to create minimal package for testing
-# upload/download etc, avoiding compilation when installing.
-#
-g_test_minimal = int(os.environ.get('MUPDF_SETUP_MINIMAL', '0'))
-
-
 def git_info():
     '''
     Returns (current, origin, diff):
@@ -198,6 +192,8 @@ def sdist():
     pipcl callback. If we are a git checkout, return all files known to
     git. Otherwise return all files except for those in build/.
     '''
+    assert os.path.exists(f'{root_dir()}/.git'), f'Cannot make sdist because not a git checkout: {root_dir()}'
+
     # Create 'git-info' file containing git ids that identify this tree. For
     # the moment this is a simple text format, but we could possibly use pickle
     # instead, depending on whether we want to include more information, e.g.
@@ -209,19 +205,6 @@ def sdist():
         f.write(f'git-id-origin: {git_id_origin}\n')
         f.write(f'git-diff:\n{git_diff}\n')
 
-    if g_test_minimal:
-        # Cut-down for testing.
-        return [
-                'setup.py',
-                'pyproject.toml',
-                'scripts/pipcl.py',
-                'include/mupdf/fitz/version.h',
-                'COPYING',
-                'git-info',
-                ]
-
-    if not os.path.exists(f'{root_dir()}/.git'):
-        raise Exception(f'Cannot make sdist because not a git checkout')
     paths = pipcl.git_items( root_dir(), submodules=True)
 
     # Build C++ files and SWIG C code for inclusion in sdist, so that it can be
@@ -266,24 +249,6 @@ def build():
     '''
     pipcl callback. Build MuPDF C, C++ and Python libraries.
     '''
-    if g_test_minimal:
-        # Cut-down for testing.
-        log(f'g_test_minimal set so doing minimal build.')
-        os.makedirs(f'{root_dir()}/{build_dir()}', exist_ok=True)
-        paths = (
-                f'{root_dir()}/{build_dir()}/mupdf.py',
-                f'{root_dir()}/{build_dir()}/_mupdf.pyd',
-                f'{root_dir()}/{build_dir()}/mupdfcpp.dll',
-                )
-        ret = []
-        for path in paths:
-            with open(path, 'w') as f:
-                # Need to make files non-identical, otherwise
-                # check-wheel-contents complains.
-                f.write(f'{path}\n')
-            ret.append( (path, os.path.basename(path)))
-        return ret
-
     # If we are an sdist, default to not trying to run clang-python - the
     # generated files will already exist, and installing/using clang-python
     # might be tricky.

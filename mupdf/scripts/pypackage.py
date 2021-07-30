@@ -138,8 +138,7 @@ def venv_run(
     if windows():
         # Run under cmd.exe with all commands inside "...".
         pre = [
-                f'cmd.exe /c "'
-                f'{"cd "+directory if directory else "true"}',
+                f'cmd.exe /c "{"cd "+directory if directory else "true"}',
                 f'{py} -m venv {venv}',
                 f'{venv}\\Scripts\\activate.bat',
                 ]
@@ -741,7 +740,7 @@ def main():
                                     ),
                             ],
                         ),
-                jlib.Arg('pypi-test <t:int>',
+                jlib.Arg('pypi-test <test>',
                         help='Whether to use test.pypi.org.',
                         ),
                 jlib.Arg('remote', multi=True,
@@ -769,7 +768,7 @@ def main():
                                     ),
                             ],
                         ),
-                jlib.Arg('sdist <sdist|package-dir>',
+                jlib.Arg('sdist <path>',
                         help='''
                         Name of preexisting sdist file to use or Python package
                         directory (e.g. containing setup.py) in which to build
@@ -826,11 +825,11 @@ def main():
         log(f'Changing abis from {abis_prev} to {abis}')
 
     if args.sdist:
-        if os.path.isfile(args.sdist):
-            parse_sdist(args.sdist)
-            sdist = args.sdist
+        if os.path.isfile(args.sdist.path):
+            parse_sdist(args.sdist.path)
+            sdist = args.sdist.path
         else:
-            package_directory = args.sdist
+            package_directory = args.sdist.path
             sdist = make_sdist(package_directory, outdir)
 
     if args.pypi_test:
@@ -840,7 +839,7 @@ def main():
         assert sdist, f'build requires sdist'
         if build.r:
             # Remote build.
-            user, host, directory = parse_remote(build.r)
+            user, host, directory = parse_remote(build.r.uri)
             local_dir = os.path.dirname(__file__)
             command = (''
                     f'rsync -aP {local_dir}/pypackage.py {local_dir}/jlib.py {sdist} {user}{host}:{directory}'
@@ -851,7 +850,7 @@ def main():
                     f' && ./pypackage.py sdist {os.path.basename(sdist)}'
                     )
             if build.a:
-                command += f' abis {build.a}'
+                command += f' abis {build.a.abis}'
 
             command += (
                     f' build'
@@ -895,7 +894,7 @@ def main():
         print(f'tag: {make_tag()}')
 
     if args.wheels:
-        pattern = args.wheels
+        pattern = args.wheels.pattern
         if not pattern.endswith('.whl'):
             pattern += '*'
             log(f'Have appended "*" to get pattern={pattern!r}')
@@ -915,8 +914,8 @@ def main():
         package_name = None
         if args.test.pypi:
             pypi = True
-            package_name = args.test.pypi
-        test(args.test.command, package_name, wheels, abis, pypi, pypi_test, py=args.test.p)
+            package_name = args.test.pypi.package_name
+        test(args.test.command, package_name, wheels, abis, pypi, pypi_test, py=args.test.p.python)
 
     if args.upload:
         assert sdist, f'Cannot upload because no sdist specified; use "sdist ...".'
@@ -936,13 +935,13 @@ def main():
         local_dir = os.path.dirname(__file__)
         sync_files = f'{local_dir}/pypackage.py,{local_dir}/jlib.py'
         if remote.s:
-            sync_files += f',{remote.s}'
+            sync_files += f',{remote.s.files}'
         system(
                 f'rsync -ai {sync_files.replace(",", " ")} {sdist if sdist else ""} {user}{host}:{directory}',
                 prefix=f'rsync to {user}{host}:{directory}: ',
                 )
         if remote.a:
-            remote_args = remote.a
+            remote_args = remote.a.args
             system(
                     f'ssh {user}{host} '
                     f'"'

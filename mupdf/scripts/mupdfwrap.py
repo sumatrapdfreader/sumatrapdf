@@ -53,17 +53,21 @@ C++ wrapping:
 
     Classes:
 
-        For each fz_* and pdf_* struct we provide a wrapper class. These
-        wrapper classes generally have a <m_internal> member that is a pointer
-        to an instance of the underlying struct.
+        For each fz_* and pdf_* struct, we provide a wrapper class with
+        a CamelCase version of the struct name, e.g. the wrapper for
+        fz_display_list is called mupdf::DisplayList.
+
+        These wrapper classes generally have a member <m_internal> that is a
+        pointer to an instance of the underlying struct.
 
         Member functions:
 
             Member functions are provided which wrap all relevant fz_*() and
-            pdf_*() functions. These methods generally take args that are
-            references to wrapper classes instead of pointers to fz_* and pdf_*
-            structs, and similarly return wrapper classes by value instead of
-            returning a pointer to a fz_* or pdf_* struct.
+            pdf_*() functions. These methods have the same name as the wrapped
+            function but without the initial fz_ or pdf_. They generally take
+            args that are references to wrapper classes instead of pointers to
+            fz_* and pdf_* structs, and similarly return wrapper classes by
+            value instead of returning a pointer to a fz_* or pdf_* struct.
 
         Reference counting:
 
@@ -251,11 +255,75 @@ Tools required to build:
         wrappers for these fz_*() functions are ommited from the generated C++
         code.
 
+        On unix it seems that clang-python packages such as Debian's
+        python-clang and OpenBSD's py3-llvm require us to explicitly specify
+        the location of libclang. Alternatively on Linux one can use our --venv
+        option to run in a venv that has done 'pip install libclang', which
+        makes clang available directly as a Python module.
+
     SWIG:
 
         We work with swig-3 and swig-4. If swig-4 is used, we propogate
         doxygen-style comments for structures and functions into the generated
         C++ code.
+
+
+Building Python bindings:
+
+    Build and install the MuPDF Python bindings as module 'mupdf' in a Python
+    virtual environment, using MuPDF's setup.py script:
+
+        Linux:
+            > python3 -m venv pylocal
+            > . pylocal/bin/activate
+            (pylocal) > pip install pyqt5 libclang
+            (pylocal) > cd .../mupdf
+            (pylocal) > python setup.py install
+
+        Windows:
+            > py -m venv pylocal
+            > pylocal\Scripts\activate
+            (pylocal) > pip install libclang pyqt5
+            (pylocal) > cd ...\mupdf
+            (pylocal) > python setup.py install
+
+        OpenBSD:
+            [It seems that pip can't install py1t5 or libclang so instead we
+            install system packages and use --system-site-packages.]
+
+            > sudo pkg_add py3-llvm py3-qt5
+            > python3 -m venv --system-site-packages pylocal
+            > . pylocal/bin/activate
+            (pylocal) > cd .../mupdf
+            (pylocal) > python setup.py install
+
+        Use the mupdf module:
+            (pylocal) > python
+            >>> import mupdf
+            >>>
+
+    Build MuPDF Python bindings without a Python virtual environment, using
+    scripts/mupdfwrap.py:
+
+        [Have not yet found a way to use clang from python on Windows without a
+        virtual environment, so this is Unix-only.]
+
+        > cd .../mupdf
+
+        Install required packages:
+            Debian:
+                > sudo apt install clang clang-python python3-dev swig
+
+            OpenBSD:
+                > pkg_add py3-llvm py3-qt5
+
+        Build:
+            > ./scripts/mupdfwrap.py -d build/shared-release -b all
+
+        Use the mupdf module by setting PYTHONPATH:
+            > PYTHONPATH=build/shared-release python3
+            >>> import mupdf
+            >>>
 
 
 Generated files:
@@ -367,7 +435,7 @@ Usage:
 
     Args:
 
-        --b     [<args>] <actions>:
+        -b      [<args>] <actions>:
         --build [<args>] <actions>:
             Builds some or all of the C++ and python interfaces.
 
@@ -382,6 +450,9 @@ Usage:
             rebuilds if commands change.
 
             args:
+                -d <details>:
+                    If specified, we show extra diagnostics when wrapping
+                    functions whose name contains <details>.
                 -f:
                     Force rebuilds.
 
@@ -458,14 +529,11 @@ Usage:
         --dir-so <directory>
             Set directory containing shared libraries.
 
-            Supported values for <directory>:
-                <mupdf>/build/shared-release/ [default]
-                <mupdf>/build/shared-debug/
-                <mupdf>/build/shared-memento/
+            Default is: build/shared-release
 
-            We use different C++ compile flags depending on release or debug builds
-            (specifically definition of NDEBUG is important because it must match
-            what was used when libmupdf.so was built).
+            We use different C++ compile flags depending on release or debug
+            builds (specifically, the definition of NDEBUG is important because
+            it must match what was used when libmupdf.so was built).
 
             Examples:
                 -d build/shared-debug
@@ -541,6 +609,21 @@ Usage:
                     * Imports mupdf and checks basic functionality.
                 * Deactivates the Python environment.
 
+        --venv <venv> ...
+            Runs mupdfwrap.py in a venv containing clang installed with 'pip
+            install libclang', passing remaining args. This seems to be the
+            only way to use clang from python on Windows.
+
+            E.g.:
+                --venv pylocal --swig-windows-auto -b all -t
+
+        --windows-cmd ...
+            Runs mupdfwrap.py via cmd.exe, passing remaining args. Useful to
+            get from cygwin to native Windows.
+
+            E.g.:
+                --windows-cmd --venv pylocal --swig-windows-auto -b all
+
     Examples:
 
         ./scripts/mupdfwrap.py -b all -t
@@ -555,6 +638,9 @@ Usage:
 
         python3 -m cProfile -s cumulative ./scripts/mupdfwrap.py -b 0
             Profile generation of C++ source code.
+
+        ./scripts/mupdfwrap.py --venv pylocal --swig-windows-auto -b all -t
+            Build and test on Windows.
 
 
 '''
@@ -597,30 +683,27 @@ assert sys.version_info[0] == 3 and sys.version_info[1] >= 6, (
 try:
     try:
         import clang.cindex
-
     except ModuleNotFoundError as e:
-
-        #print(f'"import clang.cindex" failed: {e}')
-        #print(f'sys.executable={sys.executable}')
 
         # On devuan, clang-python isn't on python3's path, but python2's
         # clang-python works fine with python3, so we deviously get the path by
         # running some python 2.
         #
-        clang_path = jlib.system( 'python2 -c "import clang; print clang.__path__[0]"', out='return')
+        e, clang_path = jlib.system( 'python2 -c "import clang; print clang.__path__[0]"', out='return', raise_errors=0)
 
-        #log( 'Retrying import of clang using info from python2 {clang_path=}')
-
-        sys.path.append( os.path.dirname( clang_path))
-        import clang.cindex
+        if e == 0:
+            log( 'Retrying import of clang using info from python2 {clang_path=}')
+            sys.path.append( os.path.dirname( clang_path))
+            import clang.cindex
+        else:
+            raise
 
 except Exception as e:
-    print(''
-            + f'{__file__}: Warning, failed to import clang.cindex: {e}\n'
-            + f'    We need Clang Python to build MuPDF python.\n'
-            + f'    For example install with:\n'
-            + f'        OpenBSD: pkg_add py3-llvm\n'
-            + f'        Linux:debian/devuan: apt install python-clang\n'
+    log('Warning: failed to import clang.cindex: {e=}\n'
+            f'We need Clang Python to build MuPDF python.\n'
+            f'Install with "pip install libclang" or use the --venv option, or:\n'
+            f'    OpenBSD: pkg_add py3-llvm\n'
+            f'    Linux:debian/devuan: apt install python-clang\n'
             )
     clang = None
 
@@ -643,7 +726,11 @@ class ClangInfo:
         clang.cindex.Config.set_library_file(). This appears to be necessary
         even when clang is installed as a standard package.
         '''
-        for version in 10, 9, 8, 7, 6,:
+        if g_windows:
+            # We require 'pip install libclang' which avoids the need to look
+            # for libclang.
+            return
+        for version in 11, 10, 9, 8, 7, 6,:
             ok = self._try_init_clang( version)
             if ok:
                 break
@@ -1395,7 +1482,20 @@ classextras = ClassExtras(
                             dev = {rename.function_call('fz_keep_device')}(dev);
                             return Device(dev);
                         }}
+                        ''',
+                        textwrap.dedent(f'''
+                        /*
+                        Custom wrapper for fz_begin_page().
+
+                        Called to start the process of writing a page to
+                        a document.
+
+                        mediabox: page size rectangle in points.
+
+                        Returns a {rename.class_('fz_device')} to write page contents to.
+                        */
                         '''),
+                        ),
                         ],
                 constructors_extra = [
                     ExtraConstructor(
@@ -1933,6 +2033,42 @@ classextras = ClassExtras(
                 opaque = True,
                 ),
 
+        fz_shade = ClassExtra(
+                methods_extra = [
+                    ExtraMethod( 'void',
+                        'paint_shade_no_cache(const Colorspace& override_cs, Matrix& ctm, const Pixmap& dest, ColorParams& color_params, Irect& bbox, const Overprint& eop)',
+                        '''
+                        {
+                            return mupdf::paint_shade(
+                                    this->m_internal,
+                                    override_cs.m_internal,
+                                    *(fz_matrix*) &ctm.a,
+                                    dest.m_internal,
+                                    *(fz_color_params*) &color_params.ri,
+                                    *(fz_irect*) &bbox.x0,
+                                    eop.m_internal,
+                                    NULL /*cache*/
+                                    );
+                        }
+                        ''',
+                        comment = f'/* Extra wrapper for fz_paint_shade(), passing cache=NULL. */',
+                        ),
+                ],
+                ),
+
+        fz_shade_color_cache = ClassExtra(
+                constructors_extra = [
+                    ExtraConstructor( '()',
+                        '''
+                        : m_internal( NULL)
+                        {
+                        }
+                        ''',
+                        comment = f'/* Constructor that sets m_internal to NULL; can then be passed to {rename.class_("fz_shade")}::{rename.method("fz_shade_color_cache", "fz_paint_shade")}(). */',
+                        ),
+                    ],
+                ),
+
         # Our wrappers of the fz_stext_* structs all have a default copy
         # constructor - there are no fz_keep_stext_*() functions.
         #
@@ -2461,6 +2597,9 @@ class Arg:
             self.name_python = f'{name}_'
         else:
             self.name_python = name
+
+    def __str__(self):
+        return f'Arg(cursor={self.cursor} name={self.name} alt={self.alt} out_param={self.out_param})'
 
 get_args_cache = dict()
 
@@ -3269,7 +3408,7 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
                     # For example this is required by mutool_draw.py because
                     # mudraw.c calls fz_set_separation_behavior().
                     #
-                    log( 'not excluding {fnname=} with enum fz_ param : {arg.cursor.spelling=} {arg.cursor.type.kind} {arg.cursor.type.get_canonical().kind=}')
+                    logx( 'not excluding {fnname=} with enum fz_ param : {arg.cursor.spelling=} {arg.cursor.type.kind} {arg.cursor.type.get_canonical().kind=}')
                 else:
                     exclude_reasons.append(
                             (
@@ -3813,7 +3952,7 @@ def class_find_constructor_fns( tu, classname, structname, base_name, extras):
                 # function fz_new_pixmap_from_alpha_channel() introduced
                 # 2021-05-07.
                 #
-                jlib.log('ignoring possible constructor because looks like copy constructor: {fnname}')
+                logx('ignoring possible constructor because looks like copy constructor: {fnname}')
             elif fnname in extras.constructor_excludes:
                 pass
             elif extras.pod and cursor.result_type.get_canonical().spelling == f'{structname}':
@@ -3827,7 +3966,7 @@ def class_find_constructor_fns( tu, classname, structname, base_name, extras):
                     extras.method_wrappers_static.append( fnname)
                 else:
                     if duplicate_type:
-                        log( 'not able to provide static factory fn {structname}::{fnname} because wrapper class is not copyable.')
+                        logx( 'not able to provide static factory fn {structname}::{fnname} because wrapper class is not copyable.')
                     log1( 'adding constructor wrapper for {fnname}')
                     constructor_fns.append( (fnname, cursor, duplicate_type))
             else:
@@ -4037,6 +4176,7 @@ def class_write_method(
         struct=None,
         duplicate_type=None,
         out_swig_python=None,
+        debug=None,
         ):
     '''
     Writes a method that calls <fnname>.
@@ -4074,9 +4214,12 @@ def class_write_method(
             If specified and there are one or more out-params, we write python
             code to overwride the default SWIG-generated method, to call our
             *_outparams_fn() alternative.
+        debug
+            Show extra diagnostics.
     '''
     assert fnname not in omit_methods
-    logx( '{classname=} {fnname=}')
+    if debug:
+        log( '{classname=} {fnname=}')
     assert fnname.startswith( ('fz_', 'pdf_'))
     fn_cursor = find_function( tu, fnname, method=True)
     if not fn_cursor:
@@ -4095,10 +4238,10 @@ def class_write_method(
     have_used_this = False
     num_out_params = 0
     comma = ''
-    debug = structname == 'pdf_document' and fnname == 'pdf_page_write'
+    #debug = structname == 'pdf_document' and fnname == 'pdf_page_write'
     for arg in get_args( tu, fn_cursor):
         if debug:
-            log( '*** {structname=} {arg=}')
+            log( 'Looking at {structname=} {fnname=} {arg=}')
         decl_h += comma
         decl_cpp += comma
         if arg.out_param:
@@ -4450,7 +4593,7 @@ def class_accessors(
             #    log( '{pointee_type=}')
             # We don't attempt to make accessors to function pointers.
             if cursor.type.get_pointee().get_canonical().kind == clang.cindex.TypeKind.FUNCTIONPROTO:
-                log( 'ignoring {cursor.spelling=} because pointer to FUNCTIONPROTO')
+                logx( 'ignoring {cursor.spelling=} because pointer to FUNCTIONPROTO')
                 continue
             elif pointee_type.startswith( ('fz_', 'pdf_')):
                 extras2 = get_fz_extras( pointee_type)
@@ -4466,7 +4609,7 @@ def class_accessors(
                     pointee_type_base = clip( pointee_type, ('fz_', 'pdf_'))
                     keep_function = f'{prefix(pointee_type)}keep_{pointee_type_base}'
                     if find_function( tu, keep_function, method=False):
-                        log( 'using {keep_function=}')
+                        logx( 'using {keep_function=}')
                     else:
                         log( 'cannot find {keep_function=}')
                         keep_function = None
@@ -4505,7 +4648,7 @@ def class_accessors(
                     # Don't let accessor return uint8_t because SWIG thinks it
                     # is a char*, leading to memory errors. Instead return int.
                     #
-                    log('Changing from {cursor.type.get_typedef_name()=} {cursor.type=} to int')
+                    logx('Changing from {cursor.type.get_typedef_name()=} {cursor.type=} to int')
                     decl = f'int {fn_args}'
                 else:
                     decl = declaration_text( cursor.type, fn_args)
@@ -4600,10 +4743,6 @@ def struct_to_string_fns(
     Writes functions for text representation of struct/wrapper-class members.
     '''
     out_h.write( f'\n')
-    out_h.write( f'/* Writes {structname}\'s members, labelled and inside (...), to a stream. */\n')
-    out_h.write( f'FZ_FUNCTION std::ostream& operator<< (std::ostream& out, const {structname}& rhs);\n')
-
-    out_h.write( f'\n')
     out_h.write( f'/* Returns string containing a {structname}\'s members, labelled and inside (...), using operator<<. */\n')
     out_h.write( f'FZ_FUNCTION std::string to_string_{structname}(const {structname}& s);\n')
 
@@ -4611,6 +4750,39 @@ def struct_to_string_fns(
     out_h.write( f'/* Returns string containing a {structname}\'s members, labelled and inside (...), using operator<<.\n')
     out_h.write( f'(Convenience overload). */\n')
     out_h.write( f'FZ_FUNCTION std::string to_string(const {structname}& s);\n')
+
+    out_cpp.write( f'\n')
+    out_cpp.write( f'FZ_FUNCTION std::string to_string_{structname}(const {structname}& s)\n')
+    out_cpp.write( f'{{\n')
+    out_cpp.write( f'    std::ostringstream buffer;\n')
+    out_cpp.write( f'    buffer << s;\n')
+    out_cpp.write( f'    return buffer.str();\n')
+    out_cpp.write( f'}}\n')
+
+    out_cpp.write( f'\n')
+    out_cpp.write( f'FZ_FUNCTION std::string to_string(const {structname}& s)\n')
+    out_cpp.write( f'{{\n')
+    out_cpp.write( f'    return to_string_{structname}(s);\n')
+    out_cpp.write( f'}}\n')
+
+
+def struct_to_string_streaming_fns(
+        tu,
+        namespace,
+        struct,
+        structname,
+        extras,
+        out_h,
+        out_cpp,
+        ):
+    '''
+    Writes operator<< functions for streaming text representation of C struct
+    members. Should be called at top-level (i.e. not inside 'namespace mupdf
+    {...}') in out_h and out_cpp.
+    '''
+    out_h.write( f'\n')
+    out_h.write( f'/* Writes {structname}\'s members, labelled and inside (...), to a stream. */\n')
+    out_h.write( f'FZ_FUNCTION std::ostream& operator<< (std::ostream& out, const {structname}& rhs);\n')
 
     out_cpp.write( f'\n')
     out_cpp.write( f'FZ_FUNCTION std::ostream& operator<< (std::ostream& out, const {structname}& rhs)\n')
@@ -4629,21 +4801,6 @@ def struct_to_string_fns(
     out_cpp.write( f'            << ")"\n');
     out_cpp.write( f'            ;\n')
     out_cpp.write( f'    return out;\n')
-    out_cpp.write( f'}}\n')
-    out_cpp.write( f'\n')
-
-    out_cpp.write( f'\n')
-    out_cpp.write( f'FZ_FUNCTION std::string to_string_{structname}(const {structname}& s)\n')
-    out_cpp.write( f'{{\n')
-    out_cpp.write( f'    std::ostringstream buffer;\n')
-    out_cpp.write( f'    buffer << s;\n')
-    out_cpp.write( f'    return buffer.str();\n')
-    out_cpp.write( f'}}\n')
-
-    out_cpp.write( f'\n')
-    out_cpp.write( f'FZ_FUNCTION std::string to_string(const {structname}& s)\n')
-    out_cpp.write( f'{{\n')
-    out_cpp.write( f'    return to_string_{structname}(s);\n')
     out_cpp.write( f'}}\n')
 
 
@@ -4688,6 +4845,7 @@ def class_wrapper(
         out_cpp,
         out_h_end,
         out_swig_python,
+        show_details,
         ):
     '''
     Creates source for a class called <classname> that wraps <struct>, with
@@ -4712,6 +4870,8 @@ def class_wrapper(
         out_h_end:
             Stream for text that should be put at the end of the generated
             header text.
+        show_details:
+            .
 
     Returns (is_container, has_to_string). is_container is true if generated
     class has custom begin() and end() methods; has_to_string is true if we
@@ -4883,6 +5043,7 @@ def class_wrapper(
                 out_cpp,
                 struct=struct,
                 out_swig_python=out_swig_python,
+                debug=show_details(fnname),
                 )
 
     # Custom methods.
@@ -5066,7 +5227,7 @@ def tabify( filename, text):
     return ret[:-1]
 
 
-def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_python, doit=True):
+def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_python, doit=True, show_details=None):
     '''
     Generates all .h and .cpp files.
 
@@ -5078,6 +5239,10 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
         Directory in which all generated files are placed.
     doit:
         For debugging only. If false, we don't actually write to any files.
+    show_details:
+        Callable taking one string arg naming a wrapped struct or function;
+        should return true if we should show extra information about the
+        specified identifier.
 
     Returns (tu, hs, cpps, fn_usage_filename, container_classnames, to_string_structnames, fn_usage, output_param_fns, c_functions).
         tu:
@@ -5128,13 +5293,13 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
         with open( temp_h, 'w') as f:
             f.write( '#include "mupdf/fitz.h"\n')
             f.write( '#include "mupdf/pdf.h"\n')
-        tu = index.parse(
-                    temp_h,
-                    args=(
-                            '-I', f'{dir_mupdf}/include',
-                            '-I', clang_info().include_path,
-                            ),
-                    )
+        args = []
+        args.append(['-I', f'{dir_mupdf}/include'])
+        if g_windows:
+            args = ('-I', f'{dir_mupdf}/include')
+        else:
+            args = ('-I', f'{dir_mupdf}/include', '-I', clang_info().include_path)
+        tu = index.parse( temp_h, args=args)
     finally:
         if os.path.isfile( temp_h):
             os.remove( temp_h)
@@ -5387,7 +5552,8 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
     #windows_def += 'LIBRARY mupdfcpp\n'    # This breaks things.
     windows_def += 'EXPORTS\n'
     for name, cursor in find_global_data_starting_with( tu, ('fz_', 'pdf_')):
-        log('global: {name=}')
+        if show_details(name):
+            log('global: {name=}')
         c_globals.append(name)
         windows_def += f'    {name} DATA\n'
 
@@ -5443,7 +5609,7 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
         #
         for cl, cu, s in classes:
             if cl == classname:
-                log( 'ignoring duplicate STRUCT_DECL for {structname=}')
+                logx( 'ignoring duplicate STRUCT_DECL for {structname=}')
                 break
         else:
             classes.append( (classname, cursor, structname))
@@ -5493,6 +5659,7 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
                     out_cpps.classes,
                     out_h_classes_end,
                     out_swig_python,
+                    show_details,
                     )
         if is_container:
             container_classnames.append( classname)
@@ -5506,6 +5673,20 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
             continue
         make_namespace_close( namespace, file)
 
+    # Write operator<< functions - these need to be outside the namespace.
+    #
+    for classname, struct, structname in classes:
+        extras = classextras.get( structname)
+        if extras.pod:
+            struct_to_string_streaming_fns(
+                    tu,
+                    namespace,
+                    struct,
+                    structname,
+                    extras,
+                    out_hs.functions,
+                    out_cpps.functions,
+                    )
 
     # Terminate multiple-inclusion guards in headers:
     #
@@ -6232,6 +6413,16 @@ def cpu_name():
     #log(f'sys.maxsize={hex(sys.maxsize)}')
     return f'x{32 if sys.maxsize == 2**31 else 64}'
 
+def abspath(path):
+    '''
+    Like os.path.absath() but converts backslashes to forward slashes; this
+    simplifies things on Windows - allows us to use '/' as directory separator
+    when constructing paths, which is simpler than using os.sep everywhere.
+    '''
+    ret = os.path.abspath(path)
+    ret = ret.replace('\\', '/')
+    return ret
+
 class BuildDirs:
     '''
     Locations of various generated files.
@@ -6239,17 +6430,17 @@ class BuildDirs:
     def __init__( self):
 
         # Assume we are in mupdf/scripts/.
-        file_ = os.path.abspath( __file__)
-        assert file_.endswith( f'{os.sep}scripts{os.sep}mupdfwrap.py'), \
+        file_ = abspath( __file__)
+        assert file_.endswith( f'/scripts/mupdfwrap.py'), \
                 'Unexpected __file__=%s file_=%s' % (__file__, file_)
-        dir_mupdf = os.path.abspath( f'{file_}/../../')
+        dir_mupdf = abspath( f'{file_}/../../')
         assert not dir_mupdf.endswith( '/')
 
         # Directories used with --build.
         self.dir_mupdf = dir_mupdf
 
         # Directory used with --ref.
-        self.ref_dir = os.path.abspath( f'{self.dir_mupdf}/mupdfwrap_ref')
+        self.ref_dir = abspath( f'{self.dir_mupdf}/mupdfwrap_ref')
         assert not self.ref_dir.endswith( '/')
 
         if g_windows:
@@ -6263,7 +6454,7 @@ class BuildDirs:
         '''
         Sets self.dir_so and also updates self.cpp_flags etc.
         '''
-        dir_so = os.path.abspath( dir_so)
+        dir_so = abspath( dir_so)
         self.dir_so = dir_so
 
         if 0: pass  # lgtm [py/unreachable-statement]
@@ -6424,12 +6615,16 @@ def main():
                 header_git = False
                 swig_c = None
                 swig_python = None
+                show_details = lambda name: False
                 jlib.log('{build_dirs.dir_so=}')
 
                 while 1:
                     actions = args.next()
                     if actions == '-f':
                         force_rebuild = True
+                    elif actions == '-d':
+                        d = args.next()
+                        show_details = lambda name: d in name
                     elif actions.startswith( '-'):
                         raise Exception( f'Unrecognised --build flag: {actions}')
                     else:
@@ -6526,6 +6721,7 @@ def main():
                                     header_git,
                                     swig_c,
                                     swig_python,
+                                    show_details=show_details,
                                     )
 
                             to_pickle( container_classnames,    f'{build_dirs.dir_mupdf}/platform/c++/container_classnames.pickle')
@@ -6555,6 +6751,7 @@ def main():
                                     f'{build_dirs.dir_mupdf}/platform/c++/include/', '.h',
                                     ):
                                 for path in jlib.get_filenames( dir_):
+                                    path = path.replace('\\', '/')
                                     _, ext = os.path.splitext( path)
                                     if ext not in ('.h', '.cpp'):
                                         continue
@@ -7262,6 +7459,37 @@ def main():
 
             elif arg == '--test-swig':
                 test_swig()
+
+            elif arg == '--venv':
+                venv = args.next()
+                args_tail = ''
+                while 1:
+                    try:
+                        args_tail += ' ' + args.next()
+                    except StopIteration:
+                        break
+                commands = (
+                        f'"{sys.executable}" -m venv {venv}',
+                        f'{venv}\\Scripts\\activate.bat',
+                        # Upgrading pip seems to fail on some Windows systems,
+                        # even when retrying after first failure.
+                        #f'(pip install --upgrade pip || pip install --upgrade pip)',
+                        f'pip install libclang',
+                        f'python {sys.argv[0]} {args_tail}',
+                        f'deactivate',
+                        )
+                command = '&&'.join(commands)
+                jlib.system(command, out='log', verbose=1)
+
+            elif arg == '--windows-cmd':
+                args_tail = ''
+                while 1:
+                    try:
+                        args_tail += f' {args.next()}'
+                    except StopIteration:
+                        break
+                command = f'cmd.exe /c "py {sys.argv[0]} {args_tail}"'
+                jlib.system(command, out='log', verbose=1)
 
             else:
                 raise Exception( f'unrecognised arg: {arg}')

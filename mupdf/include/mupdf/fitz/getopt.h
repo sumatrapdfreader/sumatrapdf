@@ -8,13 +8,4 @@ extern int fz_getopt(int nargc, char * const *nargv, const char *ostr);
 FZ_DATA extern int fz_optind;
 FZ_DATA extern char *fz_optarg;
 
-/**
-	Windows unicode versions.
-*/
-#ifdef _WIN32
-extern int fz_getoptw(int nargc, wchar_t * const *nargv, const wchar_t *ostr);
-extern int fz_optindw;
-extern wchar_t *fz_optargw;
-#endif
-
 #endif
