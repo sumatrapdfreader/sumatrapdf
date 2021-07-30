@@ -563,10 +563,9 @@ WCHAR* GetCurrentDir() {
     return buf;
 }
 
-void ChangeCurrDirToSystem32() {
-    auto sysDir = GetSystem32Dir();
-    SetCurrentDirectoryW(sysDir);
-    free(sysDir);
+void ChangeCurrDirToDocuments() {
+    WCHAR* dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
+    SetCurrentDirectoryW(dir);
 }
 
 static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {

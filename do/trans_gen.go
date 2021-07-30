@@ -210,7 +210,7 @@ func printIncompleteLangs(dirName string) {
 	}
 	langs := strings.Join(a, ", ")
 	count := fmt.Sprintf("%d out of %d", len(gIncompleteLangs), len(gLangs))
-	logf("\nIncomplete langs in %s: %s %s", fileNameFromDirName(dirName), count, langs)
+	logf("\nIncomplete langs in %s: %s %s\n", fileNameFromDirName(dirName), count, langs)
 }
 
 func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirName string) {

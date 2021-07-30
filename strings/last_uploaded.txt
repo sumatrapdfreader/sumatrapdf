@@ -260,6 +260,7 @@ Rotate &Left\tCtrl+Shift+-
 Rotate &Right\tCtrl+Shift++
 S&election
 S&quiggly
+SVG documents
 Save Annotations
 Save Embedded File...
 Save S&hortcut...\tCtrl+Shift+S

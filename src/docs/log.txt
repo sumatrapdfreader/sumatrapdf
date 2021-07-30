@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2074
   a regression from previous rewrite
   should have tested it more
+- change the start directory from System32 to Documents (fixes #2073)
 
 2021-07-29 Thu
 

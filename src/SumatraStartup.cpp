@@ -1253,8 +1253,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     //   launched by double-clicking on a file. In that case the OS sets
     //   current directory to where the file is which means we keep it open
     //   even if the file itself is closed.
-    //  c:\windows\system32 is a good directory to use
-    ChangeCurrDirToSystem32();
+    //  \Documents is a good directory to use
+    ChangeCurrDirToDocuments();
 
     CheckForUpdateAsync(win, UpdateCheck::Automatic);
 
