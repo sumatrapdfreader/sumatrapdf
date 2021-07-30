@@ -9,6 +9,14 @@ A daily log of changes and commentary. An experiment of sorts.
 - change the start directory from System32 to Documents (fixes #2073)
 - fix crash in NewChmTocItem() (fixes #2075)
   silly typo, should have tested
+- fix threading issue in how mupdf uses harfbuzz (fixes #2077)
+  they store mupdf context in a global fz_hb_secret, which gets
+  set during html layout in html_layout.c. They have locking
+  around it which works as long as all threads share ctx and their
+  locks. It doesn't work when multiple threads use different
+  fz_context (in Sumatra: opening multiple epub files at the same time)
+
+
 
 2021-07-29 Thu
 
