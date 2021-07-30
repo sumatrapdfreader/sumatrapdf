@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c7564f21fab1be284df7c0a65acb6f46ea7b7ac2
+729b2d681c287277459f8b162b262b2ca4045cb6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -351,7 +351,7 @@ br:Ver como livro\tCtrl+8
 bs:&Knjiški pregled\tCtrl+8
 by:Выгляд як &Кніга\tCtrl+8
 ca-xv:Visualització de &llibre\tCtrl+8
-ca:Visualització de &llibre\tCtrl+8
+ca:Vista de &llibre\tCtrl+8
 cn:书籍视图(&B)\tCtrl+8
 co:Cum’è un &libru\tCtrl+8
 cy:Golwg &Llyfr\tCtrl+8
@@ -495,30 +495,38 @@ uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
+ca:&Continua amb la instal·lació de la versió de 32 bits
 cn:继续安装 32 位版本(&C)
 es:&Continuar con la instalación de la versión de 32 bits
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
+nl:&Doorgaan met installeren van 32bit versie
 pl:&Kontynuuj instalację wersji 32-bitowej
 :&Copy Selection \tCtrl-C
 am:&Պատճենել ընտրումը \tCtrl-C
+ca:&Copia la selecció \tCtrl-C
 cn:复制所选内容(&C)\tCtrl+C
 es:&Copiar la selección \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
+nl:&Kopieer selectie \tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
+ca:&Copia al porta-retalls\tCtrl-C
 cn:复制到剪贴板(&C)\tCtrl+C
 es:&Copiar al portapapeles\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
+nl:&Kopieer naar Klembord\tCtrl-C
 pl:&Kopiuj do schowka\tCtrl-C
 :&Discard
 am:&Մերժել
+ca:&Descarta
 cn:取消(&D)
 it:Scarica
 kr:무시(&D)
+nl:&Weggooien
 pl:O&drzuć
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
@@ -2422,6 +2430,7 @@ am:&Հեռացնել պատմությունից
 ar:إزالة من التاريخ
 az:Tarixçədən &sil
 br:&Remover do Histórico
+ca:&Esborra-ho de l'historial
 cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
 cy:Tynnu o'&r Hanes
@@ -2520,14 +2529,18 @@ uz:&Quyidagicha saqlash...\tCtrl+S
 vn:Lưu thành...\tCtrl+S
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
+ca:Desa a un PDF &existent
 cn:保存到当前 PDF 文件(&S)
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
+nl:&Opslaan in bestaande PDF
 pl:&Zapisz w istniejącym pliku PDF
 :&Search With Google
 am:&Որոնել Google-ով
+ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
 it:Cerca con Google
+nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
 :&Settings
 am:&Կարգավորումներ
@@ -2721,6 +2734,7 @@ uz:&Bitta betdan\tCtrl+6
 vn:Trang đơn\tCtrl+6
 :&Stamp
 am:&Կնիք
+ca:&Segell
 cn:&图章
 de:&Stempel
 el:Σφραγίδα
@@ -2748,6 +2762,7 @@ pl:&Skreślenie
 :&Text
 am:&Գրվածք
 az:Mə&tn
+ca:&Text
 cn:&文本
 de:&Text
 el:Κείμενο
@@ -2820,12 +2835,15 @@ uk:&Тема
 vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
+ca:Tradueix amb &Google
 cn:使用谷歌翻译(&T)
 it:&Traduci con Google
 kr:Google로 번역(&T)
+nl:&Vertalen Met Google
 pl:&Tłumacz za pomocą Google
 :&Underline
 am:&Ընդգծված
+ca:&Subratlla
 cn:&下划线
 de:&Unterstreichen
 el:Υπογράμμιση
@@ -3508,7 +3526,7 @@ br:Adicionar página %s aos favoritos com outro nome (opcional):
 bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 by:Дадаць старонку %s у лепшыя закладкі з (калі патрэбна) імянем:
 ca-xv:Afegeix la pàgina %s als preferits amb el nom (opcional):
-ca:Afegeix la pàgina %s als preferits amb el nom (opcional):
+ca:Afegeix la pàgina %s als preferits amb un nom (opcional):
 cn:以 (可选) 名称将第 %s 页添加到收藏夹:
 co:Aghjunghje a pagina %s à i favuriti cù u nome (ozzionale) :
 cy:Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):
@@ -3681,7 +3699,7 @@ br:Avançado
 bs:Napredno
 by:Дадаткова
 ca-xv:Avançats
-ca:Avançats
+ca:Opcions avançades
 cn:高级
 co:Espertu
 cy:Uwch
@@ -3818,7 +3836,7 @@ br:Todos os documentos suportados
 bs:Svi podržani dokumenti
 by:Усе падтрымліваемыя дакументы
 ca-xv:Tots els documents suportats
-ca:Tots els documents suportats
+ca:Tots els documents compatibles
 cn:所有支持的文件
 co:Tutti i ducumenti accettati
 cy:Pob dogfen sy'n cael ei chynnal
@@ -3880,6 +3898,7 @@ ar:توضيحات
 az:Qeydlər
 bn:ব্যখা\r\n
 br:Anotações
+ca:Anotacions
 cn:标注
 co:Annutazioni
 cy:Anodiadau
@@ -3914,7 +3933,7 @@ br:Aplicativo:
 bs:Aplikacija:
 by:Прыкладанне:
 ca-xv:Programa:
-ca:Programa:
+ca:Aplicació:
 cn:应用程序:
 co:Appiecazione :
 cy:Rhaglen:
@@ -4386,6 +4405,7 @@ vn:Tự động kiểm tra cập nhật
 :Background Color:
 am:Խորքի գույնը.
 bn:পটভূমির রং:
+ca:Color de fons
 cn:背景色:
 de:Hintergrundfarbe:
 el:Χρώμα φόντου:
@@ -4408,7 +4428,7 @@ br:Ver como livro
 bs:Knjiški pregled
 by:Выгляд як кніга
 ca-xv:Visualització de llibre
-ca:Visualització de llibre
+ca:Vista de llibre
 cn:书籍视图
 co:Cum’è un libru
 cy:Golwg Llyfr
@@ -5078,7 +5098,7 @@ br:Mudar o idioma (Change Language)
 bs:Promijeni jezik (Change Language)
 by:Змяніць мову (Change Language)
 ca-xv:Canvia la llengua (Change Language)
-ca:Canvia la llengua (Change Language)
+ca:Canvia l'idioma
 cn:更改语言
 co:Cambià di lingua (Change Language)
 cy:Newid Iaith (Change Language)
@@ -5209,10 +5229,12 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
+ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
 es:Buscando actualizaciones...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
+nl:Controleer op Update...
 pl:Szukanie aktualizacji...
 :Circle
 am:Շրջան
@@ -5220,6 +5242,7 @@ ar:دائرة
 az:Dairə
 bn:কেন্দ্র
 br:Círculo
+ca:Cercle
 cn:圆
 co:Chjerchju
 cy:Cylchu
@@ -5320,7 +5343,7 @@ bg:Свиване на всички
 bn:সব বন্ধ করুন
 br:Minimizar tudo
 ca-xv:Replega-ho tot
-ca:Replega-ho tot
+ca:Redueixo-ho tot
 cn:全部折叠
 co:Tuttu piegà
 cy:Lleihau Popeth
@@ -5356,6 +5379,7 @@ uk:Згорнути всі
 am:Գույն.
 az:Rəng:
 bn:রং:
+ca:Color
 cn:颜色:
 de:Farbe:
 el:Χρώμα:
@@ -6180,7 +6204,7 @@ br:Não foi possível criar a pasta de instalação
 bs:Neuspješno kreiranje instalacijskog direktorija
 by:Немагчыма стварыць каталог для ўсталёўкі
 ca-xv:No es pot crear el directori d'instal·lació
-ca:No es pot crear el directori d'instal·lació
+ca:No es pot crear la carpeta d'instal·lació
 cn:无法创建安装目录
 co:Impussibule di creà u cartulare d’installazione
 cy:Methwyd creu'r cyfeiriadur gosod
@@ -6622,6 +6646,7 @@ ar:إزالة معيار سومرا للبحث غير ممكن
 az:Sumatra axtarış filtrini silmək mümkün olmadı
 bn:Sumatra search filter ইন্সটল হয়নি
 br:Não foi possível desinstalar o filtro do pesquisa do Sumatra
+ca:No s'ha pogut desinstal·lar el filtre de cerca del Sumatra
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
 cy:Methwyd gosod hidl chwilio Sumatra
@@ -6657,7 +6682,7 @@ br:Não foi possível desinstalar o plugin do navegador
 bs:Neuspješna instalacija plugina za browser
 by:Немагчыма знішчыць дадатак браўзера
 ca-xv:No es pot desinstal·lar el connector de navegador
-ca:No es pot desinstal·lar el connector de navegador
+ca:No es pot desinstal·lar el connector del navegador
 cn:无法卸载浏览器插件
 co:Impussibule di disinstallà l’estensione di u navigatore
 cy:Methwyd dadosod ategyn porwr
@@ -6775,13 +6800,16 @@ uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
+ca:Crea una anotació a &sota del cursor
 cn:在光标位置创建标注(&U)
 it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
+nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
+ca:Crea una anotació a la selecció
 cn:对所选内容创建标注
 de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
@@ -7565,21 +7593,26 @@ uz:Hujjat xossalari
 vn:Thuộc tính tập tin
 :Don't install
 am:Չտեղադրել
+ca:No ho instal·lis
 cn:不安装
 it:Non installare
 kr:설치하지 마십시오
+nl:Niet installeren
 pl:Nie instaluj
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
+ca:Baixa la versió de 64 bits
 cn:下载 64 位版本
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
+nl:Download 64bit versie
 pl:Pobierz wersję 64-bitową
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
 az:Tam ekran rejimindən çı&x
 br:Sair da Tela &Cheia
+ca:Surt de &la pantalla completa
 cn:退出全屏(&X)
 co:&Esce di u modu screnu sanu
 cy:Gadael Sgrin Lawn
@@ -7749,6 +7782,7 @@ ar:تعديل الشرح و التوضيح
 az:Qeydlərə düzəliş et
 bn:ব্যখা সমপাদন করুন
 br:Editar Anotações
+ca:Edita les anotacions
 cn:编辑标注
 co:&Mudificà l’annutazioni
 cy:Golygu Anodiadau
@@ -8892,7 +8926,7 @@ lv:FictionBook dokumenti
 mk:Документи на FictionBook
 my:Dokumen FictionBook
 ne:FictionBook कागजातहरु
-nl:FictionBookdocumenten
+nl:Fictie Boek documenten
 nn:FictionBook-dokumentar
 no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
@@ -8983,6 +9017,7 @@ ar:ملف مرفق
 az:Qoşma fayl
 bn:নথি সংযুক্তি
 br:Anexo de Arquivo
+ca:Fitxer adjunt
 cn:文件附件
 co:Schedariu attaccatu
 cy:Atodiad Ffeil
@@ -10750,6 +10785,7 @@ ar:صور
 az:Şəkillər
 bn:ছবি
 br:Imagens
+ca:Imatges
 cn:图像
 co:Fiure
 cy:Delweddau
@@ -10934,9 +10970,11 @@ uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 am:Տեղադրել և վեաթողարկել
+ca:Instal·la i reinicia
 cn:安装并启动
 it:Installa e ri-esegui
 kr:설치 후 재실행
+nl:Installeren + opnieuw starten
 pl:Zainstaluj i uruchom ponownie
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
@@ -11066,9 +11104,11 @@ uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
+ca:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 cn:在 64 位操作系统上安装 32 位 SumatraPDF
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
+nl:32bit SumatraPDF installeren op 64bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 :KB
 af:KB
@@ -11324,6 +11364,7 @@ ar:سطر
 az:Xətt
 bn:লাইন
 br:Linha
+ca:Línia
 cn:线段
 co:Linea
 cy:Llinell
@@ -11465,7 +11506,7 @@ mk:Дали да ја направам SumatraPDF основна апликац�
 mm:SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
 my:Jadikan aplikasi SumatraPDF pembaca utama bagi fail PDF?
 ne:SumatraPDF लाई PDF फाइलको पूर्वनिर्धारित अनुप्रयोग बनाउने?
-nl:SumatraPDF als standaardlezer van PDF-bestanden instellen?
+nl:SumatraPDF standaard programma voor PDF-bestanden?
 nn:Gjere SumatraPDF til standardprogram for PDF-filer?
 no:Gjøre SumatraPDF til standard åpningsprogram for PDF-filer?
 pa:PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੋਲੋ?
@@ -11862,9 +11903,11 @@ tw:新增視窗(&W)\tCtrl+N
 vn:Mở cửa sổ mới\tCtrl+N
 :New version available
 am:Մատչելի է նոր տարբերակ
+ca:Hi ha una versió nova disponible
 cn:有新版本
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
+nl:Nieuwe versie beschikbaar
 pl:Dostępna nowa wersja
 :Next Page
 af:Volgende Bladsy
@@ -12473,6 +12516,7 @@ am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
 az:İç PDF faylını aç
 br:Abrir PDF Embutido
+ca:Obre el PDF incrustat
 cn:打开嵌入式 PDF
 co:Apre u PDF incurpuratu
 cy:Agor PDF wedi'i Mewnosod
@@ -13890,6 +13934,7 @@ ar:مضلع
 az:Çoxbucaqlı
 bn:বহুভুজ
 br:Polígono
+ca:Polígon
 cn:多边形
 co:Poligonu
 cy:Polygon
@@ -15110,9 +15155,11 @@ uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :S&election
 am:Ը&նտրում
+ca:S&elecció
 cn:选择(&E)
 it:S&elezione
 kr:선택(&e)
+nl:S&electie
 pl:Z&aznaczenie
 :S&quiggly
 am:Ա&լիքավոր
@@ -15170,6 +15217,7 @@ am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
 az:İç faylı yadda saxla...
 br:Salvar Arquivo Embutido...
+ca:Desa el fitxer incrustat
 cn:保存嵌入式文件...
 co:Arregistrà u schedariu incurpuratu…
 cy:Cadw Ffeil wedi'i Mewnosod...
@@ -15257,13 +15305,16 @@ uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save annoations?
 am:Պահե՞լ մեկնաբանությունը:
+ca:Voleu desar les anotacions?
 cn:是否保存标注？
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
+nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
+ca:Desa els canvis a un PDF nou
 cn:另存为新的 PDF 文件
 de:Änderungen in einer neuen PDF-Datei speichern
 el:Αποθήκευση αλλαγών σε νέο PDF
@@ -15280,6 +15331,7 @@ ru:Сохранить изменения в новый PDF
 :Save changes to existing PDF
 am:Պահել փոփոխությունները առկա PDF-ում
 az:Dəyişiklikləri mövcud PDF-ə yaz
+ca:Desa els canvis a un PDF existent
 cn:保存至当前 PDF 文件
 de:Änderungen an vorhandener PDF speichern
 el:Αποθήκευση αλλαγών σε υπάρχον PDF
@@ -15295,21 +15347,27 @@ pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
+ca:Desa a un PDF &nou
 cn:保存至新的 PDF 文件(&N)
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
+nl:Opslaan in &nieuwe PDF
 pl:Zapisz w &nowym pliku PDF
 :Search With &Bing
 am:Որոնել &Bing-ով
+ca:Cerca amb el &Bing
 cn:使用必应搜索(&B)
 it:Cerca con &Bing
 kr:Bing으로 검색(&B)
+nl:Zoeken Met &Bing
 pl:Szukaj za pomocą &Bing
 :Search With &Google
 am:Որոնել &Google-ով
+ca:Cerca amb el &Google
 cn:使用谷歌搜索(&G)
 it:Cerca con &Google
 kr:Google로 검색(&G)
+nl:Zoeken Met &Google
 pl:Szukaj za pomocą &Google
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
@@ -15440,6 +15498,7 @@ uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
 am:Ընտրեք մեկնաբանությունը Խմբագրիչում
+ca:Selecciona l'anotació a l'editor
 cn:在编辑器中选择标注
 de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
@@ -15915,6 +15974,7 @@ am:Ցուցադրել &ոլորգոտիները
 ar:إظهار شريط التمرير
 az:&Sürüşdürmə zolaqlarını göstər
 br:Mostrar Barras de &Rolagem
+ca:Mostra les &barres de desplaçament
 cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
 cy:Dangos Barrau &Sgrolio
@@ -16112,6 +16172,7 @@ am:Ցուցադրել ոլո&րագոտիները
 ar:إظهار أشرطة التمرير
 az:Sürüşdürmə &zolaqlarını göstər
 br:Mostrar Barras de R&olagem
+ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
 cy:Dangos Barrau Sgr&olio
@@ -16372,9 +16433,11 @@ uz:Bitta bet
 vn:Trang đơn
 :Skip this version
 am:Բաց թողնել այս տարբերակը
+ca:Omet aquesta versió
 cn:跳过该版本
 it:Salta questa versione
 kr:이 버전 건너뛰기
+nl:Sla deze versie over
 pl:Pomiń tę wersję
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
@@ -16508,6 +16571,7 @@ am:Քառակուսի
 ar:مربع
 az:Kvadrat
 br:Quadrado
+ca:Quadrat
 cn:矩形
 co:Quadratu
 cy:Sgwâr
@@ -17174,7 +17238,7 @@ bs:SumatraPDF bi sad trebao biti vaš glavni čitač PDF fajlova
 by:Зараз SumatraPDF асацыявана з файламі PDF
 ca-xv:El SumatraPDF ha d'esser ara mateix el vostre lector PDF predeterminat
 ca:El SumatraPDF ha d'ésser ara mateix el vostre lector PDF predeterminat
-cn:现在 SumatraPDF 是默认 PDF 阅读器了
+cn:SumatraPDF 是当前默认的 PDF 阅读器了
 co:Avà SumatraPDF duveria esse u vostru lettore PDF predefinitu
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 cz:SumatraPDF by měl být výchozím PDF prohlížečem
@@ -17233,6 +17297,7 @@ am:Աջակցել SumatraPDF-ին
 ar:إدعم سومترا بي.دي.أف
 az:SumatraPDF-i dəstəklə
 br:Suporte o SumatraPDF
+ca:Suport a SumatraPDF
 cn:支持 SumatraPDF
 co:Sustene SumatraPDF
 cy:Cefnogi SumatraPDF
@@ -17541,7 +17606,7 @@ he:התקנת SumatraPDF הושלמה.
 hr:Hvala Vam! SumatraPDF je instaliran.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
 id:Terima kasih. SumatraPDF telah berhasil terinstal.
-it:Grazie! SumatraPDF installato correttamente.
+it:SumatraPDF installato correttamente.\nGrazie!
 ja:ありがとう！SumatraPDF はインストールされました。
 ka:გმადლობთ! SumatraPDF დაინსტალირდა.
 kr:야호! SumatraPDF가 설치됐습니다.
@@ -17764,9 +17829,11 @@ uz:Sarlavha:
 vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
+ca:Tradueix amb &Deepl
 cn:使用 DeepL 翻译(&D)
 it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
+nl:Vertalen Met &Deepl
 pl:Tłumacz za pomocą &DeepL
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
@@ -18019,6 +18086,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 am:Չպահված մեկնաբանություններ
+ca:Anotacions sense desar
 cn:未保存的标注
 de:Nicht gespeicherte Anmerkungen
 el:Μη αποθηκευμένα σχόλια
@@ -18033,8 +18101,10 @@ nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
+ca:Anotacions sense desar a "%s".
 cn:'%s' 中有未保存的标注
 it:Annotazioni non salvate in '%s'
+nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
 :Use &tabs
 am:Ավելացնել &ներդիրներ
@@ -18499,6 +18569,7 @@ uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 am:Դուք ունեք չպահված մեկնաբանություններ
+ca:Teniu anotacions sense desar
 cn:存在未保存的标注
 co:Avete annutazioni micca arregistrate
 de:Sie haben ungespeicherte Anmerkungen.
@@ -18516,13 +18587,17 @@ pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
+ca:Aquesta és la versió "%s" i ja està disponible la versió "%s".\nVoleu instal·lar una nova versió?
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
+nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
+ca:Esteu instal·lant el SumatraPDF de 32 bits en un sistema operatiu de 64 bits. Voleu descarregar la versió de 64 bits?
 cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
+nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
 :Zoom
 am:Դիտափոխել
