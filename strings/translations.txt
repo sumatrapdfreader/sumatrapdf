@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fb72fa2535d7033a1fdbac8a23828d3ceec28503
+80149495529d18e812b5c92408e2fd8dafb7a9f9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5191,7 +5191,7 @@ hi:नए संसकरण के लिए जांच करें(&C)
 hr:Provjeri ažuriranje
 hu:&Frissítések keresése
 id:Periksa Versi Terbar&u
-it:Controlla &aggiornamenti
+it:Controlla &aggiornamenti programma
 ja:更新のチェック(&U)
 ka:&განახლების შემოწმება
 kr:업데이트 확인(&U)
@@ -10031,7 +10031,7 @@ hi:एकल पृष्ठ को फ़िट करें
 hr:Namjesti po jednoj stranici
 hu:Teljes oldalankénti nézet
 id:Sesuaikan Halaman Tunggal
-it:Visualizza una pagina singola
+it:Visualizza come pagina singola
 ja:単一のページに合わせる
 ka:გვერდის მორგება ფანჯრის ზომაზე
 kr:한 페이지 맞춤
@@ -15175,6 +15175,8 @@ lt:Pabraukti &vingiuota linija
 lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
+:SVG documents
+pl:Documenty SVG
 :Save Annotations
 am:Պահել ծանոթագրությունը
 ar:حفظ الحواشي
@@ -16944,7 +16946,7 @@ hi:Sumatra पीडीएफ अपडेट
 hr:SumatraPDF ažuriranje
 hu:SumatraPDF frissítés
 id:Pembaruan SumatraPDF
-it:Controllo aggiornamenti SumatraPDF
+it:Aggiornamento SumatraPDF
 ja:SumatraPDF の更新
 ka:SumatraPDF-ის განახლება
 kr:SumatraPDF 업데이트
@@ -18331,7 +18333,7 @@ hi:वेबसाइट देखें(&W)
 hr:&Posjeti internetsku stranicu
 hu:&Weboldal
 id:&Kunjungi Situs
-it:Visita il sito &web
+it:Visita sito &web programma
 ja:Web サイトの訪問(&W)
 ka:&ვებ-გვერდზე გადასვლა
 kr:웹 사이트 방문(&V)
