@@ -23,14 +23,13 @@ static bool IsExternalUrl(const WCHAR* url) {
     return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
 }
 
-static TocItem* newChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, const WCHAR* url) {
+static TocItem* NewChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, const WCHAR* url) {
     auto res = new TocItem(parent, title, pageNo);
     if (!url) {
         return res;
     }
 
     IPageDestination* dest{nullptr};
-    dest->pageNo = pageNo;
     if (IsExternalUrl(url)) {
         dest = new PageDestinationURL(url);
     } else {
@@ -39,6 +38,7 @@ static TocItem* newChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, c
         pdest->name = str::Dup(url);
         dest = pdest;
     }
+    dest->pageNo = pageNo;
     CrashIf(!dest->kind);
 
     dest->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
@@ -46,8 +46,8 @@ static TocItem* newChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, c
     return res;
 }
 
-static TocItem* newChmNamedDest(const WCHAR* url, int pageNo) {
-    auto res = newChmTocItem(nullptr, url, pageNo, nullptr);
+static TocItem* NewChmNamedDest(const WCHAR* url, int pageNo) {
+    auto res = NewChmTocItem(nullptr, url, pageNo, nullptr);
     return res;
 }
 
@@ -188,7 +188,7 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
         // (same as for PDF, XPS, etc. documents)
         if (cb) {
             // TODO: optimize, create just destination
-            auto item = newChmTocItem(nullptr, nullptr, 0, pageUrl);
+            auto item = NewChmTocItem(nullptr, nullptr, 0, pageUrl);
             cb->GotoLink(item->dest);
             delete item;
         }
@@ -440,7 +440,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
     // instead pass the URL to the system's default browser
     if (url && cb) {
         // TODO: optimize, create just destination
-        auto item = newChmTocItem(nullptr, nullptr, 0, url);
+        auto item = NewChmTocItem(nullptr, nullptr, 0, url);
         cb->GotoLink(item->dest);
         delete item;
     }
@@ -504,7 +504,7 @@ IPageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     }
     if (pageNo > 0) {
         // TODO: make a function just for constructing a destination
-        auto tmp = newChmNamedDest(name, pageNo);
+        auto tmp = NewChmNamedDest(name, pageNo);
         auto res = tmp->dest;
         tmp->dest = nullptr;
         delete tmp;
@@ -529,7 +529,7 @@ TocTree* ChmModel::GetToc() {
 
     for (ChmTocTraceItem& ti : *tocTrace) {
         // TODO: set parent
-        TocItem* item = newChmTocItem(nullptr, ti.title, ti.pageNo, ti.url);
+        TocItem* item = NewChmTocItem(nullptr, ti.title, ti.pageNo, ti.url);
         item->id = ++idCounter;
         // append the item at the correct level
         CrashIf(ti.level < 1);
