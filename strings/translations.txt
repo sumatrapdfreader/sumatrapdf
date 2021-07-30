@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-80149495529d18e812b5c92408e2fd8dafb7a9f9
+9cf55ee996e1a9d172e6c3a1cd205748aab5bce7
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -409,6 +409,8 @@ vn:Xem dạng sách\tCtrl+8
 :&Caret
 am:&Ստեղն
 bn:&Caret
+ca-xv:&Cursor
+ca:&Cursor
 cn:&插入符
 de:&Cursor
 el:Αγκύλη
@@ -497,6 +499,7 @@ vn:Đóng tập tin\tCtrl+W
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
 ca:&Continua amb la instal·lació de la versió de 32 bits
 cn:继续安装 32 位版本(&C)
+de:Installation der 32-Bit-Version fortsetzen
 es:&Continuar con la instalación de la versión de 32 bits
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
@@ -506,6 +509,7 @@ pl:&Kontynuuj instalację wersji 32-bitowej
 am:&Պատճենել ընտրումը \tCtrl-C
 ca:&Copia la selecció \tCtrl-C
 cn:复制所选内容(&C)\tCtrl+C
+de:Auswahl kopieren \tStrg+C
 es:&Copiar la selección \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
@@ -515,6 +519,7 @@ pl:&Kopiuj zaznaczenie\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
 ca:&Copia al porta-retalls\tCtrl-C
 cn:复制到剪贴板(&C)\tCtrl+C
+de:In Zwischenablage kopieren\tStrg+C
 es:&Copiar al portapapeles\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
@@ -524,6 +529,8 @@ pl:&Kopiuj do schowka\tCtrl-C
 am:&Մերժել
 ca:&Descarta
 cn:取消(&D)
+de:Verwerfen
+es:&Descartar
 it:Scarica
 kr:무시(&D)
 nl:&Weggooien
@@ -616,7 +623,7 @@ cz:Pouz&e sudé stránky
 de:Nur &gerade Seiten
 dk:&Kun lige sider
 el:&Μόνο οι ζυγές σελίδες
-es:&Sólo páginas pares
+es:&Solo páginas pares
 et:&Vaid paarisleheküljed
 eu:&Orrialde bakoitiak bakarrik
 fa:فقط صفحات &زوج
@@ -680,7 +687,7 @@ cz:&Dvojstránky\tCtrl+7
 de:&Doppelseite\tStrg+7
 dk:&Modstående\tCtrl+7
 el:&Αντικριστές σελίδες\tCtrl+7
-es:&Caras opuestas\tCtrl+7
+es:&Doble página\tCtrl+7
 et:&Kaheleheküljeline\tCtrl+7
 eu:&Bi Aldeetatik\tKtrl+7
 fa:&دوصفحه‌ای\tCtrl+7
@@ -999,6 +1006,8 @@ uz:&Betlarni printerga moslash
 vn:Vừa trang in
 :&Free Text
 am:&Ազատ գրվածք
+ca-xv:Text &lliure
+ca:Text &lliure
 cn:&自由文本
 de:&Freitext
 el:Ελεύθερο κείμενο
@@ -1223,6 +1232,7 @@ uz:&Yordam
 vn:Trợ &giúp
 :&Highlight\ta
 am:&Գունանշում\ta
+ca:Ress&alta\ta
 cn:&高亮\tA
 de:&Hervorheben\ta
 el:Επισήμανση
@@ -2531,6 +2541,8 @@ vn:Lưu thành...\tCtrl+S
 am:&Պահել առկա PDF-ում
 ca:Desa a un PDF &existent
 cn:保存到当前 PDF 文件(&S)
+de:In bestehendes PDF &speichern
+es:&Guardar en un PDF existente
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
 nl:&Opslaan in bestaande PDF
@@ -2539,6 +2551,8 @@ pl:&Zapisz w istniejącym pliku PDF
 am:&Որոնել Google-ով
 ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
+de:Mit Google &suchen
+es:&Buscar con Google
 it:Cerca con Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
@@ -2748,6 +2762,7 @@ nl:&Stempel
 pl:Pie&częć
 :&Strike Out
 am:&Ջնջած
+ca:&Barra
 cn:&删除线
 de:Durchstreichen
 el:Εξάλειψη
@@ -2837,6 +2852,8 @@ vn:&Chủ đề
 am:&Թարգմանել Google-ով
 ca:Tradueix amb &Google
 cn:使用谷歌翻译(&T)
+de:Mi&t Google übersetzen
+es:&Traducir con Google
 it:&Traduci con Google
 kr:Google로 번역(&T)
 nl:&Vertalen Met Google
@@ -3400,7 +3417,7 @@ cz:Přidat oblíbenou položku
 de:Favoriten hinzufügen
 dk:Tilføj bogmærke
 el:Προσθήκη αγαπημένου
-es:Añadir favorito
+es:Añadir un favorito
 et:Lisa lemmik
 eu:Gehitu Gogokoena
 fa:افزودن به علاقه‌مندی‌ها
@@ -3468,7 +3485,7 @@ cz:Přidat stránku %s k oblíbeným...
 de:Seite %s zu Favoriten hinzufügen…
 dk:Føj side %s til foretrukne
 el:Προσθήκη της σελίδας %s στα αγαπημένα
-es:Añadir página %s a favoritos
+es:Añadir la página %s a los favoritos
 et:Lisa lehekülg %s lemmikutesse
 eu:Gehitu %s Orrialdea Gogokoenetara
 fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها
@@ -3534,7 +3551,7 @@ cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
 de:Seite %s zu Favoriten mit Namen (optional) hinzufügen:
 dk:Føj side %s til foretrukne med (valgfrit) navn:
 el:Προσθήκη σελίδας %s στα αγαπημένα με (προαιρετικό) όνομα:
-es:Añadir página %s a favoritos con nombre (opcional):
+es:Añadir la página %s a los favoritos con un nombre (opcional):
 et:Lisa lehekülg %s lemmikutesse (valikulise) nimega:
 eu:Gehitu %s Gogokoenetara (aukerazkoa) Izenarekin:
 fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها با نامی اختیاری:
@@ -3596,7 +3613,7 @@ cy:Ychwanegu tudalen %s i'r ffefrynnau\tCtrl+B
 de:Seite %s zu Favoriten hinzufügen\tStrg+B
 dk:Føj side %s til foretrukne\tCtrl+B
 el:Προσθήκη της σελίδας %s στα αγαπημένα\tCtrl+B
-es:Añadir página %s a favoritos\tCtrl+B
+es:Añadir la página %s a los favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
 ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
 gl:Engadir páxina %s aos favoritos\tCtrl+B
@@ -3639,7 +3656,7 @@ cz:Přidat k oblíbeným
 de:Zu Favoriten hinzufügen…
 dk:Føj til foretrukne
 el:Προσθήκη στα αγαπημένα
-es:Añadir a favoritos
+es:Añadir a los favoritos
 et:Lisa lemmikutesse
 eu:Gehitu Gogokoenetara
 fa:افزودن به علاقه‌مندی‌ها
@@ -3707,7 +3724,7 @@ cz:Upřesnit
 de:Erweitert
 dk:Avanceret
 el:Προχωρημένα
-es:Avanzado
+es:Opciones avanzadas
 et:Muud
 eu:Aurreratua
 fa:امکانات پیشرفته
@@ -3898,6 +3915,7 @@ ar:توضيحات
 az:Qeydlər
 bn:ব্যখা\r\n
 br:Anotações
+ca-xv:Anotacions
 ca:Anotacions
 cn:标注
 co:Annutazioni
@@ -4009,7 +4027,7 @@ cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 dk:Er du sikker på, at du vil afinstallere SumatraPDF?
 el:Είστε σίγουροι πως επιθυμείτε την απεγκατάσταση του SumatraPDF ;
-es:¿Seguro quiere desinstalar SumatraPDF?
+es:¿Seguro que quiere desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fa:آیا برای پاک کردن برنامه‌ی سوماترا پی‌دی‌اف مطمئن هستید؟
@@ -4076,7 +4094,7 @@ cz:Přidružit k PDF souborům?
 de:Mit PDF-Dateien verknüpfen?
 dk:Tilknyt med PDF-filer?
 el:Να γίνει συσχετισμός με τα αρχεία PDF;
-es:¿Asociar con archivos PDF?
+es:¿Asociar con los archivos PDF?
 et:Seosta PDF-failidega?
 eu:Elkartu PDF agiriekin?
 fa:پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
@@ -4405,6 +4423,7 @@ vn:Tự động kiểm tra cập nhật
 :Background Color:
 am:Խորքի գույնը.
 bn:পটভূমির রং:
+ca-xv:Color de fons
 ca:Color de fons
 cn:背景色:
 de:Hintergrundfarbe:
@@ -4504,7 +4523,7 @@ cz:Zástupce záložky
 de:Lesezeichen-Verknüpfungen
 dk:Gem genveje
 el:Συντομεύσεις σελιδοδεικτών
-es:Marcar atajos
+es:Atajos de los marcadores
 et:Järjehoidjate otseteed
 eu:Gogoekoenen Lasterbideak
 fa:میانبرهای نشانک
@@ -4569,7 +4588,7 @@ cz:Zástupce záložky na straně %s souboru %s
 de:Lesezeichen-Verknüpfung zu Seite %s von %s
 dk:Gem genvej til side %s af %s
 el:Συντόμευση σελιδοδείκτη στη σελίδα %s του %s
-es:Marcar atajo a la página %s de %s
+es:Atajo del marcador de la página %s de %s
 et:Tee järjehoidja otsetee leheküljele %s/%s
 eu:Lastermarka lasterbidea %s orrialdeari %s-tik
 fa:میانبر به نشانک صفحه‌ی %s از %s
@@ -5040,7 +5059,7 @@ cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazo
 de:Fehler beim Ausführen des Befehls für die Rückwärtssuche. Bitte überprüfen Sie die Einstellung.
 dk:Det lykkedes ikke at starte omvendt søgekommando. Tjek venligst kommandolinjen i indstillingerne
 el:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
-es:No se puede iniciar la orden de búsqueda inversa. Compruebe la línea de órdenes en la configuración.
+es:No se puede ejecutar la orden de búsqueda inversa. Compruebe la línea de órdenes en la configuración.
 et:Pööratud otsingu alustamine ebaõnnestus. Kontrolli seadistustest käsurida.
 eu:Ezinezkoa alderantzizko bilaketa komandoa hastea. Mesedez, egiaztatu komando lerroa ezarpenetan.
 fa:جستجوی معکوس قابل اجرا نیست. لطفاً تنظیمات خط فرمان را بازبینی کنید.
@@ -5106,7 +5125,7 @@ cz:Změnit jazyk... (Change Language)
 de:Sprache ändern… (Change Language)
 dk:Skift sprog (Change Language)
 el:Αλλαγή γλώσσας (Change Language)
-es:Cambiar idioma (Change Language)
+es:Cambiar el idioma
 et:Vali keel (Change Language)
 eu:Aldatu Hizkuntza (Change Language)
 fa:تغییر زبان (Change Language)
@@ -5231,6 +5250,7 @@ vn:Kiểm tra cập nhật
 am:Արդիացումների ստուգում...
 ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
+de:Nach einem Update suchen...
 es:Buscando actualizaciones...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
@@ -5242,6 +5262,7 @@ ar:دائرة
 az:Dairə
 bn:কেন্দ্র
 br:Círculo
+ca-xv:Cercle
 ca:Cercle
 cn:圆
 co:Chjerchju
@@ -5351,7 +5372,7 @@ cz:Sbalit vše
 de:Alles zuklappen
 dk:Skjul alt
 el:Σύμπτυξη όλων
-es:Ocultar Todo
+es:Contraer todo
 fr:Tout réduire
 ga:Laghdaigh Gach
 gl:Contraer todo
@@ -5379,6 +5400,7 @@ uk:Згорнути всі
 am:Գույն.
 az:Rəng:
 bn:রং:
+ca-xv:Color
 ca:Color
 cn:颜色:
 de:Farbe:
@@ -5613,7 +5635,7 @@ cz:Kniha průběžně
 de:Fortlaufende Buchansicht
 dk:Fortløbende bogvisning
 el:Συνεχόμενη προβολή βιβλίου
-es:Vista continua de libro
+es:Vista de libro continua
 et:Jätkuv raamatuvaade
 eu:Liburu Ikuspegi Jarraia
 fa:کتابی پیوسته
@@ -5751,7 +5773,7 @@ cz:Zaslat překlad
 de:Übersetzung beisteuern
 dk:Bidrag med oversættelse
 el:Βοηθήστε στη μετάφραση
-es:Contribuir con una traducción
+es:Contribuir a la traducción
 et:Osale tõlkimises
 eu:Lagundu Itzultzen
 fa:در ترجمه‌ی این برنامه کمک کنید
@@ -5820,7 +5842,7 @@ cz:Kopírovat &obrázek
 de:&Bild kopieren
 dk:Kopier &billede
 el:Αντιγραφή &εικόνας
-es:Copiar &imagen
+es:Copiar la &imagen
 et:Kopeeri &pilt
 eu:Kopiatu &Irudia
 fa:رونوشت از &عکس
@@ -5886,7 +5908,7 @@ cz:Kopírovat &adresu odkazu
 de:&Linkadresse kopieren
 dk:Kopier &linkadresse
 el:Αντιγραφή &διεύθυνσης
-es:Copiar dirección del en&lace
+es:Copiar la dirección del en&lace
 et:Kopeeri &lingi aadress
 eu:Kopiatu &Lotura Helbidea
 fa:رونوشت از نشانی &پیوند
@@ -6016,7 +6038,7 @@ cz:Kopírování textu bylo odepřeno (zkopírováno jako obraz)
 de:Text kopieren verweigert (nur als Bild kopiert)
 dk:Kopiering af tekst blev nægtet (kopierer kun som billede)
 el:Η αντιγραφή κειμένου δεν επετράπη (μόνο ως εικόνα)
-es:No se permite copiar como texto (copiando como imagen)
+es:No se permite la copia de texto (copiando como imagen)
 et:Teksti kopeerimine on keelatud (kopeerida saab vaid pildina)
 eu:Idazkia kopiatzea eragotzita (kopiatzea irudi bezala bakarrik)
 fa:رونوشت‌گیری از متن ممنوع است (رونوشت فقط به صورت عکس)
@@ -6148,7 +6170,7 @@ cz:Nelze získat vlastnosti tiskárny
 de:Konnte Druckereigenschaften nicht bestimmen
 dk:Printeregenskaber kunne ikke opnåes
 el:Δεν ήταν δυνατή η ανάκτηση των ιδιοτήτων του εκτυπωτή
-es:No se pudieron obtener las propiedades de la impresora
+es:No se han podido obtener las propiedades de la impresora
 et:Printeri sätteid ei õnnestunud lugeda
 eu:Ezinezkoa Irarkailu ezaugarriak lortzea
 fa:نمی‌توان خصوصیات چاپگر را به دست آورد
@@ -6212,7 +6234,7 @@ cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
 dk:Oprettelse af installationsmappe mislykkedes
 el:Αδυναμία δημιουργίας φακέλου εγκατάστασης
-es:No se pudo crear la carpeta de instalación
+es:No se ha podido crear la carpeta de instalación
 et:Ei suudetud luua paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea sortzea
 fa:نمی‌توان پوشه‌ی نصب را ایجاد کرد
@@ -6276,7 +6298,7 @@ cz:Tiskárnu nelze inicializovat
 de:Der Drucker konnte nicht initialisiert werden
 dk:Printer kunne ikke igangstartes
 el:Απέτυχε η έναρξη του εκτυπωτή
-es:No se pudo inicializar la impresora
+es:No se ha podido inicializar la impresora
 et:Printerit ei saa lähtestada
 eu:Ezinezkoa irarkailua abiaraztea
 fa:متأسفانه چاپگر منتخب در دسترس نیست
@@ -6341,7 +6363,7 @@ cz:Nelze nainstalovat PDF prohlížeč
 de:Konnte die PDF-Vorschau nicht installieren
 dk:Installation af PDF-fremviser mislykkedes
 el:Δεν ήταν δυνατή η εγκατάσταση του PDF previewer
-es:No se pudo instalar el previsualizador de PDF
+es:No se ha podido instalar el previsualizador de PDF
 et:Ei suudetud paigaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea ezartzea
 fa:نمی‌توان پیش‌نمایشگر PDF را نصب کرد.
@@ -6404,7 +6426,7 @@ cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF-Suchfilter nicht installieren
 dk:Installation af PDF-søgefilter mislykkedes
 el: Δεν ήταν δυνατή η εγκατάσταση του φίλτρου αναζήτησης PDF
-es:No se pudo instalar el filtro de búsqueda PDF
+es:No se ha podido instalar el filtro de búsqueda de PDF
 et:Ei suudetud paigaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
 fa:نمی‌توان فیلتر جستجوی PDF را نصب کرد.
@@ -6467,7 +6489,7 @@ cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
 dk:Installationsmappe kunne ikke fjernes
 el:Αδυναμία μετακίνησης φακέλου εγκατάστασης
-es:No se pudo eliminar la carpeta de instalación
+es:No se ha podido eliminar la carpeta de instalación
 et:Ei suudetud kustutada paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea kentzea
 fa:نمی‌توان پوشه‌ی نصب را حذف کرد
@@ -6530,7 +6552,7 @@ cz:Stránku nelze vykreslit
 de:Diese Seite kann leider nicht angezeigt werden
 dk:Det var ikke muligt at gengive siden
 el:Δε μπορεί να φορτωθεί η σελίδα
-es:No se pudo cargar la visualización de la página
+es:No se ha podido representar la página
 et:Lehekülje visualiseerimine ei õnnestunud
 eu:Ezinezkoa orrialdea aurkeztea
 fa:متأسفانه صفحه قابل نمایش نیست
@@ -6802,6 +6824,8 @@ vn:Không thể ghi %s vào đĩa
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
 ca:Crea una anotació a &sota del cursor
 cn:在光标位置创建标注(&U)
+de:Anmerkung &unter dem Cursor erstellen
+es:Crear una anotación &bajo el cursor
 it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
 nl:Maak Aantekening Onder Cursor
@@ -6813,7 +6837,7 @@ ca:Crea una anotació a la selecció
 cn:对所选内容创建标注
 de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
-es:Crear Anotación Desde Selección
+es:Crear una anotación con la selección
 hr:Napravite bilješku iz odabira
 it:Crea annotazione dalla selezione
 kr:선택한 곳에 주석 생성
@@ -7037,7 +7061,7 @@ cz:Vlastní &měřítko...\tCtrl+Y
 de:&Zoomfaktor…\tStrg+Y
 dk:Tilpasset &zoom...\tCtrl+Y
 el:&Προσαρμοσμένο ζουμ...\tCtrl+Y
-es:&Zoom personalizado...\tCtrl+Y
+es:&Apliación personalizada...\tCtrl+Y
 et:&Muu suurendus...\tCtrl+Y
 eu:Egile Zoo&ma...\tKtrl+Y
 fa:بزرگنمایی &سفارشی...\tCtrl+Y
@@ -7219,7 +7243,7 @@ cz:Výchozí &uspořádání:
 de:&Standardlayout:
 dk:Standard&layout:
 el:Προκαθορισμένη &διαμόρφωση:
-es:Apariencia pre&determinada:
+es:Distribución pre&determinada:
 et:Vaike&küljend:
 eu:Berezko &Egitura:
 fa:&صفحه‌بندی پیش‌فرض:
@@ -7349,7 +7373,7 @@ cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
 de:Standardanwendung im portablen Modus nicht veränderbar
 dk:Standard PDF-læser kan ikke ændres i mobil tilstand
 el:Δε μπορεί να γίνει συσχετισμός σε portable mode
-es:No se puede cambiar el lector PDF predeterminado en el modo portátil
+es:No se puede cambiar el lector de PDF predeterminado en el modo portable
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
 eu:Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu
 fa:نمی‌توان خواننده‌ی پیش‌فرض پرونده‌های PDF را در نسخه‌ی قابل حمل تغییر داد.
@@ -7595,6 +7619,8 @@ vn:Thuộc tính tập tin
 am:Չտեղադրել
 ca:No ho instal·lis
 cn:不安装
+de:Nicht installieren
+es:No instalar
 it:Non installare
 kr:설치하지 마십시오
 nl:Niet installeren
@@ -7603,6 +7629,8 @@ pl:Nie instaluj
 am:Ներբեռնել 64 բիթային տարբերակը
 ca:Baixa la versió de 64 bits
 cn:下载 64 位版本
+de:64-Bit-Version herunterladen
+es:Descargar la versión de 64 bits
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
 nl:Download 64bit versie
@@ -7619,7 +7647,7 @@ cy:Gadael Sgrin Lawn
 de:Vollbild verlassen
 dk:A&fslut fuldskærm
 el:Έξοδος από την πλήρη οθόνη
-es:Salir de pantalla completa
+es:&Salir de la pantalla completa
 et:V&älju Täisekraanilt
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
@@ -7728,7 +7756,7 @@ cz:Dokumenty EPUB
 de:EPUB-E-Bücher
 dk:EPUB-dokumenter
 el:Έγγραφα EPUB
-es:Libros electrónicos en EPUB
+es:Libros electrónicos EPUB
 et:EPUB-dokumendid
 eu:EPUB agiriak
 fa:EPUB اسناد
@@ -7789,7 +7817,7 @@ cy:Golygu Anodiadau
 de:Anmerkungen bearbeiten
 dk:Rediger anmærkninger
 el:Επεξεργασία Σχολίων
-es:Editar anotación
+es:Editar las anotaciones
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
@@ -7896,7 +7924,7 @@ cz:Zadejte heslo pro %s
 de:Bitte Passwort für %s eingeben
 dk:Indtast kodeord for %s
 el:Εισάγετε κωδικό για το %s
-es:Introduzca contraseña para %s
+es:Escriba la contraseña para %s
 et:Sisesta faili %s salasõna
 eu:Idatzi %s-rentzako sarhitza
 fa:کلمه‌ی عبور را برای %s وارد کنید
@@ -7964,7 +7992,7 @@ cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklick auf das PDF-Dokument wird der folgende Befehl ausgeführt:
 dk:Indtast den kommandolinje du vil bruge, når du dobbeltklikker på PDF-dokumentet:
 el:Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
-es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer doble-clic en el documento PDF:
+es:Escriba la línea de comandos que se invocará al hacer doble clic en el documento PDF:
 et:Sisesta käsurida, mis käivitatakse, kui teed topeltklõpsu PDF dokumendil:
 eu:Idatzi deitzeko agindu-lerroa PDF agirian klik-bikoitza egiten duzunean:
 fa:خط دستور را برای فراخوانی هنگام دوبار کلیک روی سند PDF وارد کنید:
@@ -8090,7 +8118,7 @@ cz:Rozbalit vše
 de:Alles aufklappen
 dk:Udvid
 el:Ανάπτυξη όλων
-es:Expandir Todo
+es:Expandir todo
 fr:Tout développer
 ga:Leathnaigh Gach
 gl:Expandir todo
@@ -8330,7 +8358,7 @@ cz:Dvojstránky
 de:Doppelseite
 dk:Modstående
 el:Δύο σελίδες
-es:Página doble
+es:Doble pàgina
 et:Kaheleheküljeline
 eu:Bi Aldeetatik
 fa:نمایش دوصفحه‌ای
@@ -8461,7 +8489,7 @@ cz:Nepodařilo se nastavit jako výchozí program na Windows 10
 de:Fehler beim Registrieren als Standardanwendung unter Windows 10
 dk:Kunne ikke registreres som standardprogram på win 10
 el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
-es:Fallo al registrar como programa por defecto en Windows 10.
+es:Error al registrar como programa por defecto en Windows 10.
 et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
 eu:Hutsegitea win 10-ean berezko programa bezala erregistratzerakoan
 fa:در پیشفرض قرارداد اپلیکیشن در ویندوز 10 خطایی رخ داده است
@@ -8518,7 +8546,7 @@ cz:Přejmenování souboru se nezdařilo!
 de:Die Datei konnte nicht umbenannt werden!
 dk:Fejl ved omdøbning af fil!
 el:Η μετονομασία του αρχείου απέτυχε!
-es:No se pudo renombrar el archivo.
+es:Error al renombrar el archivo.
 et:Faili ümbernimetamine ebaõnnestus.
 eu:Hutsegitea agiria berrizendatzerakoan!
 fa:تغییر نام پرونده ناموفق بود!
@@ -10785,6 +10813,7 @@ ar:صور
 az:Şəkillər
 bn:ছবি
 br:Imagens
+ca-xv:Imatges
 ca:Imatges
 cn:图像
 co:Fiure
@@ -10817,6 +10846,8 @@ ar:حبر
 az:Mürəkkəb
 bn:কালি
 br:Tinta
+ca-xv:Tinta
+ca:Tinta
 cn:墨迹
 co:Inchjostru
 cy:Inc
@@ -10972,6 +11003,8 @@ vn:Cài đặt SumatraPDF trong &thư mục:
 am:Տեղադրել և վեաթողարկել
 ca:Instal·la i reinicia
 cn:安装并启动
+de:Installieren und neu starten
+es:Instalar y reiniciar
 it:Installa e ri-esegui
 kr:설치 후 재실행
 nl:Installeren + opnieuw starten
@@ -11106,6 +11139,8 @@ vn:Đang cài đặt...
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
 ca:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 cn:在 64 位操作系统上安装 32 位 SumatraPDF
+de:32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem installieren
+es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
 nl:32bit SumatraPDF installeren op 64bit OS
@@ -11364,6 +11399,7 @@ ar:سطر
 az:Xətt
 bn:লাইন
 br:Linha
+ca-xv:Línia
 ca:Línia
 cn:线段
 co:Linea
@@ -11905,6 +11941,8 @@ vn:Mở cửa sổ mới\tCtrl+N
 am:Մատչելի է նոր տարբերակ
 ca:Hi ha una versió nova disponible
 cn:有新版本
+de:Neue Version verfügbar
+es:Nueva versión disponible
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
 nl:Nieuwe versie beschikbaar
@@ -13905,6 +13943,8 @@ am:Բազմագիծ
 ar:خط متعرج
 az:Qırıq xətt
 br:Polilinha
+ca-xv:Línia poligonal
+ca:Línia poligonal
 cn:折线
 co:Linea tronca
 cy:Llinell Poli
@@ -13934,6 +13974,7 @@ ar:مضلع
 az:Çoxbucaqlı
 bn:বহুভুজ
 br:Polígono
+ca-xv:Polígon
 ca:Polígon
 cn:多边形
 co:Poligonu
@@ -14733,6 +14774,7 @@ am:Փոփոխել
 ar:تنقيح
 az:Düzəliş et
 br:Redigir
+ca:Redacta
 cn:编辑
 co:Redige
 cy:Cuddio
@@ -15157,6 +15199,8 @@ vn:Quay phải\tCtrl+Shift++
 am:Ը&նտրում
 ca:S&elecció
 cn:选择(&E)
+de:Auswahl
+es:S&elección
 it:S&elezione
 kr:선택(&e)
 nl:S&electie
@@ -15164,6 +15208,7 @@ pl:Z&aznaczenie
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
+ca:&Giragonses
 cn:波浪线(&Q)
 de:Verschnörkelt
 el:Στριφογυριστό
@@ -15176,6 +15221,11 @@ lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
 :SVG documents
+am:SVG փաստաթղթեր
+ca:Documents SVG
+de:SVG-Dokumente
+es:Documentos SVG
+it:Documenti SVG
 pl:Documenty SVG
 :Save Annotations
 am:Պահել ծանոթագրությունը
@@ -15309,6 +15359,8 @@ vn:Lưu lối tắt...\tCtrl+Shift+S
 am:Պահե՞լ մեկնաբանությունը:
 ca:Voleu desar les anotacions?
 cn:是否保存标注？
+de:Anmerkungen speichern?
+es:¿Guardar las anotaciones?
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
 nl:Aantekeningen Opslaan?
@@ -15351,6 +15403,8 @@ ru:Сохранить изменения в существующий PDF
 am:Պահել &նոր PDF-ում
 ca:Desa a un PDF &nou
 cn:保存至新的 PDF 文件(&N)
+de:In &neue PDF speichern
+es:Guardar en un PDF &nuevo
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
 nl:Opslaan in &nieuwe PDF
@@ -15359,6 +15413,8 @@ pl:Zapisz w &nowym pliku PDF
 am:Որոնել &Bing-ով
 ca:Cerca amb el &Bing
 cn:使用必应搜索(&B)
+de:Mit &Bing suchen
+es:Buscar con &Bing
 it:Cerca con &Bing
 kr:Bing으로 검색(&B)
 nl:Zoeken Met &Bing
@@ -15367,6 +15423,8 @@ pl:Szukaj za pomocą &Bing
 am:Որոնել &Google-ով
 ca:Cerca amb el &Google
 cn:使用谷歌搜索(&G)
+de:Mit &Google suchen
+es:Buscar con &Google
 it:Cerca con &Google
 kr:Google로 검색(&G)
 nl:Zoeken Met &Google
@@ -16437,6 +16495,8 @@ vn:Trang đơn
 am:Բաց թողնել այս տարբերակը
 ca:Omet aquesta versió
 cn:跳过该版本
+de:Diese Version überspringen
+es:Omitir esta versión
 it:Salta questa versione
 kr:이 버전 건너뛰기
 nl:Sla deze versie over
@@ -17833,6 +17893,8 @@ vn:Tựa đề
 am:Թարգմանել &DeepL-ով
 ca:Tradueix amb &Deepl
 cn:使用 DeepL 翻译(&D)
+de:Mit &DeepL übersetzen
+es:Traducir con &DeepL
 it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
 nl:Vertalen Met &Deepl
@@ -18105,6 +18167,8 @@ pl:Niezapisane adnotacje
 am:Չպահված մեկնաբանություններ '%s'-ում
 ca:Anotacions sense desar a "%s".
 cn:'%s' 中有未保存的标注
+de:Nicht gespeicherte Anmerkungen in '%s'
+es:Anotaciones sin guardar en "%s"
 it:Annotazioni non salvate in '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
@@ -18591,6 +18655,8 @@ ru:Аннотации не сохранены
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
 ca:Aquesta és la versió "%s" i ja està disponible la versió "%s".\nVoleu instal·lar una nova versió?
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
+de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neue Version installieren?
+es:Esta es la versión "%s" y ya está disponible la versión "%s".\N¿Quiere instalar la versión nueva?
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
@@ -18598,6 +18664,8 @@ pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować no
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
 ca:Esteu instal·lant el SumatraPDF de 32 bits en un sistema operatiu de 64 bits. Voleu descarregar la versió de 64 bits?
 cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
+de:Sie installieren die 32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem.\nMöchten Sie die 64-Bit-Version herunterladen?
+es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
@@ -18891,7 +18959,7 @@ cz:[Zjištěna změna; probíhá aktualizace] %s
 de:[Datei wurde geändert; aktualisiere…] %s
 dk:[Ændringer konstateret; opdaterer] %s
 el:[Ανιχνεύτηκαν αλλαγές, ανανέωση] %s
-es:[Cambios detectados; actualizando] %s
+es:[Se han detectado cambios; actualizando] %s
 et:[Leiti muutuseid; värskendamine] %s
 eu:[Aldaketak atzeman dira, berritzen] %s
 fa:%s [تغییرات شناسایی شد؛ تازه‌سازی]
@@ -18957,7 +19025,7 @@ cz:kopírování textu
 de:Text kopieren
 dk:kopierer tekst
 el:αντιγραφή κειμένου
-es:copiado de texto
+es:copiando texto
 et:teksti kopeerimine
 eu:idazkia kopiatzen
 fa:در حال رونوشت متن
