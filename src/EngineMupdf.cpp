@@ -2255,7 +2255,8 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     }
 
     fz_link* link = fz_load_links(ctx, page);
-    pageInfo->retainedLinks = FixupPageLinks(link); // TOOD: is this necessary?
+    link = FixupPageLinks(link); // TOOD: is this necessary?
+    pageInfo->retainedLinks = link;
     while (link) {
         auto pel = NewFzLink(pageNo, link, nullptr);
         pageInfo->links.Append(pel);

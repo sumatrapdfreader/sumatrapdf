@@ -1,5 +1,12 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-07-30 Fri
+
+- fix links in EngineMupfd (fixes #2074)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2074
+  a regression from previous rewrite
+  should have tested it more
+
 2021-07-29 Thu
 
 - initialize translations earlier in installer / uninstaller to fix a crash
