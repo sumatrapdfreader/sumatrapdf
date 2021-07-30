@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-729b2d681c287277459f8b162b262b2ca4045cb6
+fb72fa2535d7033a1fdbac8a23828d3ceec28503
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -173,7 +173,7 @@ hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
-it:Opzioni &avanzate...
+it:Apri file opzioni &avanzate...
 ja:詳細設定(&A)
 jv:&Pilihan Terusan...
 ka:&გაფართოებული გაწყობები...
@@ -2328,7 +2328,7 @@ hi:इस दस्तावेज़ के लिए पासवर्ड &�
 hr:&Zapamti lozinku za ovaj dokument
 hu:Jelszó megjegyzése a dokumentumhoz
 id:&Ingat kata sandi untuk dokumen ini
-it:&Ricorda la password per questo documento
+it:&Memorizza password per questo documento
 ja:このドキュメントのパスワードを記憶する(&R)
 ka:ამ დოკუმენტისთვის პაროლის და&მახსოვრება
 kr:이 문서의 비밀번호 기억(&R)
@@ -2392,7 +2392,7 @@ hi:प्रत्येक दस्तावेज़ के लिए इन 
 hr:&Upamti ove postavke za svaki pojedini dokument
 hu:Eltérő nézetbeállítások megjegyzése dokumentumonként
 id:&Ingat setelan ini untuk setiap dokumen
-it:&Ricorda queste impostazioni per ogni documento
+it:&Memorizza queste impostazioni per ogni documento
 ja:ドキュメントごとにこれらの設定を記憶する(&R)
 ka:ამ პარამეტრების ყველა დოკუმენტზე &მორგება
 kr:각 문서의 설정 기억(&R)
@@ -3148,7 +3148,7 @@ hi:&बडा करें
 hr:&Uvećaj
 hu:&Nagyítás
 id:&Perbesar
-it:&Zoom
+it:&Ingrandimento
 ja:ズーム(&Z)
 ka:მას&შტაბი
 kr:배율(&Z)
@@ -4298,7 +4298,7 @@ hi:स्वचालित
 hr:Automatsko
 hu:Automatikus
 id:Otomatis
-it:Automatica
+it:Automatico
 ja:自動
 jv:Otomatis
 ka:ავტომატური
@@ -9830,7 +9830,7 @@ hi:अनुरूप करें
 hr:Prilagodi stranici
 hu:Teljes oldal
 id:Sesuaikan Dengan Halaman
-it:Adatta alla pagina
+it:Adatta a pagina intera
 ja:ページに合わせる
 ka:გვერდის ზომაზე მორგება
 kr:페이지(세로) 맞춤
@@ -9900,7 +9900,7 @@ hi:चौड़ाई के अनुसार
 hr:Namjesti po širini
 hu:Oldalszélesség
 id:Sesuaikan Dengan Lebar
-it:Adatta alla larghezza della pagina
+it:Adatta a larghezza pagina
 ja:幅に合わせる
 ka:სიგანეზე მორგება
 kr:너비(가로) 맞춤
@@ -9967,7 +9967,7 @@ hi:उपयुक्त चौड़ाई के साथ पृष्ठ ल
 hr:Namjesti po širini i prikaži stranice slijedno
 hu:Oldalszélességhez igazítás + folyamatos nézet
 id:Sesuaikan Lebar Dan Tampilkan Halaman Secara Kontinu
-it:Adatta alla larghezza e visualizza le pagine in modo continuo
+it:Adatta a larghezza pagina e visualizza pagine in modo continuo
 ja:幅に合わせて連続してページを表示する
 ka:ფანჯრის სიგანეზე მორგება და გვერდების შეუწყვეტლივ ჩვენება
 kr:지속적인 너비 맞춤과 페이지 보기
@@ -14786,7 +14786,7 @@ hi:खोले गये फाइल &याद रखें
 hr:Upamti &otvorene datoteke
 hu:Korábban megnyitott fájlok listájának tárolása
 id:Ingat &berkas yang pernah dibuka
-it:Ric&orda file aperti
+it:Salva elenc&o file aperti recentemente
 ja:開かれたファイルを記憶する(&O)
 ka:&ფაილის პოზიციის დამახსოვრება
 kr:열었던 파일(들) 기억(&O)
@@ -18697,7 +18697,7 @@ hi:ब​ङा करें
 hr:Uvećaj
 hu:Nagyítás
 id:Perbesar
-it:Zoom +
+it:Ingrandisci
 ja:拡大
 jv:Nggedhekake
 ka:გადიდება
@@ -18768,7 +18768,7 @@ hi:छोटा करें
 hr:Umanji
 hu:Kicsinyítés
 id:Perkecil
-it:Zoom -
+it:Riduci
 ja:縮小
 jv:Nyilikake
 ka:დაპატარავება
