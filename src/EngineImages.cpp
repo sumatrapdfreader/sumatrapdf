@@ -85,6 +85,11 @@ struct ImagePage {
     }
 };
 
+struct ImagePageInfo {
+    Vec<IPageElement*> allElements;
+    RectF mediabox;
+};
+
 class EngineImages : public EngineBase {
   public:
     EngineImages();
@@ -118,12 +123,11 @@ class EngineImages : public EngineBase {
         return page != nullptr;
     }
 
-    // protected:
     ScopedComPtr<IStream> fileStream;
 
     CRITICAL_SECTION cacheAccess;
     Vec<ImagePage*> pageCache;
-    Vec<RectF> mediaboxes;
+    Vec<ImagePageInfo*> pages;
 
     void GetTransform(Matrix& m, int pageNo, float zoom, int rotation);
 
@@ -150,6 +154,7 @@ EngineImages::~EngineImages() {
         CrashIf(lastPage->refs != 1);
         DropPage(lastPage, true);
     }
+    DeleteVecMembers(pages);
     LeaveCriticalSection(&cacheAccess);
     DeleteCriticalSection(&cacheAccess);
 }
@@ -157,10 +162,12 @@ EngineImages::~EngineImages() {
 RectF EngineImages::PageMediabox(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > pageCount));
     int n = pageNo - 1;
-    if (mediaboxes.at(n).IsEmpty()) {
-        mediaboxes.at(n) = LoadMediabox(pageNo);
+    ImagePageInfo* pi = pages[n];
+    RectF& mbox = pi->mediabox;
+    if (mbox.IsEmpty()) {
+        mbox = LoadMediabox(pageNo);
     }
-    return mediaboxes.at(n);
+    return mbox;
 }
 
 RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
@@ -245,43 +252,38 @@ RectF EngineImages::Transform(const RectF& rect, int pageNo, float zoom, int rot
     return res;
 }
 
-static IPageElement* NewImageElement(ImagePage* page) {
+static IPageElement* NewImageElement(int pageNo, float dx, float dy) {
     auto res = new PageElementImage();
-    res->pageNo = page->pageNo;
-    int dx = page->bmp->GetWidth();
-    int dy = page->bmp->GetHeight();
-    res->rect = RectF(0, 0, (float)dx, (float)dy);
-    res->imageID = page->pageNo;
+    res->pageNo = pageNo;
+    res->rect = RectF(0, 0, dx, dy);
+    res->imageID = pageNo;
     return res;
 }
 
 Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
-    // TODO: this is inefficient because we don't need to
-    // decompress the image. just need to know the size
-    // TODO: use mediaboxes
-    Vec<IPageElement*> els;
-    ImagePage* page = GetPage(pageNo);
-    if (!page) {
-        return els;
+    CrashIf(pageNo < 1 || pageNo > pageCount);
+    auto* pi = pages[pageNo - 1];
+    if (pi->allElements.size() > 0) {
+        return pi->allElements;
     }
+    auto mbox = PageMediabox(pageNo);
 
-    auto el = NewImageElement(page);
-    els.Append(el);
-    DropPage(page, false);
-    return els;
+    float dx = mbox.dx;
+    float dy = mbox.dy;
+    auto el = NewImageElement(pageNo, dx, dy);
+    pi->allElements.Append(el);
+    return pi->allElements;
 }
 
 IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
     if (!PageMediabox(pageNo).Contains(pt)) {
         return nullptr;
     }
-    ImagePage* page = GetPage(pageNo);
-    if (!page) {
+    auto* pi = pages[pageNo - 1];
+    if (pi->allElements.size() == 0) {
         return nullptr;
     }
-    auto res = NewImageElement(page);
-    DropPage(page, false);
-    return res;
+    return pi->allElements[0];
 }
 
 RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
@@ -402,8 +404,8 @@ class EngineImage : public EngineImages {
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
-    Bitmap* image = nullptr;
-    const WCHAR* fileExt = nullptr;
+    Bitmap* image{nullptr};
+    const WCHAR* fileExt{nullptr};
 
     bool LoadSingleFile(const WCHAR* fileName);
     bool LoadFromStream(IStream* stream);
@@ -487,15 +489,21 @@ bool EngineImage::FinishLoading() {
     }
     fileDPI = image->GetHorizontalResolution();
 
-    mediaboxes.Append(RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight()));
-    CrashIf(mediaboxes.size() != 1);
+    auto pi = new ImagePageInfo();
+    pi->mediabox = RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
+    pages.Append(pi);
+    CrashIf(pages.size() != 1);
 
     // extract all frames from multi-page TIFFs and animated GIFs
     if (str::Eq(fileExt, L".tif") || str::Eq(fileExt, L".gif")) {
         const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
-        mediaboxes.AppendBlanks(image->GetFrameCount(frameDimension) - 1);
+        int nFrames = image->GetFrameCount(frameDimension) - 1;
+        for (int i = 0; i < nFrames; i++) {
+            pi = new ImagePageInfo();
+            pages.Append(pi);
+        }
     }
-    pageCount = (int)mediaboxes.size();
+    pageCount = pages.isize();
 
     CrashIf(!fileExt);
     return fileExt != nullptr;
@@ -724,13 +732,19 @@ static bool LoadImageDir(EngineImageDir* e, const WCHAR* dir) {
         }
     }
 
-    if (e->pageFileNames.size() == 0) {
+    int nFiles = e->pageFileNames.isize();
+    if (nFiles == 0) {
         return false;
     }
+
     e->pageFileNames.SortNatural();
 
-    e->mediaboxes.AppendBlanks(e->pageFileNames.size());
-    e->pageCount = (int)e->mediaboxes.size();
+    for (int i = 0; i < nFiles; i++) {
+        ImagePageInfo* pi = new ImagePageInfo();
+        e->pages.Append(pi);
+    }
+
+    e->pageCount = nFiles;
 
     // TODO: better handle the case where images have different resolutions
     ImagePage* page = e->GetPage(1);
@@ -1036,21 +1050,21 @@ bool EngineCbx::FinishLoading() {
         json::Parse(comment.data(), this);
     }
 
-    size_t nFiles = pageFiles.size();
+    int nFiles = pageFiles.isize();
     if (nFiles == 0) {
+        delete cbxFile;
+        cbxFile = nullptr;
         return false;
     }
 
     std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
 
-    mediaboxes.AppendBlanks(nFiles);
-    files = std::move(pageFiles);
-    pageCount = (int)nFiles;
-    if (pageCount == 0) {
-        delete cbxFile;
-        cbxFile = nullptr;
-        return false;
+    for (int i = 0; i < nFiles; i++) {
+        auto pi = new ImagePageInfo();
+        pages.Append(pi);
     }
+    files = std::move(pageFiles);
+    pageCount = nFiles;
 
     TocItem* root = nullptr;
     TocItem* curr = nullptr;

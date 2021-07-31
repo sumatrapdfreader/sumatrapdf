@@ -18,6 +18,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - change EngineBase::GetElements() to return Vec<> instead of Vec<>*
 - don't leak in EngineDjVu::GetElements()
 - set defaultExt in EngineMupdf based on opened file
+- don't leak in EngineImages::GetElemens()
 
 2021-07-29 Thu
 
