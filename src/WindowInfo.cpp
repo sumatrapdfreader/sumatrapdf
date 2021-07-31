@@ -49,6 +49,8 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
+#include "utils/Log.h"
+
 struct LinkHandler : ILinkHandler {
     WindowInfo* win{nullptr};
 
@@ -364,26 +366,12 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
 
     HWND hwndFrame = win->hwndFrame;
     Kind kind = dest->GetKind();
-    if (kindDestinationNone == kind) {
-        return;
-    }
 
     if (kindDestinationScrollTo == kind) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(dest);
         return;
     }
-
-    if (kindDestinationLaunchURL == kind) {
-        return;
-    }
-
-    if (kindDestinationLaunchEmbedded == kind) {
-        // Not handled here. Must use context menu to trigger launching
-        // embedded files
-        return;
-    }
-
     if (kindDestinationLaunchFile == kind) {
         PageDestinationFile* pdf = (PageDestinationFile*)dest;
         // LaunchFile only opens files inside SumatraPDF
@@ -393,8 +381,17 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         str::Free(tmpPath);
         return;
     }
+    if (kindDestinationLaunchEmbedded == kind) {
+        // Not handled here. Must use context menu to trigger launching
+        // embedded files
+        return;
+    }
+    if (kindDestinationLaunchURL == kind) {
+        return;
+    }
 
-    CrashIf(nullptr != kind);
+    logf("LinkHandler::GotoLink: unhandled kind %s\n", kind);
+    ReportIf(true);
 }
 
 void LinkHandler::ScrollTo(IPageDestination* dest) {
@@ -446,7 +443,12 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
         return;
     }
 
-    AutoFreeWstr path = path::Normalize(pathOrig);
+    // TODO: make it a function
+    AutoFreeWstr path = str::Replace(pathOrig, L"/", L"\\");
+    if (str::StartsWith(path, L".\\")) {
+        path.Set(str::Dup(path + 2));
+    }
+
     WCHAR drive;
     bool isAbsPath = str::StartsWith(path, L"\\") || str::Parse(path, L"%c:\\", &drive);
     if (isAbsPath) {
