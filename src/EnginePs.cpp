@@ -315,7 +315,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->BenchLoadPage(pageNo);
     }
 
-    Vec<IPageElement*>* GetElements(int pageNo) override {
+    Vec<IPageElement*> GetElements(int pageNo) override {
         return pdfEngine->GetElements(pageNo);
     }
 

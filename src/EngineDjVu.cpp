@@ -259,7 +259,7 @@ class EngineDjVu : public EngineBase {
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override;
 
-    Vec<IPageElement*>* GetElements(int pageNo) override;
+    Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
@@ -901,8 +901,9 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     return res;
 }
 
-Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
+Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > PageCount());
+    Vec<IPageElement*> els;
     if (annos && miniexp_dummy == annos[pageNo - 1]) {
         ScopedCritSec scope(&gDjVuContext->lock);
         while ((annos[pageNo - 1] = ddjvu_document_get_pageanno(doc, pageNo - 1)) == miniexp_dummy) {
@@ -910,12 +911,11 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
         }
     }
     if (!annos || !annos[pageNo - 1]) {
-        return nullptr;
+        return els;
     }
 
     ScopedCritSec scope(&gDjVuContext->lock);
 
-    auto els = new Vec<IPageElement*>();
     Rect page = PageMediabox(pageNo).Round();
 
     ddjvu_status_t status;
@@ -997,7 +997,7 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
             logf("invalid link '%s', pages in document: %d\n", tmp ? tmp : "", PageCount());
             ReportIf(true);
         }
-        els->Append(el);
+        els.Append(el);
     }
     ddjvu_free(links);
 
@@ -1005,28 +1005,18 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
 }
 
 IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
-    Vec<IPageElement*>* els = GetElements(pageNo);
-    if (!els) {
-        return nullptr;
-    }
+    Vec<IPageElement*> els = GetElements(pageNo);
 
+    int n = els.isize();
     // elements are extracted bottom-to-top but are accessed
-    // in top-to-bottom order, so reverse the list first
-    els->Reverse();
-
-    IPageElement* el = nullptr;
-    for (size_t i = 0; i < els->size() && !el; i++) {
-        if (els->at(i)->GetRect().Contains(pt)) {
-            el = els->at(i);
+    // in top-to-bottom order, so search bacwards
+    for (int i = n - 1; i >= 0; i--) {
+        auto el = els.at(i);
+        if (el->GetRect().Contains(pt)) {
+            return el;
         }
     }
-
-    if (el) {
-        els->Remove(el);
-    }
-    delete els;
-
-    return el;
+    return nullptr;
 }
 
 bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {

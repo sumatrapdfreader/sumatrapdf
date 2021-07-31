@@ -96,7 +96,7 @@ class EngineEbook : public EngineBase {
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
 
-    Vec<IPageElement*>* GetElements(int pageNo) override;
+    Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override {
         CrashIf(true);
@@ -447,8 +447,8 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     return NewEbookLink(link, rect, dest, pageNo);
 }
 
-Vec<IPageElement*>* EngineEbook::GetElements(int pageNo) {
-    auto els = new Vec<IPageElement*>();
+Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
+    Vec<IPageElement*> els;
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
     size_t n = pageInstrs->size();
@@ -457,11 +457,11 @@ Vec<IPageElement*>* EngineEbook::GetElements(int pageNo) {
         if (DrawInstrType::Image == i.type) {
             auto box = GetInstrBbox(i, pageBorder);
             auto el = NewImageDataElement(pageNo, box, (int)idx);
-            els->Append(el);
+            els.Append(el);
         } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmpty()) {
             IPageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
             if (link) {
-                els->Append(link);
+                els.Append(link);
             }
         }
     }
@@ -494,23 +494,13 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
 
 IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
     auto els = GetElements(pageNo);
-    if (!els) {
-        return nullptr;
-    }
 
-    IPageElement* el = nullptr;
-    for (size_t i = 0; i < els->size() && !el; i++) {
-        if (els->at(i)->GetRect().Contains(pt)) {
-            el = els->at(i);
+    for (auto& el : els) {
+        if (el->GetRect().Contains(pt)) {
+            return el;
         }
     }
-
-    if (el) {
-        els->Remove(el);
-    }
-    delete els;
-
-    return el;
+    return nullptr;
 }
 
 IPageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {

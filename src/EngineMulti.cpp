@@ -65,7 +65,7 @@ class EngineMulti : public EngineBase {
 
     bool BenchLoadPage(int pageNo) override;
 
-    Vec<IPageElement*>* GetElements(int pageNo) override;
+    Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
@@ -162,7 +162,7 @@ bool EngineMulti::BenchLoadPage(int pageNo) {
     return e->BenchLoadPage(pageNo);
 }
 
-Vec<IPageElement*>* EngineMulti::GetElements(int pageNo) {
+Vec<IPageElement*> EngineMulti::GetElements(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->GetElements(pageNo);
 }

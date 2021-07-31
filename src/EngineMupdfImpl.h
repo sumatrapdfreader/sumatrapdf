@@ -23,6 +23,9 @@ struct FzPageInfo {
     // comments are made out of annotations
     Vec<IPageElement*> comments;
 
+    Vec<IPageElement*> allElements;
+    bool gotAllElements{false};
+
     RectF mediabox{};
     Vec<FitzPageImageInfo> images;
 
@@ -56,7 +59,7 @@ class EngineMupdf : public EngineBase {
 
     bool BenchLoadPage(int pageNo) override;
 
-    Vec<IPageElement*>* GetElements(int pageNo) override;
+    Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 

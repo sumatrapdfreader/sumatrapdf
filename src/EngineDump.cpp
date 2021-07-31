@@ -283,14 +283,14 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
         FreePageText(&pageText);
     }
 
-    Vec<IPageElement*>* els = engine->GetElements(pageNo);
-    if (els && els->size() > 0) {
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    if (els.size() > 0) {
         Out1("\t\t<PageElements>\n");
-        for (size_t i = 0; i < els->size(); i++) {
-            RectF rect = els->at(i)->GetRect();
-            Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", ElementTypeToStr(els->at(i)),
-                rect.x, rect.y, rect.dx, rect.dy);
-            IPageDestination* dest = els->at(i)->AsLink();
+        for (auto& el : els) {
+            RectF rect = el->GetRect();
+            Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", ElementTypeToStr(el), rect.x,
+                rect.y, rect.dx, rect.dy);
+            IPageDestination* dest = el->AsLink();
             if (dest) {
                 if (dest->GetKind() != nullptr) {
                     Out("\t\t\t\tLinkType=\"%s\"\n", dest->GetKind());
@@ -307,7 +307,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
                 }
             }
-            AutoFree name(Escape(els->at(i)->GetValue()));
+            AutoFree name(Escape(el->GetValue()));
             if (name.Get()) {
                 Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
             }
@@ -315,7 +315,6 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
         }
         Out1("\t\t</PageElements>\n");
     }
-    delete els;
 
     Out1("\t</Page>\n");
 }

@@ -922,10 +922,12 @@ static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     return nullptr;
 }
 
-static void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
-    if (!pageInfo) {
+static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
+    if (!pageInfo || pageInfo->gotAllElements) {
         return;
     }
+    pageInfo->gotAllElements = true;
+    auto& els = pageInfo->allElements;
 
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
@@ -934,23 +936,23 @@ static void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
         auto image = img.imageElement;
-        els->Append(image);
+        els.Append(image);
         imageIdx++;
     }
 
     for (auto& pel : pageInfo->links) {
-        els->Append(pel);
+        els.Append(pel);
     }
 
     for (auto& pel : pageInfo->autoLinks) {
-        els->Append(pel);
+        els.Append(pel);
     }
 
     for (auto& comment : pageInfo->comments) {
-        els->Append(comment);
+        els.Append(comment);
     }
 
-    els->Reverse();
+    els.Reverse();
 }
 
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
@@ -2458,15 +2460,14 @@ IPageElement* EngineMupdf::GetElementAtPos(int pageNo, PointF pt) {
     return FzGetElementAtPos(pageInfo, pt);
 }
 
-Vec<IPageElement*>* EngineMupdf::GetElements(int pageNo) {
+Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
     auto pageInfo = GetFzPageInfoFast(pageNo);
-    auto res = new Vec<IPageElement*>();
-    FzGetElements(res, pageInfo);
-    if (res->IsEmpty()) {
-        delete res;
-        return nullptr;
+    if (!pageInfo) {
+        return Vec<IPageElement*>();
     }
-    return res;
+
+    BuildGetElementsInfo(pageInfo);
+    return pageInfo->allElements;
 }
 
 #if 0

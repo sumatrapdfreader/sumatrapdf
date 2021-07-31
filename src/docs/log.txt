@@ -15,8 +15,7 @@ A daily log of changes and commentary. An experiment of sorts.
   around it which works as long as all threads share ctx and their
   locks. It doesn't work when multiple threads use different
   fz_context (in Sumatra: opening multiple epub files at the same time)
-
-
+- change EngineBase::GetElements() to return Vec<> instead of Vec<>*
 
 2021-07-29 Thu
 

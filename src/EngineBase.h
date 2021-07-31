@@ -451,7 +451,7 @@ class EngineBase {
 
     // returns a list of all available elements for this page
     // caller must delete the Vec but not the elements inside the vector
-    virtual Vec<IPageElement*>* GetElements(int pageNo) = 0;
+    virtual Vec<IPageElement*> GetElements(int pageNo) = 0;
 
     // returns the element at a given point or nullptr if there's none
     virtual IPageElement* GetElementAtPos(int pageNo, PointF pt) = 0;

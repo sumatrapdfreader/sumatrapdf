@@ -105,7 +105,7 @@ class EngineImages : public EngineBase {
         return false;
     }
 
-    Vec<IPageElement*>* GetElements(int pageNo) override;
+    Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
@@ -255,18 +255,18 @@ static IPageElement* NewImageElement(ImagePage* page) {
     return res;
 }
 
-Vec<IPageElement*>* EngineImages::GetElements(int pageNo) {
+Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
     // TODO: this is inefficient because we don't need to
     // decompress the image. just need to know the size
     // TODO: use mediaboxes
+    Vec<IPageElement*> els;
     ImagePage* page = GetPage(pageNo);
     if (!page) {
-        return nullptr;
+        return els;
     }
 
-    auto els = new Vec<IPageElement*>();
     auto el = NewImageElement(page);
-    els->Append(el);
+    els.Append(el);
     DropPage(page, false);
     return els;
 }

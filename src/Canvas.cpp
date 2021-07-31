@@ -733,23 +733,18 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
             continue;
         }
 
-        Vec<IPageElement*>* els = dm->GetEngine()->GetElements(pageNo);
-        if (!els) {
-            continue;
-        }
+        Vec<IPageElement*> els = dm->GetEngine()->GetElements(pageNo);
 
-        for (size_t i = 0; i < els->size(); i++) {
-            if (els->at(i)->Is(kindPageElementImage)) {
+        for (auto& el : els) {
+            if (el->Is(kindPageElementImage)) {
                 continue;
             }
-            Rect rect = dm->CvtToScreen(pageNo, els->at(i)->GetRect());
+            Rect rect = dm->CvtToScreen(pageNo, el->GetRect());
             Rect isect = viewPortRect.Intersect(rect);
             if (!isect.IsEmpty()) {
                 PaintRect(hdc, isect);
             }
         }
-        // we don't own the members
-        delete els;
     }
 
     DeletePen(SelectObject(hdc, oldPen));
