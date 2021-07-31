@@ -24,12 +24,19 @@ extern Kind kindEngineTxt;
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum class RenderTarget { View, Print, Export };
 
-enum PageLayoutType {
-    Layout_Single = 0,
-    Layout_Facing = 1,
-    Layout_Book = 2,
-    Layout_R2L = 16,
-    Layout_NonContinuous = 32
+struct PageLayout {
+    enum class Type {
+        Single = 0,
+        Facing,
+        Book,
+    };
+    PageLayout() = default;
+    explicit PageLayout(Type t) {
+        type = t;
+    }
+    Type type{Type::Single};
+    bool r2l{false};
+    bool nonContinuous{false};
 };
 
 extern Kind kindDestinationNone;
@@ -408,7 +415,7 @@ class EngineBase {
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
     const WCHAR* defaultExt{nullptr};
-    PageLayoutType preferredLayout = Layout_Single;
+    PageLayout preferredLayout;
     float fileDPI = 96.0f;
     bool isImageCollection{false};
     bool allowsPrinting{true};

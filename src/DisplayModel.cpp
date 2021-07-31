@@ -333,30 +333,30 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
 
     displayMode = newDisplayMode;
     presDisplayMode = newDisplayMode;
-    PageLayoutType layout = engine->preferredLayout;
+    PageLayout layout = engine->preferredLayout;
     if (DisplayMode::Automatic == displayMode) {
-        switch (layout & ~Layout_R2L) {
-            case Layout_Single:
+        switch (layout.type) {
+            case PageLayout::Type::Single:
                 displayMode = DisplayMode::Continuous;
+                if (layout.nonContinuous) {
+                    displayMode = DisplayMode::SinglePage;
+                }
                 break;
-            case Layout_Facing:
+            case PageLayout::Type::Facing:
                 displayMode = DisplayMode::ContinuousFacing;
+                if (layout.nonContinuous) {
+                    displayMode = DisplayMode::Facing;
+                }
                 break;
-            case Layout_Book:
+            case PageLayout::Type::Book:
                 displayMode = DisplayMode::ContinuousBookView;
-                break;
-            case Layout_Single | Layout_NonContinuous:
-                displayMode = DisplayMode::SinglePage;
-                break;
-            case Layout_Facing | Layout_NonContinuous:
-                displayMode = DisplayMode::Facing;
-                break;
-            case Layout_Book | Layout_NonContinuous:
-                displayMode = DisplayMode::BookView;
+                if (layout.nonContinuous) {
+                    displayMode = DisplayMode::BookView;
+                }
                 break;
         }
     }
-    displayR2L = (layout & Layout_R2L) != 0;
+    displayR2L = layout.r2l;
     BuildPagesInfo();
 }
 

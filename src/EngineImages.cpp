@@ -141,7 +141,8 @@ class EngineImages : public EngineBase {
 EngineImages::EngineImages() {
     kind = kindEngineImage;
 
-    preferredLayout = Layout_NonContinuous;
+    preferredLayout = PageLayout();
+    preferredLayout.nonContinuous = true;
     isImageCollection = true;
 
     InitializeCriticalSection(&cacheAccess);

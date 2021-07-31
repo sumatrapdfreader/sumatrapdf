@@ -177,7 +177,7 @@ EngineEbook::EngineEbook() {
     // "B Format" paperback
     pageRect = RectF(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
     pageBorder = 0.4f * GetFileDPI();
-    preferredLayout = Layout_Book;
+    preferredLayout = preferredLayout = PageLayout(PageLayout::Type::Book);
     InitializeCriticalSection(&pagesAccess);
 }
 
@@ -762,10 +762,9 @@ bool EngineEpub::FinishLoading() {
         return false;
     }
 
+    preferredLayout = PageLayout(PageLayout::Type::Book);
     if (doc->IsRTL()) {
-        preferredLayout = (PageLayoutType)(Layout_Book | Layout_R2L);
-    } else {
-        preferredLayout = Layout_Book;
+        preferredLayout.r2l = true;
     }
 
     return pageCount > 0;

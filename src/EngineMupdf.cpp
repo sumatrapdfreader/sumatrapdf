@@ -1803,8 +1803,8 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     return ok;
 }
 
-static PageLayoutType GetPreferredLayout(fz_context* ctx, fz_document* doc) {
-    PageLayoutType layout = Layout_Single;
+static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
+    PageLayout layout(PageLayout::Type::Single);
     pdf_document* pdfdoc = pdf_specifics(ctx, doc);
     if (!pdfdoc) {
         return layout;
@@ -1821,9 +1821,9 @@ static PageLayoutType GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     fz_try(ctx) {
         const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
         if (str::EndsWith(name, "Right")) {
-            layout = Layout_Book;
+            layout.type = PageLayout::Type::Book;
         } else if (str::StartsWith(name, "Two")) {
-            layout = Layout_Facing;
+            layout.type = PageLayout::Type::Facing;
         }
     }
     fz_catch(ctx) {
@@ -1833,7 +1833,7 @@ static PageLayoutType GetPreferredLayout(fz_context* ctx, fz_document* doc) {
         pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
         const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
         if (str::Eq(direction, "R2L")) {
-            layout = (PageLayoutType)(layout | Layout_R2L);
+            layout.r2l = true;
         }
     }
     fz_catch(ctx) {
