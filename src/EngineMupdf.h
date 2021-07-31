@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 bool IsEngineMupdfSupportedFileType(Kind);
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, PasswordUI* pwdUI = nullptr);
+EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, int displayDPI, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromStream(IStream* stream, PasswordUI* pwdUI = nullptr);
 
 std::span<u8> LoadEmbeddedPDFFile(const WCHAR* path);

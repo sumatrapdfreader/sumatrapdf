@@ -29,14 +29,9 @@ extern "C" {
 
 #include "utils/Log.h"
 
-// I'm a monkey, no idea why kZoom level, just know it's good
-// maybe for reflowable should reflow at desired pixel size with
-// identity ctm when rendering
-constexpr float kZoom = 2.5f;
-static float layoutDx = 420.f * kZoom;
-static float layoutDy = 595.f * kZoom;
-// static float layoutFontEm = 11.f * kZoom;
-static float layoutFontEm = 19.f;
+static float layoutDxPt = 420.f;
+static float layoutDyPt = 595.f;
+static float layoutFontEm = 11.f;
 
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
@@ -308,6 +303,15 @@ fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
     }
 
     return ctm;
+}
+
+// TODO: maybe make dpi a float as well
+static float DpiScale(float x, int dpi) {
+    CrashIf(dpi < 70.f);
+    // TODO: maybe implement step scaling like mupdf
+    float res = x * (float)dpi;
+    res = res / 96.f;
+    return res;
 }
 
 static float FzRectOverlap(fz_rect r1, fz_rect r2) {
@@ -1754,8 +1758,6 @@ bool EngineMupdf::Load(IStream* stream, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-#include "utils/Dpi.h"
-
 bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI, const WCHAR* path) {
     if (!stm) {
         return false;
@@ -1769,9 +1771,10 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI, const WCHAR*
         }
         _doc = fz_open_document_with_stream(ctx, fileNameA, stm);
         pdfdoc = pdf_specifics(ctx, _doc);
-        // TODO: maybe delay this call?
-        // float fontEm = DpiScale(layoutFontEm);
-        fz_layout_document(ctx, _doc, layoutDx, layoutDy, layoutFontEm);
+        float dx = DpiScale(layoutDxPt, displayDPI);
+        float dy = DpiScale(layoutDyPt, displayDPI);
+        float fontDy = DpiScale(layoutFontEm, displayDPI);
+        fz_layout_document(ctx, _doc, dx, dy, fontDy);
     }
     fz_always(ctx) {
         fz_drop_stream(ctx, stm);
@@ -3244,27 +3247,6 @@ int EngineMupdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     return nAnnots;
 }
 
-EngineBase* EngineMupdf::CreateFromFile(const WCHAR* path, PasswordUI* pwdUI) {
-    if (str::IsEmpty(path)) {
-        return nullptr;
-    }
-    EngineMupdf* engine = new EngineMupdf();
-    if (!engine->Load(path, pwdUI)) {
-        delete engine;
-        return nullptr;
-    }
-    return engine;
-}
-
-EngineBase* EngineMupdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
-    EngineMupdf* engine = new EngineMupdf();
-    if (!engine->Load(stream, pwdUI)) {
-        delete engine;
-        return nullptr;
-    }
-    return engine;
-}
-
 bool IsEngineMupdfSupportedFileType(Kind kind) {
     if (kind == kindFilePDF) {
         return true;
@@ -3290,12 +3272,29 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
     return false;
 }
 
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, PasswordUI* pwdUI) {
-    return EngineMupdf::CreateFromFile(path, pwdUI);
+EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, int displayDPI, PasswordUI* pwdUI) {
+    if (str::IsEmpty(path)) {
+        return nullptr;
+    }
+    EngineMupdf* engine = new EngineMupdf();
+    if (displayDPI < 70) {
+        displayDPI = 96;
+    }
+    engine->displayDPI = displayDPI;
+    if (!engine->Load(path, pwdUI)) {
+        delete engine;
+        return nullptr;
+    }
+    return engine;
 }
 
 EngineBase* CreateEngineMupdfFromStream(IStream* stream, PasswordUI* pwdUI) {
-    return EngineMupdf::CreateFromStream(stream, pwdUI);
+    EngineMupdf* engine = new EngineMupdf();
+    if (!engine->Load(stream, pwdUI)) {
+        delete engine;
+        return nullptr;
+    }
+    return engine;
 }
 
 int EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {

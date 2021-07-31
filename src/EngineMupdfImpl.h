@@ -73,9 +73,6 @@ class EngineMupdf : public EngineBase {
 
     int GetAnnotations(Vec<Annotation*>* annotsOut);
 
-    static EngineBase* CreateFromFile(const WCHAR* path, PasswordUI* pwdUI);
-    static EngineBase* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
-
     // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION* ctxAccess;
@@ -83,10 +80,9 @@ class EngineMupdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
-
     fz_context* ctx{nullptr};
     fz_locks_context fz_locks_ctx;
+    int displayDPI{96};
     fz_document* _doc{nullptr};
     pdf_document* pdfdoc{nullptr};
     fz_stream* _docStream{nullptr};
@@ -104,6 +100,7 @@ class EngineMupdf : public EngineBase {
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr, const WCHAR* path = nullptr);
     bool FinishLoading();
+    RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
 
     FzPageInfo* GetFzPageInfoFast(int pageNo);
     FzPageInfo* GetFzPageInfo(int pageNo, bool loadQuick);

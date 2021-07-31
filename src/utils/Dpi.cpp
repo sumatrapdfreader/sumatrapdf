@@ -45,9 +45,12 @@ void DpiReset() {
     gLastDpi = 0;
 }
 
+#include <shellscalingapi.h>
+#pragma comment(lib, "Shcore")
+
 // Uncached getting of dpi
 int DpiGetForHwnd(HWND hwnd) {
-    if (DynGetDpiForWindow) {
+    if (false && DynGetDpiForWindow) {
         // HWND_DESKTOP is 0 and not really HWND
         // GetDpiForWindow(HWND_DESKTOP) returns 0
         if (hwnd == HWND_DESKTOP) {
@@ -65,13 +68,12 @@ int DpiGetForHwnd(HWND hwnd) {
     // TODO: only available in 8.1
     uint dpiX = 96, dpiY = 96;
     HMONITOR h = MonitorFromWindow(hwnd, 0);
-    if (h != nullptr ) {
-        HRESULT hr = GetDpiForMonitor(h, 0 /* MDT_Effective_DPI */, &dpiX, &dpiY);
+    if (h != nullptr) {
+        HRESULT hr = GetDpiForMonitor(h, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
         if (hr == S_OK) {
-            scaleX = (int)dpiX;
-            scaleY = (int)dpiY;
-            return;
+            return (int)dpiX;
         }
+    }
 #endif
 
     ScopedGetDC dc(hwnd);

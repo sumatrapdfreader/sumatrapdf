@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/GuessFileType.h"
+#include "utils/Dpi.h"
 
 #include "SumatraConfig.h"
 #include "Annotation.h"
@@ -63,9 +64,10 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     if (!kind) {
         return nullptr;
     }
+    int dpi = DpiGet(nullptr);
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
-        engine = CreateEngineMupdfFromFile(path, pwdUI);
+        engine = CreateEngineMupdfFromFile(path, dpi, pwdUI);
         return engine;
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
@@ -101,7 +103,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         return engine;
     }
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
-        engine = CreateEngineMupdfFromFile(path, pwdUI);
+        engine = CreateEngineMupdfFromFile(path, dpi, pwdUI);
         return engine;
     }
 #if 0
