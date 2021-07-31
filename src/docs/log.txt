@@ -1,5 +1,12 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+
+2021-07-31 Sat
+
+- convert PageLayoutType into struct PageLayout
+- fix the logic to expand first item in toc tree if at most 2 top-level nodes
+  was broken during TreeModel refactor
+
 2021-07-30 Fri
 
 - fix links in EngineMupfd (fixes #2074)
@@ -20,7 +27,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - set defaultExt in EngineMupdf based on opened file
 - don't leak in EngineImages::GetElemens()
 - restore opening of file:// links in PDF files
-- convert PageLayoutType into struct PageLayout
+
 
 2021-07-29 Thu
 

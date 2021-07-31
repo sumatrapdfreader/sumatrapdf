@@ -86,14 +86,6 @@ struct PageDestinationDjVu : IPageDestination {
         value = strconv::Utf8ToWstr(link);
         return value;
     }
-    IPageDestination* Clone() {
-        auto res = new PageDestinationDjVu(link, nullptr);
-        res->pageNo = pageNo;
-        res->rect = rect;
-        res->zoom = zoom;
-        res->value = str::Dup(value);
-        return res;
-    }
 };
 
 // the link format can be any of

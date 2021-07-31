@@ -65,24 +65,6 @@ IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, const WCHAR*
     return res;
 }
 
-IPageDestination* PageDestination::Clone() {
-    auto res = new PageDestination();
-    CrashIf(!kind);
-    res->kind = kind;
-    res->pageNo = GetPageNo();
-    res->rect = GetRect();
-    res->value = str::Dup(GetValue());
-    res->name = str::Dup(GetName());
-    return res;
-}
-
-IPageDestination* ClonePageDestination(IPageDestination* dest) {
-    if (!dest) {
-        return nullptr;
-    }
-    return dest->Clone();
-}
-
 bool IPageElement::Is(Kind expectedKind) {
     Kind kind = GetKind();
     return kind == expectedKind;
@@ -101,7 +83,9 @@ TocItem::TocItem(TocItem* parent, const WCHAR* title, int pageNo) {
 
 TocItem::~TocItem() {
     delete child;
-    delete dest;
+    if (!destNotOwned) {
+        delete dest;
+    }
     while (next) {
         TocItem* tmp = next->next;
         next->next = nullptr;
@@ -137,24 +121,6 @@ void TocItem::AddChild(TocItem* newChild) {
     newChild->next = currChild;
 }
 
-// TODO: pick a better name. I think it's used to expand root-level item
-void TocItem::OpenSingleNode() {
-    // only open (root level) ToC nodes if there are at most two
-    if (next && next->next) {
-        return;
-    }
-
-    if (!IsExpanded()) {
-        isOpenToggled = !isOpenToggled;
-    }
-    if (!next) {
-        return;
-    }
-    if (!next->IsExpanded()) {
-        next->isOpenToggled = !next->isOpenToggled;
-    }
-}
-
 // regular delete is recursive, this deletes only this item
 void TocItem::DeleteJustSelf() {
     child = nullptr;
@@ -168,43 +134,6 @@ void TocItem::DeleteJustSelf() {
 // TODO: rename to GetDestination()
 IPageDestination* TocItem::GetPageDestination() const {
     return dest;
-}
-
-TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
-    if (ti == nullptr) {
-        return nullptr;
-    }
-    if (removeUnchecked && ti->isUnchecked) {
-        TocItem* next = ti->next;
-        while (next && next->isUnchecked) {
-            next = next->next;
-        }
-        return CloneTocItemRecur(next, removeUnchecked);
-    }
-    TocItem* res = new TocItem();
-    res->parent = ti->parent;
-    res->title = str::Dup(ti->title);
-    res->isOpenDefault = ti->isOpenDefault;
-    res->isOpenToggled = ti->isOpenToggled;
-    res->isUnchecked = ti->isUnchecked;
-    res->pageNo = ti->pageNo;
-    res->id = ti->id;
-    res->fontFlags = ti->fontFlags;
-    res->color = ti->color;
-    res->dest = ClonePageDestination(ti->dest);
-    res->child = CloneTocItemRecur(ti->child, removeUnchecked);
-
-    res->nPages = ti->nPages;
-    res->engineFilePath = str::Dup(ti->engineFilePath);
-
-    TocItem* next = ti->next;
-    if (removeUnchecked) {
-        while (next && next->isUnchecked) {
-            next = next->next;
-        }
-    }
-    res->next = CloneTocItemRecur(next, removeUnchecked);
-    return res;
 }
 
 int TocItem::ChildCount() {
@@ -312,12 +241,6 @@ HTREEITEM TocTree::GetHandle(TreeItem ti) {
     CrashIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
     return tocItem->hItem;
-}
-
-TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
-    TocTree* res = new TocTree();
-    res->root = CloneTocItemRecur(tree->root, removeUnchecked);
-    return res;
 }
 
 // TODO: speed up by removing recursion

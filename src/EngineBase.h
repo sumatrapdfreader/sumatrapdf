@@ -95,8 +95,6 @@ struct IPageDestination {
     [[nodiscard]] virtual WCHAR* GetName() {
         return nullptr;
     }
-    // creates a copy
-    [[nodiscard]] virtual IPageDestination* Clone() = 0;
 };
 
 struct PageDestinationURL : IPageDestination {
@@ -122,11 +120,6 @@ struct PageDestinationURL : IPageDestination {
 
     WCHAR* GetValue() override {
         return url;
-    }
-
-    IPageDestination* Clone() override {
-        auto res = new PageDestinationURL(url);
-        return res;
     }
 };
 
@@ -154,10 +147,6 @@ struct PageDestinationFile : IPageDestination {
     WCHAR* GetValue() override {
         return path;
     }
-
-    IPageDestination* Clone() override {
-        return new PageDestinationURL(path);
-    }
 };
 
 struct PageDestination : IPageDestination {
@@ -170,11 +159,9 @@ struct PageDestination : IPageDestination {
 
     [[nodiscard]] WCHAR* GetValue() override;
     [[nodiscard]] WCHAR* GetName() override;
-    [[nodiscard]] IPageDestination* Clone() override;
 };
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const WCHAR* value = nullptr);
-IPageDestination* ClonePageDestination(IPageDestination* dest);
 
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9f
@@ -319,6 +306,7 @@ struct TocItem {
     COLORREF color{ColorUnset};
 
     IPageDestination* dest{nullptr};
+    bool destNotOwned{false};
 
     // first child item
     TocItem* child{nullptr};
@@ -347,7 +335,6 @@ struct TocItem {
     void AddSiblingAtEnd(TocItem* sibling);
     void AddChild(TocItem* child);
 
-    void OpenSingleNode();
     void DeleteJustSelf();
 
     IPageDestination* GetPageDestination() const;
@@ -358,8 +345,6 @@ struct TocItem {
 
     [[nodiscard]] bool PageNumbersMatch() const;
 };
-
-TocItem* CloneTocItemRecur(TocItem*, bool);
 
 struct TocTree : TreeModel {
     TocItem* root{nullptr};
@@ -382,7 +367,6 @@ struct TocTree : TreeModel {
     HTREEITEM GetHandle(TreeItem) override;
 };
 
-TocTree* CloneTocTree(TocTree*, bool removeUnchecked);
 bool VisitTocTree(TocItem* ti, const std::function<bool(TocItem*)>& f);
 bool VisitTocTreeWithParent(TocItem* ti, const std::function<bool(TocItem* ti, TocItem* parent)>& f);
 void SetTocTreeParents(TocItem* treeRoot);

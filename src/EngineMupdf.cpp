@@ -109,15 +109,6 @@ struct PageDestinationMupdf : IPageDestination {
 
     WCHAR* GetValue() override;
     WCHAR* GetName() override;
-
-    IPageDestination* Clone() override {
-        auto res = new PageDestinationMupdf(link, outline);
-        res->pageNo = pageNo;
-        res->rect = rect;
-        res->value = str::Dup(value);
-        res->name = str::Dup(name);
-        return res;
-    }
 };
 
 WCHAR* PageDestinationMupdf ::GetValue() {

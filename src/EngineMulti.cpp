@@ -283,6 +283,44 @@ void CalcEndPageNo(TocItem* root, int nPages) {
     prev->endPageNo = nPages;
 }
 
+static TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
+    if (ti == nullptr) {
+        return nullptr;
+    }
+    if (removeUnchecked && ti->isUnchecked) {
+        TocItem* next = ti->next;
+        while (next && next->isUnchecked) {
+            next = next->next;
+        }
+        return CloneTocItemRecur(next, removeUnchecked);
+    }
+    TocItem* res = new TocItem();
+    res->parent = ti->parent;
+    res->title = str::Dup(ti->title);
+    res->isOpenDefault = ti->isOpenDefault;
+    res->isOpenToggled = ti->isOpenToggled;
+    res->isUnchecked = ti->isUnchecked;
+    res->pageNo = ti->pageNo;
+    res->id = ti->id;
+    res->fontFlags = ti->fontFlags;
+    res->color = ti->color;
+    res->dest = ti->dest;
+    res->destNotOwned = true;
+    res->child = CloneTocItemRecur(ti->child, removeUnchecked);
+
+    res->nPages = ti->nPages;
+    res->engineFilePath = str::Dup(ti->engineFilePath);
+
+    TocItem* next = ti->next;
+    if (removeUnchecked) {
+        while (next && next->isUnchecked) {
+            next = next->next;
+        }
+    }
+    res->next = CloneTocItemRecur(next, removeUnchecked);
+    return res;
+}
+
 TocItem* CreateWrapperItem(EngineBase* engine) {
     TocItem* tocFileRoot = nullptr;
     TocTree* tocTree = engine->GetToc();

@@ -568,6 +568,24 @@ static bool ShouldCustomDraw(WindowInfo* win) {
 
 void OnTocCustomDraw(TreeItemCustomDrawEvent*);
 
+
+// auto-expand root level ToC nodes if there are at most two
+static void AutoExpandTopLevelItems(TocItem* root) {
+    if (root->next && root->next->next) {
+        return;
+    }
+
+    if (!root->IsExpanded()) {
+        root->isOpenToggled = !root->isOpenToggled;
+    }
+    if (!root->next) {
+        return;
+    }
+    if (!root->next->IsExpanded()) {
+        root->next->isOpenToggled = !root->next->isOpenToggled;
+    }
+}
+
 void LoadTocTree(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
@@ -597,7 +615,7 @@ void LoadTocTree(WindowInfo* win) {
 
     UpdateTreeCtrlColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
-    tocTree->root->OpenSingleNode();
+    AutoExpandTopLevelItems(tocTree->root->child);
 
     treeCtrl->SetTreeModel(tocTree);
 
