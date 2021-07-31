@@ -1477,8 +1477,7 @@ EngineMupdf::~EngineMupdf() {
     // TODO: remove this lock and see what happens
     EnterCriticalSection(ctxAccess);
 
-    for (auto& piRef : _pages) {
-        FzPageInfo* pi = &piRef;
+    for (FzPageInfo* pi : pages) {
         DeleteVecMembers(pi->links);
         DeleteVecMembers(pi->autoLinks);
         DeleteVecMembers(pi->comments);
@@ -1493,8 +1492,8 @@ EngineMupdf::~EngineMupdf() {
     fz_drop_outline(ctx, outline);
     fz_drop_outline(ctx, attachments);
 
-    if (_info) {
-        pdf_drop_obj(ctx, _info);
+    if (pdfInfo) {
+        pdf_drop_obj(ctx, pdfInfo);
     }
 
     if (pdfdoc) {
@@ -1505,8 +1504,9 @@ EngineMupdf::~EngineMupdf() {
     drop_cached_fonts_for_ctx(ctx);
     fz_drop_context(ctx);
 
-    delete _pageLabels;
+    delete pageLabels;
     delete tocTree;
+    DeleteVecMembers(pages);
 
     str::Free(defaultExt);
     for (size_t i = 0; i < dimof(mutexes); i++) {
@@ -1783,7 +1783,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI, const WCHAR*
         return false;
     }
 
-    _docStream = stm;
+    docStream = stm;
 
     isPasswordProtected = fz_needs_password(ctx, _doc);
     if (!isPasswordProtected) {
@@ -1920,7 +1920,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
             mbox.x1 = 612;
             mbox.y1 = 792;
         }
-        FzPageInfo* pageInfo = &e->_pages.at(i);
+        FzPageInfo* pageInfo = e->pages.at(i);
         pageInfo->mediabox = ToRectF(mbox);
         pageInfo->pageNo = i + 1;
     }
@@ -1957,7 +1957,10 @@ bool EngineMupdf::FinishLoading() {
     allowsPrinting = fz_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
     allowsCopyingText = fz_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
 
-    _pages.AppendBlanks(pageCount);
+    for (int i = 0; i < pageCount; i++) {
+        auto pi = new FzPageInfo();
+        pages.Append(pi);
+    }
     if (!pdfdoc) {
         FinishNonPDFLoading(this);
         return true;
@@ -1983,7 +1986,7 @@ bool EngineMupdf::FinishLoading() {
 
     if (loadPageTreeFailed) {
         for (int pageNo = 0; pageNo < nPages; pageNo++) {
-            FzPageInfo* pageInfo = &_pages[pageNo];
+            FzPageInfo* pageInfo = pages[pageNo];
             pageInfo->pageNo = pageNo + 1;
             fz_rect mbox{};
             fz_try(ctx) {
@@ -2026,7 +2029,7 @@ bool EngineMupdf::FinishLoading() {
                 mbox.x1 = 612;
                 mbox.y1 = 792;
             }
-            FzPageInfo* pageInfo = &_pages[pageNo];
+            FzPageInfo* pageInfo = pages[pageNo];
             pageInfo->mediabox = ToRectF(mbox);
             pageInfo->pageNo = pageNo + 1;
         }
@@ -2050,28 +2053,28 @@ bool EngineMupdf::FinishLoading() {
         fz_warn(ctx, "Couldn't load attachments");
     }
 
-    pdf_obj* orig_info = nullptr;
+    pdf_obj* origInfo = nullptr;
     fz_try(ctx) {
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
-        orig_info = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Info");
+        origInfo = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Info");
 
-        if (orig_info) {
-            _info = PdfCopyStrDict(ctx, pdfdoc, orig_info);
+        if (origInfo) {
+            pdfInfo = PdfCopyStrDict(ctx, pdfdoc, origInfo);
         }
-        if (!_info) {
-            _info = pdf_new_dict(ctx, pdfdoc, 4);
+        if (!pdfInfo) {
+            pdfInfo = pdf_new_dict(ctx, pdfdoc, 4);
         }
         // also remember linearization and tagged states at this point
         if (IsLinearizedFile(this)) {
-            pdf_dict_puts_drop(ctx, _info, "Linearized", PDF_TRUE);
+            pdf_dict_puts_drop(ctx, pdfInfo, "Linearized", PDF_TRUE);
         }
         pdf_obj* trailer = pdf_trailer(ctx, pdfdoc);
         pdf_obj* marked = pdf_dict_getp(ctx, trailer, "Root/MarkInfo/Marked");
         bool isMarked = pdf_to_bool(ctx, marked);
         if (isMarked) {
-            pdf_dict_puts_drop(ctx, _info, "Marked", PDF_TRUE);
+            pdf_dict_puts_drop(ctx, pdfInfo, "Marked", PDF_TRUE);
         }
         // also remember known output intents (PDF/X, etc.)
         pdf_obj* intents = pdf_dict_getp(ctx, trailer, "Root/OutputIntents");
@@ -2085,30 +2088,30 @@ bool EngineMupdf::FinishLoading() {
                     pdf_array_push(ctx, list, intent);
                 }
             }
-            pdf_dict_puts_drop(ctx, _info, "OutputIntents", list);
+            pdf_dict_puts_drop(ctx, pdfInfo, "OutputIntents", list);
         }
         // also note common unsupported features (such as XFA forms)
         pdf_obj* xfa = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/AcroForm/XFA");
         if (pdf_is_array(ctx, xfa)) {
-            pdf_dict_puts_drop(ctx, _info, "Unsupported_XFA", PDF_TRUE);
+            pdf_dict_puts_drop(ctx, pdfInfo, "Unsupported_XFA", PDF_TRUE);
         }
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load document properties");
-        pdf_drop_obj(ctx, _info);
-        _info = nullptr;
+        pdf_drop_obj(ctx, pdfInfo);
+        pdfInfo = nullptr;
     }
 
     fz_try(ctx) {
-        pdf_obj* pageLabels = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/PageLabels");
-        if (pageLabels) {
-            _pageLabels = BuildPageLabelVec(ctx, pageLabels, PageCount());
+        pdf_obj* labels = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/PageLabels");
+        if (labels) {
+            pageLabels = BuildPageLabelVec(ctx, labels, PageCount());
         }
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load page labels");
     }
-    if (_pageLabels) {
+    if (pageLabels) {
         hasPageLabels = true;
     }
 
@@ -2278,7 +2281,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
 FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
     ScopedCritSec scope(&pagesAccess);
     CrashIf(pageNo < 1 || pageNo > pageCount);
-    FzPageInfo* pageInfo = &_pages[pageNo - 1];
+    FzPageInfo* pageInfo = pages[pageNo - 1];
     if (!pageInfo->page || !pageInfo->fullyLoaded) {
         return nullptr;
     }
@@ -2299,7 +2302,7 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     const char* label = pdf_annot_field_label(ctx, annot);
     const char* s = contents;
     // TODO: use separate classes for comments and tooltips?
-    if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
+    if (str::IsEmpty(contents)) {
         s = label;
     }
     auto ws = ToWstrTemp(s);
@@ -2325,6 +2328,11 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
         const char* label = pdf_annot_field_label(ctx, annot); // don't free
         bool isLabelEmpty = str::IsEmpty(label);
         int flags = pdf_annot_field_flags(ctx, annot);
+        bool isEmpty = isContentsEmpty && isLabelEmpty;
+
+        const char* tpStr = pdf_string_from_annot_type(ctx, tp);
+        logf("MakePageElementCommentsFromAnnotations: annot %d '%s', contents: '%s', label: '%s'\n", tp, tpStr,
+             contents, label);
 
         if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
             logf("found file attachment annotation\n");
@@ -2353,14 +2361,15 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
             continue;
         }
 
-        if (!isContentsEmpty && tp != PDF_ANNOT_FREE_TEXT) {
+        if (!isEmpty && tp != PDF_ANNOT_FREE_TEXT) {
             auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
             comments.Append(comment);
             continue;
         }
 
         if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
-            if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
+            bool isReadOnly = flags & PDF_FIELD_IS_READ_ONLY;
+            if (!isReadOnly) {
                 auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
                 comments.Append(comment);
             }
@@ -2381,7 +2390,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = &_pages[pageIdx];
+    FzPageInfo* pageInfo = pages[pageIdx];
 
     ScopedCritSec ctxScope(ctxAccess);
     if (!pageInfo->page) {
@@ -2445,7 +2454,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
 }
 
 RectF EngineMupdf::PageMediabox(int pageNo) {
-    FzPageInfo* pi = &_pages[pageNo - 1];
+    FzPageInfo* pi = pages[pageNo - 1];
     return pi->mediabox;
 }
 
@@ -2989,16 +2998,16 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
 
     if (DocumentProperty::PdfFileStructure == prop) {
         WStrVec fstruct;
-        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Linearized"))) {
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Linearized"))) {
             fstruct.Append(str::Dup(L"linearized"));
         }
-        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Marked"))) {
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Marked"))) {
             fstruct.Append(str::Dup(L"tagged"));
         }
-        if (pdf_dict_gets(ctx, _info, "OutputIntents")) {
-            int n = pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"));
+        if (pdf_dict_gets(ctx, pdfInfo, "OutputIntents")) {
+            int n = pdf_array_len(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"));
             for (int i = 0; i < n; i++) {
-                pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"), i);
+                pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"), i);
                 CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
                 fstruct.Append(strconv::Utf8ToWstr(pdf_to_name(ctx, intent) + 4));
             }
@@ -3010,7 +3019,7 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
     }
 
     if (DocumentProperty::UnsupportedFeatures == prop) {
-        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Unsupported_XFA"))) {
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Unsupported_XFA"))) {
             return str::Dup(L"XFA");
         }
         return nullptr;
@@ -3037,7 +3046,7 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
         if (pdfPropNames[i].prop == prop) {
             // _info is guaranteed not to contain any indirect references,
             // so no need for ctxAccess
-            pdf_obj* obj = pdf_dict_gets(ctx, _info, pdfPropNames[i].name);
+            pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropNames[i].name);
             if (!obj) {
                 return nullptr;
             }
@@ -3203,11 +3212,11 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
 }
 
 WCHAR* EngineMupdf::GetPageLabel(int pageNo) const {
-    if (!_pageLabels || pageNo < 1 || PageCount() < pageNo) {
+    if (!pageLabels || pageNo < 1 || PageCount() < pageNo) {
         return EngineBase::GetPageLabel(pageNo);
     }
 
-    return str::Dup(_pageLabels->at(pageNo - 1));
+    return str::Dup(pageLabels->at(pageNo - 1));
 }
 
 int EngineMupdf::GetPageByLabel(const WCHAR* label) const {
@@ -3215,8 +3224,8 @@ int EngineMupdf::GetPageByLabel(const WCHAR* label) const {
         return 0;
     }
     int pageNo = 0;
-    if (_pageLabels) {
-        pageNo = _pageLabels->Find(label) + 1;
+    if (pageLabels) {
+        pageNo = pageLabels->Find(label) + 1;
     }
 
     if (!pageNo) {
@@ -3370,7 +3379,7 @@ void EngineMupdf::InvalideAnnotationsForPage(int pageNo) {
     ScopedCritSec scope(&pagesAccess);
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = &_pages[pageIdx];
+    FzPageInfo* pageInfo = pages[pageIdx];
     if (pageInfo) {
         pageInfo->commentsNeedRebuilding = true;
     }

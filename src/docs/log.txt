@@ -8,6 +8,13 @@ A daily log of changes and commentary. An experiment of sorts.
   was broken during TreeModel refactor
 - support .txt files in EngineMupdf
 - add displayDPI to EngineMupdf
+- improve handling of annotations (as prompted by #1517)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/1517
+  I think the issue in the latest comment with PDF generated
+  by overleaf is that there are PDF_ANNOT_SCREEN annotations
+  that are not handled by mupdf (it prints
+  "cannot create appearance stream for Screen annotations" message).
+  they are shown by pdf.js so possibly valid
 
 2021-07-30 Fri
 

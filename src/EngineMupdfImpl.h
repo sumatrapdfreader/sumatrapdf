@@ -33,7 +33,7 @@ struct FzPageInfo {
     // if true, loaded expensive info (extracted text etc.)
     bool fullyLoaded{false};
 
-    bool commentsNeedRebuilding{false};
+    bool commentsNeedRebuilding{true};
 };
 
 class EngineMupdf : public EngineBase {
@@ -85,12 +85,12 @@ class EngineMupdf : public EngineBase {
     int displayDPI{96};
     fz_document* _doc{nullptr};
     pdf_document* pdfdoc{nullptr};
-    fz_stream* _docStream{nullptr};
-    Vec<FzPageInfo> _pages;
+    fz_stream* docStream{nullptr};
+    Vec<FzPageInfo*> pages;
     fz_outline* outline{nullptr};
     fz_outline* attachments{nullptr};
-    pdf_obj* _info{nullptr};
-    WStrVec* _pageLabels{nullptr};
+    pdf_obj* pdfInfo{nullptr};
+    WStrVec* pageLabels{nullptr};
 
     TocTree* tocTree{nullptr};
 
