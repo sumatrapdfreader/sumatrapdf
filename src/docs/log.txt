@@ -16,6 +16,7 @@ A daily log of changes and commentary. An experiment of sorts.
   locks. It doesn't work when multiple threads use different
   fz_context (in Sumatra: opening multiple epub files at the same time)
 - change EngineBase::GetElements() to return Vec<> instead of Vec<>*
+- don't leak in EngineDjVu::GetElements()
 
 2021-07-29 Thu
 

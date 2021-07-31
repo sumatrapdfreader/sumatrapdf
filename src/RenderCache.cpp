@@ -17,7 +17,7 @@
 #include "RenderCache.h"
 #include "TextSelection.h"
 
-#define NO_LOG
+//#define NO_LOG
 #include "utils/Log.h"
 
 #pragma warning(disable : 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'

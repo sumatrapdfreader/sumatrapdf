@@ -33,7 +33,7 @@ Kind kindEngineDjVu = "engineDjVu";
 
 // parses "123", "#123", "# 123"
 // returns -1 for invalid page
-static int ParsePageLink(const char* link) {
+static int ParseDjVuLink(const char* link) {
     if (!link) {
         return -1;
     }
@@ -107,11 +107,11 @@ static IPageDestination* NewDjVuDestination(const char* link, const char* commen
     }
     auto res = new PageDestinationDjVu(link, comment);
     res->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    res->pageNo = ParsePageLink(link);
+    res->pageNo = ParseDjVuLink(link) - 1;
     return res;
 }
 
-static IPageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
+static IPageElement* NewDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
     auto dest = NewDjVuDestination(link, comment);
     if (!dest) {
         return nullptr;
@@ -235,6 +235,13 @@ void CleanupEngineDjVu() {
     minilisp_finish();
 }
 
+struct DjVuPageInfo {
+    RectF mediabox;
+    Vec<IPageElement*> allElements;
+    miniexp_t annos{miniexp_dummy};
+    bool gotAllElements{false};
+};
+
 class EngineDjVu : public EngineBase {
   public:
     EngineDjVu();
@@ -273,13 +280,12 @@ class EngineDjVu : public EngineBase {
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
-    IStream* stream = nullptr;
+    IStream* stream{nullptr};
 
-    RectF* mediaboxes = nullptr;
+    Vec<DjVuPageInfo*> pages;
 
-    ddjvu_document_t* doc = nullptr;
+    ddjvu_document_t* doc{nullptr};
     miniexp_t outline = miniexp_nil;
-    miniexp_t* annos = nullptr;
     TocTree* tocTree = nullptr;
 
     Vec<ddjvu_fileinfo_t> fileInfos;
@@ -306,16 +312,15 @@ EngineDjVu::~EngineDjVu() {
     ScopedCritSec scope(&gDjVuContext->lock);
 
     delete tocTree;
-    free(mediaboxes);
 
-    if (annos) {
-        for (int i = 0; i < pageCount; i++) {
-            if (annos[i]) {
-                ddjvu_miniexp_release(doc, annos[i]);
-            }
+    for (auto pi : pages) {
+        if (pi->annos && pi->annos != miniexp_dummy) {
+            ddjvu_miniexp_release(doc, pi->annos);
+            pi->annos = nullptr;
         }
-        free(annos);
     }
+    DeleteVecMembers(pages);
+
     if (outline != miniexp_nil) {
         ddjvu_miniexp_release(doc, outline);
     }
@@ -340,7 +345,8 @@ EngineBase* EngineDjVu::Clone() {
 
 RectF EngineDjVu::PageMediabox(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > pageCount);
-    return mediaboxes[pageNo - 1];
+    DjVuPageInfo* pi = pages[pageNo - 1];
+    return pi->mediabox;
 }
 
 bool EngineDjVu::HasClipOptimizations(int) {
@@ -405,7 +411,7 @@ bool EngineDjVu::LoadMediaboxes() {
     }
 
     DWORD offset = r.DWordBE(12) == DJVU_MARK_DJVM ? 16 : 4;
-    for (int pages = 0; pages < pageCount;) {
+    for (int pageNo = 0; pageNo < pageCount; /* no op, must inc inside isMark */) {
         if (!ReadBytes(h, offset, buffer, 16)) {
             return false;
         }
@@ -413,7 +419,9 @@ bool EngineDjVu::LoadMediaboxes() {
         if (partLen < 0) {
             return false;
         }
-        if (r.DWordBE(0) == DJVU_MARK_FORM && r.DWordBE(8) == DJVU_MARK_DJVU && r.DWordBE(12) == DJVU_MARK_INFO) {
+        bool isMark =
+            r.DWordBE(0) == DJVU_MARK_FORM && r.DWordBE(8) == DJVU_MARK_DJVU && r.DWordBE(12) == DJVU_MARK_INFO;
+        if (isMark) {
             if (!ReadBytes(h, offset + 16, buffer, 14)) {
                 return false;
             }
@@ -425,12 +433,18 @@ bool EngineDjVu::LoadMediaboxes() {
             if (dpi < 25 || 6000 < dpi) {
                 dpi = 300;
             }
-            mediaboxes[pages].dx = GetFileDPI() * info.width / dpi;
-            mediaboxes[pages].dy = GetFileDPI() * info.height / dpi;
-            if ((info.flags & 4)) {
-                std::swap(mediaboxes[pages].dx, mediaboxes[pages].dy);
+            DjVuPageInfo* pi = pages[pageNo];
+            // auto&& mediabox = pi->mediabox;
+            float dx = GetFileDPI() * info.width / dpi;
+            float dy = GetFileDPI() * info.height / dpi;
+            if (info.flags & 4) {
+                pi->mediabox.dx = dy;
+                pi->mediabox.dy = dx;
+            } else {
+                pi->mediabox.dx = dx;
+                pi->mediabox.dy = dy;
             }
-            pages++;
+            pageNo++;
         }
         offset += 8 + partLen + (partLen & 1);
     }
@@ -469,7 +483,9 @@ bool EngineDjVu::FinishLoading() {
         return false;
     }
 
-    mediaboxes = AllocArray<RectF>(pageCount);
+    for (int i = 0; i < pageCount; i++) {
+        pages.Append(new DjVuPageInfo());
+    }
     bool ok = LoadMediaboxes();
     if (!ok) {
         // fall back to the slower but safer way to extract page mediaboxes
@@ -480,16 +496,13 @@ bool EngineDjVu::FinishLoading() {
                 gDjVuContext->SpinMessageLoop();
             }
             if (DDJVU_JOB_OK == status) {
+                DjVuPageInfo* pi = pages[i];
                 float dx = (float)info.width * GetFileDPI() / (float)info.dpi;
                 float dy = (float)info.height * GetFileDPI() / (float)info.dpi;
-                mediaboxes[i] = RectF(0, 0, dx, dy);
+                pi->mediabox.dx = dx;
+                pi->mediabox.dy = dy;
             }
         }
-    }
-
-    annos = AllocArray<miniexp_t>(pageCount);
-    for (int i = 0; i < pageCount; i++) {
-        annos[i] = miniexp_dummy;
     }
 
     while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy) {
@@ -903,14 +916,24 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
 
 Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > PageCount());
-    Vec<IPageElement*> els;
-    if (annos && miniexp_dummy == annos[pageNo - 1]) {
+    auto pi = pages[pageNo - 1];
+    if (pi->gotAllElements) {
+        return pi->allElements;
+    }
+    pi->gotAllElements = true;
+    auto& els = pi->allElements;
+
+    if (pi->annos == miniexp_dummy) {
         ScopedCritSec scope(&gDjVuContext->lock);
-        while ((annos[pageNo - 1] = ddjvu_document_get_pageanno(doc, pageNo - 1)) == miniexp_dummy) {
-            gDjVuContext->SpinMessageLoop();
+        while (pi->annos == miniexp_dummy) {
+            pi->annos = ddjvu_document_get_pageanno(doc, pageNo - 1);
+            if (pi->annos == miniexp_dummy) {
+                gDjVuContext->SpinMessageLoop();
+            }
         }
     }
-    if (!annos || !annos[pageNo - 1]) {
+
+    if (!pi->annos) {
         return els;
     }
 
@@ -928,7 +951,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
         dpiFactor = GetFileDPI() / info.dpi;
     }
 
-    miniexp_t* links = ddjvu_anno_get_hyperlinks(annos[pageNo - 1]);
+    miniexp_t* links = ddjvu_anno_get_hyperlinks(pi->annos);
     for (int i = 0; links[i]; i++) {
         miniexp_t anno = miniexp_cdr(links[i]);
 
@@ -992,7 +1015,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
         if (!tmp) {
             tmp = urlA;
         }
-        auto el = newDjVuLink(pageNo, rect, tmp, commentUtf8);
+        auto el = NewDjVuLink(pageNo, rect, tmp, commentUtf8);
         if (el->GetKind() == kindDestinationNone) {
             logf("invalid link '%s', pages in document: %d\n", tmp ? tmp : "", PageCount());
             ReportIf(true);
@@ -1039,8 +1062,14 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
         return true;
     }
 
-    int pageNo = ParsePageLink(link);
-    if (pageNo < 0) {
+    int pageNo = ParseDjVuLink(link) - 1;
+    if (pageNo >= 0) {
+        if (pageNo >= pageCount) {
+            logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
+                 pageCount);
+            ReportIf(true);
+            return false;
+        }
         ctrl->GoToPage(pageNo, true);
         return true;
     }
