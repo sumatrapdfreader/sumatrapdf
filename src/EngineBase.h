@@ -123,6 +123,36 @@ struct PageDestinationURL : IPageDestination {
     }
 };
 
+struct PageDestinationFile : IPageDestination {
+    WCHAR* path{nullptr};
+
+    PageDestinationFile() = delete;
+
+    PageDestinationFile(const WCHAR* u) {
+        CrashIf(!u);
+        kind = kindDestinationLaunchFile;
+        path = str::Dup(u);
+    }
+
+    PageDestinationFile(const char* u) {
+        CrashIf(!u);
+        kind = kindDestinationLaunchURL;
+        path = strconv::Utf8ToWstr(u);
+    }
+
+    ~PageDestinationFile() override {
+        str::Free(path);
+    }
+
+    WCHAR* GetValue() override {
+        return path;
+    }
+
+    IPageDestination* Clone() override {
+        return new PageDestinationURL(path);
+    }
+};
+
 struct PageDestination : IPageDestination {
     WCHAR* value{nullptr};
     WCHAR* name{nullptr};

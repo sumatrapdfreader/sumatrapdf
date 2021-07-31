@@ -80,7 +80,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
     Vec<SelectionOnPage>* sel = new Vec<SelectionOnPage>(textSel->len);
 
     for (int i = textSel->len - 1; i >= 0; i--) {
-        RectF rect = ToRectFl(textSel->rects[i]);
+        RectF rect = ToRectF(textSel->rects[i]);
         sel->Append(SelectionOnPage(textSel->pages[i], &rect));
     }
     sel->Reverse();

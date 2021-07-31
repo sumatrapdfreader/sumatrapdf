@@ -82,6 +82,13 @@ static bool IsExternalLink(const char* uri) {
     return uri[0] == ':';
 }
 
+static char* FzGetURL(fz_link* link, fz_outline* outline) {
+    if (link) {
+        return link->uri;
+    }
+    return outline->uri;
+}
+
 struct PageDestinationMupdf : IPageDestination {
     fz_outline* outline{nullptr};
     fz_link* link{nullptr};
@@ -91,8 +98,6 @@ struct PageDestinationMupdf : IPageDestination {
 
     PageDestinationMupdf(fz_link* l, fz_outline* o) {
         // exactly one must be provided
-        CrashIf(l && o);
-        CrashIf(!l && !o);
         kind = kindDestinationMupdf;
         link = l;
         outline = o;
@@ -104,6 +109,7 @@ struct PageDestinationMupdf : IPageDestination {
 
     WCHAR* GetValue() override;
     WCHAR* GetName() override;
+
     IPageDestination* Clone() override {
         auto res = new PageDestinationMupdf(link, outline);
         res->pageNo = pageNo;
@@ -119,10 +125,7 @@ WCHAR* PageDestinationMupdf ::GetValue() {
         return value;
     }
 
-    const char* uri = outline ? outline->uri : nullptr;
-    if (!outline) {
-        uri = link->uri;
-    }
+    char* uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
         value = strconv::Utf8ToWstr(uri);
     }
@@ -139,16 +142,141 @@ WCHAR* PageDestinationMupdf ::GetName() {
     return name;
 }
 
-static IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
-    CrashIf(link && outline);
-    auto dest = new PageDestinationMupdf(link, outline);
-    if (link) {
-        dest->rect = ToRectFl(link->rect);
+#if 0
+Kind CalcDestKind(fz_link* link, fz_outline* outline) {
+    // outline entries with page set to -1 go nowhere
+    // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1352
+    if (outline && outline->page == -1) {
+        return kindDestinationNone;
     }
-    if (outline) {
-        dest->pageNo = outline->page + 1;
+    char* uri = PdfLinkGetURI(link, outline);
+    // some outline entries are bad (issue 1245)
+    if (!uri) {
+        return kindDestinationNone;
+    }
+    if (!IsExternalLink(uri)) {
+        float x = 0, y = 0, zoom = 0;
+        int pageNo = ResolveLink(uri, &x, &y, &zoom);
+        if (pageNo == -1) {
+            // TODO: figure out what it could be
+            logf("CalcDestKind(): unknown uri: '%s'\n", uri);
+            // ReportIf(true);
+            return nullptr;
+        }
+        return kindDestinationScrollTo;
+    }
+    if (str::StartsWith(uri, "file:")) {
+        // TODO: investigate more, happens in pier-EsugAwards2007.pdf
+        return kindDestinationLaunchFile;
+    }
+    // TODO: hackish way to detect uris of various kinds
+    // like http:, news:, mailto:, tel: etc.
+    if (str::FindChar(uri, ':') != nullptr) {
+        return kindDestinationLaunchURL;
+    }
+
+    logf("CalcDestKind(): unknown uri: '%s'\n", uri);
+    // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
+    // ReportIf(true);
+    return nullptr;
+}
+
+WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    if (!uri) {
+        return nullptr;
+    }
+    if (!IsExternalLink(uri)) {
+        // other values: #1,115,208
+        return nullptr;
+    }
+    WCHAR* path = strconv::Utf8ToWstr(uri);
+    return path;
+}
+
+WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
+    if (!uri) {
+        return nullptr;
+    }
+    if (IsExternalLink(uri)) {
+        return nullptr;
+    }
+    // TODO(port): test with more stuff
+    // figure out what PDF_NAME(GoToR) ends up being
+    return strconv::Utf8ToWstr(uri);
+}
+
+IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
+    auto dest = new PageDestinationMupdf(link, outline);
+    CrashIf(!dest->kind);
+    if (dest->kind == kindDestinationScrollTo) {
+        char* uri = PdfLinkGetURI(link, outline);
+        float x = 0, y = 0, zoom = 0;
+        int pageNo = ResolveLink(uri, &x, &y, &zoom);
+        dest->pageNo = pageNo + 1;
+        dest->rect = RectF(x, y, x, y);
+        dest->value = strconv::Utf8ToWstr(uri);
+        dest->name = strconv::Utf8ToWstr(uri);
+        dest->zoom = zoom;
+    } else {
+        // TODO: clean this up
+        dest->rect = CalcDestRect(link, outline);
+        dest->value = CalcValue(link, outline);
+        dest->name = CalcDestName(link, outline);
+        dest->pageNo = CalcDestPageNo(link, outline);
+    }
+    if ((dest->pageNo <= 0) && (dest->kind != kindDestinationNone) && (dest->kind != kindDestinationLaunchFile) &&
+        (dest->kind != kindDestinationLaunchURL) && (dest->kind != kindDestinationLaunchEmbedded)) {
+        logf("dest->kind: %s, dest->pageNo: %d\n", dest->kind, dest->pageNo);
+        // ReportIf(dest->pageNo <= 0);
     }
     return dest;
+}
+#endif
+
+static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
+    if (link) {
+        return ToRectF(link->rect);
+    }
+    return {};
+}
+
+static int FzGetPageNo(fz_link* link, fz_outline* outline) {
+    if (outline) {
+        return outline->page + 1;
+    }
+    char* uri = link->uri;
+    int pageNo = ResolveLink(uri, nullptr, nullptr, nullptr);
+    return pageNo + 1;
+}
+
+static IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
+    CrashIf(link && outline);
+    CrashIf(!link && !outline);
+    char* uri = FzGetURL(link, outline);
+
+    if (str::StartsWithI(uri, "file://")) {
+        WCHAR* path = ToWstrTemp(uri);
+        path = CleanupFileURL(path);
+        auto res = new PageDestinationFile(path);
+        res->rect = FzGetRectF(link, outline);
+        str::Free(path);
+        return res;
+    }
+
+    auto dest = new PageDestinationMupdf(link, outline);
+    dest->rect = FzGetRectF(link, outline);
+    dest->pageNo = FzGetPageNo(link, outline);
+    return dest;
+}
+
+static PageElementDestination* NewLinkDestination(int srcPageNo, fz_link* link, fz_outline* outline) {
+    auto dest = NewPageDestinationMupdf(link, outline);
+    auto res = new PageElementDestination(dest);
+    res->pageNo = srcPageNo;
+    res->rect = dest->rect;
+    return res;
 }
 
 struct LinkRectList {
@@ -156,17 +284,17 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-fz_rect To_fz_rect(RectF rect) {
+fz_rect ToFzRect(RectF rect) {
     fz_rect result = {(float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy)};
     return result;
 }
 
-RectF ToRectFl(fz_rect rect) {
+RectF ToRectF(fz_rect rect) {
     return RectF::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
 static bool IsPointInRect(fz_rect rect, fz_point pt) {
-    return ToRectFl(rect).Contains(PointF(pt.x, pt.y));
+    return ToRectF(rect).Contains(PointF(pt.x, pt.y));
 }
 
 fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
@@ -202,7 +330,7 @@ static float FzRectOverlap(fz_rect r1, RectF r2f) {
     if (fz_is_empty_rect(r1)) {
         return 0.0f;
     }
-    fz_rect r2 = To_fz_rect(r2f);
+    fz_rect r2 = ToFzRect(r2f);
     fz_rect isect = fz_intersect_rect(r1, r2);
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
@@ -406,7 +534,7 @@ static inline int WcharsPerRune(int rune) {
 
 static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rect>& rects) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
-    Rect r = ToRectFl(bbox).Round();
+    Rect r = ToRectF(bbox).Round();
 
     int n = WcharsPerRune(c->c);
     if (n == 2) {
@@ -566,7 +694,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
         AutoFreeWstr part(str::Dup(next, end - next));
         uri.Set(str::Join(uri, part));
         Rect bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(To_fz_rect(ToRectFl(bbox)));
+        list->coords.Append(ToFzRect(ToRectF(bbox)));
 
         next = end + 1;
     } while (multiline);
@@ -663,7 +791,7 @@ static LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
         WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         Rect bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(To_fz_rect(ToRectFl(bbox)));
+        list->coords.Append(ToFzRect(ToRectF(bbox)));
         if (multiline) {
             end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
         }
@@ -873,14 +1001,6 @@ RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
-static PageElementDestination* NewFzLink(int srcPageNo, fz_link* link, fz_outline* outline) {
-    auto dest = NewPageDestinationMupdf(link, outline);
-    auto res = new PageElementDestination(dest);
-    res->pageNo = srcPageNo;
-    res->rect = dest->rect;
-    return res;
-}
-
 static TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDestination* dest) {
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
@@ -955,7 +1075,7 @@ static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
     els.Reverse();
 }
 
-void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
+static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     if (!pageInfo || !stext) {
         return;
     }
@@ -987,7 +1107,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         // TODO: those leak on xps
         auto dest = new PageDestinationURL(uri);
         auto pel = new PageElementDestination(dest);
-        pel->rect = ToRectFl(bbox);
+        pel->rect = ToRectF(bbox);
         pageInfo->autoLinks.Append(pel);
     }
     delete list;
@@ -1013,7 +1133,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageI
             FitzPageImageInfo img = {block->bbox, block->u.i.transform};
             auto pel = new PageElementImage();
             pel->pageNo = pageNo;
-            pel->rect = ToRectFl(block->bbox);
+            pel->rect = ToRectF(block->bbox);
             pel->imageID = images.isize();
             img.imageElement = pel;
             images.Append(img);
@@ -1759,7 +1879,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
             mbox.y1 = 792;
         }
         FzPageInfo* pageInfo = &e->_pages.at(i);
-        pageInfo->mediabox = ToRectFl(mbox);
+        pageInfo->mediabox = ToRectF(mbox);
         pageInfo->pageNo = i + 1;
     }
 
@@ -1839,7 +1959,7 @@ bool EngineMupdf::FinishLoading() {
                 mbox.x1 = 612;
                 mbox.y1 = 792;
             }
-            pageInfo->mediabox = ToRectFl(mbox);
+            pageInfo->mediabox = ToRectF(mbox);
         }
     } else {
         // this does the job of pdf_bound_page but without doing pdf_load_page()
@@ -1865,7 +1985,7 @@ bool EngineMupdf::FinishLoading() {
                 mbox.y1 = 792;
             }
             FzPageInfo* pageInfo = &_pages[pageNo];
-            pageInfo->mediabox = ToRectFl(mbox);
+            pageInfo->mediabox = ToRectF(mbox);
             pageInfo->pageNo = pageNo + 1;
         }
     }
@@ -2141,7 +2261,7 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
         s = label;
     }
     auto ws = ToWstrTemp(s);
-    RectF rd = ToRectFl(rect);
+    RectF rd = ToRectF(rect);
     return NewFzComment(ws, pageNo, rd);
 }
 
@@ -2182,7 +2302,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 
             auto el = new PageElementDestination(dest);
             el->pageNo = pageNo;
-            el->rect = ToRectFl(rect);
+            el->rect = ToRectF(rect);
 
             comments.Append(el);
             // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
@@ -2264,7 +2384,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     link = FixupPageLinks(link); // TOOD: is this necessary?
     pageInfo->retainedLinks = link;
     while (link) {
-        auto pel = NewFzLink(pageNo, link, nullptr);
+        auto pel = NewLinkDestination(pageNo, link, nullptr);
         pageInfo->links.Append(pel);
         link = link->next;
     }
@@ -2336,7 +2456,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
         return mediabox;
     }
 
-    RectF rect2 = ToRectFl(rect);
+    RectF rect2 = ToRectF(rect);
     return rect2.Intersect(mediabox);
 }
 
@@ -2358,9 +2478,9 @@ RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rota
     if (inverse) {
         ctm = fz_invert_matrix(ctm);
     }
-    fz_rect rect2 = To_fz_rect(rect);
+    fz_rect rect2 = ToFzRect(rect);
     rect2 = fz_transform_rect(rect2, ctm);
-    return ToRectFl(rect2);
+    return ToRectF(rect2);
 }
 
 RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
@@ -2388,7 +2508,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto rotation = args.rotation;
     fz_rect pRect;
     if (pageRect) {
-        pRect = To_fz_rect(*pageRect);
+        pRect = ToFzRect(*pageRect);
     } else {
         // TODO(port): use pageInfo->mediabox?
         pRect = fz_bound_page(ctx, page);
@@ -2474,155 +2594,6 @@ Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
     return pageInfo->allElements;
 }
 
-#if 0
-static char* PdfLinkGetURI(fz_link* link, fz_outline* outline) {
-    if (link) {
-        return link->uri;
-    }
-    if (outline) {
-        return outline->uri;
-    }
-    return nullptr;
-}
-
-Kind CalcDestKind(fz_link* link, fz_outline* outline) {
-    // outline entries with page set to -1 go nowhere
-    // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1352
-    if (outline && outline->page == -1) {
-        return kindDestinationNone;
-    }
-    char* uri = PdfLinkGetURI(link, outline);
-    // some outline entries are bad (issue 1245)
-    if (!uri) {
-        return kindDestinationNone;
-    }
-    if (!IsExternalLink(uri)) {
-        float x = 0, y = 0, zoom = 0;
-        int pageNo = ResolveLink(uri, &x, &y, &zoom);
-        if (pageNo == -1) {
-            // TODO: figure out what it could be
-            logf("CalcDestKind(): unknown uri: '%s'\n", uri);
-            // ReportIf(true);
-            return nullptr;
-        }
-        return kindDestinationScrollTo;
-    }
-    if (str::StartsWith(uri, "file:")) {
-        // TODO: investigate more, happens in pier-EsugAwards2007.pdf
-        return kindDestinationLaunchFile;
-    }
-    // TODO: hackish way to detect uris of various kinds
-    // like http:, news:, mailto:, tel: etc.
-    if (str::FindChar(uri, ':') != nullptr) {
-        return kindDestinationLaunchURL;
-    }
-
-    logf("CalcDestKind(): unknown uri: '%s'\n", uri);
-    // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
-    // ReportIf(true);
-    return nullptr;
-}
-
-WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
-    char* uri = PdfLinkGetURI(link, outline);
-    if (!uri) {
-        return nullptr;
-    }
-    if (!IsExternalLink(uri)) {
-        // other values: #1,115,208
-        return nullptr;
-    }
-    WCHAR* path = strconv::Utf8ToWstr(uri);
-    return path;
-}
-
-WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
-    char* uri = PdfLinkGetURI(link, outline);
-    if (!uri) {
-        return nullptr;
-    }
-    if (IsExternalLink(uri)) {
-        return nullptr;
-    }
-    // TODO(port): test with more stuff
-    // figure out what PDF_NAME(GoToR) ends up being
-    return strconv::Utf8ToWstr(uri);
-}
-
-int CalcDestPageNo(fz_link* link, fz_outline* outline) {
-    char* uri = PdfLinkGetURI(link, outline);
-    // TODO: happened in ug_logodesign.pdf. investigate
-    // CrashIf(!uri);
-    if (!uri) {
-        return 0;
-    }
-    if (IsExternalLink(uri)) {
-        return 0;
-    }
-    float x, y;
-    int pageNo = ResolveLink(uri, &x, &y, nullptr);
-    if (pageNo == -1) {
-        return 0;
-    }
-    return pageNo + 1; // TODO(port): or is it just pageNo?
-
-    return 0;
-}
-
-RectF CalcDestRect(fz_link* link, fz_outline* outline) {
-    RectF result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    char* uri = PdfLinkGetURI(link, outline);
-    // TODO: this happens in pdf/ug_logodesign.pdf, there's only outline without
-    // pageno. need to investigate
-    // CrashIf(!uri);
-    if (!uri) {
-        return result;
-    }
-
-    if (IsExternalLink(uri)) {
-        return result;
-    }
-    float x = 0;
-    float y = 0;
-    int pageNo = ResolveLink(uri, &x, &y, nullptr);
-    if (pageNo == -1) {
-        // SubmitBugReportIf(pageNo == -1);
-        return result;
-    }
-
-    result.x = (double)x;
-    result.y = (double)y;
-    return result;
-}
-
-IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
-    auto dest = new PageDestinationMupdf(link, outline);
-    CrashIf(!dest->kind);
-    if (dest->kind == kindDestinationScrollTo) {
-        char* uri = PdfLinkGetURI(link, outline);
-        float x = 0, y = 0, zoom = 0;
-        int pageNo = ResolveLink(uri, &x, &y, &zoom);
-        dest->pageNo = pageNo + 1;
-        dest->rect = RectF(x, y, x, y);
-        dest->value = strconv::Utf8ToWstr(uri);
-        dest->name = strconv::Utf8ToWstr(uri);
-        dest->zoom = zoom;
-    } else {
-        // TODO: clean this up
-        dest->rect = CalcDestRect(link, outline);
-        dest->value = CalcValue(link, outline);
-        dest->name = CalcDestName(link, outline);
-        dest->pageNo = CalcDestPageNo(link, outline);
-    }
-    if ((dest->pageNo <= 0) && (dest->kind != kindDestinationNone) && (dest->kind != kindDestinationLaunchFile) &&
-        (dest->kind != kindDestinationLaunchURL) && (dest->kind != kindDestinationLaunchEmbedded)) {
-        logf("dest->kind: %s, dest->pageNo: %d\n", dest->kind, dest->pageNo);
-        // ReportIf(dest->pageNo <= 0);
-    }
-    return dest;
-}
-#endif
-
 void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
     CrashIf(kindDestinationMupdf != dest->GetKind());
     PageDestinationMupdf* link = (PageDestinationMupdf*)dest;
@@ -2643,7 +2614,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         return;
     }
     if (IsExternalLink(uri)) {
-        linkHandler->LauncURL(uri);
+        linkHandler->LaunchURL(uri);
         return;
     }
     // TODO: more?
@@ -2659,7 +2630,7 @@ bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) 
     if (k == kindDestinationLaunchURL) {
         auto d = (PageDestinationURL*)dest;
         char* urlA = ToUtf8Temp(d->url);
-        linkHandler->LauncURL(urlA);
+        linkHandler->LaunchURL(urlA);
         return true;
     }
     linkHandler->GotoLink(dest);
@@ -2684,7 +2655,7 @@ bool EngineMupdf::BenchLoadPage(int pageNo) {
 }
 
 fz_matrix EngineMupdf::viewctm(int pageNo, float zoom, int rotation) {
-    const fz_rect tmpRc = To_fz_rect(PageMediabox(pageNo));
+    const fz_rect tmpRc = ToFzRect(PageMediabox(pageNo));
     return FzCreateViewCtm(tmpRc, zoom, rotation);
 }
 
@@ -2700,7 +2671,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     auto& images = pageInfo->images;
     bool outOfBounds = imageIdx >= images.isize();
     fz_rect imgRect = images.at(imageIdx).rect;
-    bool badRect = ToRectFl(imgRect) != rect;
+    bool badRect = ToRectF(imgRect) != rect;
     CrashIf(outOfBounds);
     CrashIf(badRect);
     if (outOfBounds || badRect) {
@@ -3178,7 +3149,7 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
         return false;
     }
 
-    fz_rect mbox = To_fz_rect(PageMediabox(pageNo));
+    fz_rect mbox = ToFzRect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;

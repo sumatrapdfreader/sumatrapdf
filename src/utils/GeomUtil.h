@@ -134,7 +134,7 @@ SIZE ToSIZE(Size s);
 SizeF ToSizeFl(Size s);
 Size ToSize(SizeF s);
 
-RectF ToRectFl(Rect r);
+RectF ToRectF(Rect r);
 RECT ToRECT(Rect r);
 RECT RECTFromRect(Gdiplus::Rect r);
 Gdiplus::Rect ToGdipRect(Rect r);

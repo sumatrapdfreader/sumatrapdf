@@ -54,7 +54,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
         return E_OUTOFMEMORY;
     }
 
-    page = engine->Transform(ToRectFl(thumb), 1, zoom, 0, true);
+    page = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &page);
     RenderedBitmap* bmp = engine->RenderPage(args);
 

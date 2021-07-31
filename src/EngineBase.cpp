@@ -467,13 +467,13 @@ bool EngineBase::HandleLink(IPageDestination*, ILinkHandler*) {
 
 // skip file:// and maybe file:/// from s. It might be added by mupdf.
 // do not free the result
-static const WCHAR* SkipFileProtocol(const WCHAR* s) {
+static const WCHAR* SkipFileProtocolTemp(const WCHAR* s) {
     if (!str::StartsWithI(s, L"file://")) {
         return s;
     }
-    s += 7;
-    if (s[0] == L'/') {
-        s += 1;
+    s += 7; // skip "file://"
+    while (*s == L'/') {
+        s++;
     }
     return s;
 }
@@ -484,7 +484,7 @@ static const WCHAR* SkipFileProtocol(const WCHAR* s) {
 // TODO: could also parse page=1 and return it so that
 // we can go to the right place
 WCHAR* CleanupFileURL(const WCHAR* s) {
-    s = SkipFileProtocol(s);
+    s = SkipFileProtocolTemp(s);
     WCHAR* s2 = str::Dup(s);
     WCHAR* s3 = str::FindChar(s2, L'#');
     if (s3) {

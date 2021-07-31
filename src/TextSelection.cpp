@@ -129,7 +129,7 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     CrashIf(result < 0 || result >= textLen);
 
     // the result indexes the first glyph to be selected in a forward selection
-    RectF bbox = ts->engine->Transform(ToRectFl(coords[result]), pageNo, 1.0, 0);
+    RectF bbox = ts->engine->Transform(ToRectF(coords[result]), pageNo, 1.0, 0);
     pt = ts->engine->Transform(pt, pageNo, 1.0, 0);
     if (pt.x > bbox.x + 0.5 * bbox.dx) {
         result++;

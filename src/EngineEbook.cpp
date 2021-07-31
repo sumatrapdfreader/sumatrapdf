@@ -140,12 +140,12 @@ static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* 
         dest->kind = kindDestinationLaunchURL;
         // TODO: not sure about this
         // dest->value = str::Dup(res->value);
-        dest->rect = ToRectFl(rect);
+        dest->rect = ToRectF(rect);
     }
 
     auto res = new PageElementDestination(dest);
     res->pageNo = pageNo;
-    res->rect = ToRectFl(rect);
+    res->rect = ToRectF(rect);
 
 #if 0 // TODO: figure out
     if (showUrl) {
@@ -158,7 +158,7 @@ static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* 
 static IPageElement* NewImageDataElement(int pageNo, Rect bbox, int imageID) {
     auto res = new PageElementImage();
     res->pageNo = pageNo;
-    res->rect = ToRectFl(bbox);
+    res->rect = ToRectF(bbox);
     res->imageID = imageID;
     return res;
 }

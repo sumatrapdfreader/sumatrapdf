@@ -64,7 +64,7 @@ struct LinkHandler : ILinkHandler {
     void GotoLink(IPageDestination*) override;
     void GotoNamedDest(const WCHAR*) override;
     void ScrollTo(IPageDestination*) override;
-    void LauncURL(const char*) override;
+    void LaunchURL(const char*) override;
     void LaunchFile(const WCHAR* path, IPageDestination*) override;
     IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
 };
@@ -363,7 +363,6 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     }
 
     HWND hwndFrame = win->hwndFrame;
-    WCHAR* path = dest->GetValue();
     Kind kind = dest->GetKind();
     if (kindDestinationNone == kind) {
         return;
@@ -386,12 +385,10 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     }
 
     if (kindDestinationLaunchFile == kind) {
-        if (!path) {
-            return;
-        }
+        PageDestinationFile* pdf = (PageDestinationFile*)dest;
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
-        WCHAR* tmpPath = CleanupFileURL(path);
+        WCHAR* tmpPath = CleanupFileURL(pdf->path);
         LaunchFile(tmpPath, dest);
         str::Free(tmpPath);
         return;
@@ -415,7 +412,7 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     win->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 
-void LinkHandler::LauncURL(const char* uri) {
+void LinkHandler::LaunchURL(const char* uri) {
     if (!uri) {
         /* ignore missing URLs */;
         return;
@@ -440,20 +437,26 @@ void LinkHandler::LauncURL(const char* uri) {
     }
 }
 
-void LinkHandler::LaunchFile(const WCHAR* path, IPageDestination* link) {
+void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
+    // TDOO: maybe should enable this in plugin mode
+    if (gPluginMode) {
+        return;
+    }
+
+    AutoFreeWstr path = path::Normalize(pathOrig);
     WCHAR drive;
-    if (str::StartsWith(path, L"\\") || str::Parse(path, L"%c:\\", &drive) || gPluginMode) {
+    bool isAbsPath = str::StartsWith(path, L"\\") || str::Parse(path, L"%c:\\", &drive);
+    if (isAbsPath) {
         return;
     }
 
     IPageDestination* remoteLink = link;
-
     AutoFreeWstr fullPath(path::GetDir(win->ctrl->GetFilePath()));
     fullPath.Set(path::Join(fullPath, path));
-    fullPath.Set(path::Normalize(fullPath));
+
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
     WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
     // TODO: don't show window until it's certain that there was no error

@@ -118,6 +118,6 @@ class EngineMupdf : public EngineBase {
 
 EngineMupdf* AsEngineMupdf(EngineBase* engine);
 
-fz_rect To_fz_rect(RectF rect);
-RectF ToRectFl(fz_rect rect);
+fz_rect ToFzRect(RectF rect);
+RectF ToRectF(fz_rect rect);
 RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap);

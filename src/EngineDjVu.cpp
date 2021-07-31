@@ -117,7 +117,7 @@ static IPageElement* NewDjVuLink(int pageNo, Rect rect, const char* link, const 
         return nullptr;
     }
     auto res = new PageElementDestination(dest);
-    res->rect = ToRectFl(rect);
+    res->rect = ToRectF(rect);
     res->pageNo = pageNo;
     return res;
 }
@@ -720,7 +720,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         content.dx /= zoom;
         content.y /= zoom;
         content.dy /= zoom;
-        pageRc = ToRectFl(content.Round());
+        pageRc = ToRectF(content.Round());
     }
 
     return pageRc;
@@ -897,7 +897,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     for (size_t i = 0; i < coords.size(); i++) {
         if (!coords.at(i).IsEmpty()) {
             if (dpiFactor != 1.0) {
-                RectF pageF = ToRectFl(coords.at(i));
+                RectF pageF = ToRectF(coords.at(i));
                 pageF.x *= dpiFactor;
                 pageF.dx *= dpiFactor;
                 pageF.y *= dpiFactor;
@@ -1082,7 +1082,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
     }
 
     if (CouldBeURL(link)) {
-        linkHandler->LauncURL(link);
+        linkHandler->LaunchURL(link);
         return true;
     }
 

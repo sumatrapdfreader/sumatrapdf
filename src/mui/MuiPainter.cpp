@@ -41,7 +41,7 @@ void Painter::PaintBackground(Graphics* g, Rect r) {
     // at the top if I don't do this
     r.Inflate(1, 1);
     ColorData* bgColor = wnd->cachedStyle->bgColor;
-    auto rf = ToRectFl(r);
+    auto rf = ToRectF(r);
     Brush* br = BrushFromColorData(bgColor, rf);
     g->FillRectangle(br, ToGdipRect(r));
 }

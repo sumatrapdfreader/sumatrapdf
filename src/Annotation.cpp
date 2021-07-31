@@ -149,7 +149,7 @@ RectF GetRect(Annotation* annot) {
     ScopedCritSec cs(e->ctxAccess);
 
     fz_rect rc = pdf_annot_rect(e->ctx, annot->pdfannot);
-    auto rect = ToRectFl(rc);
+    auto rect = ToRectF(rc);
     return rect;
 }
 
@@ -157,7 +157,7 @@ void SetRect(Annotation* annot, RectF r) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
 
-    fz_rect rc = To_fz_rect(r);
+    fz_rect rc = ToFzRect(r);
     pdf_set_annot_rect(e->ctx, annot->pdfannot, rc);
     pdf_update_annot(e->ctx, annot->pdfannot);
     e->InvalideAnnotationsForPage(annot->pageNo);
@@ -220,7 +220,7 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     constexpr int kMaxQuads = (int)dimof(quads);
     for (int i = 0; i < n && i < kMaxQuads; i++) {
         RectF rect = rects[i];
-        fz_rect r = To_fz_rect(rect);
+        fz_rect r = ToFzRect(rect);
         fz_quad q = fz_quad_from_rect(r);
         quads[i] = q;
     }
@@ -241,7 +241,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     for (int i = 0; i < n; i++) {
         fz_quad q = pdf_annot_quad_point(e->ctx, annot->pdfannot, i);
         fz_rect r = fz_rect_from_quad(q);
-        RectF rect = ToRectFl(r);
+        RectF rect = ToRectF(r);
         res.Append(rect);
     }
     return res;

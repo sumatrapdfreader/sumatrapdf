@@ -404,7 +404,7 @@ Size ToSize(const SizeF s) {
     return Size(dx, dy);
 }
 
-RectF ToRectFl(const Rect r) {
+RectF ToRectF(const Rect r) {
     return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
 }
 

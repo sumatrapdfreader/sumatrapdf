@@ -36,7 +36,7 @@ struct ILinkHandler {
     virtual void GotoLink(IPageDestination*) = 0;
     virtual void GotoNamedDest(const WCHAR*) = 0;
     virtual void ScrollTo(IPageDestination*) = 0;
-    virtual void LauncURL(const char*) = 0;
+    virtual void LaunchURL(const char*) = 0;
     virtual void LaunchFile(const WCHAR* path, IPageDestination*) = 0;
     virtual IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) = 0;
 };
