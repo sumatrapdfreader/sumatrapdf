@@ -427,36 +427,44 @@ const char* FindI(const char* s, const char* toFind) {
     return nullptr;
 }
 
+void ReplacePtr(const char** s, const char* snew) {
+    if (*s != snew) {
+        str::Free(*s);
+        *s = (char*)snew;
+    }
+}
+
 void ReplacePtr(char** s, const char* snew) {
-    if (*s == snew) {
-        return;
-    }
-    free(*s);
-    *s = (char*)snew;
+    ReplacePtr((const char**)s, snew);
 }
 
-void ReplacePtr(WCHAR** s, const WCHAR* snew) {
-    if (*s == snew) {
-        return;
+void ReplacePtr(const WCHAR** s, const WCHAR* snew) {
+    if (*s != snew) {
+        str::Free(*s);
+        *s = (WCHAR*)snew;
     }
-    free(*s);
-    *s = (WCHAR*)snew;
-}
-
-void ReplaceWithCopy(char** s, const char* snew) {
-    if (*s == snew) {
-        return;
-    }
-    free(*s);
-    *s = str::Dup(snew);
 }
 
 void ReplaceWithCopy(const char** s, const char* snew) {
-    if (*s == snew) {
-        return;
+    if (*s != snew) {
+        str::Free(*s);
+        *s = str::Dup(snew);
     }
-    free((char*)*s);
-    *s = str::Dup(snew);
+}
+
+void ReplaceWithCopy(char** s, const char* snew) {
+    ReplaceWithCopy((const char**)s, snew);
+}
+
+void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew) {
+    if (*s != snew) {
+        str::Free(*s);
+        *s = str::Dup(snew);
+    }
+}
+
+void ReplaceWithCopy(WCHAR** s, const WCHAR* snew) {
+    ReplaceWithCopy((const WCHAR**)s, snew);
 }
 
 char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator) {
@@ -2166,11 +2174,6 @@ const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
         s++;
     }
     return nullptr;
-}
-
-void ReplaceWithCopy(WCHAR** s, const WCHAR* snew) {
-    free(*s);
-    *s = str::Dup(snew);
 }
 
 WCHAR* ToLowerInPlace(WCHAR* s) {

@@ -290,7 +290,7 @@ bool OpenFileExternally(const WCHAR* path) {
     }
 
     // check if this file's perceived type is allowed
-    const WCHAR* ext = path::GetExtNoFreeTemp(path);
+    const WCHAR* ext = path::GetExtTemp(path);
     AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml")) {

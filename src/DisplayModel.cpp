@@ -85,7 +85,7 @@ const WCHAR* DisplayModel::GetFilePath() const {
 }
 
 const WCHAR* DisplayModel::GetDefaultFileExt() const {
-    return engine->defaultFileExt;
+    return engine->defaultExt;
 }
 
 int DisplayModel::PageCount() const {

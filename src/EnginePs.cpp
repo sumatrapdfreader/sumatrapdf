@@ -240,7 +240,7 @@ class EnginePs : public EngineBase {
   public:
     EnginePs() {
         kind = kindEnginePostScript;
-        defaultFileExt = L".ps";
+        defaultExt = L".ps";
     }
 
     ~EnginePs() override {
@@ -354,7 +354,7 @@ class EnginePs : public EngineBase {
         }
 
         if (str::EndsWithI(FileName(), L".eps")) {
-            defaultFileExt = L".eps";
+            defaultExt = L".eps";
         }
 
         if (!pdfEngine) {

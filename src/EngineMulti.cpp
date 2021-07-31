@@ -94,7 +94,7 @@ EngineBase* EngineMulti::PageToEngine(int& pageNo) const {
 
 EngineMulti::EngineMulti() {
     kind = kindEngineMulti;
-    defaultFileExt = L""; // TODO: no extension, is it important?
+    defaultExt = L""; // TODO: no extension, is it important?
     fileDPI = 72.0f;
 }
 

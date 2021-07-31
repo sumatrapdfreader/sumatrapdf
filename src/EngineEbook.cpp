@@ -698,7 +698,7 @@ class EngineEpub : public EngineEbook {
 
 EngineEpub::EngineEpub() : EngineEbook() {
     kind = kindEngineEpub;
-    defaultFileExt = L".epub";
+    defaultExt = L".epub";
 }
 
 EngineEpub::~EngineEpub() {
@@ -840,7 +840,7 @@ class EngineFb2 : public EngineEbook {
   public:
     EngineFb2() : EngineEbook() {
         kind = kindEngineFb2;
-        defaultFileExt = L".fb2";
+        defaultExt = L".fb2";
     }
     ~EngineFb2() override {
         delete tocTree;
@@ -898,7 +898,7 @@ bool EngineFb2::FinishLoading() {
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     if (doc->IsZipped()) {
-        defaultFileExt = L".fb2z";
+        defaultExt = L".fb2z";
     }
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
@@ -960,7 +960,7 @@ class EngineMobi : public EngineEbook {
   public:
     EngineMobi() : EngineEbook() {
         kind = kindEngineMobi;
-        defaultFileExt = L".mobi";
+        defaultExt = L".mobi";
     }
     ~EngineMobi() override {
         delete tocTree;
@@ -1112,7 +1112,7 @@ class EnginePdb : public EngineEbook {
   public:
     EnginePdb() : EngineEbook() {
         kind = kindEnginePdb;
-        defaultFileExt = L".pdb";
+        defaultExt = L".pdb";
     }
     ~EnginePdb() override {
         delete tocTree;
@@ -1326,7 +1326,7 @@ class EngineChm : public EngineEbook {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
-        defaultFileExt = L".chm";
+        defaultExt = L".chm";
     }
     ~EngineChm() override {
         delete dataCache;
@@ -1578,7 +1578,7 @@ class EngineHtml : public EngineEbook {
     EngineHtml() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        defaultFileExt = L".html";
+        defaultExt = L".html";
     }
     ~EngineHtml() override {
         delete doc;
@@ -1680,7 +1680,7 @@ class EngineTxt : public EngineEbook {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        defaultFileExt = L".txt";
+        defaultExt = L".txt";
     }
     ~EngineTxt() override {
         delete tocTree;
@@ -1716,7 +1716,7 @@ bool EngineTxt::Load(const WCHAR* fileName) {
 
     SetFileName(fileName);
 
-    defaultFileExt = path::GetExtNoFreeTemp(fileName);
+    defaultExt = path::GetExtTemp(fileName);
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc) {

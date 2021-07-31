@@ -43,7 +43,7 @@ std::string_view GetBaseName(std::string_view path) {
 }
 
 // do not free, returns pointer inside <path>
-const char* GetExtNoFreeTemp(const char* path) {
+const char* GetExtTemp(const char* path) {
     const char* ext = nullptr;
     char c = *path;
     while (c) {
@@ -107,7 +107,7 @@ const WCHAR* GetBaseNameTemp(const WCHAR* path) {
 
 // returns extension e.g. ".pdf"
 // do not free, returns pointer inside <path>
-const WCHAR* GetExtNoFreeTemp(const WCHAR* path) {
+const WCHAR* GetExtTemp(const WCHAR* path) {
     const WCHAR* ext = path + str::Len(path);
     while ((ext > path) && !IsSep(*ext)) {
         if (*ext == '.') {

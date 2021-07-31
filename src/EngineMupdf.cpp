@@ -40,13 +40,13 @@ static float layoutFontEm = 11.f * kZoom;
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
-#define MAX_MEMORY_FILE_SIZE (32 * 1024 * 1024)
+constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
 
 // in mupdf_load_system_font.c
 extern "C" void drop_cached_fonts_for_ctx(fz_context*);
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
-AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
+static AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
     return (AnnotationType)tp;
 }
 
@@ -308,7 +308,7 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const WCHAR* filePath) {
     i64 fileSize = file::GetSize(path.AsView());
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
-    if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {
+    if (fileSize > 0 && fileSize < kMaxMemoryFileSize) {
         auto dataTmp = file::ReadFileWithAllocator(filePath, nullptr);
         if (dataTmp.empty()) {
             // failed to read
@@ -1336,7 +1336,7 @@ static void InstallFitzErrorCallbacks(fz_context* ctx) {
 
 EngineMupdf::EngineMupdf() {
     kind = kindEngineMupdf;
-    defaultFileExt = L".pdf";
+    defaultExt = str::Dup(L".pdf");
     fileDPI = 72.0f;
 
     for (size_t i = 0; i < dimof(mutexes); i++) {
@@ -1392,6 +1392,7 @@ EngineMupdf::~EngineMupdf() {
     delete _pageLabels;
     delete tocTree;
 
+    str::Free(defaultExt);
     for (size_t i = 0; i < dimof(mutexes); i++) {
         LeaveCriticalSection(&mutexes[i]);
         DeleteCriticalSection(&mutexes[i]);
@@ -1522,15 +1523,15 @@ std::span<u8> EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     return {data, dataSize};
 }
 
-bool EngineMupdf::Load(const WCHAR* filePath, PasswordUI* pwdUI) {
+bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
-    SetFileName(filePath);
-    if (!ctx) {
-        return false;
-    }
+    SetFileName(path);
+
+    auto ext = path::GetExtTemp(path);
+    str::ReplaceWithCopy(&defaultExt, ext);
 
     int streamNo = -1;
-    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
+    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
 
     fz_stream* file = nullptr;
     fz_try(ctx) {
@@ -1597,6 +1598,8 @@ bool EngineMupdf::Load(IStream* stream, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
+#include "utils/Dpi.h"
+
 bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
@@ -1608,6 +1611,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         _doc = fz_open_document_with_stream(ctx, fileNameA, stm);
         pdfdoc = pdf_specifics(ctx, _doc);
         // TODO: maybe delay this call?
+        // float fontEm = DpiScale(layoutFontEm);
         fz_layout_document(ctx, _doc, layoutDx, layoutDy, layoutFontEm);
     }
     fz_always(ctx) {

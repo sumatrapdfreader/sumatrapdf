@@ -813,7 +813,7 @@ static std::span<u8> loadFromFile(Fb2Doc* doc) {
     // .url files in addition (TODO: anything else?)
     for (auto&& fileInfo : fileInfos) {
         auto fileName = fileInfo->name;
-        const char* ext = path::GetExtNoFreeTemp(fileName.data());
+        const char* ext = path::GetExtTemp(fileName.data());
         if (str::EqI(ext, ".fb2") && data.empty()) {
             data = archive->GetFileDataById(fileInfo->fileId);
         } else if (!str::EqI(ext, ".url")) {

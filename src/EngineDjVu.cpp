@@ -302,7 +302,7 @@ class EngineDjVu : public EngineBase {
 
 EngineDjVu::EngineDjVu() {
     kind = kindEngineDjVu;
-    defaultFileExt = L".djvu";
+    defaultExt = L".djvu";
     // DPI isn't constant for all pages and thus premultiplied
     fileDPI = 300.0f;
     GetDjVuContext();

@@ -377,7 +377,7 @@ class EngineBase {
     Kind kind{nullptr};
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
-    const WCHAR* defaultFileExt{nullptr};
+    const WCHAR* defaultExt{nullptr};
     PageLayoutType preferredLayout = Layout_Single;
     float fileDPI = 96.0f;
     bool isImageCollection{false};

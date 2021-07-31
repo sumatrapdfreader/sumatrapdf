@@ -429,7 +429,7 @@ EngineBase* EngineImage::Clone() {
 
     EngineImage* clone = new EngineImage();
     clone->SetFileName(FileName());
-    clone->defaultFileExt = defaultFileExt;
+    clone->defaultExt = defaultExt;
     clone->fileExt = fileExt;
     clone->fileDPI = fileDPI;
     if (fileStream) {
@@ -449,7 +449,7 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
 
     AutoFree data = file::ReadFile(file);
     fileExt = GfxFileExtFromData(data.AsSpan());
-    defaultFileExt = fileExt;
+    defaultExt = fileExt;
     image = BitmapFromData(data.AsSpan());
     return FinishLoading();
 }
@@ -469,7 +469,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
         return false;
     }
 
-    defaultFileExt = fileExt;
+    defaultExt = fileExt;
 
     AutoFree data = GetDataFromStream(stream, nullptr);
     if (IsGdiPlusNativeFormat(data.AsSpan())) {
@@ -668,7 +668,7 @@ class EngineImageDir : public EngineImages {
     EngineImageDir() {
         fileDPI = 96.0f;
         kind = kindEngineImageDir;
-        defaultFileExt = L"";
+        defaultExt = L"";
         // TODO: is there a better place to expose pageFileNames
         // than through page labels?
         hasPageLabels = true;
@@ -748,14 +748,14 @@ WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
 
     const WCHAR* path = pageFileNames.at(pageNo - 1);
     const WCHAR* fileName = path::GetBaseNameTemp(path);
-    size_t n = path::GetExtNoFreeTemp(fileName) - fileName;
+    size_t n = path::GetExtTemp(fileName) - fileName;
     return str::Dup(fileName, n);
 }
 
 int EngineImageDir::GetPageByLabel(const WCHAR* label) const {
     for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR* fileName = path::GetBaseNameTemp(pageFileNames.at(i));
-        const WCHAR* fileExt = path::GetExtNoFreeTemp(fileName);
+        const WCHAR* fileExt = path::GetExtTemp(fileName);
         if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0')) {
             return (int)i + 1;
@@ -1001,7 +1001,7 @@ bool EngineCbx::FinishLoading() {
     // TODO: return DpiGetForHwnd(HWND_DESKTOP) instead?
     fileDPI = 96.f;
 
-    defaultFileExt = GetExtFromArchiveType(cbxFile);
+    defaultExt = GetExtFromArchiveType(cbxFile);
 
     Vec<MultiFormatArchive::FileInfo*> pageFiles;
 
