@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9cf55ee996e1a9d172e6c3a1cd205748aab5bce7
+6bef604863b763b4bff861e2a2b1a13d77ba34ec
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -500,6 +500,7 @@ am:&Շարունակել 32 բիթային տարբերակի տեղադրում
 ca:&Continua amb la instal·lació de la versió de 32 bits
 cn:继续安装 32 位版本(&C)
 de:Installation der 32-Bit-Version fortsetzen
+el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
@@ -510,6 +511,7 @@ am:&Պատճենել ընտրումը \tCtrl-C
 ca:&Copia la selecció \tCtrl-C
 cn:复制所选内容(&C)\tCtrl+C
 de:Auswahl kopieren \tStrg+C
+el:Αντιγραφή επιλογής \tCtrl-C
 es:&Copiar la selección \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
@@ -520,6 +522,7 @@ am:&Պատճենել սեղմատախտգակ\tCtrl-C
 ca:&Copia al porta-retalls\tCtrl-C
 cn:复制到剪贴板(&C)\tCtrl+C
 de:In Zwischenablage kopieren\tStrg+C
+el:Αντιγραφή στο πρόχειρο\tCtrl-C
 es:&Copiar al portapapeles\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
@@ -530,6 +533,7 @@ am:&Մերժել
 ca:&Descarta
 cn:取消(&D)
 de:Verwerfen
+el:Απόρριψη
 es:&Descartar
 it:Scarica
 kr:무시(&D)
@@ -822,7 +826,7 @@ cz:&Najít:
 de:&Suchen nach:
 dk:&Find hvad:
 el:&Εύρεση του:
-es:&Encontrar:
+es:&Buscar:
 et:&Otsitav:
 eu:&Bilatu hau:
 fa:&جستجو برای:
@@ -958,7 +962,7 @@ cz:Přizpůsobit &stránky na tisknutelnou plochu
 de:Seiten in Druckbereich &einpassen
 dk:&Tilpas sider til udskrivningsområdet
 el:Προσαρμογή σελίδων σε &εκτυπώσιμη περιοχή
-es:&Ajustar páginas al área de impresión
+es:&Ajustar las páginas al área de impresión
 et:&Sobita leheküljed prinditavale alale
 eu:&Zuzendu orrialdeak eremu irarkigarrira
 fa:اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &درست کن
@@ -1011,7 +1015,7 @@ ca:Text &lliure
 cn:&自由文本
 de:&Freitext
 el:Ελεύθερο κείμενο
-es:&Texto Libre
+es:&Texto libre
 hr:&Slobodni tekst
 it:Testo libero
 kw:&Tekst Rydh
@@ -1666,7 +1670,7 @@ cz:&Pouze liché stránky
 de:Nur &ungerade Seiten
 dk:&Kun ulige sider
 el:&Μόνο οι μονές σελίδες
-es:&Sólo páginas impares
+es:&Solo páginas impares
 et:Vaid &paaritud leheküljed
 eu:&Orrialde bikoitiak bakarrik
 fa:فقط صفحات &فرد
@@ -1731,7 +1735,7 @@ cz:&Otevřít dokument
 de:Dokument ö&ffnen
 dk:&Åbn dokument
 el:Ά&νοιγμα εγγράφου
-es:&Abrir documento
+es:&Abrir un documento
 et:&Ava dokument
 eu:&Ireki Agiria
 fa:باز کردن سند
@@ -2058,7 +2062,7 @@ cz:&Připnout dokument
 de:Dokument &anheften
 dk:&Fastgør dokument
 el:&Καρφίτσωμα εγγράφου
-es:Fi&jar documento
+es:Fi&jar el documento
 et:&Kinnita dokument
 eu:&Pin Agiria
 fa:&سنجاق کردن سند
@@ -2542,6 +2546,7 @@ am:&Պահել առկա PDF-ում
 ca:Desa a un PDF &existent
 cn:保存到当前 PDF 文件(&S)
 de:In bestehendes PDF &speichern
+el:Αποθήκευση σε υπάρχον PDF
 es:&Guardar en un PDF existente
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
@@ -2552,6 +2557,7 @@ am:&Որոնել Google-ով
 ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
 de:Mit Google &suchen
+el:Αναζήτηση με Google
 es:&Buscar con Google
 it:Cerca con Google
 nl:&Zoeken Met Google
@@ -2853,6 +2859,7 @@ am:&Թարգմանել Google-ով
 ca:Tradueix amb &Google
 cn:使用谷歌翻译(&T)
 de:Mi&t Google übersetzen
+el:Μετάφραση με Google
 es:&Traducir con Google
 it:&Traduci con Google
 kr:Google로 번역(&T)
@@ -2889,7 +2896,7 @@ cy:&Defnyddio maint gwreiddiol y dudalen
 cz:Po&užít původní velikost stránky
 de:Seitengröße &nicht anpassen
 dk:&Brug originale sidestørrelser
-el:&Χρησιμοποίηση μεγέθους αρχικών σελίδων
+el:&Χρήση αρχικού μεγέθους σελίδων
 es:&Usar el tamaño original de la página
 et:&Kasuta algseid lehekülje suuruseid
 eu:E&rabili jatorrizko orrilde neurria
@@ -5251,6 +5258,7 @@ am:Արդիացումների ստուգում...
 ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
 de:Nach einem Update suchen...
+el:Έλεγχος για ενημέρωση...
 es:Buscando actualizaciones...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
@@ -6825,6 +6833,7 @@ am:Ստեղծել մեկնաբանություն &նշորդի ներքո
 ca:Crea una anotació a &sota del cursor
 cn:在光标位置创建标注(&U)
 de:Anmerkung &unter dem Cursor erstellen
+el:Δημιουργία σχολιασμού κάτω από το δρομέα
 es:Crear una anotación &bajo el cursor
 it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
@@ -7620,6 +7629,7 @@ am:Չտեղադրել
 ca:No ho instal·lis
 cn:不安装
 de:Nicht installieren
+el:Μη γίνει εγκατάσταση
 es:No instalar
 it:Non installare
 kr:설치하지 마십시오
@@ -7630,6 +7640,7 @@ am:Ներբեռնել 64 բիթային տարբերակը
 ca:Baixa la versió de 64 bits
 cn:下载 64 位版本
 de:64-Bit-Version herunterladen
+el:Λήψη έκδοσης 64-bit 
 es:Descargar la versión de 64 bits
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
@@ -8679,7 +8690,7 @@ cz:Nepodařilo se zapsat informace o příponě souboru do registru
 de:Fehler beim Schreiben der erweiterten Dateierweiterungsinformationen in die Registry
 dk:Kunne ikke skrive udvidet information om filens efternavn i registreringsdatabasen
 el:Απέτυχε η εγγραφή του εκτεταμένου αρχείου πληροφοριών στο μητρώο
-es:Fallo al escribir información de la extensión de archivo en el registro
+es:Error al escribir la información de la extensión del archivo en el registro
 et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
 fa:ثبت اطلاعات ارسال شده با پسوند طولانی ناموفق
@@ -8802,7 +8813,7 @@ cz:Rychlé zobrazování z webu
 de:Schnelle Webanzeige
 dk:Hurtig Internetvisning
 el:Γρήγορη διαδικτυακή προβολή
-es:Visualización rápida en Web
+es:Vista web rápida
 et:Kiire veebivaade
 eu:Web Ikuspen Azkarra
 fa:نمایش بی‌درنگ
@@ -8993,7 +9004,7 @@ cz:Soubor %s nebyl nalezen
 de:Datei %s nicht gefunden
 dk:Filen %s blev ikke fundet
 el:Το αρχείο %s δε βρέθηκε
-es:No se encontró el archivo %s
+es:No se ha encontrado el archivo %s
 et:Faili %s ei leitud
 eu:%s agiria ez da aurkitu
 fa:پرونده %s پیدا نشد
@@ -9052,7 +9063,7 @@ cy:Atodiad Ffeil
 de:Dateianhang
 dk:Vedhæftet fil
 el:Συνημμένο αρχείο
-es:Adjuntar archivo
+es:Archivo adjunto
 fr:Pièce jointe
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
@@ -9088,7 +9099,7 @@ cz:Velikost souboru:
 de:Dateigröße:
 dk:Filstørrelse:
 el:Μέγεθος αρχείου:
-es:Tamaño de archivo:
+es:Tamaño del archivo:
 et:Faili suurus:
 eu:Agiriaren neurria:
 fa:حجم پرونده:
@@ -9575,7 +9586,7 @@ cz:Přizpůsobit &obsah\tCtrl+3
 de:An &Inhalt anpassen\tStrg+3
 dk:Tilpas &indhold\tCrtl-3
 el:&Προσαρμογή στα περιεχόμενα\tCtrl+3
-es:Ajustar a &contenido\tCtrl+3
+es:Ajustar al &contenido\tCtrl+3
 et:&Sisu sobitamine\tCtrl+3
 eu:Finkatu &Edukia\tKtrl+3
 fa:متناسب کردن با &محتویات\tCtrl+3
@@ -9640,7 +9651,7 @@ cz:Podle &stránky\tCtrl+0
 de:An &Seite anpassen\tStrg+0
 dk:Tilpas &side\tCtrl+0
 el:&Προσαρμογή στη σελίδα\tCtrl+0
-es:Ajustar a &página\tCtrl+0
+es:Ajustar a la &página\tCtrl+0
 et:Lehekülje &kõrguse sobitamine\tCtrl+0
 eu:&Finkatu Orrialdea\tKtrl+O
 fa:به &بزرگی پنجره\tCtrl+0
@@ -9710,7 +9721,7 @@ cz:&Podle šířky\tCtrl+2
 de:An Fenster&breite anpassen\tStrg+2
 dk:Tilpas &bredde\tCtrl+2
 el:&Προσαρμογή στο πλάτος παραθύρου\tCtrl+2
-es:Ajustar a a&nchura\tCtrl+2
+es:Ajustar al a&ncho\tCtrl+2
 et:Lehekülje &laiuse sobitamine\tCtrl+2
 eu:Finkatu &Zabalera\tKtrl+2
 fa:به بزرگی &پهنای پنجره\tCtrl+2
@@ -9778,7 +9789,7 @@ cz:Přizpůsobit obsah
 de:An Inhalt anpassen
 dk:Tilpas indhold
 el:Προσαρμογή στα περιεχόμενα
-es:Ajustar a contenido
+es:Ajustar al contenido
 et:Sisu sobitamine
 eu:Finkatu Edukia
 fa:متناسب کردن با محتویات
@@ -9844,7 +9855,7 @@ cz:Podle stránky
 de:An Seite anpassen
 dk:Tilpas side
 el:Ολόκληρη σελίδα
-es:Ajustar a página
+es:Ajustar a la página
 et:Lehekülje kõrguse sobitamine
 eu:Finkatu Orrialdea
 fa:به بزرگی پنجره
@@ -10634,7 +10645,7 @@ cz:Skrýt často čtené dokumenty
 de:Oft gelesene Dokumente ausblenden
 dk:Skjul hyppigt læste
 el:Απόκρυψη συχνών αναγνωσμένων αρχείων
-es:Ocultar "lo más leído"
+es:Ocultar lo más leído
 et:Peida sageli loetud dokumendid
 eu:Ezkutatu sarri irakurriak
 fa:پنهان کردن آخرین چیزهایی که خوانده‌اید
@@ -11004,6 +11015,7 @@ am:Տեղադրել և վեաթողարկել
 ca:Instal·la i reinicia
 cn:安装并启动
 de:Installieren und neu starten
+el:Εγκατάσταση και επανεκκίνηση 
 es:Instalar y reiniciar
 it:Installa e ri-esegui
 kr:설치 후 재실행
@@ -11140,6 +11152,7 @@ am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
 ca:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 cn:在 64 位操作系统上安装 32 位 SumatraPDF
 de:32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem installieren
+el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστημα 64 bit 
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
@@ -11294,7 +11307,7 @@ cz:Nechte Windows zobrazit &náhledy PDF dokumentů
 de:Windows soll eine &Vorschau für PDF-Dokumente anzeigen
 dk:Lad Windows vise &forhåndsvisninger af PDF-dokumenter
 el:Εμφάνιση προεπισκόπησης των εγγράφων PDF στα Windows
-es:Mostrar miniaturas en los iconos de documentos &PDF
+es:Mostrar vistas previas en los iconos de los documentos &PDF
 et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fa:ویندوز امکان پیش‌نمایش اسناد PDF را داشته باشد
@@ -11584,7 +11597,7 @@ cz:Nastavit SumatraPDF jako výchozí PDF prohlížeč
 de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
 dk:Gør SumatraPDF til min standardlæser for PDF-filer
 el:Συσχετισμός του SumatraPDF με τα αρχεία PDF
-es:Convertir SumatraPDF el lector PDF predeterminado
+es:Convertir SumatraPDF en el lector PDF predeterminado
 et:Tee SumatraPDF PDF-failide vaikerakenduseks
 eu:Egin SumatraPDF nire berezko PDF irakurlea
 fa:انتخاب SumatraPDF به عنوان برنامه‌ی پیش‌فرض من برای خواندن اسناد PDF
@@ -11783,7 +11796,7 @@ cz:Dokumenty Mobi
 de:Mobi-Dokumente
 dk:Mobi-dokumenter
 el:Έγγραφα Mobi
-es:Documentos en formato Mobi
+es:Documentos Mobi
 et:Mobi-dokumendid
 eu:Mobi agiriak
 fa:Mobi اسناد
@@ -11911,8 +11924,8 @@ cy:Ffenestr ne&wydd\tCtrl+N
 cz:Nové &okno\tCtrl+N
 de:Neues Fenster\tStrg+N
 dk:Ny &vindue\tCtrl+N
-el:Νέο &παράθυρο\tCtrl+N
-es:Nueva &ventana\tCtrl+N
+el:Νέο παράθυρο\tCtrl+N
+es:&Ventana nueva\tCtrl+N
 et:Uus &aken\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
@@ -11942,7 +11955,8 @@ am:Մատչելի է նոր տարբերակ
 ca:Hi ha una versió nova disponible
 cn:有新版本
 de:Neue Version verfügbar
-es:Nueva versión disponible
+el:Νέα έκδοση διαθέσιμη
+es:Disponible una versión nueva
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
 nl:Nieuwe versie beschikbaar
@@ -12036,7 +12050,7 @@ cz:Žádná položka nebyla nalezena
 de:Suchbegriff nicht gefunden
 dk:Ingen resultater blev fundet
 el:Δε βρέθηκε το κείμενο
-es:No se encontraron coincidencias
+es:No se han encontrado coincidencias
 et:Otsitavat teksti ei leitud
 eu:Ez da emaitzik aurkitu
 fa:موردی یافت نشد
@@ -12102,7 +12116,7 @@ cz:Kolem řádku %u v souboru %s nebyl nalezen žádný výsledek
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
 dk:Intet resultat fundet omkring linje %u i filen %s
 el:Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s
-es:No se encontró resultado cerca de la línea %u en el archivo %s
+es:No se ha encontrado ningún resultado cerca de la línea %u en el archivo %s
 et:Tulemusi ei leitud rea %u lähedalt failis %s
 eu:Ez da emaitzik aurkitu %u lerro inguran %s agirian
 fa:هیچ نتیجه‌ای در خط %u در پرونده‌ی %s یافت نشد
@@ -12165,7 +12179,7 @@ cz:Soubor synchronizace nebyl nalezen
 de:Synchronisationsdatei nicht gefunden
 dk:Ingen synkroniseringsfil fundet
 el:Δε βρέθηκε αρχείο συγχρονισμού
-es:No se encontró archivo de sincronización
+es:No se ha encontrado ningún archivo de sincronización
 et:Sünkroniserimisfaili ei leitud
 eu:Aldiberetze agiria ez da aurkitu
 fa:پرونده همگام‌سازی موجود نیست
@@ -12561,7 +12575,7 @@ cy:Agor PDF wedi'i Mewnosod
 de:Eingebettetes PDF öffnen
 dk:Åbn integreret PDF
 el:Άνοιγμα ενσωματωμένου PDF 
-es:Abrir PDF adjunto
+es:Abrir un PDF incrustado
 fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
 gl:Abrir PDF inserido
@@ -12852,7 +12866,7 @@ cz:Otevřít v programu Microsoft HTML Help
 de:Mit &Microsoft HTML-Hilfe öffnen
 dk:Åbn med Microsoft HTML Help
 el:Άνοιγμα με Microsoft HTML Help
-es:Abrir con &Microsoft HTML Help
+es:Abrir con Ayuda HTML de &Microsoft
 et:Ava Microsoft HTML Helpga
 eu:Ireki Microsoft HTML Laguntzan
 fa:باز کردن در &Microsoft HTML Help
@@ -12916,7 +12930,7 @@ cz:Otevřít v programu Microsoft XPS-Viewer
 de:Mit &Microsoft XPS-Viewer öffnen
 dk:Åbn med Microsoft XPS-Viewer
 el:Άνοιγμα με Microsoft XPS-Viewer
-es:Abrir con el Visor XPS de &Microsoft
+es:Abrir con Visor XPS de &Microsoft
 et:Ava Microsoft XPS-Viewerga
 eu:Ireki Microsoft XPS-Ikusgailuan
 fa:باز کردن در Microsoft X&PS-Viewer
@@ -14341,7 +14355,7 @@ cz:Tiskárna se zadaným názvem neexistuje
 de:Drucker mit dem angegebenen Namen nicht gefunden
 dk:Printer med dette navn findes ikke
 el:Ο εκτυπωτής με αυτό το όνομα δεν υπάρχει
-es:La impresora con el nombre especificado no existe
+es:No existe la impresora con el nombre especificado
 et:Antud nimega printerit ei leidu
 eu:Ez dagi emandako izenik duen irarkailurik
 fa:چاپگری با نام داده شده وجود ندارد
@@ -14592,7 +14606,7 @@ cz:Tisk stránky %d z %d...
 de:Drucke Seite %d von %d…
 dk:Udskriver side %d af %d ...
 el:Εκτύπωση σελίδας %d από %d...
-es:Imprimiendo página %d de %d...
+es:Imprimiendo la página %d de %d...
 et:Lehekülje %d/%d printimine...
 eu:%d orria %d-tik irarkitzen...
 fa:در حال چاپ کردن صفحه‌ی %d از %d...
@@ -15200,6 +15214,7 @@ am:Ը&նտրում
 ca:S&elecció
 cn:选择(&E)
 de:Auswahl
+el:Επιλογή
 es:S&elección
 it:S&elezione
 kr:선택(&e)
@@ -15224,6 +15239,7 @@ pl:&Falowanie
 am:SVG փաստաթղթեր
 ca:Documents SVG
 de:SVG-Dokumente
+el:Έγγραφα SVG
 es:Documentos SVG
 it:Documenti SVG
 pl:Documenty SVG
@@ -15360,6 +15376,7 @@ am:Պահե՞լ մեկնաբանությունը:
 ca:Voleu desar les anotacions?
 cn:是否保存标注？
 de:Anmerkungen speichern?
+el:Αποθήκευση σχολιασμών;
 es:¿Guardar las anotaciones?
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
@@ -15404,6 +15421,7 @@ am:Պահել &նոր PDF-ում
 ca:Desa a un PDF &nou
 cn:保存至新的 PDF 文件(&N)
 de:In &neue PDF speichern
+el:Αποθήκευση σε νέο PDF
 es:Guardar en un PDF &nuevo
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
@@ -15414,6 +15432,7 @@ am:Որոնել &Bing-ով
 ca:Cerca amb el &Bing
 cn:使用必应搜索(&B)
 de:Mit &Bing suchen
+el:Αναζήτηση με Bing
 es:Buscar con &Bing
 it:Cerca con &Bing
 kr:Bing으로 검색(&B)
@@ -15424,6 +15443,7 @@ am:Որոնել &Google-ով
 ca:Cerca amb el &Google
 cn:使用谷歌搜索(&G)
 de:Mit &Google suchen
+el:Αναζήτηση με Google
 es:Buscar con &Google
 it:Cerca con &Google
 kr:Google로 검색(&G)
@@ -16496,6 +16516,7 @@ am:Բաց թողնել այս տարբերակը
 ca:Omet aquesta versió
 cn:跳过该版本
 de:Diese Version überspringen
+el:Παράλειψη αυτής της έκδοσης
 es:Omitir esta versión
 it:Salta questa versione
 kr:이 버전 건너뛰기
@@ -17894,6 +17915,7 @@ am:Թարգմանել &DeepL-ով
 ca:Tradueix amb &Deepl
 cn:使用 DeepL 翻译(&D)
 de:Mit &DeepL übersetzen
+el:Μετάφραση με DeepL
 es:Traducir con &DeepL
 it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
@@ -18168,6 +18190,7 @@ am:Չպահված մեկնաբանություններ '%s'-ում
 ca:Anotacions sense desar a "%s".
 cn:'%s' 中有未保存的标注
 de:Nicht gespeicherte Anmerkungen in '%s'
+el:Μη αποθηκευμένα σχόλια στο '%s'
 es:Anotaciones sin guardar en "%s"
 it:Annotazioni non salvate in '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
@@ -18248,7 +18271,7 @@ cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF-Dokumente verwenden
 dk:Anvend SumatraPDF som &standard PDF-læser
-el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
+el:Χρήση του SumatraPDF ως προεπιλεγμένου αναγνώστη PDF
 es:Usar SumatraPDF como lector PDF pre&determinado
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
@@ -18656,6 +18679,7 @@ am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբե
 ca:Aquesta és la versió "%s" i ja està disponible la versió "%s".\nVoleu instal·lar una nova versió?
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
 de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neue Version installieren?
+el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η έκδοση '%s'.\nΘέλετε να εγκαταστήσετε νέα έκδοση;
 es:Esta es la versión "%s" y ya está disponible la versión "%s".\N¿Quiere instalar la versión nueva?
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
@@ -18665,6 +18689,7 @@ am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերա
 ca:Esteu instal·lant el SumatraPDF de 32 bits en un sistema operatiu de 64 bits. Voleu descarregar la versió de 64 bits?
 cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
 de:Sie installieren die 32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem.\nMöchten Sie die 64-Bit-Version herunterladen?
+el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σύστημα 64-bit.\nΘέλετε να κατεβάσετε\nτην έκδοση 64-bit;
 es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
@@ -18894,7 +18919,7 @@ cz:Měřítko přiblížení
 de:Zoomfaktor
 dk:Zoomfaktor
 el:Ποσοστό μεγέθυνσης
-es:Proporción de escala
+es:Factor de ampliación
 et:Suurendusaste
 eu:Zomm ezaugarria
 fa:ضریب بزرگنمایی
@@ -19090,7 +19115,7 @@ cz:tisk dokumentu
 de:Dokument drucken
 dk:udskriver dokument
 el:εκτύπωση εγγράφου
-es:imprimiendo documento
+es:imprimiendo el documento
 et:dokumendi printimine
 eu:agiria irarkitzen
 fa:در حال چاپ سند
