@@ -100,15 +100,16 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEngineChmFromFile(path);
         return engine;
     }
-    if (kind == kindFileTxt) {
-        engine = CreateEngineTxtFromFile(path);
-        return engine;
-    }
-
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
         engine = CreateEngineMupdfFromFile(path, pwdUI);
         return engine;
     }
+#if 0
+    if (kind == kindFileTxt) {
+        engine = CreateEngineTxtFromFile(path);
+        return engine;
+    }
+#endif
 
     if (!enableEngineEbooks) {
         return engine;

@@ -102,7 +102,7 @@ class EngineMupdf : public EngineBase {
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
-    bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr);
+    bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr, const WCHAR* path = nullptr);
     bool FinishLoading();
 
     FzPageInfo* GetFzPageInfoFast(int pageNo);

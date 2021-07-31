@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - convert PageLayoutType into struct PageLayout
 - fix the logic to expand first item in toc tree if at most 2 top-level nodes
   was broken during TreeModel refactor
+- support .txt files in EngineMupdf
 
 2021-07-30 Fri
 
@@ -27,7 +28,6 @@ A daily log of changes and commentary. An experiment of sorts.
 - set defaultExt in EngineMupdf based on opened file
 - don't leak in EngineImages::GetElemens()
 - restore opening of file:// links in PDF files
-
 
 2021-07-29 Thu
 
