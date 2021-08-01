@@ -424,6 +424,7 @@ lv:&Norāde
 nl:&Merkteken
 pl:&Kareta
 ru:&Каретка
+br:&Circunflexo
 :&Close\tCtrl+W
 af:Maak Toe\tCtrl+W
 am:&Փակել\tCtrl+W
@@ -517,6 +518,7 @@ it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
 nl:&Kopieer selectie \tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
+br:Copiar Selecão \rCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
 ca:&Copia al porta-retalls\tCtrl-C
@@ -539,6 +541,7 @@ it:Scarica
 kr:무시(&D)
 nl:&Weggooien
 pl:O&drzuć
+br:&Descartar
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
 am:&Այլևս չհարցնել
@@ -1024,6 +1027,7 @@ lv:&Brīvs teksts
 my:&Teks Bebas
 nl:&Vrije Tekst
 pl:&Dowolny tekst
+br:Texto Li&vre
 :&Go To
 af:&Gaan Na
 am:&Անցում
@@ -1248,6 +1252,7 @@ lt:Pa&ryškinti
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
 pl:&Wyróżnienie\ta
+br:Destacar\ta
 :&Last Page\tEnd
 af:Laaste Bladsy\tEnd
 am:Վերջին էջը\tEnd
@@ -2552,6 +2557,7 @@ it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
 nl:&Opslaan in bestaande PDF
 pl:&Zapisz w istniejącym pliku PDF
+br:&Salvar em um PDF existente
 :&Search With Google
 am:&Որոնել Google-ով
 ca:&Cerca amb el Google
@@ -2562,6 +2568,7 @@ es:&Buscar con Google
 it:Cerca con Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
+br:Bu&scar com Google
 :&Settings
 am:&Կարգավորումներ
 ar:&الإعدادات
@@ -2766,6 +2773,7 @@ lt:&Antspaudas
 lv:&Zīmogs
 nl:&Stempel
 pl:Pie&częć
+br:Carimbo (&S)
 :&Strike Out
 am:&Ջնջած
 ca:&Barra
@@ -2780,6 +2788,7 @@ lt:&Išbraukti
 lv:&Izsvītrot
 nl:&Doorhalen
 pl:&Skreślenie
+br:Ri&scar
 :&Text
 am:&Գրվածք
 az:Mə&tn
@@ -2798,6 +2807,7 @@ my:&Teks
 nl:&Tekst
 pl:&Tekst
 ru:&Текст
+br:&Texto
 :&Theme
 am:&Ոճը
 ar:&قالب
@@ -2865,6 +2875,7 @@ it:&Traduci con Google
 kr:Google로 번역(&T)
 nl:&Vertalen Met Google
 pl:&Tłumacz za pomocą Google
+br:&Traduzir com Google
 :&Underline
 am:&Ընդգծված
 ca:&Subratlla
@@ -2880,6 +2891,7 @@ lt:Pa&braukti
 lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
+br:S&ublinhar
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -6839,6 +6851,7 @@ it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
 nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
+br:Criar Anotação Sobre o C&ursor
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
@@ -6855,6 +6868,7 @@ lt:Sukurti anotaciją iš pažymėtos vietos
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
+br:Criar Anotação a Partir da Seleção
 :Created:
 af:Geskep
 am:Ստեղծված`
@@ -15220,6 +15234,7 @@ it:S&elezione
 kr:선택(&e)
 nl:S&electie
 pl:Z&aznaczenie
+br:S&eleção
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
@@ -15235,6 +15250,7 @@ lt:Pabraukti &vingiuota linija
 lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
+br:Sublinhar &Ondulado
 :SVG documents
 am:SVG փաստաթղթեր
 ca:Documents SVG
@@ -15382,6 +15398,7 @@ it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
 nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
+br:Salvar anotações?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
@@ -15427,6 +15444,7 @@ it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
 nl:Opslaan in &nieuwe PDF
 pl:Zapisz w &nowym pliku PDF
+br:Salvar em um &novo PDF
 :Search With &Bing
 am:Որոնել &Bing-ով
 ca:Cerca amb el &Bing
@@ -15438,6 +15456,7 @@ it:Cerca con &Bing
 kr:Bing으로 검색(&B)
 nl:Zoeken Met &Bing
 pl:Szukaj za pomocą &Bing
+br:Buscar com &Bing
 :Search With &Google
 am:Որոնել &Google-ով
 ca:Cerca amb el &Google
@@ -15449,6 +15468,7 @@ it:Cerca con &Google
 kr:Google로 검색(&G)
 nl:Zoeken Met &Google
 pl:Szukaj za pomocą &Google
+br:Buscar com &Google
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -15590,6 +15610,7 @@ lt:Pasirinkti anotaciją redaktoriuje
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
+br:Selecionar Anotação no Editor
 :Select content with Ctrl+left mouse button
 am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 ar:حدد المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
@@ -15763,6 +15784,7 @@ nn:Utval:
 no:Valg:
 pl:Selekcja:
 pt:Selecção:
+br:Seleção:
 ru:Выделение:
 si:තෝරාගැනීම
 sk:Výber:
@@ -17921,6 +17943,7 @@ it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
 nl:Vertalen Met &Deepl
 pl:Tłumacz za pomocą &DeepL
+br:Traduzir com &DeepL
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
@@ -18185,6 +18208,7 @@ lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
+br:Anotações não salvas
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
 ca:Anotacions sense desar a "%s".
@@ -18195,6 +18219,7 @@ es:Anotaciones sin guardar en "%s"
 it:Annotazioni non salvate in '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
+br:Anotações não salvas em '%s'
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
@@ -18674,6 +18699,7 @@ lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
+br:Você tem anotações não salvas
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
 ca:Aquesta és la versió "%s" i ja està disponible la versió "%s".\nVoleu instal·lar una nova versió?
