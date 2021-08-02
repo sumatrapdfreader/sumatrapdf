@@ -7,9 +7,9 @@
 
 namespace tga {
 
-bool HasSignature(std::span<u8>);
-Gdiplus::Bitmap* ImageFromData(std::span<u8>);
+bool HasSignature(ByteSlice);
+Gdiplus::Bitmap* ImageFromData(ByteSlice);
 
-std::span<u8> SerializeBitmap(HBITMAP hbmp);
+ByteSlice SerializeBitmap(HBITMAP hbmp);
 
 } // namespace tga

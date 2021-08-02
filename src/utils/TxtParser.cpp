@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "StrSlice.h"
 #include "TxtParser.h"
 #include <new> // for placement new
 

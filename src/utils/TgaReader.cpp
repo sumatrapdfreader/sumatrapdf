@@ -181,7 +181,7 @@ static ImageAlpha GetAlphaType(const u8* data, size_t len) {
 }
 
 // checks whether this could be data for a TGA image
-bool HasSignature(std::span<u8> d) {
+bool HasSignature(ByteSlice d) {
     size_t len = d.size();
     const u8* data = (const u8*)d.data();
     if (HasVersion2Footer(data, len)) {
@@ -328,7 +328,7 @@ static void ReadPixel(ReadState& s, u8* dst) {
     }
 }
 
-Gdiplus::Bitmap* ImageFromData(std::span<u8> d) {
+Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
     size_t len = d.size();
     const u8* data = (const u8*)d.data();
 
@@ -388,7 +388,7 @@ inline bool memeq3(const char* pix1, const char* pix2) {
     return *(WORD*)pix1 == *(WORD*)pix2 && pix1[2] == pix2[2];
 }
 
-std::span<u8> SerializeBitmap(HBITMAP hbmp) {
+ByteSlice SerializeBitmap(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
     if ((ULONG)bmpInfo.bmWidth > USHRT_MAX || (ULONG)bmpInfo.bmHeight > USHRT_MAX) {

@@ -493,7 +493,7 @@ bool MobiDoc::ParseHeader() {
         return false;
     }
 
-    std::span<u8> rec = pdbReader->GetRecord(0);
+    auto rec = pdbReader->GetRecord(0);
     u8* firstRecData = rec.data();
     size_t recSize = rec.size();
     if (!firstRecData || recSize < kPalmDocHeaderLen) {
@@ -691,11 +691,11 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
 #define SRCS_REC 0x53524353 // 'SRCS'
 #define VIDE_REC 0x56494445 // 'VIDE'
 
-static bool IsEofRecord(std::span<u8> d) {
+static bool IsEofRecord(ByteSlice d) {
     return (4 == d.size()) && (EOF_REC == UInt32BE(d.data()));
 }
 
-static bool KnownNonImageRec(std::span<u8> d) {
+static bool KnownNonImageRec(ByteSlice d) {
     if (d.size() < 4) {
         return false;
     }
@@ -713,7 +713,7 @@ static bool KnownNonImageRec(std::span<u8> d) {
     return false;
 }
 
-static bool KnownImageFormat(std::span<u8> d) {
+static bool KnownImageFormat(ByteSlice d) {
     return nullptr != GuessFileTypeFromContent(d);
 }
 
@@ -722,7 +722,7 @@ static bool KnownImageFormat(std::span<u8> d) {
 bool MobiDoc::LoadImage(size_t imageNo) {
     size_t imageRec = imageFirstRec + imageNo;
 
-    std::span<u8> rec = pdbReader->GetRecord(imageRec);
+    auto rec = pdbReader->GetRecord(imageRec);
     if (rec.empty()) {
         return false;
     }
@@ -817,7 +817,7 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
 // Load a given record of a document into strOut, uncompressing if necessary.
 // Returns false if error.
 bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
-    std::span<u8> rec = pdbReader->GetRecord(recNo);
+    auto rec = pdbReader->GetRecord(recNo);
     u8* recData = rec.data();
     if (nullptr == recData) {
         return false;

@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/StrSlice.h"
 #include "utils/FileUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"

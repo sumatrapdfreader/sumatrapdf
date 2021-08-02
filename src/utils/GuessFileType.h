@@ -42,7 +42,7 @@ extern Kind kindDirectory;
 const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path);
 
 Kind GuessFileTypeFromContent(const WCHAR* path);
-Kind GuessFileTypeFromContent(std::span<u8> d);
+Kind GuessFileTypeFromContent(ByteSlice d);
 Kind GuessFileTypeFromName(const WCHAR*);
 Kind GuessFileType(const WCHAR* path, bool sniff);
 

@@ -11,7 +11,7 @@
 namespace webp {
 
 // checks whether this could be data for a WebP image
-bool HasSignature(std::span<u8> d) {
+bool HasSignature(ByteSlice d) {
     if (d.size() <= 12) {
         return false;
     }
@@ -19,13 +19,13 @@ bool HasSignature(std::span<u8> d) {
     return str::StartsWith(data, "RIFF") && str::StartsWith(data + 8, "WEBP");
 }
 
-Size SizeFromData(std::span<u8> d) {
+Size SizeFromData(ByteSlice d) {
     Size size;
     WebPGetInfo((const u8*)d.data(), d.size(), &size.dx, &size.dy);
     return size;
 }
 
-Gdiplus::Bitmap* ImageFromData(std::span<u8> d) {
+Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
     int w, h;
     if (!WebPGetInfo((const u8*)d.data(), d.size(), &w, &h)) {
         return nullptr;

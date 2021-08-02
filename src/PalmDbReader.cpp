@@ -103,7 +103,7 @@ size_t PdbReader::GetRecordCount() {
 }
 
 // don't free, memory is owned by us
-std::span<u8> PdbReader::GetRecord(size_t recNo) {
+ByteSlice PdbReader::GetRecord(size_t recNo) {
     size_t nRecs = recInfos.size();
     CrashIf(recNo >= nRecs);
     if (recNo >= nRecs) {

@@ -54,7 +54,7 @@ class PdbReader {
 
     const char* GetDbType();
     size_t GetRecordCount();
-    std::span<u8> GetRecord(size_t recNo);
+    ByteSlice GetRecord(size_t recNo);
 
     static PdbReader* CreateFromData(ByteSlice);
     static PdbReader* CreateFromFile(const char* path);

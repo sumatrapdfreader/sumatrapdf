@@ -192,7 +192,7 @@ static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 #undef MK_SIG
 
 // PDF files have %PDF-${ver} somewhere in the beginning of the file
-static bool IsPdfFileContent(std::span<u8> d) {
+static bool IsPdfFileContent(ByteSlice d) {
     if (d.size() < 8) {
         return false;
     }
@@ -213,7 +213,7 @@ static bool IsPdfFileContent(std::span<u8> d) {
     return false;
 }
 
-static bool IsPSFileContent(std::span<u8> d) {
+static bool IsPSFileContent(ByteSlice d) {
     char* header = (char*)d.data();
     size_t n = d.size();
     if (n < 64) {
@@ -241,7 +241,7 @@ static bool IsPSFileContent(std::span<u8> d) {
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(std::span<u8> d) {
+Kind GuessFileTypeFromContent(ByteSlice d) {
     // TODO: sniff .fb2 content
     u8* data = d.data();
     size_t len = d.size();

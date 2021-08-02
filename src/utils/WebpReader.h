@@ -3,8 +3,8 @@
 
 namespace webp {
 
-bool HasSignature(std::span<u8>);
-Size SizeFromData(std::span<u8>);
-Gdiplus::Bitmap* ImageFromData(std::span<u8>);
+bool HasSignature(ByteSlice);
+Size SizeFromData(ByteSlice);
+Gdiplus::Bitmap* ImageFromData(ByteSlice);
 
 } // namespace webp

@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "StrSlice.h"
 
 namespace str {
 
