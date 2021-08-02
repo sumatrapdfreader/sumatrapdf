@@ -250,6 +250,13 @@ pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot)
 			return;
 	}
 
+	/* If there are no changes, there is no need to request a resynthesis
+	 * (and indeed, we must not, because any changes caused by the resynth
+	 * will go in as implicit changes into a potentially-non-existent
+	 * previous journal fragment). */
+	if (!pdf_has_unsaved_changes(ctx, annot->page->doc))
+		return;
+
 	annot->needs_new_ap = 1;
 	annot->page->doc->resynth_required = 1;
 }

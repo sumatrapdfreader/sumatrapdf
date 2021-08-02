@@ -2413,6 +2413,9 @@ pdf_create_object(fz_context *ctx, pdf_document *doc)
 	entry->stm_ofs = 0;
 	entry->stm_buf = NULL;
 	entry->obj = NULL;
+
+	pdf_add_journal_fragment(ctx, doc, num, NULL, NULL, 1);
+
 	return num;
 }
 

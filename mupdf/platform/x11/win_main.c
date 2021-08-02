@@ -269,7 +269,7 @@ int wingetsavepath(pdfapp_t *app, char *buf, int len)
 		}
 
 		wcscpy(wbuf, twbuf);
-		strcpy(filename, buf);
+		fz_strlcpy(filename, buf, sizeof filename);
 		return 1;
 	}
 	else
@@ -1327,7 +1327,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 
 	if (fz_optind < argc)
 	{
-		strcpy(filename, argv[fz_optind++]);
+		fz_strlcpy(filename, argv[fz_optind++], sizeof filename);
 	}
 	else
 	{

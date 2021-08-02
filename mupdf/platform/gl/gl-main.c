@@ -742,6 +742,8 @@ void trace_save_snapshot(void)
 	trace_action("page.toPixmap(Identity, DeviceRGB).saveAsPNG(\"trace-%03d.png\");\n", trace_idx++);
 }
 
+static int document_shown_as_dirty = 0;
+
 void update_title(void)
 {
 	char buf[256];
@@ -759,7 +761,8 @@ void update_title(void)
 	else
 		title = filename;
 
-	if (pdf && pdf_has_unsaved_changes(ctx, pdf))
+	document_shown_as_dirty = pdf && pdf_has_unsaved_changes(ctx, pdf);
+	if (document_shown_as_dirty)
 		extra = "*";
 
 	n = strlen(title);
@@ -2472,12 +2475,6 @@ void do_main(void)
 			glutPostRedisplay();
 	}
 
-	int was_dirty = 0;
-	if (pdf)
-	{
-		was_dirty = pdf_has_unsaved_changes(ctx, pdf);
-	}
-
 	do_app();
 
 	if (showoutline)
@@ -2511,7 +2508,7 @@ void do_main(void)
 
 	if (pdf)
 	{
-		if (was_dirty != pdf_has_unsaved_changes(ctx, pdf))
+		if (document_shown_as_dirty != pdf_has_unsaved_changes(ctx, pdf))
 			update_title();
 	}
 }

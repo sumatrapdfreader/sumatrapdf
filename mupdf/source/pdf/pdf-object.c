@@ -746,9 +746,9 @@ new_entry(fz_context *ctx, pdf_document *doc, char *operation, int nest)
 
 		/* We create a new entry, and link it into the middle of
 		 * the chain. If we actually come to put anything into
-		 * it later, then the call to add_fragment during that
-		 * addition will discard everything in the history that
-		 * follows it. */
+		 * it later, then the call to pdf_add_journal_fragment
+		 * during that addition will discard everything in the
+		 * history that follows it. */
 		entry = fz_malloc_struct(ctx, pdf_journal_entry);
 
 		if (doc->journal->current == NULL)
@@ -1149,13 +1149,16 @@ pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
 	fz_write_printf(ctx, out, "endjournal\n");
 }
 
-static void
-add_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_buffer *copy_stream, int newobj)
+void
+pdf_add_journal_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_buffer *copy_stream, int newobj)
 {
-	pdf_journal_entry *entry = doc->journal->current;
+	pdf_journal_entry *entry;
 	pdf_journal_fragment *frag;
 
-	fz_var(copy_stream);
+	if (doc->journal == NULL)
+		return;
+
+	entry = doc->journal->current;
 
 	if (entry->next)
 	{
@@ -1293,7 +1296,7 @@ void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
 		/* Read the object/stream for the next fragment. */
 		obj = pdf_parse_journal_obj(ctx, doc, stm, &num, &buffer, &newobj);
 
-		add_fragment(ctx, doc, num, obj, buffer, newobj);
+		pdf_add_journal_fragment(ctx, doc, num, obj, buffer, newobj);
 	}
 
 	fz_skip_space(ctx, stm);
@@ -1440,7 +1443,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 			if (pdf_obj_num_is_stream(ctx, doc, parent))
 				copy_stream = pdf_load_raw_stream_number(ctx, doc, parent);
 		}
-		add_fragment(ctx, doc, parent, copy, copy_stream, was_empty);
+		pdf_add_journal_fragment(ctx, doc, parent, copy, copy_stream, was_empty);
 	}
 	fz_always(ctx)
 	{

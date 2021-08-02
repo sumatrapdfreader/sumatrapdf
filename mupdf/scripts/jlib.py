@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import codecs
 import doctest
 import inspect
@@ -30,7 +28,7 @@ def place( frame_record):
     return ret
 
 
-def expand_nv( text, caller):
+def expand_nv( text, caller=1):
     '''
     Returns <text> with special handling of {<expression>} items.
 
@@ -48,15 +46,19 @@ def expand_nv( text, caller):
     If <expression> ends with '=', this character is removed and we prefix the
     result with <expression>=.
 
-    E.g.:
-        x = 45
-        y = 'hello'
-        expand_nv( 'foo {x} {y=}')
-    returns:
-        foo 45 y=hello
+
+    >>> x = 45
+    >>> y = 'hello'
+    >>> expand_nv( 'foo {x} {y=}')
+    'foo 45 y=hello'
 
     <expression> can also use ':' and '!' to control formatting, like
     str.format().
+
+    >>> x = 45
+    >>> y = 'hello'
+    >>> expand_nv( 'foo {x} {y!r=}')
+    "foo 45 y='hello'"
     '''
     if isinstance( caller, int):
         frame_record = inspect.stack()[ caller]
@@ -104,10 +106,12 @@ def expand_nv( text, caller):
                     value = eval( expression, frame.f_globals, frame.f_locals)
                     value_text = ('{0%s}' % tail).format( value)
                 except Exception as e:
-                    value_text = '{??Failed to evaluate %r in context %s:%s because: %s??}' % (
+                    value_text = '{??Failed to evaluate %r in context %s:%s; expression=%r tail=%r: %s}' % (
                             expression,
                             frame_record.filename,
                             frame_record.lineno,
+                            expression,
+                            tail,
                             e,
                             )
                 if nv:
@@ -361,7 +365,17 @@ def log( text, level=0, caller=1, nv=True, out=None, raw=False):
     level += log_levels_find( caller)
     if level <= 0:
         text = log_text( text, caller, nv=nv, raw=raw)
-        out.write( text)
+        try:
+            out.write( text)
+        except UnicodeEncodeError:
+            # Retry, ignoring errors by encoding then decoding with
+            # errors='replace'.
+            #
+            out.write('[***write encoding error***]')
+            text_encoded = codecs.encode(text, out.encoding, errors='replace')
+            text_encoded_decoded = codecs.decode(text_encoded, out.encoding, errors='replace')
+            out.write(text_encoded_decoded)
+            out.write('[/***write encoding error***]')
         out.flush()
 
 def log_raw( text, level=0, caller=1, nv=False, out=None):
@@ -449,7 +463,7 @@ def split_first_of( text, substrings):
     and <post> is empty or starts with an item in <substrings>.
     '''
     pos, _ = strpbrk( text, substrings)
-    return text[ :pos], text[ pos+1:]
+    return text[ :pos], text[ pos:]
 
 
 
@@ -736,6 +750,24 @@ def time_duration( seconds, verbose=False, s_format='%i'):
         '4d3h2m23s'.
     s_format:
         If specified, use as printf-style format string for seconds.
+
+    >>> time_duration( 303333)
+    '3d12h15m33s'
+
+    >>> time_duration( 303333.33, s_format='%.1f')
+    '3d12h15m33.3s'
+
+    >>> time_duration( 303333, verbose=True)
+    '3 days 12 hours 15 mins 33 secs'
+
+    >>> time_duration( 303333.33, verbose=True, s_format='%.1f')
+    '3 days 12 hours 15 mins 33.3 secs'
+
+    >>> time_duration( 0)
+    '0s'
+
+    >>> time_duration( 0, verbose=True)
+    '0 sec'
     '''
     x = abs(seconds)
     ret = ''
@@ -770,14 +802,6 @@ def time_duration( seconds, verbose=False, s_format='%i'):
     if seconds < 0:
         ret = '-%s' % ret
     return ret
-
-assert time_duration( 303333) == '3d12h15m33s'
-assert time_duration( 303333.33, s_format='%.1f') == '3d12h15m33.3s'
-assert time_duration( 303333, verbose=True) == '3 days 12 hours 15 mins 33 secs'
-assert time_duration( 303333.33, verbose=True, s_format='%.1f') == '3 days 12 hours 15 mins 33.3 secs'
-
-assert time_duration( 0) == '0s'
-assert time_duration( 0, verbose=True) == '0 sec'
 
 
 def date_time( t=None):
@@ -1459,121 +1483,247 @@ def link_l_flags( sos, ld_origin=None):
     return ret
 
 
+class ArgResult:
+    '''
+    Return type for Arg.parse(), providing access via name, string or integer,
+    plus iteration. See Arg docs for details.
+    '''
+    def __init__(self):
+        self._attr = dict() # Maps names to values.
+        self._dict = dict() # Maps raw names to values.
+        self._list = list() # Ordered list of (name, value, ArgResult) tuples.
+
+    # __getattr__() and __getitem__() augment default behaviour by returning
+    # from self._attr or self._list as appropriate.
+
+    def __getattr__(self, name):
+        if name.startswith('_'):
+            return super().__getattr__(name)
+        try:
+            # .bar returns self._attr['bar'].
+            return self._attr[name]
+        except KeyError:
+            raise AttributeError
+
+    def __getitem__(self, i):
+        if isinstance(i, int):
+            # [23] returns self._list[23].
+            if i < 0:
+                i += len(self._list)
+            return self._list[i]
+        else:
+            # ['foo'] returns self._attr['foo'].
+            return self._attr[i]
+
+    def _set(self, name, name_raw, value, multi=False):
+        if multi:
+            self._attr.setdefault(name, []).append(value)
+            self._dict.setdefault(name_raw, []).append(value)
+        else:
+            assert name not in self._attr
+            self._attr[name] = value
+            self._dict[name_raw] = value
+
+    def __iter__(self):
+        return self._list.__iter__()
+
+    @staticmethod
+    def _dict_to_text(d):
+        names = sorted(d.keys())
+        names = [f'{name}={d[name]!r}' for name in names]
+        names = ', '.join(names)
+        return names
+
+    def _repr_detailed(self):
+        a = self._dict_to_text(self._attr)
+        d = self._dict_to_text(self._dict)
+        l = [str(i) for i in self._list]
+        return f'namespace(attr={a} dict={d} list={l})'
+
+    def __repr__(self):
+        assert len(self._attr) == len(self._dict)
+        a = self._dict_to_text(self._attr)
+        return f'namespace({a})'
+
+
 class Arg:
     '''
     Command-line parser with simple text-based specifications and support for
-    multiple sub-commands (e.g. search for "argparse multiple sub commands").
+    multiple sub-commands.
 
-    A basic Arg instance is specified by space-separated items in a syntax
-    string, such as '-flag' or '-f <foo>' or 'foo <foo> <bar>'. These items
-    are to match an equal number of argv items; <...> matches any argv item,
-    otherwise matching is literal. Items that start with '-' are not treated
-    specially.
+    An Arg is specified by space-separated items in a syntax string such as
+    '-flag' or '-f <foo>' or 'foo <foo> <bar>'. These items will match an
+    equal number of argv items. Items inside angled brackets such as '<foo>'
+    match any argv item that doesn't starting with '-', otherwise matching
+    is literal. If the last item is '...' (without quotes), it matches all
+    remaining items in argv.
 
     Command-line parsing is achieved by creating an empty top-level Arg
     instance with <subargs> set to a list of other Arg instances. The resulting
-    top-level Arg instance will try to match the entire command line argv with
-    any or all of these subargs, returning a simple representation of the
-    matched <...> items.
+    top-level Arg's .parse() method will try to match an entire command line
+    argv with any or all of these subargs, returning an ArgResult instance that
+    represents the matched non-literal items.
 
-    For example:
+    Basics:
 
-        >>> parser = Arg('', subargs=[Arg('-f <input>'), Arg('-o <output>')])
-        >>> args = parser.parse('-f in.txt')
-        >>> args
-        namespace(f='in.txt', o=None)
-        >>> args.f
-        'in.txt'
+        A minimal example:
 
-    Attribute names (in this case 'f' and 'o') are always generated from the
-    first item in an Arg's syntax string, with some basic processing to ensure
-    they are legal Python identifiers - removing inital '-', converting '-' to
-    '_', and removing any non-alphanumeric characters. So '-f' is converted to
-    'f', '--foo-bar' is converted to 'foo_bar' etc.
+            >>> parser = Arg('', subargs=[Arg('-f <input>'), Arg('-o <output>')])
+            >>> result = parser.parse(['-f', 'in.txt'])
+            >>> result
+            namespace(f=namespace(input='in.txt'), o=None)
+            >>> result.f.input
+            'in.txt'
 
-    An Arg with zero <...> items results in True, more than one <...> item
-    results in a list of values; there can be zero literal items:
+        The .parse() method also accepts a string instead of an argv-style
+        list. This is intended for testing ony; the string is split into an
+        argv-style list using .split() so quotes and escaped spaces etc are not
+        handled correctly.
 
-        >>> parser = Arg('', subargs=[Arg('-i'), Arg('-f <file-a> <file-b>'), Arg('<log>')])
-        >>> parser.parse('-f foo/a foo/b logfile -i')
-        namespace(f=['foo/a', 'foo/b'], i=True, log='logfile')
+            >>> parser.parse('-f in.txt')
+            namespace(f=namespace(input='in.txt'), o=None)
 
-    An Arg can be matched an arbitary number of times by setting <multi> to
-    true; unmatched multi items appear as [] rather than None:
+        Results are keyed off the first item in a syntax string, with
+        individual items appearing under each <...> name.
 
-        >>> parser = Arg('', subargs=[Arg('-f <input>', multi=1), Arg('-o <output>', multi=1)])
-        >>> args = parser.parse('-f a.txt -f b.txt -f c.txt')
-        >>> args
-        namespace(f=['a.txt', 'b.txt', 'c.txt'], o=[])
+        Individual items in a syntax string (in this case 'f', 'input', 'o',
+        'output') are converted into Python identifiers by removing any
+        inital '-', converting '-' to '_', and removing any non-alphanumeric
+        characters. So '-f' is converted to 'f', '--foo-bar' is converted to
+        'foo_bar', '<input>' is converted to 'input' etc. It is an error if two
+        or more items in <subargs> have the same first name.
+
+        A matching Arg with no <...> items results in True;
+
+            >>> parser = Arg('', subargs=[Arg('-i')])
+            >>> parser.parse('-i')
+            namespace(i=True)
+
+        There can be zero literal items:
+
+            >>> parser = Arg('', subargs=[Arg('<in> <log>')])
+            >>> parser.parse('foo logfile.txt')
+            namespace(in=namespace(in='foo', log='logfile.txt'))
+
+        Note how everything is still keyed off the name of the first item,
+        '<in>'.
+
+        An Arg can be matched an arbitary number of times by setting <multi> to
+        true; unmatched multi items appear as [] rather than None:
+
+            >>> parser = Arg('', subargs=[Arg('-f <input>', multi=1), Arg('-o <output>', multi=1)])
+            >>> parser.parse('-f a.txt -f b.txt -f c.txt')
+            namespace(f=[namespace(input='a.txt'), namespace(input='b.txt'), namespace(input='c.txt')], o=[])
 
     Sub commands:
 
         One can nest Arg's to represent sub-commands such as 'git commit ...',
         'git diff ...' etc.
 
-            >>> parser = Arg('', \
-                    subargs=[ \
-                        Arg('-o <file>'), \
-                        Arg('commit', subargs=[Arg('-a'), Arg('-f <file>')]), \
-                        Arg('diff', subargs=[Arg('-f <file>')]), \
-                        ], \
-                    )
-
+            >>> parser = Arg('',
+            ...         subargs=[
+            ...             Arg('-o <file>'),
+            ...             Arg('commit', subargs=[Arg('-a'), Arg('-f <file>')]),
+            ...             Arg('diff', subargs=[Arg('-f <file>')]),
+            ...             ],
+            ...         )
             >>> parser.parse('commit -a -f foo', exit_=0)
-            namespace(commit=namespace(a=True, f='foo'), diff=None, o=None)
+            namespace(commit=namespace(a=True, f=namespace(file='foo')), diff=None, o=None)
 
-        One can allow multiple subcommands by setting <multi> to true:
+        Allow multiple instances of the same subcommand by setting <multi> to
+        true:
 
-            >>> parser = Arg('', \
-                    subargs=[ \
-                        Arg('-o <file>'), \
-                        Arg('commit', multi=1, subargs=[Arg('-f <file>')]), \
-                        Arg('diff', subargs=[Arg('-f <file>')]), \
-                        ], \
-                    )
-            >>> parser.parse('commit -f foo diff -f bar commit -f bar', exit_=0)
-            namespace(commit=[namespace(f='foo'), namespace(f='bar')], diff=namespace(f='bar'), o=None)
+            >>> parser = Arg('',
+            ...         subargs=[
+            ...             Arg('-o <file>'),
+            ...             Arg('commit', multi=1, subargs=[Arg('-f <file>')]),
+            ...             Arg('diff', subargs=[Arg('-f <file>')]),
+            ...             ],
+            ...         )
+            >>> argv = 'commit -f foo diff -f bar commit -f wibble'
+            >>> result = parser.parse(argv, exit_=0)
+            >>> result
+            namespace(commit=[namespace(f=namespace(file='foo')), namespace(f=namespace(file='wibble'))], diff=namespace(f=namespace(file='bar')), o=None)
+
+        Iterating over <result> gives (name, value, argvalue) tuples in the
+        order in which items were found in argv.
+
+        (name, value) are the name and value of the matched item:
+
+            >>> for n, v, av in result:
+            ...     print((n, v))
+            ('commit', namespace(f=namespace(file='foo')))
+            ('diff', namespace(f=namespace(file='bar')))
+            ('commit', namespace(f=namespace(file='wibble')))
+
+        <av> is a ArgValue containing the matched item plus, for convenience,
+        None items for all the other subarg items:
+
+            >>> for n, v, av in result:
+            ...     print(av)
+            namespace(commit=namespace(f=namespace(file='foo')), diff=None, o=None)
+            namespace(commit=None, diff=namespace(f=namespace(file='bar')), o=None)
+            namespace(commit=namespace(f=namespace(file='wibble')), diff=None, o=None)
+
+        This allows simple iteration through matches in the order in which they
+        occured in argv:
+
+            >>> for n, v, av in result:
+            ...     if av.commit: print(f'found commit={av.commit}')
+            ...     elif av.diff: print(f'found diff={av.diff}')
+            ...     elif av.o: print(f'found o={av.o}')
+            found commit=namespace(f=namespace(file='foo'))
+            found diff=namespace(f=namespace(file='bar'))
+            found commit=namespace(f=namespace(file='wibble'))
 
     Consuming all remaining args:
 
-        Use '...' to match all remaining args.
+        Match all remaining items in argv by specifying '...' as the last item
+        in the syntax string. This gives a list (which may be empty) containing
+        all remaining args.
 
-            >>> parser = Arg('', \
-                        subargs=[ \
-                            Arg('-o <file>'), \
-                            Arg('-i ...'), \
-                            ], \
-                        )
+            >>> parser = Arg('',
+            ...         subargs=[
+            ...             Arg('-o <file>'),
+            ...             Arg('-i ...'),
+            ...             ],
+            ...         )
             >>> parser.parse('-i foo bar abc pqr')
             namespace(i=['foo', 'bar', 'abc', 'pqr'], o=None)
+            >>> parser.parse('-i')
+            namespace(i=[], o=None)
 
-        If '...' is the first item in the syntax
-        string, it will appear with special name _remaining:
+        If '...' is the only item in the syntax string, it will appear with
+        special name 'remaining_':
 
-            >>> parser = Arg('', \
-                        subargs=[ \
-                            Arg('-o <file>'), \
-                            Arg('...'), \
-                            ], \
-                        )
+            >>> parser = Arg('',
+            ...         subargs=[
+            ...             Arg('-o <file>'),
+            ...             Arg('...'),
+            ...             ],
+            ...         )
             >>> parser.parse('-i foo bar abc pqr')
-            namespace(_remaining=['-i', 'foo', 'bar', 'abc', 'pqr'], o=None)
+            namespace(o=None, remaining_=['-i', 'foo', 'bar', 'abc', 'pqr'])
+            >>> parser.parse('')
+            namespace(o=None, remaining_=[])
 
     Error messages:
 
-        If we fail to parse the command line, we show information about
-        what could have allowed the parse to make more progress. By default
-        we then call sys.exit(1); set exit_ to false to avoid this.
+        If we fail to parse the command line, we show information about what
+        could have allowed the parse to make more progress. By default we then
+        call sys.exit(1); set exit_ to false to avoid this.
 
             >>> parser = Arg('', subargs=[Arg('<command>'), Arg('-i <in>'), Arg('-o <out>')])
             >>> parser.parse('foo -i', exit_=0)
-            Failed at argv[1]='-i', expected one of:
+            Ran out of arguments, expected one of:
                 -i <in>
-                -o <out>
             >>> parser.parse('-i', exit_=0)
-            Failed at argv[0]='-i', expected one of:
-                <command>  (value must not start with "-")
+            Ran out of arguments, expected one of:
                 -i <in>
+
+            >>> parser.parse('-i foo -i bar', exit_=0)
+            Failed at argv[2]='-i', only one instance of -i <in> allowed, expected one of:
+                <command>  (value must not start with "-")
                 -o <out>
 
         Args can be marked as required:
@@ -1585,64 +1735,66 @@ class Arg:
 
     Help text:
 
-        The help_text() method returns help text for a particular Arg,
-        consisting of the <help> value passed to the Arg constructor followed
-        by recursive syntax and help text for subargs.
+        Help text is formatted similarly to the argparse module.
 
-        If parsing fails at '-h' or '--help' in argv, we show the help text for
-        the most recent failing Arg.
+        The help_text() method returns help text for a particular Arg,
+        consisting of any <help> text passed to the Arg constructor followed by
+        recursive syntax and help text for subargs.
+
+        If parsing fails at '-h' or '--help' in argv, we show help text for
+        the relevant Arg. '-h' shows brief help, containing just the first
+        paragraph of information for each item.
 
         Help text for the top-level Arg (e.g. if parsing fails at an initial
-        '-h' or '--help' in argv) shows all available help and syntax
-        information.
+        '-h' or '--help' in argv) shows help on all args. In particular
+        top-level '--help' shows all available help and syntax information.
 
         When an Arg is constructed, the help text can be specified as
         arbitrarily indented paragraphs with Python triple-quotes; any common
         indentation will be removed.
 
-        After showing help, we default to calling sys.exit(); pass exit_=0
-        to disable this.
+        After showing help, we default to calling sys.exit(0); pass exit_=0 to
+        disable this.
 
         Top-level help:
 
-            >>> parser = Arg('', \
-                    help=""" \
-                        Top level help. \
-                        """, \
-                    subargs=[ \
-                        Arg('foo', required=1, multi=1, help='Do foo', \
-                            subargs=[ \
-                                Arg('-f <file>', help='Input file'), \
-                                Arg('-o <file>', required=1, help='Output file'), \
-                                ], \
-                            ), \
-                        Arg('bar <qwerty>', help='Do bar') \
-                        ], \
-                    )
-
+            >>> parser = Arg('',
+            ...         help="""
+            ...             This is the top level help.
+            ...             """,
+            ...         subargs=[
+            ...             Arg('foo', required=1, multi=1, help='Do foo',
+            ...                 subargs=[
+            ...                     Arg('-f <file>', help='Input file'),
+            ...                     Arg('-o <file>', required=1, help='Output file'),
+            ...                     ],
+            ...                 ),
+            ...             Arg('bar <qwerty>', help='Do bar'),
+            ...             ],
+            ...         )
             >>> parser.parse('-h', exit_=0)
-            Top level help.
+            This is the top level help.
             <BLANKLINE>
             Usage:
                 foo  (required, multi)
-                                  Do foo
-                    -f <file>     Input file
+                    -f <file>
                     -o <file>  (required)
-                                  Output file
-                bar <qwerty>      Do bar
+                bar <qwerty>
+            <BLANKLINE>
+            Use --help to see full information.
 
         Help for a particular Arg:
 
-            >>> parser.parse('foo -h', exit_=0)
+            >>> parser.parse('foo --help', exit_=0)
             Help for 'foo':
             <BLANKLINE>
             Do foo
             <BLANKLINE>
             Usage:
                 foo  (required, multi)
-                    -f <file>     Input file
+                    -f <file>   Input file
                     -o <file>  (required)
-                                  Output file
+                                Output file
 
         Help for a lower-level Arg:
 
@@ -1653,6 +1805,35 @@ class Arg:
             <BLANKLINE>
             Usage:
                 -f <file>
+            <BLANKLINE>
+            Use --help to see full information.
+
+        Help text from the.help_text() method.
+
+            >> parser.help_text()
+            This is the top level help.
+            <BLANKLINE>
+            Usage:
+                foo  (required, multi)
+                                Do foo
+                    -f <file>   Input file
+                    -o <file>  (required)
+                                Output file
+                bar <qwerty>    Do bar
+            Use --help to see full information.
+
+        Lines are not wrapped if they end with backslash:
+
+            >>> parser = Arg('',
+            ...     help=r"""
+            ...     this help is not \\
+            ...     reformatted. \\
+            ...     """)
+            >>> parser.parse('--help', exit_=0)
+            this help is not \\
+            reformatted. \\
+            <BLANKLINE>
+            Usage:
     '''
 
     def __init__(self, syntax, subargs=None, help=None, required=False, multi=False):
@@ -1660,18 +1841,18 @@ class Arg:
         syntax:
             Text description of this argument, using space-separated items,
             each of which is to match an item in argv. Items are literal by
-            default, or match anything if inside <...>. E.g.: '-d <files>' will
-            match -d followed by one arg whose value will be available as .d.
+            default, match anything if inside angled brackets <...>, or match
+            all remaining args if '...'. E.g.: '-d <files>' will match -d
+            followed by one arg whose value will be available as .d.
 
             todo: Use <foo:type> to do automatic type conversion.
         subargs:
-            If not None, an unordered list of additional Arg instances to
-            match.
+            If not None, a list of additional Arg instances to match.
         help:
-            Help text for this item. Is passed through textwrap.dedent etc so
+            Help text for this item. Is passed through textwrap.dedent() etc so
             can be indented arbitrarily.
         required:
-            Set to true if this item is required.
+            If true this item is required.
         multi:
             If true we allow any number of these args.
         '''
@@ -1681,29 +1862,28 @@ class Arg:
         self.required = required
         self.multi = multi
         self.parent = None
+        self.match_remaining = False
 
         # We represent each space-separated element in <syntax> as an _ArgItem
-        # in self.items. Each of these will match exactly one item in argv.
+        # in self.items. Each of these will match exactly one item in argv
+        # (except for '...').
         #
-        self.items = []
-        for syntax_item in syntax.split():
+        self.syntax_items = []
+        syntax_items = syntax.split()
+        self.name_raw = ''
+        for i, syntax_item in enumerate(syntax_items):
+            if i == 0:
+                self.name_raw = syntax_item
+            if i == len(syntax_items) - 1 and syntax_item == '...':
+                self.match_remaining = True
+                break
             item = Arg._ArgItem(syntax_item)
-            self.items.append(item)
-
-        self.name = self.items[0].name if self.items else ''
-
-        # Assert that subargs is ok.
-        if self.subargs:
-            assert isinstance(subargs, list)
-            name_to_subarg = dict()
-            for subarg in subargs:
-                subarg.parent = self
-                duplicate = name_to_subarg.get(subarg.name)
-                assert duplicate is None, (
-                        f'Duplicate name {subarg.name!r} in subargs of {self.syntax!r}:'
-                        f' {duplicate.syntax!r} {subarg.syntax!r}'
-                        )
-                name_to_subarg[subarg.name] = subarg
+            self.syntax_items.append(item)
+        if self.match_remaining and not self.syntax_items:
+            self.name = 'remaining_'
+        else:
+            self.name = self.syntax_items[0].name if self.syntax_items else ''
+        self._check_subargs()
 
     def add_subarg(self, subarg):
         '''
@@ -1714,33 +1894,43 @@ class Arg:
 
     def parse(self, argv, exit_=True):
         '''
-        Attempts to parse <argv>. Returns tree of types.SimpleNamespace's
-        representing <argv> after parsing.
+        Attempts to parse <argv>.
 
-        If '-h' or '--help' is found we output appropriate help; if we fail to
-        parse the command line we output information about where things went
-        wrong. In both cases we then call exit() if exit_ it true, else we
-        return None.
+        On success:
+            Returns an ArgResult instance, usually containing other nested
+            ArgResult instances, representing <argv> after parsing.
+
+        On failure:
+            If the next un-matched item in argv is '-h' or '--help' we output
+            appropriate help, then call sys.exit(0) if <exit_> is true else
+            return None.
+
+            Otherwise we output information about where things went wrong and
+            call sys.exit(1) if <exit_> is true else return None.
         '''
         if isinstance(argv, str):
             argv = argv.split()
-        value = types.SimpleNamespace()
+        value = ArgResult()
         failures = Arg._Failures(argv)
         n = self._parse_internal(argv, 0, value, failures, depth=0)
 
         if n != len(argv):
-            # Failed to parse argv, and latest failure(s) was/were at
-            # argv[failures.pos].
+            # Failed to parse argv; latest failures were at argv[failures.pos].
             #
-
             if failures.pos < len(argv) and argv[failures.pos] in ('-h', '--help'):
-                # Parse failed at -h or --help so show help. <failures> will
-                # have a list of Arg's, each of which has a sequence of
-                # parents. We show help for the Arg at the end of the longest
-                # common sequence.
+                # Parse failed at -h or --help so show help.
+                brief = argv[failures.pos] == '-h'
+
+                # <failures> will have a list of Arg's, each of which has a
+                # sequence of parents; it would be confusing to show help for
+                # each of these Arg's so instead we show help for the the Arg
+                # at the end of the longest common ancestor.
+                #
                 def ancestors(arg):
                     return ancestors(arg.parent) + [arg] if arg.parent else [arg]
                 def common_path(paths):
+                    if not paths:
+                        return [self]
                     for n in range(len(paths[0])+1):
                         for path in paths:
                             if len(path) <= n or path[n] != paths[0][n]:
@@ -1752,9 +1942,10 @@ class Arg:
                     if arg.syntax:
                         syntax += f'{arg.syntax!r}:'
                 if syntax:
-                    print(f'Help for {syntax}\n')
-                sys.stdout.write(arg.help_text())
-
+                    sys.stdout.write(f'Help for {syntax}\n\n')
+                sys.stdout.write(arg.help_text(brief=brief))
+                if brief:
+                    sys.stdout.write('\nUse --help to see full information.\n')
             else:
                 # Show information about the parse failures.
                 sys.stdout.write(str(failures))
@@ -1766,8 +1957,8 @@ class Arg:
 
         if self.name == '' and value.__dict__:
             # Skip empty top-level.
-            assert hasattr(value, '_')
-            return value._
+            assert '_' in value._attr
+            return value._attr['_']
         return value
 
     class _ArgItem:
@@ -1775,33 +1966,29 @@ class Arg:
             if syntax_item.startswith('<') and syntax_item.endswith('>'):
                 self.text = syntax_item[1:-1]
                 self.literal = False
-            elif syntax_item == '...':
-                self.text = syntax_item
-                self.literal = False
             else:
                 self.text = syntax_item
                 self.literal = True
-            # self.parse() will return a types.SimpleNamespace that uses
-            # self.name as attribute name, so we need to make it a usable
-            # Python identifier.
+            # self.parse() will return an ArgResult that uses self.name as
+            # attribute name, so we need to make it a usable Python identifier.
             self.name = self.text
-            if self.name == '...':
-                self.name = '_remaining'
-            else:
-                while self.name.startswith('-'):
-                    self.name = self.name[1:]
-                self.name = self.name.replace('-', '_')
-                self.name = re.sub('[^a-zA-Z0-9_]', '', self.name)
-                if self.name[0] in '0123456789':
-                    self.name = '_' + self.name
+            while self.name.startswith('-'):
+                self.name = self.name[1:]
+            self.name = self.name.replace('-', '_')
+            self.name = re.sub('[^a-zA-Z0-9_]', '', self.name)
+            if self.name[0] in '0123456789':
+                self.name = '_' + self.name
         def __repr__(self):
             return f'text={self.text} literal={self.literal}'
 
     def _check_subargs(self):
+        '''
+        Assert that there are no duplicate names in self.subargs.
+        '''
         if self.subargs:
-            assert isinstance(subargs, list)
+            assert isinstance(self.subargs, list)
             name_to_subarg = dict()
-            for subarg in subargs:
+            for subarg in self.subargs:
                 subarg.parent = self
                 duplicate = name_to_subarg.get(subarg.name)
                 assert duplicate is None, (
@@ -1812,116 +1999,141 @@ class Arg:
 
     def _parse_internal(self, argv, pos, out, failures, depth):
         '''
-        Matches initial item(s) in argv, sets out.<self.name> to be the value
-        or list of values, and returns number of items consumed. We addionally
-        require that remaining argv matches self.subargs if not empty.
+        Tries to match initial item(s) in argv with self.syntax_items and
+        self.subargs.
+
+        On success we set/update <out> and return the number of argv items
+        consumed. Otherwise we return None with <failures> updated.
+
+        We fail if self.multi is false and out.<self.name> already exists.
         '''
         if not self.multi and getattr(out, self.name, None) is not None:
             # Already found.
-            return None
-        if len(argv) - pos < len(self.items):
-            # Not enough items in argv.
-            failures.add(pos, self)
+            if self.syntax_items and pos < len(argv):
+                item = self.syntax_items[0]
+                if item.literal and item.text == argv[pos]:
+                    failures.add(pos, None, f'only one instance of {self.syntax} allowed')
             return None
 
-        # Match each item in self.items[] with an item in argv[], putting
-        # non-literal items into value[].
-        values = []
-        dot_dot_dot = False
-        for i, item in enumerate(self.items):
+        # Match each item in self.syntax_items[] with an item in argv[],
+        # putting non-literal items into values[].
+        result = None
+        for i, item in enumerate(self.syntax_items):
+            if pos+i >= len(argv):
+                failures.add(pos+i, self)
+                return None
             if item.literal:
                 if item.text != argv[pos+i]:
                     failures.add(pos+i, self)
                     return None
-            elif item.text == '...':
-                # Match all remaining args.
-                values.append(argv[pos+i:])
-                dot_dot_dot = True
             else:
                 if argv[pos+i].startswith('-'):
                     failures.add(pos+i, self, f'value must not start with "-"')
                     return None
-                values.append(argv[pos+i])
+                elif len(self.syntax_items) == 1:
+                    result = argv[pos+i]
+                else:
+                    if result is None:
+                        result = ArgResult()
+                    result._set(item.name, item.name, argv[pos+i])
 
-        # Condense <value> for convenience.
-        value = True if len(values) == 0 else values[0] if len(values) == 1 else values
-        ret = len(argv) - pos if dot_dot_dot else len(self.items)
+        if self.match_remaining:
+            r = argv[pos+len(self.syntax_items):]
+            if result is None:
+                result = r
+            else:
+                result._set('remaining_', 'remaining_', r)
+            n = len(argv) - pos
+        else:
+            n = len(self.syntax_items)
 
-        name = self.name if self.name else '_'
+        if result is None:
+            result = True
+        # Condense <values> for convenience.
+        #if not result or not result._attr:
+        #    result = True
+        #value = True if len(values) == 0 else values[0] if len(values) == 1 else values
 
         if self.subargs:
             # Match all subargs; we fail if any required subarg is not matched.
-            out_subargs = types.SimpleNamespace()
-            ret_subargs = self._parse_internal_subargs(argv, pos+ret, out_subargs, failures, depth)
-            if ret_subargs is None:
+            subargs_n, subargs_out = self._parse_internal_subargs(argv, pos+n, failures, depth)
+            if subargs_n is None:
                 # We failed to match one or more required subargs.
-                if value is True:
-                    # We are top-level Arg with no name. Set None values for
-                    # all failed top-level subargs.
-                    setattr(out, name, out_subargs)
                 return None
-            ret += ret_subargs
-            value = out_subargs if value is True else (value, out_subargs)
+            n += subargs_n
+            result = subargs_out if result is True else (result, subargs_out)
 
-        if self.multi:
-            out_multi = getattr(out, name, None)
-            if out_multi is None:
-                out_multi = []
-                setattr(out, name, out_multi)
-            out_multi.append(value)
-        else:
-            setattr(out, name, value)
+        out._set(self.name if self.name else '_', self.name_raw, result, self.multi)
 
-        return ret
+        item_list_ns = ArgResult()
+        item_list_ns._set(self.name, self.name_raw, result)
+        out._list.append((self.name, result, item_list_ns))
 
-    def _parse_internal_subargs(self, argv, pos, out, failures, depth):
+        return n
+
+    def _parse_internal_subargs(self, argv, pos, failures, depth):
         '''
-        Returns number of argv items consumed, with <out> containing, for
-        each subarg, the value of the matching item in argv or None (or []
-        if multi). So if we return None, out will contain None/[] for every
-        subarg.
+        Matches as many items in self.subargs as possible, in any order.
+
+        Returns (n, out) where <n> is number of argv items consumed and <out>
+        is an ArgResult with:
+            ._attr
+                Mapping from each matching subarg.name to value.
+            ._dict
+                Mapping from each matching subarg.name_raw to value.
+            ._list
+                List of (name, value, namespace).
+
+        Returns (None, None) if we failed to match an item in self.subargs
+        where .required is true.
         '''
-        prefix = ' ' * depth*4
-        subargs_out = types.SimpleNamespace()
-        ret = 0
+        subargs_out = ArgResult()
+        n = 0
+        # Repeatedly match a single item in self.subargs until nothing matches
+        # the next item(s) in argv.
         while 1:
-            # Try to match next item in argv.
+            # Try to match one item in self.subargs.
             for subarg in self.subargs:
-                n = subarg._parse_internal(argv, pos+ret, subargs_out, failures, depth+1)
-                #log('{self=} {subarg=} {n=} {pos+ret=}')
-                if n is not None:
-                    ret += n
+                nn = subarg._parse_internal(argv, pos+n, subargs_out, failures, depth+1)
+                if nn is not None:
+                    n += nn
                     break
             else:
-                # No match for next item in argv, so we're done.
+                # No subarg matches the next item(s) in argv, so we're done.
                 break
 
         # See whether all required subargs were found.
         for subarg in self.subargs:
             if subarg.required and not hasattr(subargs_out, subarg.name):
-                # Failire to match a required item; return zero with <out>
-                # containing None/[] for each subarg.
-                for subarg in self.subargs:
-                    setattr( out, subarg.name, [] if subarg.multi else None)
-                return None
+                return None, None
 
-        # Copy subargs_out into <out>, setting missing argv items to None/[].
+        value = ArgResult()
+
+        # Copy subargs_out into <value>, setting missing argv items to None or
+        # [].
         for subarg in self.subargs:
             v = getattr(subargs_out, subarg.name, [] if subarg.multi else None)
-            setattr( out, subarg.name, v)
-        return ret
+            value._set(subarg.name, subarg.name_raw, v)
 
-    class _Help(Exception):
-        def __init__(self, arg):
-            self.arg = arg
+        # Copy subargs_out._list into <value>, setting missing items to None.
+        value._list = subargs_out._list
+        for name, v, ns in value._list:
+            assert len(ns._attr) == 1
+            for subarg in self.subargs:
+                if subarg.name != name:
+                    ns._set(subarg.name, subarg.name_raw, None)
+            assert len(ns._attr) == len(self.subargs)
+
+        return n, value
 
     class _Failures:
         def __init__(self, argv):
             self.argv = argv
             self.pos = 0
             self.args = []
+            self.misc = []
         def add(self, pos, arg, extra=None):
-            if not arg.name:
+            if arg and not arg.name:
                 log('top-level arg added to failures')
                 log(exception_info())
             if pos < self.pos:
@@ -1929,16 +2141,20 @@ class Arg:
             if pos > self.pos:
                 self.args = []
                 self.pos = pos
-            self.args.append((arg, extra))
+            if arg:
+                self.args.append((arg, extra))
+            else:
+                self.misc.append(extra)
         def __str__(self):
             ret = ''
             if self.pos == len(self.argv):
-                ret += f'Ran out of arguments,'
+                ret += f'Ran out of arguments'
             else:
-                ret += f'Failed at argv[{self.pos}]={self.argv[self.pos]!r},'
-            ret += f' expected one of:\n'
+                ret += f'Failed at argv[{self.pos}]={self.argv[self.pos]!r}'
+            for i in self.misc:
+                 ret += f', {i}'
+            ret += f', expected one of:\n'
             for arg, extra in self.args:
-                #ret += f' [arg is: {arg}]'
                 ret += f'    {arg.syntax}'
                 more = []
                 if arg.parent and arg.parent.name:
@@ -1959,7 +2175,7 @@ class Arg:
                 return f'{self.parent._path()}:{self.name}'
         return self.name
 
-    def help_text(self, prefix='', width=80, mid=None):
+    def help_text(self, prefix='', width=80, mid=None, brief=False):
         '''
         Returns help text for this arg and all subargs.
 
@@ -1968,8 +2184,10 @@ class Arg:
         width:
             Max length of any line.
         mid:
-            Column in which to start subargs' help text. If None, we
-            choose a value based on width.
+            Column in which to start subargs' help text. If None, we choose a
+            value based on width.
+        brief:
+            If true, we only show brief information.
         '''
         if width and mid:
             assert mid < width
@@ -1981,58 +2199,74 @@ class Arg:
         if top_level:
             # Show self.help_ text without indentation.
             if self.help_:
-                h = Arg._format(self.help_, prefix='', width=width)
+                h = Arg._format(self.help_, prefix='', width=width, n=1 if brief else None)
                 text += h + '\n\n'
             text += 'Usage:\n'
             if self.name:
                 prefix += '    '
-        if self.items:
-            # E.g. '-s <files>'.
+        if self.syntax_items:
+            # Show syntax, e.g. '-s <files>'.
             text += f'{prefix}'
-            for i, item in enumerate(self.items):
+            for i, item in enumerate(self.syntax_items):
                 if i: text += ' '
                 text += item.text if item.literal else f'<{item.text}>'
+            # Show flags, if any.
             extra = []
             if self.required:   extra.append('required')
             if self.multi:  extra.append('multi')
             if extra:
                 text += f'  ({", ".join(extra)})'
 
-            # Write self.help_ starting at column <mid>, starting on new line
-            # if we are already beyond <mid>.
-            if self.help_ and not top_level:
-                h = Arg._format(self.help_, mid*' '+'  ', width)
-                if len(text) < mid:
-                    # First line of help will fit on current line.
-                    h = h[len(text):]
-                    text += h
-                else:
-                    text += '\n'
+            # Show self.help_ starting at column <mid>, starting on a second
+            # line if we are already too close to or beyond <mid>.
+            if not brief and self.help_ and not top_level:
+                h = Arg._format(self.help_, mid*' ', width, n=1 if brief else None)
+                if h:
+                    if len(text) <= mid-2:
+                        # First line of help will fit on current line.
+                        h = h[len(text):]
+                    else:
+                        text += '\n'
                     text += h
             text += '\n'
 
         if self.subargs:
-            if mid is None:
-                mid = 0
-                for subarg in self.subargs:
-                    t = subarg.show( prefix + '    ', simple=True)
-                    mid = max(max_width, len(t))
             for subarg in self.subargs:
-                t = subarg.help_text( prefix + '    ', mid=mid)
+                t = subarg.help_text( prefix + '    ', mid=mid, brief=brief)
                 text += t
 
         assert text.endswith('\n')
-        assert not text.endswith('\n\n')
+        assert not text.endswith('\n\n'), f'len(self.subargs)={len(self.subargs)} text={text!r} self.help_={self.help_!r}'
         return text
 
     def __repr__(self):
-        return f'[{self.syntax}: name={self.name}]'
+        return f'Arg({self.syntax}: name={self.name})'
 
     @staticmethod
-    def _format(text, prefix, width):
+    def _format(text, prefix, width, n=None):
         '''
-        Returns text formatted according to <prefix> and <width>. Does
-        not end with newline.
+        Returns text formatted according to <prefix> and <width>. Does not end
+        with newline.
+
+        If <n> is not None, we return the first <n> paragraphs only.
+
+        We split paragraphs on double newline and also when indentation
+        changes:
+
+        >>> t = Arg._format("""
+        ... <foo>:
+        ...     bar.
+        ...
+        ...     qwerty.
+        ...
+        ...     """,
+        ...     ' '*4, 80,
+        ...     )
+        >>> print(t)
+            <foo>:
+                bar.
+        <BLANKLINE>
+                qwerty.
         '''
         def strip_newlines(text):
             while text.startswith('\n'):
@@ -2052,13 +2286,41 @@ class Arg:
         #
         paras = []
         indent_prev = -1
-        for para in text.split('\n\n'):
-            m = re.search('^( *)[^ ]', para)
-            indent = len(m.group(1)) if m else 0
+        def get_paras(text):
+            '''
+            Yields (indent, backslashe, text) for each paragraph in <text>,
+            splitting on double newlines. We also split when indentation
+            changes unless lines end with backslash. <backslash> is true iff
+            text contains backslash at end of line.
+            '''
+            for para in text.split('\n\n'):
+                indent_prev = None
+                prev_backslash = False
+                prev_prev_backslash = False
+                i0 = 0
+                lines = para.split('\n')
+                for i, line in enumerate(lines):
+                    m = re.search('^( *)[^ ]', line)
+                    indent = len(m.group(1)) if m else 0
+                    if i and not prev_backslash and indent != indent_prev:
+                        yield indent_prev, prev_prev_backslash, '\n'.join(lines[i0:i])
+                        i0 = i
+                    backslash = line.endswith('\\')
+                    if i == 0 or not prev_backslash:
+                        indent_prev = indent
+                    prev_prev_backslash = prev_backslash
+                    prev_backslash = backslash
+                yield indent_prev, prev_prev_backslash, '\n'.join(lines[i0:])
+        for i, (indent, sl, para) in enumerate(get_paras(text)):
+            if n is not None and i == n:
+                break
             para = textwrap.dedent(para)
-            para = textwrap.fill(para, width - len(prefix))
+            # Don't fill paragraph if contains backslashes.
+            if not sl:
+                para = textwrap.fill(para, width - len(prefix))
             para = textwrap.indent(para, prefix + indent*' ')
             if indent <= indent_prev:
+                # Put blank lines before less-indented paragraphs.
                 paras.append('')
             paras.append(para)
             indent_prev = indent
@@ -2066,6 +2328,10 @@ class Arg:
         assert not ret.endswith('\n')
         return ret
 
+
 if __name__ == '__main__':
+
     import doctest
-    doctest.testmod()
+    doctest.testmod(
+            optionflags=doctest.FAIL_FAST,
+            )

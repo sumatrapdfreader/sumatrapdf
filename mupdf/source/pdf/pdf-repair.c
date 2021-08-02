@@ -46,6 +46,10 @@ pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t *stm
 	 * we only need to fully parse it if it is a dictionary. */
 	tok = pdf_lex(ctx, file, buf);
 
+	/* Don't let a truncated object at EOF overwrite a good one */
+	if (tok == PDF_TOK_EOF)
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "truncated object");
+
 	if (tok == PDF_TOK_OPEN_DICT)
 	{
 		pdf_obj *obj, *dict = NULL;

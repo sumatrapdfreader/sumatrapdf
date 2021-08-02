@@ -83,6 +83,7 @@ static pdf_obj *find_head_of_field_group(fz_context *ctx, pdf_obj *obj)
 
 static void pdf_field_mark_dirty(fz_context *ctx, pdf_obj *field)
 {
+	pdf_document *doc = pdf_get_bound_document(ctx, field);
 	pdf_obj *kids = pdf_dict_get(ctx, field, PDF_NAME(Kids));
 	if (kids)
 	{
@@ -91,6 +92,8 @@ static void pdf_field_mark_dirty(fz_context *ctx, pdf_obj *field)
 			pdf_field_mark_dirty(ctx, pdf_array_get(ctx, kids, i));
 	}
 	pdf_dirty_obj(ctx, field);
+	if (doc)
+		doc->resynth_required = 1;
 }
 
 static void update_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *obj, const char *text)
