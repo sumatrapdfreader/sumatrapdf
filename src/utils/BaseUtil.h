@@ -572,6 +572,30 @@ class ExitScopeHelp {
 
 extern std::atomic<int> gAllowAllocFailure;
 
+struct ByteSlice {
+    u8* d{nullptr};
+    size_t s{0};
+
+    ByteSlice(u8* data, size_t size) {
+        d = data;
+        s = size;
+    }
+    ByteSlice(std::span<u8> data) {
+        d = data.data();
+        s = data.size();
+    }
+
+    u8* data() {
+        return d;
+    }
+    size_t size() {
+        return s;
+    }
+    bool empty() {
+        return !d || s == 0;
+    }
+};
+
 /* How to use:
 defer { free(tools_filename); };
 defer { fclose(f); };

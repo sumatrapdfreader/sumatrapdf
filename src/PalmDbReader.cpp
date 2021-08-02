@@ -15,7 +15,7 @@
 #define kPdbRecordHeaderLen 8
 
 // Takes ownership of d
-bool PdbReader::Parse(std::span<u8> d) {
+bool PdbReader::Parse(ByteSlice d) {
     data = d.data();
     dataSize = d.size();
     return ParseHeader();
@@ -119,7 +119,7 @@ std::span<u8> PdbReader::GetRecord(size_t recNo) {
     return {(u8*)data + off, size};
 }
 
-PdbReader* PdbReader::CreateFromData(std::span<u8> d) {
+PdbReader* PdbReader::CreateFromData(ByteSlice d) {
     if (d.empty()) {
         return nullptr;
     }
@@ -133,13 +133,14 @@ PdbReader* PdbReader::CreateFromData(std::span<u8> d) {
 
 PdbReader* PdbReader::CreateFromFile(const char* path) {
     auto d = file::ReadFile(path);
-    std::span<u8> ds = {(u8*)d.data(), d.size()};
-    return CreateFromData(ds);
+    ByteSlice bytes = {(u8*)d.data(), d.size()};
+    return CreateFromData(bytes);
 }
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
     std::span<u8> d = file::ReadFile(filePath);
-    return CreateFromData(d);
+    ByteSlice bytes = d;
+    return CreateFromData(bytes);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {

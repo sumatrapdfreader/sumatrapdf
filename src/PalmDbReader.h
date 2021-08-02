@@ -50,13 +50,13 @@ class PdbReader {
     PdbReader() = default;
     ~PdbReader();
 
-    bool Parse(std::span<u8>);
+    bool Parse(ByteSlice);
 
     const char* GetDbType();
     size_t GetRecordCount();
     std::span<u8> GetRecord(size_t recNo);
 
-    static PdbReader* CreateFromData(std::span<u8>);
+    static PdbReader* CreateFromData(ByteSlice);
     static PdbReader* CreateFromFile(const char* path);
 
     static PdbReader* CreateFromFile(const WCHAR* path);
