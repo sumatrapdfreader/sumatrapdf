@@ -1586,43 +1586,26 @@ const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
     return path2;
 }
 
-// <filePath> should end with embed marks, which is a stream number
-// inside pdf file
-// TODO: provide PasswordUI?
-std::span<u8> LoadEmbeddedPDFFile(const WCHAR* filePath) {
-    EngineMupdf* engine = new EngineMupdf();
-    auto res = engine->LoadStreamFromPDFFile(filePath);
-    delete engine;
-    return res;
-}
-
 std::span<u8> EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     int streamNo = -1;
     AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
     if (streamNo < 0) {
         return {};
     }
-    fz_stream* file = nullptr;
-    fz_try(ctx) {
-        file = FzOpenFile2(ctx, fnCopy);
-    }
-    fz_catch(ctx) {
-        file = nullptr;
-    }
 
-    if (!LoadFromStream(file, nullptr)) {
+    bool ok = Load(fnCopy.Get(), nullptr);
+    if (!ok) {
         return {};
     }
 
-    pdf_document* doc = (pdf_document*)_doc;
-    if (!pdf_obj_num_is_stream(ctx, doc, streamNo)) {
+    if (!pdf_obj_num_is_stream(ctx, pdfdoc, streamNo)) {
         return {};
     }
 
     fz_buffer* buffer = nullptr;
     fz_var(buffer);
     fz_try(ctx) {
-        buffer = pdf_load_stream_number(ctx, doc, streamNo);
+        buffer = pdf_load_stream_number(ctx, pdfdoc, streamNo);
     }
     fz_catch(ctx) {
         return {};
@@ -1634,9 +1617,16 @@ std::span<u8> EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     auto data = (u8*)memdup(buffer->data, dataSize);
     fz_drop_buffer(ctx, buffer);
 
-    fz_drop_document(ctx, _doc);
-    _doc = nullptr;
     return {data, dataSize};
+}
+
+// <filePath> should end with embed marks, which is a stream number
+// inside pdf file
+std::span<u8> LoadEmbeddedPDFFile(const WCHAR* filePath) {
+    EngineMupdf* engine = new EngineMupdf();
+    auto res = engine->LoadStreamFromPDFFile(filePath);
+    delete engine;
+    return res;
 }
 
 bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {

@@ -192,7 +192,6 @@ static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
     IPageDestination* dest = tocItem->GetPageDestination();
     if (dest) {
         ctrl->HandleLink(dest, win->linkHandler);
-        // win->linkHandler->GotoLink(dest);
     } else if (pageNo) {
         ctrl->GoToPage(pageNo, true);
     }
@@ -442,20 +441,15 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
 }
 
-static void SaveEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
-    CrashIf(!tab || !dest);
-    if (!tab || !dest) {
+static void SaveEmbeddedFile(TabInfo* tab, const WCHAR* srcFath, const WCHAR* fileName) {
+    auto data = LoadEmbeddedPDFFile(srcFath);
+    if (data.empty()) {
+        // TODO: show an error message
         return;
     }
-    auto filePath = dest->GetValue();
-    auto data = LoadEmbeddedPDFFile(filePath);
-    AutoFreeWstr dir = path::GetDir(filePath);
-    auto fileName = dest->GetName();
+    AutoFreeWstr dir = path::GetDir(tab->filePath);
+    fileName = path::GetBaseNameTemp(fileName);
     AutoFreeWstr dstPath = path::Join(dir, fileName);
-#if 0 // TODO: why did I have it here?
-    int streamNo = -1;
-    AutoFreeWstr fileSystemPath = ParseEmbeddedStreamNumber(filePath, &streamNo);
-#endif
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
 }
@@ -474,29 +468,30 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
     int pageNo = 0;
     TocItem* dti = (TocItem*)ti;
-    if (dti && dti->dest) {
+    IPageDestination* dest = dti ? dti->dest : nullptr;
+    if (dest) {
         pageNo = dti->dest->GetPageNo();
     }
 
     TabInfo* tab = win->currentTab;
     HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
-    bool isEmbeddedFile = false;
-    IPageDestination* dest = nullptr;
-    WCHAR* path = nullptr;
-    if (dti && dti->dest) {
-        dest = dti->dest;
-        path = dest->GetValue();
-        isEmbeddedFile = (path != nullptr) && (dest->GetKind() == kindDestinationLaunchEmbedded);
-    }
-    if (isEmbeddedFile) {
-        auto embeddedName = dest->GetName();
-        const WCHAR* ext = path::GetExtTemp(embeddedName);
+    PageDestinationFile* embeddedFile = nullptr;
+    const WCHAR* embeddedFilePath = nullptr;
+    WCHAR* fileName = nullptr;
+    if (dest && dest->GetKind() == kindDestinationLaunchEmbedded) {
+        fileName = dti->dest->GetName();
+        embeddedFile = (PageDestinationFile*)dest;
+        CrashIf(!embeddedFile->path);
+        embeddedFilePath = embeddedFile->path;
+        const WCHAR* ext = path::GetExtTemp(embeddedFilePath);
         bool canOpenEmbedded = str::EqI(ext, L".pdf");
         if (!canOpenEmbedded) {
             win::menu::Remove(popup, CmdOpenEmbeddedPDF);
         }
-    } else {
+    }
+    else {
+        // TODO: maybe move this to BuildMenuFromMenuDef
         win::menu::Remove(popup, CmdSaveEmbeddedFile);
         win::menu::Remove(popup, CmdOpenEmbeddedPDF);
     }
@@ -543,7 +538,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             DelFavorite(filePath, pageNo);
             break;
         case CmdSaveEmbeddedFile:
-            SaveEmbeddedFile(tab, dest);
+            SaveEmbeddedFile(tab, embeddedFilePath, fileName);
             break;
         case CmdOpenEmbeddedPDF:
             OpenEmbeddedFile(tab, dest);

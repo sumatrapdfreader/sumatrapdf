@@ -631,17 +631,9 @@ str::WStr TreeCtrl::GetDefaultTooltip(TreeItem ti) {
 
 // get the item at a given (x,y) position in the window
 TreeItem TreeCtrl::GetItemAt(int x, int y) {
-    if (x < 0 || y < 0) {
-        return TreeModel::kNullItem;
-    }
     TVHITTESTINFO ht{};
-    ht.pt.x = x;
-    ht.pt.y = y;
-
+    ht.pt = {x, y};
     TreeView_HitTest(hwnd, &ht);
-    if ((ht.flags & TVHT_ONITEM) == 0) {
-        return TreeModel::kNullItem;
-    }
     return GetTreeItemByHandle(ht.hItem);
 }
 
