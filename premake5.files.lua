@@ -1061,6 +1061,8 @@ function pdf_filter_files()
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
     "PalmDbReader.*",
+    "MobiDoc.*",
+    "EbookDoc.*",
   })
 
   filter {"configurations:Debug"}

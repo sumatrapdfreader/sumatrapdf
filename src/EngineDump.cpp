@@ -495,7 +495,7 @@ int main(__unused int argc, __unused char** argv) {
     float renderZoom = 1.f;
     bool loadOnly = false, silent = false;
 
-    for (size_t i = 1; i < nArgs; i++) {
+    for (int i = 1; i < nArgs; i++) {
         if (str::Eq(argList.at(i), L"-pwd") && i + 1 < nArgs && !password) {
             password = argList.at(++i);
         } else if (str::Eq(argList.at(i), L"-quick")) {
