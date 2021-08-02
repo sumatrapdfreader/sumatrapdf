@@ -3337,6 +3337,9 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         return nullptr;
     }
     FzPageInfo* pi = epdf->GetFzPageInfo(pageNo, true);
+    if (!pi) {
+        return nullptr;
+    }
 
     ScopedCritSec cs(epdf->ctxAccess);
 
