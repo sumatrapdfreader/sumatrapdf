@@ -33,7 +33,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
@@ -73,7 +73,6 @@
 #include "AppTools.h"
 #include "Installer.h"
 #include "SumatraConfig.h"
-#include "EngineEbook.h"
 #include "ExternalViewers.h"
 #include "AppColors.h"
 

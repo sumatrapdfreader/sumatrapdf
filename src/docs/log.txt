@@ -4,6 +4,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - replaced std::span<u8> with ByteSlice
 - use EngineMupdf for PalmDoc .pdb files
+- merge most of Engine*.h into EngineAll.h
 
 2021-08-01 Sun
 

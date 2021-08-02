@@ -10,10 +10,8 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineMupdf.h"
+#include "EngineAll.h"
 #include "mui/MiniMui.h"
-#include "EngineEbook.h"
-#include "EngineImages.h"
 #include "PdfPreview.h"
 
 #include "utils/Log.h"
@@ -360,8 +358,6 @@ EngineBase* XpsPreview::LoadEngine(IStream* stream) {
     return CreateEngineXpFromStream(stream);
 }
 #endif
-
-#include "EngineDjVu.h"
 
 EngineBase* DjVuPreview::LoadEngine(IStream* stream) {
     return CreateEngineDjVuFromStream(stream);

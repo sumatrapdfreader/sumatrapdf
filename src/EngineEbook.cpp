@@ -21,7 +21,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineEbook.h"
+#include "EngineAll.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"
 #include "EbookDoc.h"

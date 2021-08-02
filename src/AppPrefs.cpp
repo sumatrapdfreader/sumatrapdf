@@ -12,7 +12,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineEbook.h"
+#include "EngineAll.h"
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "DisplayModel.h"

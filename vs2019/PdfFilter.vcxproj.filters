@@ -7,8 +7,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EbookDoc.h" />
+    <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
-    <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\EngineMupdfImpl.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />

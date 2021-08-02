@@ -20,7 +20,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineDjVu.h"
+#include "EngineAll.h"
 
 #include "utils/Log.h"
 

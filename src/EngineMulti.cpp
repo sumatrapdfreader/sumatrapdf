@@ -25,8 +25,7 @@ extern "C" {
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineMupdfImpl.h"
-#include "EngineCreate.h"
-#include "EngineMulti.h"
+#include "EngineAll.h"
 
 #include "utils/Log.h"
 
@@ -251,6 +250,7 @@ int EngineMulti::GetPageByLabel(const WCHAR* label) const {
     return -1;
 }
 
+#if 0
 static void CollectTocItemsRecur(TocItem* ti, Vec<TocItem*>& v) {
     while (ti) {
         v.Append(ti);
@@ -263,7 +263,7 @@ static bool cmpByPageNo(TocItem* ti1, TocItem* ti2) {
     return ti1->pageNo < ti2->pageNo;
 }
 
-void CalcEndPageNo(TocItem* root, int nPages) {
+static void CalcEndPageNo(TocItem* root, int nPages) {
     Vec<TocItem*> tocItems;
     CollectTocItemsRecur(root, tocItems);
     size_t n = tocItems.size();
@@ -282,6 +282,7 @@ void CalcEndPageNo(TocItem* root, int nPages) {
     }
     prev->endPageNo = nPages;
 }
+#endif
 
 static TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     if (ti == nullptr) {

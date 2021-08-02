@@ -14,8 +14,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineMupdf.h"
-#include "EnginePs.h"
+#include "EngineAll.h"
 
 #include "utils/Log.h"
 

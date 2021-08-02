@@ -20,7 +20,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineImages.h"
+#include "EngineAll.h"
 #include "PdfCreator.h"
 
 // using namespace Gdiplus;

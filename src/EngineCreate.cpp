@@ -13,13 +13,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineDjVu.h"
-#include "EngineEbook.h"
-#include "EngineImages.h"
-#include "EngineMupdf.h"
-#include "EnginePs.h"
-#include "EngineMulti.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 
 static bool gEnableEpubWithPdfEngine = true;
 

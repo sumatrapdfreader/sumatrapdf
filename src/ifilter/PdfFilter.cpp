@@ -10,7 +10,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineMupdf.h"
+#include "EngineAll.h"
 
 #include "FilterBase.h"
 #include "PdfFilterClsid.h"

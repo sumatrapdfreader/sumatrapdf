@@ -524,8 +524,7 @@ class EngineBase {
     void SetFileName(const WCHAR* s);
 };
 
-class PasswordUI {
-  public:
+struct PasswordUI {
     virtual WCHAR* GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
     virtual ~PasswordUI() = default;
 };
