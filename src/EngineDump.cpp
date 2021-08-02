@@ -136,9 +136,11 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (engine->IsImageCollection()) {
         Out("\t\tImageFileDPI=\"%g\"\n", engine->GetFileDPI());
     }
-    if (engine->preferredLayout) {
+#if 0
+    if (engine->preferredLayout.t) {
         Out("\t\tPreferredLayout=\"%d\"\n", engine->preferredLayout);
     }
+#endif
     Out1("\t/>\n");
 
     if (!fullDump) {

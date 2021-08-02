@@ -479,6 +479,9 @@
     <ProjectReference Include="utils.vcxproj">
       <Project>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</Project>
     </ProjectReference>
+    <ProjectReference Include="zlib-ng.vcxproj">
+      <Project>{584D90B6-C42C-0F52-CD44-9A2839A375B3}</Project>
+    </ProjectReference>
     <ProjectReference Include="unrar.vcxproj">
       <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
     </ProjectReference>

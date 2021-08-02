@@ -673,7 +673,7 @@ workspace "SumatraPDF"
     includedirs { "src", "src/wingui", "mupdf/include" }
     disablewarnings { "4100", "4267", "4457" }
     engine_dump_files()
-    links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
+    links { "engines", "utils", "zlib-ng", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
       "version", "windowscodecs"

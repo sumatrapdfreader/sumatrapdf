@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-01 Sun
+
+- fix enginesdump build (fixes #2086)
+
 
 2021-07-31 Sat
 
