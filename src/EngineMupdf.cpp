@@ -501,7 +501,7 @@ static void FzStreamFingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) 
     fz_md5_final(&md5, digest);
 }
 
-static std::span<u8> FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
+static ByteSlice FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
     fz_seek(ctx, stream, 0, 2);
     i64 fileLen = fz_tell(ctx, stream);
     fz_seek(ctx, stream, 0, 0);
@@ -1586,7 +1586,7 @@ const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
     return path2;
 }
 
-std::span<u8> EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
+ByteSlice EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     int streamNo = -1;
     AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
     if (streamNo < 0) {
@@ -1622,7 +1622,7 @@ std::span<u8> EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
 
 // <filePath> should end with embed marks, which is a stream number
 // inside pdf file
-std::span<u8> LoadEmbeddedPDFFile(const WCHAR* filePath) {
+ByteSlice LoadEmbeddedPDFFile(const WCHAR* filePath) {
     EngineMupdf* engine = new EngineMupdf();
     auto res = engine->LoadStreamFromPDFFile(filePath);
     delete engine;
@@ -3047,12 +3047,12 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
     return nullptr;
 };
 
-std::span<u8> EngineMupdf::GetFileData() {
+ByteSlice EngineMupdf::GetFileData() {
     if (!pdfdoc) {
         return {};
     }
 
-    std::span<u8> res;
+    ByteSlice res;
     ScopedCritSec scope(ctxAccess);
 
     fz_var(res);

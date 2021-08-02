@@ -89,7 +89,7 @@ class EngineEbook : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::span<u8> GetFileData() override;
+    ByteSlice GetFileData() override;
 
     bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
@@ -203,7 +203,7 @@ RectF EngineEbook::PageContentBox(int pageNo, __unused RenderTarget target) {
     return mbox;
 }
 
-std::span<u8> EngineEbook::GetFileData() {
+ByteSlice EngineEbook::GetFileData() {
     const WCHAR* fileName = FileName();
     if (!fileName) {
         return {};
@@ -674,7 +674,7 @@ class EngineEpub : public EngineEbook {
     ~EngineEpub() override;
     EngineBase* Clone() override;
 
-    std::span<u8> GetFileData() override;
+    ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -770,7 +770,7 @@ bool EngineEpub::FinishLoading() {
     return pageCount > 0;
 }
 
-std::span<u8> EngineEpub::GetFileData() {
+ByteSlice EngineEpub::GetFileData() {
     const WCHAR* fileName = FileName();
     return GetStreamOrFileData(stream, fileName);
 }
@@ -1039,7 +1039,7 @@ IPageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
     }
     CrashIf(pageNo < 1 || pageNo > PageCount());
 
-    const std::span<u8> htmlData = doc->GetHtmlData();
+    auto htmlData = doc->GetHtmlData();
     size_t htmlLen = htmlData.size();
     const char* start = (const char*)htmlData.data();
     if ((size_t)filePos > htmlLen) {
@@ -1213,7 +1213,7 @@ class ChmDataCache {
         }
     }
 
-    std::span<u8> GetHtmlData() {
+    ByteSlice GetHtmlData() {
         return html.AsSpan();
     }
 
@@ -1239,7 +1239,7 @@ class ChmDataCache {
         return &images.Last().base;
     }
 
-    std::span<u8> GetFileData(const char* relPath, const char* pagePath) {
+    ByteSlice GetFileData(const char* relPath, const char* pagePath) {
         AutoFree url(NormalizeURL(relPath, pagePath));
         return doc->GetData(url);
     }

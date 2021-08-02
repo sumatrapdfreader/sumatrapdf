@@ -251,7 +251,7 @@ void SetCurrentLangByCode(const char* langCode) {
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
 
-    std::span<u8> d = LoadDataResource(2);
+    ByteSlice d = LoadDataResource(2);
     CrashIf(d.empty());
     std::string_view sv{(const char*)d.data(), d.size()};
     ParseTranslationsTxt(sv, langCode);

@@ -60,11 +60,6 @@ ByteReader::ByteReader(std::string_view data) {
     len = data.size();
 }
 
-ByteReader::ByteReader(std::span<u8> data) {
-    d = (const u8*)data.data();
-    len = data.size();
-}
-
 ByteReader::ByteReader(ByteSlice data) {
     d = (const u8*)data.data();
     len = data.size();

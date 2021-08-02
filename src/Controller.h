@@ -61,7 +61,7 @@ struct ControllerCallback {
     // an HtmlWindow and thus outside the reach of the main UI)
     virtual void FocusFrame(bool always) = 0;
     // tell the UI to let the user save the provided data to a file
-    virtual void SaveDownload(const WCHAR* url, std::span<u8> data) = 0;
+    virtual void SaveDownload(const WCHAR* url, ByteSlice data) = 0;
     // EbookController //
     virtual void HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) = 0;
     virtual void RequestDelayedLayout(int delay) = 0;

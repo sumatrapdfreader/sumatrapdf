@@ -33,7 +33,7 @@ char* Dup(Allocator*, const char* str, size_t cch = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
 char* Dup(Allocator*, std::string_view);
 char* Dup(std::string_view);
-char* Dup(std::span<u8> d);
+char* Dup(ByteSlice d);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
@@ -54,7 +54,7 @@ WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3, Allocator* allocator);
 
 bool Eq(const char* s1, const char* s2);
 bool Eq(std::string_view s1, const char* s2);
-bool Eq(std::span<u8> sp1, std::span<u8> sp2);
+bool Eq(ByteSlice sp1, ByteSlice sp2);
 bool EqI(const char* s1, const char* s2);
 bool EqI(std::string_view s1, const char* s2);
 bool EqIS(const char* s1, const char* s2);
@@ -64,7 +64,7 @@ bool IsEmpty(const char* s);
 bool StartsWith(const char* str, const char* prefix);
 bool StartsWith(const u8* str, const char* prefix);
 bool StartsWith(std::string_view s, const char* prefix);
-std::span<u8> ToSpan(const char* s);
+ByteSlice ToSpan(const char* s);
 
 bool Eq(const WCHAR*, const WCHAR*);
 bool EqI(const WCHAR*, const WCHAR*);
@@ -238,12 +238,13 @@ struct Str {
     char& FindEl(const std::function<bool(char&)>& check) const;
     [[nodiscard]] bool IsEmpty() const;
     [[nodiscard]] std::string_view AsView() const;
-    [[nodiscard]] std::span<u8> AsSpan() const;
+    [[nodiscard]] ByteSlice AsSpan() const;
+    [[nodiscard]] ByteSlice AsByteSlice() const;
     std::string_view StealAsView();
     bool AppendChar(char c);
     bool Append(const u8* src, size_t size = -1);
     bool AppendView(std::string_view sv);
-    bool AppendSpan(std::span<u8> d);
+    bool AppendSpan(ByteSlice d);
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
     void Set(std::string_view sv);
@@ -336,4 +337,4 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 } // namespace str
 
-std::span<u8> ToSpanU8(std::string_view sv);
+ByteSlice ToSpanU8(std::string_view sv);

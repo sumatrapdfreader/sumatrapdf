@@ -35,9 +35,9 @@ class MultiFormatArchive {
 
     size_t GetFileId(const char* fileName);
 
-    std::span<u8> GetFileDataByName(const WCHAR* filename);
-    std::span<u8> GetFileDataByName(const char* filename);
-    std::span<u8> GetFileDataById(size_t fileId);
+    ByteSlice GetFileDataByName(const WCHAR* filename);
+    ByteSlice GetFileDataByName(const char* filename);
+    ByteSlice GetFileDataById(size_t fileId);
 
     std::string_view GetComment();
 
@@ -54,7 +54,7 @@ class MultiFormatArchive {
     const char* rarFilePath_ = nullptr;
 
     bool OpenUnrarFallback(const char* rarPathUtf);
-    std::span<u8> GetFileDataByIdUnarrDll(size_t fileId);
+    ByteSlice GetFileDataByIdUnarrDll(size_t fileId);
     [[nodiscard]] bool LoadedUsingUnrarDll() const {
         return rarFilePath_ != nullptr;
     }

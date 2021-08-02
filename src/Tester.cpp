@@ -117,9 +117,9 @@ static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
 
     AutoFreeWstr outFile(str::Join(filePathBase, L"_pp.html"));
 
-    std::span<u8> htmlData = mb->GetHtmlData();
+    ByteSlice htmlData = mb->GetHtmlData();
 
-    std::span<u8> ppHtml = PrettyPrintHtml(htmlData);
+    ByteSlice ppHtml = PrettyPrintHtml(htmlData);
     file::WriteFile(outFile.Get(), ppHtml);
 
     outFile.Set(str::Join(filePathBase, L".html"));

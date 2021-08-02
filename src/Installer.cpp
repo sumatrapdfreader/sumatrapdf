@@ -124,7 +124,7 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
         auto fileName = ToWstrTemp(fi->name);
         AutoFreeWstr filePath = path::Join(destDir, fileName);
 
-        std::span<u8> d = {uncompressed, fi->uncompressedSize};
+        ByteSlice d = {uncompressed, fi->uncompressedSize};
         bool ok = file::WriteFile(filePath, d);
         free(uncompressed);
 

@@ -51,13 +51,13 @@ Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
 
 #else
 namespace webp {
-bool HasSignature(std::span<u8>) {
+bool HasSignature(ByteSlice) {
     return false;
 }
-Size SizeFromData(std::span<u8>) {
+Size SizeFromData(ByteSlice) {
     return Size();
 }
-Gdiplus::Bitmap* ImageFromData(std::span<u8>) {
+Gdiplus::Bitmap* ImageFromData(ByteSlice) {
     return nullptr;
 }
 } // namespace webp

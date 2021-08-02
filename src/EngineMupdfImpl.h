@@ -49,7 +49,7 @@ class EngineMupdf : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::span<u8> GetFileData() override;
+    ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
     bool SaveFileAsPDF(const char* pdfFileName) override;
     PageText ExtractPageText(int pageNo) override;
@@ -109,7 +109,7 @@ class EngineMupdf : public EngineBase {
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
     WCHAR* ExtractFontList();
 
-    std::span<u8> LoadStreamFromPDFFile(const WCHAR* filePath);
+    ByteSlice LoadStreamFromPDFFile(const WCHAR* filePath);
     void InvalideAnnotationsForPage(int pageNo);
 };
 

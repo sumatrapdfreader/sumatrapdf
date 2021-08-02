@@ -176,7 +176,7 @@ WCHAR* Doc::GetProperty(DocumentProperty prop) const {
     }
 }
 
-std::span<u8> Doc::GetHtmlData() const {
+ByteSlice Doc::GetHtmlData() const {
     switch (type) {
         case DocType::Epub:
             return epubDoc->GetHtmlData();

@@ -19,14 +19,14 @@ class HtmlWindowCallback {
 
     // allows for providing data for a given url.
     // returning nullptr means data wasn't provided.
-    virtual std::span<u8> GetDataForUrl(const WCHAR* url) = 0;
+    virtual ByteSlice GetDataForUrl(const WCHAR* url) = 0;
 
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)
     virtual void OnLButtonDown() = 0;
 
     // called when a file can't be displayed and has to be downloaded instead
-    virtual void DownloadData(const WCHAR* url, std::span<u8> data) = 0;
+    virtual void DownloadData(const WCHAR* url, ByteSlice data) = 0;
 
     virtual ~HtmlWindowCallback() = default;
 };
@@ -63,7 +63,7 @@ class HtmlWindow {
     void SubclassHwnd();
     void UnsubclassHwnd();
     void SetScrollbarToAuto();
-    void SetHtmlReal(std::span<u8>);
+    void SetHtmlReal(ByteSlice);
     void FreeHtmlSetInProgressData();
 
   public:
@@ -73,7 +73,7 @@ class HtmlWindow {
     void SetVisible(bool visible);
     void NavigateToUrl(const WCHAR* url);
     void NavigateToDataUrl(const WCHAR* url);
-    void SetHtml(std::span<u8>, const WCHAR* url = nullptr);
+    void SetHtml(ByteSlice, const WCHAR* url = nullptr);
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);

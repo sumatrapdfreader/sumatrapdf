@@ -12,7 +12,7 @@ bool GetCurrentThreadCallstack(str::Str& s);
 void LogCallstack();
 void RememberCallstackLogs();
 void FreeCallstackLogs();
-std::span<u8> GetCallstacks();
+ByteSlice GetCallstacks();
 void GetAllThreadsCallstacks(str::Str& s);
 void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers);
 

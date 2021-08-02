@@ -166,7 +166,7 @@ struct HtmlFormatterArgs {
 
     mui::TextRenderMethod textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
-    std::span<u8> htmlStr;
+    ByteSlice htmlStr;
 
     // we start parsing from htmlStr + reparseIdx
     int reparseIdx{0};

@@ -55,7 +55,7 @@ class EngineMulti : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::span<u8> GetFileData() override;
+    ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
     bool SaveFileAsPDF(const char* pdfFileName) override;
     PageText ExtractPageText(int pageNo) override;
@@ -131,7 +131,7 @@ RectF EngineMulti::Transform(const RectF& rect, int pageNo, float zoom, int rota
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }
 
-std::span<u8> EngineMulti::GetFileData() {
+ByteSlice EngineMulti::GetFileData() {
     return {};
 }
 

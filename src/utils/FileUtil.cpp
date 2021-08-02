@@ -464,7 +464,7 @@ FILE* OpenFILE(const char* path) {
     return OpenFILE(pathW.Get());
 }
 
-std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
+ByteSlice ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
     strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
@@ -518,16 +518,16 @@ Error:
 #endif
 }
 
-std::span<u8> ReadFile(std::string_view path) {
+ByteSlice ReadFile(std::string_view path) {
     return ReadFileWithAllocator(path.data(), nullptr);
 }
 
-std::span<u8> ReadFile(const WCHAR* filePath) {
+ByteSlice ReadFile(const WCHAR* filePath) {
     auto path = ToUtf8Temp(filePath);
     return ReadFileWithAllocator(path.Get(), nullptr);
 }
 
-bool WriteFile(const char* filePath, std::span<u8> d) {
+bool WriteFile(const char* filePath, ByteSlice d) {
     auto buf = ToWstrTemp(filePath);
     return WriteFile(buf, d);
 }
@@ -593,7 +593,7 @@ i64 GetSize(std::string_view filePath) {
     return size.QuadPart;
 }
 
-std::span<u8> ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
+ByteSlice ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
     auto pathA = ToUtf8Temp(path);
     return ReadFileWithAllocator(pathA.Get(), allocator);
 }
@@ -615,7 +615,7 @@ int ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     return (int)nRead;
 }
 
-bool WriteFile(const WCHAR* filePath, std::span<u8> d) {
+bool WriteFile(const WCHAR* filePath, ByteSlice d) {
     const void* data = d.data();
     size_t dataLen = d.size();
     DWORD access = GENERIC_WRITE;

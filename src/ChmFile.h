@@ -24,7 +24,7 @@ struct ChmFile {
     ~ChmFile();
 
     bool HasData(const char* fileName) const;
-    std::span<u8> GetData(const char* fileName) const;
+    ByteSlice GetData(const char* fileName) const;
     char* ResolveTopicID(unsigned int id) const;
 
     char* ToUtf8(const u8* text, uint overrideCP = 0) const;

@@ -82,7 +82,7 @@ class Doc {
     [[nodiscard]] const WCHAR* GetFilePath() const;
     [[nodiscard]] const WCHAR* GetDefaultFileExt() const;
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
-    [[nodiscard]] std::span<u8> GetHtmlData() const;
+    [[nodiscard]] ByteSlice GetHtmlData() const;
 
     [[nodiscard]] ImageData* GetCoverImage() const;
     [[nodiscard]] bool HasToc() const;

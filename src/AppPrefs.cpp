@@ -208,9 +208,9 @@ bool Save() {
     if (!path.data) {
         return false;
     }
-    std::span<u8> prevPrefs = file::ReadFile(path.data);
+    ByteSlice prevPrefs = file::ReadFile(path.data);
     const char* prevPrefsData = (char*)prevPrefs.data();
-    std::span<u8> prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
+    ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {
         str::Free(prevPrefs.data());
         str::Free(prefs.data());

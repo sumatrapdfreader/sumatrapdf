@@ -64,8 +64,8 @@ struct ChmModel : Controller {
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
     void OnDocumentComplete(const WCHAR* url);
     void OnLButtonDown();
-    std::span<u8> GetDataForUrl(const WCHAR* url);
-    void DownloadData(const WCHAR* url, std::span<u8> data);
+    ByteSlice GetDataForUrl(const WCHAR* url);
+    void DownloadData(const WCHAR* url, ByteSlice data);
 
     static bool IsSupportedFileType(Kind);
 

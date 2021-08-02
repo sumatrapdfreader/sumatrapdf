@@ -19,10 +19,10 @@ RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, size_t
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
-const WCHAR* GfxFileExtFromData(std::span<u8>);
-bool IsGdiPlusNativeFormat(std::span<u8>);
-Gdiplus::Bitmap* BitmapFromData(std::span<u8>);
-Size BitmapSizeFromData(std::span<u8>);
+const WCHAR* GfxFileExtFromData(ByteSlice);
+bool IsGdiPlusNativeFormat(ByteSlice);
+Gdiplus::Bitmap* BitmapFromData(ByteSlice);
+Size BitmapSizeFromData(ByteSlice);
 CLSID GetEncoderClsid(const WCHAR* format);
 RenderedBitmap* LoadRenderedBitmap(const WCHAR* path);
 RenderedBitmap* LoadRenderedBitmap(const char* path);
@@ -35,7 +35,7 @@ struct ImageData {
     ImageData() = default;
 
     [[nodiscard]] size_t size() const;
-    [[nodiscard]] std::span<u8> AsSpan() const;
+    [[nodiscard]] ByteSlice AsSpan() const;
 };
 
 struct ImageData2 {

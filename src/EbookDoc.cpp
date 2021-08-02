@@ -514,7 +514,7 @@ void EpubDoc::ParseMetadata(const char* content) {
     }
 }
 
-std::span<u8> EpubDoc::GetHtmlData() const {
+ByteSlice EpubDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 
@@ -582,7 +582,7 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     return nullptr;
 }
 
-std::span<u8> EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
+ByteSlice EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     if (!pagePath) {
         CrashIf(true);
         return {};
@@ -784,7 +784,7 @@ Fb2Doc::~Fb2Doc() {
     }
 }
 
-static std::span<u8> loadFromFile(Fb2Doc* doc) {
+static ByteSlice loadFromFile(Fb2Doc* doc) {
     MultiFormatArchive* archive = OpenZipArchive(doc->fileName, false);
     if (!archive) {
         return file::ReadFile(doc->fileName);
@@ -805,7 +805,7 @@ static std::span<u8> loadFromFile(Fb2Doc* doc) {
         return archive->GetFileDataById(0);
     }
 
-    std::span<u8> data;
+    ByteSlice data;
     // if the ZIP file contains more than one file, we try to be rather
     // restrictive in what we accept in order not to accidentally accept
     // too many archives which only contain FB2 files among others:
@@ -823,7 +823,7 @@ static std::span<u8> loadFromFile(Fb2Doc* doc) {
     return data;
 }
 
-static std::span<u8> loadFromStream(Fb2Doc* doc) {
+static ByteSlice loadFromStream(Fb2Doc* doc) {
     auto stream = doc->stream;
     MultiFormatArchive* archive = OpenZipArchive(stream, false);
     if (!archive) {
@@ -974,7 +974,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     images.Append(data);
 }
 
-std::span<u8> Fb2Doc::GetXmlData() const {
+ByteSlice Fb2Doc::GetXmlData() const {
     return {(u8*)xmlData.Get(), xmlData.size()};
 }
 
@@ -1178,7 +1178,7 @@ bool PalmDoc::Load() {
             return false;
     }
 
-    std::span<u8> text = mobiDoc->GetHtmlData();
+    ByteSlice text = mobiDoc->GetHtmlData();
     uint codePage = GuessTextCodepage((const char*)text.data(), text.size(), CP_ACP);
     AutoFree textUtf8(strconv::ToMultiByteV((const char*)text.data(), codePage, CP_UTF8));
 
@@ -1203,7 +1203,7 @@ bool PalmDoc::Load() {
     return true;
 }
 
-std::span<u8> PalmDoc::GetHtmlData() const {
+ByteSlice PalmDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 
@@ -1292,7 +1292,7 @@ bool HtmlDoc::Load() {
     return true;
 }
 
-std::span<u8> HtmlDoc::GetHtmlData() {
+ByteSlice HtmlDoc::GetHtmlData() {
     return htmlData.AsSpan();
 }
 
@@ -1319,15 +1319,15 @@ ImageData* HtmlDoc::GetImageData(const char* fileName) {
     return &images.Last().base;
 }
 
-std::span<u8> HtmlDoc::GetFileData(const char* relPath) {
+ByteSlice HtmlDoc::GetFileData(const char* relPath) {
     AutoFree url(NormalizeURL(relPath, pagePath));
     return LoadURL(url);
 }
 
-std::span<u8> HtmlDoc::LoadURL(const char* url) {
+ByteSlice HtmlDoc::LoadURL(const char* url) {
     if (str::StartsWith(url, "data:")) {
         auto res = DecodeDataURI(url);
-        return ToSpan(res);
+        return res;
     }
     if (str::FindChar(url, ':')) {
         return {};
@@ -1584,7 +1584,7 @@ bool TxtDoc::Load() {
     return true;
 }
 
-std::span<u8> TxtDoc::GetHtmlData() const {
+ByteSlice TxtDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 

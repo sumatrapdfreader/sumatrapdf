@@ -47,7 +47,7 @@ class MobiDoc {
 
     ~MobiDoc();
 
-    [[nodiscard]] std::span<u8> GetHtmlData() const;
+    [[nodiscard]] ByteSlice GetHtmlData() const;
     [[nodiscard]] size_t GetHtmlDataSize() const {
         return doc->size();
     }

@@ -101,7 +101,7 @@ class EngineImages : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::span<u8> GetFileData() override;
+    ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(__unused int pageNo) override {
         return {};
@@ -309,7 +309,7 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
     return new RenderedBitmap(hbmp, s);
 }
 
-std::span<u8> EngineImages::GetFileData() {
+ByteSlice EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
@@ -694,7 +694,7 @@ class EngineImageDir : public EngineImages {
         return nullptr;
     }
 
-    std::span<u8> GetFileData() override {
+    ByteSlice GetFileData() override {
         return {};
     }
     bool SaveFileAs(const char* copyFileName) override;
@@ -830,7 +830,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 RectF EngineImageDir::LoadMediabox(int pageNo) {
     AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
     if (bmpData.data) {
-        std::span<u8> sp{(u8*)bmpData.data, bmpData.size()};
+        ByteSlice sp{(u8*)bmpData.data, bmpData.size()};
         Size size = BitmapSizeFromData(sp);
         return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
@@ -905,7 +905,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     bool FinishLoading();
 
     ImageData GetImageData(int pageNo);
-    void ParseComicInfoXml(std::span<u8> xmlData);
+    void ParseComicInfoXml(ByteSlice xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
     MultiFormatArchive* cbxFile = nullptr;
@@ -1090,7 +1090,7 @@ bool EngineCbx::FinishLoading() {
 
     for (int i = 0; i < pageCount; i++) {
         size_t fileId = files[i]->fileId;
-        std::span<u8> sv = cbxFile->GetFileDataById(fileId);
+        ByteSlice sv = cbxFile->GetFileDataById(fileId);
         ImageData img;
         img.data = (char*)sv.data();
         img.len = sv.size();
@@ -1122,7 +1122,7 @@ static char* GetTextContent(HtmlPullParser& parser) {
 
 // extract ComicInfo.xml metadata
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
-void EngineCbx::ParseComicInfoXml(std::span<u8> xmlData) {
+void EngineCbx::ParseComicInfoXml(ByteSlice xmlData) {
     // TODO: convert UTF-16 data and skip UTF-8 BOM
     HtmlPullParser parser(xmlData);
     HtmlToken* tok;

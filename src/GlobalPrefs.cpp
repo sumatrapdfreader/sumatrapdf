@@ -44,7 +44,7 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
 }
 
 // prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
-std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
+ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         for (FileState* fs : *prefs->fileStates) {
             fs->useDefaultState = true;
@@ -61,7 +61,7 @@ std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
         gFileStateInfo.fieldCount = fieldCount;
     }
 
-    std::span<u8> serialized = SerializeStruct(&gGlobalPrefsInfo, prefs, prevData);
+    ByteSlice serialized = SerializeStruct(&gGlobalPrefsInfo, prefs, prevData);
 
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);

@@ -224,7 +224,7 @@ char* Dup(const std::string_view sv) {
     return Dup(nullptr, sv.data(), sv.size());
 }
 
-char* Dup(const std::span<u8> d) {
+char* Dup(const ByteSlice d) {
     return Dup(nullptr, (const char*)d.data(), d.size());
 }
 
@@ -258,7 +258,7 @@ bool Eq(std::string_view s1, const char* s2) {
     return EqN(s1.data(), s2, s1.size());
 }
 
-bool Eq(std::span<u8> sp1, std::span<u8> sp2) {
+bool Eq(ByteSlice sp1, ByteSlice sp2) {
     if (sp1.size() != sp2.size()) {
         return false;
     }
@@ -366,7 +366,7 @@ bool StartsWithI(const char* s, const char* prefix) {
     return 0 == _strnicmp(s, prefix, str::Len(prefix));
 }
 
-std::span<u8> ToSpan(const char* s) {
+ByteSlice ToSpan(const char* s) {
     size_t n = str::Len(s);
     return {(u8*)s, n};
 }
@@ -1553,7 +1553,11 @@ std::string_view Str::AsView() const {
     return {Get(), size()};
 }
 
-std::span<u8> Str::AsSpan() const {
+ByteSlice Str::AsSpan() const {
+    return {(u8*)Get(), size()};
+}
+
+ByteSlice Str::AsByteSlice() const {
     return {(u8*)Get(), size()};
 }
 
@@ -1578,7 +1582,7 @@ bool Str::AppendView(const std::string_view sv) {
     return this->Append(sv.data(), sv.size());
 }
 
-bool Str::AppendSpan(std::span<u8> d) {
+bool Str::AppendSpan(ByteSlice d) {
     if (d.empty()) {
         return true;
     }
@@ -2705,7 +2709,7 @@ const WCHAR* IdxToStr(const WCHAR* strs, int idx) {
 
 } // namespace seqstrings
 
-std::span<u8> ToSpanU8(std::string_view sv) {
+ByteSlice ToSpanU8(std::string_view sv) {
     return {(u8*)sv.data(), sv.size()};
 }
 

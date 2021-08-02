@@ -10,7 +10,7 @@ Favorite* NewFavorite(int pageNo, const WCHAR* name, const WCHAR* pageLabel);
 void DeleteFavorite(Favorite* fav);
 
 GlobalPrefs* NewGlobalPrefs(const char* data);
-std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData);
+ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData);
 void DeleteGlobalPrefs(GlobalPrefs* gp);
 
 SessionData* NewSessionData();

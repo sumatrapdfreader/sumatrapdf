@@ -39,22 +39,22 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 namespace file {
 
 FILE* OpenFILE(const char* path);
-std::span<u8> ReadFileWithAllocator(const char* path, Allocator*);
-bool WriteFile(const char* path, std::span<u8>);
+ByteSlice ReadFileWithAllocator(const char* path, Allocator*);
+bool WriteFile(const char* path, ByteSlice);
 
-std::span<u8> ReadFile(std::string_view path);
+ByteSlice ReadFile(std::string_view path);
 
 bool Exists(std::string_view path);
 
 FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
-std::span<u8> ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
-std::span<u8> ReadFile(const WCHAR* filePath);
+ByteSlice ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
+ByteSlice ReadFile(const WCHAR* filePath);
 
 i64 GetSize(std::string_view path);
 
 int ReadN(const WCHAR* path, char* buf, size_t toRead);
-bool WriteFile(const WCHAR* path, std::span<u8>);
+bool WriteFile(const WCHAR* path, ByteSlice);
 bool Delete(const WCHAR* path);
 bool Delete(const char* path);
 FILETIME GetModificationTime(const WCHAR* path);

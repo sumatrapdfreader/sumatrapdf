@@ -248,7 +248,7 @@ class EngineDjVu : public EngineBase {
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::span<u8> GetFileData() override;
+    ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
@@ -759,7 +759,7 @@ RectF EngineDjVu::Transform(const RectF& rect, int pageNo, float zoom, int rotat
     return RectF::FromXY(TL, BR);
 }
 
-std::span<u8> EngineDjVu::GetFileData() {
+ByteSlice EngineDjVu::GetFileData() {
     return GetStreamOrFileData(stream, FileName());
 }
 

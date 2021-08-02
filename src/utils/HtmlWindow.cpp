@@ -334,7 +334,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
 
     // those are filled in Start() and represent data to be sent
     // for a given url
-    std::span<u8> data{};
+    ByteSlice data{};
     size_t dataCurrPos = 0;
 };
 
@@ -1191,7 +1191,7 @@ class HtmlMoniker : public IMoniker {
     HtmlMoniker();
     virtual ~HtmlMoniker();
 
-    HRESULT SetHtml(std::span<u8>);
+    HRESULT SetHtml(ByteSlice);
     HRESULT SetBaseUrl(const WCHAR* baseUrl);
 
     // IUnknown
@@ -1289,7 +1289,7 @@ HtmlMoniker::~HtmlMoniker() {
     free(baseUrl);
 }
 
-HRESULT HtmlMoniker::SetHtml(std::span<u8> d) {
+HRESULT HtmlMoniker::SetHtml(ByteSlice d) {
     free(htmlData);
     htmlData = str::Dup(d);
     if (htmlStream) {
@@ -1670,7 +1670,7 @@ void HtmlWindow::NavigateToAboutBlank() {
     NavigateToUrl(L"about:blank");
 }
 
-void HtmlWindow::SetHtml(std::span<u8> d, const WCHAR* url) {
+void HtmlWindow::SetHtml(ByteSlice d, const WCHAR* url) {
     FreeHtmlSetInProgressData();
     htmlSetInProgress = str::Dup(d);
     htmlSetInProgressUrl = str::Dup(url);
@@ -1684,7 +1684,7 @@ void HtmlWindow::SetHtml(std::span<u8> d, const WCHAR* url) {
 // TODO: IHtmlDocument2->write() seems like a simpler method
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
 // https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
-void HtmlWindow::SetHtmlReal(std::span<u8> d) {
+void HtmlWindow::SetHtmlReal(ByteSlice d) {
     if (htmlContent) {
         htmlContent->Release();
     }

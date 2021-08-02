@@ -632,7 +632,7 @@ struct ControllerCallbackHandler : ControllerCallback {
         win->linkHandler->GotoLink(dest);
     }
     void FocusFrame(bool always) override;
-    void SaveDownload(const WCHAR* url, std::span<u8> data) override;
+    void SaveDownload(const WCHAR* url, ByteSlice data) override;
     void HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) override;
     void RequestDelayedLayout(int delay) override;
 };
@@ -721,7 +721,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(const WCHAR* url, std::span<u8> data) {
+void ControllerCallbackHandler::SaveDownload(const WCHAR* url, ByteSlice data) {
     AutoFreeWstr fileName(url::GetFileName(url));
     // LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, fileName, data);

@@ -897,7 +897,7 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
     return true;
 }
 
-std::span<u8> MobiDoc::GetHtmlData() const {
+ByteSlice MobiDoc::GetHtmlData() const {
     if (doc) {
         return doc->AsSpan();
     }

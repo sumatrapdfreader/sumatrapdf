@@ -3,5 +3,5 @@
 
 namespace fitz {
 
-Gdiplus::Bitmap* ImageFromData(std::span<u8>);
+Gdiplus::Bitmap* ImageFromData(ByteSlice);
 }

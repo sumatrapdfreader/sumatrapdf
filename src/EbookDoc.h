@@ -42,10 +42,10 @@ class EpubDoc {
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
-    [[nodiscard]] std::span<u8> GetHtmlData() const;
+    [[nodiscard]] ByteSlice GetHtmlData() const;
 
     ImageData* GetImageData(const char* fileName, const char* pagePath);
-    std::span<u8> GetFileData(const char* relPath, const char* pagePath);
+    ByteSlice GetFileData(const char* relPath, const char* pagePath);
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
     [[nodiscard]] const WCHAR* GetFileName() const;
@@ -83,7 +83,7 @@ class Fb2Doc {
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
-    [[nodiscard]] std::span<u8> GetXmlData() const;
+    [[nodiscard]] ByteSlice GetXmlData() const;
 
     ImageData* GetImageData(const char* fileName) const;
     ImageData* GetCoverImage() const;
@@ -108,7 +108,6 @@ class PdbReader;
 class PalmDoc {
     AutoFreeWstr fileName;
     str::Str htmlData;
-    // char buf[32]{0};
     WStrVec tocEntries;
 
     bool Load();
@@ -117,7 +116,7 @@ class PalmDoc {
     explicit PalmDoc(const WCHAR* path);
     ~PalmDoc();
 
-    [[nodiscard]] std::span<u8> GetHtmlData() const;
+    [[nodiscard]] ByteSlice GetHtmlData() const;
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
     [[nodiscard]] const WCHAR* GetFileName() const;
@@ -139,16 +138,16 @@ class HtmlDoc {
     PropertyMap props;
 
     bool Load();
-    std::span<u8> LoadURL(const char* url);
+    ByteSlice LoadURL(const char* url);
 
   public:
     explicit HtmlDoc(const WCHAR* path);
     ~HtmlDoc();
 
-    std::span<u8> GetHtmlData();
+    ByteSlice GetHtmlData();
 
     ImageData* GetImageData(const char* fileName);
-    std::span<u8> GetFileData(const char* relPath);
+    ByteSlice GetFileData(const char* relPath);
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
     [[nodiscard]] const WCHAR* GetFileName() const;
@@ -169,7 +168,7 @@ class TxtDoc {
   public:
     explicit TxtDoc(const WCHAR* fileName);
 
-    [[nodiscard]] std::span<u8> GetHtmlData() const;
+    [[nodiscard]] ByteSlice GetHtmlData() const;
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
     [[nodiscard]] const WCHAR* GetFileName() const;

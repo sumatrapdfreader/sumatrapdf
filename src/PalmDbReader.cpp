@@ -138,13 +138,13 @@ PdbReader* PdbReader::CreateFromFile(const char* path) {
 }
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
-    std::span<u8> d = file::ReadFile(filePath);
+    ByteSlice d = file::ReadFile(filePath);
     ByteSlice bytes = d;
     return CreateFromData(bytes);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    std::span<u8> d = GetDataFromStream(stream, nullptr);
+    ByteSlice d = GetDataFromStream(stream, nullptr);
     return CreateFromData(d);
 }
 

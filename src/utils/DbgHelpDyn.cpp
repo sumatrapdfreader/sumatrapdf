@@ -441,7 +441,7 @@ void FreeCallstackLogs() {
     gCallstackLogs = nullptr;
 }
 
-std::span<u8> GetCallstacks() {
+ByteSlice GetCallstacks() {
     if (!gCallstackLogs) {
         return {};
     }

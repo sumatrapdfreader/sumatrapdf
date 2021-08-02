@@ -170,14 +170,14 @@ static std::string_view BuildCrashInfoText(bool forCrash) {
     return s.StealAsView();
 }
 
-static void SaveCrashInfo(std::span<u8> d) {
+static void SaveCrashInfo(ByteSlice d) {
     if (!gCrashFilePath) {
         return;
     }
     file::WriteFile(gCrashFilePath, d);
 }
 
-static void SendCrashInfo(std::span<u8> d) {
+static void SendCrashInfo(ByteSlice d) {
     log("SendCrashInfo()\n");
     if (d.empty()) {
         return;
@@ -226,7 +226,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, char* dstDir,
         if (!filePath) {
             return false;
         }
-        std::span<u8> d = {uncompressed, fi->uncompressedSize};
+        ByteSlice d = {uncompressed, fi->uncompressedSize};
         ok = file::WriteFile(filePath, d);
 
         Allocator::Free(allocator, filePath);

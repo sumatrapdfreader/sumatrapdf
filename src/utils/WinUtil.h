@@ -122,9 +122,9 @@ HFONT GetDefaultGuiFont();
 HFONT GetDefaultGuiFont(bool bold, bool italic);
 HFONT GetDefaultGuiFontOfSize(int size);
 
-IStream* CreateStreamFromData(std::span<u8>);
-std::span<u8> GetDataFromStream(IStream* stream, HRESULT* resOpt);
-std::span<u8> GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
+IStream* CreateStreamFromData(ByteSlice);
+ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt);
+ByteSlice GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
 uint GuessTextCodepage(const char* data, size_t len, uint defVal = CP_ACP);
 WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form);
@@ -243,14 +243,14 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp);
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
-std::span<u8> SerializeBitmap(HBITMAP hbmp);
+ByteSlice SerializeBitmap(HBITMAP hbmp);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR* exePath);
 void VariantInitBstr(VARIANT& urlVar, const WCHAR* s);
-std::span<u8> LoadDataResource(int resId);
+ByteSlice LoadDataResource(int resId);
 bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command);
 
 void RectInflateTB(RECT& r, int top, int bottom);

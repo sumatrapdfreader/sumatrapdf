@@ -360,7 +360,7 @@ static int FindImageKindIdx(Kind kind) {
     return -1;
 }
 
-const WCHAR* GfxFileExtFromData(std::span<u8> d) {
+const WCHAR* GfxFileExtFromData(ByteSlice d) {
     Kind kind = GuessFileTypeFromContent(d);
     int idx = FindImageKindIdx(kind);
     if (idx >= 0) {
@@ -370,7 +370,7 @@ const WCHAR* GfxFileExtFromData(std::span<u8> d) {
 }
 
 // Windows' JPEG codec doesn't support arithmetic coding
-static bool JpegUsesArithmeticCoding(std::span<u8> d) {
+static bool JpegUsesArithmeticCoding(ByteSlice d) {
     CrashIf(GuessFileTypeFromContent(d) != kindFileJpeg);
 
     ByteReader r(d);
@@ -386,7 +386,7 @@ static bool JpegUsesArithmeticCoding(std::span<u8> d) {
 
 // Windows' PNG codec fails to handle an edge case, resulting in
 // an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
-static bool PngRequiresPresetDict(std::span<u8> d) {
+static bool PngRequiresPresetDict(ByteSlice d) {
     CrashIf(GuessFileTypeFromContent(d) != kindFilePng);
 
     ByteReader r(d);
@@ -402,14 +402,14 @@ static bool PngRequiresPresetDict(std::span<u8> d) {
     return false;
 }
 
-bool IsGdiPlusNativeFormat(std::span<u8> d) {
+bool IsGdiPlusNativeFormat(ByteSlice d) {
     Kind fmt = GuessFileTypeFromContent(d);
     return kindFileBmp == fmt || kindFileGif == fmt || kindFileTiff == fmt ||
            (kindFileJpeg == fmt && !JpegUsesArithmeticCoding(d)) || (kindFilePng == fmt && !PngRequiresPresetDict(d));
 }
 
 // see http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
-Bitmap* BitmapFromData(std::span<u8> bmpData) {
+Bitmap* BitmapFromData(ByteSlice bmpData) {
     Kind format = GuessFileTypeFromContent(bmpData);
     if (kindFileTga == format) {
         return tga::ImageFromData(bmpData);
@@ -453,7 +453,7 @@ Bitmap* BitmapFromData(std::span<u8> bmpData) {
 #define JP2_IHDR 0x69686472 /**< Image header box */
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Size BitmapSizeFromData(std::span<u8> d) {
+Size BitmapSizeFromData(ByteSlice d) {
     Size result;
     ByteReader r(d);
     size_t len = d.size();
@@ -619,7 +619,7 @@ size_t ImageData::size() const {
     return len;
 }
 
-std::span<u8> ImageData::AsSpan() const {
+ByteSlice ImageData::AsSpan() const {
     return {(u8*)data, len};
 }
 

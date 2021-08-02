@@ -509,10 +509,6 @@ class FixedArray {
     }
 };
 
-static inline std::span<u8> ToSpan(std::string_view d) {
-    return {(u8*)d.data(), d.size()};
-}
-
 /*
 Poor-man's manual dynamic typing.
 Identity of an object is an address of a unique, global string.
@@ -579,12 +575,12 @@ defer { instance->Release(); };
 */
 
 #include "GeomUtil.h"
+#include "StrSlice.h"
 #include "StrUtil.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"
 #include "Vec.h"
 #include "StringViewUtil.h"
-#include "StrSlice.h"
 #include "ColorUtil.h"
 #include "TempAllocator.h"
 

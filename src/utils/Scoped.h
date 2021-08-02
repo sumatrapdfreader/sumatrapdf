@@ -116,7 +116,7 @@ struct AutoFree {
         len = s.size();
     }
 
-    AutoFree(std::span<u8> s) { // NOLINT
+    AutoFree(ByteSlice s) { // NOLINT
         data = (char*)s.data();
         len = s.size();
     }
@@ -127,7 +127,7 @@ struct AutoFree {
         len = str::Len(data);
     }
 
-    void Set(std::span<u8> d) {
+    void Set(ByteSlice d) {
         free(data);
         data = (char*)d.data();
         len = d.size();
@@ -184,7 +184,7 @@ struct AutoFree {
         return {data, len};
     }
 
-    [[nodiscard]] std::span<u8> AsSpan() const {
+    [[nodiscard]] ByteSlice AsSpan() const {
         return {(u8*)data, len};
     }
 

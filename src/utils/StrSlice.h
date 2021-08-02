@@ -13,17 +13,21 @@ struct ByteSlice {
         d = data;
         s = size;
     }
-    ByteSlice(std::span<u8> data) {
+    ByteSlice(const ByteSlice& data) {
         d = data.data();
         s = data.size();
     }
-    u8* data() {
+    ByteSlice(const std::string_view& data) {
+        d = (u8*)data.data();
+        s = data.size();
+    }
+    u8* data() const {
         return d;
     }
-    size_t size() {
+    size_t size() const {
         return s;
     }
-    bool empty() {
+    bool empty() const {
         return !d || s == 0;
     }
 };

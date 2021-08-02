@@ -338,7 +338,7 @@ void DumpThumbnail(EngineBase* engine) {
         return;
     }
 
-    std::span<u8> imgData = tga::SerializeBitmap(bmp->GetBitmap());
+    ByteSlice imgData = tga::SerializeBitmap(bmp->GetBitmap());
     size_t len = imgData.size();
     u8* data = imgData.data();
     AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
@@ -444,13 +444,13 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             CLSID pngEncId = GetEncoderClsid(L"image/png");
             gbmp.Save(pageBmpPath, &pngEncId);
         } else if (str::EndsWithI(pageBmpPath, L".bmp")) {
-            std::span<u8> imgData = SerializeBitmap(bmp->GetBitmap());
+            ByteSlice imgData = SerializeBitmap(bmp->GetBitmap());
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData.data());
             }
         } else { // render as TGA for all other file extensions
-            std::span<u8> imgData = tga::SerializeBitmap(bmp->GetBitmap());
+            ByteSlice imgData = tga::SerializeBitmap(bmp->GetBitmap());
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData.data());

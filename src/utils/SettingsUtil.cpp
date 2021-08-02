@@ -519,7 +519,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     return base;
 }
 
-std::span<u8> SerializeStruct(const StructInfo* info, const void* strct, const char* prevData) {
+ByteSlice SerializeStruct(const StructInfo* info, const void* strct, const char* prevData) {
     str::Str out;
     out.Append(UTF8_BOM);
     SquareTree prevSqt(prevData);

@@ -37,7 +37,7 @@ bool ChmFile::HasData(const char* fileName) const {
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-std::span<u8> ChmFile::GetData(const char* fileName) const {
+ByteSlice ChmFile::GetData(const char* fileName) const {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp("/", fileName);
     } else if (str::StartsWith(fileName, "///")) {
@@ -92,7 +92,7 @@ WCHAR* ChmFile::ToStr(const char* text) const {
     return strconv::StrToWstr(text, codepage);
 }
 
-static char* GetCharZ(std::span<u8> d, size_t off) {
+static char* GetCharZ(ByteSlice d, size_t off) {
     u8* data = d.data();
     size_t len = d.size();
     if (off >= len) {

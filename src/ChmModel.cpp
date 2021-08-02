@@ -68,10 +68,10 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     void OnLButtonDown() override {
         cm->OnLButtonDown();
     }
-    std::span<u8> GetDataForUrl(const WCHAR* url) override {
+    ByteSlice GetDataForUrl(const WCHAR* url) override {
         return cm->GetDataForUrl(url);
     }
-    void DownloadData(const WCHAR* url, std::span<u8> data) override {
+    void DownloadData(const WCHAR* url, ByteSlice data) override {
         cm->DownloadData(url, data);
     }
 };
@@ -448,7 +448,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
 }
 
 // Load and cache data for a given url inside CHM file.
-std::span<u8> ChmModel::GetDataForUrl(const WCHAR* url) {
+ByteSlice ChmModel::GetDataForUrl(const WCHAR* url) {
     ScopedCritSec scope(&docAccess);
     AutoFreeWstr plainUrl(url::GetFullPath(url));
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
@@ -465,7 +465,7 @@ std::span<u8> ChmModel::GetDataForUrl(const WCHAR* url) {
     return e->data.AsSpan();
 }
 
-void ChmModel::DownloadData(const WCHAR* url, std::span<u8> data) {
+void ChmModel::DownloadData(const WCHAR* url, ByteSlice data) {
     if (cb) {
         cb->SaveDownload(url, data);
     }
@@ -614,7 +614,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     Size size;
     onBitmapRenderedCb saveThumbnail;
     AutoFreeWstr homeUrl;
-    Vec<std::span<u8>> data;
+    Vec<ByteSlice> data;
     CRITICAL_SECTION docAccess;
 
   public:
@@ -670,7 +670,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     void OnLButtonDown() override {
     }
 
-    std::span<u8> GetDataForUrl(const WCHAR* url) override {
+    ByteSlice GetDataForUrl(const WCHAR* url) override {
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
         auto urlA(ToUtf8Temp(plainUrl));
@@ -679,7 +679,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         return d;
     }
 
-    void DownloadData(const WCHAR*, std::span<u8>) override {
+    void DownloadData(const WCHAR*, ByteSlice) override {
     }
 };
 

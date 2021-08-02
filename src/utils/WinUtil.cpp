@@ -1360,7 +1360,7 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
     return CreateFontIndirectW(&lf);
 }
 
-IStream* CreateStreamFromData(std::span<u8> d) {
+IStream* CreateStreamFromData(ByteSlice d) {
     if (d.empty()) {
         return nullptr;
     }
@@ -1420,7 +1420,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     return S_OK;
 }
 
-std::span<u8> GetDataFromStream(IStream* stream, HRESULT* resOpt) {
+ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     void* data = nullptr;
     ULONG size = 0;
     HRESULT res = GetDataFromStream(stream, &data, &size);
@@ -1434,7 +1434,7 @@ std::span<u8> GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     return {(u8*)data, (size_t)size};
 }
 
-std::span<u8> GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
+ByteSlice GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
     if (stream) {
         return GetDataFromStream(stream, nullptr);
     }
@@ -1798,7 +1798,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
 // can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
-std::span<u8> SerializeBitmap(HBITMAP hbmp) {
+ByteSlice SerializeBitmap(HBITMAP hbmp) {
     Size size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
@@ -2005,7 +2005,7 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
     urlVar.bstrVal = SysAllocString(s);
 }
 
-std::span<u8> LoadDataResource(int resId) {
+ByteSlice LoadDataResource(int resId) {
     HRSRC resSrc = FindResource(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
     CrashIf(!resSrc);
     if (!resSrc) {

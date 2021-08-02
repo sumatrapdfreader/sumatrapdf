@@ -64,7 +64,7 @@ size_t ByteWriter::Size() const {
     return d.size();
 }
 
-std::span<u8> ByteWriter::AsSpan() const {
+ByteSlice ByteWriter::AsSpan() const {
     return d.AsSpan();
 }
 

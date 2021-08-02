@@ -16,7 +16,7 @@ struct ByteWriter {
     void Write64(u64 val);
 
     size_t Size() const;
-    std::span<u8> AsSpan() const;
+    ByteSlice AsSpan() const;
 };
 
 struct ByteWriterLE : ByteWriter {

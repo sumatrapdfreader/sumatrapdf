@@ -90,17 +90,17 @@ size_t MultiFormatArchive::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
-std::span<u8> MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
+ByteSlice MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
     auto fileNameA = ToUtf8Temp(fileName);
     return GetFileDataByName(fileNameA);
 }
 
-std::span<u8> MultiFormatArchive::GetFileDataByName(const char* fileName) {
+ByteSlice MultiFormatArchive::GetFileDataByName(const char* fileName) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
 }
 
-std::span<u8> MultiFormatArchive::GetFileDataById(size_t fileId) {
+ByteSlice MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (fileId == (size_t)-1) {
         return {};
     }
@@ -295,7 +295,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
     }
 }
 
-std::span<u8> MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
+ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
     auto rarPath = ToWstrTemp(rarFilePath_);
