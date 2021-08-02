@@ -20,6 +20,7 @@ size_t Len(const char* s);
 void Free(const char*);
 void Free(const u8*);
 void Free(std::string_view);
+void Free(ByteSlice);
 
 void Free(const WCHAR* s);
 void Free(std::wstring_view);

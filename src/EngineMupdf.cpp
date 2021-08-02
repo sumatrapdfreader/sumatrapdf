@@ -1629,32 +1629,21 @@ ByteSlice LoadEmbeddedPDFFile(const WCHAR* filePath) {
     return res;
 }
 
-bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
-    CrashIf(FileName() || _doc || !ctx);
-    SetFileName(path);
+static ByteSlice TxtFileToHTML(const WCHAR* path) {
+    auto fd = file::ReadFile(path);
+    if (fd.empty()) {
+        return {};
+    }
+    str::Str fc;
+    std::string_view sv = {(const char*)fd.data(), fd.size()};
+    fc.AppendView(sv);
+    str::Free(sv.data());
+    Replace(fc, "&", "&amp;");
+    Replace(fc, ">", "&gt;");
+    Replace(fc, "<", "&lt;");
 
-    auto ext = path::GetExtTemp(path);
-    str::ReplaceWithCopy(&defaultExt, ext);
-
-    int streamNo = -1;
-    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
-
-    if (str::EqI(ext, L".txt")) {
-        // synthesize a .html file from text file
-        auto fd = file::ReadFile(path);
-        if (fd.empty()) {
-            return false;
-        }
-        str::Str fc;
-        std::string_view sv = {(const char*)fd.data(), fd.size()};
-        fc.AppendView(sv);
-        str::Free(sv.data());
-        Replace(fc, "&", "&amp;");
-        Replace(fc, ">", "&gt;");
-        Replace(fc, "<", "&lt;");
-
-        str::Str d;
-        d.Append(R"(<html>
+    str::Str d;
+    d.Append(R"(<html>
     <head>
 <style>
     body {
@@ -1667,14 +1656,68 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     </head>
 <body>
     <pre>)");
-        d.AppendView(fc.AsView());
-        d.Append(R"(</pre>
+    d.AppendView(fc.AsView());
+    d.Append(R"(</pre>
 </body>
 </html>)");
+    return d.StealAsView();
+}
 
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.LendData(), d.size());
+#include "utils/GdiPlusUtil.h"
+#include "EbookBase.h"
+#include "EbookDoc.h"
+
+static ByteSlice PalmDocToHTML(const WCHAR* path) {
+    auto doc = PalmDoc::CreateFromFile(path);
+    if (!doc) {
+        return {};
+    }
+    AutoDelete<PalmDoc> delDoc;
+    auto html = doc->GetHtmlData();
+    if (html.empty()) {
+        return {};
+    }
+    auto res = str::Dup(html);
+    return {(u8*)res, html.size()};
+}
+
+bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
+    CrashIf(FileName() || _doc || !ctx);
+    SetFileName(path);
+
+    auto ext = path::GetExtTemp(path);
+    str::ReplaceWithCopy(&defaultExt, ext);
+
+    int streamNo = -1;
+    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
+
+    if (str::EqI(ext, L".txt")) {
+        // synthesize a .html file from text file
+        ByteSlice d = TxtFileToHTML(path);
+        if (d.empty()) {
+            return false;
+        }
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.data(), d.size());
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
+        str::Free(d);
+        WCHAR* overrideName = str::Join(path, L".html");
+        if (!LoadFromStream(file, pwdUI, overrideName)) {
+            return false;
+        }
+        return FinishLoading();
+    }
+
+    if (str::EqI(ext, L".pdb")) {
+        // synthesize a .html file from pdb file
+        ByteSlice d = PalmDocToHTML(path);
+        if (d.empty()) {
+            return false;
+        }
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.data(), d.size());
+        fz_stream* file = fz_open_buffer(ctx, buf);
+        fz_drop_buffer(ctx, buf);
+        str::Free(d);
         WCHAR* overrideName = str::Join(path, L".html");
         if (!LoadFromStream(file, pwdUI, overrideName)) {
             return false;
@@ -3266,6 +3309,9 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
         return true;
     }
     if (kind == kindFileTxt) {
+        return true;
+    }
+    if (kind == kindFilePalmDoc) {
         return true;
     }
     return false;

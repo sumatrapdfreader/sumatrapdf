@@ -173,6 +173,10 @@ void Free(std::string_view sv) {
     free((void*)sv.data());
 }
 
+void Free(ByteSlice d) {
+    free((void*)d.data());
+}
+
 void Free(const WCHAR* s) {
     free((void*)s);
 }

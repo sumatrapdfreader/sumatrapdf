@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-02 Mon
+
+- replaced std::span<u8> with ByteSlice
+- use EngineMupdf for PalmDoc .pdb files
+
 2021-08-01 Sun
 
 - fix enginesdump build (fixes #2086)
