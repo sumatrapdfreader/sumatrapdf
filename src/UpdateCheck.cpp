@@ -182,14 +182,16 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     // only check if at least a day passed since last check
     FILETIME currentTimeFt;
     GetSystemTimeAsFileTime(&currentTimeFt);
-    int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
+    int secsSinceLastUpdate = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
 
     constexpr int kSecondsInDay = 60 * 60 * 24;
     constexpr int kSecondsInWeek = 7 * 60 * 60 * 24;
 
-    int timeDiff = gIsPreReleaseBuild ? kSecondsInWeek : kSecondsInDay;
-    // if secs < 0 => somethings wrong, so ignore that case
-    return !((secs >= 0) && (secs < timeDiff));
+    int secsBetweenChecks = gIsPreReleaseBuild ? kSecondsInWeek : kSecondsInDay;
+    bool checkUpdate = secsSinceLastUpdate > secsBetweenChecks;
+    logf("CheckForUpdate: secsBetweenChecks: %d, secsSinceLastUpdate: %d, checkUpdate: %d\n", secsBetweenChecks,
+         secsSinceLastUpdate, (int)checkUpdate);
+    return checkUpdate;
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
