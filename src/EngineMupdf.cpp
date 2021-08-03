@@ -2435,7 +2435,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
         return nullptr;
     }
 
-    if (pageInfo->commentsNeedRebuilding) {
+    if (pdfdoc && pageInfo->commentsNeedRebuilding) {
         CrashIf(!pdfdoc);
         DeleteVecMembers(pageInfo->comments);
         MakePageElementCommentsFromAnnotations(ctx, pageInfo);
@@ -3411,6 +3411,9 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
 }
 
 void EngineMupdf::InvalideAnnotationsForPage(int pageNo) {
+    if (!pdfdoc) {
+        return;
+    }
     ScopedCritSec scope(&pagesAccess);
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;

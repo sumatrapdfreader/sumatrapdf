@@ -226,12 +226,12 @@ inline void CrashIfFunc(bool cond) {
     if (!cond) {
         return;
     }
-#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
     if (IsDebuggerPresent()) {
         DebugBreak();
-    } else {
-        CrashMe();
+        return;
     }
+#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
+    CrashMe();
 #endif
 }
 

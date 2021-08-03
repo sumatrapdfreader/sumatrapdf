@@ -8,6 +8,9 @@ A daily log of changes and commentary. An experiment of sorts.
   and now we need to tell which kind of file we're loading
   by either mimetype or file extension
   the fix is to propagate a dummy name that indicates file type
+- don't trigger debug crash rebuilding annotations in non-pdf documents (fixes #2090)
+  still don't get why I wasn't getting those crashes in debug builds
+  (so I couldn't reproduce them)
 
 2021-08-02 Mon
 
