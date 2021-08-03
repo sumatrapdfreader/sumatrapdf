@@ -637,6 +637,7 @@ bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
 }
 
 EngineBase* EngineImage::CreateFromFile(const WCHAR* fileName) {
+    logf("EngineImage::CreateFromFile(%s)\n", ToUtf8Temp(fileName).Get());
     EngineImage* engine = new EngineImage();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
@@ -660,15 +661,18 @@ static Kind imageEngineKinds[] = {
 };
 
 bool IsEngineImageSupportedFileType(Kind kind) {
+    logf("IsEngineImageSupportedFileType(%s)\n", kind);
     int n = dimof(imageEngineKinds);
     return KindInArray(imageEngineKinds, n, kind);
 }
 
 EngineBase* CreateEngineImageFromFile(const WCHAR* fileName) {
+    logf("CreateEngineImageFromFile(%s)\n", ToUtf8Temp(fileName).Get());
     return EngineImage::CreateFromFile(fileName);
 }
 
 EngineBase* CreateEngineImageFromStream(IStream* stream) {
+    log("CreateEngineImageFromStream\n");
     return EngineImage::CreateFromStream(stream);
 }
 

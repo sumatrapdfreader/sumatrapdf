@@ -293,7 +293,7 @@ STDAPI DllRegisterServer() {
     return S_OK;
 }
 
-void DeleteOrFail(const WCHAR* key, HRESULT *hr) {
+void DeleteOrFail(const WCHAR* key, HRESULT* hr) {
     DeleteRegKey(HKEY_LOCAL_MACHINE, key);
     if (!DeleteRegKey(HKEY_CURRENT_USER, key)) {
         *hr = E_FAIL;

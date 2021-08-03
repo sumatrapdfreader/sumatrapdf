@@ -29,10 +29,11 @@ void _submitDebugReportIfFunc(bool cond, __unused const char* condStr) {
 IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
     EngineBase* engine = GetEngine();
     if (!engine) {
+        logf("PreviewBase::GetThumbnail: failed to get the engine\n");
         return E_FAIL;
     }
 
-    logf("PreviewBase::GetThumbnail(cx=%d)\n", (int)cx);
+    logf("PreviewBase::GetThumbnail(cx=%d, engine: %s\n", (int)cx, engine->kind);
 
     RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
@@ -49,6 +50,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
     u8* bmpData = nullptr;
     HBITMAP hthumb = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void**)&bmpData, nullptr, 0);
     if (!hthumb) {
+        log("PreviewBase::GetThumbnail: CreateDIBSection() failed\n");
         return E_OUTOFMEMORY;
     }
 
@@ -67,9 +69,11 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
         if (pdwAlpha) {
             *pdwAlpha = WTSAT_RGB;
         }
+        log("PreviewBase::GetThumbnail: provided thumbnail\n");
     } else {
         DeleteObject(hthumb);
         hthumb = nullptr;
+        log("PreviewBase::GetThumbnail: GetDIBits() failed\n");
     }
 
     ReleaseDC(nullptr, hdc);
@@ -151,6 +155,7 @@ class PageRenderer {
 
   protected:
     static DWORD WINAPI RenderThread(LPVOID data) {
+        log("PageRenderer::RenderThread started\n");
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
         PageRenderer* pr = (PageRenderer*)data;
@@ -360,10 +365,12 @@ EngineBase* XpsPreview::LoadEngine(IStream* stream) {
 #endif
 
 EngineBase* DjVuPreview::LoadEngine(IStream* stream) {
+    log("DjVuPreview::LoadEngine()\n");
     return CreateEngineDjVuFromStream(stream);
 }
 
 EpubPreview::EpubPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID) {
+    log("EpubPreview::EpubPreview()\n");
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
@@ -373,6 +380,7 @@ EpubPreview::~EpubPreview() {
 }
 
 EngineBase* EpubPreview::LoadEngine(IStream* stream) {
+    log("EpubPreview::LoadEngine()\n");
     return CreateEngineEpubFromStream(stream);
 }
 
@@ -386,6 +394,7 @@ Fb2Preview::~Fb2Preview() {
 }
 
 EngineBase* Fb2Preview::LoadEngine(IStream* stream) {
+    log("Fb2Preview::LoadEngine()\n");
     return CreateEngineFb2FromStream(stream);
 }
 
@@ -399,13 +408,16 @@ MobiPreview::~MobiPreview() {
 }
 
 EngineBase* MobiPreview::LoadEngine(IStream* stream) {
+    log("MobiPreview::LoadEngine()\n");
     return CreateEngineMobiFromStream(stream);
 }
 
 EngineBase* CbxPreview::LoadEngine(IStream* stream) {
+    log("CbxPreview::LoadEngine()\n");
     return CreateEngineCbxFromStream(stream);
 }
 
 EngineBase* TgaPreview::LoadEngine(IStream* stream) {
+    log("TgaPreview::LoadEngine()\n");
     return CreateEngineImageFromStream(stream);
 }
