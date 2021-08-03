@@ -397,7 +397,7 @@ bool EpubDoc::Load() {
                 continue;
             }
             // load the image lazily
-            ImageData2 data;
+            ImageData data;
             data.fileName = strconv::WstrToUtf8(imgPath);
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
@@ -531,7 +531,7 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         // format specific state such as hiddenDepth and titleCount) and store it
         // in every HtmlPage, but this should work well enough for now
         for (size_t i = 0; i < images.size(); i++) {
-            ImageData2* img = &images.at(i);
+            ImageData* img = &images.at(i);
             if (str::EndsWithI(img->fileName, fileName)) {
                 if (img->base.empty()) {
                     img->base = zip->GetFileDataById(img->fileId);
@@ -550,7 +550,7 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         str::TransCharsInPlace(url, "\\", "/");
     }
     for (size_t i = 0; i < images.size(); i++) {
-        ImageData2* img = &images.at(i);
+        ImageData* img = &images.at(i);
         if (str::Eq(img->fileName, url)) {
             if (img->base.empty()) {
                 img->base = zip->GetFileDataById(img->fileId);
@@ -562,7 +562,7 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     }
 
     // try to also load images which aren't registered in the manifest
-    ImageData2 data;
+    ImageData data;
     data.fileId = zip->GetFileId(url);
     if (data.fileId != (size_t)-1) {
         data.base = zip->GetFileDataById(data.fileId);
@@ -958,7 +958,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
         return;
     }
 
-    ImageData2 data;
+    ImageData data;
     data.base = Base64Decode({(u8*)tok->s, tok->sLen});
     if (data.base.empty()) {
         return;
@@ -1301,7 +1301,7 @@ ByteSlice* HtmlDoc::GetImageData(const char* fileName) {
         }
     }
 
-    ImageData2 data;
+    ImageData data;
     data.base = LoadURL(url);
     if (data.base.empty()) {
         return nullptr;

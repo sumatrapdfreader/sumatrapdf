@@ -4,6 +4,14 @@
 class HtmlPullParser;
 struct HtmlToken;
 
+struct ImageData {
+    ByteSlice base;
+    // path by which content refers to this image
+    char* fileName{nullptr};
+    // document specific id by whcih to find this image
+    size_t fileId{0};
+};
+
 char* NormalizeURL(const char* url, const char* base);
 
 class PropertyMap {
@@ -25,7 +33,7 @@ class EpubDoc {
     CRITICAL_SECTION zipAccess;
 
     str::Str htmlData;
-    Vec<ImageData2> images;
+    Vec<ImageData> images;
     AutoFreeWstr tocPath;
     AutoFreeWstr fileName;
     PropertyMap props;
@@ -70,7 +78,7 @@ class Fb2Doc {
     IStream* stream = nullptr;
 
     str::Str xmlData;
-    Vec<ImageData2> images;
+    Vec<ImageData> images;
     AutoFree coverImage;
     PropertyMap props;
     bool isZipped = false;
@@ -134,7 +142,7 @@ class HtmlDoc {
     AutoFreeWstr fileName;
     AutoFree htmlData;
     AutoFree pagePath;
-    Vec<ImageData2> images;
+    Vec<ImageData> images;
     PropertyMap props;
 
     bool Load();

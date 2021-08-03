@@ -26,11 +26,3 @@ Size BitmapSizeFromData(ByteSlice);
 CLSID GetEncoderClsid(const WCHAR* format);
 RenderedBitmap* LoadRenderedBitmap(const WCHAR* path);
 RenderedBitmap* LoadRenderedBitmap(const char* path);
-
-struct ImageData2 {
-    ByteSlice base;
-    // path by which content refers to this image
-    char* fileName{nullptr};
-    // document specific id by whcih to find this image
-    size_t fileId{0};
-};

@@ -1200,7 +1200,7 @@ EngineBase* CreateEnginePdbFromFile(const WCHAR* fileName) {
 class ChmDataCache {
     ChmFile* doc = nullptr; // owned by creator
     AutoFree html;
-    Vec<ImageData2> images;
+    Vec<ImageData> images;
 
   public:
     ChmDataCache(ChmFile* doc, char* html) : doc(doc), html(html) {
@@ -1230,7 +1230,7 @@ class ChmDataCache {
             return nullptr;
         }
 
-        ImageData2 data;
+        ImageData data;
         data.base = tmp;
 
         data.fileName = url.Release();
