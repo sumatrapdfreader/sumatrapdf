@@ -279,17 +279,6 @@ STDAPI DllRegisterServer() {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext2));
             WriteOrFail_(key, nullptr, clsid);
         }
-        // IExtractImage (for Windows XP)
-        if (!IsWindowsVistaOrGreater()) {
-            // don't register for IExtractImage on systems which accept IThumbnailProvider
-            // (because it doesn't offer anything beyond what IThumbnailProvider does)
-            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext));
-            WriteOrFail_(key, nullptr, clsid);
-            if (ext2) {
-                key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext2));
-                WriteOrFail_(key, nullptr, clsid);
-            }
-        }
         // IPreviewHandler
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext));
         WriteOrFail_(key, nullptr, clsid);
@@ -304,14 +293,16 @@ STDAPI DllRegisterServer() {
     return S_OK;
 }
 
+void DeleteOrFail(const WCHAR* key, HRESULT *hr) {
+    DeleteRegKey(HKEY_LOCAL_MACHINE, key);
+    if (!DeleteRegKey(HKEY_CURRENT_USER, key)) {
+        *hr = E_FAIL;
+    }
+}
+
 STDAPI DllUnregisterServer() {
     log("DllUnregisterServer\n");
     HRESULT hr = S_OK;
-
-#define DeleteOrFail_(key)                     \
-    DeleteRegKey(HKEY_LOCAL_MACHINE, key);     \
-    if (!DeleteRegKey(HKEY_CURRENT_USER, key)) \
-    hr = E_FAIL
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
         if (gPreviewers[i].skip) {
@@ -326,31 +317,29 @@ STDAPI DllUnregisterServer() {
         SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, clsid);
         // remove class data
         AutoFreeWstr key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
-        DeleteOrFail_(key);
+        DeleteOrFail(key, &hr);
         // IThumbnailProvider
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext));
-        DeleteOrFail_(key);
+        DeleteOrFail(key, &hr);
         if (ext2) {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext2));
-            DeleteOrFail_(key);
+            DeleteOrFail(key, &hr);
         }
         // IExtractImage (for Windows XP)
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext));
-        DeleteOrFail_(key);
+        DeleteOrFail(key, &hr);
         if (ext2) {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext2));
-            DeleteOrFail_(key);
+            DeleteOrFail(key, &hr);
         }
         // IPreviewHandler
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext));
-        DeleteOrFail_(key);
+        DeleteOrFail(key, &hr);
         if (ext2) {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext2));
-            DeleteOrFail_(key);
+            DeleteOrFail(key, &hr);
         }
     }
-#undef DeleteOrFail_
-
     return hr;
 }
 

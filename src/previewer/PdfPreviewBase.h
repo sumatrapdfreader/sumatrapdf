@@ -9,17 +9,11 @@ class PreviewBase : public IThumbnailProvider,
                     public IInitializeWithStream,
                     public IObjectWithSite,
                     public IPreviewHandler,
-                    public IOleWindow,
-                    // for Windows XP
-                    public IPersistFile,
-                    public IExtractImage2 {
+                    public IOleWindow {
   public:
     PreviewBase(long* plRefCount, const WCHAR* clsid) {
         m_plModuleRef = plRefCount;
-        m_clsid = clsid;
         InterlockedIncrement(m_plModuleRef);
-        m_dateStamp.dwLowDateTime = 0;
-        m_dateStamp.dwHighDateTime = 0;
     }
 
     virtual ~PreviewBase() {
@@ -35,9 +29,6 @@ class PreviewBase : public IThumbnailProvider,
                                     QITABENT(PreviewBase, IObjectWithSite),
                                     QITABENT(PreviewBase, IPreviewHandler),
                                     QITABENT(PreviewBase, IOleWindow),
-                                    QITABENT(PreviewBase, IExtractImage2),
-                                    QITABENT(PreviewBase, IExtractImage),
-                                    QITABENT(PreviewBase, IPersistFile),
                                     QITABENT(PreviewBase, IPersist),
                                     {0}};
         return QISearch(this, qit, riid, ppv);
@@ -161,44 +152,6 @@ class PreviewBase : public IThumbnailProvider,
         return E_NOTIMPL;
     }
 
-    // IPersist (for Windows XP)
-    IFACEMETHODIMP GetClassID(CLSID* pClassID) {
-        return CLSIDFromString((WCHAR*)m_clsid, pClassID);
-    }
-
-    // IPersistFile (for Windows XP)
-    IFACEMETHODIMP Load(LPCOLESTR pszFileName, __unused DWORD dwMode) {
-        auto fileName = ToUtf8Temp(pszFileName);
-        logf("PdfPreview: PreviewBase::Load('%s')\n", fileName.Get());
-
-        HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                                  FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (hFile == INVALID_HANDLE_VALUE) {
-            log("PdfPreview: PreviewBase::Load() failed, no file\n");
-            return E_INVALIDARG;
-        }
-        DWORD size = GetFileSize(hFile, nullptr), read;
-        HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
-        if (!data) {
-            CloseHandle(hFile);
-            log("PdfPreview: PreviewBase::Load() failed, not enough memory\n");
-            return E_OUTOFMEMORY;
-        }
-        BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, nullptr);
-        GlobalUnlock(data);
-        GetFileTime(hFile, nullptr, nullptr, &m_dateStamp);
-        CloseHandle(hFile);
-
-        IStream* pStm;
-        if (!ok || FAILED(CreateStreamOnHGlobal(data, TRUE, &pStm))) {
-            GlobalFree(data);
-            log("PdfPreview: PreviewBase::Load() failed, couldn't create stream\n");
-            return E_FAIL;
-        }
-        HRESULT res = Initialize(pStm, 0);
-        pStm->Release();
-        return res;
-    }
     IFACEMETHODIMP IsDirty() {
         return E_NOTIMPL;
     }
@@ -210,35 +163,6 @@ class PreviewBase : public IThumbnailProvider,
     }
     IFACEMETHODIMP GetCurFile(__unused LPOLESTR* ppszFileName) {
         return E_NOTIMPL;
-    }
-
-    // IExtractImage2 (for Windows XP)
-    IFACEMETHODIMP Extract(HBITMAP* phBmpThumbnail) {
-        if (!phBmpThumbnail || !m_extractCx) {
-            return E_INVALIDARG;
-        }
-        log("PdfPreview: PreviewBase::Extract()\n");
-        WTS_ALPHATYPE dummy;
-        return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
-    }
-    IFACEMETHODIMP GetLocation(__unused LPWSTR pszPathBuffer, __unused DWORD cch, __unused DWORD* pdwPriority,
-                               const SIZE* prgSize, __unused DWORD dwRecClrDepth, DWORD* pdwFlags) {
-        if (!prgSize || !pdwFlags) {
-            return E_INVALIDARG;
-        }
-        log("PdfPreview: PreviewBase::GetLocation()\n");
-        // cheap implementation: ignore anything that isn't useful for IThumbnailProvider::GetThumbnail
-        m_extractCx = std::min(prgSize->cx, prgSize->cy);
-        *pdwFlags |= IEIFLAG_CACHE;
-        return S_OK;
-    }
-    IFACEMETHODIMP GetDateStamp(FILETIME* pDateStamp) {
-        if (!m_dateStamp.dwLowDateTime && !m_dateStamp.dwHighDateTime) {
-            return E_FAIL;
-        }
-        log("PdfPreview: PreviewBase::GetDateStamp()\n");
-        *pDateStamp = m_dateStamp;
-        return S_OK;
     }
 
     EngineBase* GetEngine() {
@@ -262,10 +186,6 @@ class PreviewBase : public IThumbnailProvider,
     HWND m_hwnd{nullptr};
     HWND m_hwndParent{nullptr};
     Rect m_rcParent;
-    // for IExtractImage2
-    const WCHAR* m_clsid{nullptr};
-    uint m_extractCx{0};
-    FILETIME m_dateStamp{0};
 
     virtual EngineBase* LoadEngine(IStream* stream) = 0;
 };
