@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ec5eb67f853c33aa8d0121a9977321d650a00af0
+95e6a248e1b15f04c6c19f77fc38f27e2d986bed
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5241,7 +5241,7 @@ bs:Provjeri za &nadogradnju
 by:Праверыць наяўнасць новай версіі
 ca-xv:&Comprova si hi ha una versió nova
 ca:&Comprova si hi ha una versió nova
-cn:检查是否有新版本(&U)
+cn:检查更新(&U)
 co:&Cuntrollà e nove versioni
 cy:Gwirio am &Ddiweddariad
 cz:&Zkontrolovat aktualizace
