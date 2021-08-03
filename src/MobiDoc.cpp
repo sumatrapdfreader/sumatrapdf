@@ -736,8 +736,7 @@ bool MobiDoc::LoadImage(size_t imageNo) {
         logf("MobiDoc::LoadImage: unknown image format\n");
         return true;
     }
-    images[imageNo].data = (char*)rec.data();
-    images[imageNo].len = rec.size();
+    images[imageNo] = rec;
     return true;
 }
 
@@ -745,7 +744,7 @@ void MobiDoc::LoadImages() {
     if (0 == imagesCount) {
         return;
     }
-    images = AllocArray<ImageData>(imagesCount);
+    images = AllocArray<ByteSlice>(imagesCount);
     for (size_t i = 0; i < imagesCount; i++) {
         if (!LoadImage(i)) {
             return;
@@ -757,23 +756,23 @@ void MobiDoc::LoadImages() {
 // as far as I can tell, this means: it starts at 1
 // returns nullptr if there is no image (e.g. it's not a format we
 // recognize)
-ImageData* MobiDoc::GetImage(size_t imgRecIndex) const {
+ByteSlice* MobiDoc::GetImage(size_t imgRecIndex) const {
     if ((imgRecIndex > imagesCount) || (imgRecIndex < 1)) {
         return nullptr;
     }
     --imgRecIndex;
-    if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len)) {
+    if (images[imgRecIndex].empty()) {
         return nullptr;
     }
     return &images[imgRecIndex];
 }
 
-ImageData* MobiDoc::GetCoverImage() {
+ByteSlice* MobiDoc::GetCoverImage() {
     if (!coverImageRec || coverImageRec < imageFirstRec) {
         return nullptr;
     }
     size_t imageNo = coverImageRec - imageFirstRec;
-    if (imageNo >= imagesCount || !images[imageNo].data) {
+    if (imageNo >= imagesCount || images[imageNo].empty()) {
         return nullptr;
     }
     return &images[imageNo];

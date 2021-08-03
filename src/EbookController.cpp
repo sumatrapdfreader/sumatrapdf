@@ -621,11 +621,11 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, Size pageSize, Size b
 }
 
 static RenderedBitmap* ThumbFromCoverPage(const Doc& doc, Size size) {
-    ImageData* coverImage = doc.GetCoverImage();
+    ByteSlice* coverImage = doc.GetCoverImage();
     if (!coverImage) {
         return nullptr;
     }
-    Bitmap* coverBmp = BitmapFromData(coverImage->AsSpan());
+    Bitmap* coverBmp = BitmapFromData(*coverImage);
     if (!coverBmp) {
         return nullptr;
     }

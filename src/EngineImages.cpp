@@ -615,11 +615,13 @@ bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
     PdfCreator* c = new PdfCreator();
     auto dpi = GetFileDPI();
     if (FileName()) {
-        AutoFree data = file::ReadFile(FileName());
-        ok = c->AddPageFromImageData(data.data, data.size(), dpi);
+        auto data = file::ReadFile(FileName());
+        ok = c->AddPageFromImageData(data, dpi);
+        str::Free(data);
     } else {
-        AutoFree data = GetDataFromStream(fileStream, nullptr);
-        ok = c->AddPageFromImageData(data.data, data.size(), dpi);
+        auto data = GetDataFromStream(fileStream, nullptr);
+        ok = c->AddPageFromImageData(data, dpi);
+        str::Free(data);
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
@@ -841,8 +843,9 @@ bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        AutoFree data = file::ReadFile(pageFileNames.at(i - 1));
-        ok = c->AddPageFromImageData(data.data, data.size(), GetFileDPI());
+        auto data = file::ReadFile(pageFileNames.at(i - 1));
+        ok = c->AddPageFromImageData(data, GetFileDPI());
+        str::Free(data);
     }
     if (ok) {
         ok = c->SaveToFile(pdfFileName);
@@ -894,7 +897,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     static EngineBase* CreateFromStream(IStream* stream);
 
     // an image for each page
-    Vec<ImageData> images;
+    Vec<ByteSlice> images;
 
   protected:
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
@@ -904,7 +907,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
-    ImageData GetImageData(int pageNo);
+    ByteSlice GetImageData(int pageNo);
     void ParseComicInfoXml(ByteSlice xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
@@ -940,7 +943,7 @@ EngineCbx::~EngineCbx() {
     delete cbxFile;
 
     for (auto&& img : images) {
-        free(img.data);
+        str::Free(img);
     }
 }
 
@@ -1090,10 +1093,7 @@ bool EngineCbx::FinishLoading() {
 
     for (int i = 0; i < pageCount; i++) {
         size_t fileId = files[i]->fileId;
-        ByteSlice sv = cbxFile->GetFileDataById(fileId);
-        ImageData img;
-        img.data = (char*)sv.data();
-        img.len = sv.size();
+        ByteSlice img = cbxFile->GetFileDataById(fileId);
         images.Append(img);
     }
 
@@ -1107,7 +1107,7 @@ TocTree* EngineCbx::GetToc() {
     return tocTree;
 }
 
-ImageData EngineCbx::GetImageData(int pageNo) {
+ByteSlice EngineCbx::GetImageData(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > PageCount()));
     return images[pageNo - 1];
 }
@@ -1203,8 +1203,8 @@ bool EngineCbx::SaveFileAsPDF(const char* pdfFileName) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        ImageData img = GetImageData(i);
-        ok = c->AddPageFromImageData(img.data, img.size(), GetFileDPI());
+        ByteSlice img = GetImageData(i);
+        ok = c->AddPageFromImageData(img, GetFileDPI());
     }
     if (ok) {
         c->CopyProperties(this);
@@ -1244,18 +1244,18 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
         auto dur = TimeSinceInMs(timeStart);
         logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
     };
-    ImageData img = GetImageData(pageNo);
-    if (img.data) {
+    ByteSlice img = GetImageData(pageNo);
+    if (!img.empty()) {
         deleteAfterUse = true;
-        return BitmapFromData(img.AsSpan());
+        return BitmapFromData(img);
     }
     return nullptr;
 }
 
 RectF EngineCbx::LoadMediabox(int pageNo) {
-    ImageData img = GetImageData(pageNo);
-    if (img.data) {
-        Size size = BitmapSizeFromData(img.AsSpan());
+    ByteSlice img = GetImageData(pageNo);
+    if (!img.empty()) {
+        Size size = BitmapSizeFromData(img);
         return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
 

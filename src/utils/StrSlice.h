@@ -17,6 +17,11 @@ struct ByteSlice {
         d = data.data();
         s = data.size();
     }
+    ByteSlice& operator=(const ByteSlice& other) {
+        d = other.d;
+        s = other.s;
+        return *this;
+    }
     ByteSlice(const std::string_view& data) {
         d = (u8*)data.data();
         s = data.size();

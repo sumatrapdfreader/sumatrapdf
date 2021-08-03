@@ -193,7 +193,7 @@ ByteSlice Doc::GetHtmlData() const {
     }
 }
 
-ImageData* Doc::GetCoverImage() const {
+ByteSlice* Doc::GetCoverImage() const {
     switch (type) {
         case DocType::Fb2:
             return fb2Doc->GetCoverImage();

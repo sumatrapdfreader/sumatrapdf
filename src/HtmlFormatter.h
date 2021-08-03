@@ -78,13 +78,12 @@ struct DrawInstr {
     DrawInstrType type{DrawInstrType::Unknown};
     union {
         // info specific to a given instruction
-        // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString
+        // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString, InstrImage
         struct {
             const char* s;
             size_t len;
         } str{nullptr, 0};
         mui::CachedFont* font; // InstrSetFont
-        ImageData img;         // InstrImage
     };
     RectF bbox{}; // common to most instructions
 
@@ -92,10 +91,14 @@ struct DrawInstr {
 
     explicit DrawInstr(DrawInstrType t, RectF bbox = {}) : type(t), bbox(bbox) {
     }
+    ByteSlice GetImage() {
+        CrashIf(type != DrawInstrType::Image);
+        return {(u8*)str.s, str.len};
+    }
 
     // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char* s, size_t len, RectF bbox, bool rtl = false);
-    static DrawInstr Image(char* data, size_t len, RectF bbox);
+    static DrawInstr Image(ByteSlice, RectF bbox);
     static DrawInstr SetFont(mui::CachedFont* font);
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(const char* s, size_t len);
@@ -214,7 +217,7 @@ class HtmlFormatter {
     bool FlushCurrLine(bool isParagraphBreak);
     void UpdateLinkBboxes(HtmlPage* page);
 
-    bool EmitImage(ImageData* img);
+    bool EmitImage(ByteSlice* img);
     void EmitHr();
     void EmitTextRun(const char* s, const char* end);
     void EmitElasticSpace();

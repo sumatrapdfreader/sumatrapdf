@@ -615,14 +615,6 @@ CLSID GetEncoderClsid(const WCHAR* format) {
     return null;
 }
 
-size_t ImageData::size() const {
-    return len;
-}
-
-ByteSlice ImageData::AsSpan() const {
-    return {(u8*)data, len};
-}
-
 RenderedBitmap* LoadRenderedBitmap(const WCHAR* path) {
     if (!path) {
         return nullptr;

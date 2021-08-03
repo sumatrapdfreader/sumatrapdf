@@ -169,20 +169,22 @@ inline char decode64(char c) {
     return -1;
 }
 
-static char* Base64Decode(const char* s, size_t sLen, size_t* lenOut) {
-    const char* end = s + sLen;
-    char* result = AllocArray<char>(sLen * 3 / 4);
-    char* curr = result;
+static ByteSlice Base64Decode(ByteSlice data) {
+    size_t sLen = data.size();
+    u8* s = data.data();
+    u8* end = data.data() + sLen;
+    u8* result = AllocArray<u8>(sLen * 3 / 4);
+    u8* curr = result;
     u8 c = 0;
     int step = 0;
     for (; s < end && *s != '='; s++) {
         char n = decode64(*s);
         if (-1 == n) {
-            if (str::IsWs(*s)) {
+            if (str::IsWs((char)*s)) {
                 continue;
             }
             free(result);
-            return nullptr;
+            return {};
         }
         switch (step++ % 4) {
             case 0:
@@ -201,10 +203,8 @@ static char* Base64Decode(const char* s, size_t sLen, size_t* lenOut) {
                 break;
         }
     }
-    if (lenOut) {
-        *lenOut = curr - result;
-    }
-    return result;
+    size_t size = curr - result;
+    return {(u8*)result, size};
 }
 
 static inline void AppendChar(str::Str& htmlData, char c) {
@@ -224,18 +224,18 @@ static inline void AppendChar(str::Str& htmlData, char c) {
     }
 }
 
-static std::string_view DecodeDataURI(const char* url) {
+// the caller must free
+static ByteSlice DecodeDataURI(const char* url) {
     const char* comma = str::FindChar(url, ',');
     if (!comma) {
         return {};
     }
     const char* data = comma + 1;
     if (comma - url >= 12 && str::EqN(comma - 7, ";base64", 7)) {
-        size_t lenOut = 0;
-        char* d = Base64Decode(data, str::Len(data), &lenOut);
-        return {d, lenOut};
+        ByteSlice d{(u8*)data, str::Len(data)};
+        return Base64Decode(d);
     }
-    return str::Dup(data);
+    return {(u8*)str::Dup(data), str::Len(data)};
 }
 
 int PropertyMap::Find(DocumentProperty prop) const {
@@ -285,9 +285,9 @@ EpubDoc::EpubDoc(IStream* stream) {
 EpubDoc::~EpubDoc() {
     EnterCriticalSection(&zipAccess);
 
-    for (size_t i = 0; i < images.size(); i++) {
-        free(images.at(i).base.data);
-        free(images.at(i).fileName);
+    for (auto&& img : images) {
+        str::Free(img.base);
+        str::Free(img.fileName);
     }
 
     LeaveCriticalSection(&zipAccess);
@@ -518,7 +518,7 @@ ByteSlice EpubDoc::GetHtmlData() const {
     return htmlData.AsSpan();
 }
 
-ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
+ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     ScopedCritSec scope(&zipAccess);
 
     if (!pagePath) {
@@ -533,12 +533,10 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         for (size_t i = 0; i < images.size(); i++) {
             ImageData2* img = &images.at(i);
             if (str::EndsWithI(img->fileName, fileName)) {
-                if (!img->base.data) {
-                    auto res = zip->GetFileDataById(img->fileId);
-                    img->base.len = res.size();
-                    img->base.data = (char*)res.data();
+                if (img->base.empty()) {
+                    img->base = zip->GetFileDataById(img->fileId);
                 }
-                if (img->base.data) {
+                if (!img->base.empty()) {
                     return &img->base;
                 }
             }
@@ -554,12 +552,10 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     for (size_t i = 0; i < images.size(); i++) {
         ImageData2* img = &images.at(i);
         if (str::Eq(img->fileName, url)) {
-            if (!img->base.data) {
-                auto res = zip->GetFileDataById(img->fileId);
-                img->base.len = res.size();
-                img->base.data = (char*)res.data();
+            if (img->base.empty()) {
+                img->base = zip->GetFileDataById(img->fileId);
             }
-            if (img->base.data) {
+            if (!img->base.empty()) {
                 return &img->base;
             }
         }
@@ -569,10 +565,8 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     ImageData2 data;
     data.fileId = zip->GetFileId(url);
     if (data.fileId != (size_t)-1) {
-        auto res = zip->GetFileDataById(data.fileId);
-        data.base.len = res.size();
-        data.base.data = (char*)res.data();
-        if (data.base.data) {
+        data.base = zip->GetFileDataById(data.fileId);
+        if (!data.base.empty()) {
             data.fileName = str::Dup(url);
             images.Append(data);
             return &images.Last().base;
@@ -775,9 +769,9 @@ Fb2Doc::Fb2Doc(IStream* stream) : stream(stream) {
 }
 
 Fb2Doc::~Fb2Doc() {
-    for (size_t i = 0; i < images.size(); i++) {
-        free(images.at(i).base.data);
-        free(images.at(i).fileName);
+    for (auto&& img : images) {
+        str::Free(img.base);
+        str::Free(img.fileName);
     }
     if (stream) {
         stream->Release();
@@ -965,8 +959,8 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     }
 
     ImageData2 data;
-    data.base.data = Base64Decode(tok->s, tok->sLen, &data.base.len);
-    if (!data.base.data) {
+    data.base = Base64Decode({(u8*)tok->s, tok->sLen});
+    if (data.base.empty()) {
         return;
     }
     data.fileName = str::Join("#", id);
@@ -978,7 +972,7 @@ ByteSlice Fb2Doc::GetXmlData() const {
     return {(u8*)xmlData.Get(), xmlData.size()};
 }
 
-ImageData* Fb2Doc::GetImageData(const char* fileName) const {
+ByteSlice* Fb2Doc::GetImageData(const char* fileName) const {
     for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).fileName, fileName)) {
             return &images.at(i).base;
@@ -987,7 +981,7 @@ ImageData* Fb2Doc::GetImageData(const char* fileName) const {
     return nullptr;
 }
 
-ImageData* Fb2Doc::GetCoverImage() const {
+ByteSlice* Fb2Doc::GetCoverImage() const {
     if (!coverImage) {
         return nullptr;
     }
@@ -1246,9 +1240,9 @@ HtmlDoc::HtmlDoc(const WCHAR* path) : fileName(str::Dup(path)) {
 }
 
 HtmlDoc::~HtmlDoc() {
-    for (size_t i = 0; i < images.size(); i++) {
-        free(images.at(i).base.data);
-        free(images.at(i).fileName);
+    for (auto&& img : images) {
+        str::Free(img.base);
+        str::Free(img.fileName);
     }
 }
 
@@ -1296,7 +1290,7 @@ ByteSlice HtmlDoc::GetHtmlData() {
     return htmlData.AsSpan();
 }
 
-ImageData* HtmlDoc::GetImageData(const char* fileName) {
+ByteSlice* HtmlDoc::GetImageData(const char* fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
     //       so add a critical section once it's used for EbookController
 
@@ -1308,12 +1302,10 @@ ImageData* HtmlDoc::GetImageData(const char* fileName) {
     }
 
     ImageData2 data;
-    auto urlData = LoadURL(url);
-    if (urlData.empty()) {
+    data.base = LoadURL(url);
+    if (data.base.empty()) {
         return nullptr;
     }
-    data.base.data = (char*)urlData.data();
-    data.base.len = urlData.size();
     data.fileName = url.Release();
     images.Append(data);
     return &images.Last().base;

@@ -242,9 +242,9 @@ bool PdfCreator::AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi) {
     return ok;
 }
 
-bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi) const {
+bool PdfCreator::AddPageFromImageData(ByteSlice data, float imgDpi) const {
     CrashIf(!ctx || !doc);
-    if (!ctx || !doc || !data || len == 0) {
+    if (!ctx || !doc || data.empty()) {
         return false;
     }
 
@@ -252,7 +252,7 @@ bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi
     fz_var(img);
 
     fz_try(ctx) {
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)data, len);
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, data.data(), data.size());
         img = fz_new_image_from_buffer(ctx, buf);
     }
     fz_catch(ctx) {

@@ -469,9 +469,9 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     return els;
 }
 
-static RenderedBitmap* getImageFromData(ImageData imageData) {
+static RenderedBitmap* getImageFromData(ByteSlice imageData) {
     HBITMAP hbmp{nullptr};
-    Bitmap* bmp = BitmapFromData(imageData.AsSpan());
+    Bitmap* bmp = BitmapFromData(imageData);
     if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
         delete bmp;
         return nullptr;
@@ -487,9 +487,9 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     int pageNo = el->pageNo;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
-    const DrawInstr& i = pageInstrs->at(idx);
+    auto&& i = pageInstrs->at(idx);
     CrashIf(i.type != DrawInstrType::Image);
-    return getImageFromData(i.img);
+    return getImageFromData(i.GetImage());
 }
 
 IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
@@ -1207,9 +1207,9 @@ class ChmDataCache {
     }
 
     ~ChmDataCache() {
-        for (size_t i = 0; i < images.size(); i++) {
-            free(images.at(i).base.data);
-            free(images.at(i).fileName);
+        for (auto&& img : images) {
+            str::Free(img.base);
+            str::Free(img.fileName);
         }
     }
 
@@ -1217,7 +1217,7 @@ class ChmDataCache {
         return html.AsSpan();
     }
 
-    ImageData* GetImageData(const char* id, const char* pagePath) {
+    ByteSlice* GetImageData(const char* id, const char* pagePath) {
         AutoFree url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.size(); i++) {
             if (str::Eq(images.at(i).fileName, url)) {
@@ -1231,8 +1231,7 @@ class ChmDataCache {
         }
 
         ImageData2 data;
-        data.base.data = (char*)tmp.data();
-        data.base.len = tmp.size();
+        data.base = tmp;
 
         data.fileName = url.Release();
         images.Append(data);
@@ -1269,7 +1268,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         AutoFree src(str::Dup(attr->val, attr->valLen));
         url::DecodeInPlace(src);
-        ImageData* img = chmDoc->GetImageData(src, pagePath);
+        ByteSlice* img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {

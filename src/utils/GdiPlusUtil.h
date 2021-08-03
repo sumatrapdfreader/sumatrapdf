@@ -27,19 +27,8 @@ CLSID GetEncoderClsid(const WCHAR* format);
 RenderedBitmap* LoadRenderedBitmap(const WCHAR* path);
 RenderedBitmap* LoadRenderedBitmap(const char* path);
 
-// TODO: for the lack of a better place
-struct ImageData {
-    char* data{nullptr};
-    size_t len{0};
-
-    ImageData() = default;
-
-    [[nodiscard]] size_t size() const;
-    [[nodiscard]] ByteSlice AsSpan() const;
-};
-
 struct ImageData2 {
-    ImageData base;
+    ByteSlice base;
     // path by which content refers to this image
     char* fileName{nullptr};
     // document specific id by whcih to find this image

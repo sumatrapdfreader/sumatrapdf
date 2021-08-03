@@ -126,20 +126,24 @@ static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
     file::WriteFile(outFile.Get(), htmlData);
 }
 
-static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* img) {
+static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ByteSlice img) {
     // it's valid to not have image data at a given index
-    if (!img || !img->data) {
+    if (img.empty()) {
         return;
     }
-    const WCHAR* ext = GfxFileExtFromData(img->AsSpan());
+    const WCHAR* ext = GfxFileExtFromData(img);
     CrashAlwaysIf(!ext);
     AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, (int)imgNo, ext));
-    file::WriteFile(fileName.Get(), img->AsSpan());
+    file::WriteFile(fileName.Get(), img);
 }
 
 static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {
     for (size_t i = 0; i < mb->imagesCount; i++) {
-        MobiSaveImage(filePathBase, i, mb->GetImage(i + 1));
+        ByteSlice* img = mb->GetImage(i + 1);
+        if (!img) {
+            continue;
+        }
+        MobiSaveImage(filePathBase, i, *img);
     }
 }
 

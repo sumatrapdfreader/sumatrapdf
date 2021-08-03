@@ -29,7 +29,7 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc) : HtmlFormat
         return;
     }
 
-    ImageData* img = doc->GetCoverImage();
+    ByteSlice* img = doc->GetCoverImage();
     if (!img) {
         return;
     }
@@ -102,7 +102,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         int n;
         if (str::Parse(attr->val, attr->valLen, "%d", &n)) {
-            ImageData* img = doc->GetImage(n);
+            ByteSlice* img = doc->GetImage(n);
             needAlt = !img || !EmitImage(img);
         }
     }
@@ -147,7 +147,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         AutoFree src(str::Dup(attr->val, attr->valLen));
         url::DecodeInPlace(src);
-        ImageData* img = epubDoc->GetImageData(src, pagePath);
+        ByteSlice* img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
@@ -209,7 +209,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     }
     AutoFree src(str::Dup(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    ImageData* img = epubDoc->GetImageData(src, pagePath);
+    ByteSlice* img = epubDoc->GetImageData(src, pagePath);
     if (img) {
         EmitImage(img);
     }
@@ -245,7 +245,7 @@ Fb2Formatter::Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc)
     if (args->reparseIdx != 0) {
         return;
     }
-    ImageData* cover = doc->GetCoverImage();
+    ByteSlice* cover = doc->GetCoverImage();
     if (!cover) {
         return;
     }
@@ -266,7 +266,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    ImageData* img = nullptr;
+    ByteSlice* img = nullptr;
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
         AutoFree src(str::Dup(attr->val, attr->valLen));
@@ -345,7 +345,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         AutoFree src(str::Dup(attr->val, attr->valLen));
         url::DecodeInPlace(src);
-        ImageData* img = htmlDoc->GetImageData(src);
+        ByteSlice* img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {

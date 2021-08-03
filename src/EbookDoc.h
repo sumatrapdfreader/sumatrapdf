@@ -44,7 +44,7 @@ class EpubDoc {
 
     [[nodiscard]] ByteSlice GetHtmlData() const;
 
-    ImageData* GetImageData(const char* fileName, const char* pagePath);
+    ByteSlice* GetImageData(const char* fileName, const char* pagePath);
     ByteSlice GetFileData(const char* relPath, const char* pagePath);
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
@@ -85,8 +85,8 @@ class Fb2Doc {
 
     [[nodiscard]] ByteSlice GetXmlData() const;
 
-    ImageData* GetImageData(const char* fileName) const;
-    ImageData* GetCoverImage() const;
+    ByteSlice* GetImageData(const char* fileName) const;
+    ByteSlice* GetCoverImage() const;
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
     [[nodiscard]] const WCHAR* GetFileName() const;
@@ -146,7 +146,7 @@ class HtmlDoc {
 
     ByteSlice GetHtmlData();
 
-    ImageData* GetImageData(const char* fileName);
+    ByteSlice* GetImageData(const char* fileName);
     ByteSlice GetFileData(const char* relPath);
 
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;

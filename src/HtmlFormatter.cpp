@@ -85,10 +85,10 @@ DrawInstr DrawInstr::FixedSpace(float dx) {
     return di;
 }
 
-DrawInstr DrawInstr::Image(char* data, size_t len, RectF bbox) {
+DrawInstr DrawInstr::Image(ByteSlice img, RectF bbox) {
     DrawInstr di(DrawInstrType::Image);
-    di.img.data = data;
-    di.img.len = len;
+    di.str.s = (const char*)img.data();
+    di.str.len = img.size();
     di.bbox = bbox;
     return di;
 }
@@ -587,9 +587,9 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
     return imageY != -1;
 }
 
-bool HtmlFormatter::EmitImage(ImageData* img) {
-    CrashIf(!img->data);
-    Size imgSize = BitmapSizeFromData(img->AsSpan());
+bool HtmlFormatter::EmitImage(ByteSlice* img) {
+    CrashIf(img->empty());
+    Size imgSize = BitmapSizeFromData(*img);
     if (imgSize.IsEmpty()) {
         return false;
     }
@@ -622,7 +622,7 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
     }
 
     RectF bbox(PointF(currX, 0), newSize);
-    AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
+    AppendInstr(DrawInstr::Image(*img, bbox));
     currX += bbox.dx;
 
     return true;
@@ -1445,7 +1445,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             CrashIf(status != Ok);
         } else if (DrawInstrType::Image == i.type) {
             // TODO: cache the bitmap somewhere (?)
-            Bitmap* bmp = BitmapFromData(i.img.AsSpan());
+            Bitmap* bmp = BitmapFromData(i.GetImage());
             if (bmp) {
                 status = g->DrawImage(bmp, ToGdipRectF(bbox), 0, 0, (float)bmp->GetWidth(), (float)bmp->GetHeight(),
                                       UnitPixel);

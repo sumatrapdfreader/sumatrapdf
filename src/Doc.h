@@ -12,7 +12,6 @@ class Fb2Doc;
 class MobiDoc;
 class PalmDoc;
 
-struct ImageData;
 class EbookTocVisitor;
 class HtmlFormatter;
 struct HtmlFormatterArgs;
@@ -84,7 +83,7 @@ class Doc {
     [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
     [[nodiscard]] ByteSlice GetHtmlData() const;
 
-    [[nodiscard]] ImageData* GetCoverImage() const;
+    [[nodiscard]] ByteSlice* GetCoverImage() const;
     [[nodiscard]] bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
     HtmlFormatter* CreateFormatter(HtmlFormatterArgs* args) const;
