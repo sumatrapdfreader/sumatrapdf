@@ -827,7 +827,7 @@ void load_page(void)
 
 	if (trace_file)
 	{
-		pdf_widget *w;
+		pdf_annot *w;
 		int i, s;
 
 		for (i = 0, s = 0, w = pdf_first_widget(ctx, page); w != NULL; i++, w = pdf_next_widget(ctx, w))

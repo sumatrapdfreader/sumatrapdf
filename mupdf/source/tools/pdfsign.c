@@ -92,7 +92,7 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 static void clear_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
 {
 	pdf_page *page = NULL;
-	pdf_widget *widget;
+	pdf_annot *widget;
 	pdf_obj *parent;
 	int pageno;
 
@@ -119,7 +119,7 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 {
 	pdf_pkcs7_signer *signer = NULL;
 	pdf_page *page = NULL;
-	pdf_widget *widget;
+	pdf_annot *widget;
 	pdf_obj *parent;
 	int pageno;
 

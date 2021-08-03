@@ -4,7 +4,7 @@ JNIEXPORT jstring JNICALL
 FUN(PDFWidget_getValue)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	const char *text = NULL;
 
 	if (!ctx || !widget) return NULL;
@@ -21,7 +21,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_setTextValue)(JNIEnv *env, jobject self, jstring jval)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	const char *val = NULL;
 	jboolean accepted = JNI_FALSE;
 
@@ -46,7 +46,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_setChoiceValue)(JNIEnv *env, jobject self, jstring jval)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	const char *val = NULL;
 	jboolean accepted = JNI_FALSE;
 
@@ -71,7 +71,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_setValue)(JNIEnv *env, jobject self, jstring jval)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	const char *val = NULL;
 	jboolean accepted = JNI_FALSE;
 
@@ -96,7 +96,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_toggle)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	jboolean accepted = JNI_FALSE;
 
 	if (!ctx || !widget) return JNI_FALSE;
@@ -114,7 +114,7 @@ JNIEXPORT void JNICALL
 FUN(PDFWidget_setEditing)(JNIEnv *env, jobject self, jboolean val)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 
 	if (!ctx || !widget) return;
 
@@ -128,7 +128,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_isEditing)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	jboolean state = JNI_FALSE;
 
 	if (!ctx || !widget) return JNI_FALSE;
@@ -146,7 +146,7 @@ JNIEXPORT jobject JNICALL
 FUN(PDFWidget_textQuads)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	jobject jquad;
 	jobjectArray array;
 	int i, nchars;
@@ -223,7 +223,7 @@ JNIEXPORT jint JNICALL
 FUN(PDFWidget_validateSignature)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	int val = 0;
 
 	if (!ctx || !widget) return 0;
@@ -240,7 +240,7 @@ JNIEXPORT void JNICALL
 FUN(PDFWidget_clearSignature)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 
 	if (!ctx || !widget) return;
 
@@ -254,7 +254,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_isSigned)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	jboolean val = JNI_FALSE;
 
 	if (!ctx || !widget) return 0;
@@ -271,7 +271,7 @@ JNIEXPORT jint JNICALL
 FUN(PDFWidget_checkCertificate)(JNIEnv *env, jobject self, jobject jverifier)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	pdf_document *pdf = pdf_annot_page(ctx, widget)->doc;
 	java_pkcs7_verifier *verifier = from_PKCS7Verifier_safe(env, jverifier);
 	pdf_signature_error ret = PDF_SIGNATURE_ERROR_UNKNOWN;
@@ -291,7 +291,7 @@ JNIEXPORT jint JNICALL
 FUN(PDFWidget_checkDigest)(JNIEnv *env, jobject self, jobject jverifier)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	java_pkcs7_verifier *verifier = from_PKCS7Verifier_safe(env, jverifier);
 	pdf_signature_error ret = PDF_SIGNATURE_ERROR_UNKNOWN;
 
@@ -310,7 +310,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_incrementalChangeAfterSigning)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	pdf_document *pdf = pdf_annot_page(ctx, widget)->doc;
 	jboolean change = JNI_FALSE;
 
@@ -328,7 +328,7 @@ JNIEXPORT jobject JNICALL
 FUN(PDFWidget_getDistinguishedName)(JNIEnv *env, jobject self, jobject jverifier)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	java_pkcs7_verifier *verifier = from_PKCS7Verifier_safe(env, jverifier);
 	pdf_document *pdf = pdf_annot_page(ctx, widget)->doc;
 	jobject jcn, jo, jou, jemail, jc;
@@ -390,7 +390,7 @@ JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_signNative)(JNIEnv *env, jobject self, jobject jsigner, jint flags, jobject jimage, jstring jreason, jstring jlocation)
 {
 	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	pdf_document *pdf = pdf_annot_page(ctx, widget)->doc;
 	pdf_pkcs7_signer *signer = from_PKCS7Signer_safe(env, jsigner);
 	fz_image *image = from_Image_safe(env, jimage);

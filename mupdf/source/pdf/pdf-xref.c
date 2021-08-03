@@ -4493,7 +4493,7 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 	return v;
 }
 
-int pdf_validate_signature(fz_context *ctx, pdf_widget *widget)
+int pdf_validate_signature(fz_context *ctx, pdf_annot *widget)
 {
 	pdf_document *doc = widget->page->doc;
 	int unsaved_versions = pdf_count_unsaved_versions(ctx, doc);

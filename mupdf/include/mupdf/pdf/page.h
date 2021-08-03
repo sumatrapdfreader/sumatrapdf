@@ -160,7 +160,7 @@ struct pdf_page
 
 	fz_link *links;
 	pdf_annot *annots, **annot_tailp;
-	pdf_widget *widgets, **widget_tailp;
+	pdf_annot *widgets, **widget_tailp;
 };
 
 #endif

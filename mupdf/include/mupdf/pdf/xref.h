@@ -208,7 +208,7 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 	  1 => became invalid on the last save
 	  n => became invalid n saves ago
 */
-int pdf_validate_signature(fz_context *ctx, pdf_widget *widget);
+int pdf_validate_signature(fz_context *ctx, pdf_annot *widget);
 int pdf_was_pure_xfa(fz_context *ctx, pdf_document *doc);
 
 /* Local xrefs - designed for holding stuff that shouldn't be written

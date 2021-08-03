@@ -128,7 +128,11 @@ void fz_drop_shade_color_cache(fz_context *ctx, fz_shade_color_cache *cache);
 	bbox: Pointer to a bounding box to limit the rendering
 	of the shade.
 
-	op: NULL, or pointer to overprint bitmap.
+	eop: NULL, or pointer to overprint bitmap.
+
+	cache: *cache is used to cache color information. If *cache is NULL it
+	is set to point to a new fz_shade_color_cache. If cache is NULL it is
+	ignored.
 */
 void fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *override_cs, fz_matrix ctm, fz_pixmap *dest, fz_color_params color_params, fz_irect bbox, const fz_overprint *eop, fz_shade_color_cache **cache);
 

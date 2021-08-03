@@ -154,7 +154,7 @@ struct input
 	char text[16*1024];
 	char *end, *p, *q;
 	int scroll;
-	pdf_widget *widget;
+	pdf_annot *widget;
 };
 
 struct list

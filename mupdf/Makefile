@@ -440,8 +440,8 @@ wasm:
 	$(MAKE) -C platform/wasm
 
 extract-test:
-	$(MAKE) extract=yes debug
-	$(MAKE) -C thirdparty/extract mutool=../../build/debug-extract/mutool test-mutool
+	$(MAKE) debug
+	$(MAKE) -C thirdparty/extract mutool=../../build/debug/mutool test-mutool
 
 tags:
 	$(TAGS_CMD)

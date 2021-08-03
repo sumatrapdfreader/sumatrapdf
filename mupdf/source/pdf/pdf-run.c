@@ -205,7 +205,7 @@ void pdf_run_annot(fz_context *ctx, pdf_annot *annot, fz_device *dev, fz_matrix 
 static void
 pdf_run_page_widgets_with_usage_imp(fz_context *ctx, pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, const char *usage, fz_cookie *cookie)
 {
-	pdf_widget *widget;
+	pdf_annot *widget;
 
 	if (cookie && cookie->progress_max != (size_t)-1)
 	{

@@ -302,12 +302,6 @@ static void ffi_gc_fz_document_writer(js_State *J, void *wri)
 
 static void ffi_pushobj(js_State *J, pdf_obj *obj);
 
-static void ffi_gc_pdf_widget(js_State *J, void *widget)
-{
-	fz_context *ctx = js_getcontext(J);
-	pdf_drop_widget(ctx, widget);
-}
-
 static void ffi_gc_pdf_annot(js_State *J, void *annot)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -5241,7 +5235,7 @@ static void ffi_PDFPage_getWidgets(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	pdf_page *page = js_touserdata(J, 0, "pdf_page");
-	pdf_widget *widget = NULL;
+	pdf_annot *widget = NULL;
 	int i = 0;
 
 	fz_try(ctx)
@@ -5253,7 +5247,7 @@ static void ffi_PDFPage_getWidgets(js_State *J)
 
 	while (widget) {
 		js_getregistry(J, "pdf_widget");
-		js_newuserdata(J, "pdf_widget", pdf_keep_widget(ctx, widget), ffi_gc_pdf_widget);
+		js_newuserdata(J, "pdf_widget", pdf_keep_widget(ctx, widget), ffi_gc_pdf_annot);
 		js_setindex(J, -2, i++);
 
 		fz_try(ctx)
@@ -6355,7 +6349,7 @@ static void ffi_PDFAnnotation_setIsOpen(js_State *J)
 static void ffi_PDFWidget_getFieldType(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int type;
 	fz_try(ctx)
 		type = pdf_field_type(ctx, pdf_annot_obj(ctx, widget));
@@ -6377,7 +6371,7 @@ static void ffi_PDFWidget_getFieldType(js_State *J)
 static void ffi_PDFWidget_getFieldFlags(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int flags;
 	fz_try(ctx)
 		flags = pdf_field_flags(ctx, pdf_annot_obj(ctx, widget));
@@ -6389,7 +6383,7 @@ static void ffi_PDFWidget_getFieldFlags(js_State *J)
 static void ffi_PDFWidget_getRect(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_rect rect;
 	fz_try(ctx)
 		rect = pdf_annot_rect(ctx, widget);
@@ -6401,7 +6395,7 @@ static void ffi_PDFWidget_getRect(js_State *J)
 static void ffi_PDFWidget_setRect(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_rect rect = ffi_torect(J, 1);
 	fz_try(ctx)
 		pdf_set_annot_rect(ctx, widget, rect);
@@ -6412,7 +6406,7 @@ static void ffi_PDFWidget_setRect(js_State *J)
 static void ffi_PDFWidget_getValue(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	const char *value;
 	fz_try(ctx)
 		value = pdf_annot_field_value(ctx, widget);
@@ -6424,7 +6418,7 @@ static void ffi_PDFWidget_getValue(js_State *J)
 static void ffi_PDFWidget_setTextValue(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	const char *value = js_tostring(J, 1);
 	fz_try(ctx)
 		pdf_set_text_field_value(ctx, widget, value);
@@ -6435,7 +6429,7 @@ static void ffi_PDFWidget_setTextValue(js_State *J)
 static void ffi_PDFWidget_setChoiceValue(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	const char *value = js_tostring(J, 1);
 	fz_try(ctx)
 		pdf_set_choice_field_value(ctx, widget, value);
@@ -6446,7 +6440,7 @@ static void ffi_PDFWidget_setChoiceValue(js_State *J)
 static void ffi_PDFWidget_toggle(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int changed = 0;
 	fz_try(ctx)
 		changed = pdf_toggle_widget(ctx, widget);
@@ -6458,7 +6452,7 @@ static void ffi_PDFWidget_toggle(js_State *J)
 static void ffi_PDFWidget_getMaxLen(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int maxLen = 0;
 	fz_try(ctx)
 		maxLen = pdf_text_widget_max_len(ctx, widget);
@@ -6470,7 +6464,7 @@ static void ffi_PDFWidget_getMaxLen(js_State *J)
 static void ffi_PDFWidget_getOptions(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int export = js_toboolean(J, 1);
 	const char *opt;
 	int i, n;
@@ -6492,7 +6486,7 @@ static void ffi_PDFWidget_getOptions(js_State *J)
 static void ffi_PDFWidget_update(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int changed = 0;
 	fz_try(ctx)
 		changed = pdf_update_widget(ctx, widget);
@@ -6504,7 +6498,7 @@ static void ffi_PDFWidget_update(js_State *J)
 static void ffi_PDFWidget_eventEnter(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_try(ctx)
 		pdf_annot_event_enter(ctx, widget);
 	fz_catch(ctx)
@@ -6514,7 +6508,7 @@ static void ffi_PDFWidget_eventEnter(js_State *J)
 static void ffi_PDFWidget_eventExit(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_try(ctx)
 		pdf_annot_event_exit(ctx, widget);
 	fz_catch(ctx)
@@ -6524,7 +6518,7 @@ static void ffi_PDFWidget_eventExit(js_State *J)
 static void ffi_PDFWidget_eventDown(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_try(ctx)
 		pdf_annot_event_down(ctx, widget);
 	fz_catch(ctx)
@@ -6534,7 +6528,7 @@ static void ffi_PDFWidget_eventDown(js_State *J)
 static void ffi_PDFWidget_eventUp(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_try(ctx)
 		pdf_annot_event_up(ctx, widget);
 	fz_catch(ctx)
@@ -6544,7 +6538,7 @@ static void ffi_PDFWidget_eventUp(js_State *J)
 static void ffi_PDFWidget_eventFocus(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_try(ctx)
 		pdf_annot_event_focus(ctx, widget);
 	fz_catch(ctx)
@@ -6554,7 +6548,7 @@ static void ffi_PDFWidget_eventFocus(js_State *J)
 static void ffi_PDFWidget_eventBlur(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	fz_try(ctx)
 		pdf_annot_event_blur(ctx, widget);
 	fz_catch(ctx)
@@ -6564,7 +6558,7 @@ static void ffi_PDFWidget_eventBlur(js_State *J)
 static void ffi_PDFWidget_validateSignature(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int val = 0;
 	fz_try(ctx)
 		val = pdf_validate_signature(ctx, widget);
@@ -6576,7 +6570,7 @@ static void ffi_PDFWidget_validateSignature(js_State *J)
 static void ffi_PDFWidget_checkCertificate(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_verifier *verifier = NULL;
 	int val = 0;
 	fz_var(verifier);
@@ -6595,7 +6589,7 @@ static void ffi_PDFWidget_checkCertificate(js_State *J)
 static void ffi_PDFWidget_checkDigest(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_verifier *verifier = NULL;
 	pdf_signature_error val = 0;
 	fz_var(verifier);
@@ -6614,7 +6608,7 @@ static void ffi_PDFWidget_checkDigest(js_State *J)
 static void ffi_PDFWidget_getSignatory(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_verifier *verifier = NULL;
 	pdf_pkcs7_distinguished_name *dn = NULL;
 	char buf[500];
@@ -6648,7 +6642,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
 static void ffi_PDFWidget_isSigned(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int val = 0;
 	fz_try(ctx)
 		val = pdf_widget_is_signed(ctx, widget);
@@ -6660,7 +6654,7 @@ static void ffi_PDFWidget_isSigned(js_State *J)
 static void ffi_PDFWidget_isReadOnly(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int val = 0;
 	fz_try(ctx)
 		val = pdf_widget_is_readonly(ctx, widget);
@@ -6682,7 +6676,7 @@ static int check_option(js_State *J, int idx, const char *name) {
 static void ffi_PDFWidget_sign(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_signer *signer = js_touserdata(J, 1, "pdf_pkcs7_signer");
 	int flags = 0;
 	fz_image *graphic = js_iscoercible(J, 3) ? js_touserdata(J, 3, "fz_image") : NULL;
@@ -6719,7 +6713,7 @@ static void ffi_PDFWidget_sign(js_State *J)
 static void ffi_PDFWidget_previewSignature(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_signer *signer = NULL;
 	int flags = 0;
 	fz_image *graphic = js_iscoercible(J, 3) ? js_touserdata(J, 3, "fz_image") : NULL;
@@ -6768,7 +6762,7 @@ static void ffi_PDFWidget_previewSignature(js_State *J)
 static void ffi_PDFWidget_getEditingState(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int state = 0;
 
 	fz_try(ctx)
@@ -6782,7 +6776,7 @@ static void ffi_PDFWidget_getEditingState(js_State *J)
 static void ffi_PDFWidget_setEditingState(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	int state = js_toboolean(J, 1);
 
 	fz_try(ctx)
@@ -6794,7 +6788,7 @@ static void ffi_PDFWidget_setEditingState(js_State *J)
 static void ffi_PDFWidget_clearSignature(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 
 	fz_try(ctx)
 		pdf_clear_signature(ctx, widget);
@@ -6805,7 +6799,7 @@ static void ffi_PDFWidget_clearSignature(js_State *J)
 static void ffi_PDFWidget_getLabel(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
 	const char *label = NULL;
 
 	fz_try(ctx)

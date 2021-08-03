@@ -8,7 +8,6 @@ typedef struct pdf_ocg_descriptor pdf_ocg_descriptor;
 
 typedef struct pdf_page pdf_page;
 typedef struct pdf_annot pdf_annot;
-typedef struct pdf_annot pdf_widget;
 typedef struct pdf_js pdf_js;
 
 enum

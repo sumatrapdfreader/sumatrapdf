@@ -262,9 +262,13 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *colorspace, fz_m
 	int i, k;
 	fz_matrix local_ctm;
 	fz_shade_color_cache *cache = NULL;
+	int recache = 0;
+	int recache2 = 0;
 
 	fz_var(temp);
 	fz_var(conv);
+	fz_var(recache);
+	fz_var(recache2);
 
 	if (colorspace == NULL)
 		colorspace = shade->colorspace;
@@ -318,6 +322,9 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *colorspace, fz_m
 				if (cache->full)
 					fz_fin_cached_color_converter(ctx, &cache->cached);
 				cache->full = 0;
+
+				/* Remember that we can put stuff back into the cache. */
+				recache = 1;
 			}
 		}
 
@@ -405,6 +412,9 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *colorspace, fz_m
 						if (cache->full2)
 							fz_drop_color_converter(ctx, &cache->cached2);
 						cache->full2 = 0;
+
+						/* Remember that we can put stuff back into the cache. */
+						recache2 = 1;
 					}
 					for (i = 0; i < 256; i++)
 					{
@@ -452,7 +462,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *colorspace, fz_m
 	}
 	fz_always(ctx)
 	{
-		if (cache)
+		if (recache)
 		{
 			cache->src = fz_keep_colorspace(ctx, colorspace);
 			cache->dst = fz_keep_colorspace(ctx, temp->colorspace);
@@ -464,7 +474,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *colorspace, fz_m
 			fz_fin_cached_color_converter(ctx, &ptd.cc);
 		if (shade->use_function)
 		{
-			if (cache)
+			if (recache2)
 			{
 				cache->src2 = fz_keep_colorspace(ctx, colorspace);
 				cache->dst2 = fz_keep_colorspace(ctx, dest->colorspace);

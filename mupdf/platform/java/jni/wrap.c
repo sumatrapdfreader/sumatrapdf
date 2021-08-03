@@ -402,7 +402,7 @@ static inline jobjectArray to_StringArray_safe(fz_context *ctx, JNIEnv *env, con
 	return arr;
 }
 
-static inline jobject to_PDFWidget_safe(fz_context *ctx, JNIEnv *env, pdf_widget *widget)
+static inline jobject to_PDFWidget_safe(fz_context *ctx, JNIEnv *env, pdf_annot *widget)
 {
 	jobject jwidget;
 	int nopts;
@@ -563,7 +563,7 @@ static inline jobject to_PDFAnnotation_safe_own(fz_context *ctx, JNIEnv *env, pd
 	return jannot;
 }
 
-static inline jobject to_PDFWidget_safe_own(fz_context *ctx, JNIEnv *env, pdf_widget *widget)
+static inline jobject to_PDFWidget_safe_own(fz_context *ctx, JNIEnv *env, pdf_annot *widget)
 {
 	jobject jwidget;
 
@@ -1011,10 +1011,10 @@ static inline pdf_obj *from_PDFObject_safe(JNIEnv *env, jobject jobj)
 	return CAST(pdf_obj *, (*env)->GetLongField(env, jobj, fid_PDFObject_pointer));
 }
 
-static inline pdf_widget *from_PDFWidget_safe(JNIEnv *env, jobject jobj)
+static inline pdf_annot *from_PDFWidget_safe(JNIEnv *env, jobject jobj)
 {
 	if (!jobj) return NULL;
-	return CAST(pdf_widget *, (*env)->GetLongField(env, jobj, fid_PDFWidget_pointer));
+	return CAST(pdf_annot *, (*env)->GetLongField(env, jobj, fid_PDFWidget_pointer));
 }
 
 static inline pdf_pkcs7_signer *from_PKCS7Signer_safe(JNIEnv *env, jobject jobj)

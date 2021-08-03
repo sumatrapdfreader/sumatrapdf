@@ -188,7 +188,7 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 }
 
 void
-pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, int64_t t, fz_display_list *disp_list)
+pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7_signer *signer, int64_t t, fz_display_list *disp_list)
 {
 	pdf_document *doc = widget->page->doc;
 
@@ -276,7 +276,7 @@ pdf_format_signature_info(fz_context *ctx, pdf_pkcs7_signer *signer, int flags, 
 }
 
 
-void pdf_sign_signature(fz_context *ctx, pdf_widget *widget,
+void pdf_sign_signature(fz_context *ctx, pdf_annot *widget,
 	pdf_pkcs7_signer *signer,
 	int flags,
 	fz_image *graphic,
@@ -381,7 +381,7 @@ fz_pixmap *pdf_preview_signature_as_pixmap(fz_context *ctx,
 	return pix;
 }
 
-void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
+void pdf_clear_signature(fz_context *ctx, pdf_annot *widget)
 {
 	int flags;
 	fz_display_list *dlist = NULL;
@@ -507,7 +507,7 @@ char *pdf_signature_format_distinguished_name(fz_context *ctx, pdf_pkcs7_disting
 	return s;
 }
 
-pdf_pkcs7_distinguished_name *pdf_signature_get_widget_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget)
+pdf_pkcs7_distinguished_name *pdf_signature_get_widget_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget)
 {
 	return pdf_signature_get_signatory(ctx, verifier, widget->page->doc, widget->obj);
 }
@@ -532,7 +532,7 @@ pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_p
 	return dn;
 }
 
-pdf_signature_error pdf_check_widget_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget)
+pdf_signature_error pdf_check_widget_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget)
 {
 	return pdf_check_digest(ctx, verifier, widget->page->doc, widget->obj);
 }
@@ -562,7 +562,7 @@ pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifi
 	return result;
 }
 
-pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *w)
+pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *w)
 {
 	return pdf_check_certificate(ctx, verifier, w->page->doc, w->obj);
 }

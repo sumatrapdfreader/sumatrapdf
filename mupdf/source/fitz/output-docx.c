@@ -1,5 +1,3 @@
-#ifdef HAVE_EXTRACT
-
 #include "glyphbox.h"
 #include "extract.h"
 
@@ -427,7 +425,7 @@ fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *ou
 	return fz_new_docx_writer_internal(ctx, out, options, 0 /*we_own_output*/, extract_format_ODT);
 }
 
-fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *format, const char *path, const char *options)
+fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
 	return fz_new_docx_writer_internal(ctx, out, options, 1 /*we_own_output*/, extract_format_ODT);
@@ -438,34 +436,8 @@ fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *o
 	return fz_new_docx_writer_internal(ctx, out, options, 0 /*we_own_output*/, extract_format_DOCX);
 }
 
-fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *format, const char *path, const char *options)
+fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
 	return fz_new_docx_writer_internal(ctx, out, options, 1 /*we_own_output*/, extract_format_DOCX);
 }
-
-#else
-
-#include "mupdf/fitz.h"
-
-fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *format, const char *path, const char *options)
-{
-	fz_throw(ctx, FZ_ERROR_GENERIC, "odt output not available in this build.");
-}
-
-fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
-{
-	fz_throw(ctx, FZ_ERROR_GENERIC, "odt output not available in this build.");
-}
-
-fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *format, const char *path, const char *options)
-{
-	fz_throw(ctx, FZ_ERROR_GENERIC, "docx output not available in this build.");
-}
-
-fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
-{
-	fz_throw(ctx, FZ_ERROR_GENERIC, "docx output not available in this build.");
-}
-
-#endif

@@ -82,7 +82,7 @@ size_t fz_copy_option(fz_context *ctx, const char *val, char *dest, size_t maxle
 	path: The document name to write (or NULL for default)
 
 	format: Which format to write (currently cbz, html, pdf, pam,
-	pbm, pgm, pkm, png, ppm, pnm, svg, text, xhtml)
+	pbm, pgm, pkm, png, ppm, pnm, svg, text, xhtml, docx, odt)
 
 	options: NULL, or pointer to comma separated string to control
 	file generation.
@@ -106,9 +106,9 @@ fz_document_writer *fz_new_svg_writer(fz_context *ctx, const char *path, const c
 fz_document_writer *fz_new_text_writer(fz_context *ctx, const char *format, const char *path, const char *options);
 fz_document_writer *fz_new_text_writer_with_output(fz_context *ctx, const char *format, fz_output *out, const char *options);
 
-fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *format, const char *path, const char *options);
+fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
-fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *format, const char *path, const char *options);
+fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
 
 fz_document_writer *fz_new_ps_writer(fz_context *ctx, const char *path, const char *options);

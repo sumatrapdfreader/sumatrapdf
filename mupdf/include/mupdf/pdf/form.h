@@ -24,38 +24,38 @@ enum pdf_widget_tx_format
 	PDF_WIDGET_TX_FORMAT_TIME
 };
 
-pdf_widget *pdf_keep_widget(fz_context *ctx, pdf_widget *widget);
-void pdf_drop_widget(fz_context *ctx, pdf_widget *widget);
-pdf_widget *pdf_first_widget(fz_context *ctx, pdf_page *page);
-pdf_widget *pdf_next_widget(fz_context *ctx, pdf_widget *previous);
-int pdf_update_widget(fz_context *ctx, pdf_widget *widget);
+pdf_annot *pdf_keep_widget(fz_context *ctx, pdf_annot *widget);
+void pdf_drop_widget(fz_context *ctx, pdf_annot *widget);
+pdf_annot *pdf_first_widget(fz_context *ctx, pdf_page *page);
+pdf_annot *pdf_next_widget(fz_context *ctx, pdf_annot *previous);
+int pdf_update_widget(fz_context *ctx, pdf_annot *widget);
 
 /*
 	create a new signature widget on the specified page, with the
 	specified name.
 
-	The returns pdf_widget reference must be dropped by the caller.
+	The returns pdf_annot reference must be dropped by the caller.
 	This is a change from releases up to an including 1.18, where
 	the returned reference was owned by the page and did not need
 	to be freed by the caller.
 */
-pdf_widget *pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name);
+pdf_annot *pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name);
 
-enum pdf_widget_type pdf_widget_type(fz_context *ctx, pdf_widget *widget);
+enum pdf_widget_type pdf_widget_type(fz_context *ctx, pdf_annot *widget);
 
-fz_rect pdf_bound_widget(fz_context *ctx, pdf_widget *widget);
+fz_rect pdf_bound_widget(fz_context *ctx, pdf_annot *widget);
 
 /*
 	get the maximum number of
 	characters permitted in a text widget
 */
-int pdf_text_widget_max_len(fz_context *ctx, pdf_widget *tw);
+int pdf_text_widget_max_len(fz_context *ctx, pdf_annot *tw);
 
 /*
 	get the type of content
 	required by a text widget
 */
-int pdf_text_widget_format(fz_context *ctx, pdf_widget *tw);
+int pdf_text_widget_format(fz_context *ctx, pdf_annot *tw);
 
 /*
 	get the list of options for a list box or combo box.
@@ -66,8 +66,8 @@ int pdf_text_widget_format(fz_context *ctx, pdf_widget *tw);
 	is true, then the export values will be returned and not the list
 	values if there are export values present.
 */
-int pdf_choice_widget_options(fz_context *ctx, pdf_widget *tw, int exportval, const char *opts[]);
-int pdf_choice_widget_is_multiselect(fz_context *ctx, pdf_widget *tw);
+int pdf_choice_widget_options(fz_context *ctx, pdf_annot *tw, int exportval, const char *opts[]);
+int pdf_choice_widget_is_multiselect(fz_context *ctx, pdf_annot *tw);
 
 /*
 	get the value of a choice widget.
@@ -77,7 +77,7 @@ int pdf_choice_widget_is_multiselect(fz_context *ctx, pdf_widget *tw);
 	with NULL as the array to find out how big the array need to
 	be. The filled in elements should not be freed by the caller.
 */
-int pdf_choice_widget_value(fz_context *ctx, pdf_widget *tw, const char *opts[]);
+int pdf_choice_widget_value(fz_context *ctx, pdf_annot *tw, const char *opts[]);
 
 /*
 	set the value of a choice widget.
@@ -85,13 +85,13 @@ int pdf_choice_widget_value(fz_context *ctx, pdf_widget *tw, const char *opts[])
 	The caller should pass the number of options selected and an
 	array of their names
 */
-void pdf_choice_widget_set_value(fz_context *ctx, pdf_widget *tw, int n, const char *opts[]);
+void pdf_choice_widget_set_value(fz_context *ctx, pdf_annot *tw, int n, const char *opts[]);
 
 int pdf_choice_field_option_count(fz_context *ctx, pdf_obj *field);
 const char *pdf_choice_field_option(fz_context *ctx, pdf_obj *field, int exportval, int i);
 
-int pdf_widget_is_signed(fz_context *ctx, pdf_widget *widget);
-int pdf_widget_is_readonly(fz_context *ctx, pdf_widget *widget);
+int pdf_widget_is_signed(fz_context *ctx, pdf_annot *widget);
+int pdf_widget_is_readonly(fz_context *ctx, pdf_annot *widget);
 
 /* Field flags */
 enum
@@ -158,9 +158,9 @@ int pdf_set_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, cons
 
 	The function returns whether validation passed.
 */
-int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
-int pdf_set_choice_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
-int pdf_edit_text_field_value(fz_context *ctx, pdf_widget *widget, const char *value, const char *change, int *selStart, int *selEnd, char **newvalue);
+int pdf_set_text_field_value(fz_context *ctx, pdf_annot *widget, const char *value);
+int pdf_set_choice_field_value(fz_context *ctx, pdf_annot *widget, const char *value);
+int pdf_edit_text_field_value(fz_context *ctx, pdf_annot *widget, const char *value, const char *change, int *selStart, int *selEnd, char **newvalue);
 
 typedef struct
 {
@@ -231,7 +231,7 @@ int pdf_count_signatures(fz_context *ctx, pdf_document *doc);
 char *pdf_signature_error_description(pdf_signature_error err);
 
 pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
-pdf_pkcs7_distinguished_name *pdf_signature_get_widget_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget);
+pdf_pkcs7_distinguished_name *pdf_signature_get_widget_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget);
 void pdf_signature_drop_distinguished_name(fz_context *ctx, pdf_pkcs7_distinguished_name *name);
 char *pdf_signature_format_distinguished_name(fz_context *ctx, pdf_pkcs7_distinguished_name *name);
 char *pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_name *dn, const char *reason, const char *location, int64_t date, int include_labels);
@@ -240,16 +240,16 @@ fz_display_list *pdf_signature_appearance_unsigned(fz_context *ctx, fz_rect rect
 
 pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
 pdf_signature_error pdf_check_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature);
-pdf_signature_error pdf_check_widget_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget);
-pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_widget *widget);
+pdf_signature_error pdf_check_widget_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget);
+pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget);
 
-void pdf_clear_signature(fz_context *ctx, pdf_widget *widget);
+void pdf_clear_signature(fz_context *ctx, pdf_annot *widget);
 
 /*
 	Sign a signature field, while assigning it an arbitrary apparance determined by a display list.
 	The function pdf_signature_appearance can generate a variety of common signature appearances.
 */
-void pdf_sign_signature_with_appearance(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer, int64_t date, fz_display_list *disp_list);
+void pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7_signer *signer, int64_t date, fz_display_list *disp_list);
 
 enum {
 	PDF_SIGNATURE_SHOW_LABELS = 1,
@@ -271,7 +271,7 @@ enum {
 /*
 	Sign a signature field, while assigning it a default appearance.
 */
-void pdf_sign_signature(fz_context *ctx, pdf_widget *widget,
+void pdf_sign_signature(fz_context *ctx, pdf_annot *widget,
 	pdf_pkcs7_signer *signer,
 	int appearance_flags,
 	fz_image *graphic,

@@ -724,7 +724,7 @@ TESSERACT_BUILD_CFLAGS += $(NEONFLAGS) -DHAVE_NEON
 TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrixneon.cpp
 endif
 
-# --- EXTRACT (optional) ---
+# --- EXTRACT ---
 
 EXTRACT_CFLAGS += -Ithirdparty/extract/include
 

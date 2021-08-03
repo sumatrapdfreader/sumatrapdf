@@ -125,8 +125,8 @@ FUN(PDFPage_getWidgets)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_page *page = from_PDFPage(env, self);
-	pdf_widget *widget = NULL;
-	pdf_widget *widgets = NULL;
+	pdf_annot *widget = NULL;
+	pdf_annot *widgets = NULL;
 	jobjectArray jwidgets = NULL;
 	int count;
 	int i;
@@ -183,7 +183,7 @@ FUN(PDFPage_createSignature)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_page *page = from_PDFPage(env, self);
-	pdf_widget *widget = NULL;
+	pdf_annot *widget = NULL;
 	char name[80];
 
 	if (!ctx || !page)

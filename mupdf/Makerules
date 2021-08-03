@@ -15,11 +15,6 @@ ifeq ($(tesseract),yes)
   build_suffix += -tesseract
 endif
 
-ifeq ($(extract),yes)
-  USE_EXTRACT := yes
-  build_suffix += -extract
-endif
-
 ifeq ($(tofu),yes)
   build_suffix += -tofu
   XCFLAGS += -DTOFU

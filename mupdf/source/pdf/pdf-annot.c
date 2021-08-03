@@ -2692,7 +2692,7 @@ const char *pdf_annot_field_label(fz_context *ctx, pdf_annot *widget)
 	return ret;
 }
 
-int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_widget *annot, const char *text, int ignore_trigger_events)
+int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_annot *annot, const char *text, int ignore_trigger_events)
 {
 	int ret;
 

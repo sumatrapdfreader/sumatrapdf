@@ -22,7 +22,7 @@ struct pdf_annot
 
 void pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots);
 void pdf_drop_annots(fz_context *ctx, pdf_annot *annot_list);
-void pdf_drop_widgets(fz_context *ctx, pdf_widget *widget_list);
+void pdf_drop_widgets(fz_context *ctx, pdf_annot *widget_list);
 
 void pdf_set_annot_has_changed(fz_context *ctx, pdf_annot *annot);
 
