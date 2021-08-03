@@ -5,6 +5,10 @@ EXPORTS
 
 	version_check_3_4
 
+	fz_new_odt_writer
+	fz_new_odt_writer_with_output
+	fz_new_docx_writer
+	fz_new_docx_writer_with_output
 	pdf_string_from_annot_type
 	fz_page_number_from_location
 	fz_lookup_metadata

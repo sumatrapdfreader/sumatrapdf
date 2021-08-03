@@ -41,7 +41,7 @@ MinHook         master     20201-01-1
 
 mujs            1.0.6      Apr 4, 2019
   https://mujs.com/
-  https://github.com/ArtifexSoftware/mujs/commit/00d4606c3baf813b7b1c176823b2729bf51002a2
+  https://github.com/ArtifexSexeoftware/mujs/commit/00d4606c3baf813b7b1c176823b2729bf51002a2
 
 ../mupdf        trunk
   https://github.com/ArtifexSoftware/mupdf/commit/c27c17d7bb7bb0ea768724d6dbf9133764c02dd2
@@ -65,3 +65,6 @@ zlib            1.2.11     2017-01-15
 zlib-ng         trunk      2021-07-23
   https://github.com/zlib-ng/zlib-ng
   https://github.com/zlib-ng/zlib-ng/commit/12a975ac9f19b3d2e362d0d783ea20400335d1c6
+
+extract         trunk
+  https://github.com/ArtifexSoftware/extract

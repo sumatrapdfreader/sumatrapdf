@@ -307,9 +307,11 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optconf()
+
     -- zlib
     -- disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     -- zlib_files()
+
     -- libjpeg-turbo
     defines { "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4018", "4100", "4244", "4245" }
@@ -333,11 +335,13 @@ workspace "SumatraPDF"
       }
     filter {}
     libjpeg_turbo_files()
+
     -- jbig2dec
     defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
     disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
+
     -- openjpeg
     disablewarnings { "4100", "4244", "4310", "4389", "4456" }
     -- openjpeg has opj_config_private.h for such over-rides
@@ -347,6 +351,7 @@ workspace "SumatraPDF"
     -- because #include "opj_config_private.h" searches current directory first
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
+
     -- freetype
     defines {
       "FT2_BUILD_LIBRARY",
@@ -356,14 +361,16 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
     includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
     freetype_files()
+
     -- lcms2
     disablewarnings { "4100" }
     includedirs { "ext/lcms2/include" }
     lcms2_files()
+
     -- harfbuzz
     includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
     defines {
-      "_CRT_SECURE_NO_WARNINGS",
+      --"_CRT_SECURE_NO_WARNINGS",
       "HAVE_FALLBACK=1",
       "HAVE_OT",
       "HAVE_UCDN",
@@ -376,15 +383,23 @@ workspace "SumatraPDF"
     }
     disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
     harfbuzz_files()
+
     -- mujs
     includedirs { "ext/mujs" }
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
     -- gumbo
     disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
+
+    -- extract
+    disablewarnings { "4005", "4201" }
+    includedirs { "ext/extract/include" }
+    includedirs { "ext/zlib-ng" }
+    extract_files()
 
 --[[
   project "zlib"
@@ -537,6 +552,7 @@ workspace "SumatraPDF"
       "ext/harfbuzz/src",
       "ext/lcms2/include",
       "ext/gumbo-parser/src",
+      "ext/extract/include",
   }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm

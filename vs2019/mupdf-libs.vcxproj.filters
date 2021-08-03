@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="extract">
+      <UniqueIdentifier>{80E8D782-ECC7-561E-F5DF-E1F4613EBD7F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="extract\src">
+      <UniqueIdentifier>{97E6B385-039C-2C7B-8C90-2652F844237F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="freetype">
       <UniqueIdentifier>{89895BD8-7556-B6E3-9E6F-A48B8A9BEB71}</UniqueIdentifier>
     </Filter>
@@ -84,6 +90,42 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\extract\src\astring.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\docx.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\docx_template.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\mem.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\memento.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\odt.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\odt_template.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\outf.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\sys.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\text.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\xml.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\zip.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\gumbo-parser\src\attribute.h">
       <Filter>gumbo-parser\src</Filter>
     </ClInclude>
@@ -251,6 +293,54 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\extract\src\alloc.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\astring.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\buffer.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\docx.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\docx_template.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\extract.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\join.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\mem.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\memento.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\odt.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\odt_template.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\outf.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\sys.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\text.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\xml.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\zip.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\freetype\src\base\ftbase.c">
       <Filter>freetype\src\base</Filter>
     </ClCompile>
@@ -815,6 +905,11 @@
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tpix_manager.c">
       <Filter>openjpeg\src\lib\openjp2</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\extract\src\memento.py">
+      <Filter>extract\src</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\ext\libjpeg-turbo\simd\jccolmmx.asm">

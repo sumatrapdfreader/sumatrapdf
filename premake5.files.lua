@@ -282,6 +282,27 @@ function openjpeg_files()
   })
 end
 
+function extract_files()
+  files_in_dir("ext/extract/src", {
+    "alloc.*",
+    "astring.*",
+    "buffer.*",
+    "docx_template.*",
+    "docx.*",
+    "extract.*",
+    "join.*",
+    "mem.*",
+    "memento.*",
+    "odt_template.*",
+    "odt.*",
+    "outf.*",
+    "sys.*",
+    "text.*",
+    "xml.*",
+    "zip.*",
+  })
+end
+
 function libwebp_files()
   files("ext/libwebp/src/dec/*.c")
 
@@ -776,6 +797,7 @@ function mupdf_files()
     "outline.c",
     "output.c",
     "output-cbz.c",
+    "output-docx.c",
     "output-pcl.c",
     "output-pclm.c",
     "output-pdfocr.c",

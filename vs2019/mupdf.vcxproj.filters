@@ -551,6 +551,9 @@
     <ClCompile Include="..\mupdf\source\fitz\output-cbz.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\output-docx.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\output-pcl.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
