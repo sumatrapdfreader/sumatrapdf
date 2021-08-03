@@ -20,6 +20,18 @@ function logview_files()
   }
 end
 
+function preview_test_files()
+  files_in_dir("src/utils", {
+    "BaseUtil.*",
+    "TempAllocator.*",
+    "StrUtil.*",
+    "StrconvUtil.*",
+  })
+  files {
+    "src/tools/preview_test.cpp",
+  }
+end
+
 function makelzsa_files()
   files_in_dir("src/utils", {
     "BaseUtil.*",
