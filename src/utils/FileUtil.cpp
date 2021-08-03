@@ -767,6 +767,11 @@ bool CreateAll(const WCHAR* dir) {
     return Create(dir);
 }
 
+bool CreateForFile(const WCHAR* path) {
+    AutoFreeWstr dir(path::GetDir(path));
+    return CreateAll(dir);
+}
+
 // remove directory and all its children
 bool RemoveAll(const WCHAR* dir) {
     // path must be doubly terminated

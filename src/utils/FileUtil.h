@@ -77,6 +77,7 @@ namespace dir {
 
 bool Exists(const WCHAR* dir);
 bool Create(const WCHAR* dir);
+bool CreateForFile(const WCHAR* path);
 bool CreateAll(const WCHAR* dir);
 bool RemoveAll(const WCHAR* dir);
 } // namespace dir

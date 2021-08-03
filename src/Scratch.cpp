@@ -85,6 +85,33 @@ Vec<FileData*> MobiToEpub2(const WCHAR* path) {
         res.Append(e);
         logf("name: '%s', size: %d, %d images\n", e->name, (int)e->data.size(), doc->imagesCount);
     }
+    {
+        auto e = new FileData();
+        e->name = str::Dup("META-INF\\container.xml");
+        e->data = ByteSlice(metaInfContainerXML).Clone();
+        res.Append(e);
+    }
+
+    {
+        auto e = new FileData();
+        e->name = str::Dup("mimetype");
+        e->data = ByteSlice(mimeType).Clone();
+        res.Append(e);
+    }
+
+    {
+        auto e = new FileData();
+        e->name = str::Dup("content.opf");
+        e->data = ByteSlice(contentOpf).Clone();
+        res.Append(e);
+    }
+
+    {
+        auto e = new FileData();
+        e->name = str::Dup("toc.ncx");
+        e->data = ByteSlice(tocNcx).Clone();
+        res.Append(e);
+    }
 
     for (size_t i = 1; i <= doc->imagesCount; i++) {
         auto imageData = doc->GetImage(i);
@@ -107,12 +134,23 @@ Vec<FileData*> MobiToEpub2(const WCHAR* path) {
 Vec<FileData*> MobiToEpub(const WCHAR* path) {
     auto files = MobiToEpub2(path);
     const WCHAR* dstDir = LR"(C:\Users\kjk\Downloads\mobiToEpub)";
+    bool failed = false;
     for (auto& f : files) {
+        if (failed) {
+            break;
+        }
         WCHAR* name = ToWstrTemp(f->name);
         AutoFreeWstr dstPath = path::Join(dstDir, name);
-        bool ok = file::WriteFile(dstPath.Get(), f->data);
+        bool ok = dir::CreateForFile(dstPath);
+        if (!ok) {
+            logf("Failed to create directory for file '%s'\n", ToUtf8Temp(dstPath).Get());
+            failed = true;
+            continue;
+        }
+        ok = file::WriteFile(dstPath.Get(), f->data);
         if (!ok) {
             logf("Failed to write '%s'\n", ToUtf8Temp(dstPath).Get());
+            failed = true;
         } else {
             logf("Wrote '%s'\n", ToUtf8Temp(dstPath).Get());
         }
