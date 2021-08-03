@@ -19,6 +19,58 @@
 
 #include "utils/Log.h"
 
+// META-INF/container.xml
+static const char* metaInfContainerXML = R"(<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+   <rootfiles>
+      <rootfile full-path="content.opf" media-type="application/oebps-package+xml"/>
+      
+   </rootfiles>
+</container>)";
+
+// mimetype
+
+static const char* mimeType = R"(application/epub+zip)";
+
+// content.opf
+static const char* contentOpf = R"(<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid_id" version="2.0">
+  <metadata xmlns:calibre="http://calibre.kovidgoyal.net/2009/metadata" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:opf="http://www.idpf.org/2007/opf" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <dc:title>input</dc:title>
+  </metadata>
+  <manifest>
+    <item href="input.htm" id="html" media-type="application/xhtml+xml"/>
+    <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="html"/>
+  </spine>
+</package>
+)";
+
+// toc.ncx
+static const char* tocNcx = R"--(<?xml version='1.0' encoding='utf-8'?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="en-US">
+  <head>
+    <meta content="d3bfbfa8-a0b5-4e1c-9297-297fb130bcbc" name="dtb:uid"/>
+    <meta content="2" name="dtb:depth"/>
+    <meta content="0" name="dtb:totalPageCount"/>
+    <meta content="0" name="dtb:maxPageNumber"/>
+  </head>
+  <docTitle>
+    <text>input</text>
+  </docTitle>
+  <navMap>
+    <navPoint id="urvn6G6FwfJA4zq7INOgGaD" playOrder="1">
+      <navLabel>
+        <text>Start</text>
+      </navLabel>
+      <content src="input.htm"/>
+    </navPoint>
+  </navMap>
+</ncx>
+)--";
+
 Vec<FileData*> MobiToEpub2(const WCHAR* path) {
     Vec<FileData*> res;
     MobiDoc* doc = MobiDoc::CreateFromFile(path);
@@ -28,7 +80,7 @@ Vec<FileData*> MobiToEpub2(const WCHAR* path) {
     auto d = doc->GetHtmlData();
     {
         auto e = new FileData();
-        e->name = str::Dup("doc.html");
+        e->name = str::Dup("input.htm");
         e->data = d.Clone();
         res.Append(e);
         logf("name: '%s', size: %d, %d images\n", e->name, (int)e->data.size(), doc->imagesCount);
