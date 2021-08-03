@@ -198,7 +198,7 @@ static EngineBase* ps2pdf(const WCHAR* path) {
         return nullptr;
     }
 
-    return CreateEngineMupdfFromStream(stream);
+    return CreateEngineMupdfFromStream(stream, ToUtf8Temp(tmpFile).Get());
 }
 
 static EngineBase* psgz2pdf(const WCHAR* fileName) {

@@ -29,7 +29,6 @@ class PreviewBase : public IThumbnailProvider,
                                     QITABENT(PreviewBase, IObjectWithSite),
                                     QITABENT(PreviewBase, IPreviewHandler),
                                     QITABENT(PreviewBase, IOleWindow),
-                                    QITABENT(PreviewBase, IPersist),
                                     {0}};
         return QISearch(this, qit, riid, ppv);
     }
@@ -152,18 +151,6 @@ class PreviewBase : public IThumbnailProvider,
         return E_NOTIMPL;
     }
 
-    IFACEMETHODIMP IsDirty() {
-        return E_NOTIMPL;
-    }
-    IFACEMETHODIMP Save(__unused LPCOLESTR pszFileName, __unused BOOL bRemember) {
-        return E_NOTIMPL;
-    }
-    IFACEMETHODIMP SaveCompleted(__unused LPCOLESTR pszFileName) {
-        return E_NOTIMPL;
-    }
-    IFACEMETHODIMP GetCurFile(__unused LPOLESTR* ppszFileName) {
-        return E_NOTIMPL;
-    }
 
     EngineBase* GetEngine() {
         if (!m_engine && m_pStream) {

@@ -1701,8 +1701,8 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
         str::Free(d);
-        WCHAR* overrideName = str::Join(path, L".html");
-        if (!LoadFromStream(file, pwdUI, overrideName)) {
+        WCHAR* nameHint = str::Join(path, L".html");
+        if (!LoadFromStream(file, ToUtf8Temp(nameHint).Get(), pwdUI)) {
             return false;
         }
         return FinishLoading();
@@ -1718,8 +1718,8 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
         str::Free(d);
-        WCHAR* overrideName = str::Join(path, L".html");
-        if (!LoadFromStream(file, pwdUI, overrideName)) {
+        WCHAR* nameHint = str::Join(path, L".html");
+        if (!LoadFromStream(file, ToUtf8Temp(nameHint).Get(), pwdUI)) {
             return false;
         }
         return FinishLoading();
@@ -1733,7 +1733,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         file = nullptr;
     }
 
-    if (!LoadFromStream(file, pwdUI)) {
+    if (!LoadFromStream(file, ToUtf8Temp(FileName()).Get(), pwdUI)) {
         return false;
     }
 
@@ -1764,7 +1764,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     fz_drop_document(ctx, _doc);
     _doc = nullptr;
 
-    if (!LoadFromStream(file, pwdUI)) {
+    if (!LoadFromStream(file, ToUtf8Temp(FileName()).Get(), pwdUI)) {
         return false;
     }
 
@@ -1772,7 +1772,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
 }
 
 // TODO: need to do stuff to support .txt etc.
-bool EngineMupdf::Load(IStream* stream, PasswordUI* pwdUI) {
+bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
     if (!ctx) {
         return false;
@@ -1785,24 +1785,20 @@ bool EngineMupdf::Load(IStream* stream, PasswordUI* pwdUI) {
     fz_catch(ctx) {
         return false;
     }
-    if (!LoadFromStream(stm, pwdUI)) {
+    if (!LoadFromStream(stm, nameHint, pwdUI)) {
         return false;
     }
     return FinishLoading();
 }
 
-bool EngineMupdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI, const WCHAR* path) {
+bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
     }
 
     _doc = nullptr;
     fz_try(ctx) {
-        char* fileNameA = ToUtf8Temp(FileName());
-        if (path) {
-            fileNameA = ToUtf8Temp(path);
-        }
-        _doc = fz_open_document_with_stream(ctx, fileNameA, stm);
+        _doc = fz_open_document_with_stream(ctx, nameHint, stm);
         pdfdoc = pdf_specifics(ctx, _doc);
         float dx = DpiScale(layoutDxPt, displayDPI);
         float dy = DpiScale(layoutDyPt, displayDPI);
@@ -3333,9 +3329,9 @@ EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, int displayDPI, Passwor
     return engine;
 }
 
-EngineBase* CreateEngineMupdfFromStream(IStream* stream, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
     EngineMupdf* engine = new EngineMupdf();
-    if (!engine->Load(stream, pwdUI)) {
+    if (!engine->Load(stream, nameHint, pwdUI)) {
         delete engine;
         return nullptr;
     }

@@ -355,7 +355,7 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
 
 EngineBase* PdfPreview::LoadEngine(IStream* stream) {
     log("PdfPreview::LoadEngine()\n");
-    return CreateEngineMupdfFromStream(stream);
+    return CreateEngineMupdfFromStream(stream, "foo.pdf");
 }
 
 #if 0

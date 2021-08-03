@@ -1,5 +1,14 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-03 Tue
+
+- possibly fix PdfPreview handler (for #2080)
+  When extending EngineMupdf to handle more file types I broke
+  loading with IStream because previously, it was always a pdf
+  and now we need to tell which kind of file we're loading
+  by either mimetype or file extension
+  the fix is to propagate a dummy name that indicates file type
+
 2021-08-02 Mon
 
 - replaced std::span<u8> with ByteSlice

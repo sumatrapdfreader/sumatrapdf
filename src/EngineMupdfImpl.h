@@ -95,10 +95,10 @@ class EngineMupdf : public EngineBase {
     TocTree* tocTree{nullptr};
 
     bool Load(const WCHAR* filePath, PasswordUI* pwdUI = nullptr);
-    bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
+    bool Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
-    bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr, const WCHAR* path = nullptr);
+    bool LoadFromStream(fz_stream* stm, const char* nameHing, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
     RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
 

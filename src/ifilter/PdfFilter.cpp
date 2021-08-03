@@ -51,7 +51,7 @@ HRESULT PdfFilter::OnInit() {
         return E_FAIL;
     }
 
-    m_pdfEngine = CreateEngineMupdfFromStream(stream);
+    m_pdfEngine = CreateEngineMupdfFromStream(stream, "foo.pdf");
     if (!m_pdfEngine) {
         return E_FAIL;
     }

@@ -50,7 +50,7 @@ TocItem* CreateWrapperItem(EngineBase* engine);
 
 bool IsEngineMupdfSupportedFileType(Kind);
 EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, int displayDPI, PasswordUI* pwdUI = nullptr);
-EngineBase* CreateEngineMupdfFromStream(IStream* stream, PasswordUI* pwdUI = nullptr);
+EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
 
 ByteSlice LoadEmbeddedPDFFile(const WCHAR* path);
 const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut);
