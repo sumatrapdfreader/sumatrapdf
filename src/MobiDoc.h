@@ -48,9 +48,6 @@ class MobiDoc {
     ~MobiDoc();
 
     [[nodiscard]] ByteSlice GetHtmlData() const;
-    [[nodiscard]] size_t GetHtmlDataSize() const {
-        return doc->size();
-    }
     ImageData* GetCoverImage();
     [[nodiscard]] ImageData* GetImage(size_t imgRecIndex) const;
     [[nodiscard]] const WCHAR* GetFileName() const {

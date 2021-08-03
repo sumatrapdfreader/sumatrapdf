@@ -982,6 +982,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
+    if (i.toEpubPath) {
+        RedirectIOToExistingConsole();
+        auto res = MobiToEpub(i.toEpubPath);
+        DeleteVecMembers(res);
+        if (i.exitWhenDone) {
+            fastExit = !gIsDebugBuild;
+            goto Exit;
+        }
+    }
+
     if (i.deleteFile) {
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us

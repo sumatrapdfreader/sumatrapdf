@@ -30,6 +30,13 @@ struct ByteSlice {
     bool empty() const {
         return !d || s == 0;
     }
+    ByteSlice Clone() const {
+        if (empty()) {
+            return {};
+        }
+        u8* res = (u8*)memdup(d, s, 1);
+        return {res, size()};
+    }
 };
 
 // TODO: rename StrSlice and add WStrSlice
