@@ -491,6 +491,7 @@
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
     <ClInclude Include="..\src\utils\ZipUtil.h" />
+    <ClInclude Include="..\src\utils\windrawlib.h" />
     <ClInclude Include="..\src\wingui\ButtonCtrl.h" />
     <ClInclude Include="..\src\wingui\CheckboxCtrl.h" />
     <ClInclude Include="..\src\wingui\DialogSizer.h" />
@@ -561,6 +562,7 @@
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
+    <ClCompile Include="..\src\utils\windrawlib.c" />
     <ClCompile Include="..\src\wingui\ButtonCtrl.cpp" />
     <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp" />
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />

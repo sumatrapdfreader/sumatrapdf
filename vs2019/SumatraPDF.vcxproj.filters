@@ -13,6 +13,9 @@
     <Filter Include="src\docs">
       <UniqueIdentifier>{45EA2ECF-31B7-89DA-5AD0-778246FCBE68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ext">
+      <UniqueIdentifier>{0DFD2FA9-79DC-AE44-82F4-391BEE5215A6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mui">
       <UniqueIdentifier>{A71E30A9-13FE-AE44-1C16-3A1B887415A6}</UniqueIdentifier>
     </Filter>
@@ -588,6 +591,9 @@
     </None>
     <None Include="..\src\docs\wishlist.txt">
       <Filter>src\docs</Filter>
+    </None>
+    <None Include="..\src\ext\versions.txt">
+      <Filter>src\ext</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

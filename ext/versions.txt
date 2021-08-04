@@ -68,3 +68,6 @@ zlib-ng         trunk      2021-07-23
 
 extract         trunk
   https://github.com/ArtifexSoftware/extract
+
+windrawlib      trunk
+  https://github.com/mity/windrawlib

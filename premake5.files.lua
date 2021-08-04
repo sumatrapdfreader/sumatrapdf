@@ -545,6 +545,7 @@ function sumatrapdf_files()
     "Version.h",
     "WindowInfo.*",
 
+    "ext/versions.txt",
     "docs/*.txt",
   })
   filter {"configurations:Debug"}
@@ -634,6 +635,7 @@ function utils_files()
     "WebpReader.*",
     "WinDynCalls.*",
     "WinUtil.*",
+    "windrawlib.*",
     "ZipUtil.*",
   })
 
