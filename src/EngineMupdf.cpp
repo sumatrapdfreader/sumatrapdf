@@ -1691,7 +1691,8 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     int streamNo = -1;
     AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
 
-    if (str::EqI(ext, L".txt")) {
+    // show .txt and .xml files as plain text but using html engine
+    if (str::EqI(ext, L".txt") || str::Eq(ext, L".xml")) {
         // synthesize a .html file from text file
         ByteSlice d = TxtFileToHTML(path);
         if (d.empty()) {
