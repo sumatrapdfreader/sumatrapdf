@@ -2436,7 +2436,6 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     }
 
     if (pdfdoc && pageInfo->commentsNeedRebuilding) {
-        CrashIf(!pdfdoc);
         DeleteVecMembers(pageInfo->comments);
         MakePageElementCommentsFromAnnotations(ctx, pageInfo);
         pageInfo->commentsNeedRebuilding = false;

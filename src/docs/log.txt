@@ -11,6 +11,7 @@ A daily log of changes and commentary. An experiment of sorts.
 - don't trigger debug crash rebuilding annotations in non-pdf documents (fixes #2090)
   still don't get why I wasn't getting those crashes in debug builds
   (so I couldn't reproduce them)
+- compile extract becase mupdf made it non-optional
 
 2021-08-02 Mon
 
