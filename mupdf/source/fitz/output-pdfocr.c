@@ -3,12 +3,6 @@
 #include <string.h>
 #include <limits.h>
 
-#if !defined(HAVE_LEPTONICA) || !defined(HAVE_TESSERACT)
-#ifndef OCR_DISABLED
-#define OCR_DISABLED
-#endif
-#endif
-
 #ifdef OCR_DISABLED
 
 /* In non-OCR builds, we need to define this otherwise SWIG Python gets SEGV
@@ -1003,10 +997,13 @@ fz_new_pdfocr_writer_with_output(fz_context *ctx, fz_output *out, const char *op
 #ifdef OCR_DISABLED
 	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
 #else
-	fz_pdfocr_writer *wri = fz_new_derived_document_writer(ctx, fz_pdfocr_writer, pdfocr_begin_page, pdfocr_end_page, pdfocr_close_writer, pdfocr_drop_writer);
+	fz_pdfocr_writer *wri = NULL;
+
+	fz_var(wri);
 
 	fz_try(ctx)
 	{
+		wri = fz_new_derived_document_writer(ctx, fz_pdfocr_writer, pdfocr_begin_page, pdfocr_end_page, pdfocr_close_writer, pdfocr_drop_writer);
 		fz_parse_draw_options(ctx, &wri->draw, options);
 		fz_parse_pdfocr_options(ctx, &wri->pdfocr, options);
 		wri->out = out;
@@ -1014,6 +1011,7 @@ fz_new_pdfocr_writer_with_output(fz_context *ctx, fz_output *out, const char *op
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);
 	}
@@ -1029,15 +1027,7 @@ fz_new_pdfocr_writer(fz_context *ctx, const char *path, const char *options)
 	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
 #else
 	fz_output *out = fz_new_output_with_path(ctx, path ? path : "out.pdfocr", 0);
-	fz_document_writer *wri = NULL;
-	fz_try(ctx)
-		wri = fz_new_pdfocr_writer_with_output(ctx, out, options);
-	fz_catch(ctx)
-	{
-		fz_drop_output(ctx, out);
-		fz_rethrow(ctx);
-	}
-	return wri;
+	return fz_new_pdfocr_writer_with_output(ctx, out, options);
 #endif
 }
 

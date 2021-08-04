@@ -1,4 +1,6 @@
-#if defined(HAVE_LEPTONICA) && defined(HAVE_TESSERACT)
+#include "mupdf/fitz/config.h"
+
+#ifndef OCR_DISABLED
 
 #include <climits>
 #include "tesseract/baseapi.h"

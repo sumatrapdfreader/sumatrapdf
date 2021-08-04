@@ -582,12 +582,11 @@ fz_buffer *
 fz_new_buffer_from_page_with_format(fz_context *ctx, fz_page *page, const char *format, const char *options, fz_matrix transform, fz_cookie *cookie)
 {
 	fz_buffer *buf = NULL;
-	fz_output *out = NULL;
+	fz_output *out;
 	fz_document_writer *writer = NULL;
 	fz_device *dev = NULL;
 
 	fz_var(buf);
-	fz_var(out);
 	fz_var(writer);
 	fz_var(dev);
 
@@ -602,10 +601,7 @@ fz_new_buffer_from_page_with_format(fz_context *ctx, fz_page *page, const char *
 		fz_close_document_writer(ctx, writer);
 	}
 	fz_always(ctx)
-	{
 		fz_drop_document_writer(ctx, writer);
-		fz_drop_output(ctx, out);
-	}
 	fz_catch(ctx)
 	{
 		fz_drop_buffer(ctx, buf);

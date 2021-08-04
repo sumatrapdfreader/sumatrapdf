@@ -4008,16 +4008,20 @@ pdf_writer_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 fz_document_writer *
 fz_new_pdf_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	pdf_writer *wri = fz_new_derived_document_writer(ctx, pdf_writer, pdf_writer_begin_page, pdf_writer_end_page, pdf_writer_close_writer, pdf_writer_drop_writer);
+	pdf_writer *wri;
+
+	fz_var(wri);
 
 	fz_try(ctx)
 	{
+		wri = fz_new_derived_document_writer(ctx, pdf_writer, pdf_writer_begin_page, pdf_writer_end_page, pdf_writer_close_writer, pdf_writer_drop_writer);
 		pdf_parse_write_options(ctx, &wri->opts, options);
 		wri->out = out;
 		wri->pdf = pdf_create_document(ctx);
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_output(ctx, out);
 		pdf_drop_document(ctx, wri->pdf);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);
@@ -4030,15 +4034,7 @@ fz_document_writer *
 fz_new_pdf_writer(fz_context *ctx, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path ? path : "out.pdf", 0);
-	fz_document_writer *wri = NULL;
-	fz_try(ctx)
-		wri = fz_new_pdf_writer_with_output(ctx, out, options);
-	fz_catch(ctx)
-	{
-		fz_drop_output(ctx, out);
-		fz_rethrow(ctx);
-	}
-	return wri;
+	return fz_new_pdf_writer_with_output(ctx, out, options);
 }
 
 void pdf_write_journal(fz_context *ctx, pdf_document *doc, fz_output *out)

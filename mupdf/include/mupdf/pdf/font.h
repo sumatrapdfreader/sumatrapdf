@@ -123,6 +123,11 @@ pdf_obj *pdf_add_cid_font(fz_context *ctx, pdf_document *doc, fz_font *font);
 */
 pdf_obj *pdf_add_cjk_font(fz_context *ctx, pdf_document *doc, fz_font *font, int script, int wmode, int serif);
 
+/*
+	Add a substitute font for any script.
+*/
+pdf_obj *pdf_add_substitute_font(fz_context *ctx, pdf_document *doc, fz_font *font);
+
 int pdf_font_writing_supported(fz_font *font);
 
 #endif

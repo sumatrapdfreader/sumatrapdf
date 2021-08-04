@@ -1488,11 +1488,14 @@ pcl_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 fz_document_writer *
 fz_new_pcl_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	fz_pcl_writer *wri = fz_new_derived_document_writer(ctx, fz_pcl_writer, pcl_begin_page, pcl_end_page, pcl_close_writer, pcl_drop_writer);
+	fz_pcl_writer *wri = NULL;
 	const char *val;
+
+	fz_var(wri);
 
 	fz_try(ctx)
 	{
+		wri = fz_new_derived_document_writer(ctx, fz_pcl_writer, pcl_begin_page, pcl_end_page, pcl_close_writer, pcl_drop_writer);
 		fz_parse_draw_options(ctx, &wri->draw, options);
 		fz_parse_pcl_options(ctx, &wri->pcl, options);
 		if (fz_has_option(ctx, options, "colorspace", &val))
@@ -1502,6 +1505,7 @@ fz_new_pcl_writer_with_output(fz_context *ctx, fz_output *out, const char *optio
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);
 	}
@@ -1513,13 +1517,5 @@ fz_document_writer *
 fz_new_pcl_writer(fz_context *ctx, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path ? path : "out.pcl", 0);
-	fz_document_writer *wri = NULL;
-	fz_try(ctx)
-		wri = fz_new_pcl_writer_with_output(ctx, out, options);
-	fz_catch(ctx)
-	{
-		fz_drop_output(ctx, out);
-		fz_rethrow(ctx);
-	}
-	return wri;
+	return fz_new_pcl_writer_with_output(ctx, out, options);
 }

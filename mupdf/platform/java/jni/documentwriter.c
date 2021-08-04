@@ -123,6 +123,7 @@ FUN(DocumentWriter_newNativeDocumentWriterWithSeekableOutputStream)(JNIEnv *env,
 
 	fz_try(ctx)
 	{
+		fz_output *out_temp;
 		state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_newNativeDocumentWriterWithSeekableOutputStream");
 		state->stream = stream;
 		state->array = array;
@@ -136,10 +137,10 @@ FUN(DocumentWriter_newNativeDocumentWriterWithSeekableOutputStream)(JNIEnv *env,
 		stream = NULL;
 		array = NULL;
 
-		wri = fz_new_document_writer_with_output(ctx, out, format, options);
-
-		/* this is now owned by 'wri' */
+		/* out becomes owned by 'wri' as soon as we call, even if it throws. */
+		out_temp = out;
 		out = NULL;
+		wri = fz_new_document_writer_with_output(ctx, out_temp, format, options);
 	}
 	fz_always(ctx)
 	{

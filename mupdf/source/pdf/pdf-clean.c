@@ -367,9 +367,10 @@ void pdf_filter_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page
 	{
 		if (filter->end_page)
 			filter->end_page(ctx, buffer, filter->opaque);
-		if (pdf_is_array(ctx, contents))
+		/* If contents is not a stream it's an array of streams or missing. */
+		if (!pdf_is_stream(ctx, contents))
 		{
-			/* Create a new stream object to replace the array of streams. */
+			/* Create a new stream object to replace the array of streams or missing object. */
 			contents = pdf_add_object_drop(ctx, doc, pdf_new_dict(ctx, doc, 1));
 			pdf_dict_put_drop(ctx, page->obj, PDF_NAME(Contents), contents);
 		}

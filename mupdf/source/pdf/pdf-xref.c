@@ -1563,13 +1563,7 @@ static void
 pdf_init_document(fz_context *ctx, pdf_document *doc)
 {
 	pdf_obj *encrypt, *id;
-	pdf_obj *dict = NULL;
-	pdf_obj *obj;
-	pdf_obj *nobj = NULL;
-	int i, repaired = 0;
-
-	fz_var(dict);
-	fz_var(nobj);
+	int repaired = 0;
 
 	fz_try(ctx)
 	{
@@ -1612,8 +1606,6 @@ pdf_init_document(fz_context *ctx, pdf_document *doc)
 
 	fz_try(ctx)
 	{
-		int hasroot, hasinfo;
-
 		if (repaired)
 		{
 			/* pdf_repair_xref may access xref_index, so reset it properly */
@@ -1633,58 +1625,83 @@ pdf_init_document(fz_context *ctx, pdf_document *doc)
 
 		if (repaired)
 		{
-			int xref_len = pdf_xref_len(ctx, doc);
-			pdf_repair_obj_stms(ctx, doc);
+			pdf_repair_trailer(ctx, doc);
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
 
-			hasroot = (pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)) != NULL);
-			hasinfo = (pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info)) != NULL);
+void pdf_repair_trailer(fz_context *ctx, pdf_document *doc)
+{
+	int hasroot, hasinfo;
+	pdf_obj *obj, *nobj;
+	pdf_obj *dict = NULL;
+	int i;
 
-			for (i = 1; i < xref_len && !hasinfo && !hasroot; ++i)
+	int xref_len = pdf_xref_len(ctx, doc);
+	pdf_repair_obj_stms(ctx, doc);
+
+	hasroot = (pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)) != NULL);
+	hasinfo = (pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info)) != NULL);
+
+	fz_var(dict);
+
+	fz_try(ctx)
+	{
+		/* Scan from the end so we have a better chance of finding
+		 * newer objects if there are multiple instances of Info and
+		 * Root objects.
+		 */
+		for (i = xref_len - 1; i > 0 && (!hasinfo || !hasroot); --i)
+		{
+			pdf_xref_entry *entry = pdf_get_xref_entry(ctx, doc, i);
+			if (entry->type == 0 || entry->type == 'f')
+				continue;
+
+			fz_try(ctx)
 			{
-				pdf_xref_entry *entry = pdf_get_xref_entry(ctx, doc, i);
-				if (entry->type == 0 || entry->type == 'f')
-					continue;
-
-				fz_try(ctx)
-				{
-					dict = pdf_load_object(ctx, doc, i);
-				}
-				fz_catch(ctx)
-				{
-					fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-					fz_warn(ctx, "ignoring broken object (%d 0 R)", i);
-					continue;
-				}
-
-				if (!hasroot)
-				{
-					obj = pdf_dict_get(ctx, dict, PDF_NAME(Type));
-					if (pdf_name_eq(ctx, obj, PDF_NAME(Catalog)))
-					{
-						nobj = pdf_new_indirect(ctx, doc, i, 0);
-						pdf_dict_put_drop(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root), nobj);
-						hasroot = 1;
-					}
-				}
-
-				if (!hasinfo)
-				{
-					if (pdf_dict_get(ctx, dict, PDF_NAME(Creator)) || pdf_dict_get(ctx, dict, PDF_NAME(Producer)))
-					{
-						nobj = pdf_new_indirect(ctx, doc, i, 0);
-						pdf_dict_put_drop(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info), nobj);
-						hasinfo = 1;
-					}
-				}
-
-				pdf_drop_obj(ctx, dict);
-				dict = NULL;
+				dict = pdf_load_object(ctx, doc, i);
+			}
+			fz_catch(ctx)
+			{
+				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+				fz_warn(ctx, "ignoring broken object (%d 0 R)", i);
+				continue;
 			}
 
-			/* ensure that strings are not used in their repaired, non-decrypted form */
-			if (doc->crypt)
-				pdf_clear_xref(ctx, doc);
+			if (!hasroot)
+			{
+				obj = pdf_dict_get(ctx, dict, PDF_NAME(Type));
+				if (obj == PDF_NAME(Catalog))
+				{
+					nobj = pdf_new_indirect(ctx, doc, i, 0);
+					pdf_dict_put_drop(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root), nobj);
+					hasroot = 1;
+				}
+			}
+
+			if (!hasinfo)
+			{
+				if (pdf_dict_get(ctx, dict, PDF_NAME(Creator)) || pdf_dict_get(ctx, dict, PDF_NAME(Producer)))
+				{
+					nobj = pdf_new_indirect(ctx, doc, i, 0);
+					pdf_dict_put_drop(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info), nobj);
+					hasinfo = 1;
+				}
+			}
+
+			pdf_drop_obj(ctx, dict);
+			dict = NULL;
 		}
+	}
+	fz_always(ctx)
+	{
+		/* ensure that strings are not used in their repaired, non-decrypted form */
+		if (doc->crypt)
+			pdf_clear_xref(ctx, doc);
 	}
 	fz_catch(ctx)
 	{
@@ -2241,6 +2258,7 @@ object_updated:
 				pdf_repair_xref(ctx, doc);
 				pdf_prime_xref_index(ctx, doc);
 				pdf_repair_obj_stms(ctx, doc);
+				pdf_repair_trailer(ctx, doc);
 			}
 			fz_catch(ctx)
 			{

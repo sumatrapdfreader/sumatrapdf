@@ -70,14 +70,21 @@ cbz_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 fz_document_writer *
 fz_new_cbz_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	fz_cbz_writer *wri = fz_new_derived_document_writer(ctx, fz_cbz_writer, cbz_begin_page, cbz_end_page, cbz_close_writer, cbz_drop_writer);
+	fz_cbz_writer *wri = NULL;
+
+	fz_var(wri);
+
 	fz_try(ctx)
 	{
+		fz_output *out_temp = out;
+		wri = fz_new_derived_document_writer(ctx, fz_cbz_writer, cbz_begin_page, cbz_end_page, cbz_close_writer, cbz_drop_writer);
 		fz_parse_draw_options(ctx, &wri->options, options);
-		wri->zip = fz_new_zip_writer_with_output(ctx, out);
+		out = NULL;
+		wri->zip = fz_new_zip_writer_with_output(ctx, out_temp);
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);
 	}

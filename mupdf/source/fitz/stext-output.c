@@ -673,11 +673,13 @@ text_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 fz_document_writer *
 fz_new_text_writer_with_output(fz_context *ctx, const char *format, fz_output *out, const char *options)
 {
-	fz_text_writer *wri;
+	fz_text_writer *wri = NULL;
 
-	wri = fz_new_derived_document_writer(ctx, fz_text_writer, text_begin_page, text_end_page, text_close_writer, text_drop_writer);
+	fz_var(wri);
+
 	fz_try(ctx)
 	{
+		wri = fz_new_derived_document_writer(ctx, fz_text_writer, text_begin_page, text_end_page, text_close_writer, text_drop_writer);
 		fz_parse_stext_options(ctx, &wri->opts, options);
 
 		wri->format = FZ_FORMAT_TEXT;
@@ -718,6 +720,7 @@ fz_new_text_writer_with_output(fz_context *ctx, const char *format, fz_output *o
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);
 	}
@@ -729,13 +732,5 @@ fz_document_writer *
 fz_new_text_writer(fz_context *ctx, const char *format, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path ? path : "out.txt", 0);
-	fz_document_writer *wri = NULL;
-	fz_try(ctx)
-		wri = fz_new_text_writer_with_output(ctx, format, out, options);
-	fz_catch(ctx)
-	{
-		fz_drop_output(ctx, out);
-		fz_rethrow(ctx);
-	}
-	return wri;
+	return fz_new_text_writer_with_output(ctx, format, out, options);
 }

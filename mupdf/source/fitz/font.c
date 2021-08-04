@@ -448,6 +448,7 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
 {
 	fz_font **fontp;
 	const unsigned char *data;
+	int ordering = FZ_ADOBE_JAPAN;
 	int index;
 	int subfont;
 	int size;
@@ -462,10 +463,10 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
 	{
 		switch (language)
 		{
-		case FZ_LANG_ja: index = UCDN_LAST_SCRIPT + 1; break;
-		case FZ_LANG_ko: index = UCDN_LAST_SCRIPT + 2; break;
-		case FZ_LANG_zh_Hans: index = UCDN_LAST_SCRIPT + 3; break;
-		case FZ_LANG_zh_Hant: index = UCDN_LAST_SCRIPT + 4; break;
+		case FZ_LANG_ja: index = UCDN_LAST_SCRIPT + 1; ordering = FZ_ADOBE_JAPAN; break;
+		case FZ_LANG_ko: index = UCDN_LAST_SCRIPT + 2; ordering = FZ_ADOBE_KOREA; break;
+		case FZ_LANG_zh_Hans: index = UCDN_LAST_SCRIPT + 3; ordering = FZ_ADOBE_GB; break;
+		case FZ_LANG_zh_Hant: index = UCDN_LAST_SCRIPT + 4; ordering = FZ_ADOBE_CNS; break;
 		}
 	}
 	if (script == UCDN_SCRIPT_ARABIC)
@@ -488,6 +489,12 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
 			if (data)
 				*fontp = fz_new_font_from_memory(ctx, NULL, data, size, subfont, 0);
 		}
+	}
+
+	if (*fontp && (script == UCDN_SCRIPT_HAN))
+	{
+		(*fontp)->flags.cjk = 1;
+		(*fontp)->flags.cjk_lang = ordering;
 	}
 
 	return *fontp;
@@ -819,6 +826,8 @@ fz_new_cjk_font(fz_context *ctx, int ordering)
 			font = fz_load_system_cjk_font(ctx, "SourceHanSerif", ordering, 1);
 		if (font)
 		{
+			font->flags.cjk = 1;
+			font->flags.cjk_lang = ordering;
 			ctx->font->cjk[ordering] = font;
 			return fz_keep_font(ctx, ctx->font->cjk[ordering]);
 		}

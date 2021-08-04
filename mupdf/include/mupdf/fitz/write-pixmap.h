@@ -171,7 +171,12 @@ typedef struct
 fz_pdfocr_options *fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, const char *args);
 
 /**
-	Create a new band writer, outputing pdfocr
+	Create a new band writer, outputing pdfocr.
+
+	Ownership of output stays with the caller, the band writer
+	borrows the reference. The caller must keep the output around
+	for the duration of the band writer, and then close/drop as
+	appropriate.
 */
 fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const fz_pdfocr_options *options);
 

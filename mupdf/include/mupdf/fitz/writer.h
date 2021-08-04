@@ -98,6 +98,11 @@ fz_new_document_writer_with_output(fz_context *ctx, fz_output *out, const char *
 
 /**
 	Document writers for various possible output formats.
+
+	All of the "_with_output" variants pass the ownership of out in
+	immediately upon calling. The writers are responsible for
+	dropping the fz_output when they are finished with it (even
+	if they throw an exception during creation).
 */
 fz_document_writer *fz_new_pdf_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pdf_writer_with_output(fz_context *ctx, fz_output *out, const char *options);

@@ -213,6 +213,10 @@ fz_zip_writer *fz_new_zip_writer(fz_context *ctx, const char *filename);
 
 /**
 	Create a new zip writer that writes to a given output stream.
+
+	Ownership of out passes in immediately upon calling this function.
+	The caller should never drop the fz_output, even if this function throws
+	an exception.
 */
 fz_zip_writer *fz_new_zip_writer_with_output(fz_context *ctx, fz_output *out);
 

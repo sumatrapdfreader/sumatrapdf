@@ -402,6 +402,8 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, const cha
 
 	fontdesc->font->flags.ft_substitute = 1;
 	fontdesc->font->flags.ft_stretch = 0;
+	fontdesc->font->flags.cjk = 1;
+	fontdesc->font->flags.cjk_lang = ros;
 }
 
 static void

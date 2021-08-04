@@ -13,11 +13,11 @@ Overview:
     Windows we use the 'py' command to find different installed Pythons.
 
     May require installation of python-venv or similar package.
+
+    On Unix one can get an interactive session inside the manylinux docker
+    container with:
+        docker exec -it pypackage bash
 '''
-
-
-# Interactive session inside docker instance:
-#        docker exec -it pypackage bash
 
 
 import argparse
@@ -365,7 +365,15 @@ def make_unix(
         contain shell constructs. If out is 'capture', we return the output text.
         '''
         command = command.replace('"', '\\"')
-        command = f'docker exec {container_name} bash -c "{command}"'
+        # Manylinux container doesn't seem to have a python3
+        # command/alias, which can break builds. Can't get alias to work. Have tried
+        # defining a bash function but this also seems to be ignored by the time
+        # we are in make:
+        #   command = f'docker exec {container_name} bash -c "function python3 {{ python3.9 \\$* ; }} ; {command}"'
+        #
+        # So instead we create a softlink.
+        #
+        command = f'docker exec {container_name} bash -c "ln -fs \\`which python3.9\\` /bin/python3 && {command}"'
         log(f'Running: {command}')
         return system(
                 command,
@@ -833,7 +841,7 @@ def main():
             sdist = make_sdist(package_directory, outdir)
 
     if args.pypi_test:
-        pypi_test = int(args.pypi_test)
+        pypi_test = int(args.pypi_test.test)
 
     for build in args.build:
         assert sdist, f'build requires sdist'
@@ -912,10 +920,11 @@ def main():
     if args.test:
         pypi = False
         package_name = None
+        python = args.test.p.python if args.test.p else None
         if args.test.pypi:
             pypi = True
             package_name = args.test.pypi.package_name
-        test(args.test.command, package_name, wheels, abis, pypi, pypi_test, py=args.test.p.python)
+        test(args.test.command, package_name, wheels, abis, pypi, pypi_test, python)
 
     if args.upload:
         assert sdist, f'Cannot upload because no sdist specified; use "sdist ...".'

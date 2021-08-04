@@ -22,7 +22,6 @@ typedef struct
 
 	fz_output *output;
 	extract_t *extract;
-	int we_own_output;
 	int spacing;
 	int rotation;
 	int images;
@@ -354,11 +353,8 @@ static void writer_close(fz_context *ctx, fz_document_writer *writer_)
 static void writer_drop(fz_context *ctx, fz_document_writer *writer_)
 {
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
-	if (writer->we_own_output)
-	{
 		fz_drop_output(ctx, writer->output);
 		writer->output = NULL;
-	}
 	assert(!writer->ctx);
 	writer->ctx = ctx;
 	extract_alloc_destroy(&writer->alloc);
@@ -387,9 +383,15 @@ static void *s_realloc_fn(void *state, void *prev, size_t size)
 	return fz_realloc_no_throw(writer->ctx, prev, size);
 }
 
-static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out, const char *options, int we_own_output, extract_format_t format)
+static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out, const char *options, extract_format_t format)
 {
-	fz_docx_writer *writer = fz_new_derived_document_writer(
+	fz_docx_writer *writer = NULL;
+
+	fz_var(writer);
+
+	fz_try(ctx)
+	{
+		writer = fz_new_derived_document_writer(
 			ctx,
 			fz_docx_writer,
 			writer_begin_page,
@@ -397,15 +399,12 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 			writer_close,
 			writer_drop
 			);
-	fz_try(ctx)
-	{
 		writer->ctx = ctx;
+		writer->output = out;
 		if (extract_alloc_create(s_realloc_fn, writer, &writer->alloc))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_alloc instance");
 		if (extract_begin(writer->alloc, format, &writer->extract))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract instance");
-		writer->output = out;
-		writer->we_own_output = we_own_output;
 		writer->spacing = get_bool_option(ctx, options, "spacing", 0);
 		writer->rotation = get_bool_option(ctx, options, "rotation", 1);
 		writer->images = get_bool_option(ctx, options, "images", 1);
@@ -414,7 +413,10 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 	}
 	fz_catch(ctx)
 	{
+		if (writer)
 		fz_drop_document_writer(ctx, &writer->super);
+		else
+			fz_drop_output(ctx, out);
 		fz_rethrow(ctx);
 	}
 	return &writer->super;
@@ -422,22 +424,22 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 
 fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	return fz_new_docx_writer_internal(ctx, out, options, 0 /*we_own_output*/, extract_format_ODT);
+	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
 }
 
 fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
-	return fz_new_docx_writer_internal(ctx, out, options, 1 /*we_own_output*/, extract_format_ODT);
+	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
 }
 
 fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	return fz_new_docx_writer_internal(ctx, out, options, 0 /*we_own_output*/, extract_format_DOCX);
+	return fz_new_docx_writer_internal(ctx, out, options, extract_format_DOCX);
 }
 
 fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *path, const char *options)
 {
 	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
-	return fz_new_docx_writer_internal(ctx, out, options, 1 /*we_own_output*/, extract_format_DOCX);
+	return fz_new_docx_writer_internal(ctx, out, options, extract_format_DOCX);
 }

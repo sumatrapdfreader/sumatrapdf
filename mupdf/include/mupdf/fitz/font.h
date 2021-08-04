@@ -93,6 +93,9 @@ typedef struct
 	unsigned int fake_italic : 1; /* synthesize italic */
 	unsigned int has_opentype : 1; /* has opentype shaping tables */
 	unsigned int invalid_bbox : 1;
+
+	unsigned int cjk : 1;
+	unsigned int cjk_lang : 2; /* CNS, GB, JAPAN, or KOREA */
 } fz_font_flags_t;
 
 /**

@@ -33,6 +33,15 @@
 /* #define FZ_ENABLE_EPUB 1 */
 
 /**
+	Choose which document writers to include.
+	By default all are enabled. To avoid building unwanted
+	ones, define FZ_ENABLE_..._OUTPUT to 0.
+*/
+/* #define FZ_ENABLE_OCR_OUTPUT 1 */
+/* #define FZ_ENABLE_DOCX_OUTPUT 1 */
+/* #define FZ_ENABLE_ODT_OUTPUT 1 */
+
+/**
 	Choose whether to enable ICC color profiles.
 */
 /* #define FZ_ENABLE_ICC 1 */
@@ -152,6 +161,18 @@
 #define FZ_ENABLE_EPUB 1
 #endif /* FZ_ENABLE_EPUB */
 
+#ifndef FZ_ENABLE_OCR_OUTPUT
+#define FZ_ENABLE_OCR_OUTPUT 1
+#endif /* FZ_ENABLE_OCR_OUTPUT */
+
+#ifndef FZ_ENABLE_ODT_OUTPUT
+#define FZ_ENABLE_ODT_OUTPUT 1
+#endif /* FZ_ENABLE_ODT_OUTPUT */
+
+#ifndef FZ_ENABLE_DOCX_OUTPUT
+#define FZ_ENABLE_DOCX_OUTPUT 1
+#endif /* FZ_ENABLE_DOCX_OUTPUT */
+
 #ifndef FZ_ENABLE_JPX
 #define FZ_ENABLE_JPX 1
 #endif /* FZ_ENABLE_JPX */
@@ -168,6 +189,12 @@
 #if FZ_ENABLE_HTML == 0 && FZ_ENABLE_EPUB == 0
 #undef TOFU_SIL
 #define TOFU_SIL
+#endif
+
+#if !defined(HAVE_LEPTONICA) || !defined(HAVE_TESSERACT)
+#ifndef OCR_DISABLED
+#define OCR_DISABLED
+#endif
 #endif
 
 #endif /* FZ_CONFIG_H */

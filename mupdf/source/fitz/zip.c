@@ -103,15 +103,21 @@ fz_drop_zip_writer(fz_context *ctx, fz_zip_writer *zip)
 fz_zip_writer *
 fz_new_zip_writer_with_output(fz_context *ctx, fz_output *out)
 {
-	fz_zip_writer *zip = fz_malloc_struct(ctx, fz_zip_writer);
+	fz_zip_writer *zip = NULL;
+
+	fz_var(zip);
+
 	fz_try(ctx)
 	{
+		zip = fz_malloc_struct(ctx, fz_zip_writer);
 		zip->output = out;
 		zip->central = fz_new_buffer(ctx, 0);
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_buffer(ctx, zip->central);
+		fz_drop_output(ctx, out);
+		if (zip)
+			fz_drop_buffer(ctx, zip->central);
 		fz_free(ctx, zip);
 		fz_rethrow(ctx);
 	}
