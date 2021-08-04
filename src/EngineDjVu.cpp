@@ -99,7 +99,7 @@ static IPageDestination* NewDjVuDestination(const char* link, const char* commen
     }
     auto res = new PageDestinationDjVu(link, comment);
     res->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    res->pageNo = ParseDjVuLink(link) - 1;
+    res->pageNo = ParseDjVuLink(link);
     return res;
 }
 
@@ -118,7 +118,9 @@ static TocItem* NewDjVuTocItem(TocItem* parent, const char* title, const char* l
     auto s = ToWstrTemp(title);
     auto res = new TocItem(parent, s, 0);
     res->dest = NewDjVuDestination(link, nullptr);
-    res->pageNo = res->dest->GetPageNo();
+    if (res->dest) {
+        res->pageNo = res->dest->GetPageNo();
+    }
     return res;
 }
 
@@ -1054,7 +1056,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
         return true;
     }
 
-    int pageNo = ParseDjVuLink(link) - 1;
+    int pageNo = ParseDjVuLink(link);
     if (pageNo >= 0) {
         if (pageNo >= pageCount) {
             logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
