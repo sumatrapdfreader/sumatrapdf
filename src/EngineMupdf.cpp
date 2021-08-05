@@ -29,8 +29,14 @@ extern "C" {
 
 #include "utils/Log.h"
 
-static float layoutDxPt = 420.f;
-static float layoutDyPt = 595.f;
+// A5
+static float layoutA5DxPt = 420.f;
+static float layoutA5DyPt = 595.f;
+
+// A4
+static float layoutA4DxPt = 595.f;
+static float layoutA4DyPt = 842.f;
+
 static float layoutFontEm = 11.f;
 
 // maximum size of a file that's entirely loaded into memory before parsed
@@ -1797,13 +1803,33 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         return false;
     }
 
+#if 0
+    /* a heuristic. a layout page size for .epub is A5 but that makes a font size too
+       large for non-epub files like .txt or .xml, so for those use larger A4 */
+    float ldx = layoutA4DxPt;
+    float ldy = layoutA4DyPt;
+    const char* ext = path::GetExtTemp(nameHint);
+    if (str::EqI(ext, ".epub")) {
+        ldx = layoutA5DxPt;
+        ldy = layoutA5DyPt;
+    }
+#endif
+
+    float ldx = layoutA5DxPt;
+    float ldy = layoutA5DyPt;
+    float lfontDy = layoutFontEm;
+    const char* ext = path::GetExtTemp(nameHint);
+    if (!str::EqI(ext, ".epub")) {
+        lfontDy = 8.f;
+    }
+
     _doc = nullptr;
     fz_try(ctx) {
         _doc = fz_open_document_with_stream(ctx, nameHint, stm);
         pdfdoc = pdf_specifics(ctx, _doc);
-        float dx = DpiScale(layoutDxPt, displayDPI);
-        float dy = DpiScale(layoutDyPt, displayDPI);
-        float fontDy = DpiScale(layoutFontEm, displayDPI);
+        float dx = DpiScale(ldx, displayDPI);
+        float dy = DpiScale(ldy, displayDPI);
+        float fontDy = DpiScale(lfontDy, displayDPI);
         fz_layout_document(ctx, _doc, dx, dy, fontDy);
     }
     fz_always(ctx) {
