@@ -151,7 +151,6 @@ class PreviewBase : public IThumbnailProvider,
         return E_NOTIMPL;
     }
 
-
     EngineBase* GetEngine() {
         if (!m_engine && m_pStream) {
             m_engine = LoadEngine(m_pStream);

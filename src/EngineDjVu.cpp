@@ -1056,29 +1056,21 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
         return true;
     }
 
-    int pageNo = ParseDjVuLink(link);
-    if (pageNo >= 0) {
-        if (pageNo >= pageCount) {
-            logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
-                 pageCount);
-            ReportIf(true);
-            return false;
-        }
-        ctrl->GoToPage(pageNo, true);
-        return true;
-    }
-
-    // there are links like: "#Here"
-    if (str::StartsWith(link, "#")) {
-        // TODO: don't know how to handle those
-        // Probably need to use ResolveNamedDest()
-        return true;
-    }
-
     if (CouldBeURL(link)) {
         linkHandler->LaunchURL(link);
         return true;
     }
+
+    int pageNo = ParseDjVuLink(link);
+    if ((pageNo < 1) || (pageNo > pageCount)) {
+        logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
+             pageCount);
+        ReportIf(true);
+        return false;
+    }
+
+    ctrl->GoToPage(pageNo, true);
+    return true;
 
 #if 0
     if (!res->kind) {
