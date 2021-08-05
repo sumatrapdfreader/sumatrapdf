@@ -266,10 +266,10 @@ var (
 			"customization options for Comic Book and images UI").setExpert(),
 		mkStruct("ChmUI", chmUI,
 			"customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
-		mkArray("SelectionHandlers", selectionHandler, "list of handlers for selected text, shown in context menu when text selection is active"),
+		mkArray("SelectionHandlers", selectionHandler, "list of handlers for selected text, shown in context menu when text selection is active. See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)"),
 		mkArray("ExternalViewers", externalViewer,
-			"list of additional external viewers for various file types "+
-				"(can have multiple entries for the same format)").setExpert(),
+			"list of additional external viewers for various file types. "+
+				"See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)").setExpert(),
 		mkField("ShowMenubar", Bool, true,
 			"if false, the menu bar will be hidden for all newly opened windows "+
 				"(use F9 to show it until the window closes or Alt to show it just briefly), only applies if UseTabs is false").setExpert().setVersion("2.5"),

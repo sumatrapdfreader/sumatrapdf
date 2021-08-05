@@ -89,7 +89,8 @@ struct ChmUI {
 };
 
 // list of handlers for selected text, shown in context menu when text
-// selection is active
+// selection is active. See [docs for more
+// information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
 struct SelectionHandler {
     // url to invoke for the selection. ${selection} will be replaced with
     // current selection and ${userlang} with language code for current UI
@@ -101,8 +102,9 @@ struct SelectionHandler {
     int cmdID;
 };
 
-// list of additional external viewers for various file types (can have
-// multiple entries for the same format)
+// list of additional external viewers for various file types. See [docs
+// for more
+// information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
 struct ExternalViewer {
     // command line with which to call the external viewer, may contain %p
     // for page number and "%1" for the file name (add quotation marks
@@ -298,10 +300,12 @@ struct GlobalPrefs {
     // FixedPageUI settings apply instead
     ChmUI chmUI;
     // list of handlers for selected text, shown in context menu when text
-    // selection is active
+    // selection is active. See [docs for more
+    // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
     Vec<SelectionHandler*>* selectionHandlers;
-    // list of additional external viewers for various file types (can have
-    // multiple entries for the same format)
+    // list of additional external viewers for various file types. See
+    // [docs for more
+    // information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
     Vec<ExternalViewer*>* externalViewers;
     // if false, the menu bar will be hidden for all newly opened windows
     // (use F9 to show it until the window closes or Alt to show it just
