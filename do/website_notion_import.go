@@ -394,14 +394,16 @@ func websiteImportNotion() {
 		notionToHTML(client, page, pages, d.IdToPage)
 	}
 
-	// run formatting in background to get to preview sooner
-	go func() {
-		// to install prettier: npm i -g prettier
-		// TODO: automatically install if not installed
-		cmd := exec.Command("prettier", "--html-whitespace-sensitivity", "strict", "--write", `*.html`)
-		cmd.Dir = "docs" // only imported pages from notion
-		u.RunCmdLoggedMust(cmd)
-	}()
+	if false {
+		// run formatting in background to get to preview sooner
+		go func() {
+			// to install prettier: npm i -g prettier
+			// TODO: automatically install if not installed
+			cmd := exec.Command("prettier", "--html-whitespace-sensitivity", "strict", "--write", `*.html`)
+			cmd.Dir = "docs" // only imported pages from notion
+			u.RunCmdLoggedMust(cmd)
+		}()
+	}
 
 	if true {
 		websiteRunLocally(".")
