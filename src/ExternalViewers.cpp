@@ -356,8 +356,9 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     }
 
     auto& viewers = gGlobalPrefs->externalViewers;
+    ExternalViewer* ev = nullptr;
     for (size_t i = 0; i < viewers->size() && i <= idx; i++) {
-        ExternalViewer* ev = viewers->at(i);
+        ev = viewers->at(i);
         // see AppendExternalViewersToMenu in Menu.cpp
         if (!ev->commandLine || !PathMatchFilter(tab->filePath, ev->filter)) {
             idx++;
@@ -367,15 +368,15 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
         return false;
     }
 
-    ExternalViewer* ev = viewers->at(idx);
     CmdLineArgsIter args(ToWstrTemp(ev->commandLine));
-    int nArgs = args.nArgs - 2;
-    if (nArgs == 0 || !file::Exists(args.at(2 + 0))) {
+    if (args.nArgs == 0) {
         return false;
     }
-
     const WCHAR* exePath = args.at(0);
-    const WCHAR* cmdLine = args.nArgs > 1 ? args.at(2 + 1) : nullptr;
+    if (!file::Exists(exePath)) {
+        return false;
+    }
+    const WCHAR* cmdLine = args.nArgs > 1 ? args.at(1) : nullptr;
     AutoFreeWstr params = FormatParams(cmdLine, tab);
     return LaunchFile(exePath, params);
 }

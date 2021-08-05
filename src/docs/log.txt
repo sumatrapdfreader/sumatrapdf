@@ -3,6 +3,7 @@ A daily log of changes and commentary. An experiment of sorts.
 2021-08-05 Thu
 
 - fix handling a link to last DjVu page (fixes #2101)
+- fix launching external viewers (fixes #2102)
 
 2021-08-04 Wed
 
