@@ -395,3 +395,8 @@ a.for-nav-icon:hover {
   font-family: monospace;
   font-size: 1.2em;
 }
+
+/* better spacing between links to pages on index page */
+.page {
+  margin-bottom: 2px;
+}
