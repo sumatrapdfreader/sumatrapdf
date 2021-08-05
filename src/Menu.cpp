@@ -1168,13 +1168,12 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
 // shows duplicate separator if no external viewers
 static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     AppendRecentFilesToMenu(menu);
-    TabInfo* tab = ctx->tab;
-    AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
+    TabInfo* tab = ctx->tab;
     for (int cmd = CmdOpenWithFirst + 1; cmd < CmdOpenWithLast; cmd++) {
         if (!CanViewWithKnownExternalViewer(tab, cmd)) {
             win::menu::Remove(menu, cmd);
@@ -1316,6 +1315,11 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         } else {
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
             AppendMenuW(menu, flags, md.idOrSubmenu, title);
+        }
+
+        if (cmdId == CmdOpenWithHtmlHelp) {
+            TabInfo* tab = ctx->tab;
+            AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
         }
     }
     RemoveBadMenuSeparators(menu);

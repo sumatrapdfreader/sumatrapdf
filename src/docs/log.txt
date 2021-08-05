@@ -4,6 +4,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - fix handling a link to last DjVu page (fixes #2101)
 - fix launching external viewers (fixes #2102)
+- place external viewers menu in the right place
 
 2021-08-04 Wed
 
