@@ -12,6 +12,9 @@ struct SelectionOnPage {
     int pageNo; // page this selection is on
     RectF rect; // position of selection rectangle on page (in page coordinates)
 
+    SelectionOnPage(const SelectionOnPage&) = default;
+    SelectionOnPage& operator=(const SelectionOnPage&) = default;
+
     // position of selection rectangle in the view port
     Rect GetRect(DisplayModel* dm) const;
 

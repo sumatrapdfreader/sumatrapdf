@@ -3816,50 +3816,63 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
+static void AddUniquePageNo(Vec<int>& v, int pageNo) {
+    for (auto n : v) {
+        if (n == pageNo) {
+            return;
+        }
+    }
+    v.Append(pageNo);
+}
+
+Vec<Annotation*> MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
+    Vec<Annotation*> annots;
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
-        return nullptr;
+        return annots;
     }
     auto engine = dm->GetEngine();
     bool supportsAnnots = EngineSupportsAnnotations(engine);
     WindowInfo* win = tab->win;
     bool ok = supportsAnnots && win->showSelection && tab->selectionOnPage;
     if (!ok) {
-        return nullptr;
+        return annots;
     }
 
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
-    int pageNo = -1;
-    Vec<RectF> rects;
-    ok = true;
+    Vec<int> pageNos;
     for (auto& sel : *s) {
-        int tmpPageNo = sel.pageNo;
-        if (pageNo != -1 && tmpPageNo != pageNo) {
-            ok = false;
+        int pageNo = sel.pageNo;
+        if (!dm->ValidPageNo(pageNo)) {
+            continue;
         }
-        pageNo = tmpPageNo;
-        rects.Append(sel.rect);
+        AddUniquePageNo(pageNos, pageNo);
     }
-    if (pageNo == -1) {
-        return nullptr;
+    if (pageNos.empty()) {
+        return annots;
     }
-    if (!ok) {
-        // we don't support selections crossing pages
-        // TODO: show an error message
-        return nullptr;
+
+    for (auto pageNo : pageNos) {
+        Vec<RectF> rects;
+        for (auto& sel : *s) {
+            if (pageNo != sel.pageNo) {
+                continue;
+            }
+            rects.Append(sel.rect);
+        }
+        Annotation* annot = EngineMupdfCreateAnnotation(engine, annotType, pageNo, PointF{});
+        SetQuadPointsAsRect(annot, rects);
+        annots.Append(annot);
     }
-    Annotation* annot = EngineMupdfCreateAnnotation(engine, annotType, pageNo, PointF{});
-    SetQuadPointsAsRect(annot, rects);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     CopySelectionToClipboard(win);
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
     ToolbarUpdateStateForWindow(win, true);
-    return annot;
+    return annots;
 }
 
 static void ShowCursorPositionInDoc(WindowInfo* win) {
@@ -4024,19 +4037,23 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             ShowCursorPositionInDoc(win);
             break;
         case 'a': {
-            auto annot = MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight);
-            if (annot) {
-                PdfColor col = GetAnnotationHighlightColor();
-                SetColor(annot, col);
+            auto annots = MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight);
+            if (!annots.empty()) {
+                for (auto annot : annots) {
+                    PdfColor col = GetAnnotationHighlightColor();
+                    SetColor(annot, col);
+                }
                 WindowInfoRerender(win);
                 if (isShift) {
-                    StartEditAnnotations(win->currentTab, annot);
+                    StartEditAnnotations(win->currentTab, annots);
                 } else {
                     auto w = win->currentTab->editAnnotsWindow;
                     if (w) {
-                        AddAnnotationToEditWindow(w, annot);
+                        for (auto annot : annots) {
+                            AddAnnotationToEditWindow(w, annot);
+                        }
                     } else {
-                        delete annot;
+                        DeleteVecMembers(annots);
                     }
                 }
             }

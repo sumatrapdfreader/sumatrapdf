@@ -44,7 +44,7 @@
 #include "EditAnnotations.h"
 
 // SumatraPDF.cpp
-extern Annotation* MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
+extern Vec<Annotation*> MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
 
 struct BuildMenuCtx {
     TabInfo* tab{nullptr};
@@ -1697,7 +1697,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     AnnotationType annotType = (AnnotationType)(cmd - CmdCreateAnnotText);
-    Annotation* createdAnnot{nullptr};
+    Vec<Annotation*> createdAnnots;
     switch (cmd) {
         case CmdCopySelection:
         case CmdTranslateSelectionWithGoogle:
@@ -1756,31 +1756,32 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
-            createdAnnot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
-            if (createdAnnot) {
+            auto annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+            if (annot) {
                 WindowInfoRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
+                createdAnnots   .Append(annot);
             }
         } break;
         case CmdCreateAnnotHighlight:
-            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
+            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
             break;
         case CmdCreateAnnotSquiggly:
-            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::Squiggly);
+            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::Squiggly);
             break;
         case CmdCreateAnnotStrikeOut:
-            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::StrikeOut);
+            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::StrikeOut);
             break;
         case CmdCreateAnnotUnderline:
-            createdAnnot = MakeAnnotationFromSelection(tab, AnnotationType::Underline);
+            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::Underline);
             break;
         case CmdCreateAnnotInk:
         case CmdCreateAnnotPolyLine:
             // TODO: implement me
             break;
     }
-    if (createdAnnot) {
-        StartEditAnnotations(tab, createdAnnot);
+    if (!createdAnnots.empty()) {
+        StartEditAnnotations(tab, createdAnnots);
     }
     // TODO: should delete it?
     // delete buildCtx.annotationUnderCursor;

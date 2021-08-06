@@ -1240,12 +1240,20 @@ void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) 
     SelectAnnotationInListBox(ew, annot);
 }
 
-// takes ownership of selectedAnnot
 void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
+    Vec<Annotation*> annots;
+    annots.Append(annot);
+    StartEditAnnotations(tab, annots);
+}
+
+// takes ownership of annots
+void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
     CrashIf(!tab->AsFixed()->GetEngine());
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (ew) {
-        AddAnnotationToEditWindow(ew, annot);
+        for (auto annot : annots) {
+            AddAnnotationToEditWindow(ew, annot);
+        }
         return;
     }
     ew = new EditAnnotationsWindow();
@@ -1288,14 +1296,16 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     }
     LayoutAndSizeToContent(ew->mainLayout, 520, minDy, mainWindow->hwnd);
     HwndPositionToTheRightOf(mainWindow->hwnd, tab->win->hwndFrame);
-    ew->skipGoToPage = (annot != nullptr);
-    SelectAnnotationInListBox(ew, annot);
+    ew->skipGoToPage = !annots.empty();
+    if (!annots.empty()) {
+        SelectAnnotationInListBox(ew, annots[0]);
+    }
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     mainWindow->SetIsVisible(true);
 
-    delete annot;
+    DeleteVecMembers(annots);
 }
 
 PdfColor GetAnnotationHighlightColor() {
