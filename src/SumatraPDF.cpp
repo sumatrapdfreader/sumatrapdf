@@ -2373,7 +2373,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
 
 // returns false if no filter has been appended
 static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
-    // TODO: add a way to get Engine from Controller and use engine->kind
+    // TODO: use ctrl->GetDefaultFileExt()
     Kind type = nullptr;
     if (ctrl->AsFixed()) {
         type = ctrl->AsFixed()->engineType;
@@ -2398,14 +2398,16 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
                 break;
         }
     }
-    if (type == kindEngineXps) {
+
+    auto ext = ctrl->GetDefaultFileExt();
+    if (str::EqI(ext, L".xps")) {
         fileFilter.Append(_TR("XPS documents"));
     } else if (type == kindEngineDjVu) {
         fileFilter.Append(_TR("DjVu documents"));
     } else if (type == kindEngineComicBooks) {
         fileFilter.Append(_TR("Comic books"));
     } else if (type == kindEngineImage) {
-        fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->GetDefaultFileExt() + 1);
+        fileFilter.AppendFmt(_TR("Image files (*%s)"), ctrl->GetDefaultFileExt());
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {

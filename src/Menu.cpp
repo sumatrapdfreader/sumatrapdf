@@ -1760,7 +1760,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             if (annot) {
                 WindowInfoRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
-                createdAnnots   .Append(annot);
+                createdAnnots.Append(annot);
             }
         } break;
         case CmdCreateAnnotHighlight:

@@ -100,7 +100,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         ".xps;.oxps",
         "xpsrchvw.exe",
         nullptr,
-        kindEngineXps,
+        kindEngineMupdf,
         nullptr
     },
     {

@@ -5,9 +5,7 @@ struct fz_outline;
 struct fz_link;
 
 extern Kind kindEngineMupdf;
-extern Kind kindEngineMupdf;
 extern Kind kindEngineMulti;
-extern Kind kindEngineXps;
 extern Kind kindEngineDjVu;
 extern Kind kindEngineImage;
 extern Kind kindEngineImageDir;
