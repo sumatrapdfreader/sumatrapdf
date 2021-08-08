@@ -182,6 +182,7 @@ func main() {
 		flgSmoke                   bool
 		flgFileUpload              string
 		flgFilesList               bool
+		flgTransDownload2          bool
 	)
 
 	{
@@ -198,6 +199,7 @@ func main() {
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
+		flag.BoolVar(&flgTransDownload2, "trans-dl2", false, "extract strings to translate from code and download translations")
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
 		flag.BoolVar(&flgUploadTranslations, "trans-upload", false, "upload translations to apptranslators.org if changed")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
@@ -236,6 +238,11 @@ func main() {
 
 	if flgFilesList {
 		filesList()
+		return
+	}
+
+	if flgTransDownload2 {
+		downloadTranslations2()
 		return
 	}
 

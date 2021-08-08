@@ -34,3 +34,4 @@ cppcheck.out.txt
 clangtidy.out.txt
 website/dl2
 node_modules
+strings/translations2.txt
