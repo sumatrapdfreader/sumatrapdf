@@ -677,23 +677,27 @@ static fz_font* pdf_load_windows_font(fz_context* ctx, const char* fontname, int
                                       int needs_exact_metrics) {
     fz_font* font;
     const char* clean_name = pdf_clean_font_name(fontname);
+    int is_base_14 = clean_name != fontname;
+
+    /* metrics for Times-Roman don't match those of Windows' Times-Roman */
+    /* https://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
+    /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2108 */
+    if (is_base_14 && !strncmp(clean_name, "Times-", 6)) {
+        return NULL;
+    }
 
     if (needs_exact_metrics) {
-        /* TODO: the metrics for Times-Roman and Courier don't match
-           those of Windows' Times New Roman and Courier New; for
-           some reason, Poppler doesn't seem to have this problem */
         int len;
         if (fz_lookup_base14_font(ctx, fontname, &len))
             return NULL;
 
-        /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
         if (clean_name != fontname && !strncmp(clean_name, "Times-", 6))
             return NULL;
     }
 
     font = pdf_load_windows_font_by_name(ctx, fontname);
     /* use the font's own metrics for base 14 fonts */
-    if (clean_name != fontname)
+    if (is_base_14)
         font->flags.ft_substitute = 0;
     return font;
 }

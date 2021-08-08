@@ -1,5 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-08 Sun
+
+- don't use Windows' font for non-embedded Times-Roman (fixes #2108)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2108
+
+
 2021-08-05 Thu
 
 - fix handling a link to last DjVu page (fixes #2101)
