@@ -2407,7 +2407,7 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
     } else if (type == kindEngineComicBooks) {
         fileFilter.Append(_TR("Comic books"));
     } else if (type == kindEngineImage) {
-        fileFilter.AppendFmt(_TR("Image files (*%s)"), ctrl->GetDefaultFileExt());
+        fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->GetDefaultFileExt()+1);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
