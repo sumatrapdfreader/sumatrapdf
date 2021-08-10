@@ -229,7 +229,7 @@ def convert( argv):
     if format_:
         out = mupdf.DocumentWriter( output, format_, options)
     else:
-        out = mupdf.DocumentWriter( output, options)
+        out = mupdf.DocumentWriter( output, options, mupdf.DocumentWriter.OutputType_PDF)
 
     i = 0
     while 1:

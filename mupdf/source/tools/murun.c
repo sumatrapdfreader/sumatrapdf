@@ -4159,6 +4159,61 @@ static void ffi_PDFDocument_addRawStream(js_State *J)
 	ffi_PDFDocument_addStream_imp(J, 1);
 }
 
+static void ffi_PDFDocument_addEmbeddedFile(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
+	const char *filename = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *mimetype = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
+	fz_buffer *contents = ffi_tobuffer(J, 3);
+	pdf_obj *ind = NULL;
+	fz_try(ctx)
+		ind = pdf_add_embedded_file(ctx, pdf, filename, mimetype, contents);
+	fz_always(ctx)
+		fz_drop_buffer(ctx, contents);
+	fz_catch(ctx)
+		rethrow(J);
+	ffi_pushobj(J, ind);
+}
+
+static void ffi_PDFDocument_loadEmbeddedFile(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
+	pdf_obj *obj = ffi_toobj(J, pdf, 1);
+	const char *mimetype = NULL;
+	const char *filename = NULL;
+	fz_buffer *contents = NULL;
+
+	fz_try(ctx) {
+		if (pdf_is_embedded_file(ctx, obj)) {
+			filename = pdf_embedded_file_name(ctx, obj);
+			mimetype = pdf_embedded_file_type(ctx, obj);
+			contents = pdf_load_embedded_file(ctx, obj);
+		}
+	}
+	fz_catch (ctx)
+		rethrow(J);
+
+	if (!contents) {
+		js_pushnull(J);
+		return;
+	}
+
+	if (js_try(J)) {
+		fz_drop_buffer(ctx, contents);
+		js_throw(J);
+	}
+	js_newobject(J);
+	js_pushstring(J, filename);
+	js_setproperty(J, -2, "filename");
+	js_pushstring(J, mimetype);
+	js_setproperty(J, -2, "mimetype");
+	ffi_pushbuffer(J, contents);
+	js_setproperty(J, -2, "contents");
+	js_endtry(J);
+}
+
 static void ffi_PDFDocument_addImage(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -7113,6 +7168,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFDocument.addFont", ffi_PDFDocument_addFont, 1);
 		jsB_propfun(J, "PDFDocument.addImage", ffi_PDFDocument_addImage, 1);
 		jsB_propfun(J, "PDFDocument.loadImage", ffi_PDFDocument_loadImage, 1);
+		jsB_propfun(J, "PDFDocument.addEmbeddedFile", ffi_PDFDocument_addEmbeddedFile, 3);
+		jsB_propfun(J, "PDFDocument.loadEmbeddedFile", ffi_PDFDocument_loadEmbeddedFile, 1);
 		jsB_propfun(J, "PDFDocument.addPage", ffi_PDFDocument_addPage, 4);
 		jsB_propfun(J, "PDFDocument.insertPage", ffi_PDFDocument_insertPage, 2);
 		jsB_propfun(J, "PDFDocument.deletePage", ffi_PDFDocument_deletePage, 1);

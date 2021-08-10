@@ -865,6 +865,7 @@ void load_page(void)
 						char *s = pdf_signature_format_distinguished_name(ctx, dn);
 						fz_strlcpy(buf, s, sizeof buf);
 						fz_free(ctx, s);
+						pdf_signature_drop_distinguished_name(ctx, dn);
 					}
 					else
 					{
@@ -1531,6 +1532,11 @@ parse_location(const char *anchor, fz_location *loc)
 	while (*s >= '0' && *s <= '9')
 		s++;
 	loc->chapter = fz_atoi(anchor)-1;
+	if (*s == 0)
+	{
+		*loc = fz_location_from_page_number(ctx, doc, loc->chapter);
+		return 1;
+	}
 	if (*s != ':')
 		return 0;
 	p = ++s;
@@ -1704,37 +1710,25 @@ static void load_document(void)
 				trace_action("  throw new RegressionError('History validation:', tmp, 'expected:', %d);\n", valid);
 			}
 		}
-		if (anchor)
-		{
-			if (parse_location(anchor, &location))
-			{
-				jump_to_location(location);
-			}
-			else
-			{
-				int anchor_page = pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL);
-				if (anchor_page < 0)
-					fz_warn(ctx, "cannot find page: %s", anchor);
-				else
-					jump_to_page(anchor_page);
-			}
-		}
 	}
-	else
+
+	if (anchor)
 	{
-		if (anchor)
+		if (parse_location(anchor, &location))
+			jump_to_location(location);
+		else
 		{
-			if (parse_location(anchor, &location))
-				jump_to_location(location);
+			location.chapter = 0;
+			if (pdf)
+				location.page = pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL);
 			else
-			{
-				int anchor_page = fz_atoi(anchor);
-				pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL);
-				if (anchor_page == 0)
-					fz_warn(ctx, "cannot find page: %s", anchor);
-				else
-					jump_to_page(anchor_page - 1);
-			}
+				location.page = -1;
+			if (location.page < 0)
+				location = fz_resolve_link(ctx, doc, anchor, NULL, NULL);
+			if (location.page < 0)
+				fz_warn(ctx, "cannot find location: %s", anchor);
+			else
+				jump_to_location(location);
 		}
 	}
 	anchor = NULL;

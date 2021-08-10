@@ -708,6 +708,10 @@ except Exception as e:
     clang = None
 
 
+# Code should show extra information if g_show_details(name) returns true.
+#
+g_show_details = lambda name: False
+
 class ClangInfo:
     '''
     Sets things up so we can import and use clang.
@@ -1421,39 +1425,82 @@ classextras = ClassExtras(
                     ],
                 ),
 
+        # This is a little complicated. Many of the functions that we would
+        # like to wrap to form constructors, have the same set of args. C++
+        # does not support named constructors so we differentiate between
+        # constructors with identical args using enums.
+        #
+        # Also, fz_document_writer is not reference counted so the wrapping
+        # class is not copyable or assignable, so our normal approach of making
+        # static class functions that return a newly constructed instance by
+        # value, does not work.
+        #
+        # So instead we define enums that are passed to our constructors,
+        # allowing the constructor to decide which fz_ function to use to
+        # create the new fz_document_writer.
+        #
+        # There should be no commented-out constructors in the generated code
+        # marked as 'Disabled because same args as ...'.
+        #
         fz_document_writer = ClassExtra(
                 class_top = '''
-                    enum Type
+                    /* Used for constructor that wraps fz_ functions taking (const char *path, const char *options). */
+                    enum PathType
                     {
-                        Type_CBZ,
-                        Type_PAM_PIXMAP,
-                        Type_PBM_PIXMAP,
-                        Type_PCL,
-                        Type_PCLM,
-                        Type_PGM_PIXMAP,
-                        Type_PKM_PIXMAP,
-                        Type_PNG_PIXMAP,
-                        Type_PNM_PIXMAP,
-                        Type_PPM_PIXMAP,
-                        Type_PS,
-                        Type_PWG,
-                        Type_SVG,
+                        PathType_CBZ,
+                        PathType_DOCX,
+                        PathType_ODT,
+                        PathType_PAM_PIXMAP,
+                        PathType_PBM_PIXMAP,
+                        PathType_PCL,
+                        PathType_PCLM,
+                        PathType_PDF,
+                        PathType_PDFOCR,
+                        PathType_PGM_PIXMAP,
+                        PathType_PKM_PIXMAP,
+                        PathType_PNG_PIXMAP,
+                        PathType_PNM_PIXMAP,
+                        PathType_PPM_PIXMAP,
+                        PathType_PS,
+                        PathType_PWG,
+                        PathType_SVG,
                     };
+
+                    /* Used for constructor that wraps fz_ functions taking (Output& out, const char *options). */
                     enum OutputType
                     {
                         OutputType_CBZ,
+                        OutputType_DOCX,
+                        OutputType_ODT,
                         OutputType_PCL,
                         OutputType_PCLM,
+                        OutputType_PDF,
+                        OutputType_PDFOCR,
                         OutputType_PS,
                         OutputType_PWG,
                     };
+
+                    /* Used for constructor that wraps fz_ functions taking (const char *format, const char *path, const char *options). */
+                    enum FormatPathType
+                    {
+                        FormatPathType_DOCUMENT,
+                        FormatPathType_TEXT,
+                    };
                 ''',
+                # These excludes should match the functions called by the
+                # extra constructors defined below. This ensures that we don't
+                # generate commented-out constructors with a comment saying
+                # 'Disabled because same args as ...'.
                 constructor_excludes = [
                     'fz_new_cbz_writer',
+                    'fz_new_docx_writer',
+                    'fz_new_odt_writer',
                     'fz_new_pam_pixmap_writer',
                     'fz_new_pbm_pixmap_writer',
                     'fz_new_pcl_writer',
                     'fz_new_pclm_writer',
+                    'fz_new_pdfocr_writer',
+                    'fz_new_pdf_writer',
                     'fz_new_pgm_pixmap_writer',
                     'fz_new_pkm_pixmap_writer',
                     'fz_new_png_pixmap_writer',
@@ -1464,10 +1511,20 @@ classextras = ClassExtras(
                     'fz_new_svg_writer',
 
                     'fz_new_cbz_writer_with_output',
+                    'fz_new_docx_writer_with_output',
+                    'fz_new_odt_writer_with_output',
                     'fz_new_pcl_writer_with_output',
                     'fz_new_pclm_writer_with_output',
+                    'fz_new_pdf_writer_with_output',
+                    'fz_new_pdfocr_writer_with_output',
                     'fz_new_ps_writer_with_output',
                     'fz_new_pwg_writer_with_output',
+
+                    'fz_new_document_writer',
+                    'fz_new_text_writer',
+
+                    'fz_new_document_writer_with_output',
+                    'fz_new_text_writer_with_output',
                     ],
 
                 copyable=False,
@@ -1499,42 +1556,148 @@ classextras = ClassExtras(
                         ],
                 constructors_extra = [
                     ExtraConstructor(
-                        '(const char *path, const char *options, Type type)',
+                        '(const char *path, const char *options, PathType path_type)',
                         f'''
                         {{
                             if (0) {{}}
-                            else if (type == Type_CBZ)          m_internal = {rename.function_call( 'fz_new_cbz_writer')}(path, options);
-                            else if (type == Type_PAM_PIXMAP)   m_internal = {rename.function_call( 'fz_new_pam_pixmap_writer')}(path, options);
-                            else if (type == Type_PBM_PIXMAP)   m_internal = {rename.function_call( 'fz_new_pbm_pixmap_writer')}(path, options);
-                            else if (type == Type_PCL)          m_internal = {rename.function_call( 'fz_new_pcl_writer')}(path, options);
-                            else if (type == Type_PCLM)         m_internal = {rename.function_call( 'fz_new_pclm_writer')}(path, options);
-                            else if (type == Type_PGM_PIXMAP)   m_internal = {rename.function_call( 'fz_new_pgm_pixmap_writer')}(path, options);
-                            else if (type == Type_PKM_PIXMAP)   m_internal = {rename.function_call( 'fz_new_pkm_pixmap_writer')}(path, options);
-                            else if (type == Type_PNG_PIXMAP)   m_internal = {rename.function_call( 'fz_new_png_pixmap_writer')}(path, options);
-                            else if (type == Type_PNM_PIXMAP)   m_internal = {rename.function_call( 'fz_new_pnm_pixmap_writer')}(path, options);
-                            else if (type == Type_PPM_PIXMAP)   m_internal = {rename.function_call( 'fz_new_ppm_pixmap_writer')}(path, options);
-                            else if (type == Type_PS)           m_internal = {rename.function_call( 'fz_new_ps_writer')}(path, options);
-                            else if (type == Type_PWG)          m_internal = {rename.function_call( 'fz_new_pwg_writer')}(path, options);
-                            else if (type == Type_SVG)          m_internal = {rename.function_call( 'fz_new_svg_writer')}(path, options);
+                            else if (path_type == PathType_CBZ)         m_internal = {rename.function_call( 'fz_new_cbz_writer')}(path, options);
+                            else if (path_type == PathType_DOCX)        m_internal = {rename.function_call( 'fz_new_docx_writer')}(path, options);
+                            else if (path_type == PathType_ODT)         m_internal = {rename.function_call( 'fz_new_odt_writer')}(path, options);
+                            else if (path_type == PathType_PAM_PIXMAP)  m_internal = {rename.function_call( 'fz_new_pam_pixmap_writer')}(path, options);
+                            else if (path_type == PathType_PBM_PIXMAP)  m_internal = {rename.function_call( 'fz_new_pbm_pixmap_writer')}(path, options);
+                            else if (path_type == PathType_PCL)         m_internal = {rename.function_call( 'fz_new_pcl_writer')}(path, options);
+                            else if (path_type == PathType_PCLM)        m_internal = {rename.function_call( 'fz_new_pclm_writer')}(path, options);
+                            else if (path_type == PathType_PDF)         m_internal = {rename.function_call( 'fz_new_pdf_writer')}(path, options);
+                            else if (path_type == PathType_PDFOCR)      m_internal = {rename.function_call( 'fz_new_pdfocr_writer')}(path, options);
+                            else if (path_type == PathType_PGM_PIXMAP)  m_internal = {rename.function_call( 'fz_new_pgm_pixmap_writer')}(path, options);
+                            else if (path_type == PathType_PKM_PIXMAP)  m_internal = {rename.function_call( 'fz_new_pkm_pixmap_writer')}(path, options);
+                            else if (path_type == PathType_PNG_PIXMAP)  m_internal = {rename.function_call( 'fz_new_png_pixmap_writer')}(path, options);
+                            else if (path_type == PathType_PNM_PIXMAP)  m_internal = {rename.function_call( 'fz_new_pnm_pixmap_writer')}(path, options);
+                            else if (path_type == PathType_PPM_PIXMAP)  m_internal = {rename.function_call( 'fz_new_ppm_pixmap_writer')}(path, options);
+                            else if (path_type == PathType_PS)          m_internal = {rename.function_call( 'fz_new_ps_writer')}(path, options);
+                            else if (path_type == PathType_PWG)         m_internal = {rename.function_call( 'fz_new_pwg_writer')}(path, options);
+                            else if (path_type == PathType_SVG)         m_internal = {rename.function_call( 'fz_new_svg_writer')}(path, options);
                             else throw ErrorAbort( "Unrecognised Type value");
                         }}
                         ''',
-                        comment = '/* Calls one of: fz_new_cbz_writer, fz_new_pam_pixmap_writer, fz_new_pbm_pixmap_writer, fz_new_pcl_writer, fz_new_pclm_writer, fz_new_pgm_pixmap_writer, fz_new_pkm_pixmap_writer, fz_new_png_pixmap_writer, fz_new_pnm_pixmap_writer, fz_new_ppm_pixmap_writer, fz_new_ps_writer, fz_new_pwg_writer, fz_new_svg_writer, */',
+                        comment = textwrap.dedent('''
+                        /* Constructor using one of:
+                            fz_new_cbz_writer()
+                            fz_new_docx_writer()
+                            fz_new_odt_writer()
+                            fz_new_pam_pixmap_writer()
+                            fz_new_pbm_pixmap_writer()
+                            fz_new_pcl_writer()
+                            fz_new_pclm_writer()
+                            fz_new_pdf_writer()
+                            fz_new_pdfocr_writer()
+                            fz_new_pgm_pixmap_writer()
+                            fz_new_pkm_pixmap_writer()
+                            fz_new_png_pixmap_writer()
+                            fz_new_pnm_pixmap_writer()
+                            fz_new_ppm_pixmap_writer()
+                            fz_new_ps_writer()
+                            fz_new_pwg_writer()
+                            fz_new_svg_writer()
+                        */'''),
                         ),
                     ExtraConstructor(
-                        '(const Output& out, const char *options, OutputType output_type)',
+                        '(Output& out, const char *options, OutputType output_type)',
+                        f'''
+                        {{
+                            /* All fz_new_*_writer_with_output() functions take
+                            ownership of the fz_output, even if they throw an
+                            exception. So we need to set out.m_internal to null
+                            here so its destructor does nothing. */
+                            fz_output* out2 = out.m_internal;
+                            out.m_internal = NULL;
+                            if (0) {{}}
+                            else if (output_type == OutputType_CBZ)     m_internal = {rename.function_call( 'fz_new_cbz_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_DOCX)    m_internal = {rename.function_call( 'fz_new_docx_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_ODT)     m_internal = {rename.function_call( 'fz_new_odt_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_PCL)     m_internal = {rename.function_call( 'fz_new_pcl_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_PCLM)    m_internal = {rename.function_call( 'fz_new_pclm_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_PDF)     m_internal = {rename.function_call( 'fz_new_pdf_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_PDFOCR)  m_internal = {rename.function_call( 'fz_new_pdfocr_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_PS)      m_internal = {rename.function_call( 'fz_new_ps_writer_with_output')}(out2, options);
+                            else if (output_type == OutputType_PWG)     m_internal = {rename.function_call( 'fz_new_pwg_writer_with_output')}(out2, options);
+                            else
+                            {{
+                                /* Ensure that out2 is dropped before we return. */
+                                {rename.function_call( 'fz_drop_output')}(out2);
+                                throw ErrorAbort( "Unrecognised OutputType value");
+                            }}
+                        }}
+                        ''',
+                        comment = textwrap.dedent('''
+                        /* Constructor using one of:
+                            fz_new_cbz_writer_with_output()
+                            fz_new_docx_writer_with_output()
+                            fz_new_odt_writer_with_output()
+                            fz_new_pcl_writer_with_output()
+                            fz_new_pclm_writer_with_output()
+                            fz_new_pdf_writer_with_output()
+                            fz_new_pdfocr_writer_with_output()
+                            fz_new_ps_writer_with_output()
+                            fz_new_pwg_writer_with_output()
+
+                        This constructor takes ownership of <out> -
+                        out.m_internal is set to NULL after this constructor
+                        returns so <out> must not be used again.
+                        */
+                        '''),
+                        ),
+                    ExtraConstructor(
+                        '(const char *format, const char *path, const char *options, FormatPathType format_path_type)',
                         f'''
                         {{
                             if (0) {{}}
-                            else if (output_type == OutputType_CBZ)     m_internal = {rename.function_call( 'fz_new_cbz_writer_with_output')}(out.m_internal, options);
-                            else if (output_type == OutputType_PCL)     m_internal = {rename.function_call( 'fz_new_pcl_writer_with_output')}(out.m_internal, options);
-                            else if (output_type == OutputType_PCLM)    m_internal = {rename.function_call( 'fz_new_pclm_writer_with_output')}(out.m_internal, options);
-                            else if (output_type == OutputType_PS)      m_internal = {rename.function_call( 'fz_new_ps_writer_with_output')}(out.m_internal, options);
-                            else if (output_type == OutputType_PWG)     m_internal = {rename.function_call( 'fz_new_pwg_writer_with_output')}(out.m_internal, options);
+                            else if (format_path_type == FormatPathType_DOCUMENT)   m_internal = {rename.function_call( 'fz_new_document_writer')}(format, path, options);
+                            else if (format_path_type == FormatPathType_TEXT)       m_internal = {rename.function_call( 'fz_new_text_writer')}(format, path, options);
                             else throw ErrorAbort( "Unrecognised OutputType value");
                         }}
                         ''',
-                        comment = '/* Calls one of: fz_new_cbz_writer_with_output, fz_new_pcl_writer_with_output, fz_new_pclm_writer_with_output, fz_new_ps_writer_with_output, fz_new_pwg_writer_with_output. */',
+                        comment = textwrap.dedent('''
+                        /* Constructor using one of:
+                            fz_new_document_writer()
+                            fz_new_text_writer()
+                        */'''),
+                        ),
+                    ExtraConstructor(
+                        '(Output& out, const char *format, const char *options)',
+                        f'''
+                        {{
+                            /* Need to transfer ownership of <out>. */
+                            fz_output* out2 = out.m_internal;
+                            out.m_internal = NULL;
+                            m_internal = {rename.function_call( 'fz_new_document_writer_with_output')}(out2, format, options);
+                        }}
+                        ''',
+                        comment = textwrap.dedent('''
+                        /* Constructor using fz_new_document_writer_with_output().
+
+                        This constructor takes ownership of <out> -
+                        out.m_internal is set to NULL after this constructor
+                        returns so <out> must not be used again.
+                        */'''),
+                        ),
+                    ExtraConstructor(
+                        '(const char *format, Output& out, const char *options)',
+                        f'''
+                        {{
+                            /* Need to transfer ownership of <out>. */
+                            fz_output* out2 = out.m_internal;
+                            out.m_internal = NULL;
+                            m_internal = {rename.function_call( 'fz_new_text_writer_with_output')}(format, out2, options);
+                        }}
+                        ''',
+                        comment = textwrap.dedent('''
+                        /* Constructor using fz_new_text_writer_with_output().
+
+                        This constructor takes ownership of <out> -
+                        out.m_internal is set to NULL after this constructor
+                        returns so <out> must not be used again.
+                        */'''),
                         ),
                     ],
 
@@ -3428,8 +3591,9 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
 
         if exclude_reasons:
             find_wrappable_function_with_arg0_type_excluded_cache[ fnname] = exclude_reasons
-            if fnname == 'fz_load_outline':   # lgtm [py/unreachable-statement]
-                log( 'excluding {fnname=} because:')
+            #if fnname == 'fz_load_outline':   # lgtm [py/unreachable-statement]
+            if g_show_details(fnname):
+                log( 'Excluding {fnname=} from possible class methods because:')
                 for i in exclude_reasons:
                     log( '    {i}')
         else:
@@ -3463,6 +3627,10 @@ def find_wrappable_function_with_arg0_type( tu, structname):
     find_wrappable_function_with_arg0_type_cache_populate( tu)
 
     ret = find_wrappable_function_with_arg0_type_cache.get( structname, [])
+    if g_show_details(structname):
+        log('{structname=}: {len(ret)=}:')
+        for i in ret:
+            log('    {i}')
     return ret
 
 
@@ -4845,7 +5013,6 @@ def class_wrapper(
         out_cpp,
         out_h_end,
         out_swig_python,
-        show_details,
         ):
     '''
     Creates source for a class called <classname> that wraps <struct>, with
@@ -4870,8 +5037,6 @@ def class_wrapper(
         out_h_end:
             Stream for text that should be put at the end of the generated
             header text.
-        show_details:
-            .
 
     Returns (is_container, has_to_string). is_container is true if generated
     class has custom begin() and end() methods; has_to_string is true if we
@@ -4983,6 +5148,8 @@ def class_wrapper(
     # extras.methods_extra etc.
     #
     for fnname in find_wrappable_function_with_arg0_type( tu, structname):
+        if g_show_details(fnname):
+            log('{structname=}: looking at potential method wrapping {fnname=}')
         if fnname in extras.method_wrappers:
             #log( 'auto-detected fn already in {structname} method_wrappers: {fnname}')
             # Omit this function, because there is an extra method with the
@@ -5043,7 +5210,7 @@ def class_wrapper(
                 out_cpp,
                 struct=struct,
                 out_swig_python=out_swig_python,
-                debug=show_details(fnname),
+                debug=g_show_details(fnname),
                 )
 
     # Custom methods.
@@ -5227,7 +5394,7 @@ def tabify( filename, text):
     return ret[:-1]
 
 
-def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_python, doit=True, show_details=None):
+def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_python, doit=True):
     '''
     Generates all .h and .cpp files.
 
@@ -5239,10 +5406,6 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
         Directory in which all generated files are placed.
     doit:
         For debugging only. If false, we don't actually write to any files.
-    show_details:
-        Callable taking one string arg naming a wrapped struct or function;
-        should return true if we should show extra information about the
-        specified identifier.
 
     Returns (tu, hs, cpps, fn_usage_filename, container_classnames, to_string_structnames, fn_usage, output_param_fns, c_functions).
         tu:
@@ -5552,7 +5715,7 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
     #windows_def += 'LIBRARY mupdfcpp\n'    # This breaks things.
     windows_def += 'EXPORTS\n'
     for name, cursor in find_global_data_starting_with( tu, ('fz_', 'pdf_')):
-        if show_details(name):
+        if g_show_details(name):
             log('global: {name=}')
         c_globals.append(name)
         windows_def += f'    {name} DATA\n'
@@ -5659,7 +5822,6 @@ def cpp_source( dir_mupdf, namespace, base, header_git, out_swig_c, out_swig_pyt
                     out_cpps.classes,
                     out_h_classes_end,
                     out_swig_python,
-                    show_details,
                     )
         if is_container:
             container_classnames.append( classname)
@@ -6575,6 +6737,8 @@ def find_python( cpu, version=None):
 
 def main():
 
+    global g_show_details
+
     # Set default build directory. Can br overridden by '-d'.
     #
     build_dirs = BuildDirs()
@@ -6615,7 +6779,7 @@ def main():
                 header_git = False
                 swig_c = None
                 swig_python = None
-                show_details = lambda name: False
+                g_show_details = lambda name: False
                 jlib.log('{build_dirs.dir_so=}')
 
                 while 1:
@@ -6624,7 +6788,7 @@ def main():
                         force_rebuild = True
                     elif actions == '-d':
                         d = args.next()
-                        show_details = lambda name: d in name
+                        g_show_details = lambda name: d in name
                     elif actions.startswith( '-'):
                         raise Exception( f'Unrecognised --build flag: {actions}')
                     else:
@@ -6720,7 +6884,6 @@ def main():
                                     header_git,
                                     swig_c,
                                     swig_python,
-                                    show_details=show_details,
                                     )
 
                             to_pickle( container_classnames,    f'{build_dirs.dir_mupdf}/platform/c++/container_classnames.pickle')

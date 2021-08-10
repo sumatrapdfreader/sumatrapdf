@@ -491,6 +491,13 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
 		}
 	}
 
+	switch (script)
+	{
+	case UCDN_SCRIPT_HANGUL: script = UCDN_SCRIPT_HAN; ordering = FZ_ADOBE_KOREA; break;
+	case UCDN_SCRIPT_HIRAGANA: script = UCDN_SCRIPT_HAN; ordering = FZ_ADOBE_JAPAN; break;
+	case UCDN_SCRIPT_KATAKANA: script = UCDN_SCRIPT_HAN; ordering = FZ_ADOBE_JAPAN; break;
+	case UCDN_SCRIPT_BOPOMOFO: script = UCDN_SCRIPT_HAN; ordering = FZ_ADOBE_CNS; break;
+	}
 	if (*fontp && (script == UCDN_SCRIPT_HAN))
 	{
 		(*fontp)->flags.cjk = 1;

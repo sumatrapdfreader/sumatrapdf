@@ -475,6 +475,37 @@ fz_runelen(int c)
 }
 
 int
+fz_runeidx(const char *s, const char *p)
+{
+	int rune;
+	int i = 0;
+	while (s < p) {
+		if (*(unsigned char *)s < Runeself)
+			++s;
+		else
+			s += fz_chartorune(&rune, s);
+		++i;
+	}
+	return i;
+}
+
+const char *
+fz_runeptr(const char *s, int i)
+{
+	int rune;
+	while (i-- > 0) {
+		rune = *(unsigned char*)s;
+		if (rune < Runeself) {
+			if (rune == 0)
+				return NULL;
+			++s;
+		} else
+			s += fz_chartorune(&rune, s);
+	}
+	return s;
+}
+
+int
 fz_utflen(const char *s)
 {
 	int c, n, rune;

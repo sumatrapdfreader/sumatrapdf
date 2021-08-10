@@ -34,12 +34,12 @@ void fz_drop_layout(fz_context *ctx, fz_layout_block *block)
 		fz_drop_pool(ctx, block->pool);
 }
 
-void fz_add_layout_line(fz_context *ctx, fz_layout_block *block, float x, float y, float h, const char *p)
+void fz_add_layout_line(fz_context *ctx, fz_layout_block *block, float x, float y, float font_size, const char *p)
 {
 	fz_layout_line *line = fz_pool_alloc(ctx, block->pool, sizeof (fz_layout_line));
 	line->x = x;
 	line->y = y;
-	line->h = h;
+	line->font_size = font_size;
 	line->p = p;
 	line->text = NULL;
 	line->next = NULL;
@@ -48,11 +48,11 @@ void fz_add_layout_line(fz_context *ctx, fz_layout_block *block, float x, float 
 	block->text_tailp = &line->text;
 }
 
-void fz_add_layout_char(fz_context *ctx, fz_layout_block *block, float x, float w, const char *p)
+void fz_add_layout_char(fz_context *ctx, fz_layout_block *block, float x, float advance, const char *p)
 {
 	fz_layout_char *ch = fz_pool_alloc(ctx, block->pool, sizeof (fz_layout_char));
 	ch->x = x;
-	ch->w = w;
+	ch->advance = advance;
 	ch->p = p;
 	ch->next = NULL;
 	*block->text_tailp = ch;

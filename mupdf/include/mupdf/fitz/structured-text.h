@@ -15,14 +15,14 @@
 */
 typedef struct fz_layout_char
 {
-	float x, w;
+	float x, advance;
 	const char *p; /* location in source text of character */
 	struct fz_layout_char *next;
 } fz_layout_char;
 
 typedef struct fz_layout_line
 {
-	float x, y, h;
+	float x, y, font_size;
 	const char *p; /* location in source text of start of line */
 	fz_layout_char *text;
 	struct fz_layout_line *next;

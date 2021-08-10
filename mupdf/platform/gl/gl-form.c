@@ -40,12 +40,41 @@ int do_sign(void)
 {
 	pdf_pkcs7_signer *signer = NULL;
 	int ok = 1;
+	int labels = sign_flags & PDF_SIGNATURE_SHOW_LABELS;
+	int graphic_name = sign_flags & PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+	int text_name = sign_flags & PDF_SIGNATURE_SHOW_TEXT_NAME;
+	int dn = sign_flags & PDF_SIGNATURE_SHOW_DN;
+	int date = sign_flags & PDF_SIGNATURE_SHOW_DATE;
+	int logo = sign_flags & PDF_SIGNATURE_SHOW_LOGO;
 
 	fz_var(signer);
 
 	fz_try(ctx)
 	{
-		trace_action("widget.sign(new PDFPKCS7Signer(%q, %q));\n", cert_filename, cert_password.text);
+		trace_action("widget.sign(new PDFPKCS7Signer(%q, %q), {", cert_filename, cert_password.text);
+
+		trace_action("'showLabels':%s,", labels ? "true" : "false");
+		trace_action("'showDN':%s,", dn ? "true" : "false");
+		trace_action("'showDate':%s,", date ? "true" : "false");
+		trace_action("'showTextName':%s,", text_name ? "true" : "false");
+		trace_action("'showGraphicName':%s,", graphic_name ? "true" : "false");
+		trace_action("'showLogo':%s}, ", logo ? "true" : "false");
+
+		if (strlen(sign_image_filename) > 0)
+			trace_action("new Image(null, %q), ", sign_image_filename);
+		else
+			trace_action("null, ");
+
+		if (strlen(sign_reason_input.text) > 0)
+			trace_action("%q, ", sign_reason_input.text);
+		else
+			trace_action("null, ");
+
+		if (strlen(sign_location_input.text) > 0)
+			trace_action("%q);\n", sign_location_input.text);
+		else
+			trace_action("null);\n");
+
 		signer = pkcs7_openssl_read_pfx(ctx, cert_filename, cert_password.text);
 		pdf_sign_signature(ctx, sig_widget, signer, sign_flags, sign_image, sign_reason_input.text, sign_location_input.text);
 		ui_show_warning_dialog("Signed document successfully.");

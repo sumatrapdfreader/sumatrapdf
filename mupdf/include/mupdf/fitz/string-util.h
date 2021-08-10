@@ -150,6 +150,30 @@ int fz_runetochar(char *str, int rune);
 int fz_runelen(int rune);
 
 /**
+	Compute the index of a rune in a string.
+
+	str: Pointer to beginning of a string.
+
+	p: Pointer to a char in str.
+
+	Returns the index of the rune pointed to by p in str.
+*/
+int fz_runeidx(const char *str, const char *p);
+
+/**
+	Obtain a pointer to the char representing the rune
+	at a given index.
+
+	str: Pointer to beginning of a string.
+
+	idx: Index of a rune to return a char pointer to.
+
+	Returns a pointer to the char where the desired rune starts,
+	or NULL if the string ends before the index is reached.
+*/
+const char *fz_runeptr(const char *str, int idx);
+
+/**
 	Count how many runes the UTF-8 encoded string
 	consists of.
 
