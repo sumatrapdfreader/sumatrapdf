@@ -11,36 +11,11 @@ import (
 	"github.com/kjk/u"
 )
 
-const translationServer = "http://www.apptranslator.org"
-
-func translationsPath() string {
-	return filepath.Join("strings", "translations.txt")
-}
-
-func translationsSha1HexMust(d []byte) string {
-	lines := toTrimmedLines(d)
-	sha1 := lines[1]
-	panicIf(len(sha1) != 40, "lastTranslationsSha1HexMust: '%s' doesn't look like sha1", sha1)
-	return sha1
-}
-
-func lastTranslationsSha1HexMust() string {
-	d, err := ioutil.ReadFile(translationsPath())
-	must(err)
-	return translationsSha1HexMust(d)
-}
-
-func saveTranslationsMust(d []byte) {
-	err := ioutil.WriteFile(translationsPath(), d, 0644)
-	must(err)
-}
+const translationServer = "https://www.apptranslator.org"
 
 func verifyTranslationsMust() {
-	sha1 := lastTranslationsSha1HexMust()
-	url := fmt.Sprintf("%s/dltrans?app=SumatraPDF&sha1=%s", translationServer, sha1)
-	d := httpDlMust(url)
-	lines := toTrimmedLines(d)
-	panicIf(lines[1] != "No change", "translations changed, run ./doit.bat -trans-dl\n")
+	// TODO: reimplement using /api/dltransfor
+	panic("NYI")
 }
 
 func validSha1(s string) bool {
@@ -85,7 +60,7 @@ func downloadTranslations() []byte {
 	// SERVER = "172.21.12.12"  // mac book
 	// SERVER = "10.37.129.2"    // mac pro
 	// PORT = 5000
-	uri := fmt.Sprintf("http://www.apptranslator.org/dltrans?app=%s&sha1=%s", app, sha1)
+	uri := fmt.Sprintf("https://www.apptranslator.org/dltrans?app=%s&sha1=%s", app, sha1)
 	d := httpDlMust(uri)
 	return d
 }
