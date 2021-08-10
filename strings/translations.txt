@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-95e6a248e1b15f04c6c19f77fc38f27e2d986bed
+79a2bb84be1ccf14fc0aadff09db6550575473bd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2959,7 +2959,7 @@ kr:원래 페이지 크기 사용(&U)
 ku:بەکارهێنانی قەبارەی ڕاستەقینەی پەڕەکان&
 kw:&Usya braster folen wreydhek
 lt:Na&udoti originalius puslapių dydžius
-lv:&Lietot sākotnējos lappušu izmērus\n
+lv:&Lietot sākotnējos lappušu izmērus
 mk:&Користи оригинални димензии на страници
 my:&Gunakan saiz halaman asal
 ne:&मौलिक पृष्ठ साईज प्रयोग गर्नुहोस्
@@ -3962,7 +3962,7 @@ vn:Tất cả các định dạng được hỗ trợ
 am:Ծանոթագրություններ
 ar:توضيحات
 az:Qeydlər
-bn:ব্যখা\r\n
+bn:ব্যখা
 br:Anotações
 ca-xv:Anotacions
 ca:Anotacions
@@ -4687,7 +4687,7 @@ uk:Закладка ярлика на сторінку %s з %s
 uz:Xatcho'p yorlig'i betga %s %s dan
 vn:Lối tắt chỉ dấu sách đến trang %s của %s
 :Bookmarks
-af:Boekmerke\n
+af:Boekmerke
 am:Էջանիշեր
 ar:قائمة العناوين
 az:Əlfəcinlər
@@ -5646,7 +5646,7 @@ kr:한 페이지씩 계속
 ku:بەردەوام
 kw:Heb aswa
 lt:Nenutrūkstama
-lv:Nepārtraukts\n
+lv:Nepārtraukts
 mk:Непрекинат поглед
 ml:തുടര്‍ച്ച
 mm:ဆက်တိုက်
@@ -5681,7 +5681,7 @@ am:Շարունակել գրքի տեսքով
 ar:عرض مستمر للكتاب
 az:Ardıcıl kitab formatı
 bg:Непрекъснат изглед като книга
-bn:\n\n\n\nক্রমাগত বই দৃশ্য\n
+bn:ক্রমাগত বই দৃশ্য
 br:Ver como livro contínuo
 bs:Slijedni knjiški pogled
 by:Выгляд як бесперапынная кніга
@@ -8575,7 +8575,7 @@ hi:इस प्रोग्राम को विंडोज १० पर �
 hr:Neuspješno registriranje kao zadani program na Windows 10
 hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
 id:Gagal mengatur sebagai aplikasi Windows 10
-it:Impossibile registrare come programma predefinito in Windows 10\r\n
+it:Impossibile registrare come programma predefinito in Windows 10
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
 ka:ვერ მოხერხდა Windows 10-ის საწყის პროგრამად დარეგისტრირება
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
@@ -9805,7 +9805,7 @@ kr:너비(가로) 맞춤(&H)\tCtrl+2
 ku:گونجاندنی &فراوانی\tCtrl+2
 kw:&Desedha Les\tCtrl+2
 lt:Visas puslapio pl&otis\tCtrl+2
-lv:Ietilpināt &platumu\tCtrl+2\n
+lv:Ietilpināt &platumu\tCtrl+2
 mk:Прилагоди на &ширина\tCtrl+2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl+2
 mm:အလျားနှင့်အမြင့် အပြည့်
