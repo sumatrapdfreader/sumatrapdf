@@ -92,9 +92,10 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
     treeCtrl->GetItemRect(ev->treeItem, false, rcLine);
     treeCtrl->GetItemRect(ev->treeItem, true, rcLabel);
 
-    if (rcLine.right + 2 < rcLabel.right) {
-        str::WStr currInfoTip = tm->Text(ti);
-        infotip.Append(currInfoTip.Get());
+    // TODO: this causes a duplicate. Not sure what changed
+    if (false && rcLine.right + 2 < rcLabel.right) {
+        WCHAR* currInfoTip = tm->Text(ti);
+        infotip.Append(currInfoTip);
         infotip.Append(L"\r\n");
     }
 
