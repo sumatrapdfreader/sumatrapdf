@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kjk/u"
 )
@@ -40,6 +42,7 @@ func uploadStringsToServer(strs string, secret string) {
 	defer rsp.Body.Close()
 	u.PanicIf(rsp.StatusCode != http.StatusOK)
 	d, err := ioutil.ReadAll(rsp.Body)
+	must(err)
 	fmt.Printf("Response:\n%s\n", string(d))
 	fmt.Printf("Upload finished\n")
 }
@@ -67,4 +70,69 @@ func uploadStringsIfChanged() {
 	uploadStringsToServer(s, uploadsecret)
 	u.WriteFileMust(path, []byte(s))
 	logf("Don't forget to checkin strings/last_uploaded.txt\n")
+}
+
+var (
+	apptranslatoServer = "https://www.apptranslator.org"
+)
+
+func printSusTranslations(d []byte) {
+	a := strings.Split(string(d), "\n")
+	currString := ""
+	isSus := func(s string) bool {
+		/*
+			if strings.Contains(s, `\n\n`) {
+				return true
+			}
+		*/
+		if strings.HasPrefix(s, `\n`) {
+			return true
+		}
+		if strings.HasSuffix(s, `\n`) {
+			return true
+		}
+		if strings.HasPrefix(s, `\r`) {
+			return true
+		}
+		if strings.HasSuffix(s, `\r`) {
+			return true
+		}
+		return false
+	}
+
+	for _, s := range a {
+		if strings.HasPrefix(s, ":") {
+			currString = s[1:]
+			continue
+		}
+		if isSus(s) {
+			fmt.Printf("Suspicious translation:\n%s\n%s\n\n", currString, s)
+		}
+	}
+}
+
+func downloadTranslations2() {
+	timeStart := time.Now()
+	defer func() {
+		fmt.Printf("downloadTranslations2() finished in %s\n", time.Since(timeStart))
+	}()
+	strs := extractStringsFromCFilesNoPaths()
+	sort.Strings(strs)
+	fmt.Printf("uploading %d strings for translation\n", len(strs))
+	secret := getTransSecret()
+	uri := apptranslatoServer + "/api/dltransfor?app=SumatraPDF&secret=" + secret
+	s := strings.Join(strs, "\n")
+	body := strings.NewReader(s)
+	req, err := http.NewRequest(http.MethodPost, uri, body)
+	must(err)
+	client := http.DefaultClient
+	rsp, err := client.Do(req)
+	must(err)
+	panicIf(rsp.StatusCode != http.StatusOK)
+	d, err := io.ReadAll(rsp.Body)
+	must(err)
+	path := filepath.Join("strings", "translations.txt")
+	u.WriteFileMust(path, d)
+	fmt.Printf("Wrote response of size %d to %s\n", len(d), path)
+	printSusTranslations(d)
 }
