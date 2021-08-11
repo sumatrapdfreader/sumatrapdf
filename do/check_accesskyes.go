@@ -239,7 +239,7 @@ func checkAccessKeys() {
 		printGroups(file, group)
 		allGroups = updateGroups(allGroups, group)
 	}
-	d := u.ReadFileMust(lastDownloadFilePath())
+	d := u.ReadFileMust(translationsTxtPath)
 	translations := parseTranslations(string(d))
 	detectAccesskeyClashes(allGroups, translations)
 }
