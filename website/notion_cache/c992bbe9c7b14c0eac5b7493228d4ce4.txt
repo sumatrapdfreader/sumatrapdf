@@ -1,4 +1,4 @@
-8711 noahttpcache
+8813 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -10,7 +10,7 @@ Body:+110
     }
   ]
 }
-Response:+8512
+Response:+8614
 {
   "recordMapWithRoles": {
     "block": {
@@ -46,8 +46,9 @@ Response:+8512
             "c9f94f17-1bf6-4b6b-bcbe-129dc605c752",
             "0ed03cf1-ab37-4a8d-9426-fafe140fbaab",
             "3f9e4296-6aaa-4c61-bcdf-71d1a8a67973",
+            "ef92b16a-dc59-4545-b22a-a32c7294bc8d",
+            "edf3bd53-f852-4241-84ea-81f265832a03",
             "2338e342-936e-4643-a456-9ba770f1d837",
-            "395f4ecf-5425-427a-a85b-691127dea056",
             "2f2efbf6-e06d-4454-aace-cae4be5fdca3",
             "4ea1249a-04ad-4071-9103-6a1d0a2072be",
             "0e047118-667a-4078-a50a-a5bd4356ad7b",
@@ -68,7 +69,7 @@ Response:+8512
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1628205420000,
+          "last_edited_time": 1628725560000,
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
@@ -76,7 +77,7 @@ Response:+8512
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 22
+          "version": 27
         }
       },
       "edebffa1-9600-441e-adf5-b2ed3a094091": {
@@ -192,8 +193,9 @@ Response:+8512
           "c9f94f17-1bf6-4b6b-bcbe-129dc605c752",
           "0ed03cf1-ab37-4a8d-9426-fafe140fbaab",
           "3f9e4296-6aaa-4c61-bcdf-71d1a8a67973",
+          "ef92b16a-dc59-4545-b22a-a32c7294bc8d",
+          "edf3bd53-f852-4241-84ea-81f265832a03",
           "2338e342-936e-4643-a456-9ba770f1d837",
-          "395f4ecf-5425-427a-a85b-691127dea056",
           "2f2efbf6-e06d-4454-aace-cae4be5fdca3",
           "4ea1249a-04ad-4071-9103-6a1d0a2072be",
           "0e047118-667a-4078-a50a-a5bd4356ad7b",
@@ -214,7 +216,7 @@ Response:+8512
         "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1628205420000,
+        "last_edited_time": 1628725560000,
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
@@ -222,12 +224,12 @@ Response:+8512
         },
         "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "type": "page",
-        "version": 22
+        "version": 27
       }
     }
   ]
 }
-19595 noahttpcache
+20250 noahttpcache
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -240,7 +242,7 @@ Body:+152
   },
   "verticalColumns": false
 }
-Response:+19355
+Response:+20010
 {
   "cursor": {
     "stack": []
@@ -331,7 +333,7 @@ Response:+19355
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492320504252,
+          "last_edited_time": 1628725560000,
           "parent_id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
           "parent_table": "block",
           "properties": {
@@ -342,12 +344,12 @@ Response:+19355
               ["kkowalczyk@gmail.com", [["a", "mailto:kkowalczyk@gmail.com"]]],
               [" ("],
               ["Krzysztof Kowalczyk", [["a", "http://blog.kowalczyk.info/"]]],
-              [", Sumatra's main developer)."]
+              [", SumatraPDF's main developer)."]
             ]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
-          "version": 0
+          "version": 4
         }
       },
       "378aa057-1f2c-4fbd-a24f-a66fa7273acb": {
@@ -368,38 +370,6 @@ Response:+19355
           "version": 11
         }
       },
-      "395f4ecf-5425-427a-a85b-691127dea056": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492320504252,
-          "id": "395f4ecf-5425-427a-a85b-691127dea056",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1626045360000,
-          "parent_id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "If you're using the latest release version, please try the latest "
-              ],
-              [
-                "pre-release build",
-                [["a", "https://www.sumatrapdfreader.org/prerelease"]]
-              ],
-              [". It's possible that bug has already been fixed."]
-            ]
-          },
-          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
-          "type": "text",
-          "version": 59
-        }
-      },
       "3f9e4296-6aaa-4c61-bcdf-71d1a8a67973": {
         "role": "comment_only",
         "value": {
@@ -412,24 +382,15 @@ Response:+19355
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492320504252,
+          "last_edited_time": 1628725500000,
           "parent_id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
           "parent_table": "block",
           "properties": {
-            "title": [
-              [
-                "Did you find a bug in Sumatra? Please create a bug report in our "
-              ],
-              [
-                "issue tracker",
-                [["a", "https://github.com/sumatrapdfreader/sumatrapdf/issues"]]
-              ],
-              ["."]
-            ]
+            "title": [["Did you encounter a bug in SumatraPDF?"]]
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
-          "version": 0
+          "version": 19
         }
       },
       "4ea1249a-04ad-4071-9103-6a1d0a2072be": {
@@ -570,8 +531,9 @@ Response:+19355
             "c9f94f17-1bf6-4b6b-bcbe-129dc605c752",
             "0ed03cf1-ab37-4a8d-9426-fafe140fbaab",
             "3f9e4296-6aaa-4c61-bcdf-71d1a8a67973",
+            "ef92b16a-dc59-4545-b22a-a32c7294bc8d",
+            "edf3bd53-f852-4241-84ea-81f265832a03",
             "2338e342-936e-4643-a456-9ba770f1d837",
-            "395f4ecf-5425-427a-a85b-691127dea056",
             "2f2efbf6-e06d-4454-aace-cae4be5fdca3",
             "4ea1249a-04ad-4071-9103-6a1d0a2072be",
             "0e047118-667a-4078-a50a-a5bd4356ad7b",
@@ -592,7 +554,7 @@ Response:+19355
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1628205420000,
+          "last_edited_time": 1628725560000,
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
@@ -600,7 +562,7 @@ Response:+19355
           },
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 22
+          "version": 27
         }
       },
       "c9f94f17-1bf6-4b6b-bcbe-129dc605c752": {
@@ -666,6 +628,62 @@ Response:+19355
           "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "column",
           "version": 34
+        }
+      },
+      "edf3bd53-f852-4241-84ea-81f265832a03": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1628725500000,
+          "id": "edf3bd53-f852-4241-84ea-81f265832a03",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1628725500000,
+          "parent_id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
+          "parent_table": "block",
+          "properties": {
+            "title": [
+              ["If yes, please create a bug report in our "],
+              [
+                "issue tracker",
+                [["a", "https://github.com/sumatrapdfreader/sumatrapdf/issues"]]
+              ],
+              ["."]
+            ]
+          },
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
+          "type": "text",
+          "version": 19
+        }
+      },
+      "ef92b16a-dc59-4545-b22a-a32c7294bc8d": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1628725500000,
+          "id": "ef92b16a-dc59-4545-b22a-a32c7294bc8d",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1628725560000,
+          "parent_id": "c992bbe9-c7b1-4c0e-ac5b-7493228d4ce4",
+          "parent_table": "block",
+          "properties": {
+            "title": [
+              ["First, see if it still happens in latest "],
+              [
+                "pre-release version",
+                [["a", "https://www.sumatrapdfreader.org/prerelease"]]
+              ],
+              [". It's possible that a bug has already been fixed there."]
+            ]
+          },
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
+          "type": "text",
+          "version": 135
         }
       },
       "fed36a56-24d4-43fe-9f7b-e0e410ecd715": {
