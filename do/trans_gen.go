@@ -10,20 +10,13 @@ import (
 	"github.com/kjk/u"
 )
 
-// number of missing translations for a language to be considered
-// incomplete (will be excluded from Translations_txt.cpp)
-const incompleteMissingThreshold = 100
-
 // Lang describes a single language
 type Lang struct {
-	desc          []string
-	code          string // "af"
-	name          string // "Afrikaans"
-	msLangID      string
-	isRtl         bool
-	translations  []string // TODO: maybe remove
-	cEscapedLines []string
-	seq           string
+	desc     []string
+	code     string // "af"
+	name     string // "Afrikaans"
+	msLangID string
+	isRtl    bool
 }
 
 // NewLang creates a new language
@@ -50,66 +43,7 @@ func getLangObjects(langDefs [][]string) []*Lang {
 	return res
 }
 
-func getTransForLang(stringsDict map[string][]*Translation, keys []string, langArg string) []string {
-	if langArg == "en" {
-		return keys
-	}
-	var trans []string
-	var untrans []string
-	for _, k := range keys {
-		var found []string
-		for _, trans := range stringsDict[k] {
-			if trans.Lang == langArg {
-				found = append(found, trans.Translation)
-			}
-		}
-		if len(found) > 0 {
-			panicIf(len(found) != 1)
-			// don't include a translation, if it's the same as the default
-			if found[0] == k {
-				found[0] = ""
-			}
-			trans = append(trans, found[0])
-		} else {
-			trans = append(trans, "")
-			untrans = append(untrans, k)
-		}
-	}
-
-	if len(untrans) > int(incompleteMissingThreshold) {
-		return nil
-	}
-	return trans
-}
-
 var gIncompleteLangs []*Lang
-
-func removeLang(langs []*Lang, lang *Lang) []*Lang {
-	for idx, el := range langs {
-		if el == lang {
-			return append(langs[:idx], langs[idx+1:]...)
-		}
-	}
-	panic("didn't find lang in langs")
-}
-
-func buildTransForLangs(langs []*Lang, stringsDict map[string][]*Translation, keys []string) []*Lang {
-	gIncompleteLangs = nil
-	for _, lang := range langs {
-		lang.translations = getTransForLang(stringsDict, keys, lang.code)
-		if len(lang.translations) == 0 {
-			gIncompleteLangs = append(gIncompleteLangs, lang)
-		}
-	}
-	logf("gIncompleteLangs: %d\n", len(gIncompleteLangs))
-	panicIf(len(gIncompleteLangs) > 20) // should be ~10
-	for _, il := range gIncompleteLangs {
-		nBefore := len(langs)
-		langs = removeLang(langs, il)
-		panicIf(len(langs) != nBefore-1)
-	}
-	return langs
-}
 
 const compactCTmpl = `/*
  DO NOT EDIT MANUALLY !!!
@@ -184,25 +118,6 @@ func cEscapeForCompact(txt string) string {
 	return fmt.Sprintf(`"%s\0"`, res)
 }
 
-func fileNameFromDirName(dirName string) string {
-	return "TranslationsInfo.cpp"
-}
-
-func buildTranslations(langs []*Lang) {
-	for _, lang := range langs[1:] {
-		var cEscaped []string
-		seq := ""
-		for _, t := range lang.translations {
-			s := fmt.Sprintf("  %s", cEscapeForCompact(t))
-			cEscaped = append(cEscaped, s)
-			seq += t
-			seq += `\0`
-		}
-		lang.cEscapedLines = cEscaped
-		lang.seq = seq
-	}
-}
-
 func printIncompleteLangs(dirName string) {
 	var a []string
 	for _, lang := range gIncompleteLangs {
@@ -210,7 +125,7 @@ func printIncompleteLangs(dirName string) {
 	}
 	langs := strings.Join(a, ", ")
 	count := fmt.Sprintf("%d out of %d", len(gIncompleteLangs), len(gLangs))
-	logf("\nIncomplete langs in %s: %s %s\n", fileNameFromDirName(dirName), count, langs)
+	logf("\nIncomplete langs in %s: %s %s\n", "TranslationsInfo.cpp", count, langs)
 }
 
 func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirName string) {
@@ -230,7 +145,6 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 	langs := getLangObjects(gLangs)
 	panicIf(langs[0].code != "en")
 
-	langs = buildTransForLangs(langs, stringsDict, keys)
 	logf("langs: %d, gLangs: %d\n", len(langs), len(gLangs))
 
 	var a []string
@@ -280,7 +194,6 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 	}
 	islangrtl = "return " + islangrtl + ";"
 	//logf("islangrtl:\n%s\n", islangrtl)
-	buildTranslations(langs)
 
 	langsCount := len(langs)
 	translationsCount := len(keys)
@@ -300,7 +213,7 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 		Langids:           langids,
 		Islangrtl:         islangrtl,
 	}
-	path := filepath.Join(dirName, fileNameFromDirName(dirName))
+	path := filepath.Join(dirName, "TranslationsInfo.cpp")
 	fileContent := evalTmpl(compactCTmpl, v2)
 	logf("fileContent: path: %s, file size: %d\n", path, len(fileContent))
 	u.WriteFileMust(path, []byte(fileContent))

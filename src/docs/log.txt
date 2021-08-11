@@ -1,17 +1,16 @@
 A daily log of changes and commentary. An experiment of sorts.
 
-
 2021-08-10 Tue
 
 - fix double tooltips for table of contents (fixes #2110)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2110
   not sure why it broke
+- remove obsolete apptranslator.org code
 
 2021-08-08 Sun
 
 - don't use Windows' font for non-embedded Times-Roman (fixes #2108)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2108
-
 
 2021-08-05 Thu
 

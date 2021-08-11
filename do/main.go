@@ -365,7 +365,7 @@ func main() {
 	}
 
 	if flgUploadTranslations {
-		uploadStringsIfChanged()
+		downloadTranslations2()
 		return
 	}
 
