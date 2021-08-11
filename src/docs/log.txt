@@ -1,5 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+
+2021-08-11 Wed
+
+- properly manage visibility state of favortis after adding / removing items (fixes #2120)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2120
+
 2021-08-10 Tue
 
 - fix double tooltips for table of contents (fixes #2110)

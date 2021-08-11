@@ -627,9 +627,7 @@ void UpdateFavoritesTree(WindowInfo* win) {
     // hide the favorites tree if we've removed the last favorite
     TreeItem root = newModel->Root();
     bool show = newModel->ChildCount(root) > 0;
-    if (show) {
-        SetSidebarVisibility(win, win->tocVisible, false);
-    }
+    SetSidebarVisibility(win, win->tocVisible, show);
 }
 
 void UpdateFavoritesTreeForAllWindows() {
