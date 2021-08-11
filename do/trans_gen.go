@@ -128,8 +128,7 @@ func printIncompleteLangs(dirName string) {
 	logf("\nIncomplete langs in %s: %s %s\n", "TranslationsInfo.cpp", count, langs)
 }
 
-func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirName string) {
-	logf("genCCodeForDir: '%s', %d strings, len(stringsDict): %d\n", dirName, len(keys), len(stringsDict))
+func genCCodeForDir(keys []string, dirName string) {
 
 	sort.Slice(gLangs, func(i, j int) bool {
 		x := gLangs[i]
@@ -239,6 +238,6 @@ func genCCode(stringsDict map[string][]*Translation, strings2 []*stringWithPath)
 			b := strings.Replace(keys[j], `\t`, "\t", -1)
 			return a < b
 		})
-		genCCodeForDir(stringsDict, keys, dir)
+		genCCodeForDir(keys, dir)
 	}
 }

@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	apptranslatoServer = "https://www.apptranslator.org"
+	apptranslatoServer  = "https://www.apptranslator.org"
+	translationsTxtPath = filepath.Join("src", "docs", "translations.txt")
 )
 
 func getTransSecret() string {
@@ -78,8 +79,7 @@ func downloadTranslations2() {
 	panicIf(rsp.StatusCode != http.StatusOK)
 	d, err := io.ReadAll(rsp.Body)
 	must(err)
-	path := filepath.Join("strings", "translations.txt")
-	u.WriteFileMust(path, d)
-	fmt.Printf("Wrote response of size %d to %s\n", len(d), path)
+	u.WriteFileMust(translationsTxtPath, d)
+	fmt.Printf("Wrote response of size %d to %s\n", len(d), translationsTxtPath)
 	printSusTranslations(d)
 }

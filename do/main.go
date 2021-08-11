@@ -355,17 +355,12 @@ func main() {
 	}
 
 	if flgDownloadTranslations {
-		downloadTranslationsMain()
+		downloadTranslations2()
 		return
 	}
 
 	if flgRegenerateTranslattions {
 		regenerateLangs()
-		return
-	}
-
-	if flgUploadTranslations {
-		downloadTranslations2()
 		return
 	}
 
