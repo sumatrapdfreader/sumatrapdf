@@ -185,6 +185,7 @@ func main() {
 		flgSmoke                   bool
 		flgFileUpload              string
 		flgFilesList               bool
+		flgBuildDocs               bool
 	)
 
 	{
@@ -222,6 +223,7 @@ func main() {
 		flag.BoolVar(&flgDrMem, "drmem", false, "run drmemory of rel 64")
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
+		flag.BoolVar(&flgBuildDocs, "build-docs", false, "build epub docs")
 		flag.Parse()
 	}
 
@@ -281,6 +283,11 @@ func main() {
 
 	if flgWebsiteImportNotion {
 		websiteImportNotion()
+		return
+	}
+
+	if flgBuildDocs {
+		buildEpubDocs()
 		return
 	}
 

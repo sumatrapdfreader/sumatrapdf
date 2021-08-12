@@ -33,16 +33,10 @@ func printSusTranslations(d []byte) {
 				return true
 			}
 		*/
-		if strings.HasPrefix(s, `\n`) {
+		if strings.HasPrefix(s, `\n`) || strings.HasSuffix(s, `\n`) {
 			return true
 		}
-		if strings.HasSuffix(s, `\n`) {
-			return true
-		}
-		if strings.HasPrefix(s, `\r`) {
-			return true
-		}
-		if strings.HasSuffix(s, `\r`) {
+		if strings.HasPrefix(s, `\r`) || strings.HasSuffix(s, `\r`) {
 			return true
 		}
 		return false
