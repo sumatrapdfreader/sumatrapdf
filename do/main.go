@@ -146,22 +146,29 @@ func main() {
 		logf("Finished in %s\n", time.Since(timeStart))
 	}()
 
+	// ad-hoc flags to be set manually (to show less options)
+	var (
+		flgGenTranslationsInfoCpp = false
+		flgCppCheck               = false
+		flgCppCheckAll            = false
+		flgClangTidy              = false
+		flgClangTidyFix           = false
+		flgBuildNo                = false
+		flgBuildLzsa              = false
+	)
+
 	var (
 		flgRegenPremake            bool
 		flgUpload                  bool
 		flgCIBuild                 bool
 		flgUploadCiBuild           bool
-		flgBuildLzsa               bool
 		flgBuildPreRelease         bool
 		flgBuildRelease            bool
 		flgWc                      bool
 		flgDownloadTranslations    bool
-		flgRegenerateTranslattions bool
-		flgUploadTranslations      bool
 		flgClean                   bool
 		flgCrashes                 bool
 		flgCheckAccessKeys         bool
-		flgBuildNo                 bool
 		flgTriggerCodeQL           bool
 		flgWebsiteRun              bool
 		flgWebsiteDeployCloudflare bool
@@ -169,10 +176,6 @@ func main() {
 		flgWebsiteBuildCloudflare  bool
 		flgNoCache                 bool
 		flgClangFormat             bool
-		flgCppCheck                bool
-		flgCppCheckAll             bool
-		flgClangTidy               bool
-		flgClangTidyFix            bool
 		flgDiff                    bool
 		flgGenSettings             bool
 		flgUpdateVer               string
@@ -182,7 +185,6 @@ func main() {
 		flgSmoke                   bool
 		flgFileUpload              string
 		flgFilesList               bool
-		flgTransDownload2          bool
 	)
 
 	{
@@ -194,28 +196,26 @@ func main() {
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
-		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
+		//flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
-		flag.BoolVar(&flgTransDownload2, "trans-dl2", false, "extract strings to translate from code and download translations")
-		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
-		flag.BoolVar(&flgUploadTranslations, "trans-upload", false, "upload translations to apptranslators.org if changed")
+		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationsInfo.cpp")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
-		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
+		//flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy", false, "deploy website to cloudflare")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import", false, "import docs from notion")
 		flag.BoolVar(&flgWebsiteBuildCloudflare, "website-build-cf", false, "build the website (download Sumatra files)")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
-		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
-		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
-		flag.BoolVar(&flgClangTidy, "clang-tidy", false, "run clang-tidy (must be installed)")
-		flag.BoolVar(&flgClangTidyFix, "clang-tidy-fix", false, "run clang-tidy (must be installed)")
+		//flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
+		//flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
+		//flag.BoolVar(&flgClangTidy, "clang-tidy", false, "run clang-tidy (must be installed)")
+		//flag.BoolVar(&flgClangTidyFix, "clang-tidy-fix", false, "run clang-tidy (must be installed)")
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.BoolVar(&flgGenSettings, "settings-gen", false, "re-generate src/SettingsStructs.h")
 		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
@@ -238,11 +238,6 @@ func main() {
 
 	if flgFilesList {
 		filesList()
-		return
-	}
-
-	if flgTransDownload2 {
-		downloadTranslations2()
 		return
 	}
 
@@ -355,12 +350,12 @@ func main() {
 	}
 
 	if flgDownloadTranslations {
-		downloadTranslations2()
+		downloadTranslations()
 		return
 	}
 
-	if flgRegenerateTranslattions {
-		regenerateLangs()
+	if flgGenTranslationsInfoCpp {
+		genTranslationInfoCpp()
 		return
 	}
 

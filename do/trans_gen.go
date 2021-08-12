@@ -19,32 +19,6 @@ type Lang struct {
 	isRtl    bool
 }
 
-// NewLang creates a new language
-func NewLang(desc []string) *Lang {
-	panicIf(len(desc) > 4)
-	res := &Lang{
-		desc:     desc,
-		code:     desc[0],
-		name:     desc[1],
-		msLangID: desc[2],
-	}
-	if len(desc) > 3 {
-		panicIf(desc[3] != "RTL")
-		res.isRtl = true
-	}
-	return res
-}
-
-func getLangObjects(langDefs [][]string) []*Lang {
-	var res []*Lang
-	for _, desc := range langDefs {
-		res = append(res, NewLang(desc))
-	}
-	return res
-}
-
-var gIncompleteLangs []*Lang
-
 const compactCTmpl = `/*
  DO NOT EDIT MANUALLY !!!
  Generated with .\doit.bat -trans-regen
@@ -118,17 +92,8 @@ func cEscapeForCompact(txt string) string {
 	return fmt.Sprintf(`"%s\0"`, res)
 }
 
-func printIncompleteLangs(dirName string) {
-	var a []string
-	for _, lang := range gIncompleteLangs {
-		a = append(a, lang.code)
-	}
-	langs := strings.Join(a, ", ")
-	count := fmt.Sprintf("%d out of %d", len(gIncompleteLangs), len(gLangs))
-	logf("\nIncomplete langs in %s: %s %s\n", "TranslationsInfo.cpp", count, langs)
-}
-
-func genCCodeForDir(keys []string, dirName string) {
+// generate TranslationsInfo.cpp
+func genTranslationInfoCpp() {
 
 	sort.Slice(gLangs, func(i, j int) bool {
 		x := gLangs[i]
@@ -141,6 +106,30 @@ func genCCodeForDir(keys []string, dirName string) {
 		}
 		return x[1] < y[1]
 	})
+
+	getLangObjects := func(langDefs [][]string) []*Lang {
+		newLang := func(desc []string) *Lang {
+			panicIf(len(desc) > 4)
+			res := &Lang{
+				desc:     desc,
+				code:     desc[0],
+				name:     desc[1],
+				msLangID: desc[2],
+			}
+			if len(desc) > 3 {
+				panicIf(desc[3] != "RTL")
+				res.isRtl = true
+			}
+			return res
+		}
+
+		var res []*Lang
+		for _, desc := range langDefs {
+			res = append(res, newLang(desc))
+		}
+		return res
+	}
+
 	langs := getLangObjects(gLangs)
 	panicIf(langs[0].code != "en")
 
@@ -195,49 +184,23 @@ func genCCodeForDir(keys []string, dirName string) {
 	//logf("islangrtl:\n%s\n", islangrtl)
 
 	langsCount := len(langs)
-	translationsCount := len(keys)
 
 	v2 := struct {
-		LangsCount        int
-		TranslationsCount int
-		Langcodes         string
-		Langnames         string
-		Langids           string
-		Islangrtl         string
+		LangsCount int
+		Langcodes  string
+		Langnames  string
+		Langids    string
+		Islangrtl  string
 	}{
-		LangsCount:        langsCount,
-		TranslationsCount: translationsCount,
-		Langcodes:         langcodes,
-		Langnames:         langnames,
-		Langids:           langids,
-		Islangrtl:         islangrtl,
+		LangsCount: langsCount,
+		Langcodes:  langcodes,
+		Langnames:  langnames,
+		Langids:    langids,
+		Islangrtl:  islangrtl,
 	}
-	path := filepath.Join(dirName, "TranslationsInfo.cpp")
+	path := filepath.Join("src", "TranslationsInfo.cpp")
 	fileContent := evalTmpl(compactCTmpl, v2)
 	logf("fileContent: path: %s, file size: %d\n", path, len(fileContent))
 	u.WriteFileMust(path, []byte(fileContent))
-	printIncompleteLangs(dirName)
 	// print_stats(langs)
-}
-
-func genCCode(stringsDict map[string][]*Translation, strings2 []*stringWithPath) {
-	for _, dir := range dirsToProcess {
-		dirToCheck := filepath.Base(dir)
-		var keys []string
-		for _, el := range strings2 {
-			if el.Dir == dirToCheck {
-				s := el.Text
-				if _, ok := stringsDict[s]; ok {
-					keys = append(keys, s)
-				}
-			}
-		}
-		keys = uniquifyStrings(keys)
-		sort.Slice(keys, func(i, j int) bool {
-			a := strings.Replace(keys[i], `\t`, "\t", -1)
-			b := strings.Replace(keys[j], `\t`, "\t", -1)
-			return a < b
-		})
-		genCCodeForDir(keys, dir)
-	}
 }

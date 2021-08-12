@@ -59,10 +59,10 @@ func printSusTranslations(d []byte) {
 	}
 }
 
-func downloadTranslations2() {
+func downloadTranslations() {
 	timeStart := time.Now()
 	defer func() {
-		fmt.Printf("downloadTranslations2() finished in %s\n", time.Since(timeStart))
+		fmt.Printf("downloadTranslations() finished in %s\n", time.Since(timeStart))
 	}()
 	strs := extractStringsFromCFilesNoPaths()
 	sort.Strings(strs)

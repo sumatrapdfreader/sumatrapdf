@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -146,109 +145,4 @@ func extractStringsFromCFilesNoPaths() []string {
 	res = uniquifyStrings(res)
 	logf("%d strings to translate\n", len(res))
 	return res
-}
-
-type stringWithPath struct {
-	Text string
-	Path string
-	Dir  string
-}
-
-func extractStringsFromCFiles() []*stringWithPath {
-	filesToProcess := getFilesToProcess()
-	logf("Files to process: %d\n", len(filesToProcess))
-	var res []*stringWithPath
-	for _, path := range filesToProcess {
-		a := extractStringsFromCFile(path)
-		for _, s := range a {
-			swp := &stringWithPath{
-				Text: s,
-				Path: path,
-				Dir:  filepath.Base(filepath.Dir(path)),
-			}
-			res = append(res, swp)
-		}
-	}
-	logf("%d strings to translate\n", len(res))
-	return res
-}
-
-func extractJustStrings(a []*stringWithPath) []string {
-	var res []string
-	for _, el := range a {
-		res = append(res, el.Text)
-	}
-	res = uniquifyStrings(res)
-	return res
-}
-
-func dumpMissingPerLanguage(strings []string, stringsDict map[string][]*Translation, dumpStrings bool) map[string]bool {
-	/*
-	   untranslated_dict = {}
-	   for lang in get_lang_list(strings_dict):
-	       untranslated_dict[lang] = get_missing_for_language(
-	           strings, strings_dict, lang)
-	   items = untranslated_dict.items()
-	   items.sort(langs_sort_func)
-
-	   print("\nMissing translations:")
-	   strs = []
-	   for (lang, untranslated) in items:
-	       if len(untranslated) > 0:
-	           strs.append("%5s: %3d" % (lang, len(untranslated)))
-	   per_line = 5
-	   while len(strs) > 0:
-	       line_strs = strs[:per_line]
-	       strs = strs[per_line:]
-	       print("  ".join(line_strs))
-	   return untranslated_dict
-	*/
-	return nil
-}
-
-func getUntranslatedAsList(untranslatedDict map[string]bool) []string {
-	var a []string
-	for s := range untranslatedDict {
-		a = append(a, s)
-	}
-	return uniquifyStrings(a)
-}
-
-// this generates TranslationsInfo.cpp
-// TODO: most of this code is no longer necessary
-func regenerateLangs() {
-	d := u.ReadFileMust(translationsTxtPath)
-	s := string(d)
-
-	fmt.Print("generate_code\n")
-	stringsDict := parseTranslations(s)
-	logf("%d strings\n", len(stringsDict))
-
-	strings := extractStringsFromCFiles()
-	stringsList := extractJustStrings(strings)
-
-	// remove obsolete strings from the server
-	var obsolete []string
-	for s := range stringsDict {
-		if !u.StringInSlice(stringsList, s) {
-			obsolete = append(obsolete, s)
-			delete(stringsDict, s)
-		}
-	}
-	if len(obsolete) > 0 {
-		logf("Removed %d obsolete strings\n", len(obsolete))
-	}
-
-	untranslatedDict := dumpMissingPerLanguage(stringsList, stringsDict, false)
-	untranslated := getUntranslatedAsList(untranslatedDict)
-	if len(untranslated) > 0 {
-		logf("%d untranslated\n", len(untranslated))
-		// add untranslated
-		for _, s := range untranslated {
-			if _, ok := stringsDict[s]; !ok {
-				stringsDict[s] = []*Translation{}
-			}
-		}
-	}
-	genCCode(stringsDict, strings)
 }
