@@ -65,8 +65,8 @@ func guessExt(fileName string, contentType string) string {
 	panic(fmt.Errorf("didn't find ext for file '%s', content type '%s'", fileName, contentType))
 }
 
-func downloadImage(c *notionapi.Client, uri string) ([]byte, string, error) {
-	resp, err := c.DownloadURL(uri)
+func downloadImage(c *notionapi.CachingClient, uri string, block *notionapi.Block) ([]byte, string, error) {
+	resp, err := c.DownloadFile(uri, block)
 	if err != nil {
 		return nil, "", err
 	}
@@ -77,7 +77,7 @@ func downloadImage(c *notionapi.Client, uri string) ([]byte, string, error) {
 }
 
 // return path of cached image on disk
-func downloadAndCacheImage(c *notionapi.Client, uri string) (string, error) {
+func downloadAndCacheImage(c *notionapi.CachingClient, uri string, block *notionapi.Block) (string, error) {
 	sha := sha1OfLink(uri)
 
 	//ext := strings.ToLower(filepath.Ext(uri))
@@ -93,7 +93,7 @@ func downloadAndCacheImage(c *notionapi.Client, uri string) (string, error) {
 	timeStart := time.Now()
 	logf("Downloading %s ... ", uri)
 
-	imgData, ext, err := downloadImage(c, uri)
+	imgData, ext, err := downloadImage(c, uri, block)
 	must(err)
 
 	cachedPath = filepath.Join(cacheImgDir, sha+ext)
@@ -105,37 +105,6 @@ func downloadAndCacheImage(c *notionapi.Client, uri string) (string, error) {
 	logf("finished in %s. Wrote as '%s'\n", time.Since(timeStart), cachedPath)
 
 	return cachedPath, nil
-}
-
-func eventObserver(ev interface{}) {
-	switch v := ev.(type) {
-	case *notionapi.EventError:
-		logf(v.Error)
-	case *notionapi.EventDidDownload:
-		nDownloadedPage++
-		logf("%03d '%s' : downloaded in %s\n", nDownloadedPage, v.PageID, v.Duration)
-	case *notionapi.EventDidReadFromCache:
-		// TODO: only verbose
-		nDownloadedPage++
-		logf("%03d '%s' : read from cache in %s\n", nDownloadedPage, v.PageID, v.Duration)
-	case *notionapi.EventGotVersions:
-		logf("downloaded info about %d versions in %s\n", v.Count, v.Duration)
-	}
-}
-
-func newNotionClient() *notionapi.Client {
-	//token := os.Getenv("NOTION_TOKEN")
-	//panicIf(token == "", "NOTION_TOKEN env variable not set, needed for downloading images\n")
-	// Note: public page, no need for a token
-	token := ""
-	client := &notionapi.Client{
-		AuthToken: token,
-	}
-	// if true, shows http requests sent to notion
-	if false {
-		client.Logger = os.Stdout
-	}
-	return client
 }
 
 func fileNameFromTitle(title string) string {
@@ -154,7 +123,7 @@ func afterPageDownload(page *notionapi.Page) error {
 
 // HTMLConverter renders article as html
 type HTMLConverter struct {
-	client   *notionapi.Client
+	client   *notionapi.CachingClient
 	page     *notionapi.Page
 	idToPage map[string]*notionapi.Page
 	conv     *tohtml.Converter
@@ -225,7 +194,7 @@ func normalizeID(id string) string {
 // RenderImage downloads and renders an image
 func (c *HTMLConverter) RenderImage(block *notionapi.Block) bool {
 	link := block.ImageURL
-	path, err := downloadAndCacheImage(c.client, link)
+	path, err := downloadAndCacheImage(c.client, link, block)
 	if err != nil {
 		logf("genImage: downloadAndCacheImage('%s') from page https://notion.so/%s failed with '%s'\n", link, normalizeID(c.page.ID), err)
 		must(err)
@@ -340,7 +309,7 @@ func (c *HTMLConverter) GenerateHTML() []byte {
 	return d
 }
 
-func notionToHTML(client *notionapi.Client, page *notionapi.Page, pages []*notionapi.Page, idToPage map[string]*notionapi.Page) {
+func notionToHTML(client *notionapi.CachingClient, page *notionapi.Page, pages []*notionapi.Page, idToPage map[string]*notionapi.Page) {
 	conv := NewHTMLConverter(page, pages, idToPage)
 	conv.client = client
 	html := conv.GenerateHTML()
@@ -360,17 +329,31 @@ func checkPrettierExist() {
 	}
 }
 
+func newNotionClient() *notionapi.CachingClient {
+	//token := os.Getenv("NOTION_TOKEN")
+	//panicIf(token == "", "NOTION_TOKEN env variable not set, needed for downloading images\n")
+	// Note: public page, no need for a token
+	token := ""
+	client := &notionapi.Client{
+		AuthToken: token,
+		DebugLog:  true,
+	}
+	// if true, shows http requests sent to notion
+	if false {
+		client.Logger = os.Stdout
+	}
+	d, err := notionapi.NewCachingClient(cacheDir, client)
+	must(err)
+	//d.Policy = notionapi.PolicyDownloadAlways
+	//d.NoReadCache = flgNoCache
+	return d
+}
+
 func websiteImportNotion() {
 	logf("websiteImportNotion() started\n")
 	checkPrettierExist()
 	must(os.Chdir("website"))
-	client := newNotionClient()
-	client.DebugLog = true
-	d, err := notionapi.NewCachingClient(cacheDir, client)
-	must(err)
-	d.EventObserver = eventObserver
-	d.RedownloadNewerVersions = true
-	//d.NoReadCache = flgNoCache
+	d := newNotionClient()
 	pages, err := d.DownloadPagesRecursively(startPageID, afterPageDownload)
 	must(err)
 	{
@@ -391,7 +374,7 @@ func websiteImportNotion() {
 		}
 	}
 	for _, page := range pages {
-		notionToHTML(client, page, pages, d.IdToPage)
+		notionToHTML(d, page, pages, d.IdToPage)
 	}
 
 	if false {
