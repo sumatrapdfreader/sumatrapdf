@@ -21,14 +21,8 @@ github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf h1:HuwmGC6wEC0CdGC3QUSBnAfQzydOiR4HeTZCySsHpHY=
 github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf/go.mod h1:+YlBbo63AHA3uS6tdRhd42B+I1lV7H7+aqDhwTRl5rs=
-github.com/kjk/notionapi v0.0.0-20210806035225-6f148bb7ce93 h1:nkakdW0Tu/wlRZG2lQROeTbOYm9QWUVGzAKLr+m+d+U=
-github.com/kjk/notionapi v0.0.0-20210806035225-6f148bb7ce93/go.mod h1:SW6RfE7bMfJv7sJWFiWGSViNdyy7Vd5ggrOwkDC1rTw=
-github.com/kjk/notionapi v0.0.0-20210806040451-e2322e02e3ff h1:8YgmUW+VxywaOZQMJpvnoPU+TncAx1B4HONoUUXqLm4=
-github.com/kjk/notionapi v0.0.0-20210806040451-e2322e02e3ff/go.mod h1:SW6RfE7bMfJv7sJWFiWGSViNdyy7Vd5ggrOwkDC1rTw=
-github.com/kjk/notionapi v0.0.0-20210806044149-8c70c4b5659b h1:V9+I4P4hTa3Kjf75X1vt5193b6fUbNaPYi7mzmaKvIY=
-github.com/kjk/notionapi v0.0.0-20210806044149-8c70c4b5659b/go.mod h1:SW6RfE7bMfJv7sJWFiWGSViNdyy7Vd5ggrOwkDC1rTw=
-github.com/kjk/notionapi v0.0.0-20210813051122-c78e3c97fc36 h1:c9NOnGrOHkupkAzcTp3KA7hxk8ZZsTumwIP5eae94PE=
-github.com/kjk/notionapi v0.0.0-20210813051122-c78e3c97fc36/go.mod h1:SW6RfE7bMfJv7sJWFiWGSViNdyy7Vd5ggrOwkDC1rTw=
+github.com/kjk/notionapi v0.0.0-20210813225557-195dcb8bc2be h1:u955OcwZJda4wyUxEnL8iWVzOCN/Mmd71IoOE3iln2A=
+github.com/kjk/notionapi v0.0.0-20210813225557-195dcb8bc2be/go.mod h1:SW6RfE7bMfJv7sJWFiWGSViNdyy7Vd5ggrOwkDC1rTw=
 github.com/kjk/siser v0.0.0-20210621233355-17e67ed4384f h1:X3X0zk+W4FIR4LvlT4BQbHMXM3rj2Ba6P4nZ8MkVPqM=
 github.com/kjk/siser v0.0.0-20210621233355-17e67ed4384f/go.mod h1:k2Pzb2Ix2MoXVfVLt3SeCEhwammA4PTgLxjDBhIUHoA=
 github.com/kjk/u v0.0.0-20210327060556-13ea33918991 h1:5YrkYcROqlUoQlE85JkQ8IEXw+92fjfFc+V8WC3GiBo=
