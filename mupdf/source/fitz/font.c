@@ -1701,7 +1701,7 @@ int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid)
 }
 
 static float
-fz_advance_ft_glyph(fz_context *ctx, fz_font *font, int gid, int wmode)
+fz_advance_ft_glyph_aux(fz_context *ctx, fz_font *font, int gid, int wmode, int locked)
 {
 	FT_Error fterr;
 	FT_Fixed adv = 0;
@@ -1721,8 +1721,10 @@ fz_advance_ft_glyph(fz_context *ctx, fz_font *font, int gid, int wmode)
 	mask = FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING | FT_LOAD_IGNORE_TRANSFORM;
 	if (wmode)
 		mask |= FT_LOAD_VERTICAL_LAYOUT;
+	if (!locked)
 	fz_lock(ctx, FZ_LOCK_FREETYPE);
 	fterr = FT_Get_Advance(font->ft_face, gid, mask, &adv);
+	if (!locked)
 	fz_unlock(ctx, FZ_LOCK_FREETYPE);
 	if (fterr && fterr != FT_Err_Invalid_Argument)
 	{
@@ -1735,6 +1737,12 @@ fz_advance_ft_glyph(fz_context *ctx, fz_font *font, int gid, int wmode)
 		}
 	}
 	return (float) adv / ((FT_Face)font->ft_face)->units_per_EM;
+}
+
+static float
+fz_advance_ft_glyph(fz_context *ctx, fz_font *font, int gid, int wmode)
+{
+	return fz_advance_ft_glyph_aux(ctx, font, gid, wmode, 0);
 }
 
 static float
@@ -1775,14 +1783,24 @@ fz_advance_glyph(fz_context *ctx, fz_font *font, int gid, int wmode)
 			return fz_advance_ft_glyph(ctx, font, gid, 1);
 		if (gid >= 0 && gid < font->glyph_count && gid < MAX_ADVANCE_CACHE)
 		{
+			float f;
+			fz_lock(ctx, FZ_LOCK_FREETYPE);
 			if (!font->advance_cache)
 			{
 				int i;
+				fz_try(ctx)
 				font->advance_cache = Memento_label(fz_malloc_array(ctx, font->glyph_count, float), "font_advance_cache");
+				fz_catch(ctx)
+				{
+					fz_unlock(ctx, FZ_LOCK_FREETYPE);
+					fz_rethrow(ctx);
+				}
 				for (i = 0; i < font->glyph_count; ++i)
-					font->advance_cache[i] = fz_advance_ft_glyph(ctx, font, i, 0);
+					font->advance_cache[i] = fz_advance_ft_glyph_aux(ctx, font, i, 0, 1);
 			}
-			return font->advance_cache[gid];
+			f = font->advance_cache[gid];
+			fz_unlock(ctx, FZ_LOCK_FREETYPE);
+			return f;
 		}
 
 		return fz_advance_ft_glyph(ctx, font, gid, 0);

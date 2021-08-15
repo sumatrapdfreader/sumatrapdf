@@ -262,3 +262,17 @@ void fz_rethrow_if(fz_context *ctx, int err)
 	if (ctx->error.errcode == err)
 		fz_rethrow(ctx);
 }
+
+void fz_start_throw_on_repair(fz_context *ctx)
+{
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	ctx->throw_on_repair++;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+}
+
+void fz_end_throw_on_repair(fz_context *ctx)
+{
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	ctx->throw_on_repair--;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+}

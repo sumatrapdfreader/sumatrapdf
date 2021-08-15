@@ -3334,6 +3334,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFWidget_clearSignature
 JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFWidget_isSigned
   (JNIEnv *, jobject);
 
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFWidget
+ * Method:    layoutTextWidget
+ * Signature: ()Lcom/artifex/mupdf/fitz/PDFWidget/TextWidgetLayout;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFWidget_layoutTextWidget
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

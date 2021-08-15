@@ -2263,6 +2263,7 @@ object_updated:
 			fz_catch(ctx)
 			{
 				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+				fz_rethrow_if(ctx, FZ_ERROR_REPAIRED);
 				if (rnum == num)
 					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse object (%d 0 R)", num);
 				else
@@ -2331,6 +2332,7 @@ pdf_resolve_indirect(fz_context *ctx, pdf_obj *ref)
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+			fz_rethrow_if(ctx, FZ_ERROR_REPAIRED);
 			fz_warn(ctx, "cannot load object (%d 0 R) into cache", num);
 			return NULL;
 		}

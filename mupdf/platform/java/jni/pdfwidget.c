@@ -457,3 +457,175 @@ FUN(PDFWidget_previewSignatureNative)(JNIEnv *env, jclass cls, jint width, jint 
 
 	return to_Pixmap_safe_own(ctx, env, pixmap);
 }
+
+JNIEXPORT jobject JNICALL
+FUN(PDFWidget_layoutTextWidget)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
+	fz_layout_block *layout = NULL;
+	fz_layout_line *line = NULL;
+	fz_layout_char *chr = NULL;
+	jobject jlayout, jlines, jmatrix, jinvmatrix;
+	fz_rect bounds;
+	fz_matrix mat;
+	const char *s;
+	int nlines = 0;
+	int i;
+
+	if (!ctx || !widget) return NULL;
+
+	jlayout = (*env)->NewObject(env, cls_TextWidgetLayout, mid_TextWidgetLayout_init, self);
+	if ((*env)->ExceptionCheck(env)) return NULL;
+	if (!jlayout) jni_throw_run(env, "cannot create text widget layout object");
+
+	fz_try(ctx)
+	{
+		bounds = pdf_bound_widget(ctx, widget);
+		layout = pdf_layout_text_widget(ctx, widget);
+		mat = fz_concat(layout->inv_matrix, fz_translate(-bounds.x0, -bounds.y0));
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	jmatrix = to_Matrix_safe(ctx, env, layout->matrix);
+	if ((*env)->ExceptionCheck(env))
+	{
+		fz_drop_layout(ctx, layout);
+		return NULL;
+	}
+	if (!jmatrix)
+	{
+		fz_drop_layout(ctx, layout);
+		jni_throw_run(env, "cannot create text widget layout matrix object");
+	}
+	(*env)->SetObjectField(env, jlayout, fid_TextWidgetLayout_matrix, jmatrix);
+
+	jinvmatrix = to_Matrix_safe(ctx, env, layout->inv_matrix);
+	if ((*env)->ExceptionCheck(env))
+	{
+		fz_drop_layout(ctx, layout);
+		return NULL;
+	}
+	if (!jinvmatrix)
+	{
+		fz_drop_layout(ctx, layout);
+		jni_throw_run(env, "cannot create text widget layout inverted matrix object");
+	}
+	(*env)->SetObjectField(env, jlayout, fid_TextWidgetLayout_invMatrix, jinvmatrix);
+
+	for (line = layout->head; line; line = line->next)
+		nlines++;
+
+	jlines = (*env)->NewObjectArray(env, nlines, cls_TextWidgetLineLayout, NULL);
+	if ((*env)->ExceptionCheck(env))
+	{
+		fz_drop_layout(ctx, layout);
+		return NULL;
+	}
+	if (!jlines)
+	{
+		fz_drop_layout(ctx, layout);
+		jni_throw_run(env, "cannot create text widget line layout object");
+	}
+	(*env)->SetObjectField(env, jlayout, fid_TextWidgetLayout_lines, jlines);
+
+	s = layout->head->p;
+
+	i = 0;
+	for (line = layout->head; line; line = line->next)
+	{
+		jobject jlinelayout, jchars, jlrect;
+		float y = line->y - line->font_size * 0.2f;
+		float b = line->y + line->font_size;
+		fz_rect lrect = fz_make_rect(line->x, y, line->x, b);
+		lrect = fz_transform_rect(lrect, mat);
+		int nchars = 0;
+		int k;
+
+		jlinelayout = (*env)->NewObject(env, cls_TextWidgetLineLayout, mid_TextWidgetLineLayout_init, self);
+		if ((*env)->ExceptionCheck(env))
+		{
+			fz_drop_layout(ctx, layout);
+			return NULL;
+		}
+		if (!jlinelayout)
+		{
+			fz_drop_layout(ctx, layout);
+			jni_throw_run(env, "cannot create text widget line layout object");
+		}
+
+		(*env)->SetObjectArrayElement(env, jlines, i, jlinelayout);
+		if ((*env)->ExceptionCheck(env))
+		{
+			fz_drop_layout(ctx, layout);
+			return NULL;
+		}
+		i++;
+
+		(*env)->SetFloatField(env, jlinelayout, fid_TextWidgetLineLayout_x, line->x);
+		(*env)->SetFloatField(env, jlinelayout, fid_TextWidgetLineLayout_y, line->y);
+		(*env)->SetFloatField(env, jlinelayout, fid_TextWidgetLineLayout_fontSize, line->font_size);
+		(*env)->SetIntField(env, jlinelayout, fid_TextWidgetLineLayout_index, fz_runeidx(s, line->p));
+
+		for (chr = line->text; chr; chr = chr->next)
+			nchars++;
+
+		jchars = (*env)->NewObjectArray(env, nchars, cls_TextWidgetCharLayout, NULL);
+		if (!jchars || (*env)->ExceptionCheck(env))
+		{
+			fz_drop_layout(ctx, layout);
+			return NULL;
+		}
+		(*env)->SetObjectField(env, jlinelayout, fid_TextWidgetLineLayout_chars, jchars);
+
+		k = 0;
+		for (chr = line->text; chr; chr = chr->next)
+		{
+			jobject jcharlayout, jcrect;
+			fz_rect crect = fz_make_rect(chr->x, y, chr->x + chr->advance, b);
+			crect = fz_transform_rect(crect, mat);
+			lrect = fz_union_rect(lrect, crect);
+
+			jcharlayout = (*env)->NewObject(env, cls_TextWidgetCharLayout, mid_TextWidgetCharLayout_init, self);
+			if ((*env)->ExceptionCheck(env))
+			{
+				fz_drop_layout(ctx, layout);
+				return NULL;
+			}
+			if (!jcharlayout)
+			{
+				fz_drop_layout(ctx, layout);
+				jni_throw_run(env, "cannot create text widget character layout object");
+			}
+
+			(*env)->SetObjectArrayElement(env, jchars, k, jcharlayout);
+			if ((*env)->ExceptionCheck(env))
+			{
+				fz_drop_layout(ctx, layout);
+				return NULL;
+			}
+			k++;
+
+			jcrect = to_Rect_safe(ctx, env, crect);
+			(*env)->SetObjectField(env, jcharlayout, fid_TextWidgetCharLayout_rect, jcrect);
+			(*env)->SetFloatField(env, jcharlayout, fid_TextWidgetCharLayout_x, chr->x);
+			(*env)->SetFloatField(env, jcharlayout, fid_TextWidgetCharLayout_advance, chr->advance);
+			(*env)->SetIntField(env, jcharlayout, fid_TextWidgetCharLayout_index, fz_runeidx(s, chr->p));
+
+			(*env)->DeleteLocalRef(env, jcrect);
+			(*env)->DeleteLocalRef(env, jcharlayout);
+		}
+
+		jlrect = to_Rect_safe(ctx, env, lrect);
+		(*env)->SetObjectField(env, jlinelayout, fid_TextWidgetLineLayout_rect, jlrect);
+
+		(*env)->DeleteLocalRef(env, jlrect);
+		(*env)->DeleteLocalRef(env, jchars);
+		(*env)->DeleteLocalRef(env, jlinelayout);
+	}
+
+	fz_drop_layout(ctx, layout);
+
+	return jlayout;
+}

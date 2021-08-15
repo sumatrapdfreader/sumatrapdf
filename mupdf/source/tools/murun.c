@@ -6865,6 +6865,89 @@ static void ffi_PDFWidget_getLabel(js_State *J)
 	js_pushstring(J, label);
 }
 
+static void ffi_PDFWidget_layoutTextWidget(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
+	fz_layout_block *layout = NULL;
+	fz_layout_line *line = NULL;
+	fz_layout_char *chr = NULL;
+	fz_rect bounds;
+	fz_matrix mat;
+	const char *s;
+	int i, k;
+
+	fz_try(ctx)
+	{
+		bounds = pdf_bound_widget(ctx, widget);
+		layout = pdf_layout_text_widget(ctx, widget);
+		mat = fz_concat(layout->inv_matrix, fz_translate(-bounds.x0, -bounds.y0));
+	}
+	fz_catch(ctx)
+		rethrow(J);
+
+	if (js_try(J)) {
+		fz_drop_layout(ctx, layout);
+		js_throw(J);
+	}
+
+	js_newobject(J);
+	ffi_pushmatrix(J, layout->matrix);
+	js_setproperty(J, -2, "matrix");
+	ffi_pushmatrix(J, layout->inv_matrix);
+	js_setproperty(J, -2, "invMatrix");
+
+	s = layout->head->p;
+
+	js_newarray(J);
+	for (line = layout->head, i = 0; line; line = line->next, i++)
+	{
+		float y = line->y - line->font_size * 0.2f;
+		float b = line->y + line->font_size;
+		fz_rect lrect = fz_make_rect(line->x, y, line->x, b);
+		lrect = fz_transform_rect(lrect, mat);
+
+		js_newobject(J);
+		js_pushnumber(J, line->x);
+		js_setproperty(J, -2, "x");
+		js_pushnumber(J, line->y);
+		js_setproperty(J, -2, "y");
+		js_pushnumber(J, line->font_size);
+		js_setproperty(J, -2, "fontSize");
+		js_pushnumber(J, fz_runeidx(s, line->p));
+		js_setproperty(J, -2, "index");
+
+		js_newarray(J);
+		for (chr = line->text, k = 0; chr; chr = chr->next, k++)
+		{
+			fz_rect crect = fz_make_rect(chr->x, y, chr->x + chr->advance, b);
+			crect = fz_transform_rect(crect, mat);
+			lrect = fz_union_rect(lrect, crect);
+
+			js_newobject(J);
+			js_pushnumber(J, chr->x);
+			js_setproperty(J, -2, "x");
+			js_pushnumber(J, chr->advance);
+			js_setproperty(J, -2, "advance");
+			js_pushnumber(J, fz_runeidx(s, chr->p));
+			js_setproperty(J, -2, "index");
+			ffi_pushrect(J, crect);
+			js_setproperty(J, -2, "rect");
+			js_setindex(J, -2, k);
+		}
+		js_setproperty(J, -2, "chars");
+
+		ffi_pushrect(J, lrect);
+		js_setproperty(J, -2, "rect");
+
+		js_setindex(J, -2, i);
+	}
+	js_setproperty(J, -2, "lines");
+
+	js_endtry(J);
+	fz_drop_layout(ctx, layout);
+}
+
 static void ffi_new_PDFPKCS7Signer(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -7322,6 +7405,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFWidget.toggle", ffi_PDFWidget_toggle, 0);
 		jsB_propfun(J, "PDFWidget.getMaxLen", ffi_PDFWidget_getMaxLen, 0);
 		jsB_propfun(J, "PDFWidget.getOptions", ffi_PDFWidget_getOptions, 1);
+		jsB_propfun(J, "PDFWidget.layoutTextWidget", ffi_PDFWidget_layoutTextWidget, 0);
 
 		jsB_propfun(J, "PDFWidget.update", ffi_PDFWidget_update, 0);
 

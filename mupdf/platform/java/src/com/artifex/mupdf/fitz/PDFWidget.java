@@ -221,4 +221,28 @@ public class PDFWidget extends PDFAnnotation
 	public native int validateSignature();
 	public native void clearSignature();
 	public native boolean isSigned();
+
+	public native TextWidgetLayout layoutTextWidget();
+
+	public class TextWidgetLayout {
+		public Matrix matrix;
+		public Matrix invMatrix;
+		public TextWidgetLineLayout[] lines;
+	}
+
+	public class TextWidgetLineLayout {
+		public float x;
+		public float y;
+		public float fontSize;
+		public int index;
+		public Rect rect;
+		public TextWidgetCharLayout[] chars;
+	}
+
+	public class TextWidgetCharLayout {
+		public float x;
+		public float advance;
+		public int index;
+		public Rect rect;
+	}
 }

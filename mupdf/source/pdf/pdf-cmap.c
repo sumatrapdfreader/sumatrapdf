@@ -495,6 +495,12 @@ add_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, 
 		return;
 	}
 
+	if (cmap->codespace_len == 0)
+	{
+		fz_warn(ctx, "CMap is missing codespace range");
+		pdf_add_codespace(ctx, cmap, 0, 65535, 2);
+	}
+
 	count = high - low + 1;
 	for (k = 0; k < count; k++) {
 		unsigned int c = low + k;

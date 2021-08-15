@@ -45,6 +45,9 @@ const char *fz_caught_message(fz_context *ctx);
 int fz_caught(fz_context *ctx);
 void fz_rethrow_if(fz_context *ctx, int errcode);
 
+void fz_start_throw_on_repair(fz_context *ctx);
+void fz_end_throw_on_repair(fz_context *ctx);
+
 enum
 {
 	FZ_ERROR_NONE = 0,
@@ -54,6 +57,7 @@ enum
 	FZ_ERROR_MINOR = 4,
 	FZ_ERROR_TRYLATER = 5,
 	FZ_ERROR_ABORT = 6,
+	FZ_ERROR_REPAIRED = 7,
 	FZ_ERROR_COUNT
 };
 
@@ -574,6 +578,7 @@ struct fz_context
 #if FZ_ENABLE_ICC
 	int icc_enabled;
 #endif
+	int throw_on_repair;
 
 	/* TODO: should these be unshared? */
 	fz_document_handler_context *handler;

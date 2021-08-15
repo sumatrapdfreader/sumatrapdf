@@ -878,7 +878,6 @@ document_has_redactions(void)
 			{
 				if (pdf_annot_type(ctx, annot) == PDF_ANNOT_REDACT)
 				{
-					fz_drop_page(ctx, (fz_page *)page);
 					has_redact = 1;
 					break;
 				}
