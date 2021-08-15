@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/goamz/goamz v0.0.0-20180131231218-8b901b531db8
-	github.com/kjk/notionapi v0.0.0-20210813225557-195dcb8bc2be
+	github.com/kjk/notionapi v0.0.0-20210815232225-e690fe18acb8
 	github.com/kjk/u v0.0.0-20210327060556-13ea33918991
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
