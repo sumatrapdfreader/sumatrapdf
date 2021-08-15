@@ -682,8 +682,15 @@ static fz_font* pdf_load_windows_font(fz_context* ctx, const char* fontname, int
     /* metrics for Times-Roman don't match those of Windows' Times-Roman */
     /* https://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
     /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2108 */
-    if (is_base_14 && !strncmp(clean_name, "Times-", 6)) {
-        return NULL;
+    /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2028 */
+    /* TODO: should this always return NULL if is_base_14 is true? */
+    if (is_base_14) {
+        if (!strncmp(clean_name, "Times-", 6)) {
+            return NULL;
+        }
+        if (!strncmp(clean_name, "Helvetica", 9)) {
+            return NULL;
+        }
     }
 
     if (needs_exact_metrics) {
