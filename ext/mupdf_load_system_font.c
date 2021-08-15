@@ -685,10 +685,13 @@ static fz_font* pdf_load_windows_font(fz_context* ctx, const char* fontname, int
     /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2028 */
     /* TODO: should this always return NULL if is_base_14 is true? */
     if (is_base_14) {
-        if (!strncmp(clean_name, "Times-", 6)) {
+        if (!strncmp(clean_name, "Times", 5)) {
             return NULL;
         }
         if (!strncmp(clean_name, "Helvetica", 9)) {
+            return NULL;
+        }
+        if (!strncmp(clean_name, "Courier", 7)) {
             return NULL;
         }
     }
