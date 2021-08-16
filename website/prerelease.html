@@ -27,6 +27,7 @@
 
       function myInit() {
         $("buildtime").innerHTML = sumBuiltOn;
+        $("buildver").innerHTML = sumLatestVer;
 
         var name = getName(sumLatestExe);
         var html = "<a href='" + sumLatestExe + "'>" + name + "</a>";
@@ -83,7 +84,7 @@
 
     <p>
       <b>
-        Latest SumatraPDF pre-release build, built on
+        Latest SumatraPDF pre-release build version <span id="buildver"></span>, built on
         <span id="buildtime"></span>
         , commit
         <a id="buildsha1"></a>

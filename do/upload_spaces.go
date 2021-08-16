@@ -206,7 +206,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	// for prerel, version is in path, not in name
 	if buildType == buildTypePreRel {
 		d["Host"] = "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType + "/" + ver
-		d["Prefix]"] = appName
+		d["Prefix"] = appName
 	}
 	return execTextTemplate(tmplText, d)
 }
