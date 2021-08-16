@@ -165,7 +165,8 @@ func main() {
 		flgBuildPreRelease         bool
 		flgBuildRelease            bool
 		flgWc                      bool
-		flgDownloadTranslations    bool
+		flgTransDownload           bool
+		flgTransCiUpdate           bool
 		flgClean                   bool
 		flgCrashes                 bool
 		flgCheckAccessKeys         bool
@@ -201,7 +202,8 @@ func main() {
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
-		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
+		flag.BoolVar(&flgTransDownload, "trans-dl", false, "download latest translations to src/docs/translations.txt")
+		flag.BoolVar(&flgTransCiUpdate, "trans-ci-update", false, "download and checkin latest translations to src/docs/translations.txt")
 		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationsInfo.cpp")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
@@ -356,8 +358,29 @@ func main() {
 		return
 	}
 
-	if flgDownloadTranslations {
+	if flgTransDownload {
 		downloadTranslations()
+		return
+	}
+
+	if flgTransCiUpdate {
+		didChange := downloadTranslations()
+		if !didChange {
+			return
+		}
+		{
+			cmd := exec.Command("git", "add", filepath.Join("src", "docs", "translations.txt"))
+			cmdRunLoggedMust(cmd)
+		}
+		{
+			cmd := exec.Command("git", "commit", "-am", "update translations")
+			cmdRunLoggedMust(cmd)
+		}
+		{
+			cmd := exec.Command("git", "push")
+			cmdRunLoggedMust(cmd)
+		}
+
 		return
 	}
 

@@ -277,15 +277,6 @@ func urlify(title string) string {
 	return s
 }
 
-func dumpEnv() {
-	env := os.Environ()
-	logf("\nEnv:\n")
-	for _, s := range env {
-		logf("env: %s\n", s)
-	}
-	logf("\n")
-}
-
 // return true if file in path1 is newer than file in path2
 // also returns true if one or both files don't exist
 func fileNewerThan(path1, path2 string) bool {
@@ -295,4 +286,24 @@ func fileNewerThan(path1, path2 string) bool {
 		return true
 	}
 	return stat1.ModTime().After(stat2.ModTime())
+}
+
+func cmdRunLoggedMust(cmd *exec.Cmd) {
+	fmt.Printf("> %s\n", cmd.String())
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	err := cmd.Run()
+	must(err)
+}
+
+func readFileMust(path string) []byte {
+	d, err := ioutil.ReadFile(path)
+	must(err)
+	return d
+}
+
+func writeFileMust(path string, data []byte) {
+	err := ioutil.WriteFile(path, data, 0644)
+	must(err)
 }

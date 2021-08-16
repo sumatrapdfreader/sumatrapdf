@@ -1,4 +1,4 @@
-name: Process crash reports
+name: Daily process (crash reports, update translations)
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
@@ -26,3 +26,8 @@ jobs:
           SPACES_KEY: ${{ secrets.SPACES_KEY }}
           SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
         run: .\doit.bat -crashes
+
+      - name: update translations
+        env:
+          TRANS_UPLOAD_SECRET: ${{ secrets.TRANS_UPLOAD_SECRET }}
+        run: .\doit.bat -ci-trans-update

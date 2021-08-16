@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,8 +10,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 var (
@@ -53,7 +52,7 @@ func printSusTranslations(d []byte) {
 	}
 }
 
-func downloadTranslations() {
+func downloadTranslations() bool {
 	timeStart := time.Now()
 	defer func() {
 		fmt.Printf("downloadTranslations() finished in %s\n", time.Since(timeStart))
@@ -73,7 +72,15 @@ func downloadTranslations() {
 	panicIf(rsp.StatusCode != http.StatusOK)
 	d, err := io.ReadAll(rsp.Body)
 	must(err)
-	u.WriteFileMust(translationsTxtPath, d)
+
+	curr := readFileMust(translationsTxtPath)
+	if bytes.Equal(d, curr) {
+		fmt.Printf("Translations didn't change\n")
+		return false
+	}
+
+	writeFileMust(translationsTxtPath, d)
 	fmt.Printf("Wrote response of size %d to %s\n", len(d), translationsTxtPath)
 	printSusTranslations(d)
+	return false
 }
