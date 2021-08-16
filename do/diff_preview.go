@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -204,21 +203,6 @@ func createEmptyFileMust(path string) {
 	f, err := os.Create(path)
 	must(err)
 	f.Close()
-}
-
-func copyFileMust(dst, src string) {
-	// ensure windows-style dir separator
-	dst = strings.Replace(dst, "/", "\\", -1)
-	src = strings.Replace(src, "/", "\\", -1)
-
-	fdst, err := os.Create(dst)
-	must(err)
-	defer fdst.Close()
-	fsrc, err := os.Open(src)
-	must(err)
-	defer fsrc.Close()
-	_, err = io.Copy(fdst, fsrc)
-	must(err)
 }
 
 func copyFileAddedMust(dirBefore, dirAfter string, change *GitChange) {
