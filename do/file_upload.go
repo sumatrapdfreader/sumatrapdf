@@ -17,7 +17,7 @@ func fileUpload(path string) {
 	must(err)
 	sha1, err := u.Sha1HexOfFile(path)
 	must(err)
-	dstFileName := sha1[:6] + "-" + filepath.Base(path)
+	dstFileName := sha1[:6] + "-" + urlify(filepath.Base(path))
 	remotePath := path2.Join(filesRemoteDir, dstFileName)
 	sizeStr := u.FmtSizeHuman(fileSize)
 	logf("uploading '%s' of size %s as '%s'\n", path, sizeStr, remotePath)

@@ -256,8 +256,8 @@ func charCanRepeat(c byte) bool {
 }
 
 // urlify generates safe url from tile by removing hazardous characters
-func urlify(title string) string {
-	s := strings.TrimSpace(title)
+func urlify(s string) string {
+	s = strings.TrimSpace(s)
 	var res []byte
 	for _, r := range s {
 		c := validateRune(r)
