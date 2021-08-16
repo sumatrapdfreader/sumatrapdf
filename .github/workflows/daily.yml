@@ -9,7 +9,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v2
         with:
           go-version: 1.16
 
@@ -17,7 +17,7 @@ jobs:
         run: npm install -g netlify-cli
 
       - name: Check out source code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: process craches and netfliy deploy
         env:
