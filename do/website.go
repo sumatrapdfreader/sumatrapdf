@@ -32,7 +32,7 @@ func websiteBuildCloudflare() {
 		fmt.Printf("Skipping downloading executables because not 'website-cf' branch\n")
 		return
 	}
-	ver := "3.2"
+	ver := "3.3.3"
 	files := []string{
 		"SumatraPDF-%VER%-64-install.exe",
 		"SumatraPDF-%VER%-64.zip",

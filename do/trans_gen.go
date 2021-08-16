@@ -6,8 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 // Lang describes a single language
@@ -201,6 +199,6 @@ func genTranslationInfoCpp() {
 	path := filepath.Join("src", "TranslationsInfo.cpp")
 	fileContent := evalTmpl(compactCTmpl, v2)
 	logf("fileContent: path: %s, file size: %d\n", path, len(fileContent))
-	u.WriteFileMust(path, []byte(fileContent))
+	writeFileMust(path, []byte(fileContent))
 	// print_stats(langs)
 }

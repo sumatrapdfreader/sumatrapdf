@@ -71,7 +71,12 @@ func isValidBuildType(buildType string) bool {
 
 func getRemoteDir(buildType string) string {
 	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
-	return "software/sumatrapdf/" + buildType + "/"
+	ver := getVerForBuildType(buildType)
+	dir := "software/sumatrapdf/" + buildType + "/"
+	if buildType == buildTypePreRel {
+		return dir + ver + "/"
+	}
+	return dir
 }
 
 func newMinioClient() *u.MinioClient {
@@ -133,6 +138,17 @@ func getDownloadUrls(storage string, buildType string, ver string) *DownloadUrls
 		portableExe32: prefix + "SumatraPDF-${buildType}-${ver}.exe",
 		portableZip32: prefix + "SumatraPDF-${buildType}-${ver}.zip",
 	}
+	if buildType == buildTypePreRel {
+		// for pre-release, ${ver} is encoded prefix
+		res = &DownloadUrls{
+			installer64:   prefix + "SumatraPDF-${buildType}-64-install.exe",
+			portableExe64: prefix + "SumatraPDF-${buildType}-64.exe",
+			portableZip64: prefix + "SumatraPDF-${buildType}-64.zip",
+			installer32:   prefix + "SumatraPDF-${buildType}-install.exe",
+			portableExe32: prefix + "SumatraPDF-${buildType}.exe",
+			portableZip32: prefix + "SumatraPDF-${buildType}.zip",
+		}
+	}
 	rplc := func(s *string) {
 		*s = strings.Replace(*s, "${ver}", ver, -1)
 		*s = strings.Replace(*s, "${buildType}", buildType, -1)
@@ -146,34 +162,53 @@ func getDownloadUrls(storage string, buildType string, ver string) *DownloadUrls
 	return res
 }
 
-func spacesUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
-	files, err := ioutil.ReadDir(dirLocal)
-	must(err)
-	for _, f := range files {
-		fname := f.Name()
-		pathLocal := filepath.Join(dirLocal, fname)
-		pathRemote := path.Join(dirRemote, fname)
-		logf("Uploading to spaces: '%s' as '%s'. ", pathLocal, pathRemote)
-		timeStart := time.Now()
-		err := c.UploadFilePublic(pathRemote, pathLocal)
-		if err != nil {
-			logf("Failed with '%s'\n", err)
-			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
-		}
-		logf("Done in %s\n", time.Since(timeStart))
+// sumatrapdf/sumatralatest.js
+func createSumatraLatestJs(buildType string) string {
+	var appName string
+	switch buildType {
+	case buildTypeDaily, buildTypePreRel:
+		appName = "SumatraPDF-prerel"
+	case buildTypeRel:
+		appName = "SumatraPDF"
+	default:
+		panicIf(true, "invalid buildType '%s'", buildType)
 	}
-	return nil
-}
 
-// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
-// consider a pre-release build already present in s3 if manifest file exists
-func verifyBuildNotInSpacesMust(buildType string) {
-	dirRemote := getRemoteDir(buildType)
+	currDate := time.Now().Format("2006-01-02")
+	// TODO: use
+	// urls := getDownloadUrls(storage, buildType, ver)
+
+	tmplText := `
+var sumLatestVer = {{.Ver}};
+var sumCommitSha1 = "{{ .Sha1 }}";
+var sumBuiltOn = "{{.CurrDate}}";
+var sumLatestName = "{{.Prefix}}.exe";
+
+var sumLatestExe         = "{{.Host}}/{{.Prefix}}.exe";
+var sumLatestExeZip      = "{{.Host}}/{{.Prefix}}.zip";
+var sumLatestPdb         = "{{.Host}}/{{.Prefix}}.pdb.zip";
+var sumLatestInstaller   = "{{.Host}}/{{.Prefix}}-install.exe";
+
+var sumLatestExe64       = "{{.Host}}/{{.Prefix}}-64.exe";
+var sumLatestExeZip64    = "{{.Host}}/{{.Prefix}}-64.zip";
+var sumLatestPdb64       = "{{.Host}}/{{.Prefix}}-64.pdb.zip";
+var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
+`
 	ver := getVerForBuildType(buildType)
-	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
-	remotePath := path.Join(dirRemote, fname)
-	c := newMinioClient()
-	panicIf(minioExists(c, remotePath), "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
+	sha1 := getGitSha1()
+	d := map[string]interface{}{
+		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType,
+		"Ver":      ver,
+		"Sha1":     sha1,
+		"CurrDate": currDate,
+		"Prefix":   appName + "-" + ver,
+	}
+	// for prerel, version is in path, not in name
+	if buildType == buildTypePreRel {
+		d["Host"] = "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType + "/" + ver
+		d["Prefix]"] = appName
+	}
+	return execTextTemplate(tmplText, d)
 }
 
 func getVersionFilesForLatestInfo(storage string, buildType string) [][]string {
@@ -221,6 +256,36 @@ PortableZip32: ${zip32}
 	}
 
 	return res
+}
+
+func spacesUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
+	files, err := ioutil.ReadDir(dirLocal)
+	must(err)
+	for _, f := range files {
+		fname := f.Name()
+		pathLocal := filepath.Join(dirLocal, fname)
+		pathRemote := path.Join(dirRemote, fname)
+		logf("Uploading to spaces: '%s' as '%s'. ", pathLocal, pathRemote)
+		timeStart := time.Now()
+		err := c.UploadFilePublic(pathRemote, pathLocal)
+		if err != nil {
+			logf("Failed with '%s'\n", err)
+			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
+		}
+		logf("Done in %s\n", time.Since(timeStart))
+	}
+	return nil
+}
+
+// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
+// consider a pre-release build already present in s3 if manifest file exists
+func verifyBuildNotInSpacesMust(buildType string) {
+	dirRemote := getRemoteDir(buildType)
+	ver := getVerForBuildType(buildType)
+	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
+	remotePath := path.Join(dirRemote, fname)
+	c := newMinioClient()
+	panicIf(minioExists(c, remotePath), "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.

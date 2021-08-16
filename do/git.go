@@ -2,8 +2,6 @@ package main
 
 import (
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 func getGitLinearVersionMust() int {
@@ -12,14 +10,14 @@ func getGitLinearVersionMust() int {
 	// we add 1000 to create a version that is larger than the svn version
 	// from the time we used svn
 	n := len(lines) + 1000
-	u.PanicIf(n < 10000, "getGitLinearVersion: n is %d (should be > 10000)", n)
+	panicIf(n < 10000, "getGitLinearVersion: n is %d (should be > 10000)", n)
 	return n
 }
 
 func getGitSha1Must() string {
 	out := runExeMust("git", "rev-parse", "HEAD")
 	s := strings.TrimSpace(string(out))
-	u.PanicIf(len(s) != 40, "getGitSha1Must(): %s doesn't look like sha1\n", s)
+	panicIf(len(s) != 40, "getGitSha1Must(): %s doesn't look like sha1\n", s)
 	return s
 }
 
@@ -65,11 +63,11 @@ func verifyOnReleaseBranchMust() {
 	currBranch := getCurrentBranchMust()
 	prefix := "rel"
 	suffix := "working"
-	u.PanicIf(!strings.HasPrefix(currBranch, prefix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
-	u.PanicIf(!strings.HasSuffix(currBranch, suffix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
+	panicIf(!strings.HasPrefix(currBranch, prefix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
+	panicIf(!strings.HasSuffix(currBranch, suffix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
 
 	ver := currBranch[len(prefix):]
 	ver = ver[:len(ver)-len(suffix)]
 
-	u.PanicIf(!strings.HasPrefix(sumatraVersion, ver), "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
+	panicIf(!strings.HasPrefix(sumatraVersion, ver), "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
 }

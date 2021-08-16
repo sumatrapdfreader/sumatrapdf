@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 const tmplHTML = `<!doctype html>
@@ -347,7 +345,7 @@ func genLangsHTML() {
 	//s = strings.Replace(s, "&#39;", "'", -1)
 
 	path := filepath.Join(websiteSettingsDir(), langsFileName())
-	u.WriteFileMust(path, []byte(s))
+	writeFileMust(path, []byte(s))
 }
 
 func genSettingsHTML() {
@@ -362,6 +360,6 @@ func genSettingsHTML() {
 	//s = strings.Replace(s, "&#39;", "'", -1)
 
 	path := filepath.Join(websiteSettingsDir(), settingsFileName())
-	u.WriteFileMust(path, []byte(s))
+	writeFileMust(path, []byte(s))
 	fmt.Printf("Wrote '%s'\n", path)
 }

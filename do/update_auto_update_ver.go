@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 // Format of auto-update file:
@@ -63,6 +61,6 @@ Latest %s
 	}
 
 	path := filepath.Join("website", "update-check-rel.txt")
-	u.WriteFileMust(path, []byte(s))
+	writeFileMust(path, []byte(s))
 	fmt.Printf("Don't forget to checkin file '%s' and deploy website\n", path)
 }

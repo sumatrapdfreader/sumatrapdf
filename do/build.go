@@ -43,11 +43,12 @@ func isNum(s string) bool {
 // Version must be in format x.y.z
 func verifyCorrectVersionMust(ver string) {
 	parts := strings.Split(ver, ".")
-	u.PanicIf(len(parts) == 0 || len(parts) > 3, "%s is not a valid version number", ver)
+	panicIf(len(parts) == 0 || len(parts) > 3, "%s is not a valid version number", ver)
 	for _, part := range parts {
-		u.PanicIf(!isNum(part), "%s is not a valid version number", ver)
+		panicIf(!isNum(part), "%s is not a valid version number", ver)
 	}
 }
+
 func getFileNamesWithPrefix(prefix string) [][]string {
 	files := [][]string{
 		{"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix)},
@@ -229,7 +230,7 @@ func buildSmoke() {
 	clean()
 
 	lzsa := absPathMust(filepath.Join("bin", "MakeLZSA.exe"))
-	u.PanicIf(!u.FileExists(lzsa), "file '%s' doesn't exist", lzsa)
+	panicIf(!u.FileExists(lzsa), "file '%s' doesn't exist", lzsa)
 
 	msbuildPath := detectMsbuildPath()
 	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
@@ -261,7 +262,7 @@ func setBuildConfigPreRelease() {
 	s := getBuildConfigCommon()
 	preRelVer := getPreReleaseVer()
 	s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
-	u.WriteFileMust(buildConfigPath(), []byte(s))
+	writeFileMust(buildConfigPath(), []byte(s))
 }
 
 func setBuildConfigRelease() {
@@ -398,7 +399,7 @@ func createManifestMust() {
 	artifactsDir := filepath.Join("out", "artifacts")
 	u.CreateDirMust(artifactsDir)
 	path := filepath.Join(artifactsDir, "manifest.txt")
-	u.WriteFileMust(path, []byte(s))
+	writeFileMust(path, []byte(s))
 }
 
 // https://lucasg.github.io/2018/01/15/Creating-an-appx-package/
@@ -449,7 +450,7 @@ func buildPreRelease() {
 	createManifestMust()
 
 	dstDir := filepath.Join("out", "final-prerel")
-	prefix := fmt.Sprintf("SumatraPDF-prerel-%s", ver)
+	prefix := "SumatraPDF-prerel"
 	copyBuiltFiles(dstDir, rel32Dir, prefix)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
 	copyBuiltManifest(dstDir, prefix)

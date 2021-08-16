@@ -316,7 +316,7 @@ func notionToHTML(client *notionapi.CachingClient, page *notionapi.Page, pages [
 	name := fileNameForPage(page)
 	path := filepath.Join("docs", name)
 	logf("Writing '%s' for title '%s'\n", path, page.Root().Title)
-	u.WriteFileMust(path, html)
+	writeFileMust(path, html)
 }
 
 func checkPrettierExist() {

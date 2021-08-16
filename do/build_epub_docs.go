@@ -28,11 +28,11 @@ func buildEpubDocs() {
 
 	{
 		path := filepath.Join(dir, "mimetype")
-		u.WriteFileMust(path, []byte(mimeTypeFile))
+		writeFileMust(path, []byte(mimeTypeFile))
 	}
 	{
 		path := filepath.Join(metaInfDir, "container.xml")
-		u.WriteFileMust(path, []byte(containerXmlFile))
+		writeFileMust(path, []byte(containerXmlFile))
 	}
 
 	{

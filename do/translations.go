@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 func verifyTranslationsMust() {
@@ -118,7 +116,7 @@ func extractTranslations(s string) []string {
 }
 
 func extractStringsFromCFile(path string) []string {
-	d := u.ReadFileMust(path)
+	d := readFileMust(path)
 	return extractTranslations(string(d))
 }
 

@@ -44,47 +44,6 @@ func execTextTemplate(tmplText string, data interface{}) string {
 	return buf.String()
 }
 
-// sumatrapdf/sumatralatest.js
-func createSumatraLatestJs(buildType string) string {
-	var appName string
-	switch buildType {
-	case buildTypeDaily, buildTypePreRel:
-		appName = "SumatraPDF-prerel"
-	case buildTypeRel:
-		appName = "SumatraPDF"
-	default:
-		panicIf(true, "invalid buildType '%s'", buildType)
-	}
-
-	currDate := time.Now().Format("2006-01-02")
-	tmplText := `
-var sumLatestVer = {{.Ver}};
-var sumCommitSha1 = "{{ .Sha1 }}";
-var sumBuiltOn = "{{.CurrDate}}";
-var sumLatestName = "{{.Prefix}}.exe";
-
-var sumLatestExe         = "{{.Host}}/{{.Prefix}}.exe";
-var sumLatestExeZip      = "{{.Host}}/{{.Prefix}}.zip";
-var sumLatestPdb         = "{{.Host}}/{{.Prefix}}.pdb.zip";
-var sumLatestInstaller   = "{{.Host}}/{{.Prefix}}-install.exe";
-
-var sumLatestExe64       = "{{.Host}}/{{.Prefix}}-64.exe";
-var sumLatestExeZip64    = "{{.Host}}/{{.Prefix}}-64.zip";
-var sumLatestPdb64       = "{{.Host}}/{{.Prefix}}-64.pdb.zip";
-var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
-`
-	ver := getVerForBuildType(buildType)
-	sha1 := getGitSha1()
-	d := map[string]interface{}{
-		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType,
-		"Ver":      ver,
-		"Sha1":     sha1,
-		"CurrDate": currDate,
-		"Prefix":   appName + "-" + ver,
-	}
-	return execTextTemplate(tmplText, d)
-}
-
 // list is sorted by Version, biggest first, to make it easy to delete oldest
 func s3ListPreReleaseFilesMust(c *S3Client, prefix string) []string {
 	bucket := c.GetBucket()

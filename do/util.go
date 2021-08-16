@@ -17,11 +17,15 @@ import (
 )
 
 var (
-	must    = u.Must
 	logf    = u.Logf
-	fatalIf = u.PanicIf
-	panicIf = u.PanicIf
+	fatalIf = panicIf
 )
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 
 func absPathMust(path string) string {
 	res, err := filepath.Abs(path)
@@ -67,7 +71,7 @@ func getEnvAfterScript(path string) []string {
 	must(err)
 	res := string(resBytes)
 	parts := strings.Split(res, "\n")
-	u.PanicIf(len(parts) == 1, "split failed\nres:\n%s\n", res)
+	panicIf(len(parts) == 1, "split failed\nres:\n%s\n", res)
 	for idx, env := range parts {
 		parts[idx] = strings.TrimSpace(env)
 	}
@@ -306,4 +310,18 @@ func readFileMust(path string) []byte {
 func writeFileMust(path string, data []byte) {
 	err := ioutil.WriteFile(path, data, 0644)
 	must(err)
+}
+
+func panicIf(cond bool, args ...interface{}) {
+	if !cond {
+		return
+	}
+	s := "condition failed"
+	if len(args) > 0 {
+		s = fmt.Sprintf("%s", args[0])
+		if len(args) > 1 {
+			s = fmt.Sprintf(s, args[1:]...)
+		}
+	}
+	panic(s)
 }

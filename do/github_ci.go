@@ -25,7 +25,7 @@ func triggerBuildWebHook(typ string) {
 	req.Header.Set("Authorization", val)
 	rsp, err := http.DefaultClient.Do(req)
 	u.Must(err)
-	u.PanicIf(rsp.StatusCode >= 400)
+	panicIf(rsp.StatusCode >= 400)
 }
 
 const (
