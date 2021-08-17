@@ -61,7 +61,7 @@ func PathIsDir(path string) (isDir bool, err error) {
 }
 
 // CreateZipWithDirContent creates a zip file with the content of a directory.
-// The names of files inside the zip file are relatitve to dirToZip e.g.
+// The names of files inside the zip file are relative to dirToZip e.g.
 // if dirToZip is foo and there is a file foo/bar.txt, the name in the zip
 // will be bar.txt
 func CreateZipWithDirContent(zipFilePath, dirToZip string) error {

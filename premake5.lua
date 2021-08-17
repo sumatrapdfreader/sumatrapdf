@@ -99,10 +99,10 @@ function optconf()
 end
 
 function zlib_ng_defines()
-  defines { 
+  defines {
     "_CRT_SECURE_NO_DEPRECATE",
     "_CRT_NONSTDC_NO_DEPRECATE",
-    "X86_FEATURES", 
+    "X86_FEATURES",
     "X86_PCLMULQDQ_CRC",
     "X86_SSE2",
     "X86_SSE42_CRC_INTRIN",
@@ -299,7 +299,7 @@ workspace "SumatraPDF"
     zlib_ng_defines()
     disablewarnings { "4244", "4267" }
     zlib_ng_files()
-    
+
   -- to make Visual Studio solution smaller
   -- combine 9 libs only used by mupdf into a single project
   -- instead of having 9 projects
@@ -390,7 +390,7 @@ workspace "SumatraPDF"
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
     -- gumbo
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267",
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
@@ -513,7 +513,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267",
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()

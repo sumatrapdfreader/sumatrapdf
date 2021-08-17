@@ -394,7 +394,7 @@ Changing nRealloc would over-write allocator, leading to crashes.
 - fix DjVu rotation (fixes #1593)
   must process the file before setting rotation
   https://github.com/sumatrapdfreader/sumatrapdf/issues/1593
-- renaming class CFoo => Foo 
+- renaming class CFoo => Foo
 
 2021-06-29 Tue
 
@@ -566,7 +566,7 @@ Changing nRealloc would over-write allocator, leading to crashes.
  we consistently start with 2019 Preview.
 - stress testing: limit number of rendered pages per file to 32 randomly
   picked pages. This speeds up stress testing by avoiding rendering really
-  big documents. 
+  big documents.
 
 2021-05-28 Fri
 
@@ -755,7 +755,7 @@ Link to the commit on pre-release and daily build pages.
 Fixed a long-standing issue of loosing list of opened files
 if Sumatra crashes or get killed by Windows (e.g. due to restart).
 Took so long to fix becaue I believed the code is correct.
-Turns out prefs::Save() was haphzardly used. It's still
+Turns out prefs::Save() was haphazardly used. It's still
 not great but at least this specific error is fixed.
 To be even more robust we should periodically (every 5 min?)
 call prefs::Save(). We only do it after opening and closing a file,
@@ -787,7 +787,7 @@ Reading code where you see T instead of WCHAR is significantly
 worse.
 The more stuff there is in .h files, the more code uses
 templates, the longer are compilation times.
-Templated code must be in .h file. 
+Templated code must be in .h file.
 While I can't fix long compilation times, I can try to keep
 them as fast as possible.
 Also an opportunity to make the API smaller.

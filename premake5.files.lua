@@ -67,7 +67,7 @@ end
 
 function zlib_ng_files()
   files_in_dir("ext/zlib-ng", {
-    "adler32.c", 
+    "adler32.c",
     "chunkset.c",
     "compare258.c",
     "compress.c",
@@ -551,7 +551,7 @@ function sumatrapdf_files()
   filter {"configurations:Debug"}
     files_in_dir("src", {
       "Tests.cpp",
-      "regress/Regress.*",  
+      "regress/Regress.*",
     })
     files_in_dir("src/testcode", {
       "test-app.h",
@@ -1049,7 +1049,7 @@ end
 function engine_dump_files()
   files_in_dir("src", {
     "EngineDump.cpp",
-    "SumatraConfig.*",    
+    "SumatraConfig.*",
     "mui/MiniMui.*",
     "mui/TextRender.*"
   })
