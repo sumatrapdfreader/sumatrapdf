@@ -203,7 +203,7 @@ func main() {
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgTransDownload, "trans-dl", false, "download latest translations to src/docs/translations.txt")
-		flag.BoolVar(&flgTransCiUpdate, "trans-ci-update", false, "download and checkin latest translations to src/docs/translations.txt")
+		flag.BoolVar(&flgTransCiUpdate, "ci-trans-update", false, "download and checkin latest translations to src/docs/translations.txt")
 		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationsInfo.cpp")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
