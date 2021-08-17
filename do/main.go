@@ -14,6 +14,7 @@ import (
 
 var (
 	flgSkipSign bool
+	flgNoCache  bool
 )
 
 func regenPremake() {
@@ -175,7 +176,6 @@ func main() {
 		flgWebsiteDeployCloudflare bool
 		flgWebsiteImportNotion     bool
 		flgWebsiteBuildCloudflare  bool
-		flgNoCache                 bool
 		flgClangFormat             bool
 		flgDiff                    bool
 		flgGenSettings             bool
