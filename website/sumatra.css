@@ -363,15 +363,18 @@ a.for-nav-icon:hover {
   display: flex;
   flex-direction: column;
   width: 30%;
-  /* background-color: #FBF0FA; */
+
   padding-left: 10px;
   padding-right: 10px;
+  padding-bottom: 8px;;
 
-  margin-left: 6px;
-  margin-top: 6px;
+  margin-left: 14px;
+  margin-top: 12px;
 
-  border: 1px solid #dddddd;
+  background: linear-gradient(180deg,#fff,hsla(0,0%,100%,.94));
+  border: 1px solid rgba(12,29,71,.1);
   border-radius: 8px;
+  box-shadow: 1px 1px 1px #ccc
 }
 
 .testimonials-text {
