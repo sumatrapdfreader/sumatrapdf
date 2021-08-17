@@ -264,7 +264,7 @@ func urlify(s string) string {
 		if c == 0 {
 			continue
 		}
-		// eliminute duplicate consequitive characters
+		// eliminate duplicate consecutive characters
 		var prev byte
 		if len(res) > 0 {
 			prev = res[len(res)-1]

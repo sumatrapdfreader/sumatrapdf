@@ -15,7 +15,7 @@ import (
 /*
 A tool to preview changes before checkin.
 Uses WinMerge to do the diffing (https://winmerge.org/)
-Anohter option that wouldn't require winmerge is to make it a web server,
+Another option that wouldn't require winmerge is to make it a web server,
 implement web-based ui and launch the browser.
 */
 

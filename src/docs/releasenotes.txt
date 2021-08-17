@@ -334,11 +334,11 @@ updated Japanese and Brazillian translation
 
 * ability to disable auto-update check
 * improved text rendering - should fix problems with overlapping text
-* improved font substition for fonts not present in PDF file
+* improved font substitution for fonts not present in PDF file
 * can now open PDF files with non-ascii names
 * improvements to DDE (contributed by Danilo Roascio)
 * SyncTex improvements
-* improve persistance of state (contributed by Robert Liu)
+* improve persistence of state (contributed by Robert Liu)
 * fix crash when pressing 'Cancel' when entering a password
 * updated translations
 
