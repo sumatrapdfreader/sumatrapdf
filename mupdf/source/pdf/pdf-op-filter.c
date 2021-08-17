@@ -1453,9 +1453,9 @@ pdf_filter_squote(fz_context *ctx, pdf_processor *proc, char *str, size_t len)
 	/* Note, we convert all T' operators to (maybe) a T* and a Tj */
 	pdf_filter_processor *p = (pdf_filter_processor*)proc;
 
-	/* need to flush text state and adjustment before we emit a newline */
+	/* need to flush text state and clear adjustment before we emit a newline */
+	p->Tm_adjust = 0;
 	filter_flush(ctx, p, FLUSH_ALL);
-	flush_adjustment(ctx, p);
 
 	pdf_tos_newline(&p->tos, p->gstate->pending.text.leading);
 	/* If Tm_pending, then just adjusting the matrix (as
@@ -1473,9 +1473,9 @@ pdf_filter_dquote(fz_context *ctx, pdf_processor *proc, float aw, float ac, char
 	 * (maybe) Tc, (maybe) Tw and a Tj. */
 	pdf_filter_processor *p = (pdf_filter_processor*)proc;
 
-	/* need to flush text state and adjustment before we emit a newline */
+	/* need to flush text state and clear adjustment before we emit a newline */
+	p->Tm_adjust = 0;
 	filter_flush(ctx, p, FLUSH_ALL);
-	flush_adjustment(ctx, p);
 
 	p->gstate->pending.text.word_space = aw;
 	p->gstate->pending.text.char_space = ac;

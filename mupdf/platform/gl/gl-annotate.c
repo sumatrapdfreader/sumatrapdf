@@ -604,7 +604,7 @@ static unsigned int hex_from_color(int n, float color[4])
 	switch (n)
 	{
 	default:
-		return 0xff000000;
+		return 0x00000000;
 	case 1:
 		r = color[0] * 255;
 		return 0xff000000 | (r<<16) | (r<<8) | r;

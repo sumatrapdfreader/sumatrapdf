@@ -112,67 +112,28 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 
 		if (xo || yo)
 		{
-			float x, y, zoom, h;
+			int x, y, w, h;
 			fz_rect mediabox;
 			fz_matrix pagectm;
 
 			/* Link coords use a coordinate space that does not seem to respect Rotate or UserUnit. */
-			/* All we need to do is figure out the page height to flip the coordinate space. */
+			/* All we need to do is figure out the page size to flip the coordinate space and
+			 * clamp the coordinates to stay on the page. */
 			pdf_page_obj_transform(ctx, pageobj, &mediabox, &pagectm);
 			mediabox = fz_transform_rect(mediabox, pagectm);
-			h = mediabox.y1 - mediabox.y0;
-
-			x = xo ? pdf_to_real(ctx, xo) : 0;
-			y = yo ? h - pdf_to_real(ctx, yo) : 0;
-			zoom = zoomo ? pdf_to_real(ctx, zoomo) : 0;
-
-			if (zoom) {
-				return fz_asprintf(ctx, "#%d,%f,%f,%.2f", page + 1, x, y, zoom);
-			} else {
-				return fz_asprintf(ctx, "#%d,%f,%f", page + 1, x, y);
-			}
-		}
-	}
-#else
-	if (obj)
-	{
-		pdf_obj *xo = NULL;
-		pdf_obj *yo = NULL;
-
-		if (pdf_name_eq(ctx, obj, PDF_NAME(XYZ)))
-		{
-			xo = pdf_array_get(ctx, dest, 2);
-			yo = pdf_array_get(ctx, dest, 3);
-		}
-		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitR)))
-		{
-			xo = pdf_array_get(ctx, dest, 2);
-			yo = pdf_array_get(ctx, dest, 5);
-		}
-		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitH)) || pdf_name_eq(ctx, obj, PDF_NAME(FitBH)))
-		{
-			yo = pdf_array_get(ctx, dest, 2);
-		}
-		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitV)) || pdf_name_eq(ctx, obj, PDF_NAME(FitBV)))
-		{
-			xo = pdf_array_get(ctx, dest, 2);
-		}
-
-		if (xo || yo)
-		{
-			int x, y, h;
-			fz_rect mediabox;
-			fz_matrix pagectm;
-
-			/* Link coords use a coordinate space that does not seem to respect Rotate or UserUnit. */
-			/* All we need to do is figure out the page height to flip the coordinate space. */
-			pdf_page_obj_transform(ctx, pageobj, &mediabox, &pagectm);
-			mediabox = fz_transform_rect(mediabox, pagectm);
+			w = mediabox.x1 - mediabox.x0;
 			h = mediabox.y1 - mediabox.y0;
 
 			x = xo ? pdf_to_int(ctx, xo) : 0;
 			y = yo ? h - pdf_to_int(ctx, yo) : 0;
-			return fz_asprintf(ctx, "#%d,%d,%d", page + 1, x, y);
+			x = fz_clamp(x, 0, w);
+			y = fz_clamp(y, 0, h);
+
+			if (zoomo) {
+				float zoom = pdf_to_real(ctx, zoomo);
+				return fz_asprintf(ctx, "#%d,%d,%d,%.2f", page + 1, x, y, zoom);
+			} else {
+				return fz_asprintf(ctx, "#%d,%d,%d", page + 1, x, y);
 			}
 		}
 	}
