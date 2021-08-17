@@ -20,7 +20,7 @@ const nBuildsToRetainPreRel = 16
 const nBuildsToRetainDaily = 64
 
 const (
-	// TODO: only remains because we want to update the versoin
+	// TODO: only remains because we want to update the version
 	// so that people eventually upgrade to pre-release
 	buildTypeDaily  = "daily"
 	buildTypePreRel = "prerel"

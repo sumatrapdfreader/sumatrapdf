@@ -42,7 +42,7 @@ func validateVer(ver string) {
 
 func updateAutoUpdateVer(ver string) {
 	validateVer(ver)
-	// TODO: verify it's bigger than the current vresion
+	// TODO: verify it's bigger than the current version
 	// TODO: add download links
 	s := fmt.Sprintf(`[SumatraPDF]
 Latest %s

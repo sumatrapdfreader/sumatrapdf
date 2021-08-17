@@ -55,7 +55,7 @@ func runCppCheck(all bool) {
 	// ... line with a problem
 	var cmd *exec.Cmd
 
-	// TODO: not sure if adding Windows SDK include  path helps.
+	// TODO: not sure if adding Windows SDK include path helps.
 	// It takes a lot of time and doesn't seem to provide value
 	//winSdkIncludeDir := `C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um`
 	// "-I", winSdkIncludeDir

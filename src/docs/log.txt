@@ -755,7 +755,7 @@ Link to the commit on pre-release and daily build pages.
 Fixed a long-standing issue of loosing list of opened files
 if Sumatra crashes or get killed by Windows (e.g. due to restart).
 Took so long to fix becaue I believed the code is correct.
-Turns out prefs::Save() was haphzardly used. It's still
+Turns out prefs::Save() was haphazardly used. It's still
 not great but at least this specific error is fixed.
 To be even more robust we should periodically (every 5 min?)
 call prefs::Save(). We only do it after opening and closing a file,
