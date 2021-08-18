@@ -592,7 +592,7 @@ static const WCHAR* Md5OfAppExe() {
     }
 
     u8 md5[16] = {0};
-    CalcMD5DigestWin(d.data, d.size(), md5);
+    CalcMD5Digest(d.data, d.size(), md5);
 
     AutoFree md5HexA(_MemToHex(&md5));
     AutoFreeWstr md5Hex = strconv::Utf8ToWchar(md5HexA.AsView());

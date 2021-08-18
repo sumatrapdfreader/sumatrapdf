@@ -6,6 +6,7 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2122
   should test with more files
 - simplify Calc[MD5|Sha1|Sha2]DigestWin by re-using common code
+- remove redundant md5/sha1/sha2 implementations using libmupdf
 
 2021-08-11 Wed
 

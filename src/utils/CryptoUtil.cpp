@@ -1,12 +1,6 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef NO_LIBMUPDF
-extern "C" {
-#include <mupdf/fitz/crypt.h>
-}
-#endif
-
 #include "utils/BaseUtil.h"
 #include "utils/CryptoUtil.h"
 
@@ -14,52 +8,9 @@ extern "C" {
 #define DWORD_MAX 0xffffffffUL
 #endif
 
-#ifndef NO_LIBMUPDF
-
-void CalcMD5Digest(const u8* data, size_t byteCount, u8 digest[16]) {
-    fz_md5 md5;
-    fz_md5_init(&md5);
-#ifdef _WIN64
-    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX) {
-        fz_md5_update(&md5, data, UINT_MAX);
-    }
-#endif
-    fz_md5_update(&md5, data, (unsigned int)byteCount);
-    fz_md5_final(&md5, digest);
-}
-
-void CalcSHA2Digest(const u8* data, size_t byteCount, u8 digest[32]) {
-    fz_sha256 sha2;
-    fz_sha256_init(&sha2);
-#ifdef _WIN64
-    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX) {
-        fz_sha256_update(&sha2, data, UINT_MAX);
-    }
-#endif
-    fz_sha256_update(&sha2, data, (unsigned int)byteCount);
-    fz_sha256_final(&sha2, digest);
-}
-
-#else
-
-void CalcMD5Digest(const u8* data, size_t byteCount, u8 digest[16]) {
-    CalcMD5DigestWin(data, byteCount, digest);
-}
-
-void CalcSHA2Digest(const u8* data, size_t byteCount, u8 digest[32]) {
-    CalcSha2DigestWin(data, byteCount, digest);
-}
-
-#endif
-
-// Note: this crashes under Win2000, use SHA2 or MD5 instad
-void CalcSHA1Digest(const u8* data, size_t byteCount, u8 digest[20]) {
-    CalcSha1DigestWin(data, byteCount, digest);
-}
-
 // TODO: could use CryptoNG available starting in Vista
-static void CalcDigestWin(const void* data, size_t byteCount, u8* digest, DWORD digestSize, const WCHAR* provider,
-                          DWORD type, ALG_ID alg) {
+static NO_INLINE void CalcDigestWin(const void* data, size_t dataSize, u8* digest, DWORD digestSize,
+                                    const WCHAR* provider, DWORD type, ALG_ID alg) {
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
     BOOL ok = CryptAcquireContextW(&hProv, nullptr, provider, type, CRYPT_VERIFYCONTEXT);
@@ -68,13 +19,13 @@ static void CalcDigestWin(const void* data, size_t byteCount, u8* digest, DWORD 
     CrashIf(!ok);
 
 #ifdef _WIN64
-    for (; byteCount > DWORD_MAX; data = (const BYTE*)data + DWORD_MAX, byteCount -= DWORD_MAX) {
+    for (; dataSize > DWORD_MAX; data = (const BYTE*)data + DWORD_MAX, dataSize -= DWORD_MAX) {
         ok = CryptHashData(hHash, (const BYTE*)data, DWORD_MAX, 0);
         CrashIf(!ok);
     }
 #endif
-    CrashIf(byteCount > DWORD_MAX);
-    ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)byteCount, 0);
+    CrashIf(dataSize > DWORD_MAX);
+    ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)dataSize, 0);
     CrashIf(!ok);
 
     DWORD hashLen = 0;
@@ -90,16 +41,16 @@ static void CalcDigestWin(const void* data, size_t byteCount, u8* digest, DWORD 
     CryptReleaseContext(hProv, 0);
 }
 
-void CalcMD5DigestWin(const void* data, size_t byteCount, u8 digest[16]) {
-    CalcDigestWin(data, byteCount, digest, 16, MS_DEF_PROV, PROV_RSA_FULL, CALG_MD5);
+void CalcMD5Digest(const void* data, size_t dataSize, u8 digest[16]) {
+    CalcDigestWin(data, dataSize, digest, 16, MS_DEF_PROV, PROV_RSA_FULL, CALG_MD5);
 }
 
-void CalcSha1DigestWin(const void* data, size_t byteCount, u8 digest[20]) {
-    CalcDigestWin(data, byteCount, digest, 20, MS_DEF_PROV, PROV_RSA_FULL, CALG_SHA1);
+void CalcSHA1Digest(const void* data, size_t dataSize, u8 digest[20]) {
+    CalcDigestWin(data, dataSize, digest, 20, MS_DEF_PROV, PROV_RSA_FULL, CALG_SHA1);
 }
 
-void CalcSha2DigestWin(const void* data, size_t byteCount, u8 digest[32]) {
-    CalcDigestWin(data, byteCount, digest, 32, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CALG_SHA_256);
+void CalcSHA2Digest(const void* data, size_t dataSize, u8 digest[32]) {
+    CalcDigestWin(data, dataSize, digest, 32, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CALG_SHA_256);
 }
 
 static bool ExtractSignature(const char* hexSignature, const void* data, size_t& dataLen, ScopedMem<BYTE>& signature,
