@@ -234,7 +234,6 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
     return {};
 }
 
-
 // copy of pdf_resolve_link in pdf-link.c without ctx and doc
 // returns page number and location on the page
 static int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp) {
@@ -2206,7 +2205,7 @@ bool EngineMupdf::FinishLoading() {
     return true;
 }
 
-static IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
+static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
     // WCHAR* path = strconv::Utf8ToWstr(outline->uri);

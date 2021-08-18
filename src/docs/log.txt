@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-17 Tue
+
+- re-enable 'Open Embedded File' via context menu on table of contents tree view (fixes #2122)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2122
+  should test with more files
 
 2021-08-11 Wed
 

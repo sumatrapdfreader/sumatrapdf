@@ -427,8 +427,10 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
         return;
     }
     auto win = tab->win;
-    WCHAR* path = dest->GetValue();
-    if (!str::StartsWith(path, tab->filePath.Get())) {
+    PageDestinationFile *destFile = (PageDestinationFile*)dest;
+    WCHAR* path = destFile->path;
+    WCHAR* tabPath = tab->filePath.Get();
+    if (!str::StartsWith(path, tabPath)) {
         return;
     }
     WindowInfo* newWin = FindWindowInfoByFile(path, true);
@@ -476,15 +478,16 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     TabInfo* tab = win->currentTab;
     HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
-    PageDestinationFile* embeddedFile = nullptr;
     const WCHAR* embeddedFilePath = nullptr;
     WCHAR* fileName = nullptr;
     if (dest && dest->GetKind() == kindDestinationLaunchEmbedded) {
-        fileName = dti->dest->GetName();
-        embeddedFile = (PageDestinationFile*)dest;
-        CrashIf(!embeddedFile->path);
+        auto embeddedFile = (PageDestinationFile*)dest;
+        // this is a path to a file on disk, e.g. a path to opened PDF
+        // with the embedded stream number
         embeddedFilePath = embeddedFile->path;
-        const WCHAR* ext = path::GetExtTemp(embeddedFilePath);
+        // this is name of the file as set inside PDF file
+        fileName = dti->dest->GetName();
+        const WCHAR* ext = path::GetExtTemp(fileName);
         bool canOpenEmbedded = str::EqI(ext, L".pdf");
         if (!canOpenEmbedded) {
             win::menu::Remove(popup, CmdOpenEmbeddedPDF);
@@ -508,7 +511,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             win::menu::SetText(popup, CmdFavoriteDel, s);
         } else {
             win::menu::Remove(popup, CmdFavoriteDel);
-
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Add page %s to favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
@@ -541,6 +543,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             SaveEmbeddedFile(tab, embeddedFilePath, fileName);
             break;
         case CmdOpenEmbeddedPDF:
+            // TODO: maybe also allow for a fileName hint
             OpenEmbeddedFile(tab, dest);
             break;
     }
