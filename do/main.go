@@ -156,6 +156,7 @@ func main() {
 		flgClangTidyFix           = false
 		flgBuildNo                = false
 		flgBuildLzsa              = false
+		flgOptimizeImages         = false
 	)
 
 	var (
@@ -232,6 +233,11 @@ func main() {
 	if false {
 		detectVersions()
 		//buildPreRelease()
+		return
+	}
+
+	if flgOptimizeImages {
+		optimizeAllImages()
 		return
 	}
 
