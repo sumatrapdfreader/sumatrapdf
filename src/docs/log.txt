@@ -7,6 +7,7 @@ A daily log of changes and commentary. An experiment of sorts.
   should test with more files
 - simplify Calc[MD5|Sha1|Sha2]DigestWin by re-using common code
 - remove redundant md5/sha1/sha2 implementations using libmupdf
+- remove NO_LIBMUPDF, move FzImgReader.[cpp|h] out of src/utils => src/
 
 2021-08-11 Wed
 

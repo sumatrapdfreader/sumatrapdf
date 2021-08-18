@@ -12,6 +12,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
+#include "FzImgReader.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 

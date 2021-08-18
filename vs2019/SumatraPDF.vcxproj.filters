@@ -105,6 +105,9 @@
     <ClInclude Include="..\src\Flags.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\FzImgReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -342,6 +345,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Flags.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\FzImgReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GlobalPrefs.cpp">

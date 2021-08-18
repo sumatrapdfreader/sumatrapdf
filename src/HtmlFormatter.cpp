@@ -10,6 +10,8 @@
 #include "utils/Timer.h"
 
 #include "EbookBase.h"
+#include "FzImgReader.h"
+
 #include "HtmlFormatter.h"
 
 #include "utils/Log.h"

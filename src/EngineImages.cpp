@@ -17,6 +17,7 @@
 #include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
+#include "FzImgReader.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
@@ -29,12 +30,10 @@ using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
 using Gdiplus::Brush;
 using Gdiplus::Color;
-using Gdiplus::CombineModeReplace;
 using Gdiplus::CompositingQualityHighQuality;
 using Gdiplus::Font;
 using Gdiplus::FontFamily;
 using Gdiplus::FontStyle;
-using Gdiplus::FontStyleBold;
 using Gdiplus::FontStyleRegular;
 using Gdiplus::FontStyleStrikeout;
 using Gdiplus::FontStyleUnderline;
@@ -346,7 +345,6 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
 
     if (!result) {
         // TODO: drop most memory intensive pages first
-        // (i.e. formats which aren't IsGdiPlusNativeFormat)?
         if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
             CrashIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
             DropPage(pageCache.Last(), true);
@@ -475,12 +473,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     defaultExt = fileExt;
 
     AutoFree data = GetDataFromStream(stream, nullptr);
-    if (IsGdiPlusNativeFormat(data.AsSpan())) {
-        image = Bitmap::FromStream(stream);
-    } else {
-        image = BitmapFromData(data.AsSpan());
-    }
-
+    image = BitmapFromData(data.AsSpan());
     return FinishLoading();
 }
 

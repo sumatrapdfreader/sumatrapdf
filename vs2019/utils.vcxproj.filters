@@ -60,9 +60,6 @@
     <ClInclude Include="..\src\utils\FileWatcher.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\FzImgReader.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\GdiPlusUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -282,9 +279,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\FileWatcher.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\FzImgReader.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\GdiPlusUtil.cpp">

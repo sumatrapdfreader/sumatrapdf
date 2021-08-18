@@ -22,6 +22,7 @@
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
 #include "HtmlFormatter.h"
+#include "FzImgReader.h"
 #include "Doc.h"
 #include "SettingsStructs.h"
 #include "EbookController.h"

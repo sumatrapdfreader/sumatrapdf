@@ -3,22 +3,18 @@
 
 #pragma warning(disable : 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
 
-#ifndef NO_LIBMUPDF
 extern "C" {
 #include <mupdf/fitz.h>
 #include "../mupdf/source/fitz/color-imp.h"
 #include "../mupdf/source/fitz/image-imp.h"
 }
-#endif
 
 #include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/FileUtil.h"
+
 #include "FzImgReader.h"
-
-#ifndef NO_LIBMUPDF
-
-// using namespace Gdiplus;
-
-namespace fitz {
 
 static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int len) {
     int w = 0, h = 0, xres = 0, yres = 0;
@@ -69,7 +65,7 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
         for (int y = 0; y < h; y++) {
             u8* line = (u8*)bmpData.Scan0 + y * bmpData.Stride;
             for (int x = 0; x < w; x++) {
-                int read = fz_read(ctx, stm, line, cs->n);
+                int read = (int)fz_read(ctx, stm, line, cs->n);
                 if (read != cs->n) {
                     fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
                 }
@@ -102,8 +98,8 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
 }
 
 // had to create a copy of fz_convert_pixmap to ensure we always get the alpha
-fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
-                              fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
+static fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
+                                     fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
     fz_pixmap* cvt;
 
     if (!ds && !keep_alpha) {
@@ -188,7 +184,7 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
     return bmp.Clone(0, 0, w, h, pixelFormat);
 }
 
-Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
+Gdiplus::Bitmap* FzImageFromData(ByteSlice d) {
     const u8* data = (const u8*)d.data();
     size_t len = d.size();
     if (len > INT_MAX || len < 12) {
@@ -212,14 +208,33 @@ Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
     return result;
 }
 
-} // namespace fitz
-
-#else
-
-namespace fitz {
-Gdiplus::Bitmap* ImageFromData(ByteSlice) {
-    return nullptr;
+Gdiplus::Bitmap* BitmapFromData(ByteSlice bmpData) {
+    auto res = BitmapFromDataWin(bmpData);
+    if (res) {
+        return res;
+    }
+    return FzImageFromData(bmpData);
 }
-} // namespace fitz
 
-#endif
+RenderedBitmap* LoadRenderedBitmap(const char* path) {
+    if (!path) {
+        return nullptr;
+    }
+    AutoFree data(file::ReadFile(path));
+    if (!data.data) {
+        return nullptr;
+    }
+    Gdiplus::Bitmap* bmp = BitmapFromData(data.AsSpan());
+    if (!bmp) {
+        return nullptr;
+    }
+
+    HBITMAP hbmp;
+    RenderedBitmap* rendered = nullptr;
+    if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
+        rendered = new RenderedBitmap(hbmp, Size(bmp->GetWidth(), bmp->GetHeight()));
+    }
+    delete bmp;
+
+    return rendered;
+}

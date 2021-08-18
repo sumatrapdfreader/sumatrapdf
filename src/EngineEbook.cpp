@@ -20,6 +20,7 @@
 #include "wingui/TreeModel.h"
 #include "DisplayMode.h"
 #include "Controller.h"
+#include "FzImgReader.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "EbookBase.h"

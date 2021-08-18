@@ -7,7 +7,6 @@
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/ByteReader.h"
-#include "utils/FzImgReader.h"
 #include "utils/TgaReader.h"
 #include "utils/WebpReader.h"
 #include "utils/WinUtil.h"
@@ -335,47 +334,8 @@ const WCHAR* GfxFileExtFromData(ByteSlice d) {
     return nullptr;
 }
 
-// Windows' JPEG codec doesn't support arithmetic coding
-static bool JpegUsesArithmeticCoding(ByteSlice d) {
-    CrashIf(GuessFileTypeFromContent(d) != kindFileJpeg);
-
-    ByteReader r(d);
-    size_t len = d.size();
-    for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF; ix += r.WordBE(ix + 2) + 2) {
-        if (0xC9 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xCB) {
-            // found the start of a frame using arithmetic coding
-            return true;
-        }
-    }
-    return false;
-}
-
-// Windows' PNG codec fails to handle an edge case, resulting in
-// an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
-static bool PngRequiresPresetDict(ByteSlice d) {
-    CrashIf(GuessFileTypeFromContent(d) != kindFilePng);
-
-    ByteReader r(d);
-    size_t len = d.size();
-    for (size_t i = 8; i + 12 < len && r.DWordBE(i) < len - i - 12; i += r.DWordBE(i) + 12) {
-        if (r.DWordBE(i + 4) == 0x49444154 /* IDAT */) {
-            // check the zlib header's FDICT flag
-            // (even if this image claims not to be zlib compressed!)
-            return (r.Byte(i + 9) & (1 << 5)) != 0;
-        }
-    }
-
-    return false;
-}
-
-bool IsGdiPlusNativeFormat(ByteSlice d) {
-    Kind fmt = GuessFileTypeFromContent(d);
-    return kindFileBmp == fmt || kindFileGif == fmt || kindFileTiff == fmt ||
-           (kindFileJpeg == fmt && !JpegUsesArithmeticCoding(d)) || (kindFilePng == fmt && !PngRequiresPresetDict(d));
-}
-
 // see http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
-Bitmap* BitmapFromData(ByteSlice bmpData) {
+Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
     Kind format = GuessFileTypeFromContent(bmpData);
     if (kindFileTga == format) {
         return tga::ImageFromData(bmpData);
@@ -383,14 +343,17 @@ Bitmap* BitmapFromData(ByteSlice bmpData) {
     if (kindFileWebp == format) {
         return webp::ImageFromData(bmpData);
     }
-    if (kindFileJp2 == format) {
-        return fitz::ImageFromData(bmpData);
-    }
-    if (kindFileJpeg == format && JpegUsesArithmeticCoding(bmpData)) {
-        return fitz::ImageFromData(bmpData);
-    }
-    if (kindFilePng == format && PngRequiresPresetDict(bmpData)) {
-        return nullptr;
+
+    {
+        auto strm = CreateStreamFromData(bmpData);
+        ScopedComPtr<IStream> stream(strm);
+        if (!stream) {
+            return nullptr;
+        }
+        auto bmp = WICDecodeImageFromStream(stream);
+        if (bmp) {
+            return bmp;
+        }
     }
 
     auto strm = CreateStreamFromData(bmpData);
@@ -398,19 +361,13 @@ Bitmap* BitmapFromData(ByteSlice bmpData) {
     if (!stream) {
         return nullptr;
     }
-    if (kindFileJxr == format) {
-        return WICDecodeImageFromStream(stream);
+    Bitmap* bmp = Gdiplus::Bitmap::FromStream(stream);
+    if (!bmp) {
+        return nullptr;
     }
-
-    Bitmap* bmp = Bitmap::FromStream(stream);
-    if (bmp && bmp->GetLastStatus() != Ok) {
+    if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp;
-        bmp = nullptr;
-    }
-    // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
-    if (bmp && kindFileJpeg == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {
-        delete bmp;
-        bmp = fitz::ImageFromData(bmpData);
+        return nullptr;
     }
     return bmp;
 }
@@ -438,27 +395,27 @@ Size BitmapSizeFromData(ByteSlice d) {
         if (len >= 13) {
             // find the first image's actual size instead of using the
             // "logical screen" size which is sometimes too large
-            size_t ix = 13;
+            size_t idx = 13;
             // skip the global color table
             if ((r.Byte(10) & 0x80)) {
-                ix += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
+                idx += (size_t)3 * (size_t)((size_t)1 << ((r.Byte(10) & 0x07) + 1));
             }
-            while (ix + 8 < len) {
-                if (r.Byte(ix) == 0x2C) {
-                    result.dx = r.WordLE(ix + 5);
-                    result.dy = r.WordLE(ix + 7);
+            while (idx + 8 < len) {
+                if (r.Byte(idx) == 0x2C) {
+                    result.dx = r.WordLE(idx + 5);
+                    result.dy = r.WordLE(idx + 7);
                     break;
-                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9) {
-                    ix += 8;
-                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFE) {
-                    const u8* commentEnd = r.Find(ix + 2, 0x00);
-                    ix = commentEnd ? commentEnd - data + 1 : len;
-                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0x01 && ix + 15 < len) {
-                    const u8* textDataEnd = r.Find(ix + 15, 0x00);
-                    ix = textDataEnd ? textDataEnd - data + 1 : len;
-                } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFF && ix + 14 < len) {
-                    const u8* applicationDataEnd = r.Find(ix + 14, 0x00);
-                    ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
+                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xF9) {
+                    idx += 8;
+                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFE) {
+                    const u8* commentEnd = r.Find(idx + 2, 0x00);
+                    idx = commentEnd ? commentEnd - data + 1 : len;
+                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0x01 && idx + 15 < len) {
+                    const u8* textDataEnd = r.Find(idx + 15, 0x00);
+                    idx = textDataEnd ? textDataEnd - data + 1 : len;
+                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFF && idx + 14 < len) {
+                    const u8* applicationDataEnd = r.Find(idx + 14, 0x00);
+                    idx = applicationDataEnd ? applicationDataEnd - data + 1 : len;
                 } else {
                     break;
                 }
@@ -466,12 +423,13 @@ Size BitmapSizeFromData(ByteSlice d) {
         }
     } else if (kind == kindFileJpeg) {
         // find the last start of frame marker for non-differential Huffman/arithmetic coding
-        for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF;) {
-            if (0xC0 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xC3 || 0xC9 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xCB) {
-                result.dx = r.WordBE(ix + 7);
-                result.dy = r.WordBE(ix + 5);
+        for (size_t idx = 2; idx + 9 < len && r.Byte(idx) == 0xFF;) {
+            if (0xC0 <= r.Byte(idx + 1) && r.Byte(idx + 1) <= 0xC3 ||
+                0xC9 <= r.Byte(idx + 1) && r.Byte(idx + 1) <= 0xCB) {
+                result.dx = r.WordBE(idx + 7);
+                result.dy = r.WordBE(idx + 5);
             }
-            ix += (size_t)r.WordBE(ix + 2) + 2;
+            idx += (size_t)r.WordBE(idx + 2) + 2;
         }
     } else if (kind == kindFileJxr || kind == kindFileTiff) {
         if (len >= 10) {
@@ -518,19 +476,19 @@ Size BitmapSizeFromData(ByteSlice d) {
         }
     } else if (kind == kindFileJp2) {
         if (len >= 32) {
-            size_t ix = 0;
-            while (ix < len - 32) {
-                u32 boxLen = r.DWordBE(ix);
-                u32 boxType = r.DWordBE(ix + 4);
+            size_t idx = 0;
+            while (idx < len - 32) {
+                u32 boxLen = r.DWordBE(idx);
+                u32 boxType = r.DWordBE(idx + 4);
                 if (JP2_JP2H == boxType) {
-                    ix += 8;
-                    u32 boxLen2 = r.DWordBE(ix);
-                    u32 boxType2 = r.DWordBE(ix + 4);
+                    idx += 8;
+                    u32 boxLen2 = r.DWordBE(idx);
+                    u32 boxType2 = r.DWordBE(idx + 4);
                     bool isIhdr = boxType2 == JP2_IHDR;
-                    ix += 8;
+                    idx += 8;
                     if (isIhdr && boxLen2 <= (boxLen - 8)) {
-                        result.dx = r.DWordBE(ix);
-                        result.dy = r.DWordBE(ix + 4);
+                        result.dx = r.DWordBE(idx);
+                        result.dy = r.DWordBE(idx + 4);
                         if (result.dx > 64 * 1024 || result.dy > 64 * 1024) {
                             // sanity check, assuming that images that big can't
                             // possibly be valid
@@ -539,8 +497,8 @@ Size BitmapSizeFromData(ByteSlice d) {
                         }
                     }
                     break;
-                } else if (boxLen != 0 && ix < UINT32_MAX - boxLen) {
-                    ix += boxLen;
+                } else if (boxLen != 0 && idx < UINT32_MAX - boxLen) {
+                    idx += boxLen;
                 } else {
                     break;
                 }
@@ -551,13 +509,12 @@ Size BitmapSizeFromData(ByteSlice d) {
     if (result.IsEmpty()) {
         // let GDI+ extract the image size if we've failed
         // (currently happens for animated GIF)
-        Bitmap* bmp = BitmapFromData(d);
+        Bitmap* bmp = BitmapFromDataWin(d);
         if (bmp) {
             result = Size(bmp->GetWidth(), bmp->GetHeight());
         }
         delete bmp;
     }
-
     return result;
 }
 
@@ -581,7 +538,7 @@ CLSID GetEncoderClsid(const WCHAR* format) {
     return null;
 }
 
-RenderedBitmap* LoadRenderedBitmap(const char* path) {
+RenderedBitmap* LoadRenderedBitmapWin(const char* path) {
     if (!path) {
         return nullptr;
     }
@@ -589,7 +546,7 @@ RenderedBitmap* LoadRenderedBitmap(const char* path) {
     if (!data.data) {
         return nullptr;
     }
-    Gdiplus::Bitmap* bmp = BitmapFromData(data.AsSpan());
+    Gdiplus::Bitmap* bmp = BitmapFromDataWin(data.AsSpan());
     if (!bmp) {
         return nullptr;
     }
