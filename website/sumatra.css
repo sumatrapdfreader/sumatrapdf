@@ -388,6 +388,10 @@ a.for-nav-icon:hover {
   align-self: center;
 }
 
+.testimonial-who a {
+  color: #b5b5b5;
+}
+
 /* keyboard shortcut */
 .ks {
   margin-right: .2em;
