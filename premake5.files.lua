@@ -1035,7 +1035,6 @@ function test_util_files()
     --"AppTools.*",
     --"StressTesting.*",
     "AppUtil.*",
-    "EngineBase.*",
     "DisplayMode.*",
     "Flags.*",
     "SumatraConfig.*",

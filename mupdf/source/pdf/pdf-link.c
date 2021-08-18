@@ -129,9 +129,8 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 			x = fz_clamp(x, 0, w);
 			y = fz_clamp(y, 0, h);
 
-			if (zoomo) {
-				float zoom = pdf_to_real(ctx, zoomo);
-				return fz_asprintf(ctx, "#%d,%d,%d,%.2f", page + 1, x, y, zoom);
+			if (zoomo && pdf_to_real(ctx, zoomo) > 0) {
+				return fz_asprintf(ctx, "#%d,%d,%d,%.2f", page + 1, x, y, pdf_to_real(ctx, zoomo));
 			} else {
 				return fz_asprintf(ctx, "#%d,%d,%d", page + 1, x, y);
 			}

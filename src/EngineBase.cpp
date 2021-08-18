@@ -415,32 +415,3 @@ WCHAR* CleanupFileURL(const WCHAR* s) {
     }
     return s2;
 }
-
-// copy of pdf_resolve_link in pdf-link.c without ctx and doc
-// returns page number and location on the page
-int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp) {
-    if (!uri || uri[0] != '#') {
-        return -1;
-    }
-    int page = atoi(uri + 1) - 1;
-    if (xp || yp) {
-        const char *x, *y, *zoom = nullptr;
-        x = strchr(uri, ',');
-        y = x ? strchr(x + 1, ',') : nullptr;
-        if (x && y) {
-            if (xp) {
-                *xp = (float)atof(x + 1);
-            }
-            if (yp) {
-                *yp = (float)atof(y + 1);
-            }
-            zoom = strchr(y + 1, ',');
-            if (zoom && zoomp) {
-                *zoomp = (float)atof(zoom + 1);
-            }
-        }
-        // logf("resolve_link OUT: page=%d x=%f y=%f zoom=%f\n", page, (xp && x) ? (*xp) : INFINITY, (yp && y) ? (*yp) :
-        // INFINITY, (zoomp && zoom) ? (*zoomp) : INFINITY);
-    }
-    return page;
-}

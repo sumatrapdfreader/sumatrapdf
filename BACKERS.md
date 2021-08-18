@@ -53,3 +53,5 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Tree of life
 - Tim Bossert
 - Julian
+- pglpm
+- N. Jensen

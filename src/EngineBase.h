@@ -54,7 +54,6 @@ struct PageText {
 };
 
 void FreePageText(PageText*);
-int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp);
 
 // a link destination
 struct IPageDestination {

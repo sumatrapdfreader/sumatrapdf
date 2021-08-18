@@ -234,6 +234,36 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
     return {};
 }
 
+
+// copy of pdf_resolve_link in pdf-link.c without ctx and doc
+// returns page number and location on the page
+static int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp) {
+    if (!uri || uri[0] != '#') {
+        return -1;
+    }
+    int page = atoi(uri + 1) - 1;
+    if (xp || yp) {
+        const char *x, *y, *zoom = nullptr;
+        x = strchr(uri, ',');
+        y = x ? strchr(x + 1, ',') : nullptr;
+        if (x && y) {
+            if (xp) {
+                *xp = (float)atoi(x + 1);
+            }
+            if (yp) {
+                *yp = (float)atoi(y + 1);
+            }
+            zoom = strchr(y + 1, ',');
+            if (zoom && zoomp) {
+                *zoomp = (float)atof(zoom + 1);
+            }
+        }
+        // logf("resolve_link OUT: page=%d x=%f y=%f zoom=%f\n", page, (xp && x) ? (*xp) : INFINITY, (yp && y) ? (*yp) :
+        // INFINITY, (zoomp && zoom) ? (*zoomp) : INFINITY);
+    }
+    return page;
+}
+
 static int FzGetPageNo(fz_link* link, fz_outline* outline) {
     if (outline) {
         return outline->page + 1;
