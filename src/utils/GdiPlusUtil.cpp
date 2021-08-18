@@ -581,7 +581,7 @@ CLSID GetEncoderClsid(const WCHAR* format) {
     return null;
 }
 
-RenderedBitmap* LoadRenderedBitmap(const WCHAR* path) {
+RenderedBitmap* LoadRenderedBitmap(const char* path) {
     if (!path) {
         return nullptr;
     }
@@ -602,9 +602,4 @@ RenderedBitmap* LoadRenderedBitmap(const WCHAR* path) {
     delete bmp;
 
     return rendered;
-}
-
-RenderedBitmap* LoadRenderedBitmap(const char* path) {
-    WCHAR* tmp = ToWstrTemp(path);
-    return LoadRenderedBitmap(tmp);
 }

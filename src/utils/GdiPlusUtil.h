@@ -24,5 +24,4 @@ bool IsGdiPlusNativeFormat(ByteSlice);
 Gdiplus::Bitmap* BitmapFromData(ByteSlice);
 Size BitmapSizeFromData(ByteSlice);
 CLSID GetEncoderClsid(const WCHAR* format);
-RenderedBitmap* LoadRenderedBitmap(const WCHAR* path);
 RenderedBitmap* LoadRenderedBitmap(const char* path);
