@@ -157,6 +157,7 @@ func main() {
 		flgBuildNo                = false
 		flgBuildLzsa              = false
 		flgOptimizeImages         = false
+		flgMakeSmallImages        = false
 	)
 
 	var (
@@ -238,6 +239,11 @@ func main() {
 
 	if flgOptimizeImages {
 		optimizeAllImages()
+		return
+	}
+
+	if flgMakeSmallImages {
+		makeSmallImages()
 		return
 	}
 

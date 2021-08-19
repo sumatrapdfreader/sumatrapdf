@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 // run optipng in parallel
@@ -38,6 +40,9 @@ func optimizeAllImages() {
 	panicIf(err != nil, "optipng is not installed")
 
 	dirsToVisit := []string{filepath.Join("website", "img"), filepath.Join("website", "docs", "img")}
+	nThreads := runtime.NumCPU()
+	sem := make(chan bool, nThreads)
+	var wg sync.WaitGroup
 	for len(dirsToVisit) > 0 {
 		dir := dirsToVisit[0]
 		dirsToVisit = dirsToVisit[1:]
@@ -50,7 +55,55 @@ func optimizeAllImages() {
 				//dirsToVisit = append(dirsToVisit, path)
 				continue
 			}
-			maybeOptimizeImage(path)
+			sem <- true
+			wg.Add(1)
+			go func(path string) {
+				maybeOptimizeImage(path)
+				<-sem
+				wg.Done()
+			}(path)
+		}
+	}
+	wg.Wait()
+}
+
+// makes -small.png variant of screenshot file sin website\img
+func makeSmallImages() {
+	{
+		cmd := exec.Command("magick", "-version")
+		err := cmd.Run()
+		if err != nil {
+			logf("ImageMagick doesn't seem to be installed\n")
+			logf("You can install it with: choco install -y imagemagick\n")
+			os.Exit(1)
+		}
+	}
+
+	dirsToVisit := []string{filepath.Join("website", "img")}
+	for len(dirsToVisit) > 0 {
+		dir := dirsToVisit[0]
+		dirsToVisit = dirsToVisit[1:]
+		files, err := ioutil.ReadDir(dir)
+		must(err)
+		for _, f := range files {
+			if f.IsDir() {
+				//dirsToVisit = append(dirsToVisit, path)
+				continue
+			}
+			name := f.Name()
+			ext := strings.ToLower(filepath.Ext(name))
+			if ext != ".png" {
+				continue
+			}
+			if strings.Contains(name, "-small") {
+				continue
+			}
+			dstName := strings.Split(name, ".")[0] + "-small.png"
+			cmd := exec.Command("magick", "convert", name, "-resize", "80x80", dstName)
+			logf("> %s\n", cmd.String())
+			cmd.Dir = dir
+			err := cmd.Run()
+			must(err)
 		}
 	}
 }
