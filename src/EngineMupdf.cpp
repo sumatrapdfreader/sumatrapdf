@@ -3304,7 +3304,8 @@ WCHAR* EngineMupdf::GetPageLabel(int pageNo) const {
 
 int EngineMupdf::GetPageByLabel(const WCHAR* label) const {
     if (!pdfdoc) {
-        return 0;
+        // non-pdf documents don't have labels so label is just a page number as string
+        return EngineBase::GetPageByLabel(label);
     }
     int pageNo = 0;
     if (pageLabels) {
