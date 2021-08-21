@@ -297,8 +297,6 @@ col, colgroup, table, tbody, td, tfoot, th, thead, tr {
 .img-wrapper {
   position: relative;
   min-width: 90vw;
-  max-width: 720px;
-  max-height: 700px;
   display: flex;
   justify-content: space-around;
 }
