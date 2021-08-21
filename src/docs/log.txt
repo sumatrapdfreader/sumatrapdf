@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-21 Sat
+
+- don't double-delete value returned by GetElementAtPos() (fixes #2135)
+
 2021-08-20 Fri
 
 - fix 'go to page' by text box in toolbar for epub (non-pdf) (fixes #2133)

@@ -1037,6 +1037,7 @@ static TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDe
     return res;
 }
 
+// don't delete the result
 static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     if (!pageInfo) {
         return nullptr;
@@ -2713,6 +2714,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
+// don't delete the result
 IPageElement* EngineMupdf::GetElementAtPos(int pageNo, PointF pt) {
     FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
     return FzGetElementAtPos(pageInfo, pt);

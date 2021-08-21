@@ -493,6 +493,7 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     return getImageFromData(i.GetImage());
 }
 
+// don't delete the result
 IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
     auto els = GetElements(pageNo);
 

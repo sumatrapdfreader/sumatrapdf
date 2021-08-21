@@ -1021,6 +1021,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
     return els;
 }
 
+// don't delete the result
 IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
 

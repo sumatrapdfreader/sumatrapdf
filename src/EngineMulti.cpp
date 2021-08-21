@@ -166,6 +166,7 @@ Vec<IPageElement*> EngineMulti::GetElements(int pageNo) {
     return e->GetElements(pageNo);
 }
 
+// don't delete the result
 IPageElement* EngineMulti::GetElementAtPos(int pageNo, PointF pt) {
     EngineBase* e = PageToEngine(pageNo);
     return e->GetElementAtPos(pageNo, pt);

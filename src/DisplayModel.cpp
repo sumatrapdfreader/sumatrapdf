@@ -1034,8 +1034,9 @@ RectF DisplayModel::CvtFromScreen(Rect r, int pageNo) {
     return RectF::FromXY(TL, BR);
 }
 
-/* Given position 'x'/'y' in the draw area, returns a structure describing
-   a link or nullptr if there is no link at this position. */
+// Given position 'x'/'y' in the draw area, returns a structure describing
+// a link or nullptr if there is no link at this position.
+// don't delete the result
 IPageElement* DisplayModel::GetElementAtPos(Point pt, int* pageNoOut) {
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo)) {

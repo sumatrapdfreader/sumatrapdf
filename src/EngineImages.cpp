@@ -275,6 +275,7 @@ Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
     return pi->allElements;
 }
 
+// don't delete the result
 IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
     if (!PageMediabox(pageNo).Contains(pt)) {
         return nullptr;

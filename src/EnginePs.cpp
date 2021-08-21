@@ -318,6 +318,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetElements(pageNo);
     }
 
+    // don't delete the result
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }

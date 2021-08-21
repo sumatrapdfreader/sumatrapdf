@@ -2035,7 +2035,6 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     ClearTocBox(win);
     AbortFinding(win, true);
 
-    delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
     delete win->annotationOnLastButtonDown;
     win->annotationOnLastButtonDown = nullptr;

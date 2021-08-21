@@ -174,7 +174,6 @@ WindowInfo::~WindowInfo() {
 }
 
 void ClearMouseState(WindowInfo* win) {
-    delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
     delete win->annotationOnLastButtonDown;
     win->annotationOnLastButtonDown = nullptr;

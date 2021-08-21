@@ -274,7 +274,6 @@ void CancelDrag(WindowInfo* win) {
     auto [x, y] = pt;
     StopMouseDrag(win, x, y, true);
     win->mouseAction = MouseAction::Idle;
-    delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
     SetCursorCached(IDC_ARROW);
 }
@@ -315,7 +314,6 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM) {
             return;
         }
         win->dragStartPending = false;
-        delete win->linkOnLastButtonDown;
         win->linkOnLastButtonDown = nullptr;
     }
 
