@@ -371,6 +371,12 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         ScrollTo(dest);
         return;
     }
+    if (kindDestinationLaunchURL == kind) {
+        auto d = (PageDestinationURL*)dest;
+        char* urlA = ToUtf8Temp(d->url);
+        LaunchURL(urlA);
+        return;
+    }
     if (kindDestinationLaunchFile == kind) {
         PageDestinationFile* pdf = (PageDestinationFile*)dest;
         // LaunchFile only opens files inside SumatraPDF
@@ -394,13 +400,12 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
 }
 
 void LinkHandler::ScrollTo(IPageDestination* dest) {
-    CrashIf(!win || win->linkHandler != this);
-    if (!dest || !win || !win->IsDocLoaded()) {
+    ReportIf(!win || !win->ctrl || win->linkHandler != this);
+    if (!dest || !win || !win->ctrl || !win->IsDocLoaded()) {
         return;
     }
-
     int pageNo = dest->GetPageNo();
-    if (pageNo <= 0) {
+    if (!win->ctrl->ValidPageNo(pageNo)) {
         return;
     }
     RectF rect = dest->GetRect();

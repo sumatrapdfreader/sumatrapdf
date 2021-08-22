@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-22 Sun
+
+- restore handling links in EngineEbook::HandleLink() (fixes #2136)
+
 2021-08-21 Sat
 
 - don't double-delete value returned by GetElementAtPos() (fixes #2135)

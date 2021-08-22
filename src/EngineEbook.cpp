@@ -99,10 +99,13 @@ class EngineEbook : public EngineBase {
 
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(IPageDestination*, ILinkHandler*) override {
-        CrashIf(true);
-        // TODO: implement me
-        return false;
+    bool HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) override {
+        ReportIf(!dest || !linkHandler);
+        if (!dest || !linkHandler) {
+            return false;
+        }
+        linkHandler->GotoLink(dest);
+        return true;
     }
 
     IPageDestination* GetNamedDest(const WCHAR* name) override;
