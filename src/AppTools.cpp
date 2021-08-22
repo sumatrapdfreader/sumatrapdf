@@ -763,5 +763,5 @@ WCHAR* FormatFileSizeNoTrans(i64 size) {
     }
     AutoFreeWstr n1(FormatSizeSuccintNoTrans(size));
     AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
-    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), "Bytes");
+    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), L"Bytes");
 }
