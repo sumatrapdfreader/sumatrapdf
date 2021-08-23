@@ -351,8 +351,9 @@ a.for-nav-icon:hover {
   display: flex;
   flex-direction: row;
   /* justify-content: center; */
-  align-items: stretch;
-  align-content: center;
+  justify-content: space-around;
+  /* align-items: stretch; */
+  /* align-content: center; */
   flex-wrap: wrap;
   width: 100%;
 }
