@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: @PACKAGE@
 Description: LCMS Color Management Library
 Version: @VERSION@
-Libs: -L${libdir} -llcms2 @LIB_PLUGINS@
+Libs: -L${libdir} -llcms2mt @LIB_PLUGINS@
 Libs.private: @LIB_MATH@ @LIB_THREAD@
 Cflags: -I${includedir}

@@ -3769,7 +3769,7 @@ static
 cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
 {
     // Color list database
-    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 0, 10, 4, "PANTONE", "TCX");
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 10, 4, "PANTONE", "TCX");
 
     // Containers for names
     cmsMLU* DescriptionMLU, *CopyrightMLU;
@@ -3799,7 +3799,7 @@ cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
     cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag, CopyrightMLU);
 
     // Set the media white point
-    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ());
+    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID));
 
 
     // Populate one value, Colorant = CMYK values in 16 bits, PCS[] = Encoded Lab values (in V2 format!!)
@@ -8255,7 +8255,6 @@ int CheckEmptyMLUC(cmsContext context)
 
     // Cleanup
     cmsCloseProfile(context, profile);
-    DebugMemDontCheckThis(context);
 
     return 1;
 }
@@ -8336,7 +8335,7 @@ cmsHPROFILE createRgbGamma(cmsContext contextID, cmsFloat64Number g)
     cmsToneCurve* Gamma[3];
     cmsHPROFILE  hRGB;
 
-    Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(0, g);
+    Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(contextID, g);
     if (Gamma[0] == NULL) return NULL;
 
     hRGB = cmsCreateRGBProfile(contextID, &D65, &Rec709Primaries, Gamma);

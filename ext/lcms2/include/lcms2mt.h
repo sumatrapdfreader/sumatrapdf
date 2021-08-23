@@ -676,10 +676,11 @@ typedef void* cmsHTRANSFORM;
 
 // Format of pixel is defined by one cmsUInt32Number, using bit fields as follows
 //
-//                              2               1            0
-//                         543210 9 8 76543 2 1 0 9 8 7654 321
-//                         EEEEEE A O TTTTT Y F P X S CCCC BBB
+//                        2  2222 1111  1111 11
+//                        4  3210 9876  5432 1098  7654 3210
+//                        E  EEEE EAOT  TTTT YFPX  SCCC CBBB
 //
+//            E: Extra samples
 //            A: Floating point -- With this flag we can differentiate 16 bits as float and as int
 //            O: Optimized -- previous optimization already returns the final 8-bit value
 //            T: Pixeltype
@@ -687,7 +688,6 @@ typedef void* cmsHTRANSFORM;
 //            P: Planar? 0=Chunky, 1=Planar
 //            X: swap 16 bps endianness?
 //            S: Do swap? ie, BGR, KYMC
-//            E: Extra samples
 //            C: Channels (Samples per pixel)
 //            B: bytes per sample
 //            Y: Swap first - changes ABGR to BGRA and KCMY to CMYK
@@ -1315,7 +1315,7 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cms
                                                  const char LanguageCode[3], const char CountryCode[3],
                                                  wchar_t* Buffer, cmsUInt32Number BufferSize);
 
-CMSAPI cmsBool           CMSEXPORT cmsMLUGetTranslationTemp(cmsContext ContextID, const cmsMLU* mlu,
+CMSAPI cmsBool           CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU* mlu,
                                                          const char LanguageCode[3], const char CountryCode[3],
                                                          char ObtainedLanguage[3], char ObtainedCountry[3]);
 
@@ -1660,6 +1660,9 @@ CMSAPI cmsUInt32Number  CMSEXPORT cmsGetSupportedIntents(cmsContext ContextID,
 
 // Copy alpha channels when transforming
 #define cmsFLAGS_COPY_ALPHA               0x04000000 // Alpha channels are copied on cmsDoTransform()
+
+// Unpremultiply/premultiply by final alpha value when transforming
+#define cmsFLAGS_PREMULT                  0x08000000 // Data is multiplied by final alpha channel on cmsDoTransform()
 
 // Fine-tune control over number of gridpoints
 #define cmsFLAGS_GRIDPOINTS(n)           (((n) & 0xFF) << 16)

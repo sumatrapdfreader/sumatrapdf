@@ -1682,6 +1682,10 @@ cmsBool OptimizeMatrixShaper(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
        // Only works on 8 bit input
        if (!_cmsFormatterIs8bit(*InputFormat)) return FALSE;
 
+       // Does not work in the presence of premultiplied alpha, as that causes the values
+       // passed in to not actually be '8 bit' in the way that we rely on.
+       if (*dwFlags & cmsFLAGS_PREMULT) return FALSE;
+
        // Seems suitable, proceed
        Src = *Lut;
 

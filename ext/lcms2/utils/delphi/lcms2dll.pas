@@ -1093,7 +1093,7 @@ FUNCTION cmsMLUgetASCII(mlu: LPcmsMLU; LanguageCode, CountryCode: PAnsiChar; Buf
 
 FUNCTION cmsMLUgetWide(mlu: LPcmsMLU; LanguageCode, CountryCode: PAnsiChar; Buffer: PWChar; BufferSize: cmsUInt32Number): cmsUInt32Number; StdCall;
 
-FUNCTION cmsMLUGetTranslationTemp(mlu: LPcmsMLU; LanguageCode, CountryCode, ObtainedLanguage, ObtainedCountry: PAnsiChar): cmsBool; StdCall;
+FUNCTION cmsMLUgetTranslation(mlu: LPcmsMLU; LanguageCode, CountryCode, ObtainedLanguage, ObtainedCountry: PAnsiChar): cmsBool; StdCall;
 
 // Undercolorremoval & black generation -------------------------------------------------------------------------------------
 
@@ -1807,7 +1807,7 @@ FUNCTION cmsMLUgetASCII(mlu: LPcmsMLU; LanguageCode, CountryCode: PAnsiChar; Buf
 
 FUNCTION cmsMLUgetWide(mlu: LPcmsMLU; LanguageCode, CountryCode: PAnsiChar; Buffer: PWChar; BufferSize: cmsUInt32Number): cmsUInt32Number; StdCall; external LCMS2_SO;
 
-FUNCTION cmsMLUGetTranslationTemp(mlu: LPcmsMLU; LanguageCode, CountryCode, ObtainedLanguage, ObtainedCountry: PAnsiChar): cmsBool; StdCall; external LCMS2_SO;
+FUNCTION cmsMLUgetTranslation(mlu: LPcmsMLU; LanguageCode, CountryCode, ObtainedLanguage, ObtainedCountry: PAnsiChar): cmsBool; StdCall; external LCMS2_SO;
 
 FUNCTION cmsAllocNamedColorList(ContextID: cmsContext; n, ColorantCount :cmsUInt32Number;
                                                            Prefix, Suffix: PAnsiChar): LPcmsNAMEDCOLORLIST; StdCall; external LCMS2_SO;
