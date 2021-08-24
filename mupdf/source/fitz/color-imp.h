@@ -33,7 +33,8 @@ fz_icc_link *fz_new_icc_link(fz_context *ctx,
 	fz_colorspace *prf,
 	fz_color_params color_params,
 	int format,
-	int copy_spots);
+	int copy_spots,
+	int premult);
 void fz_drop_icc_link_imp(fz_context *ctx, fz_storable *link);
 void fz_drop_icc_link(fz_context *ctx, fz_icc_link *link);
 fz_icc_link *fz_find_icc_link(fz_context *ctx,
@@ -42,7 +43,8 @@ fz_icc_link *fz_find_icc_link(fz_context *ctx,
 	fz_colorspace *prf,
 	fz_color_params color_params,
 	int format,
-	int copy_spots);
+	int copy_spots,
+	int premult);
 void fz_icc_transform_color(fz_context *ctx, fz_color_converter *cc, const float *src, float *dst);
 void fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src, fz_pixmap *dst, int copy_spots);
 

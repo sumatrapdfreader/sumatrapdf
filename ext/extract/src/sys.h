@@ -8,7 +8,9 @@
 
 int extract_systemf(extract_alloc_t* alloc, const char* format, ...);
 /* Like system() but takes printf-style format and args. Also, if we return +ve
-we set errno to EIO. */
+we set errno to EIO.
+
+On iOS we always -1:ENOTSUP because the system() function is not available. */
 
 int  extract_read_all(extract_alloc_t* alloc, FILE* in, char** o_out);
 /* Reads until eof into zero-terminated malloc'd buffer. */

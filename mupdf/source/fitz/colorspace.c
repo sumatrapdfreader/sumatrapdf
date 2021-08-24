@@ -794,7 +794,8 @@ fz_find_icc_link(fz_context *ctx,
 	fz_colorspace *prf,
 	fz_color_params rend,
 	int format,
-	int copy_spots)
+	int copy_spots,
+	int premult)
 {
 	fz_icc_link *link, *old_link;
 	fz_link_key key, *new_key;
@@ -809,7 +810,7 @@ fz_find_icc_link(fz_context *ctx,
 	key.src_extras = src_extras;
 	key.dst_extras = dst_extras;
 	key.copy_spots = copy_spots;
-	key.format = format;
+	key.format = (format & 1) | (premult*2);
 	key.proof = (prf != NULL);
 	key.bgr = (dst->type == FZ_COLORSPACE_BGR);
 
@@ -820,7 +821,7 @@ fz_find_icc_link(fz_context *ctx,
 		memcpy(new_key, &key, sizeof (fz_link_key));
 		fz_try(ctx)
 		{
-			link = fz_new_icc_link(ctx, src, src_extras, dst, dst_extras, prf, rend, format, copy_spots);
+			link = fz_new_icc_link(ctx, src, src_extras, dst, dst_extras, prf, rend, format, copy_spots, premult);
 			old_link = fz_store_item(ctx, new_key, link, 1000, &fz_link_store_type);
 			if (old_link)
 			{
@@ -933,7 +934,7 @@ fz_init_process_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colo
 
 		fz_try(ctx)
 		{
-			cc->link = fz_find_icc_link(ctx, ss, 0, ds, 0, is, params, 1, 0);
+			cc->link = fz_find_icc_link(ctx, ss, 0, ds, 0, is, params, 1, 0, 0);
 			cc->convert = fz_icc_transform_color;
 		}
 		fz_catch(ctx)
@@ -1457,7 +1458,7 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 			{
 				int sx = src->s + src->alpha;
 				int dx = dst->s + dst->alpha;
-				link = fz_find_icc_link(ctx, ss, sx, ds, dx, prf, params, 0, copy_spots);
+				link = fz_find_icc_link(ctx, ss, sx, ds, dx, prf, params, 0, copy_spots, src->alpha);
 				fz_icc_transform_pixmap(ctx, link, src, dst, copy_spots);
 			}
 			fz_catch(ctx)

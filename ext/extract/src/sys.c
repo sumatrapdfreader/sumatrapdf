@@ -8,8 +8,27 @@
 #include <sys/stat.h>
 
 
+/* Define extract_APPLE_IOS if we are on iOS. */
+#undef extract_APPLE_IOS
+#ifdef __APPLE__
+    #include "TargetConditionals.h"
+    #ifdef TARGET_OS_IPHONE
+        #define extract_APPLE_IOS
+    #elif TARGET_IPHONE_SIMULATOR
+        #define extract_APPLE_IOS
+    #endif
+#endif
+
 int extract_systemf(extract_alloc_t* alloc, const char* format, ...)
 {
+    #ifdef extract_APPLE_IOS
+        /* system() not available on iOS. */
+        (void) alloc;
+        (void) format;
+        errno = ENOTSUP;
+        return -1;
+    #else
+
     int e;
     char* command;
     va_list va;
@@ -24,6 +43,8 @@ int extract_systemf(extract_alloc_t* alloc, const char* format, ...)
         errno = EIO;
     }
     return e;
+
+    #endif
 }
 
 int  extract_read_all(extract_alloc_t* alloc, FILE* in, char** o_out)

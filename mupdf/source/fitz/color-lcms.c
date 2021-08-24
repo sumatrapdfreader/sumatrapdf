@@ -19,103 +19,6 @@
 #include "lcms2.h"
 #endif
 
-static void fz_premultiply_row(fz_context *ctx, int n, int c, int w, unsigned char *s)
-{
-	unsigned char a;
-	int k;
-	int n1 = n-1;
-	for (; w > 0; w--)
-	{
-		a = s[n1];
-		if (a == 0)
-			memset(s, 0, c);
-		else if (a != 255)
-			for (k = 0; k < c; k++)
-				s[k] = fz_mul255(s[k], a);
-		s += n;
-	}
-}
-
-static void fz_premultiply_row_0or1(fz_context *ctx, int n, int c, int w, unsigned char *s)
-{
-	unsigned char a;
-	int n1 = n-1;
-	for (; w > 0; w--)
-	{
-		a = s[n1];
-		if (a == 0)
-			memset(s, 0, c);
-		s += n;
-	}
-}
-
-/* Returns 0 for all the alphas being 0, 1 for them being 0 or 255, 2 otherwise. */
-static int fz_unmultiply_row(fz_context *ctx, int n, int c, int w, unsigned char *s, const unsigned char *in)
-{
-	int a, inva;
-	int k;
-	int n1 = n-1;
-	for (; w > 0; w--)
-	{
-		a = in[n1];
-		if (a != 0)
-			goto nonzero;
-		for (k = 0; k < c; k++)
-			s[k] = 0;
-		for (;k < n1; k++)
-			s[k] = in[k];
-		s[n1] = 0;
-		s += n;
-		in += n;
-	}
-	return 0;
-	for (; w > 0; w--)
-	{
-		a = in[n1];
-nonzero:
-		if (a != 0 && a != 255)
-			goto varying;
-		k = 0;
-		if (a == 0)
-			for (; k < c; k++)
-				s[k] = 0;
-		for (;k < n; k++)
-			s[k] = in[k];
-		s += n;
-		in += n;
-	}
-	return 1;
-	for (; w > 0; w--)
-	{
-		a = in[n1];
-varying:
-		if (a == 0)
-		{
-			for (k = 0; k < c; k++)
-				s[k] = 0;
-			for (;k < n1; k++)
-				s[k] = in[k];
-			s[k] = 0;
-		}
-		else if (a == 255)
-		{
-			memcpy(s, in, n);
-		}
-		else
-		{
-			inva = 255 * 256 / a;
-			for (k = 0; k < c; k++)
-				s[k] = (in[k] * inva) >> 8;
-			for (;k < n1; k++)
-				s[k] = in[k];
-			s[n1] = a;
-		}
-		s += n;
-		in += n;
-	}
-	return 2;
-}
-
 struct fz_icc_link
 {
 	fz_storable storable;
@@ -266,7 +169,8 @@ fz_new_icc_link(fz_context *ctx,
 	fz_colorspace *prf,
 	fz_color_params rend,
 	int format,
-	int copy_spots)
+	int copy_spots,
+	int premult)
 {
 	GLOINIT
 	cmsHPROFILE src_pro = src->u.icc.profile;
@@ -314,6 +218,9 @@ fz_new_icc_link(fz_context *ctx,
 
 	if (copy_spots)
 		flags |= cmsFLAGS_COPY_ALPHA;
+
+	if (premult)
+		flags |= cmsFLAGS_PREMULT;
 
 	if (prf_pro == NULL)
 	{
@@ -418,11 +325,10 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 {
 	GLOINIT
 	int cmm_num_src, cmm_num_dst, cmm_extras;
-	unsigned char *inputpos, *outputpos, *buffer;
+	unsigned char *inputpos, *outputpos;
 	int ss = src->stride;
 	int ds = dst->stride;
 	int sw = src->w;
-	int dw = dst->w;
 	int sn = src->n;
 	int dn = dst->n;
 	int sa = src->alpha;
@@ -445,39 +351,11 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 
 	inputpos = src->samples;
 	outputpos = dst->samples;
-	if (sa)
+	for (; h > 0; h--)
 	{
-		buffer = fz_malloc(ctx, ss);
-		for (; h > 0; h--)
-		{
-			int mult = fz_unmultiply_row(ctx, sn, sc, sw, buffer, inputpos);
-			if (mult == 0)
-			{
-				/* Solid transparent row. No point in doing the transform
-				 * because it will premultiplied back to 0. */
-				memset(outputpos, 0, ds);
-			}
-			else
-			{
-				cmsDoTransform(GLO link->handle, buffer, outputpos, sw);
-				if (mult == 1)
-					fz_premultiply_row_0or1(ctx, dn, dc, dw, outputpos);
-				else if (mult == 2)
-					fz_premultiply_row(ctx, dn, dc, dw, outputpos);
-			}
-			inputpos += ss;
-			outputpos += ds;
-		}
-		fz_free(ctx, buffer);
-	}
-	else
-	{
-		for (; h > 0; h--)
-		{
-			cmsDoTransform(GLO link->handle, inputpos, outputpos, sw);
-			inputpos += ss;
-			outputpos += ds;
-		}
+		cmsDoTransform(GLO link->handle, inputpos, outputpos, sw);
+		inputpos += ss;
+		outputpos += ds;
 	}
 }
 
