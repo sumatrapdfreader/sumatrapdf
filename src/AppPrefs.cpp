@@ -7,6 +7,7 @@
 #include "utils/UITask.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/Timer.h"
 
 #include "wingui/TreeModel.h"
 #include "DisplayMode.h"
@@ -29,6 +30,8 @@
 #include "Favorites.h"
 #include "Toolbar.h"
 #include "Translations.h"
+
+#include "utils/Log.h"
 
 // SumatraPDF.cpp
 extern void RememberDefaultWindowPosition(WindowInfo* win);
@@ -66,6 +69,12 @@ WCHAR* GetSettingsPath() {
 /* Caller needs to prefs::CleanUp() */
 bool Load() {
     CrashIf(gGlobalPrefs);
+
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("prefs::Load() took %.2f ms\n", dur);
+    };
 
     AutoFreeWstr path = GetSettingsPath();
     AutoFree prefsData = file::ReadFile(path.Get());
