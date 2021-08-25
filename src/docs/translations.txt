@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-79a2bb84be1ccf14fc0aadff09db6550575473bd
+0ab02257e40caa3e17faaf0d3d2a22e9e743a0f9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -501,6 +501,7 @@ vn:Đóng tập tin\tCtrl+W
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
 br:&Continue instalando a versão 32-bits
+ca-xv:&Continua amb la instal·lació de la versió de 32 bits
 ca:&Continua amb la instal·lació de la versió de 32 bits
 cn:继续安装 32 位版本(&C)
 co:&Cuntinuà l’installazione di a versione 32-bit
@@ -515,6 +516,7 @@ tr:32 bit sürümü kurmayı &sürdür
 :&Copy Selection \tCtrl-C
 am:&Պատճենել ընտրումը \tCtrl-C
 br:&Copiar Seleção \tCtrl-C
+ca-xv:&Copia la selecció \tCtrl-C
 ca:&Copia la selecció \tCtrl-C
 cn:复制所选内容(&C)\tCtrl+C
 co:&Cupià a selezzione\tCtrl+C
@@ -529,6 +531,7 @@ tr:Seçimi &Kopyala \tCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
 br:Copiar para Área de Transferência\tCtrl-C
+ca-xv:&Copia al porta-retalls\tCtrl-C
 ca:&Copia al porta-retalls\tCtrl-C
 cn:复制到剪贴板(&C)\tCtrl+C
 co:&Cupià in u preme’papei\tCtrl+C
@@ -543,6 +546,7 @@ tr:Panoya &Kopyala\tCtrl-C
 :&Discard
 am:&Մերժել
 br:&Descartar
+ca-xv:&Descarta
 ca:&Descarta
 cn:取消(&D)
 co:&Scartà
@@ -1255,6 +1259,7 @@ vn:Trợ &giúp
 :&Highlight\ta
 am:&Գունանշում\ta
 br:&Destacar\ta
+ca-xv:Ress&alta\ta
 ca:Ress&alta\ta
 cn:&高亮\tA
 co:Sopra&lineà\ta
@@ -2465,6 +2470,7 @@ am:&Հեռացնել պատմությունից
 ar:إزالة من التاريخ
 az:Tarixçədən &sil
 br:&Remover do Histórico
+ca-xv:&Suprimeix de l'historial
 ca:&Suprimeix de l'historial
 cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
@@ -2565,6 +2571,7 @@ vn:Lưu thành...\tCtrl+S
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
 br:&Salvar em um PDF existente
+ca-xv:Desa a un PDF &existent
 ca:Desa a un PDF &existent
 cn:保存到当前 PDF 文件(&S)
 co:&Arregistrà in u PDF esistente
@@ -2579,6 +2586,7 @@ tr:Var olan PDF'ye &kaydet
 :&Search With Google
 am:&Որոնել Google-ով
 br:&Buscar com Google
+ca-xv:&Cerca amb el Google
 ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
 co:&Circà cù Google
@@ -2782,6 +2790,7 @@ vn:Trang đơn\tCtrl+6
 :&Stamp
 am:&Կնիք
 br:&Carimbo
+ca-xv:&Segell
 ca:&Segell
 cn:&图章
 co:&Stampaghjolu
@@ -2799,6 +2808,7 @@ tr:&Damga
 :&Strike Out
 am:&Ջնջած
 br:Ri&scar
+ca-xv:&Ratlla
 ca:&Ratlla
 cn:&删除线
 co:&Rigà
@@ -2817,6 +2827,7 @@ tr:&Üstünü Çiz
 am:&Գրվածք
 az:Mə&tn
 br:&Texto
+ca-xv:&Text
 ca:&Text
 cn:&文本
 co:&Testu
@@ -2893,6 +2904,7 @@ vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
 br:&Traduzir com Google
+ca-xv:Tradueix amb el &Google
 ca:Tradueix amb el &Google
 cn:使用谷歌翻译(&T)
 co:&Traduce cù Google
@@ -2907,6 +2919,7 @@ tr:Google İle &Çevir
 :&Underline
 am:&Ընդգծված
 br:S&ublinhar
+ca-xv:&Subratlla
 ca:&Subratlla
 cn:&下划线
 co:&Sottulineatu
@@ -5301,6 +5314,7 @@ vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
 br:Verificando por atualizações...
+ca-xv:S'està comprovant si hi ha actualitzacions...
 ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
 co:Cuntrollu di e nove versioni…
@@ -6727,6 +6741,7 @@ ar:إزالة معيار سومرا للبحث غير ممكن
 az:Sumatra axtarış filtrini silmək mümkün olmadı
 bn:Sumatra search filter ইন্সটল হয়নি
 br:Não foi possível desinstalar o filtro do pesquisa do Sumatra
+ca-xv:No s'ha pogut desinstal·lar el filtre de cerca del Sumatra
 ca:No s'ha pogut desinstal·lar el filtre de cerca del Sumatra
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
@@ -6882,7 +6897,8 @@ vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
 br:Criar Anotação Sobre o C&ursor
-ca:Crea una anotació a &sota del cursor
+ca-xv:Crea una anotació a sota del c&ursor
+ca:Crea una anotació a sota del c&ursor
 cn:在光标位置创建标注(&U)
 co:Scrive un’annutazione &sottu à u cursore
 de:Anmerkung &unter dem Cursor erstellen
@@ -6897,6 +6913,7 @@ tr:İmlecin &Altına Not Oluştur
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
 br:Criar Anotação a partir da Seleção
+ca-xv:Crea una anotació amb la selecció
 ca:Crea una anotació amb la selecció
 cn:对所选内容创建标注
 co:Scrive un’annutazione da a selezzione
@@ -7684,6 +7701,7 @@ vn:Thuộc tính tập tin
 :Don't install
 am:Չտեղադրել
 br:Não instalar
+ca-xv:No ho instal·lis
 ca:No ho instal·lis
 cn:不安装
 co:Ùn micca installà
@@ -7698,6 +7716,7 @@ tr:Kurma
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
 br:Baixar versão 64-bits
+ca-xv:Baixa la versió de 64 bits
 ca:Baixa la versió de 64 bits
 cn:下载 64 位版本
 co:Scaricà a versione 64-bit
@@ -7714,6 +7733,7 @@ am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
 az:Tam ekran rejimindən çı&x
 br:Sair da Tela &Cheia
+ca-xv:Surt de &la pantalla completa
 ca:Surt de &la pantalla completa
 cn:退出全屏(&X)
 co:&Esce di u modu screnu sanu
@@ -7884,6 +7904,7 @@ ar:تعديل الشرح و التوضيح
 az:Qeydlərə düzəliş et
 bn:ব্যখা সমপাদন করুন
 br:Editar Anotações
+ca-xv:Edita les anotacions
 ca:Edita les anotacions
 cn:编辑标注
 co:&Mudificà l’annutazioni
@@ -9119,6 +9140,7 @@ ar:ملف مرفق
 az:Qoşma fayl
 bn:নথি সংযুক্তি
 br:Anexo de Arquivo
+ca-xv:Fitxer adjunt
 ca:Fitxer adjunt
 cn:文件附件
 co:Schedariu attaccatu
@@ -11076,6 +11098,7 @@ vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 am:Տեղադրել և վեաթողարկել
 br:Instalar e reiniciar
+ca-xv:Instal·la i reinicia
 ca:Instal·la i reinicia
 cn:安装并启动
 co:Installà è rilancià
@@ -11216,6 +11239,7 @@ vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
 br:Instalando SumatraPDF 32-bits em SO 64-bits
+ca-xv:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 ca:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 cn:在 64 位操作系统上安装 32 位 SumatraPDF
 co:Installazione di SumatraPDF 32-bit nant’à un sistema 64-bit
@@ -12022,6 +12046,7 @@ vn:Mở cửa sổ mới\tCtrl+N
 :New version available
 am:Մատչելի է նոր տարբերակ
 br:Nova versão disponível
+ca-xv:Hi ha una versió nova disponible
 ca:Hi ha una versió nova disponible
 cn:有新版本
 co:Nova versione dispunibule
@@ -12640,6 +12665,7 @@ am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
 az:İç PDF faylını aç
 br:Abrir PDF Embutido
+ca-xv:Obre el PDF incrustat
 ca:Obre el PDF incrustat
 cn:打开嵌入式 PDF
 co:Apre u PDF incurpuratu
@@ -14860,6 +14886,7 @@ am:Փոփոխել
 ar:تنقيح
 az:Düzəliş et
 br:Redigir
+ca-xv:Redacta
 ca:Redacta
 cn:编辑
 co:Redige
@@ -15284,6 +15311,7 @@ vn:Quay phải\tCtrl+Shift++
 :S&election
 am:Ը&նտրում
 br:S&eleção
+ca-xv:S&elecció
 ca:S&elecció
 cn:选择(&E)
 co:S&elezzione
@@ -15299,6 +15327,7 @@ tr:S&eçim
 am:Ա&լիքավոր
 az:&Dalğa
 br:Sublinhar &ondulado
+ca-xv:&Ondulat
 ca:&Ondulat
 cn:波浪线(&Q)
 co:&Undulà
@@ -15316,6 +15345,7 @@ tr:&Kıvrımlı
 :SVG documents
 am:SVG փաստաթղթեր
 br:Documentos SVG
+ca-xv:Documents SVG
 ca:Documents SVG
 cn:SVG 文件
 co:Ducumenti SVG
@@ -15368,6 +15398,7 @@ am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
 az:İç faylı yadda saxla...
 br:Salvar Arquivo Embutido...
+ca-xv:Desa el fitxer incrustat
 ca:Desa el fitxer incrustat
 cn:保存嵌入式文件...
 co:Arregistrà u schedariu incurpuratu…
@@ -15457,6 +15488,7 @@ vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save annoations?
 am:Պահե՞լ մեկնաբանությունը:
 br:Salvar anotações?
+ca-xv:Voleu desar les anotacions?
 ca:Voleu desar les anotacions?
 cn:是否保存标注？
 co:Arregistrà l’annutazioni ?
@@ -15472,6 +15504,7 @@ tr:Notlar kaydedilsin mi?
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
 br:Salvar alterações em um novo PDF
+ca-xv:Desa els canvis a un PDF nou
 ca:Desa els canvis a un PDF nou
 cn:另存为新的 PDF 文件
 co:Arregistrà i cambiamenti in un novu PDF
@@ -15492,6 +15525,7 @@ tr:Değişiklikleri yeni PDF'ye kaydet
 am:Պահել փոփոխությունները առկա PDF-ում
 az:Dəyişiklikləri mövcud PDF-ə yaz
 br:Salvar alterações no PDF existente
+ca-xv:Desa els canvis a un PDF existent
 ca:Desa els canvis a un PDF existent
 cn:保存至当前 PDF 文件
 co:Arregistrà i cambiamenti in u PDF esistente
@@ -15511,6 +15545,7 @@ tr:Değişiklikleri var olan PDF'ye kaydet
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
 br:Salvar em um &novo PDF
+ca-xv:Desa a un PDF &nou
 ca:Desa a un PDF &nou
 cn:保存至新的 PDF 文件(&N)
 co:Arregistrà in un &novu PDF
@@ -15525,6 +15560,7 @@ tr:&Yeni PDF'ye kaydet
 :Search With &Bing
 am:Որոնել &Bing-ով
 br:Buscar com &Bing
+ca-xv:Cerca amb el &Bing
 ca:Cerca amb el &Bing
 cn:使用必应搜索(&B)
 co:Circà cù &Bing
@@ -15539,6 +15575,7 @@ tr:&Bing İle Ara
 :Search With &Google
 am:Որոնել &Google-ով
 br:Buscar com &Google
+ca-xv:Cerca amb el &Google
 ca:Cerca amb el &Google
 cn:使用谷歌搜索(&G)
 co:Circà cù &Google
@@ -15680,6 +15717,7 @@ vn:Chọn hết\tCtrl+A
 :Select Annotation in Editor
 am:Ընտրեք մեկնաբանությունը Խմբագրիչում
 br:Selecionar Anotação no Editor
+ca-xv:Selecciona l'anotació a l'editor
 ca:Selecciona l'anotació a l'editor
 cn:在编辑器中选择标注
 co:Selezziunà l’annutazione in l’editore
@@ -16158,6 +16196,7 @@ am:Ցուցադրել &ոլորգոտիները
 ar:إظهار شريط التمرير
 az:&Sürüşdürmə zolaqlarını göstər
 br:Mostrar Barras de &Rolagem
+ca-xv:Mostra les barres de &desplaçament
 ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
@@ -16356,6 +16395,7 @@ am:Ցուցադրել ոլո&րագոտիները
 ar:إظهار أشرطة التمرير
 az:Sürüşdürmə &zolaqlarını göstər
 br:Mostrar Barras de R&olagem
+ca-xv:Mostra les barres de &desplaçament
 ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
@@ -16618,6 +16658,7 @@ vn:Trang đơn
 :Skip this version
 am:Բաց թողնել այս տարբերակը
 br:Ignorar esta versão
+ca-xv:Omet aquesta versió
 ca:Omet aquesta versió
 cn:跳过该版本
 co:Tralascià sta versione
@@ -16761,6 +16802,7 @@ am:Քառակուսի
 ar:مربع
 az:Kvadrat
 br:Quadrado
+ca-xv:Quadrat
 ca:Quadrat
 cn:矩形
 co:Quadratu
@@ -17487,7 +17529,8 @@ am:Աջակցել SumatraPDF-ին
 ar:إدعم سومترا بي.دي.أف
 az:SumatraPDF-i dəstəklə
 br:Suporte o SumatraPDF
-ca:Suport a SumatraPDF
+ca-xv:Col·laboreu amb el SumatraPDF
+ca:Col·laboreu amb el SumatraPDF
 cn:支持 SumatraPDF
 co:Sustene SumatraPDF
 cy:Cefnogi SumatraPDF
@@ -18020,6 +18063,7 @@ vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
 br:Traduzir com &DeepL
+ca-xv:Tradueix amb el &Deepl
 ca:Tradueix amb el &Deepl
 cn:使用 DeepL 翻译(&D)
 co:Traduce cù &DeepL
@@ -18283,6 +18327,7 @@ vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 am:Չպահված մեկնաբանություններ
 br:Anotações não salvas
+ca-xv:Anotacions sense desar
 ca:Anotacions sense desar
 cn:未保存的标注
 co:Annutazioni micca arregistrate
@@ -18301,6 +18346,7 @@ tr:Kaydedilmemiş notlar
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
 br:Anotações não salvas em '%s'
+ca-xv:Anotacions sense desar a «%s».
 ca:Anotacions sense desar a «%s».
 cn:'%s' 中有未保存的标注
 co:Annutazioni micca arregistrate in « %s »
@@ -18775,6 +18821,7 @@ vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 am:Դուք ունեք չպահված մեկնաբանություններ
 br:Você possui anotações não salvas
+ca-xv:Teniu anotacions sense desar
 ca:Teniu anotacions sense desar
 cn:存在未保存的标注
 co:Avete annutazioni micca arregistrate
@@ -18795,7 +18842,8 @@ tr:Kaydedilmemiş notlarınız var
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
 br:Você possui a versão '%s' sendo que a '%s' está disponível.\nDeseja instalar a nova versão?
-ca:Aquesta és la versió «%s» i ja està disponible la versió «%s».\nVoleu instal·lar la versió nova?
+ca-xv:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu instal·lar la versió nova?
+ca:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu instal·lar la versió nova?
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
 co:Impiegate a versione « %s » è a versione « %s » hè dispunibule.\nVulete installà a nova versione ?
 de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neue Version installieren?
@@ -18808,7 +18856,8 @@ tr:'%s' sürümünüz var ve '%s' sürümü kullanılabilir.\nYeni sürümü kur
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
 br:Você está instalando o SumatraPDF 32-bits em um SO 64-bits.\nDeseja baixar a versão 64-bits?
-ca:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu descarregar la versió de 64 bits?
+ca-xv:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu baixar la versió de 64 bits?
+ca:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu baixar la versió de 64 bits?
 cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
 co:Avete da installà SumatraPDF 32-bit\nnant’à un sistema 64-bit.\nVulete scaricà a versione 64-bit ?
 de:Sie installieren die 32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem.\nMöchten Sie die 64-Bit-Version herunterladen?
