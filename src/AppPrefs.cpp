@@ -92,17 +92,6 @@ bool Load() {
     }
 #endif
 
-#ifdef DISABLE_EBOOK_UI
-    if (!prefsData || !str::Find(prefsData, "UseFixedPageUI =")) {
-        gprefs->ebookUI.useFixedPageUI = gprefs->chmUI.useFixedPageUI = true;
-    }
-#endif
-#ifdef DISABLE_TABS
-    if (!prefsData || !str::Find(prefsData, "UseTabs =")) {
-        gprefs->useTabs = false;
-    }
-#endif
-
     if (!gprefs->uiLanguage || !trans::ValidateLangCode(gprefs->uiLanguage)) {
         // guess the ui language on first start
         str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
