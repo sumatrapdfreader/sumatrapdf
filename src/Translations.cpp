@@ -219,9 +219,9 @@ const WCHAR* GetTranslation(const char* s) {
     Translation* trans = FindTranslation(s);
     // we don't have a translation for this string
     if (!trans || trans->idxTransW == 0) {
-        logf("GetTranslatin: didn't find translation for '%s'\n", s);
+        logf("GetTranslation: didn't find translation for '%s'\n", s);
         // shouldn't happen
-        ReportIf(true);
+        // ReportIf(true);
         return ToWstrTemp(s);
     }
     auto idx = trans->idxTransW;

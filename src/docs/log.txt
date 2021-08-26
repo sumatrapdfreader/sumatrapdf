@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-26 Thu
+
+- add 'Cancel' button to unsaved annotations confirmation dialog (fixes #2119)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2119
+
 2021-08-25 Wed
 
 - fix launching external viewers (fixes #2142)

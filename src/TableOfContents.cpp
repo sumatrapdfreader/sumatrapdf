@@ -850,7 +850,7 @@ void TocTreeCharHandler(CharEvent* ev) {
     if (!gGlobalPrefs->escToExit) {
         return;
     }
-    if (!MayCloseWindow(win)) {
+    if (!CanCloseWindow(win)) {
         return;
     }
 

@@ -576,7 +576,7 @@ static void Finished(StressTest* st, bool success) {
         st->win->ShowNotification(s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
     }
 
-    CloseWindow(st->win, st->exitWhenDone && MayCloseWindow(st->win), false);
+    CloseWindow(st->win, st->exitWhenDone && CanCloseWindow(st->win), false);
     delete st;
 }
 

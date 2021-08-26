@@ -832,7 +832,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
         case T_CLOSE:
             current = win->tabsCtrl->GetSelectedTabIndex();
             if (tab1 == current) {
-                CloseTab(win);
+                CloseCurrentTab(win);
             } else {
                 RemoveTab(win, tab1);
             }

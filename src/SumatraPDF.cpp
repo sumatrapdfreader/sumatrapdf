@@ -2002,7 +2002,7 @@ static void OnMenuExit() {
     }
 
     for (WindowInfo* win : gWindows) {
-        if (!MayCloseWindow(win)) {
+        if (!CanCloseWindow(win)) {
             return;
         }
     }
@@ -2134,6 +2134,7 @@ enum class SaveChoice {
     Discard,
     SaveNew,
     SaveExisting,
+    Cancel,
 };
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
@@ -2144,15 +2145,18 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
     constexpr int kBtnIdDiscard = 100;
     constexpr int kBtnIdSaveToExisting = 101;
     constexpr int kBtnIdSaveToNew = 102;
+    constexpr int kBtnIdCancel = 103;
     TASKDIALOGCONFIG dialogConfig{};
-    TASKDIALOG_BUTTON buttons[3];
+    TASKDIALOG_BUTTON buttons[4];
 
     buttons[0].nButtonID = kBtnIdSaveToExisting;
     buttons[0].pszButtonText = _TR("&Save to existing PDF");
     buttons[1].nButtonID = kBtnIdSaveToNew;
     buttons[1].pszButtonText = _TR("Save to &new PDF");
     buttons[2].nButtonID = kBtnIdDiscard;
-    buttons[2].pszButtonText = _TR("&Discard");
+    buttons[2].pszButtonText = _TR("&Discard changes");
+    buttons[3].nButtonID = IDCANCEL;
+    buttons[3].pszButtonText = _TR("&Cancel");
 
     DWORD flags =
         TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -2163,7 +2167,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
     dialogConfig.pszWindowTitle = _TR("Unsaved annotations");
     dialogConfig.pszMainInstruction = mainInstr;
     dialogConfig.pszContent = content;
-    dialogConfig.nDefaultButton = kBtnIdDiscard;
+    dialogConfig.nDefaultButton = IDCANCEL;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;
     dialogConfig.pfCallback = nullptr;
@@ -2186,45 +2190,48 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
             return SaveChoice::SaveExisting;
         case kBtnIdSaveToNew:
             return SaveChoice::SaveNew;
-        case IDCANCEL:
-            // closed window
+        case kBtnIdDiscard:
             return SaveChoice::Discard;
+        case IDCANCEL:
+            return SaveChoice::Cancel;
     }
     ReportIf(true);
-    return SaveChoice::Discard;
+    return SaveChoice::Cancel;
 }
 
-static void MaybeSaveAnnotations(TabInfo* tab) {
+// if returns true, can proceed with closing
+// if returns false, should cancel closing
+static bool MaybeSaveAnnotations(TabInfo* tab) {
     if (!tab) {
-        return;
+        return true;
     }
-    // TODO: hacky because CloseTab() can call CloseWindow() and
+    // TODO: hacky because CloseCurrentTab() can call CloseWindow() and
     // they both ask to save annotations
-    // Could determine in CloseTab() if will CloseWindow() and
+    // Could determine in CloseCurrentTab() if will CloseWindow() and
     // not ask
     if (tab->askedToSaveAnnotations) {
-        return;
+        return true;
     }
-    tab->askedToSaveAnnotations = true;
 
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
-        return;
+        return true;
     }
     EngineBase* engine = dm->GetEngine();
     // shouldn't really happen but did happen.
     // don't block stress testing if opening a document flags it hasving unsaved annotations
     if (IsStressTesting()) {
-        return;
+        return true;
     }
     bool shouldConfirm = EngineHasUnsavedAnnotations(engine);
     if (!shouldConfirm) {
-        return;
+        return true;
     }
+    tab->askedToSaveAnnotations = true;
     auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame, dm->GetFilePath());
     switch (choice) {
         case SaveChoice::Discard:
-            return;
+            return true;
         case SaveChoice::SaveNew:
             SaveAnnotationsToMaybeNewPdfFile(tab);
             break;
@@ -2237,15 +2244,19 @@ static void MaybeSaveAnnotations(TabInfo* tab) {
                 tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
             });
         } break;
+        case SaveChoice::Cancel:
+            tab->askedToSaveAnnotations = false;
+            return false;
         default:
             CrashIf(true);
     }
+    return true;
 }
 
 // closes the current tab, selecting the next one
 // if there's only a single tab left, the window is closed if there
 // are other windows, else the Frequently Read page is displayed
-void CloseTab(WindowInfo* win, bool quitIfLast) {
+void CloseCurrentTab(WindowInfo* win, bool quitIfLast) {
     CrashIf(!win);
     if (!win) {
         return;
@@ -2253,12 +2264,17 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
 
     AbortFinding(win, true);
     ClearFindBox(win);
-    MaybeSaveAnnotations(win->currentTab);
+
+    // TODO: maybe should have a way to over-ride this for unconditional close?
+    bool canClose = MaybeSaveAnnotations(win->currentTab);
+    if (!canClose) {
+        return;
+    }
 
     bool didSavePrefs = false;
     size_t tabCount = win->tabs.size();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
-        if (MayCloseWindow(win)) {
+        if (CanCloseWindow(win)) {
             CloseWindow(win, quitIfLast, false);
             didSavePrefs = true; // in CloseWindow()
         }
@@ -2271,7 +2287,7 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
     }
 }
 
-bool MayCloseWindow(WindowInfo* win) {
+bool CanCloseWindow(WindowInfo* win) {
     CrashIf(!win);
     if (!win) {
         return false;
@@ -2328,8 +2344,20 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
         ExitFullScreen(win);
     }
 
+    bool canCloseWindow = true;
     for (auto& tab : win->tabs) {
-        MaybeSaveAnnotations(tab);
+        bool canCloseTab = MaybeSaveAnnotations(tab);
+        if (!canCloseTab) {
+            canCloseWindow = false;
+        }
+    }
+
+    // TODO: should be more intelligent i.e. close the tabs we can and only
+    // leave those where user cancelled closing
+    // would have to remember a list of tabs to not close above
+    // if list not empty, only close the tabs not on the list
+    if (!canCloseWindow) {
+        return;
     }
 
     bool lastWindow = (1 == gWindows.size());
@@ -3768,7 +3796,7 @@ static void OnFrameKeyEsc(WindowInfo* win) {
         ClearSearchResult(win);
         return;
     }
-    if (gGlobalPrefs->escToExit && MayCloseWindow(win)) {
+    if (gGlobalPrefs->escToExit && CanCloseWindow(win)) {
         CloseWindow(win, true, false);
         return;
     }
@@ -3917,7 +3945,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'q':
             // close the current document (it's too easy to press for discarding multiple tabs)
             // quit if this is the last window
-            CloseTab(win, true);
+            CloseCurrentTab(win, true);
             return;
         case 'r':
             ReloadDocument(win, false);
@@ -4484,7 +4512,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdClose:
-            CloseTab(win);
+            CloseCurrentTab(win);
             break;
 
         case CmdExit:
@@ -5001,7 +5029,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return SendMessageW(win->hwndCanvas, msg, wp, lp);
 
         case WM_CLOSE:
-            if (MayCloseWindow(win)) {
+            if (CanCloseWindow(win)) {
                 CloseWindow(win, true, false);
             }
             break;
