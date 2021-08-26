@@ -120,7 +120,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFavoriteHide, "Favorites: Hide")                                 \
     V(CmdDebugShowLinks, "Deubg: Show Links")                             \
     V(CmdDebugCrashMe, "Debug: Crash Me")                                 \
-    V(CmdDebugEbookUI, "Debug: Toggle Ebook UI")                          \
     V(CmdDebugAnnotations, "Debug: Annotations")                          \
     V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                 \
     V(CmdDebugTestApp, "Debug: Test App")                                 \

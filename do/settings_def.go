@@ -80,17 +80,6 @@ var (
 			"if true, hides the scrollbars but retains ability to scroll"),
 	}
 
-	ebookUI = []*Field{
-		// default serif font, a different font is used for monospaced text (currently always "Courier New")
-		mkField("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
-		mkField("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
-		mkField("TextColor", Color, mkRGB(0x5F, 0x4B, 0x32), "color for text"),
-		mkField("BackgroundColor", Color, mkRGB(0xFB, 0xF0, 0xD9), "color of the background (page)"),
-		mkField("UseFixedPageUI", Bool, false,
-			"if true, the UI used for PDF documents will be used for ebooks as well "+
-				"(enables printing and searching, disables automatic reflow)"),
-	}
-
 	comicBookUI = []*Field{
 		mkCompactStruct("WindowMargin", windowMarginComicBookUI,
 			"top, right, bottom and left margin (in that order) between window and document"),
@@ -260,8 +249,6 @@ var (
 
 		mkStruct("FixedPageUI", fixedPageUI,
 			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
-		mkStruct("EbookUI", ebookUI,
-			"customization options for eBooks (EPUB, Mobi, FictionBook) UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
 		mkStruct("ComicBookUI", comicBookUI,
 			"customization options for Comic Book and images UI").setExpert(),
 		mkStruct("ChmUI", chmUI,

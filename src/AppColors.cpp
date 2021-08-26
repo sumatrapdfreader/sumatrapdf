@@ -87,7 +87,7 @@ static COLORREF GetNoDocBgColor() {
     return GetAboutBgColor();
 }
 
-COLORREF GetAppColor(AppColor col, bool ebook) {
+COLORREF GetAppColor(AppColor col) {
     COLORREF c;
     ParsedColor* parsedCol;
 
@@ -127,18 +127,10 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
             return c;
         }
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
-        if (ebook) {
-            if (gGlobalPrefs->fixedPageUI.invertColors) {
-                parsedCol = GetPrefsColor(gGlobalPrefs->ebookUI.textColor);
-            } else {
-                parsedCol = GetPrefsColor(gGlobalPrefs->ebookUI.backgroundColor);
-            }
+        if (gGlobalPrefs->fixedPageUI.invertColors) {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
         } else {
-            if (gGlobalPrefs->fixedPageUI.invertColors) {
-                parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-            } else {
-                parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-            }
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
         }
         return parsedCol->col;
     }
@@ -153,18 +145,10 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
             return c;
         }
 
-        if (ebook) {
-            if (gGlobalPrefs->fixedPageUI.invertColors) {
-                parsedCol = GetPrefsColor(gGlobalPrefs->ebookUI.backgroundColor);
-            } else {
-                parsedCol = GetPrefsColor(gGlobalPrefs->ebookUI.textColor);
-            }
+        if (gGlobalPrefs->fixedPageUI.invertColors) {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
         } else {
-            if (gGlobalPrefs->fixedPageUI.invertColors) {
-                parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-            } else {
-                parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-            }
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
         }
         return parsedCol->col;
     }
@@ -269,15 +253,6 @@ void GetFixedPageUiColors(COLORREF& text, COLORREF& bg) {
     text = GetCurrentTheme()->document.textColor;
     bg = GetCurrentTheme()->document.backgroundColor;
 #endif
-    text = GetAppColor(AppColor::DocumentText, false);
-    bg = GetAppColor(AppColor::DocumentBg, false);
-}
-
-void GetEbookUiColors(COLORREF& text, COLORREF& bg) {
-#if 0
-    text = GetCurrentTheme()->document.textColor;
-    bg = GetCurrentTheme()->document.backgroundColor;
-#endif
-    text = GetAppColor(AppColor::DocumentText, true);
-    bg = GetAppColor(AppColor::DocumentBg, true);
+    text = GetAppColor(AppColor::DocumentText);
+    bg = GetAppColor(AppColor::DocumentBg);
 }
