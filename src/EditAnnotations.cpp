@@ -806,13 +806,32 @@ static void ListBoxSelectionChanged(EditAnnotationsWindow* ew, ListBoxSelectionC
     UpdateUIForSelectedAnnotation(ew, itemNo);
 }
 
-// TODO: text changes are not immediately reflected in tooltip
+static UINT_PTR gWindowInfoRerenderTimer = 0;
+static WindowInfo* gWindowInfoForRender = nullptr;
+
 // TODO: there seems to be a leak
 static void ContentsChanged(EditAnnotationsWindow* ew, EditTextChangedEvent* ev) {
     ev->didHandle = true;
     SetContents(ew->annot, ev->text);
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+
+    WindowInfo* win = ew->tab->win;
+    if (gWindowInfoRerenderTimer != 0) {
+        // logf("ContentsChanged: killing existing timer for re-render of WindowInfo\n");
+        KillTimer(win->hwndCanvas, gWindowInfoRerenderTimer);
+        gWindowInfoRerenderTimer = 0;
+    }
+    UINT timeoutInMs = 1000;
+    gWindowInfoForRender = win;
+    gWindowInfoRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
+        if (WindowInfoStillValid(gWindowInfoForRender)) {
+            // logf("ContentsChanged: re-rendering WindowInfo\n");
+            WindowInfoRerender(gWindowInfoForRender);
+        } else {
+            // logf("ContentsChanged: NOT re-rendering WindowInfo because is not valid anymore\n");
+        }
+        gWindowInfoRerenderTimer = 0;
+    });
 }
 
 static void WndSizeHandler(EditAnnotationsWindow* ew, SizeEvent* ev) {

@@ -4,6 +4,8 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - add 'Cancel' button to unsaved annotations confirmation dialog (fixes #2119)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2119
+- de-bounce re-rendering of document for 1 sec after changing contents of an annotation (fixes #2034)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2034
 
 2021-08-25 Wed
 
