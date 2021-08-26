@@ -524,10 +524,6 @@ static MenuDef menuDefDebug[] = {
         CmdDebugShowLinks,
     },
     {
-        "Toggle ebook UI",
-        CmdDebugEbookUI,
-    },
-    {
         "Annotation from Selection",
         CmdDebugAnnotations,
     },
@@ -1507,7 +1503,6 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 #endif
 
     win::menu::SetChecked(win->menu, CmdDebugShowLinks, gDebugShowLinks);
-    win::menu::SetChecked(win->menu, CmdDebugEbookUI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetEnabled(win->menu, CmdDebugAnnotations,
                           tab && tab->selectionOnPage && win->showSelection && EngineSupportsAnnotations(engine));
 }

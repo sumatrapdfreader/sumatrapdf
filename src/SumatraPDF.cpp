@@ -2966,8 +2966,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
         WCHAR* path = files.at(i - 1);
         Kind kind = GuessFileTypeFromName(path);
         char* pathA = ToUtf8Temp(path);
-        if (!IsSupportedFileType(kind, gGlobalPrefs->ebookUI.useFixedPageUI) && !Doc::IsSupportedFileType(kind) &&
-            !gFileHistory.Find(pathA, nullptr)) {
+        if (!IsSupportedFileType(kind, true) && !Doc::IsSupportedFileType(kind) && !gFileHistory.Find(pathA, nullptr)) {
             free(files.PopAt(i - 1));
         }
     }
@@ -4678,12 +4677,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }
-            break;
-
-        case CmdDebugEbookUI:
-            gGlobalPrefs->ebookUI.useFixedPageUI = !gGlobalPrefs->ebookUI.useFixedPageUI;
-            // use the same setting to also toggle the CHM UI
-            gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
             break;
 
         case CmdDebugDownloadSymbols:

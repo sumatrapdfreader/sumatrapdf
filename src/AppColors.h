@@ -51,6 +51,5 @@ enum class AppColor {
 
 };
 
-COLORREF GetAppColor(AppColor, bool ebook = false);
+COLORREF GetAppColor(AppColor);
 void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
-void GetEbookUiColors(COLORREF& text, COLORREF& bg);

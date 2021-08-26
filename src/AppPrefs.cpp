@@ -121,8 +121,8 @@ bool Load() {
 
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
-    auto fontName = ToWstrTemp(gprefs->ebookUI.fontName);
-    SetDefaultEbookFont(fontName.Get(), gprefs->ebookUI.fontSize);
+    // auto fontName = ToWstrTemp(gprefs->ebookUI.fontName);
+    // SetDefaultEbookFont(fontName.Get(), gprefs->ebookUI.fontSize);
 
     if (!file::Exists(path.Get())) {
         Save();
