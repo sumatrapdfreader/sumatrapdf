@@ -18,4 +18,5 @@ struct CmdLineArgsIter {
     const WCHAR* AdditionalParam(int n) const;
 
     WCHAR* at(int) const;
+    WCHAR* ParamsTemp();
 };

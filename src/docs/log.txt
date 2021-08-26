@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-08-25 Wed
+
+- fix launching external viewers (fixes #2142)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2142
+
 2021-08-22 Sun
 
 - restore handling links in EngineEbook::HandleLink() (fixes #2136)

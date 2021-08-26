@@ -61,3 +61,21 @@ const WCHAR* CmdLineArgsIter::AdditionalParam(int n) const {
 WCHAR* CmdLineArgsIter::at(int n) const {
     return args[n];
 }
+
+// returns just the params i.e. everything but the first
+// arg (which is the name of the command)
+// returns nullptr if no args
+WCHAR* CmdLineArgsIter::ParamsTemp() {
+    if (nArgs < 2) {
+        return nullptr;
+    }
+    if (nArgs == 2) {
+        return args[1];
+    }
+    // must concat all the
+    WCHAR* s = args[1];
+    for (int i = 2; i < nArgs; i++) {
+        s = str::JoinTemp(s, L" ", args[i]).Get();
+    }
+    return s;
+}
