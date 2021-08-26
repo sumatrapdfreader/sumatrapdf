@@ -1,3 +1,25 @@
+// Copyright (C) 2004-2021 Artifex Software, Inc.
+//
+// This file is part of MuPDF.
+//
+// MuPDF is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Affero General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// MuPDF is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with MuPDF. If not, see <https://www.gnu.org/licenses/agpl-3.0.en.html>
+//
+// Alternative licensing terms are available from the licensor.
+// For commercial licensing, see <https://www.artifex.com/> or contact
+// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
+// CA 94945, U.S.A., +1(415)492-9861, for further information.
+
 /* PKCS7Signer interface */
 
 typedef struct
@@ -27,7 +49,7 @@ static void signer_drop(fz_context *ctx, pdf_pkcs7_signer *signer_)
 		jboolean detach = JNI_FALSE;
 		JNIEnv *env = NULL;
 
-		env = jni_attach_thread(ctx, &detach);
+		env = jni_attach_thread(&detach);
 		if (env == NULL)
 		{
 			fz_warn(ctx, "cannot attach to JVM in signer_drop");
@@ -76,7 +98,7 @@ static pdf_pkcs7_distinguished_name *signer_distinguished_name(fz_context *ctx, 
 
 	if (signer == NULL) return NULL;
 
-	env = jni_attach_thread(ctx, &detach);
+	env = jni_attach_thread(&detach);
 	if (env == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in pdf_pkcs7_distinguished_name");
 
@@ -119,7 +141,7 @@ static size_t signer_max_digest_size(fz_context *ctx, pdf_pkcs7_signer *signer_)
 	size_t max_digest = 0;
 	int len;
 
-	JNIEnv *env = jni_attach_thread(ctx, &detach);
+	JNIEnv *env = jni_attach_thread(&detach);
 	if (env == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in signer_max_digest_size");
 
@@ -145,7 +167,7 @@ static int signer_create_digest(fz_context *ctx, pdf_pkcs7_signer *signer_, fz_s
 	jobject jstm;
 	int result = 1;
 
-	JNIEnv *env = jni_attach_thread(ctx, &detach);
+	JNIEnv *env = jni_attach_thread(&detach);
 	if (env == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in signer_create_digest");
 

@@ -1,3 +1,25 @@
+// Copyright (C) 2004-2021 Artifex Software, Inc.
+//
+// This file is part of MuPDF.
+//
+// MuPDF is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Affero General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// MuPDF is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with MuPDF. If not, see <https://www.gnu.org/licenses/agpl-3.0.en.html>
+//
+// Alternative licensing terms are available from the licensor.
+// For commercial licensing, see <https://www.artifex.com/> or contact
+// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
+// CA 94945, U.S.A., +1(415)492-9861, for further information.
+
 /* DocumentWriter interface */
 
 JNIEXPORT void JNICALL
@@ -80,8 +102,6 @@ FUN(DocumentWriter_newNativeDocumentWriterWithSeekableOutputStream)(JNIEnv *env,
 	const char *options = NULL;
 	jbyteArray array = NULL;
 	fz_output *out;
-
-	printf("DocumentWriter.newNativeDocumentWriterWithOutput()\n"); fflush(0);
 
 	if (!ctx) return 0;
 	if (!jstream) jni_throw_arg(env, "output stream must not be null");
@@ -210,7 +230,7 @@ jni_ocr_progress(fz_context *ctx, void *arg, int percent)
 	JNIEnv *env = NULL;
 	jboolean detach = JNI_FALSE;
 
-	env = jni_attach_thread(ctx, &detach);
+	env = jni_attach_thread(&detach);
 	if (env == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in jni_ocr_progress");
 

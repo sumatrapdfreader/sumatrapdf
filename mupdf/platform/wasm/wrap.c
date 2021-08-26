@@ -1,3 +1,25 @@
+// Copyright (C) 2004-2021 Artifex Software, Inc.
+//
+// This file is part of MuPDF.
+//
+// MuPDF is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Affero General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// MuPDF is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with MuPDF. If not, see <https://www.gnu.org/licenses/agpl-3.0.en.html>
+//
+// Alternative licensing terms are available from the licensor.
+// For commercial licensing, see <https://www.artifex.com/> or contact
+// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
+// CA 94945, U.S.A., +1(415)492-9861, for further information.
+
 #include "emscripten.h"
 #include "mupdf/fitz.h"
 
@@ -107,9 +129,9 @@ char *pageText(fz_document *doc, int number, float dpi)
 
 	fz_try(ctx)
 	{
-	loadPage(doc, number);
+		loadPage(doc, number);
 
-	buf = fz_new_buffer(ctx, 0);
+		buf = fz_new_buffer(ctx, 0);
 		out = fz_new_output_with_buffer(ctx, buf);
 		text = fz_new_stext_page_from_page(ctx, lastPage, &opts);
 
@@ -120,15 +142,15 @@ char *pageText(fz_document *doc, int number, float dpi)
 		fz_buffer_extract(ctx, buf, &data);
 	}
 	fz_always(ctx)
-		{
-			fz_drop_stext_page(ctx, text);
+	{
+		fz_drop_stext_page(ctx, text);
 		fz_drop_output(ctx, out);
-	fz_drop_buffer(ctx, buf);
+		fz_drop_buffer(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
 		wasm_rethrow(ctx);
-		}
+	}
 
 	return (char*)data;
 }
@@ -149,12 +171,12 @@ void doDrawPageAsPNG(fz_document *doc, int number, float dpi)
 
 	fz_try(ctx)
 	{
-	loadPage(doc, number);
-			pix = fz_new_pixmap_from_page(ctx, lastPage, fz_scale(zoom, zoom), fz_device_rgb(ctx), 0);
+		loadPage(doc, number);
+		pix = fz_new_pixmap_from_page(ctx, lastPage, fz_scale(zoom, zoom), fz_device_rgb(ctx), 0);
 		lastDrawBuffer = fz_new_buffer_from_pixmap_as_png(ctx, pix, fz_default_color_params);
 	}
 	fz_always(ctx)
-			fz_drop_pixmap(ctx, pix);
+		fz_drop_pixmap(ctx, pix);
 	fz_catch(ctx)
 		wasm_rethrow(ctx);
 }
@@ -176,7 +198,7 @@ static fz_irect pageBounds(fz_document *doc, int number, float dpi)
 	fz_irect bbox = fz_empty_irect;
 	fz_try(ctx)
 	{
-	loadPage(doc, number);
+		loadPage(doc, number);
 		bbox = fz_round_rect(fz_transform_rect(fz_bound_page(ctx, lastPage), fz_scale(dpi/72, dpi/72)));
 	}
 	fz_catch(ctx)
@@ -228,40 +250,40 @@ char *pageLinks(fz_document *doc, int number, float dpi)
 
 	fz_try(ctx)
 	{
-	loadPage(doc, number);
+		loadPage(doc, number);
 
 		links = fz_load_links(ctx, lastPage);
 
 		buf = fz_new_buffer(ctx, 0);
 
 		fz_append_string(ctx, buf, "[");
-			for (link = links; link; link = link->next)
-			{
-				fz_irect bbox = fz_round_rect(fz_transform_rect(link->rect, fz_scale(dpi/72, dpi/72)));
+		for (link = links; link; link = link->next)
+		{
+			fz_irect bbox = fz_round_rect(fz_transform_rect(link->rect, fz_scale(dpi/72, dpi/72)));
 			fz_append_string(ctx, buf, "{");
 			fz_append_printf(ctx, buf, "%q:%d,", "x", bbox.x0);
 			fz_append_printf(ctx, buf, "%q:%d,", "y", bbox.y0);
 			fz_append_printf(ctx, buf, "%q:%d,", "w", bbox.x1 - bbox.x0);
 			fz_append_printf(ctx, buf, "%q:%d,", "h", bbox.y1 - bbox.y0);
-				if (fz_is_external_link(ctx, link->uri))
+			if (fz_is_external_link(ctx, link->uri))
 			{
 				fz_append_printf(ctx, buf, "%q:%q", "href", link->uri);
 			}
-				else
-				{
+			else
+			{
 				fz_location link_loc = fz_resolve_link(ctx, doc, link->uri, NULL, NULL);
 				int link_page = fz_page_number_from_location(ctx, doc, link_loc);
 				fz_append_printf(ctx, buf, "%q:\"#page%d\"", "href", link_page+1);
-				}
+			}
 			fz_append_string(ctx, buf, "}");
 			if (link->next)
 				fz_append_string(ctx, buf, ",");
-			}
+		}
 		fz_append_string(ctx, buf, "]");
 		fz_terminate_buffer(ctx, buf);
 
 		fz_buffer_extract(ctx, buf, &data);
-		}
+	}
 	fz_always(ctx)
 	{
 		fz_drop_buffer(ctx, buf);
@@ -310,11 +332,11 @@ char *search(fz_document *doc, int number, float dpi, const char *needle)
 		fz_append_string(ctx, buf, "]");
 		fz_terminate_buffer(ctx, buf);
 
-	fz_buffer_extract(ctx, buf, &data);
+		fz_buffer_extract(ctx, buf, &data);
 	}
 	fz_always(ctx)
 	{
-	fz_drop_buffer(ctx, buf);
+		fz_drop_buffer(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
@@ -330,7 +352,7 @@ char *documentTitle(fz_document *doc)
 	static char buf[100], *result = NULL;
 	fz_try(ctx)
 	{
-	if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_TITLE, buf, sizeof buf) > 0)
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_TITLE, buf, sizeof buf) > 0)
 			result = buf;
 	}
 	fz_catch(ctx)

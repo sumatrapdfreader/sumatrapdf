@@ -1,3 +1,25 @@
+// Copyright (C) 2004-2021 Artifex Software, Inc.
+//
+// This file is part of MuPDF.
+//
+// MuPDF is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Affero General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// MuPDF is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with MuPDF. If not, see <https://www.gnu.org/licenses/agpl-3.0.en.html>
+//
+// Alternative licensing terms are available from the licensor.
+// For commercial licensing, see <https://www.artifex.com/> or contact
+// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
+// CA 94945, U.S.A., +1(415)492-9861, for further information.
+
 #include "mupdf/fitz.h"
 
 #include "color-imp.h"
@@ -18,6 +40,103 @@
 #define GLO
 #include "lcms2.h"
 #endif
+
+static void fz_premultiply_row(fz_context *ctx, int n, int c, int w, unsigned char *s)
+{
+	unsigned char a;
+	int k;
+	int n1 = n-1;
+	for (; w > 0; w--)
+	{
+		a = s[n1];
+		if (a == 0)
+			memset(s, 0, c);
+		else if (a != 255)
+			for (k = 0; k < c; k++)
+				s[k] = fz_mul255(s[k], a);
+		s += n;
+	}
+}
+
+static void fz_premultiply_row_0or1(fz_context *ctx, int n, int c, int w, unsigned char *s)
+{
+	unsigned char a;
+	int n1 = n-1;
+	for (; w > 0; w--)
+	{
+		a = s[n1];
+		if (a == 0)
+			memset(s, 0, c);
+		s += n;
+	}
+}
+
+/* Returns 0 for all the alphas being 0, 1 for them being 0 or 255, 2 otherwise. */
+static int fz_unmultiply_row(fz_context *ctx, int n, int c, int w, unsigned char *s, const unsigned char *in)
+{
+	int a, inva;
+	int k;
+	int n1 = n-1;
+	for (; w > 0; w--)
+	{
+		a = in[n1];
+		if (a != 0)
+			goto nonzero;
+		for (k = 0; k < c; k++)
+			s[k] = 0;
+		for (;k < n1; k++)
+			s[k] = in[k];
+		s[n1] = 0;
+		s += n;
+		in += n;
+	}
+	return 0;
+	for (; w > 0; w--)
+	{
+		a = in[n1];
+nonzero:
+		if (a != 0 && a != 255)
+			goto varying;
+		k = 0;
+		if (a == 0)
+			for (; k < c; k++)
+				s[k] = 0;
+		for (;k < n; k++)
+			s[k] = in[k];
+		s += n;
+		in += n;
+	}
+	return 1;
+	for (; w > 0; w--)
+	{
+		a = in[n1];
+varying:
+		if (a == 0)
+		{
+			for (k = 0; k < c; k++)
+				s[k] = 0;
+			for (;k < n1; k++)
+				s[k] = in[k];
+			s[k] = 0;
+		}
+		else if (a == 255)
+		{
+			memcpy(s, in, n);
+		}
+		else
+		{
+			inva = 255 * 256 / a;
+			for (k = 0; k < c; k++)
+				s[k] = (in[k] * inva) >> 8;
+			for (;k < n1; k++)
+				s[k] = in[k];
+			s[n1] = a;
+		}
+		s += n;
+		in += n;
+	}
+	return 2;
+}
 
 struct fz_icc_link
 {
@@ -325,10 +444,11 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 {
 	GLOINIT
 	int cmm_num_src, cmm_num_dst, cmm_extras;
-	unsigned char *inputpos, *outputpos;
+	unsigned char *inputpos, *outputpos, *buffer;
 	int ss = src->stride;
 	int ds = dst->stride;
 	int sw = src->w;
+	int dw = dst->w;
 	int sn = src->n;
 	int dn = dst->n;
 	int sa = src->alpha;
@@ -351,6 +471,34 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 
 	inputpos = src->samples;
 	outputpos = dst->samples;
+	/* LCMS can only handle premultiplied data if the number of 'extra'
+	 * channels is the same. If not, do it by steam. */
+	if (sa && cmm_extras != (int)T_EXTRA(dst_format))
+	{
+		buffer = fz_malloc(ctx, ss);
+		for (; h > 0; h--)
+		{
+			int mult = fz_unmultiply_row(ctx, sn, sc, sw, buffer, inputpos);
+			if (mult == 0)
+			{
+				/* Solid transparent row. No point in doing the transform
+				 * because it will premultiplied back to 0. */
+				memset(outputpos, 0, ds);
+			}
+			else
+			{
+				cmsDoTransform(GLO link->handle, buffer, outputpos, sw);
+				if (mult == 1)
+					fz_premultiply_row_0or1(ctx, dn, dc, dw, outputpos);
+				else if (mult == 2)
+					fz_premultiply_row(ctx, dn, dc, dw, outputpos);
+			}
+			inputpos += ss;
+			outputpos += ds;
+		}
+		fz_free(ctx, buffer);
+	}
+	else
 	for (; h > 0; h--)
 	{
 		cmsDoTransform(GLO link->handle, inputpos, outputpos, sw);

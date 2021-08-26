@@ -1,3 +1,25 @@
+// Copyright (C) 2004-2021 Artifex Software, Inc.
+//
+// This file is part of MuPDF.
+//
+// MuPDF is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Affero General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// MuPDF is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with MuPDF. If not, see <https://www.gnu.org/licenses/agpl-3.0.en.html>
+//
+// Alternative licensing terms are available from the licensor.
+// For commercial licensing, see <https://www.artifex.com/> or contact
+// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
+// CA 94945, U.S.A., +1(415)492-9861, for further information.
+
 #include "mupdf/fitz.h"
 
 #include "color-imp.h"
@@ -1458,7 +1480,12 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 			{
 				int sx = src->s + src->alpha;
 				int dx = dst->s + dst->alpha;
-				link = fz_find_icc_link(ctx, ss, sx, ds, dx, prf, params, 0, copy_spots, src->alpha);
+				/* If we have alpha, we're preserving spots and we have the same number
+				 * of 'extra' (non process, spots+alpha) channels (i.e. sx == dx), then
+				 * we get lcms2 to do the premultiplication handling for us. If not,
+				 * fz_icc_transform_pixmap will have to do it by steam. */
+				int premult = src->alpha && (sx == dx) && copy_spots;
+				link = fz_find_icc_link(ctx, ss, sx, ds, dx, prf, params, 0, copy_spots, premult);
 				fz_icc_transform_pixmap(ctx, link, src, dst, copy_spots);
 			}
 			fz_catch(ctx)

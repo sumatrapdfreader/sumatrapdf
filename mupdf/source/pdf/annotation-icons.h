@@ -1,6 +1,7 @@
 /*
 These 8x8 icons have been converted from the MIT licensed
 https://github.com/iconic/open-iconic
+Copyright (c) 2014 Waybury
  */
 
 static const char *icon_comment =
@@ -247,6 +248,7 @@ static const char *icon_star =
 /*
 These 8x8 icons have been converted from the MIT licensed
 https://github.com/michaelampr/jam
+Copyright (c) 2017 Michael Amprimo
 */
 
 static const char *icon_insert =

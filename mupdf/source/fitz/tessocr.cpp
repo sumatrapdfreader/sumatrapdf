@@ -387,6 +387,7 @@ void ocr_recognise(fz_context *ctx,
 					fz_chartorune(&unicode, graph);
 					callback(ctx, arg, unicode, font_name, line_bbox, word_bbox, char_bbox, pointsize);
 				}
+				delete[] graph;
 				res_it->Next(tesseract::RIL_SYMBOL);
 			}
 			while (!res_it->Empty(tesseract::RIL_BLOCK) &&

@@ -1,3 +1,25 @@
+// Copyright (C) 2004-2021 Artifex Software, Inc.
+//
+// This file is part of MuPDF.
+//
+// MuPDF is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Affero General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// MuPDF is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with MuPDF. If not, see <https://www.gnu.org/licenses/agpl-3.0.en.html>
+//
+// Alternative licensing terms are available from the licensor.
+// For commercial licensing, see <https://www.artifex.com/> or contact
+// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
+// CA 94945, U.S.A., +1(415)492-9861, for further information.
+
 #include "mupdf/fitz.h"
 
 #include "color-imp.h"
@@ -172,6 +194,37 @@ int fz_count_active_separations(fz_context *ctx, const fz_separations *sep)
 	return c;
 }
 
+int fz_compare_separations(fz_context *ctx, const fz_separations *sep1, const fz_separations *sep2)
+{
+	int i, n1, n2;
+
+	if (sep1 == sep2)
+		return 0; /* Match */
+	if (sep1 == NULL || sep2 == NULL)
+		return 1; /* No match */
+	n1 = sep1->num_separations;
+	n2 = sep2->num_separations;
+	if (n1 != n2)
+		return 1; /* No match */
+	if (sep1->controllable != sep2->controllable)
+		return 1; /* No match */
+	for (i = 0; i < n1; i++)
+	{
+		if (sep_state(sep1, i) != sep_state(sep2, i))
+			return 1; /* No match */
+		if (sep1->name[i] == NULL && sep2->name[i] == NULL)
+		{}
+		else if (sep1->name[i] == NULL || sep2->name[i] == NULL || strcmp(sep1->name[i], sep2->name[i]))
+			return 1; /* No match */
+		if (sep1->cs[i] != sep2->cs[i] ||
+			sep1->cs_pos[i] != sep2->cs_pos[i] ||
+			sep1->rgba[i] != sep2->rgba[i] ||
+			sep1->cmyk[i] != sep2->cmyk[i])
+			return 1; /* No match */
+	}
+	return 0;
+}
+
 fz_separations *fz_clone_separations_for_overprint(fz_context *ctx, fz_separations *sep)
 {
 	int i, j, n, c;
@@ -294,9 +347,9 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 	sstride -= sn * dw;
 
 	/* Process colorants (and alpha) first */
-	if (dst->colorspace == src->colorspace && proof_cs == NULL)
+	if (dst->colorspace == src->colorspace && proof_cs == NULL && dst->s == 0 && src->s == 0)
 	{
-		/* Simple copy */
+		/* Simple copy - no spots to worry about. */
 		unsigned char *dd = ddata;
 		const unsigned char *sd = sdata;
 		for (y = dh; y > 0; y--)
@@ -683,6 +736,35 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 	else
 	{
 		signed char map[FZ_MAX_COLORS];
+
+		/* We have a special case here. Converting from CMYK + Spots
+		 * to RGB with less spots, involves folding (at least some of)
+		 * the spots down via their equivalent colors. Merging a spot's
+		 * equivalent colour (generally expressed in CMYK) with an RGB
+		 * one works badly, (presumably because RGB colors have
+		 * different linearity to CMYK ones). For best results we want
+		 * to merge the spots into the CMYK color, and then convert
+		 * that into RGB.  We handle that case here. */
+		if (fz_colorspace_is_subtractive(ctx, src->colorspace) &&
+			!fz_colorspace_is_subtractive(ctx, dst->colorspace) &&
+			src->seps > 0 &&
+			fz_compare_separations(ctx, dst->seps, src->seps))
+		{
+			/* Converting from CMYK + Spots -> RGB with a change in spots. */
+			fz_pixmap *temp = fz_new_pixmap(ctx, src->colorspace, src->w, src->h, dst->seps, dst->alpha);
+
+			fz_try(ctx)
+			{
+				temp = fz_copy_pixmap_area_converting_seps(ctx, src, temp, prf, color_params, default_cs);
+				dst =  fz_copy_pixmap_area_converting_seps(ctx, temp, dst, NULL, color_params, default_cs);
+			}
+			fz_always(ctx)
+				fz_drop_pixmap(ctx, temp);
+			fz_catch(ctx)
+				fz_rethrow(ctx);
+
+			return dst;
+		}
 
 		/* Use a standard pixmap converter to convert the process + alpha. */
 		fz_convert_pixmap_samples(ctx, src, dst, proof_cs, default_cs, fz_default_color_params, 0);
