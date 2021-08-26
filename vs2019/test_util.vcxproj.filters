@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="mui">
-      <UniqueIdentifier>{1092880B-7C9B-887C-0517-9F7C711F947C}</UniqueIdentifier>
-    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
@@ -20,9 +17,6 @@
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
-    <ClInclude Include="..\src\mui\SvgPath.h">
-      <Filter>mui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\BaseUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -117,12 +111,6 @@
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
-    <ClCompile Include="..\src\mui\SvgPath.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\SvgPath_ut.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\tools\test_util.cpp">
       <Filter>tools</Filter>
     </ClCompile>

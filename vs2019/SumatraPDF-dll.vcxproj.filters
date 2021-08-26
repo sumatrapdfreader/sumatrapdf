@@ -198,9 +198,6 @@
     <ClInclude Include="..\src\mui\MuiBase.h">
       <Filter>src\mui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mui\SvgPath.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\mui\TextRender.h">
       <Filter>src\mui</Filter>
     </ClInclude>
@@ -411,9 +408,6 @@
       <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\MuiBase.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\SvgPath.cpp">
       <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\TextRender.cpp">

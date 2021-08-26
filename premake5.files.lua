@@ -646,7 +646,6 @@ function mui_files()
   files_in_dir("src/mui", {
     "MuiBase.*",
     "Mui.*",
-    "SvgPath.*",
     "TextRender.*",
   })
 end
@@ -1026,7 +1025,6 @@ function test_util_files()
     "SumatraConfig.*",
     "SettingsStructs.*",
     "SumatraUnitTests.cpp",
-    "mui/SvgPath*",
     "tools/test_util.cpp"
   })
 end

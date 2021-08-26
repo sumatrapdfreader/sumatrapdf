@@ -13,8 +13,6 @@ class TabItem {
 
     str::Str title;
     str::Str toolTip;
-
-    str::Str iconSvgPath;
 };
 
 class TabsCtrlState {
