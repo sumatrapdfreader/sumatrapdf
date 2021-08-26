@@ -198,39 +198,6 @@
     <ClInclude Include="..\src\mui\MuiBase.h">
       <Filter>src\mui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mui\MuiButton.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiControl.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiCss.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiDefs.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiEventMgr.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiFromText.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiGrid.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiHwndWrapper.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiLayout.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiPainter.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiScrollBar.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\mui\SvgPath.h">
       <Filter>src\mui</Filter>
     </ClInclude>
@@ -441,39 +408,6 @@
       <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\MuiBase.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiButton.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiControl.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiCss.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiDefs.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiEventMgr.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiFromText.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiGrid.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiHwndWrapper.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiLayout.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiPainter.cpp">
-      <Filter>src\mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiScrollBar.cpp">
       <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\SvgPath.cpp">
