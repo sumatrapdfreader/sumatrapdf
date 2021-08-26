@@ -12,7 +12,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
@@ -519,11 +519,6 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         win->AsChm()->PrintCurrentPage(showUI);
         return;
     }
-    if (win->AsEbook()) {
-        // TODO: use EngineEbook for printing?
-        return;
-    }
-
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) {
         return;
@@ -1014,7 +1009,7 @@ Exit:
 bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     logf(L"PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     WCHAR* fileName2 = path::Normalize(fileName);
-    EngineBase* engine = CreateEngine(fileName2);
+    EngineBase* engine = CreateEngine(fileName2, nullptr, true);
     if (!engine) {
         if (displayErrors) {
             WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);

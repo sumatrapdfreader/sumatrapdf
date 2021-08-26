@@ -4,8 +4,6 @@
 struct Controller;
 struct ChmModel;
 struct DisplayModel;
-struct EbookController;
-struct EbookFormattingData;
 struct IPageElement;
 struct IPageDestination;
 struct TocTree;
@@ -62,9 +60,6 @@ struct ControllerCallback {
     virtual void FocusFrame(bool always) = 0;
     // tell the UI to let the user save the provided data to a file
     virtual void SaveDownload(const WCHAR* url, ByteSlice data) = 0;
-    // EbookController //
-    virtual void HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) = 0;
-    virtual void RequestDelayedLayout(int delay) = 0;
 };
 
 struct Controller {
@@ -156,7 +151,7 @@ struct Controller {
     }
 
     virtual bool HandleLink(IPageDestination*, ILinkHandler*) {
-        // TODO: over-ride in ChmModel and EbookController
+        // TODO: over-ride in ChmModel
         return false;
     }
 
@@ -165,9 +160,6 @@ struct Controller {
         return nullptr;
     }
     virtual ChmModel* AsChm() {
-        return nullptr;
-    }
-    virtual EbookController* AsEbook() {
         return nullptr;
     }
 };

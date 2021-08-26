@@ -22,12 +22,11 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "Doc.h"
 
 #include "SettingsStructs.h"
 #include "DisplayModel.h"
-#include "EbookController.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
 #include "RenderCache.h"
@@ -1398,58 +1397,6 @@ static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM w
     }
 }
 
-///// methods needed for EbookUI canvases /////
-
-// NO_INLINE to help in debugging https://github.com/sumatrapdfreader/sumatrapdf/issues/292
-static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
-    // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd)) {
-        // Note: hwndTocTree's window procedure doesn't always handle
-        //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
-        //       here recursively - prevent that
-        LRESULT res = 0;
-        if (!gWheelMsgRedirect) {
-            gWheelMsgRedirect = true;
-            res = SendMessageW(win->tocTreeCtrl->hwnd, msg, wp, lp);
-            gWheelMsgRedirect = false;
-        }
-        return res;
-    }
-
-    short delta = GET_WHEEL_DELTA_WPARAM(wp);
-    if (delta > 0) {
-        win->ctrl->GoToPrevPage();
-    } else {
-        win->ctrl->GoToNextPage();
-    }
-    return 0;
-}
-
-static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    bool wasHandled;
-    LRESULT res = win->AsEbook()->HandleMessage(msg, wp, lp, wasHandled);
-    if (wasHandled) {
-        return res;
-    }
-
-    switch (msg) {
-        case WM_SETCURSOR:
-            // TODO: make (re)loading a document always clear the infotip
-            win->HideToolTip();
-            return DefWindowProc(hwnd, msg, wp, lp);
-
-        case WM_MOUSEWHEEL:
-        case WM_MOUSEHWHEEL:
-            return CanvasOnMouseWheelEbook(win, msg, wp, lp);
-
-        case WM_GESTURE:
-            return OnGesture(win, msg, wp, lp);
-
-        default:
-            return DefWindowProc(hwnd, msg, wp, lp);
-    }
-}
-
 ///// methods needed for FixedPageUI canvases with loading error /////
 
 static void OnPaintError(WindowInfo* win) {
@@ -1553,15 +1500,6 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
                 ReloadDocument(win, true);
             }
             break;
-
-        case EBOOK_LAYOUT_TIMER_ID:
-            KillTimer(hwnd, EBOOK_LAYOUT_TIMER_ID);
-            for (TabInfo* tab : win->tabs) {
-                if (tab->AsEbook()) {
-                    tab->AsEbook()->TriggerLayout();
-                }
-            }
-            break;
     }
 }
 
@@ -1662,10 +1600,6 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
             if (win->AsChm()) {
                 return WndProcCanvasChmUI(win, hwnd, msg, wp, lp);
-            }
-
-            if (win->AsEbook()) {
-                return WndProcCanvasEbookUI(win, hwnd, msg, wp, lp);
             }
 
             if (win->IsAboutWindow()) {

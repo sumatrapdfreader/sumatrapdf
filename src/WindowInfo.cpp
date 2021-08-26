@@ -24,14 +24,13 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "Doc.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
-#include "EbookController.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
@@ -191,11 +190,9 @@ bool WindowInfo::IsDocLoaded() const {
 DisplayModel* WindowInfo::AsFixed() const {
     return ctrl ? ctrl->AsFixed() : nullptr;
 }
+
 ChmModel* WindowInfo::AsChm() const {
     return ctrl ? ctrl->AsChm() : nullptr;
-}
-EbookController* WindowInfo::AsEbook() const {
-    return ctrl ? ctrl->AsEbook() : nullptr;
 }
 
 // Notify both display model and double-buffer (if they exist)
@@ -243,9 +240,6 @@ Size WindowInfo::GetViewPortSize() const {
 
 void WindowInfo::RedrawAll(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
-    if (this->AsEbook()) {
-        this->AsEbook()->RequestRepaint();
-    }
     if (update) {
         UpdateWindow(this->hwndCanvas);
     }
@@ -253,9 +247,6 @@ void WindowInfo::RedrawAll(bool update) const {
 
 void WindowInfo::RedrawAllIncludingNonClient(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
-    if (this->AsEbook()) {
-        this->AsEbook()->RequestRepaint();
-    }
     if (update) {
         RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
     }
@@ -589,17 +580,6 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
     COLORREF treeTxtCol = GetAppColor(AppColor::DocumentText);
     COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
     bool flatTreeWnd = false;
-
-    if (win->AsEbook()) {
-        labelBgCol = GetAppColor(AppColor::DocumentBg, true);
-        labelTxtCol = GetAppColor(AppColor::DocumentText, true);
-        treeTxtCol = labelTxtCol;
-        treeBgCol = labelBgCol;
-        float factor = 14.f;
-        int sign = GetLightness(labelBgCol) + factor > 255 ? 1 : -1;
-        splitterCol = AdjustLightness2(labelBgCol, sign * factor);
-        flatTreeWnd = true;
-    }
 
     {
         auto tocTreeCtrl = win->tocTreeCtrl;

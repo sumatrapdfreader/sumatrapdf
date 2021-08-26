@@ -19,7 +19,6 @@ struct Controller;
 struct ControllerCallback;
 struct ChmModel;
 struct DisplayModel;
-struct EbookController;
 struct TabInfo;
 
 struct TreeCtrl;
@@ -89,7 +88,6 @@ struct WindowInfo {
 
     [[nodiscard]] DisplayModel* AsFixed() const;
     [[nodiscard]] ChmModel* AsChm() const;
-    [[nodiscard]] EbookController* AsEbook() const;
 
     // TODO: use currentTab->ctrl instead
     Controller* ctrl{nullptr}; // owned by currentTab

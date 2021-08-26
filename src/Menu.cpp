@@ -972,33 +972,6 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     (UINT_PTR)menuDefCreateAnnotUnderCursor,
 };
 
-// TODO: many are in common for ebook and chm
-static UINT_PTR removeIfEbook[] = {
-    CmdSaveAsBookmark, // ???
-    CmdPrint,
-    // TODO: change those to: "for PDFs only"
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithPdfXchange,
-    CmdOpenWithXpsViewer,
-    CmdOpenWithHtmlHelp,
-    // TODO: common with "is chm"
-    CmdViewBook,
-    CmdViewContinuous,
-    CmdViewRotateLeft,
-    CmdViewRotateRight,
-    CmdViewPresentationMode,
-    CmdViewShowHideToolbar,
-    CmdViewShowHideScrollbars,
-    CmdFindFirst,
-
-    (UINT_PTR)menuDefZoom,
-    (UINT_PTR)menuDefFavorites,
-    (UINT_PTR)menuDefSelection,
-    (UINT_PTR)menuDefMainSelection,
-    (UINT_PTR)menuDefContext,
-};
-
 static UINT_PTR rmoveIfChm[] = {
     CmdSaveAsBookmark, // ???
     CmdViewSinglePage,
@@ -1271,7 +1244,6 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         if (ctx) {
             removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(rmoveIfChm));
-            removeMenu |= (ctx->tab && ctx->tab->AsEbook() && cmdIdInList(removeIfEbook));
             removeMenu |= (!ctx->isCbx && (cmdId == CmdViewMangaMode));
             removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
             removeMenu |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);

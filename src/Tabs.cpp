@@ -20,7 +20,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SettingsStructs.h"
 #include "AppColors.h"
 #include "DisplayModel.h"
@@ -715,13 +715,8 @@ void SaveCurrentTabInfo(WindowInfo* win) {
 
 void UpdateCurrentTabBgColor(WindowInfo* win) {
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
-    if (win->AsEbook()) {
-        COLORREF txtCol;
-        GetEbookUiColors(txtCol, tab->currBgCol);
-    } else {
-        // TODO: match either the toolbar (if shown) or background
-        tab->currBgCol = DEFAULT_CURRENT_BG_COL;
-    }
+    // TODO: match either the toolbar (if shown) or background
+    tab->currBgCol = DEFAULT_CURRENT_BG_COL;
     RepaintNow(win->tabsCtrl->hwnd);
 }
 

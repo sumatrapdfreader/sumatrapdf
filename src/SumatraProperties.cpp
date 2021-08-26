@@ -11,7 +11,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "AppColors.h"
@@ -528,11 +528,8 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, __unused bo
         layoutData->AddProperty(_TR("File Size:"), str);
     }
 
-    // TODO: display page count per current layout for ebooks?
-    if (!ctrl->AsEbook()) {
-        str = str::Format(L"%d", ctrl->PageCount());
-        layoutData->AddProperty(_TR("Number of Pages:"), str);
-    }
+    str = str::Format(L"%d", ctrl->PageCount());
+    layoutData->AddProperty(_TR("Number of Pages:"), str);
 
     if (dm) {
         str = FormatPageSize(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());

@@ -352,7 +352,7 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     for (int i = 0; i < n; i++) {
         std::string_view path = files.at(i);
         auto pathW = ToWstrTemp(path);
-        EngineBase* engine = CreateEngine(pathW);
+        EngineBase* engine = CreateEngine(pathW, nullptr, true);
         if (!engine) {
             continue;
         }
