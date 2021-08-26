@@ -467,7 +467,6 @@
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
-    <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BitManip.h" />
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h" />
@@ -504,8 +503,6 @@
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
-    <ClCompile Include="..\src\mui\SvgPath.cpp" />
-    <ClCompile Include="..\src\mui\SvgPath_ut.cpp" />
     <ClCompile Include="..\src\tools\test_util.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />

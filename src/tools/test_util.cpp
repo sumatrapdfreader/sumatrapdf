@@ -10,9 +10,6 @@ extern void BaseUtils_UnitTests();
 // in src/UnitTests.cpp
 extern void SumatraPDF_UnitTests();
 
-// in src/mui/SvgPath_ut.cpp
-extern void SvgPath_UnitTests();
-
 extern void BaseUtilTest();
 extern void ByteOrderTests();
 extern void CryptoUtilTest();
@@ -57,7 +54,6 @@ int main(__unused int argc, __unused char** argv) {
     VecTest();
     WinUtilTest();
     SumatraPDF_UnitTests();
-    SvgPath_UnitTests();
     StrFormatTest();
 
     int res = utassert_print_results();
