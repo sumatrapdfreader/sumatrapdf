@@ -81,12 +81,6 @@
     <ClInclude Include="..\src\Doc.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\EbookController.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\EbookControls.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\EditAnnotations.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -117,13 +111,7 @@
     <ClInclude Include="..\src\Menu.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MuiEbookPageDef.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Notifications.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\PagesLayoutDef.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PdfSync.h">
@@ -323,12 +311,6 @@
     <ClCompile Include="..\src\Doc.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EbookController.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\EbookControls.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\EditAnnotations.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -365,13 +347,7 @@
     <ClCompile Include="..\src\Menu.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MuiEbookPageDef.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Notifications.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\PagesLayoutDef.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfSync.cpp">

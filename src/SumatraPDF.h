@@ -26,8 +26,6 @@
 #define AUTO_RELOAD_TIMER_ID 5
 #define AUTO_RELOAD_DELAY_IN_MS 100
 
-#define EBOOK_LAYOUT_TIMER_ID 7
-
 // permissions that can be revoked through sumatrapdfrestrict.ini or the -restrict command line flag
 enum class Perm : uint {
     // enables Update checks, crash report submitting and hyperlinks

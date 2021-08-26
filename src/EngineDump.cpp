@@ -15,7 +15,7 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineDjVu.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "PdfCreator.h"
 
 void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {

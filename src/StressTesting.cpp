@@ -17,7 +17,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
@@ -26,7 +26,6 @@
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
-#include "EbookController.h"
 #include "RenderCache.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
@@ -95,68 +94,6 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     logf(L"pagerender %3d: %.2f ms\n", pagenum, timeMs);
 }
 
-static int FormatWholeDoc(Doc& doc) {
-    int PAGE_DX = 640;
-    int PAGE_DY = 520;
-
-    PoolAllocator textAllocator;
-    HtmlFormatterArgs* formatterArgs = CreateFormatterArgsDoc(doc, PAGE_DX, PAGE_DY, &textAllocator);
-
-    HtmlFormatter* formatter = doc.CreateFormatter(formatterArgs);
-    int nPages = 0;
-    for (HtmlPage* pd = formatter->Next(); pd; pd = formatter->Next()) {
-        delete pd;
-        ++nPages;
-    }
-    delete formatterArgs;
-    delete formatter;
-    return nPages;
-}
-
-static int TimeOneMethod(Doc& doc, TextRenderMethod method, const WCHAR* methodName) {
-    SetTextRenderMethod(method);
-    auto t = TimeGet();
-    int nPages = FormatWholeDoc(doc);
-    double timesms = TimeSinceInMs(t);
-    logf(L"%s: %.2f ms\n", methodName, timesms);
-    return nPages;
-}
-
-// this is to compare the time it takes to layout a whole ebook file
-// using different text measurement method (since the time is mostly
-// dominated by text measure)
-void BenchEbookLayout(const WCHAR* filePath) {
-    gLogBuf->Reset();
-    logf(L"Starting: %s\n", filePath);
-    if (!file::Exists(filePath)) {
-        logf(L"Error: file doesn't exist\n");
-        return;
-    }
-    auto t = TimeGet();
-    Doc doc = Doc::CreateFromFile(filePath);
-    if (doc.LoadingFailed()) {
-        logf(L"Error: failed to load the file as doc\n");
-        doc.Delete();
-        return;
-    }
-    double timeMs = TimeSinceInMs(t);
-    logf(L"load: %.2f ms\n", timeMs);
-
-    int nPages = TimeOneMethod(doc, TextRenderMethod::Gdi, L"gdi       ");
-    TimeOneMethod(doc, TextRenderMethod::Gdiplus, L"gdi+      ");
-    TimeOneMethod(doc, TextRenderMethod::GdiplusQuick, L"gdi+ quick");
-
-    // do it twice because the first run is very unfair to the first version that runs
-    // (probably because of font caching)
-    TimeOneMethod(doc, TextRenderMethod::Gdi, L"gdi       ");
-    TimeOneMethod(doc, TextRenderMethod::Gdiplus, L"gdi+      ");
-    TimeOneMethod(doc, TextRenderMethod::GdiplusQuick, L"gdi+ quick");
-
-    doc.Delete();
-
-    logf(L"pages: %d\n", nPages);
-}
-
 static void BenchChmLoadOnly(const WCHAR* filePath) {
     auto total = TimeGet();
     logf(L"Starting: %s\n", filePath);
@@ -189,10 +126,6 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     if (!kind) {
         return;
     }
-    if (Doc::IsSupportedFileType(kind) && !gGlobalPrefs->ebookUI.useFixedPageUI) {
-        BenchEbookLayout(filePath);
-        return;
-    }
 
     if (ChmModel::IsSupportedFileType(kind) && !gGlobalPrefs->chmUI.useFixedPageUI) {
         BenchChmLoadOnly(filePath);
@@ -203,7 +136,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     logf(L"Starting: %s\n", filePath);
 
     auto t = TimeGet();
-    EngineBase* engine = CreateEngine(filePath);
+    EngineBase* engine = CreateEngine(filePath, nullptr, true);
     if (!engine) {
         logf(L"Error: failed to load %s\n", filePath);
         return;

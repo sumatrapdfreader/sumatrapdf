@@ -53,8 +53,7 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     return false;
 }
 
-static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine,
-                                       bool enableEngineEbooks) {
+static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine) {
     if (!kind) {
         return nullptr;
     }
@@ -107,10 +106,6 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     }
 #endif
 
-    if (!enableEngineEbooks) {
-        return engine;
-    }
-
     if (kind == kindFileEpub) {
         engine = CreateEngineEpubFromFile(path);
         return engine;
@@ -134,20 +129,20 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     return nullptr;
 }
 
-EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine, bool enableEngineEbooks) {
+EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine) {
     CrashIf(!path);
 
     // try to open with the engine guess from file name
     // if that fails, try to guess the file type based on content
     Kind kind = GuessFileTypeFromName(path);
-    EngineBase* engine = CreateEngineForKind(kind, path, pwdUI, enableChmEngine, enableEngineEbooks);
+    EngineBase* engine = CreateEngineForKind(kind, path, pwdUI, enableChmEngine);
     if (engine) {
         return engine;
     }
 
     Kind newKind = GuessFileTypeFromContent(path);
     if (kind != newKind) {
-        engine = CreateEngineForKind(newKind, path, pwdUI, enableChmEngine, enableEngineEbooks);
+        engine = CreateEngineForKind(newKind, path, pwdUI, enableChmEngine);
     }
     return engine;
 }

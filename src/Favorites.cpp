@@ -19,7 +19,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"

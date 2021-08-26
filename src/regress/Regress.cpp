@@ -38,7 +38,7 @@ To write new regression test:
 #include "EbookFormatter.h"
 #include "Doc.h"
 // For Regress03 (Text Search)
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"

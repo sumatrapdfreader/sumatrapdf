@@ -9,7 +9,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
@@ -35,7 +35,7 @@ void TestRenderPage(const Flags& i) {
     for (auto fileName : files) {
         auto fileNameA(ToUtf8Temp(fileName));
         printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameA.Get(), zoom);
-        auto engine = CreateEngine(fileName);
+        auto engine = CreateEngine(fileName, nullptr, true);
         if (engine == nullptr) {
             printf("failed to create engine\n");
             continue;
@@ -83,7 +83,7 @@ void TestExtractPage(const Flags& ci) {
     }
     for (auto fileName : files) {
         auto fileNameA(ToUtf8Temp(fileName));
-        auto engine = CreateEngine(fileName);
+        auto engine = CreateEngine(fileName, nullptr, true);
         if (engine == nullptr) {
             printf("failed to create engine for file '%s'\n", fileNameA.Get());
             continue;

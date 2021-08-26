@@ -5,7 +5,7 @@
 
 void SearchTestWithDir(const WCHAR* searchFile, const WCHAR* searchTerm, const TextSearchDirection direction,
                        const TextSel* expected, const int expectedLen) {
-    EngineBase* engine = CreateEngine(searchFile, nullptr);
+    EngineBase* engine = CreateEngine(searchFile, nullptr, true);
     DocumentTextCache* textCache = new DocumentTextCache(engine);
     TextSearch* tsrch = new TextSearch(engine, textCache);
     tsrch->SetDirection(direction);

@@ -11,7 +11,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
@@ -51,10 +51,6 @@ DisplayModel* TabInfo::AsFixed() const {
 
 ChmModel* TabInfo::AsChm() const {
     return ctrl ? ctrl->AsChm() : nullptr;
-}
-
-EbookController* TabInfo::AsEbook() const {
-    return ctrl ? ctrl->AsEbook() : nullptr;
 }
 
 Kind TabInfo::GetEngineType() const {

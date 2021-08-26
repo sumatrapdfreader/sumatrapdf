@@ -323,10 +323,8 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     if (displayMode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, displayMode);
     }
-    // TODO: make EbookController::GoToPage not crash
-    if (!tab->AsEbook()) {
-        tab->ctrl->GoToPage(state->pageNo, true);
-    }
+    tab->ctrl->GoToPage(state->pageNo, true);
+
     float zoom = ZoomFromString(state->zoom, INVALID_ZOOM);
     if (zoom != INVALID_ZOOM) {
         if (tab->AsFixed()) {

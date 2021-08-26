@@ -1292,7 +1292,6 @@ ByteSlice HtmlDoc::GetHtmlData() {
 
 ByteSlice* HtmlDoc::GetImageData(const char* fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
-    //       so add a critical section once it's used for EbookController
 
     AutoFree url(NormalizeURL(fileName, pagePath));
     for (size_t i = 0; i < images.size(); i++) {

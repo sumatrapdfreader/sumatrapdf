@@ -569,8 +569,6 @@
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
     <ClInclude Include="..\src\Doc.h" />
-    <ClInclude Include="..\src\EbookController.h" />
-    <ClInclude Include="..\src\EbookControls.h" />
     <ClInclude Include="..\src\EditAnnotations.h" />
     <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
@@ -581,9 +579,7 @@
     <ClInclude Include="..\src\GlobalPrefs.h" />
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\Menu.h" />
-    <ClInclude Include="..\src\MuiEbookPageDef.h" />
     <ClInclude Include="..\src\Notifications.h" />
-    <ClInclude Include="..\src\PagesLayoutDef.h" />
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\Print.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
@@ -651,8 +647,6 @@
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
-    <ClCompile Include="..\src\EbookController.cpp" />
-    <ClCompile Include="..\src\EbookControls.cpp" />
     <ClCompile Include="..\src\EditAnnotations.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
@@ -666,9 +660,7 @@
     <ClCompile Include="..\src\MemLeakDetect.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
-    <ClCompile Include="..\src\MuiEbookPageDef.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
-    <ClCompile Include="..\src\PagesLayoutDef.cpp" />
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />

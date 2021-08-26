@@ -11,7 +11,7 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineCreate.h"
+#include "EngineAll.h"
 #include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "AppColors.h"
@@ -99,9 +99,6 @@ static void TbSetButtonDx(HWND hwndToolbar, int cmd, int dx) {
 // which documents support rotation
 static bool NeedsRotateUI(WindowInfo* win) {
     if (win->AsChm()) {
-        return false;
-    }
-    if (win->AsEbook()) {
         return false;
     }
     return true;
@@ -248,7 +245,7 @@ void ShowOrHideToolbar(WindowInfo* win) {
     if (win->presentation || win->isFullScreen) {
         return;
     }
-    if (gGlobalPrefs->showToolbar && !win->AsEbook()) {
+    if (gGlobalPrefs->showToolbar) {
         ShowWindow(win->hwndReBar, SW_SHOW);
     } else {
         // Move the focus out of the toolbar
