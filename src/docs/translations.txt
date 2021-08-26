@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0ab6722defb83a99f1e31a9caf073427332a0e77
+a4d3ff71d2e549643f2025aeb1ca2f9616478d5e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -407,6 +407,20 @@ uk:Книжна розгортка\tCtrl+8
 uz:&Kitob ko'rinishi\tCtrl+8
 vn:Xem dạng sách\tCtrl+8
 :&Cancel
+am:Չեղարկել
+br:&Cancelar
+ca-xv:&Cancel·la
+ca:&Cancel·la
+cn:取消
+co:&Abbandunà
+de:&Abbrechen
+el:&Άκυρο
+es:Cancelar
+it:&Annulla
+kr:취소
+nl:&Annuleren
+pl:&Anuluj
+tr:İptal Et
 :&Caret
 am:&Ստեղն
 bn:&Caret
@@ -545,6 +559,20 @@ nl:&Kopieer naar Klembord\tCtrl-C
 pl:&Kopiuj do schowka\tCtrl-C
 tr:Panoya &Kopyala\tCtrl-C
 :&Discard changes
+am:&Մերժել
+br:&Descartar
+ca-xv:&Descarta
+ca:&Descarta
+cn:取消(&D)
+co:&Scartà
+de:Verwerfen
+el:Απόρριψη
+es:&Descartar
+it:Scarica
+kr:무시(&D)
+nl:&Weggooien
+pl:O&drzuć zmiany
+tr:&Görmezden Gel
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
 am:&Այլևս չհարցնել
