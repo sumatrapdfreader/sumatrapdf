@@ -3671,11 +3671,6 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
     } else if (VK_DIVIDE == key && dm) {
         dm->RotateBy(-90);
         gIsDivideKeyDown = true;
-#ifdef DEBUG
-    } else if (VK_F1 == key && false) {
-        // TODO: this was in EbookWindow - is it still needed?
-        HwndSendCommand(win->hwndFrame, CmdDebugMui);
-#endif
     } else {
         return false;
     }
@@ -4188,12 +4183,6 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
     tab->editAnnotsWindow = nullptr;
 }
 
-// To avoid including mui/Mui.h, which conflicts with wingui/Layout.h
-namespace mui {
-extern void SetDebugPaint(bool);
-extern bool IsDebugPaint();
-} // namespace mui
-
 #if 0
 static bool NeedsURLEncoding(WCHAR c) {
     // TODO: implement me
@@ -4700,16 +4689,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdDebugDownloadSymbols:
             DownloadDebugSymbols();
             break;
-
-        case CmdDebugMui: {
-            mui::SetDebugPaint(!mui::IsDebugPaint());
-            bool isChecked = !mui::IsDebugPaint();
-            HMENU m = GetMenu(win->hwndFrame);
-            win::menu::SetChecked(m, CmdDebugMui, isChecked);
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
-        } break;
 
         case CmdDebugAnnotations:
             FrameOnChar(win, 'h');

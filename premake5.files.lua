@@ -646,18 +646,7 @@ function mui_files()
   files_in_dir("src/mui", {
     "MuiBase.*",
     "Mui.*",
-    "MuiCss.*",
-    "MuiLayout.*",
-    "MuiPainter.*",
-    "MuiControl.*",
-    "MuiButton.*",
-    "MuiScrollBar.*",
-    "MuiEventMgr.*",
-    "MuiHwndWrapper.*",
-    "MuiGrid.*",
     "SvgPath.*",
-    "MuiDefs.*",
-    "MuiFromText.*",
     "TextRender.*",
   })
 end

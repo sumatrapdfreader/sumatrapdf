@@ -528,10 +528,6 @@ static MenuDef menuDefDebug[] = {
         CmdDebugEbookUI,
     },
     {
-        "Mui debug paint",
-        CmdDebugMui,
-    },
-    {
         "Annotation from Selection",
         CmdDebugAnnotations,
     },
@@ -1512,7 +1508,6 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 
     win::menu::SetChecked(win->menu, CmdDebugShowLinks, gDebugShowLinks);
     win::menu::SetChecked(win->menu, CmdDebugEbookUI, gGlobalPrefs->ebookUI.useFixedPageUI);
-    win::menu::SetChecked(win->menu, CmdDebugMui, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, CmdDebugAnnotations,
                           tab && tab->selectionOnPage && win->showSelection && EngineSupportsAnnotations(engine));
 }
