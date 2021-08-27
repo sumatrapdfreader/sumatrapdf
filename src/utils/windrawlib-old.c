@@ -1,55 +1,4 @@
-/*
- * WinDrawLib
- * Copyright (c) 2016 Martin Mitas
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
-#include <float.h>
-#include <math.h>
-#include <tchar.h>
-#include <malloc.h>
-#include <stdio.h>
-#include <stdarg.h>
-
-/* Enable C preprocessor wrappers for COM methods in <objidl.h> */
-#ifndef COBJMACROS
-#define COBJMACROS
-#endif
-#include <windows.h>
-#include <unknwn.h>
-#include <dcommon.h>
-#include <d2dbasetypes.h>
-#include <d2derr.h>
-#include <wincodec.h> /* IWICBitmapSource */
-#include <objidl.h>
-
-
-#pragma warning(disable : 4201)
-
 #include "windrawlib.h"
-
-/* ------------------------------------ misc.h ------------------------------------------- */
-
-/***********************
- ***  Debug Logging  ***
- ***********************/
 
 #if !defined _MSC_VER || (defined _MSC_VER && _MSC_VER > 1200)
 #define no_log(...) \
@@ -72,80 +21,8 @@ void wd_log(const char* fmt, ...);
 #define WD_TRACE_HR_(msg, hr) WD_TRACE(msg " [0x%lx]", (hr))
 #define WD_TRACE_HR(msg) WD_TRACE(msg " [0x%lx]", hr)
 
-/**************************
- ***  Helper Functions  ***
- **************************/
-
-#define WD_PI 3.14159265358979323846f
-
-#define WD_MIN(a, b) ((a) < (b) ? (a) : (b))
-#define WD_MAX(a, b) ((a) > (b) ? (a) : (b))
-
-#define WD_ABS(a) ((a) > 0 ? (a) : -(a))
-
-#define WD_SIZEOF_ARRAY(a) (sizeof((a)) / sizeof((a)[0]))
-
-#define WD_OFFSETOF(type, member) ((size_t) & ((type*)0)->member)
-#define WD_CONTAINEROF(ptr, type, member) ((type*)((BYTE*)(ptr)-WD_OFFSETOF(type, member)))
-
-/* Safer LoadLibrary() replacement for system DLLs. */
-HMODULE wd_load_system_dll(const TCHAR* dll_name);
-
-#ifdef _MSC_VER
-/* MSVC does not understand "inline" when building as pure C (not C++).
- * However it understands "__inline" */
-#ifndef __cplusplus
-#define inline __inline
-#endif
-
-#if _MSC_VER <= 1200
-/* With MSVC 6.0, these are missing in <malloc.h>. */
-#define _malloca malloc
-#define _freea free
-
-/* With MSVC 6.0, these are missing in <math.h>. */
-static inline float floorf(float x) {
-    return (float)floor((double)x);
-}
-static inline float ceilf(float x) {
-    return (float)ceil((double)x);
-}
-static inline float powf(float x, float y) {
-    return (float)pow((double)x, (double)y);
-}
-static inline float cosf(float x) {
-    return (float)cos((double)x);
-}
-static inline float sinf(float x) {
-    return (float)sin((double)x);
-}
-static inline float atan2f(float x, float y) {
-    return (float)atan2((double)x, (double)y);
-}
-static inline float sqrtf(float x) {
-    return (float)sqrt((double)x);
-}
-#endif
-#endif
-
-/* ------------------------------------ lock.h ------------------------------------------- */
-
-extern void (*wd_fn_lock)(void);
-extern void (*wd_fn_unlock)(void);
-
-static inline void wd_lock(void) {
-    if (wd_fn_lock != NULL)
-        wd_fn_lock();
-}
-
-static inline void wd_unlock(void) {
-    if (wd_fn_unlock != NULL)
-        wd_fn_unlock();
-}
 
 /* -------------------------------------- c-gdiplus.h ----------------------------------- */
-
-
 
 /* MSDN documentation for <gdiplus/gdiplusflat.h> sucks. This one is better:
  * http://www.jose.it-berater.org/gdiplus/iframe/index.htm
@@ -2222,48 +2099,6 @@ static inline void d2d_matrix_mult(c_D2D1_MATRIX_3X2_F* res, const c_D2D1_MATRIX
     res->_32 = a->_31 * b->_12 + a->_32 * b->_22 + b->_32;
 }
 
-int d2d_init(void) {
-    static const c_D2D1_FACTORY_OPTIONS factory_options = {c_D2D1_DEBUG_LEVEL_NONE};
-    HRESULT(WINAPI * fn_D2D1CreateFactory)(c_D2D1_FACTORY_TYPE, REFIID, const c_D2D1_FACTORY_OPTIONS*, void**);
-    HRESULT hr;
-
-    /* Load D2D1.DLL. */
-    d2d_dll = wd_load_system_dll(_T("D2D1.DLL"));
-    if (d2d_dll == NULL) {
-        WD_TRACE_ERR("d2d_init: wd_load_system_dll(D2D1.DLL) failed.");
-        goto err_LoadLibrary;
-    }
-
-    fn_D2D1CreateFactory = (HRESULT(WINAPI*)(c_D2D1_FACTORY_TYPE, REFIID, const c_D2D1_FACTORY_OPTIONS*,
-                                             void**))GetProcAddress(d2d_dll, "D2D1CreateFactory");
-    if (fn_D2D1CreateFactory == NULL) {
-        WD_TRACE_ERR("d2d_init: GetProcAddress(D2D1CreateFactory) failed.");
-        goto err_GetProcAddress;
-    }
-
-    /* Create D2D factory object. Note we use D2D1_FACTORY_TYPE_SINGLE_THREADED
-     * for performance reasons and manually synchronize calls to the factory.
-     * This still allows usage in multi-threading environment but all the
-     * created resources can only be used from the respective threads where
-     * they were created. */
-    hr = fn_D2D1CreateFactory(c_D2D1_FACTORY_TYPE_SINGLE_THREADED, &c_IID_ID2D1Factory, &factory_options,
-                              (void**)&d2d_factory);
-    if (FAILED(hr)) {
-        WD_TRACE_HR("d2d_init: D2D1CreateFactory() failed.");
-        goto err_CreateFactory;
-    }
-
-    /* Success */
-    return 0;
-
-    /* Error path unwinding */
-err_CreateFactory:
-err_GetProcAddress:
-    FreeLibrary(d2d_dll);
-    d2d_dll = NULL;
-err_LoadLibrary:
-    return -1;
-}
 
 void d2d_fini(void) {
     c_ID2D1Factory_Release(d2d_factory);
@@ -3475,30 +3310,7 @@ IWICBitmapSource* wic_convert_bitmap(IWICBitmapSource* bitmap) {
 /* --------------------------------------- init.c ---------------------------------- */
 
 
-void (*wd_fn_lock)(void) = NULL;
-void (*wd_fn_unlock)(void) = NULL;
 
-static DWORD wd_preinit_flags = 0;
-
-void wdPreInitialize(void (*fnLock)(void), void (*fnUnlock)(void), DWORD dwFlags) {
-    wd_fn_lock = fnLock;
-    wd_fn_unlock = fnUnlock;
-    wd_preinit_flags = dwFlags;
-}
-
-static int wd_init_core_api(void) {
-    if (!(wd_preinit_flags & WD_DISABLE_D2D)) {
-        if (d2d_init() == 0)
-            return 0;
-    }
-
-    if (!(wd_preinit_flags & WD_DISABLE_GDIPLUS)) {
-        if (gdix_init() == 0)
-            return 0;
-    }
-
-    return -1;
-}
 
 static void wd_fini_core_api(void) {
     if (d2d_enabled())

@@ -374,7 +374,7 @@
     <ClCompile Include="..\src\utils\ZipUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\windrawlib.c">
+    <ClCompile Include="..\src\utils\windrawlib.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">
