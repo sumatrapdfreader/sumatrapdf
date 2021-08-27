@@ -52,6 +52,11 @@ static float GetDefaultFontSize() {
 
 void SetDefaultEbookFont(const WCHAR* name, float size) {
     // intentionally don't validate the input
+    if (str::Eq(name, L"default")) {
+        // "default" is used for mupdf engine to indicate
+        // we should use the font as given in css
+        name = L"Georgia";
+    }
     gDefaultFontName.SetCopy(name);
     // use a somewhat smaller size than in the EbookUI, since fit page/width
     // is likely to be above 100% for the paperback page dimensions

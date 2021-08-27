@@ -47,6 +47,10 @@ struct FixedPageUI {
     bool invertColors;
     // if true, hides the scrollbars but retains ability to scroll
     bool hideScrollbars;
+    // name of the font for ebook formats
+    char* ebookFontName;
+    // size of the font for ebook formats
+    float ebookFontSize;
 };
 
 // customization options for Comic Book and images UI
@@ -413,10 +417,12 @@ static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
     {offsetof(FixedPageUI, hideScrollbars), SettingType::Bool, false},
+    {offsetof(FixedPageUI, ebookFontName), SettingType::String, (intptr_t) "default"},
+    {offsetof(FixedPageUI, ebookFontSize), SettingType::Float, (intptr_t) "10"},
 };
-static const StructInfo gFixedPageUIInfo = {
-    sizeof(FixedPageUI), 7, gFixedPageUIFields,
-    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0HideScrollbars"};
+static const StructInfo gFixedPageUIInfo = {sizeof(FixedPageUI), 9, gFixedPageUIFields,
+                                            "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0Gra"
+                                            "dientColors\0HideScrollbars\0EbookFontName\0EbookFontSize"};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
     {offsetof(WindowMargin, top), SettingType::Int, 0},

@@ -8,6 +8,7 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2034
 - remove ebook UI (fixes #2143)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2143
+- add FixedPageUI.EbookFontName and EbookFontSize to restore control over font name / size (for #2143)
 
 2021-08-25 Wed
 

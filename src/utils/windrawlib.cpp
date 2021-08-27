@@ -45,7 +45,6 @@
 #define WD_OFFSETOF(type, member) ((size_t) & ((type*)0)->member)
 #define WD_CONTAINEROF(ptr, type, member) ((type*)((BYTE*)(ptr)-WD_OFFSETOF(type, member)))
 
-
 extern void (*wd_fn_lock)(void);
 extern void (*wd_fn_unlock)(void);
 
@@ -61,16 +60,15 @@ static inline void wd_unlock(void) {
 
 extern ID2D1Factory* d2d_factory;
 
-
 int d2d_init(void) {
     /* Create D2D factory object. Note we use D2D1_FACTORY_TYPE_SINGLE_THREADED
      * for performance reasons and manually synchronize calls to the factory.
      * This still allows usage in multi-threading environment but all the
      * created resources can only be used from the respective threads where
      * they were created. */
-    HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED,&d2d_factory);
+    HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2d_factory);
     if (FAILED(hr)) {
-        //WD_TRACE_HR("d2d_init: D2D1CreateFactory() failed.");
+        // WD_TRACE_HR("d2d_init: D2D1CreateFactory() failed.");
         goto err_CreateFactory;
     }
 
