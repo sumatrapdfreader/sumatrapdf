@@ -24,36 +24,12 @@
 #include "Commands.h"
 #include "Menu.h"
 
-// using namespace Gdiplus;
-
 using Gdiplus::ARGB;
-using Gdiplus::Bitmap;
 using Gdiplus::Brush;
 using Gdiplus::Color;
-using Gdiplus::Font;
-using Gdiplus::FontStyle;
-using Gdiplus::FontStyleRegular;
-using Gdiplus::FontStyleUnderline;
 using Gdiplus::Graphics;
-using Gdiplus::LinearGradientBrush;
-using Gdiplus::LinearGradientMode;
-using Gdiplus::Ok;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
-using Gdiplus::Status;
-
-using Gdiplus::CombineModeReplace;
-using Gdiplus::CompositingQualityHighQuality;
-using Gdiplus::GraphicsPath;
-using Gdiplus::Image;
-using Gdiplus::Matrix;
-using Gdiplus::PenAlignmentInset;
-using Gdiplus::Region;
-using Gdiplus::SmoothingModeAntiAlias;
-using Gdiplus::StringFormat;
-using Gdiplus::StringFormatFlagsDirectionRightToLeft;
-using Gdiplus::TextRenderingHintClearTypeGridFit;
-using Gdiplus::UnitPixel;
 
 #define CUSTOM_CAPTION_CLASS_NAME L"CustomCaption"
 #define UNDOCUMENTED_MENU_CLASS_NAME L"#32768"
