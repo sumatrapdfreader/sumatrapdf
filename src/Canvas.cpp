@@ -23,7 +23,6 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "Doc.h"
 
 #include "SettingsStructs.h"
 #include "DisplayModel.h"

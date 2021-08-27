@@ -184,3 +184,4 @@ void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepCont
 void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
+bool DocIsSupportedFileType(Kind);

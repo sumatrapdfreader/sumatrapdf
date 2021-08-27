@@ -17,6 +17,7 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/GdiPlusUtil.h"
+#include "utils/Archive.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -37,11 +38,14 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "Doc.h"
 #include "PdfCreator.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
+#include "PalmDbReader.h"
+#include "EbookBase.h"
+#include "EbookDoc.h"
+#include "MobiDoc.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "PdfSync.h"
@@ -275,6 +279,22 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
     }
 
     return LaunchFile(url, nullptr, L"open");
+}
+
+bool DocIsSupportedFileType(Kind kind) {
+    if (EpubDoc::IsSupportedFileType(kind)) {
+        return true;
+    }
+    if (Fb2Doc::IsSupportedFileType(kind)) {
+        return true;
+    }
+    if (MobiDoc::IsSupportedFileType(kind)) {
+        return true;
+    }
+    if (PalmDoc::IsSupportedFileType(kind)) {
+        return true;
+    }
+    return false;
 }
 
 // lets the shell open a file of any supported perceived type
@@ -2966,7 +2986,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
         WCHAR* path = files.at(i - 1);
         Kind kind = GuessFileTypeFromName(path);
         char* pathA = ToUtf8Temp(path);
-        if (!IsSupportedFileType(kind, true) && !Doc::IsSupportedFileType(kind) && !gFileHistory.Find(pathA, nullptr)) {
+        if (!IsSupportedFileType(kind, true) && !DocIsSupportedFileType(kind) && !gFileHistory.Find(pathA, nullptr)) {
             free(files.PopAt(i - 1));
         }
     }
