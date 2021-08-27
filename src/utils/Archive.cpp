@@ -361,7 +361,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = (WCHAR*)rarPathW;
-    arcData.OpenMode = RAR_OM_EXTRACT;
+    arcData.OpenMode = RAR_OM_LIST;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
     if (!hArc || arcData.OpenResult != 0) {
