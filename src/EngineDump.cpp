@@ -6,7 +6,7 @@
 #include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GdiPlusUtil.h"
-#include "mui/MiniMui.h"
+#include "mui/Mui.h"
 #include "utils/TgaReader.h"
 #include "utils/WinUtil.h"
 
@@ -533,7 +533,7 @@ int main(__unused int argc, __unused char** argv) {
     }
 
     ScopedGdiPlus gdiPlus;
-    ScopedMiniMui miniMui;
+    ScopedMui miniMui;
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(filePath, &fdata);

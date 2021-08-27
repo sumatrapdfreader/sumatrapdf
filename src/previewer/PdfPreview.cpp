@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 
 #include "Annotation.h"
@@ -11,7 +12,7 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "mui/MiniMui.h"
+#include "mui/Mui.h"
 #include "PdfPreview.h"
 
 #include "utils/Log.h"

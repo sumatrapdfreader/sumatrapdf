@@ -43,3 +43,13 @@ Graphics* AllocGraphicsForMeasureText();
 void FreeGraphicsForMeasureText(Graphics* gfx);
 
 } // namespace mui
+
+class ScopedMui {
+  public:
+    ScopedMui() {
+        mui::Initialize();
+    }
+    ~ScopedMui() {
+        mui::Destroy();
+    }
+};

@@ -7,7 +7,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\SumatraConfig.h" />
-    <ClInclude Include="..\src\mui\MiniMui.h">
+    <ClInclude Include="..\src\mui\Mui.h">
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\TextRender.h">
@@ -17,7 +17,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
-    <ClCompile Include="..\src\mui\MiniMui.cpp">
+    <ClCompile Include="..\src\mui\Mui.cpp">
       <Filter>mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\TextRender.cpp">

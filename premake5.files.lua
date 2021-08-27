@@ -1031,7 +1031,7 @@ function engine_dump_files()
   files_in_dir("src", {
     "EngineDump.cpp",
     "SumatraConfig.*",    
-    "mui/MiniMui.*",
+    "mui/Mui.*",
     "mui/TextRender.*"
   })
 end
@@ -1045,7 +1045,7 @@ function pdf_preview_files()
 
   files_in_dir("src", {
     "utils/LogDbg.*",
-    "mui/MiniMui.*",
+    "mui/Mui.*",
     "mui/TextRender.*",
     "ChmFile.*",
     "EbookDoc.*",
