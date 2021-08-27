@@ -9,15 +9,19 @@
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 
+using Gdiplus::Graphics;
+using Gdiplus::Pen;
+using Gdiplus::SolidBrush;
+
 extern bool IsUIRightToLeft(); // SumatraPDF.h
 
-#define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"
+#define kNotificationsWndClassName L"SUMATRA_PDF_NOTIFICATION_WINDOW"
 
-#define PROGRESS_WIDTH DpiScale(188)
-#define PROGRESS_HEIGHT DpiScale(5)
-#define PADDING DpiScale(6)
-#define TOP_LEFT_MARGIN DpiScale(8)
-#define CLOSE_LEFT_MARGIN DpiScale(32)
+#define kProgressDx DpiScale(188)
+#define kProgressDy DpiScale(5)
+#define kPadding DpiScale(6)
+#define kTopLeftMargin DpiScale(8)
+#define kCloseLeftMargin DpiScale(32)
 
 constexpr int TIMEOUT_TIMER_ID = 1;
 
@@ -26,7 +30,7 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
 static Rect GetCloseRect(HWND hwnd) {
     int n = DpiScale(16);
     Rect r = ClientRect(hwnd);
-    int x = r.dx - n - PADDING;
+    int x = r.dx - n - kPadding;
     // int y = PADDING;
     int y = (r.dy / 2) - (n / 2);
     int dx = n;
@@ -59,9 +63,9 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
     Rect rMsg = Rect::FromRECT(rc);
     if (wnd->hasClose) {
         rMsg.dy = std::max(rMsg.dy, DpiScale(16));
-        rMsg.dx += CLOSE_LEFT_MARGIN;
+        rMsg.dx += kCloseLeftMargin;
     }
-    rMsg.Inflate(PADDING, PADDING);
+    rMsg.Inflate(kPadding, kPadding);
 
     if (wnd->shrinkLimit < 1.0f) {
         Rect rcOrig = ClientRect(wnd->hwnd);
@@ -76,10 +80,10 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
         SetWindowPos(wnd->hwnd, nullptr, 0, 0, rMsg.dx, rMsg.dy, flags);
     } else if (init) {
         Rect r = WindowRect(wnd->hwnd);
-        r.dx = std::max(wnd->progressWidth + 2 * PADDING, rMsg.dx);
-        r.dy = rMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
+        r.dx = std::max(wnd->progressWidth + 2 * kPadding, rMsg.dx);
+        r.dy = rMsg.dy + kProgressDy + kPadding / 2;
         SetWindowPos(wnd->hwnd, nullptr, 0, 0, r.dx, r.dy, flags);
-    } else if (rMsg.dx > wnd->progressWidth + 2 * PADDING) {
+    } else if (rMsg.dx > wnd->progressWidth + 2 * kPadding) {
         SetWindowPos(wnd->hwnd, nullptr, 0, 0, rMsg.dx, WindowRect(wnd->hwnd).dy, flags);
     }
 
@@ -88,7 +92,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
         HWND parent = GetParent(wnd->hwnd);
         Rect r = MapRectToWindow(WindowRect(wnd->hwnd), HWND_DESKTOP, parent);
         int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-        r.x = WindowRect(parent).dx - r.dx - TOP_LEFT_MARGIN - cxVScroll;
+        r.x = WindowRect(parent).dx - r.dx - kTopLeftMargin - cxVScroll;
         flags = SWP_NOSIZE | SWP_NOZORDER;
         SetWindowPos(wnd->hwnd, nullptr, r.x, r.y, 0, 0, flags);
     }
@@ -98,7 +102,7 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     static ATOM atom = 0;
     if (atom == 0) {
         WNDCLASSEX wcex = {};
-        FillWndClassEx(wcex, NOTIFICATION_WND_CLASS_NAME, NotificationWndProc);
+        FillWndClassEx(wcex, kNotificationsWndClassName, NotificationWndProc);
         wcex.style = 0; // no CS_HREDRAW | CS_VREDRAW
         wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
         atom = RegisterClassExW(&wcex);
@@ -117,15 +121,15 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     this->font = CreateFontIndirect(&ncm.lfMessageFont);
 
     HDC hdc = GetDC(parent);
-    progressWidth = MulDiv(PROGRESS_WIDTH, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
+    progressWidth = MulDiv(kProgressDx, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
     ReleaseDC(parent, hdc);
 
     auto h = GetModuleHandleW(nullptr);
-    const WCHAR* clsName = NOTIFICATION_WND_CLASS_NAME;
+    const WCHAR* clsName = kNotificationsWndClassName;
     DWORD style = WS_CHILD | SS_CENTER;
     DWORD exStyle = WS_EX_TOPMOST;
-    int x = TOP_LEFT_MARGIN;
-    int y = TOP_LEFT_MARGIN;
+    int x = kTopLeftMargin;
+    int y = kTopLeftMargin;
     this->hwnd = CreateWindowExW(exStyle, clsName, msg, style, x, y, 0, 0, parent, (HMENU) nullptr, h, nullptr);
     if (this->hwnd == nullptr) {
         return false;
@@ -156,37 +160,6 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     }
 }
 
-// using namespace Gdiplus;
-
-using Gdiplus::ARGB;
-using Gdiplus::Bitmap;
-using Gdiplus::Brush;
-using Gdiplus::Color;
-using Gdiplus::Font;
-using Gdiplus::FontStyle;
-using Gdiplus::FontStyleRegular;
-using Gdiplus::FontStyleUnderline;
-using Gdiplus::Graphics;
-using Gdiplus::LinearGradientBrush;
-using Gdiplus::LinearGradientMode;
-using Gdiplus::Ok;
-using Gdiplus::Pen;
-using Gdiplus::SolidBrush;
-using Gdiplus::Status;
-
-using Gdiplus::CombineModeReplace;
-using Gdiplus::CompositingQualityHighQuality;
-using Gdiplus::GraphicsPath;
-using Gdiplus::Image;
-using Gdiplus::Matrix;
-using Gdiplus::PenAlignmentInset;
-using Gdiplus::Region;
-using Gdiplus::SmoothingModeAntiAlias;
-using Gdiplus::StringFormat;
-using Gdiplus::StringFormatFlagsDirectionRightToLeft;
-using Gdiplus::TextRenderingHintClearTypeGridFit;
-using Gdiplus::UnitPixel;
-
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     PAINTSTRUCT ps = {nullptr};
     HDC hdcWnd = BeginPaint(hwnd, &ps);
@@ -215,13 +188,13 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, colTxt);
 
-    rect.Inflate(-PADDING, -PADDING);
+    rect.Inflate(-kPadding, -kPadding);
     Rect rectMsg = rect;
     if (wnd->hasProgress) {
-        rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
+        rectMsg.dy -= kProgressDy + kPadding / 2;
     }
     if (wnd->hasClose) {
-        rectMsg.dx -= CLOSE_LEFT_MARGIN;
+        rectMsg.dx -= kCloseLeftMargin;
     }
     WCHAR* text = win::GetTextTemp(hwnd).Get();
     rTmp = ToRECT(rectMsg);
@@ -234,8 +207,8 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
 
     if (wnd->hasProgress) {
         rect.dx = wnd->progressWidth;
-        rect.y += rectMsg.dy + PADDING / 2;
-        rect.dy = PROGRESS_HEIGHT;
+        rect.y += rectMsg.dy + kPadding / 2;
+        rect.dy = kProgressDy;
 
         COLORREF col = GetAppColor(AppColor::NotifcationsProgress);
         Pen pen(GdiRgbFromCOLORREF(col));
@@ -319,7 +292,7 @@ void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
     uint flags = SWP_NOSIZE | SWP_NOZORDER;
     auto x = GetWndX(this, move);
-    int y = rect.y + rect.dy + TOP_LEFT_MARGIN;
+    int y = rect.y + rect.dy + kTopLeftMargin;
     SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
 }
 
@@ -342,7 +315,7 @@ void Notifications::Remove(NotificationWnd* wnd) {
         auto* first = wnds[0];
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
         auto x = GetWndX(this, first);
-        SetWindowPos(first->hwnd, nullptr, x, TOP_LEFT_MARGIN, 0, 0, flags);
+        SetWindowPos(first->hwnd, nullptr, x, kTopLeftMargin, 0, 0, flags);
     }
     for (int i = pos; i < n; i++) {
         if (i == 0) {
@@ -410,9 +383,9 @@ void Notifications::Relayout() {
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {
             int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-            rect.x = frame.dx - rect.dx - TOP_LEFT_MARGIN - cxVScroll;
+            rect.x = frame.dx - rect.dx - kTopLeftMargin - cxVScroll;
         } else {
-            rect.x = TOP_LEFT_MARGIN;
+            rect.x = kTopLeftMargin;
         }
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
         SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, flags);
