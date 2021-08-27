@@ -4,7 +4,6 @@
 #include "utils/BaseUtil.h"
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
-
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/GdiPlusUtil.h"
@@ -635,7 +634,7 @@ static Kind imageEngineKinds[] = {
 };
 
 bool IsEngineImageSupportedFileType(Kind kind) {
-    logf("IsEngineImageSupportedFileType(%s)\n", kind);
+    // logf("IsEngineImageSupportedFileType(%s)\n", kind);
     int n = dimof(imageEngineKinds);
     return KindInArray(imageEngineKinds, n, kind);
 }
@@ -1069,11 +1068,13 @@ bool EngineCbx::FinishLoading() {
         tocTree = new TocTree(realRoot);
     }
 
+    auto timeStart2 = TimeGet();
     for (int i = 0; i < pageCount; i++) {
         size_t fileId = files[i]->fileId;
         ByteSlice img = cbxFile->GetFileDataById(fileId);
         images.Append(img);
     }
+    logf("EngineCbx::FinishLoading(): loaded %d files in %.2f\n", (int)pageCount, TimeSinceInMs(timeStart2));
 
     delete cbxFile;
     cbxFile = nullptr;
@@ -1248,6 +1249,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
 }
 
 EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
+    auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
     Kind kind = GuessFileTypeFromContent(path);
@@ -1269,6 +1271,7 @@ EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
     if (!archive) {
         return nullptr;
     }
+    logf("EngineCbx::CreateFromFile(): opening archive took %.2f\n", TimeSinceInMs(timeStart));
 
     auto* engine = new EngineCbx(archive);
     if (engine->LoadFromFile(path)) {
