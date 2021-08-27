@@ -21,7 +21,6 @@
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
-#include "Doc.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
@@ -170,12 +169,13 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
+
 static bool IsFileToBench(const WCHAR* path) {
     Kind kind = GuessFileType(path, true);
     if (IsSupportedFileType(kind, true)) {
         return true;
     }
-    if (Doc::IsSupportedFileType(kind)) {
+    if (DocIsSupportedFileType(kind)) {
         return true;
     }
     return false;
@@ -220,7 +220,7 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     if (!kind) {
         return false;
     }
-    if (IsSupportedFileType(kind, true) || Doc::IsSupportedFileType(kind)) {
+    if (IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind)) {
         return true;
     }
     if (!filter) {
@@ -235,7 +235,7 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     if (IsSupportedFileType(kindSniffed, true)) {
         return true;
     }
-    return Doc::IsSupportedFileType(kindSniffed);
+    return DocIsSupportedFileType(kindSniffed);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR* dirPath, const WCHAR* filter, WStrVec& paths) {

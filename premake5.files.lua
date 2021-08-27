@@ -492,7 +492,6 @@ function sumatrapdf_files()
     "CrashHandler.*",
     "DisplayModel.*",
     "DisplayMode.*",
-    "Doc.*",
     "EditAnnotations.*",
     "ExternalViewers.*",
     "Favorites.*",
