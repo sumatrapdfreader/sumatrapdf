@@ -643,7 +643,6 @@ end
 
 function mui_files()
   files_in_dir("src/mui", {
-    "MuiBase.*",
     "Mui.*",
     "TextRender.*",
   })

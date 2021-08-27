@@ -27,6 +27,16 @@ TODO:
 /* Note: I would prefer this code be in utils but it depends on mui, so it must
 be in mui to avoid circular dependency */
 
+using Gdiplus::Bitmap;
+using Gdiplus::Color;
+using Gdiplus::Graphics;
+using Gdiplus::Ok;
+using Gdiplus::Region;
+using Gdiplus::SolidBrush;
+using Gdiplus::Status;
+using Gdiplus::StringFormat;
+using Gdiplus::StringFormatFlagsDirectionRightToLeft;
+
 namespace mui {
 
 TextRenderGdi* TextRenderGdi::Create(Graphics* gfx) {

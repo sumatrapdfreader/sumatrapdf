@@ -579,7 +579,6 @@
     <ClInclude Include="..\src\Version.h" />
     <ClInclude Include="..\src\WindowInfo.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
-    <ClInclude Include="..\src\mui\MuiBase.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\resource.h" />
     <ClInclude Include="..\src\testcode\test-app.h" />
@@ -656,7 +655,6 @@
     <ClCompile Include="..\src\UpdateCheck.cpp" />
     <ClCompile Include="..\src\WindowInfo.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
-    <ClCompile Include="..\src\mui\MuiBase.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\regress\Regress.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

@@ -169,7 +169,6 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
-
 static bool IsFileToBench(const WCHAR* path) {
     Kind kind = GuessFileType(path, true);
     if (IsSupportedFileType(kind, true)) {
