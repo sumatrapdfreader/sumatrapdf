@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a4d3ff71d2e549643f2025aeb1ca2f9616478d5e
+1642e67a76b365fcb41ce03761d77e6fccc799f1
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -421,6 +421,7 @@ kr:취소
 nl:&Annuleren
 pl:&Anuluj
 tr:İptal Et
+vn:&Hủy
 :&Caret
 am:&Ստեղն
 bn:&Caret
@@ -528,6 +529,7 @@ kr:32비트 버전 설치를 계속합니다(&C)
 nl:&Doorgaan met installeren van 32bit versie
 pl:&Kontynuuj instalację wersji 32-bitowej
 tr:32 bit sürümü kurmayı &sürdür
+vn:&Tiếp tục cài đặt bản 32-bit
 :&Copy Selection \tCtrl-C
 am:&Պատճենել ընտրումը \tCtrl-C
 br:&Copiar Seleção \tCtrl-C
@@ -543,6 +545,7 @@ kr:선택한 내용 복사(&C)\tCtrl-C
 nl:&Kopieer selectie \tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
 tr:Seçimi &Kopyala \tCtrl-C
+vn:&Sao chép \tCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
 br:Copiar para Área de Transferência\tCtrl-C
@@ -558,6 +561,7 @@ kr:클립보드에 복사(&C)\tCtrl-C
 nl:&Kopieer naar Klembord\tCtrl-C
 pl:&Kopiuj do schowka\tCtrl-C
 tr:Panoya &Kopyala\tCtrl-C
+vn:&Sao chép vào Clipboard\tCtrl-C
 :&Discard changes
 am:&Մերժել
 br:&Descartar
@@ -2499,6 +2503,7 @@ fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
 hr:&Ukloni iz povijesti
+hu:&Eltávolítás a listából
 id:&Hapus dari Riwayat
 it:&Rimuovi dalla cronologia
 ka:&ისტორიიდან წაშლა
@@ -4017,6 +4022,7 @@ pl:Adnotacje
 ru:Аннотации
 tr:Notlar
 tw:評注
+vn:Ghi chú
 :Application:
 af:Applikasie
 am:Ծրագիր՝
@@ -4517,6 +4523,7 @@ lv:Fona krāsa:
 nl:Achtergrond Kleur
 pl:Kolor tła:
 tr:Arka Plan Rengi
+vn:Màu nền
 :Book View
 am:Գրքի տեսքով
 ar:عرض الكتاب
@@ -5341,6 +5348,7 @@ kr:업데이트를 확인 중입니다...
 nl:Controleer op Update...
 pl:Szukanie aktualizacji...
 tr:Güncelleme denetleniyor...
+vn:Kiểm tra bản cập nhật mới...
 :Circle
 am:Շրջան
 ar:دائرة
@@ -5374,6 +5382,7 @@ ru:Круг
 ta:வட்டம்
 tr:Çember
 tw:圆
+vn:Vòng tròn
 :Close
 am:Փակել
 ar:إغلاق
@@ -5481,6 +5490,7 @@ th:ยุบทั้งหมด
 tr:Tümünü Katla
 tw:全部摺疊
 uk:Згорнути всі
+vn:Thu gọn tất cả
 :Color:
 am:Գույն.
 az:Rəng:
@@ -5504,6 +5514,7 @@ nl:Kleur
 pl:Kolor:
 ru:Цвет:
 tr:Renk:
+vn:Màu:
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -10269,68 +10280,6 @@ tw:字型:
 uk:Шрифти
 uz:Shriftlar:
 vn:Font chữ
-:Formatting the book... %d pages
-am:Գրքի կազմորոշում... %d էջ
-ar:تهيئة الكتاب... %d صفحة
-az:Kitab formatlanır... %d səh.
-bg:Форматиране на книгата... %d страници
-br:Formatando o livro... %d páginas
-bs:Formatiranje knjige... %d stranica
-by:Фарматаваць кнігу... %d старонак
-ca-xv:S'està formatant el llibre... %d pàgines
-ca:S'està formatant el llibre... %d pàgines
-cn:正在为书籍排版格式... %d 页
-co:Messa in forma di u libru… %d pagine
-cy:Fformatio'r llyfr... %d tudalen
-cz:Formátování knihy... %d stránek
-de:Buch wird formatiert… Seite %d
-dk:Formaterer bogen ... %d sider
-el:Διαμόρφωση του βιβλίου... %d σελίδες
-es:Dando formato al libro... %d páginas
-et:Raamatu vormindamine... %d lehekülge
-eu:Liburua formateatzen... %d orrialde
-fa:قالب‌بندی کتاب... %d صفحه
-fi:Muotoillaan kirjaa... %d sivua
-fr:Mise en forme du livre... %d pages
-ga:Ag formáidiú an leabhair... %d leathanach
-gl:Dándolle formato ao libro... %d páxinas
-he:מעצב את הספר... %d עמודים
-hi:किताब स्वरूपित हो रहा... %d पृष्ठ
-hr:Oblikovanje knjige... %d stranica
-hu:Könyv formázása... %d oldal
-id:Memformat buku... %d halaman
-it:Formattazione del libro... %d pagine
-ja:製本中… %d ページ
-ka:წიგნის ფორმატირება... %d გვერდი
-kr:%d 페이지 읽어들이는 중...
-ku:پەڕە %d  فۆڕماتکردنی پەڕەکانی پەرتووک ...
-kw:Ow furvasa an lyver... %d folen
-lt:Knyga formatuojama... %d puslapiai
-lv:Grāmatas formatēšana... %d lappuses
-mk:Ја форматирам книгата... %d страници
-my:Format buku ... %d halaman
-ne:पुस्तक स्वरूपण ... %d पृष्ठहरु
-nl:Boek samenstellen... %d paginas
-nn:Formatterer boka... %d sider
-no:Formater bok... %d sidene
-pl:Formatowanie książki... %d stron
-pt:A formatar livro... %d páginas
-ro:Formatează cartea... %d pagini
-ru:Форматирование книги... %d стр.
-si:පොත ෆෝර්මැට් කරමින්... %d පිටු
-sk:Formátovanie knihy... %d stránok
-sl:Oblikovanje knjige … %d strani
-sp-rs:Formatiranje knjige... %d stranica
-sq:Formaton librin... %d faqe
-sr-rs:Форматирање књиге... %d страница
-sv:Formatterar bok... %d sidor
-ta:புத்தகத்தை வடிவமைக்க ... %d பக்கங்கள்
-th:กำลังจัดรูปแบบหนังสือ ... %d หน้า
-tr:Kitap biçimlendiriliyor... %d sayfa
-tw:正在格式化書本... %d 頁
-uk:Форматується книга... %d сторінок
-uz:Kitob format qilinmoqda... %d bet
-vn:Đang định dạng sách... %d trang
 :Found text at page %s
 am:Գրվածքը գտնվել է %s էջում
 ar:تم العثور على النص في صفحة %s
@@ -12040,6 +11989,7 @@ ga:Fuinneog &nua\tCtrl+N
 gl:Nova xa&nela\tCtrl+N
 he:חלון חדש\tCtrl+N
 hr:&Novi prozor\tCtrl+N
+hu:Új &ablak\tCtrl+N
 id:&Jendela Baru\tCtrl+N
 it:Nuova &finestra\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
@@ -15391,6 +15341,7 @@ ga:Taisc na Nótaí
 gl:Gardar anotacións
 he:שמור אנוטציות
 hr:Spremi pribilješke
+hu:Megjegyzések mentése
 id:Simpan Catatan
 it:Salva annotazioni
 ja:注釈を保存
@@ -16327,6 +16278,7 @@ ga:Taispeáin na Leabhar&mharcanna\tF12
 gl:Amosar &marcadores\tF12
 he:הצג סימניות\tF12
 hr:Prikaži oznake\tF12
+hu:Könyv&jelzők megjelenítése\F12
 id:Tampilkan &Markah\tF12
 it:Visualizza segna&libri\tF12
 ja:ブックマークを表示 (&M)\tF12
@@ -16423,6 +16375,7 @@ fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
 gl:Amosar barras de desprazament&o
 hr:Prikaži &klizače
+hu:Gör&getősávok megjelenítése
 id:Tampilkan Scr&ollbars
 it:Visualizza barre sc&orrimento
 ka:საცოცი პან&ელის ჩვენება
@@ -16520,6 +16473,7 @@ ga:Taispeáin san &fillteán
 gl:Amosar no carta&fol
 he:פתח תיקייה מכילה...
 hr:Prikaži u mapi
+hu:Megjelenítés &mappában
 id:Tampilkan dalam &folder
 it:Visualizza nella &cartella
 ja:フォルダを表示(&F)
