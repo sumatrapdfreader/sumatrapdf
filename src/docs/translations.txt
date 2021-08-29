@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1642e67a76b365fcb41ce03761d77e6fccc799f1
+341d38b2c17d0992cc25dabbf7a638261c327525
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5501,6 +5501,7 @@ ca:Color
 cn:颜色:
 co:Culore :
 de:Farbe:
+dk:Farve:
 el:Χρώμα:
 es:Color:
 hr:Boja:
