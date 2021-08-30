@@ -98,6 +98,70 @@ class AbortCookieManager {
     }
 };
 
+Printer::~Printer() {
+    str::Free(name);
+    free((void*)devMode);
+}
+
+// get all the important info about a printer
+Printer* NewPrinter(WCHAR* printerName) {
+    HANDLE hPrinter{nullptr};
+    LONG ret{0};
+    Printer* printer{nullptr};
+    BOOL ok = OpenPrinterW(printerName, &hPrinter, nullptr);
+    if (!ok) {
+        return nullptr;
+    }
+
+    LONG structSize = 0;
+    LPDEVMODE devMode = nullptr;
+
+    DWORD needed = 0;
+    GetPrinterW(hPrinter, 2, nullptr, 0, &needed);
+    PRINTER_INFO_2* info = (PRINTER_INFO_2*)AllocArray<BYTE>(needed);
+    if (info) {
+        ok = GetPrinterW(hPrinter, 2, (LPBYTE)info, needed, &needed);
+    }
+    if (!ok || !info || needed <= sizeof(PRINTER_INFO_2)) {
+        goto Exit;
+    }
+
+    /* ask for the size of DEVMODE struct */
+    structSize = DocumentPropertiesW(nullptr, hPrinter, printerName, nullptr, nullptr, 0);
+    if (structSize < sizeof(DEVMODEW)) {
+        // if (displayErrors) {
+        //    MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
+        //}
+        goto Exit;
+    }
+    devMode = (DEVMODEW*)Allocator::AllocZero(nullptr, structSize);
+
+    // Get the default DevMode for the printer and modify it for your needs.
+    ret = DocumentPropertiesW(nullptr, hPrinter, printerName, devMode, nullptr, DM_OUT_BUFFER);
+    if (IDOK != ret) {
+        // if (displayErrors) {
+        //    MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
+        //}
+        goto Exit;
+    }
+    printer = new Printer();
+    printer->name = str::Dup(printerName);
+    printer->devMode = devMode;
+    printer->info = info;
+
+Exit:
+    ClosePrinter(hPrinter);
+    return printer;
+}
+
+static void MessageBoxWarningCond(bool show, const WCHAR* msg, const WCHAR* title) {
+    logf(L"%s: %s\n", title, msg);
+    if (!show) {
+        return;
+    }
+    MessageBoxWarning(nullptr, msg, title);
+}
+
 static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     RectF bounds;
     for (size_t i = 0; i < sel.size(); i++) {
@@ -870,8 +934,8 @@ static short DetectPrinterPaperSize(EngineBase* engine, const WCHAR* printerName
     Size sizeP = size.dx <= size.dy ? Size(size.dx, size.dy) : Size(size.dy, size.dx);
 
     // get list of papers and paper sizes supported by printer
-    DWORD count = DeviceCapabilities(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
-    DWORD count2 = DeviceCapabilities(printerName, nullptr, DC_PAPERSIZE, nullptr, nullptr);
+    DWORD count = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
+    DWORD count2 = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, nullptr, nullptr);
     if (count != count2 || 0 == count || ((DWORD)-1 == count)) {
         return 0;
     }
@@ -891,21 +955,25 @@ static short DetectPrinterPaperSize(EngineBase* engine, const WCHAR* printerName
     return 0;
 }
 
-static void SetPrinterCustomPaperSize(EngineBase* engine, LPDEVMODE devMode) {
-    // get size of first page in tenths of a millimeter
-    RectF mediabox = engine->PageMediabox(1);
-    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
-
-    // set custom paper size
+static void SetCustomPaperSize(Printer* printer, SizeF size) {
+    auto devMode = printer->devMode;
     devMode->dmPaperSize = 0;
     devMode->dmPaperWidth = size.dx;
     devMode->dmPaperLength = size.dy;
     devMode->dmFields |= DM_PAPERSIZE | DM_PAPERWIDTH | DM_PAPERLENGTH;
 }
 
+static void SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* printer) {
+    // get size of first page in tenths of a millimeter
+    RectF mediabox = engine->PageMediabox(1);
+    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
+    SetCustomPaperSize(printer, size);
+}
+
 bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
-    LONG ret;
+    Printer* printer{nullptr};
+
     if (!HasPermission(Perm::PrinterAccess)) {
         return false;
     }
@@ -917,61 +985,28 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
 #endif
 
     if (!engine) {
-        if (displayErrors) {
-            MessageBoxWarning(nullptr, _TR("Cannot print this file"), _TR("Printing problem."));
-        }
+        MessageBoxWarningCond(displayErrors, _TR("Cannot print this file"), _TR("Printing problem."));
         return false;
     }
 
-    AutoFreeWstr defaultPrinter;
-    if (!printerName) {
-        defaultPrinter.Set(GetDefaultPrinterName());
-        printerName = defaultPrinter;
+    if (printerName) {
+        printer = NewPrinter(printerName);
+    } else {
+        auto defName = GetDefaultPrinterName();
+        if (!defName) {
+            logf("PrintFile: GetDefaultPrinterName() failed\n");
+            return false;
+        }
+        printer = NewPrinter(defName);
+        str::Free(defName);
     }
 
-    HANDLE printer;
-    BOOL res = OpenPrinterW(printerName, &printer, nullptr);
-    if (!res) {
-        if (displayErrors) {
-            MessageBoxWarning(nullptr, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
-        }
+    if (!printer) {
+        MessageBoxWarningCond(displayErrors, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
         return false;
     }
 
-    LONG structSize = 0;
-    LPDEVMODE devMode = nullptr;
-
-    DWORD needed = 0;
-    GetPrinterW(printer, 2, nullptr, 0, &needed);
-    ScopedMem<PRINTER_INFO_2> infoData((PRINTER_INFO_2*)AllocArray<BYTE>(needed));
-    if (infoData) {
-        res = GetPrinterW(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
-    }
-    if (!res || !infoData || needed <= sizeof(PRINTER_INFO_2)) {
-        goto Exit;
-    }
-
-    /* ask for the size of DEVMODE struct */
-    structSize = DocumentPropertiesW(nullptr, printer, printerName, nullptr, nullptr, 0);
-    if (structSize < sizeof(DEVMODEW)) {
-        if (displayErrors) {
-            MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
-        }
-        goto Exit;
-    }
-    devMode = (DEVMODEW*)Allocator::AllocZero(nullptr, structSize);
-
-    // Get the default DevMode for the printer and modify it for your needs.
-    ret = DocumentPropertiesW(nullptr, printer, printerName, devMode, nullptr, DM_OUT_BUFFER);
-    if (IDOK != ret) {
-        if (displayErrors) {
-            MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
-        }
-        goto Exit;
-    }
-
-    ClosePrinter(printer);
-    printer = nullptr;
+    DEVMODEW* devMode = printer->devMode;
 
     // set paper size to match the size of the document's first page
     // (will be overridden by any paper= value in -print-settings)
@@ -987,22 +1022,18 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
             if (devMode->dmPaperSize = DetectPrinterPaperSize(engine, printerName)) {
                 devMode->dmFields |= DM_PAPERSIZE;
             } else {
-                SetPrinterCustomPaperSize(engine, devMode);
+                SetPrinterCustomPaperSizeForEngine(engine, printer);
             }
         }
 
-        PrintData pd(engine, infoData, devMode, ranges, advanced);
+        PrintData pd(engine, printer->info, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
-        if (!ok && displayErrors) {
-            MessageBoxWarning(nullptr, _TR("Couldn't initialize printer"), _TR("Printing problem."));
+        if (!ok) {
+            MessageBoxWarningCond(displayErrors, _TR("Couldn't initialize printer"), _TR("Printing problem."));
         }
     }
 
-Exit:
-    free(devMode);
-    if (printer) {
-        ClosePrinter(printer);
-    }
+    delete printer;
     return ok;
 }
 
@@ -1011,11 +1042,9 @@ bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, co
     WCHAR* fileName2 = path::Normalize(fileName);
     EngineBase* engine = CreateEngine(fileName2, nullptr, true);
     if (!engine) {
-        if (displayErrors) {
-            WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);
-            MessageBoxWarning(nullptr, msg, L"Error");
-            free(msg);
-        }
+        WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);
+        MessageBoxWarningCond(displayErrors, msg, L"Error");
+        free(msg);
         return false;
     }
     bool ok = PrintFile(engine, printerName, displayErrors, settings);
