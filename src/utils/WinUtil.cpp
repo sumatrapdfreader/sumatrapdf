@@ -8,8 +8,6 @@
 #include "utils/WinDynCalls.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-// TODO: move function that need Cmd to ResourceIds.h
-#include "Commands.h"
 
 #include <mlang.h>
 
