@@ -3010,7 +3010,7 @@ WCHAR* EngineMupdf::ExtractFontList() {
 
         auto fontInfo = ToWstrTemp(info.LendData());
         if (fontInfo.Get() && !fonts.Contains(fontInfo)) {
-            fonts.Append(fontInfo.Get());
+            fonts.Append(str::Dup(fontInfo.Get()));
         }
     }
     if (fonts.size() == 0) {
@@ -3018,7 +3018,8 @@ WCHAR* EngineMupdf::ExtractFontList() {
     }
 
     fonts.SortNatural();
-    return fonts.Join(L"\n");
+    WCHAR* res = fonts.Join(L"\n");
+    return res;
 }
 
 static const char* DocumentPropertyToMupdfMetadataKey(DocumentProperty prop) {

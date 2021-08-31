@@ -94,7 +94,7 @@ char* WstrToUtf8(std::wstring_view sv, Allocator* a) {
     return (char*)v.data();
 }
 
-/* Caller needs to free() the result */
+// caller needs to free() the result
 WCHAR* StrToWstr(const char* src, uint codePage, int cbSrc) {
     CrashIf(!src);
     if (!src) {
@@ -113,6 +113,7 @@ WCHAR* StrToWstr(const char* src, uint codePage, int cbSrc) {
     return res;
 }
 
+// caller needs to free() the result
 std::string_view ToMultiByteV(const char* src, uint codePageSrc, uint codePageDest) {
     CrashIf(!src);
     if (!src) {
