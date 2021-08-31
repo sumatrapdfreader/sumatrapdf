@@ -14,3 +14,6 @@ struct FileData {
 };
 
 Vec<FileData*> MobiToEpub(const WCHAR* path);
+
+void LoadRar();
+void LoadFile();

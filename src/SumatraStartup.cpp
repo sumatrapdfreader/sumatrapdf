@@ -1060,6 +1060,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     goto Exit;
 #endif
 
+    if (false) {
+        //LoadFile();
+        LoadRar();
+        return 0;
+    }
+
     if (i.showConsole) {
         RedirectIOToConsole();
     }

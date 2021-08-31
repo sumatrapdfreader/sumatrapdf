@@ -13,6 +13,9 @@ extern "C" {
 #include <unarr.h>
 }
 
+// TODO: set include path to ext/ dir
+#include "../../ext/unrar/dll.hpp"
+
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written
@@ -260,9 +263,6 @@ MultiFormatArchive* OpenRarArchive(IStream* stream) {
     auto* archive = new MultiFormatArchive(ar_open_rar_archive, MultiFormatArchive::Format::Rar);
     return open(archive, stream);
 }
-
-// TODO: set include path to ext/ dir
-#include "../../ext/unrar/dll.hpp"
 
 // return 1 on success. Other values for msg that we don't handle: UCM_CHANGEVOLUME, UCM_NEEDPASSWORD
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed) {

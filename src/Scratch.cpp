@@ -8,6 +8,7 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/GdiPlusUtil.h"
+#include "utils/Timer.h"
 
 #include "DisplayMode.h"
 #include "Controller.h"
@@ -18,6 +19,14 @@
 #include "Scratch.h"
 
 #include "utils/Log.h"
+
+#include "../../ext/unrar/dll.hpp"
+
+/*
+extern "C" {
+#include <unarr.h>
+}
+*/
 
 // META-INF/container.xml
 static const char* metaInfContainerXML = R"(<?xml version="1.0"?>
@@ -156,4 +165,74 @@ Vec<FileData*> MobiToEpub(const WCHAR* path) {
         }
     }
     return files;
+}
+
+constexpr const WCHAR* rarFilePath = LR"__(x:\comics\!new4\Bride of Graphic Novels, Hardcovers and Trade Paperbacks\ABSOLUTE WATCHMEN (2005) (DC) (Minutemen-TheKid).cbr)__";
+
+void LoadFile() {
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("LoadFile() took %.2f ms\n", dur);
+    };
+    auto d = file::ReadFile(rarFilePath);
+    free(d.data());
+}
+
+// return 1 on success. Other values for msg that we don't handle: UCM_CHANGEVOLUME, UCM_NEEDPASSWORD
+static int CALLBACK unrarCallback2(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed) {
+    if (UCM_PROCESSDATA != msg || !userData) {
+        return -1;
+    }
+    str::Slice* buf = (str::Slice*)userData;
+    size_t bytesGot = (size_t)bytesProcessed;
+    if (bytesGot > buf->Left()) {
+        return -1;
+    }
+    memcpy(buf->curr, (char*)rarBuffer, bytesGot);
+    buf->curr += bytesGot;
+    return 1;
+}
+
+
+void LoadRar() {
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("LoadRar() took %.2f ms\n", dur);
+    };
+
+    str::Slice uncompressedBuf;
+
+    RAROpenArchiveDataEx arcData = {nullptr};
+    arcData.ArcNameW = (WCHAR*)rarFilePath;
+    arcData.OpenMode = RAR_OM_EXTRACT;
+    arcData.Callback = unrarCallback2;
+    arcData.UserData = (LPARAM)&uncompressedBuf;
+
+    HANDLE hArc = RAROpenArchiveEx(&arcData);
+    if (!hArc || arcData.OpenResult != 0) {
+        return;
+    }
+    size_t fileId = 0;
+    while (true) {
+        RARHeaderDataEx rarHeader = {0};
+        int res = RARReadHeaderEx(hArc, &rarHeader);
+        if (0 != res) {
+            break;
+        }
+
+        str::TransCharsInPlace(rarHeader.FileNameW, L"\\", L"/");
+        auto name = ToUtf8Temp(rarHeader.FileNameW);
+
+        size_t fileSizeUncompressed = (size_t)rarHeader.UnpSize;
+        char* data = AllocArray<char>(fileSizeUncompressed + 3);
+        if (!data) {
+            return;
+        }
+        uncompressedBuf.Set(data, fileSizeUncompressed);
+        RARProcessFile(hArc, RAR_EXTRACT, nullptr, nullptr);
+    }
+
+    RARCloseArchive(hArc);
 }

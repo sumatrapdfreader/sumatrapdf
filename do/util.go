@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -321,4 +322,46 @@ func panicIf(cond bool, args ...interface{}) {
 		}
 	}
 	panic(s)
+}
+
+func findLargestFileByExt() {
+	isWantedExt := func(ext string) bool {
+		for _, s := range []string{".pdf", ".cbr", ".cbz", ".epub", "mobi", ".xps", ".djvu", ".pdb", ".prc", ".xps"} {
+			if s == ext {
+				return true
+			}
+		}
+		return false
+	}
+
+	extToSize := map[string]int64{}
+	dirs := []string{"comics", "comics read", "books"}
+	nFiles := 0
+	for _, d := range dirs {
+		startDir := filepath.Join("x:\\", d)
+		filepath.WalkDir(startDir, func(path string, d fs.DirEntry, err error) error {
+			if !d.Type().IsRegular() {
+				return nil
+			}
+			if false && (nFiles == 0 || nFiles%128 == 0) {
+				logf("%s\n", path)
+			}
+			nFiles++
+			ext := strings.ToLower(filepath.Ext(path))
+			if !isWantedExt(ext) {
+				return nil
+			}
+			fi, err := d.Info()
+			if err != nil {
+				return nil
+			}
+			size := fi.Size()
+			if size > extToSize[ext] {
+				logf("%s of size %s\n", path, u.FmtSizeHuman(size))
+				extToSize[ext] = size
+			}
+			return nil
+		})
+	}
+	logf("processed %d files\n", nFiles)
 }

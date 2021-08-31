@@ -158,6 +158,7 @@ func main() {
 		flgBuildLzsa              = false
 		flgOptimizeImages         = false
 		flgMakeSmallImages        = false
+		flgFindLargestFilesByExt  = false
 	)
 
 	var (
@@ -234,6 +235,11 @@ func main() {
 	if false {
 		detectVersions()
 		//buildPreRelease()
+		return
+	}
+
+	if flgFindLargestFilesByExt {
+		findLargestFileByExt()
 		return
 	}
 
