@@ -114,6 +114,8 @@ class EngineImages : public EngineBase {
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
     void DropPage(ImagePage* page, bool forceRemove);
+
+    RectF PageContentBox(int pageNo, RenderTarget) override;
 };
 
 EngineImages::EngineImages() {
@@ -364,6 +366,125 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
         }
         delete page;
     }
+}
+
+
+// Get content box for image by cropping out margins of similar color
+RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
+    // try to load bitmap for the image
+    auto page = GetPage(pageNo, true);
+    if (!page)
+        return RectF{};
+
+    // if we loaded bitmap, it might get deleted by GetPage while we are accessing it, so lock it
+    ScopedCritSec scope(&cacheAccess);
+    auto bmp = page->bmp;
+    if (!bmp)
+        return RectF{};
+
+    const int w = bmp->GetWidth(), h = bmp->GetHeight();
+    // don't need pixel-perfect margin, so scan 200 points at most
+    const int deltaX = std::max(1, w / 200), deltaY = std::max(1, h / 200);
+
+    Rect r(0, 0, w, h);
+
+    auto fmt = bmp->GetPixelFormat();
+    // getPixel can work with the following formats, otherwise convert it to 24bppRGB
+    switch (fmt) {
+        case PixelFormat24bppRGB:
+        case PixelFormat32bppRGB:
+        case PixelFormat32bppARGB:
+        case PixelFormat32bppPARGB:
+            break;
+        default:
+            fmt = PixelFormat24bppRGB;
+    }
+    const int bytesPerPixel = ((fmt >> 8) & 0xff) / 8; // either 3 or 4
+
+    Gdiplus::BitmapData bmpData;
+    // lock bitmap
+    {
+        Gdiplus::Rect bmpRect(0, 0, w, h);
+        Gdiplus::Status lock = bmp->LockBits(&bmpRect, Gdiplus::ImageLockModeRead, fmt, &bmpData);
+        if (lock != Gdiplus::Ok)
+            return RectF{};
+    }
+
+    auto getPixel = [&bmpData, bytesPerPixel](int x, int y) -> uint32_t {
+        CrashIf(x < 0 || x >= bmpData.Width || y < 0 || y >= bmpData.Height);
+        auto data = static_cast<const uint8_t*>(bmpData.Scan0);
+        unsigned idx = bytesPerPixel * x + bmpData.Stride * y;
+        return (data[idx+2] << 16) | (data[idx+1] << 8) | data[idx];
+    };
+
+    uint32_t marginColor = 0xffffffff;
+    auto checkPixel = [&getPixel, &marginColor](int x, int y) -> bool {
+        auto rgb = getPixel(x, y);
+        // ignore the lowest 3 bits (7=0b111) of each color component and then compare it to margin color
+        const uint32_t mask = ~0x070707U;
+        if(marginColor != 0xffffffff)
+            return (rgb & mask) == marginColor;
+        // use the first pixel color as margin color
+        marginColor = rgb & mask;
+        return true;
+    };
+    auto marginReset = [&marginColor]() { marginColor = 0xffffffff; };
+
+    // crop the page, but no more than 25% from each side
+    marginReset();
+    // left margin
+    for (; r.x < w / 4 && r.dx > w / 2; r.x += deltaX, r.dx -= deltaX) {
+        bool ok = true;
+        for (int y = 0; y <= h - deltaY; y += deltaY) {
+            ok = checkPixel(r.x + deltaX, y);
+            if (!ok)
+                break;
+        }
+        if (!ok)
+            break;
+    }
+
+    marginReset();
+    // right margin
+    for (; r.dx > w / 2; r.dx -= deltaX) {
+        bool ok = true;
+        for (int y = 0; y <= h - deltaY; y += deltaY) {
+            ok = checkPixel((r.x + r.dx) - 1 - deltaX, y);
+            if (!ok)
+                break;
+        }
+        if (!ok)
+            break;
+    }
+
+    marginReset();
+    // top margin
+    for (; r.y < h / 4 && r.dy > h / 2; r.y += deltaY, r.dy -= deltaY) {
+        bool ok = true;
+        for (int x = r.x; x <= r.x + r.dx - deltaX; x += deltaX) {
+            ok = checkPixel(x, r.y + deltaY);
+            if (!ok)
+                break;
+        }
+        if (!ok)
+            break;
+    }
+
+    marginReset();
+    // bottom margin
+    for (; r.dy > h / 2; r.dy -= deltaY) {
+        bool ok = true;
+        for (int x = r.x; x <= r.x + r.dx - deltaX; x += deltaX) {
+            ok = checkPixel(x, (r.y + r.dy) - 1 - deltaY);
+            if (!ok)
+                break;
+        }
+        if (!ok)
+            break;
+    }
+    bmp->UnlockBits(&bmpData);
+
+    return ToRectF(r);
 }
 
 ///// ImageEngine handles a single image file /////
