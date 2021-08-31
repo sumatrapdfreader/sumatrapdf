@@ -56,6 +56,7 @@ struct PrintData {
     }
 
     ~PrintData() {
+        delete printer;
         delete engine;
     }
 };
@@ -90,6 +91,11 @@ class AbortCookieManager {
         }
     }
 };
+
+void Printer::SetDevMode(DEVMODEW* dm) {
+    free((void*)devMode);
+    devMode = dm;
+}
 
 Printer::~Printer() {
     str::Free(name);
@@ -169,20 +175,20 @@ Printer* NewPrinter(WCHAR* printerName) {
         printer->nPaperSizes = (int)n;
         size_t paperNameSize = 64;
         printer->papers = AllocArray<WORD>(n);
-        WCHAR* paperNames = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // +1 is "just in case"
+        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // +1 is "just in case"
         printer->paperSizes = AllocArray<POINT>(n);
         printer->paperNames = AllocArray<WCHAR*>(n);
 
         DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
-        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, paperNames, nullptr);
+        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
         DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
 
-        WCHAR* paperName = paperNames;
+        WCHAR* paperName = paperNamesSeq;
         for (int i = 0; i < (int)n; i++) {
             printer->paperNames[i] = str::Dup(paperName);
             paperName += paperNameSize;
         }
-        str::Free(paperNames);
+        str::Free(paperNamesSeq);
     }
 
     {
@@ -197,16 +203,36 @@ Printer* NewPrinter(WCHAR* printerName) {
         if (n > 0) {
             size_t binNameSize = 24;
             printer->bins = AllocArray<WORD>(n);
-            WCHAR* binNames = AllocArray<WCHAR>(binNameSize * n + 1); // +1 is "just in case"
+            printer->binNames = AllocArray<WCHAR*>(n);
+            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1); // +1 is "just in case"
             DeviceCapabilitiesW(printerName, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
-            DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, binNames, nullptr);
-            WCHAR* binName = binNames;
+            DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
+            WCHAR* binName = binNamesSeq;
             for (int i = 0; i < (int)n; i++) {
                 printer->binNames[i] = str::Dup(binName);
                 binName += binNameSize;
             }
-            str::Free(binNames);
+            str::Free(binNamesSeq);
         }
+    }
+
+    {
+        DWORD n;
+
+        n = DeviceCapabilitiesW(printerName, nullptr, DC_COLLATE, nullptr, nullptr);
+        printer->canCallate = (n > 0);
+
+        n = DeviceCapabilitiesW(printerName, nullptr, DC_COLORDEVICE, nullptr, nullptr);
+        printer->isColor = (n > 0);
+
+        n = DeviceCapabilitiesW(printerName, nullptr, DC_DUPLEX, nullptr, nullptr);
+        printer->isDuplex = (n > 0);
+
+        n = DeviceCapabilitiesW(printerName, nullptr, DC_STAPLE, nullptr, nullptr);
+        printer->canStaple = (n > 0);
+
+        n = DeviceCapabilitiesW(printerName, nullptr, DC_ORIENTATION, nullptr, nullptr);
+        printer->orientation = n;
     }
 
 Exit:
@@ -647,7 +673,6 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
 
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
-    PRINTER_INFO_2W printerInfo{};
     Vec<SelectionOnPage>* sel;
 
     if (!HasPermission(Perm::PrinterAccess)) {
@@ -721,11 +746,9 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     pd.lphPropertyPages = &hPsp;
     pd.nPropertyPages = 1;
 
-    LPDEVNAMES devNames;
-    LPDEVMODE devMode;
-    bool failedEngineClone;
-    PrintData* data = nullptr;
-
+    bool failedEngineClone{false};
+    PrintData* data{nullptr};
+    DEVMODE* devMode{nullptr};
     // restore remembered settings
     if (defaultDevMode) {
         DEVMODE* p = defaultDevMode.Get();
@@ -744,14 +767,41 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         goto Exit;
     }
 
+    if (!pd.hDevNames) {
+        MessageBoxWarning(win->hwndFrame, _TR("Couldn't get printer name"), _TR("Printing problem."));
+        goto Exit;
+    }
+
+    {
+        DEVNAMES* devNames = (DEVNAMES*)GlobalLock(pd.hDevNames);
+        if (devNames) {
+            // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
+            WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
+            printer = NewPrinter(printerName);
+            // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
+            GlobalUnlock(pd.hDevNames);
+        }
+    }
+
+    if (!printer) {
+        MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."));
+        goto Exit;
+    }
+
+    devMode = (DEVMODEW*)GlobalLock(pd.hDevMode);
+
     if (pd.dwResultAction == PD_RESULT_PRINT || pd.dwResultAction == PD_RESULT_APPLY) {
         // remember settings for this process
-        devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
         if (devMode) {
-            defaultDevMode.Set((LPDEVMODE)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
-            GlobalUnlock(pd.hDevMode);
+            defaultDevMode.Set((DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
         }
         defaultScaleAdv = advanced.scale;
+    }
+
+    if (devMode) {
+        auto dmCopy = (DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra);
+        printer->SetDevMode(dmCopy);
+        GlobalUnlock(pd.hDevMode);
     }
 
     if (pd.dwResultAction != PD_RESULT_PRINT) {
@@ -773,23 +823,8 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         }
     }
 
-    devNames = (LPDEVNAMES)GlobalLock(pd.hDevNames);
-    devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-    if (devNames) {
-        printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
-        printerInfo.pPrinterName = (LPWSTR)devNames + devNames->wDeviceOffset;
-        printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
-    }
-
-    // TODO: create printer
     sel = printSelection ? win->currentTab->selectionOnPage : nullptr;
     data = new PrintData(engine, printer, ranges, advanced, rotation, sel);
-    if (devNames) {
-        GlobalUnlock(pd.hDevNames);
-    }
-    if (devMode) {
-        GlobalUnlock(pd.hDevMode);
-    }
 
     // if a file is missing and the engine can't thus be cloned,
     // we print using the original engine on the main thread
