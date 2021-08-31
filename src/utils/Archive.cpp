@@ -57,13 +57,14 @@ bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {
         if (!name) {
             name = "";
         }
-
+        // TODO: benchmark serial opening and implement loadOnOpen if beneficial
         FileInfo* i = allocator_.AllocStruct<FileInfo>();
         i->fileId = fileId;
         i->fileSizeUncompressed = ar_entry_get_size(ar_);
         i->filePos = ar_entry_get_offset(ar_);
         i->fileTime = ar_entry_get_filetime(ar_);
         i->name = str::Dup(&allocator_, name);
+        i->data = nullptr;
         fileInfos_.Append(i);
 
         fileId++;
@@ -74,6 +75,9 @@ bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {
 MultiFormatArchive::~MultiFormatArchive() {
     ar_close_archive(ar_);
     ar_close(data_);
+    for (auto& fi : fileInfos_) {
+        free((void*)fi->data);
+    }
 }
 
 size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, const char* name) {
@@ -103,11 +107,22 @@ ByteSlice MultiFormatArchive::GetFileDataByName(const char* fileName) {
     return GetFileDataById(fileId);
 }
 
+// the caller must free()
 ByteSlice MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (fileId == (size_t)-1) {
         return {};
     }
     CrashIf(fileId >= fileInfos_.size());
+
+    auto* fileInfo = fileInfos_[fileId];
+    CrashIf(fileInfo->fileId != fileId);
+
+    if (fileInfo->data != nullptr) {
+        // the caller takes ownership
+        ByteSlice res{(u8*)fileInfo->data, fileInfo->fileSizeUncompressed};
+        fileInfo->data = nullptr;
+        return res;
+    }
 
     if (LoadedUsingUnrarDll()) {
         return GetFileDataByIdUnarrDll(fileId);
@@ -116,9 +131,6 @@ ByteSlice MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (!ar_) {
         return {};
     }
-
-    auto* fileInfo = fileInfos_[fileId];
-    CrashIf(fileInfo->fileId != fileId);
 
     auto filePos = fileInfo->filePos;
     if (!ar_parse_entry_at(ar_, filePos)) {
@@ -298,6 +310,12 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
 ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
+    auto* fileInfo = fileInfos_[fileId];
+    CrashIf(fileInfo->fileId != fileId);
+    if (fileInfo->data != nullptr) {
+        return {(u8*)fileInfo->data, fileInfo->fileSizeUncompressed};
+    }
+
     auto rarPath = ToWstrTemp(rarFilePath_);
 
     str::Slice uncompressedBuf;
@@ -312,9 +330,6 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     if (!hArc || arcData.OpenResult != 0) {
         return {};
     }
-
-    auto* fileInfo = fileInfos_[fileId];
-    CrashIf(fileInfo->fileId != fileId);
 
     char* data = nullptr;
     size_t size = 0;
@@ -359,9 +374,16 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
     CrashIf(rarFilePath_);
     auto rarPathW = ToWstrTemp(rarPath);
 
+    str::Slice uncompressedBuf;
+
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = (WCHAR*)rarPathW;
     arcData.OpenMode = RAR_OM_LIST;
+    if (loadOnOpen) {
+        arcData.OpenMode = RAR_OM_EXTRACT;
+        arcData.Callback = unrarCallback;
+        arcData.UserData = (LPARAM)&uncompressedBuf;
+    }
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
     if (!hArc || arcData.OpenResult != 0) {
@@ -385,11 +407,21 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
         i->filePos = 0;
         i->fileTime = (i64)rarHeader.FileTime;
         i->name = str::Dup(&allocator_, name.Get());
+        i->data = nullptr;
+        if (loadOnOpen) {
+            // +2 so that it's zero-terminated even when interprted as WCHAR*
+            i->data = AllocArray<char>(i->fileSizeUncompressed + 2);
+            uncompressedBuf.Set(i->data, i->fileSizeUncompressed);
+        }
         fileInfos_.Append(i);
 
         fileId++;
 
-        RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
+        int op = RAR_SKIP;
+        if (loadOnOpen) {
+            op = RAR_EXTRACT;
+        }
+        RARProcessFile(hArc, op, nullptr, nullptr);
     }
 
     RARCloseArchive(hArc);

@@ -167,7 +167,8 @@ Vec<FileData*> MobiToEpub(const WCHAR* path) {
     return files;
 }
 
-constexpr const WCHAR* rarFilePath = LR"__(x:\comics\!new4\Bride of Graphic Novels, Hardcovers and Trade Paperbacks\ABSOLUTE WATCHMEN (2005) (DC) (Minutemen-TheKid).cbr)__";
+constexpr const WCHAR* rarFilePath =
+    LR"__(x:\comics\!new4\Bride of Graphic Novels, Hardcovers and Trade Paperbacks\ABSOLUTE WATCHMEN (2005) (DC) (Minutemen-TheKid).cbr)__";
 
 void LoadFile() {
     auto timeStart = TimeGet();
@@ -193,7 +194,6 @@ static int CALLBACK unrarCallback2(UINT msg, LPARAM userData, LPARAM rarBuffer, 
     buf->curr += bytesGot;
     return 1;
 }
-
 
 void LoadRar() {
     auto timeStart = TimeGet();

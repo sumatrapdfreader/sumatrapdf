@@ -13,13 +13,14 @@ class MultiFormatArchive {
     enum class Format { Zip, Rar, SevenZip, Tar };
 
     struct FileInfo {
-        size_t fileId;
-        std::string_view name;
-        i64 fileTime; // this is typedef'ed as time64_t in unrar.h
-        size_t fileSizeUncompressed;
+        size_t fileId{0};
+        std::string_view name{};
+        i64 fileTime{0}; // this is typedef'ed as time64_t in unrar.h
+        size_t fileSizeUncompressed{0};
 
         // internal use
-        i64 filePos;
+        i64 filePos{0};
+        char* data{nullptr};
 
         [[nodiscard]] FILETIME GetWinFileTime() const;
     };
@@ -40,6 +41,9 @@ class MultiFormatArchive {
     ByteSlice GetFileDataById(size_t fileId);
 
     std::string_view GetComment();
+
+    // if true, will load and uncompress all files on open
+    bool loadOnOpen{true};
 
   protected:
     // used for allocating strings that are referenced by ArchFileInfo::name

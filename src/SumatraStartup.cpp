@@ -1061,7 +1061,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 #endif
 
     if (false) {
-        //LoadFile();
+        // LoadFile();
         LoadRar();
         return 0;
     }
