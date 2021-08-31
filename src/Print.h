@@ -14,6 +14,10 @@ struct Printer {
     WCHAR** paperNames{nullptr}; // DC_PAPERNAMES
     POINT* paperSizes{nullptr};  // DC_PAPERSIZE
 
+    int nBins{0};
+    WORD* bins{nullptr};       // DC_BINS
+    WCHAR** binNames{nullptr}; // DC_BINNAMES
+
     Printer() = default;
     ~Printer();
 };
