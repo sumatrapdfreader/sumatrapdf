@@ -197,7 +197,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     Rect pageRcI = PageMediabox(pageNo).Round();
     ImageAttributes imgAttrs;
     imgAttrs.SetWrapMode(WrapModeTileFlipXY);
-    Status ok = g.DrawImage(page->bmp, ToGdipRect(pageRcI), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
+    Status ok = g.DrawImage(page->bmp, ToGdipRect(pageRcI), pageRcI.x, pageRcI.y, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
 
     DropPage(page, false);
     DeleteDC(hDC);
