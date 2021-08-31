@@ -31,36 +31,6 @@
 #include "SumatraProperties.h"
 #include "Translations.h"
 
-struct PrintData {
-    Printer* printer{nullptr};
-    EngineBase* engine{nullptr};
-    Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
-    Vec<SelectionOnPage> sel;   // empty when printing a page range
-    Print_Advanced_Data advData;
-    int rotation = 0;
-
-    PrintData(EngineBase* engine, Printer* printer, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advData,
-              int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
-        this->printer = printer;
-        this->advData = advData;
-        this->rotation = rotation;
-        if (engine) {
-            this->engine = engine->Clone();
-        }
-
-        if (!sel) {
-            this->ranges = ranges;
-        } else {
-            this->sel = *sel;
-        }
-    }
-
-    ~PrintData() {
-        delete printer;
-        delete engine;
-    }
-};
-
 class AbortCookieManager {
     CRITICAL_SECTION cookieAccess;
 
@@ -89,6 +59,38 @@ class AbortCookieManager {
             delete cookie;
             cookie = nullptr;
         }
+    }
+};
+
+struct PrintData {
+    Printer* printer{nullptr};
+    EngineBase* engine{nullptr};
+    Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
+    Vec<SelectionOnPage> sel;   // empty when printing a page range
+    Print_Advanced_Data advData;
+    int rotation{0};
+    ProgressUpdateUI* progressUI{nullptr};
+    AbortCookieManager* abortCookie{nullptr};
+
+    PrintData(EngineBase* engine, Printer* printer, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advData,
+              int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
+        this->printer = printer;
+        this->advData = advData;
+        this->rotation = rotation;
+        if (engine) {
+            this->engine = engine->Clone();
+        }
+
+        if (!sel) {
+            this->ranges = ranges;
+        } else {
+            this->sel = *sel;
+        }
+    }
+
+    ~PrintData() {
+        delete printer;
+        delete engine;
     }
 };
 
@@ -274,8 +276,7 @@ static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     return bounds;
 }
 
-static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nullptr,
-                          AbortCookieManager* abortCookie = nullptr) {
+static bool PrintToDevice(const PrintData& pd) {
     CrashIf(!pd.engine);
     if (!pd.engine) {
         return false;
@@ -284,6 +285,9 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     if (!pd.printer) {
         return false;
     }
+
+    auto progressUI = pd.progressUI;
+    auto abortCookie = pd.abortCookie;
 
     EngineBase& engine = *pd.engine;
     AutoFreeWstr fileName;
@@ -592,7 +596,11 @@ static DWORD WINAPI PrintThread(LPVOID data) {
     }
 
     HANDLE thread = threadData->thread = win->printThread;
-    PrintToDevice(*threadData->data, threadData, &threadData->cookie);
+
+    PrintData* pd = threadData->data;
+    pd->progressUI = threadData;
+    pd->abortCookie = &threadData->cookie;
+    PrintToDevice(*pd);
 
     uitask::Post([=] {
         if (WindowInfoStillValid(win) && thread == win->printThread) {
@@ -721,41 +729,41 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         return;
     }
 
-    PRINTDLGEXW pd{};
-    pd.lStructSize = sizeof(PRINTDLGEXW);
-    pd.hwndOwner = win->hwndFrame;
-    pd.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
+    PRINTDLGEXW pdex{};
+    pdex.lStructSize = sizeof(PRINTDLGEXW);
+    pdex.hwndOwner = win->hwndFrame;
+    pdex.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win->currentTab->selectionOnPage) {
-        pd.Flags |= PD_NOSELECTION;
+        pdex.Flags |= PD_NOSELECTION;
     }
-    pd.nCopies = 1;
+    pdex.nCopies = 1;
     /* by default print all pages */
-    pd.nPageRanges = 1;
-    pd.nMaxPageRanges = MAXPAGERANGES;
+    pdex.nPageRanges = 1;
+    pdex.nMaxPageRanges = MAXPAGERANGES;
     PRINTPAGERANGE* ppr = AllocArray<PRINTPAGERANGE>(MAXPAGERANGES);
-    pd.lpPageRanges = ppr;
+    pdex.lpPageRanges = ppr;
     ppr->nFromPage = 1;
     ppr->nToPage = dm->PageCount();
-    pd.nMinPage = 1;
-    pd.nMaxPage = dm->PageCount();
-    pd.nStartPage = START_PAGE_GENERAL;
+    pdex.nMinPage = 1;
+    pdex.nMaxPage = dm->PageCount();
+    pdex.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
     ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
-    pd.lphPropertyPages = &hPsp;
-    pd.nPropertyPages = 1;
+    pdex.lphPropertyPages = &hPsp;
+    pdex.nPropertyPages = 1;
 
     bool failedEngineClone{false};
-    PrintData* data{nullptr};
+    PrintData* pd{nullptr};
     DEVMODE* devMode{nullptr};
     // restore remembered settings
     if (defaultDevMode) {
         DEVMODE* p = defaultDevMode.Get();
-        pd.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
+        pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
     }
 
-    if (PrintDlgEx(&pd) != S_OK) {
+    if (PrintDlgEx(&pdex) != S_OK) {
         if (CommDlgExtendedError() != 0) {
             /* if PrintDlg was cancelled then
                CommDlgExtendedError is zero, otherwise it returns the
@@ -767,19 +775,19 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         goto Exit;
     }
 
-    if (!pd.hDevNames) {
+    if (!pdex.hDevNames) {
         MessageBoxWarning(win->hwndFrame, _TR("Couldn't get printer name"), _TR("Printing problem."));
         goto Exit;
     }
 
     {
-        DEVNAMES* devNames = (DEVNAMES*)GlobalLock(pd.hDevNames);
+        DEVNAMES* devNames = (DEVNAMES*)GlobalLock(pdex.hDevNames);
         if (devNames) {
             // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
             WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
             printer = NewPrinter(printerName);
             // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
-            GlobalUnlock(pd.hDevNames);
+            GlobalUnlock(pdex.hDevNames);
         }
     }
 
@@ -788,9 +796,9 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         goto Exit;
     }
 
-    devMode = (DEVMODEW*)GlobalLock(pd.hDevMode);
+    devMode = (DEVMODEW*)GlobalLock(pdex.hDevMode);
 
-    if (pd.dwResultAction == PD_RESULT_PRINT || pd.dwResultAction == PD_RESULT_APPLY) {
+    if (pdex.dwResultAction == PD_RESULT_PRINT || pdex.dwResultAction == PD_RESULT_APPLY) {
         // remember settings for this process
         if (devMode) {
             defaultDevMode.Set((DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
@@ -801,30 +809,30 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     if (devMode) {
         auto dmCopy = (DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra);
         printer->SetDevMode(dmCopy);
-        GlobalUnlock(pd.hDevMode);
+        GlobalUnlock(pdex.hDevMode);
     }
 
-    if (pd.dwResultAction != PD_RESULT_PRINT) {
+    if (pdex.dwResultAction != PD_RESULT_PRINT) {
         goto Exit;
     }
 
-    if (pd.Flags & PD_CURRENTPAGE) {
+    if (pdex.Flags & PD_CURRENTPAGE) {
         PRINTPAGERANGE pr = {(DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo()};
         ranges.Append(pr);
-    } else if (win->currentTab->selectionOnPage && (pd.Flags & PD_SELECTION)) {
+    } else if (win->currentTab->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
         printSelection = true;
-    } else if (!(pd.Flags & PD_PAGENUMS)) {
+    } else if (!(pdex.Flags & PD_PAGENUMS)) {
         PRINTPAGERANGE pr = {1, (DWORD)dm->PageCount()};
         ranges.Append(pr);
     } else {
-        CrashIf(pd.nPageRanges <= 0);
-        for (DWORD i = 0; i < pd.nPageRanges; i++) {
-            ranges.Append(pd.lpPageRanges[i]);
+        CrashIf(pdex.nPageRanges <= 0);
+        for (DWORD i = 0; i < pdex.nPageRanges; i++) {
+            ranges.Append(pdex.lpPageRanges[i]);
         }
     }
 
     sel = printSelection ? win->currentTab->selectionOnPage : nullptr;
-    data = new PrintData(engine, printer, ranges, advanced, rotation, sel);
+    pd = new PrintData(engine, printer, ranges, advanced, rotation, sel);
 
     // if a file is missing and the engine can't thus be cloned,
     // we print using the original engine on the main thread
@@ -832,25 +840,25 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     // unexpectedly deleted
     // TODO: instead prevent closing the document so that printing
     // can still happen on a separate thread and be interruptible
-    failedEngineClone = dm->GetEngine() && !data->engine;
+    failedEngineClone = dm->GetEngine() && !pd->engine;
     if (failedEngineClone) {
-        data->engine = dm->GetEngine();
+        pd->engine = dm->GetEngine();
     }
 
     if (!waitForCompletion && !failedEngineClone) {
-        PrintToDeviceOnThread(win, data);
+        PrintToDeviceOnThread(win, pd);
     } else {
-        PrintToDevice(*data);
+        PrintToDevice(*pd);
         if (failedEngineClone) {
-            data->engine = nullptr;
+            pd->engine = nullptr;
         }
-        delete data;
+        delete pd;
     }
 
 Exit:
     free(ppr);
-    GlobalFree(pd.hDevNames);
-    GlobalFree(pd.hDevMode);
+    GlobalFree(pdex.hDevNames);
+    GlobalFree(pdex.hDevMode);
 }
 
 static short GetPaperSize(EngineBase* engine) {
