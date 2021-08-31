@@ -1215,17 +1215,16 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
                 // in which case we want to pan/scroll the document
                 bool isFlick = (gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY);
                 DisplayModel* dm = win->AsFixed();
-                bool enableFlick = !dm || !dm->NeedHScroll();
+                bool enableFlick = !dm || !dm->NeedHScroll() || abs(deltaX) > 25;
                 if (isFlick && enableFlick) {
                     if (deltaX < 0) {
                         win->ctrl->GoToPrevPage();
                     } else if (deltaX > 0) {
                         win->ctrl->GoToNextPage();
                     }
-                    // When we switch pages, go back to the initial scroll position
-                    // and prevent further pan movement caused by the inertia
+                    // When we switch pages prevent further pan movement caused by the inertia
                     if (dm) {
-                        dm->ScrollXTo(win->touchState.panScrollOrigX);
+                        dm->ScrollXBy(0);
                     }
                     win->touchState.panStarted = false;
                 } else if (dm) {
