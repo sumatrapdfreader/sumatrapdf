@@ -328,8 +328,8 @@ static bool PrintToDevice(const PrintData& pd) {
     }
 
     auto devMode = pd.printer->devMode;
-    // cf. http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
-    AutoDeleteDC hdc(CreateDC(nullptr, pd.printer->name, nullptr, devMode));
+    // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
+    AutoDeleteDC hdc(CreateDCW(nullptr, pd.printer->name, nullptr, devMode));
     if (!hdc) {
         return false;
     }
