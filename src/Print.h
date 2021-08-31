@@ -7,6 +7,13 @@ struct Printer {
     DEVMODEW* devMode{nullptr};
     PRINTER_INFO_2* info{nullptr};
 
+    // number of paper sizes supported by the printer
+    int nPaperSizes{0};
+    // papers[i] is DMPAPER_LETTER etc.
+    WORD* papers{nullptr};       // DC_PAPERS
+    WCHAR** paperNames{nullptr}; // DC_PAPERNAMES
+    POINT* paperSizes{nullptr};  // DC_PAPERSIZE
+
     Printer() = default;
     ~Printer();
 };

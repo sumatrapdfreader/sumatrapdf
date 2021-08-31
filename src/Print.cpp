@@ -144,14 +144,57 @@ Printer* NewPrinter(WCHAR* printerName) {
         //}
         goto Exit;
     }
+
     printer = new Printer();
     printer->name = str::Dup(printerName);
     printer->devMode = devMode;
     printer->info = info;
 
+    {
+        DWORD n = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
+        DWORD n2 = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, nullptr, nullptr);
+        DWORD n3 = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, nullptr, nullptr);
+        if (n != n2 || n != n3 || 0 == n || ((DWORD)-1 == n)) {
+            delete printer;
+            return nullptr;
+        }
+        printer->nPaperSizes = (int)n;
+        size_t paperNameSize = 64;
+        printer->papers = AllocArray<WORD>(n);
+        WCHAR* paperNames = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1);
+        printer->paperSizes = AllocArray<POINT>(n);
+        printer->paperNames = AllocArray<WCHAR*>(n);
+
+        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
+        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, paperNames, nullptr);
+        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
+
+        WCHAR* paperName = paperNames;
+        for (int i = 0; i < (int)n; i++) {
+            printer->paperNames[i] = str::Dup(paperName);
+            paperName += paperNameSize;
+        }
+    }
+
 Exit:
     ClosePrinter(hPrinter);
     return printer;
+}
+
+static void SetCustomPaperSize(Printer* printer, SizeF size) {
+    auto devMode = printer->devMode;
+    devMode->dmPaperSize = 0;
+    devMode->dmPaperWidth = size.dx;
+    devMode->dmPaperLength = size.dy;
+    devMode->dmFields |= DM_PAPERSIZE | DM_PAPERWIDTH | DM_PAPERLENGTH;
+}
+
+// Make sure dy > dx i.e. it's tall not wide
+static Size NormalizePaperSize(Size s) {
+    if (s.dy > s.dx) {
+        return Size(s.dx, s.dy);
+    }
+    return Size(s.dy, s.dx);
 }
 
 static void MessageBoxWarningCond(bool show, const WCHAR* msg, const WCHAR* title) {
@@ -794,30 +837,26 @@ static short GetPaperByName(const WCHAR* papername) {
 }
 #endif
 
-static short GetPaperByName(const WCHAR* printerName, const WCHAR* paperName, LPDEVMODE devMode) {
+// wantedName can be a paper name, like "A6" or number for DMPAPER_* contstants like DMPAPER_LETTER
+static short GetPaperByName(Printer* printer, const WCHAR* wantedName) {
+    auto devMode = printer->devMode;
     CrashIf(!(devMode->dmFields & DM_PAPERSIZE));
     if (!(devMode->dmFields & DM_PAPERSIZE)) {
         return devMode->dmPaperSize;
     }
-    DWORD count = DeviceCapabilities(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
-    DWORD count2 = DeviceCapabilities(printerName, nullptr, DC_PAPERNAMES, nullptr, nullptr);
-    if (count != count2 || 0 == count || ((DWORD)-1 == count)) {
-        return devMode->dmPaperSize;
-    }
-    // try to determine the paper names by name
-    ScopedMem<WORD> papers(AllocArray<WORD>(count));
-    AutoFreeWstr paperNames(AllocArray<WCHAR>(64 * (size_t)count + 1));
-    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, (WCHAR*)papers.Get(), nullptr);
-    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, paperNames.Get(), nullptr);
-    for (DWORD i = 0; i < count; i++) {
-        const WCHAR* currName = paperNames.Get() + (64 * i);
-        if (str::EqIS(currName, paperName)) {
-            return papers.Get()[i];
+
+    int n = printer->nPaperSizes;
+    for (int i = 0; i < n; i++) {
+        auto paperName = printer->paperNames[i];
+        if (str::EqIS(wantedName, paperName)) {
+            return printer->papers[i];
         }
     }
+
     // alternatively allow indicating the paper directly by number
-    if (str::Parse(paperName, L"%u%$", &count)) {
-        return (short)count;
+    DWORD paperId{0};
+    if (str::Parse(wantedName, L"%u%$", &paperId)) {
+        return (short)paperId;
     }
     return devMode->dmPaperSize;
 }
@@ -858,8 +897,11 @@ static short GetPaperSourceByName(const WCHAR* printerName, const WCHAR* binName
     return devMode->dmDefaultSource;
 }
 
-static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, int pageCount,
-                               Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced, LPDEVMODE devMode) {
+static void ApplyPrintSettings(Printer* printer, const WCHAR* settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
+                               Print_Advanced_Data& advanced) {
+    auto devMode = printer->devMode;
+    auto printerName = printer->name;
+
     WStrVec rangeList;
     if (settings) {
         rangeList.Split(settings, L",", true);
@@ -912,7 +954,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
             devMode->dmDefaultSource = GetPaperSourceByName(printerName, s + 4, devMode);
             devMode->dmFields |= DM_DEFAULTSOURCE;
         } else if (str::StartsWithI(s, L"paper=")) {
-            devMode->dmPaperSize = GetPaperByName(printerName, s + 6, devMode);
+            devMode->dmPaperSize = GetPaperByName(printer, s + 6);
             devMode->dmFields |= DM_PAPERSIZE;
         } else if (str::StartsWithI(s, L"paperkind=")) {
             // alternatively allow indicating the paper kind directly by number
@@ -927,40 +969,23 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
     }
 }
 
-static short DetectPrinterPaperSize(EngineBase* engine, const WCHAR* printerName) {
+static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
     // get size of first page in tenths of a millimeter in portrait mode
     RectF mediabox = engine->PageMediabox(1);
     SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
-    Size sizeP = size.dx <= size.dy ? Size(size.dx, size.dy) : Size(size.dy, size.dx);
+    Size sizeP = NormalizePaperSize(Size(size.dx, size.dy));
 
-    // get list of papers and paper sizes supported by printer
-    DWORD count = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
-    DWORD count2 = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, nullptr, nullptr);
-    if (count != count2 || 0 == count || ((DWORD)-1 == count)) {
-        return 0;
-    }
-    ScopedMem<WORD> papers(AllocArray<WORD>(count));
-    ScopedMem<POINT> papersizes(AllocArray<POINT>(count));
-    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, (WCHAR*)papers.Get(), nullptr);
-    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, (WCHAR*)papersizes.Get(), nullptr);
+    int n = printer->nPaperSizes;
+    auto sizes = printer->paperSizes;
     // find equivalent paper size with 1mm tolerance
-    for (DWORD i = 0; i < count; i++) {
-        Size paperSizeP = papersizes[i].x <= papersizes[i].y ? Size(papersizes[i].x, papersizes[i].y)
-                                                             : Size(papersizes[i].y, papersizes[i].x);
-        if (abs(sizeP.dx - paperSizeP.dx) <= 10 && abs(sizeP.dy - paperSizeP.dy) <= 10) {
-            return papers[i];
+    for (int i = 0; i < n; i++) {
+        POINT sz = sizes[i];
+        Size pSizeP = NormalizePaperSize(Size(sz.x, sz.y));
+        if (abs(sizeP.dx - pSizeP.dx) <= 10 && abs(sizeP.dy - pSizeP.dy) <= 10) {
+            return printer->papers[i];
         }
     }
-
     return 0;
-}
-
-static void SetCustomPaperSize(Printer* printer, SizeF size) {
-    auto devMode = printer->devMode;
-    devMode->dmPaperSize = 0;
-    devMode->dmPaperWidth = size.dx;
-    devMode->dmPaperLength = size.dy;
-    devMode->dmFields |= DM_PAPERSIZE | DM_PAPERWIDTH | DM_PAPERLENGTH;
 }
 
 static void SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* printer) {
@@ -1016,10 +1041,10 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
         Print_Advanced_Data advanced;
         Vec<PRINTPAGERANGE> ranges;
 
-        ApplyPrintSettings(printerName, settings, engine->PageCount(), ranges, advanced, devMode);
+        ApplyPrintSettings(printer, settings, engine->PageCount(), ranges, advanced);
 
         if (advanced.rotation == PrintRotationAdv::Auto && devMode->dmPaperSize == 0) {
-            if (devMode->dmPaperSize = DetectPrinterPaperSize(engine, printerName)) {
+            if (devMode->dmPaperSize = DetectPrinterPaperSize(engine, printer)) {
                 devMode->dmFields |= DM_PAPERSIZE;
             } else {
                 SetPrinterCustomPaperSizeForEngine(engine, printer);
