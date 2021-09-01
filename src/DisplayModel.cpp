@@ -237,14 +237,11 @@ void DisplayModel::GetDisplayState(FileState* fs) {
 }
 
 SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
-    PageInfo* pageInfo = GetPageInfo(pageNo);
+    PageInfo* pageInfo = GetPageDimensions(pageNo);
     CrashIf(!pageInfo);
 
     if (fitToContent && pageInfo->contentBox.IsEmpty()) {
-        pageInfo->contentBox = engine->PageContentBox(pageNo);
-        if (pageInfo->contentBox.IsEmpty()) {
-            return PageSizeAfterRotation(pageNo);
-        }
+        return PageSizeAfterRotation(pageNo, false);
     }
 
     RectF box = fitToContent ? pageInfo->contentBox : pageInfo->page;
@@ -326,6 +323,27 @@ PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
     return &(pagesInfo[pageNo - 1]);
 }
 
+PageInfo* DisplayModel::GetPageDimensions(int pageNo) const {
+    PageInfo * info = GetPageInfo(pageNo);
+    if (info->page.IsEmpty()) {
+        info->page = engine->PageMediabox(pageNo);
+        if (info->page.IsEmpty()) {
+            // layout pages with an empty mediabox as A4 size (resp. letter size)
+            float fileDPI = engine->GetFileDPI();
+            if (0 == GetMeasurementSystem()) {
+                info->page = RectF(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
+            } else {
+                info->page = RectF(0, 0, 8.5 * fileDPI, 11 * fileDPI);
+            }
+        }
+    }
+    if (info->contentBox.IsEmpty()) {
+        info->contentBox = engine->PageContentBox(pageNo);
+    }
+    return info;
+}
+
+
 // Call this before the first Relayout
 void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, Size viewPort, int screenDPI) {
     totalViewPortSize = viewPort;
@@ -368,21 +386,6 @@ void DisplayModel::BuildPagesInfo() {
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
 
-    log("DisplayModel::BuildPagesInfo started\n");
-    auto timeStart = TimeGet();
-    defer {
-        auto dur = TimeSinceInMs(timeStart);
-        logf("DisplayModel::BuildPagesInfo took %.2f ms\n", dur);
-    };
-
-    RectF defaultRect;
-    float fileDPI = engine->GetFileDPI();
-    if (0 == GetMeasurementSystem()) {
-        defaultRect = RectF(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
-    } else {
-        defaultRect = RectF(0, 0, 8.5 * fileDPI, 11 * fileDPI);
-    }
-
     int columns = ColumnsFromDisplayMode(displayMode);
     int newStartPage = startPage;
     if (IsBookView(displayMode) && newStartPage == 1 && columns > 1) {
@@ -391,11 +394,6 @@ void DisplayModel::BuildPagesInfo() {
 
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
-        pageInfo->page = engine->PageMediabox(pageNo);
-        // layout pages with an empty mediabox as A4 size (resp. letter size)
-        if (pageInfo->page.IsEmpty()) {
-            pageInfo->page = defaultRect;
-        }
         pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
         if (IsContinuous(displayMode)) {
@@ -488,14 +486,11 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         int last = LastPageInARowNo(pageNo, columns, IsBookView(GetDisplayMode()), PageCount());
         RectF box;
         for (int i = first; i <= last; i++) {
-            PageInfo* pageInfo = GetPageInfo(i);
-            if (pageInfo->contentBox.IsEmpty()) {
-                pageInfo->contentBox = engine->PageContentBox(i);
-            }
+            PageInfo* pageInfo = GetPageDimensions(i);
 
             RectF pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
             RectF contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
-            if (contentBox.IsEmpty()) {
+            if (pageInfo->contentBox.IsEmpty()) {
                 contentBox = pageBox;
             }
 
@@ -1168,13 +1163,11 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
 }
 
 RectF DisplayModel::GetContentBox(int pageNo) const {
-    RectF cbox{};
-    // we cache the contentBox
-    PageInfo* pageInfo = GetPageInfo(pageNo);
-    if (pageInfo->contentBox.IsEmpty()) {
-        pageInfo->contentBox = engine->PageContentBox(pageNo);
-    }
-    cbox = pageInfo->contentBox;
+    PageInfo* pageInfo = GetPageDimensions(pageNo);
+    RectF cbox = pageInfo->contentBox;
+    if(cbox.IsEmpty())
+        return cbox;
+
     float zoom = pageInfo->zoomReal;
     // TODO: must be a better way
     if (zoom == 0) {
