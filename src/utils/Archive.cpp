@@ -57,7 +57,6 @@ bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {
         if (!name) {
             name = "";
         }
-        // TODO: benchmark serial opening and implement loadOnOpen if beneficial
         FileInfo* i = allocator_.AllocStruct<FileInfo>();
         i->fileId = fileId;
         i->fileSizeUncompressed = ar_entry_get_size(ar_);
@@ -66,6 +65,19 @@ bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {
         i->name = str::Dup(&allocator_, name);
         i->data = nullptr;
         fileInfos_.Append(i);
+        // doesn't benchmark faster for .zip files but not much slower either
+        // is probably faster for .tar.gz files
+        if (loadOnOpen) {
+            size_t size = i->fileSizeUncompressed;
+            i->data = AllocArray<char>(size + ZERO_PADDING_COUNT);
+            if (i->data) {
+                bool ok = ar_entry_uncompress(ar_, (void*)i->data, size);
+                if (!ok) {
+                    free(i->data);
+                    i->data = nullptr;
+                }
+            }
+        }
 
         fileId++;
     }

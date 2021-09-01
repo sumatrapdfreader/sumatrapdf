@@ -325,6 +325,8 @@ func panicIf(cond bool, args ...interface{}) {
 }
 
 func findLargestFileByExt() {
+	drive := "x:\\" // on laptop
+	drive = "v:\\"  // on desktop
 	isWantedExt := func(ext string) bool {
 		for _, s := range []string{".pdf", ".cbr", ".cbz", ".epub", "mobi", ".xps", ".djvu", ".pdb", ".prc", ".xps"} {
 			if s == ext {
@@ -338,7 +340,7 @@ func findLargestFileByExt() {
 	dirs := []string{"comics", "comics read", "books"}
 	nFiles := 0
 	for _, d := range dirs {
-		startDir := filepath.Join("x:\\", d)
+		startDir := filepath.Join(drive, d)
 		filepath.WalkDir(startDir, func(path string, d fs.DirEntry, err error) error {
 			if !d.Type().IsRegular() {
 				return nil
