@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"path/filepath"
-
-	"github.com/kjk/u"
 )
 
 var (
@@ -33,7 +31,7 @@ var (
 func detectPath(paths []string, name string) string {
 	for _, path := range paths {
 		p := filepath.Join(path, name)
-		if u.FileExists(p) {
+		if fileExists(p) {
 			return p
 		}
 	}
@@ -43,7 +41,7 @@ func detectPath(paths []string, name string) string {
 func detectPathInSDK(name string) string {
 	for _, sdkVer := range sdkVersions {
 		path := filepath.Join(`C:\Program Files (x86)\Windows Kits\10\bin`, sdkVer, name)
-		if u.FileExists(path) {
+		if fileExists(path) {
 			return path
 		}
 	}

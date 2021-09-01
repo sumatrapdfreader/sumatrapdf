@@ -44,7 +44,7 @@ func runExeMust(c string, args ...string) []byte {
 
 func runExeLoggedMust(c string, args ...string) []byte {
 	cmd := exec.Command(c, args...)
-	out := u.RunCmdLoggedMust(cmd)
+	out := runCmdLoggedMust(cmd)
 	return []byte(out)
 }
 
@@ -59,7 +59,7 @@ func makePrintDuration(name string) func() {
 
 // run a .bat script and capture environment variables after
 func getEnvAfterScript(path string) []string {
-	if !u.FileExists(path) {
+	if !fileExists(path) {
 		return nil
 	}
 	dir, script := filepath.Split(path)
@@ -91,7 +91,7 @@ func removeDirMust(dir string) {
 }
 
 func removeFileMust(path string) {
-	if !u.FileExists(path) {
+	if !fileExists(path) {
 		return
 	}
 	err := os.Remove(path)
@@ -197,7 +197,7 @@ func httpDlMust(uri string) []byte {
 }
 
 func httpDlToFileMust(uri string, path string, sha1Hex string) {
-	if u.FileExists(path) {
+	if fileExists(path) {
 		sha1File, err := fileSha1Hex(path)
 		must(err)
 		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
@@ -374,10 +374,11 @@ func fileExists(path string) bool {
 }
 
 func runCmdLoggedMust(cmd *exec.Cmd) string {
+	logf("> %s\n", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	out, err := cmd.CombinedOutput()
+	err := cmd.Run()
 	must(err)
-	return string(out)
+	return ""
 }

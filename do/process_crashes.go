@@ -591,7 +591,7 @@ func downloadCrashesAndGenerateHTML() {
 		// using https://github.com/netlify/cli
 		cmd := exec.Command("netlify", "dev", "-p", "8765", "--dir", ".")
 		cmd.Dir = crashesHTMLDataDir()
-		u.RunCmdLoggedMust(cmd)
+		runCmdLoggedMust(cmd)
 	}
 	if true {
 		cmd := exec.Command("netlify", "deploy", "--prod", "--dir", ".")
@@ -601,7 +601,7 @@ func downloadCrashesAndGenerateHTML() {
 			cmd = exec.Command("netlify", "deploy", "--prod", "--open", "--dir", ".")
 		}
 		cmd.Dir = crashesHTMLDataDir()
-		u.RunCmdLoggedMust(cmd)
+		runCmdLoggedMust(cmd)
 	}
 }
 

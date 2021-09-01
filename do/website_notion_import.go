@@ -308,7 +308,7 @@ func websiteImportNotion() {
 			// TODO: automatically install if not installed
 			cmd := exec.Command("prettier", "--html-whitespace-sensitivity", "strict", "--write", `*.html`)
 			cmd.Dir = "docs" // only imported pages from notion
-			u.RunCmdLoggedMust(cmd)
+			runCmdLoggedMust(cmd)
 		}()
 	}
 

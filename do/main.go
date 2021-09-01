@@ -21,7 +21,7 @@ func regenPremake() {
 	premakePath := filepath.Join("bin", "premake5.exe")
 	{
 		cmd := exec.Command(premakePath, "vs2019")
-		u.RunCmdLoggedMust(cmd)
+		runCmdLoggedMust(cmd)
 	}
 }
 
@@ -485,7 +485,7 @@ func main() {
 		buildJustPortableExe(rel64Dir, "Release", "x64")
 		//cmd := exec.Command("drmemory.exe", "-light", "-check_leaks", "-possible_leaks", "-count_leaks", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
 		cmd := exec.Command("drmemory.exe", "-leaks_only", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
-		u.RunCmdLoggedMust(cmd)
+		runCmdLoggedMust(cmd)
 		return
 	}
 
@@ -499,7 +499,7 @@ func main() {
 		}
 		cmd := exec.Command(".\\logview.exe")
 		cmd.Dir = dir
-		u.RunCmdLoggedMust(cmd)
+		runCmdLoggedMust(cmd)
 		return
 	}
 
@@ -508,7 +508,7 @@ func main() {
 		dir := filepath.Join("out", "rel64")
 		cmd := exec.Command(".\\test_util.exe")
 		cmd.Dir = dir
-		u.RunCmdLoggedMust(cmd)
+		runCmdLoggedMust(cmd)
 		return
 	}
 

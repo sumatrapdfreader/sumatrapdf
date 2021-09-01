@@ -148,14 +148,14 @@ func serveSimpleError(w http.ResponseWriter, r *http.Request, format string, arg
 }
 
 func serveMaybeGzippedFile(w http.ResponseWriter, r *http.Request, path string) bool {
-	if !u.FileExists(path) {
+	if !fileExists(path) {
 		serve404(w, r, "file '%s' doesn't exist", path)
 		return false
 	}
 	contentType := mimeTypeByExtensionExt(path)
 	usesGzip := acceptsGzip(r)
 	if usesGzip {
-		if u.FileExists(path + ".gz") {
+		if fileExists(path + ".gz") {
 			path = path + ".gz"
 		} else {
 			usesGzip = false
