@@ -415,29 +415,20 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
         CrashIf(x < 0 || x >= (int)bmpData.Width || y < 0 || y >= (int)bmpData.Height);
         auto data = static_cast<const uint8_t*>(bmpData.Scan0);
         unsigned idx = bytesPerPixel * x + bmpData.Stride * y;
-        return (data[idx+2] << 16) | (data[idx+1] << 8) | data[idx];
+        uint32_t rgb = (data[idx+2] << 16) | (data[idx+1] << 8) | data[idx];
+        // ignore the lowest 3 bits (7=0b111) of each color component
+        return rgb & (~0x070707U);
     };
 
-    uint32_t marginColor = 0xffffffff;
-    auto checkPixel = [&getPixel, &marginColor](int x, int y) -> bool {
-        auto rgb = getPixel(x, y);
-        // ignore the lowest 3 bits (7=0b111) of each color component and then compare it to margin color
-        const uint32_t mask = ~0x070707U;
-        if(marginColor != 0xffffffff)
-            return (rgb & mask) == marginColor;
-        // use the first pixel color as margin color
-        marginColor = rgb & mask;
-        return true;
-    };
-    auto marginReset = [&marginColor]() { marginColor = 0xffffffff; };
-
+    uint32_t marginColor;
     // crop the page, but no more than 25% from each side
-    marginReset();
+
     // left margin
+    marginColor = getPixel(0, h/2);
     for (; r.x < w / 4 && r.dx > w / 2; r.x += deltaX, r.dx -= deltaX) {
         bool ok = true;
         for (int y = 0; y <= h - deltaY; y += deltaY) {
-            ok = checkPixel(r.x + deltaX, y);
+            ok = getPixel(r.x + deltaX, y) == marginColor;
             if (!ok)
                 break;
         }
@@ -445,12 +436,12 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
             break;
     }
 
-    marginReset();
     // right margin
+    marginColor = getPixel(w-1, h/2);
     for (; r.dx > w / 2; r.dx -= deltaX) {
         bool ok = true;
         for (int y = 0; y <= h - deltaY; y += deltaY) {
-            ok = checkPixel((r.x + r.dx) - 1 - deltaX, y);
+            ok = getPixel((r.x + r.dx) - 1 - deltaX, y) == marginColor;
             if (!ok)
                 break;
         }
@@ -458,12 +449,12 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
             break;
     }
 
-    marginReset();
     // top margin
+    marginColor = getPixel(w/2, 0);
     for (; r.y < h / 4 && r.dy > h / 2; r.y += deltaY, r.dy -= deltaY) {
         bool ok = true;
         for (int x = r.x; x <= r.x + r.dx - deltaX; x += deltaX) {
-            ok = checkPixel(x, r.y + deltaY);
+            ok = getPixel(x, r.y + deltaY) == marginColor;
             if (!ok)
                 break;
         }
@@ -471,12 +462,12 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
             break;
     }
 
-    marginReset();
     // bottom margin
+    marginColor = getPixel(w/2, h-1);
     for (; r.dy > h / 2; r.dy -= deltaY) {
         bool ok = true;
         for (int x = r.x; x <= r.x + r.dx - deltaX; x += deltaX) {
-            ok = checkPixel(x, (r.y + r.dy) - 1 - deltaY);
+            ok = getPixel(x, (r.y + r.dy) - 1 - deltaY) == marginColor;
             if (!ok)
                 break;
         }
