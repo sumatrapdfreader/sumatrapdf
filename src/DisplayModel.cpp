@@ -1864,16 +1864,8 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
 }
 
 bool DisplayModel::ShouldCacheRendering(int pageNo) const {
-    // recommend caching for all documents which are non-trivial to render
-    if (!engine->IsImageCollection()) {
-        return true;
-    }
-
-    // recommend caching large images (mainly photos) as well, as shrinking
-    // them for every UI update (WM_PAINT) can cause notable lags, and also
-    // for smaller images which are scaled up
-    PageInfo* info = GetPageInfo(pageNo);
-    return info->page.dx * info->page.dy > 1024 * 1024 || info->pageOnScreen.dx * info->pageOnScreen.dy > 1024 * 1024;
+    // recommend caching for all documents
+    return true;
 }
 
 #if 0
