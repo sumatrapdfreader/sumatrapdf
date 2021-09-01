@@ -130,6 +130,7 @@ struct DisplayModel : Controller {
     TextSearch* textSearch{nullptr};
 
     [[nodiscard]] PageInfo* GetPageInfo(int pageNo) const;
+    [[nodiscard]] PageInfo* GetPageDimensions(int pageNo) const;
 
     /* current rotation selected by user */
     [[nodiscard]] int GetRotation() const;
