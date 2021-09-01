@@ -186,6 +186,14 @@ bool DisplayModel::NeedVScroll() const {
     return viewPort.dy < canvasSize.dy;
 }
 
+bool DisplayModel::CanScrollRight() const {
+    return viewPort.x + viewPort.dx < canvasSize.dx;
+}
+
+bool DisplayModel::CanScrollLeft() const {
+    return viewPort.x > 0;
+}
+
 Size DisplayModel::GetCanvasSize() const {
     return canvasSize;
 }
