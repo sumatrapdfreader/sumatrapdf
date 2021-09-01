@@ -1211,11 +1211,10 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
                 win->touchState.panPos = gi.ptsLocation;
 
                 // on left / right flick, go to next / prev page
-                // unless this is PDF and horizontal scrollbar is visible,
-                // in which case we want to pan/scroll the document
+                // unless we can pan/scroll the document
                 bool isFlick = (gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY);
                 DisplayModel* dm = win->AsFixed();
-                bool enableFlick = !dm || !dm->NeedHScroll() || abs(deltaX) > 25;
+                bool enableFlick = !dm || !dm->NeedHScroll() || (deltaX > 0 && !dm->CanScrollRight()) || (deltaX < 0 && !dm->CanScrollLeft());
                 if (isFlick && enableFlick) {
                     if (deltaX < 0) {
                         win->ctrl->GoToPrevPage();
