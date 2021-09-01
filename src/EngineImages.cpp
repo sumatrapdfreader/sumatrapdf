@@ -375,9 +375,10 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
     auto page = GetPage(pageNo, true);
     if (!page)
         return RectF{};
+    defer {
+        DropPage(page, false);
+    };
 
-    // if we loaded bitmap, it might get deleted by GetPage while we are accessing it, so lock it
-    ScopedCritSec scope(&cacheAccess);
     auto bmp = page->bmp;
     if (!bmp)
         return RectF{};
