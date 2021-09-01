@@ -6,15 +6,13 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-
-	"github.com/kjk/u"
 )
 
 var printClangPath bool
 
 func detectClangFormat() string {
 	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\clang-format.exe`)
-	panicIf(!u.FileExists(path), "didn't find clang-format.exe")
+	panicIf(!fileExists(path), "didn't find clang-format.exe")
 	if !printClangPath {
 		logf("clang-format: %s\n", path)
 		printClangPath = true
@@ -25,7 +23,7 @@ func detectClangFormat() string {
 func clangFormatFile(path string) {
 	clangFormatPath := detectClangFormat()
 	cmd := exec.Command(clangFormatPath, "-i", "-style=file", path)
-	u.RunCmdLoggedMust(cmd)
+	runCmdLoggedMust(cmd)
 }
 
 func clangFormatFiles() {

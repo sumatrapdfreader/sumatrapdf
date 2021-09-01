@@ -367,3 +367,17 @@ func findLargestFileByExt() {
 	}
 	logf("processed %d files\n", nFiles)
 }
+
+func fileExists(path string) bool {
+	st, err := os.Stat(path)
+	return err == nil && !st.IsDir() && st.Mode().IsRegular()
+}
+
+func runCmdLoggedMust(cmd *exec.Cmd) string {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	out, err := cmd.CombinedOutput()
+	must(err)
+	return string(out)
+}
