@@ -1028,12 +1028,11 @@ EngineCbx::EngineCbx(MultiFormatArchive* arch) {
 EngineCbx::~EngineCbx() {
     delete tocTree;
 
-    // can be set in error conditions but generally is
-    // deleted in FinishLoading
     delete cbxFile;
 
     for (auto&& img : images) {
-        str::Free(img);
+        if(!img.empty())
+            str::Free(img);
     }
 }
 
@@ -1181,16 +1180,10 @@ bool EngineCbx::FinishLoading() {
         tocTree = new TocTree(realRoot);
     }
 
-    auto timeStart2 = TimeGet();
     for (int i = 0; i < pageCount; i++) {
-        size_t fileId = files[i]->fileId;
-        ByteSlice img = cbxFile->GetFileDataById(fileId);
-        images.Append(img);
+        // actual image load will be performed in EngineCbx::GetImageData
+        images.Append({});
     }
-    logf("EngineCbx::FinishLoading(): loaded %d files in %.2f\n", (int)pageCount, TimeSinceInMs(timeStart2));
-
-    delete cbxFile;
-    cbxFile = nullptr;
 
     return true;
 }
@@ -1201,7 +1194,11 @@ TocTree* EngineCbx::GetToc() {
 
 ByteSlice EngineCbx::GetImageData(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > PageCount()));
-    return images[pageNo - 1];
+    if(!images[pageNo - 1].empty())
+        return images[pageNo - 1];
+    // decompress image data
+    size_t fileId = files[pageNo - 1]->fileId;
+    return images[pageNo - 1] = cbxFile->GetFileDataById(fileId);
 }
 
 static char* GetTextContent(HtmlPullParser& parser) {
