@@ -55,7 +55,7 @@ public class DocumentWriter
 
 	public interface OCRListener
 	{
-		boolean progress(int percent);
+		boolean progress(int page, int percent);
 	}
 
 	public native void addOCRListener(OCRListener listener);

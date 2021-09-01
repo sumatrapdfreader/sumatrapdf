@@ -223,18 +223,21 @@ FUN(DocumentWriter_close)(JNIEnv *env, jobject self)
 }
 
 static int
-jni_ocr_progress(fz_context *ctx, void *arg, int percent)
+jni_ocr_progress(fz_context *ctx, void *arg, int page, int percent)
 {
 	jobject ref = (jobject)arg;
 	jboolean cancel;
 	JNIEnv *env = NULL;
 	jboolean detach = JNI_FALSE;
 
+	if (ref == NULL)
+		return JNI_FALSE;
+
 	env = jni_attach_thread(&detach);
 	if (env == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in jni_ocr_progress");
 
-	cancel = (*env)->CallBooleanMethod(env, ref, mid_DocumentWriter_OCRListener_progress, percent);
+	cancel = (*env)->CallBooleanMethod(env, ref, mid_DocumentWriter_OCRListener_progress, page, percent);
 	if ((*env)->ExceptionCheck(env))
 		cancel = 1;
 

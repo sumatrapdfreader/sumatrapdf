@@ -150,9 +150,23 @@ fz_document_writer *fz_new_pwg_writer_with_output(fz_context *ctx, fz_output *ou
 fz_document_writer *fz_new_cbz_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_cbz_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
 
+/**
+	Used to report progress of the OCR operation.
+
+	page: Current page being processed.
+
+	percent: Progress of the OCR operation for the
+	current page in percent. Whether it reaches 100
+	once a page is finished, depends on the OCR engine.
+
+	Return 0 to continue progress, return 1 to cancel the
+	operation.
+*/
+typedef int (fz_pdfocr_progress_fn)(fz_context *ctx, void *progress_arg, int page, int percent);
+
 fz_document_writer *fz_new_pdfocr_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pdfocr_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
-void fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, int (*progress)(fz_context *, void *, int), void *);
+void fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, fz_pdfocr_progress_fn *progress, void *);
 
 fz_document_writer *fz_new_png_pixmap_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pam_pixmap_writer(fz_context *ctx, const char *path, const char *options);

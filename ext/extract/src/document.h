@@ -54,7 +54,7 @@ typedef struct
         unsigned font_bold      : 1;
         unsigned font_italic    : 1;
         unsigned wmode          : 1;
-    };
+    } flags;
     
     char_t*     chars;
     int         chars_num;
@@ -130,12 +130,13 @@ typedef struct
     /* These refer to items in .lines. Initially empty, then set
     by extract_join(). */
 
-} page_t;
-/* A page. Contains different representations of the list of spans. */
+} extract_page_t;
+/* A page. Contains different representations of the list of spans. NB not
+called page_t because this clashes with a system type on hpux. */
 
 typedef struct
 {
-    page_t**    pages;
+    extract_page_t**    pages;
     int         pages_num;
 } document_t;
 /* A list of pages. */

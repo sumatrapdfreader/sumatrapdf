@@ -72,7 +72,7 @@ endif
 we_are_mupdf_thirdparty = $(findstring /mupdf/thirdparty/extract, $(abspath .))
 ifneq ($(we_are_mupdf_thirdparty),)
     $(warning we are mupdf thirdparty)
-    mutool := ../../build/debug-extract/mutool
+    mutool := ../../build/debug/mutool
     gs := ../../../ghostpdl/debug-extract-bin/gs
     libbacktrace = ../../../libbacktrace/.libs
 endif

@@ -1198,3 +1198,13 @@ FUN(PDFDocument_endOperation)(JNIEnv *env, jobject self)
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFDocument_isRedacted)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+
+	if (!ctx || !pdf) return JNI_FALSE;
+	return pdf->redacted;
+}

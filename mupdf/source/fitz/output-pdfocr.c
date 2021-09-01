@@ -225,7 +225,7 @@ typedef struct pdfocr_band_writer_s
 	void *tessapi;
 	fz_pixmap *ocrbitmap;
 
-	int (*progress)(fz_context *, void *, int);
+	fz_pdfocr_progress_fn *progress;
 	void *progress_arg;
 } pdfocr_band_writer;
 
@@ -749,7 +749,7 @@ pdfocr_progress(fz_context *ctx, void *arg, int prog)
 	if (writer->progress == NULL)
 		return 0;
 
-	return writer->progress(ctx, writer->progress_arg, prog);
+	return writer->progress(ctx, writer->progress_arg, writer->pages - 1, prog);
 }
 
 static void
@@ -913,7 +913,7 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 }
 
 void
-fz_pdfocr_band_writer_set_progress(fz_context *ctx, fz_band_writer *writer_, int (*progress)(fz_context *, void *, int), void *progress_arg)
+fz_pdfocr_band_writer_set_progress(fz_context *ctx, fz_band_writer *writer_, fz_pdfocr_progress_fn *progress, void *progress_arg)
 {
 #ifdef OCR_DISABLED
 	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
@@ -1054,7 +1054,7 @@ fz_new_pdfocr_writer(fz_context *ctx, const char *path, const char *options)
 }
 
 void
-fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, int (*progress)(fz_context *, void *, int), void *progress_arg)
+fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, fz_pdfocr_progress_fn *progress, void *progress_arg)
 {
 #ifdef OCR_DISABLED
 	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");

@@ -6427,22 +6427,13 @@ static void ffi_PDFWidget_getFieldType(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
-	int type;
+	const char *type;
 	fz_try(ctx)
-		type = pdf_field_type(ctx, pdf_annot_obj(ctx, widget));
+		type = pdf_field_type_string(ctx, pdf_annot_obj(ctx, widget));
 	fz_catch(ctx)
 		rethrow(J);
-	switch (type)
-	{
-	default:
-	case PDF_WIDGET_TYPE_BUTTON: js_pushstring(J, "button"); break;
-	case PDF_WIDGET_TYPE_CHECKBOX: js_pushstring(J, "checkbox"); break;
-	case PDF_WIDGET_TYPE_COMBOBOX: js_pushstring(J, "combobox"); break;
-	case PDF_WIDGET_TYPE_LISTBOX: js_pushstring(J, "listbox"); break;
-	case PDF_WIDGET_TYPE_RADIOBUTTON: js_pushstring(J, "radiobutton"); break;
-	case PDF_WIDGET_TYPE_SIGNATURE: js_pushstring(J, "signature"); break;
-	case PDF_WIDGET_TYPE_TEXT: js_pushstring(J, "text"); break;
-	}
+
+	js_pushstring(J, type);
 }
 
 static void ffi_PDFWidget_getFieldFlags(js_State *J)

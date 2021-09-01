@@ -31,6 +31,7 @@
 #include "mupdf/fitz/bitmap.h"
 #include "mupdf/fitz/buffer.h"
 #include "mupdf/fitz/image.h"
+#include "mupdf/fitz/writer.h"
 
 /**
 	PCL output
@@ -205,7 +206,7 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 /**
 	Set the progress callback for a pdfocr bandwriter.
 */
-void fz_pdfocr_band_writer_set_progress(fz_context *ctx, fz_band_writer *writer, int (*progress)(fz_context *, void *, int), void *progress_arg);
+void fz_pdfocr_band_writer_set_progress(fz_context *ctx, fz_band_writer *writer, fz_pdfocr_progress_fn *progress_fn, void *progress_arg);
 
 /**
 	Write a (Greyscale or RGB) pixmap as pdfocr.

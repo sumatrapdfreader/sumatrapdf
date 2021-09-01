@@ -307,6 +307,26 @@ static void field_setValue(js_State *J)
 		rethrow(js);
 }
 
+static void field_getType(js_State *J)
+{
+	pdf_js *js = js_getcontext(J);
+	pdf_obj *field = js_touserdata(J, 0, "Field");
+	const char *type;
+
+	fz_try(js->ctx)
+		type = pdf_field_type_string(js->ctx, field);
+	fz_catch(js->ctx)
+		rethrow(js);
+
+	js_pushstring(J, type);
+}
+
+static void field_setType(js_State *J)
+{
+	pdf_js *js = js_getcontext(J);
+	fz_warn(js->ctx, "Unexpected call to field_setType");
+}
+
 static void doc_getField(js_State *J)
 {
 	pdf_js *js = js_getcontext(J);
@@ -722,6 +742,7 @@ static void declare_dom(pdf_js *js)
 	js_newobject(J);
 	{
 		addproperty(J, "Field.value", field_getValue, field_setValue);
+		addproperty(J, "Field.type", field_getType, field_setType);
 		addproperty(J, "Field.borderStyle", field_getBorderStyle, field_setBorderStyle);
 		addproperty(J, "Field.textColor", field_getTextColor, field_setTextColor);
 		addproperty(J, "Field.fillColor", field_getFillColor, field_setFillColor);

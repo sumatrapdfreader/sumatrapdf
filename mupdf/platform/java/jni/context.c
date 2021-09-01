@@ -80,6 +80,38 @@ static void drop_tls_context(void *arg)
 }
 #endif
 
+static void log_callback(void *user, const char *message)
+{
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env = NULL;
+	jobject jcallback;
+	jstring jmessage;
+	jobject jlock;
+	jmethodID mid;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		return;
+
+	if (user != NULL)
+		mid = mid_Context_Log_error;
+	else
+		mid = mid_Context_Log_warning;
+
+	jcallback = (*env)->GetStaticObjectField(env, cls_Context, fid_Context_log);
+	if (jcallback)
+	{
+		jlock = (*env)->GetStaticObjectField(env, cls_Context, fid_Context_lock);
+		(*env)->MonitorEnter(env, jlock);
+		jmessage = (*env)->NewStringUTF(env, message);
+		(*env)->CallVoidMethod(env, jcallback, mid, jmessage);
+		(*env)->DeleteLocalRef(env, jmessage);
+		(*env)->MonitorExit(env, jlock);
+	}
+
+	jni_detach_thread(detach);
+}
+
 static int init_base_context(JNIEnv *env)
 {
 	int i;
@@ -119,6 +151,9 @@ static int init_base_context(JNIEnv *env)
 		fin_base_context(env);
 		return -1;
 	}
+
+	fz_set_error_callback(base_context, log_callback, (void *) 1);
+	fz_set_warning_callback(base_context, log_callback, (void *) 0);
 
 	fz_try(base_context)
 		fz_register_document_handlers(base_context);

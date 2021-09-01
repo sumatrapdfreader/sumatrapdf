@@ -93,6 +93,21 @@ int pdf_field_type(fz_context *ctx, pdf_obj *obj)
 		return PDF_WIDGET_TYPE_BUTTON;
 }
 
+const char *pdf_field_type_string(fz_context *ctx, pdf_obj *obj)
+{
+	switch (pdf_field_type(ctx, obj))
+	{
+	default:
+	case PDF_WIDGET_TYPE_BUTTON: return "button";
+	case PDF_WIDGET_TYPE_CHECKBOX: return "checkbox";
+	case PDF_WIDGET_TYPE_COMBOBOX: return "combobox";
+	case PDF_WIDGET_TYPE_LISTBOX: return "listbox";
+	case PDF_WIDGET_TYPE_RADIOBUTTON: return "radiobutton";
+	case PDF_WIDGET_TYPE_SIGNATURE: return "signature";
+	case PDF_WIDGET_TYPE_TEXT: return "text";
+	}
+}
+
 /* Find the point in a field hierarchy where all descendants
  * share the same name */
 static pdf_obj *find_head_of_field_group(fz_context *ctx, pdf_obj *obj)

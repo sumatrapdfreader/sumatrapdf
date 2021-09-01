@@ -76,7 +76,7 @@ const char* span_string(extract_alloc_t* alloc, span_t* span)
                 span->font_name,
                 span->trm.a,
                 span->trm.d,
-                span->wmode,
+                span->flags.wmode,
                 span->chars_num
                 );
         extract_astring_cat(alloc, &ret, buffer);
@@ -157,7 +157,7 @@ span_t* line_span_first(line_t* line)
     return line->spans[0];
 }
 
-static void page_free(extract_alloc_t* alloc, page_t* page)
+static void page_free(extract_alloc_t* alloc, extract_page_t* page)
 {
     int s;
     if (!page) return;
@@ -206,9 +206,9 @@ static void page_free(extract_alloc_t* alloc, page_t* page)
     extract_free(alloc, &page->images);
 }
 
-static span_t* page_span_append(extract_alloc_t* alloc, page_t* page)
-/* Appends new empty span_ to an page_t; returns NULL with errno set on error.
-*/
+static span_t* page_span_append(extract_alloc_t* alloc, extract_page_t* page)
+/* Appends new empty span_ to an extract_page_t; returns NULL with errno set on
+error. */
 {
     span_t* span;
     if (extract_malloc(alloc, &span, sizeof(*span))) return NULL;
@@ -261,7 +261,7 @@ On return document->page[].images* will be NULL etc.
     images_t   images = {0};
     outf("extract_document_images(): images.images_num=%i", images.images_num);
     for (p=0; p<document->pages_num; ++p) {
-        page_t* page = document->pages[p];
+        extract_page_t* page = document->pages[p];
         int i;
         for (i=0; i<page->images_num; ++i) {
             image_t* image;
@@ -329,7 +329,7 @@ static void extract_document_free(extract_alloc_t* alloc, document_t* document)
         return;
     }
     for (p=0; p<document->pages_num; ++p) {
-        page_t* page = document->pages[p];
+        extract_page_t* page = document->pages[p];
         page_free(alloc, page);
         extract_free(alloc, &page);
     }
@@ -398,7 +398,7 @@ static void s_document_init(document_t* document)
 }
 
 
-static int page_span_end_clean(extract_alloc_t* alloc, page_t* page)
+static int page_span_end_clean(extract_alloc_t* alloc, extract_page_t* page)
 /* Does preliminary processing of the end of the last span in a page; intended
 to be called as we load span information.
 
@@ -430,7 +430,7 @@ char_t into a new span_t. */
     font_size = matrix_expansion(span->trm)
             * matrix_expansion(span->ctm);
 
-    if (span->wmode) {
+    if (span->flags.wmode) {
         dir.x = 0;
         dir.y = 1;
     }
@@ -618,7 +618,7 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
     </page>
     ...
 
-    We convert this into a list of page_t's, each containing a list of
+    We convert this into a list of extract_page_t's, each containing a list of
     span_t's, each containing a list of char_t's.
 
     While doing this, we do some within-span processing by calling
@@ -627,7 +627,7 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
         Split spans in two where there seem to be large gaps between glyphs.
     */
     for(;;) {
-        page_t* page;
+        extract_page_t* page;
         int e = extract_xml_pparse_next(buffer, &tag);
         if (e == 1) break; /* EOF. */
         if (e) goto end;
@@ -868,7 +868,7 @@ int extract_span_begin(
         )
 {
     int e = -1;
-    page_t* page;
+    extract_page_t* page;
     span_t* span;
     assert(extract->document.pages_num > 0);
     page = extract->document.pages[extract->document.pages_num-1];
@@ -890,9 +890,9 @@ int extract_span_begin(
         const char* ff = strchr(font_name, '+');
         const char* f = (ff) ? ff+1 : font_name;
         if (extract_strdup(extract->alloc, f, &span->font_name)) goto end;
-        span->font_bold = font_bold ? 1 : 0;
-        span->font_italic = font_italic ? 1 : 0;
-        span->wmode = wmode ? 1 : 0;
+        span->flags.font_bold = font_bold ? 1 : 0;
+        span->flags.font_italic = font_italic ? 1 : 0;
+        span->flags.wmode = wmode ? 1 : 0;
         extract->span_offset_x = 0;
         extract->span_offset_y = 0;
     }
@@ -913,7 +913,7 @@ int extract_add_char(
 {
     int e = -1;
     char_t* char_;
-    page_t* page = extract->document.pages[extract->document.pages_num-1];
+    extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
     span_t* span = page->spans[page->spans_num - 1];
     
     if (autosplit && y - extract->span_offset_y != 0) {
@@ -981,7 +981,7 @@ int extract_add_char(
 
 int extract_span_end(extract_t* extract)
 {
-    page_t* page = extract->document.pages[extract->document.pages_num-1];
+    extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
     span_t* span = page->spans[page->spans_num - 1];
     if (span->chars_num == 0) {
         /* Calling code called extract_span_begin() then extract_span_end()
@@ -1008,7 +1008,7 @@ int extract_add_image(
         )
 {
     int e = -1;
-    page_t* page = extract->document.pages[extract->document.pages_num-1];
+    extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
     image_t image_temp = {0};
     
     extract->image_n += 1;
@@ -1051,9 +1051,9 @@ int extract_add_image(
 
 int extract_page_begin(extract_t* extract)
 {
-    /* Appends new empty page_t to an extract->document. */
-    page_t* page;
-    if (extract_malloc(extract->alloc, &page, sizeof(page_t))) return -1;
+    /* Appends new empty extract_page_t to an extract->document. */
+    extract_page_t* page;
+    if (extract_malloc(extract->alloc, &page, sizeof(extract_page_t))) return -1;
     page->spans = NULL;
     page->spans_num = 0;
     page->lines = NULL;
@@ -1065,8 +1065,8 @@ int extract_page_begin(extract_t* extract)
     if (extract_realloc2(
             extract->alloc,
             &extract->document.pages,
-            sizeof(page_t*) * extract->document.pages_num + 1,
-            sizeof(page_t*) * (extract->document.pages_num + 1)
+            sizeof(extract_page_t*) * extract->document.pages_num + 1,
+            sizeof(extract_page_t*) * (extract->document.pages_num + 1)
             )) {
         extract_free(extract->alloc, &page);
         return -1;

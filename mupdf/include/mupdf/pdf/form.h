@@ -151,6 +151,7 @@ void pdf_calculate_form(fz_context *ctx, pdf_document *doc);
 void pdf_reset_form(fz_context *ctx, pdf_document *doc, pdf_obj *fields, int exclude);
 
 int pdf_field_type(fz_context *ctx, pdf_obj *field);
+const char *pdf_field_type_string(fz_context *ctx, pdf_obj *field);
 int pdf_field_flags(fz_context *ctx, pdf_obj *field);
 
 /*

@@ -29,7 +29,7 @@ JAVA_VM := $(shell /usr/libexec/java_home)
 JAVA_CFLAGS := \
 	-I $(JAVA_VM)/include \
 	-I $(JAVA_VM)/include/darwin
-JAVA_LDFLAGS :=
+JAVA_LDFLAGS := -lstdc++
 
 else
 
@@ -50,15 +50,15 @@ JAVA_LIBS := \
 JAVA_LDFLAGS := \
 	-z noexecstack
 
-ifeq ($(USE_TESSERACT), yes)
+ifeq ($(tesseract), yes)
 ifeq ($(USE_SYSTEM_TESSERACT), yes)
 JAVA_LIBS += \
 	$(shell pkg-config --libs lept) \
 	$(shell pkg-config --libs tesseract)
 
-CONFIGFLAGS += USE_SYSTEM_TESSERACT=yes
+CONFIGFLAGS += tesseract=yes USE_SYSTEM_TESSERACT=yes
 else
-CONFIGFLAGS += USE_TESSERACT=yes
+CONFIGFLAGS += tesseract=yes
 endif
 endif
 endif

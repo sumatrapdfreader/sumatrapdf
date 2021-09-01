@@ -155,16 +155,16 @@ font. */
             font_size_new = extract_matrices_to_font_size(&span->ctm, &span->trm);
             if (!state->font_name
                     || strcmp(span->font_name, state->font_name)
-                    || span->font_bold != state->font_bold
-                    || span->font_italic != state->font_italic
+                    || span->flags.font_bold != state->font_bold
+                    || span->flags.font_italic != state->font_italic
                     || font_size_new != state->font_size
                     ) {
                 if (state->font_name) {
                     if (extract_docx_run_finish(alloc, content)) goto end;
                 }
                 state->font_name = span->font_name;
-                state->font_bold = span->font_bold;
-                state->font_italic = span->font_italic;
+                state->font_bold = span->flags.font_bold;
+                state->font_italic = span->flags.font_italic;
                 state->font_size = font_size_new;
                 if (extract_docx_run_start(
                         alloc,
@@ -267,7 +267,7 @@ static int extract_document_append_image(
 
 static int extract_document_output_rotated_paragraphs(
         extract_alloc_t*    alloc,
-        page_t*             page,
+        extract_page_t*     page,
         int                 paragraph_begin,
         int                 paragraph_end,
         int                 rot,
@@ -421,7 +421,7 @@ int extract_document_to_docx_content(
     
     /* Write paragraphs into <content>. */
     for (p=0; p<document->pages_num; ++p) {
-        page_t* page = document->pages[p];
+        extract_page_t* page = document->pages[p];
         int p;
         content_state_t state;
         state.font_name = NULL;

@@ -182,7 +182,7 @@ static int lines_are_compatible(
 {
     if (a == b) return 0;
     if (!a->spans || !b->spans) return 0;
-    if (line_span_first(a)->wmode != line_span_first(b)->wmode) {
+    if (line_span_first(a)->flags.wmode != line_span_first(b)->flags.wmode) {
         return 0;
     }
     if (matrix_cmp4(
@@ -923,7 +923,7 @@ int extract_document_join(extract_alloc_t* alloc, document_t* document)
     */
     int p;
     for (p=0; p<document->pages_num; ++p) {
-        page_t* page = document->pages[p];
+        extract_page_t* page = document->pages[p];
         outf("processing page %i: num_spans=%i", p, page->spans_num);
 
         if (make_lines(

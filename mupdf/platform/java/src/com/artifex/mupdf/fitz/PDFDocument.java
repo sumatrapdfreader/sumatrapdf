@@ -126,6 +126,7 @@ public class PDFDocument extends Document
 	public native boolean hasUnsavedChanges();
 	public native boolean wasRepaired();
 	public native boolean canBeSavedIncrementally();
+	public native boolean isRedacted();
 
 	public native void save(String filename, String options);
 

@@ -89,6 +89,8 @@ static JavaVM *jvm = NULL;
 
 static jclass cls_Buffer;
 static jclass cls_ColorSpace;
+static jclass cls_Context;
+static jclass cls_Context_Log;
 static jclass cls_Context_Version;
 static jclass cls_Cookie;
 static jclass cls_DefaultAppearance;
@@ -152,6 +154,8 @@ static jclass cls_UnsupportedOperationException;
 
 static jfieldID fid_Buffer_pointer;
 static jfieldID fid_ColorSpace_pointer;
+static jfieldID fid_Context_log;
+static jfieldID fid_Context_lock;
 static jfieldID fid_Context_Version_major;
 static jfieldID fid_Context_Version_minor;
 static jfieldID fid_Context_Version_patch;
@@ -241,6 +245,8 @@ static jfieldID fid_Text_pointer;
 static jmethodID mid_ColorSpace_fromPointer;
 static jmethodID mid_ColorSpace_init;
 static jmethodID mid_Context_Version_init;
+static jmethodID mid_Context_Log_error;
+static jmethodID mid_Context_Log_warning;
 static jmethodID mid_DefaultAppearance_init;
 static jmethodID mid_Device_beginGroup;
 static jmethodID mid_Device_beginLayer;
@@ -723,6 +729,14 @@ static int find_fids(JNIEnv *env)
 	mid_ColorSpace_init = get_method(&err, env, "<init>", "(J)V");
 	mid_ColorSpace_fromPointer = get_static_method(&err, env, "fromPointer", "(J)L"PKG"ColorSpace;");
 
+	cls_Context = get_class(&err, env, PKG"Context");
+	fid_Context_log = get_static_field(&err, env, "log", "L"PKG"Context$Log;");
+	fid_Context_lock = get_static_field(&err, env, "lock", "Ljava/lang/Object;");
+
+	cls_Context_Log = get_class(&err, env, PKG"Context$Log");
+	mid_Context_Log_error = get_method(&err, env, "error", "(Ljava/lang/String;)V");
+	mid_Context_Log_warning = get_method(&err, env, "warning", "(Ljava/lang/String;)V");
+
 	cls_Context_Version = get_class(&err, env, PKG"Context$Version");
 	fid_Context_Version_major = get_field(&err, env, "major", "I");
 	fid_Context_Version_minor = get_field(&err, env, "minor", "I");
@@ -778,7 +792,7 @@ static int find_fids(JNIEnv *env)
 	fid_DocumentWriter_ocrlistener = get_field(&err, env, "ocrlistener", "J");
 
 	cls_DocumentWriter_OCRListener = get_class(&err, env, PKG"DocumentWriter$OCRListener");
-	mid_DocumentWriter_OCRListener_progress = get_method(&err, env, "progress", "(I)Z");
+	mid_DocumentWriter_OCRListener_progress = get_method(&err, env, "progress", "(II)Z");
 
 	cls_FitzInputStream = get_class(&err, env, PKG"FitzInputStream");
 	fid_FitzInputStream_pointer = get_field(&err, env, "pointer", "J");
@@ -1057,6 +1071,8 @@ static void lose_fids(JNIEnv *env)
 {
 	(*env)->DeleteGlobalRef(env, cls_Buffer);
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);
+	(*env)->DeleteGlobalRef(env, cls_Context);
+	(*env)->DeleteGlobalRef(env, cls_Context_Log);
 	(*env)->DeleteGlobalRef(env, cls_Context_Version);
 	(*env)->DeleteGlobalRef(env, cls_Cookie);
 	(*env)->DeleteGlobalRef(env, cls_DefaultAppearance);
