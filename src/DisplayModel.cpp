@@ -239,9 +239,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
 SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     CrashIf(!pageInfo);
-    if (!pageInfo) {
-        return {};
-    }
+
     if (fitToContent && pageInfo->contentBox.IsEmpty()) {
         pageInfo->contentBox = engine->PageContentBox(pageNo);
         if (pageInfo->contentBox.IsEmpty()) {
@@ -325,9 +323,6 @@ PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
         return nullptr;
     }
     CrashIf(!pagesInfo);
-    if (!pagesInfo) {
-        return nullptr;
-    }
     return &(pagesInfo[pageNo - 1]);
 }
 
