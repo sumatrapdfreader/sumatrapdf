@@ -1174,14 +1174,32 @@ static u32 LowerU64(ULONGLONG v) {
     return res;
 }
 
+const char* GiFlagsToStr(DWORD flags) {
+    switch (flags) {
+        case 0:
+            return "";
+        case GF_BEGIN:
+            return "GF_BEGIN";
+        case GF_INERTIA:
+            return "GF_INERTIA";
+        case GF_END:
+            return "GF_END";
+        case GF_INERTIA | GF_END:
+            return "GF_INERTIA  | GF_END";
+    }
+    return "unknown";
+}
+
 static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
     if (!touch::SupportsGestures()) {
         return DefWindowProc(win->hwndFrame, msg, wp, lp);
     }
+    DisplayModel* dm = win->AsFixed();
 
     HGESTUREINFO hgi = (HGESTUREINFO)lp;
     GESTUREINFO gi = {0};
     gi.cbSize = sizeof(GESTUREINFO);
+    TouchState& touchState = win->touchState;
 
     BOOL ok = touch::GetGestureInfo(hgi, &gi);
     if (!ok) {
@@ -1192,50 +1210,89 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
     switch (gi.dwID) {
         case GID_ZOOM:
             if (gi.dwFlags != GF_BEGIN && win->AsFixed()) {
-                float zoom = (float)LowerU64(gi.ullArguments) / (float)win->touchState.startArg;
+                float zoom = (float)LowerU64(gi.ullArguments) / (float)touchState.startArg;
                 ZoomToSelection(win, zoom, false, true);
             }
-            win->touchState.startArg = LowerU64(gi.ullArguments);
+            touchState.startArg = LowerU64(gi.ullArguments);
             break;
 
         case GID_PAN:
+            if (!dm) {
+                goto Exit;
+            }
             // Flicking left or right changes the page,
             // panning moves the document in the scroll window
             if (gi.dwFlags == GF_BEGIN) {
-                win->touchState.panStarted = true;
-                win->touchState.panPos = gi.ptsLocation;
-                win->touchState.panScrollOrigX = GetScrollPos(win->hwndCanvas, SB_HORZ);
-            } else if (win->touchState.panStarted) {
-                int deltaX = win->touchState.panPos.x - gi.ptsLocation.x;
-                int deltaY = win->touchState.panPos.y - gi.ptsLocation.y;
-                win->touchState.panPos = gi.ptsLocation;
+                touchState.panStarted = true;
+                touchState.panPos = gi.ptsLocation;
+                touchState.panScrollOrigX = GetScrollPos(win->hwndCanvas, SB_HORZ);
+                // logf("OnGesture: GID_PAN, GF_BEGIN, scrollX: %d\n", touchState.panScrollOrigX);
+            } else if (touchState.panStarted) {
+                int deltaX = touchState.panPos.x - gi.ptsLocation.x;
+                int deltaY = touchState.panPos.y - gi.ptsLocation.y;
+                touchState.panPos = gi.ptsLocation;
 
                 // on left / right flick, go to next / prev page
                 // unless we can pan/scroll the document
-                bool isFlick = (gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY);
-                DisplayModel* dm = win->AsFixed();
-                bool enableFlick = !dm || !dm->NeedHScroll() || (deltaX > 0 && !dm->CanScrollRight()) || (deltaX < 0 && !dm->CanScrollLeft());
-                if (isFlick && enableFlick) {
+                bool isFlickX = (gi.dwFlags & GF_INERTIA) && (abs(deltaX) > abs(deltaY)) && (abs(deltaX) > 26);
+                // logf("OnGesture: GID_PAN, flags: %d (%s), dx: %d, dy: %d, isFlick: %d\n", gi.dwFlags,
+                // GiFlagsToStr(gi.dwFlags), deltaX, deltaY, (int)isFlickX);
+                bool flipPage = false;
+                if (!dm->NeedHScroll()) {
+                    // if the page is fully visible
+                    flipPage = true;
+                    // logf("flipPage becaues !dm->NeedHScroll()");
+                }
+                if (deltaX > 0 && !dm->CanScrollRight()) {
+                    flipPage = true;
+                    // logf("flipPage becaues deltaX > 0 && !dm->CanScrollRight()");
+                }
+                if (deltaX < 0 && !dm->CanScrollLeft()) {
+                    flipPage = true;
+                    // logf("flipPage becaues deltaX < 0 && !dm->CanScrollLeft()");
+                }
+
+                if (isFlickX && flipPage) {
                     if (deltaX < 0) {
                         win->ctrl->GoToPrevPage();
+                        // TODO: scroll to show the right-hand part
+                        int x = dm->canvasSize.dx - dm->viewPort.dx;
+                        // logf("x: %d\n");
+                        dm->ScrollXTo(x);
                     } else if (deltaX > 0) {
                         win->ctrl->GoToNextPage();
+                        dm->ScrollXTo(0);
                     }
-                    // When we switch pages prevent further pan movement caused by the inertia
-                    if (dm) {
-                        dm->ScrollXBy(0);
-                    }
-                    win->touchState.panStarted = false;
-                } else if (dm) {
+                    // When we switch pages prevent further pan movement
+                    // caused by the inertia
+                    touchState.panStarted = false;
+                } else {
                     // pan / scroll
+                    bool canScrollRightBefore = dm->CanScrollRight();
+                    bool canScrollLeftBefore = dm->CanScrollLeft();
                     win->MoveDocBy(deltaX, deltaY);
+
+                    // if pan to the rigth edge, we want to "sticK" to it
+                    // and only flip page on the next flick motion
+                    bool stopPanning = false;
+                    if (canScrollRightBefore != dm->CanScrollRight()) {
+                        stopPanning = true;
+                        // logf("stopPanning because canScrollRightBefore != dm->CanScrollRight()\n");
+                    }
+                    if (canScrollLeftBefore != dm->CanScrollLeft()) {
+                        stopPanning = true;
+                        // logf("stopPanning because canScrollLeftBefore != dm->CanScrollLeft()\n");
+                    }
+                    if (stopPanning) {
+                        touchState.panStarted = false;
+                    }
                 }
             }
             break;
 
         case GID_ROTATE:
             // Rotate the PDF 90 degrees in one direction
-            if (gi.dwFlags == GF_END && win->AsFixed()) {
+            if (gi.dwFlags == GF_END && dm) {
                 // This is in radians
                 double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LowerU64(gi.ullArguments));
                 // The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
@@ -1244,11 +1301,11 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
                 // Playing with the app, I found that I often didn't go quit a full 90 or 180
                 // degrees. Allowing rotate without a full finger rotate seemed more natural.
                 if (degrees < -120 || degrees > 120) {
-                    win->AsFixed()->RotateBy(180);
+                    dm->RotateBy(180);
                 } else if (degrees < -45) {
-                    win->AsFixed()->RotateBy(-90);
+                    dm->RotateBy(-90);
                 } else if (degrees > 45) {
-                    win->AsFixed()->RotateBy(90);
+                    dm->RotateBy(90);
                 }
             }
             break;
@@ -1269,7 +1326,7 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
             // A gesture was not recognized
             break;
     }
-
+Exit:
     touch::CloseGestureInfoHandle(hgi);
     return 0;
 }
