@@ -30,6 +30,8 @@ FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
 MultiFormatArchive::MultiFormatArchive(archive_opener_t opener, MultiFormatArchive::Format format)
     : format(format), opener_(opener) {
     CrashIf(!opener);
+    if(format == Format::Tar)
+        loadOnOpen = true;
 }
 
 bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {

@@ -43,7 +43,7 @@ class MultiFormatArchive {
     std::string_view GetComment();
 
     // if true, will load and uncompress all files on open
-    bool loadOnOpen{true};
+    bool loadOnOpen{false};
 
   protected:
     // used for allocating strings that are referenced by ArchFileInfo::name
