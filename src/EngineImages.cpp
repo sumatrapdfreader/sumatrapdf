@@ -412,7 +412,7 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
     }
 
     auto getPixel = [&bmpData, bytesPerPixel](int x, int y) -> uint32_t {
-        CrashIf(x < 0 || x >= bmpData.Width || y < 0 || y >= bmpData.Height);
+        CrashIf(x < 0 || x >= (int)bmpData.Width || y < 0 || y >= (int)bmpData.Height);
         auto data = static_cast<const uint8_t*>(bmpData.Scan0);
         unsigned idx = bytesPerPixel * x + bmpData.Stride * y;
         return (data[idx+2] << 16) | (data[idx+1] << 8) | data[idx];
