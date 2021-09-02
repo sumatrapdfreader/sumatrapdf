@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha1"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +20,6 @@ import (
 )
 
 var (
-	logf    = u.Logf
 	fatalIf = panicIf
 )
 
@@ -26,6 +27,13 @@ func must(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func logf(s string, arg ...interface{}) {
+	if len(arg) > 0 {
+		s = fmt.Sprintf(s, arg...)
+	}
+	fmt.Print(s)
 }
 
 func absPathMust(path string) string {
@@ -53,7 +61,7 @@ func makePrintDuration(name string) func() {
 	timeStart := time.Now()
 	return func() {
 		dur := time.Since(timeStart)
-		logf("%s took %s\n", name, u.FormatDuration(dur))
+		logf("%s took %s\n", name, formatDuration(dur))
 	}
 }
 
@@ -80,8 +88,8 @@ func getEnvAfterScript(path string) []string {
 }
 
 func fileSizeMust(path string) int64 {
-	size, err := u.GetFileSize(path)
-	must(err)
+	size := getFileSize(path)
+	panicIf(size == -1)
 	return size
 }
 
@@ -99,7 +107,7 @@ func removeFileMust(path string) {
 }
 
 func listExeFiles(dir string) {
-	if !u.DirExists(dir) {
+	if !dirExists(dir) {
 		logf("Directory '%s' doesn't exist\n", dir)
 		return
 	}
@@ -369,8 +377,13 @@ func findLargestFileByExt() {
 }
 
 func fileExists(path string) bool {
-	st, err := os.Stat(path)
+	st, err := os.Lstat(path)
 	return err == nil && !st.IsDir() && st.Mode().IsRegular()
+}
+
+func dirExists(path string) bool {
+	st, err := os.Lstat(path)
+	return err == nil && st.IsDir()
 }
 
 func runCmdLoggedMust(cmd *exec.Cmd) string {
@@ -381,4 +394,139 @@ func runCmdLoggedMust(cmd *exec.Cmd) string {
 	err := cmd.Run()
 	must(err)
 	return ""
+}
+
+func mimeTypeFromFileName(path string) string {
+	var mimeTypes = map[string]string{
+		// this is a list from go's mime package
+		".css":  "text/css; charset=utf-8",
+		".gif":  "image/gif",
+		".htm":  "text/html; charset=utf-8",
+		".html": "text/html; charset=utf-8",
+		".jpg":  "image/jpeg",
+		".js":   "application/javascript",
+		".wasm": "application/wasm",
+		".pdf":  "application/pdf",
+		".png":  "image/png",
+		".svg":  "image/svg+xml",
+		".xml":  "text/xml; charset=utf-8",
+
+		// those are my additions
+		".txt":  "text/plain",
+		".exe":  "application/octet-stream",
+		".json": "application/json",
+	}
+
+	ext := strings.ToLower(filepath.Ext(path))
+	mt := mimeTypes[ext]
+	if mt != "" {
+		return mt
+	}
+	// if not given, default to this
+	return "application/octet-stream"
+}
+
+func normalizeNewlines(d []byte) []byte {
+	// replace CR LF (windows) with LF (unix)
+	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
+	// replace CF (mac) with LF (unix)
+	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
+	return d
+}
+
+func ctx() context.Context {
+	return context.Background()
+}
+
+func createDirMust(path string) string {
+	err := os.MkdirAll(path, 0755)
+	must(err)
+	return path
+}
+
+func userHomeDirMust() string {
+	s, err := os.UserHomeDir()
+	must(err)
+	return s
+}
+
+func humanizeSize(i int64) string {
+	if i > 1024*1024*1024 {
+		return fmt.Sprintf("%.2f GB", float64(i)/1024*1024*1024)
+	}
+	if i > 1024*1024 {
+		return fmt.Sprintf("%.2f MB", float64(i)/1024*1024)
+	}
+	if i > 1024 {
+		return fmt.Sprintf("%.2f kB", float64(i)/1024)
+	}
+	return fmt.Sprintf("%d bytes", i)
+}
+
+func getFileSize(path string) int64 {
+	st, err := os.Lstat(path)
+	if err == nil {
+		return st.Size()
+	}
+	return -1
+}
+
+func sha1OfFile(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		//fmt.Printf("os.Open(%s) failed with %s\n", path, err.Error())
+		return nil, err
+	}
+	defer f.Close()
+	h := sha1.New()
+	_, err = io.Copy(h, f)
+	if err != nil {
+		//fmt.Printf("io.Copy() failed with %s\n", err.Error())
+		return nil, err
+	}
+	return h.Sum(nil), nil
+}
+
+func sha1HexOfFile(path string) (string, error) {
+	sha1, err := sha1OfFile(path)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", sha1), nil
+}
+
+// time.Duration with a better string representation
+type FormattedDuration time.Duration
+
+func (d FormattedDuration) String() string {
+	return formatDuration(time.Duration(d))
+}
+
+// formats duration in a more human friendly way
+// than time.Duration.String()
+func formatDuration(d time.Duration) string {
+	s := d.String()
+	if strings.HasSuffix(s, "µs") {
+		// for µs we don't want fractions
+		parts := strings.Split(s, ".")
+		if len(parts) > 1 {
+			return parts[0] + " µs"
+		}
+		return strings.ReplaceAll(s, "µs", " µs")
+	} else if strings.HasSuffix(s, "ms") {
+		// for ms we only want 2 digit fractions
+		parts := strings.Split(s, ".")
+		//fmt.Printf("fmtDur: '%s' => %#v\n", s, parts)
+		if len(parts) > 1 {
+			s2 := parts[1]
+			if len(s2) > 4 {
+				// 2 for "ms" and 2+ for fraction
+				res := parts[0] + "." + s2[:2] + " ms"
+				//fmt.Printf("fmtDur: s2: '%s', res: '%s'\n", s2, res)
+				return res
+			}
+		}
+		return strings.ReplaceAll(s, "ms", " ms")
+	}
+	return s
 }

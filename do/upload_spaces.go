@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kjk/u"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 // we delete old daily and pre-release builds. This defines how many most recent
@@ -79,15 +79,18 @@ func getRemoteDir(buildType string) string {
 	return dir
 }
 
-func newMinioClient() *u.MinioClient {
-	res := &u.MinioClient{
-		StorageKey:    os.Getenv("SPACES_KEY"),
-		StorageSecret: os.Getenv("SPACES_SECRET"),
-		Bucket:        "kjkpubsf",
-		Endpoint:      "sfo2.digitaloceanspaces.com",
+var spacesBucket = "kjkpubsf"
+
+func newMinioSpacesClient() *MinioClient {
+	mc, err := minio.New("sfo2.digitaloceanspaces.com", &minio.Options{
+		Creds:  credentials.NewStaticV4(os.Getenv("SPACES_KEY"), os.Getenv("SPACES_SECRET"), ""),
+		Secure: true,
+	})
+	must(err)
+	return &MinioClient{
+		c:      mc,
+		bucket: spacesBucket,
 	}
-	res.EnsureConfigured()
-	return res
 }
 
 func hasSpacesCreds() bool {
@@ -100,12 +103,6 @@ func hasSpacesCreds() bool {
 		return false
 	}
 	return true
-}
-
-// TODO: add Exists() method to u.MinioClient to keep code closer to s3
-func minioExists(c *u.MinioClient, remotePath string) bool {
-	_, err := c.StatObject(remotePath)
-	return err == nil
 }
 
 type DownloadUrls struct {
@@ -258,25 +255,6 @@ PortableZip32: ${zip32}
 	return res
 }
 
-func spacesUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
-	files, err := ioutil.ReadDir(dirLocal)
-	must(err)
-	for _, f := range files {
-		fname := f.Name()
-		pathLocal := filepath.Join(dirLocal, fname)
-		pathRemote := path.Join(dirRemote, fname)
-		logf("Uploading to spaces: '%s' as '%s'. ", pathLocal, pathRemote)
-		timeStart := time.Now()
-		err := c.UploadFilePublic(pathRemote, pathLocal)
-		if err != nil {
-			logf("Failed with '%s'\n", err)
-			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
-		}
-		logf("Done in %s\n", time.Since(timeStart))
-	}
-	return nil
-}
-
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
 func verifyBuildNotInSpacesMust(buildType string) {
@@ -284,7 +262,7 @@ func verifyBuildNotInSpacesMust(buildType string) {
 	ver := getVerForBuildType(buildType)
 	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
 	remotePath := path.Join(dirRemote, fname)
-	c := newMinioClient()
+	c := newMinioSpacesClient()
 	panicIf(minioExists(c, remotePath), "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
@@ -294,13 +272,13 @@ func spacesUploadBuildMust(buildType string) {
 	defer func() {
 		logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
 	}()
-	c := newMinioClient()
+	mc := newMinioSpacesClient()
 
 	dirRemote := getRemoteDir(buildType)
 	dirLocal := getFinalDirForBuildType(buildType)
 	//verifyBuildNotInSpaces(c, buildType)
 
-	err := spacesUploadDir(c, dirRemote, dirLocal)
+	err := minioUploadDir(mc, dirRemote, dirLocal)
 	must(err)
 
 	// for release build we don't upload files with version info
@@ -312,7 +290,7 @@ func spacesUploadBuildMust(buildType string) {
 		files := getVersionFilesForLatestInfo("spaces", buildType)
 		for _, f := range files {
 			remotePath := f[0]
-			err := c.UploadDataPublic(remotePath, []byte(f[1]))
+			err := minioUploadDataPublic(mc, remotePath, []byte(f[1]))
 			must(err)
 			logf("Uploaded to spaces: '%s'\n", remotePath)
 		}
@@ -395,23 +373,27 @@ func spacesDeleteOldBuildsPrefix(buildType string) {
 	}
 	remoteDir := getRemoteDir(buildType)
 
-	c := newMinioClient()
-	files, err := c.ListRemoteFiles(remoteDir)
-	must(err)
-	fmt.Printf("%d minio files under '%s'\n", len(files), remoteDir)
+	mc := newMinioSpacesClient()
+	opts := minio.ListObjectsOptions{
+		Prefix:    remoteDir,
+		Recursive: true,
+	}
+	objectsCh := mc.c.ListObjects(ctx(), mc.bucket, opts)
 	var keys []string
-	for _, f := range files {
+	for f := range objectsCh {
 		keys = append(keys, f.Key)
 		//fmt.Printf("key: %s\n", f.Key)
 	}
+
+	logf("%d spaces files under '%s'\n", len(keys), remoteDir)
 	byVer := groupFilesByVersion(keys)
 	for i, v := range byVer {
 		deleting := (i >= nBuildsToRetain)
 		if deleting {
 			fmt.Printf("%d, deleting\n", v.ver)
-			for _, fn := range v.files {
-				fmt.Printf("  %s deleting\n", fn)
-				err := c.Delete(fn)
+			for _, key := range v.files {
+				logf("  %s deleting\n", key)
+				err := minioRemove(mc, key)
 				must(err)
 			}
 		} else {

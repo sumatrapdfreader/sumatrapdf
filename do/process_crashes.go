@@ -16,8 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dustin/go-humanize"
-	"github.com/kjk/u"
+	"github.com/minio/minio-go/v7"
 )
 
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
@@ -269,7 +268,7 @@ func removeEmptyCrashLines(a []string) []string {
 }
 
 func parseCrash(d []byte, ci *crashInfo) {
-	d = u.NormalizeNewlines(d)
+	d = normalizeNewlines(d)
 	s := string(d)
 	lines := strings.Split(s, "\n")
 	var tmpLines []string
@@ -335,9 +334,9 @@ func crashesDataDir() string {
 	if crashesDirCached != "" {
 		return crashesDirCached
 	}
-	dir := u.UserHomeDirMust()
+	dir := userHomeDirMust()
 	dir = filepath.Join(dir, "data", "sumatra-crashes")
-	u.CreateDirMust((dir))
+	createDirMust((dir))
 	crashesDirCached = dir
 	return dir
 }
@@ -348,11 +347,11 @@ func crashesHTMLDataDir() string {
 	if crashesHTMLDirCached != "" {
 		return crashesHTMLDirCached
 	}
-	dir := u.UserHomeDirMust()
+	dir := userHomeDirMust()
 	dir = filepath.Join(dir, "data", "sumatra-crashes-html")
 	// we want to empty this dir every time
 	must(os.RemoveAll(dir))
-	u.CreateDirMust((dir))
+	createDirMust((dir))
 	crashesHTMLDirCached = dir
 	return dir
 }
@@ -395,29 +394,14 @@ var (
 	nDeleted    = 0
 )
 
-// retry 3 times because processing on GitHub actions often fails due to
-// "An existing connection was forcibly closed by the remote host"
-func downloadAtomicallyRetry(mc *u.MinioClient, path string, key string) {
-	var err error
-	for i := 0; i < 3; i++ {
-		err = mc.DownloadFileAtomically(path, key)
-		if err == nil {
-			return
-		}
-		logf("Downloading '%s' to '%s' failed with '%s'\n", key, path, err)
-		time.Sleep(time.Millisecond * 500)
-	}
-	panicIf(true, "mc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, key, err)
-}
-
-func downloadOrReadOrDelete(mc *u.MinioClient, ci *crashInfo) {
+func downloadOrReadOrDelete(mc *MinioClient, ci *crashInfo) {
 	dataDir := crashesDataDir()
 	path := filepath.Join(dataDir, ci.Day, ci.fileNameTxt)
 	ci.pathTxt = path
 
 	if isOutdated(ci.Day) {
 		ci.isDeleted = true
-		mc.Delete(ci.storeKey)
+		minioRemove(mc, ci.storeKey)
 		os.Remove(path)
 		nDeleted++
 		if nDeleted < 32 || nDeleted%100 == 0 {
@@ -433,7 +417,7 @@ func downloadOrReadOrDelete(mc *u.MinioClient, ci *crashInfo) {
 			logf("read %s for %s %d\n", path, ci.storeKey, nRemoteFiles)
 		}
 	} else {
-		downloadAtomicallyRetry(mc, path, ci.storeKey)
+		minioDownloadAtomicallyRetry(mc, path, ci.storeKey)
 		body, err = ioutil.ReadFile(path)
 		must(err)
 		nDownloaded++
@@ -446,7 +430,7 @@ func downloadOrReadOrDelete(mc *u.MinioClient, ci *crashInfo) {
 	parseCrash(body, ci)
 	if shouldDeleteParsedCrash(body) {
 		ci.isDeleted = true
-		mc.Delete(ci.storeKey)
+		minioRemove(mc, ci.storeKey)
 		os.Remove(path)
 		nInvalid++
 		if nInvalid < 32 || nInvalid%100 == 0 {
@@ -492,14 +476,13 @@ func downloadCrashesAndGenerateHTML() {
 	// semaphore for limiting concurrent downloaders
 	sem := make(chan bool, nDownloaders)
 	go func() {
-		mc := newMinioClient()
-		client, err := mc.GetClient()
-		must(err)
+		mc := newMinioSpacesClient()
 
-		doneCh := make(chan struct{})
-		defer close(doneCh)
-
-		remoteFiles := client.ListObjects(mc.Bucket, crashesPrefix, true, doneCh)
+		opts := minio.ListObjectsOptions{
+			Prefix:    crashesPrefix,
+			Recursive: true,
+		}
+		remoteFiles := mc.c.ListObjects(ctx(), mc.bucket, opts)
 
 		finished := false
 		for rf := range remoteFiles {
@@ -615,7 +598,7 @@ func dirSize(dir string) {
 		return nil
 	}
 	filepath.Walk(dir, fun)
-	logf("Size of dir %s: %s\n", dir, humanize.Bytes(uint64(totalSize)))
+	logf("Size of dir %s: %s\n", dir, humanizeSize(totalSize))
 }
 
 const tmplDay = `

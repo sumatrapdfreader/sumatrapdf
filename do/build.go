@@ -397,7 +397,7 @@ func createManifestMust() {
 
 	s := strings.Join(lines, "\n")
 	artifactsDir := filepath.Join("out", "artifacts")
-	u.CreateDirMust(artifactsDir)
+	createDirMust(artifactsDir)
 	path := filepath.Join(artifactsDir, "manifest.txt")
 	writeFileMust(path, []byte(s))
 }
