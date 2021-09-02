@@ -12,6 +12,7 @@ import (
 
 	"github.com/kjk/atomicfile"
 	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type MinioClient struct {
@@ -136,4 +137,36 @@ func minioDownloadAtomicallyRetry(mc *MinioClient, path string, key string) {
 		time.Sleep(time.Millisecond * 500)
 	}
 	panicIf(true, "mc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, key, err)
+}
+
+func newMinioSpacesClient() *MinioClient {
+	bucket := "kjkpubsf"
+	mc, err := minio.New("sfo2.digitaloceanspaces.com", &minio.Options{
+		Creds:  credentials.NewStaticV4(os.Getenv("SPACES_KEY"), os.Getenv("SPACES_SECRET"), ""),
+		Secure: true,
+	})
+	must(err)
+	found, err := mc.BucketExists(ctx(), bucket)
+	must(err)
+	panicIf(!found, "bucket '%s' doesn't exist", bucket)
+	return &MinioClient{
+		c:      mc,
+		bucket: bucket,
+	}
+}
+
+func newMinioS3Client() *MinioClient {
+	bucket := "kjkpub"
+	mc, err := minio.New("s3.amazonaws.com", &minio.Options{
+		Creds:  credentials.NewStaticV4(os.Getenv("AWS_ACCESS"), os.Getenv("AWS_SECRET"), ""),
+		Secure: true,
+	})
+	must(err)
+	found, err := mc.BucketExists(ctx(), bucket)
+	must(err)
+	panicIf(!found, "bucket '%s' doesn't exist", bucket)
+	return &MinioClient{
+		c:      mc,
+		bucket: bucket,
+	}
 }

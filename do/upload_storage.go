@@ -1,18 +1,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 // we delete old daily and pre-release builds. This defines how many most recent
@@ -91,38 +86,6 @@ func getRemoteDir(buildType string) string {
 		return dir + ver + "/"
 	}
 	return dir
-}
-
-func newMinioSpacesClient() *MinioClient {
-	bucket := "kjkpubsf"
-	mc, err := minio.New("sfo2.digitaloceanspaces.com", &minio.Options{
-		Creds:  credentials.NewStaticV4(os.Getenv("SPACES_KEY"), os.Getenv("SPACES_SECRET"), ""),
-		Secure: true,
-	})
-	must(err)
-	found, err := mc.BucketExists(context.Background(), bucket)
-	must(err)
-	panicIf(!found, "bucket '%s' doesn't exist", bucket)
-	return &MinioClient{
-		c:      mc,
-		bucket: bucket,
-	}
-}
-
-func newMinioS3Client() *MinioClient {
-	bucket := "kjkpub"
-	mc, err := minio.New("s3.amazonaws.com", &minio.Options{
-		Creds:  credentials.NewStaticV4(os.Getenv("AWS_ACCESS"), os.Getenv("AWS_SECRET"), ""),
-		Secure: true,
-	})
-	must(err)
-	found, err := mc.BucketExists(context.Background(), bucket)
-	must(err)
-	panicIf(!found, "bucket '%s' doesn't exist", bucket)
-	return &MinioClient{
-		c:      mc,
-		bucket: bucket,
-	}
 }
 
 type DownloadUrls struct {

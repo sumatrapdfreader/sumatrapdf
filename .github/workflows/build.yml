@@ -12,7 +12,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: 1.17
 
       - name: Check out source code
         uses: actions/checkout@v2
@@ -26,7 +26,7 @@ jobs:
         run: .\doit.bat -ci
 
       # a separate step from -ci to make logs easier to read
-      - name: Upload to s3 etc.
+      - name: Upload to spaces and s3
         env:
           AWS_SECRET: ${{ secrets.AWS_SECRET }}
           AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
