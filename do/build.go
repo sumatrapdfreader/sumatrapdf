@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 var (
@@ -67,9 +65,9 @@ func copyBuiltFiles(dstDir string, srcDir string, prefix string) {
 		srcPath := filepath.Join(srcDir, srcName)
 		dstName := f[1]
 		dstPath := filepath.Join(dstDir, dstName)
-		u.CreateDirForFileMust(dstPath)
+		must(createDirForFile(dstPath))
 		if fileExists(srcPath) {
-			u.CopyFileMust(dstPath, srcPath)
+			must(copyFile(dstPath, srcPath))
 		} else {
 			logf("Skipping copying '%s'\n", srcPath)
 		}
@@ -80,7 +78,7 @@ func copyBuiltManifest(dstDir string, prefix string) {
 	srcPath := filepath.Join("out", "artifacts", "manifest.txt")
 	dstName := prefix + "-manifest.txt"
 	dstPath := filepath.Join(dstDir, dstName)
-	u.CopyFileMust(dstPath, srcPath)
+	must(copyFile(dstPath, srcPath))
 }
 
 func build(dir, config, platform string) {
@@ -99,7 +97,7 @@ func build(dir, config, platform string) {
 
 func extractSumatraVersionMust() string {
 	path := filepath.Join("src", "Version.h")
-	lines, err := u.ReadLinesFromFile(path)
+	lines, err := readLinesFromFile(path)
 	must(err)
 	s := "#define CURR_VERSION "
 	for _, l := range lines {
@@ -115,7 +113,7 @@ func extractSumatraVersionMust() string {
 // extract version_check_${VER}
 // convert from "3_4" => "3.4"
 func extractVersionCheckVerPathMust(path string) string {
-	lines, err := u.ReadLinesFromFile(path)
+	lines, err := readLinesFromFile(path)
 	must(err)
 	s := "version_check_"
 	for _, l := range lines {
@@ -335,7 +333,7 @@ func createExeZipWithPigz(dir string) {
 	// so when we run pigz the current directory is the same as
 	// the directory with the file we're compressing
 	cmd.Dir = dir
-	u.RunCmdMust(cmd)
+	runCmdMust(cmd)
 
 	fatalIf(!fileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
 	err = os.Rename(dstPathTmp, dstPath)
@@ -383,7 +381,7 @@ func createManifestMust() {
 	}
 	dirs := []string{rel32Dir, rel64Dir}
 	// in daily build, there's no 32bit build
-	if !u.PathExists(rel32Dir) {
+	if !pathExists(rel32Dir) {
 		dirs = []string{rel64Dir}
 	}
 	for _, dir := range dirs {

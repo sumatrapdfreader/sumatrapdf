@@ -9,7 +9,6 @@ import (
 
 	"github.com/kjk/notionapi"
 	"github.com/kjk/notionapi/tohtml"
-	"github.com/kjk/u"
 )
 
 type NotionID = notionapi.NotionID
@@ -319,6 +318,6 @@ func websiteImportNotion() {
 	if false {
 		//err = os.Chdir("website")
 		//must(err)
-		u.OpenBrowser("free-pdf-reader.html")
+		openBrowser("free-pdf-reader.html")
 	}
 }

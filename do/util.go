@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha1"
@@ -8,15 +9,15 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"text/template"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 var (
@@ -104,49 +105,6 @@ func removeFileMust(path string) {
 	}
 	err := os.Remove(path)
 	must(err)
-}
-
-func listExeFiles(dir string) {
-	if !dirExists(dir) {
-		logf("Directory '%s' doesn't exist\n", dir)
-		return
-	}
-	files := u.ListFilesInDir(dir, true)
-	isExe := func(s string) bool {
-		ext := strings.ToLower(filepath.Ext(s))
-		switch ext {
-		case ".bat", ".exe", ".cmd":
-			return true
-		}
-		return false
-	}
-	shouldRemember := func(s string) bool {
-		s = strings.ToLower(s)
-		switch {
-		//case strings.Contains(s, "msbuild"):
-		//	return true
-		case strings.Contains(s, "signtool.exe"):
-			return true
-		}
-		return false
-	}
-	logf("Exe files in '%s'\n", dir)
-	var remember []string
-	for _, f := range files {
-		if !isExe(f) {
-			continue
-		}
-		f = strings.TrimPrefix(f, dir)
-		f = strings.TrimPrefix(f, "\\")
-		logf("%s\n", f)
-		if shouldRemember(f) {
-			remember = append(remember, f)
-		}
-	}
-	logf("\n")
-	for _, s := range remember {
-		logf("%s\n", s)
-	}
 }
 
 func findFile(dir string, match func(string, os.FileInfo) bool) {
@@ -367,7 +325,7 @@ func findLargestFileByExt() {
 			}
 			size := fi.Size()
 			if size > extToSize[ext] {
-				logf("%s of size %s\n", path, u.FmtSizeHuman(size))
+				logf("%s of size %s\n", path, humanizeSize(size))
 				extToSize[ext] = size
 			}
 			return nil
@@ -529,4 +487,132 @@ func formatDuration(d time.Duration) string {
 		return strings.ReplaceAll(s, "ms", " ms")
 	}
 	return s
+}
+
+func copyFile(dstPath, srcPath string) error {
+	d, err := os.ReadFile(srcPath)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(filepath.Dir(dstPath), 0755)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dstPath, d, 0644)
+}
+
+func createDirForFile(path string) error {
+	dir := filepath.Dir(path)
+	return os.MkdirAll(dir, 0755)
+}
+
+func pathExists(path string) bool {
+	_, err := os.Lstat(path)
+	return err == nil
+}
+
+func readLinesFromFile(filePath string) ([]string, error) {
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0666)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	res := make([]string, 0)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		res = append(res, string(line))
+	}
+	if err = scanner.Err(); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func stringInSlice(a []string, toCheck string) bool {
+	for _, s := range a {
+		if s == toCheck {
+			return true
+		}
+	}
+	return false
+}
+
+func fmtCmdShort(cmd exec.Cmd) string {
+	cmd.Path = filepath.Base(cmd.Path)
+	return cmd.String()
+}
+
+func runCmdMust(cmd *exec.Cmd) string {
+	fmt.Printf("> %s\n", fmtCmdShort(*cmd))
+	canCapture := (cmd.Stdout == nil) && (cmd.Stderr == nil)
+	if canCapture {
+		out, err := cmd.CombinedOutput()
+		if err == nil {
+			if len(out) > 0 {
+				logf("Output:\n%s\n", string(out))
+			}
+			return string(out)
+		}
+		logf("cmd '%s' failed with '%s'. Output:\n%s\n", cmd, err, string(out))
+		must(err)
+		return string(out)
+	}
+	err := cmd.Run()
+	if err == nil {
+		return ""
+	}
+	logf("cmd '%s' failed with '%s'\n", cmd, err)
+	must(err)
+	return ""
+}
+
+func fmtSmart(format string, args ...interface{}) string {
+	if len(args) == 0 {
+		return format
+	}
+	return fmt.Sprintf(format, args...)
+}
+
+// from https://gist.github.com/hyg/9c4afcd91fe24316cbf0
+func openBrowser(url string) {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+
+func currDirAbsMust() string {
+	dir, err := filepath.Abs(".")
+	must(err)
+	return dir
+}
+
+// we are executed for do/ directory so top dir is parent dir
+func cdUpDir(dirName string) {
+	startDir := currDirAbsMust()
+	dir := startDir
+	for {
+		// we're already in top directory
+		if filepath.Base(dir) == dirName && dirExists(dir) {
+			err := os.Chdir(dir)
+			must(err)
+			return
+		}
+		parentDir := filepath.Dir(dir)
+		panicIf(dir == parentDir, "invalid startDir: '%s', dir: '%s'", startDir, dir)
+		dir = parentDir
+	}
 }

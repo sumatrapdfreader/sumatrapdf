@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 var (
@@ -36,7 +34,7 @@ func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
 	cmd.Stderr = io.MultiWriter(f, os.Stderr)
-	logf("> %s\n", u.FmtCmdShort(*cmd))
+	logf("> %s\n", fmtCmdShort(*cmd))
 	return cmd.Run()
 }
 
@@ -135,13 +133,13 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 }
 
 func main() {
-	if u.DirExists("/opt/buildhome/repo") {
+	if dirExists("/opt/buildhome/repo") {
 		// on Cloudflare pages build machine
 		os.Chdir("/opt/buildhome/repo")
 	} else {
-		u.CdUpDir("sumatrapdf")
+		cdUpDir("sumatrapdf")
 	}
-	logf("Current directory: %s\n", u.CurrDirAbsMust())
+	logf("Current directory: %s\n", currDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
 		logf("Finished in %s\n", time.Since(timeStart))

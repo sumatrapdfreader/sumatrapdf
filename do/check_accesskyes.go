@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 func isGroupStartOrEnd(s string) bool {
@@ -37,7 +35,7 @@ type accessGroup struct {
 }
 
 func extractAccesskeyGroups(path string) map[string]*accessGroup {
-	lines, err := u.ReadLinesFromFile(path)
+	lines, err := readLinesFromFile(path)
 	must(err)
 
 	groups := map[string]*accessGroup{}
@@ -78,7 +76,7 @@ func extractAccesskeyGroups(path string) map[string]*accessGroup {
 		} else if group != nil {
 			strs := extractTranslations(line)
 			for _, str := range strs {
-				exists := u.StringInSlice(group.group, str)
+				exists := stringInSlice(group.group, str)
 				n := strings.Count(str, "&")
 				panicIf(n > 1, "TODO: handle multiple '&' in strings")
 				if exists {

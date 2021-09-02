@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 /*
@@ -58,7 +56,7 @@ func detectExeMust(name string) string {
 func detectExesMust() {
 	gitPath = detectExeMust("git")
 	path := `C:\Program Files\WinMerge\WinMergeU.exe`
-	if u.PathExists(path) {
+	if pathExists(path) {
 		winMergePath = path
 		return
 	}

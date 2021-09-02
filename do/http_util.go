@@ -12,13 +12,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 func logErrorf(ctx context.Context, format string, args ...interface{}) {
-	msg := u.FmtSmart(format, args...)
-	fmt.Print(msg)
+	logf(format, args...)
 }
 
 func addNl(s string) string {
@@ -126,14 +123,14 @@ func serve404(w http.ResponseWriter, r *http.Request, format string, args ...int
 	logErrorf(r.Context(), addNl(format), args...)
 	v := map[string]interface{}{
 		"URL":      r.URL.String(),
-		"ErrorMsg": u.FmtSmart(format, args...),
+		"ErrorMsg": fmtSmart(format, args...),
 	}
 	serveHTMLTemplate(w, r, http.StatusNotFound, "404.tmpl.html", v)
 }
 
 func serveInternalError(w http.ResponseWriter, r *http.Request, format string, args ...interface{}) {
 	logErrorf(r.Context(), addNl(format), args...)
-	errMsg := u.FmtSmart(format, args...)
+	errMsg := fmtSmart(format, args...)
 	v := map[string]interface{}{
 		"URL":      r.URL.String(),
 		"ErrorMsg": errMsg,
