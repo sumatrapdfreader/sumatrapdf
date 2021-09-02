@@ -99,7 +99,7 @@ type BuildOptions struct {
 	releaseBuild              bool
 }
 
-func ensureCanUpload() {
+func ensureSpacesAndS3Creds() {
 	panicIf(!hasSpacesCreds())
 	panicIf(!hasS3Creds())
 }
@@ -110,7 +110,7 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 	logf("verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
 
 	if opts.upload {
-		ensureCanUpload()
+		ensureSpacesAndS3Creds()
 	}
 
 	if opts.sign {
@@ -474,7 +474,7 @@ func main() {
 	}
 
 	if flgUpdateVer != "" {
-		ensureCanUpload()
+		ensureSpacesAndS3Creds()
 		updateAutoUpdateVer(flgUpdateVer)
 		return
 	}

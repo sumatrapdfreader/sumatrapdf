@@ -409,14 +409,24 @@ func userHomeDirMust() string {
 }
 
 func humanizeSize(i int64) string {
-	if i > 1024*1024*1024 {
-		return fmt.Sprintf("%.2f GB", float64(i)/1024*1024*1024)
+	const (
+		kb = 1024
+		mb = kb * 1024
+		gb = mb * 1024
+	)
+	fs := func(n int64, d float64, size string) string {
+		s := fmt.Sprintf("%.2f", float64(n)/d)
+		return strings.TrimSuffix(s, ".00") + " " + size
 	}
-	if i > 1024*1024 {
-		return fmt.Sprintf("%.2f MB", float64(i)/1024*1024)
+
+	if i > gb {
+		return fs(i, gb, "GB")
 	}
-	if i > 1024 {
-		return fmt.Sprintf("%.2f kB", float64(i)/1024)
+	if i > mb {
+		return fs(i, mb, "MB")
+	}
+	if i > kb {
+		return fs(i, kb, "kB")
 	}
 	return fmt.Sprintf("%d bytes", i)
 }
@@ -615,4 +625,13 @@ func cdUpDir(dirName string) {
 		panicIf(dir == parentDir, "invalid startDir: '%s', dir: '%s'", startDir, dir)
 		dir = parentDir
 	}
+}
+
+func execTextTemplate(tmplText string, data interface{}) string {
+	tmpl, err := template.New("").Parse(tmplText)
+	must(err)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	must(err)
+	return buf.String()
 }

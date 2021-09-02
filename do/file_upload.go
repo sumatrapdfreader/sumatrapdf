@@ -12,7 +12,7 @@ import (
 const filesRemoteDir = "sumatraTestFiles/"
 
 func fileUpload(path string) {
-	ensureCanUpload()
+	ensureSpacesAndS3Creds()
 	fileSize := fileSizeMust(path)
 	sha1, err := sha1HexOfFile(path)
 	must(err)
@@ -21,52 +21,58 @@ func fileUpload(path string) {
 	sizeStr := humanizeSize(fileSize)
 	logf("uploading '%s' of size %s as '%s'\n", path, sizeStr, remotePath)
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
 	timeStart := time.Now()
 
-	go func() {
-		c := newS3Client()
-		if c.Exists(remotePath) {
-			logf("Skipping upload to s3    because '%s' already exists\n", remotePath)
+	s3Client := newMinioS3Client()
+	spacesClient := newMinioSpacesClient()
+
+	upload := func(mc *MinioClient) {
+		uri := minioURLForPath(mc, remotePath)
+		if minioExists(mc, remotePath) {
+			logf("Skipping upload, '%s' already exists\n", uri)
 		} else {
-			err := s3UploadFilePublic(c, remotePath, path)
+			err := minioUploadFilePublic(mc, remotePath, path)
 			must(err)
-			uri := "https://kjkpub.s3.amazonaws.com/" + remotePath
-			logf("Uploaded to s3 in %s\n%s\n", time.Since(timeStart), uri)
+			logf("Uploaded '%s' in %s\n", uri, time.Since(timeStart))
 		}
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		upload(s3Client)
 		wg.Done()
 	}()
+
 	go func() {
-		c := newMinioSpacesClient()
-		if minioExists(c, remotePath) {
-			logf("Skipping upload to minio because '%s' already exists\n", remotePath)
-		} else {
-			uri := minioURLForPath(c, remotePath)
-			logf("Uploaded to spaces in %s\n%s\n", time.Since(timeStart), uri)
-			err := minioUploadFilePublic(c, remotePath, path)
-			must(err)
-		}
+		upload(spacesClient)
 		wg.Done()
 	}()
 	wg.Wait()
 }
 
-func filesListSpaces() {
-	c := newMinioSpacesClient()
+func minioFilesList(mc *MinioClient) {
+	uri := minioURLForPath(mc, "")
+	logf("filesList in '%s'\n", uri)
+
 	opts := minio.ListObjectsOptions{
 		Prefix:    "",
 		Recursive: true,
 	}
-	files := c.c.ListObjects(ctx(), c.bucket, opts)
+	files := mc.c.ListObjects(ctx(), mc.bucket, opts)
 	for f := range files {
 		sizeStr := humanizeSize(f.Size)
 		logf("%s : %s\n", f.Key, sizeStr)
 	}
 }
 
+func filesListS3() {
+	mc := newMinioS3Client()
+	minioFilesList(mc)
+}
+
 func filesList() {
-	ensureCanUpload()
-	filesListSpaces()
+	ensureSpacesAndS3Creds()
+	minioFilesList(newMinioSpacesClient())
+	//filesListS3()
 }

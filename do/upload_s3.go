@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
-	"text/template"
 	"time"
 )
 
@@ -15,34 +13,6 @@ const (
 	// s3RelDir     = "sumatrapdf/rel/"
 	maxS3Results = 1000
 )
-
-// we should only sign and upload to s3 if this is my repo and a push event
-// or building locally
-// don't sign if it's a fork or pull requests
-func isGithubMyMasterBranch() bool {
-	// https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables
-	repo := os.Getenv("GITHUB_REPOSITORY")
-	if repo != "sumatrapdfreader/sumatrapdf" {
-		return false
-	}
-	ref := os.Getenv("GITHUB_REF")
-	if ref != "refs/heads/master" {
-		logf("GITHUB_REF: '%s'\n", ref)
-		return false
-	}
-	event := os.Getenv("GITHUB_EVENT_NAME")
-	// other event is "pull_request"
-	return event == "push" || event == "repository_dispatch"
-}
-
-func execTextTemplate(tmplText string, data interface{}) string {
-	tmpl, err := template.New("").Parse(tmplText)
-	must(err)
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, data)
-	must(err)
-	return buf.String()
-}
 
 // list is sorted by Version, biggest first, to make it easy to delete oldest
 func s3ListPreReleaseFilesMust(c *S3Client, prefix string) []string {
@@ -116,10 +86,6 @@ func s3UploadDir(c *S3Client, dirRemote string, dirLocal string) error {
 		}
 	}
 	return nil
-}
-
-func s3UploadFilePublic(c *S3Client, dstRemotePath string, srcPath string) error {
-	return c.UploadFileReader(dstRemotePath, srcPath, true)
 }
 
 func getFinalDirForBuildType(buildType string) string {

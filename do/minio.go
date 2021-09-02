@@ -21,7 +21,8 @@ type MinioClient struct {
 }
 
 func (c *MinioClient) URLBase() string {
-	return fmt.Sprintf("https://%s.%s/", c.bucket, c.c.EndpointURL())
+	url := c.c.EndpointURL()
+	return fmt.Sprintf("https://%s.%s/", c.bucket, url.Host)
 }
 
 func minioURLForPath(c *MinioClient, remotePath string) string {
