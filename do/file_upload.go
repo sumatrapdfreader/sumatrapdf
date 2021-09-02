@@ -66,13 +66,8 @@ func minioFilesList(mc *MinioClient) {
 	}
 }
 
-func filesListS3() {
-	mc := newMinioS3Client()
-	minioFilesList(mc)
-}
-
 func filesList() {
 	ensureSpacesAndS3Creds()
 	minioFilesList(newMinioSpacesClient())
-	//filesListS3()
+	//minioFilesList(newMinioS3Client())
 }

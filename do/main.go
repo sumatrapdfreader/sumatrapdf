@@ -100,8 +100,10 @@ type BuildOptions struct {
 }
 
 func ensureSpacesAndS3Creds() {
-	panicIf(!hasSpacesCreds())
-	panicIf(!hasS3Creds())
+	panicIf(os.Getenv("AWS_ACCESS") == "", "Not uploading to s3 because AWS_ACCESS env variable not set\n")
+	panicIf(os.Getenv("AWS_SECRET") == "", "Not uploading to s3 because AWS_SECRET env variable not set\n")
+	panicIf(os.Getenv("SPACES_KEY") == "", "Not uploading to do spaces because SPACES_KEY env variable not set\n")
+	panicIf(os.Getenv("SPACES_SECRET") == "", "Not uploading to do spaces because SPACES_SECRET env variable not set\n")
 }
 
 func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
@@ -526,13 +528,18 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
-		s3UploadBuildMust(buildType)
+		mc := newMinioS3Client()
+		// upload as:
+		// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
+		minioUploadBuildMust(mc, "s3", buildType)
 		s3DeleteOldBuilds()
 		wg.Done()
 	}()
 
+	spacesClient := newMinioSpacesClient()
+
 	go func() {
-		spacesUploadBuildMust(buildType)
+		minioUploadBuildMust(spacesClient, "spaces", buildType)
 		spacesDeleteOldBuilds()
 		wg.Done()
 	}()

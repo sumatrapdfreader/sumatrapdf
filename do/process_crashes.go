@@ -463,7 +463,7 @@ func hasNoSymbols(ci *crashInfo) bool {
 }
 
 func downloadCrashesAndGenerateHTML() {
-	panicIf(!hasSpacesCreds())
+	ensureSpacesAndS3Creds()
 	if true {
 		panicIf(os.Getenv("NETLIFY_AUTH_TOKEN") == "", "missing NETLIFY_AUTH_TOKEN env variable")
 		panicIf(os.Getenv("NETLIFY_SITE_ID") == "", "missing NETLIFY_SITE_ID env variable")
