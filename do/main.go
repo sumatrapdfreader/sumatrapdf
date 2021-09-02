@@ -238,6 +238,11 @@ func main() {
 		return
 	}
 
+	if false {
+		deleteFilesOneOff()
+		return
+	}
+
 	if flgFindLargestFilesByExt {
 		findLargestFileByExt()
 		return
@@ -527,6 +532,7 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	}()
 	var wg sync.WaitGroup
 	wg.Add(2)
+
 	go func() {
 		mc := newMinioS3Client()
 		// upload as:
@@ -536,10 +542,9 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		wg.Done()
 	}()
 
-	spacesClient := newMinioSpacesClient()
-
 	go func() {
-		minioUploadBuildMust(spacesClient, "spaces", buildType)
+		mc := newMinioSpacesClient()
+		minioUploadBuildMust(mc, "spaces", buildType)
 		spacesDeleteOldBuilds()
 		wg.Done()
 	}()

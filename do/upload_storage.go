@@ -18,7 +18,6 @@ import (
 // we delete old daily and pre-release builds. This defines how many most recent
 // builds to retain
 const nBuildsToRetainPreRel = 16
-const nBuildsToRetainDaily = 64
 
 const (
 	// TODO: only remains because we want to update the version
@@ -330,43 +329,6 @@ func minioUploadBuildMust(mc *MinioClient, where string, buildType string) {
 	}
 
 	spacesUploadBuildUpdateInfoMust(buildType)
-	// TODO: for now, we also update daily version
-	// to get people to switch to pre-release
-	if buildType == buildTypePreRel {
-		spacesUploadBuildUpdateInfoMust(buildTypeDaily)
-	}
-}
-
-// "software/sumatrapdf/prerel/SumatraPDF-prerelease-11290-64-install.exe"
-// =>
-// 11290
-func extractVersionFromName(s string) int {
-	parts := strings.Split(s, "/")
-	name := parts[len(parts)-1]
-	// TODO: eventually we'll only need prerel- as prerelease-
-	// is older naming
-	name = strings.TrimPrefix(name, "SumatraPDF-prerelease-")
-	name = strings.TrimPrefix(name, "SumatraPDF-prerel-")
-
-	// TODO: temporary, for old builds in s3
-	name = strings.TrimPrefix(name, "SumatraPDF-prerelase-")
-	name = strings.TrimPrefix(name, "manifest-")
-	name = strings.TrimPrefix(name, "manifest")
-	if name == "" {
-		return 0
-	}
-
-	parts = strings.Split(name, "-")
-	parts = strings.Split(parts[0], ".")
-	verStr := parts[0]
-	ver, err := strconv.Atoi(verStr)
-	if err != nil {
-		// TODO: temporary, for builds uploaded with bad names
-		//
-		return 1
-	}
-	//panicIf(err != nil, "extractVersionFromName: '%s', err='%s'\n", s, err)
-	return ver
 }
 
 type filesByVer struct {
@@ -375,6 +337,17 @@ type filesByVer struct {
 }
 
 func groupFilesByVersion(files []string) []*filesByVer {
+	// "software/sumatrapdf/prerel/14028/SumatraPDF-prerel-64.pdb.zip"
+	// =>
+	// 14028
+	extractVersionFromName := func(s string) int {
+		parts := strings.Split(s, "/")
+		verStr := parts[3]
+		ver, err := strconv.Atoi(verStr)
+		panicIf(err != nil, "extractVersionFromName: '%s', err='%s'\n", s, err)
+		return ver
+	}
+
 	m := map[int]*filesByVer{}
 	for _, f := range files {
 		ver := extractVersionFromName(f)
@@ -400,21 +373,13 @@ func groupFilesByVersion(files []string) []*filesByVer {
 func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
 	panicIf(buildType == buildTypeRel, "can't delete release builds")
 
-	nBuildsToRetain := nBuildsToRetainDaily
-	if buildType == buildTypePreRel {
-		nBuildsToRetain = nBuildsToRetainPreRel
-	}
-	remoteDir := getRemoteDir(buildType)
-
-	opts := minio.ListObjectsOptions{
-		Prefix:    remoteDir,
-		Recursive: true,
-	}
-	objectsCh := mc.c.ListObjects(ctx(), mc.bucket, opts)
+	nBuildsToRetain := nBuildsToRetainPreRel
+	remoteDir := "software/sumatrapdf/prerel/"
+	objectsCh := minioListObjects(mc, remoteDir)
 	var keys []string
 	for f := range objectsCh {
 		keys = append(keys, f.Key)
-		//fmt.Printf("key: %s\n", f.Key)
+		//logf("  %s\n", f.Key)
 	}
 
 	uri := minioURLForPath(mc, remoteDir)
@@ -423,12 +388,16 @@ func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
 	for i, v := range byVer {
 		deleting := (i >= nBuildsToRetain)
 		if deleting {
-			logf("%d, deleting\n", v.ver)
-			for _, key := range v.files {
-				logf("  %s deleting\n", key)
-				err := minioRemove(mc, key)
-				must(err)
+			logf("deleting %d\n", v.ver)
+			if true {
+				for _, key := range v.files {
+					err := minioRemove(mc, key)
+					must(err)
+					logf("  deleted %s\n", key)
+				}
 			}
+		} else {
+			logf("not deleting %d\n", v.ver)
 		}
 	}
 }
@@ -436,12 +405,9 @@ func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
 func spacesDeleteOldBuilds() {
 	mc := newMinioSpacesClient()
 	minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
-	//spacesDeleteOldBuildsPrefix(buildTypeDaily)
 }
 
 func s3DeleteOldBuilds() {
 	mc := newMinioS3Client()
 	minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
-	// TODO: we can remove them completely
-	//s3DeleteOldBuildsPrefix(buildTypeDaily)
 }

@@ -68,6 +68,14 @@ func minioRemove(mc *MinioClient, remotePath string) error {
 	return err
 }
 
+func minioListObjects(mc *MinioClient, prefix string) <-chan minio.ObjectInfo {
+	opts := minio.ListObjectsOptions{
+		Prefix:    prefix,
+		Recursive: true,
+	}
+	return mc.c.ListObjects(ctx(), mc.bucket, opts)
+}
+
 func minioUploadDir(mc *MinioClient, dirRemote string, dirLocal string) error {
 	files, err := ioutil.ReadDir(dirLocal)
 	must(err)

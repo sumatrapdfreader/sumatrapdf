@@ -15,8 +15,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/minio/minio-go/v7"
 )
 
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
@@ -477,12 +475,7 @@ func downloadCrashesAndGenerateHTML() {
 	sem := make(chan bool, nDownloaders)
 	go func() {
 		mc := newMinioSpacesClient()
-
-		opts := minio.ListObjectsOptions{
-			Prefix:    crashesPrefix,
-			Recursive: true,
-		}
-		remoteFiles := mc.c.ListObjects(ctx(), mc.bucket, opts)
+		remoteFiles := minioListObjects(mc, crashesPrefix)
 
 		finished := false
 		for rf := range remoteFiles {

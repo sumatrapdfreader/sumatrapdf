@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/minio/minio-go/v7"
 )
 
 const filesRemoteDir = "sumatraTestFiles/"
@@ -55,11 +53,7 @@ func minioFilesList(mc *MinioClient) {
 	uri := minioURLForPath(mc, "")
 	logf("filesList in '%s'\n", uri)
 
-	opts := minio.ListObjectsOptions{
-		Prefix:    "",
-		Recursive: true,
-	}
-	files := mc.c.ListObjects(ctx(), mc.bucket, opts)
+	files := minioListObjects(mc, "")
 	for f := range files {
 		sizeStr := humanizeSize(f.Size)
 		logf("%s : %s\n", f.Key, sizeStr)
@@ -68,6 +62,28 @@ func minioFilesList(mc *MinioClient) {
 
 func filesList() {
 	ensureSpacesAndS3Creds()
-	minioFilesList(newMinioSpacesClient())
-	//minioFilesList(newMinioS3Client())
+	//minioFilesList(newMinioSpacesClient())
+	minioFilesList(newMinioS3Client())
+}
+
+func deleteFilesOneOff() {
+	doDelete := false
+	prefix := "vack/"
+
+	//mc := newMinioSpacesClient()
+	mc := newMinioS3Client()
+	uri := minioURLForPath(mc, "")
+	logf("deleteFiles in '%s'\n", uri)
+	files := minioListObjects(mc, prefix)
+	for f := range files {
+		if doDelete {
+			err := minioRemove(mc, f.Key)
+			must(err)
+			uri := minioURLForPath(mc, f.Key)
+			logf("Deleted %s\n", uri)
+		} else {
+			sizeStr := humanizeSize(f.Size)
+			logf("%s : %s\n", f.Key, sizeStr)
+		}
+	}
 }
