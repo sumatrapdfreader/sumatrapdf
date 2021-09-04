@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f6103586bdd6217ac4822db860e7fe78a6e8fd7e
+d4e6d20bb9c0885d09b36b429e78987e3efb3406
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6381,6 +6381,7 @@ uk:Не вдалося створити папку для встановленн
 uz:O'rnatish directoriyasini yaratib bo'lmadi
 vn:Không tạo được thư mục cài đặt
 :Couldn't get printer name
+nl:Kan de naam van de printer niet ophalen
 pl:Nie można uzyskać nazwy drukarki
 :Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
