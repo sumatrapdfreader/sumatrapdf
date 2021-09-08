@@ -579,7 +579,11 @@ file_level_trailers(fz_context *ctx)
 		fz_write_ps_file_trailer(ctx, out, output_pagenum);
 
 	if (output_format == OUT_PCLM || output_format == OUT_OCR_PDF)
+	{
+		fz_close_band_writer(ctx, bander);
 		fz_drop_band_writer(ctx, bander);
+		bander = NULL;
+	}
 }
 
 static void drawband(fz_context *ctx, fz_page *page, fz_display_list *list, fz_matrix ctm, fz_rect tbounds, fz_cookie *cookie, int band_start, fz_pixmap *pix, fz_bitmap **bit)
@@ -1108,6 +1112,9 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 				ctm.f -= drawheight;
 			}
 
+			if (output_format != OUT_PCLM && output_format != OUT_OCR_PDF)
+				fz_close_band_writer(ctx, bander);
+
 			/* FIXME */
 			if (showmd5 && pix)
 			{
@@ -1158,6 +1165,11 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		}
 		fz_catch(ctx)
 		{
+			if (output_format == OUT_PCLM || output_format == OUT_OCR_PDF)
+			{
+				fz_drop_band_writer(ctx, bander);
+				bander = NULL;
+			}
 			fz_rethrow(ctx);
 		}
 	}

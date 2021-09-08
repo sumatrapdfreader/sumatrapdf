@@ -72,6 +72,7 @@ fz_write_pixmap_as_pclm(fz_context *ctx, fz_output *out, const fz_pixmap *pixmap
 	{
 		fz_write_header(ctx, writer, pixmap->w, pixmap->h, pixmap->n, pixmap->alpha, pixmap->xres, pixmap->yres, 0, pixmap->colorspace, pixmap->seps);
 		fz_write_band(ctx, writer, pixmap->stride, pixmap->h, pixmap->samples);
+		fz_close_band_writer(ctx, writer);
 	}
 	fz_always(ctx)
 		fz_drop_band_writer(ctx, writer);
@@ -261,13 +262,13 @@ pclm_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 }
 
 static void
-pclm_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
+pclm_close_band_writer(fz_context *ctx, fz_band_writer *writer_)
 {
 	pclm_band_writer *writer = (pclm_band_writer *)writer_;
 	fz_output *out = writer->super.out;
 	int i;
 
-	/* We actually do the trailer writing in the drop */
+	/* We actually do the trailer writing in the close */
 	if (writer->xref_max > 2)
 	{
 		int64_t t_pos;
@@ -291,7 +292,12 @@ pclm_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
 			fz_write_printf(ctx, out, "%010zd 00000 n \n", writer->xref[i]);
 		fz_write_printf(ctx, out, "trailer\n<<\n/Size %d\n/Root 1 0 R\n>>\nstartxref\n%ld\n%%%%EOF\n", writer->obj_num, t_pos);
 	}
+}
 
+static void
+pclm_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
+{
+	pclm_band_writer *writer = (pclm_band_writer *)writer_;
 	fz_free(ctx, writer->stripbuf);
 	fz_free(ctx, writer->compbuf);
 	fz_free(ctx, writer->page_obj);
@@ -305,6 +311,7 @@ fz_band_writer *fz_new_pclm_band_writer(fz_context *ctx, fz_output *out, const f
 	writer->super.header = pclm_write_header;
 	writer->super.band = pclm_write_band;
 	writer->super.trailer = pclm_write_trailer;
+	writer->super.close = pclm_close_band_writer;
 	writer->super.drop = pclm_drop_band_writer;
 
 	if (options)
@@ -381,9 +388,7 @@ pclm_close_writer(fz_context *ctx, fz_document_writer *wri_)
 {
 	fz_pclm_writer *wri = (fz_pclm_writer*)wri_;
 
-	fz_drop_band_writer(ctx, wri->bander);
-	wri->bander = NULL;
-
+	fz_close_band_writer(ctx, wri->bander);
 	fz_close_output(ctx, wri->out);
 }
 

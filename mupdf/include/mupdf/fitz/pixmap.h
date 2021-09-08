@@ -295,6 +295,11 @@ void fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix);
 void fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix);
 
 /**
+	Invert the alpha fo all the pixels in a pixmap.
+*/
+void fz_invert_pixmap_alpha(fz_context *ctx, fz_pixmap *pix);
+
+/**
 	Transform the pixels in a pixmap so that luminance of each
 	pixel is inverted, and the chrominance remains unchanged (as
 	much as accuracy allows).

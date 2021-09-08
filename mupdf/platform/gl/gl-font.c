@@ -384,7 +384,7 @@ int ui_break_lines(char *a, struct line *lines, int maxlines, int width, int *ma
 		}
 		else
 		{
-			if (c == ' ')
+			if (c == ' ' && maxlines > 1)
 			{
 				space = b;
 				space_x = x;

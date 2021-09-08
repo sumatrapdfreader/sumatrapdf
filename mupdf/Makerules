@@ -146,6 +146,16 @@ else ifeq ($(OS),MACOS)
   LD = xcrun ld
   RANLIB = xcrun ranlib
 
+  ifeq (, $(shell which pkg-config))
+    $(warning "No pkg-config found, install it for proper integration of libcrypto")
+  else
+    HAVE_LIBCRYPTO := $(shell pkg-config --exists 'libcrypto >= 1.1.0' && echo yes)
+    ifeq ($(HAVE_LIBCRYPTO),yes)
+	  LIBCRYPTO_CFLAGS := $(shell pkg-config --cflags libcrypto) -DHAVE_LIBCRYPTO
+	  LIBCRYPTO_LIBS := $(shell pkg-config --libs libcrypto)
+    endif
+  endif
+
 else ifeq ($(OS),Linux)
   HAVE_OBJCOPY := yes
 

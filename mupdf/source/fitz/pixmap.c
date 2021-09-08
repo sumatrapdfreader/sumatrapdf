@@ -964,6 +964,29 @@ fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix)
 	}
 }
 
+void
+fz_invert_pixmap_alpha(fz_context *ctx, fz_pixmap *pix)
+{
+	unsigned char *s = pix->samples;
+	int x, y;
+	int n1 = pix->n - pix->alpha;
+	int n = pix->n;
+
+	if (!pix->alpha)
+		return;
+
+	for (y = 0; y < pix->h; y++)
+	{
+		s += n1;
+		for (x = 0; x < pix->w; x++)
+		{
+			*s = 255 - *s;
+			s += n;
+		}
+		s += pix->stride - pix->w * n;
+	}
+}
+
 void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *image, fz_irect rect)
 {
 	unsigned char *p;
