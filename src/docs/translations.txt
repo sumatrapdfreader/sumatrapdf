@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d4e6d20bb9c0885d09b36b429e78987e3efb3406
+353b747b14e3438a64eb41b6a97b3bcfad326ed8
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6381,7 +6381,8 @@ uk:Не вдалося створити папку для встановленн
 uz:O'rnatish directoriyasini yaratib bo'lmadi
 vn:Không tạo được thư mục cài đặt
 :Couldn't get printer name
-nl:Kan de naam van de printer niet ophalen
+cn:无法获取打印机名称
+it:Impossibile ottenere il nome della stampante
 pl:Nie można uzyskać nazwy drukarki
 :Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
@@ -16403,7 +16404,7 @@ bs:Prikaži najčešće čitano
 by:Адлюстраваць тыя, які ячаста чытаюць
 ca-xv:Mostra els més llegits
 ca:Mostra els més llegits
-cn:显示经常阅读
+cn:显示经常阅读的文件
 co:Affissà i ducumenti letti aspessu
 cy:Dangos darllenwyd yn aml
 cz:Zobrazit často čtené dokumenty
