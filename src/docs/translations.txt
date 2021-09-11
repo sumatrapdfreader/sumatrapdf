@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-353b747b14e3438a64eb41b6a97b3bcfad326ed8
+9a9e69c97fcedac7e2c173e058a931ebe9365b72
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2635,7 +2635,7 @@ cz:&Nastavení
 de:&Einstellungen
 dk:&Indstillinger
 el:&Ρυθμίσεις
-es:&Configuración
+es:A&justes
 et:Sea&distused
 eu:&Ezarpenak
 fa:&تنظیمات
@@ -5146,7 +5146,7 @@ cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazo
 de:Fehler beim Ausführen des Befehls für die Rückwärtssuche. Bitte überprüfen Sie die Einstellung.
 dk:Det lykkedes ikke at starte omvendt søgekommando. Tjek venligst kommandolinjen i indstillingerne
 el:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
-es:No se puede ejecutar la orden de búsqueda inversa. Compruebe la línea de órdenes en la configuración.
+es:No se puede buscar al revés. Compruebe la línea de órdenes en los ajustes.
 et:Pööratud otsingu alustamine ebaõnnestus. Kontrolli seadistustest käsurida.
 eu:Ezinezkoa alderantzizko bilaketa komandoa hastea. Mesedez, egiaztatu komando lerroa ezarpenetan.
 fa:جستجوی معکوس قابل اجرا نیست. لطفاً تنظیمات خط فرمان را بازبینی کنید.
@@ -6382,7 +6382,9 @@ uz:O'rnatish directoriyasini yaratib bo'lmadi
 vn:Không tạo được thư mục cài đặt
 :Couldn't get printer name
 cn:无法获取打印机名称
+es:No se ha podido encontrar el nombre de la impresora
 it:Impossibile ottenere il nome della stampante
+nl:Kan de naam van de printer niet vinden
 pl:Nie można uzyskać nazwy drukarki
 :Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
@@ -6656,7 +6658,7 @@ cz:Stránku nelze vykreslit
 de:Diese Seite kann leider nicht angezeigt werden
 dk:Det var ikke muligt at gengive siden
 el:Δε μπορεί να φορτωθεί η σελίδα
-es:No se ha podido representar la página
+es:No se ha podido dibujar la página
 et:Lehekülje visualiseerimine ei õnnestunud
 eu:Ezinezkoa orrialdea aurkeztea
 fa:متأسفانه صفحه قابل نمایش نیست
@@ -7175,7 +7177,7 @@ cz:Vlastní &měřítko...\tCtrl+Y
 de:&Zoomfaktor…\tStrg+Y
 dk:Tilpasset &zoom...\tCtrl+Y
 el:&Προσαρμοσμένο ζουμ...\tCtrl+Y
-es:&Apliación personalizada...\tCtrl+Y
+es:&Ampliación personalizada...\tCtrl+Y
 et:&Muu suurendus...\tCtrl+Y
 eu:Egile Zoo&ma...\tKtrl+Y
 fa:بزرگنمایی &سفارشی...\tCtrl+Y
@@ -7487,7 +7489,7 @@ cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
 de:Standardanwendung im portablen Modus nicht veränderbar
 dk:Standard PDF-læser kan ikke ændres i mobil tilstand
 el:Δε μπορεί να γίνει συσχετισμός σε portable mode
-es:No se puede cambiar el lector de PDF predeterminado en el modo portable
+es:No se puede cambiar el lector PDF predeterminado en el modo «portable» (portatil, sin instalación)
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
 eu:Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu
 fa:نمی‌توان خواننده‌ی پیش‌فرض پرونده‌های PDF را در نسخه‌ی قابل حمل تغییر داد.
@@ -8615,7 +8617,7 @@ cz:Nepodařilo se nastavit jako výchozí program na Windows 10
 de:Fehler beim Registrieren als Standardanwendung unter Windows 10
 dk:Kunne ikke registreres som standardprogram på win 10
 el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
-es:Error al registrar como programa por defecto en Windows 10.
+es:Error al registrar como lector predeterminado en Windows 10.
 et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
 eu:Hutsegitea win 10-ean berezko programa bezala erregistratzerakoan
 fa:در پیشفرض قرارداد اپلیکیشن در ویندوز 10 خطایی رخ داده است
@@ -14550,7 +14552,7 @@ cz:Tisk stále probíhá. Přerušit a odejít?
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
 dk:Udskrift er stadig i gang. Afbryd og afslut?
 el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση και έξοδος;
-es:Impresión aún en progreso. ¿Cancelar y salir?
+es:Aún se está imprimiendo. ¿Cancelar y salir?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Eten eta utzi?
 fa:فرآیند چاپ هنوز در جریان است. انصراف و خروج؟
@@ -14612,7 +14614,7 @@ cz:Tisk je stále probíhá. Přerušit a začít znovu?
 de:Bestehenden Druckvorgang abbrechen und neu beginnen?
 dk:Udskrift pågår stadig. Afbryd og start forfra?
 el:Η εκτύπωση βρίσκεται σε εξέλιξη. Να ακυρωθεί και να ξεκινήσει πάλι;
-es:La impresión está en progreso. ¿Quiere interrumpirla e iniciar de nuevo?
+es:Aún se está imprimiendo. ¿Cancelar y empezar desde cero?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Utzi eta berriro hasi?
 fa:فرآیند چاپ هنوز در جریان است. انصراف و شروع مجدد؟
@@ -17923,7 +17925,7 @@ cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykr
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 dk:Dette dokument bruger funktioner, der ikke er understøttet (%s) og optegner måske ikke korrekt
 el:Αυτό το έγγραφο χρησιμοποιεί μη υποστηριζόμενες δυνατότητες (%s) και δεν θα μπορέσει να εμφανιστεί σωστά
-es:Este documento usa características no compatibles (%s) y puede que no se muestre correctamente
+es:Este documento contiene algunos elementos incompatibles (%s) y puede que no se visualicen correctamente
 et:See dokument sisaldab omadusi (%s), mida program ei toeta ja seetõttu ei pruugi see olla õigesti esitatud.
 eu:Agiri honek sostengatu gabeko (%s) ezaugarriak erabiltzen ditu eta badaiteke egoki ez aurkeztea
 fa:این سند حاوی ویژگی‌هایی است که توسط این برنامه پشتیبانی نمی‌شود (%s) و ممکن است به درستی نمایش داده نشود
