@@ -1379,7 +1379,15 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
 
     pdf_set_annot_modification_date(ctx, annot, time(nullptr));
     if (pdf_annot_has_author(ctx, annot)) {
-        pdf_set_annot_author(ctx, annot, getuser());
+        char* defAuthor = gGlobalPrefs->annotations.defaultAuthor;
+        // if "(none)" we don't set it
+        if (!str::Eq(defAuthor, "(none)")) {
+            const char* author = getuser();
+            if (!str::EmptyOrWhiteSpaceOnly(defAuthor)) {
+                author = defAuthor;
+            }
+            pdf_set_annot_author(ctx, annot, author);
+        }
     }
 
     switch (typ) {
