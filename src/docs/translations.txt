@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9a9e69c97fcedac7e2c173e058a931ebe9365b72
+cb6318ad46b54edc6dcaf92756ac6395bd97e9b3
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6382,6 +6382,7 @@ uz:O'rnatish directoriyasini yaratib bo'lmadi
 vn:Không tạo được thư mục cài đặt
 :Couldn't get printer name
 cn:无法获取打印机名称
+de:Druckername konnte nicht ermittelt werden
 es:No se ha podido encontrar el nombre de la impresora
 it:Impossibile ottenere il nome della stampante
 nl:Kan de naam van de printer niet vinden
