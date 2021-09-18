@@ -298,7 +298,7 @@ static void test_file(void)
 
 int main(void)
 {
-    outf_verbose_set(1);
+    extract_outf_verbose_set(1);
     test_read();
     test_write();
     test_file();

@@ -103,7 +103,7 @@ typedef unsigned char byte;
 
 /* These are used by the non-aa scan converter */
 
-static inline void
+static fz_forceinline void
 template_solid_color_1_da(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	int sa = FZ_EXPAND(color[1]);
@@ -138,7 +138,7 @@ static inline int isbigendian(void)
 	return u.c[0] != 1;
 }
 
-static inline void
+static fz_forceinline void
 template_solid_color_3_da(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	unsigned int rgba = *(int *)color;
@@ -180,7 +180,7 @@ template_solid_color_3_da(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_R
 	}
 }
 
-static inline void
+static fz_forceinline void
 template_solid_color_4_da(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	int sa = FZ_EXPAND(color[4]);
@@ -263,7 +263,7 @@ template_solid_color_4_da(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_R
 	}
 }
 
-static inline void
+static fz_forceinline void
 template_solid_color_N_256(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	int k;
@@ -332,7 +332,7 @@ template_solid_color_N_256(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_solid_color_N_256_op(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	int k;
@@ -357,7 +357,7 @@ template_solid_color_N_256_op(byte * FZ_RESTRICT dp, int n, int w, const byte * 
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_solid_color_N_sa(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da, int sa)
 {
 	int k;
@@ -373,7 +373,7 @@ template_solid_color_N_sa(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_R
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_solid_color_N_sa_op(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da, int sa, const fz_overprint * FZ_RESTRICT eop)
 {
 	int k;
@@ -391,7 +391,7 @@ template_solid_color_N_sa_op(byte * FZ_RESTRICT dp, int n, int w, const byte * F
 }
 
 #if FZ_PLOTTERS_N
-static inline void
+static fz_forceinline void
 template_solid_color_N_general(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da, int sa)
 {
 	int k;
@@ -427,7 +427,7 @@ template_solid_color_N_general(byte * FZ_RESTRICT dp, int n, int w, const byte *
 	}
 }
 
-static inline void
+static fz_forceinline void
 template_solid_color_N_general_op(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da, int sa, const fz_overprint * FZ_RESTRICT eop)
 {
 	int k;
@@ -469,7 +469,7 @@ template_solid_color_N_general_op(byte * FZ_RESTRICT dp, int n, int w, const byt
 }
 #endif
 
-static inline void
+static fz_forceinline void
 template_solid_color_0_da(byte * FZ_RESTRICT dp, int w, int sa)
 {
 	if (sa == 256)
@@ -654,7 +654,7 @@ fz_get_solid_color_painter(int n, const byte * FZ_RESTRICT color, int da, const 
 
 /* Blend a non-premultiplied color in mask over destination */
 
-static inline void
+static fz_forceinline void
 template_span_with_color_1_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	int sa = FZ_EXPAND(color[1]);
@@ -697,7 +697,7 @@ template_span_with_color_1_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 	}
 }
 
-static inline void
+static fz_forceinline void
 template_span_with_color_3_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	unsigned int rgba = *((const unsigned int *)color);
@@ -760,7 +760,7 @@ template_span_with_color_3_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 	}
 }
 
-static inline void
+static fz_forceinline void
 template_span_with_color_4_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	int sa = FZ_EXPAND(color[4]);
@@ -816,7 +816,7 @@ template_span_with_color_4_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 	}
 }
 
-static inline void
+static fz_forceinline void
 template_span_with_color_N_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	int k;
@@ -870,7 +870,7 @@ template_span_with_color_N_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRI
 	}
 }
 
-static inline void
+static fz_forceinline void
 template_span_with_color_N_general_op(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	int k;
@@ -1045,7 +1045,7 @@ fz_get_span_color_painter(int n, int da, const byte * FZ_RESTRICT color, const f
 /* Blend source in mask over destination */
 
 /* FIXME: There is potential for SWAR optimisation here */
-static inline void
+static fz_forceinline void
 template_span_with_mask_1_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, int a, const byte * FZ_RESTRICT mp, int w)
 {
 	do
@@ -1077,7 +1077,7 @@ template_span_with_mask_1_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRIC
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_with_mask_3_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, int a, const byte * FZ_RESTRICT mp, int w)
 {
 	do
@@ -1137,7 +1137,7 @@ template_span_with_mask_3_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRIC
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_with_mask_4_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, int a, const byte * FZ_RESTRICT mp, int w)
 {
 	do
@@ -1201,7 +1201,7 @@ template_span_with_mask_4_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRIC
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_with_mask_N_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, int a, const byte * FZ_RESTRICT mp, int n, int w)
 {
 	do
@@ -1353,7 +1353,7 @@ fz_get_span_mask_painter(int a, int n)
 
 /* Blend source in constant alpha over destination */
 
-static inline void
+static fz_forceinline void
 template_span_1_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int w, int alpha)
 {
 	if (sa)
@@ -1375,7 +1375,7 @@ template_span_1_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * F
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_3_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int w, int alpha)
 {
 	if (sa)
@@ -1401,7 +1401,7 @@ template_span_3_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * F
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_4_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int w, int alpha)
 {
 	if (sa)
@@ -1430,7 +1430,7 @@ template_span_4_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * F
 }
 
 #if FZ_PLOTTERS_N
-static inline void
+static fz_forceinline void
 template_span_N_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int n1, int w, int alpha)
 {
 	if (sa)
@@ -1456,7 +1456,7 @@ template_span_N_with_alpha_general(byte * FZ_RESTRICT dp, int da, const byte * F
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_N_with_alpha_general_op(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int n1, int w, int alpha, const fz_overprint * FZ_RESTRICT eop)
 {
 	if (sa)
@@ -1487,7 +1487,7 @@ template_span_N_with_alpha_general_op(byte * FZ_RESTRICT dp, int da, const byte 
 
 /* Blend source over destination */
 
-static inline void
+static fz_forceinline void
 template_span_1_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int w)
 {
 	do
@@ -1525,7 +1525,7 @@ template_span_1_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT 
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_3_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int w)
 {
 	do
@@ -1573,7 +1573,7 @@ template_span_3_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT 
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_4_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int w)
 {
 	do
@@ -1620,7 +1620,7 @@ template_span_4_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT 
 }
 
 #if FZ_PLOTTERS_N
-static inline void
+static fz_forceinline void
 template_span_N_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int n1, int w)
 {
 	do
@@ -1665,7 +1665,7 @@ template_span_N_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT 
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 template_span_N_general_op(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT sp, int sa, int n1, int w, const fz_overprint * FZ_RESTRICT eop)
 {
 	do
@@ -2258,7 +2258,7 @@ fz_paint_pixmap(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_RESTRICT src, 
 	}
 }
 
-static inline void
+static fz_forceinline void
 paint_span_alpha_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, int n, int w)
 {
 	TRACK_FN();
@@ -2274,7 +2274,7 @@ paint_span_alpha_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, int n
 	while (--w);
 }
 
-static inline void
+static fz_forceinline void
 paint_span_alpha_not_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, int n, int w, int alpha)
 {
 	TRACK_FN();
@@ -2641,7 +2641,7 @@ intermediate_run:
 #include "paint-glyph.h"
 #endif /* FZ_ENABLE_SPOT_RENDERING */
 
-static inline void
+static void
 fz_paint_glyph_alpha(const unsigned char * FZ_RESTRICT colorbv, int n, int span, unsigned char * FZ_RESTRICT dp, int da, const fz_glyph *glyph, int w, int h, int skip_x, int skip_y, const fz_overprint * FZ_RESTRICT eop)
 {
 #if FZ_ENABLE_SPOT_RENDERING
@@ -2698,7 +2698,7 @@ fallback:{}
 	}
 }
 
-static inline void
+static void
 fz_paint_glyph_solid(const unsigned char * FZ_RESTRICT colorbv, int n, int span, unsigned char * FZ_RESTRICT dp, int da, const fz_glyph * FZ_RESTRICT glyph, int w, int h, int skip_x, int skip_y, const fz_overprint * FZ_RESTRICT eop)
 {
 #if FZ_ENABLE_SPOT_RENDERING

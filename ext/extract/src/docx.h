@@ -13,8 +13,8 @@ int extract_document_to_docx_content(
         int                 images,
         extract_astring_t*  content
         );
-/* Makes *o_content point to a string containing all paragraphs in *document in
-docx XML format.
+/* Makes *o_content point to a string containing all paragraphs, images and
+tables (tables as of 2021-07-22) in *document in docx XML format.
 
 This string can be passed to extract_docx_content_item() or
 extract_docx_write_template() to be inserted into a docx archive's

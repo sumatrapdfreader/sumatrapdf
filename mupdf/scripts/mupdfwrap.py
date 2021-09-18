@@ -3356,7 +3356,7 @@ def make_internal_functions( namespace, out_h, out_cpp):
                 }
 
                 fz_context*         m_ctx;
-                std::mutex          m_mutex;    /* Serialise access to m_ctx. */
+                std::mutex          m_mutex;    /* Serialise access to m_ctx. fixme: not actually necessary. */
 
                 /* Provide thread support to mupdf. */
                 std::mutex          m_mutexes[FZ_LOCK_MAX];
@@ -3375,6 +3375,7 @@ def make_internal_functions( namespace, out_h, out_cpp):
                     if (!m_ctx) {
                         /* Make a context for this thread by cloning the global
                         context. */
+                        /* fixme: we don't actually need to take a lock here. */
                         std::lock_guard<std::mutex> lock( s_state.m_mutex);
                         m_ctx = fz_clone_context(s_state.m_ctx);
                     }

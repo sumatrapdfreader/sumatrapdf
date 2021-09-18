@@ -552,16 +552,23 @@ int fz_do_try(fz_context *ctx);
 int fz_do_always(fz_context *ctx);
 int fz_do_catch(fz_context *ctx);
 
+#ifndef FZ_JMPBUF_ALIGN
+#define FZ_JMPBUF_ALIGN 32
+#endif
+
 typedef struct
 {
-	int state, code;
 	fz_jmp_buf buffer;
+	int state, code;
+	char padding[FZ_JMPBUF_ALIGN-sizeof(int)*2];
 } fz_error_stack_slot;
 
 typedef struct
 {
 	fz_error_stack_slot *top;
 	fz_error_stack_slot stack[256];
+	fz_error_stack_slot padding;
+	fz_error_stack_slot *stack_base;
 	int errcode;
 	void *print_user;
 	void (*print)(void *user, const char *message);

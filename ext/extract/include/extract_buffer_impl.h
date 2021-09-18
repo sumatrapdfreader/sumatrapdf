@@ -30,7 +30,7 @@ static inline int extract_buffer_read(
         size_t*             o_actual
         )
 {
-    extract_buffer_cache_t* cache = (void*) buffer;
+    extract_buffer_cache_t* cache = (extract_buffer_cache_t*)(void*) buffer;
     if (cache->numbytes - cache->pos < numbytes) {
         /* Can't use just the cache. */
         return extract_buffer_read_internal(buffer, data, numbytes, o_actual);
@@ -58,7 +58,7 @@ static inline int extract_buffer_write(
         size_t*             o_actual
         )
 {
-    extract_buffer_cache_t* cache = (void*) buffer;
+    extract_buffer_cache_t* cache = (extract_buffer_cache_t*)(void*) buffer;
     if (cache->numbytes - cache->pos < numbytes) {
         /* Can't use just the cache. */
         return extract_buffer_write_internal(buffer, data, numbytes, o_actual);

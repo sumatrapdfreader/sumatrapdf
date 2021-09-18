@@ -4,6 +4,9 @@
     <Filter Include="extract">
       <UniqueIdentifier>{80E8D782-ECC7-561E-F5DF-E1F4613EBD7F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="extract\include">
+      <UniqueIdentifier>{F38F0569-5F1B-732D-682C-F621D436CF2D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="extract\src">
       <UniqueIdentifier>{97E6B385-039C-2C7B-8C90-2652F844237F}</UniqueIdentifier>
     </Filter>
@@ -90,13 +93,34 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\extract\include\extract.h">
+      <Filter>extract\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\include\extract_alloc.h">
+      <Filter>extract\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\include\extract_buffer.h">
+      <Filter>extract\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\include\extract_buffer_impl.h">
+      <Filter>extract\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\include\extract_compat_inline.h">
+      <Filter>extract\include</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\extract\src\astring.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\document.h">
       <Filter>extract\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\extract\src\docx.h">
       <Filter>extract\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\extract\src\docx_template.h">
+      <Filter>extract\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\extract\src\html.h">
       <Filter>extract\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\extract\src\mem.h">
@@ -302,6 +326,9 @@
     <ClCompile Include="..\ext\extract\src\buffer.c">
       <Filter>extract\src</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\extract\src\document.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\extract\src\docx.c">
       <Filter>extract\src</Filter>
     </ClCompile>
@@ -309,6 +336,9 @@
       <Filter>extract\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\extract\src\extract.c">
+      <Filter>extract\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\extract\src\html.c">
       <Filter>extract\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\extract\src\join.c">

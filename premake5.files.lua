@@ -287,9 +287,11 @@ function extract_files()
     "alloc.*",
     "astring.*",
     "buffer.*",
-    "docx_template.*",
+    "document.*",
     "docx.*",
+    "docx_template.*",
     "extract.*",
+    "html.*",
     "join.*",
     "mem.*",
     "memento.*",
@@ -300,6 +302,9 @@ function extract_files()
     "text.*",
     "xml.*",
     "zip.*",
+  })
+  files_in_dir("ext/extract/include", {
+    "*.h",
   })
 end
 

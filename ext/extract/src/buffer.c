@@ -375,7 +375,7 @@ int extract_buffer_write_internal(
                     not recoverable. <pos> will be the number of bytes in
                     source..+numbytes that have been successfully flushed, and
                     could be negative if we failed to flush earlier data. */
-                    outf("failed to flush. actual=%i delta=%i\n", actual, delta);
+                    outf("failed to flush. actual=%li delta=%li\n", (long) actual, (long) delta);
                     e = 0;
                     goto end;
                 }

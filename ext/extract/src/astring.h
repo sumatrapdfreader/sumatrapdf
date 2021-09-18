@@ -24,10 +24,33 @@ int extract_astring_catf(extract_alloc_t* alloc, extract_astring_t* string, cons
 int extract_astring_truncate(extract_astring_t* content, int len);
 /* Removes last <len> chars. */
 
-int astring_char_truncate_if(extract_astring_t* content, char c);
+int extract_astring_char_truncate_if(extract_astring_t* content, char c);
 /* Removes last char if it is <c>. */
 
 int extract_astring_cat_xmlc(extract_alloc_t* alloc, extract_astring_t* string, int c);
 /* Appends specified character using XML escapes as necessary. */
+
+int extract_astring_catc_unicode(
+        extract_alloc_t* alloc,
+        extract_astring_t* string,
+        int c,
+        int xml,
+        int ascii_ligatures,
+        int ascii_dash,
+        int ascii_apostrophe
+        );
+/* Appends unicode character <c> to <string>.
+    xml:
+        If true, we use XML escape sequences for special characters such as '<'
+        and unicode values above 127. Otherwise we encode as utf8.
+    ascii_ligatures: if true we expand ligatures to "fl", "fi" etc.
+    ascii_dash:
+        If true we replace unicode dash characters with '-'.
+    ascii_apostrophe:
+        If true we replace unicode apostrophe with ascii single-quote "'".
+*/
+
+int extract_astring_catc_unicode_xml(extract_alloc_t* alloc, extract_astring_t* string, int c);
+/* Appends specific unicode character, using XML escape sequences as required. */
 
 #endif

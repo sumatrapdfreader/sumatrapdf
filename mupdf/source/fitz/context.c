@@ -159,7 +159,7 @@ fz_drop_context(fz_context *ctx)
 
 	fz_flush_warnings(ctx);
 
-	assert(ctx->error.top == ctx->error.stack);
+	assert(ctx->error.top == ctx->error.stack_base);
 
 	/* Free the context itself */
 	ctx->alloc.free(ctx->alloc.user, ctx);
@@ -168,7 +168,9 @@ fz_drop_context(fz_context *ctx)
 static void
 fz_init_error_context(fz_context *ctx)
 {
-	ctx->error.top = ctx->error.stack;
+#define ALIGN(addr, align)  ((((intptr_t)(addr)) + (align-1)) & ~(align-1))
+	ctx->error.stack_base = (fz_error_stack_slot *)ALIGN(ctx->error.stack, FZ_JMPBUF_ALIGN);
+	ctx->error.top = ctx->error.stack_base;
 	ctx->error.errcode = FZ_ERROR_NONE;
 	ctx->error.message[0] = 0;
 

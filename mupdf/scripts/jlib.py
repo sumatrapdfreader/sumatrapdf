@@ -972,7 +972,11 @@ def system(
         out = out_return
 
     if verbose:
-        log(f'running: {command}', nv=0, caller=caller+1)
+        env_text = ''
+        if env_extra:
+            for n, v in env_extra.items():
+                env_text += f' {n}={v}'
+        log(f'running:{env_text} {command}', nv=0, caller=caller+1)
 
     out_raw = out in (None, subprocess.DEVNULL)
     if prefix:

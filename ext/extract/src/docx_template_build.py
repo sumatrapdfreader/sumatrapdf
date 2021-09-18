@@ -9,6 +9,9 @@ Args:
     --pretty <directory>
         Prettyfies all .xml files within <directory> using 'xmllint --format'.
 
+    -f
+        Force touch of output file, even if unchanged.
+
     -i <in-path>
         Set template docx/odt file to extract from.
     
@@ -57,12 +60,17 @@ def write(text, path, encoding):
     with open(path, 'wb') as f:
         f.write(text.encode(encoding))
 
-def write_if_diff(text, path, encoding):
-    if os.path.isfile(path):
-        old = read(path, encoding)
-        if old == text:
-            return
-    print(f'Updating path={path} because contents have changed')
+def write_if_diff(text, path, encoding, force):
+    '''
+    Does nothing if <force> is false and file named <path> already contains
+    <text>. Otherwise writes <text> to file named <path>.
+    '''
+    if not force:
+        if os.path.isfile(path):
+            old = read(path, encoding)
+            if old == text:
+                return
+        print(f'Updating path={path} because contents have changed')
     write(text, path, encoding)
 
 def check_path_safe(path):
@@ -98,6 +106,8 @@ def main():
     path_in = None
     path_out = None
     infix = None
+    force = False
+
     args = iter(sys.argv[1:])
     while 1:
         try: arg = next(args)
@@ -114,6 +124,8 @@ def main():
                     path = os.path.join(dirpath, filename)
                     system(f'xmllint --format {path} > {path}-')
                     system(f'mv {path}- {path}')
+        elif arg == '-f':
+            force = True
         elif arg == '-i':
             path_in = next(args)
         elif arg == '-n':
@@ -166,7 +178,7 @@ def main():
         for filename in sorted(filenames):
             num_items += 1
             path = os.path.join(dirpath, filename)
-            print(f'looking at path={path}')
+            #print(f'looking at path={path}')
             name = path[ len(path_temp)+1: ]
             out_c.write(f'    {{\n')
             out_c.write(f'        "{name}",\n')
@@ -213,7 +225,7 @@ def main():
     out_c.write(f'int {infix}_template_items_num = {num_items};\n')
     
     out_c = out_c.getvalue()
-    write_if_diff(out_c, f'{path_out}.c', 'utf-8')
+    write_if_diff(out_c, f'{path_out}.c', 'utf-8', force)
     
     out_h = io.StringIO()
     out_h.write(f'#ifndef EXTRACT_{infix.upper()}_TEMPLATE_H\n')
@@ -233,7 +245,7 @@ def main():
     out_h.write(f'\n')
     out_h.write(f'\n')
     out_h.write(f'#endif\n')
-    write_if_diff(out_h.getvalue(), f'{path_out}.h', 'utf-8')
+    write_if_diff(out_h.getvalue(), f'{path_out}.h', 'utf-8', force)
     #os.system(f'rm -r "{path_temp}"')
     
 if __name__ == '__main__':

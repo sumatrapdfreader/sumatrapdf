@@ -450,9 +450,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\extract\include\extract.h" />
+    <ClInclude Include="..\ext\extract\include\extract_alloc.h" />
+    <ClInclude Include="..\ext\extract\include\extract_buffer.h" />
+    <ClInclude Include="..\ext\extract\include\extract_buffer_impl.h" />
+    <ClInclude Include="..\ext\extract\include\extract_compat_inline.h" />
     <ClInclude Include="..\ext\extract\src\astring.h" />
+    <ClInclude Include="..\ext\extract\src\document.h" />
     <ClInclude Include="..\ext\extract\src\docx.h" />
     <ClInclude Include="..\ext\extract\src\docx_template.h" />
+    <ClInclude Include="..\ext\extract\src\html.h" />
     <ClInclude Include="..\ext\extract\src\mem.h" />
     <ClInclude Include="..\ext\extract\src\memento.h" />
     <ClInclude Include="..\ext\extract\src\odt.h" />
@@ -522,9 +529,11 @@
     <ClCompile Include="..\ext\extract\src\alloc.c" />
     <ClCompile Include="..\ext\extract\src\astring.c" />
     <ClCompile Include="..\ext\extract\src\buffer.c" />
+    <ClCompile Include="..\ext\extract\src\document.c" />
     <ClCompile Include="..\ext\extract\src\docx.c" />
     <ClCompile Include="..\ext\extract\src\docx_template.c" />
     <ClCompile Include="..\ext\extract\src\extract.c" />
+    <ClCompile Include="..\ext\extract\src\html.c" />
     <ClCompile Include="..\ext\extract\src\join.c" />
     <ClCompile Include="..\ext\extract\src\mem.c" />
     <ClCompile Include="..\ext\extract\src\memento.c" />
