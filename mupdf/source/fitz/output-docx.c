@@ -287,7 +287,7 @@ static void s_walk_path(fz_context *ctx, fz_docx_device *dev, extract_t *extract
 	walker.curvetoy = NULL;
 	walker.rectto = NULL;
 
-	assert(dev->writer->ctx = ctx);
+	assert(dev->writer->ctx == ctx);
 	fz_walk_path(ctx, path, &walker, extract /*arg*/);
 }
 

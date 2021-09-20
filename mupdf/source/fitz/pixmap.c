@@ -1756,7 +1756,7 @@ fz_convert_indexed_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	unsigned char *d;
 	int y, x, k, n, high;
 	unsigned char *lookup;
-	int s_line_inc, d_line_inc;
+	ptrdiff_t s_line_inc, d_line_inc;
 
 	if (src->colorspace->type != FZ_COLORSPACE_INDEXED)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot convert non-indexed pixmap");
@@ -1771,8 +1771,8 @@ fz_convert_indexed_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	dst = fz_new_pixmap_with_bbox(ctx, base, fz_pixmap_bbox(ctx, src), src->seps, src->alpha);
 	s = src->samples;
 	d = dst->samples;
-	s_line_inc = src->stride - src->w * (size_t)src->n;
-	d_line_inc = dst->stride - dst->w * (size_t)dst->n;
+	s_line_inc = src->stride - src->w * (ptrdiff_t)src->n;
+	d_line_inc = dst->stride - dst->w * (ptrdiff_t)dst->n;
 
 	if (src->alpha)
 	{
@@ -1826,7 +1826,7 @@ fz_convert_separation_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	int y, x, k, sn, bn, a;
 	float src_v[FZ_MAX_COLORS];
 	float base_v[FZ_MAX_COLORS];
-	int s_line_inc, d_line_inc;
+	ptrdiff_t s_line_inc, d_line_inc;
 
 	ss = src->colorspace;
 
@@ -1842,8 +1842,8 @@ fz_convert_separation_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	{
 		s = src->samples;
 		d = dst->samples;
-		s_line_inc = src->stride - src->w * (size_t)src->n;
-		d_line_inc = dst->stride - dst->w * (size_t)dst->n;
+		s_line_inc = src->stride - src->w * (ptrdiff_t)src->n;
+		d_line_inc = dst->stride - dst->w * (ptrdiff_t)dst->n;
 		sn = ss->n;
 		bn = base->n;
 
