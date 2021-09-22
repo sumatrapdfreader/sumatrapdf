@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-07cc15285580495876508e6ebc3a45d6e0755d3b
+e6563029cf2ccd29542e24e9f6330b2da801e4bb
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -420,6 +420,7 @@ it:&Annulla
 kr:취소
 nl:&Annuleren
 pl:&Anuluj
+sk:&Zrušiť
 tr:İptal Et
 vn:&Hủy
 :&Caret
@@ -528,6 +529,7 @@ it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
 nl:&Doorgaan met installeren van 32bit versie
 pl:&Kontynuuj instalację wersji 32-bitowej
+sk:&Pokračovať v inštalácii 32-bitovej verzie
 tr:32 bit sürümü kurmayı &sürdür
 vn:&Tiếp tục cài đặt bản 32-bit
 :&Copy Selection \tCtrl-C
@@ -1064,6 +1066,7 @@ lv:&Brīvs teksts
 my:&Teks Bebas
 nl:&Vrije Tekst
 pl:&Dowolny tekst
+sk:&Voľný text
 tr:&Özgür Metin
 :&Go To
 af:&Gaan Na
@@ -2514,6 +2517,7 @@ lv:&Izņemt no vēstures
 nl:V&erwijder uit Geschiedenis
 pl:&Usuń z historii
 ru:&Удалить из истории
+sk:&Odstrániť z histórie
 ta:வரலாற்றிலிருந்து நீக்கு 
 tr:Geçmişten &Kaldır
 tw:从历史记录删除
@@ -2602,6 +2606,7 @@ it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
 nl:&Opslaan in bestaande PDF
 pl:&Zapisz w istniejącym pliku PDF
+sk:&Uložiť do existujúceho PDF
 tr:Var olan PDF'ye &kaydet
 :&Search With Google
 am:&Որոնել Google-ով
@@ -2616,6 +2621,7 @@ es:&Buscar con Google
 it:Cerca con Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
+sk:&Hľadať pomocou Google
 tr:Google İle &Ara
 :&Settings
 am:&Կարգավորումներ
@@ -2935,6 +2941,7 @@ it:&Traduci con Google
 kr:Google로 번역(&T)
 nl:&Vertalen Met Google
 pl:&Tłumacz za pomocą Google
+sk:&Preložiť pomocou Google
 tr:Google İle &Çevir
 :&Underline
 am:&Ընդգծված
@@ -3714,6 +3721,7 @@ no:Legg side %s til i favoritter\tCtrl+B
 pl:Dodaj stronę %s do ulubionych\tCtrl+B
 pt:Adicionar página %s aos favoritos\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
+sk:Pridanie stránky %s do obľúbených\tCtrl+B
 sl:Dodaj stran %s med priljubljene\tCtrl+B
 th:เพิ่มหน้า %s ไปยังรายการโปรด Ctrl+B
 tr:%s. sayfayı sık kullanılanlara ekle\tCtrl+B
@@ -4020,6 +4028,7 @@ lv:Anotācijas
 nl:Aantekeningen
 pl:Adnotacje
 ru:Аннотации
+sk:Anotácie
 tr:Notlar
 tw:評注
 vn:Ghi chú
@@ -4522,6 +4531,7 @@ lt:Fono spalva:
 lv:Fona krāsa:
 nl:Achtergrond Kleur
 pl:Kolor tła:
+sk:Farba pozadia:
 tr:Arka Plan Rengi
 vn:Màu nền
 :Book View
@@ -5379,6 +5389,7 @@ nl:Cirkel
 no:Sirkel
 pl:Okrąg
 ru:Круг
+sk:Kruh
 ta:வட்டம்
 tr:Çember
 tw:圆
@@ -5484,6 +5495,7 @@ nl:Alle Samenvouwen
 pl:Zwiń wszystko
 pt:Recolher tudo
 ru:Свернуть все
+sk:Zbaliť všetko
 sl:Strni vse
 ta:அனைத்தையும் மறை 
 th:ยุบทั้งหมด
@@ -5514,6 +5526,7 @@ my:Warna:
 nl:Kleur
 pl:Kolor:
 ru:Цвет:
+sk:Farba:
 tr:Renk:
 vn:Màu:
 :Comic books
@@ -6388,6 +6401,7 @@ es:No se ha podido encontrar el nombre de la impresora
 it:Impossibile ottenere il nome della stampante
 nl:Kan de naam van de printer niet vinden
 pl:Nie można uzyskać nazwy drukarki
+tr:Yazıcı adı alınamadı
 :Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
 ar:لا يمكن تشغيل الطابعة
@@ -7762,6 +7776,7 @@ it:Download versione a 64bit
 kr:64비트 버전 다운로드
 nl:Download 64bit versie
 pl:Pobierz wersję 64-bitową
+sk:Stiahnuť 64-bitovú verziu
 tr:64 bit sürümü indir
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
@@ -10906,6 +10921,7 @@ lv:Attēli
 nl:Afbeeldingen
 pl:Obrazy
 ru:Изображения
+sk:Obrázky
 ta:படங்கள் 
 tr:Resimler
 tw:圖片
@@ -12011,6 +12027,7 @@ nl:Nieuw venster\tCrtl+N
 pl:Nowe &okno\tCtrl+N
 pt:Nova &janela\tCtrl+N
 ru:Новое о&кно\tCtrl+N
+sk:Nové okno\tCtrl+N
 sl:Novo okno\tCtrl+N
 ta:புதிய சாளரம் 
 th:เปิด &หน้าต่างใหม่ Ctrl+N
@@ -12031,6 +12048,7 @@ it:Nuova versione disponibile
 kr:새 버전이 있습니다
 nl:Nieuwe versie beschikbaar
 pl:Dostępna nowa wersja
+sk:Dostupná nová verzia
 tr:Yeni sürüm var
 :Next Page
 af:Volgende Bladsy
@@ -15495,6 +15513,7 @@ lv:Saglabāt izmaiņas jaunā PDF failā
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
 ru:Сохранить изменения в новый PDF
+sk:Uloženie zmien do nového PDF
 tr:Değişiklikleri yeni PDF'ye kaydet
 :Save changes to existing PDF
 am:Պահել փոփոխությունները առկա PDF-ում
@@ -15531,6 +15550,7 @@ it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
 nl:Opslaan in &nieuwe PDF
 pl:Zapisz w &nowym pliku PDF
+sk:Uložiť do &nového PDF
 tr:&Yeni PDF'ye kaydet
 :Search With &Bing
 am:Որոնել &Bing-ով
@@ -15546,6 +15566,7 @@ it:Cerca con &Bing
 kr:Bing으로 검색(&B)
 nl:Zoeken Met &Bing
 pl:Szukaj za pomocą &Bing
+sk:Vyhľadávanie pomocou &Bing
 tr:&Bing İle Ara
 :Search With &Google
 am:Որոնել &Google-ով
@@ -15561,6 +15582,7 @@ it:Cerca con &Google
 kr:Google로 검색(&G)
 nl:Zoeken Met &Google
 pl:Szukaj za pomocą &Google
+sk:Hľadať pomocou &Google
 tr:&Google İle Ara
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
@@ -16061,6 +16083,7 @@ nl:Toon Bladwijzers\tF12
 pl:Pokaż za&kładki\tF12
 pt:Mostrar &marcadores\tF12
 ru:Показать за&кладки\tF12
+sk:Zobraziť &záložky\tF12
 sl:Pokaži zaznamke\tF12
 th:แสดง &บุ๊กมาร์ก F12
 tr:Yer &İmlerini Göster\tF12
@@ -16097,6 +16120,7 @@ nl:Toon &Favorieten
 pl:Pokaż &ulubione
 pt:Mostrar &favoritos
 ru:Показать «И&збранное»
+sk:Zobraziť &obľúbené položky
 sl:Pokaži priljubljene
 th:แสดง &รายการโปรด
 tr:&Yer İmlerini Göster
@@ -16494,6 +16518,7 @@ nl:Toon in &map
 pl:Pokaż w &folderze
 pt:Mostrar na &pasta
 ru:Показать в п&апке
+sk:Zobraziť v &priečinku
 sl:Pokaži v mapi
 ta:கோப்பகத்தில் காண்பி 
 th:แสดงใน &โฟลเดอร์
@@ -17531,6 +17556,7 @@ lv:Atbalstīt SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
 ru:Поддержать SumatraPDF
+sk:Podpora SumatraPDF
 tr:SumatraPDF'yi Destekle
 tw:支持 SumatraPDF
 vn:Hỗ trợ SumatraPDF
@@ -18052,6 +18078,7 @@ it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
 nl:Vertalen Met &Deepl
 pl:Tłumacz za pomocą &DeepL
+sk:Preložiť pomocou &DeepL
 tr:&DeepL İle Çevir
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
