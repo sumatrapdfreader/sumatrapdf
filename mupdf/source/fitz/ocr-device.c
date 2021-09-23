@@ -132,6 +132,7 @@ typedef struct fz_ocr_device_s
 	word_record **words;
 
 	char *language;
+	char *datadir;
 } fz_ocr_device;
 
 static void
@@ -387,6 +388,7 @@ drop_ocr_device(fz_context *ctx, fz_ocr_device *ocr)
 	fz_free(ctx, ocr->words);
 	fz_free(ctx, ocr->chars);
 	fz_free(ctx, ocr->language);
+	fz_free(ctx, ocr->datadir);
 }
 
 static void
@@ -1067,7 +1069,7 @@ fz_ocr_close_device(fz_context *ctx, fz_device *dev)
 	fz_close_device(ctx, ocr->draw_dev);
 
 	/* Now run the OCR */
-	tessapi = ocr_init(ctx, ocr->language);
+	tessapi = ocr_init(ctx, ocr->language, ocr->datadir);
 
 	fz_try(ctx)
 	{
@@ -1117,6 +1119,7 @@ fz_new_ocr_device(fz_context *ctx,
 		fz_rect mediabox,
 		int with_list,
 		const char *language,
+		const char *datadir,
 		int (*progress)(fz_context *, void *, int),
 		void *progress_arg)
 {
@@ -1196,6 +1199,7 @@ fz_new_ocr_device(fz_context *ctx,
 		fz_set_pixmap_resolution(ctx, dev->pixmap, res.x, res.y);
 
 		dev->language = fz_strdup(ctx, language ? language : "eng");
+		dev->datadir = fz_strdup(ctx, datadir ? datadir : "");
 
 		dev->draw_dev = fz_new_draw_device(ctx, fz_identity, dev->pixmap);
 		if (with_list)

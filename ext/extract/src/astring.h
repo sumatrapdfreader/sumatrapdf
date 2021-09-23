@@ -11,8 +11,11 @@ typedef struct
 } extract_astring_t;
 
 void extract_astring_init(extract_astring_t* string);
+/* Initialises <string> so it is ready for use. */
 
 void extract_astring_free(extract_alloc_t* alloc, extract_astring_t* string);
+/* Frees any existing data and returns with <string> ready for use as if by
+extract_astring_init(). */
 
 int extract_astring_catl(extract_alloc_t* alloc, extract_astring_t* string, const char* s, size_t s_len);
 

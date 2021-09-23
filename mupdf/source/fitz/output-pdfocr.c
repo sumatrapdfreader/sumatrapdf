@@ -41,6 +41,7 @@ const char *fz_pdfocr_write_options_usage =
 	"\tcompression=flate: Flate compression\n"
 	"\tstrip-height=N: Strip height (default 0=fullpage)\n"
 	"\tocr-language=<lang>: OCR language (default=eng)\n"
+	"\tocr-datadir=<datadir>: OCR data path (default=rely on TESSDATA_PREFIX)\n"
 	"\n";
 
 static const char funky_font[] =
@@ -175,7 +176,11 @@ fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, const char *ar
 	}
 	if (fz_has_option(ctx, args, "ocr-language", &val))
 	{
-		fz_strlcpy(opts->language, val, sizeof(opts->language));
+		fz_copy_option(ctx, val, opts->language, nelem(opts->language));
+	}
+	if (fz_has_option(ctx, args, "ocr-datadir", &val))
+	{
+		fz_copy_option(ctx, val, opts->datadir, nelem(opts->datadir));
 	}
 
 	return opts;
@@ -906,7 +911,7 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 
 	fz_try(ctx)
 	{
-		writer->tessapi = ocr_init(ctx, writer->options.language);
+		writer->tessapi = ocr_init(ctx, writer->options.language, writer->options.datadir);
 	}
 	fz_catch(ctx)
 	{

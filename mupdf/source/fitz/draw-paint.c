@@ -655,12 +655,9 @@ fz_get_solid_color_painter(int n, const byte * FZ_RESTRICT color, int da, const 
 /* Blend a non-premultiplied color in mask over destination */
 
 static fz_forceinline void
-template_span_with_color_1_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
+template_span_with_color_1_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
-	int sa = FZ_EXPAND(color[1]);
 	int g = color[0];
-	if (sa == 256)
-	{
 		do
 		{
 			int ma = *mp++;
@@ -679,8 +676,12 @@ template_span_with_color_1_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 		}
 		while (--w);
 	}
-	else
+
+static fz_forceinline void
+template_span_with_color_1_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 	{
+	int sa = FZ_EXPAND(color[1]);
+	int g = color[0];
 		do
 		{
 			int ma = *mp++;
@@ -695,16 +696,12 @@ template_span_with_color_1_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 		}
 		while (--w);
 	}
-}
 
 static fz_forceinline void
-template_span_with_color_3_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
+template_span_with_color_3_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	unsigned int rgba = *((const unsigned int *)color);
 	unsigned int mask, rb, ga;
-	int sa = FZ_EXPAND(color[3]);
-	if (sa == 0)
-		return;
 	if (isbigendian())
 		rgba |= 0x000000FF;
 	else
@@ -712,8 +709,6 @@ template_span_with_color_3_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 	mask = 0xFF00FF00;
 	rb = rgba & (mask>>8);
 	ga = (rgba & mask)>>8;
-	if (sa == 256)
-	{
 		do
 		{
 			unsigned int ma = *mp++;
@@ -737,8 +732,20 @@ template_span_with_color_3_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 		}
 		while (--w);
 	}
+
+static fz_forceinline void
+template_span_with_color_3_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
+{
+	unsigned int rgba = *((const unsigned int *)color);
+	unsigned int mask, rb, ga;
+	int sa = FZ_EXPAND(color[3]);
+	if (isbigendian())
+		rgba |= 0x000000FF;
 	else
-	{
+		rgba |= 0xFF000000;
+	mask = 0xFF00FF00;
+	rb = rgba & (mask>>8);
+	ga = (rgba & mask)>>8;
 		do
 		{
 			unsigned int ma = *mp++;
@@ -758,19 +765,15 @@ template_span_with_color_3_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 		}
 		while (--w);
 	}
-}
 
 static fz_forceinline void
-template_span_with_color_4_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
+template_span_with_color_4_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
-	int sa = FZ_EXPAND(color[4]);
 	int c = color[0];
 	int m = color[1];
 	int y = color[2];
 	int k = color[3];
 	TRACK_FN();
-	if (sa == 256)
-	{
 		do
 		{
 			int ma = *mp++;
@@ -795,8 +798,16 @@ template_span_with_color_4_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 		}
 		while (--w);
 	}
-	else
+
+static fz_forceinline void
+template_span_with_color_4_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 	{
+	int sa = FZ_EXPAND(color[4]);
+	int c = color[0];
+	int m = color[1];
+	int y = color[2];
+	int k = color[3];
+	TRACK_FN();
 		do
 		{
 			int ma = *mp++;
@@ -814,18 +825,12 @@ template_span_with_color_4_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp
 		}
 		while (--w);
 	}
-}
 
 static fz_forceinline void
-template_span_with_color_N_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
+template_span_with_color_N_general_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 {
 	int k;
 	int n1 = n - da;
-	int sa = FZ_EXPAND(color[n1]);
-	if (sa == 0)
-		return;
-	if (sa == 256)
-	{
 		do
 		{
 			int ma = *mp++;
@@ -845,41 +850,52 @@ template_span_with_color_N_general(byte * FZ_RESTRICT dp, const byte * FZ_RESTRI
 			}
 			else if (ma != 0)
 			{
-				for (k = 0; k < n1; k++)
+			if (n1 > 0)
+				dp[0] = FZ_BLEND(color[0], dp[0], ma);
+			if (n1 > 1)
+				dp[1] = FZ_BLEND(color[1], dp[1], ma);
+			if (n1 > 2)
+				dp[2] = FZ_BLEND(color[2], dp[2], ma);
+			for (k = 3; k < n1; k++)
 					dp[k] = FZ_BLEND(color[k], dp[k], ma);
 				if (da)
-					dp[n1] = FZ_BLEND(255, dp[k], ma);
+				dp[n1] = FZ_BLEND(255, dp[n1], ma);
 			}
 			dp += n;
 		}
 		while (--w);
 	}
-	else
+
+static fz_forceinline void
+template_span_with_color_N_general_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da)
 	{
+	int k;
+	int n1 = n - da;
+	int sa = FZ_EXPAND(color[n1]);
 		do
 		{
 			int ma = *mp++;
 			ma = FZ_COMBINE(FZ_EXPAND(ma), sa);
-			for (k = 0; k < n1; k++)
+		if (n1 > 0)
+			dp[0] = FZ_BLEND(color[0], dp[0], ma);
+		if (n1 > 1)
+			dp[1] = FZ_BLEND(color[1], dp[1], ma);
+		if (n1 > 2)
+			dp[2] = FZ_BLEND(color[2], dp[2], ma);
+		for (k = 3; k < n1; k++)
 				dp[k] = FZ_BLEND(color[k], dp[k], ma);
 			if (da)
-				dp[k] = FZ_BLEND(255, dp[k], ma);
+			dp[n1] = FZ_BLEND(255, dp[n1], ma);
 			dp += n;
 		}
 		while (--w);
 	}
-}
 
 static fz_forceinline void
-template_span_with_color_N_general_op(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+template_span_with_color_N_general_op_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	int k;
 	int n1 = n - da;
-	int sa = FZ_EXPAND(color[n1]);
-	if (sa == 0)
-		return;
-	if (sa == 256)
-	{
 		do
 		{
 			int ma = *mp++;
@@ -913,8 +929,13 @@ template_span_with_color_N_general_op(byte * FZ_RESTRICT dp, const byte * FZ_RES
 		}
 		while (--w);
 	}
-	else
+
+static fz_forceinline void
+template_span_with_color_N_general_op_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 	{
+	int k;
+	int n1 = n - da;
+	int sa = FZ_EXPAND(color[n1]);
 		do
 		{
 			int ma = *mp++;
@@ -928,114 +949,216 @@ template_span_with_color_N_general_op(byte * FZ_RESTRICT dp, const byte * FZ_RES
 		}
 		while (--w);
 	}
+
+static void
+paint_span_with_color_0_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_N_general_solid(dp, mp, 1, w, color, 1);
 }
 
 static void
-paint_span_with_color_0_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_0_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general(dp, mp, 1, w, color, 1);
+	template_span_with_color_N_general_alpha(dp, mp, 1, w, color, 1);
 }
 
 static void
-paint_span_with_color_1(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_1_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general(dp, mp, 1, w, color, 0);
+	template_span_with_color_N_general_solid(dp, mp, 1, w, color, 0);
 }
 
 static void
-paint_span_with_color_1_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_1_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_1_da(dp, mp, 2, w, color, 1);
+	template_span_with_color_N_general_alpha(dp, mp, 1, w, color, 0);
+}
+
+static void
+paint_span_with_color_1_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_1_da_solid(dp, mp, 2, w, color, 1);
+}
+
+static void
+paint_span_with_color_1_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_1_da_alpha(dp, mp, 2, w, color, 1);
 }
 
 #if FZ_PLOTTERS_RGB
 static void
-paint_span_with_color_3(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_3_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general(dp, mp, 3, w, color, 0);
+	template_span_with_color_N_general_solid(dp, mp, 3, w, color, 0);
 }
 
 static void
-paint_span_with_color_3_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_3_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_3_da(dp, mp, 4, w, color, 1);
+	template_span_with_color_3_da_solid(dp, mp, 4, w, color, 1);
+}
+
+static void
+paint_span_with_color_3_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_N_general_alpha(dp, mp, 3, w, color, 0);
+}
+
+static void
+paint_span_with_color_3_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_3_da_alpha(dp, mp, 4, w, color, 1);
 }
 #endif /* FZ_PLOTTERS_RGB */
 
 #if FZ_PLOTTERS_CMYK
 static void
-paint_span_with_color_4(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_4_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general(dp, mp, 4, w, color, 0);
+	template_span_with_color_N_general_solid(dp, mp, 4, w, color, 0);
 }
 
 static void
-paint_span_with_color_4_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_4_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_4_da(dp, mp, 5, w, color, 1);
+	template_span_with_color_N_general_alpha(dp, mp, 4, w, color, 0);
+}
+
+static void
+paint_span_with_color_4_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_4_da_solid(dp, mp, 5, w, color, 1);
+}
+
+static void
+paint_span_with_color_4_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_4_da_alpha(dp, mp, 5, w, color, 1);
 }
 #endif /* FZ_PLOTTERS_CMYK */
 
 #if FZ_PLOTTERS_N
 static void
-paint_span_with_color_N(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_N_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general(dp, mp, n, w, color, 0);
+	template_span_with_color_N_general_solid(dp, mp, n, w, color, 0);
 }
 
 static void
-paint_span_with_color_N_da(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_N_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general(dp, mp, n, w, color, 1);
+	template_span_with_color_N_general_alpha(dp, mp, n, w, color, 0);
+}
+
+static void
+paint_span_with_color_N_da_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_N_general_solid(dp, mp, n, w, color, 1);
+}
+
+static void
+paint_span_with_color_N_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_N_general_alpha(dp, mp, n, w, color, 1);
 }
 #endif /* FZ_PLOTTERS_N */
 
 #ifdef FZ_ENABLE_SPOT_RENDERING
 static void
-paint_span_with_color_N_op(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_N_op_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general_op(dp, mp, n, w, color, 0, eop);
+	template_span_with_color_N_general_op_solid(dp, mp, n, w, color, 0, eop);
 }
 
 static void
-paint_span_with_color_N_da_op(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+paint_span_with_color_N_op_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
-	template_span_with_color_N_general_op(dp, mp, n, w, color, 1, eop);
+	template_span_with_color_N_general_op_alpha(dp, mp, n, w, color, 0, eop);
+}
+
+static void
+paint_span_with_color_N_da_op_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_N_general_op_solid(dp, mp, n, w, color, 1, eop);
+}
+
+static void
+paint_span_with_color_N_da_op_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
+{
+	TRACK_FN();
+	template_span_with_color_N_general_op_alpha(dp, mp, n, w, color, 1, eop);
 }
 #endif /* FZ_ENABLE_SPOT_RENDERING */
 
 fz_span_color_painter_t *
 fz_get_span_color_painter(int n, int da, const byte * FZ_RESTRICT color, const fz_overprint * FZ_RESTRICT eop)
 {
+	byte alpha = color[n-da];
+	if (alpha == 0)
+		return NULL;
 #if FZ_ENABLE_SPOT_RENDERING
 	if (fz_overprint_required(eop))
 	{
-		return da ? paint_span_with_color_N_da_op : paint_span_with_color_N_op;
+		if (alpha == 255)
+			return da ? paint_span_with_color_N_da_op_solid : paint_span_with_color_N_op_solid;
+		else
+			return da ? paint_span_with_color_N_da_op_alpha : paint_span_with_color_N_op_alpha;
 	}
 #endif /* FZ_ENABLE_SPOT_RENDERING */
 	switch(n-da)
 	{
-	case 0: return da ? paint_span_with_color_0_da : NULL;
-	case 1: return da ? paint_span_with_color_1_da : paint_span_with_color_1;
+	case 0:
+		if (alpha == 255)
+			return da ? paint_span_with_color_0_da_solid : NULL;
+		else
+			return da ? paint_span_with_color_0_da_alpha : NULL;
+	case 1:
+		if (alpha == 255)
+			return da ? paint_span_with_color_1_da_solid : paint_span_with_color_1_solid;
+		else
+			return da ? paint_span_with_color_1_da_alpha : paint_span_with_color_1_alpha;
 #if FZ_PLOTTERS_RGB
-	case 3: return da ? paint_span_with_color_3_da : paint_span_with_color_3;
+	case 3:
+		if (alpha == 255)
+			return da ? paint_span_with_color_3_da_solid : paint_span_with_color_3_solid;
+		else
+			return da ? paint_span_with_color_3_da_alpha : paint_span_with_color_3_alpha;
 #endif/* FZ_PLOTTERS_RGB */
 #if FZ_PLOTTERS_CMYK
-	case 4: return da ? paint_span_with_color_4_da : paint_span_with_color_4;
+	case 4:
+		if (alpha == 255)
+			return da ? paint_span_with_color_4_da_solid : paint_span_with_color_4_solid;
+		else
+			return da ? paint_span_with_color_4_da_alpha : paint_span_with_color_4_alpha;
 #endif/* FZ_PLOTTERS_CMYK */
 #if FZ_PLOTTERS_N
-	default: return da ? paint_span_with_color_N_da : paint_span_with_color_N;
+	default:
+		if (alpha == 255)
+			return da ? paint_span_with_color_N_da_solid : paint_span_with_color_N_solid;
+		else
+			return da ? paint_span_with_color_N_da_alpha : paint_span_with_color_N_alpha;
 #else
 	default: return NULL;
 #endif /* FZ_PLOTTERS_N */

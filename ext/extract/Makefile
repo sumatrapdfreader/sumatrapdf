@@ -117,7 +117,7 @@ endif
 
 # Default target - run all tests.
 #
-test: test-buffer test-misc test-src test-exe test-mutool test-gs test-html test-obj
+test: test-buffer test-misc test-src test-exe test-mutool test-gs test-html test-tables
 	@echo $@: passed
 
 # Define the main test targets.
@@ -163,6 +163,7 @@ ifneq ($(mutool),)
     tests_mutool_text := \
             $(patsubst %, %.mutool.text.diff, $(pdfs_generated)) \
 
+    tests_html := test/generated/table.pdf.mutool.html.diff
 endif
 ifneq ($(gs),)
 # Targets that test direct conversion with gs.
@@ -223,32 +224,37 @@ test_gs_fpp: $(gs)
 	ls test/generated/zlib.3.pdf.gs.*.docx | wc -l | grep '^ *2$$'
 
 
-test-html: test/generated/table.pdf.mutool.html.diff
+test-html: $(tests_html)
 
-test_tables_pdfs = \
-        test/agstat.pdf \
-        test/background_lines_1.pdf \
-        test/background_lines_2.pdf \
-        test/column_span_1.pdf \
-        test/column_span_2.pdf \
-        test/electoral_roll.pdf \
-        test/rotated.pdf \
-        test/row_span.pdf \
-        test/table.pdf \
-        test/twotables_1.pdf \
-        test/twotables_2.pdf \
+ifneq ($(mutool),)
+    test_tables_pdfs = \
+            test/agstat.pdf \
+            test/background_lines_1.pdf \
+            test/background_lines_2.pdf \
+            test/column_span_1.pdf \
+            test/column_span_2.pdf \
+            test/electoral_roll.pdf \
+            test/rotated.pdf \
+            test/row_span.pdf \
+            test/table.pdf \
+            test/twotables_1.pdf \
+            test/twotables_2.pdf \
 
-test_tables_generated = $(patsubst test/%, test/generated/%, $(test_tables_pdfs))
+    test_tables_generated = $(patsubst test/%, test/generated/%, $(test_tables_pdfs))
 
-test_tables_html    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.html.diff, $(test_tables_pdfs))
-test_tables_docx    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.docx.diff, $(test_tables_pdfs))
-test_tables_odt     = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.odt.diff,  $(test_tables_pdfs))
+    test_tables_html    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.html.diff, $(test_tables_pdfs))
+    test_tables_docx    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.docx.diff, $(test_tables_pdfs))
+    test_tables_odt     = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.odt.diff,  $(test_tables_pdfs))
 
-test_tables = $(test_tables_html) $(test_tables_docx) $(test_tables_odt)
+    test_tables = $(test_tables_html) $(test_tables_docx) $(test_tables_odt)
+endif
+
 test-tables-html:       $(test_tables_html)
 test-tables-docx:       $(test_tables_docx)
 test-tables-odt:        $(test_tables_odt)
-test-tables:            $(test_tables) 
+
+test-tables:            $(test_tables)
+	@echo $@: passed
 
 test/generated/%.pdf.mutool.html.diff: test/generated/%.pdf.mutool.html test/%.pdf.mutool.html.ref
 	@echo
@@ -307,7 +313,7 @@ exe_obj := $(patsubst src/%.cpp, src/build/%.cpp-$(build).o, $(exe_obj))
 exe_dep = $(exe_obj:.o=.d)
 exe: $(exe)
 $(exe): $(exe_obj)
-	$(CXX) $(flags_link) -o $@ $^ -lz -lm -l opencv_core -l opencv_imgproc -l opencv_imgcodecs
+	$(CXX) $(flags_link) -o $@ $^ -lz -lm
 
 run_exe = $(exe)
 ifeq ($(build),memento)
@@ -621,11 +627,14 @@ test-src:
 	if egrep -wn 'for *[(] *[a-zA-Z0-9]+ [a-zA-Z0-9]' src/*.c src/*.h; then false; else true; fi
 	@echo $@: passed
 
-# Check that all defined global symbols start with 'extract_'.
+# Check that all defined global symbols start with 'extract_'. This is not
+# included in the overall 'test' target because the use of '!egrep ...' appears
+# to break on some cluster machines.
 #
 test-obj:
 	@echo
 	nm -egPC $(exe_obj) | egrep '^[a-zA-Z0-9_]+ T' | grep -vw ^main | ! egrep -v ^extract_
+	@echo $@: passed
 
 # Compile rule. We always include src/docx_template.c as a prerequisite in case
 # code #includes docx_template.h. We use -std=gnu90 to catch 'ISO C90 forbids

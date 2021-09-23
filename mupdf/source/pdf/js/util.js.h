@@ -739,7 +739,7 @@
 "}\n"
 "\n"
 "function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {\n"
-"value = AFMergeChange(event);\n"
+"var value = AFMergeChange(event);\n"
 "if (sepStyle & 2) {\n"
 "if (!value.match(/^[+-]?\\d*[,.]?\\d*$/))\n"
 "event.rc = false;\n"

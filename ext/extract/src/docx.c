@@ -672,7 +672,7 @@ int extract_document_to_docx_content(
             y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
             y_table = (table) ? table->pos.y : DBL_MAX;
             
-            if (y_paragraph < y_table)
+            if (paragraph && y_paragraph < y_table)
             {
                 const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
                 double rotate = atan2(ctm->b, ctm->a);
@@ -706,7 +706,7 @@ int extract_document_to_docx_content(
                 }
                 p += 1;
             }
-            else
+            else if (table)
             {
                 if (s_docx_append_table(alloc, table, content)) goto end;
                 t += 1;

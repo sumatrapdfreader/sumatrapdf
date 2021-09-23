@@ -54,7 +54,7 @@ const char* extract_rect_string(const rect_t* rect)
     static char buffer[2][256];
     static int i = 0;
     i = (i + 1) % 2;
-    snprintf(buffer[i], sizeof(buffer), "((%f %f) (%f %f))", rect->min.x, rect->min.y, rect->max.x, rect->max.y);
+    snprintf(buffer[i], sizeof(buffer[i]), "((%f %f) (%f %f))", rect->min.x, rect->min.y, rect->max.x, rect->max.y);
     return buffer[i];
 }
 
@@ -1348,7 +1348,7 @@ int extract_add_line(
     rect.max.y = s_max(p0.y, p1.y);
     
     outf("%s: width=%f ((%f %f)(%f %f)) rect=%s",
-            __FUNCTION__,
+            extract_FUNCTION,
             width,
             x0, y0, x1, y1,
             extract_rect_string(&rect)
@@ -1684,7 +1684,11 @@ static int paragraphs_to_text_content(
 
 static int extract_write_tables_csv(extract_t* extract)
 {
+    int ret = -1;
     int p;
+    char* path = NULL;
+    FILE* f = NULL;
+    extract_astring_t text = {NULL, 0};
     if (!extract->tables_csv_format) return 0;
     
     outf("extract_write_tables_csv(): path_format=%s", extract->tables_csv_format);
@@ -1698,15 +1702,15 @@ static int extract_write_tables_csv(extract_t* extract)
         {
             table_t* table = page->tables[t];
             int y;
-            char* path;
-            FILE* f;
-            if (extract_asprintf(extract->alloc, &path, extract->tables_csv_format, extract->tables_csv_i) < 0) return -1;
+            if (f) fclose(f);
+            extract_free(extract->alloc, &path);
+            if (extract_asprintf(extract->alloc, &path, extract->tables_csv_format, extract->tables_csv_i) < 0) goto end;
             extract->tables_csv_i += 1;
             outf("Writing table %i to: %s", t, path);
             outf("table->cells_num_x=%i", table->cells_num_x);
             outf("table->cells_num_y=%i", table->cells_num_y);
             f = fopen(path, "w");
-            if (!f) return -1;
+            if (!f) goto end;
             for (y=0; y<table->cells_num_y; ++y)
             {
                 int x;
@@ -1714,7 +1718,7 @@ static int extract_write_tables_csv(extract_t* extract)
                 for (x=0; x<table->cells_num_x; ++x)
                 {
                     cell_t* cell = table->cells[table->cells_num_x * y + x];
-                    extract_astring_t text = {NULL, 0};
+                    extract_astring_free(extract->alloc, &text);
                     if (y==0)
                     {
                         outf("y=0 x=%i cell->rect=%s", x, extract_rect_string(&cell->rect));
@@ -1726,18 +1730,23 @@ static int extract_write_tables_csv(extract_t* extract)
                             cell->paragraphs,
                             cell->paragraphs_num,
                             &text
-                            )) return -1;
+                            )) goto end;
                     /* Reference cvs output trims trailing spaces. */
                     extract_astring_char_truncate_if(&text, ' ');
                     fprintf(f, "\"%s\"", text.chars ? text.chars : "");
-                    extract_astring_free(extract->alloc, &text);
                 }
                 fprintf(f, "\n");
             }
             fclose(f);
         }
     }
-    return 0;
+    ret = 0;
+
+    end:
+    if (f) fclose(f);
+    extract_free(extract->alloc, &path);
+    extract_astring_free(extract->alloc, &text);
+    return ret;
 }
 
 

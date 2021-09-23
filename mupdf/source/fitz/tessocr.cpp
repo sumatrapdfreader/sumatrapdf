@@ -159,7 +159,7 @@ clear_leptonica_mem(fz_context *ctx)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Attempt to use Tesseract from 2 threads at once!");
 }
 
-void *ocr_init(fz_context *ctx, const char *language)
+void *ocr_init(fz_context *ctx, const char *language, const char *datadir)
 {
 	tesseract::TessBaseAPI *api;
 
@@ -178,7 +178,7 @@ void *ocr_init(fz_context *ctx, const char *language)
 		language = "eng";
 
 	// Initialize tesseract-ocr with English, without specifying tessdata path
-	if (api->Init(NULL, 0, /* data, data_size */
+	if (api->Init(datadir, 0, /* data, data_size */
 		language,
 		tesseract::OcrEngineMode::OEM_DEFAULT,
 		NULL, 0, /* configs, configs_size */

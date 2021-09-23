@@ -341,6 +341,9 @@ fz_device *fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_st
 	the languages/scripts that should be used for OCR (e.g.
 	"eng,ara").
 
+	datadir: NULL (for ""), or a pointer to a path string otherwise
+	provided to Tesseract in the TESSDATA_PREFIX environment variable.
+
 	progress: NULL, or function to be called periodically to indicate
 	progress. Return 0 to continue, or 1 to cancel. progress_arg is
 	returned as the void *. The int is a value between 0 and 100 to
@@ -350,7 +353,7 @@ fz_device *fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_st
 	function.
 */
 fz_device *fz_new_ocr_device(fz_context *ctx, fz_device *target, fz_matrix ctm, fz_rect mediabox, int with_list, const char *language,
-			int (*progress)(fz_context *, void *, int), void *progress_arg);
+			const char *datadir, int (*progress)(fz_context *, void *, int), void *progress_arg);
 
 fz_document *fz_open_reflowed_document(fz_context *ctx, fz_document *underdoc, const fz_stext_options *opts);
 

@@ -738,7 +738,7 @@ function AFSpecial_Format(index) {
 }
 
 function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {
-	value = AFMergeChange(event);
+	var value = AFMergeChange(event);
 	if (sepStyle & 2) {
 		if (!value.match(/^[+-]?\d*[,.]?\d*$/))
 			event.rc = false;

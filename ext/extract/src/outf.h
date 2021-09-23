@@ -3,11 +3,17 @@
 
 /* Simple printf-style debug output. */
 
+#if defined(__GNUC__) || defined(__clang__) || defined(_WIN32)
+    #define extract_FUNCTION __FUNCTION__
+#else
+    #define extract_FUNCTION ""
+#endif
+
 #define outf(format, ...) \
-        (1 > extract_outf_verbose) ? (void) 0 : (extract_outf)(1, __FILE__, __LINE__, __FUNCTION__, 1 /*ln*/, format, ##__VA_ARGS__)
+        (1 > extract_outf_verbose) ? (void) 0 : (extract_outf)(1, __FILE__, __LINE__, extract_FUNCTION, 1 /*ln*/, format, ##__VA_ARGS__)
 
 #define outf0(format, ...) \
-        (0 > extract_outf_verbose) ? (void) 0 : (extract_outf)(0, __FILE__, __LINE__, __FUNCTION__, 1 /*ln*/, format, ##__VA_ARGS__)
+        (0 > extract_outf_verbose) ? (void) 0 : (extract_outf)(0, __FILE__, __LINE__, extract_FUNCTION, 1 /*ln*/, format, ##__VA_ARGS__)
 
 #define outfx(format, ...)
 

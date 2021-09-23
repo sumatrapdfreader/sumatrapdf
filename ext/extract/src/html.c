@@ -295,14 +295,14 @@ int extract_document_to_html_content(
             y_table = (table) ? table->pos.y : DBL_MAX;
             outf("p=%i y_paragraph=%f", p, y_paragraph);
             outf("t=%i y_table=%f", t, y_table);
-            if (y_paragraph < y_table)
+            if (paragraph && y_paragraph < y_table)
             {
                 //extract_astring_catf(alloc, content, "<p>@@@ paragraph %i y=%f @@@)</p>\n", p, y_paragraph);
                 if (paragraph_to_html_content(alloc, &state, paragraph, 0 /*single_line*/, content)) goto end;
                 if (content_state_reset(alloc, &state, content)) goto end;
                 p += 1;
             }
-            else
+            else if (table)
             {
                 //extract_astring_catf(alloc, content, "<p>@@@ table %t y=%f @@@)</p>\n", p, y_table);
                 if (append_table(alloc, &state, table, content)) goto end;

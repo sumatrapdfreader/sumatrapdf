@@ -1543,17 +1543,17 @@ static void password_dialog(void)
  * meaning first page. Return 1 if parsing succeeded, 0 if failed.
  */
 static int
-parse_location(const char *anchor, fz_location *loc)
+parse_location(const char *anc, fz_location *loc)
 {
 	const char *s, *p;
 
-	if (anchor == NULL)
+	if (anc == NULL)
 		return 0;
 
-	s = anchor;
+	s = anc;
 	while (*s >= '0' && *s <= '9')
 		s++;
-	loc->chapter = fz_atoi(anchor)-1;
+	loc->chapter = fz_atoi(anc)-1;
 	if (*s == 0)
 	{
 		*loc = fz_location_from_page_number(ctx, doc, loc->chapter);
@@ -1573,7 +1573,7 @@ parse_location(const char *anchor, fz_location *loc)
 }
 
 static void
-reload_or_start_journalling(fz_context *ctx, pdf_document *pdf)
+reload_or_start_journalling(void)
 {
 	char journal[PATH_MAX];
 
@@ -1604,19 +1604,19 @@ static void alert_box(const char *fmt, const char *str)
 }
 
 
-static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *evt, void *data)
+static void event_cb(fz_context *callback_ctx, pdf_document *callback_doc, pdf_doc_event *evt, void *data)
 {
 	switch (evt->type)
 	{
 	case PDF_DOCUMENT_EVENT_ALERT:
 		{
-			pdf_alert_event *alert = pdf_access_alert_event(ctx, evt);
+			pdf_alert_event *alert = pdf_access_alert_event(callback_ctx, evt);
 			alert_box("%s", alert->message);
 		}
 		break;
 
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "event not yet implemented");
+		fz_throw(callback_ctx, FZ_ERROR_GENERIC, "event not yet implemented");
 		break;
 	}
 }
@@ -1714,7 +1714,7 @@ static void load_document(void)
 			pdf_enable_js(ctx, pdf);
 		}
 
-		reload_or_start_journalling(ctx, pdf);
+		reload_or_start_journalling();
 
 		if (trace_file)
 		{

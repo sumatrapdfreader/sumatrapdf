@@ -690,7 +690,7 @@ int extract_document_to_odt_content(
                 }
                 p += 1;
             }
-            else
+            else if (table)
             {
                 if (s_odt_append_table(alloc, table, content, styles)) goto end;
                 t += 1;

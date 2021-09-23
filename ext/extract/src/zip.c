@@ -146,7 +146,9 @@ static int s_native_little_endinesss(void)
         /* Native big-endiness. */
         return 0;
     }
-    abort();
+    /* Would like to call abort() here, but that breaks on AIX/gcc. */
+    assert(0);
+    return 0;
 }
 
 

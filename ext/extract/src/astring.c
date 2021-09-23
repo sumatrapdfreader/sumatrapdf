@@ -155,14 +155,14 @@ int extract_astring_catc_unicode(
             /* Use utf8. */
             if (c < 0x80)
             {
-                if (extract_astring_catc(alloc, string, c)) return -1;
+                if (extract_astring_catc(alloc, string, (char) c)) return -1;
             }
             else if (c < 0x0800)
             {
                 char cc[2] = 
                 {
-                    ((c >> 6) & 0x1f) | 0xc0,
-                    ((c >> 0) & 0x3f) | 0x80
+                    (char) (((c >> 6) & 0x1f) | 0xc0),
+                    (char) (((c >> 0) & 0x3f) | 0x80)
                 };
                 if (extract_astring_catl(alloc, string, cc, sizeof(cc))) return -1;
             }
@@ -170,9 +170,9 @@ int extract_astring_catc_unicode(
             {
                 char cc[3] = 
                 {
-                    ((c >> 12) & 0x0f) | 0xe0,
-                    ((c >>  6) & 0x3f) | 0x80,
-                    ((c >>  0) & 0x3f) | 0x80
+                    (char) (((c >> 12) & 0x0f) | 0xe0),
+                    (char) (((c >>  6) & 0x3f) | 0x80),
+                    (char) (((c >>  0) & 0x3f) | 0x80)
                 };
                 if (extract_astring_catl(alloc, string, cc, sizeof(cc))) return -1;
             }
@@ -180,17 +180,17 @@ int extract_astring_catc_unicode(
             {
                 char cc[4] = 
                 {
-                    ((c >> 18) & 0x07) | 0xf0,
-                    ((c >> 12) & 0x3f) | 0x80,
-                    ((c >>  6) & 0x3f) | 0x80,
-                    ((c >>  0) & 0x3f) | 0x80
+                    (char) (((c >> 18) & 0x07) | 0xf0),
+                    (char) (((c >> 12) & 0x3f) | 0x80),
+                    (char) (((c >>  6) & 0x3f) | 0x80),
+                    (char) (((c >>  0) & 0x3f) | 0x80)
                 };
                 if (extract_astring_catl(alloc, string, cc, sizeof(cc))) return -1;
             }
             else
             {
                 /* Use replacement character. */
-                char cc[4] = { 0xef, 0xbf, 0xbd, 0};
+                char cc[4] = { (char) 0xef, (char) 0xbf, (char) 0xbd, 0};
                 if (extract_astring_catl(alloc, string, cc, sizeof(cc))) return -1;
             }
         }

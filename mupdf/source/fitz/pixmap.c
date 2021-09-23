@@ -1226,8 +1226,8 @@ fz_new_pixmap_from_float_data(fz_context *ctx, fz_colorspace *cs, int w, int h, 
 		{
 			float samplemu = samples[k] - mu;
 			float samplemu2 = samplemu * samplemu;
-			float w = expf(-samplemu2 / sigmasq2);
-			float k2 = (1 - k1) * w + k1;
+			float fw = expf(-samplemu2 / sigmasq2);
+			float k2 = (1 - k1) * fw + k1;
 			samples[k] = expf(KIMKAUTZC2 * k2 * (lsamples[k] - mu) + mu);
 		}
 
