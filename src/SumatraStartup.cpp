@@ -241,6 +241,10 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
         AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
         cmd.AppendFmt(L"[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath.Get(), i.forwardSearchLine);
     }
+    if (i.search != nullptr) {
+        // TODO: quote if i.search has '"' in it
+        cmd.AppendFmt(L"[Search(\"%s\",\"%s\")]", fullpath, i.search);
+    }
 
     if (!i.reuseDdeInstance) {
         // try WM_COPYDATA first, as that allows targetting a specific window
@@ -254,53 +258,56 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
 
-static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& i, bool isFirstWin) {
+static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
-    args.showWin = !(i.printDialog && i.exitWhenDone) && !gPluginMode;
+    args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
     WindowInfo* win = LoadDocument(args);
     if (!win) {
         return win;
     }
 
-    if (win->IsDocLoaded() && i.destName && isFirstWin) {
-        win->linkHandler->GotoNamedDest(i.destName);
-    } else if (win->IsDocLoaded() && i.pageNumber > 0 && isFirstWin) {
-        if (win->ctrl->ValidPageNo(i.pageNumber)) {
-            win->ctrl->GoToPage(i.pageNumber, false);
+    if (win->IsDocLoaded() && flags.destName && isFirstWin) {
+        win->linkHandler->GotoNamedDest(flags.destName);
+    } else if (win->IsDocLoaded() && flags.pageNumber > 0 && isFirstWin) {
+        if (win->ctrl->ValidPageNo(flags.pageNumber)) {
+            win->ctrl->GoToPage(flags.pageNumber, false);
         }
     }
-    if (i.hwndPluginParent) {
-        MakePluginWindow(win, i.hwndPluginParent);
+    if (flags.hwndPluginParent) {
+        MakePluginWindow(win, flags.hwndPluginParent);
     }
     if (!win->IsDocLoaded() || !isFirstWin) {
         return win;
     }
 
-    if (i.enterPresentation || i.enterFullScreen) {
-        if (i.enterPresentation && win->isFullScreen || i.enterFullScreen && win->presentation) {
+    if (flags.enterPresentation || flags.enterFullScreen) {
+        if (flags.enterPresentation && win->isFullScreen || flags.enterFullScreen && win->presentation) {
             ExitFullScreen(win);
         }
-        EnterFullScreen(win, i.enterPresentation);
+        EnterFullScreen(win, flags.enterPresentation);
     }
-    if (i.startView != DisplayMode::Automatic) {
-        SwitchToDisplayMode(win, i.startView);
+    if (flags.startView != DisplayMode::Automatic) {
+        SwitchToDisplayMode(win, flags.startView);
     }
-    if (i.startZoom != INVALID_ZOOM) {
-        ZoomToSelection(win, i.startZoom);
+    if (flags.startZoom != INVALID_ZOOM) {
+        ZoomToSelection(win, flags.startZoom);
     }
-    if ((i.startScroll.x != -1 || i.startScroll.y != -1) && win->AsFixed()) {
+    if ((flags.startScroll.x != -1 || flags.startScroll.y != -1) && win->AsFixed()) {
         DisplayModel* dm = win->AsFixed();
         ScrollState ss = dm->GetScrollState();
-        ss.x = i.startScroll.x;
-        ss.y = i.startScroll.y;
+        ss.x = flags.startScroll.x;
+        ss.y = flags.startScroll.y;
         dm->SetScrollState(ss);
     }
-    if (i.forwardSearchOrigin && i.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
+    if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         uint page;
         Vec<Rect> rects;
-        AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
-        int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
-        ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
+        AutoFreeWstr sourcePath(path::Normalize(flags.forwardSearchOrigin));
+        int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, flags.forwardSearchLine, 0, &page, rects);
+        ShowForwardSearchResult(win, sourcePath, flags.forwardSearchLine, 0, ret, page, rects);
+    }
+    if (flags.search != nullptr) {
+        FindTextOnThread(win, TextSearchDirection::Forward, flags.search, true /*wasModified*/, true /*showProgress*/);
     }
     return win;
 }
@@ -842,7 +849,9 @@ bool gEnableMemLeak = false;
 // don't show up
 static void ForceStartupLeaks() {
     time_t secs{0};
-    struct tm tm;
+    struct tm tm {
+        0
+    };
     secs = mktime(&tm);
     gmtime_s(&tm, &secs);
     gmtime(&secs);
@@ -915,30 +924,30 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     gLogToConsole = true;
 
-    Flags i;
-    ParseFlags(GetCommandLineW(), i);
-    gCli = &i;
+    Flags flags;
+    ParseFlags(GetCommandLineW(), flags);
+    gCli = &flags;
 
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
-        if (i.tester) {
+        if (flags.tester) {
             extern int TesterMain(); // in Tester.cpp
             return TesterMain();
         }
-        if (i.regress) {
+        if (flags.regress) {
             extern int RegressMain(); // in Regress.cpp
             return RegressMain();
         }
     }
 #endif
 
-    if (i.showHelp && IsInstallerButNotInstalled()) {
+    if (flags.showHelp && IsInstallerButNotInstalled()) {
         ShowInstallerHelp();
         HandleRedirectedConsoleOnShutdown();
         return 0;
     }
 
-    if (i.justExtractFiles) {
+    if (flags.justExtractFiles) {
         RedirectIOToExistingConsole();
         logf("starting ExeHasInstallerResources()\n");
         if (!ExeHasInstallerResources()) {
@@ -955,7 +964,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         return retCode;
     }
 
-    if (i.install || IsInstallerAndNamedAsSuch()) {
+    if (flags.install || IsInstallerAndNamedAsSuch()) {
         if (!ExeHasInstallerResources()) {
             ShowNotValidInstallerError();
             return 1;
@@ -966,45 +975,45 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         return retCode;
     }
 
-    if (i.uninstall) {
+    if (flags.uninstall) {
         retCode = RunUninstaller();
         ::ExitProcess(retCode);
     }
 
-    if (i.updateSelfTo) {
+    if (flags.updateSelfTo) {
         RedirectIOToExistingConsole();
-        UpdateSelfTo(i.updateSelfTo);
-        if (i.exitWhenDone) {
+        UpdateSelfTo(flags.updateSelfTo);
+        if (flags.exitWhenDone) {
             fastExit = !gIsDebugBuild;
             goto Exit;
         }
     }
 
-    if (i.toEpubPath) {
+    if (flags.toEpubPath) {
         RedirectIOToExistingConsole();
-        auto res = MobiToEpub(i.toEpubPath);
+        auto res = MobiToEpub(flags.toEpubPath);
         DeleteVecMembers(res);
-        if (i.exitWhenDone) {
+        if (flags.exitWhenDone) {
             fastExit = !gIsDebugBuild;
             goto Exit;
         }
     }
 
-    if (i.deleteFile) {
+    if (flags.deleteFile) {
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us
         // had time to exit so that we can overwrite it
-        if (i.sleepMs > 0) {
-            ::Sleep(i.sleepMs);
+        if (flags.sleepMs > 0) {
+            ::Sleep(flags.sleepMs);
         }
         // TODO: retry if file busy?
-        bool ok = file::Delete(i.deleteFile);
+        bool ok = file::Delete(flags.deleteFile);
         if (ok) {
-            logf(L"Deleted '%s'\n", i.deleteFile);
+            logf(L"Deleted '%s'\n", flags.deleteFile);
         } else {
-            logf(L"Failed to delete '%s'\n", i.deleteFile);
+            logf(L"Failed to delete '%s'\n", flags.deleteFile);
         }
-        if (i.exitWhenDone) {
+        if (flags.exitWhenDone) {
             HandleRedirectedConsoleOnShutdown();
             ::ExitProcess(0);
         }
@@ -1016,28 +1025,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)
-    InitializePolicies(i.restrictedUse);
+    InitializePolicies(flags.restrictedUse);
 
 #if defined(DEBUG)
-    if (i.testRenderPage) {
-        TestRenderPage(i);
+    if (flags.testRenderPage) {
+        TestRenderPage(flags);
         ShutdownCommon();
         return 0;
     }
 
-    if (i.testExtractPage) {
-        TestExtractPage(i);
+    if (flags.testExtractPage) {
+        TestExtractPage(flags);
         ShutdownCommon();
         return 0;
     }
 #endif
 
-    if (i.appdataDir) {
-        SetAppDataPath(i.appdataDir);
+    if (flags.appdataDir) {
+        SetAppDataPath(flags.appdataDir);
     }
 
 #if defined(DEBUG)
-    if (i.testApp) {
+    if (flags.testApp) {
         // in TestApp.cpp
         extern void TestApp(HINSTANCE hInstance);
         TestApp(hInstance);
@@ -1048,8 +1057,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     DetectExternalViewers();
 
     prefs::Load();
-    UpdateGlobalPrefs(i);
-    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
+    UpdateGlobalPrefs(flags);
+    SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
 
     // This allows ad-hoc comparison of gdi, gdi+ and gdi+ quick when used
     // in layout
@@ -1066,23 +1075,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         return 0;
     }
 
-    if (i.showConsole) {
+    if (flags.showConsole) {
         RedirectIOToConsole();
     }
 
-    if (i.registerAsDefault) {
+    if (flags.registerAsDefault) {
         AssociateExeWithPdfExtension();
     }
 
-    if (i.pathsToBenchmark.size() > 0) {
-        BenchFileOrDir(i.pathsToBenchmark);
+    if (flags.pathsToBenchmark.size() > 0) {
+        BenchFileOrDir(flags.pathsToBenchmark);
     }
 
-    if (i.exitImmediately) {
+    if (flags.exitImmediately) {
         goto Exit;
     }
 
-    gCrashOnOpen = i.crashOnOpen;
+    gCrashOnOpen = flags.crashOnOpen;
 
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
 
@@ -1096,17 +1105,25 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         goto Exit;
     }
 
-    if (i.hwndPluginParent) {
-        if (!SetupPluginMode(i)) {
+    if (flags.hwndPluginParent) {
+        if (!SetupPluginMode(flags)) {
             goto Exit;
         }
     }
 
-    if (i.printerName) {
+    {
+        // search only applies is there's 1 file
+        auto nFiles = flags.fileNames.size();
+        if (nFiles != 1) {
+            str::FreePtr(&flags.search);
+        }
+    }
+    if (flags.printerName) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
-        for (size_t n = 0; n < i.fileNames.size(); n++) {
-            bool ok = PrintFile(i.fileNames.at(n), i.printerName, !i.silent, i.printSettings);
+        auto nFiles = flags.fileNames.size();
+        for (size_t n = 0; n < nFiles; n++) {
+            bool ok = PrintFile(flags.fileNames.at(n), flags.printerName, !flags.silent, flags.printSettings);
             if (!ok) {
                 retCode++;
             }
@@ -1115,9 +1132,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         goto Exit;
     }
 
-    if (i.printDialog || i.stressTestPath || gPluginMode) {
+    if (flags.printDialog || flags.stressTestPath || gPluginMode) {
         // TODO: pass print request through to previous instance?
-    } else if (i.reuseDdeInstance) {
+    } else if (flags.reuseDdeInstance) {
         hPrevWnd = FindWindow(FRAME_CLASS_NAME, nullptr);
     } else if (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
         hPrevWnd = FindPrevInstWindow(&hMutex);
@@ -1132,9 +1149,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             MessageBoxA(nullptr, msg, "Error", MB_OK | MB_ICONERROR);
             goto Exit;
         }
-        size_t nFiles = i.fileNames.size();
+        size_t nFiles = flags.fileNames.size();
         for (size_t n = 0; n < nFiles; n++) {
-            OpenUsingDde(hPrevWnd, i.fileNames.at(n), i, 0 == n);
+            OpenUsingDde(hPrevWnd, flags.fileNames.at(n), flags, 0 == n);
         }
         if (0 == nFiles) {
             win::ToForeground(hPrevWnd);
@@ -1146,15 +1163,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         restoreSession = gGlobalPrefs->restoreSession;
     }
 
-    showStartPage =
-        !restoreSession && i.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
+    showStartPage = !restoreSession && flags.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles &&
+                    gGlobalPrefs->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
     if (showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
         SHFILEINFOW sfi{};
-        uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-        SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
+        uint flg = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+        SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flg);
     }
 
     if (restoreSession) {
@@ -1173,18 +1190,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     }
     ResetSessionState(gGlobalPrefs->sessionData);
 
-    for (const WCHAR* filePath : i.fileNames) {
+    for (const WCHAR* filePath : flags.fileNames) {
         if (restoreSession && FindWindowInfoByFile(filePath, false)) {
             continue;
         }
         auto path = ToUtf8Temp(filePath);
-        win = LoadOnStartup(filePath, i, !win);
+        win = LoadOnStartup(filePath, flags, !win);
         if (!win) {
             retCode++;
             continue;
         }
-        if (i.printDialog) {
-            OnMenuPrint(win, i.exitWhenDone);
+        if (flags.printDialog) {
+            OnMenuPrint(win, flags.exitWhenDone);
         }
     }
 
@@ -1196,7 +1213,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
                 continue;
             }
             auto path = ToUtf8Temp(filePath);
-            win = LoadOnStartup(filePath, i, !win);
+            win = LoadOnStartup(filePath, flags, !win);
             if (!win) {
                 retCode++;
             }
@@ -1206,12 +1223,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     gIsStartup = false;
 
-    if (i.fileNames.size() > 0 && !win) {
+    if (flags.fileNames.size() > 0 && !win) {
         // failed to create any window, even though there
         // were files to load (or show a failure message for)
         goto Exit;
     }
-    if (i.printDialog && i.exitWhenDone) {
+    if (flags.printDialog && flags.exitWhenDone) {
         goto Exit;
     }
 
@@ -1228,11 +1245,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         RegisterForPdfExtentions(win->hwndFrame);
     }
 
-    if (i.stressTestPath) {
+    if (flags.stressTestPath) {
         // don't save file history and preference changes
         RestrictPolicies(Perm::SavePreferences);
         RebuildMenuBarForWindow(win);
-        StartStressTest(&i, win);
+        StartStressTest(&flags, win);
         fastExit = true;
     }
 

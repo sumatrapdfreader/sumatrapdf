@@ -27,6 +27,7 @@ void OnMenuFindMatchCase(WindowInfo* win);
 void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction);
 void AbortFinding(WindowInfo* win, bool hideMessage);
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress);
-
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const WCHAR* text, bool wasModified,
+                      bool showProgress);
 extern bool gIsStartup;
 extern WStrVec gDdeOpenOnStartup;
