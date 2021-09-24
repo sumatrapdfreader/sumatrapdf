@@ -128,7 +128,7 @@ func (f *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, f.Comment)
 	}
-	logf("Unkonwn type name: '%s'\n", typeName)
+	logf(ctx(), "Unkonwn type name: '%s'\n", typeName)
 	panicIf(true)
 	return ""
 }

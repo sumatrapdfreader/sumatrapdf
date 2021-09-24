@@ -30,7 +30,11 @@ func must(err error) {
 	}
 }
 
-func logf(s string, arg ...interface{}) {
+func ctx() context.Context {
+	return context.Background()
+}
+
+func logf(ctx context.Context, s string, arg ...interface{}) {
 	if len(arg) > 0 {
 		s = fmt.Sprintf(s, arg...)
 	}
@@ -45,7 +49,7 @@ func absPathMust(path string) string {
 
 func runExeMust(c string, args ...string) []byte {
 	cmd := exec.Command(c, args...)
-	logf("> %s\n", cmd)
+	logf(ctx(), "> %s\n", cmd)
 	out, err := cmd.CombinedOutput()
 	must(err)
 	return []byte(out)
@@ -58,11 +62,11 @@ func runExeLoggedMust(c string, args ...string) []byte {
 }
 
 func makePrintDuration(name string) func() {
-	logf("%s\n", name)
+	logf(ctx(), "%s\n", name)
 	timeStart := time.Now()
 	return func() {
 		dur := time.Since(timeStart)
-		logf("%s took %s\n", name, formatDuration(dur))
+		logf(ctx(), "%s took %s\n", name, formatDuration(dur))
 	}
 }
 
@@ -76,7 +80,7 @@ func getEnvAfterScript(path string) []string {
 	// TODO: maybe use COMSPEC env variable instead of "cmd.exe" (more robust)
 	cmd := exec.Command("cmd.exe", "/c", script+" & set")
 	cmd.Dir = dir
-	logf("Executing: %s in %s\n", cmd, cmd.Dir)
+	logf(ctx(), "Executing: %s in %s\n", cmd, cmd.Dir)
 	resBytes, err := cmd.Output()
 	must(err)
 	res := string(resBytes)
@@ -110,7 +114,7 @@ func removeFileMust(path string) {
 func findFile(dir string, match func(string, os.FileInfo) bool) {
 	fn := func(path string, info os.FileInfo, err error) error {
 		if match(path, info) {
-			logf("Found: '%s'\n", path)
+			logf(ctx(), "Found: '%s'\n", path)
 		}
 		return nil
 	}
@@ -169,7 +173,7 @@ func httpDlToFileMust(uri string, path string, sha1Hex string) {
 		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 		return
 	}
-	logf("Downloading '%s'\n", uri)
+	logf(ctx(), "Downloading '%s'\n", uri)
 	d := httpDlMust(uri)
 	sha1File := dataSha1Hex(d)
 	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
@@ -312,7 +316,7 @@ func findLargestFileByExt() {
 				return nil
 			}
 			if false && (nFiles == 0 || nFiles%128 == 0) {
-				logf("%s\n", path)
+				logf(ctx(), "%s\n", path)
 			}
 			nFiles++
 			ext := strings.ToLower(filepath.Ext(path))
@@ -325,13 +329,13 @@ func findLargestFileByExt() {
 			}
 			size := fi.Size()
 			if size > extToSize[ext] {
-				logf("%s of size %s\n", path, humanizeSize(size))
+				logf(ctx(), "%s of size %s\n", path, formatSize(size))
 				extToSize[ext] = size
 			}
 			return nil
 		})
 	}
-	logf("processed %d files\n", nFiles)
+	logf(ctx(), "processed %d files\n", nFiles)
 }
 
 func fileExists(path string) bool {
@@ -345,7 +349,7 @@ func dirExists(path string) bool {
 }
 
 func runCmdLoggedMust(cmd *exec.Cmd) string {
-	logf("> %s\n", cmd.String())
+	logf(ctx(), "> %s\n", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -392,10 +396,6 @@ func normalizeNewlines(d []byte) []byte {
 	return d
 }
 
-func ctx() context.Context {
-	return context.Background()
-}
-
 func createDirMust(path string) string {
 	err := os.MkdirAll(path, 0755)
 	must(err)
@@ -408,27 +408,16 @@ func userHomeDirMust() string {
 	return s
 }
 
-func humanizeSize(i int64) string {
-	const (
-		kb = 1024
-		mb = kb * 1024
-		gb = mb * 1024
-	)
-	fs := func(n int64, d float64, size string) string {
-		s := fmt.Sprintf("%.2f", float64(n)/d)
-		return strings.TrimSuffix(s, ".00") + " " + size
+func formatSize(n int64) string {
+	sizes := []int64{1024 * 1024 * 1024, 1024 * 1024, 1024}
+	suffixes := []string{"GB", "MB", "kB"}
+	for i, size := range sizes {
+		if n >= size {
+			s := fmt.Sprintf("%.2f", float64(n)/float64(size))
+			return strings.TrimSuffix(s, ".00") + " " + suffixes[i]
+		}
 	}
-
-	if i > gb {
-		return fs(i, gb, "GB")
-	}
-	if i > mb {
-		return fs(i, mb, "MB")
-	}
-	if i > kb {
-		return fs(i, kb, "kB")
-	}
-	return fmt.Sprintf("%d bytes", i)
+	return fmt.Sprintf("%d bytes", n)
 }
 
 func getFileSize(path string) int64 {
@@ -560,11 +549,11 @@ func runCmdMust(cmd *exec.Cmd) string {
 		out, err := cmd.CombinedOutput()
 		if err == nil {
 			if len(out) > 0 {
-				logf("Output:\n%s\n", string(out))
+				logf(ctx(), "Output:\n%s\n", string(out))
 			}
 			return string(out)
 		}
-		logf("cmd '%s' failed with '%s'. Output:\n%s\n", cmd, err, string(out))
+		logf(ctx(), "cmd '%s' failed with '%s'. Output:\n%s\n", cmd, err, string(out))
 		must(err)
 		return string(out)
 	}
@@ -572,7 +561,7 @@ func runCmdMust(cmd *exec.Cmd) string {
 	if err == nil {
 		return ""
 	}
-	logf("cmd '%s' failed with '%s'\n", cmd, err)
+	logf(ctx(), "cmd '%s' failed with '%s'\n", cmd, err)
 	must(err)
 	return ""
 }

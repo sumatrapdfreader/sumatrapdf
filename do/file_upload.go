@@ -16,8 +16,8 @@ func fileUpload(path string) {
 	must(err)
 	dstFileName := sha1[:6] + "-" + urlify(filepath.Base(path))
 	remotePath := path2.Join(filesRemoteDir, dstFileName)
-	sizeStr := humanizeSize(fileSize)
-	logf("uploading '%s' of size %s as '%s'\n", path, sizeStr, remotePath)
+	sizeStr := formatSize(fileSize)
+	logf(ctx(), "uploading '%s' of size %s as '%s'\n", path, sizeStr, remotePath)
 
 	timeStart := time.Now()
 
@@ -27,11 +27,11 @@ func fileUpload(path string) {
 	upload := func(mc *MinioClient) {
 		uri := minioURLForPath(mc, remotePath)
 		if minioExists(mc, remotePath) {
-			logf("Skipping upload, '%s' already exists\n", uri)
+			logf(ctx(), "Skipping upload, '%s' already exists\n", uri)
 		} else {
 			err := minioUploadFilePublic(mc, remotePath, path)
 			must(err)
-			logf("Uploaded '%s' in %s\n", uri, time.Since(timeStart))
+			logf(ctx(), "Uploaded '%s' in %s\n", uri, time.Since(timeStart))
 		}
 	}
 
@@ -51,12 +51,12 @@ func fileUpload(path string) {
 
 func minioFilesList(mc *MinioClient) {
 	uri := minioURLForPath(mc, "")
-	logf("filesList in '%s'\n", uri)
+	logf(ctx(), "filesList in '%s'\n", uri)
 
 	files := minioListObjects(mc, "")
 	for f := range files {
-		sizeStr := humanizeSize(f.Size)
-		logf("%s : %s\n", f.Key, sizeStr)
+		sizeStr := formatSize(f.Size)
+		logf(ctx(), "%s : %s\n", f.Key, sizeStr)
 	}
 }
 
@@ -73,17 +73,17 @@ func deleteFilesOneOff() {
 	//mc := newMinioSpacesClient()
 	mc := newMinioS3Client()
 	uri := minioURLForPath(mc, "")
-	logf("deleteFiles in '%s'\n", uri)
+	logf(ctx(), "deleteFiles in '%s'\n", uri)
 	files := minioListObjects(mc, prefix)
 	for f := range files {
 		if doDelete {
 			err := minioRemove(mc, f.Key)
 			must(err)
 			uri := minioURLForPath(mc, f.Key)
-			logf("Deleted %s\n", uri)
+			logf(ctx(), "Deleted %s\n", uri)
 		} else {
-			sizeStr := humanizeSize(f.Size)
-			logf("%s : %s\n", f.Key, sizeStr)
+			sizeStr := formatSize(f.Size)
+			logf(ctx(), "%s : %s\n", f.Key, sizeStr)
 		}
 	}
 }

@@ -69,7 +69,7 @@ func copyBuiltFiles(dstDir string, srcDir string, prefix string) {
 		if fileExists(srcPath) {
 			must(copyFile(dstPath, srcPath))
 		} else {
-			logf("Skipping copying '%s'\n", srcPath)
+			logf(ctx(), "Skipping copying '%s'\n", srcPath)
 		}
 	}
 }
@@ -149,10 +149,10 @@ func detectVersions() {
 	gitSha1Cached = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
 	versionCheckVer = extractVersionCheckVerMust()
-	logf("preReleaseVer: '%s'\n", preReleaseVerCached)
-	logf("gitSha1: '%s'\n", gitSha1Cached)
-	logf("sumatraVersion: '%s'\n", sumatraVersion)
-	logf("versionCheckVer: '%s'\n", versionCheckVer)
+	logf(ctx(), "preReleaseVer: '%s'\n", preReleaseVerCached)
+	logf(ctx(), "gitSha1: '%s'\n", gitSha1Cached)
+	logf(ctx(), "sumatraVersion: '%s'\n", sumatraVersion)
+	logf(ctx(), "versionCheckVer: '%s'\n", versionCheckVer)
 	parts := strings.Split(versionCheckVer, ".")
 	panicIf(len(parts) != 2, "invalid versionCheckVer (%s), must be x.y", versionCheckVer)
 	ok := strings.HasPrefix(sumatraVersion, versionCheckVer)
@@ -195,7 +195,7 @@ func clean() {
 			}
 		}
 	}
-	logf("clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
+	logf(ctx(), "clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
 }
 
 func runTestUtilMust(dir string) {
@@ -216,7 +216,7 @@ func buildLzsa() {
 
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
-	logf("build and signed '%s'\n", path)
+	logf(ctx(), "build and signed '%s'\n", path)
 }
 
 // smoke build is meant to be run locally to check that we can build everything
@@ -406,7 +406,7 @@ func createManifestMust() {
 // https://docs.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-packaging-dot-net
 func makeAppx() {
 	appExePath := detectMakeAppxPath()
-	logf("makeAppx: '%s'\n", appExePath)
+	logf(ctx(), "makeAppx: '%s'\n", appExePath)
 }
 
 func signFilesMust(dir string) {

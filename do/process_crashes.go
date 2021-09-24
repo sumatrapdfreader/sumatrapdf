@@ -6,10 +6,8 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -403,7 +401,7 @@ func downloadOrReadOrDelete(mc *MinioClient, ci *crashInfo) {
 		os.Remove(path)
 		nDeleted++
 		if nDeleted < 32 || nDeleted%100 == 0 {
-			logf("deleted outdated %s %d\n", ci.storeKey, nRemoteFiles)
+			logf(ctx(), "deleted outdated %s %d\n", ci.storeKey, nRemoteFiles)
 		}
 		return
 	}
@@ -412,7 +410,7 @@ func downloadOrReadOrDelete(mc *MinioClient, ci *crashInfo) {
 	if err == nil {
 		nReadFiles++
 		if nReadFiles < 32 || nReadFiles%200 == 0 {
-			logf("read %s for %s %d\n", path, ci.storeKey, nRemoteFiles)
+			logf(ctx(), "read %s for %s %d\n", path, ci.storeKey, nRemoteFiles)
 		}
 	} else {
 		minioDownloadAtomicallyRetry(mc, path, ci.storeKey)
@@ -420,7 +418,7 @@ func downloadOrReadOrDelete(mc *MinioClient, ci *crashInfo) {
 		must(err)
 		nDownloaded++
 		if nDownloaded < 50 || nDownloaded%200 == 0 {
-			logf("downloaded '%s' => '%s' %d\n", ci.storeKey, path, nRemoteFiles)
+			logf(ctx(), "downloaded '%s' => '%s' %d\n", ci.storeKey, path, nRemoteFiles)
 		}
 	}
 	ci.fileSize = len(body)
@@ -432,7 +430,7 @@ func downloadOrReadOrDelete(mc *MinioClient, ci *crashInfo) {
 		os.Remove(path)
 		nInvalid++
 		if nInvalid < 32 || nInvalid%100 == 0 {
-			logf("deleted invalid %s %d\n", path, nRemoteFiles)
+			logf(ctx(), "deleted invalid %s %d\n", path, nRemoteFiles)
 		}
 		return
 	}
@@ -462,10 +460,10 @@ func hasNoSymbols(ci *crashInfo) bool {
 
 func downloadCrashesAndGenerateHTML() {
 	ensureSpacesCreds()
-	panicIf(os.Getenv("NETLIFY_AUTH_TOKEN") == "", "missing NETLIFY_AUTH_TOKEN env variable")
-	panicIf(os.Getenv("NETLIFY_SITE_ID") == "", "missing NETLIFY_SITE_ID env variable")
+	panicIf(os.Getenv("INSTA_PREV_CRASHES_PWD") == "", "missing INSTA_PREV_CRASHES_PWD env variable")
+
 	dataDir := crashesDataDir()
-	logf("downloadCrashesAndGenerateHTML: data dir: '%s'\n", dataDir)
+	logf(ctx(), "downloadCrashesAndGenerateHTML: data dir: '%s'\n", dataDir)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -482,7 +480,7 @@ func downloadCrashesAndGenerateHTML() {
 			}
 			nRemoteFiles++
 			must(rf.Err)
-			//logf("key: %s\n", rf.Key)
+			//logf(ctx(), "key: %s\n", rf.Key)
 
 			wg.Add(1)
 			sem <- true
@@ -515,7 +513,7 @@ func downloadCrashesAndGenerateHTML() {
 	}()
 	wg.Wait()
 
-	logf("%d remote files, %d invalid\n", nRemoteFiles, nInvalid)
+	logf(ctx(), "%d remote files, %d invalid\n", nRemoteFiles, nInvalid)
 	filterDeletedCrashes()
 	filterBigCrashes()
 
@@ -528,7 +526,7 @@ func downloadCrashesAndGenerateHTML() {
 
 	for idx, day := range days {
 		a := crashesPerDay[day]
-		logf("%s: %d\n", day, len(a))
+		logf(ctx(), "%s: %d\n", day, len(a))
 		sort.Slice(a, func(i, j int) bool {
 			v1 := a[i].Version
 			v2 := a[j].Version
@@ -556,27 +554,12 @@ func downloadCrashesAndGenerateHTML() {
 
 		if false && idx == 0 {
 			for _, ci := range a {
-				logf("%s %s\n", ci.Version, getFirstString(ci.CrashLines))
+				logf(ctx(), "%s %s\n", ci.Version, getFirstString(ci.CrashLines))
 			}
 		}
 	}
-	genCrashesHTML()
-	if false {
-		// using https://github.com/netlify/cli
-		cmd := exec.Command("netlify", "dev", "-p", "8765", "--dir", ".")
-		cmd.Dir = crashesHTMLDataDir()
-		runCmdLoggedMust(cmd)
-	}
-	if true {
-		cmd := exec.Command("netlify", "deploy", "--prod", "--dir", ".")
-		if strings.Contains(runtime.GOOS, "windows") {
-			// if on windows assume running locally so open browser
-			// automatically after deploying
-			cmd = exec.Command("netlify", "deploy", "--prod", "--open", "--dir", ".")
-		}
-		cmd.Dir = crashesHTMLDataDir()
-		runCmdLoggedMust(cmd)
-	}
+	files := genCrashesHTML()
+	uploadCrashesFilesToInstantPreviewMust(files)
 }
 
 func dirSize(dir string) {
@@ -589,7 +572,7 @@ func dirSize(dir string) {
 		return nil
 	}
 	filepath.Walk(dir, fun)
-	logf("Size of dir %s: %s\n", dir, humanizeSize(totalSize))
+	logf(ctx(), "Size of dir %s: %s\n", dir, formatSize(totalSize))
 }
 
 const tmplDay = `
@@ -683,9 +666,7 @@ func getTmplDay() *template.Template {
 	return tmplDayParsed
 }
 
-func genCrashHTML(dir string, ci *crashInfo) {
-	name := ci.fileNameHTML
-	path := filepath.Join(dir, name)
+func genCrashHTML(files map[string][]byte, ci *crashInfo) {
 	body := readFileMust(ci.pathTxt)
 	var buf bytes.Buffer
 	bodyStr := template.HTMLEscapeString(string(body))
@@ -701,16 +682,16 @@ func genCrashHTML(dir string, ci *crashInfo) {
 	must(err)
 	d := buf.Bytes()
 
-	writeFileMust(path, d)
+	files[ci.fileNameHTML] = d
 	nWritten++
 	if nWritten < 8 || nWritten%100 == 0 {
-		logf("wrote %s %d\n", path, nWritten)
+		logf(ctx(), "generated %s %d\n", ci.fileNameHTML, nWritten)
 	}
 }
 
-func genCrashesHTMLForDay(dir string, day string, isIndex bool) {
+func genCrashesHTMLForDay(files map[string][]byte, day string, isIndex bool) {
 	days := getDaysSorted()
-	path := filepath.Join(dir, day+".html")
+	path := filepath.Join(day + ".html")
 
 	a := crashesPerDay[day]
 	prevVer := ""
@@ -736,26 +717,26 @@ func genCrashesHTMLForDay(dir string, day string, isIndex bool) {
 	err := getTmplDay().Execute(&buf, v)
 	must(err)
 	d := buf.Bytes()
+	files[path] = d
 
-	writeFileMust(path, d)
 	if isIndex {
-		path = filepath.Join(dir, "index.html")
-		writeFileMust(path, d)
+		files["index.html"] = d
 	}
 
 	for _, ci := range a {
-		genCrashHTML(dir, ci)
+		genCrashHTML(files, ci)
 	}
 }
 
-func genCrashesHTML() {
+func genCrashesHTML() map[string][]byte {
+	files := map[string][]byte{}
 	dir := crashesHTMLDataDir()
-	logf("genCrashesHTML in %s\n", dir)
+	logf(ctx(), "genCrashesHTML in %s\n", dir)
 	days := getDaysSorted()
 	for idx, day := range days {
-		genCrashesHTMLForDay(dir, day, idx == 0)
+		genCrashesHTMLForDay(files, day, idx == 0)
 	}
-	dirSize(dir)
+	return files
 }
 
 func getFirstString(a []string) string {
@@ -778,7 +759,7 @@ func filterDeletedCrashes() {
 		}
 		crashesPerDay[day] = filtered
 	}
-	logf("filterDeletedCrashes: filtered %d\n", nFiltered)
+	logf(ctx(), "filterDeletedCrashes: filtered %d\n", nFiltered)
 }
 
 // to avoid uploading too much to netlify, we filter
@@ -801,7 +782,7 @@ func filterBigCrashes() {
 		}
 		crashesPerDay[day] = filtered
 	}
-	logf("filterBigCrashes: filtered %d\n", nFiltered)
+	logf(ctx(), "filterBigCrashes: filtered %d\n", nFiltered)
 }
 
 func getDaysSorted() []string {

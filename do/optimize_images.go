@@ -12,7 +12,7 @@ import (
 
 // run optipng in parallel
 func optimizeWithOptipng(path string) {
-	logf("Optimizing '%s'\n", path)
+	logf(ctx(), "Optimizing '%s'\n", path)
 	cmd := exec.Command("optipng", "-o5", path)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -20,7 +20,7 @@ func optimizeWithOptipng(path string) {
 	if err != nil {
 		// it's ok if fails. some jpeg images are saved as .png
 		// which trips it
-		logf("optipng failed with '%s'\n", err)
+		logf(ctx(), "optipng failed with '%s'\n", err)
 	}
 }
 
@@ -73,8 +73,8 @@ func makeSmallImages() {
 		cmd := exec.Command("magick", "-version")
 		err := cmd.Run()
 		if err != nil {
-			logf("ImageMagick doesn't seem to be installed\n")
-			logf("You can install it with: choco install -y imagemagick\n")
+			logf(ctx(), "ImageMagick doesn't seem to be installed\n")
+			logf(ctx(), "You can install it with: choco install -y imagemagick\n")
 			os.Exit(1)
 		}
 	}
@@ -100,7 +100,7 @@ func makeSmallImages() {
 			}
 			dstName := strings.Split(name, ".")[0] + "-small.png"
 			cmd := exec.Command("magick", "convert", name, "-resize", "80x80", dstName)
-			logf("> %s\n", cmd.String())
+			logf(ctx(), "> %s\n", cmd.String())
 			cmd.Dir = dir
 			err := cmd.Run()
 			must(err)

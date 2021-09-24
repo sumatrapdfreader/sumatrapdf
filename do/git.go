@@ -26,7 +26,7 @@ func isGitClean() bool {
 	out := runExeMust("git", "status", "--porcelain")
 	s := strings.TrimSpace(string(out))
 	if len(s) > 0 {
-		logf("git status --porcelain returned:\n'%s'\n", s)
+		logf(ctx(), "git status --porcelain returned:\n'%s'\n", s)
 	}
 	return len(s) == 0
 }
@@ -84,7 +84,7 @@ func isGithubMyMasterBranch() bool {
 	}
 	ref := os.Getenv("GITHUB_REF")
 	if ref != "refs/heads/master" {
-		logf("GITHUB_REF: '%s'\n", ref)
+		logf(ctx(), "GITHUB_REF: '%s'\n", ref)
 		return false
 	}
 	event := os.Getenv("GITHUB_EVENT_NAME")

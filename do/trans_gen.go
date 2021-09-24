@@ -131,7 +131,7 @@ func genTranslationInfoCpp() {
 	langs := getLangObjects(gLangs)
 	panicIf(langs[0].code != "en")
 
-	logf("langs: %d, gLangs: %d\n", len(langs), len(gLangs))
+	logf(ctx(), "langs: %d, gLangs: %d\n", len(langs), len(gLangs))
 
 	var a []string
 	for _, lang := range langs {
@@ -139,7 +139,7 @@ func genTranslationInfoCpp() {
 		a = append(a, s)
 	}
 	langcodes := strings.Join(a, " \\\n")
-	logf("langcodes: %d bytes\n", len(langcodes))
+	logf(ctx(), "langcodes: %d bytes\n", len(langcodes))
 
 	a = nil
 	for _, lang := range langs {
@@ -147,7 +147,7 @@ func genTranslationInfoCpp() {
 		a = append(a, s)
 	}
 	langnames := strings.Join(a, " \\\n")
-	logf("langnames: %d bytes\n", len(langnames))
+	logf(ctx(), "langnames: %d bytes\n", len(langnames))
 
 	a = nil
 	for _, lang := range langs {
@@ -155,14 +155,14 @@ func genTranslationInfoCpp() {
 		a = append(a, s)
 	}
 	langids := strings.Join(a, ",\n")
-	logf("langids: %d bytes\n", len(langids))
+	logf(ctx(), "langids: %d bytes\n", len(langids))
 
 	var rtlInfo []string
 	for idx, lang := range langs {
 		if !lang.isRtl {
 			continue
 		}
-		logf("lang rtl: %s %s\n", lang.code, lang.name)
+		logf(ctx(), "lang rtl: %s %s\n", lang.code, lang.name)
 		s := fmt.Sprintf("(%d == idx)", idx)
 		rtlInfo = append(rtlInfo, s)
 	}
@@ -170,7 +170,7 @@ func genTranslationInfoCpp() {
 	// there are 4 rtl langs but `langs` has incomplete langs removed,
 	// so this check is not true
 	if false && len(rtlInfo) != 4 {
-		logf("len(rtlInfo) = %d (expected 4)\n", len(rtlInfo))
+		logf(ctx(), "len(rtlInfo) = %d (expected 4)\n", len(rtlInfo))
 		panicIf(len(rtlInfo) != 4)
 	}
 
@@ -179,7 +179,7 @@ func genTranslationInfoCpp() {
 		islangrtl = "false"
 	}
 	islangrtl = "return " + islangrtl + ";"
-	//logf("islangrtl:\n%s\n", islangrtl)
+	//logf(ctx(), "islangrtl:\n%s\n", islangrtl)
 
 	langsCount := len(langs)
 
@@ -198,7 +198,7 @@ func genTranslationInfoCpp() {
 	}
 	path := filepath.Join("src", "TranslationsInfo.cpp")
 	fileContent := evalTmpl(compactCTmpl, v2)
-	logf("fileContent: path: %s, file size: %d\n", path, len(fileContent))
+	logf(ctx(), "fileContent: path: %s, file size: %d\n", path, len(fileContent))
 	writeFileMust(path, []byte(fileContent))
 	// print_stats(langs)
 }

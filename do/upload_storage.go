@@ -266,7 +266,7 @@ func getFinalDirForBuildType(buildType string) string {
 func minioUploadBuildMust(mc *MinioClient, where string, buildType string) {
 	timeStart := time.Now()
 	defer func() {
-		logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
+		logf(ctx(), "Uploaded the build to spaces in %s\n", time.Since(timeStart))
 	}()
 
 	dirRemote := getRemoteDir(buildType)
@@ -287,7 +287,7 @@ func minioUploadBuildMust(mc *MinioClient, where string, buildType string) {
 			remotePath := f[0]
 			err := minioUploadDataPublic(mc, remotePath, []byte(f[1]))
 			must(err)
-			logf("Uploaded to %s: '%s'\n", where, remotePath)
+			logf(ctx(), "Uploaded to %s: '%s'\n", where, remotePath)
 		}
 	}
 
@@ -342,25 +342,25 @@ func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
 	var keys []string
 	for f := range objectsCh {
 		keys = append(keys, f.Key)
-		//logf("  %s\n", f.Key)
+		//logf(ctx(), "  %s\n", f.Key)
 	}
 
 	uri := minioURLForPath(mc, remoteDir)
-	logf("%d files under '%s'\n", len(keys), uri)
+	logf(ctx(), "%d files under '%s'\n", len(keys), uri)
 	byVer := groupFilesByVersion(keys)
 	for i, v := range byVer {
 		deleting := (i >= nBuildsToRetain)
 		if deleting {
-			logf("deleting %d\n", v.ver)
+			logf(ctx(), "deleting %d\n", v.ver)
 			if true {
 				for _, key := range v.files {
 					err := minioRemove(mc, key)
 					must(err)
-					logf("  deleted %s\n", key)
+					logf(ctx(), "  deleted %s\n", key)
 				}
 			}
 		} else {
-			logf("not deleting %d\n", v.ver)
+			logf(ctx(), "not deleting %d\n", v.ver)
 		}
 	}
 }

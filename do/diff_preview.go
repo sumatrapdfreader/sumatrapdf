@@ -287,7 +287,7 @@ func cdToGitRoot() {
 func winmergeDiffPreview() {
 	detectExesMust()
 	createTempDirMust()
-	logf("temp dir: %s\n", tempDir)
+	logf(ctx(), "temp dir: %s\n", tempDir)
 	deleteOldDirs()
 
 	cdToGitRoot()

@@ -34,7 +34,7 @@ func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
 	cmd.Stderr = io.MultiWriter(f, os.Stderr)
-	logf("> %s\n", fmtCmdShort(*cmd))
+	logf(ctx(), "> %s\n", fmtCmdShort(*cmd))
 	return cmd.Run()
 }
 
@@ -88,7 +88,7 @@ func runCppCheck(all bool) {
 	os.Remove(cppcheckLogFile)
 	err := runCmdShowProgressAndLog(cmd, cppcheckLogFile)
 	must(err)
-	logf("\nLogged output to '%s'\n", cppcheckLogFile)
+	logf(ctx(), "\nLogged output to '%s'\n", cppcheckLogFile)
 }
 
 type BuildOptions struct {
@@ -111,9 +111,9 @@ func ensureSpacesAndS3Creds() {
 }
 
 func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
-	logf("upload: %v\n", opts.upload)
-	logf("sign: %v\n", opts.sign)
-	logf("verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
+	logf(ctx(), "upload: %v\n", opts.upload)
+	logf(ctx(), "sign: %v\n", opts.sign)
+	logf(ctx(), "verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
 
 	if opts.upload {
 		ensureSpacesAndS3Creds()
@@ -145,10 +145,10 @@ func main() {
 	} else {
 		cdUpDir("sumatrapdf")
 	}
-	logf("Current directory: %s\n", currDirAbsMust())
+	logf(ctx(), "Current directory: %s\n", currDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
-		logf("Finished in %s\n", time.Since(timeStart))
+		logf(ctx(), "Finished in %s\n", time.Since(timeStart))
 	}()
 
 	// ad-hoc flags to be set manually (to show less options)
@@ -439,7 +439,7 @@ func main() {
 		case githubEventPush:
 			currBranch := getCurrentBranchMust()
 			if currBranch == "website-cf" {
-				logf("skipping build because on branch '%s'\n", currBranch)
+				logf(ctx(), "skipping build because on branch '%s'\n", currBranch)
 				return
 			}
 			buildPreRelease()
@@ -526,13 +526,13 @@ func main() {
 
 func uploadToStorage(opts *BuildOptions, buildType string) {
 	if !opts.upload {
-		logf("Skipping uploadToStorage() because opts.upload = false\n")
+		logf(ctx(), "Skipping uploadToStorage() because opts.upload = false\n")
 		return
 	}
 
 	timeStart := time.Now()
 	defer func() {
-		logf("uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
+		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
 	}()
 	var wg sync.WaitGroup
 	wg.Add(2)

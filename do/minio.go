@@ -85,14 +85,14 @@ func minioUploadDir(mc *MinioClient, dirRemote string, dirLocal string) error {
 		pathLocal := filepath.Join(dirLocal, fname)
 		pathRemote := path.Join(dirRemote, fname)
 		uri := minioURLForPath(mc, pathRemote)
-		logf("Uploading '%s' as '%s' ", pathLocal, uri)
+		logf(ctx(), "Uploading '%s' as '%s' ", pathLocal, uri)
 		timeStart := time.Now()
 		err := minioUploadFilePublic(mc, pathRemote, pathLocal)
 		if err != nil {
-			logf("Failed with '%s'\n", err)
+			logf(ctx(), "Failed with '%s'\n", err)
 			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
 		}
-		logf("%s\n", time.Since(timeStart))
+		logf(ctx(), "%s\n", time.Since(timeStart))
 	}
 	return nil
 }
@@ -133,7 +133,7 @@ func minioDownloadAtomicallyRetry(mc *MinioClient, path string, key string) {
 		if err == nil {
 			return
 		}
-		logf("Downloading '%s' to '%s' failed with '%s'\n", key, path, err)
+		logf(ctx(), "Downloading '%s' to '%s' failed with '%s'\n", key, path, err)
 		time.Sleep(time.Millisecond * 500)
 	}
 	panicIf(true, "mc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, key, err)
