@@ -419,7 +419,7 @@ int ui_input(struct input *input, int width, int height)
 	if (height > 1)
 		area.x1 -= ui.lineheight;
 
-	n = ui_break_lines(input->text, lines, nelem(lines), area.x1-area.x0-2, NULL);
+	n = ui_break_lines(input->text, lines, height > 1 ? nelem(lines) : 1, area.x1-area.x0-2, NULL);
 
 	if (height > 1)
 		ui_scrollbar(area.x1, area.y0, area.x1+ui.lineheight, area.y1, &input->scroll, 1, fz_maxi(0, n-height)+1);

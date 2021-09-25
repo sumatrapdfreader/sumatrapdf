@@ -349,7 +349,7 @@ int extract_xml_pparse_init(extract_alloc_t* alloc, extract_buffer_t* buffer, co
         }
         first_line_buffer[actual] = 0;
         if (strcmp(first_line, first_line_buffer)) {
-            outf("Unrecognised prefix: ", first_line_buffer);
+            outf("Unrecognised prefix: %s", first_line_buffer);
             errno = ESRCH;
             goto end;
         }
@@ -393,7 +393,10 @@ static const char* extract_xml_tag_string(extract_alloc_t* alloc, extract_xml_ta
 {
     static char* buffer = NULL;
     extract_free(alloc, &buffer);
-    extract_asprintf(alloc, &buffer, "<name=%s>", tag->name ? tag->name : "");
+    if (extract_asprintf(alloc, &buffer, "<name=%s>", tag->name ? tag->name : ""))
+    {
+        return "";
+    }
     return buffer;
 }
 

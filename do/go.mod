@@ -1,19 +1,19 @@
-module do
+module github.com/sumatrapdfreader/sumatrapdf/do
 
-go 1.13
+go 1.16
 
 require (
-	github.com/dustin/go-humanize v1.0.0
-	github.com/goamz/goamz v0.0.0-20180131231218-8b901b531db8
-	github.com/kjk/notionapi v0.0.0-20210817070416-31dd9832bf0c
-	github.com/kjk/u v0.0.0-20210327060556-13ea33918991
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/kjk/atomicfile v0.0.0-20210818091506-2c406a58bae3
+	github.com/kjk/notionapi v0.0.0-20210902233546-6e6cd02e3310
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
+	github.com/minio/minio-go/v7 v7.0.14
 	github.com/minio/sha256-simd v1.0.0 // indirect
-	github.com/smartystreets/goconvey v1.6.4 // indirect
-	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	github.com/rs/xid v1.3.0 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/net v0.0.0-20210924151903-3ad01bbaa167 // indirect
+	golang.org/x/sys v0.0.0-20210925032602-92d5a993a665 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/ini.v1 v1.63.2 // indirect
 )

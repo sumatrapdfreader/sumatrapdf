@@ -52,7 +52,7 @@
 #define IF_OVERPRINT_COMPONENT(k) if (1)
 #endif
 
-static inline void
+static fz_forceinline void
 FUNCTION_NAME(NAME,N,NAME2,NAME3)(const unsigned char * FZ_RESTRICT colorbv,
 #ifndef N
 				const int n1,

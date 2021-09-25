@@ -13,16 +13,12 @@ jobs:
         with:
           go-version: 1.16
 
-      - name: install netlify-ctl
-        run: npm install -g netlify-cli
-
       - name: Check out source code
         uses: actions/checkout@v2
 
       - name: process craches and netfliy deploy
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          INSTA_PREV_CRASHES_PWD: ${{ secrets.INSTA_PREV_CRASHES_PWD }}
           SPACES_KEY: ${{ secrets.SPACES_KEY }}
           SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
         run: .\doit.bat -crashes

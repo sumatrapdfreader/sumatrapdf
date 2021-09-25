@@ -5,70 +5,85 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 const filesRemoteDir = "sumatraTestFiles/"
 
 func fileUpload(path string) {
-	ensureCanUpload()
-	fileSize, err := u.GetFileSize(path)
-	must(err)
-	sha1, err := u.Sha1HexOfFile(path)
+	ensureSpacesAndS3Creds()
+	fileSize := fileSizeMust(path)
+	sha1, err := sha1HexOfFile(path)
 	must(err)
 	dstFileName := sha1[:6] + "-" + urlify(filepath.Base(path))
 	remotePath := path2.Join(filesRemoteDir, dstFileName)
-	sizeStr := u.FmtSizeHuman(fileSize)
-	logf("uploading '%s' of size %s as '%s'\n", path, sizeStr, remotePath)
-
-	var wg sync.WaitGroup
-	wg.Add(2)
+	sizeStr := formatSize(fileSize)
+	logf(ctx(), "uploading '%s' of size %s as '%s'\n", path, sizeStr, remotePath)
 
 	timeStart := time.Now()
 
-	go func() {
-		c := newS3Client()
-		if c.Exists(remotePath) {
-			logf("Skipping upload to s3    because '%s' already exists\n", remotePath)
+	s3Client := newMinioS3Client()
+	spacesClient := newMinioSpacesClient()
+
+	upload := func(mc *MinioClient) {
+		uri := minioURLForPath(mc, remotePath)
+		if minioExists(mc, remotePath) {
+			logf(ctx(), "Skipping upload, '%s' already exists\n", uri)
 		} else {
-			err := s3UploadFilePublic(c, remotePath, path)
+			err := minioUploadFilePublic(mc, remotePath, path)
 			must(err)
-			uri := "https://kjkpub.s3.amazonaws.com/" + remotePath
-			logf("Uploaded to s3 in %s\n%s\n", time.Since(timeStart), uri)
+			logf(ctx(), "Uploaded '%s' in %s\n", uri, time.Since(timeStart))
 		}
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		upload(s3Client)
 		wg.Done()
 	}()
+
 	go func() {
-		c := newMinioClient()
-		if minioExists(c, remotePath) {
-			logf("Skipping upload to minio because '%s' already exists\n", remotePath)
-		} else {
-			uri := minioURLForPath(c, remotePath)
-			logf("Uploaded to spaces in %s\n%s\n", time.Since(timeStart), uri)
-			err := c.UploadFilePublic(remotePath, path)
-			must(err)
-		}
+		upload(spacesClient)
 		wg.Done()
 	}()
 	wg.Wait()
 }
 
-func minioURLForPath(c *u.MinioClient, remotePath string) string {
-	return c.URLBase() + remotePath
-}
+func minioFilesList(mc *MinioClient) {
+	uri := minioURLForPath(mc, "")
+	logf(ctx(), "filesList in '%s'\n", uri)
 
-func filesListSpaces() {
-	c := newMinioClient()
-	files, err := c.ListRemoteFiles(filesRemoteDir)
-	must(err)
-	for _, f := range files {
-		sizeStr := u.FmtSizeHuman(f.Size)
-		logf("%s : %s\n", f.Key, sizeStr)
+	files := minioListObjects(mc, "")
+	for f := range files {
+		sizeStr := formatSize(f.Size)
+		logf(ctx(), "%s : %s\n", f.Key, sizeStr)
 	}
 }
 
 func filesList() {
-	ensureCanUpload()
-	filesListSpaces()
+	ensureSpacesAndS3Creds()
+	//minioFilesList(newMinioSpacesClient())
+	minioFilesList(newMinioS3Client())
+}
+
+func deleteFilesOneOff() {
+	doDelete := false
+	prefix := "vack/"
+
+	//mc := newMinioSpacesClient()
+	mc := newMinioS3Client()
+	uri := minioURLForPath(mc, "")
+	logf(ctx(), "deleteFiles in '%s'\n", uri)
+	files := minioListObjects(mc, prefix)
+	for f := range files {
+		if doDelete {
+			err := minioRemove(mc, f.Key)
+			must(err)
+			uri := minioURLForPath(mc, f.Key)
+			logf(ctx(), "Deleted %s\n", uri)
+		} else {
+			sizeStr := formatSize(f.Size)
+			logf(ctx(), "%s : %s\n", f.Key, sizeStr)
+		}
+	}
 }

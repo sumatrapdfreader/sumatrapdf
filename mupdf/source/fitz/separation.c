@@ -213,7 +213,7 @@ int fz_compare_separations(fz_context *ctx, const fz_separations *sep1, const fz
 		if (sep_state(sep1, i) != sep_state(sep2, i))
 			return 1; /* No match */
 		if (sep1->name[i] == NULL && sep2->name[i] == NULL)
-		{}
+		{ /* Two unnamed separations match */ }
 		else if (sep1->name[i] == NULL || sep2->name[i] == NULL || strcmp(sep1->name[i], sep2->name[i]))
 			return 1; /* No match */
 		if (sep1->cs[i] != sep2->cs[i] ||

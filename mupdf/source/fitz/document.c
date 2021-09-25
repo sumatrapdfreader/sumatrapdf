@@ -524,6 +524,13 @@ fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char *buf
 	return -1;
 }
 
+void
+fz_set_metadata(fz_context *ctx, fz_document *doc, const char *key, const char *value)
+{
+	if (doc && doc->set_metadata)
+		doc->set_metadata(ctx, doc, key, value);
+}
+
 fz_colorspace *
 fz_document_output_intent(fz_context *ctx, fz_document *doc)
 {

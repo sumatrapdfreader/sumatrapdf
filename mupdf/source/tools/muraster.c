@@ -802,6 +802,8 @@ static int try_render_page(fz_context *ctx, int pagenum, fz_cookie *cookie, int 
 		break;
 	}
 
+	fz_close_band_writer(ctx, render->bander);
+
 	fz_drop_page(ctx, render->page);
 	fz_drop_display_list(ctx, render->list);
 	fz_drop_band_writer(ctx, render->bander);

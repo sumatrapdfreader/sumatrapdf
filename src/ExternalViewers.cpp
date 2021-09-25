@@ -318,8 +318,13 @@ static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
         params.Set(str::Replace(cmdLine, L"%p", pageNoStr));
         cmdLine = params;
     }
-    if (str::Find(cmdLine, L"%1")) {
+    if (str::Find(cmdLine, LR"("%1")")) {
+        // "%1", is alrady quoted so no need to add quotes
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
+    } else if (str::Find(cmdLine, LR"(%1)")) {
+        // %1, not quoted, need to add
+        auto s = str::JoinTemp(L"\"", tab->filePath.Get(), L"\"").Get();
+        params.Set(str::Replace(cmdLine, L"%1", s));
     } else {
         params.Set(str::Format(LR"(%s "%s")", cmdLine, tab->filePath.Get()));
     }

@@ -160,7 +160,7 @@ void fz_set_error_callback(fz_context *ctx, void (*print)(void *user, const char
 
 FZ_NORETURN static void throw(fz_context *ctx, int code)
 {
-	if (ctx->error.top > ctx->error.stack)
+	if (ctx->error.top > ctx->error.stack_base)
 	{
 		ctx->error.top->state += 2;
 		if (ctx->error.top->code != FZ_ERROR_NONE)
@@ -183,7 +183,7 @@ fz_jmp_buf *fz_push_try(fz_context *ctx)
 	 * of entering the try block. We assume that we always have room for
 	 * 1 extra level on the stack here - i.e. we throw the error on us
 	 * starting to use the last level. */
-	if (ctx->error.top + 2 >= ctx->error.stack + nelem(ctx->error.stack))
+	if (ctx->error.top + 2 >= ctx->error.stack_base + nelem(ctx->error.stack))
 	{
 		fz_strlcpy(ctx->error.message, "exception stack overflow!", sizeof ctx->error.message);
 

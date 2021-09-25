@@ -527,8 +527,14 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 	if (!pixmap)
 	{
 		fz_pixmap *original = fz_get_pixmap_from_image(ctx, image, NULL, NULL, NULL, NULL);
+		int imagemask = image->imagemask;
+
 		fz_try(ctx)
+		{
 			pixmap = fz_clone_pixmap(ctx, original);
+			if (imagemask)
+				fz_invert_pixmap_alpha(ctx, pixmap);
+		}
 		fz_always(ctx)
 			fz_drop_pixmap(ctx, original);
 		fz_catch(ctx)
@@ -684,8 +690,13 @@ pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, con
 
 	if (redacted)
 	{
+		int imagemask = image->imagemask;
+
 		fz_try(ctx)
+		{
 			image = fz_new_image_from_pixmap(ctx, redacted, NULL);
+			image->imagemask = imagemask;
+		}
 		fz_always(ctx)
 			fz_drop_pixmap(ctx, redacted);
 		fz_catch(ctx)

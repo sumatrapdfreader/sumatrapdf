@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <time.h>
 #ifdef _MSC_VER
 #define stat _stat
 #endif
@@ -1543,17 +1544,17 @@ static void password_dialog(void)
  * meaning first page. Return 1 if parsing succeeded, 0 if failed.
  */
 static int
-parse_location(const char *anchor, fz_location *loc)
+parse_location(const char *anc, fz_location *loc)
 {
 	const char *s, *p;
 
-	if (anchor == NULL)
+	if (anc == NULL)
 		return 0;
 
-	s = anchor;
+	s = anc;
 	while (*s >= '0' && *s <= '9')
 		s++;
-	loc->chapter = fz_atoi(anchor)-1;
+	loc->chapter = fz_atoi(anc)-1;
 	if (*s == 0)
 	{
 		*loc = fz_location_from_page_number(ctx, doc, loc->chapter);
@@ -1573,7 +1574,7 @@ parse_location(const char *anchor, fz_location *loc)
 }
 
 static void
-reload_or_start_journalling(fz_context *ctx, pdf_document *pdf)
+reload_or_start_journalling(void)
 {
 	char journal[PATH_MAX];
 
@@ -1604,19 +1605,19 @@ static void alert_box(const char *fmt, const char *str)
 }
 
 
-static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *evt, void *data)
+static void event_cb(fz_context *callback_ctx, pdf_document *callback_doc, pdf_doc_event *evt, void *data)
 {
 	switch (evt->type)
 	{
 	case PDF_DOCUMENT_EVENT_ALERT:
 		{
-			pdf_alert_event *alert = pdf_access_alert_event(ctx, evt);
+			pdf_alert_event *alert = pdf_access_alert_event(callback_ctx, evt);
 			alert_box("%s", alert->message);
 		}
 		break;
 
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "event not yet implemented");
+		fz_throw(callback_ctx, FZ_ERROR_GENERIC, "event not yet implemented");
 		break;
 	}
 }
@@ -1714,7 +1715,7 @@ static void load_document(void)
 			pdf_enable_js(ctx, pdf);
 		}
 
-		reload_or_start_journalling(ctx, pdf);
+		reload_or_start_journalling();
 
 		if (trace_file)
 		{
@@ -2168,6 +2169,30 @@ static char *short_signature_error_desc(pdf_signature_error err)
 	}
 }
 
+const char *format_date(int64_t secs)
+{
+	static char buf[100];
+#ifdef _POSIX_SOURCE
+	struct tm tmbuf, *tm;
+#else
+	struct tm *tm;
+#endif
+
+	if (secs <= 0)
+		return NULL;
+
+#ifdef _POSIX_SOURCE
+	tm = gmtime_r(&secs, &tmbuf);
+#else
+	tm = gmtime(&secs);
+#endif
+	if (!tm)
+		return NULL;
+
+	strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", tm);
+	return buf;
+}
+
 static void do_info(void)
 {
 	char buf[100];
@@ -2182,7 +2207,7 @@ static void do_info(void)
 		pdf_walk_tree(ctx, form_fields, PDF_NAME(Kids), process_sigs, NULL, &list, &ft_list[0], &ft);
 	}
 
-	ui_dialog_begin(ui.gridsize*20, (14+list.len) * ui.lineheight);
+	ui_dialog_begin(ui.gridsize*20, (15+list.len) * ui.lineheight);
 	ui_layout(T, X, W, 0, 0);
 
 	if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_TITLE, buf, sizeof buf) > 0)
@@ -2201,6 +2226,22 @@ static void do_info(void)
 			ui_label("PDF Creator: %s", buf);
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_PRODUCER, buf, sizeof buf) > 0)
 			ui_label("PDF Producer: %s", buf);
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_SUBJECT, buf, sizeof buf) > 0)
+			ui_label("Subject: %s", buf);
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_KEYWORDS, buf, sizeof buf) > 0)
+			ui_label("Keywords: %s", buf);
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_CREATIONDATE, buf, sizeof buf) > 0)
+		{
+			const char *s = format_date(pdf_parse_date(ctx, buf));
+			if (s)
+				ui_label("Creation date: %s", s);
+		}
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_MODIFICATIONDATE, buf, sizeof buf) > 0)
+		{
+			const char *s = format_date(pdf_parse_date(ctx, buf));
+			if (s)
+				ui_label("Modification date: %s", s);
+		}
 		buf[0] = 0;
 		if (fz_has_permission(ctx, doc, FZ_PERMISSION_PRINT))
 			fz_strlcat(buf, "print, ", sizeof buf);

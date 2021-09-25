@@ -245,6 +245,11 @@ fz_font *load_droid_fallback_font(fz_context *ctx, int script, int language, int
 	case UCDN_SCRIPT_DIVES_AKURU: return load_noto_try(ctx, "DivesAkuru");
 	case UCDN_SCRIPT_KHITAN_SMALL_SCRIPT: return load_noto_try(ctx, "KhitanSmallScript");
 	case UCDN_SCRIPT_YEZIDI: return load_noto_try(ctx, "Yezidi");
+	case UCDN_SCRIPT_VITHKUQI: return load_noto_try(ctx, "Vithkuqi");
+	case UCDN_SCRIPT_OLD_UYGHUR: return load_noto_try(ctx, "OldUyghur");
+	case UCDN_SCRIPT_CYPRO_MINOAN: return load_noto_try(ctx, "CyproMinoan");
+	case UCDN_SCRIPT_TANGSA: return load_noto_try(ctx, "Tangsa");
+	case UCDN_SCRIPT_TOTO: return load_noto_try(ctx, "Toto");
 	}
 	return NULL;
 }

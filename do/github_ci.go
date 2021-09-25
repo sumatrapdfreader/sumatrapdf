@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	"github.com/kjk/u"
 )
 
 // https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
@@ -19,12 +17,12 @@ func triggerBuildWebHook(typ string) {
 	data := fmt.Sprintf(`{"event_type": "%s"}`, typ)
 	uri := "https://api.github.com/repos/sumatrapdfreader/sumatrapdf/dispatches"
 	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data))
-	u.Must(err)
+	must(err)
 	req.Header.Set("Accept", "application/vnd.github.everest-preview+json")
 	val := fmt.Sprintf("token %s", ghtoken)
 	req.Header.Set("Authorization", val)
 	rsp, err := http.DefaultClient.Do(req)
-	u.Must(err)
+	must(err)
 	panicIf(rsp.StatusCode >= 400)
 }
 

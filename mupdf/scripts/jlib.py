@@ -3,6 +3,7 @@ import doctest
 import inspect
 import io
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -972,7 +973,11 @@ def system(
         out = out_return
 
     if verbose:
-        log(f'running: {command}', nv=0, caller=caller+1)
+        env_text = ''
+        if env_extra:
+            for n, v in env_extra.items():
+                env_text += f' {n}={v}'
+        log(f'running:{env_text} {command}', nv=0, caller=caller+1)
 
     out_raw = out in (None, subprocess.DEVNULL)
     if prefix:
@@ -1283,7 +1288,9 @@ def copy(src, dest, verbose=False):
     '''
     if verbose:
         log('Copying {src} to {dest}')
-    os.makedirs( os.path.dirname(dest), exist_ok=True)
+    dirname = os.path.dirname(dest)
+    if dirname:
+        os.makedirs( dirname, exist_ok=True)
     shutil.copy2( src, dest)
 
 # Things for figuring out whether files need updating, using mtimes.
@@ -1363,7 +1370,8 @@ def build(
         Names of files that are written by <command>. Can also be a single
         filename.
     command:
-        Command to run.
+        Command to run. {IN} and {OUT} are replaced by space-separated
+        <infiles> and <outfiles> with '/' changed to '\' on Windows.
     force_rebuild:
         If true, we always re-run the command.
     out:
@@ -1402,6 +1410,18 @@ def build(
     if not reasons or all_reasons:
         if force_rebuild:
             reasons.append( 'force_rebuild was specified')
+
+    os_name = platform.system()
+    os_windows = (os_name == 'Windows' or os_name.startswith('CYGWIN'))
+    def files_string(files):
+        ret = ' '.join(files)
+        if os_windows:
+            # This works on Cygwyn; we might only need '\\' if running in a Cmd
+            # window.
+            ret = ret.replace('/', '\\\\')
+        return ret
+    command = command.replace('{IN}', files_string(infiles))
+    command = command.replace('{OUT}', files_string(outfiles))
 
     if not reasons or all_reasons:
         try:

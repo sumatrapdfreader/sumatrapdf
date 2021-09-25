@@ -814,6 +814,38 @@ FUN(Document_getMetaData)(JNIEnv *env, jobject self, jstring jkey)
 	return (*env)->NewStringUTF(env, info);
 }
 
+JNIEXPORT void JNICALL
+FUN(Document_setMetaData)(JNIEnv *env, jobject self, jstring jkey, jstring jvalue)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	const char *key = NULL;
+	const char *value = NULL;
+
+	if (!ctx || !doc) return;
+	if (!jkey) jni_throw_arg_void(env, "key must not be null");
+	if (!jvalue) jni_throw_arg_void(env, "value must not be null");
+
+	key = (*env)->GetStringUTFChars(env, jkey, NULL);
+	value = (*env)->GetStringUTFChars(env, jvalue, NULL);
+	if (!key || !value)
+	{
+		if (key)
+			(*env)->ReleaseStringUTFChars(env, jkey, key);
+		return;
+	}
+
+	fz_try(ctx)
+		fz_set_metadata(ctx, doc, key, value);
+	fz_always(ctx)
+	{
+		(*env)->ReleaseStringUTFChars(env, jkey, key);
+		(*env)->ReleaseStringUTFChars(env, jvalue, value);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
 JNIEXPORT jboolean JNICALL
 FUN(Document_isUnencryptedPDF)(JNIEnv *env, jobject self)
 {

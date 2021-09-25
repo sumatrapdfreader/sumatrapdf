@@ -134,13 +134,13 @@ func uniquifyStrings(a []string) []string {
 
 func extractStringsFromCFilesNoPaths() []string {
 	filesToProcess := getFilesToProcess()
-	logf("Files to process: %d\n", len(filesToProcess))
+	logf(ctx(), "Files to process: %d\n", len(filesToProcess))
 	var res []string
 	for _, path := range filesToProcess {
 		a := extractStringsFromCFile(path)
 		res = append(res, a...)
 	}
 	res = uniquifyStrings(res)
-	logf("%d strings to translate\n", len(res))
+	logf(ctx(), "%d strings to translate\n", len(res))
 	return res
 }

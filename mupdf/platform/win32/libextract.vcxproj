@@ -57,11 +57,15 @@
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\buffer.c">
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\document.c">
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\docx.c">
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\docx_template.c ">
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\extract.c">
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\html.c">
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\join.c">
     </ClCompile>

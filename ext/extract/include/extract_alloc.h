@@ -1,12 +1,20 @@
-#ifndef EXTRACT_ALLOC_H
-#define EXTRACT_ALLOC_H
+#ifndef ARITFEX_EXTRACT_ALLOC_H
+#define ARITFEX_EXTRACT_ALLOC_H
 
-/* Allocation support. */
+/* Allocation support.
+
+We use in/out parameters for pointers so that we can consistently return 0 or
+-1 with errno set.
+
+This also allows us to automatically set a caller's pointer to NULL when
+freeing or if malloc fails, and leave a caller's pointer unchanged if realloc
+fails.
+*/
 
 #include <stdlib.h>
 
 typedef void* (*extract_realloc_fn_t)(void* state, void* prev, size_t size);
-/* An allocation function to be provided by user of the extract library.
+/* An externally-provided allocation function.
 
 Should behave like realloc(), except for taking the additional 'void* state'
 arg. */
@@ -32,7 +40,7 @@ passed to extract_alloc_create(). */
 
 int extract_realloc(extract_alloc_t* alloc, void** pptr, size_t newsize);
 /* Sets *pptr to point to reallocated memory and returns 0. On error return -1
-with errno set and *pptr=NULL.
+with errno set and *pptr unchanged.
 
 Uses realloc() if <alloc> is NULL, otherwise <alloc> must have been created by
 extract_alloc_create() and we use the extract_realloc_fn_t that was originally

@@ -218,11 +218,11 @@ struct FindThreadData : public ProgressUpdateUI {
     NotificationWnd* wnd{nullptr};
     HANDLE thread{nullptr};
 
-    FindThreadData(WindowInfo* win, TextSearchDirection direction, HWND findBox) {
+    FindThreadData(WindowInfo* win, TextSearchDirection direction, const WCHAR* text, bool wasModified) {
         this->win = win;
         this->direction = direction;
-        this->text = str::Dup(win::GetTextTemp(findBox).AsView());
-        this->wasModified = Edit_GetModify(findBox);
+        this->text = str::Dup(text);
+        this->wasModified = wasModified;
     }
     ~FindThreadData() override {
         CloseHandle(thread);
@@ -363,21 +363,28 @@ void AbortFinding(WindowInfo* win, bool hideMessage) {
     }
 }
 
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
+// wasModified
+//   if true, starting a search for new term
+//   if false, searching for the next occurence of previous term
+// TODO: should detect wasModified by comparing with the last search result
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const WCHAR* text, bool wasModified,
+                      bool showProgress) {
     AbortFinding(win, true);
-
-    FindThreadData* ftd = new FindThreadData(win, direction, win->hwndFindBox);
-    Edit_SetModify(win->hwndFindBox, FALSE);
-
-    if (str::IsEmpty(ftd->text.Get())) {
-        delete ftd;
+    if (str::IsEmpty(text)) {
         return;
     }
-
+    FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
     ftd->ShowUI(showProgress);
     win->findThread = nullptr;
     win->findThread = CreateThread(nullptr, 0, FindThread, ftd, 0, nullptr);
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
+}
+
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
+    WCHAR* text = win::GetTextTemp(win->hwndFindBox).Get();
+    bool wasModified = Edit_GetModify(win->hwndFindBox);
+    Edit_SetModify(win->hwndFindBox, FALSE);
+    FindTextOnThread(win, direction, text, wasModified, showProgress);
 }
 
 void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
@@ -503,7 +510,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, __unused uint col, uint ret, uint page,
+void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, uint /* col */, uint ret, uint page,
                              Vec<Rect>& rects) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -578,14 +585,17 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wp, LPARAM lp) {
 
 // DDE commands
 
-// forward-search command
-//  format: [ForwardSearch(["<pdffilepath>",]"<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
-//    if pdffilepath is provided, the file will be opened if no open window can be found for it
-//    if newwindow = 1 then a new window is created even if the file is already open
-//    if focus = 1 then the focus is set to the window
-//  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
-// Synchronization command format:
-// [ForwardSearch(["<pdffile>",]"<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
+/*
+Forward search (synchronization) DDE command
+
+[ForwardSearch(["<pdffilepath>",]"<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
+eg:
+[ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
+
+if pdffilepath is provided, the file will be opened if no open window can be found for it
+if newwindow = 1 then a new window is created even if the file is already open
+if focus = 1 then the focus is set to the window
+*/
 static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
@@ -650,8 +660,46 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
-// Open file DDE command, format:
-// [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
+/*
+Search DDE command
+
+[Search("<pdffile>","<search-term>")]
+*/
+static const WCHAR* HandleSearchCmd(const WCHAR* cmd, DDEACK& ack) {
+    AutoFreeWstr pdfFile;
+    AutoFreeWstr term;
+    const WCHAR* next = str::Parse(cmd, L"[Search(\"%S\",\"%s\")]", &pdfFile, &term);
+    // TODO: should un-quote text to allow searching text with '"' in them
+    if (!next) {
+        return nullptr;
+    }
+    if (str::IsEmpty(term.Get())) {
+        return next;
+    }
+    // check if the PDF is already opened
+    // TODO: prioritize window with HWND so that if we have the same file
+    // opened in multiple tabs / windows, we operate on the one that got the message
+    WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
+    if (!win) {
+        return next;
+    }
+    if (!win->IsDocLoaded()) {
+        ReloadDocument(win, false);
+        if (!win->IsDocLoaded()) {
+            return next;
+        }
+    }
+    ack.fAck = 1;
+    FindTextOnThread(win, TextSearchDirection::Forward, term, true /* wasModified*/, true /*showProgress*/);
+    win->Focus();
+    return next;
+}
+
+/*
+Open file DDE Command
+
+[Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
+*/
 static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile;
     int newWindow = 0;
@@ -710,10 +758,13 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
-// DDE command: jump to named destination in an already opened document.
-// Format:
-// [GoToNamedDest("<pdffilepath>","<destination name>")], e.g.:
-// [GoToNamedDest("c:\file.pdf", "chapter.1")]
+/*
+DDE command: jump to named destination in an already opened document.
+
+[GoToNamedDest("<pdffilepath>","<destination name>")]
+e.g.:
+[GoToNamedDest("c:\file.pdf", "chapter.1")]
+*/
 static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, destName;
     const WCHAR* next = str::Parse(cmd, L"[GotoNamedDest(\"%S\",%? \"%S\")]", &pdfFile, &destName);
@@ -738,11 +789,13 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
-// DDE command: jump to a page in an already opened document.
-// Format:
-// [GoToPage("<pdffilepath>",<page number>)]
-//  eg:
-// [GoToPage("c:\file.pdf",37)]
+/*
+DDE command: jump to a page in an already opened document.
+
+[GoToPage("<pdffilepath>",<page number>)]
+eg:
+[GoToPage("c:\file.pdf",37)]
+*/
 #define DDECOMMAND_PAGE L"GotoPage"
 
 static const WCHAR* HandlePageCmd(__unused HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
@@ -777,12 +830,15 @@ static const WCHAR* HandlePageCmd(__unused HWND hwnd, const WCHAR* cmd, DDEACK& 
     return next;
 }
 
-// set view mode and zoom level
-//  format: [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
-//  eg: [SetView("c:\file.pdf", "book view", -2)]
-//  note: use -1 for ZOOM_FIT_PAGE, -2 for ZOOM_FIT_WIDTH and -3 for ZOOM_FIT_CONTENT
-// Set view mode and zoom level. Format:
-// [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
+/*
+Set view mode and zoom level DDE command
+
+[SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
+eg:
+[SetView("c:\file.pdf", "book view", -2)]
+
+use -1 for ZOOM_FIT_PAGE, -2 for ZOOM_FIT_WIDTH and -3 for ZOOM_FIT_CONTENT
+*/
 static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
@@ -848,6 +904,9 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
         }
         if (!nextCmd) {
             nextCmd = HandleSetViewCmd(cmd, ack);
+        }
+        if (!nextCmd) {
+            nextCmd = HandleSearchCmd(cmd, ack);
         }
         if (!nextCmd) {
             AutoFreeWstr tmp;

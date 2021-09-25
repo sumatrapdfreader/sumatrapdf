@@ -139,6 +139,9 @@ struct Annotations {
     // type of text annotation icon: comment, help, insert, key, new
     // paragraph, note, paragraph. If not set: note.
     char* textIconType;
+    // default author for created annotations, use (none) to not add an
+    // author at all. If not set will use Windows user name
+    char* defaultAuthor;
 };
 
 // Values which are persisted for bookmarks/favorites
@@ -484,9 +487,10 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t) "#ffff00"},
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t) "#ffff00"},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t) ""},
+    {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t) ""},
 };
-static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 3, gAnnotationsFields,
-                                            "HighlightColor\0TextIconColor\0TextIconType"};
+static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 4, gAnnotationsFields,
+                                            "HighlightColor\0TextIconColor\0TextIconType\0DefaultAuthor"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},

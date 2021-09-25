@@ -30,10 +30,16 @@
     <ClCompile Include="..\..\thirdparty\extract\src\buffer.c">
       <Filter>Source Files\extract</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\document.c">
+      <Filter>Source Files\extract</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\docx.c">
       <Filter>Source Files\extract</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\extract.c">
+      <Filter>Source Files\extract</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\html.c">
       <Filter>Source Files\extract</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\misc-test.c">
@@ -84,6 +90,9 @@
       <Filter>Source Files\extract</Filter>
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\src\docx_template.h">
+      <Filter>Source Files\extract</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\extract\src\html.h">
       <Filter>Source Files\extract</Filter>
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\src\outf.h">

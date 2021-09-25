@@ -41,6 +41,7 @@ const char *fz_pdfocr_write_options_usage =
 	"\tcompression=flate: Flate compression\n"
 	"\tstrip-height=N: Strip height (default 0=fullpage)\n"
 	"\tocr-language=<lang>: OCR language (default=eng)\n"
+	"\tocr-datadir=<datadir>: OCR data path (default=rely on TESSDATA_PREFIX)\n"
 	"\n";
 
 static const char funky_font[] =
@@ -175,7 +176,11 @@ fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, const char *ar
 	}
 	if (fz_has_option(ctx, args, "ocr-language", &val))
 	{
-		fz_strlcpy(opts->language, val, sizeof(opts->language));
+		fz_copy_option(ctx, val, opts->language, nelem(opts->language));
+	}
+	if (fz_has_option(ctx, args, "ocr-datadir", &val))
+	{
+		fz_copy_option(ctx, val, opts->datadir, nelem(opts->datadir));
 	}
 
 	return opts;
@@ -198,6 +203,7 @@ fz_write_pixmap_as_pdfocr(fz_context *ctx, fz_output *out, const fz_pixmap *pixm
 	{
 		fz_write_header(ctx, writer, pixmap->w, pixmap->h, pixmap->n, pixmap->alpha, pixmap->xres, pixmap->yres, 0, pixmap->colorspace, pixmap->seps);
 		fz_write_band(ctx, writer, pixmap->stride, pixmap->h, pixmap->samples);
+		fz_close_band_writer(ctx, writer);
 	}
 	fz_always(ctx)
 		fz_drop_band_writer(ctx, writer);
@@ -824,13 +830,13 @@ pdfocr_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 }
 
 static void
-pdfocr_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
+pdfocr_close_band_writer(fz_context *ctx, fz_band_writer *writer_)
 {
 	pdfocr_band_writer *writer = (pdfocr_band_writer *)writer_;
 	fz_output *out = writer->super.out;
 	int i;
 
-	/* We actually do the trailer writing in the drop */
+	/* We actually do the trailer writing in the close */
 	if (writer->xref_max > 2)
 	{
 		int64_t t_pos;
@@ -858,13 +864,17 @@ pdfocr_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
 			fz_write_printf(ctx, out, "%010ld 00000 n \n", writer->xref[i]);
 		fz_write_printf(ctx, out, "trailer\n<</Size %d/Root 1 0 R>>\nstartxref\n%ld\n%%%%EOF\n", writer->obj_num, t_pos);
 	}
+}
 
+static void
+pdfocr_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
+{
+	pdfocr_band_writer *writer = (pdfocr_band_writer *)writer_;
 	fz_free(ctx, writer->stripbuf);
 	fz_free(ctx, writer->compbuf);
 	fz_free(ctx, writer->page_obj);
 	fz_free(ctx, writer->xref);
 	fz_drop_pixmap(ctx, writer->ocrbitmap);
-
 	ocr_fin(ctx, writer->tessapi);
 }
 #endif
@@ -879,6 +889,7 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 	writer->super.header = pdfocr_write_header;
 	writer->super.band = pdfocr_write_band;
 	writer->super.trailer = pdfocr_write_trailer;
+	writer->super.close = pdfocr_close_band_writer;
 	writer->super.drop = pdfocr_drop_band_writer;
 
 	if (options)
@@ -900,7 +911,7 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 
 	fz_try(ctx)
 	{
-		writer->tessapi = ocr_init(ctx, writer->options.language);
+		writer->tessapi = ocr_init(ctx, writer->options.language, writer->options.datadir);
 	}
 	fz_catch(ctx)
 	{
@@ -996,9 +1007,7 @@ pdfocr_close_writer(fz_context *ctx, fz_document_writer *wri_)
 {
 	fz_pdfocr_writer *wri = (fz_pdfocr_writer*)wri_;
 
-	fz_drop_band_writer(ctx, wri->bander);
-	wri->bander = NULL;
-
+	fz_close_band_writer(ctx, wri->bander);
 	fz_close_output(ctx, wri->out);
 }
 

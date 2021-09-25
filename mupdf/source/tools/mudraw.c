@@ -373,6 +373,7 @@ static const char *layer_config = NULL;
 
 static const char ocr_language_default[] = "eng";
 static const char *ocr_language = ocr_language_default;
+static const char *ocr_datadir = NULL;
 
 static struct {
 	int active;
@@ -479,8 +480,10 @@ static int usage(void)
 #endif
 #ifndef OCR_DISABLED
 		"\t-t -\tSpecify language/script for OCR (default: eng)\n"
+		"\t-d -\tSpecify path for OCR files (default: rely on TESSDATA_PREFIX environment variable)\n"
 #else
 		"\t-t -\tSpecify language/script for OCR (default: eng) (disabled)\n"
+		"\t-d -\tSpecify path for OCR files (default: rely on TESSDATA_PREFIX environment variable) (disabled)\n"
 #endif
 		"\n"
 		"\t-y l\tList the layer configs to stderr\n"
@@ -557,6 +560,11 @@ file_level_headers(fz_context *ctx)
 		char options[300];
 		fz_pdfocr_options opts = { 0 };
 		fz_snprintf(options, sizeof(options), "compression=flate,ocr-language=%s", ocr_language);
+		if (ocr_datadir)
+		{
+			fz_strlcat(options, ",ocr-datadir=", sizeof (options));
+			fz_strlcat(options, ocr_datadir, sizeof (options));
+		}
 		fz_parse_pdfocr_options(ctx, &opts, options);
 		bander = fz_new_pdfocr_band_writer(ctx, out, &opts);
 	}
@@ -579,7 +587,11 @@ file_level_trailers(fz_context *ctx)
 		fz_write_ps_file_trailer(ctx, out, output_pagenum);
 
 	if (output_format == OUT_PCLM || output_format == OUT_OCR_PDF)
+	{
+		fz_close_band_writer(ctx, bander);
 		fz_drop_band_writer(ctx, bander);
+		bander = NULL;
+	}
 }
 
 static void drawband(fz_context *ctx, fz_page *page, fz_display_list *list, fz_matrix ctm, fz_rect tbounds, fz_cookie *cookie, int band_start, fz_pixmap *pix, fz_bitmap **bit)
@@ -660,7 +672,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			{
 				pre_ocr_dev = dev;
 				dev = NULL;
-				dev = fz_new_ocr_device(ctx, pre_ocr_dev, ctm, mediabox, 1, ocr_language, NULL, NULL);
+				dev = fz_new_ocr_device(ctx, pre_ocr_dev, ctm, mediabox, 1, ocr_language, ocr_datadir, NULL, NULL);
 			}
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
@@ -774,7 +786,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			{
 				pre_ocr_dev = dev;
 				dev = NULL;
-				dev = fz_new_ocr_device(ctx, pre_ocr_dev, ctm, mediabox, 1, ocr_language, NULL, NULL);
+				dev = fz_new_ocr_device(ctx, pre_ocr_dev, ctm, mediabox, 1, ocr_language, ocr_datadir, NULL, NULL);
 			}
 			if (list)
 				fz_run_display_list(ctx, list, dev, ctm, fz_infinite_rect, cookie);
@@ -1108,6 +1120,9 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 				ctm.f -= drawheight;
 			}
 
+			if (output_format != OUT_PCLM && output_format != OUT_OCR_PDF)
+				fz_close_band_writer(ctx, bander);
+
 			/* FIXME */
 			if (showmd5 && pix)
 			{
@@ -1158,6 +1173,11 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		}
 		fz_catch(ctx)
 		{
+			if (output_format == OUT_PCLM || output_format == OUT_OCR_PDF)
+			{
+				fz_drop_band_writer(ctx, bander);
+				bander = NULL;
+			}
 			fz_rethrow(ctx);
 		}
 	}
@@ -1835,7 +1855,7 @@ int mudraw_main(int argc, char **argv)
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "qp:o:F:R:r:w:h:fB:c:e:G:Is:A:DiW:H:S:T:t:U:XLvPl:y:NO:am:")) != -1)
+	while ((c = fz_getopt(argc, argv, "qp:o:F:R:r:w:h:fB:c:e:G:Is:A:DiW:H:S:T:t:d:U:XLvPl:y:NO:am:")) != -1)
 	{
 		switch (c)
 		{
@@ -1901,6 +1921,13 @@ int mudraw_main(int argc, char **argv)
 			num_workers = atoi(fz_optarg); break;
 #else
 			fprintf(stderr, "Threads not enabled in this build\n");
+			break;
+#endif
+		case 'd':
+#ifndef OCR_DISABLED
+			ocr_datadir = fz_optarg; break;
+#else
+			fprintf(stderr, "OCR functionality not enabled in this build\n");
 			break;
 #endif
 		case 't':

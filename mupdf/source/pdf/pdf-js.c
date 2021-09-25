@@ -363,6 +363,93 @@ static void doc_setNumPages(js_State *J)
 	fz_warn(js->ctx, "Unexpected call to doc_setNumPages");
 }
 
+static void doc_getMetaString(js_State *J, const char *key)
+{
+	pdf_js *js = js_getcontext(J);
+	char buf[256];
+	int ret;
+
+	fz_try(js->ctx)
+		ret = fz_lookup_metadata(js->ctx, &js->doc->super, key, buf, nelem(buf)) > 0;
+	fz_catch(js->ctx)
+		rethrow(js);
+
+	if (ret > 0)
+		js_pushstring(J, buf);
+	else
+		js_pushundefined(J);
+}
+
+static void doc_setMetaString(js_State *J, const char *key)
+{
+	pdf_js *js = js_getcontext(J);
+	const char *value = js_tostring(J, 1);
+	fz_set_metadata(js->ctx, &js->doc->super, key, value);
+}
+
+static void doc_getMetaDate(js_State *J, const char *key)
+{
+	pdf_js *js = js_getcontext(J);
+	char buf[256];
+	int ret;
+	double time;
+
+	fz_try(js->ctx)
+	{
+		ret = fz_lookup_metadata(js->ctx, &js->doc->super, key, buf, nelem(buf)) > 0;
+		if (ret > 0)
+			time = pdf_parse_date(js->ctx, buf);
+	}
+	fz_catch(js->ctx)
+		rethrow(js);
+
+	if (ret > 0)
+	{
+		js_getglobal(J, "Date");
+		js_pushnumber(J, time * 1000);
+		js_construct(J, 1);
+	}
+	else
+		js_pushundefined(J);
+}
+
+static void doc_setMetaDate(js_State *J, const char *key)
+{
+	pdf_js *js = js_getcontext(J);
+	int64_t time;
+	char value[40];
+
+	// Coerce the argument into a date object and extract the time value.
+	js_getglobal(J, "Date");
+	js_copy(J, 1);
+	js_construct(J, 1);
+	time = js_tonumber(J, -1) / 1000;
+	js_pop(J, 1);
+
+	fz_try(js->ctx)
+		if (pdf_format_date(js->ctx, time, value, nelem(value)))
+			fz_set_metadata(js->ctx, &js->doc->super, key, value);
+	fz_catch(js->ctx)
+		rethrow(js);
+}
+
+static void doc_getAuthor(js_State *J) { doc_getMetaString(J, FZ_META_INFO_AUTHOR); }
+static void doc_setAuthor(js_State *J) { doc_setMetaString(J, FZ_META_INFO_AUTHOR); }
+static void doc_getTitle(js_State *J) { doc_getMetaString(J, FZ_META_INFO_TITLE); }
+static void doc_setTitle(js_State *J) { doc_setMetaString(J, FZ_META_INFO_TITLE); }
+static void doc_getSubject(js_State *J) { doc_getMetaString(J, FZ_META_INFO_SUBJECT); }
+static void doc_setSubject(js_State *J) { doc_setMetaString(J, FZ_META_INFO_SUBJECT); }
+static void doc_getKeywords(js_State *J) { doc_getMetaString(J, FZ_META_INFO_KEYWORDS); }
+static void doc_setKeywords(js_State *J) { doc_setMetaString(J, FZ_META_INFO_KEYWORDS); }
+static void doc_getCreator(js_State *J) { doc_getMetaString(J, FZ_META_INFO_CREATOR); }
+static void doc_setCreator(js_State *J) { doc_setMetaString(J, FZ_META_INFO_CREATOR); }
+static void doc_getProducer(js_State *J) { doc_getMetaString(J, FZ_META_INFO_PRODUCER); }
+static void doc_setProducer(js_State *J) { doc_setMetaString(J, FZ_META_INFO_PRODUCER); }
+static void doc_getCreationDate(js_State *J) { doc_getMetaDate(J, FZ_META_INFO_CREATIONDATE); }
+static void doc_setCreationDate(js_State *J) { doc_setMetaDate(J, FZ_META_INFO_CREATIONDATE); }
+static void doc_getModDate(js_State *J) { doc_getMetaDate(J, FZ_META_INFO_MODIFICATIONDATE); }
+static void doc_setModDate(js_State *J) { doc_setMetaDate(J, FZ_META_INFO_MODIFICATIONDATE); }
+
 static void doc_resetForm(js_State *J)
 {
 	pdf_js *js = js_getcontext(J);
@@ -764,6 +851,14 @@ static void declare_dom(pdf_js *js)
 	js_pushglobal(J);
 	{
 		addproperty(J, "Doc.numPages", doc_getNumPages, doc_setNumPages);
+		addproperty(J, "Doc.author", doc_getAuthor, doc_setAuthor);
+		addproperty(J, "Doc.title", doc_getTitle, doc_setTitle);
+		addproperty(J, "Doc.subject", doc_getSubject, doc_setSubject);
+		addproperty(J, "Doc.keywords", doc_getKeywords, doc_setKeywords);
+		addproperty(J, "Doc.creator", doc_getCreator, doc_setCreator);
+		addproperty(J, "Doc.producer", doc_getProducer, doc_setProducer);
+		addproperty(J, "Doc.creationDate", doc_getCreationDate, doc_setCreationDate);
+		addproperty(J, "Doc.modDate", doc_getModDate, doc_setModDate);
 		addmethod(J, "Doc.getField", doc_getField, 1);
 		addmethod(J, "Doc.resetForm", doc_resetForm, 0);
 		addmethod(J, "Doc.calculateNow", doc_calculateNow, 0);

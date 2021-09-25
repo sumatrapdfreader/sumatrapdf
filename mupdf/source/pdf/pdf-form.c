@@ -1096,8 +1096,8 @@ int pdf_text_widget_format(fz_context *ctx, pdf_annot *tw)
 static char *
 merge_changes(fz_context *ctx, const char *value, int start, int end, const char *change)
 {
-	int changelen = change ? strlen(change) : 0;
-	int valuelen = value ? strlen(value) : 0;
+	int changelen = change ? (int)strlen(change) : 0;
+	int valuelen = value ? (int)strlen(value) : 0;
 	int prelen = (start >= 0 ? start : 0);
 	int postlen = (end >= 0 && end <= valuelen ? valuelen - end : 0);
 	int newlen =  prelen + changelen + postlen + 1;
@@ -1208,14 +1208,14 @@ int pdf_edit_text_field_value(fz_context *ctx, pdf_annot *widget, const char *va
 			if (rc)
 			{
 				*result = merge_changes(ctx, evt.newValue, evt.selStart, evt.selEnd, evt.newChange);
-				*selStart = evt.selStart + strlen(evt.newChange);
+				*selStart = evt.selStart + (int)strlen(evt.newChange);
 				*selEnd = *selStart;
 			}
 		}
 		else
 		{
 			*result = merge_changes(ctx, value, *selStart, *selEnd, change);
-			*selStart = evt.selStart + strlen(change);
+			*selStart = evt.selStart + (int)strlen(change);
 			*selEnd = *selStart;
 		}
 	}

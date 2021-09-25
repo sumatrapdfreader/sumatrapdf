@@ -103,11 +103,9 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
         self.menu_file_open.triggered.connect(self.open_)
         self.menu_file_open.setShortcut(PyQt5.QtGui.QKeySequence("Ctrl+O"))
 
-        if 0:
-            # Disabled because requires wip extract.
-            self.menu_file_show_html = PyQt5.QtWidgets.QAction('&Show html')
-            self.menu_file_show_html.setToolTip('Convert to HTML and show in separate window.')
-            self.menu_file_show_html.triggered.connect(self.show_html)
+        self.menu_file_show_html = PyQt5.QtWidgets.QAction('&Show html')
+        self.menu_file_show_html.setToolTip('Convert to HTML and show in separate window.')
+        self.menu_file_show_html.triggered.connect(self.show_html)
 
         self.menu_file_quit = PyQt5.QtWidgets.QAction('&Quit')
         self.menu_file_quit.setToolTip('Exit the application.')
@@ -117,7 +115,7 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
         menu_file = self.menuBar().addMenu('&File')
         menu_file.setToolTipsVisible(True)
         menu_file.addAction(self.menu_file_open)
-        #menu_file.addAction(self.menu_file_show_html)
+        menu_file.addAction(self.menu_file_show_html)
         menu_file.addAction(self.menu_file_quit)
 
     def keyPressEvent(self, event):
@@ -254,8 +252,7 @@ def main():
             if arg in ('-h', '--help'):
                 print(__doc__)
                 return
-            elif 0 and arg == '--html':
-                # Disabled because requires wip extract support.
+            elif arg == '--html':
                 main_window.show_html()
             else:
                 raise Exception(f'Unrecognised option {arg!r}')

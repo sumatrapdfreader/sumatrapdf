@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
+#include <time.h>
 
 #ifdef _MSC_VER
     #include "compat_stdint.h"
@@ -74,8 +75,38 @@ int extract_zip_open(extract_buffer_t* buffer, extract_zip_t** o_zip)
     
     /* We could maybe convert current date/time to the ms-dos format required
     here, but using zeros doesn't seem to make a difference to Word etc. */
-    zip->mtime = 0;
-    zip->mdate = 0;
+        
+    {
+        time_t t = time(NULL);
+        struct tm*  tm;
+        #ifdef _POSIX_SOURCE
+            struct tm   tm_local;
+            tm = gmtime_r(&t, &tm_local);
+        #else
+            tm = gmtime(&t);
+        #endif
+        if (tm)
+        {
+            /* mdate and mtime are in MS DOS format:
+                mtime:
+                    bits 0-4: seconds / 2.
+                    bits 5-10: minute (0-59).
+                    bits 11-15: hour (0-23).
+                mdate:
+                    bits 0-4: day of month (1-31).
+                    bits 5-8: month (1=jan, 2=feb, etc).
+                    bits 9-15: year - 1980.
+            */
+            zip->mtime = (uint16_t) ((tm->tm_hour << 11) | (tm->tm_min << 5) | (tm->tm_sec / 2));
+            zip->mdate = (uint16_t) (((1900 + tm->tm_year - 1980) << 9) | ((tm->tm_mon + 1) << 5) | tm->tm_mday);
+        }
+        else
+        {
+            outf0("*** gmtime_r() failed");
+            zip->mtime = 0;
+            zip->mdate = 0;
+        }
+    }
     
     /* These are all copied from command-line zip on unix. */
     zip->version_creator = (0x3 << 8) + 30; /* 0x3 is unix, 30 means 3.0. */
@@ -115,7 +146,9 @@ static int s_native_little_endinesss(void)
         /* Native big-endiness. */
         return 0;
     }
-    abort();
+    /* Would like to call abort() here, but that breaks on AIX/gcc. */
+    assert(0);
+    return 0;
 }
 
 
@@ -313,7 +346,7 @@ int extract_zip_write_file(
     cd_file->name = NULL;
     
     cd_file->mtime = zip->mtime;
-    cd_file->mdate = zip->mtime;
+    cd_file->mdate = zip->mdate;
     cd_file->crc_sum = (int32_t) crc32(crc32(0, NULL, 0), data, (int) data_length);
     cd_file->size_uncompressed = (int) data_length;
     if (zip->compression_method == 0)

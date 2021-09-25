@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 var (
@@ -67,11 +65,11 @@ func copyBuiltFiles(dstDir string, srcDir string, prefix string) {
 		srcPath := filepath.Join(srcDir, srcName)
 		dstName := f[1]
 		dstPath := filepath.Join(dstDir, dstName)
-		u.CreateDirForFileMust(dstPath)
+		must(createDirForFile(dstPath))
 		if fileExists(srcPath) {
-			u.CopyFileMust(dstPath, srcPath)
+			must(copyFile(dstPath, srcPath))
 		} else {
-			logf("Skipping copying '%s'\n", srcPath)
+			logf(ctx(), "Skipping copying '%s'\n", srcPath)
 		}
 	}
 }
@@ -80,7 +78,7 @@ func copyBuiltManifest(dstDir string, prefix string) {
 	srcPath := filepath.Join("out", "artifacts", "manifest.txt")
 	dstName := prefix + "-manifest.txt"
 	dstPath := filepath.Join(dstDir, dstName)
-	u.CopyFileMust(dstPath, srcPath)
+	must(copyFile(dstPath, srcPath))
 }
 
 func build(dir, config, platform string) {
@@ -99,7 +97,7 @@ func build(dir, config, platform string) {
 
 func extractSumatraVersionMust() string {
 	path := filepath.Join("src", "Version.h")
-	lines, err := u.ReadLinesFromFile(path)
+	lines, err := readLinesFromFile(path)
 	must(err)
 	s := "#define CURR_VERSION "
 	for _, l := range lines {
@@ -115,7 +113,7 @@ func extractSumatraVersionMust() string {
 // extract version_check_${VER}
 // convert from "3_4" => "3.4"
 func extractVersionCheckVerPathMust(path string) string {
-	lines, err := u.ReadLinesFromFile(path)
+	lines, err := readLinesFromFile(path)
 	must(err)
 	s := "version_check_"
 	for _, l := range lines {
@@ -151,10 +149,10 @@ func detectVersions() {
 	gitSha1Cached = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
 	versionCheckVer = extractVersionCheckVerMust()
-	logf("preReleaseVer: '%s'\n", preReleaseVerCached)
-	logf("gitSha1: '%s'\n", gitSha1Cached)
-	logf("sumatraVersion: '%s'\n", sumatraVersion)
-	logf("versionCheckVer: '%s'\n", versionCheckVer)
+	logf(ctx(), "preReleaseVer: '%s'\n", preReleaseVerCached)
+	logf(ctx(), "gitSha1: '%s'\n", gitSha1Cached)
+	logf(ctx(), "sumatraVersion: '%s'\n", sumatraVersion)
+	logf(ctx(), "versionCheckVer: '%s'\n", versionCheckVer)
 	parts := strings.Split(versionCheckVer, ".")
 	panicIf(len(parts) != 2, "invalid versionCheckVer (%s), must be x.y", versionCheckVer)
 	ok := strings.HasPrefix(sumatraVersion, versionCheckVer)
@@ -197,7 +195,7 @@ func clean() {
 			}
 		}
 	}
-	logf("clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
+	logf(ctx(), "clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
 }
 
 func runTestUtilMust(dir string) {
@@ -218,7 +216,7 @@ func buildLzsa() {
 
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
-	logf("build and signed '%s'\n", path)
+	logf(ctx(), "build and signed '%s'\n", path)
 }
 
 // smoke build is meant to be run locally to check that we can build everything
@@ -335,7 +333,7 @@ func createExeZipWithPigz(dir string) {
 	// so when we run pigz the current directory is the same as
 	// the directory with the file we're compressing
 	cmd.Dir = dir
-	u.RunCmdMust(cmd)
+	runCmdMust(cmd)
 
 	fatalIf(!fileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
 	err = os.Rename(dstPathTmp, dstPath)
@@ -383,7 +381,7 @@ func createManifestMust() {
 	}
 	dirs := []string{rel32Dir, rel64Dir}
 	// in daily build, there's no 32bit build
-	if !u.PathExists(rel32Dir) {
+	if !pathExists(rel32Dir) {
 		dirs = []string{rel64Dir}
 	}
 	for _, dir := range dirs {
@@ -397,7 +395,7 @@ func createManifestMust() {
 
 	s := strings.Join(lines, "\n")
 	artifactsDir := filepath.Join("out", "artifacts")
-	u.CreateDirMust(artifactsDir)
+	createDirMust(artifactsDir)
 	path := filepath.Join(artifactsDir, "manifest.txt")
 	writeFileMust(path, []byte(s))
 }
@@ -408,7 +406,7 @@ func createManifestMust() {
 // https://docs.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-packaging-dot-net
 func makeAppx() {
 	appExePath := detectMakeAppxPath()
-	logf("makeAppx: '%s'\n", appExePath)
+	logf(ctx(), "makeAppx: '%s'\n", appExePath)
 }
 
 func signFilesMust(dir string) {
@@ -463,8 +461,15 @@ func buildRelease() {
 	s := fmt.Sprintf("buidling release version %s", ver)
 	defer makePrintDuration(s)()
 
-	verifyBuildNotInS3ShortMust(buildTypeRel)
-	verifyBuildNotInSpacesMust(buildTypeRel)
+	{
+		mc := newMinioSpacesClient()
+		minioVerifyBuildNotInStorageMust(mc, buildTypeRel)
+	}
+
+	{
+		mc := newMinioS3Client()
+		minioVerifyBuildNotInStorageMust(mc, buildTypeRel)
+	}
 
 	clean()
 	setBuildConfigRelease()

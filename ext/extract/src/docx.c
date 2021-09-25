@@ -21,6 +21,7 @@ docx_paragraph_finish(). */
 
 #include <assert.h>
 #include <errno.h>
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,46 +30,42 @@ docx_paragraph_finish(). */
 #include <sys/stat.h>
 
 
-static int extract_docx_paragraph_start(extract_alloc_t* alloc, extract_astring_t* content)
+static int s_docx_paragraph_start(extract_alloc_t* alloc, extract_astring_t* content)
 {
     return extract_astring_cat(alloc, content, "\n\n<w:p>");
 }
 
-static int extract_docx_paragraph_finish(extract_alloc_t* alloc, extract_astring_t* content)
+static int s_docx_paragraph_finish(extract_alloc_t* alloc, extract_astring_t* content)
 {
     return extract_astring_cat(alloc, content, "\n</w:p>");
 }
 
-static int extract_docx_run_start(
+static int s_docx_run_start(
         extract_alloc_t* alloc,
         extract_astring_t* content,
-        const char* font_name,
-        double font_size,
-        int bold,
-        int italic
+        content_state_t* content_state
         )
-/* Starts a new run. Caller must ensure that extract_docx_run_finish() was
+/* Starts a new run. Caller must ensure that s_docx_run_finish() was
 called to terminate any previous run. */
 {
     int e = 0;
     if (!e) e = extract_astring_cat(alloc, content, "\n<w:r><w:rPr><w:rFonts w:ascii=\"");
-    if (!e) e = extract_astring_cat(alloc, content, font_name);
+    if (!e) e = extract_astring_cat(alloc, content, content_state->font.name);
     if (!e) e = extract_astring_cat(alloc, content, "\" w:hAnsi=\"");
-    if (!e) e = extract_astring_cat(alloc, content, font_name);
+    if (!e) e = extract_astring_cat(alloc, content, content_state->font.name);
     if (!e) e = extract_astring_cat(alloc, content, "\"/>");
-    if (!e && bold) e = extract_astring_cat(alloc, content, "<w:b/>");
-    if (!e && italic) e = extract_astring_cat(alloc, content, "<w:i/>");
+    if (!e && content_state->font.bold) e = extract_astring_cat(alloc, content, "<w:b/>");
+    if (!e && content_state->font.italic) e = extract_astring_cat(alloc, content, "<w:i/>");
     {
         char   font_size_text[32];
-        if (0) font_size = 10;
 
         if (!e) e = extract_astring_cat(alloc, content, "<w:sz w:val=\"");
-        snprintf(font_size_text, sizeof(font_size_text), "%f", font_size * 2);
+        snprintf(font_size_text, sizeof(font_size_text), "%f", content_state->font.size * 2);
         extract_astring_cat(alloc, content, font_size_text);
         extract_astring_cat(alloc, content, "\"/>");
 
         if (!e) e = extract_astring_cat(alloc, content, "<w:szCs w:val=\"");
-        snprintf(font_size_text, sizeof(font_size_text), "%f", font_size * 1.5);
+        snprintf(font_size_text, sizeof(font_size_text), "%f", content_state->font.size * 1.5);
         extract_astring_cat(alloc, content, font_size_text);
         extract_astring_cat(alloc, content, "\"/>");
     }
@@ -77,38 +74,38 @@ called to terminate any previous run. */
 
 }
 
-static int extract_docx_run_finish(extract_alloc_t* alloc, extract_astring_t* content)
+static int s_docx_run_finish(extract_alloc_t* alloc, content_state_t* state, extract_astring_t* content)
 {
+    if (state) state->font.name = NULL;
     return extract_astring_cat(alloc, content, "</w:t></w:r>");
 }
 
-static int extract_docx_paragraph_empty(extract_alloc_t* alloc, extract_astring_t* content)
+static int s_docx_paragraph_empty(extract_alloc_t* alloc, extract_astring_t* content)
 /* Append an empty paragraph to *content. */
 {
     int e = -1;
-    if (extract_docx_paragraph_start(alloc, content)) goto end;
+    content_state_t content_state = {0};
+    if (s_docx_paragraph_start(alloc, content)) goto end;
     /* It seems like our choice of font size here doesn't make any difference
     to the ammount of vertical space, unless we include a non-space
     character. Presumably something to do with the styles in the template
     document. */
-    if (extract_docx_run_start(
-            alloc,
-            content,
-            "OpenSans",
-            10 /*font_size*/,
-            0 /*font_bold*/,
-            0 /*font_italic*/
-            )) goto end;
+    content_state.font.name = "OpenSans";
+    content_state.font.size = 10;
+    content_state.font.bold = 0;
+    content_state.font.italic = 0;
+    
+    if (s_docx_run_start(alloc, content, &content_state)) goto end;
     //docx_char_append_string(content, "&#160;");   /* &#160; is non-break space. */
-    if (extract_docx_run_finish(alloc, content)) goto end;
-    if (extract_docx_paragraph_finish(alloc, content)) goto end;
+    if (s_docx_run_finish(alloc, NULL /*state*/, content)) goto end;
+    if (s_docx_paragraph_finish(alloc, content)) goto end;
     e = 0;
     end:
     return e;
 }
 
 
-static int extract_docx_char_truncate_if(extract_astring_t* content, char c)
+static int s_docx_char_truncate_if(extract_astring_t* content, char c)
 /* Removes last char if it is <c>. */
 {
     if (content->chars_num && content->chars[content->chars_num-1] == c) {
@@ -118,22 +115,9 @@ static int extract_docx_char_truncate_if(extract_astring_t* content, char c)
 }
 
 
-typedef struct
-{
-    const char* font_name;
-    double      font_size;
-    int         font_bold;
-    int         font_italic;
-    matrix_t*   ctm_prev;
-} content_state_t;
-/* Used to keep track of font information when writing paragraphs of docx
-content, e.g. so we know whether a font has changed so need to start a new docx
-span. */
-
-
-static int extract_document_to_docx_content_paragraph(
+static int s_document_to_docx_content_paragraph(
         extract_alloc_t*    alloc,
-        content_state_t*    state,
+        content_state_t*    content_state,
         paragraph_t*        paragraph,
         extract_astring_t*  content
         )
@@ -142,7 +126,7 @@ font. */
 {
     int e = -1;
     int l;
-    if (extract_docx_paragraph_start(alloc, content)) goto end;
+    if (s_docx_paragraph_start(alloc, content)) goto end;
 
     for (l=0; l<paragraph->lines_num; ++l) {
         line_t* line = paragraph->lines[l];
@@ -151,45 +135,38 @@ font. */
             int si;
             span_t* span = line->spans[s];
             double font_size_new;
-            state->ctm_prev = &span->ctm;
+            content_state->ctm_prev = &span->ctm;
             font_size_new = extract_matrices_to_font_size(&span->ctm, &span->trm);
-            if (!state->font_name
-                    || strcmp(span->font_name, state->font_name)
-                    || span->flags.font_bold != state->font_bold
-                    || span->flags.font_italic != state->font_italic
-                    || font_size_new != state->font_size
+            if (!content_state->font.name
+                    || strcmp(span->font_name, content_state->font.name)
+                    || span->flags.font_bold != content_state->font.bold
+                    || span->flags.font_italic != content_state->font.italic
+                    || font_size_new != content_state->font.size
                     ) {
-                if (state->font_name) {
-                    if (extract_docx_run_finish(alloc, content)) goto end;
+                if (content_state->font.name) {
+                    if (s_docx_run_finish(alloc, content_state, content)) goto end;
                 }
-                state->font_name = span->font_name;
-                state->font_bold = span->flags.font_bold;
-                state->font_italic = span->flags.font_italic;
-                state->font_size = font_size_new;
-                if (extract_docx_run_start(
-                        alloc,
-                        content,
-                        state->font_name,
-                        state->font_size,
-                        state->font_bold,
-                        state->font_italic
-                        )) goto end;
+                content_state->font.name = span->font_name;
+                content_state->font.bold = span->flags.font_bold;
+                content_state->font.italic = span->flags.font_italic;
+                content_state->font.size = font_size_new;
+                if (s_docx_run_start(alloc, content, content_state)) goto end;
             }
 
             for (si=0; si<span->chars_num; ++si) {
                 char_t* char_ = &span->chars[si];
                 int c = char_->ucs;
-                if (extract_astring_cat_xmlc(alloc, content, c)) goto end;
+                if (extract_astring_catc_unicode_xml(alloc, content, c)) goto end;
             }
             /* Remove any trailing '-' at end of line. */
-            if (extract_docx_char_truncate_if(content, '-')) goto end;
+            if (s_docx_char_truncate_if(content, '-')) goto end;
         }
     }
-    if (state->font_name) {
-        if (extract_docx_run_finish(alloc, content)) goto end;
-        state->font_name = NULL;
+    if (content_state->font.name)
+    {
+        if (s_docx_run_finish(alloc, content_state, content)) goto end;
     }
-    if (extract_docx_paragraph_finish(alloc, content)) goto end;
+    if (s_docx_paragraph_finish(alloc, content)) goto end;
     
     e = 0;
     
@@ -197,7 +174,7 @@ font. */
     return e;
 }
 
-static int extract_document_append_image(
+static int s_docx_append_image(
         extract_alloc_t*    alloc,
         extract_astring_t*  content,
         image_t*            image
@@ -265,7 +242,7 @@ static int extract_document_append_image(
 }
 
 
-static int extract_document_output_rotated_paragraphs(
+static int s_docx_output_rotated_paragraphs(
         extract_alloc_t*    alloc,
         extract_page_t*     page,
         int                 paragraph_begin,
@@ -353,7 +330,7 @@ static int extract_document_output_rotated_paragraphs(
     /* Output paragraphs p0..p2-1. */
     for (p=paragraph_begin; p<paragraph_end; ++p) {
         paragraph_t* paragraph = page->paragraphs[p];
-        if (extract_document_to_docx_content_paragraph(alloc, state, paragraph, content)) goto end;
+        if (s_document_to_docx_content_paragraph(alloc, state, paragraph, content)) goto end;
     }
 
     extract_astring_cat(alloc, content, "\n");
@@ -387,7 +364,7 @@ static int extract_document_output_rotated_paragraphs(
 
     for (p=paragraph_begin; p<paragraph_end; ++p) {
         paragraph_t* paragraph = page->paragraphs[p];
-        if (extract_document_to_docx_content_paragraph(alloc, state, paragraph, content)) goto end;
+        if (s_document_to_docx_content_paragraph(alloc, state, paragraph, content)) goto end;
     }
 
     extract_astring_cat(alloc, content, "\n");
@@ -406,6 +383,257 @@ static int extract_document_output_rotated_paragraphs(
 }
 
 
+static int s_docx_append_table(extract_alloc_t* alloc, table_t* table, extract_astring_t* content)
+/* Appends table to content.
+
+We do not fix the size of the table or its columns and rows, but instead leave layout up
+to the application. */
+{
+    int e = -1;
+    int y;
+    
+    if (extract_astring_cat(alloc, content,
+            "\n"
+            "    <w:tbl>\n"
+            "        <w:tblLayout w:type=\"autofit\"/>\n"
+            )) goto end;
+
+    for (y=0; y<table->cells_num_y; ++y)
+    {
+        int x;
+        if (extract_astring_cat(alloc, content,
+                "        <w:tr>\n"
+                "            <w:trPr/>\n"
+                )) goto end;
+        
+        for (x=0; x<table->cells_num_x; ++x)
+        {
+            cell_t* cell = table->cells[y*table->cells_num_x + x];
+            if (!cell->left) continue;
+            
+            if (extract_astring_cat(alloc, content, "            <w:tc>\n")) goto end;
+            
+            /* Write cell properties. */
+            {
+                if (extract_astring_cat(alloc, content,
+                        "                <w:tcPr>\n"
+                        "                    <w:tcBorders>\n"
+                        "                        <w:top w:val=\"double\" w:sz=\"2\" w:space=\"0\" w:color=\"808080\"/>\n"
+                        "                        <w:start w:val=\"double\" w:sz=\"2\" w:space=\"0\" w:color=\"808080\"/>\n"
+                        "                        <w:bottom w:val=\"double\" w:sz=\"2\" w:space=\"0\" w:color=\"808080\"/>\n"
+                        "                        <w:end w:val=\"double\" w:sz=\"2\" w:space=\"0\" w:color=\"808080\"/>\n"
+                        "                    </w:tcBorders>\n"
+                        )) goto end;
+                if (cell->extend_right > 1)
+                {
+                    if (extract_astring_catf(alloc, content, "                    <w:gridSpan w:val=\"%i\"/>\n", cell->extend_right)) goto end;
+                }
+                if (cell->above)
+                {
+                    if (cell->extend_down > 1)
+                    {
+                        if (extract_astring_catf(alloc, content, "                    <w:vMerge w:val=\"restart\"/>\n", cell->extend_down)) goto end;
+                    }
+                }
+                else
+                {
+                    if (extract_astring_catf(alloc, content, "                    <w:vMerge w:val=\"continue\"/>\n")) goto end;
+                }
+                if (extract_astring_cat(alloc, content, "                </w:tcPr>\n")) goto end;
+            }
+            
+            /* Write contents of this cell. */
+            {
+                size_t chars_num_old = content->chars_num;
+                int p;
+                content_state_t content_state = {0};
+                content_state.font.name = NULL;
+                content_state.ctm_prev = NULL;
+                for (p=0; p<cell->paragraphs_num; ++p)
+                {
+                    paragraph_t* paragraph = cell->paragraphs[p];
+                    if (s_document_to_docx_content_paragraph(alloc, &content_state, paragraph, content)) goto end;
+                }
+                if (content_state.font.name)
+                {
+                    if (s_docx_run_finish(alloc, &content_state, content)) goto end;
+                }
+
+                /* Need to write out at least an empty paragraph in each cell,
+                otherwise Word/Libreoffice fail to show table at all; the
+                OOXML spec says "If a table cell does not include at least one
+                block-level element, then this document shall be considered
+                corrupt." */
+                if (content->chars_num == chars_num_old)
+                {
+                    if (extract_astring_catf(alloc, content, "<w:p/>\n")) goto end;
+                }
+            }
+            if (extract_astring_cat(alloc, content, "            </w:tc>\n")) goto end;
+        }
+        if (extract_astring_cat(alloc, content, "        </w:tr>\n")) goto end;
+    }
+    if (extract_astring_cat(alloc, content, "    </w:tbl>\n")) goto end;
+    e = 0;
+    
+    end:
+    return e;
+}
+
+static int s_docx_append_rotated_paragraphs(
+        extract_alloc_t*    alloc,
+        extract_page_t*     page,
+        content_state_t*    state,
+        int*                p,
+        int*                text_box_id,
+        const matrix_t*     ctm,
+        double              rotate,
+        extract_astring_t*  content
+        )
+/* Appends paragraphs with same rotation, starting with page->paragraphs[*p]
+and updates *p. */
+{
+    /* Find extent of paragraphs with this same rotation. extent
+    will contain max width and max height of paragraphs, in units
+    before application of ctm, i.e. before rotation. */
+    int e = -1;
+    point_t extent = {0, 0};
+    int p0 = *p;
+    int p1;
+    paragraph_t* paragraph = page->paragraphs[*p];
+    
+    outf("rotate=%.2frad=%.1fdeg ctm: ef=(%f %f) abcd=(%f %f %f %f)",
+            rotate, rotate * 180 / pi,
+            ctm->e,
+            ctm->f,
+            ctm->a,
+            ctm->b,
+            ctm->c,
+            ctm->d
+            );
+
+    {
+        /* We assume that first span is at origin of text
+        block. This assumes left-to-right text. */
+        double rotate0 = rotate;
+        const matrix_t* ctm0 = ctm;
+        point_t origin = {
+                paragraph->lines[0]->spans[0]->chars[0].x,
+                paragraph->lines[0]->spans[0]->chars[0].y
+                };
+        matrix_t ctm_inverse = {1, 0, 0, 1, 0, 0};
+        double ctm_det = ctm->a*ctm->d - ctm->b*ctm->c;
+        if (ctm_det != 0) {
+            ctm_inverse.a = +ctm->d / ctm_det;
+            ctm_inverse.b = -ctm->b / ctm_det;
+            ctm_inverse.c = -ctm->c / ctm_det;
+            ctm_inverse.d = +ctm->a / ctm_det;
+        }
+        else {
+            outf("cannot invert ctm=(%f %f %f %f)",
+                    ctm->a, ctm->b, ctm->c, ctm->d);
+        }
+
+        for (*p=p0; *p<page->paragraphs_num; ++(*p)) {
+            paragraph = page->paragraphs[*p];
+            ctm = &paragraph->lines[0]->spans[0]->ctm;
+            rotate = atan2(ctm->b, ctm->a);
+            if (rotate != rotate0) {
+                break;
+            }
+
+            /* Update <extent>. */
+            {
+                int l;
+                for (l=0; l<paragraph->lines_num; ++l) {
+                    line_t* line = paragraph->lines[l];
+                    span_t* span = extract_line_span_last(line);
+                    char_t* char_ = extract_span_char_last(span);
+                    double adv = char_->adv * extract_matrix_expansion(span->trm);
+                    double x = char_->x + adv * cos(rotate);
+                    double y = char_->y + adv * sin(rotate);
+
+                    double dx = x - origin.x;
+                    double dy = y - origin.y;
+
+                    /* Position relative to origin and before box rotation. */
+                    double xx = ctm_inverse.a * dx + ctm_inverse.b * dy;
+                    double yy = ctm_inverse.c * dx + ctm_inverse.d * dy;
+                    yy = -yy;
+                    if (xx > extent.x) extent.x = xx;
+                    if (yy > extent.y) extent.y = yy;
+                    if (0) outf("rotate=%f *p=%i: origin=(%f %f) xy=(%f %f) dxy=(%f %f) xxyy=(%f %f) span: %s",
+                            rotate, *p, origin.x, origin.y, x, y, dx, dy, xx, yy, extract_span_string(alloc, span));
+                }
+            }
+        }
+        p1 = *p;
+        rotate = rotate0;
+        ctm = ctm0;
+        outf("rotate=%f p0=%i p1=%i. extent is: (%f %f)",
+                rotate, p0, p1, extent.x, extent.y);
+    }
+
+    /* Paragraphs p0..p1-1 have same rotation. We output them into
+    a single rotated text box. */
+
+    /* We need unique id for text box. */
+    *text_box_id += 1;
+
+    {
+        /* Angles are in units of 1/60,000 degree. */
+        int rot = (int) (rotate * 180 / pi * 60000);
+
+        /* <wp:anchor distT=\.. etc are in EMU - 1/360,000 of a cm.
+        relativeHeight is z-ordering. (wp:positionV:wp:posOffset,
+        wp:positionV:wp:posOffset) is position of origin of box in
+        EMU.
+
+        The box rotates about its centre but we want to rotate
+        about the origin (top-left). So we correct the position of
+        box by subtracting the vector that the top-left moves when
+        rotated by angle <rotate> about the middle. */
+        double point_to_emu = 12700;    /* https://en.wikipedia.org/wiki/Office_Open_XML_file_formats#DrawingML */
+        int x = (int) (ctm->e * point_to_emu);
+        int y = (int) (ctm->f * point_to_emu);
+        int w = (int) (extent.x * point_to_emu);
+        int h = (int) (extent.y * point_to_emu);
+        int dx;
+        int dy;
+
+        if (0) outf("rotate: %f rad, %f deg. rot=%i", rotate, rotate*180/pi, rot);
+
+        h *= 2;
+        /* We can't predict how much space Word will actually
+        require for the rotated text, so make the box have the
+        original width but allow text to take extra vertical
+        space. There doesn't seem to be a way to make the text box
+        auto-grow to contain the text. */
+
+        dx = (int) ((1-cos(rotate)) * w / 2.0 + sin(rotate) * h / 2.0);
+        dy = (int) ((cos(rotate)-1) * h / 2.0 + sin(rotate) * w / 2.0);
+        outf("ctm->e,f=%f,%f rotate=%f => x,y=%ik %ik dx,dy=%ik %ik",
+                ctm->e,
+                ctm->f,
+                rotate * 180/pi,
+                x/1000,
+                y/1000,
+                dx/1000,
+                dy/1000
+                );
+        x -= dx;
+        y -= -dy;
+
+        if (s_docx_output_rotated_paragraphs(alloc, page, p0, p1, rot, x, y, w, h, *text_box_id, content, state)) goto end;
+    }
+    *p = p1 - 1;
+    e = 0;
+    
+    end:
+    
+    return e;
+}
+
 int extract_document_to_docx_content(
         extract_alloc_t*    alloc,
         document_t*         document,
@@ -422,184 +650,73 @@ int extract_document_to_docx_content(
     /* Write paragraphs into <content>. */
     for (p=0; p<document->pages_num; ++p) {
         extract_page_t* page = document->pages[p];
-        int p;
-        content_state_t state;
-        state.font_name = NULL;
-        state.font_size = 0;
-        state.font_bold = 0;
-        state.font_italic = 0;
-        state.ctm_prev = NULL;
         
-        for (p=0; p<page->paragraphs_num; ++p) {
-            paragraph_t* paragraph = page->paragraphs[p];
-            const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
-            double rotate = atan2(ctm->b, ctm->a);
-            
-            if (spacing
-                    && state.ctm_prev
-                    && paragraph->lines_num
-                    && paragraph->lines[0]->spans_num
-                    && matrix_cmp4(
-                            state.ctm_prev,
-                            &paragraph->lines[0]->spans[0]->ctm
-                            )
-                    ) {
-                /* Extra vertical space between paragraphs that were at
-                different angles in the original document. */
-                if (extract_docx_paragraph_empty(alloc, content)) goto end;
-            }
-
-            if (spacing) {
-                /* Extra vertical space between paragraphs. */
-                if (extract_docx_paragraph_empty(alloc, content)) goto end;
-            }
-            
-            if (rotation && rotate != 0) {
-            
-                /* Find extent of paragraphs with this same rotation. extent
-                will contain max width and max height of paragraphs, in units
-                before application of ctm, i.e. before rotation. */
-                point_t extent = {0, 0};
-                int p0 = p;
-                int p1;
-                
-                outf("rotate=%.2frad=%.1fdeg ctm: ef=(%f %f) abcd=(%f %f %f %f)",
-                        rotate, rotate * 180 / pi,
-                        ctm->e,
-                        ctm->f,
-                        ctm->a,
-                        ctm->b,
-                        ctm->c,
-                        ctm->d
-                        );
-                
-                {
-                    /* We assume that first span is at origin of text
-                    block. This assumes left-to-right text. */
-                    double rotate0 = rotate;
-                    const matrix_t* ctm0 = ctm;
-                    point_t origin = {
-                            paragraph->lines[0]->spans[0]->chars[0].x,
-                            paragraph->lines[0]->spans[0]->chars[0].y
-                            };
-                    matrix_t ctm_inverse = {1, 0, 0, 1, 0, 0};
-                    double ctm_det = ctm->a*ctm->d - ctm->b*ctm->c;
-                    if (ctm_det != 0) {
-                        ctm_inverse.a = +ctm->d / ctm_det;
-                        ctm_inverse.b = -ctm->b / ctm_det;
-                        ctm_inverse.c = -ctm->c / ctm_det;
-                        ctm_inverse.d = +ctm->a / ctm_det;
-                    }
-                    else {
-                        outf("cannot invert ctm=(%f %f %f %f)",
-                                ctm->a, ctm->b, ctm->c, ctm->d);
-                    }
-
-                    for (p=p0; p<page->paragraphs_num; ++p) {
-                        paragraph = page->paragraphs[p];
-                        ctm = &paragraph->lines[0]->spans[0]->ctm;
-                        rotate = atan2(ctm->b, ctm->a);
-                        if (rotate != rotate0) {
-                            break;
-                        }
-
-                        /* Update <extent>. */
-                        {
-                            int l;
-                            for (l=0; l<paragraph->lines_num; ++l) {
-                                line_t* line = paragraph->lines[l];
-                                span_t* span = line_span_last(line);
-                                char_t* char_ = span_char_last(span);
-                                double adv = char_->adv * matrix_expansion(span->trm);
-                                double x = char_->x + adv * cos(rotate);
-                                double y = char_->y + adv * sin(rotate);
-
-                                double dx = x - origin.x;
-                                double dy = y - origin.y;
-
-                                /* Position relative to origin and before box rotation. */
-                                double xx = ctm_inverse.a * dx + ctm_inverse.b * dy;
-                                double yy = ctm_inverse.c * dx + ctm_inverse.d * dy;
-                                yy = -yy;
-                                if (xx > extent.x) extent.x = xx;
-                                if (yy > extent.y) extent.y = yy;
-                                if (0) outf("rotate=%f p=%i: origin=(%f %f) xy=(%f %f) dxy=(%f %f) xxyy=(%f %f) span: %s",
-                                        rotate, p, origin.x, origin.y, x, y, dx, dy, xx, yy, span_string(alloc, span));
-                            }
-                        }
-                    }
-                    p1 = p;
-                    rotate = rotate0;
-                    ctm = ctm0;
-                    outf("rotate=%f p0=%i p1=%i. extent is: (%f %f)",
-                            rotate, p0, p1, extent.x, extent.y);
-                }
-                
-                /* Paragraphs p0..p1-1 have same rotation. We output them into
-                a single rotated text box. */
-                
-                /* We need unique id for text box. */
-                text_box_id += 1;
-                
-                {
-                    /* Angles are in units of 1/60,000 degree. */
-                    int rot = (int) (rotate * 180 / pi * 60000);
-
-                    /* <wp:anchor distT=\.. etc are in EMU - 1/360,000 of a cm.
-                    relativeHeight is z-ordering. (wp:positionV:wp:posOffset,
-                    wp:positionV:wp:posOffset) is position of origin of box in
-                    EMU.
-
-                    The box rotates about its centre but we want to rotate
-                    about the origin (top-left). So we correct the position of
-                    box by subtracting the vector that the top-left moves when
-                    rotated by angle <rotate> about the middle. */
-                    double point_to_emu = 12700;    /* https://en.wikipedia.org/wiki/Office_Open_XML_file_formats#DrawingML */
-                    int x = (int) (ctm->e * point_to_emu);
-                    int y = (int) (ctm->f * point_to_emu);
-                    int w = (int) (extent.x * point_to_emu);
-                    int h = (int) (extent.y * point_to_emu);
-                    int dx;
-                    int dy;
-
-                    if (0) outf("rotate: %f rad, %f deg. rot=%i", rotate, rotate*180/pi, rot);
-
-                    h *= 2;
-                    /* We can't predict how much space Word will actually
-                    require for the rotated text, so make the box have the
-                    original width but allow text to take extra vertical
-                    space. There doesn't seem to be a way to make the text box
-                    auto-grow to contain the text. */
-
-                    dx = (int) ((1-cos(rotate)) * w / 2.0 + sin(rotate) * h / 2.0);
-                    dy = (int) ((cos(rotate)-1) * h / 2.0 + sin(rotate) * w / 2.0);
-                    outf("ctm->e,f=%f,%f rotate=%f => x,y=%ik %ik dx,dy=%ik %ik",
-                            ctm->e,
-                            ctm->f,
-                            rotate * 180/pi,
-                            x/1000,
-                            y/1000,
-                            dx/1000,
-                            dy/1000
-                            );
-                    x -= dx;
-                    y -= -dy;
-
-                    if (extract_document_output_rotated_paragraphs(alloc, page, p0, p1, rot, x, y, w, h, text_box_id, content, &state)) goto end;
-                }
-                p = p1 - 1;
-                //p = page->paragraphs_num - 1;
-            }
-            else {
-                if (extract_document_to_docx_content_paragraph(alloc, &state, paragraph, content)) goto end;
-            }
+        int p = 0;
+        int t = 0;
         
+        content_state_t content_state;
+        content_state.font.name = NULL;
+        content_state.font.size = 0;
+        content_state.font.bold = 0;
+        content_state.font.italic = 0;
+        content_state.ctm_prev = NULL;
+        
+        /* Output paragraphs and tables in order of y coordinate. */
+        for(;;)
+        {
+            paragraph_t* paragraph = (p == page->paragraphs_num) ? NULL : page->paragraphs[p];
+            table_t* table = (t == page->tables_num) ? NULL : page->tables[t];
+            double y_paragraph;
+            double y_table;
+            if (!paragraph && !table)   break;
+            y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
+            y_table = (table) ? table->pos.y : DBL_MAX;
+            
+            if (paragraph && y_paragraph < y_table)
+            {
+                const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
+                double rotate = atan2(ctm->b, ctm->a);
+
+                if (spacing
+                        && content_state.ctm_prev
+                        && paragraph->lines_num
+                        && paragraph->lines[0]->spans_num
+                        && extract_matrix_cmp4(
+                                content_state.ctm_prev,
+                                &paragraph->lines[0]->spans[0]->ctm
+                                )
+                        ) {
+                    /* Extra vertical space between paragraphs that were at
+                    different angles in the original document. */
+                    if (s_docx_paragraph_empty(alloc, content)) goto end;
+                }
+
+                if (spacing) {
+                    /* Extra vertical space between paragraphs. */
+                    if (s_docx_paragraph_empty(alloc, content)) goto end;
+                }
+
+                if (rotation && rotate != 0)
+                {
+                    if (s_docx_append_rotated_paragraphs(alloc, page, &content_state, &p, &text_box_id, ctm, rotate, content)) goto end;
+                }
+                else
+                {
+                    if (s_document_to_docx_content_paragraph(alloc, &content_state, paragraph, content)) goto end;
+                }
+                p += 1;
+            }
+            else if (table)
+            {
+                if (s_docx_append_table(alloc, table, content)) goto end;
+                t += 1;
+            }
         }
         
         if (images) {
             int i;
             for (i=0; i<page->images_num; ++i) {
-                extract_document_append_image(alloc, content, &page->images[i]);
+                s_docx_append_image(alloc, content, &page->images[i]);
             }
         }
     }
@@ -738,7 +855,6 @@ int extract_docx_write_template(
     int     e = -1;
     int     i;
     char*   path_tempdir = NULL;
-    FILE*   f = NULL;
     char*   path = NULL;
     char*   text = NULL;
     char*   text2 = NULL;
@@ -841,7 +957,6 @@ int extract_docx_write_template(
     extract_free(alloc, &path);
     extract_free(alloc, &text);
     extract_free(alloc, &text2);
-    if (f)  fclose(f);
 
     if (e) {
         outf("Failed to create %s", path_out);

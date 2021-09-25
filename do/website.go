@@ -8,18 +8,20 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 func websiteRunLocally(dir string) {
-	// using https://github.com/netlify/cli
-	cmd := exec.Command("netlify", "dev", "--dir", dir)
-	runCmdLoggedMust(cmd)
+	serve := NewDirHandler(dir, "/", nil)
+	server := &ServerConfig{
+		Handlers:  []Handler{serve},
+		CleanURLS: true,
+	}
+	waitSignal := StartServer(server)
+	waitSignal()
 }
 
 func fileDownload(uri string, dstPath string) error {
-	u.CreateDirForFileMust(dstPath)
+	must(createDirForFile(dstPath))
 	d := httpDlMust(uri)
 	return ioutil.WriteFile(dstPath, d, 0755)
 }
@@ -45,7 +47,7 @@ func websiteBuildCloudflare() {
 	for _, file := range files {
 		fileName := strings.ReplaceAll(file, "%VER%", ver)
 		dstPath := filepath.Join("website", "dl2", fileName)
-		if u.PathExists(dstPath) {
+		if pathExists(dstPath) {
 			fmt.Printf("Skipping downloading because %s already exists\n", dstPath)
 			continue
 		}
@@ -59,7 +61,7 @@ func websiteBuildCloudflare() {
 }
 
 func websiteDeployCloudlare() {
-	u.EnsureGitClean(".")
+	panicIf(!isGitClean())
 	{
 		cmd := exec.Command("git", "checkout", "website-cf")
 		runCmdLoggedMust(cmd)

@@ -1,24 +1,26 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha1"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"text/template"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 var (
-	logf    = u.Logf
 	fatalIf = panicIf
 )
 
@@ -26,6 +28,21 @@ func must(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func ctx() context.Context {
+	return context.Background()
+}
+
+func logf(ctx context.Context, s string, arg ...interface{}) {
+	if len(arg) > 0 {
+		s = fmt.Sprintf(s, arg...)
+	}
+	fmt.Print(s)
+}
+
+func isWindows() bool {
+	return strings.Contains(runtime.GOOS, "windows")
 }
 
 func absPathMust(path string) string {
@@ -36,7 +53,7 @@ func absPathMust(path string) string {
 
 func runExeMust(c string, args ...string) []byte {
 	cmd := exec.Command(c, args...)
-	logf("> %s\n", cmd)
+	logf(ctx(), "> %s\n", cmd)
 	out, err := cmd.CombinedOutput()
 	must(err)
 	return []byte(out)
@@ -49,11 +66,11 @@ func runExeLoggedMust(c string, args ...string) []byte {
 }
 
 func makePrintDuration(name string) func() {
-	logf("%s\n", name)
+	logf(ctx(), "%s\n", name)
 	timeStart := time.Now()
 	return func() {
 		dur := time.Since(timeStart)
-		logf("%s took %s\n", name, u.FormatDuration(dur))
+		logf(ctx(), "%s took %s\n", name, formatDuration(dur))
 	}
 }
 
@@ -67,7 +84,7 @@ func getEnvAfterScript(path string) []string {
 	// TODO: maybe use COMSPEC env variable instead of "cmd.exe" (more robust)
 	cmd := exec.Command("cmd.exe", "/c", script+" & set")
 	cmd.Dir = dir
-	logf("Executing: %s in %s\n", cmd, cmd.Dir)
+	logf(ctx(), "Executing: %s in %s\n", cmd, cmd.Dir)
 	resBytes, err := cmd.Output()
 	must(err)
 	res := string(resBytes)
@@ -80,8 +97,8 @@ func getEnvAfterScript(path string) []string {
 }
 
 func fileSizeMust(path string) int64 {
-	size, err := u.GetFileSize(path)
-	must(err)
+	size := getFileSize(path)
+	panicIf(size == -1)
 	return size
 }
 
@@ -98,53 +115,10 @@ func removeFileMust(path string) {
 	must(err)
 }
 
-func listExeFiles(dir string) {
-	if !u.DirExists(dir) {
-		logf("Directory '%s' doesn't exist\n", dir)
-		return
-	}
-	files := u.ListFilesInDir(dir, true)
-	isExe := func(s string) bool {
-		ext := strings.ToLower(filepath.Ext(s))
-		switch ext {
-		case ".bat", ".exe", ".cmd":
-			return true
-		}
-		return false
-	}
-	shouldRemember := func(s string) bool {
-		s = strings.ToLower(s)
-		switch {
-		//case strings.Contains(s, "msbuild"):
-		//	return true
-		case strings.Contains(s, "signtool.exe"):
-			return true
-		}
-		return false
-	}
-	logf("Exe files in '%s'\n", dir)
-	var remember []string
-	for _, f := range files {
-		if !isExe(f) {
-			continue
-		}
-		f = strings.TrimPrefix(f, dir)
-		f = strings.TrimPrefix(f, "\\")
-		logf("%s\n", f)
-		if shouldRemember(f) {
-			remember = append(remember, f)
-		}
-	}
-	logf("\n")
-	for _, s := range remember {
-		logf("%s\n", s)
-	}
-}
-
 func findFile(dir string, match func(string, os.FileInfo) bool) {
 	fn := func(path string, info os.FileInfo, err error) error {
 		if match(path, info) {
-			logf("Found: '%s'\n", path)
+			logf(ctx(), "Found: '%s'\n", path)
 		}
 		return nil
 	}
@@ -203,7 +177,7 @@ func httpDlToFileMust(uri string, path string, sha1Hex string) {
 		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 		return
 	}
-	logf("Downloading '%s'\n", uri)
+	logf(ctx(), "Downloading '%s'\n", uri)
 	d := httpDlMust(uri)
 	sha1File := dataSha1Hex(d)
 	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
@@ -346,7 +320,7 @@ func findLargestFileByExt() {
 				return nil
 			}
 			if false && (nFiles == 0 || nFiles%128 == 0) {
-				logf("%s\n", path)
+				logf(ctx(), "%s\n", path)
 			}
 			nFiles++
 			ext := strings.ToLower(filepath.Ext(path))
@@ -359,26 +333,298 @@ func findLargestFileByExt() {
 			}
 			size := fi.Size()
 			if size > extToSize[ext] {
-				logf("%s of size %s\n", path, u.FmtSizeHuman(size))
+				logf(ctx(), "%s of size %s\n", path, formatSize(size))
 				extToSize[ext] = size
 			}
 			return nil
 		})
 	}
-	logf("processed %d files\n", nFiles)
+	logf(ctx(), "processed %d files\n", nFiles)
 }
 
 func fileExists(path string) bool {
-	st, err := os.Stat(path)
+	st, err := os.Lstat(path)
 	return err == nil && !st.IsDir() && st.Mode().IsRegular()
 }
 
+func dirExists(path string) bool {
+	st, err := os.Lstat(path)
+	return err == nil && st.IsDir()
+}
+
 func runCmdLoggedMust(cmd *exec.Cmd) string {
-	logf("> %s\n", cmd.String())
+	logf(ctx(), "> %s\n", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	err := cmd.Run()
 	must(err)
 	return ""
+}
+
+func mimeTypeFromFileName(path string) string {
+	var mimeTypes = map[string]string{
+		// this is a list from go's mime package
+		".css":  "text/css; charset=utf-8",
+		".gif":  "image/gif",
+		".htm":  "text/html; charset=utf-8",
+		".html": "text/html; charset=utf-8",
+		".jpg":  "image/jpeg",
+		".js":   "application/javascript",
+		".wasm": "application/wasm",
+		".pdf":  "application/pdf",
+		".png":  "image/png",
+		".svg":  "image/svg+xml",
+		".xml":  "text/xml; charset=utf-8",
+
+		// those are my additions
+		".txt":  "text/plain",
+		".exe":  "application/octet-stream",
+		".json": "application/json",
+	}
+
+	ext := strings.ToLower(filepath.Ext(path))
+	mt := mimeTypes[ext]
+	if mt != "" {
+		return mt
+	}
+	// if not given, default to this
+	return "application/octet-stream"
+}
+
+func normalizeNewlines(d []byte) []byte {
+	// replace CR LF (windows) with LF (unix)
+	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
+	// replace CF (mac) with LF (unix)
+	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
+	return d
+}
+
+func createDirMust(path string) string {
+	err := os.MkdirAll(path, 0755)
+	must(err)
+	return path
+}
+
+func userHomeDirMust() string {
+	s, err := os.UserHomeDir()
+	must(err)
+	return s
+}
+
+func formatSize(n int64) string {
+	sizes := []int64{1024 * 1024 * 1024, 1024 * 1024, 1024}
+	suffixes := []string{"GB", "MB", "kB"}
+	for i, size := range sizes {
+		if n >= size {
+			s := fmt.Sprintf("%.2f", float64(n)/float64(size))
+			return strings.TrimSuffix(s, ".00") + " " + suffixes[i]
+		}
+	}
+	return fmt.Sprintf("%d bytes", n)
+}
+
+func getFileSize(path string) int64 {
+	st, err := os.Lstat(path)
+	if err == nil {
+		return st.Size()
+	}
+	return -1
+}
+
+func sha1OfFile(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		//fmt.Printf("os.Open(%s) failed with %s\n", path, err.Error())
+		return nil, err
+	}
+	defer f.Close()
+	h := sha1.New()
+	_, err = io.Copy(h, f)
+	if err != nil {
+		//fmt.Printf("io.Copy() failed with %s\n", err.Error())
+		return nil, err
+	}
+	return h.Sum(nil), nil
+}
+
+func sha1HexOfFile(path string) (string, error) {
+	sha1, err := sha1OfFile(path)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", sha1), nil
+}
+
+// time.Duration with a better string representation
+type FormattedDuration time.Duration
+
+func (d FormattedDuration) String() string {
+	return formatDuration(time.Duration(d))
+}
+
+// formats duration in a more human friendly way
+// than time.Duration.String()
+func formatDuration(d time.Duration) string {
+	s := d.String()
+	if strings.HasSuffix(s, "µs") {
+		// for µs we don't want fractions
+		parts := strings.Split(s, ".")
+		if len(parts) > 1 {
+			return parts[0] + " µs"
+		}
+		return strings.ReplaceAll(s, "µs", " µs")
+	} else if strings.HasSuffix(s, "ms") {
+		// for ms we only want 2 digit fractions
+		parts := strings.Split(s, ".")
+		//fmt.Printf("fmtDur: '%s' => %#v\n", s, parts)
+		if len(parts) > 1 {
+			s2 := parts[1]
+			if len(s2) > 4 {
+				// 2 for "ms" and 2+ for fraction
+				res := parts[0] + "." + s2[:2] + " ms"
+				//fmt.Printf("fmtDur: s2: '%s', res: '%s'\n", s2, res)
+				return res
+			}
+		}
+		return strings.ReplaceAll(s, "ms", " ms")
+	}
+	return s
+}
+
+func copyFile(dstPath, srcPath string) error {
+	d, err := os.ReadFile(srcPath)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(filepath.Dir(dstPath), 0755)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dstPath, d, 0644)
+}
+
+func createDirForFile(path string) error {
+	dir := filepath.Dir(path)
+	return os.MkdirAll(dir, 0755)
+}
+
+func pathExists(path string) bool {
+	_, err := os.Lstat(path)
+	return err == nil
+}
+
+func readLinesFromFile(filePath string) ([]string, error) {
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0666)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	res := make([]string, 0)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		res = append(res, string(line))
+	}
+	if err = scanner.Err(); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func stringInSlice(a []string, toCheck string) bool {
+	for _, s := range a {
+		if s == toCheck {
+			return true
+		}
+	}
+	return false
+}
+
+func fmtCmdShort(cmd exec.Cmd) string {
+	cmd.Path = filepath.Base(cmd.Path)
+	return cmd.String()
+}
+
+func runCmdMust(cmd *exec.Cmd) string {
+	fmt.Printf("> %s\n", fmtCmdShort(*cmd))
+	canCapture := (cmd.Stdout == nil) && (cmd.Stderr == nil)
+	if canCapture {
+		out, err := cmd.CombinedOutput()
+		if err == nil {
+			if len(out) > 0 {
+				logf(ctx(), "Output:\n%s\n", string(out))
+			}
+			return string(out)
+		}
+		logf(ctx(), "cmd '%s' failed with '%s'. Output:\n%s\n", cmd, err, string(out))
+		must(err)
+		return string(out)
+	}
+	err := cmd.Run()
+	if err == nil {
+		return ""
+	}
+	logf(ctx(), "cmd '%s' failed with '%s'\n", cmd, err)
+	must(err)
+	return ""
+}
+
+func fmtSmart(format string, args ...interface{}) string {
+	if len(args) == 0 {
+		return format
+	}
+	return fmt.Sprintf(format, args...)
+}
+
+// from https://gist.github.com/hyg/9c4afcd91fe24316cbf0
+func openBrowser(url string) {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+
+func currDirAbsMust() string {
+	dir, err := filepath.Abs(".")
+	must(err)
+	return dir
+}
+
+// we are executed for do/ directory so top dir is parent dir
+func cdUpDir(dirName string) {
+	startDir := currDirAbsMust()
+	dir := startDir
+	for {
+		// we're already in top directory
+		if filepath.Base(dir) == dirName && dirExists(dir) {
+			err := os.Chdir(dir)
+			must(err)
+			return
+		}
+		parentDir := filepath.Dir(dir)
+		panicIf(dir == parentDir, "invalid startDir: '%s', dir: '%s'", startDir, dir)
+		dir = parentDir
+	}
+}
+
+func execTextTemplate(tmplText string, data interface{}) string {
+	tmpl, err := template.New("").Parse(tmplText)
+	must(err)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	must(err)
+	return buf.String()
 }

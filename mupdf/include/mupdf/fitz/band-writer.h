@@ -67,6 +67,12 @@ void fz_write_header(fz_context *ctx, fz_band_writer *writer, int w, int h, int 
 void fz_write_band(fz_context *ctx, fz_band_writer *writer, int stride, int band_height, const unsigned char *samples);
 
 /**
+	Finishes up the output and closes the band writer. After this
+	call no more headers or bands may be written.
+*/
+void fz_close_band_writer(fz_context *ctx, fz_band_writer *writer);
+
+/**
 	Drop the reference to the band writer, causing it to be
 	destroyed.
 
@@ -79,11 +85,13 @@ void fz_drop_band_writer(fz_context *ctx, fz_band_writer *writer);
 typedef void (fz_write_header_fn)(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs);
 typedef void (fz_write_band_fn)(fz_context *ctx, fz_band_writer *writer, int stride, int band_start, int band_height, const unsigned char *samples);
 typedef void (fz_write_trailer_fn)(fz_context *ctx, fz_band_writer *writer);
+typedef void (fz_close_band_writer_fn)(fz_context *ctx, fz_band_writer *writer);
 typedef void (fz_drop_band_writer_fn)(fz_context *ctx, fz_band_writer *writer);
 
 struct fz_band_writer
 {
 	fz_drop_band_writer_fn *drop;
+	fz_close_band_writer_fn *close;
 	fz_write_header_fn *header;
 	fz_write_band_fn *band;
 	fz_write_trailer_fn *trailer;

@@ -202,7 +202,7 @@ func runClangTidy(fix bool) {
 		for _, wl := range whitelisted {
 			wl = strings.ToLower(wl)
 			if strings.Contains(s, wl) {
-				logf("Whitelisted '%s'\n", s)
+				logf(ctx(), "Whitelisted '%s'\n", s)
 				return true
 			}
 		}
@@ -222,5 +222,5 @@ func runClangTidy(fix bool) {
 			}
 		}
 	}
-	logf("\nLogged output to '%s'\n", clangTidyLogFile)
+	logf(ctx(), "\nLogged output to '%s'\n", clangTidyLogFile)
 }

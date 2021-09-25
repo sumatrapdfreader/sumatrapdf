@@ -176,6 +176,7 @@ typedef struct
 	int compress;
 	int strip_height;
 	char language[256];
+	char datadir[1024];
 
 	/* Updated as we move through the job */
 	int page_count;
@@ -190,6 +191,7 @@ typedef struct
 		compression=flate: Flate compression
 		strip-height=n: Strip height (default 16)
 		ocr-language=<lang>: OCR Language (default eng)
+		ocr-datadir=<datadir>: OCR data path (default rely on TESSDATA_PREFIX)
 */
 fz_pdfocr_options *fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, const char *args);
 

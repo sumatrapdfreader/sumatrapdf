@@ -166,12 +166,13 @@ float
 fz_subpixel_adjust(fz_context *ctx, fz_matrix *ctm, fz_matrix *subpix_ctm, unsigned char *qe, unsigned char *qf)
 {
 	float size = fz_matrix_expansion(*ctm);
-	int q;
-	float pix_e, pix_f, r;
+	int q, hq, vq, qmin;
+	float pix_e, pix_f, r, hr, vr, rmin;
 
-	/* Quantise the subpixel positions. */
-	/* We never need more than 4 subpixel positions for glyphs - arguably
-	 * even that is too much. */
+	/* Quantise the subpixel positions. First, in the direction of
+	 * movement (i.e. normally X). We never need more than 4 subpixel
+	 * positions for glyphs - arguably even that is too much.
+	 * Suppress this as we get larger, because it makes less impact. */
 	if (size >= 48)
 		q = 0, r = 0.5f;
 	else if (size >= 24)
@@ -179,22 +180,40 @@ fz_subpixel_adjust(fz_context *ctx, fz_matrix *ctm, fz_matrix *subpix_ctm, unsig
 	else
 		q = 192, r = 0.125f;
 
+	/* Then in the 'downward' direction (normally Y). */
+	if (size >= 8)
+		qmin = 0, rmin = 0.5f;
+	else if (size >= 4)
+		qmin = 128, rmin =  0.25f;
+	else
+		qmin = 192, rmin = 0.125f;
+
+	/* Suppress subpixel antialiasing in y axis if we have a horizontal
+	 * matrix, and in x axis if we have a vertical matrix, unless we're
+	 * really small. */
+	hq = vq = q;
+	hr = vr = r;
+	if (ctm->a == 0 && ctm->d == 0)
+		hq = qmin, hr = rmin;
+	if (ctm->b == 0 && ctm->c == 0)
+		vq = qmin, vr = rmin;
+
 	/* Split translation into pixel and subpixel parts */
 	subpix_ctm->a = ctm->a;
 	subpix_ctm->b = ctm->b;
 	subpix_ctm->c = ctm->c;
 	subpix_ctm->d = ctm->d;
-	subpix_ctm->e = ctm->e + r;
+	subpix_ctm->e = ctm->e + hr;
 	pix_e = floorf(subpix_ctm->e);
 	subpix_ctm->e -= pix_e;
-	subpix_ctm->f = ctm->f + r;
+	subpix_ctm->f = ctm->f + vr;
 	pix_f = floorf(subpix_ctm->f);
 	subpix_ctm->f -= pix_f;
 
 	/* Quantise the subpixel part */
-	*qe = (int)(subpix_ctm->e * 256) & q;
+	*qe = (int)(subpix_ctm->e * 256) & hq;
 	subpix_ctm->e = *qe / 256.0f;
-	*qf = (int)(subpix_ctm->f * 256) & q;
+	*qf = (int)(subpix_ctm->f * 256) & vq;
 	subpix_ctm->f = *qf / 256.0f;
 
 	/* Reassemble the complete translation */

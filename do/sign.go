@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 func runCmdLoggedRedacted(cmd *exec.Cmd, redact string) error {
@@ -56,7 +54,7 @@ func signMust(path string) {
 		fileName := filepath.Base(path)
 		certSrc := filepath.Join("scripts", "cert.pfx")
 		certDest := filepath.Join(fileDir, "cert.pfx")
-		u.CopyFileMust(certDest, certSrc)
+		must(copyFile(certDest, certSrc))
 		//signServer := "http://timestamp.verisign.com/scripts/timstamp.dll"
 		signServer := "http://timestamp.sectigo.com"
 		desc := "https://www.sumatrapdfreader.org"
@@ -82,5 +80,5 @@ func signMust(path string) {
 		}
 		time.Sleep(time.Second * 15)
 	}
-	u.Must(err)
+	must(err)
 }

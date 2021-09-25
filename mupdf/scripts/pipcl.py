@@ -386,24 +386,27 @@ class Package:
         self._write_info(f'{egg_base}/.egg-info')
 
 
-    def _write_info(self):
+    def _write_info(self, dirpath=None):
         '''
-        Writes egg/dist info to files in <root>/.
+        Writes egg/dist info to files in directory <dirpath> or self.root_sep
+        if None.
         '''
-        _log(f'_write_info(): creating files in root={root}')
-        os.mkdir(root)
-        with open(f'{self.root_sep}PKG-INFO', 'w') as f:
+        if dirpath is None:
+            dirpath = self.root_sep
+        _log(f'_write_info(): creating files in directory {dirpath}')
+        os.mkdir(dirpath)
+        with open(os.path.join(dirpath, 'PKG-INFO'), 'w') as f:
             f.write(self._metainfo())
 
         # These don't seem to be required?
         #
-        #with open(f'{root_sep}SOURCES.txt', 'w') as f:
+        #with open(os.path.join(dirpath, 'SOURCES.txt', 'w') as f:
         #    pass
-        #with open(f'{root_sep}dependency_links.txt', 'w') as f:
+        #with open(os.path.join(dirpath, 'dependency_links.txt', 'w') as f:
         #    pass
-        #with open(f'{root_sep}top_level.txt', 'w') as f:
+        #with open(os.path.join(dirpath, 'top_level.txt', 'w') as f:
         #    f.write(f'{self.name}\n')
-        #with open(f'{root_sep}METADATA', 'w') as f:
+        #with open(os.path.join(dirpath, 'METADATA', 'w') as f:
         #    f.write(self._metainfo())
 
 

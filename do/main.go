@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/kjk/u"
 )
 
 var (
@@ -36,7 +34,7 @@ func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
 	cmd.Stderr = io.MultiWriter(f, os.Stderr)
-	logf("> %s\n", u.FmtCmdShort(*cmd))
+	logf(ctx(), "> %s\n", fmtCmdShort(*cmd))
 	return cmd.Run()
 }
 
@@ -90,7 +88,7 @@ func runCppCheck(all bool) {
 	os.Remove(cppcheckLogFile)
 	err := runCmdShowProgressAndLog(cmd, cppcheckLogFile)
 	must(err)
-	logf("\nLogged output to '%s'\n", cppcheckLogFile)
+	logf(ctx(), "\nLogged output to '%s'\n", cppcheckLogFile)
 }
 
 type BuildOptions struct {
@@ -101,18 +99,24 @@ type BuildOptions struct {
 	releaseBuild              bool
 }
 
-func ensureCanUpload() {
-	panicIf(!hasSpacesCreds())
-	panicIf(!hasS3Creds())
+func ensureSpacesCreds() {
+	panicIf(os.Getenv("SPACES_KEY") == "", "Not uploading to do spaces because SPACES_KEY env variable not set\n")
+	panicIf(os.Getenv("SPACES_SECRET") == "", "Not uploading to do spaces because SPACES_SECRET env variable not set\n")
+}
+
+func ensureSpacesAndS3Creds() {
+	ensureSpacesCreds()
+	panicIf(os.Getenv("AWS_ACCESS") == "", "Not uploading to s3 because AWS_ACCESS env variable not set\n")
+	panicIf(os.Getenv("AWS_SECRET") == "", "Not uploading to s3 because AWS_SECRET env variable not set\n")
 }
 
 func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
-	logf("upload: %v\n", opts.upload)
-	logf("sign: %v\n", opts.sign)
-	logf("verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
+	logf(ctx(), "upload: %v\n", opts.upload)
+	logf(ctx(), "sign: %v\n", opts.sign)
+	logf(ctx(), "verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
 
 	if opts.upload {
-		ensureCanUpload()
+		ensureSpacesAndS3Creds()
 	}
 
 	if opts.sign {
@@ -135,16 +139,16 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 }
 
 func main() {
-	if u.DirExists("/opt/buildhome/repo") {
+	if dirExists("/opt/buildhome/repo") {
 		// on Cloudflare pages build machine
 		os.Chdir("/opt/buildhome/repo")
 	} else {
-		u.CdUpDir("sumatrapdf")
+		cdUpDir("sumatrapdf")
 	}
-	logf("Current directory: %s\n", u.CurrDirAbsMust())
+	logf(ctx(), "Current directory: %s\n", currDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
-		logf("Finished in %s\n", time.Since(timeStart))
+		logf(ctx(), "Finished in %s\n", time.Since(timeStart))
 	}()
 
 	// ad-hoc flags to be set manually (to show less options)
@@ -235,6 +239,11 @@ func main() {
 	if false {
 		detectVersions()
 		//buildPreRelease()
+		return
+	}
+
+	if false {
+		deleteFilesOneOff()
 		return
 	}
 
@@ -430,7 +439,7 @@ func main() {
 		case githubEventPush:
 			currBranch := getCurrentBranchMust()
 			if currBranch == "website-cf" {
-				logf("skipping build because on branch '%s'\n", currBranch)
+				logf(ctx(), "skipping build because on branch '%s'\n", currBranch)
 				return
 			}
 			buildPreRelease()
@@ -476,7 +485,7 @@ func main() {
 	}
 
 	if flgUpdateVer != "" {
-		ensureCanUpload()
+		ensureSpacesAndS3Creds()
 		updateAutoUpdateVer(flgUpdateVer)
 		return
 	}
@@ -517,24 +526,29 @@ func main() {
 
 func uploadToStorage(opts *BuildOptions, buildType string) {
 	if !opts.upload {
-		logf("Skipping uploadToStorage() because opts.upload = false\n")
+		logf(ctx(), "Skipping uploadToStorage() because opts.upload = false\n")
 		return
 	}
 
 	timeStart := time.Now()
 	defer func() {
-		logf("uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
+		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
 	}()
 	var wg sync.WaitGroup
 	wg.Add(2)
+
 	go func() {
-		s3UploadBuildMust(buildType)
+		mc := newMinioS3Client()
+		// upload as:
+		// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
+		minioUploadBuildMust(mc, "s3", buildType)
 		s3DeleteOldBuilds()
 		wg.Done()
 	}()
 
 	go func() {
-		spacesUploadBuildMust(buildType)
+		mc := newMinioSpacesClient()
+		minioUploadBuildMust(mc, "spaces", buildType)
 		spacesDeleteOldBuilds()
 		wg.Done()
 	}()

@@ -9,7 +9,6 @@ import (
 
 	"github.com/kjk/notionapi"
 	"github.com/kjk/notionapi/tohtml"
-	"github.com/kjk/u"
 )
 
 type NotionID = notionapi.NotionID
@@ -32,7 +31,7 @@ func fileNameForPage(page *notionapi.Page) string {
 }
 
 func afterPageDownload(di *notionapi.DownloadInfo) error {
-	//logf("Downloaded page %sn\n", page.ID)
+	//logf(ctx(), "Downloaded page %sn\n", page.ID)
 	return nil
 }
 
@@ -52,9 +51,9 @@ func (c *HTMLConverter) PageByID(nid *NotionID) *notionapi.Page {
 	}
 	page = c.idToPage[nid.DashID]
 	if page == nil {
-		logf("Didn't find page for id %s' ('%s') in %d pages\n", nid.NoDashID, nid.DashID, len(c.idToPage))
+		logf(ctx(), "Didn't find page for id %s' ('%s') in %d pages\n", nid.NoDashID, nid.DashID, len(c.idToPage))
 		for id := range c.idToPage {
-			logf("%s\n", id)
+			logf(ctx(), "%s\n", id)
 		}
 	}
 	return page
@@ -65,9 +64,9 @@ func (c *HTMLConverter) getURLAndTitleForBlock(block *notionapi.Block) (string, 
 	page := c.PageByID(id)
 	if page == nil {
 		title := block.Title
-		logf("No page for id %s %s\n", id.NoDashID, title)
+		logf(ctx(), "No page for id %s %s\n", id.NoDashID, title)
 		pageURL := "https://notion.so/" + notionapi.ToNoDashID(c.page.ID)
-		logf("Link from page: %s\n", pageURL)
+		logf(ctx(), "Link from page: %s\n", pageURL)
 		url := fileNameFromTitle(title)
 		return url, title
 	}
@@ -110,7 +109,7 @@ func (c *HTMLConverter) RenderImage(block *notionapi.Block) bool {
 	link := block.Source
 	rsp, err := c.client.DownloadFile(link, block)
 	if err != nil {
-		logf("genImage: downloadAndCacheImage('%s') from page https://notion.so/%s failed with '%s'\n", link, normalizeID(c.page.ID), err)
+		logf(ctx(), "genImage: downloadAndCacheImage('%s') from page https://notion.so/%s failed with '%s'\n", link, normalizeID(c.page.ID), err)
 		must(err)
 	}
 	path := rsp.CacheFilePath
@@ -144,7 +143,7 @@ func (c *HTMLConverter) rewriteURL(uri string) string {
 	// this might happen when I link to some-one else's public notion pages
 	// but we don't do that for Sumatra docs
 	if page == nil {
-		logf("Didn't find page for url '%s', id '%s'\n", uri, id)
+		logf(ctx(), "Didn't find page for url '%s', id '%s'\n", uri, id)
 		os.Exit(0)
 	}
 	panicIf(page == nil)
@@ -237,7 +236,7 @@ func notionToHTML(client *notionapi.CachingClient, page *notionapi.Page, pages [
 	html := conv.GenerateHTML()
 	name := fileNameForPage(page)
 	path := filepath.Join("docs", name)
-	logf("Writing '%s' for title '%s'\n", path, page.Root().Title)
+	logf(ctx(), "Writing '%s' for title '%s'\n", path, page.Root().Title)
 	writeFileMust(path, html)
 }
 
@@ -245,8 +244,8 @@ func checkPrettierExist() {
 	cmd := exec.Command("prettier", "-v")
 	err := cmd.Run()
 	if err != nil {
-		logf("prettier doesn't seem to be installed. Install with:\n")
-		logf("npm i -g prettier\n")
+		logf(ctx(), "prettier doesn't seem to be installed. Install with:\n")
+		logf(ctx(), "npm i -g prettier\n")
 		os.Exit(1)
 	}
 }
@@ -274,7 +273,7 @@ func newNotionClient() *notionapi.CachingClient {
 }
 
 func websiteImportNotion() {
-	logf("websiteImportNotion() started\n")
+	logf(ctx(), "websiteImportNotion() started\n")
 	checkPrettierExist()
 	must(os.Chdir("website"))
 	d := newNotionClient()
@@ -288,13 +287,13 @@ func websiteImportNotion() {
 			for _, f := range files {
 				err = os.Remove(f)
 				if err != nil {
-					logf("Failed to remove file '%s'\n", f)
+					logf(ctx(), "Failed to remove file '%s'\n", f)
 				} else {
-					logf("Removed file '%s'\n", f)
+					logf(ctx(), "Removed file '%s'\n", f)
 				}
 			}
 		} else {
-			logf("filepath.Glob() failed with '%s'\n", err)
+			logf(ctx(), "filepath.Glob() failed with '%s'\n", err)
 		}
 	}
 	for _, page := range pages {
@@ -319,6 +318,6 @@ func websiteImportNotion() {
 	if false {
 		//err = os.Chdir("website")
 		//must(err)
-		u.OpenBrowser("free-pdf-reader.html")
+		openBrowser("free-pdf-reader.html")
 	}
 }

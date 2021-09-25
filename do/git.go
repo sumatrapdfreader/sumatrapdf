@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func isGitClean() bool {
 	out := runExeMust("git", "status", "--porcelain")
 	s := strings.TrimSpace(string(out))
 	if len(s) > 0 {
-		logf("git status --porcelain returned:\n'%s'\n", s)
+		logf(ctx(), "git status --porcelain returned:\n'%s'\n", s)
 	}
 	return len(s) == 0
 }
@@ -70,4 +71,23 @@ func verifyOnReleaseBranchMust() {
 	ver = ver[:len(ver)-len(suffix)]
 
 	panicIf(!strings.HasPrefix(sumatraVersion, ver), "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
+}
+
+// we should only sign and upload to s3 if this is my repo and a push event
+// or building locally
+// don't sign if it's a fork or pull requests
+func isGithubMyMasterBranch() bool {
+	// https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables
+	repo := os.Getenv("GITHUB_REPOSITORY")
+	if repo != "sumatrapdfreader/sumatrapdf" {
+		return false
+	}
+	ref := os.Getenv("GITHUB_REF")
+	if ref != "refs/heads/master" {
+		logf(ctx(), "GITHUB_REF: '%s'\n", ref)
+		return false
+	}
+	event := os.Getenv("GITHUB_EVENT_NAME")
+	// other event is "pull_request"
+	return event == "push" || event == "repository_dispatch"
 }

@@ -31,6 +31,7 @@ Flags::~Flags() {
     str::Free(lang);
     str::Free(updateSelfTo);
     str::Free(deleteFile);
+    str::Free(search);
 
     // TODO: temporary
     str::Free(toEpubPath);
@@ -245,6 +246,7 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(FwdSearchPermanent, "fwdsearch-permanent") \
     V(MangaMode, "manga-mode")                   \
     V(ToEpub, "to-epub")                         \
+    V(Search, "search")                          \
     V(SetColorRange, "set-color-range")
 
 #define MAKE_ARG(__arg, __name) __arg,
@@ -558,6 +560,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::ArgDeleteFile) {
             i.deleteFile = str::Dup(param);
+            continue;
+        }
+        if (arg == Arg::Search) {
+            i.search = str::Dup(param);
             continue;
         }
         if (arg == Arg::BgCol || arg == Arg::BgCol2 || arg == Arg::FwdSearchOffset || arg == Arg::FwdSearchWidth ||

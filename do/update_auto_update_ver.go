@@ -48,15 +48,15 @@ func updateAutoUpdateVer(ver string) {
 Latest %s
 `, ver)
 	fmt.Printf("Content of update file:\n%s\n\n", s)
-	c := newS3Client()
+	mc := newMinioS3Client()
 	{
 		remotePath := "sumatrapdf/sumpdf-update.txt"
-		err := c.UploadString(remotePath, s, true)
+		err := minioUploadDataPublic(mc, remotePath, []byte(s))
 		must(err)
 	}
 	{
 		remotePath := "sumatrapdf/sumpdf-latest.txt"
-		err := c.UploadString(remotePath, s, true)
+		err := minioUploadDataPublic(mc, remotePath, []byte(s))
 		must(err)
 	}
 

@@ -25,7 +25,7 @@
 
 #include "mupdf/fitz.h"
 
-void *ocr_init(fz_context *ctx, const char *lang);
+void *ocr_init(fz_context *ctx, const char *lang, const char *datadir);
 
 void ocr_fin(fz_context *ctx, void *api);
 

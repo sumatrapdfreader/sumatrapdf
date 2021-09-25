@@ -18,6 +18,9 @@
 #       to docx. We require that $(gs) was built with --with-extract-dir=... We
 #       also do a simple test of output-file-per-page.
 #
+#   make test-tables
+#       Tests handling of tables, using mutool with docx device's html output.
+#
 #   make test-buffer test-misc test-src
 #       Runs unit tests etc.
 #
@@ -53,13 +56,21 @@ else ifeq ($(build),debug-opt)
 else ifeq ($(build),memento)
     flags_link      += -g -dl
     ifeq ($(uname),OpenBSD)
-        flags_link += -L /usr/local/lib -l execinfo
+        flags_link += -l execinfo
     endif
     flags_compile   += -g -D MEMENTO
 else
     $(error unrecognised $$(build)=$(build))
 endif
 
+gdb = gdb
+ifeq ($(uname),OpenBSD)
+    flags_link += -L /usr/local/lib -l execinfo
+    $(warning have added -L /usr/local/lib)
+    gdb = egdb
+    # For some reason OpenBSD's gmake defaults CXX to g++, which is not helpful.
+    CXX = c++
+endif
 
 # Locations of mutool and gs. By default we assume these are not available.
 #
@@ -72,7 +83,11 @@ endif
 we_are_mupdf_thirdparty = $(findstring /mupdf/thirdparty/extract, $(abspath .))
 ifneq ($(we_are_mupdf_thirdparty),)
     $(warning we are mupdf thirdparty)
-    mutool := ../../build/debug/mutool
+    ifeq ($(build),memento)
+        mutool := ../../build/memento/mutool
+    else
+        mutool := ../../build/debug/mutool
+    endif
     gs := ../../../ghostpdl/debug-extract-bin/gs
     libbacktrace = ../../../libbacktrace/.libs
 endif
@@ -86,6 +101,12 @@ endif
 $(warning mutool=$(mutool))
 endif
 
+ifeq ($(build),memento)
+    mutool_run := MEMENTO_ABORT_ON_LEAK=1 $(mutool)
+else
+    mutool_run := $(mutool)
+endif
+
 ifneq ($(gs),)
 ifeq ($(wildcard $(gs)),)
     $(error gs does not exist: $(gs))
@@ -96,7 +117,7 @@ endif
 
 # Default target - run all tests.
 #
-test: test-buffer test-misc test-src test-exe test-mutool test-gs
+test: test-buffer test-misc test-src test-exe test-mutool test-gs test-html test-tables
 	@echo $@: passed
 
 # Define the main test targets.
@@ -134,10 +155,15 @@ ifneq ($(mutool),)
             $(patsubst %, %.mutool.docx.diff, $(pdfs_generated)) \
             $(patsubst %, %.mutool-norotate.docx.diff, $(pdfs_generated)) \
             $(patsubst %, %.mutool.odt.diff, $(pdfs_generated)) \
+            $(patsubst %, %.mutool.text.diff, $(pdfs_generated)) \
 
     tests_mutool_odt := \
             $(patsubst %, %.mutool.odt.diff, $(pdfs_generated)) \
 
+    tests_mutool_text := \
+            $(patsubst %, %.mutool.text.diff, $(pdfs_generated)) \
+
+    tests_html := test/generated/table.pdf.mutool.html.diff
 endif
 ifneq ($(gs),)
 # Targets that test direct conversion with gs.
@@ -157,16 +183,19 @@ endif
 test-exe: $(tests_exe)
 	@echo $@: passed
 
-# Checks output of mutool conversion from .pdf to .docx/.odt. Requires that
-# mutool was built with extract as a third-party library.
+# Checks output of mutool conversion from .pdf to .docx/.odt.
 #
 test-mutool: $(tests_mutool)
 	@echo $@: passed
 
-# Checks output of mutool conversion from .pdf to .odt. Requires that mutool
-# was built with extract as a third-party library.
+# Checks output of mutool conversion from .pdf to .odt.
 #
 test-mutool-odt: $(tests_mutool_odt)
+	@echo $@: passed
+
+# Checks output of mutool conversion from .pdf to .text.
+#
+test-mutool-text: $(tests_mutool_text)
 	@echo $@: passed
 
 # Checks output of gs conversion from .pdf to .docx. Requires that gs was built
@@ -193,7 +222,59 @@ test_gs_fpp: $(gs)
 	ls test/generated/text_graphic_image.pdf.gs.*.docx | wc -l | grep '^ *1$$'
 	ls test/generated/Python2.pdf.gs.*.docx | wc -l | grep '^ *1$$'
 	ls test/generated/zlib.3.pdf.gs.*.docx | wc -l | grep '^ *2$$'
-	
+
+
+test-html: $(tests_html)
+
+ifneq ($(mutool),)
+    test_tables_pdfs = \
+            test/agstat.pdf \
+            test/background_lines_1.pdf \
+            test/background_lines_2.pdf \
+            test/column_span_1.pdf \
+            test/column_span_2.pdf \
+            test/electoral_roll.pdf \
+            test/rotated.pdf \
+            test/row_span.pdf \
+            test/table.pdf \
+            test/twotables_1.pdf \
+            test/twotables_2.pdf \
+
+    test_tables_generated = $(patsubst test/%, test/generated/%, $(test_tables_pdfs))
+
+    test_tables_html    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.html.diff, $(test_tables_pdfs))
+    test_tables_docx    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.docx.diff, $(test_tables_pdfs))
+    test_tables_odt     = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.odt.diff,  $(test_tables_pdfs))
+
+    test_tables = $(test_tables_html) $(test_tables_docx) $(test_tables_odt)
+endif
+
+test-tables-html:       $(test_tables_html)
+test-tables-docx:       $(test_tables_docx)
+test-tables-odt:        $(test_tables_odt)
+
+test-tables:            $(test_tables)
+	@echo $@: passed
+
+test/generated/%.pdf.mutool.html.diff: test/generated/%.pdf.mutool.html test/%.pdf.mutool.html.ref
+	@echo
+	@echo == Checking $<
+	diff -u $^
+
+test/generated/%.pdf.mutool.cv.html.diff: test/generated/%.pdf.mutool.cv.html test/%.pdf.mutool.html.ref
+	@echo
+	@echo == Checking $<
+	diff -u $^
+
+test/generated/%.pdf.mutool.cv.html: test/%.pdf $(mutool)
+	$(mutool) convert -O resolution=300 -o $<..png $<
+	EXTRACT_OPENCV_IMAGE_BASE=$< $(mutool_run) convert -F docx -O html -o $@ $<
+
+test/generated/%.pdf.mutool.text.diff: test/generated/%.pdf.mutool.text test/%.pdf.mutool.text.ref
+	@echo
+	@echo == Checking $<
+	diff -u $^
+
 
 # Main executable.
 #
@@ -202,10 +283,12 @@ exe_src = \
         src/alloc.c \
         src/astring.c \
         src/buffer.c \
+        src/document.c \
         src/docx.c \
         src/docx_template.c \
         src/extract-exe.c \
         src/extract.c \
+        src/html.c \
         src/join.c \
         src/mem.c \
         src/odt.c \
@@ -216,6 +299,7 @@ exe_src = \
         src/xml.c \
         src/zip.c \
 
+
 ifeq ($(build),memento)
     exe_src += src/memento.c
     ifeq ($(uname),Linux)
@@ -223,29 +307,52 @@ ifeq ($(build),memento)
         flags_link += -L $(libbacktrace) -l backtrace -l dl
     endif
 endif
-exe_obj = $(patsubst src/%.c, src/build/%.c-$(build).o, $(exe_src))
+exe_obj := $(exe_src)
+exe_obj := $(patsubst src/%.c, src/build/%.c-$(build).o, $(exe_obj))
+exe_obj := $(patsubst src/%.cpp, src/build/%.cpp-$(build).o, $(exe_obj))
 exe_dep = $(exe_obj:.o=.d)
 exe: $(exe)
 $(exe): $(exe_obj)
-	$(CC) $(flags_link) -o $@ $^ -lz -lm
+	$(CXX) $(flags_link) -o $@ $^ -lz -lm
 
 run_exe = $(exe)
 ifeq ($(build),memento)
     ifeq ($(uname),Linux)
-        run_exe = LD_LIBRARY_PATH=$(libbacktrace) MEMENTO_ABORT_ON_LEAK=1 MEMENTO_HIDE_MULTIPLE_REALLOCS=1 $(exe)
+        run_exe = MEMENTO_ABORT_ON_LEAK=1 MEMENTO_HIDE_MULTIPLE_REALLOCS=1 LD_LIBRARY_PATH=$(libbacktrace) $(exe)
         #run_exe = LD_LIBRARY_PATH=../libbacktrace/.libs $(exe)
     endif
     ifeq ($(uname),OpenBSD)
-        run_exe = MEMENTO_ABORT_ON_LEAK=1 $(exe)
+        run_exe = MEMENTO_ABORT_ON_LEAK=1 MEMENTO_HIDE_MULTIPLE_REALLOCS=1 $(exe)
     endif
 endif
 
-ifeq ($(create_ref),yes)
-# Special rule for populating .ref directories with current output. Useful to
+exe_tables = src/build/extract-tables-$(build).exe
+exe-tables: $(exe_tables)
+exe-tables-test: $(exe_tables)
+	$< test/agstat.pdf
+
+ifeq (0,1)
+# Do not commit changes to above line.
+#
+# Special rules for populating .ref directories with current output. Useful to
 # initialise references outputs for new output type.
 #
+test/%.docx.dir.ref/: test/generated/%.docx.dir/
+	rsync -ai $< $@
 test/%.odt.dir.ref/: test/generated/%.odt.dir/
 	rsync -ai $< $@
+test/%.text.ref: test/generated/%.text
+	rsync -ai $< $@
+
+_update_tables_leafs = $(patsubst test/%, %, $(test_tables_pdfs))
+# Update all table docx reference outputs.
+#
+_update-docx-tables:
+	for i in $(_update_tables_leafs); do rsync -ai test/generated/$$i.mutool.docx.dir/ test/$$i.mutool.docx.dir.ref/; done
+# Update all table odt reference outputs.
+#
+_update-odt-tables:
+	for i in $(_update_tables_leafs); do rsync -ai test/generated/$$i.mutool.odt.dir/ test/$$i.mutool.odt.dir.ref/; done
 endif
 
 # Rules that make the various intermediate targets required by $(tests).
@@ -255,7 +362,7 @@ test/generated/%.pdf.intermediate-mu.xml: test/%.pdf $(mutool)
 	@echo
 	@echo == Generating intermediate file for $< with mutool.
 	@mkdir -p test/generated
-	$(mutool) draw -F xmltext -o $@ $<
+	$(mutool_run) draw -F xmltext -o $@ $<
 
 test/generated/%.pdf.intermediate-gs.xml: test/%.pdf $(gs)
 	@echo
@@ -297,6 +404,12 @@ test/generated/%.diff: test/generated/%.dir/ test/%.dir.ref/
 	@echo
 	@echo == Checking $<
 	diff -ru $^
+#if diff -ruq $^; then true; else echo "@@@ failure... fix with: rsync -ai" $^; false; fi
+
+test/generated/%.html.diff: test/generated/%.html test/%.html.ref
+	@echo
+	@echo == Checking $<
+	diff -u $^
 
 # This checks that -t src/template.docx gives identical results.
 #
@@ -336,6 +449,14 @@ test/generated/%.extract-template.docx.diff: test/generated/%.extract-template.d
 	@rm -r $@ 2>/dev/null || true
 	cd $< && zip -r ../$(notdir $@) .
 
+# Uses zip to create .odt file by zipping up a directory. Useful to recreate
+# .docx from reference directory test/*.odt.dir.ref.
+%.odt: %
+	@echo
+	@echo == Zipping directory into .odt file.
+	@rm -r $@ 2>/dev/null || true
+	cd $< && zip -r ../$(notdir $@) .
+
 # Prettifies each .xml file within .docx.dir/ directory.
 %.docx.dir.pretty: %.docx.dir/
 	@rm -r $@ $@- 2>/dev/null || true
@@ -348,19 +469,19 @@ test/generated/%.pdf.mutool.docx: test/%.pdf $(mutool)
 	@echo
 	@echo == Converting .pdf directly to .docx using mutool.
 	@mkdir -p test/generated
-	$(mutool) convert -O mediabox-clip=yes -o $@ $<
+	$(mutool_run) convert -O mediabox-clip=yes -o $@ $<
 
 test/generated/%.pdf.mutool-norotate.docx: test/%.pdf $(mutool)
 	@echo
 	@echo == Converting .pdf directly to .docx using mutool.
 	@mkdir -p test/generated
-	$(mutool) convert -O mediabox-clip=yes,rotation=no -o $@ $<
+	$(mutool_run) convert -O mediabox-clip=yes,rotation=no -o $@ $<
 
 test/generated/%.pdf.mutool-spacing.docx: test/%.pdf $(mutool)
 	@echo
 	@echo == Converting .pdf directly to .docx using mutool.
 	@mkdir -p test/generated
-	$(mutool) convert -O mediabox-clip=yes,spacing=yes -o $@ $<
+	$(mutool_run) convert -O mediabox-clip=yes,spacing=yes -o $@ $<
 
 # Converts .pdf directly to .docx using gs.
 test/generated/%.pdf.gs.docx: test/%.pdf $(gs)
@@ -374,8 +495,21 @@ test/generated/%.pdf.mutool.odt: test/%.pdf $(mutool)
 	@echo
 	@echo == Converting .pdf directly to .odt using mutool.
 	@mkdir -p test/generated
-	$(mutool) convert -O mediabox-clip=no -o $@ $<
+	$(mutool_run) convert -O mediabox-clip=no -o $@ $<
 
+# Converts .pdf directly to .html using mutool 
+test/generated/%.pdf.mutool.html: test/%.pdf $(mutool)
+	@echo
+	@echo == Converting .pdf directly to .html using mutool.
+	@mkdir -p test/generated
+	$(mutool_run) convert -F docx -O html -o $@ $<
+
+# Converts .pdf directly to .text using mutool 
+test/generated/%.pdf.mutool.text: test/%.pdf $(mutool)
+	@echo
+	@echo == Converting .pdf directly to .text using mutool.
+	@mkdir -p test/generated
+	$(mutool_run) convert -F docx -O text -o $@ $<
 
 # Valgrind test
 #
@@ -386,17 +520,29 @@ valgrind: $(exe) test/generated/Python2.pdf.intermediate-mu.xml
 # Memento tests.
 #
 ifeq ($(build),memento)
-msqueeze: $(exe) test/generated/Python2.pdf.intermediate-mu.xml
-	MEMENTO_SQUEEZEAT=1 $(run_exe) --alloc-exp-min 0 -r 1 -s 0 -i test/generated/Python2.pdf.intermediate-mu.xml -o test/generated/msqueeze-out.docx 2>&1 | src/memento.py -q 1 -o msqueeze-raw
-	@echo $@: passed
-mfailat: $(exe) test/generated/Python2.pdf.intermediate-mu.xml
-	MEMENTO_FAILAT=61463 $(run_exe) --alloc-exp-min 0 -r 1 -s 0 -i test/generated/Python2.pdf.intermediate-mu.xml -o test/generated/msqueeze-out.docx
-	@echo $@: passed
-mutool_memento_extract = ../../build/memento-extract/mutool
-msqueeze-mutool:
-	MEMENTO_SQUEEZEAT=1 $(mutool_memento_extract) convert -o test/generated/text_graphic_image.pdf.mutool.docx test/text_graphic_image.pdf 2>&1 | src/memento.py -q 1 -o msqueeze-raw
-msqueeze-mutool2:
-	MEMENTO_SQUEEZEAT=1 $(mutool_memento_extract) convert -o test/generated/Python2.pdf.mutool.docx test/Python2.pdf 2>&1 | src/memento.py -q 1 -o msqueeze-raw
+mutool_memento_extract = ../../build/memento/mutool
+memento_failat_gdb := $(gdb) -ex 'b Memento_breakpoint' -ex r -ex c -ex bt --args
+
+# Memento squeeze with test/text_graphic_image.pdf runs quickly - just 2,100 events taking 20s.
+#
+# test/Python2.pdf is much slower - 301,900 events, taking around 8h.
+#
+msqueeze-mutool-docx:
+	MEMENTO_SQUEEZEAT=1 ./src/memento.py -q 100 $(mutool_run) convert -o $@.docx test/text_graphic_image.pdf
+msqueeze-mutool-docx-failat:
+	MEMENTO_FAILAT=1960 $(memento_failat_gdb) $(mutool) convert -o $@.docx test/text_graphic_image.pdf
+msqueeze-mutool-odt:
+	MEMENTO_SQUEEZEAT=1 ./src/memento.py -q 100 $(mutool_run) convert -o $@.docx test/text_graphic_image.pdf
+msqueeze-mutool-odt2:
+	MEMENTO_SQUEEZEAT=4000 ./src/memento.py -q 100 $(mutool_run) convert -o $@.docx test/Python2.pdf
+msqueeze-mutool-table:
+	MEMENTO_SQUEEZEAT=1 ./src/memento.py -q 100 $(mutool_run) convert -F docx -O html -o $@.html test/agstat.pdf
+msqueeze-mutool-table-docx:
+	MEMENTO_SQUEEZEAT=1 ./src/memento.py -q 100 $(mutool_run) convert -o $@.docx test/agstat.pdf
+msqueeze-mutool-table-odt:
+	MEMENTO_SQUEEZEAT=1 ./src/memento.py -q 100 $(mutool_run) convert -o $@.odt test/agstat.pdf
+msqueeze-mutool-table-failat:
+	MEMENTO_FAILAT=296643 MEMENTO_HIDE_MULTIPLE_REALLOCS=1 $(gdb) -ex 'b Memento_breakpoint' -ex r -ex c -ex bt --args $(mutool_memento_extract) convert -F docx -O html -o $@.html test/agstat.pdf
 endif
 
 
@@ -437,6 +583,10 @@ test-buffer-valgrind: $(exe_buffer_test)
 	valgrind --leak-check=full ./$<
 	@echo $@: passed
 
+ifeq ($(build),memento)
+test-buffer-msqueeze: $(exe_buffer_test)
+	MEMENTO_SQUEEZEAT=1 ./src/memento.py -q 1 ./$<
+endif
 
 # Misc unit test.
 #
@@ -477,12 +627,26 @@ test-src:
 	if egrep -wn 'for *[(] *[a-zA-Z0-9]+ [a-zA-Z0-9]' src/*.c src/*.h; then false; else true; fi
 	@echo $@: passed
 
+# Check that all defined global symbols start with 'extract_'. This is not
+# included in the overall 'test' target because the use of '!egrep ...' appears
+# to break on some cluster machines.
+#
+test-obj:
+	@echo
+	nm -egPC $(exe_obj) | egrep '^[a-zA-Z0-9_]+ T' | grep -vw ^main | ! egrep -v ^extract_
+	@echo $@: passed
+
 # Compile rule. We always include src/docx_template.c as a prerequisite in case
-# code #includes docx_template.h.
+# code #includes docx_template.h. We use -std=gnu90 to catch 'ISO C90 forbids
+# mixing declarations and code' errors while still supporting 'inline'.
 #
 src/build/%.c-$(build).o: src/%.c src/docx_template.c src/odt_template.c 
 	@mkdir -p src/build
-	$(CC) -c $(flags_compile) -o $@ $<
+	$(CC) -std=gnu90 -c $(flags_compile) -o $@ $<
+
+src/build/%.cpp-$(build).o: src/%.cpp
+	@mkdir -p src/build
+	$(CXX) -c -Wall -W -I /usr/local/include/opencv4 -o $@ $<
 
 # Rule for machine-generated source code, src/docx_template.c. Also generates
 # src/docx_template.h.

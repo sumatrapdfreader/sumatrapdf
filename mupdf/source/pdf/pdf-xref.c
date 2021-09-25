@@ -2699,11 +2699,44 @@ pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *b
 			return -1;
 
 		s = pdf_to_text_string(ctx, info);
+		if (strlen(s) <= 0)
+			return -1;
+
 		n = 1 + (int)fz_strlcpy(buf, s, size);
 		return n;
 	}
 
 	return -1;
+}
+
+void
+pdf_set_metadata(fz_context *ctx, pdf_document *doc, const char *key, const char *value)
+{
+	pdf_obj *info = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info));
+	if (!strcmp(key, FZ_META_INFO_TITLE))
+		pdf_dict_put_text_string(ctx, info, PDF_NAME(Title), value);
+	else if (!strcmp(key, FZ_META_INFO_AUTHOR))
+		pdf_dict_put_text_string(ctx, info, PDF_NAME(Author), value);
+	else if (!strcmp(key, FZ_META_INFO_SUBJECT))
+		pdf_dict_put_text_string(ctx, info, PDF_NAME(Subject), value);
+	else if (!strcmp(key, FZ_META_INFO_KEYWORDS))
+		pdf_dict_put_text_string(ctx, info, PDF_NAME(Keywords), value);
+	else if (!strcmp(key, FZ_META_INFO_CREATOR))
+		pdf_dict_put_text_string(ctx, info, PDF_NAME(Creator), value);
+	else if (!strcmp(key, FZ_META_INFO_PRODUCER))
+		pdf_dict_put_text_string(ctx, info, PDF_NAME(Producer), value);
+	else if (!strcmp(key, FZ_META_INFO_CREATIONDATE))
+	{
+		int64_t time = pdf_parse_date(ctx, value);
+		if (time >= 0)
+			pdf_dict_put_date(ctx, info, PDF_NAME(CreationDate), time);
+	}
+	else if (!strcmp(key, FZ_META_INFO_MODIFICATIONDATE))
+	{
+		int64_t time = pdf_parse_date(ctx, value);
+		if (time >= 0)
+			pdf_dict_put_date(ctx, info, PDF_NAME(ModDate), time);
+	}
 }
 
 
@@ -2739,6 +2772,7 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	doc->super.count_pages = pdf_count_pages_imp;
 	doc->super.load_page = pdf_load_page_imp;
 	doc->super.lookup_metadata = (fz_document_lookup_metadata_fn*)pdf_lookup_metadata;
+	doc->super.set_metadata = (fz_document_set_metadata_fn*)pdf_set_metadata;
 
 	pdf_lexbuf_init(ctx, &doc->lexbuf.base, PDF_LEXBUF_LARGE);
 	doc->file = fz_keep_stream(ctx, file);

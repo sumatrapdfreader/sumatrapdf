@@ -85,10 +85,23 @@ pdf_to_matrix(fz_context *ctx, pdf_obj *array)
 	}
 }
 
-int64_t
-pdf_to_date(fz_context *ctx, pdf_obj *time)
+char *
+pdf_format_date(fz_context *ctx, int64_t time, char *s, size_t n)
 {
-	const char *s = pdf_to_str_buf(ctx, time);
+	time_t secs = time;
+#ifdef _POSIX_SOURCE
+	struct tm tmbuf, *tm = gmtime_r(&secs, &tmbuf);
+#else
+	struct tm *tm = gmtime(&secs);
+#endif
+	if (time < 0 || !tm || !strftime(s, n, "D:%Y%m%d%H%M%SZ", tm))
+		return NULL;
+	return s;
+}
+
+int64_t
+pdf_parse_date(fz_context *ctx, const char *s)
+{
 	int tz_sign, tz_hour, tz_min, tz_adj;
 	struct tm tm;
 	time_t utc;
@@ -194,6 +207,12 @@ pdf_to_date(fz_context *ctx, pdf_obj *time)
 
 	tz_adj = tz_sign * (tz_hour * 3600 + tz_min * 60);
 	return utc - tz_adj;
+}
+
+int64_t
+pdf_to_date(fz_context *ctx, pdf_obj *time)
+{
+	return pdf_parse_date(ctx, pdf_to_str_buf(ctx, time));
 }
 
 static int

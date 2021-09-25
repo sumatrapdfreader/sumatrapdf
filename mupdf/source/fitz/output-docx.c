@@ -171,7 +171,7 @@ static void dev_fill_image(fz_context *ctx, fz_device *dev_, fz_image *img, fz_m
 	{
 		if (compressed)
 		{
-			if (0) {}
+			if (0) { /* For alignment */ }
 			else if (compressed->params.type == FZ_IMAGE_RAW) type = "raw";
 			else if (compressed->params.type == FZ_IMAGE_FAX) type = "fax";
 			else if (compressed->params.type == FZ_IMAGE_FLATE) type = "flate";
@@ -230,6 +230,143 @@ static void dev_fill_image(fz_context *ctx, fz_device *dev_, fz_image *img, fz_m
 	}
 }
 
+/*
+ * Support for sending information to Extract when walking stroke/fill path
+ * with fz_walk_path().
+ */
+typedef struct
+{
+	fz_path_walker walker;
+	extract_t *extract;
+} walker_info_t;
+
+static void s_moveto(fz_context *ctx, void *arg, float x, float y)
+{
+	extract_t* extract = arg;
+	if (extract_moveto(extract, x, y))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_moveto() failed");
+}
+
+static void s_lineto(fz_context *ctx, void *arg, float x, float y)
+{
+	extract_t* extract = arg;
+	if (extract_lineto(extract, x, y))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_lineto() failed");
+}
+
+static void s_curveto(fz_context *ctx, void *arg, float x1, float y1,
+		float x2, float y2, float x3, float y3)
+{
+	/* We simply move to the end point of the curve so that subsequent
+	(straight) lines will be handled correctly. */
+	extract_t* extract = arg;
+	if (extract_moveto(extract, x3, y3))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_moveto() failed");
+}
+
+static void s_closepath(fz_context *ctx, void *arg)
+{
+	extract_t* extract = arg;
+	if (extract_closepath(extract))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_closepath() failed");
+}
+
+/*
+ * Calls extract_*() path functions on <path> using fz_walk_path() and the
+ * above callbacks.
+ */
+static void s_walk_path(fz_context *ctx, fz_docx_device *dev, extract_t *extract, const fz_path *path)
+{
+	fz_path_walker walker;
+	walker.moveto = s_moveto;
+	walker.lineto = s_lineto;
+	walker.curveto = s_curveto;
+	walker.closepath = s_closepath;
+	walker.quadto = NULL;
+	walker.curvetov = NULL;
+	walker.curvetoy = NULL;
+	walker.rectto = NULL;
+
+	assert(dev->writer->ctx == ctx);
+	fz_walk_path(ctx, path, &walker, extract /*arg*/);
+}
+
+void dev_fill_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int even_odd,
+		fz_matrix matrix, fz_colorspace * colorspace, const float *color, float alpha,
+		fz_color_params color_params)
+{
+	fz_docx_device *dev = (fz_docx_device*) dev_;
+	extract_t *extract = dev->writer->extract;
+
+	assert(!dev->writer->ctx);
+	dev->writer->ctx = ctx;
+
+	fz_try(ctx)
+	{
+		if (extract_fill_begin(
+				extract,
+				matrix.a,
+				matrix.b,
+				matrix.c,
+				matrix.d,
+				matrix.e,
+				matrix.f,
+				color[0]
+				))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin fill");
+		s_walk_path(ctx, dev, extract, path);
+		if (extract_fill_end(extract))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "extract_fill_end() failed");
+	}
+	fz_always(ctx)
+	{
+		dev->writer->ctx = NULL;
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+
+static void
+dev_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path,
+		const fz_stroke_state *stroke, fz_matrix in_ctm,
+		fz_colorspace *colorspace_in, const float *color, float alpha,
+		fz_color_params color_params)
+{
+	fz_docx_device *dev = (fz_docx_device*) dev_;
+	extract_t *extract = dev->writer->extract;
+
+	assert(!dev->writer->ctx);
+	dev->writer->ctx = ctx;
+	fz_try(ctx)
+	{
+		if (extract_stroke_begin(
+				extract,
+				in_ctm.a,
+				in_ctm.b,
+				in_ctm.c,
+				in_ctm.d,
+				in_ctm.e,
+				in_ctm.f,
+				stroke->linewidth,
+				color[0]
+				))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin stroke");
+		s_walk_path(ctx, dev, extract, path);
+		if (extract_stroke_end(extract))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "extract_stroke_end() failed");
+	}
+	fz_always(ctx)
+	{
+		dev->writer->ctx = NULL;
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
 
 static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_, fz_rect mediabox)
 {
@@ -250,6 +387,8 @@ static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_
 		dev->super.clip_stroke_text = dev_clip_stroke_text;
 		dev->super.ignore_text = dev_ignore_text;
 		dev->super.fill_image = dev_fill_image;
+		dev->super.fill_path = dev_fill_path;
+		dev->super.stroke_path = dev_stroke_path;
 		dev->writer = writer;
 	}
 	fz_always(ctx)
@@ -379,6 +518,7 @@ static void writer_drop(fz_context *ctx, fz_document_writer *writer_)
 		writer->output = NULL;
 	assert(!writer->ctx);
 	writer->ctx = ctx;
+	extract_end(&writer->extract);
 	extract_alloc_destroy(&writer->alloc);
 	writer->ctx = NULL;
 }
@@ -405,7 +545,9 @@ static void *s_realloc_fn(void *state, void *prev, size_t size)
 	return fz_realloc_no_throw(writer->ctx, prev, size);
 }
 
-static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out, const char *options, extract_format_t format)
+/* Will drop <out> if an error occurs. */
+static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out,
+		const char *options, extract_format_t format)
 {
 	fz_docx_writer *writer = NULL;
 
@@ -423,6 +565,8 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 			);
 		writer->ctx = ctx;
 		writer->output = out;
+		if (get_bool_option(ctx, options, "html", 0)) format = extract_format_HTML;
+		if (get_bool_option(ctx, options, "text", 0)) format = extract_format_TEXT;
 		if (extract_alloc_create(s_realloc_fn, writer, &writer->alloc))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_alloc instance");
 		if (extract_begin(writer->alloc, format, &writer->extract))
@@ -431,12 +575,34 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->rotation = get_bool_option(ctx, options, "rotation", 1);
 		writer->images = get_bool_option(ctx, options, "images", 1);
 		writer->mediabox_clip = get_bool_option(ctx, options, "mediabox-clip", 1);
+		{
+			const char* v;
+			if (fz_has_option(ctx, options, "tables-csv-format", &v))
+			{
+				size_t len = strlen(v) + 1; /* Might include trailing options. */
+				char* formatbuf = fz_malloc(ctx, len);
+				fz_copy_option(ctx, v, formatbuf, len);
+				fprintf(stderr, "tables-csv-format: %s\n", formatbuf);
+				if (extract_tables_csv_format(writer->extract, formatbuf))
+				{
+					fz_free(ctx, formatbuf);
+					fz_throw(ctx, FZ_ERROR_GENERIC, "extract_tables_csv_format() failed.");
+				}
+				fz_free(ctx, formatbuf);
+			}
+		}
 		writer->ctx = NULL;
 	}
 	fz_catch(ctx)
 	{
+		/* fz_drop_document_writer() drops its output so we only need to call
+		fz_drop_output() if we failed before creating the writer. */
 		if (writer)
+		{
+			writer->ctx = ctx;
 		fz_drop_document_writer(ctx, &writer->super);
+			writer->ctx = NULL;
+		}
 		else
 			fz_drop_output(ctx, out);
 		fz_rethrow(ctx);
@@ -449,19 +615,23 @@ fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *ou
 	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
 }
 
-fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
-{
-	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
-	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
-}
-
 fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
 	return fz_new_docx_writer_internal(ctx, out, options, extract_format_DOCX);
 }
 
+fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
+{
+	/* No need to drop <out> if fz_new_docx_writer_internal() throws, because
+	it always drops <out> if it fails. */
+	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
+	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
+}
+
 fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *path, const char *options)
 {
+	/* No need to drop <out> if fz_new_docx_writer_internal() throws, because
+	it always drops <out> if it fails. */
 	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
 	return fz_new_docx_writer_internal(ctx, out, options, extract_format_DOCX);
 }

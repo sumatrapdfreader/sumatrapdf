@@ -21,6 +21,7 @@ odt_paragraph_finish(). */
 
 #include <assert.h>
 #include <errno.h>
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,16 +30,15 @@ odt_paragraph_finish(). */
 #include <sys/stat.h>
 
 
-static int extract_odt_paragraph_start(extract_alloc_t* alloc, extract_astring_t* content)
+static int s_odt_paragraph_start(extract_alloc_t* alloc, extract_astring_t* content)
 {
     return extract_astring_cat(alloc, content, "\n\n<text:p>");
 }
 
-static int extract_odt_paragraph_finish(extract_alloc_t* alloc, extract_astring_t* content)
+static int s_odt_paragraph_finish(extract_alloc_t* alloc, extract_astring_t* content)
 {
     return extract_astring_cat(alloc, content, "</text:p>");
 }
-
 
 /* ODT doesn't seem to support ad-hoc inline font specifications; instead
 we have to define a style at the start of the content.xml file. So when
@@ -48,10 +48,7 @@ extract_odt_styles_t struct. */
 struct extract_odt_style_t
 {
     int     id; /* A unique id for this style. */
-    char*   font_name;
-    double  font_size;
-    int     font_bold;
-    int     font_italic;
+    font_t  font;
 };
 
 struct extract_odt_styles_t
@@ -61,41 +58,47 @@ struct extract_odt_styles_t
     int                     styles_num;
 };
 
-static int extract_odt_style_compare(extract_odt_style_t* a, extract_odt_style_t*b)
+static int s_odt_style_compare(extract_odt_style_t* a, extract_odt_style_t*b)
 {
     int d;
     double dd;
-    if ((d = strcmp(a->font_name, b->font_name)))   return d;
-    if ((dd = a->font_size - b->font_size) != 0.0)  return (dd > 0.0) ? 1 : -1;
-    if ((d = a->font_bold - b->font_bold))          return d;
-    if ((d = a->font_italic - b->font_italic))      return d;
+    if ((d = strcmp(a->font.name, b->font.name)))   return d;
+    if ((dd = a->font.size - b->font.size) != 0.0)  return (dd > 0.0) ? 1 : -1;
+    if ((d = a->font.bold - b->font.bold))          return d;
+    if ((d = a->font.italic - b->font.italic))      return d;
     return 0;
 }
 
-static int extract_odt_style_append_definition(extract_alloc_t* alloc, extract_odt_style_t* style, extract_astring_t* text)
+static int s_odt_style_append_definition(extract_alloc_t* alloc, extract_odt_style_t* style, extract_astring_t* text)
 {
-    const char* font_name = style->font_name;
+    const char* font_name = style->font.name;
     /* This improves output e.g. for zlib.3.pdf, but clearly a hack. */
     if (0 && strstr(font_name, "Helvetica"))
     {
         font_name = "Liberation Sans";
     }
-    outf("style->font_name=%s font_name=%s", style->font_name, font_name);
+    outf("style->font_name=%s font_name=%s", style->font.name, font_name);
     if (extract_astring_catf(alloc, text, "<style:style style:name=\"T%i\" style:family=\"text\">", style->id)) return -1;
     if (extract_astring_catf(alloc, text, "<style:text-properties style:font-name=\"%s\"", font_name)) return -1;
-    if (extract_astring_catf(alloc, text, " fo:font-size=\"%.2fpt\"", style->font_size)) return -1;
-    if (extract_astring_catf(alloc, text, " fo:font-weight=\"%s\"", style->font_bold ? "bold" : "normal")) return -1;
-    if (extract_astring_catf(alloc, text, " fo:font-style=\"%s\"", style->font_italic ? "italic" : "normal")) return -1;
+    if (extract_astring_catf(alloc, text, " fo:font-size=\"%.2fpt\"", style->font.size)) return -1;
+    if (extract_astring_catf(alloc, text, " fo:font-weight=\"%s\"", style->font.bold ? "bold" : "normal")) return -1;
+    if (extract_astring_catf(alloc, text, " fo:font-style=\"%s\"", style->font.italic ? "italic" : "normal")) return -1;
     if (extract_astring_cat(alloc, text, " /></style:style>")) return -1;
     return 0;
 }
 
 void extract_odt_styles_free(extract_alloc_t* alloc, extract_odt_styles_t* styles)
 {
+    int i;
+    for (i=0; i<styles->styles_num; ++i)
+    {
+        extract_odt_style_t* style = &styles->styles[i];
+        extract_free(alloc, &style->font.name);
+    }
     extract_free(alloc, &styles->styles);
 }
 
-static int extract_odt_styles_definitions(
+static int s_odt_styles_definitions(
         extract_alloc_t*        alloc,
         extract_odt_styles_t*   styles,
         extract_astring_t*      out
@@ -105,7 +108,7 @@ static int extract_odt_styles_definitions(
     if (extract_astring_cat(alloc, out, "<office:automatic-styles>")) return -1;
     for (i=0; i<styles->styles_num; ++i)
     {
-        if (extract_odt_style_append_definition(alloc, &styles->styles[i], out)) return -1;
+        if (s_odt_style_append_definition(alloc, &styles->styles[i], out)) return -1;
     }
     extract_astring_cat(alloc, out, "<style:style style:name=\"gr1\" style:family=\"graphic\">\n");
     extract_astring_cat(alloc, out, "<style:graphic-properties"
@@ -159,25 +162,22 @@ static int extract_odt_styles_definitions(
     return 0;
 }
 
-static int styles_add(
+static int s_odt_styles_add(
         extract_alloc_t*        alloc,
         extract_odt_styles_t*   styles,
-        const char*             font_name,
-        double                  font_size,
-        int                     font_bold,
-        int                     font_italic,
+        font_t*                 font,
         extract_odt_style_t**   o_style
     )
 /* Adds specified style to <styles> if not already present. Sets *o_style to
 point to the style_t within <styles>. */
 {
-    extract_odt_style_t style = {0 /*id*/, (char*) font_name, font_size, font_bold, font_italic};
+    extract_odt_style_t style = {0 /*id*/, *font};
     int i;
     /* We keep styles->styles[] sorted; todo: use bsearch or similar when
     searching. */
     for (i=0; i<styles->styles_num; ++i)
     {
-        int d = extract_odt_style_compare(&style, &styles->styles[i]);
+        int d = s_odt_style_compare(&style, &styles->styles[i]);
         if (d == 0)
         {
             *o_style = &styles->styles[i];
@@ -190,92 +190,78 @@ point to the style_t within <styles>. */
     memmove(&styles->styles[i+1], &styles->styles[i], sizeof(styles->styles[0]) * (styles->styles_num - i));
     styles->styles_num += 1;
     styles->styles[i].id = styles->styles_num + 10; /* Leave space for template's built-in styles. */
-    if (extract_strdup(alloc, font_name, &styles->styles[i].font_name)) return -1;
-    styles->styles[i].font_size = font_size;
-    styles->styles[i].font_bold = font_bold;
-    styles->styles[i].font_italic = font_italic;
+    if (extract_strdup(alloc, font->name, &styles->styles[i].font.name)) return -1;
+    styles->styles[i].font.size = font->size;
+    styles->styles[i].font.bold = font->bold;
+    styles->styles[i].font.italic = font->italic;
     *o_style = &styles->styles[i];
     return 0;
 }
 
 static int extract_odt_run_start(
-        extract_alloc_t* alloc,
-        extract_astring_t* content,
-        extract_odt_styles_t* styles,
-        const char* font_name,
-        double font_size,
-        int bold,
-        int italic
+        extract_alloc_t*        alloc,
+        extract_astring_t*      content,
+        extract_odt_styles_t*   styles,
+        content_state_t*        content_state
         )
-/* Starts a new run. Caller must ensure that extract_odt_run_finish() was
+/* Starts a new run. Caller must ensure that s_odt_run_finish() was
 called to terminate any previous run. */
 {
     extract_odt_style_t* style;
-    if (styles_add(alloc, styles, font_name, font_size, bold, italic, &style)) return -1;
+    if (s_odt_styles_add(
+            alloc,
+            styles,
+            &content_state->font,
+            &style
+            )) return -1;
     if (extract_astring_catf(alloc, content, "<text:span text:style-name=\"T%i\">", style->id)) return -1;
     return 0;
 }
 
-static int extract_odt_run_finish(extract_alloc_t* alloc, extract_astring_t* content)
+static int s_odt_run_finish(extract_alloc_t* alloc, content_state_t* content_state, extract_astring_t* content)
 {
+    if (content_state)  content_state->font.name = NULL;
     return extract_astring_cat(alloc, content, "</text:span>");
 }
 
-static int extract_odt_paragraph_empty(extract_alloc_t* alloc, extract_astring_t* content, extract_odt_styles_t* styles)
+static int s_odt_append_empty_paragraph(extract_alloc_t* alloc, extract_astring_t* content, extract_odt_styles_t* styles)
 /* Append an empty paragraph to *content. */
 {
     int e = -1;
-    if (extract_odt_paragraph_start(alloc, content)) goto end;
+    content_state_t content_state = {0};
+    if (s_odt_paragraph_start(alloc, content)) goto end;
     /* [This comment is from docx, haven't checked odt.] It seems like our
     choice of font size here doesn't make any difference to the ammount of
     vertical space, unless we include a non-space character. Presumably
     something to do with the styles in the template document. */
-    if (extract_odt_run_start(
-            alloc,
-            content,
-            styles,
-            "OpenSans",
-            10 /*font_size*/,
-            0 /*font_bold*/,
-            0 /*font_italic*/
-            )) goto end;
+    content_state.font.name = "OpenSans";
+    content_state.font.size = 10;
+    content_state.font.bold = 0;
+    content_state.font.italic = 0;
+    if (extract_odt_run_start(alloc, content, styles, &content_state)) goto end;
     //docx_char_append_string(content, "&#160;");   /* &#160; is non-break space. */
-    if (extract_odt_run_finish(alloc, content)) goto end;
-    if (extract_odt_paragraph_finish(alloc, content)) goto end;
+    if (s_odt_run_finish(alloc, NULL /*content_state*/, content)) goto end;
+    if (s_odt_paragraph_finish(alloc, content)) goto end;
     e = 0;
     end:
     return e;
 }
 
 
-typedef struct
-{
-    const char* font_name;
-    double      font_size;
-    int         font_bold;
-    int         font_italic;
-    matrix_t*   ctm_prev;
-    /* todo: add extract_odt_styles_t member? */
-} content_state_t;
-/* Used to keep track of font information when writing paragraphs of odt
-content, e.g. so we know whether a font has changed so need to start a new odt
-span. */
-
-
-static int extract_document_to_odt_content_paragraph(
+static int s_document_to_odt_content_paragraph(
         extract_alloc_t*        alloc,
-        content_state_t*        state,
+        content_state_t*        content_state,
         paragraph_t*            paragraph,
         extract_astring_t*      content,
         extract_odt_styles_t*   styles
         )
-/* Append odt xml for <paragraph> to <content>. Updates *state if we change
-font. */
+/* Append odt xml for <paragraph> to <content>. Updates *content_state if we
+change font. */
 {
     int e = -1;
     int l;
 
-    if (extract_odt_paragraph_start(alloc, content)) goto end;
+    if (s_odt_paragraph_start(alloc, content)) goto end;
 
     for (l=0; l<paragraph->lines_num; ++l)
     {
@@ -286,50 +272,41 @@ font. */
             int si;
             span_t* span = line->spans[s];
             double font_size_new;
-            state->ctm_prev = &span->ctm;
+            content_state->ctm_prev = &span->ctm;
             font_size_new = extract_matrices_to_font_size(&span->ctm, &span->trm);
-            if (!state->font_name
-                    || strcmp(span->font_name, state->font_name)
-                    || span->flags.font_bold != state->font_bold
-                    || span->flags.font_italic != state->font_italic
-                    || font_size_new != state->font_size
+            if (!content_state->font.name
+                    || strcmp(span->font_name, content_state->font.name)
+                    || span->flags.font_bold != content_state->font.bold
+                    || span->flags.font_italic != content_state->font.italic
+                    || font_size_new != content_state->font.size
                     )
             {
-                if (state->font_name)
+                if (content_state->font.name)
                 {
-                    if (extract_odt_run_finish(alloc, content)) goto end;
+                    if (s_odt_run_finish(alloc, content_state, content)) goto end;
                 }
-                state->font_name = span->font_name;
-                state->font_bold = span->flags.font_bold;
-                state->font_italic = span->flags.font_italic;
-                state->font_size = font_size_new;
-                if (extract_odt_run_start(
-                        alloc,
-                        content,
-                        styles,
-                        state->font_name,
-                        state->font_size,
-                        state->font_bold,
-                        state->font_italic
-                        )) goto end;
+                content_state->font.name = span->font_name;
+                content_state->font.bold = span->flags.font_bold;
+                content_state->font.italic = span->flags.font_italic;
+                content_state->font.size = font_size_new;
+                if (extract_odt_run_start( alloc, content, styles, content_state)) goto end;
             }
 
             for (si=0; si<span->chars_num; ++si)
             {
                 char_t* char_ = &span->chars[si];
                 int c = char_->ucs;
-                if (extract_astring_cat_xmlc(alloc, content, c)) goto end;
+                if (extract_astring_catc_unicode_xml(alloc, content, c)) goto end;
             }
             /* Remove any trailing '-' at end of line. */
-            if (astring_char_truncate_if(content, '-')) goto end;
+            if (extract_astring_char_truncate_if(content, '-')) goto end;
         }
     }
-    if (state->font_name)
+    if (content_state->font.name)
     {
-        if (extract_odt_run_finish(alloc, content)) goto end;
-        state->font_name = NULL;
+        if (s_odt_run_finish(alloc, content_state, content)) goto end;
     }
-    if (extract_odt_paragraph_finish(alloc, content)) goto end;
+    if (s_odt_paragraph_finish(alloc, content)) goto end;
     
     e = 0;
     
@@ -337,7 +314,7 @@ font. */
     return e;
 }
 
-static int extract_document_append_image(
+static int s_odt_append_image(
         extract_alloc_t*    alloc,
         extract_astring_t*  content,
         image_t*            image
@@ -362,7 +339,7 @@ static int extract_document_append_image(
 }
 
 
-static int extract_document_output_rotated_paragraphs(
+static int s_odt_output_rotated_paragraphs(
         extract_alloc_t*    alloc,
         extract_page_t*     page,
         int                 paragraph_begin,
@@ -375,14 +352,14 @@ static int extract_document_output_rotated_paragraphs(
         int                 text_box_id,
         extract_astring_t*  content,
         extract_odt_styles_t* styles,
-        content_state_t*    state
+        content_state_t*    content_state
         )
 /* Writes paragraph to content inside rotated text box. */
 {
     int e = 0;
     int p;
     double pt_to_inch = 1/72.0;
-    outf("rotated paragraphs: rotation_rad=%f (x y)=(%i %i) (w h)=(%i %i)", rotation_rad, x_pt, y_pt, w_pt, h_pt);
+    outf("rotated paragraphs: rotation_rad=%f (x y)=(%f %f) (w h)=(%f %f)", rotation_rad, x_pt, y_pt, w_pt, h_pt);
     
     // https://docs.oasis-open.org/office/OpenDocument/v1.3/cs02/part3-schema/OpenDocument-v1.3-cs02-part3-schema.html#attribute-draw_transform
     // says rotation is in degrees, but we seem to require -radians.
@@ -414,7 +391,7 @@ static int extract_document_output_rotated_paragraphs(
     for (p=paragraph_begin; p<paragraph_end; ++p)
     {
         paragraph_t* paragraph = page->paragraphs[p];
-        if (!e) e = extract_document_to_odt_content_paragraph(alloc, state, paragraph, content, styles);
+        if (!e) e = s_document_to_odt_content_paragraph(alloc, content_state, paragraph, content, styles);
     }
     
     if (!e) e = extract_astring_cat(alloc, content, "\n");
@@ -423,6 +400,219 @@ static int extract_document_output_rotated_paragraphs(
     
     if (!e) e = extract_astring_cat(alloc, content, "</text:p>\n");
     
+    return e;
+}
+
+
+static int s_odt_append_table(extract_alloc_t* alloc, table_t* table, extract_astring_t* content, extract_odt_styles_t* styles)
+{
+    int e = -1;
+    int y;
+    
+    {
+        int x;
+        static int table_number = 0;
+        table_number += 1;
+        if (extract_astring_catf(alloc, content,
+                "\n"
+                "    <table:table text:style-name=\"extract.table\" table:name=\"extract.table.%i\">\n"
+                "        <table:table-columns>\n"
+                ,
+                table_number
+                )) goto end;
+
+        for (x=0; x<table->cells_num_x; ++x)
+        {
+            if (extract_astring_cat(alloc, content,
+                    "            <table:table-column table:style-name=\"extract.table.column\"/>\n"
+                    )) goto end;
+        }
+        if (extract_astring_cat(alloc, content,
+                "        </table:table-columns>\n"
+                )) goto end;
+  }
+  for (y=0; y<table->cells_num_y; ++y)
+    {
+        int x;
+        if (extract_astring_cat(alloc, content,
+                "        <table:table-row>\n"
+                )) goto end;
+        
+        for (x=0; x<table->cells_num_x; ++x)
+        {
+            cell_t* cell = table->cells[y*table->cells_num_x + x];
+            if (!cell->above || !cell->left)
+            {
+                if (extract_astring_cat(alloc, content, "            <table:covered-table-cell/>\n")) goto end;
+                continue;
+            }
+            
+            if (extract_astring_cat(alloc, content, "            <table:table-cell")) goto end;
+            if (cell->extend_right > 1)
+            {
+                if (extract_astring_catf(alloc, content, " table:number-columns-spanned=\"%i\"", cell->extend_right)) goto end;
+            }
+            if (cell->extend_down > 1)
+            {
+                if (extract_astring_catf(alloc, content, " table:number-rows-spanned=\"%i\"", cell->extend_down)) goto end;
+            }
+            if (extract_astring_catf(alloc, content, ">\n")) goto end;
+            
+            /* Write contents of this cell. */
+            {
+                int p;
+                content_state_t content_state;
+                content_state.font.name = NULL;
+                content_state.ctm_prev = NULL;
+                for (p=0; p<cell->paragraphs_num; ++p)
+                {
+                    paragraph_t* paragraph = cell->paragraphs[p];
+                    if (s_document_to_odt_content_paragraph(alloc, &content_state, paragraph, content, styles)) goto end;
+                }
+                if (content_state.font.name)
+                {
+                    if (s_odt_run_finish(alloc, &content_state, content)) goto end;
+                }
+                if (extract_astring_cat(alloc, content, "\n")) goto end;
+            }
+            if (extract_astring_cat(alloc, content, "            </table:table-cell>\n")) goto end;
+        }
+        if (extract_astring_cat(alloc, content, "        </table:table-row>\n")) goto end;
+    }
+    if (extract_astring_cat(alloc, content, "    </table:table>\n")) goto end;
+    e = 0;
+    
+    end:
+    return e;
+}
+
+
+static int s_odt_append_rotated_paragraphs(
+        extract_alloc_t*    alloc,
+        extract_page_t*     page,
+        content_state_t*    content_state,
+        int*                p,
+        int*                text_box_id,
+        const matrix_t*     ctm,
+        double              rotate,
+        extract_astring_t*  content,
+        extract_odt_styles_t* styles
+        )
+/* Appends paragraphs with same rotation, starting with page->paragraphs[*p]
+and updates *p. */
+{
+    /* Find extent of paragraphs with this same rotation. extent
+    will contain max width and max height of paragraphs, in units
+    before application of ctm, i.e. before rotation. */
+    int e = -1;
+    point_t extent = {0, 0};
+    int p0 = *p;
+    int p1;
+    paragraph_t* paragraph = page->paragraphs[*p];
+
+    outf("rotate=%.2frad=%.1fdeg ctm: ef=(%f %f) abcd=(%f %f %f %f)",
+            rotate, rotate * 180 / pi,
+            ctm->e,
+            ctm->f,
+            ctm->a,
+            ctm->b,
+            ctm->c,
+            ctm->d
+            );
+
+    {
+        /* We assume that first span is at origin of text
+        block. This assumes left-to-right text. */
+        double rotate0 = rotate;
+        const matrix_t* ctm0 = ctm;
+        point_t origin =
+        {
+                paragraph->lines[0]->spans[0]->chars[0].x,
+                paragraph->lines[0]->spans[0]->chars[0].y
+        };
+        matrix_t ctm_inverse = {1, 0, 0, 1, 0, 0};
+        double ctm_det = ctm->a*ctm->d - ctm->b*ctm->c;
+        if (ctm_det != 0)
+        {
+            ctm_inverse.a = +ctm->d / ctm_det;
+            ctm_inverse.b = -ctm->b / ctm_det;
+            ctm_inverse.c = -ctm->c / ctm_det;
+            ctm_inverse.d = +ctm->a / ctm_det;
+        }
+        else
+        {
+            outf("cannot invert ctm=(%f %f %f %f)",
+                    ctm->a, ctm->b, ctm->c, ctm->d);
+        }
+
+        for (*p=p0; *p<page->paragraphs_num; ++*p)
+        {
+            paragraph = page->paragraphs[*p];
+            ctm = &paragraph->lines[0]->spans[0]->ctm;
+            rotate = atan2(ctm->b, ctm->a);
+            if (rotate != rotate0)
+            {
+                break;
+            }
+
+            /* Update <extent>. */
+            {
+                int l;
+                for (l=0; l<paragraph->lines_num; ++l)
+                {
+                    line_t* line = paragraph->lines[l];
+                    span_t* span = extract_line_span_last(line);
+                    char_t* char_ = extract_span_char_last(span);
+                    double adv = char_->adv * extract_matrix_expansion(span->trm);
+                    double x = char_->x + adv * cos(rotate);
+                    double y = char_->y + adv * sin(rotate);
+
+                    double dx = x - origin.x;
+                    double dy = y - origin.y;
+
+                    /* Position relative to origin and before box rotation. */
+                    double xx = ctm_inverse.a * dx + ctm_inverse.b * dy;
+                    double yy = ctm_inverse.c * dx + ctm_inverse.d * dy;
+                    yy = -yy;
+                    if (xx > extent.x) extent.x = xx;
+                    if (yy > extent.y) extent.y = yy;
+                    if (0) outf("rotate=%f *p=%i: origin=(%f %f) xy=(%f %f) dxy=(%f %f) xxyy=(%f %f) span: %s",
+                            rotate, *p, origin.x, origin.y, x, y, dx, dy, xx, yy, extract_span_string(alloc, span));
+                }
+            }
+        }
+        p1 = *p;
+        rotate = rotate0;
+        ctm = ctm0;
+        outf("rotate=%f p0=%i p1=%i. extent is: (%f %f)",
+                rotate, p0, p1, extent.x, extent.y);
+    }
+
+    /* Paragraphs p0..p1-1 have same rotation. We output them into
+    a single rotated text box. */
+
+    /* We need unique id for text box. */
+    *text_box_id += 1;
+
+    if (s_odt_output_rotated_paragraphs(
+            alloc,
+            page,
+            p0,
+            p1,
+            rotate,
+            ctm->e,
+            ctm->f,
+            extent.x,
+            extent.y,
+            *text_box_id,
+            content,
+            styles,
+            content_state
+            )) goto end;
+    *p = p1 - 1;
+    e = 0;
+    
+    end:
     return e;
 }
 
@@ -445,156 +635,66 @@ int extract_document_to_odt_content(
     for (p=0; p<document->pages_num; ++p)
     {
         extract_page_t* page = document->pages[p];
-        int p;
-        content_state_t state;
-        state.font_name = NULL;
-        state.font_size = 0;
-        state.font_bold = 0;
-        state.font_italic = 0;
-        state.ctm_prev = NULL;
+        int p = 0;
+        int t = 0;
+        content_state_t content_state;
+        content_state.font.name = NULL;
+        content_state.font.size = 0;
+        content_state.font.bold = 0;
+        content_state.font.italic = 0;
+        content_state.ctm_prev = NULL;
         
-        for (p=0; p<page->paragraphs_num; ++p)
+        for(;;)
         {
-            paragraph_t* paragraph = page->paragraphs[p];
-            const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
-            double rotate = atan2(ctm->b, ctm->a);
+            paragraph_t* paragraph = (p == page->paragraphs_num) ? NULL : page->paragraphs[p];
+            table_t* table = (t == page->tables_num) ? NULL : page->tables[t];
+            double y_paragraph;
+            double y_table;
+            if (!paragraph && !table)   break;
+            y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
+            y_table = (table) ? table->pos.y : DBL_MAX;
             
-            if (spacing
-                    && state.ctm_prev
-                    && paragraph->lines_num
-                    && paragraph->lines[0]->spans_num
-                    && matrix_cmp4(
-                            state.ctm_prev,
-                            &paragraph->lines[0]->spans[0]->ctm
-                            )
-                    )
+            if (y_paragraph < y_table)
             {
-                /* Extra vertical space between paragraphs that were at
-                different angles in the original document. */
-                if (extract_odt_paragraph_empty(alloc, content, styles)) goto end;
-            }
+                const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
+                double rotate = atan2(ctm->b, ctm->a);
 
-            if (spacing)
-            {
-                /* Extra vertical space between paragraphs. */
-                if (extract_odt_paragraph_empty(alloc, content, styles)) goto end;
-            }
-            
-            if (rotation && rotate != 0)
-            {
-                /* Find extent of paragraphs with this same rotation. extent
-                will contain max width and max height of paragraphs, in units
-                before application of ctm, i.e. before rotation. */
-                point_t extent = {0, 0};
-                int p0 = p;
-                int p1;
-                
-                outf("rotate=%.2frad=%.1fdeg ctm: ef=(%f %f) abcd=(%f %f %f %f)",
-                        rotate, rotate * 180 / pi,
-                        ctm->e,
-                        ctm->f,
-                        ctm->a,
-                        ctm->b,
-                        ctm->c,
-                        ctm->d
-                        );
-                
+                if (spacing
+                        && content_state.ctm_prev
+                        && paragraph->lines_num
+                        && paragraph->lines[0]->spans_num
+                        && extract_matrix_cmp4(
+                                content_state.ctm_prev,
+                                &paragraph->lines[0]->spans[0]->ctm
+                                )
+                        )
                 {
-                    /* We assume that first span is at origin of text
-                    block. This assumes left-to-right text. */
-                    double rotate0 = rotate;
-                    const matrix_t* ctm0 = ctm;
-                    point_t origin =
-                    {
-                            paragraph->lines[0]->spans[0]->chars[0].x,
-                            paragraph->lines[0]->spans[0]->chars[0].y
-                    };
-                    matrix_t ctm_inverse = {1, 0, 0, 1, 0, 0};
-                    double ctm_det = ctm->a*ctm->d - ctm->b*ctm->c;
-                    if (ctm_det != 0)
-                    {
-                        ctm_inverse.a = +ctm->d / ctm_det;
-                        ctm_inverse.b = -ctm->b / ctm_det;
-                        ctm_inverse.c = -ctm->c / ctm_det;
-                        ctm_inverse.d = +ctm->a / ctm_det;
-                    }
-                    else
-                    {
-                        outf("cannot invert ctm=(%f %f %f %f)",
-                                ctm->a, ctm->b, ctm->c, ctm->d);
-                    }
-
-                    for (p=p0; p<page->paragraphs_num; ++p)
-                    {
-                        paragraph = page->paragraphs[p];
-                        ctm = &paragraph->lines[0]->spans[0]->ctm;
-                        rotate = atan2(ctm->b, ctm->a);
-                        if (rotate != rotate0)
-                        {
-                            break;
-                        }
-
-                        /* Update <extent>. */
-                        {
-                            int l;
-                            for (l=0; l<paragraph->lines_num; ++l)
-                            {
-                                line_t* line = paragraph->lines[l];
-                                span_t* span = line_span_last(line);
-                                char_t* char_ = span_char_last(span);
-                                double adv = char_->adv * matrix_expansion(span->trm);
-                                double x = char_->x + adv * cos(rotate);
-                                double y = char_->y + adv * sin(rotate);
-
-                                double dx = x - origin.x;
-                                double dy = y - origin.y;
-
-                                /* Position relative to origin and before box rotation. */
-                                double xx = ctm_inverse.a * dx + ctm_inverse.b * dy;
-                                double yy = ctm_inverse.c * dx + ctm_inverse.d * dy;
-                                yy = -yy;
-                                if (xx > extent.x) extent.x = xx;
-                                if (yy > extent.y) extent.y = yy;
-                                if (0) outf("rotate=%f p=%i: origin=(%f %f) xy=(%f %f) dxy=(%f %f) xxyy=(%f %f) span: %s",
-                                        rotate, p, origin.x, origin.y, x, y, dx, dy, xx, yy, span_string(alloc, span));
-                            }
-                        }
-                    }
-                    p1 = p;
-                    rotate = rotate0;
-                    ctm = ctm0;
-                    outf("rotate=%f p0=%i p1=%i. extent is: (%f %f)",
-                            rotate, p0, p1, extent.x, extent.y);
+                    /* Extra vertical space between paragraphs that were at
+                    different angles in the original document. */
+                    if (s_odt_append_empty_paragraph(alloc, content, styles)) goto end;
                 }
-                
-                /* Paragraphs p0..p1-1 have same rotation. We output them into
-                a single rotated text box. */
-                
-                /* We need unique id for text box. */
-                text_box_id += 1;
-                
-                if (extract_document_output_rotated_paragraphs(
-                        alloc,
-                        page,
-                        p0,
-                        p1,
-                        rotate,
-                        ctm->e,
-                        ctm->f,
-                        extent.x,
-                        extent.y,
-                        text_box_id,
-                        content,
-                        styles,
-                        &state
-                        )) goto end;
-                p = p1 - 1;
+
+                if (spacing)
+                {
+                    /* Extra vertical space between paragraphs. */
+                    if (s_odt_append_empty_paragraph(alloc, content, styles)) goto end;
+                }
+
+                if (rotation && rotate != 0)
+                {
+                    if (s_odt_append_rotated_paragraphs(alloc, page, &content_state, &p, &text_box_id, ctm, rotate, content, styles)) goto end;
+                }
+                else
+                {
+                    if (s_document_to_odt_content_paragraph(alloc, &content_state, paragraph, content, styles)) goto end;
+                }
+                p += 1;
             }
-            else
+            else if (table)
             {
-                if (extract_document_to_odt_content_paragraph(alloc, &state, paragraph, content, styles)) goto end;
+                if (s_odt_append_table(alloc, table, content, styles)) goto end;
+                t += 1;
             }
-        
         }
         
         outf("images=%i", images);
@@ -604,7 +704,7 @@ int extract_document_to_odt_content(
             outf("page->images_num=%i", page->images_num);
             for (i=0; i<page->images_num; ++i)
             {
-                extract_document_append_image(alloc, content, &page->images[i]);
+                s_odt_append_image(alloc, content, &page->images[i]);
             }
         }
     }
@@ -658,26 +758,39 @@ int extract_odt_content_item(
         char* text_intermediate = NULL;
         extract_astring_t   styles_definitions = {0};
 
+        /* Insert content before '</office:text>'. */
         if (extract_content_insert(
                 alloc,
                 text,
                 NULL /*single*/,
-                NULL,
-                "</office:text>",
+                NULL /*mid_begin_name*/,
+                "</office:text>" /*mid_end_name*/,
                 contentss,
                 contentss_num,
                 &text_intermediate
                 )) goto end;
         outf("text_intermediate: %s", text_intermediate);
         
-        if (extract_odt_styles_definitions(alloc, styles, &styles_definitions)) goto end;
+        /* Convert <styles> to text. */
+        if (s_odt_styles_definitions(alloc, styles, &styles_definitions)) goto end;
         
+        /* To make tables work, we seem to need to specify table and column
+        styles, and these can be empty. todo: maybe specify exact sizes based
+        on the pdf table and cell dimensions. */
+        if (extract_astring_cat(alloc, &styles_definitions,
+                "\n"
+                "<style:style style:name=\"extract.table\" style:family=\"table\"/>\n"
+                "<style:style style:name=\"extract.table.column\" style:family=\"table-column\"/>\n"
+                )) goto end;
+        
+        /* Replace '<office:automatic-styles/>' with text from
+        <styles_definitions>. */
         e = extract_content_insert(
                 alloc,
                 text_intermediate,
                 "<office:automatic-styles/>" /*single*/,
-                NULL,
-                NULL, //"</office:automatic-styles>",
+                NULL /*mid_begin_name*/,
+                NULL /*mid_end_name*/,
                 &styles_definitions,
                 1,
                 text2
@@ -719,14 +832,14 @@ int extract_odt_content_item(
     }
     e = 0;
     end:
-    outf("e=%i errno=%i text2=%s", e, errno, text2);
+    outf("e=%i errno=%i text2=%s", e, errno, text2 ? *text2 : "");
     if (e)
     {
         /* We might have set <text2> to new content. */
         extract_free(alloc, text2);
         /* We might have used <temp> as a temporary buffer. */
-        extract_astring_free(alloc, &temp);
     }
+    extract_astring_free(alloc, &temp);
     extract_astring_init(&temp);
     return e;
 }
@@ -747,7 +860,6 @@ int extract_odt_write_template(
     int     e = -1;
     int     i;
     char*   path_tempdir = NULL;
-    FILE*   f = NULL;
     char*   path = NULL;
     char*   text = NULL;
     char*   text2 = NULL;
@@ -827,7 +939,6 @@ int extract_odt_write_template(
     }
 
     /* Copy images into <path_tempdir>/Pictures/. */
-    outf("");
     extract_free(alloc, &path);
     if (extract_asprintf(alloc, &path, "%s/Pictures", path_tempdir) < 0) goto end;
     if (extract_mkdir(path, 0777))
@@ -835,7 +946,6 @@ int extract_odt_write_template(
         outf("Failed to mkdir %s", path);
         goto end;
     }
-    outf("");
     for (i=0; i<images->images_num; ++i)
     {
         image_t* image = &images->images[i];
@@ -869,8 +979,6 @@ int extract_odt_write_template(
     extract_free(alloc, &path);
     extract_free(alloc, &text);
     extract_free(alloc, &text2);
-    //extract_odt_styles_free(alloc, &styles);
-    if (f)  fclose(f);
 
     if (e)
     {

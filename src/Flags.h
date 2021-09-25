@@ -43,6 +43,7 @@ struct Flags {
     // -new-window, if true and we're using tabs, opens
     // the document in new window
     bool inNewWindow{false};
+    WCHAR* search{nullptr};
 
     // stress-testing related
     WCHAR* stressTestPath{nullptr};
@@ -76,6 +77,7 @@ struct Flags {
     bool registerAsDefault{false};
     bool log{false};
 
+    // for internal use
     WCHAR* updateSelfTo{nullptr};
     WCHAR* deleteFile{nullptr};
 

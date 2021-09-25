@@ -1,6 +1,12 @@
 #ifndef ARTIFEX_EXTRACT_BUFFER_H
 #define ARTIFEX_EXTRACT_BUFFER_H
 
+/* Reading and writing abstractions.
+
+We use inline code in the common case where reading or writing can be satisfied
+using a cache.
+*/
+
 #include "extract_alloc.h"
 
 #include <stddef.h>
@@ -9,12 +15,6 @@
 #ifdef _MSC_VER
     #include "extract_compat_inline.h"
 #endif
-
-/* Reading and writing abstractions.
-
-We use inline code in the common case where reading or writing can be satisfied
-using a cache.
-*/
 
 
 typedef struct extract_buffer_t extract_buffer_t;
@@ -27,10 +27,10 @@ static inline int extract_buffer_read(
         size_t              numbytes,
         size_t*             o_actual
         );
-/* Reads specified number of bytes from buffer into data..+bytes, making multiple calls to
-the underlying extract_buffer_fn_read function until we have read <numbytes> or reached
-EOF. If we reach EOF, . Returns +1 if
-short read due to EOF.
+/* Reads specified number of bytes from buffer into data..+bytes, making
+multiple calls to the underlying extract_buffer_fn_read function until we have
+read <numbytes> or reached EOF. If we reach EOF, . Returns +1 if short read due
+to EOF.
 
 buffer:
     As returned by earlier call to extract_buffer_open().

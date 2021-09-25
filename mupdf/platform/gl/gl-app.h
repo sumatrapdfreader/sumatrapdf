@@ -312,5 +312,6 @@ int do_sign(void);
 void trace_action(const char *fmt, ...);
 void trace_page_update(void);
 void trace_save_snapshot(void);
+const char *format_date(int64_t secs);
 
 #endif

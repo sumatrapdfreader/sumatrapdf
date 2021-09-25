@@ -712,7 +712,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
 
     mupdf.flush_warnings()
 
-    if cookie.get_errors():
+    if cookie.errors():
         state.errored = 1
 
 

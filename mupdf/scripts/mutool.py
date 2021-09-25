@@ -108,8 +108,6 @@ def clean(argv):
     if argv and '.pdf' in argv[0].lower():
         outfile = argv.pop(0)
 
-    print( str((infile, outfile, password, opts, argv)))
-    print( f'argv={argv} len(argv)={len(argv)}')
     try:
         mupdf.ppdf_clean_file(infile, outfile, password, opts, argv)
     except Exception as e:

@@ -19,16 +19,14 @@ void extract_bzero(void *b, size_t len)
 int extract_vasprintf(extract_alloc_t* alloc, char** out, const char* format, va_list va)
 {
     int n;
-    int n2;
     va_list va2;
     va_copy(va2, va);
     n = vsnprintf(NULL, 0, format, va);
     if (n < 0) return n;
     if (extract_malloc(alloc, out, n + 1)) return -1;
-    n2 = vsnprintf(*out, n + 1, format, va2);
+    vsnprintf(*out, n + 1, format, va2);
     va_end(va2);
-    assert(n2 == n);
-    return n2;
+    return 0;
 }
 
 

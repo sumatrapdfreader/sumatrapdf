@@ -108,7 +108,7 @@ pdf_add_font_file(fz_context *ctx, pdf_document *doc, fz_font *font)
 			if (FT_Get_Sfnt_Table(font->ft_face, FT_SFNT_HEAD))
 				pdf_dict_put(ctx, obj, PDF_NAME(Subtype), PDF_NAME(OpenType));
 			else
-				pdf_dict_put(ctx, obj, PDF_NAME(Subtype), PDF_NAME(Type1C));
+				pdf_dict_put(ctx, obj, PDF_NAME(Subtype), PDF_NAME(CIDFontType0C));
 			break;
 		}
 		ref = pdf_add_object(ctx, doc, obj);

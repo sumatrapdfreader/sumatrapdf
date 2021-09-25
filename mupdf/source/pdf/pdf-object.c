@@ -26,7 +26,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #define PDF_MAKE_NAME(STRING,NAME) STRING,
 static const char *PDF_NAME_LIST[] = {
@@ -1638,19 +1637,12 @@ pdf_obj *pdf_new_matrix(fz_context *ctx, pdf_document *doc, fz_matrix mtx)
 	return arr;
 }
 
+
 pdf_obj *pdf_new_date(fz_context *ctx, pdf_document *doc, int64_t time)
 {
 	char s[40];
-	time_t secs = time;
-#ifdef _POSIX_SOURCE
-	struct tm tmbuf, *tm = gmtime_r(&secs, &tmbuf);
-#else
-	struct tm *tm = gmtime(&secs);
-#endif
-
-	if (time < 0 || !tm || !strftime(s, nelem(s), "D:%Y%m%d%H%M%SZ", tm))
+	if (!pdf_format_date(ctx, time, s, nelem(s)))
 		return NULL;
-
 	return pdf_new_string(ctx, s, strlen(s));
 }
 

@@ -1,8 +1,48 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-09-23 Thu
+
+- implement 'search' cmd-line flag (fixes #2167)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2167
+  turned out to be quite simple
+
+2021-09-14 Tue
+
+- fix external viewers for file paths with space in them (fixes #2163)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2163
+  was caused by refactoring
+
+2021-09-12 Sun
+
+- add advanced setting annotations.defaultAuthor (fixes #2160)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2160
+
+2021-09-02 Thu
+
+- fix crash processing
+
+2021-09-01 Wed
+
+- do not flick to next page when it can be scrolled
+- allow flicking pages while zoomed in
+- fix page not being deleted
+- add auto-crop(fit content) for images
+- refactoring do\ 
+
+2021-08-31 Tue
+
+- implement MultiFormatArchive.loadOnOpen for .zip files
+- enable ctrl-d (show fonts) in properties window in all builds (for #350)
+- speed up opening .cbr files (especially visible on slow network drives)
+
+2021-08-30 Mon
+
+- refactor printing a bit
+
 2021-08-27 Fri
 
 - change MultiFormatArchive::OpenUnrarFallback to use RAR_OM_LIST instead of RAR_OM_EXTRACT (seems faster)
+- less using Gdiplus::
 
 2021-08-26 Thu
 
