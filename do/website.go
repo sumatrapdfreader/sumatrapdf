@@ -11,9 +11,13 @@ import (
 )
 
 func websiteRunLocally(dir string) {
-	// using https://github.com/netlify/cli
-	cmd := exec.Command("netlify", "dev", "--dir", dir)
-	runCmdLoggedMust(cmd)
+	serve := NewDirHandler(dir, "/", nil)
+	server := &ServerConfig{
+		Handlers:  []Handler{serve},
+		CleanURLS: true,
+	}
+	waitSignal := StartServer(server)
+	waitSignal()
 }
 
 func fileDownload(uri string, dstPath string) error {

@@ -762,7 +762,7 @@ func filterDeletedCrashes() {
 	logf(ctx(), "filterDeletedCrashes: filtered %d\n", nFiltered)
 }
 
-// to avoid uploading too much to netlify, we filter
+// to avoid uploading too much, we filter
 // crashes from 3.2 etc. that are 256kb or more in size
 func filterBigCrashes() {
 	nFiltered := 0
