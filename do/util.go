@@ -41,6 +41,10 @@ func logf(ctx context.Context, s string, arg ...interface{}) {
 	fmt.Print(s)
 }
 
+func isWindows() bool {
+	return strings.Contains(runtime.GOOS, "windows")
+}
+
 func absPathMust(path string) string {
 	res, err := filepath.Abs(path)
 	must(err)
