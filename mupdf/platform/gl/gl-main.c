@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <time.h>
 #ifdef _MSC_VER
 #define stat _stat
 #endif
@@ -2168,6 +2169,30 @@ static char *short_signature_error_desc(pdf_signature_error err)
 	}
 }
 
+const char *format_date(int64_t secs)
+{
+	static char buf[100];
+#ifdef _POSIX_SOURCE
+	struct tm tmbuf, *tm;
+#else
+	struct tm *tm;
+#endif
+
+	if (secs <= 0)
+		return NULL;
+
+#ifdef _POSIX_SOURCE
+	tm = gmtime_r(&secs, &tmbuf);
+#else
+	tm = gmtime(&secs);
+#endif
+	if (!tm)
+		return NULL;
+
+	strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", tm);
+	return buf;
+}
+
 static void do_info(void)
 {
 	char buf[100];
@@ -2182,7 +2207,7 @@ static void do_info(void)
 		pdf_walk_tree(ctx, form_fields, PDF_NAME(Kids), process_sigs, NULL, &list, &ft_list[0], &ft);
 	}
 
-	ui_dialog_begin(ui.gridsize*20, (14+list.len) * ui.lineheight);
+	ui_dialog_begin(ui.gridsize*20, (15+list.len) * ui.lineheight);
 	ui_layout(T, X, W, 0, 0);
 
 	if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_TITLE, buf, sizeof buf) > 0)
@@ -2201,6 +2226,22 @@ static void do_info(void)
 			ui_label("PDF Creator: %s", buf);
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_PRODUCER, buf, sizeof buf) > 0)
 			ui_label("PDF Producer: %s", buf);
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_SUBJECT, buf, sizeof buf) > 0)
+			ui_label("Subject: %s", buf);
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_KEYWORDS, buf, sizeof buf) > 0)
+			ui_label("Keywords: %s", buf);
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_CREATIONDATE, buf, sizeof buf) > 0)
+		{
+			const char *s = format_date(pdf_parse_date(ctx, buf));
+			if (s)
+				ui_label("Creation date: %s", s);
+		}
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_MODIFICATIONDATE, buf, sizeof buf) > 0)
+		{
+			const char *s = format_date(pdf_parse_date(ctx, buf));
+			if (s)
+				ui_label("Modification date: %s", s);
+		}
 		buf[0] = 0;
 		if (fz_has_permission(ctx, doc, FZ_PERMISSION_PRINT))
 			fz_strlcat(buf, "print, ", sizeof buf);

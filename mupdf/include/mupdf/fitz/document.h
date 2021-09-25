@@ -183,10 +183,17 @@ typedef fz_page *(fz_document_load_page_fn)(fz_context *ctx, fz_document *doc, i
 
 /**
 	Type for a function to query
-	a documents metadata. See fz_lookup_metadata for more
+	a document's metadata. See fz_lookup_metadata for more
 	information.
 */
 typedef int (fz_document_lookup_metadata_fn)(fz_context *ctx, fz_document *doc, const char *key, char *buf, int size);
+
+/**
+	Type for a function to set
+	a document's metadata. See fz_set_metadata for more
+	information.
+*/
+typedef int (fz_document_set_metadata_fn)(fz_context *ctx, fz_document *doc, const char *key, const char *value);
 
 /**
 	Return output intent color space if it exists
@@ -755,10 +762,16 @@ int fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char 
 #define FZ_META_FORMAT "format"
 #define FZ_META_ENCRYPTION "encryption"
 
-#define FZ_META_INFO_AUTHOR "info:Author"
 #define FZ_META_INFO_TITLE "info:Title"
+#define FZ_META_INFO_AUTHOR "info:Author"
+#define FZ_META_INFO_SUBJECT "info:Subject"
+#define FZ_META_INFO_KEYWORDS "info:Keywords"
 #define FZ_META_INFO_CREATOR "info:Creator"
 #define FZ_META_INFO_PRODUCER "info:Producer"
+#define FZ_META_INFO_CREATIONDATE "info:CreationDate"
+#define FZ_META_INFO_MODIFICATIONDATE "info:ModDate"
+
+void fz_set_metadata(fz_context *ctx, fz_document *doc, const char *key, const char *value);
 
 /**
 	Find the output intent colorspace if the document has defined
@@ -853,6 +866,7 @@ struct fz_document
 	fz_document_count_pages_fn *count_pages;
 	fz_document_load_page_fn *load_page;
 	fz_document_lookup_metadata_fn *lookup_metadata;
+	fz_document_set_metadata_fn *set_metadata;
 	fz_document_output_intent_fn *get_output_intent;
 	fz_document_output_accelerator_fn *output_accelerator;
 	int did_layout;

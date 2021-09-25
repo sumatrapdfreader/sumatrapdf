@@ -32,6 +32,12 @@ public class Document
 	public static final String META_ENCRYPTION = "encryption";
 	public static final String META_INFO_AUTHOR = "info:Author";
 	public static final String META_INFO_TITLE = "info:Title";
+	public static final String META_INFO_SUBJECT = "info:Subject";
+	public static final String META_INFO_KEYWORDS = "info:Keywords";
+	public static final String META_INFO_CREATOR = "info:Creator";
+	public static final String META_INFO_PRODUCER = "info:Producer";
+	public static final String META_INFO_CREATIONDATE = "info:CreationDate";
+	public static final String META_INFO_MODIFICATIONDATE = "info:ModDate";
 
 	protected long pointer;
 
@@ -197,6 +203,7 @@ public class Document
 
 	public native Outline[] loadOutline();
 	public native String getMetaData(String key);
+	public native void setMetaData(String key, String value);
 	public native boolean isReflowable();
 	public native void layout(float width, float height, float em);
 

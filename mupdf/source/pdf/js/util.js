@@ -841,6 +841,29 @@ function AFRange_Validate(lowerCheck, lowerLimit, upperCheck, upperLimit) {
 	}
 }
 
+// Create Doc.info proxy object.
+function mupdf_createInfoProxy(doc) {
+        doc.info = {
+                get Title() { return doc.title; },
+                set Title(value) { doc.title = value; },
+                get Author() { return doc.author; },
+                set Author(value) { doc.author = value; },
+                get Subject() { return doc.subject; },
+                set Subject(value) { doc.subject = value; },
+                get Keywords() { return doc.keywords; },
+                set Keywords(value) { doc.keywords = value; },
+                get Creator() { return doc.creator; },
+                set Creator(value) { doc.creator = value; },
+                get Producer() { return doc.producer; },
+                set Producer(value) { doc.producer = value; },
+                get CreationDate() { return doc.creationDate; },
+                set CreationDate(value) { doc.creationDate = value; },
+                get ModDate() { return doc.modDate; },
+                set ModDate(value) { doc.modDate = value; },
+        };
+}
+mupdf_createInfoProxy(global);
+
 /* Compatibility ECMAScript functions */
 String.prototype.substr = function (start, length) {
 	if (start < 0)

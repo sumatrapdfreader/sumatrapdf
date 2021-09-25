@@ -612,6 +612,14 @@ JNIEXPORT jstring JNICALL Java_com_artifex_mupdf_fitz_Document_getMetaData
 
 /*
  * Class:     com_artifex_mupdf_fitz_Document
+ * Method:    setMetaData
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Document_setMetaData
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Document
  * Method:    isReflowable
  * Signature: ()Z
  */

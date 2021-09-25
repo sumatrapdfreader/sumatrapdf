@@ -319,4 +319,7 @@ void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
 /* Internal call as part of creating objects. */
 void pdf_add_journal_fragment(fz_context *ctx, pdf_document *doc, int parent, pdf_obj *copy, fz_buffer *copy_stream, int newobj);
 
+char *pdf_format_date(fz_context *ctx, int64_t time, char *s, size_t n);
+int64_t pdf_parse_date(fz_context *ctx, const char *s);
+
 #endif
