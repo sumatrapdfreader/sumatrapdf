@@ -22,6 +22,9 @@ RenderedBitmap::~RenderedBitmap() {
     if (IsValidHandle(hbmp)) {
         DeleteObject(hbmp);
     }
+    if (IsValidHandle(hMap)) {
+        CloseHandle(hMap);
+    }
 }
 
 RenderedBitmap* RenderedBitmap::Clone() const {
