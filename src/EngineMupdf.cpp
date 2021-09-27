@@ -11,6 +11,7 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
@@ -26,6 +27,8 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineMupdfImpl.h"
 #include "EngineAll.h"
+#include "EbookBase.h"
+#include "EbookDoc.h"
 
 #include "utils/Log.h"
 
@@ -1444,7 +1447,7 @@ struct PageTreeStackItem {
     int next_page_no = 0;
 
     PageTreeStackItem() = default;
-    ;
+
     explicit PageTreeStackItem(fz_context* ctx, pdf_obj* kids, int next_page_no = 0) {
         this->kids = kids;
         this->len = pdf_array_len(ctx, kids);
@@ -1697,10 +1700,6 @@ static ByteSlice TxtFileToHTML(const WCHAR* path) {
 </html>)");
     return d.StealAsView();
 }
-
-#include "utils/GdiPlusUtil.h"
-#include "EbookBase.h"
-#include "EbookDoc.h"
 
 static ByteSlice PalmDocToHTML(const WCHAR* path) {
     auto doc = PalmDoc::CreateFromFile(path);
