@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e6563029cf2ccd29542e24e9f6330b2da801e4bb
+69a5f64dc9b1c0487d66ac9273e4348cc59358e4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -421,6 +421,7 @@ kr:취소
 nl:&Annuleren
 pl:&Anuluj
 sk:&Zrušiť
+th:&ยกเลิก
 tr:İptal Et
 vn:&Hủy
 :&Caret
@@ -443,6 +444,7 @@ lv:&Norāde
 nl:&Merkteken
 pl:&Kareta
 ru:&Каретка
+th:&ผู้ดูแล
 tr:&Karet
 :&Close\tCtrl+W
 af:Maak Toe\tCtrl+W
@@ -530,6 +532,7 @@ kr:32비트 버전 설치를 계속합니다(&C)
 nl:&Doorgaan met installeren van 32bit versie
 pl:&Kontynuuj instalację wersji 32-bitowej
 sk:&Pokračovať v inštalácii 32-bitovej verzie
+th:&กำลังติดตั้งรุ่น 32-บิต ต่อไป
 tr:32 bit sürümü kurmayı &sürdür
 vn:&Tiếp tục cài đặt bản 32-bit
 :&Copy Selection \tCtrl-C
@@ -546,6 +549,7 @@ it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
 nl:&Kopieer selectie \tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
+th:&คัดลอกส่วนที่เลือก \tCtrl-C
 tr:Seçimi &Kopyala \tCtrl-C
 vn:&Sao chép \tCtrl-C
 :&Copy To Clipboard\tCtrl-C
@@ -562,6 +566,7 @@ it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
 nl:&Kopieer naar Klembord\tCtrl-C
 pl:&Kopiuj do schowka\tCtrl-C
+th:&คัดลอกไปยังคลิปบอร์ด\tCtrl-C
 tr:Panoya &Kopyala\tCtrl-C
 vn:&Sao chép vào Clipboard\tCtrl-C
 :&Discard changes
@@ -578,6 +583,7 @@ it:Scarica
 kr:무시(&D)
 nl:&Weggooien
 pl:O&drzuć zmiany
+th:&ละทิ้งการเปลี่ยนแปลง
 tr:&Görmezden Gel
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
@@ -1067,6 +1073,7 @@ my:&Teks Bebas
 nl:&Vrije Tekst
 pl:&Dowolny tekst
 sk:&Voľný text
+th:&ข้อความอิสระ
 tr:&Özgür Metin
 :&Go To
 af:&Gaan Na
@@ -1295,6 +1302,7 @@ lt:Pa&ryškinti
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
 pl:&Wyróżnienie\ta
+th:&เน้นสี\ta
 tr:&Vurgula\ta
 :&Last Page\tEnd
 af:Laaste Bladsy\tEnd
@@ -2519,6 +2527,7 @@ pl:&Usuń z historii
 ru:&Удалить из истории
 sk:&Odstrániť z histórie
 ta:வரலாற்றிலிருந்து நீக்கு 
+th:&ย้ายออกจากประวัติ
 tr:Geçmişten &Kaldır
 tw:从历史记录删除
 :&Save As...\tCtrl+S
@@ -2607,6 +2616,7 @@ kr:기존 PDF에 저장(&S)
 nl:&Opslaan in bestaande PDF
 pl:&Zapisz w istniejącym pliku PDF
 sk:&Uložiť do existujúceho PDF
+th:&บันทึกไปที่ PDF ที่เปิดอยู่
 tr:Var olan PDF'ye &kaydet
 :&Search With Google
 am:&Որոնել Google-ով
@@ -2622,6 +2632,7 @@ it:Cerca con Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
 sk:&Hľadať pomocou Google
+th:&ค้นหาด้วย Google
 tr:Google İle &Ara
 :&Settings
 am:&Կարգավորումներ
@@ -2830,6 +2841,7 @@ lt:&Antspaudas
 lv:&Zīmogs
 nl:&Stempel
 pl:Pie&częć
+th:&ประทับตรา
 tr:&Damga
 :&Strike Out
 am:&Ջնջած
@@ -2848,6 +2860,7 @@ lt:&Išbraukti
 lv:&Izsvītrot
 nl:&Doorhalen
 pl:&Skreślenie
+th:&ตีออก
 tr:&Üstünü Çiz
 :&Text
 am:&Գրվածք
@@ -2870,6 +2883,7 @@ my:&Teks
 nl:&Tekst
 pl:&Tekst
 ru:&Текст
+th:&ข้อความ
 tr:&Metin
 :&Theme
 am:&Ոճը
@@ -2942,6 +2956,7 @@ kr:Google로 번역(&T)
 nl:&Vertalen Met Google
 pl:&Tłumacz za pomocą Google
 sk:&Preložiť pomocou Google
+th:&แปลด้วย Google
 tr:Google İle &Çevir
 :&Underline
 am:&Ընդգծված
@@ -2961,6 +2976,7 @@ lt:Pa&braukti
 lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
+th:&ขีดเส้นใต้
 tr:&Altını Çiz
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
@@ -4029,6 +4045,7 @@ nl:Aantekeningen
 pl:Adnotacje
 ru:Аннотации
 sk:Anotácie
+th:อธิบายประกอบ
 tr:Notlar
 tw:評注
 vn:Ghi chú
@@ -4532,6 +4549,7 @@ lv:Fona krāsa:
 nl:Achtergrond Kleur
 pl:Kolor tła:
 sk:Farba pozadia:
+th:สีพื้นหลัง
 tr:Arka Plan Rengi
 vn:Màu nền
 :Book View
@@ -5357,6 +5375,7 @@ it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
 nl:Controleer op Update...
 pl:Szukanie aktualizacji...
+th:ตรวจสอบการอัพเดท
 tr:Güncelleme denetleniyor...
 vn:Kiểm tra bản cập nhật mới...
 :Circle
@@ -5391,6 +5410,7 @@ pl:Okrąg
 ru:Круг
 sk:Kruh
 ta:வட்டம்
+th:วงกลม
 tr:Çember
 tw:圆
 vn:Vòng tròn
@@ -5527,6 +5547,7 @@ nl:Kleur
 pl:Kolor:
 ru:Цвет:
 sk:Farba:
+th:สี:
 tr:Renk:
 vn:Màu:
 :Comic books
@@ -6401,6 +6422,7 @@ es:No se ha podido encontrar el nombre de la impresora
 it:Impossibile ottenere il nome della stampante
 nl:Kan de naam van de printer niet vinden
 pl:Nie można uzyskać nazwy drukarki
+th:ไม่ได้รับชื่อเครื่องพิมพ์
 tr:Yazıcı adı alınamadı
 :Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
@@ -6814,6 +6836,7 @@ my:Tidak dapat membuang penapis carian Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 ru:Не удалось удалить фильтр поиска Sumatra
+th:ไม่สามารถถอนการติดตั้งตัวกรองการค้นหา Sumatra
 tr:Sumatra arama süzgeci kaldırılamadı
 tw:無法卸除 Sumatra 搜索過濾器
 vn:Không thể gỡ cài đặt bộ lọc tìm kiếm Sumatra
@@ -6957,6 +6980,7 @@ it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
 nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
+th:สร้างคำอธิบายประกอบ &​ใต้ตัวชี้ตำแหน่ง
 tr:İmlecin &Altına Not Oluştur
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
@@ -6977,6 +7001,7 @@ lt:Sukurti anotaciją iš pažymėtos vietos
 lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
+th:สร้างคำอธิบายประกอบจากส่วนที่เลือก
 tr:Seçimden Not Oluştur
 :Created:
 af:Geskep
@@ -7761,6 +7786,7 @@ it:Non installare
 kr:설치하지 마십시오
 nl:Niet installeren
 pl:Nie instaluj
+th:ติดตั้งไม่ได้
 tr:Kurma
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
@@ -7777,6 +7803,7 @@ kr:64비트 버전 다운로드
 nl:Download 64bit versie
 pl:Pobierz wersję 64-bitową
 sk:Stiahnuť 64-bitovú verziu
+th:ดาวน์โหลดรุ่น 64 บิต
 tr:64 bit sürümü indir
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
@@ -7808,6 +7835,7 @@ nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
 ru:&Выйти из полноэкранного режима
 ta:முழுத்திரை வெளியேறு 
+th:&ออกจากโหมดเต็มหน้าจอ
 tr:Tam Ekrandan &Çık
 tw:結束全螢幕模式(&X)
 vn:Thoát khỏi chế độ Toàn màn hình
@@ -7977,6 +8005,7 @@ lv:Rediģēt anotācijas
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
+th:ปรับแต่งคำอธิบายประกอบ
 tr:Notları Düzenle
 tw:編輯評注
 :Enter password
@@ -9213,6 +9242,7 @@ lv:Faila pielikums
 nl:Bestands Bijlage
 pl:Załącznik
 ru:Вложенный файл
+th:แนบไฟล์
 tr:Dosya Eki
 tw:檔案附件
 vn:Tệp đính kèm
@@ -10923,6 +10953,7 @@ pl:Obrazy
 ru:Изображения
 sk:Obrázky
 ta:படங்கள் 
+th:รูปภาพ
 tr:Resimler
 tw:圖片
 :Ink
@@ -10955,6 +10986,7 @@ no:Blekk
 pl:Atrament
 ru:Чернила
 ta:மை 
+th:น้ำหมึก
 tr:Mürekkep
 tw:墨迹
 :Install SumatraPDF
@@ -11098,6 +11130,7 @@ it:Installa e ri-esegui
 kr:설치 후 재실행
 nl:Installeren + opnieuw starten
 pl:Zainstaluj i uruchom ponownie
+th:ติดตั้ง และ เรียกใช้งาน
 tr:Kur ve yeniden başlat
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
@@ -11239,6 +11272,7 @@ it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
 nl:32bit SumatraPDF installeren op 64bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
+th:กำลังติดตั้ง SumatraPDF รุ่น 32 บิต บนระบบปฏิบัติการ 64 บิต
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruluyor
 :KB
 af:KB
@@ -11519,6 +11553,7 @@ no:Linje
 pl:Linia
 ru:Линия
 ta:கோடு 
+th:ไลน์
 tr:Çizgi
 tw:線條
 :MB
@@ -12049,6 +12084,7 @@ kr:새 버전이 있습니다
 nl:Nieuwe versie beschikbaar
 pl:Dostępna nowa wersja
 sk:Dostupná nová verzia
+th:มีรุ่นใหม่พร้อมให้บริการ
 tr:Yeni sürüm var
 :Next Page
 af:Volgende Bladsy
@@ -12680,6 +12716,7 @@ lv:Atvērt iegultu PDF
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
 ru:Открыть вложенный PDF
+th:เปิด PDF ฝังรหัส
 tr:Gömülü PDF Aç
 tw:開啟內嵌的 PDF
 :Open a document...
@@ -14070,6 +14107,7 @@ nl:Poly Regel
 pl:Polilinia
 ru:Ломаная
 ta:பலகோடு 
+th:โพลีไลน์
 tr:Çoklu Çizgi
 tw:多線條
 :Polygon
@@ -14102,6 +14140,7 @@ nl:Veelhoek
 pl:Wielokąt
 ru:Многоугольник
 ta:பலகோணம் 
+th:รูปหลายเหลี่ยม
 tr:Çokgen
 tw:多邊形
 :Postscript documents
@@ -14900,6 +14939,7 @@ lv:Rediģēt
 nl:Redigeren
 pl:Redaguj
 ta:திருத்தஞ்செய் 
+th:แก้ไขข้อความ
 tr:Gözden Geçir
 tw:编辑
 :Remember &opened files
@@ -15314,6 +15354,7 @@ it:S&elezione
 kr:선택(&e)
 nl:S&electie
 pl:Z&aznaczenie
+th:&การเลือก
 tr:S&eçim
 :S&quiggly
 am:Ա&լիքավոր
@@ -15333,6 +15374,7 @@ lt:Pabraukti &vingiuota linija
 lv:&Viļņaina
 nl:Kr&onkelig
 pl:&Falowanie
+th:S&ยุ่งเหยิง
 tr:&Kıvrımlı
 :SVG documents
 am:SVG փաստաթղթեր
@@ -15347,6 +15389,7 @@ es:Documentos SVG
 it:Documenti SVG
 nl:SVG Documenten
 pl:Documenty SVG
+th:เอกสาร SVG
 tr:SVG belgeleri
 :Save Annotations
 am:Պահել ծանոթագրությունը
@@ -15414,6 +15457,7 @@ lv:Saglabāt iegultu failu
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
 ru:Сохранить вложенный файл...
+th:บันทึกไฟล์ฝังรหัส... 
 tr:Gömülü Dosyayı Kaydet...
 tw:儲存內嵌的檔案...
 :Save S&hortcut...\tCtrl+Shift+S
@@ -15492,6 +15536,7 @@ it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
 nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
+th:บันทึกคำอธิบายประกอบหรือไม่
 tr:Notlar kaydedilsin mi?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
@@ -15514,6 +15559,7 @@ nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
 ru:Сохранить изменения в новый PDF
 sk:Uloženie zmien do nového PDF
+th:บันทึกการเปลี่ยนแปลงเป็น PDF ใหม่
 tr:Değişiklikleri yeni PDF'ye kaydet
 :Save changes to existing PDF
 am:Պահել փոփոխությունները առկա PDF-ում
@@ -15535,6 +15581,7 @@ lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
+th:บันทึกการเปลี่ยนแปลงไปยัง PDF ที่เปิดอยู่
 tr:Değişiklikleri var olan PDF'ye kaydet
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
@@ -15551,6 +15598,7 @@ kr:새(&n) PDF에 저장하기
 nl:Opslaan in &nieuwe PDF
 pl:Zapisz w &nowym pliku PDF
 sk:Uložiť do &nového PDF
+th:บันทึกไปที่ &​PDF ใหม่
 tr:&Yeni PDF'ye kaydet
 :Search With &Bing
 am:Որոնել &Bing-ով
@@ -15567,6 +15615,7 @@ kr:Bing으로 검색(&B)
 nl:Zoeken Met &Bing
 pl:Szukaj za pomocą &Bing
 sk:Vyhľadávanie pomocou &Bing
+th:ค้นหาด้วย &​Bing
 tr:&Bing İle Ara
 :Search With &Google
 am:Որոնել &Google-ով
@@ -15583,6 +15632,7 @@ kr:Google로 검색(&G)
 nl:Zoeken Met &Google
 pl:Szukaj za pomocą &Google
 sk:Hľadať pomocou &Google
+th:ค้นหาด้วย &​Google
 tr:&Google İle Ara
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
@@ -15728,6 +15778,7 @@ lt:Pasirinkti anotaciją redaktoriuje
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
+th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
 tr:Düzenleyicide Not Seç
 :Select content with Ctrl+left mouse button
 am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
@@ -16218,6 +16269,7 @@ nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
 ru:&Показать ползунки
 ta:உருட்பட்டைகளை காண்பி 
+th:แสดงผล &​แถบเลื่อน
 tr:&Kaydırma Çubuklarını Göster
 tw:顯示捲軸(&S)
 vn:Hiện &Thanh cuộn
@@ -16420,6 +16472,7 @@ nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
 ru:Показать пол&зунки
 ta:உருட்பட்டைகளை காண்பி 
+th:&แสดงแถบเลื่อน
 tr:Kaydırma Ç&ubuklarını Göster
 tw:顯示捲軸(&O)
 :Show frequently read
@@ -16672,6 +16725,7 @@ it:Salta questa versione
 kr:이 버전 건너뛰기
 nl:Sla deze versie over
 pl:Pomiń tę wersję
+th:ข้ามรุ่นนี้
 tr:Bu sürümü atla
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
@@ -16830,6 +16884,7 @@ nl:Vierkant
 pl:Kwadrat
 ru:Квадрат
 ta:நாற்கரம் 
+th:สี่เหลี่ยม
 tr:Kare
 tw:矩形
 :Start SumatraPDF
@@ -17557,6 +17612,7 @@ nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
 ru:Поддержать SumatraPDF
 sk:Podpora SumatraPDF
+th:สนับสนุน SumatraPDF
 tr:SumatraPDF'yi Destekle
 tw:支持 SumatraPDF
 vn:Hỗ trợ SumatraPDF
@@ -18079,6 +18135,7 @@ kr:DeepL로 번역(&D)
 nl:Vertalen Met &Deepl
 pl:Tłumacz za pomocą &DeepL
 sk:Preložiť pomocou &DeepL
+th:แปลด้วย &​DeepL
 tr:&DeepL İle Çevir
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
@@ -18347,6 +18404,7 @@ lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
+th:ไม่ได้บันทึกคำอธิบายประกอบ
 tr:Kaydedilmemiş notlar
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
@@ -18361,6 +18419,7 @@ es:Anotaciones sin guardar en «%s»
 it:Annotazioni non salvate in '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
+th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
 tr:'%s' içinde kaydedilmemiş notlar
 :Use &tabs
 am:Ավելացնել &ներդիրներ
@@ -18843,6 +18902,7 @@ lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
+th:คุณไม่ได้บันทึกคำอธิบายประกอบ
 tr:Kaydedilmemiş notlarınız var
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
@@ -18857,6 +18917,7 @@ es:Esta es la versión «%s» y ya está disponible la versión «%s».\N¿Quier
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
+th:คุณมีรุ่น '%s'​ และรุ่น '%s'​ ใช่ได้ \nคุณต้องการจะติดตั้งรุ่นใหม่หรือไม่
 tr:'%s' sürümünüz var ve '%s' sürümü kullanılabilir.\nYeni sürümü kurmak ister misiniz?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
@@ -18871,6 +18932,7 @@ es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n�
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
+th:คุณกำลังติดตั้ง SumatraPDF รุ่น 32-บิต บนระบปฏิบัติการ 64-บิต.\nคุณต้องการดาวน์โหลดหรือไม่\nรุ่น 64-บิต
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruyorsunuz.\n64 bit sürümü indirmek\nister misiniz?
 :Zoom
 am:Դիտափոխել
