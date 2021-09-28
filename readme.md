@@ -7,11 +7,11 @@ for Windows under (A)GPLv3 license, with some code under BSD license (see
 AUTHORS).
 
 More information:
-* [main website](https://www.sumatrapdfreader.org) with downloads and documentation
+* [main website](https://www.sumatrapdfreader.org/free-pdf-reader) with downloads and documentation
 * [manual](https://www.sumatrapdfreader.org/manual.html)
-* [all other docs](https://www.sumatrapdfreader.org/docs/SumatraPDF-documentation-fed36a5624d443fe9f7be0e410ecd715.html)
+* [all other docs](https://www.sumatrapdfreader.org/docs/SumatraPDF-documentation)
 
-To compile you need Visual Studio 2019 16.6 or later. [Free Community edition](https://www.visualstudio.com/vs/community/) works.
+To compile you need latest Visual Studio 2022 or 2019. [Free Community edition](https://www.visualstudio.com/vs/community/) works.
 
 Open `vs2019/SumatraPDF.sln` and hit F5 to compile and run.
 
@@ -19,7 +19,7 @@ For best results use the latest release available as that's what I use and test 
 If things don't compile, first make sure you're using the latest version of Visual Studio.
 
 Notes on targets:
-* `x32_asan` target is for enabling address sanitizer, only works in 32-bit Release build and requires installing an optional "C++ AddressSanitizers" component
+* `asan` target is for enabling address sanitizer
 
 ### Asan notes
 
