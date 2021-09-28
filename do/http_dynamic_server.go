@@ -17,6 +17,13 @@ import (
 	"time"
 )
 
+// ServerConfig represents all files known to the server
+type ServerConfig struct {
+	Handlers  []Handler
+	CleanURLS bool
+	Port      int
+}
+
 type HandlerFunc = func(w http.ResponseWriter, r *http.Request)
 
 // Handler represents one or more urls and their content
@@ -63,17 +70,23 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 	http.ServeFile(w, r, path)
 }
 
-func makeServeFile(path string) HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		serveFile(w, r, path)
+func serveContent(w http.ResponseWriter, r *http.Request, d []byte, path string) {
+	if r == nil {
+		_, err := w.Write(d)
+		must(err)
+		return
 	}
+	content := bytes.NewReader(d)
+	http.ServeContent(w, r, path, time.Now(), content)
 }
 
 func (h *FileHandler) Get(url string) HandlerFunc {
 	for _, u := range h.URL {
 		// urls are case-insensitive
 		if strings.EqualFold(u, url) {
-			return makeServeFile(h.Path)
+			return func(w http.ResponseWriter, r *http.Request) {
+				serveFile(w, r, h.Path)
+			}
 		}
 	}
 	return nil
@@ -106,7 +119,9 @@ func (h *DirHandler) Get(url string) func(w http.ResponseWriter, r *http.Request
 	for i, u := range h.URL {
 		// urls are case-insensitive
 		if strings.EqualFold(u, url) {
-			return makeServeFile(h.paths[i])
+			return func(w http.ResponseWriter, r *http.Request) {
+				serveFile(w, r, h.paths[i])
+			}
 		}
 	}
 	return nil
@@ -166,6 +181,48 @@ func NewDynamicHandler(matches func(string) func(http.ResponseWriter, *http.Requ
 	return &DynamicHandler{
 		matches: matches,
 		urls:    urls,
+	}
+}
+
+type InMemoryFilesHandler struct {
+	files map[string][]byte
+}
+
+func (h *InMemoryFilesHandler) Get(uri string) func(http.ResponseWriter, *http.Request) {
+	for path, d := range h.files {
+		if strings.EqualFold(path, uri) {
+			return func(w http.ResponseWriter, r *http.Request) {
+				serveContent(w, r, d, uri)
+			}
+		}
+	}
+	return nil
+}
+
+func (h *InMemoryFilesHandler) URLS() []string {
+	var urls []string
+	for path := range h.files {
+		urls = append(urls, path)
+	}
+	return urls
+}
+
+func NewInMemoryFilesHandler(files map[string][]byte) *InMemoryFilesHandler {
+	for path, d := range files {
+		newp := strings.Replace(path, "\\", "/", -1)
+		if !strings.HasPrefix(newp, "/") {
+			newp = "/" + newp
+		}
+		newp = "/" + path
+		if path == newp {
+			continue
+		}
+		files[newp] = d
+		delete(files, path)
+	}
+
+	return &InMemoryFilesHandler{
+		files: files,
 	}
 }
 
@@ -238,13 +295,6 @@ func WriteServerFilesToZip(handlers []Handler) ([]byte, error) {
 		}
 	}
 	return zipCreateFromContent(files)
-}
-
-// ServerConfig represents all files known to the server
-type ServerConfig struct {
-	Handlers  []Handler
-	CleanURLS bool
-	Port      int
 }
 
 // returns function that will wait for SIGTERM signal (e.g. Ctrl-C) and

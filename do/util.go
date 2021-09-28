@@ -344,7 +344,7 @@ func findLargestFileByExt() {
 
 func fileExists(path string) bool {
 	st, err := os.Lstat(path)
-	return err == nil && !st.IsDir() && st.Mode().IsRegular()
+	return err == nil && st.Mode().IsRegular()
 }
 
 func dirExists(path string) bool {
@@ -594,7 +594,6 @@ func openBrowser(url string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func currDirAbsMust() string {
