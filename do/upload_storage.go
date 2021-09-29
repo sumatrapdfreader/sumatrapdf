@@ -150,7 +150,7 @@ func createSumatraLatestJs(mc *MinioClient, buildType string) string {
 	// TODO: use
 	// urls := getDownloadUrls(storage, buildType, ver)
 
-	host := mc.URLBase()
+	host := strings.TrimSuffix(mc.URLBase(), "/")
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumCommitSha1 = "{{ .Sha1 }}";

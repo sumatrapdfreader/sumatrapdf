@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/kjk/atomicfile"
@@ -27,7 +28,7 @@ func (c *MinioClient) URLBase() string {
 }
 
 func minioURLForPath(c *MinioClient, remotePath string) string {
-	return c.URLBase() + remotePath
+	return c.URLBase() + strings.TrimPrefix(remotePath, "/")
 }
 
 func minioSetPublicObjectMetadata(opts *minio.PutObjectOptions) {
