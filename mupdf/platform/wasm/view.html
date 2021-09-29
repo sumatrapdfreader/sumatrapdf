@@ -15,10 +15,43 @@ html, body { margin: 0; padding: 0; }
 
 html { background-color: gray; }
 
-input, button { border:none; background-image:none; background-color:transparent; box-shadow:none; margin:0; padding:0; }
-input { border:2px solid #777; background-color: white; height: 2em; padding-left:1ex; }
-button { border:2px solid #555; background-color: wheat; min-width: 2em; height: 2em; padding: 0 1ex; }
-button:hover { background-color: orange; }
+input, button {
+	display: block;
+	border:none;
+	background-image:none;
+	background-color:transparent;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+}
+
+input, button {
+	font-size: 16px;
+	line-height: 20px;
+	height: 30px;
+	margin: 0 4px;
+}
+input {
+	background-color: white;
+	padding: 0px 5px;
+	border: 1px solid black;
+}
+button {
+	font-family: monospace;
+	background-color: gainsboro;
+	border: 2px outset white;
+	outline: 1px solid black;
+	padding: 1px 10px 1px 10px;
+}
+button:disabled {
+	color: gray;
+	border: 2px solid gainsboro;
+	outline: 1px solid gray;
+}
+button:enabled:active:hover {
+	border: 2px inset white;
+	padding: 2px 9px 0px 11px;
+}
 
 /* MENUS */
 
@@ -88,12 +121,16 @@ div.dialog {
 	left:0;
 	right:0;
 	margin-left: auto;
-	NO-margin-right: auto;
 	width:max-content;
-	background-color:thistle;
-	padding:1em;
+	background-color:silver;
+	padding: 15px 12px;
 	z-index:2;
 	box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.2);
+}
+
+div.flex {
+	display: flex;
+	align-items: center;
 }
 
 #searchStatus {
@@ -193,11 +230,13 @@ div.error {
 </div>
 
 <div id="searchDialog" class="dialog" style="display:none">
+<div class="flex">
 <input id="searchText" type="text" size="40" oninput="updateSearch()" placeholder="Search...">
-<button onclick="runSearch(-1)">&#x25b2;</button>
-<button onclick="runSearch(1)">&#x25bc;</button>
-<button onclick="hideSearch()">&#x1f5d9;</button>
+<button onclick="runSearch(-1)">&lt;</button>
+<button onclick="runSearch(1)">&gt;</button>
+<button onclick="hideSearch()">X</button>
 <div id="searchStatus">-</div>
+</div>
 </div>
 
 <input type="file" id="open-file-input" style="display:none"
@@ -546,7 +585,7 @@ function updateView() {
 			current = i;
 
 		if (dirty[i] && isVisible(pageDIV[i], 1000)) {
-			console.log("mupdf: drawing page", i);
+			console.log("mupdf: drawing page", i, "@" + devicePixelRatio + "x");
 			let pageNumber = i;
 			dirty[pageNumber] = false;
 			let div = pageDIV[pageNumber];
@@ -559,8 +598,10 @@ function updateView() {
 			img.ondragstart = function () { return false; };
 			img.onload = function () {
 				URL.revokeObjectURL(this.src);
-				div.style.width = this.width + 'px';
-				div.style.height = this.height + 'px';
+				div.style.width = (this.width / devicePixelRatio) + 'px';
+				div.style.height = (this.height / devicePixelRatio) + 'px';
+				img.style.width = div.style.width;
+				img.style.height = div.style.height;
 			};
 			div.appendChild(img);
 
@@ -576,7 +617,7 @@ function updateView() {
 			hit.classList.add("searchHitList");
 			div.appendChild(hit);
 
-			mupdf.drawPageAsPNG(doc, pageNumber, dpi)
+			mupdf.drawPageAsPNG(doc, pageNumber, dpi * devicePixelRatio)
 				.then(data => img.src = URL.createObjectURL(new Blob([data], {type:"image/png"})))
 				.catch(error => showPageError("drawPageAsPNG", div, error));
 

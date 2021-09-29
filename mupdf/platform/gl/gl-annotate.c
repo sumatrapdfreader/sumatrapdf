@@ -698,7 +698,7 @@ static void do_annotate_date(void)
 	const char *s = format_date(pdf_annot_modification_date(ctx, ui.selected_annot));
 	if (s)
 		ui_label("Date: %s", s);
-		}
+}
 
 static void do_annotate_contents(void)
 {

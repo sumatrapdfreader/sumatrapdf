@@ -17,7 +17,7 @@ emcc -Wall -Os -g1 -o libmupdf.js \
 	-s VERBOSE=0 \
 	-s ASSERTIONS=1 \
 	-s ABORTING_MALLOC=0 \
-	-s TOTAL_MEMORY=134217728 \
+	-s ALLOW_MEMORY_GROWTH=1 \
 	-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
 	-I ../../include \
 	--pre-js wrap.js \

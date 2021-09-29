@@ -26,7 +26,7 @@ $(MUPDF_JS) $(MUPDF_WASM) : $(MUPDF_CORE) wrap.c wrap.js
 		-s WASM=1 \
 		-s VERBOSE=0 \
 		-s ABORTING_MALLOC=0 \
-		-s TOTAL_MEMORY=134217728 \
+		-s ALLOW_MEMORY_GROWTH=1 \
 		-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
 		-I ../../include \
 		--pre-js wrap.js \

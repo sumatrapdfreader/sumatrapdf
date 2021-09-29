@@ -436,6 +436,12 @@ static inline int canon(int c)
 {
 	/* TODO: proper unicode case folding */
 	/* TODO: character equivalence (a matches ä, etc) */
+
+	// Map full-width ASCII forms to ASCII:
+	// U+FF01 .. U+FF5E => U+0021 .. U+007E
+	if (c >= 0xFF01 && c <= 0xFF5E)
+		c = c - 0xFF01 + 0x21;
+
 	if (c == 0xA0 || c == 0x2028 || c == 0x2029)
 		return ' ';
 	if (c == '\r' || c == '\n' || c == '\t')
