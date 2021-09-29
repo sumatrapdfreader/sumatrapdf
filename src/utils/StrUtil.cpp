@@ -2304,6 +2304,9 @@ WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith)
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
 size_t NormalizeWSInPlace(WCHAR* str) {
+    if (!str) {
+        return 0;
+    }
     WCHAR *src = str, *dst = str;
     bool addedSpace = true;
 

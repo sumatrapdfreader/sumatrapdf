@@ -498,7 +498,7 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
 // caller needs to free() the result
 static WCHAR* NormalizeFuzzy(const WCHAR* str) {
     WCHAR* dup = str::Dup(str);
-    CharLower(dup);
+    CharLowerW(dup);
     str::NormalizeWSInPlace(dup);
     // cf. AddTocItemToView
     return dup;
@@ -522,9 +522,11 @@ static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially) {
 // (ignoring case and whitespace differences)
 IPageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, bool partially) {
     for (; item; item = item->next) {
-        AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
-        if (MatchFuzzy(fuzTitle, name, partially)) {
-            return item->GetPageDestination();
+        if (item->title) {
+            AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
+            if (MatchFuzzy(fuzTitle, name, partially)) {
+                return item->GetPageDestination();
+            }
         }
         IPageDestination* dest = FindTocItem(item->child, name, partially);
         if (dest) {

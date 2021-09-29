@@ -1,5 +1,13 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-09-29 Wed
+
+- Revert "lazy calculation of page dimensions in DisplayModel"
+  https://github.com/sumatrapdfreader/sumatrapdf/commit/9598d5fdff035493c8054139eb4936f3ee00f181
+  lesson: should have tested bigger changes like that
+- don't crash in NormalizeWSInPlace if null string
+  seen in crash reports
+
 2021-09-23 Thu
 
 - implement 'search' cmd-line flag (fixes #2167)
