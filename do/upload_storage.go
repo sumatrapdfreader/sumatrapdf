@@ -12,7 +12,7 @@ import (
 
 // we delete old daily and pre-release builds. This defines how many most recent
 // builds to retain
-const nBuildsToRetainPreRel = 16
+const nBuildsToRetainPreRel = 5
 
 const (
 	// TODO: only remains because we want to update the version
@@ -98,16 +98,8 @@ type DownloadUrls struct {
 	portableZip32 string
 }
 
-func getDownloadUrls(storage string, buildType string, ver string) *DownloadUrls {
-	var prefix string
-	switch storage {
-	case "spaces":
-		prefix = "https://kjkpubsf.sfo2.digitaloceanspaces.com/"
-	case "s3":
-		prefix = "https://kjkpub.s3.amazonaws.com/"
-	default:
-		panic(fmt.Sprintf("unknown storage '%s'", storage))
-	}
+func getDownloadUrls(mc *MinioClient, buildType string, ver string) *DownloadUrls {
+	prefix := mc.URLBase()
 	prefix += getRemoteDir(buildType)
 	// zip is like .exe but can be half the size due to compression
 	res := &DownloadUrls{
@@ -191,7 +183,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	return execTextTemplate(tmplText, d)
 }
 
-func getVersionFilesForLatestInfo(storage string, buildType string) [][]string {
+func getVersionFilesForLatestInfo(mc *MinioClient, buildType string) [][]string {
 	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
@@ -211,7 +203,7 @@ func getVersionFilesForLatestInfo(storage string, buildType string) [][]string {
 	// TODO: maybe provide download urls for both storage services
 	{
 		// *-update.txt : for current builds
-		urls := getDownloadUrls(storage, buildType, ver)
+		urls := getDownloadUrls(mc, buildType, ver)
 		s := `[SumatraPDF]
 Latest: ${ver}
 Installer64: ${inst64}
@@ -263,10 +255,10 @@ func getFinalDirForBuildType(buildType string) string {
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func minioUploadBuildMust(mc *MinioClient, where string, buildType string) {
+func minioUploadBuildMust(mc *MinioClient, buildType string) {
 	timeStart := time.Now()
 	defer func() {
-		logf(ctx(), "Uploaded the build to spaces in %s\n", time.Since(timeStart))
+		logf(ctx(), "Uploaded build '%s' to %s in %s\n", buildType, mc.URLBase(), time.Since(timeStart))
 	}()
 
 	dirRemote := getRemoteDir(buildType)
@@ -281,17 +273,17 @@ func minioUploadBuildMust(mc *MinioClient, where string, buildType string) {
 		return
 	}
 
-	spacesUploadBuildUpdateInfoMust := func(buildType string) {
-		files := getVersionFilesForLatestInfo(where, buildType)
+	uploadBuildUpdateInfoMust := func(buildType string) {
+		files := getVersionFilesForLatestInfo(mc, buildType)
 		for _, f := range files {
 			remotePath := f[0]
 			err := minioUploadDataPublic(mc, remotePath, []byte(f[1]))
 			must(err)
-			logf(ctx(), "Uploaded to %s: '%s'\n", where, remotePath)
+			logf(ctx(), "Uploaded `%s%s'\n", mc.URLBase(), remotePath)
 		}
 	}
 
-	spacesUploadBuildUpdateInfoMust(buildType)
+	uploadBuildUpdateInfoMust(buildType)
 }
 
 type filesByVer struct {
@@ -363,14 +355,4 @@ func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
 			logf(ctx(), "not deleting %d\n", v.ver)
 		}
 	}
-}
-
-func spacesDeleteOldBuilds() {
-	mc := newMinioSpacesClient()
-	minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
-}
-
-func s3DeleteOldBuilds() {
-	mc := newMinioS3Client()
-	minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
 }

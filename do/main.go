@@ -535,22 +535,30 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
 	}()
 	var wg sync.WaitGroup
-	wg.Add(2)
 
+	wg.Add(1)
 	go func() {
 		mc := newMinioS3Client()
-		// upload as:
-		// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-		minioUploadBuildMust(mc, "s3", buildType)
-		s3DeleteOldBuilds()
+		minioUploadBuildMust(mc, buildType)
+		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
 		wg.Done()
 	}()
 
+	wg.Add(1)
 	go func() {
 		mc := newMinioSpacesClient()
-		minioUploadBuildMust(mc, "spaces", buildType)
-		spacesDeleteOldBuilds()
+		minioUploadBuildMust(mc, buildType)
+		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
 		wg.Done()
 	}()
+
+	wg.Add(1)
+	go func() {
+		mc := newMinioWasabiClient()
+		minioUploadBuildMust(mc, buildType)
+		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		wg.Done()
+	}()
+
 	wg.Wait()
 }

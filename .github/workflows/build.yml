@@ -32,4 +32,6 @@ jobs:
           AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
           SPACES_KEY: ${{ secrets.SPACES_KEY }}
           SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
+          WASABI_ACCESS: ${{ secrets.WASABI_ACCESS }}
+          WASABI_SECRET: ${{ secrets.WASABI_SECRET }}
         run: .\doit.bat -ci-upload
