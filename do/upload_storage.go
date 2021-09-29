@@ -135,7 +135,7 @@ func getDownloadUrls(mc *MinioClient, buildType string, ver string) *DownloadUrl
 }
 
 // sumatrapdf/sumatralatest.js
-func createSumatraLatestJs(buildType string) string {
+func createSumatraLatestJs(mc *MinioClient, buildType string) string {
 	var appName string
 	switch buildType {
 	case buildTypeDaily, buildTypePreRel:
@@ -150,6 +150,7 @@ func createSumatraLatestJs(buildType string) string {
 	// TODO: use
 	// urls := getDownloadUrls(storage, buildType, ver)
 
+	host := mc.URLBase()
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumCommitSha1 = "{{ .Sha1 }}";
@@ -169,7 +170,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	ver := getVerForBuildType(buildType)
 	sha1 := getGitSha1()
 	d := map[string]interface{}{
-		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType,
+		"Host":     host + "software/sumatrapdf/" + buildType,
 		"Ver":      ver,
 		"Sha1":     sha1,
 		"CurrDate": currDate,
@@ -177,7 +178,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	}
 	// for prerel, version is in path, not in name
 	if buildType == buildTypePreRel {
-		d["Host"] = "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType + "/" + ver
+		d["Host"] = host + "/software/sumatrapdf/" + buildType + "/" + ver
 		d["Prefix"] = appName
 	}
 	return execTextTemplate(tmplText, d)
@@ -190,7 +191,7 @@ func getVersionFilesForLatestInfo(mc *MinioClient, buildType string) [][]string 
 
 	{
 		// *latest.js : for the website
-		s := createSumatraLatestJs(buildType)
+		s := createSumatraLatestJs(mc, buildType)
 		res = append(res, []string{remotePaths[0], s})
 	}
 
@@ -241,19 +242,6 @@ func minioVerifyBuildNotInStorageMust(mc *MinioClient, buildType string) {
 	panicIf(exists, "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
-func getFinalDirForBuildType(buildType string) string {
-	var dir string
-	switch buildType {
-	case buildTypeRel:
-		dir = "final-rel"
-	case buildTypePreRel:
-		dir = "final-prerel"
-	default:
-		panicIf(true, "invalid buildType '%s'", buildType)
-	}
-	return filepath.Join("out", dir)
-}
-
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
 func minioUploadBuildMust(mc *MinioClient, buildType string) {
 	timeStart := time.Now()
@@ -262,7 +250,20 @@ func minioUploadBuildMust(mc *MinioClient, buildType string) {
 	}()
 
 	dirRemote := getRemoteDir(buildType)
-	dirLocal := getFinalDirForBuildType(buildType)
+	getFinalDirForBuildType := func() string {
+		var dir string
+		switch buildType {
+		case buildTypeRel:
+			dir = "final-rel"
+		case buildTypePreRel:
+			dir = "final-prerel"
+		default:
+			panicIf(true, "invalid buildType '%s'", buildType)
+		}
+		return filepath.Join("out", dir)
+	}
+
+	dirLocal := getFinalDirForBuildType()
 	//verifyBuildNotInSpaces(c, buildType)
 
 	err := minioUploadDir(mc, dirRemote, dirLocal)
