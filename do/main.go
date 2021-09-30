@@ -552,13 +552,5 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		wg.Done()
 	}()
 
-	wg.Add(1)
-	go func() {
-		mc := newMinioWasabiClient()
-		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
-		wg.Done()
-	}()
-
 	wg.Wait()
 }

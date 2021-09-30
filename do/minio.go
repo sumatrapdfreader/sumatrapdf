@@ -171,19 +171,3 @@ func newMinioS3Client() *MinioClient {
 		bucket: bucket,
 	}
 }
-
-func newMinioWasabiClient() *MinioClient {
-	bucket := "kjksoft"
-	mc, err := minio.New("s3.us-west-1.wasabisys.com", &minio.Options{
-		Creds:  credentials.NewStaticV4(os.Getenv("WASABI_ACCESS"), os.Getenv("WASABI_SECRET"), ""),
-		Secure: true,
-	})
-	must(err)
-	found, err := mc.BucketExists(ctx(), bucket)
-	must(err)
-	panicIf(!found, "bucket '%s' doesn't exist", bucket)
-	return &MinioClient{
-		c:      mc,
-		bucket: bucket,
-	}
-}
