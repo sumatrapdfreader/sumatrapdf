@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-cb4080afe3d1d6dca15d7639dc667e8e4abc0c3f
+d3859087a8b01a27dc3354b594e0eb04ceae7981
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -18913,6 +18913,7 @@ ca:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu ins
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
 co:Impiegate a versione « %s » è a versione « %s » hè dispunibule.\nVulete installà a nova versione ?
 de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neue Version installieren?
+dk:Du har version '%s' og version '%s' er tilgængelig. \nVil du installere ny version?
 el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η έκδοση '%s'.\nΘέλετε να εγκαταστήσετε τη νέα έκδοση;
 es:Esta es la versión «%s» y ya está disponible la versión «%s».\N¿Quiere instalar la versión nueva?
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
@@ -18928,6 +18929,7 @@ ca:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits.
 cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
 co:Avete da installà SumatraPDF 32-bit\nnant’à un sistema 64-bit.\nVulete scaricà a versione 64-bit ?
 de:Sie installieren die 32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem.\nMöchten Sie die 64-Bit-Version herunterladen?
+dk:Du installerer 32-bit SumatraPDF på 64-bit operativsystem. \nVil du hente \n64-bit version?
 el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σύστημα 64-bit.\nΘέλετε να κατεβάσετε\nτην έκδοση 64-bit;
 es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
