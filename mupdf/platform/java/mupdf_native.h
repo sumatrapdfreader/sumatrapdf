@@ -1565,6 +1565,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setColor
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasInteriorColor
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasInteriorColor
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    getInteriorColor
  * Signature: ()[F
  */
@@ -1594,6 +1602,14 @@ JNIEXPORT jfloat JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getOpacity
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setOpacity
   (JNIEnv *, jobject, jfloat);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasAuthor
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasAuthor
+  (JNIEnv *, jobject);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
@@ -1645,6 +1661,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setModification
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasLineEndingStyles
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasLineEndingStyles
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    getLineEndingStyles
  * Signature: ()[I
  */
@@ -1658,6 +1682,14 @@ JNIEXPORT jintArray JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getLineEnd
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setLineEndingStyles
   (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasQuadPoints
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasQuadPoints
+  (JNIEnv *, jobject);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
@@ -1693,6 +1725,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_addQuadPoint
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasVertices
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasVertices
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    getVertexCount
  * Signature: ()I
  */
@@ -1722,6 +1762,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_clearVertices
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_addVertex
   (JNIEnv *, jobject, jfloat, jfloat);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasInkList
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasInkList
+  (JNIEnv *, jobject);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
@@ -1773,6 +1821,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_addInkListStrok
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasIcon
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasIcon
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    getIcon
  * Signature: ()Ljava/lang/String;
  */
@@ -1786,6 +1842,14 @@ JNIEXPORT jstring JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getIcon
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setIcon
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasOpen
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasOpen
+  (JNIEnv *, jobject);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
@@ -1898,6 +1962,14 @@ JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getQuadding
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setQuadding
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasLine
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasLine
+  (JNIEnv *, jobject);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation

@@ -246,13 +246,13 @@ public class PDFWidget extends PDFAnnotation
 
 	public native TextWidgetLayout layoutTextWidget();
 
-	public class TextWidgetLayout {
+	public static class TextWidgetLayout {
 		public Matrix matrix;
 		public Matrix invMatrix;
 		public TextWidgetLineLayout[] lines;
 	}
 
-	public class TextWidgetLineLayout {
+	public static class TextWidgetLineLayout {
 		public float x;
 		public float y;
 		public float fontSize;
@@ -261,7 +261,7 @@ public class PDFWidget extends PDFAnnotation
 		public TextWidgetCharLayout[] chars;
 	}
 
-	public class TextWidgetCharLayout {
+	public static class TextWidgetCharLayout {
 		public float x;
 		public float advance;
 		public int index;

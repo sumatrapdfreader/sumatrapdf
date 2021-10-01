@@ -129,10 +129,12 @@ public class PDFAnnotation
 	public native void setBorder(float width);
 	public native float[] getColor();
 	public native void setColor(float[] color);
+	public native boolean hasInteriorColor();
 	public native float[] getInteriorColor();
 	public native void setInteriorColor(float[] color);
 	public native float getOpacity();
 	public native void setOpacity(float opacity);
+	public native boolean hasAuthor();
 	public native String getAuthor();
 	public native void setAuthor(String author);
 	protected native long getCreationDateNative();
@@ -152,12 +154,14 @@ public class PDFAnnotation
 		setModificationDate(date.getTime());
 	}
 
+	public native boolean hasLineEndingStyles();
 	public native int[] getLineEndingStyles();
 	public native void setLineEndingStyles(int startStyle, int endStyle);
 	public void setLineEndingStyles(int[] styles) {
 		setLineEndingStyles(styles[0], styles[1]);
 	}
 
+	public native boolean hasQuadPoints();
 	public native int getQuadPointCount();
 	public native Quad getQuadPoint(int i);
 	public native void clearQuadPoints();
@@ -175,6 +179,7 @@ public class PDFAnnotation
 			addQuadPoint(q);
 	}
 
+	public native boolean hasVertices();
 	public native int getVertexCount();
 	public native Point getVertex(int i);
 	public native void clearVertices();
@@ -195,6 +200,7 @@ public class PDFAnnotation
 			addVertex(p);
 	}
 
+	public native boolean hasInkList();
 	public native int getInkListCount();
 	public native int getInkListStrokeCount(int i);
 	public native Point getInkListStrokeVertex(int i, int k);
@@ -229,8 +235,10 @@ public class PDFAnnotation
 		return list;
 	}
 
+	public native boolean hasIcon();
 	public native String getIcon();
 	public native void setIcon(String icon);
+	public native boolean hasOpen();
 	public native boolean isOpen();
 	public native void setIsOpen(boolean open);
 
@@ -251,6 +259,7 @@ public class PDFAnnotation
 	public native int getQuadding();
 	public native void setQuadding(int quadding);
 
+	public native boolean hasLine();
 	public native Point[] getLine();
 	public native void setLine(Point a, Point b);
 

@@ -70,7 +70,7 @@ public class Context
 
 	public native static Version getVersion();
 
-	public class Version {
+	public static class Version {
 		public String version;
 		public int major;
 		public int minor;

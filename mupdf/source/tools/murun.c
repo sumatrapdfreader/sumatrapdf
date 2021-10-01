@@ -5697,6 +5697,18 @@ static void ffi_PDFAnnotation_setColor(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_hasInteriorColor(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_interior_color(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
+}
+
 static void ffi_PDFAnnotation_getInteriorColor(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -5752,6 +5764,18 @@ static void ffi_PDFAnnotation_setOpacity(js_State *J)
 		pdf_set_annot_opacity(ctx, annot, opacity);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_hasQuadPoints(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_quad_points(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
 }
 
 static void ffi_PDFAnnotation_getQuadPoints(js_State *J)
@@ -5828,6 +5852,18 @@ static void ffi_PDFAnnotation_addQuadPoint(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_hasVertices(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_vertices(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
+}
+
 static void ffi_PDFAnnotation_getVertices(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -5898,6 +5934,18 @@ static void ffi_PDFAnnotation_addVertex(js_State *J)
 		pdf_add_annot_vertex(ctx, annot, p);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_hasInkList(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_ink_list(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
 }
 
 /* Returns an array of strokes, where each stroke is an array of points, where
@@ -6048,6 +6096,18 @@ static void ffi_PDFAnnotation_addInkListStrokeVertex(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_hasAuthor(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_author(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
+}
+
 static void ffi_PDFAnnotation_getAuthor(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -6130,6 +6190,18 @@ static void ffi_PDFAnnotation_setModificationDate(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_hasLineEndingStyles(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_line_ending_styles(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
+}
+
 static void ffi_PDFAnnotation_getLineEndingStyles(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -6161,6 +6233,18 @@ static void ffi_PDFAnnotation_setLineEndingStyles(js_State *J)
 		pdf_set_annot_line_ending_styles(ctx, annot, start, end);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_hasIcon(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_icon_name(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
 }
 
 static void ffi_PDFAnnotation_getIcon(js_State *J)
@@ -6230,6 +6314,18 @@ static void ffi_PDFAnnotation_setLanguage(js_State *J)
 		pdf_set_annot_language(ctx, annot, fz_text_language_from_string(lang));
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_hasLine(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_line(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
 }
 
 /* Returns an array of two point denoting the end points of the
@@ -6410,6 +6506,18 @@ static void ffi_PDFAnnotation_setHot(js_State *J)
 		pdf_set_annot_hot(ctx, annot, hot);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_hasOpen(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_open(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
 }
 
 static void ffi_PDFAnnotation_isOpen(js_State *J)
@@ -7358,30 +7466,36 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.setBorder", ffi_PDFAnnotation_setBorder, 1);
 		jsB_propfun(J, "PDFAnnotation.getColor", ffi_PDFAnnotation_getColor, 0);
 		jsB_propfun(J, "PDFAnnotation.setColor", ffi_PDFAnnotation_setColor, 1);
+		jsB_propfun(J, "PDFAnnotation.hasInteriorColor", ffi_PDFAnnotation_hasInteriorColor, 0);
 		jsB_propfun(J, "PDFAnnotation.getInteriorColor", ffi_PDFAnnotation_getInteriorColor, 0);
 		jsB_propfun(J, "PDFAnnotation.setInteriorColor", ffi_PDFAnnotation_setInteriorColor, 1);
 		jsB_propfun(J, "PDFAnnotation.getOpacity", ffi_PDFAnnotation_getOpacity, 0);
 		jsB_propfun(J, "PDFAnnotation.setOpacity", ffi_PDFAnnotation_setOpacity, 1);
+		jsB_propfun(J, "PDFAnnotation.hasAuthor", ffi_PDFAnnotation_hasAuthor, 0);
 		jsB_propfun(J, "PDFAnnotation.getAuthor", ffi_PDFAnnotation_getAuthor, 0);
 		jsB_propfun(J, "PDFAnnotation.setAuthor", ffi_PDFAnnotation_setAuthor, 1);
 		jsB_propfun(J, "PDFAnnotation.getCreationDate", ffi_PDFAnnotation_getCreationDate, 0);
 		jsB_propfun(J, "PDFAnnotation.setCreationDate", ffi_PDFAnnotation_setCreationDate, 1);
 		jsB_propfun(J, "PDFAnnotation.getModificationDate", ffi_PDFAnnotation_getModificationDate, 0);
 		jsB_propfun(J, "PDFAnnotation.setModificationDate", ffi_PDFAnnotation_setModificationDate, 1);
+		jsB_propfun(J, "PDFAnnotation.hasLineEndingStyles", ffi_PDFAnnotation_hasLineEndingStyles, 0);
 		jsB_propfun(J, "PDFAnnotation.getLineEndingStyles", ffi_PDFAnnotation_getLineEndingStyles, 0);
 		jsB_propfun(J, "PDFAnnotation.setLineEndingStyles", ffi_PDFAnnotation_setLineEndingStyles, 2);
+		jsB_propfun(J, "PDFAnnotation.hasIcon", ffi_PDFAnnotation_hasIcon, 0);
 		jsB_propfun(J, "PDFAnnotation.getIcon", ffi_PDFAnnotation_getIcon, 0);
 		jsB_propfun(J, "PDFAnnotation.setIcon", ffi_PDFAnnotation_setIcon, 1);
 		jsB_propfun(J, "PDFAnnotation.getQuadding", ffi_PDFAnnotation_getQuadding, 0);
 		jsB_propfun(J, "PDFAnnotation.setQuadding", ffi_PDFAnnotation_setQuadding, 1);
 		jsB_propfun(J, "PDFAnnotation.getLanguage", ffi_PDFAnnotation_getLanguage, 0);
 		jsB_propfun(J, "PDFAnnotation.setLanguage", ffi_PDFAnnotation_setLanguage, 1);
+		jsB_propfun(J, "PDFAnnotation.hasLine", ffi_PDFAnnotation_hasLine, 0);
 		jsB_propfun(J, "PDFAnnotation.getLine", ffi_PDFAnnotation_getLine, 0);
 		jsB_propfun(J, "PDFAnnotation.setLine", ffi_PDFAnnotation_setLine, 2);
 		jsB_propfun(J, "PDFAnnotation.getDefaultAppearance", ffi_PDFAnnotation_getDefaultAppearance, 0);
 		jsB_propfun(J, "PDFAnnotation.setDefaultAppearance", ffi_PDFAnnotation_setDefaultAppearance, 3);
 		jsB_propfun(J, "PDFAnnotation.setAppearance", ffi_PDFAnnotation_setAppearance, 6);
 
+		jsB_propfun(J, "PDFAnnotation.hasInkList", ffi_PDFAnnotation_hasInkList, 0);
 		jsB_propfun(J, "PDFAnnotation.getInkList", ffi_PDFAnnotation_getInkList, 0);
 		jsB_propfun(J, "PDFAnnotation.setInkList", ffi_PDFAnnotation_setInkList, 1);
 		jsB_propfun(J, "PDFAnnotation.clearInkList", ffi_PDFAnnotation_clearInkList, 0);
@@ -7389,11 +7503,13 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.addInkListStroke", ffi_PDFAnnotation_addInkListStroke, 0);
 		jsB_propfun(J, "PDFAnnotation.addInkListStrokeVertex", ffi_PDFAnnotation_addInkListStrokeVertex, 1);
 
+		jsB_propfun(J, "PDFAnnotation.hasQuadPoints", ffi_PDFAnnotation_hasQuadPoints, 0);
 		jsB_propfun(J, "PDFAnnotation.getQuadPoints", ffi_PDFAnnotation_getQuadPoints, 0);
 		jsB_propfun(J, "PDFAnnotation.setQuadPoints", ffi_PDFAnnotation_setQuadPoints, 1);
 		jsB_propfun(J, "PDFAnnotation.clearQuadPoints", ffi_PDFAnnotation_clearQuadPoints, 0);
 		jsB_propfun(J, "PDFAnnotation.addQuadPoint", ffi_PDFAnnotation_addQuadPoint, 1);
 
+		jsB_propfun(J, "PDFAnnotation.hasVertices", ffi_PDFAnnotation_hasVertices, 0);
 		jsB_propfun(J, "PDFAnnotation.getVertices", ffi_PDFAnnotation_getVertices, 0);
 		jsB_propfun(J, "PDFAnnotation.setVertices", ffi_PDFAnnotation_setVertices, 1);
 		jsB_propfun(J, "PDFAnnotation.clearVertices", ffi_PDFAnnotation_clearVertices, 0);
@@ -7404,6 +7520,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.getHot", ffi_PDFAnnotation_getHot, 0);
 		jsB_propfun(J, "PDFAnnotation.setHot", ffi_PDFAnnotation_setHot, 1);
 
+		jsB_propfun(J, "PDFAnnotation.hasOpen", ffi_PDFAnnotation_hasOpen, 0);
 		jsB_propfun(J, "PDFAnnotation.isOpen", ffi_PDFAnnotation_isOpen, 0);
 		jsB_propfun(J, "PDFAnnotation.setIsOpen", ffi_PDFAnnotation_setIsOpen, 1);
 

@@ -1168,3 +1168,138 @@ FUN(PDFAnnotation_setNativeAppearanceDisplayList)(JNIEnv *env, jobject self, jst
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasInteriorColor)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_interior_color(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasAuthor)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_author(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasLineEndingStyles)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_line_ending_styles(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasQuadPoints)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_quad_points(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasVertices)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_vertices(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasInkList)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_ink_list(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasIcon)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_icon_name(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasOpen)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_open(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasLine)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_line(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
