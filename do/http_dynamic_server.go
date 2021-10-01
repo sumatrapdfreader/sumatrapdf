@@ -70,23 +70,34 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 	http.ServeFile(w, r, path)
 }
 
-func serveContent(w http.ResponseWriter, r *http.Request, d []byte, path string) {
+func makeServeFile(path string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		serveFile(w, r, path)
+	}
+}
+
+// uri is only used to guess content type
+func serveContent(w http.ResponseWriter, r *http.Request, d []byte, uri string) {
 	if r == nil {
 		_, err := w.Write(d)
 		must(err)
 		return
 	}
 	content := bytes.NewReader(d)
-	http.ServeContent(w, r, path, time.Now(), content)
+	http.ServeContent(w, r, uri, time.Now(), content)
+}
+
+func makeServeContent(d []byte, uri string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		serveContent(w, r, d, uri)
+	}
 }
 
 func (h *FileHandler) Get(url string) HandlerFunc {
 	for _, u := range h.URL {
 		// urls are case-insensitive
 		if strings.EqualFold(u, url) {
-			return func(w http.ResponseWriter, r *http.Request) {
-				serveFile(w, r, h.Path)
-			}
+			return makeServeFile(h.Path)
 		}
 	}
 	return nil
@@ -119,9 +130,7 @@ func (h *DirHandler) Get(url string) func(w http.ResponseWriter, r *http.Request
 	for i, u := range h.URL {
 		// urls are case-insensitive
 		if strings.EqualFold(u, url) {
-			return func(w http.ResponseWriter, r *http.Request) {
-				serveFile(w, r, h.paths[i])
-			}
+			return makeServeFile(h.paths[i])
 		}
 	}
 	return nil
@@ -146,7 +155,7 @@ func getURLSForFiles(startDir string, urlPrefix string, acceptFile func(string) 
 		dir = filepath.ToSlash(dir)
 		dir = strings.TrimPrefix(dir, "/")
 		uri := path.Join(urlPrefix, dir)
-		//logf("getURLSForFiles: dir: '%s'\n", dir)
+		//logf(ctx(), "getURLSForFiles: dir: '%s'\n", dir)
 		urls = append(urls, uri)
 		paths = append(paths, filePath)
 		return nil
@@ -164,23 +173,46 @@ func NewDirHandler(dir string, urlPrefix string, acceptFile func(string) bool) *
 	}
 }
 
+type ContentHandler struct {
+	uri  string
+	body []byte
+}
+
+func (h *ContentHandler) Get(uri string) func(http.ResponseWriter, *http.Request) {
+	if uri == h.uri {
+		return makeServeContent(h.body, h.uri)
+	}
+	return nil
+}
+
+func (h *ContentHandler) URLS() []string {
+	return []string{h.uri}
+}
+
+func NewContentHandler(uri string, d []byte) *ContentHandler {
+	return &ContentHandler{
+		uri:  uri,
+		body: d,
+	}
+}
+
 type DynamicHandler struct {
-	matches func(string) func(http.ResponseWriter, *http.Request)
-	urls    func() []string
+	get  func(string) func(http.ResponseWriter, *http.Request)
+	urls func() []string
 }
 
 func (h *DynamicHandler) Get(uri string) func(http.ResponseWriter, *http.Request) {
-	return h.matches(uri)
+	return h.get(uri)
 }
 
 func (h *DynamicHandler) URLS() []string {
 	return h.urls()
 }
 
-func NewDynamicHandler(matches func(string) func(http.ResponseWriter, *http.Request), urls func() []string) *DynamicHandler {
+func NewDynamicHandler(get func(string) func(http.ResponseWriter, *http.Request), urls func() []string) *DynamicHandler {
 	return &DynamicHandler{
-		matches: matches,
-		urls:    urls,
+		get:  get,
+		urls: urls,
 	}
 }
 
@@ -191,9 +223,7 @@ type InMemoryFilesHandler struct {
 func (h *InMemoryFilesHandler) Get(uri string) func(http.ResponseWriter, *http.Request) {
 	for path, d := range h.files {
 		if strings.EqualFold(path, uri) {
-			return func(w http.ResponseWriter, r *http.Request) {
-				serveContent(w, r, d, uri)
-			}
+			return makeServeContent(d, uri)
 		}
 	}
 	return nil
@@ -213,7 +243,6 @@ func NewInMemoryFilesHandler(files map[string][]byte) *InMemoryFilesHandler {
 		if !strings.HasPrefix(newp, "/") {
 			newp = "/" + newp
 		}
-		newp = "/" + path
 		if path == newp {
 			continue
 		}
