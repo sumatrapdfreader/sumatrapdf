@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d3859087a8b01a27dc3354b594e0eb04ceae7981
+66ea17d39509a7af2b228ebe81353703121950d9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2832,6 +2832,7 @@ ca:&Segell
 cn:&图章
 co:&Stampaghjolu
 de:&Stempel
+dk:&Frimærke
 el:Σφραγίδα
 es:&Estampa
 hr:&Pečat
@@ -2851,6 +2852,7 @@ ca:&Ratlla
 cn:&删除线
 co:&Rigà
 de:Durchstreichen
+dk:&Gennemstreg
 el:Εξάλειψη
 es:&Tachar
 hr:Za&crtati
@@ -2871,6 +2873,7 @@ ca:&Text
 cn:&文本
 co:&Testu
 de:&Text
+dk:&Tekst
 el:Κείμενο
 es:&Texto
 hr:&Tekst
@@ -2949,6 +2952,7 @@ ca:Tradueix amb el &Google
 cn:使用谷歌翻译(&T)
 co:&Traduce cù Google
 de:Mi&t Google übersetzen
+dk:&Oversæt med Google
 el:Μετάφραση με Google
 es:&Traducir con Google
 it:&Traduci con Google
@@ -2966,6 +2970,7 @@ ca:&Subratlla
 cn:&下划线
 co:&Sottulineatu
 de:&Unterstreichen
+dk:&Understreg
 el:Υπογράμμιση
 es:&Subrayar
 hr:Podv&ući
@@ -15385,6 +15390,7 @@ ca:Documents SVG
 cn:SVG 文件
 co:Ducumenti SVG
 de:SVG-Dokumente
+dk:SVG-dokumenter
 el:Έγγραφα SVG
 es:Documentos SVG
 it:Documenti SVG
@@ -16720,6 +16726,7 @@ ca:Omet aquesta versió
 cn:跳过该版本
 co:Tralascià sta versione
 de:Diese Version überspringen
+dk:Ignorer denne version
 el:Παράλειψη αυτής της έκδοσης
 es:Omitir esta versión
 it:Salta questa versione
@@ -18129,6 +18136,7 @@ ca:Tradueix amb el &Deepl
 cn:使用 DeepL 翻译(&D)
 co:Traduce cù &DeepL
 de:Mit &DeepL übersetzen
+dk:Oversæt med &DeepL
 el:Μετάφραση με DeepL
 es:Traducir con &DeepL
 it:Traduci con &DeepL
@@ -18395,6 +18403,7 @@ ca:Anotacions sense desar
 cn:未保存的标注
 co:Annutazioni micca arregistrate
 de:Nicht gespeicherte Anmerkungen
+dk:Ikke-gemte annoteringer
 el:Μη αποθηκευμένα σχόλια
 es:Anotaciones sin guardar
 hr:Nespremljene bilješke
@@ -18415,6 +18424,7 @@ ca:Anotacions sense desar a «%s».
 cn:'%s' 中有未保存的标注
 co:Annutazioni micca arregistrate in « %s »
 de:Nicht gespeicherte Anmerkungen in '%s'
+dk:Ikke-gemte annoteringer i '%s'
 el:Μη αποθηκευμένα σχόλια στο '%s'
 es:Anotaciones sin guardar en «%s»
 it:Annotazioni non salvate in '%s'
@@ -18891,6 +18901,7 @@ ca:Teniu anotacions sense desar
 cn:存在未保存的标注
 co:Avete annutazioni micca arregistrate
 de:Sie haben ungespeicherte Anmerkungen.
+dk:Du har ikke-gemte annoteringer
 el:Έχετε μη αποθηκευμένα σχόλια
 es:Hay anotaciones sin guardar
 hr:Imate nespremljene bilješke
