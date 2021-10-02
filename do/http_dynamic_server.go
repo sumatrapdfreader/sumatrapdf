@@ -25,6 +25,7 @@ type ServerConfig struct {
 }
 
 type HandlerFunc = func(w http.ResponseWriter, r *http.Request)
+type GetHandlerFunc = func(string) func(w http.ResponseWriter, r *http.Request)
 
 // Handler represents one or more urls and their content
 type Handler interface {
@@ -34,6 +35,10 @@ type Handler interface {
 	// get all urls handled by this Handler
 	// useful for e.g. saving a static copy to disk
 	URLS() []string
+}
+
+func panicIfAbsoluteURL(uri string) {
+	panicIf(strings.Contains(uri, "://"), "got absolute url '%s'", uri)
 }
 
 // FileWriter implements http.ResponseWriter interface for writing to a file
@@ -53,13 +58,6 @@ func (w *FileWriter) WriteHeader(statusCode int) {
 	// no-op
 }
 
-type FileHandler struct {
-	// Path on disk for this file
-	Path string
-	// list of urls that this file matches
-	URL []string
-}
-
 func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 	if r == nil {
 		d := readFileMust(path)
@@ -77,7 +75,7 @@ func makeServeFile(path string) func(w http.ResponseWriter, r *http.Request) {
 }
 
 // uri is only used to guess content type
-func serveContent(w http.ResponseWriter, r *http.Request, d []byte, uri string) {
+func serveContent(w http.ResponseWriter, r *http.Request, uri string, d []byte) {
 	if r == nil {
 		_, err := w.Write(d)
 		must(err)
@@ -87,35 +85,60 @@ func serveContent(w http.ResponseWriter, r *http.Request, d []byte, uri string) 
 	http.ServeContent(w, r, uri, time.Now(), content)
 }
 
-func makeServeContent(d []byte, uri string) func(w http.ResponseWriter, r *http.Request) {
+func makeServeContent(uri string, d []byte) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		serveContent(w, r, d, uri)
+		serveContent(w, r, uri, d)
 	}
 }
 
-func (h *FileHandler) Get(url string) HandlerFunc {
-	for _, u := range h.URL {
+type FilesHandler struct {
+	files map[string]string // maps url to a path on disk
+}
+
+func (h *FilesHandler) AddFile(uri, path string) {
+	panicIfAbsoluteURL(uri)
+	panicIf(!fileExists(path), "file '%s' doesn't exist", path)
+	h.files[uri] = path
+}
+
+func (h *FilesHandler) AddFilesInDir(dir string, uriPrefix string, files []string) {
+	for _, f := range files {
+		uri := uriPrefix + f
+		path := filepath.Join(dir, f)
+		h.AddFile(uri, path)
+	}
+}
+
+func (h *FilesHandler) Get(url string) func(w http.ResponseWriter, r *http.Request) {
+	for uri, path := range h.files {
 		// urls are case-insensitive
-		if strings.EqualFold(u, url) {
-			return makeServeFile(h.Path)
+		// TODO: are they?
+		if strings.EqualFold(uri, url) {
+			return makeServeFile(path)
 		}
 	}
 	return nil
 }
 
-func (h *FileHandler) URLS() []string {
-	return h.URL
+func (h *FilesHandler) URLS() []string {
+	urls := []string{}
+	for uri := range h.files {
+		urls = append(urls, uri)
+	}
+	return urls
 }
 
-func NewFileHandler(path string, url string, urls ...string) *FileHandler {
-	// early detection of problems
-	panicIf(!fileExists(path), "file '%s' doesn't exist", path)
-	res := &FileHandler{
-		Path: path,
-		URL:  []string{url},
+// files is: uri1, path1, uri2, path2, ...
+func NewFilesHandler(files ...string) *FilesHandler {
+	panicIf(len(files)%2 == 1)
+	n := len(files)
+	h := &FilesHandler{
+		files: map[string]string{},
 	}
-	res.URL = append(res.URL, urls...)
-	return res
+	for i := 0; i < n; i += 2 {
+		h.AddFile(files[i], files[i+1])
+	}
+	return h
 }
 
 type DirHandler struct {
@@ -174,30 +197,41 @@ func NewDirHandler(dir string, urlPrefix string, acceptFile func(string) bool) *
 }
 
 type ContentHandler struct {
-	uri  string
-	body []byte
+	files map[string][]byte
 }
 
 func (h *ContentHandler) Get(uri string) func(http.ResponseWriter, *http.Request) {
-	if uri == h.uri {
-		return makeServeContent(h.body, h.uri)
+	for u, body := range h.files {
+		if uri == u {
+			return makeServeContent(uri, body)
+		}
 	}
 	return nil
 }
 
 func (h *ContentHandler) URLS() []string {
-	return []string{h.uri}
+	urls := []string{}
+	for u := range h.files {
+		urls = append(urls, u)
+	}
+	return urls
+}
+
+func (h *ContentHandler) Add(uri string, body []byte) {
+	panicIfAbsoluteURL(uri)
+	h.files[uri] = body
 }
 
 func NewContentHandler(uri string, d []byte) *ContentHandler {
-	return &ContentHandler{
-		uri:  uri,
-		body: d,
+	h := &ContentHandler{
+		files: map[string][]byte{},
 	}
+	h.Add(uri, d)
+	return h
 }
 
 type DynamicHandler struct {
-	get  func(string) func(http.ResponseWriter, *http.Request)
+	get  GetHandlerFunc
 	urls func() []string
 }
 
@@ -209,7 +243,7 @@ func (h *DynamicHandler) URLS() []string {
 	return h.urls()
 }
 
-func NewDynamicHandler(get func(string) func(http.ResponseWriter, *http.Request), urls func() []string) *DynamicHandler {
+func NewDynamicHandler(get GetHandlerFunc, urls func() []string) *DynamicHandler {
 	return &DynamicHandler{
 		get:  get,
 		urls: urls,
@@ -223,7 +257,7 @@ type InMemoryFilesHandler struct {
 func (h *InMemoryFilesHandler) Get(uri string) func(http.ResponseWriter, *http.Request) {
 	for path, d := range h.files {
 		if strings.EqualFold(path, uri) {
-			return makeServeContent(d, uri)
+			return makeServeContent(uri, d)
 		}
 	}
 	return nil
@@ -255,12 +289,24 @@ func NewInMemoryFilesHandler(files map[string][]byte) *InMemoryFilesHandler {
 	}
 }
 
-func WriteServerFilesToDir(dir string, handlers []Handler) {
+func WriteServerFilesToDir(dir string, handlers []Handler) (int, int64) {
+	nFiles := 0
+	totalSize := int64(0)
+	dirCreated := map[string]bool{}
 	for _, h := range handlers {
 		urls := h.URLS()
 		for _, uri := range urls {
 			path := filepath.Join(dir, uri)
-			must(createDirForFile(path))
+
+			// optimize for writing lots of files
+			// I assume that even a no-op os.MkdirAll()
+			// might be somewhat expensive
+			fileDir := filepath.Dir(path)
+			if !dirCreated[fileDir] {
+				must(os.MkdirAll(fileDir, 0755))
+				dirCreated[fileDir] = true
+			}
+
 			f, err := os.Create(path)
 			must(err)
 			fw := &FileWriter{
@@ -271,10 +317,16 @@ func WriteServerFilesToDir(dir string, handlers []Handler) {
 			serve(fw, nil)
 			err = f.Close()
 			must(err)
-			sizeStr := formatSize(getFileSize(path))
-			logf(ctx(), "WriteServerFilesToDir: '%s' of size %s\n", path, sizeStr)
+			fsize := getFileSize(path)
+			totalSize += fsize
+			sizeStr := formatSize(fsize)
+			if nFiles%256 == 0 {
+				logf(ctx(), "WriteServerFilesToDir: file %d '%s' of size %s\n", nFiles+1, path, sizeStr)
+			}
+			nFiles++
 		}
 	}
+	return nFiles, totalSize
 }
 
 func zipWriteContent(zw *zip.Writer, files map[string][]byte) error {
@@ -305,6 +357,7 @@ func zipCreateFromContent(files map[string][]byte) ([]byte, error) {
 }
 
 func WriteServerFilesToZip(handlers []Handler) ([]byte, error) {
+	nFiles := 0
 	files := map[string][]byte{}
 	for _, h := range handlers {
 		urls := h.URLS()
@@ -320,7 +373,10 @@ func WriteServerFilesToZip(handlers []Handler) ([]byte, error) {
 			d := buf.Bytes()
 			files[path] = d
 			sizeStr := formatSize(int64(len(d)))
-			logf(ctx(), "WriteServerFilesZip: '%s' of size %s\n", path, sizeStr)
+			if nFiles%128 == 0 {
+				logf(ctx(), "WriteServerFilesZip: %d file '%s' of size %s\n", nFiles+1, path, sizeStr)
+			}
+			nFiles++
 		}
 	}
 	return zipCreateFromContent(files)
