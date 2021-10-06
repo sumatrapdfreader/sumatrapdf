@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-66ea17d39509a7af2b228ebe81353703121950d9
+4a921bd099cd1ef6bcac6688ffcc92fbe1b8fc6a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -418,6 +418,8 @@ el:&Άκυρο
 es:Cancelar
 it:&Annulla
 kr:취소
+kw:&Hedhi
+mk:Откажи
 nl:&Annuleren
 pl:&Anuluj
 sk:&Zrušiť
@@ -485,7 +487,7 @@ jv:&Tutup\tCtrl+W
 ka:&დახურვა\tCtrl+W
 kr:닫기(&C)\tCtrl+W
 ku:داخستن&\tCtrl+W
-kw:&Degea\tCtrl+W
+kw:&Degea\tKtrl+W
 lt:&Užverti\tCtrl+W
 lv:&Aizvērt\tCtrl+W
 mk:&Затвори\tCtrl+W
@@ -529,6 +531,8 @@ el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
+kw:&Pesya lea gwersyon 32-byt
+mk:Продолжете со инсталирање на 32-битна верзија
 nl:&Doorgaan met installeren van 32bit versie
 pl:&Kontynuuj instalację wersji 32-bitowej
 sk:&Pokračovať v inštalácii 32-bitovej verzie
@@ -547,6 +551,7 @@ el:Αντιγραφή επιλογής \tCtrl-C
 es:&Copiar la selección \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
+kw:&Kopia Dewisans \tKtrl-C
 nl:&Kopieer selectie \tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
 th:&คัดลอกส่วนที่เลือก \tCtrl-C
@@ -564,6 +569,8 @@ el:Αντιγραφή στο πρόχειρο\tCtrl-C
 es:&Copiar al portapapeles\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
+kw:&Kopia dhe'n Skryp\tKtrl-C
+mk:Копирај во таблата со исечоци \ tCtrl-C
 nl:&Kopieer naar Klembord\tCtrl-C
 pl:&Kopiuj do schowka\tCtrl-C
 th:&คัดลอกไปยังคลิปบอร์ด\tCtrl-C
@@ -581,6 +588,8 @@ el:Απόρριψη
 es:&Descartar
 it:Scarica
 kr:무시(&D)
+kw:&Tewlel chanjyow
+mk:Откажи ги измените
 nl:&Weggooien
 pl:O&drzuć zmiany
 th:&ละทิ้งการเปลี่ยนแปลง
@@ -1297,7 +1306,7 @@ el:Επισήμανση
 es:&Resaltar\ta
 hr:&Istakni\ta
 it:Evidenzia\ta
-kw:&Ughboyntya\ta
+kw:&Golowboyntya\ta
 lt:Pa&ryškinti
 lv:&Iezīmēt\ta
 nl:&Markeer\ta
@@ -2613,6 +2622,7 @@ el:Αποθήκευση σε υπάρχον PDF
 es:&Guardar en un PDF existente
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
+kw:&Gwitha dhe PDF seulabrys
 nl:&Opslaan in bestaande PDF
 pl:&Zapisz w istniejącym pliku PDF
 sk:&Uložiť do existujúceho PDF
@@ -2629,6 +2639,7 @@ de:Mit Google &suchen
 el:Αναζήτηση με Google
 es:&Buscar con Google
 it:Cerca con Google
+kw:&Hwilas Gans Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
 sk:&Hľadať pomocou Google
@@ -2957,6 +2968,7 @@ el:Μετάφραση με Google
 es:&Traducir con Google
 it:&Traduci con Google
 kr:Google로 번역(&T)
+kw:&Treylya Gans Google
 nl:&Vertalen Met Google
 pl:&Tłumacz za pomocą Google
 sk:&Preložiť pomocou Google
@@ -3737,6 +3749,7 @@ kr:%s 페이지를 즐겨찾기에 추가\tCtrl+B
 kw:Keworra folen %s dhe daklow drudh\tCtrl+B
 lt:Pridėti %s puslapį prie mėgstamų\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
+mk:Додајте страница %s во омилени \ tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 no:Legg side %s til i favoritter\tCtrl+B
 pl:Dodaj stronę %s do ulubionych\tCtrl+B
@@ -4046,6 +4059,7 @@ kr:주석
 kw:Notenyans
 lt:Anotacijos
 lv:Anotācijas
+mk:Прибелешки
 nl:Aantekeningen
 pl:Adnotacje
 ru:Аннотации
@@ -4504,7 +4518,7 @@ jv:Otomatis nge-cek &updatetan
 ka:განახლების &ავტომატურად შემოწმება
 kr:자동으로 업데이트 확인(&U)
 ku:پشکنین بۆ نوێکردنەوە بە &خۆکاری
-kw:Checkya rag nowythyansow yn awtomatek
+kw:Checkya rag nowedhyansow yn awtomatek
 lt:Automatiškai &tikrinti, ar yra naujinimų
 lv:Automātiski pārbaudīt &atjauninājumus
 mk:Проверувај за &надградби автоматски
@@ -4551,6 +4565,7 @@ kr:배경색
 kw:Liw Kilva:
 lt:Fono spalva:
 lv:Fona krāsa:
+mk:Боја на позадина
 nl:Achtergrond Kleur
 pl:Kolor tła:
 sk:Farba pozadia:
@@ -5198,7 +5213,7 @@ ja:逆順検索コマンドを開始できません。設定でコマンド ラ�
 ka:შებრუნებული ძებნის ბრძანების გაშვება ვერ მოხერხდა. გთხოვთ შეამოწმეთ ბრძანებების სტრიქონის პარამეტრები.
 kr:역방향 검색 명령을 시작할 수 없습니다.  설정에서 명령줄을 확인하세요.
 ku:ناتوانرێت فرمانی گەڕانی پێچەوانە ئەنجام بدرێت. تکایە فرمانی هێڵ بپشکنە لە ڕێکخستنەکاندا
-kw:Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.
+kw:Ny yllir dalleth gorhemmyn gorthhwilas.  Check an linen gorhemmyn y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
 lv:Neizdevās palaist inversās meklēšanas komandu. Lūdzu pārbaudiet komandrindu iestatījumus.
 mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во поставувањата.
@@ -5335,7 +5350,7 @@ ja:更新のチェック(&U)
 ka:&განახლების შემოწმება
 kr:업데이트 확인(&U)
 ku:پشکنین بۆ &نوێکردنەوە
-kw:&Checkya rag versyon nowyth
+kw:&Checkya rag versyon nowydh
 lt:Tikrinti, ar yra &naujinimų
 lv:Pārbaudīt, vai nav &atjauninājumi
 mk:&Провери за надградби
@@ -5378,6 +5393,8 @@ el:Έλεγχος για ενημέρωση...
 es:Buscando actualizaciones...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
+kw:Ow checkya rag nowedhans
+mk:Провери за надградба
 nl:Controleer op Update...
 pl:Szukanie aktualizacji...
 th:ตรวจสอบการอัพเดท
@@ -5513,9 +5530,10 @@ it:Comprimi tutto
 ja:すべて折り畳む
 ka:ყველას ჩაკეცვა
 kr:모두 접기
-kw:Byghanhe Oll
+kw:Diskara Oll
 lt:Suskleisti viską
 lv:Sakļaut visu
+mk:Затвори се
 nl:Alle Samenvouwen
 pl:Zwiń wszystko
 pt:Recolher tudo
@@ -5547,6 +5565,7 @@ kr:색상
 kw:Liw:
 lt:Spalva:
 lv:Krāsa:
+mk:Боја
 my:Warna:
 nl:Kleur
 pl:Kolor:
@@ -6426,6 +6445,7 @@ co:Impussibule d’ottene u nome di a stampetta
 de:Druckername konnte nicht ermittelt werden
 es:No se ha podido encontrar el nombre de la impresora
 it:Impossibile ottenere il nome della stampante
+kw:Ny yllir kavos hanow pryntyer
 nl:Kan de naam van de printer niet vinden
 pl:Nie można uzyskać nazwy drukarki
 th:ไม่ได้รับชื่อเครื่องพิมพ์
@@ -6594,7 +6614,7 @@ ja:PDF 検索フィルタをインストールできませんでした
 ka:PDF ძიების ფილტრის ინსტალაცია ვერ მოხერხდა
 kr:PDF 검색 필터를 설치할 수 없습니다.
 ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
-kw:Ny yllir lea sythel hwilas PDF
+kw:Ny yllir lea sidhel hwilas PDF
 lt:Nepavyko įdiegti PDF paieškos filtro
 lv:Nevarēja instalēt PDF meklēšanas filtru
 mk:Не можам да инсталирам филтер за пребарување на PDF
@@ -6835,7 +6855,7 @@ id:Tidak bisa mencopot filter pencarian Sumatra
 it:Impossibile disinstallare filtro ricerca Sumatra
 ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
 kr:Sumatra 검색 필터를 제거할 수 없습니다
-kw:Ny yllir anlea sythel hwilas Sumatra
+kw:Ny yllir anlea sidhel hwilas Sumatra
 lt:Nepavyko pašalinti Sumatra paieškos filtro
 lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
 my:Tidak dapat membuang penapis carian Sumatra
@@ -6882,7 +6902,7 @@ ja:ブラウザプラグインをアンインストールできませんでし�
 ka:ბრაუზერის დანამატის დეინსტალაცია ვერ მოხერხდა
 kr:브라우저 플러그인을 제거할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
-kw:Ny yllir lea ebilyans peurel
+kw:Ny yllir anlea ebilyans peurel
 lt:Nepavyko pašalinti naršyklės įskiepio
 lv:Nevarēja atinstalēt pārlūkprogrammas spraudni
 mk:Не можам да го избришам додатокот за прелистувачи
@@ -6984,6 +7004,7 @@ el:Δημιουργία σχολιασμού κάτω από το δρομέα
 es:Crear una anotación &bajo el cursor
 it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
+kw:Gwruthyl Notenyans &Yn-Dann Resor
 nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
 th:สร้างคำอธิบายประกอบ &​ใต้ตัวชี้ตำแหน่ง
@@ -7005,6 +7026,7 @@ kr:선택한 곳에 주석 생성
 kw:Gwruthyl Notenyans a'th Tewis
 lt:Sukurti anotaciją iš pažymėtos vietos
 lv:Veidot anotāciju no atlases
+mk:Креирајте прибелешка од изборот
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
 th:สร้างคำอธิบายประกอบจากส่วนที่เลือก
@@ -7309,6 +7331,7 @@ kr:어두운
 kw:Tewl
 lt:Tamsi
 lv:Tumšs
+mk:Темно
 ne:गाढ़ा
 nl:Donker
 nn:Mørkt
@@ -7367,6 +7390,7 @@ kr:더 어두운
 kw:Tewlla
 lt:Tamsesnė
 lv:Tumšāks
+mk:Потемно
 ne:अझै गाढ़ा
 nl:Zwart
 nn:Mørkare
@@ -7555,7 +7579,7 @@ ja:ポータブル モードでは変更できません
 ka:პორტატულ რეჟიმში, PDF-ის წამკითხველად დაყენება შეუძლებელია
 kr:포터블 방식에서는 기본 PDF 리더로 바꿀 수 없습니다.
 ku:(ناتوانرێت بگۆڕدرێت لە شێوازی هەڵگرتندا (پۆرتەیبڵ  PDF پیشاندەری سەرەکی
-kw:Ny yll an pennredyer PDF bos chanjyes yn modh porthadow
+kw:Ny yll an pennredyer PDF bos chanjyes yn modh degadow
 lt:Naudojant programą kaip portatyvią, numatytosios PDF žiūryklės keisti negalima
 lv:Noklusējuma PDF lasītāju nevar izmainīt pārnesamam režīmam
 mk:Основниот читач на PDF не може да работи во мобилен режим
@@ -7790,6 +7814,8 @@ el:Μη γίνει εγκατάσταση
 es:No instalar
 it:Non installare
 kr:설치하지 마십시오
+kw:Ny wra lea
+mk:Не инсталирај
 nl:Niet installeren
 pl:Nie instaluj
 th:ติดตั้งไม่ได้
@@ -7806,6 +7832,8 @@ el:Λήψη έκδοσης 64-bit
 es:Descargar la versión de 64 bits
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
+kw:Iskarga gwersyon 64-byt
+mk:Преземете 64-битна верзија
 nl:Download 64bit versie
 pl:Pobierz wersję 64-bitową
 sk:Stiahnuť 64-bitovú verziu
@@ -8008,6 +8036,7 @@ kr:주석 편집
 kw:Golegi notenyans
 lt:Redaguoti anotacijas
 lv:Rediģēt anotācijas
+mk:Измени прибелешка
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
@@ -8190,7 +8219,7 @@ ja:PDF ドキュメント上でダブルクリックしたときに呼び出す�
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 ku:کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی:
-kw:Enter an linen-gorhemmyn dhe'y elwel pan wre'ta klyck dewblek war an skriven PDF:
+kw:Enter an linen-gorhemmyn dh'y elwel pan wre'ta klyck dewblek war an skriven PDF:
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
 lv:Ievadiet komandrindu, izsaucamu ar dubultklikšķi uz PDF dokumenta:
 mk:Внесете команда, за да се извршува при секое двојно кликнунвање на PDF-документот:
@@ -8312,6 +8341,7 @@ kr:모두 확대하기
 kw:Lesa Oll
 lt:Išplėsti viską
 lv:Izvērst visu
+mk:Прошириги сите
 nl:Alle Uitvouwen
 pl:Rozwiń wszystko
 pt:Expandir tudo
@@ -8876,7 +8906,7 @@ ja:拡張子情報をレジストリに書き込むのに失敗しました
 ka:ვერ მოხერხდა ფაილის გაფართოების სრული ინფორმაციის ჩაწერა რეგისტრში
 kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
-kw:Skrifa kedhlow ystynnyans restren ynstynnys dhe'n govskrifva a fyllis
+kw:Skrifa kedhlow ystynnans restren ynstynnys dhe'n govskrifva a fyllis
 lt:Nepavyko į registrą įrašyti išplėstinės failo plėtinio informacijos
 lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
@@ -9245,6 +9275,7 @@ kr:파일 첨부
 kw:Stagel Restren
 lt:Failo priedas
 lv:Faila pielikums
+mk:Прикачи документ
 nl:Bestands Bijlage
 pl:Załącznik
 ru:Вложенный файл
@@ -10954,6 +10985,7 @@ kr:이미지
 kw:Skeusennow
 lt:Vaizdai
 lv:Attēli
+mk:Слики
 nl:Afbeeldingen
 pl:Obrazy
 ru:Изображения
@@ -10987,6 +11019,7 @@ kr:잉크
 kw:Ynk
 lt:Rašalas
 lv:Tinte
+mk:Мастило
 nl:Snelkoppeling
 no:Blekk
 pl:Atrament
@@ -11134,6 +11167,8 @@ el:Εγκατάσταση και επανεκκίνηση
 es:Instalar y reiniciar
 it:Installa e ri-esegui
 kr:설치 후 재실행
+kw:Lea ha daslonchya
+mk:Инсталирајте и повторно стартувајте
 nl:Installeren + opnieuw starten
 pl:Zainstaluj i uruchom ponownie
 th:ติดตั้ง และ เรียกใช้งาน
@@ -11276,6 +11311,7 @@ el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστ
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
+kw:Ow lea Sumatra PDF 32-byt war SO 64-byt
 nl:32bit SumatraPDF installeren op 64bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 th:กำลังติดตั้ง SumatraPDF รุ่น 32 บิต บนระบบปฏิบัติการ 64 บิต
@@ -11508,6 +11544,7 @@ kr:밝은
 kw:Golow
 lt:Šviesi
 lv:Gaišs
+mk:Светло
 ne:हल्का
 nl:Wit
 nn:Lyst
@@ -12087,6 +12124,8 @@ el:Νέα έκδοση διαθέσιμη
 es:Disponible una versión nueva
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
+kw:Gwersyon nowydh kavadow
+mk:Достапна е нова верзија
 nl:Nieuwe versie beschikbaar
 pl:Dostępna nowa wersja
 sk:Dostupná nová verzia
@@ -15358,6 +15397,7 @@ el:Επιλογή
 es:S&elección
 it:S&elezione
 kr:선택(&e)
+kw:D&ewisans
 nl:S&electie
 pl:Z&aznaczenie
 th:&การเลือก
@@ -15394,6 +15434,7 @@ dk:SVG-dokumenter
 el:Έγγραφα SVG
 es:Documentos SVG
 it:Documenti SVG
+kw:Dogvennow SVG
 nl:SVG Documenten
 pl:Documenty SVG
 th:เอกสาร SVG
@@ -15541,6 +15582,7 @@ el:Αποθήκευση σχολιασμών;
 es:¿Guardar las anotaciones?
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
+kw:Gwitha notenyansow?
 nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
 th:บันทึกคำอธิบายประกอบหรือไม่
@@ -15562,6 +15604,7 @@ kr:새 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF nowydh
 lt:Išsaugoti pakeitimus į naują PDF failą
 lv:Saglabāt izmaiņas jaunā PDF failā
+mk:Зачувај ги измените во нов ПДФ
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
 ru:Сохранить изменения в новый PDF
@@ -15602,6 +15645,7 @@ el:Αποθήκευση σε νέο PDF
 es:Guardar en un PDF &nuevo
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
+kw:Gwitha dhe PDF &nowydh
 nl:Opslaan in &nieuwe PDF
 pl:Zapisz w &nowym pliku PDF
 sk:Uložiť do &nového PDF
@@ -15619,6 +15663,7 @@ el:Αναζήτηση με Bing
 es:Buscar con &Bing
 it:Cerca con &Bing
 kr:Bing으로 검색(&B)
+kw:Hwilas Gans &Bing
 nl:Zoeken Met &Bing
 pl:Szukaj za pomocą &Bing
 sk:Vyhľadávanie pomocou &Bing
@@ -15636,6 +15681,7 @@ el:Αναζήτηση με Google
 es:Buscar con &Google
 it:Cerca con &Google
 kr:Google로 검색(&G)
+kw:Hwilas Gans &Google
 nl:Zoeken Met &Google
 pl:Szukaj za pomocą &Google
 sk:Hľadať pomocou &Google
@@ -16731,6 +16777,7 @@ el:Παράλειψη αυτής της έκδοσης
 es:Omitir esta versión
 it:Salta questa versione
 kr:이 버전 건너뛰기
+kw:Skyppya an gwersyon ma
 nl:Sla deze versie over
 pl:Pomiń tę wersję
 th:ข้ามรุ่นนี้
@@ -17973,7 +18020,7 @@ ja:インストーラが破損しています。もう一度ダウンロード�
 ka:ინსტალატორი დაზიანებულია. გთხოვთ, ხელახლა ჩამოტვირთეთ.\n ბოდიში უხერხულობისთვის!
 kr:설치 관리자가 손상됐습니다.  다시 다운로드하세요.\n불편하게 해서 미안합니다!
 ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەوە.\nببورە لە ڕوودانی ئەو هەڵەیە!
-kw:An leans re beu legrys, Gwra y iskarga arta.\nDrog yw genen a'n ankombrynsi!
+kw:An jynnik-lea re beu legrys, Gwra y iskarga arta.\nDrog yw genen a'n ankombrynsi!
 lt:Diegimo programa sugadinta. Prašome atsisiųsti ją iš naujo.\nAtsiprašome už nepatogumus!
 lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēlreiz.\nPiedodiet par sagādātajām neērtībām!
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
@@ -18141,6 +18188,7 @@ el:Μετάφραση με DeepL
 es:Traducir con &DeepL
 it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
+kw:Treylya gans &DeepL
 nl:Vertalen Met &Deepl
 pl:Tłumacz za pomocą &DeepL
 sk:Preložiť pomocou &DeepL
@@ -18428,6 +18476,7 @@ dk:Ikke-gemte annoteringer i '%s'
 el:Μη αποθηκευμένα σχόλια στο '%s'
 es:Anotaciones sin guardar en «%s»
 it:Annotazioni non salvate in '%s'
+kw:Notenyansow anwithys yn '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
@@ -18928,6 +18977,7 @@ dk:Du har version '%s' og version '%s' er tilgængelig. \nVil du installere ny v
 el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η έκδοση '%s'.\nΘέλετε να εγκαταστήσετε τη νέα έκδοση;
 es:Esta es la versión «%s» y ya está disponible la versión «%s».\N¿Quiere instalar la versión nueva?
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
+kw:Yma dhis gwersyon '%s' ha gwersyon '%s' yw kavadow.\nA vynn'ta lea gwersyon nowydh?
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
 th:คุณมีรุ่น '%s'​ และรุ่น '%s'​ ใช่ได้ \nคุณต้องการจะติดตั้งรุ่นใหม่หรือไม่
@@ -18944,6 +18994,7 @@ dk:Du installerer 32-bit SumatraPDF på 64-bit operativsystem. \nVil du hente \n
 el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σύστημα 64-bit.\nΘέλετε να κατεβάσετε\nτην έκδοση 64-bit;
 es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
+kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwersyon 64-byt?
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
 th:คุณกำลังติดตั้ง SumatraPDF รุ่น 32-บิต บนระบปฏิบัติการ 64-บิต.\nคุณต้องการดาวน์โหลดหรือไม่\nรุ่น 64-บิต
@@ -19257,7 +19308,7 @@ ja:[変更を検出: 更新中] %s
 ka:[აღმოჩენილია ცვლილებები; მიმდინარეობს განახლება...] %s
 kr:[변경 감지됨.  새로 고치는 중...] %s
 ku:%s [گۆڕانکاری تێداکرا؛ نوێکردنەوە ]
-kw:[Nowythyansow kevys; owth arnowytha] %s
+kw:[Nowedhyansow kevys; owth arnowedhi] %s
 lt:[Aptikta pakitimų; atnaujinama] %s
 lv:[Ir atklātas izmaiņas; notiek atsvaidzināšana] %s
 mk:[Забележав промени; освежувам...] %s
