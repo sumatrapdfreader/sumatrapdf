@@ -605,6 +605,7 @@ typedef struct
 	char opwd_utf8[128]; /* Owner password. */
 	char upwd_utf8[128]; /* User password. */
 	int do_snapshot; /* Do not use directly. Use the snapshot functions. */
+	int do_preserve_metadata; /* When cleaning, preserve metadata unchanged. */
 } pdf_write_options;
 
 FZ_DATA extern const pdf_write_options pdf_default_write_options;

@@ -4749,3 +4749,31 @@ pdf_debug_doc_changes(fz_context *ctx, pdf_document *doc)
 	}
 
 }
+
+pdf_obj *
+pdf_metadata(fz_context *ctx, pdf_document *doc)
+{
+	int initial = doc->xref_base;
+	pdf_obj *obj = NULL;
+
+	fz_var(obj);
+
+	fz_try(ctx)
+	{
+		do
+		{
+			pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+			obj = pdf_dict_get(ctx, root, PDF_NAME(Metadata));
+			if (obj)
+				break;
+			doc->xref_base++;
+		}
+		while (doc->xref_base <= doc->num_xref_sections);
+	}
+	fz_always(ctx)
+		doc->xref_base = initial;
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return obj;
+}

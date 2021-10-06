@@ -138,6 +138,9 @@ def test(path):
 
     colorspace = mupdf.Colorspace(mupdf.Colorspace.Fixed_RGB)
     log(f'{colorspace.m_internal.key_storable.storable.refs}')
+    if 0:
+        c = colorspace.clamp_color([3.14])
+        log('colorspace.clamp_color returned c={c}')
     pixmap = mupdf.Pixmap(document, page_number, scale, colorspace, 0)
     log(f'Have created pixmap: {pixmap.m_internal.w} {pixmap.m_internal.h} {pixmap.m_internal.stride} {pixmap.m_internal.n}')
 

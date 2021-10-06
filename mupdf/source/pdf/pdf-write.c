@@ -95,6 +95,7 @@ typedef struct
 	int do_encrypt;
 	int dont_regenerate_id;
 	int do_snapshot;
+	int do_preserve_metadata;
 
 	int list_len;
 	int *use_list;
@@ -120,6 +121,7 @@ typedef struct
 	pdf_obj *linear_t;
 	pdf_obj *hints_s;
 	pdf_obj *hints_length;
+	int hint_object_num;
 	int page_count;
 	page_objects_list *page_object_lists;
 	int crypt_object_number;
@@ -128,6 +130,7 @@ typedef struct
 	int permissions;
 	pdf_crypt *crypt;
 	pdf_obj *crypt_obj;
+	pdf_obj *metadata;
 } pdf_write_state;
 
 /*
@@ -1295,6 +1298,7 @@ add_linearization_objs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		hint_ref = pdf_add_object(ctx, doc, hint_obj);
 		hint_num = pdf_to_num(ctx, hint_ref);
 
+		opts->hint_object_num = hint_num;
 		opts->use_list[hint_num] = USE_HINTS;
 		opts->renumber_map[hint_num] = hint_num;
 		opts->rev_renumber_map[hint_num] = hint_num;
@@ -2158,7 +2162,7 @@ static void writeobject(fz_context *ctx, pdf_document *doc, pdf_write_state *opt
 				if (is_jpx_stream(ctx, obj))
 					do_deflate = 0, do_expand = 0;
 
-				if (do_expand)
+				if (do_expand && num != opts->hint_object_num)
 					expandstream(ctx, doc, opts, obj, num, gen, do_deflate, unenc);
 				else
 					copystream(ctx, doc, opts, obj, num, gen, do_deflate, unenc);
@@ -2251,20 +2255,25 @@ static void writexref(fz_context *ctx, pdf_document *doc, pdf_write_state *opts,
 
 		if (first)
 		{
-			obj = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info));
+			pdf_obj *otrailer = pdf_trailer(ctx, doc);
+			obj = pdf_dict_get(ctx, otrailer, PDF_NAME(Info));
 			if (obj)
 				pdf_dict_put(ctx, trailer, PDF_NAME(Info), obj);
 
-			obj = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+			obj = pdf_dict_get(ctx, otrailer, PDF_NAME(Root));
 			if (obj)
 				pdf_dict_put(ctx, trailer, PDF_NAME(Root), obj);
 
-			obj = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(ID));
+
+			obj = pdf_dict_get(ctx, otrailer, PDF_NAME(ID));
 			if (obj)
 				pdf_dict_put(ctx, trailer, PDF_NAME(ID), obj);
 
 			if (opts->crypt_obj)
 				pdf_dict_put(ctx, trailer, PDF_NAME(Encrypt), opts->crypt_obj);
+
+			if (opts->metadata)
+				pdf_dict_putp(ctx, trailer, "Root/Metadata", opts->metadata);
 		}
 		if (main_xref_offset != 0)
 		{
@@ -3083,6 +3092,7 @@ static void initialise_write_state(fz_context *ctx, pdf_document *doc, const pdf
 	opts->do_clean = in_opts->do_clean;
 	opts->do_encrypt = in_opts->do_encrypt;
 	opts->dont_regenerate_id = in_opts->dont_regenerate_id;
+	opts->do_preserve_metadata = in_opts->do_preserve_metadata;
 	opts->start = 0;
 	opts->main_xref_offset = INT_MIN;
 
@@ -3541,6 +3551,9 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 			expand_lists(ctx, opts, xref_len);
 		}
 
+		if (opts->do_preserve_metadata)
+			opts->metadata = pdf_keep_obj(ctx, pdf_metadata(ctx, doc));
+
 		/* Sweep & mark objects from the trailer */
 		if (opts->do_garbage >= 1 || opts->do_linear)
 			(void)markobj(ctx, doc, opts, pdf_trailer(ctx, doc));
@@ -3689,6 +3702,7 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 		if (opts->crypt != doc->crypt)
 			pdf_drop_crypt(ctx, opts->crypt);
 		pdf_drop_obj(ctx, opts->crypt_obj);
+		pdf_drop_obj(ctx, opts->metadata);
 		doc->save_in_progress = 0;
 	}
 	fz_catch(ctx)

@@ -140,6 +140,8 @@ pdf_obj *pdf_trailer(fz_context *ctx, pdf_document *doc);
 void pdf_set_populating_xref_trailer(fz_context *ctx, pdf_document *doc, pdf_obj *trailer);
 int pdf_xref_len(fz_context *ctx, pdf_document *doc);
 
+pdf_obj *pdf_metadata(fz_context *ctx, pdf_document *doc);
+
 /*
 	Used while reading the individual xref sections from a file.
 */

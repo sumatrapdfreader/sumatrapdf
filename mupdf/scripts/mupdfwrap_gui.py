@@ -89,6 +89,7 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
         self.central_widget.setToolTip(
                 '+=  zoom in.\n'
                 '-_  zoom out.\n'
+                '0   zoom reset.\n'
                 'Shift-page-up  prev page.\n'
                 'Shift-page-down  next page.\n'
                 )

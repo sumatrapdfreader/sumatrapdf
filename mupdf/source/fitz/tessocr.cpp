@@ -57,7 +57,7 @@ void *leptonica_realloc(void *ptr, size_t blocksize)
 	printf("%d LEPTONICA_REALLOC %p,%d -> %p\n", event++, ptr, (int)blocksize, ret);
 	fflush(stdout);
 #endif
-	return NULL;
+	return ret;
 }
 
 #if TESSERACT_MAJOR_VERSION >= 5

@@ -151,6 +151,52 @@ C++ wrapping:
             fz_lookup_metadata() and its wrappers, mupdf::fz_lookup_metadata()
             and mupdf::Document::lookup_metadata().
 
+        Output parameters:
+
+            We provide two different ways of wrapping functions with
+            out-params.
+
+            Using SWIG OUTPUT markers:
+
+                First, in generated C++ prototypes, we use OUTPUT as the
+                name of out-params, which tells SWIG to treat them as
+                out-params. This works for basic out-params such as int*, so
+                SWIG will generate Python code that returns a tuple and C# code
+                that takes args marked with the C# keyword 'out'.
+
+            Unfortunately SWIG doesn't appear to handle out-params that
+            are zero terminated strings (char**) and cannot generically
+            handle binary data out-params (often indicated with unsigned
+            char**). Also, SWIG-generated C# out-params are a little
+            inconvenient compared to returning a C# tuple (requires C# 7 or
+            later).
+
+            So we provide an additional mechanism in the generated C++.
+
+            Out-params in a struct:
+
+                For each function with out-params, we provide a class
+                containing just the out-params and a function taking just the
+                non-out-param args, plus a pointer to the class. This function
+                fills in the members of this class instead of returning
+                individual out-params. We can then then generate extra Python
+                or C# code that uses these special functions to get the
+                out-params in a class object and return them as a tuple in both
+                Python and C#.
+
+            Binary out-param data:
+
+                Some MuPDF functions return binary data, typically with an
+                'unsigned char**' out-param. It is not possible to generically
+                handle these in Python or C# because the size of the returned
+                buffer is specified elsewhere (in a different out-param or in
+                the return value). So we generate custom Python and C# code to
+                give a convenient interface, e.g. copying the returned data
+                into a Python bytes object or a C# byte array.
+
+
+
+
 
 Python wrapping:
 
@@ -2495,7 +2541,7 @@ def get_field0( type_):
 get_base_type_cache = dict()
 def get_base_type( type_):
     '''
-    Follows pointer to get ultimate type.
+    Repeatedly dereferences pointer and returns the ultimate type.
     '''
     # Caching reduces time from to 0.24s to 0.1s.
     key = type_.spelling
@@ -2699,7 +2745,7 @@ class Clang6FnArgsBug( Exception):
     def __init__( self, text):
         Exception.__init__( self, f'clang-6 unable to walk args for fn type. {text}')
 
-def declaration_text( type_, name, nest=0, name_is_simple=True, arg_names=False, verbose=False):
+def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False):
     '''
     Returns text for C++ declaration of <type_> called <name>.
 
@@ -2716,7 +2762,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, arg_names=False,
     function.
     '''
     if verbose:
-        log( '{nest=} {arg_names=} {name=} {type_.spelling=} {type_.get_declaration().get_usr()=}')
+        log( '{nest=} {name=} {type_.spelling=} {type_.get_declaration().get_usr()=}')
         log( '{type_.kind=} {type_.get_array_size()=}')
     def log2( text):
         jlib.log( nest*'    ' + text, 2)
@@ -2727,7 +2773,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, arg_names=False,
     if array_n >= 0 or type_.kind == clang.cindex.TypeKind.INCOMPLETEARRAY:
         # Not sure this is correct.
         if verbose: log( '{array_n=}')
-        text = declaration_text( type_.get_array_element_type(), name, nest+1, name_is_simple, arg_names, verbose=verbose)
+        text = declaration_text( type_.get_array_element_type(), name, nest+1, name_is_simple, verbose=verbose)
         if array_n < 0:
             array_n = ''
         text += f'[{array_n}]'
@@ -2736,7 +2782,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, arg_names=False,
     pointee = type_.get_pointee()
     if pointee and pointee.spelling:
         if verbose: log( '{pointee.spelling=}')
-        return declaration_text( pointee, f'*{name}', nest+1, name_is_simple=False, arg_names=arg_names, verbose=verbose)
+        return declaration_text( pointee, f'*{name}', nest+1, name_is_simple=False, verbose=verbose)
 
     if type_.get_typedef_name():
         if verbose: log( '{type_.get_typedef_name()=}')
@@ -2774,11 +2820,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, arg_names=False,
         for arg in args:
             if i:
                 ret += ', '
-            #name2 = arg.spelling if arg_names else ''
-            #if verbose:
-            #    log( '{name2=}')
-            #ret += declaration_text( arg, name2, nest+1, arg_names=arg_names)
-            ret += declaration_text( arg, '', nest+1, arg_names=arg_names)
+            ret += declaration_text( arg, '', nest+1)
             i += 1
         if verbose: log( '{ret!r=}')
         if not name_is_simple:
@@ -2787,7 +2829,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, arg_names=False,
             name = f'({name})'
         ret = f'{name}({ret})'
         if verbose: log( '{type_.get_result()=}')
-        ret = declaration_text( type_.get_result(), ret, nest+1, name_is_simple=False, arg_names=arg_names, verbose=verbose)
+        ret = declaration_text( type_.get_result(), ret, nest+1, name_is_simple=False, verbose=verbose)
         if verbose:
             log( 'returning {ret=}')
         return ret
@@ -2829,6 +2871,8 @@ class Arg:
             double pointer, or arg is pointer other than to char.
         .name_python:
             Same as .name or .name+'_' if .name is a Python keyword.
+        .name_csharp:
+            Same as .name or .name+'_' if .name is a C# keyword.
     '''
     def __init__(self, cursor, name, separator, alt, out_param):
         self.cursor = cursor
@@ -2840,13 +2884,27 @@ class Arg:
             self.name_python = f'{name}_'
         else:
             self.name_python = name
+        self.name_csharp = f'{name}_' if name in ('out', 'is', 'in', 'params') else name
 
     def __str__(self):
         return f'Arg(cursor={self.cursor} name={self.name} alt={self.alt} out_param={self.out_param})'
 
+def get_extras(type_):
+    '''
+    Returns (cursor, typename, extras):
+        cursor: for base type.
+        typename:
+        extras: None or from classextras.
+    '''
+    base_type = get_base_type( type_)
+    base_type_cursor = base_type.get_declaration()
+    base_typename = get_base_typename( base_type)
+    extras = classextras.get( base_typename)
+    return base_type_cursor, base_typename, extras
+
 get_args_cache = dict()
 
-def get_args( tu, cursor, include_fz_context=False, verbose=False):
+def get_args( tu, cursor, include_fz_context=False, skip_first_alt=False, verbose=False):
     '''
     Yields Arg instance for each arg of the function at <cursor>.
 
@@ -2857,6 +2915,8 @@ def get_args( tu, cursor, include_fz_context=False, verbose=False):
             Clang cursor for the function.
         include_fz_context:
             If false, we skip args that are 'struct fz_context*'
+        skip_first_alt:]
+            If true, we skip the first arg with .alt set.
         verbose:
             .
     '''
@@ -2864,12 +2924,13 @@ def get_args( tu, cursor, include_fz_context=False, verbose=False):
     # are slow, so we cache the returned items. E.g. this reduces total time of
     # --build 0 from 3.5s to 2.1s.
     #
-    key = tu, cursor.location.file, cursor.location.line, include_fz_context
+    key = tu, cursor.location.file, cursor.location.line, include_fz_context, skip_first_alt
     ret = get_args_cache.get( key)
 
     if ret is None:
         ret = []
         i = 0
+        i_alt = 0
         separator = ''
         for arg_cursor in cursor.get_arguments():
             assert arg_cursor.kind == clang.cindex.CursorKind.PARM_DECL
@@ -2882,11 +2943,7 @@ def get_args( tu, cursor, include_fz_context=False, verbose=False):
                 verbose = True
             alt = None
             out_param = False
-            # Set <alt> to wrapping class if possible.
-            base_type = get_base_type( arg_cursor.type)
-            base_type_cursor = base_type.get_declaration()
-            base_typename = get_base_typename( base_type)
-            extras = classextras.get( base_typename)
+            base_type_cursor, base_typename, extras = get_extras(arg_cursor.type)
             if verbose:
                 log( '{extras=}')
             if extras:
@@ -2903,7 +2960,7 @@ def get_args( tu, cursor, include_fz_context=False, verbose=False):
                         ):
                     alt = base_type_cursor
             if verbose:
-                log( '{arg_cursor.type.spelling=} {base_type.spelling=} {arg_cursor.type.kind=}')
+                log( '{arg_cursor.type.spelling=} {base_type.spelling=} {arg_cursor.type.kind=} {get_base_typename(arg_cursor.type)=}')
             if alt:
                 if is_double_pointer( arg_cursor.type):
                     out_param = True
@@ -2921,23 +2978,30 @@ def get_args( tu, cursor, include_fz_context=False, verbose=False):
                 # Pointer to fz_ struct is not usually an out-param.
                 if verbose: log( 'not out-param because arg is: {arg_cursor.displayname=} {base_type.spelling=} {extras}')
             elif arg_cursor.type.kind == clang.cindex.TypeKind.POINTER:
+                pointee = arg_cursor.type.get_pointee()
                 if verbose:
                     log( 'clang.cindex.TypeKind.POINTER')
-                if arg_cursor.type.get_pointee().get_canonical().kind == clang.cindex.TypeKind.FUNCTIONPROTO:
+                if pointee.get_canonical().kind == clang.cindex.TypeKind.FUNCTIONPROTO:
                     # Don't mark function-pointer args as out-params.
                     if verbose:
                         log( 'clang.cindex.TypeKind.FUNCTIONPROTO')
-                elif arg_cursor.type.get_pointee().is_const_qualified():
+                elif pointee.is_const_qualified():
                     if verbose:
                         log( 'is_const_qualified()')
+                elif pointee.spelling == 'FILE':
+                    pass
                 else:
                     if verbose:
                         log( 'setting out_param = True')
                     out_param = True
+            if alt:
+                i_alt += 1
+            i += 1
+            if alt and skip_first_alt and i_alt == 1:
+                continue
             if verbose:
                 log( '*** returning {(arg_cursor.displayname, name, separator, alt, out_param)}')
             ret.append( Arg(arg_cursor, name, separator, alt, out_param))
-            i += 1
             separator = ', '
 
         get_args_cache[ key] = ret
@@ -2999,19 +3063,24 @@ def is_pointer_to( type_, destination, verbose=False):
         assert isinstance( type_, clang.cindex.Type)
         ret = None
         destination = clip( destination, 'struct ')
+        if verbose:
+            jlib.log('{type_.kind=}')
         if type_.kind == clang.cindex.TypeKind.POINTER:
             pointee = type_.get_pointee().get_canonical()
-
-            if verbose:
-                jlib.log( "{declaration_text( pointee, '')!r=} {destination + ' '!r=}")
             d = declaration_text( pointee, '')
             d = clip( d, 'const ')
             d = clip( d, 'struct ')
+            if verbose:
+                jlib.log( '{destination!r=} {d!r=}')
             ret = d == f'{destination} ' or d == f'const {destination} '
         is_pointer_to_cache[ key] = ret
 
     return ret
 
+def is_pointer_to_pointer_to( type_, destination):
+    if type_.kind != clang.cindex.TypeKind.POINTER:
+        return False
+    return is_pointer_to( type_.get_pointee().get_canonical(), destination)
 
 def make_fncall( tu, cursor, return_type, fncall, out):
     '''
@@ -3084,6 +3153,7 @@ class Generated:
             self.c_functions            = from_pickle( f'{dirpath}/c_functions.pickle')
             self.c_globals              = from_pickle( f'{dirpath}/c_globals.pickle')
             self.container_classnames   = from_pickle( f'{dirpath}/container_classnames.pickle')
+            self.swig_cpp               = from_pickle( f'{dirpath}/swig_cpp.pickle')
             self.swig_cpp_csharp        = from_pickle( f'{dirpath}/swig_cpp_csharp.pickle')
             self.swig_cpp_python        = from_pickle( f'{dirpath}/swig_cpp_python.pickle')
             self.swig_csharp            = from_pickle( f'{dirpath}/swig_csharp.pickle')
@@ -3099,6 +3169,7 @@ class Generated:
             self.output_param_fns = []
             self.c_functions = []
             self.c_globals = []
+            self.swig_cpp = io.StringIO()
             self.swig_cpp_python = io.StringIO()
             self.swig_cpp_csharp = io.StringIO()
             self.swig_python = io.StringIO()
@@ -3108,39 +3179,290 @@ class Generated:
         '''
         Saves state to .pickle files, to be loaded later via __init__().
         '''
-        to_pickle( self.c_functions,                   f'{dirpath}/c_functions.pickle')
-        to_pickle( self.c_globals,                     f'{dirpath}/c_globals.pickle')
-        to_pickle( self.container_classnames,          f'{dirpath}/container_classnames.pickle')
-        to_pickle( self.swig_cpp_csharp.getvalue(),    f'{dirpath}/swig_cpp_csharp.pickle')
-        to_pickle( self.swig_cpp_python.getvalue(),    f'{dirpath}/swig_cpp_python.pickle')
-        to_pickle( self.swig_csharp.getvalue(),        f'{dirpath}/swig_csharp.pickle')
-        to_pickle( self.swig_python.getvalue(),        f'{dirpath}/swig_python.pickle')
-        to_pickle( self.to_string_structnames,         f'{dirpath}/to_string_structnames.pickle')
+        to_pickle( self.c_functions,                f'{dirpath}/c_functions.pickle')
+        to_pickle( self.c_globals,                  f'{dirpath}/c_globals.pickle')
+        to_pickle( self.container_classnames,       f'{dirpath}/container_classnames.pickle')
+        to_pickle( self.swig_cpp.getvalue(),        f'{dirpath}/swig_cpp.pickle')
+        to_pickle( self.swig_cpp_csharp.getvalue(), f'{dirpath}/swig_cpp_csharp.pickle')
+        to_pickle( self.swig_cpp_python.getvalue(), f'{dirpath}/swig_cpp_python.pickle')
+        to_pickle( self.swig_csharp.getvalue(),     f'{dirpath}/swig_csharp.pickle')
+        to_pickle( self.swig_python.getvalue(),     f'{dirpath}/swig_python.pickle')
+        to_pickle( self.to_string_structnames,      f'{dirpath}/to_string_structnames.pickle')
 
-
-def make_python_outparam_helpers(
+def make_outparam_helper_csharp(
         tu,
         cursor,
         fnname,
-        out_h,
-        out_cpp,
+        fnname_wrapper,
         generated,
         ):
     '''
-    Create extra C++ and Python code to make tuple-returning wrapper of
+    Write C# code for a convenient tuple-returning wrapper for MuPDF
+    function that has out-params. We use the C# wrapper for our generated
+    {main_name}_outparams() function.
+
+    We don't attempt to handle functions that take unsigned char* args
+    because these generally indicate sized binary data and cannot be handled
+    generically.
+    '''
+    def write(text):
+        generated.swig_csharp.write(text)
+
+    main_name = rename.function(cursor.mangled_name)
+    return_void = cursor.result_type.spelling == 'void'
+    make_csharp_wrapper = True
+
+    if fnname == 'fz_buffer_extract':
+        # Write custom wrapper that returns the binary data as a C# bytes
+        # array, using the C# wrapper for buffer_extract_outparams_fn(fz_buffer
+        # buf, buffer_extract_outparams outparams).
+        #
+        write('// Custom C# helper for fz_buffer_extract().\n')
+        write('namespace mupdf\n')
+        write('{\n')
+        write('    // Wrapper for fz_buffer_extract().\n')
+        write('    public static class Buffer_extract\n')
+        write('    {\n')
+        write('        public static byte[] buffer_extract(this Buffer buffer)\n')
+        write('        {\n')
+        write('            var outparams = new buffer_storage_outparams();\n')
+        write('            uint n = mupdf.buffer_storage_outparams_fn(buffer.m_internal, outparams);\n')
+        write('            var raw1 = SWIGTYPE_p_unsigned_char.getCPtr(outparams.datap);\n')
+        write('            System.IntPtr raw2 = System.Runtime.InteropServices.HandleRef.ToIntPtr(raw1);\n')
+        write('            byte[] ret = new byte[n];\n')
+        write('            // Marshal.Copy() raises exception if <raw2> is null even if <n> is zero.\n')
+        write('            if (n == 0) return ret;\n')
+        write('            System.Runtime.InteropServices.Marshal.Copy(raw2, ret, 0, (int) n);\n')
+        write('            buffer.clear_buffer();\n')
+        write('            buffer.trim_buffer();\n')
+        write('            return ret;\n')
+        write('        }\n')
+        write('    }\n')
+        write('}\n')
+        write('\n')
+
+        return
+
+    # We don't attempt to generate wrappers for fns that take or return
+    # 'unsigned char*' - swig does not treat these as zero-terminated strings,
+    # and they are generally binary data so cannot be handled generically.
+    #
+    if is_pointer_to(cursor.result_type, 'unsigned char'):
+        jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because it returns unsigned char*.')
+        return
+    for arg in get_args( tu, cursor):
+        if is_pointer_to(arg.cursor.type, 'unsigned char'):
+            jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has unsigned char* arg.')
+            return
+        if is_pointer_to_pointer_to(arg.cursor.type, 'unsigned char'):
+            jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has unsigned char** arg.')
+            return
+        if arg.cursor.type.get_array_size() >= 0:
+            jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has array arg.')
+            return
+        if arg.cursor.type.kind == clang.cindex.TypeKind.POINTER:
+            pointee = arg.cursor.type.get_pointee().get_canonical()
+            if pointee.kind==clang.cindex.TypeKind.ENUM:
+                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has enum out-param arg.')
+                return
+            if pointee.kind == clang.cindex.TypeKind.FUNCTIONPROTO:
+                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has fn-ptr arg.')
+                return
+            if pointee.is_const_qualified():
+                # Not an out-param.
+                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has pointer-to-const arg.')
+                return
+            if arg.cursor.type.get_pointee().spelling == 'FILE':
+                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has FILE* arg.')
+                return
+            if pointee.spelling == 'void':
+                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has void* arg.')
+                return
+
+    if make_csharp_wrapper:
+        num_return_values = 0 if return_void else 1
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                num_return_values += 1
+        assert num_return_values
+
+        if num_return_values > 7:
+            # On linux, mono-csc can fail with:
+            #   System.NotImplementedException: tuples > 7
+            #
+            jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because would require > 7-tuple.')
+            return
+
+    if make_csharp_wrapper:
+        # Write C# wrapper.
+        arg0, _ = get_first_arg( tu, cursor)
+        write(f'// C# helper for {cursor.mangled_name}() wrapper outparams.\n')
+        write(f'namespace mupdf\n')
+        write(f'{{\n')
+        write(f'    public static class {main_name}_outparams_helper\n')
+        write(f'    {{\n')
+        if arg0.alt:
+            write(f'        // Out-params extension method {fnname_wrapper}() (wrapper for {fnname}())\n')
+            write(f'        // for class {rename.class_(arg0.alt.type.spelling)} (wrapper for {arg0.alt.type.spelling}).\n')
+        write(f'        public static ')
+
+        def write_type(alt, type_):
+            if alt:
+                write(f'{rename.class_(alt.type.spelling)}')
+            elif is_pointer_to(type_, 'char'):
+                write( f'string')
+            else:
+                text = declaration_text(type_, '').strip()
+                if text == 'int16_t':           text = 'short'
+                elif text == 'int64_t':         text = 'long'
+                elif text == 'size_t':          text = 'uint'
+                elif text == 'unsigned int':    text = 'uint'
+                write(f'{text}')
+
+        # Generate the returned tuple.
+        #
+        if num_return_values > 1:
+            write('(')
+
+        sep = ''
+
+        # Returned param, if any.
+        if not return_void:
+            return_alt = None
+            base_type_cursor, base_typename, extras = get_extras( cursor.result_type)
+            if extras:
+                if extras.opaque:
+                    # E.g. we don't have access to defintion of fz_separation,
+                    # but it is marked in classextras with opaque=true, so
+                    # there will be a wrapper class.
+                    return_alt = base_type_cursor
+                elif base_type_cursor.kind == clang.cindex.CursorKind.STRUCT_DECL:
+                    return_alt = base_type_cursor
+            write_type(return_alt, cursor.result_type)
+            sep = ', '
+
+        # Out-params.
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                write(sep)
+                write_type(arg.alt, arg.cursor.type.get_pointee())
+                if num_return_values > 1:
+                    write(f' {arg.name_csharp}')
+                sep = ', '
+
+        if num_return_values > 1:
+            write(')')
+
+        # Generate function name and params. If first arg is a wrapper class we
+        # use C#'s 'this' keyword to make this a member function of the wrapper
+        # class.
+        #jlib.log('outputs fn {fnname=}: is member: {"yes" if arg0.alt else "no"}')
+        write(f' ')
+        write(fnname_wrapper if arg0.alt else 'fn')
+        write(f'(')
+        if arg0.alt: write('this ')
+        sep = ''
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                continue
+            write(sep)
+            if arg.alt:
+                # E.g. 'Document doc'.
+                write(f'{rename.class_(arg.alt.type.spelling)} {arg.name_csharp}')
+            elif is_pointer_to(arg.cursor.type, 'char'):
+                write(f'string {arg.name_csharp}')
+            else:
+                text = declaration_text(arg.cursor.type, arg.name_csharp).strip()
+                text = clip(text, 'const ')
+                text = text.replace('int16_t ', 'short ')
+                text = text.replace('int64_t ', 'long ')
+                text = text.replace('size_t ', 'uint ')
+                text = text.replace('unsigned int ', 'uint ')
+                write(text)
+            sep = ', '
+        write(f')\n')
+
+        # Function body.
+        #
+        write(f'        {{\n')
+
+        # Create local outparams struct.
+        write(f'            var outparams = new {main_name}_outparams();\n')
+        write(f'            ')
+
+        # Generate function call.
+        if not return_void:
+            write(f'var ret = ')
+        write(f'mupdf.{main_name}_outparams_fn(')
+        sep = ''
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                continue
+            write(f'{sep}{arg.name_csharp}')
+            if arg.alt:
+                extras = get_fz_extras(arg.alt.type.spelling)
+                write('.internal_()' if extras.pod else '.m_internal')
+            sep = ', '
+        write(f'{sep}outparams);\n')
+
+        # Generate return of tuple.
+        write(f'            return ')
+        if num_return_values > 1:
+            write(f'(')
+        sep = ''
+        if not return_void:
+            if return_alt:
+                write(f'new {rename.class_(return_alt.type.spelling)}(ret)')
+            else:
+                write(f'ret')
+            sep = ', '
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                write(f'{sep}')
+                type_ = arg.cursor.type.get_pointee()
+                if arg.alt:
+                        write(f'new {rename.class_(arg.alt.type.spelling)}(outparams.{arg.name_csharp})')
+                elif 0 and is_pointer_to(type_, 'char'):
+                    # This was intended to convert char* to string, but swig
+                    # will have already done that when making a C# version of
+                    # the C++ struct, and modern csc on Windows doesn't like
+                    # creating a string from a string for some reason.
+                    write(f'new string(outparams.{arg.name_csharp})')
+                else:
+                    pointee = arg.cursor.type.get_pointee().spelling
+                    write(f'outparams.{arg.name_csharp}')
+                sep = ', '
+        if num_return_values > 1:
+            write(')')
+        write(';\n')
+        write(f'        }}\n')
+        write(f'    }}\n')
+        write(f'}}\n')
+        write('\n')
+
+
+def make_outparam_helper(
+        tu,
+        cursor,
+        fnname,
+        fnname_wrapper,
+        generated,
+        ):
+    '''
+    Create extra C++, Python and C# code to make tuple-returning wrapper of
     specified function.
 
-    We write Python code to generated.swig_python and C++ code to
-    generated.swig_cpp_python.
+    We write the code to Python code to generated.swig_python and C++ code to
+    generated.swig_cpp.
     '''
     verbose = False
     main_name = rename.function(cursor.mangled_name)
-    generated.swig_cpp_python.write( '\n')
+    generated.swig_cpp.write( '\n')
 
     # Write struct.
-    generated.swig_cpp_python.write(f'/* Helper for out-params of {cursor.mangled_name}(). */\n')
-    generated.swig_cpp_python.write(f'typedef struct\n')
-    generated.swig_cpp_python.write( '{\n')
+    generated.swig_cpp.write(f'/* Helper for out-params of {cursor.mangled_name}(). */\n')
+    generated.swig_cpp.write(f'struct {main_name}_outparams\n')
+    generated.swig_cpp.write(f'{{\n')
     for arg in get_args( tu, cursor):
         if not arg.out_param:
             continue
@@ -3148,12 +3470,18 @@ def make_python_outparam_helpers(
         if verbose:
             log( '{decl=}')
         assert arg.cursor.type.kind == clang.cindex.TypeKind.POINTER
-        pointee = arg.cursor.type.get_pointee() #.get_canonical()
-        generated.swig_cpp_python.write(f'    {declaration_text( pointee, arg.name)};\n')
-    generated.swig_cpp_python.write(f'}} {main_name}_outparams;\n')
-    generated.swig_cpp_python.write('\n')
 
-    # decl.
+        # We use .get_canonical() here because, for example, it converts
+        # int64_t to 'long long', which seems to be handled better by swig -
+        # swig maps int64_t to mupdf.SWIGTYPE_p_int64_t which can't be treated
+        # or converted to an integer.
+        #
+        pointee = arg.cursor.type.get_pointee().get_canonical()
+        generated.swig_cpp.write(f'    {declaration_text( pointee, arg.name)};\n')
+    generated.swig_cpp.write(f'}};\n')
+    generated.swig_cpp.write('\n')
+
+    # Write function definition.
     name_args = f'{main_name}_outparams_fn('
     sep = ''
     for arg in get_args( tu, cursor):
@@ -3164,76 +3492,95 @@ def make_python_outparam_helpers(
         sep = ', '
     name_args += f'{sep}{main_name}_outparams* outparams'
     name_args += ')'
-    generated.swig_cpp_python.write(declaration_text( cursor.result_type, name_args))
-    generated.swig_cpp_python.write('\n')
-
-    # body.
-    generated.swig_cpp_python.write('{\n')
+    generated.swig_cpp.write(declaration_text( cursor.result_type, name_args))
+    generated.swig_cpp.write('\n')
+    generated.swig_cpp.write('{\n')
     # Set all pointer fields to NULL.
     for arg in get_args( tu, cursor):
         if not arg.out_param:
             continue
         if arg.cursor.type.get_pointee().kind == clang.cindex.TypeKind.POINTER:
-            generated.swig_cpp_python.write(f'    outparams->{arg.name} = NULL;\n')
-    # Make call.
-    generated.swig_cpp_python.write(f'    return {rename.function_call(cursor.mangled_name)}(')
+            generated.swig_cpp.write(f'    outparams->{arg.name} = NULL;\n')
+    # Make call. Note that *_outparams will have changed size_t to unsigned long or similar so
+    # that SWIG can handle it. Would like to cast the addresses of the struct members to
+    # things like (size_t*) but this cause problems with const so we use temporaries.
+    for arg in get_args( tu, cursor):
+        if not arg.out_param:
+            continue
+        generated.swig_cpp.write(f'    {declaration_text(arg.cursor.type.get_pointee(), arg.name)};\n')
+    return_void = (cursor.result_type.spelling == 'void')
+    generated.swig_cpp.write(f'    ')
+    if not return_void:
+        generated.swig_cpp.write(f'{declaration_text(cursor.result_type, "ret")} = ')
+    generated.swig_cpp.write(f'{rename.function_call(cursor.mangled_name)}(')
     sep = ''
     for arg in get_args( tu, cursor):
-        generated.swig_cpp_python.write(sep)
+        generated.swig_cpp.write(sep)
         if arg.out_param:
-            generated.swig_cpp_python.write(f'&outparams->{arg.name}')
+            #generated.swig_cpp.write(f'&outparams->{arg.name}')
+            generated.swig_cpp.write(f'&{arg.name}')
         else:
-            generated.swig_cpp_python.write(f'{arg.name}')
+            generated.swig_cpp.write(f'{arg.name}')
         sep = ', '
-    generated.swig_cpp_python.write(');\n')
-    generated.swig_cpp_python.write('}\n')
-    generated.swig_cpp_python.write('\n')
+    generated.swig_cpp.write(');\n')
+    for arg in get_args( tu, cursor):
+        if not arg.out_param:
+            continue
+        generated.swig_cpp.write(f'    outparams->{arg.name} = {arg.name};\n')
+    if not return_void:
+        generated.swig_cpp.write('    return ret;\n')
+    generated.swig_cpp.write('}\n')
+    generated.swig_cpp.write('\n')
 
-    # Write python wrapper.
-    generated.swig_python.write('')
-    generated.swig_python.write(f'def {main_name}(')
-    sep = ''
-    for arg in get_args( tu, cursor):
-        if arg.out_param:
-            continue
-        generated.swig_python.write(f'{sep}{arg.name_python}')
-        sep = ', '
-    generated.swig_python.write('):\n')
-    generated.swig_python.write(f'    """\n')
-    generated.swig_python.write(f'    Wrapper for out-params of {cursor.mangled_name}().\n')
-    sep = ''
-    generated.swig_python.write(f'    Returns: ')
-    return_void = cursor.result_type.spelling == 'void'
-    sep = ''
-    if not return_void:
-        generated.swig_python.write( f'{cursor.result_type.spelling}')
-        sep = ', '
-    for arg in get_args( tu, cursor):
-        if arg.out_param:
-            generated.swig_python.write(f'{sep}{declaration_text(arg.cursor.type.get_pointee(), arg.name_python)}')
+    if 1:
+        # Write python wrapper.
+        return_void = cursor.result_type.spelling == 'void'
+        generated.swig_python.write('')
+        generated.swig_python.write(f'def {main_name}(')
+        sep = ''
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                continue
+            generated.swig_python.write(f'{sep}{arg.name_python}')
             sep = ', '
-    generated.swig_python.write(f'\n')
-    generated.swig_python.write(f'    """\n')
-    generated.swig_python.write(f'    outparams = {main_name}_outparams()\n')
-    generated.swig_python.write(f'    ret = {main_name}_outparams_fn(')
-    sep = ''
-    for arg in get_args( tu, cursor):
-        if arg.out_param:
-            continue
-        generated.swig_python.write(f'{sep}{arg.name_python}')
-        sep = ', '
-    generated.swig_python.write(f'{sep}outparams)\n')
-    generated.swig_python.write(f'    return ')
-    sep = ''
-    if not return_void:
-        generated.swig_python.write(f'ret')
-        sep = ', '
-    for arg in get_args( tu, cursor):
-        if arg.out_param:
-            generated.swig_python.write(f'{sep}outparams.{arg.name_python}')
+        generated.swig_python.write('):\n')
+        generated.swig_python.write(f'    """\n')
+        generated.swig_python.write(f'    Wrapper for out-params of {cursor.mangled_name}().\n')
+        sep = ''
+        generated.swig_python.write(f'    Returns: ')
+        sep = ''
+        if not return_void:
+            generated.swig_python.write( f'{cursor.result_type.spelling}')
             sep = ', '
-    generated.swig_python.write('\n')
-    generated.swig_python.write('\n')
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                generated.swig_python.write(f'{sep}{declaration_text(arg.cursor.type.get_pointee(), arg.name_python)}')
+                sep = ', '
+        generated.swig_python.write(f'\n')
+        generated.swig_python.write(f'    """\n')
+        generated.swig_python.write(f'    outparams = {main_name}_outparams()\n')
+        generated.swig_python.write(f'    ret = {main_name}_outparams_fn(')
+        sep = ''
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                continue
+            generated.swig_python.write(f'{sep}{arg.name_python}')
+            sep = ', '
+        generated.swig_python.write(f'{sep}outparams)\n')
+        generated.swig_python.write(f'    return ')
+        sep = ''
+        if not return_void:
+            generated.swig_python.write(f'ret')
+            sep = ', '
+        for arg in get_args( tu, cursor):
+            if arg.out_param:
+                generated.swig_python.write(f'{sep}outparams.{arg.name_python}')
+                sep = ', '
+        generated.swig_python.write('\n')
+        generated.swig_python.write('\n')
+
+    # Write C# wrapper.
+    make_outparam_helper_csharp(tu, cursor, fnname, fnname_wrapper, generated)
 
 
 def make_python_class_method_outparam_override(
@@ -3316,10 +3663,63 @@ def make_python_class_method_outparam_override(
     out.write('\n')
 
 
+def make_wrapper_comment(
+        tu,
+        cursor,
+        fnname,
+        fnname_wrapper,
+        indent,
+        is_method
+        ):
+    ret = io.StringIO()
+    def write(text):
+        text = text.replace('\n', f'\n{indent}')
+        ret.write( text)
+
+    num_out_params = 0
+    for arg in get_args( tu, cursor, include_fz_context=False, skip_first_alt=is_method):
+        if arg.out_param:
+            num_out_params += 1
+
+    write( f'Wrapper for {cursor.mangled_name}().')
+    if num_out_params:
+        tuple_size = num_out_params
+        if cursor.result_type.spelling != 'void':
+            tuple_size += 1
+        write( f'\n')
+        write( f'\n')
+        write( f'This {"method" if is_method else "function"} has out-params. Python/C# wrappers look like:\n')
+        write( f'    {fnname_wrapper}(')
+        sep = ''
+        for arg in get_args( tu, cursor, include_fz_context=False, skip_first_alt=is_method):
+            if not arg.out_param:
+                write( f'{sep}{declaration_text( arg.cursor.type, arg.name)}')
+                sep = ', '
+        write(') => ')
+        if tuple_size > 1:
+            write( '(')
+        sep = ''
+        if cursor.result_type.spelling != 'void':
+            write( f'{cursor.result_type.spelling}')
+            sep = ', '
+        for arg in get_args( tu, cursor, include_fz_context=False, skip_first_alt=is_method):
+            if arg.out_param:
+                write( f'{sep}{declaration_text( arg.cursor.type.get_pointee(), arg.name)}')
+                sep = ', '
+        if tuple_size > 1:
+            write( ')')
+        write( f'\n')
+    else:
+        write( ' ')
+
+    return ret.getvalue()
+
+
 def make_function_wrapper(
         tu,
         cursor,
         fnname,
+        fnname_wrapper,
         out_h,
         out_cpp,
         generated,
@@ -3331,6 +3731,8 @@ def make_function_wrapper(
     cursor:
         Clang cursor for function to wrap.
     fnname:
+        Name of wrapped function.
+    fnname_wrapper:
         Name of function to create.
     out_h:
         Stream to which we write header output.
@@ -3356,12 +3758,21 @@ def make_function_wrapper(
     '''
     assert cursor.kind == clang.cindex.CursorKind.FUNCTION_DECL
 
-    verbose = fnname == 'pdf_add_annot_ink_list'
+    verbose = fnname_wrapper == 'pdf_add_annot_ink_list'
 
-    # Write first line: <result_type> <fnname> (<args>...)
+    num_out_params = 0
+    for arg in get_args( tu, cursor, include_fz_context=True):
+        if is_pointer_to(arg.cursor.type, 'fz_context'):
+            continue
+        if arg.out_param:
+            num_out_params += 1
+
+    # Write first line: <result_type> <fnname_wrapper> (<args>...)
     #
+    comment = make_wrapper_comment( tu, cursor, fnname, fnname_wrapper, indent='', is_method=False)
+    comment = f'/* {comment}*/\n'
     for out in out_h, out_cpp:
-        out.write( f'/* Wrapper for {cursor.mangled_name}(). */\n')
+        out.write( comment)
 
     # Copy any comment into .h file before declaration.
     if cursor.raw_comment:
@@ -3369,18 +3780,25 @@ def make_function_wrapper(
         if not cursor.raw_comment.endswith( '\n'):
             out_h.write( '\n')
 
-    name_args_h = f'{fnname}('
-    name_args_cpp = f'{fnname}('
+    name_args_h = f'{fnname_wrapper}('
+    name_args_cpp = f'{fnname_wrapper}('
     comma = ''
-    num_out_params = 0
     for arg in get_args( tu, cursor, include_fz_context=True):
         if verbose:
             log( '{arg.cursor=} {arg.name=} {arg.separator=} {arg.alt=} {arg.out_param=}')
         if is_pointer_to(arg.cursor.type, 'fz_context'):
             continue
         if arg.out_param:
-            num_out_params += 1
-        decl = declaration_text( arg.cursor.type, arg.name, verbose=verbose)
+            decl = ''
+            decl += '\n'
+            decl += '        #ifdef SWIG\n'
+            decl += '            ' + declaration_text( arg.cursor.type, 'OUTPUT') + '\n'
+            decl += '        #else\n'
+            decl += '            ' + declaration_text( arg.cursor.type, arg.name) + '\n'
+            decl += '        #endif\n'
+            decl += '        '
+        else:
+            decl = declaration_text( arg.cursor.type, arg.name, verbose=verbose)
         if verbose:
             log( '{decl=}')
         name_args_h += f'{comma}{decl}'
@@ -3413,12 +3831,11 @@ def make_function_wrapper(
     out_cpp.write( '\n')
 
     if num_out_params:
-        make_python_outparam_helpers(
+        make_outparam_helper(
                 tu,
                 cursor,
                 fnname,
-                out_h,
-                out_cpp,
+                fnname_wrapper,
                 generated,
                 )
 
@@ -3976,6 +4393,7 @@ def make_function_wrappers(
             make_function_wrapper(
                     tu,
                     cursor,
+                    fnname,
                     fnname_wrapper,
                     temp_out_h,
                     temp_out_cpp,
@@ -4610,7 +5028,16 @@ def class_write_method(
             decl_cpp += f'{const}{rename.class_(arg.alt.type.spelling)}& {arg.name}'
         else:
             logx( '{arg.spelling=}')
-            decl_h += declaration_text( arg.cursor.type, arg.name)
+            if arg.out_param:
+                decl_h += '\n'
+                decl_h += '            #ifdef SWIG\n'
+                decl_h += '                ' + declaration_text( arg.cursor.type, 'OUTPUT') + '\n'
+                decl_h += '            #else\n'
+                decl_h += '                ' + declaration_text( arg.cursor.type, arg.name) + '\n'
+                decl_h += '            #endif\n'
+                decl_h += '            '
+            else:
+                decl_h += declaration_text( arg.cursor.type, arg.name)
             decl_cpp += declaration_text( arg.cursor.type, arg.name)
         comma = ', '
 
@@ -4621,7 +5048,7 @@ def class_write_method(
     if constructor:
         comment = f'Constructor using {fnname}().'
     else:
-        comment = f'Wrapper for {fnname}().'
+        comment = make_wrapper_comment( tu, fn_cursor, fnname, methodname, indent='    ', is_method=True)
 
     if not static and not constructor:
         assert have_used_this, f'error: wrapper for {structname}: {fnname}() is not useful - does not have a {structname} arg.'
@@ -6039,11 +6466,6 @@ def cpp_source(
             functions_unused += 1
         if n and not exclude_reasons:
             continue
-        # 'cursor.displayname' doesn't include the return type, so we use our
-        # declaration_text() fn to show the function details.
-        if 0:   # lgtm [py/unreachable-statement]
-            out_fn_usage.write( f'    {declaration_text( cursor.type, cursor.spelling, arg_names=1)}\n')
-            out_fn_usage.write( f'        {n}\n')
 
     out_fn_usage.write( f'Functions not wrapped by class methods:\n')
     out_fn_usage.write( '\n')
@@ -6064,7 +6486,7 @@ def cpp_source(
             num_interesting_reasons += 1
         if num_interesting_reasons:
             try:
-                out_fn_usage.write( f'    {declaration_text( cursor.type, cursor.spelling, arg_names=1)}\n')
+                out_fn_usage.write( f'    {declaration_text( cursor.type, cursor.spelling)}\n')
             except Clang6FnArgsBug as e:
                 out_fn_usage.write( f'    {cursor.spelling} [full prototype not available due to known clang-6 issue]\n')
             for t, description in exclude_reasons:
@@ -6078,7 +6500,7 @@ def cpp_source(
     for fnname in sorted( fn_usage.keys()):
         n, cursor = fn_usage[ fnname]
         if n > 1:
-            out_fn_usage.write( f'    n={n}: {declaration_text( cursor.type, cursor.spelling, arg_names=1)}\n')
+            out_fn_usage.write( f'    n={n}: {declaration_text( cursor.type, cursor.spelling)}\n')
 
     out_fn_usage.write( f'\n')
     out_fn_usage.write( f'Number of wrapped functions: {len(fn_usage)}\n')
@@ -6240,8 +6662,7 @@ def build_swig(
                 }}
                 '''
 
-    if language == 'python':
-        common += generated.swig_cpp_python
+    common += generated.swig_cpp
     if language == 'csharp':
         common += generated.swig_cpp_csharp
 
@@ -6306,6 +6727,9 @@ def build_swig(
             %include cdata.i
             %include std_vector.i
             {"%include argcargv.i" if language=="python" else ""}
+
+            %include <cstring.i>
+            %cstring_output_allocate(char **OUTPUT, free($1));
 
             namespace std
             {{
@@ -6519,9 +6943,6 @@ def build_swig(
 
         text += '%}\n'
 
-    if language == 'csharp':
-        text += generated.swig_csharp
-
     if 1:   # lgtm [py/constant-conditional-expression]
         # This is a horrible hack to avoid swig failing because
         # include/mupdf/pdf/object.h defines an enum which contains a #include.
@@ -6669,6 +7090,9 @@ def build_swig(
         jlib.log('{len(cs)=}')
         jlib.log('{len(cs2)=}')
         assert cs2 != cs, f'Failed to add toString() methods.'
+        jlib.log('{len(generated.swig_csharp)=}')
+        assert len(generated.swig_csharp)
+        cs2 += generated.swig_csharp
         jlib.update_file(cs2, f'{build_dirs.dir_so}/mupdf.cs')
         #jlib.copy(f'{outdir}/mupdf.cs', f'{build_dirs.dir_so}/mupdf.cs')
         jlib.log('{rebuilt=}')
@@ -6989,6 +7413,8 @@ def build( build_dirs, swig, args):
             build_python = int(args.next())
         elif actions == '--csharp':
             build_csharp = int(args.next())
+            if build_csharp:
+                build_python = 0
         elif actions.startswith( '-'):
             raise Exception( f'Unrecognised --build flag: {actions}')
         else:
@@ -7293,11 +7719,6 @@ def build( build_dirs, swig, args):
                                 f'{build_dirs.dir_so}/mupdfcsharp.dll',
                                 verbose=1,
                                 )
-                        jlib.copy(
-                                f'platform/csharp/mupdf.cs',
-                                f'{build_dirs.dir_so}/mupdf.cs',
-                                verbose=1,
-                                )
 
                 else:
                     # We use g++ debug/release flags as implied by
@@ -7343,13 +7764,13 @@ def build( build_dirs, swig, args):
 
                     # These are the input files to our g++ command:
                     #
-                    swig_cpp_python     = f'{build_dirs.dir_mupdf}/platform/python/mupdfcpp_swig.cpp'
-                    swig_cpp_csharp     = f'{build_dirs.dir_mupdf}/platform/csharp/mupdfcpp_swig.cpp'
-                    include1            = f'{build_dirs.dir_mupdf}/include'
-                    include2            = f'{build_dirs.dir_mupdf}/platform/c++/include'
+                    swig_cpp_python = f'{build_dirs.dir_mupdf}/platform/python/mupdfcpp_swig.cpp'
+                    swig_cpp_csharp = f'{build_dirs.dir_mupdf}/platform/csharp/mupdfcpp_swig.cpp'
+                    include1        = f'{build_dirs.dir_mupdf}/include'
+                    include2        = f'{build_dirs.dir_mupdf}/platform/c++/include'
 
-                    mupdf_so            = f'{build_dirs.dir_so}/libmupdf.so'
-                    mupdfcpp_so         = f'{build_dirs.dir_so}/libmupdfcpp.so'
+                    mupdf_so        = f'{build_dirs.dir_so}/libmupdf.so'
+                    mupdfcpp_so     = f'{build_dirs.dir_so}/libmupdfcpp.so'
 
                     if build_python:
                         out_so = f'{build_dirs.dir_so}/_mupdf.so'
@@ -7782,9 +8203,7 @@ def main():
                 # which moght be because of mixing gcc and clang?
                 #
                 if g_windows:
-                    csc = glob.glob('C:/Windows/Microsoft.NET/Framework/v4.*/csc.exe')
-                    assert len(csc) == 1
-                    csc = csc[0]
+                    csc = '"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/Roslyn/csc.exe"'
                     mono = ''
                 else:
                     mono = 'mono'
@@ -7813,13 +8232,61 @@ def main():
                                         public static void Main(string[] args)
                                         {
                                             Console.WriteLine("MuPDF C# test starting.");
+
+                                            // Check we can load a document.
                                             mupdf.Document document = new mupdf.Document("zlib.3.pdf");
                                             Console.WriteLine("document: " + document);
                                             Console.WriteLine("num chapters: " + document.count_chapters());
                                             mupdf.Page page = document.load_page(0);
                                             mupdf.Rect rect = page.bound_page();
-                                            Console.WriteLine("rect: " + rect.to_string());
                                             Console.WriteLine("rect: " + rect);
+                                            if ("" + rect != rect.to_string())
+                                            {
+                                                throw new System.Exception("rect ToString() is broken: '" + rect + "' != '" + rect.to_string() + "'");
+                                            }
+
+                                            // Test conversion to html using docx device.
+                                            var buffer = page.new_buffer_from_page_with_format(
+                                                    "docx",
+                                                    "html",
+                                                    new mupdf.Matrix(1, 0, 0, 1, 0, 0),
+                                                    new mupdf.Cookie()
+                                                    );
+                                            var data = buffer.buffer_extract();
+                                            var s = System.Text.Encoding.UTF8.GetString(data, 0, data.Length);
+                                            if (s.Length < 100) {
+                                                throw new System.Exception("HTML text is too short");
+                                            }
+                                            Console.WriteLine("s=" + s);
+
+                                            // Check that previous buffer.buffer_extract() cleared the buffer.
+                                            data = buffer.buffer_extract();
+                                            s = System.Text.Encoding.UTF8.GetString(data, 0, data.Length);
+                                            if (s.Length > 0) {
+                                                throw new System.Exception("Buffer was not cleared.");
+                                            }
+
+                                            // Check we can create pixmap from page.
+                                            var pixmap = page.new_pixmap_from_page_contents(
+                                                    new mupdf.Matrix(1, 0, 0, 1, 0, 0),
+                                                    new mupdf.Colorspace(mupdf.Colorspace.Fixed.Fixed_RGB),
+                                                    0 /*alpha*/
+                                                    );
+
+                                            // Check returned tuple from bitmap.bitmap_details().
+                                            var w = 100;
+                                            var h = 200;
+                                            var n = 4;
+                                            var xres = 300;
+                                            var yres = 300;
+                                            var bitmap = new mupdf.Bitmap(w, h, n, xres, yres);
+                                            (var w2, var h2, var n2, var stride) = bitmap.bitmap_details();
+                                            Console.WriteLine("bitmap.bitmap_details() returned:"
+                                                    + " " + w2 + " " + h2 + " " + n2 + " " + stride);
+                                            if (w2 != w || h2 != h) {
+                                                throw new System.Exception("Unexpected tuple values from bitmap.bitmap_details().");
+                                            }
+
                                             Console.WriteLine("MuPDF C# test finished.");
                                         }
                                     }
@@ -7832,14 +8299,13 @@ def main():
                             ('test-csharp.cs', mupdf_cs),
                             out,
                             f'{csc} -out:{{OUT}} {{IN}}',
-                            force_rebuild=1,
                             )
                     if g_windows:
                         jlib.system(f'cd {build_dirs.dir_so} && {mono} ../../{out}', verbose=1)
                     else:
                         jlib.system(f'LD_LIBRARY_PATH={build_dirs.dir_so} {mono} ./{out}', verbose=1)
 
-                if 1:
+                if 0:
                     # Build and run gui test.
                     #
                     # Don't know why Unix/Windows differ in what -r: args are

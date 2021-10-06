@@ -2735,7 +2735,9 @@ int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_annot *ann
 void
 pdf_set_annot_appearance(fz_context *ctx, pdf_annot *annot, const char *appearance, const char *state, fz_matrix ctm, fz_rect bbox, pdf_obj *res, fz_buffer *contents)
 {
-	pdf_obj *form, *ap, *app;
+	pdf_obj *form = NULL;
+	pdf_obj *ap, *app;
+	pdf_obj *app_name = NULL;
 
 	begin_annot_op(ctx, annot, "Set appearance stream");
 
@@ -2743,30 +2745,41 @@ pdf_set_annot_appearance(fz_context *ctx, pdf_annot *annot, const char *appearan
 		appearance = "N";
 
 	fz_var(form);
+	fz_var(app_name);
 
 	fz_try(ctx)
 	{
-		form = pdf_new_xobject(ctx, annot->page->doc, bbox, ctm, res, contents);
-		form = pdf_add_object_drop(ctx, annot->page->doc, form);
-
 		ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
 		if (!ap)
 			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
 
 		if (!state)
-			pdf_dict_puts(ctx, ap, appearance, form);
+			form = pdf_keep_obj(ctx, pdf_dict_gets(ctx, ap, appearance));
 		else
 		{
 			if (strcmp(appearance, "N") && strcmp(appearance, "R") && strcmp(appearance, "D"))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Unknown annotation appearance");
 
-			app = pdf_dict_put_dict(ctx, ap, pdf_new_name(ctx, appearance), 2);
-			pdf_dict_puts(ctx, app, state, form);
+			app_name = pdf_new_name(ctx, appearance);
+			app = pdf_dict_get(ctx, ap, app_name);
+			if (!app)
+				app = pdf_dict_put_dict(ctx, ap, app_name, 2);
+			form = pdf_keep_obj(ctx, pdf_dict_gets(ctx, ap, appearance));
 		}
+		if (!form)
+			form = pdf_new_xobject(ctx, annot->page->doc, bbox, ctm, res, contents);
+		else
+			pdf_update_xobject(ctx, annot->page->doc, form, bbox, ctm, res, contents);
+
+		if (!state)
+			pdf_dict_puts(ctx, ap, appearance, form);
+		else
+			pdf_dict_puts(ctx, app, state, form);
 	}
 	fz_always(ctx)
 	{
 		pdf_drop_obj(ctx, form);
+		pdf_drop_obj(ctx, app_name);
 		end_annot_op(ctx, annot);
 	}
 	fz_catch(ctx)
