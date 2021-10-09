@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kjk/common v0.0.0-20211009015822-390a87ada155
+	github.com/kjk/common v0.0.0-20211009020628-1e7bb13ec0a1
 	github.com/kjk/notionapi v0.0.0-20210902233546-6e6cd02e3310
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
