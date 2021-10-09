@@ -4,31 +4,39 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"crypto/sha1"
 	"fmt"
-	"io"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/kjk/common/u"
 )
 
 var (
-	fatalIf = panicIf
+	must                 = u.Must
+	panicIf              = u.PanicIf
+	fatalIf              = panicIf
+	isWindows            = u.IsWindows
+	fileExists           = u.FileExists
+	dirExists            = u.DirExists
+	pathExists           = u.PathExists
+	normalizeNewlines    = u.NormalizeNewlines
+	formatSize           = u.FormatSize
+	getFileSize          = u.FileSize
+	copyFile             = u.CopyFile
+	openBrowser          = u.OpenBrowser
+	sha1HexOfFile        = u.FileSha1Hex
+	fileSha1Hex          = u.FileSha1Hex
+	dataSha1Hex          = u.DataSha1Hex
+	formatDuration       = u.FormatDuration
+	mimeTypeFromFileName = u.MimeTypeFromFileName
 )
-
-func must(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
 
 func ctx() context.Context {
 	return context.Background()
@@ -39,10 +47,6 @@ func logf(ctx context.Context, s string, arg ...interface{}) {
 		s = fmt.Sprintf(s, arg...)
 	}
 	fmt.Print(s)
-}
-
-func isWindows() bool {
-	return strings.Contains(runtime.GOOS, "windows")
 }
 
 func absPathMust(path string) string {
@@ -145,20 +149,6 @@ func toTrimmedLines(d []byte) []string {
 		}
 	}
 	return lines[:i]
-}
-
-func dataSha1Hex(d []byte) string {
-	sha1 := sha1.Sum(d)
-	return fmt.Sprintf("%x", sha1[:])
-}
-
-func fileSha1Hex(path string) (string, error) {
-	d, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	sha1 := sha1.Sum(d)
-	return fmt.Sprintf("%x", sha1[:]), nil
 }
 
 func httpDlMust(uri string) []byte {
@@ -284,20 +274,6 @@ func writeFileMust(path string, data []byte) {
 	must(err)
 }
 
-func panicIf(cond bool, args ...interface{}) {
-	if !cond {
-		return
-	}
-	s := "condition failed"
-	if len(args) > 0 {
-		s = fmt.Sprintf("%s", args[0])
-		if len(args) > 1 {
-			s = fmt.Sprintf(s, args[1:]...)
-		}
-	}
-	panic(s)
-}
-
 func findLargestFileByExt() {
 	drive := "x:\\" // on laptop
 	drive = "v:\\"  // on desktop
@@ -342,16 +318,6 @@ func findLargestFileByExt() {
 	logf(ctx(), "processed %d files\n", nFiles)
 }
 
-func fileExists(path string) bool {
-	st, err := os.Lstat(path)
-	return err == nil && st.Mode().IsRegular()
-}
-
-func dirExists(path string) bool {
-	st, err := os.Lstat(path)
-	return err == nil && st.IsDir()
-}
-
 func runCmdLoggedMust(cmd *exec.Cmd) string {
 	logf(ctx(), "> %s\n", cmd.String())
 	cmd.Stdout = os.Stdout
@@ -360,44 +326,6 @@ func runCmdLoggedMust(cmd *exec.Cmd) string {
 	err := cmd.Run()
 	must(err)
 	return ""
-}
-
-func mimeTypeFromFileName(path string) string {
-	var mimeTypes = map[string]string{
-		// this is a list from go's mime package
-		".css":  "text/css; charset=utf-8",
-		".gif":  "image/gif",
-		".htm":  "text/html; charset=utf-8",
-		".html": "text/html; charset=utf-8",
-		".jpg":  "image/jpeg",
-		".js":   "application/javascript",
-		".wasm": "application/wasm",
-		".pdf":  "application/pdf",
-		".png":  "image/png",
-		".svg":  "image/svg+xml",
-		".xml":  "text/xml; charset=utf-8",
-
-		// those are my additions
-		".txt":  "text/plain",
-		".exe":  "application/octet-stream",
-		".json": "application/json",
-	}
-
-	ext := strings.ToLower(filepath.Ext(path))
-	mt := mimeTypes[ext]
-	if mt != "" {
-		return mt
-	}
-	// if not given, default to this
-	return "application/octet-stream"
-}
-
-func normalizeNewlines(d []byte) []byte {
-	// replace CR LF (windows) with LF (unix)
-	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
-	// replace CF (mac) with LF (unix)
-	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
-	return d
 }
 
 func createDirMust(path string) string {
@@ -412,106 +340,9 @@ func userHomeDirMust() string {
 	return s
 }
 
-func formatSize(n int64) string {
-	sizes := []int64{1024 * 1024 * 1024, 1024 * 1024, 1024}
-	suffixes := []string{"GB", "MB", "kB"}
-	for i, size := range sizes {
-		if n >= size {
-			s := fmt.Sprintf("%.2f", float64(n)/float64(size))
-			return strings.TrimSuffix(s, ".00") + " " + suffixes[i]
-		}
-	}
-	return fmt.Sprintf("%d bytes", n)
-}
-
-func getFileSize(path string) int64 {
-	st, err := os.Lstat(path)
-	if err == nil {
-		return st.Size()
-	}
-	return -1
-}
-
-func sha1OfFile(path string) ([]byte, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		//fmt.Printf("os.Open(%s) failed with %s\n", path, err.Error())
-		return nil, err
-	}
-	defer f.Close()
-	h := sha1.New()
-	_, err = io.Copy(h, f)
-	if err != nil {
-		//fmt.Printf("io.Copy() failed with %s\n", err.Error())
-		return nil, err
-	}
-	return h.Sum(nil), nil
-}
-
-func sha1HexOfFile(path string) (string, error) {
-	sha1, err := sha1OfFile(path)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%x", sha1), nil
-}
-
-// time.Duration with a better string representation
-type FormattedDuration time.Duration
-
-func (d FormattedDuration) String() string {
-	return formatDuration(time.Duration(d))
-}
-
-// formats duration in a more human friendly way
-// than time.Duration.String()
-func formatDuration(d time.Duration) string {
-	s := d.String()
-	if strings.HasSuffix(s, "µs") {
-		// for µs we don't want fractions
-		parts := strings.Split(s, ".")
-		if len(parts) > 1 {
-			return parts[0] + " µs"
-		}
-		return strings.ReplaceAll(s, "µs", " µs")
-	} else if strings.HasSuffix(s, "ms") {
-		// for ms we only want 2 digit fractions
-		parts := strings.Split(s, ".")
-		//fmt.Printf("fmtDur: '%s' => %#v\n", s, parts)
-		if len(parts) > 1 {
-			s2 := parts[1]
-			if len(s2) > 4 {
-				// 2 for "ms" and 2+ for fraction
-				res := parts[0] + "." + s2[:2] + " ms"
-				//fmt.Printf("fmtDur: s2: '%s', res: '%s'\n", s2, res)
-				return res
-			}
-		}
-		return strings.ReplaceAll(s, "ms", " ms")
-	}
-	return s
-}
-
-func copyFile(dstPath, srcPath string) error {
-	d, err := os.ReadFile(srcPath)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(filepath.Dir(dstPath), 0755)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(dstPath, d, 0644)
-}
-
 func createDirForFile(path string) error {
 	dir := filepath.Dir(path)
 	return os.MkdirAll(dir, 0755)
-}
-
-func pathExists(path string) bool {
-	_, err := os.Lstat(path)
-	return err == nil
 }
 
 func readLinesFromFile(filePath string) ([]string, error) {
@@ -575,25 +406,6 @@ func fmtSmart(format string, args ...interface{}) string {
 		return format
 	}
 	return fmt.Sprintf(format, args...)
-}
-
-// from https://gist.github.com/hyg/9c4afcd91fe24316cbf0
-func openBrowser(url string) {
-	var err error
-
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func currDirAbsMust() string {

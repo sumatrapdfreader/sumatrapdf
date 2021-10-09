@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kjk/atomicfile"
+	"github.com/kjk/common/atomicfile"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
