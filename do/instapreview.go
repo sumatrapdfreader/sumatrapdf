@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 	"time"
+
+	"github.com/kjk/common/httputil"
 )
 
 // upload to https://www.instantpreview.dev
@@ -12,7 +14,7 @@ func uploadCrashesFilesToInstantPreviewMust(files map[string][]byte) string {
 	must(err)
 	timeStart := time.Now()
 	uri := "https://sumcrashes.instantpreview.dev/upload?" + os.Getenv("INSTA_PREV_CRASHES_PWD")
-	res, err := httpPost(uri, zipData)
+	res, err := httputil.Post(uri, zipData)
 	must(err)
 	uri = string(res)
 	sizeStr := formatSize(int64(len(zipData)))

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -22,6 +21,7 @@ var (
 	must                 = u.Must
 	panicIf              = u.PanicIf
 	fatalIf              = panicIf
+	urlify               = u.Slug
 	isWindows            = u.IsWindows
 	fileExists           = u.FileExists
 	dirExists            = u.DirExists
@@ -36,6 +36,7 @@ var (
 	dataSha1Hex          = u.DataSha1Hex
 	formatDuration       = u.FormatDuration
 	mimeTypeFromFileName = u.MimeTypeFromFileName
+	readLinesFromFile    = u.ReadLines
 )
 
 func ctx() context.Context {
@@ -104,11 +105,6 @@ func fileSizeMust(path string) int64 {
 	size := getFileSize(path)
 	panicIf(size == -1)
 	return size
-}
-
-func removeDirMust(dir string) {
-	err := os.RemoveAll(dir)
-	must(err)
 }
 
 func removeFileMust(path string) {
@@ -182,65 +178,6 @@ func evalTmpl(s string, v interface{}) string {
 	err = tmpl.Execute(&buf, v)
 	must(err)
 	return buf.String()
-}
-
-// whitelisted characters valid in url
-func validateRune(c rune) byte {
-	if c >= 'a' && c <= 'z' {
-		return byte(c)
-	}
-	if c >= 'A' && c <= 'Z' {
-		return byte(c)
-	}
-	if c >= '0' && c <= '9' {
-		return byte(c)
-	}
-	if c == '-' || c == '_' || c == '.' {
-		return byte(c)
-	}
-	if c == ' ' {
-		return '-'
-	}
-	return 0
-}
-
-func charCanRepeat(c byte) bool {
-	if c >= 'a' && c <= 'z' {
-		return true
-	}
-	if c >= 'A' && c <= 'Z' {
-		return true
-	}
-	if c >= '0' && c <= '9' {
-		return true
-	}
-	return false
-}
-
-// urlify generates safe url from tile by removing hazardous characters
-func urlify(s string) string {
-	s = strings.TrimSpace(s)
-	var res []byte
-	for _, r := range s {
-		c := validateRune(r)
-		if c == 0 {
-			continue
-		}
-		// eliminate duplicate consecutive characters
-		var prev byte
-		if len(res) > 0 {
-			prev = res[len(res)-1]
-		}
-		if c == prev && !charCanRepeat(c) {
-			continue
-		}
-		res = append(res, c)
-	}
-	s = string(res)
-	if len(s) > 128 {
-		s = s[:128]
-	}
-	return s
 }
 
 // return true if file in path1 is newer than file in path2
@@ -343,24 +280,6 @@ func userHomeDirMust() string {
 func createDirForFile(path string) error {
 	dir := filepath.Dir(path)
 	return os.MkdirAll(dir, 0755)
-}
-
-func readLinesFromFile(filePath string) ([]string, error) {
-	file, err := os.OpenFile(filePath, os.O_RDONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	res := make([]string, 0)
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		res = append(res, string(line))
-	}
-	if err = scanner.Err(); err != nil {
-		return nil, err
-	}
-	return res, nil
 }
 
 func stringInSlice(a []string, toCheck string) bool {

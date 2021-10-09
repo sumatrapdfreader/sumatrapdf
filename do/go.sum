@@ -17,8 +17,10 @@ github.com/json-iterator/go v1.1.11/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
-github.com/kjk/common v0.0.0-20211009020628-1e7bb13ec0a1 h1:GIgckJEHrMtxjT85SyIL/a1zbjJiwFxGNrHtg5OjJL8=
-github.com/kjk/common v0.0.0-20211009020628-1e7bb13ec0a1/go.mod h1:qz9RG0JBq6W5Vs6s0cKHhDIBSrTEbmlknucz0+s+8So=
+github.com/kjk/common v0.0.0-20211009030817-2bf8a44fe154 h1:SmeRlSeiAlqMebwxyAT3c38AL02nSsFJr8OXfKDwyVY=
+github.com/kjk/common v0.0.0-20211009030817-2bf8a44fe154/go.mod h1:bZoW8+ube8gSUMxdvIMVBw97o5gepeZqlCD8V+0MWXg=
+github.com/kjk/common v0.0.0-20211009032613-007e32327eb2 h1:HFMsFRUL1K/Gc4Yqhd0/f2PYrZ/U2cdcYUmwn0S/YK4=
+github.com/kjk/common v0.0.0-20211009032613-007e32327eb2/go.mod h1:bZoW8+ube8gSUMxdvIMVBw97o5gepeZqlCD8V+0MWXg=
 github.com/kjk/notionapi v0.0.0-20210902233546-6e6cd02e3310 h1:bwFTbm7jp0vvye6p4eDaTlJFz9Yoy0yx0JtJnLcthWU=
 github.com/kjk/notionapi v0.0.0-20210902233546-6e6cd02e3310/go.mod h1:SW6RfE7bMfJv7sJWFiWGSViNdyy7Vd5ggrOwkDC1rTw=
 github.com/kjk/siser v0.0.0-20210621233355-17e67ed4384f h1:X3X0zk+W4FIR4LvlT4BQbHMXM3rj2Ba6P4nZ8MkVPqM=
