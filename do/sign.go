@@ -52,7 +52,7 @@ func signMust(path string) {
 		signtoolPath := detectSigntoolPath()
 		fileDir := filepath.Dir(path)
 		fileName := filepath.Base(path)
-		certSrc := filepath.Join("scripts", "cert.pfx")
+		certSrc := filepath.Join("do", "scripts", "cert.pfx")
 		certDest := filepath.Join(fileDir, "cert.pfx")
 		must(copyFile(certDest, certSrc))
 		//signServer := "http://timestamp.verisign.com/scripts/timstamp.dll"
