@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,7 +21,6 @@ var (
 	panicIf              = u.PanicIf
 	fatalIf              = panicIf
 	urlify               = u.Slug
-	isWindows            = u.IsWindows
 	fileExists           = u.FileExists
 	dirExists            = u.DirExists
 	pathExists           = u.PathExists
@@ -30,13 +28,13 @@ var (
 	formatSize           = u.FormatSize
 	getFileSize          = u.FileSize
 	copyFile             = u.CopyFile
-	openBrowser          = u.OpenBrowser
 	sha1HexOfFile        = u.FileSha1Hex
 	fileSha1Hex          = u.FileSha1Hex
 	dataSha1Hex          = u.DataSha1Hex
 	formatDuration       = u.FormatDuration
 	mimeTypeFromFileName = u.MimeTypeFromFileName
 	readLinesFromFile    = u.ReadLines
+	toTrimmedLines       = u.ToTrimmedLines
 )
 
 func ctx() context.Context {
@@ -131,44 +129,6 @@ func findSigntool() {
 		return s == "signtool.exe"
 	}
 	findFile(`C:\Program Files (x86)`, isSigntool)
-}
-
-func toTrimmedLines(d []byte) []string {
-	lines := strings.Split(string(d), "\n")
-	i := 0
-	for _, l := range lines {
-		l = strings.TrimSpace(l)
-		// remove empty lines
-		if len(l) > 0 {
-			lines[i] = l
-			i++
-		}
-	}
-	return lines[:i]
-}
-
-func httpDlMust(uri string) []byte {
-	res, err := http.Get(uri)
-	must(err)
-	d, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	must(err)
-	return d
-}
-
-func httpDlToFileMust(uri string, path string, sha1Hex string) {
-	if fileExists(path) {
-		sha1File, err := fileSha1Hex(path)
-		must(err)
-		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
-		return
-	}
-	logf(ctx(), "Downloading '%s'\n", uri)
-	d := httpDlMust(uri)
-	sha1File := dataSha1Hex(d)
-	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
-	err := ioutil.WriteFile(path, d, 0755)
-	must(err)
 }
 
 func evalTmpl(s string, v interface{}) string {

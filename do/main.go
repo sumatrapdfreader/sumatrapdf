@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/kjk/common/u"
 )
 
 var (
@@ -289,7 +291,7 @@ func main() {
 	}
 
 	if flgDiff {
-		winmergeDiffPreview()
+		u.WinmergeDiffPreview()
 		return
 	}
 
