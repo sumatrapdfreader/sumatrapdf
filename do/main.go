@@ -12,7 +12,6 @@ import (
 
 var (
 	flgSkipSign bool
-	flgNoCache  bool
 )
 
 func regenPremake() {
@@ -164,34 +163,30 @@ func main() {
 	)
 
 	var (
-		flgRegenPremake            bool
-		flgUpload                  bool
-		flgCIBuild                 bool
-		flgUploadCiBuild           bool
-		flgBuildPreRelease         bool
-		flgBuildRelease            bool
-		flgWc                      bool
-		flgTransDownload           bool
-		flgTransCiUpdate           bool
-		flgClean                   bool
-		flgCrashes                 bool
-		flgCheckAccessKeys         bool
-		flgTriggerCodeQL           bool
-		flgWebsiteRun              bool
-		flgWebsiteDeployCloudflare bool
-		flgWebsiteImportNotion     bool
-		flgWebsiteBuildCloudflare  bool
-		flgClangFormat             bool
-		flgDiff                    bool
-		flgGenSettings             bool
-		flgUpdateVer               string
-		flgDrMem                   bool
-		flgLogView                 bool
-		flgRunTests                bool
-		flgSmoke                   bool
-		flgFileUpload              string
-		flgFilesList               bool
-		flgBuildDocs               bool
+		flgRegenPremake    bool
+		flgUpload          bool
+		flgCIBuild         bool
+		flgUploadCiBuild   bool
+		flgBuildPreRelease bool
+		flgBuildRelease    bool
+		flgWc              bool
+		flgTransDownload   bool
+		flgTransCiUpdate   bool
+		flgClean           bool
+		flgCrashes         bool
+		flgCheckAccessKeys bool
+		flgTriggerCodeQL   bool
+		flgClangFormat     bool
+		flgDiff            bool
+		flgGenSettings     bool
+		flgUpdateVer       string
+		flgDrMem           bool
+		flgLogView         bool
+		flgRunTests        bool
+		flgSmoke           bool
+		flgFileUpload      string
+		flgFilesList       bool
+		flgBuildDocs       bool
 	)
 
 	{
@@ -215,11 +210,6 @@ func main() {
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		//flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
-		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
-		flag.BoolVar(&flgWebsiteDeployCloudflare, "website-deploy", false, "deploy website to cloudflare")
-		flag.BoolVar(&flgWebsiteImportNotion, "website-import", false, "import docs from notion")
-		flag.BoolVar(&flgWebsiteBuildCloudflare, "website-build-cf", false, "build the website (download Sumatra files)")
-		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		//flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		//flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
 		//flag.BoolVar(&flgClangTidy, "clang-tidy", false, "run clang-tidy (must be installed)")
@@ -295,16 +285,6 @@ func main() {
 
 	if flgBuildDocs {
 		buildEpubDocs()
-		return
-	}
-
-	if flgWebsiteBuildCloudflare {
-		websiteBuildCloudflare()
-		return
-	}
-
-	if flgWebsiteDeployCloudflare {
-		websiteDeployCloudlare()
 		return
 	}
 
