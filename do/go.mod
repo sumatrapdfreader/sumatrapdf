@@ -3,9 +3,9 @@ module github.com/sumatrapdfreader/sumatrapdf/do
 go 1.16
 
 require (
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kjk/common v0.0.0-20211009032613-007e32327eb2
-	github.com/kjk/notionapi v0.0.0-20210902233546-6e6cd02e3310
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/minio-go/v7 v7.0.14

@@ -160,8 +160,6 @@ func main() {
 		flgClangTidyFix           = false
 		flgBuildNo                = false
 		flgBuildLzsa              = false
-		flgOptimizeImages         = false
-		flgMakeSmallImages        = false
 		flgFindLargestFilesByExt  = false
 	)
 
@@ -252,16 +250,6 @@ func main() {
 		return
 	}
 
-	if flgOptimizeImages {
-		optimizeAllImages()
-		return
-	}
-
-	if flgMakeSmallImages {
-		makeSmallImages()
-		return
-	}
-
 	if flgFileUpload != "" {
 		fileUpload(flgFileUpload)
 		return
@@ -304,16 +292,6 @@ func main() {
 	}
 
 	ensureBuildOptionsPreRequesites(opts)
-
-	if flgWebsiteRun {
-		websiteRunLocally("website")
-		return
-	}
-
-	if flgWebsiteImportNotion {
-		websiteImportNotion()
-		return
-	}
 
 	if flgBuildDocs {
 		buildEpubDocs()
