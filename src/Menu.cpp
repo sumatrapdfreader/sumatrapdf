@@ -1000,6 +1000,37 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 
 #define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
 
+static HDC menuDC = nullptr;
+
+static HDC GetOrCreateMenuDC() {
+    // If we have previously created a Device Context, return it
+    if (menuDC)
+        return menuDC;
+
+    // Get the default font in use by menus (e.g. Segoe UI for latin text)
+    NONCLIENTMETRICS metrics;
+    UINT structSize = sizeof(NONCLIENTMETRICS);
+    metrics.cbSize = structSize;
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, structSize, &metrics, 0);
+    LOGFONTW menuFont = metrics.lfMenuFont;
+
+    // Create device context
+    HDC hdc = CreateDC(TEXT("DISPLAY"), NULL, NULL, NULL);
+    // Create HFONT for use in the device context
+    // TODO: is there a more succint way to convert LOGFONTW -> HFONT?
+    HFONT hFont = CreateFont(menuFont.lfHeight, menuFont.lfWidth, menuFont.lfEscapement, menuFont.lfOrientation,
+                             menuFont.lfWeight, menuFont.lfItalic, menuFont.lfUnderline, menuFont.lfStrikeOut,
+                             menuFont.lfCharSet, menuFont.lfOutPrecision, menuFont.lfClipPrecision, menuFont.lfQuality,
+                             menuFont.lfPitchAndFamily, menuFont.lfFaceName);
+    SelectObject(hdc, hFont);
+
+    // Save instance so we don't need to create a new one each time
+    menuDC = hdc;
+
+    return hdc;
+    // TODO: do we ever need to call DeleteDC(menuDC)?
+}
+
 static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
     CrashIf(!filePath || !menuFile);
     if (!filePath || !menuFile) {
@@ -1008,6 +1039,24 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
 
     AutoFreeWstr menuString;
     menuString.SetCopy(path::GetBaseNameTemp(filePath));
+
+    // Create a rectangle to act as a boundary for filenames
+    RECT boundaryRect;
+    boundaryRect.top = boundaryRect.left = 0;
+    boundaryRect.right = 500;  // TODO: is this a good size?
+    boundaryRect.bottom = 20;
+    // Get reference to device context with proper font setup to draw on
+    HDC hdc = GetOrCreateMenuDC();
+    // Get string to be truncated
+    WCHAR* tmpStr = menuString.Get();
+    // TODO: should we use DT_RIGHT or DT_RTLREADING for RTL text?
+    // (this decision would likely affect SumatraAbout.cpp's DrawStartPage() as well)
+    bool isRTL = IsUIRightToLeft();
+    UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_CALCRECT | DT_MODIFYSTRING | DT_NOPREFIX | (isRTL ? DT_RIGHT : DT_LEFT);
+    // `DT_CALCRECT` prevents it from drawing; `DT_MODIFYSTRING` returns the truncated text
+    DrawText(hdc, tmpStr, -1, &boundaryRect, fmt);
+    // tmpStr points to the same address as menuString; we're done
+
     auto fileName = win::menu::ToSafeString(menuString);
     int menuIdx = (int)((index + 1) % 10);
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
