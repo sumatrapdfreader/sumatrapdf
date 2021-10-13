@@ -1,9 +1,0 @@
-name = "sumatrapdf-api"
-type = "javascript"
-
-workers_dev = true
-[env.production]
-workers_dev = false
-account_id = "71694ef61795ecbe1bc331d217dbd7a7"
-zone_id = "fcfbc0bc896b2593d320dae494aefa44"
-route = "www.sumatrapdfreader.org/api/*"
