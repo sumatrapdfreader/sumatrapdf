@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/kjk/minio"
 )
 
 // we delete old daily and pre-release builds. This defines how many most recent
@@ -98,7 +101,7 @@ type DownloadUrls struct {
 	portableZip32 string
 }
 
-func getDownloadUrls(mc *MinioClient, buildType string, ver string) *DownloadUrls {
+func getDownloadUrls(mc *minio.Client, buildType string, ver string) *DownloadUrls {
 	prefix := mc.URLBase()
 	prefix += getRemoteDir(buildType)
 	// zip is like .exe but can be half the size due to compression
@@ -135,7 +138,7 @@ func getDownloadUrls(mc *MinioClient, buildType string, ver string) *DownloadUrl
 }
 
 // sumatrapdf/sumatralatest.js
-func createSumatraLatestJs(mc *MinioClient, buildType string) string {
+func createSumatraLatestJs(mc *minio.Client, buildType string) string {
 	var appName string
 	switch buildType {
 	case buildTypeDaily, buildTypePreRel:
@@ -184,7 +187,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	return execTextTemplate(tmplText, d)
 }
 
-func getVersionFilesForLatestInfo(mc *MinioClient, buildType string) [][]string {
+func getVersionFilesForLatestInfo(mc *minio.Client, buildType string) [][]string {
 	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
@@ -233,17 +236,17 @@ PortableZip32: ${zip32}
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func minioVerifyBuildNotInStorageMust(mc *MinioClient, buildType string) {
+func minioVerifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
 	dirRemote := getRemoteDir(buildType)
 	ver := getVerForBuildType(buildType)
 	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
 	remotePath := path.Join(dirRemote, fname)
-	exists := minioExists(mc, remotePath)
+	exists := mc.Exists(remotePath)
 	panicIf(exists, "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func minioUploadBuildMust(mc *MinioClient, buildType string) {
+func minioUploadBuildMust(mc *minio.Client, buildType string) {
 	timeStart := time.Now()
 	defer func() {
 		logf(ctx(), "Uploaded build '%s' to %s in %s\n", buildType, mc.URLBase(), time.Since(timeStart))
@@ -266,7 +269,7 @@ func minioUploadBuildMust(mc *MinioClient, buildType string) {
 	dirLocal := getFinalDirForBuildType()
 	//verifyBuildNotInSpaces(c, buildType)
 
-	err := minioUploadDir(mc, dirRemote, dirLocal)
+	err := mc.UploadDir(dirRemote, dirLocal, true)
 	must(err)
 
 	// for release build we don't upload files with version info
@@ -278,7 +281,7 @@ func minioUploadBuildMust(mc *MinioClient, buildType string) {
 		files := getVersionFilesForLatestInfo(mc, buildType)
 		for _, f := range files {
 			remotePath := f[0]
-			err := minioUploadDataPublic(mc, remotePath, []byte(f[1]))
+			_, err := mc.UploadData(remotePath, []byte(f[1]), true)
 			must(err)
 			logf(ctx(), "Uploaded `%s%s'\n", mc.URLBase(), remotePath)
 		}
@@ -326,19 +329,19 @@ func groupFilesByVersion(files []string) []*filesByVer {
 	return res
 }
 
-func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
+func minioDeleteOldBuildsPrefix(mc *minio.Client, buildType string) {
 	panicIf(buildType == buildTypeRel, "can't delete release builds")
 
 	nBuildsToRetain := nBuildsToRetainPreRel
 	remoteDir := "software/sumatrapdf/prerel/"
-	objectsCh := minioListObjects(mc, remoteDir)
+	objectsCh := mc.ListObjects(remoteDir)
 	var keys []string
 	for f := range objectsCh {
 		keys = append(keys, f.Key)
 		//logf(ctx(), "  %s\n", f.Key)
 	}
 
-	uri := minioURLForPath(mc, remoteDir)
+	uri := mc.URLForPath(remoteDir)
 	logf(ctx(), "%d files under '%s'\n", len(keys), uri)
 	byVer := groupFilesByVersion(keys)
 	for i, v := range byVer {
@@ -347,7 +350,7 @@ func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
 			logf(ctx(), "deleting %d\n", v.ver)
 			if true {
 				for _, key := range v.files {
-					err := minioRemove(mc, key)
+					err := mc.Remove(key)
 					must(err)
 					logf(ctx(), "  deleted %s\n", key)
 				}
@@ -356,4 +359,43 @@ func minioDeleteOldBuildsPrefix(mc *MinioClient, buildType string) {
 			logf(ctx(), "not deleting %d\n", v.ver)
 		}
 	}
+}
+
+// retry 3 times because processing on GitHub actions often fails due to
+// "An existing connection was forcibly closed by the remote host"
+func minioDownloadAtomicallyRetry(mc *minio.Client, path string, key string) {
+	var err error
+	for i := 0; i < 3; i++ {
+		err = mc.DownloadFileAtomically(path, key)
+		if err == nil {
+			return
+		}
+		logf(ctx(), "Downloading '%s' to '%s' failed with '%s'\n", key, path, err)
+		time.Sleep(time.Millisecond * 500)
+	}
+	panicIf(true, "mc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, key, err)
+}
+
+func newMinioSpacesClient() *minio.Client {
+	config := &minio.Config{
+		Bucket:   "kjkpubsf",
+		Endpoint: "sfo2.digitaloceanspaces.com",
+		Access:   os.Getenv("SPACES_KEY"),
+		Secret:   os.Getenv("SPACES_SECRET"),
+	}
+	mc, err := minio.New(config)
+	must(err)
+	return mc
+}
+
+func newMinioS3Client() *minio.Client {
+	config := &minio.Config{
+		Bucket:   "kjkpub",
+		Endpoint: "s3.amazonaws.com",
+		Access:   os.Getenv("AWS_ACCESS"),
+		Secret:   os.Getenv("AWS_SECRET"),
+	}
+	mc, err := minio.New(config)
+	must(err)
+	return mc
 }

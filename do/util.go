@@ -17,24 +17,21 @@ import (
 )
 
 var (
-	must                 = u.Must
-	panicIf              = u.PanicIf
-	fatalIf              = panicIf
-	urlify               = u.Slug
-	fileExists           = u.FileExists
-	dirExists            = u.DirExists
-	pathExists           = u.PathExists
-	normalizeNewlines    = u.NormalizeNewlines
-	formatSize           = u.FormatSize
-	getFileSize          = u.FileSize
-	copyFile             = u.CopyFile
-	sha1HexOfFile        = u.FileSha1Hex
-	fileSha1Hex          = u.FileSha1Hex
-	dataSha1Hex          = u.DataSha1Hex
-	formatDuration       = u.FormatDuration
-	mimeTypeFromFileName = u.MimeTypeFromFileName
-	readLinesFromFile    = u.ReadLines
-	toTrimmedLines       = u.ToTrimmedLines
+	must              = u.Must
+	panicIf           = u.PanicIf
+	fatalIf           = panicIf
+	urlify            = u.Slug
+	fileExists        = u.FileExists
+	dirExists         = u.DirExists
+	pathExists        = u.PathExists
+	normalizeNewlines = u.NormalizeNewlines
+	formatSize        = u.FormatSize
+	getFileSize       = u.FileSize
+	copyFile          = u.CopyFile
+	fileSha1Hex       = u.FileSha1Hex
+	formatDuration    = u.FormatDuration
+	readLinesFromFile = u.ReadLines
+	toTrimmedLines    = u.ToTrimmedLines
 )
 
 func ctx() context.Context {

@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kjk/minio"
 )
 
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
@@ -391,14 +393,14 @@ var (
 	nDeleted    = 0
 )
 
-func downloadOrReadOrDelete(mc *MinioClient, ci *crashInfo) {
+func downloadOrReadOrDelete(mc *minio.Client, ci *crashInfo) {
 	dataDir := crashesDataDir()
 	path := filepath.Join(dataDir, ci.Day, ci.fileNameTxt)
 	ci.pathTxt = path
 
 	if isOutdated(ci.Day) {
 		ci.isDeleted = true
-		minioRemove(mc, ci.storeKey)
+		mc.Remove(ci.storeKey)
 		os.Remove(path)
 		nDeleted++
 		if nDeleted < 32 || nDeleted%100 == 0 {
@@ -427,7 +429,7 @@ func downloadOrReadOrDelete(mc *MinioClient, ci *crashInfo) {
 	parseCrash(body, ci)
 	if shouldDeleteParsedCrash(body) {
 		ci.isDeleted = true
-		minioRemove(mc, ci.storeKey)
+		mc.Remove(ci.storeKey)
 		os.Remove(path)
 		nInvalid++
 		if nInvalid < 32 || nInvalid%100 == 0 {
@@ -472,7 +474,7 @@ func downloadCrashesAndGenerateHTML() {
 	sem := make(chan bool, nDownloaders)
 	go func() {
 		mc := newMinioSpacesClient()
-		remoteFiles := minioListObjects(mc, crashesPrefix)
+		remoteFiles := mc.ListObjects(crashesPrefix)
 
 		finished := false
 		for rf := range remoteFiles {

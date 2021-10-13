@@ -1,35 +1,37 @@
 package main
 
 import (
-	path2 "path"
+	"path"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/kjk/minio"
 )
 
 const filesRemoteDir = "sumatraTestFiles/"
 
-func fileUpload(path string) {
+func fileUpload(fpath string) {
 	ensureSpacesAndS3Creds()
-	fileSize := fileSizeMust(path)
-	sha1, err := sha1HexOfFile(path)
+	fileSize := fileSizeMust(fpath)
+	sha1, err := fileSha1Hex(fpath)
 	must(err)
-	dstFileName := sha1[:6] + "-" + urlify(filepath.Base(path))
-	remotePath := path2.Join(filesRemoteDir, dstFileName)
+	dstFileName := sha1[:6] + "-" + urlify(filepath.Base(fpath))
+	remotePath := path.Join(filesRemoteDir, dstFileName)
 	sizeStr := formatSize(fileSize)
-	logf(ctx(), "uploading '%s' of size %s as '%s'\n", path, sizeStr, remotePath)
+	logf(ctx(), "uploading '%s' of size %s as '%s'\n", fpath, sizeStr, remotePath)
 
 	timeStart := time.Now()
 
 	s3Client := newMinioS3Client()
 	spacesClient := newMinioSpacesClient()
 
-	upload := func(mc *MinioClient) {
-		uri := minioURLForPath(mc, remotePath)
-		if minioExists(mc, remotePath) {
+	upload := func(mc *minio.Client) {
+		uri := mc.URLForPath(remotePath)
+		if mc.Exists(remotePath) {
 			logf(ctx(), "Skipping upload, '%s' already exists\n", uri)
 		} else {
-			err := minioUploadFilePublic(mc, remotePath, path)
+			_, err := mc.UploadFile(remotePath, fpath, true)
 			must(err)
 			logf(ctx(), "Uploaded '%s' in %s\n", uri, time.Since(timeStart))
 		}
@@ -49,11 +51,11 @@ func fileUpload(path string) {
 	wg.Wait()
 }
 
-func minioFilesList(mc *MinioClient) {
-	uri := minioURLForPath(mc, "")
+func minioFilesList(mc *minio.Client) {
+	uri := mc.URLForPath("")
 	logf(ctx(), "filesList in '%s'\n", uri)
 
-	files := minioListObjects(mc, "")
+	files := mc.ListObjects("")
 	for f := range files {
 		sizeStr := formatSize(f.Size)
 		logf(ctx(), "%s : %s\n", f.Key, sizeStr)
@@ -72,14 +74,14 @@ func deleteFilesOneOff() {
 
 	//mc := newMinioSpacesClient()
 	mc := newMinioS3Client()
-	uri := minioURLForPath(mc, "")
+	uri := mc.URLForPath("")
 	logf(ctx(), "deleteFiles in '%s'\n", uri)
-	files := minioListObjects(mc, prefix)
+	files := mc.ListObjects(prefix)
 	for f := range files {
 		if doDelete {
-			err := minioRemove(mc, f.Key)
+			err := mc.Remove(f.Key)
 			must(err)
-			uri := minioURLForPath(mc, f.Key)
+			uri := mc.URLForPath(f.Key)
 			logf(ctx(), "Deleted %s\n", uri)
 		} else {
 			sizeStr := formatSize(f.Size)

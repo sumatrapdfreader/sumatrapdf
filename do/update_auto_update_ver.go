@@ -51,12 +51,12 @@ Latest %s
 	mc := newMinioS3Client()
 	{
 		remotePath := "sumatrapdf/sumpdf-update.txt"
-		err := minioUploadDataPublic(mc, remotePath, []byte(s))
+		_, err := mc.UploadData(remotePath, []byte(s), true)
 		must(err)
 	}
 	{
 		remotePath := "sumatrapdf/sumpdf-latest.txt"
-		err := minioUploadDataPublic(mc, remotePath, []byte(s))
+		_, err := mc.UploadData(remotePath, []byte(s), true)
 		must(err)
 	}
 
