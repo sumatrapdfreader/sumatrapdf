@@ -336,17 +336,15 @@ WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
     AutoFreeWstr normFile(path::Normalize(file));
 
     for (WindowInfo* win : gWindows) {
-        if (!win->IsAboutWindow() && path::IsSame(win->currentTab->filePath, normFile)) {
-            return win;
-        }
-        if (focusTab && win->tabs.size() > 1) {
-            // bring a background tab to the foreground
-            for (TabInfo* tab : win->tabs) {
-                if (tab != win->currentTab && path::IsSame(tab->filePath, normFile)) {
-                    TabsSelect(win, win->tabs.Find(tab));
-                    return win;
-                }
+        for (TabInfo* tab : win->tabs) {
+            WCHAR* fp = tab->filePath;
+            if (!fp || !path::IsSame(tab->filePath, normFile)) {
+                continue;
             }
+            if (focusTab && tab != win->currentTab) {
+                TabsSelect(win, win->tabs.Find(tab));
+            }
+            return win;
         }
     }
     return nullptr;
