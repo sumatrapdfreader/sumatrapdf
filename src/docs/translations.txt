@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4a921bd099cd1ef6bcac6688ffcc92fbe1b8fc6a
+91084b9e96ddb820f5db4df68409e0861a935cc6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5274,7 +5274,7 @@ hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
 id:Ubah Bahasa (Change Language)
-it:Cambia lingua
+it:Lingua interfaccia utente
 ja:言語の変更 (Change Language)
 jv:Ganti Basa
 ka:ენის შეცვლა (Change Language)
@@ -6443,6 +6443,7 @@ br:Não foi possível ver o nome da impressora
 cn:无法获取打印机名称
 co:Impussibule d’ottene u nome di a stampetta
 de:Druckername konnte nicht ermittelt werden
+el:Δεν ήταν δυνατή η λήψη του ονόματος του εκτυπωτή 
 es:No se ha podido encontrar el nombre de la impresora
 it:Impossibile ottenere il nome della stampante
 kw:Ny yllir kavos hanow pryntyer
@@ -18706,7 +18707,7 @@ hi:वेबसाइट देखें(&W)
 hr:&Posjeti internetsku stranicu
 hu:&Weboldal
 id:&Kunjungi Situs
-it:Visita sito &web programma
+it:Sito &web programma
 ja:Web サイトの訪問(&W)
 ka:&ვებ-გვერდზე გადასვლა
 kr:웹 사이트 방문(&V)
