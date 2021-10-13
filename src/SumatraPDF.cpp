@@ -2097,7 +2097,7 @@ enum class SaveChoice {
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
     auto fileName = path::GetBaseNameTemp(filePath);
     auto mainInstr = str::Format(_TR("Unsaved annotations in '%s'"), fileName);
-    auto content = _TR("Save annoations?");
+    auto content = _TR("Save annotations?");
 
     constexpr int kBtnIdDiscard = 100;
     constexpr int kBtnIdSaveToExisting = 101;
