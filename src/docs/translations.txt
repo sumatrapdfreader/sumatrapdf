@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-91084b9e96ddb820f5db4df68409e0861a935cc6
+4484489159d3895046537abd116d524320799088
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15571,15 +15571,15 @@ tw:儲存捷徑(&H)...\tCtrl+Shift+S
 uk:Зберегти ярлик...\tCtrl+Shift+S
 uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
-:Save annoations?
-am:Պահե՞լ մեկնաբանությունը:
+:Save annotations?
+am:Պահե՞լ մեկնաբանությունը?
 br:Salvar anotações?
 ca-xv:Voleu desar les anotacions?
 ca:Voleu desar les anotacions?
-cn:是否保存标注？
-co:Arregistrà l’annutazioni ?
+cn:是否保存标注
+co:Arregistrà l’annutazioni?
 de:Anmerkungen speichern?
-el:Αποθήκευση σχολιασμών;
+el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
