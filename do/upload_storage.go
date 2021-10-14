@@ -361,21 +361,6 @@ func minioDeleteOldBuildsPrefix(mc *minio.Client, buildType string) {
 	}
 }
 
-// retry 3 times because processing on GitHub actions often fails due to
-// "An existing connection was forcibly closed by the remote host"
-func minioDownloadAtomicallyRetry(mc *minio.Client, path string, key string) {
-	var err error
-	for i := 0; i < 3; i++ {
-		err = mc.DownloadFileAtomically(path, key)
-		if err == nil {
-			return
-		}
-		logf(ctx(), "Downloading '%s' to '%s' failed with '%s'\n", key, path, err)
-		time.Sleep(time.Millisecond * 500)
-	}
-	panicIf(true, "mc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, key, err)
-}
-
 func newMinioSpacesClient() *minio.Client {
 	config := &minio.Config{
 		Bucket:   "kjkpubsf",

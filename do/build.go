@@ -312,7 +312,7 @@ func createExeZipWithGoWithNameMust(dir, nameInZip string) {
 func createExeZipWithPigz(dir string) {
 	srcFile := "SumatraPDF.exe"
 	srcPath := filepath.Join(dir, srcFile)
-	fatalIf(!fileExists(srcPath), "file '%s' doesn't exist\n", srcPath)
+	panicIf(!fileExists(srcPath), "file '%s' doesn't exist\n", srcPath)
 
 	// this is the file that pigz.exe will create
 	dstFileTmp := "SumatraPDF.exe.zip"
@@ -327,7 +327,7 @@ func createExeZipWithPigz(dir string) {
 	wd, err := os.Getwd()
 	must(err)
 	pigzExePath := filepath.Join(wd, "bin", "pigz.exe")
-	fatalIf(!fileExists(pigzExePath), "file '%s' doesn't exist\n", pigzExePath)
+	panicIf(!fileExists(pigzExePath), "file '%s' doesn't exist\n", pigzExePath)
 	cmd := exec.Command(pigzExePath, "-11", "--keep", "--zip", srcFile)
 	// in pigz we don't control the name of the file created inside so
 	// so when we run pigz the current directory is the same as
@@ -335,7 +335,7 @@ func createExeZipWithPigz(dir string) {
 	cmd.Dir = dir
 	runCmdMust(cmd)
 
-	fatalIf(!fileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
+	panicIf(!fileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
 	err = os.Rename(dstPathTmp, dstPath)
 	must(err)
 }

@@ -16,13 +16,6 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v2
 
-      - name: process craches and netfliy deploy
-        env:
-          INSTA_PREV_CRASHES_PWD: ${{ secrets.INSTA_PREV_CRASHES_PWD }}
-          SPACES_KEY: ${{ secrets.SPACES_KEY }}
-          SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
-        run: .\doit.bat -crashes
-
       - name: update translations
         env:
           TRANS_UPLOAD_SECRET: ${{ secrets.TRANS_UPLOAD_SECRET }}

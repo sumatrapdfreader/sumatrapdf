@@ -175,7 +175,6 @@ func main() {
 		flgTransDownload   bool
 		flgTransCiUpdate   bool
 		flgClean           bool
-		flgCrashes         bool
 		flgCheckAccessKeys bool
 		flgTriggerCodeQL   bool
 		flgClangFormat     bool
@@ -208,7 +207,6 @@ func main() {
 		flag.BoolVar(&flgTransCiUpdate, "ci-trans-update", false, "download and checkin latest translations to src/docs/translations.txt")
 		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationsInfo.cpp")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
-		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		//flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
@@ -317,11 +315,6 @@ func main() {
 
 	if flgClangFormat {
 		clangFormatFiles()
-		return
-	}
-
-	if flgCrashes {
-		downloadCrashesAndGenerateHTML()
 		return
 	}
 
