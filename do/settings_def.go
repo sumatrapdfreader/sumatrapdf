@@ -251,7 +251,7 @@ var (
 		mkField("TabWidth", Int, 300,
 			"maximum width of a single tab"),
 		mkField("ToolbarTextColor", Color, mkRGB(0x00, 0x00, 0x00),
-			"color value for text in toolbar").setExpert().setVersion("3.4"),
+			"color value for text in toolbar when UseSysColor is set to false").setExpert().setVersion("3.4"),
 		mkEmptyLine(),
 
 		mkStruct("FixedPageUI", fixedPageUI,

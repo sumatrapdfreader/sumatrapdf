@@ -278,7 +278,7 @@ struct GlobalPrefs {
     bool restoreSession;
     // maximum width of a single tab
     int tabWidth;
-    // color value for text in toolbar
+    // color value for text in toolbar when UseSysColor is set to false
     char* toolbarTextColor;
     ParsedColor toolbarTextColorParsed;
     // customization options for PDF, XPS, DjVu and PostScript UI
