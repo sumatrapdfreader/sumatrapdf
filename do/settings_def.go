@@ -134,11 +134,6 @@ var (
 			"id of this favorite in the menu (assigned by AppendFavMenuItems)").setInternal(),
 	}
 
-	toolbarColors = []*Field{
-		mkField("TbTextColor", Color, mkRGB(0x00, 0x00, 0x00),
-			"color value for text in toolbar"),
-	}
-
 	fileSettings = []*Field{
 		mkField("FilePath", String, nil,
 			"path of the document"),
@@ -255,10 +250,10 @@ var (
 			"if true and SessionData isn't empty, that session will be restored at startup").setExpert(),
 		mkField("TabWidth", Int, 300,
 			"maximum width of a single tab"),
+		mkField("ToolbarTextColor", Color, mkRGB(0x00, 0x00, 0x00),
+			"color value for text in toolbar").setExpert().setVersion("3.4"),
 		mkEmptyLine(),
 
-		mkStruct("ToolbarColors", toolbarColors,
-			"color customization for the toolbar").setExpert().setVersion("3.4"),
 		mkStruct("FixedPageUI", fixedPageUI,
 			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
 		mkStruct("ComicBookUI", comicBookUI,

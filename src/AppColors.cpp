@@ -249,7 +249,7 @@ COLORREF GetAppColor(AppColor col) {
             // Assign old color with scheme prior to 3.4
             return GetAppColor(AppColor::DocumentText);
         } else {
-            parsedCol = GetPrefsColor(gGlobalPrefs->toolbarColors.tbTextColor);
+            parsedCol = GetPrefsColor(gGlobalPrefs->toolbarTextColor);
             return parsedCol->col;
         }
     }
