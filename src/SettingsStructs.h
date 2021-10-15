@@ -5,6 +5,13 @@
 
 struct RenderedBitmap;
 
+// color customization for the toolbar
+struct ToolbarColors {
+    // color value for text in toolbar
+    char* tbTextColor;
+    ParsedColor tbTextColorParsed;
+};
+
 // top, right, bottom and left margin (in that order) between window and
 // document
 struct WindowMargin {
@@ -278,6 +285,8 @@ struct GlobalPrefs {
     bool restoreSession;
     // maximum width of a single tab
     int tabWidth;
+    // color customization for the toolbar
+    ToolbarColors toolbarColors;
     // customization options for PDF, XPS, DjVu and PostScript UI
     FixedPageUI fixedPageUI;
     // customization options for Comic Book and images UI
@@ -397,6 +406,11 @@ struct GlobalPrefs {
 };
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
+
+static const FieldInfo gToolbarColorsFields[] = {
+    {offsetof(ToolbarColors, tbTextColor), SettingType::Color, (intptr_t) "#000000"},
+};
+static const StructInfo gToolbarColorsInfo = {sizeof(ToolbarColors), 1, gToolbarColorsFields, "TbTextColor"};
 
 static const FieldInfo gWindowMarginFields[] = {
     {offsetof(WindowMargin, top), SettingType::Int, 2},
@@ -601,6 +615,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, toolbarColors), SettingType::Struct, (intptr_t)&gToolbarColorsInfo},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
     {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
@@ -652,13 +667,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
-    "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0ComicBo"
-    "okUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels"
-    "\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0\0RememberState"
-    "PerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0Ver"
-    "sionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Win"
-    "dowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0R"
-    "eopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    sizeof(GlobalPrefs), 56, gGlobalPrefsFields,
+    "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0ToolbarColors\0Fixed"
+    "PageUI\0ComicBookUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTi"
+    "tle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0"
+    "\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0Check"
+    "ForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0D"
+    "efaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates"
+    "\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

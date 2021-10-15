@@ -134,6 +134,11 @@ var (
 			"id of this favorite in the menu (assigned by AppendFavMenuItems)").setInternal(),
 	}
 
+	toolbarColors = []*Field{
+		mkField("TbTextColor", Color, mkRGB(0x00, 0x00, 0x00),
+			"color value for text in toolbar"),
+	}
+
 	fileSettings = []*Field{
 		mkField("FilePath", String, nil,
 			"path of the document"),
@@ -252,6 +257,8 @@ var (
 			"maximum width of a single tab"),
 		mkEmptyLine(),
 
+		mkStruct("ToolbarColors", toolbarColors,
+			"color customization for the toolbar").setExpert().setVersion("3.4"),
 		mkStruct("FixedPageUI", fixedPageUI,
 			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
 		mkStruct("ComicBookUI", comicBookUI,

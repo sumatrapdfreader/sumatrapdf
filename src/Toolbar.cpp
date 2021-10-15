@@ -296,8 +296,8 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             // SetBkMode(hdc, TRANSPARENT);
             auto br = CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor);
 #else
-            // Set color used in "Page:" and "Find:" labels to black
-            auto col = RGB(0x00, 0x00, 0x00);
+            // Set color used in "Page:" and "Find:" labels
+            auto col = GetAppColor(AppColor::ToolbarText);
             SetTextColor(hdc, col);
             SetBkMode(hdc, TRANSPARENT);
             auto br = GetStockBrush(NULL_BRUSH);

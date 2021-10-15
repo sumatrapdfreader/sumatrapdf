@@ -244,6 +244,16 @@ COLORREF GetAppColor(AppColor col) {
         return c;
     }
 
+    if (col == AppColor::ToolbarText) {
+        if (gGlobalPrefs->useSysColors) {
+            // Assign old color with scheme prior to 3.4
+            return GetAppColor(AppColor::DocumentText);
+        } else {
+            parsedCol = GetPrefsColor(gGlobalPrefs->toolbarColors.tbTextColor);
+            return parsedCol->col;
+        }
+    }
+
     CrashIf(true);
     return COL_WINDOW_BG;
 }

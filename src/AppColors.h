@@ -49,6 +49,9 @@ enum class AppColor {
     TabClickedCloseX,
     TabClickedCloseCircle,
 
+    // Colors used in toolbar
+    //ToolbarBg, // Will we be able to change it in the future? (Toolbar.cpp:40)
+    ToolbarText
 };
 
 COLORREF GetAppColor(AppColor);
