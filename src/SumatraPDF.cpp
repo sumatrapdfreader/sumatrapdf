@@ -3986,6 +3986,8 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             if (!isShift) {
                 gGlobalPrefs->fixedPageUI.invertColors ^= true;
                 UpdateDocumentColors();
+                UpdateTreeCtrlColors(win);
+                // UpdateUiForCurrentTab(win);
             }
             break;
         case 'm':
