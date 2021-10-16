@@ -242,6 +242,27 @@ static bool IsPSFileContent(ByteSlice d) {
     return isPJL;
 }
 
+// https://github.com/file/file/blob/7449263e1d6167233b3b6abfc3e4c13407d6432c/magic/Magdir/animation#L265
+// https://nokiatech.github.io/heif/technical.html
+// TODO: need to figure out heif vs. heic
+static bool IsHeicContent(ByteSlice d) {
+    if (d.size() < 0x18) {
+        return false;
+    }
+    char* s = (char*)d.data();
+    char* hdr = s + 4;
+    bool isheic = str::StartsWith(hdr, "ftypheic");
+    bool ismif = str::StartsWith(hdr, "ftypmif1");
+    if (!(isheic || ismif)) {
+        return false;
+    }
+    hdr = s + 16;
+    if (!str::StartsWith(hdr, "mif1heic")) {
+        return false;
+    }
+    return true;
+}
+
 // detect file type based on file content
 Kind GuessFileTypeFromContent(ByteSlice d) {
     // TODO: sniff .fb2 content
@@ -258,6 +279,10 @@ Kind GuessFileTypeFromContent(ByteSlice d) {
         if ((len > sigMaxLen) && memeq(dat, sig, sigLen)) {
             return gFileSigs[i].kind;
         }
+    }
+
+    if (IsHeicContent(d)) {
+        return kindFileHeic;
     }
 
     if (IsPdfFileContent(d)) {
