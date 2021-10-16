@@ -14,7 +14,6 @@
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "EngineDjVu.h"
 #include "EngineAll.h"
 #include "PdfCreator.h"
 
@@ -546,7 +545,7 @@ int main(__unused int argc, __unused char** argv) {
     }
 
     PasswordHolder pwdUI(password);
-    EngineBase* engine = CreateEngine(filePath, &pwdUI);
+    EngineBase* engine = CreateEngine(filePath, &pwdUI, false);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(filePath));
         return 1;

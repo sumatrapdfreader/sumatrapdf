@@ -462,12 +462,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\FzImgReader.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\EngineDump.cpp" />
+    <ClCompile Include="..\src\FzImgReader.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
