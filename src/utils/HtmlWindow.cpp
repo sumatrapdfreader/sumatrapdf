@@ -11,6 +11,7 @@
 #include "ScopedWin.h"
 #include "WinUtil.h"
 #include "GdiPlusUtil.h"
+#include "GuessFileType.h"
 
 // An important (to Sumatra) use case is displaying CHM documents. First we used
 // IE's built-in support form CHM documents (using its: protocol

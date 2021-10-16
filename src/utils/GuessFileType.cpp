@@ -43,6 +43,7 @@ Kind kindFilePalmDoc = "filePalmDoc";
 Kind kindFileHTML = "fileHTML";
 Kind kindFileTxt = "fileTxt";
 Kind kindFileSvg = "fileSvg";
+Kind kindFileHeic = "fileHeic";
 
 // http://en.wikipedia.org/wiki/.nfo
 // http://en.wikipedia.org/wiki/FILE_ID.DIZ
@@ -104,6 +105,7 @@ Kind kindFileSvg = "fileSvg";
     V(".zip\0", kindFileZip)        \
     V(".rar\0", kindFileRar)        \
     V(".7z\0", kindFile7Z)          \
+    V(".heic\0", kindFileHeic)      \
     V(".tar\0", kindFileTar)
 
 #define EXT(ext, kind) ext
@@ -415,4 +417,43 @@ Kind GuessFileType(const WCHAR* path, bool sniff) {
         return GuessFileTypeFromName(path);
     }
     return GuessFileTypeFromName(path);
+}
+
+static const Kind gImageKinds[] = {kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,
+                                   kindFileTga, kindFileJxr,  kindFileWebp, kindFileJp2, kindFileHeic};
+
+static const WCHAR* gImageFormatExts =
+    L".png\0"
+    L".jpg\0"
+    L".gif\0"
+    L".bmp\0"
+    L".tif\0"
+    L".tga\0"
+    L".jxr\0"
+    L".webp\0"
+    L".jp2\0"
+    L".heic\0"
+    L"\0";
+
+static int FindImageKindIdx(Kind kind) {
+    int n = (int)dimof(gImageKinds);
+    for (int i = 0; i < n; i++) {
+        if (kind == gImageKinds[i]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+const WCHAR* GfxFileExtFromKind(Kind kind) {
+    int idx = FindImageKindIdx(kind);
+    if (idx >= 0) {
+        return seqstrings::IdxToStr(gImageFormatExts, idx);
+    }
+    return nullptr;
+}
+
+const WCHAR* GfxFileExtFromData(ByteSlice d) {
+    Kind kind = GuessFileTypeFromContent(d);
+    return GfxFileExtFromKind(kind);
 }

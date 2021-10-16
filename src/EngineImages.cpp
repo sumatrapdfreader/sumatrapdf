@@ -543,6 +543,11 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
 
     AutoFree data = file::ReadFile(file);
     fileExt = GfxFileExtFromData(data.AsSpan());
+    if (fileExt == nullptr) {
+        Kind kind = GuessFileTypeFromName(file);
+        fileExt = GfxFileExtFromKind(kind);
+    }
+    CrashIf(fileExt == nullptr);
     defaultExt = fileExt;
     image = BitmapFromData(data.AsSpan());
     return FinishLoading();
@@ -741,10 +746,8 @@ EngineBase* EngineImage::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-static Kind imageEngineKinds[] = {
-    kindFilePng, kindFileJpeg, kindFileGif, kindFileTiff, kindFileBmp, kindFileTga,
-    kindFileJxr, kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2,
-};
+static Kind imageEngineKinds[] = {kindFilePng, kindFileJpeg, kindFileGif, kindFileTiff, kindFileBmp, kindFileTga,
+                                  kindFileJxr, kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2, kindFileHeic};
 
 bool IsEngineImageSupportedFileType(Kind kind) {
     // logf("IsEngineImageSupportedFileType(%s)\n", kind);
@@ -1031,7 +1034,7 @@ EngineCbx::~EngineCbx() {
     delete cbxFile;
 
     for (auto&& img : images) {
-        if(!img.empty())
+        if (!img.empty())
             str::Free(img);
     }
 }
@@ -1194,7 +1197,7 @@ TocTree* EngineCbx::GetToc() {
 
 ByteSlice EngineCbx::GetImageData(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > PageCount()));
-    if(!images[pageNo - 1].empty())
+    if (!images[pageNo - 1].empty())
         return images[pageNo - 1];
     // decompress image data
     size_t fileId = files[pageNo - 1]->fileId;

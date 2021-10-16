@@ -18,6 +18,7 @@ Next version:
 * faster scrolling with mouse wheel when cursor over scrollbar
 * add -search cmd-line option and [Search("<file>", "<search-term>")] DDE command
 * when showing document properties press ctrl-d will show font information for PDF files
+* support opening .heic image files (if Windows has heic codec installed)
 
 3.3.3 (2021-07-20)
 * fix a crash in PdfFilter.dll

@@ -19,7 +19,6 @@ RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, size_t
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
-const WCHAR* GfxFileExtFromData(ByteSlice);
 Gdiplus::Bitmap* BitmapFromDataWin(ByteSlice bmpData);
 Size BitmapSizeFromData(ByteSlice);
 CLSID GetEncoderClsid(const WCHAR* format);

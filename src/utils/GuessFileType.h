@@ -35,6 +35,7 @@ extern Kind kindFileMobi;
 extern Kind kindFilePalmDoc;
 extern Kind kindFileHTML;
 extern Kind kindFileSvg;
+extern Kind kindFileHeic;
 extern Kind kindFileTxt;
 
 extern Kind kindDirectory;
@@ -45,5 +46,7 @@ Kind GuessFileTypeFromContent(const WCHAR* path);
 Kind GuessFileTypeFromContent(ByteSlice d);
 Kind GuessFileTypeFromName(const WCHAR*);
 Kind GuessFileType(const WCHAR* path, bool sniff);
+const WCHAR* GfxFileExtFromData(ByteSlice);
+const WCHAR* GfxFileExtFromKind(Kind);
 
 bool KindInArray(Kind* kinds, int nKinds, Kind kind);

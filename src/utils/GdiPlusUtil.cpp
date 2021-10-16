@@ -298,42 +298,6 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-static const Kind gImageKinds[] = {
-    kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,
-    kindFileTga, kindFileJxr,  kindFileWebp, kindFileJp2,
-};
-
-static const WCHAR* gImageFormatExts =
-    L".png\0"
-    L".jpg\0"
-    L".gif\0"
-    L".bmp\0"
-    L".tif\0"
-    L".tga\0"
-    L".jxr\0"
-    L".webp\0"
-    L".jp2\0"
-    L"\0";
-
-static int FindImageKindIdx(Kind kind) {
-    int n = (int)dimof(gImageKinds);
-    for (int i = 0; i < n; i++) {
-        if (kind == gImageKinds[i]) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-const WCHAR* GfxFileExtFromData(ByteSlice d) {
-    Kind kind = GuessFileTypeFromContent(d);
-    int idx = FindImageKindIdx(kind);
-    if (idx >= 0) {
-        return seqstrings::IdxToStr(gImageFormatExts, idx);
-    }
-    return nullptr;
-}
-
 // see http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
     Kind format = GuessFileTypeFromContent(bmpData);

@@ -8,6 +8,7 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/GdiPlusUtil.h"
+#include "utils/GuessFileType.h"
 #include "utils/Timer.h"
 
 #include "DisplayMode.h"

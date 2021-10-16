@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-10-15 Fri
+
+- support .heic files (fixes #2196)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2196
+
 2021-10-04 Mon
 
 - update mupdf
