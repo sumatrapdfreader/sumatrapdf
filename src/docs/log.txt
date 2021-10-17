@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-10-17 Sun
+
+- don't crash on empty links in djvu (fixes #2200)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2200
+
 2021-10-15 Fri
 
 - support .heic files (fixes #2196)

@@ -957,7 +957,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
                    miniexp_stringp(miniexp_cadr(url)) && miniexp_stringp(miniexp_caddr(url))) {
             urlA = miniexp_to_str(miniexp_cadr(url));
         }
-        if (!urlA) {
+        if (!urlA || !*urlA) {
             continue;
         }
 
@@ -1010,9 +1010,10 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
             tmp = urlA;
         }
         auto el = NewDjVuLink(pageNo, rect, tmp, commentUtf8);
-        if (el->GetKind() == kindDestinationNone) {
+        if (!el || el->GetKind() == kindDestinationNone) {
             logf("invalid link '%s', pages in document: %d\n", tmp ? tmp : "", PageCount());
             ReportIf(true);
+            continue;
         }
         els.Append(el);
     }
