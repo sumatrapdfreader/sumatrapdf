@@ -127,7 +127,7 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 		verifyTranslationsMust()
 	}
 	if opts.doCleanCheck {
-		panicIf(!isGitClean(), "git has unsaved changes\n")
+		panicIf(!isGitClean(""), "git has unsaved changes\n")
 	}
 	if opts.releaseBuild {
 		verifyOnReleaseBranchMust()

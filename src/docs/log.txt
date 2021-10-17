@@ -2,6 +2,7 @@ A daily log of changes and commentary. An experiment of sorts.
 
 2021-10-17 Sun
 
+- add 'u' for underline annotation; add Annotations.underlineColor setting (fixes #2157)
 - don't crash on empty links in djvu (fixes #2200)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2200
 

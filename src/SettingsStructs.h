@@ -133,6 +133,9 @@ struct Annotations {
     // color used for highlight annotations
     char* highlightColor;
     ParsedColor highlightColorParsed;
+    // color used for underline annotations
+    char* underlineColor;
+    ParsedColor underlineColorParsed;
     // color used for text icon annotation
     char* textIconColor;
     ParsedColor textIconColorParsed;
@@ -485,12 +488,14 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
 
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t) "#ffff00"},
+    {offsetof(Annotations, underlineColor), SettingType::Color, (intptr_t) "#00ff00"},
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t) "#ffff00"},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t) ""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t) ""},
 };
-static const StructInfo gAnnotationsInfo = {sizeof(Annotations), 4, gAnnotationsFields,
-                                            "HighlightColor\0TextIconColor\0TextIconType\0DefaultAuthor"};
+static const StructInfo gAnnotationsInfo = {
+    sizeof(Annotations), 5, gAnnotationsFields,
+    "HighlightColor\0UnderlineColor\0TextIconColor\0TextIconType\0DefaultAuthor"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},

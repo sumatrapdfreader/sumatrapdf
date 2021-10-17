@@ -1327,18 +1327,26 @@ void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
     DeleteVecMembers(annots);
 }
 
-PdfColor GetAnnotationHighlightColor() {
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->annotations.highlightColor);
+static PdfColor GetAnnotationHighlightColor() {
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* parsedCol = GetParsedColor(a.highlightColor, a.highlightColorParsed);
     return parsedCol->pdfCol;
 }
 
-PdfColor GetAnnotationTextIconColor() {
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->annotations.textIconColor);
+static PdfColor GetAnnotationUnderlineColor() {
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* parsedCol = GetParsedColor(a.underlineColor, a.underlineColorParsed);
+    return parsedCol->pdfCol;
+}
+
+static PdfColor GetAnnotationTextIconColor() {
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* parsedCol = GetParsedColor(a.textIconColor, a.textIconColorParsed);
     return parsedCol->pdfCol;
 }
 
 // caller needs to free()
-char* GetAnnotationTextIcon() {
+static char* GetAnnotationTextIcon() {
     char* s = str::Dup(gGlobalPrefs->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
     str::RemoveCharsInPlace(s, " ");
@@ -1425,6 +1433,12 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
             SetIconName(res, iconName.AsView());
         }
         auto col = GetAnnotationTextIconColor();
+        SetColor(res, col);
+    } else if (typ == AnnotationType::Underline) {
+        auto col = GetAnnotationUnderlineColor();
+        SetColor(res, col);
+    } else if (typ == AnnotationType::Highlight) {
+        auto col = GetAnnotationHighlightColor();
         SetColor(res, col);
     }
     pdf_drop_annot(ctx, annot);

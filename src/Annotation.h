@@ -67,9 +67,6 @@ RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 // Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
-PdfColor GetAnnotationHighlightColor();
-PdfColor GetAnnotationTextIconColor();
-char* GetAnnotationTextIcon();
 
 // EditAnnotations.cpp
 std::string_view Author(Annotation*);

@@ -118,6 +118,8 @@ var (
 	annotations = []*Field{
 		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x0),
 			"color used for highlight annotations"),
+		mkField("UnderlineColor", Color, mkRGB(0x00, 0xFF, 0x0),
+			"color used for underline annotations"),
 		mkField("TextIconColor", Color, mkRGB(0xFF, 0xFF, 0x0), "color used for text icon annotation"),
 		mkField("TextIconType", String, "", "type of text annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note."),
 		mkField("DefaultAuthor", String, "", "default author for created annotations, use (none) to not add an author at all. If not set will use Windows user name").setVersion("3.4"),

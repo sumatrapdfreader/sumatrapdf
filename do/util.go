@@ -57,6 +57,15 @@ func runExeMust(c string, args ...string) []byte {
 	return []byte(out)
 }
 
+func runExeInDirMust(dir string, c string, args ...string) []byte {
+	cmd := exec.Command(c, args...)
+	logf(ctx(), "> %s\n", cmd)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	must(err)
+	return []byte(out)
+}
+
 func runExeLoggedMust(c string, args ...string) []byte {
 	cmd := exec.Command(c, args...)
 	out := runCmdLoggedMust(cmd)
@@ -171,8 +180,15 @@ func findLargestFileByExt() {
 	logf(ctx(), "processed %d files\n", nFiles)
 }
 
+func fmdCmdShort(cmd *exec.Cmd) string {
+	cmd2 := *cmd
+	exePath := filepath.Base(cmd.Path)
+	cmd2.Path = exePath
+	return cmd2.String()
+}
+
 func runCmdLoggedMust(cmd *exec.Cmd) string {
-	logf(ctx(), "> %s\n", cmd.String())
+	logf(ctx(), ">2 %s\n", fmdCmdShort(cmd))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin

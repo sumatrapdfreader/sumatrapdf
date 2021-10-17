@@ -8,10 +8,13 @@ Next version:
   we have few built-in and you can add your own via
   https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers
 * added Annotations.TextIconColor and TextIconType advanced settings
+* added Annotations.UnderlineColor advanced setting
 * added Annotations.DefaultAuthor advanced setting
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
 * 'i' keyboard shortcuts inverts document colors
-   Shift + 'i' does what 'i' used to do i.e. show page number
+  'Shift + i' does what 'i' used to do i.e. show page number
+* 'u' and 'Shift + u' keyboard shortucts adds underline annotation for currently selected text
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2157
 * respect zoom level in PDF destination links
   https://github.com/sumatrapdfreader/sumatrapdf/commit/3aa18aaf89caef7dd28529682d9344ef89422100
 * support .svg files

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -424,14 +426,33 @@ func genSettingsStruct() string {
 	return content
 }
 
-// this we do to work-around a bug in Cloudflare Pages
-func urlizeVersion(s string) string {
-	return strings.Replace(s, ".", "-", -1)
+func updateSumatraWebsite() string {
+	dir := filepath.Join("..", "sumatra-website")
+	dir, err := filepath.Abs(dir)
+	logf(ctx(), "sumatra website dir: '%s'\n", dir)
+	must(err)
+	panicIf(!dirExists(dir), "directory for sumatra website '%s' doesn't exist", dir)
+	panicIf(!isGitClean(dir), "github repository '%s' must be clean", dir)
+	{
+		cmd := exec.Command("git", "pull")
+		runCmdLoggedMust(cmd)
+	}
+	dir = filepath.Join(dir, "www")
+	panicIf(!dirExists(dir), "directory for sumatra website '%s' doesn't exist", dir)
+	return dir
 }
 
 func genAndSaveSettingsStructs() {
+	websiteDir := updateSumatraWebsite()
+	websiteSettingsDir := filepath.Join(websiteDir, "settings")
 	ver := extractSumatraVersionMust()
-	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings/settings%s.html", urlizeVersion(ver))
+	// this we do to work-around a bug in Cloudflare Pages that doesn't support '.' in file name
+	verUrlized := strings.Replace(ver, ".", "-", -1)
+
+	settingsFileName := fmt.Sprintf("settings%s.html", verUrlized)
+	langsFileName := fmt.Sprintf("langs%s", verUrlized)
+
+	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings/settings%s.html", verUrlized)
 
 	globalPrefs[0].Comment = helpURI
 
@@ -458,6 +479,49 @@ func genAndSaveSettingsStructs() {
 	clangFormatFile(path)
 	fmt.Printf("Wrote '%s'\n", path)
 
+	genLangsHTML := func() {
+		var langs []*Lang
+		for _, el := range gLangs {
+			langs = append(langs, mkLang(el[1], el[0]))
+		}
+		sort.Slice(langs, func(i, j int) bool {
+			return langs[i].name < langs[j].name
+		})
+		var lines []string
+		for _, l := range langs {
+			s := fmt.Sprintf(`<tr><td>%s</td><td>%s</td></tr>`, l.name, l.code)
+			lines = append(lines, s)
+		}
+		inside := strings.Join(lines, "\n")
+		s := strings.Replace(tmplLangsHTML, "%INSIDE%", inside, -1)
+		s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
+		s = strings.Replace(s, "settings.html", settingsFileName, -1)
+		s = strings.Replace(s, "\n", "\r\n", -1)
+		// undo html escaping that differs from Python
+		// TODO: possibly remove
+		//s = strings.Replace(s, "&#39;", "'", -1)
+
+		path := filepath.Join(websiteSettingsDir, langsFileName)
+		writeFileMust(path, []byte(s))
+	}
+
+	genSettingsHTML := func() {
+		prefs := globalPrefsStruct
+		inside := genStruct(prefs, "", false)
+		s := strings.Replace(tmplHTML, "%INSIDE%", inside, -1)
+		s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
+		s = strings.Replace(s, "langs.html", langsFileName, -1)
+		s = strings.Replace(s, "\n", "\r\n", -1)
+		// undo html escaping that differs from Python
+		// TODO: possibly remove
+		//s = strings.Replace(s, "&#39;", "'", -1)
+
+		path := filepath.Join(websiteSettingsDir, settingsFileName)
+		writeFileMust(path, []byte(s))
+		fmt.Printf("Wrote '%s'\n", path)
+	}
+
 	genSettingsHTML()
 	genLangsHTML()
+	logf(ctx(), "!!!!!! checkin sumatra website repo!!!!\n")
 }

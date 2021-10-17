@@ -22,8 +22,8 @@ func getGitSha1Must() string {
 	return s
 }
 
-func isGitClean() bool {
-	out := runExeMust("git", "status", "--porcelain")
+func isGitClean(dir string) bool {
+	out := runExeInDirMust(dir, "git", "status", "--porcelain")
 	s := strings.TrimSpace(string(out))
 	if len(s) > 0 {
 		logf(ctx(), "git status --porcelain returned:\n'%s'\n", s)

@@ -27,7 +27,8 @@ func clangFormatFile(path string) {
 }
 
 func clangFormatFiles() {
-	detectClangFormat()
+	path := detectClangFormat()
+	logf(ctx(), "using '%s'\n", path)
 	files := []string{
 		`src\*.cpp`,
 		`src\*.h`,
@@ -83,4 +84,5 @@ func clangFormatFiles() {
 		}
 	}
 	wg.Wait()
+	logf(ctx(), "used '%s'\n", path)
 }
