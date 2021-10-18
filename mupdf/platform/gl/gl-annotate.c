@@ -414,6 +414,12 @@ static void do_save_pdf_dialog(int for_signing)
 				{
 					pdf_save_document(ctx, pdf, save_filename, &save_opts);
 					fz_strlcpy(filename, save_filename, PATH_MAX);
+					fz_strlcat(save_filename, ".journal", PATH_MAX);
+#ifdef _WIN32
+					fz_remove_utf8(save_filename);
+#else
+					remove(save_filename);
+#endif
 					reload_document();
 				}
 			}

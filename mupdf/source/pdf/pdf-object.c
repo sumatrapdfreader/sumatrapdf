@@ -2404,6 +2404,48 @@ pdf_unmark_obj(fz_context *ctx, pdf_obj *obj)
 	obj->flags &= ~PDF_FLAGS_MARKED;
 }
 
+int
+pdf_mark_list_push(fz_context *ctx, pdf_mark_list *list, pdf_obj *obj)
+{
+	if (list->len == list->max)
+	{
+		int newsize = list->max ? list->max * 2 : 32;
+		list->list = fz_realloc_array(ctx, list->list, newsize, pdf_obj *);
+		list->max = newsize;
+	}
+
+	if (pdf_mark_obj(ctx, obj))
+		return 1;
+
+	list->list[list->len++] = obj;
+
+	return 0;
+}
+
+void
+pdf_mark_list_pop(fz_context *ctx, pdf_mark_list *list)
+{
+	pdf_unmark_obj(ctx, list->list[--list->len]);
+}
+
+void
+pdf_mark_list_init(fz_context *ctx, pdf_mark_list *list)
+{
+	list->len = list->max = 0;
+	list->list = NULL;
+}
+
+void
+pdf_mark_list_free(fz_context *ctx, pdf_mark_list *list)
+{
+	while (list->len)
+		pdf_mark_list_pop(ctx, list);
+
+	fz_free(ctx, list->list);
+	list->max = 0;
+	list->list = NULL;
+}
+
 void
 pdf_set_obj_memo(fz_context *ctx, pdf_obj *obj, int bit, int memo)
 {

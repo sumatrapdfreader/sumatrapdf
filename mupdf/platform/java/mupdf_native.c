@@ -115,6 +115,8 @@ static jclass cls_NullPointerException;
 static jclass cls_Object;
 static jclass cls_OutOfMemoryError;
 static jclass cls_Outline;
+static jclass cls_OutlineItem;
+static jclass cls_OutlineIterator;
 static jclass cls_PDFAnnotation;
 static jclass cls_PDFDocument;
 static jclass cls_PDFDocument_JsEventListener;
@@ -182,6 +184,7 @@ static jfieldID fid_Matrix_e;
 static jfieldID fid_Matrix_f;
 static jfieldID fid_NativeDevice_nativeInfo;
 static jfieldID fid_NativeDevice_nativeResource;
+static jfieldID fid_OutlineIterator_pointer;
 static jfieldID fid_PDFAnnotation_pointer;
 static jfieldID fid_PDFDocument_pointer;
 static jfieldID fid_PDFGraftMap_pointer;
@@ -283,6 +286,8 @@ static jmethodID mid_Matrix_init;
 static jmethodID mid_NativeDevice_init;
 static jmethodID mid_Object_toString;
 static jmethodID mid_Outline_init;
+static jmethodID mid_OutlineItem_init;
+static jmethodID mid_OutlineIterator_init;
 static jmethodID mid_PDFAnnotation_init;
 static jmethodID mid_PDFDocument_JsEventListener_onAlert;
 static jmethodID mid_PDFDocument_init;
@@ -831,6 +836,13 @@ static int find_fids(JNIEnv *env)
 	cls_Outline = get_class(&err, env, PKG"Outline");
 	mid_Outline_init = get_method(&err, env, "<init>", "(Ljava/lang/String;Ljava/lang/String;[L"PKG"Outline;)V");
 
+	cls_OutlineItem = get_class(&err, env, PKG"OutlineIterator$OutlineItem");
+	mid_OutlineItem_init = get_method(&err, env, "<init>", "(Ljava/lang/String;Ljava/lang/String;Z)V");
+
+	cls_OutlineIterator = get_class(&err, env, PKG"OutlineIterator");
+	fid_OutlineIterator_pointer = get_field(&err, env, "pointer", "J");
+	mid_OutlineIterator_init = get_method(&err, env, "<init>", "(J)V");
+
 	cls_Page = get_class(&err, env, PKG"Page");
 	fid_Page_pointer = get_field(&err, env, "pointer", "J");
 	mid_Page_init = get_method(&err, env, "<init>", "(J)V");
@@ -1096,6 +1108,8 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_Object);
 	(*env)->DeleteGlobalRef(env, cls_OutOfMemoryError);
 	(*env)->DeleteGlobalRef(env, cls_Outline);
+	(*env)->DeleteGlobalRef(env, cls_OutlineItem);
+	(*env)->DeleteGlobalRef(env, cls_OutlineIterator);
 	(*env)->DeleteGlobalRef(env, cls_PDFAnnotation);
 	(*env)->DeleteGlobalRef(env, cls_PDFDocument);
 	(*env)->DeleteGlobalRef(env, cls_PDFDocument_JsEventListener);
@@ -1190,6 +1204,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/fitzinputstream.c"
 #include "jni/font.c"
 #include "jni/image.c"
+#include "jni/outlineiterator.c"
 #include "jni/page.c"
 #include "jni/path.c"
 #include "jni/pdfannotation.c"

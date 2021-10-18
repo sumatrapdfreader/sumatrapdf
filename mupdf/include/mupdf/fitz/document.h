@@ -24,6 +24,7 @@
 #define MUPDF_FITZ_DOCUMENT_H
 
 #include "mupdf/fitz/system.h"
+#include "mupdf/fitz/types.h"
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/geometry.h"
 #include "mupdf/fitz/device.h"
@@ -32,23 +33,9 @@
 #include "mupdf/fitz/outline.h"
 #include "mupdf/fitz/separation.h"
 
-typedef struct fz_document fz_document;
 typedef struct fz_document_handler fz_document_handler;
 typedef struct fz_page fz_page;
 typedef intptr_t fz_bookmark;
-
-/**
-	Locations within the document are referred to in terms of
-	chapter and page, rather than just a page number. For some
-	documents (such as epub documents with large numbers of pages
-	broken into many chapters) this can make navigation much faster
-	as only the required chapter needs to be decoded at a time.
-*/
-typedef struct
-{
-	int chapter;
-	int page;
-} fz_location;
 
 /**
 	Simple constructor for fz_locations.
@@ -147,6 +134,12 @@ typedef int (fz_document_has_permission_fn)(fz_context *ctx, fz_document *doc, f
 	for more information.
 */
 typedef fz_outline *(fz_document_load_outline_fn)(fz_context *ctx, fz_document *doc);
+
+/**
+	Type for a function to be called to obtain an outline iterator
+	for a document. See fz_document_outline_iterator for more information.
+*/
+typedef fz_outline_iterator *(fz_document_outline_iterator_fn)(fz_context *ctx, fz_document *doc);
 
 /**
 	Type for a function to be called to lay
@@ -489,6 +482,13 @@ int fz_authenticate_password(fz_context *ctx, fz_document *doc, const char *pass
 	Should be freed by fz_drop_outline.
 */
 fz_outline *fz_load_outline(fz_context *ctx, fz_document *doc);
+
+/**
+	Get an iterator for the document outline.
+
+	Should be freed by fz_drop_outline_iterator.
+*/
+fz_outline_iterator *fz_new_outline_iterator(fz_context *ctx, fz_document *doc);
 
 /**
 	Is the document reflowable.
@@ -858,6 +858,7 @@ struct fz_document
 	fz_document_authenticate_password_fn *authenticate_password;
 	fz_document_has_permission_fn *has_permission;
 	fz_document_load_outline_fn *load_outline;
+	fz_document_outline_iterator_fn *outline_iterator;
 	fz_document_layout_fn *layout;
 	fz_document_make_bookmark_fn *make_bookmark;
 	fz_document_lookup_bookmark_fn *lookup_bookmark;

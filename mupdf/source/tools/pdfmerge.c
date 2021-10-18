@@ -31,6 +31,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 static int usage(void)
 {
@@ -45,37 +46,238 @@ static int usage(void)
 	return 1;
 }
 
-static fz_context *ctx = NULL;
 static pdf_document *doc_des = NULL;
 static pdf_document *doc_src = NULL;
+int output_page_count = 0;
 
-static void page_merge(int page_from, int page_to, pdf_graft_map *graft_map)
+static void page_merge(fz_context *ctx, int page_from, int page_to, pdf_graft_map *graft_map)
 {
 	pdf_graft_mapped_page(ctx, graft_map, page_to - 1, doc_src, page_from - 1);
 }
 
-static void merge_range(const char *range)
+/*
+	While we are processing, it_src tracks the current position we are copying from.
+
+	items is the list of things we have stepped through to get to the current position.
+	A prefix of these items may have already been copied across. copied_to_depth is
+	the length of that prefix. 0 < = copied_to_depth <= len.
+*/
+typedef struct
+{
+	fz_context *ctx;
+	fz_outline_iterator *it_dst;
+	fz_outline_iterator *it_src;
+	const char *range;
+	int page_count;
+	int max;
+	int len;
+	fz_outline_item *items;
+	int copied_to_depth;
+	int page_output_base;
+} cor_state;
+
+/* Given a range, and a page in the range 1 to count, return the position
+ * which the page occupies in the output range (or 0 for not in range).
+ * So page 12 within 10-20 would return 3.
+ */
+static int
+position_in_range(fz_context *ctx, const char *range, int count, int page)
+{
+	int start, end;
+	int n = 0;
+
+	while ((range = fz_parse_page_range(ctx, range, &start, &end, count)))
+	{
+		if (start < end)
+		{
+			if (start <= page && page <= end)
+				return n + page - start + 1;
+			n += end - start + 1;
+		}
+		else
+		{
+			if (end <= page && page <= start)
+				return n + page - end + 1;
+			n += start - end + 1;
+		}
+	}
+
+	return 0;
+}
+
+static void
+copy_item(cor_state *cor)
+{
+	fz_context *ctx = cor->ctx;
+
+	while (cor->copied_to_depth < cor->len)
+	{
+		/* All items copied in a run get the same uri - that of the last one. */
+		fz_outline_item item = cor->items[cor->copied_to_depth];
+		item.uri = cor->items[cor->len-1].uri;
+		fz_outline_iterator_insert(ctx, cor->it_dst, &item);
+		cor->copied_to_depth++;
+		fz_outline_iterator_prev(ctx, cor->it_dst);
+		fz_outline_iterator_down(ctx, cor->it_dst);
+	}
+}
+
+static char *
+rewrite_page(fz_context *ctx, const char *uri, int n)
+{
+	const char *p;
+
+	if (uri == NULL)
+		return NULL;
+
+	if (strncmp(uri, "#page=", 6) != 0)
+		return fz_strdup(ctx, uri);
+	p = strchr(uri+6, '&');
+	if (p == NULL)
+		return fz_asprintf(ctx, "#page=%d", n);
+
+	return fz_asprintf(ctx, "#page=%d%s", n, p);
+}
+
+static void
+do_copy_outline_range(cor_state *cor)
+{
+	fz_context *ctx = cor->ctx;
+
+	do
+	{
+		int has_children;
+		float x, y;
+		fz_outline_item *item = fz_outline_iterator_item(ctx, cor->it_src);
+		int page_num = fz_page_number_from_location(ctx, (fz_document *)doc_src, fz_resolve_link(ctx, (fz_document *)doc_src, item->uri, &x, &y));
+		int page_in_range = position_in_range(ctx, cor->range, cor->page_count, page_num+1);
+		int new_page_number = page_in_range + cor->page_output_base;
+
+		if (cor->len == cor->max)
+		{
+			int newmax = cor->max ? cor->max * 2 : 8;
+			cor->items = fz_realloc_array(ctx, cor->items, newmax, fz_outline_item);
+			cor->max = newmax;
+		}
+		cor->len++;
+		cor->items[cor->len-1].title = NULL;
+		cor->items[cor->len-1].uri = NULL;
+		cor->items[cor->len-1].is_open = item->is_open;
+		cor->items[cor->len-1].title = item->title ? fz_strdup(ctx, item->title) : NULL;
+		cor->items[cor->len-1].uri = rewrite_page(ctx, item->uri, new_page_number);
+
+		if (page_in_range != 0)
+			copy_item(cor);
+
+		has_children = fz_outline_iterator_down(ctx, cor->it_src);
+		if (has_children == 0)
+			do_copy_outline_range(cor);
+		if (has_children >= 0)
+			fz_outline_iterator_up(ctx, cor->it_src);
+
+		cor->len--;
+		if (cor->copied_to_depth > cor->len)
+		{
+			cor->copied_to_depth = cor->len;
+			fz_outline_iterator_up(ctx, cor->it_dst);
+		}
+		fz_outline_iterator_next(ctx, cor->it_dst);
+		fz_free(ctx, cor->items[cor->len].title);
+		fz_free(ctx, cor->items[cor->len].uri);
+	}
+	while (fz_outline_iterator_next(ctx, cor->it_src) == 0);
+}
+
+static void
+copy_outline_range(fz_context *ctx, fz_outline_iterator *it_dst, fz_outline_iterator *it_src, const char *range, int page_count, int page_output_base)
+{
+	cor_state cor;
+
+	cor.ctx = ctx;
+	cor.it_dst = it_dst;
+	cor.it_src = it_src;
+	cor.max = 0;
+	cor.len = 0;
+	cor.copied_to_depth = 0;
+	cor.range = range;
+	cor.items = NULL;
+	cor.page_count = page_count;
+	cor.page_output_base = page_output_base;
+
+	fz_try(ctx)
+		do_copy_outline_range(&cor);
+	fz_always(ctx)
+	{
+		int i;
+
+		for (i = 0; i < cor.len; i++)
+		{
+			fz_free(ctx, cor.items[i].title);
+			fz_free(ctx, cor.items[i].uri);
+		}
+		fz_free(ctx, cor.items);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+
+static void merge_range(fz_context *ctx, const char *range)
 {
 	int start, end, i, count;
 	pdf_graft_map *graft_map;
+	const char *r;
+	fz_outline_iterator *it_src = NULL;
+	fz_outline_iterator *it_dst = NULL;
+	int pages_merged = 0;
 
 	count = pdf_count_pages(ctx, doc_src);
 	graft_map = pdf_new_graft_map(ctx, doc_des);
 
+	fz_var(it_src);
+	fz_var(it_dst);
+
 	fz_try(ctx)
 	{
-		while ((range = fz_parse_page_range(ctx, range, &start, &end, count)))
+		r = range;
+		while ((r = fz_parse_page_range(ctx, r, &start, &end, count)))
 		{
 			if (start < end)
 				for (i = start; i <= end; ++i)
-					page_merge(i, -1, graft_map);
+				{
+					page_merge(ctx, i, 0, graft_map);
+					pages_merged++;
+				}
 			else
 				for (i = start; i >= end; --i)
-					page_merge(i, -1, graft_map);
+				{
+					page_merge(ctx, i, 0, graft_map);
+					pages_merged++;
 		}
+	}
+
+		it_src = fz_new_outline_iterator(ctx, (fz_document *)doc_src);
+		if (it_src == NULL)
+			break; /* Should never happen */
+		it_dst = fz_new_outline_iterator(ctx, (fz_document *)doc_des);
+		if (it_dst == NULL)
+			break; /* Should never happen */
+
+		/* Run to the end of it_dst. */
+		if (fz_outline_iterator_item(ctx, it_dst) != NULL)
+		{
+			while (fz_outline_iterator_next(ctx, it_dst) == 0);
+		}
+
+		if (fz_outline_iterator_item(ctx, it_src) != NULL)
+			copy_outline_range(ctx, it_dst, it_src, range, count, output_page_count);
+
+		output_page_count += pages_merged;
 	}
 	fz_always(ctx)
 	{
+		fz_drop_outline_iterator(ctx, it_src);
+		fz_drop_outline_iterator(ctx, it_dst);
 		pdf_drop_graft_map(ctx, graft_map);
 	}
 	fz_catch(ctx)
@@ -91,6 +293,7 @@ int pdfmerge_main(int argc, char **argv)
 	char *flags = "";
 	char *input;
 	int c;
+	fz_context *ctx;
 
 	while ((c = fz_getopt(argc, argv, "o:O:")) != -1)
 	{
@@ -136,9 +339,9 @@ int pdfmerge_main(int argc, char **argv)
 		{
 			doc_src = pdf_open_document(ctx, input);
 			if (fz_optind == argc || !fz_is_page_range(ctx, argv[fz_optind]))
-				merge_range("1-N");
+				merge_range(ctx, "1-N");
 			else
-				merge_range(argv[fz_optind++]);
+				merge_range(ctx, argv[fz_optind++]);
 		}
 		fz_always(ctx)
 			pdf_drop_document(ctx, doc_src);

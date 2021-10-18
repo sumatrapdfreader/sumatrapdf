@@ -476,9 +476,11 @@ function AFParseDateEx(string, fmt) {
 			if (order.indexOf('y') < order.indexOf('m')) {
 				year = nums[0];
 				month = nums[1];
+				date = 1;
 			} else {
 				year = nums[1];
 				month = nums[0];
+				date = 1;
 			}
 		}
 

@@ -146,6 +146,8 @@ int pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, cha
 
 fz_outline *pdf_load_outline(fz_context *ctx, pdf_document *doc);
 
+fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc);
+
 /*
 	Get the number of layer configurations defined in this document.
 

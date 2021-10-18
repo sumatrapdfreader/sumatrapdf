@@ -710,7 +710,7 @@ pdf_page_transform(fz_context *ctx, pdf_page *page, fz_rect *page_mediabox, fz_m
 }
 
 static void
-find_seps(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme)
+find_seps(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_mark_list *clearme)
 {
 	int i, n;
 	pdf_obj *nameobj, *cols;
@@ -759,10 +759,8 @@ find_seps(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme
 	{
 		if (pdf_is_indirect(ctx, obj))
 		{
-			if (pdf_mark_obj(ctx, obj))
+			if (pdf_mark_list_push(ctx, clearme, obj))
 				return; /* already been here */
-			/* remember to clear this colorspace dictionary at the end */
-			pdf_array_push(ctx, clearme, obj);
 		}
 
 		find_seps(ctx, seps, pdf_array_get(ctx, obj, 1), clearme);
@@ -771,10 +769,8 @@ find_seps(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme
 	{
 		if (pdf_is_indirect(ctx, obj))
 		{
-			if (pdf_mark_obj(ctx, obj))
+			if (pdf_mark_list_push(ctx, clearme, obj))
 				return; /* already been here */
-			/* remember to clear this colorspace dictionary at the end */
-			pdf_array_push(ctx, clearme, obj);
 		}
 
 		/* If the separation colorants exists for this DeviceN color space
@@ -787,7 +783,7 @@ find_seps(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme
 }
 
 static void
-find_devn(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme)
+find_devn(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_mark_list *clearme)
 {
 	int i, j, n, m;
 	pdf_obj *arr;
@@ -842,20 +838,17 @@ find_devn(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme
 	}
 }
 
-typedef void (res_finder_fn)(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme);
+typedef void (res_finder_fn)(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_mark_list *clearme);
 
 static void
-scan_page_seps(fz_context *ctx, pdf_obj *res, fz_separations **seps, res_finder_fn *fn, pdf_obj *clearme)
+scan_page_seps(fz_context *ctx, pdf_obj *res, fz_separations **seps, res_finder_fn *fn, pdf_mark_list *clearme)
 {
 	pdf_obj *dict;
 	pdf_obj *obj;
 	int i, n;
 
-	if (pdf_mark_obj(ctx, res))
+	if (pdf_mark_list_push(ctx, clearme, res))
 		return; /* already been here */
-
-	/* remember to clear this resource dictionary at the end */
-	pdf_array_push(ctx, clearme, res);
 
 	dict = pdf_dict_get(ctx, res, PDF_NAME(ColorSpace));
 	n = pdf_dict_len(ctx, dict);
@@ -888,46 +881,36 @@ fz_separations *
 pdf_page_separations(fz_context *ctx, pdf_page *page)
 {
 	pdf_obj *res = pdf_page_resources(ctx, page);
-	pdf_obj *clearme = NULL;
+	pdf_mark_list clearme;
 	fz_separations *seps = NULL;
 
-	clearme = pdf_new_array(ctx, page->doc, 100);
+	pdf_mark_list_init(ctx, &clearme);
 	fz_try(ctx)
 	{
 		/* Run through and look for separations first. This is
 		 * because separations are simplest to deal with, and
 		 * because DeviceN may be implemented on top of separations.
 		 */
-		scan_page_seps(ctx, res, &seps, find_seps, clearme);
+		scan_page_seps(ctx, res, &seps, find_seps, &clearme);
 	}
 	fz_always(ctx)
-	{
-		int i, n = pdf_array_len(ctx, clearme);
-		for (i = 0; i < n; ++i)
-			pdf_unmark_obj(ctx, pdf_array_get(ctx, clearme, i));
-		pdf_drop_obj(ctx, clearme);
-	}
+		pdf_mark_list_free(ctx, &clearme);
 	fz_catch(ctx)
 	{
 		fz_drop_separations(ctx, seps);
 		fz_rethrow(ctx);
 	}
 
-	clearme = pdf_new_array(ctx, page->doc, 100);
+	pdf_mark_list_init(ctx, &clearme);
 	fz_try(ctx)
 	{
 		/* Now run through again, and look for DeviceNs. These may
 		 * have spot colors in that aren't defined in terms of
 		 * separations. */
-		scan_page_seps(ctx, res, &seps, find_devn, clearme);
+		scan_page_seps(ctx, res, &seps, find_devn, &clearme);
 	}
 	fz_always(ctx)
-	{
-		int i, n = pdf_array_len(ctx, clearme);
-		for (i = 0; i < n; ++i)
-			pdf_unmark_obj(ctx, pdf_array_get(ctx, clearme, i));
-		pdf_drop_obj(ctx, clearme);
-	}
+		pdf_mark_list_free(ctx, &clearme);
 	fz_catch(ctx)
 	{
 		fz_drop_separations(ctx, seps);

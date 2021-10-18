@@ -104,62 +104,27 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 		return NULL;
 
 	obj = pdf_array_get(ctx, dest, 1);
-	/* SumattraPDF */
-#if 1
 	if (obj)
 	{
-		pdf_obj *xo = NULL;
-		pdf_obj *yo = NULL;
-		pdf_obj *zoomo = NULL;
+		const char *typestring = pdf_to_name(ctx, pdf_array_get(ctx, dest, 1));
+		double arg1 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 2));
+		double arg2 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 3));
+		double arg3 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 4));
+		double arg4 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 5));
 
+		/* See explanation of this format in pdf-outline.c */
 		if (pdf_name_eq(ctx, obj, PDF_NAME(XYZ)))
-		{
-			xo = pdf_array_get(ctx, dest, 2);
-			yo = pdf_array_get(ctx, dest, 3);
-			zoomo = pdf_array_get(ctx, dest, 4);
-		}
-		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitR)))
-		{
-			xo = pdf_array_get(ctx, dest, 2);
-			yo = pdf_array_get(ctx, dest, 5);
-		}
+			return fz_asprintf(ctx, "#page=%d&zoom=%g,%g,%g", page + 1, arg1, arg2, arg3);
+		else if (pdf_name_eq(ctx, obj, PDF_NAME(Fit)) || pdf_name_eq(ctx, obj, PDF_NAME(FitB)))
+			return fz_asprintf(ctx, "#page=%d&view=%s", page + 1, typestring);
 		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitH)) || pdf_name_eq(ctx, obj, PDF_NAME(FitBH)))
-		{
-			yo = pdf_array_get(ctx, dest, 2);
-		}
+			return fz_asprintf(ctx, "#page=%d&view=%s,%g", page + 1, typestring, arg1);
 		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitV)) || pdf_name_eq(ctx, obj, PDF_NAME(FitBV)))
-		{
-			xo = pdf_array_get(ctx, dest, 2);
+			return fz_asprintf(ctx, "#page=%d&view=%s,%g", page + 1, typestring, arg1);
+		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitR)))
+			return fz_asprintf(ctx, "#page=%d&viewrect=%g,%g,%g,%g", page + 1, typestring, arg1, arg2, arg3, arg4);
 		}
-
-		if (xo || yo)
-		{
-			int x, y, w, h;
-			fz_rect mediabox;
-			fz_matrix pagectm;
-
-			/* Link coords use a coordinate space that does not seem to respect Rotate or UserUnit. */
-			/* All we need to do is figure out the page size to flip the coordinate space and
-			 * clamp the coordinates to stay on the page. */
-			pdf_page_obj_transform(ctx, pageobj, &mediabox, &pagectm);
-			mediabox = fz_transform_rect(mediabox, pagectm);
-			w = mediabox.x1 - mediabox.x0;
-			h = mediabox.y1 - mediabox.y0;
-
-			x = xo ? pdf_to_int(ctx, xo) : 0;
-			y = yo ? h - pdf_to_int(ctx, yo) : 0;
-			x = fz_clamp(x, 0, w);
-			y = fz_clamp(y, 0, h);
-
-			if (zoomo && pdf_to_real(ctx, zoomo) > 0) {
-				return fz_asprintf(ctx, "#%d,%d,%d,%.2f", page + 1, x, y, pdf_to_real(ctx, zoomo));
-			} else {
-				return fz_asprintf(ctx, "#%d,%d,%d", page + 1, x, y);
-			}
-		}
-	}
-#endif
-	return fz_asprintf(ctx, "#%d", page + 1);
+	return fz_asprintf(ctx, "#page=%d", page + 1);
 }
 
 static char *
@@ -427,7 +392,7 @@ pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *action, int p
 		else
 			return NULL;
 
-		return fz_asprintf(ctx, "#%d", pagenum + 1);
+		return fz_asprintf(ctx, "#page=%d", pagenum + 1);
 	}
 
 	return NULL;
@@ -516,26 +481,4 @@ pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_obj *annots, int pa
 	}
 
 	return head;
-}
-
-int
-pdf_resolve_link(fz_context *ctx, pdf_document *doc, const char *uri, float *xp, float *yp)
-{
-	if (uri && uri[0] == '#')
-	{
-		int page = fz_atoi(uri + 1) - 1;
-		if (xp || yp)
-		{
-			const char *x = strchr(uri, ',');
-			const char *y = strrchr(uri, ',');
-			if (x && y)
-			{
-				if (xp) *xp = fz_atoi(x + 1);
-				if (yp) *yp = fz_atoi(y + 1);
-			}
-		}
-		return page;
-	}
-	fz_warn(ctx, "unknown link uri '%s'", uri);
-	return -1;
 }

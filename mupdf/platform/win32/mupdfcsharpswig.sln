@@ -1,0 +1,109 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdfcsharpswig", "mupdfcsharpswig.vcxproj", "{985AE4FC-7200-4E8A-B5E2-B8038C110966}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		DebugGSView|Win32 = DebugGSView|Win32
+		DebugGSView|x64 = DebugGSView|x64
+		DebugJava|Win32 = DebugJava|Win32
+		DebugJava|x64 = DebugJava|x64
+		DebugOpenSSL|Win32 = DebugOpenSSL|Win32
+		DebugOpenSSL|x64 = DebugOpenSSL|x64
+		DebugCsharp|Win32 = DebugCsharp|Win32
+		DebugCsharp|x64 = DebugCsharp|x64
+		DebugTesseract|Win32 = DebugTesseract|Win32
+		DebugTesseract|x64 = DebugTesseract|x64
+		Memento|Win32 = Memento|Win32
+		Memento|x64 = Memento|x64
+		MementoOpenSSL|Win32 = MementoOpenSSL|Win32
+		MementoOpenSSL|x64 = MementoOpenSSL|x64
+		MementoTesseract|Win32 = MementoTesseract|Win32
+		MementoTesseract|x64 = MementoTesseract|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+		ReleaseGSView|Win32 = ReleaseGSView|Win32
+		ReleaseGSView|x64 = ReleaseGSView|x64
+		ReleaseJava|Win32 = ReleaseJava|Win32
+		ReleaseJava|x64 = ReleaseJava|x64
+		ReleaseOpenSSL|Win32 = ReleaseOpenSSL|Win32
+		ReleaseOpenSSL|x64 = ReleaseOpenSSL|x64
+		ReleaseCsharp|Win32 = ReleaseCsharp|Win32
+		ReleaseCsharp|x64 = ReleaseCsharp|x64
+		ReleaseTesseract|Win32 = ReleaseTesseract|Win32
+		ReleaseTesseract|x64 = ReleaseTesseract|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Debug|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Debug|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Debug|x64.ActiveCfg = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Debug|x64.Build.0 = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugGSView|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugGSView|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugGSView|x64.ActiveCfg = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugGSView|x64.Build.0 = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugJava|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugJava|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugJava|x64.ActiveCfg = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugJava|x64.Build.0 = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugOpenSSL|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugOpenSSL|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugOpenSSL|x64.ActiveCfg = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugOpenSSL|x64.Build.0 = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugCsharp|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugCsharp|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugCsharp|x64.ActiveCfg = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugCsharp|x64.Build.0 = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugTesseract|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugTesseract|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugTesseract|x64.ActiveCfg = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.DebugTesseract|x64.Build.0 = Debug|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Memento|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Memento|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Memento|x64.ActiveCfg = Disabled|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Memento|x64.Build.0 = Disabled|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoOpenSSL|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoOpenSSL|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoOpenSSL|x64.ActiveCfg = Disabled|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoOpenSSL|x64.Build.0 = Disabled|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoTesseract|Win32.ActiveCfg = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoTesseract|Win32.Build.0 = Debug|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoTesseract|x64.ActiveCfg = Disabled|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.MementoTesseract|x64.Build.0 = Disabled|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Release|Win32.ActiveCfg = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Release|Win32.Build.0 = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Release|x64.ActiveCfg = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.Release|x64.Build.0 = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseGSView|Win32.ActiveCfg = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseGSView|Win32.Build.0 = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseGSView|x64.ActiveCfg = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseGSView|x64.Build.0 = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseJava|Win32.ActiveCfg = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseJava|Win32.Build.0 = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseJava|x64.ActiveCfg = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseJava|x64.Build.0 = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseOpenSSL|Win32.ActiveCfg = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseOpenSSL|Win32.Build.0 = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseOpenSSL|x64.ActiveCfg = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseOpenSSL|x64.Build.0 = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseCsharp|Win32.ActiveCfg = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseCsharp|Win32.Build.0 = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseCsharp|x64.ActiveCfg = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseCsharp|x64.Build.0 = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseTesseract|Win32.ActiveCfg = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseTesseract|Win32.Build.0 = Release|Win32
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseTesseract|x64.ActiveCfg = Release|x64
+		{985AE4FC-7200-4E8A-B5E2-B8038C110966}.ReleaseTesseract|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2E24DFDB-899D-4402-8236-30B1678A086B}
+	EndGlobalSection
+EndGlobal

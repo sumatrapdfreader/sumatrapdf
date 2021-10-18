@@ -361,10 +361,26 @@ fz_has_permission(fz_context *ctx, fz_document *doc, fz_permission p)
 fz_outline *
 fz_load_outline(fz_context *ctx, fz_document *doc)
 {
+	if (doc == NULL)
+		return NULL;
 	fz_ensure_layout(ctx, doc);
-	if (doc && doc->load_outline)
+	if (doc->load_outline)
 		return doc->load_outline(ctx, doc);
+	if (doc->outline_iterator == NULL)
 	return NULL;
+	return fz_load_outline_from_iterator(ctx, doc->outline_iterator(ctx, doc));
+}
+
+fz_outline_iterator *
+fz_new_outline_iterator(fz_context *ctx, fz_document *doc)
+{
+	if (doc == NULL)
+		return NULL;
+	if (doc->outline_iterator)
+		return doc->outline_iterator(ctx, doc);
+	if (doc->load_outline == NULL)
+		return NULL;
+	return fz_outline_iterator_from_outline(ctx, fz_load_outline(ctx, doc));
 }
 
 fz_location

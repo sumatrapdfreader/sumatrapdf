@@ -895,6 +895,40 @@ FUN(Document_loadOutline)(JNIEnv *env, jobject self)
 	return joutline;
 }
 
+JNIEXPORT jobject JNICALL
+FUN(Document_outlineIterator)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	fz_outline_iterator *iterator = NULL;
+	jobject jiterator = NULL;
+
+	if (!ctx || !doc) return NULL;
+
+	fz_var(iterator);
+
+	fz_try(ctx)
+	{
+		iterator = fz_new_outline_iterator(ctx, doc);
+		if (iterator)
+		{
+			jiterator = to_OutlineIterator_safe(ctx, env, iterator);
+			if (!jiterator || (*env)->ExceptionCheck(env))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "outlineIterator failed");
+			iterator = NULL;
+		}
+	}
+	fz_always(ctx)
+		fz_drop_outline_iterator(ctx, iterator);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	if ((*env)->ExceptionCheck(env))
+		return NULL;
+
+	return jiterator;
+}
+
 JNIEXPORT jlong JNICALL
 FUN(Document_makeBookmark)(JNIEnv *env, jobject self, jint chapter, jint page)
 {

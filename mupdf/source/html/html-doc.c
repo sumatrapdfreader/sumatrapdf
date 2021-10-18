@@ -89,7 +89,7 @@ htdoc_update_outline(fz_context *ctx, fz_document *doc, fz_outline *node)
 {
 	while (node)
 	{
-		node->page = htdoc_resolve_link(ctx, doc, node->uri, &node->x, &node->y).page;
+		node->page = htdoc_resolve_link(ctx, doc, node->uri, &node->x, &node->y);
 		htdoc_update_outline(ctx, doc, node->down);
 		node = node->next;
 	}

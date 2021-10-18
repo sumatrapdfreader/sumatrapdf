@@ -2676,12 +2676,14 @@ static void to_outline(js_State *J, fz_outline *outline)
 			js_pushundefined(J);
 		js_setproperty(J, -2, "uri");
 
+#if 0 /* FIXME: */
 		if (outline->page >= 0)
 			js_pushnumber(J, outline->page);
 		else
 			js_pushundefined(J);
-		js_setproperty(J, -2, "page");
-
+		js_setproperty(J, -2, "page")
+			;
+#endif
 		if (outline->down) {
 			to_outline(J, outline->down);
 			js_setproperty(J, -2, "down");

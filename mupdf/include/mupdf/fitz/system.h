@@ -182,6 +182,8 @@ void fz_free_argv(int argc, char **argv);
 #define S_ISDIR(mode) ((mode) & S_IFDIR)
 #endif
 
+int64_t fz_stat_mtime(const char *path);
+
 /* inline is standard in C++. For some compilers we can enable it within
  * C too. Some compilers think they know better than we do about when
  * to actually honour inline (particularly for large functions); use

@@ -318,6 +318,18 @@ static inline jobject to_Outline_safe(fz_context *ctx, JNIEnv *env, fz_document 
 	return jarr;
 }
 
+static inline jobject to_OutlineIterator_safe(fz_context *ctx, JNIEnv *env, fz_outline_iterator *iterator)
+{
+	jobject jiterator = NULL;
+
+	if (!ctx || !iterator) return NULL;
+
+	jiterator = (*env)->NewObject(env, cls_OutlineIterator, mid_OutlineIterator_init, (jlong)iterator);
+	if (!jiterator || (*env)->ExceptionCheck(env)) return NULL;
+
+	return jiterator;
+}
+
 static inline jobject to_PDFAnnotation_safe(fz_context *ctx, JNIEnv *env, pdf_annot *annot)
 {
 	jobject jannot;
@@ -731,6 +743,15 @@ static inline fz_image *from_Image(JNIEnv *env, jobject jobj)
 	image = CAST(fz_image *, (*env)->GetLongField(env, jobj, fid_Image_pointer));
 	if (!image) jni_throw_null(env, "cannot use already destroyed Image");
 	return image;
+}
+
+static inline fz_outline_iterator *from_OutlineIterator(JNIEnv *env, jobject jobj)
+{
+	fz_outline_iterator *iterator;
+	if (!jobj) return NULL;
+	iterator = CAST(fz_outline_iterator *, (*env)->GetLongField(env, jobj, fid_OutlineIterator_pointer));
+	if (!iterator) jni_throw_null(env, "cannot use already destroyed OutlineIterator");
+	return iterator;
 }
 
 static inline fz_page *from_Page(JNIEnv *env, jobject jobj)

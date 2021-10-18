@@ -26,11 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/stat.h>
 #include <time.h>
-#ifdef _MSC_VER
-#define stat _stat
-#endif
 #ifndef _WIN32
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -46,7 +42,9 @@
 #endif
 
 #ifndef _WIN32
-#include <unistd.h> /* for fork, exec, and getcwd */
+#include <unistd.h> /* for getcwd */
+#include <spawn.h> /* for posix_spawn */
+extern char **environ; /* see environ (7) */
 #else
 #include <direct.h> /* for getcwd */
 #endif
@@ -59,17 +57,6 @@ void glutLeaveMainLoop(void)
 	exit(0);
 }
 #endif
-
-time_t
-stat_mtime(const char *path)
-{
-	struct stat info;
-
-	if (stat(path, &info) < 0)
-		return 0;
-
-	return info.st_mtime;
-}
 
 fz_context *ctx = NULL;
 pdf_document *pdf = NULL;
@@ -89,9 +76,12 @@ enum
 
 static void open_browser(const char *uri)
 {
+	char *argv[3];
 	char buf[PATH_MAX];
+
 #ifndef _WIN32
 	pid_t pid;
+	int err;
 #endif
 
 	/* Relative file:// URI, make it absolute! */
@@ -120,22 +110,14 @@ static void open_browser(const char *uri)
 		browser = "xdg-open";
 #endif
 	}
-	/* Fork once to start a child process that we wait on. This
-	 * child process forks again and immediately exits. The
-	 * grandchild process continues in the background. The purpose
-	 * of this strange two-step is to avoid zombie processes. See
-	 * bug 695701 for an explanation. */
-	pid = fork();
-	if (pid == 0)
-	{
-		if (fork() == 0)
-		{
-			execlp(browser, browser, uri, (char*)0);
-			fprintf(stderr, "cannot exec '%s'\n", browser);
-		}
-		_exit(0);
-	}
-	waitpid(pid, NULL, 0);
+
+	argv[0] = (char*) browser;
+	argv[1] = (char*) uri;
+	argv[2] = NULL;
+	err = posix_spawn(&pid, browser, NULL, NULL, argv, environ);
+	if (err)
+		fz_warn(ctx, "cannot spawn browser '%s': %s", browser, strerror(err));
+
 #endif
 }
 
@@ -1187,15 +1169,20 @@ static void relayout(void)
 
 static int count_outline(fz_outline *node, int end)
 {
-	int is_selected, n, p;
+	int is_selected, n, p, np;
 	int count = 0;
-	while (node)
+
+	if (!node)
+		return 0;
+	np = fz_page_number_from_location(ctx, doc, node->page);
+
+	do
 	{
-		p = node->page;
+		p = np;
 		count += 1;
 		n = end;
-		if (node->next && node->next->page >= 0)
-			n = node->next->page;
+		if (node->next && (np = fz_page_number_from_location(ctx, doc, node->next->page)) >= 0)
+			n = fz_page_number_from_location(ctx, doc, node->next->page);
 		is_selected = 0;
 		if (fz_count_chapters(ctx, doc) == 1)
 			is_selected = (p>=0) && (currentpage.page == p || (currentpage.page > p && currentpage.page < n));
@@ -1203,19 +1190,26 @@ static int count_outline(fz_outline *node, int end)
 			count += count_outline(node->down, end);
 		node = node->next;
 	}
+	while (node);
+
 	return count;
 }
 
 static void do_outline_imp(struct list *list, int end, fz_outline *node, int depth)
 {
-	int is_selected, was_open, n;
+	int is_selected, was_open, n, np;
 
-	while (node)
+	if (!node)
+		return;
+
+	np = fz_page_number_from_location(ctx, doc, node->page);
+
+	do
 	{
-		int p = node->page;
+		int p = np;
 		n = end;
-		if (node->next && node->next->page >= 0)
-			n = node->next->page;
+		if (node->next && (np = fz_page_number_from_location(ctx, doc, node->next->page)) >= 0)
+			n = np;
 
 		was_open = node->is_open;
 		is_selected = 0;
@@ -1238,6 +1232,7 @@ static void do_outline_imp(struct list *list, int end, fz_outline *node, int dep
 			do_outline_imp(list, n, node->down, depth + 1);
 		node = node->next;
 	}
+	while (node);
 }
 
 static void do_outline(fz_outline *node)
@@ -1638,8 +1633,8 @@ static void load_document(void)
 	{
 		/* Check whether that file exists, and isn't older than
 		 * the document. */
-		atime = stat_mtime(accelpath);
-		dtime = stat_mtime(filename);
+		atime = fz_stat_mtime(accelpath);
+		dtime = fz_stat_mtime(filename);
 		if (atime == 0)
 		{
 			/* No accelerator */
@@ -1649,7 +1644,11 @@ static void load_document(void)
 		else
 		{
 			/* Accelerator data is out of date */
-			unlink(accelpath);
+#ifdef _WIN32
+			fz_remove_utf8(accelpath);
+#else
+			remove(accelpath);
+#endif
 			accel = NULL; /* In case we have jumped up from below */
 		}
 	}
@@ -2686,6 +2685,14 @@ int main(int argc, char **argv)
 	int c;
 
 #ifndef _WIN32
+
+	/* Never wait for termination of child processes. */
+	struct sigaction arg = {
+		.sa_handler=SIG_IGN,
+		.sa_flags=SA_NOCLDWAIT
+	};
+	sigaction(SIGCHLD, &arg, NULL);
+
 	signal(SIGHUP, signal_handler);
 #endif
 

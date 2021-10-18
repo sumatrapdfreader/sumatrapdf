@@ -237,45 +237,24 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
     return {};
 }
 
-// copy of pdf_resolve_link in pdf-link.c without ctx and doc
-// returns page number and location on the page
-static int ResolveLink(const char* uri, float* xp, float* yp, float* zoomp) {
-    if (!uri || uri[0] != '#') {
+static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float *xp, float *yp) {
+    if (!uri) {
         return -1;
     }
-    int page = atoi(uri + 1) - 1;
-    if (xp || yp) {
-        const char *x, *y, *zoom = nullptr;
-        x = strchr(uri, ',');
-        y = x ? strchr(x + 1, ',') : nullptr;
-        if (x && y) {
-            if (xp) {
-                *xp = (float)atoi(x + 1);
-            }
-            if (yp) {
-                *yp = (float)atoi(y + 1);
-            }
-            zoom = strchr(y + 1, ',');
-            if (zoom && zoomp) {
-                *zoomp = (float)atof(zoom + 1);
-            }
-        }
-        // logf("resolve_link OUT: page=%d x=%f y=%f zoom=%f\n", page, (xp && x) ? (*xp) : INFINITY, (yp && y) ? (*yp) :
-        // INFINITY, (zoomp && zoom) ? (*zoomp) : INFINITY);
-    }
-    return page;
-}
-
-static int FzGetPageNo(fz_link* link, fz_outline* outline) {
-    if (outline) {
-        return outline->page + 1;
-    }
-    char* uri = link->uri;
-    int pageNo = ResolveLink(uri, nullptr, nullptr, nullptr);
+    fz_location loc = fz_resolve_link(ctx, doc, uri, xp, yp);
+    int pageNo = fz_page_number_from_location(ctx, doc, loc);
     return pageNo + 1;
 }
 
-static IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
+static int FzGetPageNo(fz_context* ctx, fz_document* doc, fz_link* link, fz_outline* outline) {
+    float x, y;
+    const char* uri = link ? link->uri : outline ? outline->uri : nullptr;
+    int pageNo = ResolveLink(ctx, doc, uri, &x, &y);
+    return pageNo;
+}
+
+static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* doc, fz_link* link,
+                                                 fz_outline* outline) {
     CrashIf(link && outline);
     CrashIf(!link && !outline);
     char* uri = FzGetURL(link, outline);
@@ -291,12 +270,13 @@ static IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outl
 
     auto dest = new PageDestinationMupdf(link, outline);
     dest->rect = FzGetRectF(link, outline);
-    dest->pageNo = FzGetPageNo(link, outline);
+    dest->pageNo = FzGetPageNo(ctx, doc, link, outline);
     return dest;
 }
 
-static PageElementDestination* NewLinkDestination(int srcPageNo, fz_link* link, fz_outline* outline) {
-    auto dest = NewPageDestinationMupdf(link, outline);
+static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx, fz_document* doc, fz_link* link,
+                                                  fz_outline* outline) {
+    auto dest = NewPageDestinationMupdf(ctx, doc, link, outline);
     auto res = new PageElementDestination(dest);
     res->pageNo = srcPageNo;
     res->rect = dest->rect;
@@ -835,6 +815,7 @@ static LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
     return list;
 }
 
+/*
 static COLORREF MkColorFromFloat(float r, float g, float b) {
     u8 rb = (u8)(r * 255.0f);
     u8 gb = (u8)(g * 255.0f);
@@ -862,6 +843,7 @@ static COLORREF ColorRefFromPdfFloat(fz_context* ctx, int n, float color[4]) {
     CrashIf(true);
     return 0;
 }
+*/
 
 // try to produce an 8-bit palette for saving some memory
 static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
@@ -1292,10 +1274,6 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc) {
         fz_outline* link = fz_new_outline(ctx);
         link->title = fz_strdup(ctx, nameStr);
         link->uri = fz_strdup(ctx, nameStr); // TODO: maybe make file:// ?
-        // TODO: a hack: re-using page as stream number
-        // Could construct PageDestination here instead of delaying
-        // until BuildToc
-        link->page = streamNo;
         curr->next = link;
         curr = link;
     }
@@ -2228,7 +2206,8 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         if (!name) {
             name = str::Dup(L"");
         }
-        int pageNo = outline->page + 1;
+
+        int pageNo = FzGetPageNo(ctx, _doc, nullptr, outline);
 
         IPageDestination* dest = nullptr;
         Kind kindRaw = nullptr;
@@ -2237,7 +2216,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
             dest = DestFromAttachment(this, outline);
         } else {
             kindRaw = kindTocFzOutline;
-            dest = NewPageDestinationMupdf(nullptr, outline);
+            dest = NewPageDestinationMupdf(ctx, _doc, nullptr, outline);
         }
 
         TocItem* item = NewTocItemWithDestination(parent, name, dest);
@@ -2248,13 +2227,16 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
-        item->fontFlags = outline->flags;
+        item->fontFlags = 0; // TODO: had outline->flags; but mupdf changed outline
         item->pageNo = pageNo;
         CrashIf(!item->PageNumbersMatch());
 
+        // TODO: had outline->n_color and outline->color but mupdf changed outline
+        /*
         if (outline->n_color > 0) {
             item->color = ColorRefFromPdfFloat(ctx, outline->n_color, outline->color);
         }
+        */
 
         if (outline->down) {
             item->child = BuildTocTree(item, outline->down, idCounter, isAttachment);
@@ -2353,7 +2335,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
     }
 
     float x, y, zoom = 0;
-    int pageNo = ResolveLink(uri, &x, &y, &zoom);
+    int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
 
     RectF r{x, y, 0, 0};
     pageDest = NewSimpleDest(pageNo, r, zoom);
@@ -2518,7 +2500,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     link = FixupPageLinks(link); // TOOD: is this necessary?
     pageInfo->retainedLinks = link;
     while (link) {
-        auto pel = NewLinkDestination(pageNo, link, nullptr);
+        auto pel = NewLinkDestination(pageNo, ctx, _doc, link, nullptr);
         pageInfo->links.Append(pel);
         link = link->next;
     }
@@ -2738,8 +2720,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         uri = link->link->uri;
     }
     float x, y;
-    float zoom = 0.f;
-    ResolveLink(uri, &x, &y, &zoom);
+    float zoom = 0.f; // TODO: used to have zoom but mupdf changed outline
     fz_location loc = fz_resolve_link(e->ctx, e->_doc, uri, &x, &y);
     int pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
     auto ctrl = linkHandler->GetController();

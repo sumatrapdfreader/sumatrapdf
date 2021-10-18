@@ -24,11 +24,69 @@
 #define MUPDF_FITZ_OUTLINE_H
 
 #include "mupdf/fitz/system.h"
+#include "mupdf/fitz/types.h"
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/link.h"
 #include "mupdf/fitz/output.h"
 
 /* Outline */
+
+typedef struct {
+	char *title;
+	char *uri;
+	int is_open;
+} fz_outline_item;
+
+typedef struct fz_outline_iterator fz_outline_iterator;
+
+/**
+	Call to get the current outline item.
+
+	Can return NULL. The item is only valid until the next call.
+*/
+fz_outline_item *fz_outline_iterator_item(fz_context *ctx, fz_outline_iterator *iter);
+
+/**
+	Calls to move the iterator position.
+
+	A negative return value means we could not move as requested. Otherwise:
+	0 = the final position has a valid item.
+	1 = not a valid item, but we can insert an item here.
+*/
+int fz_outline_iterator_next(fz_context *ctx, fz_outline_iterator *iter);
+int fz_outline_iterator_prev(fz_context *ctx, fz_outline_iterator *iter);
+int fz_outline_iterator_up(fz_context *ctx, fz_outline_iterator *iter);
+int fz_outline_iterator_down(fz_context *ctx, fz_outline_iterator *iter);
+
+/**
+	Call to insert a new item BEFORE the current point.
+
+	Ownership of pointers are retained by the caller. The item data will be copied.
+
+	After an insert, we implicitly do a next, so that a successive insert operation
+	would insert after the item inserted here. The return code is therefore as for next.
+*/
+int fz_outline_iterator_insert(fz_context *ctx, fz_outline_iterator *iter, fz_outline_item *item);
+
+/**
+	Delete the current item.
+
+	This implicitly moves us to the 'next' item, and the return code is as for fz_outline_iterator_next.
+*/
+int fz_outline_iterator_delete(fz_context *ctx, fz_outline_iterator *iter);
+
+/**
+	Update the current item properties according to the given item.
+*/
+void fz_outline_iterator_update(fz_context *ctx, fz_outline_iterator *iter, fz_outline_item *item);
+
+/**
+	Drop the current iterator.
+*/
+void fz_drop_outline_iterator(fz_context *ctx, fz_outline_iterator *iter);
+
+
+/** Structure based API */
 
 /**
 	fz_outline is a tree of the outline of a document (also known
@@ -55,16 +113,11 @@ typedef struct fz_outline
 	int refs;
 	char *title;
 	char *uri;
-	int page;
+	fz_location page;
 	float x, y;
 	struct fz_outline *next;
 	struct fz_outline *down;
 	int is_open;
-
-	/* sumatrapdf: support color and flags */
-	int flags;
-	int n_color;
-	float color[4];
 } fz_outline;
 
 /**
@@ -91,5 +144,85 @@ fz_outline *fz_keep_outline(fz_context *ctx, fz_outline *outline);
 	Never throws exceptions.
 */
 void fz_drop_outline(fz_context *ctx, fz_outline *outline);
+
+/**
+	Routine to implement the old Structure based API from an iterator.
+*/
+fz_outline *
+fz_load_outline_from_iterator(fz_context *ctx, fz_outline_iterator *iter);
+
+
+/**
+	Implementation details.
+	Of use to people coding new document handlers.
+*/
+
+/**
+	Function type for getting the current item.
+
+	Can return NULL. The item is only valid until the next call.
+*/
+typedef fz_outline_item *(fz_outline_iterator_item_fn)(fz_context *ctx, fz_outline_iterator *iter);
+
+/**
+	Function types for moving the iterator position.
+
+	A negative return value means we could not move as requested. Otherwise:
+	0 = the final position has a valid item.
+	1 = not a valid item, but we can insert an item here.
+*/
+typedef int (fz_outline_iterator_next_fn)(fz_context *ctx, fz_outline_iterator *iter);
+typedef int (fz_outline_iterator_prev_fn)(fz_context *ctx, fz_outline_iterator *iter);
+typedef int (fz_outline_iterator_up_fn)(fz_context *ctx, fz_outline_iterator *iter);
+typedef int (fz_outline_iterator_down_fn)(fz_context *ctx, fz_outline_iterator *iter);
+
+/**
+	Function type for inserting a new item BEFORE the current point.
+
+	Ownership of pointers are retained by the caller. The item data will be copied.
+
+	After an insert, we implicitly do a next, so that a successive insert operation
+	would insert after the item inserted here. The return code is therefore as for next.
+*/
+typedef int (fz_outline_iterator_insert_fn)(fz_context *ctx, fz_outline_iterator *iter, fz_outline_item *item);
+
+/**
+	Function type for deleting the current item.
+
+	This implicitly moves us to the 'next' item, and the return code is as for fz_outline_iterator_next.
+*/
+typedef int (fz_outline_iterator_delete_fn)(fz_context *ctx, fz_outline_iterator *iter);
+
+/**
+	Function type for updating the current item properties according to the given item.
+*/
+typedef void (fz_outline_iterator_update_fn)(fz_context *ctx, fz_outline_iterator *iter, fz_outline_item *item);
+
+/**
+	Function type for dropping the current iterator.
+*/
+typedef void (fz_outline_iterator_drop_fn)(fz_context *ctx, fz_outline_iterator *iter);
+
+#define fz_new_derived_outline_iter(CTX, TYPE, DOC)\
+	((TYPE *)Memento_label(fz_new_outline_iterator_of_size(ctx,sizeof(TYPE),DOC),#TYPE))
+
+fz_outline_iterator *fz_new_outline_iterator_of_size(fz_context *ctx, size_t size, fz_document *doc);
+
+fz_outline_iterator *fz_outline_iterator_from_outline(fz_context *ctx, fz_outline *outline);
+
+struct fz_outline_iterator {
+	/* Functions */
+	fz_outline_iterator_drop_fn *drop;
+	fz_outline_iterator_item_fn *item;
+	fz_outline_iterator_next_fn *next;
+	fz_outline_iterator_prev_fn *prev;
+	fz_outline_iterator_up_fn *up;
+	fz_outline_iterator_down_fn *down;
+	fz_outline_iterator_insert_fn *insert;
+	fz_outline_iterator_update_fn *update;
+	fz_outline_iterator_delete_fn *del;
+	/* Common state */
+	fz_document *doc;
+};
 
 #endif

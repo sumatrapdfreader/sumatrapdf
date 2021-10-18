@@ -625,7 +625,7 @@ epub_parse_ncx_imp(fz_context *ctx, epub_document *doc, fz_xml *node, char *base
 				tailp = &(*tailp)->next;
 				outline->title = Memento_label(fz_strdup(ctx, text), "outline_title");
 				outline->uri = Memento_label(fz_strdup(ctx, path), "outline_uri");
-				outline->page = -1;
+				outline->page = fz_make_location(-1, -1);
 				outline->down = epub_parse_ncx_imp(ctx, doc, node, base_uri);
 				outline->is_open = 1;
 			}

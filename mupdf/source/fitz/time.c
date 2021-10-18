@@ -20,9 +20,11 @@
 // Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
 // CA 94945, U.S.A., +1(415)492-9861, for further information.
 
-#ifdef _WIN32
-
 #include "mupdf/fitz.h"
+
+#include <sys/stat.h>
+
+#ifdef _WIN32
 
 #include <stdio.h>
 #include <errno.h>
@@ -187,8 +189,34 @@ fz_free_argv(int argc, char **argv)
 	free(argv);
 }
 
+int64_t
+fz_stat_mtime(const char *path)
+{
+	struct _stat info;
+	wchar_t *wpath;
+
+	wpath = fz_wchar_from_utf8(path);
+	if (wpath == NULL)
+		return 0;
+
+	if (_wstat(wpath, &info) < 0) {
+		free(wpath);
+		return 0;
+	}
+
+	free(wpath);
+	return info.st_mtime;
+}
+
 #else
 
-int fz_time_dummy;
+int64_t
+fz_stat_mtime(const char *path)
+{
+	struct stat info;
+	if (stat(path, &info) < 0)
+		return 0;
+	return info.st_mtime;
+}
 
 #endif /* _WIN32 */
