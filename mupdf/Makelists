@@ -35,6 +35,8 @@ FREETYPE_SRC += thirdparty/freetype/src/type1/type1.c
 
 GUMBO_CFLAGS += -Ithirdparty/gumbo-parser/src
 
+GUMBO_BUILD_CFLAGS += -std=c99
+
 GUMBO_SRC += thirdparty/gumbo-parser/src/attribute.c
 GUMBO_SRC += thirdparty/gumbo-parser/src/char_ref.c
 GUMBO_SRC += thirdparty/gumbo-parser/src/error.c

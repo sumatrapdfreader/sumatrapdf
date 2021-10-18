@@ -3,10 +3,10 @@
 /* UniJIS-UCS2-HW-H */
 
 static const pdf_range cmap_UniJIS_UCS2_HW_H_ranges[] = {
-{32,91,231},
-{92,92,8719},
-{93,126,292},
-{165,165,291},
+{0x20,0x5b,0xe7},
+{0x5c,0x5c,0x220f},
+{0x5d,0x7e,0x124},
+{0xa5,0xa5,0x123},
 };
 
 static pdf_cmap cmap_UniJIS_UCS2_HW_H = {

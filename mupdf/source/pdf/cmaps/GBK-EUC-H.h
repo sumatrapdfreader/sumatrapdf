@@ -3,8 +3,8 @@
 /* GBK-EUC-H */
 
 static const pdf_range cmap_GBK_EUC_H_ranges[] = {
-{32,32,7716},
-{33,126,814},
+{0x20,0x20,0x1e24},
+{0x21,0x7e,0x32e},
 };
 
 static pdf_cmap cmap_GBK_EUC_H = {

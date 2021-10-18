@@ -3,7 +3,7 @@
 /* Identity-H */
 
 static const pdf_range cmap_Identity_H_ranges[] = {
-{0,65535,0},
+{0x0,0xffff,0x0},
 };
 
 static pdf_cmap cmap_Identity_H = {

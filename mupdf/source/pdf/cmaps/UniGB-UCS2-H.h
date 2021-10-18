@@ -3,8 +3,8 @@
 /* UniGB-UCS2-H */
 
 static const pdf_range cmap_UniGB_UCS2_H_ranges[] = {
-{12536,12537,22391},
-{12583,12583,734},
+{0x30f8,0x30f9,0x5777},
+{0x3127,0x3127,0x2de},
 };
 
 static pdf_cmap cmap_UniGB_UCS2_H = {

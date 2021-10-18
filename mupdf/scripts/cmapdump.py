@@ -144,19 +144,19 @@ def dumpcmap(filename):
 	if len(ranges) > 0:
 		print("static const pdf_range cmap_%s_ranges[] = {" % cname)
 		for r in ranges:
-			print("{%d,%d,%d}," % r)
+			print("{0x%x,0x%x,0x%x}," % r)
 		print("};")
 		print()
 	if len(xranges) > 0:
 		print("static const pdf_xrange cmap_%s_xranges[] = {" % cname)
 		for r in xranges:
-			print("{%d,%d,%d}," % r)
+			print("{0x%x,0x%x,0x%x}," % r)
 		print("};")
 		print()
 	if len(mranges) > 0:
 		print("static const pdf_mrange cmap_%s_mranges[] = {" % cname)
 		for r in mranges:
-			print("{%d,%d}," % r)
+			print("{0x%x,0x%x}," % r)
 		print("};")
 		print()
 		print("static const int cmap_%s_table[] = {" % cname)
@@ -164,10 +164,10 @@ def dumpcmap(filename):
 		i = 0
 		for r in mdata:
 			if i <= n:
-				sys.stdout.write("%d," % r)
+				sys.stdout.write("0x%x," % r)
 				i = i + 1
 			else:
-				sys.stdout.write("\n%d," % r)
+				sys.stdout.write("\n0x%x," % r)
 				i = 1
 				n = r
 		sys.stdout.write("\n")

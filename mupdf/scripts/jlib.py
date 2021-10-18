@@ -1057,16 +1057,20 @@ def system(
 
     if raise_errors:
         if e:
+            env_string = ''
+            if env_extra:
+                for n, v in env_extra.items():
+                    env_string += f'{n}={v} '
             if out_original == 'return':
                 if not output_return.endswith('\n'):
                     output_return += '\n'
                 raise Exception(
-                        f'Command failed: {command}\n'
+                        f'Command failed: {env_string}{command}\n'
                         f'Output was:\n'
                         f'{output_return}'
                         )
             else:
-                raise Exception( 'command failed: %s' % command)
+                raise Exception( f'command failed: {env_string}{command}')
         elif out_original == 'return':
             return output_return
         else:

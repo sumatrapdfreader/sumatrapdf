@@ -86,7 +86,8 @@ public class MuPDFGui : System.Windows.Forms.Form
                 new mupdf.Matrix(1, 0, 0, 1, 0, 0),
                 new mupdf.Cookie()
                 );
-        var html_bytes = mupdf.Buffer_extract.fn(buffer);
+        System.Console.WriteLine("buffer=" + buffer);
+        var html_bytes = buffer.buffer_extract();
         var html_string = System.Text.Encoding.UTF8.GetString(html_bytes, 0, html_bytes.Length);
         var web_browser = new System.Windows.Forms.WebBrowser();
         web_browser.DocumentText = html_string;

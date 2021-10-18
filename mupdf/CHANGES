@@ -1,3 +1,50 @@
+List of changes in MuPDF 1.19.0
+
+	Removed support for Luratech JBIG2 and JPEG2000 decoders.
+
+	Added 'extract' library for more output options:
+		Added DOCX output format
+		Added ODT output format
+
+	Notable new features:
+		Journal for undo and redo
+		Snapshot for auto-save and restore (for backgrounding mobile apps)
+		Reflow document wrapper
+		Rollover appearance for annotations and widgets
+		Customize appearance of signed digital signatures
+		Progress and cancel callbacks to OCR functions
+		Create signature form fields
+
+	Minor new features:
+		Support CJK fonts in pdfwrite output
+		Support JBIG2 images in pdfwrite output
+		Support opacity for all markup annotation types
+		High-DPI aware UI in mupdf-gl
+		mutool extract -a option to embed SMasks as alpha channel
+
+	API changes:
+		Removed pdf_widget type alias (was always same as pdf_annot)
+		Updated annotation 'dirty' logic
+		Fix typo in function and type names: designated name -> distinguished name
+		More functions available to 'mutool run'
+		More functions available to Java library
+
+	New unicode scripts and fonts for EPUB:
+		Dogra, Elymaic, Gondi, Hanifi Rohingya, Masaram Gondi,
+		Medefaidrin, Nushu, Nyiakeng Puachue Hmong, Old Sogdian,
+		Sogdian, Soyombo, Wancho, Yezidi, and Zanabazar Square.
+
+	C++ and Python bindings:
+		C++ and Python bindings now work on Windows.
+		Python bindings are available as pre-built binaries on pypi.org.
+		Added demo PDF viewer using the Python MuPDF bindings and PyQt.
+
+		Better access to data in generated wrapper classes.
+		Improved handling of out-parameters in generated Python.
+		Text representation of POD types via C++ operator<< and Python str().
+		Fixed ref-counting bug in iterators.
+		Updates for new MuPDF functions.
+
 List of changes in MuPDF 1.18.0
 
 	mutool draw: bbox output format.
