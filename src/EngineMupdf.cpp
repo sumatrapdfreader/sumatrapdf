@@ -241,8 +241,16 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float
     if (!uri) {
         return -1;
     }
-    fz_location loc = fz_resolve_link(ctx, doc, uri, xp, yp);
-    int pageNo = fz_page_number_from_location(ctx, doc, loc);
+    int pageNo = -1;
+    fz_var(pageNo);
+    fz_try(ctx) {
+        fz_location loc = fz_resolve_link(ctx, doc, uri, xp, yp);
+        pageNo = fz_page_number_from_location(ctx, doc, loc);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "fz_resolve_link failed");
+    }
+
     return pageNo + 1;
 }
 
@@ -2721,8 +2729,15 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     }
     float x, y;
     float zoom = 0.f; // TODO: used to have zoom but mupdf changed outline
-    fz_location loc = fz_resolve_link(e->ctx, e->_doc, uri, &x, &y);
-    int pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
+    int pageNo = -1;
+    fz_var(pageNo);
+    fz_try(e->ctx) {
+        fz_location loc = fz_resolve_link(e->ctx, e->_doc, uri, &x, &y);
+        pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
+    }
+    fz_catch (e->ctx) {
+        fz_warn(e->ctx, "fz_resolve_link() failed");
+    }
     auto ctrl = linkHandler->GetController();
     if (pageNo != -1) {
         RectF r(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
