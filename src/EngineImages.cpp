@@ -979,8 +979,6 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    [[nodiscard]] const WCHAR* GetDefaultFileExt() const;
-
     TocTree* GetToc() override;
 
     // json::ValueVisitor
@@ -1007,9 +1005,6 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     MultiFormatArchive* cbxFile = nullptr;
     Vec<MultiFormatArchive::FileInfo*> files;
     TocTree* tocTree = nullptr;
-
-    // not owned
-    const WCHAR* defaultExt = nullptr;
 
     // extracted metadata
     AutoFreeWstr propTitle;
@@ -1324,10 +1319,6 @@ WCHAR* EngineCbx::GetProperty(DocumentProperty prop) {
         default:
             return nullptr;
     }
-}
-
-const WCHAR* EngineCbx::GetDefaultFileExt() const {
-    return defaultExt;
 }
 
 Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {

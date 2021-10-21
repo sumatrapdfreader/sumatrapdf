@@ -2488,7 +2488,11 @@ static void OnMenuSaveAs(WindowInfo* win) {
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
-    ofn.lpstrDefExt = defExt + 1;
+    // defExt can be null, we want to skip '.'
+    if (str::Len(defExt) > 0 && defExt[0] == L'.') {
+        defExt++;
+    }
+    ofn.lpstrDefExt = defExt;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     // note: explicitly not setting lpstrInitialDir so that the OS
     // picks a reasonable default (in particular, we don't want this

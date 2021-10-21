@@ -5,6 +5,11 @@ A daily log of changes and commentary. An experiment of sorts.
 - fixed storing navigation change twice on tree item click (fixes #2202)
   removed TocTreeClick handler because it duplicates the work
   of selection changed handler
+- fix crash 'save as' for .zip / .cbx files (fixes #2198)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2198
+  There were 2 problems. OnMenuSaveAs() didn't handle defExt being null
+  defaultExt for EngineCbx was null because defaultExt field
+  was hiding one in EngineBase. 
 
 2021-10-17 Sun
 

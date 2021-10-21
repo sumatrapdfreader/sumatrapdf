@@ -237,7 +237,7 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
     return {};
 }
 
-static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float *xp, float *yp) {
+static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float* xp, float* yp) {
     if (!uri) {
         return -1;
     }
@@ -2735,7 +2735,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         fz_location loc = fz_resolve_link(e->ctx, e->_doc, uri, &x, &y);
         pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
     }
-    fz_catch (e->ctx) {
+    fz_catch(e->ctx) {
         fz_warn(e->ctx, "fz_resolve_link() failed");
     }
     auto ctrl = linkHandler->GetController();
