@@ -686,7 +686,14 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
     }
     }
 
+// disabled becaues of https://github.com/sumatrapdfreader/sumatrapdf/issues/2202
+// it was added for https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
+// but unclear if its still needed
+// this calls GoToTocLinkTask) which will eventually call GoToPage()
+// which adds nav point. Maybe I should not add nav point
+// if going to the same page?
 static void TocTreeClick(TreeClickEvent* ev) {
+#if 0
     ev->didHandle = true;
     if (!ev->treeItem) {
         return;
@@ -695,6 +702,7 @@ static void TocTreeClick(TreeClickEvent* ev) {
     CrashIf(!win);
     bool allowExternal = false;
     GoToTocTreeItem(win, ev->treeItem, allowExternal);
+#endif
 }
 
 static void TocTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
