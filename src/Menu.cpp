@@ -660,7 +660,7 @@ static MenuDef menuDefCreateAnnotFromSelection[] = {
         CmdCreateAnnotHighlight,
     },
     {
-        _TRN("&Underline"),
+        _TRN("&Underline\tu"),
         CmdCreateAnnotUnderline,
     },
     {
