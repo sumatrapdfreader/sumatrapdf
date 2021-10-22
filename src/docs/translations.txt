@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f9bc6834726c11a709a2e17e310c6351f016fc57
+e54f16804bab75ec5e9d06f4cb09403357205459
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -582,7 +582,7 @@ br:&Descartar
 ca-xv:&Descarta
 ca:&Descarta
 cn:取消(&D)
-co:&Scartà
+co:&Scartà i cambiamenti
 de:Verwerfen
 el:Απόρριψη
 es:&Descartar
@@ -2055,7 +2055,7 @@ by:&Пароль:
 ca-xv:&Contrasenya:
 ca:&Contrasenya:
 cn:密码(&P):
-co:&Parolla d’entrata :
+co:&Parolla d’intesa :
 cy:&Cyfrinair:
 cz:&Heslo:
 de:&Passwort:
@@ -2388,7 +2388,7 @@ by:&Запомніць пароль для гэтага дакументу
 ca-xv:&Recorda la contrasenya per a aquest document
 ca:&Recorda la contrasenya per a aquest document
 cn:记住本文件的密码(&R)
-co:Arricurdassi di a &parolla d’entrata per stu ducumentu
+co:Arricurdassi di a &parolla d’intesa per stu ducumentu
 cy:&Cofio cyfrinair y ddogfen
 cz:P&amatovat si heslo tohoto dokumentu
 de:Passwort für dieses Dokument &merken
@@ -4984,7 +4984,7 @@ by:Няма злучэння з інтэрнэтам (памылка %#x).
 ca-xv:No es pot connectar a internet (error %#x).
 ca:No es pot connectar a internet (error %#x).
 cn:无法连接到互联网 (错误：%#x)。
-co:Ùn pò micca cunnettassi à Internet (sbagliu %#x).
+co:Ùn pò micca cunnettesi à Internet (sbagliu %#x).
 cy:Methu cysylltu â'r Rhyngrwyd (gwall %#x).
 cz:Nelze se připojit k Internetu (chyba %#x).
 de:Keine Verbindung zum Internet möglich (Fehler %#x).
@@ -6060,7 +6060,7 @@ by:Капіяваць адрас &спасылкі
 ca-xv:Copia l'adreça de l'enllaç
 ca:Copia l'adreça de l'enllaç
 cn:复制链接地址(&L)
-co:Cupià l’&indirizzu di a leia
+co:Cupià l’&indirizzu di u liame
 cy:Copïo &Dolen Cyfeiriad
 cz:Kopírovat &adresu odkazu
 de:&Linkadresse kopieren
@@ -8058,7 +8058,7 @@ by:Увядзіце пароль
 ca-xv:Introduïu la contrasenya
 ca:Introduïu la contrasenya
 cn:请输入密码
-co:Scrivite a parolla d’entrata
+co:Scrivite a parolla d’intesa
 cy:Rhoi cyfrinair
 cz:Zadejte heslo
 de:Bitte Passwort eingeben
@@ -8129,7 +8129,7 @@ by:Увядзіце пароль для %s
 ca-xv:Introduïu la constrasenya per a %s
 ca:Introduïu la constrasenya per a %s
 cn:请输入 %s 的密码
-co:Scrivite a parolla d’entrata per %s
+co:Scrivite a parolla d’intesa per %s
 cy:Rhoi cyfrinair ar gyfer %s
 cz:Zadejte heslo pro %s
 de:Bitte Passwort für %s eingeben
@@ -11461,7 +11461,7 @@ by:Паказваць &перадпрагляд дакументаў PDF у Wind
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
 ca:Permet al Windows mostrar les &vistes prèvies dels documents PDF
 cn:让 Windows 显示 PDF 文件的预览(&P)
-co:Permette à Windows di &previsualizà i ducumenti PDF
+co:Permette à Windows d’affissà a &fighjulata di i ducumenti PDF
 cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
 de:Windows soll eine &Vorschau für PDF-Dokumente anzeigen
@@ -15578,7 +15578,7 @@ br:Salvar anotações?
 ca-xv:Voleu desar les anotacions?
 ca:Voleu desar les anotacions?
 cn:是否保存标注
-co:Arregistrà l’annutazioni?
+co:Arregistrà l’annutazioni ?
 de:Anmerkungen speichern?
 el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
