@@ -1,5 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-10-22 Fri
+
+- fix generating corrupted PDF when doing 'save to new pdf' twice (fixes #2206)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2206
+  was doing something that wasn't supported by mupdf
+
 2021-10-20 Wed
 
 - fixed storing navigation change twice on tree item click (fixes #2202)
