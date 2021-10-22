@@ -156,7 +156,7 @@ static WStrVec gAllowedFileTypes;
 // if this flag is set, CloseWindow will not save prefs before closing the window.
 static bool gDontSavePrefs = false;
 
-static void CloseDocumentInTab(WindowInfo*, bool keepUIEnabled = false, bool deleteModel = false);
+static void CloseDocumentInCurrentTab(WindowInfo*, bool keepUIEnabled = false, bool deleteModel = false);
 static void UpdatePageInfoHelper(WindowInfo*, NotificationWnd* wnd = nullptr, int pageNo = -1);
 static void OnSidebarSplitterMove(SplitterMoveEvent*);
 static void OnFavSplitterMove(SplitterMoveEvent*);
@@ -1446,6 +1446,9 @@ void DeleteWindowInfo(WindowInfo* win) {
 }
 
 static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
+    if (path::IsSame(oldPath, newPath)) {
+        return;
+    }
     char* newPathA = ToUtf8Temp(newPath);
     FileState* fs = gFileHistory.Find(newPathA, nullptr);
     bool oldIsPinned = false;
@@ -1649,7 +1652,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         if (openNewTab) {
             SaveCurrentTabInfo(args.win);
         }
-        CloseDocumentInTab(win, true, args.forceReuse);
+        CloseDocumentInCurrentTab(win, true, args.forceReuse);
     }
     if (!args.forceReuse) {
         // insert a new tab for the loaded document
@@ -1720,7 +1723,7 @@ void LoadModelIntoTab(TabInfo* tab) {
         return;
     }
     WindowInfo* win = tab->win;
-    CloseDocumentInTab(win, true);
+    CloseDocumentInCurrentTab(win, true);
 
     win->currentTab = tab;
     win->ctrl = tab->ctrl;
@@ -1984,7 +1987,7 @@ static void OnMenuExit() {
 // about window (set keepUIEnabled if a new document will be loaded
 // into the tab right afterwards and LoadDocIntoCurrentTab would revert
 // the UI disabling afterwards anyway)
-static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteModel) {
+static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool deleteModel) {
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm()) {
         win->AsChm()->RemoveParentHwnd();
@@ -2054,8 +2057,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    const WCHAR* name = engine->FileName();
-    str::BufSet(dstFileName, dimof(dstFileName), name);
+    const WCHAR* srcFileName = engine->FileName();
+    str::BufSet(dstFileName, dimof(dstFileName), srcFileName);
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = tab->win->hwndFrame;
@@ -2079,12 +2082,27 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
         tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
     });
-    if (ok) {
-        str::Str msg;
-        msg.AppendFmt(_TRA("Saved annotations to '%s'"), dstFilePath.Get());
-        tab->win->ShowNotification(msg.AsView());
+    if (!ok) {
+        return false;
     }
-    return ok;
+
+    auto win = tab->win;
+    UpdateTabFileDisplayStateForTab(tab);
+    CloseDocumentInCurrentTab(win, true, true);
+    SetFocus(win->hwndFrame);
+
+    AutoFreeWstr newPath(path::Normalize(dstFileName));
+    // TODO: this should be 'duplicate FileInHistory"
+    RenameFileInHistory(srcFileName, newPath);
+
+    LoadArgs args(dstFileName, win);
+    args.forceReuse = true;
+    LoadDocument(args);
+
+    str::Str msg;
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), dstFilePath.Get());
+    tab->win->ShowNotification(msg.AsView());
+    return true;
 }
 
 enum class SaveChoice {
@@ -2336,7 +2354,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
         DeleteWindowInfo(win);
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        CloseDocumentInTab(win);
+        CloseDocumentInCurrentTab(win);
         SetFocus(win->hwndFrame);
         CrashIf(!gWindows.Contains(win));
     } else {
@@ -2664,7 +2682,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     }
 
     UpdateTabFileDisplayStateForTab(win->currentTab);
-    CloseDocumentInTab(win, true, true);
+    CloseDocumentInCurrentTab(win, true, true);
     SetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
