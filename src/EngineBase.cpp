@@ -13,6 +13,14 @@
 
 #include "utils/Log.h"
 
+bool IsExternalUrl(const WCHAR* url) {
+    return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
+}
+
+bool IsExternalUrl(const char* url) {
+    return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
+}
+
 void FreePageText(PageText* pageText) {
     str::Free(pageText->text);
     free((void*)pageText->coords);

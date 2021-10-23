@@ -19,9 +19,6 @@
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 
-static bool IsExternalUrl(const WCHAR* url) {
-    return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
-}
 
 static TocItem* NewChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, const WCHAR* url) {
     auto res = new TocItem(parent, title, pageNo);

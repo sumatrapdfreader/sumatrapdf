@@ -17,6 +17,8 @@ A daily log of changes and commentary. An experiment of sorts.
 - swap keyboard shortcuts 'i' and 'shift - i' (fixes #2210)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2210
 
+- better handle URLs in EngineMupdf
+
 2021-10-20 Wed
 
 - fixed storing navigation change twice on tree item click (fixes #2202)

@@ -268,6 +268,12 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     CrashIf(!link && !outline);
     char* uri = FzGetURL(link, outline);
 
+    if (IsExternalUrl(uri)) {
+        auto res = new PageDestinationURL(uri);
+        res->rect = FzGetRectF(link, outline);
+        return res;
+    }
+
     if (str::StartsWithI(uri, "file://")) {
         WCHAR* path = ToWstrTemp(uri);
         path = CleanupFileURL(path);
