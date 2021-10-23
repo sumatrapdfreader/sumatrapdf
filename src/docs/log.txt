@@ -14,6 +14,9 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2145
   still not perfect: we don't save preferences after changing state of showing favorites
 
+- swap keyboard shortcuts 'i' and 'shift - i' (fixes #2210)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2210
+
 2021-10-20 Wed
 
 - fixed storing navigation change twice on tree item click (fixes #2202)
