@@ -35,6 +35,7 @@ Kind kindFileRar = "fileRar";
 Kind kindFile7Z = "file7Z";
 Kind kindFileTar = "fileTar";
 Kind kindFileFb2 = "fileFb2";
+Kind kindFileFb2z = "fileFb2z"; // fb2 but inside .zip file
 Kind kindDirectory = "directory";
 Kind kindFileEpub = "fileEpub";
 // TODO: introduce kindFileTealDoc?
@@ -66,9 +67,10 @@ Kind kindFileHeic = "fileHeic";
     V(".ps.gz\0", kindFilePS)       \
     V(".eps\0", kindFilePS)         \
     V(".fb2\0", kindFileFb2)        \
-    V(".fb2z\0", kindFileFb2)       \
-    V(".zfb2\0", kindFileFb2)       \
-    V(".fb2.zip\0", kindFileFb2)    \
+    V(".fb2z\0", kindFileFb2z)      \
+    V(".fbz\0", kindFileFb2z)       \
+    V(".zfb2\0", kindFileFb2z)      \
+    V(".fb2.zip\0", kindFileFb2z)   \
     V(".cbz\0", kindFileCbz)        \
     V(".cbr\0", kindFileCbr)        \
     V(".cb7\0", kindFileCb7)        \

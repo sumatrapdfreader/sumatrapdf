@@ -41,6 +41,8 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
         return true;
     } else if (kind == kindFileFb2) {
         return true;
+    } else if (kind == kindFileFb2z) {
+        return true;
     } else if (kind == kindFileMobi) {
         return true;
     } else if (kind == kindFilePalmDoc) {
@@ -110,7 +112,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEngineEpubFromFile(path);
         return engine;
     }
-    if (kind == kindFileFb2) {
+    if (kind == kindFileFb2 || kind == kindFileFb2z) {
         engine = CreateEngineFb2FromFile(path);
         return engine;
     }

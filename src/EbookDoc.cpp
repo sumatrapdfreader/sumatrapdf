@@ -1045,7 +1045,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
 }
 
 bool Fb2Doc::IsSupportedFileType(Kind kind) {
-    return kind == kindFileFb2;
+    return kind == kindFileFb2 || kind == kindFileFb2z;
 }
 
 Fb2Doc* Fb2Doc::CreateFromFile(const WCHAR* path) {

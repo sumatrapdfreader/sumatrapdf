@@ -30,6 +30,7 @@ extern Kind kindFileWebp;
 extern Kind kindFileJp2;
 
 extern Kind kindFileFb2;
+extern Kind kindFileFb2z;
 extern Kind kindFileEpub;
 extern Kind kindFileMobi;
 extern Kind kindFilePalmDoc;
