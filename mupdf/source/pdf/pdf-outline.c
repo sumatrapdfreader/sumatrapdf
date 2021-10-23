@@ -692,11 +692,14 @@ pdf_resolve_link(fz_context *ctx, pdf_document *doc, const char *uri, float *xp,
 			h = mediabox.y1 - mediabox.y0;
 
 			if (type == PDF_NAME(FitH) || type == PDF_NAME(FitBH))
-				*yp = fz_clamp(h-a1, 0, h);
+				if (yp) *yp = fz_clamp(h-a1, 0, h);
 			if (type == PDF_NAME(FitV) || type == PDF_NAME(FitBV))
-				*xp = fz_clamp(a1, 0, w);
+				if (xp) *xp = fz_clamp(a1, 0, w);
 			if (type == PDF_NAME(FitR) || type == PDF_NAME(XYZ))
-				*xp = fz_clamp(a1, 0, w), *yp = fz_clamp(h-a2, 0, h);
+			{
+				if (xp) *xp = fz_clamp(a1, 0, w);
+				if (yp) *yp = fz_clamp(h-a2, 0, h);
+		}
 		}
 		return page;
 	}
