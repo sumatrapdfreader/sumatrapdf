@@ -1799,6 +1799,29 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
+#if 0
+const char* custom_css = R"(
+* {
+    background-color: #f3f3f3;
+    line-height: 1.3em;
+}
+@page{
+    margin:2em 2em;    
+}
+)";
+#endif
+
+const char* custom_css = nullptr;
+
+/*
+line-height: 2.5em;
+font-family: "Consolas";
+
+    line-height: 2.5em;
+    font-family: Consolas;
+
+*/
+
 // TODO: need to do stuff to support .txt etc.
 bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
@@ -1842,6 +1865,10 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
     const char* ext = path::GetExtTemp(nameHint);
     if (!str::EqI(ext, ".epub")) {
         lfontDy = 8.f;
+    }
+
+	if (custom_css) {
+        fz_set_user_css(ctx, custom_css);
     }
 
     _doc = nullptr;
@@ -2690,8 +2717,11 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     } else {
         fz_try(ctx) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            // TODO: how is mupdf getting away with fz_clear_pixmap()?
+            // TODO: to have uniform background needs to set custom css
+            // background-color and clear pixmap with the same color
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
+            //fz_clear_pixmap(ctx, pix);
+            // fz_fill_pixmap_with_color(ctx, pix, )
             dev = fz_new_draw_device(ctx, ctm, pix);
             fz_run_page_contents(ctx, page, dev, fz_identity, NULL);
             fz_close_device(ctx, dev);
