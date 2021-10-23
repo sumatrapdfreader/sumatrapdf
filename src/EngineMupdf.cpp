@@ -18,6 +18,7 @@ extern "C" {
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
+#include "utils/Timer.h"
 
 #include "AppColors.h"
 #include "Annotation.h"
@@ -3211,6 +3212,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
         return false;
     }
 
+    auto timeStart = TimeGet();
     TempStr currPath = ToUtf8Temp(engine->FileName());
     if (path.empty()) {
         path = {currPath.Get()};
@@ -3231,7 +3233,8 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
     fz_try(ctx) {
         pdf_save_document(ctx, epdf->pdfdoc, path.data(), &save_opts);
         ok = true;
-        logf("Saved annotations to '%s'\n", path.data());
+        auto dur = TimeSinceInMs(timeStart);
+        logf("Saved annotations to '%s' in  %.2f ms\n", path.data(), dur);
     }
     fz_catch(ctx) {
         const char* mupdfErr = fz_caught_message(epdf->ctx);

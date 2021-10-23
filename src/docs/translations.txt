@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e54f16804bab75ec5e9d06f4cb09403357205459
+8716e93a158e4a3d0b198bca1f7ad1bba7d15ce5
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2974,27 +2974,7 @@ pl:&Tłumacz za pomocą Google
 sk:&Preložiť pomocou Google
 th:&แปลด้วย Google
 tr:Google İle &Çevir
-:&Underline
-am:&Ընդգծված
-br:S&ublinhar
-ca-xv:&Subratlla
-ca:&Subratlla
-cn:&下划线
-co:&Sottulineatu
-de:&Unterstreichen
-dk:&Understreg
-el:Υπογράμμιση
-es:&Subrayar
-hr:Podv&ući
-it:Sottolineato
-kr:밑줄(&U)
-kw:&Islinya
-lt:Pa&braukti
-lv:&Pasvītrojums
-nl:&Onderstrepen
-pl:&Podkreślenie
-th:&ขีดเส้นใต้
-tr:&Altını Çiz
+:&Underline\tu
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -15441,44 +15421,7 @@ nl:SVG Documenten
 pl:Documenty SVG
 th:เอกสาร SVG
 tr:SVG belgeleri
-:Save Annotations
-am:Պահել ծանոթագրությունը
-ar:حفظ الحواشي
-az:Qeydləri yadda saxla
-bg:Запази анотациите
-br:Salvar anotações
-ca-xv:Desa les anotacions
-ca:Desa les anotacions
-cn:保存标注
-co:Arregistrà l’ann&utazioni
-cy:Cadw anodiadau
-de:Anmerkungen speichern
-dk:Gem anmærkninger
-el:Αποθήκευση Επισημάνσεων
-es:Guardar las anotaciones
-fr:Sauvegarder les annotations
-ga:Taisc na Nótaí
-gl:Gardar anotacións
-he:שמור אנוטציות
-hr:Spremi pribilješke
-hu:Megjegyzések mentése
-id:Simpan Catatan
-it:Salva annotazioni
-ja:注釈を保存
-ka:ანოტაციების შენახვა
-kr:주석 저장
-kw:Gwitha Notennow
-lt:Išsaugoti anotacijas
-lv:Saglabāt anotācijas
-nl:Aantekeningen Opslaan
-pl:Zapisz adnotacje
-pt:Guardar anotações
-ru:Сохранить аннотации
-sl:Shrani pripombe
-th:บันทึกคำอธิบายประกอบ
-tr:Notları Kaydet
-tw:儲存評注
-uk:Зберегти аннотації
+:Save Annotations to existing PDF
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
