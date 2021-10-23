@@ -626,7 +626,10 @@ void UpdateFavoritesTree(WindowInfo* win) {
 
     // hide the favorites tree if we've removed the last favorite
     TreeItem root = newModel->Root();
-    bool show = newModel->ChildCount(root) > 0;
+    bool show = gGlobalPrefs->showFavorites;
+    if (newModel->ChildCount(root) == 0) {
+        show = false;
+    }
     SetSidebarVisibility(win, win->tocVisible, show);
 }
 

@@ -6,6 +6,14 @@ A daily log of changes and commentary. An experiment of sorts.
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2206
   was doing something that wasn't supported by mupdf
 
+- re-enable opening fb2 inside .zip and support .fbz extension (fixes #870, fixes #2147)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/870
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2147
+
+- don't show favorites when reloading prefs (fixes #2145)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2145
+  still not perfect: we don't save preferences after changing state of showing favorites
+
 2021-10-20 Wed
 
 - fixed storing navigation change twice on tree item click (fixes #2202)
