@@ -1,6 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
-2021-10-25 Tue
+2021-10-26 Tue
+
+- fix pdf_resolve_link (fixes #2216)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2216
+
+2021-10-25 Mon
 
 - if fails to open with engine mupdf, also try to open with other engines (fixes #2212)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2212

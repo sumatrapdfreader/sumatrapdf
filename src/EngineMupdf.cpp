@@ -2764,6 +2764,11 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     if (!link->outline) {
         uri = link->link->uri;
     }
+    if (IsExternalLink(uri)) {
+        linkHandler->LaunchURL(uri);
+        return;
+    }
+
     float x, y;
     float zoom = 0.f; // TODO: used to have zoom but mupdf changed outline
     int pageNo = -1;
@@ -2775,18 +2780,15 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     fz_catch(e->ctx) {
         fz_warn(e->ctx, "fz_resolve_link() failed");
     }
+    if (pageNo < 0) {
+        // TODO: more?
+        // CrashIf(true);
+        return;
+    }
+
+    RectF r(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     auto ctrl = linkHandler->GetController();
-    if (pageNo != -1) {
-        RectF r(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-        ctrl->ScrollTo(pageNo + 1, r, zoom);
-        return;
-    }
-    if (IsExternalLink(uri)) {
-        linkHandler->LaunchURL(uri);
-        return;
-    }
-    // TODO: more?
-    // CrashIf(true);
+    ctrl->ScrollTo(pageNo + 1, r, zoom);
 }
 
 bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
