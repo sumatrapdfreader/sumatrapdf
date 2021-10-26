@@ -99,7 +99,12 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     }
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
         engine = CreateEngineMupdfFromFile(path, dpi, pwdUI);
-        return engine;
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/2212
+        // if failed to open with EngineMupdf, will also try to open
+        // with my engine
+        if (engine) {
+            return engine;
+        }
     }
 #if 0
     if (kind == kindFileTxt) {

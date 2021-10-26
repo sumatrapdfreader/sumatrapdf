@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-10-25 Tue
+
+- if fails to open with engine mupdf, also try to open with other engines (fixes #2212)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2212
+
 2021-10-22 Fri
 
 - fix generating corrupted PDF when doing 'save to new pdf' twice (fixes #2206)
