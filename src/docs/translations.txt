@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c7f3444980898ad03daeede36e7c7b2d529a6b5d
+78ff56397ae3b3b7e9f064009e72d3a022b9d1ee
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2975,6 +2975,7 @@ sk:&Preložiť pomocou Google
 th:&แปลด้วย Google
 tr:Google İle &Çevir
 :&Underline\tu
+am:&Ընդգծել\tu
 cn:下划线(&U)\tU
 co:&Sottulineatu\tu
 de:&Unterstreichen\tu
@@ -15427,6 +15428,7 @@ pl:Documenty SVG
 th:เอกสาร SVG
 tr:SVG belgeleri
 :Save Annotations to existing PDF
+am:Պահել ծանոթագրությունը առկա PDF-ում
 cn:将标注保存到当前 PDF
 co:Arregistrà l’annutazioni in u PDF esistente
 de:Anmerkungen in bestehende PDF-Dateien speichern
