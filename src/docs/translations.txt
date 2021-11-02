@@ -1,4 +1,4 @@
-AppTranslator: SumatraPDF
+﻿AppTranslator: SumatraPDF
 78ff56397ae3b3b7e9f064009e72d3a022b9d1ee
 :&About
 af:&Omtrent
@@ -347,7 +347,7 @@ ar:عرض &الكتاب
 az:&Kitab formatı\tCtrl+8
 bg:&Изглед като книга\tCtrl+8
 bn:&বই-এর মত সজ্জা\টি কন্ট্রোল + ৮
-br:Ver como livro\tCtrl+8
+br:Visualizar como livro\tCtrl+8
 bs:&Knjiški pregled\tCtrl+8
 by:Выгляд як &Кніга\tCtrl+8
 ca-xv:Visualització de &llibre\tCtrl+8
@@ -521,7 +521,7 @@ uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
-br:&Continue instalando a versão 32-bits
+br:&Continuar instalando a versão de 32 bits
 ca-xv:&Continua amb la instal·lació de la versió de 32 bits
 ca:&Continua amb la instal·lació de la versió de 32 bits
 cn:继续安装 32 位版本(&C)
@@ -559,7 +559,7 @@ tr:Seçimi &Kopyala \tCtrl-C
 vn:&Sao chép \tCtrl-C
 :&Copy To Clipboard\tCtrl-C
 am:&Պատճենել սեղմատախտգակ\tCtrl-C
-br:Copiar para Área de Transferência\tCtrl-C
+br:Copiar pra Área de Transferência\tCtrl-C
 ca-xv:&Copia al porta-retalls\tCtrl-C
 ca:&Copia al porta-retalls\tCtrl-C
 cn:复制到剪贴板(&C)\tCtrl+C
@@ -578,7 +578,7 @@ tr:Panoya &Kopyala\tCtrl-C
 vn:&Sao chép vào Clipboard\tCtrl-C
 :&Discard changes
 am:&Մերժել
-br:&Descartar
+br:&Descartar mudanças
 ca-xv:&Descarta
 ca:&Descarta
 cn:取消(&D)
@@ -601,7 +601,7 @@ ar:لا تسألني مرةً أخرى&
 az:Bir daha &soruşma
 bg:Без повтор&но питане
 bn:&আমাকে আর জিজ্ঞেস করবেন না
-br:Não perguntar novamente
+br:Não me pergunte de novo
 bs:Nemoj me ponovo pitati
 by:Больш не пытаць
 ca-xv:&No m'ho tornis a preguntar
@@ -670,7 +670,7 @@ ar:الصفحات &الزوجية فقط
 az:Yalnız &cüt səhifələr
 bg:Само &четни страници
 bn:&শুধুমাত্র জোর পৃষ্ঠাগুলো
-br:Apenas as páginas par&es
+br:Só as páginas par&es
 bs:Samo &parne stranice
 by:Толькі &цотныя старонкі
 ca-xv:Només les pàgines parells
@@ -869,7 +869,7 @@ ar:ابحث عن&:
 az:&Axtarılan sətir:
 bg:&Търсене на:
 bn:কি &খুঁজছেন
-br:&Localizar o quê:
+br:&Achar o quê:
 bs:&Traži:
 by:&Узор:
 ca-xv:&Cerca el què:
@@ -1005,7 +1005,7 @@ am:&Հարմարեցնել էջերը տպելու համար
 ar:&ملائمة الصفحات لمنطقة الطباعة
 az:&Çap sahəsinə sığışdır
 bg:&Оразмери страниците в полето за отпечатване
-br:Ajustar páginas à área de impressão
+br:Ajustar as páginas na área de impressão
 bs:Uklopi stranice na područje za štampu
 by:Па&дагнаць старонкі да вобласці друку
 ca-xv:Ajusta les pàgines a l'àrea imprimible
@@ -1091,7 +1091,7 @@ ar:انتقل الى&
 az:K&eçid
 bg:&Отиване на
 bn:এতে চলুন...
-br:&Ir para
+br:&Ir pra
 bs:Idi na
 by:Перайсці да
 ca-xv:&Vés a
@@ -1388,7 +1388,7 @@ am:&Մեծացնել
 ar:&التكبير
 az:&Böyütmə:
 bg:&Увеличение:
-br:Aumento:
+br:Ampliação:
 bs:&Uvećanje:
 by:&Павелічэнне:
 ca-xv:&Nivell d'augment:
@@ -1723,7 +1723,7 @@ am:&Միայն կենտ էջերը
 ar:&الصفحات الفردية فقط
 az:Yalnız tə&k səhifələr
 bg:Само &нечетни страници
-br:Apenas as páginas ímpares
+br:Só as páginas ímpares
 bs:Samo &neparne stranice
 by:Толькі &няцотныя старонкі
 ca-xv:Només les pàgines senars
@@ -2445,7 +2445,7 @@ am:Հիշել այս կարգավորումները &բոլոր ֆայլերի �
 ar:&تذكر هذه الإعدادات لكل وثيقة
 az:Bu &parametrləri bütün sənədlər üçün yadda saxla
 bg:Запази &настройките за всеки документ
-br:Lembrar estas preferências para cada documento
+br:Lembrar estas configurações pra cada documento
 bs:&Upamti ove postavke za svaki pojedini dokument
 by:Запомніць гэтыя параметры для &кожнага дакумента
 ca-xv:Conserva estes &preferències per a cada document
@@ -2612,7 +2612,7 @@ uz:&Quyidagicha saqlash...\tCtrl+S
 vn:Lưu thành...\tCtrl+S
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
-br:&Salvar em um PDF existente
+br:&Salvar num PDF existente
 ca-xv:Desa a un PDF &existent
 ca:Desa a un PDF &existent
 cn:保存到当前 PDF 文件(&S)
@@ -2630,7 +2630,7 @@ th:&บันทึกไปที่ PDF ที่เปิดอยู่
 tr:Var olan PDF'ye &kaydet
 :&Search With Google
 am:&Որոնել Google-ով
-br:&Buscar com Google
+br:&Procurar com o Google
 ca-xv:&Cerca amb el Google
 ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
@@ -2651,7 +2651,7 @@ ar:&الإعدادات
 az:&Parametrlər
 bg:&Настройки
 bn:&সেটিং
-br:&Preferências
+br:&Configurações
 bs:&Postavke
 by:Налады
 ca-xv:&Preferències
@@ -2715,7 +2715,7 @@ am:&Հարմարեցնել էջը տպելու համար (եթե պահանջվ
 ar:(تقليص الصفحات إلى منطقة قابلة للطباعة (إذا لزم الأمر& 
 az:Ehtiyac varsa, səhifələri çap sahəsinin ölçüsünə görə kiçilt
 bg:&Намали страниците в мястото за отпечатване (при необходимост)
-br:Reduzir página&s à área de impressão (se necessário)
+br:Reduzir as página&s à área de impressão (se necessário)
 bs:Umanji stranice na područje za štampu (ako je potrebno)
 by:&Сціскаць старонкі да вобласці друку (калі неабходна)
 ca-xv:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
@@ -2957,7 +2957,7 @@ uk:&Тема
 vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
-br:&Traduzir com Google
+br:&Traduzir com o Google
 ca-xv:Tradueix amb el &Google
 ca:Tradueix amb el &Google
 cn:使用谷歌翻译(&T)
@@ -2986,7 +2986,7 @@ am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
 az:&Faktiki ölçüyə görə
 bg:Използване на &оригиналните размери на страниците
-br:&Usar tamanhos de página originais
+br:&Usar os tamanhos originais das páginas
 bs:Koristi &originalne veličine stranica
 by:&Выкарыстоўваць звычайны памер старонкі
 ca-xv:&Usa la mida de pàgina original
@@ -3051,7 +3051,7 @@ ar:&العرض
 az:&Görüntü
 bg:&Изглед
 bn:দর্শন
-br:&Exibir
+br:&Visualizar
 bs:&Prikaz
 by:Выгляд
 ca-xv:&Visualitza
@@ -3581,7 +3581,7 @@ ar:الى المفضلة %s اضافة صفحة
 az:%s. səhifəni seçilmişlərə əlavə et
 bg:Добавяне на страница %s към любимите
 bn:এই পাতাটিকে %s প্রিয়তে যোগ করুন
-br:Adicionar página %s aos favoritos
+br:Adicionar a página %s aos favoritos
 bs:Dodaj stranicu %s u favorite
 by:Дадаць старонку %s у лепшыя закладкі
 ca-xv:Afegeix la pàgina %s als preferits
@@ -3647,7 +3647,7 @@ ar:(الى المفضلة مع  اسم (إختياري %s اضافة صفحة:
 az:%s. səhifəni bu (ixtiyari) adla seçilmişlərə əlavə et:
 bg:Добавяне на страница %s към любимите с име (по избор):
 bn:%s পেইজটাকে প্রিয়তে যোগ করুন নাম সহ (ইচ্ছাকৃত) 
-br:Adicionar página %s aos favoritos com outro nome (opcional):
+br:Adicionar a página %s aos favoritos com o nome (opcional):
 bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 by:Дадаць старонку %s у лепшыя закладкі з (калі патрэбна) імянем:
 ca-xv:Afegeix la pàgina %s als preferits amb el nom (opcional):
@@ -3712,7 +3712,7 @@ ar: إلى المفضلة %s إضافة الصفحة\tCtrl+B
 az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 bg:Добави страница %s към любимите\tCtrl+B
 bn:পৃষঠা যোগ করুন %s to favorites\tCtrl+B
-br:Adicionar página %s aos favoritos\tCtrl+B
+br:Adicionar a página %s aos favoritos\tCtrl+B
 ca-xv:Afegeix la pàgina %s als preferits\tCtrl+B
 ca:Afegeix la pàgina %s als preferits\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
@@ -4129,7 +4129,7 @@ ar:؟  SumatraPDF هل انت متاكد تريد مسح
 az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
 bg:Наистина ли искате да деинсталирате SumatraPDF ?
 bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
-br:Deseja mesmo desinstalar o SumatraPDF?
+br:Você tem certeza que você quer desinstalar o SumatraPDF?
 bs:Da li ste sigurni da želite deinstalirati SumatraPDF?
 by:Вы сапраўды ўпэўнены, что трэба знішчыць SumatraPDF?
 ca-xv:Esteu segur de voler desinstal·lar el SumatraPDF?
@@ -4196,7 +4196,7 @@ ar:ارتبط بملفات مستندات محمولة ؟
 az:PDF fayllarla əlaqə yaradılsın?
 bg:Указване на програмата като такава по подразбиране за отваряне на PDF файлове?
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
-br:Associar com arquivos PDF?
+br:Associar com os arquivos PDF?
 bs:Asocirati sa PDF datotekama?
 by:Асацыяваць з PDF-файламі?
 ca-xv:Voleu associar-lo amb els fitxers PDF?
@@ -4564,7 +4564,7 @@ ar:عرض الكتاب
 az:Kitab formatı
 bg:Изглед като книга
 bn:বইরূপ প্রদর্শন
-br:Ver como livro
+br:Visualizar como livro
 bs:Knjiški pregled
 by:Выгляд як кніга
 ca-xv:Visualització de llibre
@@ -4632,7 +4632,7 @@ ar:اختصارات قائمة العناوين
 az:Əlfəcin yarlıkları
 bg:Кратък път към отметки
 bn:পুস্তক-চিহ্ন শর্টকাট
-br:Atalhos de marcadores
+br:Atalhos dos favoritos
 bs:Kratice zabilješki
 by:Спасылкі закладак
 ca-xv:Dreceres de marcadors
@@ -4697,7 +4697,7 @@ ar:%s من %s اختصار قائمة العناوين الى صفحة
 az:%s. (%s) səhifə yarlıkının əlfəcini
 bg:Кратък път към отметка на страница %s от %s
 bn:বুকমার্ক শর্টকাট %s থেকে %s
-br:Atalho para a página %s de %s
+br:Atalho do favorito para a página %s de %s
 bs:Kratica zabilješke na stranicu %s od %s
 by:Спасылак закладкі да старонкі %s з %s
 ca-xv:Drecera del marcador a la pàgina %s de %s
@@ -4762,7 +4762,7 @@ ar:قائمة العناوين
 az:Əlfəcinlər
 bg:Отметки
 bn:পুস্তক-চিহ্নসমূহ
-br:Marcadores
+br:Favoritos
 bs:Zabilješke
 by:Закладкі
 ca-xv:Marcadors
@@ -4964,7 +4964,7 @@ ar:لم يتم التمكن من الإتصال بالإنترنت (%#x خطأ).
 az:İnternetə qoşulmaq mümkün deyil (xəta %#x).
 bg:Няма връзка с Интернет (грешка %#x).
 bn:ইন্টারনেট এর সাথে যুক্ত করা যাচ্ছে না (এরর %#x)
-br:Falha na conexão à Internet (erro %#x).
+br:Não pôde conectar com a Internet (erro %#x).
 bs:Ne mogu se povezati na Internet (greška %#x)
 by:Няма злучэння з інтэрнэтам (памылка %#x).
 ca-xv:No es pot connectar a internet (error %#x).
@@ -5100,7 +5100,7 @@ ar:لايمكن طباعة هذا الملف
 az:Bu faylı çap etmək mümkün deyil
 bg:Файлът не може да бъде отпечатан
 bn:এই ফাইলটি মুদ্রণ করা যাচ্ছে না
-br:Não foi possível imprimir este arquivo
+br:Não pôde imprimir este arquivo
 bs:Ne mogu odštampati ovaj fajl
 by:Не атрымалася раздрукаваць гэты файл
 ca-xv:No es pot imprimir el fitxer
@@ -5168,7 +5168,7 @@ ar:لا يمكن بدء تشغيل الأمر بحث عكسي. الرجاء ال
 az:Tərs axtarış komandasını yerinə yetirmək mümkün deyil. Komanda sətrinin parametrlərini yoxlayın.
 bg:Обратното търсене не може да започне. Моля проверете параметрите в настройките.
 bn:বিপরীত অনুসন্ধান কমান্ড শুরু করা যাবে না। সেটিংস এ কমান্ড লাইন চেক করুন.
-br:Não é possível acionar a pesquisa inversa. Verifique a linha de comando nas preferências.
+br:Não pôde iniciar o comando de busca inversa. Por favor verifique a linha de comando nas configurações.
 bs:Ne mogu pokrenuti komandu pretraživanja unazad. Molimo da provjerite komandnu liniju u postavkama.
 by:Немагчыма здзейсніць зваротны пошук. Калі ласка, праверце камандны радок у наладах.
 ca-xv:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia de comandes a les preferències.
@@ -5369,7 +5369,7 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
-br:Verificando por atualizações...
+br:Procurando atualizações...
 ca-xv:S'està comprovant si hi ha actualitzacions...
 ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
@@ -5495,7 +5495,7 @@ ar:طي الكل
 az:Hamısını bağla
 bg:Свиване на всички
 bn:সব বন্ধ করুন
-br:Minimizar tudo
+br:Retrair tudo
 ca-xv:Replega-ho tot
 ca:Redueixo-ho tot
 cn:全部折叠
@@ -5767,7 +5767,7 @@ ar:عرض مستمر للكتاب
 az:Ardıcıl kitab formatı
 bg:Непрекъснат изглед като книга
 bn:ক্রমাগত বই দৃশ্য
-br:Ver como livro contínuo
+br:Visualizar como livro contínuo
 bs:Slijedni knjiški pogled
 by:Выгляд як бесперапынная кніга
 ca-xv:Visualització contínua de llibre
@@ -5905,7 +5905,7 @@ ar:ساهم بالترجمة
 az:Tərcüməyə kömək et
 bg:Допринеси за превода
 bn:অনুবাদ প্রদান করুন
-br:Contribua com a tradução
+br:Contribuir com uma tradução
 bs:Pomozi prijevodom
 by:Дапамагчы з перакладам
 ca-xv:Contribuïu en la traducció
@@ -6040,7 +6040,7 @@ ar:نسخ &رابط العنوان
 az:Keçidin &ünvanını kopyala
 bg:Копиране на интернет &адреса
 bn:কপি & লিঙ্ক অ্যাড্রেস 
-br:Copiar ata&lho
+br:Copiar o endereço do &link
 bs:Kopiraj adresu &linka
 by:Капіяваць адрас &спасылкі
 ca-xv:Copia l'adreça de l'enllaç
@@ -6170,7 +6170,7 @@ ar:(ناسخ النص رفض (ناسخ باسم صورة فقط
 az:Mətni kopyalamaq mümkün olmadı (şəkil kimi kopyalanır)
 bg:Текстът не може да бъде копиран (затова беше копиран само като картинка)
 bn:লেখা কপি করতে দেয়া হয়নি (ছবি-মাত্র কপি করা হচ্ছিল)
-br:Cópia de texto negada (copiando somente como imagem)
+br:A cópia do texto foi negada (copiando só como imagem)
 bs:Kopiranje teksta je nemoguće (kopirano kao slika)
 by:Тэкст забаронена капіяваць (капіяваць толькі як малюнак)
 ca-xv:No es pot copiar el text (només es copia com a imatge)
@@ -6302,7 +6302,7 @@ ar:تعذر الحصول على خصائص الطابعة
 az:Printer xüsusiyyətlərini müəyyən etmək mümkün olmadı
 bg:Настройките на принтера не са намерени
 bn:মুদ্রণ যন্ত্রের প্রোপারটিজ অর্জন করা সম্ভব হয়নি
-br:Não foi possível obter as propriedades da impressora
+br:Não pôde obter as propriedades da impressora
 bs:Ne mogu dobaviti postavke štampača
 by:Не атрымалася адкрыць Налады друку
 ca-xv:No es poden obtindre les propietats de la impressora
@@ -6366,7 +6366,7 @@ ar:لا يمكن إنشاء دليل التثبيت
 az:Quraşdırma qovluğunu yaratmaq mümkün olmadı
 bg:Не може да се създаде директория за инсталация
 bn:ইন্সটলএসন ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
-br:Não foi possível criar a pasta de instalação
+br:Não pôde criar o diretório de instalação
 bs:Neuspješno kreiranje instalacijskog direktorija
 by:Немагчыма стварыць каталог для ўсталёўкі
 ca-xv:No es pot crear el directori d'instal·lació
@@ -6426,7 +6426,7 @@ uz:O'rnatish directoriyasini yaratib bo'lmadi
 vn:Không tạo được thư mục cài đặt
 :Couldn't get printer name
 am:Հնարավոր չեղավ ստանալ տպիչի անունը
-br:Não foi possível ver o nome da impressora
+br:Não pôde obter o nome da impressora
 cn:无法获取打印机名称
 co:Impussibule d’ottene u nome di a stampetta
 de:Druckername konnte nicht ermittelt werden
@@ -6444,7 +6444,7 @@ ar:لا يمكن تشغيل الطابعة
 az:Printeri işə salmaq mümkün olmadı
 bg:Принтерът не може да бъде инициализиран
 bn:মুদ্রণ যন্ত্র আরম্ভ করা সম্ভব হয়নি
-br:Não foi possível acionar a impressora
+br:Não pôde inicializar a impressora
 bs:Ne mogu inicijalizirati štampač
 by:Немагчыма ініцыіраваць друкарку
 ca-xv:No es pot inicialitzar la impressora
@@ -6509,7 +6509,7 @@ ar:لم استطع تثبيت معاين المستندات المحمولة
 az:PDF önbaxış alətini quraşdırmaq mümkün olmadı
 bg:Програмата за преглед на PDF файлове не се инсталира
 bn:পিডিএফ প্রিভিউয়ার ইন্সটল করা সম্ভব হয়নি
-br:Não foi possível instalar o pré-visualizador para PDF
+br:Não pôde instalar o pré-visualizador do PDF
 bs:Neuspješno instaliranje PDF preglednika
 by:Немагчыма усталяваць перадпрагляд PDF
 ca-xv:No es pot instal·lar el visor ràpid de PDF
@@ -6572,7 +6572,7 @@ ar:لم أستطع تثبيت تصفية بحث الملفات المحمولة
 az:PDF axtarış filtrini quraşdırmaq mümkün olmadı
 bg:Не можа да се инсталира PDF филтър за търсене
 bn:পিডিএফ খোঁজ ফিল্টার ইন্সটল করা সম্ভব হয়নি
-br:Não foi possível instalar o filtro de pesquisa para PDF
+br:Não pôde instalar o filtro de busca do PDF
 bs:Neuspješno instaliranje filtera za pretragu PDF-ova
 by:Немагчыма ўсталяваць пошукавы фільтр PDF
 ca-xv:No es pot instal·lar el filtre de cerca PDF
@@ -6635,7 +6635,7 @@ ar:لا يمكن إزالة دليل التثبيت
 az:Quraşdırma qovluğunu silmək mümkün olmadı
 bg:Не можа да се изтрие инсталационната директория
 bn:ইনস্টল ডিরেক্টরি মোছা সম্ভব হল না
-br:Não foi possível remover a pasta de instalação
+br:Não pôde remover o diretório de instalação
 bs:Neuspješno uklanjanje instalacijskog direktorija
 by:Немагчыма знішчыць каталог для ўсталёўкі
 ca-xv:No es pot suprimir el directori d'instal·lació
@@ -6698,7 +6698,7 @@ ar:لا يستطيع أن يعيد الصفحة
 az:Səhifəni əks etdirmək mümkün olmadı
 bg:Страницата не може да се изобрази
 bn:পৃষ্ঠাটি দেখানো যাচ্ছে না
-br:Não foi possível renderizar a página
+br:Não pôde renderizar a página
 bs:Nije moguće iscrtati stranicu
 by:Не атрымаўся сфармаваць малюнак старонкі
 ca-xv:No es pot representar la pàgina
@@ -6763,7 +6763,7 @@ ar:لا يمكن إلغاء تثبيت معاين المستندات المحم�
 az:PDF önbaxış alətini silmək mümkün olmadı
 bg:Програмата за преглед на PDF файлове не е премахната.
 bn:PDF previewer সরানো যায় নি
-br:Não foi possível desinstalar o pré-visualizador para PDF
+br:Não pôde desinstalar o pré-visualizador do PDF
 bs:Neuspješna deinstalacija PDF preglednika
 by:Немагчыма знішчыць перадпрагляд PDF
 ca-xv:No es pot desinstal·lar el visor ràpid PDF
@@ -6825,7 +6825,7 @@ am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զ�
 ar:إزالة معيار سومرا للبحث غير ممكن
 az:Sumatra axtarış filtrini silmək mümkün olmadı
 bn:Sumatra search filter ইন্সটল হয়নি
-br:Não foi possível desinstalar o filtro do pesquisa do Sumatra
+br:Não pôde desinstalar o filtro de busca do Sumatra
 ca-xv:No s'ha pogut desinstal·lar el filtre de cerca del Sumatra
 ca:No s'ha pogut desinstal·lar el filtre de cerca del Sumatra
 cn:无法卸载 Sumatra 搜索过滤器
@@ -6860,7 +6860,7 @@ ar:لا يمكن إلغاء تثبيت متصفح البرنامج المساع�
 az:Brauzer plaginini silmək mümkün olmadı
 bg:Не може да деинсталирате плъгина за браузъра
 bn:ব্রাউজার প্লাগ-ইন সরানো যায় নি
-br:Não foi possível desinstalar o plugin do navegador
+br:Não pôde desinstalar o plugin do navegador
 bs:Neuspješna instalacija plugina za browser
 by:Немагчыма знішчыць дадатак браўзера
 ca-xv:No es pot desinstal·lar el connector de navegador
@@ -6923,7 +6923,7 @@ ar: الى القرص %s لا يستطيع ان يكتب
 az:%s diskə yazıla bilmədi
 bg:Не можа да се запише %s на диска
 bn:ডিস্কে %s লেখা যায় নি
-br:Não foi possível gravar %s no disco
+br:Não pôde gravar o %s no disco
 bs:Neuspješno zapisivanje %s na disk
 by:Немагчыма запісаць %s на дыск
 ca-xv:No es pot escriure %s al disc
@@ -6982,7 +6982,7 @@ uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
-br:Criar Anotação Sobre o C&ursor
+br:Criar Anotação Sob o C&ursor
 ca-xv:Crea una anotació a sota del c&ursor
 ca:Crea una anotació a sota del c&ursor
 cn:在光标位置创建标注(&U)
@@ -7000,7 +7000,7 @@ tr:İmlecin &Altına Not Oluştur
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bn:বাছাই থেকে টীকা লিখুন
-br:Criar Anotação a partir da Seleção
+br:Criar Anotação da Seleção
 ca-xv:Crea una anotació amb la selecció
 ca:Crea una anotació amb la selecció
 cn:对所选内容创建标注
@@ -7347,7 +7347,7 @@ ar:غامق
 az:Daha tünd
 bg:По-тъмен
 bn:গাঢ় অন্ধকার
-br:Muito escuro
+br:Mais escuro
 by:Больш цёмны
 ca-xv:Més fosc
 ca:Més fosc
@@ -7406,7 +7406,7 @@ ar:التخطيط الافتراضي&
 az:Standart &düzüm:
 bg:&Разположение по подразбиране:
 bn:পূর্বনির্ধারিত &লেআউট
-br:&Visualização Padrão
+br:&Modelo Padrão
 bs:Izvorni &izgled:
 by:&Кампаноўка па змаўчанні
 ca-xv:&Visualització predeterminada:
@@ -7536,7 +7536,7 @@ ar:لا يمكن تغيير قارئ المستندات المحمولة الا�
 az:Mobil rejimdə PDF fayllarla əlaqə yaratmaq mümkün deyil
 bg:PDF четеца не може да бъде сменен в преносим режим
 bn:পুর্বনির্ধারিত পিডিএফ রিডার বহনযোগ্য অবস্থায় বদলানো যাবে না
-br:Não é possível alterar o leitor PDF padrão no modo portátil
+br:O leitor PDF padrão não pode ser mudado no modo portátil
 bs:Glavni preglednik PDF fajlova se ne može promijeniti u portable režimu
 by:У мабільным рэжыме змяніць PDF-в'юер нельга
 ca-xv:No es pot canviar el lector de PDF predeterminat en mode portable.
@@ -7810,7 +7810,7 @@ th:ติดตั้งไม่ได้
 tr:Kurma
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
-br:Baixar versão 64-bits
+br:Baixar versão de 64 bits
 ca-xv:Baixa la versió de 64 bits
 ca:Baixa la versió de 64 bits
 cn:下载 64 位版本
@@ -7938,7 +7938,7 @@ ar:EPUB كتب الكترونية
 az:EPUB e-kitabları
 bg:EPUB документи
 bn:EPUB ইবুকগুলো
-br:Documentos EPUB
+br:Ebooks EPUB
 bs:EPUB dokumenti
 by:EPUB ebooks
 ca-xv:Documents EPUB
@@ -8038,7 +8038,7 @@ ar:ادخل كلمة السر
 az:Parolu daxil edin
 bg:Въведете парола
 bn:শব্দকূট প্রবেশ করুন
-br:Digite a senha
+br:Insira a senha
 bs:Unesite lozinku
 by:Увядзіце пароль
 ca-xv:Introduïu la contrasenya
@@ -8109,7 +8109,7 @@ ar:%s ادخل كلمة سر ل
 az:%s üçün parolu daxil edin
 bg:Въведете парола за %s
 bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
-br:Digite a senha de %s
+br:Insira a senha do %s
 bs:Unesite lozinku za %s
 by:Увядзіце пароль для %s
 ca-xv:Introduïu la constrasenya per a %s
@@ -8177,7 +8177,7 @@ ar:ادخل سطر الاوامر للاستدعاء عند النقر المز�
 az:PDF sənədinin üstünə iki dəfə basdıqda çağırılan komanda sətrini daxil edin:
 bg:Въведете командата, която ще бъде изпълнена при двоен клик върху PDF документа:
 bn:কমান্ড লাইন লিখুন, যখন আপনি পিডিএফ ফাইলে দুবার ক্লিক করবেন
-br:Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:
+br:Insira a linha de comando a invocar quando você faz um duplo clique no documento PDF:
 bs:Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF dokument:
 by:Увядзіце каманду для выкліку пры падвойнай пстрычцы па дакуменце PDF:
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
@@ -8241,7 +8241,7 @@ ar:%s خطأ في التحميل
 az:%s faylının yüklənməsində xəta baş verdi
 bg:Грешка при зареждане на %s
 bn:ভূল লোড হচ্ছে %s
-br:Erro ao carregar %s
+br:Erro ao carregar o %s
 bs:Greška pri učitavanju %s
 by:Памылка запампоўкі %s
 ca-xv:S'ha produït un error en carregar %s
@@ -8613,7 +8613,7 @@ am:Հնարավոր չեղավ ջնջել Գրանցատեղիի բանալին�
 ar:فشل في حذف مفاتيح مكتب تسجيل إلغاء التثبيت
 az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
 bg:Неуспешно изтриване на ключовете на деинсталатора в регистъра
-br:Falha na remoção das entradas de registro do desinstalador
+br:Falhou em apagar as chaves do registro do desinstalador
 bs:Neuspješno brisanje registarskih ključeva deinstalera
 by:Немагчыма знішчыць ключы рэестру знішчальніка
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
@@ -8675,7 +8675,7 @@ am:Հնարավոր չեղավ գրանցել որպես լռելյայն ծրա
 ar:فشل للتسجيل في البرنامج الافتراضي على فوز 10
 az:win 10 da əsas proqram olaraq qeydiyyatdan keçirmək uğursuz oldu
 bg:Грешка при регистрация като програма по подразбиране на Windows 10
-br:Falha ao registrar como programa padrão no Windows 10
+br:Falhou em registrar como programa padrão no Windows 10
 bs:Neuspješno registriranje kao zadani program na win 10
 by:Немагчыма зарэгістраваць як стандартную праграму ў Win 10
 ca-xv:Ha fallat de registrar-lo com a programa per defecte a win 10
@@ -8732,7 +8732,7 @@ ar:فشل في إعادة تسمية الملف!
 az:Faylın adını dəyişmək mümkün olmadı!
 bg:Преименуването не беше успешно!
 bn:নতুন নামকরণ ব্যর্থ হয়েছে
-br:Falha ao renomear o arquivo!
+br:Falhou em renomear o arquivo!
 bs:Neuspješna promjena naziva faja!
 by:Немагчыма перайменаваць файл!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
@@ -8797,7 +8797,7 @@ ar:فشل في حفظ الملف
 az:Faylı yadda saxlamaq mümkün olmadı
 bg:Грешка при запаметяване на файла
 bn:সঞ্চিকা সংরক্ষণে ব্যর্থ
-br:Erro ao salvar o arquivo.
+br:Falhou em salvar um arquivo.
 bs:Neuspješno spašavanje fajla
 by:Немагчыма захаваць файл
 ca-xv:S'ha produït un error en guardar el fitxer.
@@ -8865,7 +8865,7 @@ am:Հնարավոր չեղավ ֆայլի ընդլայնման մասին գրա
 ar:فشل في كتابة معلومات امتداد الملف الممتدة لمكتب التسجيل
 az:Faylın genişliyi haqqında ətraflı məlumatı reyestrə yazmaq mümkün olmadı
 bg:Информация за разширението за изпълнителни файлове не може да се вкара в регистъра. 
-br:Falha na gravação da extensão de arquivo no registro
+br:Falhou em gravar a informação da extensão do arquivo extendido no registro
 bs:Neuspješno zapisivanje informacije o ekstenziji proširenog fajla u registar
 by:Немагчыма запісаць у рэестр інфармацыю аб пашырэннях файлаў
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
@@ -8926,7 +8926,7 @@ am:Ծրագիրը հեռացնելու մասին գրառումը չստացվ�
 ar:فشل في كتابة معلومات الغاء التثبيت الى مكتب التسجيل
 az:Deinstalyasiya məlumatını reyestrə yazmaq mümkün olmadı
 bg:Информацията за премахването на програмата не може да се впише в регистъра.
-br:Falha na gravação dos dados de desinstalação no registro
+br:Falhou em gravar a informação da desinstalação no registro
 bs:Neuspješno zapisivanje deinstalacijske informacije u registar
 by:Немагчыма запісаць у рэестр інфармацыю аб знішчальніку
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
@@ -8988,7 +8988,7 @@ ar:عرض سريع على الويب
 az:Sürətli veb-görüntü
 bg:Бърз Web изглед
 bn:দ্রুত ওয়েব ভিউ
-br:Visualização rápida na Web
+br:Visualização rápida da Web
 bs:Brzi web pregled
 by:Хуткі Web-выгляд
 ca-xv:Visualització ràpida de web
@@ -9242,7 +9242,7 @@ am:Ֆայլի կցորդ
 ar:ملف مرفق
 az:Qoşma fayl
 bn:নথি সংযুক্তি
-br:Anexo de Arquivo
+br:Anexo do Arquivo
 ca-xv:Fitxer adjunt
 ca:Fitxer adjunt
 cn:文件附件
@@ -9415,7 +9415,7 @@ ar:بح&ث...\tCtrl+F
 az:A&xtar...\tCtrl+F
 bg:&Търси...\tCtrl+F
 bn:অনুসন্ধান...\tCtrl+F
-br:Localizar...\tCtrl+F
+br:Acha&r...\tCtrl+F
 bs:Traži...\tCtrl+F
 by:Знайсці...\tCtrl+F
 ca-xv:&Cerca...\tCtrl+F
@@ -9484,7 +9484,7 @@ ar:بحث
 az:Axtar
 bg:Търсене
 bn:খুজুন
-br:Localizar
+br:Achar
 bs:Traži
 by:Знайсці
 ca-xv:Cerca
@@ -9553,7 +9553,7 @@ ar:بحث عن التالي
 az:Sonrakını tap
 bg:Намиране на следващото съвпадение
 bn:পরবর্তী অনুসন্ধান
-br:Localizar próximo
+br:Achar o próximo
 bs:Nađi sljedeće
 by:Найти следующее
 ca-xv:Cerca següent
@@ -9624,7 +9624,7 @@ ar:البحث عن السابق
 az:Əvvəlkini tap
 bg:Намиране на предишното съвпадение
 bn:পূর্ববর্তী অনুসন্ধান
-br:Localizar anterior
+br:Achar o anterior
 bs:Nađi prethodno
 by:Знайсці папярэдняе
 ca-xv:Cerca anterior
@@ -9695,7 +9695,7 @@ ar:بحث
 az:Axtar:
 bg:Търсене:
 bn:অনুসন্ধান:
-br:Localizar:
+br:Achar:
 bs:Traži:
 by:Знайсці:
 ca-xv:Cerca:
@@ -9829,7 +9829,7 @@ ar:ملائمة &الصفحة \tCtrl+0
 az:&Səhifəyə görə sığışdır\tCtrl+0
 bg:Оразмеряване по &височина\tCtrl+0
 bn:পৃষ্ঠা অনুরূপ\tCtrl+0
-br:&Página inteira\tCtrl+0
+br:&Ajustar na página\tCtrl+0
 bs:Uklopi &stranicu\tCtrl+0
 by:Падагнаць старонку\tCtrl+0
 ca-xv:Ajusta a la &pàgina\tCtrl+0
@@ -9899,7 +9899,7 @@ ar:ملائمة &العرض \tCtrl+2
 az:&Genişliyə görə sığışdır\tCtrl+2
 bg:Оразмеряване по &ширина\tCtrl+2
 bn:প্রস্থ অনুরূপ\tCtrl+2
-br:Ajustar pela l&argura\tCtrl+2
+br:Ajustar a l&argura\tCtrl+2
 bs:&Uklopi po širini\tCtrl+2
 by:Падагнаць па шырыне
 ca-xv:Ajusta a l'am&plada\tCtrl+2
@@ -10033,7 +10033,7 @@ ar:ملائمة الصفحة
 az:Səhifəyə görə sığışdır
 bg:Оразмеряване по височина
 bn:পৃষ্ঠা অনুরূপ
-br:Página inteira
+br:Ajustar na página
 bs:Uklopi stranicu
 by:Падагнаць старонку
 ca-xv:Ajusta a la pàgina
@@ -10103,7 +10103,7 @@ ar:ملائمة العرض
 az:Genişliyə görə sığışdır
 bg:Оразмери по ширина
 bn:প্রস্থ অনুরূপ
-br:Ajustar pela largura
+br:Ajustar a largura
 bs:Uklopi po širini
 by:Падагнаць па шырыне
 ca-xv:Ajusta a l'amplada
@@ -10171,7 +10171,7 @@ am:Ձգել լայնությամբ և ցուցադրել էջերը անդադա
 ar:ملائمة العرض واظهار الصفحات باستمرار
 az:Səhifənin genişliyinə görə sığışdır və səhifələri ardıcıl göstər
 bg:Оразмери по широчина и покажи страниците непрекъснато
-br:Ajustar pela largura e exibir páginas de modo contínuo
+br:Ajustar a largura e mostrar as páginas continuamente
 bs:Uklopi po širini i prikaži stranice slijedno
 by:Падагнаць па шырыне і Паказаць бесперапынную старонку
 ca-xv:Ajusta l'amplada i mostra les pàgines de forma contínua
@@ -10235,7 +10235,7 @@ ar:ملائمة صفحة مفردة
 az:Tək səhifəyə sığışdır
 bg:Оразмери една страница
 bn:শুধু এক পৃষ্ঠার মাপমত করুন
-br:Ajustar em uma única página
+br:Ajustar numa única página
 bs:Uklopi jednu stranicu
 by:Размясціць на адной старонцы
 ca-xv:Ajusta a una única pàgina
@@ -10365,7 +10365,7 @@ ar:تم العثور على النص في صفحة %s
 az:Mətn %s. səhifədə tapıldı
 bg:Текстът е намерен на страница %s
 bn:%s পৃষ্ঠায় পাওয়া গেছে
-br:Texto encontrado na página %s
+br:Achou o texto na página %s
 bs:Tekst je pronađen na stranici %s
 by:Тэкст знойдзены на стар. %s
 ca-xv:S'ha trobat el text a la pagina %s
@@ -10429,7 +10429,7 @@ am:Գտնել գրվածքը %s էջում (կրկին)
 ar:وُجد النص في الصفحة %s (مرة أخرى)
 az:Mətn %s. səhifədə (təkrar) tapıldı
 bg:Текстът е намерен на страница %s (отново)
-br:Texto encontrado (de novo) na página %s
+br:Achou o texto na página %s (de novo)
 bs:Tekst pronađen na stranici %s (opet)
 by:Знайсці тэкст на старонцы %s (зноўку)
 ca-xv:S'ha trobat el text a la pàgina %s (altra vegada)
@@ -10492,7 +10492,7 @@ ar:الأكثر قراءة
 az:Ən çox oxunanlar
 bg:Често четени
 bn:প্রায়শই পড়া হয়
-br:Lidos com freqüência
+br:Lidos frequentemente
 bs:Najčešće čitano
 by:Якія часта чытаюць
 ca-xv:Llegits més freqüents
@@ -10557,7 +10557,7 @@ ar:ج.ب
 az:GB
 bg:GB
 bn:জিবি
-br:GB
+br:GBs
 bs:GB
 by:GB
 ca-xv:GB
@@ -10628,7 +10628,7 @@ ar:انتقل لصفحة
 az:Səhifəyə keç
 bg:Отиване на страница
 bn:এর পৃষ্ঠায় চলুন
-br:Ir para a página
+br:Ir pra página
 bs:Idi na stranicu
 by:Перайсці на старонку
 ca-xv:Vés a la pàgina
@@ -10761,7 +10761,7 @@ ar:إخفاء الأكثر قراءة
 az:Ən çox oxunanları gizlət
 bg:Скриване на често четените
 bn:বারবার পঠিত বই গোপন করুন
-br:Ocultar Lidos com freqüência
+br:Ocultar os lidos frequentemente
 bs:Sakrij najčešće čitano
 by:Зхаваць тыя, якія часта чытаюць
 ca-xv:Amaga els més llegits
@@ -10825,7 +10825,7 @@ ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
 az:Məsləhət: Təkrar axtarış üçün F3 düyməsinə basın
 bg:Съвет: Използвайте F3 за повторно търсене
 bn:সঙ্কেত: আবার খুঁজতে F3 চাপুন
-br:Dica: tecle F3 para achar a próxima ocorrência
+br:Dica: Use a tecla F3 pra achar de novo
 bs:Pomoć: upotrijebite tipku F3 za ponovnu pretragu
 by:Падказка: Націсніце F3 каб працягнуць пошук
 ca-xv:Suggeriment: feu servir la tecla F3 per tornar a cercar
@@ -11167,7 +11167,7 @@ ar:!فشل التثبيت
 az:Quraşdırma baş tutmadı!
 bg:Инсталацията беше неуспешна!
 bn:ইনস্টলেশন ব্যর্থ
-br:Falha na instalação!
+br:A instalação falhou!
 bs:Neuspješna instalacija!
 by:Памылка ўсталёўкі!
 ca-xv:La instal·lació ha fallat!
@@ -11289,7 +11289,7 @@ uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
-br:Instalando SumatraPDF 32-bits em SO 64-bits
+br:Instalando o SumatraPDF de 32 bits no SO de 64 bits
 ca-xv:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 ca:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 cn:在 64 位操作系统上安装 32 位 SumatraPDF
@@ -11311,7 +11311,7 @@ ar:ك.ب
 az:KB
 bg:KB
 bn:KB
-br:KB
+br:KBs
 bs:KB
 by:KB
 ca-xv:KB
@@ -11380,7 +11380,7 @@ am:Թույլատրել Windows Desktop Search-ին &PDF ֆայլերի որոն
 ar:دع البحث في سطح مكتب الوندوز &البحث في وثائق المستندات المحمولة
 az:PDF sənədlərini Windows Desktop Search vasitəsilə a&xtar
 bg:Нека Windows Desktop Search &търси PDF документи
-br:Permitir que o Windows faça a bu&sca em documentos PDF
+br:Deixar a busca da área de trabalho do windows fazer &buscas em documentos PDF
 bs:Omogući Windows Desktop Search-u da &pretražuje PDF dokumente
 by:Шукаць дакументы PDF ў Windows Desktop Search
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
@@ -11441,7 +11441,7 @@ am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նա
 ar:دع الوندوز باظهار &معاينات الوثائق من المستندات المحمولة
 az:PDF sənədlərini Windows alətləri vasitəsilə &görüntülə
 bg:Нека Windows показва &преглед на PDF документи
-br:Permitir que o Windows &pré-visualize documentos PDF
+br:Deixar o Windows mostrar as &pré-visualizações dos documentos PDF
 bs:Omogući Windows-ima da prikažu &pregled PDF dokumenata
 by:Паказваць &перадпрагляд дакументаў PDF у Windows
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
@@ -11594,7 +11594,7 @@ ar:م.ب
 az:MB
 bg:MB
 bn:এমবি
-br:MB
+br:MBs
 bs:MB
 by:MB
 ca-xv:MB
@@ -11665,7 +11665,7 @@ ar: المحمولة الافتراضي  لملفات المستندات الم�
 az:SumatraPDF PDF faylların görüntülənməsi üçün standart proqram edilsin?
 bg:Искате ли да зададете SumatraPDF като основното си приложение за отваряне на PDF файлове?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
-br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
+br:Tornar o SumatraPDF o aplicativo padrão pra arquivos PDF?
 bs:Postavi SumatraPDF za glavnu aplikaciju za PDF fajlove?
 by:Зрабіць SumatraPDF стандартнай праграмай прагляду PDF-файлаў?
 ca-xv:Voleu que el SumatraPDF siga el visor predeterminat dels fitxers PDF?
@@ -11733,7 +11733,7 @@ ar:المحمولة  قارئ المستندات المحمولة الافترا
 az:SumatraPDF-i PDF fayllarla əlaqələndir
 bg:Направи SumatraPDF четец на PDF по подразбиране
 bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ
-br:Tornar o SumatraPDF o leitor PDF padrão
+br:Tornar o SumatraPDF meu leitor PDF padrão
 bs:Učini SumatraPDF mojim glavnim čitačem PDF fajlova
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ca-xv:Fes el SumatraPDF el lector de PDF predeterminat
@@ -12063,7 +12063,7 @@ am:Նոր &պատուհան\tCtrl+N
 ar:نافذة جديدة&/Ctrl+N
 az:Yeni pə&ncərə\tCtrl+N
 bg:Нов &прозорец\tCtrl+N
-br:Novo &window\tCtrl+N
+br:Nova &janela\tCtrl+N
 ca-xv:&Finestra nova\tCtrl+N
 ca:&Finestra nova\tCtrl+N
 cn:新建窗口(&W)\tCtrl+N
@@ -12196,7 +12196,7 @@ ar:لا توجد متطابقات
 az:Uyğun mətn tapılmadı
 bg:Няма съвпадения
 bn:কোন মিল খুজে পাওয়া যায় নি
-br:Nenhuma ocorrência encontrada
+br:Não foram achadas combinações
 bs:Pojam nije pronađen
 by:Узор не знойдзены
 ca-xv:No s'han trobat coincidències
@@ -12262,7 +12262,7 @@ am:Ոչինչ չի գտնվել %u տողում %s ֆայլի
 ar:لم يتم العثور على نتائج حول السطر %u في الملف %s
 az:%u sətrinə uyğun olan nəticə %s faylında tapılmadı
 bg:Няма резултати около ред %u във файла %s
-br:Nenhum resultado próximo à linha %u no arquivo %s
+br:Nenhum resultado achado ao redor da linha %u no arquivo %s
 bs:Nema rezultata oko %u. linije u fajlu %s
 by:Вынік, які адпавядае радку %u у файле %s, не знойдзены
 ca-xv:No s'ha trobat cap resultat de la cerca vàlid a la línia %u al fitxer %s
@@ -12325,7 +12325,7 @@ am:Չեն գտնվել համանման ֆայլեր
 ar:لاتوجد مزامنة للملف
 az:Sinxronlaşdırma faylı tapılmadı
 bg:Файлът за синхронизация не е намерен
-br:Nenhum arquivo de sincronização foi encontrado
+br:Nenhum arquivo de sincronização foi achado
 bs:Sinhronizacijski fajl nije pronađen
 by:Файл сінхранізацыі не знойдзены
 ca-xv:No s'ha trobat el fitxer de sincronització
@@ -12389,7 +12389,7 @@ am:Այստեղ չկա համաժամեցնելու համար տեղեկութ�
 ar:لا معلومات تزامن في هذا الموقع
 az:Bu mövqedə sinxronlaşdırma məlumatı yoxdur
 bg:В тази позиция няма информация за синхронизация
-br:Não há informação de sincronização nesta posição
+br:Nenhuma informação de sincronização nesta posição
 bs:Nema sinhronizacijskih podataka na ovoj poziciji
 by:У гэтай пазіцыі адсутнічае інфармацыя для сінхранізацыі
 ca-xv:No hi ha informació de sincronització en esta posició
@@ -12662,7 +12662,7 @@ am:Բացել PDF-XChange-ում
 ar:فتح في PDF-XChange
 az:PD&F-XChange-də aç
 bg:Отворяне с PDF-XChange
-br:Abrir no PDF-XChange
+br:Abrir &no PDF-XChange
 bs:Otvori u PDF-XChange
 by:Адкрыць у PDF-XChange
 ca-xv:Obre amb el PDF-XChange
@@ -12725,7 +12725,7 @@ vn:Mở bằng PDF-XChange
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
 az:İç PDF faylını aç
-br:Abrir PDF Embutido
+br:Abrir PDF embutido
 ca-xv:Obre el PDF incrustat
 ca:Obre el PDF incrustat
 cn:打开嵌入式 PDF
@@ -13014,7 +13014,7 @@ am:Բացել Microsoft HTML Help-ում
 ar:فتح في Microsoft HTML Help
 az:Microsoft &HTML Help-də aç
 bg:Отваряне с Microsoft HTML Help
-br:Abrir no Microsoft HTML Help
+br:Abrir no &Microsoft HTML Help
 bs:Otvori u Microsoft HTML Help
 by:Адкрыць у Microsoft HTML Help
 ca-xv:Obre amb el Microsoft HTML Help
@@ -13078,7 +13078,7 @@ am:Բացել Microsoft XPS-Viewer-ում
 ar:فتح في Microsoft XPS-Viewer
 az:Microsoft &XPS-Viewer-də aç
 bg:Отваряне с Microsoft XPS-Viewer
-br:Abrir no Microsoft XPS-Viewer
+br:Abrir no &Microsoft XPS-Viewer
 bs:Otvori u Microsoft XPS-Viewer
 by:Адкрыць у Microsoft XPS-Viewer
 ca-xv:Obre amb el Microsoft XPS-Viewer
@@ -13142,7 +13142,7 @@ am:Հ&ատկություններ...\tCtrl+D
 ar:الخصائص...\tCtrl+D
 az:&Xüsusiyyətlər\tCtrl+D
 bg:&Свойства
-br:Propriedades...\tCtrl+D
+br:P&ropriedades...\tCtrl+D
 bs:P&ostavke...\tCtrl+D
 by:Уласцівасці\tCtrl+D
 ca-xv:P&ropietats...\tCtrl+D
@@ -13274,7 +13274,7 @@ am:PDF-ի լավարկում՝
 ar:تحسينات المستندات المحمولة
 az:PDF optimallaşdırması:
 bg:PDF оптимизации:
-br:Otimizações PDF:
+br:Otimizações do PDF:
 bs:PDF optimizacije:
 by:Аптымізацыя PDF:
 ca-xv:Optimitzacions del PDF:
@@ -13535,7 +13535,7 @@ ar:صف&حة \tCtrl+G
 az:Sə&hifə...\tCtrl+G
 bg:&Страница...\tCtrl+G
 bn:পৃষ্ঠা সংখ্যা...\tCtrl+G
-br:Página...\tCtrl+G
+br:Pá&gina...\tCtrl+G
 bs:Stranicu...\tCtrl+G
 by:Старонка...\tCtrl+G
 ca-xv:Pà&gina...\tCtrl+G
@@ -13733,7 +13733,7 @@ am:%u էջը գոյություն չունի
 ar:غير موجود %u رقم الصفحة 
 az:Səhifə %u mövcud deyil
 bg:Страница с номер %u не съществува
-br:A página %u não existe
+br:Número da página %u inexistente
 bs:Stranica %u ne postoji
 by:Старонка %u не існуе
 ca-xv:La pàgina %u no existeix
@@ -13797,7 +13797,7 @@ am:Էջի շարժը
 ar:قياس الصفحة
 az:Səhifələrin miqyaslanması
 bg:Оразмеряване на страницата
-br:Ajuste da página
+br:Dimensionamento da página
 bs:Skaliranje stranice
 by:Маштаб старонкі
 ca-xv:Escalat de la pàgina
@@ -13990,7 +13990,7 @@ am:Շարունակելուց առաջ փակեք %s-ը:
 ar: !المضي قدما %s الرجاء اغلاق
 az:Davam etmək üçün %s bağlayın!
 bg:Моля изберете %s за да продължите!
-br:Por favor feche %s para continuar!
+br:Por favor feche o %s pra prosseguir!
 bs:Molimo da zatvorite %s za nastavak!
 by:Каб працягнуць, зачыніце %s!
 ca-xv:Tanqueu %s per continuar!
@@ -14053,7 +14053,7 @@ ar:الرجاء الإنتظار - اعادة...
 az:Görüntü hazırlanır, lütfən gözləyin...
 bg:Моля изчакайте - изображението се създава
 bn:দয়া করে অপেক্ষা করুন, লোড হচ্ছে....
-br:Por favor aguarde, renderizando...
+br:Por favor aguarde - renderizando...
 bs:Molim pričekajte, iscrtavam...
 by:Пачакайце - фармуецца малюнак...
 ca-xv:S'està renderitzant...
@@ -14116,7 +14116,7 @@ vn:Xin chờ đợi, đang hiện...
 am:Բազմագիծ
 ar:خط متعرج
 az:Qırıq xətt
-br:Polilinha
+br:Poli-linha
 ca-xv:Línia poligonal
 ca:Línia poligonal
 cn:折线
@@ -14442,7 +14442,7 @@ ar:نطاق الطباعة
 az:Çap diapazonu
 bg:Отпечатване на някои страници
 bn:প্রিন্ট করার সীমা
-br:Intervalo de impressão
+br:Alcance da impressão
 bs:Štampaj raspon
 by:Дыяпазон друку
 ca-xv:Interval d'impressió
@@ -14505,7 +14505,7 @@ am:Այս անվամբ տպիչ գոյություն չունի
 ar:طابعة بهذا الاسم غير موجودة
 az:Bu adda printer mövcud deyil
 bg:Принтер с това име не съществува
-br:Nâo existe uma impressora com esse nome
+br:Uma impressora com o nome dado não existe
 bs:Štampač sa datim nazivom ne postoji
 by:Друкарка з такім імем не існуе
 ca-xv:No existeix cap impressora amb aquest nom
@@ -14568,7 +14568,7 @@ ar:الطباعة في التقدم.
 az:Çap davam edir.
 bg:Печатане...
 bn:প্রিন্ট হচ্ছে
-br:Imprimindo...
+br:Impressão em progresso...
 bs:Štampanje u napretku.
 by:Ідзе друк
 ca-xv:La impresió és en procés.
@@ -14632,7 +14632,7 @@ am:Տպում է: Ընդհատե՞լ և փակել:
 ar:الطباعة قيد التقدم. إحباط وإنهاء؟
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
-br:Ainda imprimindo... Interromper e sair?
+br:A impressão ainda está em progresso. Abortar e sair?
 bs:Štampanje je još uvijek u toku. Prekini i izađi?
 by:Ідзе друк. Спыніць і выйсці?
 ca-xv:La impressió encara és en procés. Voleu aturar i sortir?
@@ -14694,7 +14694,7 @@ am:Տպում է։ Կանգնեցնե՞լ։
 ar:الطباعة قيد التقدم. إحباط والبدء من جديد؟
 az:Çap davam edir. Dayandırmaq və yenidən başlamaq?
 bg:Отпечатването се извършва. Прекъсни и започни отначало?
-br:A impressão está em andamento. Interromper e começar de novo?
+br:A impressão ainda está em progresso. Abortar e começar do zero?
 bs:Štampa je još u toku. Prekini i započni ispočetka?
 by:Ідзе друк. Спыніць і пачаць нанова?
 ca-xv:La impressió encara es troba en progrés. Voleu cancel·lar-la i tornar a començar??
@@ -14756,7 +14756,7 @@ am:Տպում է %d էջը %d-ից...
 ar:طباعة الصفحة %d من %d...
 az:%d/%d səhifə çap olunur...
 bg:Отпечатване на страница %d от %d...
-br:Imprimindo página %d de %d...
+br:Imprimindo a página %d de %d...
 bs:Štampam stranicu %d od %d...
 by:Друкуецца старонка %d з %d...
 ca-xv:S'està imprimient la pàgina %d de %d...
@@ -15108,7 +15108,7 @@ am:Հեռացնել %s  էջը ընտրյալներից
 ar:حذف الصفحة %s من المفضلة
 az:%s. səhifəni seçilmişlərdən sil
 bg:Премахни страница %s от любимите
-br:Remover página %s dos favoritos
+br:Remover a página %s dos favoritos
 bs:Ukloni stranicu %s iz favorita
 by:Выдаліць старонку %s з лепшых закладак
 ca-xv:Suprimeix la pàgina %s dels preferits
@@ -15172,7 +15172,7 @@ ar:إعادة تسمية إلى
 az:Adını dəyişdir
 bg:Преименувай на
 bn:নতুন নাম
-br:Renomear para
+br:Renomear como
 bs:Promije&ni naziv u
 by:Перайменаваць у
 ca-xv:Canvia el nom a
@@ -15238,7 +15238,7 @@ ar:دوران لليسار\tCtrl+Shift+-
 az:So&la döndər\tCtrl+Shift+-
 bg:Завъртане на&ляво\tCtrl+Shift+-
 bn:বামদিকে বিবর্তন\tCtrl+Shift+-
-br:Girar à esquerda\tCtrl+Shift+-
+br:Girar a esquerda\tCtrl+Shift+-
 bs:Rotiraj nalijevo\tCtrl+Shift+-
 by:Павярнуць супраць гадзінніка\tCtrl+Shift+-
 ca-xv:Gira a l'esquerra\tCtrl+Maj+-
@@ -15309,7 +15309,7 @@ ar:دوران لليمين\tCtrl+Shift++
 az:Sa&ğa döndər\tCtrl+Shift++
 bg:Завъртане на&дясно\tCtrl+Shift++
 bn:ডানদিকে বিবর্তন\tCtrl+Shift++
-br:Girar à direita\tCtrl+Shift++
+br:Girar a direita\tCtrl+Shift++
 bs:Rotiraj nadesno\tCtrl+Shift++
 by:Павярнуць па гадзінніку\tCtrl+Shift++
 ca-xv:Gira a la dreta\tCtrl+Maj++
@@ -15547,7 +15547,7 @@ tr:Notlar kaydedilsin mi?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
-br:Salvar alterações em um novo PDF
+br:Salvar as mudanças em um novo PDF
 ca-xv:Desa els canvis a un PDF nou
 ca:Desa els canvis a un PDF nou
 cn:另存为新的 PDF 文件
@@ -15571,7 +15571,7 @@ tr:Değişiklikleri yeni PDF'ye kaydet
 :Save changes to existing PDF
 am:Պահել փոփոխությունները առկա PDF-ում
 az:Dəyişiklikləri mövcud PDF-ə yaz
-br:Salvar alterações no PDF existente
+br:Salvar as mudanças no PDF existente
 ca-xv:Desa els canvis a un PDF existent
 ca:Desa els canvis a un PDF existent
 cn:保存至当前 PDF 文件
@@ -15610,7 +15610,7 @@ th:บันทึกไปที่ &​PDF ใหม่
 tr:&Yeni PDF'ye kaydet
 :Search With &Bing
 am:Որոնել &Bing-ով
-br:Buscar com &Bing
+br:Procurar com o &Bing
 ca-xv:Cerca amb el &Bing
 ca:Cerca amb el &Bing
 cn:使用必应搜索(&B)
@@ -15628,7 +15628,7 @@ th:ค้นหาด้วย &​Bing
 tr:&Bing İle Ara
 :Search With &Google
 am:Որոնել &Google-ով
-br:Buscar com &Google
+br:Procurar com &Google
 ca-xv:Cerca amb el &Google
 ca:Cerca amb el &Google
 cn:使用谷歌搜索(&G)
@@ -15649,7 +15649,7 @@ am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
 az:%d/%d axtarılır...
 bg:Търсене в страница %d от %d...
-br:Localizando %d de %d...
+br:Procurando %d de %d...
 bs:Pretražujem %d od %d...
 by:Апрацоўка старонкі %d з %d...
 ca-xv:S'està cercant %d de %d...
@@ -15795,7 +15795,7 @@ am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 ar:حدد المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
 az:Məzmunu Ctrl+sol siçan düyməsi ilə seç
 bg:Изберете съдържание с Ctrl и левия бутон на мишката
-br:Selecionar com Ctrl+Botão esquerdo do mouse
+br:Selecionar o conteúdo com Ctrl+Botão esquerdo do mouse
 bs:Izaberi sadržaj pomoću Ctrl+lijeva tipka miša
 by:Выбраць змест з Ctrl+левая кнопка мышы
 ca-xv:Seleccioneu contigut amb la combinació Ctrl+botó secundari del ratolí
@@ -15859,7 +15859,7 @@ am:Ընտրեք պանակ, որտեղ պետք է տեղադրվի SumatraPDF-�
 ar:المحمولة Sumatra حدد المجلد حيث يجب أن يكون مثبت مستندات :
 az:SumatraPDF-in quraşdırılacağı qovluğu seçin:
 bg:Изберете папката, в която да се инсталира SumatraPDF:
-br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
+br:Selecione a pasta aonde o SumatraPDF deve ser instalado:
 bs:Izaberite direktorij gdje bi SumatraPDF trebao biti instaliran:
 by:Абярыце каталог, куды ўсталяваць SumatraPDF:
 ca-xv:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
@@ -15984,7 +15984,7 @@ ar:إرسال ب&البريد الإلكتروني
 az:&E-poçtla göndər...
 bg:Изпрати по &електронната поща
 bn:ই-মেইল দিয়ে পাঠান
-br:Enviar por email...
+br:Enviar por &email...
 bs:Pošalji &e-mailom...
 by:Адаслаць &E-mail...
 ca-xv:Envia per correu-&e...
@@ -16051,7 +16051,7 @@ ar:أمر البحث عن نص باتجاه معاكس
 az:Tərs axtarış komandasını təyin et
 bg:Въведи параметри за обратно търсене
 bn:সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
-br:Configurar pesquisa inversa
+br:Definir a linha de comando da busca inversa
 bs:Postavi komandnu liniju za pretragu unazad
 by:Задаць каманду зваротнага пошуку
 ca-xv:Cerca endarrera
@@ -16117,7 +16117,7 @@ am:Ցուցադրել &Էջանիշերը\tF12
 ar:إظهار العلامات المرجعية
 az:Əl&fəcinləri göstər\tF12
 bg:Покажи &Любими\tF12
-br:Mostrar &marcadores\tF12
+br:Mostrar &favoritos\tF12
 ca-xv:Mostra els &marcadors\tF12
 ca:Mostra els &marcadors\tF12
 cn:显示书签(&B)\tF12
@@ -16192,7 +16192,7 @@ am:Էջերը &ցուցադրել շարունակական
 ar:اظهار الصفحات باستمرار
 az:Səhifələri &ardıcıl göstər
 bg:&Непрекъснати страници
-br:Exibir páginas de modo contínuo
+br:Mostrar as &páginas continuamente
 bs:Prikaži stranice slijedno
 by:Паказваць Бесперапынную &Старонку
 ca-xv:Mostra les &pàgines de forma contínua
@@ -16255,7 +16255,7 @@ vn:Xem trang liên tiếp
 am:Ցուցադրել &ոլորգոտիները
 ar:إظهار شريط التمرير
 az:&Sürüşdürmə zolaqlarını göstər
-br:Mostrar Barras de &Rolagem
+br:Mostrar as Barras de &Rolagem
 ca-xv:Mostra les barres de &desplaçament
 ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&S)
@@ -16290,7 +16290,7 @@ ar:اظهار شريط الأدوات
 az:Alətlər &panelini göstər
 bg:Лен&та с инструменти
 bn:উপকরণপট্টি প্রদর্শন
-br:Mostrar barra de ferramentas
+br:Mostrar a &barra de ferramentas
 bs:Prikaži alatnu traku
 by:Паказваць панэлі прылад
 ca-xv:Mostra la &barra d'eines
@@ -16358,7 +16358,7 @@ am:Ցուցադրել Էջա&նիշերը\tF12
 ar:إظهار العلامات المرجعية
 az:Əlfə&cinləri göstər\tF12
 bg:Покажи Отмет&ките\tF12
-br:Mostrar &marcadores\tF12
+br:Mostrar &favoritos\tF12
 ca-xv:Mostra els &marcadors\tF12
 ca:Mostra els &marcadors\tF12
 cn:显示书签(&M)\tF12
@@ -16456,7 +16456,7 @@ vn:Hiện Ưa thích
 am:Ցուցադրել ոլո&րագոտիները
 ar:إظهار أشرطة التمرير
 az:Sürüşdürmə &zolaqlarını göstər
-br:Mostrar Barras de R&olagem
+br:Mostrar as Barras de R&olagem
 ca-xv:Mostra les barres de &desplaçament
 ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&O)
@@ -16490,7 +16490,7 @@ am:Ցուցադրել հաճախակի բացվածները
 ar:إظهار الأكثر قراءة
 az:Ən çox oxunanları göstər
 bg:Покажи често четените
-br:Mostrar Lidos com freqüência
+br:Mostrar os lidos frequentemente
 bs:Prikaži najčešće čitano
 by:Адлюстраваць тыя, які ячаста чытаюць
 ca-xv:Mostra els més llegits
@@ -16592,7 +16592,7 @@ am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
 az:Mümkündürsə, ə&lfəcinlər panelini göstər
 bg:Покажи &показалеца в страничната колона когато е възможно
-br:Mostrar barra lateral de marcadores quando disponível
+br:Mostrar a &barra lateral dos favoritos quando disponível
 bs:Prikaži traku sa &zabilješkama kad je dostupna
 by:Паказваць панэль &закладак (пры магчымасці)
 ca-xv:Mostra la &barra lateral de marcadors quan estiga disponible
@@ -16744,7 +16744,7 @@ am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք '�
 ar:الرجاء اضغط 'إلغاء الأمر'، إذا كنت ترغب في مساعدتنا على إصلاح هذا الحادث \n\n !آسف، أنه لا ينبغي أن يكون قد حدث
 az:Bağışlayın, gözlənilməz xəta baş verdi!\n\nProblemin həllində bizə kömək etmək üçün "İmtina" düyməsinə basın.
 bg:Извинете, това не би трябвало да се случва!\n\nМоля, натиснете „Отказ“, ако искате да ни помогнете да поправим причината за този срив (спиране).
-br:Desculpe, isso não deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.
+br:Lamento, isso não deveria ter acontecido!\n\nPor favor pressione 'Cancelar' se você quer nos ajudar a consertar a causa deste crash.
 bs:Oprostite, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
 by:Даруйqt, гэтага не павінна было здарыцца!\n\nКалі ласка націсніце "Адмена", калі вы хочаце дапамагчы нам выправіць прычыну гэтай памылкі.
 ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
@@ -17034,7 +17034,7 @@ am:SumatraPDF %s-ը տեղակայելու ծրագիր
 ar:المثبت%s المحمولة Sumatra مستندات
 az:SumatraPDF quraşdırıcısı %s
 bg:SumatraPDF %s инсталатор
-br:SumatraPDF %s instalador
+br:Instalador %s do SumatraPDF
 bs:SumatraPDF %s instaler
 by:SumatraPDF %s Усталёўшчык
 ca-xv:Instal·lador del SumatraPDF %s
@@ -17095,7 +17095,7 @@ am:SumatraPDF %s-ը հեռացնելու ծրագիր
 ar:إلغاء  تثبيت %s المحمولة Sumatra مستندات
 az:SumatraPDF deinstalyatoru %s
 bg:SumatraPDF %s деинсталатор
-br:SumatraPDF %s desinstalador
+br:Desinstalador %s do SumatraPDF
 bs:SumatraPDF %s deinstaler
 by:SumatraPDF %s Знішчальнік
 ca-xv:Desintal·lador del SumatraPDF %s
@@ -17284,7 +17284,7 @@ am:SumatraPDF-ի ձախողում
 ar:مستندات Sumatra المحمولة تحطمت
 az:SumatraPDF əməliyyatı qəza ilə nəticələndi
 bg:SumatraPDF се срина (спря внезапно)
-br:O SumatraPDF travou
+br:O SumatraPDF sofreu um crash
 bs:SumatraPDF se srušio
 by:SumatraPDF зламаўся
 ca-xv:El SumatraPDF ha fallat
@@ -17348,7 +17348,7 @@ am:SumatraPDF-ը հեռացվել է:
 ar: مستندات Sumatra المحمولة إلغاء تثبيت
 az:SumatraPDF silindi.
 bg:SumatraPDF е премахнат.
-br:SumatraPDF foi desinstalado.
+br:O SumatraPDF foi desinstalado.
 bs:SumatraPDF je deinstaliran.
 by:SumatraPDF быў знішчаны
 ca-xv:S'ha desinstal·lat el SumatraPDF.
@@ -17409,7 +17409,7 @@ am:SumatraPDF-ը չի գտնվել:
 ar:مستندات Sumatra المحمولة لم يتم العثور على تثبيت
 az:SumatraPDF quraşdırması tapılmadı.
 bg:Не е намерена инсталационен пакет на SumatraPDF
-br:A instalação do SumatraPDF não foi encontrada.
+br:A instalação do SumatraPDF não foi achada.
 bs:SumatraPDF instalacija nije pronađena.
 by:Усталёўшчык SumatraPDF не знойдзены.
 ca-xv:No s'ha trobat cap instal·lació del SumatraPDF.
@@ -17471,7 +17471,7 @@ ar:المحمولة هو قارئ المستندات المحمولة الافت
 az:SumatraPDF PDF faylları ilə əlaqələndirilmişdir
 bg:SumatraPDF е вашият PDF четец по подразбиране
 bn:মূল  PDF reader হিসাবে SumatraPDF বাছাই হয়েছে।
-br:O SumatraPDF é o seu leitor PDF padrão
+br:O SumatraPDF é seu leitor PDF padrão
 bs:SumatraPDF je vaš glavni čitač PDF fajlova
 by:SumatraPDF асацыявана з файламі PDF
 ca-xv:El SumatraPDF és el seu lector PDF predeterminat
@@ -17633,7 +17633,7 @@ am:Հնարավոր չէ բացել համաժամեցման ֆայլը
 ar:لايمكن فتح مزامنة الملف
 az:Sinxronlaşdırma faylını açmaq mümkün deyil
 bg:Файлът за синхронизация не може да бъде отворен
-br:Não foi possível abrir o arquivo de sincronização
+br:O arquivo de sincronização não pôde ser aberto
 bs:Ne mogu otvoriti sinhronizacijski fajl
 by:Не атрымалася адкрыць файл з інфармацыяй для сінхранізацыі
 ca-xv:El fitxer de sincronització no es pot obrir
@@ -17698,7 +17698,7 @@ ar:المستندات المحمولة موسومة
 az:Teqlənmiş PDF
 bg:Етикетирен .PDF файл (Tagged PDF)
 bn:ট্যাগ করা PDF
-br:PDF com marcações (tags)
+br:PDF com etiquetas
 bs:Označeni PDF
 by:Тэгі PDF
 ca-xv:PDF etiquetat
@@ -17948,7 +17948,7 @@ am:Ծրագրի տեղադրիչը վնասված է: Կրկին բեռնեք ա
 ar:اسف للازعاج! \n . تم إتلاف المثبت. الرجاء تحميله مرة أخرى
 az:Quraşdırıcı zədələnmişdir. Lütfən onu təkrar endirin.\nNarahatçılığa görə üzr istəyirik!
 bg:Програмата за инсталиране е повредена. Моля, изтеглете я отново.\n Простете ни за неудобството!
-br:O instalador está corrompido. Por favor baixe-o novamente.\nDesculpe pelo incômodo!
+br:O instalador está corrompido. Por favor baixe-o de novo.\nLamento pela incoveniência!
 bs:Instaler je oštećen. Molimo da ga ponovo preuzmete.\nOprostite zbog neugodnosti!
 by:Усталёўшчык пашкоджаны. Калі ласка спампуйце ізноўку.\nВыбачайце!
 ca-xv:L'instal·lador és malmés. Baixeu-lo una altra vegada.\nLamentem les molèsties!
@@ -18009,7 +18009,7 @@ am:Փաստաթուղթը օգտագործում է չաջակցվող յուր�
 ar:وقد لا تعرض بشكل صحيح (%s) هذا المستند يستخدم ميزات غير معتمدة
 az:Bu sənəd dəstəklənməyən funksiyalardan (%s) istifadə edir və düzgün əks olunmaya bilər
 bg:Този документ използва неподдържана функционалност (%s) и може да не се визуализира коректно
-br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
+br:Este documento usa recursos não suportados (%s) e poderia não renderizar apropriadamente.
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
 by:Гэты дакумент выкарыстоўвае магчымасці, якія не падтрымліваюцца (%s) і можа няправільна адлюстроўвацца
 ca-xv:Aquest document utilitza característiques no suportades (%s) i pot no mostrar-se correctament
@@ -18134,7 +18134,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
-br:Traduzir com &DeepL
+br:Traduzir com o &DeepL
 ca-xv:Tradueix amb el &Deepl
 ca:Tradueix amb el &Deepl
 cn:使用 DeepL 翻译(&D)
@@ -18156,7 +18156,7 @@ am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
 az:SumatraPDF-i sil
 bg:Деинсталиране на SumatraPDF
-br:Desinstalar SumatraPDF
+br:Desinstalar o SumatraPDF
 bs:Deinstaliraj SumatraPDF
 by:Знішчыць SumatraPDF
 ca-xv:Desinstal·la el SumatraPDF
@@ -18279,7 +18279,7 @@ am:Ծրագիրը հեռացվում է...
 ar:إزالة التثبيت قيد التقدم...
 az:Deinstalyasiya davam edir...
 bg:Деинсталиране...
-br:Desinstalação em progresso…
+br:Desinstalação em progresso...
 bs:Deinstalacija u toku ...
 by:Ідзе знішчэнне...
 ca-xv:Desinstal·lació en progrés...
@@ -18566,7 +18566,7 @@ ar:العرض
 az:Görüntü
 bg:Изглед
 bn:এভাবে দেখুন
-br:Exibir
+br:Visualizar
 bs:Prikaz
 by:Выгляд
 ca-xv:Visualitza
@@ -18637,7 +18637,7 @@ ar:&زيارة موقع البرنامج
 az:Proqramın &vebsaytına keç
 bg:Посетете &уебсайта
 bn:&আমাদের ওয়েবসাইট দেখুন
-br:&Visitar a página do SumatraPDF
+br:&Visitar o site da web
 bs:&Posjeti web stranicu
 by:Наведаць сайт
 ca-xv:Visiteu el lloc &web
@@ -18837,7 +18837,7 @@ ar:لديك آخر نسخة
 az:Ən son versiyanı istifadə edirsiniz.
 bg:Имате последната версия.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
-br:Esta é a versão mais recente.
+br:Você tem a versão mais recente.
 bs:Koristite najnoviju verziju.
 by:Вы выкарыстоўваеце апошнюю версію.
 ca-xv:Teniu la darrera versió.
@@ -18901,7 +18901,7 @@ uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 am:Դուք ունեք չպահված մեկնաբանություններ
-br:Você possui anotações não salvas
+br:Você tem anotações não salvas
 ca-xv:Teniu anotacions sense desar
 ca:Teniu anotacions sense desar
 cn:存在未保存的标注
@@ -18924,7 +18924,7 @@ th:คุณไม่ได้บันทึกคำอธิบายปร�
 tr:Kaydedilmemiş notlarınız var
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
-br:Você possui a versão '%s' sendo que a '%s' está disponível.\nDeseja instalar a nova versão?
+br:Você tem a versão '%s' e a versão '%s' está disponível.\nVocê quer instalar a nova versão?
 ca-xv:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu instal·lar la versió nova?
 ca:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu instal·lar la versió nova?
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
@@ -18941,7 +18941,7 @@ th:คุณมีรุ่น '%s'​ และรุ่น '%s'​ ใช่�
 tr:'%s' sürümünüz var ve '%s' sürümü kullanılabilir.\nYeni sürümü kurmak ister misiniz?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
-br:Você está instalando o SumatraPDF 32-bits em um SO 64-bits.\nDeseja baixar a versão 64-bits?
+br:Você está instalando o SumatraPDF de 32 bits num SO de 64 bits.\nVocê gostaria de baixar a versão de 64 bits?
 ca-xv:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu baixar la versió de 64 bits?
 ca:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu baixar la versió de 64 bits?
 cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
@@ -19028,7 +19028,7 @@ ar:تكبير
 az:Böyüt
 bg:Увеличаване
 bn:বড় করুন
-br:Aumentar zoom
+br:Aumentar o zoom
 bs:Uvećaj
 by:Павялічыць
 ca-xv:Apropa't
@@ -19099,7 +19099,7 @@ ar:تصغير
 az:Kiçilt
 bg:Намаляне
 bn:ছোট করুন
-br:Diminuir zoom
+br:Diminuir o zoom
 bs:Umanji
 by:Паменьшыць
 ca-xv:Allunya't
@@ -19169,7 +19169,7 @@ ar:عامل التكبير/التصغير
 az:Miqyas əmsalı
 bg:Коефициент на увеличение
 bn:বিবর্ধক অনুপাত
-br:Proporção de zoom
+br:Fator do zoom
 bs:Faktor uvećanja
 by:Маштабны каэфіцыент
 ca-xv:Factor d'escala
@@ -19300,7 +19300,7 @@ ar:ناسخ النص
 az:mətnin kopyalanması
 bg:копиране на текст
 bn:লেখা কপি করা হচ্ছে
-br:copiando texto
+br:Copiando o texto
 bs:kopiram tekst
 by:капіяваць тэкст
 ca-xv:s'està copiant text
@@ -19365,7 +19365,7 @@ am:Ֆայլը տպվում է
 ar:طباعة المستند
 az:sənədin çap olunması
 bg:отпечатване на документ
-br:imprimindo documento
+br:imprimindo o documento
 bs:štampam dokument
 by:дакумент друкуецца
 ca-xv:s'està imprimint el document
