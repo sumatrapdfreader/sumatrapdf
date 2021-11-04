@@ -2461,7 +2461,7 @@ fz_draw_end_group(fz_context *ctx, fz_device *devp)
 typedef struct
 {
 	int refs;
-	float ctm[4];
+	float ctm[6];
 	int id;
 	char has_shape;
 	char has_group_alpha;
@@ -2488,6 +2488,8 @@ fz_make_hash_tile_key(fz_context *ctx, fz_store_hash *hash, void *key_)
 	hash->u.im.m[1] = key->ctm[1];
 	hash->u.im.m[2] = key->ctm[2];
 	hash->u.im.m[3] = key->ctm[3];
+	hash->u.im.m[4] = key->ctm[4];
+	hash->u.im.m[5] = key->ctm[5];
 	hash->u.im.ptr = key->cs;
 	return 1;
 }
@@ -2522,6 +2524,8 @@ fz_cmp_tile_key(fz_context *ctx, void *k0_, void *k1_)
 		k0->ctm[1] == k1->ctm[1] &&
 		k0->ctm[2] == k1->ctm[2] &&
 		k0->ctm[3] == k1->ctm[3] &&
+		k0->ctm[4] == k1->ctm[4] &&
+		k0->ctm[5] == k1->ctm[5] &&
 		k0->cs == k1->cs;
 }
 
@@ -2529,8 +2533,8 @@ static void
 fz_format_tile_key(fz_context *ctx, char *s, size_t n, void *key_)
 {
 	tile_key *key = (tile_key *)key_;
-	fz_snprintf(s, n, "(tile id=%x, ctm=%g %g %g %g, cs=%x, shape=%d, ga=%d)",
-			key->id, key->ctm[0], key->ctm[1], key->ctm[2], key->ctm[3], key->cs,
+	fz_snprintf(s, n, "(tile id=%x, ctm=%g %g %g %g %g %g, cs=%x, shape=%d, ga=%d)",
+			key->id, key->ctm[0], key->ctm[1], key->ctm[2], key->ctm[3], key->ctm[4], key->ctm[5], key->cs,
 			key->has_shape, key->has_group_alpha);
 }
 
@@ -2580,6 +2584,43 @@ fz_tile_size(fz_context *ctx, tile_record *tile)
 	return sizeof(*tile) + fz_pixmap_size(ctx, tile->dest) + fz_pixmap_size(ctx, tile->shape) + fz_pixmap_size(ctx, tile->group_alpha);
 }
 
+static float
+tile_mod(float a, float m)
+{
+	int i;
+
+	if (m < 0)
+		m = -m;
+	a = fmod(a, m);
+	if (a < 0)
+		a += m;
+
+	i = (int)(256.0f*a + 0.5f);
+
+	return i/256.0f;
+}
+
+static void
+get_tile_ctm(float *out, const fz_matrix ctm, float xstep, float ystep)
+{
+	out[0] = ctm.a;
+	out[1] = ctm.b;
+	out[2] = ctm.c;
+	out[3] = ctm.d;
+	if ((ctm.b == 0 && ctm.c == 0) || (ctm.a == 0 && ctm.d == 0))
+	{
+		fz_point p = fz_transform_point_xy(xstep, ystep, ctm);
+
+		out[4] = p.x == 0 ? ctm.e : tile_mod(ctm.e, p.x);
+		out[5] = p.y == 0 ? ctm.f : tile_mod(ctm.f, p.y);
+	}
+	else
+	{
+		out[4] = ctm.e;
+		out[5] = ctm.f;
+	}
+}
+
 static int
 fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix in_ctm, int id)
 {
@@ -2595,7 +2636,12 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 	if (dev->top == 0 && dev->resolve_spots)
 		state = push_group_for_separations(ctx, dev, fz_default_color_params /* FIXME */, dev->default_cs);
 
-	/* area, view, xstep, ystep are in pattern space */
+	/* area, view, xstep, ystep are in pattern space
+	 * area = the extent that we need to tile the pattern into. (i.e this is
+	 * the area to be filled with the pattern mapped back into pattern space).
+	 * view = the pattern bbox.
+	 * xstep and ystep are the repeats for the file.
+	 */
 	/* ctm maps from pattern space to device space */
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
@@ -2618,10 +2664,10 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 	{
 		tile_key tk;
 		tile_record *tile;
-		tk.ctm[0] = ctm.a;
-		tk.ctm[1] = ctm.b;
-		tk.ctm[2] = ctm.c;
-		tk.ctm[3] = ctm.d;
+		fz_matrix ctm2 = ctm;
+		ctm2.e = bbox.x0;
+		ctm2.f = bbox.y0;
+		get_tile_ctm(tk.ctm, ctm2, xstep, ystep);
 		tk.id = id;
 		tk.cs = state[1].dest->colorspace;
 		tk.has_shape = (state[1].shape != NULL);
@@ -2826,13 +2872,11 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 				key = fz_malloc_struct(ctx, tile_key);
 				key->refs = 1;
 				key->id = state[1].id;
-				key->ctm[0] = ctm.a;
-				key->ctm[1] = ctm.b;
-				key->ctm[2] = ctm.c;
-				key->ctm[3] = ctm.d;
+				get_tile_ctm(key->ctm, ctm, xstep, ystep);
 				key->cs = fz_keep_colorspace_store_key(ctx, state[1].dest->colorspace);
 				key->has_shape = (state[1].shape != NULL);
 				key->has_group_alpha = (state[1].group_alpha != NULL);
+
 				existing_tile = fz_store_item(ctx, key, tile, fz_tile_size(ctx, tile), &fz_tile_store_type);
 				if (existing_tile)
 				{
