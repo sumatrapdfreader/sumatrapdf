@@ -247,7 +247,7 @@ type_match(const char **uri, const namestring *types)
 			char c = (*uri)[types->len];
 			if (c == ',' || c == '&')
 			{
-				*uri = *uri + types->len + 1;
+				(*uri) += types->len + 1;
 				return types->name;
 			}
 			if (c == 0)

@@ -76,7 +76,9 @@ enum
 
 static void open_browser(const char *uri)
 {
+#ifndef _WIN32
 	char *argv[3];
+#endif
 	char buf[PATH_MAX];
 
 #ifndef _WIN32

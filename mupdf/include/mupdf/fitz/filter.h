@@ -34,14 +34,14 @@ typedef struct fz_jbig2_globals fz_jbig2_globals;
 typedef struct
 {
 	int64_t offset;
-	size_t length;
+	uint64_t length;
 } fz_range;
 
 /**
 	The null filter reads a specified amount of data from the
 	substream.
 */
-fz_stream *fz_open_null_filter(fz_context *ctx, fz_stream *chain, int len, int64_t offset);
+fz_stream *fz_open_null_filter(fz_context *ctx, fz_stream *chain, uint64_t len, int64_t offset);
 
 /**
 	The range filter copies data from specified ranges of the
@@ -53,7 +53,7 @@ fz_stream *fz_open_range_filter(fz_context *ctx, fz_stream *chain, fz_range *ran
 	The endstream filter reads a PDF substream, and starts to look
 	for an 'endstream' token after the specified length.
 */
-fz_stream *fz_open_endstream_filter(fz_context *ctx, fz_stream *chain, int len, int64_t offset);
+fz_stream *fz_open_endstream_filter(fz_context *ctx, fz_stream *chain, uint64_t len, int64_t offset);
 
 /**
 	Concat filter concatenates several streams into one.

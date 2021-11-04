@@ -29,7 +29,7 @@
 struct null_filter
 {
 	fz_stream *chain;
-	size_t remain;
+	uint64_t remain;
 	int64_t offset;
 	unsigned char buffer[4096];
 };
@@ -38,7 +38,7 @@ static int
 next_null(fz_context *ctx, fz_stream *stm, size_t max)
 {
 	struct null_filter *state = stm->state;
-	size_t n;
+	uint64_t n;
 
 	if (state->remain == 0)
 		return EOF;
@@ -71,7 +71,7 @@ close_null(fz_context *ctx, void *state_)
 }
 
 fz_stream *
-fz_open_null_filter(fz_context *ctx, fz_stream *chain, int len, int64_t offset)
+fz_open_null_filter(fz_context *ctx, fz_stream *chain, uint64_t len, int64_t offset)
 {
 	struct null_filter *state = fz_malloc_struct(ctx, struct null_filter);
 	state->chain = fz_keep_stream(ctx, chain);
@@ -179,7 +179,8 @@ fz_open_range_filter(fz_context *ctx, fz_stream *chain, fz_range *ranges, int nr
 struct endstream_filter
 {
 	fz_stream *chain;
-	size_t remain, extras, size;
+	uint64_t remain;
+	size_t extras, size;
 	int64_t offset;
 	int warned;
 	unsigned char buffer[4096];
@@ -292,7 +293,7 @@ close_endstream(fz_context *ctx, void *state_)
 }
 
 fz_stream *
-fz_open_endstream_filter(fz_context *ctx, fz_stream *chain, int len, int64_t offset)
+fz_open_endstream_filter(fz_context *ctx, fz_stream *chain, uint64_t len, int64_t offset)
 {
 	struct endstream_filter *state;
 

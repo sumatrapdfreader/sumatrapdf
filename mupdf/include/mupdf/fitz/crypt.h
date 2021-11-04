@@ -33,8 +33,8 @@
 */
 typedef struct
 {
-	unsigned int state[4];
-	unsigned int count[2];
+	uint32_t lo, hi;
+	uint32_t a, b, c, d;
 	unsigned char buffer[64];
 } fz_md5;
 

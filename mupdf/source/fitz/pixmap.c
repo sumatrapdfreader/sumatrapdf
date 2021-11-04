@@ -104,7 +104,7 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 	{
 		fz_try(ctx)
 		{
-			if (pix->stride > SIZE_MAX / pix->h)
+			if ((size_t)pix->stride > SIZE_MAX / (size_t)pix->h)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Overly large image");
 			pix->samples = Memento_label(fz_malloc(ctx, pix->h * pix->stride), "pixmap_data");
 		}
