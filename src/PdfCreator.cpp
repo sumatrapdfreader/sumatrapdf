@@ -182,6 +182,8 @@ bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) const {
     fz_var(resources);
     fz_var(dev);
 
+    bool ok = true;
+    fz_var(ok);
     fz_try(ctx) {
         float zoom = 1.0f;
         if (imgDpi > 0) {
@@ -206,9 +208,9 @@ bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) const {
         fz_drop_device(ctx, dev);
     }
     fz_catch(ctx) {
-        return false;
+        ok = false;
     }
-    return true;
+    return ok;
 }
 
 static bool AddPageFromHBITMAP(PdfCreator* c, HBITMAP hbmp, Size size, float imgDpi) {
@@ -256,7 +258,7 @@ bool PdfCreator::AddPageFromImageData(ByteSlice data, float imgDpi) const {
         img = fz_new_image_from_buffer(ctx, buf);
     }
     fz_catch(ctx) {
-        return false;
+        img = nullptr;
     }
     if (!img) {
         return false;
@@ -296,8 +298,6 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
 
     auto val = ToUtf8Temp(value);
 
-    pdf_obj* obj = nullptr;
-    fz_var(obj);
     fz_try(ctx) {
         pdf_obj* info = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info));
         if (!info) {
@@ -311,7 +311,6 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
         pdf_dict_puts_drop(ctx, info, name, valobj);
     }
     fz_catch(ctx) {
-        pdf_drop_obj(ctx, obj);
         return false;
     }
     return true;

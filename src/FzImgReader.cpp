@@ -140,6 +140,9 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
         pix = fz_load_jpx(ctx, data, len, nullptr);
     }
     fz_catch(ctx) {
+        pix = nullptr;
+    }
+    if (!pix) {
         return nullptr;
     }
 

@@ -243,13 +243,17 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float
         return -1;
     }
     int pageNo = -1;
+    fz_location loc;
+
+    fz_var(loc);
     fz_var(pageNo);
     fz_try(ctx) {
-        fz_location loc = fz_resolve_link(ctx, doc, uri, xp, yp);
+        loc = fz_resolve_link(ctx, doc, uri, xp, yp);
         pageNo = fz_page_number_from_location(ctx, doc, loc);
     }
     fz_catch(ctx) {
         fz_warn(ctx, "fz_resolve_link failed");
+        pageNo = -1;
     }
 
     return pageNo + 1;
@@ -979,12 +983,17 @@ RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
 
     fz_pixmap* bgrPixmap = nullptr;
+    fz_colorspace* csdest = nullptr;
+    fz_color_params cp;
+
     fz_var(bgrPixmap);
+    fz_var(csdest);
+    fz_var(cp);
 
     /* BGRA is a GDI compatible format */
     fz_try(ctx) {
-        fz_colorspace* csdest = fz_device_bgr(ctx);
-        fz_color_params cp = fz_default_color_params;
+        csdest = fz_device_bgr(ctx);
+        cp = fz_default_color_params;
         bgrPixmap = FzConvertPixmap2(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
     }
     fz_catch(ctx) {
@@ -1754,6 +1763,8 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     }
 
     fz_stream* file = nullptr;
+
+    fz_var(file);
     fz_try(ctx) {
         file = FzOpenFile2(ctx, fnCopy);
     }
@@ -1830,10 +1841,14 @@ bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI)
     }
 
     fz_stream* stm = nullptr;
+    fz_var(stm);
     fz_try(ctx) {
         stm = FzOpenIStream(ctx, stream);
     }
     fz_catch(ctx) {
+        stm = nullptr;
+    }
+    if (!stm) {
         return false;
     }
     if (!LoadFromStream(stm, nameHint, pwdUI)) {
@@ -1871,19 +1886,26 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         fz_set_user_css(ctx, custom_css);
     }
 
+    float dx, dy, fontDy;
     _doc = nullptr;
+    fz_var(dx);
+    fz_var(dy);
+    fz_var(fontDy);
     fz_try(ctx) {
         _doc = fz_open_document_with_stream(ctx, nameHint, stm);
         pdfdoc = pdf_specifics(ctx, _doc);
-        float dx = DpiScale(ldx, displayDPI);
-        float dy = DpiScale(ldy, displayDPI);
-        float fontDy = DpiScale(lfontDy, displayDPI);
+        dx = DpiScale(ldx, displayDPI);
+        dy = DpiScale(ldy, displayDPI);
+        fontDy = DpiScale(lfontDy, displayDPI);
         fz_layout_document(ctx, _doc, dx, dy, fontDy);
     }
     fz_always(ctx) {
         fz_drop_stream(ctx, stm);
     }
     fz_catch(ctx) {
+        _doc = nullptr;
+    }
+    if (!_doc) {
         return false;
     }
 
@@ -1957,15 +1979,21 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     }
 
     pdf_obj* root = nullptr;
+    fz_var(root);
     fz_try(ctx) {
         root = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Root");
     }
     fz_catch(ctx) {
+        root = nullptr;
+    }
+    if (!root) {
         return layout;
     }
 
+    const char* name = nullptr;
+    fz_var(name);
     fz_try(ctx) {
-        const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
+        name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
         if (str::EndsWith(name, "Right")) {
             layout.type = PageLayout::Type::Book;
         } else if (str::StartsWith(name, "Two")) {
@@ -1975,9 +2003,13 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     fz_catch(ctx) {
     }
 
+    pdf_obj* prefs = nullptr;
+    const char* direction = nullptr;
+    fz_var(prefs);
+    fz_var(direction);
     fz_try(ctx) {
-        pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
-        const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
+        prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
+        direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
         if (str::Eq(direction, "R2L")) {
             layout.r2l = true;
         }
@@ -2011,11 +2043,15 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
     for (int i = 0; i < e->pageCount; i++) {
         fz_rect mbox{};
         fz_matrix page_ctm{};
+        fz_page* page = nullptr;
+        fz_var(page);
+        fz_var(mbox);
         fz_try(ctx) {
-            fz_page* page = fz_load_page(ctx, e->_doc, i);
+            page = fz_load_page(ctx, e->_doc, i);
             mbox = fz_bound_page(ctx, page);
         }
         fz_catch(ctx) {
+            mbox = {};
         }
         if (fz_is_empty_rect(mbox)) {
             fz_warn(ctx, "cannot find page size for page %d", i);
@@ -2045,12 +2081,13 @@ bool EngineMupdf::FinishLoading() {
     pdfdoc = pdf_specifics(ctx, _doc);
 
     pageCount = 0;
+    fz_var(pageCount);
     fz_try(ctx) {
         // this call might throw the first time
         pageCount = fz_count_pages(ctx, _doc);
     }
     fz_catch(ctx) {
-        return false;
+        pageCount = 0;
     }
     if (pageCount == 0) {
         fz_warn(ctx, "document has no pages");
@@ -2093,12 +2130,16 @@ bool EngineMupdf::FinishLoading() {
             FzPageInfo* pageInfo = pages[pageNo];
             pageInfo->pageNo = pageNo + 1;
             fz_rect mbox{};
+            pdf_page* page = nullptr;
+            fz_var(page);
+            fz_var(mbox);
             fz_try(ctx) {
-                pdf_page* page = pdf_load_page(ctx, pdfdoc, pageNo);
+                page = pdf_load_page(ctx, pdfdoc, pageNo);
                 pageInfo->page = (fz_page*)page;
                 mbox = pdf_bound_page(ctx, page);
             }
             fz_catch(ctx) {
+                mbox = {};
             }
 
             if (fz_is_empty_rect(mbox)) {
@@ -2118,13 +2159,17 @@ bool EngineMupdf::FinishLoading() {
             int objNo = map[i].object;
             fz_rect mbox{};
             fz_matrix page_ctm{};
+            pdf_obj* pageref = nullptr;
+            fz_var(pageref);
+            fz_var(mbox);
             fz_try(ctx) {
-                pdf_obj* pageref = pdf_load_object(ctx, pdfdoc, objNo);
+                pageref = pdf_load_object(ctx, pdfdoc, objNo);
                 pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
                 mbox = fz_transform_rect(mbox, page_ctm);
                 pdf_drop_obj(ctx, pageref);
             }
             fz_catch(ctx) {
+                mbox = {};
             }
             if (fz_is_empty_rect(mbox)) {
                 fz_warn(ctx, "cannot find page size for page %d", i);
@@ -2158,6 +2203,7 @@ bool EngineMupdf::FinishLoading() {
     }
 
     pdf_obj* origInfo = nullptr;
+    fz_var(origInfo);
     fz_try(ctx) {
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
@@ -2206,8 +2252,10 @@ bool EngineMupdf::FinishLoading() {
         pdfInfo = nullptr;
     }
 
+    pdf_obj* labels = nullptr;
+    fz_var(labels);
     fz_try(ctx) {
-        pdf_obj* labels = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/PageLabels");
+        labels = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/PageLabels");
         if (labels) {
             pageLabels = BuildPageLabelVec(ctx, labels, PageCount());
         }
@@ -2348,13 +2396,15 @@ IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
     pdf_obj* dest = nullptr;
 
     fz_var(dest);
+    pdf_obj* nameobj = nullptr;
+    fz_var(nameobj);
     fz_try(ctx) {
-        pdf_obj* nameobj = pdf_new_string(ctx, nameA.Get(), (int)nameA.size());
+        nameobj = pdf_new_string(ctx, nameA.Get(), (int)nameA.size());
         dest = pdf_lookup_dest(ctx, pdfdoc, nameobj);
         pdf_drop_obj(ctx, nameobj);
     }
     fz_catch(ctx) {
-        return nullptr;
+        dest = nullptr;
     }
 
     if (!dest) {
@@ -2369,7 +2419,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
         uri = pdf_parse_link_dest(ctx, pdfdoc, dest);
     }
     fz_catch(ctx) {
-        return nullptr;
+        uri = nullptr;
     }
 
     if (!uri) {
@@ -2603,7 +2653,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
         }
     }
     fz_catch(ctx) {
-        return mediabox;
+        list = nullptr;
     }
 
     if (!list) {
@@ -2692,9 +2742,11 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             break;
     }
 
+    pdf_page* pdfpage = nullptr;
+    fz_var(pdfpage);
     if (pdfdoc) {
         fz_try(ctx) {
-            pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
+            pdfpage = pdf_page_from_fz_page(ctx, page);
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
             // TODO: in printing different style. old code use pdf_run_page_with_usage(), with usage ="View"
@@ -2864,7 +2916,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         fz_drop_pixmap(ctx, pixmap);
     }
     fz_catch(ctx) {
-        return nullptr;
+        bmp = nullptr;
     }
 
     return bmp;
@@ -3268,6 +3320,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
     }
 
     bool ok = false;
+    fz_var(ok);
     fz_try(ctx) {
         pdf_save_document(ctx, epdf->pdfdoc, path.data(), &save_opts);
         ok = true;
