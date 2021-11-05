@@ -19,7 +19,6 @@
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 
-
 static TocItem* NewChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, const WCHAR* url) {
     auto res = new TocItem(parent, title, pageNo);
     if (!url) {

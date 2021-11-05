@@ -1882,7 +1882,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         lfontDy = 8.f;
     }
 
-	if (custom_css) {
+    if (custom_css) {
         fz_set_user_css(ctx, custom_css);
     }
 
@@ -2360,6 +2360,8 @@ TocTree* EngineMupdf::GetToc() {
 
     int idCounter = 0;
 
+    ScopedCritSec cs(ctxAccess);
+
     TocItem* root = nullptr;
     TocItem* att = nullptr;
     if (outline) {
@@ -2772,7 +2774,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             // TODO: to have uniform background needs to set custom css
             // background-color and clear pixmap with the same color
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
-            //fz_clear_pixmap(ctx, pix);
+            // fz_clear_pixmap(ctx, pix);
             // fz_fill_pixmap_with_color(ctx, pix, )
             dev = fz_new_draw_device(ctx, ctm, pix);
             fz_run_page_contents(ctx, page, dev, fz_identity, NULL);
