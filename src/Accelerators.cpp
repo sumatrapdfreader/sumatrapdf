@@ -55,11 +55,11 @@ ACCEL gAccelerators[] = {
     {FVIRTKEY, VK_F5, CmdViewPresentationMode},
     {FVIRTKEY, VK_F6, CmdMoveFrameFocus},
     {FVIRTKEY, VK_F8, CmdViewShowHideToolbar},
-
     {FVIRTKEY, VK_F9, CmdViewShowHideMenuBar},
     {FVIRTKEY, VK_F11, CmdViewFullScreen},
     {FSHIFT | FVIRTKEY, VK_F11, CmdViewPresentationMode},
     {FVIRTKEY, VK_F12, CmdViewBookmarks},
+    {FSHIFT | FVIRTKEY, VK_F12, CmdViewBookmarks},
     {FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdZoomOut},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdViewRotateLeft},
     {FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdZoomOut},
