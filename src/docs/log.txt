@@ -19,6 +19,9 @@ A daily log of changes and commentary. An experiment of sorts.
   which is triggered after entering full-screen (which makes sense because it
   re-positiones a window and therefore mouse position changes)
 
+- restore multi-frame images (tif and gif) (fixes #2234)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2234
+
 2021-10-26 Tue
 
 - fix pdf_resolve_link (fixes #2216)

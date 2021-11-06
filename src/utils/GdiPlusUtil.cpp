@@ -298,28 +298,17 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-// see http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
-Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
-    Kind format = GuessFileTypeFromContent(bmpData);
-    if (kindFileTga == format) {
-        return tga::ImageFromData(bmpData);
+static Bitmap* DecodeWithWIC(ByteSlice bmpData) {
+    auto strm = CreateStreamFromData(bmpData);
+    ScopedComPtr<IStream> stream(strm);
+    if (!stream) {
+        return nullptr;
     }
-    if (kindFileWebp == format) {
-        return webp::ImageFromData(bmpData);
-    }
+    auto bmp = WICDecodeImageFromStream(stream);
+    return bmp;
+}
 
-    {
-        auto strm = CreateStreamFromData(bmpData);
-        ScopedComPtr<IStream> stream(strm);
-        if (!stream) {
-            return nullptr;
-        }
-        auto bmp = WICDecodeImageFromStream(stream);
-        if (bmp) {
-            return bmp;
-        }
-    }
-
+static Bitmap* DecodeWithGdiplus(ByteSlice bmpData) {
     auto strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
@@ -332,6 +321,34 @@ Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
     if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp;
         return nullptr;
+    }
+    return bmp;
+}
+
+Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
+    Kind format = GuessFileTypeFromContent(bmpData);
+    if (kindFileTga == format) {
+        return tga::ImageFromData(bmpData);
+    }
+    if (kindFileWebp == format) {
+        return webp::ImageFromData(bmpData);
+    }
+
+    // those are potentially multi-image formats and WICDecodeImageFromStream
+    // doesn't support that
+    // TODO: more formats? webp?
+    bool tryGdiplusFirst = (kindFileTiff == format) || (kindFileGif == format);
+
+    Bitmap* bmp{nullptr};
+    if (tryGdiplusFirst) {
+        bmp = DecodeWithGdiplus(bmpData);
+        ;
+    }
+    if (!bmp) {
+        bmp = DecodeWithWIC(bmpData);
+    }
+    if (!bmp && !tryGdiplusFirst) {
+        bmp = DecodeWithGdiplus(bmpData);
     }
     return bmp;
 }

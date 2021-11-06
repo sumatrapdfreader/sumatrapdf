@@ -2710,7 +2710,6 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fzcookie = &cookie->cookie;
     }
 
-    // TODO(port): I don't see why this lock is needed
     ScopedCritSec cs(ctxAccess);
 
     auto pageRect = args.pageRect;
