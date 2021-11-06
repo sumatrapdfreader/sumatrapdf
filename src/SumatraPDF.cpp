@@ -3400,8 +3400,8 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
             win->windowStateBeforePresentation = WIN_STATE_NORMAL;
         }
         win->presentation = PM_ENABLED;
-
-        SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, nullptr);
+        // hack: this tells OnMouseMove() to hide cursor immediately
+        win->dragPrevPos = Point(-2, -3);
     } else {
         win->isFullScreen = true;
     }
@@ -3455,7 +3455,7 @@ void ExitFullScreen(WindowInfo* win) {
             win->ctrl->SetPresentationMode(false);
         }
         // re-enable the auto-hidden cursor
-        KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
+        KillTimer(win->hwndCanvas, kHideCursorTimerID);
         SetCursorCached(IDC_ARROW);
         // ensure that no ToC is shown when entering presentation mode the next time
         for (TabInfo* tab : win->tabs) {

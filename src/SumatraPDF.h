@@ -17,8 +17,8 @@
 #define SB_HPAGEUP (WM_USER + 102)
 #define SB_HPAGEDOWN (WM_USER + 103)
 
-#define HIDE_CURSOR_TIMER_ID 3
-#define HIDE_CURSOR_DELAY_IN_MS 3000
+constexpr int kHideCursorTimerID = 3;
+constexpr int kHideCursorDelayInMs = 3000;
 
 #define REPAINT_TIMER_ID 1
 #define REPAINT_MESSAGE_DELAY_IN_MS 1000

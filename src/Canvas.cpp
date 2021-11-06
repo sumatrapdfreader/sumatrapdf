@@ -293,17 +293,33 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM) {
 
     if (win->presentation != PM_DISABLED) {
         if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+            // logf("OnMouseMove: hiding cursor because black screen or white screen\n");
             SetCursor((HCURSOR) nullptr);
             return;
         }
-        // shortly display the cursor if the mouse has moved and the cursor is hidden
-        if (Point(x, y) != win->dragPrevPos && !GetCursor()) {
-            if (win->mouseAction == MouseAction::Idle) {
-                SetCursorCached(IDC_ARROW);
-            } else {
-                SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+
+        bool showingCursor = (GetCursor() != nullptr);
+        bool sameAsLastPos = win->dragPrevPos.Eq(x, y);
+        // logf("OnMouseMove(): win->presentation != PM_DISABLED (%d, %d) showingCursor: %d, same as last pos: %d\n", x,
+        // y,
+        //     (int)showingCursor, (int)sameAsLastPos);
+        if (!sameAsLastPos) {
+            // shortly display the cursor if the mouse has moved and the cursor is hidden
+            if (!showingCursor) {
+                // logf("OnMouseMove: temporary showing cursor\n");
+                if (win->mouseAction == MouseAction::Idle) {
+                    SetCursorCached(IDC_ARROW);
+                } else {
+                    SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+                }
             }
-            SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, nullptr);
+            if (win->dragPrevPos.Eq(-2, -3)) {
+                // hack: hide cursor immediately. see EnterFullScreen
+                SetTimer(win->hwndCanvas, kHideCursorTimerID, 1, nullptr);
+            } else {
+                // logf("OnMouseMove: starting kHideCursorTimerID\n");
+                SetTimer(win->hwndCanvas, kHideCursorTimerID, kHideCursorDelayInMs, nullptr);
+            }
         }
     }
 
@@ -1528,9 +1544,11 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
             }
             break;
 
-        case HIDE_CURSOR_TIMER_ID:
-            KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
-            if (win->presentation) {
+        case kHideCursorTimerID:
+            // logf("got kHideCursorTimerID\n");
+            KillTimer(hwnd, kHideCursorTimerID);
+            if (win->presentation != PM_DISABLED) {
+                // logf("hiding cursor because win->presentations\n");
                 SetCursor((HCURSOR) nullptr);
             }
             break;

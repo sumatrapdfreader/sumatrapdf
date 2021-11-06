@@ -11,6 +11,7 @@ struct Point {
     Point(int x, int y);
 
     [[nodiscard]] bool IsEmpty() const;
+    [[nodiscard]] bool Eq(int x, int y) const;
     bool operator==(const Point& other) const;
     bool operator!=(const Point& other) const;
 };

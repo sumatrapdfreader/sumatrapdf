@@ -10,6 +10,15 @@ A daily log of changes and commentary. An experiment of sorts.
   This is for use under Visual Studio. F12 triggers a breakpoint,
   which is annoying
 
+- hide cursor immediately on F5 and fix cursor hiding regression (fixes #2231)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2231
+  There was a regression in 3.3 where the cursor in F5 (full-screen) was not auto-hidden
+  the second time
+  There was also an issue (probably always present) that hiding a cursor in
+  EnterFullScreen() was a no-op because would get over-ridden by OnMouseMove()
+  which is triggered after entering full-screen (which makes sense because it
+  re-positiones a window and therefore mouse position changes)
+
 2021-10-26 Tue
 
 - fix pdf_resolve_link (fixes #2216)
