@@ -305,7 +305,7 @@ void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) const 
         HideToolTip();
         return;
     }
-    infotip->Show(text, rc, multiline);
+    infotip->ShowOrUpdate(text, rc, multiline);
 }
 
 void WindowInfo::HideToolTip() const {

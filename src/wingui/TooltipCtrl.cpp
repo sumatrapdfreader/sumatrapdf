@@ -55,48 +55,64 @@ static void SetMaxWidthForText(HWND hwnd, const WCHAR* text, bool multiline) {
     SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
 }
 
-void TooltipCtrl::Show(std::string_view s, Rect& rc, bool multiline) {
+void TooltipCtrl::ShowOrUpdate(std::string_view s, Rect& rc, bool multiline) {
     auto ws = ToWstrTemp(s);
-    Show(ws, rc, multiline);
+    ShowOrUpdate(ws, rc, multiline);
 }
 
-void TooltipCtrl::Show(const WCHAR* txt, Rect& rc, bool multiline) {
-    auto currText = text.Get();
-    // to change the text we need to delete and add tooltip
-    // TODO: probably there's a simpler way
-    if (!str::Eq(txt, currText)) {
-        Hide();
-    }
-
-    SetMaxWidthForText(hwnd, txt, multiline);
-
-    TOOLINFO ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = parent;
-    ti.uFlags = TTF_SUBCLASS;
-    ti.rect = ToRECT(rc);
-
-    bool isNew = text.IsEmpty();
-    uint msg = TTM_NEWTOOLRECT;
-    if (isNew) {
+void TooltipCtrl::ShowOrUpdate(const WCHAR* txt, Rect& rc, bool multiline) {
+    bool isShowing = IsShowing();
+    if (!isShowing) {
+        SetMaxWidthForText(hwnd, txt, multiline);
+        TOOLINFO ti{0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = parent;
+        ti.uFlags = TTF_SUBCLASS;
+        ti.rect = ToRECT(rc);
         ti.lpszText = (WCHAR*)txt;
-        msg = TTM_ADDTOOL;
-    }
-    SendMessageW(hwnd, msg, 0, (LPARAM)&ti);
-    logf(L"TooltipCtrl::Show() (%d, %d) - (%d, %d), '%s', msg: %s\n", rc.x, rc.y, rc.dx, rc.dy, txt, isNew ? L"TTM_ADDTOOL" : L"TTM_NEWTOOLRECT");
-    text.Set(txt);
-}
-
-void TooltipCtrl::Hide() {
-    if (text.IsEmpty()) {
+        SendMessageW(hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+        isShowing = true;
         return;
     }
 
-    TOOLINFO ti = {0};
+    constexpr int bufSize = 512;
+    WCHAR buf[bufSize]{0};
+    TOOLINFO tiCurr{0};
+    tiCurr.cbSize = sizeof(tiCurr);
+    tiCurr.hwnd = parent;
+    tiCurr.lpszText = buf;
+    SendMessageW(hwnd, TTM_GETTEXT, bufSize - 1, (LPARAM)&tiCurr);
+    // TODO: should also compare ti.rect wit rc
+    if (str::Eq(buf, txt)) {
+        return;
+    }
+
+    SetMaxWidthForText(hwnd, txt, multiline);
+    tiCurr.lpszText = (WCHAR*)txt;
+    tiCurr.uFlags = TTF_SUBCLASS;
+    tiCurr.rect = ToRECT(rc);
+    SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&tiCurr);
+    SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&tiCurr);
+}
+
+int TooltipCtrl::Count() {
+    int n = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    return n;
+}
+
+bool TooltipCtrl::IsShowing() {
+    return Count() > 0;
+}
+
+void TooltipCtrl::Hide() {
+    if (IsShowing()) {
+        return;
+    }
+
+    TOOLINFO ti{0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
     SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
-    text.Reset();
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime
