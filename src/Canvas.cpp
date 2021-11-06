@@ -979,6 +979,7 @@ static void SetTextOrArrorCursor(DisplayModel* dm, Point pt) {
     }
 }
 
+// TODO: this gets called way too often
 static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     Point pt;
     DisplayModel* dm = win->AsFixed();

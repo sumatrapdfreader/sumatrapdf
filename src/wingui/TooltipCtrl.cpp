@@ -10,6 +10,8 @@
 #include "wingui/Window.h"
 #include "wingui/TooltipCtrl.h"
 
+#include "utils/Log.h"
+
 // https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-control-reference
 
 Kind kindTooltip = "tooltip";
@@ -58,23 +60,35 @@ void TooltipCtrl::Show(std::string_view s, Rect& rc, bool multiline) {
     Show(ws, rc, multiline);
 }
 
-void TooltipCtrl::Show(const WCHAR* text, Rect& rc, bool multiline) {
-    SetMaxWidthForText(hwnd, text, multiline);
+void TooltipCtrl::Show(const WCHAR* txt, Rect& rc, bool multiline) {
+    auto currText = text.Get();
+    // to change the text we need to delete and add tooltip
+    // TODO: probably there's a simpler way
+    if (!str::Eq(txt, currText)) {
+        Hide();
+    }
+
+    SetMaxWidthForText(hwnd, txt, multiline);
 
     TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
     ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (WCHAR*)text;
     ti.rect = ToRECT(rc);
-    uint msg = isShowing ? TTM_NEWTOOLRECT : TTM_ADDTOOL;
-    SendMessageW(hwnd, msg, 0, (LPARAM)&ti);
 
-    isShowing = true;
+    bool isNew = text.IsEmpty();
+    uint msg = TTM_NEWTOOLRECT;
+    if (isNew) {
+        ti.lpszText = (WCHAR*)txt;
+        msg = TTM_ADDTOOL;
+    }
+    SendMessageW(hwnd, msg, 0, (LPARAM)&ti);
+    logf(L"TooltipCtrl::Show() (%d, %d) - (%d, %d), '%s', msg: %s\n", rc.x, rc.y, rc.dx, rc.dy, txt, isNew ? L"TTM_ADDTOOL" : L"TTM_NEWTOOLRECT");
+    text.Set(txt);
 }
 
 void TooltipCtrl::Hide() {
-    if (!isShowing) {
+    if (text.IsEmpty()) {
         return;
     }
 
@@ -82,7 +96,7 @@ void TooltipCtrl::Hide() {
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
     SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
-    isShowing = false;
+    text.Reset();
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime

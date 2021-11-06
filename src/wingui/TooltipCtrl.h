@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct TooltipCtrl : WindowBase {
-    bool isShowing = false;
+    str::WStr text;
 
     explicit TooltipCtrl(HWND parent);
     ~TooltipCtrl() override;
