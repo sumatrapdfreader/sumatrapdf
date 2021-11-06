@@ -33,7 +33,7 @@ func fileUpload(fpath string) {
 		} else {
 			_, err := mc.UploadFile(remotePath, fpath, true)
 			must(err)
-			logf(ctx(), "Uploaded '%s' in %s\n", uri, time.Since(timeStart))
+			logf(ctx(), "Uploaded in %s\n%s\n", time.Since(timeStart), uri)
 		}
 	}
 

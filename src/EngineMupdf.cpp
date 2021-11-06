@@ -1047,26 +1047,27 @@ static TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDe
 }
 
 // don't delete the result
-static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
+NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     if (!pageInfo) {
         return nullptr;
     }
-    int pageNo = pageInfo->pageNo;
+    Vec<IPageElement*> res;
+
     for (auto pel : pageInfo->links) {
         if (pel->GetRect().Contains(pt)) {
-            return pel;
+            res.Append(pel);
         }
     }
 
     for (auto* pel : pageInfo->autoLinks) {
         if (pel->GetRect().Contains(pt)) {
-            return pel;
+            res.Append(pel);
         }
     }
 
     for (auto* pel : pageInfo->comments) {
         if (pel->GetRect().Contains(pt)) {
-            return pel;
+            res.Append(pel);
         }
     }
 
@@ -1075,11 +1076,14 @@ static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
         if (IsPointInRect(ir, p)) {
-            return img.imageElement;
+            res.Append(img.imageElement);
         }
         imageIdx++;
     }
-    return nullptr;
+    if (res.IsEmpty()) {
+        return nullptr;
+    }
+    return res[0];
 }
 
 static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
@@ -1091,8 +1095,6 @@ static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
 
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
-    int pageNo = pageInfo->pageNo;
-
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
         auto image = img.imageElement;
