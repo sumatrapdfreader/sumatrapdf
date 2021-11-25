@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-32bab910b2fdbe26bc0655364db132de1153530c
+1412e86752404c746ed6763940d61bda0cf4fefc
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -68,7 +68,7 @@ th:&เกี่ยวกับ
 tl:Tungkol S&a...
 tr:&Hakkında
 tw:關於(&A)
-uk:Про програму...
+uk:&Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
 :&Actual Size\tCtrl+1
@@ -204,7 +204,7 @@ ta:மேம்பட்ட விருப்பத்தேர்வுகள�
 th:&การตั้งค่าขั้นสูง
 tr:&Gelişmiş Ayarlar...
 tw:進階選項(&A)...
-uk:Розширені налаштування...
+uk:&Розширені налаштування...
 uz:&Qo'shimcha parametrlar...
 vn:Tùy chọn &nâng cao...
 :&All selected pages
@@ -338,7 +338,7 @@ th:&ถอยกลับ Alt+Left Arrow
 tl:Bumalik\tAlt+Left Arrow
 tr:&Geri\tAlt+Sol Ok
 tw:上一頁(&B)\tAlt+左箭頭
-uk:Назад\tAlt+Ліва стрілка
+uk:&Назад\tAlt+Ліва стрілка
 uz:&Orqaga\tAlt+<-
 vn:Trở về\tAlt+Mũi tên trái
 :&Book View\tCtrl+8
@@ -426,6 +426,7 @@ pl:&Anuluj
 sk:&Zrušiť
 th:&ยกเลิก
 tr:İptal Et
+uk:&Скасувати
 vn:&Hủy
 :&Caret
 am:&Ստեղն
@@ -450,6 +451,7 @@ pl:&Kareta
 ru:&Каретка
 th:&ผู้ดูแล
 tr:&Karet
+uk:&Каретка
 :&Close\tCtrl+W
 af:Maak Toe\tCtrl+W
 am:&Փակել\tCtrl+W
@@ -2547,6 +2549,7 @@ ta:வரலாற்றிலிருந்து நீக்கு
 th:&ย้ายออกจากประวัติ
 tr:Geçmişten &Kaldır
 tw:从历史记录删除
+uk:&Видалити з історії
 :&Save As...\tCtrl+S
 af:&Stoor As\tCtrl+S
 am:&Պահել որպես\tCtrl+S
@@ -2912,6 +2915,7 @@ pl:&Tekst
 ru:&Текст
 th:&ข้อความ
 tr:&Metin
+uk:&Текст
 :&Theme
 am:&Ոճը
 ar:&قالب
@@ -2993,6 +2997,7 @@ am:&Ընդգծել\tu
 cn:下划线(&U)\tU
 co:&Sottulineatu\tu
 de:&Unterstreichen\tu
+es:&Subrayar\tu
 hu:Aláhúzás\tu
 nl:&Onderstrepen\tu
 pl:Pod&kreślenie\tu
@@ -4039,6 +4044,7 @@ vn:Tất cả các định dạng được hỗ trợ
 am:Ծանոթագրություններ
 ar:توضيحات
 az:Qeydlər
+bg:Обяснения
 bn:ব্যখা
 br:Anotações
 ca-xv:Anotacions
@@ -4070,6 +4076,7 @@ sk:Anotácie
 th:อธิบายประกอบ
 tr:Notlar
 tw:評注
+uk:Анотації
 vn:Ghi chú
 :Application:
 af:Applikasie
@@ -4548,11 +4555,12 @@ th:ตรวจสอบโดยอัตโนมัติ &อัพเดท
 tl:Awtomatikong tignan kung may mga pagbabago
 tr:&Güncellemeleri kendiliğinden denetle
 tw:自動檢查是否有新版本(&U)
-uk:Автоматична перевірка оновлень
+uk:&Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
 :Background Color:
 am:Խորքի գույնը.
+bg:Цвят на фона
 bn:পটভূমির রং:
 br:Cor de fundo
 ca-xv:Color de fons
@@ -4575,6 +4583,7 @@ pl:Kolor tła:
 sk:Farba pozadia:
 th:สีพื้นหลัง
 tr:Arka Plan Rengi
+uk:Колір фону
 vn:Màu nền
 :Book View
 am:Գրքի տեսքով
@@ -5387,6 +5396,7 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
+bg:Проверявам за обновления
 br:Verificando por atualizações...
 ca-xv:S'està comprovant si hi ha actualitzacions...
 ca:S'està comprovant si hi ha actualitzacions...
@@ -5404,11 +5414,13 @@ nl:Controleer op Update...
 pl:Szukanie aktualizacji...
 th:ตรวจสอบการอัพเดท
 tr:Güncelleme denetleniyor...
+uk:Перевірка оновлення...
 vn:Kiểm tra bản cập nhật mới...
 :Circle
 am:Շրջան
 ar:دائرة
 az:Dairə
+bg:Кръг
 bn:কেন্দ্র
 br:Círculo
 ca-xv:Cercle
@@ -5441,6 +5453,7 @@ ta:வட்டம்
 th:วงกลม
 tr:Çember
 tw:圆
+uk:Коло
 vn:Vòng tròn
 :Close
 am:Փակել
@@ -5556,6 +5569,7 @@ vn:Thu gọn tất cả
 :Color:
 am:Գույն.
 az:Rəng:
+bg:Цвят
 bn:রং:
 br:Cor:
 ca-xv:Color
@@ -5581,6 +5595,7 @@ ru:Цвет:
 sk:Farba:
 th:สี:
 tr:Renk:
+uk:Колір:
 vn:Màu:
 :Comic books
 am:Հումորային գրքեր
@@ -6461,6 +6476,7 @@ nl:Kan de naam van de printer niet vinden
 pl:Nie można uzyskać nazwy drukarki
 th:ไม่ได้รับชื่อเครื่องพิมพ์
 tr:Yazıcı adı alınamadı
+uk:Не вдалося отримати назву принтера
 :Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
 ar:لا يمكن تشغيل الطابعة
@@ -6877,6 +6893,7 @@ ru:Не удалось удалить фильтр поиска Sumatra
 th:ไม่สามารถถอนการติดตั้งตัวกรองการค้นหา Sumatra
 tr:Sumatra arama süzgeci kaldırılamadı
 tw:無法卸除 Sumatra 搜索過濾器
+uk:Не вдалось видалити фільтр пошуку Sumatra
 vn:Không thể gỡ cài đặt bộ lọc tìm kiếm Sumatra
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
@@ -7024,6 +7041,7 @@ th:สร้างคำอธิบายประกอบ &​ใต้ตั
 tr:İmlecin &Altına Not Oluştur
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
+bg:Създай Обяснение от избраното
 bn:বাছাই থেকে টীকা লিখুন
 br:Criar Anotação a partir da Seleção
 ca-xv:Crea una anotació amb la selecció
@@ -7818,6 +7836,7 @@ uz:Hujjat xossalari
 vn:Thuộc tính tập tin
 :Don't install
 am:Չտեղադրել
+bg:Не инсталирай
 br:Não instalar
 ca-xv:No ho instal·lis
 ca:No ho instal·lis
@@ -7835,8 +7854,10 @@ nl:Niet installeren
 pl:Nie instaluj
 th:ติดตั้งไม่ได้
 tr:Kurma
+uk:Не встановлювати
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
+bg:Свали 64-битова версия
 br:Baixar versão 64-bits
 ca-xv:Baixa la versió de 64 bits
 ca:Baixa la versió de 64 bits
@@ -7855,6 +7876,7 @@ pl:Pobierz wersję 64-bitową
 sk:Stiahnuť 64-bitovú verziu
 th:ดาวน์โหลดรุ่น 64 บิต
 tr:64 bit sürümü indir
+uk:Завантажити 64-bit версію
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
@@ -7889,6 +7911,7 @@ ta:முழுத்திரை வெளியேறு
 th:&ออกจากโหมดเต็มหน้าจอ
 tr:Tam Ekrandan &Çık
 tw:結束全螢幕模式(&X)
+uk:&Вийти з повноекранного режиму
 vn:Thoát khỏi chế độ Toàn màn hình
 :E&xit\tCtrl+Q
 af:&Gaan Uit-Q
@@ -8031,6 +8054,7 @@ vn:Tập tin EPUB
 am:Խմբագրել ծանոթագրությունները
 ar:تعديل الشرح و التوضيح 
 az:Qeydlərə düzəliş et
+bg:Редактирай Обясненията
 bn:ব্যখা সমপাদন করুন
 br:Editar Anotações
 ca-xv:Edita les anotacions
@@ -8061,6 +8085,7 @@ ru:Изменить аннотации
 th:ปรับแต่งคำอธิบายประกอบ
 tr:Notları Düzenle
 tw:編輯評注
+uk:Змінити анотації
 :Enter password
 af:Tik Wagwoord In
 am:Գրեք գաղտնաբառը
@@ -9272,6 +9297,7 @@ vn:Không tìm thấy tập tin %s
 am:Ֆայլի կցորդ
 ar:ملف مرفق
 az:Qoşma fayl
+bg:Прикачен файл
 bn:নথি সংযুক্তি
 br:Anexo de Arquivo
 ca-xv:Fitxer adjunt
@@ -9302,6 +9328,7 @@ ru:Вложенный файл
 th:แนบไฟล์
 tr:Dosya Eki
 tw:檔案附件
+uk:Вкладений файл
 vn:Tệp đính kèm
 :File Size:
 am:Ֆայլի չափը՝
@@ -10982,6 +11009,7 @@ vn:Tập tin ảnh (*.%s)
 am:Պատկերներ
 ar:صور
 az:Şəkillər
+bg:Изображения
 bn:ছবি
 br:Imagens
 ca-xv:Imatges
@@ -11015,10 +11043,12 @@ ta:படங்கள்
 th:รูปภาพ
 tr:Resimler
 tw:圖片
+uk:Зображення
 :Ink
 am:Թանաք
 ar:حبر
 az:Mürəkkəb
+bg:Мастило
 bn:কালি
 br:Tinta
 ca-xv:Tinta
@@ -11050,6 +11080,7 @@ ta:மை
 th:น้ำหมึก
 tr:Mürekkep
 tw:墨迹
+uk:Чорнила
 :Install SumatraPDF
 af:Installeer SumatraPDF
 am:Տեղադրել SumatraPDF-ը
@@ -11179,6 +11210,7 @@ uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 am:Տեղադրել և վեաթողարկել
+bg:Инсталирай и рестартирай програмата
 br:Instalar e reiniciar
 ca-xv:Instal·la i reinicia
 ca:Instal·la i reinicia
@@ -11196,6 +11228,7 @@ nl:Installeren + opnieuw starten
 pl:Zainstaluj i uruchom ponownie
 th:ติดตั้ง และ เรียกใช้งาน
 tr:Kur ve yeniden başlat
+uk:Встановити та перезапустити
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
 ar:!فشل التثبيت
@@ -11324,6 +11357,7 @@ uz:O'rnatilmoqda...
 vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
+bg:Инсталира се 32-битова версия на SumatraPDF на 64-битова ОС
 br:Instalando SumatraPDF 32-bits em SO 64-bits
 ca-xv:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 ca:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
@@ -11593,6 +11627,7 @@ vn:Sáng
 am:Գիծ
 ar:سطر
 az:Xətt
+bg:Линия
 bn:লাইন
 br:Linha
 ca-xv:Línia
@@ -11624,6 +11659,7 @@ ta:கோடு
 th:ไลน์
 tr:Çizgi
 tw:線條
+uk:Лінія
 :MB
 af:MB
 am:ՄԲ
@@ -12136,9 +12172,11 @@ ta:புதிய சாளரம்
 th:เปิด &หน้าต่างใหม่ Ctrl+N
 tr:Yeni &pencere\tCtrl+N
 tw:新增視窗(&W)\tCtrl+N
+uk:Нове в&ікно\tCtrl+N
 vn:Mở cửa sổ mới\tCtrl+N
 :New version available
 am:Մատչելի է նոր տարբերակ
+bg:Достъпна е нова версия
 br:Nova versão disponível
 ca-xv:Hi ha una versió nova disponible
 ca:Hi ha una versió nova disponible
@@ -12157,6 +12195,7 @@ pl:Dostępna nowa wersja
 sk:Dostupná nová verzia
 th:มีรุ่นใหม่พร้อมให้บริการ
 tr:Yeni sürüm var
+uk:Доступна нова версія
 :Next Page
 af:Volgende Bladsy
 am:Հաջորդ էջը
@@ -12791,6 +12830,7 @@ ru:Открыть вложенный PDF
 th:เปิด PDF ฝังรหัส
 tr:Gömülü PDF Aç
 tw:開啟內嵌的 PDF
+uk:Відкрити вкладений PDF
 :Open a document...
 am:Բացել փաստաթուղթ...
 ar:فتح مستند...
@@ -14155,6 +14195,7 @@ vn:Xin chờ đợi, đang hiện...
 am:Բազմագիծ
 ar:خط متعرج
 az:Qırıq xətt
+bg:Поли-линия
 br:Polilinha
 ca-xv:Línia poligonal
 ca:Línia poligonal
@@ -14178,15 +14219,17 @@ lt:Laužtė
 lv:Lauzta līnija
 nl:Poly Regel
 pl:Polilinia
-ru:Ломаная
+ru:Ламана лінія
 ta:பலகோடு 
 th:โพลีไลน์
 tr:Çoklu Çizgi
 tw:多線條
+uk:Ламана лінія
 :Polygon
 am:Պոլիգոն
 ar:مضلع
 az:Çoxbucaqlı
+bg:Полигон
 bn:বহুভুজ
 br:Polígono
 ca-xv:Polígon
@@ -14217,6 +14260,7 @@ ta:பலகோணம்
 th:รูปหลายเหลี่ยม
 tr:Çokgen
 tw:多邊形
+uk:Багатокутник
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -14990,6 +15034,7 @@ vn:Đổi tê&n...\tF2
 am:Փոփոխել
 ar:تنقيح
 az:Düzəliş et
+bg:Редактирай
 br:Redigir
 ca-xv:Redacta
 ca:Redacta
@@ -15456,6 +15501,7 @@ th:S&ยุ่งเหยิง
 tr:&Kıvrımlı
 :SVG documents
 am:SVG փաստաթղթեր
+bg:SVG документи
 br:Documentos SVG
 ca-xv:Documents SVG
 ca:Documents SVG
@@ -15472,11 +15518,14 @@ nl:SVG Documenten
 pl:Documenty SVG
 th:เอกสาร SVG
 tr:SVG belgeleri
+uk:SVG документи
 :Save Annotations to existing PDF
 am:Պահել ծանոթագրությունը առկա PDF-ում
+bg:Запази Обясненията в съществуващ PDF
 cn:将标注保存到当前 PDF
 co:Arregistrà l’annutazioni in u PDF esistente
 de:Anmerkungen in bestehende PDF-Dateien speichern
+es:Guardar Anotaciones a PDF existente
 hu:Megjegyzések elmentése a meglévő PDF-be
 nl:Notaties opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
@@ -15512,6 +15561,7 @@ ru:Сохранить вложенный файл...
 th:บันทึกไฟล์ฝังรหัส... 
 tr:Gömülü Dosyayı Kaydet...
 tw:儲存內嵌的檔案...
+uk:Зберегти вкладений файл...
 :Save S&hortcut...\tCtrl+Shift+S
 am:Պահել դ&յուրանցումը...\tCtrl+Shift+S
 ar:حفظ الاختصار...\tCtrl+Shift+S
@@ -15576,6 +15626,7 @@ uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
 :Save annotations?
 am:Պահե՞լ մեկնաբանությունը?
+bg:Да запазя ли обясненията?
 br:Salvar anotações?
 ca-xv:Voleu desar les anotacions?
 ca:Voleu desar les anotacions?
@@ -15595,6 +15646,7 @@ tr:Notlar kaydedilsin mi?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
+bg:Запази промените в нов PDF
 br:Salvar alterações em um novo PDF
 ca-xv:Desa els canvis a un PDF nou
 ca:Desa els canvis a un PDF nou
@@ -15617,6 +15669,7 @@ ru:Сохранить изменения в новый PDF
 sk:Uloženie zmien do nového PDF
 th:บันทึกการเปลี่ยนแปลงเป็น PDF ใหม่
 tr:Değişiklikleri yeni PDF'ye kaydet
+uk:Зберегти зміни у новий PDF
 :Save changes to existing PDF
 am:Պահել փոփոխությունները առկա PDF-ում
 az:Dəyişiklikləri mövcud PDF-ə yaz
@@ -15640,6 +15693,7 @@ pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в существующий PDF
 th:บันทึกการเปลี่ยนแปลงไปยัง PDF ที่เปิดอยู่
 tr:Değişiklikleri var olan PDF'ye kaydet
+uk:Зберегти зміни в поточний PDF
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
 br:Salvar em um &novo PDF
@@ -16204,6 +16258,7 @@ sl:Pokaži zaznamke\tF12
 th:แสดง &บุ๊กมาร์ก F12
 tr:Yer &İmlerini Göster\tF12
 tw:顯示書籤(&B)\tF12
+uk:Показати за&кладки\tF12
 :Show &Favorites
 am:Ցուցադրել &Ընտրյալները
 ar:إظهار التفضيلات
@@ -16242,6 +16297,7 @@ sl:Pokaži priljubljene
 th:แสดง &รายการโปรด
 tr:&Yer İmlerini Göster
 tw:顯示最愛(&F)
+uk:Показати О&бране
 vn:Hiện mục Ưa thích
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
@@ -16339,6 +16395,7 @@ ta:உருட்பட்டைகளை காண்பி
 th:แสดงผล &​แถบเลื่อน
 tr:&Kaydırma Çubuklarını Göster
 tw:顯示捲軸(&S)
+uk:&Показати смугу прокрутки
 vn:Hiện &Thanh cuộn
 :Show &Toolbar\tF8
 af:Vertoon Toolbar
@@ -16542,6 +16599,7 @@ ta:உருட்பட்டைகளை காண்பி
 th:&แสดงแถบเลื่อน
 tr:Kaydırma Ç&ubuklarını Göster
 tw:顯示捲軸(&O)
+uk:Показати смугу &прокрутки
 :Show frequently read
 am:Ցուցադրել հաճախակի բացվածները
 ar:إظهار الأكثر قراءة
@@ -16644,6 +16702,7 @@ ta:கோப்பகத்தில் காண்பி
 th:แสดงใน &โฟลเดอร์
 tr:&Klasörde göster
 tw:打開所在資料夾(&F)
+uk:Показати в п&апці
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
@@ -16780,6 +16839,7 @@ uz:Bitta bet
 vn:Trang đơn
 :Skip this version
 am:Բաց թողնել այս տարբերակը
+bg:Пропусни тази версия
 br:Ignorar esta versão
 ca-xv:Omet aquesta versió
 ca:Omet aquesta versió
@@ -16797,6 +16857,7 @@ nl:Sla deze versie over
 pl:Pomiń tę wersję
 th:ข้ามรุ่นนี้
 tr:Bu sürümü atla
+uk:Пропустити цю версію
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:الرجاء اضغط 'إلغاء الأمر'، إذا كنت ترغب في مساعدتنا على إصلاح هذا الحادث \n\n !آسف، أنه لا ينبغي أن يكون قد حدث
@@ -16928,6 +16989,7 @@ vn:Tập tin nguồn %s không có điểm đồng bộ
 am:Քառակուսի
 ar:مربع
 az:Kvadrat
+bg:Квадрат
 br:Quadrado
 ca-xv:Quadrat
 ca:Quadrat
@@ -16958,6 +17020,7 @@ ta:நாற்கரம்
 th:สี่เหลี่ยม
 tr:Kare
 tw:矩形
+uk:Квадрат
 :Start SumatraPDF
 am:Բացել SumatraPDF-ը
 ar:بدء تشغيل مستندات Sumatra  المحمولة
@@ -17687,6 +17750,7 @@ sk:Podpora SumatraPDF
 th:สนับสนุน SumatraPDF
 tr:SumatraPDF'yi Destekle
 tw:支持 SumatraPDF
+uk:Підтримка SumatraPDF
 vn:Hỗ trợ SumatraPDF
 :Synchronization file cannot be opened
 am:Հնարավոր չէ բացել համաժամեցման ֆայլը
@@ -18463,6 +18527,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 am:Չպահված մեկնաբանություններ
+bg:Незапазени обяснения
 br:Anotações não salvas
 ca-xv:Anotacions sense desar
 ca:Anotacions sense desar
@@ -18986,6 +19051,7 @@ pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 th:คุณไม่ได้บันทึกคำอธิบายประกอบ
 tr:Kaydedilmemiş notlarınız var
+uk:Анотації не збережено
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
 br:Você possui a versão '%s' sendo que a '%s' está disponível.\nDeseja instalar a nova versão?
