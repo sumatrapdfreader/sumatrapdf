@@ -423,14 +423,23 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IS_TOGGLE_NO_VIEW == PDF_ANNOT_IS_TOGGLE_NO_VIEW;
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IS_LOCKED_CONTENTS == PDF_ANNOT_IS_LOCKED_CONTENTS;
 
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_UNSET == FZ_LANG_UNSET;
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_ur == FZ_LANG_ur;
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_urd == FZ_LANG_urd;
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_ko == FZ_LANG_ko;
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_ja == FZ_LANG_ja;
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_zh == FZ_LANG_zh;
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_zh_Hans == FZ_LANG_zh_Hans;
-	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LANGUAGE_zh_Hant == FZ_LANG_zh_Hant;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_UNSET == FZ_LANG_UNSET;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_ur == FZ_LANG_ur;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_urd == FZ_LANG_urd;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_ko == FZ_LANG_ko;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_ja == FZ_LANG_ja;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh == FZ_LANG_zh;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hans == FZ_LANG_zh_Hans;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hant == FZ_LANG_zh_Hant;
+
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_XYZ == PDF_DESTINATION_XYZ;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT == PDF_DESTINATION_FIT;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_H == PDF_DESTINATION_FIT_H;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_V == PDF_DESTINATION_FIT_V;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_R == PDF_DESTINATION_FIT_R;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_B == PDF_DESTINATION_FIT_B;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_BH == PDF_DESTINATION_FIT_BH;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_BV == PDF_DESTINATION_FIT_BV;
 
 	valid &= com_artifex_mupdf_fitz_StrokeState_LINE_CAP_BUTT == FZ_LINECAP_BUTT;
 	valid &= com_artifex_mupdf_fitz_StrokeState_LINE_CAP_ROUND == FZ_LINECAP_ROUND;

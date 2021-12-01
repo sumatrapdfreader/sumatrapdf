@@ -731,6 +731,12 @@ close_rld(fz_context *ctx, void *state_)
 	fz_free(ctx, state);
 }
 
+static int
+next_rld_defused(fz_context *ctx, fz_stream *stm, size_t max)
+{
+	return EOF;
+}
+
 fz_stream *
 fz_open_rld(fz_context *ctx, fz_stream *chain)
 {
@@ -739,6 +745,14 @@ fz_open_rld(fz_context *ctx, fz_stream *chain)
 	state->run = 0;
 	state->n = 0;
 	state->c = 0;
+
+	/* Don't explode RLE compression bombs. */
+	if (chain->next == next_rld || chain->next == next_rld_defused)
+	{
+		fz_warn(ctx, "RLE bomb defused");
+		return fz_new_stream(ctx, state, next_rld_defused, close_rld);
+	}
+
 	return fz_new_stream(ctx, state, next_rld, close_rld);
 }
 

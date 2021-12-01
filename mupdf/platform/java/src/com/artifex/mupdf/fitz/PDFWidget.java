@@ -192,10 +192,10 @@ public class PDFWidget extends PDFAnnotation
 		return previewSignatureNative(width, height, lang, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer, Image image) {
-		return previewSignatureNative(width, height, LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
+		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
 	}
 	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer) {
-		return previewSignatureNative(width, height, LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
+		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public Pixmap previewSignature(float dpi, PKCS7Signer signer, int flags, Image image, String reason, String location) {
 		Rect r = getBounds();

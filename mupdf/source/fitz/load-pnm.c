@@ -88,15 +88,6 @@ static inline int iswhite(int a)
 	return 0;
 }
 
-static inline int iseol(int a)
-{
-	switch (a) {
-	case '\r': case '\n':
-		return 1;
-	}
-	return 0;
-}
-
 static inline int bitdepth_from_maxval(int maxval)
 {
 	int depth = 0;

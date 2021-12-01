@@ -957,10 +957,9 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 				e = pdf_get_xref_entry(ctx, doc, num);
 				newxref[opts->renumber_map[num]] = *e;
 				if (e->obj)
-				{
 					pdf_set_obj_parent(ctx, e->obj, opts->renumber_map[num]);
 					e->obj = NULL;
-				}
+				e->stm_buf = NULL;
 				new_use_list[opts->renumber_map[num]] = opts->use_list[num];
 			}
 			else

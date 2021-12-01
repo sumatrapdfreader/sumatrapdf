@@ -99,6 +99,27 @@ public class Matrix
 		return this;
 	}
 
+	public Matrix invert() {
+		float det = a * d - b * c;
+		if (det > -Math.ulp(0) && det < Math.ulp(0))
+			return this;
+
+		float srca = a;
+		float srcb = b;
+		float srcc = c;
+		float srcd = d;
+		float srce = e;
+		float srcf = f;
+		float rdet = 1 / det;
+		this.a = srcd * rdet;
+		this.b = -srcb * rdet;
+		this.c = -srcc * rdet;
+		this.d = srca * rdet;
+		this.e = -srce * this.a - srcf * this.c;
+		this.f = -srce * this.b - srcf * this.d;
+		return this;
+	}
+
 	public Matrix rotate(float degrees) {
 		while (degrees < 0)
 			degrees += 360;
@@ -185,5 +206,21 @@ public class Matrix
 		}
 
 		return new Matrix(cos, sin, -sin, cos, 0, 0);
+	}
+
+	public static Matrix Inverted(Matrix m) {
+		float det = m.a * m.d - m.b * m.c;
+		if (det > -Math.ulp(0) && det < Math.ulp(0))
+			return m;
+
+		float rdet = 1 / det;
+		float inva = m.d * rdet;
+		float invb = -m.b * rdet;
+		float invc = -m.c * rdet;
+		float invd = m.a * rdet;
+		float inve = -m.e * inva - m.f * invc;
+		float invf = -m.e * invb - m.f * invd;
+
+		return new Matrix(inva, invb, invc, invd, inve, invf);
 	}
 }

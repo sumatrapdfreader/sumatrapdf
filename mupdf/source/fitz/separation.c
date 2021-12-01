@@ -346,6 +346,10 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 	dstride -= dn * dw;
 	sstride -= sn * dw;
 
+	if (dst->x < src->x || dst->x + dst->w > src->x + src->w ||
+		dst->y < src->y || dst->y + dst->h > src->y + src-> h)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot convert pixmap where dst is not within src!");
+
 	/* Process colorants (and alpha) first */
 	if (dst->colorspace == src->colorspace && proof_cs == NULL && dst->s == 0 && src->s == 0)
 	{
@@ -752,6 +756,12 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 		{
 			/* Converting from CMYK + Spots -> RGB with a change in spots. */
 			fz_pixmap *temp = fz_new_pixmap(ctx, src->colorspace, src->w, src->h, dst->seps, dst->alpha);
+
+			/* Match the regions exactly (this matters in particular when we are
+			 * using rotation, and the src region is not origined at 0,0 - see bug
+			 * 704726. */
+			temp->x = src->x;
+			temp->y = src->y;
 
 			fz_try(ctx)
 			{

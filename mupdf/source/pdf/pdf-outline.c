@@ -135,6 +135,7 @@ pdf_outline_iterator_up(fz_context *ctx, fz_outline_iterator *iter_)
 {
 	pdf_outline_iterator *iter = (pdf_outline_iterator *)iter_;
 	pdf_obj *up;
+	pdf_obj *grandparent;
 
 	if (iter->current == NULL)
 		return -1;
@@ -143,8 +144,15 @@ pdf_outline_iterator_up(fz_context *ctx, fz_outline_iterator *iter_)
 		iter->modifier = MOD_NONE;
 		return 0;
 	}
+	/* The topmost level still has a parent pointer, just one
+	 * that points to the outlines object. We never want to
+	 * allow us to move 'up' onto the outlines object. */
 	up = pdf_dict_get(ctx, iter->current, PDF_NAME(Parent));
 	if (up == NULL)
+		/* This should never happen! */
+		return -1;
+	grandparent = pdf_dict_get(ctx, up, PDF_NAME(Parent));
+	if (grandparent == NULL)
 		return -1;
 
 	iter->modifier = MOD_NONE;
@@ -311,7 +319,7 @@ do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_n
 {
 	int count;
 	int open_delta = 0;
-	pdf_obj *parent, *up;
+	pdf_obj *parent;
 
 	/* If the open/closed state changes, update. */
 	count = pdf_dict_get_int(ctx, obj, PDF_NAME(Count));
@@ -320,17 +328,19 @@ do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_n
 		pdf_dict_put_int(ctx, obj, PDF_NAME(Count), -count);
 		open_delta = -count;
 	}
-	else if (is_new_node && item->is_open)
+	else if (is_new_node)
 		open_delta = 1;
 
-	up = obj;
-	while ((parent = pdf_dict_get(ctx, up, PDF_NAME(Parent))) != NULL)
+	parent = pdf_dict_get(ctx, obj, PDF_NAME(Parent));
+	while (parent)
 	{
-		pdf_obj *cobj = pdf_dict_get(ctx, up, PDF_NAME(Count));
+		pdf_obj *cobj = pdf_dict_get(ctx, parent, PDF_NAME(Count));
 		count = pdf_to_int(ctx, cobj);
 		if (open_delta || cobj == NULL)
-			pdf_dict_put_int(ctx, up, PDF_NAME(Count), count > 0 ? count + open_delta : count - open_delta);
-		up = parent;
+			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count >= 0 ? count + open_delta : count - open_delta);
+		if (count < 0)
+			break;
+		parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
 	}
 
 	if (item->title)
@@ -342,62 +352,14 @@ do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_n
 	pdf_dict_del(ctx, obj, PDF_NAME(Dest));
 	if (item->uri)
 	{
+		pdf_document *doc = pdf_get_bound_document(ctx, obj);
+
 		if (fz_is_external_link(ctx, item->uri))
-		{
-			pdf_obj *a = pdf_dict_put_dict(ctx, obj, PDF_NAME(A), 4);
-			pdf_dict_put(ctx, a, PDF_NAME(Type), PDF_NAME(Action));
-			pdf_dict_put(ctx, a, PDF_NAME(S), PDF_NAME(URI));
-			pdf_dict_put_text_string(ctx, a, PDF_NAME(URI), item->uri);
-		}
+			pdf_dict_put_drop(ctx, obj, PDF_NAME(A),
+				pdf_new_action_from_link(ctx, doc, item->uri));
 		else
-		{
-			pdf_document *doc = pdf_get_bound_document(ctx, obj);
-			int page = int_from_fragment(item->uri, "page", 0, 0) - 1;
-			const char *val = val_from_fragment(item->uri, "view");
-			pdf_obj *type = type_match(&val, fit_types);
-			pdf_obj *arr = pdf_dict_put_array(ctx, obj, PDF_NAME(Dest), 5);
-
-			if (type == NULL)
-			{
-				val = val_from_fragment(item->uri, "viewrect");
-				if (val)
-					type = PDF_NAME(FitR);
-			}
-			if (type == NULL)
-			{
-				val = val_from_fragment(item->uri, "zoom");
-				if (val)
-					type = PDF_NAME(XYZ);
-			}
-
-			pdf_array_push(ctx, arr, pdf_lookup_page_obj(ctx, doc, page));
-			if (type)
-			{
-				float a1, a2, a3, a4;
-				a1 = my_read_float(&val);
-				a2 = my_read_float(&val);
-				a3 = my_read_float(&val);
-				a4 = my_read_float(&val);
-				pdf_array_push(ctx, arr, type);
-				if (type == PDF_NAME(XYZ))
-				{
-					pdf_array_push_real(ctx, arr, a1);
-					pdf_array_push_real(ctx, arr, a2);
-					pdf_array_push_real(ctx, arr, a3);
-				}
-				else if (type == PDF_NAME(FitH) || type == PDF_NAME(FitBH) || type == PDF_NAME(FitV) || type == PDF_NAME(FitBV))
-					pdf_array_push_real(ctx, arr, a1);
-				else if (type == PDF_NAME(FitR))
-				{
-					pdf_array_push_real(ctx, arr, a1);
-					pdf_array_push_real(ctx, arr, a2);
-					pdf_array_push_real(ctx, arr, a3);
-					pdf_array_push_real(ctx, arr, a4);
-				}
-			}
-			else
-				pdf_array_push(ctx, arr, PDF_NAME(Fit));
-		}
+			pdf_dict_put_drop(ctx, obj, PDF_NAME(Dest),
+				pdf_new_destination_from_link(ctx, doc, item->uri));
 	}
 }
 
@@ -406,14 +368,19 @@ pdf_outline_iterator_insert(fz_context *ctx, fz_outline_iterator *iter_, fz_outl
 {
 	pdf_outline_iterator *iter = (pdf_outline_iterator *)iter_;
 	pdf_document *doc = (pdf_document *)iter->super.doc;
-	pdf_obj *obj;
+	pdf_obj *obj = NULL;
 	pdf_obj *prev;
 	pdf_obj *parent;
 	int result;
 
-	obj = pdf_add_new_dict(ctx, doc, 4);
+	fz_var(obj);
+
+	pdf_begin_operation(ctx, doc, "Insert outline item");
+
 	fz_try(ctx)
 	{
+	obj = pdf_add_new_dict(ctx, doc, 4);
+
 		if (iter->modifier == MOD_BELOW)
 			parent = iter->current;
 		else if (iter->modifier == MOD_NONE && iter->current == NULL)
@@ -468,7 +435,10 @@ pdf_outline_iterator_insert(fz_context *ctx, fz_outline_iterator *iter_, fz_outl
 		}
 	}
 	fz_always(ctx)
+	{
 		pdf_drop_obj(ctx, obj);
+		pdf_end_operation(ctx, doc);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
@@ -479,17 +449,26 @@ static void
 pdf_outline_iterator_update(fz_context *ctx, fz_outline_iterator *iter_, fz_outline_item *item)
 {
 	pdf_outline_iterator *iter = (pdf_outline_iterator *)iter_;
+	pdf_document *doc = (pdf_document *)iter->super.doc;
 
 	if (iter->modifier != MOD_NONE || iter->current == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't update a non-existent outline item!");
 
+	pdf_begin_operation(ctx, doc, "Update outline item");
+
+	fz_try(ctx)
 	do_outline_update(ctx, iter->current, item, 0);
+	fz_always(ctx)
+		pdf_end_operation(ctx, doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static int
 pdf_outline_iterator_del(fz_context *ctx, fz_outline_iterator *iter_)
 {
 	pdf_outline_iterator *iter = (pdf_outline_iterator *)iter_;
+	pdf_document *doc = (pdf_document *)iter->super.doc;
 	pdf_obj *next, *prev, *parent;
 	int count;
 
@@ -500,17 +479,25 @@ pdf_outline_iterator_del(fz_context *ctx, fz_outline_iterator *iter_)
 	next = pdf_dict_get(ctx, iter->current, PDF_NAME(Next));
 	parent = pdf_dict_get(ctx, iter->current, PDF_NAME(Parent));
 	count = pdf_dict_get_int(ctx, iter->current, PDF_NAME(Count));
-
+	/* How many nodes visible from above are being removed? */
 	if (count > 0)
+		count++; /* Open children, plus this node. */
+	else
+		count = 1; /* Just this node */
+
+	pdf_begin_operation(ctx, doc, "Delete outline item");
+
+	fz_try(ctx)
 	{
 		pdf_obj *up = parent;
 		while (up)
 		{
 			int c = pdf_dict_get_int(ctx, up, PDF_NAME(Count));
 			pdf_dict_put_int(ctx, up, PDF_NAME(Count), (c > 0 ? c - count : c + count));
+			if (c < 0)
+				break;
 			up = pdf_dict_get(ctx, up, PDF_NAME(Parent));
 		}
-	}
 
 	if (prev)
 	{
@@ -539,6 +526,11 @@ pdf_outline_iterator_del(fz_context *ctx, fz_outline_iterator *iter_)
 		pdf_dict_del(ctx, parent, PDF_NAME(First));
 		pdf_dict_del(ctx, parent, PDF_NAME(Last));
 	}
+	}
+	fz_always(ctx)
+		pdf_end_operation(ctx, doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	return 0;
 }
@@ -705,4 +697,96 @@ pdf_resolve_link(fz_context *ctx, pdf_document *doc, const char *uri, float *xp,
 	}
 	fz_warn(ctx, "unknown link uri '%s'", uri);
 	return -1;
+}
+
+pdf_obj *
+pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *uri)
+{
+	pdf_obj *dest = pdf_new_array(ctx, doc, 5);
+	const char *val;
+	pdf_obj *type;
+	int page;
+
+	fz_try(ctx)
+	{
+		page = int_from_fragment(uri, "page", 0, 0) - 1;
+		val = val_from_fragment(uri, "view");
+		type = type_match(&val, fit_types);
+
+		if (type == NULL)
+		{
+			val = val_from_fragment(uri, "viewrect");
+			if (val)
+				type = PDF_NAME(FitR);
+		}
+		if (type == NULL)
+		{
+			val = val_from_fragment(uri, "zoom");
+			if (val)
+				type = PDF_NAME(XYZ);
+		}
+
+		pdf_array_push(ctx, dest, pdf_lookup_page_obj(ctx, doc, page));
+		if (type)
+		{
+			float a1, a2, a3, a4;
+			a1 = my_read_float(&val);
+			a2 = my_read_float(&val);
+			a3 = my_read_float(&val);
+			a4 = my_read_float(&val);
+			pdf_array_push(ctx, dest, type);
+			if (type == PDF_NAME(XYZ))
+			{
+				pdf_array_push_real(ctx, dest, a1);
+				pdf_array_push_real(ctx, dest, a2);
+				pdf_array_push_real(ctx, dest, a3);
+			}
+			else if (type == PDF_NAME(FitH) || type == PDF_NAME(FitBH) || type == PDF_NAME(FitV) || type == PDF_NAME(FitBV))
+				pdf_array_push_real(ctx, dest, a1);
+			else if (type == PDF_NAME(FitR))
+			{
+				pdf_array_push_real(ctx, dest, a1);
+				pdf_array_push_real(ctx, dest, a2);
+				pdf_array_push_real(ctx, dest, a3);
+				pdf_array_push_real(ctx, dest, a4);
+			}
+		}
+		else
+			pdf_array_push(ctx, dest, PDF_NAME(Fit));
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, dest);
+		fz_rethrow(ctx);
+	}
+
+	return dest;
+}
+
+pdf_obj *
+pdf_new_action_from_link(fz_context *ctx, pdf_document *doc, const char *uri)
+{
+	pdf_obj *action = pdf_new_dict(ctx, doc, 2);
+
+	fz_try(ctx)
+	{
+		if (fz_is_external_link(ctx, uri))
+		{
+			pdf_dict_put(ctx, action, PDF_NAME(S), PDF_NAME(URI));
+			pdf_dict_put_text_string(ctx, action, PDF_NAME(URI), uri);
+		}
+		else
+		{
+			pdf_dict_put(ctx, action, PDF_NAME(S), PDF_NAME(GoTo));
+			pdf_dict_put_drop(ctx, action, PDF_NAME(D),
+				pdf_new_destination_from_link(ctx, doc, uri));
+		}
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, action);
+		fz_rethrow(ctx);
+	}
+
+	return action;
 }

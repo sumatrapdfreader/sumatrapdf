@@ -379,7 +379,6 @@ static void fz_xmltext_fill_image(fz_context *ctx, fz_device *dev_, fz_image *im
 
 fz_device *fz_new_xmltext_device(fz_context *ctx, fz_output *out)
 {
-	static int page_number = 0;
 	fz_xmltext_device *dev = fz_new_derived_device(ctx, fz_xmltext_device);
 
 	dev->super.close_device = fz_stext_close_device;
@@ -392,7 +391,6 @@ fz_device *fz_new_xmltext_device(fz_context *ctx, fz_output *out)
 	dev->super.fill_image = fz_xmltext_fill_image;
 
 	dev->out = out;
-	page_number += 1;
 
 	return (fz_device*)dev;
 }

@@ -423,18 +423,26 @@ copy_jpx_to_pixmap(fz_context *ctx, fz_pixmap *img, opj_image_t *jpx)
 		int32_t oy = safe_mul32(ctx, comp->y0, cdy) - jpx->y0;
 		int32_t ox = safe_mul32(ctx, comp->x0, cdx) - jpx->x0;
 		unsigned char *dst0 = dst + oy * stride;
+		int prec = comp->prec;
+		int sgnd = comp->sgnd;
 
 		if (comp->data == NULL)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "No data for JP2 image component %d", k);
+
+		if (fz_colorspace_is_indexed(ctx, img->colorspace))
+		{
+			prec = 8; /* Don't do any scaling! */
+			sgnd = 0;
+		}
 
 		/* Check that none of the following will overflow. */
 		(void)safe_mla32(ctx, ch, cdy, oy);
 		(void)safe_mla32(ctx, cw, cdx, ox);
 
 		if (cdx == 1 && cdy == 1)
-			template_copy_comp(dst0, w, h, stride, comp->data, ox, oy, 1 /*cdx*/, 1 /*cdy*/, cw, ch, comp->sgnd, comp->prec, comps);
+			template_copy_comp(dst0, w, h, stride, comp->data, ox, oy, 1 /*cdx*/, 1 /*cdy*/, cw, ch, sgnd, prec, comps);
 		else
-			template_copy_comp(dst0, w, h, stride, comp->data, ox, oy, cdx, cdy, cw, ch, comp->sgnd, comp->prec, comps);
+			template_copy_comp(dst0, w, h, stride, comp->data, ox, oy, cdx, cdy, cw, ch, sgnd, prec, comps);
 		dst++;
 	}
 }

@@ -116,7 +116,7 @@ static void clear_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatu
 	pdf_page *page = NULL;
 	pdf_annot *widget;
 	pdf_obj *parent;
-	int pageno;
+	int pageno, pagenoend;
 
 	fz_var(page);
 
@@ -125,11 +125,25 @@ static void clear_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatu
 	fz_try(ctx)
 	{
 		parent = pdf_dict_get(ctx, signature, PDF_NAME(P));
+		if (parent != NULL)
+		{
 		pageno = pdf_lookup_page_number(ctx, doc, parent);
+			pagenoend = pageno+1;
+		}
+		else
+		{
+			pageno = 0;
+			pagenoend = pdf_count_pages(ctx, doc);
+		}
+		for (; pageno < pagenoend; pageno++)
+		{
 		page = pdf_load_page(ctx, doc, pageno);
 		for (widget = pdf_first_widget(ctx, page); widget; widget = pdf_next_widget(ctx, widget))
 			if (pdf_widget_type(ctx, widget) == PDF_WIDGET_TYPE_SIGNATURE && !pdf_objcmp_resolve(ctx, pdf_annot_obj(ctx, widget), signature))
 				pdf_clear_signature(ctx, widget);
+			fz_drop_page(ctx, (fz_page *) page);
+			page = NULL;
+		}
 	}
 	fz_always(ctx)
 		fz_drop_page(ctx, (fz_page*)page);
@@ -143,7 +157,7 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 	pdf_page *page = NULL;
 	pdf_annot *widget;
 	pdf_obj *parent;
-	int pageno;
+	int pageno, pagenoend;
 
 	fz_var(page);
 	fz_var(signer);
@@ -155,7 +169,18 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 		signer = pkcs7_openssl_read_pfx(ctx, certificatefile, certificatepassword);
 
 		parent = pdf_dict_get(ctx, signature, PDF_NAME(P));
+		if (parent != NULL)
+		{
 		pageno = pdf_lookup_page_number(ctx, doc, parent);
+			pagenoend = pageno+1;
+		}
+		else
+		{
+			pageno = 0;
+			pagenoend = pdf_count_pages(ctx, doc);
+		}
+		for (; pageno < pagenoend; pageno++)
+		{
 		page = pdf_load_page(ctx, doc, pageno);
 		for (widget = pdf_first_widget(ctx, page); widget; widget = pdf_next_widget(ctx, widget))
 			if (pdf_widget_type(ctx, widget) == PDF_WIDGET_TYPE_SIGNATURE && !pdf_objcmp_resolve(ctx, pdf_annot_obj(ctx, widget), signature))
@@ -164,6 +189,9 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 					NULL,
 					NULL,
 					NULL);
+			fz_drop_page(ctx, (fz_page *) page);
+			page = NULL;
+		}
 	}
 	fz_always(ctx)
 	{

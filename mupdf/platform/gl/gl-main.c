@@ -100,6 +100,12 @@ static void open_browser(const char *uri)
 		}
 	}
 
+	if (strncmp(uri, "file://", 7) && strncmp(uri, "http://", 7) && strncmp(uri, "https://", 8) && strncmp(uri, "mailto:", 7))
+	{
+		fz_warn(ctx, "refusing to open unknown link (%s)", uri);
+		return;
+	}
+
 #ifdef _WIN32
 	ShellExecuteA(NULL, "open", uri, 0, 0, SW_SHOWNORMAL);
 #else
@@ -1319,6 +1325,8 @@ static void do_links(fz_link *link)
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 
+	tooltip = NULL;
+
 	while (link)
 	{
 		bounds = link->rect;
@@ -1327,6 +1335,7 @@ static void do_links(fz_link *link)
 
 		if (ui_mouse_inside(area))
 		{
+			if (!tooltip)
 			tooltip = link->uri;
 			ui.hot = link;
 			if (!ui.active && ui.down)

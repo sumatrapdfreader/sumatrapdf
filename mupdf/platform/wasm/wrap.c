@@ -390,9 +390,9 @@ char *outlineTitle(fz_outline *node)
 }
 
 EMSCRIPTEN_KEEPALIVE
-int outlinePage(fz_outline *node)
+int outlinePage(fz_document *doc, fz_outline *node)
 {
-	return node->page + 1;
+	return fz_page_number_from_location(ctx, doc, node->page);
 }
 
 EMSCRIPTEN_KEEPALIVE

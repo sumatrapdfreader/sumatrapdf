@@ -686,4 +686,16 @@ void pdf_load_journal(fz_context *ctx, pdf_document *doc, const char *filename);
 */
 void pdf_read_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm);
 
+typedef enum
+{
+	PDF_DESTINATION_XYZ = 0,
+	PDF_DESTINATION_FIT,
+	PDF_DESTINATION_FIT_H,
+	PDF_DESTINATION_FIT_V,
+	PDF_DESTINATION_FIT_R,
+	PDF_DESTINATION_FIT_B,
+	PDF_DESTINATION_FIT_BH,
+	PDF_DESTINATION_FIT_BV,
+} pdf_destination_type;
+
 #endif

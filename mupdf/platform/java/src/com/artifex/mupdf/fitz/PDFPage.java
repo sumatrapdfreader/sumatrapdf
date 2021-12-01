@@ -64,4 +64,57 @@ public class PDFPage extends Page
 	}
 
 	public native PDFWidget createSignature();
+
+	public native Matrix getTransform();
+
+	/* type is one of PDFDocument.DESTINATION_* */
+	public native Link createLink(Rect bbox, int pageno, int type, float ... args);
+
+	public Link createLinkXYZ(Rect bbox, int pageno, float left, float top, float zoom)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_XYZ, left, top, zoom);
+	}
+	public Link createLinkXYZ(Rect bbox, int pageno, Point p, float zoom)
+	{
+		return createLinkXYZ(bbox, pageno, p.x, p.y, zoom);
+	}
+
+	public Link createLinkFit(Rect bbox, int pageno)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT);
+	}
+
+	public Link createLinkFitH(Rect bbox, int pageno, float top)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_H, top);
+	}
+
+	public Link createLinkFitV(Rect bbox, int pageno, float left)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_V, left);
+	}
+
+	public Link createLinkFitR(Rect bbox, int pageno, float left, float bottom, float right, float top)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_R, left, bottom, right, top);
+	}
+	public Link createLinkFitR(Rect bbox, int pageno, Rect area)
+	{
+		return createLinkFitR(bbox, pageno, area.x0, area.y0, area.x1, area.y0);
+	}
+
+	public Link createLinkFitB(Rect bbox, int pageno)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_B);
+	}
+
+	public Link createLinkFitBH(Rect bbox, int pageno, float top)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_BH, top);
+	}
+
+	public Link createLinkFitBV(Rect bbox, int pageno, float left)
+	{
+		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_BV, left);
+	}
 }

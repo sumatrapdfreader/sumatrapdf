@@ -518,20 +518,23 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 	fz_link **linkp;
 	fz_rect page_mediabox;
 	fz_matrix page_ctm;
+	fz_rect rect;
 
 	fz_var(link);
 	fz_var(ind_obj);
 	fz_var(bs);
 	fz_var(a);
 
-	pdf_page_transform(ctx, page, &page_mediabox, &page_ctm);
-	page_ctm = fz_invert_matrix(page_ctm);
-	bbox = fz_transform_rect(bbox, page_ctm);
+	pdf_begin_operation(ctx, page->doc, "Create Link");
 
 	fz_try(ctx)
 	{
 		int ind_obj_num;
 		pdf_obj *annot_arr;
+
+	pdf_page_transform(ctx, page, &page_mediabox, &page_ctm);
+	page_ctm = fz_invert_matrix(page_ctm);
+		rect = fz_transform_rect(bbox, page_ctm);
 
 		annot_arr = pdf_dict_get(ctx, page->obj, PDF_NAME(Annots));
 		if (annot_arr == NULL)
@@ -542,19 +545,15 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 
 		pdf_dict_put(ctx, annot_obj, PDF_NAME(Type), PDF_NAME(Annot));
 		pdf_dict_put(ctx, annot_obj, PDF_NAME(Subtype), PDF_NAME(Link));
-		pdf_dict_put_rect(ctx, annot_obj, PDF_NAME(Rect), bbox);
+		pdf_dict_put_rect(ctx, annot_obj, PDF_NAME(Rect), rect);
 		bs = pdf_new_dict(ctx, doc, 4);
 		pdf_dict_put(ctx, bs, PDF_NAME(S), PDF_NAME(S));
 		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
 		pdf_dict_put_int(ctx, bs, PDF_NAME(W), 0);
 		pdf_dict_put(ctx, annot_obj, PDF_NAME(BS), bs);
-		if (uri)
-		{
-			a = pdf_new_dict(ctx, doc, 2);
-			pdf_dict_put(ctx, a, PDF_NAME(S), PDF_NAME(URI));
-			pdf_dict_put_text_string(ctx, a, PDF_NAME(URI), uri);
-			pdf_dict_put(ctx, annot_obj, PDF_NAME(A), a);
-		}
+
+		pdf_dict_put_drop(ctx, annot_obj, PDF_NAME(A),
+			pdf_new_action_from_link(ctx, doc, uri));
 
 		/*
 			Both annotation object and annotation structure are now created.
@@ -577,10 +576,10 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 	}
 	fz_always(ctx)
 	{
-		pdf_drop_obj(ctx, a);
 		pdf_drop_obj(ctx, bs);
 		pdf_drop_obj(ctx, annot_obj);
 		pdf_drop_obj(ctx, ind_obj);
+		pdf_end_operation(ctx, page->doc);
 	}
 	fz_catch(ctx)
 	{

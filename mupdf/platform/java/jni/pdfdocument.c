@@ -1208,3 +1208,34 @@ FUN(PDFDocument_isRedacted)(JNIEnv *env, jobject self)
 	if (!ctx || !pdf) return JNI_FALSE;
 	return pdf->redacted;
 }
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_getLanguage)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	int lang;
+
+	if (!ctx || !pdf) return FZ_LANG_UNSET;
+
+	fz_try(ctx)
+		lang = pdf_document_language(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return lang;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_setLanguage)(JNIEnv *env, jobject self, jint lang)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+
+	if (!ctx || !pdf) return;
+
+	fz_try(ctx)
+		pdf_set_document_language(ctx, pdf, lang);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

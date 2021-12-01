@@ -666,6 +666,19 @@ static enum pdf_line_ending line_ending_from_string(const char *str)
 	return PDF_ANNOT_LE_NONE;
 }
 
+static pdf_destination_type destination_type_from_string(const char *str)
+{
+	if (!strcmp(str, "XYZ")) return PDF_DESTINATION_XYZ;
+	if (!strcmp(str, "Fit")) return PDF_DESTINATION_FIT;
+	if (!strcmp(str, "FitH")) return PDF_DESTINATION_FIT_H;
+	if (!strcmp(str, "FitV")) return PDF_DESTINATION_FIT_V;
+	if (!strcmp(str, "FitR")) return PDF_DESTINATION_FIT_R;
+	if (!strcmp(str, "FitB")) return PDF_DESTINATION_FIT_B;
+	if (!strcmp(str, "FitBH")) return PDF_DESTINATION_FIT_BH;
+	if (!strcmp(str, "FitBV")) return PDF_DESTINATION_FIT_BV;
+	return PDF_DESTINATION_FIT;
+}
+
 static void ffi_pushstroke(js_State *J, const fz_stroke_state *stroke)
 {
 	js_newobject(J);
@@ -2857,6 +2870,11 @@ static void ffi_Page_getLinks(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 
+	if (js_try(J)) {
+		fz_drop_link(ctx, links);
+		js_throw(J);
+	}
+
 	js_newarray(J);
 	for (link = links; link; link = link->next) {
 		js_newobject(J);
@@ -2870,7 +2888,38 @@ static void ffi_Page_getLinks(js_State *J)
 		js_setindex(J, -2, i++);
 	}
 
+	js_endtry(J);
 	fz_drop_link(ctx, links);
+}
+
+static void ffi_Page_createLink(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_page *page = ffi_topage(J, 0);
+	fz_link *link = NULL;
+	fz_rect rect = js_iscoercible(J, 1) ? ffi_torect(J, 1) : fz_empty_rect;
+	const char *uri = js_iscoercible(J, 2) ? js_tostring(J, 2) : "";
+
+	fz_try(ctx)
+		link = fz_create_link(ctx, page, rect, uri);
+	fz_catch(ctx)
+		rethrow(J);
+
+	if (js_try(J)) {
+		fz_drop_link(ctx, link);
+		js_throw(J);
+	}
+
+	js_newobject(J);
+
+	ffi_pushrect(J, link->rect);
+	js_setproperty(J, -2, "bounds");
+
+	js_pushstring(J, link->uri);
+	js_setproperty(J, -2, "uri");
+
+	js_endtry(J);
+	fz_drop_link(ctx, link);
 }
 
 static void ffi_ColorSpace_getNumberOfComponents(js_State *J)
@@ -5471,6 +5520,68 @@ static void ffi_PDFPage_toPixmap(js_State *J)
 	js_newuserdata(J, "fz_pixmap", pixmap, ffi_gc_fz_pixmap);
 }
 
+static void ffi_PDFPage_getTransform(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_page *page = pdf_page_from_fz_page(ctx, ffi_topage(J, 0));
+	fz_matrix ctm;
+
+	fz_try(ctx)
+		pdf_page_transform(ctx, page, NULL, &ctm);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushmatrix(J, ctm);
+}
+
+static void ffi_PDFPage_createLink(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_page *page = pdf_page_from_fz_page(ctx, ffi_topage(J, 0));
+	fz_rect rect = ffi_torect(J, 1);
+	int pageno = js_tonumber(J, 2);
+	pdf_destination_type type = destination_type_from_string(js_tostring(J, 3));
+	double arg1 = js_tonumber(J, 4);
+	double arg2 = js_tonumber(J, 5);
+	double arg3 = js_tonumber(J, 6);
+	double arg4 = js_tonumber(J, 7);
+	char *uri = NULL;
+	fz_link *link = NULL;
+
+	fz_try(ctx)
+	{
+		pageno = fz_clampi(pageno, 0, pdf_count_pages(ctx, page->doc) - 1);
+		uri = pdf_new_link_uri(ctx, pageno, type, arg1, arg2, arg3, arg4);
+		link = fz_create_link(ctx, &page->super, rect, uri);
+	}
+	fz_always(ctx)
+		fz_free(ctx, uri);
+	fz_catch(ctx)
+		rethrow(J);
+
+	if (!link)
+	{
+		js_pushnull(J);
+		return;
+	}
+
+	if (js_try(J)) {
+		fz_drop_link(ctx, link);
+		js_throw(J);
+	}
+
+	js_newobject(J);
+
+	ffi_pushrect(J, link->rect);
+	js_setproperty(J, -2, "bounds");
+
+	js_pushstring(J, link->uri);
+	js_setproperty(J, -2, "uri");
+
+	js_endtry(J);
+	fz_drop_link(ctx, link);
+}
+
 static void ffi_PDFAnnotation_bound(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -5985,6 +6096,9 @@ static void ffi_PDFAnnotation_getInkList(js_State *J)
 	}
 }
 
+#define MAX_INK_STROKE 256
+#define MAX_INK_POINT 16384
+
 /* Takes an argument on the same format as getInkList returns. */
 static void ffi_PDFAnnotation_setInkList(js_State *J)
 {
@@ -5992,16 +6106,23 @@ static void ffi_PDFAnnotation_setInkList(js_State *J)
 	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
 	fz_point *points = NULL;
 	int *counts = NULL;
-	int n, nv, k, i, v;
+	int n, m, nv, k, i, v;
 
 	fz_var(counts);
 	fz_var(points);
 
 	n = js_getlength(J, 1);
+	if (n > MAX_INK_STROKE)
+		js_rangeerror(J, "too many strokes in ink annotation");
 	nv = 0;
 	for (i = 0; i < n; ++i) {
 		js_getindex(J, 1, i);
-		nv += js_getlength(J, -1);
+		m = js_getlength(J, -1);
+		if (m > MAX_INK_POINT)
+			js_rangeerror(J, "too many points in ink annotation stroke");
+		nv += m;
+		if (nv > MAX_INK_POINT)
+			js_rangeerror(J, "too many points in ink annotation");
 		js_pop(J, 1);
 	}
 
@@ -7188,6 +7309,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Page.toStructuredText", ffi_Page_toStructuredText, 1);
 		jsB_propfun(J, "Page.search", ffi_Page_search, 0);
 		jsB_propfun(J, "Page.getLinks", ffi_Page_getLinks, 0);
+		jsB_propfun(J, "Page.createLink", ffi_Page_createLink, 2);
 	}
 	js_setregistry(J, "fz_page");
 
@@ -7445,6 +7567,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFPage.applyRedactions", ffi_PDFPage_applyRedactions, 2);
 		jsB_propfun(J, "PDFPage.process", ffi_PDFPage_process, 1);
 		jsB_propfun(J, "PDFPage.toPixmap", ffi_PDFPage_toPixmap, 5);
+		jsB_propfun(J, "PDFPage.getTransform", ffi_PDFPage_getTransform, 0);
+		jsB_propfun(J, "PDFPage.createLink", ffi_PDFPage_createLink, 7);
 	}
 	js_setregistry(J, "pdf_page");
 

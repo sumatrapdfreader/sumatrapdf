@@ -762,6 +762,7 @@ int fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char 
 #define FZ_META_FORMAT "format"
 #define FZ_META_ENCRYPTION "encryption"
 
+#define FZ_META_INFO "info:"
 #define FZ_META_INFO_TITLE "info:Title"
 #define FZ_META_INFO_AUTHOR "info:Author"
 #define FZ_META_INFO_SUBJECT "info:Subject"
