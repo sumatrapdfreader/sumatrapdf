@@ -164,6 +164,8 @@ struct Favorite {
 struct FileState {
     // path of the document
     char* filePath;
+    // the portable path
+    char* fileRelativePath;
     // Values which are persisted for bookmarks/favorites
     Vec<Favorite*>* favorites;
     // a document can be "pinned" to the Frequently Read list so that it
@@ -231,6 +233,8 @@ struct FileState {
 struct TabState {
     // path of the document
     char* filePath;
+    // the portable path
+    char* fileRelativePath;
     // same as FileStates -> DisplayMode
     char* displayMode;
     // number of the last read page
@@ -266,6 +270,8 @@ struct SessionData {
 // Most values on this structure can be updated through the UI and are
 // persisted in SumatraPDF-settings.txt
 struct GlobalPrefs {
+    // the computer name, whether the machine has been replaced
+    char* computerName;
     // background color of the non-document windows, traditionally yellow
     char* mainWindowBackground;
     ParsedColor mainWindowBackgroundParsed;
@@ -528,6 +534,7 @@ static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0
 
 static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, filePath), SettingType::String, 0},
+    {offsetof(FileState, fileRelativePath), SettingType::String, 0},
     {offsetof(FileState, favorites), SettingType::Array, (intptr_t)&gFavoriteInfo},
     {offsetof(FileState, isPinned), SettingType::Bool, false},
     {offsetof(FileState, isMissing), SettingType::Bool, false},
@@ -548,8 +555,8 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, tocState), SettingType::IntArray, 0},
 };
 static StructInfo gFileStateInfo = {
-    sizeof(FileState), 19, gFileStateFields,
-    "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageN"
+    sizeof(FileState), 20, gFileStateFields,
+    "FilePath\0FileRelativePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageN"
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState"};
 
 static const FieldInfo gPointF_1_Fields[] = {
@@ -560,6 +567,7 @@ static const StructInfo gPointF_1_Info = {sizeof(PointF), 2, gPointF_1_Fields, "
 
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::String, 0},
+    {offsetof(TabState, fileRelativePath), SettingType::String, 0},
     {offsetof(TabState, displayMode), SettingType::String, (intptr_t) "automatic"},
     {offsetof(TabState, pageNo), SettingType::Int, 1},
     {offsetof(TabState, zoom), SettingType::String, (intptr_t) "fit page"},
@@ -568,8 +576,8 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, showToc), SettingType::Bool, true},
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
 };
-static const StructInfo gTabStateInfo = {sizeof(TabState), 8, gTabStateFields,
-                                         "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState"};
+static const StructInfo gTabStateInfo = {sizeof(TabState), 9, gTabStateFields,
+                                         "FilePath\0FileRelativePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState"};
 
 static const FieldInfo gRect_2_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -599,6 +607,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
      (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-4.html"},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, computerName), SettingType::String, (intptr_t) "invalid"},
     {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, (intptr_t) "#80fff200"},
     {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},
     {offsetof(GlobalPrefs, reuseInstance), SettingType::Bool, false},
@@ -657,8 +666,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
-    "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0ComicBo"
+    sizeof(GlobalPrefs), 56, gGlobalPrefsFields,
+    "\0\0ComputerName\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0ComicBo"
     "okUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels"
     "\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0\0RememberState"
     "PerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0Ver"

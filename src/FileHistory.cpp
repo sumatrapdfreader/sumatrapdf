@@ -73,6 +73,24 @@ void FileHistory::UpdateStatesSource(Vec<FileState*>* states) {
     this->states = states;
 }
 
+void FileHistory::FixPath() {
+    
+    if (states != nullptr) {
+
+        // Init executable program path
+        AutoFreeStr exeDir = str::Dup(ToUtf8Temp(GetExeDir()).Get());
+
+        FileState* fs = nullptr;
+        for (size_t i = 0; i < states->size(); i++) {
+            fs = states->at(i);
+            // is relative path
+            if (fs->fileRelativePath) {
+                str::ReplaceWithCopy(&fs->filePath, str::JoinTemp(exeDir, fs->fileRelativePath));
+            }
+        }
+    }
+}
+
 void FileHistory::Clear(bool keepFavorites) const {
     if (!states) {
         return;

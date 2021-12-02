@@ -523,6 +523,13 @@ TempWstr GetExePathTemp() {
     return str::DupTemp(buf);
 }
 
+TempWstr GetComputerName() {
+    WCHAR buf[MAX_PATH] = {0};
+    DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerNameW(buf,&len);
+    return str::DupTemp(buf);
+}
+
 /* Return directory where this executable is located.
 Caller needs to free()
 */

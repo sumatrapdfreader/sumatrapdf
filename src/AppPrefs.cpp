@@ -92,6 +92,15 @@ bool Load() {
     }
 #endif
 
+    bool newComputer = true;
+    char* computerName = ToUtf8Temp(GetComputerName().Get());
+    if (!str::EqI(gprefs->computerName, computerName)) {
+        str::ReplaceWithCopy(&gprefs->computerName, computerName);
+    } else {
+        newComputer = false;
+    }
+
+
     if (!gprefs->uiLanguage || !trans::ValidateLangCode(gprefs->uiLanguage)) {
         // guess the ui language on first start
         str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
@@ -121,6 +130,10 @@ bool Load() {
 
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
+    if (newComputer) {
+        gFileHistory.FixPath();
+        FixSessionDataRelativePath(gGlobalPrefs->sessionData);
+    }
     auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
     SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 

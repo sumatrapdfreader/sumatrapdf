@@ -20,5 +20,8 @@ ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed);
 
 void SetFileStatePath(FileState* fs, const char* path);
 void SetFileStatePath(FileState* fs, const WCHAR* path);
+void SetFileStateRelativePath(FileState* fs, const char* path);
+
+void FixSessionDataRelativePath(Vec<SessionData*>* sessionData);
 
 #define GetPrefsColor(name) GetParsedColor(name, name##Parsed)

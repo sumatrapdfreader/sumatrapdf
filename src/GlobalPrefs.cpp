@@ -19,6 +19,7 @@ GlobalPrefs* gGlobalPrefs = nullptr;
 FileState* NewDisplayState(const char* filePath) {
     FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
     SetFileStatePath(fs, filePath);
+    SetFileStateRelativePath(fs, filePath);
     return fs;
 }
 
@@ -88,6 +89,7 @@ SessionData* NewSessionData() {
 TabState* NewTabState(FileState* fs) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
     str::ReplaceWithCopy(&state->filePath, fs->filePath);
+    str::ReplaceWithCopy(&state->fileRelativePath, fs->fileRelativePath);
     str::ReplaceWithCopy(&state->displayMode, fs->displayMode);
     state->pageNo = fs->pageNo;
     str::ReplaceWithCopy(&state->zoom, fs->zoom);
@@ -127,4 +129,42 @@ void SetFileStatePath(FileState* fs, const char* path) {
 void SetFileStatePath(FileState* fs, const WCHAR* path) {
     char* pathA = ToUtf8Temp(path);
     SetFileStatePath(fs, pathA);
+}
+
+void SetFileStateRelativePath(FileState* fs, const char* filepath) {
+    if (filepath) {
+        AutoFreeWstr current = GetExeDir();
+        AutoFreeWstr path = strconv::Utf8ToWstr(filepath);
+        WCHAR relativePath[MAX_PATH] = {0};
+        if(PathRelativePathToW(relativePath,
+            current.Get(),FILE_ATTRIBUTE_DIRECTORY,
+            path.Get(), FILE_ATTRIBUTE_NORMAL)) {
+            // discriminate: .. and .
+            if (relativePath[1] == L'\\') {
+                str::ReplaceWithCopy(&fs->fileRelativePath, strconv::WstrToUtf8(&relativePath[1]));
+            }
+        }
+    }
+
+}
+
+void FixSessionDataRelativePath(Vec<SessionData*>* sessionData) {
+    if (sessionData != nullptr) {
+        Vec<TabState*>* tabStates = nullptr;
+        TabState* ts = nullptr;
+
+        // Init executable program path
+        AutoFreeStr exeDir = str::Dup(ToUtf8Temp(GetExeDir()).Get());
+
+        // traversal, repair the path
+        for (size_t i = 0; i < sessionData->size(); i++) {
+            tabStates = sessionData->at(i)->tabStates;
+            for (size_t j = 0; j < tabStates->size(); j++) {
+                ts = tabStates->at(j);
+                if (ts->fileRelativePath) {
+                    str::ReplaceWithCopy(&ts->filePath, str::JoinTemp(exeDir, ts->fileRelativePath));
+                }
+            }
+        }
+    }
 }

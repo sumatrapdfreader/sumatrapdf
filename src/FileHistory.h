@@ -27,4 +27,5 @@ struct FileHistory {
     void GetFrequencyOrder(Vec<FileState*>& list) const;
     void Purge(bool alwaysUseDefaultState = false) const;
     void UpdateStatesSource(Vec<FileState*>* states);
+    void FixPath();
 };
