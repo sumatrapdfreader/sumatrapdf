@@ -1702,12 +1702,14 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             break;
         case CmdSelectAnnotation:
             CrashIf(!buildCtx.annotationUnderCursor);
+
+            [[fallthrough]];
         case CmdEditAnnotations:
             StartEditAnnotations(tab, nullptr);
             SelectAnnotationInEditWindow(tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
             break;
         case CmdCopyLinkTarget: {
-            WCHAR* tmp = CleanupFileURL(value);
+            WCHAR* tmp = CleanupURLForClipbardCopy(value);
             CopyTextToClipboard(tmp);
             str::Free(tmp);
         } break;
