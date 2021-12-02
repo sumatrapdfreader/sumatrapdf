@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1412e86752404c746ed6763940d61bda0cf4fefc
+76a5fe5ea9dc51016731d43cb765a6b10f924c13
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2999,6 +2999,7 @@ co:&Sottulineatu\tu
 de:&Unterstreichen\tu
 es:&Subrayar\tu
 hu:Aláhúzás\tu
+it:&Sottolineato\ts
 nl:&Onderstrepen\tu
 pl:Pod&kreślenie\tu
 :&Use original page sizes
@@ -15527,6 +15528,7 @@ co:Arregistrà l’annutazioni in u PDF esistente
 de:Anmerkungen in bestehende PDF-Dateien speichern
 es:Guardar Anotaciones a PDF existente
 hu:Megjegyzések elmentése a meglévő PDF-be
+it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 :Save Embedded File...
