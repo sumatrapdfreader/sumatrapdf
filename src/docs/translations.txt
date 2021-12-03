@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-76a5fe5ea9dc51016731d43cb765a6b10f924c13
+3ee4b8c5cf1a2d1729385b8c5d4dc4178946d254
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3002,6 +3002,7 @@ hu:Aláhúzás\tu
 it:&Sottolineato\ts
 nl:&Onderstrepen\tu
 pl:Pod&kreślenie\tu
+tr:Altını çiz
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -4075,7 +4076,7 @@ pl:Adnotacje
 ru:Аннотации
 sk:Anotácie
 th:อธิบายประกอบ
-tr:Notlar
+tr:Dipnotlar
 tw:評注
 uk:Анотації
 vn:Ghi chú
@@ -5390,7 +5391,7 @@ sv:&Sök efter ny version
 ta:புதிய பதிப்பை தேடு
 th:ตรวจสอบ &อัพเดท
 tl:Tignan kung may bagong &bersyon
-tr:&Güncellemeleri Denetle
+tr:&Güncellemeleri denetle
 tw:檢查是否有新版本(&U)
 uk:Перевірити, чи є нова версія
 uz:&Yangi versiyani tekshirish
@@ -7039,7 +7040,7 @@ kw:Gwruthyl Notenyans &Yn-Dann Resor
 nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
 th:สร้างคำอธิบายประกอบ &​ใต้ตัวชี้ตำแหน่ง
-tr:İmlecin &Altına Not Oluştur
+tr:İmlecin &Altına Dipnot Oluştur
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
 bg:Създай Обяснение от избраното
@@ -7063,7 +7064,7 @@ mk:Креирајте прибелешка од изборот
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
 th:สร้างคำอธิบายประกอบจากส่วนที่เลือก
-tr:Seçimden Not Oluştur
+tr:Seçimden Dipnot Oluştur
 :Created:
 af:Geskep
 am:Ստեղծված`
@@ -8084,7 +8085,7 @@ nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
 th:ปรับแต่งคำอธิบายประกอบ
-tr:Notları Düzenle
+tr:Dipnotları Düzenle
 tw:編輯評注
 uk:Змінити анотації
 :Enter password
@@ -15531,6 +15532,7 @@ hu:Megjegyzések elmentése a meglévő PDF-be
 it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
+tr:Dipnotları mevcut PDF'ye kaydet
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
@@ -15644,7 +15646,7 @@ kw:Gwitha notenyansow?
 nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
 th:บันทึกคำอธิบายประกอบหรือไม่
-tr:Notlar kaydedilsin mi?
+tr:Dipnotlar kaydedilsin mi?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
@@ -15899,7 +15901,7 @@ lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
 th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
-tr:Düzenleyicide Not Seç
+tr:Düzenleyicide Dipnot Seç
 :Select content with Ctrl+left mouse button
 am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 ar:حدد المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
@@ -18549,7 +18551,7 @@ lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
 th:ไม่ได้บันทึกคำอธิบายประกอบ
-tr:Kaydedilmemiş notlar
+tr:Kaydedilmemiş dipnotlar
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
 br:Anotações não salvas em '%s'
@@ -18567,7 +18569,7 @@ kw:Notenyansow anwithys yn '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
-tr:'%s' içinde kaydedilmemiş notlar
+tr:'%s' içinde kaydedilmemiş dipnotlar
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
@@ -19052,7 +19054,7 @@ nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 th:คุณไม่ได้บันทึกคำอธิบายประกอบ
-tr:Kaydedilmemiş notlarınız var
+tr:Kaydedilmemiş dipnotlarınız var
 uk:Анотації не збережено
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
