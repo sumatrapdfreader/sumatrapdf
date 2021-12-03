@@ -60,6 +60,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdSaveAnnotations, "Save Annotations")                             \
     V(CmdEditAnnotations, "Edit Annotations")                             \
     V(CmdSelectAnnotation, "Select Annotation in Editor")                 \
+    V(CmdDeleteAnnotation, "Delete Annotation")                           \
     V(CmdZoomFitPage, "Zoom: Fit Page")                                   \
     V(CmdZoomActualSize, "Zoom: Actual Size")                             \
     V(CmdZoomFitWidth, "Zoom: Fit Width")                                 \

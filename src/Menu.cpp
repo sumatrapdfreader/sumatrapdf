@@ -767,6 +767,10 @@ static MenuDef menuDefContext[] = {
         CmdSelectAnnotation,
     },
     {
+        _TRN("Delete Annotation\tDel"),
+        CmdDeleteAnnotation,
+    },
+    {
         _TRN("Edit Annotations"),
         CmdEditAnnotations,
     },
@@ -947,6 +951,7 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdFavoriteToggle,
     CmdSaveAnnotations,
     CmdSelectAnnotation,
+    CmdDeleteAnnotation,
     CmdEditAnnotations,
     CmdOpenSelectedDocument,
     CmdPinSelectedDocument,
@@ -960,6 +965,7 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSelectAnnotation,
     CmdEditAnnotations,
+    CmdDeleteAnnotation,
     (UINT_PTR)menuDefCreateAnnotFromSelection,
     (UINT_PTR)menuDefCreateAnnotUnderCursor,
 };
@@ -1264,6 +1270,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
             disableMenu |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
             disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdSelectAnnotation));
+            disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdDeleteAnnotation));
             disableMenu |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
 
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
@@ -1707,6 +1714,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdEditAnnotations:
             StartEditAnnotations(tab, nullptr);
             SelectAnnotationInEditWindow(tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
+            break;
+        case CmdDeleteAnnotation:
+            DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
             break;
         case CmdCopyLinkTarget: {
             WCHAR* tmp = CleanupURLForClipbardCopy(value);

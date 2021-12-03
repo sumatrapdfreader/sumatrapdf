@@ -793,12 +793,19 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     MessageBoxNYI(ew->mainWindow->hwnd);
 }
 
+void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annotation* annot) {
+    Delete(annot);
+    if (ew != nullptr) {
+        // can be null if called from Menu.cpp and annotations window is not visible
+        RebuildAnnotations(ew);
+        UpdateUIForSelectedAnnotation(ew, -1);
+    }
+    WindowInfoRerender(tab->win);
+}
+
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
     CrashIf(!ew->annot);
-    Delete(ew->annot);
-    RebuildAnnotations(ew);
-    UpdateUIForSelectedAnnotation(ew, -1);
-    WindowInfoRerender(ew->tab->win);
+    DeleteAnnotationAndUpdateUI(ew->tab, ew, ew->annot);
 }
 
 static void ListBoxSelectionChanged(EditAnnotationsWindow* ew, ListBoxSelectionChangedEvent* ev) {

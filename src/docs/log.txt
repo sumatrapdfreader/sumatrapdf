@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-12-03 Fri
+- add 'Delete Annotation' context menu and Del / Backspace (fixes #2248)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2248
+
 2021-12-02 Thu
 
 - fix management of tooltips for tags (fixes #2247)

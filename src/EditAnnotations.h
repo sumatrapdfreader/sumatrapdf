@@ -8,3 +8,4 @@ void StartEditAnnotations(TabInfo*, Vec<Annotation*>&);
 void CloseAndDeleteEditAnnotationsWindow(EditAnnotationsWindow*);
 void AddAnnotationToEditWindow(EditAnnotationsWindow*, Annotation*);
 void SelectAnnotationInEditWindow(EditAnnotationsWindow*, Annotation*);
+void DeleteAnnotationAndUpdateUI(TabInfo*, EditAnnotationsWindow*, Annotation*);
