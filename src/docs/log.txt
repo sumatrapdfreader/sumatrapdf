@@ -3,6 +3,10 @@ A daily log of changes and commentary. An experiment of sorts.
 2021-12-03 Fri
 - add 'Delete Annotation' context menu and Del / Backspace (fixes #2248)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2248
+- fix deleting annotations (fixes #2249)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2249
+  a mismatch between Annotation* kept in EditAnnotationsWindow
+  and Annotation* from outside.
 
 2021-12-02 Thu
 

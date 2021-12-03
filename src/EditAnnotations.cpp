@@ -281,7 +281,34 @@ static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
     ew->buttonSaveToNewFile->SetIsEnabled(didChange);
 }
 
+static void RemoveDeletedAnnotations(Vec<Annotation*>* v) {
+again:
+    auto n = v->isize();
+    for (int i = 0; i < n; i++) {
+        auto a = v->at(i);
+        if (a->isDeleted) {
+            v->RemoveAt((size_t)i, 1);
+            delete a;
+            goto again;
+        }
+    }
+}
+
+// Annotation* is a temporary wrapper. Find matching in list of annotations
+static Annotation* FindMatchingAnnotation(EditAnnotationsWindow* ew, Annotation* annot) {
+    if (!ew || !ew->annotations) {
+        return annot;
+    }
+    for (auto a : *ew->annotations) {
+        if (IsAnnotationEq(a, annot)) {
+            return a;
+        }
+    }
+    return nullptr;
+}
+
 static void RebuildAnnotations(EditAnnotationsWindow* ew) {
+    RemoveDeletedAnnotations(ew->annotations);
     auto model = new ListBoxModelStrings();
     int n = 0;
     if (ew->annotations) {
@@ -291,9 +318,7 @@ static void RebuildAnnotations(EditAnnotationsWindow* ew) {
     str::Str s;
     for (int i = 0; i < n; i++) {
         auto annot = ew->annotations->at(i);
-        if (annot->isDeleted) {
-            continue;
-        }
+        CrashIf(annot->isDeleted);
         s.Reset();
         s.AppendFmt("page %d, ", annot->pageNo);
         s.AppendView(AnnotationReadableName(annot->type));
@@ -794,6 +819,7 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
 }
 
 void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annotation* annot) {
+    annot = FindMatchingAnnotation(ew, annot);
     Delete(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible

@@ -3613,6 +3613,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         if (annot) {
             auto tab = win->currentTab;
             DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, annot);
+            delete annot;
         }
 
         return true;
