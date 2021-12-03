@@ -2,6 +2,12 @@ A daily log of changes and commentary. An experiment of sorts.
 
 2021-12-02 Thu
 
+- fix management of tooltips for tags (fixes #2247)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2247
+  still not a great solution. This information should be stored
+  on TabsInfo and TabsCtrl2 should only manage ITab objects that
+  provide needed info
+
 - strip 'mailto:' when copying links to clipboard (fixes #2244)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2244
 

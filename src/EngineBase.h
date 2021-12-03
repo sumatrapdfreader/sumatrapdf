@@ -531,4 +531,3 @@ struct PasswordUI {
 
 WCHAR* CleanupFileURL(const WCHAR*);
 WCHAR* CleanupURLForClipbardCopy(const WCHAR*);
-

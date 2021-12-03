@@ -105,7 +105,7 @@ bool TooltipCtrl::IsShowing() {
 }
 
 void TooltipCtrl::Hide() {
-    if (IsShowing()) {
+    if (!IsShowing()) {
         return;
     }
 

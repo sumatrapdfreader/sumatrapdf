@@ -568,6 +568,7 @@ int TabsCtrl2::InsertTab(int idx, const WCHAR* ws) {
     item.mask = TCIF_TEXT;
     item.pszText = (WCHAR*)ws;
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
+    tooltips.InsertAt(idx, str::Dup(L""));
     return insertedIdx;
 }
 
@@ -579,6 +580,7 @@ int TabsCtrl2::InsertTab(int idx, std::string_view sv) {
     auto s = ToWstrTemp(sv);
     item.pszText = s.Get();
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
+    tooltips.InsertAt(idx, str::Dup(L""));
     return insertedIdx;
 }
 
@@ -587,10 +589,12 @@ void TabsCtrl2::RemoveTab(int idx) {
     CrashIf(idx >= GetTabCount());
     BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
     CrashIf(!ok);
+    tooltips.RemoveAt(idx);
 }
 
 void TabsCtrl2::RemoveAllTabs() {
     TabCtrl_DeleteAllItems(hwnd);
+    tooltips.Reset();
 }
 
 // TODO: remove in favor of std::string_view version
@@ -716,8 +720,10 @@ void TabsCtrl2::MaybeUpdateTooltipText(int idx) {
 }
 
 void TabsCtrl2::SetTooltip(int idx, std::wstring_view sv) {
+    WCHAR* curr = tooltips[idx];
     WCHAR* s = str::Dup(sv);
-    tooltips.InsertAt(idx, s);
+    tooltips[idx] = s;
+    str::Free(curr);
 }
 
 const WCHAR* TabsCtrl2::GetTooltip(int idx) {
