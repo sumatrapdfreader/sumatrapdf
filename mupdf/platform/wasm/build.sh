@@ -4,6 +4,9 @@ make -j4 -C ../.. generate
 
 source /opt/emsdk/emsdk_env.sh
 
+echo Building generated files:
+make -j4 -C ../.. generate
+
 echo Building library:
 make -j4 -C ../.. \
 	OS=wasm build=release \

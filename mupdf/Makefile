@@ -45,7 +45,6 @@ ifneq ($(verbose),yes)
   QUIET_CXX = @ echo "    CXX $@" ;
   QUIET_GEN = @ echo "    GEN $@" ;
   QUIET_LINK = @ echo "    LINK $@" ;
-  QUIET_HOSTLINK = @ echo "    HOSTLINK $@" ;
   QUIET_RM = @ echo "    RM $@" ;
   QUIET_TAGS = @ echo "    TAGS $@" ;
   QUIET_WINDRES = @ echo "    WINDRES $@" ;
@@ -61,8 +60,6 @@ AR_CMD = $(QUIET_AR) $(MKTGTDIR) ; $(AR) cr $@ $^
 ifdef RANLIB
   RANLIB_CMD = $(QUIET_RANLIB) $(RANLIB) $@
 endif
-HOSTCC ?= $(CC)
-HOSTLINK_CMD = $(QUIET_HOSTLINK) $(MKTGTDIR) ; $(HOSTCC) -o $@ $^
 LINK_CMD = $(QUIET_LINK) $(MKTGTDIR) ; $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 TAGS_CMD = $(QUIET_TAGS) ctags -R --c-kinds=+p --exclude=platform/python --exclude=platform/c++
 WINDRES_CMD = $(QUIET_WINDRES) $(MKTGTDIR) ; $(WINDRES) $< $@
@@ -83,9 +80,6 @@ endif
 $(OUT)/%.a :
 	$(AR_CMD)
 	$(RANLIB_CMD)
-
-$(OUT)/scripts/hexdump.exe: scripts/hexdump.c
-	$(HOSTLINK_CMD)
 
 $(OUT)/%.exe: %.c
 	$(LINK_CMD)
@@ -176,7 +170,7 @@ PKCS7_OBJ := $(PKCS7_SRC:%.c=$(OUT)/%.o)
 
 # --- Generated embedded font files ---
 
-HEXDUMP_EXE := $(OUT)/scripts/hexdump.exe
+HEXDUMP_SH := scripts/hexdump.sh
 
 FONT_BIN := $(sort $(wildcard resources/fonts/urw/*.cff))
 FONT_BIN += $(sort $(wildcard resources/fonts/han/*.ttc))
@@ -187,10 +181,10 @@ FONT_BIN += $(sort $(wildcard resources/fonts/sil/*.cff))
 
 FONT_GEN := $(FONT_BIN:%=generated/%.c)
 
-generated/%.cff.c : %.cff $(HEXDUMP_EXE) ; $(QUIET_GEN) $(MKTGTDIR) ; $(HEXDUMP_EXE) -s $@ $<
-generated/%.otf.c : %.otf $(HEXDUMP_EXE) ; $(QUIET_GEN) $(MKTGTDIR) ; $(HEXDUMP_EXE) -s $@ $<
-generated/%.ttf.c : %.ttf $(HEXDUMP_EXE) ; $(QUIET_GEN) $(MKTGTDIR) ; $(HEXDUMP_EXE) -s $@ $<
-generated/%.ttc.c : %.ttc $(HEXDUMP_EXE) ; $(QUIET_GEN) $(MKTGTDIR) ; $(HEXDUMP_EXE) -s $@ $<
+generated/%.cff.c : %.cff $(HEXDUMP_SH) ; $(QUIET_GEN) $(MKTGTDIR) ; bash $(HEXDUMP_SH) > $@ $<
+generated/%.otf.c : %.otf $(HEXDUMP_SH) ; $(QUIET_GEN) $(MKTGTDIR) ; bash $(HEXDUMP_SH) > $@ $<
+generated/%.ttf.c : %.ttf $(HEXDUMP_SH) ; $(QUIET_GEN) $(MKTGTDIR) ; bash $(HEXDUMP_SH) > $@ $<
+generated/%.ttc.c : %.ttc $(HEXDUMP_SH) ; $(QUIET_GEN) $(MKTGTDIR) ; bash $(HEXDUMP_SH) > $@ $<
 
 ifeq ($(HAVE_OBJCOPY),yes)
   MUPDF_OBJ += $(FONT_BIN:%=$(OUT)/%.o)
@@ -451,7 +445,7 @@ java-clean:
 	$(MAKE) -C platform/java build=$(build) clean
 
 wasm:
-	$(MAKE) -C platform/wasm HOSTCC=$(CC)
+	$(MAKE) -C platform/wasm
 
 extract-test:
 	$(MAKE) debug

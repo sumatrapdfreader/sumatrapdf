@@ -272,7 +272,7 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 	int n = 0;
 
 	if (!ctx || !page) return NULL;
-	if (!jneedle) jni_throw_arg(env, "needle must not be null");
+	if (!jneedle) return NULL;
 
 	needle = (*env)->GetStringUTFChars(env, jneedle, NULL);
 	if (!needle) return 0;

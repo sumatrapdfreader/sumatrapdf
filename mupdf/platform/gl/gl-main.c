@@ -224,7 +224,6 @@ static int showoutline = 0;
 static int showundo = 0;
 static int showlinks = 0;
 static int showsearch = 0;
-static int showinfo = 0;
 int showannotate = 0;
 int showform = 0;
 
@@ -622,6 +621,27 @@ static void help_dialog(void)
 	ui_spacer();
 	ui_layout(ALL, BOTH, CENTER, ui.padsize, ui.padsize);
 	ui_label_with_scrollbar(help_dialog_text, 0, 0, &scroll);
+	ui_dialog_end();
+}
+
+static fz_buffer *format_info_text();
+
+static void info_dialog(void)
+{
+	static int scroll;
+	fz_buffer *info_text;
+
+	ui_dialog_begin(ui.gridsize*20, ui.gridsize*20);
+	ui_layout(B, NONE, S, ui.padsize, ui.padsize);
+	if (ui_button("Okay") || ui.key == KEY_ENTER || ui.key == KEY_ESCAPE)
+		ui.dialog = NULL;
+	ui_spacer();
+	ui_layout(ALL, BOTH, CENTER, ui.padsize, ui.padsize);
+
+	info_text = format_info_text();
+	ui_label_with_scrollbar((char*)fz_string_from_buffer(ctx, info_text), 0, 0, &scroll);
+	fz_drop_buffer(ctx, info_text);
+
 	ui_dialog_end();
 }
 
@@ -1336,7 +1356,7 @@ static void do_links(fz_link *link)
 		if (ui_mouse_inside(area))
 		{
 			if (!tooltip)
-			tooltip = link->uri;
+				tooltip = link->uri;
 			ui.hot = link;
 			if (!ui.active && ui.down)
 				ui.active = link;
@@ -1961,9 +1981,6 @@ static void do_app(void)
 			ui.key = 'T', ui.mod = 0, ui.plain = 1;
 	}
 
-	if (ui.down || ui.middle || ui.right || ui.key)
-		showinfo = 0;
-
 	if (trace_file && ui.key == KEY_CTL_P)
 		trace_save_snapshot();
 
@@ -1979,7 +1996,7 @@ static void do_app(void)
 		case 'u': toggle_undo(); break;
 		case 'L': showlinks = !showlinks; break;
 		case 'F': showform = !showform; break;
-		case 'i': showinfo = !showinfo; break;
+		case 'i': ui.dialog = info_dialog; break;
 		case 'r': reload(); break;
 		case 'q': quit(); break;
 		case 'S': do_save_pdf_file(); break;
@@ -2205,11 +2222,12 @@ const char *format_date(int64_t secs)
 	return buf;
 }
 
-static void do_info(void)
+static fz_buffer *format_info_text()
 {
-	char buf[100];
+	fz_buffer *out = fz_new_buffer(ctx, 4096);
 	pdf_document *pdoc = pdf_specifics(ctx, doc);
 	sigs_list list = { 0, 0, NULL };
+	char buf[100];
 
 	if (pdoc)
 	{
@@ -2219,41 +2237,44 @@ static void do_info(void)
 		pdf_walk_tree(ctx, form_fields, PDF_NAME(Kids), process_sigs, NULL, &list, &ft_list[0], &ft);
 	}
 
-	ui_dialog_begin(ui.gridsize*20, (15+list.len) * ui.lineheight);
-	ui_layout(T, X, W, 0, 0);
+	fz_append_printf(ctx, out, "File: %s\n\n", filename);
 
 	if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_TITLE, buf, sizeof buf) > 0)
-		ui_label("Title: %s", buf);
+		fz_append_printf(ctx, out, "Title: %s\n", buf);
 	if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_AUTHOR, buf, sizeof buf) > 0)
-		ui_label("Author: %s", buf);
+		fz_append_printf(ctx, out, "Author: %s\n", buf);
 	if (fz_lookup_metadata(ctx, doc, FZ_META_FORMAT, buf, sizeof buf) > 0)
-		ui_label("Format: %s", buf);
+		fz_append_printf(ctx, out, "Format: %s\n", buf);
 	if (fz_lookup_metadata(ctx, doc, FZ_META_ENCRYPTION, buf, sizeof buf) > 0)
-		ui_label("Encryption: %s", buf);
+		fz_append_printf(ctx, out, "Encryption: %s\n", buf);
+
+	fz_append_string(ctx, out, "\n");
+
 	if (pdoc)
 	{
 		int updates = pdf_count_versions(ctx, pdoc);
 
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_CREATOR, buf, sizeof buf) > 0)
-			ui_label("PDF Creator: %s", buf);
+			fz_append_printf(ctx, out, "PDF Creator: %s\n", buf);
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_PRODUCER, buf, sizeof buf) > 0)
-			ui_label("PDF Producer: %s", buf);
+			fz_append_printf(ctx, out, "PDF Producer: %s\n", buf);
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_SUBJECT, buf, sizeof buf) > 0)
-			ui_label("Subject: %s", buf);
+			fz_append_printf(ctx, out, "Subject: %s\n", buf);
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_KEYWORDS, buf, sizeof buf) > 0)
-			ui_label("Keywords: %s", buf);
+			fz_append_printf(ctx, out, "Keywords: %s\n", buf);
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_CREATIONDATE, buf, sizeof buf) > 0)
 		{
 			const char *s = format_date(pdf_parse_date(ctx, buf));
 			if (s)
-				ui_label("Creation date: %s", s);
+				fz_append_printf(ctx, out, "Creation date: %s\n", s);
 		}
 		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_MODIFICATIONDATE, buf, sizeof buf) > 0)
 		{
 			const char *s = format_date(pdf_parse_date(ctx, buf));
 			if (s)
-				ui_label("Modification date: %s", s);
+				fz_append_printf(ctx, out, "Modification date: %s\n", s);
 		}
+
 		buf[0] = 0;
 		if (fz_has_permission(ctx, doc, FZ_PERMISSION_PRINT))
 			fz_strlcat(buf, "print, ", sizeof buf);
@@ -2267,21 +2288,22 @@ static void do_info(void)
 			buf[strlen(buf)-2] = 0;
 		else
 			fz_strlcat(buf, "none", sizeof buf);
-		ui_label("Permissions: %s", buf);
-		ui_label("PDF %sdocument with %d update%s",
+		fz_append_printf(ctx, out, "Permissions: %s\n", buf);
+
+		fz_append_printf(ctx, out, "PDF %sdocument with %d update%s\n",
 			pdf_doc_was_linearized(ctx, pdoc) ? "linearized " : "",
 			updates, updates > 1 ? "s" : "");
 		if (updates > 0)
 		{
 			int n = pdf_validate_change_history(ctx, pdoc);
 			if (n == 0)
-				ui_label("Change history seems valid.");
+				fz_append_printf(ctx, out, "Change history seems valid.\n");
 			else if (n == 1)
-				ui_label("Invalid changes made to the document in the last update.");
+				fz_append_printf(ctx, out, "Invalid changes made to the document in the last update.\n");
 			else if (n == 2)
-				ui_label("Invalid changes made to the document in the penultimate update.");
+				fz_append_printf(ctx, out, "Invalid changes made to the document in the penultimate update.\n");
 			else
-				ui_label("Invalid changes made to the document %d updates ago.", n);
+				fz_append_printf(ctx, out, "Invalid changes made to the document %d updates ago.\n", n);
 		}
 
 		if (list.len)
@@ -2297,34 +2319,36 @@ static void do_info(void)
 						pdf_pkcs7_verifier *verifier = pkcs7_openssl_new_verifier(ctx);
 						pdf_signature_error sig_cert_error = pdf_check_certificate(ctx, verifier, pdf, field);
 						pdf_signature_error sig_digest_error = pdf_check_digest(ctx, verifier, pdf, field);
-						ui_label("Signature %d: CERT: %s, DIGEST: %s%s", i+1,
+						fz_append_printf(ctx, out, "Signature %d: CERT: %s, DIGEST: %s%s\n", i+1,
 							short_signature_error_desc(sig_cert_error),
 							short_signature_error_desc(sig_digest_error),
-								pdf_signature_incremental_change_since_signing(ctx, pdf, field) ? ", Changed since": "");
-
+							pdf_signature_incremental_change_since_signing(ctx, pdf, field) ? ", Changed since": "");
 						pdf_drop_verifier(ctx, verifier);
 					}
 					else
-						ui_label("Signature %d: Unsigned", i+1);
+						fz_append_printf(ctx, out, "Signature %d: Unsigned\n", i+1);
 				}
 				fz_catch(ctx)
-					ui_label("Signature %d: Error", i+1);
+					fz_append_printf(ctx, out, "Signature %d: Error\n", i+1);
 			}
 			fz_free(ctx, list.sig);
 
 			if (updates == 0)
-				ui_label("No updates since document creation");
+				fz_append_printf(ctx, out, "No updates since document creation\n");
 			else
 			{
 				int n = pdf_validate_change_history(ctx, pdf);
 				if (n == 0)
-					ui_label("Document changes conform to permissions");
+					fz_append_printf(ctx, out, "Document changes conform to permissions\n");
 				else
-					ui_label("Document permissions violated %d updates ago", n);
+					fz_append_printf(ctx, out, "Document permissions violated %d updates ago\n", n);
 			}
 		}
+
+		fz_append_string(ctx, out, "\n");
 	}
-	ui_label("Page: %d / %d", fz_page_number_from_location(ctx, doc, currentpage)+1, fz_count_pages(ctx, doc));
+
+	fz_append_printf(ctx, out, "Page: %d / %d\n", fz_page_number_from_location(ctx, doc, currentpage)+1, fz_count_pages(ctx, doc));
 	{
 		int w = (int)(page_bounds.x1 - page_bounds.x0 + 0.5f);
 		int h = (int)(page_bounds.y1 - page_bounds.y0 + 0.5f);
@@ -2332,13 +2356,14 @@ static void do_info(void)
 		if (!size)
 			size = paper_size_name(h, w);
 		if (size)
-			ui_label("Size: %d x %d (%s)", w, h, size);
+			fz_append_printf(ctx, out, "Size: %d x %d (%s)\n", w, h, size);
 		else
-			ui_label("Size: %d x %d", w, h);
+			fz_append_printf(ctx, out, "Size: %d x %d\n", w, h);
 	}
-	ui_label("ICC rendering: %s.", currenticc ? "on" : "off");
-	ui_label("Spot rendering: %s.", currentseparations ? "on" : "off");
-	ui_dialog_end();
+	fz_append_printf(ctx, out, "ICC rendering: %s.\n", currenticc ? "on" : "off");
+	fz_append_printf(ctx, out, "Spot rendering: %s.\n", currentseparations ? "on" : "off");
+
+	return out;
 }
 
 static void do_canvas(void)
@@ -2571,9 +2596,6 @@ void do_main(void)
 	}
 
 	do_canvas();
-
-	if (showinfo)
-		do_info();
 
 	if (pdf)
 	{

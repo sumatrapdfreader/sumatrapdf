@@ -912,6 +912,9 @@ svg_dev_fill_image(fz_context *ctx, fz_device *dev, fz_image *image, fz_matrix c
 	fz_matrix local_ctm = ctm;
 	fz_matrix scale = { 0 };
 
+	if (alpha == 0)
+		return;
+
 	scale.a = 1.0f / image->w;
 	scale.d = 1.0f / image->h;
 
@@ -933,6 +936,9 @@ svg_dev_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shade, fz_matrix c
 	fz_irect bbox;
 	fz_pixmap *pix;
 	fz_rect scissor = fz_device_current_scissor(ctx, dev);
+
+	if (alpha == 0)
+		return;
 
 	if (fz_is_infinite_rect(scissor))
 	{
@@ -1096,6 +1102,7 @@ svg_dev_begin_group(fz_context *ctx, fz_device *dev, fz_rect bbox, fz_colorspace
 		out = end_def(ctx, sdev);
 	}
 
+	/* FIXME: Handle alpha == 0 somehow? */
 	/* SVG 1.1 doesn't support adequate blendmodes/knockout etc, so just ignore it for now */
 	if (alpha == 1)
 		fz_write_printf(ctx, out, "<g");
