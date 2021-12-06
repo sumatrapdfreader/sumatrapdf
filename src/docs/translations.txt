@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3ee4b8c5cf1a2d1729385b8c5d4dc4178946d254
+cb1428e1a9d03664e6fb684e2d1bee9a9ba9d5fe
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7641,6 +7641,11 @@ tw:無法在可攜模式變更預設 PDF 閱讀器
 uk:Не можна змінити штатний переглядач PDF у портативному режимі
 uz:Portable usulida andoza PDF ko'rish vositasini o'zgartirib bo'lmaydi
 vn:Không thay đổi được trình đọc PDF chính ở chế độ di động
+:Delete Annotation\tDel
+cn:删除标注\tDel
+de:Anmerkung löschen\tDel
+nl:Verwijder Aantekening\tDel
+pl:Usuń adnotację\tDel
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
 ar:رفض الأذونات:
