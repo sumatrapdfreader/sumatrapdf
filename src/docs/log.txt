@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-12-08 Wed
+- respect DiskAccess=0 better (fixes #2263)
+  https://github.com/sumatrapdfreader/sumatrapdf/issues/2263
+  Also shortened some loops since for (x : a) works on static arrays
+
 2021-12-03 Fri
 - add 'Delete Annotation' context menu and Del / Backspace (fixes #2248)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2248

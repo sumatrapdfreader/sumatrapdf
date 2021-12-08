@@ -1261,6 +1261,12 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         if (!HasPermission(Perm::PrinterAccess)) {
             removeMenu |= (cmdId == CmdPrint);
         }
+        if (!HasPermission(Perm::DiskAccess)) {
+            removeMenu |= cmdIdInList(removeIfNoDiskAccessPerm);
+        }
+        if (!HasPermission(Perm::CopySelection)) {
+            removeMenu |= cmdIdInList(removeIfNoCopyPerms);
+        }
 
         if (ctx) {
             removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(rmoveIfChm));
@@ -1346,19 +1352,18 @@ static struct {
 // clang-format on
 
 int MenuIdFromVirtualZoom(float virtualZoom) {
-    int n = (int)dimof(gZoomMenuIds);
-    for (int i = 0; i < n; i++) {
-        if (virtualZoom == gZoomMenuIds[i].zoom) {
-            return gZoomMenuIds[i].itemId;
+    for (auto&& it : gZoomMenuIds) {
+        if (virtualZoom == it.zoom) {
+            return it.itemId;
         }
     }
     return CmdZoomCustom;
 }
 
 float ZoomMenuItemToZoom(int menuItemId) {
-    for (int i = 0; i < dimof(gZoomMenuIds); i++) {
-        if (menuItemId == gZoomMenuIds[i].itemId) {
-            return gZoomMenuIds[i].zoom;
+    for (auto&& it : gZoomMenuIds) {
+        if (menuItemId == it.itemId) {
+            return it.zoom;
         }
     }
     CrashIf(true);
@@ -1368,8 +1373,8 @@ float ZoomMenuItemToZoom(int menuItemId) {
 static void ZoomMenuItemCheck(HMENU m, int menuItemId, bool canZoom) {
     CrashIf((CmdZoomFirst > menuItemId) || (menuItemId > CmdZoomLast));
 
-    for (int i = 0; i < dimof(gZoomMenuIds); i++) {
-        win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
+    for (auto&& it : gZoomMenuIds) {
+        win::menu::SetEnabled(m, it.itemId, canZoom);
     }
 
     if (CmdZoom100 == menuItemId) {
@@ -1426,8 +1431,7 @@ static bool IsFileCloseMenuEnabled() {
 
 static void SetMenuStateForSelection(TabInfo* tab, HMENU menu) {
     bool isTextSelected = tab && tab->win && tab->win->showSelection && tab->selectionOnPage;
-    for (int i = 0; i < dimof(disableIfNoSelection); i++) {
-        int id = disableIfNoSelection[i];
+    for (int id : disableIfNoSelection) {
         win::menu::SetEnabled(menu, id, isTextSelected);
     }
     for (int id = CmdSelectionHandlerFirst; id < CmdSelectionHandlerLast; id++) {
@@ -1470,8 +1474,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
 
     bool hasDocument = tab && tab->IsDocLoaded();
-    for (int i = 0; i < dimof(disableIfNoDocument); i++) {
-        int id = disableIfNoDocument[i];
+    for (int id : disableIfNoDocument) {
         win::menu::SetEnabled(win->menu, id, hasDocument);
     }
 
@@ -1505,13 +1508,11 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     bool fileExists = tab && file::Exists(tab->filePath);
 
     if (tab && tab->ctrl && !fileExists && dir::Exists(tab->filePath)) {
-        for (int i = 0; i < dimof(disableIfDirectoryOrBrokenPDF); i++) {
-            int id = disableIfDirectoryOrBrokenPDF[i];
+        for (int id : disableIfDirectoryOrBrokenPDF) {
             win::menu::SetEnabled(win->menu, id, false);
         }
     } else if (fileExists && CouldBePDFDoc(tab)) {
-        for (int i = 0; i < dimof(disableIfDirectoryOrBrokenPDF); i++) {
-            int id = disableIfDirectoryOrBrokenPDF[i];
+        for (int id : disableIfDirectoryOrBrokenPDF) {
             win::menu::SetEnabled(win->menu, id, true);
         }
     }

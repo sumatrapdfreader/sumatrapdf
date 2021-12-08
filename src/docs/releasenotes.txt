@@ -14,6 +14,7 @@ Next version:
 * 'Shift + i' keyboard shortcuts inverts document colors
 * 'u' and 'Shift + u' keyboard shortucts adds underline annotation for currently selected text
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2157
+* 'Delete' / 'Backspace' keyboard shortucts delete an annotation under mouse cursor
 * respect zoom level in PDF destination links
   https://github.com/sumatrapdfreader/sumatrapdf/commit/3aa18aaf89caef7dd28529682d9344ef89422100
 * support .svg files
