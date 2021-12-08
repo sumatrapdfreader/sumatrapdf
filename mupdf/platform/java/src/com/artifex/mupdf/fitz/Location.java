@@ -59,4 +59,14 @@ public final class Location
 			this.x == other.x &&
 			this.y == other.y;
 	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Location(chapter=");
+		sb.append(chapter);
+		sb.append(", page=");
+		sb.append(page);
+		sb.append(")");
+		return sb.toString();
+	}
 }
