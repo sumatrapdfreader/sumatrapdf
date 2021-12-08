@@ -44,13 +44,22 @@ or MSys on Win32:
 
       sh autogen.sh
 
-    In case of problems, you  may need to install or upgrade Automake,
-    Autoconf or  Libtool.  See  README.git in the  top-level directory
+    In case of problems, you may  need to install or upgrade Automake,
+    Autoconf or Libtool.  See  `README.git' in the top-level directory
     for more information.
 
 
   3. Build and install the library
   --------------------------------
+
+    Say
+
+      ./configure --help
+
+    to see  the list of  possible configuration options  and important
+    environment  variables.  The ./configure script  will detect  some
+    prerequisite  system  libraries  (libpng, brotli, etc.)  if  their
+    headers are available at the default locations.
 
     The following  should work  on all Unix  systems where  the `make'
     command invokes GNU Make:
@@ -74,6 +83,18 @@ or MSys on Win32:
 
     If  this still doesn't  work, there  must be  a problem  with your
     system (e.g., you are using a very old version of GNU Make).
+
+    For library identification, FreeType's `configure' script uses the
+    `pkg-config' interface: Assuming it  needs library `foo', it calls
+    the  `pkg-config' program  to find  information on  library `foo',
+    which in turn  looks for a `foo.pc' file installed  at the system.
+    Some platforms,  however, don't come with  `pkg-support'; you then
+    have  to  use environment  variables  as  described by  `configure
+    --help'.  Example:
+
+      LIBPNG_CFLAGS="-I/path/to/libpng/include/directory" \
+      LIBPNG_LIBS="-L/path/to/libpng/lib/directory" \
+      configure ...
 
     It  is possible  to  compile FreeType  in  a different  directory.
     Assuming the FreeType source  files in directory `/src/freetype' a
@@ -105,7 +126,7 @@ or MSys on Win32:
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2003-2020 by
+Copyright (C) 2003-2021 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

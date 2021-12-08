@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2002-2020 by
+# Copyright (C) 2002-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -93,7 +93,7 @@ fi
 inode_src=`ls -id $abs_ft2_dir | awk '{print $1}'`
 inode_dst=`ls -id $abs_curr_dir | awk '{print $1}'`
 
-if test $inode_src -ne $inode_dst; then
+if test $inode_src != $inode_dst; then
   if test ! -d docs; then
     mkdir docs
     echo "Copying documentation assets"

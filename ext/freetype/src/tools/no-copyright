@@ -7,8 +7,6 @@
 #
 # Don't put empty lines into this file!
 #
-.gitignore
-#
 builds/unix/pkg.m4
 #
 docs/FTL.TXT
@@ -61,5 +59,7 @@ src/gzip/zutil.h
 #
 src/tools/apinames.c
 src/tools/ftrandom/ftrandom.c
+#
+subprojects/dlg
 #
 # EOF

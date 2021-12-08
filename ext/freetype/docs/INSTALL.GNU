@@ -11,9 +11,6 @@ instructions in the file `INSTALL.UNIX' instead.
   1. Install GNU Make
   -------------------
 
-    Because  GNU Make  is  the  only Make  tool  supported to  compile
-    FreeType 2, you should install it on your machine.
-
     The FreeType 2 build system relies on many features special to GNU
     Make.
 
@@ -100,6 +97,28 @@ instructions in the file `INSTALL.UNIX' instead.
     step 5.
 
 
+  3a. Use clang instead of gcc
+  ----------------------------
+
+    The `clang'  compiler can  use FreeType's setup  for `gcc';  it is
+    sufficient to set the `CC' variable, for example
+
+      make CC=clang
+
+
+  3b. Compiling with a C++ compiler
+  ---------------------------------
+
+    FreeType can be built with a C++ compiler, for example
+
+      make CC="g++"
+
+    If `clang++' should  be used it is necessary to  also override the
+    `ANSIFLAGS' variable:
+
+      make CC="clang++" ANSIFLAGS=""
+
+
   4. Configure the build system for an unknown platform/compiler
   --------------------------------------------------------------
 
@@ -133,7 +152,8 @@ instructions in the file `INSTALL.UNIX' instead.
 
     To  launch  the build,  simply  invoke  GNU  Make again:  The  top
     Makefile will detect the configuration file and run the build with
-    it.
+    it.  If you have used variables in  step 3, you must use  the same
+    variables here, too.
 
 
   Final note
@@ -148,7 +168,7 @@ instructions in the file `INSTALL.UNIX' instead.
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2003-2020 by
+Copyright (C) 2003-2021 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

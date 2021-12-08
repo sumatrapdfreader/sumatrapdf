@@ -1,4 +1,154 @@
-CHANGES BETWEEN 2.10.3 and 2.10.4
+CHANGES BETWEEN 2.11.0 and 2.11.1
+
+  I. IMPORTANT CHANGES
+
+    - Some  fields  in  the  `CID_FaceDictRec`, `CID_FaceInfoRec`, and
+      `FT_Data` structures  have been changed  from signed to unsigned
+      type,  which  better reflects  the actual usage.  It is also  an
+      additional means to protect against malformed input.
+
+
+  II. MISCELLANEOUS
+
+    - Cmake support  has been  further improved.   To do  that various
+      backward-incompatible  changes were  necessary; please  see file
+      `CMakeLists.txt` for more details.
+
+    - Since version  2.11.0, a  C99 compiler  is necessary  to compile
+      FreeType.
+
+    - The experimental  'COLR' v1 API  has been updated to  the latest
+      OpenType standard 1.9.
+
+    - The `apinames` tool got a new  option `-wV` to output an OpenVMS
+      Linker Option File.
+
+    - VMS support was updated.
+
+    - MS Visual Studio support was added to build the demo programs.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.10.4 and 2.11.0
+
+  I. IMPORTANT CHANGES
+
+  - A  new rendering  module has  been  added to  create 8-bit  Signed
+    Distance Field (SDF)  bitmaps for both outline  and bitmap glyphs.
+    The new  rendering mode is called  `FT_RENDER_MODE_SDF`, the pixel
+    mode is  `FT_PIXEL_MODE_GRAY8`, and the corresponding  raster flag
+    is `FT_RASTER_FLAG_SDF`.
+
+    This work was Anuj Verma's GSoC 2020 project.
+
+  - A new, experimental API is  now available for surfacing properties
+    of 'COLR' v1  color fonts (as the name says,  this is an extension
+    to  the  'COLR' table  for  outline  color  fonts using  the  SFNT
+    container  format).   'COLR'  v1  fonts are  a  recently  proposed
+    addition to OFF and OpenType; specification work currently happens
+    in
+
+      https://github.com/googlefonts/colr-gradients-spec/
+
+    'COLR'  v1  is  expected  to   be  merged  to  OpenType;  the  ISO
+    standardisation process  for adding 'COLR'  v1 as an  amendment to
+    OFF is underway.
+
+    Functions similar  to the  already existing  'COLR' API  have been
+    added to access the corresponding data.
+
+      FT_Get_Color_Glyph_Paint
+        Retrieve the root paint for a given glyph ID.
+
+      FT_Get_Paint_Layers
+        Access the layers of a `PaintColrLayers` table.
+
+      FT_Get_Colorline_Stops
+        Retrieve the  'color stops' on a  color line.  As an  input, a
+        color stop iterator gets used, which in turn is retrieved from
+        a paint.
+
+      FT_Get_Paint
+        Dereference  an  `FT_OpaquePaint`   object  and  retrieve  the
+        corresponding `FT_COLR_Paint`  object, which  contains details
+        on how to draw the respective 'COLR' v1 `Paint` table.
+
+
+  II. MISCELLANEOUS
+
+  - FreeType has moved its infrastructure to
+
+      https://gitlab.freedesktop.org/freetype
+
+    A  side  effect  is  that  the git  repositories  are  now  called
+    `freetype.git` and  `freetype-demos.git`, which by  default expand
+    to the directories  `freetype` and `freetype-demos`, respectively.
+    The documentation has been updated accordingly.
+
+    FreeType's Savannah  repositories will stay; they  are now mirrors
+    of the 'freedesktop.org' repositories.
+
+  - A  new  function  `FT_Get_Transform`  returns  the  values set  by
+    `FT_Set_Transform`.
+
+  - A  new configuration  macro `FT_DEBUG_LOGGING`  is available.   It
+    provides extended debugging capabilities for FreeType, for example
+    showing a time stamp or displaying the component a tracing message
+    comes from.  See file `docs/DEBUG` for more information.
+
+    This work was Priyesh Kumar's GSoC 2020 project.
+
+  - The legacy Type 1 and CFF  engines are further demoted due to lack
+    of CFF2 charstring support.  You now need to use `FT_Property_Set`
+    to  enable  them  besides  the  `T1_CONFIG_OPTION_OLD_ENGINE`  and
+    `CFF_CONFIG_OPTION_OLD_ENGINE` options, respectively.
+
+  - The experimental 'warp' mode (AF_CONFIG_OPTION_USE_WARPER) for the
+    auto-hinter has been removed.
+
+  - The smooth rasterizer performance has been improved by >10%.  Note
+    that  due to  necessary code  changes there  might be  very subtle
+    differences  in  rendering.  They  are  not  visible by  the  eye,
+    however.
+
+  - PCF bitmap fonts compressed with LZW (these are usually files with
+    the extension `.pcf.Z`) are now handled correctly.
+
+  - Improved  Meson  build  files,  including  support  to  build  the
+    FreeType demo programs.
+
+  - A new demo program `ftsdf` is available to display Signed Distance
+    Fields of glyphs.
+
+  - The `ftlint` demo program has been  extended to do more testing of
+    its input.  In particular, it  can display horizontal and vertical
+    acutances  for quality  assessment,  together  with computing  MD5
+    checksums of rendered glyphs.
+
+    [The acutance measures  how sharply the pixel  coverage changes at
+     glyph edges.  For monochrome bitmaps,  it is always 2.0 in either
+     X or  Y direction.  For  anti-aliased bitmaps, it depends  on the
+     hinting and the shape of a glyph and might approach or even reach
+     value 2.0  for glyphs like 'I',  'L', '+', '-', or  '=', while it
+     might be lower for glyphs like 'O', 'S', or 'W'.]
+
+  - The `ttdebug`  demo program didn't show  changed point coordinates
+    (bug introduced in version 2.10.3).
+
+  - It is now possible to adjust the axis increment for variable fonts
+    in the `ftmulti` demo program.
+
+  - It is now possible to change  the hinting engine in the `ftstring`
+    demo program.
+
+  - The graphical demo programs work  better now in native color depth
+    on win32 and x11.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.10.3 and 2.10.4 (2020-Oct-20)
 
   I. IMPORTANT BUG FIXES
 
@@ -13,7 +163,7 @@ CHANGES BETWEEN 2.10.3 and 2.10.4
 
 ======================================================================
 
-CHANGES BETWEEN 2.10.2 and 2.10.3
+CHANGES BETWEEN 2.10.2 and 2.10.3 (2020-Oct-10)
 
   I. IMPORTANT CHANGES
 
@@ -63,7 +213,7 @@ CHANGES BETWEEN 2.10.2 and 2.10.3
 
 ======================================================================
 
-CHANGES BETWEEN 2.10.1 and 2.10.2
+CHANGES BETWEEN 2.10.1 and 2.10.2 (2020-May-09)
 
   I. IMPORTANT CHANGES
 
@@ -100,7 +250,7 @@ CHANGES BETWEEN 2.10.1 and 2.10.2
 
 ======================================================================
 
-CHANGES BETWEEN 2.10.0 and 2.10.1
+CHANGES BETWEEN 2.10.0 and 2.10.1 (2019-Jul-01)
 
   I. IMPORTANT BUG FIXES
 
@@ -154,7 +304,7 @@ CHANGES BETWEEN 2.10.0 and 2.10.1
 
 ======================================================================
 
-CHANGES BETWEEN 2.9.1 and 2.10.0
+CHANGES BETWEEN 2.9.1 and 2.10.0 (2019-Mar-15)
 
   I. IMPORTANT CHANGES
 
@@ -280,7 +430,7 @@ CHANGES BETWEEN 2.9.1 and 2.10.0
 
 ======================================================================
 
-CHANGES BETWEEN 2.9 and 2.9.1
+CHANGES BETWEEN 2.9 and 2.9.1 (2019-May-01)
 
   I. IMPORTANT BUG FIXES
 
@@ -328,7 +478,7 @@ CHANGES BETWEEN 2.9 and 2.9.1
 
 ======================================================================
 
-CHANGES BETWEEN 2.8.1 and 2.9
+CHANGES BETWEEN 2.8.1 and 2.9 (2018-Jan-08)
 
   I. IMPORTANT BUG FIXES
 
@@ -418,7 +568,7 @@ CHANGES BETWEEN 2.8.1 and 2.9
 
 ======================================================================
 
-CHANGES BETWEEN 2.8 and 2.8.1
+CHANGES BETWEEN 2.8 and 2.8.1 (2017-Sep-16)
 
   I. IMPORTANT BUG FIXES
 
@@ -501,7 +651,7 @@ CHANGES BETWEEN 2.8 and 2.8.1
 
 ======================================================================
 
-CHANGES BETWEEN 2.7.1 and 2.8
+CHANGES BETWEEN 2.7.1 and 2.8 (2017-May-13)
 
   I. IMPORTANT CHANGES
 
@@ -622,7 +772,7 @@ CHANGES BETWEEN 2.7.1 and 2.8
 
 ======================================================================
 
-CHANGES BETWEEN 2.7 and 2.7.1
+CHANGES BETWEEN 2.7 and 2.7.1 (2016-Dec-30)
 
   I. IMPORTANT CHANGES
 
@@ -699,7 +849,7 @@ CHANGES BETWEEN 2.7 and 2.7.1
 
 ======================================================================
 
-CHANGES BETWEEN 2.6.5 and 2.7
+CHANGES BETWEEN 2.6.5 and 2.7 (2016-Sep-08)
 
   I. IMPORTANT CHANGES
 
@@ -763,7 +913,7 @@ CHANGES BETWEEN 2.6.5 and 2.7
 
 ======================================================================
 
-CHANGES BETWEEN 2.6.4 and 2.6.5
+CHANGES BETWEEN 2.6.4 and 2.6.5 (2016-Jul-12)
 
   I. IMPORTANT BUG FIXES
 
@@ -783,7 +933,7 @@ CHANGES BETWEEN 2.6.4 and 2.6.5
 
 ======================================================================
 
-CHANGES BETWEEN 2.6.3 and 2.6.4
+CHANGES BETWEEN 2.6.3 and 2.6.4 (2016-Jul-05)
 
   I. IMPORTANT CHANGES
 
@@ -849,7 +999,7 @@ CHANGES BETWEEN 2.6.3 and 2.6.4
 
 ======================================================================
 
-CHANGES BETWEEN 2.6.2 and 2.6.3
+CHANGES BETWEEN 2.6.2 and 2.6.3 (2016-Feb-08)
 
   I. IMPORTANT CHANGES
 
@@ -898,7 +1048,7 @@ CHANGES BETWEEN 2.6.2 and 2.6.3
 
 ======================================================================
 
-CHANGES BETWEEN 2.6.1 and 2.6.2
+CHANGES BETWEEN 2.6.1 and 2.6.2 (2015-Nov-28)
 
   I. IMPORTANT CHANGES
 
@@ -958,7 +1108,7 @@ CHANGES BETWEEN 2.6.1 and 2.6.2
 
 ======================================================================
 
-CHANGES BETWEEN 2.6 and 2.6.1
+CHANGES BETWEEN 2.6 and 2.6.1 (2015-Oct-04)
 
   I. IMPORTANT BUG FIXES
 
@@ -1039,7 +1189,7 @@ CHANGES BETWEEN 2.6 and 2.6.1
 
 ======================================================================
 
-CHANGES BETWEEN 2.5.5 and 2.6
+CHANGES BETWEEN 2.5.5 and 2.6 (2015-Jun-07)
 
   I. IMPORTANT CHANGES
 
@@ -1145,7 +1295,7 @@ CHANGES BETWEEN 2.5.5 and 2.6
 
 ======================================================================
 
-CHANGES BETWEEN 2.5.4 and 2.5.5
+CHANGES BETWEEN 2.5.4 and 2.5.5 (2014-Dec-30)
 
   I. IMPORTANT BUG FIXES
 
@@ -1155,7 +1305,7 @@ CHANGES BETWEEN 2.5.4 and 2.5.5
 
 ======================================================================
 
-CHANGES BETWEEN 2.5.3 and 2.5.4
+CHANGES BETWEEN 2.5.3 and 2.5.4 (2014-Dec-06)
 
   I. IMPORTANT BUG FIXES
 
@@ -1226,7 +1376,7 @@ CHANGES BETWEEN 2.5.3 and 2.5.4
 
 ======================================================================
 
-CHANGES BETWEEN 2.5.2 and 2.5.3
+CHANGES BETWEEN 2.5.2 and 2.5.3 (2014-Mar-06)
 
   I. IMPORTANT BUG FIXES
 
@@ -1294,7 +1444,7 @@ CHANGES BETWEEN 2.5.2 and 2.5.3
 
 ======================================================================
 
-CHANGES BETWEEN 2.5.1 and 2.5.2
+CHANGES BETWEEN 2.5.1 and 2.5.2 (2013-Dec-08)
 
   I. IMPORTANT BUG FIXES
 
@@ -1318,7 +1468,7 @@ CHANGES BETWEEN 2.5.1 and 2.5.2
 
 ======================================================================
 
-CHANGES BETWEEN 2.5 and 2.5.1
+CHANGES BETWEEN 2.5 and 2.5.1 (2013-Nov-25)
 
   I. IMPORTANT BUG FIXES
 
@@ -1422,7 +1572,7 @@ CHANGES BETWEEN 2.5 and 2.5.1
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.12 and 2.5
+CHANGES BETWEEN 2.4.12 and 2.5 (2013-Jun-19)
 
   I. IMPORTANT BUG FIXES
 
@@ -1502,7 +1652,7 @@ CHANGES BETWEEN 2.4.12 and 2.5
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.11 and 2.4.12
+CHANGES BETWEEN 2.4.11 and 2.4.12 (2013-May-08)
 
     - We have another CFF parsing and hinting engine!  Written by Dave
       Arnold <darnold@adobe.com>,  this work  has been  contributed by
@@ -1590,7 +1740,7 @@ index ebcf189..3f2ce6b 100644
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.10 and 2.4.11
+CHANGES BETWEEN 2.4.10 and 2.4.11 (2012-Dec-20)
 
   I. IMPORTANT BUG FIXES
 
@@ -1650,7 +1800,7 @@ CHANGES BETWEEN 2.4.10 and 2.4.11
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.9 and 2.4.10
+CHANGES BETWEEN 2.4.9 and 2.4.10 (2012-Jun-15)
 
   I. IMPORTANT BUG FIXES
 
@@ -1675,7 +1825,7 @@ CHANGES BETWEEN 2.4.9 and 2.4.10
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.8 and 2.4.9
+CHANGES BETWEEN 2.4.8 and 2.4.9 (2012-Mar-08)
 
   I. IMPORTANT BUG FIXES
 
@@ -1703,7 +1853,7 @@ CHANGES BETWEEN 2.4.8 and 2.4.9
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.7 and 2.4.8
+CHANGES BETWEEN 2.4.7 and 2.4.8 (2011-Nov-14)
 
   I. IMPORTANT BUG FIXES
 
@@ -1719,7 +1869,7 @@ CHANGES BETWEEN 2.4.7 and 2.4.8
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.6 and 2.4.7
+CHANGES BETWEEN 2.4.6 and 2.4.7 (2011-Oct-18)
 
   I. IMPORTANT BUG FIXES
 
@@ -1736,7 +1886,7 @@ CHANGES BETWEEN 2.4.6 and 2.4.7
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.5 and 2.4.6
+CHANGES BETWEEN 2.4.5 and 2.4.6 (2011-Jul-29)
 
   I. IMPORTANT BUG FIXES
 
@@ -1775,7 +1925,7 @@ CHANGES BETWEEN 2.4.5 and 2.4.6
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.4 and 2.4.5
+CHANGES BETWEEN 2.4.4 and 2.4.5 (2011-Jun-25)
 
   I. IMPORTANT BUG FIXES
 
@@ -1822,7 +1972,7 @@ CHANGES BETWEEN 2.4.4 and 2.4.5
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.3 and 2.4.4
+CHANGES BETWEEN 2.4.3 and 2.4.4 (2010-Nov-28)
 
   I. IMPORTANT BUG FIXES
 
@@ -1847,7 +1997,7 @@ CHANGES BETWEEN 2.4.3 and 2.4.4
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.2 and 2.4.3
+CHANGES BETWEEN 2.4.2 and 2.4.3 (2010-Oct-03)
 
   I. IMPORTANT BUG FIXES
 
@@ -1866,7 +2016,7 @@ CHANGES BETWEEN 2.4.2 and 2.4.3
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.1 and 2.4.2
+CHANGES BETWEEN 2.4.1 and 2.4.2 (2010-Aug-06)
 
   I. IMPORTANT BUG FIXES
 
@@ -1890,7 +2040,7 @@ CHANGES BETWEEN 2.4.1 and 2.4.2
 
 ======================================================================
 
-CHANGES BETWEEN 2.4.0 and 2.4.1
+CHANGES BETWEEN 2.4.0 and 2.4.1 (2010-Jul-18)
 
   I. IMPORTANT CHANGES
 
@@ -1900,7 +2050,7 @@ CHANGES BETWEEN 2.4.0 and 2.4.1
 
 ======================================================================
 
-CHANGES BETWEEN 2.3.12 and 2.4.0
+CHANGES BETWEEN 2.3.12 and 2.4.0 (2010-Jul-12)
 
   I. IMPORTANT CHANGES
 
@@ -5299,7 +5449,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright (C) 2000-2020 by
+Copyright (C) 2000-2021 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

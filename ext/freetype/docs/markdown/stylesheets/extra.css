@@ -1,12 +1,6 @@
 /* Body and page */
-.wy-nav-content {
-    max-width: 90%;
-}
 .md-grid {
     max-width: 90%;
-}
-.md-sidebar--secondary {
-    margin-left: 90%;
 }
 p {
     text-align: justify;

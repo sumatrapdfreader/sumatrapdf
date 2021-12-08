@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Check trace components in FreeType 2 source.
-# Author: suzuki toshiya, 2009, 2013
+# Author: suzuki toshiya, 2009, 2013, 2020
 #
 # This code is explicitly into the public domain.
 
@@ -50,7 +50,7 @@ for i in range( 1, len( sys.argv ) ):
 #
 
 c_pathname_pat = re.compile( '^.*\.[ch]$', re.IGNORECASE )
-trace_use_pat  = re.compile( '^[ \t]*#define[ \t]+FT_COMPONENT[ \t]+trace_' )
+trace_use_pat  = re.compile( '^[ \t]*#define[ \t]+FT_COMPONENT[ \t]+' )
 
 for d in SRC_FILE_DIRS:
   for ( p, dlst, flst ) in os.walk( d ):

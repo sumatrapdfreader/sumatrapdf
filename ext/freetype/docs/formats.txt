@@ -79,8 +79,7 @@ which isn't supported yet please send a mail too.
 
   SFNT    PS      TYPE_1  ---        type1    Type 1 GX Font Format
                                               (for the Mac) [3]
-  SFNT    PS      TYPE_1  CID        cid      5180.sfnt.pdf (for the Mac)
-                                              [3]
+  SFNT    PS      TYPE_1  CID        cid      5180.sfnt.pdf (for the Mac) [3]
   SFNT    PS      CFF     ---        cff      OT spec, 5176.CFF.pdf
                                               (`OTTO' format)
   SFNT    PS      CFF     CID        cff      OT spec, 5176.CFF.pdf
@@ -95,6 +94,12 @@ which isn't supported yet please send a mail too.
   SFNT    TT      VAR     ---        truetype GX spec (`?var' tables)
   SFNT    TT      VAR     ---        truetype OT spec 1.8
                                               (`?var' + `?VAR' tables)
+
+
+  WOFF    ---     ---     ---        cff,     Compressed SFNT, ver. 1.0 [6]
+                                     truetype
+  WOFF2   ---     ---     ---        cff,     Compressed SFNT, ver. 2.0 [6]
+                                     truetype
 
 
   ---     PS      TYPE_1  ---        type1    T1_SPEC.pdf
@@ -185,13 +190,17 @@ which isn't supported yet please send a mail too.
 
       https://fontforge.github.io/pcf-format.html
 
-[5] This is from MS Windows 3; see Microsoft's Knowledge Base article at
+[5] This is from MS Windows 3;  see Microsoft's Knowledge Base article
+    at
 
       https://support.microsoft.com/kb/65123
 
+[6] Supported  font  formats  are   TrueType  and  OpenType  fonts  as
+    defined in the OpenType specification 1.6 and newer.
+
 ------------------------------------------------------------------------
 
-Copyright (C) 2004-2020 by
+Copyright (C) 2004-2021 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

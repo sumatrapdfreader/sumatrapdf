@@ -44,6 +44,21 @@ located in the file `ftoption.h'.  The macros are:
     When `FT2_DEBUG_MEMORY'  isn't defined  at runtime,  the debugging
     memory manager is ignored, and performance is unaffected.
 
+  FT_DEBUG_LOGGING
+
+    #define this macro for enhanced logging support; it automatically
+    sets `FT_DEBUG_LEVEL_TRACE' and `FT_DEBUG_LEVEL_ERROR'.
+
+    If  defined,  `FT_TRACE'  and  `FT_ERROR'  can  send  tracing  and
+    debugging messages to a file.  The location of the log file has to
+    be set  with the  `FT_LOGGING_FILE' environment variable  (more on
+    this later).
+
+    The main enhancements are the  possibility of logging the time and
+    the name  of the `FT_COMPONENT'  macro together with  the affected
+    `FT_TRACE' or `FT_ERROR' calls.  See below how to activate this in
+    the `FT2_DEBUG' environment variable.
+
 
 II. Debugging macros
 --------------------
@@ -150,6 +165,43 @@ behaviour of FreeType at runtime.
     the memory and io components, which  are set to the trace levels 5
     and 4, respectively.
 
+    If `FT_DEBUG_LOGGING' is defined, two more options are available.
+
+    * -v: Print also  the name of FreeType's component  from which the
+          current log is produced, together with the tracing level.
+
+    * -t: Print also the time.
+
+    Here are some examples how the output might look like.
+
+      FT2_DEBUG="any:7 memory:5 -vt"
+
+        => [20:32:02:44969 ttload:2]    table directory loaded
+
+      FT2_DEBUG="any:7 memory:5 -t"
+
+        => [20:32:02:44969]    table directory loaded
+
+      FT2_DEBUG="any:7 memory:5 -v"
+
+        => [ttload:2]    table directory loaded
+
+
+  FT_LOGGING_FILE
+
+    This  variable  is  only  used  if  FreeType  is  built  with  the
+    `FT_DEBUG_LOGGING'  macro defined.   It contains  the path  to the
+    file where the user wants to put  his log file.  If it is not set,
+    FreeType uses stderr.
+
+    Examples:
+
+      On UNIX-like systems with bash:
+      export FT_LOGGING_FILE="/tmp/freetype2.log"
+
+      On Windows:
+      set FT_LOGGING_FILE=C:\Users\AppData\Local\Temp\freetype2.log
+
 
   FT2_DEBUG_MEMORY
 
@@ -201,9 +253,51 @@ behaviour of FreeType at runtime.
     If it  is undefined,  or if  its value  is not  strictly positive,
     freed blocks are released at runtime.
 
+
+IV. Additional Capabilities with `FT_DEBUG_LOGGING'
+---------------------------------------------------
+
+If `FT_DEBUG_LOGGING' is  defined, four APIs are  available to provide
+additional debugging support.  Use
+
+  #include <freetype/ftlogging.h>
+
+to access them.
+
+  FT_Trace_Set_Level( const char*  level )
+
+    By  default,  FreeType   uses  the  tracing  levels   set  in  the
+    `FT2_DEBUG' environment  variable.  Use this function  to override
+    the value with `level'.  Use value `NULL' to disable tracing.
+
+  FT_Trace_Set_Default_Level():
+
+    Reset the tracing levels to the default value, i.e., the value of
+    the `FT2_DEBUG' environment variable or no tracing if not set.
+
+  FT_Set_Log_Handler( ft_custom_log_handler  handler ):
+
+    Use `handler' as a custom handler for formatting tracing and error
+    messages.  The  `ft_custom_log_handler' typedef has  the following
+    prototype.
+
+      void
+      (*ft_custom_log_handler)( const char*  ft_component,
+                                const char*  fmt,
+                                va_list      args );
+
+   `ft_component' is the current component like `ttload', `fmt' is the
+   first argument  of `FT_TRACE' or  `FT_ERROR', and `args'  holds the
+   remaining arguments.
+
+  FT_Set_Default_Log_Handler():
+
+    Reset the log handler to the default version.
+
+
 ------------------------------------------------------------------------
 
-Copyright (C) 2002-2020 by
+Copyright (C) 2002-2021 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

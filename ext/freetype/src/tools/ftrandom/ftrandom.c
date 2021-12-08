@@ -29,7 +29,7 @@
 /* This file is now part of the FreeType library */
 
 
-#define _XOPEN_SOURCE 500 /* for `kill', `strdup', `random', and `srandom' */
+#define _XOPEN_SOURCE 600 /* for `kill', `strdup', `random', and `srandom' */
 
 
 #include <stdio.h>

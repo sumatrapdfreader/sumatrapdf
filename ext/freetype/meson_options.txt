@@ -2,7 +2,7 @@
 # meson_options.txt
 #
 
-# Copyright (C) 2020 by
+# Copyright (C) 2020-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -12,36 +12,42 @@
 # fully.
 
 
-option('zlib',
-  type: 'combo',
-  choices: ['disabled', 'auto', 'builtin', 'system'],
+option('brotli',
+  type: 'feature',
   value: 'auto',
-  description: 'Support reading gzip-compressed font files.')
+  description: 'Use Brotli library to support decompressing WOFF2 fonts')
 
 option('bzip2',
   type: 'feature',
   value: 'auto',
-  description: 'Support reading bzip2-compressed font files.')
-
-option('png',
-  type: 'feature',
-  value: 'auto',
-  description: 'Support color bitmap glyph formats in the PNG format.'
-               + 'Requires libpng.')
+  description: 'Support reading bzip2-compressed font files')
 
 option('harfbuzz',
   type: 'feature',
   value: 'auto',
-  description: 'Use Harfbuzz library to improve auto-hinting.'
-               + ' If available, many glyphs not directly addressable'
-               + ' by a font\'s character map will be hinted also.')
-
-option('brotli',
-  type: 'feature',
-  value: 'auto',
-  description: 'Use Brotli library to support decompressing WOFF2 fonts.')
+  description: 'Use Harfbuzz library to improve auto-hinting;'
+               + ' if available, many glyphs not directly addressable'
+               + ' by a font\'s character map will be hinted also')
 
 option('mmap',
   type: 'feature',
   value: 'auto',
-  description: 'Use mmap() to open font files for faster parsing.')
+  description: 'Use mmap() to open font files for faster parsing')
+
+option('png',
+  type: 'feature',
+  value: 'auto',
+  description: 'Support color bitmap glyph formats in the PNG format;'
+               + ' requires libpng')
+
+option('tests',
+  type: 'feature',
+  value: 'disabled',
+  description: 'Enable FreeType unit and regression tests')
+
+option('zlib',
+  type: 'feature',
+  value: 'auto',
+  description: 'Support reading gzip-compressed font files')
+
+# EOF

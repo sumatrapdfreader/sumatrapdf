@@ -22,7 +22,7 @@
 #include <ctype.h>
 
 #define  PROGRAM_NAME     "apinames"
-#define  PROGRAM_VERSION  "0.3"
+#define  PROGRAM_VERSION  "0.4"
 
 #define  LINEBUFF_SIZE  1024
 
@@ -33,6 +33,7 @@ typedef enum  OutputFormat_
   OUTPUT_WINDOWS_DEF,   /* output a Windows .DEF file for Visual C++ or Mingw */
   OUTPUT_BORLAND_DEF,   /* output a Windows .DEF file for Borland C++         */
   OUTPUT_WATCOM_LBC,    /* output a Watcom Linker Command File                */
+  OUTPUT_VMS_OPT,       /* output an OpenVMS Linker Option File               */
   OUTPUT_NETWARE_IMP,   /* output a NetWare ImportFile                        */
   OUTPUT_GNU_VERMAP     /* output a version map for GNU or Solaris linker     */
 
@@ -167,7 +168,6 @@ names_dump( FILE*         out,
   case OUTPUT_WATCOM_LBC:
     {
       const char*  dot;
-      char         temp[512];
 
 
       if ( !dll_name )
@@ -181,7 +181,8 @@ names_dump( FILE*         out,
       dot = strchr( dll_name, '.' );
       if ( dot )
       {
-        int  len = dot - dll_name;
+        char  temp[512];
+        int   len = dot - dll_name;
 
 
         if ( len > (int)( sizeof ( temp ) - 1 ) )
@@ -197,6 +198,16 @@ names_dump( FILE*         out,
         fprintf( out, "++_%s.%s.%s\n",
                       the_names[nn].name, dll_name, the_names[nn].name );
     }
+
+    break;
+
+  case OUTPUT_VMS_OPT:
+    fprintf( out, "GSMATCH=LEQUAL,2,0\n"
+                  "CASE_SENSITIVE=YES\n"
+                  "SYMBOL_VECTOR=(-\n" );
+    for ( nn = 0; nn < num_names - 1; nn++ )
+      fprintf( out, "    %s=PROCEDURE,-\n", the_names[nn].name );
+    fprintf( out, "    %s=PROCEDURE)\n", the_names[num_names - 1].name );
 
     break;
 
@@ -352,6 +363,7 @@ usage( void )
     "           -w      output .DEF file for Visual C++ and Mingw\n"
     "           -wB     output .DEF file for Borland C++\n"
     "           -wW     output Watcom Linker Response File\n"
+    "           -wV     output OpenVMS Linker Options File\n"
     "           -wN     output NetWare Import File\n"
     "           -wL     output version map for GNU or Solaris linker\n"
     "\n";
@@ -443,6 +455,10 @@ main( int                 argc,
 
       case 'W':
         format = OUTPUT_WATCOM_LBC;
+        break;
+
+      case 'V':
+        format = OUTPUT_VMS_OPT;
         break;
 
       case 'N':
