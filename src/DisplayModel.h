@@ -15,10 +15,6 @@ struct PageInfo {
     /* data that is calculated when needed. actual content size within a page (View target) */
     RectF contentBox{};
 
-    /* data that needs to be set before DisplayModel::Relayout().
-       Determines whether a given page should be shown on the screen. */
-    bool shown = false;
-
     /* data that changes when zoom and rotation changes */
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
@@ -33,6 +29,10 @@ struct PageInfo {
     // when zoomVirtual in DisplayMode is ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH
     // or ZOOM_FIT_CONTENT, this is per-page zoom level
     float zoomReal;
+
+    /* data that needs to be set before DisplayModel::Relayout().
+       Determines whether a given page should be shown on the screen. */
+    bool shown = false;
 };
 
 /* The current scroll state (needed for saving/restoring the scroll position) */
@@ -42,9 +42,9 @@ struct ScrollState {
     explicit ScrollState(int page, double x, double y);
     bool operator==(const ScrollState& other) const;
 
-    int page = 0;
     double x = 0;
     double y = 0;
+    int page = 0;
 };
 
 struct DocumentTextCache;
@@ -189,9 +189,6 @@ struct DisplayModel : Controller {
     // called when we decide that the display needs to be redrawn
     void RepaintDisplay();
 
-    /* allow resizing a window without triggering a new rendering (needed for window destruction) */
-    bool dontRenderFlag = false;
-
     [[nodiscard]] bool GetPresentationMode() const;
 
     void BuildPagesInfo();
@@ -240,12 +237,6 @@ struct DisplayModel : Controller {
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     float dpiFactor{1.0f};
-    /* whether to display pages Left-to-Right or Right-to-Left.
-       this value is extracted from the PDF document */
-    bool displayR2L{false};
-
-    /* when we're in presentation mode, _pres* contains the pre-presentation values */
-    bool presentationMode{false};
     float presZoomVirtual{INVALID_ZOOM};
     DisplayMode presDisplayMode{DisplayMode::Automatic};
 
@@ -253,4 +244,14 @@ struct DisplayModel : Controller {
     /* index of the "current" history entry (to be updated on navigation),
        resp. number of Back history entries */
     size_t navHistoryIdx{0};
+
+    /* whether to display pages Left-to-Right or Right-to-Left.
+       this value is extracted from the PDF document */
+    bool displayR2L{false};
+
+    /* when we're in presentation mode, _pres* contains the pre-presentation values */
+    bool presentationMode{false};
+
+    /* allow resizing a window without triggering a new rendering (needed for window destruction) */
+    bool dontRenderFlag = false;
 };
