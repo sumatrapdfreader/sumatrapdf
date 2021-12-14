@@ -95,10 +95,10 @@ reflow_outline_iterator(fz_context *ctx, reflow_document *doc)
 	return fz_new_outline_iterator(ctx, doc->underdoc);
 }
 
-static fz_location
-reflow_resolve_link(fz_context *ctx, reflow_document *doc, const char *uri, float *xp, float *yp)
+static fz_link_dest
+reflow_resolve_link_dest(fz_context *ctx, reflow_document *doc, const char *uri)
 {
-	return fz_resolve_link(ctx, doc->underdoc, uri, xp, yp);
+	return fz_resolve_link_dest(ctx, doc->underdoc, uri);
 }
 
 static int
@@ -242,7 +242,7 @@ fz_open_reflowed_document(fz_context *ctx, fz_document *underdoc, const fz_stext
 	doc->base.has_permission = (fz_document_has_permission_fn*)reflow_has_permission;
 	doc->base.load_outline = (fz_document_load_outline_fn*)reflow_load_outline;
 	doc->base.outline_iterator = (fz_document_outline_iterator_fn*)reflow_outline_iterator;
-	doc->base.resolve_link = (fz_document_resolve_link_fn *)reflow_resolve_link;
+	doc->base.resolve_link_dest = (fz_document_resolve_link_dest_fn *)reflow_resolve_link_dest;
 	doc->base.count_pages = (fz_document_count_pages_fn *)reflow_count_pages;
 	doc->base.load_page = (fz_document_load_page_fn *)reflow_load_page;
 	doc->base.lookup_metadata = (fz_document_lookup_metadata_fn*)reflow_lookup_metadata;

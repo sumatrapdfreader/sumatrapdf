@@ -163,8 +163,8 @@ xps_add_link_target(fz_context *ctx, xps_document *doc, char *name)
 	doc->target = target;
 }
 
-fz_location
-xps_lookup_link_target(fz_context *ctx, fz_document *doc_, const char *target_uri, float *xp, float *yp)
+fz_link_dest
+xps_lookup_link_target(fz_context *ctx, fz_document *doc_, const char *target_uri)
 {
 	xps_document *doc = (xps_document*)doc_;
 	xps_target *target;
@@ -172,8 +172,8 @@ xps_lookup_link_target(fz_context *ctx, fz_document *doc_, const char *target_ur
 	needle = needle ? needle + 1 : target_uri;
 	for (target = doc->target; target; target = target->next)
 		if (!strcmp(target->name, needle))
-			return fz_make_location(0, target->page);
-	return fz_make_location(-1, -1);
+			return fz_make_link_dest_xyz(0, target->page, 0, 0, 0);
+	return fz_make_link_dest_none();
 }
 
 static void

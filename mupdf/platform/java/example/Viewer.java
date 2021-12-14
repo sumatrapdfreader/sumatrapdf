@@ -61,7 +61,7 @@ public class Viewer extends Frame implements WindowListener, ActionListener, Ite
 	protected int searchDirection = 1;
 	protected Location searchPage = null;
 	protected Location searchHitPage = null;
-	protected Quad[] searchHits = new Quad[0];
+	protected Quad[][] searchHits = new Quad[0][];
 	protected EventQueue eq = null;
 	protected SearchTask searchTask = null;
 
@@ -224,9 +224,11 @@ public class Viewer extends Frame implements WindowListener, ActionListener, Ite
 			if (currentPage.equals(searchHitPage) && searchHits != null) {
 				g2d.setColor(new Color(1, 0, 0, 0.4f));
 				for (int i = 0; i < searchHits.length; ++i) {
-					Rect hit = new Rect(searchHits[i]).transform(pageCTM);
+					for (int k = 0; k < searchHits[i].length; ++k) {
+						Rect hit = new Rect(searchHits[i][k]).transform(pageCTM);
 					g2d.fillRect((int)hit.x0, (int)hit.y0, (int)(hit.x1-hit.x0), (int)(hit.y1-hit.y0));
 				}
+			}
 			}
 
 			if (links != null) {
@@ -763,7 +765,7 @@ public class Viewer extends Frame implements WindowListener, ActionListener, Ite
 			while (!done && !isCancelled() && System.currentTimeMillis() < executionUntil) {
 				searchHits = doc.search(searchPage.chapter, searchPage.page, needle);
 				if (searchHits != null && searchHits.length > 0) {
-					searchHitPage = new Location(searchPage, searchHits[0].ul_x, searchHits[0].ul_y);
+					searchHitPage = searchPage;
 					jumpToLocation(searchHitPage);
 					done = true;
 				}

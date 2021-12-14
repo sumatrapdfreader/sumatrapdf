@@ -54,6 +54,28 @@ typedef struct fz_link
 	char *uri;
 } fz_link;
 
+typedef enum
+{
+	FZ_LINK_DEST_FIT,
+	FZ_LINK_DEST_FIT_B,
+	FZ_LINK_DEST_FIT_H,
+	FZ_LINK_DEST_FIT_BH,
+	FZ_LINK_DEST_FIT_V,
+	FZ_LINK_DEST_FIT_BV,
+	FZ_LINK_DEST_FIT_R,
+	FZ_LINK_DEST_XYZ
+} fz_link_dest_type;
+
+typedef struct
+{
+	fz_location loc;
+	fz_link_dest_type type;
+	float x, y, w, h, zoom;
+} fz_link_dest;
+
+fz_link_dest fz_make_link_dest_none(void);
+fz_link_dest fz_make_link_dest_xyz(int chapter, int page, float x, float y, float z);
+
 /**
 	Create a new link record.
 

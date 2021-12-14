@@ -46,7 +46,7 @@ public class StructuredText
 		pointer = p;
 	}
 
-	public native Quad[] search(String needle);
+	public native Quad[][] search(String needle);
 	public native Quad[] highlight(Point a, Point b);
 	public native Quad snapSelection(Point a, Point b, int mode);
 	public native String copy(Point a, Point b);

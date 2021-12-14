@@ -383,15 +383,30 @@ fz_new_outline_iterator(fz_context *ctx, fz_document *doc)
 	return fz_outline_iterator_from_outline(ctx, fz_load_outline(ctx, doc));
 }
 
+fz_link_dest
+fz_resolve_link_dest(fz_context *ctx, fz_document *doc, const char *uri)
+{
+	fz_ensure_layout(ctx, doc);
+	if (doc && doc->resolve_link_dest)
+		return doc->resolve_link_dest(ctx, doc, uri);
+	return fz_make_link_dest_none();
+}
+
+char *
+fz_format_link_uri(fz_context *ctx, fz_document *doc, fz_link_dest dest)
+{
+	if (doc && doc->format_link_uri)
+		return doc->format_link_uri(ctx, doc, dest);
+	fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create internal links for this document type");
+}
+
 fz_location
 fz_resolve_link(fz_context *ctx, fz_document *doc, const char *uri, float *xp, float *yp)
 {
-	fz_ensure_layout(ctx, doc);
-	if (xp) *xp = 0;
-	if (yp) *yp = 0;
-	if (doc && doc->resolve_link)
-		return doc->resolve_link(ctx, doc, uri, xp, yp);
-	return fz_make_location(-1, -1);
+	fz_link_dest dest = fz_resolve_link_dest(ctx, doc, uri);
+	if (xp) *xp = dest.x;
+	if (yp) *yp = dest.y;
+	return dest.loc;
 }
 
 void

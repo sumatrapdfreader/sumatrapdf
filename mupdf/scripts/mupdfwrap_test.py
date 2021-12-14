@@ -88,7 +88,14 @@ def test(path):
     # buffer_storage().
     #
     assert getattr(mupdf.Buffer, 'buffer_storage_raw')
-    assert getattr(mupdf.Buffer, 'buffer_storage', None) is None
+    assert getattr(mupdf.Buffer, 'buffer_storage')
+    b = mupdf.Buffer()
+    try:
+        b.buffer_storage()
+    except Exception as e:
+        assert 'Buffer.buffer_storage() is not available' in str(e)
+    else:
+        assert 0, 'Expected exception from mupdf.Buffer.buffer_storage()'
 
     assert getattr(mupdf.Buffer, 'buffer_extract_raw')
     assert getattr(mupdf.Buffer, 'buffer_extract')
@@ -137,7 +144,7 @@ def test(path):
     log(f'Have created scale: a={scale.a} b={scale.b} c={scale.c} d={scale.d} e={scale.e} f={scale.f}')
 
     colorspace = mupdf.Colorspace(mupdf.Colorspace.Fixed_RGB)
-    log(f'{colorspace.m_internal.key_storable.storable.refs}')
+    log(f'{colorspace.m_internal.key_storable.storable.refs=}')
     if 0:
         c = colorspace.clamp_color([3.14])
         log('colorspace.clamp_color returned c={c}')

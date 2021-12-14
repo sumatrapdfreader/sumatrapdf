@@ -39,6 +39,35 @@ changes that may be require to update between versions.
 Note, that we only list changes in existing APIs here, not all additions
 to the API.
 
+<h2>Changes from 1.19</h2>
+
+<p>
+The search API has been extended with one optional parameter: an integer array.
+If the 'hit_mark' array is provided it must be the same length as the quad array.
+Each entry corresponds to the quad of the same index.
+It will be filled in with 1 for each quad that starts a new search hit, and 0 for
+each quad that is a continuation of a search hit
+(for example when a match spans a line-break).
+
+<ul>
+<li>int fz_search_stext_page(ctx, text, needle, <i>int *hit_mark</i>, fz_quad *hit_bbox, int hit_max);
+<li>int fz_search_display_list(ctx, list, needle, <i>int *hit_mark</i>, fz_quad *hit_bbox, int hit_max);
+<li>int fz_search_page(ctx, page, needle, <i>int *hit_mark</i>, fz_quad *hit_bbox, int hit_max);
+<li>int fz_search_page_number(ctx, doc, page, needle, <i>int *hit_mark</i>, fz_quad *hit_bbox, int hit_max);
+<li>int fz_search_chapter_page_number(ctx, doc, c, p, needle, <i>int *hit_mark</i>, fz_quad *hit_bbox, int hit_max);
+</ul>
+
+<p>
+The Java search functions have also changed.
+They now return an array of array of quads instead of an array of quads.
+
+<ul>
+<li>Quad[][] StructuredText.search(String needle);
+<li>Quad[][] DisplayList.search(String needle);
+<li>Quad[][] Page.search(String needle);
+<li>Quad[][] Document.search(int chapter, int page, String needle);
+</ul>
+
 <h2>Changes from 1.18 to 1.19</h2>
 
 <p>We were inconsistent with the behaviour of fz_create_ and pdf_create_

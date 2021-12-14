@@ -133,8 +133,8 @@ static int count_chapter_pages(fz_context *ctx, epub_document *doc, epub_chapter
 	return acc->pages_in_chapter[ch->number];
 }
 
-static fz_location
-epub_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest, float *xp, float *yp)
+static fz_link_dest
+epub_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
 {
 	epub_document *doc = (epub_document*)doc_;
 	epub_chapter *ch;
@@ -161,16 +161,15 @@ epub_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest, float *x
 				if (y >= 0)
 				{
 					int page = y / ph;
-					if (yp) *yp = y - page * ph;
-					return fz_make_location(i, page);
+					return fz_make_link_dest_xyz(i, page, 0, y - page * ph, 0);
 				}
-				return fz_make_location(-1, -1);
+				return fz_make_link_dest_none();
 			}
-			return fz_make_location(i, 0);
+			return fz_make_link_dest_xyz(i, 0, 0, 0, 0);
 		}
 	}
 
-	return fz_make_location(-1, -1);
+	return fz_make_link_dest_none();
 }
 
 static void
@@ -847,7 +846,7 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 		doc->super.drop_document = epub_drop_document;
 		doc->super.layout = epub_layout;
 		doc->super.load_outline = epub_load_outline;
-		doc->super.resolve_link = epub_resolve_link;
+		doc->super.resolve_link_dest = epub_resolve_link;
 		doc->super.make_bookmark = epub_make_bookmark;
 		doc->super.lookup_bookmark = epub_lookup_bookmark;
 		doc->super.count_chapters = epub_count_chapters;

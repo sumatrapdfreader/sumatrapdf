@@ -244,7 +244,7 @@ void fz_print_stext_page_as_text(fz_context *ctx, fz_output *out, fz_stext_page 
 	NOTE: This is an experimental interface and subject to change
 	without notice.
 */
-int fz_search_stext_page(fz_context *ctx, fz_stext_page *text, const char *needle, fz_quad *quads, int max_quads);
+int fz_search_stext_page(fz_context *ctx, fz_stext_page *text, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
 
 /**
 	Return a list of quads to highlight lines inside the selection

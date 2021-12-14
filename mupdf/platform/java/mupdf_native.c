@@ -87,6 +87,7 @@ static JavaVM *jvm = NULL;
 
 /* All the cached classes/mids/fids we need. */
 
+static jclass cls_ArrayOfQuad;
 static jclass cls_Buffer;
 static jclass cls_ColorSpace;
 static jclass cls_Context;
@@ -108,6 +109,7 @@ static jclass cls_Image;
 static jclass cls_IndexOutOfBoundsException;
 static jclass cls_IntegerArray;
 static jclass cls_Link;
+static jclass cls_LinkDestination;
 static jclass cls_Location;
 static jclass cls_Matrix;
 static jclass cls_NativeDevice;
@@ -156,12 +158,12 @@ static jclass cls_UnsupportedOperationException;
 
 static jfieldID fid_Buffer_pointer;
 static jfieldID fid_ColorSpace_pointer;
-static jfieldID fid_Context_log;
-static jfieldID fid_Context_lock;
 static jfieldID fid_Context_Version_major;
 static jfieldID fid_Context_Version_minor;
 static jfieldID fid_Context_Version_patch;
 static jfieldID fid_Context_Version_version;
+static jfieldID fid_Context_lock;
+static jfieldID fid_Context_log;
 static jfieldID fid_Cookie_pointer;
 static jfieldID fid_DefaultAppearance_color;
 static jfieldID fid_DefaultAppearance_font;
@@ -176,6 +178,14 @@ static jfieldID fid_FitzInputStream_markpos;
 static jfieldID fid_FitzInputStream_pointer;
 static jfieldID fid_Font_pointer;
 static jfieldID fid_Image_pointer;
+static jfieldID fid_LinkDestination_chapter;
+static jfieldID fid_LinkDestination_height;
+static jfieldID fid_LinkDestination_page;
+static jfieldID fid_LinkDestination_type;
+static jfieldID fid_LinkDestination_width;
+static jfieldID fid_LinkDestination_x;
+static jfieldID fid_LinkDestination_y;
+static jfieldID fid_LinkDestination_zoom;
 static jfieldID fid_Matrix_a;
 static jfieldID fid_Matrix_b;
 static jfieldID fid_Matrix_c;
@@ -289,6 +299,7 @@ static jmethodID mid_Outline_init;
 static jmethodID mid_OutlineItem_init;
 static jmethodID mid_OutlineIterator_init;
 static jmethodID mid_PDFAnnotation_init;
+static jmethodID mid_LinkDestination_init;
 static jmethodID mid_PDFDocument_JsEventListener_onAlert;
 static jmethodID mid_PDFDocument_init;
 static jmethodID mid_PDFGraftMap_init;
@@ -432,14 +443,14 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hans == FZ_LANG_zh_Hans;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hant == FZ_LANG_zh_Hant;
 
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_XYZ == PDF_DESTINATION_XYZ;
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT == PDF_DESTINATION_FIT;
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_H == PDF_DESTINATION_FIT_H;
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_V == PDF_DESTINATION_FIT_V;
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_R == PDF_DESTINATION_FIT_R;
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_B == PDF_DESTINATION_FIT_B;
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_BH == PDF_DESTINATION_FIT_BH;
-	valid &= com_artifex_mupdf_fitz_PDFDocument_DESTINATION_FIT_BV == PDF_DESTINATION_FIT_BV;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT == FZ_LINK_DEST_FIT;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_B == FZ_LINK_DEST_FIT_B;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_H == FZ_LINK_DEST_FIT_H;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_BH == FZ_LINK_DEST_FIT_BH;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_V == FZ_LINK_DEST_FIT_V;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_BV == FZ_LINK_DEST_FIT_BV;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_R == FZ_LINK_DEST_FIT_R;
+	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_XYZ == FZ_LINK_DEST_XYZ;
 
 	valid &= com_artifex_mupdf_fitz_StrokeState_LINE_CAP_BUTT == FZ_LINECAP_BUTT;
 	valid &= com_artifex_mupdf_fitz_StrokeState_LINE_CAP_ROUND == FZ_LINECAP_ROUND;
@@ -826,7 +837,7 @@ static int find_fids(JNIEnv *env)
 	mid_Link_init = get_method(&err, env, "<init>", "(L"PKG"Rect;Ljava/lang/String;)V");
 
 	cls_Location = get_class(&err, env, PKG"Location");
-	mid_Location_init = get_method(&err, env, "<init>", "(IIFF)V");
+	mid_Location_init = get_method(&err, env, "<init>", "(II)V");
 
 	cls_Matrix = get_class(&err, env, PKG"Matrix");
 	fid_Matrix_a = get_field(&err, env, "a", "F");
@@ -873,6 +884,17 @@ static int find_fids(JNIEnv *env)
 	cls_PDFDocument = get_class(&err, env, PKG"PDFDocument");
 	fid_PDFDocument_pointer = get_field(&err, env, "pointer", "J");
 	mid_PDFDocument_init = get_method(&err, env, "<init>", "(J)V");
+
+	cls_LinkDestination = get_class(&err, env, PKG"LinkDestination");
+	mid_LinkDestination_init = get_method(&err, env, "<init>", "(IIIFFFFF)V");
+	fid_LinkDestination_chapter = get_field(&err, env, "chapter", "I");
+	fid_LinkDestination_page = get_field(&err, env, "page", "I");
+	fid_LinkDestination_type = get_field(&err, env, "type", "I");
+	fid_LinkDestination_x = get_field(&err, env, "x", "F");
+	fid_LinkDestination_y = get_field(&err, env, "y", "F");
+	fid_LinkDestination_width = get_field(&err, env, "width", "F");
+	fid_LinkDestination_height = get_field(&err, env, "height", "F");
+	fid_LinkDestination_zoom = get_field(&err, env, "zoom", "F");
 
 	cls_PDFDocument_JsEventListener = get_class(&err, env, PKG"PDFDocument$JsEventListener");
 	mid_PDFDocument_JsEventListener_onAlert = get_method(&err, env, "onAlert", "(Ljava/lang/String;)V");
@@ -937,6 +959,8 @@ static int find_fids(JNIEnv *env)
 	fid_Quad_lr_x = get_field(&err, env, "lr_x", "F");
 	fid_Quad_lr_y = get_field(&err, env, "lr_y", "F");
 	mid_Quad_init = get_method(&err, env, "<init>", "(FFFFFFFF)V");
+
+	cls_ArrayOfQuad = get_class(&err, env, "[L"PKG"Quad;");
 
 	cls_Rect = get_class(&err, env, PKG"Rect");
 	fid_Rect_x0 = get_field(&err, env, "x0", "F");
@@ -1090,6 +1114,7 @@ static void jni_detach_thread(jboolean detach)
 
 static void lose_fids(JNIEnv *env)
 {
+	(*env)->DeleteGlobalRef(env, cls_ArrayOfQuad);
 	(*env)->DeleteGlobalRef(env, cls_Buffer);
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);
 	(*env)->DeleteGlobalRef(env, cls_Context);
@@ -1110,6 +1135,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_IndexOutOfBoundsException);
 	(*env)->DeleteGlobalRef(env, cls_IntegerArray);
 	(*env)->DeleteGlobalRef(env, cls_Link);
+	(*env)->DeleteGlobalRef(env, cls_LinkDestination);
 	(*env)->DeleteGlobalRef(env, cls_Location);
 	(*env)->DeleteGlobalRef(env, cls_Matrix);
 	(*env)->DeleteGlobalRef(env, cls_NativeDevice);

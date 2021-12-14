@@ -267,7 +267,8 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 {
 	fz_context *ctx = get_context(env);
 	fz_page *page = from_Page(env, self);
-	fz_quad hits[256];
+	fz_quad hits[500];
+	int marks[500];
 	const char *needle = NULL;
 	int n = 0;
 
@@ -278,13 +279,13 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (!needle) return 0;
 
 	fz_try(ctx)
-		n = fz_search_page(ctx, page, needle, hits, nelem(hits));
+		n = fz_search_page(ctx, page, needle, marks, hits, nelem(hits));
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_QuadArray_safe(ctx, env, hits, n);
+	return to_SearchHits_safe(ctx, env, marks, hits, n);
 }
 
 JNIEXPORT jobject JNICALL
@@ -434,4 +435,16 @@ FUN(Page_createLink)(JNIEnv *env, jobject self, jobject jrect, jstring juri)
 	}
 
 	return to_Link_safe_own(ctx, env, link);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Page_getDocument)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_page *page = from_Page(env, self);
+	fz_document *doc = page ? page->doc : NULL;
+
+	if (!ctx || !page || !doc) return NULL;
+
+	return to_Document_safe_own(ctx, env, fz_keep_document(ctx, doc));
 }

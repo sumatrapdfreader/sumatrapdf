@@ -314,7 +314,7 @@ char *search(fz_document *doc, int number, float dpi, const char *needle)
 	{
 		loadPage(doc, number);
 
-		n = fz_search_page(ctx, lastPage, needle, hits, nelem(hits));
+		n = fz_search_page(ctx, lastPage, needle, NULL, hits, nelem(hits));
 
 		buf = fz_new_buffer(ctx, 0);
 

@@ -259,7 +259,7 @@ xps_init_document(fz_context *ctx, xps_document *doc)
 	doc->super.refs = 1;
 	doc->super.drop_document = xps_drop_document;
 	doc->super.load_outline = xps_load_outline;
-	doc->super.resolve_link = xps_lookup_link_target;
+	doc->super.resolve_link_dest = xps_lookup_link_target;
 	doc->super.count_pages = xps_count_pages;
 	doc->super.load_page = xps_load_page;
 	doc->super.lookup_metadata = xps_lookup_metadata;

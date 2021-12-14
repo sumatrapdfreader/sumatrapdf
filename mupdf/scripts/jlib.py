@@ -47,7 +47,6 @@ def expand_nv( text, caller=1):
     If <expression> ends with '=', this character is removed and we prefix the
     result with <expression>=.
 
-
     >>> x = 45
     >>> y = 'hello'
     >>> expand_nv( 'foo {x} {y=}')
@@ -60,6 +59,15 @@ def expand_nv( text, caller=1):
     >>> y = 'hello'
     >>> expand_nv( 'foo {x} {y!r=}')
     "foo 45 y='hello'"
+
+    If <expression> starts with '=', this character is removed and we show each
+    space-separated item in the remaining text as though it was appended with
+    '='.
+
+    >>> foo = 45
+    >>> y = 'hello'
+    >>> expand_nv('{=foo y}')
+    'foo=45 y=hello'
     '''
     if isinstance( caller, int):
         frame_record = inspect.stack()[ caller]
@@ -87,7 +95,14 @@ def expand_nv( text, caller=1):
                     if close < 0:
                         raise Exception( 'After "{" at offset %s, cannot find closing "}". text is: %r' % (
                                 pos, text))
-                    yield pre, text[ pos+1 : close]
+                    text2 = text[ pos+1 : close]
+                    if text2.startswith('='):
+                        text2 = text2[1:]
+                        for i, text3 in enumerate(text2.split()):
+                            pre2 = ' ' if i else pre
+                            yield pre2, text3 + '='
+                    else:
+                        yield pre, text[ pos+1 : close]
                     pre = ''
                     pos = close + 1
                 else:
@@ -329,6 +344,8 @@ def log( text, level=0, caller=1, nv=True, out=None, raw=False):
 
     text:
         The text to output.
+    level:
+        Lower values are more verbose.
     caller:
         How many frames to step up to get caller's context when evaluating
         file:line information and/or expressions. Or frame record as returned
@@ -571,7 +588,9 @@ def exception_info( exception=None, limit=None, out=None, prefix='', oneline=Fal
         else:
             # No exception; use current backtrace.
             for f in inspect.stack():
-                ff = f[1], f[2], f[3], f[4][0].strip()
+                f4 = f[4]
+                f4 = f[4][0].strip() if f4 else ''
+                ff = f[1], f[2], f[3], f4
                 frames.append(ff)
 
         # If there is a live exception, append frames from point in the try:
@@ -1203,19 +1222,22 @@ class Args:
         except StopIteration:
             return None
 
-def update_file( text, filename):
+def update_file( text, filename, return_different=False):
     '''
     Writes <text> to <filename>. Does nothing if contents of <filename> are
     already <text>.
+
+    If <return_different> is true, we return existing contents if <filename>
+    already exists and differs from <text>.
     '''
     try:
         with open( filename) as f:
             text0 = f.read()
     except OSError:
         text0 = None
-    if text == text0:
-        log( 'Unchanged: ' + filename)
-    else:
+    if text != text0:
+        if return_different and text0 is not None:
+            return text
         log( 'Updating:  ' + filename)
         # Write to temp file and rename, to ensure we are atomic.
         filename_temp = f'{filename}-jlib-temp'
@@ -1236,7 +1258,13 @@ def mtime( filename, default=0):
 def get_filenames( paths):
     '''
     Yields each file in <paths>, walking any directories.
+
+    If <paths> is a tuple (paths2, filter_) and <filter_> is callable, we yield
+    all files in <paths2> for which filter_(path2) returns true.
     '''
+    filter_ = lambda path: True
+    if isinstance( paths, tuple) and len( paths) == 2 and callable( paths[1]):
+        paths, filter_ = paths
     if isinstance( paths, str):
         paths = (paths,)
     for name in paths:
@@ -1244,9 +1272,11 @@ def get_filenames( paths):
             for dirpath, dirnames, filenames in os.walk( name):
                 for filename in filenames:
                     path = os.path.join( dirpath, filename)
-                    yield path
+                    if filter_( path):
+                        yield path
         else:
-            yield name
+            if filter_( name):
+                yield name
 
 def remove( path):
     '''
@@ -1369,10 +1399,11 @@ def build(
     infiles:
         Names of files that are read by <command>. Can be a single filename. If
         an item is a directory, we expand to all filenames in the directory's
-        tree.
+        tree. Can be (files2, filter_) as supported by jlib.get_filenames().
     outfiles:
-        Names of files that are written by <command>. Can also be a single
-        filename.
+        Names of files that are written by <command>. Can also be a
+        single filename. Can be (files2, filter_) as supported by
+        jlib.get_filenames().
     command:
         Command to run. {IN} and {OUT} are replaced by space-separated
         <infiles> and <outfiles> with '/' changed to '\' on Windows.
@@ -1418,6 +1449,8 @@ def build(
     os_name = platform.system()
     os_windows = (os_name == 'Windows' or os_name.startswith('CYGWIN'))
     def files_string(files):
+        if isinstance(files, tuple) and len(files) == 2 and callable(files[1]):
+            files = files[0],
         ret = ' '.join(files)
         if os_windows:
             # This works on Cygwyn; we might only need '\\' if running in a Cmd
@@ -1454,14 +1487,20 @@ def build(
     # fails but still creates target(s), then next time we will know target(s)
     # are not up to date.
     #
+    # We rename the command to a temporary file and then rename back again
+    # after the command finishes so that its mtime is unchanged if the command
+    # has not changed.
+    #
     ensure_parent_dir( command_filename)
-    with open( command_filename, 'w') as f:
-        pass
+    command_filename_temp = command_filename + '-'
+    remove(command_filename_temp)
+    if os.path.exists( command_filename):
+        rename(command_filename, command_filename_temp)
+    update_file( command, command_filename_temp)
 
     system( command, out=out, verbose=verbose, executable=executable, caller=2)
 
-    with open( command_filename, 'w') as f:
-        f.write( command)
+    rename( command_filename_temp, command_filename)
 
     return True
 

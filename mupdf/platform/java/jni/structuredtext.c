@@ -37,7 +37,8 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 {
 	fz_context *ctx = get_context(env);
 	fz_stext_page *text = from_StructuredText(env, self);
-	fz_quad hits[256];
+	fz_quad hits[500];
+	int marks[500];
 	const char *needle = NULL;
 	int n = 0;
 
@@ -48,13 +49,13 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (!needle) return NULL;
 
 	fz_try(ctx)
-		n = fz_search_stext_page(ctx, text, needle, hits, nelem(hits));
+		n = fz_search_stext_page(ctx, text, needle, marks, hits, nelem(hits));
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_QuadArray_safe(ctx, env, hits, n);
+	return to_SearchHits_safe(ctx, env, marks, hits, n);
 }
 
 JNIEXPORT jobject JNICALL

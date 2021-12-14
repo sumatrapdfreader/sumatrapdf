@@ -496,8 +496,36 @@ static const char *find_string(const char *s, const char *needle, const char **e
 	return *endp = NULL, NULL;
 }
 
+static void add_hit_char(fz_context *ctx, struct highlight *hits, int *hit_mark, fz_stext_line *line, fz_stext_char *ch, int is_at_start)
+{
+	float vfuzz = ch->size * hits->vfuzz;
+	float hfuzz = ch->size * hits->hfuzz;
+
+	if (hits->len > 0 && !is_at_start)
+	{
+		fz_quad *end = &hits->box[hits->len-1];
+		if (hdist(&line->dir, &end->lr, &ch->quad.ll) < hfuzz
+			&& vdist(&line->dir, &end->lr, &ch->quad.ll) < vfuzz
+			&& hdist(&line->dir, &end->ur, &ch->quad.ul) < hfuzz
+			&& vdist(&line->dir, &end->ur, &ch->quad.ul) < vfuzz)
+		{
+			end->ur = ch->quad.ur;
+			end->lr = ch->quad.lr;
+			return;
+		}
+	}
+
+	if (hits->len < hits->cap)
+	{
+		if (hit_mark)
+			hit_mark[hits->len] = is_at_start;
+		hits->box[hits->len] = ch->quad;
+		hits->len++;
+	}
+}
+
 int
-fz_search_stext_page(fz_context *ctx, fz_stext_page *page, const char *needle, fz_quad *quads, int max_quads)
+fz_search_stext_page(fz_context *ctx, fz_stext_page *page, const char *needle, int *hit_mark, fz_quad *quads, int max_quads)
 {
 	struct highlight hits;
 	fz_stext_block *block;
@@ -542,7 +570,9 @@ try_new_match:
 					if (inside)
 					{
 						if (haystack < end)
-							on_highlight_char(ctx, &hits, line, ch);
+						{
+							add_hit_char(ctx, &hits, hit_mark, line, ch, haystack == begin);
+						}
 						else
 						{
 							inside = 0;

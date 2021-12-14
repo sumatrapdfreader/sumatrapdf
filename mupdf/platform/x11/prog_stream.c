@@ -121,7 +121,7 @@ static int next_prog(fz_context *ctx, fz_stream *stm, size_t len)
 			unlock(ps);
 			fz_throw(ctx, FZ_ERROR_TRYLATER, "Not enough data yet");
 		}
-		len = ps->available - stm->pos;
+		len = fz_mini(len, ps->available - stm->pos);
 	}
 	unlock(ps);
 

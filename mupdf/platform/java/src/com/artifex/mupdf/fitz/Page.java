@@ -68,9 +68,14 @@ public class Page
 		return toStructuredText(null);
 	}
 
-	public native Quad[] search(String needle);
+	public native Quad[][] search(String needle);
 
 	public native byte[] textAsHtml();
 
+	public native Document getDocument();
+
 	public native Link createLink(Rect bbox, String uri);
+	public Link createLink(Rect bbox, LinkDestination dest) {
+		return createLink(bbox, getDocument().formatLinkURI(dest));
+	}
 }

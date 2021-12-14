@@ -1299,7 +1299,7 @@ static int mark_search_step(int cancel)
 		return -1;
 	}
 
-	count = fz_search_page_number(ctx, (fz_document*)pdf, rds_state.i-1, search_needle, quads, nelem(quads));
+	count = fz_search_page_number(ctx, (fz_document*)pdf, rds_state.i-1, search_needle, NULL, quads, nelem(quads));
 	if (count > 0)
 	{
 		pdf_page *page = pdf_load_page(ctx, pdf, rds_state.i-1);

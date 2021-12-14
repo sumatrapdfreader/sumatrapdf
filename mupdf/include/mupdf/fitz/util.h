@@ -95,10 +95,10 @@ fz_buffer *fz_new_buffer_from_display_list(fz_context *ctx, fz_display_list *lis
 	Record the hits in the hit_bbox array and return the number of
 	hits. Will stop looking once it has filled hit_max rectangles.
 */
-int fz_search_page(fz_context *ctx, fz_page *page, const char *needle, fz_quad *hit_bbox, int hit_max);
-int fz_search_page_number(fz_context *ctx, fz_document *doc, int number, const char *needle, fz_quad *hit_bbox, int hit_max);
-int fz_search_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int page, const char *needle, fz_quad *hit_bbox, int hit_max);
-int fz_search_display_list(fz_context *ctx, fz_display_list *list, const char *needle, fz_quad *hit_bbox, int hit_max);
+int fz_search_page(fz_context *ctx, fz_page *page, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
+int fz_search_page_number(fz_context *ctx, fz_document *doc, int number, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
+int fz_search_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int page, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
+int fz_search_display_list(fz_context *ctx, fz_display_list *list, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
 
 /**
 	Parse an SVG document into a display-list.

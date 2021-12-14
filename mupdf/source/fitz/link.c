@@ -84,3 +84,15 @@ fz_is_external_link(fz_context *ctx, const char *uri)
 
 	return uri[0] == ':';
 }
+
+fz_link_dest fz_make_link_dest_none(void)
+{
+	fz_link_dest dest = { { -1, -1 }, FZ_LINK_DEST_XYZ, 0, 0, 0, 0, 0 };
+	return dest;
+}
+
+fz_link_dest fz_make_link_dest_xyz(int chapter, int page, float x, float y, float z)
+{
+	fz_link_dest dest = { { chapter, page }, FZ_LINK_DEST_XYZ, x, y, 0, 0, z };
+	return dest;
+}

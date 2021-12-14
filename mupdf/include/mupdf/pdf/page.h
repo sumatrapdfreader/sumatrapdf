@@ -81,7 +81,7 @@ fz_link *pdf_load_links(fz_context *ctx, pdf_page *page);
 /*
 	Determine the size of a page.
 
-	Determine the page size in user space units, taking page rotation
+	Determine the page size in points, taking page rotation
 	into account. The page size is taken to be the crop box if it
 	exists (visible area after cropping), otherwise the media box will
 	be used (possibly including printing marks).

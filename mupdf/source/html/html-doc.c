@@ -56,8 +56,8 @@ htdoc_drop_document(fz_context *ctx, fz_document *doc_)
 	fz_drop_outline(ctx, doc->outline);
 }
 
-static fz_location
-htdoc_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest, float *xp, float *yp)
+static fz_link_dest
+htdoc_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
 {
 	html_document *doc = (html_document*)doc_;
 	const char *s = strchr(dest, '#');
@@ -67,12 +67,11 @@ htdoc_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest, float *
 		if (y >= 0)
 		{
 			int page = y / doc->html->page_h;
-			if (yp) *yp = y - page * doc->html->page_h;
-			return fz_make_location(0, page);
+			return fz_make_link_dest_xyz(0, page, 0, y - page * doc->html->page_h, 0);
 		}
 	}
 
-	return fz_make_location(-1, -1);
+	return fz_make_link_dest_none();
 }
 
 static int
@@ -89,7 +88,10 @@ htdoc_update_outline(fz_context *ctx, fz_document *doc, fz_outline *node)
 {
 	while (node)
 	{
-		node->page = htdoc_resolve_link(ctx, doc, node->uri, &node->x, &node->y);
+		fz_link_dest dest = htdoc_resolve_link(ctx, doc, node->uri);
+		node->page = dest.loc;
+		node->x = dest.x;
+		node->y = dest.y;
 		htdoc_update_outline(ctx, doc, node->down);
 		node = node->next;
 	}
@@ -214,7 +216,7 @@ htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer 
 	doc->super.drop_document = htdoc_drop_document;
 	doc->super.layout = htdoc_layout;
 	doc->super.load_outline = htdoc_load_outline;
-	doc->super.resolve_link = htdoc_resolve_link;
+	doc->super.resolve_link_dest = htdoc_resolve_link;
 	doc->super.make_bookmark = htdoc_make_bookmark;
 	doc->super.lookup_bookmark = htdoc_lookup_bookmark;
 	doc->super.count_pages = htdoc_count_pages;

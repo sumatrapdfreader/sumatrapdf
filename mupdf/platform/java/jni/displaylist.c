@@ -139,7 +139,8 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 {
 	fz_context *ctx = get_context(env);
 	fz_display_list *list = from_DisplayList(env, self);
-	fz_quad hits[256];
+	fz_quad hits[500];
+	int marks[500];
 	const char *needle = NULL;
 	int n = 0;
 
@@ -150,11 +151,11 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (!needle) return NULL;
 
 	fz_try(ctx)
-		n = fz_search_display_list(ctx, list, needle, hits, nelem(hits));
+		n = fz_search_display_list(ctx, list, needle, marks, hits, nelem(hits));
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_QuadArray_safe(ctx, env, hits, n);
+	return to_SearchHits_safe(ctx, env, marks, hits, n);
 }

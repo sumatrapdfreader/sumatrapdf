@@ -33,7 +33,7 @@ fz_page *xps_load_page(fz_context *ctx, fz_document *doc, int chapter, int numbe
 fz_outline *xps_load_outline(fz_context *ctx, fz_document *doc);
 void xps_run_page(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
 fz_link *xps_load_links(fz_context *ctx, fz_page *page);
-fz_location xps_lookup_link_target(fz_context *ctx, fz_document *doc, const char *target_uri, float *xp, float *yp);
+fz_link_dest xps_lookup_link_target(fz_context *ctx, fz_document *doc, const char *target_uri);
 
 int xps_strcasecmp(char *a, char *b);
 void xps_resolve_url(fz_context *ctx, xps_document *doc, char *output, char *base_uri, char *path, int output_size);

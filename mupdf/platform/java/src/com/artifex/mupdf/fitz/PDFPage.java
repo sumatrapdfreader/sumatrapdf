@@ -67,54 +67,28 @@ public class PDFPage extends Page
 
 	public native Matrix getTransform();
 
-	/* type is one of PDFDocument.DESTINATION_* */
-	public native Link createLink(Rect bbox, int pageno, int type, float ... args);
-
-	public Link createLinkXYZ(Rect bbox, int pageno, float left, float top, float zoom)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_XYZ, left, top, zoom);
+	public Link createLinkFit(Rect bbox, int page) {
+		return createLink(bbox, LinkDestination.Fit(0, page));
 	}
-	public Link createLinkXYZ(Rect bbox, int pageno, Point p, float zoom)
-	{
-		return createLinkXYZ(bbox, pageno, p.x, p.y, zoom);
+	public Link createLinkFitB(Rect bbox, int page) {
+		return createLink(bbox, LinkDestination.FitB(0, page));
 	}
-
-	public Link createLinkFit(Rect bbox, int pageno)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT);
+	public Link createLinkXYZ(Rect bbox, int page, float x, float y, float zoom) {
+		return createLink(bbox, LinkDestination.XYZ(0, page, x, y, zoom));
 	}
-
-	public Link createLinkFitH(Rect bbox, int pageno, float top)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_H, top);
+	public Link createLinkFitR(Rect bbox, int page, float x, float y, float w, float h) {
+		return createLink(bbox, LinkDestination.FitR(0, page, x, y, w, h));
 	}
-
-	public Link createLinkFitV(Rect bbox, int pageno, float left)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_V, left);
+	public Link createLinkFitV(Rect bbox, int page, float x) {
+		return createLink(bbox, LinkDestination.FitV(0, page, x));
 	}
-
-	public Link createLinkFitR(Rect bbox, int pageno, float left, float bottom, float right, float top)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_R, left, bottom, right, top);
+	public Link createLinkFitBV(Rect bbox, int page, float x) {
+		return createLink(bbox, LinkDestination.FitBV(0, page, x));
 	}
-	public Link createLinkFitR(Rect bbox, int pageno, Rect area)
-	{
-		return createLinkFitR(bbox, pageno, area.x0, area.y0, area.x1, area.y0);
+	public Link createLinkFitH(Rect bbox, int page, float y) {
+		return createLink(bbox, LinkDestination.FitH(0, page, y));
 	}
-
-	public Link createLinkFitB(Rect bbox, int pageno)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_B);
-	}
-
-	public Link createLinkFitBH(Rect bbox, int pageno, float top)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_BH, top);
-	}
-
-	public Link createLinkFitBV(Rect bbox, int pageno, float left)
-	{
-		return createLink(bbox, pageno, PDFDocument.DESTINATION_FIT_BV, left);
+	public Link createLinkFitBH(Rect bbox, int page, float y) {
+		return createLink(bbox, LinkDestination.FitBH(0, page, y));
 	}
 }

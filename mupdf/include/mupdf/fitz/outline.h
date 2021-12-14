@@ -63,8 +63,8 @@ int fz_outline_iterator_down(fz_context *ctx, fz_outline_iterator *iter);
 
 	Ownership of pointers are retained by the caller. The item data will be copied.
 
-	After an insert, we implicitly do a next, so that a successive insert operation
-	would insert after the item inserted here. The return code is therefore as for next.
+	After an insert, we do not change where we are pointing.
+	The return code is the same as for next, it indicates the current iterator position.
 */
 int fz_outline_iterator_insert(fz_context *ctx, fz_outline_iterator *iter, fz_outline_item *item);
 

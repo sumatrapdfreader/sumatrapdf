@@ -2534,7 +2534,7 @@ void do_main(void)
 			search_hit_count = fz_search_chapter_page_number(ctx, doc,
 				search_page.chapter, search_page.page,
 				search_needle,
-				search_hit_quads, nelem(search_hit_quads));
+				NULL, search_hit_quads, nelem(search_hit_quads));
 			trace_action("hits = doc.loadPage(%d).search(%q);\n", fz_page_number_from_location(ctx, doc, search_page), search_needle);
 			trace_action("print('Search page %d:', repr(%q), hits.length, repr(hits));\n", fz_page_number_from_location(ctx, doc, search_page), search_needle);
 			if (search_hit_count)

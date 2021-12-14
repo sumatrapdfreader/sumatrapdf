@@ -12,125 +12,24 @@
 
 <article>
 
-<p>
-MuPDF is an open source software framework for viewing and converting PDF, XPS, and E-book documents.
-There are viewers for various platforms,
-several command line tools,
-and a software library for building tools and applications.
-
-<h2>Viewers</h2>
-
-<p>
-For Linux and Windows there are two viewers. One is a very basic viewer using x11 and win32, respectively.
-It has been supplanted by a newer viewer using OpenGL for rendering, which has more features
-such as table of contents, unicode search, etc.
-We keep the old viewers around for older systems where OpenGL is not available.
-
-<p>
-Read the <a href="manual-mupdf-gl.html">manual for the new Linux and Windows viewer</a>.
-
-<p>
-Android currently has several different viewers with varying degrees of complexity:
-
-<dl>
-<dt><a href="https://play.google.com/store/apps/details?id=com.artifex.mupdfdemo">MuPDF</a>
-<dd>The main app on Google Play. Supports forms and annotations.
-<dt><a href="https://play.google.com/store/apps/details?id=com.artifex.mupdf.viewer.app">MuPDF viewer</a>
-<dd>A slimmed down viewer only variant of the main app.
-<dt><a href="https://play.google.com/store/apps/details?id=com.artifex.mupdf.mini.app">MuPDF mini</a>
-<dd>A minimal code example of a document viewer.
-</dl>
-
-<p>
-The iOS viewer is available on the <a href="https://itunes.apple.com/us/app/mupdf/id482941798">App Store</a>.
-
-<p>
-There is also a
-<a href="https://mupdf.com/wasm">WASM viewer</a> for running MuPDF in the browser.
-
 <h2>Command Line Tools</h2>
 
 <p>
-The command line tools are all gathered into one umbrella command: mutool.
+The command line tools are all gathered into one umbrella command:
 
-<p>
-For rendering and converting documents there are three commands available:
-
-<dl>
-<dt><a href="manual-mutool-draw.html">mutool draw</a>
-<dd>This is the more customizable tool, but also has a more difficult set of command line options.
-It is primarily used for rendering a document to image files.
-<dt><a href="manual-mutool-convert.html">mutool convert</a>
-<dd>This tool is used for converting documents into other formats, and is easier to use.
-<dt><a href="manual-mutool-trace.html">mutool trace</a>
-<dd>This is a debugging tool used for printing a trace of the graphics device calls on a page.
-</dl>
-
-<p>
-There are also several tools specifically for working with PDF files:
-
-<dl>
-<dt><a href="manual-mutool-show.html">mutool show</a>
-<dd>A tool for displaying the internal objects in a PDF file.
-<dt><a href="manual-mutool-extract.html">mutool extract</a>
-<dd>Extract images and embedded font resources.
-<dt><a href="manual-mutool-clean.html">mutool clean</a>
-<dd>Rewrite PDF file. Used to fix broken files, or to make a PDF file human editable.
-<dt><a href="manual-mutool-merge.html">mutool merge</a>
-<dd>Merge pages from multiple input files into a new PDF.
-<dt><a href="manual-mutool-poster.html">mutool poster</a>
-<dd>Divide pages of a PDF into pieces that can be printed and merged into a large poster.
-<dt><a href="manual-mutool-create.html">mutool create</a>
-<dd>Create a new PDF file from a text file with graphics commands.
-<dt><a href="manual-mutool-sign.html">mutool sign</a>
-<dd>List, verify, and sign digital signatures in PDF files.
-<dt><a href="manual-mutool-info.html">mutool info</a>
-<dd>Print details about objects on each page in a PDF file.
-<dt><a href="manual-mutool-pages.html">mutool pages</a>
-<dd>Print details about media box, artbox, etc for each page in a PDF file.
-</dl>
-
-<p>
-And finally, there is a tool for doing anything you can imagine:
-
-<dl>
-<dt><a href="manual-mutool-run.html">mutool run</a>
-<dd>A tool for running Javascript programs with access to the MuPDF library functions.
-</dl>
+<ul>
+<li><a href="mutool.html">mutool</a>
+</ul>
 
 <h2>Library</h2>
 
 <p>
-The library is written in portable C.
-<!--
-To learn more about the C interface, read the <a href="book/nav.xhtml">MuPDF Explored</a> book.
-The book is also available as a <a href="book.pdf">PDF</a> and <a href="book.epub">EPUB</a> file.
--->
+The library is written in portable C. There is also a Java library, which uses JNI to provide access to the C library.
 
 <ul>
-<li><a href="building.html">How to build the library</a>.
-<li><a href="coding-overview.html">Overview</a>.
-<li><a href="coding-style.html">Coding style</a>.
-<li><a href="coding-progressive.html">Progressive loading</a>.
-<li><a href="thirdparty.html">List of third party libraries</a>.
-<li><a href="api/index.html">MuPDF API reference manual.</a>.
-<li><a href="api/changes.html">Changes in the public API between versions</a>.
+<li><a href="library.html">MuPDF library</a>
 </ul>
 
-<p>
-There is also a Java library, which uses JNI to provide access to the C library.
-The Java classes provide an interface very similar to that available in the
-<a href="manual-mutool-run.html">mutool run</a> command line tool.
-This Java library also powers the Android SDK.
-
-<p>
-If you want to build an application for Android, you have several options. You
-can base it off one of the existing viewers, or build a new app using the Java
-library directly.
-
-<ul>
-<li><a href="android-sdk.html">Android SDK documentation</a>.
-</ul>
 
 <h2>App Kit</h2>
 
@@ -138,7 +37,6 @@ library directly.
 We also provide an App Kit for developing mobile apps using MuPDF.
 You can get started with the sample apps for iOS and Android.
 
-<p>
 <ul>
 <li><a href="https://mupdf.com/appkit">App Kit documentation</a>
 </ul>
@@ -149,9 +47,17 @@ You can get started with the sample apps for iOS and Android.
 Handy if you would like a top level overview of the technology ecosystem,
 including notes and links to associated repositories.
 
-<p>
 <ul>
 <li><a href="ecosystem.html">MuPDF technology ecosystem</a>
+</ul>
+
+<h2>Viewers</h2>
+
+<p>
+Introduction to MuPDF viewers, including desktop, mobile and web.
+
+<ul>
+<li><a href="viewers.html">MuPDF Viewers</a>
 </ul>
 
 <h2>Contributing</h2>
@@ -169,7 +75,7 @@ Artifex Software also has a <a href="https://www.artifex.com/developers-bug-boun
 
 <footer>
 <a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
-Copyright &copy; 2006-2018 Artifex Software Inc.
+Copyright &copy; 2006-2021 Artifex Software Inc.
 </footer>
 
 </body>

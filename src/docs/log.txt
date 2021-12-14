@@ -1,5 +1,8 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-12-14 Tue
+- update mupdf
+
 2021-12-08 Wed
 - respect DiskAccess=0 better (fixes #2263)
   https://github.com/sumatrapdfreader/sumatrapdf/issues/2263
