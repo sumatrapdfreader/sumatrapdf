@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-cb1428e1a9d03664e6fb684e2d1bee9a9ba9d5fe
+4fb0b1f7287c541fd89362213b6791add38b2d87
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2629,6 +2629,7 @@ ca:Desa a un PDF &existent
 cn:保存到当前 PDF 文件(&S)
 co:&Arregistrà in u PDF esistente
 de:In bestehendes PDF &speichern
+dk:&Gem i eksisterende PDF
 el:Αποθήκευση σε υπάρχον PDF
 es:&Guardar en un PDF existente
 hu:Meglévő PDF-be mentés
@@ -2648,6 +2649,7 @@ ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
 co:&Circà cù Google
 de:Mit Google &suchen
+dk:&Søg med Google
 el:Αναζήτηση με Google
 es:&Buscar con Google
 hu:Keresés Google-el
@@ -2997,6 +2999,7 @@ am:&Ընդգծել\tu
 cn:下划线(&U)\tU
 co:&Sottulineatu\tu
 de:&Unterstreichen\tu
+dk:&Understreg\tu
 es:&Subrayar\tu
 hu:Aláhúzás\tu
 it:&Sottolineato\ts
@@ -7643,7 +7646,9 @@ uz:Portable usulida andoza PDF ko'rish vositasini o'zgartirib bo'lmaydi
 vn:Không thay đổi được trình đọc PDF chính ở chế độ di động
 :Delete Annotation\tDel
 cn:删除标注\tDel
+co:Squassà l’annutazione\tSuppr
 de:Anmerkung löschen\tDel
+it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
 :Denied Permissions:
@@ -11248,7 +11253,7 @@ by:Памылка ўсталёўкі!
 ca-xv:La instal·lació ha fallat!
 ca:Ha fallat la instal·lació.
 cn:安装失败！
-co:Installazione fiasca !
+co:Installazione fiascata !
 cy:Methodd y gosod!
 cz:Instalace se nezdařila!
 de:Die Installation ist fehlgeschlagen!
@@ -15730,6 +15735,7 @@ ca:Cerca amb el &Bing
 cn:使用必应搜索(&B)
 co:Circà cù &Bing
 de:Mit &Bing suchen
+dk:Søg med &Bing
 el:Αναζήτηση με Bing
 es:Buscar con &Bing
 hu:Keresés &Bing-el
@@ -15749,6 +15755,7 @@ ca:Cerca amb el &Google
 cn:使用谷歌搜索(&G)
 co:Circà cù &Google
 de:Mit &Google suchen
+dk:Søg med &Google
 el:Αναζήτηση με Google
 es:Buscar con &Google
 hu:Keresés &Google-el
@@ -18358,7 +18365,7 @@ by:Памылка знішчэння
 ca-xv:La desinstal·lació ha fallat
 ca:Ha fallat la desinstal·lació
 cn:卸载失败
-co:Disinstallazione fiasca
+co:Disinstallazione fiascata
 cy:Methodd y gosod
 cz:Odinstalace programu se nezdařila
 de:Die Deinstallation ist fehlgeschlagen
