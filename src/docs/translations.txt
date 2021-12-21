@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4fb0b1f7287c541fd89362213b6791add38b2d87
+9fea3762bac07510bed54b37e0baa32adf4ea750
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -416,6 +416,7 @@ co:&Abbandunà
 de:&Abbrechen
 el:&Άκυρο
 es:Cancelar
+fr:Annuler
 hu:&Mégse
 it:&Annulla
 kr:취소
@@ -439,6 +440,7 @@ co:&Cursore
 de:&Cursor
 el:Αγκύλη
 es:&Cursor
+fr:Curseur
 hr:&Znak za umetanje
 hu:Kurzor
 it:&Cursore
@@ -533,6 +535,7 @@ co:&Cuntinuà l’installazione di a versione 32-bit
 de:Installation der 32-Bit-Version fortsetzen
 el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
+fr:Continuer l'installation de la version 32-bits
 hu:Folytatás a 32-bites verzió telepítésével
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
@@ -554,6 +557,7 @@ co:&Cupià a selezzione\tCtrl+C
 de:Auswahl kopieren \tStrg+C
 el:Αντιγραφή επιλογής \tCtrl-C
 es:&Copiar la selección \tCtrl-C
+fr:Copier la sélection \tCtrl-C
 hu:Kiválasztás másolása \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
@@ -573,6 +577,7 @@ co:&Cupià in u preme’papei\tCtrl+C
 de:In Zwischenablage kopieren\tStrg+C
 el:Αντιγραφή στο πρόχειρο\tCtrl-C
 es:&Copiar al portapapeles\tCtrl-C
+fr:Copier dans le presse-papiers
 hu:Vágólapra másolás\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
@@ -593,6 +598,7 @@ co:&Scartà i cambiamenti
 de:Verwerfen
 el:Απόρριψη
 es:&Descartar
+fr:&Abandonner les modifications
 hu:Változtatások elvetése
 it:Scarica
 kr:무시(&D)
@@ -2632,6 +2638,7 @@ de:In bestehendes PDF &speichern
 dk:&Gem i eksisterende PDF
 el:Αποθήκευση σε υπάρχον PDF
 es:&Guardar en un PDF existente
+fr:&Sauvegarder dans le PDF existant
 hu:Meglévő PDF-be mentés
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
@@ -2652,6 +2659,7 @@ de:Mit Google &suchen
 dk:&Søg med Google
 el:Αναζήτηση με Google
 es:&Buscar con Google
+fr:&Rechercher avec Google
 hu:Keresés Google-el
 it:Cerca con Google
 kw:&Hwilas Gans Google
@@ -2904,6 +2912,7 @@ de:&Text
 dk:&Tekst
 el:Κείμενο
 es:&Texto
+fr:&Texte
 hr:&Tekst
 hu:Szöveg
 it:&Testo
@@ -2985,6 +2994,7 @@ de:Mi&t Google übersetzen
 dk:&Oversæt med Google
 el:Μετάφραση με Google
 es:&Traducir con Google
+fr:&Traduire avec Google
 hu:Fordítsd le a Google-el
 it:&Traduci con Google
 kr:Google로 번역(&T)
@@ -3000,7 +3010,9 @@ cn:下划线(&U)\tU
 co:&Sottulineatu\tu
 de:&Unterstreichen\tu
 dk:&Understreg\tu
+el:Υπογράμμιση\tu
 es:&Subrayar\tu
+fr:&Souligner\tu
 hu:Aláhúzás\tu
 it:&Sottolineato\ts
 nl:&Onderstrepen\tu
@@ -4575,6 +4587,7 @@ co:Culore di u fondu :
 de:Hintergrundfarbe:
 el:Χρώμα φόντου:
 es:Color de fondo
+fr:Couleur d'arrière-plan
 hr:Boja pozadine:
 hu:Háttérszín:
 it:Colore sfondo:
@@ -5410,6 +5423,7 @@ co:Cuntrollu di e nove versioni…
 de:Nach einem Update suchen...
 el:Έλεγχος για ενημέρωση...
 es:Buscando actualizaciones...
+fr:Vérifier les mises à jour
 hu:Frissítés keresése...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
@@ -5585,6 +5599,7 @@ de:Farbe:
 dk:Farve:
 el:Χρώμα:
 es:Color:
+fr:Couleur
 hr:Boja:
 hu:Szín:
 it:Colore:
@@ -7648,6 +7663,8 @@ vn:Không thay đổi được trình đọc PDF chính ở chế độ di độ
 cn:删除标注\tDel
 co:Squassà l’annutazione\tSuppr
 de:Anmerkung löschen\tDel
+el:Διαγραφή σχολίου\tDel
+fr:Supprimer l'annotation\tDel
 it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
@@ -7857,6 +7874,7 @@ co:Ùn micca installà
 de:Nicht installieren
 el:Μη γίνει εγκατάσταση
 es:No instalar
+fr:Ne pas installer
 hu:Ne telepítsd
 it:Non installare
 kr:설치하지 마십시오
@@ -7878,6 +7896,7 @@ co:Scaricà a versione 64-bit
 de:64-Bit-Version herunterladen
 el:Λήψη έκδοσης 64-bit 
 es:Descargar la versión de 64 bits
+fr:Télécharger la version 64-bits
 hu:64-bites verzió letöltése
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
@@ -11231,6 +11250,7 @@ co:Installà è rilancià
 de:Installieren und neu starten
 el:Εγκατάσταση και επανεκκίνηση 
 es:Instalar y reiniciar
+fr:Installer et redémarrer
 hu:Telepítés és újraindítás
 it:Installa e ri-esegui
 kr:설치 후 재실행
@@ -11378,6 +11398,7 @@ co:Installazione di SumatraPDF 32-bit nant’à un sistema 64-bit
 de:32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem installieren
 el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστημα 64 bit 
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
+fr:Installation de SumatraPDF 32-bits sur un système 64-bits
 hu:32-bites SumatraPDF telepítése 64-bites operációs rendszerre
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
@@ -12197,6 +12218,7 @@ co:Nova versione dispunibule
 de:Neue Version verfügbar
 el:Νέα έκδοση διαθέσιμη
 es:Disponible una versión nueva
+fr:Nouvelle version disponible
 hu:Új verzió elérhető
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
@@ -15482,6 +15504,7 @@ co:S&elezzione
 de:Auswahl
 el:Επιλογή
 es:S&elección
+fr:S&élection
 hu:K&iválasztás
 it:S&elezione
 kr:선택(&e)
@@ -15523,6 +15546,7 @@ de:SVG-Dokumente
 dk:SVG-dokumenter
 el:Έγγραφα SVG
 es:Documentos SVG
+fr:Documents SVG
 hu:SVG dokumentumok
 it:Documenti SVG
 kw:Dogvennow SVG
@@ -15537,7 +15561,9 @@ bg:Запази Обясненията в съществуващ PDF
 cn:将标注保存到当前 PDF
 co:Arregistrà l’annutazioni in u PDF esistente
 de:Anmerkungen in bestehende PDF-Dateien speichern
+el:Αποθήκευση σχολίων σε υπάρχον PDF
 es:Guardar Anotaciones a PDF existente
+fr:Sauvegarder les annotations dans le PDF existant.
 hu:Megjegyzések elmentése a meglévő PDF-be
 it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
@@ -15649,6 +15675,7 @@ co:Arregistrà l’annutazioni ?
 de:Anmerkungen speichern?
 el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
+fr:Sauvegarder les annotations ?
 hu:Megjegyzések mentése?
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
@@ -15669,6 +15696,7 @@ co:Arregistrà i cambiamenti in un novu PDF
 de:Änderungen in einer neuen PDF-Datei speichern
 el:Αποθήκευση αλλαγών σε νέο PDF
 es:Guardar los cambios en un nuevo PDF
+fr:Enregistrer les modifications dans un nouveau PDF
 hr:Spremi promjene u novi PDF
 hu:Változtatások elmentése egy új PDF-be
 it:Salva modifiche in un nuovo PDF
@@ -15695,6 +15723,7 @@ co:Arregistrà i cambiamenti in u PDF esistente
 de:Änderungen an vorhandener PDF speichern
 el:Αποθήκευση αλλαγών σε υπάρχον PDF
 es:Guardar los cambios en un PDF existente
+fr:Enregistrer les modifications dans le PDF existant.
 hr:Spremi promjene u postojeći PDF
 hu:Változtatások mentése a meglévő PDF-be
 it:Salva modifiche in un PDF esistente
@@ -15718,6 +15747,7 @@ co:Arregistrà in un &novu PDF
 de:In &neue PDF speichern
 el:Αποθήκευση σε νέο PDF
 es:Guardar en un PDF &nuevo
+fr:Sauvegarder dans un &nouveau PDF
 hu:Mentés új PDF-be
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
@@ -15738,6 +15768,7 @@ de:Mit &Bing suchen
 dk:Søg med &Bing
 el:Αναζήτηση με Bing
 es:Buscar con &Bing
+fr:Rechercher avec &Bing
 hu:Keresés &Bing-el
 it:Cerca con &Bing
 kr:Bing으로 검색(&B)
@@ -15758,6 +15789,7 @@ de:Mit &Google suchen
 dk:Søg med &Google
 el:Αναζήτηση με Google
 es:Buscar con &Google
+fr:Rechercher avec &Google
 hu:Keresés &Google-el
 it:Cerca con &Google
 kr:Google로 검색(&G)
@@ -16865,6 +16897,7 @@ de:Diese Version überspringen
 dk:Ignorer denne version
 el:Παράλειψη αυτής της έκδοσης
 es:Omitir esta versión
+fr:Ignorer cette version
 hu:Ezen verzió kihagyása
 it:Salta questa versione
 kr:이 버전 건너뛰기
@@ -18283,6 +18316,7 @@ de:Mit &DeepL übersetzen
 dk:Oversæt med &DeepL
 el:Μετάφραση με DeepL
 es:Traducir con &DeepL
+fr:Traduire avec &DeepL
 hu:Fordítsd le a DeepL-el
 it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
@@ -18553,6 +18587,7 @@ de:Nicht gespeicherte Anmerkungen
 dk:Ikke-gemte annoteringer
 el:Μη αποθηκευμένα σχόλια
 es:Anotaciones sin guardar
+fr:Annotations non sauvegardées
 hr:Nespremljene bilješke
 hu:Mentetlen megjegyzések
 it:Annotazioni non salvate
@@ -18575,6 +18610,7 @@ de:Nicht gespeicherte Anmerkungen in '%s'
 dk:Ikke-gemte annoteringer i '%s'
 el:Μη αποθηκευμένα σχόλια στο '%s'
 es:Anotaciones sin guardar en «%s»
+fr:Annotations dans ‘%s’ non sauvegardées
 hu:Mentetlen megjegyzések itt: '%s'
 it:Annotazioni non salvate in '%s'
 kw:Notenyansow anwithys yn '%s'
@@ -19054,6 +19090,7 @@ de:Sie haben ungespeicherte Anmerkungen.
 dk:Du har ikke-gemte annoteringer
 el:Έχετε μη αποθηκευμένα σχόλια
 es:Hay anotaciones sin guardar
+fr:Vous avez des annotations non sauvegardées
 hr:Imate nespremljene bilješke
 hu:Mentetlen megjegyzéseid vannak
 id:Kamu memiliki catatan yang belum tersimpan
@@ -19079,6 +19116,7 @@ de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neu
 dk:Du har version '%s' og version '%s' er tilgængelig. \nVil du installere ny version?
 el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η έκδοση '%s'.\nΘέλετε να εγκαταστήσετε τη νέα έκδοση;
 es:Esta es la versión «%s» y ya está disponible la versión «%s».\N¿Quiere instalar la versión nueva?
+fr:Vous avez la version ‘%s’ et la version ‘%s’ est disponible. \nVoulez-vous installer la nouvelle version ?
 hu:A jelenlegi verziód '%s' és már a '%s' verzió is elérhető.\nSzeretnéd feltelepíteni az új verziót?
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
 kw:Yma dhis gwersyon '%s' ha gwersyon '%s' yw kavadow.\nA vynn'ta lea gwersyon nowydh?
@@ -19097,6 +19135,7 @@ de:Sie installieren die 32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebss
 dk:Du installerer 32-bit SumatraPDF på 64-bit operativsystem. \nVil du hente \n64-bit version?
 el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σύστημα 64-bit.\nΘέλετε να κατεβάσετε\nτην έκδοση 64-bit;
 es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
+fr:Installation de SumatraPDF 32-bits sur un  système 64-bits. \nVoulez-vous télécharger la  version \n64-bits
 hu:A SumatraPDF 32-bites verzióját telepíted éppen egy 64-bites operációs rendszerre.\nSzeretnéd inkább letölteni a\n64-bites verziót?
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
 kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwersyon 64-byt?
