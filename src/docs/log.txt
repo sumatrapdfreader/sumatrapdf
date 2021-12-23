@@ -1,5 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-12-23 Fri
+- update mupdf (fixes #2268)
+  fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/2268
+  i.e. repairs outline to load it
+  unfortunately it marks the file as having unsaved annotations
+
 2021-12-14 Tue
 - update mupdf
 
