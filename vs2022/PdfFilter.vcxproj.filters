@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ifilter">
+      <UniqueIdentifier>{74F9F98B-E0D8-7827-E9F0-03FE554FDF88}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\EbookDoc.h" />
+    <ClInclude Include="..\src\EngineAll.h" />
+    <ClInclude Include="..\src\EngineBase.h" />
+    <ClInclude Include="..\src\EngineMupdfImpl.h" />
+    <ClInclude Include="..\src\MobiDoc.h" />
+    <ClInclude Include="..\src\PalmDbReader.h" />
+    <ClInclude Include="..\src\ifilter\EpubFilter.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ifilter\FilterBase.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ifilter\PdfFilter.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ifilter\TeXFilter.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\EbookDoc.cpp" />
+    <ClCompile Include="..\src\EngineBase.cpp" />
+    <ClCompile Include="..\src\EngineMupdf.cpp" />
+    <ClCompile Include="..\src\MUPDF_Exports.cpp" />
+    <ClCompile Include="..\src\MobiDoc.cpp" />
+    <ClCompile Include="..\src\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\ifilter\EpubFilter.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ifilter\PdfFilter.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ifilter\TeXFilter.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\ifilter\PdfFilter.rc">
+      <Filter>ifilter</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

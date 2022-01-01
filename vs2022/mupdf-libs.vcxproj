@@ -1,0 +1,1466 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|Win32">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|x64">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|Win32">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|x64">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|Win32">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|x64">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|Win32">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|x64">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{18B1F38A-0469-35D8-6D70-0E345947D0C8}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>mupdf-libs</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\out\dbg32\</OutDir>
+    <IntDir>..\out\dbg32\obj\x32\Debug\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\out\dbg64\</OutDir>
+    <IntDir>..\out\dbg64\obj\x64\Debug\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <OutDir>..\out\dbg64_asan\</OutDir>
+    <IntDir>..\out\dbg64_asan\obj\x64_asan\Debug\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\out\rel32\</OutDir>
+    <IntDir>..\out\rel32\obj\x32\Release\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\out\rel64\</OutDir>
+    <IntDir>..\out\rel64\obj\x64\Release\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <OutDir>..\out\rel64_asan\</OutDir>
+    <IntDir>..\out\rel64_asan\obj\x64_asan\Release\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <OutDir>..\out\rel32_prefast\</OutDir>
+    <IntDir>..\out\rel32_prefast\obj\x32\ReleaseAnalyze\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <OutDir>..\out\rel64_prefast\</OutDir>
+    <IntDir>..\out\rel64_prefast\obj\x64\ReleaseAnalyze\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <OutDir>..\out\rel64_prefast_asan\</OutDir>
+    <IntDir>..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\mupdf-libs\</IntDir>
+    <TargetName>mupdf-libs</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4312;4996;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_ITERATOR_DEBUGGING=0;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib-ng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\extract\include\extract.h" />
+    <ClInclude Include="..\ext\extract\include\extract_alloc.h" />
+    <ClInclude Include="..\ext\extract\include\extract_buffer.h" />
+    <ClInclude Include="..\ext\extract\include\extract_buffer_impl.h" />
+    <ClInclude Include="..\ext\extract\include\extract_compat_inline.h" />
+    <ClInclude Include="..\ext\extract\src\astring.h" />
+    <ClInclude Include="..\ext\extract\src\document.h" />
+    <ClInclude Include="..\ext\extract\src\docx.h" />
+    <ClInclude Include="..\ext\extract\src\docx_template.h" />
+    <ClInclude Include="..\ext\extract\src\html.h" />
+    <ClInclude Include="..\ext\extract\src\mem.h" />
+    <ClInclude Include="..\ext\extract\src\memento.h" />
+    <ClInclude Include="..\ext\extract\src\odt.h" />
+    <ClInclude Include="..\ext\extract\src\odt_template.h" />
+    <ClInclude Include="..\ext\extract\src\outf.h" />
+    <ClInclude Include="..\ext\extract\src\sys.h" />
+    <ClInclude Include="..\ext\extract\src\text.h" />
+    <ClInclude Include="..\ext\extract\src\xml.h" />
+    <ClInclude Include="..\ext\extract\src\zip.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\attribute.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\char_ref.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\error.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\gumbo.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\insertion_mode.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\parser.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\string_buffer.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\string_piece.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_enum.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_gperf.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_sizes.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\tag_strings.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\token_type.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\tokenizer.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\tokenizer_states.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\utf8.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\util.h" />
+    <ClInclude Include="..\ext\gumbo-parser\src\vector.h" />
+    <ClInclude Include="..\ext\lcms2\src\extra_xform.h" />
+    <ClInclude Include="..\ext\lcms2\src\lcms2_internal.h" />
+    <ClInclude Include="..\ext\mujs\mujs.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\bio.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\cidx_manager.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\cio.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\dwt.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\event.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\function_list.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\image.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\indexbox_manager.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\invert.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\j2k.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\jp2.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\mct.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\mqc.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\mqc_inl.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\openjpeg.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_clock.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_codec.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_common.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_config.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_config_private.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_includes.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_intmath.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_inttypes.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_malloc.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_stdint.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\pi.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\sparse_array.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1_luts.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t2.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\tcd.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\tgt.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\thread.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\tls_keys.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\extract\src\alloc.c" />
+    <ClCompile Include="..\ext\extract\src\astring.c" />
+    <ClCompile Include="..\ext\extract\src\buffer.c" />
+    <ClCompile Include="..\ext\extract\src\document.c" />
+    <ClCompile Include="..\ext\extract\src\docx.c" />
+    <ClCompile Include="..\ext\extract\src\docx_template.c" />
+    <ClCompile Include="..\ext\extract\src\extract.c" />
+    <ClCompile Include="..\ext\extract\src\html.c" />
+    <ClCompile Include="..\ext\extract\src\join.c" />
+    <ClCompile Include="..\ext\extract\src\mem.c" />
+    <ClCompile Include="..\ext\extract\src\memento.c" />
+    <ClCompile Include="..\ext\extract\src\odt.c" />
+    <ClCompile Include="..\ext\extract\src\odt_template.c" />
+    <ClCompile Include="..\ext\extract\src\outf.c" />
+    <ClCompile Include="..\ext\extract\src\sys.c" />
+    <ClCompile Include="..\ext\extract\src\text.c" />
+    <ClCompile Include="..\ext\extract\src\xml.c" />
+    <ClCompile Include="..\ext\extract\src\zip.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftbase.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftbbox.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftbitmap.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftdebug.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftgasp.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftglyph.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftinit.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftotval.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftstroke.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftsynth.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftsystem.c" />
+    <ClCompile Include="..\ext\freetype\src\base\fttype1.c" />
+    <ClCompile Include="..\ext\freetype\src\cff\cff.c" />
+    <ClCompile Include="..\ext\freetype\src\cid\type1cid.c" />
+    <ClCompile Include="..\ext\freetype\src\psaux\psaux.c" />
+    <ClCompile Include="..\ext\freetype\src\pshinter\pshinter.c" />
+    <ClCompile Include="..\ext\freetype\src\psnames\psnames.c" />
+    <ClCompile Include="..\ext\freetype\src\raster\raster.c" />
+    <ClCompile Include="..\ext\freetype\src\sfnt\sfnt.c" />
+    <ClCompile Include="..\ext\freetype\src\smooth\smooth.c" />
+    <ClCompile Include="..\ext\freetype\src\truetype\truetype.c" />
+    <ClCompile Include="..\ext\freetype\src\type1\type1.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\attribute.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\char_ref.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\error.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\parser.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\string_buffer.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\string_piece.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\tag.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\tokenizer.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\utf8.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\util.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\vector.c" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-aat-layout.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-aat-map.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-blob.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-buffer-serialize.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-buffer.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-common.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-face.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-fallback-shape.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-font.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ft.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-map.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-number.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-cff1-table.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-cff2-table.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-color.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-face.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-font.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-layout.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-map.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-math.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-meta.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-metrics.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-name.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-arabic.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-default.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-hangul.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-hebrew.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-indic-table.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-indic.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-khmer.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-myanmar.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-thai.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-use-table.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-use.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-vowel-constraints.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-fallback.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-normalize.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-tag.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-var.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-set.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-shape-plan.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-shape.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-shaper.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-static.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff-common.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff1.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff2.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-input.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-plan.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ucd.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-unicode.cc" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_arith.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_arith_iaid.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_arith_int.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_generic.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_halftone.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_huffman.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_hufftab.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_image.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_mmr.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_page.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_refinement.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_segment.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_symbol_dict.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_text.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsalpha.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmscam02.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmscgats.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmscnvrt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmserr.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsgamma.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsgmt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmshalf.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsintrp.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsio0.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsio1.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmslut.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsmd5.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsmtrx.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsnamed.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsopt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmspack.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmspcs.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsplugin.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsps2.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmssamp.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmssm.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmstypes.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsvirt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmswtpnt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsxform.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jaricom.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jcomapi.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdapimin.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdapistd.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdarith.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdatadst.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdatasrc.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdcoefct.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdcolor.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jddctmgr.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdhuff.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdinput.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdmainct.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdmarker.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdmaster.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdmerge.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdphuff.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdpostct.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdsample.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jdtrans.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jerror.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jfdctflt.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jfdctfst.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jfdctint.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jidctflt.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jidctfst.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jidctint.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jidctred.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jmemmgr.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jmemnobs.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jquant1.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jquant2.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\jutils.c" />
+    <ClCompile Include="..\ext\libjpeg-turbo\simd\jsimd_i386.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\simd\jsimd_x86_64.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\ext\mujs\one.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\bio.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\cidx_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\cio.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\dwt.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\event.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\function_list.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\image.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\invert.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\j2k.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\jp2.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\mct.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\mqc.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\openjpeg.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\opj_clock.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\phix_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\pi.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\ppix_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\sparse_array.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\t1.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\t2.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tcd.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tgt.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\thix_manager.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\thread.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tpix_manager.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\extract\src\memento.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jccolmmx.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jccolmmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jccolmmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jccolmmx.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jccolss2-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jccolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jccolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jccolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jccolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jccolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jccolss2-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jccolss2.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jccolss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jccolss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jccolss2.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcgrammx.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcgrammx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcgrammx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcgrammx.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcgrass2-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcgrass2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcgrass2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcgrass2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcgrass2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcgrass2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcgrass2-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcgrass2.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcgrass2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcgrass2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcgrass2.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcqnt3dn.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcqnt3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcqnt3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcqnt3dn.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcqntmmx.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcqntmmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcqntmmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcqntmmx.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcqnts2f-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcqnts2f-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcqnts2f-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcqnts2f-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcqnts2f-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcqnts2f-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcqnts2f-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcqnts2f.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcqnts2f.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcqnts2f.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcqnts2f.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcqnts2i-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcqnts2i-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcqnts2i-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcqnts2i-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcqnts2i-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcqnts2i-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcqnts2i-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcqnts2i.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcqnts2i.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcqnts2i.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcqnts2i.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcqntsse.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcqntsse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcqntsse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcqntsse.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcsammmx.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcsammmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcsammmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcsammmx.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcsamss2-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcsamss2-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jcsamss2.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jcsamss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jcsamss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jcsamss2.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdcolmmx.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jdcolmmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jdcolmmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jdcolmmx.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdcolss2-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdcolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdcolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdcolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdcolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdcolss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdcolss2-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdcolss2.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jdcolss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jdcolss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jdcolss2.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdmermmx.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jdmermmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jdmermmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jdmermmx.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdmerss2-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdmerss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdmerss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdmerss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdmerss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdmerss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdmerss2-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdmerss2.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jdmerss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jdmerss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jdmerss2.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdsammmx.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jdsammmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jdsammmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jdsammmx.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdsamss2-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdsamss2-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdsamss2-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jdsamss2.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jdsamss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jdsamss2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jdsamss2.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jf3dnflt.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jf3dnflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jf3dnflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jf3dnflt.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfmmxfst.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jfmmxfst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jfmmxfst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jfmmxfst.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfmmxint.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jfmmxint.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jfmmxint.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jfmmxint.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfss2fst-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jfss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jfss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jfss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jfss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jfss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jfss2fst-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfss2fst.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jfss2fst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jfss2fst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jfss2fst.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfss2int-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jfss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jfss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jfss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jfss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jfss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jfss2int-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfss2int.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jfss2int.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jfss2int.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jfss2int.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfsseflt-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jfsseflt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jfsseflt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jfsseflt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jfsseflt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jfsseflt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jfsseflt-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jfsseflt.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jfsseflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jfsseflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jfsseflt.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\ji3dnflt.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/ji3dnflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/ji3dnflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/ji3dnflt.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jimmxfst.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jimmxfst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jimmxfst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jimmxfst.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jimmxint.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jimmxint.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jimmxint.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jimmxint.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jimmxred.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jimmxred.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jimmxred.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jimmxred.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2flt-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jiss2flt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jiss2flt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jiss2flt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jiss2flt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jiss2flt-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jiss2flt-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2flt.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jiss2flt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jiss2flt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jiss2flt.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2fst-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jiss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jiss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jiss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jiss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jiss2fst-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jiss2fst-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2fst.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jiss2fst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jiss2fst.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jiss2fst.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2int-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jiss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jiss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jiss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jiss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jiss2int-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jiss2int-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2int.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jiss2int.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jiss2int.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jiss2int.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2red-64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jiss2red-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jiss2red-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jiss2red-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jiss2red-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jiss2red-64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jiss2red-64.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jiss2red.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jiss2red.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jiss2red.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jiss2red.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jisseflt.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jisseflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jisseflt.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jisseflt.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\jsimdcpu.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+    </CustomBuild>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

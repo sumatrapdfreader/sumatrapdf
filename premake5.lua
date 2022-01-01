@@ -1,8 +1,8 @@
 --[[
-To generate Visual Studio files (in vs2017/ directory), run:
+To generate Visual Studio files (in vs2019/ or vs2022/ directory), run:
 scripts\premake-regenerate-vs-projects.ps1
 
-I'm using premake5 alpha12 from https://premake.github.io/download.html#v5
+I'm using premake5 beta1 from https://premake.github.io/download.html#v5
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -156,6 +156,10 @@ workspace "SumatraPDF"
 
   filter "action:vs2019"
     location "vs2019"
+  filter {}
+
+  filter "action:vs2022"
+    location "vs2022"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}

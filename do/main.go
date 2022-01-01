@@ -22,6 +22,10 @@ func regenPremake() {
 		cmd := exec.Command(premakePath, "vs2019")
 		runCmdLoggedMust(cmd)
 	}
+	{
+		cmd := exec.Command(premakePath, "vs2022")
+		runCmdLoggedMust(cmd)
+	}
 }
 
 func openForAppend(name string) (*os.File, error) {
