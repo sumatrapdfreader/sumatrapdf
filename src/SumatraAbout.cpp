@@ -226,34 +226,6 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     return rect;
 }
 
-// draw on the bottom left
-static Rect DrawSupportLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 16));
-    auto col = GetAppColor(AppColor::MainWindowLink);
-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
-    ScopedSelectObject font(hdc, fontLeftTxt);
-
-    SetTextColor(hdc, col);
-    SetBkMode(hdc, TRANSPARENT);
-    Rect rc = ClientRect(hwnd);
-
-    SIZE txtSize;
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    int y = rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING;
-    Rect rect(ABOUT_INNER_PADDING, y, txtSize.cx, txtSize.cy);
-
-    RECT rTmp = ToRECT(rect);
-    DrawTextW(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
-    {
-        ScopedSelectObject pen(hdc, penLinkLine);
-        PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
-    }
-
-    // make the click target larger
-    rect.Inflate(ABOUT_INNER_PADDING, ABOUT_INNER_PADDING);
-    return rect;
-}
-
 /* Draws the about screen and remembers some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
@@ -816,9 +788,5 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
     sl = new StaticLinkInfo(rect, kLinkHideList);
-    win->staticLinks.Append(sl);
-
-    rect = DrawSupportLink(win->hwndCanvas, hdc, _TR("Support SumatraPDF"));
-    sl = new StaticLinkInfo(rect, URL_SUPPORT_SUMATRA);
     win->staticLinks.Append(sl);
 }
