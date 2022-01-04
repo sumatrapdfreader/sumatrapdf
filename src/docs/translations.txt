@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-08be30d345483b5e0efb11cb9c23b4b5c6ecd04e
+28c3e30fef8de42f414f1eb026b2a11d62a3b010
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7702,6 +7702,7 @@ cn:删除标注\tDel
 co:Squassà l’annutazione\tSuppr
 de:Anmerkung löschen\tDel
 el:Διαγραφή σχολίου\tDel
+es:Eliminar anotación\tDel
 et:Kustuta kommentaar\tDel
 fr:Supprimer l'annotation\tDel
 it:Elimina annotazione\tCanc
