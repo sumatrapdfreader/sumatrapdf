@@ -31,6 +31,7 @@ using Gdiplus::FrameDimensionPage;
 using Gdiplus::FrameDimensionTime;
 using Gdiplus::Graphics;
 using Gdiplus::ImageAttributes;
+using Gdiplus::InterpolationModeHighQualityBicubic;
 using Gdiplus::Matrix;
 using Gdiplus::MatrixOrderAppend;
 using Gdiplus::Ok;
@@ -180,6 +181,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     Graphics g(hDC);
     g.SetCompositingQuality(CompositingQualityHighQuality);
+    g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
 
