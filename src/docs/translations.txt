@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-28c3e30fef8de42f414f1eb026b2a11d62a3b010
+e0f84c532f190b5612948e481190f430de1f5fca
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -17838,43 +17838,6 @@ tw:SumatraPDF 已成為你的預設 PDF 閱讀器
 uk:SumatraPDF тепер буде вашим PDF переглядачем по замовчуванню
 uz:SumatraPDF endi andoza PDF ko'rish vositasi bo'ldi
 vn:SumatraPDF giờ là trình đọc PDF chính của bạn
-:Support SumatraPDF
-am:Աջակցել SumatraPDF-ին
-ar:إدعم سومترا بي.دي.أف
-az:SumatraPDF-i dəstəklə
-bg:Спонсорирай SumatraPDF
-br:Suporte o SumatraPDF
-ca-xv:Col·laboreu amb el SumatraPDF
-ca:Col·laboreu amb el SumatraPDF
-cn:支持 SumatraPDF
-co:Sustene SumatraPDF
-cy:Cefnogi SumatraPDF
-de:SumatraPDF unterstützen
-dk:Støt SumatraPDF
-el:Υποστηρίξτε το SumatraPDF
-es:Apoyar a SumatraPDF
-et:Toeta SumatraPDF-i
-fr:Soutenir SumatraPDF
-ga:Tacaigh le SumatraPDF
-gl:Asistencia do SumatraPDF
-hr:Podrži SumatraPDF
-hu:Támogasd a SumatraPDF-et
-id:Dukung SumatraPDF
-it:Supporta SumatraPDF
-ka: SumatraPDF-ის დახმარება
-kr:SumatraPDF 지원하기
-kw:Skoodhya SumatraPDF
-lt:Paremti SumatraPDF
-lv:Atbalstīt SumatraPDF
-nl:Steun SumatraPDF
-pl:Wesprzyj SumatraPDF
-ru:Поддержать SumatraPDF
-sk:Podpora SumatraPDF
-th:สนับสนุน SumatraPDF
-tr:SumatraPDF'yi Destekle
-tw:支持 SumatraPDF
-uk:Підтримка SumatraPDF
-vn:Hỗ trợ SumatraPDF
 :Synchronization file cannot be opened
 am:Հնարավոր չէ բացել համաժամեցման ֆայլը
 ar:لايمكن فتح مزامنة الملف
@@ -19312,7 +19275,7 @@ el:Μεγέθυνση
 es:Ampliar
 et:Suurenda
 eu:Zooma Handitu
-fa:بزرگ نمایی
+fa:بزرگ‌نمایی
 fi:Lähennä
 fr:Zoom avant
 fy-nl:Ynzoome
@@ -19383,7 +19346,7 @@ el:Σμίκρυνση
 es:Reducir
 et:Vähenda
 eu:Zooma Gutxitu
-fa:کوچک نمایی
+fa:کوچک‌نمایی
 fi:Loitonna
 fr:Zoom arrière
 fy-nl:Utzoome
