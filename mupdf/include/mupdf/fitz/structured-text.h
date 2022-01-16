@@ -285,6 +285,7 @@ char *fz_copy_rectangle(fz_context *ctx, fz_stext_page *page, fz_rect area, int 
 typedef struct
 {
 	int flags;
+	float scale;
 } fz_stext_options;
 
 /**

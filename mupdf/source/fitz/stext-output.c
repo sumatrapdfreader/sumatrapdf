@@ -28,6 +28,41 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+// Text black color when converted from DeviceCMYK to RGB
+#define CMYK_BLACK 0x221f1f
+
+static void fz_scale_stext_page(fz_context *ctx, fz_stext_page *page, float scale)
+{
+	fz_matrix m = fz_scale(scale, scale);
+	fz_stext_block *block;
+	fz_stext_line *line;
+	fz_stext_char *ch;
+
+	for (block = page->first_block; block; block = block->next)
+	{
+		block->bbox = fz_transform_rect(block->bbox, m);
+		switch (block->type)
+		{
+		case FZ_STEXT_BLOCK_TEXT:
+			for (line = block->u.t.first_line; line; line = line->next)
+			{
+				line->bbox = fz_transform_rect(block->bbox, m);
+				for (ch = line->first_char; ch; ch = ch->next)
+				{
+					ch->origin = fz_transform_point(ch->origin, m);
+					ch->quad = fz_transform_quad(ch->quad, m);
+					ch->size = ch->size * scale;
+				}
+			}
+			break;
+
+		case FZ_STEXT_BLOCK_IMAGE:
+			block->u.i.transform = fz_post_scale(block->u.i.transform, scale, scale);
+			break;
+		}
+	}
+}
+
 /* HTML output (visual formatting with preserved layout) */
 
 static int
@@ -46,10 +81,26 @@ font_full_name(fz_context *ctx, fz_font *font)
 	return s ? s + 1 : name;
 }
 
+static const char *
+html_clean_font_name(const char *fontname)
+{
+	if (strstr(fontname, "Times"))
+		return "Times New Roman";
+	if (strstr(fontname, "Arial") || strstr(fontname, "Helvetica"))
+	{
+		if (strstr(fontname, "Narrow") || strstr(fontname, "Condensed"))
+			return "Arial Narrow";
+		return "Arial";
+	}
+	if (strstr(fontname, "Courier"))
+		return "Courier";
+	return fontname;
+}
+
 static void
 font_family_name(fz_context *ctx, fz_font *font, char *buf, int size, int is_mono, int is_serif)
 {
-	const char *name = font_full_name(ctx, font);
+	const char *name = html_clean_font_name(font_full_name(ctx, font));
 	char *s;
 	fz_strlcpy(buf, name, size);
 	s = strrchr(buf, '-');
@@ -77,14 +128,14 @@ fz_print_style_begin_html(fz_context *ctx, fz_output *out, fz_font *font, float 
 	if (is_mono) fz_write_string(ctx, out, "<tt>");
 	if (is_bold) fz_write_string(ctx, out, "<b>");
 	if (is_italic) fz_write_string(ctx, out, "<i>");
-	fz_write_printf(ctx, out, "<span style=\"font-family:%s;font-size:%gpt", family, size);
-	if (color != 0)
+	fz_write_printf(ctx, out, "<span style=\"font-family:%s;font-size:%.1fpt", family, size);
+	if (color != 0 && color != CMYK_BLACK)
 		fz_write_printf(ctx, out, ";color:#%06x", color);
 	fz_write_printf(ctx, out, "\">");
 }
 
 static void
-fz_print_style_end_html(fz_context *ctx, fz_output *out, fz_font *font, float size, int sup)
+fz_print_style_end_html(fz_context *ctx, fz_output *out, fz_font *font, float size, int sup, int color)
 {
 	int is_mono = fz_font_is_monospaced(ctx, font);
 	int is_bold = fz_font_is_bold(ctx,font);
@@ -100,12 +151,128 @@ fz_print_style_end_html(fz_context *ctx, fz_output *out, fz_font *font, float si
 static void
 fz_print_stext_image_as_html(fz_context *ctx, fz_output *out, fz_stext_block *block)
 {
+	fz_matrix ctm = block->u.i.transform;
+
+#define USE_CSS_MATRIX_TRANSFORMS
+#ifdef USE_CSS_MATRIX_TRANSFORMS
+	/* Matrix maths notes.
+	 * When we get here ctm maps the unit square to the position in device
+	 * space occupied by the image.
+	 *
+	 * That is to say that mapping the 4 corners of the unit square through
+	 * the transform, give us the 4 target corners. We extend the corners
+	 * by adding an extra '1' into them to allow transforms to work. Thus
+	 * (x,y) maps through ctm = (a b c d e f) as:
+	 *
+	 * (x y 1) (a b 0) = (X Y 1)
+	 *         (c d 0)
+	 *         (e f 1)
+	 *
+	 * To simplify reading of matrix maths, we use the trick where we
+	 * 'drop' the first matrix down the page. Thus the corners c0=(0,0),
+	 * c1=(1,0), c2=(1,1), c3=(0,1) map to C0, C1, C2, C3 respectively:
+	 *
+	 *         (    a     b 0)
+	 *         (    c     d 0)
+	 *         (    e     f 1)
+	 * (0 0 1) (    e     f 1)
+	 * (0 1 1) (  c+e   d+f 1)
+	 * (1 1 1) (a+c+e b+d+f 1)
+	 * (1 0 1) (  a+e   b+f 1)
+	 *
+	 * where C0 = (e,f), C1=(c+e, d+f) C2=(a+c+e, b+d+f), C3=(a+e, b+f)
+	 *
+	 * Unfortunately, the CSS matrix transform, does not map the unit square.
+	 * Rather it does something moderately mad. As far as I can work out, the
+	 * top left corner of a (0,0) -> (w, h) box is transformed using the .e
+	 * and .f entries of the matrix. Then the image from within that square
+	 * is transformed using the centre of that square as the origin.
+	 *
+	 * So, an image placed at (0,0) in destination space with 1:1 transform
+	 * will result in an image a (0,0) as you'd expect. But an image at (0,0)
+	 * with a scale of 2, will result in 25% of the image off the left of the
+	 * screen, and 25% off the top.
+	 *
+	 * Accordingly, we have to adjust the ctm in several steps.
+	 */
+	/* Move to moving the centre of the image. */
+	ctm.e += (ctm.a+ctm.c)/2;
+	ctm.f += (ctm.b+ctm.d)/2;
+	/* Move from transforming the unit square to w/h */
+	ctm.a /= block->u.i.image->w;
+	ctm.b /= block->u.i.image->w;
+	ctm.c /= block->u.i.image->h;
+	ctm.d /= block->u.i.image->h;
+	/* Move from points to pixels */
+	ctm.a *= 96.0f/72;
+	ctm.b *= 96.0f/72;
+	ctm.c *= 96.0f/72;
+	ctm.d *= 96.0f/72;
+	ctm.e *= 96.0f/72;
+	ctm.f *= 96.0f/72;
+	/* Move to moving the top left of the untransformed image box, cos HTML is bonkers. */
+	ctm.e -= block->u.i.image->w/2;
+	ctm.f -= block->u.i.image->h/2;
+
+	fz_write_printf(ctx, out, "<img style=\"position:absolute;transform:matrix(%g,%g,%g,%g,%g,%g)\" src=\"",
+		ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f);
+#else
+	/* Alternative version of the code that uses scaleX/Y and rotate
+	 * instead, but only copes with axis aligned cases. */
+	int t;
+
 	int x = block->bbox.x0;
 	int y = block->bbox.y0;
 	int w = block->bbox.x1 - block->bbox.x0;
 	int h = block->bbox.y1 - block->bbox.y0;
 
-	fz_write_printf(ctx, out, "<img style=\"position:absolute;top:%dpt;left:%dpt;width:%dpt;height:%dpt\" src=\"", y, x, w, h);
+	const char *flip = "";
+
+	if (ctm.b == 0 && ctm.c == 0)
+	{
+		if (ctm.a < 0 && ctm.d < 0)
+			flip = "transform: scaleX(-1) scaleY(-1);";
+		else if (ctm.a < 0)
+		{
+			flip = "transform: scaleX(-1);";
+		}
+		else if (ctm.d < 0)
+		{
+			flip = "transform: scaleY(-1);";
+		}
+	} else if (ctm.a == 0 && ctm.d == 0) {
+		if (ctm.b < 0 && ctm.c < 0)
+		{
+			flip = "transform: scaleY(-1) rotate(90deg);";
+			x += (w-h)/2;
+			y -= (w-h)/2;
+			t = w; w = h; h = t;
+		}
+		else if (ctm.b < 0)
+		{
+			flip = "transform: scaleX(-1) scaleY(-1) rotate(90deg);";
+			x += (w-h)/2;
+			y -= (w-h)/2;
+			t = w; w = h; h = t;
+		}
+		else if (ctm.c < 0)
+		{
+			flip = "transform: scaleX(-1) scaleY(-1) rotate(270deg);";
+			x += (w-h)/2;
+			y -= (w-h)/2;
+			t = w; w = h; h = t;
+		}
+		else
+		{
+			flip = "transform: scaleY(-1) rotate(270deg);";
+			x += (w-h)/2;
+			y -= (w-h)/2;
+			t = w; w = h; h = t;
+		}
+	}
+
+	fz_write_printf(ctx, out, "<img style=\"position:absolute;%stop:%dpt;left:%dpt;width:%dpt;height:%dpt\" src=\"", flip, y, x, w, h);
+#endif
 	fz_write_image_as_data_uri(ctx, out, block->u.i.image);
 	fz_write_string(ctx, out, "\">\n");
 }
@@ -115,7 +282,7 @@ fz_print_stext_block_as_html(fz_context *ctx, fz_output *out, fz_stext_block *bl
 {
 	fz_stext_line *line;
 	fz_stext_char *ch;
-	int x, y;
+	float x, y, h;
 
 	fz_font *font = NULL;
 	float size = 0;
@@ -126,8 +293,15 @@ fz_print_stext_block_as_html(fz_context *ctx, fz_output *out, fz_stext_block *bl
 	{
 		x = line->bbox.x0;
 		y = line->bbox.y0;
+		h = line->bbox.y1 - line->bbox.y0;
 
-		fz_write_printf(ctx, out, "<p style=\"position:absolute;white-space:pre;margin:0;padding:0;top:%dpt;left:%dpt\">", y, x);
+		if (line->first_char)
+		{
+			h = line->first_char->size;
+			y = line->first_char->origin.y - h * 0.8;
+		}
+
+		fz_write_printf(ctx, out, "<p style=\"top:%.1fpt;left:%.1fpt;line-height:%.1fpt\">", y, x, h);
 		font = NULL;
 
 		for (ch = line->first_char; ch; ch = ch->next)
@@ -136,7 +310,7 @@ fz_print_stext_block_as_html(fz_context *ctx, fz_output *out, fz_stext_block *bl
 			if (ch->font != font || ch->size != size || ch_sup != sup || ch->color != color)
 			{
 				if (font)
-					fz_print_style_end_html(ctx, out, font, size, sup);
+					fz_print_style_end_html(ctx, out, font, size, sup, color);
 				font = ch->font;
 				size = ch->size;
 				color = ch->color;
@@ -161,7 +335,7 @@ fz_print_stext_block_as_html(fz_context *ctx, fz_output *out, fz_stext_block *bl
 		}
 
 		if (font)
-			fz_print_style_end_html(ctx, out, font, size, sup);
+			fz_print_style_end_html(ctx, out, font, size, sup, color);
 
 		fz_write_string(ctx, out, "</p>\n");
 	}
@@ -172,10 +346,10 @@ fz_print_stext_page_as_html(fz_context *ctx, fz_output *out, fz_stext_page *page
 {
 	fz_stext_block *block;
 
-	int w = page->mediabox.x1 - page->mediabox.x0;
-	int h = page->mediabox.y1 - page->mediabox.y0;
+	float w = page->mediabox.x1 - page->mediabox.x0;
+	float h = page->mediabox.y1 - page->mediabox.y0;
 
-	fz_write_printf(ctx, out, "<div id=\"page%d\" style=\"position:relative;width:%dpt;height:%dpt;background-color:white\">\n", id, w, h);
+	fz_write_printf(ctx, out, "<div id=\"page%d\" style=\"width:%.1fpt;height:%.1fpt\">\n", id, w, h);
 
 	for (block = page->first_block; block; block = block->next)
 	{
@@ -195,8 +369,9 @@ fz_print_stext_header_as_html(fz_context *ctx, fz_output *out)
 	fz_write_string(ctx, out, "<html>\n");
 	fz_write_string(ctx, out, "<head>\n");
 	fz_write_string(ctx, out, "<style>\n");
-	fz_write_string(ctx, out, "body{background-color:gray}\n");
-	fz_write_string(ctx, out, "div{margin:1em auto}\n");
+	fz_write_string(ctx, out, "body{background-color:slategray}\n");
+	fz_write_string(ctx, out, "div{position:relative;background-color:white;margin:1em auto;box-shadow:1px 1px 8px -2px black}\n");
+	fz_write_string(ctx, out, "p{position:absolute;white-space:pre;margin:0}\n");
 	fz_write_string(ctx, out, "</style>\n");
 	fz_write_string(ctx, out, "</head>\n");
 	fz_write_string(ctx, out, "<body>\n");
@@ -609,6 +784,7 @@ static fz_device *
 text_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)
 {
 	fz_text_writer *wri = (fz_text_writer*)wri_;
+	float s = wri->opts.scale;
 
 	if (wri->page)
 	{
@@ -618,7 +794,7 @@ text_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)
 
 	wri->number++;
 
-	wri->page = fz_new_stext_page(ctx, mediabox);
+	wri->page = fz_new_stext_page(ctx, fz_transform_rect(mediabox, fz_scale(s, s)));
 	return fz_new_stext_device(ctx, wri->page, &wri->opts);
 }
 
@@ -626,6 +802,9 @@ static void
 text_end_page(fz_context *ctx, fz_document_writer *wri_, fz_device *dev)
 {
 	fz_text_writer *wri = (fz_text_writer*)wri_;
+	float s = wri->opts.scale;
+
+	fz_scale_stext_page(ctx, wri->page, s);
 
 	fz_try(ctx)
 	{

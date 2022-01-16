@@ -37,6 +37,15 @@ typedef enum
 	FLUSH_FILL = 1+2
 } gstate_flush_flags;
 
+typedef struct pdf_filter_gstate_sc
+	{
+		char name[256];
+		pdf_pattern *pat;
+		fz_shade *shd;
+		int n;
+		float c[FZ_MAX_COLORS];
+} pdf_filter_gstate_sc;
+
 typedef struct pdf_filter_gstate
 {
 	fz_matrix ctm;
@@ -45,14 +54,7 @@ typedef struct pdf_filter_gstate
 		char name[256];
 		fz_colorspace *cs;
 	} cs, CS;
-	struct
-	{
-		char name[256];
-		pdf_pattern *pat;
-		fz_shade *shd;
-		int n;
-		float c[FZ_MAX_COLORS];
-	} sc, SC;
+	pdf_filter_gstate_sc sc, SC;
 	struct
 	{
 		fz_linecap linecap;
@@ -1533,6 +1535,46 @@ pdf_filter_d1(fz_context *ctx, pdf_processor *proc, float wx, float wy, float ll
 /* color */
 
 static void
+set_default_cs_values(pdf_filter_gstate_sc *sc, const char *name, fz_colorspace *cs)
+{
+	int n = cs->n;
+	int i;
+	if (strcmp(name, "Separation") == 0 || strcmp(name, "DeviceN") == 0) {
+		for (i = 0; i < n; ++i)
+			sc->c[i] = 1;
+	}
+	else if (strcmp(name, "DeviceGray") == 0 ||
+		strcmp(name, "DeviceRGB") == 0 ||
+		strcmp(name, "CalGray") == 0 ||
+		strcmp(name, "CalRGB") == 0 ||
+		strcmp(name, "Indexed") == 0)
+	{
+		for (i = 0; i < n; ++i)
+			sc->c[i] = 0;
+	}
+	else if (strcmp(name, "DeviceCMYK") == 0)
+	{
+		sc->c[0] = 0;
+		sc->c[1] = 0;
+		sc->c[2] = 0;
+		sc->c[3] = 1;
+	}
+	else if (strcmp(name, "Lab") == 0 ||
+		strcmp(name, "ICCBased") == 0)
+	{
+		/* Really we should clamp c[i] to the appropriate range. */
+		for (i = 0; i < n; ++i)
+			sc->c[i] = 0;
+	}
+	else
+		return;
+	sc->pat = NULL;
+	sc->shd = NULL;
+	sc->name[0] = 0;
+	sc->n = n;
+}
+
+static void
 pdf_filter_CS(fz_context *ctx, pdf_processor *proc, const char *name, fz_colorspace *cs)
 {
 	pdf_filter_processor *p = (pdf_filter_processor*)proc;
@@ -1540,6 +1582,7 @@ pdf_filter_CS(fz_context *ctx, pdf_processor *proc, const char *name, fz_colorsp
 	fz_strlcpy(gstate->pending.CS.name, name, sizeof gstate->pending.CS.name);
 	gstate->pending.CS.cs = cs;
 	copy_resource(ctx, p, PDF_NAME(ColorSpace), name);
+	set_default_cs_values(&gstate->pending.SC, name, cs);
 }
 
 static void
@@ -1550,6 +1593,7 @@ pdf_filter_cs(fz_context *ctx, pdf_processor *proc, const char *name, fz_colorsp
 	fz_strlcpy(gstate->pending.cs.name, name, sizeof gstate->pending.cs.name);
 	gstate->pending.cs.cs = cs;
 	copy_resource(ctx, p, PDF_NAME(ColorSpace), name);
+	set_default_cs_values(&gstate->pending.sc, name, cs);
 }
 
 static void

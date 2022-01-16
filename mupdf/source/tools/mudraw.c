@@ -337,6 +337,7 @@ fz_colorspace *proof_cs = NULL;
 static const char *icc_filename = NULL;
 static float gamma_value = 1;
 static int invert = 0;
+static int kill_text = 0;
 static int band_height = 0;
 static int lowmemory = 0;
 
@@ -447,6 +448,7 @@ static int usage(void)
 		"\t-A -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-A -/-\tnumber of bits of antialiasing (0 to 8) (graphics, text)\n"
 		"\t-l -\tminimum stroked line width (in pixels)\n"
+		"\t-K\tdo not draw text\n"
 		"\t-D\tdisable use of display list\n"
 		"\t-i\tignore errors\n"
 		"\t-L\tlow memory mode (avoid caching, clear objects after each page)\n"
@@ -598,6 +600,11 @@ static void drawband(fz_context *ctx, fz_page *page, fz_display_list *list, fz_m
 			fz_clear_pixmap_with_value(ctx, pix, 255);
 
 		dev = fz_new_draw_device_with_proof(ctx, fz_identity, pix, proof_cs);
+		if (kill_text)
+		{
+			dev->fill_text = NULL;
+			dev->stroke_text = NULL;
+		}
 		if (lowmemory)
 			fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 		if (alphabits_graphics == 0)
@@ -645,16 +652,18 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		float zoom;
 		fz_matrix ctm;
 		fz_device *pre_ocr_dev = NULL;
+		fz_rect tmediabox;
 
 		zoom = resolution / 72;
 		ctm = fz_pre_scale(fz_rotate(rotation), zoom, zoom);
+		tmediabox = fz_transform_rect(mediabox, ctm);
 
 		fz_var(pre_ocr_dev);
 
 		fz_try(ctx)
 		{
 			fz_write_printf(ctx, out, "<page mediabox=\"%g %g %g %g\">\n",
-					mediabox.x0, mediabox.y0, mediabox.x1, mediabox.y1);
+					tmediabox.x0, tmediabox.y0, tmediabox.x1, tmediabox.y1);
 			dev = fz_new_trace_device(ctx, out);
 			if (output_format == OUT_OCR_TRACE)
 			{
@@ -691,13 +700,21 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 	{
 		fz_try(ctx)
 		{
+			float zoom;
+			fz_matrix ctm;
+			fz_rect tmediabox;
+
+			zoom = resolution / 72;
+			ctm = fz_pre_scale(fz_rotate(rotation), zoom, zoom);
+			tmediabox = fz_transform_rect(mediabox, ctm);
+
 			fz_write_printf(ctx, out, "<page mediabox=\"%g %g %g %g\">\n",
-					mediabox.x0, mediabox.y0, mediabox.x1, mediabox.y1);
+					tmediabox.x0, tmediabox.y0, tmediabox.x1, tmediabox.y1);
 			dev = fz_new_xmltext_device(ctx, out);
 			if (list)
-				fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, cookie);
+				fz_run_display_list(ctx, list, dev, ctm, fz_infinite_rect, cookie);
 			else
-				fz_run_page(ctx, page, dev, fz_identity, cookie);
+				fz_run_page(ctx, page, dev, ctm, cookie);
 			fz_write_printf(ctx, out, "</page>\n");
 			fz_close_device(ctx, dev);
 		}
@@ -716,15 +733,23 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		fz_try(ctx)
 		{
 			fz_rect bbox = fz_empty_rect;
+			float zoom;
+			fz_matrix ctm;
+			fz_rect tmediabox;
+
+			zoom = resolution / 72;
+			ctm = fz_pre_scale(fz_rotate(rotation), zoom, zoom);
+			tmediabox = fz_transform_rect(mediabox, ctm);
+
 			dev = fz_new_bbox_device(ctx, &bbox);
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 			if (list)
-				fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, cookie);
+				fz_run_display_list(ctx, list, dev, ctm, fz_infinite_rect, cookie);
 			else
-				fz_run_page(ctx, page, dev, fz_identity, cookie);
+				fz_run_page(ctx, page, dev, ctm, cookie);
 			fz_close_device(ctx, dev);
-			fz_write_printf(ctx, out, "<page bbox=\"%R\" mediabox=\"%R\" />\n", &bbox, &mediabox);
+			fz_write_printf(ctx, out, "<page bbox=\"%R\" mediabox=\"%R\" />\n", &bbox, &tmediabox);
 		}
 		fz_always(ctx)
 		{
@@ -743,6 +768,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		float zoom;
 		fz_matrix ctm;
 		fz_device *pre_ocr_dev = NULL;
+		fz_rect tmediabox;
 
 		zoom = resolution / 72;
 		ctm = fz_pre_scale(fz_rotate(rotation), zoom, zoom);
@@ -762,7 +788,8 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			stext_options.flags |= FZ_STEXT_MEDIABOX_CLIP;
 			if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
 				stext_options.flags |= FZ_STEXT_PRESERVE_SPANS;
-			text = fz_new_stext_page(ctx, mediabox);
+			tmediabox = fz_transform_rect(mediabox, ctm);
+			text = fz_new_stext_page(ctx, tmediabox);
 			dev = fz_new_stext_device(ctx, text, &stext_options);
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
@@ -836,6 +863,8 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 
 		fz_try(ctx)
 		{
+			/* We are ignoring ctm here. Understandable in a way, as resolution makes no sense
+			 * when writing PDFs. Rotation is taken care of by the pdf_add_page call. */
 			pdf_obj *page_obj;
 
 			dev = pdf_page_write(ctx, pdfout, mediabox, &resources, &contents);
@@ -1010,13 +1039,13 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 					memset(&workers[band].cookie, 0, sizeof(fz_cookie));
 					workers[band].list = list;
 					workers[band].pix = fz_new_pixmap_with_bbox(ctx, colorspace, band_ibounds, seps, alpha);
+					workers[band].pix->y += band * band_height;
 					fz_set_pixmap_resolution(ctx, workers[band].pix, resolution, resolution);
 					workers[band].running = 1;
 #ifndef DISABLE_MUTHREADS
 					DEBUG_THREADS(("Worker %d, Pre-triggering band %d\n", band, band));
 					mu_trigger_semaphore(&workers[band].start);
 #endif
-					ctm.f -= drawheight;
 				}
 				pix = workers[0].pix;
 			}
@@ -1096,6 +1125,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 				{
 					worker_t *w = &workers[band % num_workers];
 					w->band = band + num_workers;
+					w->pix->y = band_ibounds.y0 + w->band * band_height;
 					w->ctm = ctm;
 					w->tbounds = tbounds;
 					memset(&w->cookie, 0, sizeof(fz_cookie));
@@ -1105,7 +1135,8 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 					mu_trigger_semaphore(&w->start);
 #endif
 				}
-				ctm.f -= drawheight;
+				if (num_workers <= 0)
+					pix->y += band_height;
 			}
 
 			if (output_format != OUT_PCLM && output_format != OUT_OCR_PDF)
@@ -1843,7 +1874,7 @@ int mudraw_main(int argc, char **argv)
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "qp:o:F:R:r:w:h:fB:c:e:G:Is:A:DiW:H:S:T:t:d:U:XLvPl:y:NO:am:")) != -1)
+	while ((c = fz_getopt(argc, argv, "qp:o:F:R:r:w:h:fB:c:e:G:Is:A:DiW:H:S:T:t:d:U:XLvPl:y:NO:am:K")) != -1)
 	{
 		switch (c)
 		{
@@ -1873,6 +1904,8 @@ int mudraw_main(int argc, char **argv)
 		case 'S': layout_em = fz_atof(fz_optarg); break;
 		case 'U': layout_css = fz_optarg; break;
 		case 'X': layout_use_doc_css = 0; break;
+
+		case 'K': kill_text = 1; break;
 
 		case 'O': spots = fz_atof(fz_optarg);
 #ifndef FZ_ENABLE_SPOT_RENDERING

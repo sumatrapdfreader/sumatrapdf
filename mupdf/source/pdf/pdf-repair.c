@@ -355,6 +355,7 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 	if (doc->repair_attempted)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Repair failed already - not trying again");
 	doc->repair_attempted = 1;
+	doc->repair_in_progress = 1;
 
 	pdf_forget_xref(ctx, doc);
 
@@ -695,6 +696,7 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 			pdf_drop_obj(ctx, roots[i]);
 		fz_free(ctx, roots);
 		fz_free(ctx, list);
+		doc->repair_in_progress = 0;
 	}
 	fz_catch(ctx)
 	{

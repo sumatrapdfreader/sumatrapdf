@@ -221,9 +221,9 @@ typedef struct
 			int id;
 			char has_shape;
 			char has_group_alpha;
-			float m[6];
+			float m[4];
 			void *ptr;
-		} im; /* 36 or 40 bytes */
+		} im; /* 28 or 32 bytes */
 		struct
 		{
 			unsigned char src_md5[16];
@@ -238,7 +238,7 @@ typedef struct
 			unsigned int bgr:1;
 		} link; /* 36 bytes */
 	} u;
-} fz_store_hash; /* 40 or 48 bytes */
+} fz_store_hash; /* 40 or 44 bytes */
 
 /**
 	Every type of object to be placed into the store defines an

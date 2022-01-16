@@ -2564,6 +2564,38 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_enableJournal
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    saveJournal
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_saveJournal
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    saveJournalWithStream
+ * Signature: (Lcom/artifex/mupdf/fitz/SeekableOutputStream;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_saveJournalWithStream
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    loadJournal
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_loadJournal
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    loadJournalWithStream
+ * Signature: (Lcom/artifex/mupdf/fitz/SeekableInputStream;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_loadJournalWithStream
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    undoRedoPosition
  * Signature: ()I
  */

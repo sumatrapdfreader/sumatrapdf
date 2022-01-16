@@ -490,21 +490,6 @@ char_callback(fz_context *ctx, void *arg, int unicode,
 	fz_ocr_device *ocr = (fz_ocr_device *)arg;
 	fz_rect bbox = { word_bbox[0]-1, word_bbox[1]-1, word_bbox[2]+1, word_bbox[3]+1 };
 
-	if (unicode == 'b')
-	{
-		fz_device *device = fz_new_draw_device(ctx, fz_identity, ocr->pixmap);
-		fz_path *path = fz_new_path(ctx);
-		fz_color_params params = {0};
-		fz_stroke_state stroke = { 0 };
-		float color = 0;
-		stroke.linewidth = 1;
-		fz_rectto(ctx, path, char_bbox[0], char_bbox[1], char_bbox[2], char_bbox[3]);
-		fz_stroke_path(ctx, device, path, &stroke, fz_identity, fz_device_gray(ctx), &color, 1, params);
-		fz_drop_path(ctx, path);
-		fz_close_device(ctx, device);
-		fz_drop_device(ctx, device);
-	}
-
 	if (bbox.x0 != ocr->word_bbox.x0 ||
 		bbox.y0 != ocr->word_bbox.y0 ||
 		bbox.x1 != ocr->word_bbox.x1 ||
@@ -1080,8 +1065,6 @@ fz_ocr_close_device(fz_context *ctx, fz_device *dev)
 		ocr_fin(ctx, tessapi);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
-
-	fz_save_pixmap_as_png(ctx, ocr->pixmap, "ass.png");
 
 	/* If we're not using a list, we're done! */
 	if (ocr->list_dev == ocr->target)

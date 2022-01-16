@@ -411,6 +411,24 @@ pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i)
 		}
 	}
 
+	/* Some really hairy code here. When we are reading the file in
+	 * initially, we read from 'newest' to 'oldest' (i.e. from 0 to
+	 * doc->num_xref_sections-1). Each section is created initially
+	 * with num_objects == 0 in it, and remains like that while we
+	 * are parsing the stream from the file. This is the only time
+	 * we'll ever have xref_sections with 0 objects in them. */
+	if (doc->xref_sections[doc->num_xref_sections-1].num_objects == 0)
+	{
+		/* The oldest xref section has 0 objects in it. So we are
+		 * parsing an xref stream while loading. We don't want to
+		 * solidify the xref we are currently parsing for (as it'll
+		 * get very confused, and end up a different 'shape' in
+		 * memory to that which is in the file, and would hence
+		 * render 'fingerprinting' for snapshotting invalid) so
+		 * just give up at this point. */
+		return NULL;
+	}
+
 	/* At this point, we solidify the xref. This ensures that we
 	 * can return a pointer. This is the only case where this function
 	 * might throw an exception, and it will never happen when we are
@@ -593,7 +611,7 @@ void pdf_ensure_solid_xref(fz_context *ctx, pdf_document *doc, int num)
 	if (doc->num_xref_sections == 0)
 		pdf_populate_next_xref_level(ctx, doc);
 
-	ensure_solid_xref(ctx, doc, num, doc->num_xref_sections-1);
+	ensure_solid_xref(ctx, doc, num, 0);
 }
 
 int pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int num)

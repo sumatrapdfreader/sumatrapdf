@@ -620,14 +620,15 @@ queue_word(fz_context *ctx, char_callback_data_t *cb)
 	word->len = cb->word_len;
 	memcpy(word->bbox, cb->word_bbox, 4*sizeof(float));
 	memcpy(word->chars, cb->word_chars, cb->word_len * sizeof(int));
-	word->dirn = cb->word_dirn;
 	cb->word_len = 0;
-	cb->word_dirn = 0;
 
 	line_is_v = !!(cb->line_dirn & (WORD_CONTAINS_B2T | WORD_CONTAINS_T2B));
-	word_is_v = !!(cb->line_dirn & (WORD_CONTAINS_B2T | WORD_CONTAINS_T2B));
+	word_is_v = !!(cb->word_dirn & (WORD_CONTAINS_B2T | WORD_CONTAINS_T2B));
 	line_is_h = !!(cb->line_dirn & (WORD_CONTAINS_L2R | WORD_CONTAINS_R2L));
-	word_is_h = !!(cb->line_dirn & (WORD_CONTAINS_L2R | WORD_CONTAINS_R2L));
+	word_is_h = !!(cb->word_dirn & (WORD_CONTAINS_L2R | WORD_CONTAINS_R2L));
+
+	word->dirn = cb->word_dirn;
+	cb->word_dirn = 0;
 
 	/* Can we put the new word onto the end of the existing line? */
 	if (cb->line != NULL &&

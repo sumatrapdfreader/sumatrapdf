@@ -848,6 +848,10 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "no"))
 		opts->flags ^= FZ_STEXT_MEDIABOX_CLIP;
 
+	opts->scale = 1;
+	if (fz_has_option(ctx, string, "resolution", &val))
+		opts->scale = fz_atof(val) / 96.0f; /* HTML base resolution is 96ppi */
+
 	return opts;
 }
 

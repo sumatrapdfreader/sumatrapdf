@@ -635,11 +635,11 @@ static int dodrawpage(fz_context *ctx, int pagenum, fz_cookie *cookie, render_de
 					ibounds.y1 = ibounds.y0 + remaining_height;
 				remaining_height -= band_height;
 				w->pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, NULL, 0);
+				w->pix->y += band * band_height;
 				fz_set_pixmap_resolution(ctx, w->pix, x_resolution, y_resolution);
 				DEBUG_THREADS(("Worker %d, Pre-triggering band %d\n", band, band));
 				w->started = 1;
 				mu_trigger_semaphore(&w->start);
-				ctm.f -= band_height;
 			}
 			pix = workers[0].pix;
 		}
@@ -699,7 +699,8 @@ static int dodrawpage(fz_context *ctx, int pagenum, fz_cookie *cookie, render_de
 				w->started = 1;
 				mu_trigger_semaphore(&w->start);
 			}
-			ctm.f -= draw_height;
+			if (render->num_workers <= 0)
+				pix += draw_height;
 		}
 	}
 	fz_always(ctx)

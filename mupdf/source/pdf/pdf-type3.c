@@ -224,6 +224,17 @@ void pdf_load_type3_glyphs(fz_context *ctx, pdf_document *doc, pdf_font_desc *fo
 				fontdesc->size += 0; // TODO: display list size calculation
 			}
 		}
+
+		if (fontdesc->font->flags.invalid_bbox)
+		{
+			/* Union all the char bboxes together. */
+			fz_rect bbox = fontdesc->font->bbox_table[0];
+			for (i = 1; i < 256; i++)
+			{
+				bbox = fz_union_rect(bbox, fontdesc->font->bbox_table[0]);
+			}
+			fontdesc->font->bbox = bbox;
+		}
 	}
 	fz_catch(ctx)
 	{

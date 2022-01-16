@@ -349,6 +349,7 @@ struct pdf_document
 	pdf_rev_page_map *rev_page_map;
 
 	int repair_attempted;
+	int repair_in_progress;
 
 	/* State indicating which file parsing method we are using */
 	int file_reading_linearly;

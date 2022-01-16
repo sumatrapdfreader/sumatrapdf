@@ -476,6 +476,7 @@ static fz_pixmap *
 pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, const unsigned char *e, int onlymeta, int bitmap, const unsigned char **out)
 {
 	fz_pixmap *img = NULL;
+	size_t span;
 
 	pnm->width = 0;
 	p = pnm_read_comments(ctx, p, e, 1);
@@ -512,23 +513,29 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image height must be > 0");
 	if (pnm->width <= 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image width must be > 0");
-	if ((unsigned int)pnm->height > UINT_MAX / pnm->width / fz_colorspace_n(ctx, pnm->cs) / (pnm->bitdepth / 8 + 1))
+	if (pnm->bitdepth == 1)
+	{
+		/* Overly sensitive test, but we can live with it. */
+		if ((size_t)pnm->width > SIZE_MAX / (unsigned int)fz_colorspace_n(ctx, pnm->cs))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "image row too large");
+		span = ((size_t)fz_colorspace_n(ctx, pnm->cs) * pnm->width + 7)/8;
+	}
+	else
+	{
+		size_t bytes_per_sample = (pnm->bitdepth-1)/8 + 1;
+		span = (size_t)fz_colorspace_n(ctx, pnm->cs) * bytes_per_sample;
+		if ((size_t)pnm->width > SIZE_MAX / span)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "image row too large");
+		span = (size_t)pnm->width * span;
+	}
+	if ((size_t)pnm->height > SIZE_MAX / span)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
+	if (e - p < 0 || ((size_t)(e - p)) < span * (size_t)pnm->height)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data");
 
 	if (onlymeta)
 	{
-		int w = pnm->width;
-		int h = pnm->height;
-		int n = fz_colorspace_n(ctx, pnm->cs);
-
-		if (pnm->maxval == 255)
-			p += n * w * h;
-		else if (bitmap)
-			p += ((w + 7) / 8) * h;
-		else if (pnm->maxval < 255)
-			p += n * w * h;
-		else
-			p += 2 * n * w * h;
+		p += span * (size_t)pnm->height;
 	}
 	else
 	{

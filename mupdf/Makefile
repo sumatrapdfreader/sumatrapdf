@@ -401,22 +401,23 @@ libs: $(LIBS_TO_INSTALL_IN_BIN) $(LIBS_TO_INSTALL_IN_LIB)
 tools: $(TOOL_APPS)
 apps: $(TOOL_APPS) $(VIEW_APPS)
 
-install: libs apps
+install-libs: libs
 	install -d $(DESTDIR)$(incdir)/mupdf
 	install -d $(DESTDIR)$(incdir)/mupdf/fitz
 	install -d $(DESTDIR)$(incdir)/mupdf/pdf
 	install -m 644 include/mupdf/*.h $(DESTDIR)$(incdir)/mupdf
 	install -m 644 include/mupdf/fitz/*.h $(DESTDIR)$(incdir)/mupdf/fitz
 	install -m 644 include/mupdf/pdf/*.h $(DESTDIR)$(incdir)/mupdf/pdf
-
 ifneq ($(LIBS_TO_INSTALL_IN_LIB),)
 	install -d $(DESTDIR)$(libdir)
 	install -m 644 $(LIBS_TO_INSTALL_IN_LIB) $(DESTDIR)$(libdir)
 endif
 
+install-apps: apps
 	install -d $(DESTDIR)$(bindir)
 	install -m 755 $(LIBS_TO_INSTALL_IN_BIN) $(TOOL_APPS) $(VIEW_APPS) $(DESTDIR)$(bindir)
 
+install-docs:
 	install -d $(DESTDIR)$(mandir)/man1
 	install -m 644 docs/man/*.1 $(DESTDIR)$(mandir)/man1
 
@@ -425,6 +426,8 @@ endif
 	install -m 644 README COPYING CHANGES $(DESTDIR)$(docdir)
 	install -m 644 docs/*.html docs/*.css docs/*.png $(DESTDIR)$(docdir)
 	install -m 644 docs/examples/* $(DESTDIR)$(docdir)/examples
+
+install: install-libs install-apps install-docs
 
 tarball:
 	bash scripts/archive.sh

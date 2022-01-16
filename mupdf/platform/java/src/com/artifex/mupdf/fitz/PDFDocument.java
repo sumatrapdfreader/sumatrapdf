@@ -169,6 +169,10 @@ public class PDFDocument extends Document
 	public native boolean wasLinearized();
 
 	public native void enableJournal();
+	public native void saveJournal(String filename);
+	public native void saveJournalWithStream(SeekableOutputStream stream);
+	public native void loadJournal(String filename);
+	public native void loadJournalWithStream(SeekableInputStream stream);
 
 	public native int undoRedoPosition();
 	public native int undoRedoSteps();

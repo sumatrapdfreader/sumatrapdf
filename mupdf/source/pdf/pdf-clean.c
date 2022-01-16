@@ -325,6 +325,7 @@ pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_re
 	fz_buffer *new_buf;
 	pdf_obj *struct_parents_obj;
 	int struct_parents;
+	fz_matrix matrix;
 
 	fz_var(new_xobj);
 	fz_var(new_buf);
@@ -344,6 +345,9 @@ pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_re
 
 	if (pdf_mark_obj(ctx, old_xobj))
 		return pdf_keep_obj(ctx, old_xobj);
+
+	matrix = pdf_dict_get_matrix(ctx, old_xobj, PDF_NAME(Matrix));
+	transform = fz_concat(transform, matrix);
 
 	fz_try(ctx)
 	{

@@ -1060,6 +1060,205 @@ FUN(PDFDocument_enableJournal)(JNIEnv *env, jobject self)
 	pdf_enable_journal(ctx, pdf);
 }
 
+JNIEXPORT void JNICALL
+FUN(PDFDocument_saveJournalWithStream)(JNIEnv *env, jobject self, jobject jstream)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	SeekableStreamState *state = NULL;
+	jobject stream = NULL;
+	jbyteArray array = NULL;
+	fz_output *out = NULL;
+
+	if (!ctx || !pdf)
+		return;
+	if (!jstream)
+		jni_throw_arg_void(env, "stream must not be null");
+
+	fz_var(state);
+	fz_var(out);
+	fz_var(stream);
+	fz_var(array);
+
+	stream = (*env)->NewGlobalRef(env, jstream);
+	if (!stream)
+		jni_throw_run_void(env, "invalid stream");
+
+	array = (*env)->NewByteArray(env, sizeof state->buffer);
+	if ((*env)->ExceptionCheck(env))
+	{
+		(*env)->DeleteGlobalRef(env, stream);
+		return;
+	}
+	if (!array)
+	{
+		(*env)->DeleteGlobalRef(env, stream);
+		jni_throw_run_void(env, "cannot create byte array");
+	}
+
+	array = (*env)->NewGlobalRef(env, array);
+	if (!array)
+	{
+		(*env)->DeleteGlobalRef(env, stream);
+		jni_throw_run_void(env, "cannot create global reference");
+	}
+
+	fz_try(ctx)
+	{
+		/* No exceptions can occur from here to stream owning state, so we must not free state. */
+		state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_state");
+		state->stream = stream;
+		state->array = array;
+
+		/* Ownership transferred to state. */
+		stream = NULL;
+		array = NULL;
+
+		/* Stream takes ownership of state. */
+		out = fz_new_output(ctx, sizeof state->buffer, state, SeekableOutputStream_write, NULL, SeekableOutputStream_drop);
+		out->seek = SeekableOutputStream_seek;
+		out->tell = SeekableOutputStream_tell;
+		out->truncate = SeekableOutputStream_truncate;
+		out->as_stream = SeekableOutputStream_as_stream;
+
+		/* these are now owned by 'out' */
+		state = NULL;
+
+		pdf_write_journal(ctx, pdf, out);
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_output(ctx, out);
+	}
+	fz_catch(ctx)
+	{
+		(*env)->DeleteGlobalRef(env, array);
+		(*env)->DeleteGlobalRef(env, stream);
+		jni_rethrow_void(env, ctx);
+	}
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_loadJournalWithStream)(JNIEnv *env, jobject self, jobject jstream)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	SeekableStreamState *state = NULL;
+	jobject stream = NULL;
+	jbyteArray array = NULL;
+	fz_stream *stm = NULL;
+
+	if (!ctx || !pdf)
+		return;
+	if (!jstream)
+		jni_throw_arg_void(env, "stream must not be null");
+
+	fz_var(state);
+	fz_var(stm);
+	fz_var(stream);
+	fz_var(array);
+
+	stream = (*env)->NewGlobalRef(env, jstream);
+	if (!stream)
+		jni_throw_run_void(env, "invalid stream");
+
+	array = (*env)->NewByteArray(env, sizeof state->buffer);
+	if ((*env)->ExceptionCheck(env))
+	{
+		(*env)->DeleteGlobalRef(env, stream);
+		return;
+	}
+	if (!array)
+	{
+		(*env)->DeleteGlobalRef(env, stream);
+		jni_throw_run_void(env, "cannot create byte array");
+	}
+
+	array = (*env)->NewGlobalRef(env, array);
+	if (!array)
+	{
+		(*env)->DeleteGlobalRef(env, stream);
+		jni_throw_run_void(env, "cannot create global reference");
+	}
+
+	fz_try(ctx)
+	{
+		/* No exceptions can occur from here to stream owning state, so we must not free state. */
+		state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_state");
+		state->stream = stream;
+		state->array = array;
+
+		/* Ownership transferred to state. */
+		stream = NULL;
+		array = NULL;
+
+		/* Stream takes ownership of accstate. */
+		stm = fz_new_stream(ctx, state, SeekableInputStream_next, SeekableInputStream_drop);
+		stm->seek = SeekableInputStream_seek;
+
+		pdf_read_journal(ctx, pdf, stm);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_stream(ctx, stm);
+	}
+	fz_catch(ctx)
+	{
+		(*env)->DeleteGlobalRef(env, array);
+		(*env)->DeleteGlobalRef(env, stream);
+		jni_rethrow_void(env, ctx);
+	}
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_saveJournal)(JNIEnv *env, jobject self, jstring jfilename)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	const char *filename = NULL;
+
+	if (!ctx || !pdf)
+		return;
+	if (!jfilename)
+		jni_throw_arg_void(env, "filename must not be null");
+
+	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
+	if (!filename)
+		jni_throw_run_void(env, "cannot get characters in filename");
+
+	fz_try(ctx)
+		pdf_save_journal(ctx, pdf, filename);
+	fz_always(ctx)
+		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_loadJournal)(JNIEnv *env, jobject self, jstring jfilename)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	const char *filename = NULL;
+
+	if (!ctx || !pdf)
+		return;
+	if (!jfilename)
+		jni_throw_arg_void(env, "filename must not be null");
+
+	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
+	if (!filename)
+		jni_throw_run_void(env, "cannot get characters in filename");
+
+	fz_try(ctx)
+		pdf_load_journal(ctx, pdf, filename);
+	fz_always(ctx)
+		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
 JNIEXPORT jint JNICALL
 FUN(PDFDocument_undoRedoPosition)(JNIEnv *env, jobject self)
 {

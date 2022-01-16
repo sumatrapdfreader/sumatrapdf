@@ -690,7 +690,7 @@ function AFSpecial_KeystrokeEx(fmt) {
 			event.selStart = 0;
 			event.selEnd = event.value.length;
 		}
-	} else if (event.willCommit)
+	} else
 		app.alert('The value entered ('+event.value+') does not match the format of the field [ '+event.target.name+' ] should be '+fmt);
 }
 
@@ -721,6 +721,8 @@ function AFSpecial_Keystroke(index) {
 
 function AFSpecial_Format(index) {
 	var res;
+	if (!event.value)
+		return;
 	switch (index) {
 	case 0:
 		res = util.printx('99999', event.value);

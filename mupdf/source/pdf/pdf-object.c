@@ -1335,6 +1335,10 @@ void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
 	}
 
 	doc->file_size = file_size;
+	/* We're about to make the last xref an incremental one. All incremental
+	 * ones MUST be solid, but the snapshot might not have saved it as such,
+	 * so solidify it now. */
+	pdf_ensure_solid_xref(ctx, doc, pdf_xref_len(ctx, doc));
 	doc->num_incremental_sections = nis;
 
 	if (nis > 0)
@@ -1395,7 +1399,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 		parent_num == 0 while an object is being parsed from the file.
 		No further action is necessary.
 	*/
-	if (parent == 0 || doc->save_in_progress || doc->repair_attempted)
+	if (parent == 0 || doc->save_in_progress || doc->repair_in_progress)
 		return;
 
 	if (doc->journal && doc->journal->nesting == 0)
