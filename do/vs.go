@@ -20,11 +20,11 @@ var (
 	msBuildName = `MSBuild\Current\Bin\MSBuild.exe`
 
 	vsBasePaths = []string{
-		// https://help.github.com/en/github/automating-your-workflow-with-github-actions/software-in-virtual-environments-for-github-actions#visual-studio-2019-enterprise
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise`,
-		`c:\Program Files (x86)\Microsoft Visual Studio\2019\Preview`,
-		`c:\Program Files (x86)\Microsoft Visual Studio\2019\Community`,
+		// https://github.com/actions/virtual-environments/blob/main/images/win/Windows2022-Readme.md
+		`C:\Program Files\Microsoft Visual Studio\2022\Enterprise`,
 		`C:\Program Files\Microsoft Visual Studio\2022\Preview`,
+		`C:\Program Files\Microsoft Visual Studio\2022\Community`,
+		`C:\Program Files\Microsoft Visual Studio\2022\Professional`,
 	}
 )
 

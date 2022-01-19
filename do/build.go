@@ -83,7 +83,7 @@ func copyBuiltManifest(dstDir string, prefix string) {
 
 func build(dir, config, platform string) {
 	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
@@ -212,7 +212,7 @@ func buildLzsa() {
 	clean()
 
 	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2019\MakeLZSA.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
+	runExeLoggedMust(msbuildPath, `vs2022\MakeLZSA.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
@@ -231,7 +231,7 @@ func buildSmoke() {
 	panicIf(!fileExists(lzsa), "file '%s' doesn't exist", lzsa)
 
 	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
+	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
 	outDir := filepath.Join("out", "rel64")
 	runTestUtilMust(outDir)
 
@@ -494,7 +494,7 @@ func buildRelease() {
 
 func buildJustPortableExe(dir, config, platform string) {
 	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF`, p, `/m`)
@@ -503,7 +503,7 @@ func buildJustPortableExe(dir, config, platform string) {
 
 func buildLogview() {
 	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	config := "Release"
 	platform := "x64"
@@ -513,7 +513,7 @@ func buildLogview() {
 
 func buildTestUtil() {
 	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	config := "Release"
 	platform := "x64"
