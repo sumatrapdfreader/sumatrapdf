@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2

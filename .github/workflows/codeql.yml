@@ -5,12 +5,12 @@ on:
 jobs:
   build:
     name: CodeQL
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: 1.17
 
       - name: Check out source code
         uses: actions/checkout@v2
