@@ -1003,8 +1003,9 @@ initialise_banding(fz_context *ctx, render_details *render, int color)
 
 	w = render->ibounds.x1 - render->ibounds.x0;
 	min_band_mem = (size_t)bpp * w * min_band_height;
+	if (min_band_mem > 0)
 	reps = (int)(max_band_memory / min_band_mem);
-	if (reps < 1)
+	if (min_band_mem == 0 || reps < 1)
 		reps = 1;
 
 	/* Adjust reps to even out the work between threads */

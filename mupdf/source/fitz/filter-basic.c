@@ -297,9 +297,6 @@ fz_open_endstream_filter(fz_context *ctx, fz_stream *chain, uint64_t len, int64_
 {
 	struct endstream_filter *state;
 
-	if (len < 0)
-		len = 0;
-
 	state = fz_malloc_struct(ctx, struct endstream_filter);
 	state->chain = fz_keep_stream(ctx, chain);
 	state->remain = len;

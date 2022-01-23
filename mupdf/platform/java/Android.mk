@@ -212,6 +212,12 @@ LOCAL_CFLAGS += $(MUPDF_EXTRA_CFLAGS)
 
 LOCAL_SRC_FILES += $(MUPDF_PATH)/platform/java/mupdf_native.c
 
+ifdef ADD_SOURCE_FILES
+LOCAL_SRC_FILES += $(ADD_SOURCE_FILES)
+LOCAL_CFLAGS += $(ADD_C_FLAGS)
+LOCAL_C_INCLUDES += $(ADD_C_INCLUDES)
+endif
+
 LOCAL_STATIC_LIBRARIES += mupdf_core
 LOCAL_STATIC_LIBRARIES += mupdf_thirdparty_freetype
 LOCAL_STATIC_LIBRARIES += mupdf_thirdparty_gumbo

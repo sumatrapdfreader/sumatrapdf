@@ -233,7 +233,7 @@ void fz_md5_update(fz_md5 *ctx, const unsigned char *data, size_t size)
 	(dst)[2] = (src >> 16); \
 	(dst)[3] = (src >> 24)
 
-void fz_md5_final(fz_md5 *ctx, unsigned char *result)
+void fz_md5_final(fz_md5 *ctx, unsigned char result[16])
 {
 	uint32_t used, available;
 
