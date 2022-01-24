@@ -2,23 +2,14 @@
 #include "jsvalue.h"
 #include "jsbuiltin.h"
 
+#if defined(_MSC_VER) && (_MSC_VER < 1700) /* VS2012 has stdint.h */
+typedef unsigned int uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+#include <stdint.h>
+#endif
+
 #include <time.h>
-
-#define JS_RAND_MAX (0x7fffffff)
-
-static unsigned int jsM_rand_temper(unsigned int x)
-{
-	x ^= x>>11;
-	x ^= x<<7 & 0x9D2C5680;
-	x ^= x<<15 & 0xEFC60000;
-	x ^= x>>18;
-	return x;
-}
-
-static int jsM_rand_r(unsigned int *seed)
-{
-	return jsM_rand_temper(*seed = *seed * 1103515245 + 12345)/2;
-}
 
 static double jsM_round(double x)
 {
@@ -94,7 +85,21 @@ static void Math_pow(js_State *J)
 
 static void Math_random(js_State *J)
 {
-	js_pushnumber(J, jsM_rand_r(&J->seed) / (JS_RAND_MAX + 1.0));
+	/* Lehmer generator with a=48271 and m=2^31-1 */
+	/* Park & Miller (1988). Random Number Generators: Good ones are hard to find. */
+	J->seed = (uint64_t) J->seed * 48271 % 0x7fffffff;
+	js_pushnumber(J, (double) J->seed / 0x7fffffff);
+}
+
+static void Math_init_random(js_State *J)
+{
+	/* Pick initial seed by scrambling current time with Xorshift. */
+	/* Marsaglia (2003). Xorshift RNGs. */
+	J->seed = time(0) + 123;
+	J->seed ^= J->seed << 13;
+	J->seed ^= J->seed >> 17;
+	J->seed ^= J->seed << 5;
+	J->seed %= 0x7fffffff;
 }
 
 static void Math_round(js_State *J)
@@ -156,8 +161,7 @@ static void Math_min(js_State *J)
 
 void jsB_initmath(js_State *J)
 {
-	J->seed = time(NULL);
-
+	Math_init_random(J);
 	js_pushobject(J, jsV_newobject(J, JS_CMATH, J->Object_prototype));
 	{
 		jsB_propn(J, "E", 2.7182818284590452354);

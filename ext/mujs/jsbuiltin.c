@@ -98,8 +98,10 @@ static void jsB_isFinite(js_State *J)
 	js_pushboolean(J, isfinite(n));
 }
 
-static void Encode(js_State *J, const char *str, const char *unescaped)
+static void Encode(js_State *J, const char *str_, const char *unescaped)
 {
+	/* NOTE: volatile to silence GCC warning about longjmp clobbering a variable */
+	const char * volatile str = str_;
 	js_Buffer *sb = NULL;
 
 	static const char *HEX = "0123456789ABCDEF";
@@ -126,8 +128,10 @@ static void Encode(js_State *J, const char *str, const char *unescaped)
 	js_free(J, sb);
 }
 
-static void Decode(js_State *J, const char *str, const char *reserved)
+static void Decode(js_State *J, const char *str_, const char *reserved)
 {
+	/* NOTE: volatile to silence GCC warning about longjmp clobbering a variable */
+	const char * volatile str = str_;
 	js_Buffer *sb = NULL;
 	int a, b;
 

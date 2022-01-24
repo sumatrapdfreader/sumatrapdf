@@ -46,6 +46,8 @@ static void jsG_freeobject(js_State *J, js_Object *obj)
 		jsG_freeiterator(J, obj->u.iter.head);
 	if (obj->type == JS_CUSERDATA && obj->u.user.finalize)
 		obj->u.user.finalize(J, obj->u.user.data);
+	if (obj->type == JS_CCFUNCTION && obj->u.c.finalize)
+		obj->u.c.finalize(J, obj->u.c.data);
 	js_free(J, obj);
 }
 

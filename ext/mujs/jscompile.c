@@ -794,15 +794,19 @@ static void addjump(JF, enum js_AstType type, js_Ast *target, int inst)
 	target->jumps = jump;
 }
 
-static void labeljumps(JF, js_JumpList *jump, int baddr, int caddr)
+static void labeljumps(JF, js_Ast *stm, int baddr, int caddr)
 {
+	js_JumpList *jump = stm->jumps;
 	while (jump) {
+		js_JumpList *next = jump->next;
 		if (jump->type == STM_BREAK)
 			labelto(J, F, jump->inst, baddr);
 		if (jump->type == STM_CONTINUE)
 			labelto(J, F, jump->inst, caddr);
-		jump = jump->next;
+		js_free(J, jump);
+		jump = next;
 	}
+	stm->jumps = NULL;
 }
 
 static int isloop(enum js_AstType T)
@@ -1121,7 +1125,7 @@ static void cstm(JF, js_Ast *stm)
 		cexp(J, F, stm->b);
 		emitline(J, F, stm);
 		emitjumpto(J, F, OP_JTRUE, loop);
-		labeljumps(J, F, stm->jumps, here(J,F), cont);
+		labeljumps(J, F, stm, here(J,F), cont);
 		break;
 
 	case STM_WHILE:
@@ -1133,7 +1137,7 @@ static void cstm(JF, js_Ast *stm)
 		emitline(J, F, stm);
 		emitjumpto(J, F, OP_JUMP, loop);
 		label(J, F, end);
-		labeljumps(J, F, stm->jumps, here(J,F), loop);
+		labeljumps(J, F, stm, here(J,F), loop);
 		break;
 
 	case STM_FOR:
@@ -1164,7 +1168,7 @@ static void cstm(JF, js_Ast *stm)
 		emitjumpto(J, F, OP_JUMP, loop);
 		if (end)
 			label(J, F, end);
-		labeljumps(J, F, stm->jumps, here(J,F), cont);
+		labeljumps(J, F, stm, here(J,F), cont);
 		break;
 
 	case STM_FOR_IN:
@@ -1189,12 +1193,12 @@ static void cstm(JF, js_Ast *stm)
 			emitjumpto(J, F, OP_JUMP, loop);
 		}
 		label(J, F, end);
-		labeljumps(J, F, stm->jumps, here(J,F), loop);
+		labeljumps(J, F, stm, here(J,F), loop);
 		break;
 
 	case STM_SWITCH:
 		cswitch(J, F, stm->a, stm->b);
-		labeljumps(J, F, stm->jumps, here(J,F), 0);
+		labeljumps(J, F, stm, here(J,F), 0);
 		break;
 
 	case STM_LABEL:
@@ -1204,7 +1208,7 @@ static void cstm(JF, js_Ast *stm)
 			stm = stm->b;
 		/* loops and switches have already been labelled */
 		if (!isloop(stm->type) && stm->type != STM_SWITCH)
-			labeljumps(J, F, stm->jumps, here(J,F), 0);
+			labeljumps(J, F, stm, here(J,F), 0);
 		break;
 
 	case STM_BREAK:

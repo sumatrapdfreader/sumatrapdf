@@ -15,6 +15,12 @@ else
   VERSION := $(shell basename $$PWD | sed -e s,^mujs-,,)
 endif
 
+ifeq ($(shell uname),Darwin)
+	SO_EXT := dylib
+else
+	SO_EXT := so
+endif
+
 # Compiler flags for various configurations:
 
 CFLAGS := -std=c99 -pedantic -Wall -Wextra -Wno-unused-parameter
@@ -55,7 +61,7 @@ HDRS := $(wildcard js*.h mujs.h utf.h regexp.h)
 default: shell
 shell: $(OUT)/mujs $(OUT)/mujs-pp
 static: $(OUT)/libmujs.a
-shared: $(OUT)/libmujs.so
+shared: $(OUT)/libmujs.$(SO_EXT)
 
 astnames.h: jsparse.h
 	grep -E '(AST|EXP|STM)_' jsparse.h | sed 's/^[^A-Z]*\(AST_\)*/"/;s/,.*/",/' | tr A-Z a-z > $@
@@ -80,7 +86,7 @@ $(OUT)/libmujs.a: $(OUT)/libmujs.o
 	@ mkdir -p $(dir $@)
 	$(AR) cr $@ $^
 
-$(OUT)/libmujs.so: one.c $(HDRS)
+$(OUT)/libmujs.$(SO_EXT): one.c $(HDRS)
 	@ mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -shared $(LDFLAGS) -o $@ $< -lm
 
@@ -117,8 +123,8 @@ install-common: $(OUT)/mujs $(OUT)/mujs.pc
 install-static: install-common $(OUT)/libmujs.a
 	install -m 644 $(OUT)/libmujs.a $(DESTDIR)$(libdir)
 
-install-shared: install-common $(OUT)/libmujs.so
-	install -m 755 $(OUT)/libmujs.so $(DESTDIR)$(libdir)
+install-shared: install-common $(OUT)/libmujs.$(SO_EXT)
+	install -m 755 $(OUT)/libmujs.$(SO_EXT) $(DESTDIR)$(libdir)
 
 install: install-static
 
@@ -127,7 +133,7 @@ uninstall:
 	rm -f $(DESTDIR)$(incdir)/mujs.h
 	rm -f $(DESTDIR)$(libdir)/pkgconfig/mujs.pc
 	rm -f $(DESTDIR)$(libdir)/libmujs.a
-	rm -f $(DESTDIR)$(libdir)/libmujs.so
+	rm -f $(DESTDIR)$(libdir)/libmujs.$(SO_EXT)
 
 tarball:
 	git archive --format=zip --prefix=mujs-$(VERSION)/ HEAD > mujs-$(VERSION).zip

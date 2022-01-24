@@ -13,6 +13,13 @@
 #include <float.h>
 #include <limits.h>
 
+/* NOTE: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=103052 */
+#ifdef __GNUC__
+#if (__GNUC__ >= 6)
+#pragma GCC optimize ("no-ipa-pure-const")
+#endif
+#endif
+
 /* Microsoft Visual C */
 #ifdef _MSC_VER
 #pragma warning(disable:4996) /* _CRT_SECURE_NO_WARNINGS */
@@ -92,6 +99,9 @@ typedef struct js_StackTrace js_StackTrace;
 #endif
 #ifndef JS_ASTLIMIT
 #define JS_ASTLIMIT 100		/* max nested expressions */
+#endif
+#ifndef JS_STRLIMIT
+#define JS_STRLIMIT (1<<28)	/* max string length */
 #endif
 
 /* instruction size -- change to int if you get integer overflow syntax errors */

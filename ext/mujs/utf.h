@@ -1,3 +1,16 @@
+/*
+ * The authors of this software are Rob Pike and Ken Thompson.
+ *              Copyright (c) 2002 by Lucent Technologies.
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose without fee is hereby granted, provided that this entire notice
+ * is included in all copies of any software which is or includes a copy
+ * or modification of this software and in all copies of the supporting
+ * documentation for such software.
+ * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHORS NOR LUCENT TECHNOLOGIES MAKE
+ * ANY REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+ * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+ */
 #ifndef js_utf_h
 #define js_utf_h
 
@@ -10,11 +23,8 @@ typedef int Rune;	/* 32 bits */
 
 #define isalpharune	jsU_isalpharune
 #define islowerrune	jsU_islowerrune
-#define isspacerune	jsU_isspacerune
-#define istitlerune	jsU_istitlerune
 #define isupperrune	jsU_isupperrune
 #define tolowerrune	jsU_tolowerrune
-#define totitlerune	jsU_totitlerune
 #define toupperrune	jsU_toupperrune
 
 enum
@@ -33,11 +43,8 @@ int	utflen(const char *s);
 
 int		isalpharune(Rune c);
 int		islowerrune(Rune c);
-int		isspacerune(Rune c);
-int		istitlerune(Rune c);
 int		isupperrune(Rune c);
 Rune		tolowerrune(Rune c);
-Rune		totitlerune(Rune c);
 Rune		toupperrune(Rune c);
 
 #endif

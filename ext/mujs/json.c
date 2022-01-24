@@ -362,7 +362,9 @@ static void JSON_stringify(js_State *J)
 {
 	js_Buffer *sb = NULL;
 	char buf[12];
-	const char *s, *gap;
+	/* NOTE: volatile to silence GCC warning about longjmp clobbering a variable */
+	const char * volatile gap;
+	const char *s;
 	int n;
 
 	gap = NULL;

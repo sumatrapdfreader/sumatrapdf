@@ -42,7 +42,9 @@ static js_StringNode jsS_sentinel = { &jsS_sentinel, &jsS_sentinel, 0, ""};
 
 static js_StringNode *jsS_newstringnode(js_State *J, const char *string, const char **result)
 {
-	int n = strlen(string);
+	size_t n = strlen(string);
+	if (n > JS_STRLIMIT)
+		js_rangeerror(J, "invalid string length");
 	js_StringNode *node = js_malloc(J, soffsetof(js_StringNode, string) + n + 1);
 	node->left = node->right = &jsS_sentinel;
 	node->level = 1;

@@ -53,25 +53,27 @@ void js_newregexp(js_State *J, const char *pattern, int flags)
 
 void js_RegExp_prototype_exec(js_State *J, js_Regexp *re, const char *text)
 {
+	const char *haystack;
 	int result;
 	int i;
 	int opts;
 	Resub m;
 
+	haystack = text;
 	opts = 0;
 	if (re->flags & JS_REGEXP_G) {
-		if (re->last > strlen(text)) {
+		if (re->last > strlen(haystack)) {
 			re->last = 0;
 			js_pushnull(J);
 			return;
 		}
 		if (re->last > 0) {
-			text += re->last;
+			haystack = text + re->last;
 			opts |= REG_NOTBOL;
 		}
 	}
 
-	result = js_regexec(re->prog, text, &m, opts);
+	result = js_regexec(re->prog, haystack, &m, opts);
 	if (result < 0)
 		js_error(J, "regexec failed");
 	if (result == 0) {
@@ -85,7 +87,7 @@ void js_RegExp_prototype_exec(js_State *J, js_Regexp *re, const char *text)
 			js_setindex(J, -2, i);
 		}
 		if (re->flags & JS_REGEXP_G)
-			re->last = re->last + (m.sub[0].ep - text);
+			re->last = m.sub[0].ep - text;
 		return;
 	}
 
@@ -191,9 +193,14 @@ static void jsB_RegExp(js_State *J)
 static void Rp_toString(js_State *J)
 {
 	js_Regexp *re;
-	char *out;
+	char * volatile out = NULL;
 
 	re = js_toregexp(J, 0);
+
+	if (js_try(J)) {
+		js_free(J, out);
+		js_throw(J);
+	}
 
 	out = js_malloc(J, strlen(re->source) + 6); /* extra space for //gim */
 	strcpy(out, "/");
@@ -203,10 +210,6 @@ static void Rp_toString(js_State *J)
 	if (re->flags & JS_REGEXP_I) strcat(out, "i");
 	if (re->flags & JS_REGEXP_M) strcat(out, "m");
 
-	if (js_try(J)) {
-		js_free(J, out);
-		js_throw(J);
-	}
 	js_pop(J, 0);
 	js_pushstring(J, out);
 	js_endtry(J);

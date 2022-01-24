@@ -110,6 +110,8 @@ static void Fp_apply(js_State *J)
 		n = 0;
 	} else {
 		n = js_getlength(J, 2);
+		if (n < 0)
+			n = 0;
 		for (i = 0; i < n; ++i)
 			js_getindex(J, 2, i);
 	}
@@ -143,6 +145,8 @@ static void callbound(js_State *J)
 	args = js_gettop(J);
 	js_getproperty(J, fun, "__BoundArguments__");
 	n = js_getlength(J, args);
+	if (n < 0)
+		n = 0;
 	for (i = 0; i < n; ++i)
 		js_getindex(J, args, i);
 	js_remove(J, args);
@@ -165,6 +169,8 @@ static void constructbound(js_State *J)
 	args = js_gettop(J);
 	js_getproperty(J, fun, "__BoundArguments__");
 	n = js_getlength(J, args);
+	if (n < 0)
+		n = 0;
 	for (i = 0; i < n; ++i)
 		js_getindex(J, args, i);
 	js_remove(J, args);

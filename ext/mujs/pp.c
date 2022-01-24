@@ -28,9 +28,15 @@ static void js_ppstring(js_State *J, const char *filename, const char *source, i
 
 void js_ppfile(js_State *J, const char *filename, int minify)
 {
-	FILE *f;
-	char *s;
+	FILE * volatile f = NULL;
+	char * volatile s = NULL;
 	int n, t;
+
+	if (js_try(J)) {
+		js_free(J, s);
+		fclose(f);
+		js_throw(J);
+	}
 
 	f = fopen(filename, "rb");
 	if (!f) {
@@ -68,17 +74,11 @@ void js_ppfile(js_State *J, const char *filename, int minify)
 
 	s[n] = 0; /* zero-terminate string containing file data */
 
-	if (js_try(J)) {
-		js_free(J, s);
-		fclose(f);
-		js_throw(J);
-	}
-
 	js_ppstring(J, filename, s, minify);
 
+	js_endtry(J);
 	js_free(J, s);
 	fclose(f);
-	js_endtry(J);
 }
 
 int

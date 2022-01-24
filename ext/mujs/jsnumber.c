@@ -30,10 +30,12 @@ static void Np_toString(js_State *J)
 	char buf[100];
 	js_Object *self = js_toobject(J, 0);
 	int radix = js_isundefined(J, 1) ? 10 : js_tointeger(J, 1);
+	double x = 0;
 	if (self->type != JS_CNUMBER)
 		js_typeerror(J, "not a number");
+	x = self->u.number;
 	if (radix == 10) {
-		js_pushstring(J, jsV_numbertostring(J, buf, self->u.number));
+		js_pushstring(J, jsV_numbertostring(J, buf, x));
 		return;
 	}
 	if (radix < 2 || radix > 36)
@@ -42,8 +44,8 @@ static void Np_toString(js_State *J)
 	/* lame number to string conversion for any radix from 2 to 36 */
 	{
 		static const char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-		double number = self->u.number;
-		int sign = self->u.number < 0;
+		double number = x;
+		int sign = x < 0;
 		js_Buffer *sb = NULL;
 		uint64_t u, limit = ((uint64_t)1<<52);
 
@@ -154,7 +156,7 @@ static void Np_toExponential(js_State *J)
 	if (isnan(x) || isinf(x))
 		js_pushstring(J, jsV_numbertostring(J, buf, x));
 	else
-		numtostr(J, "%.*e", width, self->u.number);
+		numtostr(J, "%.*e", width, x);
 }
 
 static void Np_toPrecision(js_State *J)
@@ -170,7 +172,7 @@ static void Np_toPrecision(js_State *J)
 	if (isnan(x) || isinf(x))
 		js_pushstring(J, jsV_numbertostring(J, buf, x));
 	else
-		numtostr(J, "%.*g", width, self->u.number);
+		numtostr(J, "%.*g", width, x);
 }
 
 void jsB_initnumber(js_State *J)

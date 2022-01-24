@@ -116,26 +116,31 @@ static void Sp_concat(js_State *J)
 {
 	int i, top = js_gettop(J);
 	int n;
-	char * volatile out;
+	char * volatile out = NULL;
 	const char *s;
 
 	if (top == 1)
 		return;
 
 	s = checkstring(J, 0);
-	n = strlen(s);
-	out = js_malloc(J, n + 1);
-	strcpy(out, s);
+	n = 1 + strlen(s);
 
 	if (js_try(J)) {
 		js_free(J, out);
 		js_throw(J);
 	}
 
+	if (n > JS_STRLIMIT)
+		js_rangeerror(J, "invalid string length");
+	out = js_malloc(J, n);
+	strcpy(out, s);
+
 	for (i = 1; i < top; ++i) {
 		s = js_tostring(J, i);
 		n += strlen(s);
-		out = js_realloc(J, out, n + 1);
+		if (n > JS_STRLIMIT)
+			js_rangeerror(J, "invalid string length");
+		out = js_realloc(J, out, n);
 		strcat(out, s);
 	}
 
@@ -236,21 +241,24 @@ static void Sp_substring(js_State *J)
 
 static void Sp_toLowerCase(js_State *J)
 {
-	const char *src = checkstring(J, 0);
-	char *dst = js_malloc(J, UTFmax * strlen(src) + 1);
-	const char *s = src;
-	char *d = dst;
+	const char *s = checkstring(J, 0);
+	char * volatile dst = NULL;
+	char *d;
 	Rune rune;
+
+	if (js_try(J)) {
+		js_free(J, dst);
+		js_throw(J);
+	}
+
+	d = dst = js_malloc(J, UTFmax * strlen(s) + 1);
 	while (*s) {
 		s += chartorune(&rune, s);
 		rune = tolowerrune(rune);
 		d += runetochar(d, &rune);
 	}
 	*d = 0;
-	if (js_try(J)) {
-		js_free(J, dst);
-		js_throw(J);
-	}
+
 	js_pushstring(J, dst);
 	js_endtry(J);
 	js_free(J, dst);
@@ -258,21 +266,24 @@ static void Sp_toLowerCase(js_State *J)
 
 static void Sp_toUpperCase(js_State *J)
 {
-	const char *src = checkstring(J, 0);
-	char *dst = js_malloc(J, UTFmax * strlen(src) + 1);
-	const char *s = src;
-	char *d = dst;
+	const char *s = checkstring(J, 0);
+	char * volatile dst = NULL;
+	char *d;
 	Rune rune;
+
+	if (js_try(J)) {
+		js_free(J, dst);
+		js_throw(J);
+	}
+
+	d = dst = js_malloc(J, UTFmax * strlen(s) + 1);
 	while (*s) {
 		s += chartorune(&rune, s);
 		rune = toupperrune(rune);
 		d += runetochar(d, &rune);
 	}
 	*d = 0;
-	if (js_try(J)) {
-		js_free(J, dst);
-		js_throw(J);
-	}
+
 	js_pushstring(J, dst);
 	js_endtry(J);
 	js_free(J, dst);
@@ -299,23 +310,24 @@ static void Sp_trim(js_State *J)
 static void S_fromCharCode(js_State *J)
 {
 	int i, top = js_gettop(J);
+	char * volatile s = NULL;
+	char *p;
 	Rune c;
-	char *s, *p;
-
-	s = p = js_malloc(J, (top-1) * UTFmax + 1);
 
 	if (js_try(J)) {
 		js_free(J, s);
 		js_throw(J);
 	}
 
+	s = p = js_malloc(J, (top-1) * UTFmax + 1);
+
 	for (i = 1; i < top; ++i) {
 		c = js_touint32(J, i);
 		p += runetochar(p, &c);
 	}
 	*p = 0;
-	js_pushstring(J, s);
 
+	js_pushstring(J, s);
 	js_endtry(J);
 	js_free(J, s);
 }

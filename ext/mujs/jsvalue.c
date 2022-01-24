@@ -385,17 +385,21 @@ static js_Object *jsV_newstring(js_State *J, const char *v)
 /* ToObject() on a value */
 js_Object *jsV_toobject(js_State *J, js_Value *v)
 {
+	js_Object *o;
 	switch (v->type) {
 	default:
-	case JS_TSHRSTR: return jsV_newstring(J, v->u.shrstr);
 	case JS_TUNDEFINED: js_typeerror(J, "cannot convert undefined to object");
 	case JS_TNULL: js_typeerror(J, "cannot convert null to object");
-	case JS_TBOOLEAN: return jsV_newboolean(J, v->u.boolean);
-	case JS_TNUMBER: return jsV_newnumber(J, v->u.number);
-	case JS_TLITSTR: return jsV_newstring(J, v->u.litstr);
-	case JS_TMEMSTR: return jsV_newstring(J, v->u.memstr->p);
 	case JS_TOBJECT: return v->u.object;
+	case JS_TSHRSTR: o = jsV_newstring(J, v->u.shrstr); break;
+	case JS_TLITSTR: o = jsV_newstring(J, v->u.litstr); break;
+	case JS_TMEMSTR: o = jsV_newstring(J, v->u.memstr->p); break;
+	case JS_TBOOLEAN: o = jsV_newboolean(J, v->u.boolean); break;
+	case JS_TNUMBER: o = jsV_newnumber(J, v->u.number); break;
 	}
+	v->type = JS_TOBJECT;
+	v->u.object = o;
+	return o;
 }
 
 void js_newobjectx(js_State *J)
@@ -463,13 +467,15 @@ void js_newscript(js_State *J, js_Function *fun, js_Environment *scope)
 	js_pushobject(J, obj);
 }
 
-void js_newcfunction(js_State *J, js_CFunction cfun, const char *name, int length)
+void js_newcfunctionx(js_State *J, js_CFunction cfun, const char *name, int length, void *data, js_Finalize finalize)
 {
 	js_Object *obj = jsV_newobject(J, JS_CCFUNCTION, J->Function_prototype);
 	obj->u.c.name = name;
 	obj->u.c.function = cfun;
 	obj->u.c.constructor = NULL;
 	obj->u.c.length = length;
+	obj->u.c.data = data;
+	obj->u.c.finalize = finalize;
 	js_pushobject(J, obj);
 	{
 		js_pushnumber(J, length);
@@ -481,6 +487,11 @@ void js_newcfunction(js_State *J, js_CFunction cfun, const char *name, int lengt
 		}
 		js_defproperty(J, -2, "prototype", JS_DONTENUM | JS_DONTCONF);
 	}
+}
+
+void js_newcfunction(js_State *J, js_CFunction cfun, const char *name, int length)
+{
+	js_newcfunctionx(J, cfun, name, length, NULL, NULL);
 }
 
 /* prototype -- constructor */
@@ -562,14 +573,15 @@ void js_concat(js_State *J)
 	if (js_isstring(J, -2) || js_isstring(J, -1)) {
 		const char *sa = js_tostring(J, -2);
 		const char *sb = js_tostring(J, -1);
+		char * volatile sab = NULL;
 		/* TODO: create js_String directly */
-		char *sab = js_malloc(J, strlen(sa) + strlen(sb) + 1);
-		strcpy(sab, sa);
-		strcat(sab, sb);
 		if (js_try(J)) {
 			js_free(J, sab);
 			js_throw(J);
 		}
+		sab = js_malloc(J, strlen(sa) + strlen(sb) + 1);
+		strcpy(sab, sa);
+		strcat(sab, sb);
 		js_pop(J, 2);
 		js_pushstring(J, sab);
 		js_endtry(J);

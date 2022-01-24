@@ -15,6 +15,9 @@
 #include <string.h>
 
 #include "utf.h"
+#include "utfdata.h"
+
+#define nelem(a) (int)(sizeof (a) / sizeof (a)[0])
 
 typedef unsigned char uchar;
 
@@ -164,11 +167,11 @@ runetochar(char *str, const Rune *rune)
 	if(c > Runemax)
 		c = Runeerror;
 	if(c <= Rune3) {
-	str[0] = T3 |  (c >> 2*Bitx);
-	str[1] = Tx | ((c >> 1*Bitx) & Maskx);
-	str[2] = Tx |  (c & Maskx);
-	return 3;
-}
+		str[0] = T3 |  (c >> 2*Bitx);
+		str[1] = Tx | ((c >> 1*Bitx) & Maskx);
+		str[2] = Tx |  (c & Maskx);
+		return 3;
+	}
 
 	/*
 	 * four character sequence
@@ -209,4 +212,94 @@ utflen(const char *s)
 			s += chartorune(&rune, s);
 		n++;
 	}
+}
+
+static const Rune *
+ucd_bsearch(Rune c, const Rune *t, int n, int ne)
+{
+	const Rune *p;
+	int m;
+
+	while(n > 1) {
+		m = n/2;
+		p = t + m*ne;
+		if(c >= p[0]) {
+			t = p;
+			n = n-m;
+		} else
+			n = m;
+	}
+	if(n && c >= t[0])
+		return t;
+	return 0;
+}
+
+Rune
+tolowerrune(Rune c)
+{
+	const Rune *p;
+
+	p = ucd_bsearch(c, ucd_tolower2, nelem(ucd_tolower2)/3, 3);
+	if(p && c >= p[0] && c <= p[1])
+		return c + p[2];
+	p = ucd_bsearch(c, ucd_tolower1, nelem(ucd_tolower1)/2, 2);
+	if(p && c == p[0])
+		return c + p[1];
+	return c;
+}
+
+Rune
+toupperrune(Rune c)
+{
+	const Rune *p;
+
+	p = ucd_bsearch(c, ucd_toupper2, nelem(ucd_toupper2)/3, 3);
+	if(p && c >= p[0] && c <= p[1])
+		return c + p[2];
+	p = ucd_bsearch(c, ucd_toupper1, nelem(ucd_toupper1)/2, 2);
+	if(p && c == p[0])
+		return c + p[1];
+	return c;
+}
+
+int
+islowerrune(Rune c)
+{
+	const Rune *p;
+
+	p = ucd_bsearch(c, ucd_toupper2, nelem(ucd_toupper2)/3, 3);
+	if(p && c >= p[0] && c <= p[1])
+		return 1;
+	p = ucd_bsearch(c, ucd_toupper1, nelem(ucd_toupper1)/2, 2);
+	if(p && c == p[0])
+		return 1;
+	return 0;
+}
+
+int
+isupperrune(Rune c)
+{
+	const Rune *p;
+
+	p = ucd_bsearch(c, ucd_tolower2, nelem(ucd_tolower2)/3, 3);
+	if(p && c >= p[0] && c <= p[1])
+		return 1;
+	p = ucd_bsearch(c, ucd_tolower1, nelem(ucd_tolower1)/2, 2);
+	if(p && c == p[0])
+		return 1;
+	return 0;
+}
+
+int
+isalpharune(Rune c)
+{
+	const Rune *p;
+
+	p = ucd_bsearch(c, ucd_alpha2, nelem(ucd_alpha2)/2, 2);
+	if(p && c >= p[0] && c <= p[1])
+		return 1;
+	p = ucd_bsearch(c, ucd_alpha1, nelem(ucd_alpha1), 1);
+	if(p && c == p[0])
+		return 1;
+	return 0;
 }

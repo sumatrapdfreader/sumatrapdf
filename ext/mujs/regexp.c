@@ -943,6 +943,10 @@ void regfreex(void *(*alloc)(void *ctx, void *p, int n), void *ctx, Reprog *prog
 
 static void *default_alloc(void *ctx, void *p, int n)
 {
+	if (n == 0) {
+		free(p);
+		return NULL;
+	}
 	return realloc(p, (size_t)n);
 }
 

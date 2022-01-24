@@ -788,6 +788,7 @@ void jsC_dumpfunction(js_State *J, js_Function *F)
 	minify = 0;
 
 	printf("%s(%d)\n", F->name, F->numparams);
+	if (F->strict) printf("\tstrict\n");
 	if (F->lightweight) printf("\tlightweight\n");
 	if (F->arguments) printf("\targuments\n");
 	printf("\tsource %s:%d\n", F->filename, F->line);

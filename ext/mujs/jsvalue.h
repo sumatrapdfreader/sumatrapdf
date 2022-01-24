@@ -103,6 +103,8 @@ struct js_Object
 			js_CFunction function;
 			js_CFunction constructor;
 			int length;
+			void *data;
+			js_Finalize finalize;
 		} c;
 		js_Regexp r;
 		struct {

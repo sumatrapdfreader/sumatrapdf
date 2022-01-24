@@ -13,6 +13,14 @@ static void jsR_run(js_State *J, js_Function *F);
 #define TOP (J->top)
 #define BOT (J->bot)
 
+static void js_trystackoverflow(js_State *J)
+{
+	STACK[TOP].type = JS_TLITSTR;
+	STACK[TOP].u.litstr = "exception stack overflow";
+	++TOP;
+	js_throw(J);
+}
+
 static void js_stackoverflow(js_State *J)
 {
 	STACK[TOP].type = JS_TLITSTR;
@@ -111,7 +119,9 @@ void js_pushnumber(js_State *J, double v)
 
 void js_pushstring(js_State *J, const char *v)
 {
-	int n = strlen(v);
+	size_t n = strlen(v);
+	if (n > JS_STRLIMIT)
+		js_rangeerror(J, "invalid string length");
 	CHECKSTACK(1);
 	if (n <= soffsetof(js_Value, type)) {
 		char *s = STACK[TOP].u.shrstr;
@@ -127,6 +137,8 @@ void js_pushstring(js_State *J, const char *v)
 
 void js_pushlstring(js_State *J, const char *v, int n)
 {
+	if (n > JS_STRLIMIT)
+		js_rangeerror(J, "invalid string length");
 	CHECKSTACK(1);
 	if (n <= soffsetof(js_Value, type)) {
 		char *s = STACK[TOP].u.shrstr;
@@ -164,8 +176,18 @@ void js_pushglobal(js_State *J)
 void js_currentfunction(js_State *J)
 {
 	CHECKSTACK(1);
-	STACK[TOP] = STACK[BOT-1];
+	if (BOT > 0)
+		STACK[TOP] = STACK[BOT-1];
+	else
+		STACK[TOP].type = JS_TUNDEFINED;
 	++TOP;
+}
+
+void *js_currentfunctiondata(js_State *J)
+{
+	if (BOT > 0)
+		return STACK[BOT-1].u.object->u.c.data;
+	return NULL;
 }
 
 /* Read values from stack */
@@ -1104,6 +1126,9 @@ void js_call(js_State *J, int n)
 	js_Object *obj;
 	int savebot;
 
+	if (n < 0)
+		js_rangeerror(J, "number of arguments cannot be negative");
+
 	if (!js_iscallable(J, -n-2))
 		js_typeerror(J, "%s is not callable", js_typeof(J, -n-2));
 
@@ -1173,13 +1198,18 @@ void js_construct(js_State *J, int n)
 	if (n > 0)
 		js_rot(J, n + 1);
 
+	/* and save a copy to return */
+	js_pushobject(J, newobj);
+	js_rot(J, n + 3);
+
 	/* call the function */
 	js_call(J, n);
 
 	/* if result is not an object, return the original object we created */
 	if (!js_isobject(J, -1)) {
 		js_pop(J, 1);
-		js_pushobject(J, newobj);
+	} else {
+		js_rot2pop1(J);
 	}
 }
 
@@ -1226,7 +1256,7 @@ int js_pcall(js_State *J, int n)
 void *js_savetrypc(js_State *J, js_Instruction *pc)
 {
 	if (J->trytop == JS_TRYLIMIT)
-		js_error(J, "try: exception stack overflow");
+		js_trystackoverflow(J);
 	J->trybuf[J->trytop].E = J->E;
 	J->trybuf[J->trytop].envtop = J->envtop;
 	J->trybuf[J->trytop].tracetop = J->tracetop;
@@ -1240,7 +1270,7 @@ void *js_savetrypc(js_State *J, js_Instruction *pc)
 void *js_savetry(js_State *J)
 {
 	if (J->trytop == JS_TRYLIMIT)
-		js_error(J, "try: exception stack overflow");
+		js_trystackoverflow(J);
 	J->trybuf[J->trytop].E = J->E;
 	J->trybuf[J->trytop].envtop = J->envtop;
 	J->trybuf[J->trytop].tracetop = J->tracetop;
