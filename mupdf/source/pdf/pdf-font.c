@@ -475,12 +475,57 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, const char *fontn
 	}
 }
 
+#define TTF_U16(p) ((uint16_t) ((p)[0]<<8) | ((p)[1]))
+#define TTF_U32(p) ((uint32_t) ((p)[0]<<24) | ((p)[1]<<16) | ((p)[2]<<8) | ((p)[3]))
+
+static fz_buffer *
+pdf_extract_cff_subtable(fz_context *ctx, unsigned char *data, size_t size)
+{
+	size_t num_tables = TTF_U16(data + 4);
+	size_t i;
+
+	if (12 + num_tables * 16 > size)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid TTF header");
+
+	for (i = 0; i < num_tables; ++i)
+	{
+		unsigned char *record = data + 12 + i * 16;
+		if (!memcmp("CFF ", record, 4))
+		{
+			uint64_t offset = TTF_U32(record + 8);
+			uint64_t length = TTF_U32(record + 12);
+			uint64_t end = offset + length;
+			if (end > size)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid TTF subtable offset/length");
+			return fz_new_buffer_from_copied_data(ctx, data + offset, length);
+		}
+	}
+
+	return NULL;
+}
+
 static void
 pdf_load_embedded_font(fz_context *ctx, pdf_document *doc, pdf_font_desc *fontdesc, const char *fontname, pdf_obj *stmref)
 {
 	fz_buffer *buf;
+	unsigned char *data;
+	size_t size;
 
 	buf = pdf_load_stream(ctx, stmref);
+
+	/* Extract CFF subtable for OpenType fonts: */
+	size = fz_buffer_storage(ctx, buf, &data);
+	if (size > 12) {
+		if (!memcmp("OTTO", data, 4)) {
+			fz_buffer *cff = pdf_extract_cff_subtable(ctx, data, size);
+			if (cff)
+			{
+				fz_drop_buffer(ctx, buf);
+				buf = cff;
+			}
+		}
+	}
+
 	fz_try(ctx)
 		fontdesc->font = fz_new_font_from_buffer(ctx, fontname, buf, 0, 1);
 	fz_always(ctx)

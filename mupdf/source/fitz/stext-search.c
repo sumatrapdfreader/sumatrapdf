@@ -434,9 +434,6 @@ fz_copy_rectangle(fz_context *ctx, fz_stext_page *page, fz_rect area, int crlf)
 
 static inline int canon(int c)
 {
-	/* TODO: proper unicode case folding */
-	/* TODO: character equivalence (a matches ä, etc) */
-
 	// Map full-width ASCII forms to ASCII:
 	// U+FF01 .. U+FF5E => U+0021 .. U+007E
 	if (c >= 0xFF01 && c <= 0xFF5E)
@@ -446,9 +443,8 @@ static inline int canon(int c)
 		return ' ';
 	if (c == '\r' || c == '\n' || c == '\t')
 		return ' ';
-	if (c >= 'A' && c <= 'Z')
-		return c - 'A' + 'a';
-	return c;
+
+	return fz_toupper(c);
 }
 
 static inline int chartocanon(int *c, const char *s)

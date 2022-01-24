@@ -36,11 +36,55 @@
 #include <windows.h> /* for MultiByteToWideChar etc. */
 #endif
 
-static inline int
+#include "utfdata.h"
+
+static const int *
+fz_ucd_bsearch(int c, const int *t, int n, int ne)
+{
+	const int *p;
+	int m;
+	while (n > 1)
+	{
+		m = n/2;
+		p = t + m*ne;
+		if (c >= p[0])
+		{
+			t = p;
+			n = n - m;
+		}
+		else
+		{
+			n = m;
+		}
+	}
+	if (n && c >= t[0])
+		return t;
+	return 0;
+}
+
+int
 fz_tolower(int c)
 {
-	if (c >= 'A' && c <= 'Z')
-		return c + 32;
+	const int *p;
+	p = fz_ucd_bsearch(c, ucd_tolower2, nelem(ucd_tolower2) / 3, 3);
+	if (p && c >= p[0] && c <= p[1])
+		return c + p[2];
+	p = fz_ucd_bsearch(c, ucd_tolower1, nelem(ucd_tolower1) / 2, 2);
+	if (p && c == p[0])
+		return c + p[1];
+	return c;
+}
+
+int
+fz_toupper(int c)
+{
+	const int *p;
+	p = fz_ucd_bsearch(c, ucd_toupper2, nelem(ucd_toupper2) / 3, 3);
+	if (p && c >= p[0] && c <= p[1])
+		return c + p[2];
+	p = fz_ucd_bsearch(c, ucd_toupper1, nelem(ucd_toupper1) / 2, 2);
+	if (p && c == p[0])
+		return c + p[1];
 	return c;
 }
 

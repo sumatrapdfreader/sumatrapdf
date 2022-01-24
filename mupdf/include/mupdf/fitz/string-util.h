@@ -222,4 +222,10 @@ int fz_grisu(float f, char *s, int *exp);
 int fz_is_page_range(fz_context *ctx, const char *s);
 const char *fz_parse_page_range(fz_context *ctx, const char *s, int *a, int *b, int n);
 
+/**
+	Unicode aware tolower and toupper functions.
+*/
+int fz_tolower(int c);
+int fz_toupper(int c);
+
 #endif
