@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e0f84c532f190b5612948e481190f430de1f5fca
+210570daa443c613746ccbe0f361839454684494
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -540,6 +540,7 @@ el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
 et:&Jätka 32-bitise versiooni paigaldamist
 fr:Continuer l'installation de la version 32-bits
+gl:Continuar instalando a versión de 32 bits
 hu:Folytatás a 32-bites verzió telepítésével
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
@@ -2909,6 +2910,7 @@ dk:&Gennemstreg
 el:Εξάλειψη
 es:&Tachar
 et:&Tõmba maha
+fr:Rayer
 hr:Za&crtati
 hu:Kihúzás
 it:Cancellato
@@ -3035,6 +3037,7 @@ el:Υπογράμμιση\tu
 es:&Subrayar\tu
 et:&Jooni alla\tu
 fr:&Souligner\tu
+gl:Subliñar
 hu:Aláhúzás\tu
 it:&Sottolineato\ts
 nl:&Onderstrepen\tu
@@ -4613,6 +4616,7 @@ el:Χρώμα φόντου:
 es:Color de fondo
 et:Taustavärv:
 fr:Couleur d'arrière-plan
+gl:Cor de fondo
 hr:Boja pozadine:
 hu:Háttérszín:
 it:Colore sfondo:
@@ -5395,7 +5399,7 @@ fi:Tarkista &päivitysten saatavuus
 fr:&Vérifier les mises à jour
 fy-nl:&Kontrolearje op fernijings
 ga:Lorg Nuashonruithe
-gl:Buscar act&ualizacións
+gl:Buscar actualizacións
 he:בדוק עדכונים...
 hi:नए संसकरण के लिए जांच करें(&C)
 hr:Provjeri ažuriranje
@@ -5450,6 +5454,7 @@ el:Έλεγχος για ενημέρωση...
 es:Buscando actualizaciones...
 et:Uuenduste otsimine...
 fr:Vérifier les mises à jour
+gl:Comprobar actualizacións
 hu:Frissítés keresése...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
@@ -5629,6 +5634,7 @@ el:Χρώμα:
 es:Color:
 et:Värv:
 fr:Couleur
+gl:cor
 hr:Boja:
 hu:Szín:
 it:Colore:
@@ -6210,7 +6216,7 @@ fa:رونوشت از تو&ضیح
 fi:Kopioi kommentti
 fr:Copier le co&mmentaire
 ga:Macasamhlaigh an nóta tráchta
-gl:Copiar o co&mentario
+gl:Copiar o comentario
 he:העתק הערה
 hi:&टिप्पणी नक़ल करें
 hr:Kopiraj ko&mentar
@@ -7108,6 +7114,8 @@ de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
 es:Crear una anotación con la selección
 et:Loo valikust kommentaar
+fr:Créer une annotation à partir de la sélection
+gl:Crear anotacion a partir da selección
 hr:Napravite bilješku iz odabira
 hu:Megjegyzés készítése a kiválasztásból
 it:Crea annotazione dalla selezione
@@ -7705,6 +7713,7 @@ el:Διαγραφή σχολίου\tDel
 es:Eliminar anotación\tDel
 et:Kustuta kommentaar\tDel
 fr:Supprimer l'annotation\tDel
+gl:Borrar anotación
 it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
@@ -7917,6 +7926,7 @@ el:Μη γίνει εγκατάσταση
 es:No instalar
 et:Ära paigalda
 fr:Ne pas installer
+gl:Non instalar
 hu:Ne telepítsd
 it:Non installare
 kr:설치하지 마십시오
@@ -7940,6 +7950,7 @@ el:Λήψη έκδοσης 64-bit
 es:Descargar la versión de 64 bits
 et:Laadi alla 64-bitine versioon
 fr:Télécharger la version 64-bits
+gl:Baixar versión de 64 bits
 hu:64-bites verzió letöltése
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
@@ -12271,6 +12282,7 @@ el:Νέα έκδοση διαθέσιμη
 es:Disponible una versión nueva
 et:Saadaval on uus versioon
 fr:Nouvelle version disponible
+gl:Nova versión dispoñible
 hu:Új verzió elérhető
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
@@ -15583,6 +15595,7 @@ de:Verschnörkelt
 el:Στριφογυριστό
 es:&Ondulado
 et:&Kritseldus
+fr:&Ondulé
 hr:&Vrckava crta
 hu:Hullámos
 it:Sinuoso
@@ -15607,6 +15620,7 @@ el:Έγγραφα SVG
 es:Documentos SVG
 et:SVG dokumendid
 fr:Documents SVG
+gl:documentos SVG
 hu:SVG dokumentumok
 it:Documenti SVG
 kw:Dogvennow SVG
@@ -15625,6 +15639,7 @@ el:Αποθήκευση σχολίων σε υπάρχον PDF
 es:Guardar Anotaciones a PDF existente
 et:Salvesta kommentaarid olemas olevasse PDF-i
 fr:Sauvegarder les annotations dans le PDF existant.
+gl:Gardar anotacións ó PDF existente
 hu:Megjegyzések elmentése a meglévő PDF-be
 it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
@@ -15739,6 +15754,7 @@ el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
 et:Salvestada kommentaarid?
 fr:Sauvegarder les annotations ?
+gl:Gardar anotacións?
 hu:Megjegyzések mentése?
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
@@ -15761,6 +15777,7 @@ el:Αποθήκευση αλλαγών σε νέο PDF
 es:Guardar los cambios en un nuevo PDF
 et:Salvesta muudatused uude PDF-i
 fr:Enregistrer les modifications dans un nouveau PDF
+gl:Gardar anotacións a un novo PDF
 hr:Spremi promjene u novi PDF
 hu:Változtatások elmentése egy új PDF-be
 it:Salva modifiche in un nuovo PDF
@@ -16005,6 +16022,7 @@ de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
 es:Seleccionar la anotación en el editor
 et:Vali redaktoris kommentaar
+fr:Sélectionner l'annotation dans l'éditeur
 hr:Odaberite bilješku u uređivaču
 hu:Megjegyzés kiválasztása a szerkesztőben
 it:Seleziona annotazione nell'editor
@@ -18627,6 +18645,7 @@ el:Μη αποθηκευμένα σχόλια
 es:Anotaciones sin guardar
 et:Salvestamata kommentaarid
 fr:Annotations non sauvegardées
+gl:Anotacións sen gardar
 hr:Nespremljene bilješke
 hu:Mentetlen megjegyzések
 it:Annotazioni non salvate
@@ -19132,6 +19151,7 @@ el:Έχετε μη αποθηκευμένα σχόλια
 es:Hay anotaciones sin guardar
 et:Sul on salvestamata kommentaare
 fr:Vous avez des annotations non sauvegardées
+gl:Tes anotacións sen gardar
 hr:Imate nespremljene bilješke
 hu:Mentetlen megjegyzéseid vannak
 id:Kamu memiliki catatan yang belum tersimpan
