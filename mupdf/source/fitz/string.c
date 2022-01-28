@@ -660,6 +660,9 @@ const char *fz_parse_page_range(fz_context *ctx, const char *s, int *a, int *b, 
 	else
 		*b = *a;
 
+	if (*a < 0) *a = n + 1 + *a;
+	if (*b < 0) *b = n + 1 + *b;
+
 	*a = fz_clampi(*a, 1, n);
 	*b = fz_clampi(*b, 1, n);
 

@@ -217,7 +217,7 @@ int fz_grisu(float f, char *s, int *exp);
 
 /**
 	Check and parse string into page ranges:
-		( ','? ([0-9]+|'N') ( '-' ([0-9]+|N) )? )+
+		/,?(-?\d+|N)(-(-?\d+|N))?/
 */
 int fz_is_page_range(fz_context *ctx, const char *s);
 const char *fz_parse_page_range(fz_context *ctx, const char *s, int *a, int *b, int n);

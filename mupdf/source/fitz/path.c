@@ -646,7 +646,7 @@ static inline void bound_expand(fz_rect *r, fz_point p)
 void fz_walk_path(fz_context *ctx, const fz_path *path, const fz_path_walker *proc, void *arg)
 {
 	int i, k, cmd_len;
-	float x, y, sx, sy;
+	float x=0, y=0, sx=0, sy=0;
 	uint8_t *cmds;
 	float *coords;
 
