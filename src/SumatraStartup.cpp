@@ -1154,11 +1154,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             OpenUsingDde(hPrevWnd, flags.fileNames.at(n), flags, 0 == n);
         }
         if (0 == nFiles) {
-            win::ToForeground(hPrevWnd);
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/2306
+            // if -new-window cmd-line flag given, create a new window
+            // even if there are no files to open
+            if (flags.inNewWindow) {
+                goto ContinueOpenWindow;
+            } else {
+                win::ToForeground(hPrevWnd);
+            }
         }
         goto Exit;
     }
 
+ContinueOpenWindow:
     if (gGlobalPrefs->sessionData->size() > 0 && !gPluginURL) {
         restoreSession = gGlobalPrefs->restoreSession;
     }
