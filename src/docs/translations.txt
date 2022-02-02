@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-210570daa443c613746ccbe0f361839454684494
+33a23bfe82ec59cae777b3e5e03f247670c79312
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7717,6 +7717,7 @@ gl:Borrar anotación
 it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
+tr:Dipnotu Sil\tDel
 uk:Видалити анотацію\tDel
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
@@ -15644,7 +15645,7 @@ hu:Megjegyzések elmentése a meglévő PDF-be
 it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
-tr:Dipnotları mevcut PDF'ye kaydet
+tr:Dipnotları geçerli PDF'ye kaydet
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
