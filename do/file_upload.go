@@ -12,7 +12,7 @@ import (
 const filesRemoteDir = "sumatraTestFiles/"
 
 func fileUpload(fpath string) {
-	ensureSpacesAndS3Creds()
+	ensureAllUploadCreds()
 	fileSize := fileSizeMust(fpath)
 	sha1, err := fileSha1Hex(fpath)
 	must(err)
@@ -22,9 +22,6 @@ func fileUpload(fpath string) {
 	logf(ctx(), "uploading '%s' of size %s as '%s'\n", fpath, sizeStr, remotePath)
 
 	timeStart := time.Now()
-
-	s3Client := newMinioS3Client()
-	spacesClient := newMinioSpacesClient()
 
 	upload := func(mc *minio.Client) {
 		uri := mc.URLForPath(remotePath)
@@ -38,16 +35,24 @@ func fileUpload(fpath string) {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(1)
 	go func() {
-		upload(s3Client)
+		upload(newMinioS3Client())
 		wg.Done()
 	}()
 
+	wg.Add(1)
 	go func() {
-		upload(spacesClient)
+		upload(newMinioBackblazeClient())
 		wg.Done()
 	}()
+
+	wg.Add(1)
+	go func() {
+		upload(newMinioSpacesClient())
+		wg.Done()
+	}()
+
 	wg.Wait()
 }
 
@@ -63,17 +68,18 @@ func minioFilesList(mc *minio.Client) {
 }
 
 func filesList() {
-	ensureSpacesAndS3Creds()
-	//minioFilesList(newMinioSpacesClient())
-	minioFilesList(newMinioS3Client())
+	ensureAllUploadCreds()
+	minioFilesList(newMinioBackblazeClient())
 }
 
 func deleteFilesOneOff() {
 	doDelete := false
 	prefix := "vack/"
 
-	//mc := newMinioSpacesClient()
-	mc := newMinioS3Client()
+	var mc *minio.Client
+	//mc = newMinioSpacesClient()
+	//mc = newMinioS3Client()
+	//mc = newMinioBackblazeClient()
 	uri := mc.URLForPath("")
 	logf(ctx(), "deleteFiles in '%s'\n", uri)
 	files := mc.ListObjects(prefix)

@@ -384,3 +384,15 @@ func newMinioS3Client() *minio.Client {
 	must(err)
 	return mc
 }
+
+func newMinioBackblazeClient() *minio.Client {
+	config := &minio.Config{
+		Bucket:   "kjk-files",
+		Endpoint: "s3.us-west-001.backblazeb2.com",
+		Access:   os.Getenv("BB_ACCESS"),
+		Secret:   os.Getenv("BB_SECRET"),
+	}
+	mc, err := minio.New(config)
+	must(err)
+	return mc
+}

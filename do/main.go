@@ -109,10 +109,12 @@ func ensureSpacesCreds() {
 	panicIf(os.Getenv("SPACES_SECRET") == "", "Not uploading to do spaces because SPACES_SECRET env variable not set\n")
 }
 
-func ensureSpacesAndS3Creds() {
+func ensureAllUploadCreds() {
 	ensureSpacesCreds()
 	panicIf(os.Getenv("AWS_ACCESS") == "", "Not uploading to s3 because AWS_ACCESS env variable not set\n")
 	panicIf(os.Getenv("AWS_SECRET") == "", "Not uploading to s3 because AWS_SECRET env variable not set\n")
+	panicIf(os.Getenv("BB_ACCESS") == "", "Not uploading to backblaze because BB_ACCESS env variable not set\n")
+	panicIf(os.Getenv("BB_SECRET") == "", "Not uploading to backblaze because BB_SECRET env variable not set\n")
 }
 
 func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
@@ -121,7 +123,7 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 	logf(ctx(), "verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
 
 	if opts.upload {
-		ensureSpacesAndS3Creds()
+		ensureAllUploadCreds()
 	}
 
 	if opts.sign {
@@ -442,7 +444,7 @@ func main() {
 	}
 
 	if flgUpdateVer != "" {
-		ensureSpacesAndS3Creds()
+		ensureAllUploadCreds()
 		updateAutoUpdateVer(flgUpdateVer)
 		return
 	}
@@ -492,6 +494,14 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
 	}()
 	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		mc := newMinioBackblazeClient()
+		minioUploadBuildMust(mc, buildType)
+		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		wg.Done()
+	}()
 
 	wg.Add(1)
 	go func() {

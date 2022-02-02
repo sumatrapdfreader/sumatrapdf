@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/kjk/minio"
 )
 
 // Format of auto-update file:
@@ -48,19 +50,27 @@ func updateAutoUpdateVer(ver string) {
 Latest %s
 `, ver)
 	fmt.Printf("Content of update file:\n%s\n\n", s)
-	mc := newMinioS3Client()
-	{
-		remotePath := "sumatrapdf/sumpdf-update.txt"
-		_, err := mc.UploadData(remotePath, []byte(s), true)
-		must(err)
+	d := []byte(s)
+
+	uploadInfo := func(mc *minio.Client) {
+		{
+			remotePath := "sumatrapdf/sumpdf-update.txt"
+			_, err := mc.UploadData(remotePath, d, true)
+			must(err)
+		}
+		{
+			remotePath := "sumatrapdf/sumpdf-latest.txt"
+			_, err := mc.UploadData(remotePath, d, true)
+			must(err)
+		}
 	}
-	{
-		remotePath := "sumatrapdf/sumpdf-latest.txt"
-		_, err := mc.UploadData(remotePath, []byte(s), true)
-		must(err)
-	}
+
+	uploadInfo(newMinioS3Client())
+	uploadInfo(newMinioBackblazeClient())
+	uploadInfo(newMinioSpacesClient())
 
 	path := filepath.Join("website", "update-check-rel.txt")
 	writeFileMust(path, []byte(s))
+
 	fmt.Printf("Don't forget to checkin file '%s' and deploy website\n", path)
 }
