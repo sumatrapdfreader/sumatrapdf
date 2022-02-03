@@ -11,9 +11,9 @@ More information:
 * [manual](https://www.sumatrapdfreader.org/manual.html)
 * [all other docs](https://www.sumatrapdfreader.org/docs/SumatraPDF-documentation)
 
-To compile you need latest Visual Studio 2022 or 2019. [Free Community edition](https://www.visualstudio.com/vs/community/) works.
+To compile you need latest Visual Studio 2022. [Free Community edition](https://www.visualstudio.com/vs/community/) works.
 
-Open `vs2019/SumatraPDF.sln` and hit F5 to compile and run.
+Open `vs2022/SumatraPDF.sln` and hit F5 to compile and run.
 
 For best results use the latest release available as that's what I use and test with.
 If things don't compile, first make sure you're using the latest version of Visual Studio.
