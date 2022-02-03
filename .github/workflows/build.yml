@@ -30,6 +30,8 @@ jobs:
         env:
           AWS_SECRET: ${{ secrets.AWS_SECRET }}
           AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
+          BB_SECRET: ${{ secrets.BB_SECRET }}
+          BB_ACCESS: ${{ secrets.BB_ACCESS }}
           SPACES_KEY: ${{ secrets.SPACES_KEY }}
           SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
           WASABI_ACCESS: ${{ secrets.WASABI_ACCESS }}
