@@ -277,6 +277,7 @@ void Delete(Annotation* annot) {
     pdf_delete_annot(e->ctx, page, annot->pdfannot);
     annot->isDeleted = true;
     annot->isChanged = true; // TODO: not sure I need this
+    e->modifiedAnnotations = true;
 }
 
 // -1 if not exist

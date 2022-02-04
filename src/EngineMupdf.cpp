@@ -3492,8 +3492,11 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     if (!epdf->pdfdoc) {
         return false;
     }
-    int res = pdf_has_unsaved_changes(epdf->ctx, epdf->pdfdoc);
-    return res != 0;
+    // pdf_has_unsaved_changes() also returns true if the file was auto-repaired
+    // at loading time, which is not something we want
+    // int res = pdf_has_unsaved_changes(epdf->ctx, epdf->pdfdoc);
+    // return res != 0;
+    return epdf->modifiedAnnotations;
 }
 
 bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
@@ -3577,6 +3580,8 @@ Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo)
         // unsupported type
         return nullptr;
     }
+
+    engine->modifiedAnnotations = true;
 
     CrashIf(pageNo < 1);
     Annotation* res = new Annotation();

@@ -94,6 +94,10 @@ class EngineMupdf : public EngineBase {
 
     TocTree* tocTree{nullptr};
 
+    // used to track "dirty" state of annotations. not perfect because if we add and delete
+    // the same annotation, we should be back to 0
+    bool modifiedAnnotations{false};
+
     bool Load(const WCHAR* filePath, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)

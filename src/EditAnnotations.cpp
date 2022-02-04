@@ -38,6 +38,7 @@ extern "C" {
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "WindowInfo.h"
+#include "Toolbar.h"
 #include "TabInfo.h"
 #include "EditAnnotations.h"
 #include "SumatraPDF.h"
@@ -827,6 +828,7 @@ void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annota
         UpdateUIForSelectedAnnotation(ew, -1);
     }
     WindowInfoRerender(tab->win);
+    ToolbarUpdateStateForWindow(tab->win, false);
 }
 
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
