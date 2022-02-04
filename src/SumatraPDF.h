@@ -97,6 +97,7 @@ extern bool gSuppressAltKey;
 extern HBITMAP gBitmapReloadingCue;
 extern HCURSOR gCursorDrag;
 extern bool gCrashOnOpen;
+extern HWND gLastActiveFrameHwnd;
 
 #define gPluginMode (gPluginURL != nullptr)
 

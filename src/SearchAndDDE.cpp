@@ -732,6 +732,11 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         win = FindWindowInfoByFile(pdfFile, focusTab);
     }
     if (newWindow || !win) {
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/2315
+        // open in the last active window
+        if (win == nullptr) {
+            win = FindWindowInfoByHwnd(gLastActiveFrameHwnd);
+        }
         LoadArgs args(pdfFile, win);
         win = LoadDocument(args);
     } else if (!win->IsDocLoaded()) {

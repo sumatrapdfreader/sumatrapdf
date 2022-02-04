@@ -4802,6 +4802,8 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
     return 0;
 }
 
+HWND gLastActiveFrameHwnd = nullptr;
+
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
@@ -4862,6 +4864,13 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             if (gOwnerDrawMenu) {
                 MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
                 return TRUE;
+            }
+            break;
+
+        case WM_ACTIVATE:
+            if (wp != WA_INACTIVE) {
+                gLastActiveFrameHwnd = hwnd;
+                logf("activated 0x%x\n", (void*)hwnd);
             }
             break;
 
