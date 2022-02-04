@@ -149,15 +149,44 @@ fz_drop_image(fz_context *ctx, fz_image *image)
 }
 
 static void
-fz_mask_color_key(fz_pixmap *pix, int n, const int *colorkey)
+fz_mask_color_key(fz_pixmap *pix, int n, int bpc, const int *colorkey)
 {
 	unsigned char *p = pix->samples;
 	int w;
 	int k, t;
 	int h = pix->h;
 	size_t stride = pix->stride - pix->w * (size_t)pix->n;
+	int scaledcolorkey[FZ_MAX_COLORS * 2];
+	int scale, shift, max;
+
 	if (pix->w == 0)
 		return;
+
+	for (k = 0; k < 2 * n; k++)
+		scaledcolorkey[k] = fz_clampi(colorkey[k], 0, (1 << bpc) - 1);
+
+	switch (bpc)
+	{
+	case 1: scale = 255; shift = 0; max = 1; break;
+	case 2: scale = 85; shift = 0; max = 3; break;
+	case 4: scale = 17; shift = 0; max = 15; break;
+	default:
+	case 8: scale = 1; shift = 0; max = 0xff; break;
+	case 16: scale = 1; shift = 8; max = 0xffff; break;
+	case 24: scale = 1; shift = 16; max = 0xffffff; break;
+	case 32: scale = 1; shift = 24; max = 0xffffffff; break;
+	}
+
+	for (k = 0; k < 2 * n; k++)
+		scaledcolorkey[k] = fz_clampi(colorkey[k], 0, max);
+
+	if (scale > 1)
+		for (k = 0; k < 2 * n; k++)
+			scaledcolorkey[k] *= scale;
+	else if (shift > 0)
+		for (k = 0; k < 2 * n; k++)
+			scaledcolorkey[k] >>= shift;
+
 	while (h--)
 	{
 		w = pix->w;
@@ -165,7 +194,7 @@ fz_mask_color_key(fz_pixmap *pix, int n, const int *colorkey)
 		{
 			t = 1;
 			for (k = 0; k < n; k++)
-				if (p[k] < colorkey[k * 2] || p[k] > colorkey[k * 2 + 1])
+				if (p[k] < scaledcolorkey[k * 2] || p[k] > scaledcolorkey[k * 2 + 1])
 					t = 0;
 			if (t)
 				for (k = 0; k < pix->n; k++)
@@ -616,7 +645,7 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image
 
 		/* color keyed transparency */
 		if (image->use_colorkey && !image->mask)
-			fz_mask_color_key(tile, image->n, image->colorkey);
+			fz_mask_color_key(tile, image->n, image->bpc, image->colorkey);
 
 		if (indexed)
 		{
