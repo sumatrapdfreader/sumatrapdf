@@ -800,6 +800,40 @@ static void ShowNotValidInstallerError() {
     MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
 }
 
+static void ShowNoAdminErrorMessage() {
+    TASKDIALOGCONFIG dialogConfig{};
+    DWORD flags =
+        TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_ENABLE_HYPERLINKS;
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.cxWidth = 340;
+    dialogConfig.pszWindowTitle = L"SumatraPDF";
+    dialogConfig.pszMainInstruction = L"SumatraPDF is running as admin and cannot open files from a non-admin process";
+    ;
+    dialogConfig.pszContent =
+        LR"(<a href="https://github.com/sumatrapdfreader/sumatrapdf/discussions/2316">Read more about this error</a>)";
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.pfCallback = TaskdialogHandleLinkscallback;
+    dialogConfig.dwCommonButtons = TDCBF_OK_BUTTON;
+    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
+
+    auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    CrashIf(hr == E_INVALIDARG);
+}
+
+// non-admin process cannot send DDE messages to admin process
+// so when that happens we need to alert the user
+// TODO: maybe a better fix is to re-launch ourselves as admin?
+static bool IsNoAdminToAdmin(HWND hPrevWnd) {
+    DWORD otherProcId = 1;
+    GetWindowThreadProcessId(hPrevWnd, &otherProcId);
+    if (CanTalkToProcess(otherProcId)) {
+        return false;
+    }
+    ShowNoAdminErrorMessage();
+    return false;
+}
+
 #if 0
 static void LogDpiAwareness() {
     if (!DynGetThreadDpiAwarenessContext) {
@@ -1139,17 +1173,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     } else if (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
         hPrevWnd = FindPrevInstWindow(&hMutex);
     }
+
     if (hPrevWnd) {
-        DWORD otherProcId = 1;
-        GetWindowThreadProcessId(hPrevWnd, &otherProcId);
-        if (!CanTalkToProcess(otherProcId)) {
-            // TODO: maybe just launch another instance. The problem with that
-            // is that they'll fight for settings file which might cause corruption
-            auto msg = "SumatraPDF is running as admin and cannot open files from a non-admin process";
-            MessageBoxA(nullptr, msg, "Error", MB_OK | MB_ICONERROR);
+        size_t nFiles = flags.fileNames.size();
+        // we allow -new-window on its own if no files given
+        if (nFiles > 0 && IsNoAdminToAdmin(hPrevWnd)) {
             goto Exit;
         }
-        size_t nFiles = flags.fileNames.size();
         for (size_t n = 0; n < nFiles; n++) {
             OpenUsingDde(hPrevWnd, flags.fileNames.at(n), flags, 0 == n);
         }
