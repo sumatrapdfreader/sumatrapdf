@@ -331,8 +331,7 @@ void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepCont
     UpdateToolbarState(win);
 }
 
-// Find the first window showing a given PDF file
-WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
+TabInfo* FindTabByFile(const WCHAR* file) {
     AutoFreeWstr normFile(path::Normalize(file));
 
     for (WindowInfo* win : gWindows) {
@@ -341,13 +340,34 @@ WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
             if (!fp || !path::IsSame(tab->filePath, normFile)) {
                 continue;
             }
-            if (focusTab && tab != win->currentTab) {
-                TabsSelect(win, win->tabs.Find(tab));
-            }
-            return win;
+            return tab;
         }
     }
     return nullptr;
+}
+
+// ok for tab to be null
+void SelectTabInWindow(TabInfo* tab) {
+    if (!tab || !tab->win) {
+        return;
+    }
+    auto win = tab->win;
+    if (tab == win->currentTab) {
+        return;
+    }
+    TabsSelect(win, win->tabs.Find(tab));
+}
+
+// Find the first window showing a given PDF file
+WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
+    TabInfo* tab = FindTabByFile(file);
+    if (!tab) {
+        return nullptr;
+    }
+    if (focusTab) {
+        SelectTabInWindow(tab);
+    }
+    return tab->win;
 }
 
 // Find the first window that has been produced from <file>

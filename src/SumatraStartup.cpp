@@ -802,8 +802,7 @@ static void ShowNotValidInstallerError() {
 
 static void ShowNoAdminErrorMessage() {
     TASKDIALOGCONFIG dialogConfig{};
-    DWORD flags =
-        TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_ENABLE_HYPERLINKS;
+    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_ENABLE_HYPERLINKS;
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.cxWidth = 340;
     dialogConfig.pszWindowTitle = L"SumatraPDF";
@@ -905,6 +904,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     bool restoreSession{false};
     HANDLE hMutex{nullptr};
     HWND hPrevWnd{nullptr};
+    TabInfo* tabToSelect = nullptr;
 
     CrashIf(hInstance != GetInstance());
 
@@ -1146,7 +1146,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     }
 
     {
-        // search only applies is there's 1 file
+        // search only applies if there's 1 file
         auto nFiles = flags.fileNames.size();
         if (nFiles != 1) {
             str::FreePtr(&flags.search);
@@ -1229,8 +1229,12 @@ ContinueOpenWindow:
     ResetSessionState(gGlobalPrefs->sessionData);
 
     for (const WCHAR* filePath : flags.fileNames) {
-        if (restoreSession && FindWindowInfoByFile(filePath, false)) {
-            continue;
+        if (restoreSession) {
+            auto tab = FindTabByFile(filePath);
+            if (tab) {
+                tabToSelect = tab;
+                continue;
+            }
         }
         auto path = ToUtf8Temp(filePath);
         win = LoadOnStartup(filePath, flags, !win);
@@ -1242,6 +1246,7 @@ ContinueOpenWindow:
             OnMenuPrint(win, flags.exitWhenDone);
         }
     }
+    SelectTabInWindow(tabToSelect);
 
     nWithDde = (int)gDdeOpenOnStartup.size();
     if (nWithDde > 0) {

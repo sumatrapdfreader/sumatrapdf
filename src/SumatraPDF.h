@@ -127,6 +127,8 @@ void RelayoutWindow(WindowInfo* win);
 // note: background tabs are only searched if focusTab is true
 WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab);
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab);
+TabInfo* FindTabByFile(const WCHAR* file);
+void SelectTabInWindow(TabInfo*);
 
 class EngineBase;
 
