@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kjk/minio"
@@ -84,11 +85,7 @@ func getVerForBuildType(buildType string) string {
 func getRemoteDir(buildType string) string {
 	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
 	ver := getVerForBuildType(buildType)
-	dir := "software/sumatrapdf/" + buildType + "/"
-	if buildType == buildTypePreRel {
-		return dir + ver + "/"
-	}
-	return dir
+	return "software/sumatrapdf/" + buildType + "/" + ver + "/"
 }
 
 type DownloadUrls struct {
@@ -245,7 +242,7 @@ func minioVerifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
 	panicIf(exists, "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
-// https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
+// https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/1024/SumatraPDF-prerelease-install.exe etc.
 func minioUploadBuildMust(mc *minio.Client, buildType string) {
 	timeStart := time.Now()
 	defer func() {
@@ -396,3 +393,96 @@ func newMinioBackblazeClient() *minio.Client {
 	must(err)
 	return mc
 }
+
+func uploadToStorage(opts *BuildOptions, buildType string) {
+	if !opts.upload {
+		logf(ctx(), "Skipping uploadToStorage() because opts.upload = false\n")
+		return
+	}
+
+	timeStart := time.Now()
+	defer func() {
+		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
+	}()
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		mc := newMinioBackblazeClient()
+		minioUploadBuildMust(mc, buildType)
+		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		mc := newMinioS3Client()
+		minioUploadBuildMust(mc, buildType)
+		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		mc := newMinioSpacesClient()
+		minioUploadBuildMust(mc, buildType)
+		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		wg.Done()
+	}()
+
+	wg.Wait()
+}
+
+// change
+// software/sumatrapdf/rel/SumatraPDF-${ver}... =>
+// software/sumatrapdf/rel/${ver}/SumatraPDF...
+// keeps old versions to not break download links
+// func oneTimeRelCopy() {
+// 	doCopy := func(mc *minio.Client) {
+// 		chFiles := mc.ListObjects("software/sumatrapdf/rel/SumatraPDF-")
+// 		for oi := range chFiles {
+// 			parts := strings.Split(oi.Key, "/")
+// 			name := parts[len(parts)-1]
+// 			if name == "SumatraPDF-settings.txt" {
+// 				fmt.Printf("skipping %s\n", oi.Key)
+// 				continue
+// 			}
+// 			parts = strings.SplitN(oi.Key, "-", 3)
+// 			var ver string
+// 			if len(parts) == 3 {
+// 				// software/sumatrapdf/rel/SumatraPDF-3.2-64.exe
+// 				// =>
+// 				// ["software/sumatrapdf/rel/SumatraPDF", "3.2", "64.exe"]
+// 				ver = parts[1]
+// 			} else {
+// 				// software/sumatrapdf/rel/SumatraPDF-3.2.exe
+// 				// =>
+// 				// ["software/sumatrapdf/rel/SumatraPDF", "3.2.exe"]
+// 				ver = parts[1]
+// 				for _, suff := range []string{".exe", ".pdb.zip", ".pdb.lzsa", ".zip", ".pdb"} {
+// 					ver = strings.Replace(ver, suff, "", -1)
+// 				}
+// 			}
+// 			newKey := "software/sumatrapdf/rel/" + ver + "/" + name
+// 			if mc.Exists(newKey) {
+// 				fmt.Printf("Skipping copying %s because %s already exists\n", oi.Key, newKey)
+// 				continue
+// 			}
+// 			_, err := mc.Copy(oi.Key, newKey)
+// 			panicIfErr(err)
+// 			fmt.Printf("copied %s => %s\n", oi.Key, newKey)
+// 		}
+// 	}
+// 	if false {
+// 		mc := newMinioSpacesClient()
+// 		doCopy(mc)
+// 	}
+// 	if true {
+// 		mc := newMinioBackblazeClient()
+// 		doCopy(mc)
+// 	}
+// 	if true {
+// 		mc := newMinioS3Client()
+// 		doCopy(mc)
+// 	}
+// }

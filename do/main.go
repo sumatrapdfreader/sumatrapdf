@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/kjk/common/u"
@@ -481,43 +480,4 @@ func main() {
 	}
 
 	flag.Usage()
-}
-
-func uploadToStorage(opts *BuildOptions, buildType string) {
-	if !opts.upload {
-		logf(ctx(), "Skipping uploadToStorage() because opts.upload = false\n")
-		return
-	}
-
-	timeStart := time.Now()
-	defer func() {
-		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
-	}()
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		mc := newMinioBackblazeClient()
-		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
-		wg.Done()
-	}()
-
-	wg.Add(1)
-	go func() {
-		mc := newMinioS3Client()
-		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
-		wg.Done()
-	}()
-
-	wg.Add(1)
-	go func() {
-		mc := newMinioSpacesClient()
-		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
-		wg.Done()
-	}()
-
-	wg.Wait()
 }

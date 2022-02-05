@@ -19,6 +19,7 @@ import (
 var (
 	must              = u.Must
 	panicIf           = u.PanicIf
+	panicIfErr        = u.PanicIfErr
 	urlify            = u.Slug
 	fileExists        = u.FileExists
 	dirExists         = u.DirExists
