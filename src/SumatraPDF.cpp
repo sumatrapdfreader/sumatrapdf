@@ -3618,8 +3618,8 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         return true;
     }
 
-    if (VK_DELETE == key || VK_BACK == key) {
-        logf("del or back pressed\n");
+    bool isDel = VK_DELETE == key || VK_BACK == key;
+    if (isDel && !inTextfield) {
         Point pt{0, 0};
         bool ok = GetCursorPosInHwnd(win->hwndCanvas, pt);
         DisplayModel* dm = win->AsFixed();
