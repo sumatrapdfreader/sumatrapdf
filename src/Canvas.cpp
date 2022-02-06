@@ -1576,12 +1576,11 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
     }
 }
 
-static void OnDropFiles(HDROP hDrop, bool dragFinish) {
+static void OnDropFiles(WindowInfo* win, HDROP hDrop, bool dragFinish) {
     WCHAR filePath[MAX_PATH] = {0};
     int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
 
     bool isShift = IsShiftPressed();
-    WindowInfo* win = nullptr;
     for (int i = 0; i < nFiles; i++) {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, L".lnk")) {
@@ -1591,7 +1590,7 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
             }
         }
         // The first dropped document may override the current window
-        LoadArgs args(filePath, nullptr);
+        LoadArgs args(filePath, win);
         if (isShift && !win) {
             win = CreateAndShowWindowInfo(nullptr);
             args.win = win;
@@ -1606,10 +1605,11 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // messages that don't require win
 
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     switch (msg) {
         case WM_DROPFILES:
             CrashIf(lp != 0 && lp != 1);
-            OnDropFiles((HDROP)wp, !lp);
+            OnDropFiles(win, (HDROP)wp, !lp);
             return 0;
 
         // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
@@ -1619,7 +1619,6 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 1;
     }
 
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
