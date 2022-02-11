@@ -281,3 +281,32 @@ FUN(Context_getVersion)(JNIEnv *env, jclass cls)
 
 	return jversion;
 }
+
+JNIEXPORT void JNICALL
+FUN(Context_setUserCSS)(JNIEnv *env, jclass cls, jstring jcss)
+{
+	fz_context *ctx = get_context(env);
+	const char *css = NULL;
+
+	if (jcss)
+		css = (*env)->GetStringUTFChars(env, jcss, NULL);
+
+	fz_try(ctx)
+		fz_set_user_css(ctx, css);
+	fz_always(ctx)
+		if (jcss)
+			(*env)->ReleaseStringUTFChars(env, jcss, css);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(Context_useDocumentCSS)(JNIEnv *env, jclass cls, jboolean state)
+{
+	fz_context *ctx = get_context(env);
+
+	fz_try(ctx)
+		fz_set_use_document_css(ctx, state);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

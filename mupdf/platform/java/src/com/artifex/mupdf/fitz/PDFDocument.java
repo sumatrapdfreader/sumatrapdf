@@ -189,4 +189,6 @@ public class PDFDocument extends Document
 
 	public native int getLanguage();
 	public native void setLanguage(int lang);
+
+	public native int countSignatures();
 }

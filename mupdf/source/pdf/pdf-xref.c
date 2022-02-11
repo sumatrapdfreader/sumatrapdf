@@ -1053,6 +1053,17 @@ pdf_xref_find_subsection(fz_context *ctx, pdf_document *doc, int start, int len)
 	return &sub->table[start-sub->start];
 }
 
+static inline void
+validate_object_number_range(fz_context *ctx, int first, int len, const char *what)
+{
+	if (first < 0 || first > PDF_MAX_OBJECT_NUMBER)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "first object number in %s out of range", what);
+	if (len <= 0 || len > PDF_MAX_OBJECT_NUMBER)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "number of objects in %s out of range", what);
+	if (len - 1 > PDF_MAX_OBJECT_NUMBER - first)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "last object number in %s out of range", what);
+}
+
 static pdf_obj *
 pdf_read_old_xref(fz_context *ctx, pdf_document *doc)
 {
@@ -1089,12 +1100,8 @@ pdf_read_old_xref(fz_context *ctx, pdf_document *doc)
 			fz_seek(ctx, file, -(2 + (int)strlen(s)), SEEK_CUR);
 		}
 
-		if (start < 0 || start > PDF_MAX_OBJECT_NUMBER
-				|| len < 0 || len > PDF_MAX_OBJECT_NUMBER
-				|| start + len - 1 > PDF_MAX_OBJECT_NUMBER)
-		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "xref subsection object numbers are out of range");
-		}
+		validate_object_number_range(ctx, start, len, "xref subsection");
+
 		/* broken pdfs where size in trailer undershoots entries in xref sections */
 		if (start + len > xref_len)
 		{
@@ -1173,8 +1180,7 @@ pdf_read_new_xref_section(fz_context *ctx, pdf_document *doc, fz_stream *stm, in
 	pdf_xref_entry *table;
 	int i, n;
 
-	if (i0 < 0 || i0 > PDF_MAX_OBJECT_NUMBER || i1 < 0 || i1 > PDF_MAX_OBJECT_NUMBER || i0 + i1 - 1 > PDF_MAX_OBJECT_NUMBER)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "xref subsection object numbers are out of range");
+	validate_object_number_range(ctx, i0, i1, "xref subsection");
 
 	table = pdf_xref_find_subsection(ctx, doc, i0, i1);
 	for (i = i0; i < i0 + i1; i++)
@@ -1896,12 +1902,7 @@ pdf_load_obj_stm(fz_context *ctx, pdf_document *doc, int num, pdf_lexbuf *buf, i
 		count = pdf_dict_get_int(ctx, objstm, PDF_NAME(N));
 		first = pdf_dict_get_int(ctx, objstm, PDF_NAME(First));
 
-		if (count < 0 || count > PDF_MAX_OBJECT_NUMBER)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "number of objects in object stream out of range");
-		if (first < 0 || first > PDF_MAX_OBJECT_NUMBER
-				|| count < 0 || count > PDF_MAX_OBJECT_NUMBER
-				|| first + count - 1 > PDF_MAX_OBJECT_NUMBER)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "object stream object numbers are out of range");
+		validate_object_number_range(ctx, first, count, "object stream");
 
 		numbuf = fz_calloc(ctx, count, sizeof(*numbuf));
 		ofsbuf = fz_calloc(ctx, count, sizeof(*ofsbuf));

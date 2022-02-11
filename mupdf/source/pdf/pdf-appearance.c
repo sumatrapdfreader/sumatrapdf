@@ -2525,7 +2525,7 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_na
 #endif
 
 		fzbuf = fz_new_buffer(ctx, 256);
-		if (name)
+		if (name && strlen(name) > 0)
 		{
 			if (include_labels)
 				fz_append_string(ctx, fzbuf, "Digitally signed by ");
@@ -2541,7 +2541,7 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_na
 			fz_append_string(ctx, fzbuf, dn_str);
 		}
 
-		if (reason)
+		if (reason && strlen(reason) > 0)
 		{
 			fz_append_string(ctx, fzbuf, "\n");
 			if (include_labels)
@@ -2549,7 +2549,7 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_na
 			fz_append_string(ctx, fzbuf, reason);
 		}
 
-		if (location)
+		if (location && strlen(location) > 0)
 		{
 			fz_append_string(ctx, fzbuf, "\n");
 			if (include_labels)

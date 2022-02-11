@@ -40,6 +40,17 @@ public class Quad
 		this.lr_y = lr_y;
 	}
 
+	public Quad(Rect r) {
+		this.ul_x = r.x0;
+		this.ul_y = r.y0;
+		this.ur_x = r.x1;
+		this.ur_y = r.y0;
+		this.ll_x = r.x0;
+		this.ll_y = r.y1;
+		this.lr_x = r.x1;
+		this.lr_y = r.y1;
+	}
+
 	public Rect toRect() {
 		float x0 = Math.min(Math.min(ul_x, ur_x), Math.min(ll_x, lr_x));
 		float y0 = Math.min(Math.min(ul_y, ur_y), Math.min(ll_y, lr_y));
@@ -85,6 +96,31 @@ public class Quad
 		return this;
 	}
 
+	protected boolean triangleContainsPoint(float x, float y, float ax, float ay, float bx, float by, float cx, float cy) {
+		float s, t, area;
+		s = ay * cx - ax * cy + (cy - ay) * x + (ax - cx) * y;
+		t = ax * by - ay * bx + (ay - by) * x + (bx - ax) * y;
+
+		if ((s < 0) != (t < 0))
+			return false;
+
+		area = -by * cx + ay * (cx - bx) + ax * (by - cy) + bx * cy;
+
+		return area < 0 ?
+			(s <= 0 && s + t >= area) :
+			(s >= 0 && s + t <= area);
+	}
+
+	public boolean contains(float x, float y) {
+		return triangleContainsPoint(x, y, ul_x, ul_y, ur_x, ur_y, lr_x, lr_y) ||
+			triangleContainsPoint(x, y, ul_x, ul_y, lr_x, lr_y, ll_x, ll_y);
+
+	}
+
+	public boolean contains(Point p) {
+		return contains(p.x, p.y);
+	}
+
 	public String toString() {
 		return "["
 			+ ul_x + " " + ul_y + " "
@@ -92,5 +128,14 @@ public class Quad
 			+ ll_x + " " + ll_y + " "
 			+ lr_x + " " + lr_y
 			+ "]";
+	}
+
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Quad))
+			return false;
+		Quad other = (Quad) obj;
+		return ul_x == other.ul_x && ul_y == other.ul_y && ur_x == other.ur_x &&
+			ur_y == other.ur_y && ll_x == other.ll_x && ll_y == other.ll_y &&
+			lr_x == other.lr_x && lr_y == other.lr_y;
 	}
 }

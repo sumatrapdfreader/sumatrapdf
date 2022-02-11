@@ -33,10 +33,16 @@ public class Link
 	}
 
 	public boolean isExternal() {
-		for (int i = 0; i < uri.length(); i++)
+		char c = uri.charAt(0);
+		if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z'))
+			return false;
+
+		for (int i = 1; i < uri.length(); i++)
 		{
-			char c = uri.charAt(i);
-			if (c >= 'a' && c <= 'z')
+			c = uri.charAt(i);
+			if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+					(c >= '0' && c <= '9') ||
+					c == '+' || c == '-' || c == '.')
 				continue;
 			else
 				return c == ':';

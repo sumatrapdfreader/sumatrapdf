@@ -330,7 +330,11 @@ static int ui_input_key(struct input *input, int multiline)
 			ui_input_delete_selection(input);
 		else if (input->p > input->text)
 		{
-			char *pp = prev_char(input->p, input->text);
+			char *pp;
+			if (ui.mod == GLUT_ACTIVE_CTRL)
+				pp = prev_word(input->p, input->text);
+			else
+				pp = prev_char(input->p, input->text);
 			memmove(pp, input->p, input->end - input->p);
 			input->end -= input->p - pp;
 			*input->end = 0;

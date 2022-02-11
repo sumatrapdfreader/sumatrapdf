@@ -1438,3 +1438,20 @@ FUN(PDFDocument_setLanguage)(JNIEnv *env, jobject self, jint lang)
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_countSignatures)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	jint val = -1;
+
+	if (!ctx || !pdf) return -1;
+
+	fz_try(ctx)
+		val = pdf_count_signatures(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return val;
+}

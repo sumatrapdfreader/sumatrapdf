@@ -154,6 +154,11 @@ public class Rect
 		return (x >= x0 && x < x1 && y >= y0 && y < y1);
 	}
 
+	public boolean contains(Point p)
+	{
+		return contains(p.x, p.y);
+	}
+
 	public boolean contains(Rect r)
 	{
 		if (isEmpty() || r.isEmpty())

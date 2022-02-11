@@ -86,6 +86,7 @@ public class Document
 
 	public static native boolean recognize(String magic);
 
+	public native boolean supportsAccelerator();
 	public native void saveAccelerator(String filename);
 	public native void outputAccelerator(SeekableOutputStream stream);
 

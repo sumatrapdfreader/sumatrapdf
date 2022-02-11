@@ -65,7 +65,10 @@ endif
 
 MUPDF_JAR := ../../$(OUT)/libmupdf.jar
 
-default: $(MUPDF_JAVA) $(MUPDF_JAR) $(EXAMPLE_JAVA_SOURCES)
+EXAMPLE_JAVA_SOURCES := $(sort $(wildcard example/*.java))
+EXAMPLE_JAVA_OBJECTS := $(subst example/,../../$(OUT)/example/,$(EXAMPLE_JAVA_SOURCES:%.java=%.class))
+
+default: $(MUPDF_JAVA) $(MUPDF_JAR) $(EXAMPLE_JAVA_OBJECTS)
 
 MUPDF_CORE := ../../$(OUT)/libmupdf.a ../../$(OUT)/libmupdf-third.a
 ifeq "$(OS)" "Linux"
@@ -85,9 +88,6 @@ JAVAC_FLAGS := $(JAVAC_XFLAGS) -source 1.7 -target 1.7
 $(LIBRARY_JAVA_OBJECTS) : $(LIBRARY_JAVA_SOURCES)
 	mkdir -p ../../$(OUT)
 	$(JAVAC) $(JAVAC_FLAGS) -h ../../$(OUT)/ -d ../../$(OUT)/ $^
-
-EXAMPLE_JAVA_SOURCES := $(sort $(wildcard example/*.java))
-EXAMPLE_JAVA_OBJECTS := $(subst example/,../../$(OUT)/example/,$(EXAMPLE_JAVA_SOURCES:%.java=%.class))
 
 $(EXAMPLE_JAVA_OBJECTS): $(EXAMPLE_JAVA_SOURCES)
 	$(JAVAC) $(JAVAC_FLAGS) -classpath ../../$(OUT) -d ../../$(OUT)/ $^

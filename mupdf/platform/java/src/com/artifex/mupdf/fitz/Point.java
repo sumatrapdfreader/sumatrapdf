@@ -49,4 +49,11 @@ public class Point
 
 		return this;
 	}
+
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Point))
+			return false;
+		Point other = (Point) obj;
+		return x == other.x && y == other.y;
+	}
 }

@@ -584,6 +584,21 @@ FUN(Document_recognize)(JNIEnv *env, jclass cls, jstring jmagic)
 	return recognized;
 }
 
+JNIEXPORT jboolean JNICALL
+FUN(Document_supportsAccelerator)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	jboolean support = JNI_FALSE;
+
+	fz_try(ctx)
+		support = fz_document_supports_accelerator(ctx, doc);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return support;
+}
+
 JNIEXPORT void JNICALL
 FUN(Document_saveAccelerator)(JNIEnv *env, jobject self, jstring jfilename)
 {
