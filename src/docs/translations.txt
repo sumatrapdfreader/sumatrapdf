@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-33a23bfe82ec59cae777b3e5e03f247670c79312
+6cb609acc5d8b9af75dbe679a05194aae6b32dbd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7706,6 +7706,7 @@ uk:Не можна змінити штатний переглядач PDF у п�
 uz:Portable usulida andoza PDF ko'rish vositasini o'zgartirib bo'lmaydi
 vn:Không thay đổi được trình đọc PDF chính ở chế độ di động
 :Delete Annotation\tDel
+br:Apagar Anotação\tDel
 cn:删除标注\tDel
 co:Squassà l’annutazione\tSuppr
 de:Anmerkung löschen\tDel
@@ -15633,6 +15634,7 @@ uk:SVG документи
 :Save Annotations to existing PDF
 am:Պահել ծանոթագրությունը առկա PDF-ում
 bg:Запази Обясненията в съществуващ PDF
+br:Salvar anotações neste PDF
 cn:将标注保存到当前 PDF
 co:Arregistrà l’annutazioni in u PDF esistente
 de:Anmerkungen in bestehende PDF-Dateien speichern
