@@ -1083,6 +1083,10 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
             win->dragStartPending = false;
         }
 
+        // Kill the smooth scroll timer when zooming
+        // We don't want to move to the new updated y offset after zooming
+        KillTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID);
+
         return 0;
     }
 
