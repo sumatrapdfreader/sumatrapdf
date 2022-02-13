@@ -618,6 +618,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->showToc ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hDlg, IDC_REMEMBER_STATE_PER_DOCUMENT,
                            prefs->rememberStatePerDocument ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hDlg, IDC_SMOOTH_SCROLLING, prefs->smoothScrolling ? BST_CHECKED : BST_UNCHECKED);
             EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_STATE_PER_DOCUMENT), prefs->rememberOpenedFiles);
             CheckDlgButton(hDlg, IDC_USE_TABS, prefs->useTabs ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hDlg, IDC_CHECK_FOR_UPDATES, prefs->checkForUpdates ? BST_CHECKED : BST_UNCHECKED);
@@ -641,6 +642,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             SetDlgItemText(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TR("Default &Zoom:"));
             SetDlgItemText(hDlg, IDC_DEFAULT_SHOW_TOC, _TR("Show the &bookmarks sidebar when available"));
             SetDlgItemText(hDlg, IDC_REMEMBER_STATE_PER_DOCUMENT, _TR("&Remember these settings for each document"));
+            SetDlgItemText(hDlg, IDC_SMOOTH_SCROLLING, _TR("Smooth &Scrolling"));
             SetDlgItemText(hDlg, IDC_SECTION_ADVANCED, _TR("Advanced"));
             SetDlgItemText(hDlg, IDC_USE_TABS, _TR("Use &tabs"));
             SetDlgItemText(hDlg, IDC_CHECK_FOR_UPDATES, _TR("Automatically check for &updates"));
@@ -695,6 +697,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
                     prefs->rememberStatePerDocument =
                         (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_STATE_PER_DOCUMENT));
+                    prefs->smoothScrolling = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SMOOTH_SCROLLING));
                     prefs->useTabs = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_USE_TABS));
                     prefs->checkForUpdates = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_CHECK_FOR_UPDATES));
                     prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));

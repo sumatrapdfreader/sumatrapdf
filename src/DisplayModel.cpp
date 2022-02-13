@@ -1522,6 +1522,10 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
     RepaintDisplay();
 }
 
+int DisplayModel::yOffset() {
+    return viewPort.y;
+}
+
 void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     if (zoomLevel > 0) {
         zoomLevel = limitValue(zoomLevel, ZOOM_MIN, ZOOM_MAX);

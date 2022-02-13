@@ -326,6 +326,8 @@ struct GlobalPrefs {
     // if true, we store display settings for each document separately
     // (i.e. everything after UseDefaultState in FileStates)
     bool rememberStatePerDocument;
+    // true if smooth scrolling is enabled
+    bool smoothScrolling;
     // ISO code of the current UI language
     char* uiLanguage;
     // if true, we show the toolbar at the top of the window

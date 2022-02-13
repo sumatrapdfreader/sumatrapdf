@@ -158,6 +158,9 @@ struct DisplayModel : Controller {
     void ScrollXBy(int dx);
     void ScrollYTo(int yOff);
     void ScrollYBy(int dy, bool changePage);
+
+    [[nodiscard]] int yOffset();
+
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */

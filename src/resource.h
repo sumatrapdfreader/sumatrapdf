@@ -59,6 +59,7 @@
 #define IDC_PRINT_SCALE_FIT             1062
 #define IDC_PRINT_SCALE_NONE            1063
 #define IDC_SECTION_PRINT_COMPATIBILITY 1070
+#define IDC_SMOOTH_SCROLLING            1081
 #define IDC_TOC_LABEL_WITH_CLOSE        1101
 #define IDC_FAV_LABEL_WITH_CLOSE        1106
 #define IDC_TABBAR                      1110
