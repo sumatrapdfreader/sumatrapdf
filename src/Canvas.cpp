@@ -55,7 +55,6 @@
 
 // Defines for the mouse wheel smooth scrolling timer
 #define MW_SMOOTHSCROLL_TIMER_ID 6
-#define MW_SMOOTHSCROLL_DELAY_IN_MS 5
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
@@ -139,7 +138,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
         bool smoothScrolling = gGlobalPrefs->smoothScrolling;
         if (smoothScrolling) {
             win->scrollTargetY = si.nPos;
-            SetTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID, MW_SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+            SetTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID, USER_TIMER_MINIMUM, nullptr);
         } else {
             win->AsFixed()->ScrollYTo(si.nPos);
         }
