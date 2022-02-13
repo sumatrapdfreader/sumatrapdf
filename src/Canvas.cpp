@@ -53,6 +53,10 @@
 
 #include "utils/Log.h"
 
+// Defines for the mouse wheel smooth scrolling timer
+#define MW_SMOOTHSCROLL_TIMER_ID 6
+#define MW_SMOOTHSCROLL_DELAY_IN_MS 5
+
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
 // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
@@ -132,7 +136,13 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
-        win->AsFixed()->ScrollYTo(si.nPos);
+        bool smoothScrolling = gGlobalPrefs->smoothScrolling;
+        if (smoothScrolling) {
+            win->scrollTargetY = si.nPos;
+            SetTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID, MW_SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+        } else {
+            win->AsFixed()->ScrollYTo(si.nPos);
+        }
     }
 }
 
@@ -1571,6 +1581,27 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
             KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
             if (win->currentTab && win->currentTab->reloadOnFocus) {
                 ReloadDocument(win, true);
+            }
+            break;
+
+        case MW_SMOOTHSCROLL_TIMER_ID:
+            DisplayModel* dm = win->AsFixed();
+
+            int current = dm->yOffset();
+            int target = win->scrollTargetY;
+            int delta = target - current;
+
+            if (delta == 0) {
+                KillTimer(hwnd, MW_SMOOTHSCROLL_TIMER_ID);
+            } else {
+                // logf("Smooth scrolling from %d to %d (delta %d)\n", current, target, delta);
+
+                constexpr double stepSize = 10.0;
+                double step = delta / stepSize;
+
+                // Round away from zero
+                int dy = step < 0 ? (int)floor(step) : (int)ceil(step);
+                dm->ScrollYTo(current + dy);
             }
             break;
     }
