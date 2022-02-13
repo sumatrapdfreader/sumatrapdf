@@ -628,6 +628,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, smoothScrolling), SettingType::Bool, false},
     {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
@@ -659,13 +660,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 56, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0ComicBo"
     "okUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels"
     "\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0\0RememberState"
-    "PerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0Ver"
-    "sionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Win"
-    "dowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0R"
-    "eopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "PerDocument\0SmoothScrolling\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0Che"
+    "ckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode"
+    "\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStat"
+    "es\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif
