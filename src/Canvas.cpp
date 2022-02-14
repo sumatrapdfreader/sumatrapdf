@@ -53,8 +53,11 @@
 
 #include "utils/Log.h"
 
-// Defines for the mouse wheel smooth scrolling timer
+// Timer for mouse wheel smooth scrolling
 #define MW_SMOOTHSCROLL_TIMER_ID 6
+
+// Smooth scrolling enabled?
+static bool gSmoothScrollingEnabled = true;
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
@@ -135,8 +138,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
-        bool smoothScrolling = gGlobalPrefs->smoothScrolling;
-        if (smoothScrolling) {
+        if (gSmoothScrollingEnabled) {
             win->scrollTargetY = si.nPos;
             SetTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID, USER_TIMER_MINIMUM, nullptr);
         } else {
