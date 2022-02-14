@@ -57,12 +57,12 @@
 #define MW_SMOOTHSCROLL_TIMER_ID 6
 
 // Smooth scrolling enabled?
-static bool gSmoothScrollingEnabled = true;
+static const bool gSmoothScrollingEnabled = true;
 
 // Smooth scrolling factor. This is a value between 0 and 1.
 // Each step, we scroll the needed delta times this factor.
 // Therefore, a higher factor makes smooth scrolling faster.
-static double gSmoothScrollingFactor = 0.2;
+static const double gSmoothScrollingFactor = 0.2;
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
