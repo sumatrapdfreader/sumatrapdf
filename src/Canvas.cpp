@@ -59,6 +59,11 @@
 // Smooth scrolling enabled?
 static bool gSmoothScrollingEnabled = true;
 
+// Smooth scrolling factor. This is a value between 0 and 1.
+// Each step, we scroll the needed delta times this factor.
+// Therefore, a higher factor makes smooth scrolling faster.
+static double gSmoothScrollingFactor = 0.2;
+
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
 // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
@@ -1601,8 +1606,7 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
             } else {
                 // logf("Smooth scrolling from %d to %d (delta %d)\n", current, target, delta);
 
-                constexpr double stepSize = 10.0;
-                double step = delta / stepSize;
+                double step = delta * gSmoothScrollingFactor;
 
                 // Round away from zero
                 int dy = step < 0 ? (int)floor(step) : (int)ceil(step);
