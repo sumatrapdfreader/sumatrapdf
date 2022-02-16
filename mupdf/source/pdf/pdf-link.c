@@ -92,6 +92,10 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 	}
 
 	pageobj = pdf_array_get(ctx, dest, 0);
+	/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/2347 */
+	if (!pageobj) {
+		return fz_strdup(ctx, "");
+	}
 	if (pdf_is_int(ctx, pageobj))
 	{
 		pageno = pdf_to_int(ctx, pageobj);
