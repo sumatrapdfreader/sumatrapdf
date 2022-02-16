@@ -2765,6 +2765,18 @@ pdf_set_annot_appearance(fz_context *ctx, pdf_annot *annot, const char *appearan
 				app = pdf_dict_put_dict(ctx, ap, app_name, 2);
 			form = pdf_keep_obj(ctx, pdf_dict_gets(ctx, ap, appearance));
 		}
+		/* Care required here. Some files have multiple annotations, which share
+		 * appearance streams. As such, we must NOT reuse such appearance streams.
+		 * On the other hand, we cannot afford to always recreate appearance
+		 * streams, as this can lead to leakage of partial edits into the document.
+		 * Any appearance we generate will be in the incremental section, and we
+		 * will never generate shared appearances. As such, we can reuse an
+		 * appearance object only if it is in the incremental section. */
+		if (!pdf_obj_is_incremental(ctx, form))
+		{
+			pdf_drop_obj(ctx, form);
+			form = NULL;
+		}
 		if (!form)
 			form = pdf_new_xobject(ctx, annot->page->doc, bbox, ctm, res, contents);
 		else

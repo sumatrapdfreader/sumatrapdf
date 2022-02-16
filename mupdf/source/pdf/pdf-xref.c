@@ -1058,9 +1058,9 @@ validate_object_number_range(fz_context *ctx, int first, int len, const char *wh
 {
 	if (first < 0 || first > PDF_MAX_OBJECT_NUMBER)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "first object number in %s out of range", what);
-	if (len <= 0 || len > PDF_MAX_OBJECT_NUMBER)
+	if (len < 0 || len > PDF_MAX_OBJECT_NUMBER)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "number of objects in %s out of range", what);
-	if (len - 1 > PDF_MAX_OBJECT_NUMBER - first)
+	if (len > 0 && len - 1 > PDF_MAX_OBJECT_NUMBER - first)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "last object number in %s out of range", what);
 }
 
@@ -4826,4 +4826,17 @@ pdf_metadata(fz_context *ctx, pdf_document *doc)
 		fz_rethrow(ctx);
 
 	return obj;
+}
+
+int pdf_obj_is_incremental(fz_context *ctx, pdf_obj *obj)
+{
+	pdf_document *doc = pdf_get_bound_document(ctx, obj);
+	int v;
+
+	if (doc == NULL || doc->num_incremental_sections == 0)
+		return 0;
+
+	v = pdf_find_incremental_update_num_for_obj(ctx, doc, obj);
+
+	return (v == 0);
 }
