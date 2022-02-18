@@ -650,7 +650,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
     if (dwm::IsCompositionEnabled()) {
         // Pass the messages to DwmDefWindowProc first. It serves the hit testing for the buttons.
         LRESULT res;
-        if (dwm::DefWindowProc_(hwnd, msg, wp, lp, &res)) {
+        if (dwm::DefaultWindowProc(hwnd, msg, wp, lp, &res)) {
             *callDef = false;
             return res;
         }

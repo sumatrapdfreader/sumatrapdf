@@ -147,7 +147,7 @@ namespace dwm {
 
 BOOL IsCompositionEnabled();
 HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset);
-BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT* plResult);
+BOOL DefaultWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT* plResult);
 HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute);
 }; // namespace dwm
 

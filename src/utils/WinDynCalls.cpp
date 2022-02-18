@@ -173,7 +173,7 @@ HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset) {
     return DynDwmExtendFrameIntoClientArea(hwnd, pMarInset);
 }
 
-BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT* plResult) {
+BOOL DefaultWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT* plResult) {
     if (!DynDwmDefWindowProc) {
         return FALSE;
     }
