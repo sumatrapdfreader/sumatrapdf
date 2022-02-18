@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6cb609acc5d8b9af75dbe679a05194aae6b32dbd
+6f2155fc5d76bfaebcf4de89367ecc9859e95adb
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -429,6 +429,7 @@ pl:&Anuluj
 sk:&Zrušiť
 th:&ยกเลิก
 tr:İptal Et
+tw:取消(&C)
 uk:&Скасувати
 vn:&Hủy
 :&Caret
@@ -551,6 +552,7 @@ pl:&Kontynuuj instalację wersji 32-bitowej
 sk:&Pokračovať v inštalácii 32-bitovej verzie
 th:&กำลังติดตั้งรุ่น 32-บิต ต่อไป
 tr:32 bit sürümü kurmayı &sürdür
+tw:繼續安裝32位元版本(&C)
 uk:&Продовжити встановлення 32-розрядної версії
 vn:&Tiếp tục cài đặt bản 32-bit
 :&Copy Selection \tCtrl-C
@@ -573,6 +575,7 @@ nl:&Kopieer selectie \tCtrl-C
 pl:&Kopiuj zaznaczenie\tCtrl-C
 th:&คัดลอกส่วนที่เลือก \tCtrl-C
 tr:Seçimi &Kopyala \tCtrl-C
+tw:複製選取文字(&C) \tCtrl-C
 uk:&Копіювати виділення \tCtrl-C
 vn:&Sao chép \tCtrl-C
 :&Copy To Clipboard\tCtrl-C
@@ -1112,6 +1115,7 @@ pl:&Dowolny tekst
 sk:&Voľný text
 th:&ข้อความอิสระ
 tr:&Özgür Metin
+tw:自由文字(&F)
 uk:&Довільний текст
 :&Go To
 af:&Gaan Na
@@ -1344,6 +1348,7 @@ nl:&Markeer\ta
 pl:&Wyróżnienie\ta
 th:&เน้นสี\ta
 tr:&Vurgula\ta
+tw:高亮度(&H)\ta
 uk:&Виділити\ta 
 :&Last Page\tEnd
 af:Laaste Bladsy\tEnd
@@ -4630,6 +4635,7 @@ pl:Kolor tła:
 sk:Farba pozadia:
 th:สีพื้นหลัง
 tr:Arka Plan Rengi
+tw:背景顏色:
 uk:Колір фону
 vn:Màu nền
 :Book View
@@ -5464,6 +5470,7 @@ nl:Controleer op Update...
 pl:Szukanie aktualizacji...
 th:ตรวจสอบการอัพเดท
 tr:Güncelleme denetleniyor...
+tw:檢查更新中...
 uk:Перевірка оновлення...
 vn:Kiểm tra bản cập nhật mới...
 :Circle
@@ -5650,6 +5657,7 @@ ru:Цвет:
 sk:Farba:
 th:สี:
 tr:Renk:
+tw:顏色:
 uk:Колір:
 vn:Màu:
 :Comic books
@@ -6534,6 +6542,7 @@ nl:Kan de naam van de printer niet vinden
 pl:Nie można uzyskać nazwy drukarki
 th:ไม่ได้รับชื่อเครื่องพิมพ์
 tr:Yazıcı adı alınamadı
+tw:無法取得印表機名稱
 uk:Не вдалося отримати назву принтера
 :Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
@@ -7100,6 +7109,7 @@ nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
 th:สร้างคำอธิบายประกอบ &​ใต้ตัวชี้ตำแหน่ง
 tr:İmlecin &Altına Dipnot Oluştur
+tw:在游標下建立便箋(&U)
 uk:Створити анотацію &Під курсором
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
@@ -7128,6 +7138,7 @@ nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
 th:สร้างคำอธิบายประกอบจากส่วนที่เลือก
 tr:Seçimden Dipnot Oluştur
+tw:從選取文字建立便箋
 uk:Створити анотацію з виділеного
 :Created:
 af:Geskep
@@ -7719,6 +7730,7 @@ it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
 tr:Dipnotu Sil\tDel
+tw:刪除便箋\t刪除
 uk:Видалити анотацію\tDel
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
@@ -7938,6 +7950,7 @@ nl:Niet installeren
 pl:Nie instaluj
 th:ติดตั้งไม่ได้
 tr:Kurma
+tw:不要安裝
 uk:Не встановлювати
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
@@ -11469,6 +11482,7 @@ nl:32bit SumatraPDF installeren op 64bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 th:กำลังติดตั้ง SumatraPDF รุ่น 32 บิต บนระบบปฏิบัติการ 64 บิต
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruluyor
+tw:安裝32位元版本 SumatraPDF 於 64位元版系統
 uk:Встановлення 32-розрядної SumatraPDF на 64-розрядну ОС
 :KB
 af:KB
