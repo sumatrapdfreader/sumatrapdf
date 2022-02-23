@@ -563,7 +563,7 @@ enum bidi_state // possible states
 	let	//	ET following le
 } ;
 
-const unsigned char state_weak[][10] =
+static const unsigned char state_weak[][10] =
 {
 	//	N,  L,  R,  AN, EN, AL,NSM, CS, ES, ET,
 /*xa*/  { ao, xl, xr, cn, cn, xa, xa, ao, ao, ao }, /* arabic letter		  */
@@ -623,7 +623,7 @@ enum bidi_action // possible actions
 
 typedef uint16_t fz_bidi_action;
 
-const fz_bidi_action action_weak[][10] =
+static const fz_bidi_action action_weak[][10] =
 {
 	//   N,.. L,   R,  AN,  EN,  AL, NSM,  CS,..ES,  ET,
 /*xa*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxR, xxN, xxN, xxN }, /* arabic letter			*/
@@ -861,7 +861,7 @@ enum neutral_state
 	This leads to the need for 'a' and 'na' states.
 ------------------------------------------------------------------------*/
 
-const int action_neutrals[][5] =
+static const int action_neutrals[][5] =
 {
 //	N,	L,	R, AN, EN, = cls
 					// state =
@@ -875,7 +875,7 @@ const int action_neutrals[][5] =
 	{In, En, Rn, Rn, En}		// na	N  preceded by a
 } ;
 
-const int state_neutrals[][5] =
+static const int state_neutrals[][5] =
 {
 //	 N, L,	R,	AN, EN = cls
 					// state =
@@ -986,7 +986,7 @@ void fz_bidi_resolve_neutrals(fz_bidi_level baselevel, fz_bidi_chartype *pcls, c
 		  Accepted subset of direction classes
 		  R, L, AN, EN
 ------------------------------------------------------------------------*/
-const fz_bidi_level add_level[][4] =
+static const fz_bidi_level add_level[][4] =
 {
 	// L,  R,	AN, EN = cls
 					// level =

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -87,6 +87,7 @@ static JavaVM *jvm = NULL;
 
 /* All the cached classes/mids/fids we need. */
 
+static jclass cls_AlertResult;
 static jclass cls_ArrayOfQuad;
 static jclass cls_Buffer;
 static jclass cls_ColorSpace;
@@ -156,6 +157,8 @@ static jclass cls_TextWidgetLineLayout;
 static jclass cls_TryLaterException;
 static jclass cls_UnsupportedOperationException;
 
+static jfieldID fid_AlertResult_buttonPressed;
+static jfieldID fid_AlertResult_checkboxChecked;
 static jfieldID fid_Buffer_pointer;
 static jfieldID fid_ColorSpace_pointer;
 static jfieldID fid_Context_Version_major;
@@ -897,7 +900,11 @@ static int find_fids(JNIEnv *env)
 	fid_LinkDestination_zoom = get_field(&err, env, "zoom", "F");
 
 	cls_PDFDocument_JsEventListener = get_class(&err, env, PKG"PDFDocument$JsEventListener");
-	mid_PDFDocument_JsEventListener_onAlert = get_method(&err, env, "onAlert", "(Ljava/lang/String;)V");
+	mid_PDFDocument_JsEventListener_onAlert = get_method(&err, env, "onAlert", "(L"PKG"PDFDocument;Ljava/lang/String;Ljava/lang/String;IILjava/lang/String;Z)L"PKG"PDFDocument$JsEventListener$AlertResult;");
+
+	cls_AlertResult = get_class(&err, env, PKG"PDFDocument$JsEventListener$AlertResult");
+	fid_AlertResult_buttonPressed = get_field(&err, env, "buttonPressed", "I");
+	fid_AlertResult_checkboxChecked = get_field(&err, env, "checkboxChecked", "Z");
 
 	cls_PDFGraftMap = get_class(&err, env, PKG"PDFGraftMap");
 	fid_PDFGraftMap_pointer = get_field(&err, env, "pointer", "J");
@@ -1114,6 +1121,7 @@ static void jni_detach_thread(jboolean detach)
 
 static void lose_fids(JNIEnv *env)
 {
+	(*env)->DeleteGlobalRef(env, cls_AlertResult);
 	(*env)->DeleteGlobalRef(env, cls_ArrayOfQuad);
 	(*env)->DeleteGlobalRef(env, cls_Buffer);
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);

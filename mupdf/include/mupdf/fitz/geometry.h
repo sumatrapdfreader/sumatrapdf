@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -111,6 +111,11 @@ static inline int fz_mini(int a, int b)
 }
 
 static inline size_t fz_minz(size_t a, size_t b)
+{
+	return (a < b ? a : b);
+}
+
+static inline int64_t fz_mini64(int64_t a, int64_t b)
 {
 	return (a < b ? a : b);
 }

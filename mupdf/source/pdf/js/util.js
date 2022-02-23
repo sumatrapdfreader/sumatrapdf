@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -879,10 +879,6 @@ String.prototype.substr = function (start, length) {
 Date.prototype.getYear = Date.prototype.getFullYear;
 Date.prototype.setYear = Date.prototype.setFullYear;
 Date.prototype.toGMTString = Date.prototype.toUTCString;
-
-console.clear = function() { console.println('--- clear console ---\n'); };
-console.show = function(){};
-console.hide = function(){};
 
 app.plugIns = [];
 app.viewerType = 'Reader';

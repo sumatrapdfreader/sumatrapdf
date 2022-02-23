@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -342,6 +342,20 @@ static inline jobject to_PDFAnnotation_safe(fz_context *ctx, JNIEnv *env, pdf_an
 		pdf_drop_annot(ctx, annot);
 
 	return jannot;
+}
+
+static inline jobject to_PDFDocument_safe(fz_context *ctx, JNIEnv *env, pdf_document *pdf)
+{
+	jobject jpdf;
+
+	if (!ctx || !pdf) return NULL;
+
+	pdf_keep_document(ctx, pdf);
+	jpdf = (*env)->NewObject(env, cls_PDFDocument, mid_PDFDocument_init, jlong_cast(pdf));
+	if (!jpdf)
+		pdf_drop_document(ctx, pdf);
+
+	return jpdf;
 }
 
 static inline jobject to_PDFObject_safe(fz_context *ctx, JNIEnv *env, pdf_obj *obj)

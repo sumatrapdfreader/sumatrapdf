@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -893,48 +893,85 @@ int ui_slider(int *value, int min, int max, int width)
 	return *value != start_value && ui.active == value && !ui.down;
 }
 
-void ui_splitter(int *x, int min, int max, enum side side)
+void ui_splitter(int *start, int *v, int min, int max, enum side side)
 {
-	static int start_x = 0;
-	fz_irect area = ui_pack(4, 0);
+	fz_irect area;
+
+	if (side == L || side == R)
+		area = ui_pack(4, 0);
+	else if (side == T || side == B)
+		area = ui_pack(0, 4);
 
 	if (ui_mouse_inside(area))
 	{
-		ui.hot = x;
+		ui.hot = v;
 		if (!ui.active && ui.down)
 		{
-			ui.active = x;
-			start_x = *x;
+			ui.active = v;
+			*start = *v;
 		}
 	}
 
-	if (ui.active == x)
-		*x = fz_clampi(start_x + (ui.x - ui.down_x), min, max);
-
-	if (ui.hot == x || ui.active == x)
-		ui.cursor = GLUT_CURSOR_LEFT_RIGHT;
-
-	if (side == L)
+	if (ui.active == v)
 	{
-		glColorHex(UI_COLOR_BEVEL_4);
-		glRectf(area.x0+0, area.y0, area.x0+2, area.y1);
-		glColorHex(UI_COLOR_BEVEL_3);
-		glRectf(area.x0+2, area.y0, area.x0+3, area.y1);
-		glColorHex(UI_COLOR_PANEL);
-		glRectf(area.x0+3, area.y0, area.x0+4, area.y1);
+		// how we slide the splitter coords depends on the packing direction
+		switch (ui.layout->side)
+		{
+		default:
+		case L: *v = fz_clampi(*start + (ui.x - ui.down_x), min, max); break;
+		case R: *v = fz_clampi(*start + (ui.down_x - ui.x), min, max); break;
+		case B: *v = fz_clampi(*start + (ui.down_y - ui.y), min, max); break;
+		case T: *v = fz_clampi(*start + (ui.y - ui.down_y), min, max); break;
+		}
 	}
+
+	if (ui.hot == v || ui.active == v)
+	{
+		if (side == L || side == R)
+			ui.cursor = GLUT_CURSOR_LEFT_RIGHT;
+		else if (side == T || side == B)
+			ui.cursor = GLUT_CURSOR_UP_DOWN;
+	}
+
 	if (side == R)
 	{
 		glColorHex(UI_COLOR_PANEL);
-		glRectf(area.x0, area.y0, area.x0+2, area.y1);
+		glRectf(area.x0+0, area.y0, area.x0+2, area.y1);
 		glColorHex(UI_COLOR_BEVEL_2);
 		glRectf(area.x0+2, area.y0, area.x0+3, area.y1);
 		glColorHex(UI_COLOR_BEVEL_1);
 		glRectf(area.x0+3, area.y0, area.x0+4, area.y1);
 	}
+	else if (side == L)
+	{
+		glColorHex(UI_COLOR_BEVEL_4);
+		glRectf(area.x0+0, area.y0, area.x0+1, area.y1);
+		glColorHex(UI_COLOR_BEVEL_3);
+		glRectf(area.x0+1, area.y0, area.x0+3, area.y1);
+		glColorHex(UI_COLOR_PANEL);
+		glRectf(area.x0+2, area.y0, area.x0+4, area.y1);
+	}
+	else if (side == T)
+	{
+		glColorHex(UI_COLOR_BEVEL_4);
+		glRectf(area.x0, area.y0+0, area.x1, area.y0+1);
+		glColorHex(UI_COLOR_BEVEL_3);
+		glRectf(area.x0, area.y0+1, area.x1, area.y0+2);
+		glColorHex(UI_COLOR_PANEL);
+		glRectf(area.x0, area.y0+2, area.x1, area.y0+4);
+	}
+	else if (side == B)
+	{
+		glColorHex(UI_COLOR_PANEL);
+		glRectf(area.x0, area.y0+0, area.x1, area.y0+2);
+		glColorHex(UI_COLOR_BEVEL_2);
+		glRectf(area.x0, area.y0+2, area.x1, area.y0+3);
+		glColorHex(UI_COLOR_BEVEL_1);
+		glRectf(area.x0, area.y0+3, area.x1, area.y0+4);
+	}
 }
 
-void ui_scrollbar(int x0, int y0, int x1, int y1, int *value, int page_size, int max)
+void ui_scrollbar(int x0, int y0, int x1, int y1, int *value, int page_size, int max, int *sticky)
 {
 	static float start_top = 0; /* we can only drag in one scrollbar at a time, so static is safe */
 	float top;
@@ -953,6 +990,14 @@ void ui_scrollbar(int x0, int y0, int x1, int y1, int *value, int page_size, int
 		return;
 	}
 
+	if (sticky)
+	{
+		if (*sticky <= -1)
+			*value = 0;
+		else if (*sticky >= 1)
+			*value = max;
+	}
+
 	top = (float) *value * avail_h / max;
 
 	if (ui.down && !ui.active)
@@ -961,12 +1006,12 @@ void ui_scrollbar(int x0, int y0, int x1, int y1, int *value, int page_size, int
 		{
 			if (ui.y < y0 + top)
 			{
-				ui.active = "pgdn";
+				ui.active = "pgup";
 				*value -= page_size;
 			}
 			else if (ui.y >= y0 + top + thumb_h)
 			{
-				ui.active = "pgup";
+				ui.active = "pgdn";
 				*value += page_size;
 			}
 			else
@@ -987,6 +1032,18 @@ void ui_scrollbar(int x0, int y0, int x1, int y1, int *value, int page_size, int
 		*value = 0;
 	else if (*value > max)
 		*value = max;
+
+	if (sticky)
+	{
+		if (*sticky == 0 && *value == 0)
+			*sticky = -1;
+		else if (*sticky == 0 && *value == max)
+			*sticky = 1;
+		else if (*sticky <= -1 && *value != 0)
+			*sticky = 0;
+		else if (*sticky >= 1 && *value != max)
+			*sticky = 0;
+	}
 
 	top = (float) *value * avail_h / max;
 
@@ -1045,7 +1102,7 @@ void ui_tree_begin(struct list *list, int count, int req_w, int req_h, int is_tr
 	if (max_scroll_y > 0)
 	{
 		ui_scrollbar(area.x1, area.y0, area.x1+16, area.y1,
-				&list->scroll_y, area.y1-area.y0, count * ui.lineheight);
+				&list->scroll_y, area.y1-area.y0, count * ui.lineheight, NULL);
 	}
 
 	list->is_tree = is_tree;
@@ -1129,7 +1186,7 @@ void ui_list_end(struct list *list)
 	ui_tree_end(list);
 }
 
-void ui_label_with_scrollbar(char *text, int width, int height, int *scroll)
+void ui_label_with_scrollbar(char *text, int width, int height, int *scroll, int *sticky)
 {
 	struct line lines[500];
 	fz_irect area;
@@ -1140,8 +1197,13 @@ void ui_label_with_scrollbar(char *text, int width, int height, int *scroll)
 	if (n > (area.y1-area.y0) / ui.lineheight)
 	{
 		if (ui_mouse_inside(area))
+		{
 			*scroll -= ui.scroll_y * ui.lineheight * 3;
-		ui_scrollbar(area.x1-16, area.y0, area.x1, area.y1, scroll, area.y1-area.y0, n * ui.lineheight);
+			if (ui.scroll_y)
+				*sticky = 0;
+		}
+		ui_scrollbar(area.x1-16, area.y0, area.x1, area.y1,
+				scroll, area.y1-area.y0, n * ui.lineheight, sticky);
 	}
 	else
 		*scroll = 0;

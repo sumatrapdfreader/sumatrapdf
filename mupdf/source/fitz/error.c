@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -68,10 +68,15 @@ void fz_default_warning_callback(void *user, const char *message)
 
 /* Warning context */
 
-void fz_set_warning_callback(fz_context *ctx, void (*print)(void *user, const char *message), void *user)
+void fz_set_warning_callback(fz_context *ctx, fz_warning_cb *warning_cb, void *user)
 {
 	ctx->warn.print_user = user;
-	ctx->warn.print = print;
+	ctx->warn.print = warning_cb;
+}
+
+fz_warning_cb *fz_warning_callback(fz_context *ctx)
+{
+	return ctx->warn.print;
 }
 
 void fz_var_imp(void *var)
@@ -123,10 +128,15 @@ void fz_warn(fz_context *ctx, const char *fmt, ...)
 
 /* Error context */
 
-void fz_set_error_callback(fz_context *ctx, void (*print)(void *user, const char *message), void *user)
+void fz_set_error_callback(fz_context *ctx, fz_error_cb *error_cb, void *user)
 {
 	ctx->error.print_user = user;
-	ctx->error.print = print;
+	ctx->error.print = error_cb;
+}
+
+fz_error_cb *fz_error_callback(fz_context *ctx)
+{
+	return ctx->error.print;
 }
 
 /* When we first setjmp, state is set to 0. Whenever we throw, we add 2 to

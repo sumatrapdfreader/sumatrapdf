@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -72,6 +72,76 @@ typedef void (pdf_doc_event_cb)(fz_context *ctx, pdf_document *doc, pdf_doc_even
 	the data provided to the event callback pdf_doc_event_cb.
 */
 typedef void (pdf_free_doc_event_data_cb)(fz_context *ctx, void *data);
+
+typedef struct pdf_js_console pdf_js_console;
+
+/*
+	Callback called when the console is dropped because it
+	is being replaced or the javascript is being disabled
+	by a call to pdf_disable_js().
+*/
+typedef void (pdf_js_console_drop_cb)(pdf_js_console *console, void *user);
+
+/*
+	Callback signalling that a piece of javascript is asking
+	the javascript console to be displayed.
+*/
+typedef void (pdf_js_console_show_cb)(void *user);
+
+/*
+	Callback signalling that a piece of javascript is asking
+	the javascript console to be hidden.
+*/
+typedef void (pdf_js_console_hide_cb)(void *user);
+
+/*
+	Callback signalling that a piece of javascript is asking
+	the javascript console to remove all its contents.
+*/
+typedef void (pdf_js_console_clear_cb)(void *user);
+
+/*
+	Callback signalling that a piece of javascript is appending
+	the given message to the javascript console contents.
+*/
+typedef void (pdf_js_console_write_cb)(void *user, const char *msg);
+
+/*
+	The callback functions relating to a javascript console.
+*/
+typedef struct pdf_js_console {
+	pdf_js_console_drop_cb *drop;
+	pdf_js_console_show_cb *show;
+	pdf_js_console_hide_cb *hide;
+	pdf_js_console_clear_cb *clear;
+	pdf_js_console_write_cb *write;
+} pdf_js_console;
+
+/*
+	Retrieve the currently set javascript console, or NULL
+	if none is set.
+*/
+pdf_js_console *pdf_js_get_console(fz_context *ctx, pdf_document *doc);
+
+/*
+	Set a new javascript console.
+
+	console: A set of callback functions informing about
+	what pieces of executed js is trying to do
+	to the js console. The caller transfers ownership of
+	console when calling pdf_js_set_console(). Once it and
+	the corresponding user pointer are no longer needed
+	console->drop() will be called passing both the console
+	and the user pointer.
+
+	user: Opaque data that will be passed unchanged to all
+	js console callbacks when called. The caller ensures
+	that this is valid until either the js console is
+	replaced by calling pdf_js_set_console() again with a
+	new console, or pdf_disable_js() is called. In either
+	case the caller to ensures that the user data is freed.
+*/
+void pdf_js_set_console(fz_context *ctx, pdf_document *doc, pdf_js_console *console, void *user);
 
 /*
 	Open a PDF document.

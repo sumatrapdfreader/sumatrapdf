@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -201,11 +201,29 @@ static void ui_do_cut(struct input *input)
 	}
 }
 
-static void ui_do_paste(struct input *input)
+static void ui_do_paste(struct input *input, int multiline)
 {
 	const char *buf = ui_get_clipboard();
-	if (buf)
+	char *p, *oneline = NULL;
+
+	if (!buf)
+		return;
+
+	if (multiline)
+	{
 		ui_input_paste(input, buf);
+		return;
+	}
+
+	p = oneline = strdup(buf);
+	while (*p)
+	{
+		if (*p == '\n' || *p == '\r')
+			*p = ' ';
+		p++;
+	}
+	ui_input_paste(input, oneline);
+	free(oneline);
 }
 
 static int ui_input_key(struct input *input, int multiline)
@@ -367,13 +385,13 @@ static int ui_input_key(struct input *input, int multiline)
 		ui_do_cut(input);
 		break;
 	case KEY_CTL_V:
-		ui_do_paste(input);
+		ui_do_paste(input, multiline);
 		break;
 	case KEY_INSERT:
 		if (ui.mod == GLUT_ACTIVE_CTRL)
 			ui_do_copy(input);
 		if (ui.mod == GLUT_ACTIVE_SHIFT)
-			ui_do_paste(input);
+			ui_do_paste(input, multiline);
 		break;
 	default:
 		if (ui.key >= 32 && ui.plain)
@@ -426,7 +444,7 @@ int ui_input(struct input *input, int width, int height)
 	n = ui_break_lines(input->text, lines, height > 1 ? nelem(lines) : 1, area.x1-area.x0-2, NULL);
 
 	if (height > 1)
-		ui_scrollbar(area.x1, area.y0, area.x1+ui.lineheight, area.y1, &input->scroll, 1, fz_maxi(0, n-height)+1);
+		ui_scrollbar(area.x1, area.y0, area.x1+ui.lineheight, area.y1, &input->scroll, 1, fz_maxi(0, n-height)+1, NULL);
 	else
 		input->scroll = 0;
 
@@ -516,4 +534,89 @@ int ui_input(struct input *input, int width, int height)
 	}
 
 	return state;
+}
+
+void ui_readline_init(struct readline *readline, const char *text)
+{
+	int i;
+
+	memset(readline->buffer, 0, sizeof readline->buffer);
+	for (i = 0; i < UI_READLINE_SIZE; i++)
+		readline->history[i] = &(readline->buffer[i][0]);
+
+	readline->used = 0;
+	readline->current = -1;
+
+	ui_input_init(&readline->input, text ? text : "");
+}
+
+const char *ui_readline(struct readline *readline, int width)
+{
+	int state;
+
+	/* Override key up/down to navigate history. */
+	switch (ui.key)
+	{
+	case KEY_UP:
+		ui.key = 0;
+
+		if (readline->current == -1) /* no history entries */
+			break;
+		if (readline->current == 0) /* no older entries */
+			break;
+
+		readline->current--;
+		ui_input_init(&readline->input, readline->history[readline->current]);
+		readline->input.p = readline->input.q = readline->input.end;
+		break;
+	case KEY_DOWN:
+		ui.key = 0;
+
+		if (readline->current == -1) /* no history entries */
+			break;
+		if (readline->current == readline->used) /* no newer entries */
+			break;
+		if (readline->current == readline->used - 1) /* at insertion point */
+		{
+			readline->current++;
+			ui_input_init(&readline->input, "");
+			readline->input.p = readline->input.q = readline->input.end;
+			break;
+		}
+
+		readline->current++;
+		ui_input_init(&readline->input, readline->history[readline->current]);
+		readline->input.p = readline->input.q = readline->input.end;
+		break;
+	}
+
+	state = ui_input(&readline->input, width, 1);
+
+	/* Remember line in history. */
+	if (state == UI_INPUT_ACCEPT)
+	{
+		char *accepted;
+
+		if (readline->used == UI_READLINE_SIZE)
+		{
+			char *tmp = readline->history[0];
+			memmove(readline->history, readline->history + 1, (UI_READLINE_SIZE - 1) * sizeof(char *));
+			readline->history[UI_READLINE_SIZE - 1] = tmp;
+
+			fz_strlcpy(readline->history[UI_READLINE_SIZE - 1], readline->input.text, UI_INPUT_SIZE);
+			accepted = readline->history[UI_READLINE_SIZE - 1];
+			readline->current = UI_READLINE_SIZE;
+		}
+		else
+		{
+			fz_strlcpy(readline->history[readline->used], readline->input.text, UI_INPUT_SIZE);
+			accepted = readline->history[readline->used];
+			readline->used++;
+			readline->current = readline->used;
+		}
+
+		return accepted;
+	}
+
+	return NULL;
 }

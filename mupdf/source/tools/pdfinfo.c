@@ -671,7 +671,7 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
 			}
 		}
-	}
+}
 
 static void
 gatherpageinfo(fz_context *ctx, globals *glo, int page, int show)

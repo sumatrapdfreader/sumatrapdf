@@ -38,7 +38,7 @@ typedef enum
 } gstate_flush_flags;
 
 typedef struct pdf_filter_gstate_sc
-	{
+{
 		char name[256];
 		pdf_pattern *pat;
 		fz_shade *shd;
@@ -756,6 +756,7 @@ filter_string_to_segment(fz_context *ctx, pdf_filter_processor *p, unsigned char
 		{
 			uni = FZ_REPLACEMENT_CHARACTER;
 			fz_warn(ctx, "cannot encode character");
+			remove = 0;
 		}
 		else
 			remove = filter_show_char(ctx, p, cid, &uni);

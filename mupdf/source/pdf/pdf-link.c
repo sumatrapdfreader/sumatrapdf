@@ -170,7 +170,7 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 	}
 
 	return pdf_format_link_uri(ctx, destination);
-		}
+}
 
 static char *
 pdf_parse_file_spec(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_obj *dest)

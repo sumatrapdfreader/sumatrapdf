@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -205,6 +205,10 @@ static int canvas_y = 0, canvas_h = 100;
 
 static int outline_w = 14; /* to be scaled by lineheight */
 static int annotate_w = 12; /* to be scaled by lineheight */
+static int console_h = 14; /* to be scaled by lineheight */
+
+static int outline_start_x = 0;
+static int console_start_y = 0;
 
 static int oldtint = 0, currenttint = 0;
 static int oldinvert = 0, currentinvert = 0;
@@ -224,8 +228,11 @@ static int showoutline = 0;
 static int showundo = 0;
 static int showlinks = 0;
 static int showsearch = 0;
+static int showconsole = 0;
 int showannotate = 0;
 int showform = 0;
+
+static pdf_js_console gl_js_console;
 
 static const char *tooltip = NULL;
 
@@ -555,6 +562,7 @@ static char *help_dialog_text =
 	"\n"
 	"\n"
 	"F1 - show this message\n"
+	"` F12 - show javascript console\n"
 	"i - show document information\n"
 	"o - show document outline\n"
 	"u - show undo history\n"
@@ -620,7 +628,7 @@ static void help_dialog(void)
 		ui.dialog = NULL;
 	ui_spacer();
 	ui_layout(ALL, BOTH, CENTER, ui.padsize, ui.padsize);
-	ui_label_with_scrollbar(help_dialog_text, 0, 0, &scroll);
+	ui_label_with_scrollbar(help_dialog_text, 0, 0, &scroll, NULL);
 	ui_dialog_end();
 }
 
@@ -639,7 +647,7 @@ static void info_dialog(void)
 	ui_layout(ALL, BOTH, CENTER, ui.padsize, ui.padsize);
 
 	info_text = format_info_text();
-	ui_label_with_scrollbar((char*)fz_string_from_buffer(ctx, info_text), 0, 0, &scroll);
+	ui_label_with_scrollbar((char*)fz_string_from_buffer(ctx, info_text), 0, 0, &scroll, NULL);
 	fz_drop_buffer(ctx, info_text);
 
 	ui_dialog_end();
@@ -1522,11 +1530,13 @@ static void toggle_fullscreen(void)
 static void shrinkwrap(void)
 {
 	int w = page_tex.w;
+	int h = page_tex.h;
 	if (showoutline || showundo)
 		w += outline_w + 4;
 	if (showannotate)
 		w += annotate_w;
-	int h = page_tex.h;
+	if (showconsole)
+		h += console_h;
 	if (screen_w > 0 && w > screen_w)
 		w = screen_w;
 	if (screen_h > 0 && h > screen_h)
@@ -1743,6 +1753,7 @@ static void load_document(void)
 		{
 			trace_action("doc.enableJS();\n");
 			pdf_enable_js(ctx, pdf);
+			pdf_js_set_console(ctx, pdf, &gl_js_console, ctx);
 		}
 
 		reload_or_start_journalling();
@@ -1968,6 +1979,200 @@ static void clear_search(void)
 	search_hit_count = 0;
 }
 
+#define MAX_CONSOLE_LINES 500
+
+static fz_buffer *console_buffer;
+static int console_scroll = 0;
+static int console_sticky = 1;
+static int console_lines = 0;
+static struct readline console_readline;
+static void (*warning_callback)(void *, const char *) = NULL;
+static void (*error_callback)(void *, const char *) = NULL;
+
+static void
+remove_oldest_console_line()
+{
+	unsigned char *s;
+	size_t size = fz_buffer_storage(ctx, console_buffer, &s);
+	unsigned char *p = s;
+	unsigned char *e = s + size;
+
+	while (p < e && *p != '\n')
+		p++;
+
+	if (p < e && *p == '\n')
+	{
+		p++;
+		memmove(s, p, e - p);
+		fz_resize_buffer(ctx, console_buffer, e - p);
+		console_lines--;
+	}
+}
+
+static void
+gl_js_console_write(void *user, const char *message)
+{
+	fz_context *ctx = user;
+	const char *p = NULL;
+
+	if (message == NULL)
+		return;
+
+	p = message;
+	while (*p)
+	{
+		if (*p == '\n')
+			console_lines++;
+		if (console_lines >= MAX_CONSOLE_LINES)
+			remove_oldest_console_line();
+		if (*p)
+			fz_append_byte(ctx, console_buffer, *p);
+		p++;
+	}
+}
+
+static void
+gl_js_console_show(void *user)
+{
+	if (showconsole)
+		return;
+
+	showconsole = 1;
+	if (canvas_w == page_tex.w && canvas_h == page_tex.h)
+		shrinkwrap();
+	ui.focus = &console_readline;
+}
+
+static void
+gl_js_console_hide(void *user)
+{
+	if (!showconsole)
+		return;
+
+	showconsole = 0;
+	if (canvas_w == page_tex.w && canvas_h == page_tex.h)
+		shrinkwrap();
+	ui.focus = NULL;
+}
+
+static void
+gl_js_console_clear(void *user)
+{
+	fz_context *ctx = user;
+	fz_resize_buffer(ctx, console_buffer, 0);
+	console_lines = 0;
+}
+
+static void console_warn(void *user, const char *message)
+{
+	fz_context *ctx = user;
+	gl_js_console_write(ctx, "\nwarning: ");
+	gl_js_console_write(ctx, message);
+	if (warning_callback)
+		warning_callback(user, message);
+}
+
+static void console_err(void *user, const char *message)
+{
+	fz_context *ctx = user;
+	gl_js_console_write(ctx, "\nerror: ");
+	gl_js_console_write(ctx, message);
+	if (error_callback)
+		error_callback(user, message);
+}
+
+static void console_init(void)
+{
+	ui_readline_init(&console_readline, NULL);
+
+	console_buffer = fz_new_buffer(ctx, 0);
+	fz_append_printf(ctx, console_buffer, "Welcome to MuPDF %s with MuJS %d.%d.%d",
+		FZ_VERSION,
+		JS_VERSION_MAJOR, JS_VERSION_MINOR, JS_VERSION_PATCH);
+
+	warning_callback = fz_warning_callback(ctx);
+	fz_set_warning_callback(ctx, console_warn, ctx);
+	error_callback = fz_error_callback(ctx);
+	fz_set_error_callback(ctx, console_err, ctx);
+}
+
+static pdf_js_console gl_js_console = {
+	NULL,
+	gl_js_console_show,
+	gl_js_console_hide,
+	gl_js_console_clear,
+	gl_js_console_write,
+};
+
+static void toggle_console(void)
+{
+	showconsole = !showconsole;
+	if (showconsole)
+		ui.focus = &console_readline;
+	if (canvas_w == page_tex.w && canvas_h == page_tex.h)
+		shrinkwrap();
+}
+
+void do_console(void)
+{
+	pdf_js_console *console = pdf_js_get_console(ctx, pdf);
+	char *result = NULL;
+	const char *accepted = NULL;
+
+	fz_var(result);
+
+	ui_layout(B, BOTH, NW, 0, 0);
+	ui_panel_begin(canvas_w, console_h, ui.padsize, ui.padsize, 1);
+
+	ui_layout(B, X, NW, 0, 0);
+
+	accepted = ui_readline(&console_readline, 0);
+	if (accepted != NULL)
+	{
+		ui.focus = &console_readline;
+		if (console_readline.input.text[0])
+		{
+			fz_try(ctx)
+			{
+				if (console && console->write)
+				{
+					console->write(ctx, "\n> ");
+					console->write(ctx, console_readline.input.text);
+				}
+				pdf_js_execute(pdf->js, "console", console_readline.input.text, &result);
+				if (result && console && console->write)
+				{
+					console->write(ctx, "\n");
+					console->write(ctx, result);
+				}
+			}
+			fz_always(ctx)
+				fz_free(ctx, result);
+			fz_catch(ctx)
+			{
+				if (console)
+				{
+					console->write(ctx, "\nError: ");
+					console->write(ctx, fz_caught_message(ctx));
+				}
+			}
+			fz_flush_warnings(ctx);
+			ui_input_init(&console_readline.input, "");
+		}
+	}
+
+	ui_layout(ALL, BOTH, NW, ui.padsize, ui.padsize);
+
+	// White background!
+	glColorHex(0xF5F5F5);
+	glRectf(ui.cavity->x0, ui.cavity->y0, ui.cavity->x1, ui.cavity->y1);
+
+	char *console_string = (char *) fz_string_from_buffer(ctx, console_buffer);
+	ui_label_with_scrollbar(console_string, 0, 10, &console_scroll, &console_sticky);
+
+	ui_panel_end();
+}
+
 static void do_app(void)
 {
 	if (ui.mod == GLUT_ACTIVE_ALT)
@@ -1997,6 +2202,7 @@ static void do_app(void)
 		case 'L': showlinks = !showlinks; break;
 		case 'F': showform = !showform; break;
 		case 'i': ui.dialog = info_dialog; break;
+		case '`': case KEY_F12: toggle_console(); break;
 		case 'r': reload(); break;
 		case 'q': quit(); break;
 		case 'S': do_save_pdf_file(); break;
@@ -2576,7 +2782,7 @@ void do_main(void)
 	else if (showundo)
 		do_undo();
 	if (showoutline || showundo)
-		ui_splitter(&outline_w, 6*ui.gridsize, 20*ui.gridsize, R);
+		ui_splitter(&outline_start_x, &outline_w, 6*ui.gridsize, 20*ui.gridsize, R);
 
 	if (!eqloc(oldpage, currentpage) || oldseparations != currentseparations || oldicc != currenticc)
 	{
@@ -2593,6 +2799,12 @@ void do_main(void)
 		else
 			do_redact_panel();
 		ui_panel_end();
+	}
+
+	if (showconsole)
+	{
+		do_console();
+		ui_splitter(&console_start_y, &console_h, 6*ui.lineheight, 25*ui.lineheight, T);
 	}
 
 	do_canvas();
@@ -2687,6 +2899,7 @@ static void cleanup(void)
 #endif
 
 	trace_action("quit(0);\n");
+
 	fz_drop_output(ctx, trace_file);
 	fz_drop_stext_page(ctx, page_text);
 	fz_drop_separations(ctx, seps);
@@ -2768,6 +2981,8 @@ int main(int argc, char **argv)
 	 * of seeing. */
 	fz_set_stddbg(ctx, fz_stdods(ctx));
 #endif
+
+	console_init();
 
 	fz_register_document_handlers(ctx);
 
@@ -2869,6 +3084,7 @@ int main(int argc, char **argv)
 
 	annotate_w *= ui.lineheight;
 	outline_w *= ui.lineheight;
+	console_h *= ui.lineheight;
 
 	glutMainLoop();
 

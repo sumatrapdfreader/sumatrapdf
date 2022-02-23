@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -38,7 +38,7 @@ static void free_event_cb_data(fz_context *ctx, void *data)
 	}
 }
 
-static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, void *data)
+static void event_cb(fz_context *ctx, pdf_document *pdf, pdf_doc_event *event, void *data)
 {
 	jobject jlistener = (jobject)data;
 	jboolean detach = JNI_FALSE;
@@ -53,17 +53,39 @@ static void event_cb(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, v
 	case PDF_DOCUMENT_EVENT_ALERT:
 		{
 			pdf_alert_event *alert;
-			jstring jstring = NULL;
+			jstring jtitle = NULL;
+			jstring jmessage = NULL;
+			jstring jcheckboxmsg = NULL;
+			jobject jalertresult;
+			jobject jpdf;
 
 			alert = pdf_access_alert_event(ctx, event);
 
-			jstring = (*env)->NewStringUTF(env, alert->message);
-			if (!jstring || (*env)->ExceptionCheck(env))
+			jpdf = to_PDFDocument_safe(ctx, env, pdf);
+			if (!jpdf || (*env)->ExceptionCheck(env))
 				fz_throw_java_and_detach_thread(ctx, env, detach);
 
-			(*env)->CallVoidMethod(env, jlistener, mid_PDFDocument_JsEventListener_onAlert, jstring);
+			jtitle = (*env)->NewStringUTF(env, alert->message);
+			if (!jtitle || (*env)->ExceptionCheck(env))
+				fz_throw_java_and_detach_thread(ctx, env, detach);
+
+			jmessage = (*env)->NewStringUTF(env, alert->message);
+			if (!jmessage || (*env)->ExceptionCheck(env))
+				fz_throw_java_and_detach_thread(ctx, env, detach);
+
+			jcheckboxmsg = (*env)->NewStringUTF(env, alert->message);
+			if (!jcheckboxmsg || (*env)->ExceptionCheck(env))
+				fz_throw_java_and_detach_thread(ctx, env, detach);
+
+			jalertresult = (*env)->CallObjectMethod(env, jlistener, mid_PDFDocument_JsEventListener_onAlert, jpdf, jtitle, jmessage, alert->icon_type, alert->button_group_type, jcheckboxmsg, alert->initially_checked);
 			if ((*env)->ExceptionCheck(env))
 				fz_throw_java_and_detach_thread(ctx, env, detach);
+
+			if (jalertresult)
+			{
+				alert->button_pressed = (*env)->GetIntField(env, jalertresult, fid_AlertResult_buttonPressed);
+				alert->finally_checked = (*env)->GetBooleanField(env, jalertresult, fid_AlertResult_checkboxChecked);
+			}
 		}
 		break;
 

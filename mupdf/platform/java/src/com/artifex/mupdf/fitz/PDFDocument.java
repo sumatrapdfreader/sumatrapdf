@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -146,7 +146,23 @@ public class PDFDocument extends Document
 	}
 
 	public interface JsEventListener {
-		void onAlert(String message);
+		public static final int BUTTON_GROUP_OK = 0;
+		public static final int BUTTON_GROUP_OK_CANCEL = 1;
+		public static final int BUTTON_GROUP_YES_NO = 2;
+		public static final int BUTTON_GROUP_YES_NO_CANCEL = 3;
+
+		public static final int BUTTON_NONE = 0;
+		public static final int BUTTON_OK = 1;
+		public static final int BUTTON_CANCEL = 2;
+		public static final int BUTTON_NO = 3;
+		public static final int BUTTON_YES = 4;
+
+		public static class AlertResult {
+			public int buttonPressed;
+			public boolean checkboxChecked;
+		}
+
+		public AlertResult onAlert(PDFDocument doc, String title, String message, int iconType, int buttonGroupType, String checkboxMessage, boolean checkboxState);
 	}
 	public native void enableJs();
 	public native void disableJs();

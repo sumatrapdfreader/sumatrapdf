@@ -2734,9 +2734,9 @@ retry_after_repair:
 				/* We don't want to be using any local xref, so
 				 * bin any that we have. */
 				pdf_annot_pop_and_discard_local_xref(ctx, annot);
-				/* Binning the xref may leave us holding pointers
-				 * to the wrong versions of ap_n. */
-				ap_n = pdf_annot_ap(ctx, annot);
+				/* Binning the xref may leave ap_n holding an invalid pointer.
+				 * We don't use it from this point onwards anymore, but beware
+				 * in future code changes. */
 				pop_local_xref = 0;
 			}
 

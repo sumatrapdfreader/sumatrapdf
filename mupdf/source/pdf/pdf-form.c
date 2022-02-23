@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1098,7 +1098,7 @@ merge_changes(fz_context *ctx, const char *value, int start, int end, const char
 {
 	int changelen = change ? (int)strlen(change) : 0;
 	int valuelen = value ? (int)strlen(value) : 0;
-	int prelen = (start >= 0 ? start : 0);
+	int prelen = (start >= 0 ? (start < valuelen ? start : valuelen) : 0);
 	int postlen = (end >= 0 && end <= valuelen ? valuelen - end : 0);
 	int newlen =  prelen + changelen + postlen + 1;
 	char *merged = fz_malloc(ctx, newlen);
@@ -2007,7 +2007,7 @@ static void pdf_execute_js_action(fz_context *ctx, pdf_document *doc, pdf_obj *t
 			fz_snprintf(buf, sizeof buf, "%d/%s", pdf_to_num(ctx, target), path);
 			pdf_begin_operation(ctx, doc, "Javascript Event");
 			in_op = 1;
-			pdf_js_execute(doc->js, buf, code);
+			pdf_js_execute(doc->js, buf, code, NULL);
 		}
 		fz_always(ctx)
 		{
