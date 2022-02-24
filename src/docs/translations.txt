@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6f2155fc5d76bfaebcf4de89367ecc9859e95adb
+714114e9a0f01fa8f081aa9e666d8db29abe6866
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -419,6 +419,7 @@ el:&Άκυρο
 es:Cancelar
 et:&Loobu
 fr:Annuler
+hr:&Odustani
 hu:&Mégse
 it:&Annulla
 kr:취소
@@ -542,6 +543,7 @@ es:&Continuar con la instalación de la versión de 32 bits
 et:&Jätka 32-bitise versiooni paigaldamist
 fr:Continuer l'installation de la version 32-bits
 gl:Continuar instalando a versión de 32 bits
+hr:&Nastavi instalirati 32-bit verziju 
 hu:Folytatás a 32-bites verzió telepítésével
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
@@ -567,6 +569,7 @@ el:Αντιγραφή επιλογής \tCtrl-C
 es:&Copiar la selección \tCtrl-C
 et:&Kopeeri valik \tCtrl+C
 fr:Copier la sélection \tCtrl-C
+hr:&Kopiraj odabrano \tCtrl-C
 hu:Kiválasztás másolása \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
@@ -590,6 +593,7 @@ el:Αντιγραφή στο πρόχειρο\tCtrl-C
 es:&Copiar al portapapeles\tCtrl-C
 et:&Kopeeri lõikelauale\tCtrl+C
 fr:Copier dans le presse-papiers
+hr:&Kopiraj u međuspremnik\tCtrl-C
 hu:Vágólapra másolás\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
@@ -613,6 +617,7 @@ el:Απόρριψη
 es:&Descartar
 et:&Loobu muudatustest
 fr:&Abandonner les modifications
+hr:&Odbaci promjene
 hu:Változtatások elvetése
 it:Scarica
 kr:무시(&D)
@@ -2661,6 +2666,7 @@ el:Αποθήκευση σε υπάρχον PDF
 es:&Guardar en un PDF existente
 et:&Salvesta olemas olevasse PDF-i
 fr:&Sauvegarder dans le PDF existant
+hr:&Spremi u postojeći PDF
 hu:Meglévő PDF-be mentés
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
@@ -2683,6 +2689,7 @@ el:Αναζήτηση με Google
 es:&Buscar con Google
 et:Otsi Google-iga
 fr:&Rechercher avec Google
+hr:Pretraži &sa Google-om
 hu:Keresés Google-el
 it:Cerca con Google
 kw:&Hwilas Gans Google
@@ -3023,6 +3030,7 @@ el:Μετάφραση με Google
 es:&Traducir con Google
 et:&Tõlgi Google-iga
 fr:&Traduire avec Google
+hr:&Prevedi sa Google-om
 hu:Fordítsd le a Google-el
 it:&Traduci con Google
 kr:Google로 번역(&T)
@@ -3043,6 +3051,7 @@ es:&Subrayar\tu
 et:&Jooni alla\tu
 fr:&Souligner\tu
 gl:Subliñar
+hr:&Podcrtano\tu
 hu:Aláhúzás\tu
 it:&Sottolineato\ts
 nl:&Onderstrepen\tu
@@ -5461,6 +5470,7 @@ es:Buscando actualizaciones...
 et:Uuenduste otsimine...
 fr:Vérifier les mises à jour
 gl:Comprobar actualizacións
+hr:Provjera dostupnosti ažuriranja...
 hu:Frissítés keresése...
 it:Controllo aggiornamenti...
 kr:업데이트를 확인 중입니다...
@@ -6535,6 +6545,7 @@ el:Δεν ήταν δυνατή η λήψη του ονόματος του εκ�
 es:No se ha podido encontrar el nombre de la impresora
 et:Printeri nime hankimine ebaõnnestus
 fr:Impossible d'obtenir le nom de l'imprimante
+hr:Nemoguće dobiti naziv printera
 hu:Nem sikerült lekérni a nyomtató nevét
 it:Impossibile ottenere il nome della stampante
 kw:Ny yllir kavos hanow pryntyer
@@ -7101,6 +7112,7 @@ el:Δημιουργία σχολιασμού κάτω από το δρομέα
 es:Crear una anotación &bajo el cursor
 et:Lisa kursori j&uurde kommentaar
 fr:Créer une annotation &sous le curseur
+hr:Napravi bilješku &ispod kursora
 hu:Új megjegyzés &Kurzor alatt
 it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
@@ -7726,6 +7738,7 @@ es:Eliminar anotación\tDel
 et:Kustuta kommentaar\tDel
 fr:Supprimer l'annotation\tDel
 gl:Borrar anotación
+hr:Obriši bilješku\tDel
 it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
@@ -7941,6 +7954,7 @@ es:No instalar
 et:Ära paigalda
 fr:Ne pas installer
 gl:Non instalar
+hr:Nemoj instalirati
 hu:Ne telepítsd
 it:Non installare
 kr:설치하지 마십시오
@@ -7966,6 +7980,7 @@ es:Descargar la versión de 64 bits
 et:Laadi alla 64-bitine versioon
 fr:Télécharger la version 64-bits
 gl:Baixar versión de 64 bits
+hr:Preuzmite 64-bitnu verziju
 hu:64-bites verzió letöltése
 it:Download versione a 64bit
 kr:64비트 버전 다운로드
@@ -11325,6 +11340,7 @@ el:Εγκατάσταση και επανεκκίνηση
 es:Instalar y reiniciar
 et:Paigalda ja kävita uuesti
 fr:Installer et redémarrer
+hr:Instaliraj i ponovno pokreni
 hu:Telepítés és újraindítás
 it:Installa e ri-esegui
 kr:설치 후 재실행
@@ -11474,6 +11490,7 @@ el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστ
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 et:32-bitise SumatraPDF-i paigaldamine 64-bitisele operatsioonisüsteemile
 fr:Installation de SumatraPDF 32-bits sur un système 64-bits
+hr:Instaliranje 32-bitne SumatraPDF na 64-bit OS
 hu:32-bites SumatraPDF telepítése 64-bites operációs rendszerre
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
@@ -12299,6 +12316,7 @@ es:Disponible una versión nueva
 et:Saadaval on uus versioon
 fr:Nouvelle version disponible
 gl:Nova versión dispoñible
+hr:Dostupna nova verzija
 hu:Új verzió elérhető
 it:Nuova versione disponibile
 kr:새 버전이 있습니다
@@ -15591,6 +15609,7 @@ el:Επιλογή
 es:S&elección
 et:V&alik
 fr:S&élection
+hr:O&dabir
 hu:K&iválasztás
 it:S&elezione
 kr:선택(&e)
@@ -15637,6 +15656,7 @@ es:Documentos SVG
 et:SVG dokumendid
 fr:Documents SVG
 gl:documentos SVG
+hr:SVG dokumenti
 hu:SVG dokumentumok
 it:Documenti SVG
 kw:Dogvennow SVG
@@ -15657,6 +15677,7 @@ es:Guardar Anotaciones a PDF existente
 et:Salvesta kommentaarid olemas olevasse PDF-i
 fr:Sauvegarder les annotations dans le PDF existant.
 gl:Gardar anotacións ó PDF existente
+hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
 it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
@@ -15772,6 +15793,7 @@ es:¿Guardar las anotaciones?
 et:Salvestada kommentaarid?
 fr:Sauvegarder les annotations ?
 gl:Gardar anotacións?
+hr:Spremi bilješke?
 hu:Megjegyzések mentése?
 it:Vuoi salvare le annotazioni?
 kr:주석을 저장할까요?
@@ -15848,6 +15870,7 @@ el:Αποθήκευση σε νέο PDF
 es:Guardar en un PDF &nuevo
 et:Salvesta &uude PDF-i
 fr:Sauvegarder dans un &nouveau PDF
+hr:Spremi u &novi PDF
 hu:Mentés új PDF-be
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
@@ -15870,6 +15893,7 @@ el:Αναζήτηση με Bing
 es:Buscar con &Bing
 et:Otsi &Bingiga
 fr:Rechercher avec &Bing
+hr:Pretraži sa &Bing-om
 hu:Keresés &Bing-el
 it:Cerca con &Bing
 kr:Bing으로 검색(&B)
@@ -15892,6 +15916,7 @@ el:Αναζήτηση με Google
 es:Buscar con &Google
 et:Otsi &Google-iga
 fr:Rechercher avec &Google
+hr:Pretraži sa &Google-om
 hu:Keresés &Google-el
 it:Cerca con &Google
 kr:Google로 검색(&G)
@@ -17006,6 +17031,7 @@ el:Παράλειψη αυτής της έκδοσης
 es:Omitir esta versión
 et:Jäta see versioon vahele
 fr:Ignorer cette version
+hr:Preskoči ovu verziju
 hu:Ezen verzió kihagyása
 it:Salta questa versione
 kr:이 버전 건너뛰기
@@ -17042,7 +17068,7 @@ ga:Faraor, níor chóir go dtarlódh sin!\n\nBrúigh 'Cealaigh' le do thoil, má
 gl:Desculpe, isto non debería ocorrer\n\nPor favor, prema 'Cancelar', se quere axudarnos a reparar o motivo deste erro.
 he:מצטערים על התקלה!\n\nאנא לחץ על 'ביטול' אם ברצונך לסייע לנו בפתרון הבעיה.
 hi:क्षमा करें, ऐसा नहीं होना चाहिए; अगर आप इस दुर्घटना को ठीक करने में मदद करना चाहते है : \n\n कृपया  'रद्द करें' दबाएँ |
-hr:Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
+hr:Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Odustani' ako nam želite pomoći ispraviti uzrok ovog rušenja.
 hu:Sajnáljuk, váratlan hiba történt!\n\nKérjük nyomja meg a Mégse gombot, ha segíteni szeretne nekünk a hiba kijavításában.
 id:Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.
 it:Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona 'Annulla'.
@@ -18390,6 +18416,7 @@ el:Μετάφραση με DeepL
 es:Traducir con &DeepL
 et:Tõlgi &DeepL-iga
 fr:Traduire avec &DeepL
+hr:Prevedi sa &DeepL
 hu:Fordítsd le a DeepL-el
 it:Traduci con &DeepL
 kr:DeepL로 번역(&D)
@@ -18687,6 +18714,7 @@ el:Μη αποθηκευμένα σχόλια στο '%s'
 es:Anotaciones sin guardar en «%s»
 et:Salvestamata kommentaarid dokumendis '%s'
 fr:Annotations dans ‘%s’ non sauvegardées
+hr:Nespremljene bilješke u '%s'
 hu:Mentetlen megjegyzések itt: '%s'
 it:Annotazioni non salvate in '%s'
 kw:Notenyansow anwithys yn '%s'
@@ -19197,6 +19225,7 @@ el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η �
 es:Esta es la versión «%s» y ya está disponible la versión «%s».\N¿Quiere instalar la versión nueva?
 et:Sul on versioon '%s' ja saadaval on versioon '%s'.\nKas soovid paigaldada uue versiooni?
 fr:Vous avez la version ‘%s’ et la version ‘%s’ est disponible. \nVoulez-vous installer la nouvelle version ?
+hr:Imate verziju '%s' a verzija '%s' je dostupna.\nŽelite li instalirati novu verziju?
 hu:A jelenlegi verziód '%s' és már a '%s' verzió is elérhető.\nSzeretnéd feltelepíteni az új verziót?
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
 kw:Yma dhis gwersyon '%s' ha gwersyon '%s' yw kavadow.\nA vynn'ta lea gwersyon nowydh?
@@ -19218,6 +19247,7 @@ el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σ�
 es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
 et:Paigaldad 64-bitisele operatsioonisüsteemile 32-bitist SumatraPDF-i versiooni.\nKas soovid alla laadida\nhoopis 64-bitise versiooni?
 fr:Installation de SumatraPDF 32-bits sur un  système 64-bits. \nVoulez-vous télécharger la  version \n64-bits
+hr:Instalirate 32-bitnu SumatraPDF on 64-bitni OS.\nŽelite li preuzeti 64-bit verziju?
 hu:A SumatraPDF 32-bites verzióját telepíted éppen egy 64-bites operációs rendszerre.\nSzeretnéd inkább letölteni a\n64-bites verziót?
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
 kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwersyon 64-byt?
