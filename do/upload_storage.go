@@ -98,32 +98,30 @@ type DownloadUrls struct {
 	portableZip32 string
 }
 
-func getDownloadUrls(mc *minio.Client, buildType string, ver string) *DownloadUrls {
-	prefix := mc.URLBase()
-	prefix += getRemoteDir(buildType)
+func getDownloadUrlsForPrefix(prefix string, buildType string, ver string) *DownloadUrls {
 	// zip is like .exe but can be half the size due to compression
 	res := &DownloadUrls{
-		installer64:   prefix + "SumatraPDF-${buildType}-${ver}-64-install.exe",
-		portableExe64: prefix + "SumatraPDF-${buildType}-${ver}-64.exe",
-		portableZip64: prefix + "SumatraPDF-${buildType}-${ver}-64.zip",
-		installer32:   prefix + "SumatraPDF-${buildType}-${ver}-install.exe",
-		portableExe32: prefix + "SumatraPDF-${buildType}-${ver}.exe",
-		portableZip32: prefix + "SumatraPDF-${buildType}-${ver}.zip",
+		installer64:   prefix + "SumatraPDF-${ver}-64-install.exe",
+		portableExe64: prefix + "SumatraPDF-${ver}-64.exe",
+		portableZip64: prefix + "SumatraPDF-${ver}-64.zip",
+		installer32:   prefix + "SumatraPDF-${ver}-install.exe",
+		portableExe32: prefix + "SumatraPDF-${ver}.exe",
+		portableZip32: prefix + "SumatraPDF-${ver}.zip",
 	}
 	if buildType == buildTypePreRel {
 		// for pre-release, ${ver} is encoded prefix
 		res = &DownloadUrls{
-			installer64:   prefix + "SumatraPDF-${buildType}-64-install.exe",
-			portableExe64: prefix + "SumatraPDF-${buildType}-64.exe",
-			portableZip64: prefix + "SumatraPDF-${buildType}-64.zip",
-			installer32:   prefix + "SumatraPDF-${buildType}-install.exe",
-			portableExe32: prefix + "SumatraPDF-${buildType}.exe",
-			portableZip32: prefix + "SumatraPDF-${buildType}.zip",
+			installer64:   prefix + "SumatraPDF-prerel-64-install.exe",
+			portableExe64: prefix + "SumatraPDF-prerel-64.exe",
+			portableZip64: prefix + "SumatraPDF-prerel-64.zip",
+			installer32:   prefix + "SumatraPDF-prerel-install.exe",
+			portableExe32: prefix + "SumatraPDF-prerel.exe",
+			portableZip32: prefix + "SumatraPDF-prerel.zip",
 		}
 	}
 	rplc := func(s *string) {
 		*s = strings.Replace(*s, "${ver}", ver, -1)
-		*s = strings.Replace(*s, "${buildType}", buildType, -1)
+		//*s = strings.Replace(*s, "${buildType}", buildType, -1)
 	}
 	rplc(&res.installer64)
 	rplc(&res.portableExe64)
@@ -132,6 +130,48 @@ func getDownloadUrls(mc *minio.Client, buildType string, ver string) *DownloadUr
 	rplc(&res.portableExe32)
 	rplc(&res.portableZip32)
 	return res
+}
+
+func genUpdateTxt(urls *DownloadUrls, ver string) string {
+	s := `[SumatraPDF]
+Latest: ${ver}
+Installer64: ${inst64}
+Installer32: ${inst32}
+PortableExe64: ${exe64}
+PortableExe32: ${exe32}
+PortableZip64: ${zip64}
+PortableZip32: ${zip32}
+`
+	rplc := func(old, new string) {
+		s = strings.Replace(s, old, new, -1)
+	}
+	rplc("${ver}", ver)
+	rplc("${inst64}", urls.installer64)
+	rplc("${inst32}", urls.installer32)
+	rplc("${exe64}", urls.portableExe64)
+	rplc("${exe32}", urls.portableExe32)
+	rplc("${zip64}", urls.portableZip64)
+	rplc("${zip32}", urls.portableZip32)
+	return s
+}
+
+func testGenUpdateTxt() {
+	ver := "14276"
+	urls := getDownloadUrlsViaWebsite(buildTypePreRel, ver)
+	s := genUpdateTxt(urls, ver)
+	fmt.Printf("testGenUpdateTxt:\n%s\n", s)
+	os.Exit(0)
+}
+
+func getDownloadUrlsViaWebsite(buildType string, ver string) *DownloadUrls {
+	prefix := "https://www.sumatrapdfreader.org/dl/" + buildType + "/" + ver + "/"
+	return getDownloadUrlsForPrefix(prefix, buildType, ver)
+}
+
+func getDownloadUrlsDirectS3(mc *minio.Client, buildType string, ver string) *DownloadUrls {
+	prefix := mc.URLBase()
+	prefix += getRemoteDir(buildType)
+	return getDownloadUrlsForPrefix(prefix, buildType, ver)
 }
 
 // sumatrapdf/sumatralatest.js
@@ -147,10 +187,21 @@ func createSumatraLatestJs(mc *minio.Client, buildType string) string {
 	}
 
 	currDate := time.Now().Format("2006-01-02")
+	ver := getVerForBuildType(buildType)
+
+	// old version pointing directly to s3 storage
+	//host := strings.TrimSuffix(mc.URLBase(), "/")
+	//host + "software/sumatrapdf/" + buildType
+
+	// new version that redirects via www.sumatrapdfreader.org/dl/
+	host := "https://www.sumatrapdfreader.org/dl/prerel/" + ver
+	if buildType == buildTypeRel {
+		host = "https://www.sumatrapdfreader.org/dl/rel/" + ver
+	}
+
 	// TODO: use
 	// urls := getDownloadUrls(storage, buildType, ver)
 
-	host := strings.TrimSuffix(mc.URLBase(), "/")
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumCommitSha1 = "{{ .Sha1 }}";
@@ -167,10 +218,9 @@ var sumLatestExeZip64    = "{{.Host}}/{{.Prefix}}-64.zip";
 var sumLatestPdb64       = "{{.Host}}/{{.Prefix}}-64.pdb.zip";
 var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 `
-	ver := getVerForBuildType(buildType)
 	sha1 := getGitSha1()
 	d := map[string]interface{}{
-		"Host":     host + "software/sumatrapdf/" + buildType,
+		"Host":     host,
 		"Ver":      ver,
 		"Sha1":     sha1,
 		"CurrDate": currDate,
@@ -201,30 +251,13 @@ func getVersionFilesForLatestInfo(mc *minio.Client, buildType string) [][]string
 		res = append(res, []string{remotePaths[1], ver})
 	}
 
-	// TODO: maybe provide download urls for both storage services
 	{
 		// *-update.txt : for current builds
-		urls := getDownloadUrls(mc, buildType, ver)
-		s := `[SumatraPDF]
-Latest: ${ver}
-Installer64: ${inst64}
-Installer32: ${inst32}
-PortableExe64: ${exe64}
-PortableExe32: ${exe32}
-PortableZip64: ${zip64}
-PortableZip32: ${zip32}
-`
-		rplc := func(old, new string) {
-			s = strings.Replace(s, old, new, -1)
+		urls := getDownloadUrlsViaWebsite(buildType, ver)
+		if false {
+			urls = getDownloadUrlsDirectS3(mc, buildType, ver)
 		}
-		rplc("${ver}", ver)
-		rplc("${inst64}", urls.installer64)
-		rplc("${inst32}", urls.installer32)
-		rplc("${exe64}", urls.portableExe64)
-		rplc("${exe32}", urls.portableExe32)
-		rplc("${zip64}", urls.portableZip64)
-		rplc("${zip32}", urls.portableZip32)
-
+		s := genUpdateTxt(urls, ver)
 		res = append(res, []string{remotePaths[2], s})
 	}
 
@@ -433,56 +466,60 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	wg.Wait()
 }
 
-// change
-// software/sumatrapdf/rel/SumatraPDF-${ver}... =>
-// software/sumatrapdf/rel/${ver}/SumatraPDF...
-// keeps old versions to not break download links
-// func oneTimeRelCopy() {
-// 	doCopy := func(mc *minio.Client) {
-// 		chFiles := mc.ListObjects("software/sumatrapdf/rel/SumatraPDF-")
-// 		for oi := range chFiles {
-// 			parts := strings.Split(oi.Key, "/")
-// 			name := parts[len(parts)-1]
-// 			if name == "SumatraPDF-settings.txt" {
-// 				fmt.Printf("skipping %s\n", oi.Key)
-// 				continue
-// 			}
-// 			parts = strings.SplitN(oi.Key, "-", 3)
-// 			var ver string
-// 			if len(parts) == 3 {
-// 				// software/sumatrapdf/rel/SumatraPDF-3.2-64.exe
-// 				// =>
-// 				// ["software/sumatrapdf/rel/SumatraPDF", "3.2", "64.exe"]
-// 				ver = parts[1]
-// 			} else {
-// 				// software/sumatrapdf/rel/SumatraPDF-3.2.exe
-// 				// =>
-// 				// ["software/sumatrapdf/rel/SumatraPDF", "3.2.exe"]
-// 				ver = parts[1]
-// 				for _, suff := range []string{".exe", ".pdb.zip", ".pdb.lzsa", ".zip", ".pdb"} {
-// 					ver = strings.Replace(ver, suff, "", -1)
-// 				}
-// 			}
-// 			newKey := "software/sumatrapdf/rel/" + ver + "/" + name
-// 			if mc.Exists(newKey) {
-// 				fmt.Printf("Skipping copying %s because %s already exists\n", oi.Key, newKey)
-// 				continue
-// 			}
-// 			_, err := mc.Copy(oi.Key, newKey)
-// 			panicIfErr(err)
-// 			fmt.Printf("copied %s => %s\n", oi.Key, newKey)
-// 		}
-// 	}
-// 	if false {
-// 		mc := newMinioSpacesClient()
-// 		doCopy(mc)
-// 	}
-// 	if true {
-// 		mc := newMinioBackblazeClient()
-// 		doCopy(mc)
-// 	}
-// 	if true {
-// 		mc := newMinioS3Client()
-// 		doCopy(mc)
-// 	}
-// }
+/*
+change
+software/sumatrapdf/rel/SumatraPDF-${ver}... =>
+software/sumatrapdf/rel/${ver}/SumatraPDF...
+keeps old versions to not break download links
+*/
+/*
+func oneTimeRelCopy() {
+	doCopy := func(mc *minio.Client) {
+		chFiles := mc.ListObjects("software/sumatrapdf/rel/SumatraPDF-")
+		for oi := range chFiles {
+			parts := strings.Split(oi.Key, "/")
+			name := parts[len(parts)-1]
+			if name == "SumatraPDF-settings.txt" {
+				fmt.Printf("skipping %s\n", oi.Key)
+				continue
+			}
+			parts = strings.SplitN(oi.Key, "-", 3)
+			var ver string
+			if len(parts) == 3 {
+				// software/sumatrapdf/rel/SumatraPDF-3.2-64.exe
+				// =>
+				// ["software/sumatrapdf/rel/SumatraPDF", "3.2", "64.exe"]
+				ver = parts[1]
+			} else {
+				// software/sumatrapdf/rel/SumatraPDF-3.2.exe
+				// =>
+				// ["software/sumatrapdf/rel/SumatraPDF", "3.2.exe"]
+				ver = parts[1]
+				for _, suff := range []string{".exe", ".pdb.zip", ".pdb.lzsa", ".zip", ".pdb"} {
+					ver = strings.Replace(ver, suff, "", -1)
+				}
+			}
+			newKey := "software/sumatrapdf/rel/" + ver + "/" + name
+			if mc.Exists(newKey) {
+				fmt.Printf("Skipping copying %s because %s already exists\n", oi.Key, newKey)
+				continue
+			}
+			_, err := mc.Copy(oi.Key, newKey)
+			panicIfErr(err)
+			fmt.Printf("copied %s => %s\n", oi.Key, newKey)
+		}
+	}
+	if false {
+		mc := newMinioSpacesClient()
+		doCopy(mc)
+	}
+	if true {
+		mc := newMinioBackblazeClient()
+		doCopy(mc)
+	}
+	if true {
+		mc := newMinioS3Client()
+		doCopy(mc)
+	}
+}
+*/

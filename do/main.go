@@ -230,6 +230,11 @@ func main() {
 	}
 
 	if false {
+		testGenUpdateTxt()
+		return
+	}
+
+	if false {
 		detectVersions()
 		//buildPreRelease()
 		return
