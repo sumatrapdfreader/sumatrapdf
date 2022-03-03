@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-714114e9a0f01fa8f081aa9e666d8db29abe6866
+42f250f328f9b28b028ddcd533e11e910d6594ce
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -428,6 +428,7 @@ mk:Откажи
 nl:&Annuleren
 pl:&Anuluj
 sk:&Zrušiť
+sl:&Prekliči
 th:&ยกเลิก
 tr:İptal Et
 tw:取消(&C)
@@ -2270,7 +2271,7 @@ ro:Pagina anterioară\t<-
 ru:Пре&дыдущая страница\tСтрелка влево
 si:&පෙර පිටුව\tLeft Arrow
 sk:&Predchádzajúca strana\t<-
-sl:Predhodna stran\tPuščica levo
+sl:&Prejšnja stran\tPuščica levo
 sn:Peji yesure\t<-
 sp-rs:Prethodna stranica\t<-
 sq:&Faqja e mëparshme\tLeft Arrow
@@ -2696,6 +2697,7 @@ kw:&Hwilas Gans Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
 sk:&Hľadať pomocou Google
+sl:&Išči z Google
 th:&ค้นหาด้วย Google
 tr:Google İle &Ara
 :&Settings
@@ -4131,6 +4133,7 @@ nl:Aantekeningen
 pl:Adnotacje
 ru:Аннотации
 sk:Anotácie
+sl:Pripombe
 th:อธิบายประกอบ
 tr:Dipnotlar
 tw:評注
@@ -4642,6 +4645,7 @@ mk:Боја на позадина
 nl:Achtergrond Kleur
 pl:Kolor tła:
 sk:Farba pozadia:
+sl:Barva ozadja:
 th:สีพื้นหลัง
 tr:Arka Plan Rengi
 tw:背景顏色:
@@ -5665,6 +5669,7 @@ nl:Kleur
 pl:Kolor:
 ru:Цвет:
 sk:Farba:
+sl:Barva:
 th:สี:
 tr:Renk:
 tw:顏色:
@@ -7119,6 +7124,7 @@ kr:커서 아래 주석 생성(&U)
 kw:Gwruthyl Notenyans &Yn-Dann Resor
 nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
+sl:Ustvari pripombo &pod kurzorjem
 th:สร้างคำอธิบายประกอบ &​ใต้ตัวชี้ตำแหน่ง
 tr:İmlecin &Altına Dipnot Oluştur
 tw:在游標下建立便箋(&U)
@@ -7148,6 +7154,7 @@ lv:Veidot anotāciju no atlases
 mk:Креирајте прибелешка од изборот
 nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
+sl:Ustvari pripombo iz izbire
 th:สร้างคำอธิบายประกอบจากส่วนที่เลือก
 tr:Seçimden Dipnot Oluştur
 tw:從選取文字建立便箋
@@ -7742,6 +7749,7 @@ hr:Obriši bilješku\tDel
 it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
+sl:Izbriši pripombo\tDel
 tr:Dipnotu Sil\tDel
 tw:刪除便箋\t刪除
 uk:Видалити анотацію\tDel
@@ -8198,6 +8206,7 @@ mk:Измени прибелешка
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
+sl:Uredi pripombo
 th:ปรับแต่งคำอธิบายประกอบ
 tr:Dipnotları Düzenle
 tw:編輯評注
@@ -11157,6 +11166,7 @@ nl:Afbeeldingen
 pl:Obrazy
 ru:Изображения
 sk:Obrázky
+sl:Slike
 ta:படங்கள் 
 th:รูปภาพ
 tr:Resimler
@@ -11783,6 +11793,7 @@ nl:Regel
 no:Linje
 pl:Linia
 ru:Линия
+sl:Črta
 ta:கோடு 
 th:ไลน์
 tr:Çizgi
@@ -14577,7 +14588,7 @@ ro:Pagina anterioară
 ru:Предыдущая страница
 si:පෙර පිටුව
 sk:Predchádzajúca strana
-sl:Predhodna stran
+sl:Prejšnja stran
 sn:Peji yesure
 sp-rs:Prethodna stranica
 sq:Faqja e mëparshme
@@ -15682,6 +15693,7 @@ hu:Megjegyzések elmentése a meglévő PDF-be
 it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
+sl:Shrani pripombe v obstoječi PDF
 tr:Dipnotları geçerli PDF'ye kaydet
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
@@ -15800,6 +15812,7 @@ kr:주석을 저장할까요?
 kw:Gwitha notenyansow?
 nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
+sl:Shraniti pripombe?
 th:บันทึกคำอธิบายประกอบหรือไม่
 tr:Dipnotlar kaydedilsin mi?
 :Save changes to a new PDF
@@ -15901,6 +15914,7 @@ kw:Hwilas Gans &Bing
 nl:Zoeken Met &Bing
 pl:Szukaj za pomocą &Bing
 sk:Vyhľadávanie pomocou &Bing
+sl:Išči z &Bing
 th:ค้นหาด้วย &​Bing
 tr:&Bing İle Ara
 :Search With &Google
@@ -15924,6 +15938,7 @@ kw:Hwilas Gans &Google
 nl:Zoeken Met &Google
 pl:Szukaj za pomocą &Google
 sk:Hľadať pomocou &Google
+sl:Išči z &Google
 th:ค้นหาด้วย &​Google
 tr:&Google İle Ara
 :Searching %d of %d...
@@ -16073,6 +16088,7 @@ lt:Pasirinkti anotaciją redaktoriuje
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
+sl:Izberi pripombo v urejevalniku
 th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
 tr:Düzenleyicide Dipnot Seç
 :Select content with Ctrl+left mouse button
@@ -18699,6 +18715,7 @@ lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
+sl:Neshranjene pripombe
 th:ไม่ได้บันทึกคำอธิบายประกอบ
 tr:Kaydedilmemiş dipnotlar
 :Unsaved annotations in '%s'
@@ -18720,6 +18737,7 @@ it:Annotazioni non salvate in '%s'
 kw:Notenyansow anwithys yn '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
+sl:Neshranjene pripombe v '%s'
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
 tr:'%s' içinde kaydedilmemiş dipnotlar
 :Use &tabs
@@ -19208,6 +19226,7 @@ lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
+sl:Imaš neshranjene pripombe
 th:คุณไม่ได้บันทึกคำอธิบายประกอบ
 tr:Kaydedilmemiş dipnotlarınız var
 uk:Анотації не збережено
