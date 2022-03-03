@@ -253,8 +253,8 @@ static void merge_range(fz_context *ctx, const char *range)
 				{
 					page_merge(ctx, i, 0, graft_map);
 					pages_merged++;
+				}
 		}
-	}
 
 		it_src = fz_new_outline_iterator(ctx, (fz_document *)doc_src);
 		if (it_src == NULL)

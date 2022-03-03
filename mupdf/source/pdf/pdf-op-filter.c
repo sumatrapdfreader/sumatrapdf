@@ -39,11 +39,11 @@ typedef enum
 
 typedef struct pdf_filter_gstate_sc
 {
-		char name[256];
-		pdf_pattern *pat;
-		fz_shade *shd;
-		int n;
-		float c[FZ_MAX_COLORS];
+	char name[256];
+	pdf_pattern *pat;
+	fz_shade *shd;
+	int n;
+	float c[FZ_MAX_COLORS];
 } pdf_filter_gstate_sc;
 
 typedef struct pdf_filter_gstate

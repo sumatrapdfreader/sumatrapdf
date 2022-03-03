@@ -367,7 +367,7 @@ fz_load_outline(fz_context *ctx, fz_document *doc)
 	if (doc->load_outline)
 		return doc->load_outline(ctx, doc);
 	if (doc->outline_iterator == NULL)
-	return NULL;
+		return NULL;
 	return fz_load_outline_from_iterator(ctx, doc->outline_iterator(ctx, doc));
 }
 

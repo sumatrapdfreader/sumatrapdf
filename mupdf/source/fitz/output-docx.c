@@ -514,8 +514,8 @@ static void writer_close(fz_context *ctx, fz_document_writer *writer_)
 static void writer_drop(fz_context *ctx, fz_document_writer *writer_)
 {
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
-		fz_drop_output(ctx, writer->output);
-		writer->output = NULL;
+	fz_drop_output(ctx, writer->output);
+	writer->output = NULL;
 	assert(!writer->ctx);
 	writer->ctx = ctx;
 	extract_end(&writer->extract);
@@ -556,13 +556,13 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 	fz_try(ctx)
 	{
 		writer = fz_new_derived_document_writer(
-			ctx,
-			fz_docx_writer,
-			writer_begin_page,
-			writer_end_page,
-			writer_close,
-			writer_drop
-			);
+				ctx,
+				fz_docx_writer,
+				writer_begin_page,
+				writer_end_page,
+				writer_close,
+				writer_drop
+				);
 		writer->ctx = ctx;
 		writer->output = out;
 		if (get_bool_option(ctx, options, "html", 0)) format = extract_format_HTML;
@@ -600,7 +600,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		if (writer)
 		{
 			writer->ctx = ctx;
-		fz_drop_document_writer(ctx, &writer->super);
+			fz_drop_document_writer(ctx, &writer->super);
 			writer->ctx = NULL;
 		}
 		else

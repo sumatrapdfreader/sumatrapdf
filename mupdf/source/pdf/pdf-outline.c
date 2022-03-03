@@ -43,8 +43,8 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_lis
 
 	last = pdf_dict_get(ctx, expected_parent, PDF_NAME(Last));
 
-		while (dict && pdf_is_dict(ctx, dict))
-		{
+	while (dict && pdf_is_dict(ctx, dict))
+	{
 		if (pdf_mark_list_push(ctx, mark_list, dict))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Cycle detected in outlines");
 
@@ -72,7 +72,7 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_lis
 			*fixed = 1;
 		}
 		if (parent_diff)
-			{
+		{
 			fz_warn(ctx, "Bad or missing parent pointer in outline tree, repairing");
 			pdf_dict_put(ctx, dict, PDF_NAME(Parent), expected_parent);
 		}
@@ -88,7 +88,7 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_lis
 		{
 			fz_warn(ctx, "Bad or missing last pointer in outline tree, repairing");
 			pdf_dict_put(ctx, expected_parent, PDF_NAME(Last), dict);
-			}
+		}
 
 		first = pdf_dict_get(ctx, dict, PDF_NAME(First));
 		if (first)
@@ -96,7 +96,7 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_lis
 
 		expected_prev = dict;
 		dict = next;
-		}
+	}
 }
 
 fz_outline *
@@ -278,7 +278,7 @@ pdf_outline_iterator_insert(fz_context *ctx, fz_outline_iterator *iter_, fz_outl
 
 	fz_try(ctx)
 	{
-	obj = pdf_add_new_dict(ctx, doc, 4);
+		obj = pdf_add_new_dict(ctx, doc, 4);
 
 		if (iter->modifier == MOD_BELOW)
 			parent = iter->current;
@@ -359,7 +359,7 @@ pdf_outline_iterator_update(fz_context *ctx, fz_outline_iterator *iter_, fz_outl
 	pdf_begin_operation(ctx, doc, "Update outline item");
 
 	fz_try(ctx)
-	do_outline_update(ctx, iter->current, item, 0);
+		do_outline_update(ctx, iter->current, item, 0);
 	fz_always(ctx)
 		pdf_end_operation(ctx, doc);
 	fz_catch(ctx)
@@ -402,37 +402,37 @@ pdf_outline_iterator_del(fz_context *ctx, fz_outline_iterator *iter_)
 			up = pdf_dict_get(ctx, up, PDF_NAME(Parent));
 		}
 
-	if (prev)
-	{
-		if (next)
-			pdf_dict_put(ctx, prev, PDF_NAME(Next), next);
-		else
-			pdf_dict_del(ctx, prev, PDF_NAME(Next));
-	}
-	if (next)
-	{
 		if (prev)
-			pdf_dict_put(ctx, next, PDF_NAME(Prev), prev);
-		else
+		{
+			if (next)
+				pdf_dict_put(ctx, prev, PDF_NAME(Next), next);
+			else
+				pdf_dict_del(ctx, prev, PDF_NAME(Next));
+		}
+		if (next)
+		{
+			if (prev)
+				pdf_dict_put(ctx, next, PDF_NAME(Prev), prev);
+			else
 			{
 				pdf_dict_put(ctx, parent, PDF_NAME(First), next);
-			pdf_dict_del(ctx, next, PDF_NAME(Prev));
+				pdf_dict_del(ctx, next, PDF_NAME(Prev));
 			}
-		iter->current = next;
-	}
-	else if (prev)
-	{
-		iter->current = prev;
-		pdf_dict_put(ctx, parent, PDF_NAME(Last), prev);
-	}
+			iter->current = next;
+		}
+		else if (prev)
+		{
+			iter->current = prev;
+			pdf_dict_put(ctx, parent, PDF_NAME(Last), prev);
+		}
 		else if (parent)
-	{
-		iter->current = parent;
-		iter->modifier = MOD_BELOW;
-		pdf_dict_del(ctx, parent, PDF_NAME(First));
-		pdf_dict_del(ctx, parent, PDF_NAME(Last));
+		{
+			iter->current = parent;
+			iter->modifier = MOD_BELOW;
+			pdf_dict_del(ctx, parent, PDF_NAME(First));
+			pdf_dict_del(ctx, parent, PDF_NAME(Last));
 			result = 1;
-	}
+		}
 		else
 		{
 			iter->current = NULL;
@@ -506,14 +506,14 @@ fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc
 	pdf_mark_list_init(ctx, &mark_list);
 	fz_try(ctx)
 	{
-	root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
-	obj = pdf_dict_get(ctx, root, PDF_NAME(Outlines));
-	first = pdf_dict_get(ctx, obj, PDF_NAME(First));
-	if (first)
-	{
-		/* cache page tree for fast link destination lookups */
-		pdf_load_page_tree(ctx, doc);
-		fz_try(ctx)
+		root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+		obj = pdf_dict_get(ctx, root, PDF_NAME(Outlines));
+		first = pdf_dict_get(ctx, obj, PDF_NAME(First));
+		if (first)
+		{
+			/* cache page tree for fast link destination lookups */
+			pdf_load_page_tree(ctx, doc);
+			fz_try(ctx)
 			{
 				/* Pass through the outlines once, fixing inconsistencies */
 				pdf_test_outline(ctx, doc, first, &mark_list, obj, &fixed);
@@ -526,15 +526,15 @@ fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc
 					pdf_test_outline(ctx, doc, first, &mark_list, obj, NULL);
 				}
 			}
-		fz_always(ctx)
+			fz_always(ctx)
 			{
 				if (fixed)
 					pdf_end_operation(ctx, doc);
-			pdf_drop_page_tree(ctx, doc);
+				pdf_drop_page_tree(ctx, doc);
 			}
-		fz_catch(ctx)
-			fz_rethrow(ctx);
-	}
+			fz_catch(ctx)
+				fz_rethrow(ctx);
+		}
 	}
 	fz_always(ctx)
 		pdf_mark_list_free(ctx, &mark_list);

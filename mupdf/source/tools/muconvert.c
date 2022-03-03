@@ -211,12 +211,12 @@ int muconvert_main(int argc, char **argv)
 			fz_drop_document(ctx, doc);
 			doc = NULL;
 		}
-	fz_close_document_writer(ctx, out);
+		fz_close_document_writer(ctx, out);
 	}
 	fz_always(ctx)
 	{
 		fz_drop_document(ctx, doc);
-	fz_drop_document_writer(ctx, out);
+		fz_drop_document_writer(ctx, out);
 	}
 	fz_catch(ctx)
 		retval = EXIT_FAILURE;

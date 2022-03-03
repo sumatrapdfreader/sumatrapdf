@@ -532,8 +532,8 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 		int ind_obj_num;
 		pdf_obj *annot_arr;
 
-	pdf_page_transform(ctx, page, &page_mediabox, &page_ctm);
-	page_ctm = fz_invert_matrix(page_ctm);
+		pdf_page_transform(ctx, page, &page_mediabox, &page_ctm);
+		page_ctm = fz_invert_matrix(page_ctm);
 		rect = fz_transform_rect(bbox, page_ctm);
 
 		annot_arr = pdf_dict_get(ctx, page->obj, PDF_NAME(Annots));

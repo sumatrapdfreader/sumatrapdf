@@ -82,7 +82,7 @@ fz_trace_text_span(fz_context *ctx, fz_output *out, fz_text_span *span, int dept
 			default:
 				if (ucs < 32)
 					fz_write_printf(ctx, out, "&#x%x;", ucs);
-		else
+				else
 					fz_write_rune(ctx, out, ucs);
 				break;
 			case '&': fz_write_string(ctx, out, "&amp;"); break;

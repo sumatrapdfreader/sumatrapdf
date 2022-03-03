@@ -958,7 +958,7 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 				newxref[opts->renumber_map[num]] = *e;
 				if (e->obj)
 					pdf_set_obj_parent(ctx, e->obj, opts->renumber_map[num]);
-					e->obj = NULL;
+				e->obj = NULL;
 				e->stm_buf = NULL;
 				new_use_list[opts->renumber_map[num]] = opts->use_list[num];
 			}
@@ -1038,16 +1038,16 @@ mark_all(fz_context *ctx, pdf_document *doc, pdf_mark_list *list, pdf_write_stat
 	if (pdf_mark_list_push(ctx, list, val))
 		return;
 
-		if (pdf_is_indirect(ctx, val))
-		{
-			int num = pdf_to_num(ctx, val);
+	if (pdf_is_indirect(ctx, val))
+	{
+		int num = pdf_to_num(ctx, val);
 		int bits = flag;
-			if (num >= opts->list_len)
-				expand_lists(ctx, opts, num);
+		if (num >= opts->list_len)
+			expand_lists(ctx, opts, num);
 		if (page >= 0)
 			page_objects_list_insert(ctx, opts, page, num);
-			if (opts->use_list[num] & USE_PAGE_MASK)
-				/* Already used */
+		if (opts->use_list[num] & USE_PAGE_MASK)
+			/* Already used */
 			bits = USE_SHARED;
 		if ((opts->use_list[num] | bits) == opts->use_list[num])
 		{
@@ -1056,41 +1056,41 @@ mark_all(fz_context *ctx, pdf_document *doc, pdf_mark_list *list, pdf_write_stat
 			return;
 		}
 		opts->use_list[num] |= bits;
-		}
+	}
 
-		if (pdf_is_dict(ctx, val))
+	if (pdf_is_dict(ctx, val))
+	{
+		int i, n;
+		n = pdf_dict_len(ctx, val);
+
+		for (i = 0; i < n; i++)
 		{
-			int i, n;
-			n = pdf_dict_len(ctx, val);
+			pdf_obj *v = pdf_dict_get_val(ctx, val, i);
+			pdf_obj *type = pdf_dict_get(ctx, v, PDF_NAME(Type));
 
-			for (i = 0; i < n; i++)
-			{
-				pdf_obj *v = pdf_dict_get_val(ctx, val, i);
-				pdf_obj *type = pdf_dict_get(ctx, v, PDF_NAME(Type));
-
-				/* Don't walk through the Page tree, or direct to a page. */
-				if (pdf_name_eq(ctx, PDF_NAME(Pages), type) || pdf_name_eq(ctx, PDF_NAME(Page), type))
-					continue;
+			/* Don't walk through the Page tree, or direct to a page. */
+			if (pdf_name_eq(ctx, PDF_NAME(Pages), type) || pdf_name_eq(ctx, PDF_NAME(Page), type))
+				continue;
 
 			mark_all(ctx, doc, list, opts, v, flag, page);
-			}
 		}
-		else if (pdf_is_array(ctx, val))
+	}
+	else if (pdf_is_array(ctx, val))
+	{
+		int i, n = pdf_array_len(ctx, val);
+
+		for (i = 0; i < n; i++)
 		{
-			int i, n = pdf_array_len(ctx, val);
+			pdf_obj *v = pdf_array_get(ctx, val, i);
+			pdf_obj *type = pdf_dict_get(ctx, v, PDF_NAME(Type));
 
-			for (i = 0; i < n; i++)
-			{
-				pdf_obj *v = pdf_array_get(ctx, val, i);
-				pdf_obj *type = pdf_dict_get(ctx, v, PDF_NAME(Type));
-
-				/* Don't walk through the Page tree, or direct to a page. */
-				if (pdf_name_eq(ctx, PDF_NAME(Pages), type) || pdf_name_eq(ctx, PDF_NAME(Page), type))
-					continue;
+			/* Don't walk through the Page tree, or direct to a page. */
+			if (pdf_name_eq(ctx, PDF_NAME(Pages), type) || pdf_name_eq(ctx, PDF_NAME(Page), type))
+				continue;
 
 			mark_all(ctx, doc, list, opts, v, flag, page);
-			}
 		}
+	}
 	pdf_mark_list_pop(ctx, list);
 }
 
@@ -1100,55 +1100,55 @@ mark_pages(fz_context *ctx, pdf_document *doc, pdf_mark_list *list, pdf_write_st
 	if (pdf_mark_list_push(ctx, list, val))
 		return pagenum;
 
-		if (pdf_is_dict(ctx, val))
+	if (pdf_is_dict(ctx, val))
+	{
+		if (pdf_name_eq(ctx, PDF_NAME(Page), pdf_dict_get(ctx, val, PDF_NAME(Type))))
 		{
-			if (pdf_name_eq(ctx, PDF_NAME(Page), pdf_dict_get(ctx, val, PDF_NAME(Type))))
-			{
-				int num = pdf_to_num(ctx, val);
+			int num = pdf_to_num(ctx, val);
 			pdf_mark_list_pop(ctx, list);
 
 			mark_all(ctx, doc, list, opts, val, pagenum == 0 ? USE_PAGE1 : (pagenum<<USE_PAGE_SHIFT), pagenum);
-				page_objects_list_set_page_object(ctx, opts, pagenum, num);
-				pagenum++;
-				opts->use_list[num] |= USE_PAGE_OBJECT;
+			page_objects_list_set_page_object(ctx, opts, pagenum, num);
+			pagenum++;
+			opts->use_list[num] |= USE_PAGE_OBJECT;
 			return pagenum;
-			}
-			else
-			{
-				int i, n = pdf_dict_len(ctx, val);
-
-				for (i = 0; i < n; i++)
-				{
-					pdf_obj *key = pdf_dict_get_key(ctx, val, i);
-					pdf_obj *obj = pdf_dict_get_val(ctx, val, i);
-
-					if (pdf_name_eq(ctx, PDF_NAME(Kids), key))
-					pagenum = mark_pages(ctx, doc, list, opts, obj, pagenum);
-					else
-					mark_all(ctx, doc, list, opts, obj, USE_CATALOGUE, -1);
-				}
-
-				if (pdf_is_indirect(ctx, val))
-				{
-					int num = pdf_to_num(ctx, val);
-					opts->use_list[num] |= USE_CATALOGUE;
-				}
-			}
 		}
-		else if (pdf_is_array(ctx, val))
+		else
 		{
-			int i, n = pdf_array_len(ctx, val);
+			int i, n = pdf_dict_len(ctx, val);
 
 			for (i = 0; i < n; i++)
 			{
-			pagenum = mark_pages(ctx, doc, list, opts, pdf_array_get(ctx, val, i), pagenum);
+				pdf_obj *key = pdf_dict_get_key(ctx, val, i);
+				pdf_obj *obj = pdf_dict_get_val(ctx, val, i);
+
+				if (pdf_name_eq(ctx, PDF_NAME(Kids), key))
+					pagenum = mark_pages(ctx, doc, list, opts, obj, pagenum);
+				else
+					mark_all(ctx, doc, list, opts, obj, USE_CATALOGUE, -1);
 			}
+
 			if (pdf_is_indirect(ctx, val))
 			{
 				int num = pdf_to_num(ctx, val);
 				opts->use_list[num] |= USE_CATALOGUE;
 			}
 		}
+	}
+	else if (pdf_is_array(ctx, val))
+	{
+		int i, n = pdf_array_len(ctx, val);
+
+		for (i = 0; i < n; i++)
+		{
+			pagenum = mark_pages(ctx, doc, list, opts, pdf_array_get(ctx, val, i), pagenum);
+		}
+		if (pdf_is_indirect(ctx, val))
+		{
+			int num = pdf_to_num(ctx, val);
+			opts->use_list[num] |= USE_CATALOGUE;
+		}
+	}
 	pdf_mark_list_pop(ctx, list);
 
 	return pagenum;
@@ -1162,37 +1162,37 @@ mark_root(fz_context *ctx, pdf_document *doc, pdf_mark_list *list, pdf_write_sta
 	if (pdf_mark_list_push(ctx, list, dict))
 		return;
 
-		if (pdf_is_indirect(ctx, dict))
-		{
-			int num = pdf_to_num(ctx, dict);
-			opts->use_list[num] |= USE_CATALOGUE;
-		}
+	if (pdf_is_indirect(ctx, dict))
+	{
+		int num = pdf_to_num(ctx, dict);
+		opts->use_list[num] |= USE_CATALOGUE;
+	}
 
-		for (i = 0; i < n; i++)
-		{
-			pdf_obj *key = pdf_dict_get_key(ctx, dict, i);
-			pdf_obj *val = pdf_dict_get_val(ctx, dict, i);
+	for (i = 0; i < n; i++)
+	{
+		pdf_obj *key = pdf_dict_get_key(ctx, dict, i);
+		pdf_obj *val = pdf_dict_get_val(ctx, dict, i);
 
-			if (pdf_name_eq(ctx, PDF_NAME(Pages), key))
+		if (pdf_name_eq(ctx, PDF_NAME(Pages), key))
 			opts->page_count = mark_pages(ctx, doc, list, opts, val, 0);
-			else if (pdf_name_eq(ctx, PDF_NAME(Names), key))
+		else if (pdf_name_eq(ctx, PDF_NAME(Names), key))
 			mark_all(ctx, doc, list, opts, val, USE_OTHER_OBJECTS, -1);
-			else if (pdf_name_eq(ctx, PDF_NAME(Dests), key))
+		else if (pdf_name_eq(ctx, PDF_NAME(Dests), key))
 			mark_all(ctx, doc, list, opts, val, USE_OTHER_OBJECTS, -1);
-			else if (pdf_name_eq(ctx, PDF_NAME(Outlines), key))
-			{
-				int section;
-				/* Look at PageMode to decide whether to
-				 * USE_OTHER_OBJECTS or USE_PAGE1 here. */
-				if (pdf_name_eq(ctx, pdf_dict_get(ctx, dict, PDF_NAME(PageMode)), PDF_NAME(UseOutlines)))
-					section = USE_PAGE1;
-				else
-					section = USE_OTHER_OBJECTS;
-			mark_all(ctx, doc, list, opts, val, section, -1);
-			}
+		else if (pdf_name_eq(ctx, PDF_NAME(Outlines), key))
+		{
+			int section;
+			/* Look at PageMode to decide whether to
+			 * USE_OTHER_OBJECTS or USE_PAGE1 here. */
+			if (pdf_name_eq(ctx, pdf_dict_get(ctx, dict, PDF_NAME(PageMode)), PDF_NAME(UseOutlines)))
+				section = USE_PAGE1;
 			else
-			mark_all(ctx, doc, list, opts, val, USE_CATALOGUE, -1);
+				section = USE_OTHER_OBJECTS;
+			mark_all(ctx, doc, list, opts, val, section, -1);
 		}
+		else
+			mark_all(ctx, doc, list, opts, val, USE_CATALOGUE, -1);
+	}
 	pdf_mark_list_pop(ctx, list);
 }
 
@@ -1204,16 +1204,16 @@ mark_trailer(fz_context *ctx, pdf_document *doc, pdf_mark_list *list, pdf_write_
 	if (pdf_mark_list_push(ctx, list, dict))
 		return;
 
-		for (i = 0; i < n; i++)
-		{
-			pdf_obj *key = pdf_dict_get_key(ctx, dict, i);
-			pdf_obj *val = pdf_dict_get_val(ctx, dict, i);
+	for (i = 0; i < n; i++)
+	{
+		pdf_obj *key = pdf_dict_get_key(ctx, dict, i);
+		pdf_obj *val = pdf_dict_get_val(ctx, dict, i);
 
-			if (pdf_name_eq(ctx, PDF_NAME(Root), key))
+		if (pdf_name_eq(ctx, PDF_NAME(Root), key))
 			mark_root(ctx, doc, list, opts, val);
-			else
+		else
 			mark_all(ctx, doc, list, opts, val, USE_CATALOGUE, -1);
-		}
+	}
 	pdf_mark_list_pop(ctx, list);
 }
 
@@ -1494,13 +1494,13 @@ linearize(fz_context *ctx, pdf_document *doc, pdf_write_state *opts)
 	/* Ensure that every page has local references of its resources */
 	fz_try(ctx)
 	{
-	/* FIXME: We could 'thin' the resources according to what is actually
-	 * required for each page, but this would require us to run the page
-	 * content streams. */
+		/* FIXME: We could 'thin' the resources according to what is actually
+		 * required for each page, but this would require us to run the page
+		 * content streams. */
 		pdf_localise_page_resources(ctx, doc, &list);
 
-	/* Walk the objects for each page, marking which ones are used, where */
-	memset(opts->use_list, 0, n * sizeof(int));
+		/* Walk the objects for each page, marking which ones are used, where */
+		memset(opts->use_list, 0, n * sizeof(int));
 		mark_trailer(ctx, doc, &list, opts, pdf_trailer(ctx, doc));
 	}
 	fz_always(ctx)

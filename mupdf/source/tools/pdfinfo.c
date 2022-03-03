@@ -238,7 +238,7 @@ gatherdimensions(fz_context *ctx, globals *glo, int page, pdf_obj *pageref)
 	bbox = pdf_to_rect(ctx, obj);
 
 	obj = pdf_dict_get(ctx, pageref, PDF_NAME(UserUnit));
-	if (pdf_is_real(ctx, obj))
+	if (pdf_is_number(ctx, obj))
 	{
 		float unit = pdf_to_real(ctx, obj);
 		bbox.x0 *= unit;
@@ -614,63 +614,63 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 	if (pdf_mark_list_push(ctx, mark_list, rsrc))
 		return;
 
-		font = pdf_dict_get(ctx, rsrc, PDF_NAME(Font));
-		if (show & FONTS && font)
+	font = pdf_dict_get(ctx, rsrc, PDF_NAME(Font));
+	if (show & FONTS && font)
+	{
+		int n;
+
+		gatherfonts(ctx, glo, page, pageref, font);
+		n = pdf_dict_len(ctx, font);
+		for (i = 0; i < n; i++)
 		{
-			int n;
+			pdf_obj *obj = pdf_dict_get_val(ctx, font, i);
 
-			gatherfonts(ctx, glo, page, pageref, font);
-			n = pdf_dict_len(ctx, font);
-			for (i = 0; i < n; i++)
-			{
-				pdf_obj *obj = pdf_dict_get_val(ctx, font, i);
-
-				subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
-				if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
+			subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
+			if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
 				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
-			}
 		}
+	}
 
-		xobj = pdf_dict_get(ctx, rsrc, PDF_NAME(XObject));
-		if (show & (IMAGES|XOBJS) && xobj)
+	xobj = pdf_dict_get(ctx, rsrc, PDF_NAME(XObject));
+	if (show & (IMAGES|XOBJS) && xobj)
+	{
+		int n;
+
+		if (show & IMAGES)
+			gatherimages(ctx, glo, page, pageref, xobj);
+		if (show & XOBJS)
 		{
-			int n;
-
-			if (show & IMAGES)
-				gatherimages(ctx, glo, page, pageref, xobj);
-			if (show & XOBJS)
-			{
-				gatherforms(ctx, glo, page, pageref, xobj);
-				gatherpsobjs(ctx, glo, page, pageref, xobj);
-			}
-			n = pdf_dict_len(ctx, xobj);
-			for (i = 0; i < n; i++)
-			{
-				pdf_obj *obj = pdf_dict_get_val(ctx, xobj, i);
-				subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
-				if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
-				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
-			}
+			gatherforms(ctx, glo, page, pageref, xobj);
+			gatherpsobjs(ctx, glo, page, pageref, xobj);
 		}
-
-		shade = pdf_dict_get(ctx, rsrc, PDF_NAME(Shading));
-		if (show & SHADINGS && shade)
-			gathershadings(ctx, glo, page, pageref, shade);
-
-		pattern = pdf_dict_get(ctx, rsrc, PDF_NAME(Pattern));
-		if (show & PATTERNS && pattern)
+		n = pdf_dict_len(ctx, xobj);
+		for (i = 0; i < n; i++)
 		{
-			int n;
-			gatherpatterns(ctx, glo, page, pageref, pattern);
-			n = pdf_dict_len(ctx, pattern);
-			for (i = 0; i < n; i++)
-			{
-				pdf_obj *obj = pdf_dict_get_val(ctx, pattern, i);
-				subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
-				if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
+			pdf_obj *obj = pdf_dict_get_val(ctx, xobj, i);
+			subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
+			if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
 				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
-			}
 		}
+	}
+
+	shade = pdf_dict_get(ctx, rsrc, PDF_NAME(Shading));
+	if (show & SHADINGS && shade)
+		gathershadings(ctx, glo, page, pageref, shade);
+
+	pattern = pdf_dict_get(ctx, rsrc, PDF_NAME(Pattern));
+	if (show & PATTERNS && pattern)
+	{
+		int n;
+		gatherpatterns(ctx, glo, page, pageref, pattern);
+		n = pdf_dict_len(ctx, pattern);
+		for (i = 0; i < n; i++)
+		{
+			pdf_obj *obj = pdf_dict_get_val(ctx, pattern, i);
+			subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
+			if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
+				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
+		}
+	}
 }
 
 static void
@@ -690,7 +690,7 @@ gatherpageinfo(fz_context *ctx, globals *glo, int page, int show)
 	pdf_mark_list_init(ctx, &mark_list);
 	fz_try(ctx)
 	{
-	rsrc = pdf_dict_get(ctx, pageref, PDF_NAME(Resources));
+		rsrc = pdf_dict_get(ctx, pageref, PDF_NAME(Resources));
 		gatherresourceinfo(ctx, &mark_list, glo, page, rsrc, show);
 	}
 	fz_always(ctx)

@@ -836,7 +836,7 @@ static fz_bidi_chartype get_resolved_neutrals(fz_bidi_action action)
 	 * so that we understand what changed in case we ever update to
 	 * a newer release of the bidirectional code.
 	 */
-		return action;
+	return action;
 }
 
 // state values

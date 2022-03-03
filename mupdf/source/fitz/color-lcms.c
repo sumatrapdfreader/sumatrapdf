@@ -499,12 +499,12 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 		fz_free(ctx, buffer);
 	}
 	else
-	for (; h > 0; h--)
-	{
-		cmsDoTransform(GLO link->handle, inputpos, outputpos, sw);
-		inputpos += ss;
-		outputpos += ds;
-	}
+		for (; h > 0; h--)
+		{
+			cmsDoTransform(GLO link->handle, inputpos, outputpos, sw);
+			inputpos += ss;
+			outputpos += ds;
+		}
 }
 
 #endif

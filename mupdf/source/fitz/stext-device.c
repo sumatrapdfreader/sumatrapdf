@@ -237,9 +237,8 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	}
 	else
 	{
-		fz_rect bbox = fz_font_bbox(ctx, font);
-		a.x = bbox.x1;
-		d.x = bbox.x0;
+		a.x = 1;
+		d.x = 0;
 		a.y = 0;
 		d.y = 0;
 	}

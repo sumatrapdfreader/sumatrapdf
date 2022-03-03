@@ -91,11 +91,13 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 		return fz_strdup(ctx, ld);
 	}
 
-	pageobj = pdf_array_get(ctx, dest, 0);
-	/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/2347 */
-	if (!pageobj) {
-		return fz_strdup(ctx, "");
+	if (pdf_array_len(ctx, dest) < 1)
+	{
+		fz_warn(ctx, "invalid link destination");
+		return NULL;
 	}
+
+	pageobj = pdf_array_get(ctx, dest, 0);
 	if (pdf_is_int(ctx, pageobj))
 	{
 		pageno = pdf_to_int(ctx, pageobj);
@@ -535,26 +537,26 @@ pdf_format_link_uri(fz_context *ctx, fz_link_dest dest)
 	char *uri = NULL;
 
 	switch (dest.type)
-		{
-		default:
+	{
+	default:
 	case FZ_LINK_DEST_FIT:
 		uri = fz_asprintf(ctx, "#page=%d&view=Fit", dest.loc.page + 1);
-			break;
+		break;
 	case FZ_LINK_DEST_FIT_B:
 		uri = fz_asprintf(ctx, "#page=%d&view=FitB", dest.loc.page + 1);
-			break;
+		break;
 	case FZ_LINK_DEST_FIT_H:
 		uri = fz_asprintf(ctx, "#page=%d&view=FitH,%g", dest.loc.page + 1, dest.y);
-			break;
+		break;
 	case FZ_LINK_DEST_FIT_BH:
 		uri = fz_asprintf(ctx, "#page=%d&view=FitBH,%g", dest.loc.page + 1, dest.y);
-			break;
+		break;
 	case FZ_LINK_DEST_FIT_V:
 		uri = fz_asprintf(ctx, "#page=%d&view=FitV,%g", dest.loc.page + 1, dest.x);
-			break;
+		break;
 	case FZ_LINK_DEST_FIT_BV:
 		uri = fz_asprintf(ctx, "#page=%d&view=FitBV,%g", dest.loc.page + 1, dest.x);
-			break;
+		break;
 	case FZ_LINK_DEST_XYZ:
 		if (dest.zoom == 0 && dest.x == 0 && dest.y == 0)
 			uri = fz_asprintf(ctx, "#page=%d", dest.loc.page + 1);
@@ -563,15 +565,15 @@ pdf_format_link_uri(fz_context *ctx, fz_link_dest dest)
 				dest.zoom,
 				dest.x,
 				dest.y);
-			break;
+		break;
 	case FZ_LINK_DEST_FIT_R:
 		uri = fz_asprintf(ctx, "#page=%d&viewrect=%g,%g,%g,%g", dest.loc.page + 1,
 			dest.x,
 			dest.y,
 			dest.w,
 			dest.h);
-			break;
-		}
+		break;
+	}
 
 	return uri;
 }

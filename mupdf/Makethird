@@ -250,8 +250,8 @@ $(OUT)/thirdparty/extract/%.o: thirdparty/extract/%.c
 thirdparty/extract/src/docx_template.c: thirdparty/extract/src/template.docx thirdparty/extract/src/docx_template_build.py
 	$(QUIET_GEN) if python3 -c 'import sys; sys.exit(sys.version_info < (3,6))'; \
 		then python3 thirdparty/extract/src/docx_template_build.py \
-		-i thirdparty/extract/src/template.docx \
-		-n docx \
+			-i thirdparty/extract/src/template.docx \
+			-n docx \
 			-o thirdparty/extract/src/docx_template ; \
 		else echo python3 is older than 3.6 so not running docx_template_build.py; \
 		fi
@@ -260,8 +260,8 @@ thirdparty/extract/src/docx_template.c: thirdparty/extract/src/template.docx thi
 thirdparty/extract/src/odt_template.c: thirdparty/extract/src/template.odt thirdparty/extract/src/docx_template_build.py
 	$(QUIET_GEN) if python3 -c 'import sys; sys.exit(sys.version_info < (3,6))'; \
 		then python3 thirdparty/extract/src/docx_template_build.py \
-		-i thirdparty/extract/src/template.odt \
-		-n odt \
+			-i thirdparty/extract/src/template.odt \
+			-n odt \
 			-o thirdparty/extract/src/odt_template ; \
 		else echo python3 is older than 3.6 so not running docx_template_build.py; \
 		fi

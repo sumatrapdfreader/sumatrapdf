@@ -1744,10 +1744,10 @@ fz_advance_ft_glyph_aux(fz_context *ctx, fz_font *font, int gid, int wmode, int 
 	if (wmode)
 		mask |= FT_LOAD_VERTICAL_LAYOUT;
 	if (!locked)
-	fz_lock(ctx, FZ_LOCK_FREETYPE);
+		fz_lock(ctx, FZ_LOCK_FREETYPE);
 	fterr = FT_Get_Advance(font->ft_face, gid, mask, &adv);
 	if (!locked)
-	fz_unlock(ctx, FZ_LOCK_FREETYPE);
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 	if (fterr && fterr != FT_Err_Invalid_Argument)
 	{
 		fz_warn(ctx, "FT_Get_Advance(%s,%d): %s", font->name, gid, ft_error_string(fterr));
@@ -1811,7 +1811,7 @@ fz_advance_glyph(fz_context *ctx, fz_font *font, int gid, int wmode)
 			{
 				int i;
 				fz_try(ctx)
-				font->advance_cache = Memento_label(fz_malloc_array(ctx, font->glyph_count, float), "font_advance_cache");
+					font->advance_cache = Memento_label(fz_malloc_array(ctx, font->glyph_count, float), "font_advance_cache");
 				fz_catch(ctx)
 				{
 					fz_unlock(ctx, FZ_LOCK_FREETYPE);
