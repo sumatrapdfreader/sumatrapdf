@@ -228,7 +228,6 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	}
 	// for prerel, version is in path, not in name
 	if buildType == buildTypePreRel {
-		d["Host"] = host + "/software/sumatrapdf/" + buildType + "/" + ver
 		d["Prefix"] = appName
 	}
 	return execTextTemplate(tmplText, d)
