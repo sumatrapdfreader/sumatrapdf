@@ -435,6 +435,7 @@ func updateSumatraWebsite() string {
 	panicIf(!isGitClean(dir), "github repository '%s' must be clean", dir)
 	{
 		cmd := exec.Command("git", "pull")
+		cmd.Dir = dir
 		runCmdLoggedMust(cmd)
 	}
 	dir = filepath.Join(dir, "www")
@@ -450,7 +451,7 @@ func genAndSaveSettingsStructs() {
 	verUrlized := strings.Replace(ver, ".", "-", -1)
 
 	settingsFileName := fmt.Sprintf("settings%s.html", verUrlized)
-	langsFileName := fmt.Sprintf("langs%s", verUrlized)
+	langsFileName := fmt.Sprintf("langs%s.html", verUrlized)
 
 	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings/settings%s.html", verUrlized)
 

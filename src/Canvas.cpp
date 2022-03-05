@@ -56,9 +56,6 @@
 // Timer for mouse wheel smooth scrolling
 #define MW_SMOOTHSCROLL_TIMER_ID 6
 
-// Smooth scrolling enabled?
-static const bool gSmoothScrollingEnabled = true;
-
 // Smooth scrolling factor. This is a value between 0 and 1.
 // Each step, we scroll the needed delta times this factor.
 // Therefore, a higher factor makes smooth scrolling faster.
@@ -143,7 +140,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
-        if (gSmoothScrollingEnabled) {
+        if (gGlobalPrefs->smoothScroll) {
             win->scrollTargetY = si.nPos;
             SetTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID, USER_TIMER_MINIMUM, nullptr);
         } else {

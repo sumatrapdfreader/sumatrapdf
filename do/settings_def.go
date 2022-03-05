@@ -242,6 +242,8 @@ var (
 
 		//MkField("ThemeName", String, "light", "the name of the theme to use"),
 
+		mkField("SmoothScroll", Bool, false,
+			"if true, implements smooth scrolling").setExpert(),
 		mkField("EscToExit", Bool, false,
 			"if true, Esc key closes SumatraPDF").setExpert(),
 		mkField("ReuseInstance", Bool, false,
