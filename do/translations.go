@@ -103,7 +103,7 @@ func getFilesToProcess() []string {
 }
 
 var (
-	translationPattern = regexp.MustCompile(`\b_TR[UN]?\("(.*?)"\)`)
+	translationPattern = regexp.MustCompile(`\b_TR[AN]?\("(.*?)"\)`)
 )
 
 func extractTranslations(s string) []string {

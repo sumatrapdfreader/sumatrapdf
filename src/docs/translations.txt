@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-42f250f328f9b28b028ddcd533e11e910d6594ce
+3ac63e7cdeb60e841e477ab4544e336ac1f838d3
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4482,6 +4482,22 @@ tw:作者:
 uk:Автор:
 uz:Muallif:
 vn:Tác giả
+:Author: %s
+am:Հեղինակ՝ %s
+az:Müəllif: %s
+bn:গ্রন্থকার: %s
+cn:作者: %s
+de:Autor: %s
+el:Συγγραφέας: %s
+es:Autora: %s
+hr:Autor: %s
+it:Autore: %s
+kw:Skrifer: %s
+lt:Autorius: %s
+lv:Autors: %s
+nl:Auteur: %s
+pl:Autor: %s
+ru:Автор: %s
 :Automatic
 af:Outomaties
 am:Ինքնաշխատ
@@ -4916,6 +4932,20 @@ tw:書籤
 uk:Закладки
 uz:Xatcho'plar
 vn:Chỉ dấu sách
+:Border: %d
+am:Եզրագիծ. %d
+bn:সীমানা: %d
+cn:边框: %d
+de:Umrandung: %d
+el:Περιθώριο: %d
+es:Borde: %d
+hr:Rub: %d
+it:Bordo: %d
+kw:Amal: %d
+lt:Kraštas: %d
+lv:Apmale: %d
+nl:Rand %d
+pl:Obramowanie: %d
 :Bytes
 am:Բայթ
 ar:بايت
@@ -5805,6 +5835,21 @@ tw:相容性
 uk:Сумісність
 uz:Mosligi
 vn:Tính tương thích
+:Contents:
+am:Բովանդակություններ.
+az:Məzmun:
+bn:বিষয়:
+cn:内容：
+de:Inhalte:
+el:Περιεχόμενα:
+es:Contenido:
+hr:Sadržaj:
+it:Contenuti:
+kw:Dalghow:
+lt:Turinys:
+lv:Saturs:
+nl:Inhoud
+pl:Zawartość:
 :Continuous
 af:Aanmekaar
 am:Անդադար
@@ -7540,6 +7585,22 @@ tr:Kapkaranlık
 tw:更暗
 uk:Темніша
 vn:Tối hơn
+:Date:
+am:Ամսաթիվ.
+az:Tarix:
+bn:তারিখ:
+cn:日期:
+de:Datum:
+el:Ημερομηνία:
+es:Fetcha:
+hr:Datum:
+it:Data:
+kw:Dedhyas:
+lt:Data:
+lv:Datums:
+nl:Datum:
+pl:Data:
+ru:Дата:
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -11070,6 +11131,20 @@ tw:提示: 按 F3 重新尋找。
 uk:Підказка: Для повторного пошуку натисніть F3
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
+:Icon:
+am:Պատկերակ.
+bn:আইকন
+cn:图标:
+de:Icon:
+el:Εικονίδιο:
+es:Icono:
+hr:Ikona:
+it:Icona:
+kw:Ikon:
+lt:Ikona:
+lv:Ikona:
+nl:Pictogram:
+pl:Ikona:
 :Image files (*.%s)
 am:Պատկերի ֆայլեր (*.%s)
 ar:ملفات الصور (*.%s)
@@ -11511,6 +11586,19 @@ th:กำลังติดตั้ง SumatraPDF รุ่น 32 บิต บ
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruluyor
 tw:安裝32位元版本 SumatraPDF 於 64位元版系統
 uk:Встановлення 32-розрядної SumatraPDF на 64-розрядну ОС
+:Interior Color:
+am:Ներքին գույնը.
+cn:填充颜色：
+de:Innenfarbe:
+el:Εσωτερικό Χρώμα:
+es:Color Interior
+hr:Unutarnja boja:
+it:Colore interno:
+kw:Liw A-Bervedh:
+lt:Vidaus spalva:
+lv:Iekšējā krāsa:
+nl:Interieur Kleur
+pl:Kolor wnętrza:
 :KB
 af:KB
 am:ԿԲ
@@ -11799,6 +11887,34 @@ th:ไลน์
 tr:Çizgi
 tw:線條
 uk:Лінія
+:Line End:
+am:Տողի ավարտը.
+bn:লাইন শেষ:
+cn:线段终点
+de:Zeilenende:
+el:Τέλος γραμμής:
+es:Fin de Línea:
+hr:Kraj linije:
+it:Fine linea:
+kw:Diwedh Linen:
+lt:Linijos pabaiga:
+nl:Lijn Eind
+pl:Koniec linii:
+ru:Конец линии:
+:Line Start:
+am:Տողի մեկնարկը.
+bn:লাইন শুরু:
+cn:线段起点
+de:Zeilenstart:
+el:Έναρξη γραμμής:
+es:Inicio de Línea:
+hr:Početak linije:
+it:Inizio linea:
+kw:Dalleth Linen:
+lt:Linijos pradžia:
+nl:Lijn Begin
+pl:Początek linii:
+ru:Начало линии:
 :MB
 af:MB
 am:ՄԲ
@@ -12806,6 +12922,34 @@ tw:確定(&O)
 uk:Гаразд
 uz:OK
 vn:Đồng ý
+:Opacity:
+am:Մգություն.
+bn:অস্বচ্ছতা:
+cn:透明度:
+de:Deckkraft:
+el:Διαφάνεια:
+es:Opacidad:
+hr:Neprozirnost:
+it:Opacità:
+kw:Disklerder:
+lt:Nepermatomumas:
+lv:Necaurspīdīgums:
+nl:Dekking
+pl:Nieprzezroczystość:
+:Opacity: %d
+am:Մգություն. %d
+bn:অস্বচ্ছতা: %d
+cn:透明度: %d
+de:Deckkraft: %d
+el:Διαφάνεια: %d
+es:Opacidad: %d
+hr:Neprozirnost: %d
+it:Opacità: %d
+kw:Disklerder: %d
+lt:Nepermatomumas: %d
+lv:Necaurspīdīgums: %d
+nl:Dekking: %d
+pl:Nieprzezroczystość: %d
 :Open
 af:Maak Oop
 am:Բացել
@@ -14407,6 +14551,20 @@ th:รูปหลายเหลี่ยม
 tr:Çokgen
 tw:多邊形
 uk:Багатокутник
+:Popup: %d 0 R
+am:Ելնող. %d 0 R
+cn:弹出：%d 0 R
+de:Pop-up: %d 0 R
+el:Αναδυόμενο παράθυρο: %d 0 R
+es:Ventana Emergente: %d 0 R
+hr:Skočna obavijest: %d 0 R
+it:Popup: %d 0 R
+kw:Tardhans: %d 0 R
+lt:Pranešimas: %d 0 R
+lv:Uznirstošs: %d 0 R
+nl:Popup: %d O R
+pl:Wyskakujące okienko: %d 0 R
+ru:Всплывающее окно: %d 0 R
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -15176,6 +15334,19 @@ tw:重新命名(&N)...\tF2
 uk:Перейменувати...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
+:Rect: x=%d y=%d dx=%d dy=%d
+am:Ուղղ. x=%d y=%d dx=%d dy=%d
+cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
+de:Rechteck: x=%d y=%d dx=%d dy=%d
+el:Τετρ: x=%d y=%d dx=%dy=%d
+es:Rectangulo: x=%d y=%d dx=%d dy=%d
+hr:Pravokutnik: x=%d y=%d dx=%d dy=%d
+it:Rettangolo: x=%d Y=%d dx=%d dy=%d
+kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
+lt:Stačiakampis: x=%d y=%d dx=%d dy=%d
+lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
+nl:Rect: x=%d y=%d dx=%d dy=%d
+pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 :Redact
 am:Փոփոխել
 ar:تنقيح
@@ -15893,6 +16064,33 @@ pl:Zapisz w &nowym pliku PDF
 sk:Uložiť do &nového PDF
 th:บันทึกไปที่ &​PDF ใหม่
 tr:&Yeni PDF'ye kaydet
+:Saved annotations to '%s'
+am:Պահված մեկնաբանություններ '%s'-ում
+cn:保存注释到 '%s'
+de:Gespeicherte Anmerkungen zu '%s'
+el: Αποθηκεύτηκαν σχόλια στο '%s'
+es:Anotaciones guardadas en '%s'
+hr:Bilješke spremljene u '%s'
+it:Annotazioni salvate in '%s'
+kw:Notenyansow gwithys dhe '%s'
+lt:Anotacijos išsaugotos į '%s'
+lv:Anotācijas ir saglabātas šeit: '%s'
+nl:Aantekeningen opgeslagen in '%s'
+pl:Zapisano adnotacje do '%s'
+ru:Аннотации сохранены в '%s'
+:Saving of '%s' failed with: '%s'
+am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
+cn:保存 '%s' 失败: '%s'
+de:Speichern von '%s' fehlgeschlagen mit: '%s'
+el:Η αποθήκευση του '%s' απέτυχε με: '%s'
+es:El proceso de guardado de '%s' fallo por: '%s'
+hr:Spremanje '%s' neuspjelo sa: '%s'
+it:Salvataggio di '%s' fallito con: '%s'
+kw:Gwitha '%s' re fyllis gans: '%s'
+lt:%s išsaugojimas nepavyko: '%s'
+lv:'%s' saglabāšana neizdevās ar: '%s'
+nl:Opslaan van '%s' mislukt met: '%s'
+pl:Zapisywanie '%s' nie powiodło się z: '%s'
 :Search With &Bing
 am:Որոնել &Bing-ով
 br:Buscar com &Bing
@@ -18042,6 +18240,70 @@ tw:已標示的 PDF
 uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
+:Text Alignment:
+am:Գրվածքի հավասարեցում
+cn:文本对齐:
+de:Textausrichtung:
+el:Ευθυγράμμιση κειμένου:
+es:Alineación de Texto:
+hr:Poravnavanje teksta:
+it:Allineamento testo:
+kw:Alinyans Tekst:
+lt:Teksto lygiavimas:
+lv:Teksta līdzinājums:
+nl:Tekst Uitlijning:
+pl:Wyrównanie tekstu:
+ru:Выравнивание текста:
+:Text Color:
+am:Գրվածքի գույն
+az:Mətnin rəngi:
+bn:লেখার রং:
+cn:文本颜色:
+de:Textfarbe:
+el:Text Color: 
+es:Color de Texto:
+hr:Boja teksta:
+it:Colore testo:
+kw:Liw Tekst:
+lt:Teksto spalva:
+lv:Teksta krāsa:
+my:Warna Teks:
+nl:Tekst Kleur
+pl:Kolor tekstu:
+ru:Цвет текста:
+:Text Size:
+am:Գրվածքի չափ.
+az:Mətnin ölçüsü:
+bn:লেখার আকার:
+cn:文本大小:
+de:Textgröße:
+el:Μέγεθος κειμένου: 
+es:Tamaño de Texto
+hr:Veličina teksta:
+it:Dimensione testo:
+kw:Braster Tekst:
+lt:Teksto dydis:
+lv:Teksta lielums:
+my:Saiz Teks:
+nl:Tekst Grootte:
+pl:Rozmiar tekstu:
+ru:Размер текста:
+:Text Size: %d
+am:Գրվածքի չափը՝ %d
+bn:লেখার আকার: %d
+cn:文本大小: %d
+de:Textgröße: %d
+el:Μέγεθος κειμένου: %d
+es:Tamaño de Texto: %d
+hr:Veličina teksta: %d
+it:Dimensione testo: %d
+kw:Braster Tekst: %d
+lt:Teksto dydis: %d
+lv:Teksta lielums: %d
+my:Saiz Teks: %d
+nl:Tekst Grootte: %d
+pl:Rozmiar tekstu: %d
+ru:Размер текста: %d
 :Text documents
 am:Գրվածքային փաստաթղթեր
 ar:مستندات نصية
