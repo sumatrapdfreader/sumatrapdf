@@ -184,7 +184,7 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
         c->allTranslationsW.Append(ws.Get(), ws.size() + 1);
     }
     CrashIf(nTrans != c->nTranslations);
-    if (c->nUntranslated > 0) {
+    if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {
         logf("Untranslated strings: %d for lang '%s'\n", c->nUntranslated, langCode);
     }
 }

@@ -90,6 +90,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+        BringWindowToTop(hDlg);
         return FALSE;
     }
     //] ACCESSKEY_GROUP Password Dialog
