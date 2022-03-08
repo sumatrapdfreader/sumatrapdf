@@ -282,9 +282,11 @@ void fz_set_error_callback(fz_context *ctx, fz_error_cb *error_cb, void *user);
 
 /**
 	Retrieve the currently set error callback, or NULL if none
-	has been set.
+	has been set. Optionally, if user is non-NULL, the user pointer
+	given when the warning callback was set is also passed back to
+	the caller.
 */
-fz_error_cb *fz_error_callback(fz_context *ctx);
+fz_error_cb *fz_error_callback(fz_context *ctx, void **user);
 
 /**
 	Set the warning callback. This will be called as part of the
@@ -296,9 +298,11 @@ void fz_set_warning_callback(fz_context *ctx, fz_warning_cb *warning_cb, void *u
 
 /**
 	Retrieve the currently set warning callback, or NULL if none
-	has been set.
+	has been set. Optionally, if user is non-NULL, the user pointer
+	given when the warning callback was set is also passed back to
+	the caller.
 */
-fz_warning_cb *fz_warning_callback(fz_context *ctx);
+fz_warning_cb *fz_warning_callback(fz_context *ctx, void **user);
 
 /**
 	In order to tune MuPDF's behaviour, certain functions can

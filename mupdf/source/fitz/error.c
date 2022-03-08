@@ -74,8 +74,10 @@ void fz_set_warning_callback(fz_context *ctx, fz_warning_cb *warning_cb, void *u
 	ctx->warn.print = warning_cb;
 }
 
-fz_warning_cb *fz_warning_callback(fz_context *ctx)
+fz_warning_cb *fz_warning_callback(fz_context *ctx, void **user)
 {
+	if (user)
+		*user = ctx->warn.print_user;
 	return ctx->warn.print;
 }
 
@@ -134,8 +136,10 @@ void fz_set_error_callback(fz_context *ctx, fz_error_cb *error_cb, void *user)
 	ctx->error.print = error_cb;
 }
 
-fz_error_cb *fz_error_callback(fz_context *ctx)
+fz_error_cb *fz_error_callback(fz_context *ctx, void **user)
 {
+	if (user)
+		*user = ctx->error.print_user;
 	return ctx->error.print;
 }
 

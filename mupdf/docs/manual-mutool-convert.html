@@ -135,11 +135,31 @@ The SVG output options are:
 <dt>no-reuse-images	<dd> Do not reuse images using &lt;symbol&gt; definitions.
 </dl>
 
+<h2>
+Text output
+</h2>
+
+<p>
+Text output extracts the text of the page into a single output file.
+
+<p>
+The text output options are:
+
+<dl>
+<dt>preserve-ligatures		<dd> Ligatures are passed through in their original form. If not activated ligatures are expanded into their constituent parts, e.g. the ligature ffi is expanded into three separate characters, f, f and i.
+<dt>preserve-whitespace		<dd> Whitespace is passed through in its original form. If not activated any type of horizontal whitespace (including horizontal tabs) will be replaced with space characters of variable width.
+<dt>preserve-images		<dd> Images will be stored in the structure text. The default is to ignore all images.
+<dt>inhibit-spaces		<dd> Missing spaces will not be added where there are large gaps between characters. The default is to insert these missing spaces.
+<dt>dehyphenate			<dd> Hyphens at the end of a line will be removed and the lines will be merged. The default is to leave the hyphens and not join lines.
+<dt>preserve-spans		<dd> Text spans on the same line will not be merged. Each line will thus be a span of text with the same font, color and size.
+<dt>mediabox-clip		<dd> Characters entirely outside the page's mediabox are ignored.
+</dl>
+
 </article>
 
 <footer>
 <a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
-Copyright &copy; 2006-2018 Artifex Software Inc.
+Copyright &copy; 2006-2022 Artifex Software Inc.
 </footer>
 
 </body>

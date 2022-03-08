@@ -1753,7 +1753,7 @@ static void load_document(void)
 		{
 			trace_action("doc.enableJS();\n");
 			pdf_enable_js(ctx, pdf);
-			pdf_js_set_console(ctx, pdf, &gl_js_console, ctx);
+			pdf_js_set_console(ctx, pdf, &gl_js_console, NULL);
 		}
 
 		reload_or_start_journalling();
@@ -1988,6 +1988,8 @@ static int console_lines = 0;
 static struct readline console_readline;
 static void (*warning_callback)(void *, const char *) = NULL;
 static void (*error_callback)(void *, const char *) = NULL;
+static void *warning_user = NULL;
+static void *error_user = NULL;
 
 static void
 remove_oldest_console_line()
@@ -2012,7 +2014,6 @@ remove_oldest_console_line()
 static void
 gl_js_console_write(void *user, const char *message)
 {
-	fz_context *ctx = user;
 	const char *p = NULL;
 
 	if (message == NULL)
@@ -2058,27 +2059,24 @@ gl_js_console_hide(void *user)
 static void
 gl_js_console_clear(void *user)
 {
-	fz_context *ctx = user;
 	fz_resize_buffer(ctx, console_buffer, 0);
 	console_lines = 0;
 }
 
 static void console_warn(void *user, const char *message)
 {
-	fz_context *ctx = user;
 	gl_js_console_write(ctx, "\nwarning: ");
 	gl_js_console_write(ctx, message);
 	if (warning_callback)
-		warning_callback(user, message);
+		warning_callback(warning_user, message);
 }
 
 static void console_err(void *user, const char *message)
 {
-	fz_context *ctx = user;
 	gl_js_console_write(ctx, "\nerror: ");
 	gl_js_console_write(ctx, message);
 	if (error_callback)
-		error_callback(user, message);
+		error_callback(error_user, message);
 }
 
 static void console_init(void)
@@ -2090,10 +2088,10 @@ static void console_init(void)
 		FZ_VERSION,
 		JS_VERSION_MAJOR, JS_VERSION_MINOR, JS_VERSION_PATCH);
 
-	warning_callback = fz_warning_callback(ctx);
-	fz_set_warning_callback(ctx, console_warn, ctx);
-	error_callback = fz_error_callback(ctx);
-	fz_set_error_callback(ctx, console_err, ctx);
+	warning_callback = fz_warning_callback(ctx, &warning_user);
+	fz_set_warning_callback(ctx, console_warn, NULL);
+	error_callback = fz_error_callback(ctx, &error_user);
+	fz_set_error_callback(ctx, console_err, NULL);
 }
 
 static pdf_js_console gl_js_console = {

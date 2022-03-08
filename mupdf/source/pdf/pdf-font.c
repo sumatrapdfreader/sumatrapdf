@@ -428,6 +428,36 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, const cha
 	fontdesc->font->flags.cjk_lang = ros;
 }
 
+static struct { int ros, serif; const char *name; } known_cjk_fonts[] = {
+	{ FZ_ADOBE_GB, 0, "SimFang" },
+	{ FZ_ADOBE_GB, 0, "SimHei" },
+	{ FZ_ADOBE_GB, 1, "SimKai" },
+	{ FZ_ADOBE_GB, 1, "SimLi" },
+	{ FZ_ADOBE_GB, 1, "SimSun" },
+	{ FZ_ADOBE_GB, 1, "NSimSun" },
+	{ FZ_ADOBE_GB, 1, "Song" },
+
+	{ FZ_ADOBE_CNS, 1, "MingLiU" },
+	{ FZ_ADOBE_CNS, 1, "PMingLiU" },
+
+	{ FZ_ADOBE_JAPAN, 0, "Gothic" },
+	{ FZ_ADOBE_JAPAN, 0, "PGothic" },
+	{ FZ_ADOBE_JAPAN, 1, "Mincho" },
+	{ FZ_ADOBE_JAPAN, 1, "PMincho" },
+
+	{ FZ_ADOBE_KOREA, 1, "Batang" },
+	{ FZ_ADOBE_KOREA, 0, "Gulim" },
+	{ FZ_ADOBE_KOREA, 0, "Dotum" },
+};
+
+static int match_font_name(const char *s, const char *ref)
+{
+	/* Skip "MS-" prefix if present. */
+	if (s[0] == 'M' && s[1] == 'S' && s[2] == '-')
+		return !strncmp(s+3, ref, strlen(ref));
+	return !strncmp(s, ref, strlen(ref));
+}
+
 static void
 pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, const char *fontname, const char *collection)
 {
@@ -464,8 +494,21 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, const char *fontn
 			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, FZ_ADOBE_KOREA, serif);
 		else
 		{
+			size_t i;
 			if (strcmp(collection, "Adobe-Identity") != 0)
 				fz_warn(ctx, "unknown cid collection: %s", collection);
+
+			// Recognize common CJK fonts when using Identity or other non-CJK CMap
+			for (i = 0; i < nelem(known_cjk_fonts); ++i)
+			{
+				if (match_font_name(fontname, known_cjk_fonts[i].name))
+				{
+					pdf_load_substitute_cjk_font(ctx, fontdesc, fontname,
+						known_cjk_fonts[i].ros, known_cjk_fonts[i].serif);
+					return;
+				}
+			}
+
 			pdf_load_substitute_font(ctx, fontdesc, fontname, mono, serif, bold, italic);
 		}
 	}
