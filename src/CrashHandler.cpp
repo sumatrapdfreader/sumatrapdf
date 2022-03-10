@@ -51,19 +51,20 @@ static bool gDisableSymbolsDownload = true;
 static bool gDisableSymbolsDownload = false;
 #endif
 
-#define DLURLBASE L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/"
-
 // Get url for file with symbols. Caller needs to free().
 static WCHAR* BuildSymbolsUrl() {
     const WCHAR* urlBase = nullptr;
     if (gIsPreReleaseBuild) {
-        urlBase = DLURLBASE "prerel/SumatraPDF-prerel-" TEXT(QM(PRE_RELEASE_VER));
+        urlBase = L"https://www.sumatrapdfreader.org/dl/prerel/" TEXT(QM(PRE_RELEASE_VER)) L"/SumatraPDF-prerel";
     } else {
-        // assuming this is release vers
-        urlBase = DLURLBASE "rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+        // assuming this is release version
+        urlBase = L"https://www.sumatrapdfreader.org/dl/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
     }
-    const WCHAR* is64 = IsProcess64() ? L"-64" : L"";
-    return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
+    const WCHAR* suff = L".pdb.lzsa";
+    if (IsProcess64()) {
+        suff = L"-64.pdb.lzsa";
+    }
+    return str::Join(urlBase, suff);
 }
 
 /* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.
