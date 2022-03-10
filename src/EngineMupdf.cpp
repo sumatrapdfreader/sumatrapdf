@@ -2127,6 +2127,46 @@ bool EngineMupdf::FinishLoading() {
         return false;
     }
 
+    if (!loadPageTreeFailed) {
+        // this does the job of pdf_bound_page but without doing pdf_load_page()
+        pdf_rev_page_map* map = pdfdoc->rev_page_map;
+        for (int i = 0; i < nPages && !loadPageTreeFailed; i++) {
+            int pageNo = map[i].page;
+            if (pageNo >= nPages) {
+                // corrupted file
+                loadPageTreeFailed = true;
+                continue;
+            }
+            int objNo = map[i].object;
+            fz_rect mbox{};
+            fz_matrix page_ctm{};
+            pdf_obj* pageref = nullptr;
+            fz_var(pageref);
+            fz_var(mbox);
+            fz_try(ctx) {
+                pageref = pdf_load_object(ctx, pdfdoc, objNo);
+                pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+                mbox = fz_transform_rect(mbox, page_ctm);
+                pdf_drop_obj(ctx, pageref);
+            }
+            fz_catch(ctx) {
+                loadPageTreeFailed = true;
+                mbox = {};
+            }
+            if (fz_is_empty_rect(mbox)) {
+                fz_warn(ctx, "cannot find page size for page %d", i);
+                mbox.x0 = 0;
+                mbox.y0 = 0;
+                mbox.x1 = 612;
+                mbox.y1 = 792;
+                loadPageTreeFailed = true;
+            }
+            FzPageInfo* pageInfo = pages[pageNo];
+            pageInfo->mediabox = ToRectF(mbox);
+            pageInfo->pageNo = pageNo + 1;
+        }
+    }
+
     if (loadPageTreeFailed) {
         for (int pageNo = 0; pageNo < nPages; pageNo++) {
             FzPageInfo* pageInfo = pages[pageNo];
@@ -2152,37 +2192,6 @@ bool EngineMupdf::FinishLoading() {
                 mbox.y1 = 792;
             }
             pageInfo->mediabox = ToRectF(mbox);
-        }
-    } else {
-        // this does the job of pdf_bound_page but without doing pdf_load_page()
-        pdf_rev_page_map* map = pdfdoc->rev_page_map;
-        for (int i = 0; i < nPages; i++) {
-            int pageNo = map[i].page;
-            int objNo = map[i].object;
-            fz_rect mbox{};
-            fz_matrix page_ctm{};
-            pdf_obj* pageref = nullptr;
-            fz_var(pageref);
-            fz_var(mbox);
-            fz_try(ctx) {
-                pageref = pdf_load_object(ctx, pdfdoc, objNo);
-                pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-                mbox = fz_transform_rect(mbox, page_ctm);
-                pdf_drop_obj(ctx, pageref);
-            }
-            fz_catch(ctx) {
-                mbox = {};
-            }
-            if (fz_is_empty_rect(mbox)) {
-                fz_warn(ctx, "cannot find page size for page %d", i);
-                mbox.x0 = 0;
-                mbox.y0 = 0;
-                mbox.x1 = 612;
-                mbox.y1 = 792;
-            }
-            FzPageInfo* pageInfo = pages[pageNo];
-            pageInfo->mediabox = ToRectF(mbox);
-            pageInfo->pageNo = pageNo + 1;
         }
     }
 
