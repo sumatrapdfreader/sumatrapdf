@@ -2322,7 +2322,6 @@ fz_paint_pixmap_with_bbox(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_REST
 
 	n -= sa;
 	fn = fz_get_span_painter(da, sa, n, alpha, 0);
-	assert(fn);
 	if (fn == NULL)
 		return;
 
@@ -2369,7 +2368,6 @@ fz_paint_pixmap(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_RESTRICT src, 
 
 	n -= sa;
 	fn = fz_get_span_painter(da, sa, n, alpha, 0);
-	assert(fn);
 	if (fn == NULL)
 		return;
 
@@ -2490,7 +2488,6 @@ fz_paint_pixmap_with_overprint(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ
 
 	n -= sa;
 	fn = fz_get_span_painter(da, sa, n, 255, eop);
-	assert(fn);
 	if (fn == NULL)
 		return;
 
