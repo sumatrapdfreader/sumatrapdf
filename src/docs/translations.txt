@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-edf8155ae8fa3c335a6e836deb4d2fe0dbb3c979
+02dcfb95aca230b3607acf3c406b9b156bf6fc12
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -422,6 +422,7 @@ fr:Annuler
 hr:&Odustani
 hu:&Mégse
 it:&Annulla
+ja:キャンセル(&C)
 kr:취소
 kw:&Hedhi
 mk:Откажи
@@ -2576,6 +2577,7 @@ hr:&Ukloni iz povijesti
 hu:&Eltávolítás a listából
 id:&Hapus dari Riwayat
 it:&Rimuovi dalla cronologia
+ja:履歴から削除(&R)
 ka:&ისტორიიდან წაშლა
 kr:히스토리에서 제거(&R)
 kw:&Removya A Istori
@@ -2702,6 +2704,7 @@ fr:&Rechercher avec Google
 hr:Pretraži &sa Google-om
 hu:Keresés Google-el
 it:Cerca con Google
+ja:Google で検索(&S)
 kw:&Hwilas Gans Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
@@ -2938,6 +2941,7 @@ fr:Rayer
 hr:Za&crtati
 hu:Kihúzás
 it:Cancellato
+ja:打ち消し線(&S)
 kw:&Treuslinya
 lt:&Išbraukti
 lv:&Izsvītrot
@@ -2963,6 +2967,7 @@ fr:&Texte
 hr:&Tekst
 hu:Szöveg
 it:&Testo
+ja:テキスト(&T)
 kr:문자열(&T)
 kw:&Tekst
 lt:&Tekstas
@@ -3047,6 +3052,7 @@ fr:&Traduire avec Google
 hr:&Prevedi sa Google-om
 hu:Fordítsd le a Google-el
 it:&Traduci con Google
+ja:Google を使って翻訳(&T)
 kr:Google로 번역(&T)
 kw:&Treylya Gans Google
 nl:&Vertalen Met Google
@@ -3069,6 +3075,7 @@ gl:Subliñar
 hr:&Podcrtano\tu
 hu:Aláhúzás\tu
 it:&Sottolineato\ts
+ja:下線(&U)\tu
 nl:&Onderstrepen\tu
 pl:Pod&kreślenie\tu
 sl:&Podčrtano\tu
@@ -4137,6 +4144,7 @@ hr:Bilješke
 hu:Megjegyzések
 id:Catatan
 it:Annotazioni
+ja:注釈
 ka:ანოტაციები
 kr:주석
 kw:Notenyans
@@ -4506,6 +4514,7 @@ el:Συγγραφέας: %s
 es:Autora: %s
 hr:Autor: %s
 it:Autore: %s
+ja:作者: %s
 kw:Skrifer: %s
 lt:Autorius: %s
 lv:Autors: %s
@@ -4668,6 +4677,7 @@ gl:Cor de fondo
 hr:Boja pozadine:
 hu:Háttérszín:
 it:Colore sfondo:
+ja:背景色:
 kr:배경색
 kw:Liw Kilva:
 lt:Fono spalva:
@@ -5523,6 +5533,7 @@ gl:Comprobar actualizacións
 hr:Provjera dostupnosti ažuriranja...
 hu:Frissítés keresése...
 it:Controllo aggiornamenti...
+ja:更新を確認中...
 kr:업데이트를 확인 중입니다...
 kw:Ow checkya rag nowedhans
 mk:Провери за надградба
@@ -5558,6 +5569,7 @@ hr:Krug
 hu:Kör
 id:Lingkaran
 it:Cerchio
+ja:丸
 ka:წრე
 kr:원
 kw:Kylgh
@@ -5707,6 +5719,7 @@ gl:cor
 hr:Boja:
 hu:Szín:
 it:Colore:
+ja:色:
 kr:색상
 kw:Liw:
 lt:Spalva:
@@ -5863,6 +5876,7 @@ el:Περιεχόμενα:
 es:Contenido:
 hr:Sadržaj:
 it:Contenuti:
+ja:コンテンツ:
 kw:Dalghow:
 lt:Turinys:
 lv:Saturs:
@@ -7616,6 +7630,7 @@ el:Ημερομηνία:
 es:Fetcha:
 hr:Datum:
 it:Data:
+ja:日付:
 kw:Dedhyas:
 lt:Data:
 lv:Datums:
@@ -8048,6 +8063,7 @@ gl:Non instalar
 hr:Nemoj instalirati
 hu:Ne telepítsd
 it:Non installare
+ja:インストールしない
 kr:설치하지 마십시오
 kw:Ny wra lea
 mk:Не инсталирај
@@ -8075,6 +8091,7 @@ gl:Baixar versión de 64 bits
 hr:Preuzmite 64-bitnu verziju
 hu:64-bites verzió letöltése
 it:Download versione a 64bit
+ja:64-bit 版をダウンロード
 kr:64비트 버전 다운로드
 kw:Iskarga gwersyon 64-byt
 mk:Преземете 64-битна верзија
@@ -8107,6 +8124,7 @@ hr:I&zlaz iz cijelog ekrana
 hu:Kilépés a teljes képernyőből
 id:Keluar dari layar penuh
 it:Esci da schermo pieno
+ja:全画面を終了(&X)
 ka:სრულ&ეკრანიანიდან გამოსვლა
 kr:전체화면 종료(&x)
 kw:Kwytya Skrin-leun
@@ -8283,6 +8301,7 @@ hr:Uredi bilješke
 hu:Megjegyzések szerkesztése
 id:Tambah catatan
 it:Modifica annotazioni
+ja:注釈を編集する
 ka:ანოტაციის რედაქტირება
 kr:주석 편집
 kw:Golegi notenyans
@@ -11166,6 +11185,7 @@ el:Εικονίδιο:
 es:Icono:
 hr:Ikona:
 it:Icona:
+ja:アイコン:
 kw:Ikon:
 lt:Ikona:
 lv:Ikona:
@@ -11258,6 +11278,7 @@ hr:Slike
 hu:Képek
 id:Gambar
 it:Immagini
+ja:画像
 ka:სურათები
 kr:이미지
 kw:Skeusennow
@@ -11456,6 +11477,7 @@ fr:Installer et redémarrer
 hr:Instaliraj i ponovno pokreni
 hu:Telepítés és újraindítás
 it:Installa e ri-esegui
+ja:インストールしてプログラムを再起動
 kr:설치 후 재실행
 kw:Lea ha daslonchya
 mk:Инсталирајте и повторно стартувајте
@@ -11607,6 +11629,7 @@ fr:Installation de SumatraPDF 32-bits sur un système 64-bits
 hr:Instaliranje 32-bitne SumatraPDF na 64-bit OS
 hu:32-bites SumatraPDF telepítése 64-bites operációs rendszerre
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
+ja:64-bit 版の OS に 32-bit 版の SumatraPDF をインストール中
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
 kw:Ow lea Sumatra PDF 32-byt war SO 64-byt
 nl:32bit SumatraPDF installeren op 64bit OS
@@ -12479,6 +12502,7 @@ gl:Nova versión dispoñible
 hr:Dostupna nova verzija
 hu:Új verzió elérhető
 it:Nuova versione disponibile
+ja:更新があります
 kr:새 버전이 있습니다
 kw:Gwersyon nowydh kavadow
 mk:Достапна е нова верзија
@@ -12965,6 +12989,7 @@ el:Διαφάνεια:
 es:Opacidad:
 hr:Neprozirnost:
 it:Opacità:
+ja:透過率:
 kw:Disklerder:
 lt:Nepermatomumas:
 lv:Necaurspīdīgums:
@@ -12980,6 +13005,7 @@ el:Διαφάνεια: %d
 es:Opacidad: %d
 hr:Neprozirnost: %d
 it:Opacità: %d
+ja:透過率: %d
 kw:Disklerder: %d
 lt:Nepermatomumas: %d
 lv:Necaurspīdīgums: %d
@@ -15836,6 +15862,7 @@ fr:S&élection
 hr:O&dabir
 hu:K&iválasztás
 it:S&elezione
+ja:選択(&E)
 kr:선택(&e)
 kw:D&ewisans
 nl:S&electie
@@ -16025,6 +16052,7 @@ gl:Gardar anotacións?
 hr:Spremi bilješke?
 hu:Megjegyzések mentése?
 it:Vuoi salvare le annotazioni?
+ja:注釈を保存しますか？
 kr:주석을 저장할까요?
 kw:Gwitha notenyansow?
 nl:Aantekeningen Opslaan?
@@ -16158,6 +16186,7 @@ fr:Rechercher avec &Bing
 hr:Pretraži sa &Bing-om
 hu:Keresés &Bing-el
 it:Cerca con &Bing
+ja:Bing で検索(&B)
 kr:Bing으로 검색(&B)
 kw:Hwilas Gans &Bing
 nl:Zoeken Met &Bing
@@ -16182,6 +16211,7 @@ fr:Rechercher avec &Google
 hr:Pretraži sa &Google-om
 hu:Keresés &Google-el
 it:Cerca con &Google
+ja:Google で検索(&G)
 kr:Google로 검색(&G)
 kw:Hwilas Gans &Google
 nl:Zoeken Met &Google
@@ -16827,6 +16857,7 @@ hr:Prikaži &klizače
 hu:Görgetősávok mutatása
 id:Tampilkan &Scrollbars
 it:Vi&sualizza barre scorrimento
+ja:スクロールバーを表示(&S)
 ka:საცოცი &პანელის ჩვენება
 kw:Diskwedhes &Skrolvarrys
 lt:Rodyti &slinkties juostas
@@ -17033,6 +17064,7 @@ hr:Prikaži &klizače
 hu:Gör&getősávok megjelenítése
 id:Tampilkan Scr&ollbars
 it:Visualizza barre sc&orrimento
+ja:スクロールバーを表示(&O)
 ka:საცოცი პან&ელის ჩვენება
 kr:스크롤바 보이기(&o)
 kw:Diskwedhes Skr&olvarrys
@@ -17459,6 +17491,7 @@ hr:Kvadrat
 hu:Négyzet
 id:Persegi
 it:Piazza
+ja:四角
 ka:კვადრატი
 kr:사각형
 kw:Pedrek
@@ -18303,6 +18336,7 @@ el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
 hr:Poravnavanje teksta:
 it:Allineamento testo:
+ja:テキスト位置:
 kw:Alinyans Tekst:
 lt:Teksto lygiavimas:
 lv:Teksta līdzinājums:
@@ -18320,6 +18354,7 @@ el:Text Color:
 es:Color de Texto:
 hr:Boja teksta:
 it:Colore testo:
+ja:テキスト色:
 kw:Liw Tekst:
 lt:Teksto spalva:
 lv:Teksta krāsa:
@@ -18338,6 +18373,7 @@ el:Μέγεθος κειμένου:
 es:Tamaño de Texto
 hr:Veličina teksta:
 it:Dimensione testo:
+ja:テキストサイズ:
 kw:Braster Tekst:
 lt:Teksto dydis:
 lv:Teksta lielums:
@@ -18355,6 +18391,7 @@ el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 hr:Veličina teksta: %d
 it:Dimensione testo: %d
+ja:テキストサイズ: %d
 kw:Braster Tekst: %d
 lt:Teksto dydis: %d
 lv:Teksta lielums: %d
@@ -18756,6 +18793,7 @@ fr:Traduire avec &DeepL
 hr:Prevedi sa &DeepL
 hu:Fordítsd le a DeepL-el
 it:Traduci con &DeepL
+ja:DeepL を使って翻訳(&D)
 kr:DeepL로 번역(&D)
 kw:Treylya gans &DeepL
 nl:Vertalen Met &Deepl
