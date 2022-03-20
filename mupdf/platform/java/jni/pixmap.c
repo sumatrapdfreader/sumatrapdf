@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -292,6 +292,20 @@ FUN(Pixmap_tint)(JNIEnv *env, jobject self, jint black, jint white)
 
 	fz_try(ctx)
 		fz_tint_pixmap(ctx, pixmap, black, white);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(Pixmap_setResolution)(JNIEnv *env, jobject self, jint xres, jint yres)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+
+	if (!ctx || !pixmap) return;
+
+	fz_try(ctx)
+		fz_set_pixmap_resolution(ctx, pixmap, xres, yres);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }

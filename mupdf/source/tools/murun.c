@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -3468,6 +3468,16 @@ static void ffi_Pixmap_getColorSpace(js_State *J)
 {
 	fz_pixmap *pixmap = js_touserdata(J, 0, "fz_pixmap");
 	ffi_pushcolorspace(J, pixmap->colorspace);
+}
+
+static void ffi_Pixmap_setResolution(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_pixmap *pixmap = js_touserdata(J, 0, "fz_pixmap");
+	int xres = js_tointeger(J, 1);
+	int yres = js_tointeger(J, 2);
+
+	fz_set_pixmap_resolution(ctx, pixmap, xres, yres);
 }
 
 static void ffi_new_Image(js_State *J)
@@ -7864,6 +7874,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Pixmap.getXResolution", ffi_Pixmap_getXResolution, 0);
 		jsB_propfun(J, "Pixmap.getYResolution", ffi_Pixmap_getYResolution, 0);
 		jsB_propfun(J, "Pixmap.getSample", ffi_Pixmap_getSample, 3);
+		jsB_propfun(J, "Pixmap.setResolution", ffi_Pixmap_setResolution, 2);
 		jsB_propfun(J, "Pixmap.warp", ffi_Pixmap_warp, 3);
 
 		// Pixmap.samples()

@@ -92,7 +92,7 @@ class Package:
         url_home
         url_source
         url_docs
-        utl_tracker
+        url_tracker
             A string containing a URL.
         keywords
             A string containing space-separated keywords.
@@ -128,7 +128,7 @@ class Package:
             asserted to be within <root>.
         fn_sdist
             A function taking no args that returns a list of paths, e.g.
-            using git_items(), for files that should be copied into the
+            using pipcl.git_items(), for files that should be copied into the
             sdist. Relative paths are interpreted as relative to <root>. It is
             an error if a path does not exist or is not a file.
         '''
@@ -660,7 +660,7 @@ class Package:
 
 def git_items( directory, submodules=False):
     '''
-    Helper for Package's fn_sdist() callback.
+    Helper for pipcl.Package's fn_sdist() callback.
 
     Returns list of paths for all files known to git within <directory>. Each
     path is relative to <directory>.

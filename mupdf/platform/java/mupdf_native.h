@@ -4131,6 +4131,14 @@ JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_Pixmap_getYResolution
 
 /*
  * Class:     com_artifex_mupdf_fitz_Pixmap
+ * Method:    setResolution
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Pixmap_setResolution
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Pixmap
  * Method:    invert
  * Signature: ()V
  */

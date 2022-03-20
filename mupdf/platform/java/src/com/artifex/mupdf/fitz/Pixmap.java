@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -87,6 +87,9 @@ public class Pixmap
 	public native int[] getPixels(); /* only valid for RGBA or BGRA pixmaps */
 	public native int getXResolution();
 	public native int getYResolution();
+
+	public native void setResolution(int xres, int yres);
+
 	public native void invert();
 	public native void invertLuminance();
 	public native void gamma(float gamma);

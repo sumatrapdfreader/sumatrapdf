@@ -30,11 +30,13 @@ typedef struct pdf_gstate pdf_gstate;
 typedef struct pdf_processor pdf_processor;
 
 void *pdf_new_processor(fz_context *ctx, int size);
+pdf_processor *pdf_keep_processor(fz_context *ctx, pdf_processor *proc);
 void pdf_close_processor(fz_context *ctx, pdf_processor *proc);
 void pdf_drop_processor(fz_context *ctx, pdf_processor *proc);
 
 struct pdf_processor
 {
+	int refs;
 	void (*close_processor)(fz_context *ctx, pdf_processor *proc);
 	void (*drop_processor)(fz_context *ctx, pdf_processor *proc);
 

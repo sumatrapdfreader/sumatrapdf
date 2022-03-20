@@ -868,10 +868,18 @@ def main():
                 # Also run basic import test.
                 command += " -t"
 
+            # Add a command to rsync remote wheels back to local machine.
+            #
+            #log( '{sdist=}')
+            sdist_prefix = os.path.basename( sdist)
+            sdist_suffix = '.tar.gz'
+            assert sdist_prefix.endswith( sdist_suffix)
+            sdist_prefix = sdist_prefix[ : -len( sdist_suffix)]
             command += (
                     f'"'
-                    f' && rsync -ai {user}{host}:{directory}pypackage-out/ {outdir}/'
+                    f' && rsync -ai \'{user}{host}:{directory}pypackage-out/{sdist_prefix}*\' {outdir}/'
                     )
+
             system(command, prefix=f'{user}{host}:{directory}: ')
 
         else:

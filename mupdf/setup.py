@@ -38,7 +38,6 @@ import platform
 import re
 import subprocess
 import sys
-import sys
 import time
 
 
@@ -225,20 +224,27 @@ def sdist():
     paths += [
             'build/shared-release/mupdf.py',
             'git-info',
+            'platform/c++/c_enums.pickle',
             'platform/c++/c_functions.pickle',
             'platform/c++/c_globals.pickle',
             'platform/c++/container_classnames.pickle',
+            'platform/c++/cpp_files.pickle',
+            'platform/c++/h_files.pickle',
             'platform/c++/implementation/classes.cpp',
+            'platform/c++/implementation/classes2.cpp',
             'platform/c++/implementation/exceptions.cpp',
             'platform/c++/implementation/functions.cpp',
             'platform/c++/implementation/internal.cpp',
             'platform/c++/include/mupdf/classes.h',
+            'platform/c++/include/mupdf/classes2.h',
             'platform/c++/include/mupdf/exceptions.h',
             'platform/c++/include/mupdf/functions.h',
             'platform/c++/include/mupdf/internal.h',
-            'platform/c++/swig_c.pickle',
+            'platform/c++/swig_cpp.pickle',
+            'platform/c++/swig_csharp.pickle',
             'platform/c++/swig_python.pickle',
             'platform/c++/to_string_structnames.pickle',
+            'platform/c++/virtual_fnptrs.pickle',
             'platform/c++/windows_mupdf.def',
             'platform/python/mupdfcpp_swig.cpp',
             ]
@@ -432,7 +438,7 @@ mupdf_package = pipcl.Package(
                 ],
         author = 'Artifex Software, Inc.',
         author_email = 'support@artifex.com',
-        url_docs = 'https://twiki.ghostscript.com/do/view/Main/MuPDFWrap/',
+        url_docs = 'https://mupdf.com/r/C-and-Python-APIs',
         url_home = 'https://mupdf.com/',
         url_source = 'https://git.ghostscript.com/?p=mupdf.git',
         url_tracker = 'https://bugs.ghostscript.com/',

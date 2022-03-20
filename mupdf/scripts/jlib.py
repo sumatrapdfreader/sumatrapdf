@@ -571,6 +571,12 @@ def exception_info( exception=None, limit=None, out=None, prefix='', oneline=Fal
     try:
         frames = []
 
+        def append_frame(f):
+            f4 = f[4]
+            f4 = f4[0].strip() if f4 else ''
+            ff = f[1], f[2], f[3], f4
+            frames.append(ff)
+
         if tb:
             # There is a live exception.
             #
@@ -583,15 +589,11 @@ def exception_info( exception=None, limit=None, out=None, prefix='', oneline=Fal
             # backtraces that miss much useful information.
             #
             for f in reversed(inspect.getouterframes(tb.tb_frame)):
-                ff = f[1], f[2], f[3], f[4][0].strip()
-                frames.append(ff)
+                append_frame(f)
         else:
             # No exception; use current backtrace.
             for f in inspect.stack():
-                f4 = f[4]
-                f4 = f[4][0].strip() if f4 else ''
-                ff = f[1], f[2], f[3], f4
-                frames.append(ff)
+                append_frame(f)
 
         # If there is a live exception, append frames from point in the try:
         # block that caused the exception to be raised, to the point at which
@@ -607,8 +609,7 @@ def exception_info( exception=None, limit=None, out=None, prefix='', oneline=Fal
             frames.append( None)
 
             for f in inspect.getinnerframes(tb):
-                ff = f[1], f[2], f[3], f[4][0].strip()
-                frames.append(ff)
+                append_frame(f)
 
         cwd = os.getcwd() + os.sep
         if oneline:
@@ -720,7 +721,12 @@ class StreamPrefix:
     takes no parameters and return a string.
     '''
     def __init__( self, stream, prefix):
-        self.stream = stream
+        if callable(stream):
+            self.stream_write = stream
+            self.stream_flush = lambda: None
+        else:
+            self.stream_write = stream.write
+            self.stream_flush = stream.flush
         self.at_start = True
         if callable(prefix):
             self.prefix = prefix
@@ -739,10 +745,10 @@ class StreamPrefix:
         text = text.replace( '\n', '\n%s' % self.prefix())
         if append_newline:
             text += '\n'
-        self.stream.write( text)
+        self.stream_write( text)
 
     def flush( self):
-        self.stream.flush()
+        self.stream_flush()
 
 
 def debug( text):
@@ -914,28 +920,39 @@ def system(
             If true, we raise an exception if the command fails, otherwise we
             return the failing error code or zero.
         out:
-            Where output is sent.
-            If None, child process inherits this process's stdout and stderr.
-            If subprocess.DEVNULL, child process's output is lost.
-            Otherwise we repeatedly read child process's output via a pipe and
-            write to <out>:
-                If <out> is 'return' we store the output and include it in our
-                return value or exception.
-                Otherwise if <out> is 'log' we write to jlib.log() using our
-                caller's stack frame.
-                Otherwise if <out> is an integer, we do: os.write( out, text)
-                Otherwise if <out> is callable, we do: out( text)
-                Otherwise we assume <out> is python stream or similar, and do:
-                out.write(text)
+            Where to send output from child process.
+
+            <out> is <o> or (o, prefix) or list of such items. Each <o> is
+            matched as follows:
+
+                None: child process inherits this process's stdout and
+                stderr. (Must be the only item, and <prefix> is not supported.)
+
+                subprocess.DEVNULL: child process's output is lost. (Must be
+                the only item, and <prefix> is not supported.)
+
+                'return': we store the output and include it in our return
+                value or exception. Can only be specified once.
+
+                'log': we write to jlib.log() using our caller's stack
+                frame. Can only be specified once.
+
+                An integer: we do: os.write(o, text)
+
+                Is callable: we do: o(text)
+
+                Otherwise we assume <o> is python stream or similar, and do:
+                o.write(text)
+
+            If <prefix> is specified, it is applied to each line in the output
+            before being sent to <o>.
         prefix:
-            If not None, should be prefix string or callable used to prefix
-            all output. [This is for convenience to avoid the need to do
-            out=StreamPrefix(...).]
+            Default prefix for all items in <out>.
         shell:
             Passed to underlying subprocess.Popen() call.
         encoding:
             Sepecify the encoding used to translate the command's output to
-            characters. If None we send bytes to <out>.
+            characters. If None we send bytes to items in <out>.
         errors:
             How to handle encoding errors; see docs for codecs module
             for details. Defaults to 'replace' so we never raise a
@@ -956,16 +973,23 @@ def system(
             environment passed to the child process.
 
     Returns:
-        If raise_errors is true:
-            If the command failed, we raise an exception; if <out> is 'return'
-            the exception text includes the output.
-            If <out> is 'return' we return the text output from the command.
-            Else we return None
+        raise_errors:
+            true:
+                If the command failed, we raise an exception; if <out> contains
+                'return' the exception text includes the output.
 
-        Else if <out> is 'return', we return (e, text) where <e> is the
-        command's exit code and <text> is the output from the command.
+                Else if <out> contains 'return' we return the text output from the
+                command.
 
-        Else we return <e>, the command's exit code.
+                Else we return None.
+            false:
+                If <out> contains 'return', we return (e, text) where <e> is the
+                command's exit code and <text> is the output from the command.
+
+                Else we return <e>, the command's return code.
+
+                In the above, <e> is the subprocess-style returncode - the exit
+                code, or -N if killed by signal N.
 
     >>> print(system('echo hello a', prefix='foo:', out='return'))
     foo:hello a
@@ -982,14 +1006,59 @@ def system(
     foo:
     <BLANKLINE>
     '''
-    out_original = out
-    if out == 'log':
-        out_frame_record = inspect.stack()[caller]
-        out = lambda text: log( text, caller=out_frame_record, nv=False, raw=True)
-    elif out == 'return':
-        # Store the output ourselves so we can return it.
-        out_return = io.StringIO()
-        out = out_return
+    out_pipe = 0
+    out_none = 0
+    out_devnull = 0
+    out_return = None
+    out_log = 0
+
+    outs = out if isinstance(out, list) else [out]
+    for i, o in enumerate(outs):
+        if o is None:
+            out_none += 1
+        elif o == subprocess.DEVNULL:
+            out_devnull += 1
+        else:
+            out_pipe += 1
+            o_prefix = prefix
+            if isinstance(o, tuple) and len(o) == 2:
+                o, o_prefix = o
+                assert o not in (None, subprocess.DEVNULL), f'out[]={o} does not make sense with a prefix ({o_prefix})'
+            assert not isinstance(o, (tuple, list))
+            if o == 'return':
+                assert not out_return, f'"return" specified twice does not make sense'
+                out_return = io.StringIO()
+                outs[i] = out_return.write
+            elif o == 'log':
+                assert not out_log, f'"log" specified twice does not make sense'
+                out_log += 1
+                out_frame_record = inspect.stack()[caller]
+                outs[i] = lambda text: log( text, caller=out_frame_record, nv=False, raw=True)
+            elif isinstance(o, int):
+                outs[i] = lambda text: os.write( o, text)
+            elif callable(o):
+                outs[i] = o
+            else:
+                assert hasattr(o, 'write') and callable(o.write), (
+                        f'Do not understand o={o}, must be one of:'
+                            ' None, subprocess.DEVNULL, "return", "log", <int>,'
+                            ' or support o() or o.write().'
+                            )
+                outs[i] = o.write
+            if o_prefix:
+                outs[i] = StreamPrefix( outs[i], o_prefix).write
+
+    if out_pipe:
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT
+    elif out_none == len(outs):
+        stdout = None
+        stderr = None
+    elif out_devnull == len(outs):
+        stdout = subprocess.DEVNULL
+        stderr = subprocess.DEVNULL
+    else:
+        assert 0, f'Inconsistent out: {out}'
 
     if verbose:
         env_text = ''
@@ -997,19 +1066,6 @@ def system(
             for n, v in env_extra.items():
                 env_text += f' {n}={v}'
         log(f'running:{env_text} {command}', nv=0, caller=caller+1)
-
-    out_raw = out in (None, subprocess.DEVNULL)
-    if prefix:
-        if out_raw:
-            raise Exception( 'No out stream available for prefix')
-        out = StreamPrefix( make_out_callable( out), prefix)
-
-    if out_raw:
-        stdout = out
-        stderr = out
-    else:
-        stdout = subprocess.PIPE
-        stderr = subprocess.STDOUT
 
     env = None
     if env_extra:
@@ -1028,10 +1084,7 @@ def system(
             env=env
             )
 
-    child_out = child.stdout
-
-    if stdout == subprocess.PIPE:
-        out2 = make_out_callable( out)
+    if out_pipe:
         decoder = None
         if encoding:
             # subprocess's universal_newlines and codec.streamreader seem to
@@ -1052,27 +1105,26 @@ def system(
             # multipe calls to write() - it returns all available data, not
             # just from the first unread write() call.
             #
-            bytes_ = os.read( child.stdout.fileno(), 10000)
+            output = os.read( child.stdout.fileno(), 10000)
             if decoder:
-                final = not bytes_
-                text = decoder.decode(bytes_, final)
-                out2.write(text)
-            else:
-                out2.write(bytes_)
-            if not bytes_:
+                final = not output
+                output = decoder.decode(output, final)
+            for o in outs:
+                o(output)
+            if not output:
                 break
 
     e = child.wait()
 
-    if out_original == 'log':
+    if out_log:
         if not _log_text_line_start:
-            # Terminate last incomplete line.
+            # Terminate last incomplete line of log outputs.
             sys.stdout.write('\n')
     if verbose:
         log(f'[returned e={e}]', nv=0, caller=caller+1)
 
-    if out_original == 'return':
-        output_return = out_return.getvalue()
+    if out_return:
+        out_return = out_return.getvalue()
 
     if raise_errors:
         if e:
@@ -1080,23 +1132,23 @@ def system(
             if env_extra:
                 for n, v in env_extra.items():
                     env_string += f'{n}={v} '
-            if out_original == 'return':
-                if not output_return.endswith('\n'):
-                    output_return += '\n'
+            if out_return is not None:
+                if not out_return.endswith('\n'):
+                    out_return += '\n'
                 raise Exception(
                         f'Command failed: {env_string}{command}\n'
                         f'Output was:\n'
-                        f'{output_return}'
+                        f'{out_return}'
                         )
             else:
                 raise Exception( f'command failed: {env_string}{command}')
-        elif out_original == 'return':
-            return output_return
+        elif out_return is not None:
+            return out_return
         else:
             return
 
-    if out_original == 'return':
-        return e, output_return
+    if out_return is not None:
+        return e, out_return
     else:
         return e
 

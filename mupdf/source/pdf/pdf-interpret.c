@@ -32,7 +32,15 @@
 void *
 pdf_new_processor(fz_context *ctx, int size)
 {
-	return Memento_label(fz_calloc(ctx, 1, size), "pdf_processor");
+	pdf_processor *ret = Memento_label(fz_calloc(ctx, 1, size), "pdf_processor");
+	ret->refs = 1;
+	return ret;
+}
+
+pdf_processor *
+pdf_keep_processor(fz_context *ctx, pdf_processor *proc)
+{
+	return fz_keep_imp(ctx, proc, &proc->refs);
 }
 
 void
@@ -48,14 +56,14 @@ pdf_close_processor(fz_context *ctx, pdf_processor *proc)
 void
 pdf_drop_processor(fz_context *ctx, pdf_processor *proc)
 {
-	if (proc)
+	if (fz_drop_imp(ctx, proc, &proc->refs))
 	{
 		if (proc->close_processor)
 			fz_warn(ctx, "dropping unclosed PDF processor");
 		if (proc->drop_processor)
 			proc->drop_processor(ctx, proc);
+		fz_free(ctx, proc);
 	}
-	fz_free(ctx, proc);
 }
 
 static void

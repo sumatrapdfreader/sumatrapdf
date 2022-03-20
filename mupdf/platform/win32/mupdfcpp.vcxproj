@@ -191,6 +191,9 @@
     <ClCompile Include="..\c++\implementation\classes.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\c++\implementation\classes2.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\c++\implementation\exceptions.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
