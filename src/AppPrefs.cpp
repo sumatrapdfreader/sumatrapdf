@@ -66,6 +66,12 @@ WCHAR* GetSettingsPath() {
     return AppGenDataFilename(GetSettingsFileNameTemp());
 }
 
+static void setMin(int& i, int minVal) {
+    if (i < minVal) {
+        i = minVal;
+    }
+}
+
 /* Caller needs to prefs::CleanUp() */
 bool Load() {
     CrashIf(gGlobalPrefs);
@@ -118,6 +124,37 @@ bool Load() {
     while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->Last() > ZOOM_MAX) {
         gprefs->zoomLevels->Pop();
     }
+
+    // sanitize WindowMargin and PageSpacing values
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1899
+    {
+        auto&& m = gprefs->fixedPageUI.windowMargin;
+        setMin(m.bottom, 0);
+        setMin(m.top, 0);
+        setMin(m.left, 0);
+        setMin(m.right, 0);
+    }
+    {
+        auto&& m = gprefs->comicBookUI.windowMargin;
+        setMin(m.bottom, 0);
+        setMin(m.top, 0);
+        setMin(m.left, 0);
+        setMin(m.right, 0);
+    }
+    {
+        auto&& s = gprefs->fixedPageUI.pageSpacing;
+        setMin(s.dx, 0);
+        setMin(s.dy, 0);
+    }
+    {
+        auto&& s = gprefs->comicBookUI.pageSpacing;
+        setMin(s.dx, 0);
+        setMin(s.dy, 0);
+    }
+    setMin(gprefs->tabWidth, 300);
+    setMin(gprefs->sidebarDx, 0);
+    setMin(gprefs->tocDy, 0);
+    setMin(gprefs->treeFontSize, 0);
 
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
