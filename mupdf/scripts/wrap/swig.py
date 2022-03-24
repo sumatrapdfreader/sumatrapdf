@@ -415,26 +415,27 @@ def build_swig(
             %array_functions(unsigned char, bytes);
             ''')
 
-    if state_.windows:
-        # Directors not currently supported.
-        pass
-    else:
-        text += textwrap.dedent(f'''
-                %exception {{
-                  try {{
+    text += textwrap.dedent(f'''
+            %exception {{
+                try {{
                     $action
-                  }}
-                  catch (Swig::DirectorException &e) {{
+                }}
+            ''')
+    if not state_.windows:  # Directors not currently supported on Windows.
+        text += textwrap.dedent(f'''
+                catch (Swig::DirectorException &e) {{
                     SWIG_fail;
-                  }}
-                  catch(std::exception& e) {{
-                    SWIG_exception(SWIG_RuntimeError, e.what());
-                  }}
-                  catch(...) {{
-                    SWIG_exception(SWIG_RuntimeError, "Unknown exception");
-                  }}
                 }}
                 ''')
+    text += textwrap.dedent(f'''
+            catch(std::exception& e) {{
+                SWIG_exception(SWIG_RuntimeError, e.what());
+            }}
+            catch(...) {{
+                    SWIG_exception(SWIG_RuntimeError, "Unknown exception");
+                }}
+            }}
+            ''')
 
     text += textwrap.dedent(f'''
             // Ensure SWIG handles OUTPUT params.

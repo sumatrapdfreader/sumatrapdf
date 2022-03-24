@@ -106,6 +106,7 @@ def venv_run(
         prefix=None,
         pip_upgrade=True,
         bufsize=-1,
+        raise_errors=True,
         ):
     '''
     Runs commands inside Python venv, joined by &&.
@@ -184,6 +185,7 @@ def venv_run(
 
     return system(
             command,
+            raise_errors=raise_errors,
             return_output=return_output,
             prefix=prefix,
             bufsize=bufsize,
@@ -792,6 +794,7 @@ def main():
                         or "build ...", otherwise uses ABIs (default or as
                         specified with 'abis ...').
                         ''',
+                        multi=True,
                         subargs = [
                             jlib.Arg('-p <python>',
                                     help='''
@@ -926,13 +929,14 @@ def main():
             log(f'    {wheel}')
 
     if args.test:
-        pypi = False
-        package_name = None
-        python = args.test.p.python if args.test.p else None
-        if args.test.pypi:
-            pypi = True
-            package_name = args.test.pypi.package_name
-        test(args.test.command, package_name, wheels, abis, pypi, pypi_test, python)
+        for test_ in args.test:
+            pypi = False
+            package_name = None
+            python = test_.p.python if test_.p else None
+            if test_.pypi:
+                pypi = True
+                package_name = test_.pypi.package_name
+            test( test_.command, package_name, wheels, abis, pypi, pypi_test, python)
 
     if args.upload:
         assert sdist, f'Cannot upload because no sdist specified; use "sdist ...".'
@@ -940,12 +944,21 @@ def main():
         log(f'Uploading wheels ({len(wheels)} for sdist: {sdist!r}')
         for wheel in wheels:
             log(f'    {wheel}')
-        venv_run([
-                f'pip install twine',
-                f'python -m twine upload --disable-progress-bar {"--repository testpypi" if pypi_test else ""} {sdist} {" ".join(wheels)}',
-                ],
-                bufsize=0,  # So we see login/password prompts.
-                )
+        # We repeated on error, in case user enters the wrong password.
+        while 1:
+            try:
+                venv_run([
+                        f'pip install twine',
+                        f'python -m twine upload --disable-progress-bar {"--repository testpypi" if pypi_test else ""} {sdist} {" ".join(wheels)}',
+                        ],
+                        bufsize=0,  # So we see login/password prompts.
+                        raise_errors=True,
+                        )
+            except Exception  as e:
+                jlib.log( 'Failed to upload: {e=}')
+                input( jlib.log_text( 'Press <enter> to retry... ').strip())
+            else:
+                break
 
     for remote in args.remote:
         user, host, directory = parse_remote(remote.uri)

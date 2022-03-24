@@ -18,7 +18,7 @@ from . import state
 from . import util
 
 
-def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False):
+def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, expand_typedef=True):
     '''
     Returns text for C++ declaration of <type_> called <name>.
 
@@ -46,7 +46,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False):
     if array_n >= 0 or type_.kind == state.clang.cindex.TypeKind.INCOMPLETEARRAY:
         # Not sure this is correct.
         if verbose: jlib.log( '{array_n=}')
-        text = declaration_text( type_.get_array_element_type(), name, nest+1, name_is_simple, verbose=verbose)
+        text = declaration_text( type_.get_array_element_type(), name, nest+1, name_is_simple, verbose=verbose, expand_typedef=expand_typedef)
         if array_n < 0:
             array_n = ''
         text += f'[{array_n}]'
@@ -55,9 +55,9 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False):
     pointee = type_.get_pointee()
     if pointee and pointee.spelling:
         if verbose: jlib.log( '{pointee.spelling=}')
-        return declaration_text( pointee, f'*{name}', nest+1, name_is_simple=False, verbose=verbose)
+        return declaration_text( pointee, f'*{name}', nest+1, name_is_simple=False, verbose=verbose, expand_typedef=expand_typedef)
 
-    if type_.get_typedef_name():
+    if expand_typedef and type_.get_typedef_name():
         if verbose: jlib.log( '{type_.get_typedef_name()=}')
         const = 'const ' if type_.is_const_qualified() else ''
         return f'{const}{type_.get_typedef_name()} {name}'
@@ -269,6 +269,9 @@ def make_fncall( tu, cursor, return_type, fncall, out):
         out.write(  f'        ret = {fncall};\n')
     out.write(      f'    }}\n')
     out.write(      f'    fz_catch(auto_ctx) {{\n')
+    out.write(      f'        if (s_trace_exceptions) {{\n')
+    out.write(      f'            std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): fz_catch() has caught exception.\\n";\n')
+    out.write(      f'        }}\n')
     out.write(      f'        {te}(auto_ctx);\n')
     out.write(      f'    }}\n')
     if return_type != 'void':
@@ -775,6 +778,10 @@ def make_internal_functions( namespace, out_h, out_cpp):
             #include <thread>
             #include <mutex>
 
+            #include <string.h>
+
+            static const char* s_trace_exceptions_s = getenv("MUPDF_trace_exceptions");
+            static bool s_trace_exceptions = (s_trace_exceptions_s && !strcmp(s_trace_exceptions_s, "1")) ? true : false;
 
             '''))
 
@@ -999,6 +1006,10 @@ def make_function_wrappers(
                 char    code_text[32];
                 snprintf(code_text, sizeof(code_text), "%i", code);
                 m_text = std::string("code=") + code_text + ": " + text;
+                if (s_trace_exceptions)
+                {{
+                    std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): {base_name}: m_code=" << m_code << " m_text: " << m_text << "\\n";
+                }}
             }};
 
             const char* {base_name}::what() const throw()
@@ -1029,6 +1040,10 @@ def make_function_wrappers(
                 {typename}::{typename}(const char* text)
                 : {base_name}({enum}, text)
                 {{
+                    if (s_trace_exceptions)
+                    {{
+                        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): {typename} constructor, text: " << m_text << "\\n";
+                    }}
                 }}
 
                 '''))
@@ -1047,11 +1062,19 @@ def make_function_wrappers(
             void {te}(fz_context* ctx)
             {{
                 int code = fz_caught(ctx);
+                if (s_trace_exceptions)
+                {{
+                    std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): code=" << code << "\\n";
+                }}
                 const char* text = fz_caught_message(ctx);
+                if (s_trace_exceptions)
+                {{
+                    std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): text=" << text << "\\n";
+                }}
             '''))
     for enum, typename, padding in errors():
         out_exceptions_cpp.write( f'    if (code == {enum}) {padding}throw {typename}{padding}(text);\n')
-    out_exceptions_cpp.write( f'    throw {base_name}(code, fz_caught_message(ctx));\n')
+    out_exceptions_cpp.write( f'    throw {base_name}(code, text);\n')
     out_exceptions_cpp.write( f'}}\n')
     out_exceptions_cpp.write( '\n')
 
@@ -2564,6 +2587,11 @@ def class_wrapper_virtual_fnptrs(
         out_h_end,
         generated,
         ):
+    '''
+    Generate extra wrapper class for structs that contain function pointers,
+    for use as a SWIG Director class so that the function pointers can be made
+    to effectively point to Python or C# code.
+    '''
     if not extras.virtual_fnptrs:
         return
 
@@ -2590,7 +2618,7 @@ def class_wrapper_virtual_fnptrs(
     out_cpp.write( f'/* Implementation of methods for `{classname}2`, virtual_fnptrs wrapper for `{struct_name}`). */\n')
     out_cpp.write( '\n')
 
-    def get_fnptrs():
+    def get_fnptrs( shallow_typedef_expansion=False):
         '''
         Yields (cursor, fnptr_type).
         cursor:
@@ -2602,7 +2630,50 @@ def class_wrapper_virtual_fnptrs(
             if cursor.type.kind == state.clang.cindex.TypeKind.POINTER:
                 pointee = cursor.type.get_pointee().get_canonical()
                 if pointee.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
-                    yield cursor, pointee #.get_canonical()
+                    # Need to find partially-canonical ttype, expanding any
+                    # top-level typedef but preserving typedef arg types such
+                    # as int64_t.
+                    #pointee2 = cursor.type.get_pointee().get_declaration().underlying_typedef_type
+                    if shallow_typedef_expansion:
+                        pointee_cursor = cursor.type.get_pointee().get_declaration()
+                        if pointee_cursor.kind == state.clang.cindex.CursorKind.TYPEDEF_DECL:
+                            # Unlike get_canonical(), this preserves any typedefs within, e.g. int64_t.
+                            pointee = pointee_cursor.underlying_typedef_type
+                    yield cursor, pointee
+
+    if struct_name == 'fz_output':
+        # debugging.
+        for cursor, fnptr in get_fnptrs():
+            if cursor.spelling == 'seek':
+                jlib.log( '{struct_name}::{cursor.spelling}:')
+                jlib.log( '    {cursor.type.get_pointee().spelling=}')
+                jlib.log( '    {fnptr.spelling=}')
+                t = cursor.type.get_pointee()
+                jlib.log( '{cursor.kind=}')
+                jlib.log( '{t.kind=}')
+                jlib.log( '{t.spelling=}')
+                jlib.log( '{t.get_typedef_name()=}')
+
+                jlib.log( '{cursor.underlying_typedef_type=}')
+
+                jlib.log( '{cursor.type.get_pointee().spelling=}')  # fz_output_seek_fn
+
+                jlib.log( '{cursor.type.get_pointee().get_canonical().spelling=}')  # void (struct fz_context *, void *, long long, int)
+
+                # this is: fz_output_seek_fn
+                jlib.log( '{cursor.type.get_pointee().get_declaration().spelling=}')    # fz_output_seek_fn
+
+                # This is: void (fz_context *, void *, int64_t, int)
+                jlib.log( '{cursor.type.get_pointee().get_declaration().underlying_typedef_type.spelling=}') # void (fz_context *, void *, int64_t, int)
+
+                while 0:
+                    command = input( '>>> ')
+                    try:
+                        result = eval( command) #, globals(), locals())
+                        print( f'{result}')
+                    except Exception as e:
+                        print( f'Exception: {e}')
+
 
     # Constructor
     #
@@ -2647,20 +2718,29 @@ def class_wrapper_virtual_fnptrs(
         out_h.write(text)
         out_cpp.write(text)
 
+    verbose = False
+    #verbose |= state.state_.show_details( struct_name)
+
     # Define static callback for each fnptr.
     #
-    for cursor, fnptr_type in get_fnptrs():
+    for cursor, fnptr_type in get_fnptrs( shallow_typedef_expansion=True):
 
         # Write static callback.
         #
+        #verbose |= state.state_.show_details( cursor.spelling)
+        #verbose |= state.state_.show_details( f'{struct_name}::{cursor.spelling}')
+        if verbose:
+            jlib.log( '== Creating static callback for {struct_name}::{cursor.spelling}')
         out_cpp.write(f'/* Static callback, calls self->{cursor.spelling}(). */\n')
         out_cpp.write(f'static {fnptr_type.get_result().spelling} {classname}2_s_{cursor.spelling}')
         out_cpp.write('(')
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
             name = f'arg_{i}'
+            if verbose:
+                jlib.log( '=== {i=} {name=} {arg_type.spelling=}')
             out_cpp.write(sep)
-            out_cpp.write( declaration_text( arg_type, name))
+            out_cpp.write( declaration_text( arg_type, name, verbose=verbose, expand_typedef=False))
             sep = ', '
         out_cpp.write(')')
         out_cpp.write('\n')
@@ -3595,6 +3675,13 @@ def cpp_source(
             #include "mupdf/exceptions.h"
             #include "mupdf/fitz.h"
 
+            #include <iostream>
+
+            #include <string.h>
+
+            static const char* s_trace_exceptions_s = getenv("MUPDF_trace_exceptions");
+            static bool s_trace_exceptions = (s_trace_exceptions_s && !strcmp(s_trace_exceptions_s, "1")) ? true : false;
+
             '''))
 
     out_cpps.functions.write( textwrap.dedent(
@@ -3693,6 +3780,8 @@ def cpp_source(
 
             static const char* s_trace_s = getenv("MUPDF_trace");
             static bool s_trace = (s_trace_s && !strcmp(s_trace_s, "1")) ? true : false;
+            static const char* s_trace_exceptions_s = getenv("MUPDF_trace_exceptions");
+            static bool s_trace_exceptions = (s_trace_exceptions_s && !strcmp(s_trace_exceptions_s, "1")) ? true : false;
 
             '''))
 

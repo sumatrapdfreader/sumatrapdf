@@ -66,6 +66,11 @@ C++ wrapping:
                 If "1", generated code outputs a diagnostic when doing special
                 handling of MuPDF structs containing function pointers.
 
+            MUPDF_trace_exceptions
+                If "1", generated code outputs diagnostics when we catch a
+                MuPDF setjmp/longjmp exception and convert it into a C++
+                exception.
+
             MUPDF_check_refs
                 If "1", generated code checks MuPDF struct reference counts at
                 runtime. See below for details.
@@ -1036,8 +1041,7 @@ def build( build_dirs, swig_command, args):
         elif actions == '-d':
             d = args.next()
             def fn(name):
-                return d in name
-            #state.show_details = lambda name: d in name
+                return name and (d in name)
             state.state_.show_details = fn
         elif actions == '--devenv':
             devenv = args.next()
@@ -1202,6 +1206,7 @@ def build( build_dirs, swig_command, args):
                     #
                     jlib.log(f'Building mupdfcpp.dll by running devenv ...')
                     command = (
+                            f'cd {build_dirs.dir_mupdf}&&'
                             f'"{devenv}"'
                             f' platform/win32/mupdf.sln'
                             f' /Build "ReleasePython|{build_dirs.cpu.windows_config}"'
@@ -1210,7 +1215,7 @@ def build( build_dirs, swig_command, args):
                     jlib.system(command, verbose=1, out='log')
 
                     jlib.copy(
-                            f'platform/win32/{build_dirs.cpu.windows_subdir}Release/mupdfcpp{build_dirs.cpu.windows_suffix}.dll',
+                            f'{build_dirs.dir_mupdf}/platform/win32/{build_dirs.cpu.windows_subdir}Release/mupdfcpp{build_dirs.cpu.windows_suffix}.dll',
                             f'{build_dirs.dir_so}/',
                             verbose=1,
                             )
@@ -1314,7 +1319,7 @@ def build( build_dirs, swig_command, args):
                         # The swig-generated .cpp file must exist at
                         # this point.
                         #
-                        cpp_path = 'platform/python/mupdfcpp_swig.cpp'
+                        cpp_path = f'{build_dirs.dir_mupdf}/platform/python/mupdfcpp_swig.cpp'
                         assert os.path.exists(cpp_path), f'SWIG-generated file does not exist: {cpp_path}'
 
                         # We need to update mtime of the .cpp file to
@@ -1331,6 +1336,7 @@ def build( build_dirs, swig_command, args):
 
                         jlib.log('Building mupdfpyswig project')
                         command = (
+                                f'cd {build_dirs.dir_mupdf}&&'
                                 f'"{devenv}"'
                                 f' platform/win32/mupdfpyswig.sln'
                                 f' /Build "ReleasePython|{build_dirs.cpu.windows_config}"'
@@ -1339,7 +1345,7 @@ def build( build_dirs, swig_command, args):
                         jlib.system(command, verbose=1, out='log', env_extra=env_extra)
 
                         jlib.copy(
-                                f'platform/win32/{build_dirs.cpu.windows_subdir}Release/mupdfpyswig.dll',
+                                f'{build_dirs.dir_mupdf}/platform/win32/{build_dirs.cpu.windows_subdir}Release/mupdfpyswig.dll',
                                 f'{build_dirs.dir_so}/_mupdf.pyd',
                                 verbose=1,
                                 )
@@ -1353,6 +1359,7 @@ def build( build_dirs, swig_command, args):
 
                         jlib.log('Building mupdfcsharp project')
                         command = (
+                                f'cd {build_dirs.dir_mupdf}&&'
                                 f'"{devenv}"'
                                 f' platform/win32/mupdfcsharpswig.sln'
                                 f' /Build "ReleaseCsharp|{build_dirs.cpu.windows_config}"'
@@ -1361,7 +1368,7 @@ def build( build_dirs, swig_command, args):
                         jlib.system(command, verbose=1, out='log')
 
                         jlib.copy(
-                                f'platform/win32/{build_dirs.cpu.windows_subdir}Release/mupdfcsharpswig.dll',
+                                f'{build_dirs.dir_mupdf}/platform/win32/{build_dirs.cpu.windows_subdir}Release/mupdfcsharpswig.dll',
                                 f'{build_dirs.dir_so}/mupdfcsharp.dll',
                                 verbose=1,
                                 )
@@ -1883,19 +1890,22 @@ def main2():
 
                 env_extra, command_prefix = python_settings(build_dirs)
                 join = '&' if state.state_.windows else ''
+                script_py = os.path.relpath( f'{build_dirs.dir_mupdf}/scripts/mupdfwrap_gui.py')
                 if arg == '--test-python-gui':
                     env_extra[ 'MUPDF_trace'] = '0'
                     env_extra[ 'MUPDF_check_refs'] = '1'
-                    command = f'{command_prefix} ./scripts/mupdfwrap_gui.py'
+                    env_extra[ 'MUPDF_trace_exceptions'] = '1'
+                    command = f'{command_prefix} {script_py}'
                     jlib.system( command, env_extra=env_extra, out='log', verbose=1)
 
                 else:
                     jlib.log( 'running scripts/mupdfwrap_test.py ...')
-                    command = f'MUPDF_trace=0 MUPDF_check_refs=1 {command_prefix} {build_dirs.dir_mupdf}/scripts/mupdfwrap_test.py'
+                    script_py = os.path.relpath( f'{build_dirs.dir_mupdf}/scripts/mupdfwrap_test.py')
+                    command = f'MUPDF_trace=0 MUPDF_check_refs=1 MUPDF_trace_exceptions=1 {command_prefix} {script_py}'
                     with open( f'{build_dirs.dir_mupdf}/platform/python/mupdf_test.py.out.txt', 'w') as f:
                         jlib.system( command, env_extra=env_extra, out='log', verbose=1)
                         # Repeat with pdf_reference17.pdf if it exists.
-                        path = '../pdf_reference17.pdf'
+                        path = os.path.relpath( f'{build_dirs.dir_mupdf}/../pdf_reference17.pdf')
                         if os.path.exists(path):
                             jlib.log('Running mupdfwrap_test.py on {path}')
                             command += f' {path}'

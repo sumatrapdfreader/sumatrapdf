@@ -370,11 +370,11 @@ class BuildDirs:
         # Set self.cpu and self.python_version.
         if state_.windows:
             # Infer from self.dir_so.
-            m = re.match( 'shared-release(-(x[0-9]+))?(-py([0-9.]+))?$', os.path.basename(self.dir_so))
+            m = re.match( 'shared-([a-z]+)(-(x[0-9]+))?(-py([0-9.]+))?$', os.path.basename(self.dir_so))
             #log(f'self.dir_so={self.dir_so} {os.path.basename(self.dir_so)} m={m}')
             assert m, f'Failed to parse dir_so={self.dir_so!r} - should be *-x32|x64-pyA.B'
-            self.cpu = Cpu( m.group(2))
-            self.python_version = m.group(4)
+            self.cpu = Cpu( m.group(3))
+            self.python_version = m.group(5)
             #log('{self.cpu=} {self.python_version=} {dir_so=}')
         else:
             # Use Python we are running under.
