@@ -875,6 +875,10 @@ def build_swig(
                 # work on Linux.
                 prefix = textwrap.dedent(
                         f'''
+                        import ctypes
+                        import os
+                        import importlib
+
                         # The required .so's are in the same directory as this
                         # Python file. On OpenBSD we can explicitly load these
                         # .so's here using ctypes.cdll.LoadLibrary(), which
@@ -882,9 +886,6 @@ def build_swig(
                         #
                         # Unfortunately this doesn't work on Linux.
                         #
-                        import ctypes
-                        import os
-                        import importlib
                         for leaf in ('libmupdf.so', 'libmupdfcpp.so', '_mupdf.so'):
                             path = os.path.abspath(f'{{__file__}}/../{{leaf}}')
                             #print(f'path={{path}}')

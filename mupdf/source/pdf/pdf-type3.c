@@ -231,7 +231,7 @@ void pdf_load_type3_glyphs(fz_context *ctx, pdf_document *doc, pdf_font_desc *fo
 			fz_rect bbox = fontdesc->font->bbox_table[0];
 			for (i = 1; i < 256; i++)
 			{
-				bbox = fz_union_rect(bbox, fontdesc->font->bbox_table[0]);
+				bbox = fz_union_rect(bbox, fontdesc->font->bbox_table[i]);
 			}
 			fontdesc->font->bbox = bbox;
 		}
