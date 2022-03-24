@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-02dcfb95aca230b3607acf3c406b9b156bf6fc12
+533a8d9a7dbc453e0069906c6827c77e6fbcab39
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -625,7 +625,7 @@ et:&Loobu muudatustest
 fr:&Abandonner les modifications
 hr:&Odbaci promjene
 hu:Változtatások elvetése
-it:Scarica
+it:Annullare
 kr:무시(&D)
 kw:&Tewlel chanjyow
 mk:Откажи ги измените
