@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-533a8d9a7dbc453e0069906c6827c77e6fbcab39
+97038ae185a490bdde221896c4fb7f166efda1e5
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -625,7 +625,7 @@ et:&Loobu muudatustest
 fr:&Abandonner les modifications
 hr:&Odbaci promjene
 hu:Változtatások elvetése
-it:Annullare
+it:Esci
 kr:무시(&D)
 kw:&Tewlel chanjyow
 mk:Откажи ги измените
@@ -16106,7 +16106,7 @@ et:Salvesta muudatused olemas olevasse PDF-i
 fr:Enregistrer les modifications dans le PDF existant.
 hr:Spremi promjene u postojeći PDF
 hu:Változtatások mentése a meglévő PDF-be
-it:Salva modifiche in un PDF esistente
+it:Salva modifiche in questo PDF
 kr:기존 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lt:Išsaugoti pakeitimus į esamą PDF failą
