@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-97038ae185a490bdde221896c4fb7f166efda1e5
+a975c9b0a25e733e6c03d51bb7d45b8a8ecf2d7e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -421,6 +421,7 @@ et:&Loobu
 fr:Annuler
 hr:&Odustani
 hu:&Mégse
+id:&Membatalkan
 it:&Annulla
 ja:キャンセル(&C)
 kr:취소
@@ -450,6 +451,7 @@ et:&Caret
 fr:Curseur
 hr:&Znak za umetanje
 hu:Kurzor
+id:&Sisipan
 it:&Cursore
 kr:캐럿(&C)
 kw:&Karet
@@ -548,6 +550,7 @@ fr:Continuer l'installation de la version 32-bits
 gl:Continuar instalando a versión de 32 bits
 hr:&Nastavi instalirati 32-bit verziju 
 hu:Folytatás a 32-bites verzió telepítésével
+id:&Lanjutkan pemasangan versi 32-bit
 it:Continua installazione versione 32bit
 kr:32비트 버전 설치를 계속합니다(&C)
 kw:&Pesya lea gwersyon 32-byt
@@ -575,6 +578,7 @@ et:&Kopeeri valik \tCtrl+C
 fr:Copier la sélection \tCtrl-C
 hr:&Kopiraj odabrano \tCtrl-C
 hu:Kiválasztás másolása \tCtrl-C
+id:&Menyalin Pilihan \tCtrl-C
 it:&Copia selezione\tCtrl-C
 kr:선택한 내용 복사(&C)\tCtrl-C
 kw:&Kopia Dewisans \tKtrl-C
@@ -600,6 +604,7 @@ et:&Kopeeri lõikelauale\tCtrl+C
 fr:Copier dans le presse-papiers
 hr:&Kopiraj u međuspremnik\tCtrl-C
 hu:Vágólapra másolás\tCtrl-C
+id:&Salin Ke Papan Klip\tCtrl-C
 it:&Copia negli Appunti\tCtrl-C
 kr:클립보드에 복사(&C)\tCtrl-C
 kw:&Kopia dhe'n Skryp\tKtrl-C
@@ -625,6 +630,7 @@ et:&Loobu muudatustest
 fr:&Abandonner les modifications
 hr:&Odbaci promjene
 hu:Változtatások elvetése
+id:Abaikan perubahan
 it:Esci
 kr:무시(&D)
 kw:&Tewlel chanjyow
@@ -1117,6 +1123,7 @@ es:&Texto libre
 et:&Vaba tekst
 hr:&Slobodni tekst
 hu:Szabad szöveg
+id:Teks Bebas
 it:Testo libero
 kw:&Tekst Rydh
 lt:&Laisvas tekstas
@@ -1353,6 +1360,7 @@ es:&Resaltar\ta
 et:&Esiletõstmine\ta
 hr:&Istakni\ta
 hu:Kiemelés\ta
+id:Sorotan
 it:Evidenzia\ta
 kw:&Golowboyntya\ta
 lt:Pa&ryškinti
@@ -2679,6 +2687,7 @@ et:&Salvesta olemas olevasse PDF-i
 fr:&Sauvegarder dans le PDF existant
 hr:&Spremi u postojeći PDF
 hu:Meglévő PDF-be mentés
+id:&Simpan ke PDF yang sudah ada
 it:&Salva in un PDF esistente
 kr:기존 PDF에 저장(&S)
 kw:&Gwitha dhe PDF seulabrys
@@ -2703,6 +2712,7 @@ et:Otsi Google-iga
 fr:&Rechercher avec Google
 hr:Pretraži &sa Google-om
 hu:Keresés Google-el
+id:&Cari dengan Google
 it:Cerca con Google
 ja:Google で検索(&S)
 kw:&Hwilas Gans Google
@@ -2916,6 +2926,7 @@ es:&Estampa
 et:&Tempel
 hr:&Pečat
 hu:Bélyeg
+id:&Stempel
 it:&Stamp
 kw:&Stampa
 lt:&Antspaudas
@@ -2940,6 +2951,7 @@ et:&Tõmba maha
 fr:Rayer
 hr:Za&crtati
 hu:Kihúzás
+id:Coret
 it:Cancellato
 ja:打ち消し線(&S)
 kw:&Treuslinya
@@ -2966,6 +2978,7 @@ et:&Tekst
 fr:&Texte
 hr:&Tekst
 hu:Szöveg
+id:&Teks
 it:&Testo
 ja:テキスト(&T)
 kr:문자열(&T)
@@ -3051,6 +3064,7 @@ et:&Tõlgi Google-iga
 fr:&Traduire avec Google
 hr:&Prevedi sa Google-om
 hu:Fordítsd le a Google-el
+id:&Terjemahkan dengan Google
 it:&Traduci con Google
 ja:Google を使って翻訳(&T)
 kr:Google로 번역(&T)
@@ -3063,6 +3077,7 @@ th:&แปลด้วย Google
 tr:Google İle &Çevir
 :&Underline\tu
 am:&Ընդգծել\tu
+br:&Sublinhado\tu
 cn:下划线(&U)\tU
 co:&Sottulineatu\tu
 de:&Unterstreichen\tu
@@ -3074,6 +3089,7 @@ fr:&Souligner\tu
 gl:Subliñar
 hr:&Podcrtano\tu
 hu:Aláhúzás\tu
+id:Garis bawah
 it:&Sottolineato\ts
 ja:下線(&U)\tu
 nl:&Onderstrepen\tu
@@ -4508,11 +4524,13 @@ vn:Tác giả
 am:Հեղինակ՝ %s
 az:Müəllif: %s
 bn:গ্রন্থকার: %s
+br:Autor: %s
 cn:作者: %s
 de:Autor: %s
 el:Συγγραφέας: %s
 es:Autora: %s
 hr:Autor: %s
+id:Penulis: %s
 it:Autore: %s
 ja:作者: %s
 kw:Skrifer: %s
@@ -4522,6 +4540,7 @@ nl:Auteur: %s
 pl:Autor: %s
 ru:Автор: %s
 sl:Avtor: %s
+tr:Yazar: %s
 :Automatic
 af:Outomaties
 am:Ինքնաշխատ
@@ -4676,6 +4695,7 @@ fr:Couleur d'arrière-plan
 gl:Cor de fondo
 hr:Boja pozadine:
 hu:Háttérszín:
+id:Warna Latar:
 it:Colore sfondo:
 ja:背景色:
 kr:배경색
@@ -4960,11 +4980,13 @@ vn:Chỉ dấu sách
 :Border: %d
 am:Եզրագիծ. %d
 bn:সীমানা: %d
+br:Borda: %d
 cn:边框: %d
 de:Umrandung: %d
 el:Περιθώριο: %d
 es:Borde: %d
 hr:Rub: %d
+id:Garis Tepi: %d
 it:Bordo: %d
 kw:Amal: %d
 lt:Kraštas: %d
@@ -4972,6 +4994,7 @@ lv:Apmale: %d
 nl:Rand %d
 pl:Obramowanie: %d
 sl:Rob: %d
+tr:Kenarlık: %d
 :Bytes
 am:Բայթ
 ar:بايت
@@ -5532,6 +5555,7 @@ fr:Vérifier les mises à jour
 gl:Comprobar actualizacións
 hr:Provjera dostupnosti ažuriranja...
 hu:Frissítés keresése...
+id:Mencari pembaruan...
 it:Controllo aggiornamenti...
 ja:更新を確認中...
 kr:업데이트를 확인 중입니다...
@@ -5718,6 +5742,7 @@ fr:Couleur
 gl:cor
 hr:Boja:
 hu:Szín:
+id:Warna:
 it:Colore:
 ja:色:
 kr:색상
@@ -5870,11 +5895,13 @@ vn:Tính tương thích
 am:Բովանդակություններ.
 az:Məzmun:
 bn:বিষয়:
+br:Conteúdo:
 cn:内容：
 de:Inhalte:
 el:Περιεχόμενα:
 es:Contenido:
 hr:Sadržaj:
+id:Isi:
 it:Contenuti:
 ja:コンテンツ:
 kw:Dalghow:
@@ -5883,6 +5910,7 @@ lv:Saturs:
 nl:Inhoud
 pl:Zawartość:
 sl:Vsebina:
+tr:İçerikler:
 :Continuous
 af:Aanmekaar
 am:Անդադար
@@ -6630,6 +6658,7 @@ et:Printeri nime hankimine ebaõnnestus
 fr:Impossible d'obtenir le nom de l'imprimante
 hr:Nemoguće dobiti naziv printera
 hu:Nem sikerült lekérni a nyomtató nevét
+id:Tidak dapat menemukan printer
 it:Impossibile ottenere il nome della stampante
 kw:Ny yllir kavos hanow pryntyer
 nl:Kan de naam van de printer niet vinden
@@ -7199,6 +7228,7 @@ et:Lisa kursori j&uurde kommentaar
 fr:Créer une annotation &sous le curseur
 hr:Napravi bilješku &ispod kursora
 hu:Új megjegyzés &Kurzor alatt
+id:Buat catatan dengan kursor
 it:Crea annotazione sotto al c&ursore
 kr:커서 아래 주석 생성(&U)
 kw:Gwruthyl Notenyans &Yn-Dann Resor
@@ -7226,6 +7256,7 @@ fr:Créer une annotation à partir de la sélection
 gl:Crear anotacion a partir da selección
 hr:Napravite bilješku iz odabira
 hu:Megjegyzés készítése a kiválasztásból
+id:Buat catatan dari pilihan
 it:Crea annotazione dalla selezione
 kr:선택한 곳에 주석 생성
 kw:Gwruthyl Notenyans a'th Tewis
@@ -7624,11 +7655,13 @@ vn:Tối hơn
 am:Ամսաթիվ.
 az:Tarix:
 bn:তারিখ:
+br:Data:
 cn:日期:
 de:Datum:
 el:Ημερομηνία:
 es:Fetcha:
 hr:Datum:
+id:Tanggal:
 it:Data:
 ja:日付:
 kw:Dedhyas:
@@ -7638,6 +7671,7 @@ nl:Datum:
 pl:Data:
 ru:Дата:
 sl:Datum:
+tr:Tarih:
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -7844,6 +7878,7 @@ et:Kustuta kommentaar\tDel
 fr:Supprimer l'annotation\tDel
 gl:Borrar anotación
 hr:Obriši bilješku\tDel
+id:Hapus Catatan\tDel
 it:Elimina annotazione\tCanc
 nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
@@ -8062,6 +8097,7 @@ fr:Ne pas installer
 gl:Non instalar
 hr:Nemoj instalirati
 hu:Ne telepítsd
+id:Jangan memasang
 it:Non installare
 ja:インストールしない
 kr:설치하지 마십시오
@@ -8090,6 +8126,7 @@ fr:Télécharger la version 64-bits
 gl:Baixar versión de 64 bits
 hr:Preuzmite 64-bitnu verziju
 hu:64-bites verzió letöltése
+id:Unduh versi 64-bit
 it:Download versione a 64bit
 ja:64-bit 版をダウンロード
 kr:64비트 버전 다운로드
@@ -11179,11 +11216,13 @@ vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Icon:
 am:Պատկերակ.
 bn:আইকন
+br:Ícone
 cn:图标:
 de:Icon:
 el:Εικονίδιο:
 es:Icono:
 hr:Ikona:
+id:Ikon:
 it:Icona:
 ja:アイコン:
 kw:Ikon:
@@ -11192,6 +11231,7 @@ lv:Ikona:
 nl:Pictogram:
 pl:Ikona:
 sl:Ikona:
+tr:Simge:
 :Image files (*.%s)
 am:Պատկերի ֆայլեր (*.%s)
 ar:ملفات الصور (*.%s)
@@ -11476,6 +11516,7 @@ et:Paigalda ja kävita uuesti
 fr:Installer et redémarrer
 hr:Instaliraj i ponovno pokreni
 hu:Telepítés és újraindítás
+id:Pasang dan buka kembali
 it:Installa e ri-esegui
 ja:インストールしてプログラムを再起動
 kr:설치 후 재실행
@@ -11628,6 +11669,7 @@ et:32-bitise SumatraPDF-i paigaldamine 64-bitisele operatsioonisüsteemile
 fr:Installation de SumatraPDF 32-bits sur un système 64-bits
 hr:Instaliranje 32-bitne SumatraPDF na 64-bit OS
 hu:32-bites SumatraPDF telepítése 64-bites operációs rendszerre
+id:Memasang SumatraPDF versi 32-bit pada OS 64-bit
 it:Installa SumatraPDF a 32bit in S.O. a 64bit
 ja:64-bit 版の OS に 32-bit 版の SumatraPDF をインストール中
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
@@ -11641,11 +11683,13 @@ tw:安裝32位元版本 SumatraPDF 於 64位元版系統
 uk:Встановлення 32-розрядної SumatraPDF на 64-розрядну ОС
 :Interior Color:
 am:Ներքին գույնը.
+br:Cor Interior:
 cn:填充颜色：
 de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
 es:Color Interior
 hr:Unutarnja boja:
+id:Warna Interior:
 it:Colore interno:
 kw:Liw A-Bervedh:
 lt:Vidaus spalva:
@@ -11653,6 +11697,7 @@ lv:Iekšējā krāsa:
 nl:Interieur Kleur
 pl:Kolor wnętrza:
 sl:Barva notranjosti:
+tr:İç Renk:
 :KB
 af:KB
 am:ԿԲ
@@ -11944,11 +11989,13 @@ uk:Лінія
 :Line End:
 am:Տողի ավարտը.
 bn:লাইন শেষ:
+br:Fim da linha:
 cn:线段终点
 de:Zeilenende:
 el:Τέλος γραμμής:
 es:Fin de Línea:
 hr:Kraj linije:
+id:Garis Akhir:
 it:Fine linea:
 kw:Diwedh Linen:
 lt:Linijos pabaiga:
@@ -11956,14 +12003,17 @@ nl:Lijn Eind
 pl:Koniec linii:
 ru:Конец линии:
 sl:Konec črte:
+tr:Satır Bitişi:
 :Line Start:
 am:Տողի մեկնարկը.
 bn:লাইন শুরু:
+br:Começo da linha:
 cn:线段起点
 de:Zeilenstart:
 el:Έναρξη γραμμής:
 es:Inicio de Línea:
 hr:Početak linije:
+id:Garis Awal:
 it:Inizio linea:
 kw:Dalleth Linen:
 lt:Linijos pradžia:
@@ -11971,6 +12021,7 @@ nl:Lijn Begin
 pl:Początek linii:
 ru:Начало линии:
 sl:Začetek črte:
+tr:Satır Başlangıcı:
 :MB
 af:MB
 am:ՄԲ
@@ -12501,6 +12552,7 @@ fr:Nouvelle version disponible
 gl:Nova versión dispoñible
 hr:Dostupna nova verzija
 hu:Új verzió elérhető
+id:Versi baru tersedia
 it:Nuova versione disponibile
 ja:更新があります
 kr:새 버전이 있습니다
@@ -12983,11 +13035,13 @@ vn:Đồng ý
 :Opacity:
 am:Մգություն.
 bn:অস্বচ্ছতা:
+br:Opacidade:
 cn:透明度:
 de:Deckkraft:
 el:Διαφάνεια:
 es:Opacidad:
 hr:Neprozirnost:
+id:Kegelapan:
 it:Opacità:
 ja:透過率:
 kw:Disklerder:
@@ -12996,14 +13050,17 @@ lv:Necaurspīdīgums:
 nl:Dekking
 pl:Nieprzezroczystość:
 sl:Motnost:
+tr:Opaklık:
 :Opacity: %d
 am:Մգություն. %d
 bn:অস্বচ্ছতা: %d
+br:Opacidade: %d
 cn:透明度: %d
 de:Deckkraft: %d
 el:Διαφάνεια: %d
 es:Opacidad: %d
 hr:Neprozirnost: %d
+id:Kegelapan: %d
 it:Opacità: %d
 ja:透過率: %d
 kw:Disklerder: %d
@@ -13012,6 +13069,7 @@ lv:Necaurspīdīgums: %d
 nl:Dekking: %d
 pl:Nieprzezroczystość: %d
 sl:Motnost: %d
+tr:Opaklık: %d
 :Open
 af:Maak Oop
 am:Բացել
@@ -14618,11 +14676,13 @@ tw:多邊形
 uk:Багатокутник
 :Popup: %d 0 R
 am:Ելնող. %d 0 R
+br:Aparecer: %d 0 R
 cn:弹出：%d 0 R
 de:Pop-up: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
 hr:Skočna obavijest: %d 0 R
+id:Munculkan: %d 0 R
 it:Popup: %d 0 R
 kw:Tardhans: %d 0 R
 lt:Pranešimas: %d 0 R
@@ -14631,6 +14691,7 @@ nl:Popup: %d O R
 pl:Wyskakujące okienko: %d 0 R
 ru:Всплывающее окно: %d 0 R
 sl:Pojavno okno: %d 0 R
+tr:Baloncuk: %d 0 R
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -15402,11 +15463,13 @@ uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
+br:Retângulo: x=%d y=%d dx=%d dy=%d
 cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
 de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
 hr:Pravokutnik: x=%d y=%d dx=%d dy=%d
+id:Persegi: x=%d y=%d dx=%d dy=%d
 it:Rettangolo: x=%d Y=%d dx=%d dy=%d
 kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lt:Stačiakampis: x=%d y=%d dx=%d dy=%d
@@ -15414,6 +15477,7 @@ lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 sl:Pravokotnik: x=%d y=%d dx=%d dy=%d
+tr:Dikdörtgen: x=%d y=%d dx=%d dy=%d
 :Redact
 am:Փոփոխել
 ar:تنقيح
@@ -15861,6 +15925,7 @@ et:V&alik
 fr:S&élection
 hr:O&dabir
 hu:K&iválasztás
+id:Pilihan
 it:S&elezione
 ja:選択(&E)
 kr:선택(&e)
@@ -15885,6 +15950,7 @@ et:&Kritseldus
 fr:&Ondulé
 hr:&Vrckava crta
 hu:Hullámos
+id:Lekukan
 it:Sinuoso
 kw:I&gam-ogam
 lt:Pabraukti &vingiuota linija
@@ -15911,6 +15977,7 @@ fr:Documents SVG
 gl:documentos SVG
 hr:SVG dokumenti
 hu:SVG dokumentumok
+id:Dokumen SVG
 it:Documenti SVG
 kw:Dogvennow SVG
 nl:SVG Documenten
@@ -15933,6 +16000,7 @@ fr:Sauvegarder les annotations dans le PDF existant.
 gl:Gardar anotacións ó PDF existente
 hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
+id:Simpan catatan ke PDF terkini
 it:Salva annotazioni in PDF esistente
 nl:Notaties opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
@@ -16051,6 +16119,7 @@ fr:Sauvegarder les annotations ?
 gl:Gardar anotacións?
 hr:Spremi bilješke?
 hu:Megjegyzések mentése?
+id:Simpan catatan?
 it:Vuoi salvare le annotazioni?
 ja:注釈を保存しますか？
 kr:주석을 저장할까요?
@@ -16077,6 +16146,7 @@ fr:Enregistrer les modifications dans un nouveau PDF
 gl:Gardar anotacións a un novo PDF
 hr:Spremi promjene u novi PDF
 hu:Változtatások elmentése egy új PDF-be
+id:Simpan perubahan ke PDF baru
 it:Salva modifiche in un nuovo PDF
 kr:새 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF nowydh
@@ -16106,6 +16176,7 @@ et:Salvesta muudatused olemas olevasse PDF-i
 fr:Enregistrer les modifications dans le PDF existant.
 hr:Spremi promjene u postojeći PDF
 hu:Változtatások mentése a meglévő PDF-be
+id:Simpan perubahan ke PDF terkini
 it:Salva modifiche in questo PDF
 kr:기존 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
@@ -16132,6 +16203,7 @@ et:Salvesta &uude PDF-i
 fr:Sauvegarder dans un &nouveau PDF
 hr:Spremi u &novi PDF
 hu:Mentés új PDF-be
+id:Simpan ke PDF &baru
 it:Salva in un &nuovo PDF
 kr:새(&n) PDF에 저장하기
 kw:Gwitha dhe PDF &nowydh
@@ -16143,11 +16215,13 @@ th:บันทึกไปที่ &​PDF ใหม่
 tr:&Yeni PDF'ye kaydet
 :Saved annotations to '%s'
 am:Պահված մեկնաբանություններ '%s'-ում
+br:Anotações salvas em '%s'
 cn:保存注释到 '%s'
 de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
 hr:Bilješke spremljene u '%s'
+id:Catatan tersimpan di: %s'
 it:Annotazioni salvate in '%s'
 kw:Notenyansow gwithys dhe '%s'
 lt:Anotacijos išsaugotos į '%s'
@@ -16156,13 +16230,16 @@ nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje do '%s'
 ru:Аннотации сохранены в '%s'
 sl:Shrani pripombe v '%s'
+tr:Dipnotlar şuraya kaydedildi: '%s'
 :Saving of '%s' failed with: '%s'
 am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
+br:Salvamento de '%s' falhou com: '%s'
 cn:保存 '%s' 失败: '%s'
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
 hr:Spremanje '%s' neuspjelo sa: '%s'
+id:Penyimpanan %s' gagal dengan: %s'
 it:Salvataggio di '%s' fallito con: '%s'
 kw:Gwitha '%s' re fyllis gans: '%s'
 lt:%s išsaugojimas nepavyko: '%s'
@@ -16170,6 +16247,7 @@ lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
 sl:Shranjevanje '%s' ni uspelo: '%s'
+tr:'%s' kaydedilmesi başarısız: '%s'
 :Search With &Bing
 am:Որոնել &Bing-ով
 br:Buscar com &Bing
@@ -16185,6 +16263,7 @@ et:Otsi &Bingiga
 fr:Rechercher avec &Bing
 hr:Pretraži sa &Bing-om
 hu:Keresés &Bing-el
+id:Cari menggunakan &Bing
 it:Cerca con &Bing
 ja:Bing で検索(&B)
 kr:Bing으로 검색(&B)
@@ -16210,6 +16289,7 @@ et:Otsi &Google-iga
 fr:Rechercher avec &Google
 hr:Pretraži sa &Google-om
 hu:Keresés &Google-el
+id:Cari menggunakan &Google
 it:Cerca con &Google
 ja:Google で検索(&G)
 kr:Google로 검색(&G)
@@ -16361,6 +16441,7 @@ et:Vali redaktoris kommentaar
 fr:Sélectionner l'annotation dans l'éditeur
 hr:Odaberite bilješku u uređivaču
 hu:Megjegyzés kiválasztása a szerkesztőben
+id:Pilih Catatan di Penyunting
 it:Seleziona annotazione nell'editor
 kw:Dewis Notenyans y'n Wolegell
 lt:Pasirinkti anotaciją redaktoriuje
@@ -17332,6 +17413,7 @@ et:Jäta see versioon vahele
 fr:Ignorer cette version
 hr:Preskoči ovu verziju
 hu:Ezen verzió kihagyása
+id:Lewatkan versi ini
 it:Salta questa versione
 kr:이 버전 건너뛰기
 kw:Skyppya an gwersyon ma
@@ -18330,11 +18412,13 @@ uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text Alignment:
 am:Գրվածքի հավասարեցում
+br:Alinhamento de Texto:
 cn:文本对齐:
 de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
 hr:Poravnavanje teksta:
+id:Rata Teks:
 it:Allineamento testo:
 ja:テキスト位置:
 kw:Alinyans Tekst:
@@ -18344,15 +18428,18 @@ nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
 ru:Выравнивание текста:
 sl:Poravnava besedila:
+tr:Satır Hizası:
 :Text Color:
 am:Գրվածքի գույն
 az:Mətnin rəngi:
 bn:লেখার রং:
+br:Cor do Texto:
 cn:文本颜色:
 de:Textfarbe:
 el:Text Color: 
 es:Color de Texto:
 hr:Boja teksta:
+id:Warna Teks:
 it:Colore testo:
 ja:テキスト色:
 kw:Liw Tekst:
@@ -18363,15 +18450,18 @@ nl:Tekst Kleur
 pl:Kolor tekstu:
 ru:Цвет текста:
 sl:Barva besedila:
+tr:Metin Rengi:
 :Text Size:
 am:Գրվածքի չափ.
 az:Mətnin ölçüsü:
 bn:লেখার আকার:
+br:Tamanho do Texto:
 cn:文本大小:
 de:Textgröße:
 el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
 hr:Veličina teksta:
+id:Ukuran Teks:
 it:Dimensione testo:
 ja:テキストサイズ:
 kw:Braster Tekst:
@@ -18382,14 +18472,17 @@ nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 ru:Размер текста:
 sl:Velikost besedila:
+tr:Metin Boyutu:
 :Text Size: %d
 am:Գրվածքի չափը՝ %d
 bn:লেখার আকার: %d
+br:Tamanho do Texto: %d
 cn:文本大小: %d
 de:Textgröße: %d
 el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 hr:Veličina teksta: %d
+id:Ukuran Teks: %d
 it:Dimensione testo: %d
 ja:テキストサイズ: %d
 kw:Braster Tekst: %d
@@ -18400,6 +18493,7 @@ nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
 ru:Размер текста: %d
 sl:Velikost besedila: %d
+tr:Metin Boyutu: %d
 :Text documents
 am:Գրվածքային փաստաթղթեր
 ar:مستندات نصية
@@ -18792,6 +18886,7 @@ et:Tõlgi &DeepL-iga
 fr:Traduire avec &DeepL
 hr:Prevedi sa &DeepL
 hu:Fordítsd le a DeepL-el
+id:Terjemahkan dengan &DeepL
 it:Traduci con &DeepL
 ja:DeepL を使って翻訳(&D)
 kr:DeepL로 번역(&D)
@@ -19068,6 +19163,7 @@ fr:Annotations non sauvegardées
 gl:Anotacións sen gardar
 hr:Nespremljene bilješke
 hu:Mentetlen megjegyzések
+id:Catatan tidak tersimpan
 it:Annotazioni non salvate
 kr:저장되지 않은 주석
 kw:Notenyansow anwithys
@@ -19093,6 +19189,7 @@ et:Salvestamata kommentaarid dokumendis '%s'
 fr:Annotations dans ‘%s’ non sauvegardées
 hr:Nespremljene bilješke u '%s'
 hu:Mentetlen megjegyzések itt: '%s'
+id:Catatan tidak tersimpan di '%s'
 it:Annotazioni non salvate in '%s'
 kw:Notenyansow anwithys yn '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
@@ -19606,6 +19703,7 @@ et:Sul on versioon '%s' ja saadaval on versioon '%s'.\nKas soovid paigaldada uue
 fr:Vous avez la version ‘%s’ et la version ‘%s’ est disponible. \nVoulez-vous installer la nouvelle version ?
 hr:Imate verziju '%s' a verzija '%s' je dostupna.\nŽelite li instalirati novu verziju?
 hu:A jelenlegi verziód '%s' és már a '%s' verzió is elérhető.\nSzeretnéd feltelepíteni az új verziót?
+id:Anda memiliki versi '%s' dan versi '%s' telah tersedia.\nApakah anda ingin memasang versi terbaru?
 it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi installare la nuova versione?
 kw:Yma dhis gwersyon '%s' ha gwersyon '%s' yw kavadow.\nA vynn'ta lea gwersyon nowydh?
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
@@ -19629,6 +19727,7 @@ et:Paigaldad 64-bitisele operatsioonisüsteemile 32-bitist SumatraPDF-i versioon
 fr:Installation de SumatraPDF 32-bits sur un  système 64-bits. \nVoulez-vous télécharger la  version \n64-bits
 hr:Instalirate 32-bitnu SumatraPDF on 64-bitni OS.\nŽelite li preuzeti 64-bit verziju?
 hu:A SumatraPDF 32-bites verzióját telepíted éppen egy 64-bites operációs rendszerre.\nSzeretnéd inkább letölteni a\n64-bites verziót?
+id:Anda memasang SumatraPDF versi 32-bit pada OS 64-bit.\nApakah Anda ingin mengunduh versi 64-bit?
 it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaricare SumatraPDF a 64bit?
 kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwersyon 64-byt?
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
