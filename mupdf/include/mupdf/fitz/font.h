@@ -705,8 +705,9 @@ struct fz_font
 
 	int glyph_count;
 
-	/* per glyph bounding box cache */
-	fz_rect *bbox_table;
+	/* per glyph bounding box cache. */
+	fz_rect **bbox_table;
+	int use_glyph_bbox;
 
 	/* substitute metrics */
 	int width_count;
@@ -714,7 +715,7 @@ struct fz_font
 	short *width_table; /* in 1000 units */
 
 	/* cached glyph metrics */
-	float *advance_cache;
+	float **advance_cache;
 
 	/* cached encoding lookup */
 	uint16_t *encoding_cache[256];
