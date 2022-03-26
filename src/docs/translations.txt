@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a975c9b0a25e733e6c03d51bb7d45b8a8ecf2d7e
+03febf492780c55b77d918107aea23a5686a84ce
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4526,6 +4526,7 @@ az:Müəllif: %s
 bn:গ্রন্থকার: %s
 br:Autor: %s
 cn:作者: %s
+co:Autore : %s
 de:Autor: %s
 el:Συγγραφέας: %s
 es:Autora: %s
@@ -4982,6 +4983,7 @@ am:Եզրագիծ. %d
 bn:সীমানা: %d
 br:Borda: %d
 cn:边框: %d
+co:Bordu : %d
 de:Umrandung: %d
 el:Περιθώριο: %d
 es:Borde: %d
@@ -5897,6 +5899,7 @@ az:Məzmun:
 bn:বিষয়:
 br:Conteúdo:
 cn:内容：
+co:Cuntenutu :
 de:Inhalte:
 el:Περιεχόμενα:
 es:Contenido:
@@ -7657,6 +7660,7 @@ az:Tarix:
 bn:তারিখ:
 br:Data:
 cn:日期:
+co:Data :
 de:Datum:
 el:Ημερομηνία:
 es:Fetcha:
@@ -11218,6 +11222,7 @@ am:Պատկերակ.
 bn:আইকন
 br:Ícone
 cn:图标:
+co:Icona :
 de:Icon:
 el:Εικονίδιο:
 es:Icono:
@@ -11685,6 +11690,7 @@ uk:Встановлення 32-розрядної SumatraPDF на 64-розря�
 am:Ներքին գույնը.
 br:Cor Interior:
 cn:填充颜色：
+co:Culore interiore :
 de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
 es:Color Interior
@@ -11991,6 +11997,7 @@ am:Տողի ավարտը.
 bn:লাইন শেষ:
 br:Fim da linha:
 cn:线段终点
+co:Fine di linea :
 de:Zeilenende:
 el:Τέλος γραμμής:
 es:Fin de Línea:
@@ -12009,6 +12016,7 @@ am:Տողի մեկնարկը.
 bn:লাইন শুরু:
 br:Começo da linha:
 cn:线段起点
+co:Principiu di linea :
 de:Zeilenstart:
 el:Έναρξη γραμμής:
 es:Inicio de Línea:
@@ -13037,6 +13045,7 @@ am:Մգություն.
 bn:অস্বচ্ছতা:
 br:Opacidade:
 cn:透明度:
+co:Opacità :
 de:Deckkraft:
 el:Διαφάνεια:
 es:Opacidad:
@@ -13056,6 +13065,7 @@ am:Մգություն. %d
 bn:অস্বচ্ছতা: %d
 br:Opacidade: %d
 cn:透明度: %d
+co:Opacità : %d
 de:Deckkraft: %d
 el:Διαφάνεια: %d
 es:Opacidad: %d
@@ -14678,6 +14688,7 @@ uk:Багатокутник
 am:Ելնող. %d 0 R
 br:Aparecer: %d 0 R
 cn:弹出：%d 0 R
+co:Finestrinu : %d 0 R
 de:Pop-up: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
@@ -15465,6 +15476,7 @@ vn:Đổi tê&n...\tF2
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
 br:Retângulo: x=%d y=%d dx=%d dy=%d
 cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
+co:Rett: x=%d y=%d dx=%d dy=%d
 de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
@@ -16217,6 +16229,7 @@ tr:&Yeni PDF'ye kaydet
 am:Պահված մեկնաբանություններ '%s'-ում
 br:Anotações salvas em '%s'
 cn:保存注释到 '%s'
+co:Annutazioni arregistrate nant’à « %s »
 de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
@@ -16235,6 +16248,7 @@ tr:Dipnotlar şuraya kaydedildi: '%s'
 am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
 br:Salvamento de '%s' falhou com: '%s'
 cn:保存 '%s' 失败: '%s'
+co:Arregistramentu di « %s » fiascatu cù : « %s »
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
@@ -18414,6 +18428,7 @@ vn:PDF được gắn thẻ
 am:Գրվածքի հավասարեցում
 br:Alinhamento de Texto:
 cn:文本对齐:
+co:Aliniamentu di testu :
 de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
@@ -18435,6 +18450,7 @@ az:Mətnin rəngi:
 bn:লেখার রং:
 br:Cor do Texto:
 cn:文本颜色:
+co:Culore di u testu :
 de:Textfarbe:
 el:Text Color: 
 es:Color de Texto:
@@ -18457,6 +18473,7 @@ az:Mətnin ölçüsü:
 bn:লেখার আকার:
 br:Tamanho do Texto:
 cn:文本大小:
+co:Dimensione di testu :
 de:Textgröße:
 el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
@@ -18478,6 +18495,7 @@ am:Գրվածքի չափը՝ %d
 bn:লেখার আকার: %d
 br:Tamanho do Texto: %d
 cn:文本大小: %d
+co:Dimensione di testu : %d
 de:Textgröße: %d
 el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
