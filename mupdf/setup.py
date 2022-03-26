@@ -188,8 +188,10 @@ def get_flag(name, default):
 
 def sdist():
     '''
-    pipcl callback. If we are a git checkout, return all files known to
-    git. Otherwise return all files except for those in build/.
+    pipcl callback. We run './scripts/mupdfwrap.py -b 0' to create C++ files
+    etc using clang-python, and return these generated files plus all files
+    known to git. [This allows sdists to be used to generate wheels etc on
+    machines without clang-python.]
     '''
     assert os.path.exists(f'{root_dir()}/.git'), f'Cannot make sdist because not a git checkout: {root_dir()}'
 
@@ -253,7 +255,8 @@ def sdist():
 
 def build():
     '''
-    pipcl callback. Build MuPDF C, C++ and Python libraries.
+    pipcl callback. Build MuPDF C, C++ and Python libraries and return list of
+    created files.
     '''
     # If we are an sdist, default to not trying to run clang-python - the
     # generated files will already exist, and installing/using clang-python
@@ -344,6 +347,7 @@ Summary
 * MuPDF's ``setjmp``/``longjmp`` exceptions are converted to Python exceptions.
 * Functions and methods do not take ``fz_context`` arguments. (Automatically-generated per-thread contexts are used internally.)
 * Wrapper classes automatically handle reference counting of the underlying structs (with internal calls to ``fz_keep_*()`` and ``fz_drop_*()``).
+* Support for MuPDF function pointers with SWIG Director classes, allowing MuPDF to call Python callbacks.
 * Provides a small number of extensions beyond the basic C API:
 
   * Some generated classes have extra support for iteration.
@@ -420,7 +424,7 @@ Here is some example code that shows all available information about document's 
 More information
 ----------------
 
-https://twiki.ghostscript.com/do/view/Main/MuPDFWrap
+https://mupdf.com/r/C-and-Python-APIs
 
 """
 

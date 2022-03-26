@@ -708,7 +708,7 @@ def main():
 
     sdist = None
     wheels = []
-    pypi_test = True
+    pypi_test = 1
     abis = None
     outdir = 'pypackage-out'
     remote = None
@@ -971,7 +971,7 @@ def main():
                 prefix=f'rsync to {user}{host}:{directory}: ',
                 )
         if remote.a:
-            remote_args = remote.a.args
+            remote_args = f'pypi-test {pypi_test} {remote.a.args}'
             system(
                     f'ssh {user}{host} '
                     f'"'

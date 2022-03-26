@@ -68,7 +68,13 @@ def build_swig(
     assert language in ('python', 'csharp')
     # Find version of swig. (We use quotes around <swig> to make things work on
     # Windows.)
-    t = jlib.system( f'"{swig_command}" -version', out='return')
+    try:
+        t = jlib.system( f'"{swig_command}" -version', out='return')
+    except Exception as e:
+        if state_.windows:
+            raise Exception( 'swig failed; on Windows swig can be auto-installed with: --swig-windows-auto') from e
+        else:
+            raise
     m = re.search( 'SWIG Version ([0-9]+)[.]([0-9]+)[.]([0-9]+)', t)
     assert m
     swig_major = int( m.group(1))

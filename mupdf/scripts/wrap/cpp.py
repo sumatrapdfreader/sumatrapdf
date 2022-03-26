@@ -2576,6 +2576,34 @@ def class_to_string_fns(
     out_cpp.write( f'}}\n')
 
 
+def get_struct_fnptrs( cursor_struct, shallow_typedef_expansion=False):
+    '''
+    Yields (cursor, fnptr_type) for function-pointer members of struct defined
+    at cusor, where <cursor> is the cursor of the member and <fntr_type> is the
+    type.
+
+    cursor_struct:
+        Cursor for definition of struct; this can be a typedef.
+    shallow_typedef_expansion:
+        If true, the returned <fnptr_type> has any top-level typedefs resolved
+        so will be a clang.cindex.TypeKind.FUNCTIONPROTO, but typedefs within
+        the function args are not resolved, e.g. they can be size_t. This can
+        be useful when generating code that will be compiled on different
+        platforms with differing definitions of size_t.
+    '''
+    for cursor in cursor_struct.type.get_canonical().get_fields():
+        t = cursor.type
+        if t.kind == state.clang.cindex.TypeKind.POINTER:
+            t = cursor.type.get_pointee()
+            if t.kind == state.clang.cindex.TypeKind.TYPEDEF:
+                t_cursor = t.get_declaration()
+                t = t_cursor.underlying_typedef_type
+            if t.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
+                if not shallow_typedef_expansion:
+                    t = t.get_canonical()
+                yield cursor, t
+
+
 def class_wrapper_virtual_fnptrs(
         tu,
         struct_cursor,
@@ -2594,10 +2622,6 @@ def class_wrapper_virtual_fnptrs(
     '''
     if not extras.virtual_fnptrs:
         return
-
-    for out in out_h, out_cpp:
-        out.write( '\n')
-        out.write( '#ifndef _WIN32 /* SWIG Directors support not currently available on Windows. */\n')
 
     generated.virtual_fnptrs.append( f'{classname}2')
     if len(extras.virtual_fnptrs) == 2:
@@ -2619,69 +2643,16 @@ def class_wrapper_virtual_fnptrs(
     out_cpp.write( '\n')
 
     def get_fnptrs( shallow_typedef_expansion=False):
-        '''
-        Yields (cursor, fnptr_type).
-        cursor:
-            Cursor for pointer to fn.
-        fnptr_type:
-            Type of fn.
-        '''
-        for cursor in struct_cursor.type.get_canonical().get_fields():
-            if cursor.type.kind == state.clang.cindex.TypeKind.POINTER:
-                pointee = cursor.type.get_pointee().get_canonical()
-                if pointee.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
-                    # Need to find partially-canonical ttype, expanding any
-                    # top-level typedef but preserving typedef arg types such
-                    # as int64_t.
-                    #pointee2 = cursor.type.get_pointee().get_declaration().underlying_typedef_type
-                    if shallow_typedef_expansion:
-                        pointee_cursor = cursor.type.get_pointee().get_declaration()
-                        if pointee_cursor.kind == state.clang.cindex.CursorKind.TYPEDEF_DECL:
-                            # Unlike get_canonical(), this preserves any typedefs within, e.g. int64_t.
-                            pointee = pointee_cursor.underlying_typedef_type
-                    yield cursor, pointee
-
-    if struct_name == 'fz_output':
-        # debugging.
-        for cursor, fnptr in get_fnptrs():
-            if cursor.spelling == 'seek':
-                jlib.log( '{struct_name}::{cursor.spelling}:')
-                jlib.log( '    {cursor.type.get_pointee().spelling=}')
-                jlib.log( '    {fnptr.spelling=}')
-                t = cursor.type.get_pointee()
-                jlib.log( '{cursor.kind=}')
-                jlib.log( '{t.kind=}')
-                jlib.log( '{t.spelling=}')
-                jlib.log( '{t.get_typedef_name()=}')
-
-                jlib.log( '{cursor.underlying_typedef_type=}')
-
-                jlib.log( '{cursor.type.get_pointee().spelling=}')  # fz_output_seek_fn
-
-                jlib.log( '{cursor.type.get_pointee().get_canonical().spelling=}')  # void (struct fz_context *, void *, long long, int)
-
-                # this is: fz_output_seek_fn
-                jlib.log( '{cursor.type.get_pointee().get_declaration().spelling=}')    # fz_output_seek_fn
-
-                # This is: void (fz_context *, void *, int64_t, int)
-                jlib.log( '{cursor.type.get_pointee().get_declaration().underlying_typedef_type.spelling=}') # void (fz_context *, void *, int64_t, int)
-
-                while 0:
-                    command = input( '>>> ')
-                    try:
-                        result = eval( command) #, globals(), locals())
-                        print( f'{result}')
-                    except Exception as e:
-                        print( f'Exception: {e}')
-
+        for i in get_struct_fnptrs( struct_cursor, shallow_typedef_expansion):
+            yield i
 
     # Constructor
     #
     out_h.write( '\n')
     out_h.write( '    /** == Constructor. */\n')
-    out_h.write(f'    {classname}2();\n')
+    out_h.write(f'    FZ_FUNCTION {classname}2();\n')
     out_cpp.write('\n')
-    out_cpp.write(f'{classname}2::{classname}2()\n')
+    out_cpp.write(f'FZ_FUNCTION {classname}2::{classname}2()\n')
     out_cpp.write( '{\n')
     alloc = [''] + alloc.split('\n')
     alloc = '\n    '.join(alloc)
@@ -2700,9 +2671,9 @@ def class_wrapper_virtual_fnptrs(
         # Destructor
         out_h.write( '\n')
         out_h.write( '    /** == Destructor. */\n')
-        out_h.write(f'    ~{classname}2();\n')
+        out_h.write(f'    FZ_FUNCTION ~{classname}2();\n')
         out_cpp.write('\n')
-        out_cpp.write(f'{classname}2::~{classname}2()\n')
+        out_cpp.write(f'FZ_FUNCTION {classname}2::~{classname}2()\n')
         out_cpp.write( '{\n')
         out_cpp.write(f'    if (s_trace_director)\n')
         out_cpp.write( '    {\n')
@@ -2713,34 +2684,55 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(f'    {free}\n')
         out_cpp.write( '}\n')
 
-
     def write(text):
         out_h.write(text)
         out_cpp.write(text)
 
-    verbose = False
-    #verbose |= state.state_.show_details( struct_name)
-
-    # Define static callback for each fnptr.
+    # Define static callback for each fnptr. It's important that these
+    # functions do not resolve function parameter typedefs such as size_t to
+    # the underlying types such as long int, because:
+    #
+    #   * Our generated code can be compiled on different machines where types
+    #   such as size_t can be typedef-ed differently.
+    #
+    #   * Elsewhere, code that we generate will assign our static callback
+    #   functions to MuPDF's function pointers (which use things like size_t).
+    #
+    #   * These assignments will fail if the types don't match exactly.
+    #
+    # For example fz_output has a member:
+    #   fz_output_write_fn *write;
+    #
+    # This typedef is:
+    #   void (fz_output_write_fn)(fz_context *ctx, void *state, const void *data, size_t n);
+    #
+    # We generate a static function called Output2_s_write() and we will be
+    # setting a fz_output's write member to point to Output2_s_write(), which
+    # only works if the types match exactly.
+    #
+    # So we need to resolve the outer 'typedef fz_output_write_fn', but not
+    # the inner 'size_t' typedef for the <n> arg. This is slightly tricky with
+    # clang-python - it provide a Type.get_canonical() method that resolves all
+    # typedefs, but to resolve just one level of typedefs requires a bit more
+    # work. See get_struct_fnptrs() for details.
+    #
+    # [Usually our generated code deliberately resolves typedefs such as size_t
+    # to long int etc, because SWIG-generated code for size_t etc does not
+    # always work properly due to SWIG having its own definitions of things
+    # like size_t in Python/C#. But in this case the generated static function
+    # is not seen by SWIG so it's ok to make it use size_t etc.]
     #
     for cursor, fnptr_type in get_fnptrs( shallow_typedef_expansion=True):
 
         # Write static callback.
-        #
-        #verbose |= state.state_.show_details( cursor.spelling)
-        #verbose |= state.state_.show_details( f'{struct_name}::{cursor.spelling}')
-        if verbose:
-            jlib.log( '== Creating static callback for {struct_name}::{cursor.spelling}')
         out_cpp.write(f'/* Static callback, calls self->{cursor.spelling}(). */\n')
         out_cpp.write(f'static {fnptr_type.get_result().spelling} {classname}2_s_{cursor.spelling}')
         out_cpp.write('(')
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
             name = f'arg_{i}'
-            if verbose:
-                jlib.log( '=== {i=} {name=} {arg_type.spelling=}')
             out_cpp.write(sep)
-            out_cpp.write( declaration_text( arg_type, name, verbose=verbose, expand_typedef=False))
+            out_cpp.write( declaration_text( arg_type, name, expand_typedef=False))
             sep = ', '
         out_cpp.write(')')
         out_cpp.write('\n')
@@ -2777,8 +2769,8 @@ def class_wrapper_virtual_fnptrs(
     out_h.write(f'    /** These methods set the function pointers in *m_internal\n')
     out_h.write(f'    to point to internal callbacks that call our virtual methods. */\n')
     for cursor, fnptr_type in get_fnptrs():
-        out_h.write(f'    void use_virtual_{cursor.spelling}( bool use=true);\n')
-        out_cpp.write(f'void {classname}2::use_virtual_{cursor.spelling}( bool use)\n')
+        out_h.write(f'    FZ_FUNCTION void use_virtual_{cursor.spelling}( bool use=true);\n')
+        out_cpp.write(f'FZ_FUNCTION void {classname}2::use_virtual_{cursor.spelling}( bool use)\n')
         out_cpp.write( '{\n')
         if extras.pod == 'inline':
             # Fnptr (in {classname}2) and virtual function (in {classname})
@@ -2797,9 +2789,9 @@ def class_wrapper_virtual_fnptrs(
     out_h.write(f'    /** Default virtual method implementations; these all throw an exception. */\n')
     for cursor, fnptr_type in get_fnptrs():
 
-        out_h.write(f'    virtual {fnptr_type.get_result().spelling} {cursor.spelling}(')
+        out_h.write(f'    FZ_FUNCTION virtual {fnptr_type.get_result().spelling} {cursor.spelling}(')
         out_cpp.write(f'/* Default implementation of virtual method. */\n')
-        out_cpp.write(f'{fnptr_type.get_result().spelling} {classname}2::{cursor.spelling}(')
+        out_cpp.write(f'FZ_FUNCTION {fnptr_type.get_result().spelling} {classname}2::{cursor.spelling}(')
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
             if i < 2:
@@ -2816,10 +2808,6 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write( '}\n')
 
     out_h.write(  '};\n')
-
-    for out in out_h, out_cpp:
-        out.write( '\n')
-        out.write( f'#endif /* SWIG Directors support not currently available on Windows. */\n')
 
 
 def class_wrapper(
@@ -3844,6 +3832,7 @@ def cpp_source(
             continue
 
         if not cursor.is_definition():
+            # Handle abstract type only if we have an ClassExtra for it.
             extras = classes.classextras.get( tu, cursor.spelling)
             if extras and extras.opaque:
                 pass
@@ -4020,3 +4009,26 @@ def cpp_source(
     if num_regressions:
         raise Exception( f'There were {num_regressions} regressions')
     return tu
+
+
+def test():
+    '''
+    Place to experiment with clang-python.
+    '''
+    text = textwrap.dedent('''
+            #include <stdint.h>
+            #include <stdlib.h>
+            typedef void (*fnptr_t)(int64_t a, size_t b);
+            fnptr_t fnptr;
+            struct Foo
+            {
+                void (*fnptr)(int64_t a, size_t b);
+            };
+            typedef struct Foo Foo;
+            ''')
+    path = 'wrap-test.cpp'
+    jlib.update_file( text, path)
+    index = state.clang.cindex.Index.create()
+    tu = index.parse( path)
+    for cursor in tu.cursor.get_children():
+        pass

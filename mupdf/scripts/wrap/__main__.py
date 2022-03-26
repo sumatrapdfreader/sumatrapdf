@@ -1943,6 +1943,9 @@ def main2():
                 destination = args.next()
                 jlib.system( f'rsync -aiRz {build_dirs.dir_mupdf}/docs/generated/./ {destination}', verbose=1, out='log')
 
+            elif arg == '--test-cpp':
+                cpp.test()
+
             elif arg in ('--test-python', '-t', '--test-python-gui'):
 
                 env_extra, command_prefix = python_settings(build_dirs)
@@ -2226,7 +2229,7 @@ def main():
     try:
         main2()
     except Exception:
-        sys.stderr.write(jlib.exception_info())
+        jlib.exception_info()
         sys.exit(1)
 
 if __name__ == '__main__':
