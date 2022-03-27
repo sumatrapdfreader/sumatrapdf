@@ -175,6 +175,9 @@ WCHAR* GetFileName(const WCHAR* url);
 } // namespace url
 
 namespace seqstrings {
+
+void Next(const char*& s);
+void Next(const char*& s, int& idx);
 char* SkipStr(char* s);
 const char* SkipStr(const char* s);
 int StrToIdx(const char* strs, const char* toFind);

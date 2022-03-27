@@ -1156,10 +1156,34 @@ void DecodeInPlace(char* url) {
 // of L1 cache
 namespace seqstrings {
 
+void Next(const char*& s, int& idx) {
+    if (!s || !*s || idx < 0) {
+        s = nullptr;
+        idx = -1;
+        return;
+    }
+    while (*s) {
+        s++;
+    }
+    s++; // skip terminating 0
+    idx++;
+}
+
+void Next(const char*& s) {
+    if (!s || !*s) {
+        s = nullptr;
+        return;
+    }
+    while (*s) {
+        s++;
+    }
+    s++; // skip terminating 0
+}
+
 // advance to next string
 // return nullptr if end of strings
 const char* SkipStr(const char* s) {
-    // empty string marks the end, means idx was too high
+    // empty string marks the end
     if (!*s) {
         return nullptr;
     }
