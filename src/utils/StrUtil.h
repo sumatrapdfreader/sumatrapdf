@@ -174,12 +174,12 @@ WCHAR* GetFileName(const WCHAR* url);
 
 } // namespace url
 
+using SeqStrings = const char*;
+
 namespace seqstrings {
 
 void Next(const char*& s);
 void Next(const char*& s, int& idx);
-char* SkipStr(char* s);
-const char* SkipStr(const char* s);
 int StrToIdx(const char* strs, const char* toFind);
 int StrToIdxIS(const char* strs, const char* toFind);
 const char* IdxToStr(const char* strs, int idx);

@@ -133,8 +133,7 @@ static Kind GetKindByFileExt(const WCHAR* path) {
             }
             return gExtsKind[idx];
         }
-        curr = seqstrings::SkipStr(curr);
-        idx++;
+        seqstrings::Next(curr, idx);
     }
     return nullptr;
 }

@@ -101,9 +101,9 @@ void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
 }
 
 static void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char* strings) {
-    while (*strings) {
+    while (strings) {
         items.Append(strings);
-        strings = seqstrings::SkipStr(strings);
+        seqstrings::Next(strings);
     }
 }
 

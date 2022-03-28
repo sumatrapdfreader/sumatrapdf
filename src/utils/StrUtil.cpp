@@ -1180,25 +1180,6 @@ void Next(const char*& s) {
     s++; // skip terminating 0
 }
 
-// advance to next string
-// return nullptr if end of strings
-const char* SkipStr(const char* s) {
-    // empty string marks the end
-    if (!*s) {
-        return nullptr;
-    }
-    // skip past next '\0' char
-    while (*s) {
-        s++;
-    }
-    return s + 1;
-}
-
-char* SkipStr(char* s) {
-    auto res = SkipStr((const char*)s);
-    return (char*)res;
-}
-
 // Returns nullptr if s is the same as toFind
 // If they are not equal, returns end of s + 1
 static inline const char* StrEqWeird(const char* s, const char* toFind) {
@@ -1264,7 +1245,7 @@ const char* IdxToStr(const char* strs, int idx) {
     CrashIf(idx < 0);
     const char* s = strs;
     while (idx > 0) {
-        s = SkipStr(s);
+        Next(s);
         if (!s) {
             return nullptr;
         }

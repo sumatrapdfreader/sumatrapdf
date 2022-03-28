@@ -461,7 +461,7 @@ class EngineBase {
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
-    [[nodiscard]] bool AllowsPrinting() const;
+    virtual bool AllowsPrinting() const;
 
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)

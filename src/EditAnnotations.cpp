@@ -380,9 +380,9 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
 }
 
 static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* strings) {
-    while (*strings) {
+    while (strings) {
         items.Append(strings);
-        strings = seqstrings::SkipStr(strings);
+        seqstrings::Next(strings);
     }
 }
 

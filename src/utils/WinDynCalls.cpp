@@ -195,9 +195,9 @@ static const char* dllsToPreload =
 // be loaded indirectly
 void NoDllHijacking() {
     const char* dll = dllsToPreload;
-    while (*dll) {
+    while (dll) {
         SafeLoadLibrary(dll);
-        dll = seqstrings::SkipStr(dll);
+        seqstrings::Next(dll);
     }
 }
 
