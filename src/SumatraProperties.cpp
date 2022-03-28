@@ -30,8 +30,7 @@
 #define PROPERTIES_TXT_DY_PADDING 2
 #define PROPERTIES_WIN_TITLE _TR("Document Properties")
 
-class PropertyEl {
-  public:
+struct PropertyEl {
     PropertyEl(const WCHAR* leftTxt, WCHAR* rightTxt, bool isPath = false) : leftTxt(leftTxt), isPath(isPath) {
         this->rightTxt.Set(rightTxt);
     }
@@ -49,24 +48,23 @@ class PropertyEl {
     bool isPath;
 };
 
-class PropertiesLayout : public Vec<PropertyEl*> {
-  public:
+struct PropertiesLayout {
     PropertiesLayout() = default;
     ~PropertiesLayout() {
-        DeleteVecMembers(*this);
+        DeleteVecMembers(props);
     }
 
     void AddProperty(const WCHAR* key, WCHAR* value, bool isPath = false) {
         // don't display value-less properties
         if (!str::IsEmpty(value)) {
-            Append(new PropertyEl(key, value, isPath));
+            props.Append(new PropertyEl(key, value, isPath));
         } else {
             free(value);
         }
     }
     bool HasProperty(const WCHAR* key) {
-        for (size_t i = 0; i < size(); i++) {
-            if (str::Eq(key, at(i)->leftTxt)) {
+        for (auto&& prop : props) {
+            if (str::Eq(key, prop->leftTxt)) {
                 return true;
             }
         }
@@ -75,22 +73,17 @@ class PropertiesLayout : public Vec<PropertyEl*> {
 
     HWND hwnd{nullptr};
     HWND hwndParent{nullptr};
+    Vec<PropertyEl*> props;
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
 
-static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent) {
-    for (PropertiesLayout* pl : gPropertiesWindows) {
-        if (pl->hwndParent == hwndParent) {
-            return pl;
-        }
-    }
-    return nullptr;
-}
-
 static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
     for (PropertiesLayout* pl : gPropertiesWindows) {
         if (pl->hwnd == hwnd) {
+            return pl;
+        }
+        if (pl->hwndParent == hwnd) {
             return pl;
         }
     }
@@ -98,7 +91,7 @@ static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
 }
 
 void DeletePropertiesWindow(HWND hwndParent) {
-    PropertiesLayout* pl = FindPropertyWindowByParent(hwndParent);
+    PropertiesLayout* pl = FindPropertyWindowByHwnd(hwndParent);
     if (pl) {
         DestroyWindow(pl->hwnd);
     }
@@ -369,7 +362,7 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
     /* calculate text dimensions for the left side */
     SelectObject(hdc, fontLeftTxt);
     int leftMaxDx = 0;
-    for (PropertyEl* el : *layoutData) {
+    for (PropertyEl* el : layoutData->props) {
         const WCHAR* txt = el->leftTxt;
         RECT rc = {0};
         DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
@@ -386,7 +379,7 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
     int rightMaxDx = 0;
     int lineCount = 0;
     int textDy = 0;
-    for (PropertyEl* el : *layoutData) {
+    for (PropertyEl* el : layoutData->props) {
         const WCHAR* txt = el->rightTxt;
         RECT rc = {0};
         DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
@@ -413,7 +406,7 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
     }
 
     int currY = 0;
-    for (PropertyEl* el : *layoutData) {
+    for (PropertyEl* el : layoutData->props) {
         el->leftPos = Rect(offset, offset + currY, leftMaxDx, el->leftPos.dy);
         el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
         el->rightPos.y = offset + currY;
@@ -551,7 +544,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
 }
 
 static void ShowProperties(HWND parent, Controller* ctrl, bool extended = false) {
-    PropertiesLayout* layoutData = FindPropertyWindowByParent(parent);
+    PropertiesLayout* layoutData = FindPropertyWindowByHwnd(parent);
     if (layoutData) {
         SetActiveWindow(layoutData->hwnd);
         return;
@@ -594,7 +587,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
-    for (PropertyEl* el : *layoutData) {
+    for (PropertyEl* el : layoutData->props) {
         const WCHAR* txt = el->leftTxt;
         rTmp = ToRECT(el->leftPos);
         DrawTextW(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
@@ -602,7 +595,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
-    for (PropertyEl* el : *layoutData) {
+    for (PropertyEl* el : layoutData->props) {
         const WCHAR* txt = el->rightTxt;
         Rect rc = el->rightPos;
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING) {
@@ -633,7 +626,7 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
 
     // concatenate all the properties into a multi-line string
     str::WStr lines(256);
-    for (PropertyEl* el : *layoutData) {
+    for (PropertyEl* el : layoutData->props) {
         lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt.Get());
     }
 
