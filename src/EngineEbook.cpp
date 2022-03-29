@@ -666,7 +666,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
         }
     }
 
-    // TODO; send parent to newEbookTocItem
+    // TODO: send parent to newEbookTocItem
     TocItem* item = newEbookTocItem(nullptr, name, dest);
     item->id = ++idCounter;
     if (isIndex) {
