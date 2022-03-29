@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f93f9b6ceeda6e302f453b056fd169dfa49ce368
+35c19dd055eff2207556e6497a021e8970d25665
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6389,6 +6389,8 @@ uk:Копіювати коментар
 uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy To Clipboard
+br:Copiar para Área de Transferência
+pl:Kopiuj do schowka
 :Copying text was denied (copying as image only)
 am:Գրվածքի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
 ar:(ناسخ النص رفض (ناسخ باسم صورة فقط 
@@ -10826,7 +10828,7 @@ ar:الأكثر قراءة
 az:Ən çox oxunanlar
 bg:Често четени
 bn:প্রায়শই পড়া হয়
-br:Lidos com freqüência
+br:Lidos com frequência
 bs:Najčešće čitano
 by:Якія часта чытаюць
 ca-xv:Llegits més freqüents
@@ -10956,6 +10958,8 @@ uk:GB
 uz:GB
 vn:GB
 :Get Fonts Info
+br:Informações da Fonte
+pl:Uzyskaj informacje o czcionkach
 :Go to page
 af:Gaan Na Bladsy
 am:Անցնել էջի
@@ -11096,7 +11100,7 @@ ar:إخفاء الأكثر قراءة
 az:Ən çox oxunanları gizlət
 bg:Скриване на често четените
 bn:বারবার পঠিত বই গোপন করুন
-br:Ocultar Lidos com freqüência
+br:Ocultar Lidos com frequência
 bs:Sakrij najčešće čitano
 by:Зхаваць тыя, якія часта чытаюць
 ca-xv:Amaga els més llegits
@@ -12508,7 +12512,7 @@ am:Նոր &պատուհան\tCtrl+N
 ar:نافذة جديدة&/Ctrl+N
 az:Yeni pə&ncərə\tCtrl+N
 bg:Нов &прозорец\tCtrl+N
-br:Novo &window\tCtrl+N
+br:Novo &janela\tCtrl+N
 ca-xv:&Finestra nova\tCtrl+N
 ca:&Finestra nova\tCtrl+N
 cn:新建窗口(&W)\tCtrl+N
@@ -17181,7 +17185,7 @@ am:Ցուցադրել հաճախակի բացվածները
 ar:إظهار الأكثر قراءة
 az:Ən çox oxunanları göstər
 bg:Покажи често четените
-br:Mostrar Lidos com freqüência
+br:Mostrar Lidos com frequência
 bs:Prikaži najčešće čitano
 by:Адлюстраваць тыя, які ячаста чытаюць
 ca-xv:Mostra els més llegits
