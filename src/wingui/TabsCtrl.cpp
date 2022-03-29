@@ -104,7 +104,7 @@ static HWND CreateTooltipForRect(HWND parent, const WCHAR* s, RECT& r) {
 
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-    TOOLINFOW ti = {0};
+    TOOLINFOW ti{};
     ti.cbSize = sizeof(TOOLINFO);
     ti.uFlags = TTF_SUBCLASS;
     ti.hwnd = parent;

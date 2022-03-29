@@ -81,7 +81,7 @@ void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt) {
 }
 
 void InitAllCommonControls() {
-    INITCOMMONCONTROLSEX cex = {0};
+    INITCOMMONCONTROLSEX cex{};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&cex);
@@ -180,7 +180,7 @@ const char* OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
 }
 
 const char* GetWindowsVerTemp() {
-    OSVERSIONINFOEX ver = {0};
+    OSVERSIONINFOEX ver{};
     ver.dwOSVersionInfoSize = sizeof(ver);
 #pragma warning(push)
 #pragma warning(disable : 4996)  // 'GetVersionEx': was declared deprecated
@@ -387,7 +387,7 @@ TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
     if (createIfMissing) {
         csidl = csidl | CSIDL_FLAG_CREATE;
     }
-    WCHAR path[MAX_PATH] = {0};
+    WCHAR path[MAX_PATH]{};
     HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
     if (S_OK != res) {
         return TempWstr(); // TODO: why {} doesn't work?
@@ -518,7 +518,7 @@ void HandleRedirectedConsoleOnShutdown() {
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
 TempWstr GetExePathTemp() {
-    WCHAR buf[MAX_PATH] = {0};
+    WCHAR buf[MAX_PATH]{};
     GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
     return str::DupTemp(buf);
 }
@@ -537,7 +537,7 @@ Returns ${SystemRoot}\system32 directory.
 Caller has to free() the result.
 */
 WCHAR* GetSystem32Dir() {
-    WCHAR buf[1024] = {0};
+    WCHAR buf[1024]{};
     DWORD n = GetEnvironmentVariableW(L"SystemRoot", &buf[0], dimof(buf));
     if ((n == 0) || (n >= dimof(buf))) {
         CrashIf(true);
@@ -612,7 +612,7 @@ WCHAR* ResolveLnk(const WCHAR* path) {
         return nullptr;
     }
 
-    WCHAR newPath[MAX_PATH] = {0};
+    WCHAR newPath[MAX_PATH]{};
     hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
     if (FAILED(hRes)) {
         return nullptr;
@@ -750,7 +750,7 @@ bool LaunchBrowser(const char* url) {
 
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {nullptr};
-    STARTUPINFOW si = {0};
+    STARTUPINFOW si{};
     si.cb = sizeof(si);
 
     // CreateProcess() might modify cmd line argument, so make a copy
@@ -846,7 +846,7 @@ Rect ShiftRectToWorkArea(Rect rect, HWND hwnd, bool bFully) {
 // Limits size to max available work area (screen size - taskbar)
 void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
     HMONITOR hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-    MONITORINFO mi = {0};
+    MONITORINFO mi{};
     mi.cbSize = sizeof mi;
     BOOL ok = GetMonitorInfo(hmon, &mi);
     if (!ok) {
@@ -869,7 +869,7 @@ Rect GetWorkAreaRect(Rect rect, HWND hwnd) {
     if (hwnd) {
         hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
     }
-    MONITORINFO mi = {0};
+    MONITORINFO mi{};
     mi.cbSize = sizeof mi;
     BOOL ok = GetMonitorInfo(hmon, &mi);
     if (!ok) {
@@ -880,7 +880,7 @@ Rect GetWorkAreaRect(Rect rect, HWND hwnd) {
 
 // returns the dimensions the given window has to have in order to be a fullscreen window
 Rect GetFullscreenRect(HWND hwnd) {
-    MONITORINFO mi = {0};
+    MONITORINFO mi{};
     mi.cbSize = sizeof(mi);
     if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)) {
         return Rect::FromRECT(mi.rcMonitor);
@@ -1022,7 +1022,7 @@ void CenterDialog(HWND hDlg, HWND hParent) {
 /* Get the name of default printer or nullptr if not exists.
    The caller needs to free() the result */
 WCHAR* GetDefaultPrinterName() {
-    WCHAR buf[512] = {0};
+    WCHAR buf[512]{};
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize)) {
         return str::Dup(buf);
@@ -1151,7 +1151,7 @@ HFONT GetDefaultGuiFont() {
     if (gDefaultGuiFont) {
         return gDefaultGuiFont;
     }
-    NONCLIENTMETRICS ncm = {0};
+    NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     gDefaultGuiFont = CreateFontIndirectW(&ncm.lfMessageFont);
@@ -1159,7 +1159,7 @@ HFONT GetDefaultGuiFont() {
 }
 
 HFONT GetDefaultGuiFontOfSize(int size) {
-    NONCLIENTMETRICS ncm = {0};
+    NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
@@ -1195,7 +1195,7 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
 }
 
 int GetSizeOfDefaultGuiFont() {
-    NONCLIENTMETRICS ncm = {0};
+    NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     int res = -ncm.lfMessageFont.lfHeight;
@@ -1311,7 +1311,7 @@ void Empty(HMENU m) {
 
 void SetText(HMENU m, int id, const WCHAR* s) {
     CrashIf(id < 0);
-    MENUITEMINFOW mii = {0};
+    MENUITEMINFOW mii{};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
@@ -1341,7 +1341,7 @@ const WCHAR* ToSafeString(AutoFreeWstr& s) {
 } // namespace win
 
 HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
-    LOGFONTW lf = {0};
+    LOGFONTW lf{};
 
     lf.lfWidth = 0;
     lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
@@ -1378,7 +1378,7 @@ IStream* CreateStreamFromData(ByteSlice d) {
         return nullptr;
     }
 
-    LARGE_INTEGER zero = {0};
+    LARGE_INTEGER zero{};
     stream->Seek(zero, STREAM_SEEK_SET, nullptr);
 
     stream->AddRef();
@@ -1408,7 +1408,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     }
 
     ULONG read;
-    LARGE_INTEGER zero = {0};
+    LARGE_INTEGER zero{};
     stream->Seek(zero, STREAM_SEEK_SET, nullptr);
     res = stream->Read(d, stat.cbSize.LowPart, &read);
     if (FAILED(res) || read != n) {
@@ -1476,7 +1476,7 @@ uint GuessTextCodepage(const char* data, size_t len, uint defVal) {
 
     int ilen = std::min((int)len, INT_MAX);
     int count = 1;
-    DetectEncodingInfo info = {0};
+    DetectEncodingInfo info{};
     HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char*)data, &ilen, &info, &count);
     if (FAILED(hr) || count != 1) {
         return defVal;
@@ -1653,7 +1653,7 @@ COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
 BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
     BitmapPixels* res = AllocStruct<BitmapPixels>();
 
-    DIBSECTION info = {0};
+    DIBSECTION info{};
     int nBytes = GetObject(hbmp, sizeof(info), &info);
     CrashIf(nBytes < sizeof(info.dsBm));
     Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
@@ -1687,7 +1687,7 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
         return nullptr;
     }
 
-    BITMAPINFO bmi = {0};
+    BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = size.dy;
@@ -1722,7 +1722,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     UnpackColor(bgColor, rb, gb, bb);
     int diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
 
-    DIBSECTION info = {0};
+    DIBSECTION info{};
     int ret = GetObject(hbmp, sizeof(info), &info);
     CrashIf(ret < sizeof(info.dsBm));
     Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
@@ -1772,7 +1772,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
         return;
     }
 
-    BITMAPINFO bmi = {0};
+    BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = size.dy;
@@ -1832,7 +1832,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
 }
 
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {
-    BITMAPINFO bmi = {0};
+    BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = -size.dy;
@@ -1928,7 +1928,7 @@ bool SafeCloseHandle(HANDLE* h) {
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
 void RunNonElevated(const WCHAR* exePath) {
     AutoFreeWstr cmd, explorerPath;
-    WCHAR buf[MAX_PATH] = {0};
+    WCHAR buf[MAX_PATH]{};
     uint res = GetWindowsDirectory(buf, dimof(buf));
     if (0 == res || res >= dimof(buf)) {
         goto Run;
@@ -1944,11 +1944,11 @@ Run:
 }
 
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu) {
-    WINDOWINFO wi = {0};
+    WINDOWINFO wi{};
     wi.cbSize = sizeof(wi);
     GetWindowInfo(hwnd, &wi);
 
-    RECT r = {0};
+    RECT r{};
     r.right = dx;
     r.bottom = dy;
     DWORD style = wi.dwStyle;
@@ -2118,7 +2118,7 @@ void RectInflateTB(RECT& r, int top, int bottom) {
 static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,  IDC_HAND, IDC_SIZEALL,
                                   IDC_SIZEWE, IDC_SIZENS, IDC_NO,   IDC_CROSS};
 
-static HCURSOR cachedCursors[dimof(knownCursorIds)] = {};
+static HCURSOR cachedCursors[dimof(knownCursorIds)]{};
 
 static int GetCursorIndex(LPWSTR cursorId) {
     int n = (int)dimof(knownCursorIds);
@@ -2192,7 +2192,7 @@ void DeleteCachedCursors() {
 // this triggers drmemory. Force no inlining so that it's easy to write a
 // localized suppression
 __declspec(noinline) int GetMeasurementSystem() {
-    WCHAR unitSystem[2] = {0};
+    WCHAR unitSystem[2]{};
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     if (unitSystem[0] == '0') {
         return 0;
@@ -2203,7 +2203,7 @@ __declspec(noinline) int GetMeasurementSystem() {
 // ask for getting WM_MOUSELEAVE for the window
 // returns true if started tracking
 bool TrackMouseLeave(HWND hwnd) {
-    TRACKMOUSEEVENT tme = {0};
+    TRACKMOUSEEVENT tme{};
     tme.cbSize = sizeof(TRACKMOUSEEVENT);
     tme.dwFlags = TME_QUERY;
     tme.hwndTrack = hwnd;

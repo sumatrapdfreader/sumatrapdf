@@ -500,7 +500,7 @@ Size BitmapSizeFromData(ByteSlice d) {
 }
 
 CLSID GetEncoderClsid(const WCHAR* format) {
-    CLSID null = {0};
+    CLSID null{};
     uint numEncoders, size;
     Status ok = Gdiplus::GetImageEncodersSize(&numEncoders, &size);
     if (ok != Ok || 0 == size) {

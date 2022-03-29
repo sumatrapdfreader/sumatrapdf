@@ -279,7 +279,7 @@ bool ChmFile::Load(const char* fileNameA) {
     }
 
     uint fileCodepage = codepage;
-    char header[24] = {0};
+    char header[24]{};
     int n = file::ReadN(fileName, header, sizeof(header));
     if (n < (int)sizeof(header)) {
         ByteReader r(header, sizeof(header));

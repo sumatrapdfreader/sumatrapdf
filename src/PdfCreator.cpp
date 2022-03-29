@@ -72,7 +72,7 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "render_to_pixmap: failed to allocate %d bytes", (int)stride * h);
     }
 
-    BITMAPINFO bmi = {0};
+    BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = w;
     bmi.bmiHeader.biHeight = -h;

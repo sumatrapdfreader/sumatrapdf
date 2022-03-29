@@ -101,7 +101,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
 bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     static ATOM atom = 0;
     if (atom == 0) {
-        WNDCLASSEX wcex = {};
+        WNDCLASSEX wcex{};
         FillWndClassEx(wcex, kNotificationsWndClassName, NotificationWndProc);
         wcex.style = 0; // no CS_HREDRAW | CS_VREDRAW
         wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
@@ -115,7 +115,7 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
         this->progressMsg = str::Dup(progressMsg);
     }
 
-    NONCLIENTMETRICS ncm = {};
+    NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     this->font = CreateFontIndirect(&ncm.lfMessageFont);

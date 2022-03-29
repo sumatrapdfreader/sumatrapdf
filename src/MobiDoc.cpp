@@ -192,13 +192,13 @@ static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader st
 #define kCdicsMax 32
 
 class HuffDicDecompressor {
-    u32 cacheTable[kCacheItemCount] = {};
-    u32 baseTable[kBaseTableItemCount] = {};
+    u32 cacheTable[kCacheItemCount]{};
+    u32 baseTable[kBaseTableItemCount]{};
 
     size_t dictsCount = 0;
     // owned by the creator (in our case: by the PdbReader)
-    u8* dicts[kCdicsMax] = {};
-    u32 dictSize[kCdicsMax] = {};
+    u8* dicts[kCdicsMax]{};
+    u32 dictSize[kCdicsMax]{};
 
     u32 codeLength = 0;
 

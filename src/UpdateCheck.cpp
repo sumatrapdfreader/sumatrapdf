@@ -174,7 +174,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
     // don't check for updates at the first start, so that privacy
     // sensitive users can disable the update check in time
-    FILETIME never = {0};
+    FILETIME never{};
     if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never)) {
         return false;
     }

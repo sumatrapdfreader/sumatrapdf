@@ -363,7 +363,7 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         a.mouseWindow.y = pt.y;
 
         // determine which item has been clicked (if any)
-        TVHITTESTINFO ht = {0};
+        TVHITTESTINFO ht{};
         ht.pt.x = a.mouseWindow.x;
         ht.pt.y = a.mouseWindow.y;
         TreeView_HitTest(nmhdr->hwndFrom, &ht);
@@ -617,9 +617,9 @@ TreeCtrl::~TreeCtrl() {
 
 str::WStr TreeCtrl::GetDefaultTooltip(TreeItem ti) {
     auto hItem = GetHandleByTreeItem(ti);
-    WCHAR buf[INFOTIPSIZE + 1] = {}; // +1 just in case
+    WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
 
-    TVITEMW item = {0};
+    TVITEMW item{};
     item.hItem = hItem;
     item.mask = TVIF_TEXT;
     item.pszText = buf;

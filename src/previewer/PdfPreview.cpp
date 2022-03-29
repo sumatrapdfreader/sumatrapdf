@@ -40,7 +40,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
     Rect thumb = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
 
-    BITMAPINFO bmi = {0};
+    BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biHeight = thumb.dy;
     bmi.bmiHeader.biWidth = thumb.dx;
@@ -224,7 +224,7 @@ static LRESULT OnPaint(HWND hwnd) {
 }
 
 static LRESULT OnVScroll(HWND hwnd, WPARAM wp) {
-    SCROLLINFO si = {0};
+    SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(hwnd, SB_VERT, &si);
@@ -315,7 +315,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 IFACEMETHODIMP PreviewBase::DoPreview() {
     log("PreviewBase::DoPreview()\n");
 
-    WNDCLASSEX wcex = {0};
+    WNDCLASSEX wcex{};
     wcex.cbSize = sizeof(wcex);
     wcex.lpfnWndProc = PreviewWndProc;
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -341,7 +341,7 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
         engine = nullptr;
     }
 
-    SCROLLINFO si = {0};
+    SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     si.nPos = 1;

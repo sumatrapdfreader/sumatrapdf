@@ -518,7 +518,7 @@ static void StartUnInstallerLogging() {
 }
 
 static WCHAR* GetUninstallerPathInTemp() {
-    WCHAR tempDir[MAX_PATH + 14] = {0};
+    WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     CrashAlwaysIf(res == 0 || res >= dimof(tempDir));
     return path::Join(tempDir, L"Sumatra-Uninstaller.exe");
@@ -565,7 +565,7 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
 }
 
 static WCHAR* GetSelfDeleteBatchPathInTemp() {
-    WCHAR tempDir[MAX_PATH + 14] = {0};
+    WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     CrashAlwaysIf(res == 0 || res >= dimof(tempDir));
     return path::Join(tempDir, L"sumatra-self-del.bat");

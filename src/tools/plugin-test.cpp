@@ -56,7 +56,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         RECT rcClient = ToRECT(ClientRect(hwnd));
         HBRUSH brushBg = CreateSolidBrush(0xCCCCCC);
         FillRect(hDC, &rcClient, brushBg);
-        LOGFONTW lf = {0};
+        LOGFONTW lf{};
         lf.lfHeight = -14;
         str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), L"MS Shell Dlg");
         HFONT hFont = CreateFontIndirectW(&lf);
@@ -101,7 +101,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         argList.InsertAt(2, nullptr);
     }
 
-    WNDCLASS wc = {0};
+    WNDCLASS wc{};
     wc.lpfnWndProc = PluginParentWndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = PLUGIN_TEST_NAME;

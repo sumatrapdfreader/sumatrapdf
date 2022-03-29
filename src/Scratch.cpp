@@ -220,7 +220,7 @@ void LoadRar() {
     }
     size_t fileId = 0;
     while (true) {
-        RARHeaderDataEx rarHeader = {0};
+        RARHeaderDataEx rarHeader{};
         int res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res) {
             break;
@@ -372,7 +372,7 @@ class edge_chromium : public browser {
             CoUninitialize();
             return false;
         }
-        MSG msg = {};
+        MSG msg{};
         while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

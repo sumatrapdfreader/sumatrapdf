@@ -422,7 +422,7 @@ bool IsAbsolute(const WCHAR* path) {
 // returns the path to either the %TEMP% directory or a
 // non-existing file inside whose name starts with filePrefix
 WCHAR* GetTempFilePath(const WCHAR* filePrefix) {
-    WCHAR tempDir[MAX_PATH - 14] = {0};
+    WCHAR tempDir[MAX_PATH - 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     if (!res || res >= dimof(tempDir)) {
         return nullptr;
@@ -430,7 +430,7 @@ WCHAR* GetTempFilePath(const WCHAR* filePrefix) {
     if (!filePrefix) {
         return str::Dup(tempDir);
     }
-    WCHAR path[MAX_PATH] = {0};
+    WCHAR path[MAX_PATH]{};
     if (!GetTempFileNameW(tempDir, filePrefix, 0, path)) {
         return nullptr;
     }
@@ -441,7 +441,7 @@ WCHAR* GetTempFilePath(const WCHAR* filePrefix) {
 // with either the given fileName or the module's name
 // (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
-    WCHAR modulePath[MAX_PATH] = {0};
+    WCHAR modulePath[MAX_PATH]{};
     GetModuleFileName(GetInstance(), modulePath, dimof(modulePath));
     modulePath[dimof(modulePath) - 1] = '\0';
     if (!fileName) {
@@ -668,7 +668,7 @@ bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite) {
 }
 
 FILETIME GetModificationTime(const WCHAR* filePath) {
-    FILETIME lastMod = {0};
+    FILETIME lastMod{};
     AutoCloseHandle h(OpenReadOnly(filePath));
     if (h.IsValid()) {
         GetFileTime(h, nullptr, nullptr, &lastMod);
@@ -677,7 +677,7 @@ FILETIME GetModificationTime(const WCHAR* filePath) {
 }
 
 FILETIME GetModificationTime(const char* filePath) {
-    FILETIME lastMod = {0};
+    FILETIME lastMod{};
     AutoCloseHandle h(OpenReadOnly(filePath));
     if (h.IsValid()) {
         GetFileTime(h, nullptr, nullptr, &lastMod);

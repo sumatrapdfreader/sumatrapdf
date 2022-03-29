@@ -137,7 +137,7 @@ static bool IsoDateParse(const WCHAR* isoDate, SYSTEMTIME* timeOut) {
 }
 
 static WCHAR* FormatSystemTime(SYSTEMTIME& date) {
-    WCHAR buf[512] = {0};
+    WCHAR buf[512]{};
     int cchBufLen = dimof(buf);
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, buf, cchBufLen);
     if (ret < 2) { // GetDateFormat() failed or returned an empty result
@@ -168,7 +168,7 @@ static void ConvDateToDisplay(WCHAR** s, bool (*DateParse)(const WCHAR* date, SY
         return;
     }
 
-    SYSTEMTIME date = {0};
+    SYSTEMTIME date{};
     bool ok = DateParse(*s, &date);
     if (!ok) {
         return;
@@ -373,7 +373,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     int leftMaxDx = 0;
     for (PropertyEl* el : layoutData->props) {
         const WCHAR* txt = el->leftTxt;
-        RECT rc = {0};
+        RECT rc{};
         DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->leftPos.dx = rc.right - rc.left;
         // el->leftPos.dy is set below to be equal to el->rightPos.dy
@@ -390,7 +390,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     int textDy = 0;
     for (PropertyEl* el : layoutData->props) {
         const WCHAR* txt = el->rightTxt;
-        RECT rc = {0};
+        RECT rc{};
         DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->rightPos.dx = rc.right - rc.left;
         el->leftPos.dy = el->rightPos.dy = rc.bottom - rc.top;

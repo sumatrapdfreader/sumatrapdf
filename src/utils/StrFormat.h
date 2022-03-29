@@ -72,7 +72,7 @@ struct Arg {
         double d;
         std::string_view sv;
         std::wstring_view wsv;
-    } u = {0};
+    } u{};
 
     Arg() = default;
 

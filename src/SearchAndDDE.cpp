@@ -927,7 +927,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    DDEACK ack = {0};
+    DDEACK ack{};
     LPVOID command = GlobalLock((HGLOBAL)hi);
     if (!command) {
         return 0;
@@ -964,7 +964,7 @@ LRESULT OnCopyData(__unused HWND hwnd, WPARAM wp, LPARAM lp) {
         return FALSE;
     }
 
-    DDEACK ack = {0};
+    DDEACK ack{};
     HandleDdeCmds(hwnd, cmd, ack);
     return ack.fAck ? TRUE : FALSE;
 }

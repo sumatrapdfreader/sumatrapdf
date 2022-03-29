@@ -40,7 +40,7 @@ static WatchedFile* gWatchedSettingsFile = nullptr;
 
 // number of weeks past since 2011-01-01
 static int GetWeekCount() {
-    SYSTEMTIME date20110101 = {0};
+    SYSTEMTIME date20110101{};
     date20110101.wYear = 2011;
     date20110101.wMonth = 1;
     date20110101.wDay = 1;

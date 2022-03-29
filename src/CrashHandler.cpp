@@ -99,7 +99,7 @@ static bool isDllBuild = false;
 static bool gCrashed = false;
 WCHAR* gCrashFilePath = nullptr;
 
-static MINIDUMP_EXCEPTION_INFORMATION gMei = {0};
+static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
 // returns true if running on wine (winex11.drv is present)
@@ -436,7 +436,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
 }
 
 static void GetOsVersion(str::Str& s) {
-    OSVERSIONINFOEX ver = {0};
+    OSVERSIONINFOEX ver{};
     bool ok = GetOsVersion(ver);
     ver.dwOSVersionInfoSize = sizeof(ver);
     if (!ok) {
@@ -529,7 +529,7 @@ static void GetGraphicsDriverInfo(str::Str& s) {
 }
 
 static void GetLanguage(str::Str& s) {
-    char country[32] = {0}, lang[32] = {0};
+    char country[32] = {}, lang[32]{};
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
     s.AppendFmt("Lang: %s %s\n", lang, country);

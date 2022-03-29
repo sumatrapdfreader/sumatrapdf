@@ -604,7 +604,7 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
 
 // TODO: need to finish StrFormat and use it instead.
 char* FmtV(const char* fmt, va_list args) {
-    char message[256] = {0};
+    char message[256]{};
     size_t bufCchSize = dimof(message);
     char* buf = message;
     for (;;) {
@@ -1003,7 +1003,7 @@ const char* Parse(const char* str, const char* fmt, ...) {
 // TODO: could optimize it by making the main Parse() implementation
 // work with explicit length and not rely on zero-termination
 const char* Parse(const char* str, size_t len, const char* fmt, ...) {
-    char buf[128] = {0};
+    char buf[128]{};
     char* s = buf;
 
     if (!str || !fmt) {
@@ -2364,7 +2364,7 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
 WCHAR* FormatNumWithThousandSep(i64 num, LCID locale) {
-    WCHAR thousandSep[4] = {0};
+    WCHAR thousandSep[4]{};
     if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep))) {
         str::BufSet(thousandSep, dimof(thousandSep), L",");
     }

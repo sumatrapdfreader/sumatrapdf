@@ -2736,7 +2736,7 @@ gdix_vtable_t* gdix_vtable = NULL;
 
 int gdix_init(void) {
     int(WINAPI * gdix_Startup)(ULONG_PTR*, const c_GpStartupInput*, void*);
-    c_GpStartupInput input = {0};
+    c_GpStartupInput input{};
     int status;
 
     gdix_dll = wd_load_system_dll(_T("GDIPLUS.DLL"));
@@ -3366,7 +3366,7 @@ static const struct {
 #define WD_MOD_IMAGEAPI 1
 #define WD_MOD_STRINGAPI 2
 
-static UINT wd_init_counter[WD_MOD_COUNT] = {0};
+static UINT wd_init_counter[WD_MOD_COUNT]{};
 
 BOOL wdInitialize(DWORD dwFlags) {
     BOOL want_init[WD_MOD_COUNT];

@@ -1308,7 +1308,7 @@ HRESULT HtmlMoniker::SetBaseUrl(const WCHAR* newBaseUrl) {
 
 STDMETHODIMP HtmlMoniker::BindToStorage(__unused IBindCtx* pbc, __unused IMoniker* pmkToLeft, REFIID riid,
                                         void** ppvObj) {
-    LARGE_INTEGER seek = {0};
+    LARGE_INTEGER seek{};
     htmlStream->Seek(seek, STREAM_SEEK_SET, nullptr);
     return htmlStream->QueryInterface(riid, ppvObj);
 }
@@ -1635,7 +1635,7 @@ void HtmlWindow::GoForward() {
 }
 
 int HtmlWindow::GetZoomPercent() {
-    VARIANT vtOut = {0};
+    VARIANT vtOut{};
     HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, nullptr, &vtOut);
     if (FAILED(hr)) {
         return 100;
@@ -1644,8 +1644,8 @@ int HtmlWindow::GetZoomPercent() {
 }
 
 void HtmlWindow::SetZoomPercent(int zoom) {
-    VARIANT vtIn = {0};
-    VARIANT vtOut = {0};
+    VARIANT vtIn{};
+    VARIANT vtOut{};
     VariantSetLong(&vtIn, zoom);
     webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vtIn, &vtOut);
 }
@@ -1858,7 +1858,7 @@ HRESULT HtmlWindow::OnDragEnter(IDataObject* dataObj) {
         return E_INVALIDARG;
     }
     FORMATETC fe = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    STGMEDIUM stg = {0};
+    STGMEDIUM stg{};
     if (FAILED(data->GetData(&fe, &stg))) {
         return E_FAIL;
     }
@@ -1872,7 +1872,7 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject* dataObj) {
         return E_INVALIDARG;
     }
     FORMATETC fe = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    STGMEDIUM stg = {0};
+    STGMEDIUM stg{};
     if (FAILED(data->GetData(&fe, &stg))) {
         return E_FAIL;
     }

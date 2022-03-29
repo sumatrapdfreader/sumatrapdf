@@ -62,7 +62,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused  HINSTANCE hPrevInstance, __u
 
     gHinst = hInstance;
 
-    INITCOMMONCONTROLSEX cc = {0};
+    INITCOMMONCONTROLSEX cc{};
     cc.dwSize = sizeof(cc);
     cc.dwICC = ICC_WIN95_CLASSES;
     InitCommonControlsEx(&cc);

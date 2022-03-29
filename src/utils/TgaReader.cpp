@@ -403,7 +403,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
         return {};
     }
 
-    BITMAPINFO bmi = {0};
+    BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = w;
     bmi.bmiHeader.biHeight = h;
@@ -418,7 +418,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     }
     ReleaseDC(nullptr, hDC);
 
-    TgaHeader headerLE = {0};
+    TgaHeader headerLE{};
     headerLE.imageType = Type_Truecolor_RLE;
     headerLE.width = convLE(w);
     headerLE.height = convLE(h);

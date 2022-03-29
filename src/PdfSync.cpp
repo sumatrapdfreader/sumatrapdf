@@ -233,7 +233,7 @@ int Pdfsync::RebuildIndex() {
     // add the initial tex file to the source file stack
     filestack.Append(srcfiles.size());
     srcfiles.Append(jobName.StealData());
-    PdfsyncFileIndex findex = {0};
+    PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
 
     PdfsyncLine psline;

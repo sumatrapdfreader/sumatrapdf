@@ -87,7 +87,7 @@ void UpdateDeltaPerLine() {
 static void OnVScroll(WindowInfo* win, WPARAM wp) {
     CrashIf(!win->AsFixed());
 
-    SCROLLINFO si = {0};
+    SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
@@ -152,7 +152,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
 static void OnHScroll(WindowInfo* win, WPARAM wp) {
     CrashIf(!win->AsFixed());
 
-    SCROLLINFO si = {0};
+    SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(win->hwndCanvas, SB_HORZ, &si);
@@ -1115,7 +1115,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
 
     if (gDeltaPerLine < 0 && win->AsFixed()) {
         // scroll by (fraction of a) page
-        SCROLLINFO si = {0};
+        SCROLLINFO si{};
         si.cbSize = sizeof(si);
         si.fMask = SIF_PAGE;
         GetScrollInfo(win->hwndCanvas, horizontal ? SB_HORZ : SB_VERT, &si);
@@ -1232,7 +1232,7 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
     DisplayModel* dm = win->AsFixed();
 
     HGESTUREINFO hgi = (HGESTUREINFO)lp;
-    GESTUREINFO gi = {0};
+    GESTUREINFO gi{};
     gi.cbSize = sizeof(GESTUREINFO);
     TouchState& touchState = win->touchState;
 
@@ -1615,7 +1615,7 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
 }
 
 static void OnDropFiles(WindowInfo* win, HDROP hDrop, bool dragFinish) {
-    WCHAR filePath[MAX_PATH] = {0};
+    WCHAR filePath[MAX_PATH]{};
     int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
 
     bool isShift = IsShiftPressed();

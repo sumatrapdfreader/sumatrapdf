@@ -203,7 +203,7 @@ static void RegisterLabelWithCloseWnd() {
         return;
     }
 
-    WNDCLASSEX wcex = {};
+    WNDCLASSEX wcex{};
     FillWndClassEx(wcex, WND_CLASS_NAME, WndProcLabelWithClose);
     atom = RegisterClassExW(&wcex);
     CrashIf(!atom);

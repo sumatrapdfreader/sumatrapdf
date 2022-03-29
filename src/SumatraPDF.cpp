@@ -762,7 +762,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
 
-    SCROLLINFO si = {0};
+    SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
@@ -2066,9 +2066,9 @@ static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool 
 }
 
 bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
-    WCHAR dstFileName[MAX_PATH + 1] = {0};
+    WCHAR dstFileName[MAX_PATH + 1]{};
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn{};
     str::WStr fileFilter(256);
     fileFilter.Append(_TR("PDF documents"));
     fileFilter.Append(L"\1*.pdf\1");
@@ -2519,7 +2519,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
     }
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
@@ -2683,7 +2683,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
 
     AutoFreeWstr initDir(path::GetDir(srcFileName));
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
@@ -2749,7 +2749,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     AutoFreeWstr fileFilter = str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts"));
     str::TransCharsInPlace(fileFilter, L"\1", L"\0");
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
@@ -2860,7 +2860,7 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
         return false;
     }
 
-    BROWSEINFOW bi = {0};
+    BROWSEINFOW bi{};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = caption;
@@ -2886,7 +2886,7 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
 
 static void OnMenuOpenFolder(WindowInfo* win) {
     HWND hwnd = win->hwndFrame;
-    WCHAR dirW[MAX_PATH + 2] = {0};
+    WCHAR dirW[MAX_PATH + 2]{};
     bool ok = BrowseForFolder(hwnd, nullptr, L"Select folder with PDF files", dirW, dimof(dirW));
     if (!ok) {
         return;
@@ -2956,7 +2956,7 @@ static void OnMenuOpen(WindowInfo* win) {
     fileFilter.Append(L"\1*.*\1");
     str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
 

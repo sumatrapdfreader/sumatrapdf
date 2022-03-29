@@ -217,7 +217,7 @@ static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
         return false;
     }
 
-    MODULEENTRY32 mod = {0};
+    MODULEENTRY32 mod{};
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
@@ -327,7 +327,7 @@ static bool IsProcWithModule(DWORD processId, const WCHAR* modulePath) {
         return false;
     }
 
-    MODULEENTRY32W me32 = {0};
+    MODULEENTRY32W me32{};
     me32.dwSize = sizeof(me32);
     BOOL ok = Module32FirstW(hModSnapshot, &me32);
     while (ok) {
@@ -441,7 +441,7 @@ bool KillProcessesUsingInstallation() {
     }
 
     bool killedAllProcesses = true;
-    PROCESSENTRY32W proc = {0};
+    PROCESSENTRY32W proc{};
     proc.dwSize = sizeof(proc);
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
@@ -475,7 +475,7 @@ static void ProcessesUsingInstallation(WStrVec& names) {
         return;
     }
 
-    PROCESSENTRY32W proc = {0};
+    PROCESSENTRY32W proc{};
     proc.dwSize = sizeof(proc);
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
@@ -692,7 +692,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
     StringFormat sfmt;
     const float letterSpacing = -12.f;
     float totalDx = -letterSpacing; // counter last iteration of the loop
-    WCHAR s[2] = {0};
+    WCHAR s[2]{};
     Gdiplus::PointF origin(0.f, 0.f);
     Gdiplus::RectF bbox;
     for (int i = 0; i < dimof(gLetters); i++) {
@@ -748,7 +748,7 @@ static float DrawMessage(Graphics& g, const WCHAR* msg, float y, float dx, Color
 
 static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     LetterInfo* li;
-    WCHAR s[2] = {0};
+    WCHAR s[2]{};
     for (int i = 0; i < dimof(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;

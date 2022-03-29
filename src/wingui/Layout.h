@@ -147,7 +147,7 @@ enum class CrossAxisAlign : u8 {
 
 struct boxElementInfo {
     ILayout* layout = nullptr;
-    Size size = {};
+    Size size{};
     int flex = 0;
 };
 

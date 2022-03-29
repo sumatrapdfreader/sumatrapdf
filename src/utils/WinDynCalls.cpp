@@ -210,7 +210,7 @@ void PrioritizeSystemDirectoriesForDllLoad() {
         return;
     }
     // Only supported since Win 10
-    PROCESS_MITIGATION_IMAGE_LOAD_POLICY m = {0};
+    PROCESS_MITIGATION_IMAGE_LOAD_POLICY m{};
     m.PreferSystem32Images = 1;
     DynSetProcessMitigationPolicy(ProcessImageLoadPolicy, &m, sizeof(m));
     DbgOutLastError();

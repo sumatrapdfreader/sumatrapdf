@@ -81,7 +81,7 @@ struct ButtonInfo {
     bool highlighted = false;
     bool inactive = false;
     // form the inner rectangle where the button image is drawn
-    RECT margins = {0};
+    RECT margins{};
 
     ButtonInfo() = default;
 };
@@ -916,7 +916,7 @@ static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y) {
     }
     HMENU popup = CreatePopupMenu();
 
-    MENUITEMINFO mii = {0};
+    MENUITEMINFO mii{};
     mii.cbSize = sizeof(MENUITEMINFO);
     mii.fMask = MIIM_SUBMENU | MIIM_STRING;
     for (int i = 0; i < count; i++) {

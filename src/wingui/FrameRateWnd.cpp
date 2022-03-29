@@ -129,7 +129,7 @@ static void RegisterFrameRateWndClass() {
         // already registered
         return;
     }
-    WNDCLASSEX wcex = {};
+    WNDCLASSEX wcex{};
     FillWndClassEx(wcex, FRAME_RATE_CLASS_NAME, WndProcFrameRate);
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);

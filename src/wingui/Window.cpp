@@ -792,7 +792,7 @@ static void RegisterWindowClass(Window* w) {
             }
         }
     }
-    WNDCLASSEXW wcex = {};
+    WNDCLASSEXW wcex{};
     wcex.cbSize = sizeof(wcex);
     wcex.hIcon = w->hIcon;
     wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);

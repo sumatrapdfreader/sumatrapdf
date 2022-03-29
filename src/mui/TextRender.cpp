@@ -221,7 +221,7 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
 
     FreeMemBmp();
 
-    BITMAPINFO bmi = {};
+    BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = dx;
     bmi.bmiHeader.biHeight = dy;
@@ -277,7 +277,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectF bb,
     ExtTextOut(memHdc, 0, 0, opts, nullptr, s, (uint)sLen, nullptr);
 #endif
 
-    BLENDFUNCTION bf = {};
+    BLENDFUNCTION bf{};
     bf.BlendOp = AC_SRC_OVER;
     bf.BlendFlags = 0;
     bf.AlphaFormat = 0;           // 0 - ignore source alpha, AC_SRC_ALPHA (1) - use source alpha

@@ -348,7 +348,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     char* data = nullptr;
     size_t size = 0;
     auto fileName = ToWstrTemp(fileInfo->name.data());
-    RARHeaderDataEx rarHeader = {0};
+    RARHeaderDataEx rarHeader{};
     int res;
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());
     if (!ok) {
@@ -406,7 +406,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
 
     size_t fileId = 0;
     while (true) {
-        RARHeaderDataEx rarHeader = {0};
+        RARHeaderDataEx rarHeader{};
         int res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res) {
             break;

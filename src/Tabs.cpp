@@ -887,7 +887,7 @@ void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar) {
         RelayoutCaption(win);
     } else if (dwm::IsCompositionEnabled()) {
         // remove the extended frame
-        MARGINS margins = {0};
+        MARGINS margins{};
         dwm::ExtendFrameIntoClientArea(win->hwndFrame, &margins);
         win->extendedFrameHeight = 0;
     }

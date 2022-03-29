@@ -1819,7 +1819,7 @@ static HFONT gMenuFont = nullptr;
 
 HFONT GetMenuFont() {
     if (!gMenuFont) {
-        NONCLIENTMETRICS ncm = {0};
+        NONCLIENTMETRICS ncm{};
         ncm.cbSize = sizeof(ncm);
         SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
         gMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
@@ -1857,7 +1857,7 @@ static void ParseMenuText(WCHAR* s, MenuText& mt) {
 }
 
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
-    MENUITEMINFOW mii = {0};
+    MENUITEMINFOW mii{};
     mii.cbSize = sizeof(MENUITEMINFOW);
 
     int n = GetMenuItemCount(hmenu);
@@ -1883,7 +1883,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
     }
     WCHAR buf[1024];
 
-    MENUITEMINFOW mii = {0};
+    MENUITEMINFOW mii{};
     mii.cbSize = sizeof(MENUITEMINFOW);
 
     int n = GetMenuItemCount(hmenu);

@@ -26,7 +26,7 @@ class TabsCtrlPrivate;
 struct TabsCtrl {
     // creation parameters. must be set before CreateTabsCtrl
     HWND parent = nullptr;
-    RECT initialPos = {};
+    RECT initialPos{};
 
     TabSelectedCb onTabSelected = nullptr;
     TabClosedCb onTabClosed = nullptr;

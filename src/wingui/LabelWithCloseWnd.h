@@ -17,7 +17,7 @@ struct LabelWithCloseWnd {
     HFONT font = nullptr;
     int cmd = 0;
 
-    Rect closeBtnPos = {};
+    Rect closeBtnPos{};
     COLORREF txtCol = 0;
     COLORREF bgCol = 0;
 
@@ -37,7 +37,7 @@ struct LabelWithCloseCtrl : public Window {
     void SetPaddingXY(int x, int y);
     Size GetIdealSize() override;
 
-    Rect closeBtnPos = {};
+    Rect closeBtnPos{};
 
     // in points
     int padX = 0;

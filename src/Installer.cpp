@@ -59,7 +59,7 @@ static HBRUSH ghbrBackground = nullptr;
 
 static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
-static lzma::SimpleArchive gArchive = {};
+static lzma::SimpleArchive gArchive{};
 
 static StaticCtrl* gStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
@@ -637,7 +637,7 @@ static void OnButtonBrowse() {
         str::Free(tmp);
     }
 
-    WCHAR path[MAX_PATH] = {};
+    WCHAR path[MAX_PATH]{};
     bool ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
                               path, dimof(path));
     if (!ok) {

@@ -170,7 +170,7 @@ static void versioncheck_test() {
 
 static void hexstrTest() {
     u8 buf[6] = {1, 2, 33, 255, 0, 18};
-    u8 buf2[6] = {0};
+    u8 buf2[6]{};
     AutoFree s(_MemToHex(&buf));
     utassert(str::Eq(s, "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);

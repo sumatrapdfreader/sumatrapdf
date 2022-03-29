@@ -55,7 +55,7 @@ static const char* ExceptionNameFromCode(DWORD excCode) {
     }
 #undef EXC
 
-    static char buf[512] = {0};
+    static char buf[512]{};
 
     FormatMessageA(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_HMODULE, GetModuleHandleA("ntdll.dll"), excCode,
                    0, buf, sizeof(buf), nullptr);
@@ -277,7 +277,7 @@ void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
         symName = &(symInfo->Name[0]);
     }
 
-    char moduleName[MAX_PATH] = {0};
+    char moduleName[MAX_PATH]{};
     DWORD section;
     DWORD_PTR offset;
     ok = GetAddrInfo((void*)addr, moduleName, sizeof(moduleName), section, offset);
@@ -389,7 +389,7 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
     if (-1 == res) {
         s.Append("Failed to SuspendThread()\r\n");
     } else {
-        CONTEXT ctx = {0};
+        CONTEXT ctx{};
         ctx.ContextFlags = CONTEXT_FULL;
         BOOL ok = GetThreadContext(hThread, &ctx);
         if (ok) {

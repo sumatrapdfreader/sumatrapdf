@@ -438,7 +438,7 @@ static fz_stream* FzOpenIStream(fz_context* ctx, IStream* stream) {
         return nullptr;
     }
 
-    LARGE_INTEGER zero = {0};
+    LARGE_INTEGER zero{};
     HRESULT res = stream->Seek(zero, STREAM_SEEK_SET, nullptr);
     if (FAILED(res)) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
@@ -879,7 +879,7 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
     u8* dest = bmpData;
     u8* source = pixmap->samples;
     u32* palette = (u32*)bmi.Get()->bmiColors;
-    u8 grayIdxs[256] = {0};
+    u8 grayIdxs[256]{};
 
     int paletteSize = 0;
     RGBQUAD c;
@@ -1281,7 +1281,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc) {
         return nullptr;
     }
 
-    fz_outline root = {0};
+    fz_outline root{};
     fz_outline* curr = &root;
     for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
         pdf_obj* dest = pdf_dict_get_val(ctx, dict, i);
@@ -1923,7 +1923,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
     }
 
     // TODO: make this work for non-PDF formats?
-    u8 digest[16 + 32] = {0};
+    u8 digest[16 + 32]{};
     if (pdfdoc) {
         FzStreamFingerprint(ctx, pdfdoc->file, digest);
     }
@@ -2639,7 +2639,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
 
     ScopedCritSec scope(ctxAccess);
 
-    fz_cookie fzcookie = {};
+    fz_cookie fzcookie{};
     fz_rect rect = fz_empty_rect;
     fz_device* dev = nullptr;
     fz_display_list* list = nullptr;

@@ -368,7 +368,7 @@ Kind GuessFileTypeFromContent(const WCHAR* path) {
     }
 
     // +1 for zero-termination
-    char buf[2048 + 1] = {0};
+    char buf[2048 + 1]{};
     int n = file::ReadN(path, buf, dimof(buf) - 1);
     if (n <= 0) {
         return nullptr;

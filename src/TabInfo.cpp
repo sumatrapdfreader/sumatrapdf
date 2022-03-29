@@ -125,7 +125,7 @@ bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, ByteSlice data) {
         return false;
     }
 
-    WCHAR dstFileName[MAX_PATH] = {0};
+    WCHAR dstFileName[MAX_PATH]{};
     if (fileName) {
         str::BufSet(dstFileName, dimof(dstFileName), fileName);
     }
@@ -137,7 +137,7 @@ bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, ByteSlice data) {
     AutoFreeWstr fileFilter = str::Format(L"%s\1*.*\1", _TR("All files"));
     str::TransCharsInPlace(fileFilter, L"\1", L"\0");
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwndParent;
     ofn.lpstrFile = dstFileName;

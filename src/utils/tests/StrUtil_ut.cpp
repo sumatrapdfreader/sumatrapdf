@@ -637,7 +637,7 @@ void StrTest() {
     }
 
     {
-        char buf1[6] = {0};
+        char buf1[6]{};
         size_t cnt = str::BufAppend(buf1, dimof(buf1), "");
         utassert(0 == cnt);
         cnt = str::BufAppend(buf1, dimof(buf1), "1234");
@@ -652,7 +652,7 @@ void StrTest() {
     }
 
     {
-        WCHAR buf1[6] = {0};
+        WCHAR buf1[6]{};
         size_t cnt = str::BufAppend(buf1, dimof(buf1), L"");
         utassert(0 == cnt);
         cnt = str::BufAppend(buf1, dimof(buf1), L"1234");
