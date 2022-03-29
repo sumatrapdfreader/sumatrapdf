@@ -103,11 +103,11 @@ static inline Size GetTabSize(HWND hwnd) {
 }
 
 struct TabPainter {
-    TabsCtrl2* tabsCtrl{nullptr};
-    PathData* data{nullptr};
+    TabsCtrl2* tabsCtrl = nullptr;
+    PathData* data = nullptr;
     int width{-1};
     int height{-1};
-    HWND hwnd{nullptr};
+    HWND hwnd = nullptr;
 
     int selectedTabIdx{-1};
     int highlighted{-1};

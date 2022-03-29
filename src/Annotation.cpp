@@ -479,7 +479,7 @@ std::string_view DefaultAppearanceTextFont(Annotation* annot) {
 void SetDefaultAppearanceTextFont(Annotation* annot, std::string_view sv) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    const char* fontName{nullptr};
+    const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
     float textColor[4]{0};
@@ -493,7 +493,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, std::string_view sv) {
 int DefaultAppearanceTextSize(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    const char* fontName{nullptr};
+    const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
     float textColor[4]{0};
@@ -504,7 +504,7 @@ int DefaultAppearanceTextSize(Annotation* annot) {
 void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    const char* fontName{nullptr};
+    const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
     float textColor[4]{0};
@@ -518,7 +518,7 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
 PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    const char* fontName{nullptr};
+    const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
     float textColor[4];
@@ -530,7 +530,7 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
 void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    const char* fontName{nullptr};
+    const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
     float textColor[4]{0};

@@ -20,7 +20,7 @@ class MultiFormatArchive {
 
         // internal use
         i64 filePos{0};
-        char* data{nullptr};
+        char* data = nullptr;
 
         [[nodiscard]] FILETIME GetWinFileTime() const;
     };

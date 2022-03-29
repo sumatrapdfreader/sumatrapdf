@@ -4,18 +4,18 @@
 struct TreeCtrl;
 
 struct TreeItmGetTooltipEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
-    NMTVGETINFOTIPW* info{nullptr};
+    NMTVGETINFOTIPW* info = nullptr;
 };
 
 using TreeItemGetTooltipHandler = std::function<void(TreeItmGetTooltipEvent*)>;
 
 struct TreeSelectionChangedEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem prevSelectedItem{0};
     TreeItem selectedItem{0};
-    NMTREEVIEW* nmtv{nullptr};
+    NMTREEVIEW* nmtv = nullptr;
     bool byKeyboard{false};
     bool byMouse{false};
 };
@@ -23,7 +23,7 @@ struct TreeSelectionChangedEvent : WndEvent {
 using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent*)>;
 
 struct TreeItemExpandedEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
     bool isExpanded{false};
 };
@@ -38,9 +38,9 @@ struct TreeItemState {
 };
 
 struct TreeItemChangedEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
-    NMTVITEMCHANGE* nmic{nullptr};
+    NMTVITEMCHANGE* nmic = nullptr;
 
     bool checkedChanged{false};
     bool expandedChanged{false};
@@ -53,15 +53,15 @@ struct TreeItemChangedEvent : WndEvent {
 using TreeItemChangedHandler = std::function<void(TreeItemChangedEvent*)>;
 
 struct TreeItemCustomDrawEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
-    NMTVCUSTOMDRAW* nm{nullptr};
+    NMTVCUSTOMDRAW* nm = nullptr;
 };
 
 using TreeItemCustomDrawHandler = std::function<void(TreeItemCustomDrawEvent*)>;
 
 struct TreeClickEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
     bool isDblClick{false};
 
@@ -74,8 +74,8 @@ struct TreeClickEvent : WndEvent {
 using TreeClickHandler = std::function<void(TreeClickEvent*)>;
 
 struct TreeKeyDownEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
-    NMTVKEYDOWN* nmkd{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
+    NMTVKEYDOWN* nmkd = nullptr;
     int keyCode{0};
     u32 flags{0};
 };
@@ -83,15 +83,15 @@ struct TreeKeyDownEvent : WndEvent {
 using TreeKeyDownHandler = std::function<void(TreeKeyDownEvent*)>;
 
 struct TreeGetDispInfoEvent : WndEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
-    NMTVDISPINFOEXW* dispInfo{nullptr};
+    NMTVDISPINFOEXW* dispInfo = nullptr;
 };
 
 using TreeGetDispInfoHandler = std::function<void(TreeGetDispInfoEvent*)>;
 
 struct TreeItemDraggeddEvent {
-    TreeCtrl* treeCtrl{nullptr};
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem draggedItem{0};
     TreeItem dragTargetItem{0};
     bool isStart{false};
@@ -123,37 +123,37 @@ struct TreeCtrl : WindowBase {
     TreeItem dragTargetItem{0};
 
     // treeModel not owned by us
-    TreeModel* treeModel{nullptr};
+    TreeModel* treeModel = nullptr;
 
     // for all WM_NOTIFY messages
-    WmNotifyHandler onNotify{nullptr};
+    WmNotifyHandler onNotify = nullptr;
 
     // for WM_NOTIFY with TVN_GETINFOTIP
-    TreeItemGetTooltipHandler onGetTooltip{nullptr};
+    TreeItemGetTooltipHandler onGetTooltip = nullptr;
 
     // for WM_NOTIFY with TVN_SELCHANGED
-    TreeSelectionChangedHandler onTreeSelectionChanged{nullptr};
+    TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
 
     // for WM_NOTIFY with TVN_ITEMEXPANDED
-    TreeItemExpandedHandler onTreeItemExpanded{nullptr};
+    TreeItemExpandedHandler onTreeItemExpanded = nullptr;
 
     // for WM_NOTIFY with TVN_ITEMCHANGED
-    TreeItemChangedHandler onTreeItemChanged{nullptr};
+    TreeItemChangedHandler onTreeItemChanged = nullptr;
 
     // for WM_NOTIFY wiht NM_CUSTOMDRAW
-    TreeItemCustomDrawHandler onTreeItemCustomDraw{nullptr};
+    TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
 
     // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
-    TreeClickHandler onTreeClick{nullptr};
+    TreeClickHandler onTreeClick = nullptr;
 
     // for WM_NOITFY with TVN_KEYDOWN
-    TreeKeyDownHandler onTreeKeyDown{nullptr};
+    TreeKeyDownHandler onTreeKeyDown = nullptr;
 
     // for WM_NOTIFY with TVN_GETDISPINFO
-    TreeGetDispInfoHandler onTreeGetDispInfo{nullptr};
+    TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
 
     // for TVN_BEGINDRAG / WM_MOUSEMOVE / WM_LBUTTONUP
-    TreeItemDraggedHandler onTreeItemDragStartEnd{nullptr};
+    TreeItemDraggedHandler onTreeItemDragStartEnd = nullptr;
 
     Size idealSize{};
 

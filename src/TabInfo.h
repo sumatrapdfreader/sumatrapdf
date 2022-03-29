@@ -11,8 +11,8 @@ struct WindowInfo;
    be moved between windows once this is supported) */
 struct TabInfo {
     AutoFreeWstr filePath;
-    WindowInfo* win{nullptr};
-    Controller* ctrl{nullptr};
+    WindowInfo* win = nullptr;
+    Controller* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
     AutoFreeWstr frameTitle;
     // state of the table of contents
@@ -25,15 +25,15 @@ struct TabInfo {
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus{false};
     // FileWatcher token for unsubscribing
-    WatchedFile* watcher{nullptr};
+    WatchedFile* watcher = nullptr;
     // list of rectangles of the last rectangular, text or image selection
     // (split by page, in user coordinates)
-    Vec<SelectionOnPage>* selectionOnPage{nullptr};
+    Vec<SelectionOnPage>* selectionOnPage = nullptr;
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
     float prevZoomVirtual{INVALID_ZOOM};
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
-    TocTree* currToc{nullptr}; // not owned by us
-    EditAnnotationsWindow* editAnnotsWindow{nullptr};
+    TocTree* currToc = nullptr; // not owned by us
+    EditAnnotationsWindow* editAnnotsWindow = nullptr;
 
     // TODO: terrible hack
     bool askedToSaveAnnotations{false};

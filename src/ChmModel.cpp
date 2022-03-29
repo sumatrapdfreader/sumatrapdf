@@ -25,7 +25,7 @@ static TocItem* NewChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, c
         return res;
     }
 
-    IPageDestination* dest{nullptr};
+    IPageDestination* dest = nullptr;
     if (IsExternalUrl(url)) {
         dest = new PageDestinationURL(url);
     } else {

@@ -42,7 +42,7 @@ struct TranslationCache {
     // TODO: maybe also cache str::WStr allTranslationsW
     // we currently return a temp converted string but there's a chance their
     // lifetime could survive temp allocator lifetime
-    Translation* translations{nullptr};
+    Translation* translations = nullptr;
     int nTranslations{0};
     int nUntranslated{0};
 };
@@ -50,7 +50,7 @@ struct TranslationCache {
 // used locally, gCurrLangCode points into gLangCodes
 static const char* gCurrLangCode = nullptr;
 static int gCurrLangIdx{0};
-static TranslationCache* gTranslationCache{nullptr};
+static TranslationCache* gTranslationCache = nullptr;
 
 static void UnescapeStringIntoStr(char* s, str::Str& str) {
     for (; *s; s++) {

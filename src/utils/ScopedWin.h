@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ScopedCritSec {
-    CRITICAL_SECTION* cs{nullptr};
+    CRITICAL_SECTION* cs = nullptr;
 
     explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) {
         EnterCriticalSection(cs);
@@ -13,7 +13,7 @@ struct ScopedCritSec {
 };
 
 class AutoCloseHandle {
-    HANDLE handle{nullptr};
+    HANDLE handle = nullptr;
 
   public:
     AutoCloseHandle() = default;
@@ -47,7 +47,7 @@ class AutoCloseHandle {
 template <class T>
 class ScopedComPtr {
   protected:
-    T* ptr{nullptr};
+    T* ptr = nullptr;
 
   public:
     ScopedComPtr() = default;
@@ -91,7 +91,7 @@ class ScopedComPtr {
 template <class T>
 class ScopedComQIPtr {
   protected:
-    T* ptr{nullptr};
+    T* ptr = nullptr;
 
   public:
     ScopedComQIPtr() = default;
@@ -139,7 +139,7 @@ class ScopedComQIPtr {
 };
 
 class AutoDeleteDC {
-    HDC hdc{nullptr};
+    HDC hdc = nullptr;
 
   public:
     explicit AutoDeleteDC(HDC hdc) {
@@ -173,8 +173,8 @@ using AutoDeletePen = ScopedGdiObj<HPEN>;
 using AutoDeleteBrush = ScopedGdiObj<HBRUSH>;
 
 class ScopedGetDC {
-    HDC hdc{nullptr};
-    HWND hwnd{nullptr};
+    HDC hdc = nullptr;
+    HWND hwnd = nullptr;
 
   public:
     explicit ScopedGetDC(HWND hwnd) {
@@ -190,8 +190,8 @@ class ScopedGetDC {
 };
 
 class ScopedSelectObject {
-    HDC hdc{nullptr};
-    HGDIOBJ prev{nullptr};
+    HDC hdc = nullptr;
+    HGDIOBJ prev = nullptr;
 
   public:
     ScopedSelectObject(HDC hdc, HGDIOBJ obj) : hdc(hdc) {
@@ -203,8 +203,8 @@ class ScopedSelectObject {
 };
 
 class ScopedSelectFont {
-    HDC hdc{nullptr};
-    HFONT prevFont{nullptr};
+    HDC hdc = nullptr;
+    HFONT prevFont = nullptr;
 
   public:
     explicit ScopedSelectFont(HDC hdc, HFONT font) {
@@ -217,8 +217,8 @@ class ScopedSelectFont {
 };
 
 class ScopedSelectPen {
-    HDC hdc{nullptr};
-    HPEN prevPen{nullptr};
+    HDC hdc = nullptr;
+    HPEN prevPen = nullptr;
 
   public:
     explicit ScopedSelectPen(HDC hdc, HPEN pen) {
@@ -231,8 +231,8 @@ class ScopedSelectPen {
 };
 
 class ScopedSelectBrush {
-    HDC hdc{nullptr};
-    HBRUSH prevBrush{nullptr};
+    HDC hdc = nullptr;
+    HBRUSH prevBrush = nullptr;
 
   public:
     explicit ScopedSelectBrush(HDC hdc, HBRUSH pen) {

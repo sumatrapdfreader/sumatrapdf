@@ -158,19 +158,19 @@ class PreviewBase : public IThumbnailProvider,
         return m_engine;
     }
 
-    PageRenderer* renderer{nullptr};
+    PageRenderer* renderer = nullptr;
 
   protected:
     long m_lRef{1};
-    long* m_plModuleRef{nullptr};
+    long* m_plModuleRef = nullptr;
     ScopedComPtr<IStream> m_pStream;
-    EngineBase* m_engine{nullptr};
+    EngineBase* m_engine = nullptr;
     // engines based on EngineImages require GDI+ to be preloaded
-    ScopedGdiPlus* m_gdiScope{nullptr};
+    ScopedGdiPlus* m_gdiScope = nullptr;
     // state for IPreviewHandler
     ScopedComPtr<IUnknown> m_site;
-    HWND m_hwnd{nullptr};
-    HWND m_hwndParent{nullptr};
+    HWND m_hwnd = nullptr;
+    HWND m_hwndParent = nullptr;
     Rect m_rcParent;
 
     virtual EngineBase* LoadEngine(IStream* stream) = 0;

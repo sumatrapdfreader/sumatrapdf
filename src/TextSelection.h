@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 struct DocumentTextCache {
-    EngineBase* engine{nullptr};
+    EngineBase* engine = nullptr;
     int nPages{0};
-    PageText* pagesText{nullptr};
+    PageText* pagesText = nullptr;
     int debugSize{0};
 
     CRITICAL_SECTION access;
@@ -20,16 +20,16 @@ struct DocumentTextCache {
 struct TextSel {
     int len{0};
     int cap{0};
-    int* pages{nullptr};
-    Rect* rects{nullptr};
+    int* pages = nullptr;
+    Rect* rects = nullptr;
 };
 
 struct TextSelection {
     int startPage{-1}, endPage{-1};
     int startGlyph{-1}, endGlyph{-1};
 
-    EngineBase* engine{nullptr};
-    DocumentTextCache* textCache{nullptr};
+    EngineBase* engine = nullptr;
+    DocumentTextCache* textCache = nullptr;
 
     TextSelection(EngineBase* engine, DocumentTextCache* textCache);
     ~TextSelection();

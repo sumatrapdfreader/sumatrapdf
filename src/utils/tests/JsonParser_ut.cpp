@@ -8,8 +8,8 @@
 #include "utils/UtAssert.h"
 
 struct JsonValue {
-    const char* path{nullptr};
-    const char* value{nullptr};
+    const char* path = nullptr;
+    const char* value = nullptr;
     json::Type type{json::Type::String};
 
     JsonValue() = default;

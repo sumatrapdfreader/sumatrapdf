@@ -4,7 +4,7 @@
 // note: include BaseUtil.h instead of including directly
 
 struct ByteSlice {
-    u8* d{nullptr};
+    u8* d = nullptr;
     size_t s{0};
 
     ByteSlice() = default;

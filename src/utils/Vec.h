@@ -11,11 +11,11 @@ store pointer types or POD types
 template <typename T>
 class Vec {
   public:
-    Allocator* allocator{nullptr};
+    Allocator* allocator = nullptr;
     size_t len{0};
     size_t cap{0};
     size_t capacityHint{0};
-    T* els{nullptr};
+    T* els = nullptr;
     T buf[16];
 
     // We always pad the elements with a single 0 value. This makes

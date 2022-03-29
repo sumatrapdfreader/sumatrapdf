@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct FileData {
-    char* name{nullptr};
+    char* name = nullptr;
     ByteSlice data{};
     int imageNo{0}; // counting from 1
 

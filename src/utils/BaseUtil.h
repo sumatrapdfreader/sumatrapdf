@@ -393,8 +393,8 @@ struct PoolAllocator : Allocator {
         // data follows here
     };
 
-    Block* currBlock{nullptr};
-    Block* firstBlock{nullptr};
+    Block* currBlock = nullptr;
+    Block* firstBlock = nullptr;
     int nAllocs{0};
     CRITICAL_SECTION cs;
 

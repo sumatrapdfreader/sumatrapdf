@@ -479,7 +479,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
 }
 
 static RenderedBitmap* getImageFromData(ByteSlice imageData) {
-    HBITMAP hbmp{nullptr};
+    HBITMAP hbmp = nullptr;
     Bitmap* bmp = BitmapFromData(imageData);
     if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
         delete bmp;
@@ -1411,7 +1411,7 @@ static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
 }
 
 class ChmHtmlCollector : public EbookTocVisitor {
-    ChmFile* doc{nullptr};
+    ChmFile* doc = nullptr;
     WStrList added;
     str::Str html;
 

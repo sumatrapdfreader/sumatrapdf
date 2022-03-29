@@ -99,7 +99,7 @@ struct StyleRule {
 };
 
 struct DrawStyle {
-    mui::CachedFont* font{nullptr};
+    mui::CachedFont* font = nullptr;
     AlignAttr align{AlignAttr::NotFound};
     bool dirRtl{false};
 };
@@ -138,7 +138,7 @@ struct HtmlFormatterArgs {
        that is read-only and outlives us. Sometimes (e.g. when resolving
        html entities) we need a modified text. This allocator is
        used to allocate this text. */
-    Allocator* textAllocator{nullptr};
+    Allocator* textAllocator = nullptr;
 
     mui::TextRenderMethod textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
@@ -227,11 +227,11 @@ class HtmlFormatter {
     float pageDy{0};
     float lineSpacing{0};
     float spaceDx{0};
-    Graphics* gfx{nullptr}; // for measuring text
+    Graphics* gfx = nullptr; // for measuring text
     AutoFreeWstr defaultFontName;
     float defaultFontSize{0};
-    Allocator* textAllocator{nullptr};
-    mui::ITextRender* textMeasure{nullptr};
+    Allocator* textAllocator = nullptr;
+    mui::ITextRender* textMeasure = nullptr;
 
     // style stack of the current line
     Vec<DrawStyle> styleStack;
@@ -259,7 +259,7 @@ class HtmlFormatter {
     Vec<DrawInstr> currLineInstr;
     // reparse point of the first instructions in a current line
     ptrdiff_t currLineReparseIdx{0};
-    HtmlPage* currPage{nullptr};
+    HtmlPage* currPage = nullptr;
 
     // for tracking whether we're currently inside <a> tag
     size_t currLinkIdx{0};
@@ -267,7 +267,7 @@ class HtmlFormatter {
     // reparse point for the current HtmlToken
     ptrdiff_t currReparseIdx{0};
 
-    HtmlPullParser* htmlParser{nullptr};
+    HtmlPullParser* htmlParser = nullptr;
 
     // list of pages that we've created but haven't yet sent to client
     Vec<HtmlPage*> pagesToSend;

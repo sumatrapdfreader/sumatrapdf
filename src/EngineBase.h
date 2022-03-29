@@ -51,8 +51,8 @@ extern Kind kindDestinationMupdf;
 // text on a page
 // a character and its bounding box in page coordinates
 struct PageText {
-    WCHAR* text{nullptr};
-    Rect* coords{nullptr};
+    WCHAR* text = nullptr;
+    Rect* coords = nullptr;
     int len{0}; // number of chars in text and bounding boxes in coords
 };
 
@@ -60,7 +60,7 @@ void FreePageText(PageText*);
 
 // a link destination
 struct IPageDestination {
-    Kind kind{nullptr};
+    Kind kind = nullptr;
 
     int pageNo{-1};
     RectF rect{};
@@ -98,7 +98,7 @@ struct IPageDestination {
 };
 
 struct PageDestinationURL : IPageDestination {
-    WCHAR* url{nullptr};
+    WCHAR* url = nullptr;
 
     PageDestinationURL() = delete;
 
@@ -124,7 +124,7 @@ struct PageDestinationURL : IPageDestination {
 };
 
 struct PageDestinationFile : IPageDestination {
-    WCHAR* path{nullptr};
+    WCHAR* path = nullptr;
 
     PageDestinationFile() = delete;
 
@@ -150,8 +150,8 @@ struct PageDestinationFile : IPageDestination {
 };
 
 struct PageDestination : IPageDestination {
-    WCHAR* value{nullptr};
-    WCHAR* name{nullptr};
+    WCHAR* value = nullptr;
+    WCHAR* name = nullptr;
 
     PageDestination() = default;
 
@@ -172,7 +172,7 @@ extern Kind kindPageElementComment;
 
 // an element on a page. Might be clicked, provides tooltip info for hoover
 struct IPageElement {
-    Kind kind{nullptr};
+    Kind kind = nullptr;
     // position of the element on the page
     RectF rect{};
     int pageNo{-1};
@@ -219,7 +219,7 @@ struct PageElementImage : IPageElement {
 };
 
 struct PageElementComment : IPageElement {
-    WCHAR* comment{nullptr};
+    WCHAR* comment = nullptr;
 
     PageElementComment(const WCHAR* c) {
         kind = kindPageElementComment;
@@ -271,19 +271,19 @@ extern Kind kindTocDjvu;
 
 // an item in a document's Table of Content
 struct TocItem {
-    HTREEITEM hItem{nullptr};
+    HTREEITEM hItem = nullptr;
 
     // each engine has a raw representation of the toc item which
     // we want to access. Not (yet) supported by all engines
     // other values come from parsing this value
-    Kind kindRaw{nullptr};
-    char* rawVal1{nullptr};
-    char* rawVal2{nullptr};
+    Kind kindRaw = nullptr;
+    char* rawVal1 = nullptr;
+    char* rawVal2 = nullptr;
 
-    TocItem* parent{nullptr};
+    TocItem* parent = nullptr;
 
     // the item's visible label
-    WCHAR* title{nullptr};
+    WCHAR* title = nullptr;
 
     // in some formats, the document can specify the tree item
     // is expanded by default. We keep track if user toggled
@@ -305,21 +305,21 @@ struct TocItem {
     int fontFlags{0}; // fontBitBold, fontBitItalic
     COLORREF color{ColorUnset};
 
-    IPageDestination* dest{nullptr};
+    IPageDestination* dest = nullptr;
     bool destNotOwned{false};
 
     // first child item
-    TocItem* child{nullptr};
+    TocItem* child = nullptr;
     // next sibling
-    TocItem* next{nullptr};
+    TocItem* next = nullptr;
 
     // caching to speed up ChildAt
-    TocItem* currChild{nullptr};
+    TocItem* currChild = nullptr;
     int currChildNo{0};
 
     // -- only for .EngineMulti
     // marks a node that represents a file
-    char* engineFilePath{nullptr};
+    char* engineFilePath = nullptr;
     int nPages{0};
     // auto-calculated page number that tells us a span from
     // pageNo => endPageNo
@@ -347,7 +347,7 @@ struct TocItem {
 };
 
 struct TocTree : TreeModel {
-    TocItem* root{nullptr};
+    TocItem* root = nullptr;
 
     TocTree() = default;
     explicit TocTree(TocItem* root);
@@ -385,9 +385,9 @@ struct RenderPageArgs {
     float zoom{0};
     int rotation{0};
     /* if nullptr: defaults to the page's mediabox */
-    RectF* pageRect{nullptr};
+    RectF* pageRect = nullptr;
     RenderTarget target = RenderTarget::View;
-    AbortCookie** cookie_out{nullptr};
+    AbortCookie** cookie_out = nullptr;
 
     RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect = nullptr,
                    RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr);
@@ -395,17 +395,17 @@ struct RenderPageArgs {
 
 class EngineBase {
   public:
-    Kind kind{nullptr};
+    Kind kind = nullptr;
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
-    const WCHAR* defaultExt{nullptr};
+    const WCHAR* defaultExt = nullptr;
     PageLayout preferredLayout;
     float fileDPI = 96.0f;
     bool isImageCollection{false};
     bool allowsPrinting{true};
     bool allowsCopyingText{true};
     bool isPasswordProtected{false};
-    char* decryptionKey{nullptr};
+    char* decryptionKey = nullptr;
     bool hasPageLabels{false};
     int pageCount{-1};
 

@@ -224,7 +224,7 @@ struct BitmapPixels {
 };
 
 struct RenderedBitmap {
-    HBITMAP hbmp{nullptr};
+    HBITMAP hbmp = nullptr;
     Size size = {};
     HANDLE hMap = {};
 

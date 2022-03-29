@@ -50,7 +50,7 @@
 #include "utils/Log.h"
 
 struct LinkHandler : ILinkHandler {
-    WindowInfo* win{nullptr};
+    WindowInfo* win = nullptr;
 
     explicit LinkHandler(WindowInfo* w) {
         CrashIf(!w);

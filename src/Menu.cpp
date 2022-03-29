@@ -47,11 +47,11 @@
 extern Vec<Annotation*> MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType);
 
 struct BuildMenuCtx {
-    TabInfo* tab{nullptr};
+    TabInfo* tab = nullptr;
     bool isCbx{false};
     bool hasSelection{false};
     bool supportsAnnotations{false};
-    Annotation* annotationUnderCursor{nullptr};
+    Annotation* annotationUnderCursor = nullptr;
     bool hasUnsavedAnnotations{false};
     bool isCursorOnPage{false};
     bool canSendEmail{false};
@@ -64,17 +64,17 @@ BuildMenuCtx::~BuildMenuCtx() {
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
-    const WCHAR* text{nullptr};
+    const WCHAR* text = nullptr;
     // copy of MENUITEMINFO fields
     uint fType{0};
     uint fState{0};
-    HBITMAP hbmpChecked{nullptr};
-    HBITMAP hbmpUnchecked{nullptr};
-    HBITMAP hbmpItem{nullptr};
+    HBITMAP hbmpChecked = nullptr;
+    HBITMAP hbmpUnchecked = nullptr;
+    HBITMAP hbmpItem = nullptr;
 };
 
 struct MenuDef {
-    const char* title{nullptr};
+    const char* title = nullptr;
     UINT_PTR idOrSubmenu{0};
 };
 

@@ -4,10 +4,10 @@
 bool CouldBeArg(const WCHAR*);
 
 struct CmdLineArgsIter {
-    WCHAR** args{nullptr};
+    WCHAR** args = nullptr;
     int curr{1}; // first argument is exe path, which we skip
     int nArgs{0};
-    const WCHAR* currArg{nullptr};
+    const WCHAR* currArg = nullptr;
 
     explicit CmdLineArgsIter(const WCHAR* cmdLine);
     ~CmdLineArgsIter();

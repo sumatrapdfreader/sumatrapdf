@@ -498,8 +498,8 @@ class EngineImage : public EngineImages {
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
-    Bitmap* image{nullptr};
-    const WCHAR* fileExt{nullptr};
+    Bitmap* image = nullptr;
+    const WCHAR* fileExt = nullptr;
 
     bool LoadSingleFile(const WCHAR* fileName);
     bool LoadFromStream(IStream* stream);

@@ -62,7 +62,7 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
 
 int main(__unused int argc, __unused char** argv) {
     HANDLE hPipe{INVALID_HANDLE_VALUE};
-    HANDLE hThread{nullptr};
+    HANDLE hThread = nullptr;
     BOOL ok{FALSE};
     DWORD threadId{0};
 

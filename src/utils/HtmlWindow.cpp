@@ -1273,10 +1273,10 @@ class HtmlMoniker : public IMoniker {
   private:
     LONG refCount{1};
 
-    char* htmlData{nullptr};
-    IStream* htmlStream{nullptr};
+    char* htmlData = nullptr;
+    IStream* htmlStream = nullptr;
 
-    WCHAR* baseUrl{nullptr};
+    WCHAR* baseUrl = nullptr;
 };
 
 HtmlMoniker::HtmlMoniker() = default;

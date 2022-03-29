@@ -7,7 +7,7 @@ struct HtmlToken;
 struct ImageData {
     ByteSlice base;
     // path by which content refers to this image
-    char* fileName{nullptr};
+    char* fileName = nullptr;
     // document specific id by whcih to find this image
     size_t fileId{0};
 };

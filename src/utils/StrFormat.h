@@ -124,7 +124,7 @@ struct Fmt {
 
     bool isOk{true}; // true if mismatch between formatting instruction and args
 
-    const char* format{nullptr};
+    const char* format = nullptr;
     Inst instructions[32]; // 32 should be big enough for everybody
     int nInst{0};
 

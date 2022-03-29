@@ -339,7 +339,7 @@ Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
     // TODO: more formats? webp?
     bool tryGdiplusFirst = (kindFileTiff == format) || (kindFileGif == format);
 
-    Bitmap* bmp{nullptr};
+    Bitmap* bmp = nullptr;
     if (tryGdiplusFirst) {
         bmp = DecodeWithGdiplus(bmpData);
         ;

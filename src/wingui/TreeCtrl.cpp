@@ -568,7 +568,7 @@ TreeItem TreeCtrl::GetSelection() {
 }
 
 bool TreeCtrl::SelectItem(TreeItem ti) {
-    HTREEITEM hi{nullptr};
+    HTREEITEM hi = nullptr;
     if (ti != TreeModel::kNullItem) {
         hi = GetHandleByTreeItem(ti);
     }

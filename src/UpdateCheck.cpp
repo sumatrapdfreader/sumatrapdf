@@ -56,15 +56,15 @@ constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/updat
 bool gUpdateCheckInProgress = false;
 
 struct UpdateInfo {
-    HWND hwndParent{nullptr};
-    const char* latestVer{nullptr};
-    const char* installer64{nullptr};
-    const char* installer32{nullptr};
-    const char* portable64{nullptr};
-    const char* portable32{nullptr};
+    HWND hwndParent = nullptr;
+    const char* latestVer = nullptr;
+    const char* installer64 = nullptr;
+    const char* installer32 = nullptr;
+    const char* portable64 = nullptr;
+    const char* portable32 = nullptr;
 
-    const char* dlURL{nullptr};
-    const WCHAR* installerPath{nullptr};
+    const char* dlURL = nullptr;
+    const WCHAR* installerPath = nullptr;
 
     UpdateInfo() = default;
     ~UpdateInfo() {
@@ -122,7 +122,7 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
     res->portable32 = str::Dup(node->GetValue("PortableExe32"));
 
     // figure out which executable to download
-    const char* dlURL{nullptr};
+    const char* dlURL = nullptr;
     bool isDll = IsDllBuild();
     if (IsProcess64()) {
         if (isDll) {

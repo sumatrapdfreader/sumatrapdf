@@ -63,14 +63,14 @@ class AbortCookieManager {
 };
 
 struct PrintData {
-    Printer* printer{nullptr};
-    EngineBase* engine{nullptr};
+    Printer* printer = nullptr;
+    EngineBase* engine = nullptr;
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
     Vec<SelectionOnPage> sel;   // empty when printing a page range
     Print_Advanced_Data advData;
     int rotation{0};
-    ProgressUpdateUI* progressUI{nullptr};
-    AbortCookieManager* abortCookie{nullptr};
+    ProgressUpdateUI* progressUI = nullptr;
+    AbortCookieManager* abortCookie = nullptr;
 
     PrintData(EngineBase* engine, Printer* printer, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advData,
               int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
@@ -121,9 +121,9 @@ Printer::~Printer() {
 
 // get all the important info about a printer
 Printer* NewPrinter(WCHAR* printerName) {
-    HANDLE hPrinter{nullptr};
+    HANDLE hPrinter = nullptr;
     LONG ret{0};
-    Printer* printer{nullptr};
+    Printer* printer = nullptr;
     BOOL ok = OpenPrinterW(printerName, &hPrinter, nullptr);
     if (!ok) {
         return nullptr;
@@ -668,7 +668,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
     static bool hasDefaults = false;
 
-    Printer* printer{nullptr};
+    Printer* printer = nullptr;
 
     if (!hasDefaults) {
         hasDefaults = true;
@@ -755,8 +755,8 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     pdex.nPropertyPages = 1;
 
     bool failedEngineClone{false};
-    PrintData* pd{nullptr};
-    DEVMODE* devMode{nullptr};
+    PrintData* pd = nullptr;
+    DEVMODE* devMode = nullptr;
     // restore remembered settings
     if (defaultDevMode) {
         DEVMODE* p = defaultDevMode.Get();
@@ -1078,7 +1078,7 @@ static void SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
 
 bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
-    Printer* printer{nullptr};
+    Printer* printer = nullptr;
 
     if (!HasPermission(Perm::PrinterAccess)) {
         return false;

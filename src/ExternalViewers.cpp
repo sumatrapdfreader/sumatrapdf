@@ -248,7 +248,7 @@ static WCHAR* GetPDFXChangePath() {
 void DetectExternalViewers() {
     CrashIf(gExternalViewersCount > 0); // only call once
 
-    ExternalViewerInfo* info{nullptr};
+    ExternalViewerInfo* info = nullptr;
     int n = dimof(gExternalViewers);
     for (int i = 0; i < n; i++) {
         info = &gExternalViewers[i];

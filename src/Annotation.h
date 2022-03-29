@@ -55,8 +55,8 @@ struct Annotation {
     // deleted are not shown but can be undeleted
     bool isDeleted{false};
 
-    EngineMupdf* engine{nullptr};
-    pdf_annot* pdfannot{nullptr};
+    EngineMupdf* engine = nullptr;
+    pdf_annot* pdfannot = nullptr;
 
     Annotation() = default;
     ~Annotation() = default;

@@ -56,7 +56,7 @@ struct TabsCtrl2 : WindowBase {
     WStrVec tooltips;
 
     // for all WM_NOTIFY messages
-    WmNotifyHandler onNotify{nullptr};
+    WmNotifyHandler onNotify = nullptr;
 
     explicit TabsCtrl2(HWND parent);
     ~TabsCtrl2() override;

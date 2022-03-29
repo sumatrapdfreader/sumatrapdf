@@ -209,14 +209,14 @@ static void UpdateFindStatusTask(WindowInfo* win, NotificationWnd* wnd, int curr
 }
 
 struct FindThreadData : public ProgressUpdateUI {
-    WindowInfo* win{nullptr};
+    WindowInfo* win = nullptr;
     TextSearchDirection direction{TextSearchDirection::Forward};
     bool wasModified{false};
     AutoFreeWstr text;
     // owned by win->notifications, as FindThreadData
     // can be deleted before the notification times out
-    NotificationWnd* wnd{nullptr};
-    HANDLE thread{nullptr};
+    NotificationWnd* wnd = nullptr;
+    HANDLE thread = nullptr;
 
     FindThreadData(WindowInfo* win, TextSearchDirection direction, const WCHAR* text, bool wasModified) {
         this->win = win;
@@ -478,7 +478,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     }
 
     WCHAR* inverseSearch = ToWstrTemp(gGlobalPrefs->inverseSearchCmdLine);
-    WCHAR* toFree{nullptr};
+    WCHAR* toFree = nullptr;
     if (!inverseSearch) {
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands(nullptr);

@@ -120,14 +120,14 @@ struct DisplayModel : Controller {
     [[nodiscard]] Kind GetEngineType() const;
 
     // controller-specific data (easier to save here than on WindowInfo)
-    Kind engineType{nullptr};
+    Kind engineType = nullptr;
 
-    Synchronizer* pdfSync{nullptr};
+    Synchronizer* pdfSync = nullptr;
 
-    DocumentTextCache* textCache{nullptr};
-    TextSelection* textSelection{nullptr};
+    DocumentTextCache* textCache = nullptr;
+    TextSelection* textSelection = nullptr;
     // access only from Search thread
-    TextSearch* textSearch{nullptr};
+    TextSearch* textSearch = nullptr;
 
     [[nodiscard]] PageInfo* GetPageInfo(int pageNo) const;
 
@@ -208,10 +208,10 @@ struct DisplayModel : Controller {
     bool GoToPrevPage(int scrollY);
     int GetPageNextToPoint(Point pt) const;
 
-    EngineBase* engine{nullptr};
+    EngineBase* engine = nullptr;
 
     /* an array of PageInfo, len of array is pageCount */
-    PageInfo* pagesInfo{nullptr};
+    PageInfo* pagesInfo = nullptr;
 
     DisplayMode displayMode{DisplayMode::Automatic};
     /* In non-continuous mode is the first page from a file that we're

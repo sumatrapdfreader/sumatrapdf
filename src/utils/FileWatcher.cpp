@@ -56,7 +56,7 @@ TODO:
 // Some people use overlapped.hEvent to store data but I'm playing it safe.
 struct OverlappedEx {
     OVERLAPPED overlapped{};
-    void* data{nullptr};
+    void* data = nullptr;
 };
 
 // info needed to detect that a file has changed
@@ -66,18 +66,18 @@ struct FileWatcherState {
 };
 
 struct WatchedDir {
-    WatchedDir* next{nullptr};
-    const WCHAR* dirPath{nullptr};
-    HANDLE hDir{nullptr};
+    WatchedDir* next = nullptr;
+    const WCHAR* dirPath = nullptr;
+    HANDLE hDir = nullptr;
     bool startMonitoring{true};
     OverlappedEx overlapped;
     char buf[8 * 1024]{0};
 };
 
 struct WatchedFile {
-    WatchedFile* next{nullptr};
-    WatchedDir* watchedDir{nullptr};
-    const WCHAR* filePath{nullptr};
+    WatchedFile* next = nullptr;
+    WatchedDir* watchedDir = nullptr;
+    const WCHAR* filePath = nullptr;
     std::function<void()> onFileChangedCb;
 
     // if true, the file is on a network drive and we have

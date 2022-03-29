@@ -6,17 +6,17 @@ struct Annotation;
 struct FitzPageImageInfo {
     fz_rect rect = fz_unit_rect;
     fz_matrix transform;
-    IPageElement* imageElement{nullptr};
+    IPageElement* imageElement = nullptr;
 };
 
 struct FzPageInfo {
     int pageNo{0}; // 1-based
-    fz_page* page{nullptr};
+    fz_page* page = nullptr;
 
     // each containz fz_link for this page
     Vec<PageElementDestination*> links;
     // have to keep them alive because they are reverenced in links
-    fz_link* retainedLinks{nullptr};
+    fz_link* retainedLinks = nullptr;
 
     // auto-detected links
     Vec<IPageElement*> autoLinks;
@@ -80,19 +80,19 @@ class EngineMupdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    fz_context* ctx{nullptr};
+    fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
     int displayDPI{96};
-    fz_document* _doc{nullptr};
-    pdf_document* pdfdoc{nullptr};
-    fz_stream* docStream{nullptr};
+    fz_document* _doc = nullptr;
+    pdf_document* pdfdoc = nullptr;
+    fz_stream* docStream = nullptr;
     Vec<FzPageInfo*> pages;
-    fz_outline* outline{nullptr};
-    fz_outline* attachments{nullptr};
-    pdf_obj* pdfInfo{nullptr};
-    WStrVec* pageLabels{nullptr};
+    fz_outline* outline = nullptr;
+    fz_outline* attachments = nullptr;
+    pdf_obj* pdfInfo = nullptr;
+    WStrVec* pageLabels = nullptr;
 
-    TocTree* tocTree{nullptr};
+    TocTree* tocTree = nullptr;
 
     // used to track "dirty" state of annotations. not perfect because if we add and delete
     // the same annotation, we should be back to 0

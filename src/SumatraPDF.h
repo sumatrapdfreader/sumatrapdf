@@ -151,11 +151,11 @@ struct LoadArgs {
     }
 
     // we don't own those values
-    EngineBase* engine{nullptr};
-    const WCHAR* fileName{nullptr};
-    WindowInfo* win{nullptr};
+    EngineBase* engine = nullptr;
+    const WCHAR* fileName = nullptr;
+    WindowInfo* win = nullptr;
 
-    const WCHAR* fileNameToFree{nullptr};
+    const WCHAR* fileNameToFree = nullptr;
 
     bool showWin{true};
     bool forceReuse{false};

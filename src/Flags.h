@@ -17,12 +17,12 @@ struct Flags {
     WStrVec pathsToBenchmark;
     bool exitWhenDone{false};
     bool printDialog{false};
-    WCHAR* printerName{nullptr};
-    WCHAR* printSettings{nullptr};
-    WCHAR* forwardSearchOrigin{nullptr};
+    WCHAR* printerName = nullptr;
+    WCHAR* printSettings = nullptr;
+    WCHAR* forwardSearchOrigin = nullptr;
     int forwardSearchLine{0};
     bool reuseDdeInstance{false};
-    WCHAR* destName{nullptr};
+    WCHAR* destName = nullptr;
     int pageNumber = {-1};
     bool restrictedUse{false};
     bool enterPresentation{false};
@@ -31,25 +31,25 @@ struct Flags {
     float startZoom = INVALID_ZOOM;
     Point startScroll{-1, -1};
     bool showConsole{false};
-    HWND hwndPluginParent{nullptr};
-    WCHAR* pluginURL{nullptr};
+    HWND hwndPluginParent = nullptr;
+    WCHAR* pluginURL = nullptr;
     bool exitImmediately{false};
     bool silent{false};
-    WCHAR* appdataDir{nullptr};
-    WCHAR* inverseSearchCmdLine{nullptr};
+    WCHAR* appdataDir = nullptr;
+    WCHAR* inverseSearchCmdLine = nullptr;
     bool invertColors{false};
     bool regress{false};
     bool tester{false};
     // -new-window, if true and we're using tabs, opens
     // the document in new window
     bool inNewWindow{false};
-    WCHAR* search{nullptr};
+    WCHAR* search = nullptr;
 
     // stress-testing related
-    WCHAR* stressTestPath{nullptr};
+    WCHAR* stressTestPath = nullptr;
     // nullptr is equivalent to "*" (i.e. all files)
-    WCHAR* stressTestFilter{nullptr};
-    WCHAR* stressTestRanges{nullptr};
+    WCHAR* stressTestFilter = nullptr;
+    WCHAR* stressTestRanges = nullptr;
     int stressTestCycles{1};
     int stressParallelCount{1};
     bool stressRandomizeFiles{false};
@@ -63,12 +63,12 @@ struct Flags {
     bool crashOnOpen{false};
 
     // deprecated flags
-    char* lang{nullptr};
+    char* lang = nullptr;
     WStrVec globalPrefArgs;
 
     // related to installer
     bool showHelp{false};
-    WCHAR* installDir{nullptr};
+    WCHAR* installDir = nullptr;
     bool install{false};
     bool uninstall{false};
     bool withFilter{false};
@@ -78,10 +78,10 @@ struct Flags {
     bool log{false};
 
     // for internal use
-    WCHAR* updateSelfTo{nullptr};
-    WCHAR* deleteFile{nullptr};
+    WCHAR* updateSelfTo = nullptr;
+    WCHAR* deleteFile = nullptr;
 
-    WCHAR* toEpubPath{nullptr};
+    WCHAR* toEpubPath = nullptr;
 
     // for some commands, will sleep for sleepMs milliseconds
     // before proceeding

@@ -2,20 +2,20 @@
    License: GPLv3 */
 
 struct Printer {
-    WCHAR* name{nullptr};
-    DEVMODEW* devMode{nullptr};
-    PRINTER_INFO_2* info{nullptr};
+    WCHAR* name = nullptr;
+    DEVMODEW* devMode = nullptr;
+    PRINTER_INFO_2* info = nullptr;
 
     // number of paper sizes supported by the printer
     int nPaperSizes{0};
     // papers[i] is DMPAPER_LETTER etc.
-    WORD* papers{nullptr};       // DC_PAPERS
-    WCHAR** paperNames{nullptr}; // DC_PAPERNAMES
-    POINT* paperSizes{nullptr};  // DC_PAPERSIZE
+    WORD* papers = nullptr;       // DC_PAPERS
+    WCHAR** paperNames = nullptr; // DC_PAPERNAMES
+    POINT* paperSizes = nullptr;  // DC_PAPERSIZE
 
     int nBins{0};
-    WORD* bins{nullptr};       // DC_BINS
-    WCHAR** binNames{nullptr}; // DC_BINNAMES
+    WORD* bins = nullptr;       // DC_BINS
+    WCHAR** binNames = nullptr; // DC_BINNAMES
 
     bool isColor{false};    // DC_COLORDEVICE
     bool isDuplex{false};   // DC_DUPLEX

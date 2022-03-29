@@ -62,8 +62,8 @@ struct TouchState {
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
     Rect rect;
-    WCHAR* target{nullptr};
-    WCHAR* infotip{nullptr};
+    WCHAR* target = nullptr;
+    WCHAR* infotip = nullptr;
 
     explicit StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip = nullptr);
     StaticLinkInfo() = default;
@@ -90,29 +90,29 @@ struct WindowInfo {
     [[nodiscard]] ChmModel* AsChm() const;
 
     // TODO: use currentTab->ctrl instead
-    Controller* ctrl{nullptr}; // owned by currentTab
+    Controller* ctrl = nullptr; // owned by currentTab
 
     Vec<TabInfo*> tabs;
-    TabInfo* currentTab{nullptr}; // points into tabs
+    TabInfo* currentTab = nullptr; // points into tabs
 
-    HWND hwndFrame{nullptr};
-    HWND hwndCanvas{nullptr};
-    HWND hwndReBar{nullptr};
-    HWND hwndToolbar{nullptr};
-    HWND hwndFindText{nullptr};
-    HWND hwndFindBox{nullptr};
-    HWND hwndFindBg{nullptr};
-    HWND hwndPageText{nullptr};
-    HWND hwndPageBox{nullptr};
-    HWND hwndPageBg{nullptr};
-    HWND hwndPageTotal{nullptr};
-    HWND hwndTbInfoText{nullptr};
+    HWND hwndFrame = nullptr;
+    HWND hwndCanvas = nullptr;
+    HWND hwndReBar = nullptr;
+    HWND hwndToolbar = nullptr;
+    HWND hwndFindText = nullptr;
+    HWND hwndFindBox = nullptr;
+    HWND hwndFindBg = nullptr;
+    HWND hwndPageText = nullptr;
+    HWND hwndPageBox = nullptr;
+    HWND hwndPageBg = nullptr;
+    HWND hwndPageTotal = nullptr;
+    HWND hwndTbInfoText = nullptr;
 
     // state related to table of contents (PDF bookmarks etc.)
-    HWND hwndTocBox{nullptr};
+    HWND hwndTocBox = nullptr;
 
-    LabelWithCloseWnd* tocLabelWithClose{nullptr};
-    TreeCtrl* tocTreeCtrl{nullptr};
+    LabelWithCloseWnd* tocLabelWithClose = nullptr;
+    TreeCtrl* tocTreeCtrl = nullptr;
     UINT_PTR tocBoxSubclassId{0};
 
     // whether the current tab's ToC has been loaded into the tree
@@ -123,34 +123,34 @@ struct WindowInfo {
     bool tocKeepSelection{false};
 
     // state related to favorites
-    HWND hwndFavBox{nullptr};
-    LabelWithCloseWnd* favLabelWithClose{nullptr};
-    TreeCtrl* favTreeCtrl{nullptr};
+    HWND hwndFavBox = nullptr;
+    LabelWithCloseWnd* favLabelWithClose = nullptr;
+    TreeCtrl* favTreeCtrl = nullptr;
     Vec<FileState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
-    SplitterCtrl* sidebarSplitter{nullptr};
+    SplitterCtrl* sidebarSplitter = nullptr;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    SplitterCtrl* favSplitter{nullptr};
+    SplitterCtrl* favSplitter = nullptr;
 
-    TabsCtrl2* tabsCtrl{nullptr};
+    TabsCtrl2* tabsCtrl = nullptr;
     bool tabsVisible{false};
     bool tabsInTitlebar{false};
     // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
-    Vec<TabInfo*>* tabSelectionHistory{nullptr};
+    Vec<TabInfo*>* tabSelectionHistory = nullptr;
 
-    HWND hwndCaption{nullptr};
-    CaptionInfo* caption{nullptr};
+    HWND hwndCaption = nullptr;
+    CaptionInfo* caption = nullptr;
     int extendedFrameHeight{0};
 
-    TooltipCtrl* infotip{nullptr};
+    TooltipCtrl* infotip = nullptr;
 
-    HMENU menu{nullptr};
+    HMENU menu = nullptr;
     bool isMenuHidden{false}; // not persisted at shutdown
 
-    DoubleBuffer* buffer{nullptr};
+    DoubleBuffer* buffer = nullptr;
 
     MouseAction mouseAction = MouseAction::Idle;
     bool dragRightClick{false}; // if true, drag was initiated with right mouse click
@@ -192,24 +192,24 @@ struct WindowInfo {
     int wheelAccumDelta{0};
     UINT_PTR delayedRepaintTimer{0};
 
-    Notifications* notifications{nullptr}; // only access from UI thread
+    Notifications* notifications = nullptr; // only access from UI thread
 
-    HANDLE printThread{nullptr};
+    HANDLE printThread = nullptr;
     bool printCanceled{false};
 
-    HANDLE findThread{nullptr};
+    HANDLE findThread = nullptr;
     bool findCanceled{false};
 
-    ILinkHandler* linkHandler{nullptr};
-    IPageElement* linkOnLastButtonDown{nullptr};
-    const WCHAR* urlOnLastButtonDown{nullptr};
-    Annotation* annotationOnLastButtonDown{nullptr};
+    ILinkHandler* linkHandler = nullptr;
+    IPageElement* linkOnLastButtonDown = nullptr;
+    const WCHAR* urlOnLastButtonDown = nullptr;
+    Annotation* annotationOnLastButtonDown = nullptr;
     Size annotationBeingMovedSize;
     Point annotationBeingMovedOffset;
-    HBITMAP bmpMovePattern{nullptr};
-    HBRUSH brMovePattern{nullptr};
+    HBITMAP bmpMovePattern = nullptr;
+    HBRUSH brMovePattern = nullptr;
 
-    ControllerCallback* cbHandler{nullptr};
+    ControllerCallback* cbHandler = nullptr;
 
     // The target y offset for smooth scrolling.
     // We use a timer to gradually scroll there.
@@ -225,13 +225,13 @@ struct WindowInfo {
         int hideStep{0}; // value used to gradually hide the markers
     } fwdSearchMark;
 
-    StressTest* stressTest{nullptr};
+    StressTest* stressTest = nullptr;
 
     TouchState touchState;
 
-    FrameRateWnd* frameRateWnd{nullptr};
+    FrameRateWnd* frameRateWnd = nullptr;
 
-    SumatraUIAutomationProvider* uiaProvider{nullptr};
+    SumatraUIAutomationProvider* uiaProvider = nullptr;
 
     void UpdateCanvasSize();
     Size GetViewPortSize() const;

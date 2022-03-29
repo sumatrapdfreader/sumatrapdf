@@ -24,7 +24,7 @@ class ParseArgs {
   public:
     str::Str path;
     bool canceled{false};
-    ValueVisitor* visitor{nullptr};
+    ValueVisitor* visitor = nullptr;
 
     explicit ParseArgs(ValueVisitor* visitor) : visitor(visitor) {
     }

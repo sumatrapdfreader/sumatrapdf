@@ -272,7 +272,7 @@ static Arg GetArg(const WCHAR* s) {
 void ParseFlags(const WCHAR* cmdLine, Flags& i) {
     CmdLineArgsIter args(cmdLine);
 
-    const WCHAR* param{nullptr};
+    const WCHAR* param = nullptr;
     int paramInt{0};
 
     for (auto argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {

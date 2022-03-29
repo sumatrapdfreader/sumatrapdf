@@ -61,8 +61,8 @@ static bool CouldBeURL(const char* link) {
 }
 
 struct PageDestinationDjVu : IPageDestination {
-    const char* link{nullptr};
-    WCHAR* value{nullptr};
+    const char* link = nullptr;
+    WCHAR* value = nullptr;
 
     PageDestinationDjVu(const char* l, const char* comment) {
         kind = kindDestinationDjVu;
@@ -274,11 +274,11 @@ class EngineDjVu : public EngineBase {
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
-    IStream* stream{nullptr};
+    IStream* stream = nullptr;
 
     Vec<DjVuPageInfo*> pages;
 
-    ddjvu_document_t* doc{nullptr};
+    ddjvu_document_t* doc = nullptr;
     miniexp_t outline = miniexp_nil;
     TocTree* tocTree = nullptr;
 

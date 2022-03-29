@@ -42,13 +42,13 @@
 struct FavTreeItem {
     ~FavTreeItem();
 
-    HTREEITEM hItem{nullptr};
-    FavTreeItem* parent{nullptr};
-    WCHAR* text{nullptr};
+    HTREEITEM hItem = nullptr;
+    FavTreeItem* parent = nullptr;
+    WCHAR* text = nullptr;
     bool isExpanded{false};
 
     // not owned by us
-    Favorite* favorite{nullptr};
+    Favorite* favorite = nullptr;
 
     Vec<FavTreeItem*> children;
 };
@@ -72,7 +72,7 @@ struct FavTreeModel : public TreeModel {
     void SetHandle(TreeItem, HTREEITEM) override;
     HTREEITEM GetHandle(TreeItem) override;
 
-    FavTreeItem* root{nullptr};
+    FavTreeItem* root = nullptr;
 };
 
 FavTreeModel::~FavTreeModel() {
@@ -291,13 +291,13 @@ bool HasFavorites() {
 
 // caller has to free() the result
 static WCHAR* FavReadableName(Favorite* fn) {
-    const WCHAR* toFree{nullptr};
+    const WCHAR* toFree = nullptr;
     const WCHAR* label = ToWstrTemp(fn->pageLabel);
     if (!label) {
         label = str::Format(L"%d", fn->pageNo);
         toFree = label;
     }
-    WCHAR* res{nullptr};
+    WCHAR* res = nullptr;
     if (fn->name) {
         AutoFreeWstr pageNo(str::Format(_TR("(page %s)"), label));
         res = str::Join(ToWstrTemp(fn->name), L" ", pageNo);

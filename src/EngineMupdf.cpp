@@ -95,11 +95,11 @@ static char* FzGetURL(fz_link* link, fz_outline* outline) {
 }
 
 struct PageDestinationMupdf : IPageDestination {
-    fz_outline* outline{nullptr};
-    fz_link* link{nullptr};
+    fz_outline* outline = nullptr;
+    fz_link* link = nullptr;
 
-    WCHAR* value{nullptr};
-    WCHAR* name{nullptr};
+    WCHAR* value = nullptr;
+    WCHAR* name = nullptr;
 
     PageDestinationMupdf(fz_link* l, fz_outline* o) {
         // exactly one must be provided

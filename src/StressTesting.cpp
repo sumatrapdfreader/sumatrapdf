@@ -436,7 +436,7 @@ a human advancing one page at a time. This is mostly to run through a large numb
 of PDFs before a release to make sure we're crash proof. */
 
 struct StressTest {
-    WindowInfo* win{nullptr};
+    WindowInfo* win = nullptr;
     LARGE_INTEGER currPageRenderTime{0};
     Vec<int> pagesToRender;
     int currPageNo{0};
@@ -453,7 +453,7 @@ struct StressTest {
     int fileIndex{0};
 
     // owned by StressTest
-    TestFileProvider* fileProvider{nullptr};
+    TestFileProvider* fileProvider = nullptr;
 
     StressTest(WindowInfo* win, bool exitWhenDone);
     ~StressTest();

@@ -84,21 +84,21 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 }
 
 class PageRenderer {
-    EngineBase* engine{nullptr};
-    HWND hwnd{nullptr};
+    EngineBase* engine = nullptr;
+    HWND hwnd = nullptr;
 
     int currPage{0};
-    RenderedBitmap* currBmp{nullptr};
+    RenderedBitmap* currBmp = nullptr;
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
     Size currSize;
     int reqPage{0};
     float reqZoom{0.f};
     Size reqSize;
     bool reqAbort{false};
-    AbortCookie* abortCookie{nullptr};
+    AbortCookie* abortCookie = nullptr;
 
     CRITICAL_SECTION currAccess;
-    HANDLE thread{nullptr};
+    HANDLE thread = nullptr;
 
     // seeking inside an IStream spins an inner event loop
     // which can cause reentrance in OnPaint and leave an

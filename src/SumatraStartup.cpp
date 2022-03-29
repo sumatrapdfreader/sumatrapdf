@@ -428,10 +428,10 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
-    HANDLE hMap{nullptr};
-    HWND hwnd{nullptr};
+    HANDLE hMap = nullptr;
+    HWND hwnd = nullptr;
     DWORD prevProcId{0};
-    DWORD* procId{nullptr};
+    DWORD* procId = nullptr;
     bool hasPrevInst;
     DWORD lastErr{0};
 Retry:
@@ -558,8 +558,8 @@ static void UpdateGlobalPrefs(const Flags& i) {
     }
     gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
 
-    WCHAR* arg{nullptr};
-    WCHAR* param{nullptr};
+    WCHAR* arg = nullptr;
+    WCHAR* param = nullptr;
     for (size_t n = 0; n < i.globalPrefArgs.size(); n++) {
         arg = i.globalPrefArgs.at(n);
         if (str::EqI(arg, L"-esc-to-exit")) {
@@ -650,8 +650,8 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
 
 // verify that libmupdf.dll matches the .exe
 static void VerifyNoLibmupdfMismatch() {
-    char* versionCheckFuncName{nullptr};
-    FARPROC addr{nullptr};
+    char* versionCheckFuncName = nullptr;
+    FARPROC addr = nullptr;
 
     if (!ExeHasInstallerResources()) {
         // this is not a version that needs libmupdf.dll
@@ -899,11 +899,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
                      __unused int nCmdShow) {
     int retCode{1}; // by default it's error
     int nWithDde{0};
-    WindowInfo* win{nullptr};
+    WindowInfo* win = nullptr;
     bool showStartPage{false};
     bool restoreSession{false};
-    HANDLE hMutex{nullptr};
-    HWND hPrevWnd{nullptr};
+    HANDLE hMutex = nullptr;
+    HWND hPrevWnd = nullptr;
     TabInfo* tabToSelect = nullptr;
 
     CrashIf(hInstance != GetInstance());
@@ -939,7 +939,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     ForceStartupLeaks();
 
     // for testing mem leak detection
-    void* maybeLeak{nullptr};
+    void* maybeLeak = nullptr;
     if (gEnableMemLeak) {
         MemLeakInit();
         maybeLeak = malloc(10);

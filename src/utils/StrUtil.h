@@ -194,9 +194,9 @@ const WCHAR* IdxToStr(const WCHAR* strs, int idx);
 namespace str {
 struct Str {
     // allocator is not owned by Vec and must outlive it
-    Allocator* allocator{nullptr};
+    Allocator* allocator = nullptr;
     // TODO: to save space (8 bytes), combine els and buf?
-    char* els{nullptr};
+    char* els = nullptr;
     u32 len{0};
     u32 cap{0};
     char buf[32];
@@ -271,8 +271,8 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith);
 
 struct WStr {
     // allocator is not owned by Vec and must outlive it
-    Allocator* allocator{nullptr};
-    WCHAR* els{nullptr};
+    Allocator* allocator = nullptr;
+    WCHAR* els = nullptr;
     u32 len{0};
     u32 cap{0};
     WCHAR buf[32];
