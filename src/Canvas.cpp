@@ -602,7 +602,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    int pageNo{-1};
+    int pageNo = -1;
     IPageElement* pageEl = dm->GetElementAtPos(Point(x, y), &pageNo);
     if (pageEl && pageEl->Is(kindPageElementDest)) {
         // speed up navigation in a file where navigation links are in a fixed position

@@ -967,7 +967,7 @@ void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
     }
 
     MSG msg;
-    bool isFinished{false};
+    bool isFinished = false;
     while (!isFinished) {
         BOOL ok = WaitMessage();
         if (!ok) {

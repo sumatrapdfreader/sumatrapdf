@@ -443,7 +443,7 @@ struct StressTest {
     int pageForSearchStart{0};
     int filesCount{0}; // number of files processed so far
     int timerId{0};
-    bool exitWhenDone{false};
+    bool exitWhenDone = false;
 
     SYSTEMTIME stressStartTime{};
     int cycles{1};

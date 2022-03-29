@@ -2860,7 +2860,7 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
         return false;
     }
 
-    BROWSEINFO bi = {nullptr};
+    BROWSEINFOW bi = {0};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = caption;
@@ -4280,7 +4280,7 @@ static bool NeedsURLEncoding(WCHAR c) {
 #endif
 
 static str::WStr URLEncode(const WCHAR* s) {
-    WCHAR buf[INTERNET_MAX_URL_LENGTH]{0};
+    WCHAR buf[INTERNET_MAX_URL_LENGTH]{};
     DWORD cchSizeInOut = dimof(buf) - 1;
     DWORD flags = URL_ESCAPE_AS_UTF8;
     UrlEscapeW(s, buf, &cchSizeInOut, flags);

@@ -122,7 +122,7 @@ struct Fmt {
 
     std::string_view Eval(const Arg** args, int nArgs);
 
-    bool isOk{true}; // true if mismatch between formatting instruction and args
+    bool isOk = true; // true if mismatch between formatting instruction and args
 
     const char* format = nullptr;
     Inst instructions[32]; // 32 should be big enough for everybody

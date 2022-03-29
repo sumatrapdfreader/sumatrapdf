@@ -45,7 +45,7 @@ struct FavTreeItem {
     HTREEITEM hItem = nullptr;
     FavTreeItem* parent = nullptr;
     WCHAR* text = nullptr;
-    bool isExpanded{false};
+    bool isExpanded = false;
 
     // not owned by us
     Favorite* favorite = nullptr;

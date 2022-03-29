@@ -53,7 +53,7 @@ enum PresentationMode {
 
 // WM_GESTURE handling
 struct TouchState {
-    bool panStarted{false};
+    bool panStarted = false;
     POINTS panPos{};
     int panScrollOrigX{0};
     double startArg{0};
@@ -116,11 +116,11 @@ struct WindowInfo {
     UINT_PTR tocBoxSubclassId{0};
 
     // whether the current tab's ToC has been loaded into the tree
-    bool tocLoaded{false};
+    bool tocLoaded = false;
     // whether the ToC sidebar is currently visible
-    bool tocVisible{false};
+    bool tocVisible = false;
     // set to temporarily disable UpdateTocSelection
-    bool tocKeepSelection{false};
+    bool tocKeepSelection = false;
 
     // state related to favorites
     HWND hwndFavBox = nullptr;
@@ -135,8 +135,8 @@ struct WindowInfo {
     SplitterCtrl* favSplitter = nullptr;
 
     TabsCtrl2* tabsCtrl = nullptr;
-    bool tabsVisible{false};
-    bool tabsInTitlebar{false};
+    bool tabsVisible = false;
+    bool tabsInTitlebar = false;
     // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
     Vec<TabInfo*>* tabSelectionHistory = nullptr;
@@ -148,13 +148,13 @@ struct WindowInfo {
     TooltipCtrl* infotip = nullptr;
 
     HMENU menu = nullptr;
-    bool isMenuHidden{false}; // not persisted at shutdown
+    bool isMenuHidden = false; // not persisted at shutdown
 
     DoubleBuffer* buffer = nullptr;
 
     MouseAction mouseAction = MouseAction::Idle;
-    bool dragRightClick{false}; // if true, drag was initiated with right mouse click
-    bool dragStartPending{false};
+    bool dragRightClick = false; // if true, drag was initiated with right mouse click
+    bool dragStartPending = false;
 
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we
@@ -170,7 +170,7 @@ struct WindowInfo {
     int yScrollSpeed{0};
 
     // true while selecting and when currentTab->selectionOnPage != nullptr
-    bool showSelection{false};
+    bool showSelection = false;
     // selection rectangle in screen coordinates (only needed while selecting)
     Rect selectionRect;
     // size of the current rectangular selection in document units
@@ -179,7 +179,7 @@ struct WindowInfo {
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLinkInfo*> staticLinks;
 
-    bool isFullScreen{false};
+    bool isFullScreen = false;
     PresentationMode presentation{PM_DISABLED};
     int windowStateBeforePresentation{0};
 
@@ -195,10 +195,10 @@ struct WindowInfo {
     Notifications* notifications = nullptr; // only access from UI thread
 
     HANDLE printThread = nullptr;
-    bool printCanceled{false};
+    bool printCanceled = false;
 
     HANDLE findThread = nullptr;
-    bool findCanceled{false};
+    bool findCanceled = false;
 
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;
@@ -219,8 +219,8 @@ struct WindowInfo {
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
     struct {
-        bool show{false}; // are the markers visible?
-        Vec<Rect> rects;  // location of the markers in user coordinates
+        bool show = false; // are the markers visible?
+        Vec<Rect> rects;   // location of the markers in user coordinates
         int page{0};
         int hideStep{0}; // value used to gradually hide the markers
     } fwdSearchMark;

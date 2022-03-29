@@ -105,17 +105,17 @@ static inline Size GetTabSize(HWND hwnd) {
 struct TabPainter {
     TabsCtrl2* tabsCtrl = nullptr;
     PathData* data = nullptr;
-    int width{-1};
-    int height{-1};
+    int width = -1;
+    int height = -1;
     HWND hwnd = nullptr;
 
-    int selectedTabIdx{-1};
-    int highlighted{-1};
-    int xClicked{-1};
-    int xHighlighted{-1};
-    int nextTab{-1};
-    bool isDragging{false};
-    bool inTitlebar{false};
+    int selectedTabIdx = -1;
+    int highlighted = -1;
+    int xClicked = -1;
+    int xHighlighted = -1;
+    int nextTab = -1;
+    bool isDragging = false;
+    bool inTitlebar = false;
     LPARAM mouseCoordinates{0};
     COLORREF currBgCol{DEFAULT_CURRENT_BG_COL};
 

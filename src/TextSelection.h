@@ -3,9 +3,9 @@
 
 struct DocumentTextCache {
     EngineBase* engine = nullptr;
-    int nPages{0};
+    int nPages = 0;
     PageText* pagesText = nullptr;
-    int debugSize{0};
+    int debugSize = 0;
 
     CRITICAL_SECTION access;
 
@@ -18,15 +18,17 @@ struct DocumentTextCache {
 
 // TODO: replace with Vec<TextSel>
 struct TextSel {
-    int len{0};
-    int cap{0};
+    int len = 0;
+    int cap = 0;
     int* pages = nullptr;
     Rect* rects = nullptr;
 };
 
 struct TextSelection {
-    int startPage{-1}, endPage{-1};
-    int startGlyph{-1}, endGlyph{-1};
+    int startPage = -1;
+    int endPage = -1;
+    int startGlyph = -1;
+    int endGlyph = -1;
 
     EngineBase* engine = nullptr;
     DocumentTextCache* textCache = nullptr;

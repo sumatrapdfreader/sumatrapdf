@@ -71,7 +71,7 @@ struct TxtParser {
     str::Slice toParse;
     Token tok;
     char escapeChar{SERIALIZE_ESCAPE_CHAR};
-    bool failed{false};
+    bool failed = false;
     Vec<TxtNode*> nodes;
 
     TxtNode* AllocTxtNode(TxtNode::Type);

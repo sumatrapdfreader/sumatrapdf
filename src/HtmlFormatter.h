@@ -101,7 +101,7 @@ struct StyleRule {
 struct DrawStyle {
     mui::CachedFont* font = nullptr;
     AlignAttr align{AlignAttr::NotFound};
-    bool dirRtl{false};
+    bool dirRtl = false;
 };
 
 struct HtmlPage {
@@ -246,12 +246,12 @@ class HtmlFormatter {
     // number of nested lists for indenting whole paragraphs
     int listDepth{0};
     // set if newlines are not to be ignored
-    bool preFormatted{false};
+    bool preFormatted = false;
     // set if the reading direction is RTL
-    bool dirRtl{false};
+    bool dirRtl = false;
     // list of currently opened tags for auto-closing when needed
     Vec<HtmlTag> tagNesting;
-    bool keepTagNesting{false};
+    bool keepTagNesting = false;
     // set from CSS and to be checked by the individual tag handlers
     Vec<StyleRule> styleRules;
 
@@ -272,7 +272,7 @@ class HtmlFormatter {
     // list of pages that we've created but haven't yet sent to client
     Vec<HtmlPage*> pagesToSend;
 
-    bool finishedParsing{false};
+    bool finishedParsing = false;
     // number of pages generated so far, approximate. Only used
     // for detection of cover image duplicates in mobi formatting
     int pageCount{0};

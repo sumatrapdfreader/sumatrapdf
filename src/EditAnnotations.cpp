@@ -172,7 +172,7 @@ struct EditAnnotationsWindow {
     // currently selected annotation
     Annotation* annot = nullptr;
 
-    bool skipGoToPage{false};
+    bool skipGoToPage = false;
 
     str::Str currTextColor;
     str::Str currCustomColor;

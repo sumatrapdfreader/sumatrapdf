@@ -24,6 +24,6 @@ public:
 
 private:
     PdfFilterState m_state{PdfFilterState::End};
-    int m_iPageNo{-1};
+    int m_iPageNo = -1;
     EngineBase *m_pdfEngine = nullptr;
 };

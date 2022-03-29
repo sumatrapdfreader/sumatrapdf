@@ -94,7 +94,7 @@ class PageRenderer {
     int reqPage{0};
     float reqZoom{0.f};
     Size reqSize;
-    bool reqAbort{false};
+    bool reqAbort = false;
     AbortCookie* abortCookie = nullptr;
 
     CRITICAL_SECTION currAccess;
@@ -105,7 +105,7 @@ class PageRenderer {
     // engine semi-initialized when it's called recursively
     // (this only applies for the UI thread where the critical
     // sections can't prevent recursion without the risk of deadlock)
-    bool preventRecursion{false};
+    bool preventRecursion = false;
 
   public:
     PageRenderer(EngineBase* engine, HWND hwnd) {

@@ -233,7 +233,7 @@ struct DjVuPageInfo {
     RectF mediabox;
     Vec<IPageElement*> allElements;
     miniexp_t annos{miniexp_dummy};
-    bool gotAllElements{false};
+    bool gotAllElements = false;
 };
 
 class EngineDjVu : public EngineBase {

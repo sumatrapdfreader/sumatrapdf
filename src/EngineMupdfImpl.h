@@ -24,16 +24,16 @@ struct FzPageInfo {
     Vec<IPageElement*> comments;
 
     Vec<IPageElement*> allElements;
-    bool gotAllElements{false};
+    bool gotAllElements = false;
 
     RectF mediabox{};
     Vec<FitzPageImageInfo> images;
 
     // if false, only loaded page (fast)
     // if true, loaded expensive info (extracted text etc.)
-    bool fullyLoaded{false};
+    bool fullyLoaded = false;
 
-    bool commentsNeedRebuilding{true};
+    bool commentsNeedRebuilding = true;
 };
 
 class EngineMupdf : public EngineBase {
@@ -96,7 +96,7 @@ class EngineMupdf : public EngineBase {
 
     // used to track "dirty" state of annotations. not perfect because if we add and delete
     // the same annotation, we should be back to 0
-    bool modifiedAnnotations{false};
+    bool modifiedAnnotations = false;
 
     bool Load(const WCHAR* filePath, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);

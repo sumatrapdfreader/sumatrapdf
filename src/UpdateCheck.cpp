@@ -233,7 +233,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     dialogConfig.hwndParent = updateInfo->hwndParent;
 
     int buttonPressedId{0};
-    BOOL verificationFlagChecked{false};
+    BOOL verificationFlagChecked = false;
 
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, &verificationFlagChecked);
     CrashIf(hr == E_INVALIDARG);

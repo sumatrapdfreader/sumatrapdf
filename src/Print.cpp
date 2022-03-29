@@ -754,7 +754,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;
 
-    bool failedEngineClone{false};
+    bool failedEngineClone = false;
     PrintData* pd = nullptr;
     DEVMODE* devMode = nullptr;
     // restore remembered settings

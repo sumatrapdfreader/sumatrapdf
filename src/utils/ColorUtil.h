@@ -15,8 +15,8 @@
 using PdfColor = uint64_t;
 
 struct ParsedColor {
-    bool wasParsed{false};
-    bool parsedOk{false};
+    bool wasParsed = false;
+    bool parsedOk = false;
     COLORREF col{0};
     PdfColor pdfCol{0};
 };

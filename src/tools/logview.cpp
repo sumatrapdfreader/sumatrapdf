@@ -26,15 +26,15 @@ bool IsValidHandle(HANDLE h) {
 
 static DWORD WINAPI PipeHandlingThread(void* param) {
     HANDLE hHeap = GetProcessHeap();
-    char bufRequest[kBufSize]{0};
-    DWORD cbBytesRead{0};
+    char bufRequest[kBufSize]{};
+    DWORD cbBytesRead = 0;
     HANDLE hPipe = (HANDLE)param;
     if (!IsValidHandle(hPipe)) {
         log("PipeHandlingThread: not a valid handle!\n");
         return (DWORD)-1;
     }
-    BOOL ok{false};
-    DWORD err{0};
+    BOOL ok = FALSE;
+    DWORD err = 0;
     while (err == 0) {
         ok = ReadFile(hPipe, bufRequest, sizeof(bufRequest) - 1, &cbBytesRead, nullptr);
         if (ok && cbBytesRead > 0) {
@@ -61,10 +61,10 @@ static DWORD WINAPI PipeHandlingThread(void* param) {
 }
 
 int main(__unused int argc, __unused char** argv) {
-    HANDLE hPipe{INVALID_HANDLE_VALUE};
+    HANDLE hPipe = INVALID_HANDLE_VALUE;
     HANDLE hThread = nullptr;
-    BOOL ok{FALSE};
-    DWORD threadId{0};
+    BOOL ok = false;
+    DWORD threadId = 0;
 
     log("Starting logview\n");
     for (;;) {

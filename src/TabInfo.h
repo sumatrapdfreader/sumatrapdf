@@ -16,14 +16,14 @@ struct TabInfo {
     // text of win->hwndFrame when the tab is selected
     AutoFreeWstr frameTitle;
     // state of the table of contents
-    bool showToc{false};
-    bool showTocPresentation{false};
+    bool showToc = false;
+    bool showTocPresentation = false;
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;
     // canvas dimensions when the document was last visible
     Rect canvasRc;
     // whether to auto-reload the document when the tab is selected
-    bool reloadOnFocus{false};
+    bool reloadOnFocus = false;
     // FileWatcher token for unsubscribing
     WatchedFile* watcher = nullptr;
     // list of rectangles of the last rectangular, text or image selection
@@ -36,7 +36,7 @@ struct TabInfo {
     EditAnnotationsWindow* editAnnotsWindow = nullptr;
 
     // TODO: terrible hack
-    bool askedToSaveAnnotations{false};
+    bool askedToSaveAnnotations = false;
 
     TabInfo(WindowInfo* win, const WCHAR* filePath);
     ~TabInfo();

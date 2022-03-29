@@ -900,8 +900,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     int retCode{1}; // by default it's error
     int nWithDde{0};
     WindowInfo* win = nullptr;
-    bool showStartPage{false};
-    bool restoreSession{false};
+    bool showStartPage = false;
+    bool restoreSession = false;
     HANDLE hMutex = nullptr;
     HWND hPrevWnd = nullptr;
     TabInfo* tabToSelect = nullptr;

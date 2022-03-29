@@ -364,7 +364,7 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
         return MkPdfColorFromFloat(color[0], color[1], color[2]);
     }
     if (n == 4) {
-        float rgb[4]{0};
+        float rgb[4]{};
         fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, nullptr, fz_default_color_params);
         return MkPdfColorFromFloat(rgb[0], rgb[1], rgb[2]);
     }
@@ -375,7 +375,7 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
 PdfColor GetColor(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    float color[4]{0};
+    float color[4]{};
     int n;
     pdf_annot_color(e->ctx, annot->pdfannot, &n, color);
     PdfColor res = PdfColorFromFloat(e->ctx, n, color);
@@ -387,7 +387,7 @@ bool SetColor(Annotation* annot, PdfColor c) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
     bool didChange = false;
-    float color[4]{0};
+    float color[4]{};
     int n;
     pdf_annot_color(e->ctx, annot->pdfannot, &n, color);
     float oldOpacity = pdf_annot_opacity(e->ctx, annot->pdfannot);
@@ -427,7 +427,7 @@ bool SetColor(Annotation* annot, PdfColor c) {
 PdfColor InteriorColor(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    float color[4]{0};
+    float color[4]{};
     int n;
     pdf_annot_interior_color(e->ctx, annot->pdfannot, &n, color);
     PdfColor res = PdfColorFromFloat(e->ctx, n, color);
@@ -438,10 +438,10 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
     bool didChange = false;
-    float color[4]{0};
+    float color[4]{};
     int n;
     pdf_annot_color(e->ctx, annot->pdfannot, &n, color);
-    float newColor[3]{0};
+    float newColor[3]{};
     PdfColorToFloat(c, newColor);
     didChange = (n != 3);
     if (!didChange) {
@@ -471,7 +471,7 @@ std::string_view DefaultAppearanceTextFont(Annotation* annot) {
     const char* fontName;
     float sizeF{0.0};
     int n{0};
-    float textColor[4]{0};
+    float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     return fontName;
 }
@@ -482,7 +482,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, std::string_view sv) {
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
-    float textColor[4]{0};
+    float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     pdf_set_annot_default_appearance(e->ctx, annot->pdfannot, sv.data(), sizeF, n, textColor);
     pdf_update_annot(e->ctx, annot->pdfannot);
@@ -496,7 +496,7 @@ int DefaultAppearanceTextSize(Annotation* annot) {
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
-    float textColor[4]{0};
+    float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     return (int)sizeF;
 }
@@ -507,7 +507,7 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
-    float textColor[4]{0};
+    float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     pdf_set_annot_default_appearance(e->ctx, annot->pdfannot, fontName, (float)textSize, n, textColor);
     pdf_update_annot(e->ctx, annot->pdfannot);
@@ -533,7 +533,7 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n{0};
-    float textColor[4]{0};
+    float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     PdfColorToFloat(col, textColor);
     pdf_set_annot_default_appearance(e->ctx, annot->pdfannot, fontName, sizeF, n, textColor);

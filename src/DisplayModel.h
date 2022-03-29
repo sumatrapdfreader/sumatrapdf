@@ -250,10 +250,10 @@ struct DisplayModel : Controller {
 
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */
-    bool displayR2L{false};
+    bool displayR2L = false;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
-    bool presentationMode{false};
+    bool presentationMode = false;
 
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool dontRenderFlag = false;

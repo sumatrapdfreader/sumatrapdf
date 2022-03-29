@@ -624,7 +624,7 @@ WCHAR* TabsCtrl2::GetTabText(int idx) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());
 
-    WCHAR buf[512]{0};
+    WCHAR buf[512]{};
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
     item.pszText = buf;

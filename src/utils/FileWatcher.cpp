@@ -69,9 +69,9 @@ struct WatchedDir {
     WatchedDir* next = nullptr;
     const WCHAR* dirPath = nullptr;
     HANDLE hDir = nullptr;
-    bool startMonitoring{true};
+    bool startMonitoring = true;
     OverlappedEx overlapped;
-    char buf[8 * 1024]{0};
+    char buf[8 * 1024]{};
 };
 
 struct WatchedFile {
@@ -83,7 +83,7 @@ struct WatchedFile {
     // if true, the file is on a network drive and we have
     // to check if it changed manually, by periodically checking
     // file state for changes
-    bool isManualCheck{false};
+    bool isManualCheck = false;
     FileWatcherState fileState;
 };
 

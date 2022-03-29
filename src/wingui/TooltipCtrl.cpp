@@ -76,7 +76,7 @@ void TooltipCtrl::ShowOrUpdate(const WCHAR* txt, Rect& rc, bool multiline) {
     }
 
     constexpr int bufSize = 512;
-    WCHAR buf[bufSize]{0};
+    WCHAR buf[bufSize]{};
     TOOLINFO tiCurr{0};
     tiCurr.cbSize = sizeof(tiCurr);
     tiCurr.hwnd = parent;

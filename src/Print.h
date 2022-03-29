@@ -17,11 +17,11 @@ struct Printer {
     WORD* bins = nullptr;       // DC_BINS
     WCHAR** binNames = nullptr; // DC_BINNAMES
 
-    bool isColor{false};    // DC_COLORDEVICE
-    bool isDuplex{false};   // DC_DUPLEX
-    bool canStaple{false};  // DC_STAPLE
-    bool canCallate{false}; // DC_COLLATE
-    int orientation{0};     // DC_ORIENTATION
+    bool isColor = false;    // DC_COLORDEVICE
+    bool isDuplex = false;   // DC_DUPLEX
+    bool canStaple = false;  // DC_STAPLE
+    bool canCallate = false; // DC_COLLATE
+    int orientation{0};      // DC_ORIENTATION
 
     Printer() = default;
     ~Printer();

@@ -65,8 +65,8 @@ static void logToPipe(std::string_view sv) {
     }
 
     DWORD cbWritten{0};
-    BOOL ok{false};
-    bool didConnect{false};
+    BOOL ok = false;
+    bool didConnect = false;
     if (!IsValidHandle(hLogPipe)) {
         // try open pipe for logging
         hLogPipe = CreateFileW(kPipeName, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
@@ -101,7 +101,7 @@ static void logToPipe(std::string_view sv) {
 #if 0
         DWORD err = GetLastError();
         OutputDebugStringA("logPipe: WriteFile() failed with error: ");
-        char buf[256]{0};
+        char buf[256]{};
         snprintf(buf, sizeof(buf) - 1, "%d %s\n", (int)err, getWinError(err));
         OutputDebugStringA(buf);
 #endif

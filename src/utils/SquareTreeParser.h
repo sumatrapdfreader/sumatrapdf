@@ -12,7 +12,7 @@ class SquareTreeNode {
             const char* str;
             SquareTreeNode* child;
         } value = nullptr;
-        bool isChild{false};
+        bool isChild = false;
 
         DataItem() = default;
         DataItem(const char* k, const char* string) {

@@ -48,13 +48,13 @@ extern Vec<Annotation*> MakeAnnotationFromSelection(TabInfo* tab, AnnotationType
 
 struct BuildMenuCtx {
     TabInfo* tab = nullptr;
-    bool isCbx{false};
-    bool hasSelection{false};
-    bool supportsAnnotations{false};
+    bool isCbx = false;
+    bool hasSelection = false;
+    bool supportsAnnotations = false;
     Annotation* annotationUnderCursor = nullptr;
-    bool hasUnsavedAnnotations{false};
-    bool isCursorOnPage{false};
-    bool canSendEmail{false};
+    bool hasUnsavedAnnotations = false;
+    bool isCursorOnPage = false;
+    bool canSendEmail = false;
     ~BuildMenuCtx();
 };
 

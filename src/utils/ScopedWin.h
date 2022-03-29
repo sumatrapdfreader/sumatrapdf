@@ -269,7 +269,7 @@ class ScopedGdiPlus {
     Gdiplus::GdiplusStartupOutput so{};
     ULONG_PTR token{0};
     ULONG_PTR hookToken{0};
-    bool noBgThread{false};
+    bool noBgThread = false;
 
   public:
     // suppress the GDI+ background thread when initiating in WinMain,

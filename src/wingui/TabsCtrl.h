@@ -50,7 +50,7 @@ void SetFont(TabsCtrl*, HFONT);
 
 struct TabsCtrl2 : WindowBase {
     str::WStr lastTabText;
-    bool createToolTipsHwnd{false};
+    bool createToolTipsHwnd = false;
     str::WStr currTooltipText;
 
     WStrVec tooltips;

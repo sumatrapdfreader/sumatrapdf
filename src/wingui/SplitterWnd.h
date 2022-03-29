@@ -13,9 +13,9 @@ struct SplitterCtrl;
 // position and setting resizeAllowed to false if it's not allowed to go there
 struct SplitterMoveEvent {
     SplitterCtrl* w = nullptr;
-    bool done{false};
+    bool done = false;
     // user can set to false to forbid resizing here
-    bool resizeAllowed{true};
+    bool resizeAllowed = true;
 };
 
 using SplitterMoveHandler = std::function<void(SplitterMoveEvent*)>;
@@ -24,7 +24,7 @@ using SplitterMoveHandler = std::function<void(SplitterMoveEvent*)>;
 // for WindowBase
 struct SplitterCtrl : public Window {
     SplitterType type = SplitterType::Horiz;
-    bool isLive{true};
+    bool isLive = true;
     SplitterMoveHandler onSplitterMove = nullptr;
 
     HBITMAP bmp = nullptr;
@@ -34,7 +34,7 @@ struct SplitterCtrl : public Window {
     // if a parent clips children, DrawXorBar() doesn't work, so for
     // non-live resize, we need to remove WS_CLIPCHILDREN style from
     // parent and restore it when we're done
-    bool parentClipsChildren{false};
+    bool parentClipsChildren = false;
 
     explicit SplitterCtrl(HWND parent);
     ~SplitterCtrl() override;

@@ -27,7 +27,7 @@ static char* GetThumbnailPathTemp(const char* filePath) {
     // I'd have liked to also include the file's last modification time
     // in the fingerprint (much quicker than hashing the entire file's
     // content), but that's too expensive for files on slow drives
-    u8 digest[16]{0};
+    u8 digest[16]{};
     // TODO: why is this happening? Seen in crash reports e.g. 35043
     if (!filePath) {
         return nullptr;

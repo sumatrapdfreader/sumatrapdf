@@ -211,7 +211,7 @@ static void UpdateFindStatusTask(WindowInfo* win, NotificationWnd* wnd, int curr
 struct FindThreadData : public ProgressUpdateUI {
     WindowInfo* win = nullptr;
     TextSearchDirection direction{TextSearchDirection::Forward};
-    bool wasModified{false};
+    bool wasModified = false;
     AutoFreeWstr text;
     // owned by win->notifications, as FindThreadData
     // can be deleted before the notification times out

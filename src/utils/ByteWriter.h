@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ByteWriter {
-    bool isLE{false};
+    bool isLE = false;
     str::Str d;
 
     ByteWriter(size_t sizeHint = 0);

@@ -171,7 +171,7 @@ void* PoolAllocator::Realloc(void*, size_t) {
 }
 
 static void printSize(const char* s, size_t size) {
-    char buf[512]{0};
+    char buf[512]{};
     str::BufFmt(buf, dimof(buf), "%s%d\n", s, (int)size);
     OutputDebugStringA(buf);
 }

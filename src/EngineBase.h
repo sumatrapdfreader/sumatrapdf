@@ -36,8 +36,8 @@ struct PageLayout {
         type = t;
     }
     Type type{Type::Single};
-    bool r2l{false};
-    bool nonContinuous{false};
+    bool r2l = false;
+    bool nonContinuous = false;
 };
 
 extern Kind kindDestinationNone;
@@ -62,7 +62,7 @@ void FreePageText(PageText*);
 struct IPageDestination {
     Kind kind = nullptr;
 
-    int pageNo{-1};
+    int pageNo = -1;
     RectF rect{};
     float zoom{0.f};
 
@@ -175,7 +175,7 @@ struct IPageElement {
     Kind kind = nullptr;
     // position of the element on the page
     RectF rect{};
-    int pageNo{-1};
+    int pageNo = -1;
 
     virtual ~IPageElement() = default;
 
@@ -211,7 +211,7 @@ struct IPageElement {
 };
 
 struct PageElementImage : IPageElement {
-    int imageID{-1};
+    int imageID = -1;
 
     PageElementImage() {
         kind = kindPageElementImage;
@@ -288,10 +288,10 @@ struct TocItem {
     // in some formats, the document can specify the tree item
     // is expanded by default. We keep track if user toggled
     // expansion state of the tree item
-    bool isOpenDefault{false};
-    bool isOpenToggled{false};
+    bool isOpenDefault = false;
+    bool isOpenToggled = false;
 
-    bool isUnchecked{false};
+    bool isUnchecked = false;
 
     // page this item points to (-1 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
@@ -306,7 +306,7 @@ struct TocItem {
     COLORREF color{ColorUnset};
 
     IPageDestination* dest = nullptr;
-    bool destNotOwned{false};
+    bool destNotOwned = false;
 
     // first child item
     TocItem* child = nullptr;
@@ -401,13 +401,13 @@ class EngineBase {
     const WCHAR* defaultExt = nullptr;
     PageLayout preferredLayout;
     float fileDPI = 96.0f;
-    bool isImageCollection{false};
-    bool allowsPrinting{true};
-    bool allowsCopyingText{true};
-    bool isPasswordProtected{false};
+    bool isImageCollection = false;
+    bool allowsPrinting = true;
+    bool allowsCopyingText = true;
+    bool isPasswordProtected = false;
     char* decryptionKey = nullptr;
-    bool hasPageLabels{false};
-    int pageCount{-1};
+    bool hasPageLabels = false;
+    int pageCount = -1;
 
     // TODO: migrate other engines to use this
     AutoFreeWstr fileNameBase;

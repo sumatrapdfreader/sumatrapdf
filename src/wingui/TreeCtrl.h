@@ -16,8 +16,8 @@ struct TreeSelectionChangedEvent : WndEvent {
     TreeItem prevSelectedItem{0};
     TreeItem selectedItem{0};
     NMTREEVIEW* nmtv = nullptr;
-    bool byKeyboard{false};
-    bool byMouse{false};
+    bool byKeyboard = false;
+    bool byMouse = false;
 };
 
 using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent*)>;
@@ -25,15 +25,15 @@ using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent
 struct TreeItemExpandedEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
-    bool isExpanded{false};
+    bool isExpanded = false;
 };
 
 using TreeItemExpandedHandler = std::function<void(TreeItemExpandedEvent*)>;
 
 struct TreeItemState {
-    bool isSelected{false};
-    bool isExpanded{false};
-    bool isChecked{false};
+    bool isSelected = false;
+    bool isExpanded = false;
+    bool isChecked = false;
     int nChildren{0};
 };
 
@@ -42,9 +42,9 @@ struct TreeItemChangedEvent : WndEvent {
     TreeItem treeItem{0};
     NMTVITEMCHANGE* nmic = nullptr;
 
-    bool checkedChanged{false};
-    bool expandedChanged{false};
-    bool selectedChanged{false};
+    bool checkedChanged = false;
+    bool expandedChanged = false;
+    bool selectedChanged = false;
     // except for nChildren
     TreeItemState prevState{};
     TreeItemState newState{};
@@ -63,7 +63,7 @@ using TreeItemCustomDrawHandler = std::function<void(TreeItemCustomDrawEvent*)>;
 struct TreeClickEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem{0};
-    bool isDblClick{false};
+    bool isDblClick = false;
 
     // mouse x,y position relative to the window
     Point mouseWindow{};
@@ -94,7 +94,7 @@ struct TreeItemDraggeddEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem draggedItem{0};
     TreeItem dragTargetItem{0};
-    bool isStart{false};
+    bool isStart = false;
 };
 
 using TreeItemDraggedHandler = std::function<void(TreeItemDraggeddEvent*)>;
@@ -107,17 +107,17 @@ using TreeItemDraggedHandler = std::function<void(TreeItemDraggeddEvent*)>;
 
 struct TreeCtrl : WindowBase {
     // creation parameters. must be set before Create() call
-    bool withCheckboxes{false};
+    bool withCheckboxes = false;
 
     // sets TVS_FULLROWSELECT style
     // https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
-    bool fullRowSelect{false};
+    bool fullRowSelect = false;
 
     // set before Create() to enable drag&drop
-    bool supportDragDrop{false};
+    bool supportDragDrop = false;
 
     // TODO: possibly not needed anymore
-    bool isDragging{false};
+    bool isDragging = false;
 
     TreeItem draggedItem{0};
     TreeItem dragTargetItem{0};

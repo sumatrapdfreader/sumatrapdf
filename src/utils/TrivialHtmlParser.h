@@ -41,7 +41,7 @@ class HtmlParser {
     char* html = nullptr;
     // true if s was allocated by ourselves, false if managed
     // by the caller
-    bool freeHtml{false};
+    bool freeHtml = false;
     // the codepage used for converting text to Unicode
     uint codepage{CP_ACP};
 
