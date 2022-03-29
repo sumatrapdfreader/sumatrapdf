@@ -3262,7 +3262,6 @@ ByteSlice EngineMupdf::GetFileData() {
     return file::ReadFile(path);
 }
 
-// TODO: proper support for includeUserAnnots or maybe just remove it
 bool EngineMupdf::SaveFileAs(const char* copyFileName) {
     auto dstPath = ToWstrTemp(copyFileName);
     AutoFree d = GetFileData();

@@ -58,6 +58,8 @@ struct PropertyEl {
 struct PropertiesLayout {
     PropertiesLayout() = default;
     ~PropertiesLayout() {
+        delete btnCopyToClipboard;
+        delete btnGetFonts;
         DeleteVecMembers(props);
     }
 
