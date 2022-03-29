@@ -932,12 +932,12 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_FitzInputStream_close
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef com_artifex_mupdf_fitz_Font_LATIN
-#define com_artifex_mupdf_fitz_Font_LATIN 0L
-#undef com_artifex_mupdf_fitz_Font_GREEK
-#define com_artifex_mupdf_fitz_Font_GREEK 1L
-#undef com_artifex_mupdf_fitz_Font_CYRILLIC
-#define com_artifex_mupdf_fitz_Font_CYRILLIC 2L
+#undef com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_LATIN
+#define com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_LATIN 0L
+#undef com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_GREEK
+#define com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_GREEK 1L
+#undef com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_CYRILLIC
+#define com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_CYRILLIC 2L
 #undef com_artifex_mupdf_fitz_Font_ADOBE_CNS
 #define com_artifex_mupdf_fitz_Font_ADOBE_CNS 0L
 #undef com_artifex_mupdf_fitz_Font_ADOBE_GB

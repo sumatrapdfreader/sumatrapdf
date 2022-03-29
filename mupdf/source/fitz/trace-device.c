@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -55,6 +55,13 @@ fz_trace_color(fz_context *ctx, fz_output *out, fz_colorspace *colorspace, const
 	}
 	if (alpha < 1)
 		fz_write_printf(ctx, out, " alpha=\"%g\"", alpha);
+}
+
+static void
+fz_trace_color_params(fz_context *ctx, fz_output *out, fz_color_params color_params)
+{
+	fz_write_printf(ctx, out, " ri=\"%d\" bp=\"%d\" op=\"%d\" opm=\"%d\"",
+		color_params.ri, color_params.bp, color_params.op, color_params.opm);
 }
 
 static void
@@ -179,6 +186,7 @@ fz_trace_fill_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int ev
 	else
 		fz_write_printf(ctx, out, " winding=\"nonzero\"");
 	fz_trace_color(ctx, out, colorspace, color, alpha);
+	fz_trace_color_params(ctx, out, color_params);
 	fz_trace_matrix(ctx, out, ctm);
 	fz_write_printf(ctx, out, ">\n");
 	fz_trace_path(ctx, dev, path);
@@ -210,6 +218,7 @@ fz_trace_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path, cons
 	}
 
 	fz_trace_color(ctx, out, colorspace, color, alpha);
+	fz_trace_color_params(ctx, out, color_params);
 	fz_trace_matrix(ctx, out, ctm);
 	fz_write_printf(ctx, out, ">\n");
 
@@ -262,6 +271,7 @@ fz_trace_fill_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_mat
 	fz_trace_indent(ctx, out, dev->depth);
 	fz_write_printf(ctx, out, "<fill_text");
 	fz_trace_color(ctx, out, colorspace, color, alpha);
+	fz_trace_color_params(ctx, out, color_params);
 	fz_trace_matrix(ctx, out, ctm);
 	fz_write_printf(ctx, out, ">\n");
 	fz_trace_text(ctx, out, text, dev->depth+1);
@@ -278,6 +288,7 @@ fz_trace_stroke_text(fz_context *ctx, fz_device *dev_, const fz_text *text, cons
 	fz_trace_indent(ctx, out, dev->depth);
 	fz_write_printf(ctx, out, "<stroke_text");
 	fz_trace_color(ctx, out, colorspace, color, alpha);
+	fz_trace_color_params(ctx, out, color_params);
 	fz_trace_matrix(ctx, out, ctm);
 	fz_write_printf(ctx, out, ">\n");
 	fz_trace_text(ctx, out, text, dev->depth+1);
@@ -338,6 +349,7 @@ fz_trace_fill_image(fz_context *ctx, fz_device *dev_, fz_image *image, fz_matrix
 	fz_write_printf(ctx, out, "<fill_image alpha=\"%g\"", alpha);
 	if (image->colorspace)
 		fz_write_printf(ctx, out, " colorspace=\"%s\"", fz_colorspace_name(ctx, image->colorspace));
+	fz_trace_color_params(ctx, out, color_params);
 	fz_trace_matrix(ctx, out, ctm);
 	fz_write_printf(ctx, out, " width=\"%d\" height=\"%d\"", image->w, image->h);
 	fz_write_printf(ctx, out, "/>\n");
@@ -359,6 +371,7 @@ fz_trace_fill_shade(fz_context *ctx, fz_device *dev_, fz_shade *shade, fz_matrix
 		shade->matrix.e,
 		shade->matrix.f);
 	fz_write_printf(ctx, out, " colorspace=\"%s\"", fz_colorspace_name(ctx, shade->colorspace));
+	fz_trace_color_params(ctx, out, color_params);
 	// TODO: use_background and background
 	// TODO: use_function and function
 	switch (shade->type)
@@ -426,6 +439,7 @@ fz_trace_fill_image_mask(fz_context *ctx, fz_device *dev_, fz_image *image, fz_m
 	fz_write_printf(ctx, out, "<fill_image_mask");
 	fz_trace_matrix(ctx, out, ctm);
 	fz_trace_color(ctx, out, colorspace, color, alpha);
+	fz_trace_color_params(ctx, out, color_params);
 	fz_write_printf(ctx, out, " width=\"%d\" height=\"%d\"", image->w, image->h);
 	fz_write_printf(ctx, out, "/>\n");
 }
@@ -462,6 +476,7 @@ fz_trace_begin_mask(fz_context *ctx, fz_device *dev_, fz_rect bbox, int luminosi
 	fz_write_printf(ctx, out, "<clip_mask bbox=\"%g %g %g %g\" s=\"%s\"",
 		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
 		luminosity ? "luminosity" : "alpha");
+	fz_trace_color_params(ctx, out, color_params);
 	fz_write_printf(ctx, out, ">\n");
 	dev->depth++;
 }

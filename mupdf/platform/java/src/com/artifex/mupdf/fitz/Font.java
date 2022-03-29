@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -28,9 +28,9 @@ public class Font
 		Context.init();
 	}
 
-	public static final int LATIN = 0;
-	public static final int GREEK = 1;
-	public static final int CYRILLIC = 2;
+	public static final int SIMPLE_ENCODING_LATIN = 0;
+	public static final int SIMPLE_ENCODING_GREEK = 1;
+	public static final int SIMPLE_ENCODING_CYRILLIC = 2;
 
 	public static final int ADOBE_CNS = 0;
 	public static final int ADOBE_GB = 1;
