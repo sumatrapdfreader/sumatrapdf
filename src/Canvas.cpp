@@ -888,6 +888,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
     bool rendering = false;
     Rect screen(Point(), dm->GetViewPort().Size());
 
+    bool isRtl = IsUIRightToLeft();
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
         if (!pageInfo || 0.0f == pageInfo->visibleRatio) {
@@ -918,11 +919,11 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
                     RepaintAsync(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 } else {
-                    DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), IsUIRightToLeft());
+                    DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), isRtl);
                 }
                 rendering = true;
             } else {
-                DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), IsUIRightToLeft());
+                DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), isRtl);
             }
             SelectObject(hdc, hPrevFont);
             continue;

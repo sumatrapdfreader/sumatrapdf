@@ -25,6 +25,13 @@
 #include "SumatraProperties.h"
 #include "Translations.h"
 
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/ButtonCtrl.h"
+
+void ShowProperties(HWND parent, Controller* ctrl, bool extended);
+
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING 8
 #define PROPERTIES_TXT_DY_PADDING 2
@@ -71,8 +78,10 @@ struct PropertiesLayout {
         return false;
     }
 
-    HWND hwnd{nullptr};
-    HWND hwndParent{nullptr};
+    HWND hwnd = nullptr;
+    HWND hwndParent = nullptr;
+    ButtonCtrl* btnCopyToClipboard = nullptr;
+    ButtonCtrl* btnGetFonts = nullptr;
     Vec<PropertyEl*> props;
 };
 
@@ -354,7 +363,7 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
     return denials.Join(L", ");
 }
 
-static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* rect) {
+static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
     AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize));
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
@@ -401,9 +410,6 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
     totalDy += 4;
 
     int offset = PROPERTIES_RECT_PADDING;
-    if (rect) {
-        *rect = Rect(0, 0, totalDx + 2 * offset, totalDy + offset);
-    }
 
     int currY = 0;
     for (PropertyEl* el : layoutData->props) {
@@ -414,9 +420,58 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
     }
 
     SelectObject(hdc, origFont);
+    auto dx = totalDx + 2 * offset;
+    auto dy = totalDy + offset;
+
+    // calc size and pos of buttons
+    dy += offset;
+
+    if (layoutData->btnGetFonts) {
+        auto sz = layoutData->btnGetFonts->GetIdealSize();
+        Rect rc{offset, dy, sz.dx, sz.dy};
+        layoutData->btnGetFonts->SetBounds(rc);
+    }
+
+    {
+        auto sz = layoutData->btnCopyToClipboard->GetIdealSize();
+        int x = dx - offset - sz.dx;
+        Rect rc{x, dy, sz.dx, sz.dy};
+        layoutData->btnCopyToClipboard->SetBounds(rc);
+        dy += sz.dy;
+    }
+
+    dy += offset;
+    auto rect = Rect(0, 0, dx, dy);
+    return rect;
 }
 
-static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
+static void ShowExtendedProperties(HWND hwnd) {
+    PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
+    if (pl) {
+        WindowInfo* win = FindWindowInfoByHwnd(pl->hwndParent);
+        if (win && !pl->HasProperty(_TR("Fonts:"))) {
+            DestroyWindow(hwnd);
+            ShowProperties(win->hwndFrame, win->ctrl, true);
+        }
+    }
+}
+
+static void CopyPropertiesToClipboard(HWND hwnd) {
+    PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
+    if (!layoutData) {
+        return;
+    }
+
+    // concatenate all the properties into a multi-line string
+    str::WStr lines(256);
+    for (PropertyEl* el : layoutData->props) {
+        lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt.Get());
+    }
+
+    CopyTextToClipboard(lines.LendData());
+}
+
+static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, bool extended) {
     CrashIf(layoutData->hwnd);
     auto h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
@@ -430,13 +485,30 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
 
     layoutData->hwnd = hwnd;
     layoutData->hwndParent = hParent;
-    SetRtl(hwnd, IsUIRightToLeft());
+    bool isRtl = IsUIRightToLeft();
+    SetRtl(hwnd, isRtl);
+    {
+        auto b = new ButtonCtrl(hwnd);
+        b->Create();
+        b->SetText(_TR("Copy To Clipboard"));
+        layoutData->btnCopyToClipboard = b;
+        b->SetRtl(isRtl);
+        b->onClicked = [hwnd] { CopyPropertiesToClipboard(hwnd); };
+    }
+
+    if (!extended) {
+        auto b = new ButtonCtrl(hwnd);
+        b->Create();
+        b->SetText(_TR("Get Fonts Info"));
+        b->SetRtl(isRtl);
+        layoutData->btnGetFonts = b;
+        b->onClicked = [hwnd] { ShowExtendedProperties(hwnd); };
+    }
 
     // get the dimensions required for the about box's content
-    Rect rc;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    UpdatePropertiesLayout(layoutData, hdc, &rc);
+    auto rc = CalcPropertiesLayout(layoutData, hdc);
     EndPaint(hwnd, &ps);
 
     // resize the new window to just match these dimensions
@@ -533,7 +605,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
     if (extended) {
-        // TODO: FontList extraction can take a while
+        // Note: FontList extraction can take a while
         str = ctrl->GetProperty(DocumentProperty::FontList);
         if (str) {
             // add a space between basic and extended file properties
@@ -543,7 +615,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     }
 }
 
-static void ShowProperties(HWND parent, Controller* ctrl, bool extended = false) {
+void ShowProperties(HWND parent, Controller* ctrl, bool extended) {
     PropertiesLayout* layoutData = FindPropertyWindowByHwnd(parent);
     if (layoutData) {
         SetActiveWindow(layoutData->hwnd);
@@ -557,13 +629,13 @@ static void ShowProperties(HWND parent, Controller* ctrl, bool extended = false)
     gPropertiesWindows.Append(layoutData);
     GetProps(ctrl, layoutData, extended);
 
-    if (!CreatePropertiesWindow(parent, layoutData)) {
+    if (!CreatePropertiesWindow(parent, layoutData, extended)) {
         delete layoutData;
     }
 }
 
 void OnMenuProperties(WindowInfo* win) {
-    ShowProperties(win->hwndFrame, win->ctrl);
+    ShowProperties(win->hwndFrame, win->ctrl, false);
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc) {
@@ -611,26 +683,10 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
 
 static void OnPaintProperties(HWND hwnd) {
     PAINTSTRUCT ps;
-    Rect rc;
     HDC hdc = BeginPaint(hwnd, &ps);
-    UpdatePropertiesLayout(FindPropertyWindowByHwnd(hwnd), hdc, &rc);
+    // CalcPropertiesLayout(FindPropertyWindowByHwnd(hwnd), hdc);
     DrawProperties(hwnd, hdc);
     EndPaint(hwnd, &ps);
-}
-
-static void CopyPropertiesToClipboard(HWND hwnd) {
-    PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
-    if (!layoutData) {
-        return;
-    }
-
-    // concatenate all the properties into a multi-line string
-    str::WStr lines(256);
-    for (PropertyEl* el : layoutData->props) {
-        lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt.Get());
-    }
-
-    CopyTextToClipboard(lines.LendData());
 }
 
 static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
@@ -642,21 +698,18 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
 
         case CmdProperties:
             // make a repeated Ctrl+D display some extended properties
-            // TODO: expose this through a UI button or similar
-            PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
-            if (pl) {
-                WindowInfo* win = FindWindowInfoByHwnd(pl->hwndParent);
-                if (win && !pl->HasProperty(_TR("Fonts:"))) {
-                    DestroyWindow(hwnd);
-                    ShowProperties(win->hwndFrame, win->ctrl, true);
-                }
-            }
+            ShowExtendedProperties(hwnd);
             break;
     }
 }
 
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     PropertiesLayout* pl;
+
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
+    }
 
     switch (msg) {
         case WM_CREATE:

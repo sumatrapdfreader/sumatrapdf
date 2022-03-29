@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-03febf492780c55b77d918107aea23a5686a84ce
+f93f9b6ceeda6e302f453b056fd169dfa49ce368
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6388,6 +6388,7 @@ tw:複製註解(&M)
 uk:Копіювати коментар
 uz:&Izohni nusxa olish
 vn:Chép chú thích
+:Copy To Clipboard
 :Copying text was denied (copying as image only)
 am:Գրվածքի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
 ar:(ناسخ النص رفض (ناسخ باسم صورة فقط 
@@ -10954,6 +10955,7 @@ tw:GB
 uk:GB
 uz:GB
 vn:GB
+:Get Fonts Info
 :Go to page
 af:Gaan Na Bladsy
 am:Անցնել էջի
