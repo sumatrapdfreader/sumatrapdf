@@ -34,6 +34,9 @@
     <Filter Include="src\utils\tests">
       <UniqueIdentifier>{0FF3B448-7B7E-220D-848F-A501F0997E0D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\wingui">
+      <UniqueIdentifier>{0FE57D82-FB9C-BFCF-64A4-982B507B5AC0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Accelerators.h">
@@ -218,6 +221,66 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\UtAssert.h">
       <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\ButtonCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\CheckboxCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\DialogSizer.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\DropDownCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\EditCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\FrameRateWnd.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\ImageCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\Layout.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\ListBoxCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\ProgressCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\SplitterWnd.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\StaticCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TabsCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TooltipCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TrackbarCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TreeCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TreeModel.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\WinGui.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\Window.h">
+      <Filter>src\wingui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -482,11 +545,68 @@
     <ClCompile Include="..\src\utils\tests\WinUtil_ut.cpp">
       <Filter>src\utils\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\DialogSizer.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\EditCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ImageCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Layout.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ListBoxCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ProgressCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\StaticCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TabsCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TooltipCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TrackbarCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TreeModel.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\WinGui.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Window.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\docs\log.txt">
-      <Filter>src\docs</Filter>
-    </None>
     <None Include="..\src\docs\releasenotes.txt">
       <Filter>src\docs</Filter>
     </None>

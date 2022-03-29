@@ -787,6 +787,7 @@ workspace "SumatraPDF"
 
     synctex_files()
     mui_files()
+    wingui_files()
     uia_files()
     sumatrapdf_files()
 
@@ -834,6 +835,7 @@ workspace "SumatraPDF"
 
     synctex_files()
     mui_files()
+    wingui_files()
     uia_files()
     sumatrapdf_files()
 

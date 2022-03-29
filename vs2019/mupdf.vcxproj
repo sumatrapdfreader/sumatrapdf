@@ -513,6 +513,7 @@
     <ClInclude Include="..\mupdf\source\fitz\smallcaps.h" />
     <ClInclude Include="..\mupdf\source\fitz\tessocr.h" />
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h" />
+    <ClInclude Include="..\mupdf\source\fitz\utfdata.h" />
     <ClInclude Include="..\mupdf\source\fitz\z-imp.h" />
     <ClInclude Include="..\mupdf\source\pdf\annotation-icons.h" />
     <ClInclude Include="..\mupdf\source\pdf\pdf-annot-imp.h" />

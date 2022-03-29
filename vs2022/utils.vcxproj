@@ -491,26 +491,6 @@
     <ClInclude Include="..\src\utils\WinUtil.h" />
     <ClInclude Include="..\src\utils\ZipUtil.h" />
     <ClInclude Include="..\src\utils\windrawlib.h" />
-    <ClInclude Include="..\src\wingui\ButtonCtrl.h" />
-    <ClInclude Include="..\src\wingui\CheckboxCtrl.h" />
-    <ClInclude Include="..\src\wingui\DialogSizer.h" />
-    <ClInclude Include="..\src\wingui\DropDownCtrl.h" />
-    <ClInclude Include="..\src\wingui\EditCtrl.h" />
-    <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
-    <ClInclude Include="..\src\wingui\ImageCtrl.h" />
-    <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
-    <ClInclude Include="..\src\wingui\Layout.h" />
-    <ClInclude Include="..\src\wingui\ListBoxCtrl.h" />
-    <ClInclude Include="..\src\wingui\ProgressCtrl.h" />
-    <ClInclude Include="..\src\wingui\SplitterWnd.h" />
-    <ClInclude Include="..\src\wingui\StaticCtrl.h" />
-    <ClInclude Include="..\src\wingui\TabsCtrl.h" />
-    <ClInclude Include="..\src\wingui\TooltipCtrl.h" />
-    <ClInclude Include="..\src\wingui\TrackbarCtrl.h" />
-    <ClInclude Include="..\src\wingui\TreeCtrl.h" />
-    <ClInclude Include="..\src\wingui\TreeModel.h" />
-    <ClInclude Include="..\src\wingui\WinGui.h" />
-    <ClInclude Include="..\src\wingui\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\utils\Archive.cpp" />
@@ -561,26 +541,6 @@
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
     <ClCompile Include="..\src\utils\windrawlib.cpp" />
-    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
-    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\EditCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
-    <ClCompile Include="..\src\wingui\ImageCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
-    <ClCompile Include="..\src\wingui\Layout.cpp" />
-    <ClCompile Include="..\src\wingui\ListBoxCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\ProgressCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
-    <ClCompile Include="..\src\wingui\StaticCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TrackbarCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TreeModel.cpp" />
-    <ClCompile Include="..\src\wingui\WinGui.cpp" />
-    <ClCompile Include="..\src\wingui\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

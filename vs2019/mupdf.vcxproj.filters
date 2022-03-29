@@ -309,6 +309,9 @@
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\utfdata.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\z-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
