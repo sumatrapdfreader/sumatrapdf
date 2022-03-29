@@ -981,7 +981,9 @@ Align::Align(ILayout* c) {
     kind = kindAlign;
 }
 
-Align::~Align() = default;
+Align::~Align() {
+    delete Child;
+}
 
 Size Align::Layout(const Constraints bc) {
     dbglayoutf("Align::Layout() ");
@@ -1117,12 +1119,18 @@ TableLayout::TableLayout() {
 }
 
 TableLayout::~TableLayout() {
-    // we don't own ILayout* elements in cells
+    int n = rows * cols;
+    for (int i = 0; i < n; i++) {
+        auto child = cells[i].child;
+        delete child;
+    }
     free(cells);
     free(maxColWidths);
 }
 
 Size TableLayout::Layout(Constraints bc) {
+    // TODO: implement me
+    CrashMe();
     return {};
 }
 
@@ -1175,6 +1183,7 @@ int TableLayout::MinIntrinsicWidth(int height) {
 }
 
 void TableLayout::SetBounds(Rect) {
+    // TODO: implement me
     CrashMe();
 }
 
@@ -1195,13 +1204,18 @@ int TableLayout::CellIdx(int row, int col) {
     return idx;
 }
 
-void TableLayout::SetCell(int row, int col, ILayout* el) {
+void TableLayout::SetCell(int row, int col, ILayout* child) {
     int idx = CellIdx(row, col);
-    cells[idx].el = el;
+    auto& cell = cells[idx];
+    if (cell.child) {
+        // delete existing child
+        delete cell.child;
+    }
+    cell.child = child;
 }
 
 ILayout* TableLayout::GetCell(int row, int col) {
     int idx = CellIdx(row, col);
-    auto el = cells[idx].el;
-    return el;
+    auto child = cells[idx].child;
+    return child;
 }

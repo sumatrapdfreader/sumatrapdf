@@ -251,7 +251,7 @@ struct TableLayout : LayoutBase {
     int rows = 0;
 
     struct Cell {
-        ILayout* el;
+        ILayout* child;
         // TODO: per-cell layout data
         Size elSize;
     };
