@@ -394,12 +394,17 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
         const WCHAR* txt = el->rightTxt;
         RECT rc{};
         DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
-        el->rightPos.dx = rc.right - rc.left;
+        auto dx = rc.right - rc.left;
+        // limit the width or right text as some fields can be very long
+        if (dx > 720) {
+            dx = 720;
+        }
+        el->rightPos.dx = dx;
         el->leftPos.dy = el->rightPos.dy = rc.bottom - rc.top;
         textDy += el->rightPos.dy;
 
-        if (el->rightPos.dx > rightMaxDx) {
-            rightMaxDx = el->rightPos.dx;
+        if (dx > rightMaxDx) {
+            rightMaxDx = dx;
         }
         lineCount++;
     }
