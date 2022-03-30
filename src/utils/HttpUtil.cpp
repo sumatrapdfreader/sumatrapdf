@@ -11,7 +11,7 @@
 #include "utils/Log.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
-#define USER_AGENT L"BaseHTTP"
+#define USER_AGENT L"SumatraPdfHTTP"
 
 bool HttpRspOk(const HttpRsp* rsp) {
     return (rsp->error == ERROR_SUCCESS) && (rsp->httpStatusCode == 200);

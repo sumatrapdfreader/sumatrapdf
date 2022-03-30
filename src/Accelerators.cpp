@@ -16,6 +16,7 @@ ACCEL gAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'D', CmdProperties},
     {FCONTROL | FVIRTKEY, 'F', CmdFindFirst},
     {FCONTROL | FVIRTKEY, 'G', CmdGoToPage},
+    {FCONTROL | FVIRTKEY, 'K', CmdCommandPalette},
     {FCONTROL | FVIRTKEY, 'L', CmdViewPresentationMode},
     {FSHIFT | FCONTROL | FVIRTKEY, 'L', CmdViewFullScreen},
     {FCONTROL | FVIRTKEY, 'N', CmdNewWindow},

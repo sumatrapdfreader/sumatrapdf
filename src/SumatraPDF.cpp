@@ -32,6 +32,8 @@
 #include "wingui/TooltipCtrl.h"
 #include "wingui/DropDownCtrl.h"
 #include "wingui/TabsCtrl.h"
+#include "wingui/EditCtrl.h"
+#include "wingui/ListBoxCtrl.h"
 
 #include "Annotation.h"
 #include "DisplayMode.h"
@@ -4386,6 +4388,145 @@ static void OnMenuCustomZoom(WindowInfo* win) {
     ZoomToSelection(win, zoom);
 }
 
+struct CommandPaletteWindow {
+    CommandPaletteWindow() = default;
+    ~CommandPaletteWindow();
+
+    Window* mainWindow = nullptr;
+    LayoutBase* mainLayout = nullptr;
+
+    EditCtrl* editQuery = nullptr;
+    ListBoxCtrl* listBoxResults = nullptr;
+    ListBoxModel* lbModel = nullptr;
+};
+
+CommandPaletteWindow::~CommandPaletteWindow() {
+    delete mainLayout;
+    delete mainWindow;
+    delete lbModel;
+}
+
+static void CommandPaletteWindowCloseHandler(CommandPaletteWindow* win, WindowCloseEvent* ev) {
+    CrashIf(win->mainWindow != ev->w);
+    delete win;
+}
+
+static void ComnandPaleteQueryChanged(CommandPaletteWindow* win, EditTextChangedEvent* ev) {
+    ev->didHandle = true;
+    /*
+    SetContents(ew->annot, ev->text);
+    EnableSaveIfAnnotationsChanged(ew);
+
+    WindowInfo* win = ew->tab->win;
+    if (gWindowInfoRerenderTimer != 0) {
+        // logf("ContentsChanged: killing existing timer for re-render of WindowInfo\n");
+        KillTimer(win->hwndCanvas, gWindowInfoRerenderTimer);
+        gWindowInfoRerenderTimer = 0;
+    }
+    UINT timeoutInMs = 1000;
+    gWindowInfoForRender = win;
+    gWindowInfoRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
+        if (WindowInfoStillValid(gWindowInfoForRender)) {
+            // logf("ContentsChanged: re-rendering WindowInfo\n");
+            WindowInfoRerender(gWindowInfoForRender);
+        } else {
+            // logf("ContentsChanged: NOT re-rendering WindowInfo because is not valid anymore\n");
+        }
+        gWindowInfoRerenderTimer = 0;
+    });
+*/
+}
+
+static void CommandPaletteSelectionChanged(CommandPaletteWindow* win, ListBoxSelectionChangedEvent* ev) {
+    int itemNo = ev->idx;
+    //UpdateUIForSelectedAnnotation(ew, itemNo);
+}
+
+static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
+
+static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
+    HWND parent = win->mainWindow->hwnd;
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    {
+        auto w = new EditCtrl(parent);
+        w->isMultiLine = false;
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->maxDx = 150;
+        w->onTextChanged = [win](auto&& PH1) { return ComnandPaleteQueryChanged(win, std::forward<decltype(PH1)>(PH1)); };
+        win->editQuery = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        auto w = new ListBoxCtrl(parent);
+        w->idealSizeLines = 32;
+        w->SetInsetsPt(4, 0);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        win->lbModel = new ListBoxModelStrings();
+        w->SetModel(win->lbModel);
+        w->onSelectionChanged = [win](auto&& PH1) {
+            return CommandPaletteSelectionChanged(win, std::forward<decltype(PH1)>(PH1));
+        };
+        win->listBoxResults = w;
+        vbox->AddChild(w, 1);
+    }
+
+    auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
+    win->mainLayout = padding;
+}
+
+static void RunCommandPallette(WindowInfo* winInfo) {
+    logf("RunCommandPalette()\n");
+    auto win = gCommandPaletteWindow;
+    if (win) {
+        HWND hwnd = win->mainWindow->hwnd;
+        BringWindowToTop(hwnd);
+        return;
+    }
+    win = new CommandPaletteWindow();
+    auto mainWindow = new Window();
+    HMODULE h = GetModuleHandleW(nullptr);
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+    mainWindow->hIcon = LoadIconW(h, iconName);
+
+    mainWindow->isDialog = true;
+    mainWindow->backgroundColor = MkGray(0xee);
+    mainWindow->SetText(_TR("Command Palette"));
+    // PositionCloseTo(w, args->hwndRelatedTo);
+    // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
+    // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
+    // w->initialSize = {winSize.cx, winSize.cy};
+    bool ok = mainWindow->Create();
+    CrashIf(!ok);
+    mainWindow->onClose = [win](auto&& PH1) {
+        return CommandPaletteWindowCloseHandler(win, std::forward<decltype(PH1)>(PH1));
+    };
+    //mainWindow->onSize = [win](auto&& PH1) { return WndSizeHandler(ew, std::forward<decltype(PH1)>(PH1)); };
+
+    win->mainWindow = mainWindow;
+    CreateCommandPaletteMainLayout(win);
+
+    // size our editor window to be the same height as main window
+    int minDy = 720;
+    // TODO: this is slightly less that wanted
+    HWND hwnd = winInfo->hwndFrame;
+    auto rc = ClientRect(hwnd);
+    if (rc.dy > 0) {
+        minDy = rc.dy;
+    }
+    LayoutAndSizeToContent(win->mainLayout, 520, minDy, mainWindow->hwnd);
+
+    // important to call this after hooking up onSize to ensure
+    // first layout is triggered
+    mainWindow->SetIsVisible(true);
+    win->editQuery->SetFocus();
+}
+
 static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int wmId = LOWORD(wp);
 
@@ -4495,6 +4636,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdPrint:
             OnMenuPrint(win);
+            break;
+
+        case CmdCommandPalette:
+            RunCommandPallette(win);
             break;
 
         case CmdClose:
