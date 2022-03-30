@@ -23,6 +23,8 @@
 #ifndef MUPDF_PDF_PARSE_H
 #define MUPDF_PDF_PARSE_H
 
+#include "mupdf/pdf/document.h"
+
 typedef enum
 {
 	PDF_TOK_ERROR, PDF_TOK_EOF,

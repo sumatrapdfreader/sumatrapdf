@@ -23,6 +23,8 @@
 #ifndef MUPDF_PDF_CLEAN_H
 #define MUPDF_PDF_CLEAN_H
 
+#include "mupdf/pdf/document.h"
+
 /*
 	Read infile, and write selected pages to outfile with the given options.
 */

@@ -23,6 +23,8 @@
 #ifndef MUPDF_FITZ_GETOPT_H
 #define MUPDF_FITZ_GETOPT_H
 
+#include "export.h"
+
 /**
 	Simple functions/variables for use in tools.
 */

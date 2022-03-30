@@ -24,6 +24,7 @@
 #define MUPDF_FITZ_STRING_H
 
 #include "mupdf/fitz/system.h"
+#include "mupdf/fitz/context.h"
 
 /* The Unicode character used to incoming character whose value is
  * unknown or unrepresentable. */

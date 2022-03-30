@@ -23,6 +23,12 @@
 #ifndef MUPDF_PDF_RESOURCE_H
 #define MUPDF_PDF_RESOURCE_H
 
+#include "mupdf/fitz/font.h"
+#include "mupdf/fitz/image.h"
+#include "mupdf/fitz/shade.h"
+#include "mupdf/fitz/store.h"
+#include "mupdf/pdf/object.h"
+
 void pdf_store_item(fz_context *ctx, pdf_obj *key, void *val, size_t itemsize);
 void *pdf_find_item(fz_context *ctx, fz_store_drop_fn *drop, pdf_obj *key);
 void pdf_remove_item(fz_context *ctx, fz_store_drop_fn *drop, pdf_obj *key);

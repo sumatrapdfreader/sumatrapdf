@@ -27,6 +27,7 @@
 #include "mupdf/fitz/geometry.h"
 #include "mupdf/fitz/font.h"
 #include "mupdf/fitz/pixmap.h"
+#include "mupdf/fitz/device.h"
 
 /**
 	Purge all the glyphs from the cache.

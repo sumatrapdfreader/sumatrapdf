@@ -25,6 +25,7 @@
 
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
+#include "mupdf/fitz/color.h"
 
 /**
 	A fz_separation structure holds details of a set of separations

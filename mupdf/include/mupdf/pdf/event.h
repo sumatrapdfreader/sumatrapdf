@@ -23,6 +23,8 @@
 #ifndef MUPDF_PDF_EVENT_H
 #define MUPDF_PDF_EVENT_H
 
+#include "mupdf/pdf/document.h"
+
 /*
 	Document events: the objects via which MuPDF informs the calling app
 	of occurrences emanating from the document, possibly from user interaction

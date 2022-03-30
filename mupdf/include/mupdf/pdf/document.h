@@ -24,6 +24,11 @@
 #define MUPDF_PDF_DOCUMENT_H
 
 #include "mupdf/fitz/export.h"
+#include "mupdf/fitz/document.h"
+#include "mupdf/fitz/hash.h"
+#include "mupdf/fitz/stream.h"
+#include "mupdf/fitz/xml.h"
+#include "mupdf/pdf/object.h"
 
 typedef struct pdf_xref pdf_xref;
 typedef struct pdf_ocg_descriptor pdf_ocg_descriptor;
@@ -31,6 +36,7 @@ typedef struct pdf_ocg_descriptor pdf_ocg_descriptor;
 typedef struct pdf_page pdf_page;
 typedef struct pdf_annot pdf_annot;
 typedef struct pdf_js pdf_js;
+typedef struct pdf_document pdf_document;
 
 enum
 {

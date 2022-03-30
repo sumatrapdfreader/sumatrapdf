@@ -30,6 +30,9 @@
 #include "mupdf/fitz/pixmap.h"
 #include "mupdf/fitz/structured-text.h"
 #include "mupdf/fitz/buffer.h"
+#include "mupdf/fitz/xml.h"
+#include "mupdf/fitz/archive.h"
+#include "mupdf/fitz/display-list.h"
 
 /**
 	Create a display list.

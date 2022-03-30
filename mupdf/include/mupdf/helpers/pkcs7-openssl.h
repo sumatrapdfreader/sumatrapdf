@@ -23,6 +23,9 @@
 #ifndef MUPDF_PKCS7_OPENSSL_H
 #define MUPDF_PKCS7_OPENSSL_H
 
+#include "mupdf/pdf/document.h"
+#include "mupdf/pdf/form.h"
+
 /* This an example pkcs7 implementation using openssl. These are the types of functions that you
  * will likely need to sign documents and check signatures within documents. In particular, to
  * sign a document, you need a function that derives a pdf_pkcs7_signer object from a certificate

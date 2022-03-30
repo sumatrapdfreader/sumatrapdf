@@ -27,6 +27,7 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/geometry.h"
 #include "mupdf/fitz/buffer.h"
+#include "mupdf/fitz/color.h"
 
 /* forward declaration for circular dependency */
 struct fz_device;

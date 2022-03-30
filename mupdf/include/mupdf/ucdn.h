@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+#include "fitz/system.h"
+
 #define UCDN_EAST_ASIAN_F 0
 #define UCDN_EAST_ASIAN_H 1
 #define UCDN_EAST_ASIAN_W 2

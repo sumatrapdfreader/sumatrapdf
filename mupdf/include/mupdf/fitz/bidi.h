@@ -21,6 +21,7 @@
 #define FITZ_BIDI_H
 
 #include "mupdf/fitz/system.h"
+#include "mupdf/fitz/context.h"
 
 /* Implementation details: subject to change. */
 

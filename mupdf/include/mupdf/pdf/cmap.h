@@ -23,6 +23,9 @@
 #ifndef MUPDF_PDF_CMAP_H
 #define MUPDF_PDF_CMAP_H
 
+#include "mupdf/fitz/store.h"
+#include "mupdf/pdf/document.h"
+
 #define PDF_MRANGE_CAP 8
 
 typedef struct

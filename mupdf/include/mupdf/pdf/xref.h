@@ -23,6 +23,8 @@
 #ifndef MUPDF_PDF_XREF_H
 #define MUPDF_PDF_XREF_H
 
+#include "mupdf/pdf/document.h"
+
 /*
 	Allocate a slot in the xref table and return a fresh unused object number.
 */

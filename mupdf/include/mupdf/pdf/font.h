@@ -24,6 +24,8 @@
 #define MUPDF_PDF_FONT_H
 
 #include "mupdf/pdf/cmap.h"
+#include "mupdf/fitz/device.h"
+#include "mupdf/fitz/font.h"
 
 enum
 {

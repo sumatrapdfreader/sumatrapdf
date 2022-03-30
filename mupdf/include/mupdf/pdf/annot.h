@@ -23,6 +23,14 @@
 #ifndef MUPDF_PDF_ANNOT_H
 #define MUPDF_PDF_ANNOT_H
 
+#include "mupdf/fitz/display-list.h"
+#include "mupdf/fitz/stream.h"
+#include "mupdf/fitz/structured-text.h"
+#include "mupdf/pdf/object.h"
+#include "mupdf/pdf/page.h"
+
+typedef struct pdf_annot pdf_annot;
+
 enum pdf_annot_type
 {
 	PDF_ANNOT_TEXT,

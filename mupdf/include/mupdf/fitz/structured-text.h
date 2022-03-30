@@ -31,6 +31,7 @@
 #include "mupdf/fitz/image.h"
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/device.h"
+#include "mupdf/fitz/pool.h"
 
 /**
 	Simple text layout (for use with annotation editing primarily).

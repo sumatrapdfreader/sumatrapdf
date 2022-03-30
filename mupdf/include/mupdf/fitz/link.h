@@ -26,6 +26,7 @@
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/geometry.h"
+#include "mupdf/fitz/types.h"
 
 /**
 	fz_link is a list of interactive links on a page.

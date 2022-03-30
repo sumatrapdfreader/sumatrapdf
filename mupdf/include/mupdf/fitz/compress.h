@@ -24,6 +24,7 @@
 #define MUPDF_FITZ_COMPRESS_H
 
 #include "mupdf/fitz/system.h"
+#include "mupdf/fitz/buffer.h"
 
 typedef enum
 {

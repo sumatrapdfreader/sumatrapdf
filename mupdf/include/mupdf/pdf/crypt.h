@@ -23,6 +23,9 @@
 #ifndef MUPDF_PDF_CRYPT_H
 #define MUPDF_PDF_CRYPT_H
 
+#include "mupdf/pdf/document.h"
+#include "mupdf/pdf/object.h"
+
 enum
 {
 	PDF_ENCRYPT_KEEP,

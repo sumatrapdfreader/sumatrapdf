@@ -23,6 +23,9 @@
 #ifndef MUPDF_PDF_FORM_H
 #define MUPDF_PDF_FORM_H
 
+#include "mupdf/fitz/display-list.h"
+#include "mupdf/pdf/document.h"
+
 /* Types of widget */
 enum pdf_widget_type
 {

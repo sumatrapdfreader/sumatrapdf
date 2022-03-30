@@ -25,6 +25,7 @@
 
 #include "mupdf/pdf/font.h"
 #include "mupdf/pdf/resource.h"
+#include "mupdf/pdf/document.h"
 
 typedef struct pdf_gstate pdf_gstate;
 typedef struct pdf_processor pdf_processor;
