@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-35c19dd055eff2207556e6497a021e8970d25665
+12d01bd630b54d5c7d6c13eac08ac30a2ecaffc4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6390,6 +6390,7 @@ uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy To Clipboard
 br:Copiar para Área de Transferência
+it:Copia negli Appunti
 pl:Kopiuj do schowka
 :Copying text was denied (copying as image only)
 am:Գրվածքի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
@@ -10959,6 +10960,7 @@ uz:GB
 vn:GB
 :Get Fonts Info
 br:Informações da Fonte
+it:Ottieni informazioni sui font
 pl:Uzyskaj informacje o czcionkach
 :Go to page
 af:Gaan Na Bladsy
