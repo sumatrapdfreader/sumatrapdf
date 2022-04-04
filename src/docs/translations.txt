@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-12d01bd630b54d5c7d6c13eac08ac30a2ecaffc4
+f97163607d140de92c3fe8323e3867cb02ef6736
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3247,7 +3247,7 @@ de:Fe&nster
 dk:&Vindue
 el:Παρά&θυρο
 es:V&entana
-et:A&ken
+et:&Aken
 eu:Lei&hoa
 fa:&پنجره
 fi:Ikkuna
@@ -4152,7 +4152,7 @@ de:Anmerkungen
 dk:Anmærkninger
 el:Σχόλια
 es:Anotaciones
-et:Kommentaarid
+et:Märkused
 fr:Annotations
 ga:Nótaí mínithe
 gl:Anotacións
@@ -4530,6 +4530,7 @@ co:Autore : %s
 de:Autor: %s
 el:Συγγραφέας: %s
 es:Autora: %s
+et:Autor: %s
 hr:Autor: %s
 id:Penulis: %s
 it:Autore: %s
@@ -4865,7 +4866,7 @@ de:Lesezeichen-Verknüpfung zu Seite %s von %s
 dk:Gem genvej til side %s af %s
 el:Συντόμευση σελιδοδείκτη στη σελίδα %s του %s
 es:Atajo del marcador de la página %s de %s
-et:Tee järjehoidja otsetee leheküljele %s/%s
+et:Lisa järjehoidjasse otsetee leheküljele %s/%s
 eu:Lastermarka lasterbidea %s orrialdeari %s-tik
 fa:میانبر به نشانک صفحه‌ی %s از %s
 fi:Tee pikakuvake sivulle %s/%s
@@ -4987,6 +4988,7 @@ co:Bordu : %d
 de:Umrandung: %d
 el:Περιθώριο: %d
 es:Borde: %d
+et:Ääris: %d
 hr:Rub: %d
 id:Garis Tepi: %d
 it:Bordo: %d
@@ -5016,7 +5018,7 @@ de:Bytes
 dk:Bytes
 el:Bytes
 es:Bytes
-et:Baiti
+et:Baidid
 eu:Byte
 fa:بایت
 fi:tavua
@@ -5828,6 +5830,11 @@ tw:漫畫書
 uk:Документи CBR, CBZ (комікси)
 uz:Komikslar
 vn:Truyện tranh comic
+:Command Palette
+cn:命令面板
+de:Befehlspalette
+et:Käsupalett
+pl:Paleta poleceń
 :Compatibility
 am:Համատեղելիությունը
 ar:التوافق
@@ -5903,6 +5910,7 @@ co:Cuntenutu :
 de:Inhalte:
 el:Περιεχόμενα:
 es:Contenido:
+et:Sisu:
 hr:Sadržaj:
 id:Isi:
 it:Contenuti:
@@ -6390,6 +6398,9 @@ uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy To Clipboard
 br:Copiar para Área de Transferência
+cn:复制到剪贴版
+de:In Zwischenablage kopieren
+et:Kopeeri lõikelauale
 it:Copia negli Appunti
 pl:Kopiuj do schowka
 :Copying text was denied (copying as image only)
@@ -7231,7 +7242,7 @@ co:Scrive un’annutazione &sottu à u cursore
 de:Anmerkung &unter dem Cursor erstellen
 el:Δημιουργία σχολιασμού κάτω από το δρομέα
 es:Crear una anotación &bajo el cursor
-et:Lisa kursori j&uurde kommentaar
+et:Lisa kursori &juurde märkus
 fr:Créer une annotation &sous le curseur
 hr:Napravi bilješku &ispod kursora
 hu:Új megjegyzés &Kurzor alatt
@@ -7258,7 +7269,7 @@ co:Scrive un’annutazione da a selezzione
 de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
 es:Crear una anotación con la selección
-et:Loo valikust kommentaar
+et:Loo valitust märkus
 fr:Créer une annotation à partir de la sélection
 gl:Crear anotacion a partir da selección
 hr:Napravite bilješku iz odabira
@@ -7431,7 +7442,7 @@ de:Cursorposition:
 dk:Markørposition:
 el:Θέση κέρσορα:
 es:Posición del cursor:
-et:Kursori asukoht
+et:Kursori asukoht:
 eu:Kurtsorearen kokapena:
 fa:موقعیت مکان‌نما
 fi:Kohdistimen sijainti:
@@ -7668,6 +7679,7 @@ co:Data :
 de:Datum:
 el:Ημερομηνία:
 es:Fetcha:
+et:Kuupäev:
 hr:Datum:
 id:Tanggal:
 it:Data:
@@ -7699,7 +7711,7 @@ de:&Standardlayout:
 dk:Standard&layout:
 el:Προκαθορισμένη &διαμόρφωση:
 es:Distribución pre&determinada:
-et:Vaike&küljend:
+et:Vaike &küljend:
 eu:Berezko &Egitura:
 fa:&صفحه‌بندی پیش‌فرض:
 fi:Oletus&tyyli:
@@ -7764,7 +7776,7 @@ de:Standard&vergrößerung:
 dk:Standard&zoom
 el:Προκαθορισμένο &ζουμ:
 es:Am&pliación predeterminada:
-et:Vaike&suurendus:
+et:Vaike &suurendus:
 eu:Berezko &Zooma:
 fa:&بزرگنمایی پیش‌فرض:
 fi:Oletus&zoomaus:
@@ -7882,7 +7894,7 @@ co:Squassà l’annutazione\tSuppr
 de:Anmerkung löschen\tDel
 el:Διαγραφή σχολίου\tDel
 es:Eliminar anotación\tDel
-et:Kustuta kommentaar\tDel
+et:Kustuta märkus\tDel
 fr:Supprimer l'annotation\tDel
 gl:Borrar anotación
 hr:Obriši bilješku\tDel
@@ -8338,7 +8350,7 @@ de:Anmerkungen bearbeiten
 dk:Rediger anmærkninger
 el:Επεξεργασία σχολίων
 es:Editar las anotaciones
-et:Muuda kommentaare
+et:Muuda märkusi
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
@@ -9077,7 +9089,7 @@ de:Die Datei konnte nicht umbenannt werden!
 dk:Fejl ved omdøbning af fil!
 el:Η μετονομασία του αρχείου απέτυχε!
 es:Error al renombrar el archivo.
-et:Faili ümbernimetamine ebaõnnestus.
+et:Faili ümbernimetamine ebaõnnestus!
 eu:Hutsegitea agiria berrizendatzerakoan!
 fa:تغییر نام پرونده ناموفق بود!
 fi:Tiedoston uudelleennimeäminen epäonnistui!
@@ -10045,7 +10057,7 @@ de:Suchen:
 dk:Find:
 el:Εύρεση:
 es:Buscar:
-et:Otsing:
+et:Otsi:
 eu:Bilatu:
 fa:جستجو:
 fi:Etsi:
@@ -10960,6 +10972,9 @@ uz:GB
 vn:GB
 :Get Fonts Info
 br:Informações da Fonte
+cn:显示字体信息
+de:Schriftarten-Infos erhalten
+et:Hangi fondi infot
 it:Ottieni informazioni sui font
 pl:Uzyskaj informacje o czcionkach
 :Go to page
@@ -11234,6 +11249,7 @@ co:Icona :
 de:Icon:
 el:Εικονίδιο:
 es:Icono:
+et:Ikoon:
 hr:Ikona:
 id:Ikon:
 it:Icona:
@@ -11702,6 +11718,7 @@ co:Culore interiore :
 de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
 es:Color Interior
+et:Sisevärv:
 hr:Unutarnja boja:
 id:Warna Interior:
 it:Colore interno:
@@ -12009,6 +12026,7 @@ co:Fine di linea :
 de:Zeilenende:
 el:Τέλος γραμμής:
 es:Fin de Línea:
+et:Joone lõpp:
 hr:Kraj linije:
 id:Garis Akhir:
 it:Fine linea:
@@ -12028,6 +12046,7 @@ co:Principiu di linea :
 de:Zeilenstart:
 el:Έναρξη γραμμής:
 es:Inicio de Línea:
+et:Joone algus:
 hr:Početak linije:
 id:Garis Awal:
 it:Inizio linea:
@@ -13057,6 +13076,7 @@ co:Opacità :
 de:Deckkraft:
 el:Διαφάνεια:
 es:Opacidad:
+et:Läbipaistvus:
 hr:Neprozirnost:
 id:Kegelapan:
 it:Opacità:
@@ -13077,6 +13097,7 @@ co:Opacità : %d
 de:Deckkraft: %d
 el:Διαφάνεια: %d
 es:Opacidad: %d
+et:Läbipaistvus: %d
 hr:Neprozirnost: %d
 id:Kegelapan: %d
 it:Opacità: %d
@@ -14633,7 +14654,7 @@ de:Polylinie
 dk:Polylinje
 el:Πολυγραμμή
 es:Polilínea
-et:Hulknurk
+et:Murdjoon
 ga:Líne iolrach
 gl:Liña polivinílica
 hr:Poli-linija
@@ -14700,6 +14721,7 @@ co:Finestrinu : %d 0 R
 de:Pop-up: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
+et:Hüpikaken: %d 0 R
 hr:Skočna obavijest: %d 0 R
 id:Munculkan: %d 0 R
 it:Popup: %d 0 R
@@ -15488,6 +15510,7 @@ co:Rett: x=%d y=%d dx=%d dy=%d
 de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
+et:Ristkülik: x=%d y=%d dx=%d dy=%d
 hr:Pravokutnik: x=%d y=%d dx=%d dy=%d
 id:Persegi: x=%d y=%d dx=%d dy=%d
 it:Rettangolo: x=%d Y=%d dx=%d dy=%d
@@ -16015,7 +16038,7 @@ co:Arregistrà l’annutazioni in u PDF esistente
 de:Anmerkungen in bestehende PDF-Dateien speichern
 el:Αποθήκευση σχολίων σε υπάρχον PDF
 es:Guardar Anotaciones a PDF existente
-et:Salvesta kommentaarid olemas olevasse PDF-i
+et:Salvesta märkused olemasolevasse PDF-i
 fr:Sauvegarder les annotations dans le PDF existant.
 gl:Gardar anotacións ó PDF existente
 hr:Spremi bilješke u postojeći PDF
@@ -16134,7 +16157,7 @@ co:Arregistrà l’annutazioni ?
 de:Anmerkungen speichern?
 el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
-et:Salvestada kommentaarid?
+et:Salvestada märkused?
 fr:Sauvegarder les annotations ?
 gl:Gardar anotacións?
 hr:Spremi bilješke?
@@ -16241,6 +16264,7 @@ co:Annutazioni arregistrate nant’à « %s »
 de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
+et:Märkused salvestatud '%s'
 hr:Bilješke spremljene u '%s'
 id:Catatan tersimpan di: %s'
 it:Annotazioni salvate in '%s'
@@ -16260,6 +16284,7 @@ co:Arregistramentu di « %s » fiascatu cù : « %s »
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
+et:Salvestamine '%s' ebaõnnestus: '%s'
 hr:Spremanje '%s' neuspjelo sa: '%s'
 id:Penyimpanan %s' gagal dengan: %s'
 it:Salvataggio di '%s' fallito con: '%s'
@@ -16459,7 +16484,7 @@ co:Selezziunà l’annutazione in l’editore
 de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
 es:Seleccionar la anotación en el editor
-et:Vali redaktoris kommentaar
+et:Vali märkus redaktoris
 fr:Sélectionner l'annotation dans l'éditeur
 hr:Odaberite bilješku u uređivaču
 hu:Megjegyzés kiválasztása a szerkesztőben
@@ -18440,6 +18465,7 @@ co:Aliniamentu di testu :
 de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
+et:Teksti joondus:
 hr:Poravnavanje teksta:
 id:Rata Teks:
 it:Allineamento testo:
@@ -18462,6 +18488,7 @@ co:Culore di u testu :
 de:Textfarbe:
 el:Text Color: 
 es:Color de Texto:
+et:Teksti värv
 hr:Boja teksta:
 id:Warna Teks:
 it:Colore testo:
@@ -18485,6 +18512,7 @@ co:Dimensione di testu :
 de:Textgröße:
 el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
+et:Teksti suurus:
 hr:Veličina teksta:
 id:Ukuran Teks:
 it:Dimensione testo:
@@ -18507,6 +18535,7 @@ co:Dimensione di testu : %d
 de:Textgröße: %d
 el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
+et:Teksti suurus: %d
 hr:Veličina teksta: %d
 id:Ukuran Teks: %d
 it:Dimensione testo: %d
@@ -18847,7 +18876,7 @@ de:Titel:
 dk:Titel:
 el:Τίτλος:
 es:Título:
-et:Päis:
+et:Pealkiri:
 eu:Izenburua:
 fa:عنوان:
 fi:Otsikko:
@@ -19184,7 +19213,7 @@ de:Nicht gespeicherte Anmerkungen
 dk:Ikke-gemte annoteringer
 el:Μη αποθηκευμένα σχόλια
 es:Anotaciones sin guardar
-et:Salvestamata kommentaarid
+et:Salvestamata märkused
 fr:Annotations non sauvegardées
 gl:Anotacións sen gardar
 hr:Nespremljene bilješke
@@ -19211,7 +19240,7 @@ de:Nicht gespeicherte Anmerkungen in '%s'
 dk:Ikke-gemte annoteringer i '%s'
 el:Μη αποθηκευμένα σχόλια στο '%s'
 es:Anotaciones sin guardar en «%s»
-et:Salvestamata kommentaarid dokumendis '%s'
+et:Salvestamata märkused dokumendis '%s'
 fr:Annotations dans ‘%s’ non sauvegardées
 hr:Nespremljene bilješke u '%s'
 hu:Mentetlen megjegyzések itt: '%s'
@@ -19695,7 +19724,7 @@ de:Sie haben ungespeicherte Anmerkungen.
 dk:Du har ikke-gemte annoteringer
 el:Έχετε μη αποθηκευμένα σχόλια
 es:Hay anotaciones sin guardar
-et:Sul on salvestamata kommentaare
+et:Sul on salvestamata märkuseid
 fr:Vous avez des annotations non sauvegardées
 gl:Tes anotacións sen gardar
 hr:Imate nespremljene bilješke
@@ -19780,7 +19809,7 @@ de:Zoom
 dk:Zoom
 el:Ζουμ
 es:Ampliación
-et:Suurenda
+et:Suurendus
 eu:Zooma
 fa:بزرگنمایی
 fi:Zoomaus
@@ -19917,7 +19946,7 @@ de:Verkleinern
 dk:Zoom ud
 el:Σμίκρυνση
 es:Reducir
-et:Vähenda
+et:Suurenda välja
 eu:Zooma Gutxitu
 fa:کوچک‌نمایی
 fi:Loitonna
