@@ -57,7 +57,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFindMatch, "Find: Match Case")                                   \
     V(CmdFindNextSel, "Find: Next Selection")                             \
     V(CmdFindPrevSel, "Find: Previous Selection")                         \
-    V(CmdSaveAnnotations, "Save Annotations")                             \
+    V(CmdSaveAnnotations, "Save Annotations to existing PDF")                             \
     V(CmdEditAnnotations, "Edit Annotations")                             \
     V(CmdSelectAnnotation, "Select Annotation in Editor")                 \
     V(CmdDeleteAnnotation, "Delete Annotation")                           \

@@ -161,7 +161,7 @@ static MenuDef menuDefFile[] = {
         CmdSaveAs,
     },
     {
-        _TRN("Save Annotations to existing PDF"),
+        _TRN("Save Annotations to existing PDF\tCtrl+Shift+S"),
         CmdSaveAnnotations,
     },
 //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
@@ -783,7 +783,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
     },
     {
-        _TRN("Save Annotations to existing PDF"),
+        _TRN("Save Annotations to existing PDF\tCtrl+Shift+S"),
         CmdSaveAnnotations,
     },
     {
