@@ -4439,7 +4439,7 @@ static void ComnandPaleteQueryChanged(CommandPaletteWindow* win, EditTextChanged
 
 static void CommandPaletteSelectionChanged(CommandPaletteWindow* win, ListBoxSelectionChangedEvent* ev) {
     int itemNo = ev->idx;
-    //UpdateUIForSelectedAnnotation(ew, itemNo);
+    // UpdateUIForSelectedAnnotation(ew, itemNo);
 }
 
 static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
@@ -4456,7 +4456,9 @@ static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->maxDx = 150;
-        w->onTextChanged = [win](auto&& PH1) { return ComnandPaleteQueryChanged(win, std::forward<decltype(PH1)>(PH1)); };
+        w->onTextChanged = [win](auto&& PH1) {
+            return ComnandPaleteQueryChanged(win, std::forward<decltype(PH1)>(PH1));
+        };
         win->editQuery = w;
         vbox->AddChild(w);
     }
@@ -4506,7 +4508,7 @@ static void RunCommandPallette(WindowInfo* winInfo) {
     mainWindow->onClose = [win](auto&& PH1) {
         return CommandPaletteWindowCloseHandler(win, std::forward<decltype(PH1)>(PH1));
     };
-    //mainWindow->onSize = [win](auto&& PH1) { return WndSizeHandler(ew, std::forward<decltype(PH1)>(PH1)); };
+    // mainWindow->onSize = [win](auto&& PH1) { return WndSizeHandler(ew, std::forward<decltype(PH1)>(PH1)); };
 
     win->mainWindow = mainWindow;
     CreateCommandPaletteMainLayout(win);

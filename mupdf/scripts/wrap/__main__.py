@@ -835,7 +835,6 @@ from . import cpp
 from . import parse
 from . import state
 from . import swig
-from . import util
 
 clang = state.clang
 
@@ -979,8 +978,6 @@ def find_python( cpu, version=None):
     command = 'py -0p'
     jlib.log('Running: {command}')
     text = jlib.system(command, out='return')
-    version_list_highest = [0]
-    ret = None
     for line in text.split('\n'):
         jlib.log( '    {line}')
         m = re.match( '^ *-([0-9.]+)-((64)|(32)) +([^\\r*]+)[\\r*]*$', line)
@@ -1034,7 +1031,6 @@ def build( build_dirs, swig_command, args):
 
     force_rebuild = False
     header_git = False
-    swig_python = None
     state.state_.show_details = lambda name: False
     devenv = f'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/devenv.com'
 
@@ -1144,7 +1140,7 @@ def build( build_dirs, swig_command, args):
                     namespace = 'mupdf'
                     generated = cpp.Generated()
 
-                    tu = cpp.cpp_source(
+                    cpp.cpp_source(
                             build_dirs.dir_mupdf,
                             namespace,
                             f'{build_dirs.dir_mupdf}/platform/c++',
@@ -1410,6 +1406,10 @@ def build( build_dirs, swig_command, args):
                         #
                         python_exe = os.path.realpath( sys.executable)
                         python_config = f'{python_exe}-config'
+                        if not jlib.find_in_paths( python_config):
+                            default = 'python3-config'
+                            jlib.log( 'Warning, cannot find {python_config=}, using {default=}')
+                            python_config = default
                         # --cflags gives things like
                         # -Wno-unused-result -g etc, so we just use
                         # --includes.
@@ -1706,7 +1706,6 @@ def main2():
     # Set default swig.
     #
     swig_command = 'swig'
-    have_seen_build_arg = False
 
     args = jlib.Args( sys.argv[1:])
     while 1:
@@ -1722,8 +1721,6 @@ def main2():
                 print( __doc__)
 
             elif arg == '--build' or arg == '-b':
-                #assert not have_seen_build_arg, 'Cannot run --build/-b more than once'
-                have_seen_build_arg = True
                 build( build_dirs, swig_command, args)
 
             elif arg == '--check-headers':
@@ -1949,7 +1946,6 @@ def main2():
                     jlib.log('Ignoring {arg} because not running on Windows')
 
             elif arg == '--sync-pretty':
-                sync_docs = False
                 destination = args.next()
                 jlib.log( 'Syncing to {destination=}')
                 generated = cpp.Generated(f'{build_dirs.dir_mupdf}/platform/c++')
@@ -2001,7 +1997,6 @@ def main2():
             elif arg in ('--test-python', '-t', '--test-python-gui'):
 
                 env_extra, command_prefix = python_settings(build_dirs)
-                join = '&' if state.state_.windows else ''
                 script_py = os.path.relpath( f'{build_dirs.dir_mupdf}/scripts/mupdfwrap_gui.py')
                 if arg == '--test-python-gui':
                     env_extra[ 'MUPDF_trace'] = '0'

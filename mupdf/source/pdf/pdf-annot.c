@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -2836,4 +2836,56 @@ pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, co
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+}
+
+static pdf_obj *filespec_subtypes[] = {
+	PDF_NAME(FileAttachment),
+	NULL,
+};
+
+int
+pdf_annot_has_filespec(fz_context *ctx, pdf_annot *annot)
+{
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(FS), filespec_subtypes);
+}
+
+pdf_obj *
+pdf_annot_filespec(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *filespec;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(FS), filespec_subtypes);
+		filespec = pdf_dict_get(ctx, annot->obj, PDF_NAME(FS));
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return filespec;
+}
+
+void
+pdf_set_annot_filespec(fz_context *ctx, pdf_annot *annot, pdf_obj *fs)
+{
+	if (!pdf_is_embedded_file(ctx, fs))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot set non-filespec as annotation filespec");
+
+	begin_annot_op(ctx, annot, "Set filespec");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(M), markup_subtypes);
+		pdf_dict_put_drop(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(FS), fs);
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
 }

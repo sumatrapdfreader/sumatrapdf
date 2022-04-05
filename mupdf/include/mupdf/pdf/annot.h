@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -687,13 +687,53 @@ fz_stext_page *pdf_new_stext_page_from_annot(fz_context *ctx, pdf_annot *annot, 
 
 fz_layout_block *pdf_layout_text_widget(fz_context *ctx, pdf_annot *annot);
 
-const char *pdf_guess_mime_type_from_file_name(fz_context *ctx, const char *filename);
-pdf_obj *pdf_embedded_file_stream(fz_context *ctx, pdf_obj *fs);
-const char *pdf_embedded_file_name(fz_context *ctx, pdf_obj *fs);
-const char *pdf_embedded_file_type(fz_context *ctx, pdf_obj *fs);
+typedef struct pdf_embedded_file_params pdf_embedded_file_params;
+
+/*
+	Parameters for and embedded file. Obtained through
+	pdf_get_embedded_file_params(). The creation and
+	modification date fields are < 0 if unknown.
+*/
+struct pdf_embedded_file_params {
+	const char *filename;
+	const char *mimetype;
+	int size;
+	int64_t created;
+	int64_t modified;
+};
+
+/*
+	Check if pdf object is a file specification.
+*/
 int pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs);
-fz_buffer *pdf_load_embedded_file(fz_context *ctx, pdf_obj *fs);
-pdf_obj *pdf_add_embedded_file(fz_context *ctx, pdf_document *doc, const char *filename, const char *mimetype, fz_buffer *contents);
+
+/*
+	Add an embedded file to the document. This can later
+	be passed e.g. to pdf_annot_set_filespec(). If unknown,
+	supply NULL for MIME type and -1 for the date arguments.
+	If a checksum is added it can later be verified by calling
+	pdf_verify_embedded_file_checksum().
+*/
+pdf_obj *pdf_add_embedded_file(fz_context *ctx, pdf_document *doc, const char *filename, const char *mimetype, fz_buffer *contents, int64_t created, int64_t modifed, int add_checksum);
+
+/*
+	Obtain parameters for embedded file: name, size,
+	creation and modification dates cnad MIME type.
+*/
+void pdf_get_embedded_file_params(fz_context *ctx, pdf_obj *fs, pdf_embedded_file_params *out);
+
+/*
+	Load embedded file contents in a buffer which
+	needs to be dropped by the called after use.
+*/
+fz_buffer *pdf_load_embedded_file_contents(fz_context *ctx, pdf_obj *fs);
+
+/*
+	Verifies the embedded file checksum. Returns 1
+	if the verifiction is successful or there is no
+	checksum to be verified, or 0 if verification fails.
+*/
+int pdf_verify_embedded_file_checksum(fz_context *ctx, pdf_obj *fs);
 
 char *pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 char *pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *obj, int pagenum);
@@ -714,5 +754,20 @@ void pdf_set_annot_hot(fz_context *ctx, pdf_annot *annot, int hot);
 
 void pdf_set_annot_appearance(fz_context *ctx, pdf_annot *annot, const char *appearance, const char *state, fz_matrix ctm, fz_rect bbox, pdf_obj *res, fz_buffer *contents);
 void pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, const char *appearance, const char *state, fz_matrix ctm, fz_display_list *list);
+
+/*
+	Check to see if an annotation has a file specification.
+*/
+int pdf_annot_has_filespec(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Retrieve the file specification for the given annotation.
+*/
+pdf_obj *pdf_annot_filespec(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Set the annotation file specification.
+*/
+void pdf_set_annot_filespec(fz_context *ctx, pdf_annot *annot, pdf_obj *obj);
 
 #endif

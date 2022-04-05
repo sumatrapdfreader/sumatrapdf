@@ -37,8 +37,6 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
     if verbose:
         jlib.log( '{nest=} {name=} {type_.spelling=} {type_.get_declaration().get_usr()=}')
         jlib.log( '{type_.kind=} {type_.get_array_size()=}')
-    def log2( text):
-        jlib.log( nest*'    ' + text, 2)
 
     array_n = type_.get_array_size()
     if verbose:
@@ -867,42 +865,6 @@ def make_internal_functions( namespace, out_h, out_cpp):
     out_cpp.write( cpp_text)
 
     make_namespace_close( namespace, out_cpp)
-
-
-    def functions_cache_populate( tu):
-        if tu in state.state_.functions_cache:
-            return
-        fns = dict()
-        global_data = dict()
-        enums = dict()
-
-        for cursor in tu.cursor.get_children():
-            if cursor.kind == state.clang.cindex.CursorKind.ENUM_DECL:
-                #jlib.log('ENUM_DECL: {cursor.spelling=}')
-                enum_values = list()
-                for cursor2 in cursor.get_children():
-                    #jlib.log('    {cursor2.spelling=}')
-                    name = cursor2.spelling
-                    #if name.startswith('PDF_ENUM_NAME_'):
-                    enum_values.append(name)
-                enums[ cursor.type.get_canonical().spelling] = enum_values
-            if (cursor.linkage == state.clang.cindex.LinkageKind.EXTERNAL
-                    or cursor.is_definition()  # Picks up static inline functions.
-                    ):
-                if cursor.kind == state.clang.cindex.CursorKind.FUNCTION_DECL:
-                    fnname = cursor.mangled_name
-                    if state.state_.show_details( fnname):
-                        jlib.log( 'Looking at {fnname=}')
-                    if fnname not in omit_fns:
-                        fns[ fnname] = cursor
-                else:
-                    global_data[ cursor.mangled_name] = cursor
-
-        state.state_.functions_cache[ tu] = fns
-        state.state_.global_data[ tu] = global_data
-        state.state_.enums[ tu] = enums
-        jlib.log('Have populated fns and global_data. {len(enums)=}')
-
 
 
 def make_function_wrappers(
@@ -2011,7 +1973,6 @@ def function_wrapper_class_aware(
                     # For now, we return this type directly with no wrapping.
                     pass
                 else:
-                    return_extras = classes.classextras.get( tu, return_cursor.type.spelling)
                     return_type = util.rename.class_(return_cursor.type.spelling)
                     fn_h = f'{return_type} {decl_h}'
                     if struct_name:
@@ -3776,7 +3737,7 @@ def cpp_source(
     # Write source code for exceptions and wrapper functions.
     #
     jlib.log( 'Creating wrapper functions...')
-    output_param_fns = make_function_wrappers(
+    make_function_wrappers(
             tu,
             namespace,
             out_hs.exceptions,

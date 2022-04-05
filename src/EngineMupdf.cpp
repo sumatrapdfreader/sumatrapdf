@@ -1266,14 +1266,6 @@ pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     return copy;
 }
 
-static int PdfStreamNo(fz_context* ctx, pdf_obj* ref) {
-    pdf_document* doc = pdf_get_indirect_document(ctx, ref);
-    if (doc) {
-        return pdf_to_num(ctx, ref);
-    }
-    return 0;
-}
-
 // Note: make sure to only call with ctxAccess
 static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc) {
     pdf_obj* dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
@@ -1284,19 +1276,17 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc) {
     fz_outline root{};
     fz_outline* curr = &root;
     for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
-        pdf_obj* dest = pdf_dict_get_val(ctx, dict, i);
+        pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
 
-        int is_embedded = pdf_is_embedded_file(ctx, dest);
-        if (is_embedded == 0) {
+        if (!pdf_is_embedded_file(ctx, fs)) {
             continue;
         }
-        pdf_obj* fs = pdf_embedded_file_stream(ctx, dest);
-        int streamNo = PdfStreamNo(ctx, fs);
-        const char* nameStr = pdf_embedded_file_name(ctx, dest);
+        pdf_embedded_file_params fileParams = {};
+        pdf_get_embedded_file_params(ctx, fs, &fileParams);
+        const char* nameStr = fileParams.filename;
         if (str::IsEmpty(nameStr)) {
             continue;
         }
-        // int streamNo = pdf_to_num(ctx, embedded);
         fz_outline* link = fz_new_outline(ctx);
         link->title = fz_strdup(ctx, nameStr);
         link->uri = fz_strdup(ctx, nameStr); // TODO: maybe make file:// ?
@@ -2508,8 +2498,10 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
         if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
             logf("found file attachment annotation\n");
 
-            pdf_obj* fs = pdf_dict_get(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(FS));
-            const char* attname = pdf_embedded_file_name(ctx, fs);
+            pdf_embedded_file_params fileParams = {};
+            pdf_obj* fs = pdf_annot_obj(ctx, annot);
+            pdf_get_embedded_file_params(ctx, fs, &fileParams);
+            const char* attname = fileParams.filename;
             fz_rect rect = pdf_annot_rect(ctx, annot);
             if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
                 continue;

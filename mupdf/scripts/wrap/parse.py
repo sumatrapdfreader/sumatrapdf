@@ -8,7 +8,6 @@ import jlib
 
 from . import classes
 from . import cpp
-from . import parse
 from . import state
 from . import util
 
@@ -548,7 +547,7 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
             result_type = result_type.get_pointee().get_canonical()
         result_type = util.clip( result_type.spelling, 'struct ')
         if result_type.startswith( ('fz_', 'pdf_')):
-            result_type_extras = parse.get_fz_extras( tu, result_type)
+            result_type_extras = get_fz_extras( tu, result_type)
             if not result_type_extras:
                 exclude_reasons.append(
                         (
@@ -573,9 +572,9 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
         #
         i = 0
         arg0_cursor = None
-        for arg in parse.get_args( tu, cursor):
+        for arg in get_args( tu, cursor):
 
-            base_typename = parse.get_base_typename( arg.cursor.type)
+            base_typename = get_base_typename( arg.cursor.type)
             if not arg.alt and base_typename.startswith( ('fz_', 'pdf_')):
                 if arg.cursor.type.get_canonical().kind == clang.cindex.TypeKind.ENUM:
                     # We don't (yet) wrap fz_* enums, but for now at least we

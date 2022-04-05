@@ -819,8 +819,6 @@ def build_swig(
     os.makedirs( f'{build_dirs.dir_so}', exist_ok=True)
     util.update_file_regress( text, swig_i, check_regress)
 
-    line_end = '^' if state_.windows else '\\'
-
     # Try to disable some unhelpful SWIG warnings;. unfortunately this doesn't
     # seem to have any effect.
     disable_swig_warnings = [
@@ -840,6 +838,9 @@ def build_swig(
         # Need -D_WIN32 on Windows because as of 2022-03-17, C++ code for
         # SWIG Directors support doesn't work on Windows so is inside #ifndef
         # _WIN32...#endif.
+        #
+        # Maybe use '^' on windows as equivalent to unix '\\' for multiline
+        # ending?
         command = (
                 textwrap.dedent(
                 f'''
@@ -966,6 +967,9 @@ def build_swig(
                 command,
                 force_rebuild,
                 )
+        # fixme: use <rebuilt> line with language=='python' to avoid multiple
+        # modifications to unchanged mupdf.cs?
+        #
         # For classes that have our to_string() method, override C#'s
         # ToString() to call to_string().
         with open(f'{outdir}/mupdf.cs') as f:
@@ -987,10 +991,6 @@ def build_swig(
 
     else:
         assert 0
-
-
-def build_swig_java( container_classnames):
-    return build_swig( container_classnames, 'java')
 
 
 def test_swig():

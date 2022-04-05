@@ -4654,9 +4654,17 @@ static void ffi_PDFDocument_addEmbeddedFile(js_State *J)
 	const char *filename = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
 	const char *mimetype = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
 	fz_buffer *contents = ffi_tobuffer(J, 3);
+	double created = js_trynumber(J, 4, -1);
+	double modified = js_trynumber(J, 5, -1);
+	int add_checksum = js_tryboolean(J, 6, 0);
 	pdf_obj *ind = NULL;
+
+	if (created >= 0) created /= 1000;
+	if (modified >= 0) modified /= 1000;
+
 	fz_try(ctx)
-		ind = pdf_add_embedded_file(ctx, pdf, filename, mimetype, contents);
+		ind = pdf_add_embedded_file(ctx, pdf, filename, mimetype, contents,
+			created, modified, add_checksum);
 	fz_always(ctx)
 		fz_drop_buffer(ctx, contents);
 	fz_catch(ctx)
@@ -4664,42 +4672,81 @@ static void ffi_PDFDocument_addEmbeddedFile(js_State *J)
 	ffi_pushobj(J, ind);
 }
 
-static void ffi_PDFDocument_loadEmbeddedFile(js_State *J)
+static void ffi_pushembeddedfileparams(js_State *J, pdf_embedded_file_params *params)
+{
+	js_newobject(J);
+	js_pushstring(J, params->filename);
+	js_setproperty(J, -2, "filename");
+	if (params->mimetype)
+		js_pushstring(J, params->mimetype);
+	else
+		js_pushundefined(J);
+	js_setproperty(J, -2, "mimetype");
+	js_pushnumber(J, params->size);
+	js_setproperty(J, -2, "size");
+	if (params->created >= 0)
+	{
+		js_getglobal(J, "Date");
+		js_pushnumber(J, params->created * 1000);
+		js_construct(J, 1);
+	}
+	else
+		js_pushundefined(J);
+	js_setproperty(J, -2, "creationDate");
+	if (params->modified >= 0)
+	{
+		js_getglobal(J, "Date");
+		js_pushnumber(J, params->modified * 1000);
+		js_construct(J, 1);
+	}
+	else
+		js_pushundefined(J);
+	js_setproperty(J, -2, "modificationDate");
+}
+
+static void ffi_PDFDocument_getEmbeddedFileParams(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
-	pdf_obj *obj = ffi_toobj(J, pdf, 1);
-	const char *mimetype = NULL;
-	const char *filename = NULL;
-	fz_buffer *contents = NULL;
+	pdf_obj *fs = ffi_toobj(J, pdf, 1);
+	pdf_embedded_file_params params;
 
-	fz_try(ctx) {
-		if (pdf_is_embedded_file(ctx, obj)) {
-			filename = pdf_embedded_file_name(ctx, obj);
-			mimetype = pdf_embedded_file_type(ctx, obj);
-			contents = pdf_load_embedded_file(ctx, obj);
-		}
-	}
+	fz_try(ctx)
+		pdf_get_embedded_file_params(ctx, fs, &params);
 	fz_catch (ctx)
 		rethrow(J);
 
-	if (!contents) {
-		js_pushnull(J);
-		return;
-	}
+	ffi_pushembeddedfileparams(J, &params);
+}
 
-	if (js_try(J)) {
-		fz_drop_buffer(ctx, contents);
-		js_throw(J);
-	}
-	js_newobject(J);
-	js_pushstring(J, filename);
-	js_setproperty(J, -2, "filename");
-	js_pushstring(J, mimetype);
-	js_setproperty(J, -2, "mimetype");
+static void ffi_PDFDocument_getEmbeddedFileContents(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
+	pdf_obj *fs = ffi_toobj(J, pdf, 1);
+	fz_buffer *contents = NULL;
+
+	fz_try(ctx)
+		contents = pdf_load_embedded_file_contents(ctx, fs);
+	fz_catch (ctx)
+		rethrow(J);
+
 	ffi_pushbuffer(J, contents);
-	js_setproperty(J, -2, "contents");
-	js_endtry(J);
+}
+
+static void ffi_PDFDocument_verifyEmbeddedFileChecksum(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
+	pdf_obj *fs = ffi_toobj(J, pdf, 1);
+	int valid = 0;
+
+	fz_try(ctx)
+		valid = pdf_verify_embedded_file_checksum(ctx, fs);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_pushboolean(J, valid);
 }
 
 static void ffi_PDFDocument_addImage(js_State *J)
@@ -6965,6 +7012,34 @@ static void ffi_PDFAnnotation_setAppearance(js_State *J)
 		js_throw(J);
 }
 
+static void ffi_PDFAnnotation_getFilespec(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	pdf_obj *fs = NULL;
+
+	fz_try(ctx)
+		fs = pdf_annot_filespec(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushobj(J, fs);
+}
+
+static void ffi_PDFAnnotation_setFilespec(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	pdf_page *page = pdf_annot_page(ctx, annot);
+	pdf_document *pdf = page->doc;
+	pdf_obj *fs = ffi_toobj(J, pdf, 1);
+
+	fz_try(ctx)
+		pdf_set_annot_filespec(ctx, annot, fs);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFAnnotation_update(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -7916,8 +7991,12 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFDocument.addFont", ffi_PDFDocument_addFont, 1);
 		jsB_propfun(J, "PDFDocument.addImage", ffi_PDFDocument_addImage, 1);
 		jsB_propfun(J, "PDFDocument.loadImage", ffi_PDFDocument_loadImage, 1);
-		jsB_propfun(J, "PDFDocument.addEmbeddedFile", ffi_PDFDocument_addEmbeddedFile, 3);
-		jsB_propfun(J, "PDFDocument.loadEmbeddedFile", ffi_PDFDocument_loadEmbeddedFile, 1);
+
+		jsB_propfun(J, "PDFDocument.addEmbeddedFile", ffi_PDFDocument_addEmbeddedFile, 6);
+		jsB_propfun(J, "PDFDocument.getEmbeddedFileParams", ffi_PDFDocument_getEmbeddedFileParams, 1);
+		jsB_propfun(J, "PDFDocument.getEmbeddedFileContents", ffi_PDFDocument_getEmbeddedFileContents, 1);
+		jsB_propfun(J, "PDFDocument.verifyEmbeddedFileChecksum", ffi_PDFDocument_verifyEmbeddedFileChecksum, 1);
+
 		jsB_propfun(J, "PDFDocument.addPage", ffi_PDFDocument_addPage, 4);
 		jsB_propfun(J, "PDFDocument.insertPage", ffi_PDFDocument_insertPage, 2);
 		jsB_propfun(J, "PDFDocument.deletePage", ffi_PDFDocument_deletePage, 1);
@@ -8027,6 +8106,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.getDefaultAppearance", ffi_PDFAnnotation_getDefaultAppearance, 0);
 		jsB_propfun(J, "PDFAnnotation.setDefaultAppearance", ffi_PDFAnnotation_setDefaultAppearance, 3);
 		jsB_propfun(J, "PDFAnnotation.setAppearance", ffi_PDFAnnotation_setAppearance, 6);
+		jsB_propfun(J, "PDFAnnotation.getFilespec", ffi_PDFAnnotation_getFilespec, 0);
+		jsB_propfun(J, "PDFAnnotation.setFilespec", ffi_PDFAnnotation_setFilespec, 1);
 
 		jsB_propfun(J, "PDFAnnotation.hasInkList", ffi_PDFAnnotation_hasInkList, 0);
 		jsB_propfun(J, "PDFAnnotation.getInkList", ffi_PDFAnnotation_getInkList, 0);

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -182,6 +182,7 @@ void fz_free_argv(int argc, char **argv);
 #define S_ISDIR(mode) ((mode) & S_IFDIR)
 #endif
 
+int64_t fz_stat_ctime(const char *path);
 int64_t fz_stat_mtime(const char *path);
 
 /* inline is standard in C++. For some compilers we can enable it within

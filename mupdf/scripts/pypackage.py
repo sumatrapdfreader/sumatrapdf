@@ -20,14 +20,12 @@ Overview:
 '''
 
 
-import argparse
 import distutils.util
 import glob
 import os
 import platform
 import re
 import shutil
-import subprocess
 import sys
 import tarfile
 import time

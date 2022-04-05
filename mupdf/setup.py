@@ -156,7 +156,6 @@ def git_info():
         return text
     current = get_id('git show --pretty=oneline')
     origin = get_id('git show --pretty=oneline origin')
-    command = ''
     diff = subprocess.check_output(f'cd {root_dir()} && git diff', shell=True).decode('utf8')
     return current, origin, diff
 

@@ -256,7 +256,6 @@ def make_outparam_helper_csharp(
                 # creating a string from a string for some reason.
                 write(f'new string(outparams.{arg.name_csharp})')
             else:
-                pointee = arg.cursor.type.get_pointee().spelling
                 write(f'outparams.{arg.name_csharp}')
             sep = ', '
     if num_return_values > 1:

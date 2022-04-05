@@ -1359,6 +1359,21 @@ def update_file( text, filename, return_different=False):
         rename( filename_temp, filename)
 
 
+def find_in_paths( name, paths=None):
+    '''
+    Looks for <name> in paths and returns complete path. paths is list/tuple or
+    colon-separated string; if None we use $PATH.
+    '''
+    if paths is None:
+        paths = os.environ.get( 'PATH', '')
+    if isinstance( paths, str):
+        paths = paths.split( ':')
+    for path in paths:
+        p = f'{path}/{name}'
+        if os.path.isfile( p):
+            return p
+
+
 def mtime( filename, default=0):
     '''
     Returns mtime of file, or <default> if error - e.g. doesn't exist.
@@ -2507,7 +2522,6 @@ class Arg:
 
 if __name__ == '__main__':
 
-    import doctest
     doctest.testmod(
             optionflags=doctest.FAIL_FAST,
             )

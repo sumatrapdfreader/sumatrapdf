@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -226,18 +226,7 @@ pdf_parse_file_spec(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_
 	return uri;
 }
 
-const char *
-pdf_embedded_file_name(fz_context *ctx, pdf_obj *fs)
-{
-	pdf_obj *filename = pdf_dict_get(ctx, fs, PDF_NAME(UF));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(F));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Unix));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(DOS));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Mac));
-	return pdf_to_text_string(ctx, filename);
-}
-
-pdf_obj *
+static pdf_obj *
 pdf_embedded_file_stream(fz_context *ctx, pdf_obj *fs)
 {
 	pdf_obj *ef = pdf_dict_get(ctx, fs, PDF_NAME(EF));
@@ -249,27 +238,86 @@ pdf_embedded_file_stream(fz_context *ctx, pdf_obj *fs)
 	return file;
 }
 
-const char *
-pdf_embedded_file_type(fz_context *ctx, pdf_obj *fs)
-{
-	pdf_obj *file = pdf_embedded_file_stream(ctx, fs);
-	pdf_obj *subtype = pdf_dict_get(ctx, file, PDF_NAME(Subtype));
-	return subtype ? pdf_to_name(ctx, subtype) : "application/octet-stream";
-}
-
 int
 pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs)
 {
 	return pdf_is_stream(ctx, pdf_embedded_file_stream(ctx, fs));
 }
 
-fz_buffer *
-pdf_load_embedded_file(fz_context *ctx, pdf_obj *fs)
+void
+pdf_get_embedded_file_params(fz_context *ctx, pdf_obj *fs, pdf_embedded_file_params *out)
 {
+	pdf_obj *file, *params, *filename, *subtype;
+
+	if (!pdf_is_embedded_file(ctx, fs) || !out)
+		return;
+
+	file = pdf_embedded_file_stream(ctx, fs);
+	params = pdf_dict_get(ctx, file, PDF_NAME(Params));
+
+	filename = pdf_dict_get(ctx, fs, PDF_NAME(UF));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(F));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Unix));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(DOS));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Mac));
+	out->filename = pdf_to_text_string(ctx, filename);
+
+	subtype = pdf_dict_get(ctx, file, PDF_NAME(Subtype));
+	if (!subtype)
+		out->mimetype = "application/octet-stream";
+	else
+		out->mimetype = pdf_to_name(ctx, subtype);
+	out->size = pdf_dict_get_int(ctx, params, PDF_NAME(Size));
+	out->created = pdf_dict_get_date(ctx, params, PDF_NAME(CreationDate));
+	out->modified = pdf_dict_get_date(ctx, params, PDF_NAME(ModDate));
+}
+
+fz_buffer *
+pdf_load_embedded_file_contents(fz_context *ctx, pdf_obj *fs)
+{
+	if (!pdf_is_embedded_file(ctx, fs))
+		return NULL;
 	return pdf_load_stream(ctx, pdf_embedded_file_stream(ctx, fs));
 }
 
-const char *
+int
+pdf_verify_embedded_file_checksum(fz_context *ctx, pdf_obj *fs)
+{
+	unsigned char digest[16];
+	pdf_obj *file, *params;
+	const char *checksum;
+	fz_buffer *contents;
+	int valid = 0;
+	size_t len;
+
+	if (!pdf_is_embedded_file(ctx, fs))
+		return 1;
+
+	file = pdf_embedded_file_stream(ctx, fs);
+	params = pdf_dict_get(ctx, file, PDF_NAME(Params));
+	checksum = pdf_dict_get_string(ctx, params, PDF_NAME(CheckSum), &len);
+	if (!checksum || strlen(checksum) == 0)
+		return 1;
+
+	valid = 0;
+
+	fz_try(ctx)
+	{
+		file = pdf_embedded_file_stream(ctx, fs);
+		contents = pdf_load_stream(ctx, file);
+		fz_md5_buffer(ctx, contents, digest);
+		if (len == nelem(digest) && !memcmp(digest, checksum, nelem(digest)))
+			valid = 1;
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, contents);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return valid;
+}
+
+static const char *
 pdf_guess_mime_type_from_file_name(fz_context *ctx, const char *filename)
 {
 	const char *ext = strrchr(filename, '.');
@@ -326,13 +374,15 @@ pdf_guess_mime_type_from_file_name(fz_context *ctx, const char *filename)
 
 pdf_obj *
 pdf_add_embedded_file(fz_context *ctx, pdf_document *doc,
-	const char *filename, const char *mimetype, fz_buffer *contents)
+	const char *filename, const char *mimetype, fz_buffer *contents,
+	int64_t created, int64_t modified, int add_checksum)
 {
 	const char *s;
 	char asciiname[1024];
 	pdf_obj *file = NULL;
 	pdf_obj *filespec = NULL;
-	pdf_obj *ef;
+	pdf_obj *ef = NULL;
+	pdf_obj *params = NULL;
 	size_t i;
 
 	fz_var(file);
@@ -356,6 +406,19 @@ pdf_add_embedded_file(fz_context *ctx, pdf_document *doc,
 		pdf_dict_put(ctx, file, PDF_NAME(Type), PDF_NAME(EmbeddedFile));
 		pdf_dict_put_name(ctx, file, PDF_NAME(Subtype), mimetype);
 		pdf_update_stream(ctx, doc, file, contents, 0);
+
+		params = pdf_dict_put_dict(ctx, file, PDF_NAME(Params), 4);
+		pdf_dict_put_int(ctx, params, PDF_NAME(Size), fz_buffer_storage(ctx, contents, NULL));
+		if (created >= 0)
+				pdf_dict_put_date(ctx, params, PDF_NAME(CreationDate), created);
+		if (modified >= 0)
+				pdf_dict_put_date(ctx, params, PDF_NAME(ModDate), modified);
+		if (add_checksum)
+		{
+			unsigned char digest[16];
+			fz_md5_buffer(ctx, contents, digest);
+				pdf_dict_put_string(ctx, params, PDF_NAME(CheckSum), (const char *) digest, nelem(digest));
+		}
 
 		filespec = pdf_add_new_dict(ctx, doc, 4);
 		pdf_dict_put(ctx, filespec, PDF_NAME(Type), PDF_NAME(Filespec));
