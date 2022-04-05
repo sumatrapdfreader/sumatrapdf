@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f97163607d140de92c3fe8323e3867cb02ef6736
+2e5cb163982bc9d72c6c650c7f46a67af64621fa
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5834,6 +5834,7 @@ vn:Truyện tranh comic
 cn:命令面板
 de:Befehlspalette
 et:Käsupalett
+nl:Opdrachten
 pl:Paleta poleceń
 :Compatibility
 am:Համատեղելիությունը
@@ -6402,6 +6403,7 @@ cn:复制到剪贴版
 de:In Zwischenablage kopieren
 et:Kopeeri lõikelauale
 it:Copia negli Appunti
+nl:Kopieer naar klembord
 pl:Kopiuj do schowka
 :Copying text was denied (copying as image only)
 am:Գրվածքի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
@@ -10976,6 +10978,7 @@ cn:显示字体信息
 de:Schriftarten-Infos erhalten
 et:Hangi fondi infot
 it:Ottieni informazioni sui font
+nl:Informatie over lettertypen ophalen
 pl:Uzyskaj informacje o czcionkach
 :Go to page
 af:Gaan Na Bladsy
@@ -16029,26 +16032,9 @@ sl:SVG dokumenti
 th:เอกสาร SVG
 tr:SVG belgeleri
 uk:SVG документи
-:Save Annotations to existing PDF
-am:Պահել ծանոթագրությունը առկա PDF-ում
-bg:Запази Обясненията в съществуващ PDF
-br:Salvar anotações neste PDF
-cn:将标注保存到当前 PDF
-co:Arregistrà l’annutazioni in u PDF esistente
-de:Anmerkungen in bestehende PDF-Dateien speichern
-el:Αποθήκευση σχολίων σε υπάρχον PDF
-es:Guardar Anotaciones a PDF existente
-et:Salvesta märkused olemasolevasse PDF-i
-fr:Sauvegarder les annotations dans le PDF existant.
-gl:Gardar anotacións ó PDF existente
-hr:Spremi bilješke u postojeći PDF
-hu:Megjegyzések elmentése a meglévő PDF-be
-id:Simpan catatan ke PDF terkini
-it:Salva annotazioni in PDF esistente
-nl:Notaties opslaan in bestaande PDF
-pl:Zapisz adnotacje do istniejącego pliku PDF
-sl:Shrani pripombe v obstoječi PDF
-tr:Dipnotları geçerli PDF'ye kaydet
+:Save Annotations to existing PDF\tCtrl+Shift+S
+cn:将标注保存到当前 PDF\tCtrl+Shift+S
+nl:Notities opslaan in bestaande PDF\tCtrl Shift S
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
