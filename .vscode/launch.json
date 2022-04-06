@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Go",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": true,
+            "externalConsole": false,
+            "program": "${workspaceFolder}/do"
+        },
+        {
             "name": "Launch dbg 64",
             "type": "cppvsdbg",
             "preLaunchTask": "build-dbg-64",
