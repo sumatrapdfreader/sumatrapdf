@@ -54,7 +54,7 @@ struct Slice {
     char* end = nullptr;
     char* curr = nullptr;
 
-    Slice();
+    Slice() = default;
     Slice(char* s, size_t len);
     Slice(char* start, char* end);
     Slice(const Slice& other);

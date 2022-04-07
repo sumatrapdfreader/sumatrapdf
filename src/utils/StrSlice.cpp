@@ -13,10 +13,6 @@ static inline bool IsWsNoNewline(char c) {
     return (' ' == c) || ('\r' == c) || ('\t' == c);
 }
 
-Slice::Slice() {
-    // nothing to do
-}
-
 Slice::Slice(char* s, char* e) : begin(s), end(e), curr(s) {
     CrashIf(begin > end);
 }
@@ -64,7 +60,7 @@ size_t Slice::AdvanceCurrTo(char* s) {
 
 // returns number of characters skipped
 size_t Slice::SkipWsUntilNewline() {
-    // things are faster if those are locals and not
+    // things are faster if those are locals
     char* s = curr;
     char* e = end;
     while (s < e) {

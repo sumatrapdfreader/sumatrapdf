@@ -12,7 +12,7 @@ var (
 
 	keyboardShortcut = []*Field{
 		mkField("Cmd", String, "", "command"),
-		mkField("Shortcut", String, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
+		mkField("Key", String, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
 	}
 
 	scrollPos = []*Field{

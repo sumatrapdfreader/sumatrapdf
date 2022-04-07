@@ -152,7 +152,7 @@ struct Shortcut {
     // command
     char* cmd;
     // keyboard shortcut (e.g. Ctrl-Alt-F)
-    char* shortcut;
+    char* key;
 };
 
 // Values which are persisted for bookmarks/favorites
@@ -519,9 +519,9 @@ static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy
 
 static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
-    {offsetof(Shortcut, shortcut), SettingType::String, (intptr_t) ""},
+    {offsetof(Shortcut, key), SettingType::String, (intptr_t) ""},
 };
-static const StructInfo gShortcutInfo = {sizeof(Shortcut), 2, gShortcutFields, "Cmd\0Shortcut"};
+static const StructInfo gShortcutInfo = {sizeof(Shortcut), 2, gShortcutFields, "Cmd\0Key"};
 
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), SettingType::String, 0},

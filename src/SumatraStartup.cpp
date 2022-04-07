@@ -504,7 +504,7 @@ static bool RegisterForPdfExtentions(HWND hwnd) {
 }
 
 static int RunMessageLoop() {
-    HACCEL accTable = CreateSumatraAcceleratorTable();
+    HACCEL* accTable = CreateSumatraAcceleratorTable();
 
     MSG msg{nullptr};
 
@@ -515,7 +515,7 @@ static int RunMessageLoop() {
         if (win) {
             accHwnd = win->hwndFrame;
         }
-        if (TranslateAccelerator(accHwnd, accTable, &msg)) {
+        if (TranslateAccelerator(accHwnd, *accTable, &msg)) {
             continue;
         }
 

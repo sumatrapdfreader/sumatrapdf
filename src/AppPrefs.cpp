@@ -30,6 +30,7 @@
 #include "Favorites.h"
 #include "Toolbar.h"
 #include "Translations.h"
+#include "Accelerators.h"
 
 #include "utils/Log.h"
 
@@ -326,6 +327,7 @@ bool Reload() {
 
     UpdateDocumentColors();
     UpdateFixedPageScrollbarsVisibility();
+    CreateSumatraAcceleratorTable();
     return true;
 }
 
