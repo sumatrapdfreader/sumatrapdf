@@ -10,6 +10,11 @@ var (
 		mkField("Dy", Int, 0, "height"),
 	}
 
+	keyboardShortcut = []*Field{
+		mkField("Cmd", String, "", "command"),
+		mkField("Shortcut", String, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
+	}
+
 	scrollPos = []*Field{
 		mkField("X", Float, 0, "x coordinate"),
 		mkField("Y", Float, 0, "y coordinate"),
@@ -348,6 +353,7 @@ var (
 			"if true, we show a list of frequently read documents when no document is loaded"),
 		mkField("UseTabs", Bool, true,
 			"if true, documents are opened in tabs instead of new windows").setVersion("3.0"),
+		mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
 		mkEmptyLine(),
 
 		// file history and favorites

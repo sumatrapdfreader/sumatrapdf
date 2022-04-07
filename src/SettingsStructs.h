@@ -147,6 +147,14 @@ struct Annotations {
     char* defaultAuthor;
 };
 
+// custom keyboard shortcuts
+struct Shortcut {
+    // command
+    char* cmd;
+    // keyboard shortcut (e.g. Ctrl-Alt-F)
+    char* shortcut;
+};
+
 // Values which are persisted for bookmarks/favorites
 struct Favorite {
     // name of this favorite as shown in the menu
@@ -380,6 +388,8 @@ struct GlobalPrefs {
     bool showStartPage;
     // if true, documents are opened in tabs instead of new windows
     bool useTabs;
+    // custom keyboard shortcuts
+    Vec<Shortcut*>* shortcuts;
     // information about opened files (in most recently used order)
     Vec<FileState*>* fileStates;
     // state of the last session, usage depends on RestoreSession
@@ -506,6 +516,12 @@ static const FieldInfo gRectFields[] = {
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
 static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy"};
+
+static const FieldInfo gShortcutFields[] = {
+    {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
+    {offsetof(Shortcut, shortcut), SettingType::String, (intptr_t) ""},
+};
+static const StructInfo gShortcutInfo = {sizeof(Shortcut), 2, gShortcutFields, "Cmd\0Shortcut"};
 
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), SettingType::String, 0},
@@ -649,6 +665,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, shortcuts), SettingType::Array, (intptr_t)&gShortcutInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo},
     {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo},
@@ -660,13 +677,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 56, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 57, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0SmoothScroll\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedP"
     "ageUI\0ComicBookUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTit"
     "le\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0CustomScreenDPI\0"
     "\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0Check"
     "ForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0D"
-    "efaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates"
-    "\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "efaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0Shortcuts\0\0"
+    "FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif
