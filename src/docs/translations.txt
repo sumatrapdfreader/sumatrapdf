@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2e5cb163982bc9d72c6c650c7f46a67af64621fa
+01887211b3d6ad876a7e409bc1fc43fd9540cb83
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -71,77 +71,7 @@ tw:關於(&A)
 uk:&Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
-:&Actual Size\tCtrl+1
-af:&Gewone Grootte\tCtrl+1
-am:Իրական &չափը\tCtrl+1
-ar:الحجم &الحقيقي\tCtrl+1
-az:&Faktiki ölçü\tCtrl+1
-bg:&Оригинален (реален) размер\tCtrl+1
-bn:বাস্তবিক আকার\tCtrl+1
-br:&Tamanho real\tCtrl+1
-bs:Stvarna veličina\tCtrl+1
-by:Сапраўдны памер\tCtrl+1
-ca-xv:Mida &real\tCtrl+1
-ca:Mida &real\tCtrl+1
-cn:实际大小(&A)\tCtrl+1
-co:&Dimensione attuale\tCtrl+1
-cy:&Gwir Faint\tCtrl+1
-cz:Skutečná &velikost\tCtrl+1
-de:&Tatsächliche Größe\tStrg+1
-dk:&Faktisk størrelse\tCtrl+1
-el:Πραγματικό &μέγεθος\tCtrl+1
-es:&Tamaño real\tCtrl+1
-et:&Tegelik suurus\tCtrl+1
-eu:&Oraingo Neurria\tKtrl+1
-fa:&اندازه واقعی\tCtrl+1
-fi:&Todellinen koko\tCtrl+1
-fr:&Taille réelle\tCtrl+1
-fy-nl:Wiere grutte\tCtrl+1
-ga:&Méid Iarbhír\tCtrl+1
-gl:&Tamaño actual\tCtrl+1
-he:גודל מקורי\tCtrl+1
-hi:वास्तविक आकार(&A)\tCtrl+1
-hr:Stvarna veličina\tCtrl+1
-hu:&Tényleges méret\tCtrl+1
-id:&Ukuran Sebenarnya\tCtrl+1
-it:Dimensioni &attuali\tCtrl+1
-ja:実際のサイズ(&A)\tCtrl+1
-jv:&Ukuran Nyata\tCtrl+1
-ka:&თავდაპირველი ზომა\tCtrl+1
-kr:실제 크기(&A)\tCtrl+1
-ku:قەبارەی ڕاستەقینە &\tCtrl+1
-kw:&Braster gwir\tCtrl+1
-lt:&Originalus\tCtrl+1
-lv:&Patiesais lielums\tCtrl+1
-mk:&Реална големина\tCtrl+1
-ml:ശരിയായ വലിപ്പം\tCtrl+1
-mm:ပုံမှန် အရွယ်\tCtrl+1
-my:&Saiz sebenar\tCtrl+1
-ne:&सही आकार\tCtrl+1
-nl:&Ware grootte\tCtrl+1
-nn:F&aktisk storleik\tCtrl+1
-no:Fak&tisk størrelse\tCtrl+1
-pa:&ਅਸਲ ਅਕਾਰ\tCtrl+1
-pl:&Rozmiar rzeczywisty\tCtrl+1
-pt:T&amanho real\tCtrl+1
-ro:Mărime &efectivă\tCtrl+1
-ru:&Настоящий размер\tCtrl+1
-si:&නියමිත ප්‍රමාණය\tCtrl+1
-sk:&Skutočná veľkosť\tCtrl+1
-sl:&Dejanska velikost\tCtrl+1
-sn:Saizi chaiyo\tCtrl+1
-sp-rs:Stvarna veličina\tCtrl+1
-sq:Përmasa &reale\tCtrl+1
-sr-rs:Стварна величина\tCtrl+1
-sv:&Verklig storlek\tCtrl+1
-ta:மெய் அளவு\tCtrl+1 (&A)
-th:&ขนาดจริง Ctrl+1
-tl:Tunay na Laki\tCtrl+1
-tr:Gerçek &Boyut\tCtrl+1
-tw:實際大小(&A)\tCtrl+1
-uk:Справжній розмір\tCtrl+1
-uz:&Haqiqiy o'lchami\tCtrl+1
-vn:Kích thướ&c thật\tCtrl+1
+:&Actual Size
 :&Advanced Options...
 am:&Ընդլայնված ընտրանքներ..
 ar:خيارات &متقدمة
@@ -274,138 +204,8 @@ tw:所有已選取頁面(&A)
 uk:Обрано всі сторінки
 uz:&Hamma tanlangan betlar
 vn:Tất cả các tr&ang được chọn
-:&Back\tAlt+Left Arrow
-am:&Նախորդը\tAlt+Left Arrow
-ar:للخلف&\tAlt+Left Arrow
-az:&Geri\tAlt+Sol ox
-bg:На&зад\tAlt+Лява стрелка
-bn:&পিছনে\tAlt+Left Arrow 
-br:Voltar\tAlt+<-
-bs:Nazad\tAlt+<-
-by:&Назад\tAlt+Стрэлка налева
-ca-xv:Arrere\tAlt+Fletxa esquerra
-ca:&Enrere\tAlt+<--
-cn:向前翻(&B)\tAlt+左方向键
-co:&Nanzu\tAlt+Fleccia manca
-cy:Nôl\tAlt+Saeth Chwith
-cz:Z&pět\tAlt+Šipka vlevo
-de:Vorherige Ansicht\tAlt+<-
-dk:&Tilbage\tAlt+venstre pil
-el:&Πίσω\tAlt+<-
-es:&Atrás\tAlt+Izq
-et:&Tagasi\tAlt+Vasaknool
-eu:A&tzera\tAlt+Ezker Gezia
-fa:جای &قبلی\tAlt+←‎
-fi:&Takaisin\tAlt+Vasen nuoli
-fr:&Retour\tAlt+<-
-fy-nl:Tebek\tAlt+<-
-ga:&Siar\tAlt+Saighead Ar Clé
-gl:&Atrás\tAlt+Frecha esquerda
-he:מקטע קודם\tחץ שמאלי + Alt
-hi:&वापस\t Alt+बायाँ तीर
-hr:Natrag\tAlt+<-
-hu:Ugrás vissza\tAlt+<-
-id:&Kembali\tAlt+<-
-it:&Indietro\tAlt+freccia sinistra
-ja:前に戻る(&B)\tAlt+←
-jv:&Mbalik\tAlt+Arah Kiri
-ka:&უკან\tAlt+მარცხენა ისარი
-kr:이전에 본 페이지(&B)\tAlt+왼쪽 방향키
-ku:&گەڕانەوە\tAlt+Left Arrow
-kw:War-lergh\tAlt+<-
-lt:At&gal\tAlt+Kairėn
-lv:&Atpakaļ\tAlt+Kreisā bultiņa
-mk:Назад\tAlt+Left Arrow
-my:&Kembali\tAlt+Left Arrow
-ne:&पछाडि\tAlt+बायाँ बाण
-nl:Terug\tAlt+<-
-nn:&Tilbake\tAlt+Venstretast
-no:Tilbake\tAlt+←
-pa:&Back\tAlt+Left Arrow
-pl:&Wstecz\tAlt+W lewo
-pt:&Recuar\tAlt + <-
-ro:Înapoi\tAlt+<-
-ru:&Назад\tAlt+Стрелка влево
-si:&පසුපසට\tAlt+Left Arrow
-sk:&Naspäť\tAlt+Left Arrow
-sl:&Nazaj\tAlt+Leva puščica
-sp-rs:Nazad\tAlt+<-
-sq:&Prapa\tAlt+Left Arrow
-sr-rs:Назад\tAlt+<-
-sv:Tillbaka\tAlt+Pil vänster
-ta:பின்\tAlt+Left Arrow
-th:&ถอยกลับ Alt+Left Arrow
-tl:Bumalik\tAlt+Left Arrow
-tr:&Geri\tAlt+Sol Ok
-tw:上一頁(&B)\tAlt+左箭頭
-uk:&Назад\tAlt+Ліва стрілка
-uz:&Orqaga\tAlt+<-
-vn:Trở về\tAlt+Mũi tên trái
-:&Book View\tCtrl+8
-am:&Գրքի տեսքով\tCtrl+8
-ar:عرض &الكتاب
-az:&Kitab formatı\tCtrl+8
-bg:&Изглед като книга\tCtrl+8
-bn:&বই-এর মত সজ্জা\টি কন্ট্রোল + ৮
-br:Ver como livro\tCtrl+8
-bs:&Knjiški pregled\tCtrl+8
-by:Выгляд як &Кніга\tCtrl+8
-ca-xv:Visualització de &llibre\tCtrl+8
-ca:Vista de &llibre\tCtrl+8
-cn:书籍视图(&B)\tCtrl+8
-co:Cum’è un &libru\tCtrl+8
-cy:Golwg &Llyfr\tCtrl+8
-cz:K&niha\tCtrl+8
-de:&Buchansicht\tStrg+8
-dk:&Bogvisning\tCtrl+8
-el:&Προβολή βιβλίου\tCtrl+8
-es:&Vista de libro\tCtrl+8
-et:&Raamatuvaade\tCtrl+8
-eu:&Liburu Ikuspegia\tKtrl+8
-fa:&کتابی\tCtrl+8
-fi:&Kirjanäkymä\tCtrl+8
-fr:Comme un livre\tCtrl+8
-ga:&Leabhar-amharc\tCtrl+8
-gl:Vista de li&bro\tCtrl+8
-he:תצוגת ספר\tCtrl+8
-hi:&पुस्तक के रुप में देखें\tCtrl+8
-hr:&Knjiški pregled\tCtrl+8
-hu:&Könyv-mód (oldalpár címlappal)\tCtrl+8
-id:Tampilan &Buku\tCtrl+8
-it:Vista &libro\tCtrl+8
-ja:ブック ビュー(&B)\tCtrl+8
-jv:&Tampilan Buku\tCtrl+8
-ka:&წიგნის რეჟიმი\tCtrl+8
-kr:책처럼 보기(&B)\tCtrl+8
-ku:شێوازی پەرتووک&\tCtrl+8
-kw:&Gwel-lyver\tCtrl+8
-lt:Kn&yga\tCtrl+8
-lv:&Grāmatas skats\tCtrl+8
-mk:Книга\tCtrl+8
-my:Lihat &buku\tCtrl+8
-ne:&पुस्तिका दृश्य\tCtrl+8
-nl:&Boekweergave\tCtrl+8
-nn:&Bokvising\tCtrl+8
-no:&Bokvisning\tCtrl+8
-pa:&ਕਿਤਾਬੀ ਦਿੱਖ\tCtrl+8
-pl:Widok o&dczytu\tCtrl+8
-pt:Como li&vro\tCtrl+8
-ro:Format carte\tCtrl+8
-ru:В &разворот\tCtrl+8
-si:&පොතක් ලෙස\tCtrl+8
-sk:&Kniha\tCtrl+8
-sl:Knjižni pogled\tCtrl+8
-sp-rs:Izgled knjige\tCtrl+8
-sq:&Libër\tCtrl+8
-sr-rs:Изглед књиге\tCtrl+8
-sv:&Bokvy\tCtrl+8
-ta:&புத்தக தோற்றம்\tCtrl+8
-th:&แสดงแบบหนังสือ Ctrl+8
-tr:&Kitap Görünümü\tCtrl+8
-tw:書本檢視(&B)\tCtrl+8
-uk:Книжна розгортка\tCtrl+8
-uz:&Kitob ko'rinishi\tCtrl+8
-vn:Xem dạng sách\tCtrl+8
+:&Back
+:&Book View
 :&Cancel
 am:Չեղարկել
 bg:&Отказ
@@ -464,77 +264,7 @@ sl:&Karet
 th:&ผู้ดูแล
 tr:&Karet
 uk:&Каретка
-:&Close\tCtrl+W
-af:Maak Toe\tCtrl+W
-am:&Փակել\tCtrl+W
-ar:&اغلاق\tCtrl+W
-az:&Bağla\tCtrl+W
-bg:&Затвори\tCtrl+W
-bn:&বন্ধ\tCtrl+W
-br:&Fechar\tCtrl+W
-bs:&Zatvori\tCtrl+W
-by:Зачыніць\tCtrl+W
-ca-xv:&Tanca\tCtrl+W
-ca:&Tanca\tCtrl+W
-cn:关闭(&C)\tCtrl+W
-co:&Chjode\tCtrl+W
-cy:&Cau\tCtrl+W
-cz:&Zavřít\tCtrl+W
-de:&Schließen\tStrg+W
-dk:&Luk\tCtrl+W
-el:&Κλείσιμο\tCtrl+W
-es:&Cerrar\tCtrl+W
-et:&Sulge\tCtrl+W
-eu:It&xi\tKtrl+W
-fa:ب&ستن\tCtrl+W
-fi:&Sulje\tCtrl+W
-fr:&Fermer\tCtrl+W
-fy-nl:&Ofslute\tCtrl+W
-ga:&Dún\tCtrl+W
-gl:Pe&char\tCtrl+W
-he:סגור\tCtrl+W
-hi:बंद करें(&C)\tCtrl+W
-hr:&Zatvori\tCtrl+W
-hu:Be&zárás\tCtrl+W
-id:&Tutup\tCtrl+W
-it:&Chiudi\tCtrl+W
-ja:閉じる(&C)\tCtrl+W
-jv:&Tutup\tCtrl+W
-ka:&დახურვა\tCtrl+W
-kr:닫기(&C)\tCtrl+W
-ku:داخستن&\tCtrl+W
-kw:&Degea\tKtrl+W
-lt:&Užverti\tCtrl+W
-lv:&Aizvērt\tCtrl+W
-mk:&Затвори\tCtrl+W
-ml:അടയ്ക്കുക\tCtrl+W
-mm:&ပိတ်ပါ\tCtrl+W
-my:&Tutup\tCtrl+W
-ne:&बन्द गर्नुहोस्\tCtrl+W
-nl:&Sluiten\tCtrl+W
-nn:&Lukk\tCtrl+W
-no:&Lukk\tCtrl+W
-pa:ਬੰਦ ਕਰੋ(&C)\tCtrl+W
-pl:&Zamknij\tCtrl+W
-pt:Fe&char\tCtrl+W
-ro:Înc&hidere\tCtrl+W
-ru:&Закрыть\tCtrl+W
-si:&වසන්න\tCtrl+W
-sk:&Zatvoriť\tCtrl+W
-sl:&Zapri\tCtrl+W
-sn:&Vhara\tCtrl+0
-sp-rs:Zatvori\tCtrl+W
-sq:&Mbyll\tCtrl+W
-sr-rs:Затвори\tCtrl+W
-sv:&Stäng\tCtrl+W
-ta:மூடு\tCtrl+W
-th:&ปิด Ctrl+W
-tl:Isara\tCtrl+W
-tr:&Kapat\tCtrl+W
-tw:關閉(&C)\tCtrl+W
-uk:&Закрити\tCtrl+W
-uz:&Yopish\tCtrl+W
-vn:Đóng tập tin\tCtrl+W
+:&Close
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
 br:&Continue instalando a versão 32-bits
@@ -564,58 +294,72 @@ tr:32 bit sürümü kurmayı &sürdür
 tw:繼續安裝32位元版本(&C)
 uk:&Продовжити встановлення 32-розрядної версії
 vn:&Tiếp tục cài đặt bản 32-bit
-:&Copy Selection \tCtrl-C
-am:&Պատճենել ընտրումը \tCtrl-C
-br:&Copiar Seleção \tCtrl-C
-ca-xv:&Copia la selecció \tCtrl-C
-ca:&Copia la selecció \tCtrl-C
-cn:复制所选内容(&C)\tCtrl+C
-co:&Cupià a selezzione\tCtrl+C
-de:Auswahl kopieren \tStrg+C
-el:Αντιγραφή επιλογής \tCtrl-C
-es:&Copiar la selección \tCtrl-C
-et:&Kopeeri valik \tCtrl+C
-fr:Copier la sélection \tCtrl-C
-hr:&Kopiraj odabrano \tCtrl-C
-hu:Kiválasztás másolása \tCtrl-C
-id:&Menyalin Pilihan \tCtrl-C
-it:&Copia selezione\tCtrl-C
-kr:선택한 내용 복사(&C)\tCtrl-C
-kw:&Kopia Dewisans \tKtrl-C
-nl:&Kopieer selectie \tCtrl-C
-pl:&Kopiuj zaznaczenie\tCtrl-C
-sl:&Kopiraj izbor\tCtrl-C
-th:&คัดลอกส่วนที่เลือก \tCtrl-C
-tr:Seçimi &Kopyala \tCtrl-C
-tw:複製選取文字(&C) \tCtrl-C
-uk:&Копіювати виділення \tCtrl-C
-vn:&Sao chép \tCtrl-C
-:&Copy To Clipboard\tCtrl-C
-am:&Պատճենել սեղմատախտգակ\tCtrl-C
-br:Copiar para Área de Transferência\tCtrl-C
-ca-xv:&Copia al porta-retalls\tCtrl-C
-ca:&Copia al porta-retalls\tCtrl-C
-cn:复制到剪贴板(&C)\tCtrl+C
-co:&Cupià in u preme’papei\tCtrl+C
-de:In Zwischenablage kopieren\tStrg+C
-el:Αντιγραφή στο πρόχειρο\tCtrl-C
-es:&Copiar al portapapeles\tCtrl-C
-et:&Kopeeri lõikelauale\tCtrl+C
-fr:Copier dans le presse-papiers
-hr:&Kopiraj u međuspremnik\tCtrl-C
-hu:Vágólapra másolás\tCtrl-C
-id:&Salin Ke Papan Klip\tCtrl-C
-it:&Copia negli Appunti\tCtrl-C
-kr:클립보드에 복사(&C)\tCtrl-C
-kw:&Kopia dhe'n Skryp\tKtrl-C
-mk:Копирај во таблата со исечоци \ tCtrl-C
-nl:&Kopieer naar Klembord\tCtrl-C
-pl:&Kopiuj do schowka\tCtrl-C
-sl:&Kopiraj v odložišče\Ctrl-C
-th:&คัดลอกไปยังคลิปบอร์ด\tCtrl-C
-tr:Panoya &Kopyala\tCtrl-C
-uk:Копіювати в буфер обміну\Ctrl-C
-vn:&Sao chép vào Clipboard\tCtrl-C
+:&Copy Selection
+am:&Պատճենել նշվածը
+ar:نسخ المحدد&
+az:Seçilmiş sahəni &kopyala
+bg:&Копиране на избраното
+bn:&নির্বাচিত অংশ কপি করুন
+br:&Copiar seleção
+bs:&Kopiraj označeno
+by:&Капіяваць выбранае
+ca-xv:&Copia la selecció
+ca:&Copia la selecció
+cn:复制选定范围(&C)
+co:Cupià a sele&zzione
+cy:Copïo &Dewis
+cz:&Kopírovat výběr
+de:Auswahl &kopieren
+dk:&Kopier markering
+el:&Αντιγραφή επιλογής
+es:&Copiar selección
+et:&Kopeeri valik
+eu:&Kopiatu Hautapena
+fa:&رونوشت از قسمت انتخاب شده
+fi:Kopioi &valinta
+fr:&Copier la sélection
+ga:&Macasamhlaigh an Roghnúchán
+gl:&Copiar a selección
+he:העתק בחירה
+hi:च&यनित का नक़ल करें
+hr:&Kopiraj obilježeno
+hu:Kijelölés &másolása
+id:&Salin Seleksi
+it:&Copia selezione
+ja:選択範囲をコピー(&C)
+ka:მონიშნულის &კოპირება
+kr:선택한 부분 복사(&C)
+ku:لەبەرگرتنەوەی دیاریکراو&
+kw:&Kopia Dewis
+lt:&Kopijuoti pažymėtą sritį
+lv:&Kopēt atlasi
+mk:&Копирај селекција
+my:&Salin Pilihan
+ne:चयनको प्रति&लिपि बनाउनुहोस्
+nl:Selectie kopiëren
+nn:&Kopier utval
+no:&Kopier valgt område
+pa:&ਚੋਣ ਦੀ ਕਾਪੀ ਕਰੋ
+pl:Kopiuj &zaznaczenie
+pt:&Copiar seleção
+ro:&Copiază selecția
+ru:С&копировать выделенное
+si:ලකුනුකල ‌කොටස ‌කොපිකරන්න
+sk:&Kopírovať vybrané
+sl:Kopiraj izbor
+sp-rs:Kopiraj izabrano
+sq:&Kopjoj materialin
+sr-rs:Копирај изабрано
+sv:&Kopiera markering
+ta:தேர்ந்தெடுத்தவற்றை நகலெடு
+th:&คัดลอกตำแหน่งที่เลือก
+tl:Kopyahin ang napili
+tr:Seçimi &Kopyala
+tw:複製選取範圍(&C)
+uk:Скопіювати вибране
+uz:&Tanlanganni nusxa olish
+vn:&Chép phần đã chọn
+:&Copy To Clipboard
 :&Discard changes
 am:&Մերժել
 br:&Descartar
@@ -776,69 +520,7 @@ tw:僅偶數頁(&E)
 uk:Тільки парні сторінки
 uz:&Faqat juft betlar
 vn:Chỉ những trang lẻ
-:&Facing\tCtrl+7
-am:&Երկու էջով\tCtrl+7
-ar:متقابلتان&\tCtrl+7
-az:&Cüt səhifələr\tCtrl+7
-bg:&Срещуположни страници\tCtrl+7
-br:Página dupla\tCtrl+7
-bs:&Dvije stranice\tCtrl+7
-by:Па &дзве старонцы\tCtrl+7
-ca-xv:Pàgina &doble\tCtrl+7
-ca:Pàgina &doble\tCtrl+7
-cn:双页视图(&F)\tCtrl+7
-co:Pagina d&oppia\tCtrl+7
-cy:&Wynebu\tCtrl+7
-cz:&Dvojstránky\tCtrl+7
-de:&Doppelseite\tStrg+7
-dk:&Modstående\tCtrl+7
-el:&Αντικριστές σελίδες\tCtrl+7
-es:&Doble página\tCtrl+7
-et:&Kaheleheküljeline\tCtrl+7
-eu:&Bi Aldeetatik\tKtrl+7
-fa:&دوصفحه‌ای\tCtrl+7
-fi:&Rinnakkain\tCtrl+7
-fr:Double page\tCtrl+7
-ga:&Dhá Leathanach\tCtrl+7
-gl:&Dúas páxinas\tCtrl+7
-he:עמוד לצד עמוד\tCtrl+7
-hi:&समतल करना\tCtrl+7
-hr:&Dvije stranice\tCtrl+7
-hu:&Oldalpár\tCtrl+7
-id:Meng&hadap\tCtrl+7
-it:Pagine &affiancate\tCtrl+7
-ja:見返し表示(&F)\tCtrl+7
-ka:&ურთიერთ-საპირისპიროდ\tCtrl+7
-kr:두 페이지씩(&F)\tCtrl+7
-ku:&ڕووکار\tCtrl+7
-kw:&A-dal\tCtrl+7
-lt:&Du puslapiai\tCtrl+7
-lv:&Divas lappuses\tCtrl+7
-mk:Две страници\tCtrl+7
-my:&Menghadap\tCtrl+7
-ne:&सम्मुख\tCtrl+7
-nl:&Dubbele pagina\tCtrl+7
-nn:&Fleire sider\tCtrl+7
-no:&Flere sider\tCtrl+7
-pl:&Wiele stron\tCtrl+7
-pt:D&uas páginas\tCtrl+7
-ro:Două pagini\tCtrl+7
-ru:По &две страницы\tCtrl+7
-si:&Facing\tCtrl+7
-sk:&Dve strany\tCtrl+7
-sl:Dvostransko\tCtrl+7
-sp-rs:Naspramno\tCtrl+7
-sq:&Përbri\tCtrl+7
-sr-rs:Наспрамно\tCtrl+7
-sv:&Sida vid sida\tCtrl+7
-ta:பார்வையில்\tCtrl+7
-th:&เป็นหน้า Ctrl + 7
-tl:&Magkaharap\tCrtl+7
-tr:&Her İki Yüz\tCtrl+7
-tw:雙頁模式(&F)\tCtrl+7
-uk:Дві сторінки\tCtrl+7
-uz:&Ikkita betdan\tCtrl+7
-vn:Trang kép\tCtrl+7
+:&Facing
 :&File
 af:&Lêer
 am:&Ֆայլ
@@ -977,76 +659,7 @@ tw:尋找(&F):
 uk:Що шукати:
 uz:&Qidirish:
 vn:Tìm (các) từ sau:
-:&First Page\tHome
-af:Eerste Bladsy\tHome
-am:Առաջին էջը\tHome
-ar:الصفحة &الأولى\tHome
-az:&Birinci səhifə\tHome
-bg:&Начална страница\tHome
-bn:প্রথম পৃষ্ঠা\tHome
-br:Primeira página\tHome
-bs:Prva stranica\tHome
-by:Першая старонка\tHome
-ca-xv:&Primera pàgina\tInici
-ca:&Primera pàgina\tInici
-cn:第一页(&F)\tHome
-co:P&rima pagina\tPrincipiu
-cy:Tudalen Gyntaf\tHome
-cz:První &stránka\tHome
-de:&Erste Seite\tPos 1
-dk:&Første side\tHome
-el:Πρώτ&η σελίδα\tHome
-es:&Primera página\tInicio
-et:&Esimene lehekülg\tHome
-eu:&Lehen Orrialdea\tHasiera
-fa:صفحه‌ی &نخست\tHome
-fi:E&nsimmäinen sivu\tHome
-fr:P&remière page\tHome
-fy-nl:Earste side\tHome
-ga:An Chéad Leathanach\tHome
-gl:Primeira páxina\tHome
-he:עמוד ראשון\tHome
-hi:पहले पृष्ठ पर\tHome
-hr:Prva stranica\tHome
-hu:Első oldal\tHome
-id:Halaman Pertama\tHome
-it:&Prima pagina\t<Home>
-ja:最初のページ(&F)\tHome
-ka:&პირველი გვერდი\tHome
-kr:첫 페이지(&F)\tHome
-ku:پەڕەی یەکەم&\tHome
-kw:Kynsa Folen\tHome
-lt:Pi&rmąjį puslapį\tHome
-lv:&Pirmo lappusi\tSākums
-mk:Прва страница\tHome
-ml:ആദ്യ താള്‍\tHome
-mm:ပထမ စာမျက်နှာ\tHome
-my:&Halaman pertama\tHome
-ne:&पहिलो पृष्ठ\tHome
-nl:Eerste pagina\tHome
-nn:Fyrste side\tHome
-no:Første side\tHome
-pa:ਪਹਿਲੇ ਪੰਨੇ ਤੇ\tHome
-pl:&Pierwsza strona\tHome
-pt:Primeira &página\tHome
-ro:Prima pagină\tHome
-ru:Перва&я страница\tHome
-si:&මුල් පිටුව\tHome
-sk:&Prvá strana\tHome
-sl:Prva stran\tHome
-sn:Peji yekutanga\tHome
-sp-rs:Prva stranica\tHome
-sq:&Faqja e parë\tHome
-sr-rs:Прва страница\tHome
-sv:Första sidan\tHome
-ta:முதல் பக்கம்\tHome
-th:&หน้าแรก Home
-tl:Unang Pahina\tHome
-tr:&İlk Sayfa\tHome
-tw:第一頁(&F)\tHome
-uk:Перша сторінка\tHome
-uz:&Birinchi bet\tHome
-vn:Trang đầu\tHome
+:&First Page
 :&Fit pages to printable area
 am:&Հարմարեցնել էջերը տպելու համար
 ar:&ملائمة الصفحات لمنطقة الطباعة
@@ -1347,101 +960,8 @@ tw:求助(&H)
 uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
-:&Highlight\ta
-am:&Գունանշում\ta
-br:&Destacar\ta
-ca-xv:Ress&alta\ta
-ca:Ress&alta\ta
-cn:&高亮\tA
-co:Sopra&lineà\ta
-de:&Hervorheben\ta
-el:Επισήμανση
-es:&Resaltar\ta
-et:&Esiletõstmine\ta
-hr:&Istakni\ta
-hu:Kiemelés\ta
-id:Sorotan
-it:Evidenzia\ta
-kw:&Golowboyntya\ta
-lt:Pa&ryškinti
-lv:&Iezīmēt\ta
-nl:&Markeer\ta
-pl:&Wyróżnienie\ta
-sl:O&znači\ta
-th:&เน้นสี\ta
-tr:&Vurgula\ta
-tw:高亮度(&H)\ta
-uk:&Виділити\ta 
-:&Last Page\tEnd
-af:Laaste Bladsy\tEnd
-am:Վերջին էջը\tEnd
-ar:الصفحة &الأخيرة\tEnd
-az:&Axırıncı səhifə\tEnd
-bg:&Последна страница\tEnd
-bn:শেষ পৃষ্ঠা\tEnd
-br:Última página\tEnd
-bs:Posljednja stranica\tEnd
-by:Апошняя старонка\tEnd
-ca-xv:Ú&ltima pàgina\tFinal
-ca:Ú&ltima pàgina\tFinal
-cn:最后一页(&L)\tEnd
-co:&Ultima pagina\tFine
-cy:Tudalen Olaf\tEnd
-cz:Pos&lední stránka\tEnd
-de:&Letzte Seite\tEnde
-dk:&Sidste side\tEnd
-el:&Τελευταία σελίδα\tEnd
-es:Ú&ltima página\tFin
-et:&Viimane lehekülg\tEnd
-eu:A&zken Orrialdea\tAmaiera
-fa:صفحه‌ی آ&خر\tEnd
-fi:&Viimeinen sivu\tEnd
-fr:&Dernière page\tEnd
-fy-nl:Lêste side\tEnd
-ga:&An Leathanach Deiridh\tEnd
-gl:Última páxina\tEnd
-he:עמוד אחרון\tEnd
-hi:अन्तिम पृष्ठ पर\tHome
-hr:Posljednja stranica\tEnd
-hu:Utolsó oldal\tEnd
-id:Halaman Terakhir\tEnd
-it:&Ultima pagina\tTasto Fine
-ja:最後のページ(&L)\tEnd
-ka:&ბოლო გვერდი\tEnd
-kr:마지막 페이지(&L)\tEnd
-ku:دواین پەڕە&\tEnd
-kw:Diwettha folen\tEnd
-lt:Pa&skutinįjį puslapį\tEnd
-lv:Pē&dējo lappusi\tBeigas
-mk:Последна страница\tEnd
-ml:അവസാന താള്‍\tEnd
-mm:နောက်ဆုံး စာမျက်နှာ\tEnd
-my:&Halaman terakhir
-ne:अन्ति&म पृष्ठ\tEnd
-nl:&Laatste pagina\tEnd
-nn:Siste side\tEnd
-no:Siste side\tEnd
-pa:ਆਖਰੀ ਪੰਨੇ ਤੇ\tEnd
-pl:&Ostatnia strona\tEnd
-pt:Última pá&gina\tEnd
-ro:Ultima pagină\tEnd
-ru:Посл&едняя страница\tEnd
-si:&අවසාන පිටුව\tEnd
-sk:&Posledná strana\tEnd
-sl:Zadnja stran\tEnd
-sn:Peji yekupedzisira\tEnd
-sp-rs:Poslednja stranica\tEnd
-sq:&Faqja e fundit\tEnd
-sr-rs:Последња страница\tEnd
-sv:Sista sidan\tEnd
-ta:இறுதி பக்கம்\tEnd
-th:&หน้าสุดท้าย End
-tl:Huling Pahina\tEnd
-tr:So&n Sayfa\tEnd
-tw:最後頁(&L)\tEnd
-uk:Остання сторінка\tEnd
-uz:&Oxirgi bet\tEnd
-vn:Trang cuối\tEnd
+:&Highlight
+:&Last Page
 :&Magnification:
 am:&Մեծացնել
 ar:&التكبير
@@ -1638,76 +1158,7 @@ tw:符合大小寫(&M)
 uk:Враховувати регістр
 uz:&Registrni hisobga olish
 vn:Phân biệt &HOA-thường
-:&Next Page\tRight Arrow
-af:Volgende Bladsy\t->
-am:Հաջորդ էջը\t->
-ar:الصفحة &التالية\t->
-az:&Sonrakı səhifə\tSağ ox
-bg:Следва&ща страница\tДясна стрелка
-bn:পরবর্তী পৃষ্ঠা\t->
-br:Página seguinte\t->
-bs:Sljedeća stranica\t->
-by:Наступная старонка\t->
-ca-xv:Pàgina &següent\tFletxa Dreta
-ca:Pàgina &següent\t-->
-cn:下一页(&N)\t右方向键
-co:Pagina &seguente\tFleccia diritta
-cy:Tudalen Nesaf\tSaeth Dde
-cz:Další strá&nka\tŠipka vpravo
-de:&Nächste Seite\t->
-dk:&Næste side\t->
-el:&Επόμενη σελίδα\t->
-es:Página &siguiente\t->
-et:&Järgmine lehekülg\tParemnool
-eu:&Hurrengo Orrialdea\tEskuin Gezia
-fa:صفحه‌ی &بعدی\t→
-fi:&Seuraava sivu\tOikea nuoli
-fr:Page &suivante\t->
-fy-nl:Folgjende side\t->
-ga:&Leathanach Ar Aghaidh\tSaighead ar deis
-gl:Páxina seguinte\t->
-he:עמוד הבא\tחץ ימני
-hi:अगले पृष्ठ पर\t->
-hr:Sljedeća stranica\t->
-hu:Következő oldal\t->
-id:Halaman Berikutnya\t->
-it:Pagi&na successiva\tFreccia destra
-ja:次のページ(&N)\t→
-ka:შ&ემდეგი გვერდი\tმარჯვენა ისარი
-kr:다음 페이지(&N)\t오른쪽 방향키
-ku:پەڕەی دواتر&\tRight Arrow
-kw:Nessa Folen\t->
-lt:&Kitas puslapis\tDešinėn
-lv:&Nākamo lappusi\tLabā bultiņa
-mk:Следна страница\t->
-ml:അടുത്ത താള്‍\t->
-mm:နောက် တမျက်နှာ\t->
-my:&Halaman seterusnya\t->
-ne:&अर्को पृष्ठ\tदायाँ बाण
-nl:Volgende pagina\t->
-nn:Neste side\t->
-no:Neste side\t→
-pa:ਅਗਲੇ ਪੰਨੇ ਤੇ\t->
-pl:&Następna strona\tW prawo
-pt:Página &seguinte\t->
-ro:Pagina următoare\t->
-ru:С&ледующая страница\tСтрелка вправо
-si:&මීළග පිටුව\tRight Arrow
-sk:&Ďalšia strana\t->
-sl:Naslednja stran\tPuščica desno
-sn:Peji yemberi\t->
-sp-rs:Sledeća stranica\t->
-sq:&Faqja tjetër\tRight Arrow
-sr-rs:Следећа страница\t->
-sv:Nästa sida\tPil höger
-ta:அடுத்த பக்கம்\t->
-th:&หน้าถัดไป Right Arrow
-tl:Sunod na Pahina\t->
-tr:&Sonraki Sayfa\tSağ Ok
-tw:下一頁(&N)\t右箭頭
-uk:Наступна сторінка\t->
-uz:&Keyingi bet\t->
-vn:Trang sau\tMũi tên phải
+:&Next Page
 :&No
 af:&Nee
 am:&Ոչ
@@ -1905,77 +1356,7 @@ tw:開啟文件(&O)
 uk:Відкрити документ
 uz:&Hujjatni ochish
 vn:Mở tập tin
-:&Open...\tCtrl+O
-af:&Maak Oop...\tCtrl+O
-am:Բացել...\tCtrl+O
-ar:&فتح...\tCtrl+O
-az:&Aç...\tCtrl+O
-bg:&Отваряне...\tCtrl+O
-bn:&উন্মীলন...\tCtrl+O
-br:A&brir...\tCtrl+O
-bs:&Otvori...\tCtrl+O
-by:Адчыніць...\tCtrl+O
-ca-xv:&Obre...\tCtrl+O
-ca:&Obre...\tCtrl+O
-cn:打开(&O)...\tCtrl+O
-co:&Apre…\tCtrl+O
-cy:&Agor...\tCtrl+O
-cz:&Otevřít...\tCtrl+O
-de:Ö&ffnen…\tStrg+O
-dk:&Åbn...\tCtrl+O
-el:Ά&νοιγμα...\tCtrl+O
-es:&Abrir...\tCtrl+O
-et:&Ava...\tCtrl+O
-eu:&Ireki...\tKtrl+O
-fa:&باز کردن...\tCtrl+O
-fi:&Avaa...\tCtrl+O
-fr:&Ouvrir...\tCtrl+O
-fy-nl:&Iepenje...\tCtrl+O
-ga:&Oscail...\tCtrl+O
-gl:A&brir...\tCtrl+O
-he:פתח...\tCtrl+O
-hi:फाईल खोलें(&O)\tCtrl+O
-hr:&Otvori...\tCtrl+O
-hu:Megny&itás...\tCtrl+O
-id:&Buka...\tCtrl+O
-it:&Apri...\tCtrl+O
-ja:開く(&O)...\tCtrl+O
-jv:&Mbukak...\tCtrl+O
-ka:&გახსნა...\tCtrl+O
-kr:열기(&O)...\tCtrl+O
-ku:کردنەوە...&\tCtrl+O
-kw:&Ygor...\tCtrl+O
-lt:&Atverti...\tCtrl+O
-lv:&Atvērt...\tCtrl+O
-mk:&Отвори...\tCtrl+O
-ml:തുറക്കുക...\tCtrl+O
-mm:&ဖွင့်ပါ...\tCtrl+O
-my:&Buka...\tCtrl+O
-ne:खोल्नु&होस्...\tCtrl+O
-nl:&Openen...\tCtrl+O
-nn:&Opne...\tCtrl+O
-no:&Åpne...\tCtrl+O
-pa:ਫਾਇਲ ਖੋਲੋ(&O)...\tCtrl+O
-pl:&Otwórz...\tCtrl+O
-pt:&Abrir...\tCtrl+O
-ro:&Deschidere...\tCtrl+O
-ru:&Открыть...\tCtrl+O
-si:&විවෘත කරන්න... (O)\tCtrl+O
-sk:&Otvoriť...\tCtrl+O
-sl:&Odpri …\tCtrl+O
-sn:Vhura...\tCtrl+0
-sp-rs:Otvori...\tCtrl+O
-sq:&Hap...\tCtrl+O
-sr-rs:Отвори...\tCtrl+O
-sv:&Öppna...\tCtrl+O
-ta:திற...\tCtrl+O
-th:&เปิด...Ctrl+O
-tl:Buksan...\tCtrl+O
-tr:&Aç...\tCtrl+O
-tw:開啟(&O)...\tCtrl+O
-uk:Відкрити...\tCtrl+O
-uz:&Ochish...\tCtrl+O
-vn:Mở tập tin...\tCtrl+O
+:&Open...
 :&Options
 am:&Ընտրանքներ
 ar:&الخيارات
@@ -2231,76 +1612,72 @@ tw:釘選文件(&P)
 uk:Документ pin
 uz:&Hujjatni eslab qolish
 vn:Ghim tập tin
-:&Previous Page\tLeft Arrow
-af:Vorige Bladsy\t<-
-am:Նախորդ էջը\t<-
-ar:الصفحة &السابقة\tLeft Arrow
-az:&Əvvəlki səhifə\tSol ox
-bg:Преди&шна страница\tЛява стрелка
-bn:পূর্ববর্তী পৃষ্ঠা\t<-
-br:Página anterior\t<-
-bs:Prethodna stranica\t<-
-by:Папярэдняя старонка\t<-
-ca-xv:Pàgina &anterior\t<-
-ca:Pàgina &anterior\t<--
-cn:上一页(&P)\t左方向键
-co:Pagina &precedente\tFleccia manca
-cy:Tudalen &Flaenorol\tSaeth Chwith
-cz:&Předchozí stránka\tŠipka vlevo
-de:&Vorherige Seite\t<-
-dk:&Forrige side\t<-
-el:&Προηγούμενη σελίδα\t<-
-es:Página &anterior\t<-
-et:&Eelmine lehekülg\tVasaknool
-eu:&Aurreko Orrialdea\tEzker Gezia
-fa:صفحه‌ی &قبلی\t←
-fi:&Edellinen sivu\tVasen nuoli
-fr:Page &précédente\t<-
-fy-nl:Foarige side\t<-
-ga:Leathanach Roimhe\tSaighead ar clé
-gl:Páxina anterior\t<-
-he:עמוד קודם\tחץ שמאלי
-hi:पिछले पृष्ठ पर\t<-
-hr:Prethodna stranica\t<-
-hu:Előző oldal\t<-
-id:Halaman Sebelumnya\t<-
-it:&Pagina precedente\tFreccia sinistra
-ja:前のページ(&P)\t←
-ka:წი&ნა გვერდი\tმარცხენა ისარი
-kr:이전 페이지(&P)\t왼쪽 방향키
-ku:پەڕەی پێشوو&\tLeft Arrow
-kw:Folen kyns\t<-
-lt:&Ankstesnis puslapis\tKairėn
-lv:&Iepriekšējo lappusi\tKreisā bultiņa
-mk:Претходна страница\t<-
-ml:മുന്‍പുള്ള താള്‍\t<-
-mm:ပြီးတဲ့ စာမျက်နှာ\t<-
-my:&Halaman sebelumnya\t<-
-ne:अ&घिल्लो पृष्ठ\tबायाँ बाण
-nl:Vorige pagina\t<-
-nn:Førre side\t<-
-no:Forrige side\t←
-pa:ਪਿਛਲੇ ਪੰਨੇ ਤੇ\t<-
-pl:&Poprzednia strona\tW lewo
-pt:Página &anterior\t<-
-ro:Pagina anterioară\t<-
-ru:Пре&дыдущая страница\tСтрелка влево
-si:&පෙර පිටුව\tLeft Arrow
-sk:&Predchádzajúca strana\t<-
-sl:&Prejšnja stran\tPuščica levo
-sn:Peji yesure\t<-
-sp-rs:Prethodna stranica\t<-
-sq:&Faqja e mëparshme\tLeft Arrow
-sr-rs:Претходна страница\t<-
-sv:Föregående sida\tPil vänster
-ta:முந்தைய பக்கம்\tLeft Arrow
-th:&หน้าก่อนหน้า Left Arrow
-tl:Naunang Pahina\t<-
-tr:&Önceki Sayfa\tSol Ok
-tw:上一頁(&P)\t左箭頭
-uk:Попередня сторінка\t<-
-uz:&Oldingi bet\t<-
-vn:Trang trước\tMũi tên trái
+:&Previous Page
+:&Print...
+am:&Տպել...
+ar:&طباعة...
+az:&Çap et...
+bg:&Отпечатване...
+bn:&প্রিন্ট
+br:Im&primir...
+bs:Š&tampaj...
+by:Д&рукаваць...
+ca-xv:Im&primeix...
+ca:Im&primeix...
+cn:打印(&P)...
+co:&Stampà…
+cy:&Argraffu...
+cz:&Tisk...
+de:&Drucken…
+dk:&Udskriv ...
+el:&Εκτύπωση
+es:&Imprimir...
+et:&Prindi...
+eu:&Irarkitu...
+fa:&چاپ...
+fi:&Tulosta...
+fr:Im&primer...
+ga:&Clóbhuail...
+gl:&Imprimir...
+he:הדפס...
+hi:&छापें...
+hr:Is&pis...
+hu:&Nyomtatás
+id:&Cetak...
+it:&Stampa
+ja:印刷(&P)...
+jv:&Nyithak
+ka:&ამობეჭდვა...
+kr:인쇄(&P)...
+ku:چاپکردن...&
+kw:&Pryntya...
+lt:&Spausdinti...
+lv:&Drukāt...
+mk:&Печати...
+my:&Cetak...
+ne:&छाप्नुहोस् ...
+nl:Afdrukken...
+nn:&Skriv ut
+no:&Skriv ut...
+pl:&Drukuj...
+pt:&Imprimir...
+ro:&Tipărește...
+ru:Пе&чать...
+si:මුද්‍රණය...
+sk:&Tlač...
+sl:&Natisni …
+sp-rs:Štampaj...
+sq:&Printoj...
+sr-rs:Штампај...
+sv:&Skriv ut...
+ta:அச்சிடு...
+th:&พิมพ์...
+tl:I-&print
+tr:&Yazdır...
+tw:列印(&P)...
+uk:Друк...
+uz:&Chop etish...
+vn:In...
 :&Print... (denied)
 am:&Տպել... (մերժված)
 ar:&تم رفض الطباعة
@@ -2365,77 +1742,6 @@ tw:列印(&P)... (已中斷)
 uk:Друк... (відхилено)
 uz:&Chop etish... (ruxsat etilmagan)
 vn:&In... (bị từ chối)
-:&Print...\tCtrl+P
-af:&Druk\tCtrl+P
-am:&Տպել\tCtrl+P
-ar:&طباعة...\tCtrl+P
-az:&Çap et...\tCtrl+P
-bg:От&печатай\tCtrl+P
-bn:&মুদ্রন...\tCtrl+P
-br:&Imprimir\tCtrl+P
-bs:&Štampaj...\tCtrl+P
-by:Друкаваць...\tCtrl+P
-ca-xv:&Imprimeix...\tCtrl+P
-ca:&Imprimeix...\tCtrl+P
-cn:打印(&P)...\tCtrl+P
-co:&Stampà…\tCtrl+P
-cy:&Argraffu...\tCtrl+P
-cz:&Tisk...\tCtrl+P
-de:&Drucken…\tStrg+P
-dk:&Udskriv ...\tCtrl+P
-el:&Εκτύπωση...\tCtrl+P
-es:&Imprimir...\tCtrl+P
-et:&Prindi...\tCtrl+P
-eu:Irarkit&u...\tKtrl+P
-fa:&چاپ...\tCtrl+P
-fi:&Tulosta...\tCtrl+P
-fr:&Imprimer...\tCtrl+P
-fy-nl:&Ofdrukke...\tCtrl+P
-ga:&Clóbhuail\tCtrl+P
-gl:&Imprimir...\tCtrl+P
-he:הדפס...\tCtrl+P
-hi:परिंट करें(&P)\tCtrl+P
-hr:&Ispiši...\tCtrl+P
-hu:Nyomt&atás...\tCtrl+P
-id:&Cetak...\tCtrl+P
-it:Stam&pa...\tCtrl+P
-ja:印刷(&P)...\tCtrl+P
-jv:&Nyithak... \tCtrl+P
-ka:&ამობეჭდვა...\tCtrl+P
-kr:인쇄(&P)...\tCtrl+P
-ku:چاپکردن...&\tCtrl+P
-kw:&Pryntya\tCtrl+P
-lt:&Spausdinti...\tCtrl+P
-lv:&Drukāt...\tCtrl+P
-mk:&Печати...\tCtrl+P
-ml:അച്ചടി...\tCtrl+P
-mm:&ပုံနှိပ်ပါ...\tCtrl+P
-my:&Cetak...\tCtrl+P
-ne:&छाप्नुहोस्...\tCtrl+P
-nl:Afdrukken...\tCtrl+P
-nn:Skriv &ut...\tCtrl+P
-no:&Skriv ut...\tCtrl+P
-pa:ਪਰਿੰਟ ਕਰੋ(&P)...\tCtrl+P
-pl:&Drukuj...\tCtrl+P
-pt:&Imprimir\tCtrl+P
-ro:I&mprimare...\tCtrl+P
-ru:Пе&чать...\tCtrl+P
-si:&මුද්‍රණය... (P)\tCtrl+P
-sk:&Tlačiť...\tCtrl+P
-sl:&Natisni …\tCtrl+P
-sn:&Printa...\tCtrl+P
-sp-rs:Štampaj...\tCtrl+P
-sq:&Printoj...\tCtrl+P
-sr-rs:Штампај...\tCtrl+P
-sv:Skriv &ut...\tCtrl+P
-ta:அச்சிடு...\tCtrl+P
-th:&พิมพ์...Ctrl+P
-tl:I-&print\tCtrl+P
-tr:&Yazdır...\tCtrl+P
-tw:列印(&P)...\tCtrl+P
-uk:&Друкувати...\tCtrl+P
-uz:&Chop etish\tCtrl+P
-vn:In...\tCtrl+P
 :&Remember the password for this document
 am:&Հիշել ֆայլի գաղտնաբառը
 ar:&حفظ كلمة السر لهذا المستند
@@ -2601,77 +1907,70 @@ th:&ย้ายออกจากประวัติ
 tr:Geçmişten &Kaldır
 tw:从历史记录删除
 uk:&Видалити з історії
-:&Save As...\tCtrl+S
-af:&Stoor As\tCtrl+S
-am:&Պահել որպես\tCtrl+S
-ar:&حفظ باسم...\tCtrl+S
-az:Fərqli adla &yadda saxla...\tCtrl+S
-bg:За&пис като...\tCtrl+S
-bn:&সংরক্ষণ এই রূপে...\tCtrl+S
-br:&Salvar como...\tCtrl+S
-bs:&Spasi kao...\tCtrl+S
-by:Захаваць як...\tCtrl+S
-ca-xv:Anomena i al&ça...\tCtrl+S
-ca:Anomena i de&sa...\tCtrl+S
-cn:另存为(&S)...\tCtrl+S
-co:Arregistrà cù u &nome…\tCtrl+S
-cy:&Cadw fel...\tCtrl+S
-cz:&Uložit jako...\tCtrl+S
-de:&Speichern unter…\tStrg+S
-dk:&Gem som ...\tCtrl+S
-el:&Αποθήκευση ως...\tCtrl+S
-es:&Guardar como...\tCtrl+S
-et:Salvesta &kui...\tCtrl+S
-eu:&Gorde Honela...\tKtrl+S
-fa:&ذخیره کردن با نام...\tCtrl+S
-fi:Tallenna &nimellä...\tCtrl+S
-fr:&Enregistrer sous...\tCtrl+S
-fy-nl:&Bewarje as...\tCtrl+S
-ga:Cuir i dtaisce mar...\tCtrl+S
-gl:&Gardar como...\tCtrl+S
-he:שמור בשם...\tCtrl+S
-hi:इस तरह संभालें(&S)\tCtrl+S
-hr:&Spremi kao...\tCtrl+S
-hu:Ment&és másként...\tCtrl+S
-id:&Simpan Sebagai...\tCtrl+S
-it:&Salva con nome...\tCtrl+S
-ja:名前を付けて保存(&S)...\tCtrl+S
-jv:&Simpen Dadi...\tCtrl+S
-ka:შენახვა &როგორც...\tCtrl+S
-kr:다른 이름으로 저장(&S)...\tCtrl+S
-ku:&پاراستن وەکو...\tCtrl+S
-kw:&Gwitha avel...\tCtrl+S
-lt:Į&rašyti kaip...\tCtrl+S
-lv:&Saglabāt kā...\tCtrl+S
-mk:&Зачувај како...\tCtrl+S
-ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക...\tCtrl+S
-mm:&ကဲ့သို့ သိမ်းပါ.....\tCtrl+S
-my:&Simpan sebagai...\tCtrl+S
-ne:ब&चत गर्नुहोस्...\tCtrl+S
-nl:&Opslaan als...\tCtrl+S
-nn:Lagre &som...\tCtrl+S
-no:Lagre &som...\tCtrl+S
-pa:ਇੰਝ ਸੰਬਾਲੋ(&S)...\tCtrl+S
-pl:Zapisz &jako...\tCtrl+S
-pt:&Gravar como...\tCtrl+S
-ro:Salvare c&a...\tCtrl+S
-ru:Сохранить &как...\tCtrl+S
-si:ලෙස &සුරකින්න... (A)\tCtrl+S
-sk:Uložiť ako...\tCtrl+S
-sl:Shrani &kot …\tCtrl+S
-sn:&Sevha se...\tCtrl+S
-sp-rs:Sačuvaj kao...\tCtrl+S
-sq:&Ruaj si...\tCtrl+S
-sr-rs:Сачувај као...\tCtrl+S
-sv:Spara so&m...\tCtrl+S
-ta:எனச் சேமி...\tCtrl+S
-th:&บันทึกเป็น...Ctrl+S
-tl:I-save Bilang...\tCtrl+S
-tr:&Farklı Kaydet...\tCtrl+S
-tw:另存為(&S)...\tCtrl+S
-uk:Зб&ерегти як...\tCtrl+S
-uz:&Quyidagicha saqlash...\tCtrl+S
-vn:Lưu thành...\tCtrl+S
+:&Save As...
+am:&Պահել որպես
+ar:&حفظ باسم...
+az:&Fərqli adla yadda saxla...
+bg:За&пис като...
+br:&Salvar como...
+bs:&Spasi kao...
+by:&Захаваць як...
+ca-xv:Anomena i al&ça...
+ca:Anomena i de&sa...
+cn:另存为(&S)...
+co:Arregistrà cù u &nome…
+cy:&Cadw fel...
+cz:&Uložit jako...
+de:&Speichern unter…
+dk:&Gem som ...
+el:&Αποθήκευση ως...
+es:&Guardar como...
+et:Salvesta &kui...
+eu:&Gorde Honela...
+fa:&ذخیره کردن با نام...
+fi:Tallenna &nimellä...
+fr:&Enregistrer sous...
+ga:&Cuir i dtaisce mar...
+gl:&Gardar como...
+he:שמור בשם...
+hi:सहेजें &जैसे...
+hr:&Spremi kao...
+hu:&Mentés másként...
+id:Si&mpan Sebagai...
+it:&Salva come...
+ja:名前を付けて保存(&S)...
+jv:&Simpen Dadi...
+ka:შენახვა &როგორც...
+kr:다른 이름으로 저장(&S)...
+ku:پاراستن وەکو...&
+kw:&Gwitha Avel...
+lt:Į&rašyti kaip...
+lv:&Saglabāt kā...
+mk:&Зачувај како...
+my:&Simpan Sebagai...
+ne:ब&चत गर्नुहोस्...
+nl:Op&slaan als...
+nn:&Lagre som...
+no:&Lagre som...
+pl:Zapisz &jako...
+pt:&Gravar como...
+ro:&Salvează ca...
+ru:Сохранить &как...
+si:ලෙස &සුරකින්න
+sk:&Uložiť ako...
+sl:Shrani &kot …
+sp-rs:Sačuvaj kao...
+sq:&Ruaj si...
+sr-rs:Сачувај као...
+sv:&Spara som...
+ta:எனச் சேமி...
+th:&บันทึกเป็น...
+tl:I-&save bilang...
+tr:&Farklı Kaydet...
+tw:另存為(&S)...
+uk:Зберегти як...
+uz:&Quyidagicha saqlash...
+vn:Lưu thành...
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
 br:&Salvar em um PDF existente
@@ -2850,68 +2149,7 @@ tw:如有需要，縮小頁面符合可列印區域(&S)
 uk:Урізати сторінки до зони друку (при необхідності)
 uz:&Betlarni printerga moslab kichraytirish (zarur bo'lganda)
 vn:Nén vừa trang in (nếu cần thiết)
-:&Single Page\tCtrl+6
-am:&Մեկ էջով\tCtrl+6
-ar:&صفحة واحدة\tCtrl+6
-az:&Tək səhifə\tCtrl+6
-bg:&Една страница\tCtrl+6
-br:Página única\tCtrl+6
-bs:&Jedna stranica\tCtrl+6
-by:&Адна старонка\tCtrl+6
-ca-xv:Pàgina ú&nica\tCtrl+6
-ca:&Una sola pàgina\tCtrl+6
-cn:单页视图(&S)\tCtrl+6
-co:&Una pagina sola\tCtrl+6
-cy:Tudalen &Unigol\tCtrl+6
-cz:&Jedna stránka\tCtrl+6
-de:&Einzelne Seite\tStrg+6
-dk:&Enkelt side\tCtrl+6
-el:&Μονή σελίδα\tCtrl+6
-es:Una &sola página\tCtrl+6
-et:Ü&heleheküljeline\tCtrl+6
-eu:&Orrialde Bakarra\tKtrl+6
-fa:&تک صفحه‌ای\tCtrl+6
-fi:&Yksittäinen sivu\tCtrl+6
-fr:Une &seule page\tCtrl+6
-ga:&Leathanach amháin\tCtrl+6
-gl:Unha &soa páxina\tCtrl+6
-he:עמוד יחיד\tCtrl+6
-hi:&एकल पृष्ठ\tCtrl+6
-hr:&Jedna stranica\tCtrl+6
-hu:&Egyoldalas\tCtrl+6
-id:Halaman &Tunggal\tCtrl+6
-it:Pagina &singola\tCtrl+6
-ja:単一ページ(&S)\tCtrl+6
-ka:&თითო გვერდად\tCtrl+6
-kr:한 페이지씩(&S)\tCtrl+6
-ku:پەڕەی تاک&\tCtrl+6
-kw:&Folen Unnik\tCtrl+6
-lt:&Vienas puslapis\tCtrl+6
-lv:&Viena lappuse\tCtrl+6
-mk:Единечна страница\tCtrl+6
-my:&Halaman Tunggal\tCtrl+6
-ne:&एकल पृष्ठ\tCtrl+6
-nl:&Enkele pagina\tCtrl+6
-nn:&Enkeltside\tCtrl+6
-no:&Enkeltside\tCtrl+6
-pl:&Pojedyncza strona\tCtrl+6
-pt:Uma &página\tCtrl+6
-ro:O &singură pagină\tCtrl+6
-ru:&Постранично\tCtrl+6
-si:&තනි පිටුව\tCtrl+6
-sk:&Jedna strana\tCtrl+6
-sl:&Enostransko\tCtrl+6
-sp-rs:Pojedinačna stranica\tCtrl+6
-sq:&Njëfletësh\tCtrl+6
-sr-rs:Појединачна страница\tCtrl+6
-sv:&Enkel sida\tCtrl+6
-ta:ஒற்றைப் பக்கம்\tCtrl+6
-th:&หน้าเดียว Ctrl+6 
-tr:&Tek Sayfa\tCtrl+6
-tw:單頁模式(&S)\tCtrl+6
-uk:Одна сторінка\tCtrl+6
-uz:&Bitta betdan\tCtrl+6
-vn:Trang đơn\tCtrl+6
+:&Single Page
 :&Stamp
 am:&Կնիք
 br:&Carimbo
@@ -3075,27 +2313,27 @@ sk:&Preložiť pomocou Google
 sl:Prevedi z &Google
 th:&แปลด้วย Google
 tr:Google İle &Çevir
-:&Underline\tu
-am:&Ընդգծել\tu
-br:&Sublinhado\tu
-cn:下划线(&U)\tU
-co:&Sottulineatu\tu
-de:&Unterstreichen\tu
-dk:&Understreg\tu
-el:Υπογράμμιση\tu
-es:&Subrayar\tu
-et:&Jooni alla\tu
-fr:&Souligner\tu
-gl:Subliñar
-hr:&Podcrtano\tu
-hu:Aláhúzás\tu
-id:Garis bawah
-it:&Sottolineato\ts
-ja:下線(&U)\tu
-nl:&Onderstrepen\tu
-pl:Pod&kreślenie\tu
-sl:&Podčrtano\tu
-tr:Altını çiz
+:&Underline
+am:&Ընդգծված
+br:S&ublinhar
+ca-xv:&Subratlla
+ca:&Subratlla
+cn:&下划线
+co:&Sottulineatu
+de:&Unterstreichen
+dk:&Understreg
+el:Υπογράμμιση
+es:&Subrayar
+hr:Podv&ući
+it:Sottolineato
+kr:밑줄(&U)
+kw:&Islinya
+lt:Pa&braukti
+lv:&Pasvītrojums
+nl:&Onderstrepen
+pl:&Podkreślenie
+th:&ขีดเส้นใต้
+tr:&Altını Çiz
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -7488,70 +6726,7 @@ tw:游標位置:
 uk:Позиція вказівника:
 uz:Kursor holati:
 vn:Vị trí con trỏ:
-:Custom &Zoom...\tCtrl+Y
-am:&Ընտրված չափով\tCtrl+Y
-ar:تكبير مخصص&\tCtrl+Y
-az:Miq&yası qeyd et...\tCtrl+Y
-bg:Увеличение по &избор...\tCtrl+Y
-br:&Zoom personalizado...\tCtrl+Y
-bs:&Prilagođeno uvećanje...\tCtrl+Y
-by:Налады &маштабу...\tCtrl+Y
-ca-xv:Zoom &predeterminat..\tCtrl+Y
-ca:Ampliació &predeterminada…\tCtrl+Y
-cn:自定义缩放(&Z)...\tCtrl+Y
-co:&Ingrandamentu persunalizatu…\tCtrl+Y
-cy:&Addasu Chwyddo...\tCtrl+Y
-cz:Vlastní &měřítko...\tCtrl+Y
-de:&Zoomfaktor…\tStrg+Y
-dk:Tilpasset &zoom...\tCtrl+Y
-el:&Προσαρμοσμένο ζουμ...\tCtrl+Y
-es:&Ampliación personalizada...\tCtrl+Y
-et:&Muu suurendus...\tCtrl+Y
-eu:Egile Zoo&ma...\tKtrl+Y
-fa:بزرگنمایی &سفارشی...\tCtrl+Y
-fi:&Mukautettu zoomaustaso...\tCtrl+Y
-fr:&Zoom personnalisé...\tCtrl+Y
-fy-nl:&Oanpaste Zoom...\tCtrl+Y
-ga:Formhéadú saincheaptha...\tCtrl+Y
-gl:&Aumento a medida...\tCtrl+Y
-he:זום משתמש...\tCtrl+Y
-hi:प्रचलन ज़ूम (&Z)...\tCtrl+Y
-hr:&Prilagođeno uvećanje...\tCtrl+Y
-hu:... Egyéni méret\tCtrl+Y
-id:&Pembesaran Buatan\tCtrl+Y
-it:Ingrandimento personali&zzato\tCtrl+Y
-ja:拡大率の指定(&Z)...\tCtrl+Y
-ka:&მასშტაბის მითითება...\tCtrl+Y
-kr:사용자 지정 배율(&Z)...\tCtrl+Y
-ku:هێنانەپێشەوەی &تایبەت...\tCtrl+Y
-kw:&Zoum arbennik...\tCtrl+Y
-lt:Pasirinkti &mastelį...\tCtrl+Y
-lv:Pielāgot &tālummaiņu...\tCtrl+Y
-mk:&Зумирање по избор...\tCtrl+Y
-my:Custom &Zoom...\tCtrl+Y
-ne:अनुकुल &आकार ...\tCtrl+Y
-nl:Aangepaste &Zoom...\tCtrl+Y
-nn:Tilpassa &zooming...\tCtrl+Y
-no:&Egendefinert zoom...\tCtrl+Y
-pl:&Własne powiększenie...\tCtrl+Y
-pt:&Personalizar...\tCtrl+Y
-ro:Factor de mărire... \tCtrl+Y
-ru:&Указать масштаб...\tCtrl+Y
-si:අභිමත &විශාලනය\tCtrl+Y
-sk:Vlastná &zmena veľkosti...\tCtrl+Y
-sl:Povečava po &meri …\tCtrl+Y
-sp-rs:Prilagođeno uvećanje...\tCtrl+Y
-sq:&Shkalla e caktuar...\tCtrl+Y
-sr-rs:Прилагођено увећање...\tCtrl+Y
-sv:&Anpassad zoom...\tCtrl+Y
-ta:விருப்பிற்கேற்ற பெருக்கம்\tCtrl+Y
-th:ขยายเข้าออกกำหนดเอง...Ctrl+Y
-tl:Custom na laki...\tCtrl+Y
-tr:Kişiselleştirilmiş &Yakınlaştırma... \tCtrl+Y
-tw:自訂縮放(&Z)...\tCtrl+Y
-uk:Вказати масштаб...\tCtrl+Y
-uz:&Miqyosni ko'rsatish...\tCtrl+Y
-vn:Thu phóng &tuỳ ý...\tCtrl+Y
+:Custom &Zoom...
 :Dark
 am:Մուգ
 ar:مظلم
@@ -8161,6 +7336,7 @@ sl:Prenesi 64-bitno različico
 th:ดาวน์โหลดรุ่น 64 บิต
 tr:64 bit sürümü indir
 uk:Завантажити 64-bit версію
+:E&xit
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
@@ -8199,77 +7375,6 @@ tr:Tam Ekrandan &Çık
 tw:結束全螢幕模式(&X)
 uk:&Вийти з повноекранного режиму
 vn:Thoát khỏi chế độ Toàn màn hình
-:E&xit\tCtrl+Q
-af:&Gaan Uit-Q
-am:Փա&կել\tCtrl+Q
-ar:خروج\tCtrl+Q
-az:Çıxı&ş\tCtrl+Q
-bg:Из&ход\tCtrl+Q
-bn:&প্রস্থান\tCtrl+Q
-br:Sai&r\tCtrl+Q
-bs:&Izlaz\tCtrl+Q
-by:Выйсце\tCtrl+Q
-ca-xv:I&x\tCtrl+Q
-ca:S&urt\tCtrl+Q
-cn:退出(&X)\tCtrl+Q
-co:&Esce\tCtrl+Q
-cy:&Gadael\tCtrl+Q
-cz:&Konec\tCtrl+Q
-de:&Beenden\tStrg+Q
-dk:&Afslut\tCtrl+Q
-el:Έ&ξοδος\tCtrl+Q
-es:&Salir\tCtrl+Q
-et:Väl&ju\tCtrl+Q
-eu:I&rten\tKtrl+Q
-fa:&خروج\tCtrl+Q
-fi:&Lopeta\tCtrl+Q
-fr:&Quitter\tCtrl+Q
-fy-nl:&Ofslute\tCtrl+Q
-ga:Scoir\tCtrl+Q
-gl:&Saír\tCtrl+Q
-he:יציאה\tCtrl+Q
-hi:बाहर निकलें(&x)\tCtrl+Q
-hr:&Izađi\tCtrl+Q
-hu:&Kilépés\tCtrl+Q
-id:&Keluar\tCtrl+Q
-it:Es&ci\tCtrl+Q
-ja:終了(&X)\tCtrl+Q
-jv:&Metu\tCtrl+Q
-ka:&გამოსვლა\tCtrl+Q
-kr:끝내기(&X)\tCtrl+Q
-ku:دە&رچوون\tCtrl+Q
-kw:&Degea\tCtrl+Q
-lt:&Baigti darbą\tCtrl+Q
-lv:&Iziet\tCtrl+Q
-mk:&Излези\tCtrl+Q
-ml:പുറത്തേക്ക് \tCtrl+Q
-mm:&ထွက်ပါ\tCtrl+Q
-my:&Keluar\tCtrl+Q
-ne:बाहिर &जानुहोस्\tCtrl+Q
-nl:&Afsluiten\tCtrl+Q
-nn:&Avslutt\tCtrl+Q
-no:A&vslutt\tCtrl+Q
-pa:ਬੰਦ ਕਰੋ(&x)\tCtrl+Q
-pl:&Wyjdź\tCtrl+Q
-pt:&Sair\tCtrl+Q
-ro:&Ieșire\tCtrl+Q
-ru:В&ыход\tCtrl+Q
-si:වසන්න\tCtrl+Q
-sk:&Ukončiť\tCtrl+Q
-sl:I&zhod\tCtrl+Q
-sn:&Siyana Nazvo\tCtrl+Q
-sp-rs:Izađi\tCtrl+Q
-sq:D&al\tCtrl+Q
-sr-rs:Изађи\tCtrl+Q
-sv:&Avsluta\tCtrl+Q
-ta:வெளியேறு\tCtrl+Q
-th:&ออก Ctrl+Q
-tl:Isara\tCtrl+Q
-tr:Ç&ık\tCtrl+O
-tw:結束(&X)\tCtrl+Q
-uk:&Вийти\tCtrl+Q
-uz:&Chiqish\tCtrl+Q
-vn:Th&oát\tCtrl+Q
 :EPUB ebooks
 am:EPUB ebooks
 ar:EPUB كتب الكترونية
@@ -8749,140 +7854,8 @@ tw:最愛(&A)
 uk:Закладки
 uz:&Tanlanganlar
 vn:Ưa thích
-:F&orward\tAlt+Right Arrow
-am:Առաջ\tAlt+->
-ar:ل&لامام\tAlt+Right Arrow
-az:&İrəli\tAlt+Sağ ox
-bg:Нап&ред\tAlt+Дясна стрелка
-br:Avançar\tAlt+->
-bs:Naprijed\tAlt+->
-by:У&перад\tAlt+Стрэлка направа
-ca-xv:Endavan&t\tAlt+Fletxa Dreta
-ca:En&davant\tAlt+-->
-cn:向后翻(&O)\tAlt+右方向键
-co:&Dopu\tAlt+Fleccia diritta
-cy:Ymlaen\tAlt+Saeth Dde
-cz:V&před\tAlt+Šipka vpravo
-de:Nächste Ansicht\tAlt+->
-dk:F&remad\tAlt+->
-el:Εμπ&ρός\tAlt+->
-es:&Adelante\tAlt+Der
-et:E&dasi\tAlt+Paremnool
-eu:A&urrera\tAlt+Eskuin Gezia
-fa:جای &بعدی\tAlt+→‎
-fi:Se&uraava\tAlt+Oikea nuoli
-fr:&Avancer\tAlt+->
-fy-nl:Fierder\tAlt+->
-ga:Ar aghaidh\tAlt+Saighead Ar Deis
-gl:Adiante\tAlt+Right Arrow
-he:מקטע הבא\tחץ ימני + Alt
-hi:अग&ला\tAlt+दायाँ तीर
-hr:Naprijed\tAlt+->
-hu:Ugrás előre\tAlt+->
-id:Berikutnya\tAlt+->
-it:A&vanti\tAlt+freccia destra
-ja:次に進む(&O)\tAlt+→
-ka:&წინ\tAlt+ისარი მარჯვნივ
-kr:이후에 본 페이지(&O)\tAlt+오른쪽 방향키
-ku:پێ&شتر\tAlt+Right Arrow
-kw:Yn-rag\tAlt+->
-lt:&Pirmyn\tAlt+Dešinėn
-lv:&Tālāk\tAlt+Labā bultiņa
-mk:Напред\tAlt+Right Arrow
-my:F&orward \t alt + Panah Kanan
-ne:अ&गाडि\tAlt+दायाँ बाण
-nl:Verder\tAlt+->
-nn:F&ramover\tAlt+Høyretast
-no:Fremover\tAlt+→
-pl:&Dalej\tAlt+W prawo
-pt:A&vançar\tAlt + ->
-ro:Înainte\tAlt+->
-ru:&Вперёд\tAlt+Стрелка вправо
-si:ඉදිරියට\tAlt+Right Arrow
-sk:D&opredu\tAlt+Right Arrow
-sl:Naprej\tAlt+Desna puščica
-sp-rs:Napred\tAlt+->
-sq:P&ërpara\tAlt+Right Arrow
-sr-rs:Напред\tAlt+->
-sv:Framåt\tAlt+Pil höger
-ta:முன்னோக்கி \tAlt+Right Arrow
-th:&ไปข้างหน้า Alt + ลูกศรขวา
-tl:Susunod\tAlt+Right Arrow
-tr:İ&leri\tAlt+Sağ Ok
-tw:下一停頓頁面(&O)\tAlt+右箭頭
-uk:Вперед\tAlt+Права стрілка
-uz:&Oldinga\tAlt+->
-vn:Tiếp tục\tAlt+Mũi tên phải
-:F&ullscreen\tF11
-af:Volskerm\tCtrl+Shift+L
-am:Լ&իաէկրան\tCtrl+Shift+L
-ar:ملء الشاشة \tF11 
-az:Tam ek&ran\tCtrl+Shift+L
-bg:На &цял екран\tCtrl+Shift+L / F11
-bn:পূর্ণ পর্দা\tCtrl+Shift+L
-br:Tela cheia\tCtrl+Shift+L
-bs:Cijeli ekran\tCtrl+Shift+L
-by:Поўны экран\tCtrl+Shift+L
-ca-xv:Pantalla &complerta\tCtrl+Majus+L
-ca:Pantalla &completa\tCtrl+Maj+L
-cn:全屏(&U)\tF11
-co:&Screnu sanu\tF11
-cy:Sgrin Lawn\tCtrl+Shift+L
-cz:&Celá obrazovka\tF11
-de:&Vollbild\tF11
-dk:F&uldskærm\tF11
-el:&Πλήρης οθόνη\tCtrl+Shift+L
-es:&Pantalla completa\tCtrl+Mayús+L
-et:&Täisekraanvaade\tCtrl+Shift+L
-eu:&Ikusleiho-osoan\tKtrl+Shift+L
-fa:&تمام‌صفحه\tCtrl+Shift+L
-fi:Koko &näyttö\tCtrl+Shift+L
-fr:&Plein écran\tCtrl+Maj+L
-fy-nl:Folslein skerm\tCtrl+Shift+L
-ga:Lánscáileán\tCtrl+Shift+L
-gl:A toda pantalla\tCtrl+Shift+L
-he:מסך מלא\tCtrl+Shift+L
-hi:पूरा परदा\tCtrl+Shift+L
-hr:Cijeli zaslon\tCtrl+Shift+L
-hu:Teljes képernyő\tCtrl+Shift+L
-id:Selayar Penuh\tCtrl+Shift+L
-it:S&chermo intero\tF11
-ja:全画面表示(&U)\tCtrl+Shift+L
-ka:მთელ &ეკრანზე\tCtrl+Shift+L
-kr:전체 화면(&U)\tCtrl+Shift+L
-ku:پڕ&بەشاشە\tCtrl+Shift+L
-kw:Skrin Leun\tCtrl+Shift+L
-lt:&Visas ekranas\tCtrl+Shift+L
-lv:Piln&ekrāns\tF11
-mk:На цел екран\tCtrl+Shift+L
-ml:മുഴുവന്‍ കാണിക്കുക\tCtrl+Shift+L
-mm:မြင်ကွင်း ပြည့်\tCtrl+Shift+L
-my:Mukasurat Penuh\tCtrl+Shift+L
-ne:पू&र्णस्क्रिन\tCtrl+Shift+L
-nl:Volledig scherm\tCtrl+Shift+L
-nn:Full skjerm\tCtrl+Shift+L
-no:Fullskjerm\tCtrl+Shift+L
-pa:ਪੂਰੀ ਸਕਰੀਨ\tCtrl+Shift+L
-pl:Pełny &ekran\tF11
-pt:Ecrã co&mpleto\tCtrl+Shift+L
-ro:Tot ecranul\tCtrl+Shift+L
-ru:Полный &экран\tF11
-si:සම්පූර්ණ තිරය\tCtrl+Shift+L
-sk:&Na celú obrazovku\tCtrl+Shift+L
-sl:Celozaslonsko\tCtrl+Shift+L
-sn:Zadza Screen\tCtrl+Shift+L
-sp-rs:Ceo ekran\tCtrl+Shift+L
-sq:Ekran i p&lotë\tCtrl+Shift+L
-sr-rs:Цео екран\tCtrl+Shift+L
-sv:Fullskärm\tF11
-ta:முழுத்திரை
-th:&เต็มจอภาพ F11
-tl:Pagkasyahin sa buong screen\tCtrl+Shift+L
-tr:&Tam Ekran\tF11
-tw:全螢幕模式(&U)\tF11
-uk:На цілий екран\tCtrl+Shift+L
-uz:To'liq &ekran\tCtrl+Shift+L
-vn:Toàn màn hình\tCtrl+Shift+L
+:F&orward
+:F&ullscreen
 :Facing
 af:Teenoor
 am:Երկու էջ
@@ -9759,76 +8732,7 @@ tw:檔案:
 uk:Файл:
 uz:Fayl:
 vn:Tập tin:
-:Fin&d...\tCtrl+F
-af:Soek...\tCtrl+F
-am:Փնտ&րել...\tCtrl+F
-ar:بح&ث...\tCtrl+F
-az:A&xtar...\tCtrl+F
-bg:&Търси...\tCtrl+F
-bn:অনুসন্ধান...\tCtrl+F
-br:Localizar...\tCtrl+F
-bs:Traži...\tCtrl+F
-by:Знайсці...\tCtrl+F
-ca-xv:&Cerca...\tCtrl+F
-ca:&Cerca...\tCtrl+F
-cn:查找(&D)...\tCtrl+F
-co:&Circà…\tCtrl+F
-cy:Canfo&d...\tCtrl+F
-cz:Nají&t...\tCtrl+F
-de:S&uchen…\tStrg+F
-dk:Fin&d...\tCtrl+F
-el:Εύ&ρεση...\tCtrl+F
-es:&Buscar...\tCtrl+F
-et:&Otsi...\tCtrl+F
-eu:&Bilatu...\tKtrl+F
-fa:&جستجو...\tCtrl+F
-fi:Ets&i...\tCtrl+F
-fr:&Rechercher...\tCtrl+F
-fy-nl:Sykje...\tCtrl+F
-ga:Aimsigh...\tCtrl+F
-gl:Procura...\tCtrl+F
-he:חפש...\tCtrl+F
-hi:खोज...\tCtrl+F
-hr:Pronađi...\tCtrl+F
-hu:Keresés...\tCtrl+F
-id:Temukan...\tCtrl+F
-it:Tro&va...\tCtrl+F
-ja:検索(&D)...\tCtrl+F
-ka:&ძიება...\tCtrl+F
-kr:찾기(&D)...\tCtrl+F
-ku:دۆ&زینەوە...\tCtrl+F
-kw:Kavos...\tCtrl+F
-lt:&Ieškoti...\tCtrl+F
-lv:At&rast...\tCtrl+F
-mk:Најди...\tCtrl+F
-ml:കണ്ടെത്തുക...\tCtrl+F
-mm:ရှာပါ\tCtrl+F
-my:Cari...\tCtrl+F
-ne:&फेला पार्नुहोस् ...\tCtrl+F
-nl:Zoeken...\tCtrl+F
-nn:Finn...\tCtrl+F
-no:Søk etter...\tCtrl+F
-pa:ਲੱਭੋ...\tCtrl+F
-pl:&Znajdź...\tCtrl+F
-pt:&Localizar...\tCtrl+F
-ro:Caută...\tCtrl+F
-ru:На&йти...\tCtrl+F
-si:සොයන්න... (F)\tCtrl+F
-sk:H&ľadať...\tCtrl+F
-sl:Naj&di …\tCtrl+F
-sn:Wana...\tCtrl+F
-sp-rs:Pronađi...\tCtrl+F
-sq:G&jej...\tCtrl+F
-sr-rs:Пронађи...\tCtrl+F
-sv:Sök...\tCtrl+F
-ta:தேடு...\tCtrl+F
-th:&ค้นหา ... Ctrl + F
-tl:Hanapin...\tCtrl+F
-tr:&Bul...\tCtrl+F
-tw:尋找(&F)...\tCtrl+F
-uk:Знайти...\tCtrl+F
-uz:&Qidirish...\tCtrl+F
-vn:Tìm kiếm...\tCtrl+F
+:Fin&d...
 :Find
 am:Գտնել
 ar:بحث
@@ -10110,209 +9014,9 @@ tw:尋找(&F):
 uk:Знайти:
 uz:Qidirish:
 vn:Tìm kiếm:
-:Fit &Content\tCtrl+3
-am:Հարմարեցնել &բովանդակությունը\tCtrl+3
-ar:ملائمة المحتوى  \tCtrl+3
-az:&Məzmuna görə sığışdır\tCtrl+3
-bg:Оразмеряване по &съдържание\tCtrl+3
-br:Ajustar ao &conteúdo\tCtrl+3
-bs:Uklopi s&adržaj\tCtrl+3
-by:Падагнаць &змест\tCtrl+3
-ca-xv:Ajusta el &contingut\tCtrl+3
-ca:Ajusta al &contingut\tCtrl+3
-cn:适合内容(&C)\tCtrl+3
-co:&Adattà à u cuntenutu\tCtrl+3
-cy:Ffitio'r &Cynnwys\tCtrl+3
-cz:Přizpůsobit &obsah\tCtrl+3
-de:An &Inhalt anpassen\tStrg+3
-dk:Tilpas &indhold\tCrtl-3
-el:&Προσαρμογή στα περιεχόμενα\tCtrl+3
-es:Ajustar al &contenido\tCtrl+3
-et:&Sisu sobitamine\tCtrl+3
-eu:Finkatu &Edukia\tKtrl+3
-fa:متناسب کردن با &محتویات\tCtrl+3
-fi:&Sovita sisältö\tCtrl+3
-fr:&Ajuster au contenu\tCtrl+3
-ga:Oiriúnaigh an t-inneachar\tCtrl+3
-gl:Axustar &contido\tCtrl+3
-he:התאם לתוכן\tCtrl+3
-hi:सामग्री को फ़िट करें \tCtrl+3
-hr:Namjesti po &sadržaju\tCtrl+3
-hu:&Tartalom\tCtrl+3
-id:Sesuaikan Dengan &Konten\tCtrl+3
-it:Adatta al &contenuto\tCtrl+3
-ja:内容に合わせる(&C)\tCtrl+3
-ka:&შიგთავსის მიხედვით\tCtrl+3
-kr:내용에 맞춤(&C)\tCtrl+3
-ku:گونجاندنی &پێکهاتە\tCtrl+3
-kw:Desedha &Dalgh\tCtrl+3
-lt:Visas puslapio &turinys\tCtrl+3
-lv:Ietilpināt &saturu\tCtrl+3
-mk:Прилагоди на &содржина\tCtrl+3
-my:Fit &Kandungan\tCtrl +3
-ne:&सामग्री अटाउनुहोस्\tCtrl+3
-nl:Passend maken\tCtrl+3
-nn:Tilpass &innhald\tCtrl+3
-no:Tilpass &innhold\tCtrl+3
-pl:Dopasuj do &zawartości\tCtrl+3
-pt:Ajustar ao &conteúdo\tCtrl+3
-ro:Potrivire după conținut\tCtrl+3
-ru:По содер&жимому\tCtrl+3
-si:නිසිලෙස &අන්තර්ගතය සකසන්න\tCtrl+3
-sk:Prispôsobiť &obsah\tCtrl+3
-sl:&Prilagodi vsebino\tCtrl+3
-sp-rs:Podesi prema sadržaju\tCtrl+3
-sq:Përshtat &materialin\tCtrl+3
-sr-rs:Подеси према садржају\tCtrl+3
-sv:Anpassa efter &innehåll\tCtrl+3
-ta:பொருத்தம் & உள்ளடக்கம்\tCtrl+3
-th:พอดี &เนื้อหา Ctrl + 3
-tl:Pagkasyahin ang laman\tCtrl+3
-tr:&İçeriği Sığdır\tCtrl+3
-tw:符合內容(&C)\tCtrl+3
-uk:Розмістити вміст \tCtrl+3
-uz:&Tarkibiga moslash\tCtrl+3
-vn:Vừa nội dung\tCtrl+3
-:Fit &Page\tCtrl+0
-af:&Pas Blad In\tCtrl+0
-am:Էջի &չափով\tCtrl+0
-ar:ملائمة &الصفحة \tCtrl+0
-az:&Səhifəyə görə sığışdır\tCtrl+0
-bg:Оразмеряване по &височина\tCtrl+0
-bn:পৃষ্ঠা অনুরূপ\tCtrl+0
-br:&Página inteira\tCtrl+0
-bs:Uklopi &stranicu\tCtrl+0
-by:Падагнаць старонку\tCtrl+0
-ca-xv:Ajusta a la &pàgina\tCtrl+0
-ca:Ajusta a la &pàgina\tCtrl+0
-cn:适合页面(&P)\tCtrl+0
-co:&Pagina sana\tCtrl+0
-cy:&Ffitio'r Dudalen\tCtrl+0
-cz:Podle &stránky\tCtrl+0
-de:An &Seite anpassen\tStrg+0
-dk:Tilpas &side\tCtrl+0
-el:&Προσαρμογή στη σελίδα\tCtrl+0
-es:Ajustar a la &página\tCtrl+0
-et:Lehekülje &kõrguse sobitamine\tCtrl+0
-eu:&Finkatu Orrialdea\tKtrl+O
-fa:به &بزرگی پنجره\tCtrl+0
-fi:Sovita sivu &pystysuunnassa\tCtrl+0
-fr:&Page entière\tCtrl+0
-fy-nl:Folsleine &side\tCtrl+0
-ga:Oiriúnaigh don Lch\tCtrl+0
-gl:&Páxina enteira\tCtrl+0
-he:התאם לעמוד\tCtrl+0
-hi:अनुरूप करें(&P)\tCtrl+0
-hr:Prilagodi &stranici\tCtrl+0
-hu:&Teljes oldal\tCtrl+0
-id:Sesuaikan Dengan &Halaman\tCtrl+0
-it:&Pagina intera\tCtrl+0
-ja:ページに合わせる(&P)\tCtrl+0
-ka:&გვერდის ზომაზე მორგება\tCtrl+0
-kr:페이지(세로) 맞춤(&P)\tCtrl+0
-ku:گونجاندنی &پەڕە\tCtrl+0
-kw:Desedha &Folen\tCtrl+0
-lt:Visas &puslapis\tCtrl+0
-lv:Ietilpināt &lappusi\tCtrl+0
-mk:Прилагоди на &страница\tCtrl+0
-ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl+0
-mm:စာမျက်နှာ ပြည့်\tCtrl+O
-my:&Muatkan mukasurat\tCtrl+0
-ne:&पृष्ठ अटाउनुहोस्\tCtrl+0
-nl:Hele &pagina\tCtrl+0
-nn:Tilpass &side\tCtrl+0
-no:Tilpass &side\tCtrl+0
-pa:ਫਿਟ ਕਰੋ(&P)\tCtrl+0
-pl:Dopasuj do s&trony\tCtrl+0
-pt:&Ajustar à página\tCtrl+0
-ro:&Pagină întreagă\tCtrl+0
-ru:По &размеру страницы\tCtrl+0
-si:නිසිලෙස &පිටුව සකසන්න\tCtrl+0
-sk:P&rispôsobiť strane\tCtrl+0
-sl:&Prilagodi stran\tCtrl+0
-sn:Kwanisa &Peji\tCtrl+0
-sp-rs:Podesi prema stranici\tCtrl+0
-sq:Përshtat &faqen\tCtrl+0
-sr-rs:Подеси према страници\tCtrl+0
-sv:Anpassa efter &helsida\tCtrl+0
-ta:பக்கம் பொருந்தவை\tCtrl+0
-th:พอดี &หน้า Ctrl+0
-tl:Ipagkasya ang &Pahina\tCtrl+0
-tr:&Sayfayı Sığdır\tCtrl+0
-tw:符合頁面(&P)\tCtrl+0
-uk:Припа&сувати сторінку\tCtrl+0
-uz:&Betga moslash\tCtrl+0
-vn:Vừa &trang\tCtrl+0
-:Fit &Width\tCtrl+2
-af:Pas In Breedte\tCtrl+2
-am:Հավասարեցնել &լայնությամբ\tCtrl+2
-ar:ملائمة &العرض \tCtrl+2
-az:&Genişliyə görə sığışdır\tCtrl+2
-bg:Оразмеряване по &ширина\tCtrl+2
-bn:প্রস্থ অনুরূপ\tCtrl+2
-br:Ajustar pela l&argura\tCtrl+2
-bs:&Uklopi po širini\tCtrl+2
-by:Падагнаць па шырыне
-ca-xv:Ajusta a l'am&plada\tCtrl+2
-ca:Ajusta a l'am&plada\tCtrl+2
-cn:适合宽度(&W)\tCtrl+2
-co:&Larghezza sana\tCtrl+2
-cy:&Fitio'r Lled\tCtrl+2
-cz:&Podle šířky\tCtrl+2
-de:An Fenster&breite anpassen\tStrg+2
-dk:Tilpas &bredde\tCtrl+2
-el:&Προσαρμογή στο πλάτος παραθύρου\tCtrl+2
-es:Ajustar al a&ncho\tCtrl+2
-et:Lehekülje &laiuse sobitamine\tCtrl+2
-eu:Finkatu &Zabalera\tKtrl+2
-fa:به بزرگی &پهنای پنجره\tCtrl+2
-fi:Sovita sivu &vaakasuunnassa\tCtrl+2
-fr:Pleine &largeur\tCtrl+2
-fy-nl:Passend yn &breedte\tCtrl+2
-ga:Oiriúnaigh don Leithead\tCtrl+2
-gl:Axustar ao ancho\tCtrl+2
-he:התאם לרוחב\tCtrl+2
-hi:चौड़ाई के अनुसार(&h)\tCtrl+2
-hr:&Namjesti po širini\tCtrl+2
-hu:Oldal&szélesség\tCtrl+2
-id:Sesuaikan Dengan &Lebar\tCtrl+2
-it:Adatta a &larghezza pagina\tCtrl+2
-ja:幅に合わせる(&W)\tCtrl+2
-ka:&სიგანეზე მორგება\tCtrl+2
-kr:너비(가로) 맞춤(&H)\tCtrl+2
-ku:گونجاندنی &فراوانی\tCtrl+2
-kw:&Desedha Les\tCtrl+2
-lt:Visas puslapio pl&otis\tCtrl+2
-lv:Ietilpināt &platumu\tCtrl+2
-mk:Прилагоди на &ширина\tCtrl+2
-ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl+2
-mm:အလျားနှင့်အမြင့် အပြည့်
-my:&Muatkan lebar\tCtrl+2
-ne:&चौडाइ अटाउनुहोस्\tCtrl+2
-nl:Passend in &breedte\tCtrl+2
-nn:Tilpass &breidde\tCtrl+2
-no:Tilpass til bredd&e\tCtrl+2
-pa:ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ(&h)\tCtrl+2
-pl:Dopasuj do sz&erokości\tCtrl+2
-pt:Ajustar à &largura\tCtrl+2
-ro:Potrivire după lățime pagină\tCtrl+2
-ru:По &ширине\tCtrl+2
-si:නිසිලෙස &පළල සකසන්න\tCtrl+2
-sk:N&a šírku obrazovky\tCtrl+2
-sl:P&rilagodi po širini\tCtrl+2
-sn:Kwanisa hupamhu\tCtrl+2
-sp-rs:Podesi prema širini\tCtrl+2
-sq:Përshtat &gjerësinë\tCtrl+2
-sr-rs:Подеси према ширини\tCtrl+2
-sv:Anpassa efter &bredd\tCtrl+2
-ta:அகலம் பொருந்தவை\tCtrl+2
-th:พอดี &ความกว้าง Ctrl+2
-tl:&Ipagkasya ang Lapad\tCtrl+2
-tr:&Genişliğe Sığdır\tCtrl+2
-tw:符合寬度(&H)\tCtrl+2
-uk:Припасувати до &ширини\tCtrl+2
-uz:&Eniga moslash\tCtrl+2
-vn:Vừa chiều &rộng\tCtrl+2
+:Fit &Content
+:Fit &Page
+:Fit &Width
 :Fit Content
 am:Հարմարեցնել բովանդակությունը
 ar:ملائمة المحتوى
@@ -12531,49 +11235,7 @@ tw:檔案更新日期:
 uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
-:New &window\tCtrl+N
-am:Նոր &պատուհան\tCtrl+N
-ar:نافذة جديدة&/Ctrl+N
-az:Yeni pə&ncərə\tCtrl+N
-bg:Нов &прозорец\tCtrl+N
-br:Novo &janela\tCtrl+N
-ca-xv:&Finestra nova\tCtrl+N
-ca:&Finestra nova\tCtrl+N
-cn:新建窗口(&W)\tCtrl+N
-co:No&va finestra\tCtrl+N
-cy:Ffenestr ne&wydd\tCtrl+N
-cz:Nové &okno\tCtrl+N
-de:Neues Fenster\tStrg+N
-dk:Ny &vindue\tCtrl+N
-el:Νέο παράθυρο\tCtrl+N
-es:&Ventana nueva\tCtrl+N
-et:Uus &aken\tCtrl+N
-fr:Nouvelle &fenêtre\tCtrl+N
-ga:Fuinneog &nua\tCtrl+N
-gl:Nova xa&nela\tCtrl+N
-he:חלון חדש\tCtrl+N
-hr:&Novi prozor\tCtrl+N
-hu:Új &ablak\tCtrl+N
-id:&Jendela Baru\tCtrl+N
-it:Nuova &finestra\tCtrl+N
-ja:新しいウィンドウ (&W)\tCtrl+N
-ka:ახალი &ფანჯარა\tCtrl+N
-kr:새 창(&w)\tCtrl+N
-kw:&Fenester nowydh\tCtrl+N
-lt:&Naujas langas\tCtrl+N
-lv:Jauns &logs\tCtrl+N
-nl:Nieuw venster\tCrtl+N
-pl:Nowe &okno\tCtrl+N
-pt:Nova &janela\tCtrl+N
-ru:Новое о&кно\tCtrl+N
-sk:Nové okno\tCtrl+N
-sl:Novo okno\tCtrl+N
-ta:புதிய சாளரம் 
-th:เปิด &หน้าต่างใหม่ Ctrl+N
-tr:Yeni &pencere\tCtrl+N
-tw:新增視窗(&W)\tCtrl+N
-uk:Нове в&ікно\tCtrl+N
-vn:Mở cửa sổ mới\tCtrl+N
+:New &window
 :New version available
 am:Մատչելի է նոր տարբերակ
 bg:Достъпна е нова версия
@@ -13667,70 +12329,69 @@ tw:開啟於 Microsoft XPS-Viewer(&W)
 uk:Відкрити у Microsoft XPS-Viewer
 uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
-:P&roperties\tCtrl+D
-am:Հ&ատկություններ...\tCtrl+D
-ar:الخصائص...\tCtrl+D
-az:&Xüsusiyyətlər\tCtrl+D
+:P&roperties
+am:Հ&ատկություններ
+ar:الخصائص
+az:&Xüsusiyyətlər
 bg:&Свойства
-br:Propriedades...\tCtrl+D
-bs:P&ostavke...\tCtrl+D
-by:Уласцівасці\tCtrl+D
-ca-xv:P&ropietats...\tCtrl+D
-ca:P&ropietats...\tCtrl+D
-cn:属性(&R)\tCtrl+D
-co:&Pruprietà\tCtrl+D
-cy:P&riodweddau...\tCtrl+D
-cz:&Vlastnosti...\tCtrl+D
-de:Ei&genschaften\tStrg+D
-dk:E&genskaber\tCtrl+D
-el:&Ιδιότητες\tCtrl+D
-es:P&ropiedades...\tCtrl+D
-et:O&madused\tCtrl+D
-eu:&Ezaugarriak\tKtrl+D
-fa:م&شخصات\tCtrl+D
-fi:O&minaisuudet\tCtrl+D
-fr:&Propriétés\tCtrl+D
-fy-nl:E&igenskippen...\tCtrl+D
-ga:Ai&ríonna\tCtrl+D
-gl:P&ropiedades\tCtrl+D
-he:מאפיינים...\tCtrl+D
-hi:&गुण\tCtrl+D
-hr:S&vojstva...\tCtrl+D
-hu:&Tulajdonságok\tCtrl+D
-id:P&roperti\tCtrl+D
-it:P&roprietà\tCtrl+D
-ja:プロパティ(&R)\tCtrl+D
-ka:&თვისებები...\tCtrl+D
-kr:속성(&R)\tCtrl+D
-ku:تا&یبەتمەندییەکان\tCtrl+D
-kw:&Gnasow\tCtrl+D
-lt:&Savybės\tCtrl+D
-lv:&Rekvizīti\tCtrl+D
-mk:С&војства...\tCtrl+D
-my:P&roperties\tCtrl+D
-ne:&गुणहरु\tCtrl+D
-nl:E&igenschappen...\tCtrl+D
-nn:E&genskaper\tCtrl+D
-no:E&genskaper...\tCtrl+D
-pl:&Właściwości\tCtrl+D
-pt:&Propriedades...\tCtrl+D
-ro:P&roprietăți\tCtrl+D
-ru:Сво&йства...\tCtrl+D
-si:වත්කම් (P)\tCtrl+D
-sk:V&lastnosti...\tCtrl+D
-sl:Lastnosti\tCtrl+D
-sp-rs:Osobine\tCtrl+D
-sq:V&eti\tCtrl+D
-sr-rs:Особине\tCtrl+D
-sv:&Egenskaper...\tCtrl+D
-ta:பண்புகள்...\tCtrl+D
-th:&คุณสมบัติ Ctrl+D
-tl:Mga Katangian\tCtrl+D
-tr:&Özellikler\tCtrl+D
-tw:特性(&R)...\tCtrl+D
-uk:Властивості\tCtrl+D
-uz:&Xossalari\tCtrl+D
-vn:Thuộc tính\tCtrl+D
+br:P&ropriedades
+bs:&Postavke
+by:Уласцівасці
+ca-xv:P&ropietats
+ca:P&ropietats
+cn:属性(&R)
+co:&Pruprietà
+cy:&Priodweddau
+cz:&Vlastnosti
+de:Ei&genschaften
+dk:Egenskabe&r
+el:&Ιδιότητες
+es:P&ropiedades
+et:O&madused
+eu:Eza&ugarriak
+fa:م&شخصات
+fi:Ominaisuudet
+fr:P&ropriétés
+ga:Ai&ríonna
+gl:P&ropiedades
+he:מאפיינים
+hi:&गुण
+hr:&Svojstva
+hu:&Tulajdonságok
+id:P&roperti
+it:P&roprietà
+ja:プロパティ(&R)
+ka:&თვისებები...
+kr:속성(&R)
+ku:تایبە&تمەندییەکان
+kw:&Gnasow
+lt:&Savybės
+lv:&Rekvizīti
+mk:&Својства
+my:P&roperties
+ne:&गुणहरु
+nl:E&igenschappen
+nn:E&genskaper
+no:E&genskaper
+pl:&Właściwości
+pt:&Propriedades
+ro:P&roprietăți
+ru:Сво&йства...
+si:ග&තිගුණ
+sk:&Vlastnosti
+sl:Lastnosti
+sp-rs:Osobine
+sq:V&eti
+sr-rs:Особине
+sv:E&genskaper
+ta:பண்புகள்
+th:&คุณสมบัติ
+tl:Mga katangian
+tr:Ö&zellikler
+tw:特性(&R)...
+uk:Властивості
+uz:&Xossalari
+vn:Thuộc tính
 :PDF Document
 af:PDF Dokument
 am:PDF ֆայլ
@@ -14058,76 +12719,7 @@ tw:PDF 文件
 uk:Документи PDF
 uz:PDF hujjatlari
 vn:Tập tin PDF
-:Pa&ge...\tCtrl+G
-af:Bladsy...\tCtrl+G
-am:Էջ&ը...\tCtrl+G
-ar:صف&حة \tCtrl+G
-az:Sə&hifə...\tCtrl+G
-bg:&Страница...\tCtrl+G
-bn:পৃষ্ঠা সংখ্যা...\tCtrl+G
-br:Página...\tCtrl+G
-bs:Stranicu...\tCtrl+G
-by:Старонка...\tCtrl+G
-ca-xv:Pà&gina...\tCtrl+G
-ca:Pà&gina...\tCtrl+G
-cn:前往第 ... 页(&G)\tCtrl+G
-co:Pa&gina…\tCtrl+G
-cy:Tudalen...\tCtrl+G
-cz:Strán&ka...\tCtrl+G
-de:&Seite…\tStrg+G
-dk:&Side ...\tCtrl+G
-el:&Σελίδα...\tCtrl+G
-es:Pá&gina...\tCtrl+G
-et:&Lehekülg...\tCtrl+G
-eu:&Orrialdea...\tKtrl+G
-fa:&صفحه‌ی...\tCtrl+G
-fi:Si&vulle...\tCtrl+G
-fr:Pa&ge...\tCtrl+G
-fy-nl:Side...\tCtrl+G
-ga:Leathanach...\tCtrl+G
-gl:Páxina...\tCtrl+G
-he:עמוד...\tCtrl+G
-hi:पृष्ठ संख्या पर\tCtrl+G
-hr:Stranica...\tCtrl+G
-hu:Megadott oldal...\tCtrl+G
-id:Halaman...\tCtrl+G
-it:Pa&gina...\tCtrl+G
-ja:ページ指定(&G)...\tCtrl+G
-ka:&გვერდის მითითება...\tCtrl+G
-kr:페이지 이동(&G)...\tCtrl+G
-ku:پە&ڕە...\tCtrl+G
-kw:Folen...\tCtrl+G
-lt:P&uslapis...\tCtrl+G
-lv:Lap&pusi...\tCtrl+G
-mk:Страница...\tCtrl+G
-ml:താള്‍...\tCtrl+G
-mm:စာမျက်နှာ...\tCtrl+G
-my:Mukasurat...\tCtrl+G
-ne:&पृष्ठ ...\tCtrl+G
-nl:Pa&gina...\tCtrl+G
-nn:Side...\tCtrl+G
-no:Side...\tCtrl+G
-pa:ਪੰਨਾ ਨੰਬਰ ਤੇ\tCtrl+G
-pl:&Strona...\tCtrl+G
-pt:Pági&na...\tCtrl+G
-ro:Pagina...\tCtrl+G
-ru:&Указанная страница...\tCtrl+G
-si:Pa&ge...\tCtrl+G
-sk:St&rana...\tCtrl+G
-sl:Stran …\tCtrl+G
-sn:Peji...\tCtrl+G
-sp-rs:Stranica...\tCtrl+G
-sq:Fa&qja...\tCtrl+G
-sr-rs:Страница...\tCtrl+G
-sv:Sida...\tCtrl+G
-ta:பக்கம்...\tCtrl+G
-th:&หน้า...Ctrl+G
-tl:Pahina...\tCtrl+G
-tr:&Sayfa...\tCtrl+G
-tw:前往頁(&G)...\tCtrl+G
-uk:До сторінки...\tCtrl+G
-uz:&Bet...\tCtrl+G
-vn:Trang...\tCtrl+G
+:Pa&ge...
 :Page %s
 am:Էջ %s
 ar:الصفحة %s
@@ -14798,69 +13390,7 @@ tw:Postscript 文件
 uk:Документи postscript
 uz:Postscript hujjatlari
 vn:Tập tin Postscript
-:Pr&esentation\tF5
-am:Ներ&կայացում\tF5
-ar:العرض التقديم \tF5
-az:Tə&qdimat\tCtrl+L
-bg:&Презентация\tCtrl+L
-br:Apr&esentação\tCtrl+L
-bs:Pr&ezentacija\tCtrl+L
-by:Д&эманстрацыя\tF5
-ca-xv:Pr&esentació\tCtrl+L
-ca:Pr&esentació\tCtrl+L
-cn:幻灯片(&E)\tF5
-co:&Presentazione\tF5
-cy:Cyflwyniad\tCtrl+L
-cz:Pr&ezentace\tF5
-de:&Präsentation\tF5
-dk:H&ele skærmen\tCtrl+L
-el:&Παρουσίαση\tCtrl+L
-es:Pr&esentación\tCtrl+L
-et:&Esitlus\tCtrl+L
-eu:&Aurkezpena\tKtrl+L
-fa:ارا&ئه\tF5
-fi:&Esitys\tCtrl+L
-fr:P&résentation\tCtrl+L
-ga:Cur i láthair\tCtrl+L
-gl:Pr&esentación\tCtrl+L
-he:מצגת\tCtrl+L
-hi:&प्रस्तुति\tCtrl+L
-hr:Pr&ezentacija\tCtrl+L
-hu:Bemutató\tCtrl+L
-id:Pr&esentasi\tF5
-it:Pr&esentazione\tF5
-ja:プレゼンテーション(&E)\tCtrl+L
-ka:წარმოდგ&ენა\tCtrl+L
-kr:프리젠테이션(&E)\tCtrl+L
-ku:پڕ& بە شاشە بەبێ شریتی ئامرازەکان\tCtrl+L
-kw:Pr&esentyans\tF5
-lt:&Pateiktis\tCtrl+L
-lv:Prezentācija\tF5
-mk:Презентација\tCtrl+L
-my:P&embentangan\tCtrl + L
-ne:प्रस्तुती&करण\tCtrl+L
-nl:Pr&esentatie\tCtrl+L
-nn:Pr&esentasjon\tF5
-no:Pr&esentasjon\tCtrl+L
-pl:&Prezentacja\tF5
-pt:Aprese&ntação\tCtrl+L
-ro:Pr&ezentare\tCtrl+L
-ru:Пр&езентация\tF5
-si:ඉ&දිරිපත් කිරීම\tF5
-sk:Pr&ezentácia\tCtrl+L
-sl:Pr&edstavitev\tCtrl+L
-sp-rs:Prezentacija\tCtrl+L
-sq:Pr&ezantim\tCtrl+L
-sr-rs:Презентација\tCtrl+L
-sv:Pr&esentation\tF5
-ta:விளக்கக்காட்சி \tCtrl+L
-th:&การนำเสนอ F5
-tl:Pr&esentasyon\tCtrl+L
-tr:S&unum\tF5
-tw:投影片顯示(&E)\tCtrl+L
-uk:Презентація\tCtrl+L
-uz:&Namoyish\tCtrl+L
-vn:Trình chiếu\tCtrl+L
+:Pr&esentation
 :Previous Page
 af:Vorige Bladsy
 am:Նախորդ էջը
@@ -15443,68 +13973,7 @@ tw:列印問題
 uk:Помилка друкування.
 uz:Chop etish muammosi.
 vn:Lỗi in.
-:Re&name...\tF2
-am:Վե&րանվանել...\tF2
-ar:إعادة تسمية...\tF2
-az:A&dını dəyişdir...\tF2
-bg:Преименувай...\tF2
-br:Re&nomear...\tF2
-bs:Promije&ni naziv...\tF2
-by:&Новае імя...\tF2
-ca-xv:Canvia el &nom...\tF2
-ca:Canvia el &nom...\tF2
-cn:重命名(&N)...\tF2
-co:&Rinumà…\tF2
-cy:&Ailenwi...\tF2
-cz:Přejme&novat...\tF2
-de:Umbe&nennen…\tF2
-dk:Om&døb ... \tF2
-el:&Μετονομασία...\tF2
-es:Re&nombrar...\tF2
-et:&Nimeta ümber...\tF2
-eu:&Berrizendatu...\tF2
-fa:تغییر  &نام...\tF2
-fi:&Uudelleennimeä...\tF2
-fr:Re&nommer...\tF2
-ga:Athainmnigh...\tF2
-gl:Re&nomear...\tF2
-he:שנה שם...\tF2
-hi:&नाम बदलें...\tF2
-hr:Preime&novati...\tF2
-hu:Átnevezés...\tF2
-id:&Ganti Nama...\tF2
-it:Ri&nomina...\tF2
-ja:名前を変更(&N)...\tF2
-ka:გადა&რქმევა...\tF2
-kr:이름 바꾸기(&N)...\tF2
-ku:گۆڕینی &ناو...\tF2
-kw:Dashe&nwel...\tF2
-lt:P&ervadinti...\tF2
-lv:Pār&dēvēt...\tF2
-mk:Преименувај... \tF2
-my:&Nama semula ...\tF2
-ne:नाम &फेर्नुहोस्...\tF2
-nl:&Naam wijzigen...\tF2
-nn:Gjev n&ytt namn...\tF2
-no:Gi nytt &navn... \tF2
-pl:Zmień &nazwę...\tF2
-pt:Mudar &nome...\tF2
-ro:Rede&numire...\tF2
-ru:Пере&именовать...\tF2
-si:නැවත නම් කරන්න...\tF2
-sk:Preme&novať...\tF2
-sl:Preime&nuj …\tF2
-sp-rs:Preimenuj...\tF2
-sq:Rie&mërtoj...\tF2
-sr-rs:Преименуј...\tF2
-sv:Döp om...\tF2
-ta:மறுபெயரிடுதல்... \tF2
-th:&เปลี่ยนชื่อ... F2
-tr:Yeniden Adla&ndır...\tF2
-tw:重新命名(&N)...\tF2
-uk:Перейменувати...\tF2
-uz:&Nomini o'zgartirish...\tF2
-vn:Đổi tê&n...\tF2
+:Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
 br:Retângulo: x=%d y=%d dx=%d dy=%d
@@ -15815,6 +14284,7 @@ tw:重新命名為
 uk:Перейменувати в
 uz:Yangi nom
 vn:Đổi tên thành
+:Rotate &Left
 :Rotate &Left\tCtrl+Shift+-
 af:Draai Links\tCtrl+Shift+-
 am:Պտտել ձախ\tCtrl+Shift+-
@@ -15886,6 +14356,7 @@ tw:頁面左旋(&L)\tCtrl+Shift+-
 uk:Повернути ліворуч\tCtrl+Shift+-
 uz:&Chapga burish\tCtrl+Shift+-
 vn:Quay trái\tCtrl+Shift+-
+:Rotate &Right
 :Rotate &Right\tCtrl+Shift++
 af:Draai Regs\tCtrl+Shift++
 am:Պտտել աջ\tCtrl+Shift++
@@ -16032,9 +14503,26 @@ sl:SVG dokumenti
 th:เอกสาร SVG
 tr:SVG belgeleri
 uk:SVG документи
-:Save Annotations to existing PDF\tCtrl+Shift+S
-cn:将标注保存到当前 PDF\tCtrl+Shift+S
-nl:Notities opslaan in bestaande PDF\tCtrl Shift S
+:Save Annotations to existing PDF
+am:Պահել ծանոթագրությունը առկա PDF-ում
+bg:Запази Обясненията в съществуващ PDF
+br:Salvar anotações neste PDF
+cn:将标注保存到当前 PDF
+co:Arregistrà l’annutazioni in u PDF esistente
+de:Anmerkungen in bestehende PDF-Dateien speichern
+el:Αποθήκευση σχολίων σε υπάρχον PDF
+es:Guardar Anotaciones a PDF existente
+et:Salvesta märkused olemasolevasse PDF-i
+fr:Sauvegarder les annotations dans le PDF existant.
+gl:Gardar anotacións ó PDF existente
+hr:Spremi bilješke u postojeći PDF
+hu:Megjegyzések elmentése a meglévő PDF-be
+id:Simpan catatan ke PDF terkini
+it:Salva annotazioni in PDF esistente
+nl:Notaties opslaan in bestaande PDF
+pl:Zapisz adnotacje do istniejącego pliku PDF
+sl:Shrani pripombe v obstoječi PDF
+tr:Dipnotları geçerli PDF'ye kaydet
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
@@ -16070,68 +14558,7 @@ th:บันทึกไฟล์ฝังรหัส...
 tr:Gömülü Dosyayı Kaydet...
 tw:儲存內嵌的檔案...
 uk:Зберегти вкладений файл...
-:Save S&hortcut...\tCtrl+Shift+S
-am:Պահել դ&յուրանցումը...\tCtrl+Shift+S
-ar:حفظ الاختصار...\tCtrl+Shift+S
-az:Yarlı&ğı yadda saxla...\tCtrl+Shift+S
-bg:Запамети &кратък път към файла...\tCtrl+Shift+S
-br:S&alvar atalho...\tCtrl+Shift+S
-bs:Spasi k&raticu...\tCtrl+Shift+S
-by:Захаваць спасыла&к\tCtrl+Shift+S
-ca-xv:Guarda una &drecera...\tCtrl+Maj+5
-ca:Desa una &drecera...\tCtrl+Maj+5
-cn:保存快捷方式(&H)...\tCtrl+Shift+S
-co:Arregistrà l’&accurtatoghju…\tCtrl+Maiusc+S
-cy:Cadw'r &Llwybr Byr...\tCtrl+Shift+S
-cz:U&ložit zástupce...\tCtrl+Shift+S
-de:&Verknüpfung speichern…\tStrg+Umschalt+S
-dk:Gem ge&nvej ...\tCtrl+skift+S
-el:Αποθήκευση &συντόμευσης...\tCtrl+Shift+S
-es:Guardar el ata&jo...\tCtrl+Mayús+S
-et:Salvesta &otsetee...\tCtrl+Shift+S
-eu:Gorde &Lasterbidea...\tKtrl+Shift+S
-fa:ذخیره‌ی &میانبر...\tCtrl+Shift+S
-fi:Tallenna p&ikakuvake...\tCtrl+Shift+S
-fr:Enregistrer un raccourci... \tCtrl+Maj-S
-ga:Cuir an t-aicearra i dtaisce...\tCtrl+Shift+S
-gl:Gardar atallo...\tCtrl+Shift+S
-he:שמור קיצור דרך...\tCtrl+Shift+S
-hi:शॉ&र्टकट सहेजें... \tCtrl+Shift+S
-hr:Spremi p&rečac...\tCtrl+Shift+S
-hu:Parancsikon készítése...\tCtrl+Shift+S
-id:Simpan &Jalan Pintas...\tCtrl+Shift+S
-it:Salva &collegamento\tCtrl+Maiusc+S
-ja:ショートカットを作成(&H)...\tCtrl+Shift+S
-ka:&ჩანიშვნა…\tCtrl+Shift+S
-kr:바로가기 저장(&H)...\tCtrl+Shift+S
-ku:پاراستنی کورتە&ئایکۆن...\tCtrl+Shift+S
-kw:Gwitha S&kochfordh\tCtrl+Shift+S
-lt:Išsaugoti N&uorodą...\tCtrl+Shift+S
-lv:Saglabāt saīs&ni....\tCtrl+Shift+S
-mk:Зачувај &кратенка...\tCtrl+Shift+S
-my:Simpan S&hortcut...\tCtrl+Shift+S
-ne:&सर्टकट बचत गर्नुहोस्...\tCtrl+Shift+S
-nl:Snelkoppeling opslaan...\tCtrl+Shift+S
-nn:Large s&narveg...\tCtrl+Shift+S
-no:Lagre s&narvei...\tCtrl+Shift+S
-pl:Zapisz s&krót...\tCtrl+Shift+S
-pt:Criar atal&ho...\tCtrl+Shift+S
-ro:Salvează legătura...\tCtrl+Shift+S
-ru:Сохранить &ярлык…\tCtrl+Shift+S
-si:කෙටිමග සු&රකින්න...\tCtrl+Shift+S
-sk:Uložiť z&ástupcu...\tCtrl+Shift+S
-sl:S&hrani bližnjico …\tCtrl+Shift+S
-sp-rs:Sačuvaj prečicu...\tCtrl+Shift+S
-sq:&Ruaj s&hkurtoren...\tCtrl+Shift+S
-sr-rs:Сачувај пречицу...\tCtrl+Shift+S
-sv:Spara g&enväg...\tCtrl+Shift+S
-ta:குறுக்குவழி சேமி...\tCtrl+Shift+S
-th:บันทึก &ทางลัด... Ctrl+Shift+S
-tr:K&ısayolu Kaydet...\tCtrl+Shift+S
-tw:儲存捷徑(&H)...\tCtrl+Shift+S
-uk:Зберегти ярлик...\tCtrl+Shift+S
-uz:&Yorliqni saqlash...\tCtrl+Shift+S
-vn:Lưu lối tắt...\tCtrl+Shift+S
+:Save S&hortcut...
 :Save annotations?
 am:Պահե՞լ մեկնաբանությունը?
 bg:Да запазя ли обясненията?
@@ -16397,69 +14824,70 @@ tw:正在搜尋第 %d 頁 (共 %d 頁)
 uk:Пошук %d з %d...
 uz:%d %d dan qidirilmoqda...
 vn:Đang tìm %d trên %d
-:Select &All\tCtrl+A
-am:Նշել &բոլորը\tCtrl+A
-ar:حدد&الكل\tCtrl+A
-az:&Hamısını seç\tCtrl+A
-bg:Избери &всичко\tCtrl+A
-br:Selecion&ar Tudo\tCtrl+A
-bs:Označi &sve\tCtrl+A
-by:Выбраць &усё\tCtrl+A
-ca-xv:Seleccciona-ho &tot\tCtrl+A
-ca:Seleccciona-ho &tot\tCtrl+A
-cn:全选(&A)\tCtrl+A
-co:&Tuttu selezziunà\tCtrl+A
-cy:Dewis &Popeth\tCtrl+A
-cz:Vybrat &vše\tCtrl+A
+:Select &All
+am:Նշել &բոլորը
+ar:حدد &الكل
+az:&Hamısını seç
+bg:Избери всичко
+bn:বাছাই করুন & সবগুলো
+br:Selecion&ar tudo
+bs:Označi &sve
+by:Выбраць &усё
+ca-xv:Selecciona-ho &tot
+ca:Selecciona-ho &tot
+cn:全选(&A)
+co:&Tuttu selezziunà
+cy:Dewis &Popeth
+cz:Vybrat &vše
 de:Alles &markieren\tStrg+A
-dk:Vælg &alt\tCtrl+A
-el:Επιλογή όλων\tCtrl+A
-es:Seleccionar &todo\tCtrl+A
-et:V&ali kõik\tCtrl+A
-eu:&Hautatu Guztiak\tKtrl+A
-fa:انتخاب &همه\tCtrl+A
-fi:V&alitse kaikki\tCtrl+A
-fr:&Tout sélectionner\tCtrl+A
-ga:Roghnaigh Uile\tCtrl+A
-gl:Seleccion&ar todo\tCtrl+A
-he:בחר הכל\tCtrl+A
-hi:सब &चुनें\tCtrl+A
-hr:Obilježi &sve\tCtrl+A
-hu:Összes &kijelölése\tCtrl+A
-id:Pilih Semu&a\tCtrl+A
-it:Selezion&a tutto\tCtrl+A
-ja:すべて選択(&A)\tCtrl+A
-ka:ყ&ველას მონიშვნა\tCtrl+A
-kr:모두 선택(&A)\tCtrl+A
-ku:دیاریکردنی &هەمووی\tCtrl+A
-kw:Dewis &Oll\tCtrl+A
-lt:Pažymėti &viską\tCtrl+A
-lv:Atlasīt &visu\tCtrl+A
-mk:Избери сè\tCtrl+A
-my:Pilih Semu&a\tCtrl+A
-ne:सबै &चयन गर्नुहोस्\tCtrl+A
-nl:&Alles selecteren\tCtrl+A
-nn:Vel &alle\tCtrl+A
-no:Merk &alle\tCtrl+A
-pl:Zaznacz &wszystko\tCtrl+A
-pt:&Selecionar tudo\tCtrl+A
-ro:Selectează &tot\tCtrl+A
-ru:В&ыделить все\tCtrl+A
-si:සියල්ල &තෝරන්න\tCtrl+A
-sk:Vybrať &všetko\tCtrl+A
-sl:Izberi vse\tCtrl+A
-sp-rs:Izaberi sve\tCtrl+A
-sq:Seleksionoj të &gjithë\tCtrl+A
-sr-rs:Изабери све\tCtrl+A
-sv:Markera &allt\tCtrl+A
-ta:அனைத்தையும் தேர்வு செய் \tCtrl+A
-th:เลือก &ทั้งหมด Ctrl+A
-tl:Piliin L&ahat\tCtrl+A
-tr:T&ümünü Seç\tCtrl+A
-tw:全選(&A)\tCtrl+A
-uk:Вибрати всі\tCtrl+A
-uz:&Hammasini tanlash\tCtrl+A
-vn:Chọn hết\tCtrl+A
+dk:Marker &alt
+el:Επιλογή ό&λων
+es:Seleccionar &todo
+et:V&ali kõik
+eu:Hautatu G&uztiak
+fa:انتخاب &همه
+fi:V&alitse kaikki
+fr:&Tout sélectionner
+ga:Roghnaigh Uile
+gl:Seleccion&ar todo
+he:בחר הכל
+hi:सब &चुनें
+hr:Obilježi &sve
+hu:&Összes kijelölése
+id:Pilih Semu&a
+it:Seleziona &tutto
+ja:すべて選択(&A)
+ka:ყ&ველას მონიშვნა
+kr:모두 선택(&A)
+ku:دیاریکردنی &هەمووی
+kw:Dewis &Oll
+lt:Pažymėti &viską
+lv:Atlasīt &visu
+mk:Избери сè
+my:Pilih &Semua
+ne:सबै &चयन गर्नुहोस्
+nl:&Alles selecteren
+nn:Vel &alle
+no:Merk &alt
+pl:Zaznacz &wszystko
+pt:&Selecionar tudo
+ro:Selecte&ază Tot
+ru:В&ыделить все
+si:සියල්ල &තෝරන්න
+sk:Vybrať &všetko
+sl:Izberi vse
+sp-rs:Izaberi sve
+sq:Seleksionoj të &gjithë
+sr-rs:Изабери све
+sv:Markera &allt
+ta:அனைத்தையும் தேர்வு செய்
+th:เลือก &ทั้งหมด
+tl:Piliin lahat
+tr:&Tümünü Seç
+tw:全選(&A)
+uk:Вибрати всі
+uz:&Hammasini tanlash
+vn:Chọn hết
 :Select Annotation in Editor
 am:Ընտրեք մեկնաբանությունը Խմբագրիչում
 br:Selecionar Anotação no Editor
@@ -16806,45 +15234,66 @@ tw:設定反向搜尋指令列
 uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
-:Show &Bookmarks\tF12
-am:Ցուցադրել &Էջանիշերը\tF12
-ar:إظهار العلامات المرجعية
-az:Əl&fəcinləri göstər\tF12
-bg:Покажи &Любими\tF12
-br:Mostrar &marcadores\tF12
-ca-xv:Mostra els &marcadors\tF12
-ca:Mostra els &marcadors\tF12
-cn:显示书签(&B)\tF12
-co:Affissà l’&indette\tF12
-cy:Dangos Nodau Tudalen\tF12
-de:Lesezeichen anzeigen\tF12
-dk:Vis &bogmærker\tF12
-el:Εμφάνιση &σελιδοδεικτών\tF12
-es:Mostrar los marcadores\tF12
-et:Näita &Järjehoidjaid\tF12
-fr:Afficher les &signets\tF12
-ga:Taispeáin na &Leabharmharcanna\tF12
-gl:Amosar &marcadores\tF12
-he:הצג סימניות\tCtrl+F12
-hr:Prikaži &oznake\tF12
-hu:Könyvjelzők mutatása\tF12
-id:Tampilkan &Markah\tF12
-it:Visualizza &segnalibri\tF12
-ja:ブックマークを表示(&B)\tF12
-ka:სანიშნეების &ჩვენება\tF12
-kw:Diskwedhes &Folennotennow\tF12
-lt:Rodyti ž&ymes\tF12
-lv:Rādīt &grāmatzīmes\tF12
-nl:Toon Bladwijzers\tF12
-pl:Pokaż za&kładki\tF12
-pt:Mostrar &marcadores\tF12
-ru:Показать за&кладки\tF12
-sk:Zobraziť &záložky\tF12
-sl:Pokaži zaznamke\tF12
-th:แสดง &บุ๊กมาร์ก F12
-tr:Yer &İmlerini Göster\tF12
-tw:顯示書籤(&B)\tF12
-uk:Показати за&кладки\tF12
+:Show &Bookmarks
+am:Ցուցադրել &Էջանիշերը
+ar:اظهار &قوائم العناوين
+az:Ə&lfəcinləri göstər
+bg:Покажи отметките
+br:Mostrar Fa&voritos
+bs:Pokaži &oznake
+by:Паказаць &Закладкі
+ca-xv:Mostra els &marcadors
+ca:Mostra els &marcadors
+cn:显示书签(&B)
+co:Affissà l’indette
+cy:Dangos &Nodau Tudalen
+cz:Zobrazit &záložky
+de:Lese&zeichen anzeigen
+dk:Vis &bogmærker
+el:Εμφάνιση &σελιδοδεικτών
+es:Mostrar &marcadores
+et:Näita &järjehoidjaid
+eu:Erakutsi Laster&markak
+fa:ن&شانک‌ها را نشان بده
+fi:Näytä &Kirjanmerkit
+fr:Voir les &Marque-pages
+ga:Lea&bharmharcanna a taispeáint
+gl:Amosar &marcadores
+he:הצג סימניות
+hi:बुकमार्क दिखाएँ (&B)
+hr:Prikaži &oznake
+hu:Könyvjelzők mutatása
+id:Tampilkan &Markah
+it:Visualizza segnali&bri
+ja:ブックマークを表示(&B)
+ka:&სანიშნეების ჩვენება
+kr:책갈피 보이기(&B)
+ku:پیشنادانی &نیشانەکراوەکان
+lt:Rodyti ž&ymas
+lv:Rādīt &grāmatzīmes
+mk:Прикажи &обележувачи
+my:Papar &Bookmark
+ne:&पुस्तकचिनोहरू देखाउनुहोस्
+nl:Bladwijzers tonen
+nn:Vis &bokmerkar
+no:Vis &bokmerker
+pl:Pokaż &Zakładki
+pt:&Mostrar marcadores
+ro:Arata Se&bnele de Carte
+ru:Показать &закладки
+si:පි&ටුසලකුණු පෙන්වන්න
+sk:Zobraziť &Záložky
+sl:Prikaži &zaznamke
+sp-rs:Prikaži Obeleživače
+sq:Tregoj &faqet me shenjë
+sr-rs:Прикажи обележене
+sv:Visa &Bokmärken
+ta:புத்தகக்குறிகளை காட்டுக
+tr:Göster &Sık Kullanılanlar
+tw:顯示書籤 (&B)
+uk:Показати закладки
+uz:&Xatcho'plarni ko'rsatish
+vn:Hiện chỉ dấu sách
 :Show &Favorites
 am:Ցուցադրել &Ընտրյալները
 ar:إظهار التفضيلات
@@ -16986,7 +15435,7 @@ tr:&Kaydırma Çubuklarını Göster
 tw:顯示捲軸(&S)
 uk:&Показати смугу прокрутки
 vn:Hiện &Thanh cuộn
-:Show &Toolbar\tF8
+:Show &Toolbar
 af:Vertoon Toolbar
 am:Ցուցադրել &գործիքները
 ar:اظهار شريط الأدوات
@@ -16995,17 +15444,16 @@ bg:Лен&та с инструменти
 bn:উপকরণপট্টি প্রদর্শন
 br:Mostrar barra de ferramentas
 bs:Prikaži alatnu traku
-by:Паказваць панэлі прылад
+by:Паказ панэлі прылад
 ca-xv:Mostra la &barra d'eines
 ca:Mostra la &barra d'eines
-cn:显示工具栏(&T)\tF8
-co:Affissà a &barra d’attrezzi\tF8
+cn:显示工具栏(&T)
 cy:Dangos y &Bar Offer
 cz:Zobrazit panel nás&trojů
-de:&Werkzeugleiste anzeigen\tF8
+de:&Werkzeugleiste anzeigen
 dk:Vis &værktøjslinje
 el:&Εμφάνιση γραμμής εργαλείων
-es:Mostrar la barra de &herramientas
+es:Mostrar barra de &herramientas
 et:&Näita tööriistariba
 eu:Erakutsi &Tresnabarra
 fa:نمایش نوار &ابزار
@@ -17036,7 +15484,7 @@ nl:Werkbalk tonen
 nn:Vis verktylinje
 no:Vis verktøylinje
 pa:ਸੰਦ ਵਾਲੀ ਫੱਟੀ ਵਖਾਓ
-pl:Pokaż pasek &narzędzi\tF8
+pl:Pokaż pasek &narzędzi
 pt:Mostrar &barra de ferramentas
 ro:Arată bara de instrumente
 ru:Панель &инструментов
@@ -17047,52 +15495,16 @@ sn:Ratidza Toolbar
 sp-rs:Traka sa alatkama
 sq:Tregoj &brezin e mjeteve
 sr-rs:Трака са алаткама
-sv:Visa verktygsfält\tF8
+sv:Visa verktygsfält
 ta:கருவிப்பட்டை காண்பி
-th:แสดง &แถบเครื่องมือ F8
+th:แสดงแถบเครื่องมือ
 tl:Ipakita ang toolbar
-tr:&Araç Çubuğunu Göster\tF8
-tw:顯示工具列(&T)\tF8
+tr:&Araç çubuğunu göster
+tw:顯示工具列(&T)
 uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
-:Show Book&marks\tF12
-am:Ցուցադրել Էջա&նիշերը\tF12
-ar:إظهار العلامات المرجعية
-az:Əlfə&cinləri göstər\tF12
-bg:Покажи Отмет&ките\tF12
-br:Mostrar &marcadores\tF12
-ca-xv:Mostra els &marcadors\tF12
-ca:Mostra els &marcadors\tF12
-cn:显示书签(&M)\tF12
-co:Affissà l’&indette\tF12
-cy:Dangos Nodau Tudalen\tF12
-de:Lesezeichen anzeigen\tF12
-dk:Vis bog&mærker\tF12
-el:Εμφάνιση σελιδο&δεικτών\tF12
-es:Mostrar los mar&cadores\tF12
-et:Näita &järjehoidjaid\tF12
-fr:Afficher les &marque-pages\tF12
-ga:Taispeáin na Leabhar&mharcanna\tF12
-gl:Amosar &marcadores\tF12
-he:הצג סימניות\tF12
-hr:Prikaži oznake\tF12
-hu:Könyv&jelzők megjelenítése\F12
-id:Tampilkan &Markah\tF12
-it:Visualizza segna&libri\tF12
-ja:ブックマークを表示 (&M)\tF12
-ka:სანიშნეების &ჩვენება\tF12
-kw:Diskwedhes Folen&notennow\tF12
-lt:Rodyti ž&ymes\tF12
-lv:Rādīt grāmat&zīmes\tF12
-nl:Toon Blad&wijzers\tF12
-pl:Pokaż za&kładki\tF12
-pt:Mostrar &marcadores\tF12
-ru:Показать зак&ладки\tF12
-sl:Pokaži zazna&mke\tF12
-th:แสดง &บุ๊กมาร์ก F12
-tr:Yer &İmlerini Göster\tF12
-tw:顯示書籤(&M)\tF12
+:Show Book&marks
 :Show Favorites
 am:Ցուցադրել ընտրյալները
 ar:إظهار المفضلة
