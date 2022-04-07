@@ -320,6 +320,9 @@
     <ClCompile Include="..\src\ChmModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Commands.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>src</Filter>
     </ClCompile>
