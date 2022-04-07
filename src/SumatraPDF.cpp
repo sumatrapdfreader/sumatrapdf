@@ -3609,6 +3609,24 @@ static bool ChmForwardKey(WPARAM key) {
     return false;
 }
 
+static void DeleteAnnotationUnderCursor(WindowInfo* win) {
+    Point pt{0, 0};
+    bool ok = GetCursorPosInHwnd(win->hwndCanvas, pt);
+    DisplayModel* dm = win->AsFixed();
+    Annotation* annot = nullptr;
+    if (ok && dm) {
+        int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+        if (pageNoUnderCursor > 0) {
+            annot = dm->GetAnnotationAtPos(pt, nullptr);
+        }
+    }
+    if (annot) {
+        auto tab = win->currentTab;
+        DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, annot);
+        delete annot;
+    }
+}
+
 bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         // black/white screen is disabled on any unmodified key press in FrameOnChar
@@ -3617,27 +3635,6 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
 
     if (VK_ESCAPE == key) {
         CancelDrag(win);
-        return true;
-    }
-
-    bool isDel = VK_DELETE == key || VK_BACK == key;
-    if (isDel && !inTextfield) {
-        Point pt{0, 0};
-        bool ok = GetCursorPosInHwnd(win->hwndCanvas, pt);
-        DisplayModel* dm = win->AsFixed();
-        Annotation* annot = nullptr;
-        if (ok && dm) {
-            int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-            if (pageNoUnderCursor > 0) {
-                annot = dm->GetAnnotationAtPos(pt, nullptr);
-            }
-        }
-        if (annot) {
-            auto tab = win->currentTab;
-            DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, annot);
-            delete annot;
-        }
-
         return true;
     }
 
@@ -3742,12 +3739,12 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         } else {
             win->ctrl->GoToNextPage();
         }
-    } else if (VK_HOME == key) {
-        win->ctrl->GoToFirstPage();
-    } else if (VK_END == key) {
-        if (!win->ctrl->GoToLastPage()) {
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
-        }
+        /*} else if (VK_HOME == key) {
+            win->ctrl->GoToFirstPage();*/
+        /*} else if (VK_END == key) {
+            if (!win->ctrl->GoToLastPage()) {
+                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+            }*/
     } else if (VK_MULTIPLY == key && dm) {
         dm->RotateBy(90);
     } else if (VK_DIVIDE == key && dm) {
@@ -3907,6 +3904,25 @@ static void ShowCursorPositionInDoc(WindowInfo* win) {
     }
 }
 
+static void openAnnotsInEditWindow(WindowInfo* win, Vec<Annotation*>& annots, bool isShift) {
+    if (annots.empty()) {
+        return;
+    }
+    WindowInfoRerender(win);
+    if (isShift) {
+        StartEditAnnotations(win->currentTab, annots);
+        return;
+    }
+    auto w = win->currentTab->editAnnotsWindow;
+    if (w) {
+        for (auto annot : annots) {
+            AddAnnotationToEditWindow(w, annot);
+        }
+    } else {
+        DeleteVecMembers(annots);
+    }
+};
+
 static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         win->ChangePresentationMode(PM_ENABLED);
@@ -3953,25 +3969,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     auto* ctrl = win->ctrl;
     DisplayModel* dm = win->AsFixed();
     auto currentTab = win->currentTab;
-
-    auto openAnnotsInEditWindow = [&win](Vec<Annotation*>& annots, bool isShift) -> void {
-        if (annots.empty()) {
-            return;
-        }
-        WindowInfoRerender(win);
-        if (isShift) {
-            StartEditAnnotations(win->currentTab, annots);
-            return;
-        }
-        auto w = win->currentTab->editAnnotsWindow;
-        if (w) {
-            for (auto annot : annots) {
-                AddAnnotationToEditWindow(w, annot);
-            }
-        } else {
-            DeleteVecMembers(annots);
-        }
-    };
 
     switch (key) {
         case VK_SPACE:
@@ -4079,14 +4076,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'm':
             ShowCursorPositionInDoc(win);
             break;
-        case 'u': {
-            auto annots = MakeAnnotationFromSelection(currentTab, AnnotationType::Underline);
-            openAnnotsInEditWindow(annots, isShift);
-        } break;
-        case 'a': {
-            auto annots = MakeAnnotationFromSelection(currentTab, AnnotationType::Highlight);
-            openAnnotsInEditWindow(annots, isShift);
-        } break;
     }
 }
 
@@ -4483,7 +4472,6 @@ static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
 }
 
 static void RunCommandPallette(WindowInfo* winInfo) {
-    logf("RunCommandPalette()\n");
     auto win = gCommandPaletteWindow;
     if (win) {
         HWND hwnd = win->mainWindow->hwnd;
@@ -4776,7 +4764,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdGoToLastPage:
             if (win->IsDocLoaded()) {
-                ctrl->GoToLastPage();
+                if (!ctrl->GoToLastPage()) {
+                    SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+                }
             }
             break;
 
@@ -4923,6 +4913,25 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdDebugAnnotations:
             FrameOnChar(win, 'h');
             break;
+
+        case CmdCreateAnnotHighlight: {
+            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
+            bool isShift = IsShiftPressed();
+            openAnnotsInEditWindow(win, annots, isShift);
+        } break;
+
+        case CmdCreateAnnotUnderline: {
+            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::Underline);
+            bool isShift = IsShiftPressed();
+            openAnnotsInEditWindow(win, annots, isShift);
+        } break;
+
+        case CmdDeleteAnnotation: {
+            bool inTextField = GetFocus() == win->hwndFindBox;
+            if (!inTextField) {
+                DeleteAnnotationUnderCursor(win);
+            }
+        } break;
 
 #if defined(DEBUG)
         case CmdDebugTestApp:

@@ -8,7 +8,7 @@
 //#define CTRL (FCONTROL | FVIRTKEY)
 //#define SHIFT_CTRL (FSHIFT | FCONTROL | FVIRTKEY)
 
-// TODO: should FVIRTKEY be set for chars like 'A'
+// TODO: should FVIRTKEY be set for chars like 'A' ?
 ACCEL gAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'A', CmdSelectAll},
     {FCONTROL | FVIRTKEY, 'B', CmdFavoriteAdd},
@@ -68,6 +68,19 @@ ACCEL gAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdViewRotateLeft},
     {FALT | FVIRTKEY, VK_LEFT, CmdGoToNavBack},
     {FALT | FVIRTKEY, VK_RIGHT, CmdGoToNavForward},
+    {FVIRTKEY, VK_HOME, CmdGoToFirstPage},
+    {FVIRTKEY, VK_END, CmdGoToLastPage},
+
+    // need 2 entries for 'a' and 'Shift + a'
+    // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)
+    {0, 'a', CmdCreateAnnotHighlight},
+    {0, 'A', CmdCreateAnnotHighlight},
+
+    {0, 'u', CmdCreateAnnotUnderline},
+    {0, 'U', CmdCreateAnnotUnderline},
+
+    {FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
+    {FVIRTKEY, VK_BACK, CmdDeleteAnnotation},
 };
 
 HACCEL CreateSumatraAcceleratorTable() {
@@ -75,4 +88,16 @@ HACCEL CreateSumatraAcceleratorTable() {
     HACCEL res = CreateAcceleratorTableW(gAccelerators, n);
     CrashIf(res == nullptr);
     return res;
+}
+
+bool GetAccelByCmd(int cmdId, ACCEL& accelOut) {
+    int n = (int)dimof(gAccelerators);
+    for (int i = 0; i < n; i++) {
+        ACCEL& a = gAccelerators[i];
+        if (a.cmd == cmdId) {
+            accelOut = a;
+            return true;
+        }
+    }
+    return false;
 }
