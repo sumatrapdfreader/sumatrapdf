@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-01887211b3d6ad876a7e409bc1fc43fd9540cb83
+e4b1048abc8a85206b045277def80776c3a5d7e4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -72,6 +72,8 @@ uk:&Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
 :&Actual Size
+nl:&Werkelijke grootte
+pl:&Rozmiar rzeczywisty
 :&Advanced Options...
 am:&Ընդլայնված ընտրանքներ..
 ar:خيارات &متقدمة
@@ -205,7 +207,11 @@ uk:Обрано всі сторінки
 uz:&Hamma tanlangan betlar
 vn:Tất cả các tr&ang được chọn
 :&Back
+nl:&Terug
+pl:&Wstecz
 :&Book View
+nl:&Boek Tonen
+pl:Widok o&dczytu
 :&Cancel
 am:Չեղարկել
 bg:&Отказ
@@ -265,6 +271,8 @@ th:&ผู้ดูแล
 tr:&Karet
 uk:&Каретка
 :&Close
+nl:&Sluiten
+pl:&Zamknij
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
 br:&Continue instalando a versão 32-bits
@@ -360,6 +368,8 @@ uk:Скопіювати вибране
 uz:&Tanlanganni nusxa olish
 vn:&Chép phần đã chọn
 :&Copy To Clipboard
+nl:&Kopieer Naar Klembord
+pl:Kopiuj do s&chowka
 :&Discard changes
 am:&Մերժել
 br:&Descartar
@@ -521,6 +531,8 @@ uk:Тільки парні сторінки
 uz:&Faqat juft betlar
 vn:Chỉ những trang lẻ
 :&Facing
+nl:&Gericht op
+pl:&Wiele stron
 :&File
 af:&Lêer
 am:&Ֆայլ
@@ -660,6 +672,8 @@ uk:Що шукати:
 uz:&Qidirish:
 vn:Tìm (các) từ sau:
 :&First Page
+nl:&Eerste Pagina
+pl:&Pierwsza strona
 :&Fit pages to printable area
 am:&Հարմարեցնել էջերը տպելու համար
 ar:&ملائمة الصفحات لمنطقة الطباعة
@@ -961,7 +975,11 @@ uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
 :&Highlight
+nl:&Markeren
+pl:&Wyróżnienie
 :&Last Page
+nl:&Laatste Pagina
+pl:&Ostatnia strona
 :&Magnification:
 am:&Մեծացնել
 ar:&التكبير
@@ -1159,6 +1177,8 @@ uk:Враховувати регістр
 uz:&Registrni hisobga olish
 vn:Phân biệt &HOA-thường
 :&Next Page
+nl:&Volgende Pagina
+pl:&Następna strona
 :&No
 af:&Nee
 am:&Ոչ
@@ -1357,6 +1377,8 @@ uk:Відкрити документ
 uz:&Hujjatni ochish
 vn:Mở tập tin
 :&Open...
+nl:&Openen
+pl:&Otwórz...
 :&Options
 am:&Ընտրանքներ
 ar:&الخيارات
@@ -1613,6 +1635,8 @@ uk:Документ pin
 uz:&Hujjatni eslab qolish
 vn:Ghim tập tin
 :&Previous Page
+nl:&Vorige Pagina
+pl:&Poprzednia strona
 :&Print...
 am:&Տպել...
 ar:&طباعة...
@@ -2150,6 +2174,8 @@ uk:Урізати сторінки до зони друку (при необхі
 uz:&Betlarni printerga moslab kichraytirish (zarur bo'lganda)
 vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page
+nl:&Enkele Pagina
+pl:&Pojedyncza strona
 :&Stamp
 am:&Կնիք
 br:&Carimbo
@@ -6727,6 +6753,8 @@ uk:Позиція вказівника:
 uz:Kursor holati:
 vn:Vị trí con trỏ:
 :Custom &Zoom...
+nl:Aangepast & zoom...
+pl:&Własne powiększenie...
 :Dark
 am:Մուգ
 ar:مظلم
@@ -7337,6 +7365,8 @@ th:ดาวน์โหลดรุ่น 64 บิต
 tr:64 bit sürümü indir
 uk:Завантажити 64-bit версію
 :E&xit
+nl:A&fsluiten
+pl:&Wyjście
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
@@ -7855,7 +7885,11 @@ uk:Закладки
 uz:&Tanlanganlar
 vn:Ưa thích
 :F&orward
+nl:V&ooruit
+pl:&Dalej
 :F&ullscreen
+nl:V&oledig Scherm
+pl:Pełny &ekran
 :Facing
 af:Teenoor
 am:Երկու էջ
@@ -8733,6 +8767,8 @@ uk:Файл:
 uz:Fayl:
 vn:Tập tin:
 :Fin&d...
+nl:Zoe&k
+pl:&Znajdź...
 :Find
 am:Գտնել
 ar:بحث
@@ -9015,8 +9051,14 @@ uk:Знайти:
 uz:Qidirish:
 vn:Tìm kiếm:
 :Fit &Content
+nl:&Inhoud Aanpassen
+pl:Dopasuj do &zawartości
 :Fit &Page
+nl:&Pagina Aanpassen
+pl:Dopasuj do s&trony
 :Fit &Width
+nl:&Breedte Aanpassen
+pl:Dopasuj do sz&erokości
 :Fit Content
 am:Հարմարեցնել բովանդակությունը
 ar:ملائمة المحتوى
@@ -11236,6 +11278,8 @@ uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window
+nl:Nieuw &Kader
+pl:Nowe &okno
 :New version available
 am:Մատչելի է նոր տարբերակ
 bg:Достъпна е нова версия
@@ -12720,6 +12764,8 @@ uk:Документи PDF
 uz:PDF hujjatlari
 vn:Tập tin PDF
 :Pa&ge...
+nl:Pa&gina
+pl:&Strona...
 :Page %s
 am:Էջ %s
 ar:الصفحة %s
@@ -13391,6 +13437,8 @@ uk:Документи postscript
 uz:Postscript hujjatlari
 vn:Tập tin Postscript
 :Pr&esentation
+nl:Pr&esentatie
+pl:&Prezentacja
 :Previous Page
 af:Vorige Bladsy
 am:Նախորդ էջը
@@ -13974,6 +14022,8 @@ uk:Помилка друкування.
 uz:Chop etish muammosi.
 vn:Lỗi in.
 :Re&name...
+nl:Her&noem
+pl:Zmień &nazwę...
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
 br:Retângulo: x=%d y=%d dx=%d dy=%d
@@ -14285,6 +14335,8 @@ uk:Перейменувати в
 uz:Yangi nom
 vn:Đổi tên thành
 :Rotate &Left
+nl:&Linksom Roteren
+pl:Obróć w &lewo
 :Rotate &Left\tCtrl+Shift+-
 af:Draai Links\tCtrl+Shift+-
 am:Պտտել ձախ\tCtrl+Shift+-
@@ -14357,6 +14409,8 @@ uk:Повернути ліворуч\tCtrl+Shift+-
 uz:&Chapga burish\tCtrl+Shift+-
 vn:Quay trái\tCtrl+Shift+-
 :Rotate &Right
+nl:&Rechtsom Roteren
+pl:Obróć w &prawo
 :Rotate &Right\tCtrl+Shift++
 af:Draai Regs\tCtrl+Shift++
 am:Պտտել աջ\tCtrl+Shift++
@@ -14559,6 +14613,8 @@ tr:Gömülü Dosyayı Kaydet...
 tw:儲存內嵌的檔案...
 uk:Зберегти вкладений файл...
 :Save S&hortcut...
+nl:S&neltoets Opslaan
+pl:Zapisz s&krót...
 :Save annotations?
 am:Պահե՞լ մեկնաբանությունը?
 bg:Да запазя ли обясненията?
@@ -14685,7 +14741,7 @@ kw:Notenyansow gwithys dhe '%s'
 lt:Anotacijos išsaugotos į '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
-pl:Zapisano adnotacje do '%s'
+pl:Zapisano adnotacje w '%s'
 ru:Аннотации сохранены в '%s'
 sl:Shrani pripombe v '%s'
 tr:Dipnotlar şuraya kaydedildi: '%s'
@@ -15083,7 +15139,7 @@ ne:चयन:
 nl:Selectie
 nn:Utval:
 no:Valg:
-pl:Selekcja:
+pl:Zaznaczenie:
 pt:Selecção:
 ru:Выделение:
 si:තෝරාගැනීම
@@ -15277,7 +15333,7 @@ ne:&पुस्तकचिनोहरू देखाउनुहोस्
 nl:Bladwijzers tonen
 nn:Vis &bokmerkar
 no:Vis &bokmerker
-pl:Pokaż &Zakładki
+pl:Pokaż &zakładki
 pt:&Mostrar marcadores
 ro:Arata Se&bnele de Carte
 ru:Показать &закладки
@@ -15505,6 +15561,8 @@ uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks
+nl:Toon Blad&wijzers
+pl:Pokaż za&kładki
 :Show Favorites
 am:Ցուցադրել ընտրյալները
 ar:إظهار المفضلة
