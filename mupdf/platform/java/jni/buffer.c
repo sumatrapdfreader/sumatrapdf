@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -101,8 +101,7 @@ FUN(Buffer_readBytes)(JNIEnv *env, jobject self, jint jat, jobject jbs)
 
 	remaining_input = len - at;
 	remaining_output = (*env)->GetArrayLength(env, jbs);
-	len = fz_minz(0, remaining_output);
-	len = fz_minz(len, remaining_input);
+	len = fz_minz(remaining_output, remaining_input);
 
 	bs = (*env)->GetByteArrayElements(env, jbs, NULL);
 	if (!bs) jni_throw_io(env, "cannot get bytes to read");
@@ -203,7 +202,7 @@ FUN(Buffer_writeBytesFrom)(JNIEnv *env, jobject self, jobject jbs, jint joff, ji
 	bslen = (*env)->GetArrayLength(env, jbs);
 	if (joff < 0) jni_throw_oob_void(env, "offset is negative");
 	if (jlen < 0) jni_throw_oob_void(env, "length is negative");
-	if (off + len >= bslen) jni_throw_oob_void(env, "offset + length is outside of buffer");
+	if (off + len > bslen) jni_throw_oob_void(env, "offset + length is outside of buffer");
 
 	bs = (*env)->GetByteArrayElements(env, jbs, NULL);
 	if (!bs) jni_throw_io_void(env, "cannot get bytes to write");

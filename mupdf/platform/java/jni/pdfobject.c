@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -60,23 +60,6 @@ FUN(PDFObject_isIndirect)(JNIEnv *env, jobject self)
 
 	fz_try(ctx)
 		b = pdf_is_indirect(ctx, obj);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-
-	return b ? JNI_TRUE : JNI_FALSE;
-}
-
-JNIEXPORT jboolean JNICALL
-FUN(PDFObject_isNull)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	pdf_obj *obj = from_PDFObject(env, self);
-	int b = 0;
-
-	if (!ctx || !obj) return JNI_FALSE;
-
-	fz_try(ctx)
-		b = pdf_is_null(ctx, obj);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
@@ -436,7 +419,9 @@ FUN(PDFObject_resolve)(JNIEnv *env, jobject self)
 	pdf_obj *ind = NULL;
 	jobject jobj;
 
-	if (!ctx || !obj) return NULL;
+	if (!ctx) return NULL;
+
+	if (!obj) return to_PDFObject_safe(ctx, env, NULL);
 
 	fz_try(ctx)
 		ind = pdf_resolve_indirect(ctx, obj);
@@ -457,7 +442,9 @@ FUN(PDFObject_getArray)(JNIEnv *env, jobject self, jint index)
 	pdf_obj *arr = from_PDFObject(env, self);
 	pdf_obj *val = NULL;
 
-	if (!ctx || !arr) return NULL;
+	if (!ctx) return NULL;
+
+	if (!arr) return to_PDFObject_safe(ctx, env, NULL);
 
 	fz_try(ctx)
 		val = pdf_array_get(ctx, arr, index);
@@ -475,8 +462,10 @@ FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname)
 	const char *name = NULL;
 	pdf_obj *val = NULL;
 
-	if (!ctx || !dict) return NULL;
+	if (!ctx) return NULL;
 	if (!jname) jni_throw_arg(env, "name must not be null");
+
+	if (!dict) return to_PDFObject_safe(ctx, env, NULL);
 
 	name = (*env)->GetStringUTFChars(env, jname, NULL);
 	if (!name) jni_throw_run(env, "cannot get name to lookup");
@@ -498,7 +487,9 @@ FUN(PDFObject_getDictionaryKey)(JNIEnv *env, jobject self, jint index)
 	pdf_obj *dict = from_PDFObject(env, self);
 	pdf_obj *key = NULL;
 
-	if (!ctx || !dict) return NULL;
+	if (!ctx) return NULL;
+
+	if (!dict) return to_PDFObject_safe(ctx, env, NULL);
 
 	fz_try(ctx)
 		key = pdf_dict_get_key(ctx, dict, index);

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1302,4 +1302,32 @@ FUN(PDFAnnotation_hasLine)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	return has;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFAnnotation_setFileSpecification)(JNIEnv *env, jobject self, jobject jfs)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	pdf_obj *fs = from_PDFObject(env, jfs);
+
+	fz_try(ctx)
+		pdf_set_annot_filespec(ctx, annot, fs);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFAnnotation_getFileSpecification)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	pdf_obj *fs = NULL;
+
+	fz_try(ctx)
+		fs = pdf_annot_filespec(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_PDFObject_safe(ctx, env, fs);
 }

@@ -2165,6 +2165,22 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setNativeAppear
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setNativeAppearanceDisplayList
   (JNIEnv *, jobject, jstring, jstring, jobject, jobject);
 
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setFileSpecification
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setFileSpecification
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getFileSpecification
+ * Signature: ()Lcom/artifex/mupdf/fitz/PDFObject;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getFileSpecification
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif
@@ -2722,6 +2738,38 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_setLanguage
 JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_countSignatures
   (JNIEnv *, jobject);
 
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    addEmbeddedFile
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Lcom/artifex/mupdf/fitz/Buffer;JJZ)Lcom/artifex/mupdf/fitz/PDFObject;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_addEmbeddedFile
+  (JNIEnv *, jobject, jstring, jstring, jobject, jlong, jlong, jboolean);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    getEmbeddedFileParams
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;)Lcom/artifex/mupdf/fitz/PDFDocument/PDFEmbeddedFileParams;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_getEmbeddedFileParams
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    loadEmbeddedFileContents
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;)Lcom/artifex/mupdf/fitz/Buffer;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_loadEmbeddedFileContents
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    verifyEmbeddedFileChecksum
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_verifyEmbeddedFileChecksum
+  (JNIEnv *, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif
@@ -2786,14 +2834,6 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_finalize
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFObject_isIndirect
-  (JNIEnv *, jobject);
-
-/*
- * Class:     com_artifex_mupdf_fitz_PDFObject
- * Method:    isNull
- * Signature: ()Z
- */
-JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFObject_isNull
   (JNIEnv *, jobject);
 
 /*

@@ -1477,3 +1477,99 @@ FUN(PDFDocument_countSignatures)(JNIEnv *env, jobject self)
 
 	return val;
 }
+
+JNIEXPORT jobject JNICALL
+FUN(PDFDocument_addEmbeddedFile)(JNIEnv *env, jobject self, jstring jfilename, jstring jmimetype, jobject jcontents, jlong created, jlong modified, jboolean addChecksum)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	const char *filename = NULL;
+	const char *mimetype = NULL;
+	fz_buffer *contents = from_Buffer(env, jcontents);
+	pdf_obj *fs = NULL;
+
+	if (!ctx || !pdf) return NULL;
+	if (!jfilename) jni_throw_arg(env, "filename must not be null");
+
+	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
+	if (!filename) return NULL;
+
+	if (jmimetype)
+	{
+		mimetype = (*env)->GetStringUTFChars(env, jmimetype, NULL);
+		if (!mimetype)
+		{
+			(*env)->ReleaseStringUTFChars(env, jfilename, filename);
+			return NULL;
+		}
+	}
+
+	fz_try(ctx)
+		fs = pdf_add_embedded_file(ctx, pdf, filename, mimetype, contents, created, modified, addChecksum);
+	fz_always(ctx)
+	{
+		if (mimetype)
+			(*env)->ReleaseStringUTFChars(env, jmimetype, mimetype);
+		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_PDFObject_safe(ctx, env, fs);
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_getEmbeddedFileParams)(JNIEnv *env, jobject self, jobject jfs)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *fs = from_PDFObject_safe(env, jfs);
+	pdf_embedded_file_params params;
+	jstring jfilename = NULL;
+	jstring jmimetype = NULL;
+
+	fz_try(ctx)
+		pdf_get_embedded_file_params(ctx, fs, &params);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	jfilename = (*env)->NewStringUTF(env, params.filename);
+	if (!jfilename || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	jmimetype = (*env)->NewStringUTF(env, params.mimetype);
+	if (!jmimetype || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	return (*env)->NewObject(env, cls_PDFDocument_PDFEmbeddedFileParams, mid_PDFDocument_PDFEmbeddedFileParams_init,
+		jfilename, jmimetype, params.size, params.created * 1000, params.modified * 1000);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFDocument_loadEmbeddedFileContents)(JNIEnv *env, jobject self, jobject jfs)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *fs = from_PDFObject_safe(env, jfs);
+	fz_buffer *contents = NULL;
+
+	fz_try(ctx)
+		contents = pdf_load_embedded_file_contents(ctx, fs);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe(ctx, env, contents);
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFDocument_verifyEmbeddedFileChecksum)(JNIEnv *env, jobject self, jobject jfs)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *fs = from_PDFObject_safe(env, jfs);
+	int valid = 0;
+
+	fz_try(ctx)
+		valid = pdf_verify_embedded_file_checksum(ctx, fs);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return valid ? JNI_TRUE : JNI_FALSE;
+}

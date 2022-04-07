@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -21,6 +21,10 @@
 // CA 94945, U.S.A., +1(415)492-9861, for further information.
 
 package com.artifex.mupdf.fitz;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class Buffer
 {
@@ -46,6 +50,10 @@ public class Buffer
 		pointer = newNativeBuffer(0);
 	}
 
+	protected Buffer(long p) {
+		pointer = p;
+	}
+
 	public native int getLength();
 	public native int readByte(int at);
 	public native int readBytes(int at, byte[] bs);
@@ -60,4 +68,37 @@ public class Buffer
 	public native void writeLines(String... lines);
 
 	public native void save(String filename);
+
+	public void readIntoStream(OutputStream stream)
+	{
+		try {
+			byte[] data = new byte[getLength()];
+			readBytes(0, data);
+			stream.write(data);
+		} catch (IOException e) {
+			throw new RuntimeException("unable to write all bytes from buffer into stream");
+		}
+	}
+
+	public void writeFromStream(InputStream stream)
+	{
+		try {
+			boolean readAllBytes = false;
+			byte[] data = null;
+			while (!readAllBytes)
+			{
+				int availableBytes = stream.available();
+				if (data == null || availableBytes > data.length)
+					data = new byte[availableBytes];
+				int bytesRead = stream.read(data);
+				if (bytesRead >= 0)
+					writeBytesFrom(data, 0, bytesRead);
+				else
+					readAllBytes = true;
+			}
+		} catch (IOException e) {
+			throw new RuntimeException("unable to read all bytes from stream into buffer");
+		}
+	}
+
 }

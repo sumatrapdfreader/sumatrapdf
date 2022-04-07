@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -470,10 +470,14 @@ static void save_attachment_dialog(void)
 			fz_try(ctx)
 			{
 				pdf_obj *fs = pdf_dict_get(ctx, pdf_annot_obj(ctx, ui.selected_annot), PDF_NAME(FS));
-				fz_buffer *buf = pdf_load_embedded_file(ctx, fs);
+				fz_buffer *buf = pdf_load_embedded_file_contents(ctx, fs);
 				fz_save_buffer(ctx, buf, attach_filename);
 				fz_drop_buffer(ctx, buf);
-				trace_action("// save attachment!\n");
+				trace_action("tmp = annot.getFilespec()\n");
+				trace_action("doc.getEmbeddedFileContents(tmp).save(\"%s\");\n", attach_filename);
+				trace_action("tmp = doc.verifyEmbeddedFileChecksum(tmp);\n");
+				trace_action("if (tmp != true)\n");
+				trace_action("  throw new RegressionError('Embedded file checksum:', tmp, 'expected:', true);\n");
 			}
 			fz_catch(ctx)
 			{
@@ -493,6 +497,7 @@ static void open_attachment_dialog(void)
 			pdf_begin_operation(ctx, pdf, "Embed file attachment");
 			fz_try(ctx)
 			{
+				int64_t created, modified;
 				fz_buffer *contents;
 				char *filename;
 				pdf_obj *fs;
@@ -506,10 +511,14 @@ static void open_attachment_dialog(void)
 					filename = attach_filename;
 
 				contents = fz_read_file(ctx, attach_filename);
-				fs = pdf_add_embedded_file(ctx, pdf, filename, NULL, contents);
-				pdf_dict_put_drop(ctx, pdf_annot_obj(ctx, ui.selected_annot), PDF_NAME(FS), fs);
+				created = fz_stat_ctime(attach_filename);
+				modified = fz_stat_mtime(attach_filename);
+
+				fs = pdf_add_embedded_file(ctx, pdf, filename, NULL, contents,
+					created, modified, 0);
+				pdf_set_annot_filespec(ctx, ui.selected_annot, fs);
 				fz_drop_buffer(ctx, contents);
-				trace_action("// add attachment!\n");
+				trace_action("annot.setFilespec(doc.addEmbeddedFile(\"%s\", null, readFile(\"%s\"), new Date(%d).getTime(), new Date(%d).getTime(), false));\n", filename, attach_filename, created, modified);
 			}
 			fz_always(ctx)
 			{
@@ -1208,15 +1217,17 @@ void do_annotate_panel(void)
 
 		if (pdf_annot_type(ctx, ui.selected_annot) == PDF_ANNOT_FILE_ATTACHMENT)
 		{
+			pdf_embedded_file_params params;
 			char attname[PATH_MAX];
-			pdf_obj *fs = pdf_dict_get(ctx, pdf_annot_obj(ctx, ui.selected_annot), PDF_NAME(FS));
+			pdf_obj *fs = pdf_annot_filespec(ctx, ui.selected_annot);
 			if (pdf_is_embedded_file(ctx, fs))
 			{
 				if (ui_button("Save..."))
 				{
 					fz_dirname(attname, filename, sizeof attname);
 					fz_strlcat(attname, "/", sizeof attname);
-					fz_strlcat(attname, pdf_embedded_file_name(ctx, fs), sizeof attname);
+					pdf_get_embedded_file_params(ctx, fs, &params);
+					fz_strlcat(attname, params.filename, sizeof attname);
 					ui_init_save_file(attname, NULL);
 					ui.dialog = save_attachment_dialog;
 				}

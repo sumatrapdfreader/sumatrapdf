@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -45,7 +45,9 @@ public class PDFObject implements Iterable<PDFObject>
 	}
 
 	public native boolean isIndirect();
-	public native boolean isNull();
+	public boolean isNull() {
+		return this == PDFObject.Null;
+	}
 	public native boolean isBoolean();
 	public native boolean isInteger();
 	public native boolean isReal();

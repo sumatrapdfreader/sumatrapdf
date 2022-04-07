@@ -200,6 +200,20 @@ static inline jfloatArray to_floatArray(fz_context *ctx, JNIEnv *env, const floa
 
 /* Conversion functions: C to Java. None of these throw fitz exceptions. */
 
+static inline jobject to_Buffer_safe(fz_context *ctx, JNIEnv *env, fz_buffer *buf)
+{
+	jobject jbuf;
+
+	if (!ctx || !buf) return NULL;
+
+	fz_keep_buffer(ctx, buf);
+	jbuf = (*env)->NewObject(env, cls_Buffer, mid_Buffer_init, jlong_cast(buf));
+	if (!jbuf)
+		fz_drop_buffer(ctx, buf);
+
+	return jbuf;
+}
+
 static inline jint to_ColorParams_safe(fz_context *ctx, JNIEnv *env, fz_color_params cp)
 {
 	if (!ctx) return 0;

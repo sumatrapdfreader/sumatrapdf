@@ -123,6 +123,7 @@ static jclass cls_OutlineIterator;
 static jclass cls_PDFAnnotation;
 static jclass cls_PDFDocument;
 static jclass cls_PDFDocument_JsEventListener;
+static jclass cls_PDFDocument_PDFEmbeddedFileParams;
 static jclass cls_PDFGraftMap;
 static jclass cls_PDFObject;
 static jclass cls_PDFPage;
@@ -258,6 +259,7 @@ static jfieldID fid_TextWidgetLineLayout_x;
 static jfieldID fid_TextWidgetLineLayout_y;
 static jfieldID fid_Text_pointer;
 
+static jmethodID mid_Buffer_init;
 static jmethodID mid_ColorSpace_fromPointer;
 static jmethodID mid_ColorSpace_init;
 static jmethodID mid_Context_Version_init;
@@ -304,6 +306,7 @@ static jmethodID mid_OutlineIterator_init;
 static jmethodID mid_PDFAnnotation_init;
 static jmethodID mid_LinkDestination_init;
 static jmethodID mid_PDFDocument_JsEventListener_onAlert;
+static jmethodID mid_PDFDocument_PDFEmbeddedFileParams_init;
 static jmethodID mid_PDFDocument_init;
 static jmethodID mid_PDFGraftMap_init;
 static jmethodID mid_PDFObject_init;
@@ -750,6 +753,7 @@ static int find_fids(JNIEnv *env)
 	int getvmErr;
 
 	cls_Buffer = get_class(&err, env, PKG"Buffer");
+	mid_Buffer_init = get_method(&err, env, "<init>", "(J)V");
 	fid_Buffer_pointer = get_field(&err, env, "pointer", "J");
 
 	cls_ColorSpace = get_class(&err, env, PKG"ColorSpace");
@@ -901,6 +905,9 @@ static int find_fids(JNIEnv *env)
 
 	cls_PDFDocument_JsEventListener = get_class(&err, env, PKG"PDFDocument$JsEventListener");
 	mid_PDFDocument_JsEventListener_onAlert = get_method(&err, env, "onAlert", "(L"PKG"PDFDocument;Ljava/lang/String;Ljava/lang/String;IILjava/lang/String;Z)L"PKG"PDFDocument$JsEventListener$AlertResult;");
+
+	cls_PDFDocument_PDFEmbeddedFileParams = get_class(&err, env, PKG"PDFDocument$PDFEmbeddedFileParams");
+	mid_PDFDocument_PDFEmbeddedFileParams_init = get_method(&err, env, "<init>", "(Ljava/lang/String;Ljava/lang/String;IJJ)V");
 
 	cls_AlertResult = get_class(&err, env, PKG"PDFDocument$JsEventListener$AlertResult");
 	fid_AlertResult_buttonPressed = get_field(&err, env, "buttonPressed", "I");
@@ -1156,6 +1163,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_PDFAnnotation);
 	(*env)->DeleteGlobalRef(env, cls_PDFDocument);
 	(*env)->DeleteGlobalRef(env, cls_PDFDocument_JsEventListener);
+	(*env)->DeleteGlobalRef(env, cls_PDFDocument_PDFEmbeddedFileParams);
 	(*env)->DeleteGlobalRef(env, cls_PDFGraftMap);
 	(*env)->DeleteGlobalRef(env, cls_PDFObject);
 	(*env)->DeleteGlobalRef(env, cls_PDFPage);

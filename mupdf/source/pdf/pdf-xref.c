@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -912,6 +912,7 @@ pdf_xref_size_from_old_trailer(fz_context *ctx, pdf_document *doc)
 	pdf_obj *trailer = NULL;
 	size_t n;
 	pdf_lexbuf *buf = &doc->lexbuf.base;
+	pdf_obj *obj = NULL;
 
 	fz_var(trailer);
 
@@ -976,6 +977,10 @@ pdf_xref_size_from_old_trailer(fz_context *ctx, pdf_document *doc)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "expected trailer dictionary");
 
 		trailer = pdf_parse_dict(ctx, doc, doc->file, buf);
+
+		obj = pdf_dict_get(ctx, trailer, PDF_NAME(Size));
+		if (pdf_is_indirect(ctx, obj))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "trailer Size entry is indirect");
 
 		size = pdf_dict_get_int(ctx, trailer, PDF_NAME(Size));
 		if (size < 0 || size > PDF_MAX_OBJECT_NUMBER + 1)

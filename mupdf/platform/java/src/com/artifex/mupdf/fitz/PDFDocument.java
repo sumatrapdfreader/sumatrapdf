@@ -22,6 +22,9 @@
 
 package com.artifex.mupdf.fitz;
 
+import java.io.InputStream;
+import java.util.Date;
+
 public class PDFDocument extends Document
 {
 	/* Languages, keep in sync with FZ_LANG_* */
@@ -207,4 +210,34 @@ public class PDFDocument extends Document
 	public native void setLanguage(int lang);
 
 	public native int countSignatures();
+
+	public native PDFObject addEmbeddedFile(String filename, String mimetype, Buffer contents, long created, long modified, boolean addChecksum);
+	public native PDFEmbeddedFileParams getEmbeddedFileParams(PDFObject fs);
+	public native Buffer loadEmbeddedFileContents(PDFObject fs);
+	public native boolean verifyEmbeddedFileChecksum(PDFObject fs);
+
+	public PDFObject addEmbeddedFile(String filename, String mimetype, InputStream stream, Date created, Date modified, boolean addChecksum) {
+		Buffer contents = new Buffer();
+		contents.writeFromStream(stream);
+		long createdTime = created != null ? created.getTime() : -1;
+		long modifiedTime = modified != null ? modified.getTime() : -1;
+		return addEmbeddedFile(filename, mimetype, contents, createdTime, modifiedTime, addChecksum);
+	}
+
+	public static class PDFEmbeddedFileParams {
+		public final String filename;
+		public final String mimetype;
+		public final int size;
+		public final Date creationDate;
+		public final Date modificationDate;
+
+		protected PDFEmbeddedFileParams(String filename, String mimetype, int size, long created, long modified) {
+			this.filename = filename;
+			this.mimetype = mimetype;
+			this.size = size;
+			this.creationDate = new Date(created);
+			this.modificationDate = new Date(modified);
+		}
+	}
+
 }
