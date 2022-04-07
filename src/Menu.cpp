@@ -66,8 +66,8 @@ BuildMenuCtx::~BuildMenuCtx() {
 struct MenuOwnerDrawInfo {
     const WCHAR* text = nullptr;
     // copy of MENUITEMINFO fields
-    uint fType{0};
-    uint fState{0};
+    uint fType = 0;
+    uint fState = 0;
     HBITMAP hbmpChecked = nullptr;
     HBITMAP hbmpUnchecked = nullptr;
     HBITMAP hbmpItem = nullptr;
@@ -75,7 +75,7 @@ struct MenuOwnerDrawInfo {
 
 struct MenuDef {
     const char* title = nullptr;
-    UINT_PTR idOrSubmenu{0};
+    UINT_PTR idOrSubmenu = 0;
 };
 
 constexpr const char* kMenuSeparator = "-----";

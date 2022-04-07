@@ -53,7 +53,7 @@ extern Kind kindDestinationMupdf;
 struct PageText {
     WCHAR* text = nullptr;
     Rect* coords = nullptr;
-    int len{0}; // number of chars in text and bounding boxes in coords
+    int len = 0; // number of chars in text and bounding boxes in coords
 };
 
 void FreePageText(PageText*);
@@ -295,14 +295,14 @@ struct TocItem {
 
     // page this item points to (-1 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
-    int pageNo{0};
+    int pageNo = 0;
 
     // arbitrary number allowing to distinguish this TocItem
     // from any other of the same ToC tree (must be constant
     // between runs so that it can be persisted in FileState::tocState)
-    int id{0};
+    int id = 0;
 
-    int fontFlags{0}; // fontBitBold, fontBitItalic
+    int fontFlags = 0; // fontBitBold, fontBitItalic
     COLORREF color{ColorUnset};
 
     IPageDestination* dest = nullptr;
@@ -315,15 +315,15 @@ struct TocItem {
 
     // caching to speed up ChildAt
     TocItem* currChild = nullptr;
-    int currChildNo{0};
+    int currChildNo = 0;
 
     // -- only for .EngineMulti
     // marks a node that represents a file
     char* engineFilePath = nullptr;
-    int nPages{0};
+    int nPages = 0;
     // auto-calculated page number that tells us a span from
     // pageNo => endPageNo
-    int endPageNo{0};
+    int endPageNo = 0;
 
     TocItem() = default;
 
@@ -381,9 +381,9 @@ class AbortCookie {
 };
 
 struct RenderPageArgs {
-    int pageNo{0};
-    float zoom{0};
-    int rotation{0};
+    int pageNo = 0;
+    float zoom = 0.f;
+    int rotation = 0;
     /* if nullptr: defaults to the page's mediabox */
     RectF* pageRect = nullptr;
     RenderTarget target = RenderTarget::View;

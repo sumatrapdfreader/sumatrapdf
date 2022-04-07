@@ -126,10 +126,10 @@ struct Fmt {
 
     const char* format = nullptr;
     Inst instructions[32]; // 32 should be big enough for everybody
-    int nInst{0};
+    int nInst = 0;
 
-    int currArgNo{0};
-    int currPercArgNo{0};
+    int currArgNo = 0;
+    int currPercArgNo = 0;
     str::Str res;
 };
 

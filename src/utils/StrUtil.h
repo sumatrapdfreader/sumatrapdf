@@ -197,11 +197,11 @@ struct Str {
     Allocator* allocator = nullptr;
     // TODO: to save space (8 bytes), combine els and buf?
     char* els = nullptr;
-    u32 len{0};
-    u32 cap{0};
+    u32 len = 0;
+    u32 cap = 0;
     char buf[32];
 
-    int nReallocs{0};
+    int nReallocs = 0;
 
     static constexpr size_t kBufChars = dimof(buf);
 
@@ -273,8 +273,8 @@ struct WStr {
     // allocator is not owned by Vec and must outlive it
     Allocator* allocator = nullptr;
     WCHAR* els = nullptr;
-    u32 len{0};
-    u32 cap{0};
+    u32 len = 0;
+    u32 cap = 0;
     WCHAR buf[32];
 
     static constexpr size_t kBufChars = dimof(buf);

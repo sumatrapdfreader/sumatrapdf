@@ -4,8 +4,8 @@
 // note: include BaseUtil.h instead of including directly
 
 struct Point {
-    int x{0};
-    int y{0};
+    int x = 0;
+    int y = 0;
 
     Point() = default;
     Point(int x, int y);
@@ -17,8 +17,8 @@ struct Point {
 };
 
 struct PointF {
-    float x{0};
-    float y{0};
+    float x = 0;
+    float y = 0;
 
     PointF() = default;
 
@@ -30,8 +30,8 @@ struct PointF {
 };
 
 struct Size {
-    int dx{0};
-    int dy{0};
+    int dx = 0;
+    int dy = 0;
 
     Size() = default;
     Size(int dx, int dy);
@@ -44,8 +44,8 @@ struct Size {
 };
 
 struct SizeF {
-    float dx{0};
-    float dy{0};
+    float dx = 0;
+    float dy = 0;
 
     SizeF() = default;
     SizeF(float dx, float dy);
@@ -57,10 +57,10 @@ struct SizeF {
 };
 
 struct Rect {
-    int x{0};
-    int y{0};
-    int dx{0};
-    int dy{0};
+    int x = 0;
+    int y = 0;
+    int dx = 0;
+    int dy = 0;
 
     Rect() = default;
     Rect(RECT r);           // NOLINT
@@ -93,10 +93,10 @@ struct Rect {
 };
 
 struct RectF {
-    float x{0};
-    float y{0};
-    float dx{0};
-    float dy{0};
+    float x = 0;
+    float y = 0;
+    float dx = 0;
+    float dy = 0;
 
     RectF() = default;
 

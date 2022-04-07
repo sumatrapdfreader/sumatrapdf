@@ -232,7 +232,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
     dialogConfig.hwndParent = updateInfo->hwndParent;
 
-    int buttonPressedId{0};
+    int buttonPressedId = 0;
     BOOL verificationFlagChecked = false;
 
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, &verificationFlagChecked);

@@ -5,7 +5,7 @@
 
 struct ByteSlice {
     u8* d = nullptr;
-    size_t s{0};
+    size_t s = 0;
 
     ByteSlice() = default;
     ~ByteSlice() = default;

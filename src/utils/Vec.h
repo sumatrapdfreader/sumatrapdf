@@ -12,9 +12,9 @@ template <typename T>
 class Vec {
   public:
     Allocator* allocator = nullptr;
-    size_t len{0};
-    size_t cap{0};
-    size_t capacityHint{0};
+    size_t len = 0;
+    size_t cap = 0;
+    size_t capacityHint = 0;
     T* els = nullptr;
     T buf[16];
 

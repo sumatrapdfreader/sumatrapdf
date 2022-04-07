@@ -74,7 +74,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     // remove files that should not be deleted
     Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
-    int n{0};
+    int n = 0;
     for (auto& fs : list) {
         if (n++ > kFileHistoryMaxFrequent * 2) {
             break;

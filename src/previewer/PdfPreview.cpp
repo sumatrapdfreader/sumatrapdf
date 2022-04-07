@@ -87,11 +87,11 @@ class PageRenderer {
     EngineBase* engine = nullptr;
     HWND hwnd = nullptr;
 
-    int currPage{0};
+    int currPage = 0;
     RenderedBitmap* currBmp = nullptr;
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
     Size currSize;
-    int reqPage{0};
+    int reqPage = 0;
     float reqZoom{0.f};
     Size reqSize;
     bool reqAbort = false;

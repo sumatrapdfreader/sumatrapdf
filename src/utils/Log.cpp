@@ -64,7 +64,7 @@ static void logToPipe(std::string_view sv) {
         return;
     }
 
-    DWORD cbWritten{0};
+    DWORD cbWritten = 0;
     BOOL ok = false;
     bool didConnect = false;
     if (!IsValidHandle(hLogPipe)) {

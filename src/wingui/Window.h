@@ -149,8 +149,8 @@ struct WindowBase : public ILayout {
     HWND parent = nullptr;
     Point initialPos{-1, -1};
     Size initialSize{0, 0};
-    DWORD dwStyle{0};
-    DWORD dwExStyle{0};
+    DWORD dwStyle = 0;
+    DWORD dwExStyle = 0;
     HFONT hfont = nullptr; // TODO: this should be abstract Font description
 
     // those tweak WNDCLASSEX for RegisterClass() class
@@ -158,7 +158,7 @@ struct WindowBase : public ILayout {
     HICON hIconSm = nullptr;
     LPCWSTR lpszMenuName = nullptr;
 
-    int ctrlID{0};
+    int ctrlID = 0;
 
     // called at start of windows proc to allow intercepting messages
     MsgFilter msgFilter;
@@ -190,7 +190,7 @@ struct WindowBase : public ILayout {
     str::Str text;
 
     HWND hwnd = nullptr;
-    UINT_PTR subclassId{0};
+    UINT_PTR subclassId = 0;
 
     WindowBase() = default;
     explicit WindowBase(HWND p);

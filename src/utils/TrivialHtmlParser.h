@@ -45,8 +45,8 @@ class HtmlParser {
     // the codepage used for converting text to Unicode
     uint codepage{CP_ACP};
 
-    size_t elementsCount{0};
-    size_t attributesCount{0};
+    size_t elementsCount = 0;
+    size_t attributesCount = 0;
 
     HtmlElement* rootElement = nullptr;
     HtmlElement* currElement = nullptr;

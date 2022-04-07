@@ -271,7 +271,7 @@ class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
     }
 
   protected:
-    LONG refCount{1};
+    LONG refCount = 1;
 };
 
 ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release() {
@@ -505,7 +505,7 @@ class HW_IInternetProtocolFactory : public IClassFactory {
     }
 
   protected:
-    LONG refCount{1};
+    LONG refCount = 1;
 };
 
 STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release() {
@@ -1095,7 +1095,7 @@ IDownloadManager : public IUnknown {
 #endif
 
 class HW_IDownloadManager : public IDownloadManager {
-    LONG refCount{1};
+    LONG refCount = 1;
 
   public:
     HW_IDownloadManager() = default;
@@ -1271,7 +1271,7 @@ class HtmlMoniker : public IMoniker {
     }
 
   private:
-    LONG refCount{1};
+    LONG refCount = 1;
 
     char* htmlData = nullptr;
     IStream* htmlStream = nullptr;

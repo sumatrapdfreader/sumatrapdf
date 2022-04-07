@@ -470,7 +470,7 @@ std::string_view DefaultAppearanceTextFont(Annotation* annot) {
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName;
     float sizeF{0.0};
-    int n{0};
+    int n = {0};
     float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     return fontName;
@@ -481,7 +481,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, std::string_view sv) {
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
-    int n{0};
+    int n = {0};
     float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     pdf_set_annot_default_appearance(e->ctx, annot->pdfannot, sv.data(), sizeF, n, textColor);
@@ -495,7 +495,7 @@ int DefaultAppearanceTextSize(Annotation* annot) {
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
-    int n{0};
+    int n = {0};
     float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     return (int)sizeF;
@@ -506,7 +506,7 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
-    int n{0};
+    int n = {0};
     float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     pdf_set_annot_default_appearance(e->ctx, annot->pdfannot, fontName, (float)textSize, n, textColor);
@@ -520,7 +520,7 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
-    int n{0};
+    int n = {0};
     float textColor[4];
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     PdfColor res = PdfColorFromFloat(e->ctx, n, textColor);
@@ -532,7 +532,7 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
-    int n{0};
+    int n = {0};
     float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     PdfColorToFloat(col, textColor);

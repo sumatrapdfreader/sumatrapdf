@@ -395,7 +395,7 @@ struct PoolAllocator : Allocator {
 
     Block* currBlock = nullptr;
     Block* firstBlock = nullptr;
-    int nAllocs{0};
+    int nAllocs = 0;
     CRITICAL_SECTION cs;
 
     PoolAllocator();

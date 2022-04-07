@@ -178,7 +178,7 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
     auto& btInfo = gToolbarButtons[i];
-    TBBUTTON info{0};
+    TBBUTTON info{};
     info.idCommand = btInfo.cmdId;
     if (TbIsSeparator(btInfo)) {
         info.fsStyle = TBSTYLE_SEP;

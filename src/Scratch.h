@@ -4,7 +4,7 @@
 struct FileData {
     char* name = nullptr;
     ByteSlice data{};
-    int imageNo{0}; // counting from 1
+    int imageNo = 0; // counting from 1
 
     FileData() = default;
     ~FileData() {

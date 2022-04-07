@@ -32,7 +32,7 @@ struct ExternalViewerInfo {
 
 // kindEngineChm
 
-static int gExternalViewersCount{0};
+static int gExternalViewersCount = 0;
 
 // clang-format off
 static ExternalViewerInfo gExternalViewers[] = {

@@ -267,8 +267,8 @@ class ScopedGdiPlus {
   protected:
     Gdiplus::GdiplusStartupInput si{};
     Gdiplus::GdiplusStartupOutput so{};
-    ULONG_PTR token{0};
-    ULONG_PTR hookToken{0};
+    ULONG_PTR token = 0;
+    ULONG_PTR hookToken = 0;
     bool noBgThread = false;
 
   public:

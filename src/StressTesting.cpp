@@ -437,20 +437,20 @@ of PDFs before a release to make sure we're crash proof. */
 
 struct StressTest {
     WindowInfo* win = nullptr;
-    LARGE_INTEGER currPageRenderTime{0};
+    LARGE_INTEGER currPageRenderTime = 0;
     Vec<int> pagesToRender;
-    int currPageNo{0};
-    int pageForSearchStart{0};
-    int filesCount{0}; // number of files processed so far
-    int timerId{0};
+    int currPageNo = 0;
+    int pageForSearchStart = 0;
+    int filesCount = 0; // number of files processed so far
+    int timerId = 0;
     bool exitWhenDone = false;
 
     SYSTEMTIME stressStartTime{};
-    int cycles{1};
+    int cycles = 1;
     Vec<PageRange> pageRanges;
     // range of files to render (files get a new index when going through several cycles)
     Vec<PageRange> fileRanges;
-    int fileIndex{0};
+    int fileIndex = 0;
 
     // owned by StressTest
     TestFileProvider* fileProvider = nullptr;

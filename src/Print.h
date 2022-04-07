@@ -7,13 +7,13 @@ struct Printer {
     PRINTER_INFO_2* info = nullptr;
 
     // number of paper sizes supported by the printer
-    int nPaperSizes{0};
+    int nPaperSizes = 0;
     // papers[i] is DMPAPER_LETTER etc.
     WORD* papers = nullptr;       // DC_PAPERS
     WCHAR** paperNames = nullptr; // DC_PAPERNAMES
     POINT* paperSizes = nullptr;  // DC_PAPERSIZE
 
-    int nBins{0};
+    int nBins = 0;
     WORD* bins = nullptr;       // DC_BINS
     WCHAR** binNames = nullptr; // DC_BINNAMES
 
@@ -21,7 +21,7 @@ struct Printer {
     bool isDuplex = false;   // DC_DUPLEX
     bool canStaple = false;  // DC_STAPLE
     bool canCallate = false; // DC_COLLATE
-    int orientation{0};      // DC_ORIENTATION
+    int orientation = 0;     // DC_ORIENTATION
 
     Printer() = default;
     ~Printer();

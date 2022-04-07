@@ -10,7 +10,7 @@ struct FitzPageImageInfo {
 };
 
 struct FzPageInfo {
-    int pageNo{0}; // 1-based
+    int pageNo = 0; // 1-based
     fz_page* page = nullptr;
 
     // each containz fz_link for this page

@@ -161,7 +161,7 @@ class PreviewBase : public IThumbnailProvider,
     PageRenderer* renderer = nullptr;
 
   protected:
-    long m_lRef{1};
+    long m_lRef = 1;
     long* m_plModuleRef = nullptr;
     ScopedComPtr<IStream> m_pStream;
     EngineBase* m_engine = nullptr;

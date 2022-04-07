@@ -116,7 +116,7 @@ struct TabPainter {
     int nextTab = -1;
     bool isDragging = false;
     bool inTitlebar = false;
-    LPARAM mouseCoordinates{0};
+    LPARAM mouseCoordinates = 0;
     COLORREF currBgCol{DEFAULT_CURRENT_BG_COL};
 
     TabPainter(TabsCtrl2* ctrl, Size tabSize);

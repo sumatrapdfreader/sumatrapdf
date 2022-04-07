@@ -20,7 +20,7 @@ struct Flags {
     WCHAR* printerName = nullptr;
     WCHAR* printSettings = nullptr;
     WCHAR* forwardSearchOrigin = nullptr;
-    int forwardSearchLine{0};
+    int forwardSearchLine = 0;
     bool reuseDdeInstance = false;
     WCHAR* destName = nullptr;
     int pageNumber = -1;

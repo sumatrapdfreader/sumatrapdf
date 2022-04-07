@@ -66,5 +66,5 @@ class StringInterner {
         return intToStr.at(n);
     }
 
-    int nInternCalls{0}; // so we know how effective interning is
+    int nInternCalls = 0; // so we know how effective interning is
 };

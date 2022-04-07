@@ -42,8 +42,8 @@ static void EnumeratePrinters() {
     str::WStr output;
 
     PRINTER_INFO_5* info5Arr = nullptr;
-    DWORD bufSize{0};
-    DWORD printersCount{0};
+    DWORD bufSize = 0;
+    DWORD printersCount = 0;
     BOOL ok =
         EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr, 0, &bufSize, &printersCount);
     if (ok != 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
@@ -273,7 +273,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
     CmdLineArgsIter args(cmdLine);
 
     const WCHAR* param = nullptr;
-    int paramInt{0};
+    int paramInt = 0;
 
     for (auto argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
         Arg arg = GetArg(argName);

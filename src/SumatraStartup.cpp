@@ -430,10 +430,10 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     int retriesLeft = 3;
     HANDLE hMap = nullptr;
     HWND hwnd = nullptr;
-    DWORD prevProcId{0};
+    DWORD prevProcId = 0;
     DWORD* procId = nullptr;
     bool hasPrevInst;
-    DWORD lastErr{0};
+    DWORD lastErr = 0;
 Retry:
     // use a memory mapping containing a process id as mutex
     hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
@@ -881,7 +881,7 @@ bool gEnableMemLeak = false;
 // call this function before MemLeakInit() so that those allocations
 // don't show up
 static void ForceStartupLeaks() {
-    time_t secs{0};
+    time_t secs = 0;
     struct tm tm {
         0
     };
@@ -897,8 +897,8 @@ static void ForceStartupLeaks() {
 
 int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR cmdLine,
                      __unused int nCmdShow) {
-    int retCode{1}; // by default it's error
-    int nWithDde{0};
+    int retCode = 1; // by default it's error
+    int nWithDde = 0;
     WindowInfo* win = nullptr;
     bool showStartPage = false;
     bool restoreSession = false;

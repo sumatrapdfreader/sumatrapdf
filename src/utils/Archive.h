@@ -13,13 +13,13 @@ class MultiFormatArchive {
     enum class Format { Zip, Rar, SevenZip, Tar };
 
     struct FileInfo {
-        size_t fileId{0};
+        size_t fileId = 0;
         std::string_view name{};
-        i64 fileTime{0}; // this is typedef'ed as time64_t in unrar.h
-        size_t fileSizeUncompressed{0};
+        i64 fileTime = 0; // this is typedef'ed as time64_t in unrar.h
+        size_t fileSizeUncompressed = 0;
 
         // internal use
-        i64 filePos{0};
+        i64 filePos = 0;
         char* data = nullptr;
 
         [[nodiscard]] FILETIME GetWinFileTime() const;

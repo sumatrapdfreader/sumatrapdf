@@ -6,8 +6,7 @@
                 "${workspaceRoot}/mupdf/include",
                 "${workspaceRoot}/src",
                 "${workspaceRoot}/src/utils",
-                "${workspaceRoot}/src/wingui",
-                "${workspaceRoot}/ext/WDL"
+                "${workspaceRoot}/src/wingui"
             ],
             "defines": [
                 "_DEBUG",

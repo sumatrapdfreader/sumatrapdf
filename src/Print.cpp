@@ -68,7 +68,7 @@ struct PrintData {
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
     Vec<SelectionOnPage> sel;   // empty when printing a page range
     Print_Advanced_Data advData;
-    int rotation{0};
+    int rotation = 0;
     ProgressUpdateUI* progressUI = nullptr;
     AbortCookieManager* abortCookie = nullptr;
 
@@ -122,7 +122,7 @@ Printer::~Printer() {
 // get all the important info about a printer
 Printer* NewPrinter(WCHAR* printerName) {
     HANDLE hPrinter = nullptr;
-    LONG ret{0};
+    LONG ret = 0;
     Printer* printer = nullptr;
     BOOL ok = OpenPrinterW(printerName, &hPrinter, nullptr);
     if (!ok) {
@@ -939,7 +939,7 @@ static short GetPaperByName(Printer* printer, const WCHAR* wantedName) {
     }
 
     // alternatively allow indicating the paper directly by number
-    DWORD paperId{0};
+    DWORD paperId = 0;
     if (str::Parse(wantedName, L"%u%$", &paperId)) {
         return (short)paperId;
     }
@@ -970,7 +970,7 @@ static short GetPaperSourceByName(Printer* printer, const WCHAR* binName) {
             return printer->bins[i];
         }
     }
-    DWORD count{0};
+    DWORD count = 0;
     // alternatively allow indicating the paper bin directly by number
     if (str::Parse(binName, L"%u%$", &count)) {
         return (short)count;

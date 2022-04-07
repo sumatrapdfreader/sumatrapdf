@@ -61,8 +61,8 @@ struct OverlappedEx {
 
 // info needed to detect that a file has changed
 struct FileWatcherState {
-    FILETIME time{0};
-    i64 size{0};
+    FILETIME time = 0;
+    i64 size = 0;
 };
 
 struct WatchedDir {

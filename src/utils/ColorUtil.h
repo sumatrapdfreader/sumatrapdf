@@ -17,8 +17,8 @@ using PdfColor = uint64_t;
 struct ParsedColor {
     bool wasParsed = false;
     bool parsedOk = false;
-    COLORREF col{0};
-    PdfColor pdfCol{0};
+    COLORREF col = 0;
+    PdfColor pdfCol = 0;
 };
 
 COLORREF MkGray(u8 x);

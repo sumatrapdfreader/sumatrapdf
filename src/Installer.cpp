@@ -1075,7 +1075,7 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
     dialogConfig.hwndParent = hwndParent;
 
-    int buttonPressedId{0};
+    int buttonPressedId = 0;
 
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     CrashIf(hr == E_INVALIDARG);

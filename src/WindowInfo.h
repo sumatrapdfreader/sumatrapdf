@@ -55,8 +55,8 @@ enum PresentationMode {
 struct TouchState {
     bool panStarted = false;
     POINTS panPos{};
-    int panScrollOrigX{0};
-    double startArg{0};
+    int panScrollOrigX = 0;
+    double startArg = 0;
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
@@ -113,7 +113,7 @@ struct WindowInfo {
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
     TreeCtrl* tocTreeCtrl = nullptr;
-    UINT_PTR tocBoxSubclassId{0};
+    UINT_PTR tocBoxSubclassId = 0;
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
@@ -143,7 +143,7 @@ struct WindowInfo {
 
     HWND hwndCaption = nullptr;
     CaptionInfo* caption = nullptr;
-    int extendedFrameHeight{0};
+    int extendedFrameHeight = 0;
 
     TooltipCtrl* infotip = nullptr;
 
@@ -166,8 +166,8 @@ struct WindowInfo {
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
        of the mouse from the point where the user middle clicked. */
-    int xScrollSpeed{0};
-    int yScrollSpeed{0};
+    int xScrollSpeed = 0;
+    int yScrollSpeed = 0;
 
     // true while selecting and when currentTab->selectionOnPage != nullptr
     bool showSelection = false;
@@ -181,16 +181,16 @@ struct WindowInfo {
 
     bool isFullScreen = false;
     PresentationMode presentation{PM_DISABLED};
-    int windowStateBeforePresentation{0};
+    int windowStateBeforePresentation = 0;
 
-    long nonFullScreenWindowStyle{0};
+    long nonFullScreenWindowStyle = 0;
     Rect nonFullScreenFrameRect;
 
-    Rect canvasRc;     // size of the canvas (excluding any scroll bars)
-    int currPageNo{0}; // cached value, needed to determine when to auto-update the ToC selection
+    Rect canvasRc;      // size of the canvas (excluding any scroll bars)
+    int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 
-    int wheelAccumDelta{0};
-    UINT_PTR delayedRepaintTimer{0};
+    int wheelAccumDelta = 0;
+    UINT_PTR delayedRepaintTimer = 0;
 
     Notifications* notifications = nullptr; // only access from UI thread
 
@@ -221,8 +221,8 @@ struct WindowInfo {
     struct {
         bool show = false; // are the markers visible?
         Vec<Rect> rects;   // location of the markers in user coordinates
-        int page{0};
-        int hideStep{0}; // value used to gradually hide the markers
+        int page = 0;
+        int hideStep = 0; // value used to gradually hide the markers
     } fwdSearchMark;
 
     StressTest* stressTest = nullptr;
