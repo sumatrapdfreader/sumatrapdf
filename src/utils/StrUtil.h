@@ -180,11 +180,11 @@ namespace seqstrings {
 
 void Next(const char*& s);
 void Next(const char*& s, int& idx);
-int StrToIdx(const char* strs, const char* toFind);
-int StrToIdxIS(const char* strs, const char* toFind);
-const char* IdxToStr(const char* strs, int idx);
+int StrToIdx(SeqStrings strs, const char* toFind);
+int StrToIdxIS(SeqStrings strs, const char* toFind);
+const char* IdxToStr(SeqStrings strs, int idx);
 
-int StrToIdx(const char* strs, const WCHAR* toFind);
+int StrToIdx(SeqStrings strs, const WCHAR* toFind);
 const WCHAR* IdxToStr(const WCHAR* strs, int idx);
 } // namespace seqstrings
 

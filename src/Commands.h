@@ -143,8 +143,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCreateAnnotInk, "Create Ink Annotation")                         \
     V(CmdCreateAnnotPopup, "Create Popup Annotation")                     \
     V(CmdCreateAnnotFileAttachment, "Create File Attachment Annotation")  \
-    V(CmdCommandPalette, "Command Palette")                               \
-    V(CmdLastCommand, "")
+    V(CmdCommandPalette, "Command Palette")
 
 // order of CreateAnnot* must be the same as enum AnnotationType
 /*
@@ -168,6 +167,8 @@ enum {
     CmdSeparator = CmdFirst,
 
     COMMANDS(DEF_CMD)
+
+    CmdLastCommand,
 
     /* range for "external viewers" setting */
     CmdOpenWithExternalFirst,
@@ -200,3 +201,5 @@ enum {
 };
 
 #undef DEF_CMD
+
+int GetCommandIdByName(const char*);
