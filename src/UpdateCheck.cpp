@@ -33,8 +33,6 @@ static const char* kindNotifUpdateCheckInProgress = "notifUpdateCheckInProgress"
 // for testing. if true will ignore version checks etc. and act like there's an update
 constexpr bool gForceAutoUpdate = false;
 
-#define PRE_RELEASE_VER
-
 // clang-format off
 #if defined(PRE_RELEASE_VER)
 //constexpr const WCHAR* kUpdateInfoURL =  L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
