@@ -637,50 +637,14 @@ bool WindowInfoStillValid(WindowInfo* win) {
     return gWindows.Contains(win);
 }
 
-static bool IsWindowInfoHwnd(WindowInfo* win, HWND hwnd, HWND parent) {
-    if (hwnd == win->hwndFrame) {
-        return true;
-    }
-    if (!parent) {
-        return false;
-    }
-    // canvas, toolbar, rebar, tocbox, splitters
-    if (parent == win->hwndFrame) {
-        return true;
-    }
-    // infotips, message windows
-
-    if (parent == win->hwndCanvas) {
-        return true;
-    }
-    // page and find labels and boxes
-    if (parent == win->hwndToolbar) {
-        return true;
-    }
-    // ToC tree, sidebar title and close button
-    if (parent == win->hwndTocBox) {
-        return true;
-    }
-    // Favorites tree, title, and close button
-    if (parent == win->hwndFavBox) {
-        return true;
-    }
-    // tab bar
-    if (parent == win->tabsCtrl->hwnd) {
-        return true;
-    }
-    // caption buttons, tab bar
-    if (parent == win->hwndCaption) {
-        return true;
-    }
-    return false;
-}
-
-WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
-    HWND parent = GetParent(hwnd);
+WindowInfo* FindWindowInfoByHwnd(HWND hwndToFind) {
     for (WindowInfo* win : gWindows) {
-        if (IsWindowInfoHwnd(win, hwnd, parent)) {
-            return win;
+        HWND hwnd = hwndToFind;
+        while (hwnd) {
+            if (hwnd == win->hwndFrame) {
+                return win;
+            }
+            hwnd = GetParent(hwnd);
         }
     }
     return nullptr;

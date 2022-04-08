@@ -510,12 +510,10 @@ static int RunMessageLoop() {
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
         // dispatch the accelerator to the correct window
-        HWND accHwnd = msg.hwnd;
+        HWND hwnd = msg.hwnd;
         WindowInfo* win = FindWindowInfoByHwnd(msg.hwnd);
-        if (win) {
-            accHwnd = win->hwndFrame;
-        }
-        if (TranslateAccelerator(accHwnd, *accTable, &msg)) {
+        if (win && (hwnd == win->hwndFrame || hwnd == win->hwndCanvas) &&
+            TranslateAccelerator(win->hwndFrame, *accTable, &msg)) {
             continue;
         }
 
