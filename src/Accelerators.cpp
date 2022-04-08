@@ -146,6 +146,9 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'u', CmdCreateAnnotUnderline},
     {0, 'U', CmdCreateAnnotUnderline},
 
+    {0, 'i', CmdInvertColors},
+    {0, 'I', CmdTogglePageInfo},
+
     {FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
     {FVIRTKEY, VK_BACK, CmdDeleteAnnotation},
 };

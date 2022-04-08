@@ -4059,20 +4059,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
                 win->ChangePresentationMode(PM_WHITE_SCREEN);
             }
             break;
-        case 'i':
-            // experimental "page info" tip: make figuring out current page and
-            // total pages count a one-key action (unless they're already visible)
-            if (isShift) {
-                gGlobalPrefs->fixedPageUI.invertColors ^= true;
-                UpdateDocumentColors();
-                UpdateTreeCtrlColors(win);
-                // UpdateUiForCurrentTab(win);
-            } else {
-                if (dm) {
-                    TogglePageInfoHelper(win);
-                }
-            }
-            break;
         case 'm':
             ShowCursorPositionInDoc(win);
             break;
@@ -4594,6 +4580,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     auto* ctrl = win->ctrl;
+    DisplayModel* dm = win->AsFixed();
+
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
         case CmdNewWindow:
@@ -4962,6 +4950,21 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdFavoriteToggle:
             ToggleFavorites(win);
+            break;
+
+        case CmdTogglePageInfo:
+            if (dm) {
+                // "page info" tip: make figuring out current page and
+                // total pages count a one-key action (unless they're already visible)
+                TogglePageInfoHelper(win);
+            }
+            break;
+
+        case CmdInvertColors:
+            gGlobalPrefs->fixedPageUI.invertColors ^= true;
+            UpdateDocumentColors();
+            UpdateTreeCtrlColors(win);
+            // UpdateUiForCurrentTab(win);
             break;
 
         default:

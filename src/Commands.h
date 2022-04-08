@@ -143,6 +143,8 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCreateAnnotInk, "Create Ink Annotation")                         \
     V(CmdCreateAnnotPopup, "Create Popup Annotation")                     \
     V(CmdCreateAnnotFileAttachment, "Create File Attachment Annotation")  \
+    V(CmdInvertColors, "Invert colors")                                   \
+    V(CmdTogglePageInfo, "Toggle page info")                              \
     V(CmdCommandPalette, "Command Palette")
 
 // order of CreateAnnot* must be the same as enum AnnotationType
