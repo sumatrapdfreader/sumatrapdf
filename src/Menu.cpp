@@ -1255,7 +1255,7 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
     bool isVirt = virt & FVIRTKEY;
     BYTE key = a.key;
 
-    if (isVirt && key >= VK_F1 && key <= VK_F20) {
+    if (isVirt && key >= VK_F1 && key <= VK_F24) {
         int n = key - VK_F1 + 1;
         str.AppendFmt(L"F%d", n);
         return;
@@ -1277,6 +1277,44 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
     // Note: might need to add if we add more shortcuts
     const WCHAR* keyStr = nullptr;
     switch (key) {
+        case VK_END:
+            keyStr = L"End";
+            break;
+        case VK_HOME:
+            keyStr = L"Home";
+            break;
+        case VK_LEFT:
+            // TODO: just Left?
+            keyStr = L"Left Arrow";
+            if (!isEng) {
+                keyStr = L"<-";
+            }
+            break;
+        case VK_RIGHT:
+            // TODO: just Right?
+            keyStr = L"Right Arrow";
+            if (!isEng) {
+                keyStr = L"->";
+            }
+            break;
+        case VK_UP:
+            keyStr = L"Up";
+            break;
+        case VK_DOWN:
+            keyStr = L"Down";
+            break;
+        case VK_BACK:
+            keyStr = L"Backspace";
+            break;
+        case VK_DELETE:
+            keyStr = L"Del";
+            break;
+        case VK_INSERT:
+            keyStr = L"Insert";
+            break;
+        case VK_ESCAPE:
+            keyStr = L"Esc";
+            break;
         case VK_ADD:
         case VK_OEM_PLUS:
             keyStr = L"+";
@@ -1284,30 +1322,6 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
         case VK_SUBTRACT:
         case VK_OEM_MINUS:
             keyStr = L"-";
-            break;
-        case VK_LEFT:
-            keyStr = L"Left Arrow";
-            if (!isEng) {
-                keyStr = L"<-";
-            }
-            break;
-        case VK_RIGHT:
-            keyStr = L"Right Arrow";
-            if (!isEng) {
-                keyStr = L"->";
-            }
-            break;
-        case VK_HOME:
-            keyStr = L"Home";
-            break;
-        case VK_END:
-            keyStr = L"End";
-            break;
-        case VK_DELETE:
-            keyStr = L"Del";
-            break;
-        case VK_BACK:
-            keyStr = L"Backspace";
             break;
     }
     CrashIf(!keyStr);
