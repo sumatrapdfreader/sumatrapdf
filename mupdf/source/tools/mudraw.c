@@ -359,6 +359,11 @@ static worker_t *workers;
 static fz_band_writer *bander = NULL;
 
 static const char *layer_config = NULL;
+static int layer_list = 0;
+static int layer_on[1000];
+static int layer_off[1000];
+static int layer_on_len;
+static int layer_off_len;
 
 static const char ocr_language_default[] = "eng";
 static const char *ocr_language = ocr_language_default;
@@ -479,6 +484,10 @@ static int usage(void)
 		"\t-y l\tList the layer configs to stderr\n"
 		"\t-y -\tSelect layer config (by number)\n"
 		"\t-y -{,-}*\tSelect layer config (by number), and toggle the listed entries\n"
+		"\n"
+		"\t-Y\tList individual layers to stderr\n"
+		"\t-z -\tHide individual layer\n"
+		"\t-Z -\tShow individual layer\n"
 		"\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n"
 		);
@@ -1704,6 +1713,50 @@ static inline int iswhite(int ch)
 		ch == '\014' || ch == '\015' || ch == '\040';
 }
 
+static void list_layers(fz_context *ctx, fz_document *doc)
+{
+#if FZ_ENABLE_PDF
+	pdf_document *pdoc = pdf_specifics(ctx, doc);
+	int k, n = pdf_count_layers(ctx, pdoc);
+	for (k = 0; k < n; ++k) {
+		const char *name = pdf_layer_name(ctx, pdoc, k);
+		int state = pdf_layer_is_enabled(ctx, pdoc, k);
+		fprintf(stderr, "layer %d (%s): %s\n", k+1, state ? "on" : "off", name);
+	}
+#endif
+}
+
+static void toggle_layers(fz_context *ctx, fz_document *doc)
+{
+#if FZ_ENABLE_PDF
+	pdf_document *pdoc = pdf_specifics(ctx, doc);
+	int i, k, n;
+
+	n = pdf_count_layers(ctx, pdoc);
+	for (i = 0; i < layer_off_len; ++i)
+	{
+		if (layer_off[i] == -1)
+			for (k = 0; k < n; ++k)
+				pdf_enable_layer(ctx, pdoc, k, 0);
+		else if (layer_off[i] >= 1 && layer_off[i] <= n)
+			pdf_enable_layer(ctx, pdoc, layer_off[i] - 1, 0);
+		else
+			fprintf(stderr, "invalid layer: %d\n", layer_off[i]);
+	}
+
+	for (i = 0; i < layer_on_len; ++i)
+	{
+		if (layer_on[i] == -1)
+			for (k = 0; k < n; ++k)
+				pdf_enable_layer(ctx, pdoc, k, 1);
+		else if (layer_on[i] >= 1 && layer_on[i] <= n)
+			pdf_enable_layer(ctx, pdoc, layer_on[i] - 1, 1);
+		else
+			fprintf(stderr, "invalid layer: %d\n", layer_on[i]);
+	}
+#endif
+}
+
 static void apply_layer_config(fz_context *ctx, fz_document *doc, const char *lc)
 {
 #if FZ_ENABLE_PDF
@@ -1874,7 +1927,7 @@ int mudraw_main(int argc, char **argv)
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "qp:o:F:R:r:w:h:fB:c:e:G:Is:A:DiW:H:S:T:t:d:U:XLvPl:y:NO:am:K")) != -1)
+	while ((c = fz_getopt(argc, argv, "qp:o:F:R:r:w:h:fB:c:e:G:Is:A:DiW:H:S:T:t:d:U:XLvPl:y:Yz:Z:NO:am:K")) != -1)
 	{
 		switch (c)
 		{
@@ -1972,6 +2025,9 @@ int mudraw_main(int argc, char **argv)
 			break;
 #endif
 		case 'y': layer_config = fz_optarg; break;
+		case 'Y': layer_list = 1; break;
+		case 'z': layer_off[layer_off_len++] = !strcmp(fz_optarg, "all") ? -1 : fz_atoi(fz_optarg); break;
+		case 'Z': layer_on[layer_on_len++] = !strcmp(fz_optarg, "all") ? -1 : fz_atoi(fz_optarg); break;
 		case 'a': useaccel = 0; break;
 
 		case 'v': fprintf(stderr, "mudraw version %s\n", FZ_VERSION); return 1;
@@ -2432,6 +2488,10 @@ int mudraw_main(int argc, char **argv)
 
 					if (layer_config)
 						apply_layer_config(ctx, doc, layer_config);
+					if (layer_on_len > 0 || layer_off_len > 0)
+						toggle_layers(ctx, doc);
+					if (layer_list)
+						list_layers(ctx, doc);
 
 					if (fz_optind == argc || !fz_is_page_range(ctx, argv[fz_optind]))
 						drawrange(ctx, doc, "1-N");

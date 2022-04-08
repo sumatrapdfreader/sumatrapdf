@@ -101,6 +101,35 @@ pdf_count_layer_configs(fz_context *ctx, pdf_document *doc)
 	return desc ? desc->num_configs : 0;
 }
 
+int
+pdf_count_layers(fz_context *ctx, pdf_document *doc)
+{
+	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
+	return desc ? desc->len : 0;
+}
+
+const char *
+pdf_layer_name(fz_context *ctx, pdf_document *doc, int layer)
+{
+	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
+	return desc ? pdf_dict_get_text_string(ctx, desc->ocgs[layer].obj, PDF_NAME(Name)) : NULL;
+}
+
+int
+pdf_layer_is_enabled(fz_context *ctx, pdf_document *doc, int layer)
+{
+	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
+	return desc ? desc->ocgs[layer].state : 0;
+}
+
+void
+pdf_enable_layer(fz_context *ctx, pdf_document *doc, int layer, int enabled)
+{
+	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
+	if (desc)
+		desc->ocgs[layer].state = enabled;
+}
+
 static int
 count_entries(fz_context *ctx, pdf_obj *obj)
 {
@@ -168,7 +197,7 @@ populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order,
 			ui = get_ocg_ui(ctx, desc, fill++);
 			ui->depth = depth;
 			ui->ocg = -1;
-			ui->name = pdf_to_str_buf(ctx, o);
+			ui->name = pdf_to_text_string(ctx, o);
 			ui->button_flags = PDF_LAYER_UI_LABEL;
 			ui->locked = 1;
 			continue;
@@ -184,7 +213,7 @@ populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order,
 		ui = get_ocg_ui(ctx, desc, fill++);
 		ui->depth = depth;
 		ui->ocg = j;
-		ui->name = pdf_dict_get_string(ctx, o, PDF_NAME(Name), NULL);
+		ui->name = pdf_dict_get_text_string(ctx, o, PDF_NAME(Name));
 		ui->button_flags = pdf_array_contains(ctx, o, rbgroups) ? PDF_LAYER_UI_RADIOBOX : PDF_LAYER_UI_CHECKBOX;
 		ui->locked = pdf_array_contains(ctx, o, locked);
 	}

@@ -224,6 +224,8 @@ fz_outline *pdf_load_outline(fz_context *ctx, pdf_document *doc);
 
 fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc);
 
+void pdf_invalidate_xfa(fz_context *ctx, pdf_document *doc);
+
 /*
 	Get the number of layer configurations defined in this document.
 
@@ -231,8 +233,13 @@ fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc
 */
 int pdf_count_layer_configs(fz_context *ctx, pdf_document *doc);
 
-void pdf_invalidate_xfa(fz_context *ctx, pdf_document *doc);
-
+/*
+	Configure visibility of individual layers in this document.
+*/
+int pdf_count_layers(fz_context *ctx, pdf_document *doc);
+const char *pdf_layer_name(fz_context *ctx, pdf_document *doc, int layer);
+int pdf_layer_is_enabled(fz_context *ctx, pdf_document *doc, int layer);
+void pdf_enable_layer(fz_context *ctx, pdf_document *doc, int layer, int enabled);
 
 typedef struct
 {

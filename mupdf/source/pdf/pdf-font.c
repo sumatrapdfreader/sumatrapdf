@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -556,21 +556,23 @@ pdf_load_embedded_font(fz_context *ctx, pdf_document *doc, pdf_font_desc *fontde
 
 	buf = pdf_load_stream(ctx, stmref);
 
-	/* Extract CFF subtable for OpenType fonts: */
-	size = fz_buffer_storage(ctx, buf, &data);
-	if (size > 12) {
-		if (!memcmp("OTTO", data, 4)) {
-			fz_buffer *cff = pdf_extract_cff_subtable(ctx, data, size);
-			if (cff)
-			{
-				fz_drop_buffer(ctx, buf);
-				buf = cff;
+	fz_try(ctx)
+	{
+		/* Extract CFF subtable for OpenType fonts: */
+		size = fz_buffer_storage(ctx, buf, &data);
+		if (size > 12) {
+			if (!memcmp("OTTO", data, 4)) {
+				fz_buffer *cff = pdf_extract_cff_subtable(ctx, data, size);
+				if (cff)
+				{
+					fz_drop_buffer(ctx, buf);
+					buf = cff;
+				}
 			}
 		}
-	}
 
-	fz_try(ctx)
 		fontdesc->font = fz_new_font_from_buffer(ctx, fontname, buf, 0, 1);
+	}
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
 	fz_catch(ctx)
@@ -1542,7 +1544,17 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 
 		/* Load CharProcs */
 		if (type3)
+		{
 			pdf_load_type3_glyphs(ctx, doc, fontdesc);
+
+			/* Type 3 fonts with glyphs that cyclically refer to the
+			type 3 font itself will already have caused its font
+			descriptor to be cached in the store. The font descriptor
+			being prepared here is preferable, so remove any potential
+			font descriptor stored by the call to pdf_load_type3_glyphs()
+			above. */
+			pdf_remove_item(ctx, pdf_drop_font_imp, dict);
+		}
 
 		pdf_store_item(ctx, dict, fontdesc, fontdesc->size);
 	}
