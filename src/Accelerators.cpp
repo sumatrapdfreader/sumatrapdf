@@ -184,7 +184,7 @@ static bool SkipVirtKey(const char*& s, const char* key) {
     V(VK_F23, "F23")         \
     V(VK_F24, "F24")
 
-#define KEY_NAME(id, txt) #id "\0"
+#define KEY_NAME(id, txt) txt "\0"
 SeqStrings gVirtKeyNames = VIRT_KEYS(KEY_NAME) "\0";
 #undef KEY_NAME
 
