@@ -605,6 +605,9 @@
     <ClCompile Include="..\src\wingui\Window.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\wingui2.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\docs\releasenotes.txt">

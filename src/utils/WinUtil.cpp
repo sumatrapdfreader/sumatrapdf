@@ -18,6 +18,10 @@ static HFONT gDefaultGuiFontBold = nullptr;
 static HFONT gDefaultGuiFontItalic = nullptr;
 static HFONT gDefaultGuiFontBoldItalic = nullptr;
 
+bool ToBool(BOOL b) {
+    return b ? true : false;
+}
+
 RenderedBitmap::~RenderedBitmap() {
     if (IsValidHandle(hbmp)) {
         DeleteObject(hbmp);
@@ -2394,6 +2398,14 @@ void HwndSendCommand(HWND hwnd, int cmdId) {
     SendMessageW(hwnd, WM_COMMAND, (WPARAM)cmdId, 0);
 }
 
+void HwndDestroyWindowSafe(HWND* hwnd) {
+    if (!hwnd || !*hwnd || !::IsWindow(*hwnd)) {
+        return;
+    }
+    ::DestroyWindow(*hwnd);
+    *hwnd = nullptr;
+}
+
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
     auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
     CrashIf(0 == res);
@@ -2425,4 +2437,26 @@ void TbGetMetrics(HWND hwnd, TBMETRICS* metrics) {
 void TbSetMetrics(HWND hwnd, TBMETRICS* metrics) {
     LPARAM lp = (LPARAM)metrics;
     SendMessageW(hwnd, TB_SETMETRICS, 0, lp);
+}
+
+bool DeleteObjectSafe(HGDIOBJ* h) {
+    if (!h || !*h) {
+        return false;
+    }
+    auto res = ::DeleteObject(*h);
+    *h = nullptr;
+    return ToBool(res);
+}
+
+bool DeleteFontSafe(HFONT* h) {
+    return DeleteObjectSafe((HGDIOBJ*)h);
+}
+
+bool DestroyIconSafe(HICON* h) {
+    if (!h || !*h) {
+        return false;
+    }
+    auto res = ::DestroyIcon(*h);
+    *h = nullptr;
+    return ToBool(res);
 }

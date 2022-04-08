@@ -8,6 +8,7 @@
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
+bool ToBool(BOOL b);
 int RectDx(const RECT& r);
 int RectDy(const RECT& r);
 POINT MakePoint(long x, long y);
@@ -281,6 +282,11 @@ Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
 void HwndSendCommand(HWND hwnd, int cmdId);
+void HwndDestroyWindowSafe(HWND* hwnd);
+
+bool DeleteObjectSafe(HGDIOBJ*);
+bool DeleteFontSafe(HFONT*);
+bool DestroyIconSafe(HICON*);
 
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info);
 void TbGetPadding(HWND, int* padX, int* padY);

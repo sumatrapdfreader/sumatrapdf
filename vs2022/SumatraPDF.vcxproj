@@ -887,6 +887,7 @@
     <ClCompile Include="..\src\wingui\TreeModel.cpp" />
     <ClCompile Include="..\src\wingui\WinGui.cpp" />
     <ClCompile Include="..\src\wingui\Window.cpp" />
+    <ClCompile Include="..\src\wingui\wingui2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\docs\releasenotes.txt" />
