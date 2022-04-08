@@ -509,9 +509,10 @@ static int RunMessageLoop() {
     MSG msg{nullptr};
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
-        // dispatch the accelerator to the correct window
+        // dispatch the accelerator but only in frame / canvas
+        // this prevents translating accelerator in e.g. edit control
         HWND hwnd = msg.hwnd;
-        WindowInfo* win = FindWindowInfoByHwnd(msg.hwnd);
+        WindowInfo* win = FindWindowInfoByHwnd(hwnd);
         if (win && (hwnd == win->hwndFrame || hwnd == win->hwndCanvas) &&
             TranslateAccelerator(win->hwndFrame, *accTable, &msg)) {
             continue;

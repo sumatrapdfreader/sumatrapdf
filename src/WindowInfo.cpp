@@ -637,14 +637,10 @@ bool WindowInfoStillValid(WindowInfo* win) {
     return gWindows.Contains(win);
 }
 
-WindowInfo* FindWindowInfoByHwnd(HWND hwndToFind) {
+WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
     for (WindowInfo* win : gWindows) {
-        HWND hwnd = hwndToFind;
-        while (hwnd) {
-            if (hwnd == win->hwndFrame) {
-                return win;
-            }
-            hwnd = GetParent(hwnd);
+        if ((win->hwndFrame == hwnd) || ::IsChild(win->hwndFrame, hwnd)) {
+            return win;
         }
     }
     return nullptr;
