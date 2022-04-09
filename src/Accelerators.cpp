@@ -136,7 +136,9 @@ ACCEL gBuiltInAccelerators[] = {
     {FALT | FVIRTKEY, VK_LEFT, CmdGoToNavBack},
     {FALT | FVIRTKEY, VK_RIGHT, CmdGoToNavForward},
     {FVIRTKEY, VK_HOME, CmdGoToFirstPage},
+    {FCONTROL | FVIRTKEY, VK_HOME, CmdGoToFirstPage},
     {FVIRTKEY, VK_END, CmdGoToLastPage},
+    {FCONTROL | FVIRTKEY, VK_END, CmdGoToLastPage},
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)

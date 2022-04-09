@@ -3718,12 +3718,12 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         win->ctrl->GoToPrevPage();
     } else if (VK_NEXT == key && isCtrl) {
         win->ctrl->GoToNextPage();
-    } else if (VK_HOME == key && isCtrl) {
-        win->ctrl->GoToFirstPage();
-    } else if (VK_END == key && isCtrl) {
-        if (!win->ctrl->GoToLastPage()) {
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
-        }
+        /*} else if (VK_HOME == key && isCtrl) {
+            win->ctrl->GoToFirstPage();
+        } else if (VK_END == key && isCtrl) {
+            if (!win->ctrl->GoToLastPage()) {
+                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+        }*/
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
