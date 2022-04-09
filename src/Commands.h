@@ -148,6 +148,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCloseCurrentDocument, "Close current document")                  \
     V(CmdNoOp, "No op")                                                   \
     V(CmdToggleZoom, "Toggle Zoom")                                       \
+    V(CmdRotateLeft, "Rotate left")                                       \
+    V(CmdRotateRight, "Rotate right")                                     \
+    V(CmdToggleFullscreen, "Toggle fullscreem")                           \
     V(CmdCommandPalette, "Command Palette")
 
 // order of CreateAnnot* must be the same as enum AnnotationType

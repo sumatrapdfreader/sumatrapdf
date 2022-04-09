@@ -3983,23 +3983,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'l':
             FrameOnKeydown(win, VK_RIGHT, 0);
             break;
-        case '[':
-            if (dm) {
-                dm->RotateBy(-90);
-            }
-            break;
-        case ']':
-            if (dm) {
-                dm->RotateBy(90);
-            }
-            break;
-        case 'f':
-            if (win->isFullScreen || win->presentation) {
-                ExitFullScreen(win);
-            } else {
-                EnterFullScreen(win);
-            }
-            break;
         // per https://en.wikipedia.org/wiki/Keyboard_layout
         // almost all keyboard layouts allow to press either
         // '+' or '=' unshifted (and one of them is also often
@@ -4965,6 +4948,26 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdExitFullScreen:
             ExitFullScreen(win);
+            break;
+
+        case CmdRotateLeft:
+            if (dm) {
+                dm->RotateBy(-90);
+            }
+            break;
+
+        case CmdRotateRight:
+            if (dm) {
+                dm->RotateBy(90);
+            }
+            break;
+
+        case CmdToggleFullscreen:
+            if (win->isFullScreen || win->presentation) {
+                ExitFullScreen(win);
+            } else {
+                EnterFullScreen(win);
+            }
             break;
 
         case CmdToggleZoom:

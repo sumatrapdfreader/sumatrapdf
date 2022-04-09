@@ -160,6 +160,9 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'n', CmdGoToNextPage},
     {0, 'p', CmdGoToPrevPage},
     {0, 'z', CmdToggleZoom},
+    {0, 'f', CmdToggleFullscreen},
+    {0, '[', CmdRotateLeft},
+    {0, ']', CmdRotateRight},
 };
 
 ACCEL* gAccels = nullptr;
