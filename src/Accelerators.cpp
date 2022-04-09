@@ -151,6 +151,8 @@ ACCEL gBuiltInAccelerators[] = {
 
     {FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
     {FVIRTKEY, VK_BACK, CmdDeleteAnnotation},
+
+    {0, 'q', CmdCloseCurrentDocument},
 };
 
 ACCEL* gAccels = nullptr;

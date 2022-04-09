@@ -3949,11 +3949,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case VK_ESCAPE:
             OnFrameKeyEsc(win);
             return;
-        case 'q':
-            // close the current document (it's too easy to press for discarding multiple tabs)
-            // quit if this is the last window
-            CloseCurrentTab(win, true);
-            return;
         case 'r':
             ReloadDocument(win, false);
             return;
@@ -4985,6 +4980,12 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdExitFullScreen:
             ExitFullScreen(win);
+            break;
+
+        case CmdCloseCurrentDocument:
+            // close the current document (it's too easy to press for discarding multiple tabs)
+            // quit if this is the last window
+            CloseCurrentTab(win, true);
             break;
 
         // Note: duplicated in OnWindowContextMenu because slightly different handling
