@@ -63,7 +63,7 @@ constexpr int CmdPageInfo = (int)CmdLast + 16;
 constexpr int CmdInfoText = (int)CmdLast + 17;
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    {TbIcon::Open, CmdOpen, _TRN("Open")},
+    {TbIcon::Open, CmdOpenFile, _TRN("Open")},
     {TbIcon::Print, CmdPrint, _TRN("Print")},
     {TbIcon::None, CmdPageInfo, nullptr}, // text box for page number + show current page / no of pages
     {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
@@ -135,7 +135,7 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
 
     bool isAllowed = true;
     switch (cmdId) {
-        case CmdOpen:
+        case CmdOpenFile:
             isAllowed = HasPermission(Perm::DiskAccess);
             break;
         case CmdPrint:
@@ -148,11 +148,11 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
 
     // If no file open, only enable open button
     if (!win->IsDocLoaded()) {
-        return CmdOpen == cmdId;
+        return CmdOpenFile == cmdId;
     }
 
     switch (cmdId) {
-        case CmdOpen:
+        case CmdOpenFile:
             // opening different files isn't allowed in plugin mode
             return !gPluginMode;
 

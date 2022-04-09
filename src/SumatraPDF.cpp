@@ -4536,7 +4536,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnDuplicateInNewWindow(win);
             break;
 
-        case CmdOpen:
+        case CmdOpenFile:
             OnMenuOpen(win);
             break;
 

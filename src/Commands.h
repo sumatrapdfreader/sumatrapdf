@@ -7,7 +7,7 @@ A command is represented by a unique number, defined as
 Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
 */
 #define COMMANDS(V)                                                       \
-    V(CmdOpen, "Open File...")                                            \
+    V(CmdOpenFile, "Open File...")                                        \
     V(CmdOpenFolder, "Open Folder...")                                    \
     V(CmdClose, "Close Document")                                         \
     V(CmdSaveAs, "Save File As...")                                       \
@@ -146,7 +146,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdInvertColors, "Invert colors")                                   \
     V(CmdTogglePageInfo, "Toggle page info")                              \
     V(CmdCloseCurrentDocument, "Close current document")                  \
-    V(CmdNoOp, "No op")                                                   \
+    V(CmdNone, "Do nothing")                                              \
     V(CmdToggleZoom, "Toggle Zoom")                                       \
     V(CmdRotateLeft, "Rotate left")                                       \
     V(CmdRotateRight, "Rotate right")                                     \

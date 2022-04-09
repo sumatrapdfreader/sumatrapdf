@@ -147,7 +147,7 @@ static MenuDef menuDefFile[] = {
     },
     {
         _TRN("&Open..."),
-        CmdOpen,
+        CmdOpenFile,
     },
     // TODO: should make it available for everyone?
     //{ "Open Folder",                        CmdOpenFolder,             },
@@ -934,7 +934,7 @@ static UINT_PTR removeIfNoCopyPerms[] = {
 // TODO: all prefs params also fall under disk access
 static UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdNewWindow, // ???
-    CmdOpen,
+    CmdOpenFile,
     CmdOpenFolder,
     CmdClose, // ???
     CmdShowInFolder,

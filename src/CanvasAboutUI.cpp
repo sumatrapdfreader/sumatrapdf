@@ -100,7 +100,7 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
         return;
     }
     if (str::Eq(url, kLinkOpenFile)) {
-        HwndSendCommand(win->hwndFrame, CmdOpen);
+        HwndSendCommand(win->hwndFrame, CmdOpenFile);
     } else if (str::Eq(url, kLinkHideList)) {
         gGlobalPrefs->showStartPage = false;
         win->RedrawAll(true);

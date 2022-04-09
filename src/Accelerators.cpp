@@ -90,7 +90,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, 'L', CmdViewFullScreen},
     {FCONTROL | FVIRTKEY, 'N', CmdNewWindow},
     {FSHIFT | FCONTROL | FVIRTKEY, 'N', CmdDuplicateInNewWindow},
-    {FCONTROL | FVIRTKEY, 'O', CmdOpen},
+    {FCONTROL | FVIRTKEY, 'O', CmdOpenFile},
     {FCONTROL | FVIRTKEY, 'S', CmdSaveAs},
     //{FSHIFT | FCONTROL | FVIRTKEY, 'S', CmdSaveAsBookmark},
     {FSHIFT | FCONTROL | FVIRTKEY, 'S', CmdSaveAnnotations},
