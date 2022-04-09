@@ -517,9 +517,8 @@ void WindowBase::Unsubclass() {
     }
 }
 
-WindowBase::WindowBase(HWND p) {
+WindowBase::WindowBase() {
     kind = kindWindowBase;
-    parent = p;
     ctrlID = GetNextCtrlID();
 }
 
@@ -575,7 +574,7 @@ static void Dispatch_WM_CONTEXTMENU(void* user, WndEvent* ev) {
     Handle_WM_CONTEXTMENU(w, ev);
 }
 
-bool WindowBase::Create() {
+bool WindowBase::Create(HWND parent) {
     auto h = GetModuleHandle(nullptr);
     int x = CW_USEDEFAULT;
     if (initialPos.x != -1) {
@@ -723,8 +722,10 @@ void WindowBase::SetText(const WCHAR* s) {
 void WindowBase::SetText(std::string_view sv) {
     text.Set(sv);
     // can be set before we create the window
-    HwndSetText(hwnd, text.AsView());
-    HwndInvalidate(hwnd);
+    if (hwnd) {
+        HwndSetText(hwnd, text.AsView());
+        HwndInvalidate(hwnd);
+    }
 }
 
 std::string_view WindowBase::GetText() {
@@ -811,15 +812,14 @@ Window::Window() {
     kind = kindWindow;
     dwExStyle = 0;
     dwStyle = WS_OVERLAPPEDWINDOW;
-    // TODO: at this point parent cannot be set yet
+}
+
+bool Window::Create(HWND parent) {
     if (parent == nullptr) {
         dwStyle |= WS_CLIPCHILDREN;
     } else {
         dwStyle |= WS_CHILD;
     }
-}
-
-bool Window::Create() {
     if (winClass == nullptr) {
         winClass = DEFAULT_WIN_CLASS;
     }

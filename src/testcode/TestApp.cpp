@@ -67,7 +67,7 @@ void TestApp(HINSTANCE hInstance) {
     w->SetTitle("this is a title");
     w->initialPos = {100, 100};
     w->initialSize = {480, 640};
-    bool ok = w->Create();
+    bool ok = w->Create(0);
     CrashIf(!ok);
 
     auto l = CreateMainLayout(w->hwnd);

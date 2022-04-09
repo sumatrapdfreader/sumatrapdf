@@ -17,14 +17,13 @@
 
 Kind kindTrackbar = "trackbar";
 
-TrackbarCtrl::TrackbarCtrl(HWND p) : WindowBase(p) {
+TrackbarCtrl::TrackbarCtrl() {
     kind = kindTrackbar;
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     dwStyle |= TBS_AUTOTICKS; // tick marks for each increment
     dwStyle |= TBS_TOOLTIPS;  // show current value when dragging in a tooltip
     dwExStyle = 0;
     winClass = TRACKBAR_CLASS;
-    parent = p;
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
@@ -67,7 +66,7 @@ static void Handle_WM_VHSCROLL(void* user, WndEvent* ev) {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
-bool TrackbarCtrl::Create() {
+bool TrackbarCtrl::Create(HWND parent) {
     if (isHorizontal) {
         dwStyle |= TBS_HORZ;
         idealSize.dx = 32;
@@ -79,7 +78,7 @@ bool TrackbarCtrl::Create() {
     }
     initialSize = idealSize;
 
-    bool ok = WindowBase::Create();
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

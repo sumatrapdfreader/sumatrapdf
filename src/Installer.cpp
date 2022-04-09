@@ -89,9 +89,9 @@ static void ProgressStep() {
 }
 
 static CheckboxCtrl* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked) {
-    CheckboxCtrl* w = new CheckboxCtrl(hwndParent);
+    CheckboxCtrl* w = new CheckboxCtrl();
     w->SetText(s);
-    w->Create();
+    w->Create(hwndParent);
     w->SetIsChecked(isChecked);
     return w;
 }
@@ -478,8 +478,8 @@ static void OnButtonInstall() {
     nInstallationSteps++; // for writing registry entries
     nInstallationSteps++; // to show progress at the beginning
 
-    gProgressBar = new ProgressCtrl(gHwndFrame, nInstallationSteps);
-    gProgressBar->Create();
+    gProgressBar = new ProgressCtrl(nInstallationSteps);
+    gProgressBar->Create(gHwndFrame);
     RECT prc = {rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy};
     gProgressBar->SetBounds(prc);
     // first one to show progress quickly
@@ -765,10 +765,10 @@ static void OnCreateWindow(HWND hwnd) {
 
     x = WINDOW_MARGIN;
     dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - DpiScale(hwnd, 4);
-    gTextboxInstDir = new EditCtrl(hwnd);
+    gTextboxInstDir = new EditCtrl();
     gTextboxInstDir->dwStyle |= WS_BORDER;
     gTextboxInstDir->SetText(gCli->installDir);
-    gTextboxInstDir->Create();
+    gTextboxInstDir->Create(hwnd);
     rc = {x, y, x + dx, y + staticDy};
     gTextboxInstDir->SetBounds(rc);
 
@@ -776,9 +776,9 @@ static void OnCreateWindow(HWND hwnd) {
 
     s = _TR("Install SumatraPDF in &folder:");
     rc = {x, y, x + r.dx, y + staticDy};
-    gStaticInstDir = new StaticCtrl(hwnd);
+    gStaticInstDir = new StaticCtrl();
     gStaticInstDir->SetText(s);
-    gStaticInstDir->Create();
+    gStaticInstDir->Create(hwnd);
     gStaticInstDir->SetBounds(rc);
 
     gShowOptions = !gShowOptions;

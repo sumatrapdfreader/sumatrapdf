@@ -24,7 +24,7 @@ static void SetButtonCheckState(HWND hwnd, CheckState newState) {
     Button_SetCheck(hwnd, newState);
 }
 
-CheckboxCtrl::CheckboxCtrl(HWND parent) : WindowBase(parent) {
+CheckboxCtrl::CheckboxCtrl() {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
     winClass = WC_BUTTON;
     kind = kindCheckbox;
@@ -49,8 +49,8 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     }
 }
 
-bool CheckboxCtrl::Create() {
-    bool ok = WindowBase::Create();
+bool CheckboxCtrl::Create(HWND parent) {
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

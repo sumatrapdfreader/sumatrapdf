@@ -16,7 +16,7 @@
 
 Kind kindStatic = "static";
 
-StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
+StaticCtrl::StaticCtrl() {
     dwStyle = WS_CHILD | WS_VISIBLE;
     winClass = WC_STATICW;
     kind = kindStatic;
@@ -54,8 +54,8 @@ void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
     ev->didHandle = true;
 }
 
-bool StaticCtrl::Create() {
-    bool ok = WindowBase::Create();
+bool StaticCtrl::Create(HWND parent) {
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

@@ -495,8 +495,8 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     bool isRtl = IsUIRightToLeft();
     SetRtl(hwnd, isRtl);
     {
-        auto b = new ButtonCtrl(hwnd);
-        b->Create();
+        auto b = new ButtonCtrl();
+        b->Create(hwnd);
         b->SetText(_TR("Copy To Clipboard"));
         layoutData->btnCopyToClipboard = b;
         b->SetRtl(isRtl);
@@ -504,8 +504,8 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     }
 
     if (!extended) {
-        auto b = new ButtonCtrl(hwnd);
-        b->Create();
+        auto b = new ButtonCtrl();
+        b->Create(hwnd);
         b->SetText(_TR("Get Fonts Info"));
         b->SetRtl(isRtl);
         layoutData->btnGetFonts = b;

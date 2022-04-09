@@ -22,10 +22,10 @@ struct TrackbarCtrl : WindowBase {
     // for WM_NOTIFY with TRBN_THUMBPOSCHANGING
     TrackbarPoschangingHandler onPosChanging = nullptr;
 
-    explicit TrackbarCtrl(HWND parent);
+    TrackbarCtrl();
     ~TrackbarCtrl() override;
 
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     Size GetIdealSize() override;
     void SetRange(int min, int max);

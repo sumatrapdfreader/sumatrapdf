@@ -41,7 +41,8 @@ static void DragMove(TreeCtrl* w, int xCur, int yCur) {
     // drag the item to the current position of the mouse pointer
     // first convert the dialog coordinates to control coordinates
     POINT pt{xCur, yCur};
-    MapWindowPoints(w->parent, w->hwnd, &pt, 1);
+    auto parent = ::GetParent(w->hwnd);
+    MapWindowPoints(parent, w->hwnd, &pt, 1);
     ImageList_DragMove(pt.x, pt.y);
 
     // turn off the dragged image so the background can be refreshed.
@@ -144,7 +145,7 @@ static void DragStart(TreeCtrl* w, NMTREEVIEWW* nmtv) {
 
     // ShowCursor(FALSE);
     SetCursorCached(IDC_HAND);
-    SetCapture(w->parent);
+    SetCapture(GetParent(w->hwnd));
     w->isDragging = true;
 }
 
@@ -489,18 +490,17 @@ void TreeCtrl::WndProc(WndEvent* ev) {
     }
 }
 
-TreeCtrl::TreeCtrl(HWND p) : WindowBase(p) {
+TreeCtrl::TreeCtrl() {
     kind = kindTree;
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     dwStyle |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     dwStyle |= TVS_TRACKSELECT | TVS_NOHSCROLL | TVS_INFOTIP;
     dwExStyle = TVS_EX_DOUBLEBUFFER;
     winClass = WC_TREEVIEWW;
-    parent = p;
     initialSize = {48, 120};
 }
 
-bool TreeCtrl::Create() {
+bool TreeCtrl::Create(HWND parent) {
     if (!supportDragDrop) {
         dwStyle |= TVS_DISABLEDRAGDROP;
     }
@@ -509,7 +509,7 @@ bool TreeCtrl::Create() {
         dwStyle &= ~TVS_HASLINES;
     }
 
-    bool ok = WindowBase::Create();
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

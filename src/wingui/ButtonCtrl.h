@@ -7,9 +7,9 @@ struct ButtonCtrl : WindowBase {
     ClickedHandler onClicked = nullptr;
     bool isDefault = false;
 
-    explicit ButtonCtrl(HWND parent);
+    ButtonCtrl();
     ~ButtonCtrl() override;
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     Size GetIdealSize() override;
 };

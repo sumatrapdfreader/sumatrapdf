@@ -14,17 +14,17 @@
 
 Kind kindProgress = "progress";
 
-ProgressCtrl::ProgressCtrl(HWND p, int initialMax) : WindowBase(p) {
+ProgressCtrl::ProgressCtrl(int initialMax) {
+    max = initialMax;
     dwStyle = WS_CHILD | WS_VISIBLE;
     winClass = PROGRESS_CLASSW;
     kind = kindProgress;
-    max = initialMax;
 }
 
 ProgressCtrl::~ProgressCtrl() = default;
 
-bool ProgressCtrl::Create() {
-    bool ok = WindowBase::Create();
+bool ProgressCtrl::Create(HWND parent) {
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

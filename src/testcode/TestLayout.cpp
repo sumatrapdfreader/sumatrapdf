@@ -61,10 +61,10 @@ static void onCheckboxChanged(CheckState state) {
 }
 
 static CheckboxCtrl* CreateCheckbox(HWND parent, std::string_view s) {
-    auto b = new CheckboxCtrl(parent);
+    auto b = new CheckboxCtrl();
     b->SetText(s);
     b->onCheckStateChanged = onCheckboxChanged;
-    b->Create();
+    b->Create(parent);
     return b;
 }
 
@@ -74,11 +74,11 @@ static void onTextChanged(EditTextChangedEvent* args) {
 }
 
 static EditCtrl* CreateEdit(HWND parent, std::string_view s) {
-    auto w = new EditCtrl(parent);
+    auto w = new EditCtrl();
     w->SetText(s);
     w->SetCueText("a cue text");
     w->onTextChanged = onTextChanged;
-    w->Create();
+    w->Create(parent);
     return w;
 }
 
@@ -91,21 +91,21 @@ static void onDropDownSelected(DropDownSelectionChangedEvent* args) {
 }
 
 static DropDownCtrl* CreatedDropDown(HWND parent) {
-    auto w = new DropDownCtrl(parent);
+    auto w = new DropDownCtrl();
     for (size_t i = 0; i < dimof(ddItems); i++) {
         auto s = ddItems[i];
         std::string_view sv(s);
         w->items.Append(sv);
     }
     w->onSelectionChanged = onDropDownSelected;
-    w->Create();
+    w->Create(parent);
     return w;
 }
 
 static StaticCtrl* CreateStatic(HWND parent, std::string_view s) {
-    auto w = new StaticCtrl(parent);
+    auto w = new StaticCtrl();
     w->SetText(s);
-    w->Create();
+    w->Create(parent);
     return w;
 }
 
@@ -114,8 +114,8 @@ static int currProgress = 0;
 static ProgressCtrl* gProgress = nullptr;
 
 static ProgressCtrl* CreateProgress(HWND parent, int maxRange) {
-    auto w = new ProgressCtrl(parent, maxRange);
-    w->Create();
+    auto w = new ProgressCtrl(maxRange);
+    w->Create(parent);
     return w;
 }
 

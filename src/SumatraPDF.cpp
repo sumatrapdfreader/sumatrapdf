@@ -1298,18 +1298,18 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
 }
 
 static void CreateSidebar(WindowInfo* win) {
-    win->sidebarSplitter = new SplitterCtrl(win->hwndFrame);
+    win->sidebarSplitter = new SplitterCtrl();
     win->sidebarSplitter->type = SplitterType::Vert;
     win->sidebarSplitter->onSplitterMove = OnSidebarSplitterMove;
-    bool ok = win->sidebarSplitter->Create();
+    bool ok = win->sidebarSplitter->Create(win->hwndFrame);
     CrashIf(!ok);
 
     CreateToc(win);
 
-    win->favSplitter = new SplitterCtrl(win->hwndFrame);
+    win->favSplitter = new SplitterCtrl();
     win->favSplitter->type = SplitterType::Horiz;
     win->favSplitter->onSplitterMove = OnFavSplitterMove;
-    ok = win->favSplitter->Create();
+    ok = win->favSplitter->Create(win->hwndFrame);
     CrashIf(!ok);
 
     CreateFavorites(win);
@@ -1389,8 +1389,8 @@ static WindowInfo* CreateWindowInfo() {
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
 
-    win->infotip = new TooltipCtrl(win->hwndCanvas);
-    win->infotip->Create();
+    win->infotip = new TooltipCtrl();
+    win->infotip->Create(win->hwndCanvas);
 
     CreateCaption(win);
     CreateTabbar(win);
@@ -4352,9 +4352,9 @@ static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
-        auto w = new EditCtrl(parent);
+        auto w = new EditCtrl();
         w->isMultiLine = false;
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->maxDx = 150;
         w->onTextChanged = [win](auto&& PH1) {
@@ -4365,10 +4365,10 @@ static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
     }
 
     {
-        auto w = new ListBoxCtrl(parent);
+        auto w = new ListBoxCtrl();
         w->idealSizeLines = 32;
         w->SetInsetsPt(4, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         win->lbModel = new ListBoxModelStrings();
         w->SetModel(win->lbModel);
@@ -4403,7 +4403,7 @@ static void RunCommandPallette(WindowInfo* winInfo) {
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
     // w->initialSize = {winSize.cx, winSize.cy};
-    bool ok = mainWindow->Create();
+    bool ok = mainWindow->Create(0);
     CrashIf(!ok);
     mainWindow->onClose = [win](auto&& PH1) {
         return CommandPaletteWindowCloseHandler(win, std::forward<decltype(PH1)>(PH1));

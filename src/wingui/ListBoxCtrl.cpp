@@ -30,7 +30,7 @@ std::string_view ListBoxModelStrings::Item(int i) {
     return strings.at(i);
 }
 
-ListBoxCtrl::ListBoxCtrl(HWND p) : WindowBase(p), idealSize({DpiScale(p, 120), DpiScale(p, 32)}) {
+ListBoxCtrl::ListBoxCtrl() {
     kind = kindListBox;
     dwExStyle = 0;
     dwStyle = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
@@ -74,8 +74,10 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     }
 }
 
-bool ListBoxCtrl::Create() {
-    bool ok = WindowBase::Create();
+bool ListBoxCtrl::Create(HWND parent) {
+    idealSize = {DpiScale(parent, 120), DpiScale(parent, 32)};
+    bool ok = WindowBase::Create(parent);
+
     // TODO: update ideal size based on the size of the model?
     if (!ok) {
         return false;

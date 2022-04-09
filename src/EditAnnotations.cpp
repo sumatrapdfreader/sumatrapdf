@@ -886,8 +886,8 @@ static void WndSizeHandler(EditAnnotationsWindow* ew, SizeEvent* ev) {
 }
 
 static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
-    auto w = new StaticCtrl(parent);
-    bool ok = w->Create();
+    auto w = new StaticCtrl();
+    bool ok = w->Create(parent);
     CrashIf(!ok);
     w->SetText(sv);
     return w;
@@ -900,10 +900,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
-        auto w = new ListBoxCtrl(parent);
+        auto w = new ListBoxCtrl();
         w->idealSizeLines = 5;
         w->SetInsetsPt(4, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         ew->lbModel = new ListBoxModelStrings();
         w->SetModel(ew->lbModel);
@@ -948,10 +948,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new EditCtrl(parent);
+        auto w = new EditCtrl();
         w->isMultiLine = true;
         w->idealSizeLines = 5;
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->maxDx = 150;
         w->onTextChanged = [ew](auto&& PH1) { return ContentsChanged(ew, std::forward<decltype(PH1)>(PH1)); };
@@ -967,9 +967,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
         w->onSelectionChanged = [ew](auto&& PH1) {
@@ -987,9 +987,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
         w->onSelectionChanged = [ew](auto&& PH1) {
@@ -1007,11 +1007,11 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new TrackbarCtrl(parent);
+        auto w = new TrackbarCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
         w->rangeMin = 8;
         w->rangeMax = 36;
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onPosChanging = [ew](auto&& PH1) { return TextFontSizeChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarTextSize = w;
@@ -1025,9 +1025,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
         w->onSelectionChanged = [ew](auto&& PH1) {
@@ -1045,9 +1045,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onSelectionChanged = [ew](auto&& PH1) {
             return LineStartEndSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
@@ -1064,9 +1064,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onSelectionChanged = [ew](auto&& PH1) {
             return LineStartEndSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
@@ -1083,9 +1083,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onSelectionChanged = [ew](auto&& PH1) { return IconSelectionChanged(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->dropDownIcon = w;
@@ -1100,10 +1100,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new TrackbarCtrl(parent);
+        auto w = new TrackbarCtrl();
         w->rangeMin = borderWidthMin;
         w->rangeMax = borderWidthMax;
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onPosChanging = [ew](auto&& PH1) { return BorderWidthChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarBorder = w;
@@ -1118,9 +1118,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
         w->onSelectionChanged = [ew](auto&& PH1) {
@@ -1138,9 +1138,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl(parent);
+        auto w = new DropDownCtrl();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
         w->onSelectionChanged = [ew](auto&& PH1) {
@@ -1158,10 +1158,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new TrackbarCtrl(parent);
+        auto w = new TrackbarCtrl();
         w->rangeMin = 0;
         w->rangeMax = 255;
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onPosChanging = [ew](auto&& PH1) { return OpacityChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarOpacity = w;
@@ -1169,10 +1169,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl(parent);
+        auto w = new ButtonCtrl();
         w->SetInsetsPt(8, 0, 0, 0);
         w->SetText("Save...");
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onClicked = [ew] { return ButtonSaveAttachment(ew); };
         ew->buttonSaveAttachment = w;
@@ -1180,10 +1180,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl(parent);
+        auto w = new ButtonCtrl();
         w->SetInsetsPt(8, 0, 0, 0);
         w->SetText("Embed...");
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onClicked = [ew] { return ButtonEmbedAttachment(ew); };
         ew->buttonEmbedAttachment = w;
@@ -1191,12 +1191,12 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl(parent);
+        auto w = new ButtonCtrl();
         w->SetInsetsPt(11, 0, 0, 0);
         w->SetText("Delete annotation");
         // TODO: doesn't work
         w->SetTextColor(MkColor(0xff, 0, 0));
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->onClicked = [ew] { return ButtonDeleteHandler(ew); };
         ew->buttonDelete = w;
@@ -1210,10 +1210,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl(parent);
+        auto w = new ButtonCtrl();
         // TODO: maybe  file name e.g. "Save changes to foo.pdf"
         w->SetText(_TR("Save changes to existing PDF"));
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClicked = [ew] { return ButtonSaveToCurrentPDFHandler(ew); };
@@ -1222,10 +1222,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl(parent);
+        auto w = new ButtonCtrl();
         w->SetInsetsPt(8, 0, 0, 0);
         w->SetText(_TR("Save changes to a new PDF"));
-        bool ok = w->Create();
+        bool ok = w->Create(parent);
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClicked = [ew] { return ButtonSaveToNewFileHandler(ew); };
@@ -1323,7 +1323,7 @@ void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
     // w->initialSize = {winSize.cx, winSize.cy};
-    bool ok = mainWindow->Create();
+    bool ok = mainWindow->Create(0);
     CrashIf(!ok);
     mainWindow->onClose = [ew](auto&& PH1) { return WndCloseHandler(ew, std::forward<decltype(PH1)>(PH1)); };
     mainWindow->onSize = [ew](auto&& PH1) { return WndSizeHandler(ew, std::forward<decltype(PH1)>(PH1)); };

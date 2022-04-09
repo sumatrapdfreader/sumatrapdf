@@ -14,7 +14,7 @@
 
 Kind kindButton = "button";
 
-ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
+ButtonCtrl::ButtonCtrl() {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     winClass = WC_BUTTONW;
     kind = kindButton;
@@ -38,13 +38,13 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     }
 }
 
-bool ButtonCtrl::Create() {
+bool ButtonCtrl::Create(HWND parent) {
     if (isDefault) {
         dwStyle |= BS_DEFPUSHBUTTON;
     } else {
         dwStyle |= BS_PUSHBUTTON;
     }
-    bool ok = WindowBase::Create();
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }
@@ -71,9 +71,9 @@ Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 #endif
 
 ButtonCtrl* CreateButton(HWND parent, std::string_view s, const ClickedHandler& onClicked) {
-    auto b = new ButtonCtrl(parent);
+    auto b = new ButtonCtrl();
     b->onClicked = onClicked;
     b->SetText(s);
-    b->Create();
+    b->Create(parent);
     return b;
 }

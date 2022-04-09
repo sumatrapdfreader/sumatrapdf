@@ -2,10 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct StaticCtrl : WindowBase {
-    explicit StaticCtrl(HWND parent);
+    StaticCtrl();
     ~StaticCtrl() override;
 
-    bool Create() override;
+    bool Create(HWND parent) override;
     Size GetIdealSize() override;
 
     HBRUSH tmpBgBrush = nullptr;

@@ -270,9 +270,8 @@ void LabelWithCloseWnd::SetPaddingXY(int x, int y) {
 
 Kind kindLabelWithClose = "labelWithClose";
 
-LabelWithCloseCtrl::LabelWithCloseCtrl(HWND p) {
+LabelWithCloseCtrl::LabelWithCloseCtrl() {
     kind = kindLabelWithClose;
-    parent = p;
     dwStyle = WS_VISIBLE | WS_CHILD;
     dwExStyle = 0;
     backgroundColor = GetSysColor(COLOR_BTNFACE);

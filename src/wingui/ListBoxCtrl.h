@@ -35,9 +35,9 @@ struct ListBoxCtrl : WindowBase {
     Size idealSize{};
     int idealSizeLines = 0;
 
-    explicit ListBoxCtrl(HWND parent);
+    ListBoxCtrl();
     ~ListBoxCtrl() override;
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     int GetItemHeight(int);
 

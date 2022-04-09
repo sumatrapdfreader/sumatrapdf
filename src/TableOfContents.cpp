@@ -883,7 +883,7 @@ void CreateToc(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    auto* treeCtrl = new TreeCtrl(win->hwndTocBox);
+    auto* treeCtrl = new TreeCtrl();
     treeCtrl->fullRowSelect = true;
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
     treeCtrl->onGetTooltip = TocCustomizeTooltip;
@@ -898,7 +898,7 @@ void CreateToc(WindowInfo* win) {
     HFONT fnt = GetTreeFont();
     treeCtrl->SetFont(fnt);
 
-    bool ok = treeCtrl->Create();
+    bool ok = treeCtrl->Create(win->hwndTocBox);
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;
     SubclassToc(win);

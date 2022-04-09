@@ -14,7 +14,7 @@
 
 Kind kindImage = "image";
 
-ImageCtrl::ImageCtrl(HWND p) : WindowBase(p) {
+ImageCtrl::ImageCtrl() {
     dwStyle = WS_CHILD | WS_VISIBLE;
     winClass = WC_STATICW;
     kind = kindImage;
@@ -84,10 +84,10 @@ static void ImageCtrlWndProc(WndEvent* ev) {
     // logf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, ev->wp);
 }
 
-bool ImageCtrl::Create() {
+bool ImageCtrl::Create(HWND parent) {
     // TODO: for now we require bmp to be set before calling Create()
     CrashIf(!bmp);
-    bool ok = WindowBase::Create();
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ProgressCtrl : WindowBase {
-    explicit ProgressCtrl(HWND parent, int max = 0);
+    explicit ProgressCtrl(int initialMax = 0);
 
     // those might be outdated if user manipulates hwnd directly
     int max = 0;
@@ -12,7 +12,7 @@ struct ProgressCtrl : WindowBase {
     int idealDy = 0;
 
     ~ProgressCtrl() override;
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     void SetMax(int);
     void SetCurrent(int);

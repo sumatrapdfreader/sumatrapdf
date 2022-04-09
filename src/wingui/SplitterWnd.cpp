@@ -80,10 +80,9 @@ static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 
 
 Kind kindSplitter = "splitter";
 
-SplitterCtrl::SplitterCtrl(HWND p) {
+SplitterCtrl::SplitterCtrl() {
     kind = kindSplitter;
     // winClass = SPLITTER_CLASS_NAME;
-    parent = p;
     backgroundColor = GetSysColor(COLOR_BTNFACE);
     dwStyle = WS_CHILDWINDOW;
     dwExStyle = 0;
@@ -167,7 +166,7 @@ static void SplitterCtrlWndProc(WndEvent* ev) {
     }
 }
 
-bool SplitterCtrl::Create() {
+bool SplitterCtrl::Create(HWND parent) {
     bmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
     CrashIf(!bmp);
     brush = CreatePatternBrush(bmp);
@@ -176,7 +175,7 @@ bool SplitterCtrl::Create() {
     DWORD style = GetWindowLong(parent, GWL_STYLE);
     parentClipsChildren = bit::IsMaskSet<DWORD>(style, WS_CLIPCHILDREN);
 
-    bool ok = Window::Create();
+    bool ok = Window::Create(parent);
     if (!ok) {
         return false;
     }

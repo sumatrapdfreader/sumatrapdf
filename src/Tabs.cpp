@@ -651,10 +651,10 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
 }
 
 void CreateTabbar(WindowInfo* win) {
-    TabsCtrl2* tabsCtrl = new TabsCtrl2(win->hwndFrame);
+    TabsCtrl2* tabsCtrl = new TabsCtrl2();
     tabsCtrl->ctrlID = IDC_TABBAR;
     tabsCtrl->createToolTipsHwnd = true;
-    tabsCtrl->Create();
+    tabsCtrl->Create(win->hwndFrame);
 
     HWND hwndTabBar = tabsCtrl->hwnd;
     SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);

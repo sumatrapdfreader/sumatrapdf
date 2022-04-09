@@ -160,7 +160,7 @@ struct TreeCtrl : WindowBase {
     // private
     TVITEMW item{};
 
-    explicit TreeCtrl(HWND parent);
+    TreeCtrl();
     ~TreeCtrl() override;
 
     Size GetIdealSize() override;
@@ -179,7 +179,7 @@ struct TreeCtrl : WindowBase {
     TreeItem GetItemAt(int x, int y);
     bool IsExpanded(TreeItem);
 
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     void SetBackgroundColor(COLORREF);
     void SetTextColor(COLORREF);

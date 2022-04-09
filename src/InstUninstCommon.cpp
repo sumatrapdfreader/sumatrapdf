@@ -558,9 +558,9 @@ bool CheckInstallUninstallPossible(bool silent) {
 }
 
 ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {
-    auto* b = new ButtonCtrl(hwndParent);
+    auto* b = new ButtonCtrl();
     b->SetText(s);
-    b->Create();
+    b->Create(hwndParent);
 
     RECT r;
     GetClientRect(hwndParent, &r);

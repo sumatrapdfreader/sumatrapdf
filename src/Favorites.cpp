@@ -872,7 +872,7 @@ void CreateFavorites(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    TreeCtrl* treeCtrl = new TreeCtrl(win->hwndFavBox);
+    TreeCtrl* treeCtrl = new TreeCtrl();
 
     treeCtrl->fullRowSelect = true;
     treeCtrl->onContextMenu = FavTreeContextMenu;
@@ -886,7 +886,7 @@ void CreateFavorites(WindowInfo* win) {
     HFONT fnt = GetTreeFont();
     treeCtrl->SetFont(fnt);
 
-    bool ok = treeCtrl->Create();
+    bool ok = treeCtrl->Create(win->hwndFavBox);
     CrashIf(!ok);
 
     win->favTreeCtrl = treeCtrl;

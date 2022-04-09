@@ -146,9 +146,8 @@ struct WindowBase : public ILayout {
     // a win32 control class. Assumed static so not freed
     const WCHAR* winClass = nullptr;
 
-    HWND parent = nullptr;
-    Point initialPos{-1, -1};
-    Size initialSize{0, 0};
+    Point initialPos = {-1, -1};
+    Size initialSize = {0, 0};
     DWORD dwStyle = 0;
     DWORD dwExStyle = 0;
     HFONT hfont = nullptr; // TODO: this should be abstract Font description
@@ -192,11 +191,10 @@ struct WindowBase : public ILayout {
     HWND hwnd = nullptr;
     UINT_PTR subclassId = 0;
 
-    WindowBase() = default;
-    explicit WindowBase(HWND p);
+    WindowBase();
     ~WindowBase() override;
 
-    virtual bool Create();
+    virtual bool Create(HWND parent);
     virtual Size GetIdealSize();
 
     virtual void WndProc(WndEvent*);
@@ -255,7 +253,7 @@ struct Window : WindowBase {
     Window();
     ~Window() override;
 
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     void SetTitle(std::string_view);
 

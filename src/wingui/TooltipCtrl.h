@@ -2,9 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct TooltipCtrl : WindowBase {
-    explicit TooltipCtrl(HWND parent);
+    TooltipCtrl();
     ~TooltipCtrl() override;
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     Size GetIdealSize() override;
 
@@ -17,4 +17,6 @@ struct TooltipCtrl : WindowBase {
     void SetMaxWidth(int dx);
     int Count();
     bool IsShowing();
+
+    HWND parent = nullptr;
 };

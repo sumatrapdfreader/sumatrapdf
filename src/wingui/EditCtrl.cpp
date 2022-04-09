@@ -96,7 +96,7 @@ void EditCtrl::SetSelection(int start, int end) {
     Edit_SetSel(hwnd, start, end);
 }
 
-EditCtrl::EditCtrl(HWND p) : WindowBase(p) {
+EditCtrl::EditCtrl() {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
     dwStyle |= WS_BORDER;
@@ -104,7 +104,7 @@ EditCtrl::EditCtrl(HWND p) : WindowBase(p) {
     kind = kindEdit;
 }
 
-bool EditCtrl::Create() {
+bool EditCtrl::Create(HWND parent) {
     // Note: has to remember this here because when I GetWindowStyle() later on,
     // WS_BORDER is not set, which is a mystery, because it is being drawn.
     // also, WS_BORDER seems to be painted in client area
@@ -116,7 +116,7 @@ bool EditCtrl::Create() {
         dwStyle |= ES_AUTOHSCROLL;
     }
 
-    bool ok = WindowBase::Create();
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

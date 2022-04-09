@@ -12,9 +12,9 @@ using OnCheckStateChanged = std::function<void(CheckState)>;
 struct CheckboxCtrl : WindowBase {
     OnCheckStateChanged onCheckStateChanged = nullptr;
 
-    explicit CheckboxCtrl(HWND parent);
+    CheckboxCtrl();
     ~CheckboxCtrl() override;
-    bool Create() override;
+    bool Create(HWND parent) override;
 
     Size GetIdealSize() override;
 

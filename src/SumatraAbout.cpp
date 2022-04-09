@@ -463,8 +463,8 @@ static void CreateInfotipForLink(StaticLinkInfo* linkInfo) {
         return;
     }
 
-    gAboutTooltip = new TooltipCtrl(gHwndAbout);
-    gAboutTooltip->Create();
+    gAboutTooltip = new TooltipCtrl();
+    gAboutTooltip->Create(gHwndAbout);
     gAboutTooltip->ShowOrUpdate(linkInfo->infotip, linkInfo->rect, false);
 }
 

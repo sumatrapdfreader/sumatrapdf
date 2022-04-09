@@ -16,7 +16,7 @@
 
 Kind kindTooltip = "tooltip";
 
-TooltipCtrl::TooltipCtrl(HWND p) : WindowBase(p) {
+TooltipCtrl::TooltipCtrl() {
     kind = kindTooltip;
     dwExStyle = WS_EX_TOPMOST;
     dwStyle = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
@@ -30,8 +30,9 @@ TooltipCtrl::~TooltipCtrl() {
     DestroyWindow(hwnd);
 }
 
-bool TooltipCtrl::Create() {
-    bool ok = WindowBase::Create();
+bool TooltipCtrl::Create(HWND parent) {
+    this->parent = parent;
+    bool ok = WindowBase::Create(nullptr);
     SetDelayTime(TTDT_AUTOPOP, 32767);
     return ok;
 }

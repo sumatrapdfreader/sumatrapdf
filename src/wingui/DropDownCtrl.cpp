@@ -17,7 +17,7 @@
 
 Kind kindDropDown = "dropdown";
 
-DropDownCtrl::DropDownCtrl(HWND parent) : WindowBase(parent) {
+DropDownCtrl::DropDownCtrl() {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;
     winClass = WC_COMBOBOX;
     kind = kindDropDown;
@@ -56,8 +56,8 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     }
 }
 
-bool DropDownCtrl::Create() {
-    bool ok = WindowBase::Create();
+bool DropDownCtrl::Create(HWND parent) {
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }

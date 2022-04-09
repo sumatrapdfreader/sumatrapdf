@@ -490,7 +490,7 @@ void SetPos(TabsCtrl* ctrl, RECT& r) {
 
 Kind kindTabs = "tabs";
 
-TabsCtrl2::TabsCtrl2(HWND p) : WindowBase(p) {
+TabsCtrl2::TabsCtrl2() {
     dwStyle = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT | WS_VISIBLE;
     winClass = WC_TABCONTROLW;
     kind = kindTabs;
@@ -511,11 +511,11 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
     }
 }
 
-bool TabsCtrl2::Create() {
+bool TabsCtrl2::Create(HWND parent) {
     if (createToolTipsHwnd) {
         dwStyle |= TCS_TOOLTIPS;
     }
-    bool ok = WindowBase::Create();
+    bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
     }
