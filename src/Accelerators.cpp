@@ -36,6 +36,8 @@
     V(VK_INSERT, "Insert")   \
     V(VK_ESCAPE, "Esc")      \
     V(VK_ESCAPE, "Escape")   \
+    V(VK_RETURN, "Return")   \
+    V(VK_SPACE, "Space")     \
     V(VK_F1, "F1")           \
     V(VK_F2, "F2")           \
     V(VK_F3, "F3")           \
@@ -62,7 +64,6 @@
     V(VK_F24, "F24")
 // TODO: remaining keys:
 /*
-#define VK_SPACE          0x20
 #define VK_PRIOR          0x21
 #define VK_NEXT           0x22
 #define VK_SELECT         0x29
@@ -165,6 +166,12 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'f', CmdToggleFullscreen},
     {0, '[', CmdRotateLeft},
     {0, ']', CmdRotateRight},
+
+    {FVIRTKEY, VK_SPACE, CmdGoToNextPage},
+    {FSHIFT | FVIRTKEY, VK_SPACE, CmdGoToPrevPage},
+
+    {FVIRTKEY, VK_RETURN, CmdGoToNextPage},
+    {FSHIFT | FVIRTKEY, VK_RETURN, CmdGoToPrevPage},
 };
 
 ACCEL* gAccels = nullptr;

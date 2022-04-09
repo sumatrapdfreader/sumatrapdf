@@ -1323,6 +1323,12 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
         case VK_OEM_MINUS:
             keyStr = L"-";
             break;
+        case VK_SPACE:
+            keyStr = L"Space";
+            break;
+        case VK_RETURN:
+            keyStr = L"Return";
+            break;
     }
     CrashIf(!keyStr);
     if (keyStr) {

@@ -3963,10 +3963,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     auto currentTab = win->currentTab;
 
     switch (key) {
-        case VK_SPACE:
-        case VK_RETURN:
-            FrameOnKeydown(win, isShift ? VK_PRIOR : VK_NEXT, 0);
-            break;
         case 'h':
             FrameOnKeydown(win, VK_LEFT, 0);
             break;
@@ -4710,25 +4706,25 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdGoToNextPage:
-            if (win->IsDocLoaded()) {
+            if (ctrl && win->IsDocLoaded()) {
                 ctrl->GoToNextPage();
             }
             break;
 
         case CmdGoToPrevPage:
-            if (win->IsDocLoaded()) {
+            if (ctrl && win->IsDocLoaded()) {
                 ctrl->GoToPrevPage();
             }
             break;
 
         case CmdGoToFirstPage:
-            if (win->IsDocLoaded()) {
+            if (ctrl && win->IsDocLoaded()) {
                 ctrl->GoToFirstPage();
             }
             break;
 
         case CmdGoToLastPage:
-            if (win->IsDocLoaded()) {
+            if (ctrl && win->IsDocLoaded()) {
                 if (!ctrl->GoToLastPage()) {
                     SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
                 }
