@@ -83,6 +83,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'D', CmdProperties},
     {FCONTROL | FVIRTKEY, 'F', CmdFindFirst},
     {FCONTROL | FVIRTKEY, 'G', CmdGoToPage},
+    {0, 'g', CmdGoToPage},
     {FCONTROL | FVIRTKEY, 'K', CmdCommandPalette},
     {FCONTROL | FVIRTKEY, 'L', CmdViewPresentationMode},
     {FSHIFT | FCONTROL | FVIRTKEY, 'L', CmdViewFullScreen},
@@ -155,6 +156,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FVIRTKEY, VK_BACK, CmdDeleteAnnotation},
 
     {0, 'q', CmdCloseCurrentDocument},
+    {0, 'r', CmdReloadDocument},
 };
 
 ACCEL* gAccels = nullptr;

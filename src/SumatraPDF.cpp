@@ -3949,9 +3949,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case VK_ESCAPE:
             OnFrameKeyEsc(win);
             return;
-        case 'r':
-            ReloadDocument(win, false);
-            return;
         case VK_TAB:
             AdvanceFocus(win);
             break;
@@ -3974,9 +3971,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             bool forward = isShift;
             ctrl->Navigate(forward ? 1 : -1);
         } break;
-        case 'g':
-            OnMenuGoToPage(win);
-            break;
         case 'h':
             FrameOnKeydown(win, VK_LEFT, 0);
             break;
@@ -4641,7 +4635,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuExit();
             break;
 
-        case CmdRefresh:
+        case CmdReloadDocument:
             ReloadDocument(win, false);
             break;
 
@@ -5117,7 +5111,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                     HwndSendCommand(hwnd, CmdGoToNavForward);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
-                    HwndSendCommand(hwnd, CmdRefresh);
+                    HwndSendCommand(hwnd, CmdReloadDocument);
                     return TRUE;
                 case APPCOMMAND_BROWSER_SEARCH:
                     HwndSendCommand(hwnd, CmdFindFirst);

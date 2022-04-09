@@ -15,7 +15,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdShowInFolder, "Show File In Folder...")                          \
     V(CmdRenameFile, "Rename File...")                                    \
     V(CmdExit, "Exit Application")                                        \
-    V(CmdRefresh, "Reload Document")                                      \
+    V(CmdReloadDocument, "Reload Document")                               \
     V(CmdSaveAsBookmark, "Save As Bookmark...")                           \
     V(CmdSendByEmail, "Send Document By Email...")                        \
     V(CmdProperties, "Show Document Properties...")                       \
