@@ -4582,6 +4582,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     auto* ctrl = win->ctrl;
     DisplayModel* dm = win->AsFixed();
 
+    AnnotationType annotType = (AnnotationType)(wmId - CmdCreateAnnotText);
+    Vec<Annotation*> createdAnnots;
+
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
         case CmdNewWindow:
@@ -4902,8 +4905,21 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             FrameOnChar(win, 'h');
             break;
 
+        // TODO: make it closer to handling in OnWindowContextMenu()
         case CmdCreateAnnotHighlight: {
             auto annots = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
+            bool isShift = IsShiftPressed();
+            openAnnotsInEditWindow(win, annots, isShift);
+        } break;
+
+        case CmdCreateAnnotSquiggly: {
+            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::Squiggly);
+            bool isShift = IsShiftPressed();
+            openAnnotsInEditWindow(win, annots, isShift);
+        } break;
+
+        case CmdCreateAnnotStrikeOut: {
+            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::StrikeOut);
             bool isShift = IsShiftPressed();
             openAnnotsInEditWindow(win, annots, isShift);
         } break;
@@ -4967,10 +4983,46 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             // UpdateUiForCurrentTab(win);
             break;
 
+        case CmdExitFullScreen:
+            ExitFullScreen(win);
+            break;
+
+        // Note: duplicated in OnWindowContextMenu because slightly different handling
+        case CmdCreateAnnotText:
+        case CmdCreateAnnotFreeText:
+        case CmdCreateAnnotStamp:
+        case CmdCreateAnnotCaret:
+        case CmdCreateAnnotSquare:
+        case CmdCreateAnnotLine:
+        case CmdCreateAnnotCircle: {
+            EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+            bool handle = !win->isFullScreen && EngineSupportsAnnotations(engine);
+            if (!handle) {
+                return 0;
+            }
+            POINT pt = GetCursorPosInHwnd(hwnd);
+            int x = pt.x;
+            int y = pt.y;
+            int pageNoUnderCursor = dm->GetPageNoByPoint(Point{x, y});
+            if (pageNoUnderCursor < 0) {
+                return 0;
+            }
+            PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNoUnderCursor);
+            MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+            auto annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+            if (annot) {
+                WindowInfoRerender(win);
+                ToolbarUpdateStateForWindow(win, true);
+                createdAnnots.Append(annot);
+            }
+        } break;
+
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
     }
-
+    if (!createdAnnots.empty()) {
+        StartEditAnnotations(tab, createdAnnots);
+    }
     return 0;
 }
 

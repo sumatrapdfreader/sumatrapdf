@@ -1824,6 +1824,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdViewShowHideToolbar:
         case CmdViewShowHideScrollbars:
         case CmdSaveAnnotations:
+        case CmdFavoriteAdd:
+        case CmdExitFullScreen:
             // handle in FrameOnCommand() in SumatraPDF.cpp
             HwndSendCommand(win->hwndFrame, cmd);
             break;
@@ -1856,15 +1858,10 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
                 delete bmp;
             }
             break;
-        case CmdFavoriteAdd:
-            AddFavoriteForCurrentPage(win);
-            break;
         case CmdFavoriteDel:
             DelFavorite(filePath, pageNoUnderCursor);
             break;
-        case CmdExitFullScreen:
-            ExitFullScreen(win);
-            break;
+        // Note: duplicated in OnWindowContextMenu because slightly different handling
         case CmdCreateAnnotText:
         case CmdCreateAnnotFreeText:
         case CmdCreateAnnotStamp:
