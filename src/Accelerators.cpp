@@ -157,6 +157,9 @@ ACCEL gBuiltInAccelerators[] = {
 
     {0, 'q', CmdCloseCurrentDocument},
     {0, 'r', CmdReloadDocument},
+    {0, 'n', CmdGoToNextPage},
+    {0, 'p', CmdGoToPrevPage},
+    {0, 'z', CmdToggleZoom},
 };
 
 ACCEL* gAccels = nullptr;

@@ -3983,15 +3983,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'l':
             FrameOnKeydown(win, VK_RIGHT, 0);
             break;
-        case 'n':
-            ctrl->GoToNextPage();
-            break;
-        case 'p':
-            ctrl->GoToPrevPage();
-            break;
-        case 'z':
-            win->ToggleZoom();
-            break;
         case '[':
             if (dm) {
                 dm->RotateBy(-90);
@@ -4974,6 +4965,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdExitFullScreen:
             ExitFullScreen(win);
+            break;
+
+        case CmdToggleZoom:
+            win->ToggleZoom();
             break;
 
         case CmdCloseCurrentDocument:
