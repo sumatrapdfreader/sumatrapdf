@@ -4582,8 +4582,23 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     auto* ctrl = win->ctrl;
     DisplayModel* dm = win->AsFixed();
 
-    AnnotationType annotType = (AnnotationType)(wmId - CmdCreateAnnotText);
     Vec<Annotation*> createdAnnots;
+
+    AnnotationType annotType = (AnnotationType)(wmId - CmdCreateAnnotText);
+    switch (wmId) {
+        case CmdCreateAnnotHighlight:
+            annotType = AnnotationType::Highlight;
+            break;
+        case CmdCreateAnnotSquiggly:
+            annotType = AnnotationType::Squiggly;
+            break;
+        case CmdCreateAnnotStrikeOut:
+            annotType = AnnotationType::StrikeOut;
+            break;
+        case CmdCreateAnnotUnderline:
+            annotType = AnnotationType::Underline;
+            break;
+    }
 
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
@@ -4906,26 +4921,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         // TODO: make it closer to handling in OnWindowContextMenu()
-        case CmdCreateAnnotHighlight: {
-            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
-            bool isShift = IsShiftPressed();
-            openAnnotsInEditWindow(win, annots, isShift);
-        } break;
-
-        case CmdCreateAnnotSquiggly: {
-            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::Squiggly);
-            bool isShift = IsShiftPressed();
-            openAnnotsInEditWindow(win, annots, isShift);
-        } break;
-
-        case CmdCreateAnnotStrikeOut: {
-            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::StrikeOut);
-            bool isShift = IsShiftPressed();
-            openAnnotsInEditWindow(win, annots, isShift);
-        } break;
-
+        case CmdCreateAnnotHighlight:
+        case CmdCreateAnnotSquiggly:
+        case CmdCreateAnnotStrikeOut:
         case CmdCreateAnnotUnderline: {
-            auto annots = MakeAnnotationFromSelection(tab, AnnotationType::Underline);
+            auto annots = MakeAnnotationFromSelection(tab, annotType);
             bool isShift = IsShiftPressed();
             openAnnotsInEditWindow(win, annots, isShift);
         } break;

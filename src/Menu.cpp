@@ -1894,6 +1894,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             break;
     }
     if (!createdAnnots.empty()) {
+        // TODO: leaking createdAnnots?
         StartEditAnnotations(tab, createdAnnots);
     }
     // TODO: should delete it?
