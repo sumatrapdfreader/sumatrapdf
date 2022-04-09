@@ -170,6 +170,7 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'w', CmdPresentationWhiteBackground},
     // // for Logitech's wireless presenters which target PowerPoint's shortcuts
     {0, '.', CmdPresentationBlackBackground},
+    {0, 'c', CmdViewContinuous},
 
     {FVIRTKEY, VK_SPACE, CmdGoToNextPage},
     {FSHIFT | FVIRTKEY, VK_SPACE, CmdGoToPrevPage},

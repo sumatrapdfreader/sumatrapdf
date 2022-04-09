@@ -3997,9 +3997,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             }
             gIsDivideKeyDown = false;
             break;
-        case 'c':
-            OnMenuViewContinuous(win);
-            break;
         case 'b':
             OnFrameKeyB(win);
             break;
