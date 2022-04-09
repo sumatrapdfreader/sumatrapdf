@@ -3963,18 +3963,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     auto currentTab = win->currentTab;
 
     switch (key) {
-        case 'h':
-            FrameOnKeydown(win, VK_LEFT, 0);
-            break;
-        case 'j':
-            FrameOnKeydown(win, VK_DOWN, 0);
-            break;
-        case 'k':
-            FrameOnKeydown(win, VK_UP, 0);
-            break;
-        case 'l':
-            FrameOnKeydown(win, VK_RIGHT, 0);
-            break;
         // per https://en.wikipedia.org/wiki/Keyboard_layout
         // almost all keyboard layouts allow to press either
         // '+' or '=' unshifted (and one of them is also often
@@ -4949,6 +4937,22 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (ctrl) {
                 ctrl->Navigate(-1);
             }
+            break;
+
+        case CmdScrollLeft:
+            FrameOnKeydown(win, VK_LEFT, 0);
+            break;
+
+        case CmdScrollDown:
+            FrameOnKeydown(win, VK_DOWN, 0);
+            break;
+
+        case CmdScrollUp:
+            FrameOnKeydown(win, VK_UP, 0);
+            break;
+
+        case CmdScrollRight:
+            FrameOnKeydown(win, VK_RIGHT, 0);
             break;
 
         case CmdNavigateForward:
