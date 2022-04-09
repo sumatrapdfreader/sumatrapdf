@@ -153,6 +153,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdToggleFullscreen, "Toggle fullscreem")                           \
     V(CmdNavigateBack, "Navigate back")                                   \
     V(CmdNavigateForward, "Navigate forward")                             \
+    V(CmdShowCursorPosition, "Show cursor position")                      \
+    V(CmdPresentationWhiteBackground, "Presentation white background")    \
+    V(CmdPresentationBlackBackground, "Presentation black background")    \
     V(CmdCommandPalette, "Command Palette")
 
 // order of CreateAnnot* must be the same as enum AnnotationType

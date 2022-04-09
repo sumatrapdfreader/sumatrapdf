@@ -4003,20 +4003,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'b':
             OnFrameKeyB(win);
             break;
-        case '.':
-            // for Logitech's wireless presenters which target PowerPoint's shortcuts
-            if (win->presentation) {
-                win->ChangePresentationMode(PM_BLACK_SCREEN);
-            }
-            break;
-        case 'w':
-            if (win->presentation) {
-                win->ChangePresentationMode(PM_WHITE_SCREEN);
-            }
-            break;
-        case 'm':
-            ShowCursorPositionInDoc(win);
-            break;
     }
 }
 
@@ -4976,6 +4962,21 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleZoom:
             win->ToggleZoom();
+            break;
+
+        case CmdShowCursorPosition:
+            ShowCursorPositionInDoc(win);
+            break;
+
+        case CmdPresentationBlackBackground:
+            if (win->presentation) {
+                win->ChangePresentationMode(PM_BLACK_SCREEN);
+            }
+            break;
+        case CmdPresentationWhiteBackground:
+            if (win->presentation) {
+                win->ChangePresentationMode(PM_WHITE_SCREEN);
+            }
             break;
 
         case CmdCloseCurrentDocument:
