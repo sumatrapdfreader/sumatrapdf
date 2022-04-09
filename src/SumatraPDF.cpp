@@ -3967,10 +3967,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case VK_RETURN:
             FrameOnKeydown(win, isShift ? VK_PRIOR : VK_NEXT, 0);
             break;
-        case VK_BACK: {
-            bool forward = isShift;
-            ctrl->Navigate(forward ? 1 : -1);
-        } break;
         case 'h':
             FrameOnKeydown(win, VK_LEFT, 0);
             break;
@@ -4967,6 +4963,18 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
                 ExitFullScreen(win);
             } else {
                 EnterFullScreen(win);
+            }
+            break;
+
+        case CmdNavigateBack:
+            if (ctrl) {
+                ctrl->Navigate(-1);
+            }
+            break;
+
+        case CmdNavigateForward:
+            if (ctrl) {
+                ctrl->Navigate(1);
             }
             break;
 

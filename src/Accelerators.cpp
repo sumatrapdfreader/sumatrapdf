@@ -153,7 +153,9 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'I', CmdTogglePageInfo},
 
     {FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
-    {FVIRTKEY, VK_BACK, CmdDeleteAnnotation},
+
+    {FVIRTKEY, VK_BACK, CmdNavigateBack},
+    {FSHIFT | FVIRTKEY, VK_BACK, CmdNavigateForward},
 
     {0, 'q', CmdCloseCurrentDocument},
     {0, 'r', CmdReloadDocument},
