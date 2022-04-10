@@ -376,3 +376,29 @@ u32 MurmurHash2(const void* key, size_t len) {
 
     return h;
 }
+
+// variation of MurmurHash2 which deals with strings that are
+// mostly ASCII and should be treated case independently
+u32 MurmurHashWStrI(const WCHAR* str) {
+    size_t len = str::Len(str);
+    auto a = GetTempAllocator();
+    u8* data = (u8*)a->Alloc(len);
+    WCHAR c;
+    u8* dst = data;
+    while (true) {
+        c = *str++;
+        if (!c) {
+            break;
+        }
+        if (c & 0xFF80) {
+            *dst++ = 0x80;
+            continue;
+        }
+        if ('A' <= c && c <= 'Z') {
+            *dst++ = (u8)(c + 'a' - 'A');
+            continue;
+        }
+        *dst++ = (u8)c;
+    }
+    return MurmurHash2(data, len);
+}

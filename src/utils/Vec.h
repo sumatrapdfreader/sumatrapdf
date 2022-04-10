@@ -503,30 +503,13 @@ class WStrVec : public Vec<WCHAR*> {
 // WStrList owns the strings it contains and frees them at destruction
 class WStrList {
     struct Item {
-        WCHAR* string;
-        u32 hash;
-
-        explicit Item(WCHAR* string = nullptr, u32 hash = 0) : string(string), hash(hash) {
-        }
+        WCHAR* string = nullptr;
+        u32 hash = 0;
     };
 
     Vec<Item> items;
     size_t count = 0;
     Allocator* allocator;
-
-    // variation of MurmurHash2 which deals with strings that are
-    // mostly ASCII and should be treated case independently
-    // TODO: I'm guessing would be much faster when done as MurmuserHash2I()
-    // with lower-casing done in-line, without the need to allocate memory for the copy
-    static u32 GetQuickHashI(const WCHAR* str) {
-        size_t len = str::Len(str);
-        AutoFree data(AllocArray<char>(len));
-        WCHAR c;
-        for (char* dst = data; (c = *str++) != 0; dst++) {
-            *dst = (c & 0xFF80) ? 0x80 : 'A' <= c && c <= 'Z' ? (char)(c + 'a' - 'A') : (char)c;
-        }
-        return MurmurHash2(data, len);
-    }
 
   public:
     explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr) : items(capHint, allocator) {
@@ -553,12 +536,13 @@ class WStrList {
 
     // str must have been allocated by allocator and is owned by StrList
     void Append(WCHAR* str) {
-        items.Append(Item(str, GetQuickHashI(str)));
+        u32 hash = MurmurHashWStrI(str);
+        items.Append(Item{str, hash});
         count++;
     }
 
     int Find(const WCHAR* str, size_t startAt = 0) const {
-        u32 hash = GetQuickHashI(str);
+        u32 hash = MurmurHashWStrI(str);
         Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::Eq(item[i].string, str)) {
@@ -569,7 +553,7 @@ class WStrList {
     }
 
     int FindI(const WCHAR* str, size_t startAt = 0) const {
-        u32 hash = GetQuickHashI(str);
+        u32 hash = MurmurHashWStrI(str);
         Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::EqI(item[i].string, str)) {
