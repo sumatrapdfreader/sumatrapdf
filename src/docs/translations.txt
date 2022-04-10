@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7f1142f72661aee3b5e7e25d20967af3c853fa23
+8cf9d80c5be890ea8086e8efa86a8aff79af5554
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -14600,7 +14600,7 @@ hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
 id:Simpan catatan ke PDF terkini
 it:Salva annotazioni in PDF esistente
-nl:Notaties opslaan in bestaande PDF
+nl:Notities opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 sl:Shrani pripombe v obstoječi PDF
 tr:Dipnotları geçerli PDF'ye kaydet
