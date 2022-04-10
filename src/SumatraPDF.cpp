@@ -4345,9 +4345,44 @@ static void CommandPaletteSelectionChanged(CommandPaletteWindow* win, ListBoxSel
 
 static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
 
+static i32 gBlacklistCommandsFromPalette[] = {
+    CmdNone,
+    CmdOpenWithFirst,
+    CmdOpenWithLast,
+    CmdCommandPalette,
+};
+
+static bool IsCommandPaletteBlacklisted(i32 cmdId) {
+    size_t n = dimof(gBlacklistCommandsFromPalette);
+    for (size_t i = 0; i < n; i++) {
+        if (gBlacklistCommandsFromPalette[i] == cmdId) {
+            return true;
+        }
+    }
+    switch (cmdId) {
+        case CmdDebugCrashMe: {
+            bool onlyDebug = gIsDebugBuild || gIsPreReleaseBuild;
+            return !onlyDebug;
+        }
+    }
+    return false;
+}
+
 static void CollectPaletteStrings(ListBoxModelStrings* m) {
     for (FileState* fs : *gGlobalPrefs->fileStates) {
         m->strings.Append(fs->filePath);
+    }
+
+    i32 cmdId = CmdFirst + 1;
+    const char* strs = gCommandDescriptions;
+    bool doAdd;
+    while (strs) {
+        doAdd = !IsCommandPaletteBlacklisted(cmdId);
+        if (doAdd) {
+            m->strings.Append(strs);
+        }
+        seqstrings::Next(strs);
+        cmdId++;
     }
 }
 

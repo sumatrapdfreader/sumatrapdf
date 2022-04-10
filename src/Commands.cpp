@@ -13,6 +13,10 @@ SeqStrings gCommandNames = COMMANDS(CMD_NAME) "\0";
 int gCommandIds[] = {COMMANDS(CMD_ID)};
 #undef CMD_ID
 
+#define CMD_DESC(id, txt) txt "\0"
+SeqStrings gCommandDescriptions = COMMANDS(CMD_DESC) "\0";
+#undef CMD_DESC
+
 /* returns -1 if not found */
 int GetCommandIdByName(const char* cmdName) {
     int idx = seqstrings::StrToIdxIS(gCommandNames, cmdName);

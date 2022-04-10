@@ -84,7 +84,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdZoomFitWidthAndContinuous, "Zoom: Fit Width And Continuous")     \
     V(CmdZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")      \
     V(CmdContributeTranslation, "Contribute Translation")                 \
-    V(CmdOpenWithFirst, "")                                               \
+    V(CmdOpenWithFirst, "Open With First")                                \
     V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                      \
     V(CmdOpenWithFoxIt, "Open With FoxIt")                                \
     V(CmdOpenWithFoxItPhantom, "Open With FoxIt Phantom")                 \
@@ -92,7 +92,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenWithXpsViewer, "Open With Xps Viewer")                       \
     V(CmdOpenWithHtmlHelp, "Open With HTML Help")                         \
     V(CmdOpenWithPdfDjvuBookmarker, "Open With Pdf&Djvu Bookmarker")      \
-    V(CmdOpenWithLast, "")                                                \
+    V(CmdOpenWithLast, "Open With Last")                                  \
     V(CmdOpenSelectedDocument, "Open Selected Document")                  \
     V(CmdPinSelectedDocument, "Pin Selected Document")                    \
     V(CmdForgetSelectedDocument, "Remove Selected Document From History") \
@@ -220,3 +220,5 @@ enum {
 #undef DEF_CMD
 
 int GetCommandIdByName(const char*);
+
+extern SeqStrings gCommandDescriptions;
