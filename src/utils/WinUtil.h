@@ -273,6 +273,7 @@ bool IsValidDelayType(int type);
 
 void HwndDpiAdjust(HWND, float* x, float* y);
 void HwndSetText(HWND, std::string_view s);
+void HwndSetText(HWND, const WCHAR*);
 HICON HwndSetIcon(HWND, HICON);
 HICON HwndGetIcon(HWND);
 void HwndInvalidate(HWND);

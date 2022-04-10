@@ -2298,6 +2298,18 @@ bool IsValidDelayType(int type) {
     return false;
 }
 
+void HwndSetText(HWND hwnd, const WCHAR* s) {
+    // can be called before a window is created
+    if (!hwnd) {
+        return;
+    }
+    if (!s) {
+        SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
+        return;
+    }
+    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)s);
+}
+
 void HwndSetText(HWND hwnd, std::string_view sv) {
     // can be called before a window is created
     if (!hwnd) {

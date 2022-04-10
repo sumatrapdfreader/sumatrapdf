@@ -134,6 +134,14 @@ Kind Wnd::GetKind() {
     return kind;
 }
 
+void Wnd::SetText(const WCHAR* s) {
+    // can be set before we create the window
+    if (hwnd) {
+        HwndSetText(hwnd, s);
+        HwndInvalidate(hwnd);
+    }
+}
+
 void Wnd::SetVisibility(Visibility newVisibility) {
     // TODO: make it work before Create()?
     CrashIf(!hwnd);
@@ -427,6 +435,26 @@ LRESULT Wnd::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
+// for interop with windows not wrapped in Wnd, run this at the beginning of message loop
+LRESULT TryReflectNotify(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    // hwnd is a parent of control sending WM_NOTIFY message
+    LRESULT result = 0;
+    if (msg != WM_NOTIFY) {
+        return result;
+    }
+    // Do notification reflection if message came from a child window.
+    // Restricting OnNotifyReflect to child windows avoids double handling.
+    NMHDR* hdr = reinterpret_cast<LPNMHDR>(lparam);
+    HWND from = hdr->hwndFrom;
+    Wnd* wndFrom = WindowMapGetWindow(from);
+    if (wndFrom) {
+        if (hwnd == GetParent(wndFrom->hwnd)) {
+            result = wndFrom->OnNotifyReflect(wparam, lparam);
+        }
+    }
+    return result;
+}
+
 LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     LRESULT result = 0;
 
@@ -463,13 +491,15 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_NOTIFY: {
             // Do notification reflection if message came from a child window.
             // Restricting OnNotifyReflect to child windows avoids double handling.
-            LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
-            HWND from = pHeader->hwndFrom;
-            Wnd* pWndFrom = WindowMapGetWindow(from);
+            NMHDR* hdr = reinterpret_cast<NMHDR*>(lparam);
+            HWND from = hdr->hwndFrom;
+            Wnd* wndFrom = WindowMapGetWindow(from);
 
-            if (pWndFrom != NULL)
-                if (::GetParent(from) == this->hwnd)
-                    result = pWndFrom->OnNotifyReflect(wparam, lparam);
+            if (wndFrom != nullptr) {
+                if (::GetParent(from) == this->hwnd) {
+                    result = wndFrom->OnNotifyReflect(wparam, lparam);
+                }
+            }
 
             // Handle user notifications
             if (result == 0)
@@ -781,6 +811,76 @@ int MessageLoop() {
     }
 
     return static_cast<int>(LOWORD(msg.wParam));
+}
+
+} // namespace wg
+
+//- Button
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/buttons
+namespace wg {
+
+Kind kindButton = "button";
+
+Button::Button() {
+    kind = kindButton;
+}
+
+Button::~Button() = default;
+
+LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg != WM_COMMAND) {
+        return 0;
+    }
+    auto code = HIWORD(wparam);
+    if (code != BN_CLICKED) {
+        return 0;
+    }
+    if (!onClicked) {
+        return 0;
+    }
+    onClicked();
+    return 1;
+}
+
+HWND Button::Create(HWND parent) {
+    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    winClass = WC_BUTTONW;
+    if (isDefault) {
+        dwStyle |= BS_DEFPUSHBUTTON;
+    } else {
+        dwStyle |= BS_PUSHBUTTON;
+    }
+    HWND ret = Wnd::Create(parent);
+    if (!ret) {
+        return nullptr;
+    }
+    auto size = GetIdealSize();
+    RECT r{0, 0, size.dx, size.dy};
+    SetBounds(r);
+    return ret;
+}
+
+Size Button::GetIdealSize() {
+    return ButtonGetIdealSize(hwnd);
+}
+
+#if 0
+Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
+    win::SetText(this->hwnd, s);
+    Size size = this->GetIdealSize();
+    uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
+    SetWindowPos(this->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
+    return size;
+}
+#endif
+
+Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked) {
+    auto b = new Button();
+    b->onClicked = onClicked;
+    b->SetText(s);
+    b->Create(parent);
+    return b;
 }
 
 } // namespace wg

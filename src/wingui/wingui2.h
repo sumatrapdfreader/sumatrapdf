@@ -2,6 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 namespace wg {
+
+LRESULT TryReflectNotify(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
 struct Wnd : public ILayout {
@@ -71,8 +74,12 @@ struct Wnd : public ILayout {
     void SetPos(RECT* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
+    void SetText(const WCHAR*);
 
     Kind kind = nullptr;
+    // either a custom class that we registered or
+    // a win32 control class. Assumed static so not freed
+    const WCHAR* winClass = nullptr;
 
     Insets insets{};
     Size childSize{};
@@ -95,5 +102,26 @@ struct Wnd : public ILayout {
 
 int MessageLoop();
 bool PreTranslateMessage(MSG& msg);
+
+} // namespace wg
+
+//- Button
+namespace wg {
+using ClickedHandler = std::function<void()>;
+
+struct Button : Wnd {
+    ClickedHandler onClicked = nullptr;
+    bool isDefault = false;
+
+    Button();
+    ~Button() override;
+    HWND Create(HWND parent) override;
+
+    Size GetIdealSize() override;
+
+    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+};
+
+Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked);
 
 } // namespace wg
