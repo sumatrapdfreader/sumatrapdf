@@ -4302,6 +4302,8 @@ struct CommandPaletteWindow {
     ListBoxModel* lbModel = nullptr;
 };
 
+static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
+
 CommandPaletteWindow::~CommandPaletteWindow() {
     delete mainLayout;
     delete mainWindow;
@@ -4353,8 +4355,6 @@ static bool IsCmdInList(i32 cmdId, int n, i32* list) {
     }
     return false;
 }
-
-static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
 
 // clang-format off
 static i32 gBlacklistCommandsFromPalette[] = {
