@@ -4,13 +4,26 @@
 namespace wg {
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
-struct Wnd {
+struct Wnd : public ILayout {
     Wnd();
     Wnd(HWND hwnd);
     virtual ~Wnd();
     virtual void Destroy();
 
     virtual HWND Create(HWND parent);
+
+    virtual Size GetIdealSize();
+
+    // ILayout
+    Kind GetKind() override;
+    void SetVisibility(Visibility) override;
+    Visibility GetVisibility() override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size Layout(Constraints bc) override;
+    void SetBounds(Rect) override;
+    void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
+
     HWND Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD style, int x, int y, int width,
                 int height, HWND parent, HMENU menu, LPVOID param);
     virtual void PreCreate(CREATESTRUCT& cs);
@@ -54,6 +67,19 @@ struct Wnd {
     virtual LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
 
     LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
+
+    void SetPos(RECT* r);
+    void SetIsVisible(bool isVisible);
+    bool IsVisible() const;
+
+    Kind kind = nullptr;
+
+    Insets insets{};
+    Size childSize{};
+    Rect lastBounds{};
+
+    // data that can be set before calling Create()
+    Visibility visibility{Visibility::Visible};
 
     CREATESTRUCT create_struct = {};
     WNDCLASSEX window_class = {};

@@ -10,6 +10,8 @@
 
 #include "utils/Log.h"
 
+Kind kindWnd = "wnd";
+
 // this is experimantal win32 gui wrappers based on
 // https://github.com/erengy/windows
 
@@ -100,6 +102,7 @@ LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
 Wnd::Wnd() {
     instance = GetModuleHandleW(nullptr);
     gWindowBeingCreated = nullptr;
+    kind = kindWnd;
 
     // Create default window class
     WNDCLASSEX wc = {};
@@ -118,11 +121,52 @@ Wnd::Wnd() {
 Wnd::Wnd(HWND hwnd) {
     instance = GetModuleHandleW(nullptr);
     gWindowBeingCreated = nullptr;
+    kind = kindWnd;
+
     this->hwnd = hwnd;
 }
 
 Wnd::~Wnd() {
     Destroy();
+}
+
+Kind Wnd::GetKind() {
+    return kind;
+}
+
+void Wnd::SetVisibility(Visibility newVisibility) {
+    // TODO: make it work before Create()?
+    CrashIf(!hwnd);
+    visibility = newVisibility;
+    bool isVisible = IsVisible();
+    // TODO: a different way to determine if is top level vs. child window?
+    if (GetParent(hwnd) == nullptr) {
+        ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
+    } else {
+        BOOL bIsVisible = toBOOL(isVisible);
+        SetWindowStyle(hwnd, WS_VISIBLE, bIsVisible);
+    }
+}
+
+Visibility Wnd::GetVisibility() {
+    return visibility;
+#if 0
+    if (GetParent(hwnd) == nullptr) {
+        // TODO: what to do for top-level window?
+        CrashMe();
+        return true;
+    }
+    bool isVisible = IsWindowStyleSet(hwnd, WS_VISIBLE);
+    return isVisible;
+#endif
+}
+
+void Wnd::SetIsVisible(bool isVisible) {
+    SetVisibility(isVisible ? Visibility::Visible : Visibility::Collapse);
+}
+
+bool Wnd::IsVisible() const {
+    return visibility == Visibility::Visible;
 }
 
 void Wnd::Destroy() {
@@ -275,6 +319,70 @@ LRESULT Wnd::OnMessageReflect(UINT, WPARAM, LPARAM) {
 
     // return 0 for unhandled messages
     return 0;
+}
+
+Size Wnd::GetIdealSize() {
+    return {};
+}
+
+Size Wnd::Layout(const Constraints bc) {
+    dbglayoutf("WindowBase::Layout() %s ", GetKind());
+    LogConstraints(bc, "\n");
+
+    auto hinset = insets.left + insets.right;
+    auto vinset = insets.top + insets.bottom;
+    auto innerConstraints = bc.Inset(hinset, vinset);
+
+    int dx = MinIntrinsicWidth(0);
+    int dy = MinIntrinsicHeight(0);
+    childSize = innerConstraints.Constrain(Size{dx, dy});
+    auto res = Size{
+        childSize.dx + hinset,
+        childSize.dy + vinset,
+    };
+    return res;
+}
+
+int Wnd::MinIntrinsicHeight(int) {
+#if 0
+    auto vinset = insets.top + insets.bottom;
+    Size s = GetIdealSize();
+    return s.dy + vinset;
+#else
+    Size s = GetIdealSize();
+    return s.dy;
+#endif
+}
+
+int Wnd::MinIntrinsicWidth(int) {
+#if 0
+    auto hinset = insets.left + insets.right;
+    Size s = GetIdealSize();
+    return s.dx + hinset;
+#else
+    Size s = GetIdealSize();
+    return s.dx;
+#endif
+}
+
+void Wnd::SetPos(RECT* r) {
+    ::MoveWindow(hwnd, r);
+}
+
+void Wnd::SetBounds(Rect bounds) {
+    dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", GetKind(), bounds.x, bounds.y, bounds.dx, bounds.dy);
+
+    lastBounds = bounds;
+
+    bounds.x += insets.left;
+    bounds.y += insets.top;
+    bounds.dx -= (insets.right + insets.left);
+    bounds.dy -= (insets.bottom + insets.top);
+
+    auto r = RectToRECT(bounds);
+    ::MoveWindow(hwnd, &r);
+    // TODO: optimize if doesn't change position
+    ::InvalidateRect(hwnd, nullptr, TRUE);
 }
 
 // A function used internally to call OnMessageReflect. Don't call or override this function.
