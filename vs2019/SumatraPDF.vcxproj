@@ -616,6 +616,7 @@
     <ClInclude Include="..\src\wingui\TreeModel.h" />
     <ClInclude Include="..\src\wingui\WinGui.h" />
     <ClInclude Include="..\src\wingui\Window.h" />
+    <ClInclude Include="..\src\wingui\wingui2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />

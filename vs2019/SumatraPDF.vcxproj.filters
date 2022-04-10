@@ -279,6 +279,9 @@
     <ClInclude Include="..\src\wingui\Window.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\wingui2.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\synctex\synctex_parser.c">

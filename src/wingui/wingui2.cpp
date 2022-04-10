@@ -6,34 +6,24 @@
 #include "utils/WinUtil.h"
 
 #include "Layout.h"
-
-// #include "wingui2.h"
+#include "wingui2.h"
 
 #include "utils/Log.h"
 
 // this is experimantal win32 gui wrappers based on
 // https://github.com/erengy/windows
-// I'm using https://github.com/kjk/windows fork to track progress
-// for now everything is in this one file
 
-// definitions, will go into wingui2.h
-namespace wg {}
-
-// implementation
 namespace wg {
 
 // window_map.h / window_map.cpp
-
-struct Window;
-
 struct WindowToHwnd {
-    Window* window = nullptr;
+    Wnd* window = nullptr;
     HWND hwnd = nullptr;
 };
 
 Vec<WindowToHwnd> gWindowToHwndMap;
 
-Window* WindowMapGetWindow(HWND hwnd) {
+Wnd* WindowMapGetWindow(HWND hwnd) {
     for (auto& el : gWindowToHwndMap) {
         if (el.hwnd == hwnd) {
             return el.window;
@@ -42,7 +32,7 @@ Window* WindowMapGetWindow(HWND hwnd) {
     return nullptr;
 }
 
-void WindowMapAdd(HWND hwnd, Window* w) {
+void WindowMapAdd(HWND hwnd, Wnd* w) {
     if (!hwnd || (WindowMapGetWindow(hwnd) != nullptr)) {
         return;
     }
@@ -62,7 +52,7 @@ bool WindowMapRemove(HWND hwnd) {
     return false;
 }
 
-bool WindowMapRemove(Window* w) {
+bool WindowMapRemove(Wnd* w) {
     int n = gWindowToHwndMap.isize();
     for (int i = 0; i < n; i++) {
         auto&& el = gWindowToHwndMap[i];
@@ -82,89 +72,16 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 
 //- Window.h / Window.cpp
 
-enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
-
-struct Window {
-    Window();
-    Window(HWND hwnd);
-    virtual ~Window();
-    virtual void Destroy();
-
-    virtual HWND Create(HWND parent = nullptr);
-    virtual HWND Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD style, int x, int y, int width,
-                        int height, HWND parent, HMENU menu, LPVOID param);
-    virtual void PreCreate(CREATESTRUCT& cs);
-    virtual void PreRegisterClass(WNDCLASSEX& wc);
-    virtual bool PreTranslateMessage(MSG& msg);
-
-    void Attach(HWND hwnd);
-    HWND Detach();
-    void SetWindowHandle(HWND hwnd);
-
-    // message handlers
-    virtual LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    virtual LRESULT WindowProcDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    void Subclass(HWND hwnd);
-    void UnSubclass();
-
-    bool RegisterClass(WNDCLASSEX& wc) const;
-
-    // Message handlers
-    virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam) {
-        return FALSE;
-    }
-    virtual void OnContextMenu(HWND hwnd, POINT pt) {
-    } // TODO: use Point
-    virtual void OnCreate(HWND hwnd, LPCREATESTRUCT create_struct);
-    virtual BOOL OnDestroy() {
-        return FALSE;
-    }
-    virtual void OnDropFiles(HDROP drop_info) {
-    }
-    virtual void OnGetMinMaxInfo(LPMINMAXINFO mmi) {
-    }
-    virtual LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) {
-        return -1;
-    }
-    virtual void OnMove(LPPOINTS pts) {
-    }
-    virtual LRESULT OnNotify(int control_id, LPNMHDR nmh) {
-        return 0;
-    }
-    virtual void OnPaint(HDC hdc, LPPAINTSTRUCT ps) {
-    }
-    virtual void OnSize(UINT uMsg, UINT type, SIZE size) {
-    }
-    virtual void OnTaskbarCallback(UINT uMsg, LPARAM lParam) {
-    }
-    virtual void OnTimer(UINT_PTR event_id) {
-    }
-    virtual void OnWindowPosChanging(LPWINDOWPOS window_pos) {
-    }
-
-    CREATESTRUCT create_struct = {};
-    WNDCLASSEX window_class = {};
-    HFONT font = nullptr;
-    HICON icon_large = nullptr;
-    HICON icon_small = nullptr;
-    HMENU menu = nullptr;
-    WNDPROC prev_window_proc = nullptr;
-    HWND parent = nullptr;
-    HWND window = nullptr;
-    HINSTANCE instance = nullptr;
-};
-
-Window* gCurrentWindow = nullptr;
+Wnd* gWindowBeingCreated = nullptr;
 const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
 
-LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    Window* window = WindowMapGetWindow(hwnd);
+LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    Wnd* window = WindowMapGetWindow(hwnd);
 
     if (!window) {
         // I think it's meant to ensure we associate Window with HWND
         // as early as possible given than CreateWindow
-        window = gCurrentWindow;
+        window = gWindowBeingCreated;
         if (window) {
             window->SetWindowHandle(hwnd);
             WindowMapAdd(hwnd, window);
@@ -172,15 +89,15 @@ LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
     }
 
     if (window) {
-        return window->WindowProc(hwnd, uMsg, wParam, lParam);
+        return window->WindowProc(hwnd, msg, wparam, lparam);
     } else {
-        return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
+        return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
 }
 
-Window::Window() {
+Wnd::Wnd() {
     instance = GetModuleHandleW(nullptr);
-    gCurrentWindow = nullptr; // TODO: why?
+    gWindowBeingCreated = nullptr;
 
     // Create default window class
     WNDCLASSEX wc = {};
@@ -196,18 +113,18 @@ Window::Window() {
     }
 }
 
-Window::Window(HWND hwnd) {
+Wnd::Wnd(HWND hwnd) {
     instance = GetModuleHandleW(nullptr);
-    gCurrentWindow = nullptr; // TODO: why?
-    window = hwnd;
+    gWindowBeingCreated = nullptr;
+    this->hwnd = hwnd;
 }
 
-Window::~Window() {
+Wnd::~Wnd() {
     Destroy();
 }
 
-void Window::Destroy() {
-    HwndDestroyWindowSafe(&window);
+void Wnd::Destroy() {
+    HwndDestroyWindowSafe(&hwnd);
     if (font && parent) {
         DeleteFontSafe(&font);
     }
@@ -219,36 +136,77 @@ void Window::Destroy() {
     }
 
     WindowMapRemove(this);
-    window = nullptr;
+    hwnd = nullptr;
 }
 
-void Window::OnCreate(HWND hwnd, LPCREATESTRUCT create_struct) {
+void Wnd::OnCreate(HWND hwnd, LPCREATESTRUCT create_struct) {
     LOGFONT logfont;
     ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
     font = ::CreateFontIndirect(&logfont);
-    ::SendMessage(window, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
+    ::SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
 }
 
-LRESULT Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    return WindowProcDefault(hwnd, uMsg, wParam, lParam);
+LRESULT Wnd::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    return WindowProcDefault(hwnd, msg, wparam, lparam);
 }
 
-LRESULT Window::WindowProcDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
+BOOL Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
+    return FALSE;
+}
+void Wnd::OnContextMenu(HWND hwnd, POINT pt) {
+}
+
+BOOL Wnd::OnDestroy() {
+    return FALSE;
+}
+
+void Wnd::OnDropFiles(HDROP drop_info) {
+}
+
+void Wnd::OnGetMinMaxInfo(MINMAXINFO* mmi) {
+}
+
+LRESULT Wnd::OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam) {
+    return -1;
+}
+
+void Wnd::OnMove(LPPOINTS pts) {
+}
+
+LRESULT Wnd::OnNotify(int control_id, LPNMHDR nmh) {
+    return 0;
+}
+
+void Wnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
+}
+
+void Wnd::OnSize(UINT msg, UINT type, SIZE size) {
+}
+
+void Wnd::OnTaskbarCallback(UINT msg, LPARAM lparam) {
+}
+void Wnd::OnTimer(UINT_PTR event_id) {
+}
+
+void Wnd::OnWindowPosChanging(WINDOWPOS* window_pos) {
+}
+
+LRESULT Wnd::WindowProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    switch (msg) {
         case WM_COMMAND: {
-            if (OnCommand(wParam, lParam))
+            if (OnCommand(wparam, lparam))
                 return 0;
             break;
         }
 
         case WM_CONTEXTMENU: {
-            POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-            OnContextMenu(reinterpret_cast<HWND>(wParam), pt);
+            POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+            OnContextMenu(reinterpret_cast<HWND>(wparam), pt);
             break;
         }
 
         case WM_CREATE: {
-            OnCreate(hwnd, reinterpret_cast<LPCREATESTRUCT>(lParam));
+            OnCreate(hwnd, reinterpret_cast<LPCREATESTRUCT>(lparam));
             break;
         }
 
@@ -258,17 +216,17 @@ LRESULT Window::WindowProcDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
         case WM_DROPFILES: {
-            OnDropFiles(reinterpret_cast<HDROP>(wParam));
+            OnDropFiles(reinterpret_cast<HDROP>(wparam));
             break;
         }
         case WM_ENTERSIZEMOVE:
         case WM_EXITSIZEMOVE: {
             SIZE size = {0};
-            OnSize(uMsg, 0, size);
+            OnSize(msg, 0, size);
             break;
         }
         case WM_GETMINMAXINFO: {
-            OnGetMinMaxInfo(reinterpret_cast<LPMINMAXINFO>(lParam));
+            OnGetMinMaxInfo(reinterpret_cast<LPMINMAXINFO>(lparam));
             break;
         }
         case WM_LBUTTONDOWN:
@@ -283,18 +241,18 @@ LRESULT Window::WindowProcDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_MOUSELEAVE:
         case WM_MOUSEMOVE:
         case WM_MOUSEWHEEL: {
-            LRESULT lResult = OnMouseEvent(uMsg, wParam, lParam);
+            LRESULT lResult = OnMouseEvent(msg, wparam, lparam);
             if (lResult != -1)
                 return lResult;
             break;
         }
         case WM_MOVE: {
-            POINTS pts = MAKEPOINTS(lParam);
+            POINTS pts = MAKEPOINTS(lparam);
             OnMove(&pts);
             break;
         }
         case WM_NOTIFY: {
-            LRESULT lResult = OnNotify(static_cast<int>(wParam), reinterpret_cast<LPNMHDR>(lParam));
+            LRESULT lResult = OnNotify(static_cast<int>(wparam), reinterpret_cast<LPNMHDR>(lparam));
             if (lResult)
                 return lResult;
             break;
@@ -316,40 +274,44 @@ LRESULT Window::WindowProcDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
         case WM_SIZE: {
-            SIZE size = {LOWORD(lParam), HIWORD(lParam)};
-            OnSize(uMsg, static_cast<UINT>(wParam), size);
+            SIZE size = {LOWORD(lparam), HIWORD(lparam)};
+            OnSize(msg, static_cast<UINT>(wparam), size);
             break;
         }
         case WM_TIMER: {
-            OnTimer(static_cast<UINT>(wParam));
+            OnTimer(static_cast<UINT>(wparam));
             break;
         }
         case WM_WINDOWPOSCHANGING: {
-            OnWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lParam));
+            OnWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lparam));
             break;
         }
 
         default: {
-            if (uMsg == WM_TASKBARCREATED || uMsg == WM_TASKBARBUTTONCREATED || uMsg == WM_TASKBARCALLBACK) {
-                OnTaskbarCallback(uMsg, lParam);
+            if (msg == WM_TASKBARCREATED || msg == WM_TASKBARBUTTONCREATED || msg == WM_TASKBARCALLBACK) {
+                OnTaskbarCallback(msg, lparam);
                 return 0;
             }
             break;
         }
     }
 
+    return FinalWindowProc(msg, wparam, lparam);
+}
+
+LRESULT Wnd::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     if (prev_window_proc) {
-        return ::CallWindowProc(prev_window_proc, hwnd, uMsg, wParam, lParam);
+        return ::CallWindowProc(prev_window_proc, hwnd, msg, wparam, lparam);
     } else {
-        return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
+        return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
 }
 
-void Window::SetWindowHandle(HWND hwnd) {
-    window = hwnd;
+void Wnd::SetWindowHandle(HWND hwnd) {
+    this->hwnd = hwnd;
 }
 
-void Window::PreCreate(CREATESTRUCT& cs) {
+void Wnd::PreCreate(CREATESTRUCT& cs) {
     create_struct.cx = cs.cx;
     create_struct.cy = cs.cy;
     create_struct.dwExStyle = cs.dwExStyle;
@@ -364,7 +326,7 @@ void Window::PreCreate(CREATESTRUCT& cs) {
     create_struct.y = cs.y;
 }
 
-void Window::PreRegisterClass(WNDCLASSEX& wc) {
+void Wnd::PreRegisterClass(WNDCLASSEX& wc) {
     window_class.style = wc.style;
     window_class.lpfnWndProc = WindowProcStatic;
     window_class.cbClsExtra = wc.cbClsExtra;
@@ -377,11 +339,11 @@ void Window::PreRegisterClass(WNDCLASSEX& wc) {
     window_class.lpszClassName = wc.lpszClassName;
 }
 
-bool Window::PreTranslateMessage(MSG& msg) {
+bool Wnd::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-bool Window::RegisterClass(WNDCLASSEX& wc) const {
+bool Wnd::RegisterClass(WNDCLASSEX& wc) const {
     WNDCLASSEX wc_existing = {0};
     if (::GetClassInfoEx(instance, wc.lpszClassName, &wc_existing)) {
         wc = wc_existing;
@@ -396,7 +358,7 @@ bool Window::RegisterClass(WNDCLASSEX& wc) const {
     return ToBool(res);
 }
 
-void Window::Attach(HWND hwnd) {
+void Wnd::Attach(HWND hwnd) {
     Detach();
 
     if (::IsWindow(hwnd)) {
@@ -407,20 +369,21 @@ void Window::Attach(HWND hwnd) {
     }
 }
 
-HWND Window::Detach() {
-    HWND hwnd = window;
+HWND Wnd::Detach() {
+    HWND hwndRet = this->hwnd;
 
-    if (prev_window_proc)
+    if (prev_window_proc) {
         UnSubclass();
+    }
 
     WindowMapRemove(this);
 
-    window = nullptr;
+    this->hwnd = nullptr;
 
-    return hwnd;
+    return hwndRet;
 }
 
-HWND Window::Create(HWND parent) {
+HWND Wnd::Create(HWND parent) {
     PreRegisterClass(window_class);
     if (window_class.lpszClassName) {
         RegisterClass(window_class);
@@ -451,56 +414,58 @@ HWND Window::Create(HWND parent) {
                   create_struct.hMenu, create_struct.lpCreateParams);
 }
 
-HWND Window::Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD style, int x, int y, int width,
-                    int height, HWND parent, HMENU menu, LPVOID param) {
+HWND Wnd::Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD style, int x, int y, int width,
+                 int height, HWND parent, HMENU menu, LPVOID param) {
     Destroy();
 
-    gCurrentWindow = this;
+    gWindowBeingCreated = this;
 
     menu = menu;
     parent = parent;
 
-    window =
+    hwnd =
         ::CreateWindowEx(ex_style, class_name, window_name, style, x, y, width, height, parent, menu, instance, param);
 
     WNDCLASSEX wc = {0};
     ::GetClassInfoEx(instance, class_name, &wc);
     if (wc.lpfnWndProc != reinterpret_cast<WNDPROC>(WindowProcStatic)) {
-        Subclass(window);
-        OnCreate(window, &create_struct);
+        Subclass(hwnd);
+        OnCreate(hwnd, &create_struct);
     }
 
-    gCurrentWindow = nullptr;
+    gWindowBeingCreated = nullptr;
 
-    return window;
+    return hwnd;
 }
 
-void Window::Subclass(HWND hwnd) {
+void Wnd::Subclass(HWND hwnd) {
     WNDPROC current_proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
     if (current_proc != reinterpret_cast<WNDPROC>(WindowProcStatic)) {
         prev_window_proc = reinterpret_cast<WNDPROC>(
             ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProcStatic)));
-        window = hwnd;
+        this->hwnd = hwnd;
     }
 }
 
-void Window::UnSubclass() {
-    WNDPROC current_proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(window, GWLP_WNDPROC));
+void Wnd::UnSubclass() {
+    WNDPROC current_proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
     if (current_proc == reinterpret_cast<WNDPROC>(WindowProcStatic)) {
-        ::SetWindowLongPtr(window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(prev_window_proc));
+        ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(prev_window_proc));
         prev_window_proc = nullptr;
     }
 }
 
 // application.cpp
 bool PreTranslateMessage(MSG& msg) {
-    if ((WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST) ||
-        (WM_MOUSEFIRST <= msg.message && msg.message <= WM_MOUSELAST)) {
-        for (HWND hwnd = msg.hwnd; hwnd != nullptr; hwnd = ::GetParent(hwnd)) {
-            if (auto window = WindowMapGetWindow(hwnd)) {
-                if (window->PreTranslateMessage(msg)) {
-                    return true;
-                }
+    bool shouldProcess = (WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST) ||
+                         (WM_MOUSEFIRST <= msg.message && msg.message <= WM_MOUSELAST);
+    if (!shouldProcess) {
+        return false;
+    }
+    for (HWND hwnd = msg.hwnd; hwnd != nullptr; hwnd = ::GetParent(hwnd)) {
+        if (auto window = WindowMapGetWindow(hwnd)) {
+            if (window->PreTranslateMessage(msg)) {
+                return true;
             }
         }
     }
