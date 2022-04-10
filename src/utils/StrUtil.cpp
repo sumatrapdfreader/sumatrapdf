@@ -2789,6 +2789,24 @@ static bool allocateIndexIfNeeded(VecStr& v) {
     return true;
 }
 
+bool VecStr::Exists(std::string_view sv) {
+    int n = Size();
+    for (int i = 0; i < n; i++) {
+        auto s = at(i);
+        if (str::Eq(sv, s)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool VecStr::AppendIfNotExists(std::string_view sv) {
+    if (!Exists(sv)) {
+        return Append(sv);
+    }
+    return false;
+}
+
 bool VecStr::Append(std::string_view sv) {
     bool ok = allocateIndexIfNeeded(*this);
     if (!ok) {

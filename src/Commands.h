@@ -96,12 +96,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenSelectedDocument, "Open Selected Document")                  \
     V(CmdPinSelectedDocument, "Pin Selected Document")                    \
     V(CmdForgetSelectedDocument, "Remove Selected Document From History") \
-    V(CmdTocEditorStart, "Table of contents: Start Editing")              \
-    V(CmdTocEditorAddSibling, "Add Sibling")                              \
-    V(CmdTocEditorAddChild, "Add Child")                                  \
-    V(CmdTocEditorRemoveItem, "Remove")                                   \
-    V(CmdTocEditorAddPdfChild, "Add PDF Child")                           \
-    V(CmdTocEditorAddPdfSibling, "Add PDF Sibling")                       \
     V(CmdExpandAll, "Expand All")                                         \
     V(CmdCollapseAll, "Collapse All")                                     \
     V(CmdSaveEmbeddedFile, "Save Embedded File...")                       \

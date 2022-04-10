@@ -4343,6 +4343,15 @@ static void CommandPaletteSelectionChanged(CommandPaletteWindow* win, ListBoxSel
     // UpdateUIForSelectedAnnotation(ew, itemNo);
 }
 
+static bool IsCmdInList(i32 cmdId, int n, i32* list) {
+    for (int i = 0; i < n; i++) {
+        if (list[i] == cmdId) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
 
 static i32 gBlacklistCommandsFromPalette[] = {
@@ -4350,35 +4359,110 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithFirst,
     CmdOpenWithLast,
     CmdCommandPalette,
+    CmdExitFullScreen, // ?
+
+    // managing frequently list in home tab
+    CmdOpenSelectedDocument, 
+    CmdPinSelectedDocument,
+    CmdForgetSelectedDocument,
+
+    CmdExpandAll, // TODO: figure the proper context for it
+    CmdCollapseAll, // TODO: figure the proper context for it
+    CmdMoveFrameFocus,
+
+    CmdFavoriteAdd,
+    CmdFavoriteDel,
+    CmdFavoriteToggle,
+
+    CmdPresentationWhiteBackground,
+    CmdPresentationBlackBackground,
 };
 
-static bool IsCommandPaletteBlacklisted(i32 cmdId) {
-    size_t n = dimof(gBlacklistCommandsFromPalette);
-    for (size_t i = 0; i < n; i++) {
-        if (gBlacklistCommandsFromPalette[i] == cmdId) {
-            return true;
+// most commands is not valid when document is not opened
+// it's shorter to list the remaining commands
+static i32 gDocumentNotOpenWhitelist[] = {
+    CmdOpenFile,
+    CmdOpenFolder,
+    CmdExit,
+    CmdNewWindow,
+    CmdContributeTranslation,
+    CmdOptions,
+    CmdAdvancedOptions,
+    CmdChangeLanguage,
+    CmdCheckUpdate,
+    CmdHelpOpenManualInBrowser,
+    CmdHelpVisitWebsite,
+    CmdHelpAbout,
+    CmdFavoriteShow,
+    CmdFavoriteHide,
+    CmdToggleFullscreen,
+};
+
+struct CommandPaletteBuildCtx {
+    bool isDocLoaded = false;
+    bool supportsAnnots = false;
+};
+
+static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
+    int n = (int)dimof(gBlacklistCommandsFromPalette);
+    if (IsCmdInList(cmdId, n, gBlacklistCommandsFromPalette)) {
+        return false;
+    }
+    if (!ctx.isDocLoaded) {
+        n = (int)dimof(gDocumentNotOpenWhitelist);
+        if (!IsCmdInList(cmdId, n, gDocumentNotOpenWhitelist)) {
+            return false;
         }
     }
+
     switch (cmdId) {
+        case CmdDebugShowLinks:
+        case CmdDebugAnnotations:
+        case CmdDebugDownloadSymbols:
+        case CmdDebugTestApp:
+        case CmdDebugShowNotif:
         case CmdDebugCrashMe: {
-            bool onlyDebug = gIsDebugBuild || gIsPreReleaseBuild;
-            return !onlyDebug;
+            return gIsDebugBuild || gIsPreReleaseBuild;
         }
     }
-    return false;
+    return true;
 }
 
-static void CollectPaletteStrings(ListBoxModelStrings* m) {
+static void AddOpenedFiles(ListBoxModelStrings* m, WindowInfo* win) {
+    for (TabInfo* tab : win->tabs) {
+        if (!tab->IsDocLoaded()) {
+            continue;
+        }
+        auto path = tab->filePath.Get();
+        auto s = ToUtf8Temp(path);
+        // avoid adding the same file opened in multiple window
+        m->strings.AppendIfNotExists(s); 
+    }
+}
+
+static void CollectPaletteStrings(ListBoxModelStrings* m, WindowInfo* win) {
+    CommandPaletteBuildCtx ctx;
+    ctx.isDocLoaded = win->IsDocLoaded();
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        auto engine = dm->GetEngine();
+        ctx.supportsAnnots = EngineSupportsAnnotations(engine);
+    }
+
+    // append paths of opened files
+    for (WindowInfo* w : gWindows) {
+        AddOpenedFiles(m, w);
+    }
+    // append paths of files from history, excluding
+    // already appended (from opened files)
     for (FileState* fs : *gGlobalPrefs->fileStates) {
-        m->strings.Append(fs->filePath);
+        m->strings.AppendIfNotExists(fs->filePath);
     }
 
     i32 cmdId = CmdFirst + 1;
     const char* strs = gCommandDescriptions;
-    bool doAdd;
     while (strs) {
-        doAdd = !IsCommandPaletteBlacklisted(cmdId);
-        if (doAdd) {
+        if (AllowCommand(ctx, cmdId)) {
             m->strings.Append(strs);
         }
         seqstrings::Next(strs);
@@ -4386,9 +4470,9 @@ static void CollectPaletteStrings(ListBoxModelStrings* m) {
     }
 }
 
-static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
+static void CreateCommandPaletteMainLayout(WindowInfo* winInfo, CommandPaletteWindow* win) {
     auto m = new ListBoxModelStrings();
-    CollectPaletteStrings(m);
+    CollectPaletteStrings(m, winInfo);
 
     HWND parent = win->mainWindow->hwnd;
     auto vbox = new VBox();
@@ -4452,7 +4536,7 @@ static void RunCommandPallette(WindowInfo* winInfo) {
     // mainWindow->onSize = [win](auto&& PH1) { return WndSizeHandler(ew, std::forward<decltype(PH1)>(PH1)); };
 
     win->mainWindow = mainWindow;
-    CreateCommandPaletteMainLayout(win);
+    CreateCommandPaletteMainLayout(winInfo, win);
 
     // size our editor window to be the same height as main window
     int minDy = 720;

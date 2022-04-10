@@ -607,7 +607,8 @@ struct VecStr {
     int Size() const;
     void Reset();
     bool Append(std::string_view sv);
-
+    bool Exists(std::string_view sv);
+    bool AppendIfNotExists(std::string_view sv);
     std::string_view at(int) const;
 };
 
