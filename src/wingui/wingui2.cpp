@@ -23,7 +23,7 @@ struct WindowToHwnd {
 
 Vec<WindowToHwnd> gWindowToHwndMap;
 
-Wnd* WindowMapGetWindow(HWND hwnd) {
+static Wnd* WindowMapGetWindow(HWND hwnd) {
     for (auto& el : gWindowToHwndMap) {
         if (el.hwnd == hwnd) {
             return el.window;
@@ -32,7 +32,7 @@ Wnd* WindowMapGetWindow(HWND hwnd) {
     return nullptr;
 }
 
-void WindowMapAdd(HWND hwnd, Wnd* w) {
+static void WindowMapAdd(HWND hwnd, Wnd* w) {
     if (!hwnd || (WindowMapGetWindow(hwnd) != nullptr)) {
         return;
     }
@@ -40,7 +40,8 @@ void WindowMapAdd(HWND hwnd, Wnd* w) {
     gWindowToHwndMap.Append(el);
 }
 
-bool WindowMapRemove(HWND hwnd) {
+/*
+static bool WindowMapRemove(HWND hwnd) {
     int n = gWindowToHwndMap.isize();
     for (int i = 0; i < n; i++) {
         auto&& el = gWindowToHwndMap[i];
@@ -51,8 +52,9 @@ bool WindowMapRemove(HWND hwnd) {
     }
     return false;
 }
+*/
 
-bool WindowMapRemove(Wnd* w) {
+static bool WindowMapRemove(Wnd* w) {
     int n = gWindowToHwndMap.isize();
     for (int i = 0; i < n; i++) {
         auto&& el = gWindowToHwndMap[i];
@@ -89,7 +91,7 @@ LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
     }
 
     if (window) {
-        return window->WindowProc(hwnd, msg, wparam, lparam);
+        return window->WndProc(hwnd, msg, wparam, lparam);
     } else {
         return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
@@ -139,25 +141,47 @@ void Wnd::Destroy() {
     hwnd = nullptr;
 }
 
-void Wnd::OnCreate(HWND hwnd, LPCREATESTRUCT create_struct) {
-    LOGFONT logfont;
-    ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
-    font = ::CreateFontIndirect(&logfont);
-    ::SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
-}
-
-LRESULT Wnd::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    return WindowProcDefault(hwnd, msg, wparam, lparam);
+LRESULT Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
 BOOL Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
     return FALSE;
 }
-void Wnd::OnContextMenu(HWND hwnd, POINT pt) {
+
+// Called during window creation. Override this functions to perform tasks
+// such as creating child windows.
+int Wnd::OnCreate(HWND hwnd, CREATESTRUCT*) {
+    // This function is called when a WM_CREATE message is received
+    // Override it to automatically perform tasks during window creation.
+    // Return 0 to continue creating the window.
+
+    // Note: Window controls don't call OnCreate. They are sublcassed (attached)
+    //  after their window is created.
+
+    LOGFONT logfont;
+    ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
+    font = ::CreateFontIndirect(&logfont);
+    ::SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
+
+    return 0;
 }
 
-BOOL Wnd::OnDestroy() {
+void Wnd::OnDestroy() {
+}
+
+// Called when the background of the window's client area needs to be erased.
+// Override this function in your derived class to perform drawing tasks.
+// Return Value: Return FALSE to also permit default erasure of the background
+//               Return TRUE to prevent default erasure of the background
+BOOL Wnd::OnEraseBkgnd(HDC) {
     return FALSE;
+}
+
+void Wnd::OnClose() {
+}
+
+void Wnd::OnContextMenu(HWND hwnd, POINT pt) {
 }
 
 void Wnd::OnDropFiles(HDROP drop_info) {
@@ -173,7 +197,45 @@ LRESULT Wnd::OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam) {
 void Wnd::OnMove(LPPOINTS pts) {
 }
 
-LRESULT Wnd::OnNotify(int control_id, LPNMHDR nmh) {
+// Processes notification (WM_NOTIFY) messages from a child window.
+LRESULT Wnd::OnNotify(int controlId, NMHDR* nmh) {
+    // You can use either OnNotifyReflect or OnNotify to handle notifications
+    // Override OnNotifyReflect to handle notifications in the CWnd class that
+    //   generated the notification.   OR
+    // Override OnNotify to handle notifications in the PARENT of the CWnd class
+    //   that generated the notification.
+
+    // Your overriding function should look like this ...
+
+    // LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
+    // switch (pHeader->code)
+    // {
+    //      Handle your notifications from the CHILD window here
+    //      Return the value recommended by the Windows API documentation.
+    //      For many notifications, the return value doesn't matter, but for some it does.
+    // }
+
+    // return 0 for unhandled notifications
+    // The framework will call SetWindowLongPtr(DWLP_MSGRESULT, result) for dialogs.
+    return 0;
+}
+
+// Processes the notification (WM_NOTIFY) messages in the child window that originated them.
+LRESULT Wnd::OnNotifyReflect(WPARAM, LPARAM) {
+    // Override OnNotifyReflect to handle notifications in the CWnd class that
+    //   generated the notification.
+
+    // Your overriding function should look like this ...
+
+    // LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
+    // switch (pHeader->code)
+    // {
+    //      Handle your notifications from this window here
+    //      Return the value recommended by the Windows API documentation.
+    // }
+
+    // Return 0 for unhandled notifications.
+    // The framework will call SetWindowLongPtr(DWLP_MSGRESULT, result) for dialogs.
     return 0;
 }
 
@@ -185,40 +247,181 @@ void Wnd::OnSize(UINT msg, UINT type, SIZE size) {
 
 void Wnd::OnTaskbarCallback(UINT msg, LPARAM lparam) {
 }
+
 void Wnd::OnTimer(UINT_PTR event_id) {
 }
 
 void Wnd::OnWindowPosChanging(WINDOWPOS* window_pos) {
 }
 
-LRESULT Wnd::WindowProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+// This function processes those special messages sent by some older controls,
+// and reflects them back to the originating CWnd object.
+// Override this function in your derived class to handle these special messages:
+// WM_COMMAND, WM_CTLCOLORBTN, WM_CTLCOLOREDIT, WM_CTLCOLORDLG, WM_CTLCOLORLISTBOX,
+// WM_CTLCOLORSCROLLBAR, WM_CTLCOLORSTATIC, WM_CHARTOITEM,  WM_VKEYTOITEM,
+// WM_HSCROLL, WM_VSCROLL, WM_DRAWITEM, WM_MEASUREITEM, WM_DELETEITEM,
+// WM_COMPAREITEM, WM_PARENTNOTIFY.
+LRESULT Wnd::OnMessageReflect(UINT, WPARAM, LPARAM) {
+    // This function processes those special messages (see above) sent
+    // by some older controls, and reflects them back to the originating CWnd object.
+    // Override this function in your derived class to handle these special messages.
+
+    // Your overriding function should look like this ...
+
+    // switch (msg)
+    // {
+    //      Handle your reflected messages here
+    // }
+
+    // return 0 for unhandled messages
+    return 0;
+}
+
+// A function used internally to call OnMessageReflect. Don't call or override this function.
+LRESULT Wnd::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+    HWND wnd = 0;
     switch (msg) {
-        case WM_COMMAND: {
-            if (OnCommand(wparam, lparam))
-                return 0;
+        case WM_COMMAND:
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORDLG:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORSCROLLBAR:
+        case WM_CTLCOLORSTATIC:
+        case WM_CHARTOITEM:
+        case WM_VKEYTOITEM:
+        case WM_HSCROLL:
+        case WM_VSCROLL:
+            wnd = reinterpret_cast<HWND>(lparam);
             break;
+
+        case WM_DRAWITEM:
+        case WM_MEASUREITEM:
+        case WM_DELETEITEM:
+        case WM_COMPAREITEM:
+            wnd = GetDlgItem(hwnd, static_cast<int>(wparam));
+            break;
+
+        case WM_PARENTNOTIFY:
+            switch (LOWORD(wparam)) {
+                case WM_CREATE:
+                case WM_DESTROY:
+                    wnd = reinterpret_cast<HWND>(lparam);
+                    break;
+            }
+    }
+
+    Wnd* pWnd = WindowMapGetWindow(wnd);
+
+    if (pWnd != NULL)
+        return pWnd->OnMessageReflect(msg, wparam, lparam);
+
+    return 0;
+}
+
+LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    LRESULT result = 0;
+
+    switch (msg) {
+        case WM_CLOSE: {
+            OnClose();
+            return 0;
         }
 
-        case WM_CONTEXTMENU: {
-            POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
-            OnContextMenu(reinterpret_cast<HWND>(wparam), pt);
-            break;
-        }
+        case WM_COMMAND: {
+            // Reflect this message if it's from a control.
+            Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
+            if (pWnd != NULL)
+                result = pWnd->OnCommand(wparam, lparam);
+
+            // Handle user commands.
+            if (0 == result)
+                result = OnCommand(wparam, lparam);
+
+            if (0 != result)
+                return 0;
+        } break; // Note: Some MDI commands require default processing.
 
         case WM_CREATE: {
-            OnCreate(hwnd, reinterpret_cast<LPCREATESTRUCT>(lparam));
+            OnCreate(hwnd, reinterpret_cast<CREATESTRUCT*>(lparam));
             break;
         }
 
         case WM_DESTROY: {
-            if (OnDestroy())
-                return 0;
+            OnDestroy();
+            break; // Note: Some controls require default processing.
+        }
+
+        case WM_NOTIFY: {
+            // Do notification reflection if message came from a child window.
+            // Restricting OnNotifyReflect to child windows avoids double handling.
+            LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
+            HWND from = pHeader->hwndFrom;
+            Wnd* pWndFrom = WindowMapGetWindow(from);
+
+            if (pWndFrom != NULL)
+                if (::GetParent(from) == this->hwnd)
+                    result = pWndFrom->OnNotifyReflect(wparam, lparam);
+
+            // Handle user notifications
+            if (result == 0)
+                result = OnNotify((int)wparam, (NMHDR*)lparam);
+            if (result != 0)
+                return result;
             break;
         }
+
+        case WM_PAINT: {
+            if (!prev_window_proc) {
+                if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
+                    PAINTSTRUCT ps;
+                    HDC hdc = ::BeginPaint(hwnd, &ps);
+                    OnPaint(hdc, &ps);
+                    ::EndPaint(hwnd, &ps);
+                } else {
+                    HDC hdc = ::GetDC(hwnd);
+                    OnPaint(hdc, nullptr);
+                    ::ReleaseDC(hwnd, hdc);
+                }
+            }
+            return 0;
+        }
+
+        case WM_ERASEBKGND: {
+            HDC dc = (HDC)(wparam);
+            BOOL preventErasure;
+
+            preventErasure = OnEraseBkgnd(dc);
+            if (preventErasure)
+                return TRUE;
+        } break;
+
+        // A set of messages to be reflected back to the control that generated them.
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORDLG:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORSCROLLBAR:
+        case WM_CTLCOLORSTATIC:
+        case WM_DRAWITEM:
+        case WM_MEASUREITEM:
+        case WM_DELETEITEM:
+        case WM_COMPAREITEM:
+        case WM_CHARTOITEM:
+        case WM_VKEYTOITEM:
+        case WM_HSCROLL:
+        case WM_VSCROLL:
+        case WM_PARENTNOTIFY: {
+            result = MessageReflect(msg, wparam, lparam);
+            if (result != 0)
+                return result; // Message processed so return.
+        } break;               // Do default processing when message not already processed.
+
         case WM_DROPFILES: {
             OnDropFiles(reinterpret_cast<HDROP>(wparam));
             break;
         }
+
         case WM_ENTERSIZEMOVE:
         case WM_EXITSIZEMOVE: {
             SIZE size = {0};
@@ -251,28 +454,13 @@ LRESULT Wnd::WindowProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             OnMove(&pts);
             break;
         }
-        case WM_NOTIFY: {
-            LRESULT lResult = OnNotify(static_cast<int>(wparam), reinterpret_cast<LPNMHDR>(lparam));
-            if (lResult)
-                return lResult;
+
+        case WM_CONTEXTMENU: {
+            POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+            OnContextMenu(reinterpret_cast<HWND>(wparam), pt);
             break;
         }
 
-        case WM_PAINT: {
-            if (!prev_window_proc) {
-                if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
-                    PAINTSTRUCT ps;
-                    HDC hdc = ::BeginPaint(hwnd, &ps);
-                    OnPaint(hdc, &ps);
-                    ::EndPaint(hwnd, &ps);
-                } else {
-                    HDC hdc = ::GetDC(hwnd);
-                    OnPaint(hdc, nullptr);
-                    ::ReleaseDC(hwnd, hdc);
-                }
-            }
-            break;
-        }
         case WM_SIZE: {
             SIZE size = {LOWORD(lparam), HIWORD(lparam)};
             OnSize(msg, static_cast<UINT>(wparam), size);
@@ -296,6 +484,7 @@ LRESULT Wnd::WindowProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
         }
     }
 
+    // Now hand all messages to the default procedure.
     return FinalWindowProc(msg, wparam, lparam);
 }
 
