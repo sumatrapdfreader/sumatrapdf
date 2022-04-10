@@ -4293,6 +4293,7 @@ struct CommandPaletteWindow {
     CommandPaletteWindow() = default;
     ~CommandPaletteWindow();
 
+    VecStr allStrings;
     Window* mainWindow = nullptr;
     LayoutBase* mainLayout = nullptr;
 
@@ -4310,11 +4311,12 @@ CommandPaletteWindow::~CommandPaletteWindow() {
 static void CommandPaletteWindowCloseHandler(CommandPaletteWindow* win, WindowCloseEvent* ev) {
     CrashIf(win->mainWindow != ev->w);
     delete win;
+    gCommandPaletteWindow = nullptr;
 }
 
+/*
 static void ComnandPaleteQueryChanged(CommandPaletteWindow* win, EditTextChangedEvent* ev) {
     ev->didHandle = true;
-    /*
     SetContents(ew->annot, ev->text);
     EnableSaveIfAnnotationsChanged(ew);
 
@@ -4335,8 +4337,8 @@ static void ComnandPaleteQueryChanged(CommandPaletteWindow* win, EditTextChanged
         }
         gWindowInfoRerenderTimer = 0;
     });
-*/
 }
+*/
 
 static void CommandPaletteSelectionChanged(CommandPaletteWindow* win, ListBoxSelectionChangedEvent* ev) {
     int itemNo = ev->idx;
@@ -4354,6 +4356,7 @@ static bool IsCmdInList(i32 cmdId, int n, i32* list) {
 
 static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
 
+// clang-format off
 static i32 gBlacklistCommandsFromPalette[] = {
     CmdNone,
     CmdOpenWithFirst,
@@ -4362,11 +4365,11 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdExitFullScreen, // ?
 
     // managing frequently list in home tab
-    CmdOpenSelectedDocument, 
+    CmdOpenSelectedDocument,
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
 
-    CmdExpandAll, // TODO: figure the proper context for it
+    CmdExpandAll,   // TODO: figure the proper context for it
     CmdCollapseAll, // TODO: figure the proper context for it
     CmdMoveFrameFocus,
 
@@ -4397,6 +4400,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdFavoriteHide,
     CmdToggleFullscreen,
 };
+// clang-format on
 
 struct CommandPaletteBuildCtx {
     bool isDocLoaded = false;
@@ -4428,7 +4432,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     return true;
 }
 
-static void AddOpenedFiles(ListBoxModelStrings* m, WindowInfo* win) {
+static void AddOpenedFiles(VecStr& strings, WindowInfo* win) {
     for (TabInfo* tab : win->tabs) {
         if (!tab->IsDocLoaded()) {
             continue;
@@ -4436,11 +4440,11 @@ static void AddOpenedFiles(ListBoxModelStrings* m, WindowInfo* win) {
         auto path = tab->filePath.Get();
         auto s = ToUtf8Temp(path);
         // avoid adding the same file opened in multiple window
-        m->strings.AppendIfNotExists(s); 
+        strings.AppendIfNotExists(s);
     }
 }
 
-static void CollectPaletteStrings(ListBoxModelStrings* m, WindowInfo* win) {
+static void CollectPaletteStrings(VecStr& strings, WindowInfo* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
     DisplayModel* dm = win->AsFixed();
@@ -4451,28 +4455,89 @@ static void CollectPaletteStrings(ListBoxModelStrings* m, WindowInfo* win) {
 
     // append paths of opened files
     for (WindowInfo* w : gWindows) {
-        AddOpenedFiles(m, w);
+        AddOpenedFiles(strings, w);
     }
     // append paths of files from history, excluding
     // already appended (from opened files)
     for (FileState* fs : *gGlobalPrefs->fileStates) {
-        m->strings.AppendIfNotExists(fs->filePath);
+        strings.AppendIfNotExists(fs->filePath);
     }
 
     i32 cmdId = CmdFirst + 1;
     const char* strs = gCommandDescriptions;
     while (strs) {
         if (AllowCommand(ctx, cmdId)) {
-            m->strings.Append(strs);
+            strings.Append(strs);
         }
         seqstrings::Next(strs);
         cmdId++;
     }
 }
 
-static void CreateCommandPaletteMainLayout(WindowInfo* winInfo, CommandPaletteWindow* win) {
+// filter is one or more words separated by whitespace
+// filter matches if all words match, ignoring the case
+static bool FilterMatches(const char* str, const char* filter) {
+    // empty filter matches all
+    if (!filter || str::EmptyOrWhiteSpaceOnly(filter)) {
+        return true;
+    }
+    VecStr words;
+    char* s = str::DupTemp(filter);
+    char* wordStart = s;
+    bool wasWs = false;
+    while (*s) {
+        if (str::IsWs(*s)) {
+            *s = 0;
+            if (!wasWs) {
+                words.AppendIfNotExists(wordStart);
+                wasWs = true;
+            }
+            wordStart = s + 1;
+        }
+        s++;
+    }
+    if (str::Len(wordStart) > 0) {
+        words.AppendIfNotExists(wordStart);
+    }
+    // all words must be present
+    int nWords = words.Size();
+    for (int i = 0; i < nWords; i++) {
+        auto word = words.at(i);
+        if (!str::ContainsI(str, word.data())) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static void FilterStrings(const VecStr& allStrings, const char* filter, VecStr& matchedOut) {
+    matchedOut.Reset();
+    int n = allStrings.Size();
+    for (int i = 0; i < n; i++) {
+        auto s = allStrings.at(i);
+        if (FilterMatches(s.data(), filter)) {
+            matchedOut.Append(s);
+        }
+    }
+}
+
+static void ComnandPaleteQueryChanged(CommandPaletteWindow* win, EditTextChangedEvent* ev) {
+    ev->didHandle = true;
+    // TODO: would be more efficient to use existing model
+    // and tell listbox to re-render
+    auto filter = ev->text;
     auto m = new ListBoxModelStrings();
-    CollectPaletteStrings(m, winInfo);
+    FilterStrings(win->allStrings, filter.data(), m->strings);
+    delete win->lbModel;
+    win->lbModel = m;
+    win->listBoxResults->SetModel(m);
+    if (m->ItemsCount() > 0) {
+        win->listBoxResults->SetCurrentSelection(0);
+    }
+}
+
+static void CreateCommandPaletteMainLayout(WindowInfo* winInfo, CommandPaletteWindow* win) {
+    CollectPaletteStrings(win->allStrings, winInfo);
 
     HWND parent = win->mainWindow->hwnd;
     auto vbox = new VBox();
@@ -4498,8 +4563,12 @@ static void CreateCommandPaletteMainLayout(WindowInfo* winInfo, CommandPaletteWi
         w->SetInsetsPt(4, 0);
         bool ok = w->Create(parent);
         CrashIf(!ok);
+
+        auto m = new ListBoxModelStrings();
+        FilterStrings(win->allStrings, nullptr, m->strings);
         win->lbModel = m;
         w->SetModel(win->lbModel);
+
         w->onSelectionChanged = [win](auto&& PH1) {
             return CommandPaletteSelectionChanged(win, std::forward<decltype(PH1)>(PH1));
         };
