@@ -4345,7 +4345,16 @@ static void CommandPaletteSelectionChanged(CommandPaletteWindow* win, ListBoxSel
 
 static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
 
+static void CollectPaletteStrings(ListBoxModelStrings* m) {
+    for (FileState* fs : *gGlobalPrefs->fileStates) {
+        m->strings.Append(fs->filePath);
+    }
+}
+
 static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
+    auto m = new ListBoxModelStrings();
+    CollectPaletteStrings(m);
+
     HWND parent = win->mainWindow->hwnd;
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
@@ -4370,7 +4379,7 @@ static void CreateCommandPaletteMainLayout(CommandPaletteWindow* win) {
         w->SetInsetsPt(4, 0);
         bool ok = w->Create(parent);
         CrashIf(!ok);
-        win->lbModel = new ListBoxModelStrings();
+        win->lbModel = m;
         w->SetModel(win->lbModel);
         w->onSelectionChanged = [win](auto&& PH1) {
             return CommandPaletteSelectionChanged(win, std::forward<decltype(PH1)>(PH1));
@@ -4390,6 +4399,7 @@ static void RunCommandPallette(WindowInfo* winInfo) {
         BringWindowToTop(hwnd);
         return;
     }
+
     win = new CommandPaletteWindow();
     auto mainWindow = new Window();
     HMODULE h = GetModuleHandleW(nullptr);
@@ -4399,10 +4409,6 @@ static void RunCommandPallette(WindowInfo* winInfo) {
     mainWindow->isDialog = true;
     mainWindow->backgroundColor = MkGray(0xee);
     mainWindow->SetText(_TR("Command Palette"));
-    // PositionCloseTo(w, args->hwndRelatedTo);
-    // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
-    // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
-    // w->initialSize = {winSize.cx, winSize.cy};
     bool ok = mainWindow->Create(0);
     CrashIf(!ok);
     mainWindow->onClose = [win](auto&& PH1) {
@@ -4419,10 +4425,11 @@ static void RunCommandPallette(WindowInfo* winInfo) {
     HWND hwnd = winInfo->hwndFrame;
     auto rc = ClientRect(hwnd);
     if (rc.dy > 0) {
-        minDy = rc.dy;
+        minDy = rc.dy - 72;
     }
     LayoutAndSizeToContent(win->mainLayout, 520, minDy, mainWindow->hwnd);
 
+    HwndPositionInCenterOf(mainWindow->hwnd, hwnd);
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     mainWindow->SetIsVisible(true);
