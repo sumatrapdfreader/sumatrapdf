@@ -402,3 +402,21 @@ u32 MurmurHashWStrI(const WCHAR* str) {
     }
     return MurmurHash2(data, len);
 }
+
+// variation of MurmurHash2 which deals with strings that are
+// mostly ASCII and should be treated case independently
+u32 MurmurHashStrI(const char* str) {
+    TempStr scopy = str::DupTemp(str);
+    size_t len = scopy.size();
+    char* dst = scopy.Get();
+    char c;
+    for (size_t i = 0; i < len; i++) {
+        c = *str++;
+        if ('A' <= c && c <= 'Z') {
+            *dst++ = (c + 'a' - 'A');
+            continue;
+        }
+        *dst++ = c;
+    }
+    return MurmurHash2(scopy.Get(), len);
+}
