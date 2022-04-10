@@ -4783,7 +4783,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdProperties:
-            OnMenuProperties(win);
+            ShowPropertiesWindow(win);
             break;
 
         case CmdMoveFrameFocus:

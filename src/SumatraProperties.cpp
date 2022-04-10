@@ -24,6 +24,7 @@
 #include "SumatraAbout.h"
 #include "SumatraProperties.h"
 #include "Translations.h"
+#include "SumatraConfig.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -32,10 +33,13 @@
 
 void ShowProperties(HWND parent, Controller* ctrl, bool extended);
 
-#define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
-#define PROPERTIES_RECT_PADDING 8
-#define PROPERTIES_TXT_DY_PADDING 2
-#define PROPERTIES_WIN_TITLE _TR("Document Properties")
+constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";
+
+#define kLeftRightPaddingDx 8
+#define kRectPadding 8
+#define kTxtPaddingDy 2
+
+LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 struct PropertyEl {
     PropertyEl(const WCHAR* leftTxt, WCHAR* rightTxt, bool isPath = false) : leftTxt(leftTxt), isPath(isPath) {
@@ -89,7 +93,7 @@ struct PropertiesLayout {
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
 
-static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
+PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
     for (PropertiesLayout* pl : gPropertiesWindows) {
         if (pl->hwnd == hwnd) {
             return pl;
@@ -410,20 +414,20 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     }
 
     CrashIf(!(lineCount > 0 && textDy > 0));
-    int totalDx = leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX + rightMaxDx;
+    int totalDx = leftMaxDx + kLeftRightPaddingDx + rightMaxDx;
 
     int totalDy = 4;
-    totalDy += textDy + (lineCount - 1) * PROPERTIES_TXT_DY_PADDING;
+    totalDy += textDy + (lineCount - 1) * kTxtPaddingDy;
     totalDy += 4;
 
-    int offset = PROPERTIES_RECT_PADDING;
+    int offset = kRectPadding;
 
     int currY = 0;
     for (PropertyEl* el : layoutData->props) {
         el->leftPos = Rect(offset, offset + currY, leftMaxDx, el->leftPos.dy);
-        el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
+        el->rightPos.x = offset + leftMaxDx + kLeftRightPaddingDx;
         el->rightPos.y = offset + currY;
-        currY += el->rightPos.dy + PROPERTIES_TXT_DY_PADDING;
+        currY += el->rightPos.dy + kTxtPaddingDy;
     }
 
     SelectObject(hdc, origFont);
@@ -478,12 +482,24 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
     CopyTextToClipboard(lines.LendData());
 }
 
+static bool gDidRegister = false;
 static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, bool extended) {
+    HMODULE h = GetModuleHandleW(nullptr);
+    if (!gDidRegister) {
+        WNDCLASSEX wcex = {};
+        FillWndClassEx(wcex, kPropertiesWinClassName, WndProcProperties);
+        WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+        wcex.hIcon = LoadIconW(h, iconName);
+        CrashIf(!wcex.hIcon);
+        ATOM atom = RegisterClassEx(&wcex);
+        CrashIf(!atom);
+        gDidRegister = true;
+    }
+
     CrashIf(layoutData->hwnd);
-    auto h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    auto clsName = PROPERTIES_CLASS_NAME;
-    auto title = PROPERTIES_WIN_TITLE;
+    auto clsName = kPropertiesWinClassName;
+    auto title = _TR("Document Properties");
     HWND hwnd = CreateWindowW(clsName, title, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                               nullptr, nullptr, h, nullptr);
     if (!hwnd) {
@@ -641,7 +657,7 @@ void ShowProperties(HWND parent, Controller* ctrl, bool extended) {
     }
 }
 
-void OnMenuProperties(WindowInfo* win) {
+void ShowPropertiesWindow(WindowInfo* win) {
     ShowProperties(win->hwndFrame, win->ctrl, false);
 }
 
@@ -677,8 +693,8 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     for (PropertyEl* el : layoutData->props) {
         const WCHAR* txt = el->rightTxt;
         Rect rc = el->rightPos;
-        if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING) {
-            rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
+        if (rc.x + rc.dx > rcClient.x + rcClient.dx - kRectPadding) {
+            rc.dx = rcClient.x + rcClient.dx - kRectPadding - rc.x;
         }
         rTmp = ToRECT(rc);
         uint format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);

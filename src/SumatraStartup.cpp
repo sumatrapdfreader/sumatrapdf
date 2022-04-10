@@ -193,12 +193,6 @@ static bool RegisterWinClass() {
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
 
-    FillWndClassEx(wcex, PROPERTIES_CLASS_NAME, WndProcProperties);
-    wcex.hIcon = LoadIconW(h, iconName);
-    CrashIf(!wcex.hIcon);
-    atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
-
     RegisterCaptionWndClass();
     return true;
 }
@@ -509,12 +503,18 @@ static int RunMessageLoop() {
     MSG msg{nullptr};
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
+        bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
+                         (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
+
         // dispatch the accelerator but only in frame / canvas
         // this prevents translating accelerator in e.g. edit control
         HWND hwnd = msg.hwnd;
         WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-        if (win && (hwnd == win->hwndFrame || hwnd == win->hwndCanvas) &&
+        if (doAccels && win && (hwnd == win->hwndFrame || hwnd == win->hwndCanvas) &&
             TranslateAccelerator(win->hwndFrame, *accTable, &msg)) {
+            continue;
+        }
+        if (doAccels && FindPropertyWindowByHwnd(hwnd) && TranslateAccelerator(hwnd, *accTable, &msg)) {
             continue;
         }
 
