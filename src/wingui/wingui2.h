@@ -65,7 +65,7 @@ struct Wnd : public ILayout {
     void Subclass();
     // void UnSubclass();
 
-    // Message handlers that can be
+    // Message handlers that can be over-written
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
     virtual void OnAttach();

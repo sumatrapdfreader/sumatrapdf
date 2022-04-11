@@ -42,6 +42,7 @@ struct CommandPaletteWnd : Wnd {
 
     void OnDestroy() override;
     bool PreTranslateMessage(MSG& msg) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     bool Create(WindowInfo* win);
     void QueryChanged();
@@ -223,6 +224,19 @@ static void FilterStrings(const VecStr& allStrings, const char* filter, VecStr& 
             matchedOut.Append(s);
         }
     }
+}
+
+LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    switch (msg) {
+        case WM_ACTIVATE:
+            if (wparam == WA_INACTIVE) {
+                Close();
+                return 0;
+            }
+            break;
+    }
+
+    return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
 bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
