@@ -104,8 +104,9 @@ struct CommandPaletteWindow : Wnd {
 };
 
 void TestWingui() {
-    auto w = new wg::Wnd();
-    w->Create(nullptr);
+    auto w = new Wnd();
+    CreateCustomArgs args;
+    w->CreateCustom(args);
     auto res = RunMessageLoop(nullptr, w->hwnd);
     delete w;
     return;

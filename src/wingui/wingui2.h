@@ -7,13 +7,34 @@ LRESULT TryReflectNotify(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
+struct CreateControlArgs {
+    HWND parent = nullptr;
+    const WCHAR* className = nullptr;
+    DWORD style = 0;
+    DWORD exStyle = 0;
+    Rect pos = {};
+    HMENU ctrlId = 0;
+};
+
+struct CreateCustomArgs {
+    HWND parent = nullptr;
+    const WCHAR* className = nullptr;
+    const WCHAR* title = nullptr;
+    DWORD style = 0;
+    DWORD exStyle = 0;
+    Rect pos = {};
+    HMENU menu = nullptr;
+    LPVOID* createParams;
+};
+
 struct Wnd : public ILayout {
     Wnd();
     Wnd(HWND hwnd);
     virtual ~Wnd();
     virtual void Destroy();
 
-    virtual HWND Create(HWND parent);
+    HWND CreateCustom(const CreateCustomArgs&);
+    HWND CreateControl(const CreateControlArgs&);
 
     virtual Size GetIdealSize();
 
@@ -30,11 +51,6 @@ struct Wnd : public ILayout {
     HWND CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD style, int x, int y, int width,
                   int height, HWND parent, HMENU idOrMenu, LPVOID lparam = NULL);
 
-    virtual void PreCreate(CREATESTRUCT& cs);
-
-    // we use wndClassName instead
-    // virtual void PreRegisterClass(WNDCLASSEX& wc);
-
     virtual bool PreTranslateMessage(MSG& msg);
 
     void Attach(HWND hwnd);
@@ -46,8 +62,6 @@ struct Wnd : public ILayout {
     void Subclass(HWND hwnd);
     // void UnSubclass();
     //  void SetDefaultFont();
-
-    bool RegisterClass(WNDCLASSEX& wc) const;
 
     // Message handlers that can be
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -104,9 +118,6 @@ struct Wnd : public ILayout {
     // HWND parent = nullptr;
     HWND hwnd = nullptr;
     HINSTANCE instance = nullptr;
-
-    // set this for controls in the constructor
-    const WCHAR* wndClassName = nullptr;
 };
 
 bool PreTranslateMessage(MSG& msg);
@@ -124,8 +135,7 @@ struct Button : Wnd {
     Button();
     ~Button() override;
 
-    void PreCreate(CREATESTRUCT& cs) override;
-    HWND Create(HWND parent) override;
+    HWND Create(HWND parent);
 
     Size GetIdealSize() override;
 
@@ -141,27 +151,30 @@ Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicke
 namespace wg {
 using TextChangedHandler = std::function<void()>;
 
+struct EditCreateArgs {
+    HWND parent = nullptr;
+    bool isMultiLine = false;
+    bool withBorder = false;
+    const char* cueText = nullptr;
+};
+
 struct Edit : Wnd {
-    str::Str cueText;
     TextChangedHandler onTextChanged = nullptr;
 
     // set before Create()
-    bool isMultiLine = false;
     int idealSizeLines = 1;
     int maxDx = 0;
-    bool hasBorder = false;
 
     Edit();
     ~Edit();
 
-    void PreCreate(CREATESTRUCT& cs) override;
-    HWND Create(HWND parent) override;
+    HWND Create(const EditCreateArgs&);
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     Size GetIdealSize() override;
 
     void SetSelection(int start, int end);
-    bool SetCueText(std::string_view);
+    bool HasBorder();
 };
 } // namespace wg
 
@@ -181,8 +194,8 @@ struct ListBox : Wnd {
     ListBox();
     virtual ~ListBox();
 
-    void PreCreate(CREATESTRUCT& cs) override;
-    HWND Create(HWND parent) override;
+    HWND Create(HWND parent);
+
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     int GetItemHeight(int);

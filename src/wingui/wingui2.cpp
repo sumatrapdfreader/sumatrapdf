@@ -106,29 +106,7 @@ LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
 
 Wnd::Wnd() {
     instance = GetModuleHandleW(nullptr);
-    gWindowBeingCreated = nullptr;
     kind = kindWnd;
-
-    // Create default window class
-    WNDCLASSEX wc = {};
-    if (!::GetClassInfoExW(instance, kDefaultClassName, &wc)) {
-        wc.cbSize = sizeof(wc);
-        wc.style = CS_DBLCLKS;
-        wc.lpfnWndProc = StaticWindowProc;
-        wc.hInstance = instance;
-        wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
-        wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
-        wc.lpszClassName = kDefaultClassName;
-        ::RegisterClassEx(&wc);
-    }
-}
-
-Wnd::Wnd(HWND hwnd) {
-    instance = GetModuleHandleW(nullptr);
-    gWindowBeingCreated = nullptr;
-    kind = kindWnd;
-
-    this->hwnd = hwnd;
 }
 
 Wnd::~Wnd() {
@@ -670,62 +648,8 @@ LRESULT Wnd::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 }
 
-// Called by CWnd::Create to set some window creation parameters.
-void Wnd::PreCreate(CREATESTRUCT& cs) {
-    // Override this function to set the CREATESTRUCT values prior to window creation.
-    // Here we set the initial values for the following:
-    //  window styles (WS_VISABLE, WS_CHILD, WS_WS_MAXIMIZEBOX etc.)
-    //  window extended styles
-    //  window position
-    //  window menu
-    //  window class name
-    //  window name (caption)
-}
-
-static void WndRegisterClass(WNDCLASS& wc) {
-    WNDCLASS wcTest = {};
-    if (::GetClassInfo(GetInstance(), wc.lpszClassName, &wcTest)) {
-        wc = wcTest;
-        return;
-    }
-    wc.hInstance = GetInstance();
-    wc.lpfnWndProc = StaticWindowProc;
-    bool ok = ::RegisterClass(&wc);
-    CrashIf(!ok);
-}
-
-/*
-void Wnd::PreRegisterClass(WNDCLASS& wc) {
-    window_class.style = wc.style;
-    window_class.lpfnWndProc = StaticWindowProc;
-    window_class.cbClsExtra = wc.cbClsExtra;
-    window_class.cbWndExtra = wc.cbWndExtra;
-    window_class.hInstance = instance;
-    window_class.hIcon = wc.hIcon;
-    window_class.hCursor = wc.hCursor;
-    window_class.hbrBackground = wc.hbrBackground;
-    window_class.lpszMenuName = wc.lpszMenuName;
-    window_class.lpszClassName = wc.lpszClassName;
-}
-*/
-
 bool Wnd::PreTranslateMessage(MSG& msg) {
     return false;
-}
-
-bool Wnd::RegisterClass(WNDCLASSEX& wc) const {
-    WNDCLASSEX wc_existing = {0};
-    if (::GetClassInfoEx(instance, wc.lpszClassName, &wc_existing)) {
-        wc = wc_existing;
-        return TRUE;
-    }
-
-    wc.cbSize = sizeof(wc);
-    wc.hInstance = instance;
-    wc.lpfnWndProc = StaticWindowProc;
-
-    auto res = ::RegisterClassEx(&wc);
-    return ToBool(res);
 }
 
 void Wnd::Attach(HWND hwnd) {
@@ -762,90 +686,100 @@ void Wnd::Cleanup() {
     prevWindowProc = nullptr;
 }
 
-HWND Wnd::Create(HWND parent) {
-    WNDCLASS wc = {};
-    CREATESTRUCT cs = {};
-
-    // PreRegisterClass(wc);
-    wc.lpszClassName = wndClassName;
-    if (wc.lpszClassName) {
-        WndRegisterClass(wc);
-        cs.lpszClass = wc.lpszClassName;
-    } else {
-        cs.lpszClass = kDefaultClassName;
+static void WndRegisterClass(const WCHAR* className) {
+    WNDCLASSEX wc = {};
+    if (::GetClassInfoExW(GetInstance(), className, &wc)) {
+        return;
     }
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_DBLCLKS;
+    wc.hInstance = GetInstance();
+    wc.lpfnWndProc = StaticWindowProc;
+    wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
+    ATOM atom = ::RegisterClassExW(&wc);
+    CrashIf(!atom);
+}
 
-    // Set a reasonable default window style.
-    DWORD dwOverlappedStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-    cs.style = WS_VISIBLE;
-    if (parent) {
-        cs.style |= WS_CHILD;
-    } else {
-        cs.style |= dwOverlappedStyle;
-    }
+HWND Wnd::CreateControl(const CreateControlArgs& args) {
+    CrashIf(!args.parent);
+    CrashIf(!args.className);
 
-    // Set a reasonable default window position
-    if (0 == parent) {
-        cs.x = CW_USEDEFAULT;
-        cs.cx = CW_USEDEFAULT;
-        cs.y = CW_USEDEFAULT;
-        cs.cy = CW_USEDEFAULT;
-    }
-
-    // Allow the CREATESTRUCT parameters to be modified.
-    PreCreate(cs);
-
-    DWORD style = cs.style & ~WS_VISIBLE;
-
-    CreateEx(cs.dwExStyle, cs.lpszClass, cs.lpszName, style, cs.x, cs.y, cs.cx, cs.cy, parent, cs.hMenu,
-             cs.lpCreateParams);
-    CrashIf(!::IsWindow(hwnd));
-
-    if (cs.style & WS_VISIBLE) {
-        if (cs.style & WS_MAXIMIZE)
-            ::ShowWindow(hwnd, SW_MAXIMIZE);
-        else if (cs.style & WS_MINIMIZE)
-            ::ShowWindow(hwnd, SW_MINIMIZE);
-        else
-            ::ShowWindow(hwnd, SW_SHOWNORMAL);
-    }
+    DWORD exStyle = args.exStyle;
+    const WCHAR* className = args.className;
+    int x = args.pos.x;
+    int y = args.pos.y;
+    int dx = args.pos.dx;
+    int dy = args.pos.dy;
+    HWND parent = args.parent;
+    HMENU id = args.ctrlId;
+    HINSTANCE inst = GetInstance();
+    LPVOID* createParams = 0;
+    hwnd = ::CreateWindowExW(exStyle, className, L"", args.style, x, y, dx, dy, parent, id, inst, createParams);
+    CrashIf(!hwnd);
+    Subclass(hwnd);
+    OnAttach();
     return hwnd;
 }
 
-// Creates the window by specifying each parameter. The lpszClassName must
-//  be a predefined class name or registered with RegisterClass. A failure
-//  to create a window throws an exception.
-HWND Wnd::CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD style, int x, int y, int width,
-                   int height, HWND parent, HMENU idOrMenu, LPVOID lparam /*= NULL*/) {
-    CrashIf(hwnd);
-    CrashIf(IsWindow(hwnd)); // Only one window per CWnd instance allowed.
+HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
+    {
+        const WCHAR* clsName = args.className;
+        if (clsName == nullptr) {
+            clsName = kDefaultClassName;
+        }
+        WndRegisterClass(clsName);
+    }
+    HWND parent = args.parent;
 
-    // Ensure a window class is registered.
-    if (!className || !*className) {
-        className = kDefaultClassName;
+    // TODO: use args.style if != 0
+
+    // Set a reasonable default window style.
+    DWORD dwOverlappedStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+    DWORD style = WS_VISIBLE;
+    if (parent) {
+        style |= WS_CHILD;
+    } else {
+        style |= dwOverlappedStyle;
     }
 
-    WNDCLASS wc = {};
-    wc.lpszClassName = (WCHAR*)className;
-    wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
-    wc.hCursor = ::LoadCursor(0, IDC_ARROW);
+    int x = args.pos.x;
+    int y = args.pos.y;
+    int dx = args.pos.dx;
+    int dy = args.pos.dy;
+    if (!args.parent && args.pos.IsEmpty()) {
+        x = CW_USEDEFAULT;
+        y = CW_USEDEFAULT;
+        dx = CW_USEDEFAULT;
+        dy = CW_USEDEFAULT;
+    }
 
-    // Register the window class (if not already registered).
-    WndRegisterClass(wc);
+    DWORD tmpStyle = style & ~WS_VISIBLE;
+    DWORD exStyle = args.exStyle;
+    const WCHAR* className = args.className;
+    const WCHAR* title = args.title;
+    HMENU m = (HMENU)args.menu;
+    HINSTANCE inst = GetInstance();
+    LPVOID* createParams = args.createParams;
 
+    // associate hwnd with this window in WM_CREATE
+    // TODO: send this as createParams instead?
     gWindowBeingCreated = this;
-    // Create window
-    hwnd = ::CreateWindowEx(exStyle, className, windowName, style, x, y, width, height, parent, idOrMenu, GetInstance(),
-                            lparam);
-
+    HWND hwndTmp =
+        ::CreateWindowExW(exStyle, className, title, args.style, x, y, dx, dy, parent, m, inst, createParams);
     gWindowBeingCreated = nullptr;
-    CrashIf(!hwnd);
+    CrashIf(!hwndTmp);
+    // hwnd should be assigned in WM_CREATE
+    CrashIf(hwndTmp != hwnd);
+    CrashIf(this != WindowMapGetWindow(hwndTmp));
 
-    if (!str::Eq(className, kDefaultClassName)) {
-        // Automatically subclass predefined window class types.
-        Subclass(hwnd);
-        // Override this to perform tasks after the window is attached.
-        OnAttach();
+    if (style & WS_VISIBLE) {
+        if (style & WS_MAXIMIZE)
+            ::ShowWindow(hwnd, SW_MAXIMIZE);
+        else if (style & WS_MINIMIZE)
+            ::ShowWindow(hwnd, SW_MINIMIZE);
+        else
+            ::ShowWindow(hwnd, SW_SHOWNORMAL);
     }
     return hwnd;
 }
@@ -925,24 +859,23 @@ LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 1;
 }
 
-void Button::PreCreate(CREATESTRUCT& cs) {
-    LONG style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
-    if (isDefault) {
-        style |= BS_DEFPUSHBUTTON;
-    } else {
-        style |= BS_PUSHBUTTON;
-    }
-    cs.style = style;
-}
-
 HWND Button::Create(HWND parent) {
-    HWND ret = Wnd::Create(parent);
-    CrashIf(!ret);
+    CreateControlArgs args;
+    args.parent = parent;
+    args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    if (isDefault) {
+        args.style |= BS_DEFPUSHBUTTON;
+    } else {
+        args.style |= BS_PUSHBUTTON;
+    }
+
+    Wnd::CreateControl(args);
+    CrashIf(!hwnd);
 
     auto size = GetIdealSize();
     RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);
-    return ret;
+    return hwnd;
 }
 
 Size Button::GetIdealSize() {
@@ -991,42 +924,42 @@ Edit::~Edit() {
     // DeleteObject(bgBrush);
 }
 
-bool Edit::SetCueText(std::string_view s) {
-    cueText.Set(s);
-    return EditSetCueText(hwnd, cueText.AsView());
-}
-
 void Edit::SetSelection(int start, int end) {
     Edit_SetSel(hwnd, start, end);
 }
 
-void Edit::PreCreate(CREATESTRUCT& cs) {
-    // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
-    LONG style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
-    style |= WS_BORDER;
-    hasBorder = bit::IsMaskSet<LONG>(style, WS_BORDER);
-    if (isMultiLine) {
-        style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
-    } else {
-        // ES_AUTOHSCROLL disable wrapping in multi-line setup
-        style |= ES_AUTOHSCROLL;
-    }
-    cs.style = style;
-}
-
-HWND Edit::Create(HWND parent) {
+HWND Edit::Create(const EditCreateArgs& editArgs) {
     // Note: has to remember this here because when I GetWindowStyle() later on,
     // WS_BORDER is not set, which is a mystery, because it is being drawn.
     // also, WS_BORDER seems to be painted in client area
 
-    auto hwnd = Wnd::Create(parent);
+    // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
+    CreateControlArgs args;
+    args.parent = editArgs.parent;
+    args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
+    if (editArgs.withBorder) {
+        args.style |= WS_BORDER;
+    }
+    if (editArgs.isMultiLine) {
+        args.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
+    } else {
+        // ES_AUTOHSCROLL disable wrapping in multi-line setup
+        args.style |= ES_AUTOHSCROLL;
+    }
+    Wnd::CreateControl(args);
     CrashIf(!hwnd);
     if (!hwnd) {
         return nullptr;
     }
-
-    EditSetCueText(hwnd, cueText.AsView());
+    if (editArgs.cueText) {
+        EditSetCueText(hwnd, editArgs.cueText);
+    }
     return hwnd;
+}
+
+bool Edit::HasBorder() {
+    DWORD style = GetWindowStyle(hwnd);
+    return bit::IsMaskSet<DWORD>(style, WS_BORDER);
 }
 
 Size Edit::GetIdealSize() {
@@ -1056,7 +989,7 @@ Size Edit::GetIdealSize() {
     int rm = (int)HIWORD(margins);
     dx += lm + rm;
 
-    if (this->hasBorder) {
+    if (HasBorder()) {
         dx += DpiScale(hwnd, 4);
         dy += DpiScale(hwnd, 4);
     }
@@ -1099,26 +1032,24 @@ ListBox::~ListBox() {
     delete this->model;
 }
 
-void ListBox::PreCreate(CREATESTRUCT& cs) {
-    // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
-    LONG style = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
-    style |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
-    cs.style = style;
-}
-
 HWND ListBox::Create(HWND parent) {
     idealSize = {DpiScale(parent, 120), DpiScale(parent, 32)};
-    HWND ret = Wnd::Create(parent);
-    CrashIf(!ret);
 
-    // TODO: update ideal size based on the size of the model?
-    if (!ret) {
+    CreateControlArgs args;
+    args.parent = parent;
+    // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
+    args.style = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
+    args.style |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    Wnd::CreateControl(args);
+    CrashIf(!hwnd);
+    if (!hwnd) {
         return nullptr;
     }
+    // TODO: update ideal size based on the size of the model?
     if (model != nullptr) {
         FillWithItems(this->hwnd, model);
     }
-    return ret;
+    return hwnd;
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/lb-getitemheight
