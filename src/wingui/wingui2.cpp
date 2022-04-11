@@ -440,11 +440,15 @@ LRESULT Wnd::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
                     break;
             }
     }
+    if (!wnd) {
+        return 0;
+    }
 
     Wnd* pWnd = WindowMapGetWindow(wnd);
-
-    if (pWnd != NULL)
-        return pWnd->OnMessageReflect(msg, wparam, lparam);
+    if (pWnd != nullptr) {
+        auto res = pWnd->OnMessageReflect(msg, wparam, lparam);
+        return res;
+    }
 
     return 0;
 }
@@ -481,15 +485,19 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_COMMAND: {
             // Reflect this message if it's from a control.
             Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
-            if (pWnd != NULL)
-                result = pWnd->OnCommand(wparam, lparam);
+            bool didHandle = false;
+            if (pWnd != nullptr) {
+                didHandle = pWnd->OnCommand(wparam, lparam);
+            }
 
             // Handle user commands.
-            if (0 == result)
-                result = OnCommand(wparam, lparam);
+            if (!didHandle) {
+                didHandle = OnCommand(wparam, lparam);
+            }
 
-            if (0 != result)
+            if (didHandle) {
                 return 0;
+            }
         } break; // Note: Some MDI commands require default processing.
 
         case WM_CREATE: {
@@ -516,36 +524,45 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             }
 
             // Handle user notifications
-            if (result == 0)
+            if (result == 0) {
                 result = OnNotify((int)wparam, (NMHDR*)lparam);
-            if (result != 0)
+            }
+            if (result != 0) {
                 return result;
+            }
             break;
         }
 
         case WM_PAINT: {
-            if (!prevWindowProc) {
-                if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
-                    PAINTSTRUCT ps;
-                    HDC hdc = ::BeginPaint(hwnd, &ps);
-                    OnPaint(hdc, &ps);
-                    ::EndPaint(hwnd, &ps);
-                } else {
-                    HDC hdc = ::GetDC(hwnd);
-                    OnPaint(hdc, nullptr);
-                    ::ReleaseDC(hwnd, hdc);
-                }
+            if (prevWindowProc) {
+                // Allow window controls to do their default drawing.
+                return FinalWindowProc(msg, wparam, lparam);
             }
+
+            if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
+                PAINTSTRUCT ps;
+                HDC hdc = ::BeginPaint(hwnd, &ps);
+                OnPaint(hdc, &ps);
+                ::EndPaint(hwnd, &ps);
+            } else {
+                HDC hdc = ::GetDC(hwnd);
+                OnPaint(hdc, nullptr);
+                ::ReleaseDC(hwnd, hdc);
+            }
+            // No more drawing required
             return 0;
         }
 
         case WM_ERASEBKGND: {
+            return true;
+            /*
             HDC dc = (HDC)(wparam);
             BOOL preventErasure;
 
             preventErasure = OnEraseBkgnd(dc);
             if (preventErasure)
                 return TRUE;
+            */
         } break;
 
         // A set of messages to be reflected back to the control that generated them.
@@ -688,12 +705,17 @@ void Wnd::Cleanup() {
 
 static void WndRegisterClass(const WCHAR* className) {
     WNDCLASSEX wc = {};
-    if (::GetClassInfoExW(GetInstance(), className, &wc)) {
+    wc.cbSize = sizeof(wc);
+    HINSTANCE inst = GetInstance();
+    BOOL ok = ::GetClassInfoExW(inst, className, &wc);
+    if (ok) {
         return;
     }
+    wc = {};
     wc.cbSize = sizeof(wc);
     wc.style = CS_DBLCLKS;
-    wc.hInstance = GetInstance();
+    wc.hInstance = inst;
+    wc.lpszClassName = className;
     wc.lpfnWndProc = StaticWindowProc;
     wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
@@ -705,6 +727,8 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     CrashIf(!args.parent);
     CrashIf(!args.className);
 
+    DWORD style = args.style;
+    style |= WS_CHILD;
     DWORD exStyle = args.exStyle;
     const WCHAR* className = args.className;
     int x = args.pos.x;
@@ -715,32 +739,40 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     HMENU id = args.ctrlId;
     HINSTANCE inst = GetInstance();
     LPVOID* createParams = 0;
-    hwnd = ::CreateWindowExW(exStyle, className, L"", args.style, x, y, dx, dy, parent, id, inst, createParams);
+    hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
     CrashIf(!hwnd);
     Subclass(hwnd);
     OnAttach();
+    HFONT f = args.font;
+    if (!f) {
+        f = GetDefaultGuiFont();
+    }
+    HwndSetFont(hwnd, f);
     return hwnd;
 }
 
 HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
-    {
-        const WCHAR* clsName = args.className;
-        if (clsName == nullptr) {
-            clsName = kDefaultClassName;
-        }
-        WndRegisterClass(clsName);
+    const WCHAR* className = args.className;
+    if (className == nullptr) {
+        className = kDefaultClassName;
     }
+    WndRegisterClass(className);
     HWND parent = args.parent;
 
-    // TODO: use args.style if != 0
-
-    // Set a reasonable default window style.
-    DWORD dwOverlappedStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-    DWORD style = WS_VISIBLE;
+    DWORD style = args.style;
+    if (style == 0) {
+        style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+    }
     if (parent) {
         style |= WS_CHILD;
     } else {
-        style |= dwOverlappedStyle;
+        style &= ~WS_CHILD;
+        style |= WS_CLIPCHILDREN;
+    }
+    if (args.visible) {
+        style |= WS_VISIBLE;
+    } else {
+        style &= ~WS_VISIBLE;
     }
 
     int x = args.pos.x;
@@ -756,22 +788,26 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
 
     DWORD tmpStyle = style & ~WS_VISIBLE;
     DWORD exStyle = args.exStyle;
-    const WCHAR* className = args.className;
     const WCHAR* title = args.title;
     HMENU m = (HMENU)args.menu;
     HINSTANCE inst = GetInstance();
-    LPVOID* createParams = args.createParams;
+    LPVOID* createParams = nullptr;
 
-    // associate hwnd with this window in WM_CREATE
-    // TODO: send this as createParams instead?
+    // associate hwnd with this window as soon as possible
+    // in StaticWndProc
     gWindowBeingCreated = this;
-    HWND hwndTmp =
-        ::CreateWindowExW(exStyle, className, title, args.style, x, y, dx, dy, parent, m, inst, createParams);
+    HWND hwndTmp = ::CreateWindowExW(exStyle, className, title, style, x, y, dx, dy, parent, m, inst, createParams);
     gWindowBeingCreated = nullptr;
     CrashIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE
     CrashIf(hwndTmp != hwnd);
     CrashIf(this != WindowMapGetWindow(hwndTmp));
+
+    HFONT f = args.font;
+    if (!f) {
+        f = GetDefaultGuiFont();
+    }
+    HwndSetFont(hwnd, f);
 
     if (style & WS_VISIBLE) {
         if (style & WS_MAXIMIZE)
@@ -782,6 +818,12 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
             ::ShowWindow(hwnd, SW_SHOWNORMAL);
     }
     return hwnd;
+}
+
+// if only top given, set them all to top
+// if top, right given, set bottom to top and left to right
+void Wnd::SetInsetsPt(int top, int right, int bottom, int left) {
+    insets = DpiScaledInsets(hwnd, top, right, bottom, left);
 }
 
 void Wnd::Subclass(HWND hwnd) {
@@ -839,28 +881,30 @@ Kind kindButton = "button";
 
 Button::Button() {
     kind = kindButton;
-    winClass = WC_BUTTONW;
 }
 
 Button::~Button() = default;
 
-LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg != WM_COMMAND) {
-        return 0;
-    }
+bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
-    if (code != BN_CLICKED) {
+    if (code == BN_CLICKED && onClicked) {
+        onClicked();
+        return true;
+    }
+    return false;
+}
+
+LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_CTLCOLORBTN) {
+        // TODO: implement me
         return 0;
     }
-    if (!onClicked) {
-        return 0;
-    }
-    onClicked();
-    return 1;
+    return 0;
 }
 
 HWND Button::Create(HWND parent) {
     CreateControlArgs args;
+    args.className = WC_BUTTONW;
     args.parent = parent;
     args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     if (isDefault) {
@@ -916,7 +960,6 @@ static bool EditSetCueText(HWND hwnd, std::string_view s) {
 }
 
 Edit::Edit() {
-    winClass = WC_EDIT;
     kind = kindEdit;
 }
 
@@ -929,16 +972,16 @@ void Edit::SetSelection(int start, int end) {
 }
 
 HWND Edit::Create(const EditCreateArgs& editArgs) {
-    // Note: has to remember this here because when I GetWindowStyle() later on,
-    // WS_BORDER is not set, which is a mystery, because it is being drawn.
-    // also, WS_BORDER seems to be painted in client area
-
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     CreateControlArgs args;
+    args.className = WC_EDITW;
     args.parent = editArgs.parent;
     args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
     if (editArgs.withBorder) {
-        args.style |= WS_BORDER;
+        args.exStyle = WS_EX_CLIENTEDGE;
+        // Note: when using WS_BORDER, we would need to remember
+        // we have border and use it in Edit::HasBorder
+        // args.style |= WS_BORDER;
     }
     if (editArgs.isMultiLine) {
         args.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
@@ -958,13 +1001,13 @@ HWND Edit::Create(const EditCreateArgs& editArgs) {
 }
 
 bool Edit::HasBorder() {
-    DWORD style = GetWindowStyle(hwnd);
-    return bit::IsMaskSet<DWORD>(style, WS_BORDER);
+    DWORD exStyle = GetWindowExStyle(hwnd);
+    bool res = bit::IsMaskSet<DWORD>(exStyle, WS_EX_CLIENTEDGE);
+    return res;
 }
 
 Size Edit::GetIdealSize() {
-    // TODO: use font on the control
-    HFONT hfont = GetDefaultGuiFont();
+    HFONT hfont = HwndGetFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
     // logf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
     auto txt = win::GetTextTemp(hwnd);
@@ -991,22 +1034,22 @@ Size Edit::GetIdealSize() {
 
     if (HasBorder()) {
         dx += DpiScale(hwnd, 4);
-        dy += DpiScale(hwnd, 4);
+        dy += DpiScale(hwnd, 8);
     }
     // logf("EditCtrl::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
     return {dx, dy};
 }
 
-LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg == WM_COMMAND) {
-        auto code = HIWORD(wparam);
-        if (code == EN_CHANGE && onTextChanged) {
-            onTextChanged();
-            return 1;
-        }
-        return 0;
+bool Edit::OnCommand(WPARAM wparam, LPARAM lparam) {
+    auto code = HIWORD(wparam);
+    if (code == EN_CHANGE && onTextChanged) {
+        onTextChanged();
+        return true;
     }
+    return false;
+}
 
+LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     if (msg == WM_CTLCOLOREDIT) {
         // TOOD: return brush
         return 0;
@@ -1022,7 +1065,6 @@ Kind kindListBox = "listbox";
 
 ListBox::ListBox() {
     kind = kindListBox;
-    winClass = L"LISTBOX";
 #if 0
     ctrlID = 0;
 #endif
@@ -1036,6 +1078,8 @@ HWND ListBox::Create(HWND parent) {
     idealSize = {DpiScale(parent, 120), DpiScale(parent, 32)};
 
     CreateControlArgs args;
+    args.className = L"LISTBOX";
+
     args.parent = parent;
     // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
     args.style = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
@@ -1109,23 +1153,22 @@ void ListBox::SetModel(ListBoxModel* model) {
     // TODO: update ideal size based on the size of the model
 }
 
-LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg == WM_COMMAND) {
-        auto code = HIWORD(wparam);
-
-        // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-selchange
-        if (code == LBN_SELCHANGE && onSelectionChanged) {
-            onSelectionChanged();
-            return 1;
-        }
-        // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-dblclk
-        if (code == LBN_DBLCLK && onDoubleClick) {
-            onDoubleClick();
-            return 1;
-        }
-        return 0;
+bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
+    auto code = HIWORD(wparam);
+    // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-selchange
+    if (code == LBN_SELCHANGE && onSelectionChanged) {
+        onSelectionChanged();
+        return true;
     }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-dblclk
+    if (code == LBN_DBLCLK && onDoubleClick) {
+        onDoubleClick();
+        return true;
+    }
+    return false;
+}
 
+LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorlistbox
     if (msg == WM_CTLCOLORLISTBOX) {
         // TOOD: implement me

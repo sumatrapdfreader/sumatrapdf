@@ -119,8 +119,7 @@ void SetRtl(HWND hwnd, bool isRtl);
 Rect ChildPosWithinParent(HWND);
 
 int GetSizeOfDefaultGuiFont();
-HFONT GetDefaultGuiFont();
-HFONT GetDefaultGuiFont(bool bold, bool italic);
+HFONT GetDefaultGuiFont(bool bold = false, bool italic = false);
 HFONT GetDefaultGuiFontOfSize(int size);
 
 IStream* CreateStreamFromData(ByteSlice);

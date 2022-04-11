@@ -1079,7 +1079,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     }
 
 #if defined(DEBUG)
-    if (false) {
+    if (true) {
         // in TestApp.cpp
         extern void TestWingui();
         TestWingui();

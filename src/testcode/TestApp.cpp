@@ -8,6 +8,8 @@
 #include "wingui/ButtonCtrl.h"
 #include "wingui/wingui2.h"
 
+#include "utils/Log.h"
+
 // in TestTab.cpp
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
@@ -95,18 +97,108 @@ void TestApp(HINSTANCE hInstance) {
 
 using namespace wg;
 
-struct CommandPaletteWindow : Wnd {
-    ~CommandPaletteWindow() {
-        delete btn;
+struct CommandPaletteWnd : Wnd {
+    ~CommandPaletteWnd() override {
+        delete mainLayout;
     }
-    Button* btn;
-    Edit* query;
+    Button* btn = nullptr;
+    Edit* editQuery = nullptr;
+    ListBox *listBoxResults = nullptr;
+
+    LayoutBase* mainLayout = nullptr;
+
+    bool Create();
+
+    void OnDestroy() override;
+    void QueryChanged();
+    void SelectionChanged();
+    void ButtonClicked();
 };
 
+void CommandPaletteWnd::QueryChanged() {
+    logf("query changed\n");
+}
+
+void CommandPaletteWnd::SelectionChanged() {
+    logf("selection changed\n");
+}
+
+void CommandPaletteWnd::ButtonClicked() {
+    logf("button clicked\n");
+}
+
+void CommandPaletteWnd::OnDestroy() {
+    ::PostQuitMessage(0);
+}
+
+bool CommandPaletteWnd::Create() {
+    {
+        CreateCustomArgs args;
+        args.title = L"Command Palette";
+        args.visible = false;
+        CreateCustom(args);
+    }
+    if (!hwnd) {
+        return false;
+    }
+
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    {
+        auto c = new Edit();
+        EditCreateArgs args;
+        args.parent = hwnd;
+        args.isMultiLine = false;
+        args.withBorder = true;
+        args.cueText = "a cue text";
+        HWND ok = c->Create(args);
+        CrashIf(!ok);
+        c->maxDx = 150;
+        c->onTextChanged = std::bind(&CommandPaletteWnd::QueryChanged, this);
+        editQuery = c;
+        vbox->AddChild(c);
+    }
+
+    {
+        auto c = new ListBox();
+        c->idealSizeLines = 32;
+        c->SetInsetsPt(4, 0);
+        auto wnd = c->Create(hwnd);
+        CrashIf(!wnd);
+
+        auto m = new ListBoxModelStrings();
+        m->strings.Append("Hello");
+        m->strings.Append("My friend");
+        c->SetModel(m);
+        c->onSelectionChanged = std::bind(&CommandPaletteWnd::SelectionChanged, this);
+        listBoxResults = c;
+        vbox->AddChild(c, 1);
+    }
+    {
+        auto c = new Button();
+        auto wnd = c->Create(hwnd);
+        CrashIf(!wnd);
+        c->SetText(L"A button");
+        c->onClicked = std::bind(&CommandPaletteWnd::ButtonClicked, this);
+        btn = c;
+        vbox->AddChild(c);
+    }
+
+    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    mainLayout = padding;
+
+    LayoutAndSizeToContent(mainLayout, 520, 720, hwnd);
+    SetIsVisible(true);
+    ::SetFocus(editQuery->hwnd);
+    return true;
+}
+
 void TestWingui() {
-    auto w = new Wnd();
-    CreateCustomArgs args;
-    w->CreateCustom(args);
+    auto w = new CommandPaletteWnd();
+    bool ok = w->Create();
+    CrashIf(!ok);
     auto res = RunMessageLoop(nullptr, w->hwnd);
     delete w;
     return;

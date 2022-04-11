@@ -1150,20 +1150,8 @@ Rect ChildPosWithinParent(HWND hwnd) {
     return rc;
 }
 
-// don't delete the font
-HFONT GetDefaultGuiFont() {
-    if (gDefaultGuiFont) {
-        return gDefaultGuiFont;
-    }
-    NONCLIENTMETRICS ncm{};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    gDefaultGuiFont = CreateFontIndirectW(&ncm.lfMessageFont);
-    return gDefaultGuiFont;
-}
-
 HFONT GetDefaultGuiFontOfSize(int size) {
-    NONCLIENTMETRICS ncm{};
+    NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
@@ -1185,7 +1173,7 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
     if (existing != nullptr) {
         return existing;
     }
-    NONCLIENTMETRICS ncm{0};
+    NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     if (bold) {

@@ -14,6 +14,8 @@ struct CreateControlArgs {
     DWORD exStyle = 0;
     Rect pos = {};
     HMENU ctrlId = 0;
+    bool visible = true;
+    HFONT font = nullptr;
 };
 
 struct CreateCustomArgs {
@@ -24,7 +26,8 @@ struct CreateCustomArgs {
     DWORD exStyle = 0;
     Rect pos = {};
     HMENU menu = nullptr;
-    LPVOID* createParams;
+    bool visible = true;
+    HFONT font = nullptr;
 };
 
 struct Wnd : public ILayout {
@@ -97,9 +100,6 @@ struct Wnd : public ILayout {
     void SetText(const WCHAR*);
 
     Kind kind = nullptr;
-    // either a custom class that we registered or
-    // a win32 control class. Assumed static so not freed
-    const WCHAR* winClass = nullptr;
 
     Insets insets{};
     Size childSize{};
@@ -140,6 +140,7 @@ struct Button : Wnd {
     Size GetIdealSize() override;
 
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
 
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked);
@@ -170,6 +171,7 @@ struct Edit : Wnd {
 
     HWND Create(const EditCreateArgs&);
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 
     Size GetIdealSize() override;
 
@@ -197,6 +199,7 @@ struct ListBox : Wnd {
     HWND Create(HWND parent);
 
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 
     int GetItemHeight(int);
 
