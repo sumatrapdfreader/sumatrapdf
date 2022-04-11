@@ -1,5 +1,6 @@
 #include "test-app.h"
 #include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -107,13 +108,12 @@ struct CommandPaletteWnd : Wnd {
 
     LayoutBase* mainLayout = nullptr;
 
-
     void OnDestroy() override;
     bool PreTranslateMessage(MSG&msg) override;
 
     bool Create();
     void QueryChanged();
-    void SelectionChanged();
+    void ListDoubleClick();
     void ButtonClicked();
 };
 
@@ -126,10 +126,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG&msg) {
         }
 
         if (msg.wParam == VK_RETURN) {
-            int sel = listBoxResults->GetCurrentSelection();
-            if (sel >= 0) {
-                logf("selected an item %d\n", sel);
-            }
+            ListDoubleClick();
             return true;
         }
 
@@ -162,12 +159,16 @@ void CommandPaletteWnd::QueryChanged() {
     logf("query changed\n");
 }
 
-void CommandPaletteWnd::SelectionChanged() {
-    logf("selection changed\n");
+void CommandPaletteWnd::ListDoubleClick() {
+    int sel = listBoxResults->GetCurrentSelection();
+    if (sel >= 0) {
+        logf("selected an item %d\n", sel);
+        Close();
+    }
 }
 
 void CommandPaletteWnd::ButtonClicked() {
-    logf("button clicked\n");
+    Close();
 }
 
 void CommandPaletteWnd::OnDestroy() {
@@ -179,6 +180,7 @@ bool CommandPaletteWnd::Create() {
         CreateCustomArgs args;
         args.title = L"Command Palette";
         args.visible = false;
+        args.style = WS_POPUPWINDOW;
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -215,7 +217,7 @@ bool CommandPaletteWnd::Create() {
         m->strings.Append("Hello");
         m->strings.Append("My friend");
         c->SetModel(m);
-        c->onSelectionChanged = std::bind(&CommandPaletteWnd::SelectionChanged, this);
+        c->onDoubleClick = std::bind(&CommandPaletteWnd::ListDoubleClick, this);
         listBoxResults = c;
         vbox->AddChild(c, 1);
     }
@@ -223,7 +225,7 @@ bool CommandPaletteWnd::Create() {
         auto c = new Button();
         auto wnd = c->Create(hwnd);
         CrashIf(!wnd);
-        c->SetText(L"A button");
+        c->SetText(L"Close");
         c->onClicked = std::bind(&CommandPaletteWnd::ButtonClicked, this);
         btn = c;
         vbox->AddChild(c);
@@ -233,6 +235,7 @@ bool CommandPaletteWnd::Create() {
     mainLayout = padding;
 
     LayoutAndSizeToContent(mainLayout, 520, 720, hwnd);
+    CenterDialog(hwnd);
     SetIsVisible(true);
     ::SetFocus(editQuery->hwnd);
     return true;
