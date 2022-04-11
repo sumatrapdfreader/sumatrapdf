@@ -6,6 +6,8 @@
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
 
+#include "wingui/wingui2.h"
+
 // in TestTab.cpp
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
@@ -87,5 +89,14 @@ void TestApp(HINSTANCE hInstance) {
     w->SetIsVisible(true);
 
     auto res = RunMessageLoop(nullptr, w->hwnd);
+    delete w;
+    return;
+}
+
+void TestWingui() {
+    auto w = new wg::Wnd();
+    w->Create(nullptr);
+    auto res = RunMessageLoop(nullptr, w->hwnd);
+    delete w;
     return;
 }

@@ -123,6 +123,8 @@ struct Button : Wnd {
 
     Button();
     ~Button() override;
+
+    void PreCreate(CREATESTRUCT& cs) override;
     HWND Create(HWND parent) override;
 
     Size GetIdealSize() override;

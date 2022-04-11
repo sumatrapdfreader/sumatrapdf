@@ -900,6 +900,7 @@ Kind kindButton = "button";
 
 Button::Button() {
     kind = kindButton;
+    winClass = WC_BUTTONW;
 }
 
 Button::~Button() = default;
@@ -919,18 +920,20 @@ LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 1;
 }
 
-HWND Button::Create(HWND parent) {
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
-    winClass = WC_BUTTONW;
+void Button::PreCreate(CREATESTRUCT& cs) {
+    LONG style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     if (isDefault) {
-        dwStyle |= BS_DEFPUSHBUTTON;
+        style |= BS_DEFPUSHBUTTON;
     } else {
-        dwStyle |= BS_PUSHBUTTON;
+        style |= BS_PUSHBUTTON;
     }
+    cs.style = style;
+}
+
+HWND Button::Create(HWND parent) {
     HWND ret = Wnd::Create(parent);
-    if (!ret) {
-        return nullptr;
-    }
+    CrashIf(!ret);
+
     auto size = GetIdealSize();
     RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);
