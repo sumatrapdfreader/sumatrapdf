@@ -3,6 +3,9 @@
 
 struct NotificationWnd;
 
+extern Kind NG_CURSOR_POS_HELPER;
+extern Kind NG_RESPONSE_TO_ACTION;
+
 using NotificationWndRemovedCallback = std::function<void(NotificationWnd*)>;
 
 enum class NotificationOptions {
@@ -57,6 +60,11 @@ struct Notifications {
 
     ~Notifications();
     bool Contains(NotificationWnd* wnd) const;
+
+    NotificationWnd* Show(HWND hwnd, const WCHAR* msg, NotificationOptions opts = NotificationOptions::WithTimeout,
+                          Kind groupId = NG_RESPONSE_TO_ACTION);
+    NotificationWnd* Show(HWND hwnd, std::string_view, NotificationOptions opts = NotificationOptions::WithTimeout,
+                          Kind groupId = NG_RESPONSE_TO_ACTION);
 
     // groupId is used to classify notifications and causes a notification
     // to replace any other notification of the same group

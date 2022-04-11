@@ -3,6 +3,8 @@
 
 enum class TextSearchDirection : bool { Backward = false, Forward = true };
 
+struct ProgressUpdateUI;
+
 class TextSearch : public TextSelection {
   public:
     TextSearch(EngineBase* engine, DocumentTextCache* textCache);

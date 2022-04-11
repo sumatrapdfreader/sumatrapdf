@@ -30,7 +30,6 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Notifications.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

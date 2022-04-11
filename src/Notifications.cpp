@@ -13,6 +13,9 @@ using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
 
+Kind NG_CURSOR_POS_HELPER = "cursorPosHelper";
+Kind NG_RESPONSE_TO_ACTION = "responseToAction";
+
 extern bool IsUIRightToLeft(); // SumatraPDF.h
 
 #define kNotificationsWndClassName L"SUMATRA_PDF_NOTIFICATION_WINDOW"
@@ -390,6 +393,26 @@ void Notifications::Relayout() {
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
         SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, flags);
     }
+}
+
+NotificationWnd* Notifications::Show(HWND hwnd, const WCHAR* msg, NotificationOptions opts, Kind groupId) {
+    int timeoutMS = ((uint)opts & (uint)NotificationOptions::Persist) ? 0 : 3000;
+    bool highlight = ((uint)opts & (uint)NotificationOptions::Highlight);
+
+    NotificationWnd* wnd = new NotificationWnd(hwnd, timeoutMS);
+    wnd->highlight = highlight;
+    wnd->wndRemovedCb = [this](NotificationWnd* wnd) { RemoveNotification(wnd); };
+    if (NG_CURSOR_POS_HELPER == groupId) {
+        wnd->shrinkLimit = 0.7f;
+    }
+    wnd->Create(msg, nullptr);
+    Add(wnd, groupId);
+    return wnd;
+}
+
+NotificationWnd* Notifications::Show(HWND hwnd, std::string_view sv, NotificationOptions opts, Kind groupId) {
+    auto msg = ToWstrTemp(sv);
+    return Show(hwnd, msg.Get(), opts, groupId);
 }
 
 void NotificationWnd::UpdateProgress(int current, int total) {

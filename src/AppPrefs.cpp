@@ -20,7 +20,6 @@
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
-#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "TabInfo.h"
 #include "Flags.h"

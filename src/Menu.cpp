@@ -24,8 +24,6 @@
 #include "Theme.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
-#include "ProgressUpdateUI.h"
-#include "Notifications.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

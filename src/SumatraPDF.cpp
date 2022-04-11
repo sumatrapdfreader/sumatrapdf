@@ -1198,7 +1198,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
     if (unsupported) {
         unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"),
                                     unsupported.Get()));
-        win->ShowNotification(unsupported, NotificationOptions::Warning, NG_PERSISTENT_WARNING);
+        win->notifications->Show(win->hwndCanvas, unsupported, NotificationOptions::Warning, NG_PERSISTENT_WARNING);
     }
 
     // This should only happen after everything else is ready
@@ -1583,7 +1583,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // there is a window the user has just been interacting with
     if (failEarly) {
         AutoFreeWstr msg(str::Format(_TR("File %s not found"), fullPath.Get()));
-        win->ShowNotification(msg, NotificationOptions::Highlight);
+        win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
@@ -1640,7 +1640,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         // TODO: same message as in Canvas.cpp to not introduce
         // new translation. Find a better message e.g. why failed.
         WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath.Get());
-        win->ShowNotification(msg, NotificationOptions::Highlight);
+        win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         str::Free(msg);
         ShowWindow(win->hwndFrame, SW_SHOW);
 
@@ -1805,7 +1805,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
     }
     if (!wnd) {
         auto options = NotificationOptions::Persist;
-        win->ShowNotification(pageInfo, options, NG_PAGE_INFO_HELPER);
+        win->notifications->Show(win->hwndCanvas, pageInfo, options, NG_PAGE_INFO_HELPER);
     } else {
         wnd->UpdateMessage(pageInfo);
     }
@@ -1895,7 +1895,7 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
         posInfo.Set(str::Format(L"%s - %s %s", posInfo.Get(), _TR("Selection:"), selStr.Get()));
     }
     if (!wnd) {
-        win->ShowNotification(posInfo, NotificationOptions::Persist, NG_CURSOR_POS_HELPER);
+        win->notifications->Show(win->hwndCanvas, posInfo, NotificationOptions::Persist, NG_CURSOR_POS_HELPER);
     } else {
         wnd->UpdateMessage(posInfo);
     }
@@ -2103,7 +2103,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
         str::Str msg;
         // TODO: duplicated string
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
-        tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
+        tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView(), NotificationOptions::Warning);
     });
     if (!ok) {
         return false;
@@ -2124,7 +2124,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
 
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), dstFilePath.Get());
-    tab->win->ShowNotification(msg.AsView());
+    tab->win->notifications->Show(win->hwndCanvas, msg.AsView());
     return true;
 }
 
@@ -2239,7 +2239,7 @@ static bool MaybeSaveAnnotations(TabInfo* tab) {
                 str::Str msg;
                 // TODO: duplicated message
                 msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
-                tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
+                tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView(), NotificationOptions::Warning);
             });
         } break;
         case SaveChoice::Cancel:
@@ -2715,7 +2715,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         LoadArgs args(srcFileName, win);
         args.forceReuse = true;
         LoadDocument(args);
-        win->ShowNotification(_TR("Failed to rename the file!"), NotificationOptions::Warning);
+        win->notifications->Show(win->hwndCanvas, _TR("Failed to rename the file!"), NotificationOptions::Warning);
         return;
     }
 
@@ -4163,14 +4163,14 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
         str::Str msg;
         // TODO: duplicated message
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
-        tab->win->ShowNotification(msg.AsView(), NotificationOptions::Warning);
+        tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView(), NotificationOptions::Warning);
     });
     if (!ok) {
         return;
     }
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), path.Get());
-    tab->win->ShowNotification(msg.AsView());
+    tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView());
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;
@@ -4274,7 +4274,7 @@ static void CopySelectionInTabToClipboard(TabInfo* tab) {
     }
     // TODO: can this be reached?
     if (tab->AsFixed()) {
-        tab->win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
+        tab->win->notifications->Show(tab->win->hwndCanvas, _TR("Select content with Ctrl+left mouse button"));
     }
 }
 
@@ -4732,9 +4732,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 #endif
 
         case CmdDebugShowNotif: {
-            win->ShowNotification(L"This is a notification", NotificationOptions::Warning);
+            win->notifications->Show(win->hwndCanvas, L"This is a notification", NotificationOptions::Warning);
             // TODO: this notification covers previous
-            // win->ShowNotification(L"This is a second notification\nMy friend.");
+            // win->notifications->Show(win->hwndCanvas, L"This is a second notification\nMy friend.");
         } break;
 
         case CmdDebugCrashMe:

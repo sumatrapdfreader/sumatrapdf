@@ -25,8 +25,6 @@
 #include "AppColors.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
-#include "ProgressUpdateUI.h"
-#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"

@@ -311,7 +311,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
     WCHAR* selText = nullptr;
     bool isTextOnlySelectionOut = false;
     if (!gDisableDocumentRestrictions && (dm && !dm->GetEngine()->AllowsCopyingText())) {
-        win->ShowNotification(_TR("Copying text was denied (copying as image only)"));
+        win->notifications->Show(win->hwndCanvas, _TR("Copying text was denied (copying as image only)"));
     } else {
         selText = GetSelectedText(tab, L"\r\n", isTextOnlySelectionOut);
     }

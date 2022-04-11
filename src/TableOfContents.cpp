@@ -28,8 +28,6 @@
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
-#include "ProgressUpdateUI.h"
-#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "DisplayModel.h"

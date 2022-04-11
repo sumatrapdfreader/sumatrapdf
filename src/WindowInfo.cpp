@@ -31,9 +31,9 @@
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
+#include "Notifications.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -74,9 +74,6 @@ LinkHandler::~LinkHandler() {
 }
 
 Vec<WindowInfo*> gWindows;
-
-Kind NG_CURSOR_POS_HELPER = "cursorPosHelper";
-Kind NG_RESPONSE_TO_ACTION = "responseToAction";
 
 StaticLinkInfo::StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip) {
     this->rect = rect;
@@ -312,26 +309,6 @@ void WindowInfo::HideToolTip() const {
     infotip->Hide();
 }
 
-NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, NotificationOptions opts, Kind groupId) {
-    int timeoutMS = ((uint)opts & (uint)NotificationOptions::Persist) ? 0 : 3000;
-    bool highlight = ((uint)opts & (uint)NotificationOptions::Highlight);
-
-    NotificationWnd* wnd = new NotificationWnd(hwndCanvas, timeoutMS);
-    wnd->highlight = highlight;
-    wnd->wndRemovedCb = [this](NotificationWnd* wnd) { this->notifications->RemoveNotification(wnd); };
-    if (NG_CURSOR_POS_HELPER == groupId) {
-        wnd->shrinkLimit = 0.7f;
-    }
-    wnd->Create(msg, nullptr);
-    notifications->Add(wnd, groupId);
-    return wnd;
-}
-
-NotificationWnd* WindowInfo::ShowNotification(std::string_view sv, NotificationOptions opts, Kind groupId) {
-    auto msg = ToWstrTemp(sv);
-    return this->ShowNotification(msg.Get(), opts, groupId);
-}
-
 bool WindowInfo::CreateUIAProvider() {
     if (uiaProvider) {
         return true;
@@ -472,7 +449,7 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
             AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.Get()));
-            win->ShowNotification(msg, NotificationOptions::Highlight);
+            win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         }
         return;
     }

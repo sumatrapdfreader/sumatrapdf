@@ -40,9 +40,6 @@ enum class MouseAction {
 };
 // clang-format on
 
-extern Kind NG_CURSOR_POS_HELPER;
-extern Kind NG_RESPONSE_TO_ACTION;
-
 // clang-format off
 enum PresentationMode {
     PM_DISABLED = 0,
@@ -248,10 +245,6 @@ struct WindowInfo {
 
     void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false) const;
     void HideToolTip() const;
-    NotificationWnd* ShowNotification(const WCHAR* msg, NotificationOptions opts = NotificationOptions::WithTimeout,
-                                      Kind groupId = NG_RESPONSE_TO_ACTION);
-    NotificationWnd* ShowNotification(std::string_view, NotificationOptions opts = NotificationOptions::WithTimeout,
-                                      Kind groupId = NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();
 };

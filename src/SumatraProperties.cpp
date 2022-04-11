@@ -15,8 +15,6 @@
 #include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "AppColors.h"
-#include "ProgressUpdateUI.h"
-#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"

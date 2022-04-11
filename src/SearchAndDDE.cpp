@@ -447,7 +447,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
             return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
-            win->ShowNotification(_TR("Synchronization file cannot be opened"));
+            win->notifications->Show(win->hwndCanvas, _TR("Synchronization file cannot be opened"));
             return true;
         }
         gGlobalPrefs->enableTeXEnhancements = true;
@@ -463,7 +463,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     uint line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
-        win->ShowNotification(_TR("No synchronization info at this position"));
+        win->notifications->Show(win->hwndCanvas, _TR("No synchronization info at this position"));
         return true;
     }
 
@@ -494,11 +494,13 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         AutoFreeWstr appDir = GetExeDir();
         AutoCloseHandle process(LaunchProcess(cmdline, appDir));
         if (!process) {
-            win->ShowNotification(
+            win->notifications->Show(
+                win->hwndCanvas,
                 _TR("Cannot start inverse search command. Please check the command line in the settings."));
         }
     } else if (gGlobalPrefs->enableTeXEnhancements) {
-        win->ShowNotification(
+        win->notifications->Show(
+            win->hwndCanvas,
             _TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
 
@@ -547,13 +549,13 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, 
 
     AutoFreeWstr buf;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
-        win->ShowNotification(_TR("No synchronization file found"));
+        win->notifications->Show(win->hwndCanvas, _TR("No synchronization file found"));
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
-        win->ShowNotification(_TR("Synchronization file cannot be opened"));
+        win->notifications->Show(win->hwndCanvas, _TR("Synchronization file cannot be opened"));
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
         buf.Set(str::Format(_TR("Page number %u inexistant"), page));
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
-        win->ShowNotification(_TR("No synchronization info at this position"));
+        win->notifications->Show(win->hwndCanvas, _TR("No synchronization info at this position"));
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
         buf.Set(str::Format(_TR("Unknown source file (%s)"), fileName));
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
@@ -564,7 +566,7 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, 
         buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
     }
     if (buf) {
-        win->ShowNotification(buf);
+        win->notifications->Show(win->hwndCanvas, buf);
     }
 }
 
