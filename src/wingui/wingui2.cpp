@@ -87,7 +87,7 @@ LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
         // as early as possible given than CreateWindow
         window = gWindowBeingCreated;
         if (window) {
-            window->SetWindowHandle(hwnd);
+            window->hwnd = hwnd;
             WindowMapAdd(hwnd, window);
         }
     }
@@ -222,7 +222,7 @@ bool Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
 
 // Called during window creation. Override this functions to perform tasks
 // such as creating child windows.
-int Wnd::OnCreate(HWND hwnd, CREATESTRUCT*) {
+int Wnd::OnCreate(CREATESTRUCT*) {
     // This function is called when a WM_CREATE message is received
     // Override it to automatically perform tasks during window creation.
     // Return 0 to continue creating the window.
@@ -510,7 +510,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         } break; // Note: Some MDI commands require default processing.
 
         case WM_CREATE: {
-            OnCreate(hwnd, reinterpret_cast<CREATESTRUCT*>(lparam));
+            OnCreate((CREATESTRUCT*)lparam);
             break;
         }
 
@@ -665,10 +665,6 @@ LRESULT Wnd::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 }
 
-void Wnd::SetWindowHandle(HWND hwnd) {
-    this->hwnd = hwnd;
-}
-
 // Called by CWnd::Create to set some window creation parameters.
 void Wnd::PreCreate(CREATESTRUCT& cs) {
     // Override this function to set the CREATESTRUCT values prior to window creation.
@@ -776,7 +772,12 @@ HWND Wnd::Create(HWND parent) {
 
     // Set a reasonable default window style.
     DWORD dwOverlappedStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-    cs.style = WS_VISIBLE | ((parent) ? WS_CHILD : dwOverlappedStyle);
+    cs.style = WS_VISIBLE;
+    if (parent) {
+        cs.style |= WS_CHILD;
+    } else {
+        cs.style |= dwOverlappedStyle;
+    }
 
     // Set a reasonable default window position
     if (0 == parent) {
@@ -811,6 +812,7 @@ HWND Wnd::Create(HWND parent) {
 //  to create a window throws an exception.
 HWND Wnd::CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD style, int x, int y, int width,
                    int height, HWND parent, HMENU idOrMenu, LPVOID lparam /*= NULL*/) {
+    CrashIf(hwnd);
     CrashIf(IsWindow(hwnd)); // Only one window per CWnd instance allowed.
 
     // Ensure a window class is registered.
@@ -832,46 +834,16 @@ HWND Wnd::CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD s
                             lparam);
 
     gWindowBeingCreated = nullptr;
-
     CrashIf(!hwnd);
 
-    // Automatically subclass predefined window class types.
-    auto ok = ::GetClassInfo(GetInstance(), className, &wc);
-    CrashIf(!ok);
-    if (wc.lpfnWndProc != StaticWindowProc) {
+    if (!str::Eq(className, kDefaultClassName)) {
+        // Automatically subclass predefined window class types.
         Subclass(hwnd);
         // Override this to perform tasks after the window is attached.
         OnAttach();
     }
     return hwnd;
 }
-
-/*
-
-HWND Wnd::Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD style, int x, int y, int width,
-                 int height, HWND parent, HMENU menu, LPVOID param) {
-    Destroy();
-
-    gWindowBeingCreated = this;
-
-    menu = menu;
-    parent = parent;
-
-    hwnd =
-        ::CreateWindowEx(ex_style, class_name, window_name, style, x, y, width, height, parent, menu, instance, param);
-
-    WNDCLASSEX wc = {0};
-    ::GetClassInfoEx(instance, class_name, &wc);
-    if (wc.lpfnWndProc != reinterpret_cast<WNDPROC>(StaticWindowProc)) {
-        Subclass(hwnd);
-        OnCreate(hwnd, &create_struct);
-    }
-
-    gWindowBeingCreated = nullptr;
-
-    return hwnd;
-}
-*/
 
 void Wnd::Subclass(HWND hwnd) {
     CrashIf(!IsWindow(hwnd));

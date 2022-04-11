@@ -43,8 +43,6 @@ struct Wnd : public ILayout {
     HWND Detach();
     void Cleanup();
 
-    void SetWindowHandle(HWND hwnd);
-
     void Subclass(HWND hwnd);
     // void UnSubclass();
     //  void SetDefaultFont();
@@ -57,7 +55,7 @@ struct Wnd : public ILayout {
     virtual void OnAttach();
     virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
     virtual void OnClose();
-    virtual int OnCreate(HWND, CREATESTRUCT*);
+    virtual int OnCreate(CREATESTRUCT*);
     virtual void OnDestroy();
 
     virtual void OnContextMenu(HWND hwnd, Point pt);
