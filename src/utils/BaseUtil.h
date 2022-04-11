@@ -578,10 +578,10 @@ defer { instance->Release(); };
 
 #include "GeomUtil.h"
 #include "StrSlice.h"
+#include "Vec.h"
 #include "StrUtil.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"
-#include "Vec.h"
 #include "StringViewUtil.h"
 #include "ColorUtil.h"
 #include "TempAllocator.h"

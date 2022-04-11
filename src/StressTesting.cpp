@@ -437,7 +437,7 @@ of PDFs before a release to make sure we're crash proof. */
 
 struct StressTest {
     WindowInfo* win = nullptr;
-    LARGE_INTEGER currPageRenderTime = 0;
+    LARGE_INTEGER currPageRenderTime = {};
     Vec<int> pagesToRender;
     int currPageNo = 0;
     int pageForSearchStart = 0;
