@@ -24,9 +24,10 @@
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-//#include "wingui/TooltipCtrl.h"
 #include "wingui/SplitterWnd.h"
 #include "wingui/LabelWithCloseWnd.h"
+#include "wingui/ListBoxCtrl.h"
+#include "wingui/wingui2.h"
 
 #include "Accelerators.h"
 #include "wingui/TreeModel.h"
@@ -503,6 +504,10 @@ static int RunMessageLoop() {
     MSG msg{nullptr};
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (wg::PreTranslateMessage(msg)) {
+            continue;
+        }
+
         bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
                          (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
 
@@ -1077,15 +1082,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     if (flags.appdataDir) {
         SetAppDataPath(flags.appdataDir);
     }
-
-#if defined(DEBUG)
-    if (true) {
-        // in TestApp.cpp
-        extern void TestWingui();
-        TestWingui();
-        return 0;
-    }
-#endif
 
 #if defined(DEBUG)
     if (flags.testApp) {

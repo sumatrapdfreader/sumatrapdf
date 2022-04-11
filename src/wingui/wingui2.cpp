@@ -125,6 +125,12 @@ void Wnd::SetText(const WCHAR* s) {
     }
 }
 
+TempStr Wnd::GetText() {
+    auto sw = win::GetTextTemp(hwnd);
+    auto sa = ToUtf8Temp(sw.AsView());
+    return sa;
+}
+
 void Wnd::SetVisibility(Visibility newVisibility) {
     // TODO: make it work before Create()?
     CrashIf(!hwnd);
@@ -559,15 +565,12 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
 
         case WM_ERASEBKGND: {
-            return true;
-            /*
             HDC dc = (HDC)(wparam);
             BOOL preventErasure;
 
             preventErasure = OnEraseBkgnd(dc);
             if (preventErasure)
                 return TRUE;
-            */
         } break;
 
         // A set of messages to be reflected back to the control that generated them.
@@ -1091,8 +1094,9 @@ HWND ListBox::Create(HWND parent) {
 
     args.parent = parent;
     // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
-    args.style = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
+    args.style = WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
     args.style |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    // args.style |= WS_BORDER;
     Wnd::CreateControl(args);
     CrashIf(!hwnd);
     if (!hwnd) {

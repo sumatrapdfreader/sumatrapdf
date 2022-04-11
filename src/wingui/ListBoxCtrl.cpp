@@ -40,10 +40,12 @@ ListBoxCtrl::~ListBoxCtrl() {
 
 void FillWithItems(HWND hwnd, ListBoxModel* model) {
     ListBox_ResetContent(hwnd);
-    for (int i = 0; i < model->ItemsCount(); i++) {
-        auto sv = model->Item(i);
-        auto ws = ToWstrTemp(sv);
-        ListBox_AddString(hwnd, ws.Get());
+    if (model) {
+        for (int i = 0; i < model->ItemsCount(); i++) {
+            auto sv = model->Item(i);
+            auto ws = ToWstrTemp(sv);
+            ListBox_AddString(hwnd, ws.Get());
+        }
     }
 }
 
@@ -135,9 +137,7 @@ void ListBoxCtrl::SetModel(ListBoxModel* model) {
         delete this->model;
     }
     this->model = model;
-    if (model != nullptr) {
-        FillWithItems(this->hwnd, model);
-    }
+    FillWithItems(this->hwnd, model);
     SetCurrentSelection(-1);
     // TODO: update ideal size based on the size of the model
 }

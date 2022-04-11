@@ -544,6 +544,7 @@
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\Caption.h" />
     <ClInclude Include="..\src\ChmModel.h" />
+    <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\Controller.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
@@ -630,6 +631,7 @@
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\Caption.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
+    <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />

@@ -2385,13 +2385,13 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
 }
 
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
-    Rect rHwndRelative = WindowRect(hwndRelative);
-    Rect rHwnd = WindowRect(hwnd);
-    int x = rHwndRelative.x + (rHwndRelative.dx / 2) - (rHwnd.dx / 2);
-    int y = rHwndRelative.y + (rHwndRelative.dy / 2) - (rHwnd.dy / 2);
+    Rect rRelative = WindowRect(hwndRelative);
+    Rect r = WindowRect(hwnd);
+    int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
+    int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
 
-    Rect r = ShiftRectToWorkArea(Rect{x, y, rHwnd.dx, rHwnd.dy}, hwnd, true);
-    SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    Rect rc = ShiftRectToWorkArea(Rect{x, y, r.dx, r.dy}, hwnd, true);
+    SetWindowPos(hwnd, nullptr, rc.x, rc.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 void HwndSendCommand(HWND hwnd, int cmdId) {

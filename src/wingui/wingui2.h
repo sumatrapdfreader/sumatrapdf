@@ -98,6 +98,7 @@ struct Wnd : public ILayout {
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
     void SetText(const WCHAR*);
+    TempStr GetText();
 
     Kind kind = nullptr;
 

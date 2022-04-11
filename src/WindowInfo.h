@@ -4,6 +4,7 @@
 struct DoubleBuffer;
 struct LinkHandler;
 struct Notifications;
+struct NotificationWnd;
 struct StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
