@@ -1078,12 +1078,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         SetAppDataPath(flags.appdataDir);
     }
 
+#if defined(DEBUG)
     if (false) {
         // in TestApp.cpp
         extern void TestWingui();
         TestWingui();
         return 0;
     }
+#endif
 
 #if defined(DEBUG)
     if (flags.testApp) {
