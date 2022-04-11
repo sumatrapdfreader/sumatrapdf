@@ -24,6 +24,8 @@
 #include "SumatraConfig.h"
 #include "Commands.h"
 #include "CommandPalette.h"
+#include "SumatraPDF.h"
+#include "Tabs.h"
 
 #include "utils/Log.h"
 
@@ -153,6 +155,22 @@ static void AddOpenedFiles(StrVec& strings, WindowInfo* win) {
     }
 }
 
+static TabInfo* FindOpenedFile(std::string_view sv) {
+    for (WindowInfo* win : gWindows) {
+        for (TabInfo* tab : win->tabs) {
+            if (!tab->IsDocLoaded()) {
+                continue;
+            }
+            auto path = tab->filePath.Get();
+            auto s = ToUtf8Temp(path);
+            if (str::Eq(s.Get(), sv.data())) {
+                return tab;
+            }
+        }
+    }
+    return nullptr;
+}
+
 static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
@@ -173,9 +191,10 @@ static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
     }
 
     i32 cmdId = CmdFirst + 1;
-    const char* strs = gCommandDescriptions;
+    SeqStrings strs = gCommandDescriptions;
     while (strs) {
         if (AllowCommand(ctx, cmdId)) {
+            CrashIf(str::Len(strs) == 0);
             strings.Append(strs);
         }
         seqstrings::Next(strs);
@@ -283,9 +302,9 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
 
 void CommandPaletteWnd::QueryChanged() {
     auto filter = editQuery->GetText();
-    // TODO: would be more efficient to use existing model
-    // and tell listbox to re-render
-    auto m = new ListBoxModelStrings();
+    // for efficiency, reusing existing model
+    auto m = (ListBoxModelStrings*)listBox->model;
+    // auto m = new ListBoxModelStrings();
     FilterStrings(allStrings, filter.Get(), m->strings);
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
@@ -295,17 +314,18 @@ void CommandPaletteWnd::QueryChanged() {
 
 static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 
-void SaveDeleteCommandPaletteWnd() {
+void SafeDeleteCommandPaletteWnd() {
     if (!gCommandPaletteWnd) {
         return;
     }
+
     auto tmp = gCommandPaletteWnd;
     gCommandPaletteWnd = nullptr;
     delete tmp;
 }
 
 void CommandPaletteWnd::ScheduleDelete() {
-    uitask::Post(&SaveDeleteCommandPaletteWnd);
+    uitask::Post(&SafeDeleteCommandPaletteWnd);
 }
 
 void CommandPaletteWnd::ExecuteSelection() {
@@ -318,12 +338,25 @@ void CommandPaletteWnd::ExecuteSelection() {
     // logf("selection: %s, id: %d\n", s.data(), cmdId);
     if (cmdId >= 0) {
         HwndSendCommand(win->hwndFrame, cmdId);
+        SetActiveWindow(win->hwndFrame);
         ScheduleDelete();
         return;
     }
-    // this must be a file path
-    // TODO: implement me
+    TabInfo* tab = FindOpenedFile(s);
+    if (tab != nullptr) {
+        if (tab->win->currentTab != tab) {
+            SelectTabInWindow(tab);
+        }
+        SetActiveWindow(tab->win->hwndFrame);
+        ScheduleDelete();
+        return;
+    }
+
+    LoadArgs args(s.data(), win);
+    args.forceReuse = false; // open in a new tab
+    LoadDocument(args);
     ScheduleDelete();
+    SetActiveWindow(win->hwndFrame);
 }
 
 void CommandPaletteWnd::ListDoubleClick() {

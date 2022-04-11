@@ -1185,6 +1185,10 @@ void Next(const char*& s) {
         s++;
     }
     s++; // skip terminating 0
+    if (!*s) {
+        s = nullptr;
+        return;
+    }
 }
 
 // Returns nullptr if s is the same as toFind
