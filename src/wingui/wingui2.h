@@ -168,10 +168,12 @@ struct Edit : Wnd {
 namespace wg {
 
 using ListBoxSelectionChangedHandler = std::function<void()>;
+using ListBoxDoubleClickHandler = std::function<void()>;
 
 struct ListBox : Wnd {
     ListBoxModel* model = nullptr;
     ListBoxSelectionChangedHandler onSelectionChanged = nullptr;
+    ListBoxDoubleClickHandler onDoubleClick = nullptr;
 
     Size idealSize = {};
     int idealSizeLines = 0;
@@ -179,7 +181,9 @@ struct ListBox : Wnd {
     ListBox();
     virtual ~ListBox();
 
+    void PreCreate(CREATESTRUCT& cs) override;
     HWND Create(HWND parent) override;
+    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     int GetItemHeight(int);
 

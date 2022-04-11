@@ -1091,15 +1091,19 @@ ListBox::ListBox() {
     kind = kindListBox;
     winClass = L"LISTBOX";
 #if 0
-    dwExStyle = 0;
-    dwStyle = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
-    dwStyle |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
     ctrlID = 0;
 #endif
 }
 
 ListBox::~ListBox() {
     delete this->model;
+}
+
+void ListBox::PreCreate(CREATESTRUCT& cs) {
+    // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
+    LONG style = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
+    style |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    cs.style = style;
 }
 
 HWND ListBox::Create(HWND parent) {
@@ -1172,6 +1176,31 @@ void ListBox::SetModel(ListBoxModel* model) {
     }
     SetCurrentSelection(-1);
     // TODO: update ideal size based on the size of the model
+}
+
+LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_COMMAND) {
+        auto code = HIWORD(wparam);
+
+        // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-selchange
+        if (code == LBN_SELCHANGE && onSelectionChanged) {
+            onSelectionChanged();
+            return 1;
+        }
+        // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-dblclk
+        if (code == LBN_DBLCLK && onDoubleClick) {
+            onDoubleClick();
+            return 1;
+        }
+        return 0;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorlistbox
+    if (msg == WM_CTLCOLORLISTBOX) {
+        // TOOD: implement me
+        return 0;
+    }
+    return 0;
 }
 
 } // namespace wg
