@@ -5,7 +5,6 @@ struct ListBoxModel {
     virtual ~ListBoxModel() = default;
     ;
     virtual int ItemsCount() = 0;
-    virtual Size Draw(bool measure) = 0;
     virtual std::string_view Item(int) = 0;
 };
 
@@ -14,7 +13,6 @@ struct ListBoxModelStrings : ListBoxModel {
 
     ~ListBoxModelStrings() override;
     int ItemsCount() override;
-    Size Draw(bool measure) override;
     std::string_view Item(int) override;
 };
 
