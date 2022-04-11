@@ -9,7 +9,7 @@ struct ListBoxModel {
 };
 
 struct ListBoxModelStrings : ListBoxModel {
-    VecStr strings;
+    StrVec strings;
 
     ~ListBoxModelStrings() override;
     int ItemsCount() override;

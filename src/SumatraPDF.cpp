@@ -4624,7 +4624,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpAbout:
-            OnMenuAbout();
+            OnMenuAbout(win);
             break;
 
         case CmdCheckUpdate:

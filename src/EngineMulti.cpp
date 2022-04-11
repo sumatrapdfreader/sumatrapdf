@@ -76,7 +76,7 @@ class EngineMulti : public EngineBase {
     int GetPageByLabel(const WCHAR* label) const override;
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
-    bool LoadFromFiles(std::string_view dir, VecStr& files);
+    bool LoadFromFiles(std::string_view dir, StrVec& files);
     void UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo);
 
     EngineBase* PageToEngine(int& pageNo) const;
@@ -346,7 +346,7 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     return tocWrapper;
 }
 
-bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
+bool EngineMulti::LoadFromFiles(std::string_view dir, StrVec& files) {
     int n = files.Size();
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
@@ -427,7 +427,7 @@ bool IsEngineMultiSupportedFileType(Kind kind) {
     return kind == kindDirectory;
 }
 
-EngineBase* CreateEngineMultiFromFiles(std::string_view dir, VecStr& files) {
+EngineBase* CreateEngineMultiFromFiles(std::string_view dir, StrVec& files) {
     EngineMulti* engine = new EngineMulti();
     if (!engine->LoadFromFiles(dir, files)) {
         delete engine;
@@ -441,7 +441,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
         bool isValid = str::EndsWithI(path.data(), ".pdf");
         return isValid;
     };
-    VecStr files;
+    StrVec files;
     auto dir = ToUtf8Temp(dirW);
     bool ok = CollectFilesFromDirectory(dir.AsView(), files, isValidFunc);
     if (!ok) {

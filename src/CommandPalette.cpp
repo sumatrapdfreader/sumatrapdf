@@ -190,7 +190,7 @@ static bool FilterMatches(const char* str, const char* filter) {
     if (!filter || str::EmptyOrWhiteSpaceOnly(filter)) {
         return true;
     }
-    VecStr words;
+    StrVec words;
     char* s = str::DupTemp(filter);
     char* wordStart = s;
     bool wasWs = false;
@@ -219,13 +219,13 @@ static bool FilterMatches(const char* str, const char* filter) {
     return true;
 }
 
-static void FilterStrings(const StrVec& strs, const char* filter, VecStr& matchedOut) {
+static void FilterStrings(const StrVec& strs, const char* filter, StrVec& matchedOut) {
     matchedOut.Reset();
     int n = strs.Size();
     for (int i = 0; i < n; i++) {
         auto s = strs.at(i);
         if (FilterMatches(s.data(), filter)) {
-            matchedOut.Append(s);
+            matchedOut.Append(s.data());
         }
     }
 }

@@ -2732,6 +2732,38 @@ ByteSlice ToSpanU8(std::string_view sv) {
     return {(u8*)sv.data(), sv.size()};
 }
 
+#if 0
+// TODO: could increase kVecStrIndexSize when expanding array
+constexpr int kVecStrIndexSize = 128;
+struct VecStrIndex {
+    VecStrIndex* next;
+    int nStrings;
+    char* offsets[kVecStrIndexSize];
+    i32 sizes[kVecStrIndexSize];
+    int ItemsLeft() const;
+};
+
+// Append-only, optimized vector of strings. Allocates from pool allocator, so
+// strings are close together and freed in bulk
+// implemented in BaseUtil.cpp
+struct VecStr {
+    PoolAllocator allocator;
+    VecStrIndex* firstIndex = nullptr;
+    VecStrIndex* currIndex = nullptr;
+
+    VecStr() = default;
+    ~VecStr() = default;
+    void Reset();
+
+    int Size() const;
+    std::string_view at(int) const;
+
+    bool Append(std::string_view sv);
+    bool Exists(std::string_view sv);
+    bool AppendIfNotExists(std::string_view sv);
+};
+
+
 int VecStrIndex::ItemsLeft() const {
     return kVecStrIndexSize - nStrings;
 }
@@ -2838,6 +2870,7 @@ void VecStr::Reset() {
     firstIndex = nullptr;
     currIndex = nullptr;
 }
+#endif
 
 //- StrVec
 
@@ -2856,9 +2889,13 @@ constexpr u32 kNullIdx = (u32)-2;
 void StrVec::Reset() {
     str.Reset();
     index.Reset();
+    sortedIndex.Reset();
+    isSorted = false;
 }
 
 int StrVec::Append(const char* s) {
+    isSorted = false; // adding stuff invalidates sorting
+
     bool ok;
     if (s == nullptr) {
         ok = index.Append(kNullIdx);
@@ -2922,7 +2959,42 @@ int StrVec::AppendIfNotExists(std::string_view sv) {
     return Append(sv.data());
 }
 
-void StrVecWithSort::Sort() {
+static bool strCmpLess(std::string_view s1, std::string_view s2) {
+    if (s1.empty()) {
+        return true;
+    }
+    if (s1.empty()) {
+        return false;
+    }
+    bool ret = s1 < s2;
+    return ret;
+}
+
+static bool strCmpLessI(std::string_view s1, std::string_view s2) {
+    if (s1.empty()) {
+        return true;
+    }
+    if (s1.empty()) {
+        return false;
+    }
+    size_t n1 = s1.size();
+    size_t n2 = s2.size();
+    for (size_t i = 0; i < n1 && i < n2; i++) {
+        int c1 = tolower(s1[i]);
+        int c2 = tolower(s2[i]);
+        if (c1 == c2) {
+            continue;
+        }
+        return c1 < c2;
+    }
+    return n1 < n2;
+}
+
+void StrVec::Sort(StrCmpLessFunc lessFn) {
+    if (lessFn == nullptr) {
+        lessFn = strCmpLess;
+    }
+
     // sortedIndex is 0...Size()-1 value
     // that points into index Vec
     // starty by fillng sortedIndex with 0...Size()-1
@@ -2932,23 +3004,26 @@ void StrVecWithSort::Sort() {
     for (u32 i = 0; i < n; i++) {
         sortedIndex.Append(i);
     }
-
-    struct {
-        StrVecWithSort& v;
-        bool operator()(u32 i, u32 j) const {
-            std::string_view is = v.at((int)v.index.at((int)i));
-            std::string_view js = v.at((int)v.index.at((int)j));
-            bool ret = is < js;
-            return ret;
-        }
-    } customLess{*this};
-
-    std::sort(sortedIndex.begin(), sortedIndex.end(), customLess);
+    std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
+        std::string_view is1 = at((int)i1);
+        std::string_view is2 = at((int)i2);
+        bool ret = lessFn(is1, is2);
+        return ret;
+    });
+    isSorted = true;
 }
 
-std::string_view StrVecWithSort::AtSorted(int i) {
-    // must re-sort after changing data
+void StrVec::SortCaseInsensitive() {
+    Sort(strCmpLessI);
+}
+
+std::string_view StrVec::AtSorted(int i) {
+    if (!isSorted) {
+        Sort();
+    }
     CrashIf(sortedIndex.size() != index.size());
+    CrashIf(!isSorted);
+
     u32 i2 = sortedIndex[i];
     return at((int)i2);
 }

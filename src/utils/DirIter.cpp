@@ -141,7 +141,7 @@ std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
 }
 #endif
 
-bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
+bool CollectFilesFromDirectory(std::string_view dir, StrVec& files,
                                const std::function<bool(std::string_view)>& fileMatchesFn) {
     auto dirW = ToWstrTemp(dir);
     AutoFreeWstr pattern = path::Join(dirW, L"*");
@@ -163,7 +163,7 @@ bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
                 matches = fileMatchesFn(filePath.AsView());
             }
             if (matches) {
-                files.Append(filePath.AsView());
+                files.Append(filePath);
             }
         }
     } while (FindNextFileW(hfind, &fdata));

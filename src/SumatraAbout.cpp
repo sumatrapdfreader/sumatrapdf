@@ -541,7 +541,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-void OnMenuAbout() {
+void OnMenuAbout(WindowInfo* win) {
     if (gHwndAbout) {
         SetActiveWindow(gHwndAbout);
         return;
@@ -581,6 +581,7 @@ void OnMenuAbout() {
     wRc.dy += rc.dy - cRc.dy;
     MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
 
+    HwndPositionInCenterOf(gHwndAbout, win->hwndFrame);
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 

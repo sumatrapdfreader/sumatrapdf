@@ -526,40 +526,16 @@ class WStrList {
     }
 };
 
-// TODO: could increase kVecStrIndexSize when expanding array
-constexpr int kVecStrIndexSize = 128;
-struct VecStrIndex {
-    VecStrIndex* next;
-    int nStrings;
-    char* offsets[kVecStrIndexSize];
-    i32 sizes[kVecStrIndexSize];
-    int ItemsLeft() const;
-};
+typedef bool (*StrCmpLessFunc)(std::string_view s1, std::string_view s2);
 
-// Append-only, optimized vector of strings. Allocates from pool allocator, so
-// strings are close together and freed in bulk
-// implemented in BaseUtil.cpp
-struct VecStr {
-    PoolAllocator allocator;
-    VecStrIndex* firstIndex = nullptr;
-    VecStrIndex* currIndex = nullptr;
-
-    VecStr() = default;
-    ~VecStr() = default;
-    void Reset();
-
-    int Size() const;
-    std::string_view at(int) const;
-
-    bool Append(std::string_view sv);
-    bool Exists(std::string_view sv);
-    bool AppendIfNotExists(std::string_view sv);
-};
-
-// implementation in StrUtil.cpp
 struct StrVec {
     str::Str str;   // a growable string
     Vec<u32> index; // values are index into str
+
+    // index in sorted order
+    // TODO: maybe there's a way to combine with index
+    Vec<u32> sortedIndex;
+    bool isSorted = false;
 
     StrVec() = default;
     ~StrVec() = default;
@@ -572,15 +548,9 @@ struct StrVec {
     int Append(const char*);
     bool Exists(std::string_view);
     int AppendIfNotExists(std::string_view);
-};
 
-struct StrVecWithSort : StrVec {
-    // index in sorted order
-    Vec<u32> sortedIndex;
+    void Sort(StrCmpLessFunc lessFn = nullptr);
 
-    StrVecWithSort() = default;
-    ~StrVecWithSort() = default;
-
-    void Sort();
+    void SortCaseInsensitive();
     std::string_view AtSorted(int);
 };

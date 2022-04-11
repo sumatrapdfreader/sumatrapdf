@@ -65,7 +65,7 @@ struct PdfMerger {
     fz_context* ctx = nullptr;
     pdf_document* doc_des = nullptr;
     pdf_document* doc_src = nullptr;
-    VecStr filePaths;
+    StrVec filePaths;
 
     PdfMerger() = default;
     ~PdfMerger();
@@ -150,7 +150,7 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
             return true;
         }
         std::string_view path = ti->engineFilePath;
-        filePaths.Append(path);
+        filePaths.Append(path.data());
         return true;
     });
 

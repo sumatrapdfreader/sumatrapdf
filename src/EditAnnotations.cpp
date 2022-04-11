@@ -320,7 +320,7 @@ static void RebuildAnnotations(EditAnnotationsWindow* ew) {
         s.Reset();
         s.AppendFmt("page %d, ", annot->pageNo);
         s.AppendView(AnnotationReadableName(annot->type));
-        model->strings.Append(s.AsView());
+        model->strings.Append(s.Get());
     }
 
     ew->listBox->SetModel(model);

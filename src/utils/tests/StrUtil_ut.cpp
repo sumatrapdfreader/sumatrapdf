@@ -277,6 +277,149 @@ void strWStrTest() {
     }
 }
 
+static void assertStrEq(std::string_view sv, const char* s) {
+    const char* svd = sv.data();
+    size_t n = sv.size();
+    bool ok = str::Eq(sv, s);
+    utassert(ok);
+    utassert(svd[n] == 0); // ensure ends with 0
+}
+
+static void StrVecTest() {
+    std::string_view sv;
+    const char* strs[] = {"foo", "bar", "Blast", "this is a large string, my friend"};
+    int unsortedOrder[] = {0, 1, 2, 3};
+    int sortedOrder[]{2, 1, 0, 3};
+    int sortedNoCaseOrder[]{1, 2, 0, 3};
+
+    int n = (int)dimof(strs);
+    StrVec v;
+    utassert(v.Size() == 0);
+    for (int i = 0; i < n; i++) {
+        v.Append(strs[i]);
+        utassert(v.Size() == i + 1);
+    }
+
+    CrashIf(v.isSorted);
+    v.Sort();
+    CrashIf(!v.isSorted);
+
+    for (int i = 0; i < n; i++) {
+        auto got = v.AtSorted(i);
+        auto exp = strs[sortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+
+    // allocate a bunch to test allocating
+    for (int i = 0; i < 1024; i++) {
+        v.Append(strs[3]);
+    }
+    utassert(v.Size() == 1024 + n);
+
+    for (int i = 0; i < n; i++) {
+        auto got = v.at(i);
+        auto exp = strs[unsortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+
+    for (int i = 0; i < 1024; i++) {
+        auto got = v.at(i + n);
+        auto exp = strs[3];
+        assertStrEq(got, exp);
+    }
+
+    // test on-demand sort
+    CrashIf(v.isSorted);
+    sv = v.AtSorted(0);
+    CrashIf(!v.isSorted);
+    for (int i = 0; i < n; i++) {
+        auto got = v.AtSorted(i);
+        auto exp = strs[sortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+
+    v.SortCaseInsensitive();
+    CrashIf(!v.isSorted);
+
+    for (int i = 0; i < n; i++) {
+        auto got = v.AtSorted(i);
+        auto exp = strs[sortedNoCaseOrder[i]];
+        assertStrEq(got, exp);
+    }
+}
+
+static void WStrVecTest() {
+    WStrVec v;
+    v.Append(str::Dup(L"foo"));
+    v.Append(str::Dup(L"bar"));
+    WCHAR* s = v.Join();
+    utassert(v.size() == 2);
+    utassert(str::Eq(L"foobar", s));
+    free(s);
+
+    s = v.Join(L";");
+    utassert(v.size() == 2);
+    utassert(str::Eq(L"foo;bar", s));
+    free(s);
+
+    v.Append(str::Dup(L"glee"));
+    s = v.Join(L"_ _");
+    utassert(v.size() == 3);
+    utassert(str::Eq(L"foo_ _bar_ _glee", s));
+    free(s);
+
+    v.Sort();
+    s = v.Join();
+    utassert(str::Eq(L"barfooglee", s));
+    free(s);
+
+    {
+        WStrVec v2(v);
+        utassert(str::Eq(v2.at(1), L"foo"));
+        v2.Append(str::Dup(L"nobar"));
+        utassert(str::Eq(v2.at(3), L"nobar"));
+        v2 = v;
+        utassert(v2.size() == 3 && v2.at(0) != v.at(0));
+        utassert(str::Eq(v2.at(1), L"foo"));
+    }
+
+    {
+        WStrVec v2;
+        size_t count = v2.Split(L"a,b,,c,", L",");
+        utassert(count == 5 && v2.Find(L"c") == 3);
+        utassert(v2.Find(L"") == 2);
+        utassert(v2.Find(L"", 3) == 4);
+        utassert(v2.Find(L"", 5) == -1);
+        utassert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
+        AutoFreeWstr joined(v2.Join(L";"));
+        utassert(str::Eq(joined, L"a;b;;c;"));
+    }
+
+    {
+        WStrVec v2;
+        size_t count = v2.Split(L"a,b,,c,", L",", true);
+        utassert(count == 3 && v2.Find(L"c") == 2);
+        AutoFreeWstr joined(v2.Join(L";"));
+        utassert(str::Eq(joined, L"a;b;c"));
+        AutoFreeWstr last(v2.Pop());
+        utassert(v2.size() == 2 && str::Eq(last, L"c"));
+    }
+}
+
+static void StrListTest() {
+    WStrList l;
+    utassert(l.size() == 0);
+    l.Append(str::Dup(L"one"));
+    l.Append(str::Dup(L"two"));
+    l.Append(str::Dup(L"One"));
+    utassert(l.size() == 3);
+    utassert(str::Eq(l.at(0), L"one"));
+    utassert(str::EqI(l.at(2), L"one"));
+    utassert(l.Find(L"One") == 2);
+    utassert(l.FindI(L"One") == 0);
+    utassert(l.Find(L"Two") == -1);
+}
+
 void StrTest() {
     WCHAR buf[32];
     const WCHAR* str = L"a string";
@@ -703,4 +846,7 @@ void StrTest() {
     StrConvTest();
     StrUrlExtractTest();
     ParseUntilTest();
+    WStrVecTest();
+    StrListTest();
+    StrVecTest();
 }

@@ -3,12 +3,14 @@
 
 /* styling for About/Properties windows */
 
+struct WindowInfo;
+
 constexpr const WCHAR* kLeftTextFont = L"Arial";
 constexpr int kLeftTextFontSize = 12;
 constexpr const WCHAR* kRightTextFont = L"Arial Black";
 constexpr int kRightTextFontSize = 12;
 
-void OnMenuAbout();
+void OnMenuAbout(WindowInfo*);
 
 void DrawAboutPage(WindowInfo* win, HDC hdc);
 
