@@ -11,6 +11,9 @@
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
+#include "wingui/ListBoxCtrl.h"
+
+#include "wingui/wingui2.h"
 
 #include "utils/Log.h"
 
@@ -945,6 +948,9 @@ void WindowBase::SetBounds(const RECT& r) const {
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (wg::PreTranslateMessage(msg)) {
+            continue;
+        }
         if (TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
             continue;
         }

@@ -107,13 +107,56 @@ struct CommandPaletteWnd : Wnd {
 
     LayoutBase* mainLayout = nullptr;
 
-    bool Create();
 
     void OnDestroy() override;
+    bool PreTranslateMessage(MSG&msg) override;
+
+    bool Create();
     void QueryChanged();
     void SelectionChanged();
     void ButtonClicked();
 };
+
+bool CommandPaletteWnd::PreTranslateMessage(MSG&msg) {
+    if (msg.message == WM_KEYDOWN) {
+        int dir = 0;
+        if (msg.wParam == VK_ESCAPE) {
+            Close();
+            return true;
+        }
+
+        if (msg.wParam == VK_RETURN) {
+            int sel = listBoxResults->GetCurrentSelection();
+            if (sel >= 0) {
+                logf("selected an item %d\n", sel);
+            }
+            return true;
+        }
+
+        if (msg.wParam == VK_UP) {
+            dir = -1;
+        } else if (msg.wParam == VK_DOWN) {
+            dir = 1;
+        }
+        if (!dir) {
+            return false;
+        }
+        int n = listBoxResults->GetCount();
+        if (n == 0) {
+            return false;
+        }
+        int currSel = listBoxResults->GetCurrentSelection();
+        int sel = currSel + dir;
+        if (sel < 0) {
+            sel = n -1;
+        }
+        if (sel >= n) {
+            sel = 0;
+        }
+        listBoxResults->SetCurrentSelection(sel);
+    }
+    return false;
+}
 
 void CommandPaletteWnd::QueryChanged() {
     logf("query changed\n");

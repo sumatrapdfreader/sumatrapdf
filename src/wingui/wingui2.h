@@ -62,9 +62,8 @@ struct Wnd : public ILayout {
     HWND Detach();
     void Cleanup();
 
-    void Subclass(HWND hwnd);
+    void Subclass();
     // void UnSubclass();
-    //  void SetDefaultFont();
 
     // Message handlers that can be
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -94,6 +93,7 @@ struct Wnd : public ILayout {
     LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
 
+    void Close();
     void SetPos(RECT* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
@@ -205,6 +205,7 @@ struct ListBox : Wnd {
 
     Size GetIdealSize() override;
 
+    int GetCount();
     int GetCurrentSelection();
     bool SetCurrentSelection(int);
     void SetModel(ListBoxModel*);

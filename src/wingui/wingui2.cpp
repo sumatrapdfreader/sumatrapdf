@@ -387,6 +387,11 @@ int Wnd::MinIntrinsicWidth(int) {
 #endif
 }
 
+void Wnd::Close() {
+    CrashIf(!::IsWindow(hwnd));
+    PostMessageW(hwnd, WM_CLOSE, 0, 0);
+}
+
 void Wnd::SetPos(RECT* r) {
     ::MoveWindow(hwnd, r);
 }
@@ -673,7 +678,8 @@ void Wnd::Attach(HWND hwnd) {
     CrashIf(!IsWindow(hwnd));
     CrashIf(WindowMapGetWindow(hwnd));
 
-    Subclass(hwnd);
+    this->hwnd = hwnd;
+    Subclass();
     OnAttach();
 }
 
@@ -729,6 +735,11 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
 
     DWORD style = args.style;
     style |= WS_CHILD;
+    if (args.visible) {
+        style |= WS_VISIBLE;
+    } else {
+        style &= ~WS_VISIBLE;
+    }
     DWORD exStyle = args.exStyle;
     const WCHAR* className = args.className;
     int x = args.pos.x;
@@ -741,7 +752,7 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     LPVOID* createParams = 0;
     hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
     CrashIf(!hwnd);
-    Subclass(hwnd);
+    Subclass();
     OnAttach();
     HFONT f = args.font;
     if (!f) {
@@ -826,15 +837,13 @@ void Wnd::SetInsetsPt(int top, int right, int bottom, int left) {
     insets = DpiScaledInsets(hwnd, top, right, bottom, left);
 }
 
-void Wnd::Subclass(HWND hwnd) {
+void Wnd::Subclass() {
     CrashIf(!IsWindow(hwnd));
     CrashIf(prevWindowProc); // don't subclass multiple times
 
-    this->hwnd = hwnd;
     WindowMapAdd(hwnd, this);
-    LONG_PTR pWndProc = reinterpret_cast<LONG_PTR>(StaticWindowProc);
-    LONG_PTR pRes = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, pWndProc);
-    prevWindowProc = reinterpret_cast<WNDPROC>(pRes);
+    prevWindowProc = SubclassWindow(hwnd, StaticWindowProc);
+    CrashIf(!prevWindowProc);
 }
 
 // application.cpp
@@ -1117,6 +1126,11 @@ Size ListBox::GetIdealSize() {
         res.dy = dy;
     }
     return res;
+}
+
+int ListBox::GetCount() {
+    LRESULT res = ListBox_GetCount(hwnd);
+    return (int)res;
 }
 
 int ListBox::GetCurrentSelection() {
