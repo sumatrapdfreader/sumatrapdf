@@ -179,28 +179,34 @@ bool Wnd::IsVisible() const {
 
 void Wnd::Destroy() {
     HwndDestroyWindowSafe(&hwnd);
-    if (font && parent) {
+    /*if (font && parent) {
         DeleteFontSafe(&font);
-    }
-    //TODO: move to Frame subclass
-    //DestroyIconSafe(&icon_large);
-    //DestroyIconSafe(&icon_small);
+    }*/
+    // TODO: move to Frame subclass
+    // DestroyIconSafe(&icon_large);
+    // DestroyIconSafe(&icon_small);
 
-    if (prev_window_proc) {
+    /*
+    if (prevWindowProc) {
         UnSubclass();
     }
+    */
 
-    WindowMapRemove(this);
-    hwnd = nullptr;
+    Cleanup();
 }
 
 LRESULT Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
+// This function is called when a window is attached to Wnd.
+// Override it to automatically perform tasks when the window is attached.
+// Note:  Window controls are attached.
+void Wnd::OnAttach() {
+}
+
 // Override this to handle WM_COMMAND messages
 bool Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
-
     //  UINT id = LOWORD(wparam);
     //  switch (id)
     //  {
@@ -224,10 +230,12 @@ int Wnd::OnCreate(HWND hwnd, CREATESTRUCT*) {
     // Note: Window controls don't call OnCreate. They are sublcassed (attached)
     //  after their window is created.
 
+    /*
     LOGFONT logfont;
     ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
     font = ::CreateFontIndirect(&logfont);
     ::SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
+    */
 
     return 0;
 }
@@ -533,7 +541,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
 
         case WM_PAINT: {
-            if (!prev_window_proc) {
+            if (!prevWindowProc) {
                 if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
                     PAINTSTRUCT ps;
                     HDC hdc = ::BeginPaint(hwnd, &ps);
@@ -650,8 +658,8 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 
 LRESULT Wnd::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (prev_window_proc) {
-        return ::CallWindowProc(prev_window_proc, hwnd, msg, wparam, lparam);
+    if (prevWindowProc) {
+        return ::CallWindowProc(prevWindowProc, hwnd, msg, wparam, lparam);
     } else {
         return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
@@ -661,22 +669,32 @@ void Wnd::SetWindowHandle(HWND hwnd) {
     this->hwnd = hwnd;
 }
 
+// Called by CWnd::Create to set some window creation parameters.
 void Wnd::PreCreate(CREATESTRUCT& cs) {
-    create_struct.cx = cs.cx;
-    create_struct.cy = cs.cy;
-    create_struct.dwExStyle = cs.dwExStyle;
-    create_struct.hInstance = instance;
-    create_struct.hMenu = cs.hMenu;
-    create_struct.hwndParent = cs.hwndParent;
-    create_struct.lpCreateParams = cs.lpCreateParams;
-    create_struct.lpszClass = cs.lpszClass;
-    create_struct.lpszName = cs.lpszName;
-    create_struct.style = cs.style;
-    create_struct.x = cs.x;
-    create_struct.y = cs.y;
+    // Override this function to set the CREATESTRUCT values prior to window creation.
+    // Here we set the initial values for the following:
+    //  window styles (WS_VISABLE, WS_CHILD, WS_WS_MAXIMIZEBOX etc.)
+    //  window extended styles
+    //  window position
+    //  window menu
+    //  window class name
+    //  window name (caption)
 }
 
-void Wnd::PreRegisterClass(WNDCLASSEX& wc) {
+static void WndRegisterClass(WNDCLASS& wc) {
+    WNDCLASS wcTest = {};
+    if (::GetClassInfo(GetInstance(), wc.lpszClassName, &wcTest)) {
+        wc = wcTest;
+        return;
+    }
+    wc.hInstance = GetInstance();
+    wc.lpfnWndProc = StaticWindowProc;
+    bool ok = ::RegisterClass(&wc);
+    CrashIf(!ok);
+}
+
+/*
+void Wnd::PreRegisterClass(WNDCLASS& wc) {
     window_class.style = wc.style;
     window_class.lpfnWndProc = StaticWindowProc;
     window_class.cbClsExtra = wc.cbClsExtra;
@@ -688,6 +706,7 @@ void Wnd::PreRegisterClass(WNDCLASSEX& wc) {
     window_class.lpszMenuName = wc.lpszMenuName;
     window_class.lpszClassName = wc.lpszClassName;
 }
+*/
 
 bool Wnd::PreTranslateMessage(MSG& msg) {
     return false;
@@ -709,60 +728,125 @@ bool Wnd::RegisterClass(WNDCLASSEX& wc) const {
 }
 
 void Wnd::Attach(HWND hwnd) {
-    Detach();
+    CrashIf(!IsWindow(hwnd));
+    CrashIf(WindowMapGetWindow(hwnd));
 
-    if (::IsWindow(hwnd)) {
-        if (!WindowMapGetWindow(hwnd)) {
-            WindowMapAdd(hwnd, this);
-            Subclass(hwnd);
-        }
-    }
+    Subclass(hwnd);
+    OnAttach();
+}
+
+// Attaches a CWnd object to a dialog item.
+void Wnd::AttachDlgItem(UINT id, HWND parent) {
+    CrashIf(!::IsWindow(parent));
+    HWND wnd = ::GetDlgItem(parent, id);
+    Attach(wnd);
 }
 
 HWND Wnd::Detach() {
-    HWND hwndRet = this->hwnd;
-
-    if (prev_window_proc) {
-        UnSubclass();
+    CrashIf(!prevWindowProc);
+    if (IsWindow(hwnd)) {
+        SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)(prevWindowProc));
     }
 
+    HWND wnd = this->hwnd;
     WindowMapRemove(this);
-
     this->hwnd = nullptr;
+    prevWindowProc = nullptr;
+    return wnd;
+}
 
-    return hwndRet;
+void Wnd::Cleanup() {
+    WindowMapRemove(this);
+    hwnd = nullptr;
+    prevWindowProc = nullptr;
 }
 
 HWND Wnd::Create(HWND parent) {
-    PreRegisterClass(window_class);
-    if (window_class.lpszClassName) {
-        RegisterClass(window_class);
-        create_struct.lpszClass = window_class.lpszClassName;
-    }
+    WNDCLASS wc = {};
+    CREATESTRUCT cs = {};
 
-    PreCreate(create_struct);
-    if (!create_struct.lpszClass) {
-        create_struct.lpszClass = kDefaultClassName;
-    }
-    if (!parent && create_struct.hwndParent) {
-        parent = create_struct.hwndParent;
-    }
-    DWORD style;
-    if (create_struct.style) {
-        style = create_struct.style;
+    // PreRegisterClass(wc);
+    wc.lpszClassName = wndClassName;
+    if (wc.lpszClassName) {
+        WndRegisterClass(wc);
+        cs.lpszClass = wc.lpszClassName;
     } else {
-        style = WS_VISIBLE | (parent ? WS_CHILD : WS_OVERLAPPEDWINDOW);
+        cs.lpszClass = kDefaultClassName;
     }
 
-    bool cx_or_cy = create_struct.cx || create_struct.cy;
-    int x = cx_or_cy ? create_struct.x : CW_USEDEFAULT;
-    int y = cx_or_cy ? create_struct.y : CW_USEDEFAULT;
-    int cx = cx_or_cy ? create_struct.cx : CW_USEDEFAULT;
-    int cy = cx_or_cy ? create_struct.cy : CW_USEDEFAULT;
+    // Set a reasonable default window style.
+    DWORD dwOverlappedStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+    cs.style = WS_VISIBLE | ((parent) ? WS_CHILD : dwOverlappedStyle);
 
-    return Create(create_struct.dwExStyle, create_struct.lpszClass, create_struct.lpszName, style, x, y, cx, cy, parent,
-                  create_struct.hMenu, create_struct.lpCreateParams);
+    // Set a reasonable default window position
+    if (0 == parent) {
+        cs.x = CW_USEDEFAULT;
+        cs.cx = CW_USEDEFAULT;
+        cs.y = CW_USEDEFAULT;
+        cs.cy = CW_USEDEFAULT;
+    }
+
+    // Allow the CREATESTRUCT parameters to be modified.
+    PreCreate(cs);
+
+    DWORD style = cs.style & ~WS_VISIBLE;
+
+    CreateEx(cs.dwExStyle, cs.lpszClass, cs.lpszName, style, cs.x, cs.y, cs.cx, cs.cy, parent, cs.hMenu,
+             cs.lpCreateParams);
+    CrashIf(!::IsWindow(hwnd));
+
+    if (cs.style & WS_VISIBLE) {
+        if (cs.style & WS_MAXIMIZE)
+            ::ShowWindow(hwnd, SW_MAXIMIZE);
+        else if (cs.style & WS_MINIMIZE)
+            ::ShowWindow(hwnd, SW_MINIMIZE);
+        else
+            ::ShowWindow(hwnd, SW_SHOWNORMAL);
+    }
+    return hwnd;
 }
+
+// Creates the window by specifying each parameter. The lpszClassName must
+//  be a predefined class name or registered with RegisterClass. A failure
+//  to create a window throws an exception.
+HWND Wnd::CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD style, int x, int y, int width,
+                   int height, HWND parent, HMENU idOrMenu, LPVOID lparam /*= NULL*/) {
+    CrashIf(IsWindow(hwnd)); // Only one window per CWnd instance allowed.
+
+    // Ensure a window class is registered.
+    if (!className || !*className) {
+        className = kDefaultClassName;
+    }
+
+    WNDCLASS wc = {};
+    wc.lpszClassName = (WCHAR*)className;
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
+    wc.hCursor = ::LoadCursor(0, IDC_ARROW);
+
+    // Register the window class (if not already registered).
+    WndRegisterClass(wc);
+
+    gWindowBeingCreated = this;
+    // Create window
+    hwnd = ::CreateWindowEx(exStyle, className, windowName, style, x, y, width, height, parent, idOrMenu, GetInstance(),
+                            lparam);
+
+    gWindowBeingCreated = nullptr;
+
+    CrashIf(!hwnd);
+
+    // Automatically subclass predefined window class types.
+    auto ok = ::GetClassInfo(GetInstance(), className, &wc);
+    CrashIf(!ok);
+    if (wc.lpfnWndProc != StaticWindowProc) {
+        Subclass(hwnd);
+        // Override this to perform tasks after the window is attached.
+        OnAttach();
+    }
+    return hwnd;
+}
+
+/*
 
 HWND Wnd::Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD style, int x, int y, int width,
                  int height, HWND parent, HMENU menu, LPVOID param) {
@@ -787,22 +871,17 @@ HWND Wnd::Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD 
 
     return hwnd;
 }
+*/
 
 void Wnd::Subclass(HWND hwnd) {
-    WNDPROC current_proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
-    if (current_proc != reinterpret_cast<WNDPROC>(StaticWindowProc)) {
-        prev_window_proc = reinterpret_cast<WNDPROC>(
-            ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(StaticWindowProc)));
-        this->hwnd = hwnd;
-    }
-}
+    CrashIf(!IsWindow(hwnd));
+    CrashIf(prevWindowProc); // don't subclass multiple times
 
-void Wnd::UnSubclass() {
-    WNDPROC current_proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
-    if (current_proc == reinterpret_cast<WNDPROC>(StaticWindowProc)) {
-        ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(prev_window_proc));
-        prev_window_proc = nullptr;
-    }
+    this->hwnd = hwnd;
+    WindowMapAdd(hwnd, this);
+    LONG_PTR pWndProc = reinterpret_cast<LONG_PTR>(StaticWindowProc);
+    LONG_PTR pRes = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, pWndProc);
+    prevWindowProc = reinterpret_cast<WNDPROC>(pRes);
 }
 
 // application.cpp

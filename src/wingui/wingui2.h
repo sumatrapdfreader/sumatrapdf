@@ -27,25 +27,34 @@ struct Wnd : public ILayout {
     void SetBounds(Rect) override;
     void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
 
-    HWND Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD style, int x, int y, int width,
-                int height, HWND parent, HMENU menu, LPVOID param);
+    HWND CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD style, int x, int y, int width,
+                  int height, HWND parent, HMENU idOrMenu, LPVOID lparam = NULL);
+
     virtual void PreCreate(CREATESTRUCT& cs);
-    virtual void PreRegisterClass(WNDCLASSEX& wc);
+
+    // we use wndClassName instead
+    // virtual void PreRegisterClass(WNDCLASSEX& wc);
+
     virtual bool PreTranslateMessage(MSG& msg);
 
     void Attach(HWND hwnd);
+    void AttachDlgItem(UINT id, HWND parent);
+
     HWND Detach();
+    void Cleanup();
+
     void SetWindowHandle(HWND hwnd);
 
     void Subclass(HWND hwnd);
-    void UnSubclass();
-    // void SetDefaultFont();
+    // void UnSubclass();
+    //  void SetDefaultFont();
 
     bool RegisterClass(WNDCLASSEX& wc) const;
 
     // Message handlers that can be
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
+    virtual void OnAttach();
     virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
     virtual void OnClose();
     virtual int OnCreate(HWND, CREATESTRUCT*);
@@ -87,18 +96,19 @@ struct Wnd : public ILayout {
     // data that can be set before calling Create()
     Visibility visibility{Visibility::Visible};
 
-    CREATESTRUCT create_struct = {};
-    WNDCLASSEX window_class = {};
     // TODO: move those to Frame subclass
-    //HICON icon_large = nullptr;
-    //HICON icon_small = nullptr;
-    //HMENU menu = nullptr;
+    // HICON icon_large = nullptr;
+    // HICON icon_small = nullptr;
+    // HMENU menu = nullptr;
 
-    HFONT font = nullptr;
-    WNDPROC prev_window_proc = nullptr;
-    HWND parent = nullptr;
+    // HFONT font = nullptr;
+    WNDPROC prevWindowProc = nullptr;
+    // HWND parent = nullptr;
     HWND hwnd = nullptr;
     HINSTANCE instance = nullptr;
+
+    // set this for controls in the constructor
+    const WCHAR* wndClassName = nullptr;
 };
 
 bool PreTranslateMessage(MSG& msg);
