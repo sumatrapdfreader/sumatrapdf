@@ -611,15 +611,14 @@ struct StrVec {
     int Size() const;
     std::string_view at(int) const;
 
-    void Append(const char*);
+    int Append(const char*);
     bool Exists(std::string_view);
-    bool AppendIfNotExists(std::string_view);
+    int AppendIfNotExists(std::string_view);
 };
 
 struct StrVecWithSort : StrVec {
     // index in sorted order
-    // using int because std::sort() doesn't support u32
-    Vec<int> sortedIndex;
+    Vec<u32> sortedIndex;
 
     StrVecWithSort() = default;
     ~StrVecWithSort() = default;

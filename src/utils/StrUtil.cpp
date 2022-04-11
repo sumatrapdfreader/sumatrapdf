@@ -2858,15 +2858,26 @@ void StrVec::Reset() {
     index.Reset();
 }
 
-void StrVec::Append(const char* s) {
+int StrVec::Append(const char* s) {
+    bool ok;
     if (s == nullptr) {
-        index.Append(kNullIdx);
-        return;
+        ok = index.Append(kNullIdx);
+        if (!ok) {
+            return -1;
+        }
+        return Size() - 1;
     }
     size_t sLen = str::Len(s);
     u32 idx = (u32)str.size();
-    str.Append(s, sLen + 1);
-    index.Append(idx);
+    ok = str.Append(s, sLen + 1);
+    if (!ok) {
+        return -1;
+    }
+    ok = index.Append(idx);
+    if (!ok) {
+        return -1;
+    }
+    return Size() - 1;
 }
 
 int StrVec::size() const {
@@ -2904,12 +2915,11 @@ bool StrVec::Exists(std::string_view sv) {
     return false;
 }
 
-bool StrVec::AppendIfNotExists(std::string_view sv) {
+int StrVec::AppendIfNotExists(std::string_view sv) {
     if (Exists(sv)) {
-        return false;
+        return -1;
     }
-    Append(sv.data());
-    return true;
+    return Append(sv.data());
 }
 
 void StrVecWithSort::Sort() {
@@ -2925,9 +2935,9 @@ void StrVecWithSort::Sort() {
 
     struct {
         StrVecWithSort& v;
-        bool operator()(int i, int j) const {
-            std::string_view is = v.at((int)v.index.at(i));
-            std::string_view js = v.at((int)v.index.at(j));
+        bool operator()(u32 i, u32 j) const {
+            std::string_view is = v.at((int)v.index.at((int)i));
+            std::string_view js = v.at((int)v.index.at((int)j));
             bool ret = is < js;
             return ret;
         }
