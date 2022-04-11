@@ -214,5 +214,6 @@ enum {
 #undef DEF_CMD
 
 int GetCommandIdByName(const char*);
+int GetCommandIdByDesc(const char*);
 
 extern SeqStrings gCommandDescriptions;

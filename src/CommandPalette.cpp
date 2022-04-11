@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/UITask.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -27,39 +28,6 @@
 #include "utils/Log.h"
 
 using namespace wg;
-
-struct CommandPaletteWnd : Wnd {
-    ~CommandPaletteWnd() override {
-        delete mainLayout;
-    }
-    Button* btn = nullptr;
-    Edit* editQuery = nullptr;
-
-    StrVec allStrings;
-    ListBox* listBox = nullptr;
-
-    LayoutBase* mainLayout = nullptr;
-
-    void OnDestroy() override;
-    bool PreTranslateMessage(MSG& msg) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-
-    bool Create(WindowInfo* win);
-    void QueryChanged();
-    void ListDoubleClick();
-    void ButtonClicked();
-};
-
-static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
-
-static bool IsCmdInList(i32 cmdId, int n, i32* list) {
-    for (int i = 0; i < n; i++) {
-        if (list[i] == cmdId) {
-            return true;
-        }
-    }
-    return false;
-}
 
 // clang-format off
 static i32 gBlacklistCommandsFromPalette[] = {
@@ -106,6 +74,42 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdToggleFullscreen,
 };
 // clang-format on
+
+static bool IsCmdInList(i32 cmdId, int n, i32* list) {
+    for (int i = 0; i < n; i++) {
+        if (list[i] == cmdId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+struct CommandPaletteWnd : Wnd {
+    ~CommandPaletteWnd() override {
+        delete mainLayout;
+    }
+    WindowInfo* win = nullptr;
+    Button* btn = nullptr;
+    Edit* editQuery = nullptr;
+
+    StrVec allStrings;
+    ListBox* listBox = nullptr;
+
+    LayoutBase* mainLayout = nullptr;
+
+    void OnDestroy() override;
+    bool PreTranslateMessage(MSG& msg) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+
+    void ScheduleDelete();
+
+    bool Create(WindowInfo* win);
+    void QueryChanged();
+    void ListDoubleClick();
+    void ButtonClicked();
+
+    void ExecuteSelection();
+};
 
 struct CommandPaletteBuildCtx {
     bool isDocLoaded = false;
@@ -230,7 +234,7 @@ LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
     switch (msg) {
         case WM_ACTIVATE:
             if (wparam == WA_INACTIVE) {
-                Close();
+                ScheduleDelete();
                 return 0;
             }
             break;
@@ -243,12 +247,12 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         int dir = 0;
         if (msg.wParam == VK_ESCAPE) {
-            Close();
+            ScheduleDelete();
             return true;
         }
 
         if (msg.wParam == VK_RETURN) {
-            ListDoubleClick();
+            ExecuteSelection();
             return true;
         }
 
@@ -278,7 +282,6 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
 }
 
 void CommandPaletteWnd::QueryChanged() {
-    logf("query changed\n");
     auto filter = editQuery->GetText();
     // TODO: would be more efficient to use existing model
     // and tell listbox to re-render
@@ -290,20 +293,49 @@ void CommandPaletteWnd::QueryChanged() {
     }
 }
 
-void CommandPaletteWnd::ListDoubleClick() {
-    int sel = listBox->GetCurrentSelection();
-    if (sel >= 0) {
-        logf("selected an item %d\n", sel);
-        Close();
+static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
+
+void SaveDeleteCommandPaletteWnd() {
+    if (!gCommandPaletteWnd) {
+        return;
     }
+    auto tmp = gCommandPaletteWnd;
+    gCommandPaletteWnd = nullptr;
+    delete tmp;
+}
+
+void CommandPaletteWnd::ScheduleDelete() {
+    uitask::Post(&SaveDeleteCommandPaletteWnd);
+}
+
+void CommandPaletteWnd::ExecuteSelection() {
+    int sel = listBox->GetCurrentSelection();
+    if (sel < 0) {
+        return;
+    }
+    auto s = listBox->model->Item(sel);
+    int cmdId = GetCommandIdByDesc(s.data());
+    // logf("selection: %s, id: %d\n", s.data(), cmdId);
+    if (cmdId >= 0) {
+        HwndSendCommand(win->hwndFrame, cmdId);
+        ScheduleDelete();
+        return;
+    }
+    // this must be a file path
+    // TODO: implement me
+    ScheduleDelete();
+}
+
+void CommandPaletteWnd::ListDoubleClick() {
+    ExecuteSelection();
 }
 
 void CommandPaletteWnd::ButtonClicked() {
-    Close();
+    ScheduleDelete();
 }
 
 void CommandPaletteWnd::OnDestroy() {
-    gCommandPaletteWnd = nullptr;
+    ScheduleDelete();
 }
 
 bool CommandPaletteWnd::Create(WindowInfo* win) {
@@ -383,14 +415,10 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
 }
 
 void RunCommandPallette(WindowInfo* win) {
-    auto wnd = gCommandPaletteWnd;
-    if (wnd) {
-        HWND hwnd = wnd->hwnd;
-        BringWindowToTop(hwnd);
-        return;
-    }
-
-    wnd = new CommandPaletteWnd();
+    CrashIf(gCommandPaletteWnd);
+    auto wnd = new CommandPaletteWnd();
+    wnd->win = win;
     bool ok = wnd->Create(win);
     CrashIf(!ok);
+    gCommandPaletteWnd = wnd;
 }

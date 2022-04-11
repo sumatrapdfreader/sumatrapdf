@@ -109,16 +109,9 @@ struct Wnd : public ILayout {
     // data that can be set before calling Create()
     Visibility visibility{Visibility::Visible};
 
-    // TODO: move those to Frame subclass
-    // HICON icon_large = nullptr;
-    // HICON icon_small = nullptr;
-    // HMENU menu = nullptr;
-
-    // HFONT font = nullptr;
     WNDPROC prevWindowProc = nullptr;
-    // HWND parent = nullptr;
     HWND hwnd = nullptr;
-    HINSTANCE instance = nullptr;
+    // HINSTANCE instance = nullptr; // TODO: probably doesn't need
 };
 
 bool PreTranslateMessage(MSG& msg);

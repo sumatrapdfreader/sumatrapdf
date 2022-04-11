@@ -18,12 +18,22 @@ SeqStrings gCommandDescriptions = COMMANDS(CMD_DESC) "\0";
 #undef CMD_DESC
 
 /* returns -1 if not found */
-int GetCommandIdByName(const char* cmdName) {
-    int idx = seqstrings::StrToIdxIS(gCommandNames, cmdName);
+static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
+    int idx = seqstrings::StrToIdxIS(commands, s);
     if (idx < 0) {
         return -1;
     }
     CrashIf(idx >= dimof(gCommandIds));
     int cmdId = gCommandIds[idx];
     return cmdId;
+}
+
+/* returns -1 if not found */
+int GetCommandIdByName(const char* cmdName) {
+    return GetCommandIdByNameOrDesc(gCommandNames, cmdName);
+}
+
+/* returns -1 if not found */
+int GetCommandIdByDesc(const char* cmdDesc) {
+    return GetCommandIdByNameOrDesc(gCommandDescriptions, cmdDesc);
 }

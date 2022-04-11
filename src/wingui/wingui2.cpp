@@ -105,7 +105,7 @@ LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
 }
 
 Wnd::Wnd() {
-    instance = GetModuleHandleW(nullptr);
+    // instance = GetModuleHandleW(nullptr);
     kind = kindWnd;
 }
 
@@ -168,19 +168,11 @@ bool Wnd::IsVisible() const {
 
 void Wnd::Destroy() {
     HwndDestroyWindowSafe(&hwnd);
-    /*if (font && parent) {
-        DeleteFontSafe(&font);
-    }*/
-    // TODO: move to Frame subclass
-    // DestroyIconSafe(&icon_large);
-    // DestroyIconSafe(&icon_small);
-
     /*
     if (prevWindowProc) {
         UnSubclass();
     }
     */
-
     Cleanup();
 }
 

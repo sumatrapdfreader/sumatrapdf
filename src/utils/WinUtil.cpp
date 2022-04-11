@@ -2402,8 +2402,9 @@ void HwndDestroyWindowSafe(HWND* hwnd) {
     if (!hwnd || !*hwnd || !::IsWindow(*hwnd)) {
         return;
     }
-    ::DestroyWindow(*hwnd);
+    auto hwndTemp = *hwnd;
     *hwnd = nullptr;
+    ::DestroyWindow(hwndTemp);
 }
 
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
