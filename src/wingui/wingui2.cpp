@@ -7,8 +7,11 @@
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
-#include "Layout.h"
-#include "wingui2.h"
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/ListBoxCtrl.h"
+#include "wingui/wingui2.h"
 
 #include "utils/Log.h"
 
@@ -1076,6 +1079,99 @@ LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
         return 0;
     }
     return 0;
+}
+
+} // namespace wg
+
+namespace wg {
+
+Kind kindListBox = "listbox";
+
+ListBox::ListBox() {
+    kind = kindListBox;
+    winClass = L"LISTBOX";
+#if 0
+    dwExStyle = 0;
+    dwStyle = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
+    dwStyle |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    ctrlID = 0;
+#endif
+}
+
+ListBox::~ListBox() {
+    delete this->model;
+}
+
+HWND ListBox::Create(HWND parent) {
+    idealSize = {DpiScale(parent, 120), DpiScale(parent, 32)};
+    HWND ret = Wnd::Create(parent);
+    CrashIf(!ret);
+
+    // TODO: update ideal size based on the size of the model?
+    if (!ret) {
+        return nullptr;
+    }
+    if (model != nullptr) {
+        FillWithItems(this->hwnd, model);
+    }
+    return ret;
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/lb-getitemheight
+int ListBox::GetItemHeight(int idx) {
+    // idx only valid for LBS_OWNERDRAWVARIABLE, otherwise should be 0
+    int res = (int)SendMessageW(hwnd, LB_GETITEMHEIGHT, idx, 0);
+    if (res == LB_ERR) {
+        // if failed for some reason, fallback to measuring text in default font
+        // HFONT f = GetFont();
+        HFONT f = GetDefaultGuiFont();
+        Size sz = HwndMeasureText(hwnd, L"A", f);
+        res = sz.dy;
+    }
+    return res;
+}
+
+Size ListBox::GetIdealSize() {
+    Size res = idealSize;
+    if (idealSizeLines > 0) {
+        int dy = GetItemHeight(0) * idealSizeLines + DpiScale(hwnd, 2 + 2); // padding of 2 at top and bottom
+        res.dy = dy;
+    }
+    return res;
+}
+
+int ListBox::GetCurrentSelection() {
+    LRESULT res = ListBox_GetCurSel(hwnd);
+    return (int)res;
+}
+
+// -1 to clear selection
+// returns false on error
+bool ListBox::SetCurrentSelection(int n) {
+    if (n < 0) {
+        ListBox_SetCurSel(hwnd, -1);
+        return true;
+    }
+    int nItems = model->ItemsCount();
+    if (n >= nItems) {
+        return false;
+    }
+    LRESULT res = ListBox_SetCurSel(hwnd, n);
+    return res != LB_ERR;
+}
+
+// for efficiency you can re-use model:
+// get the model, change data, call SetModel() again
+void ListBox::SetModel(ListBoxModel* model) {
+    if (this->model && (this->model != model)) {
+        delete this->model;
+    }
+    this->model = model;
+    if (model != nullptr) {
+        FillWithItems(this->hwnd, model);
+    }
+    SetCurrentSelection(-1);
+    // TODO: update ideal size based on the size of the model
 }
 
 } // namespace wg

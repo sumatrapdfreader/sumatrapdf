@@ -4299,7 +4299,6 @@ struct CommandPaletteWindow {
 
     EditCtrl* editQuery = nullptr;
     ListBoxCtrl* listBoxResults = nullptr;
-    ListBoxModel* lbModel = nullptr;
 };
 
 static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
@@ -4307,7 +4306,6 @@ static CommandPaletteWindow* gCommandPaletteWindow = nullptr;
 CommandPaletteWindow::~CommandPaletteWindow() {
     delete mainLayout;
     delete mainWindow;
-    delete lbModel;
 }
 
 static void CommandPaletteWindowCloseHandler(CommandPaletteWindow* win, WindowCloseEvent* ev) {
@@ -4528,8 +4526,6 @@ static void ComnandPaleteQueryChanged(CommandPaletteWindow* win, EditTextChanged
     auto filter = ev->text;
     auto m = new ListBoxModelStrings();
     FilterStrings(win->allStrings, filter.data(), m->strings);
-    delete win->lbModel;
-    win->lbModel = m;
     win->listBoxResults->SetModel(m);
     if (m->ItemsCount() > 0) {
         win->listBoxResults->SetCurrentSelection(0);
@@ -4566,8 +4562,7 @@ static void CreateCommandPaletteMainLayout(WindowInfo* winInfo, CommandPaletteWi
 
         auto m = new ListBoxModelStrings();
         FilterStrings(win->allStrings, nullptr, m->strings);
-        win->lbModel = m;
-        w->SetModel(win->lbModel);
+        w->SetModel(m);
 
         w->onSelectionChanged = [win](auto&& PH1) {
             return CommandPaletteSelectionChanged(win, std::forward<decltype(PH1)>(PH1));

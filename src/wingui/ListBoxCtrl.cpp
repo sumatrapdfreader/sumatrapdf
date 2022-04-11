@@ -39,10 +39,11 @@ ListBoxCtrl::ListBoxCtrl() {
     ctrlID = 0;
 }
 
-ListBoxCtrl::~ListBoxCtrl() = default;
+ListBoxCtrl::~ListBoxCtrl() {
+    delete this->model;
+}
 
-static void FillWithItems(ListBoxCtrl* w, ListBoxModel* model) {
-    HWND hwnd = w->hwnd;
+void FillWithItems(HWND hwnd, ListBoxModel* model) {
     ListBox_ResetContent(hwnd);
     for (int i = 0; i < model->ItemsCount(); i++) {
         auto sv = model->Item(i);
@@ -83,7 +84,7 @@ bool ListBoxCtrl::Create(HWND parent) {
         return false;
     }
     if (model != nullptr) {
-        FillWithItems(this, model);
+        FillWithItems(this->hwnd, model);
     }
     void* user = this;
     RegisterHandlerForMessage(hwnd, WM_COMMAND, Handle_WM_COMMAND, user);
@@ -132,10 +133,15 @@ bool ListBoxCtrl::SetCurrentSelection(int n) {
     return res != LB_ERR;
 }
 
+// for efficiency you can re-use model:
+// get the model, change data, call SetModel() again
 void ListBoxCtrl::SetModel(ListBoxModel* model) {
+    if (this->model && (this->model != model)) {
+        delete this->model;
+    }
     this->model = model;
     if (model != nullptr) {
-        FillWithItems(this, model);
+        FillWithItems(this->hwnd, model);
     }
     SetCurrentSelection(-1);
     // TODO: update ideal size based on the size of the model

@@ -166,8 +166,6 @@ struct EditAnnotationsWindow {
     ButtonCtrl* buttonSaveToCurrentFile = nullptr;
     ButtonCtrl* buttonSaveToNewFile = nullptr;
 
-    ListBoxModel* lbModel = nullptr;
-
     Vec<Annotation*>* annotations = nullptr;
     // currently selected annotation
     Annotation* annot = nullptr;
@@ -268,7 +266,6 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     DeleteAnnotations(this);
     delete mainWindow;
     delete mainLayout;
-    delete lbModel;
 }
 
 static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
@@ -327,8 +324,6 @@ static void RebuildAnnotations(EditAnnotationsWindow* ew) {
     }
 
     ew->listBox->SetModel(model);
-    delete ew->lbModel;
-    ew->lbModel = model;
     EnableSaveIfAnnotationsChanged(ew);
 }
 
@@ -905,8 +900,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0);
         bool ok = w->Create(parent);
         CrashIf(!ok);
-        ew->lbModel = new ListBoxModelStrings();
-        w->SetModel(ew->lbModel);
+        auto lbModel = new ListBoxModelStrings();
+        w->SetModel(lbModel);
         w->onSelectionChanged = [ew](auto&& PH1) {
             return ListBoxSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
         };

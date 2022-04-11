@@ -32,7 +32,7 @@ struct ListBoxCtrl : WindowBase {
     ListBoxModel* model = nullptr;
     ListBoxSelectionChangedHandler onSelectionChanged = nullptr;
 
-    Size idealSize{};
+    Size idealSize = {};
     int idealSizeLines = 0;
 
     ListBoxCtrl();
@@ -47,3 +47,5 @@ struct ListBoxCtrl : WindowBase {
     bool SetCurrentSelection(int);
     void SetModel(ListBoxModel*);
 };
+
+void FillWithItems(HWND hwnd, ListBoxModel* model);

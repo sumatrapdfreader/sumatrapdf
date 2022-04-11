@@ -4,8 +4,8 @@
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
+#include "wingui/ListBoxCtrl.h"
 #include "wingui/ButtonCtrl.h"
-
 #include "wingui/wingui2.h"
 
 // in TestTab.cpp

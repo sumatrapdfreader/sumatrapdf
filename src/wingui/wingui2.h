@@ -164,3 +164,30 @@ struct Edit : Wnd {
     bool SetCueText(std::string_view);
 };
 } // namespace wg
+
+namespace wg {
+
+using ListBoxSelectionChangedHandler = std::function<void()>;
+
+struct ListBox : Wnd {
+    ListBoxModel* model = nullptr;
+    ListBoxSelectionChangedHandler onSelectionChanged = nullptr;
+
+    Size idealSize = {};
+    int idealSizeLines = 0;
+
+    ListBox();
+    virtual ~ListBox();
+
+    HWND Create(HWND parent) override;
+
+    int GetItemHeight(int);
+
+    Size GetIdealSize() override;
+
+    int GetCurrentSelection();
+    bool SetCurrentSelection(int);
+    void SetModel(ListBoxModel*);
+};
+
+} // namespace wg
