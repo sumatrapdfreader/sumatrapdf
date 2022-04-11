@@ -79,7 +79,7 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 Wnd* gWindowBeingCreated = nullptr;
 const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
 
-LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     Wnd* window = WindowMapGetWindow(hwnd);
 
     if (!window) {
@@ -109,7 +109,7 @@ Wnd::Wnd() {
     if (!::GetClassInfoExW(instance, kDefaultClassName, &wc)) {
         wc.cbSize = sizeof(wc);
         wc.style = CS_DBLCLKS;
-        wc.lpfnWndProc = WindowProcStatic;
+        wc.lpfnWndProc = StaticWindowProc;
         wc.hInstance = instance;
         wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
         wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
@@ -182,8 +182,9 @@ void Wnd::Destroy() {
     if (font && parent) {
         DeleteFontSafe(&font);
     }
-    DestroyIconSafe(&icon_large);
-    DestroyIconSafe(&icon_small);
+    //TODO: move to Frame subclass
+    //DestroyIconSafe(&icon_large);
+    //DestroyIconSafe(&icon_small);
 
     if (prev_window_proc) {
         UnSubclass();
@@ -197,8 +198,20 @@ LRESULT Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
-BOOL Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
-    return FALSE;
+// Override this to handle WM_COMMAND messages
+bool Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
+
+    //  UINT id = LOWORD(wparam);
+    //  switch (id)
+    //  {
+    //  case IDM_FILE_NEW:
+    //      OnFileNew();
+    //      return true;   // return TRUE for handled commands
+    //  }
+
+    // return false for unhandled commands
+
+    return false;
 }
 
 // Called during window creation. Override this functions to perform tasks
@@ -219,6 +232,9 @@ int Wnd::OnCreate(HWND hwnd, CREATESTRUCT*) {
     return 0;
 }
 
+// This function is called when a window is destroyed.
+// Override it to do additional tasks, such as ending the application
+//  with PostQuitMessage.
 void Wnd::OnDestroy() {
 }
 
@@ -226,14 +242,21 @@ void Wnd::OnDestroy() {
 // Override this function in your derived class to perform drawing tasks.
 // Return Value: Return FALSE to also permit default erasure of the background
 //               Return TRUE to prevent default erasure of the background
-BOOL Wnd::OnEraseBkgnd(HDC) {
-    return FALSE;
+bool Wnd::OnEraseBkgnd(HDC) {
+    return false;
 }
 
+// Called in response to WM_CLOSE, before the window is destroyed.
+// Override this function to suppress destroying the window.
+// WM_CLOSE is sent by SendMessage(WM_CLOSE, 0, 0) or by clicking X
+//  in the top right corner.
+// Child windows don't receive WM_CLOSE unless they are closed using
+//  the Close function.
 void Wnd::OnClose() {
+    Destroy();
 }
 
-void Wnd::OnContextMenu(HWND hwnd, POINT pt) {
+void Wnd::OnContextMenu(HWND hwnd, Point pt) {
 }
 
 void Wnd::OnDropFiles(HDROP drop_info) {
@@ -567,7 +590,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             break;
         }
         case WM_GETMINMAXINFO: {
-            OnGetMinMaxInfo(reinterpret_cast<LPMINMAXINFO>(lparam));
+            OnGetMinMaxInfo(reinterpret_cast<MINMAXINFO*>(lparam));
             break;
         }
         case WM_LBUTTONDOWN:
@@ -594,7 +617,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
 
         case WM_CONTEXTMENU: {
-            POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+            Point pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
             OnContextMenu(reinterpret_cast<HWND>(wparam), pt);
             break;
         }
@@ -655,7 +678,7 @@ void Wnd::PreCreate(CREATESTRUCT& cs) {
 
 void Wnd::PreRegisterClass(WNDCLASSEX& wc) {
     window_class.style = wc.style;
-    window_class.lpfnWndProc = WindowProcStatic;
+    window_class.lpfnWndProc = StaticWindowProc;
     window_class.cbClsExtra = wc.cbClsExtra;
     window_class.cbWndExtra = wc.cbWndExtra;
     window_class.hInstance = instance;
@@ -679,7 +702,7 @@ bool Wnd::RegisterClass(WNDCLASSEX& wc) const {
 
     wc.cbSize = sizeof(wc);
     wc.hInstance = instance;
-    wc.lpfnWndProc = WindowProcStatic;
+    wc.lpfnWndProc = StaticWindowProc;
 
     auto res = ::RegisterClassEx(&wc);
     return ToBool(res);
@@ -755,7 +778,7 @@ HWND Wnd::Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD 
 
     WNDCLASSEX wc = {0};
     ::GetClassInfoEx(instance, class_name, &wc);
-    if (wc.lpfnWndProc != reinterpret_cast<WNDPROC>(WindowProcStatic)) {
+    if (wc.lpfnWndProc != reinterpret_cast<WNDPROC>(StaticWindowProc)) {
         Subclass(hwnd);
         OnCreate(hwnd, &create_struct);
     }
@@ -767,16 +790,16 @@ HWND Wnd::Create(DWORD ex_style, LPCWSTR class_name, LPCWSTR window_name, DWORD 
 
 void Wnd::Subclass(HWND hwnd) {
     WNDPROC current_proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
-    if (current_proc != reinterpret_cast<WNDPROC>(WindowProcStatic)) {
+    if (current_proc != reinterpret_cast<WNDPROC>(StaticWindowProc)) {
         prev_window_proc = reinterpret_cast<WNDPROC>(
-            ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProcStatic)));
+            ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(StaticWindowProc)));
         this->hwnd = hwnd;
     }
 }
 
 void Wnd::UnSubclass() {
     WNDPROC current_proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
-    if (current_proc == reinterpret_cast<WNDPROC>(WindowProcStatic)) {
+    if (current_proc == reinterpret_cast<WNDPROC>(StaticWindowProc)) {
         ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(prev_window_proc));
         prev_window_proc = nullptr;
     }
@@ -799,6 +822,7 @@ bool PreTranslateMessage(MSG& msg) {
     return false;
 }
 
+#if 0
 int MessageLoop() {
     MSG msg;
 
@@ -812,6 +836,7 @@ int MessageLoop() {
 
     return static_cast<int>(LOWORD(msg.wParam));
 }
+#endif
 
 } // namespace wg
 
