@@ -135,3 +135,32 @@ struct Button : Wnd {
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked);
 
 } // namespace wg
+
+// Edit
+
+namespace wg {
+using TextChangedHandler = std::function<void()>;
+
+struct Edit : Wnd {
+    str::Str cueText;
+    TextChangedHandler onTextChanged = nullptr;
+
+    // set before Create()
+    bool isMultiLine = false;
+    int idealSizeLines = 1;
+    int maxDx = 0;
+    bool hasBorder = false;
+
+    Edit();
+    ~Edit();
+
+    void PreCreate(CREATESTRUCT& cs) override;
+    HWND Create(HWND parent) override;
+    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+
+    Size GetIdealSize() override;
+
+    void SetSelection(int start, int end);
+    bool SetCueText(std::string_view);
+};
+} // namespace wg

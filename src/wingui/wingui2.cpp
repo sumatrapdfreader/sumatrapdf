@@ -3,7 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/BitManip.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 
 #include "Layout.h"
 #include "wingui2.h"
@@ -960,6 +962,120 @@ Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicke
     b->SetText(s);
     b->Create(parent);
     return b;
+}
+
+} // namespace wg
+
+namespace wg {
+
+Kind kindEdit = "edit";
+
+static bool EditSetCueText(HWND hwnd, std::string_view s) {
+    if (!hwnd) {
+        return false;
+    }
+    auto ws = ToWstrTemp(s);
+    bool ok = Edit_SetCueBannerText(hwnd, ws.Get()) == TRUE;
+    return ok;
+}
+
+Edit::Edit() {
+    winClass = WC_EDIT;
+    kind = kindEdit;
+}
+
+Edit::~Edit() {
+    // DeleteObject(bgBrush);
+}
+
+bool Edit::SetCueText(std::string_view s) {
+    cueText.Set(s);
+    return EditSetCueText(hwnd, cueText.AsView());
+}
+
+void Edit::SetSelection(int start, int end) {
+    Edit_SetSel(hwnd, start, end);
+}
+
+void Edit::PreCreate(CREATESTRUCT& cs) {
+    // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
+    LONG style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
+    style |= WS_BORDER;
+    hasBorder = bit::IsMaskSet<LONG>(style, WS_BORDER);
+    if (isMultiLine) {
+        style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
+    } else {
+        // ES_AUTOHSCROLL disable wrapping in multi-line setup
+        style |= ES_AUTOHSCROLL;
+    }
+    cs.style = style;
+}
+
+HWND Edit::Create(HWND parent) {
+    // Note: has to remember this here because when I GetWindowStyle() later on,
+    // WS_BORDER is not set, which is a mystery, because it is being drawn.
+    // also, WS_BORDER seems to be painted in client area
+
+    auto hwnd = Wnd::Create(parent);
+    CrashIf(!hwnd);
+    if (!hwnd) {
+        return nullptr;
+    }
+
+    EditSetCueText(hwnd, cueText.AsView());
+    return hwnd;
+}
+
+Size Edit::GetIdealSize() {
+    // TODO: use font on the control
+    HFONT hfont = GetDefaultGuiFont();
+    Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
+    // logf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
+    auto txt = win::GetTextTemp(hwnd);
+    Size s2 = HwndMeasureText(hwnd, txt, hfont);
+    // logf("EditCtrl::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
+
+    int dx = std::max(s1.dx, s2.dx);
+    if (maxDx > 0 && dx > maxDx) {
+        dx = maxDx;
+    }
+    // for multi-line text, this measures multiple line.
+    // TODO: maybe figure out better protocol
+    int dy = std::min(s1.dy, s2.dy);
+    if (dy == 0) {
+        dy = std::max(s1.dy, s2.dy);
+    }
+    dy = dy * idealSizeLines;
+    // logf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
+
+    LRESULT margins = SendMessageW(hwnd, EM_GETMARGINS, 0, 0);
+    int lm = (int)LOWORD(margins);
+    int rm = (int)HIWORD(margins);
+    dx += lm + rm;
+
+    if (this->hasBorder) {
+        dx += DpiScale(hwnd, 4);
+        dy += DpiScale(hwnd, 4);
+    }
+    // logf("EditCtrl::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
+    return {dx, dy};
+}
+
+LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_COMMAND) {
+        auto code = HIWORD(wparam);
+        if (code == EN_CHANGE && onTextChanged) {
+            onTextChanged();
+            return 1;
+        }
+        return 0;
+    }
+
+    if (msg == WM_CTLCOLOREDIT) {
+        // TOOD: return brush
+        return 0;
+    }
+    return 0;
 }
 
 } // namespace wg

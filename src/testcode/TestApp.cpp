@@ -93,6 +93,16 @@ void TestApp(HINSTANCE hInstance) {
     return;
 }
 
+using namespace wg;
+
+struct CommandPaletteWindow : Wnd {
+    ~CommandPaletteWindow() {
+        delete btn;
+    }
+    Button* btn;
+    Edit* query;
+};
+
 void TestWingui() {
     auto w = new wg::Wnd();
     w->Create(nullptr);
