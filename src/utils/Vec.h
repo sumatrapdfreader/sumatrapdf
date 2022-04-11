@@ -588,26 +588,42 @@ struct VecStr {
 
     VecStr() = default;
     ~VecStr() = default;
-    int Size() const;
     void Reset();
+
+    int Size() const;
+    std::string_view at(int) const;
+
     bool Append(std::string_view sv);
     bool Exists(std::string_view sv);
     bool AppendIfNotExists(std::string_view sv);
-    std::string_view at(int) const;
 };
 
 // implementation in StrUtil.cpp
 struct StrVec {
-    static const u32 kNullIdx = (u32)-2;
-    str::Str str;
-    Vec<u32> index;
+    str::Str str;   // a growable string
+    Vec<u32> index; // values are index into str
 
-    StrVec();
+    StrVec() = default;
     ~StrVec() = default;
     void Reset();
 
-    int size();
-    std::string_view at(int idx);
+    int size() const;
+    int Size() const;
+    std::string_view at(int) const;
 
-    void Append(const char* s);
+    void Append(const char*);
+    bool Exists(std::string_view);
+    bool AppendIfNotExists(std::string_view);
+};
+
+struct StrVecWithSort : StrVec {
+    // index in sorted order
+    // using int because std::sort() doesn't support u32
+    Vec<int> sortedIndex;
+
+    StrVecWithSort() = default;
+    ~StrVecWithSort() = default;
+
+    void Sort();
+    std::string_view AtSorted(int);
 };

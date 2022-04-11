@@ -2839,38 +2839,51 @@ void VecStr::Reset() {
     currIndex = nullptr;
 }
 
-StrVec::StrVec() {
-    // add one character so that we can use index 0 as "not found"
-    str.AppendChar(0);
-}
+//- StrVec
+
+/*
+TODO:
+ - StrVecWithData where it associate arbitrary data with each string
+ - StrVecWithSubset - has additional index which contains a subset
+   of strings which we create by providing a filter function.
+   Could be used for efficiently managing strings in
+   Command Palette
+*/
+
+// represents null string
+constexpr u32 kNullIdx = (u32)-2;
 
 void StrVec::Reset() {
     str.Reset();
-    str.AppendChar(0);
     index.Reset();
 }
 
 void StrVec::Append(const char* s) {
-    u32 idx = kNullIdx;
-    size_t sLen;
     if (s == nullptr) {
-        goto Append;
+        index.Append(kNullIdx);
+        return;
     }
-    sLen = str::Len(s);
-    idx = (u32)str.size();
+    size_t sLen = str::Len(s);
+    u32 idx = (u32)str.size();
     str.Append(s, sLen + 1);
-Append:
     index.Append(idx);
 }
 
-int StrVec::size() {
+int StrVec::size() const {
     return index.isize();
 }
 
-std::string_view StrVec::at(int idx) {
-    int n = size();
-    ReportIf(idx < 0 || idx >= n);
+int StrVec::Size() const {
+    return index.isize();
+}
+
+std::string_view StrVec::at(int idx) const {
+    int n = Size();
+    CrashIf(idx < 0 || idx >= n);
     u32 start = index.at(idx);
+    if (start == kNullIdx) {
+        return {};
+    }
     u32 end = (u32)str.size();
     if (idx + 1 < n) {
         end = (u32)index.at(idx + 1);
@@ -2878,4 +2891,54 @@ std::string_view StrVec::at(int idx) {
     const char* s = str.LendData() + start;
     size_t len = (size_t)(end - start - 1);
     return {s, len};
+}
+
+bool StrVec::Exists(std::string_view sv) {
+    int n = Size();
+    for (int i = 0; i < n; i++) {
+        auto s = at(i);
+        if (str::Eq(sv, s)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool StrVec::AppendIfNotExists(std::string_view sv) {
+    if (Exists(sv)) {
+        return false;
+    }
+    Append(sv.data());
+    return true;
+}
+
+void StrVecWithSort::Sort() {
+    // sortedIndex is 0...Size()-1 value
+    // that points into index Vec
+    // starty by fillng sortedIndex with 0...Size()-1
+    // and then sort by swapping indexes
+    u32 n = (u32)index.size();
+    sortedIndex.Reset();
+    for (u32 i = 0; i < n; i++) {
+        sortedIndex.Append(i);
+    }
+
+    struct {
+        StrVecWithSort& v;
+        bool operator()(int i, int j) const {
+            std::string_view is = v.at((int)v.index.at(i));
+            std::string_view js = v.at((int)v.index.at(j));
+            bool ret = is < js;
+            return ret;
+        }
+    } customLess{*this};
+
+    std::sort(sortedIndex.begin(), sortedIndex.end(), customLess);
+}
+
+std::string_view StrVecWithSort::AtSorted(int i) {
+    // must re-sort after changing data
+    CrashIf(sortedIndex.size() != index.size());
+    u32 i2 = sortedIndex[i];
+    return at((int)i2);
 }

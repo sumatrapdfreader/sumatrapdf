@@ -35,7 +35,7 @@ struct CommandPaletteWnd : Wnd {
     Button* btn = nullptr;
     Edit* editQuery = nullptr;
 
-    VecStr allStrings;
+    StrVec allStrings;
     ListBox* listBox = nullptr;
 
     LayoutBase* mainLayout = nullptr;
@@ -137,7 +137,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     return true;
 }
 
-static void AddOpenedFiles(VecStr& strings, WindowInfo* win) {
+static void AddOpenedFiles(StrVec& strings, WindowInfo* win) {
     for (TabInfo* tab : win->tabs) {
         if (!tab->IsDocLoaded()) {
             continue;
@@ -149,7 +149,7 @@ static void AddOpenedFiles(VecStr& strings, WindowInfo* win) {
     }
 }
 
-static void CollectPaletteStrings(VecStr& strings, WindowInfo* win) {
+static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
     DisplayModel* dm = win->AsFixed();
@@ -215,11 +215,11 @@ static bool FilterMatches(const char* str, const char* filter) {
     return true;
 }
 
-static void FilterStrings(const VecStr& allStrings, const char* filter, VecStr& matchedOut) {
+static void FilterStrings(const StrVec& strs, const char* filter, VecStr& matchedOut) {
     matchedOut.Reset();
-    int n = allStrings.Size();
+    int n = strs.Size();
     for (int i = 0; i < n; i++) {
-        auto s = allStrings.at(i);
+        auto s = strs.at(i);
         if (FilterMatches(s.data(), filter)) {
             matchedOut.Append(s);
         }
