@@ -33,10 +33,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
-#include "wingui/CheckboxCtrl.h"
-#include "wingui/EditCtrl.h"
-#include "wingui/ImageCtrl.h"
-#include "wingui/StaticCtrl.h"
 
 #include "SumatraConfig.h"
 #include "DisplayMode.h"

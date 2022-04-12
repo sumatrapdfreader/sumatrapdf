@@ -13,11 +13,10 @@
 #include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
-#include "wingui/DropDownCtrl.h"
 #include "wingui/TooltipCtrl.h"
 #include "wingui/TabsCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"
-#include "wingui/SplitterWnd.h"
+#include "wingui/SplitterCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
 #include "Annotation.h"

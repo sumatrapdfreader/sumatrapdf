@@ -26,7 +26,6 @@
 #include "wingui/EditCtrl.h"
 #include "wingui/StaticCtrl.h"
 #include "wingui/ProgressCtrl.h"
-#include "wingui/ImageCtrl.h"
 
 #include "Translations.h"
 

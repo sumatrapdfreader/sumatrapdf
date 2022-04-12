@@ -79,7 +79,6 @@ class RenderCache;
 struct TabInfo;
 struct LabelWithCloseWnd;
 struct SessionData;
-struct DropDownCtrl;
 struct Flags;
 
 // all defined in SumatraPDF.cpp

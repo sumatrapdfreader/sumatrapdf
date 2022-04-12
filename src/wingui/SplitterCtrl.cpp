@@ -10,7 +10,7 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 
-#include "SplitterWnd.h"
+#include "SplitterCtrl.h"
 
 // the technique for drawing the splitter for non-live resize is described
 // at http://www.catch22.net/tuts/splitter-windows

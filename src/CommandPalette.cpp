@@ -81,6 +81,10 @@ static i32 gCommandsNoActivate[] = {
     CmdOptions,
     CmdChangeLanguage,
     CmdHelpAbout,
+    CmdHelpOpenManualInBrowser,
+    CmdHelpVisitWebsite,
+    CmdOpenFile,
+    CmdOpenFolder,
     // TOOD: probably more
 };
 // clang-format on

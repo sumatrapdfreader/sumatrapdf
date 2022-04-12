@@ -16,21 +16,17 @@
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
-#include "utils/Archive.h"
-#include "utils/LzmaSimpleArchive.h"
 
 #include "SumatraConfig.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/SplitterWnd.h"
-#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/TreeModel.h"
 #include "wingui/ListBoxCtrl.h"
 #include "wingui/wingui2.h"
 
 #include "Accelerators.h"
-#include "wingui/TreeModel.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

@@ -23,8 +23,6 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
-#include "wingui/CheckboxCtrl.h"
-#include "wingui/EditCtrl.h"
 
 #include "CrashHandler.h"
 #include "Translations.h"

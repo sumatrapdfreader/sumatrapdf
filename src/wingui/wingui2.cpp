@@ -1088,10 +1088,10 @@ bool Edit::HasBorder() {
 Size Edit::GetIdealSize() {
     HFONT hfont = HwndGetFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
-    // logf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
+    // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
     auto txt = win::GetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
-    // logf("EditCtrl::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
+    // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
     int dx = std::max(s1.dx, s2.dx);
     if (maxDx > 0 && dx > maxDx) {
@@ -1104,7 +1104,7 @@ Size Edit::GetIdealSize() {
         dy = std::max(s1.dy, s2.dy);
     }
     dy = dy * idealSizeLines;
-    // logf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
+    // logf("Edit::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 
     LRESULT margins = SendMessageW(hwnd, EM_GETMARGINS, 0, 0);
     int lm = (int)LOWORD(margins);
@@ -1115,7 +1115,7 @@ Size Edit::GetIdealSize() {
         dx += DpiScale(hwnd, 4);
         dy += DpiScale(hwnd, 8);
     }
-    // logf("EditCtrl::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
+    // logf("Edit::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
     return {dx, dy};
 }
 

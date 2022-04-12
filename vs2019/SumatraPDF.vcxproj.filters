@@ -255,7 +255,7 @@
     <ClInclude Include="..\src\wingui\ProgressCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\SplitterWnd.h">
+    <ClInclude Include="..\src\wingui\SplitterCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\StaticCtrl.h">
@@ -581,7 +581,7 @@
     <ClCompile Include="..\src\wingui\ProgressCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
+    <ClCompile Include="..\src\wingui\SplitterCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\StaticCtrl.cpp">

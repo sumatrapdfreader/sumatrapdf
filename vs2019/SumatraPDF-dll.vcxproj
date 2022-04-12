@@ -635,7 +635,7 @@
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\ListBoxCtrl.h" />
     <ClInclude Include="..\src\wingui\ProgressCtrl.h" />
-    <ClInclude Include="..\src\wingui\SplitterWnd.h" />
+    <ClInclude Include="..\src\wingui\SplitterCtrl.h" />
     <ClInclude Include="..\src\wingui\StaticCtrl.h" />
     <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\TooltipCtrl.h" />
@@ -907,7 +907,7 @@
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\ListBoxCtrl.cpp" />
     <ClCompile Include="..\src\wingui\ProgressCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
+    <ClCompile Include="..\src\wingui\SplitterCtrl.cpp" />
     <ClCompile Include="..\src\wingui\StaticCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />

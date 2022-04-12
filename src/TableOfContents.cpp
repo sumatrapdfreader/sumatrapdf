@@ -14,10 +14,8 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/LabelWithCloseWnd.h"
-#include "wingui/SplitterWnd.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
-#include "wingui/DropDownCtrl.h"
 
 #include "Annotation.h"
 #include "DisplayMode.h"
