@@ -1095,6 +1095,18 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
 
 } // namespace wg
 
+//- Edit
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
+
+// TODO:
+// - expose EN_UPDATE
+// https://docs.microsoft.com/en-us/windows/win32/controls/en-update
+// - add border and possibly other decorations by handling WM_NCCALCSIZE, WM_NCPAINT and
+// WM_NCHITTEST
+//   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
+// - include value we remember in WM_NCCALCSIZE in GetIdealSize()
+
 namespace wg {
 
 Kind kindEdit = "edit";
@@ -1137,6 +1149,10 @@ HWND Edit::Create(const EditCreateArgs& editArgs) {
     } else {
         // ES_AUTOHSCROLL disable wrapping in multi-line setup
         args.style |= ES_AUTOHSCROLL;
+    }
+    idealSizeLines = editArgs.idealSizeLines;
+    if (idealSizeLines < 1) {
+        idealSizeLines = 1;
     }
     Wnd::CreateControl(args);
     CrashIf(!hwnd);
@@ -1189,6 +1205,7 @@ Size Edit::GetIdealSize() {
     return {dx, dy};
 }
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/en-change
 bool Edit::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
     if (code == EN_CHANGE && onTextChanged) {
@@ -1197,6 +1214,27 @@ bool Edit::OnCommand(WPARAM wparam, LPARAM lparam) {
     }
     return false;
 }
+
+#if 0
+// https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
+static void Handle_WM_CTLCOLOREDIT(void* user, WndEvent* ev) {
+    auto w = (EditCtrl*)user;
+    CrashIf(ev->msg != WM_CTLCOLOREDIT);
+    HWND hwndCtrl = (HWND)ev->lp;
+    CrashIf(hwndCtrl != w->hwnd);
+    if (w->bgBrush == nullptr) {
+        return;
+    }
+    HDC hdc = (HDC)ev->wp;
+    // SetBkColor(hdc, w->bgCol);
+    SetBkMode(hdc, TRANSPARENT);
+    if (w->textColor != ColorUnset) {
+        ::SetTextColor(hdc, w->textColor);
+    }
+    ev->didHandle = true;
+    ev->result = (INT_PTR)w->bgBrush;
+}
+#endif
 
 LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     if (msg == WM_CTLCOLOREDIT) {

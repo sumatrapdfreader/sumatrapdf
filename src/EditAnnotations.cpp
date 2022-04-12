@@ -19,7 +19,6 @@ extern "C" {
 #include "wingui/Window.h"
 #include "wingui/ListBoxCtrl.h"
 #include "wingui/DropDownCtrl.h"
-#include "wingui/EditCtrl.h"
 #include "wingui/TrackbarCtrl.h"
 
 #include "wingui/wingui2.h"
@@ -131,7 +130,7 @@ struct EditAnnotationsWindow {
     Static* staticModificationDate = nullptr;
     Static* staticPopup = nullptr;
     Static* staticContents = nullptr;
-    EditCtrl* editContents = nullptr;
+    Edit* editContents = nullptr;
     Static* staticTextAlignment = nullptr;
     DropDownCtrl* dropDownTextAlignment = nullptr;
     Static* staticTextFont = nullptr;
@@ -842,9 +841,9 @@ static UINT_PTR gWindowInfoRerenderTimer = 0;
 static WindowInfo* gWindowInfoForRender = nullptr;
 
 // TODO: there seems to be a leak
-static void ContentsChanged(EditAnnotationsWindow* ew, EditTextChangedEvent* ev) {
-    ev->didHandle = true;
-    SetContents(ew->annot, ev->text);
+static void ContentsChanged(EditAnnotationsWindow* ew) {
+    auto txt = ew->editContents->GetText();
+    SetContents(ew->annot, txt);
     EnableSaveIfAnnotationsChanged(ew);
 
     WindowInfo* win = ew->tab->win;
@@ -947,13 +946,15 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new EditCtrl();
-        w->isMultiLine = true;
-        w->idealSizeLines = 5;
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        EditCreateArgs args;
+        args.parent = parent;
+        args.isMultiLine = true;
+        args.idealSizeLines = 5;
+        auto w = new Edit();
+        HWND hwnd = w->Create(args);
+        CrashIf(!hwnd);
         w->maxDx = 150;
-        w->onTextChanged = [ew](auto&& PH1) { return ContentsChanged(ew, std::forward<decltype(PH1)>(PH1)); };
+        w->onTextChanged = [ew]() { return ContentsChanged(ew); };
         ew->editContents = w;
         vbox->AddChild(w);
     }

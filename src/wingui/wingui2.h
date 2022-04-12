@@ -191,6 +191,7 @@ struct EditCreateArgs {
     bool isMultiLine = false;
     bool withBorder = false;
     const char* cueText = nullptr;
+    int idealSizeLines = 1;
 };
 
 struct Edit : Wnd {

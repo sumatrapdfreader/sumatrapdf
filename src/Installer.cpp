@@ -22,7 +22,6 @@
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/EditCtrl.h"
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/ProgressCtrl.h"
 
@@ -60,7 +59,7 @@ static Button* gButtonRunSumatra = nullptr;
 static lzma::SimpleArchive gArchive{};
 
 static Static* gStaticInstDir = nullptr;
-static EditCtrl* gTextboxInstDir = nullptr;
+static Edit* gTextboxInstDir = nullptr;
 static Button* gButtonBrowseDir = nullptr;
 
 #if ENABLE_REGISTER_DEFAULT
@@ -770,10 +769,15 @@ static void OnCreateWindow(HWND hwnd) {
 
     x = WINDOW_MARGIN;
     dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - DpiScale(hwnd, 4);
-    gTextboxInstDir = new EditCtrl();
-    gTextboxInstDir->dwStyle |= WS_BORDER;
+
+    EditCreateArgs eargs;
+    eargs.parent = hwnd;
+    eargs.withBorder = true;
+    gTextboxInstDir = new Edit();
+    HWND ehwnd = gTextboxInstDir->Create(eargs);
+    CrashIf(!ehwnd);
+
     gTextboxInstDir->SetText(gCli->installDir);
-    gTextboxInstDir->Create(hwnd);
     rc = {x, y, x + dx, y + staticDy};
     gTextboxInstDir->SetBounds(rc);
 
