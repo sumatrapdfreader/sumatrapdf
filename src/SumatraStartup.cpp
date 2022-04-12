@@ -1275,6 +1275,9 @@ ContinueOpenWindow:
         goto Exit;
     }
 
+    // call before creating first window and menu
+    CreateSumatraAcceleratorTable();
+
     if (!win) {
         win = CreateAndShowWindowInfo();
         if (!win) {

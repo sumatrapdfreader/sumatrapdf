@@ -10,7 +10,7 @@ SeqStrings gCommandNames = COMMANDS(CMD_NAME) "\0";
 #undef CMD_NAME
 
 #define CMD_ID(id, txt) id,
-int gCommandIds[] = {COMMANDS(CMD_ID)};
+i32 gCommandIds[] = {COMMANDS(CMD_ID)};
 #undef CMD_ID
 
 #define CMD_DESC(id, txt) txt "\0"
@@ -25,7 +25,7 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s
     }
     CrashIf(idx >= dimof(gCommandIds));
     int cmdId = gCommandIds[idx];
-    return cmdId;
+    return (int)cmdId;
 }
 
 /* returns -1 if not found */

@@ -242,6 +242,10 @@ static MenuDef menuDefFile[] = {
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
     {
+        _TRN("Command Palette"),
+        CmdCommandPalette,
+    },
+    {
         _TRN("&Single Page"),
         CmdViewSinglePage,
     },
@@ -1427,10 +1431,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             }
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, title);
         } else {
-            // if this is an accelerator,
             str::WStr title2 = title;
             if (GetAccelByCmd(cmdId, accel)) {
-                // TODO: remove keyboard accelerator from all menu entries
+                // if this is an accelerator, append it to menu
                 if (!str::Find(title, L"\t")) {
                     AppendAccelKeyToMenuString(title2, accel);
                 }
