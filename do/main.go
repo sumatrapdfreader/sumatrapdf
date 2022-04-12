@@ -178,7 +178,6 @@ func main() {
 		flgBuildRelease    bool
 		flgWc              bool
 		flgTransDownload   bool
-		flgTransCiUpdate   bool
 		flgClean           bool
 		flgCheckAccessKeys bool
 		flgTriggerCodeQL   bool
@@ -209,7 +208,6 @@ func main() {
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgTransDownload, "trans-dl", false, "download latest translations to src/docs/translations.txt")
-		flag.BoolVar(&flgTransCiUpdate, "ci-trans-update", false, "download and checkin latest translations to src/docs/translations.txt")
 		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationsInfo.cpp")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
@@ -350,27 +348,6 @@ func main() {
 
 	if flgTransDownload {
 		downloadTranslations()
-		return
-	}
-
-	if flgTransCiUpdate {
-		didChange := downloadTranslations()
-		if !didChange {
-			return
-		}
-		{
-			cmd := exec.Command("git", "add", filepath.Join("src", "docs", "translations.txt"))
-			cmdRunLoggedMust(cmd)
-		}
-		{
-			cmd := exec.Command("git", "commit", "-am", "update translations")
-			cmdRunLoggedMust(cmd)
-		}
-		{
-			cmd := exec.Command("git", "push")
-			cmdRunLoggedMust(cmd)
-		}
-
 		return
 	}
 
