@@ -891,6 +891,11 @@ bool Wnd::IsFocused() const {
     return tobool(isFocused);
 }
 
+void Wnd::SetRtl(bool isRtl) const {
+    CrashIf(!hwnd);
+    SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
+}
+
 // application.cpp
 bool PreTranslateMessage(MSG& msg) {
     bool shouldProcess = (WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST) ||
@@ -1045,7 +1050,7 @@ Size Button::GetIdealSize() {
 }
 
 #if 0
-Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
+Size Button::SetTextAndResize(const WCHAR* s) {
     win::SetText(this->hwnd, s);
     Size size = this->GetIdealSize();
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;

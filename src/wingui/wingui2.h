@@ -107,6 +107,7 @@ struct Wnd : public ILayout {
     bool IsEnabled() const;
     void SetFocus() const;
     bool IsFocused() const;
+    void SetRtl(bool) const;
 
     Kind kind = nullptr;
 

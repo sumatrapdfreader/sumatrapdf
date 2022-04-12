@@ -597,7 +597,6 @@
     <ClInclude Include="..\src\uia\StartPageProvider.h" />
     <ClInclude Include="..\src\uia\TextRange.h" />
     <ClInclude Include="..\src\utils\UtAssert.h" />
-    <ClInclude Include="..\src\wingui\ButtonCtrl.h" />
     <ClInclude Include="..\src\wingui\CheckboxCtrl.h" />
     <ClInclude Include="..\src\wingui\DialogSizer.h" />
     <ClInclude Include="..\src\wingui\DropDownCtrl.h" />
@@ -866,7 +865,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp" />
     <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp" />
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
     <ClCompile Include="..\src\wingui\DropDownCtrl.cpp" />

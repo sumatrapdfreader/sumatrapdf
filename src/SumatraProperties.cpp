@@ -26,8 +26,9 @@
 #include "SumatraConfig.h"
 
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/ButtonCtrl.h"
+#include "wingui/wingui2.h"
+
+using namespace wg;
 
 void ShowProperties(HWND parent, Controller* ctrl, bool extended);
 
@@ -84,8 +85,8 @@ struct PropertiesLayout {
 
     HWND hwnd = nullptr;
     HWND hwndParent = nullptr;
-    ButtonCtrl* btnCopyToClipboard = nullptr;
-    ButtonCtrl* btnGetFonts = nullptr;
+    Button* btnCopyToClipboard = nullptr;
+    Button* btnGetFonts = nullptr;
     Vec<PropertyEl*> props;
 };
 
@@ -509,18 +510,26 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     bool isRtl = IsUIRightToLeft();
     SetRtl(hwnd, isRtl);
     {
-        auto b = new ButtonCtrl();
-        b->Create(hwnd);
-        b->SetText(_TR("Copy To Clipboard"));
+        ButtonCreateArgs args;
+        args.parent = hwnd;
+        args.text = _TRA("Copy To Clipboard");
+
+        auto b = new Button();
+        b->Create(args);
+
         layoutData->btnCopyToClipboard = b;
         b->SetRtl(isRtl);
         b->onClicked = [hwnd] { CopyPropertiesToClipboard(hwnd); };
     }
 
     if (!extended) {
-        auto b = new ButtonCtrl();
-        b->Create(hwnd);
-        b->SetText(_TR("Get Fonts Info"));
+        ButtonCreateArgs args;
+        args.parent = hwnd;
+        args.text = _TRA("Get Fonts Info");
+
+        auto b = new Button();
+        b->Create(args);
+
         b->SetRtl(isRtl);
         layoutData->btnGetFonts = b;
         b->onClicked = [hwnd] { ShowExtendedProperties(hwnd); };
@@ -728,7 +737,8 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     PropertiesLayout* pl;
 
     LRESULT res = 0;
-    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+    res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res != 0) {
         return res;
     }
 
