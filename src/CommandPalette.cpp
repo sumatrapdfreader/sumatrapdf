@@ -99,17 +99,13 @@ static bool IsCmdInList(i32 cmdId, int n, i32* list) {
 }
 
 struct CommandPaletteWnd : Wnd {
-    ~CommandPaletteWnd() override {
-        delete mainLayout;
-    }
+    ~CommandPaletteWnd() override = default;
     WindowInfo* win = nullptr;
 
     Edit* editQuery = nullptr;
     StrVec allStrings;
     ListBox* listBox = nullptr;
     Static* staticHelp = nullptr;
-
-    LayoutBase* mainLayout = nullptr;
 
     void OnDestroy() override;
     bool PreTranslateMessage(MSG& msg) override;
@@ -466,7 +462,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     }
 
     auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
-    mainLayout = padding;
+    layout = padding;
 
     auto rc = ClientRect(win->hwndFrame);
     int dy = rc.dy - 72;
@@ -476,7 +472,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     if (dy > 640) {
         dy = 640;
     }
-    LayoutAndSizeToContent(mainLayout, 520, dy, hwnd);
+    LayoutAndSizeToContent(layout, 520, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
     SetIsVisible(true);

@@ -17,8 +17,8 @@
 
 Kind kindWnd = "wnd";
 
-// this is experimantal win32 gui wrappers based on
-// https://github.com/erengy/windows
+// TODO:
+// - if layout is set, do layout on WM_SIZE using LayoutToSize
 
 namespace wg {
 
@@ -111,6 +111,7 @@ Wnd::Wnd() {
 
 Wnd::~Wnd() {
     Destroy();
+    delete layout;
 }
 
 Kind Wnd::GetKind() {

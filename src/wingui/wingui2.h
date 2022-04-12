@@ -113,7 +113,7 @@ struct Wnd : public ILayout {
 
     WNDPROC prevWindowProc = nullptr;
     HWND hwnd = nullptr;
-    // HINSTANCE instance = nullptr; // TODO: probably doesn't need
+    ILayout* layout = nullptr;
 };
 
 bool PreTranslateMessage(MSG& msg);
