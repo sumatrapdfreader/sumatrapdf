@@ -16,6 +16,7 @@ struct CreateControlArgs {
     HMENU ctrlId = 0;
     bool visible = true;
     HFONT font = nullptr;
+    const char* text = nullptr;
 };
 
 struct CreateCustomArgs {
@@ -98,6 +99,7 @@ struct Wnd : public ILayout {
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
     void SetText(const WCHAR*);
+    void SetText(const char*);
     TempStr GetText();
 
     Kind kind = nullptr;
@@ -118,18 +120,48 @@ bool PreTranslateMessage(MSG& msg);
 
 } // namespace wg
 
-//- Button
+//- Static
+
 namespace wg {
 using ClickedHandler = std::function<void()>;
+
+struct StaticCreateArgs {
+    HWND parent = nullptr;
+    const char* text = nullptr;
+};
+
+struct Static : Wnd {
+    Static();
+    ~Static() override = default;
+
+    ClickedHandler onClicked = nullptr;
+
+    HWND Create(const StaticCreateArgs&);
+
+    Size GetIdealSize() override;
+
+    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+};
+
+} // namespace wg
+
+//- Button
+namespace wg {
+
+struct ButtonCreateArgs {
+    HWND parent = nullptr;
+    const char* text = nullptr;
+};
 
 struct Button : Wnd {
     ClickedHandler onClicked = nullptr;
     bool isDefault = false;
 
     Button();
-    ~Button() override;
+    ~Button() override = default;
 
-    HWND Create(HWND parent);
+    HWND Create(const ButtonCreateArgs&);
 
     Size GetIdealSize() override;
 

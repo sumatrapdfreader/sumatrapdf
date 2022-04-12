@@ -118,11 +118,17 @@ Kind Wnd::GetKind() {
 }
 
 void Wnd::SetText(const WCHAR* s) {
-    // can be set before we create the window
-    if (hwnd) {
-        HwndSetText(hwnd, s);
-        HwndInvalidate(hwnd);
+    CrashIf(!hwnd);
+    HwndSetText(hwnd, s);
+    HwndInvalidate(hwnd); // TODO: move inside HwndSetText()?
+}
+
+void Wnd::SetText(const char* s) {
+    if (!s) {
+        s = "";
     }
+    auto ws = ToWstrTemp(s);
+    SetText(ws.Get());
 }
 
 TempStr Wnd::GetText() {
@@ -754,6 +760,9 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
         f = GetDefaultGuiFont();
     }
     HwndSetFont(hwnd, f);
+    if (args.text) {
+        SetText(args.text);
+    }
     return hwnd;
 }
 
@@ -858,24 +867,85 @@ bool PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-#if 0
-int MessageLoop() {
-    MSG msg;
+} // namespace wg
 
-    // TODO: add handling of accelerators
-    while (::GetMessage(&msg, nullptr, 0, 0)) {
-        if (!PreTranslateMessage(msg)) {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
-        }
+//- Static
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
+
+namespace wg {
+Kind kindStatic = "static";
+
+Static::Static() {
+    kind = kindStatic;
+}
+
+HWND Static::Create(const StaticCreateArgs& btnArgs) {
+    CreateControlArgs args;
+    args.className = WC_STATICW;
+    args.parent = btnArgs.parent;
+    args.style = WS_CHILD | WS_VISIBLE | SS_NOTIFY;
+    args.text = btnArgs.text;
+
+    Wnd::CreateControl(args);
+    CrashIf(!hwnd);
+
+    auto size = GetIdealSize();
+    RECT r{0, 0, size.dx, size.dy};
+    SetBounds(r);
+    return hwnd;
+}
+
+Size Static::GetIdealSize() {
+    CrashIf(!hwnd);
+    WCHAR* txt = win::GetTextTemp(hwnd);
+    HFONT hfont = GetWindowFont(hwnd);
+    return HwndMeasureText(hwnd, txt, hfont);
+}
+
+bool Static::OnCommand(WPARAM wparam, LPARAM lparam) {
+    auto code = HIWORD(wparam);
+    if (code == STN_CLICKED && onClicked) {
+        onClicked();
+        return true;
     }
+    return false;
+}
 
-    return static_cast<int>(LOWORD(msg.wParam));
+#if 0
+void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
+    auto w = (StaticCtrl*)user;
+    uint msg = ev->msg;
+    CrashIf(msg != WM_CTLCOLORSTATIC);
+    HDC hdc = (HDC)ev->wp;
+    if (w->textColor != ColorUnset) {
+        SetTextColor(hdc, w->textColor);
+    }
+    // the brush we return is the background color for the whole
+    // area of static control
+    // SetBkColor() is just for the part where the text is
+    // SetBkMode(hdc, TRANSPARENT) sets the part of the text to transparent
+    // (but the whole background is still controlled by the bruhs
+    auto bgBrush = w->backgroundColorBrush;
+    if (bgBrush != nullptr) {
+        SetBkColor(hdc, w->backgroundColor);
+        ev->result = (LRESULT)bgBrush;
+    } else {
+        SetBkMode(hdc, TRANSPARENT);
+    }
+    ev->didHandle = true;
 }
 #endif
 
-} // namespace wg
+LRESULT Static::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_CTLCOLORSTATIC) {
+        // TODO: implement me
+        return 0;
+    }
+    return 0;
+}
 
+} // namespace wg
 //- Button
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
@@ -886,8 +956,6 @@ Kind kindButton = "button";
 Button::Button() {
     kind = kindButton;
 }
-
-Button::~Button() = default;
 
 bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
@@ -906,10 +974,10 @@ LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-HWND Button::Create(HWND parent) {
+HWND Button::Create(const ButtonCreateArgs& btnArgs) {
     CreateControlArgs args;
     args.className = WC_BUTTONW;
-    args.parent = parent;
+    args.parent = btnArgs.parent;
     args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     if (isDefault) {
         args.style |= BS_DEFPUSHBUTTON;
@@ -920,6 +988,11 @@ HWND Button::Create(HWND parent) {
     Wnd::CreateControl(args);
     CrashIf(!hwnd);
 
+    // TODO: maybe fold into CreateControl
+    if (btnArgs.text) {
+        auto s = ToWstrTemp(btnArgs.text);
+        SetText(s.Get());
+    }
     auto size = GetIdealSize();
     RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);
@@ -943,8 +1016,10 @@ Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked) {
     auto b = new Button();
     b->onClicked = onClicked;
-    b->SetText(s);
-    b->Create(parent);
+    ButtonCreateArgs args;
+    args.parent = parent;
+    args.text = ToUtf8Temp(s).Get();
+    b->Create(args);
     return b;
 }
 

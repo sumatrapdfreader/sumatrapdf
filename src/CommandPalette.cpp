@@ -73,6 +73,16 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdFavoriteToggle,
     CmdToggleFullscreen,
 };
+
+// for those commands do not activate main window
+// for example those that show dialogs (because the main window takes
+// focus away from them)
+static i32 gCommandsNoActivate[] = {
+    CmdOptions,
+    CmdChangeLanguage,
+    CmdHelpAbout,
+    // TOOD: probably more
+};
 // clang-format on
 
 static bool IsCmdInList(i32 cmdId, int n, i32* list) {
@@ -89,11 +99,11 @@ struct CommandPaletteWnd : Wnd {
         delete mainLayout;
     }
     WindowInfo* win = nullptr;
-    Button* btn = nullptr;
-    Edit* editQuery = nullptr;
 
+    Edit* editQuery = nullptr;
     StrVec allStrings;
     ListBox* listBox = nullptr;
+    Static* staticHelp = nullptr;
 
     LayoutBase* mainLayout = nullptr;
 
@@ -106,9 +116,8 @@ struct CommandPaletteWnd : Wnd {
     bool Create(WindowInfo* win);
     void QueryChanged();
     void ListDoubleClick();
-    void ButtonClicked();
 
-    void ExecuteSelection();
+    void ExecuteCurrentSelection();
 };
 
 struct CommandPaletteBuildCtx {
@@ -277,7 +286,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         }
 
         if (msg.wParam == VK_RETURN) {
-            ExecuteSelection();
+            ExecuteCurrentSelection();
             return true;
         }
 
@@ -329,27 +338,33 @@ void SafeDeleteCommandPaletteWnd() {
     auto tmp = gCommandPaletteWnd;
     gCommandPaletteWnd = nullptr;
     delete tmp;
-    SetActiveWindow(gHwndToActivateOnClose);
-    gHwndToActivateOnClose = nullptr;
+    if (gHwndToActivateOnClose) {
+        SetActiveWindow(gHwndToActivateOnClose);
+        gHwndToActivateOnClose = nullptr;
+    }
 }
 
 void CommandPaletteWnd::ScheduleDelete() {
     uitask::Post(&SafeDeleteCommandPaletteWnd);
 }
 
-void CommandPaletteWnd::ExecuteSelection() {
+void CommandPaletteWnd::ExecuteCurrentSelection() {
     int sel = listBox->GetCurrentSelection();
     if (sel < 0) {
         return;
     }
     auto s = listBox->model->Item(sel);
     int cmdId = GetCommandIdByDesc(s.data());
-    // logf("selection: %s, id: %d\n", s.data(), cmdId);
     if (cmdId >= 0) {
+        bool noActivate = IsCmdInList(cmdId, (int)dimof(gCommandsNoActivate), gCommandsNoActivate);
+        if (noActivate) {
+            gHwndToActivateOnClose = nullptr;
+        }
         HwndSendCommand(win->hwndFrame, cmdId);
         ScheduleDelete();
         return;
     }
+
     TabInfo* tab = FindOpenedFile(s);
     if (tab != nullptr) {
         if (tab->win->currentTab != tab) {
@@ -367,19 +382,28 @@ void CommandPaletteWnd::ExecuteSelection() {
 }
 
 void CommandPaletteWnd::ListDoubleClick() {
-    ExecuteSelection();
-}
-
-void CommandPaletteWnd::ButtonClicked() {
-    ScheduleDelete();
+    ExecuteCurrentSelection();
 }
 
 void CommandPaletteWnd::OnDestroy() {
     ScheduleDelete();
 }
 
+// almost like HwndPositionInCenterOf but y is near top of hwndRelative
+static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
+    Rect rRelative = WindowRect(hwndRelative);
+    Rect r = WindowRect(hwnd);
+    int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
+    int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
+
+    Rect rc = ShiftRectToWorkArea(Rect{x, y, r.dx, r.dy}, hwnd, true);
+    rc.y = rRelative.y + 32;
+    SetWindowPos(hwnd, nullptr, rc.x, rc.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
 bool CommandPaletteWnd::Create(WindowInfo* win) {
     CollectPaletteStrings(allStrings, win);
+
     {
         CreateCustomArgs args;
         // args.title = L"Command Palette";
@@ -396,22 +420,23 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
-        auto c = new Edit();
         EditCreateArgs args;
         args.parent = hwnd;
         args.isMultiLine = false;
         args.withBorder = true;
         args.cueText = "a cue text";
-        HWND ok = c->Create(args);
-        CrashIf(!ok);
+        auto c = new Edit();
         c->maxDx = 150;
         c->onTextChanged = std::bind(&CommandPaletteWnd::QueryChanged, this);
+        HWND ok = c->Create(args);
+        CrashIf(!ok);
         editQuery = c;
         vbox->AddChild(c);
     }
 
     {
         auto c = new ListBox();
+        c->onDoubleClick = std::bind(&CommandPaletteWnd::ListDoubleClick, this);
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         auto wnd = c->Create(hwnd);
@@ -420,18 +445,19 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
         auto m = new ListBoxModelStrings();
         FilterStrings(allStrings, nullptr, m->strings);
         c->SetModel(m);
-        c->onDoubleClick = std::bind(&CommandPaletteWnd::ListDoubleClick, this);
         listBox = c;
         vbox->AddChild(c, 1);
     }
 
     {
-        auto c = new Button();
-        auto wnd = c->Create(hwnd);
+        StaticCreateArgs args;
+        args.parent = hwnd;
+        args.text = "↑ ↓ to navigate      Enter to select     Esc to close";
+
+        auto c = new Static();
+        auto wnd = c->Create(args);
         CrashIf(!wnd);
-        c->SetText(L"Close");
-        c->onClicked = std::bind(&CommandPaletteWnd::ButtonClicked, this);
-        btn = c;
+        staticHelp = c;
         vbox->AddChild(c);
     }
 
@@ -447,7 +473,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
         dy = 640;
     }
     LayoutAndSizeToContent(mainLayout, 520, dy, hwnd);
-    HwndPositionInCenterOf(hwnd, win->hwndFrame);
+    PositionCommandPalette(hwnd, win->hwndFrame);
 
     SetIsVisible(true);
     ::SetFocus(editQuery->hwnd);
