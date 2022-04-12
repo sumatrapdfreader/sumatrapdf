@@ -780,34 +780,21 @@ void WindowBase::SetRtl(bool isRtl) const {
 
 Kind kindWindow = "window";
 
-struct winClassWithAtom {
-    const WCHAR* winClass = nullptr;
-    ATOM atom = 0;
-};
-
-Vec<winClassWithAtom> gRegisteredClasses;
-
 static void RegisterWindowClass(Window* w) {
-    // check if already registered
-    for (auto&& ca : gRegisteredClasses) {
-        if (str::Eq(ca.winClass, w->winClass)) {
-            if (ca.atom != 0) {
-                return;
-            }
-        }
+    WNDCLASSEXW wc{};
+    BOOL ok = ::GetClassInfoExW(GetInstance(), w->winClass, &wc);
+    if (ok) {
+        return;
     }
-    WNDCLASSEXW wcex{};
-    wcex.cbSize = sizeof(wcex);
-    wcex.hIcon = w->hIcon;
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-    wcex.hIconSm = w->hIconSm;
-    wcex.lpfnWndProc = wndProcCustom;
-    wcex.lpszClassName = w->winClass;
-    wcex.lpszMenuName = w->lpszMenuName;
-    ATOM atom = RegisterClassExW(&wcex);
+    wc.cbSize = sizeof(wc);
+    wc.hIcon = w->hIcon;
+    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hIconSm = w->hIconSm;
+    wc.lpfnWndProc = wndProcCustom;
+    wc.lpszClassName = w->winClass;
+    wc.lpszMenuName = w->lpszMenuName;
+    ATOM atom = RegisterClassExW(&wc);
     CrashIf(!atom);
-    winClassWithAtom ca = {w->winClass, atom};
-    gRegisteredClasses.Append(ca);
 }
 
 Window::Window() {
