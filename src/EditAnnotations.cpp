@@ -17,12 +17,13 @@ extern "C" {
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/StaticCtrl.h"
 #include "wingui/ButtonCtrl.h"
 #include "wingui/ListBoxCtrl.h"
 #include "wingui/DropDownCtrl.h"
 #include "wingui/EditCtrl.h"
 #include "wingui/TrackbarCtrl.h"
+
+#include "wingui/wingui2.h"
 
 #include "Annotation.h"
 #include "DisplayMode.h"
@@ -44,6 +45,8 @@ extern "C" {
 #include "SumatraPDF.h"
 
 #include "utils/Log.h"
+
+using namespace wg;
 
 using std::placeholders::_1;
 
@@ -124,38 +127,38 @@ struct EditAnnotationsWindow {
     LayoutBase* mainLayout = nullptr;
 
     ListBoxCtrl* listBox = nullptr;
-    StaticCtrl* staticRect = nullptr;
-    StaticCtrl* staticAuthor = nullptr;
-    StaticCtrl* staticModificationDate = nullptr;
-    StaticCtrl* staticPopup = nullptr;
-    StaticCtrl* staticContents = nullptr;
+    Static* staticRect = nullptr;
+    Static* staticAuthor = nullptr;
+    Static* staticModificationDate = nullptr;
+    Static* staticPopup = nullptr;
+    Static* staticContents = nullptr;
     EditCtrl* editContents = nullptr;
-    StaticCtrl* staticTextAlignment = nullptr;
+    Static* staticTextAlignment = nullptr;
     DropDownCtrl* dropDownTextAlignment = nullptr;
-    StaticCtrl* staticTextFont = nullptr;
+    Static* staticTextFont = nullptr;
     DropDownCtrl* dropDownTextFont = nullptr;
-    StaticCtrl* staticTextSize = nullptr;
+    Static* staticTextSize = nullptr;
     TrackbarCtrl* trackbarTextSize = nullptr;
-    StaticCtrl* staticTextColor = nullptr;
+    Static* staticTextColor = nullptr;
     DropDownCtrl* dropDownTextColor = nullptr;
 
-    StaticCtrl* staticLineStart = nullptr;
+    Static* staticLineStart = nullptr;
     DropDownCtrl* dropDownLineStart = nullptr;
-    StaticCtrl* staticLineEnd = nullptr;
+    Static* staticLineEnd = nullptr;
     DropDownCtrl* dropDownLineEnd = nullptr;
 
-    StaticCtrl* staticIcon = nullptr;
+    Static* staticIcon = nullptr;
     DropDownCtrl* dropDownIcon = nullptr;
 
-    StaticCtrl* staticBorder = nullptr;
+    Static* staticBorder = nullptr;
     TrackbarCtrl* trackbarBorder = nullptr;
 
-    StaticCtrl* staticColor = nullptr;
+    Static* staticColor = nullptr;
     DropDownCtrl* dropDownColor = nullptr;
-    StaticCtrl* staticInteriorColor = nullptr;
+    Static* staticInteriorColor = nullptr;
     DropDownCtrl* dropDownInteriorColor = nullptr;
 
-    StaticCtrl* staticOpacity = nullptr;
+    Static* staticOpacity = nullptr;
     TrackbarCtrl* trackbarOpacity = nullptr;
 
     ButtonCtrl* buttonSaveAttachment = nullptr;
@@ -880,11 +883,13 @@ static void WndSizeHandler(EditAnnotationsWindow* ew, SizeEvent* ev) {
     LayoutToSize(ew->mainLayout, {dx, dy});
 }
 
-static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
-    auto w = new StaticCtrl();
-    bool ok = w->Create(parent);
-    CrashIf(!ok);
-    w->SetText(sv);
+static Static* CreateStatic(HWND parent, std::string_view sv = {}) {
+    auto w = new Static();
+    StaticCreateArgs args;
+    args.parent = parent;
+    args.text = sv.data();
+    HWND hwnd = w->Create(args);
+    CrashIf(!hwnd);
     return w;
 }
 

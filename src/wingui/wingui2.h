@@ -100,6 +100,8 @@ struct Wnd : public ILayout {
     bool IsVisible() const;
     void SetText(const WCHAR*);
     void SetText(const char*);
+    void SetText(std::string_view);
+
     TempStr GetText();
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;

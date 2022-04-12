@@ -131,6 +131,15 @@ void Wnd::SetText(const char* s) {
     SetText(ws.Get());
 }
 
+void Wnd::SetText(std::string_view sv) {
+    if (sv.empty()) {
+        SetText(L"");
+    }
+    auto ws = ToWstrTemp(sv);
+    SetText(ws.Get());
+}
+
+
 TempStr Wnd::GetText() {
     auto sw = win::GetTextTemp(hwnd);
     auto sa = ToUtf8Temp(sw.AsView());

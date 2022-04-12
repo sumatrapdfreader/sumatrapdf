@@ -2,6 +2,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+#if 0
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
@@ -297,8 +298,10 @@ static BOOL CreateMainWindow(HINSTANCE hInstance, int nCmdShow) {
     UpdateWindow(hwnd);
     return TRUE;
 }
+#endif
 
 int TestLayout(HINSTANCE hInstance, int nCmdShow) {
+#if 0
     RegisterWinClass(hInstance);
 
     if (!CreateMainWindow(hInstance, nCmdShow)) {
@@ -308,4 +311,7 @@ int TestLayout(HINSTANCE hInstance, int nCmdShow) {
     HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
     auto res = RunMessageLoop(accelTable, g_hwnd);
     return res;
+#else
+    return 0;
+#endif
 }
