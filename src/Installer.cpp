@@ -32,12 +32,8 @@
 #include "AppPrefs.h"
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
-#include "SettingsStructs.h"
-#include "GlobalPrefs.h"
-#include "AppUtil.h"
 #include "Flags.h"
 #include "SumatraPDF.h"
-#include "resource.h"
 #include "Version.h"
 #include "Installer.h"
 

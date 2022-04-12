@@ -13,16 +13,16 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
+
 #include <tlhelp32.h>
 #include <io.h>
+
 #include "utils/FileUtil.h"
 #include "Translations.h"
-#include "resource.h"
 #include "utils/Timer.h"
 #include "Version.h"
 #include "utils/WinUtil.h"
 #include "utils/CmdLineArgsIter.h"
-#include "CrashHandler.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/Log.h"
@@ -36,8 +36,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
-#include "SettingsStructs.h"
-#include "GlobalPrefs.h"
 #include "Flags.h"
 #include "SumatraPDF.h"
 #include "Installer.h"
