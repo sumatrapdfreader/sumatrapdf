@@ -151,7 +151,7 @@ bool Load() {
         setMin(s.dx, 0);
         setMin(s.dy, 0);
     }
-    setMin(gprefs->tabWidth, 300);
+    setMin(gprefs->tabWidth, 60);
     setMin(gprefs->sidebarDx, 0);
     setMin(gprefs->tocDy, 0);
     setMin(gprefs->treeFontSize, 0);
