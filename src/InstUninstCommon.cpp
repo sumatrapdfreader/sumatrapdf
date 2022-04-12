@@ -555,24 +555,6 @@ bool CheckInstallUninstallPossible(bool silent) {
     return possible;
 }
 
-ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {
-    auto* b = new ButtonCtrl();
-    b->SetText(s);
-    b->Create(hwndParent);
-
-    RECT r;
-    GetClientRect(hwndParent, &r);
-    Size size = b->GetIdealSize();
-    int x = RectDx(r) - size.dx - WINDOW_MARGIN;
-    int y = RectDy(r) - size.dy - WINDOW_MARGIN;
-    r.left = x;
-    r.right = x + size.dx;
-    r.top = y;
-    r.bottom = y + size.dy;
-    b->SetPos(&r);
-    return b;
-}
-
 // This display is inspired by http://letteringjs.com/
 typedef struct {
     // part that doesn't change

@@ -21,11 +21,13 @@
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ButtonCtrl.h"
-#include "wingui/CheckboxCtrl.h"
+#include "wingui/ListBoxCtrl.h"
 #include "wingui/EditCtrl.h"
+#include "wingui/CheckboxCtrl.h"
 #include "wingui/StaticCtrl.h"
 #include "wingui/ProgressCtrl.h"
+
+#include "wingui/wingui2.h"
 
 #include "Translations.h"
 
@@ -49,16 +51,18 @@
 static bool gRegisterAsDefault = false;
 #endif
 
+using namespace wg;
+
 static bool gAutoUpdate = false;
 static HBRUSH ghbrBackground = nullptr;
 
-static ButtonCtrl* gButtonOptions = nullptr;
-static ButtonCtrl* gButtonRunSumatra = nullptr;
+static Button* gButtonOptions = nullptr;
+static Button* gButtonRunSumatra = nullptr;
 static lzma::SimpleArchive gArchive{};
 
 static StaticCtrl* gStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
-static ButtonCtrl* gButtonBrowseDir = nullptr;
+static Button* gButtonBrowseDir = nullptr;
 
 #if ENABLE_REGISTER_DEFAULT
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
@@ -66,8 +70,8 @@ static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
 static CheckboxCtrl* gCheckboxRegisterSearchFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
-static ButtonCtrl* gButtonExit = nullptr;
-static ButtonCtrl* gButtonInstaller = nullptr;
+static Button* gButtonExit = nullptr;
+static Button* gButtonInstaller = nullptr;
 
 static HANDLE hThread = nullptr;
 static bool success = false;
@@ -96,7 +100,7 @@ static void OnButtonExit() {
 }
 
 static void CreateButtonExit(HWND hwndParent) {
-    gButtonExit = CreateDefaultButtonCtrl(hwndParent, _TR("Close"));
+    gButtonExit = CreateDefaultButton(hwndParent, _TR("Close"));
     gButtonExit->onClicked = OnButtonExit;
 }
 
@@ -331,7 +335,7 @@ static void OnButtonStartSumatra() {
 }
 
 static void CreateButtonRunSumatra(HWND hwndParent) {
-    gButtonRunSumatra = CreateDefaultButtonCtrl(hwndParent, _TR("Start SumatraPDF"));
+    gButtonRunSumatra = CreateDefaultButton(hwndParent, _TR("Start SumatraPDF"));
     gButtonRunSumatra->onClicked = OnButtonStartSumatra;
 }
 
@@ -529,7 +533,14 @@ static void EnableAndShow(WindowBase* w, bool enable) {
     }
 }
 
-static Size SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
+static void EnableAndShow(Wnd* w, bool enable) {
+    if (w) {
+        win::SetVisibility(w->hwnd, enable);
+        w->SetIsEnabled(enable);
+    }
+}
+
+static Size SetButtonTextAndResize(Button* b, const WCHAR* s) {
     b->SetText(s);
     Size size = b->GetIdealSize();
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
@@ -681,11 +692,11 @@ static void OnCreateWindow(HWND hwnd) {
     RECT rc;
     Rect r = ClientRect(hwnd);
 
-    gButtonInstaller = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
+    gButtonInstaller = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
     gButtonInstaller->onClicked = OnButtonInstall;
 
     Size btnSize;
-    gButtonOptions = CreateDefaultButtonCtrl(hwnd, _TR("&Options"));
+    gButtonOptions = CreateDefaultButton(hwnd, _TR("&Options"));
     gButtonOptions->onClicked = OnButtonOptions;
 
     btnSize = gButtonOptions->GetIdealSize();
@@ -751,7 +762,7 @@ static void OnCreateWindow(HWND hwnd) {
     const WCHAR* s = L"&...";
     Size btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize2.dx += DpiScale(hwnd, 4);
-    gButtonBrowseDir = CreateDefaultButtonCtrl(hwnd, s);
+    gButtonBrowseDir = CreateDefaultButton(hwnd, s);
     gButtonBrowseDir->onClicked = OnButtonBrowse;
     // btnSize = gButtonBrowseDir->GetIdealSize();
     x = r.dx - WINDOW_MARGIN - btnSize2.dx;
@@ -835,6 +846,10 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
 
     LRESULT res = 0;
     if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
+    }
+    res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res) {
         return res;
     }
 

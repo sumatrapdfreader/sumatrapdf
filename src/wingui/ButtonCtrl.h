@@ -15,3 +15,4 @@ struct ButtonCtrl : WindowBase {
 };
 
 ButtonCtrl* CreateButton(HWND parent, std::string_view s, const ClickedHandler& onClicked);
+ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);

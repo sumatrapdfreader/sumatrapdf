@@ -12,7 +12,6 @@
 
 #define WIN_BG_COLOR RGB(0xff, 0xf2, 0) // yellow
 
-// TODO: should scale
 #define WINDOW_MARGIN DpiScale(8)
 
 /* The window is divided in three parts:
@@ -53,7 +52,6 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
 void InitInstallerUninstaller();
 void OnPaintFrame(HWND hwnd);
 void AnimStep();

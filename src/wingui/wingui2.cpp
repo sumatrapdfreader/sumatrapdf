@@ -464,23 +464,35 @@ LRESULT Wnd::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 
 // for interop with windows not wrapped in Wnd, run this at the beginning of message loop
-LRESULT TryReflectNotify(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     // hwnd is a parent of control sending WM_NOTIFY message
-    LRESULT result = 0;
-    if (msg != WM_NOTIFY) {
-        return result;
-    }
-    // Do notification reflection if message came from a child window.
-    // Restricting OnNotifyReflect to child windows avoids double handling.
-    NMHDR* hdr = reinterpret_cast<LPNMHDR>(lparam);
-    HWND from = hdr->hwndFrom;
-    Wnd* wndFrom = WindowMapGetWindow(from);
-    if (wndFrom) {
-        if (hwnd == GetParent(wndFrom->hwnd)) {
-            result = wndFrom->OnNotifyReflect(wparam, lparam);
+    switch (msg) {
+        case WM_COMMAND: {
+            // Reflect this message if it's from a control.
+            Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
+            bool didHandle = false;
+            if (pWnd != nullptr) {
+                didHandle = pWnd->OnCommand(wparam, lparam);
+            }
+            if (didHandle) {
+                return 1;
+            }
+        } break; // Note: Some MDI commands require default processing.
+        case WM_NOTIFY: {
+            // Do notification reflection if message came from a child window.
+            // Restricting OnNotifyReflect to child windows avoids double handling.
+            NMHDR* hdr = reinterpret_cast<LPNMHDR>(lparam);
+            HWND from = hdr->hwndFrom;
+            Wnd* wndFrom = WindowMapGetWindow(from);
+            if (!wndFrom) {
+                return 0;
+            }
+            if (hwnd == GetParent(wndFrom->hwnd)) {
+                return wndFrom->OnNotifyReflect(wparam, lparam);
+            }
         }
     }
-    return result;
+    return 0;
 }
 
 LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -851,6 +863,27 @@ void Wnd::Subclass() {
     CrashIf(!prevWindowProc);
 }
 
+void Wnd::SetIsEnabled(bool isEnabled) const {
+    // TODO: make it work even if not yet created?
+    CrashIf(!hwnd);
+    BOOL enabled = isEnabled ? TRUE : FALSE;
+    ::EnableWindow(hwnd, enabled);
+}
+
+bool Wnd::IsEnabled() const {
+    BOOL enabled = ::IsWindowEnabled(hwnd);
+    return tobool(enabled);
+}
+
+void Wnd::SetFocus() const {
+    ::SetFocus(hwnd);
+}
+
+bool Wnd::IsFocused() const {
+    BOOL isFocused = ::IsFocused(hwnd);
+    return tobool(isFocused);
+}
+
 // application.cpp
 bool PreTranslateMessage(MSG& msg) {
     bool shouldProcess = (WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST) ||
@@ -1015,12 +1048,36 @@ Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 #endif
 
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked) {
-    auto b = new Button();
-    b->onClicked = onClicked;
     ButtonCreateArgs args;
     args.parent = parent;
     args.text = ToUtf8Temp(s).Get();
+
+    auto b = new Button();
+    b->onClicked = onClicked;
     b->Create(args);
+    return b;
+}
+
+#define kButtonMargin DpiScale(8)
+
+Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
+    ButtonCreateArgs args;
+    args.parent = parent;
+    args.text = ToUtf8Temp(s).Get();
+
+    auto* b = new Button();
+    b->Create(args);
+
+    RECT r;
+    GetClientRect(parent, &r);
+    Size size = b->GetIdealSize();
+    int x = RectDx(r) - size.dx - kButtonMargin;
+    int y = RectDy(r) - size.dy - kButtonMargin;
+    r.left = x;
+    r.right = x + size.dx;
+    r.top = y;
+    r.bottom = y + size.dy;
+    b->SetPos(&r);
     return b;
 }
 

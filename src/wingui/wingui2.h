@@ -3,7 +3,7 @@
 
 namespace wg {
 
-LRESULT TryReflectNotify(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
@@ -101,6 +101,10 @@ struct Wnd : public ILayout {
     void SetText(const WCHAR*);
     void SetText(const char*);
     TempStr GetText();
+    void SetIsEnabled(bool isEnabled) const;
+    bool IsEnabled() const;
+    void SetFocus() const;
+    bool IsFocused() const;
 
     Kind kind = nullptr;
 
@@ -170,6 +174,7 @@ struct Button : Wnd {
 };
 
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked);
+Button* CreateDefaultButton(HWND parent, const WCHAR* s);
 
 } // namespace wg
 

@@ -5,6 +5,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
@@ -75,5 +76,25 @@ ButtonCtrl* CreateButton(HWND parent, std::string_view s, const ClickedHandler& 
     b->onClicked = onClicked;
     b->SetText(s);
     b->Create(parent);
+    return b;
+}
+
+#define kButtonMargin DpiScale(8)
+
+ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {
+    auto* b = new ButtonCtrl();
+    b->SetText(s);
+    b->Create(hwndParent);
+
+    RECT r;
+    GetClientRect(hwndParent, &r);
+    Size size = b->GetIdealSize();
+    int x = RectDx(r) - size.dx - kButtonMargin;
+    int y = RectDy(r) - size.dy - kButtonMargin;
+    r.left = x;
+    r.right = x + size.dx;
+    r.top = y;
+    r.bottom = y + size.dy;
+    b->SetPos(&r);
     return b;
 }
