@@ -24,7 +24,6 @@
 #include "wingui/ListBoxCtrl.h"
 #include "wingui/EditCtrl.h"
 #include "wingui/CheckboxCtrl.h"
-#include "wingui/StaticCtrl.h"
 #include "wingui/ProgressCtrl.h"
 
 #include "wingui/wingui2.h"
@@ -60,7 +59,7 @@ static Button* gButtonOptions = nullptr;
 static Button* gButtonRunSumatra = nullptr;
 static lzma::SimpleArchive gArchive{};
 
-static StaticCtrl* gStaticInstDir = nullptr;
+static Static* gStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
 static Button* gButtonBrowseDir = nullptr;
 
@@ -780,11 +779,14 @@ static void OnCreateWindow(HWND hwnd) {
 
     y -= staticDy;
 
-    s = _TR("Install SumatraPDF in &folder:");
+    const char* s2 = _TRA("Install SumatraPDF in &folder:");
     rc = {x, y, x + r.dx, y + staticDy};
-    gStaticInstDir = new StaticCtrl();
-    gStaticInstDir->SetText(s);
-    gStaticInstDir->Create(hwnd);
+
+    StaticCreateArgs args;
+    args.parent = hwnd;
+    args.text = s2;
+    gStaticInstDir = new Static();
+    gStaticInstDir->Create(args);
     gStaticInstDir->SetBounds(rc);
 
     gShowOptions = !gShowOptions;
