@@ -111,8 +111,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFavoriteAdd, "Favorites: Add")                                   \
     V(CmdFavoriteDel, "Favorites: Delete")                                \
     V(CmdFavoriteToggle, "Favorites: Toggle")                             \
-    V(CmdFavoriteShow, "Favorites: Show")                                 \
-    V(CmdFavoriteHide, "Favorites: Hide")                                 \
     V(CmdDebugShowLinks, "Deubg: Show Links")                             \
     V(CmdDebugCrashMe, "Debug: Crash Me")                                 \
     V(CmdDebugAnnotations, "Debug: Annotations")                          \

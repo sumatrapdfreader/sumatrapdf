@@ -50,13 +50,12 @@ static i32 gBlacklistCommandsFromPalette[] = {
 
     CmdFavoriteAdd,
     CmdFavoriteDel,
-    CmdFavoriteToggle,
 
     CmdPresentationWhiteBackground,
     CmdPresentationBlackBackground,
 };
 
-// most commands is not valid when document is not opened
+// most commands are not valid when document is not opened
 // it's shorter to list the remaining commands
 static i32 gDocumentNotOpenWhitelist[] = {
     CmdOpenFile,
@@ -71,8 +70,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdHelpOpenManualInBrowser,
     CmdHelpVisitWebsite,
     CmdHelpAbout,
-    CmdFavoriteShow,
-    CmdFavoriteHide,
+    CmdFavoriteToggle,
     CmdToggleFullscreen,
 };
 // clang-format on
