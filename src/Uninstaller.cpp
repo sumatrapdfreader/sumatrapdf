@@ -32,8 +32,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-
 #include "wingui/wingui2.h"
 
 #include "SumatraConfig.h"
@@ -383,7 +381,8 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
     bool handled;
 
     LRESULT res = 0;
-    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+    res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res != 0) {
         return res;
     }
 
