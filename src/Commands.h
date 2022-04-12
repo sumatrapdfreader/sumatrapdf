@@ -103,7 +103,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOptions, "Options...")                                           \
     V(CmdAdvancedOptions, "Advanced Options...")                          \
     V(CmdChangeLanguage, "Change Language...")                            \
-    V(CmdCheckUpdate, "Check For Update")                                 \
+    V(CmdCheckUpdate, "Check For Updates")                                \
     V(CmdHelpOpenManualInBrowser, "Help: Manual")                         \
     V(CmdHelpVisitWebsite, "Help: SumatraPDF Website")                    \
     V(CmdHelpAbout, "Help: About SumatraPDF")                             \
@@ -112,14 +112,14 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFavoriteDel, "Favorites: Delete")                                \
     V(CmdFavoriteToggle, "Favorites: Toggle")                             \
     V(CmdDebugShowLinks, "Deubg: Show Links")                             \
-    V(CmdDebugCrashMe, "Debug: Crash Me")                                 \
+    V(CmdDebugCrashMe, "Debug:Crash Me")                                 \
     V(CmdDebugAnnotations, "Debug: Annotations")                          \
     V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                 \
     V(CmdDebugTestApp, "Debug: Test App")                                 \
     V(CmdDebugShowNotif, "Debug: Show Notification")                      \
     V(CmdCreateAnnotText, "Create Text Annotation")                       \
     V(CmdCreateAnnotLink, "Create Link Annotation")                       \
-    V(CmdCreateAnnotFreeText, "Create  Free Text Annotation")             \
+    V(CmdCreateAnnotFreeText, "Create Free Text Annotation")              \
     V(CmdCreateAnnotLine, "Create Line Annotation")                       \
     V(CmdCreateAnnotSquare, "Create Square Annotation")                   \
     V(CmdCreateAnnotCircle, "Create Circle Annotation")                   \
@@ -142,7 +142,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdToggleZoom, "Toggle Zoom")                                       \
     V(CmdRotateLeft, "Rotate left")                                       \
     V(CmdRotateRight, "Rotate right")                                     \
-    V(CmdToggleFullscreen, "Toggle fullscreem")                           \
+    V(CmdToggleFullscreen, "Toggle fullscreen")                           \
     V(CmdNavigateBack, "Navigate back")                                   \
     V(CmdNavigateForward, "Navigate forward")                             \
     V(CmdShowCursorPosition, "Show cursor position")                      \
