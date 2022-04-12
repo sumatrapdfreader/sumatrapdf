@@ -356,6 +356,13 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_KEYDOWN == msg) {
+        // TODO: if user re-binds F3 it'll not be picked up
+        // we would have to either run accelerators after
+        if (wp == VK_F3) {
+            auto searchDir = IsShiftPressed() ? TextSearchDirection::Backward : TextSearchDirection::Forward;
+            FindTextOnThread(win, searchDir, true);
+            // Note: we don't return but let default processing take place
+        }
         if (FrameOnKeydown(win, wp, lp, true)) {
             return 0;
         }
@@ -363,6 +370,10 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 
     LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, msg, wp, lp);
 
+    // TOOD: why do we do it? re-eneable when we notice what breaks
+    // the intent seems to be "after content of edit box changed"
+    // but how does that afect state of the toolbar?
+#if 0
     switch (msg) {
         case WM_CHAR:
         case WM_PASTE:
@@ -373,6 +384,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             ToolbarUpdateStateForWindow(win, false);
             break;
     }
+#endif
 
     return ret;
 }
