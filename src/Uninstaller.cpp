@@ -13,14 +13,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
-
-#include <tlhelp32.h>
-#include <io.h>
-
 #include "utils/FileUtil.h"
-#include "Translations.h"
 #include "utils/Timer.h"
-#include "Version.h"
+
 #include "utils/WinUtil.h"
 #include "utils/CmdLineArgsIter.h"
 #include "utils/Dpi.h"
@@ -29,9 +24,17 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/RegistryPaths.h"
 #include "utils/GdiPlusUtil.h"
 
+#include <tlhelp32.h>
+#include <io.h>
+#include "Translations.h"
+#include "Version.h"
+
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ButtonCtrl.h"
+
+#include "wingui/wingui2.h"
 
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
@@ -43,11 +46,13 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
 
+using namespace wg;
+
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
 static bool success = false;
-static ButtonCtrl* gButtonExit = nullptr;
-static ButtonCtrl* gButtonUninstaller = nullptr;
+static Button* gButtonExit = nullptr;
+static Button* gButtonUninstaller = nullptr;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
 
@@ -56,7 +61,7 @@ static void OnButtonExit() {
 }
 
 static void CreateButtonExit(HWND hwndParent) {
-    gButtonExit = CreateDefaultButtonCtrl(hwndParent, _TR("Close"));
+    gButtonExit = CreateDefaultButton(hwndParent, _TR("Close"));
     gButtonExit->onClicked = OnButtonExit;
 }
 
@@ -333,7 +338,7 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
 }
 
 static void OnCreateWindow(HWND hwnd) {
-    gButtonUninstaller = CreateDefaultButtonCtrl(hwnd, _TR("Uninstall SumatraPDF"));
+    gButtonUninstaller = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"));
     gButtonUninstaller->onClicked = OnButtonUninstall;
 }
 

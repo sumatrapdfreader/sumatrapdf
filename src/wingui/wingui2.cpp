@@ -139,7 +139,6 @@ void Wnd::SetText(std::string_view sv) {
     SetText(ws.Get());
 }
 
-
 TempStr Wnd::GetText() {
     auto sw = win::GetTextTemp(hwnd);
     auto sa = ToUtf8Temp(sw.AsView());

@@ -1,17 +1,14 @@
 #include "test-app.h"
 #include "utils/BaseUtil.h"
 
-#include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/ButtonCtrl.h"
-
+#if 0
 // in TestTab.cpp
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
 extern int TestLayout(HINSTANCE hInstance, int nCmdShow);
 
-static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, OnClicked onClicked) {
-    auto b = new ButtonCtrl(parent);
+static std::tuple<ILayout*, Button*> CreateButtonLayout(HWND parent, std::string_view s, OnClicked onClicked) {
+    auto b = new Button(parent);
     b->OnClicked = onClicked;
     b->SetText(s);
     b->Create();
@@ -49,6 +46,7 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     padding->insets = DefaultInsets();
     return padding;
 }
+#endif
 
 void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
     // no-op implementation to satisfy SubmitBugReport()
@@ -58,7 +56,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused  HINSTANCE hPrevInstance, __u
                      __unused  int nCmdShow) {
     // SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
     // SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-
+#if 0
     gHinst = hInstance;
 
     INITCOMMONCONTROLSEX cc{};
@@ -96,4 +94,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused  HINSTANCE hPrevInstance, __u
 
     auto res = RunMessageLoop(nullptr);
     return res;
+#else
+    return 0;
+#endif
 }

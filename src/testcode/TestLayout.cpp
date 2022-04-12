@@ -4,13 +4,6 @@
 
 #if 0
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/ButtonCtrl.h"
-#include "wingui/CheckboxCtrl.h"
-#include "wingui/EditCtrl.h"
-#include "wingui/DropDownCtrl.h"
-#include "wingui/StaticCtrl.h"
-#include "wingui/ProgressCtrl.h"
 
 #include "test-app.h"
 

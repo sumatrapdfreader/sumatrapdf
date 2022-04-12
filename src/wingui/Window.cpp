@@ -382,6 +382,12 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     LRESULT res = 0;
+
+    res = wg::TryReflectMessages(hwnd, msg, wp, lp);
+    if (res != 0) {
+        return res;
+    }
+
     if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
         return res;
     }

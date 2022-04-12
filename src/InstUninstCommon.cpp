@@ -21,7 +21,6 @@
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ButtonCtrl.h"
 
 #include "CrashHandler.h"
 #include "Translations.h"

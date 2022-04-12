@@ -27,8 +27,6 @@ extern int gButtonDy;
 
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 
-struct ButtonCtrl;
-
 extern WCHAR* firstError;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;

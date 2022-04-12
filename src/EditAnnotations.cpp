@@ -17,7 +17,6 @@ extern "C" {
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ButtonCtrl.h"
 #include "wingui/ListBoxCtrl.h"
 #include "wingui/DropDownCtrl.h"
 #include "wingui/EditCtrl.h"
@@ -161,13 +160,13 @@ struct EditAnnotationsWindow {
     Static* staticOpacity = nullptr;
     TrackbarCtrl* trackbarOpacity = nullptr;
 
-    ButtonCtrl* buttonSaveAttachment = nullptr;
-    ButtonCtrl* buttonEmbedAttachment = nullptr;
+    Button* buttonSaveAttachment = nullptr;
+    Button* buttonEmbedAttachment = nullptr;
 
-    ButtonCtrl* buttonDelete = nullptr;
+    Button* buttonDelete = nullptr;
 
-    ButtonCtrl* buttonSaveToCurrentFile = nullptr;
-    ButtonCtrl* buttonSaveToNewFile = nullptr;
+    Button* buttonSaveToCurrentFile = nullptr;
+    Button* buttonSaveToNewFile = nullptr;
 
     Vec<Annotation*>* annotations = nullptr;
     // currently selected annotation
@@ -1169,35 +1168,48 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl();
+        ButtonCreateArgs args;
+        args.parent = parent;
+        args.text = "Save...";
+
+        auto w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
-        w->SetText("Save...");
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        HWND hwnd = w->Create(args);
+        CrashIf(!hwnd);
+
         w->onClicked = [ew] { return ButtonSaveAttachment(ew); };
         ew->buttonSaveAttachment = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = new ButtonCtrl();
+        ButtonCreateArgs args;
+        args.parent = parent;
+        args.text = "Embed...";
+
+        auto w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
-        w->SetText("Embed...");
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        HWND hwnd = w->Create(args);
+        CrashIf(!hwnd);
+
         w->onClicked = [ew] { return ButtonEmbedAttachment(ew); };
         ew->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = new ButtonCtrl();
+        ButtonCreateArgs args;
+        args.parent = parent;
+        args.text = "Delete annotation";
+
+        auto w = new Button();
         w->SetInsetsPt(11, 0, 0, 0);
-        w->SetText("Delete annotation");
+        HWND hwnd = w->Create(args);
+        CrashIf(!hwnd);
+
         // TODO: doesn't work
-        w->SetTextColor(MkColor(0xff, 0, 0));
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        // w->SetTextColor(MkColor(0xff, 0, 0));
+
         w->onClicked = [ew] { return ButtonDeleteHandler(ew); };
         ew->buttonDelete = w;
         vbox->AddChild(w);
@@ -1210,11 +1222,15 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl();
+        ButtonCreateArgs args;
+        args.parent = parent;
         // TODO: maybe  file name e.g. "Save changes to foo.pdf"
-        w->SetText(_TR("Save changes to existing PDF"));
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        args.text = _TRA("Save changes to existing PDF");
+
+        auto w = new Button();
+        HWND hwnd = w->Create(args);
+        CrashIf(!hwnd);
+
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClicked = [ew] { return ButtonSaveToCurrentPDFHandler(ew); };
         ew->buttonSaveToCurrentFile = w;
@@ -1222,11 +1238,16 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new ButtonCtrl();
+        ButtonCreateArgs args;
+        args.parent = parent;
+        // TODO: maybe  file name e.g. "Save changes to foo.pdf"
+        args.text = _TRA("Save changes to a new PDF");
+
+        auto w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
-        w->SetText(_TR("Save changes to a new PDF"));
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        HWND hwnd = w->Create(args);
+        CrashIf(!hwnd);
+
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClicked = [ew] { return ButtonSaveToNewFileHandler(ew); };
         ew->buttonSaveToNewFile = w;
