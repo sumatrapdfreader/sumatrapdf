@@ -551,6 +551,6 @@ struct StrVec {
 
     void Sort(StrCmpLessFunc lessFn = nullptr);
 
-    void SortCaseInsensitive();
+    void SortNoCase();
     std::string_view AtSorted(int);
 };

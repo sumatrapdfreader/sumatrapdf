@@ -338,7 +338,7 @@ static void StrVecTest() {
         assertStrEq(got, exp);
     }
 
-    v.SortCaseInsensitive();
+    v.SortNoCase();
     CrashIf(!v.isSorted);
 
     for (int i = 0; i < n; i++) {

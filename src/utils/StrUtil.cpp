@@ -2974,7 +2974,7 @@ static bool strCmpLess(std::string_view s1, std::string_view s2) {
     return ret;
 }
 
-static bool strCmpLessI(std::string_view s1, std::string_view s2) {
+static bool strCmpLessNoCase(std::string_view s1, std::string_view s2) {
     if (s1.empty()) {
         return true;
     }
@@ -3017,8 +3017,8 @@ void StrVec::Sort(StrCmpLessFunc lessFn) {
     isSorted = true;
 }
 
-void StrVec::SortCaseInsensitive() {
-    Sort(strCmpLessI);
+void StrVec::SortNoCase() {
+    Sort(strCmpLessNoCase);
 }
 
 std::string_view StrVec::AtSorted(int i) {

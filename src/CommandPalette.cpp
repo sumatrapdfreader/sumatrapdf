@@ -190,15 +190,23 @@ static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
         strings.AppendIfNotExists(fs->filePath);
     }
 
+    // we want them sorted
+    StrVec tempStrings;
     i32 cmdId = CmdFirst + 1;
     SeqStrings strs = gCommandDescriptions;
     while (strs) {
         if (AllowCommand(ctx, cmdId)) {
             CrashIf(str::Len(strs) == 0);
-            strings.Append(strs);
+            tempStrings.Append(strs);
         }
         seqstrings::Next(strs);
         cmdId++;
+    }
+    tempStrings.SortNoCase();
+    int n = tempStrings.Size();
+    for (int i = 0; i < n; i++) {
+        auto sv = tempStrings.AtSorted(i);
+        strings.Append(sv.data());
     }
 }
 
@@ -313,6 +321,7 @@ void CommandPaletteWnd::QueryChanged() {
 }
 
 static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
+static HWND gHwndToActivateOnClose = nullptr;
 
 void SafeDeleteCommandPaletteWnd() {
     if (!gCommandPaletteWnd) {
@@ -322,6 +331,8 @@ void SafeDeleteCommandPaletteWnd() {
     auto tmp = gCommandPaletteWnd;
     gCommandPaletteWnd = nullptr;
     delete tmp;
+    SetActiveWindow(gHwndToActivateOnClose);
+    gHwndToActivateOnClose = nullptr;
 }
 
 void CommandPaletteWnd::ScheduleDelete() {
@@ -338,7 +349,6 @@ void CommandPaletteWnd::ExecuteSelection() {
     // logf("selection: %s, id: %d\n", s.data(), cmdId);
     if (cmdId >= 0) {
         HwndSendCommand(win->hwndFrame, cmdId);
-        SetActiveWindow(win->hwndFrame);
         ScheduleDelete();
         return;
     }
@@ -347,7 +357,7 @@ void CommandPaletteWnd::ExecuteSelection() {
         if (tab->win->currentTab != tab) {
             SelectTabInWindow(tab);
         }
-        SetActiveWindow(tab->win->hwndFrame);
+        gHwndToActivateOnClose = tab->win->hwndFrame;
         ScheduleDelete();
         return;
     }
@@ -356,7 +366,6 @@ void CommandPaletteWnd::ExecuteSelection() {
     args.forceReuse = false; // open in a new tab
     LoadDocument(args);
     ScheduleDelete();
-    SetActiveWindow(win->hwndFrame);
 }
 
 void CommandPaletteWnd::ListDoubleClick() {
@@ -454,4 +463,5 @@ void RunCommandPallette(WindowInfo* win) {
     bool ok = wnd->Create(win);
     CrashIf(!ok);
     gCommandPaletteWnd = wnd;
+    gHwndToActivateOnClose = win->hwndFrame;
 }
