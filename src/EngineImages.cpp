@@ -15,7 +15,8 @@
 #include "utils/DirIter.h"
 #include "utils/Log.h"
 
-#include "wingui/TreeModel.h"
+#include "wingui/UIModels.h"
+
 #include "FzImgReader.h"
 #include "DisplayMode.h"
 #include "Controller.h"

@@ -10,7 +10,8 @@
 #include "utils/HtmlPullParser.h"
 #include "mui/Mui.h"
 
-#include "wingui/TreeModel.h"
+#include "wingui/UIModels.h"
+
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

@@ -18,11 +18,12 @@ extern "C" {
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 
+#include "wingui/UIModels.h"
+
 #include "AppColors.h"
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
 #include "Controller.h"
-#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineMupdfImpl.h"
 #include "EngineAll.h"

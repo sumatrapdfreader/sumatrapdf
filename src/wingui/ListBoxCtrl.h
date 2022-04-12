@@ -1,22 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct ListBoxModel {
-    virtual ~ListBoxModel() = default;
-    ;
-    virtual int ItemsCount() = 0;
-    virtual std::string_view Item(int) = 0;
-};
-
-struct ListBoxModelStrings : ListBoxModel {
-    StrVec strings;
-
-    ~ListBoxModelStrings() override;
-    int ItemsCount() override;
-    std::string_view Item(int) override;
-};
-
 struct ListBoxCtrl;
+struct ListBoxModel;
 
 struct ListBoxSelectionChangedEvent : WndEvent {
     ListBoxCtrl* listBox = nullptr;
@@ -45,5 +31,3 @@ struct ListBoxCtrl : WindowBase {
     bool SetCurrentSelection(int);
     void SetModel(ListBoxModel*);
 };
-
-void FillWithItems(HWND hwnd, ListBoxModel* model);

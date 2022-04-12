@@ -1,7 +1,6 @@
 #include "test-app.h"
 #include "utils/BaseUtil.h"
 
-#include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"

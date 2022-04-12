@@ -20,9 +20,10 @@ extern "C" {
 #include "utils/ZipUtil.h"
 #include "utils/Timer.h"
 
+#include "wingui/UIModels.h"
+
 #include "AppColors.h"
 #include "Annotation.h"
-#include "wingui/TreeModel.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

@@ -6,7 +6,8 @@
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
-#include "wingui/WinGui.h"
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ListBoxCtrl.h"
@@ -14,16 +15,6 @@
 // https://docs.microsoft.com/en-us/windows/win32/controls/list-boxes
 
 Kind kindListBox = "listbox";
-
-ListBoxModelStrings::~ListBoxModelStrings() = default;
-
-int ListBoxModelStrings::ItemsCount() {
-    return strings.Size();
-}
-
-std::string_view ListBoxModelStrings::Item(int i) {
-    return strings.at(i);
-}
 
 ListBoxCtrl::ListBoxCtrl() {
     kind = kindListBox;
@@ -36,17 +27,6 @@ ListBoxCtrl::ListBoxCtrl() {
 
 ListBoxCtrl::~ListBoxCtrl() {
     delete this->model;
-}
-
-void FillWithItems(HWND hwnd, ListBoxModel* model) {
-    ListBox_ResetContent(hwnd);
-    if (model) {
-        for (int i = 0; i < model->ItemsCount(); i++) {
-            auto sv = model->Item(i);
-            auto ws = ToWstrTemp(sv);
-            ListBox_AddString(hwnd, ws.Get());
-        }
-    }
 }
 
 static void DispatchSelectionChanged(ListBoxCtrl* w, WndEvent* ev) {

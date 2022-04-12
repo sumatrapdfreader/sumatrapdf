@@ -7,7 +7,6 @@
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 
-#include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/EditCtrl.h"

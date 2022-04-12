@@ -13,8 +13,8 @@ extern "C" {
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
-#include "wingui/WinGui.h"
-#include "wingui/TreeModel.h"
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/StaticCtrl.h"

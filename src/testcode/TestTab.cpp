@@ -3,7 +3,6 @@
 #include "utils/WinUtil.h"
 #include "test-app.h"
 
-#include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 

@@ -5,7 +5,6 @@
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/TabsCtrl.h"

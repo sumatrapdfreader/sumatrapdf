@@ -5,11 +5,10 @@
 #include "utils/WinUtil.h"
 #include "utils/UITask.h"
 
-#include "wingui/WinGui.h"
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TreeModel.h"
-#include "wingui/ListBoxCtrl.h"
 #include "wingui/wingui2.h"
 
 #include "DisplayMode.h"

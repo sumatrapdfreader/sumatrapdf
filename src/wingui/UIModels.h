@@ -1,6 +1,27 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+/*
+Data models for UI controls.
+Don't depend on UI subsystem because they are used in non-gui code e.g. engines.
+*/
+
+struct ListBoxModel {
+    virtual ~ListBoxModel() = default;
+    virtual int ItemsCount() = 0;
+    virtual std::string_view Item(int) = 0;
+};
+
+struct ListBoxModelStrings : ListBoxModel {
+    StrVec strings;
+
+    ~ListBoxModelStrings() override = default;
+    int ItemsCount() override;
+    std::string_view Item(int) override;
+};
+
+void FillWithItems(HWND hwnd, ListBoxModel* model);
+
 // TreeItem represents an item in a TreeView control
 typedef UINT_PTR TreeItem;
 

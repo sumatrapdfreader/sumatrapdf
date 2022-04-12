@@ -13,9 +13,10 @@ extern "C" {
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
+#include "wingui/UIModels.h"
+
 #include "resource.h"
 #include "Commands.h"
-#include "wingui/TreeModel.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

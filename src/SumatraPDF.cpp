@@ -19,10 +19,10 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/Archive.h"
 
-#include "wingui/WinGui.h"
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/SplitterCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"

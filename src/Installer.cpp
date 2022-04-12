@@ -18,10 +18,10 @@
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/RegistryPaths.h"
 
-#include "wingui/WinGui.h"
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ListBoxCtrl.h"
 #include "wingui/EditCtrl.h"
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/ProgressCtrl.h"

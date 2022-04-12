@@ -7,10 +7,9 @@
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
-#include "wingui/WinGui.h"
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/ListBoxCtrl.h"
 #include "wingui/wingui2.h"
 
 #include "utils/Log.h"

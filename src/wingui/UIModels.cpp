@@ -2,7 +2,26 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "wingui/TreeModel.h"
+#include "wingui/UIModels.h"
+
+int ListBoxModelStrings::ItemsCount() {
+    return strings.Size();
+}
+
+std::string_view ListBoxModelStrings::Item(int i) {
+    return strings.at(i);
+}
+
+void FillWithItems(HWND hwnd, ListBoxModel* model) {
+    ListBox_ResetContent(hwnd);
+    if (model) {
+        for (int i = 0; i < model->ItemsCount(); i++) {
+            auto sv = model->Item(i);
+            auto ws = ToWstrTemp(sv);
+            ListBox_AddString(hwnd, ws.Get());
+        }
+    }
+}
 
 static bool VisitTreeItemRec(TreeModel* tm, TreeItem ti, const TreeItemVisitor& visitor) {
     if (ti == TreeModel::kNullItem) {

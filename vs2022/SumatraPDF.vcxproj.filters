@@ -273,10 +273,7 @@
     <ClInclude Include="..\src\wingui\TreeCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\TreeModel.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\WinGui.h">
+    <ClInclude Include="..\src\wingui\UIModels.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\Window.h">
@@ -599,10 +596,7 @@
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wingui\TreeModel.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\WinGui.cpp">
+    <ClCompile Include="..\src\wingui\UIModels.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Window.cpp">

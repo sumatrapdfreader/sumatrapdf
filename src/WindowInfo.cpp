@@ -8,10 +8,10 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/WinGui.h"
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/TooltipCtrl.h"
 #include "wingui/TabsCtrl.h"

@@ -29,7 +29,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/RegistryPaths.h"
 #include "utils/GdiPlusUtil.h"
 
-#include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"

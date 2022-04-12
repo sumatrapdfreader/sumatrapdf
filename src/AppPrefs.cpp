@@ -9,7 +9,8 @@
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
 
-#include "wingui/TreeModel.h"
+#include "wingui/UIModels.h"
+
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
