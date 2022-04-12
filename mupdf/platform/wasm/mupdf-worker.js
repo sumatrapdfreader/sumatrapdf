@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -25,12 +25,22 @@
 // Import the WASM module
 importScripts("libmupdf.js");
 
+let fetcher = new Worker("mupdf-fetcher.js");
+
 let mupdf = {};
 let ready = false;
 
+let wasm_onFetchData = null;
+let wasm_openDocumentFromBuffer = null;
+
 Module.onRuntimeInitialized = function () {
 	Module.ccall('initContext');
-	mupdf.openDocumentFromBuffer = Module.cwrap('openDocumentFromBuffer', 'number', ['string', 'number', 'number']);
+
+	wasm_onFetchData = Module.cwrap('onFetchData', 'null', ['number', 'number', 'number', 'number']);
+	wasm_openDocumentFromBuffer = Module.cwrap('openDocumentFromBuffer', 'number', ['number', 'number', 'string']);
+
+	mupdf.openURL = Module.cwrap('openURL', 'number', ['string', 'number', 'number']);
+	mupdf.openDocumentFromStream = Module.cwrap('openDocumentFromStream', 'number', ['number', 'string']);
 	mupdf.freeDocument = Module.cwrap('freeDocument', 'null', ['number']);
 	mupdf.documentTitle = Module.cwrap('documentTitle', 'string', ['number']);
 	mupdf.countPages = Module.cwrap('countPages', 'number', ['number']);
@@ -52,12 +62,20 @@ Module.onRuntimeInitialized = function () {
 	ready = true;
 };
 
-mupdf.openDocument = function (data, magic) {
+mupdf.openDocumentFromBuffer = function (data, magic) {
 	let n = data.byteLength;
 	let ptr = Module._malloc(n);
 	let src = new Uint8Array(data);
 	Module.HEAPU8.set(src, ptr);
-	return mupdf.openDocumentFromBuffer(magic, ptr, n);
+	return wasm_openDocumentFromBuffer(ptr, n, magic);
+}
+
+function onFetchData(id, block, data) {
+	let n = data.byteLength;
+	let p = Module._malloc(n);
+	Module.HEAPU8.set(new Uint8Array(data), p);
+	wasm_onFetchData(id, block, p, n);
+	Module._free(p);
 }
 
 mupdf.drawPageAsPNG = function (doc, page, dpi) {
@@ -119,6 +137,28 @@ mupdf.search = function (doc, page, dpi, needle) {
 	return JSON.parse(mupdf.searchJSON(doc, page, dpi, needle));
 }
 
+let trylater_timer = 0;
+let trylater_queue = [];
+
+function trylater_progress() {
+	trylater_timer = 0;
+	let current_queue = trylater_queue;
+	trylater_queue = [];
+	current_queue.forEach(onmessage);
+}
+
+fetcher.onmessage = function (event) {
+	let [ cmd, id, block, data ] = event.data;
+	if (cmd === 'DATA') {
+		onFetchData(id, block, data);
+		if (!trylater_timer)
+			trylater_timer = setTimeout(trylater_progress, 0);
+	}
+	if (cmd === 'ERROR') {
+		console.log("FETCH ERROR", data);
+	}
+}
+
 onmessage = function (event) {
 	let [ func, args, id ] = event.data;
 	if (!ready) {
@@ -132,6 +172,10 @@ onmessage = function (event) {
 		else
 			postMessage(["RESULT", id, result]);
 	} catch (error) {
-		postMessage(["ERROR", id, {name: error.name, message: error.message}]);
+		if (error === "trylater") {
+			trylater_queue.push(event);
+		} else {
+			postMessage(["ERROR", id, {name: error.name, message: error.message}]);
+		}
 	}
 }

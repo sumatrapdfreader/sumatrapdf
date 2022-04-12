@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -22,12 +22,17 @@
 
 #include "emscripten.h"
 #include "mupdf/fitz.h"
+#include <string.h>
+#include <math.h>
 
 static fz_context *ctx;
 
 void wasm_rethrow(fz_context *ctx)
 {
-	EM_ASM({ throw new Error(UTF8ToString($0)); }, fz_caught_message(ctx));
+	if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
+		EM_ASM({ throw "trylater"; });
+	else
+		EM_ASM({ throw new Error(UTF8ToString($0)); }, fz_caught_message(ctx));
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -35,14 +40,12 @@ void initContext(void)
 {
 	ctx = fz_new_context(NULL, NULL, 100<<20);
 	if (!ctx)
-	{
 		EM_ASM({ throw new Error("Cannot create MuPDF context!"); });
-	}
 	fz_register_document_handlers(ctx);
 }
 
 EMSCRIPTEN_KEEPALIVE
-fz_document *openDocumentFromBuffer(char *magic, unsigned char *data, size_t len)
+fz_document *openDocumentFromBuffer(unsigned char *data, int size, char *magic)
 {
 	fz_document *document = NULL;
 	fz_buffer *buf = NULL;
@@ -55,7 +58,7 @@ fz_document *openDocumentFromBuffer(char *magic, unsigned char *data, size_t len
 
 	fz_try(ctx)
 	{
-		buf = fz_new_buffer_from_data(ctx, data, len);
+		buf = fz_new_buffer_from_data(ctx, data, size);
 		stm = fz_open_buffer(ctx, buf);
 		document = fz_open_document_with_stream(ctx, magic, stm);
 	}
@@ -69,6 +72,17 @@ fz_document *openDocumentFromBuffer(char *magic, unsigned char *data, size_t len
 		fz_free(ctx, data);
 		wasm_rethrow(ctx);
 	}
+	return document;
+}
+
+EMSCRIPTEN_KEEPALIVE
+fz_document *openDocumentFromStream(fz_stream *stm, char *magic)
+{
+	fz_document *document = NULL;
+	fz_try(ctx)
+		document = fz_open_document_with_stream(ctx, magic, stm);
+	fz_catch(ctx)
+		wasm_rethrow(ctx);
 	return document;
 }
 
@@ -405,4 +419,131 @@ EMSCRIPTEN_KEEPALIVE
 fz_outline *outlineNext(fz_outline *node)
 {
 	return node->next;
+}
+
+/* PROGRESSIVE FETCH STREAM */
+
+struct fetch_state
+{
+	int block_shift;
+	int block_size;
+	int content_length; // Content-Length in bytes
+	int map_length; // Content-Length in blocks
+	uint8_t *content; // Array buffer with bytes
+	uint8_t *map; // Map of which blocks have been requested and loaded.
+};
+
+static void fetch_close(fz_context *ctx, void *state_)
+{
+	struct fetch_state *state = state_;
+	fz_free(ctx, state->content);
+	fz_free(ctx, state->map);
+	state->content = NULL;
+	state->map = NULL;
+	// TODO: wait for all outstanding requests to complete, then free state
+	// fz_free(ctx, state);
+	EM_ASM({
+		fetcher.postMessage(['CLOSE', $0]);
+	}, state);
+}
+
+static void fetch_seek(fz_context *ctx, fz_stream *stm, int64_t offset, int whence)
+{
+	struct fetch_state *state = stm->state;
+	stm->wp = stm->rp = state->content;
+	if (whence == SEEK_END)
+		stm->pos = state->content_length + offset;
+	else if (whence == SEEK_CUR)
+		stm->pos += offset;
+	else
+		stm->pos = offset;
+	if (stm->pos < 0)
+		stm->pos = 0;
+	if (stm->pos > state->content_length)
+		stm->pos = state->content_length;
+}
+
+static int fetch_next(fz_context *ctx, fz_stream *stm, size_t len)
+{
+	struct fetch_state *state = stm->state;
+
+	int block = stm->pos >> state->block_shift;
+	int start = block << state->block_shift;
+	int end = start + state->block_size;
+	if (end > state->content_length)
+		end = state->content_length;
+
+	if (state->map[block] == 0) {
+		state->map[block] = 1;
+		EM_ASM({
+			fetcher.postMessage(['READ', $0, $1]);
+		}, state, block);
+		fz_throw(ctx, FZ_ERROR_TRYLATER, "waiting for data");
+	}
+
+	if (state->map[block] == 1) {
+		fz_throw(ctx, FZ_ERROR_TRYLATER, "waiting for data");
+	}
+
+	stm->rp = state->content + stm->pos;
+	stm->wp = state->content + end;
+	stm->pos = end;
+
+	if (stm->rp < stm->wp)
+		return *stm->rp++;
+	return -1;
+}
+
+EM_JS(void, js_init_fetch, (struct fetch_state *state, char *url, int content_length, int block_shift), {
+	fetcher.postMessage(['OPEN', state, [UTF8ToString(url), content_length, block_shift]]);
+});
+
+EMSCRIPTEN_KEEPALIVE
+void onFetchData(struct fetch_state *state, int block, uint8_t *data, int size)
+{
+	if (state->content) {
+		memcpy(state->content + (block << state->block_shift), data, size);
+		state->map[block] = 2;
+	}
+}
+
+EMSCRIPTEN_KEEPALIVE
+fz_stream *openURL(char *url, int content_length, int block_size)
+{
+	fz_stream *stm = NULL;
+	fz_var(stm);
+	fz_try (ctx)
+	{
+		struct fetch_state *state;
+		int block_shift = (int)log2(block_size);
+
+		if (block_shift < 10 || block_shift > 24)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid block shift: %d", block_shift);
+
+		state = fz_malloc(ctx, sizeof *state);
+		state->block_shift = block_shift;
+		state->block_size = 1 << block_shift;
+		state->content_length = content_length;
+		state->content = fz_malloc(ctx, state->content_length);
+		state->map_length = content_length / state->block_size + 1;
+		state->map = fz_malloc(ctx, state->map_length);
+		memset(state->map, 0, state->map_length);
+
+		stm = fz_new_stream(ctx, state, fetch_next, fetch_close);
+		// stm->progressive = 1;
+		stm->seek = fetch_seek;
+
+		js_init_fetch(state, url, content_length, block_shift);
+	}
+	fz_catch(ctx)
+	{
+		if (state)
+		{
+			fz_free(ctx, state->content);
+			fz_free(ctx, state->map);
+			fz_free(ctx, state);
+		}
+		wasm_rethrow(ctx);
+	}
+	return stm;
 }

@@ -407,23 +407,41 @@ function showPageError(where, page, error) {
 	page.appendChild(div);
 }
 
-async function openURL(url) {
-	freeDocument();
-	try {
-		let response = await fetch(url);
-		if (!response.ok)
-			throw new Error("Could not fetch document.");
-		await initDocument(response, url);
-	} catch (error) {
-		showDocumentError("initDocument", error);
+async function openFile(file) {
+	if (file instanceof File) {
+		freeDocument();
+		try {
+			doc = await mupdf.openDocumentFromBuffer(await file.arrayBuffer(), file.name);
+			initDocument(file.name);
+		} catch (error) {
+			showDocumentError("openFile", error);
+		}
 	}
 }
 
-function openFile(file) {
+async function openURL(url, progressive=true) {
 	freeDocument();
-	if (file instanceof File) {
-		initDocument(file, file.name)
-			.catch(error => showDocumentError("initDocument", error));
+	try {
+		let headResponse = await fetch(url, { method: "HEAD" });
+		if (!headResponse.ok)
+			throw new Error("Could not fetch document.");
+		let acceptRanges = headResponse.headers.get("Accept-Ranges");
+		let contentLength = headResponse.headers.get("Content-Length");
+		let contentType = headResponse.headers.get("Content-Type");
+		if (acceptRanges === 'bytes' && progressive) {
+			console.log("USING HTTP RANGE REQUESTS");
+			let stm = await mupdf.openURL(url, contentLength, 1 << 20);
+			doc = await mupdf.openDocumentFromStream(stm, contentType || url);
+		} else {
+			let bodyResponse = await fetch(url);
+			if (!bodyResponse.ok)
+				throw new Error("Could not fetch document.");
+			let buffer = await bodyResponse.arrayBuffer();
+			doc = await mupdf.openDocumentFromBuffer(buffer, contentType || url);
+		}
+		initDocument(url);
+	} catch (error) {
+		showDocumentError("openURL", error);
 	}
 }
 
@@ -440,18 +458,18 @@ function freeDocument() {
 	emptyNode(document.getElementById("outline"));
 }
 
-async function initDocument(blob, magic) {
-	let data = await blob.arrayBuffer();
-	doc = await mupdf.openDocument(data, magic);
+async function initDocument(url) {
+	console.log("INIT DOCUMENT", doc, url);
+
 	pageCount = await mupdf.countPages(doc);
 	let title = await mupdf.documentTitle(doc);
 
-	console.log("mupdf: Loaded", JSON.stringify(magic), "with", pageCount, "pages.");
+	console.log("mupdf: Loaded", JSON.stringify(url), "with", pageCount, "pages.");
 
 	if (title)
 		document.title = title;
 	else
-		document.title = magic;
+		document.title = url;
 
 	// Use second page as default page size (the cover page is often differently sized)
 	let defaultW = await mupdf.pageWidth(doc, pageCount > 1 ? 2 : 1, dpi);
@@ -718,7 +736,7 @@ mupdf.oninit = function () {
 	emptyNode(document.getElementById("pages"));
 	let params = new URLSearchParams(window.location.search);
 	if (params.has("file"))
-		openURL(params.get("file"));
+		openURL(params.get("file"), params.get("progressive"));
 }
 
 </script>

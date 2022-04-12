@@ -554,6 +554,8 @@ pdf_load_embedded_font(fz_context *ctx, pdf_document *doc, pdf_font_desc *fontde
 	unsigned char *data;
 	size_t size;
 
+	fz_var(buf);
+
 	buf = pdf_load_stream(ctx, stmref);
 
 	fz_try(ctx)

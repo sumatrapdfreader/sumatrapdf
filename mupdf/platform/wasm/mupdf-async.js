@@ -54,7 +54,10 @@ let mupdf = {};
 		}
 	}
 
-	mupdf.openDocument = wrap("openDocument");
+	mupdf.openURL = wrap("openURL");
+	mupdf.openDocumentFromStream = wrap("openDocumentFromStream");
+	mupdf.openDocumentFromBuffer = wrap("openDocumentFromBuffer");
+
 	mupdf.freeDocument = wrap("freeDocument");
 	mupdf.documentTitle = wrap("documentTitle");
 	mupdf.documentOutline = wrap("documentOutline");

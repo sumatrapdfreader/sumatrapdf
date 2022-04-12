@@ -226,6 +226,7 @@ static char *reflow_options = NULL;
 static int isfullscreen = 0;
 static int showoutline = 0;
 static int showundo = 0;
+static int showlayers = 0;
 static int showlinks = 0;
 static int showsearch = 0;
 static int showconsole = 0;
@@ -566,6 +567,7 @@ static char *help_dialog_text =
 	"i - show document information\n"
 	"o - show document outline\n"
 	"u - show undo history\n"
+	"Y - show layer list\n"
 	"a - show annotation editor\n"
 	"R - show redaction editor\n"
 	"L - highlight links\n"
@@ -1344,6 +1346,41 @@ static void do_undo(void)
 	ui_panel_end();
 }
 
+static void do_layers(void)
+{
+	const char *name;
+	int n, i, on;
+
+	ui_layout(L, BOTH, NW, 0, 0);
+	ui_panel_begin(outline_w, 0, ui.padsize*2, ui.padsize*2, 1);
+	ui_layout(T, X, NW, ui.padsize, ui.padsize);
+	ui_label("Layers:");
+	ui_layout(T, X, NW, ui.padsize*2, ui.padsize);
+
+	if (pdf)
+	{
+		n = pdf_count_layers(ctx, pdf);
+		for (i = 0; i < n; ++i)
+		{
+			name = pdf_layer_name(ctx, pdf, i);
+			on = pdf_layer_is_enabled(ctx, pdf, i);
+			if (ui_checkbox(name, &on))
+			{
+				pdf_enable_layer(ctx, pdf, i, on);
+				page_contents_changed = 1;
+			}
+		}
+		if (n == 0)
+			ui_label("None");
+	}
+	else
+	{
+		ui_label("None");
+	}
+
+	ui_panel_end();
+}
+
 static void do_links(fz_link *link)
 {
 	fz_rect bounds;
@@ -1531,7 +1568,7 @@ static void shrinkwrap(void)
 {
 	int w = page_tex.w;
 	int h = page_tex.h;
-	if (showoutline || showundo)
+	if (showoutline || showundo || showlayers)
 		w += outline_w + 4;
 	if (showannotate)
 		w += annotate_w;
@@ -1860,7 +1897,7 @@ static void toggle_outline(void)
 	if (outline)
 	{
 		showoutline = !showoutline;
-		showundo = 0;
+		showundo = showlayers = 0;
 		if (canvas_w == page_tex.w && canvas_h == page_tex.h)
 			shrinkwrap();
 	}
@@ -1869,7 +1906,15 @@ static void toggle_outline(void)
 static void toggle_undo(void)
 {
 	showundo = !showundo;
-	showoutline = 0;
+	showoutline = showlayers = 0;
+	if (canvas_w == page_tex.w && canvas_h == page_tex.h)
+		shrinkwrap();
+}
+
+static void toggle_layers(void)
+{
+	showlayers = !showlayers;
+	showoutline = showundo = 0;
 	if (canvas_w == page_tex.w && canvas_h == page_tex.h)
 		shrinkwrap();
 }
@@ -2197,6 +2242,7 @@ static void do_app(void)
 		case 'R': toggle_annotate(ANNOTATE_MODE_REDACT); break;
 		case 'o': toggle_outline(); break;
 		case 'u': toggle_undo(); break;
+		case 'Y': toggle_layers(); break;
 		case 'L': showlinks = !showlinks; break;
 		case 'F': showform = !showform; break;
 		case 'i': ui.dialog = info_dialog; break;
@@ -2779,7 +2825,9 @@ void do_main(void)
 		do_outline(outline);
 	else if (showundo)
 		do_undo();
-	if (showoutline || showundo)
+	else if (showlayers)
+		do_layers();
+	if (showoutline || showundo || showlayers)
 		ui_splitter(&outline_start_x, &outline_w, 6*ui.gridsize, 20*ui.gridsize, R);
 
 	if (!eqloc(oldpage, currentpage) || oldseparations != currentseparations || oldicc != currenticc)
