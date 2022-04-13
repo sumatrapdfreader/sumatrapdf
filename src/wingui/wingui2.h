@@ -289,3 +289,31 @@ struct Checkbox : Wnd {
 };
 
 } // namespace wg
+
+//- Progress
+
+namespace wg {
+
+struct ProgressCreateArgs {
+    HWND parent = nullptr;
+    int initialMax = 0;
+};
+
+struct Progress : Wnd {
+    Progress();
+    ~Progress() override = default;
+
+    int idealDx = 0;
+    int idealDy = 0;
+
+    HWND Create(const ProgressCreateArgs&);
+
+    void SetMax(int);
+    void SetCurrent(int);
+    int GetMax();
+    int GetCurrent();
+
+    Size GetIdealSize() override;
+};
+
+} // namespace wg

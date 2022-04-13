@@ -22,7 +22,6 @@
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ProgressCtrl.h"
 
 #include "wingui/wingui2.h"
 
@@ -66,7 +65,7 @@ static Checkbox* gCheckboxRegisterDefault = nullptr;
 #endif
 static Checkbox* gCheckboxRegisterSearchFilter = nullptr;
 static Checkbox* gCheckboxRegisterPreviewer = nullptr;
-static ProgressCtrl* gProgressBar = nullptr;
+static Progress* gProgressBar = nullptr;
 static Button* gButtonExit = nullptr;
 static Button* gButtonInstaller = nullptr;
 
@@ -479,8 +478,11 @@ static void OnButtonInstall() {
     nInstallationSteps++; // for writing registry entries
     nInstallationSteps++; // to show progress at the beginning
 
-    gProgressBar = new ProgressCtrl(nInstallationSteps);
-    gProgressBar->Create(gHwndFrame);
+    ProgressCreateArgs args;
+    args.initialMax = nInstallationSteps;
+    args.parent = gHwndFrame;
+    gProgressBar = new Progress();
+    gProgressBar->Create(args);
     RECT prc = {rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy};
     gProgressBar->SetBounds(prc);
     // first one to show progress quickly

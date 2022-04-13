@@ -243,9 +243,6 @@
     <ClInclude Include="..\src\wingui\ListBoxCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\ProgressCtrl.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\SplitterCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -555,9 +552,6 @@
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\ListBoxCtrl.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\ProgressCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\SplitterCtrl.cpp">

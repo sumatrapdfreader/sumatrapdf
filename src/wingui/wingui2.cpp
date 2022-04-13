@@ -1439,3 +1439,54 @@ bool Checkbox::IsChecked() const {
 }
 
 } // namespace wg
+
+//- Progress
+
+namespace wg {
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/progress-bar-control-reference
+
+Kind kindProgress = "progress";
+
+Progress::Progress() {
+    kind = kindProgress;
+}
+
+HWND Progress::Create(const ProgressCreateArgs& args) {
+    CreateControlArgs cargs;
+    cargs.parent = args.parent;
+    cargs.style = WS_CHILD | WS_VISIBLE;
+    cargs.className = PROGRESS_CLASSW;
+
+    Wnd::CreateControl(cargs);
+    SizeToIdealSize(this);
+    if (hwnd && args.initialMax != 0) {
+        SetMax(args.initialMax);
+    }
+    return hwnd;
+}
+
+Size Progress::GetIdealSize() {
+    return {idealDx, idealDy};
+}
+
+void Progress::SetMax(int newMax) {
+    int min = 0;
+    SendMessageW(hwnd, PBM_SETRANGE32, min, newMax);
+}
+
+void Progress::SetCurrent(int newCurrent) {
+    SendMessageW(hwnd, PBM_SETPOS, newCurrent, 0);
+}
+
+int Progress::GetMax() {
+    auto max = (int)SendMessageW(hwnd, PBM_GETRANGE, FALSE /* get high limit */, 0);
+    return max;
+}
+
+int Progress::GetCurrent() {
+    auto current = (int)SendMessageW(hwnd, PBM_GETPOS, 0, 0);
+    return current;
+}
+
+} // namespace wg
