@@ -7,12 +7,8 @@
 #define SEARCH_FILTER_DLL_NAME L"PdfFilter.dll"
 #define PREVIEW_DLL_NAME L"PdfPreview.dll"
 
-#define INSTALLER_WIN_DX 420
-#define INSTALLER_WIN_DY 340
-
-#define WIN_BG_COLOR RGB(0xff, 0xf2, 0) // yellow
-
-#define WINDOW_MARGIN DpiScale(8)
+#define kInstallerWinDx 420
+#define kInstallerWinDy 340
 
 /* The window is divided in three parts:
 - top part, where we display nice graphics

@@ -47,6 +47,8 @@
 static bool gRegisterAsDefault = false;
 #endif
 
+#define kInstallerWinMargin DpiScale(8)
+
 using namespace wg;
 
 static bool gAutoUpdate = false;
@@ -63,11 +65,12 @@ static Button* gButtonBrowseDir = nullptr;
 #if ENABLE_REGISTER_DEFAULT
 static Checkbox* gCheckboxRegisterDefault = nullptr;
 #endif
+static Checkbox* gCheckboxForAllUsers = nullptr;
 static Checkbox* gCheckboxRegisterSearchFilter = nullptr;
 static Checkbox* gCheckboxRegisterPreviewer = nullptr;
 static Progress* gProgressBar = nullptr;
 static Button* gButtonExit = nullptr;
-static Button* gButtonInstaller = nullptr;
+static Button* gButtonInstall = nullptr;
 
 static HANDLE hThread = nullptr;
 static bool success = false;
@@ -464,12 +467,13 @@ static void OnButtonInstall() {
 #endif
 
     // note: this checkbox isn't created when running inside Wow64
-    gCli->withFilter = gCheckboxRegisterSearchFilter != nullptr && gCheckboxRegisterSearchFilter->IsChecked();
+    gCli->withFilter = gCheckboxRegisterSearchFilter && gCheckboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
-    gCli->withPreview = gCheckboxRegisterPreviewer != nullptr && gCheckboxRegisterPreviewer->IsChecked();
+    gCli->withPreview = gCheckboxRegisterPreviewer && gCheckboxRegisterPreviewer->IsChecked();
+    gCli->allUsers = gCheckboxForAllUsers && gCheckboxRegisterSearchFilter->IsChecked();
 
     // create a progress bar in place of the Options button
-    int dx = DpiScale(gHwndFrame, INSTALLER_WIN_DX / 2);
+    int dx = DpiScale(gHwndFrame, kInstallerWinDx / 2);
     Rect rc(0, 0, dx, gButtonDy);
     rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
 
@@ -496,11 +500,12 @@ static void OnButtonInstall() {
 #if ENABLE_REGISTER_DEFAULT
     delete gCheckboxRegisterDefault;
 #endif
+    delete gCheckboxForAllUsers;
     delete gCheckboxRegisterSearchFilter;
     delete gCheckboxRegisterPreviewer;
     delete gButtonOptions;
 
-    gButtonInstaller->SetIsEnabled(false);
+    gButtonInstall->SetIsEnabled(false);
 
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
@@ -509,7 +514,7 @@ static void OnButtonInstall() {
 }
 
 static void OnInstallationFinished() {
-    delete gButtonInstaller;
+    delete gButtonInstall;
     delete gProgressBar;
 
     if (success) {
@@ -555,6 +560,7 @@ static void OnButtonOptions() {
 #if ENABLE_REGISTER_DEFAULT
     EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
 #endif
+    EnableAndShow(gCheckboxForAllUsers, gShowOptions);
     EnableAndShow(gCheckboxRegisterSearchFilter, gShowOptions);
     EnableAndShow(gCheckboxRegisterPreviewer, gShowOptions);
 
@@ -661,6 +667,23 @@ static void OnButtonBrowse() {
     gTextboxInstDir->SetFocus();
 }
 
+// bottom-right
+static void PositionInstallButton(Button* b) {
+    HWND parent = ::GetParent(b->hwnd);
+    Rect r = ClientRect(parent);
+    Size size = b->GetIdealSize();
+    int x = r.dx - size.dx - kInstallerWinMargin;
+    int y = r.dy - size.dy - kInstallerWinMargin;
+    b->SetBounds({x, y, size.dx, size.dy});
+}
+
+void ForAllUsersStateChanged() {
+    bool checked = gCheckboxForAllUsers->IsChecked();
+    Button_SetElevationRequiredState(gButtonInstall->hwnd, checked);
+    PositionInstallButton(gButtonInstall);
+    // TODO: update default directory
+}
+
 static bool InstallerOnWmCommand(WPARAM wp) {
     switch (LOWORD(wp)) {
         case IDCANCEL:
@@ -686,36 +709,34 @@ static WCHAR* GetDefaultPdfViewer() {
 
 //[ ACCESSKEY_GROUP Installer
 static void OnCreateWindow(HWND hwnd) {
-    RECT rc;
+    gButtonInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
+    gButtonInstall->onClicked = OnButtonInstall;
+    PositionInstallButton(gButtonInstall);
+
     Rect r = ClientRect(hwnd);
-
-    gButtonInstaller = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
-    gButtonInstaller->onClicked = OnButtonInstall;
-
-    Size btnSize;
     gButtonOptions = CreateDefaultButton(hwnd, _TR("&Options"));
     gButtonOptions->onClicked = OnButtonOptions;
-
-    btnSize = gButtonOptions->GetIdealSize();
-    int x = WINDOW_MARGIN;
-    int y = r.dy - btnSize.dy - WINDOW_MARGIN;
+    auto btnSize = gButtonOptions->GetIdealSize();
+    int x = kInstallerWinMargin;
+    int y = r.dy - btnSize.dy - kInstallerWinMargin;
     uint flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
     SetWindowPos(gButtonOptions->hwnd, nullptr, x, y, 0, 0, flags);
 
     gButtonDy = btnSize.dy;
-    gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);
+    gBottomPartDy = gButtonDy + (kInstallerWinMargin * 2);
 
     Size size = TextSizeInHwnd(hwnd, L"Foo");
     int staticDy = size.dy + DpiScale(hwnd, 6);
 
     y = r.dy - gBottomPartDy;
-    int dx = r.dx - (WINDOW_MARGIN * 2) - DpiScale(hwnd, 2);
+    int dx = r.dx - (kInstallerWinMargin * 2) - DpiScale(hwnd, 2);
 
     x += DpiScale(hwnd, 2);
 
     // build options controls going from the bottom
-    y -= (staticDy + WINDOW_MARGIN);
+    y -= (staticDy + kInstallerWinMargin);
 
+    RECT rc;
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
@@ -753,8 +774,19 @@ static void OnCreateWindow(HWND hwnd) {
         y -= staticDy;
     }
 #endif
+
+    {
+        const WCHAR* s = _TR("Install for all users");
+        bool isChecked = gCli->allUsers;
+        gCheckboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
+        gCheckboxForAllUsers->onCheckStateChanged = ForAllUsersStateChanged;
+        rc = {x, y, x + dx, y + staticDy};
+        gCheckboxForAllUsers->SetPos(&rc);
+        y -= staticDy;
+    }
+
     // a bit more space between text box and checkboxes
-    y -= (DpiScale(hwnd, 4) + WINDOW_MARGIN);
+    y -= (DpiScale(hwnd, 4) + kInstallerWinMargin);
 
     const WCHAR* s = L"&...";
     Size btnSize2 = TextSizeInHwnd(hwnd, s);
@@ -762,12 +794,12 @@ static void OnCreateWindow(HWND hwnd) {
     gButtonBrowseDir = CreateDefaultButton(hwnd, s);
     gButtonBrowseDir->onClicked = OnButtonBrowse;
     // btnSize = gButtonBrowseDir->GetIdealSize();
-    x = r.dx - WINDOW_MARGIN - btnSize2.dx;
+    x = r.dx - kInstallerWinMargin - btnSize2.dx;
     SetWindowPos(gButtonBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
-    x = WINDOW_MARGIN;
-    dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - DpiScale(hwnd, 4);
+    x = kInstallerWinMargin;
+    dx = r.dx - (2 * kInstallerWinMargin) - btnSize2.dx - DpiScale(hwnd, 4);
 
     EditCreateArgs eargs;
     eargs.parent = hwnd;
@@ -795,7 +827,7 @@ static void OnCreateWindow(HWND hwnd) {
     gShowOptions = !gShowOptions;
     OnButtonOptions();
 
-    gButtonInstaller->SetFocus();
+    gButtonInstall->SetFocus();
 
     if (gAutoUpdate) {
         // click the Install button
@@ -814,8 +846,8 @@ static void CreateMainWindow() {
     const WCHAR* winCls = INSTALLER_FRAME_CLASS_NAME;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
-    int dx = DpiScale(INSTALLER_WIN_DX);
-    int dy = DpiScale(INSTALLER_WIN_DY);
+    int dx = DpiScale(kInstallerWinDx);
+    int dy = DpiScale(kInstallerWinDy);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
     gHwndFrame = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
@@ -964,7 +996,7 @@ static int RunApp() {
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
-        if (dur > 10000 && gButtonInstaller && gButtonInstaller->IsEnabled()) {
+        if (dur > 10000 && gButtonInstall && gButtonInstall->IsEnabled()) {
             CheckInstallUninstallPossible(true);
             t = TimeGet();
         }

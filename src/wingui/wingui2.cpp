@@ -1042,6 +1042,7 @@ LRESULT Static::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 
 } // namespace wg
+
 //- Button
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons

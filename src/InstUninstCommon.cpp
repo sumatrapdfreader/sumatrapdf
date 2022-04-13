@@ -15,12 +15,10 @@
 #include "utils/CmdLineArgsIter.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/RegistryPaths.h"
 
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
 
 #include "CrashHandler.h"
 #include "Translations.h"
@@ -40,10 +38,12 @@
 #include "utils/Log.h"
 
 // define to 1 to enable shadow effect, to 0 to disable
-#define DRAW_TEXT_SHADOW 1
-#define DRAW_MSG_TEXT_SHADOW 0
+constexpr bool kDrawTextShadow = true;
+constexpr bool kDrawMsgTextShadow = false;
 
-#define TEN_SECONDS_IN_MS 10 * 1000
+#define kInstallerWinBgColor RGB(0xff, 0xf2, 0) // yellow
+
+#define kTenSecondsInMs 10 * 1000
 
 using Gdiplus::Bitmap;
 using Gdiplus::Color;
@@ -350,7 +350,7 @@ static bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
     }
 
     if (waitUntilTerminated) {
-        WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
+        WaitForSingleObject(hProcess, kTenSecondsInMs);
     }
 
     return true;
@@ -378,7 +378,7 @@ static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bo
     }
 
     if (waitUntilTerminated) {
-        WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
+        WaitForSingleObject(hProcess, kTenSecondsInMs);
     }
 
     return true;
@@ -708,8 +708,8 @@ static float DrawMessage(Graphics& g, const WCHAR* msg, float y, float dx, Color
     if (trans::IsCurrLangRtl()) {
         sft.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
     }
-#if DRAW_MSG_TEXT_SHADOW
-    {
+
+    if (kDrawMsgTextShadow) {
         bbox.X--;
         bbox.Y++;
         SolidBrush b(Color(0xff, 0xff, 0xff));
@@ -717,7 +717,7 @@ static float DrawMessage(Graphics& g, const WCHAR* msg, float y, float dx, Color
         bbox.X++;
         bbox.Y--;
     }
-#endif
+
     SolidBrush b(color);
     g.DrawString(s, -1, &f, bbox, &sft, &b);
 
@@ -735,12 +735,12 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
         }
 
         g.RotateTransform(li->rotation, MatrixOrderAppend);
-#if DRAW_TEXT_SHADOW
-        // draw shadow first
-        SolidBrush b2(li->colShadow);
-        Gdiplus::PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
-        g.DrawString(s, 1, f, o2, &b2);
-#endif
+        if (kDrawTextShadow) {
+            // draw shadow first
+            SolidBrush b2(li->colShadow);
+            Gdiplus::PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
+            g.DrawString(s, 1, f, o2, &b2);
+        }
 
         SolidBrush b1(li->col);
         Gdiplus::PointF o1(li->x, y + li->dyOff);
@@ -757,10 +757,10 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     float y2 = -34;
 
     const WCHAR* ver_s = L"v" CURR_VERSION_STR;
-#if DRAW_TEXT_SHADOW
-    SolidBrush b1(Color(0, 0, 0));
-    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);
-#endif
+    if (kDrawTextShadow) {
+        SolidBrush b1(Color(0, 0, 0));
+        g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);
+    }
     SolidBrush b2(Color(0xff, 0xff, 0xff));
     g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2, y2), &b2);
     g.ResetTransform();
@@ -775,7 +775,7 @@ static void DrawFrame2(Graphics& g, Rect r) {
     CalcLettersLayout(g, &f, r.dx);
 
     Gdiplus::Color bgCol;
-    bgCol.SetFromCOLORREF(WIN_BG_COLOR);
+    bgCol.SetFromCOLORREF(kInstallerWinBgColor);
     SolidBrush bgBrush(bgCol);
     Gdiplus::Rect r2(ToGdipRect(r));
     r2.Inflate(1, 1);

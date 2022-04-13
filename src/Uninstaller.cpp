@@ -41,8 +41,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Installer.h"
 #include "AppUtil.h"
 
-#define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
-#define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
+#define UNkInstallerWinDx kInstallerWinDx
+#define UNkInstallerWinDy kInstallerWinDy
 
 using namespace wg;
 
@@ -344,8 +344,8 @@ static void CreateMainWindow() {
     AutoFreeWstr title = str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR);
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
-    int dx = DpiScale(INSTALLER_WIN_DX);
-    int dy = DpiScale(INSTALLER_WIN_DY);
+    int dx = DpiScale(kInstallerWinDx);
+    int dy = DpiScale(kInstallerWinDy);
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     auto winCls = INSTALLER_FRAME_CLASS_NAME;

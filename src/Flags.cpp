@@ -35,7 +35,6 @@ Flags::~Flags() {
     str::Free(toEpubPath);
 }
 
-#if defined(DEBUG)
 static void EnumeratePrinters() {
     str::WStr output;
 
@@ -85,7 +84,6 @@ static void EnumeratePrinters() {
     free(info5Arr);
     MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
-#endif
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
@@ -245,6 +243,8 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(MangaMode, "manga-mode")                   \
     V(ToEpub, "to-epub")                         \
     V(Search, "search")                          \
+    V(AllUsers, "all-users")                     \
+    V(AllUsers2, "allusers")                     \
     V(SetColorRange, "set-color-range")
 
 #define MAKE_ARG(__arg, __name) __arg,
@@ -380,6 +380,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.log = true;
             continue;
         }
+        if (arg == Arg::AllUsers || arg == Arg::AllUsers2) {
+            i.allUsers = true;
+            continue;
+        }
         if (arg == Arg::CrashOnOpen) {
             // to make testing of crash reporting system in pre-release/release
             // builds possible
@@ -396,14 +400,12 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.globalPrefArgs.Append(str::Dup(argName));
             continue;
         }
-#if defined(DEBUG)
-        if (arg == Arg::ArgEnumPrinters) {
+        if (arg == Arg::ArgEnumPrinters && (gIsDebugBuild || gIsPreReleaseBuild)) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             i.exitImmediately = true;
             return;
         }
-#endif
         param = args.EatParam();
         // follwing args require at least one param
         // if no params here, assume this is a file
