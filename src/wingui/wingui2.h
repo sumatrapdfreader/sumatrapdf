@@ -220,6 +220,10 @@ namespace wg {
 using ListBoxSelectionChangedHandler = std::function<void()>;
 using ListBoxDoubleClickHandler = std::function<void()>;
 
+struct ListBoxCreateArgs {
+    HWND parent = nullptr;
+};
+
 struct ListBox : Wnd {
     ListBoxModel* model = nullptr;
     ListBoxSelectionChangedHandler onSelectionChanged = nullptr;
@@ -231,7 +235,7 @@ struct ListBox : Wnd {
     ListBox();
     virtual ~ListBox();
 
-    HWND Create(HWND parent);
+    HWND Create(const ListBoxCreateArgs&);
 
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
@@ -244,6 +248,44 @@ struct ListBox : Wnd {
     int GetCurrentSelection();
     bool SetCurrentSelection(int);
     void SetModel(ListBoxModel*);
+};
+
+} // namespace wg
+
+//- CheckboxCtrl
+
+namespace wg {
+
+enum class CheckState {
+    Unchecked = BST_UNCHECKED,
+    Checked = BST_CHECKED,
+    Indeterminate = BST_INDETERMINATE,
+};
+
+using CheckboxStateChangedHandler = std::function<void()>;
+
+struct CheckboxCreateArgs {
+    HWND parent = nullptr;
+    const char* text = nullptr;
+    CheckState initialState = CheckState::Unchecked;
+};
+
+struct Checkbox : Wnd {
+    CheckboxStateChangedHandler onCheckStateChanged = nullptr;
+
+    Checkbox();
+    ~Checkbox() override = default;
+    HWND Create(const CheckboxCreateArgs&);
+
+    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+
+    Size GetIdealSize() override;
+
+    void SetCheckState(CheckState);
+    CheckState GetCheckState() const;
+
+    void SetIsChecked(bool isChecked);
+    bool IsChecked() const;
 };
 
 } // namespace wg

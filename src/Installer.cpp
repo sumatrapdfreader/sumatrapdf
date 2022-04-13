@@ -22,7 +22,6 @@
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/CheckboxCtrl.h"
 #include "wingui/ProgressCtrl.h"
 
 #include "wingui/wingui2.h"
@@ -63,10 +62,10 @@ static Edit* gTextboxInstDir = nullptr;
 static Button* gButtonBrowseDir = nullptr;
 
 #if ENABLE_REGISTER_DEFAULT
-static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
+static Checkbox* gCheckboxRegisterDefault = nullptr;
 #endif
-static CheckboxCtrl* gCheckboxRegisterSearchFilter = nullptr;
-static CheckboxCtrl* gCheckboxRegisterPreviewer = nullptr;
+static Checkbox* gCheckboxRegisterSearchFilter = nullptr;
+static Checkbox* gCheckboxRegisterPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
 static Button* gButtonExit = nullptr;
 static Button* gButtonInstaller = nullptr;
@@ -85,11 +84,16 @@ static void ProgressStep() {
     }
 }
 
-static CheckboxCtrl* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked) {
-    CheckboxCtrl* w = new CheckboxCtrl();
-    w->SetText(s);
-    w->Create(hwndParent);
-    w->SetIsChecked(isChecked);
+static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked) {
+    CheckboxCreateArgs args;
+    args.parent = hwndParent;
+    if (s) {
+        args.text = ToUtf8Temp(s).Get();
+    }
+    args.initialState = isChecked ? CheckState::Checked : CheckState::Unchecked;
+
+    Checkbox* w = new Checkbox();
+    w->Create(args);
     return w;
 }
 
@@ -521,13 +525,6 @@ static void OnInstallationFinished() {
     if (gAutoUpdate && success) {
         // click the Start button
         PostMessageW(gHwndFrame, WM_COMMAND, IDOK, 0);
-    }
-}
-
-static void EnableAndShow(WindowBase* w, bool enable) {
-    if (w) {
-        win::SetVisibility(w->hwnd, enable);
-        w->SetIsEnabled(enable);
     }
 }
 

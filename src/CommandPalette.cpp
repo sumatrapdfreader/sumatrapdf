@@ -434,11 +434,13 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     }
 
     {
+        ListBoxCreateArgs args;
+        args.parent = hwnd;
         auto c = new ListBox();
         c->onDoubleClick = std::bind(&CommandPaletteWnd::ListDoubleClick, this);
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
-        auto wnd = c->Create(hwnd);
+        auto wnd = c->Create(args);
         CrashIf(!wnd);
 
         auto m = new ListBoxModelStrings();

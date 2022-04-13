@@ -146,7 +146,6 @@ TempStr Wnd::GetText() {
 }
 
 void Wnd::SetVisibility(Visibility newVisibility) {
-    // TODO: make it work before Create()?
     CrashIf(!hwnd);
     visibility = newVisibility;
     bool isVisible = IsVisible();
@@ -871,7 +870,6 @@ void Wnd::Subclass() {
 }
 
 void Wnd::SetIsEnabled(bool isEnabled) const {
-    // TODO: make it work even if not yet created?
     CrashIf(!hwnd);
     BOOL enabled = isEnabled ? TRUE : FALSE;
     ::EnableWindow(hwnd, enabled);
@@ -915,6 +913,16 @@ bool PreTranslateMessage(MSG& msg) {
 
 } // namespace wg
 
+static void SizeToIdealSize(wg::Wnd* wnd) {
+    if (!wnd || !wnd->hwnd) {
+        return;
+    }
+    auto size = wnd->GetIdealSize();
+    // TODO: don't change x,y, only dx/dy
+    RECT r{0, 0, size.dx, size.dy};
+    wnd->SetBounds(r);
+}
+
 //- Static
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
@@ -934,11 +942,8 @@ HWND Static::Create(const StaticCreateArgs& btnArgs) {
     args.text = btnArgs.text;
 
     Wnd::CreateControl(args);
-    CrashIf(!hwnd);
+    SizeToIdealSize(this);
 
-    auto size = GetIdealSize();
-    RECT r{0, 0, size.dx, size.dy};
-    SetBounds(r);
     return hwnd;
 }
 
@@ -1030,18 +1035,11 @@ HWND Button::Create(const ButtonCreateArgs& btnArgs) {
     } else {
         args.style |= BS_PUSHBUTTON;
     }
+    args.text = btnArgs.text;
 
     Wnd::CreateControl(args);
-    CrashIf(!hwnd);
+    SizeToIdealSize(this);
 
-    // TODO: maybe fold into CreateControl
-    if (btnArgs.text) {
-        auto s = ToWstrTemp(btnArgs.text);
-        SetText(s.Get());
-    }
-    auto size = GetIdealSize();
-    RECT r{0, 0, size.dx, size.dy};
-    SetBounds(r);
     return hwnd;
 }
 
@@ -1155,12 +1153,12 @@ HWND Edit::Create(const EditCreateArgs& editArgs) {
         idealSizeLines = 1;
     }
     Wnd::CreateControl(args);
-    CrashIf(!hwnd);
-    if (!hwnd) {
-        return nullptr;
-    }
-    if (editArgs.cueText) {
-        EditSetCueText(hwnd, editArgs.cueText);
+    SizeToIdealSize(this);
+
+    if (hwnd) {
+        if (editArgs.cueText) {
+            EditSetCueText(hwnd, editArgs.cueText);
+        }
     }
     return hwnd;
 }
@@ -1261,26 +1259,26 @@ ListBox::~ListBox() {
     delete this->model;
 }
 
-HWND ListBox::Create(HWND parent) {
-    idealSize = {DpiScale(parent, 120), DpiScale(parent, 32)};
+HWND ListBox::Create(const ListBoxCreateArgs& args) {
+    idealSize = {DpiScale(args.parent, 120), DpiScale(args.parent, 32)};
 
-    CreateControlArgs args;
-    args.className = L"LISTBOX";
+    CreateControlArgs cargs;
+    cargs.className = L"LISTBOX";
+    cargs.parent = args.parent;
 
-    args.parent = parent;
     // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
-    args.style = WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
-    args.style |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    cargs.style = WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
+    cargs.style |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
     // args.style |= WS_BORDER;
-    Wnd::CreateControl(args);
-    CrashIf(!hwnd);
-    if (!hwnd) {
-        return nullptr;
+    Wnd::CreateControl(cargs);
+    SizeToIdealSize(this);
+
+    if (hwnd) {
+        if (model != nullptr) {
+            FillWithItems(this->hwnd, model);
+        }
     }
-    // TODO: update ideal size based on the size of the model?
-    if (model != nullptr) {
-        FillWithItems(this->hwnd, model);
-    }
+
     return hwnd;
 }
 
@@ -1368,6 +1366,76 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
         return 0;
     }
     return 0;
+}
+
+} // namespace wg
+
+//- Checkbox
+
+namespace wg {
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/buttons
+
+static Kind kindCheckbox = "checkbox";
+
+static CheckState GetButtonCheckState(HWND hwnd) {
+    auto res = Button_GetCheck(hwnd);
+    return (CheckState)res;
+}
+
+static void SetButtonCheckState(HWND hwnd, CheckState newState) {
+    CrashIf(!hwnd);
+    Button_SetCheck(hwnd, newState);
+}
+
+Checkbox::Checkbox() {
+    kind = kindCheckbox;
+}
+
+HWND Checkbox::Create(const CheckboxCreateArgs& args) {
+    CreateControlArgs cargs;
+    cargs.parent = args.parent;
+    cargs.text = args.text;
+    cargs.className = WC_BUTTONW;
+    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
+
+    Wnd::CreateControl(cargs);
+    SizeToIdealSize(this);
+    return hwnd;
+}
+
+bool Checkbox::OnCommand(WPARAM wp, LPARAM) {
+    auto code = HIWORD(wp);
+    if (code == BN_CLICKED && onCheckStateChanged) {
+        onCheckStateChanged();
+        return true;
+    }
+    return false;
+}
+
+Size Checkbox::GetIdealSize() {
+    return ButtonGetIdealSize(hwnd);
+}
+
+void Checkbox::SetCheckState(CheckState newState) {
+    CrashIf(!hwnd);
+    SetButtonCheckState(hwnd, newState);
+}
+
+CheckState Checkbox::GetCheckState() const {
+    return GetButtonCheckState(hwnd);
+}
+
+void Checkbox::SetIsChecked(bool isChecked) {
+    CrashIf(!hwnd);
+    CheckState newState = isChecked ? CheckState::Checked : CheckState::Unchecked;
+    SetButtonCheckState(hwnd, newState);
+}
+
+bool Checkbox::IsChecked() const {
+    CrashIf(!hwnd);
+    auto state = GetCheckState();
+    return state == CheckState::Checked;
 }
 
 } // namespace wg

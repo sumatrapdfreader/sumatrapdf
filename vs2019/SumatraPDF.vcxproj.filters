@@ -222,9 +222,6 @@
     <ClInclude Include="..\src\utils\UtAssert.h">
       <Filter>src\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\CheckboxCtrl.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\DialogSizer.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -535,9 +532,6 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\tests\WinUtil_ut.cpp">
       <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp">
-      <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\DialogSizer.cpp">
       <Filter>src\wingui</Filter>
