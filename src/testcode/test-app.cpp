@@ -48,7 +48,7 @@ static ILayout* CreateMainLayout(HWND hwnd) {
 }
 #endif
 
-void _submitDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
     // no-op implementation to satisfy SubmitBugReport()
 }
 

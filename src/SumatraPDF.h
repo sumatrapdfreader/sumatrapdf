@@ -119,7 +119,7 @@ void UpdateDocumentColors();
 void UpdateFixedPageScrollbarsVisibility();
 void UpdateTabFileDisplayStateForTab(TabInfo* tab);
 void ReloadDocument(WindowInfo* win, bool autoRefresh);
-void OnMenuViewFullscreen(WindowInfo* win, bool presentation = false);
+void ToggleFullScreen(WindowInfo* win, bool presentation = false);
 void RelayoutWindow(WindowInfo* win);
 
 // note: background tabs are only searched if focusTab is true

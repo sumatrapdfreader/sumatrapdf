@@ -3521,7 +3521,7 @@ void ExitFullScreen(WindowInfo* win) {
     }
 }
 
-void OnMenuViewFullscreen(WindowInfo* win, bool presentation) {
+void ToggleFullScreen(WindowInfo* win, bool presentation) {
     bool enterFullScreen = presentation ? !win->presentation : !win->isFullScreen;
 
     if (win->presentation || win->isFullScreen) {
@@ -3535,9 +3535,9 @@ void OnMenuViewFullscreen(WindowInfo* win, bool presentation) {
     }
 }
 
-static void OnMenuViewPresentation(WindowInfo* win) {
+static void TogglePresentationMode(WindowInfo* win) {
     // only DisplayModel currently supports an actual presentation mode
-    OnMenuViewFullscreen(win, win->AsFixed() != nullptr);
+    ToggleFullScreen(win, win->AsFixed() != nullptr);
 }
 
 // make sure that idx falls within <0, max-1> inclusive range
@@ -3758,7 +3758,7 @@ static void OnFrameKeyEsc(WindowInfo* win) {
         return;
     }
     if (win->presentation || win->isFullScreen) {
-        OnMenuViewFullscreen(win, win->presentation != PM_DISABLED);
+        ToggleFullScreen(win, win->presentation != PM_DISABLED);
         return;
     }
 }
@@ -4628,12 +4628,16 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuGoToPage(win);
             break;
 
-        case CmdViewPresentationMode:
-            OnMenuViewPresentation(win);
+        case CmdTogglePresentationMode:
+            TogglePresentationMode(win);
             break;
 
-        case CmdViewFullScreen:
-            OnMenuViewFullscreen(win);
+        case CmdToggleFullscreen:
+            ToggleFullScreen(win);
+            break;
+
+        case CmdExitFullScreen:
+            ExitFullScreen(win);
             break;
 
         case CmdViewRotateLeft:
@@ -4816,10 +4820,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             // UpdateUiForCurrentTab(win);
             break;
 
-        case CmdExitFullScreen:
-            ExitFullScreen(win);
-            break;
-
         case CmdRotateLeft:
             if (dm) {
                 dm->RotateBy(-90);
@@ -4829,14 +4829,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdRotateRight:
             if (dm) {
                 dm->RotateBy(90);
-            }
-            break;
-
-        case CmdToggleFullscreen:
-            if (win->isFullScreen || win->presentation) {
-                ExitFullScreen(win);
-            } else {
-                EnterFullScreen(win);
             }
             break;
 

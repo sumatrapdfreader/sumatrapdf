@@ -285,11 +285,11 @@ static MenuDef menuDefView[] = {
     },
     {
         _TRN("Pr&esentation"),
-        CmdViewPresentationMode,
+        CmdTogglePresentationMode,
     },
     {
         _TRN("F&ullscreen"),
-        CmdViewFullScreen,
+        CmdToggleFullscreen,
     },
     {
         kMenuSeparator,
@@ -847,7 +847,7 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdSendByEmail,
     CmdSelectAll,
     CmdProperties,
-    CmdViewPresentationMode,
+    CmdTogglePresentationMode,
     CmdOpenWithAcrobat,
     CmdOpenWithFoxIt,
     CmdOpenWithPdfXchange,
@@ -904,8 +904,8 @@ static UINT_PTR removeIfNoInternetPerms[] = {
 };
 
 static UINT_PTR removeIfNoFullscreenPerms[] = {
-    CmdViewPresentationMode,
-    CmdViewFullScreen,
+    CmdTogglePresentationMode,
+    CmdToggleFullscreen,
 };
 
 static UINT_PTR removeIfNoPrefsPerms[] = {
@@ -984,7 +984,7 @@ static UINT_PTR rmoveIfChm[] = {
     CmdViewContinuous,
     CmdViewRotateLeft,
     CmdViewRotateRight,
-    CmdViewPresentationMode,
+    CmdTogglePresentationMode,
     CmdToggleScrollbars,
     CmdZoomFitPage,
     CmdZoomActualSize,

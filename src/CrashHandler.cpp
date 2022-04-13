@@ -178,8 +178,8 @@ static void SaveCrashInfo(ByteSlice d) {
     file::WriteFile(gCrashFilePath, d);
 }
 
-static void SendCrashInfo(ByteSlice d) {
-    log("SendCrashInfo()\n");
+static void UploadCrashReport(ByteSlice d) {
+    log("UploadCrashReport()\n");
     if (d.empty()) {
         return;
     }
@@ -315,29 +315,29 @@ bool CrashHandlerDownloadSymbols() {
 }
 
 // like crash report, but can be triggered without a crash
-void _submitDebugReport(const char* condStr) {
+void _uploadDebugReport(const char* condStr) {
     if (!CrashHandlerCanUseNet()) {
         return;
     }
 
-    logf(L"_submitDebugReport: gSymbolPathW: '%s'\n", gSymbolPathW);
+    logf(L"_uploadDebugReport: gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
     if (!ok) {
-        log("_submitDebugReport(): CrashHandlerDownloadSymbols() failed\n");
+        log("_uploadDebugReport(): CrashHandlerDownloadSymbols() failed\n");
         return;
     }
 
     auto sv = BuildCrashInfoText(false);
     if (sv.empty()) {
-        log("_submitDebugReport(): skipping because !BuildCrashInfoText()\n");
+        log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
     auto d = ToSpanU8(sv);
     // SaveCrashInfo(d);
-    SendCrashInfo(d);
+    UploadCrashReport(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());
-    log("_submitDebugReport() finished\n");
+    log("_uploadDebugReport() finished\n");
 }
 
 // we want to avoid submitting multiple reports for the same
@@ -345,7 +345,7 @@ void _submitDebugReport(const char* condStr) {
 // so only allow once submition in a given session
 static bool didSubmitDebugReport = false;
 
-void _submitDebugReportIfFunc(bool cond, __unused const char* condStr) {
+void _uploadDebugReportIfFunc(bool cond, __unused const char* condStr) {
     if (!cond || didSubmitDebugReport) {
         return;
     }
@@ -355,37 +355,37 @@ void _submitDebugReportIfFunc(bool cond, __unused const char* condStr) {
         DebugBreak();
     }
 #if defined(PRE_RELEASE_VER)
-    _submitDebugReport(condStr);
+    _uploadDebugReport(condStr);
 #endif
 }
 
 // If we can't resolve the symbols, we assume it's because we don't have symbols
 // so we'll try to download them and retry. If we can resolve symbols, we'll
 // get the callstacks etc. and submit to our server for analysis.
-void SubmitCrashReport() {
-    log("SubmitCrashReport()\n");
+void TryUploadCrashReport() {
+    log("TryUploadCrashReport()\n");
     if (!CrashHandlerCanUseNet()) {
-        log("SubmitCrashReport(): skipping because !CrashHandlerCanUseNet()\n");
+        log("TryUploadCrashReport(): skipping because !CrashHandlerCanUseNet()\n");
         return;
     }
 
-    logf(L"SubmitCrashReport: gSymbolPathW: '%s'\n", gSymbolPathW);
+    logf(L"TryUploadCrashReport: gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
     if (!ok) {
-        log("SubmitCrashReport(): CrashHandlerDownloadSymbols() failed\n");
+        log("TryUploadCrashReport(): CrashHandlerDownloadSymbols() failed\n");
     }
 
     auto sv = BuildCrashInfoText(true);
     if (sv.empty()) {
-        log("SubmitCrashReport(): skipping because !BuildCrashInfoText()\n");
+        log("TryUploadCrashReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
     auto d = ToSpanU8(sv);
     SaveCrashInfo(d);
-    SendCrashInfo(d);
+    UploadCrashReport(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());
-    log("SubmitCrashReport() finished\n");
+    log("TryUploadCrashReport() finished\n");
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID) {
@@ -394,7 +394,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID) {
         return 0;
     }
 
-    SubmitCrashReport();
+    TryUploadCrashReport();
 
     // always write a MiniDump (for the latest crash only)
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps

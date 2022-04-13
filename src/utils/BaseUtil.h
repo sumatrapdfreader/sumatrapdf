@@ -254,12 +254,12 @@ inline void CrashIfFunc(bool cond) {
         CrashIfFunc(cond);          \
     } while (0)
 
-void _submitDebugReportIfFunc(bool cond, __unused const char* condStr);
+void _uploadDebugReportIfFunc(bool cond, __unused const char* condStr);
 
 #define ReportIf(cond)                         \
     do {                                       \
         __analysis_assume(!(cond));            \
-        _submitDebugReportIfFunc(cond, #cond); \
+        _uploadDebugReportIfFunc(cond, #cond); \
     } while (0)
 
 void* AllocZero(size_t count, size_t size);

@@ -1347,7 +1347,7 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
 
         case GID_TWOFINGERTAP:
             // Two-finger tap toggles fullscreen mode
-            OnMenuViewFullscreen(win);
+            ToggleFullScreen(win);
             break;
 
         case GID_PRESSANDTAP:

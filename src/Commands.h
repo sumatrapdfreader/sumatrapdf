@@ -19,7 +19,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdSaveAsBookmark, "Save As Bookmark...")                           \
     V(CmdSendByEmail, "Send Document By Email...")                        \
     V(CmdProperties, "Show Document Properties...")                       \
-    V(CmdExitFullScreen, "Exit FullScreen")                               \
     V(CmdViewSinglePage, "View: Single Page")                             \
     V(CmdViewFacing, "View: Facing")                                      \
     V(CmdViewBook, "View: Book")                                          \
@@ -28,8 +27,11 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdViewRotateLeft, "View: Rotate Left")                             \
     V(CmdViewRotateRight, "View: Rotate Right")                           \
     V(CmdViewBookmarks, "View: Bookmarks")                                \
-    V(CmdViewFullScreen, "View: FullScreen")                              \
-    V(CmdViewPresentationMode, "View: Presentation Mode")                 \
+    V(CmdExitFullScreen, "Exit FullScreen")                               \
+    V(CmdToggleFullscreen, "Toggle Fullscreen")                           \
+    V(CmdPresentationWhiteBackground, "Presentation white background")    \
+    V(CmdPresentationBlackBackground, "Presentation black background")    \
+    V(CmdTogglePresentationMode, "View: Presentation Mode")               \
     V(CmdToggleToolbar, "View: Toogle Toolbar")                           \
     V(CmdToggleScrollbars, "View: Toogle Scrollbars")                     \
     V(CmdToggleMenuBar, "View: Toggle Menu Bar")                          \
@@ -150,12 +152,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdToggleZoom, "Toggle Zoom")                                       \
     V(CmdRotateLeft, "Rotate left")                                       \
     V(CmdRotateRight, "Rotate right")                                     \
-    V(CmdToggleFullscreen, "Toggle fullscreen")                           \
     V(CmdNavigateBack, "Navigate back")                                   \
     V(CmdNavigateForward, "Navigate forward")                             \
     V(CmdShowCursorPosition, "Show cursor position")                      \
-    V(CmdPresentationWhiteBackground, "Presentation white background")    \
-    V(CmdPresentationBlackBackground, "Presentation black background")    \
     V(CmdOpenNextFileInFolder, "Open next file in folder")                \
     V(CmdOpenPrevFileInFolder, "Open prev file in folder")                \
     V(CmdCommandPalette, "Command Palette")

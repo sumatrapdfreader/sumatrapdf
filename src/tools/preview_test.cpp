@@ -29,7 +29,7 @@ LPCOLESTR myGuid = SZ_PDF_PREVIEW_CLSID;
 
 typedef HRESULT ourDllGetClassObjectT(REFCLSID rclsid, REFIID riid, void** ppv);
 
-void _submitDebugReportIfFunc(bool, const char*) {
+void _uploadDebugReportIfFunc(bool, const char*) {
     // no-op implementation to satisfy SubmitBugReport()
 }
 
