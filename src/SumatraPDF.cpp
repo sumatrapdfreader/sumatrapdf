@@ -3642,14 +3642,6 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         return true;
     }
 
-    // TODO: add CmdOpenNextFileInFolder, CmdOpenPrevFileInFolder
-    if ((VK_LEFT == key || VK_RIGHT == key) && isShift && isCtrl && !win->IsAboutWindow() && !inTextfield) {
-        // folder browsing should also work when an error page is displayed,
-        // so special-case it before the win->IsDocLoaded() check
-        BrowseFolder(win, VK_RIGHT == key);
-        return true;
-    }
-
     if (!win->IsDocLoaded()) {
         return false;
     }
@@ -4401,16 +4393,26 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuOpenFolder(win);
             break;
 
-        case CmdSaveAs:
-            OnMenuSaveAs(win);
+        case CmdShowInFolder:
+            OnMenuShowInFolder(win);
+            break;
+
+        case CmdOpenPrevFileInFolder:
+        case CmdOpenNextFileInFolder:
+            if (!win->IsAboutWindow()) {
+                // folder browsing should also work when an error page is displayed,
+                // so special-case it before the win->IsDocLoaded() check
+                bool forward = wmId == CmdOpenNextFileInFolder;
+                BrowseFolder(win, forward);
+            }
             break;
 
         case CmdRenameFile:
             OnMenuRenameFile(win);
             break;
 
-        case CmdShowInFolder:
-            OnMenuShowInFolder(win);
+        case CmdSaveAs:
+            OnMenuSaveAs(win);
             break;
 
         case CmdPrint:
