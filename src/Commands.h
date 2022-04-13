@@ -49,8 +49,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdGoToFirstPage, "Go to First Page")                               \
     V(CmdGoToLastPage, "Go to Last Page")                                 \
     V(CmdGoToPage, "Go to Page...")                                       \
-    V(CmdGoToNavBack, "Navigate: Back")                                   \
-    V(CmdGoToNavForward, "Navigate: Forward")                             \
     V(CmdFindFirst, "Find")                                               \
     V(CmdFindNext, "Find: Next")                                          \
     V(CmdFindPrev, "Find: Previous")                                      \

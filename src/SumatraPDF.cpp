@@ -3642,6 +3642,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         return true;
     }
 
+    // TODO: add CmdOpenNextFileInFolder, CmdOpenPrevFileInFolder
     if ((VK_LEFT == key || VK_RIGHT == key) && isShift && isCtrl && !win->IsAboutWindow() && !inTextfield) {
         // folder browsing should also work when an error page is displayed,
         // so special-case it before the win->IsDocLoaded() check
@@ -4650,18 +4651,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case CmdGoToNavBack:
-            if (win->IsDocLoaded()) {
-                ctrl->Navigate(-1);
-            }
-            break;
-
-        case CmdGoToNavForward:
-            if (win->IsDocLoaded()) {
-                ctrl->Navigate(1);
-            }
-            break;
-
         case CmdTranslateSelectionWithGoogle:
             LaunchBrowserWithSelection(
                 tab, L"https://translate.google.com/?sl=auto&tl=${userlang}&op=translate&text=${selection}");
@@ -4795,6 +4784,13 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdNavigateForward:
+            if (ctrl) {
+                ctrl->Navigate(1);
+            }
+            break;
+
+
         case CmdScrollLeft:
             FrameOnKeydown(win, VK_LEFT, 0);
             break;
@@ -4809,12 +4805,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdScrollRight:
             FrameOnKeydown(win, VK_RIGHT, 0);
-            break;
-
-        case CmdNavigateForward:
-            if (ctrl) {
-                ctrl->Navigate(1);
-            }
             break;
 
         case CmdToggleZoom:
@@ -4965,10 +4955,10 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // TRUE so as to not make them bubble up further
             switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
-                    HwndSendCommand(hwnd, CmdGoToNavBack);
+                    HwndSendCommand(hwnd, CmdNavigateBack);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FORWARD:
-                    HwndSendCommand(hwnd, CmdGoToNavForward);
+                    HwndSendCommand(hwnd, CmdNavigateForward);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
                     HwndSendCommand(hwnd, CmdReloadDocument);

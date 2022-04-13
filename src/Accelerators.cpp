@@ -28,6 +28,8 @@
     V(VK_RIGHT, "Right")     \
     V(VK_UP, "Up")           \
     V(VK_DOWN, "Down")       \
+    V(VK_NEXT, "PageDown")   \
+    V(VK_PRIOR, "PageUp")   \
     V(VK_BACK, "Back")       \
     V(VK_BACK, "Backspace")  \
     V(VK_DELETE, "Del")      \
@@ -64,8 +66,6 @@
     V(VK_F24, "F24")
 // TODO: remaining keys:
 /*
-#define VK_PRIOR          0x21
-#define VK_NEXT           0x22
 #define VK_SELECT         0x29
 #define VK_HELP           0x2F
 
@@ -78,6 +78,29 @@
 static HACCEL gLastAccel = nullptr;
 
 ACCEL gBuiltInAccelerators[] = {
+    {0, 'n', CmdGoToNextPage},
+    {FVIRTKEY, VK_SPACE, CmdGoToNextPage},
+    {FVIRTKEY, VK_RETURN, CmdGoToNextPage},
+
+    {0, 'p', CmdGoToPrevPage},
+    {FSHIFT | FVIRTKEY, VK_SPACE, CmdGoToPrevPage},
+    {FSHIFT | FVIRTKEY, VK_RETURN, CmdGoToPrevPage},
+
+    {FVIRTKEY, VK_HOME, CmdGoToFirstPage},
+    {FCONTROL | FVIRTKEY, VK_HOME, CmdGoToFirstPage},
+    {FVIRTKEY, VK_END, CmdGoToLastPage},
+    {FCONTROL | FVIRTKEY, VK_END, CmdGoToLastPage},
+
+    {FVIRTKEY, VK_BACK, CmdNavigateBack},
+    {FALT | FVIRTKEY, VK_LEFT, CmdNavigateBack},
+    {FSHIFT | FVIRTKEY, VK_BACK, CmdNavigateForward},
+    {FALT | FVIRTKEY, VK_RIGHT, CmdNavigateForward},
+
+    {0, 'h', CmdScrollLeft},
+    {0, 'j', CmdScrollDown},
+    {0, 'k', CmdScrollUp},
+    {0, 'l', CmdScrollRight},
+
     {FCONTROL | FVIRTKEY, 'A', CmdSelectAll},
     {FCONTROL | FVIRTKEY, 'B', CmdFavoriteAdd},
     {FCONTROL | FVIRTKEY, 'C', CmdCopySelection},
@@ -135,12 +158,6 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdViewRotateLeft},
     {FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdZoomOut},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdViewRotateLeft},
-    {FALT | FVIRTKEY, VK_LEFT, CmdGoToNavBack},
-    {FALT | FVIRTKEY, VK_RIGHT, CmdGoToNavForward},
-    {FVIRTKEY, VK_HOME, CmdGoToFirstPage},
-    {FCONTROL | FVIRTKEY, VK_HOME, CmdGoToFirstPage},
-    {FVIRTKEY, VK_END, CmdGoToLastPage},
-    {FCONTROL | FVIRTKEY, VK_END, CmdGoToLastPage},
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)
@@ -155,18 +172,8 @@ ACCEL gBuiltInAccelerators[] = {
 
     {FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
 
-    {FVIRTKEY, VK_BACK, CmdNavigateBack},
-    {FSHIFT | FVIRTKEY, VK_BACK, CmdNavigateForward},
-
-    {0, 'h', CmdScrollLeft},
-    {0, 'j', CmdScrollDown},
-    {0, 'k', CmdScrollUp},
-    {0, 'l', CmdScrollRight},
-
     {0, 'q', CmdCloseCurrentDocument},
     {0, 'r', CmdReloadDocument},
-    {0, 'n', CmdGoToNextPage},
-    {0, 'p', CmdGoToPrevPage},
     {0, 'z', CmdToggleZoom},
     {0, 'f', CmdToggleFullscreen},
     {0, '[', CmdRotateLeft},
@@ -176,12 +183,6 @@ ACCEL gBuiltInAccelerators[] = {
     // // for Logitech's wireless presenters which target PowerPoint's shortcuts
     {0, '.', CmdPresentationBlackBackground},
     {0, 'c', CmdViewContinuous},
-
-    {FVIRTKEY, VK_SPACE, CmdGoToNextPage},
-    {FSHIFT | FVIRTKEY, VK_SPACE, CmdGoToPrevPage},
-
-    {FVIRTKEY, VK_RETURN, CmdGoToNextPage},
-    {FSHIFT | FVIRTKEY, VK_RETURN, CmdGoToPrevPage},
 };
 
 ACCEL* gAccels = nullptr;
@@ -320,7 +321,7 @@ HACCEL* CreateSumatraAcceleratorTable() {
         char* cmd = shortcut->cmd;
         int cmdId = GetCommandIdByName(cmd);
         if (cmdId < 0) {
-            logf("CreateSumatraAcceleratorTable: cnknown cmd name '%s'\n", cmd);
+            logf("CreateSumatraAcceleratorTable: unknown cmd name '%s'\n", cmd);
             continue;
         }
         ACCEL accel = {};

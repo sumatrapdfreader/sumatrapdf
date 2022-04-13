@@ -342,11 +342,11 @@ static MenuDef menuDefGoTo[] = {
     },
     {
         _TRN("&Back"),
-        CmdGoToNavBack,
+        CmdNavigateBack,
     },
     {
         _TRN("F&orward"),
-        CmdGoToNavForward,
+        CmdNavigateForward,
     },
     {
         kMenuSeparator,
@@ -838,8 +838,8 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdGoToPrevPage,
     CmdGoToFirstPage,
     CmdGoToLastPage,
-    CmdGoToNavBack,
-    CmdGoToNavForward,
+    CmdNavigateBack,
+    CmdNavigateForward,
     CmdGoToPage,
     CmdFindFirst,
     CmdSaveAs,
@@ -1627,8 +1627,8 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     MenuUpdateZoom(win);
 
     if (win->IsDocLoaded() && tab) {
-        win::menu::SetEnabled(win->menu, CmdGoToNavBack, tab->ctrl->CanNavigate(-1));
-        win::menu::SetEnabled(win->menu, CmdGoToNavForward, tab->ctrl->CanNavigate(1));
+        win::menu::SetEnabled(win->menu, CmdNavigateBack, tab->ctrl->CanNavigate(-1));
+        win::menu::SetEnabled(win->menu, CmdNavigateForward, tab->ctrl->CanNavigate(1));
     }
 
     // TODO: is this check too expensive?
