@@ -68,6 +68,7 @@ bool StartsWith(std::string_view s, const char* prefix);
 ByteSlice ToSpan(const char* s);
 
 bool Eq(const WCHAR*, const WCHAR*);
+bool Eq(std::wstring_view s1, const WCHAR* s2);
 bool EqI(const WCHAR*, const WCHAR*);
 bool EqIS(const WCHAR*, const WCHAR*);
 bool EqN(const WCHAR*, const WCHAR*, size_t);
@@ -526,31 +527,74 @@ class WStrList {
     }
 };
 
-typedef bool (*StrCmpLessFunc)(std::string_view s1, std::string_view s2);
+typedef bool (*StrLessFunc)(std::string_view s1, std::string_view s2);
 
-struct StrVec {
-    str::Str str;   // a growable string
-    Vec<u32> index; // values are index into str
+struct StrVec;
 
-    // index in sorted order
-    // TODO: maybe there's a way to combine with index
+struct StrVecSortedView {
+    StrVec* v; // not owned
     Vec<u32> sortedIndex;
-    bool isSorted = false;
+    int Size() const;
+    std::string_view at(int) const;
+
+    StrVecSortedView() = default;
+    ~StrVecSortedView() = default;
+};
+
+// strings are stored linearly in strings, separated by 0
+// index is an array of indexes i.e. strings[index[2]] is
+// beginning of string at index 2
+struct StrVec {
+    str::Str strings;
+    Vec<u32> index;
 
     StrVec() = default;
     ~StrVec() = default;
     void Reset();
 
-    int size() const;
     int Size() const;
     std::string_view at(int) const;
 
     int Append(const char*);
-    bool Exists(std::string_view);
+    int Find(std::string_view sv, int startAt = 0) const;
+    bool Exists(std::string_view) const;
     int AppendIfNotExists(std::string_view);
 
-    void Sort(StrCmpLessFunc lessFn = nullptr);
+    bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
+    bool GetSortedViewNoCase(StrVecSortedView&) const;
+};
 
-    void SortNoCase();
-    std::string_view AtSorted(int);
+typedef bool (*WStrLessFunc)(std::wstring_view s1, std::wstring_view s2);
+
+struct WStrVec2;
+
+struct WStrVecSortedView {
+    WStrVec2* v; // not owned
+    Vec<u32> sortedIndex;
+    int Size() const;
+    std::wstring_view at(int) const;
+};
+
+// same design as StrVec
+struct WStrVec2 {
+    str::WStr strings;
+    Vec<u32> index;
+
+    WStrVec2() = default;
+    ~WStrVec2() = default;
+    void Reset();
+
+    int Size() const;
+    std::wstring_view at(int) const;
+    int Append(const WCHAR*);
+    int Find(const WCHAR* s, int startAt = 0) const;
+    bool Exists(std::wstring_view) const;
+    int AppendIfNotExists(std::wstring_view);
+
+    bool GetSortedView(WStrVecSortedView&, WStrLessFunc lessFn = nullptr) const;
+    bool GetSortedViewNoCase(WStrVecSortedView&) const;
+
+    // TODO: remove, only for compat
+    size_t size() const;
+    // TODO: rename to Index()
 };

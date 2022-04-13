@@ -300,12 +300,12 @@ static void StrVecTest() {
         utassert(v.Size() == i + 1);
     }
 
-    CrashIf(v.isSorted);
-    v.Sort();
-    CrashIf(!v.isSorted);
+    StrVecSortedView sortedView;
+    bool ok = v.GetSortedView(sortedView);
+    CrashIf(!ok);
 
     for (int i = 0; i < n; i++) {
-        auto got = v.AtSorted(i);
+        auto got = sortedView.at(i);
         auto exp = strs[sortedOrder[i]];
         assertStrEq(got, exp);
     }
@@ -328,21 +328,11 @@ static void StrVecTest() {
         assertStrEq(got, exp);
     }
 
-    // test on-demand sort
-    CrashIf(v.isSorted);
-    sv = v.AtSorted(0);
-    CrashIf(!v.isSorted);
-    for (int i = 0; i < n; i++) {
-        auto got = v.AtSorted(i);
-        auto exp = strs[sortedOrder[i]];
-        assertStrEq(got, exp);
-    }
-
-    v.SortNoCase();
-    CrashIf(!v.isSorted);
+    ok = v.GetSortedViewNoCase(sortedView);
+    CrashIf(!ok);
 
     for (int i = 0; i < n; i++) {
-        auto got = v.AtSorted(i);
+        auto got = sortedView.at(i);
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }

@@ -2055,6 +2055,10 @@ bool Eq(const WCHAR* s1, const WCHAR* s2) {
     return 0 == wcscmp(s1, s2);
 }
 
+bool Eq(std::wstring_view s1, const WCHAR* s2) {
+    return Eq(s1.data(), s2);
+}
+
 // return true if s1 == s2, case insensitive
 bool EqI(const WCHAR* s1, const WCHAR* s2) {
     if (s1 == s2) {
@@ -2891,15 +2895,11 @@ TODO:
 constexpr u32 kNullIdx = (u32)-2;
 
 void StrVec::Reset() {
-    str.Reset();
+    strings.Reset();
     index.Reset();
-    sortedIndex.Reset();
-    isSorted = false;
 }
 
 int StrVec::Append(const char* s) {
-    isSorted = false; // adding stuff invalidates sorting
-
     bool ok;
     if (s == nullptr) {
         ok = index.Append(kNullIdx);
@@ -2909,8 +2909,8 @@ int StrVec::Append(const char* s) {
         return Size() - 1;
     }
     size_t sLen = str::Len(s);
-    u32 idx = (u32)str.size();
-    ok = str.Append(s, sLen + 1);
+    u32 idx = (u32)strings.size();
+    ok = strings.Append(s, sLen + 1);
     if (!ok) {
         return -1;
     }
@@ -2919,10 +2919,6 @@ int StrVec::Append(const char* s) {
         return -1;
     }
     return Size() - 1;
-}
-
-int StrVec::size() const {
-    return index.isize();
 }
 
 int StrVec::Size() const {
@@ -2936,24 +2932,29 @@ std::string_view StrVec::at(int idx) const {
     if (start == kNullIdx) {
         return {};
     }
-    u32 end = (u32)str.size();
+    u32 end = (u32)strings.size();
     if (idx + 1 < n) {
         end = (u32)index.at(idx + 1);
     }
-    const char* s = str.LendData() + start;
+    const char* s = strings.LendData() + start;
     size_t len = (size_t)(end - start - 1);
     return {s, len};
 }
 
-bool StrVec::Exists(std::string_view sv) {
+int StrVec::Find(std::string_view sv, int startAt) const {
     int n = Size();
-    for (int i = 0; i < n; i++) {
+    for (int i = startAt; i < n; i++) {
         auto s = at(i);
         if (str::Eq(sv, s)) {
             return true;
         }
     }
     return false;
+}
+
+bool StrVec::Exists(std::string_view sv) const {
+    int idx = Find(sv);
+    return idx != -1;
 }
 
 int StrVec::AppendIfNotExists(std::string_view sv) {
@@ -2963,7 +2964,7 @@ int StrVec::AppendIfNotExists(std::string_view sv) {
     return Append(sv.data());
 }
 
-static bool strCmpLess(std::string_view s1, std::string_view s2) {
+static bool strLess(std::string_view s1, std::string_view s2) {
     if (s1.empty()) {
         return true;
     }
@@ -2974,7 +2975,7 @@ static bool strCmpLess(std::string_view s1, std::string_view s2) {
     return ret;
 }
 
-static bool strCmpLessNoCase(std::string_view s1, std::string_view s2) {
+static bool strLessNoCase(std::string_view s1, std::string_view s2) {
     if (s1.empty()) {
         return true;
     }
@@ -2994,9 +2995,10 @@ static bool strCmpLessNoCase(std::string_view s1, std::string_view s2) {
     return n1 < n2;
 }
 
-void StrVec::Sort(StrCmpLessFunc lessFn) {
+#if 0
+void StrVec::Sort(StrLessFunc lessFn) {
     if (lessFn == nullptr) {
-        lessFn = strCmpLess;
+        lessFn = strLess;
     }
 
     // sortedIndex is 0...Size()-1 value
@@ -3016,18 +3018,195 @@ void StrVec::Sort(StrCmpLessFunc lessFn) {
     });
     isSorted = true;
 }
+#endif
 
-void StrVec::SortNoCase() {
-    Sort(strCmpLessNoCase);
+bool StrVec::GetSortedView(StrVecSortedView& view, StrLessFunc lessFn) const {
+    view.v = (StrVec*)this;
+    view.sortedIndex = this->index; // TOOD: verify this works as expected
+
+    if (lessFn == nullptr) {
+        lessFn = strLess;
+    }
+
+    auto& sortedIndex = view.sortedIndex;
+    // sortedIndex is 0...Size()-1 value
+    // that points into index Vec
+    // starty by fillng sortedIndex with 0...Size()-1
+    // and then sort by swapping indexes
+    u32 n = (u32)index.size();
+    sortedIndex.Reset();
+    for (u32 i = 0; i < n; i++) {
+        sortedIndex.Append(i);
+    }
+    std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
+        std::string_view is1 = at((int)i1);
+        std::string_view is2 = at((int)i2);
+        bool ret = lessFn(is1, is2);
+        return ret;
+    });
+
+    return true;
 }
 
-std::string_view StrVec::AtSorted(int i) {
-    if (!isSorted) {
-        Sort();
-    }
-    CrashIf(sortedIndex.size() != index.size());
-    CrashIf(!isSorted);
+bool StrVec::GetSortedViewNoCase(StrVecSortedView& view) const {
+    return GetSortedView(view, strLessNoCase);
+}
+
+int StrVecSortedView::Size() const {
+    return sortedIndex.isize();
+}
+
+std::string_view StrVecSortedView::at(int i) const {
+    CrashIf(sortedIndex.size() != v->index.size());
 
     u32 i2 = sortedIndex[i];
-    return at((int)i2);
+    return v->at((int)i2);
+}
+
+//- WStrVec
+
+bool wstrLess(std::wstring_view s1, std::wstring_view s2) {
+    if (s1.empty()) {
+        return true;
+    }
+    if (s1.empty()) {
+        return false;
+    }
+    bool ret = s1 < s2;
+    return ret;
+}
+
+bool wstrLessNoCase(std::wstring_view s1, std::wstring_view s2) {
+    if (s1.empty()) {
+        return true;
+    }
+    if (s1.empty()) {
+        return false;
+    }
+    size_t n1 = s1.size();
+    size_t n2 = s2.size();
+    for (size_t i = 0; i < n1 && i < n2; i++) {
+        WCHAR c1 = towlower(s1[i]);
+        WCHAR c2 = towlower(s2[i]);
+        if (c1 == c2) {
+            continue;
+        }
+        return c1 < c2;
+    }
+    return n1 < n2;
+}
+
+void WStrVec2::Reset() {
+    strings.Reset();
+    index.Reset();
+}
+
+// returns index with strings
+int WStrVec2::Append(const WCHAR* s) {
+    bool ok;
+    if (s == nullptr) {
+        ok = index.Append(kNullIdx);
+        if (!ok) {
+            return -1;
+        }
+        return Size() - 1;
+    }
+    size_t sLen = str::Len(s);
+    u32 idx = (u32)strings.size();
+    ok = strings.Append(s, sLen + 1);
+    if (!ok) {
+        return -1;
+    }
+    ok = index.Append(idx);
+    if (!ok) {
+        return -1;
+    }
+    return Size() - 1;
+}
+
+int WStrVec2::Size() const {
+    return index.isize();
+}
+
+size_t WStrVec2::size() const {
+    return index.size();
+}
+
+std::wstring_view WStrVec2::at(int idx) const {
+    int n = Size();
+    CrashIf(idx < 0 || idx >= n);
+    u32 start = index.at(idx);
+    if (start == kNullIdx) {
+        return {};
+    }
+    u32 end = (u32)strings.size();
+    if (idx + 1 < n) {
+        end = (u32)index.at(idx + 1);
+    }
+    const WCHAR* s = strings.LendData() + start;
+    size_t len = (size_t)(end - start - 1);
+    return {s, len};
+}
+
+int WStrVec2::Find(const WCHAR* s, int startAt) const {
+    int n = Size();
+    for (int i = startAt; i < n; i++) {
+        auto s2 = at(i);
+        if (str::Eq(s, s2.data())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool WStrVec2::Exists(std::wstring_view sv) const {
+    int idx = Find(sv.data(), 0);
+    return idx != -1;
+}
+
+int WStrVec2::AppendIfNotExists(std::wstring_view sv) {
+    if (Exists(sv)) {
+        return -1;
+    }
+    return Append(sv.data());
+}
+
+bool WStrVec2::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const {
+    view.v = (WStrVec2*)this;
+    view.sortedIndex = this->index; // TOOD: verify this works as expected
+
+    if (lessFn == nullptr) {
+        lessFn = wstrLess;
+    }
+
+    auto& sortedIndex = view.sortedIndex;
+    // sortedIndex is 0...Size()-1 value
+    // that points into index Vec
+    // starty by fillng sortedIndex with 0...Size()-1
+    // and then sort by swapping indexes
+    u32 n = (u32)index.size();
+    sortedIndex.Reset();
+    for (u32 i = 0; i < n; i++) {
+        sortedIndex.Append(i);
+    }
+    std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
+        std::wstring_view is1 = at((int)i1);
+        std::wstring_view is2 = at((int)i2);
+        bool ret = lessFn(is1, is2);
+        return ret;
+    });
+
+    return true;
+}
+bool WStrVec2::GetSortedViewNoCase(WStrVecSortedView& view) const {
+    return GetSortedView(view, wstrLessNoCase);
+}
+
+int WStrVecSortedView::Size() const {
+    return sortedIndex.isize();
+}
+
+std::wstring_view WStrVecSortedView::at(int i) const {
+    u32 idx = sortedIndex[i];
+    return v->at(idx);
 }

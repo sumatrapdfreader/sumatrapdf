@@ -76,6 +76,7 @@ struct Flags {
     bool justExtractFiles = false;
     bool registerAsDefault = false;
     bool log = false;
+    bool allUsers = false;
 
     // for internal use
     WCHAR* updateSelfTo = nullptr;

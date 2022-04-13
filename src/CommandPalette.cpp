@@ -208,10 +208,11 @@ static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
         seqstrings::Next(strs);
         cmdId++;
     }
-    tempStrings.SortNoCase();
-    int n = tempStrings.Size();
+    StrVecSortedView sortedView;
+    tempStrings.GetSortedViewNoCase(sortedView);
+    int n = sortedView.Size();
     for (int i = 0; i < n; i++) {
-        auto sv = tempStrings.AtSorted(i);
+        auto sv = sortedView.at(i);
         strings.Append(sv.data());
     }
 }
