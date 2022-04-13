@@ -301,11 +301,11 @@ static MenuDef menuDefView[] = {
     },
     {
         _TRN("Show &Toolbar"),
-        CmdViewShowHideToolbar,
+        CmdToggleToolbar,
     },
     {
         _TRN("Show Scr&ollbars"),
-        CmdViewShowHideScrollbars,
+        CmdToggleScrollbars,
     },
     {
         nullptr,
@@ -758,11 +758,11 @@ static MenuDef menuDefContext[] = {
     },
     {
         _TRN("Show &Toolbar"),
-        CmdViewShowHideToolbar,
+        CmdToggleToolbar,
     },
     {
         _TRN("Show &Scrollbars"),
-        CmdViewShowHideScrollbars,
+        CmdToggleScrollbars,
     },
     {
         kMenuSeparator,
@@ -985,7 +985,7 @@ static UINT_PTR rmoveIfChm[] = {
     CmdViewRotateLeft,
     CmdViewRotateRight,
     CmdViewPresentationMode,
-    CmdViewShowHideScrollbars,
+    CmdToggleScrollbars,
     CmdZoomFitPage,
     CmdZoomActualSize,
     CmdZoomFitWidth,
@@ -1621,8 +1621,8 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     win::menu::SetChecked(win->menu, CmdViewBookmarks, checked);
 
     win::menu::SetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
-    win::menu::SetChecked(win->menu, CmdViewShowHideToolbar, gGlobalPrefs->showToolbar);
-    win::menu::SetChecked(win->menu, CmdViewShowHideScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);
+    win::menu::SetChecked(win->menu, CmdToggleToolbar, gGlobalPrefs->showToolbar);
+    win::menu::SetChecked(win->menu, CmdToggleScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -1764,7 +1764,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetEnabled(popup, CmdViewBookmarks, win->ctrl->HacToc());
     win::menu::SetChecked(popup, CmdViewBookmarks, win->tocVisible);
 
-    win::menu::SetChecked(popup, CmdViewShowHideScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);
+    win::menu::SetChecked(popup, CmdToggleScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);
 
     win::menu::SetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
@@ -1798,7 +1798,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     // if toolbar is not shown, add option to show it
     if (gGlobalPrefs->showToolbar) {
-        win::menu::Remove(popup, CmdViewShowHideToolbar);
+        win::menu::Remove(popup, CmdToggleToolbar);
     }
     RemoveBadMenuSeparators(popup);
 
@@ -1829,8 +1829,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdViewBookmarks:
         case CmdFavoriteToggle:
         case CmdProperties:
-        case CmdViewShowHideToolbar:
-        case CmdViewShowHideScrollbars:
+        case CmdToggleToolbar:
+        case CmdToggleScrollbars:
         case CmdSaveAnnotations:
         case CmdFavoriteAdd:
         case CmdExitFullScreen:

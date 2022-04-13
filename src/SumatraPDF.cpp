@@ -4476,11 +4476,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuViewMangaMode(win);
             break;
 
-        case CmdViewShowHideToolbar:
+        case CmdToggleToolbar:
             OnMenuViewShowHideToolbar();
             break;
 
-        case CmdViewShowHideScrollbars:
+        case CmdToggleScrollbars:
             OnMenuViewShowHideScrollbars();
             break;
 
@@ -4492,7 +4492,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             StartEditAnnotations(tab, nullptr);
             break;
 
-        case CmdViewShowHideMenuBar:
+        case CmdToggleMenuBar:
             if (!win->tabsInTitlebar) {
                 ShowHideMenuBar(win);
             }

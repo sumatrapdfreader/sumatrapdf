@@ -30,9 +30,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdViewBookmarks, "View: Bookmarks")                                \
     V(CmdViewFullScreen, "View: FullScreen")                              \
     V(CmdViewPresentationMode, "View: Presentation Mode")                 \
-    V(CmdViewShowHideToolbar, "View: Toogle Toolbar")                     \
-    V(CmdViewShowHideScrollbars, "View: Toogle Scrollbars")               \
-    V(CmdViewShowHideMenuBar, "View: Toggle Menu Bar")                    \
+    V(CmdToggleToolbar, "View: Toogle Toolbar")                           \
+    V(CmdToggleScrollbars, "View: Toogle Scrollbars")                     \
+    V(CmdToggleMenuBar, "View: Toggle Menu Bar")                          \
     V(CmdCopySelection, "Copy Selection")                                 \
     V(CmdTranslateSelectionWithGoogle, "Translate Selection with Google") \
     V(CmdTranslateSelectionWithDeepL, "Translate Selection With DeepL")   \
