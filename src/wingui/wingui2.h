@@ -108,6 +108,7 @@ struct Wnd : public ILayout {
     void SetFocus() const;
     bool IsFocused() const;
     void SetRtl(bool) const;
+    void SetBackgroundColor(COLORREF);
 
     Kind kind = nullptr;
 
@@ -121,6 +122,9 @@ struct Wnd : public ILayout {
     WNDPROC prevWindowProc = nullptr;
     HWND hwnd = nullptr;
     ILayout* layout = nullptr;
+
+    COLORREF backgroundColor{ColorUnset};
+    HBRUSH backgroundColorBrush = nullptr;
 };
 
 bool PreTranslateMessage(MSG& msg);
@@ -392,6 +396,58 @@ struct Trackbar : Wnd {
 
     void SetValue(int);
     int GetValue();
+};
+
+} // namespace wg
+
+// - Splitter
+namespace wg {
+enum class SplitterType {
+    Horiz,
+    Vert,
+};
+
+struct Splitter;
+
+// called when user drags the splitter ('done' is false) and when drag is finished ('done' is
+// true). the owner can constrain splitter by using current cursor
+// position and setting resizeAllowed to false if it's not allowed to go there
+struct SplitterMoveEvent {
+    Splitter* w = nullptr;
+    bool done = false; // TODO: rename to finishedDragging
+    // user can set to false to forbid resizing here
+    bool resizeAllowed = true;
+};
+
+using SplitterMoveHandler = std::function<void(SplitterMoveEvent*)>;
+
+struct SplitterCreateArgs {
+    HWND parent = nullptr;
+    SplitterType type = SplitterType::Horiz;
+    bool isLive = true;
+    COLORREF backgroundColor = ColorUnset;
+};
+
+struct Splitter : public Wnd {
+    SplitterType type = SplitterType::Horiz;
+    bool isLive = true;
+    SplitterMoveHandler onSplitterMove = nullptr;
+    COLORREF backgroundColor = 0;
+
+    HBITMAP bmp = nullptr;
+    HBRUSH brush = nullptr;
+
+    Point prevResizeLinePos{};
+    // if a parent clips children, DrawXorBar() doesn't work, so for
+    // non-live resize, we need to remove WS_CLIPCHILDREN style from
+    // parent and restore it when we're done
+    bool parentClipsChildren = false;
+
+    Splitter();
+    ~Splitter() override;
+
+    HWND Create(const SplitterCreateArgs&);
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 };
 
 } // namespace wg

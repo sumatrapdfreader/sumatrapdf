@@ -24,11 +24,13 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/TreeCtrl.h"
-#include "wingui/SplitterCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
 #include "wingui/TooltipCtrl.h"
 #include "wingui/TabsCtrl.h"
+
+#include "wingui/wingui2.h"
+using namespace wg;
 
 #include "Annotation.h"
 #include "DisplayMode.h"
@@ -1294,19 +1296,25 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
 }
 
 static void CreateSidebar(WindowInfo* win) {
-    win->sidebarSplitter = new SplitterCtrl();
-    win->sidebarSplitter->type = SplitterType::Vert;
-    win->sidebarSplitter->onSplitterMove = OnSidebarSplitterMove;
-    bool ok = win->sidebarSplitter->Create(win->hwndFrame);
-    CrashIf(!ok);
+    {
+        SplitterCreateArgs args;
+        args.parent = win->hwndFrame;
+        args.type = SplitterType::Vert;
+        win->sidebarSplitter = new Splitter();
+        win->sidebarSplitter->onSplitterMove = OnSidebarSplitterMove;
+        win->sidebarSplitter->Create(args);
+    }
 
     CreateToc(win);
 
-    win->favSplitter = new SplitterCtrl();
-    win->favSplitter->type = SplitterType::Horiz;
-    win->favSplitter->onSplitterMove = OnFavSplitterMove;
-    ok = win->favSplitter->Create(win->hwndFrame);
-    CrashIf(!ok);
+    {
+        SplitterCreateArgs args;
+        args.parent = win->hwndFrame;
+        args.type = SplitterType::Horiz;
+        win->favSplitter = new Splitter();
+        win->favSplitter->onSplitterMove = OnFavSplitterMove;
+        win->favSplitter->Create(args);
+    }
 
     CreateFavorites(win);
 
@@ -3966,7 +3974,7 @@ static bool FrameOnSysChar(WindowInfo* win, WPARAM key) {
 }
 
 static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
-    SplitterCtrl* splitter = ev->w;
+    Splitter* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
@@ -3990,7 +3998,7 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
 }
 
 static void OnFavSplitterMove(SplitterMoveEvent* ev) {
-    SplitterCtrl* splitter = ev->w;
+    Splitter* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 

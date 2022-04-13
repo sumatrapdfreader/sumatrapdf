@@ -16,8 +16,10 @@
 #include "wingui/TooltipCtrl.h"
 #include "wingui/TabsCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"
-#include "wingui/SplitterCtrl.h"
 #include "wingui/FrameRateWnd.h"
+
+#include "wingui/wingui2.h"
+using namespace wg;
 
 #include "Annotation.h"
 #include "DisplayMode.h"

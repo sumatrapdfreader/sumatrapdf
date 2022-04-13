@@ -182,8 +182,8 @@ struct WindowBase : public ILayout {
     // when set after Create() must also call DragAcceptFiles(hwnd, TRUE);
     DropFilesHandler onDropFiles = nullptr;
 
-    COLORREF textColor{ColorUnset};
-    COLORREF backgroundColor{ColorUnset};
+    COLORREF textColor = ColorUnset;
+    COLORREF backgroundColor = ColorUnset;
     HBRUSH backgroundColorBrush = nullptr;
 
     str::Str text;

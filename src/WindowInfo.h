@@ -9,7 +9,9 @@ struct StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
-struct SplitterCtrl;
+namespace wg {
+struct Splitter;
+}
 struct CaptionInfo;
 struct TabsCtrl2;
 
@@ -126,10 +128,10 @@ struct WindowInfo {
     Vec<FileState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
-    SplitterCtrl* sidebarSplitter = nullptr;
+    wg::Splitter* sidebarSplitter = nullptr;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    SplitterCtrl* favSplitter = nullptr;
+    wg::Splitter* favSplitter = nullptr;
 
     TabsCtrl2* tabsCtrl = nullptr;
     bool tabsVisible = false;
