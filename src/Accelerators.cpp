@@ -11,80 +11,87 @@
 
 #include "utils/Log.h"
 
-#define VIRT_KEYS(V)         \
-    V(VK_NUMPAD0, "numpad0") \
-    V(VK_NUMPAD1, "numpad1") \
-    V(VK_NUMPAD2, "numpad2") \
-    V(VK_NUMPAD3, "numpad3") \
-    V(VK_NUMPAD4, "numpad4") \
-    V(VK_NUMPAD5, "numpad5") \
-    V(VK_NUMPAD6, "numpad6") \
-    V(VK_NUMPAD7, "numpad7") \
-    V(VK_NUMPAD8, "numpad8") \
-    V(VK_NUMPAD9, "numpad9") \
-    V(VK_END, "End")         \
-    V(VK_HOME, "Home")       \
-    V(VK_LEFT, "Left")       \
-    V(VK_RIGHT, "Right")     \
-    V(VK_UP, "Up")           \
-    V(VK_DOWN, "Down")       \
-    V(VK_NEXT, "PageDown")   \
-    V(VK_PRIOR, "PageUp")   \
-    V(VK_BACK, "Back")       \
-    V(VK_BACK, "Backspace")  \
-    V(VK_DELETE, "Del")      \
-    V(VK_DELETE, "Delete")   \
-    V(VK_INSERT, "Ins")      \
-    V(VK_INSERT, "Insert")   \
-    V(VK_ESCAPE, "Esc")      \
-    V(VK_ESCAPE, "Escape")   \
-    V(VK_RETURN, "Return")   \
-    V(VK_SPACE, "Space")     \
-    V(VK_F1, "F1")           \
-    V(VK_F2, "F2")           \
-    V(VK_F3, "F3")           \
-    V(VK_F4, "F4")           \
-    V(VK_F5, "F5")           \
-    V(VK_F6, "F6")           \
-    V(VK_F7, "F7")           \
-    V(VK_F8, "F8")           \
-    V(VK_F9, "F9")           \
-    V(VK_F10, "F10")         \
-    V(VK_F11, "F11")         \
-    V(VK_F12, "F12")         \
-    V(VK_F13, "F13")         \
-    V(VK_F14, "F14")         \
-    V(VK_F15, "F15")         \
-    V(VK_F16, "F16")         \
-    V(VK_F17, "F17")         \
-    V(VK_F18, "F18")         \
-    V(VK_F19, "F19")         \
-    V(VK_F20, "F20")         \
-    V(VK_F21, "F21")         \
-    V(VK_F22, "F22")         \
-    V(VK_F23, "F23")         \
+#define VIRT_KEYS(V)           \
+    V(VK_NUMPAD0, "numpad0")   \
+    V(VK_NUMPAD1, "numpad1")   \
+    V(VK_NUMPAD2, "numpad2")   \
+    V(VK_NUMPAD3, "numpad3")   \
+    V(VK_NUMPAD4, "numpad4")   \
+    V(VK_NUMPAD5, "numpad5")   \
+    V(VK_NUMPAD6, "numpad6")   \
+    V(VK_NUMPAD7, "numpad7")   \
+    V(VK_NUMPAD8, "numpad8")   \
+    V(VK_NUMPAD9, "numpad9")   \
+    V(VK_END, "End")           \
+    V(VK_HOME, "Home")         \
+    V(VK_LEFT, "Left")         \
+    V(VK_RIGHT, "Right")       \
+    V(VK_UP, "Up")             \
+    V(VK_DOWN, "Down")         \
+    V(VK_NEXT, "PageDown")     \
+    V(VK_PRIOR, "PageUp")      \
+    V(VK_BACK, "Back")         \
+    V(VK_BACK, "Backspace")    \
+    V(VK_DELETE, "Del")        \
+    V(VK_DELETE, "Delete")     \
+    V(VK_INSERT, "Ins")        \
+    V(VK_INSERT, "Insert")     \
+    V(VK_ESCAPE, "Esc")        \
+    V(VK_ESCAPE, "Escape")     \
+    V(VK_RETURN, "Return")     \
+    V(VK_SPACE, "Space")       \
+    V(VK_MULTIPLY, "Multiply") \
+    V(VK_MULTIPLY, "Mult")     \
+    V(VK_ADD, "Add")           \
+    V(VK_SUBTRACT, "Subtract") \
+    V(VK_SUBTRACT, "Sub")      \
+    V(VK_DIVIDE, "Divide")     \
+    V(VK_DIVIDE, "Div")        \
+    V(VK_HELP, "Help")         \
+    V(VK_SELECT, "Select")     \
+    V(VK_F1, "F1")             \
+    V(VK_F2, "F2")             \
+    V(VK_F3, "F3")             \
+    V(VK_F4, "F4")             \
+    V(VK_F5, "F5")             \
+    V(VK_F6, "F6")             \
+    V(VK_F7, "F7")             \
+    V(VK_F8, "F8")             \
+    V(VK_F9, "F9")             \
+    V(VK_F10, "F10")           \
+    V(VK_F11, "F11")           \
+    V(VK_F12, "F12")           \
+    V(VK_F13, "F13")           \
+    V(VK_F14, "F14")           \
+    V(VK_F15, "F15")           \
+    V(VK_F16, "F16")           \
+    V(VK_F17, "F17")           \
+    V(VK_F18, "F18")           \
+    V(VK_F19, "F19")           \
+    V(VK_F20, "F20")           \
+    V(VK_F21, "F21")           \
+    V(VK_F22, "F22")           \
+    V(VK_F23, "F23")           \
     V(VK_F24, "F24")
-// TODO: remaining keys:
-/*
-#define VK_SELECT         0x29
-#define VK_HELP           0x2F
-
-#define VK_MULTIPLY       0x6A
-#define VK_ADD            0x6B
-#define VK_SUBTRACT       0x6D
-#define VK_DIVIDE         0x6F
-*/
 
 static HACCEL gLastAccel = nullptr;
 
 ACCEL gBuiltInAccelerators[] = {
+    {FVIRTKEY, VK_NEXT, CmdScrollByScreen},
+    {FVIRTKEY, VK_SPACE, CmdScrollByScreen},
+    {FVIRTKEY, VK_RETURN, CmdScrollByScreen},
+    {FCONTROL | FVIRTKEY, VK_DOWN, CmdScrollByScreen},
+
+    {FVIRTKEY, VK_PRIOR, CmdScrollBackByScreen},
+    {FSHIFT | FVIRTKEY, VK_SPACE, CmdScrollBackByScreen},
+    {FSHIFT | FVIRTKEY, VK_RETURN, CmdScrollBackByScreen},
+    {FCONTROL | FVIRTKEY, VK_UP, CmdScrollBackByScreen},
+
     {0, 'n', CmdGoToNextPage},
-    {FVIRTKEY, VK_SPACE, CmdGoToNextPage},
-    {FVIRTKEY, VK_RETURN, CmdGoToNextPage},
+    {FCONTROL | FVIRTKEY, VK_NEXT, CmdGoToNextPage},
 
     {0, 'p', CmdGoToPrevPage},
-    {FSHIFT | FVIRTKEY, VK_SPACE, CmdGoToPrevPage},
-    {FSHIFT | FVIRTKEY, VK_RETURN, CmdGoToPrevPage},
+    {FCONTROL | FVIRTKEY, VK_PRIOR, CmdGoToPrevPage},
 
     {FVIRTKEY, VK_HOME, CmdGoToFirstPage},
     {FCONTROL | FVIRTKEY, VK_HOME, CmdGoToFirstPage},

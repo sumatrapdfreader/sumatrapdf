@@ -3623,7 +3623,8 @@ static void DeleteAnnotationUnderCursor(WindowInfo* win) {
     }
 }
 
-bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
+bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp) {
+    // TODO: how does this interact with new accelerators?
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         // black/white screen is disabled on any unmodified key press in FrameOnChar
         return true;
@@ -3647,42 +3648,22 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
     }
 
     DisplayModel* dm = win->AsFixed();
+
     // some of the chm key bindings are different than the rest and we
     // need to make sure we don't break them
     bool isChm = win->AsChm();
-
+    // TODO: not sure how this interacts with accelerators
+#if 0
     bool isPageUp = (isCtrl && (VK_UP == key));
     if (!isChm) {
         isPageUp |= (VK_PRIOR == key) && !isCtrl;
-    }
-
-    if (isPageUp) {
-        int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
-        }
-        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
-            win->ctrl->GoToPrevPage(true);
-        }
-        return true;
     }
 
     bool isPageDown = (isCtrl && (VK_DOWN == key));
     if (!isChm) {
         isPageDown |= (VK_NEXT == key) && !isCtrl;
     }
-
-    if (isPageDown) {
-        int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
-        }
-        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
-            win->ctrl->GoToNextPage();
-        }
-        return true;
-    }
-
+#endif
     if (isChm) {
         if (ChmForwardKey(key)) {
             win->AsChm()->PassUIMsg(WM_KEYDOWN, key, lp);
@@ -3691,6 +3672,8 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
     }
     // lf("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
+    // the parts that are commented out should now be handled
+    // in OnCommand via accelerators
     if (VK_UP == key) {
         if (dm && dm->NeedVScroll()) {
             SendMessageW(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEUP : SB_LINEUP, 0);
@@ -3704,18 +3687,17 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
             win->ctrl->GoToNextPage();
         }
     } else if (VK_PRIOR == key && isCtrl) {
-        win->ctrl->GoToPrevPage();
+        // win->ctrl->GoToPrevPage();
+        logf("CTRL + VK_PRIOR\n");
     } else if (VK_NEXT == key && isCtrl) {
-        win->ctrl->GoToNextPage();
-        /*} else if (VK_HOME == key && isCtrl) {
-            win->ctrl->GoToFirstPage();
-        } else if (VK_END == key && isCtrl) {
-            if (!win->ctrl->GoToLastPage()) {
-                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
-        }*/
-    } else if (inTextfield) {
-        // The remaining keys have a different meaning
-        return false;
+        //win->ctrl->GoToNextPage();
+        logf("CTRL + VK_NEXTds\n");
+    } else if (VK_HOME == key && isCtrl) {
+        // win->ctrl->GoToFirstPage();
+    } else if (VK_END == key && isCtrl) {
+        if (!win->ctrl->GoToLastPage()) {
+            //    SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+        }
     } else if (VK_LEFT == key) {
         if (dm && dm->NeedHScroll() && !isCtrl) {
             SendMessageW(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGELEFT : SB_LINELEFT, 0);
@@ -3728,12 +3710,12 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         } else {
             win->ctrl->GoToNextPage();
         }
-        /*} else if (VK_HOME == key) {
-            win->ctrl->GoToFirstPage();*/
-        /*} else if (VK_END == key) {
-            if (!win->ctrl->GoToLastPage()) {
-                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
-            }*/
+    } else if (VK_HOME == key) {
+        // win->ctrl->GoToFirstPage();
+    } else if (VK_END == key) {
+        if (!win->ctrl->GoToLastPage()) {
+            // SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+        }
     } else if (VK_MULTIPLY == key && dm) {
         dm->RotateBy(90);
     } else if (VK_DIVIDE == key && dm) {
@@ -4535,17 +4517,54 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleTocBox(win);
             break;
 
+        // TODO: implement those here instead of forwarding to FrameOnKeydown
+        case CmdScrollLeft:
+            FrameOnKeydown(win, VK_LEFT, 0);
+            break;
+
+        case CmdScrollDown:
+            FrameOnKeydown(win, VK_DOWN, 0);
+            break;
+
+        case CmdScrollUp:
+            FrameOnKeydown(win, VK_UP, 0);
+            break;
+
+        case CmdScrollRight:
+            FrameOnKeydown(win, VK_RIGHT, 0);
+            break;
+
         case CmdGoToNextPage:
             if (ctrl && win->IsDocLoaded()) {
                 ctrl->GoToNextPage();
             }
             break;
 
+        case CmdScrollByScreen: {
+            int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+            if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
+                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
+            }
+            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+                win->ctrl->GoToNextPage();
+            }
+        } break;
+
         case CmdGoToPrevPage:
             if (ctrl && win->IsDocLoaded()) {
                 ctrl->GoToPrevPage();
             }
             break;
+
+        case CmdScrollBackByScreen: {
+            int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+            if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
+                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
+            }
+            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+                win->ctrl->GoToPrevPage(true);
+            }
+        } break;
 
         case CmdGoToFirstPage:
             if (ctrl && win->IsDocLoaded()) {
@@ -4704,10 +4723,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdDeleteAnnotation: {
-            bool inTextField = GetFocus() == win->hwndFindBox;
-            if (!inTextField) {
-                DeleteAnnotationUnderCursor(win);
-            }
+            DeleteAnnotationUnderCursor(win);
         } break;
 
 #if defined(DEBUG)
@@ -4790,23 +4806,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (ctrl) {
                 ctrl->Navigate(1);
             }
-            break;
-
-
-        case CmdScrollLeft:
-            FrameOnKeydown(win, VK_LEFT, 0);
-            break;
-
-        case CmdScrollDown:
-            FrameOnKeydown(win, VK_DOWN, 0);
-            break;
-
-        case CmdScrollUp:
-            FrameOnKeydown(win, VK_UP, 0);
-            break;
-
-        case CmdScrollRight:
-            FrameOnKeydown(win, VK_RIGHT, 0);
             break;
 
         case CmdToggleZoom:

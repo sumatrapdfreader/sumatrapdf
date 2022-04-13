@@ -44,6 +44,12 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCopyImage, "Copy Image")                                         \
     V(CmdCopyLinkTarget, "Copy Link Target")                              \
     V(CmdCopyComment, "Copy Comment")                                     \
+    V(CmdScrollUp, "Scroll Up")                                           \
+    V(CmdScrollDown, "Scroll Down")                                       \
+    V(CmdScrollLeft, "Scroll Left")                                       \
+    V(CmdScrollRight, "Scroll Right")                                     \
+    V(CmdScrollByScreen, "Scroll By Screen")                              \
+    V(CmdScrollBackByScreen, "Scroll Back By Screen")                     \
     V(CmdGoToNextPage, "Go to Next Page")                                 \
     V(CmdGoToPrevPage, "Go to Previous Page")                             \
     V(CmdGoToFirstPage, "Go to First Page")                               \
@@ -146,12 +152,8 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdShowCursorPosition, "Show cursor position")                      \
     V(CmdPresentationWhiteBackground, "Presentation white background")    \
     V(CmdPresentationBlackBackground, "Presentation black background")    \
-    V(CmdScrollUp, "Scroll Up")                                           \
-    V(CmdScrollDown, "Scroll Down")                                       \
-    V(CmdScrollLeft, "Scroll Left")                                       \
-    V(CmdScrollRight, "Scroll Right")                                     \
-    V(CmdOpenNextFileInFolder, "Open next file in folder") \
-    V(CmdOpenPrevFileInFolder, "Open prev file in folder") \
+    V(CmdOpenNextFileInFolder, "Open next file in folder")                \
+    V(CmdOpenPrevFileInFolder, "Open prev file in folder")                \
     V(CmdCommandPalette, "Command Palette")
 
 // order of CreateAnnot* must be the same as enum AnnotationType

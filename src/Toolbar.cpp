@@ -363,9 +363,15 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             FindTextOnThread(win, searchDir, true);
             // Note: we don't return but let default processing take place
         }
-        if (FrameOnKeydown(win, wp, lp, true)) {
-            return 0;
-        }
+        // TODO: here we used to call FrameOnKeydown() to make keys
+        // like pageup etc. work even when focus is in text field
+        // that no longer works because we moved most keys handling
+        // to accelerators and we don't want to process acceleratos
+        // while in edit control.
+        // We could try to manually run accelerators but only if they
+        // are virtual and don't prevent edit control from working
+        // or maybe explicitly forword built-in accelerator for
+        // white-listed shortucts but only if they were not modified by the user
     }
 
     LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, msg, wp, lp);
@@ -565,9 +571,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_KEYDOWN == msg) {
-        if (FrameOnKeydown(win, wp, lp, true)) {
-            return 0;
-        }
+        // TODO: see WndProcFindBox for note on enabling accelerators here as well
     }
 
     return CallWindowProc(DefWndProcPageBox, hwnd, msg, wp, lp);
