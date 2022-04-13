@@ -18,7 +18,6 @@ extern "C" {
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ListBoxCtrl.h"
-#include "wingui/DropDownCtrl.h"
 #include "wingui/TrackbarCtrl.h"
 
 #include "wingui/wingui2.h"
@@ -132,29 +131,29 @@ struct EditAnnotationsWindow {
     Static* staticContents = nullptr;
     Edit* editContents = nullptr;
     Static* staticTextAlignment = nullptr;
-    DropDownCtrl* dropDownTextAlignment = nullptr;
+    DropDown* dropDownTextAlignment = nullptr;
     Static* staticTextFont = nullptr;
-    DropDownCtrl* dropDownTextFont = nullptr;
+    DropDown* dropDownTextFont = nullptr;
     Static* staticTextSize = nullptr;
     TrackbarCtrl* trackbarTextSize = nullptr;
     Static* staticTextColor = nullptr;
-    DropDownCtrl* dropDownTextColor = nullptr;
+    DropDown* dropDownTextColor = nullptr;
 
     Static* staticLineStart = nullptr;
-    DropDownCtrl* dropDownLineStart = nullptr;
+    DropDown* dropDownLineStart = nullptr;
     Static* staticLineEnd = nullptr;
-    DropDownCtrl* dropDownLineEnd = nullptr;
+    DropDown* dropDownLineEnd = nullptr;
 
     Static* staticIcon = nullptr;
-    DropDownCtrl* dropDownIcon = nullptr;
+    DropDown* dropDownIcon = nullptr;
 
     Static* staticBorder = nullptr;
     TrackbarCtrl* trackbarBorder = nullptr;
 
     Static* staticColor = nullptr;
-    DropDownCtrl* dropDownColor = nullptr;
+    DropDown* dropDownColor = nullptr;
     Static* staticInteriorColor = nullptr;
-    DropDownCtrl* dropDownInteriorColor = nullptr;
+    DropDown* dropDownInteriorColor = nullptr;
 
     Static* staticOpacity = nullptr;
     TrackbarCtrl* trackbarOpacity = nullptr;
@@ -382,7 +381,7 @@ static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* string
     }
 }
 
-static void DropDownFillColors(DropDownCtrl* w, PdfColor col, str::Str& customColor) {
+static void DropDownFillColors(DropDown* w, PdfColor col, str::Str& customColor) {
     Vec<std::string_view> items;
     ItemsFromSeqstrings(items, gColors);
     const char* colorName = GetKnownColorName(col);
@@ -494,8 +493,9 @@ static void DoTextAlignment(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->dropDownTextAlignment->SetIsVisible(true);
 }
 
-static void TextAlignmentSelectionChanged(EditAnnotationsWindow* ew, DropDownSelectionChangedEvent* ev) {
-    int newQuadding = ev->idx;
+static void TextAlignmentSelectionChanged(EditAnnotationsWindow* ew) {
+    auto idx = ew->dropDownTextAlignment->GetCurrentSelection();
+    int newQuadding = idx;
     SetQuadding(ew->annot, newQuadding);
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -517,9 +517,9 @@ static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->dropDownTextFont->SetIsVisible(true);
 }
 
-static void TextFontSelectionChanged(EditAnnotationsWindow* ew, DropDownSelectionChangedEvent* ev) {
-    ev->didHandle = true;
-    const char* font = seqstrings::IdxToStr(gFontNames, ev->idx);
+static void TextFontSelectionChanged(EditAnnotationsWindow* ew) {
+    auto idx = ew->dropDownTextFont->GetCurrentSelection();
+    const char* font = seqstrings::IdxToStr(gFontNames, idx);
     SetDefaultAppearanceTextFont(ew->annot, font);
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -558,8 +558,10 @@ static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->dropDownTextColor->SetIsVisible(true);
 }
 
-static void TextColorSelectionChanged(EditAnnotationsWindow* ew, DropDownSelectionChangedEvent* ev) {
-    auto col = GetDropDownColor(ev->item);
+static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
+    auto idx = ew->dropDownTextColor->GetCurrentSelection();
+    auto item = ew->dropDownTextColor->items.at(idx);
+    auto col = GetDropDownColor(item);
     SetDefaultAppearanceTextColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -607,17 +609,24 @@ static void DoLineStartEnd(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->dropDownLineEnd->SetIsVisible(true);
 }
 
-static void LineStartEndSelectionChanged(EditAnnotationsWindow* ew, DropDownSelectionChangedEvent* ev) {
+static void LineStartSelectionChanged(EditAnnotationsWindow* ew) {
     int start = 0;
     int end = 0;
     GetLineEndingStyles(ew->annot, &start, &end);
-    int newVal = ev->idx;
-    if (ev->dropDown == ew->dropDownLineStart) {
-        start = newVal;
-    } else {
-        CrashIf(ev->dropDown != ew->dropDownLineEnd);
-        end = newVal;
-    }
+    auto idx = ew->dropDownLineStart->GetCurrentSelection();
+    int newVal = idx;
+    start = newVal;
+    EnableSaveIfAnnotationsChanged(ew);
+    WindowInfoRerender(ew->tab->win);
+}
+
+static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
+    int start = 0;
+    int end = 0;
+    GetLineEndingStyles(ew->annot, &start, &end);
+    auto idx = ew->dropDownLineEnd->GetCurrentSelection();
+    int newVal = idx;
+    end = newVal;
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
 }
@@ -649,8 +658,10 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->dropDownIcon->SetIsVisible(true);
 }
 
-static void IconSelectionChanged(EditAnnotationsWindow* ew, DropDownSelectionChangedEvent* ev) {
-    SetIconName(ew->annot, ev->item);
+static void IconSelectionChanged(EditAnnotationsWindow* ew) {
+    auto idx = ew->dropDownIcon->GetCurrentSelection();
+    auto item = ew->dropDownIcon->items.at(idx);
+    SetIconName(ew->annot, item);
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
 }
@@ -674,8 +685,10 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->dropDownColor->SetIsVisible(true);
 }
 
-static void ColorSelectionChanged(EditAnnotationsWindow* ew, DropDownSelectionChangedEvent* ev) {
-    auto col = GetDropDownColor(ev->item);
+static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
+    auto idx = ew->dropDownColor->GetCurrentSelection();
+    auto item = ew->dropDownColor->items.at(idx);
+    auto col = GetDropDownColor(item);
     SetColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -693,8 +706,10 @@ static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->dropDownInteriorColor->SetIsVisible(true);
 }
 
-static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew, DropDownSelectionChangedEvent* ev) {
-    auto col = GetDropDownColor(ev->item);
+static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
+    auto idx = ew->dropDownInteriorColor->GetCurrentSelection();
+    auto item = ew->dropDownInteriorColor->items.at(idx);
+    auto col = GetDropDownColor(item);
     SetInteriorColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
@@ -967,14 +982,15 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        w->Create(args);
+
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return TextAlignmentSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->onSelectionChanged = [ew]() { return TextAlignmentSelectionChanged(ew); };
         ew->dropDownTextAlignment = w;
         vbox->AddChild(w);
     }
@@ -987,14 +1003,14 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+
+        w->Create(args);
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return TextFontSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->onSelectionChanged = [ew]() { return TextFontSelectionChanged(ew); };
         ew->dropDownTextFont = w;
         vbox->AddChild(w);
     }
@@ -1025,14 +1041,14 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        w->Create(args);
+
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return TextColorSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->onSelectionChanged = [ew]() { return TextColorSelectionChanged(ew); };
         ew->dropDownTextColor = w;
         vbox->AddChild(w);
     }
@@ -1045,13 +1061,14 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return LineStartEndSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->Create(args);
+
+        w->onSelectionChanged = [ew]() { return LineStartSelectionChanged(ew); };
         ew->dropDownLineStart = w;
         vbox->AddChild(w);
     }
@@ -1064,13 +1081,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return LineStartEndSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->Create(args);
+
+        w->onSelectionChanged = [ew]() { return LineEndSelectionChanged(ew); };
         ew->dropDownLineEnd = w;
         vbox->AddChild(w);
     }
@@ -1083,11 +1100,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
-        w->onSelectionChanged = [ew](auto&& PH1) { return IconSelectionChanged(ew, std::forward<decltype(PH1)>(PH1)); };
+        w->Create(args);
+
+        w->onSelectionChanged = [ew]() { return IconSelectionChanged(ew); };
         ew->dropDownIcon = w;
         vbox->AddChild(w);
     }
@@ -1118,14 +1137,14 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        w->Create(args);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return ColorSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->onSelectionChanged = [ew]() { return ColorSelectionChanged(ew); };
         ew->dropDownColor = w;
         vbox->AddChild(w);
     }
@@ -1138,14 +1157,15 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new DropDownCtrl();
+        DropDownCreateArgs args;
+        args.parent = parent;
+
+        auto w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        w->Create(args);
+
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return InteriorColorSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->onSelectionChanged = [ew]() { return InteriorColorSelectionChanged(ew); };
         ew->dropDownInteriorColor = w;
         vbox->AddChild(w);
     }

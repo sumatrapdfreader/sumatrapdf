@@ -1490,3 +1490,119 @@ int Progress::GetCurrent() {
 }
 
 } // namespace wg
+
+//- DropDown
+
+namespace wg {
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/combo-boxes
+
+Kind kindDropDown = "dropdown";
+
+DropDown::DropDown() {
+    kind = kindDropDown;
+}
+
+static void SetDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
+    ComboBox_ResetContent(hwnd);
+    for (std::string_view s : items) {
+        auto ws = ToWstrTemp(s);
+        ComboBox_AddString(hwnd, ws);
+    }
+}
+
+bool DropDown::OnCommand(WPARAM wp, LPARAM) {
+    auto code = HIWORD(wp);
+    if ((code == CBN_SELCHANGE) && onSelectionChanged) {
+        onSelectionChanged();
+        // must return false or else the drop-down list will not close
+        return false;
+    }
+    return false;
+}
+
+HWND DropDown::Create(const DropDownCreateArgs& args) {
+    CreateControlArgs cargs;
+    cargs.parent = args.parent;
+    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;
+    cargs.className = WC_COMBOBOX;
+
+    Wnd::CreateControl(cargs);
+    if (!hwnd) {
+        return nullptr;
+    }
+
+    // SetDropDownItems(hwnd, items);
+    SetCurrentSelection(-1);
+
+    SizeToIdealSize(this);
+    return hwnd;
+}
+
+// -1 means no selection
+int DropDown::GetCurrentSelection() {
+    int res = (int)ComboBox_GetCurSel(hwnd);
+    return res;
+}
+
+// -1 : no selection
+void DropDown::SetCurrentSelection(int n) {
+    if (n < 0) {
+        ComboBox_SetCurSel(hwnd, -1);
+        return;
+    }
+    int nItems = (int)items.size();
+    CrashIf(n >= nItems);
+    ComboBox_SetCurSel(hwnd, n);
+}
+
+void DropDown::SetCueBanner(std::string_view sv) {
+    auto ws = ToWstrTemp(sv);
+    ComboBox_SetCueBannerText(hwnd, ws.Get());
+}
+
+void DropDown::SetItems(Vec<std::string_view>& newItems) {
+    items.Reset();
+    for (std::string_view s : newItems) {
+        items.Append(s);
+    }
+    SetDropDownItems(hwnd, items);
+    SetCurrentSelection(-1);
+}
+
+static void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char* strings) {
+    while (strings) {
+        items.Append(strings);
+        seqstrings::Next(strings);
+    }
+}
+
+void DropDown::SetItemsSeqStrings(const char* items) {
+    Vec<std::string_view> strings;
+    DropDownItemsFromStringArray(strings, items);
+    SetItems(strings);
+}
+
+Size DropDown::GetIdealSize() {
+    HFONT hfont = GetWindowFont(hwnd);
+    Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
+    for (std::string_view s : items) {
+        auto ws = ToWstrTemp(s);
+        Size s2 = TextSizeInHwnd(hwnd, ws, hfont);
+        s1.dx = std::max(s1.dx, s2.dx);
+        s1.dy = std::max(s1.dy, s2.dy);
+    }
+    // TODO: not sure if I want scrollbar. Only needed if a lot of items
+    int dxPad = GetSystemMetrics(SM_CXVSCROLL);
+    int dx = s1.dx + dxPad + DpiScale(hwnd, 8);
+    // TODO: 5 is a guessed number.
+    int dyPad = DpiScale(hwnd, 4);
+    int dy = s1.dy + dyPad;
+    Rect rc = WindowRect(hwnd);
+    if (rc.dy > dy) {
+        dy = rc.dy;
+    }
+    return {dx, dy};
+}
+
+} // namespace wg

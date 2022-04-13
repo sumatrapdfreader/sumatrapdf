@@ -24,7 +24,6 @@ struct TabInfo;
 
 struct TreeCtrl;
 struct TooltipCtrl;
-struct DropDownCtrl;
 
 struct Annotation;
 struct ILinkHandler;

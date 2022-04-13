@@ -12,6 +12,8 @@ struct ListBoxModel {
     virtual std::string_view Item(int) = 0;
 };
 
+using DropDownModel = ListBoxModel;
+
 struct ListBoxModelStrings : ListBoxModel {
     StrVec strings;
 
@@ -19,6 +21,8 @@ struct ListBoxModelStrings : ListBoxModel {
     int ItemsCount() override;
     std::string_view Item(int) override;
 };
+
+using DropDownModelStrings = ListBoxModelStrings;
 
 void FillWithItems(HWND hwnd, ListBoxModel* model);
 

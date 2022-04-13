@@ -625,7 +625,6 @@
     <ClInclude Include="..\src\uia\TextRange.h" />
     <ClInclude Include="..\src\utils\UtAssert.h" />
     <ClInclude Include="..\src\wingui\DialogSizer.h" />
-    <ClInclude Include="..\src\wingui\DropDownCtrl.h" />
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
     <ClInclude Include="..\src\wingui\ImageCtrl.h" />
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
@@ -891,7 +890,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
-    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp" />
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
     <ClCompile Include="..\src\wingui\ImageCtrl.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />

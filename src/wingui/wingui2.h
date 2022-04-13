@@ -317,3 +317,35 @@ struct Progress : Wnd {
 };
 
 } // namespace wg
+
+//- DropDown
+
+namespace wg {
+
+using DropDownSelectionChangedHandler = std::function<void()>;
+
+struct DropDownCreateArgs {
+    HWND parent = nullptr;
+    // TODO: model or items
+};
+
+struct DropDown : Wnd {
+    // TODO: use DropDownModel
+    Vec<std::string_view> items;
+    DropDownSelectionChangedHandler onSelectionChanged = nullptr;
+
+    DropDown();
+    ~DropDown() override = default;
+    HWND Create(const DropDownCreateArgs&);
+
+    Size GetIdealSize() override;
+    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+
+    int GetCurrentSelection();
+    void SetCurrentSelection(int n);
+    void SetItems(Vec<std::string_view>& newItems);
+    void SetItemsSeqStrings(const char* items);
+    void SetCueBanner(std::string_view);
+};
+
+} // namespace wg

@@ -225,9 +225,6 @@
     <ClInclude Include="..\src\wingui\DialogSizer.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\DropDownCtrl.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\FrameRateWnd.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -534,9 +531,6 @@
       <Filter>src\utils\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\DialogSizer.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
