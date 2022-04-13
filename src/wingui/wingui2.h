@@ -350,3 +350,48 @@ struct DropDown : Wnd {
 };
 
 } // namespace wg
+
+//- Trackbar
+
+namespace wg {
+
+struct Trackbar;
+
+struct TrackbarPosChangingEvent {
+    Trackbar* trackbar = nullptr;
+    int pos = -1;
+    NMTRBTHUMBPOSCHANGING* info = nullptr;
+};
+
+using TrackbarPoschangingHandler = std::function<void(TrackbarPosChangingEvent*)>;
+
+struct TrackbarCreateArgs {
+    HWND parent = nullptr;
+    bool isHorizontal = true;
+    int rangeMin = 1;
+    int rangeMax = 5;
+};
+
+struct Trackbar : Wnd {
+    Size idealSize{};
+
+    // for WM_NOTIFY with TRBN_THUMBPOSCHANGING
+    TrackbarPoschangingHandler onPosChanging = nullptr;
+
+    Trackbar();
+    ~Trackbar() override = default;
+
+    HWND Create(const TrackbarCreateArgs&);
+
+    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+
+    Size GetIdealSize() override;
+    void SetRange(int min, int max);
+    int GetRangeMin();
+    int getRangeMax();
+
+    void SetValue(int);
+    int GetValue();
+};
+
+} // namespace wg

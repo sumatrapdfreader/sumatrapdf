@@ -17,7 +17,6 @@ extern "C" {
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TrackbarCtrl.h"
 
 #include "wingui/wingui2.h"
 
@@ -134,7 +133,7 @@ struct EditAnnotationsWindow {
     Static* staticTextFont = nullptr;
     DropDown* dropDownTextFont = nullptr;
     Static* staticTextSize = nullptr;
-    TrackbarCtrl* trackbarTextSize = nullptr;
+    Trackbar* trackbarTextSize = nullptr;
     Static* staticTextColor = nullptr;
     DropDown* dropDownTextColor = nullptr;
 
@@ -147,7 +146,7 @@ struct EditAnnotationsWindow {
     DropDown* dropDownIcon = nullptr;
 
     Static* staticBorder = nullptr;
-    TrackbarCtrl* trackbarBorder = nullptr;
+    Trackbar* trackbarBorder = nullptr;
 
     Static* staticColor = nullptr;
     DropDown* dropDownColor = nullptr;
@@ -155,7 +154,7 @@ struct EditAnnotationsWindow {
     DropDown* dropDownInteriorColor = nullptr;
 
     Static* staticOpacity = nullptr;
-    TrackbarCtrl* trackbarOpacity = nullptr;
+    Trackbar* trackbarOpacity = nullptr;
 
     Button* buttonSaveAttachment = nullptr;
     Button* buttonEmbedAttachment = nullptr;
@@ -540,7 +539,6 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextFontSizeChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
-    ev->didHandle = true;
     int fontSize = ev->pos;
     SetDefaultAppearanceTextSize(ew->annot, fontSize);
     AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
@@ -584,7 +582,6 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void BorderWidthChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
-    ev->didHandle = true;
     int borderWidth = ev->pos;
     SetBorderWidth(ew->annot, borderWidth);
     AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
@@ -737,7 +734,6 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
-    ev->didHandle = true;
     int opacity = ev->pos;
     SetOpacity(ew->annot, opacity);
     AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
@@ -1023,12 +1019,16 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new TrackbarCtrl();
+        TrackbarCreateArgs args;
+        args.parent = parent;
+        args.rangeMin = 8;
+        args.rangeMax = 36;
+
+        auto w = new Trackbar();
         w->SetInsetsPt(4, 0, 0, 0);
-        w->rangeMin = 8;
-        w->rangeMax = 36;
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+
+        w->Create(args);
+
         w->onPosChanging = [ew](auto&& PH1) { return TextFontSizeChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarTextSize = w;
         vbox->AddChild(w);
@@ -1119,11 +1119,12 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new TrackbarCtrl();
-        w->rangeMin = borderWidthMin;
-        w->rangeMax = borderWidthMax;
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        TrackbarCreateArgs args;
+        args.parent = parent;
+        args.rangeMin = borderWidthMin;
+        args.rangeMax = borderWidthMax;
+        auto w = new Trackbar();
+        w->Create(args);
         w->onPosChanging = [ew](auto&& PH1) { return BorderWidthChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarBorder = w;
         vbox->AddChild(w);
@@ -1178,11 +1179,14 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = new TrackbarCtrl();
-        w->rangeMin = 0;
-        w->rangeMax = 255;
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        TrackbarCreateArgs args;
+        args.parent = parent;
+        args.rangeMin = 0;
+        args.rangeMax = 255;
+
+        auto w = new Trackbar();
+        w->Create(args);
+
         w->onPosChanging = [ew](auto&& PH1) { return OpacityChanging(ew, std::forward<decltype(PH1)>(PH1)); };
         ew->trackbarOpacity = w;
         vbox->AddChild(w);

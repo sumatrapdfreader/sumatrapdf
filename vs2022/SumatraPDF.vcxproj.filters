@@ -246,9 +246,6 @@
     <ClInclude Include="..\src\wingui\TooltipCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\TrackbarCtrl.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\TreeCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -546,9 +543,6 @@
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\TooltipCtrl.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\TrackbarCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp">

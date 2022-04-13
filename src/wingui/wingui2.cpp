@@ -497,6 +497,31 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
                 return wndFrom->OnNotifyReflect(wparam, lparam);
             }
         }
+        // A set of messages to be reflected back to the control that generated them.
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORDLG:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORSCROLLBAR:
+        case WM_CTLCOLORSTATIC:
+        case WM_DRAWITEM:
+        case WM_MEASUREITEM:
+        case WM_DELETEITEM:
+        case WM_COMPAREITEM:
+        case WM_CHARTOITEM:
+        case WM_VKEYTOITEM:
+        case WM_HSCROLL:
+        case WM_VSCROLL:
+        case WM_PARENTNOTIFY: {
+            Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
+            LRESULT result = 0;
+            if (pWnd != nullptr) {
+                result = pWnd->MessageReflect(msg, wparam, lparam);
+            }
+            if (result != 0) {
+                return result; // Message processed so return.
+            }
+        } break; // Do default processing when message not already processed.
     }
     return 0;
 }
@@ -1607,6 +1632,117 @@ Size DropDown::GetIdealSize() {
         dy = rc.dy;
     }
     return {dx, dy};
+}
+
+} // namespace wg
+
+//- Trackbar
+
+namespace wg {
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/trackbar-control-reference
+
+Kind kindTrackbar = "trackbar";
+
+Trackbar::Trackbar() {
+    kind = kindTrackbar;
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
+HWND Trackbar::Create(const TrackbarCreateArgs& args) {
+    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    dwStyle |= TBS_AUTOTICKS; // tick marks for each increment
+    dwStyle |= TBS_TOOLTIPS;  // show current value when dragging in a tooltip
+    if (args.isHorizontal) {
+        dwStyle |= TBS_HORZ;
+        idealSize.dx = 32;
+        idealSize.dy = DpiScale(args.parent, 22);
+    } else {
+        dwStyle |= TBS_VERT;
+        idealSize.dy = 32;
+        idealSize.dx = DpiScale(args.parent, 22);
+    }
+
+    CreateControlArgs cargs;
+    cargs.className = TRACKBAR_CLASS;
+    cargs.parent = args.parent;
+
+    // TODO: add initial size to CreateControlArgs
+    // initialSize = idealSize;
+
+    cargs.style = dwStyle;
+    // args.style |= WS_BORDER;
+    Wnd::CreateControl(cargs);
+    SizeToIdealSize(this);
+
+    if (hwnd) {
+        SetRange(args.rangeMin, args.rangeMax);
+        SetValue(args.rangeMin);
+    }
+    return hwnd;
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
+// https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
+LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM) {
+    if (!onPosChanging) {
+        return 0;
+    }
+    switch (msg) {
+        case WM_VSCROLL:
+        case WM_HSCROLL: {
+            int pos = (int)HIWORD(wp);
+            int code = (int)LOWORD(wp);
+            switch (code) {
+                case TB_THUMBPOSITION:
+                case TB_THUMBTRACK:
+                    // pos is HIWORD so do nothing
+                    break;
+                default:
+                    pos = GetValue();
+            }
+            TrackbarPosChangingEvent a{};
+            a.trackbar = this;
+            a.pos = pos;
+            onPosChanging(&a);
+            // per https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
+            // "if an application processes this message, it should return zero"
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+Size Trackbar::GetIdealSize() {
+    return {idealSize.dx, idealSize.dy};
+}
+
+void Trackbar::SetRange(int min, int max) {
+    WPARAM redraw = (WPARAM)TRUE;
+    LPARAM range = (LPARAM)MAKELONG(min, max);
+    SendMessageW(hwnd, TBM_SETRANGE, redraw, range);
+}
+
+int Trackbar::GetRangeMin() {
+    int res = SendMessageW(hwnd, TBM_GETRANGEMIN, 0, 0);
+    return res;
+}
+
+int Trackbar::getRangeMax() {
+    int res = SendMessageW(hwnd, TBM_GETRANGEMAX, 0, 0);
+    return res;
+}
+
+void Trackbar::SetValue(int pos) {
+    WPARAM redraw = (WPARAM)TRUE;
+    LPARAM p = (LPARAM)pos;
+    SendMessageW(hwnd, TBM_SETPOS, redraw, p);
+}
+
+int Trackbar::GetValue() {
+    int res = (int)SendMessageW(hwnd, TBM_GETPOS, 0, 0);
+    return res;
 }
 
 } // namespace wg

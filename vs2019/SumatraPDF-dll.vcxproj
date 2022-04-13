@@ -632,7 +632,6 @@
     <ClInclude Include="..\src\wingui\SplitterCtrl.h" />
     <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\TooltipCtrl.h" />
-    <ClInclude Include="..\src\wingui\TrackbarCtrl.h" />
     <ClInclude Include="..\src\wingui\TreeCtrl.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
     <ClInclude Include="..\src\wingui\Window.h" />
@@ -896,7 +895,6 @@
     <ClCompile Include="..\src\wingui\SplitterCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TrackbarCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
     <ClCompile Include="..\src\wingui\Window.cpp" />
