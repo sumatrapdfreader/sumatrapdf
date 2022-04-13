@@ -114,10 +114,10 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
         case SB_LINEDOWN:
             si.nPos += lineHeight;
             break;
-        case SB_HPAGEUP:
+        case SB_HALF_PAGEUP:
             si.nPos -= si.nPage / 2;
             break;
-        case SB_HPAGEDOWN:
+        case SB_HALF_PAGEDOWN:
             si.nPos += si.nPage / 2;
             break;
         case SB_PAGEUP:
@@ -1131,7 +1131,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
     // alt while scrolling will scroll by half a page per tick
     // usefull for browsing long files
     if ((LOWORD(wp) & MK_ALT) || IsAltPressed()) {
-        SendMessageW(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HPAGEUP : SB_HPAGEDOWN, 0);
+        SendMessageW(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HALF_PAGEUP : SB_HALF_PAGEDOWN, 0);
         return 0;
     }
 
@@ -1140,7 +1140,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
         Point pt;
         GetCursorPosInHwnd(win->hwndCanvas, pt);
         if (pt.x > win->canvasRc.dx) {
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HPAGEUP : SB_HPAGEDOWN, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HALF_PAGEUP : SB_HALF_PAGEDOWN, 0);
             return 0;
         }
     }

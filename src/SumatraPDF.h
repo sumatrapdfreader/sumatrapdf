@@ -14,8 +14,8 @@
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)
-#define SB_HPAGEUP (WM_USER + 102)
-#define SB_HPAGEDOWN (WM_USER + 103)
+#define SB_HALF_PAGEUP (WM_USER + 102)
+#define SB_HALF_PAGEDOWN (WM_USER + 103)
 
 constexpr int kHideCursorTimerID = 3;
 constexpr int kHideCursorDelayInMs = 3000;
