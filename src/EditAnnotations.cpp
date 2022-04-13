@@ -17,7 +17,6 @@ extern "C" {
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ListBoxCtrl.h"
 #include "wingui/TrackbarCtrl.h"
 
 #include "wingui/wingui2.h"
@@ -123,7 +122,7 @@ struct EditAnnotationsWindow {
     Window* mainWindow = nullptr;
     LayoutBase* mainLayout = nullptr;
 
-    ListBoxCtrl* listBox = nullptr;
+    ListBox* listBox = nullptr;
     Static* staticRect = nullptr;
     Static* staticAuthor = nullptr;
     Static* staticModificationDate = nullptr;
@@ -177,6 +176,8 @@ struct EditAnnotationsWindow {
     str::Str currCustomInteriorColor;
 
     ~EditAnnotationsWindow();
+
+    void ListBoxSelectionChanged();
 };
 
 static EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
@@ -847,9 +848,9 @@ static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
     DeleteAnnotationAndUpdateUI(ew->tab, ew, ew->annot);
 }
 
-static void ListBoxSelectionChanged(EditAnnotationsWindow* ew, ListBoxSelectionChangedEvent* ev) {
-    int itemNo = ev->idx;
-    UpdateUIForSelectedAnnotation(ew, itemNo);
+void EditAnnotationsWindow::ListBoxSelectionChanged() {
+    int itemNo = listBox->GetCurrentSelection();
+    UpdateUIForSelectedAnnotation(this, itemNo);
 }
 
 static UINT_PTR gWindowInfoRerenderTimer = 0;
@@ -913,16 +914,15 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
-        auto w = new ListBoxCtrl();
-        w->idealSizeLines = 5;
+        ListBoxCreateArgs args;
+        args.parent = parent;
+        args.idealSizeLines = 5;
+        auto w = new ListBox();
         w->SetInsetsPt(4, 0);
-        bool ok = w->Create(parent);
-        CrashIf(!ok);
+        w->Create(args);
         auto lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
-        w->onSelectionChanged = [ew](auto&& PH1) {
-            return ListBoxSelectionChanged(ew, std::forward<decltype(PH1)>(PH1));
-        };
+        w->onSelectionChanged = std::bind(&EditAnnotationsWindow::ListBoxSelectionChanged, ew);
         ew->listBox = w;
         vbox->AddChild(w);
     }

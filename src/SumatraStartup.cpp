@@ -23,7 +23,6 @@
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ListBoxCtrl.h"
 #include "wingui/wingui2.h"
 
 #include "Accelerators.h"

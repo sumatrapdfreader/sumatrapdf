@@ -8,9 +8,10 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/UIModels.h"
+
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/ListBoxCtrl.h"
 
 #include "wingui/wingui2.h"
 

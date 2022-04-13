@@ -222,6 +222,7 @@ using ListBoxDoubleClickHandler = std::function<void()>;
 
 struct ListBoxCreateArgs {
     HWND parent = nullptr;
+    int idealSizeLines = 0;
 };
 
 struct ListBox : Wnd {

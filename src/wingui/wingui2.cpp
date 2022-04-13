@@ -1260,6 +1260,10 @@ ListBox::~ListBox() {
 }
 
 HWND ListBox::Create(const ListBoxCreateArgs& args) {
+    idealSizeLines = args.idealSizeLines;
+    if (idealSizeLines < 0) {
+        idealSizeLines = 0;
+    }
     idealSize = {DpiScale(args.parent, 120), DpiScale(args.parent, 32)};
 
     CreateControlArgs cargs;
