@@ -78,7 +78,6 @@ Color COLOR_MSG_FAILED(gCol1);
 HWND gHwndFrame = nullptr;
 WCHAR* firstError = nullptr;
 HFONT gFontDefault = nullptr;
-bool gShowOptions = false;
 bool gForceCrash = false;
 WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
@@ -126,12 +125,6 @@ static HFONT CreateDefaultGuiFont() {
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     HFONT f = CreateFontIndirectW(&ncm.lfMenuFont);
     return f;
-}
-
-static void InvalidateFrame() {
-    Rect rc = ClientRect(gHwndFrame);
-    RECT rcTmp = ToRECT(rc);
-    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
 
 void InitInstallerUninstaller() {
@@ -528,6 +521,10 @@ void SetDefaultMsg() {
     SetMsg(gDefaultMsg, COLOR_MSG_WELCOME);
 }
 
+void InvalidateFrame() {
+    HwndInvalidate(gHwndFrame);
+}
+
 bool CheckInstallUninstallPossible(bool silent) {
     bool ok = KillProcessesUsingInstallation();
     logf("CheckInstallUninstallPossible: KillProcessesUsingInstallation() returned %d\n", ok);
@@ -766,7 +763,7 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     g.ResetTransform();
 }
 
-static void DrawFrame2(Graphics& g, Rect r) {
+static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(Gdiplus::UnitPixel);
@@ -784,7 +781,7 @@ static void DrawFrame2(Graphics& g, Rect r) {
     Font f2(L"Impact", 16, FontStyleRegular);
     DrawSumatraLetters(g, &f, &f2, 18.f);
 
-    if (gShowOptions) {
+    if (skipMessage) {
         return;
     }
 
@@ -797,19 +794,19 @@ static void DrawFrame2(Graphics& g, Rect r) {
     }
 }
 
-static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT*) {
+static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT*, bool skipMessage) {
     // TODO: cache bmp object?
     Graphics g(dc);
     Rect rc = ClientRect(hwnd);
     Bitmap bmp(rc.dx, rc.dy, &g);
     Graphics g2((Image*)&bmp);
-    DrawFrame2(g2, rc);
+    DrawFrame2(g2, rc, skipMessage);
     g.DrawImage(&bmp, 0, 0);
 }
 
-void OnPaintFrame(HWND hwnd) {
+void OnPaintFrame(HWND hwnd, bool skipMessage) {
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
-    DrawFrame(hwnd, dc, &ps);
+    DrawFrame(hwnd, dc, &ps, skipMessage);
     EndPaint(hwnd, &ps);
 }

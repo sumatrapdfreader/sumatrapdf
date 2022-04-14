@@ -41,9 +41,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Installer.h"
 #include "AppUtil.h"
 
-#define UNkInstallerWinDx kInstallerWinDx
-#define UNkInstallerWinDy kInstallerWinDy
-
 using namespace wg;
 
 static HBRUSH ghbrBackground = nullptr;
@@ -293,12 +290,6 @@ static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     return 0;
 }
 
-static void InvalidateFrame() {
-    Rect rc = ClientRect(gHwndFrame);
-    RECT rcTmp = ToRECT(rc);
-    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
-}
-
 static void OnButtonUninstall() {
     if (!CheckInstallUninstallPossible()) {
         return;
@@ -307,7 +298,7 @@ static void OnButtonUninstall() {
     // disable the button during uninstallation
     gButtonUninstaller->SetIsEnabled(false);
     SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
-    InvalidateFrame();
+    HwndInvalidate(gHwndFrame);
 
     hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, nullptr);
 }
@@ -318,7 +309,7 @@ void OnUninstallationFinished() {
     CreateButtonExit(gHwndFrame);
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = firstError;
-    InvalidateFrame();
+    HwndInvalidate(gHwndFrame);
 
     CloseHandle(hThread);
 }
@@ -365,18 +356,6 @@ static void ShowUsage() {
     MessageBoxW(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 
-#if 0
-static WCHAR* GetInstallationDir() {
-    WCHAR* dir = GetExistingInstallationDir();
-    if (dir) {
-        return dir;
-    }
-    // fall back to the uninstaller's path
-    auto exePath = GetExePathTemp();
-    return path::GetDir(exePath);
-}
-#endif
-
 static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     bool handled;
 
@@ -409,7 +388,7 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
             return TRUE;
 
         case WM_PAINT:
-            OnPaintFrame(hwnd);
+            OnPaintFrame(hwnd, false);
             break;
 
         case WM_COMMAND:

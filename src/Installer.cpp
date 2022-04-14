@@ -21,7 +21,6 @@
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
 
 #include "wingui/wingui2.h"
 
@@ -59,7 +58,7 @@ static Button* gButtonRunSumatra = nullptr;
 static lzma::SimpleArchive gArchive{};
 
 static Static* gStaticInstDir = nullptr;
-static Edit* gTextboxInstDir = nullptr;
+static Edit* gEditInstallationDir = nullptr;
 static Button* gButtonBrowseDir = nullptr;
 
 #if ENABLE_REGISTER_DEFAULT
@@ -76,6 +75,7 @@ static HANDLE hThread = nullptr;
 static bool success = false;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
+bool gShowOptions = false;
 
 int currProgress = 0;
 static void ProgressStep() {
@@ -273,9 +273,11 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
 
 static bool WriteUninstallerRegistryInfos() {
     // we only want to write one of those
-    bool ok = WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
-    if (ok) {
-        return true;
+    if (gCli->allUsers) {
+        bool ok = WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+        if (ok) {
+            return true;
+        }
     }
     return WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
 }
@@ -327,7 +329,10 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 }
 
 static bool WriteExtendedFileExtensionInfos() {
-    bool ok1 = WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE);
+    bool ok1 = true;
+    if (gCli->allUsers) {
+        ok1 = WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE);
+    }
     bool ok2 = WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER);
     return ok1 || ok2;
 }
@@ -430,12 +435,6 @@ Error:
     return 0;
 }
 
-static void InvalidateFrame() {
-    RECT rc;
-    GetClientRect(gHwndFrame, &rc);
-    InvalidateRect(gHwndFrame, &rc, FALSE);
-}
-
 static void OnButtonOptions();
 
 static void OnButtonInstall() {
@@ -455,7 +454,7 @@ static void OnButtonInstall() {
         return;
     }
 
-    WCHAR* userInstallDir = win::GetTextTemp(gTextboxInstDir->hwnd).Get();
+    WCHAR* userInstallDir = win::GetTextTemp(gEditInstallationDir->hwnd).Get();
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
@@ -494,7 +493,7 @@ static void OnButtonInstall() {
 
     // disable the install button and remove all the installation options
     delete gStaticInstDir;
-    delete gTextboxInstDir;
+    delete gEditInstallationDir;
     delete gButtonBrowseDir;
 
 #if ENABLE_REGISTER_DEFAULT
@@ -508,7 +507,7 @@ static void OnButtonInstall() {
     gButtonInstall->SetIsEnabled(false);
 
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
-    InvalidateFrame();
+    HwndInvalidate(gHwndFrame);
 
     hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
 }
@@ -525,7 +524,7 @@ static void OnInstallationFinished() {
         SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
     }
     gMsgError = firstError;
-    InvalidateFrame();
+    HwndInvalidate(gHwndFrame);
 
     CloseHandle(hThread);
 
@@ -554,7 +553,7 @@ static void OnButtonOptions() {
     gShowOptions = !gShowOptions;
 
     EnableAndShow(gStaticInstDir, gShowOptions);
-    EnableAndShow(gTextboxInstDir, gShowOptions);
+    EnableAndShow(gEditInstallationDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
 
 #if ENABLE_REGISTER_DEFAULT
@@ -637,7 +636,7 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
 }
 
 static void OnButtonBrowse() {
-    WCHAR* installDir = win::GetTextTemp(gTextboxInstDir->hwnd).Get();
+    WCHAR* installDir = win::GetTextTemp(gEditInstallationDir->hwnd).Get();
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {
@@ -662,9 +661,9 @@ static void OnButtonBrowse() {
     if (!str::EndsWithI(path, end)) {
         installPath = path::Join(path, appName);
     }
-    gTextboxInstDir->SetText(installPath);
-    gTextboxInstDir->SetSelection(0, -1);
-    gTextboxInstDir->SetFocus();
+    gEditInstallationDir->SetText(installPath);
+    gEditInstallationDir->SetSelection(0, -1);
+    gEditInstallationDir->SetFocus();
 }
 
 // bottom-right
@@ -677,11 +676,48 @@ static void PositionInstallButton(Button* b) {
     b->SetBounds({x, y, size.dx, size.dy});
 }
 
+// caller needs to str::Free()
+static WCHAR* GetInstallationDir(bool forAllUsers) {
+    const WCHAR* appName = GetAppNameTemp();
+    AutoFreeWstr regPath = GetRegPathUninst(appName);
+    AutoFreeWstr dir = ReadRegStr2(regPath, L"InstallLocation");
+    if (dir) {
+        if (str::EndsWithI(dir, L".exe")) {
+            dir.Set(path::GetDir(dir));
+        }
+        if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
+            logf(L"GetInstallationDir: got '%s' from InstallLocation registry\n", dir.Get());
+            return dir.StealData();
+        }
+    }
+
+    if (forAllUsers) {
+        WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, true).Get();
+        if (dataDir) {
+            WCHAR* res = path::Join(dataDir, appName);
+            return res;
+        }
+    }
+
+    // fall back to %APPLOCALDATA%\SumatraPDF
+    WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
+    if (dataDir) {
+        WCHAR* res = path::Join(dataDir, appName);
+        return res;
+    }
+
+    // fall back to C:\ as a last resort
+    return str::Join(L"C:\\", appName);
+}
+
 void ForAllUsersStateChanged() {
     bool checked = gCheckboxForAllUsers->IsChecked();
     Button_SetElevationRequiredState(gButtonInstall->hwnd, checked);
     PositionInstallButton(gButtonInstall);
-    // TODO: update default directory
+    gCli->allUsers = checked;
+    str::Free(gCli->installDir);
+    gCli->installDir = GetInstallationDir(gCli->allUsers);
+    gEditInstallationDir->SetText(gCli->installDir);
 }
 
 static bool InstallerOnWmCommand(WPARAM wp) {
@@ -804,13 +840,13 @@ static void OnCreateWindow(HWND hwnd) {
     EditCreateArgs eargs;
     eargs.parent = hwnd;
     eargs.withBorder = true;
-    gTextboxInstDir = new Edit();
-    HWND ehwnd = gTextboxInstDir->Create(eargs);
+    gEditInstallationDir = new Edit();
+    HWND ehwnd = gEditInstallationDir->Create(eargs);
     CrashIf(!ehwnd);
 
-    gTextboxInstDir->SetText(gCli->installDir);
+    gEditInstallationDir->SetText(gCli->installDir);
     rc = {x, y, x + dx, y + staticDy};
-    gTextboxInstDir->SetBounds(rc);
+    gEditInstallationDir->SetBounds(rc);
 
     y -= staticDy;
 
@@ -853,38 +889,10 @@ static void CreateMainWindow() {
     gHwndFrame = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 }
 
-static WCHAR* GetInstallationDir() {
-    const WCHAR* appName = GetAppNameTemp();
-    AutoFreeWstr regPath = GetRegPathUninst(appName);
-    AutoFreeWstr dir = ReadRegStr2(regPath, L"InstallLocation");
-    if (dir) {
-        if (str::EndsWithI(dir, L".exe")) {
-            dir.Set(path::GetDir(dir));
-        }
-        if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
-            logf(L"GetInstallationDir: got '%s' from InstallLocation registry\n", dir.Get());
-            return dir.StealData();
-        }
-    }
-
-    // fall back to %APPLOCALDATA%\SumatraPDF
-    WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
-    if (dataDir) {
-        WCHAR* res = path::Join(dataDir, appName);
-        return res;
-    }
-
-    // fall back to C:\ as a last resort
-    return str::Join(L"C:\\", appName);
-}
-
 static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     bool handled;
 
     LRESULT res = 0;
-    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
-        return res;
-    }
     res = TryReflectMessages(hwnd, msg, wp, lp);
     if (res) {
         return res;
@@ -913,7 +921,7 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             return TRUE;
 
         case WM_PAINT:
-            OnPaintFrame(hwnd);
+            OnPaintFrame(hwnd, gShowOptions);
             break;
 
         case WM_COMMAND:
@@ -1139,7 +1147,7 @@ int RunInstaller() {
         StartInstallerLogging();
     }
     if (!gCli->installDir) {
-        gCli->installDir = GetInstallationDir();
+        gCli->installDir = GetInstallationDir(gCli->allUsers);
     }
     logf(L"RunInstaller: '%s' installing into dir '%s'\n", GetExePathTemp().Get(), gCli->installDir);
 

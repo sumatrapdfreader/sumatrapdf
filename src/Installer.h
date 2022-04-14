@@ -28,8 +28,6 @@ extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
 extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
-extern bool gShowOptions;
-extern bool gReproBug;
 
 extern Gdiplus::Color COLOR_MSG_WELCOME;
 extern Gdiplus::Color COLOR_MSG_OK;
@@ -47,7 +45,7 @@ extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
 void InitInstallerUninstaller();
-void OnPaintFrame(HWND hwnd);
+void OnPaintFrame(HWND hwnd, bool skipoMessage);
 void AnimStep();
 void NotifyFailed(const WCHAR* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
