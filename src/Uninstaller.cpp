@@ -580,7 +580,7 @@ static void InitSelfDelete() {
 }
 
 int RunUninstaller() {
-    InitInstallerUninstaller();
+    trans::SetCurrentLangByCode(trans::DetectUserLang());
 
     if (gCli->log) {
         StartUnInstallerLogging();

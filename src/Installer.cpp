@@ -498,6 +498,8 @@ static void StartInstallation() {
     hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
 }
 
+static void OnButtonOptions();
+
 static void OnButtonInstall() {
     if (gShowOptions) {
         // hide and disable "Options" button during installation
@@ -1160,7 +1162,8 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
 }
 
 int RunInstaller() {
-    InitInstallerUninstaller();
+    trans::SetCurrentLangByCode(trans::DetectUserLang());
+
     if (gCli->log) {
         StartInstallerLogging();
     }
@@ -1193,11 +1196,11 @@ int RunInstaller() {
     if (!gCli->runInstallNow) {
         // use settings from previous installation
         if (!gCli->withFilter) {
-            gCli->withFilter = IsSearchFilterInstalled();
+            gCli->withFilter = gWasSearchFilterInstalled;
             log("setting gCli->withFilter because search filter installed\n");
         }
         if (!gCli->withPreview) {
-            gCli->withPreview = IsPreviewerInstalled();
+            gCli->withPreview = gWasPreviewInstaller;
             log("setting gCli->withPreview because previewer installed\n");
         }
     }
@@ -1212,7 +1215,11 @@ int RunInstaller() {
     }
 
     if (gCli->silent) {
-        log("Silent installation\n");
+        if (gCli->allUsers && !IsProcessRunningElevated()) {
+            log("allUsers but not elevated: re-starting as elevated\n");
+            RestartElevatedForAllUsers();
+            ::ExitProcess(0);
+        }
         InstallerThread(nullptr);
         ret = success ? 0 : 1;
     } else {

@@ -26,7 +26,6 @@ extern int gButtonDy;
 extern WCHAR* firstError;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
-extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
 
 extern Gdiplus::Color COLOR_MSG_WELCOME;
@@ -44,7 +43,6 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-void InitInstallerUninstaller();
 void OnPaintFrame(HWND hwnd, bool skipoMessage);
 void AnimStep();
 void NotifyFailed(const WCHAR* msg);

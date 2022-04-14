@@ -997,7 +997,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         return retCode;
     }
 
-    if (flags.install || IsInstallerAndNamedAsSuch()) {
+    if (flags.install || flags.runInstallNow || IsInstallerAndNamedAsSuch()) {
         if (!ExeHasInstallerResources()) {
             ShowNotValidInstallerError();
             return 1;

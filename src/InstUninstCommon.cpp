@@ -77,7 +77,6 @@ Color COLOR_MSG_FAILED(gCol1);
 
 HWND gHwndFrame = nullptr;
 WCHAR* firstError = nullptr;
-HFONT gFontDefault = nullptr;
 bool gForceCrash = false;
 WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
@@ -117,19 +116,6 @@ void NotifyFailed(const WCHAR* msg) {
 void SetMsg(const WCHAR* msg, Color color) {
     gMsg.SetCopy(msg);
     gMsgColor = color;
-}
-
-static HFONT CreateDefaultGuiFont() {
-    NONCLIENTMETRICSW ncm{};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    HFONT f = CreateFontIndirectW(&ncm.lfMenuFont);
-    return f;
-}
-
-void InitInstallerUninstaller() {
-    gFontDefault = CreateDefaultGuiFont();
-    trans::SetCurrentLangByCode(trans::DetectUserLang());
 }
 
 WCHAR* GetExistingInstallationDir() {
