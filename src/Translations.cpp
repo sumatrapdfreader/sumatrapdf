@@ -205,6 +205,9 @@ static Translation* FindTranslation(const char* s) {
 }
 
 const char* GetTranslationA(const char* s) {
+    if (gCurrLangIdx == 0) {
+        return s;
+    }
     Translation* trans = FindTranslation(s);
     // we don't have a translation for this string
     if (!trans || trans->idxTrans == 0) {
@@ -216,6 +219,9 @@ const char* GetTranslationA(const char* s) {
 }
 
 const WCHAR* GetTranslation(const char* s) {
+    if (gCurrLangIdx == 0) {
+        return ToWstrTemp(s);
+    }
     Translation* trans = FindTranslation(s);
     // we don't have a translation for this string
     if (!trans || trans->idxTransW == 0) {

@@ -225,7 +225,7 @@ static DWORD GetDirSize(const WCHAR* dir) {
     return totalSize;
 }
 
-// caller needs to free() the result
+// caller needs to str::Free() the result
 static WCHAR* GetInstallDate() {
     SYSTEMTIME st;
     GetSystemTime(&st);
@@ -358,7 +358,7 @@ static bool CreateAppShortcut(int csidl) {
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
-static void OpenLogInNotepad() {
+static void ShowInstallerLog() {
     if (!gInstallerLogPath) {
         return;
     }
@@ -441,7 +441,6 @@ Error:
             PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
         }
     }
-    OpenLogInNotepad();
     return 0;
 }
 
@@ -462,7 +461,7 @@ static void RestartElevatedForAllUsers() {
     }
     cmdLine = str::JoinTemp(cmdLine, L" -install-dir \"", gCli->installDir);
     cmdLine = str::JoinTemp(cmdLine, L"\"");
-    logf(L"Re-launching '%s' with args '%s' as elevated\n", exePath.Get(), cmdLine);
+    logf(L"Re-launching '%s' as elevated, args\n%s\n", exePath.Get(), cmdLine);
     LaunchElevated(exePath, cmdLine);
 }
 
@@ -547,6 +546,7 @@ static void OnButtonInstall() {
 
     if (gCli->allUsers && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers();
+        ShowInstallerLog();
         ::ExitProcess(0);
     }
     StartInstallation();
@@ -1260,6 +1260,7 @@ int RunInstaller() {
         RegisterPreviewer(true);
     }
     log("Installer finished\n");
+    ShowInstallerLog();
 Exit:
     free(firstError);
 
