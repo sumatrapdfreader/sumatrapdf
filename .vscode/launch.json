@@ -4,6 +4,8 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+
         {
             "name": "Launch Go",
             "type": "go",
@@ -32,7 +34,7 @@
             "preLaunchTask": "build-dbg-64",
             "request": "launch",
             "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
-            "args": ["-install"],
+            "args": ["-install", "-log"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

@@ -179,9 +179,11 @@ void logf(const char* fmt, ...) {
     va_end(args);
 }
 
-void StartLogToFile(const char* path) {
+void StartLogToFile(const char* path, bool noRemove) {
     logFilePath = str::Dup(path);
-    remove(path);
+    if (!noRemove) {
+        remove(path);
+    }
 }
 
 void log(const WCHAR* s) {

@@ -645,6 +645,7 @@ char* FmtV(const char* fmt, va_list args) {
     return buf;
 }
 
+// caller needs to str::Free()
 char* Format(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);

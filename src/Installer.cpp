@@ -75,7 +75,8 @@ static HANDLE hThread = nullptr;
 static bool success = false;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
-bool gShowOptions = false;
+static bool gShowOptions = false;
+static char* gInstallerLogPath = nullptr;
 
 int currProgress = 0;
 static void ProgressStep() {
@@ -357,6 +358,14 @@ static bool CreateAppShortcut(int csidl) {
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
+static void OpenLogInNotepad() {
+    if (!gInstallerLogPath) {
+        return;
+    }
+    WCHAR* path = ToWstrTemp(gInstallerLogPath);
+    LaunchFile(path, nullptr, L"open");
+}
+
 static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
 
 static void CreateAppShortcuts() {
@@ -432,6 +441,7 @@ Error:
             PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
         }
     }
+    OpenLogInNotepad();
     return 0;
 }
 
@@ -1101,17 +1111,19 @@ static char* PickInstallerLogPath() {
     if (!dir.Get()) {
         return nullptr;
     }
-    auto dirA = ToUtf8Temp(dir.AsView());
-    return path::Join(dirA, "sumatra-install-log.txt", nullptr);
+    WCHAR* path = path::Join(dir, L"sumatra-install-log.txt", nullptr);
+    auto pathA = strconv::WstrToUtf8(path);
+    str::Free(path);
+    return pathA;
 }
 
 static void StartInstallerLogging() {
-    char* dir = PickInstallerLogPath();
-    if (!dir) {
+    gInstallerLogPath = PickInstallerLogPath();
+    if (!gInstallerLogPath) {
         return;
     }
-    StartLogToFile(dir);
-    free(dir);
+    StartLogToFile(gInstallerLogPath, true);
+    logf("------------- Starting SumatraPDF installation\n");
 }
 
 // returns true if should exit the installer
