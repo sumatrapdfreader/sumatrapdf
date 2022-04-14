@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8cf9d80c5be890ea8086e8efa86a8aff79af5554
+c4b8b9c6471de587b729eb3f40df6b8a51315be0
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -10327,6 +10327,7 @@ sl:Namesti in ponovno zaženi
 th:ติดตั้ง และ เรียกใช้งาน
 tr:Kur ve yeniden başlat
 uk:Встановити та перезапустити
+:Install for all users
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
 ar:!فشل التثبيت
