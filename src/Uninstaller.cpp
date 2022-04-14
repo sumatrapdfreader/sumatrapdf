@@ -139,6 +139,9 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 }
 
 static void RemoveOwnRegistryKeys(HKEY hkey) {
+    if (!hkey) {
+        return;
+    }
     UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeNameTemp();
@@ -339,7 +342,7 @@ static void CreateMainWindow() {
     int dy = DpiScale(kInstallerWinDy);
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
-    auto winCls = INSTALLER_FRAME_CLASS_NAME;
+    auto winCls = kInstallerWindowClassName;
     gHwndFrame = CreateWindowW(winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 }
 
@@ -415,7 +418,7 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
 static bool RegisterWinClass() {
     WNDCLASSEX wcex{};
 
-    FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcUninstallerFrame);
+    FillWndClassEx(wcex, kInstallerWindowClassName, WndProcUninstallerFrame);
     auto h = GetModuleHandle(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, iconName);

@@ -222,8 +222,10 @@ static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
     return false;
 }
 
+#define kBrowserPluginName L"npPdfViewer.dll"
+
 void UninstallBrowserPlugin() {
-    AutoFreeWstr dllPath = GetExistingInstallationFilePath(BROWSER_PLUGIN_NAME);
+    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kBrowserPluginName);
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath.Set(GetInstalledBrowserPluginPath());
@@ -422,7 +424,7 @@ bool KillProcessesUsingInstallation() {
         return true;
     }
     AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
-    AutoFreeWstr browserPlugin = path::Join(dir, BROWSER_PLUGIN_NAME);
+    AutoFreeWstr browserPlugin = path::Join(dir, kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -457,7 +459,7 @@ static void ProcessesUsingInstallation(WStrVec& names) {
         return;
     }
     AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
-    AutoFreeWstr browserPlugin = path::Join(dir, BROWSER_PLUGIN_NAME);
+    AutoFreeWstr browserPlugin = path::Join(dir, kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {

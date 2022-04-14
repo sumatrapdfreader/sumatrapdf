@@ -1,9 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define INSTALLER_FRAME_CLASS_NAME L"SUMATRA_PDF_INSTALLER_FRAME"
+#define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
-#define BROWSER_PLUGIN_NAME L"npPdfViewer.dll"
 #define SEARCH_FILTER_DLL_NAME L"PdfFilter.dll"
 #define PREVIEW_DLL_NAME L"PdfPreview.dll"
 
@@ -22,6 +21,7 @@ extern int gBottomPartDy;
 extern int gButtonDy;
 
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
+#define WM_APP_START_INSTALLATION (WM_APP + 2)
 
 extern WCHAR* firstError;
 extern const WCHAR* gDefaultMsg;

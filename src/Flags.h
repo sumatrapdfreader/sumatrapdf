@@ -77,6 +77,7 @@ struct Flags {
     bool registerAsDefault = false;
     bool log = false;
     bool allUsers = false;
+    bool runInstallNow = false;
 
     // for internal use
     WCHAR* updateSelfTo = nullptr;

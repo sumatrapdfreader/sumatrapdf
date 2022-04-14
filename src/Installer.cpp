@@ -435,42 +435,28 @@ Error:
     return 0;
 }
 
-static void OnButtonOptions();
-
-static void OnButtonInstall() {
-    if (gShowOptions) {
-        // hide and disable "Options" button during installation
-        OnButtonOptions();
+static void RestartElevatedForAllUsers() {
+    auto exePath = GetExePathTemp();
+    WCHAR* cmdLine = (WCHAR*)L"-run-install-now -all-users";
+    if (gCli->withFilter) {
+        cmdLine = str::JoinTemp(cmdLine, L" -with-filter");
     }
-
-    {
-        /* if the app is running, we have to kill it so that we can over-write the executable */
-        WCHAR* exePath = GetInstalledExePath();
-        KillProcessesWithModule(exePath, true);
-        str::Free(exePath);
+    if (gCli->withPreview) {
+        cmdLine = str::JoinTemp(cmdLine, L" -with-preview");
     }
-
-    if (!CheckInstallUninstallPossible()) {
-        return;
+    if (gCli->silent) {
+        cmdLine = str::JoinTemp(cmdLine, L" -silent");
     }
-
-    WCHAR* userInstallDir = win::GetTextTemp(gEditInstallationDir->hwnd).Get();
-    if (!str::IsEmpty(userInstallDir)) {
-        str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
+    if (gCli->log) {
+        cmdLine = str::JoinTemp(cmdLine, L" -log");
     }
+    cmdLine = str::JoinTemp(cmdLine, L" -install-dir \"", gCli->installDir);
+    cmdLine = str::JoinTemp(cmdLine, L"\"");
+    logf(L"Re-launching '%s' with args '%s' as elevated\n", exePath.Get(), cmdLine);
+    LaunchElevated(exePath, cmdLine);
+}
 
-#if ENABLE_REGISTER_DEFAULT
-    // note: this checkbox isn't created if we're already registered as default
-    //       (in which case we're just going to re-register)
-    gInstallerGlobals.registerAsDefault = gCheckboxRegisterDefault == nullptr || gCheckboxRegisterDefault->IsChecked();
-#endif
-
-    // note: this checkbox isn't created when running inside Wow64
-    gCli->withFilter = gCheckboxRegisterSearchFilter && gCheckboxRegisterSearchFilter->IsChecked();
-    // note: this checkbox isn't created on Windows 2000 and XP
-    gCli->withPreview = gCheckboxRegisterPreviewer && gCheckboxRegisterPreviewer->IsChecked();
-    gCli->allUsers = gCheckboxForAllUsers && gCheckboxRegisterSearchFilter->IsChecked();
-
+static void StartInstallation() {
     // create a progress bar in place of the Options button
     int dx = DpiScale(gHwndFrame, kInstallerWinDx / 2);
     Rect rc(0, 0, dx, gButtonDy);
@@ -510,6 +496,48 @@ static void OnButtonInstall() {
     HwndInvalidate(gHwndFrame);
 
     hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
+}
+
+static void OnButtonInstall() {
+    if (gShowOptions) {
+        // hide and disable "Options" button during installation
+        OnButtonOptions();
+    }
+
+    {
+        /* if the app is running, we have to kill it so that we can over-write the executable */
+        WCHAR* exePath = GetInstalledExePath();
+        KillProcessesWithModule(exePath, true);
+        str::Free(exePath);
+    }
+
+    if (!CheckInstallUninstallPossible()) {
+        return;
+    }
+
+    WCHAR* userInstallDir = win::GetTextTemp(gEditInstallationDir->hwnd).Get();
+    if (!str::IsEmpty(userInstallDir)) {
+        str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
+    }
+
+#if ENABLE_REGISTER_DEFAULT
+    // note: this checkbox isn't created if we're already registered as default
+    //       (in which case we're just going to re-register)
+    gInstallerGlobals.registerAsDefault = gCheckboxRegisterDefault == nullptr || gCheckboxRegisterDefault->IsChecked();
+#endif
+
+    // note: this checkbox isn't created when running inside Wow64
+    gCli->withFilter = gCheckboxRegisterSearchFilter && gCheckboxRegisterSearchFilter->IsChecked();
+    // note: this checkbox isn't created on Windows 2000 and XP
+    gCli->withPreview = gCheckboxRegisterPreviewer && gCheckboxRegisterPreviewer->IsChecked();
+
+    gCli->allUsers = gCheckboxForAllUsers && gCheckboxForAllUsers->IsChecked();
+
+    if (gCli->allUsers && !IsProcessRunningElevated()) {
+        RestartElevatedForAllUsers();
+        ::ExitProcess(0);
+    }
+    StartInstallation();
 }
 
 static void OnInstallationFinished() {
@@ -879,7 +907,7 @@ static void CreateMainWindow() {
     if (trans::IsCurrLangRtl()) {
         exStyle = WS_EX_LAYOUTRTL;
     }
-    const WCHAR* winCls = INSTALLER_FRAME_CLASS_NAME;
+    const WCHAR* winCls = kInstallerWindowClassName;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
     int dx = DpiScale(kInstallerWinDx);
@@ -901,6 +929,9 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
     switch (msg) {
         case WM_CREATE:
             OnCreateWindow(hwnd);
+            if (gCli->runInstallNow) {
+                PostMessageW(gHwndFrame, WM_APP_START_INSTALLATION, 0, 0);
+            }
             break;
 
         case WM_CTLCOLORSTATIC: {
@@ -931,6 +962,10 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             }
             break;
 
+        case WM_APP_START_INSTALLATION:
+            StartInstallation();
+            break;
+
         case WM_APP_INSTALLATION_FINISHED:
             OnInstallationFinished();
             if (gButtonRunSumatra) {
@@ -951,7 +986,7 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
 static bool RegisterWinClass() {
     WNDCLASSEX wcex{};
 
-    FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcInstallerFrame);
+    FillWndClassEx(wcex, kInstallerWindowClassName, WndProcInstallerFrame);
     auto h = GetModuleHandleW(nullptr);
     WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, resName);
@@ -1077,23 +1112,6 @@ static void StartInstallerLogging() {
     free(dir);
 }
 
-void RelaunchElevatedIfNotDebug() {
-    if (gIsDebugBuild) {
-        // for easier debugging, we don't require
-        // elevation in debug build
-        return;
-    }
-    if (IsProcessRunningElevated()) {
-        log("Already running elevated\n");
-        return;
-    }
-    auto exePath = GetExePathTemp();
-    WCHAR* cmdLine = GetCommandLineW(); // not owning the memory
-    logf(L"Re-launching '%s' with args '%s' as elevated\n", exePath.Get(), cmdLine);
-    LaunchElevated(exePath, cmdLine);
-    ::ExitProcess(0);
-}
-
 // returns true if should exit the installer
 bool MaybeMismatchedOSDialog(HWND hwndParent) {
     if (IsProcessAndOsArchSame()) {
@@ -1151,12 +1169,8 @@ int RunInstaller() {
     }
     logf(L"RunInstaller: '%s' installing into dir '%s'\n", GetExePathTemp().Get(), gCli->installDir);
 
-    RelaunchElevatedIfNotDebug();
-
-    if (!gCli->silent) {
-        if (MaybeMismatchedOSDialog(nullptr)) {
-            return 0;
-        }
+    if (!gCli->silent && MaybeMismatchedOSDialog(nullptr)) {
+        return 0;
     }
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
@@ -1176,13 +1190,16 @@ int RunInstaller() {
 
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
 
-    if (!gCli->withFilter) {
-        gCli->withFilter = IsSearchFilterInstalled();
-        log("setting gCli->withFilter because search filter installed\n");
-    }
-    if (!gCli->withPreview) {
-        gCli->withPreview = IsPreviewerInstalled();
-        log("setting gCli->withPreview because previewer installed\n");
+    if (!gCli->runInstallNow) {
+        // use settings from previous installation
+        if (!gCli->withFilter) {
+            gCli->withFilter = IsSearchFilterInstalled();
+            log("setting gCli->withFilter because search filter installed\n");
+        }
+        if (!gCli->withPreview) {
+            gCli->withPreview = IsPreviewerInstalled();
+            log("setting gCli->withPreview because previewer installed\n");
+        }
     }
 
     // unregister search filter and previewer to reduce
