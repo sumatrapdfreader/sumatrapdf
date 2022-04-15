@@ -1226,7 +1226,6 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     RemoveBadMenuSeparators(menu);
 }
 
-// TODO: might need to translate some of those
 static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
     auto lang = trans::GetCurrentLangCode();
     bool isEng = str::IsEmpty(lang) || str::Eq(lang, "en");
@@ -1269,8 +1268,9 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
         return;
     }
 
-    bool isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
-    if (isAscii) {
+    // virtual codes overlap with some ascii chars like '-' is VK_INSERT
+    // so for non-virtual assume it's a single char
+    if (!isVirt) {
         WCHAR c = (WCHAR)key;
         str.AppendChar(c);
         return;
@@ -1287,15 +1287,13 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
             keyStr = L"Home";
             break;
         case VK_LEFT:
-            // TODO: just Left?
-            keyStr = L"Left Arrow";
+            keyStr = L"Left";
             if (!isEng) {
                 keyStr = L"<-";
             }
             break;
         case VK_RIGHT:
-            // TODO: just Right?
-            keyStr = L"Right Arrow";
+            keyStr = L"Right";
             if (!isEng) {
                 keyStr = L"->";
             }
