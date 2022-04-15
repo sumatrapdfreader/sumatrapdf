@@ -1270,7 +1270,8 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
 
     // virtual codes overlap with some ascii chars like '-' is VK_INSERT
     // so for non-virtual assume it's a single char
-    if (!isVirt) {
+    bool isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
+    if (isAscii || !isVirt) {
         WCHAR c = (WCHAR)key;
         str.AppendChar(c);
         return;
