@@ -219,16 +219,15 @@ const char* GetTranslationA(const char* s) {
 }
 
 const WCHAR* GetTranslation(const char* s) {
-    if (gCurrLangIdx == 0) {
-        return ToWstrTemp(s);
-    }
     Translation* trans = FindTranslation(s);
     // we don't have a translation for this string
     if (!trans || trans->idxTransW == 0) {
         logf("GetTranslation: didn't find translation for '%s'\n", s);
         // shouldn't happen
         // ReportIf(true);
-        return ToWstrTemp(s);
+        // it's a mem leak but the contract is that those strings
+        // are not freed and survive long enough they can't be temp strings
+        return strconv::Utf8ToWstr(s);
     }
     auto idx = trans->idxTransW;
     return gTranslationCache->allTranslationsW.LendData() + idx;
