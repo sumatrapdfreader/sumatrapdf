@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c4b8b9c6471de587b729eb3f40df6b8a51315be0
+03ad6e5c9cf345c57d800ce0a544cc8f8e8de134
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -73,6 +73,7 @@ uz:&Dastur haqida
 vn:Giới thiệu
 :&Actual Size
 cn:实际大小(&A)
+de:&Tatsächliche Größe
 nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
 :&Advanced Options...
@@ -209,10 +210,12 @@ uz:&Hamma tanlangan betlar
 vn:Tất cả các tr&ang được chọn
 :&Back
 cn:上一视图(B)
+de:&Vorherige Ansicht
 nl:&Terug
 pl:&Wstecz
 :&Book View
 cn:书籍视图(&B)
+de:&Buchansicht
 nl:&Boek Tonen
 pl:Widok o&dczytu
 :&Cancel
@@ -275,6 +278,7 @@ tr:&Karet
 uk:&Каретка
 :&Close
 cn:关闭(&C)
+de:&Schließen
 nl:&Sluiten
 pl:&Zamknij
 :&Continue installing 32-bit version
@@ -373,6 +377,7 @@ uz:&Tanlanganni nusxa olish
 vn:&Chép phần đã chọn
 :&Copy To Clipboard
 cn:复制到剪贴版(&C)
+de:&In Zwischenablage kopieren
 nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
 :&Discard changes
@@ -537,6 +542,7 @@ uz:&Faqat juft betlar
 vn:Chỉ những trang lẻ
 :&Facing
 cn:双页视图(&F)
+de:&Doppelseite
 nl:&Gericht op
 pl:&Wiele stron
 :&File
@@ -679,6 +685,7 @@ uz:&Qidirish:
 vn:Tìm (các) từ sau:
 :&First Page
 cn:第一页(&F)
+de:&Erste Seite
 nl:&Eerste Pagina
 pl:&Pierwsza strona
 :&Fit pages to printable area
@@ -983,10 +990,12 @@ uz:&Yordam
 vn:Trợ &giúp
 :&Highlight
 cn:高亮(&H)
+de:Text &hervorheben
 nl:&Markeren
 pl:&Wyróżnienie
 :&Last Page
 cn:最后一页(&L)
+de:&Letzte Seite
 nl:&Laatste Pagina
 pl:&Ostatnia strona
 :&Magnification:
@@ -1187,6 +1196,7 @@ uz:&Registrni hisobga olish
 vn:Phân biệt &HOA-thường
 :&Next Page
 cn:下一页(&N)
+de:&Nächste Seite
 nl:&Volgende Pagina
 pl:&Następna strona
 :&No
@@ -1388,6 +1398,7 @@ uz:&Hujjatni ochish
 vn:Mở tập tin
 :&Open...
 cn:打开(&O)...
+de:Öffnen
 nl:&Openen
 pl:&Otwórz...
 :&Options
@@ -1647,6 +1658,7 @@ uz:&Hujjatni eslab qolish
 vn:Ghim tập tin
 :&Previous Page
 cn:上一页(&P)
+de:&Vorherige Seite
 nl:&Vorige Pagina
 pl:&Poprzednia strona
 :&Print...
@@ -2187,6 +2199,7 @@ uz:&Betlarni printerga moslab kichraytirish (zarur bo'lganda)
 vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page
 cn:单页视图(&S)
+de:Einzel&seitenansicht
 nl:&Enkele Pagina
 pl:&Pojedyncza strona
 :&Stamp
@@ -6767,6 +6780,7 @@ uz:Kursor holati:
 vn:Vị trí con trỏ:
 :Custom &Zoom...
 cn:自定义缩放(&Z)...
+de:Benutzerdefinierter &Zoom...
 nl:Aangepast & zoom...
 pl:&Własne powiększenie...
 :Dark
@@ -7380,6 +7394,7 @@ tr:64 bit sürümü indir
 uk:Завантажити 64-bit версію
 :E&xit
 cn:退出(&X)
+de:&Beenden
 nl:A&fsluiten
 pl:&Wyjście
 :E&xit Fullscreen
@@ -7901,10 +7916,12 @@ uz:&Tanlanganlar
 vn:Ưa thích
 :F&orward
 cn:下一视图(&O)
+de:&Nächste Ansicht
 nl:V&ooruit
 pl:&Dalej
 :F&ullscreen
 cn:全屏(&U)
+de:&Vollbild
 nl:V&oledig Scherm
 pl:Pełny &ekran
 :Facing
@@ -8785,6 +8802,7 @@ uz:Fayl:
 vn:Tập tin:
 :Fin&d...
 cn:查找(&D)...
+de:S&uchen...
 nl:Zoe&k
 pl:&Znajdź...
 :Find
@@ -9070,14 +9088,17 @@ uz:Qidirish:
 vn:Tìm kiếm:
 :Fit &Content
 cn:适合内容(&C)
+de:Orginalgröße
 nl:&Inhoud Aanpassen
 pl:Dopasuj do &zawartości
 :Fit &Page
 cn:适合页面(&P)
+de:Seitenhöhe
 nl:&Pagina Aanpassen
 pl:Dopasuj do s&trony
 :Fit &Width
 cn:适合宽度(&W)
+de:Seitenbreite
 nl:&Breedte Aanpassen
 pl:Dopasuj do sz&erokości
 :Fit Content
@@ -10328,6 +10349,9 @@ th:ติดตั้ง และ เรียกใช้งาน
 tr:Kur ve yeniden başlat
 uk:Встановити та перезапустити
 :Install for all users
+cn:为所有用户安装
+de:Für alle Benutzer installieren
+pl:Zainstaluj dla wszystkich użytkowników
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
 ar:!فشل التثبيت
@@ -11301,6 +11325,7 @@ uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window
 cn:新建窗口(&W)
+de:Neues &Fenster
 nl:Nieuw &Kader
 pl:Nowe &okno
 :New version available
@@ -12788,6 +12813,7 @@ uz:PDF hujjatlari
 vn:Tập tin PDF
 :Pa&ge...
 cn:前往第 ... 页(&G)
+de:Seite
 nl:Pa&gina
 pl:&Strona...
 :Page %s
@@ -13462,6 +13488,7 @@ uz:Postscript hujjatlari
 vn:Tập tin Postscript
 :Pr&esentation
 cn:幻灯片(&E)
+de:Präsentation
 nl:Pr&esentatie
 pl:&Prezentacja
 :Previous Page
@@ -14048,6 +14075,7 @@ uz:Chop etish muammosi.
 vn:Lỗi in.
 :Re&name...
 cn:重命名(&N)...
+de:Umbenennen
 nl:Her&noem
 pl:Zmień &nazwę...
 :Rect: x=%d y=%d dx=%d dy=%d
@@ -14362,6 +14390,7 @@ uz:Yangi nom
 vn:Đổi tên thành
 :Rotate &Left
 cn:逆时针旋转(&L)
+de:Gegen UZS drehen
 nl:&Linksom Roteren
 pl:Obróć w &lewo
 :Rotate &Left\tCtrl+Shift+-
@@ -14437,6 +14466,7 @@ uz:&Chapga burish\tCtrl+Shift+-
 vn:Quay trái\tCtrl+Shift+-
 :Rotate &Right
 cn:顺时针旋转(&R)
+de:Im UZS drehen
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
 :Rotate &Right\tCtrl+Shift++
@@ -14642,6 +14672,7 @@ tw:儲存內嵌的檔案...
 uk:Зберегти вкладений файл...
 :Save S&hortcut...
 cn:保存快捷方式(&H)...
+de:Verknüpfung speichern
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
 :Save annotations?
@@ -15591,6 +15622,7 @@ uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks
 cn:显示书签(&M)
+de:Lesezeichen anzeigen
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
 :Show Favorites
