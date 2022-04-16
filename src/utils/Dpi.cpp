@@ -50,7 +50,7 @@ void DpiReset() {
 
 // Uncached getting of dpi
 int DpiGetForHwnd(HWND hwnd) {
-    if (false && DynGetDpiForWindow) {
+    if (DynGetDpiForWindow) {
         // HWND_DESKTOP is 0 and not really HWND
         // GetDpiForWindow(HWND_DESKTOP) returns 0
         if (hwnd == HWND_DESKTOP) {

@@ -257,6 +257,7 @@ var (
 			"if true, we use Windows system colors for background/text color. Over-rides other settings").setExpert(),
 		mkField("RestoreSession", Bool, true,
 			"if true and SessionData isn't empty, that session will be restored at startup").setExpert(),
+		mkField("ToolbarSize", Int, 18, "height of toolbar").setVersion("3.4"),
 		mkField("TabWidth", Int, 300,
 			"maximum width of a single tab"),
 		mkEmptyLine(),

@@ -73,6 +73,15 @@ static void setMin(int& i, int minVal) {
     }
 }
 
+static void setMinMax(int& i, int minVal, int maxVal) {
+    if (i < minVal) {
+        i = minVal;
+    }
+    if (i > maxVal) {
+        i = maxVal;
+    }
+}
+
 /* Caller needs to prefs::CleanUp() */
 bool Load() {
     CrashIf(gGlobalPrefs);
@@ -156,6 +165,7 @@ bool Load() {
     setMin(gprefs->sidebarDx, 0);
     setMin(gprefs->tocDy, 0);
     setMin(gprefs->treeFontSize, 0);
+    setMinMax(gprefs->toolbarSize, 10, 64);
 
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);

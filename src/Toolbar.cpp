@@ -728,7 +728,7 @@ void CreateToolbar(WindowInfo* win) {
     win->hwndToolbar = hwndToolbar;
     SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-    int dx = DpiScale(18);
+    int dx = DpiScale(hwndParent, gGlobalPrefs->toolbarSize);
     // icon sizes must be multiple of 4 or else they are sheared
     // TODO: I must be doing something wrong, any size should be ok
     // it might be about size of buttons / bitmaps

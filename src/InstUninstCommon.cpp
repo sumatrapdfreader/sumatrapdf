@@ -515,7 +515,7 @@ void InvalidateFrame() {
 
 bool CheckInstallUninstallPossible(bool silent) {
     bool ok = KillProcessesUsingInstallation();
-    logf("CheckInstallUninstallPossible: KillProcessesUsingInstallation() returned %d\n", ok);
+    //logf("CheckInstallUninstallPossible: KillProcessesUsingInstallation() returned %d\n", ok);
 
     // now determine which processes are using installation files
     // and ask user to close them.
