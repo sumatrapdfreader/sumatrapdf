@@ -257,6 +257,8 @@ var (
 			"if true, we use Windows system colors for background/text color. Over-rides other settings").setExpert(),
 		mkField("RestoreSession", Bool, true,
 			"if true and SessionData isn't empty, that session will be restored at startup").setExpert(),
+		mkField("FontSize", Int, 0,
+			"font size. 0 means Windows default").setVersion("3.4"),
 		mkField("ToolbarSize", Int, 18, "height of toolbar").setVersion("3.4"),
 		mkField("TabWidth", Int, 300,
 			"maximum width of a single tab"),
@@ -349,7 +351,7 @@ var (
 			"if both favorites and bookmarks parts of sidebar are visible, this is "+
 				"the height of bookmarks (table of contents) part"),
 		mkField("TreeFontSize", Int, 0,
-			"font size for bookmarks and favorites tree views. 0 means Windows default").setVersion("3.3"),
+			"obsolete: use FontSize. font size for bookmarks and favorites tree views. 0 means Windows default").setVersion("3.3"),
 		mkField("ShowStartPage", Bool, true,
 			"if true, we show a list of frequently read documents when no document is loaded"),
 		mkField("UseTabs", Bool, true,

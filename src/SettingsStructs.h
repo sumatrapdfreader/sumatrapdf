@@ -289,6 +289,8 @@ struct GlobalPrefs {
     // if true and SessionData isn't empty, that session will be restored
     // at startup
     bool restoreSession;
+    // font size. 0 means Windows default
+    int fontSize;
     // height of toolbar
     int toolbarSize;
     // maximum width of a single tab
@@ -382,8 +384,8 @@ struct GlobalPrefs {
     // if both favorites and bookmarks parts of sidebar are visible, this
     // is the height of bookmarks (table of contents) part
     int tocDy;
-    // font size for bookmarks and favorites tree views. 0 means Windows
-    // default
+    // obsolete: use FontSize. font size for bookmarks and favorites tree
+    // views. 0 means Windows default
     int treeFontSize;
     // if true, we show a list of frequently read documents when no
     // document is loaded
@@ -625,6 +627,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, reuseInstance), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
     {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, fontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
     {(size_t)-1, SettingType::Comment, 0},
@@ -680,13 +683,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 58, gGlobalPrefsFields,
-    "\0\0MainWindowBackground\0SmoothScroll\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0ToolbarSize\0TabWi"
-    "dth\0\0FixedPageUI\0ComicBookUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0"
-    "FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0Custo"
-    "mScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSil"
-    "ently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDi"
-    "splayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0S"
-    "hortcuts\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    sizeof(GlobalPrefs), 59, gGlobalPrefsFields,
+    "\0\0MainWindowBackground\0SmoothScroll\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0FontSize\0ToolbarS"
+    "ize\0TabWidth\0\0FixedPageUI\0ComicBookUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedD"
+    "ocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswo"
+    "rds\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0As"
+    "sociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements"
+    "\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage"
+    "\0UseTabs\0Shortcuts\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif
