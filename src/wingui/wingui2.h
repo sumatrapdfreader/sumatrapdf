@@ -138,6 +138,7 @@ using ClickedHandler = std::function<void()>;
 
 struct StaticCreateArgs {
     HWND parent = nullptr;
+    HFONT font = nullptr;
     const char* text = nullptr;
 };
 
@@ -162,6 +163,7 @@ namespace wg {
 
 struct ButtonCreateArgs {
     HWND parent = nullptr;
+    HFONT font = nullptr;
     const char* text = nullptr;
 };
 
@@ -196,6 +198,7 @@ struct EditCreateArgs {
     bool withBorder = false;
     const char* cueText = nullptr;
     int idealSizeLines = 1;
+    HFONT font = nullptr;
 };
 
 struct Edit : Wnd {
@@ -227,6 +230,7 @@ using ListBoxDoubleClickHandler = std::function<void()>;
 struct ListBoxCreateArgs {
     HWND parent = nullptr;
     int idealSizeLines = 0;
+    HFONT font = nullptr;
 };
 
 struct ListBox : Wnd {

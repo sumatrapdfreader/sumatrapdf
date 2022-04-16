@@ -2947,10 +2947,10 @@ int StrVec::Find(std::string_view sv, int startAt) const {
     for (int i = startAt; i < n; i++) {
         auto s = at(i);
         if (str::Eq(sv, s)) {
-            return true;
+            return i;
         }
     }
-    return false;
+    return -1;
 }
 
 bool StrVec::Exists(std::string_view sv) const {
@@ -3154,10 +3154,10 @@ int WStrVec2::Find(const WCHAR* s, int startAt) const {
     for (int i = startAt; i < n; i++) {
         auto s2 = at(i);
         if (str::Eq(s, s2.data())) {
-            return true;
+            return i;
         }
     }
-    return false;
+    return -1;
 }
 
 bool WStrVec2::Exists(std::wstring_view sv) const {

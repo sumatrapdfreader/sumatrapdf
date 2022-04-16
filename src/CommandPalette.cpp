@@ -30,6 +30,8 @@
 
 using namespace wg;
 
+static HFONT gCommandPaletteFont = nullptr;
+
 // clang-format off
 static i32 gBlacklistCommandsFromPalette[] = {
     CmdNone,
@@ -258,9 +260,10 @@ static void FilterStrings(const StrVec& strs, const char* filter, StrVec& matche
     int n = strs.Size();
     for (int i = 0; i < n; i++) {
         auto s = strs.at(i);
-        if (FilterMatches(s.data(), filter)) {
-            matchedOut.Append(s.data());
+        if (!FilterMatches(s.data(), filter)) {
+            continue;
         }
+        matchedOut.Append(s.data());
     }
 }
 
@@ -319,7 +322,6 @@ void CommandPaletteWnd::QueryChanged() {
     auto filter = editQuery->GetText();
     // for efficiency, reusing existing model
     auto m = (ListBoxModelStrings*)listBox->model;
-    // auto m = new ListBoxModelStrings();
     FilterStrings(allStrings, filter.Get(), m->strings);
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
@@ -403,12 +405,12 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
 
 bool CommandPaletteWnd::Create(WindowInfo* win) {
     CollectPaletteStrings(allStrings, win);
-
     {
         CreateCustomArgs args;
         // args.title = L"Command Palette";
         args.visible = false;
         args.style = WS_POPUPWINDOW;
+        args.font = gCommandPaletteFont;
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -425,6 +427,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
         args.isMultiLine = false;
         args.withBorder = true;
         args.cueText = "a cue text";
+        args.font = gCommandPaletteFont;
         auto c = new Edit();
         c->maxDx = 150;
         c->onTextChanged = std::bind(&CommandPaletteWnd::QueryChanged, this);
@@ -437,6 +440,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     {
         ListBoxCreateArgs args;
         args.parent = hwnd;
+        args.font = gCommandPaletteFont;
         auto c = new ListBox();
         c->onDoubleClick = std::bind(&CommandPaletteWnd::ListDoubleClick, this);
         c->idealSizeLines = 32;
@@ -454,6 +458,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     {
         StaticCreateArgs args;
         args.parent = hwnd;
+        args.font = gCommandPaletteFont;
         args.text = "↑ ↓ to navigate      Enter to select     Esc to close";
 
         auto c = new Static();
@@ -484,6 +489,14 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
 
 void RunCommandPallette(WindowInfo* win) {
     CrashIf(gCommandPaletteWnd);
+    // make min font size 16 (I get 12)
+    int fontSize = GetSizeOfDefaultGuiFont();
+    if (fontSize < 16) {
+        fontSize = 16;
+    }
+    gCommandPaletteFont = GetDefaultGuiFontOfSize(16);
+    // TODO: leaking font
+
     auto wnd = new CommandPaletteWnd();
     wnd->win = win;
     bool ok = wnd->Create(win);

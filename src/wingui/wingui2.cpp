@@ -979,14 +979,15 @@ Static::Static() {
     kind = kindStatic;
 }
 
-HWND Static::Create(const StaticCreateArgs& btnArgs) {
-    CreateControlArgs args;
-    args.className = WC_STATICW;
-    args.parent = btnArgs.parent;
-    args.style = WS_CHILD | WS_VISIBLE | SS_NOTIFY;
-    args.text = btnArgs.text;
+HWND Static::Create(const StaticCreateArgs& args) {
+    CreateControlArgs cargs;
+    cargs.className = WC_STATICW;
+    cargs.parent = args.parent;
+    cargs.font = args.font;
+    cargs.style = WS_CHILD | WS_VISIBLE | SS_NOTIFY;
+    cargs.text = args.text;
 
-    Wnd::CreateControl(args);
+    Wnd::CreateControl(cargs);
     SizeToIdealSize(this);
 
     return hwnd;
@@ -1071,19 +1072,20 @@ LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-HWND Button::Create(const ButtonCreateArgs& btnArgs) {
-    CreateControlArgs args;
-    args.className = WC_BUTTONW;
-    args.parent = btnArgs.parent;
-    args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+HWND Button::Create(const ButtonCreateArgs& args) {
+    CreateControlArgs cargs;
+    cargs.className = WC_BUTTONW;
+    cargs.parent = args.parent;
+    cargs.font = args.font;
+    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     if (isDefault) {
-        args.style |= BS_DEFPUSHBUTTON;
+        cargs.style |= BS_DEFPUSHBUTTON;
     } else {
-        args.style |= BS_PUSHBUTTON;
+        cargs.style |= BS_PUSHBUTTON;
     }
-    args.text = btnArgs.text;
+    cargs.text = args.text;
 
-    Wnd::CreateControl(args);
+    Wnd::CreateControl(cargs);
     SizeToIdealSize(this);
 
     return hwnd;
@@ -1181,6 +1183,7 @@ HWND Edit::Create(const EditCreateArgs& editArgs) {
     CreateControlArgs args;
     args.className = WC_EDITW;
     args.parent = editArgs.parent;
+    args.font = editArgs.font;
     args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
     if (editArgs.withBorder) {
         args.exStyle = WS_EX_CLIENTEDGE;
@@ -1315,6 +1318,7 @@ HWND ListBox::Create(const ListBoxCreateArgs& args) {
     CreateControlArgs cargs;
     cargs.className = L"LISTBOX";
     cargs.parent = args.parent;
+    cargs.font = args.font;
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
     cargs.style = WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
