@@ -163,7 +163,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
         AutoFreeWstr totalCount(str::Format(_TR("(of %d)"), data->pageCount));
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
 
-        Edit_SelectAll(editPageNo);
+        EditSelectAll(editPageNo);
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Go to page:"));
         SetDlgItemText(hDlg, IDOK, _TR("Go to page"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
@@ -247,7 +247,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
             data->editWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_FIND_EDIT), GWLP_WNDPROC,
                                                           (LONG_PTR)Dialog_Find_Edit_Proc);
-            Edit_SelectAll(GetDlgItem(hDlg, IDC_FIND_EDIT));
+            EditSelectAll(GetDlgItem(hDlg, IDC_FIND_EDIT));
 
             CenterDialog(hDlg);
             SetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
@@ -853,7 +853,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
         if (data->favName) {
             SetDlgItemText(hDlg, IDC_FAV_NAME_EDIT, data->favName);
-            Edit_SelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+            EditSelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         }
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));

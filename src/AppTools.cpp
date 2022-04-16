@@ -484,7 +484,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             return true;
 
         case UWM_DELAYED_SET_FOCUS:
-            Edit_SelectAll(hwnd);
+            EditSelectAll(hwnd);
             return true;
 
         case WM_KEYDOWN:

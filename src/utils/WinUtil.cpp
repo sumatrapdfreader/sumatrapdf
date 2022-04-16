@@ -76,8 +76,29 @@ RECT MakeRect(long x, long y, long dx, long dy) {
     return r;
 }
 
-void Edit_SelectAll(HWND hwnd) {
+void EditSelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
+}
+
+int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
+    CrashIf(lines < 1);
+    CrashIf(lines > 256);
+
+    HFONT hfont = HwndGetFont(hwnd);
+    Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
+    // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
+    auto txt = win::GetTextTemp(hwnd);
+    Size s2 = HwndMeasureText(hwnd, txt, hfont);
+    int dy = std::min(s1.dy, s2.dy);
+    if (dy == 0) {
+        dy = std::max(s1.dy, s2.dy);
+    }
+    dy = dy * lines;
+    if (hasBorder) {
+        dy += DpiScale(hwnd, 8);
+    }
+    // logf("Edit::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
+    return dy;
 }
 
 void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt) {
@@ -1153,7 +1174,7 @@ Rect ChildPosWithinParent(HWND hwnd) {
 HFONT GetDefaultGuiFontOfSize(int size) {
     NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
     HFONT fnt = CreateFontIndirectW(&ncm.lfMessageFont);
     return fnt;

@@ -165,7 +165,7 @@ bool Load() {
     setMin(gprefs->sidebarDx, 0);
     setMin(gprefs->tocDy, 0);
     setMin(gprefs->treeFontSize, 0);
-    setMinMax(gprefs->toolbarSize, 10, 64);
+    setMinMax(gprefs->toolbarSize, 8, 64);
 
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);

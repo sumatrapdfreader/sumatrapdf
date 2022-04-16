@@ -347,7 +347,7 @@ void OnSelectAll(WindowInfo* win, bool textOnly) {
     }
 
     if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
-        Edit_SelectAll(GetFocus());
+        EditSelectAll(GetFocus());
         return;
     }
 

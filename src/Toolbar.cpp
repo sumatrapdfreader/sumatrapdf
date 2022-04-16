@@ -46,7 +46,6 @@ static int kButtonSpacingX = 4;
 
 // distance between label and edit field
 constexpr int kTextPaddingRight = 6;
-constexpr int kMinIconSize = 16;
 constexpr int kPageBoxDx = 40;
 
 struct ToolbarButtonInfo {
@@ -485,24 +484,27 @@ void UpdateToolbarState(WindowInfo* win) {
     }
 }
 
-static void CreateFindBox(WindowInfo* win) {
+static void CreateFindBox(WindowInfo* win, HFONT hfont, int iconDy) {
     int findBoxDx = DpiScale(win->hwndFrame, 160);
-    int minIconSize = DpiScale(win->hwndFrame, kMinIconSize);
     HMODULE hmod = GetModuleHandleW(nullptr);
     HWND p = win->hwndToolbar;
     DWORD style = WS_VISIBLE | WS_CHILD;
-
-    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", style, 0, 1, findBoxDx, minIconSize + 4, p,
+    DWORD exStyle = WS_EX_STATICEDGE;
+    int dy = iconDy + 2;
+    Size textSize = HwndMeasureText(win->hwndFrame, L"M", hfont);
+    HWND findBg = CreateWindowEx(exStyle, WC_STATIC, L"", style, 0, 1, findBoxDx, dy, p,
                                  (HMENU) nullptr, hmod, nullptr);
 
     int dx = findBoxDx - 2 * GetSystemMetrics(SM_CXEDGE);
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
-    HWND find = CreateWindowExW(0, WC_EDIT, L"", style, 0, 1, dx, minIconSize + 2, p, (HMENU) nullptr, hmod, nullptr);
+    dy = iconDy + DpiScale(2);
+    dy = iconDy;
+    exStyle = 0;
+    HWND find = CreateWindowExW(exStyle, WC_EDIT, L"", style, 0, 1, dx, dy, p, (HMENU) nullptr, hmod, nullptr);
 
     style = WS_VISIBLE | WS_CHILD;
     HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, p, (HMENU) nullptr, hmod, nullptr);
 
-    HFONT hfont = GetDefaultGuiFont();
     SetWindowFont(label, hfont, FALSE);
     SetWindowFont(find, hfont, FALSE);
 
@@ -521,12 +523,12 @@ static void CreateFindBox(WindowInfo* win) {
     win->hwndFindBg = findBg;
 }
 
-static void CreateInfoText(WindowInfo* win) {
+static void CreateInfoText(WindowInfo* win, HFONT font) {
     HMODULE hmod = GetModuleHandleW(nullptr);
     DWORD style = WS_VISIBLE | WS_CHILD;
     HWND labelInfo =
         CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, win->hwndToolbar, (HMENU) nullptr, hmod, nullptr);
-    SetWindowFont(labelInfo, GetDefaultGuiFont(), FALSE);
+    SetWindowFont(labelInfo, font, FALSE);
 
     win->hwndTbInfoText = labelInfo;
     SetToolbarInfoText(win, L"");
@@ -664,29 +666,29 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
         RECT rTmp = ToRECT(rc);
         InvalidateRect(win->hwndToolbar, &rTmp, TRUE);
     }
+    InvalidateRect(win->hwndToolbar, nullptr, TRUE);
 }
 
-static void CreatePageBox(WindowInfo* win) {
+static void CreatePageBox(WindowInfo* win, HFONT font, int iconDy) {
     auto hwndFrame = win->hwndFrame;
     auto hwndToolbar = win->hwndToolbar;
     int boxWidth = DpiScale(hwndFrame, kPageBoxDx);
-    int minIconSize = DpiScale(hwndFrame, kMinIconSize);
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto h = GetModuleHandle(nullptr);
     int dx = boxWidth;
-    int dy = minIconSize + 4;
+    int dy = iconDy + 2;
     DWORD exStyle = WS_EX_STATICEDGE;
     HWND pageBg =
-        CreateWindowExW(exStyle, WC_STATIC, L"", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
-    HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
-    HWND total = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
+        CreateWindowExW(exStyle, WC_STATICW, L"", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
+    HWND label = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
+    HWND total = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
 
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
     dx = boxWidth - 2 * GetSystemMetrics(SM_CXEDGE);
-    dy = minIconSize + 2;
-    HWND page = CreateWindowExW(0, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
+    dy = iconDy;
+    exStyle = 0;
+    HWND page = CreateWindowExW(exStyle, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
 
-    auto font = GetDefaultGuiFont();
     SetWindowFont(label, font, FALSE);
     SetWindowFont(page, font, FALSE);
     SetWindowFont(total, font, FALSE);
@@ -715,6 +717,8 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
+constexpr int kDefaultIconSize = 18;
+
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 void CreateToolbar(WindowInfo* win) {
     kButtonSpacingX = 0;
@@ -728,12 +732,20 @@ void CreateToolbar(WindowInfo* win) {
     win->hwndToolbar = hwndToolbar;
     SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-    int dx = DpiScale(hwndParent, gGlobalPrefs->toolbarSize);
+    // we call it ToolbarSize for users, but it's really size of the icon
+    // toolbar size is iconSize + padding (seems to be 6)
+    int iconSize = gGlobalPrefs->toolbarSize;
+    if (iconSize == kDefaultIconSize) {
+        // scale if default size
+        iconSize = DpiScale(hwndParent, iconSize);
+
+    }
     // icon sizes must be multiple of 4 or else they are sheared
     // TODO: I must be doing something wrong, any size should be ok
     // it might be about size of buttons / bitmaps
-    dx = RoundUp(dx, 4);
-    // this doesn't seem to be required and doesn't help with wierd sizes like 22
+    iconSize = RoundUp(iconSize, 4);
+    int dx = iconSize;
+    // this doesn't seem to be required and doesn't help with weird sizes like 22
     // but the docs say to do it
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
 
@@ -815,9 +827,16 @@ void CreateToolbar(WindowInfo* win) {
 
     SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
 
-    CreatePageBox(win);
-    CreateFindBox(win);
-    CreateInfoText(win);
+    int defFontSize = GetSizeOfDefaultGuiFont();
+    // 18 was the default toolbar size, we want to scale the fonts in proportion
+    int newSize = (defFontSize * iconSize) / kDefaultIconSize;
+    auto font = GetDefaultGuiFontOfSize(newSize);
+
+    CreatePageBox(win, font, iconSize);
+    CreateFindBox(win, font, iconSize);
+    CreateInfoText(win, font);
+
+    // TODO: leaking font
 
     UpdateToolbarPageText(win, -1);
     UpdateToolbarFindText(win);

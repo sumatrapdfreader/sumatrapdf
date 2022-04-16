@@ -20,7 +20,9 @@ Rect ClientRect(HWND hwnd);
 Rect WindowRect(HWND hwnd);
 Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo);
 
-void Edit_SelectAll(HWND hwnd);
+void EditSelectAll(HWND hwnd);
+int EditIdealDy(HWND hwnd, bool hasBorder, int lines = 1);
+
 void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt);
 
 bool IsValidHandle(HANDLE);
