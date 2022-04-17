@@ -38,7 +38,6 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithFirst,
     CmdOpenWithLast,
     CmdCommandPalette,
-    CmdExitFullScreen, // ?
 
     // managing frequently list in home tab
     CmdOpenSelectedDocument,

@@ -27,22 +27,21 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdViewRotateLeft, "View: Rotate Left")                             \
     V(CmdViewRotateRight, "View: Rotate Right")                           \
     V(CmdViewBookmarks, "View: Bookmarks")                                \
-    V(CmdExitFullScreen, "Exit FullScreen")                               \
     V(CmdToggleFullscreen, "Toggle Fullscreen")                           \
-    V(CmdPresentationWhiteBackground, "Presentation white background")    \
-    V(CmdPresentationBlackBackground, "Presentation black background")    \
+    V(CmdPresentationWhiteBackground, "Presentation White Background")    \
+    V(CmdPresentationBlackBackground, "Presentation Black Background")    \
     V(CmdTogglePresentationMode, "View: Presentation Mode")               \
-    V(CmdToggleToolbar, "View: Toogle Toolbar")                           \
-    V(CmdToggleScrollbars, "View: Toogle Scrollbars")                     \
-    V(CmdToggleMenuBar, "View: Toggle Menu Bar")                          \
+    V(CmdToggleToolbar, "Toogle Toolbar")                                 \
+    V(CmdToggleScrollbars, "Toogle Scrollbars")                           \
+    V(CmdToggleMenuBar, "Toggle Menu Bar")                                \
     V(CmdCopySelection, "Copy Selection")                                 \
     V(CmdTranslateSelectionWithGoogle, "Translate Selection with Google") \
     V(CmdTranslateSelectionWithDeepL, "Translate Selection With DeepL")   \
     V(CmdSearchSelectionWithGoogle, "Search Selection with Google")       \
     V(CmdSearchSelectionWithBing, "Search Selection with Bing")           \
     V(CmdSelectAll, "Select All")                                         \
-    V(CmdNewWindow, "Open New Window")                                    \
-    V(CmdDuplicateInNewWindow, "Open Document In New Window")             \
+    V(CmdNewWindow, "Open New SumatraPDF Window")                         \
+    V(CmdDuplicateInNewWindow, "Open Current Document In New Window")     \
     V(CmdCopyImage, "Copy Image")                                         \
     V(CmdCopyLinkTarget, "Copy Link Target")                              \
     V(CmdCopyComment, "Copy Comment")                                     \
@@ -94,7 +93,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdZoomFitWidthAndContinuous, "Zoom: Fit Width And Continuous")     \
     V(CmdZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")      \
     V(CmdContributeTranslation, "Contribute Translation")                 \
-    V(CmdOpenWithFirst, "Open With First")                                \
+    V(CmdOpenWithFirst, "don't use")                                      \
     V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                      \
     V(CmdOpenWithFoxIt, "Open With FoxIt")                                \
     V(CmdOpenWithFoxItPhantom, "Open With FoxIt Phantom")                 \
@@ -102,7 +101,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenWithXpsViewer, "Open With Xps Viewer")                       \
     V(CmdOpenWithHtmlHelp, "Open With HTML Help")                         \
     V(CmdOpenWithPdfDjvuBookmarker, "Open With Pdf&Djvu Bookmarker")      \
-    V(CmdOpenWithLast, "Open With Last")                                  \
+    V(CmdOpenWithLast, "don't use")                                       \
     V(CmdOpenSelectedDocument, "Open Selected Document")                  \
     V(CmdPinSelectedDocument, "Pin Selected Document")                    \
     V(CmdForgetSelectedDocument, "Remove Selected Document From History") \
@@ -145,19 +144,19 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCreateAnnotInk, "Create Ink Annotation")                         \
     V(CmdCreateAnnotPopup, "Create Popup Annotation")                     \
     V(CmdCreateAnnotFileAttachment, "Create File Attachment Annotation")  \
-    V(CmdInvertColors, "Invert colors")                                   \
-    V(CmdTogglePageInfo, "Toggle page info")                              \
-    V(CmdCloseCurrentDocument, "Close current document")                  \
-    V(CmdNone, "Do nothing")                                              \
+    V(CmdInvertColors, "Invert Colors")                                   \
+    V(CmdTogglePageInfo, "Toggle Page Info")                              \
+    V(CmdCloseCurrentDocument, "Close Current Document")                  \
     V(CmdToggleZoom, "Toggle Zoom")                                       \
-    V(CmdRotateLeft, "Rotate left")                                       \
-    V(CmdRotateRight, "Rotate right")                                     \
-    V(CmdNavigateBack, "Navigate back")                                   \
-    V(CmdNavigateForward, "Navigate forward")                             \
-    V(CmdShowCursorPosition, "Show cursor position")                      \
-    V(CmdOpenNextFileInFolder, "Open next file in folder")                \
-    V(CmdOpenPrevFileInFolder, "Open prev file in folder")                \
-    V(CmdCommandPalette, "Command Palette")
+    V(CmdRotateLeft, "Rotate Left")                                       \
+    V(CmdRotateRight, "Rotate Right")                                     \
+    V(CmdNavigateBack, "Navigate Back")                                   \
+    V(CmdNavigateForward, "Navigate Forward")                             \
+    V(CmdShowCursorPosition, "Show Cursor Position")                      \
+    V(CmdOpenNextFileInFolder, "Open Next File In Folder")                \
+    V(CmdOpenPrevFileInFolder, "Open Previous File In Folder")            \
+    V(CmdCommandPalette, "Command Palette")                               \
+    V(CmdNone, "Do nothing")
 
 // order of CreateAnnot* must be the same as enum AnnotationType
 /*

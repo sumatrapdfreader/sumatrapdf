@@ -492,8 +492,8 @@ static void CreateFindBox(WindowInfo* win, HFONT hfont, int iconDy) {
     DWORD exStyle = WS_EX_STATICEDGE;
     int dy = iconDy + 2;
     Size textSize = HwndMeasureText(win->hwndFrame, L"M", hfont);
-    HWND findBg = CreateWindowEx(exStyle, WC_STATIC, L"", style, 0, 1, findBoxDx, dy, p,
-                                 (HMENU) nullptr, hmod, nullptr);
+    HWND findBg =
+        CreateWindowEx(exStyle, WC_STATIC, L"", style, 0, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
 
     int dx = findBoxDx - 2 * GetSystemMetrics(SM_CXEDGE);
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
@@ -738,7 +738,6 @@ void CreateToolbar(WindowInfo* win) {
     if (iconSize == kDefaultIconSize) {
         // scale if default size
         iconSize = DpiScale(hwndParent, iconSize);
-
     }
     // icon sizes must be multiple of 4 or else they are sheared
     // TODO: I must be doing something wrong, any size should be ok

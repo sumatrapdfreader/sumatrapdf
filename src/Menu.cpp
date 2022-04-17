@@ -794,7 +794,7 @@ static MenuDef menuDefContext[] = {
     },
     {
         _TRN("E&xit Fullscreen"),
-        CmdExitFullScreen,
+        CmdToggleFullscreen, // only seen in full-screen mode
     },
     {
         nullptr,
@@ -1755,7 +1755,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     bool isFullScreen = win->isFullScreen || win->presentation;
     if (!isFullScreen) {
-        win::menu::Remove(popup, CmdExitFullScreen);
+        win::menu::Remove(popup, CmdToggleFullscreen);
     }
     SetMenuStateForSelection(tab, popup);
 
@@ -1832,7 +1832,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdToggleScrollbars:
         case CmdSaveAnnotations:
         case CmdFavoriteAdd:
-        case CmdExitFullScreen:
+        case CmdToggleFullscreen:
             // handle in FrameOnCommand() in SumatraPDF.cpp
             HwndSendCommand(win->hwndFrame, cmd);
             break;

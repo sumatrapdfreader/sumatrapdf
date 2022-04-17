@@ -4636,10 +4636,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleFullScreen(win);
             break;
 
-        case CmdExitFullScreen:
-            ExitFullScreen(win);
-            break;
-
         case CmdViewRotateLeft:
             if (win->AsFixed()) {
                 win->AsFixed()->RotateBy(-90);
