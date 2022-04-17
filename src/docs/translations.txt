@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-03ad6e5c9cf345c57d800ce0a544cc8f8e8de134
+7efc8f72080e7953370d855e395d358f9d1540ce
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -387,7 +387,7 @@ ca-xv:&Descarta
 ca:&Descarta
 cn:取消(&D)
 co:&Scartà i cambiamenti
-de:Verwerfen
+de:&Änderungen verwerfen
 el:Απόρριψη
 es:&Descartar
 et:&Loobu muudatustest
@@ -1398,7 +1398,7 @@ uz:&Hujjatni ochish
 vn:Mở tập tin
 :&Open...
 cn:打开(&O)...
-de:Öffnen
+de:&Öffnen...
 nl:&Openen
 pl:&Otwórz...
 :&Options
@@ -9088,17 +9088,17 @@ uz:Qidirish:
 vn:Tìm kiếm:
 :Fit &Content
 cn:适合内容(&C)
-de:Orginalgröße
+de:An &Inhalt anpassen
 nl:&Inhoud Aanpassen
 pl:Dopasuj do &zawartości
 :Fit &Page
 cn:适合页面(&P)
-de:Seitenhöhe
+de:An &Seite anpassen
 nl:&Pagina Aanpassen
 pl:Dopasuj do s&trony
 :Fit &Width
 cn:适合宽度(&W)
-de:Seitenbreite
+de:An Fenster&breite anpassen
 nl:&Breedte Aanpassen
 pl:Dopasuj do sz&erokości
 :Fit Content
@@ -12813,7 +12813,7 @@ uz:PDF hujjatlari
 vn:Tập tin PDF
 :Pa&ge...
 cn:前往第 ... 页(&G)
-de:Seite
+de:&Seite...
 nl:Pa&gina
 pl:&Strona...
 :Page %s
@@ -13488,7 +13488,7 @@ uz:Postscript hujjatlari
 vn:Tập tin Postscript
 :Pr&esentation
 cn:幻灯片(&E)
-de:Präsentation
+de:Pr&äsentation
 nl:Pr&esentatie
 pl:&Prezentacja
 :Previous Page
@@ -14075,7 +14075,7 @@ uz:Chop etish muammosi.
 vn:Lỗi in.
 :Re&name...
 cn:重命名(&N)...
-de:Umbenennen
+de:Umbe&nennen...
 nl:Her&noem
 pl:Zmień &nazwę...
 :Rect: x=%d y=%d dx=%d dy=%d
@@ -14390,7 +14390,7 @@ uz:Yangi nom
 vn:Đổi tên thành
 :Rotate &Left
 cn:逆时针旋转(&L)
-de:Gegen UZS drehen
+de:&Gegen UZS drehen
 nl:&Linksom Roteren
 pl:Obróć w &lewo
 :Rotate &Left\tCtrl+Shift+-
@@ -14466,7 +14466,7 @@ uz:&Chapga burish\tCtrl+Shift+-
 vn:Quay trái\tCtrl+Shift+-
 :Rotate &Right
 cn:顺时针旋转(&R)
-de:Im UZS drehen
+de:Im &UZS drehen
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
 :Rotate &Right\tCtrl+Shift++
@@ -14672,7 +14672,7 @@ tw:儲存內嵌的檔案...
 uk:Зберегти вкладений файл...
 :Save S&hortcut...
 cn:保存快捷方式(&H)...
-de:Verknüpfung speichern
+de:Verknüpfung speichern...
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
 :Save annotations?
