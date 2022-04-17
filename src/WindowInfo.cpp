@@ -350,6 +350,12 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
         WCHAR* tmpPath = CleanupFileURL(pdf->path);
+        // heuristic: replace %20 with ' '
+        if (!file::Exists(tmpPath) && (str::Find(tmpPath, L"%20") != nullptr)) {
+            WCHAR* tmp = str::Replace(tmpPath, L"%20", L" ");
+            str::Free(tmpPath);
+            tmpPath = tmp;
+        }
         LaunchFile(tmpPath, dest);
         str::Free(tmpPath);
         return;
