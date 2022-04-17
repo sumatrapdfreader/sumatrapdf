@@ -46,6 +46,15 @@ const (
 	cppcheckLogFile = "cppcheck.out.txt"
 )
 
+func detectCppcheckExe() string {
+	// TODO: better detection logic
+	path := `c:\Program Files\Cppcheck\cppcheck.exe`
+	if pathExists(path) {
+		return path
+	}
+	return "cppcheck.exe"
+}
+
 func runCppCheck(all bool) {
 	// -q : quiet, doesn't print progress report
 	// -v : prints more info about the error
@@ -63,7 +72,7 @@ func runCppCheck(all bool) {
 	// "-I", winSdkIncludeDir
 	// "-D__RPCNDR_H_VERSION__=440"
 
-	args := []string{"--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-DPRE_RELEASE_VER=3.3", "-q", "-v"}
+	args := []string{"--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-DPRE_RELEASE_VER=3.4", "-q", "-v"}
 	if all {
 		args = append(args, "--enable=style")
 		args = append(args, "--suppress=constParameter")
@@ -88,7 +97,8 @@ func runCppCheck(all bool) {
 		args = append(args, "--suppress=knownConditionTrueFalse")
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
-	cmd = exec.Command("cppcheck", args...)
+	cppcheckExe := detectCppcheckExe()
+	cmd = exec.Command(cppcheckExe, args...)
 	os.Remove(cppcheckLogFile)
 	err := runCmdShowProgressAndLog(cmd, cppcheckLogFile)
 	must(err)
