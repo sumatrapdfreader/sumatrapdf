@@ -119,8 +119,9 @@ void SetMsg(const WCHAR* msg, Color color) {
 }
 
 WCHAR* GetExistingInstallationDir() {
+    log("GetExistingInstallationDir()\n");
     AutoFreeWstr regPathUninst = GetRegPathUninst(GetAppNameTemp());
-    AutoFreeWstr dir = ReadRegStr2(regPathUninst, L"InstallLocation");
+    AutoFreeWstr dir = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
     if (!dir) {
         return nullptr;
     }
@@ -142,11 +143,14 @@ WCHAR* GetExistingInstallationFilePath(const WCHAR* name) {
 }
 
 WCHAR* GetInstallDirTemp() {
+    logf(L"GetInstallDirTemp() => %s\n", gCli->installDir);
     return gCli->installDir;
 }
 
 WCHAR* GetInstallationFilePath(const WCHAR* name) {
-    return path::Join(gCli->installDir, name);
+    auto res = path::Join(gCli->installDir, name);
+    logf(L"GetInstallationFilePath(%s) = > %s\n", name, res);
+    return res;
 }
 
 WCHAR* GetInstalledExePath() {
@@ -171,7 +175,7 @@ WCHAR* GetShortcutPath(int csidl) {
 #endif
 
 WCHAR* GetInstalledBrowserPluginPath() {
-    return ReadRegStr2(kRegPathPlugin, L"Path");
+    return LoggedReadRegStr2(kRegPathPlugin, L"Path");
 }
 
 static bool SkipProcessByID(DWORD procID) {
@@ -246,19 +250,20 @@ bool IsSearchFilterInstalled() {
 bool IsPreviewerInstalled() {
     const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
     AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    bool isInstalled =  str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
+    bool isInstalled = str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
     logf("IsPreviewerInstalled() isInstalled=%d\n", isInstalled);
     return isInstalled;
 }
 
 void RegisterSearchFilter(bool silent) {
     AutoFreeWstr dllPath = GetInstallationFilePath(SEARCH_FILTER_DLL_NAME);
+    logf(L"RegisterSearchFilter(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     bool ok = RegisterServerDLL(dllPath);
     if (ok) {
-        logf(L"registered search filter in dll '%s'\n", dllPath.Get());
+        log("  did registe\n");
         return;
     }
-    logf(L"failed to register search filter in dll '%s'\n", dllPath.Get());
+    log("  failed to register\n");
     if (silent) {
         return;
     }
@@ -266,14 +271,14 @@ void RegisterSearchFilter(bool silent) {
 }
 
 void UnRegisterSearchFilter(bool silent) {
-    logf("UnRegisterSearchFilter(silent=%d)\n", silent);
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(SEARCH_FILTER_DLL_NAME);
+    logf("UnRegisterSearchFilter(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
-        logf(L"  unregistered search filter in dll '%s'\n", dllPath.Get());
+        log(L"  did unregister\n");
         return;
     }
-    logf(L"  failed to unregister search filter in dll '%s'\n", dllPath.Get());
+    log("  failed to unregister\n");
     if (silent) {
         return;
     }
@@ -281,31 +286,31 @@ void UnRegisterSearchFilter(bool silent) {
 }
 
 void RegisterPreviewer(bool silent) {
-    logf("RegisterPreviewer(silent=%d)\n", silent);
     AutoFreeWstr dllPath = GetInstallationFilePath(PREVIEW_DLL_NAME);
+    logf("RegisterPreviewer(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     bool ok = RegisterServerDLL(dllPath);
     if (ok) {
-        logf(L"  registered previewer in dll '%s'\n", dllPath.Get());
+        log("  did register\n");
         return;
     }
     if (silent) {
         return;
     }
-    logf(L"  failed to register previewer in dll '%s'\n", dllPath.Get());
+    log("  failed to register\n");
     NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
 void UnRegisterPreviewer(bool silent) {
-    logf("UnRegisterPreviewer(silent=%d)\n", silent);
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(PREVIEW_DLL_NAME);
+    logf("UnRegisterPreviewer(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
-        logf(L"  unregistered previewer in dll '%s'\n", dllPath.Get());
+        log("  did unregister\n");
         return;
     }
-    logf(L" failed to unregister previewer in dll '%s'\n", dllPath.Get());
+    log(" failed to unregister\n");
     if (silent) {
         return;
     }

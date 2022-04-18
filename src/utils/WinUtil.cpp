@@ -359,6 +359,16 @@ WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
     return res;
 }
 
+WCHAR* LoggedReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
+    HKEY keySub1 = HKEY_LOCAL_MACHINE;
+    HKEY keySub2 = HKEY_CURRENT_USER;
+    WCHAR* res = LoggedReadRegStr(keySub1, keyName, valName);
+    if (!res) {
+        res = LoggedReadRegStr(keySub2, keyName, valName);
+    }
+    return res;
+}
+
 bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
     DWORD cbData = (DWORD)(str::Len(value) + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_SZ, (const void*)value, cbData);
@@ -382,7 +392,6 @@ bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWOR
     return ERROR_SUCCESS == res;
 }
 
-
 bool LoggedWriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
     auto res = WriteRegDWORD(keySub, keyName, valName, value);
     logf(L"WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(keySub), keyName, valName, (int)value, res);
@@ -399,7 +408,7 @@ bool CreateRegKey(HKEY keySub, const WCHAR* keyName) {
     return true;
 }
 
-const char *RegKeyNameTemp(HKEY key) {
+const char* RegKeyNameTemp(HKEY key) {
     if (key == HKEY_LOCAL_MACHINE) {
         return "HKEY_LOCAL_MACHINE";
     }
@@ -412,7 +421,7 @@ const char *RegKeyNameTemp(HKEY key) {
     return "RegKeyName: unknown key";
 }
 
-const WCHAR *RegKeyNameWTemp(HKEY key) {
+const WCHAR* RegKeyNameWTemp(HKEY key) {
     auto k = RegKeyNameTemp(key);
     return ToWstrTemp(k);
 }

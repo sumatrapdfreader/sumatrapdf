@@ -138,7 +138,7 @@ static void StartInstallerLogging() {
 }
 
 bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
-    logf(L"ExtractFiles: extracting to dir '%s'\n", destDir);
+    logf(L"ExtractFiles(): dir '%s'\n", destDir);
     lzma::FileInfo* fi;
     u8* uncompressed;
 
@@ -166,7 +166,7 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
             str::Free(msg);
             return false;
         }
-        logf(L"Extracted '%s'\n", fileName.Get());
+        logf(L"  extracted '%s'\n", fileName.Get());
         ProgressStep();
     }
 
@@ -174,6 +174,7 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
 }
 
 static bool CreateInstallationDirectory() {
+    log("CreateInstallationDirectory()\n");
     bool ok = dir::CreateAll(gCli->installDir);
     if (!ok) {
         LogLastError();
@@ -183,6 +184,7 @@ static bool CreateInstallationDirectory() {
 }
 
 static bool CopySelfToDir(const WCHAR* destDir) {
+    logf(L"CopySelfToDir(%s)\n", destDir);
     auto exePath = GetExePathTemp();
     auto exeName = GetExeNameTemp();
     auto dstPath = path::Join(destDir, exeName);
@@ -195,14 +197,15 @@ static bool CopySelfToDir(const WCHAR* destDir) {
     file::DeleteZoneIdentifier(dstPathA);
     str::Free(dstPath);
     if (!ok) {
-        logf(L"CopySelfToDir: failed to cpoy '%s' to dir '%s'\n", exePath.Get(), destDir);
+        logf(L"  failed to copy '%s' to dir '%s'\n", exePath.Get(), destDir);
         return false;
     }
-    logf(L"CopySelfToDir: copied '%s' to dir '%s'\n", exePath.Get(), destDir);
+    logf(L"  copied '%s' to dir '%s'\n", exePath.Get(), destDir);
     return true;
 }
 
 static void CopySettingsFile() {
+    log("CopySettingsFile()\n");
     // up to 3.1.2 we stored settings in %APPDATA%
     // after that we use %LOCALAPPDATA%
     // copy the settings from old directory
@@ -226,11 +229,12 @@ static void CopySettingsFile() {
     bool failIfExists = true;
     // don't care if it fails or not
     file::Copy(dstPath.Get(), srcPath.Get(), failIfExists);
-    logf(L"CopySettingsFile: copied '%s' to '%s'\n", srcPath.Get(), dstPath.Get());
+    logf(L"  copied '%s' to '%s'\n", srcPath.Get(), dstPath.Get());
 }
 
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(const WCHAR* dir) {
+    logf(L"GetDirSize(%s)\n", dir);
     AutoFreeWstr dirPattern = path::Join(dir, L"*");
     WIN32_FIND_DATA findData;
 
@@ -261,6 +265,7 @@ static WCHAR* GetInstallDate() {
 }
 
 static bool WriteUninstallerRegistryInfo(HKEY hkey) {
+    logf("WriteUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
     AutoFreeWstr installedExePath = GetInstallationFilePath(GetExeNameTemp());
@@ -284,18 +289,18 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     }
     DWORD size = GetDirSize(gCli->installDir) / 1024;
     // size of installed directory after copying files
-    ok &= WriteRegDWORD(hkey, regPathUninst, L"EstimatedSize", size);
+    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"EstimatedSize", size);
     // current date as YYYYMMDD
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"InstallDate", installDate);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"InstallLocation", installDir);
-    ok &= WriteRegDWORD(hkey, regPathUninst, L"NoModify", 1);
-    ok &= WriteRegDWORD(hkey, regPathUninst, L"NoRepair", 1);
+    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"NoModify", 1);
+    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"NoRepair", 1);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"Publisher", TEXT(PUBLISHER_STR));
     // command line for uninstaller
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"UninstallString", uninstallCmdLine);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLUpdateInfo",
-                      L"https://www.sumatrapdfreader.org/docs/Version-history.html");
+                            L"https://www.sumatrapdfreader.org/docs/Version-history.html");
 
     return ok;
 }
@@ -313,6 +318,7 @@ static bool WriteUninstallerRegistryInfos() {
 
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
+    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
     const WCHAR* exeName = GetExeNameTemp();
@@ -378,6 +384,7 @@ static void CreateButtonRunSumatra(HWND hwndParent) {
 }
 
 static bool CreateAppShortcut(int csidl) {
+    logf("CreateAppShortcut(csidl=%d)\n", csidl);
     AutoFreeWstr shortcutPath = GetShortcutPath(csidl);
     if (!shortcutPath.Get()) {
         return false;
@@ -389,11 +396,11 @@ static bool CreateAppShortcut(int csidl) {
 static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
 
 static void CreateAppShortcuts() {
+    logf("CreateAppShortcuts()\n");
     for (size_t i = 0; i < dimof(shortcutDirs); i++) {
         int csidl = shortcutDirs[i];
         CreateAppShortcut(csidl);
     }
-    log("did create app shortcuts\n");
 }
 
 static DWORD WINAPI InstallerThread(__unused LPVOID data) {
@@ -738,15 +745,16 @@ static void PositionInstallButton(Button* b) {
 
 // caller needs to str::Free()
 static WCHAR* GetInstallationDir(bool forAllUsers) {
+    logf(L"GetInstallationDir(forAllUsers=%d)\n", (int)forAllUsers);
     const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr regPath = GetRegPathUninst(appName);
-    AutoFreeWstr dir = ReadRegStr2(regPath, L"InstallLocation");
+    AutoFreeWstr dir = LoggedReadRegStr2(regPath, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));
         }
         if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
-            logf(L"GetInstallationDir: got '%s' from InstallLocation registry\n", dir.Get());
+            logf(L"  got '%s' from InstallLocation registry\n", dir.Get());
             return dir.StealData();
         }
     }
@@ -755,6 +763,7 @@ static WCHAR* GetInstallationDir(bool forAllUsers) {
         WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, true).Get();
         if (dataDir) {
             WCHAR* res = path::Join(dataDir, appName);
+            logf(L"  got '%s' by GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", res);
             return res;
         }
     }
@@ -763,15 +772,19 @@ static WCHAR* GetInstallationDir(bool forAllUsers) {
     WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
     if (dataDir) {
         WCHAR* res = path::Join(dataDir, appName);
+        logf(L"  got '%s' by GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", res);
         return res;
     }
 
     // fall back to C:\ as a last resort
-    return str::Join(L"C:\\", appName);
+    auto res = str::Join(L"C:\\", appName);
+    logf(L"  got %s as last resort\n", res);
+    return res;
 }
 
 void ForAllUsersStateChanged() {
     bool checked = gCheckboxForAllUsers->IsChecked();
+    logf("ForAllUsersStateChanged() to %d\n", (int)checked);
     Button_SetElevationRequiredState(gButtonInstall->hwnd, checked);
     PositionInstallButton(gButtonInstall);
     gCli->allUsers = checked;
@@ -1108,7 +1121,9 @@ static bool OpenEmbeddedFilesArchive() {
 }
 
 bool ExtractInstallerFiles() {
+    log("ExtractInstallerFiles()\n");
     if (!CreateInstallationDirectory()) {
+        log("  CreateInstallationDirectory() failed\n");
         return false;
     }
 

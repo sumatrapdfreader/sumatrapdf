@@ -78,7 +78,6 @@ static bool RemoveUninstallerRegistryInfo() {
     return ok1 || ok2;
 }
 
-
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     logf("UnregisterFromBeingDefaultViewer()\n");

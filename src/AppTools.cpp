@@ -24,7 +24,7 @@ bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
     const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr regPathUninst = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
-    AutoFreeWstr installedPath = ReadRegStr2(regPathUninst, L"InstallLocation");
+    AutoFreeWstr installedPath = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
     if (!installedPath) {
         return false;
     }
@@ -354,14 +354,14 @@ static struct {
     {"notepad++.exe", "-n%l \"%f\"", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Notepad++", nullptr},
     {"notepad++.exe", "-n%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Notepad++",
      L"DisplayIcon"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 3_is1",
-     L"InstallLocation"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 3_is1",
-     L"DisplayIcon"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 2_is1",
-     L"InstallLocation"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 2_is1",
-     L"DisplayIcon"},
+    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE,
+     kRegWinCurrentVer L"\\Uninstall\\Sublime Text 3_is1", L"InstallLocation"},
+    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE,
+     kRegWinCurrentVer L"\\Uninstall\\Sublime Text 3_is1", L"DisplayIcon"},
+    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE,
+     kRegWinCurrentVer L"\\Uninstall\\Sublime Text 2_is1", L"InstallLocation"},
+    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE,
+     kRegWinCurrentVer L"\\Uninstall\\Sublime Text 2_is1", L"DisplayIcon"},
     {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
      L"Software\\ToolsCenter\\TeXnicCenterNT", L"AppPath"},
     {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,

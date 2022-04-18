@@ -44,13 +44,14 @@ void LogLastError(DWORD err = 0);
 void DbgOutLastError(DWORD err = 0);
 
 // registry
-const char *RegKeyNameTemp(HKEY key);
-const WCHAR *RegKeyNameWTemp(HKEY key);
+const char* RegKeyNameTemp(HKEY key);
+const WCHAR* RegKeyNameWTemp(HKEY key);
 bool RegKeyExists(HKEY keySub, const WCHAR* keyName);
 WCHAR* ReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
 WCHAR* LoggedReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
 char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
 WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName);
+WCHAR* LoggedReadRegStr2(const WCHAR* keyName, const WCHAR* valName);
 bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value);
 bool LoggedWriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value);
 bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value);
@@ -305,4 +306,3 @@ void TbSetPadding(HWND, int padX, int padY);
 void TbGetMetrics(HWND hwnd, TBMETRICS* metrics);
 void TbSetMetrics(HWND hwnd, TBMETRICS* metrics);
 void TbGetRect(HWND hwnd, int buttonId, RECT* rc);
-
