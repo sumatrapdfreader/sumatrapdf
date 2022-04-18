@@ -27,6 +27,7 @@
 #include "Translations.h"
 
 #include "AppPrefs.h"
+#include "AppTools.h"
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
 #include "Flags.h"
@@ -107,6 +108,33 @@ static void OnButtonExit() {
 static void CreateButtonExit(HWND hwndParent) {
     gButtonExit = CreateDefaultButton(hwndParent, _TR("Close"));
     gButtonExit->onClicked = OnButtonExit;
+}
+
+char* GetInstallerLogPath() {
+    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    if (!dir.Get()) {
+        return nullptr;
+    }
+    WCHAR* path = path::Join(dir, L"sumatra-install-log.txt", nullptr);
+    auto pathA = strconv::WstrToUtf8(path);
+    str::Free(path);
+    return pathA;
+}
+
+static void ShowInstallerLog() {
+    if (!gInstallerLogPath) {
+        return;
+    }
+    WCHAR* path = ToWstrTemp(gInstallerLogPath);
+    LaunchFile(path, nullptr, L"open");
+}
+
+static void StartInstallerLogging() {
+    gInstallerLogPath = GetInstallerLogPath();
+    if (!gInstallerLogPath) {
+        return;
+    }
+    StartLogToFile(gInstallerLogPath, true);
 }
 
 bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
@@ -244,29 +272,29 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr regPathUninst = GetRegPathUninst(appName);
     // path to installed executable (or "$path,0" to force the first icon)
-    ok &= WriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
-    ok &= WriteRegStr(hkey, regPathUninst, L"DisplayName", appName);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", appName);
     // version format: "1.2"
-    ok &= WriteRegStr(hkey, regPathUninst, L"DisplayVersion", CURR_VERSION_STR);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsWindowsVistaOrGreater()) {
         auto key = str::JoinTemp(appName, L" ", CURR_VERSION_STR);
-        ok &= WriteRegStr(hkey, regPathUninst, L"DisplayName", key);
+        ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", key);
     }
     DWORD size = GetDirSize(gCli->installDir) / 1024;
     // size of installed directory after copying files
     ok &= WriteRegDWORD(hkey, regPathUninst, L"EstimatedSize", size);
     // current date as YYYYMMDD
-    ok &= WriteRegStr(hkey, regPathUninst, L"InstallDate", installDate);
-    ok &= WriteRegStr(hkey, regPathUninst, L"InstallLocation", installDir);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"InstallDate", installDate);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"InstallLocation", installDir);
     ok &= WriteRegDWORD(hkey, regPathUninst, L"NoModify", 1);
     ok &= WriteRegDWORD(hkey, regPathUninst, L"NoRepair", 1);
-    ok &= WriteRegStr(hkey, regPathUninst, L"Publisher", TEXT(PUBLISHER_STR));
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"Publisher", TEXT(PUBLISHER_STR));
     // command line for uninstaller
-    ok &= WriteRegStr(hkey, regPathUninst, L"UninstallString", uninstallCmdLine);
-    ok &= WriteRegStr(hkey, regPathUninst, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
-    ok &= WriteRegStr(hkey, regPathUninst, L"URLUpdateInfo",
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"UninstallString", uninstallCmdLine);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLUpdateInfo",
                       L"https://www.sumatrapdfreader.org/docs/Version-history.html");
 
     return ok;
@@ -291,7 +319,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     AutoFreeWstr exePath = GetInstalledExePath();
     if (HKEY_LOCAL_MACHINE == hkey) {
         AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
-        ok &= WriteRegStr(hkey, key, nullptr, exePath);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, exePath);
     }
     AutoFreeWstr REG_CLASSES_APPS = GetRegClassesApps(GetAppNameTemp());
 
@@ -299,22 +327,22 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     AutoFreeWstr iconPath = str::Join(exePath, L",1");
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\DefaultIcon");
-        ok &= WriteRegStr(hkey, key, nullptr, iconPath);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
     }
     AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Open\\Command");
-        ok &= WriteRegStr(hkey, key, nullptr, cmdPath);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
     }
     AutoFreeWstr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
-        ok &= WriteRegStr(hkey, key, nullptr, printPath);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, printPath);
     }
     AutoFreeWstr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\PrintTo\\Command");
-        ok &= WriteRegStr(hkey, key, nullptr, printToPath);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
     }
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
@@ -322,9 +350,9 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     ok &= ListAsDefaultProgramPreWin10(exeName, GetSupportedExts(), hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
-    ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
+    ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, L"Content Type", L"application/pdf");
     const WCHAR* key = L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
-    ok &= WriteRegStr(hkey, key, L"Extension", L".pdf");
+    ok &= LoggedWriteRegStr(hkey, key, L"Extension", L".pdf");
 
     return ok;
 }
@@ -356,14 +384,6 @@ static bool CreateAppShortcut(int csidl) {
     }
     AutoFreeWstr installedExePath = GetInstalledExePath();
     return CreateShortcut(shortcutPath, installedExePath);
-}
-
-static void ShowInstallerLog() {
-    if (!gInstallerLogPath) {
-        return;
-    }
-    WCHAR* path = ToWstrTemp(gInstallerLogPath);
-    LaunchFile(path, nullptr, L"open");
 }
 
 static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
@@ -775,7 +795,7 @@ static bool InstallerOnWmCommand(WPARAM wp) {
 #if ENABLE_REGISTER_DEFAULT
 /* Caller needs to free() the result. */
 static WCHAR* GetDefaultPdfViewer() {
-    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID);
+    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", kRegProgId);
     if (buf) {
         return buf.StealData();
     }
@@ -1106,26 +1126,6 @@ bool ExtractInstallerFiles() {
     return ExtractFiles(&gArchive, gCli->installDir);
 }
 
-static char* PickInstallerLogPath() {
-    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    if (!dir.Get()) {
-        return nullptr;
-    }
-    WCHAR* path = path::Join(dir, L"sumatra-install-log.txt", nullptr);
-    auto pathA = strconv::WstrToUtf8(path);
-    str::Free(path);
-    return pathA;
-}
-
-static void StartInstallerLogging() {
-    gInstallerLogPath = PickInstallerLogPath();
-    if (!gInstallerLogPath) {
-        return;
-    }
-    StartLogToFile(gInstallerLogPath, true);
-    logf("------------- Starting SumatraPDF installation\n");
-}
-
 // returns true if should exit the installer
 bool MaybeMismatchedOSDialog(HWND hwndParent) {
     if (IsProcessAndOsArchSame()) {
@@ -1179,10 +1179,11 @@ int RunInstaller() {
     if (gCli->log) {
         StartInstallerLogging();
     }
+    logf("------------- Starting SumatraPDF installation\n");
     if (!gCli->installDir) {
         gCli->installDir = GetInstallationDir(gCli->allUsers);
     }
-    logf(L"RunInstaller: '%s' installing into dir '%s'\n", GetExePathTemp().Get(), gCli->installDir);
+    logf(L"Running'%s' installing into dir '%s'\n", GetExePathTemp().Get(), gCli->installDir);
 
     if (!gCli->silent && MaybeMismatchedOSDialog(nullptr)) {
         return 0;

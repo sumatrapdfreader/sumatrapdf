@@ -119,8 +119,8 @@ void SetMsg(const WCHAR* msg, Color color) {
 }
 
 WCHAR* GetExistingInstallationDir() {
-    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppNameTemp());
-    AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
+    AutoFreeWstr regPathUninst = GetRegPathUninst(GetAppNameTemp());
+    AutoFreeWstr dir = ReadRegStr2(regPathUninst, L"InstallLocation");
     if (!dir) {
         return nullptr;
     }
@@ -164,8 +164,14 @@ WCHAR* GetShortcutPath(int csidl) {
     return path::Join(dir, lnkName);
 }
 
+#ifndef _WIN64
+#define kRegPathPlugin L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin"
+#else
+#define kRegPathPlugin L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64"
+#endif
+
 WCHAR* GetInstalledBrowserPluginPath() {
-    return ReadRegStr2(REG_PATH_PLUGIN, L"Path");
+    return ReadRegStr2(kRegPathPlugin, L"Path");
 }
 
 static bool SkipProcessByID(DWORD procID) {
@@ -211,6 +217,7 @@ static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
 #define kBrowserPluginName L"npPdfViewer.dll"
 
 void UninstallBrowserPlugin() {
+    log("UninstallBrowserPlugin()\n");
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(kBrowserPluginName);
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
@@ -221,23 +228,27 @@ void UninstallBrowserPlugin() {
     }
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
-        log("did uninstall browser plugin\n");
+        log("  did uninstall browser plugin\n");
         return;
     }
-    log("failed to uninstall browser plugin\n");
+    log("  failed to uninstall browser plugin\n");
     NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
 
 bool IsSearchFilterInstalled() {
     const WCHAR* key = L".pdf\\PersistentHandler";
-    AutoFreeWstr iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    return str::EqI(iid, SZ_PDF_FILTER_HANDLER);
+    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    bool isInstalled = str::EqI(iid, SZ_PDF_FILTER_HANDLER);
+    logf("IsSearchFilterInstalled() isInstalled=%d\n", isInstalled);
+    return isInstalled;
 }
 
 bool IsPreviewerInstalled() {
     const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    AutoFreeWstr iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    return str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
+    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    bool isInstalled =  str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
+    logf("IsPreviewerInstalled() isInstalled=%d\n", isInstalled);
+    return isInstalled;
 }
 
 void RegisterSearchFilter(bool silent) {
@@ -255,13 +266,14 @@ void RegisterSearchFilter(bool silent) {
 }
 
 void UnRegisterSearchFilter(bool silent) {
+    logf("UnRegisterSearchFilter(silent=%d)\n", silent);
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(SEARCH_FILTER_DLL_NAME);
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
-        logf(L"unregistered search filter in dll '%s'\n", dllPath.Get());
+        logf(L"  unregistered search filter in dll '%s'\n", dllPath.Get());
         return;
     }
-    logf(L"failed to unregister search filter in dll '%s'\n", dllPath.Get());
+    logf(L"  failed to unregister search filter in dll '%s'\n", dllPath.Get());
     if (silent) {
         return;
     }
@@ -269,29 +281,31 @@ void UnRegisterSearchFilter(bool silent) {
 }
 
 void RegisterPreviewer(bool silent) {
+    logf("RegisterPreviewer(silent=%d)\n", silent);
     AutoFreeWstr dllPath = GetInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     bool ok = RegisterServerDLL(dllPath);
     if (ok) {
-        logf(L"registered previewer in dll '%s'\n", dllPath.Get());
+        logf(L"  registered previewer in dll '%s'\n", dllPath.Get());
         return;
     }
     if (silent) {
         return;
     }
-    logf(L"failed to register previewer in dll '%s'\n", dllPath.Get());
+    logf(L"  failed to register previewer in dll '%s'\n", dllPath.Get());
     NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
 void UnRegisterPreviewer(bool silent) {
+    logf("UnRegisterPreviewer(silent=%d)\n", silent);
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
-        logf(L"unregistered previewer in dll '%s'\n", dllPath.Get());
+        logf(L"  unregistered previewer in dll '%s'\n", dllPath.Get());
         return;
     }
-    logf(L"failed to unregister previewer in dll '%s'\n", dllPath.Get());
+    logf(L" failed to unregister previewer in dll '%s'\n", dllPath.Get());
     if (silent) {
         return;
     }
@@ -317,6 +331,7 @@ static bool IsProcWithModule(DWORD processId, const WCHAR* modulePath) {
 }
 
 static bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
+    logf("KillProcWithId(processId=%d)\n", (int)processId);
     BOOL inheritHandle = FALSE;
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
     DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
@@ -341,6 +356,7 @@ static bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
 // If <waitUntilTerminated> is true, will wait until process is fully killed.
 // Returns TRUE if killed a process
 static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bool waitUntilTerminated) {
+    logf(L"KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
     if (!IsProcWithModule(processId, modulePath)) {
         return false;
     }
@@ -385,7 +401,7 @@ int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
     int killCount = 0;
     do {
         if (KillProcWithIdAndModule(pe32.th32ProcessID, modulePath, waitUntilTerminated)) {
-            logf("Killed process with id %d\n", (int)pe32.th32ProcessID);
+            logf("  killed process with id %d\n", (int)pe32.th32ProcessID);
             killCount++;
         }
     } while (Process32Next(hProcSnapshot, &pe32));
@@ -405,6 +421,7 @@ int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
 // that load PdfPreview.dll or PdfFilter.dll (which link to libmupdf.dll)
 // returns false if there are processes and we failed to kill them
 bool KillProcessesUsingInstallation() {
+    log("KillProcessesUsingInstallation()\n");
     AutoFreeWstr dir = GetExistingInstallationDir();
     if (dir.empty()) {
         return true;
@@ -424,9 +441,9 @@ bool KillProcessesUsingInstallation() {
     while (ok) {
         DWORD procID = proc.th32ProcessID;
         if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
-            logf(L"KillProcessesUsingInstallation: attempting to kill process %d '%s'\n", (int)procID, proc.szExeFile);
+            logf(L"  attempting to kill process %d '%s'\n", (int)procID, proc.szExeFile);
             bool didKill = KillProcWithId(procID, true);
-            logf("KillProcessesUsingInstallation: KillProcWithId(%d) returned %d\n", procID, (int)didKill);
+            logf("  KillProcWithId(%d) returned %d\n", procID, (int)didKill);
             if (!didKill) {
                 killedAllProcesses = false;
             }
@@ -440,6 +457,7 @@ bool KillProcessesUsingInstallation() {
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names) {
+    log("ProcessesUsingInstallation()\n");
     AutoFreeWstr dir = GetExistingInstallationDir();
     if (dir.empty()) {
         return;
@@ -514,7 +532,8 @@ void InvalidateFrame() {
 }
 
 bool CheckInstallUninstallPossible(bool silent) {
-    bool ok = KillProcessesUsingInstallation();
+    logf("CheckInstallUninstallPossible(silent=%d)\n", silent);
+    KillProcessesUsingInstallation();
     // logf("CheckInstallUninstallPossible: KillProcessesUsingInstallation() returned %d\n", ok);
 
     // now determine which processes are using installation files
@@ -566,8 +585,6 @@ LetterInfo gLetters[] = {
 };
 // clang-format on
 
-#define SUMATRA_LETTERS_COUNT (dimof(gLetters))
-
 #if 0
 static char RandUppercaseLetter()
 {
@@ -598,8 +615,10 @@ static void SetLettersSumatraUpTo(int n) {
     }
 }
 
+#define kSumatraLettersCount (dimof(gLetters))
+
 static void SetLettersSumatra() {
-    SetLettersSumatraUpTo(SUMATRA_LETTERS_COUNT);
+    SetLettersSumatraUpTo(kSumatraLettersCount);
 }
 
 // an animation that reveals letters one by one
@@ -612,7 +631,7 @@ static FrameTimeoutCalculator* gRevealingLettersAnim = nullptr;
 int gRevealingLettersAnimLettersToShow;
 
 static void RevealingLettersAnimStart() {
-    int framesPerSec = (int)(double(SUMATRA_LETTERS_COUNT) / REVEALING_ANIM_DUR);
+    int framesPerSec = (int)(double(kSumatraLettersCount) / REVEALING_ANIM_DUR);
     gRevealingLettersAnim = new FrameTimeoutCalculator(framesPerSec);
     gRevealingLettersAnimLettersToShow = 0;
     SetLettersSumatraUpTo(0);

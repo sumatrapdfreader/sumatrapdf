@@ -27,18 +27,18 @@ static bool WriteWin10Registry(const WCHAR* appName, const WCHAR* exeName, const
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
     AutoFreeWstr capKey = str::Join(L"SOFTWARE\\", appName, L"\\Capabilities");
-    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
+    ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
     AutoFreeWstr desc = str::Join(appName, L" is a PDF reader.");
-    ok &= WriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
+    ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
     AutoFreeWstr appLongName = str::Join(appName, L" Reader");
-    ok &= WriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
+    ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
     AutoFreeWstr keyAssoc = str::Join(capKey, L"\\FileAssociations");
 
     for (int i = 0; nullptr != extensions[i]; i++) {
         const WCHAR* ext = extensions[i];
-        ok &= WriteRegStr(hkey, keyAssoc, ext, exeName);
+        ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, exeName);
     }
     return ok;
 }

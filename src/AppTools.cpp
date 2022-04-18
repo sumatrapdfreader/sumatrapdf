@@ -16,6 +16,8 @@
 #include "Translations.h"
 #include "Version.h"
 
+#include "utils/Log.h"
+
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
@@ -197,50 +199,50 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
         return;
     }
 
-    AutoFreeWstr REG_CLASSES_APP = str::Join(LR"(Software\Classes\)", GetAppNameTemp());
+    AutoFreeWstr regClassesApp = str::Join(LR"(Software\Classes\)", GetAppNameTemp());
 
     AutoFreeWstr prevHandler;
     // Remember the previous default app for the Uninstaller
-    prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
+    prevHandler.Set(LoggedReadRegStr(hkey, kRegClassesPdf, nullptr));
 
     bool ok = false;
     const WCHAR* appName = GetAppNameTemp();
     if (prevHandler && !str::Eq(prevHandler, appName)) {
-        WriteRegStr(hkey, REG_CLASSES_APP, L"previous.pdf", prevHandler);
+        LoggedWriteRegStr(hkey, regClassesApp, L"previous.pdf", prevHandler);
     }
 
-    WriteRegStr(hkey, REG_CLASSES_APP, nullptr, _TR("PDF Document"));
+    LoggedWriteRegStr(hkey, regClassesApp, nullptr, _TR("PDF Document"));
     AutoFreeWstr icon_path = str::Join(exePath, L",1");
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APP, LR"(\DefaultIcon)");
-        WriteRegStr(hkey, key, nullptr, icon_path);
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\DefaultIcon)");
+        LoggedWriteRegStr(hkey, key, nullptr, icon_path);
     }
 
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APP, LR"(\shell)");
-        WriteRegStr(hkey, key, nullptr, L"open");
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell)");
+        LoggedWriteRegStr(hkey, key, nullptr, L"open");
     }
 
     // "${exePath}" "%1" %*
     AutoFreeWstr cmdPath = str::Format(LR"("%s" "%%1" %%*)", exePath.Get());
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APP, LR"(\shell\open\command)");
-        ok = WriteRegStr(hkey, key, nullptr, cmdPath);
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell\open\command)");
+        ok = LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
     }
 
     // register for printing: "${exePath}" -print-to-default "%1"
     cmdPath.Set(str::Format(LR"("%s" -print-to-default "%%1")", exePath.Get()));
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APP, LR"(\shell\print\command)");
-        WriteRegStr(hkey, key, nullptr, cmdPath);
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell\print\command)");
+        LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
     }
 
     // register for printing to specific printer:
     // "${exePath}" -print-to "%2" "%1"
     cmdPath.Set(str::Format(LR"("%s" -print-to "%%2" "%%1")", exePath.Get()));
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APP, LR"(\shell\printto\command)");
-        WriteRegStr(hkey, key, nullptr, cmdPath);
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell\printto\command)");
+        LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
     };
 
     // Only change the association if we're confident, that we've registered ourselves well enough
@@ -248,14 +250,14 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
         return;
     }
 
-    WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, appName);
+    LoggedWriteRegStr(hkey, kRegClassesPdf, nullptr, appName);
     // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
-    WriteRegStr(hkey, REG_CLASSES_PDF LR"(\OpenWithProgids)", appName, L"");
+    LoggedWriteRegStr(hkey, kRegClassesPdf LR"(\OpenWithProgids)", appName, L"");
     if (hkey == HKEY_CURRENT_USER) {
-        WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, L"Progid", appName);
+        LoggedWriteRegStr(hkey, kRegExplorerPdfExt, L"Progid", appName);
         CrashIf(hkey == nullptr); // to appease prefast
-        SHDeleteValue(hkey, REG_EXPLORER_PDF_EXT, L"Application");
-        DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT LR"(\UserChoice)", true);
+        SHDeleteValue(hkey, kRegExplorerPdfExt, L"Application");
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt LR"(\UserChoice)", true);
     }
 }
 
@@ -265,26 +267,26 @@ bool IsExeAssociatedWithPdfExtension() {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
     const WCHAR* appName = GetAppNameTemp();
 
-    AutoFreeWstr tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
+    AutoFreeWstr tmp(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, L"Progid"));
     if (tmp && !str::Eq(tmp, appName)) {
         return false;
     }
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR.exe
-    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Application"));
+    tmp.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, L"Application"));
     AutoFreeWstr exeName = str::Join(appName, L".exe");
     if (tmp && !str::EqI(tmp, exeName)) {
         return false;
     }
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT LR"(\UserChoice)", L"Progid"));
+    tmp.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt LR"(\UserChoice)", L"Progid"));
     if (tmp && !str::Eq(tmp, appName)) {
         return false;
     }
 
     // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr));
+    tmp.Set(LoggedReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr));
     if (!str::Eq(tmp, appName)) {
         return false;
     }
@@ -292,7 +294,7 @@ bool IsExeAssociatedWithPdfExtension() {
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
     {
         AutoFreeWstr key = str::Join(appName, LR"(\shell)");
-        tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+        tmp.Set(LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
     }
     if (!str::EqI(tmp, L"open")) {
         return false;
@@ -301,7 +303,7 @@ bool IsExeAssociatedWithPdfExtension() {
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
     {
         AutoFreeWstr key = str::Join(appName, LR"(\shell\open\command)");
-        tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+        tmp.Set(LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
     }
     if (!tmp) {
         return false;
@@ -345,42 +347,42 @@ static struct {
     const WCHAR* RegValue;         // Registry value name
 } editorRules[] = {
     {"WinEdt.exe", "\"[Open(|%f|);SelPar(%l,8)]\"", BinaryPath, HKEY_LOCAL_MACHINE,
-     REG_WIN_CURR L"\\App Paths\\WinEdt.exe", nullptr},
+     kRegWinCurrentVer L"\\App Paths\\WinEdt.exe", nullptr},
     {"WinEdt.exe", "\"[Open(|%f|);SelPar(%l,8)]\"", BinaryDir, HKEY_CURRENT_USER, L"Software\\WinEdt", L"Install Root"},
-    {"notepad++.exe", "-n%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\notepad++.exe",
+    {"notepad++.exe", "-n%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\App Paths\\notepad++.exe",
      nullptr},
     {"notepad++.exe", "-n%l \"%f\"", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Notepad++", nullptr},
-    {"notepad++.exe", "-n%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Notepad++",
+    {"notepad++.exe", "-n%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Notepad++",
      L"DisplayIcon"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 3_is1",
+    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 3_is1",
      L"InstallLocation"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 3_is1",
+    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 3_is1",
      L"DisplayIcon"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 2_is1",
+    {"sublime_text.exe", "\"%f:%l\"", BinaryDir, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 2_is1",
      L"InstallLocation"},
-    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Sublime Text 2_is1",
+    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Sublime Text 2_is1",
      L"DisplayIcon"},
     {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
      L"Software\\ToolsCenter\\TeXnicCenterNT", L"AppPath"},
     {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
-     REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation"},
+     kRegWinCurrentVer L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation"},
     {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
-     REG_WIN_CURR L"\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation"},
+     kRegWinCurrentVer L"\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation"},
     {"TEXCNTR.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
      L"Software\\ToolsCenter\\TeXnicCenter", L"AppPath"},
     {"TEXCNTR.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, HKEY_LOCAL_MACHINE,
-     REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation"},
-    {"WinShell.exe", "-c \"%f\" -l %l", BinaryDir, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\WinShell_is1",
+     kRegWinCurrentVer L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation"},
+    {"WinShell.exe", "-c \"%f\" -l %l", BinaryDir, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\WinShell_is1",
      L"InstallLocation"},
     {"gvim.exe", "\"%f\" +%l", BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path"},
     {// TODO: add this rule only if the latex-suite for ViM is installed
      // (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
      "gvim.exe", "-c \":RemoteOpen +%l %f\"", BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path"},
-    {"texmaker.exe", "\"%f\" -line %l", SiblingPath, HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Texmaker",
+    {"texmaker.exe", "\"%f\" -line %l", SiblingPath, HKEY_LOCAL_MACHINE, kRegWinCurrentVer L"\\Uninstall\\Texmaker",
      L"UninstallString"},
     {
         "TeXworks.exe", "-p=%l \"%f\"", BinaryDir, HKEY_LOCAL_MACHINE,
-        REG_WIN_CURR "\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
+        kRegWinCurrentVer "\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
         // TODO: find a way to detect where emacs is installed
         // L"emacsclientw.exe",L"+%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, L"???", L"???",
     }};
@@ -399,7 +401,7 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
 
     for (int i = 0; i < dimof(editorRules); i++) {
         auto& rule = editorRules[i];
-        AutoFreeWstr path(ReadRegStr(rule.RegRoot, rule.RegKey, rule.RegValue));
+        AutoFreeWstr path(LoggedReadRegStr(rule.RegRoot, rule.RegKey, rule.RegValue));
         if (!path) {
             continue;
         }

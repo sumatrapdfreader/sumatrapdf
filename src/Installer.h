@@ -74,3 +74,4 @@ bool IsSearchFilterInstalled();
 void UninstallBrowserPlugin();
 
 bool CheckInstallUninstallPossible(bool silent = false);
+char* GetInstallerLogPath();

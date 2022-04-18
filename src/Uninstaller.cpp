@@ -50,6 +50,7 @@ static Button* gButtonExit = nullptr;
 static Button* gButtonUninstaller = nullptr;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
+static char* gUninstallerLogPath = nullptr;
 
 static void OnButtonExit() {
     SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
@@ -61,12 +62,13 @@ static void CreateButtonExit(HWND hwndParent) {
 }
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
-    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppNameTemp());
-    bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
+    logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
+    AutoFreeWstr regPathUninst = GetRegPathUninst(GetAppNameTemp());
+    bool ok1 = LoggedDeleteRegKey(hkey, regPathUninst);
     // legacy, this key was added by installers up to version 1.8
     const WCHAR* appName = GetAppNameTemp();
     AutoFreeWstr key = str::Join(L"Software\\", appName);
-    bool ok2 = DeleteRegKey(hkey, key);
+    bool ok2 = LoggedDeleteRegKey(hkey, key);
     return ok1 && ok2;
 }
 
@@ -76,46 +78,50 @@ static bool RemoveUninstallerRegistryInfo() {
     return ok1 || ok2;
 }
 
+
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
-    AutoFreeWstr curr = ReadRegStr(hkey, REG_CLASSES_PDF, nullptr);
-    AutoFreeWstr REG_CLASSES_APP = GetRegClassesApp(GetAppNameTemp());
-    AutoFreeWstr prev = ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf");
+    logf("UnregisterFromBeingDefaultViewer()\n");
+    AutoFreeWstr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
+    AutoFreeWstr regClassesApp = GetRegClassesApp(GetAppNameTemp());
+    AutoFreeWstr prev = LoggedReadRegStr(hkey, regClassesApp, L"previous.pdf");
     const WCHAR* appName = GetAppNameTemp();
     if (!curr || !str::Eq(curr, appName)) {
         // not the default, do nothing
     } else if (prev) {
-        WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, prev);
+        LoggedWriteRegStr(hkey, kRegClassesPdf, nullptr, prev);
     } else {
 #pragma warning(push)
 #pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the
                                 // specification for the function 'SHDeleteValueW'
-        SHDeleteValue(hkey, REG_CLASSES_PDF, nullptr);
+        SHDeleteValueW(hkey, kRegClassesPdf, nullptr);
 #pragma warning(pop)
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
+    AutoFreeWstr buf = LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
     if (str::Eq(buf, appName)) {
-        LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
+        LONG res = SHDeleteValueW(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
         if (res != ERROR_SUCCESS) {
             LogLastError(res);
         }
     }
-    buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION));
+    const WCHAR* kRegApplication = L"Application";
+    buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication));
     const WCHAR* exeName = GetExeNameTemp();
     if (str::EqI(buf, exeName)) {
-        LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION);
+        LONG res = SHDeleteValue(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication);
         if (res != ERROR_SUCCESS) {
             LogLastError(res);
         }
     }
-    buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
+    buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", kRegProgId));
     if (str::Eq(buf, appName)) {
-        DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
+        LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", true);
     }
 }
 
+// delete registry key but only if it's empty
 static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
     HKEY hkey;
     LSTATUS status = RegOpenKeyExW(root, keyName, 0, KEY_READ, &hkey);
@@ -131,10 +137,11 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
         isEmpty = 0 == subkeys && 0 == values;
     }
     RegCloseKey(hkey);
-
-    if (isEmpty) {
-        DeleteRegKey(root, keyName);
+    if (!isEmpty) {
+        return isEmpty;
     }
+
+    LoggedDeleteRegKey(root, keyName);
     return isEmpty;
 }
 
@@ -142,21 +149,22 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     if (!hkey) {
         return;
     }
+    logf("RemoveOwnRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
     UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeNameTemp();
     AutoFreeWstr regClassApp = GetRegClassesApp(appName);
-    DeleteRegKey(hkey, regClassApp);
+    LoggedDeleteRegKey(hkey, regClassApp);
     AutoFreeWstr regClassApps = GetRegClassesApps(appName);
-    DeleteRegKey(hkey, regClassApps);
+    LoggedDeleteRegKey(hkey, regClassApps);
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_PDF, L"\\OpenWithProgids");
+        AutoFreeWstr key = str::Join(kRegClassesPdf, L"\\OpenWithProgids");
         SHDeleteValueW(hkey, key, appName);
     }
 
     if (HKEY_LOCAL_MACHINE == hkey) {
         AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
-        DeleteRegKey(hkey, key);
+        LoggedDeleteRegKey(hkey, key);
     }
 
     const WCHAR** supportedExts = GetSupportedExts();
@@ -167,7 +175,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
         DeleteEmptyRegKey(hkey, keyname);
 
         keyname.Set(str::Join(L"Software\\Classes\\", supportedExts[j], openWithVal));
-        if (!DeleteRegKey(hkey, keyname)) {
+        if (!LoggedDeleteRegKey(hkey, keyname)) {
             continue;
         }
         // remove empty keys that the installer might have created
@@ -182,7 +190,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     // delete keys written in ListAsDefaultProgramWin10()
     SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", appName);
     AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", appName);
-    DeleteRegKey(hkey, keyName);
+    LoggedDeleteRegKey(hkey, keyName);
 }
 
 static void RemoveOwnRegistryKeys() {
@@ -478,24 +486,6 @@ static int RunApp() {
     }
 }
 
-static char* PickUnInstallerLogPath() {
-    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    if (!dir.Get()) {
-        return nullptr;
-    }
-    auto dirA = ToUtf8Temp(dir.AsView());
-    return path::Join(dirA, "sumatra-uninstall-log.txt", nullptr);
-}
-
-static void StartUnInstallerLogging() {
-    char* dir = PickUnInstallerLogPath();
-    if (!dir) {
-        return;
-    }
-    StartLogToFile(dir);
-    free(dir);
-}
-
 static WCHAR* GetUninstallerPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
@@ -506,6 +496,7 @@ static WCHAR* GetUninstallerPathInTemp() {
 // to be able to delete installation directory we must copy
 // ourselves to temp directory and re-launch
 static void RelaunchElevatedFromTempDirectory(Flags* cli) {
+    log("RelaunchElevatedFromTempDirectory()\n");
     if (gIsDebugBuild) {
         // for easier debugging, debug build doesn't need
         // to be copied / re-launched
@@ -516,15 +507,15 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
     auto ownPath = GetExePathTemp();
     if (str::EqI(installerTempPath, ownPath)) {
         if (IsProcessRunningElevated()) {
-            log("Already running elevated and from temp dir\n");
+            log("  already running elevated and from temp dir\n");
             return;
         }
     }
 
-    logf(L"must copy installer '%s' to '%s'\n", ownPath.Get(), installerTempPath.Get());
+    logf(L"  copying installer '%s' to '%s'\n", ownPath.Get(), installerTempPath.Get());
     bool ok = file::Copy(installerTempPath, ownPath, false);
     if (!ok) {
-        logf("failed to copy installer\n");
+        logf("  failed to copy installer\n");
         return;
     }
 
@@ -538,7 +529,7 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
     if (cli->log) {
         cmdLine.Append(L" -log");
     }
-    logf(L"Re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine.Get());
+    logf(L"  re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine.Get());
     LaunchElevated(installerTempPath, cmdLine.Get());
     ::ExitProcess(0);
 }
@@ -579,18 +570,35 @@ static void InitSelfDelete() {
     LaunchProcess(cmdLine, nullptr, flags);
 }
 
+static void ShowUninstallerLog() {
+    if (!gUninstallerLogPath) {
+        return;
+    }
+    WCHAR* path = ToWstrTemp(gUninstallerLogPath);
+    LaunchFile(path, nullptr, L"open");
+}
+
+static void StartUninstallerLogging() {
+    // same as installer
+    gUninstallerLogPath = GetInstallerLogPath();
+    if (!gUninstallerLogPath) {
+        return;
+    }
+    StartLogToFile(gUninstallerLogPath, true);
+}
+
 int RunUninstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
     if (gCli->log) {
-        StartUnInstallerLogging();
+        StartUninstallerLogging();
     }
-    log("RunUninstaller()\n");
+    logf("------------- Starting SumatraPDF uninstallation\n");
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
     WCHAR* cmdLine = GetCommandLineW();
     WCHAR* exePath = GetExePathTemp();
-    logf(L"Starting uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
+    logf(L"Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
 
     int ret = 1;
     auto installerExists = file::Exists(exePath);
@@ -655,6 +663,8 @@ int RunUninstaller() {
         RegisterPreviewer(true);
     }
     InitSelfDelete();
+    ShowUninstallerLog();
+
 Exit:
     free(firstError);
     return ret;

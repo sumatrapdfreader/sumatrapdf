@@ -332,6 +332,12 @@ TryAgainWOW64:
     return val;
 }
 
+WCHAR* LoggedReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
+    auto res = ReadRegStr(keySub, keyName, valName);
+    logf(L"ReadRegStr(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(keySub), keyName, valName, res);
+    return res;
+}
+
 // called needs to free() the result
 char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
     WCHAR* ws = ReadRegStr(keySub, keyName, valName);
@@ -359,6 +365,12 @@ bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const 
     return ERROR_SUCCESS == res;
 }
 
+bool LoggedWriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
+    auto res = WriteRegStr(keySub, keyName, valName, value);
+    logf(L"WriteRegStr(%s, %s, %s, %s) => '%d'\n", RegKeyNameWTemp(keySub), keyName, valName, value, res);
+    return res;
+}
+
 bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value) {
     DWORD size = sizeof(DWORD);
     LSTATUS res = SHGetValue(keySub, keyName, valName, nullptr, &value, &size);
@@ -370,6 +382,13 @@ bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWOR
     return ERROR_SUCCESS == res;
 }
 
+
+bool LoggedWriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
+    auto res = WriteRegDWORD(keySub, keyName, valName, value);
+    logf(L"WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(keySub), keyName, valName, (int)value, res);
+    return res;
+}
+
 bool CreateRegKey(HKEY keySub, const WCHAR* keyName) {
     HKEY hKey;
     LSTATUS res = RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
@@ -378,6 +397,24 @@ bool CreateRegKey(HKEY keySub, const WCHAR* keyName) {
     }
     RegCloseKey(hKey);
     return true;
+}
+
+const char *RegKeyNameTemp(HKEY key) {
+    if (key == HKEY_LOCAL_MACHINE) {
+        return "HKEY_LOCAL_MACHINE";
+    }
+    if (key == HKEY_CURRENT_USER) {
+        return "HKEY_CURRENT_USER";
+    }
+    if (key == HKEY_CLASSES_ROOT) {
+        return "HKEY_CLASSES_ROOT";
+    }
+    return "RegKeyName: unknown key";
+}
+
+const WCHAR *RegKeyNameWTemp(HKEY key) {
+    auto k = RegKeyNameTemp(key);
+    return ToWstrTemp(k);
 }
 
 #pragma warning(push)
@@ -406,6 +443,12 @@ bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst) {
 
     LSTATUS res = SHDeleteKeyW(keySub, keyName);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
+}
+
+bool LoggedDeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst) {
+    auto res = DeleteRegKey(keySub, keyName, resetACLFirst);
+    logf(L"DeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(keySub), keyName, resetACLFirst, res);
+    return res;
 }
 
 TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
