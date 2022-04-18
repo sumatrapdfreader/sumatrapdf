@@ -384,20 +384,27 @@ static void CreateButtonRunSumatra(HWND hwndParent) {
 }
 
 static bool CreateAppShortcut(int csidl) {
-    logf("CreateAppShortcut(csidl=%d)\n", csidl);
     AutoFreeWstr shortcutPath = GetShortcutPath(csidl);
     if (!shortcutPath.Get()) {
+        log("CreateAppShortcut() failed\n");
         return false;
     }
+    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath.Get());
     AutoFreeWstr installedExePath = GetInstalledExePath();
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
-static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
+// https://docs.microsoft.com/en-us/windows/win32/shell/csidl
+// CSIDL_COMMON_DESKTOPDIRECTORY - files and folders on desktop for all users. C:\Documents and Settings\All
+// Users\Desktop CSIDL_COMMON_STARTMENU - Start menu for all users, C:\Documents and Settings\All Users\Start Menu
+// CSIDL_DESKTOP - virutal folder, desktop for current user
+// CSIDL_STARTMENU - Start menu for current user. Settings\username\Start Menu
+static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP, CSIDL_STARTMENU};
 
-static void CreateAppShortcuts() {
-    logf("CreateAppShortcuts()\n");
-    for (size_t i = 0; i < dimof(shortcutDirs); i++) {
+static void CreateAppShortcuts(bool forAllUsers) {
+    logf("CreateAppShortcuts(forAllUsers=%d)\n", (int)forAllUsers);
+    size_t start = forAllUsers ? 0 : 2;
+    for (size_t i = start; i < dimof(shortcutDirs); i++) {
         int csidl = shortcutDirs[i];
         CreateAppShortcut(csidl);
     }
@@ -435,7 +442,7 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     UninstallBrowserPlugin();
 
-    CreateAppShortcuts();
+    CreateAppShortcuts(gCli->allUsers);
 
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
