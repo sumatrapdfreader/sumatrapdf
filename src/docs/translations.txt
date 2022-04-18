@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7efc8f72080e7953370d855e395d358f9d1540ce
+86decf5015babccbce7716e4abca35058a2c4f7e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -74,6 +74,7 @@ vn:Giới thiệu
 :&Actual Size
 cn:实际大小(&A)
 de:&Tatsächliche Größe
+it:Dimensione &attuale
 nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
 :&Advanced Options...
@@ -107,7 +108,7 @@ hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
-it:Apri file opzioni &avanzate...
+it:Apri file (opzioni &avanzate)...
 ja:詳細設定(&A)
 jv:&Pilihan Terusan...
 ka:&გაფართოებული გაწყობები...
@@ -211,11 +212,13 @@ vn:Tất cả các tr&ang được chọn
 :&Back
 cn:上一视图(B)
 de:&Vorherige Ansicht
+it:&Indietro
 nl:&Terug
 pl:&Wstecz
 :&Book View
 cn:书籍视图(&B)
 de:&Buchansicht
+it:&Libro
 nl:&Boek Tonen
 pl:Widok o&dczytu
 :&Cancel
@@ -279,6 +282,7 @@ uk:&Каретка
 :&Close
 cn:关闭(&C)
 de:&Schließen
+it:&Chiudi
 nl:&Sluiten
 pl:&Zamknij
 :&Continue installing 32-bit version
@@ -378,6 +382,7 @@ vn:&Chép phần đã chọn
 :&Copy To Clipboard
 cn:复制到剪贴版(&C)
 de:&In Zwischenablage kopieren
+it:&Copia negli Appunti
 nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
 :&Discard changes
@@ -543,6 +548,7 @@ vn:Chỉ những trang lẻ
 :&Facing
 cn:双页视图(&F)
 de:&Doppelseite
+it:Pagine a&ffiancate
 nl:&Gericht op
 pl:&Wiele stron
 :&File
@@ -686,6 +692,7 @@ vn:Tìm (các) từ sau:
 :&First Page
 cn:第一页(&F)
 de:&Erste Seite
+it:&Prima pagina
 nl:&Eerste Pagina
 pl:&Pierwsza strona
 :&Fit pages to printable area
@@ -991,11 +998,13 @@ vn:Trợ &giúp
 :&Highlight
 cn:高亮(&H)
 de:Text &hervorheben
+it:Eviden&zia
 nl:&Markeren
 pl:&Wyróżnienie
 :&Last Page
 cn:最后一页(&L)
 de:&Letzte Seite
+it:&Ultima pagina
 nl:&Laatste Pagina
 pl:&Ostatnia strona
 :&Magnification:
@@ -1197,6 +1206,7 @@ vn:Phân biệt &HOA-thường
 :&Next Page
 cn:下一页(&N)
 de:&Nächste Seite
+it:Pagina &successiva
 nl:&Volgende Pagina
 pl:&Następna strona
 :&No
@@ -1399,6 +1409,7 @@ vn:Mở tập tin
 :&Open...
 cn:打开(&O)...
 de:&Öffnen...
+it:&Apri
 nl:&Openen
 pl:&Otwórz...
 :&Options
@@ -1659,6 +1670,7 @@ vn:Ghim tập tin
 :&Previous Page
 cn:上一页(&P)
 de:&Vorherige Seite
+it:Pagina &precedente
 nl:&Vorige Pagina
 pl:&Poprzednia strona
 :&Print...
@@ -2200,6 +2212,7 @@ vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page
 cn:单页视图(&S)
 de:Einzel&seitenansicht
+it:Pagina &singola
 nl:&Enkele Pagina
 pl:&Pojedyncza strona
 :&Stamp
@@ -5124,6 +5137,7 @@ vn:Truyện tranh comic
 cn:命令面板
 de:Befehlspalette
 et:Käsupalett
+it:Elenco comandi
 nl:Opdrachten
 pl:Paleta poleceń
 :Compatibility
@@ -6781,6 +6795,7 @@ vn:Vị trí con trỏ:
 :Custom &Zoom...
 cn:自定义缩放(&Z)...
 de:Benutzerdefinierter &Zoom...
+it:&Zoom personalizzato
 nl:Aangepast & zoom...
 pl:&Własne powiększenie...
 :Dark
@@ -7395,6 +7410,7 @@ uk:Завантажити 64-bit версію
 :E&xit
 cn:退出(&X)
 de:&Beenden
+it:&Esci
 nl:A&fsluiten
 pl:&Wyjście
 :E&xit Fullscreen
@@ -7917,11 +7933,13 @@ vn:Ưa thích
 :F&orward
 cn:下一视图(&O)
 de:&Nächste Ansicht
+it:&Avanti
 nl:V&ooruit
 pl:&Dalej
 :F&ullscreen
 cn:全屏(&U)
 de:&Vollbild
+it:Sc&hermo pieno
 nl:V&oledig Scherm
 pl:Pełny &ekran
 :Facing
@@ -8803,6 +8821,7 @@ vn:Tập tin:
 :Fin&d...
 cn:查找(&D)...
 de:S&uchen...
+it:&Trova
 nl:Zoe&k
 pl:&Znajdź...
 :Find
@@ -9089,16 +9108,19 @@ vn:Tìm kiếm:
 :Fit &Content
 cn:适合内容(&C)
 de:An &Inhalt anpassen
+it:Adatta al &contenuto
 nl:&Inhoud Aanpassen
 pl:Dopasuj do &zawartości
 :Fit &Page
 cn:适合页面(&P)
 de:An &Seite anpassen
+it:Adatta alla &pagina
 nl:&Pagina Aanpassen
 pl:Dopasuj do s&trony
 :Fit &Width
 cn:适合宽度(&W)
 de:An Fenster&breite anpassen
+it:Adatta a &larghezza
 nl:&Breedte Aanpassen
 pl:Dopasuj do sz&erokości
 :Fit Content
@@ -10351,6 +10373,8 @@ uk:Встановити та перезапустити
 :Install for all users
 cn:为所有用户安装
 de:Für alle Benutzer installieren
+it:Installa per tutti gli utenti
+nl:Installeer voor alle gebruikers
 pl:Zainstaluj dla wszystkich użytkowników
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
@@ -11326,6 +11350,7 @@ vn:Ngày chỉnh sửa
 :New &window
 cn:新建窗口(&W)
 de:Neues &Fenster
+it:Nuova &finestra
 nl:Nieuw &Kader
 pl:Nowe &okno
 :New version available
@@ -12814,6 +12839,7 @@ vn:Tập tin PDF
 :Pa&ge...
 cn:前往第 ... 页(&G)
 de:&Seite...
+it:Pa&gina...
 nl:Pa&gina
 pl:&Strona...
 :Page %s
@@ -13489,6 +13515,7 @@ vn:Tập tin Postscript
 :Pr&esentation
 cn:幻灯片(&E)
 de:Pr&äsentation
+it:Presentazione
 nl:Pr&esentatie
 pl:&Prezentacja
 :Previous Page
@@ -14076,6 +14103,7 @@ vn:Lỗi in.
 :Re&name...
 cn:重命名(&N)...
 de:Umbe&nennen...
+it:Ri&nomina...
 nl:Her&noem
 pl:Zmień &nazwę...
 :Rect: x=%d y=%d dx=%d dy=%d
@@ -14391,6 +14419,7 @@ vn:Đổi tên thành
 :Rotate &Left
 cn:逆时针旋转(&L)
 de:&Gegen UZS drehen
+it:Ruota a &sinistra
 nl:&Linksom Roteren
 pl:Obróć w &lewo
 :Rotate &Left\tCtrl+Shift+-
@@ -14467,6 +14496,7 @@ vn:Quay trái\tCtrl+Shift+-
 :Rotate &Right
 cn:顺时针旋转(&R)
 de:Im &UZS drehen
+it:Ruota a &destra
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
 :Rotate &Right\tCtrl+Shift++
@@ -14673,6 +14703,7 @@ uk:Зберегти вкладений файл...
 :Save S&hortcut...
 cn:保存快捷方式(&H)...
 de:Verknüpfung speichern...
+it:Sal&va scorciatoia...
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
 :Save annotations?
@@ -15623,6 +15654,7 @@ vn:Hiện thanh công cụ
 :Show Book&marks
 cn:显示书签(&M)
 de:Lesezeichen anzeigen
+it:Visualizza &Preferiti
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
 :Show Favorites
