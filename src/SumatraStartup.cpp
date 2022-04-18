@@ -973,7 +973,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     ParseFlags(GetCommandLineW(), flags);
     gCli = &flags;
 
-    if (flags.log) {
+    bool isInstaller = flags.install || flags.runInstallNow || IsInstallerAndNamedAsSuch();
+    bool isUninstaller = flags.uninstall;
+    bool noLogHere = isInstaller || isUninstaller;
+
+    if (flags.log && !noLogHere) {
         logFilePath = GetLogFilePath();
         if (logFilePath) {
             StartLogToFile(logFilePath, true);
@@ -1016,7 +1020,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         return retCode;
     }
 
-    if (flags.install || flags.runInstallNow || IsInstallerAndNamedAsSuch()) {
+    if (isInstaller) {
         if (!ExeHasInstallerResources()) {
             ShowNotValidInstallerError();
             return 1;
@@ -1027,7 +1031,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         return retCode;
     }
 
-    if (flags.uninstall) {
+    if (isUninstaller) {
         retCode = RunUninstaller();
         ::ExitProcess(retCode);
     }
