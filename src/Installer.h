@@ -75,3 +75,4 @@ void UninstallBrowserPlugin();
 
 bool CheckInstallUninstallPossible(bool silent = false);
 char* GetInstallerLogPath();
+void ShowLogFile(const char* logPath);

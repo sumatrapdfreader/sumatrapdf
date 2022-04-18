@@ -25,3 +25,4 @@ WCHAR* PathForFileInAppDataDir(const WCHAR* fileName);
 
 WCHAR* FormatFileSize(i64);
 WCHAR* FormatFileSizeNoTrans(i64);
+void ShowLogFile(const char* logPath);

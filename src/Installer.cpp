@@ -77,7 +77,6 @@ static bool success = false;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
 static bool gShowOptions = false;
-static char* gInstallerLogPath = nullptr;
 
 int currProgress = 0;
 static void ProgressStep() {
@@ -116,25 +115,9 @@ char* GetInstallerLogPath() {
         return nullptr;
     }
     WCHAR* path = path::Join(dir, L"sumatra-install-log.txt", nullptr);
-    auto pathA = strconv::WstrToUtf8(path);
+    auto res = strconv::WstrToUtf8(path);
     str::Free(path);
-    return pathA;
-}
-
-static void ShowInstallerLog() {
-    if (!gInstallerLogPath) {
-        return;
-    }
-    WCHAR* path = ToWstrTemp(gInstallerLogPath);
-    LaunchFile(path, nullptr, L"open");
-}
-
-static void StartInstallerLogging() {
-    gInstallerLogPath = GetInstallerLogPath();
-    if (!gInstallerLogPath) {
-        return;
-    }
-    StartLogToFile(gInstallerLogPath, true);
+    return res;
 }
 
 bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
@@ -389,7 +372,7 @@ static bool CreateAppShortcut(int csidl) {
         log("CreateAppShortcut() failed\n");
         return false;
     }
-    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath.Get());
+    logf(L"CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath.Get());
     AutoFreeWstr installedExePath = GetInstalledExePath();
     return CreateShortcut(shortcutPath, installedExePath);
 }
@@ -580,7 +563,6 @@ static void OnButtonInstall() {
 
     if (gCli->allUsers && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers();
-        ShowInstallerLog();
         ::ExitProcess(0);
     }
     StartInstallation();
@@ -1198,8 +1180,12 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
 int RunInstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
+    const char* installerLogPath = nullptr;
     if (gCli->log) {
-        StartInstallerLogging();
+        installerLogPath = GetInstallerLogPath();
+        if (installerLogPath) {
+            StartLogToFile(installerLogPath, false);
+        }
     }
     logf("------------- Starting SumatraPDF installation\n");
     if (!gCli->installDir) {
@@ -1283,7 +1269,7 @@ int RunInstaller() {
         RegisterPreviewer(true);
     }
     log("Installer finished\n");
-    ShowInstallerLog();
+    ShowLogFile(installerLogPath);
 Exit:
     free(firstError);
 

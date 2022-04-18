@@ -767,3 +767,11 @@ WCHAR* FormatFileSizeNoTrans(i64 size) {
     AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), L"Bytes");
 }
+
+void ShowLogFile(const char* logPath) {
+    if (!logPath) {
+        return;
+    }
+    WCHAR* path = ToWstrTemp(logPath);
+    LaunchFile(path, nullptr, L"open");
+}

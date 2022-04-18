@@ -894,6 +894,17 @@ static void ForceStartupLeaks() {
     }
 }
 
+static char* GetLogFilePath() {
+    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    if (!dir.Get()) {
+        return nullptr;
+    }
+    auto path = path::Join(dir, L"sumatra-log.txt", nullptr);
+    auto res = strconv::WstrToUtf8(path);
+    str::Free(path);
+    return res;
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR cmdLine,
                      __unused int nCmdShow) {
     int retCode = 1; // by default it's error
@@ -904,6 +915,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     HANDLE hMutex = nullptr;
     HWND hPrevWnd = nullptr;
     TabInfo* tabToSelect = nullptr;
+    const char* logFilePath = nullptr;
 
     CrashIf(hInstance != GetInstance());
 
@@ -960,6 +972,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     Flags flags;
     ParseFlags(GetCommandLineW(), flags);
     gCli = &flags;
+
+    if (flags.log) {
+        logFilePath = GetLogFilePath();
+        if (logFilePath) {
+            StartLogToFile(logFilePath, true);
+        }
+    }
 
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
@@ -1332,11 +1351,13 @@ Exit:
 
     HandleRedirectedConsoleOnShutdown();
 
+    ShowLogFile(logFilePath);
     if (fastExit) {
         // leave all the remaining clean-up to the OS
         // (as recommended for a quick exit)
         ::ExitProcess(retCode);
     }
+    str::Free(logFilePath);
 
     FreeExternalViewers();
     while (gWindows.size() > 0) {

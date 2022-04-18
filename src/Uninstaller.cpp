@@ -543,6 +543,7 @@ static WCHAR* GetSelfDeleteBatchPathInTemp() {
 // a hack to allow deleting our own executable
 // we create a bash script that deletes us
 static void InitSelfDelete() {
+    log("InitSelfDelete()\n");
     auto exePath = GetExePathTemp();
     auto exePathA = ToUtf8Temp(exePath.AsView());
     str::Str script;
@@ -569,30 +570,19 @@ static void InitSelfDelete() {
     LaunchProcess(cmdLine, nullptr, flags);
 }
 
-static void ShowUninstallerLog() {
-    if (!gUninstallerLogPath) {
-        return;
-    }
-    WCHAR* path = ToWstrTemp(gUninstallerLogPath);
-    LaunchFile(path, nullptr, L"open");
-}
-
-static void StartUninstallerLogging() {
-    // same as installer
-    gUninstallerLogPath = GetInstallerLogPath();
-    if (!gUninstallerLogPath) {
-        return;
-    }
-    StartLogToFile(gUninstallerLogPath, true);
-}
-
 int RunUninstaller() {
+    const char* uninstallerLogPath = nullptr;
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
     if (gCli->log) {
-        StartUninstallerLogging();
+        // same as installer
+        uninstallerLogPath = GetInstallerLogPath();
+        if (uninstallerLogPath) {
+            StartLogToFile(uninstallerLogPath, false);
+        }
+        logf("------------- Starting SumatraPDF uninstallation\n");
     }
-    logf("------------- Starting SumatraPDF uninstallation\n");
+
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
     WCHAR* cmdLine = GetCommandLineW();
@@ -662,7 +652,7 @@ int RunUninstaller() {
         RegisterPreviewer(true);
     }
     InitSelfDelete();
-    ShowUninstallerLog();
+    ShowLogFile(uninstallerLogPath);
 
 Exit:
     free(firstError);
