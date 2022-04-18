@@ -193,6 +193,8 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 */
 
+// TODO: this method no longer valid
+#if 0
 void DoAssociateExeWithPdfExtension(HKEY hkey) {
     auto exePath = GetExePathTemp();
     if (exePath.empty()) {
@@ -260,7 +262,10 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
         LoggedDeleteRegKey(hkey, kRegExplorerPdfExt LR"(\UserChoice)", true);
     }
 }
+#endif
 
+// TODO: this method no longer valid
+#if 0
 // verify that all registry entries that need to be set in order to associate
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension() {
@@ -327,6 +332,7 @@ bool IsExeAssociatedWithPdfExtension() {
 
     return path::IsSame(exePath, argList.at(0));
 }
+#endif
 
 // List of rules used to detect TeX editors.
 

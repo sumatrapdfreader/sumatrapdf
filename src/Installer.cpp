@@ -40,13 +40,6 @@
 
 #include "utils/Log.h"
 
-// if 1, adds checkbox to register as default PDF viewer
-#define ENABLE_REGISTER_DEFAULT 0
-
-#if ENABLE_REGISTER_DEFAULT
-static bool gRegisterAsDefault = false;
-#endif
-
 #define kInstallerWinMargin DpiScale(8)
 
 using namespace wg;
@@ -62,9 +55,6 @@ static Static* gStaticInstDir = nullptr;
 static Edit* gEditInstallationDir = nullptr;
 static Button* gButtonBrowseDir = nullptr;
 
-#if ENABLE_REGISTER_DEFAULT
-static Checkbox* gCheckboxRegisterDefault = nullptr;
-#endif
 static Checkbox* gCheckboxForAllUsers = nullptr;
 static Checkbox* gCheckboxRegisterSearchFilter = nullptr;
 static Checkbox* gCheckboxRegisterPreviewer = nullptr;
@@ -405,12 +395,6 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     CopySettingsFile();
 
-#if ENABLE_REGISTER_DEFAULT
-    if (gInstallerGlobals.registerAsDefault) {
-        AssociateExeWithPdfExtension();
-    }
-#endif
-
     // mark them as uninstalled
     gWasSearchFilterInstalled = false;
     gWasPreviewInstaller = false;
@@ -508,9 +492,6 @@ static void StartInstallation() {
     delete gEditInstallationDir;
     delete gButtonBrowseDir;
 
-#if ENABLE_REGISTER_DEFAULT
-    delete gCheckboxRegisterDefault;
-#endif
     delete gCheckboxForAllUsers;
     delete gCheckboxRegisterSearchFilter;
     delete gCheckboxRegisterPreviewer;
@@ -547,12 +528,6 @@ static void OnButtonInstall() {
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
-
-#if ENABLE_REGISTER_DEFAULT
-    // note: this checkbox isn't created if we're already registered as default
-    //       (in which case we're just going to re-register)
-    gInstallerGlobals.registerAsDefault = gCheckboxRegisterDefault == nullptr || gCheckboxRegisterDefault->IsChecked();
-#endif
 
     // note: this checkbox isn't created when running inside Wow64
     gCli->withFilter = gCheckboxRegisterSearchFilter && gCheckboxRegisterSearchFilter->IsChecked();
@@ -612,9 +587,6 @@ static void OnButtonOptions() {
     EnableAndShow(gEditInstallationDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
 
-#if ENABLE_REGISTER_DEFAULT
-    EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
-#endif
     EnableAndShow(gCheckboxForAllUsers, gShowOptions);
     EnableAndShow(gCheckboxRegisterSearchFilter, gShowOptions);
     EnableAndShow(gCheckboxRegisterPreviewer, gShowOptions);
@@ -794,17 +766,6 @@ static bool InstallerOnWmCommand(WPARAM wp) {
     return true;
 }
 
-#if ENABLE_REGISTER_DEFAULT
-/* Caller needs to free() the result. */
-static WCHAR* GetDefaultPdfViewer() {
-    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", kRegProgId);
-    if (buf) {
-        return buf.StealData();
-    }
-    return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
-}
-#endif
-
 //[ ACCESSKEY_GROUP Installer
 static void OnCreateWindow(HWND hwnd) {
     gButtonInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
@@ -853,25 +814,6 @@ static void OnCreateWindow(HWND hwnd) {
         gCheckboxRegisterSearchFilter->SetPos(&rc);
         y -= staticDy;
     }
-
-#if ENABLE_REGISTER_DEFAULT
-    AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
-    const WCHAR* appName = GetAppNameTemp();
-    BOOL hasOtherViewer = !str::EqI(defaultViewer, appName);
-
-    BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
-    // only show the checbox if Sumatra is not already a default viewer.
-    // the alternative (disabling the checkbox) is more confusing
-    if (!isSumatraDefaultViewer) {
-        // only check the "Use as default" checkbox when no other PDF viewer
-        // is currently selected (not going to intrude)
-        bool isChecked = !hasOtherViewer || gInstallerGlobals.registerAsDefault;
-        gCheckboxRegisterDefault = CreateCheckbox(hwnd, _TR("Use SumatraPDF as the &default PDF reader"), isChecked);
-        rc = {x, y, x + dx, y + staticDy};
-        gCheckboxRegisterDefault->SetPos(&rc);
-        y -= staticDy;
-    }
-#endif
 
     {
         const WCHAR* s = _TR("Install for all users");

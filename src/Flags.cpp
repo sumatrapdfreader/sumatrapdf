@@ -179,8 +179,6 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
 }
 
 #define ARGS(V)                                  \
-    V(RegisterForPdf, "register-for-pdf")        \
-    V(RegisterForPdf2, "register")               \
     V(Silent, "s")                               \
     V(Silent2, "silent")                         \
     V(PrintToDefault, "print-to-default")        \
@@ -278,12 +276,6 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         Arg arg = GetArg(argName);
         if (arg == Arg::Unknown) {
             goto CollectFile;
-        }
-
-        if (arg == Arg::RegisterForPdf || arg == Arg::RegisterForPdf2) {
-            i.registerAsDefault = true;
-            i.exitImmediately = true;
-            return;
         }
 
         if (arg == Arg::Silent || arg == Arg::Silent2) {

@@ -314,11 +314,6 @@ var (
 			"if true, we show the toolbar at the top of the window"),
 		mkField("ShowFavorites", Bool, false,
 			"if true, we show the Favorites sidebar"),
-		mkField("AssociatedExtensions", String, nil,
-			"a list of extensions that SumatraPDF has associated itself with and will "+
-				"reassociate if a different application takes over (e.g. \".pdf .xps .epub\")"),
-		mkField("AssociateSilently", Bool, false,
-			"whether file associations should be fixed silently or only after user feedback"),
 		mkField("CheckForUpdates", Bool, true,
 			"if true, we check once a day if an update is available"),
 		mkField("VersionToSkip", String, nil,

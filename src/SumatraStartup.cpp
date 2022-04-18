@@ -467,32 +467,6 @@ Error:
     goto Retry;
 }
 
-// Registering happens either through the Installer or the Options dialog;
-// here we just make sure that we're still registered
-static bool RegisterForPdfExtentions(HWND hwnd) {
-    if (IsRunningInPortableMode() || !HasPermission(Perm::RegistryAccess) || gPluginMode) {
-        return false;
-    }
-
-    if (IsExeAssociatedWithPdfExtension()) {
-        return true;
-    }
-
-    /* Ask user for permission, unless he previously said he doesn't want to
-       see this dialog */
-    if (!gGlobalPrefs->associateSilently) {
-        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->associateSilently);
-        str::ReplaceWithCopy(&gGlobalPrefs->associatedExtensions, IDYES == result ? ".pdf" : nullptr);
-    }
-    // for now, .pdf is the only choice
-    if (!str::EqI(gGlobalPrefs->associatedExtensions, ".pdf")) {
-        return false;
-    }
-
-    AssociateExeWithPdfExtension();
-    return true;
-}
-
 static int RunMessageLoop() {
     HACCEL* accTable = CreateSumatraAcceleratorTable();
 
@@ -1135,10 +1109,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         RedirectIOToConsole();
     }
 
-    if (flags.registerAsDefault) {
-        AssociateExeWithPdfExtension();
-    }
-
     if (flags.pathsToBenchmark.size() > 0) {
         BenchFileOrDir(flags.pathsToBenchmark);
     }
@@ -1305,12 +1275,6 @@ ContinueOpenWindow:
         if (!win) {
             goto Exit;
         }
-    }
-
-    // Make sure that we're still registered as default,
-    // if the user has explicitly told us to be
-    if (gGlobalPrefs->associatedExtensions) {
-        RegisterForPdfExtentions(win->hwndFrame);
     }
 
     if (flags.stressTestPath) {

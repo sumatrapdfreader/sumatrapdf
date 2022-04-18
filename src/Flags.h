@@ -74,7 +74,6 @@ struct Flags {
     bool withFilter = false;
     bool withPreview = false;
     bool justExtractFiles = false;
-    bool registerAsDefault = false;
     bool log = false;
     bool allUsers = false;
     bool runInstallNow = false;

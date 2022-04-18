@@ -344,13 +344,6 @@ struct GlobalPrefs {
     bool showToolbar;
     // if true, we show the Favorites sidebar
     bool showFavorites;
-    // a list of extensions that SumatraPDF has associated itself with and
-    // will reassociate if a different application takes over (e.g. ".pdf
-    // .xps .epub")
-    char* associatedExtensions;
-    // whether file associations should be fixed silently or only after
-    // user feedback
-    bool associateSilently;
     // if true, we check once a day if an update is available
     bool checkForUpdates;
     // we won't ask again to update to this version
@@ -651,8 +644,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, associatedExtensions), SettingType::String, 0},
-    {offsetof(GlobalPrefs, associateSilently), SettingType::Bool, false},
     {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
     {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
@@ -680,13 +671,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 58, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 56, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0SmoothScroll\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0ToolbarSize\0TabWi"
     "dth\0\0FixedPageUI\0ComicBookUI\0ChmUI\0SelectionHandlers\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0"
     "FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0Custo"
-    "mScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSil"
-    "ently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDi"
-    "splayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0S"
-    "hortcuts\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "mScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0CheckForUpdates\0VersionToSkip\0Re"
+    "memberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0Wind"
+    "owPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0Shortcuts\0\0FileStates\0SessionData\0Reop"
+    "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

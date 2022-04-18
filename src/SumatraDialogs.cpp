@@ -624,17 +624,6 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             CheckDlgButton(hDlg, IDC_CHECK_FOR_UPDATES, prefs->checkForUpdates ? BST_CHECKED : BST_UNCHECKED);
             EnableWindow(GetDlgItem(hDlg, IDC_CHECK_FOR_UPDATES), HasPermission(Perm::InternetAccess));
             CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
-            if (IsExeAssociatedWithPdfExtension()) {
-                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
-                EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
-            } else if (IsRunningInPortableMode()) {
-                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER,
-                               _TR("Default PDF reader can't be changed in portable mode"));
-                EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
-            } else {
-                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Make SumatraPDF my default PDF reader"));
-                EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), HasPermission(Perm::RegistryAccess));
-            }
 
             win::SetText(hDlg, _TR("SumatraPDF Options"));
             SetDlgItemText(hDlg, IDC_SECTION_VIEW, _TR("View"));
@@ -720,21 +709,6 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 case IDC_DEFAULT_SHOW_TOC:
                 case IDC_REMEMBER_STATE_PER_DOCUMENT:
                 case IDC_CHECK_FOR_UPDATES:
-                    return TRUE;
-
-                case IDC_SET_DEFAULT_READER:
-                    if (!HasPermission(Perm::RegistryAccess)) {
-                        return TRUE;
-                    }
-                    AssociateExeWithPdfExtension();
-                    if (IsExeAssociatedWithPdfExtension()) {
-                        SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
-                        EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
-                        SendMessageW(hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hDlg, IDOK), TRUE);
-                    } else {
-                        SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER,
-                                       _TR("SumatraPDF should now be your default PDF reader"));
-                    }
                     return TRUE;
             }
             break;

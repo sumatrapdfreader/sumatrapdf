@@ -78,6 +78,8 @@ static bool RemoveUninstallerRegistryInfo() {
     return ok1 || ok2;
 }
 
+// TODO: this method no longer works
+#if 0
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     logf("UnregisterFromBeingDefaultViewer()\n");
@@ -119,6 +121,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
         LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", true);
     }
 }
+#endif
 
 // delete registry key but only if it's empty
 static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
@@ -149,7 +152,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
         return;
     }
     logf("RemoveOwnRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
-    UnregisterFromBeingDefaultViewer(hkey);
+    //UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeNameTemp();
     AutoFreeWstr regClassApp = GetRegClassesApp(appName);

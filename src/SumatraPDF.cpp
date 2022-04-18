@@ -1904,21 +1904,6 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
     }
 }
 
-void AssociateExeWithPdfExtension() {
-    if (!HasPermission(Perm::RegistryAccess)) {
-        return;
-    }
-
-    DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
-    DoAssociateExeWithPdfExtension(HKEY_LOCAL_MACHINE);
-
-    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, nullptr, nullptr);
-
-    // Remind the user, when a different application takes over
-    str::ReplaceWithCopy(&gGlobalPrefs->associatedExtensions, ".pdf");
-    gGlobalPrefs->associateSilently = false;
-}
-
 // re-render the document currently displayed in this window
 void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea) {
     DisplayModel* dm = win->AsFixed();

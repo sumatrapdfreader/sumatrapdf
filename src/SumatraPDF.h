@@ -106,7 +106,7 @@ bool HasPermission(Perm permission);
 bool IsUIRightToLeft();
 bool SumatraLaunchBrowser(const WCHAR* url);
 bool OpenFileExternally(const WCHAR* path);
-void AssociateExeWithPdfExtension();
+//void AssociateExeWithPdfExtension(bool forAllUsers);
 void CloseCurrentTab(WindowInfo* win, bool quitIfLast = false);
 bool CanCloseWindow(WindowInfo* win);
 void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose);

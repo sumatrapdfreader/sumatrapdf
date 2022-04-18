@@ -41,7 +41,6 @@
 #define IDC_REMEMBER_STATE_PER_DOCUMENT 1027
 #define IDC_SECTION_ADVANCED            1028
 #define IDC_CHECK_FOR_UPDATES           1029
-#define IDC_SET_DEFAULT_READER          1030
 #define IDC_REMEMBER_OPENED_FILES       1031
 #define IDC_FIND_EDIT                   1032
 #define IDC_MATCH_CASE                  1033
