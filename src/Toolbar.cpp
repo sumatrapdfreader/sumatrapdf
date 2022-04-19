@@ -828,7 +828,7 @@ void CreateToolbar(WindowInfo* win) {
 
     int defFontSize = GetSizeOfDefaultGuiFont();
     // 18 was the default toolbar size, we want to scale the fonts in proportion
-    int newSize = (defFontSize * iconSize) / kDefaultIconSize;
+    int newSize = (defFontSize * gGlobalPrefs->toolbarSize) / kDefaultIconSize;
     auto font = GetDefaultGuiFontOfSize(newSize);
 
     CreatePageBox(win, font, iconSize);
