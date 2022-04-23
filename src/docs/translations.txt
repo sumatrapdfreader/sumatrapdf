@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1126eb9cb1b4dc059c9a15590387239e2315032d
+8b2fcaafdd6f69bf0922f03e865dc0fce8051f4a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -74,6 +74,7 @@ vn:Giới thiệu
 :&Actual Size
 br:&Tamanho Real
 cn:实际大小(&A)
+co:&Dimensione attuale
 de:&Tatsächliche Größe
 eu:&Oraingo neurria
 it:Dimensione &attuale
@@ -214,6 +215,7 @@ vn:Tất cả các tr&ang được chọn
 :&Back
 br:&Voltar
 cn:上一视图(B)
+co:&Precedente
 de:&Vorherige Ansicht
 eu:A&tzera
 it:&Indietro
@@ -222,6 +224,7 @@ pl:&Wstecz
 :&Book View
 br:&Ver como livro
 cn:书籍视图(&B)
+co:Cum’è un &libru
 de:&Buchansicht
 eu:&Liburu ikuspegia
 it:&Libro
@@ -289,6 +292,7 @@ uk:&Каретка
 :&Close
 br:&Fechar
 cn:关闭(&C)
+co:&Chjode
 de:&Schließen
 eu:It&xi
 it:&Chiudi
@@ -392,6 +396,7 @@ vn:&Chép phần đã chọn
 :&Copy To Clipboard
 br:&Copiar para Área de Transferência
 cn:复制到剪贴版(&C)
+co:&Cupià in u preme’papei
 de:&In Zwischenablage kopieren
 eu:&Kopiatu gakora
 it:&Copia negli Appunti
@@ -561,6 +566,7 @@ vn:Chỉ những trang lẻ
 :&Facing
 br:&Página dupla
 cn:双页视图(&F)
+co:Pagina d&oppia
 de:&Doppelseite
 it:Pagine a&ffiancate
 nl:&Gericht op
@@ -706,6 +712,7 @@ vn:Tìm (các) từ sau:
 :&First Page
 br:&Primeira Página
 cn:第一页(&F)
+co:P&rima pagina
 de:&Erste Seite
 eu:&Lehen orrialdea
 it:&Prima pagina
@@ -1015,6 +1022,7 @@ vn:Trợ &giúp
 :&Highlight
 br:&Destacar
 cn:高亮(&H)
+co:&Sopralineà
 de:Text &hervorheben
 eu:&Nabarmendu
 it:Eviden&zia
@@ -1023,6 +1031,7 @@ pl:&Wyróżnienie
 :&Last Page
 br:&Última página
 cn:最后一页(&L)
+co:&Ultima pagina
 de:&Letzte Seite
 eu:&Azken orrialdea
 it:&Ultima pagina
@@ -1227,6 +1236,7 @@ vn:Phân biệt &HOA-thường
 :&Next Page
 br:&Próxima Página
 cn:下一页(&N)
+co:Pagina &seguente
 de:&Nächste Seite
 eu:&Hurrengo orrialdea
 it:Pagina &successiva
@@ -1432,6 +1442,7 @@ vn:Mở tập tin
 :&Open...
 br:&Abrir
 cn:打开(&O)...
+co:&Apre…
 de:&Öffnen...
 eu:&Ireki...
 it:&Apri
@@ -1695,6 +1706,7 @@ vn:Ghim tập tin
 :&Previous Page
 br:&Página anterior
 cn:上一页(&P)
+co:Pagina &precedente
 de:&Vorherige Seite
 eu:A&urreko orrialdea
 it:Pagina &precedente
@@ -2241,6 +2253,7 @@ vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page
 br:&Página única
 cn:单页视图(&S)
+co:&Una pagina sola
 de:Einzel&seitenansicht
 it:Pagina &singola
 nl:&Enkele Pagina
@@ -5175,6 +5188,7 @@ vn:Truyện tranh comic
 :Command Palette
 br:Paleta de Comandos
 cn:命令面板
+co:Tavuletta di cumande
 de:Befehlspalette
 et:Käsupalett
 eu:Agindu paleta
@@ -5746,6 +5760,7 @@ vn:Chép chú thích
 :Copy To Clipboard
 br:Copiar para Área de Transferência
 cn:复制到剪贴版
+co:Cupià in u preme’papei
 de:In Zwischenablage kopieren
 et:Kopeeri lõikelauale
 eu:Kopiatu gakora
@@ -6842,6 +6857,7 @@ vn:Vị trí con trỏ:
 :Custom &Zoom...
 br:Zoom &Personalizado...
 cn:自定义缩放(&Z)...
+co:&Ingrandamentu persunalizatu…
 de:Benutzerdefinierter &Zoom...
 eu:Norbere &Zooma...
 it:&Zoom personalizzato
@@ -7398,6 +7414,7 @@ uk:Завантажити 64-bit версію
 :E&xit
 br:S&air
 cn:退出(&X)
+co:&Esce
 de:&Beenden
 eu:I&rten
 it:&Esci
@@ -7926,6 +7943,7 @@ vn:Ưa thích
 :F&orward
 br:A&vançar
 cn:下一视图(&O)
+co:&Dopu
 de:&Nächste Ansicht
 eu:A&urrera
 it:&Avanti
@@ -7934,6 +7952,7 @@ pl:&Dalej
 :F&ullscreen
 br:T&ela Cheia
 cn:全屏(&U)
+co:&Screnu sanu
 de:&Vollbild
 eu:Ikusleiho-o&soa
 it:Sc&hermo pieno
@@ -8819,6 +8838,7 @@ vn:Tập tin:
 :Fin&d...
 br:Locali&zar
 cn:查找(&D)...
+co:&Circà…
 de:S&uchen...
 eu:&Bilatu...
 it:&Trova
@@ -9108,6 +9128,7 @@ vn:Tìm kiếm:
 :Fit &Content
 br:Ajustar ao &conteúdo
 cn:适合内容(&C)
+co:&Adattà à u cuntenutu
 de:An &Inhalt anpassen
 eu:Finkatu &edukia
 it:Adatta al &contenuto
@@ -9116,6 +9137,7 @@ pl:Dopasuj do &zawartości
 :Fit &Page
 br:Ajustar à &página
 cn:适合页面(&P)
+co:&Pagina sana
 de:An &Seite anpassen
 eu:Finkatu &orrialdea
 it:Adatta alla &pagina
@@ -9124,6 +9146,7 @@ pl:Dopasuj do s&trony
 :Fit &Width
 br:Ajustar pela &largura
 cn:适合宽度(&W)
+co:&Larghezza sana
 de:An Fenster&breite anpassen
 eu:Finkatu &zabalera
 it:Adatta a &larghezza
@@ -9791,6 +9814,7 @@ vn:GB
 :Get Fonts Info
 br:Informações da Fonte
 cn:显示字体信息
+co:Ottene infurmazioni di grafie
 de:Schriftarten-Infos erhalten
 et:Hangi fondi infot
 eu:Lortu hizkien argibideak
@@ -10383,6 +10407,7 @@ uk:Встановити та перезапустити
 :Install for all users
 br:Instalar para todos os usuários
 cn:为所有用户安装
+co:Installà per tutti l’utilizatori
 de:Für alle Benutzer installieren
 eu:Ezarri erabiltzaile guztientzat
 it:Installa per tutti gli utenti
@@ -11297,6 +11322,7 @@ vn:Ngày chỉnh sửa
 :New &window
 br:Nova &janela
 cn:新建窗口(&W)
+co:Nova &finestra
 de:Neues &Fenster
 eu:&Leiho berria
 it:Nuova &finestra
@@ -12792,6 +12818,7 @@ vn:Tập tin PDF
 :Pa&ge...
 br:Pá&gina
 cn:前往第 ... 页(&G)
+co:Pa&gina…
 de:&Seite...
 eu:O&rrialdea...
 it:Pa&gina...
@@ -13473,6 +13500,7 @@ vn:Tập tin Postscript
 :Pr&esentation
 br:A&presentação
 cn:幻灯片(&E)
+co:&Presentazione
 de:Pr&äsentation
 eu:Aur&kezpena
 it:Presentazione
@@ -14063,6 +14091,7 @@ vn:Lỗi in.
 :Re&name...
 br:Re&nomear...
 cn:重命名(&N)...
+co:&Rinuminà…
 de:Umbe&nennen...
 eu:B&errizendatu...
 it:Ri&nomina...
@@ -14382,6 +14411,7 @@ vn:Đổi tên thành
 :Rotate &Left
 br:Girar à &esquerda
 cn:逆时针旋转(&L)
+co:Girà à &manca
 de:&Gegen UZS drehen
 eu:Itzulikatu e&zkerrera
 it:Ruota a &sinistra
@@ -14461,6 +14491,7 @@ vn:Quay trái\tCtrl+Shift+-
 :Rotate &Right
 br:Girar à &direita
 cn:顺时针旋转(&R)
+co:Girà à &diritta
 de:Im &UZS drehen
 eu:Itzulikatu e&skuinera
 it:Ruota a &destra
@@ -14673,6 +14704,7 @@ uk:Зберегти вкладений файл...
 :Save S&hortcut...
 br:Salvar A&talho
 cn:保存快捷方式(&H)...
+co:Arregistrà l’&accurtatoghju…
 de:Verknüpfung speichern...
 eu:Gorde &lastertekla...
 it:Sal&va scorciatoia...
@@ -15571,6 +15603,7 @@ by:Паказ панэлі прылад
 ca-xv:Mostra la &barra d'eines
 ca:Mostra la &barra d'eines
 cn:显示工具栏(&T)
+co:Affissà a &barra d’attrezzi
 cy:Dangos y &Bar Offer
 cz:Zobrazit panel nás&trojů
 de:&Werkzeugleiste anzeigen
@@ -15630,6 +15663,7 @@ vn:Hiện thanh công cụ
 :Show Book&marks
 br:Mostrar favo&ritos
 cn:显示书签(&M)
+co:Affissà l’&indette
 de:Lesezeichen anzeigen
 it:Visualizza &Preferiti
 nl:Toon Blad&wijzers
