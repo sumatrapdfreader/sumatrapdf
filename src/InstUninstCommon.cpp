@@ -90,15 +90,14 @@ static Color gMsgColor;
 
 static WStrVec gProcessesToClose;
 
+// clang-format off
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
-// clang-format off
-static const WCHAR* gSupportedExtsSumatra[] = {
-    L".pdf",  L".xps",  L".oxps", L".cbz",  L".cbr",  L".cb7", L".cbt",
-    L".djvu", L".chm", L".mobi", L".epub", L".azw",  L".azw3", L".azw4",
-    L".fb2", L".fb2z", L".prc",  L".tif", L".tiff", L".jp2",  L".png",
-    L".jpg",  L".jpeg", L".tga", L".gif",  nullptr
-};
+static SeqStrings gSupportedExts = 
+    ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
+    ".djvu\0.chm\0.mobi\0.epub\0.azw\0.azw3\0.azw4\0" \
+    ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
+    ".jpg\0.jpeg\0.tga\0.gif\0";
 // clang-format on
 
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
@@ -116,8 +115,8 @@ WCHAR* GetRegClassesApps(const WCHAR* appName) {
     return str::Join(L"Software\\Classes\\Applications\\", appName, L".exe");
 }
 
-const WCHAR** GetSupportedExts() {
-    return gSupportedExtsSumatra;
+SeqStrings GetSupportedExts() {
+    return gSupportedExts;
 }
 
 void NotifyFailed(const WCHAR* msg) {

@@ -290,10 +290,11 @@ static bool WriteUninstallerRegistryInfos() {
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
 // http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
-static bool ListAsDefaultProgramWin10(const WCHAR* appName, const WCHAR* exeName, const WCHAR* extensions[],
-                                      HKEY hkey) {
+static bool ListAsDefaultProgramWin10(HKEY hkey) {
     bool ok = true;
 
+    const WCHAR* appName = GetAppNameTemp();
+    const WCHAR* exeName = GetExeNameTemp();
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
     const WCHAR* capKey = str::JoinTemp(L"SOFTWARE\\", appName, L"\\Capabilities");
     ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
@@ -305,19 +306,16 @@ static bool ListAsDefaultProgramWin10(const WCHAR* appName, const WCHAR* exeName
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
     AutoFreeWstr keyAssoc = str::Join(capKey, L"\\FileAssociations");
 
-    for (int i = 0; nullptr != extensions[i]; i++) {
-        const WCHAR* ext = extensions[i];
-        ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, exeName);
+    auto ext = GetSupportedExts();
+    while (ext) {
+        const WCHAR* extw = ToWstrTemp(ext);
+        ok &= LoggedWriteRegStr(hkey, keyAssoc, extw, exeName);
+        seqstrings::Next(ext);
     }
-    if (!ok) {
-        log("Failed to register as default program on win 10\n");
-        // NotifyFailed(_TR("Failed to register as default program on win 10"));
-    }
-
     return ok;
 }
 
-bool ListAsDefaultProgramPreWin10(const WCHAR* exeName, const WCHAR* extensions[], HKEY hkey) {
+bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
     // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
@@ -331,11 +329,16 @@ bool ListAsDefaultProgramPreWin10(const WCHAR* exeName, const WCHAR* extensions[
     // Also, if Sumatra is the only program handling those docs, our
     // PDF icon will be shown (we need icons and properly configure them)
     bool ok = true;
-    AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", exeName);
-    for (int i = 0; nullptr != extensions[i]; i++) {
-        const WCHAR* ext = extensions[i];
-        AutoFreeWstr name = str::Join(L"Software\\Classes\\", ext, openWithVal);
-        ok &= CreateRegKey(hkey, name.Get());
+
+    const WCHAR* exeName = GetExeNameTemp();
+
+    const WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
+    auto exts = GetSupportedExts();
+    while (exts) {
+        const WCHAR* ext = ToWstrTemp(exts);
+        const WCHAR* name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
+        ok &= CreateRegKey(hkey, name);
+        seqstrings::Next(exts);
     }
     return ok;
 }
@@ -559,13 +562,11 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
     }
 
-    auto exts = GetSupportedExts();
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
-    ok &= ListAsDefaultProgramPreWin10(exeName, exts, hkey);
+    ok &= ListAsDefaultProgramPreWin10(hkey);
 
-    auto appName = GetAppNameTemp();
-    ok &= ListAsDefaultProgramWin10(appName, exeName, exts, hkey);
+    ok &= ListAsDefaultProgramWin10(hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, L"Content Type", L"application/pdf");

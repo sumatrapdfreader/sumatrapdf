@@ -170,14 +170,15 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
         LoggedDeleteRegKey(hkey, key);
     }
 
-    const WCHAR** supportedExts = GetSupportedExts();
-    AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", exeName);
-    for (int j = 0; nullptr != supportedExts[j]; j++) {
-        AutoFreeWstr keyname(str::Join(L"Software\\Classes\\", supportedExts[j], L"\\OpenWithProgids"));
+    SeqStrings exts = GetSupportedExts();
+    const WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
+    while (exts) {
+        const WCHAR* ext = ToWstrTemp(exts);
+        const WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
         SHDeleteValueW(hkey, keyname, appName);
         DeleteEmptyRegKey(hkey, keyname);
 
-        keyname.Set(str::Join(L"Software\\Classes\\", supportedExts[j], openWithVal));
+        keyname = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
         if (!LoggedDeleteRegKey(hkey, keyname)) {
             continue;
         }
@@ -188,6 +189,8 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
         }
         *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
         DeleteEmptyRegKey(hkey, keyname);
+
+        seqstrings::Next(exts);
     }
 
     // delete keys written in ListAsDefaultProgramWin10()

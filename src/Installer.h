@@ -54,7 +54,7 @@ void SetDefaultMsg();
 
 int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated);
 
-const WCHAR** GetSupportedExts();
+SeqStrings GetSupportedExts();
 
 WCHAR* GetShortcutPath(int csidl);
 
