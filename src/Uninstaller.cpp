@@ -21,7 +21,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/Log.h"
-#include "utils/RegistryPaths.h"
 #include "utils/GdiPlusUtil.h"
 
 #include <tlhelp32.h>
@@ -42,6 +41,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "AppUtil.h"
 
 using namespace wg;
+
+#define kRegProgId L"ProgId"
 
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
@@ -152,7 +153,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
         return;
     }
     logf("RemoveOwnRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
-    //UnregisterFromBeingDefaultViewer(hkey);
+    // UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeNameTemp();
     AutoFreeWstr regClassApp = GetRegClassesApp(appName);

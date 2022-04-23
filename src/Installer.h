@@ -9,6 +9,9 @@
 #define kInstallerWinDx 420
 #define kInstallerWinDy 340
 
+#define kRegExplorerPdfExt L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
+#define kRegClassesPdf L"Software\\Classes\\.pdf"
+
 /* The window is divided in three parts:
 - top part, where we display nice graphics
 - middle part, where we either display messages or advanced options
@@ -76,3 +79,7 @@ void UninstallBrowserPlugin();
 bool CheckInstallUninstallPossible(bool silent = false);
 char* GetInstallerLogPath();
 void ShowLogFile(const char* logPath);
+
+WCHAR* GetRegPathUninst(const WCHAR* appName);
+WCHAR* GetRegClassesApp(const WCHAR* appName);
+WCHAR* GetRegClassesApps(const WCHAR* appName);

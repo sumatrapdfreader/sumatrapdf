@@ -16,7 +16,6 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
-#include "utils/RegistryPaths.h"
 
 #include "wingui/UIModels.h"
 
@@ -289,6 +288,242 @@ static bool WriteUninstallerRegistryInfos() {
     return WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
 }
 
+// https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
+// http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
+static bool ListAsDefaultProgramWin10(const WCHAR* appName, const WCHAR* exeName, const WCHAR* extensions[],
+                                      HKEY hkey) {
+    bool ok = true;
+
+    // L"SOFTWARE\\SumatraPDF\\Capabilities"
+    const WCHAR* capKey = str::JoinTemp(L"SOFTWARE\\", appName, L"\\Capabilities");
+    ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
+    AutoFreeWstr desc = str::Join(appName, L" is a PDF reader.");
+    ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
+    AutoFreeWstr appLongName = str::Join(appName, L" Reader");
+    ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
+
+    // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
+    AutoFreeWstr keyAssoc = str::Join(capKey, L"\\FileAssociations");
+
+    for (int i = 0; nullptr != extensions[i]; i++) {
+        const WCHAR* ext = extensions[i];
+        ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, exeName);
+    }
+    if (!ok) {
+        log("Failed to register as default program on win 10\n");
+        // NotifyFailed(_TR("Failed to register as default program on win 10"));
+    }
+
+    return ok;
+}
+
+bool ListAsDefaultProgramPreWin10(const WCHAR* exeName, const WCHAR* extensions[], HKEY hkey) {
+    // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
+    // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
+    // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
+    // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
+    // menu item doesn't even exist for .mobi files
+    // It's not so easy, though, because if we just set it to SumatraPDF,
+    // all GetSupportedExts() will be reported as "PDF Document" by Explorer, so this needs
+    // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
+    // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
+    // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries
+    // Also, if Sumatra is the only program handling those docs, our
+    // PDF icon will be shown (we need icons and properly configure them)
+    bool ok = true;
+    AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", exeName);
+    for (int i = 0; nullptr != extensions[i]; i++) {
+        const WCHAR* ext = extensions[i];
+        AutoFreeWstr name = str::Join(L"Software\\Classes\\", ext, openWithVal);
+        ok &= CreateRegKey(hkey, name.Get());
+    }
+    return ok;
+}
+
+/*
+Structure of registry entries for associating Sumatra with PDF files.
+
+The following paths exist under both HKEY_LOCAL_MACHINE and HKEY_CURRENT_USER.
+HKCU has precedence over HKLM.
+
+Software\Classes\.pdf default key is name of reg entry describing the app
+  handling opening PDF files. In our case it's SumatraPDF
+Software\Classes\.pdf\OpenWithProgids
+  should contain SumatraPDF so that it's easier for the user to later
+  restore SumatraPDF to become the default app through Windows Explorer,
+  cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
+
+Software\Classes\SumatraPDF\DefaultIcon = $exePath,1
+  1 means the second icon resource within the executable
+Software\Classes\SumatraPDF\shell\open\command = "$exePath" "%1"
+  tells how to call sumatra to open PDF file. %1 is replaced by PDF file path
+
+Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
+  should be SumatraPDF (FoxIt takes it over); only needed for HKEY_CURRENT_USER
+  TODO: No other app seems to set this one, and only UserChoice seems to make
+        a difference - is this still required for Windows XP?
+
+Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Application
+  should be SumatraPDF.exe; only needed for HKEY_CURRENT_USER
+  Windows XP seems to use this instead of:
+
+Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice\Progid
+  should be SumatraPDF as well (also only needed for HKEY_CURRENT_USER);
+  this key is used for remembering a user's choice with Explorer's Open With dialog
+  and can't be written to - so we delete it instead!
+
+HKEY_CLASSES_ROOT\.pdf\OpenWithList
+  list of all apps that can be used to open PDF files. We don't touch that.
+
+HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
+HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
+
+Note: When making changes below, please also adjust WriteExtendedFileExtensionInfo(),
+UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
+
+*/
+
+// TODO: this method no longer valid
+#if 0
+void DoAssociateExeWithPdfExtension(HKEY hkey) {
+    auto exePath = GetExePathTemp();
+    if (exePath.empty()) {
+        return;
+    }
+
+    AutoFreeWstr regClassesApp = str::Join(LR"(Software\Classes\)", GetAppNameTemp());
+
+    AutoFreeWstr prevHandler;
+    // Remember the previous default app for the Uninstaller
+    prevHandler.Set(LoggedReadRegStr(hkey, kRegClassesPdf, nullptr));
+
+    bool ok = false;
+    const WCHAR* appName = GetAppNameTemp();
+    if (prevHandler && !str::Eq(prevHandler, appName)) {
+        LoggedWriteRegStr(hkey, regClassesApp, L"previous.pdf", prevHandler);
+    }
+
+    LoggedWriteRegStr(hkey, regClassesApp, nullptr, _TR("PDF Document"));
+    AutoFreeWstr icon_path = str::Join(exePath, L",1");
+    {
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\DefaultIcon)");
+        LoggedWriteRegStr(hkey, key, nullptr, icon_path);
+    }
+
+    {
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell)");
+        LoggedWriteRegStr(hkey, key, nullptr, L"open");
+    }
+
+    // "${exePath}" "%1" %*
+    AutoFreeWstr cmdPath = str::Format(LR"("%s" "%%1" %%*)", exePath.Get());
+    {
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell\open\command)");
+        ok = LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
+    }
+
+    // register for printing: "${exePath}" -print-to-default "%1"
+    cmdPath.Set(str::Format(LR"("%s" -print-to-default "%%1")", exePath.Get()));
+    {
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell\print\command)");
+        LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
+    }
+
+    // register for printing to specific printer:
+    // "${exePath}" -print-to "%2" "%1"
+    cmdPath.Set(str::Format(LR"("%s" -print-to "%%2" "%%1")", exePath.Get()));
+    {
+        AutoFreeWstr key = str::Join(regClassesApp, LR"(\shell\printto\command)");
+        LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
+    };
+
+    // Only change the association if we're confident, that we've registered ourselves well enough
+    if (!ok) {
+        return;
+    }
+
+    LoggedWriteRegStr(hkey, kRegClassesPdf, nullptr, appName);
+    // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
+    LoggedWriteRegStr(hkey, kRegClassesPdf LR"(\OpenWithProgids)", appName, L"");
+    if (hkey == HKEY_CURRENT_USER) {
+        LoggedWriteRegStr(hkey, kRegExplorerPdfExt, L"Progid", appName);
+        CrashIf(hkey == nullptr); // to appease prefast
+        SHDeleteValue(hkey, kRegExplorerPdfExt, L"Application");
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt LR"(\UserChoice)", true);
+    }
+}
+#endif
+
+// TODO: this method no longer valid
+#if 0
+// verify that all registry entries that need to be set in order to associate
+// Sumatra with .pdf files exist and have the right values
+bool IsExeAssociatedWithPdfExtension() {
+    // this one doesn't have to exist but if it does, it must be APP_NAME_STR
+    const WCHAR* appName = GetAppNameTemp();
+
+    AutoFreeWstr tmp(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, L"Progid"));
+    if (tmp && !str::Eq(tmp, appName)) {
+        return false;
+    }
+
+    // this one doesn't have to exist but if it does, it must be APP_NAME_STR.exe
+    tmp.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, L"Application"));
+    AutoFreeWstr exeName = str::Join(appName, L".exe");
+    if (tmp && !str::EqI(tmp, exeName)) {
+        return false;
+    }
+
+    // this one doesn't have to exist but if it does, it must be APP_NAME_STR
+    tmp.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt LR"(\UserChoice)", L"Progid"));
+    if (tmp && !str::Eq(tmp, appName)) {
+        return false;
+    }
+
+    // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
+    tmp.Set(LoggedReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr));
+    if (!str::Eq(tmp, appName)) {
+        return false;
+    }
+
+    // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
+    {
+        AutoFreeWstr key = str::Join(appName, LR"(\shell)");
+        tmp.Set(LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    }
+    if (!str::EqI(tmp, L"open")) {
+        return false;
+    }
+
+    // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
+    {
+        AutoFreeWstr key = str::Join(appName, LR"(\shell\open\command)");
+        tmp.Set(LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    }
+    if (!tmp) {
+        return false;
+    }
+
+    auto exePath = GetExePathTemp().Get();
+    if (!exePath || !str::Find(tmp, LR"("%1")")) {
+        return false;
+    }
+
+    CmdLineArgsIter argList(tmp);
+    bool hasPerc1 = false;
+    for (int i = 1; i < argList.nArgs; i++) {
+        if (str::Eq(argList.args[i], L"%1")) {
+            hasPerc1 = true;
+        }
+    }
+    if (!hasPerc1) {
+        return false;
+    }
+
+    return path::IsSame(exePath, argList.at(0));
+}
+#endif
+
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
@@ -324,9 +559,13 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
     }
 
+    auto exts = GetSupportedExts();
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
-    ok &= ListAsDefaultProgramPreWin10(exeName, GetSupportedExts(), hkey);
+    ok &= ListAsDefaultProgramPreWin10(exeName, exts, hkey);
+
+    auto appName = GetAppNameTemp();
+    ok &= ListAsDefaultProgramWin10(appName, exeName, exts, hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, L"Content Type", L"application/pdf");
@@ -342,6 +581,7 @@ static bool WriteExtendedFileExtensionInfos() {
         ok1 = WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE);
     }
     bool ok2 = WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER);
+
     return ok1 || ok2;
 }
 
@@ -423,13 +663,6 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     if (!WriteExtendedFileExtensionInfos()) {
         log("WriteExtendedFileExtensionInfos() failed\n");
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
-    }
-
-    appName = GetAppNameTemp();
-    exeName = GetExeNameTemp();
-    if (!ListAsDefaultProgramWin10(appName, exeName, GetSupportedExts())) {
-        log("Failed to register as default program on win 10\n");
-        NotifyFailed(_TR("Failed to register as default program on win 10"));
     }
 
     ProgressStep();

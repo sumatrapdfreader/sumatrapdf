@@ -16,7 +16,6 @@
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/LzmaSimpleArchive.h"
-#include "utils/RegistryPaths.h"
 
 #include "wingui/Layout.h"
 
@@ -94,13 +93,28 @@ static WStrVec gProcessesToClose;
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
 // clang-format off
-const WCHAR* gSupportedExtsSumatra[] = {
+static const WCHAR* gSupportedExtsSumatra[] = {
     L".pdf",  L".xps",  L".oxps", L".cbz",  L".cbr",  L".cb7", L".cbt",
     L".djvu", L".chm", L".mobi", L".epub", L".azw",  L".azw3", L".azw4",
     L".fb2", L".fb2z", L".prc",  L".tif", L".tiff", L".jp2",  L".png",
     L".jpg",  L".jpeg", L".tga", L".gif",  nullptr
 };
 // clang-format on
+
+// This is in HKLM. Note that on 64bit windows, if installing 32bit app
+// the installer has to be 32bit as well, so that it goes into proper
+// place in registry (under Software\Wow6432Node\Microsoft\Windows\...
+WCHAR* GetRegPathUninst(const WCHAR* appName) {
+    return str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
+}
+
+WCHAR* GetRegClassesApp(const WCHAR* appName) {
+    return str::Join(L"Software\\Classes\\", appName);
+}
+
+WCHAR* GetRegClassesApps(const WCHAR* appName) {
+    return str::Join(L"Software\\Classes\\Applications\\", appName, L".exe");
+}
 
 const WCHAR** GetSupportedExts() {
     return gSupportedExtsSumatra;

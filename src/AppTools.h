@@ -9,8 +9,7 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName);
 char* AppGenDataFilenameTemp(const char* fileName);
 void SetAppDataPath(const WCHAR* path);
 
-//void DoAssociateExeWithPdfExtension(HKEY hkey);
-//bool IsExeAssociatedWithPdfExtension();
+// bool IsExeAssociatedWithPdfExtension();
 
 WCHAR* AutoDetectInverseSearchCommands(HWND);
 
