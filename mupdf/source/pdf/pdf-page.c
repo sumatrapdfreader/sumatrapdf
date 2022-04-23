@@ -104,26 +104,15 @@ pdf_drop_page_tree(fz_context *ctx, pdf_document *doc)
 	doc->rev_page_count = 0;
 }
 
-enum
-{
-	LOCAL_STACK_SIZE = 16
-};
-
 static pdf_obj *
 pdf_lookup_page_loc_imp(fz_context *ctx, pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **parentp, int *indexp)
 {
+	pdf_mark_list mark_list;
 	pdf_obj *kids;
 	pdf_obj *hit = NULL;
 	int i, len;
-	pdf_obj *local_stack[LOCAL_STACK_SIZE];
-	pdf_obj **stack = &local_stack[0];
-	int stack_max = LOCAL_STACK_SIZE;
-	int stack_len = 0;
 
-	fz_var(hit);
-	fz_var(stack);
-	fz_var(stack_len);
-	fz_var(stack_max);
+	pdf_mark_list_init(ctx, &mark_list);
 
 	fz_try(ctx)
 	{
@@ -135,23 +124,7 @@ pdf_lookup_page_loc_imp(fz_context *ctx, pdf_document *doc, pdf_obj *node, int *
 			if (len == 0)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "malformed page tree");
 
-			/* Every node we need to unmark goes into the stack */
-			if (stack_len == stack_max)
-			{
-				if (stack == &local_stack[0])
-				{
-					stack = fz_malloc_array(ctx, stack_max * 2, pdf_obj*);
-					memcpy(stack, &local_stack[0], stack_max * sizeof(*stack));
-				}
-				else
-				{
-					stack = fz_realloc_array(ctx, stack, stack_max * 2, pdf_obj*);
-				}
-				stack_max *= 2;
-			}
-			stack[stack_len++] = node;
-
-			if (pdf_mark_obj(ctx, node))
+			if (pdf_mark_list_push(ctx, &mark_list, node))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
 
 			for (i = 0; i < len; i++)
@@ -199,10 +172,7 @@ pdf_lookup_page_loc_imp(fz_context *ctx, pdf_document *doc, pdf_obj *node, int *
 	}
 	fz_always(ctx)
 	{
-		for (i = stack_len; i > 0; i--)
-			pdf_unmark_obj(ctx, stack[i-1]);
-		if (stack != &local_stack[0])
-			fz_free(ctx, stack);
+		pdf_mark_list_free(ctx, &mark_list);
 	}
 	fz_catch(ctx)
 	{
@@ -262,9 +232,10 @@ pdf_count_pages_before_kid(fz_context *ctx, pdf_document *doc, pdf_obj *parent, 
 static int
 pdf_lookup_page_number_slow(fz_context *ctx, pdf_document *doc, pdf_obj *node)
 {
+	pdf_mark_list mark_list;
 	int needle = pdf_to_num(ctx, node);
 	int total = 0;
-	pdf_obj *parent, *parent2;
+	pdf_obj *parent;
 
 	if (!pdf_name_eq(ctx, pdf_dict_get(ctx, node, PDF_NAME(Type)), PDF_NAME(Page)))
 	{
@@ -272,13 +243,13 @@ pdf_lookup_page_number_slow(fz_context *ctx, pdf_document *doc, pdf_obj *node)
 		return -1;
 	}
 
-	parent2 = parent = pdf_dict_get(ctx, node, PDF_NAME(Parent));
-	fz_var(parent);
+	pdf_mark_list_init(ctx, &mark_list);
+	parent = pdf_dict_get(ctx, node, PDF_NAME(Parent));
 	fz_try(ctx)
 	{
 		while (pdf_is_dict(ctx, parent))
 		{
-			if (pdf_mark_obj(ctx, parent))
+			if (pdf_mark_list_push(ctx, &mark_list, parent))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree (parents)");
 			total += pdf_count_pages_before_kid(ctx, doc, parent, needle);
 			needle = pdf_to_num(ctx, parent);
@@ -286,20 +257,9 @@ pdf_lookup_page_number_slow(fz_context *ctx, pdf_document *doc, pdf_obj *node)
 		}
 	}
 	fz_always(ctx)
-	{
-		/* Run back and unmark */
-		while (parent2)
-		{
-			pdf_unmark_obj(ctx, parent2);
-			if (parent2 == parent)
-				break;
-			parent2 = pdf_dict_get(ctx, parent2, PDF_NAME(Parent));
-		}
-	}
+		pdf_mark_list_free(ctx, &mark_list);
 	fz_catch(ctx)
-	{
 		fz_rethrow(ctx);
-	}
 
 	return total;
 }

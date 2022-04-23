@@ -511,10 +511,11 @@ EMSCRIPTEN_KEEPALIVE
 fz_stream *openURL(char *url, int content_length, int block_size)
 {
 	fz_stream *stm = NULL;
+	struct fetch_state *state = NULL;
 	fz_var(stm);
+	fz_var(state);
 	fz_try (ctx)
 	{
-		struct fetch_state *state;
 		int block_shift = (int)log2(block_size);
 
 		if (block_shift < 10 || block_shift > 24)

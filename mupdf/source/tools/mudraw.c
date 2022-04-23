@@ -430,7 +430,7 @@ static int usage(void)
 		"\t-r -\tresolution in dpi (default: 72)\n"
 		"\t-w -\twidth (in pixels) (maximum width if -r is specified)\n"
 		"\t-h -\theight (in pixels) (maximum height if -r is specified)\n"
-		"\t-f -\tfit width and/or height exactly; ignore original aspect ratio\n"
+		"\t-f\tfit width and/or height exactly; ignore original aspect ratio\n"
 		"\t-B -\tmaximum band_height (pXm, pcl, pclm, ocr.pdf, ps, psd and png output only)\n"
 #ifndef DISABLE_MUTHREADS
 		"\t-T -\tnumber of threads to use for rendering (banded mode only)\n"
