@@ -15,6 +15,6 @@ extern const char* currentVersion; // e.g. "3.2.1138"
 extern const char* gitSha1;
 extern const char* preReleaseVersion;
 
-const WCHAR* GetExeNameTemp();
+constexpr const WCHAR* kExeName = L"SumatraPDF.exe";
 
 int GetAppIconID();

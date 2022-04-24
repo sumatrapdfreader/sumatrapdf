@@ -59,10 +59,6 @@ bool gDisableDocumentRestrictions = true;
 bool gDisableDocumentRestrictions = false;
 #endif
 
-const WCHAR* GetExeNameTemp() {
-    return L"SumatraPDF.exe";
-}
-
 int GetAppIconID() {
     return IDI_SUMATRAPDF;
 }

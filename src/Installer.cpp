@@ -158,8 +158,7 @@ static bool CreateInstallationDirectory() {
 static bool CopySelfToDir(const WCHAR* destDir) {
     logf(L"CopySelfToDir(%s)\n", destDir);
     auto exePath = GetExePathTemp();
-    auto exeName = GetExeNameTemp();
-    auto dstPath = path::Join(destDir, exeName);
+    WCHAR* dstPath = path::JoinTemp(destDir, kExeName);
     bool failIfExists = false;
     bool ok = file::Copy(dstPath, exePath, failIfExists);
     // strip zone identifier (if exists) to avoid windows
@@ -167,7 +166,6 @@ static bool CopySelfToDir(const WCHAR* destDir) {
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
     auto dstPathA = ToUtf8Temp(dstPath);
     file::DeleteZoneIdentifier(dstPathA);
-    str::Free(dstPath);
     if (!ok) {
         logf(L"  failed to copy '%s' to dir '%s'\n", exePath.Get(), destDir);
         return false;
@@ -239,7 +237,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     logf("WriteUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
-    AutoFreeWstr installedExePath = GetInstallationFilePath(GetExeNameTemp());
+    AutoFreeWstr installedExePath = GetInstallationFilePath(kExeName);
     AutoFreeWstr installDate = GetInstallDate();
     WCHAR* installDir = GetInstallDirTemp();
     WCHAR* uninstallerPath = installedExePath; // same as
@@ -291,7 +289,6 @@ static bool WriteUninstallerRegistryInfos() {
 static bool ListAsDefaultProgramWin10(HKEY hkey) {
     bool ok = true;
 
-    const WCHAR* exeName = GetExeNameTemp();
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
     WCHAR* capKey = str::JoinTemp(L"SOFTWARE\\", kAppName, L"\\Capabilities");
     ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", kAppName, capKey);
@@ -306,7 +303,7 @@ static bool ListAsDefaultProgramWin10(HKEY hkey) {
     auto ext = GetSupportedExts();
     while (ext) {
         WCHAR* extw = ToWstrTemp(ext);
-        ok &= LoggedWriteRegStr(hkey, keyAssoc, extw, exeName);
+        ok &= LoggedWriteRegStr(hkey, keyAssoc, extw, kExeName);
         seqstrings::Next(ext);
     }
     return ok;
@@ -327,9 +324,7 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // PDF icon will be shown (we need icons and properly configure them)
     bool ok = true;
 
-    const WCHAR* exeName = GetExeNameTemp();
-
-    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
+    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
     auto exts = GetSupportedExts();
     while (exts) {
         WCHAR* ext = ToWstrTemp(exts);
@@ -528,10 +523,9 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
-    const WCHAR* exeName = GetExeNameTemp();
     AutoFreeWstr exePath = GetInstalledExePath();
     if (HKEY_LOCAL_MACHINE == hkey) {
-        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
+        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, exePath);
     }
     WCHAR* REG_CLASSES_APPS = GetRegClassesAppsTemp(kAppName);

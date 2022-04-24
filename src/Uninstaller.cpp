@@ -112,8 +112,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     }
     const WCHAR* kRegApplication = L"Application";
     buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication));
-    const WCHAR* exeName = GetExeNameTemp();
-    if (str::EqI(buf, exeName)) {
+    if (str::EqI(buf, kExeName)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication);
         if (res != ERROR_SUCCESS) {
             LogLastError(res);
@@ -156,7 +155,6 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     }
     logf("RemoveOwnRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
     // UnregisterFromBeingDefaultViewer(hkey);
-    const WCHAR* exeName = GetExeNameTemp();
     const WCHAR* regClassApp = GetRegClassesAppTemp(kAppName);
     LoggedDeleteRegKey(hkey, regClassApp);
     WCHAR* regClassApps = GetRegClassesAppsTemp(kAppName);
@@ -167,12 +165,12 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     }
 
     if (HKEY_LOCAL_MACHINE == hkey) {
-        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
+        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
         LoggedDeleteRegKey(hkey, key);
     }
 
     SeqStrings exts = GetSupportedExts();
-    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
+    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
     while (exts) {
         WCHAR* ext = ToWstrTemp(exts);
         WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");

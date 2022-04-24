@@ -164,7 +164,7 @@ WCHAR* GetInstallationFilePath(const WCHAR* name) {
 
 WCHAR* GetInstalledExePath() {
     WCHAR* dir = GetInstallDirTemp();
-    return path::Join(dir, GetExeNameTemp());
+    return path::Join(dir, kExeName);
 }
 
 WCHAR* GetShortcutPath(int csidl) {
@@ -509,8 +509,7 @@ static const WCHAR* readableProcessNames[] = {
 // clang-format on
 
 static const WCHAR* ReadableProcName(const WCHAR* procPath) {
-    const WCHAR* exeName = GetExeNameTemp();
-    readableProcessNames[0] = exeName;
+    readableProcessNames[0] = kExeName;
     readableProcessNames[1] = kAppName;
     const WCHAR* procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
