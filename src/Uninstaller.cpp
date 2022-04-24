@@ -98,7 +98,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
 #pragma warning(push)
 #pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the
                                 // specification for the function 'SHDeleteValueW'
-        SHDeleteValueW(hkey, kRegClassesPdf, nullptr);
+        LoggedDeleteRegValue(hkey, kRegClassesPdf, nullptr);
 #pragma warning(pop)
     }
 
@@ -161,7 +161,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     LoggedDeleteRegKey(hkey, regClassApps);
     {
         WCHAR* key = str::JoinTemp(kRegClassesPdf, L"\\OpenWithProgids");
-        SHDeleteValueW(hkey, key, kAppName);
+        LoggedDeleteRegValue(hkey, key, kAppName);
     }
 
     if (HKEY_LOCAL_MACHINE == hkey) {
@@ -174,7 +174,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     while (exts) {
         WCHAR* ext = ToWstrTemp(exts);
         WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
-        SHDeleteValueW(hkey, keyname, kAppName);
+        LoggedDeleteRegValue(hkey, keyname, kAppName);
         DeleteEmptyRegKey(hkey, keyname);
 
         keyname = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
@@ -195,7 +195,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     }
 
     // delete keys written in ListAsDefaultProgramWin10()
-    SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", kAppName);
+    LoggedDeleteRegValue(hkey, L"SOFTWARE\\RegisteredApplications", kAppName);
     AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", kAppName);
     LoggedDeleteRegKey(hkey, keyName);
 }

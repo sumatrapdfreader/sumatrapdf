@@ -284,9 +284,9 @@ void DbgOutLastError(DWORD err) {
 }
 
 // return true if a given registry key (path) exists
-bool RegKeyExists(HKEY keySub, const WCHAR* keyName) {
+bool RegKeyExists(HKEY hkey, const WCHAR* keyName) {
     HKEY hKey;
-    LONG res = RegOpenKey(keySub, keyName, &hKey);
+    LONG res = RegOpenKeyW(hkey, keyName, &hKey);
     if (ERROR_SUCCESS == res) {
         RegCloseKey(hKey);
         return true;
@@ -298,15 +298,15 @@ bool RegKeyExists(HKEY keySub, const WCHAR* keyName) {
 }
 
 // called needs to free() the result
-WCHAR* ReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
-    if (!keySub) {
+WCHAR* ReadRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
+    if (!hkey) {
         return nullptr;
     }
     WCHAR* val = nullptr;
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
-    LONG res = RegOpenKeyEx(keySub, keyName, 0, access, &hKey);
+    LONG res = RegOpenKeyEx(hkey, keyName, 0, access, &hKey);
     if (ERROR_SUCCESS == res) {
         DWORD valLen;
         res = RegQueryValueEx(hKey, valName, nullptr, nullptr, nullptr, &valLen);
@@ -319,7 +319,7 @@ TryAgainWOW64:
         }
         RegCloseKey(hKey);
     }
-    if (ERROR_FILE_NOT_FOUND == res && HKEY_LOCAL_MACHINE == keySub && KEY_READ == access) {
+    if (ERROR_FILE_NOT_FOUND == res && HKEY_LOCAL_MACHINE == hkey && KEY_READ == access) {
 // try the (non-)64-bit key as well, as HKLM\Software is not shared between 32-bit and
 // 64-bit applications per http://msdn.microsoft.com/en-us/library/aa384253(v=vs.85).aspx
 #ifdef _WIN64
@@ -332,15 +332,15 @@ TryAgainWOW64:
     return val;
 }
 
-WCHAR* LoggedReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
-    auto res = ReadRegStr(keySub, keyName, valName);
-    logf(L"ReadRegStr(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(keySub), keyName, valName, res);
+WCHAR* LoggedReadRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
+    auto res = ReadRegStr(hkey, keyName, valName);
+    logf(L"ReadRegStr(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(hkey), keyName, valName, res);
     return res;
 }
 
 // called needs to free() the result
-char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
-    WCHAR* ws = ReadRegStr(keySub, keyName, valName);
+char* ReadRegStrUtf8(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
+    WCHAR* ws = ReadRegStr(hkey, keyName, valName);
     if (!ws) {
         return nullptr;
     }
@@ -369,38 +369,38 @@ WCHAR* LoggedReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
     return res;
 }
 
-bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
+bool WriteRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
     DWORD cbData = (DWORD)(str::Len(value) + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_SZ, (const void*)value, cbData);
+    LSTATUS res = SHSetValueW(hkey, keyName, valName, REG_SZ, (const void*)value, cbData);
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
-    auto res = WriteRegStr(keySub, keyName, valName, value);
-    logf(L"WriteRegStr(%s, %s, %s, %s) => '%d'\n", RegKeyNameWTemp(keySub), keyName, valName, value, res);
+bool LoggedWriteRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
+    auto res = WriteRegStr(hkey, keyName, valName, value);
+    logf(L"WriteRegStr(%s, %s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, value, res);
     return res;
 }
 
-bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value) {
+bool ReadRegDWORD(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, DWORD& value) {
     DWORD size = sizeof(DWORD);
-    LSTATUS res = SHGetValue(keySub, keyName, valName, nullptr, &value, &size);
+    LSTATUS res = SHGetValue(hkey, keyName, valName, nullptr, &value, &size);
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
-    LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_DWORD, (const void*)&value, sizeof(DWORD));
+bool WriteRegDWORD(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
+    LSTATUS res = SHSetValueW(hkey, keyName, valName, REG_DWORD, (const void*)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
-    auto res = WriteRegDWORD(keySub, keyName, valName, value);
-    logf(L"WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(keySub), keyName, valName, (int)value, res);
+bool LoggedWriteRegDWORD(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
+    auto res = WriteRegDWORD(hkey, keyName, valName, value);
+    logf(L"WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, (int)value, res);
     return res;
 }
 
-bool CreateRegKey(HKEY keySub, const WCHAR* keyName) {
+bool CreateRegKey(HKEY hkey, const WCHAR* keyName) {
     HKEY hKey;
-    LSTATUS res = RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
+    LSTATUS res = RegCreateKeyExW(hkey, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
     if (res != ERROR_SUCCESS) {
         return false;
     }
@@ -431,9 +431,9 @@ const WCHAR* RegKeyNameWTemp(HKEY key) {
                                 // an unprotected object"
 // try to remove any access restrictions on the key
 // by granting everybody all access to this key (nullptr DACL)
-static void ResetRegKeyAcl(HKEY keySub, const WCHAR* keyName) {
+static void ResetRegKeyAcl(HKEY hkey, const WCHAR* keyName) {
     HKEY hKey;
-    LONG res = RegOpenKeyEx(keySub, keyName, 0, WRITE_DAC, &hKey);
+    LONG res = RegOpenKeyEx(hkey, keyName, 0, WRITE_DAC, &hKey);
     if (ERROR_SUCCESS != res) {
         return;
     }
@@ -445,18 +445,29 @@ static void ResetRegKeyAcl(HKEY keySub, const WCHAR* keyName) {
 }
 #pragma warning(pop)
 
-bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst) {
+bool DeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
     if (resetACLFirst) {
-        ResetRegKeyAcl(keySub, keyName);
+        ResetRegKeyAcl(hkey, keyName);
     }
 
-    LSTATUS res = SHDeleteKeyW(keySub, keyName);
+    LSTATUS res = SHDeleteKeyW(hkey, keyName);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-bool LoggedDeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst) {
-    auto res = DeleteRegKey(keySub, keyName, resetACLFirst);
-    logf(L"DeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(keySub), keyName, resetACLFirst, res);
+bool LoggedDeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
+    auto res = DeleteRegKey(hkey, keyName, resetACLFirst);
+    logf(L"DeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
+    return res;
+}
+
+bool DeleteRegValue(HKEY hkey, const WCHAR* keyName, const WCHAR* val) {
+    auto res = SHDeleteValueW(hkey, keyName, val);
+    return res == ERROR_SUCCESS;
+}
+
+bool LoggedDeleteRegValue(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
+    auto res = DeleteRegValue(hkey, keyName, valName);
+    logf(L"LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey), keyName, valName, res);
     return res;
 }
 

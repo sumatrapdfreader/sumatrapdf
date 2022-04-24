@@ -442,7 +442,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
     if (hkey == HKEY_CURRENT_USER) {
         LoggedWriteRegStr(hkey, kRegExplorerPdfExt, L"Progid", appName);
         CrashIf(hkey == nullptr); // to appease prefast
-        SHDeleteValue(hkey, kRegExplorerPdfExt, L"Application");
+        LoggedDeleteRegValue(hkey, kRegExplorerPdfExt, L"Application");
         LoggedDeleteRegKey(hkey, kRegExplorerPdfExt LR"(\UserChoice)", true);
     }
 }

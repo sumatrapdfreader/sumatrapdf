@@ -314,8 +314,8 @@ STDAPI DllUnregisterServer() {
         const WCHAR* ext2 = gPreviewers[i].ext2;
 
         // unregister preview handler
-        SHDeleteValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, clsid);
-        SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, clsid);
+        DeleteRegValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, clsid);
+        DeleteRegValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, clsid);
         // remove class data
         AutoFreeWstr key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
         DeleteOrFail(key, &hr);

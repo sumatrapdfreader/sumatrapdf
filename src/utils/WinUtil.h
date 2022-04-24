@@ -60,6 +60,8 @@ bool LoggedWriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName
 bool CreateRegKey(HKEY keySub, const WCHAR* keyName);
 bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
 bool LoggedDeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
+bool DeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
+bool LoggedDeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
 
 TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 
