@@ -24,11 +24,7 @@ static bool gBuildXpsPreview = true;
 static bool gBuildXpsPreview = false;
 #endif
 
-#ifdef BUILD_DJVU_PREVIEW
 static bool gBuildDjVuPreview = true;
-#else
-static bool gBuildDjVuPreview = false;
-#endif
 
 #ifdef BUILD_EPUB_PREVIEW
 static bool gBuildEpubPreview = true;
@@ -48,17 +44,8 @@ static bool gBuildMobiPreview = true;
 static bool gBuildMobiPreview = false;
 #endif
 
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 static bool gBuildCbxPreview = true;
-#else
-static bool gBuildCbxPreview = false;
-#endif
-
-#ifdef BUILD_TGA_PREVIEW
 static bool gBuildTgaPreview = true;
-#else
-static bool gBuildTgaPreview = false;
-#endif
 
 class PreviewClassFactory : public IClassFactory {
   public:
@@ -215,9 +202,7 @@ static struct {
 #ifdef BUILD_XPS_PREVIEW
     {SZ_XPS_PREVIEW_CLSID, L".xps", L".oxps"},
 #endif
-#ifdef BUILD_DJVU_PREVIEW
     {SZ_DJVU_PREVIEW_CLSID, L".djvu"},
-#endif
 #ifdef BUILD_EPUB_PREVIEW
     {SZ_EPUB_PREVIEW_CLSID, L".epub"},
 #endif
@@ -227,21 +212,8 @@ static struct {
 #ifdef BUILD_MOBI_PREVIEW
     {SZ_MOBI_PREVIEW_CLSID, L".mobi"},
 #endif
-#ifdef BUILD_CBZ_PREVIEW
-    {SZ_CBX_PREVIEW_CLSID, L".cbz"},
-#endif
-#ifdef BUILD_CBR_PREVIEW
-    {SZ_CBX_PREVIEW_CLSID, L".cbr"},
-#endif
-#ifdef BUILD_CB7_PREVIEW
-    {SZ_CBX_PREVIEW_CLSID, L".cb7"},
-#endif
-#ifdef BUILD_CBT_PREVIEW
-    {SZ_CBX_PREVIEW_CLSID, L".cbt"},
-#endif
-#ifdef BUILD_TGA_PREVIEW
-    {SZ_TGA_PREVIEW_CLSID, L".tga"},
-#endif
+    {SZ_CBX_PREVIEW_CLSID, L".cbz"},           {SZ_CBX_PREVIEW_CLSID, L".cbr"}, {SZ_CBX_PREVIEW_CLSID, L".cb7"},
+    {SZ_CBX_PREVIEW_CLSID, L".cbt"},           {SZ_TGA_PREVIEW_CLSID, L".tga"},
 };
 
 STDAPI DllRegisterServer() {

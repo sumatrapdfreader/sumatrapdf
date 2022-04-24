@@ -269,19 +269,10 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLUpdateInfo",
                             L"https://www.sumatrapdfreader.org/docs/Version-history.html");
-
-    return ok;
-}
-
-static bool WriteUninstallerRegistryInfos() {
-    // we only want to write one of those
-    if (gCli->allUsers) {
-        bool ok = WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
-        if (ok) {
-            return true;
-        }
+    if (!ok) {
+        log("WriteUninstallerRegistryInfo() failed\n");
     }
-    return WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
+    return ok;
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
@@ -563,17 +554,11 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     const WCHAR* key = L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
     ok &= LoggedWriteRegStr(hkey, key, L"Extension", L".pdf");
 
-    return ok;
-}
-
-static bool WriteExtendedFileExtensionInfos() {
-    bool ok1 = true;
-    if (gCli->allUsers) {
-        ok1 = WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE);
+    if (!ok) {
+        log("WriteExtendedFileExtensionInfo() failed\n");
     }
-    bool ok2 = WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER);
 
-    return ok1 || ok2;
+    return ok;
 }
 
 static void OnButtonStartSumatra() {
@@ -608,7 +593,8 @@ static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTME
 static void CreateAppShortcuts(bool forAllUsers) {
     logf("CreateAppShortcuts(forAllUsers=%d)\n", (int)forAllUsers);
     size_t start = forAllUsers ? 0 : 2;
-    for (size_t i = start; i < dimof(shortcutDirs); i++) {
+    size_t end = forAllUsers ? 2 : dimof(shortcutDirs);
+    for (size_t i = start; i < end; i++) {
         int csidl = shortcutDirs[i];
         CreateAppShortcut(csidl);
     }
@@ -616,6 +602,7 @@ static void CreateAppShortcuts(bool forAllUsers) {
 
 static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     success = false;
+    bool ok;
 
     if (!ExtractInstallerFiles()) {
         log("ExtractInstallerFiles() failed\n");
@@ -644,13 +631,22 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     // (still warn, if we've failed to create the uninstaller, though)
     success = true;
 
-    if (!WriteUninstallerRegistryInfos()) {
-        log("WriteUninstallerRegistryInfos() failed\n");
+    // we only want to write one of those
+    if (gCli->allUsers) {
+        ok = WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+    } else {
+        ok = WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
+    }
+    if (!ok) {
         NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
     }
 
-    if (!WriteExtendedFileExtensionInfos()) {
-        log("WriteExtendedFileExtensionInfos() failed\n");
+    if (gCli->allUsers) {
+        ok = WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE);
+    } else {
+        ok = WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER);
+    }
+    if (!ok) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 

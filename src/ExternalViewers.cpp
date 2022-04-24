@@ -401,6 +401,8 @@ bool CanSendAsEmailAttachment(TabInfo* tab) {
     return pDropTarget.Create(CLSID_SendMail);
 }
 
+// TODO: maybe use
+// https://stackoverflow.com/questions/47639267/win32-c-sending-email-in-windows-10-by-invoking-default-mail-client
 bool SendAsEmailAttachment(TabInfo* tab, HWND hwndParent) {
     if (!tab || !CanSendAsEmailAttachment(tab)) {
         return false;

@@ -426,11 +426,6 @@ const WCHAR* RegKeyNameWTemp(HKEY key) {
     return ToWstrTemp(k);
 }
 
-#pragma warning(push)
-#pragma warning(disable : 6248) // "Setting a SECURITY_DESCRIPTOR's DACL to nullptr will result in
-                                // an unprotected object"
-// try to remove any access restrictions on the key
-// by granting everybody all access to this key (nullptr DACL)
 static void ResetRegKeyAcl(HKEY hkey, const WCHAR* keyName) {
     HKEY hKey;
     LONG res = RegOpenKeyEx(hkey, keyName, 0, WRITE_DAC, &hKey);
@@ -439,11 +434,17 @@ static void ResetRegKeyAcl(HKEY hkey, const WCHAR* keyName) {
     }
     SECURITY_DESCRIPTOR secdesc;
     InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
+
+#pragma warning(push)
+#pragma warning(disable : 6248)
+    // "Setting a SECURITY_DESCRIPTOR's DACL to nullptr will result in an unprotected object"
+    // https://docs.microsoft.com/en-us/cpp/code-quality/c6248?view=msvc-170
     SetSecurityDescriptorDacl(&secdesc, TRUE, nullptr, TRUE);
+#pragma warning(pop)
+
     RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
     RegCloseKey(hKey);
 }
-#pragma warning(pop)
 
 bool DeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
     if (resetACLFirst) {
