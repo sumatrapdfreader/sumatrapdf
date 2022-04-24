@@ -70,8 +70,6 @@ void HandleRedirectedConsoleOnShutdown();
 
 TempWstr GetExePathTemp();
 WCHAR* GetExeDir();
-WCHAR* GetSystem32Dir();
-WCHAR* GetCurrentDir();
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 

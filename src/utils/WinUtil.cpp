@@ -609,38 +609,6 @@ WCHAR* GetExeDir() {
     return dir;
 }
 
-/*
-Returns ${SystemRoot}\system32 directory.
-Caller has to free() the result.
-*/
-WCHAR* GetSystem32Dir() {
-    WCHAR buf[1024]{};
-    DWORD n = GetEnvironmentVariableW(L"SystemRoot", &buf[0], dimof(buf));
-    if ((n == 0) || (n >= dimof(buf))) {
-        CrashIf(true);
-        return str::Dup(L"c:\\windows\\system32");
-    }
-    return path::Join(buf, L"system32");
-}
-
-/*
-Returns current directory.
-Caller has to free() the result.
-*/
-WCHAR* GetCurrentDir() {
-    DWORD n = GetCurrentDirectoryW(0, nullptr);
-    if (0 == n) {
-        return nullptr;
-    }
-    WCHAR* buf = AllocArray<WCHAR>(n + 1);
-    DWORD res = GetCurrentDirectoryW(n, buf);
-    if (0 == res) {
-        return nullptr;
-    }
-    CrashIf(res > n);
-    return buf;
-}
-
 void ChangeCurrDirToDocuments() {
     WCHAR* dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
     SetCurrentDirectoryW(dir);
