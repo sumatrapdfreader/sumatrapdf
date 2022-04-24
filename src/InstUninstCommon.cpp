@@ -103,16 +103,12 @@ static SeqStrings gSupportedExts =
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-WCHAR* GetRegPathUninst(const WCHAR* appName) {
-    return str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
+const WCHAR* GetRegPathUninstTemp(const WCHAR* appName) {
+    return str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
 }
 
-WCHAR* GetRegClassesApp(const WCHAR* appName) {
-    return str::Join(L"Software\\Classes\\", appName);
-}
-
-WCHAR* GetRegClassesApps(const WCHAR* appName) {
-    return str::Join(L"Software\\Classes\\Applications\\", appName, L".exe");
+const WCHAR* GetRegClassesAppsTemp(const WCHAR* appName) {
+    return str::JoinTemp(L"Software\\Classes\\Applications\\", appName, L".exe");
 }
 
 SeqStrings GetSupportedExts() {
@@ -133,7 +129,7 @@ void SetMsg(const WCHAR* msg, Color color) {
 
 WCHAR* GetExistingInstallationDir() {
     log("GetExistingInstallationDir()\n");
-    AutoFreeWstr regPathUninst = GetRegPathUninst(GetAppNameTemp());
+    const WCHAR* regPathUninst = GetRegPathUninstTemp(GetAppNameTemp());
     AutoFreeWstr dir = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
     if (!dir) {
         return nullptr;

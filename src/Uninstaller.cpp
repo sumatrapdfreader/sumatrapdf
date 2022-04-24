@@ -64,11 +64,11 @@ static void CreateButtonExit(HWND hwndParent) {
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
-    AutoFreeWstr regPathUninst = GetRegPathUninst(GetAppNameTemp());
+    const WCHAR* regPathUninst = GetRegPathUninstTemp(GetAppNameTemp());
     bool ok1 = LoggedDeleteRegKey(hkey, regPathUninst);
     // legacy, this key was added by installers up to version 1.8
     const WCHAR* appName = GetAppNameTemp();
-    AutoFreeWstr key = str::Join(L"Software\\", appName);
+    const WCHAR* key = str::JoinTemp(L"Software\\", appName);
     bool ok2 = LoggedDeleteRegKey(hkey, key);
     return ok1 && ok2;
 }
@@ -79,13 +79,17 @@ static bool RemoveUninstallerRegistryInfo() {
     return ok1 || ok2;
 }
 
+static const WCHAR* GetRegClassesAppTemp(const WCHAR* appName) {
+    return str::JoinTemp(L"Software\\Classes\\", appName);
+}
+
 // TODO: this method no longer works
 #if 0
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     logf("UnregisterFromBeingDefaultViewer()\n");
     AutoFreeWstr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
-    AutoFreeWstr regClassesApp = GetRegClassesApp(GetAppNameTemp());
+    const WCHAR* regClassesApp = GetRegClassesAppTemp(GetAppNameTemp());
     AutoFreeWstr prev = LoggedReadRegStr(hkey, regClassesApp, L"previous.pdf");
     const WCHAR* appName = GetAppNameTemp();
     if (!curr || !str::Eq(curr, appName)) {
@@ -156,9 +160,9 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     // UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeNameTemp();
-    AutoFreeWstr regClassApp = GetRegClassesApp(appName);
+    const WCHAR* regClassApp = GetRegClassesAppTemp(appName);
     LoggedDeleteRegKey(hkey, regClassApp);
-    AutoFreeWstr regClassApps = GetRegClassesApps(appName);
+    const WCHAR* regClassApps = GetRegClassesAppsTemp(appName);
     LoggedDeleteRegKey(hkey, regClassApps);
     {
         AutoFreeWstr key = str::Join(kRegClassesPdf, L"\\OpenWithProgids");

@@ -247,7 +247,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath);
 
     const WCHAR* appName = GetAppNameTemp();
-    AutoFreeWstr regPathUninst = GetRegPathUninst(appName);
+    const WCHAR* regPathUninst = GetRegPathUninstTemp(appName);
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", appName);
@@ -538,7 +538,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, exePath);
     }
-    AutoFreeWstr REG_CLASSES_APPS = GetRegClassesApps(GetAppNameTemp());
+    const WCHAR* REG_CLASSES_APPS = GetRegClassesAppsTemp(GetAppNameTemp());
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     AutoFreeWstr iconPath = str::Join(exePath, L",1");
@@ -942,7 +942,7 @@ static void PositionInstallButton(Button* b) {
 static WCHAR* GetInstallationDir(bool forAllUsers) {
     logf(L"GetInstallationDir(forAllUsers=%d)\n", (int)forAllUsers);
     const WCHAR* appName = GetAppNameTemp();
-    AutoFreeWstr regPath = GetRegPathUninst(appName);
+    const WCHAR* regPath = GetRegPathUninstTemp(appName);
     AutoFreeWstr dir = LoggedReadRegStr2(regPath, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
