@@ -113,11 +113,13 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     if (!path) {
         return nullptr;
     }
+    WCHAR* res = nullptr;
     bool ok = dir::Create(path);
-    if (!ok) {
-        return nullptr;
+    if (ok) {
+        res = path::Join(path, fileName);
     }
-    return path::Join(path, fileName);
+    str::Free(path);
+    return res;
 }
 
 char* AppGenDataFilenameTemp(const char* fileName) {
