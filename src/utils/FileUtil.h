@@ -13,6 +13,8 @@ const char* GetExtTemp(const char* path);
 char* Join(const char* path, const char* fileName, Allocator* allocator);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
+TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
+
 std::string_view GetDir(std::string_view path);
 bool IsDirectory(std::string_view);
 bool IsDirectory(std::wstring_view);

@@ -2567,7 +2567,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         ok = file::WriteFile(realDstFileName, textUTF8BOM.AsSpan());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
-        AutoFreeWstr producerName = str::Join(GetAppNameTemp(), L" ", CURR_VERSION_STR);
+        WCHAR* producerName = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);
         PdfCreator::SetProducerName(producerName);
         ok = engine->SaveFileAsPDF(pathA.Get());
         if (!ok && gIsDebugBuild) {
@@ -5235,7 +5235,7 @@ static WCHAR* GetSymbolsDir() {
         return GetExeDir();
     }
     TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    return path::Join(dir.Get(), GetAppNameTemp(), L"crashinfo");
+    return path::Join(dir.Get(), kAppName, L"crashinfo");
 }
 
 static void DownloadDebugSymbols() {

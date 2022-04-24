@@ -103,11 +103,11 @@ static SeqStrings gSupportedExts =
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-const WCHAR* GetRegPathUninstTemp(const WCHAR* appName) {
+TempWstr GetRegPathUninstTemp(const WCHAR* appName) {
     return str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
 }
 
-const WCHAR* GetRegClassesAppsTemp(const WCHAR* appName) {
+TempWstr GetRegClassesAppsTemp(const WCHAR* appName) {
     return str::JoinTemp(L"Software\\Classes\\Applications\\", appName, L".exe");
 }
 
@@ -129,7 +129,7 @@ void SetMsg(const WCHAR* msg, Color color) {
 
 WCHAR* GetExistingInstallationDir() {
     log("GetExistingInstallationDir()\n");
-    const WCHAR* regPathUninst = GetRegPathUninstTemp(GetAppNameTemp());
+    const WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
     AutoFreeWstr dir = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
     if (!dir) {
         return nullptr;
@@ -168,12 +168,11 @@ WCHAR* GetInstalledExePath() {
 }
 
 WCHAR* GetShortcutPath(int csidl) {
-    TempWstr dir = GetSpecialFolderTemp(csidl, false);
-    if (!dir.Get()) {
+    WCHAR* dir = GetSpecialFolderTemp(csidl, false);
+    if (!dir) {
         return nullptr;
     }
-    const WCHAR* appName = GetAppNameTemp();
-    AutoFreeWstr lnkName = str::Join(appName, L".lnk");
+    WCHAR* lnkName = str::JoinTemp(kAppName, L".lnk");
     return path::Join(dir, lnkName);
 }
 
@@ -511,9 +510,8 @@ static const WCHAR* readableProcessNames[] = {
 
 static const WCHAR* ReadableProcName(const WCHAR* procPath) {
     const WCHAR* exeName = GetExeNameTemp();
-    const WCHAR* appName = GetAppNameTemp();
     readableProcessNames[0] = exeName;
-    readableProcessNames[1] = appName;
+    readableProcessNames[1] = kAppName;
     const WCHAR* procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
         if (str::EqI(procName, readableProcessNames[i])) {

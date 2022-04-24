@@ -192,10 +192,9 @@ static void CopySettingsFile() {
         return;
     }
 
-    const WCHAR* appName = GetAppNameTemp();
     const WCHAR* prefsFileName = prefs::GetSettingsFileNameTemp();
-    AutoFreeWstr srcPath = path::Join(srcDir.Get(), appName, prefsFileName);
-    AutoFreeWstr dstPath = path::Join(dstDir.Get(), appName, prefsFileName);
+    AutoFreeWstr srcPath = path::Join(srcDir.Get(), kAppName, prefsFileName);
+    AutoFreeWstr dstPath = path::Join(dstDir.Get(), kAppName, prefsFileName);
 
     // don't over-write
     bool failIfExists = true;
@@ -246,17 +245,16 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     WCHAR* uninstallerPath = installedExePath; // same as
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath);
 
-    const WCHAR* appName = GetAppNameTemp();
-    const WCHAR* regPathUninst = GetRegPathUninstTemp(appName);
+    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", appName);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", kAppName);
     // version format: "1.2"
     ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsWindowsVistaOrGreater()) {
-        auto key = str::JoinTemp(appName, L" ", CURR_VERSION_STR);
+        WCHAR* key = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);
         ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", key);
     }
     DWORD size = GetDirSize(gCli->installDir) / 1024;
@@ -293,22 +291,21 @@ static bool WriteUninstallerRegistryInfos() {
 static bool ListAsDefaultProgramWin10(HKEY hkey) {
     bool ok = true;
 
-    const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeNameTemp();
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
-    const WCHAR* capKey = str::JoinTemp(L"SOFTWARE\\", appName, L"\\Capabilities");
-    ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
-    AutoFreeWstr desc = str::Join(appName, L" is a PDF reader.");
+    WCHAR* capKey = str::JoinTemp(L"SOFTWARE\\", kAppName, L"\\Capabilities");
+    ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", kAppName, capKey);
+    WCHAR* desc = str::JoinTemp(kAppName, L" is a PDF reader.");
     ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
-    AutoFreeWstr appLongName = str::Join(appName, L" Reader");
+    WCHAR* appLongName = str::JoinTemp(kAppName, L" Reader");
     ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
-    AutoFreeWstr keyAssoc = str::Join(capKey, L"\\FileAssociations");
+    WCHAR* keyAssoc = str::JoinTemp(capKey, L"\\FileAssociations");
 
     auto ext = GetSupportedExts();
     while (ext) {
-        const WCHAR* extw = ToWstrTemp(ext);
+        WCHAR* extw = ToWstrTemp(ext);
         ok &= LoggedWriteRegStr(hkey, keyAssoc, extw, exeName);
         seqstrings::Next(ext);
     }
@@ -332,11 +329,11 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
 
     const WCHAR* exeName = GetExeNameTemp();
 
-    const WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
+    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
     auto exts = GetSupportedExts();
     while (exts) {
-        const WCHAR* ext = ToWstrTemp(exts);
-        const WCHAR* name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
+        WCHAR* ext = ToWstrTemp(exts);
+        WCHAR* name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
         ok &= CreateRegKey(hkey, name);
         seqstrings::Next(exts);
     }
@@ -394,15 +391,14 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
         return;
     }
 
-    AutoFreeWstr regClassesApp = str::Join(LR"(Software\Classes\)", GetAppNameTemp());
+    AutoFreeWstr regClassesApp = str::Join(LR"(Software\Classes\)", kAppName);
 
     AutoFreeWstr prevHandler;
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(LoggedReadRegStr(hkey, kRegClassesPdf, nullptr));
 
     bool ok = false;
-    const WCHAR* appName = GetAppNameTemp();
-    if (prevHandler && !str::Eq(prevHandler, appName)) {
+    if (prevHandler && !str::Eq(prevHandler, kAppName)) {
         LoggedWriteRegStr(hkey, regClassesApp, L"previous.pdf", prevHandler);
     }
 
@@ -462,28 +458,28 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
 // verify that all registry entries that need to be set in order to associate
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension() {
-    // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    const WCHAR* appName = GetAppNameTemp();
+    // this one doesn't have to exist but if it does, it must be kAppName
+    const WCHAR* appName = kAppName;
 
     AutoFreeWstr tmp(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, L"Progid"));
     if (tmp && !str::Eq(tmp, appName)) {
         return false;
     }
 
-    // this one doesn't have to exist but if it does, it must be APP_NAME_STR.exe
+    // this one doesn't have to exist but if it does, it must be ${kAppName}.exe
     tmp.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, L"Application"));
     AutoFreeWstr exeName = str::Join(appName, L".exe");
     if (tmp && !str::EqI(tmp, exeName)) {
         return false;
     }
 
-    // this one doesn't have to exist but if it does, it must be APP_NAME_STR
+    // this one doesn't have to exist but if it does, it must be kAppName
     tmp.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt LR"(\UserChoice)", L"Progid"));
     if (tmp && !str::Eq(tmp, appName)) {
         return false;
     }
 
-    // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
+    // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to kAppName
     tmp.Set(LoggedReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr));
     if (!str::Eq(tmp, appName)) {
         return false;
@@ -535,30 +531,30 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     const WCHAR* exeName = GetExeNameTemp();
     AutoFreeWstr exePath = GetInstalledExePath();
     if (HKEY_LOCAL_MACHINE == hkey) {
-        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
+        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, exePath);
     }
-    const WCHAR* REG_CLASSES_APPS = GetRegClassesAppsTemp(GetAppNameTemp());
+    WCHAR* REG_CLASSES_APPS = GetRegClassesAppsTemp(kAppName);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    AutoFreeWstr iconPath = str::Join(exePath, L",1");
+    WCHAR* iconPath = str::JoinTemp(exePath, L",1");
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\DefaultIcon");
+        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\DefaultIcon");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
     }
     AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get());
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Open\\Command");
+        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\Shell\\Open\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
     }
     AutoFreeWstr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get());
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
+        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printPath);
     }
     AutoFreeWstr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get());
     {
-        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\PrintTo\\Command");
+        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\Shell\\PrintTo\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
     }
 
@@ -626,8 +622,6 @@ static void CreateAppShortcuts(bool forAllUsers) {
 
 static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     success = false;
-    const WCHAR* appName{nullptr};
-    const WCHAR* exeName{nullptr};
 
     if (!ExtractInstallerFiles()) {
         log("ExtractInstallerFiles() failed\n");
@@ -915,13 +909,12 @@ static void OnButtonBrowse() {
         return;
     }
 
-    AutoFreeWstr installPath = str::Dup(path);
+    WCHAR* installPath = path;
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    const WCHAR* appName = GetAppNameTemp();
-    AutoFreeWstr end = str::Join(L"\\", appName);
+    WCHAR* end = str::JoinTemp(L"\\", kAppName);
     if (!str::EndsWithI(path, end)) {
-        installPath = path::Join(path, appName);
+        installPath = path::JoinTemp(path, kAppName);
     }
     gEditInstallationDir->SetText(installPath);
     gEditInstallationDir->SetSelection(0, -1);
@@ -941,8 +934,7 @@ static void PositionInstallButton(Button* b) {
 // caller needs to str::Free()
 static WCHAR* GetInstallationDir(bool forAllUsers) {
     logf(L"GetInstallationDir(forAllUsers=%d)\n", (int)forAllUsers);
-    const WCHAR* appName = GetAppNameTemp();
-    const WCHAR* regPath = GetRegPathUninstTemp(appName);
+    WCHAR* regPath = GetRegPathUninstTemp(kAppName);
     AutoFreeWstr dir = LoggedReadRegStr2(regPath, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
@@ -957,7 +949,7 @@ static WCHAR* GetInstallationDir(bool forAllUsers) {
     if (forAllUsers) {
         WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, true).Get();
         if (dataDir) {
-            WCHAR* res = path::Join(dataDir, appName);
+            WCHAR* res = path::Join(dataDir, kAppName);
             logf(L"  got '%s' by GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", res);
             return res;
         }
@@ -966,13 +958,13 @@ static WCHAR* GetInstallationDir(bool forAllUsers) {
     // fall back to %APPLOCALDATA%\SumatraPDF
     WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
     if (dataDir) {
-        WCHAR* res = path::Join(dataDir, appName);
+        WCHAR* res = path::Join(dataDir, kAppName);
         logf(L"  got '%s' by GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", res);
         return res;
     }
 
     // fall back to C:\ as a last resort
-    auto res = str::Join(L"C:\\", appName);
+    auto res = str::Join(L"C:\\", kAppName);
     logf(L"  got %s as last resort\n", res);
     return res;
 }

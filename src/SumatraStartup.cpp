@@ -68,7 +68,6 @@
 #include "Menu.h"
 #include "AppTools.h"
 #include "Installer.h"
-#include "SumatraConfig.h"
 #include "ExternalViewers.h"
 #include "AppColors.h"
 
@@ -665,7 +664,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
         printf("%s", corruptedInstallationConsole);
     }
 
-    AutoFreeWstr title = str::Join(GetAppNameTemp(), L" installer");
+    WCHAR* title = str::JoinTemp(kAppName, L" installer");
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =
@@ -674,7 +673,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = title.Get();
+    dialogConfig.pszWindowTitle = title;
     dialogConfig.pszMainInstruction = ToWstrTemp(corruptedInstallation);
     dialogConfig.pszContent =
         LR"(Learn more at <a href="https://www.sumatrapdfreader.org/docs/Corrupted-installation">www.sumatrapdfreader.org/docs/Corrupted-installation</a>.)";
@@ -710,7 +709,7 @@ constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    const char* appName = ToUtf8Temp(GetAppNameTemp());
+    const char* appName = ToUtf8Temp(kAppName);
     str::Str msg{kInstallerHelpTmpl};
     str::Replace(msg, "${appName}", appName);
 
@@ -721,7 +720,7 @@ static void ShowInstallerHelp() {
         return;
     }
 
-    AutoFreeWstr title = str::Join(GetAppNameTemp(), L" installer usage");
+    WCHAR* title = str::JoinTemp(kAppName, L" installer usage");
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =
@@ -730,7 +729,7 @@ static void ShowInstallerHelp() {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = title.Get();
+    dialogConfig.pszWindowTitle = title;
     dialogConfig.pszMainInstruction = ToWstrTemp(msg.Get());
     dialogConfig.pszContent =
         LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";

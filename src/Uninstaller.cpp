@@ -64,11 +64,10 @@ static void CreateButtonExit(HWND hwndParent) {
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
-    const WCHAR* regPathUninst = GetRegPathUninstTemp(GetAppNameTemp());
+    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
     bool ok1 = LoggedDeleteRegKey(hkey, regPathUninst);
     // legacy, this key was added by installers up to version 1.8
-    const WCHAR* appName = GetAppNameTemp();
-    const WCHAR* key = str::JoinTemp(L"Software\\", appName);
+    WCHAR* key = str::JoinTemp(L"Software\\", kAppName);
     bool ok2 = LoggedDeleteRegKey(hkey, key);
     return ok1 && ok2;
 }
@@ -89,10 +88,9 @@ static const WCHAR* GetRegClassesAppTemp(const WCHAR* appName) {
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     logf("UnregisterFromBeingDefaultViewer()\n");
     AutoFreeWstr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
-    const WCHAR* regClassesApp = GetRegClassesAppTemp(GetAppNameTemp());
+    const WCHAR* regClassesApp = GetRegClassesAppTemp(kAppName);
     AutoFreeWstr prev = LoggedReadRegStr(hkey, regClassesApp, L"previous.pdf");
-    const WCHAR* appName = GetAppNameTemp();
-    if (!curr || !str::Eq(curr, appName)) {
+    if (!curr || !str::Eq(curr, kAppName)) {
         // not the default, do nothing
     } else if (prev) {
         LoggedWriteRegStr(hkey, kRegClassesPdf, nullptr, prev);
@@ -106,7 +104,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
     AutoFreeWstr buf = LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
-    if (str::Eq(buf, appName)) {
+    if (str::Eq(buf, kAppName)) {
         LONG res = SHDeleteValueW(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
         if (res != ERROR_SUCCESS) {
             LogLastError(res);
@@ -122,7 +120,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
         }
     }
     buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", kRegProgId));
-    if (str::Eq(buf, appName)) {
+    if (str::Eq(buf, kAppName)) {
         LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", true);
     }
 }
@@ -158,28 +156,27 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     }
     logf("RemoveOwnRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
     // UnregisterFromBeingDefaultViewer(hkey);
-    const WCHAR* appName = GetAppNameTemp();
     const WCHAR* exeName = GetExeNameTemp();
-    const WCHAR* regClassApp = GetRegClassesAppTemp(appName);
+    const WCHAR* regClassApp = GetRegClassesAppTemp(kAppName);
     LoggedDeleteRegKey(hkey, regClassApp);
-    const WCHAR* regClassApps = GetRegClassesAppsTemp(appName);
+    WCHAR* regClassApps = GetRegClassesAppsTemp(kAppName);
     LoggedDeleteRegKey(hkey, regClassApps);
     {
-        AutoFreeWstr key = str::Join(kRegClassesPdf, L"\\OpenWithProgids");
-        SHDeleteValueW(hkey, key, appName);
+        WCHAR* key = str::JoinTemp(kRegClassesPdf, L"\\OpenWithProgids");
+        SHDeleteValueW(hkey, key, kAppName);
     }
 
     if (HKEY_LOCAL_MACHINE == hkey) {
-        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
+        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
         LoggedDeleteRegKey(hkey, key);
     }
 
     SeqStrings exts = GetSupportedExts();
-    const WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
+    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", exeName);
     while (exts) {
-        const WCHAR* ext = ToWstrTemp(exts);
-        const WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
-        SHDeleteValueW(hkey, keyname, appName);
+        WCHAR* ext = ToWstrTemp(exts);
+        WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
+        SHDeleteValueW(hkey, keyname, kAppName);
         DeleteEmptyRegKey(hkey, keyname);
 
         keyname = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
@@ -187,19 +184,21 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
             continue;
         }
         // remove empty keys that the installer might have created
-        *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
+        WCHAR* p = str::FindCharLast(keyname, '\\');
+        *p = 0;
         if (!DeleteEmptyRegKey(hkey, keyname)) {
             continue;
         }
-        *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
+        p = str::FindCharLast(keyname, '\\');
+        *p = 0;
         DeleteEmptyRegKey(hkey, keyname);
 
         seqstrings::Next(exts);
     }
 
     // delete keys written in ListAsDefaultProgramWin10()
-    SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", appName);
-    AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", appName);
+    SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", kAppName);
+    AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", kAppName);
     LoggedDeleteRegKey(hkey, keyName);
 }
 
@@ -366,14 +365,13 @@ static void CreateMainWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    const WCHAR* appName = GetAppNameTemp();
-    AutoFreeWstr caption = str::Join(appName, L" Uninstaller Usage");
+    WCHAR* caption = str::JoinTemp(kAppName, L" Uninstaller Usage");
     AutoFreeWstr msg = str::Format(
         L"uninstall.exe [/s][/d <path>]\n\
     \n\
     /s\tuninstalls %s silently (without user interaction).\n\
     /d\tchanges the directory from where %s will be uninstalled.",
-        appName, appName);
+        kAppName, kAppName);
     MessageBoxW(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 

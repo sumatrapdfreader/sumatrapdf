@@ -80,5 +80,5 @@ bool CheckInstallUninstallPossible(bool silent = false);
 char* GetInstallerLogPath();
 void ShowLogFile(const char* logPath);
 
-const WCHAR* GetRegPathUninstTemp(const WCHAR* appName);
-const WCHAR* GetRegClassesAppsTemp(const WCHAR* appName);
+TempWstr GetRegPathUninstTemp(const WCHAR* appName);
+TempWstr GetRegClassesAppsTemp(const WCHAR* appName);

@@ -21,8 +21,7 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
-    const WCHAR* appName = GetAppNameTemp();
-    const WCHAR* regPathUninst = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
+    WCHAR* regPathUninst = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
     AutoFreeWstr installedPath = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
     if (!installedPath) {
         return false;
@@ -104,22 +103,19 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
         return path::GetPathOfFileInAppDir(fileName);
     }
 
-    WCHAR* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
+    WCHAR* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
     if (!path) {
         return nullptr;
     }
-    const WCHAR* appName = GetAppNameTemp();
-    path = path::Join(path, appName);
+    path = path::JoinTemp(path, kAppName);
     if (!path) {
         return nullptr;
     }
-    WCHAR* res = nullptr;
     bool ok = dir::Create(path);
-    if (ok) {
-        res = path::Join(path, fileName);
+    if (!ok) {
+        return nullptr;
     }
-    str::Free(path);
-    return res;
+    return path::Join(path, fileName);
 }
 
 char* AppGenDataFilenameTemp(const char* fileName) {

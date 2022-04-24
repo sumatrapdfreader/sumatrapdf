@@ -179,9 +179,30 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
     }
     WCHAR* res = str::Join(path, sepStr, fileName);
     if (fileName2) {
+        // TODO: also check sep
         WCHAR* toFree = res;
         res = Join(res, fileName2);
         free(toFree);
+    }
+    return res;
+}
+
+TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
+    // TODO: not sure if should allow null path
+    if (IsSep(*fileName)) {
+        fileName++;
+    }
+    const WCHAR* sepStr = nullptr;
+    size_t pathLen = str::Len(path);
+    if (pathLen > 0) {
+        if (!IsSep(path[pathLen - 1])) {
+            sepStr = L"\\";
+        }
+    }
+    TempWstr res = str::JoinTemp(path, sepStr, fileName);
+    if (fileName2) {
+        // TODO: also check sep
+        res = str::JoinTemp(res, fileName2);
     }
     return res;
 }

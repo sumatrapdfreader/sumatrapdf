@@ -59,10 +59,6 @@ bool gDisableDocumentRestrictions = true;
 bool gDisableDocumentRestrictions = false;
 #endif
 
-const WCHAR* GetAppNameTemp() {
-    return L"SumatraPDF";
-}
-
 const WCHAR* GetExeNameTemp() {
     return L"SumatraPDF.exe";
 }
