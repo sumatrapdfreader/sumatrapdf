@@ -831,30 +831,24 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
 }
 
 // return true if the app is running in elevated (as admin)
-// TODO: on Vista+ use GetTokenInformation linked
-// https://social.msdn.microsoft.com/Forums/vstudio/en-US/f64ff4cb-d21b-4d72-b513-fb8eb39f4a3a/how-to-determine-if-a-user-that-created-a-process-doesnt-belong-to-administrators-group?forum=windowssecurity
+// TODO: on Vista+ use GetTokenInformation:
+// https://social.msdn.microsoft.com/Forums/vstudio/en-US/f64ff4cb-d21b-4d72-b513-fb8eb39f4a3a/how-to-determine-if-a-user-that-created-a-process-doesnt-belong-to-administrators-group
 bool IsProcessRunningElevated() {
-    BOOL isAdmin = FALSE;
-    PSID administratorsGroup = nullptr;
+    PSID adminsGroup = nullptr;
 
     // Allocate and initialize a SID of the administrators group
     SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
     DWORD sub1 = SECURITY_BUILTIN_DOMAIN_RID;
     DWORD sub2 = DOMAIN_ALIAS_RID_ADMINS;
-    if (!AllocateAndInitializeSid(&NtAuthority, 2, sub1, sub2, 0, 0, 0, 0, 0, 0, &administratorsGroup)) {
-        goto Cleanup;
+    if (!AllocateAndInitializeSid(&NtAuthority, 2, sub1, sub2, 0, 0, 0, 0, 0, 0, &adminsGroup)) {
+        return false;
     }
 
     // Determine whether the SID of administrators group is enabled in
     // the primary access token of the process
-    if (!CheckTokenMembership(nullptr, administratorsGroup, &isAdmin)) {
-        goto Cleanup;
-    }
-
-Cleanup:
-    if (administratorsGroup) {
-        FreeSid(administratorsGroup);
-    }
+    BOOL isAdmin = FALSE;
+    CheckTokenMembership(nullptr, adminsGroup, &isAdmin);
+    FreeSid(adminsGroup);
     return tobool(isAdmin);
 }
 
@@ -870,6 +864,99 @@ bool CanTalkToProcess(DWORD procId) {
         return true;
     }
     return false;
+}
+
+static const DWORD groupsToCheck[] = {
+    DOMAIN_ALIAS_RID_USERS,
+    // every user belongs to the users group, hence users come before guests
+    DOMAIN_ALIAS_RID_GUESTS,
+    DOMAIN_ALIAS_RID_POWER_USERS,
+    DOMAIN_ALIAS_RID_ADMINS,
+};
+
+// return true if the account has admin privileges
+// https://github.com/kichik/nsis/blob/de09827b5b651b1d467c17be17bc7e5a98dae70f/Contrib/UserInfo/UserInfo.c#L70
+static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
+    HANDLE hToken = nullptr;
+    BOOL isMember = FALSE;
+    DWORD highestGroup = 0;
+    BOOL validTokenGroups = FALSE;
+    TOKEN_GROUPS* ptg = NULL;
+    DWORD cbTokenGroups;
+
+    BOOL ok = OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken) ||
+              OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
+    if (!ok) {
+        return false;
+    }
+
+    // Use "old school" membership check?
+    if (!checkTokenForGroupDeny) {
+        // We must query the size of the group information associated with
+        // the token. Note that we expect a FALSE result from GetTokenInformation
+        // because we've given it a NULL buffer. On exit cbTokenGroups will tell
+        // the size of the group information.
+        if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &cbTokenGroups) &&
+            GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+            // Allocate buffer and ask for the group information again.
+            // This may fail if an administrator has added this account
+            // to an additional group between our first call to
+            // GetTokenInformation and this one.
+            ptg = (TOKEN_GROUPS*)GlobalAlloc(GPTR, cbTokenGroups);
+            if (ptg && GetTokenInformation(hToken, TokenGroups, ptg, cbTokenGroups, &cbTokenGroups)) {
+                validTokenGroups = TRUE;
+            }
+        }
+    }
+
+    SID_IDENTIFIER_AUTHORITY systemSid = {SECURITY_NT_AUTHORITY};
+    if (validTokenGroups || checkTokenForGroupDeny) {
+        PSID psid = nullptr;
+        for (size_t i = 0; i < dimof(groupsToCheck); i++) {
+            // Create a SID for the local group and then check if it exists in our token
+            DWORD sub1 = SECURITY_BUILTIN_DOMAIN_RID;
+            DWORD groupID = groupsToCheck[i];
+            ok = AllocateAndInitializeSid(&systemSid, 2, sub1, groupID, 0, 0, 0, 0, 0, 0, &psid);
+            if (!ok) {
+                continue;
+            }
+
+            if (checkTokenForGroupDeny) {
+                CheckTokenMembership(0, psid, &isMember);
+            } else if (validTokenGroups) {
+                isMember = FALSE;
+                for (DWORD j = 0; !isMember && (j < ptg->GroupCount); j++) {
+                    if (EqualSid(ptg->Groups[j].Sid, psid)) {
+                        isMember = TRUE;
+                    }
+                }
+            }
+            if (isMember) {
+                highestGroup = groupID;
+            }
+            FreeSid(psid);
+        }
+    }
+
+    if (ptg) {
+        GlobalFree(ptg);
+    }
+    CloseHandle(hToken);
+    return highestGroup;
+}
+
+// Get highest account type based on current elevation level i.e. the
+// account is admin (DOMAIN_ALIAS_RID_ADMINS) only if the user is running elevated
+// see groupsToCheck for possible values
+DWORD GetAccountType() {
+    return GetAccountTypeHelper(true);
+}
+
+// Get highest account type of the user. Can return admin (DOMAIN_ALIAS_RID_ADMINS)
+// when not running elevated but the account belong to administrator group
+// see groupsToCheck for possible values
+DWORD GetOriginalAccountType() {
+    return GetAccountTypeHelper(false);
 }
 
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline) {

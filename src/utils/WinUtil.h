@@ -102,6 +102,8 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args);
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
 bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
+DWORD GetAccountType();
+DWORD GetOriginalAccountType();
 
 void PaintRect(HDC, Rect);
 void PaintLine(HDC, Rect);
