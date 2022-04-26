@@ -82,3 +82,10 @@ void ShowLogFile(const char* logPath);
 
 TempWstr GetRegPathUninstTemp(const WCHAR* appName);
 TempWstr GetRegClassesAppsTemp(const WCHAR* appName);
+
+// InstallerRegistry.cpp
+
+bool WriteUninstallerRegistryInfo(HKEY hkey);
+bool WriteExtendedFileExtensionInfo(HKEY hkey);
+bool RemoveUninstallerRegistryInfo(HKEY hkey);
+void RemoveOwnRegistryKeys(HKEY hkey);

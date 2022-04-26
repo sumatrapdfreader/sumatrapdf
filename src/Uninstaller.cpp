@@ -62,149 +62,6 @@ static void CreateButtonExit(HWND hwndParent) {
     gButtonExit->onClicked = OnButtonExit;
 }
 
-static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
-    logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
-    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
-    bool ok1 = LoggedDeleteRegKey(hkey, regPathUninst);
-    // legacy, this key was added by installers up to version 1.8
-    WCHAR* key = str::JoinTemp(L"Software\\", kAppName);
-    bool ok2 = LoggedDeleteRegKey(hkey, key);
-    return ok1 && ok2;
-}
-
-static bool RemoveUninstallerRegistryInfo() {
-    bool ok1 = RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
-    bool ok2 = RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER);
-    return ok1 || ok2;
-}
-
-static const WCHAR* GetRegClassesAppTemp(const WCHAR* appName) {
-    return str::JoinTemp(L"Software\\Classes\\", appName);
-}
-
-// TODO: this method no longer works
-#if 0
-/* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
-static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
-    logf("UnregisterFromBeingDefaultViewer()\n");
-    AutoFreeWstr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
-    const WCHAR* regClassesApp = GetRegClassesAppTemp(kAppName);
-    AutoFreeWstr prev = LoggedReadRegStr(hkey, regClassesApp, L"previous.pdf");
-    if (!curr || !str::Eq(curr, kAppName)) {
-        // not the default, do nothing
-    } else if (prev) {
-        LoggedWriteRegStr(hkey, kRegClassesPdf, nullptr, prev);
-    } else {
-#pragma warning(push)
-#pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the
-                                // specification for the function 'SHDeleteValueW'
-        LoggedDeleteRegValue(hkey, kRegClassesPdf, nullptr);
-#pragma warning(pop)
-    }
-
-    // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    AutoFreeWstr buf = LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
-    if (str::Eq(buf, kAppName)) {
-        LONG res = SHDeleteValueW(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
-        if (res != ERROR_SUCCESS) {
-            LogLastError(res);
-        }
-    }
-    const WCHAR* kRegApplication = L"Application";
-    buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication));
-    if (str::EqI(buf, kExeName)) {
-        LONG res = SHDeleteValue(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication);
-        if (res != ERROR_SUCCESS) {
-            LogLastError(res);
-        }
-    }
-    buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", kRegProgId));
-    if (str::Eq(buf, kAppName)) {
-        LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", true);
-    }
-}
-#endif
-
-// delete registry key but only if it's empty
-static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
-    HKEY hkey;
-    LSTATUS status = RegOpenKeyExW(root, keyName, 0, KEY_READ, &hkey);
-    if (status != ERROR_SUCCESS) {
-        return true;
-    }
-
-    DWORD subkeys, values;
-    bool isEmpty = false;
-    status = RegQueryInfoKeyW(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr, &values, nullptr, nullptr,
-                              nullptr, nullptr);
-    if (status == ERROR_SUCCESS) {
-        isEmpty = 0 == subkeys && 0 == values;
-    }
-    RegCloseKey(hkey);
-    if (!isEmpty) {
-        return isEmpty;
-    }
-
-    LoggedDeleteRegKey(root, keyName);
-    return isEmpty;
-}
-
-static void RemoveOwnRegistryKeys(HKEY hkey) {
-    if (!hkey) {
-        return;
-    }
-    logf("RemoveOwnRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
-    // UnregisterFromBeingDefaultViewer(hkey);
-    const WCHAR* regClassApp = GetRegClassesAppTemp(kAppName);
-    LoggedDeleteRegKey(hkey, regClassApp);
-    WCHAR* regClassApps = GetRegClassesAppsTemp(kAppName);
-    LoggedDeleteRegKey(hkey, regClassApps);
-    {
-        WCHAR* key = str::JoinTemp(kRegClassesPdf, L"\\OpenWithProgids");
-        LoggedDeleteRegValue(hkey, key, kAppName);
-    }
-
-    if (HKEY_LOCAL_MACHINE == hkey) {
-        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
-        LoggedDeleteRegKey(hkey, key);
-    }
-
-    SeqStrings exts = GetSupportedExts();
-    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
-    while (exts) {
-        WCHAR* ext = ToWstrTemp(exts);
-        WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
-        LoggedDeleteRegValue(hkey, keyname, kAppName);
-        DeleteEmptyRegKey(hkey, keyname);
-
-        keyname = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
-        if (!LoggedDeleteRegKey(hkey, keyname)) {
-            continue;
-        }
-        // remove empty keys that the installer might have created
-        WCHAR* p = str::FindCharLast(keyname, '\\');
-        *p = 0;
-        if (!DeleteEmptyRegKey(hkey, keyname)) {
-            continue;
-        }
-        p = str::FindCharLast(keyname, '\\');
-        *p = 0;
-        DeleteEmptyRegKey(hkey, keyname);
-
-        seqstrings::Next(exts);
-    }
-
-    // delete keys written in ListAsDefaultProgramWin10()
-    LoggedDeleteRegValue(hkey, L"SOFTWARE\\RegisteredApplications", kAppName);
-    AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", kAppName);
-    LoggedDeleteRegKey(hkey, keyName);
-}
-
-static void RemoveOwnRegistryKeys() {
-    RemoveOwnRegistryKeys(HKEY_LOCAL_MACHINE);
-    RemoveOwnRegistryKeys(HKEY_CURRENT_USER);
-    log("RemoveOwnRegistryKeys()\n");
-}
 
 #if 0
 // The following list is used to verify that all the required files have been
@@ -281,7 +138,11 @@ static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
         KillProcessesWithModule(exePath, true);
     }
 
-    if (!RemoveUninstallerRegistryInfo()) {
+    // TODO: reconsider what is failure
+    bool ok = RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+    ok |= RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER);
+
+    if (!ok) {
         log("RemoveUninstallerRegistryInfo failed\n");
         NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
@@ -293,7 +154,8 @@ static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     RemoveShortcuts();
 
     UninstallBrowserPlugin();
-    RemoveOwnRegistryKeys();
+    RemoveOwnRegistryKeys(HKEY_LOCAL_MACHINE);
+    RemoveOwnRegistryKeys(HKEY_CURRENT_USER);
 
     RemoveInstalledFiles();
     // NotifyFailed(_TR("Couldn't remove installation directory"));

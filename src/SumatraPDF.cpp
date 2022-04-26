@@ -4411,19 +4411,21 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ChangeZoomLevel(win, ZOOM_FIT_PAGE, false);
             break;
 
-        case CmdZoomIn:
-            if (win->IsDocLoaded()) {
-                auto zoom = ctrl->GetNextZoomStep(ZOOM_MAX);
-                ZoomToSelection(win, zoom, false);
+        case CmdZoomIn: {
+            if (!win->IsDocLoaded()) {
+                return 0;
             }
-            break;
+            auto zoom = ctrl->GetNextZoomStep(ZOOM_MAX);
+            ZoomToSelection(win, zoom, false);
+        } break;
 
-        case CmdZoomOut:
-            if (win->IsDocLoaded()) {
-                auto zoom = ctrl->GetNextZoomStep(ZOOM_MIN);
-                ZoomToSelection(win, zoom, false);
+        case CmdZoomOut: {
+            if (!win->IsDocLoaded()) {
+                return 0;
             }
-            break;
+            auto zoom = ctrl->GetNextZoomStep(ZOOM_MIN);
+            ZoomToSelection(win, zoom, false);
+        } break;
 
         case CmdZoom6400:
         case CmdZoom3200:
@@ -4501,6 +4503,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         // TODO: rename CmdScrolUpLineOrPrevPage
         case CmdScrollUp: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             if (dm && dm->NeedVScroll()) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
             } else {
@@ -4510,6 +4515,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdScrollUpHalfPage: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             if (dm && dm->NeedVScroll()) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_HALF_PAGEUP, 0);
             } else {
@@ -4520,6 +4528,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         // TODO: do I need both CmdScrollUpPage and CmdGoToPrevPage
         case CmdScrollUpPage: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
             if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
@@ -4530,13 +4541,17 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdGoToPrevPage:
-            if (ctrl && win->IsDocLoaded()) {
-                ctrl->GoToPrevPage();
+            if (!win->IsDocLoaded()) {
+                return 0;
             }
+            ctrl->GoToPrevPage();
             break;
 
         // TODO: rename CmdScrolDownOrNextPage
         case CmdScrollDown: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             if (dm && dm->NeedVScroll()) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
             } else {
@@ -4546,6 +4561,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdScrollDownHalfPage: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             if (dm && dm->NeedVScroll()) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_HALF_PAGEDOWN, 0);
             } else {
@@ -4555,6 +4573,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdScrollDownPage: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
             if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
@@ -4572,6 +4593,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         // TODO: rename CmdScrollLeftOrPrevPage
         case CmdScrollLeft: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             if (dm && dm->NeedHScroll()) {
                 SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
             } else {
@@ -4584,6 +4608,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdScrollRight: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
             if (dm && dm->NeedHScroll()) {
                 SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
             } else {
@@ -4596,16 +4623,18 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdGoToFirstPage:
-            if (ctrl && win->IsDocLoaded()) {
-                ctrl->GoToFirstPage();
+            if (!win->IsDocLoaded()) {
+                return 0;
             }
+            ctrl->GoToFirstPage();
             break;
 
         case CmdGoToLastPage:
-            if (ctrl && win->IsDocLoaded()) {
-                if (!ctrl->GoToLastPage()) {
-                    SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
-                }
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
+            if (!ctrl->GoToLastPage()) {
+                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
             }
             break;
 
