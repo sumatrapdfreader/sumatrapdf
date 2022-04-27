@@ -3,7 +3,7 @@
 
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
-#define kInstallerWinDx 420
+#define kInstallerWinDx 492
 #define kInstallerWinDy 340
 
 #define kRegExplorerPdfExt L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
