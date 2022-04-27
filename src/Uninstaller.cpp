@@ -210,16 +210,21 @@ static void OnCreateWindow(HWND hwnd) {
     gButtonUninstaller->onClicked = OnButtonUninstall;
 }
 
-static void CreateMainWindow() {
+static void CreateUninstallerWindow() {
     AutoFreeWstr title = str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR);
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
-    int dx = DpiScale(kInstallerWinDx);
-    int dy = DpiScale(kInstallerWinDy);
+    int dx = kInstallerWinDx;
+    int dy = kInstallerWinDy;
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     auto winCls = kInstallerWindowClassName;
     gHwndFrame = CreateWindowW(winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+
+    dx = DpiScale(gHwndFrame, kInstallerWinDx);
+    dy = DpiScale(gHwndFrame, kInstallerWinDy);
+    HwndResizeClientSize(gHwndFrame, dx, dy);
+    OnCreateWindow(gHwndFrame);
 }
 
 static void ShowUsage() {
@@ -244,10 +249,6 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
     }
 
     switch (msg) {
-        case WM_CREATE:
-            OnCreateWindow(hwnd);
-            break;
-
         case WM_CTLCOLORSTATIC: {
             if (ghbrBackground == nullptr) {
                 ghbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
@@ -304,7 +305,7 @@ static bool RegisterWinClass() {
 }
 
 static BOOL InstanceInit() {
-    CreateMainWindow();
+    CreateUninstallerWindow();
     if (!gHwndFrame) {
         return FALSE;
     }

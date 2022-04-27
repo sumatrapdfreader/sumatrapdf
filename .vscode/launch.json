@@ -6,6 +6,7 @@
     "configurations": [
 
 
+
         {
             "name": "Launch Go",
             "type": "go",
