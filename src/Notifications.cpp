@@ -20,20 +20,20 @@ extern bool IsUIRightToLeft(); // SumatraPDF.h
 
 #define kNotificationsWndClassName L"SUMATRA_PDF_NOTIFICATION_WINDOW"
 
-#define kProgressDx DpiScale(188)
-#define kProgressDy DpiScale(5)
-#define kPadding DpiScale(6)
-#define kTopLeftMargin DpiScale(8)
-#define kCloseLeftMargin DpiScale(32)
+constexpr int kProgressDx = 188;
+constexpr int kProgressDy = 5;
+constexpr int kPadding = 6;
+constexpr int kTopLeftMargin = 8;
+constexpr int kCloseLeftMargin = 32;
 
 constexpr int TIMEOUT_TIMER_ID = 1;
 
 static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 static Rect GetCloseRect(HWND hwnd) {
-    int n = DpiScale(16);
+    int n = DpiScale(hwnd, 16);
     Rect r = ClientRect(hwnd);
-    int x = r.dx - n - kPadding;
+    int x = r.dx - n - DpiScale(hwnd, kPadding);
     // int y = PADDING;
     int y = (r.dy / 2) - (n / 2);
     int dx = n;
@@ -66,9 +66,10 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
     Rect rMsg = Rect::FromRECT(rc);
     if (wnd->hasClose) {
         rMsg.dy = std::max(rMsg.dy, DpiScale(16));
-        rMsg.dx += kCloseLeftMargin;
+        rMsg.dx += DpiScale(wnd->hwnd, kCloseLeftMargin);
     }
-    rMsg.Inflate(kPadding, kPadding);
+    int padding = DpiScale(wnd->hwnd, kPadding);
+    rMsg.Inflate(padding, padding);
 
     if (wnd->shrinkLimit < 1.0f) {
         Rect rcOrig = ClientRect(wnd->hwnd);
@@ -83,10 +84,11 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
         SetWindowPos(wnd->hwnd, nullptr, 0, 0, rMsg.dx, rMsg.dy, flags);
     } else if (init) {
         Rect r = WindowRect(wnd->hwnd);
-        r.dx = std::max(wnd->progressWidth + 2 * kPadding, rMsg.dx);
-        r.dy = rMsg.dy + kProgressDy + kPadding / 2;
+        r.dx = std::max(wnd->progressWidth + 2 * padding, rMsg.dx);
+        int progressDy = DpiScale(wnd->hwnd, kProgressDy);
+        r.dy = rMsg.dy + progressDy + padding / 2;
         SetWindowPos(wnd->hwnd, nullptr, 0, 0, r.dx, r.dy, flags);
-    } else if (rMsg.dx > wnd->progressWidth + 2 * kPadding) {
+    } else if (rMsg.dx > wnd->progressWidth + 2 * padding) {
         SetWindowPos(wnd->hwnd, nullptr, 0, 0, rMsg.dx, WindowRect(wnd->hwnd).dy, flags);
     }
 
@@ -95,7 +97,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
         HWND parent = GetParent(wnd->hwnd);
         Rect r = MapRectToWindow(WindowRect(wnd->hwnd), HWND_DESKTOP, parent);
         int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-        r.x = WindowRect(parent).dx - r.dx - kTopLeftMargin - cxVScroll;
+        r.x = WindowRect(parent).dx - r.dx - DpiScale(wnd->hwnd, kTopLeftMargin) - cxVScroll;
         flags = SWP_NOSIZE | SWP_NOZORDER;
         SetWindowPos(wnd->hwnd, nullptr, r.x, r.y, 0, 0, flags);
     }
@@ -124,15 +126,17 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     this->font = CreateFontIndirect(&ncm.lfMessageFont);
 
     HDC hdc = GetDC(parent);
-    progressWidth = MulDiv(kProgressDx, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
+    int progressDx = DpiScale(parent, kProgressDx);
+    progressWidth = MulDiv(progressDx, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
     ReleaseDC(parent, hdc);
 
     auto h = GetModuleHandleW(nullptr);
     const WCHAR* clsName = kNotificationsWndClassName;
     DWORD style = WS_CHILD | SS_CENTER;
     DWORD exStyle = WS_EX_TOPMOST;
-    int x = kTopLeftMargin;
-    int y = kTopLeftMargin;
+    int margin = DpiScale(hwnd, kTopLeftMargin);
+    int x = margin;
+    int y = margin;
     this->hwnd = CreateWindowExW(exStyle, clsName, msg, style, x, y, 0, 0, parent, (HMENU) nullptr, h, nullptr);
     if (this->hwnd == nullptr) {
         return false;
@@ -191,13 +195,15 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, colTxt);
 
-    rect.Inflate(-kPadding, -kPadding);
+    int padding = DpiScale(hwnd, kPadding);
+    int progressDy = DpiScale(hwnd, kProgressDy);
+    rect.Inflate(-padding, -padding);
     Rect rectMsg = rect;
     if (wnd->hasProgress) {
-        rectMsg.dy -= kProgressDy + kPadding / 2;
+        rectMsg.dy -= progressDy + padding / 2;
     }
     if (wnd->hasClose) {
-        rectMsg.dx -= kCloseLeftMargin;
+        rectMsg.dx -= DpiScale(hwnd, kCloseLeftMargin);
     }
     WCHAR* text = win::GetTextTemp(hwnd).Get();
     rTmp = ToRECT(rectMsg);
@@ -210,8 +216,8 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
 
     if (wnd->hasProgress) {
         rect.dx = wnd->progressWidth;
-        rect.y += rectMsg.dy + kPadding / 2;
-        rect.dy = kProgressDy;
+        rect.y += rectMsg.dy + padding / 2;
+        rect.dy = progressDy;
 
         COLORREF col = GetAppColor(AppColor::NotifcationsProgress);
         Pen pen(GdiRgbFromCOLORREF(col));
@@ -295,7 +301,7 @@ void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
     uint flags = SWP_NOSIZE | SWP_NOZORDER;
     auto x = GetWndX(this, move);
-    int y = rect.y + rect.dy + kTopLeftMargin;
+    int y = rect.y + rect.dy + DpiScale(fix->hwnd, kTopLeftMargin);
     SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
 }
 
@@ -318,7 +324,7 @@ void Notifications::Remove(NotificationWnd* wnd) {
         auto* first = wnds[0];
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
         auto x = GetWndX(this, first);
-        SetWindowPos(first->hwnd, nullptr, x, kTopLeftMargin, 0, 0, flags);
+        SetWindowPos(first->hwnd, nullptr, x, DpiScale(first->hwnd, kTopLeftMargin), 0, 0, flags);
     }
     for (int i = pos; i < n; i++) {
         if (i == 0) {
@@ -381,14 +387,15 @@ void Notifications::Relayout() {
     auto* first = this->wnds[0];
     HWND hwndCanvas = GetParent(first->hwnd);
     Rect frame = ClientRect(hwndCanvas);
+    int topLeftMargin = DpiScale(hwndCanvas, kTopLeftMargin);
     for (auto* wnd : this->wnds) {
         Rect rect = WindowRect(wnd->hwnd);
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {
             int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-            rect.x = frame.dx - rect.dx - kTopLeftMargin - cxVScroll;
+            rect.x = frame.dx - rect.dx - topLeftMargin - cxVScroll;
         } else {
-            rect.x = kTopLeftMargin;
+            rect.x = topLeftMargin;
         }
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
         SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, flags);
