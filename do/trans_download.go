@@ -52,7 +52,7 @@ func printSusTranslations(d []byte) {
 	}
 }
 
-func downloadTranslations() bool {
+func downloadTranslationsMust() []byte {
 	timeStart := time.Now()
 	defer func() {
 		fmt.Printf("downloadTranslations() finished in %s\n", time.Since(timeStart))
@@ -72,6 +72,11 @@ func downloadTranslations() bool {
 	panicIf(rsp.StatusCode != http.StatusOK)
 	d, err := io.ReadAll(rsp.Body)
 	must(err)
+	return d
+}
+
+func downloadTranslations() bool {
+	d := downloadTranslationsMust()
 
 	curr := readFileMust(translationsTxtPath)
 	if bytes.Equal(d, curr) {

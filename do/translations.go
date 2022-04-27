@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -8,11 +9,9 @@ import (
 )
 
 func verifyTranslationsMust() {
-	// TODO: reimplement using /api/dltransfor
-	// this should check if the translations.txt is the latest version
-	// as available on the server. We should download it and
-	// compare with src/docs/translations.txt
-	panic("NYI")
+	d := downloadTranslationsMust()
+	curr := readFileMust(translationsTxtPath)
+	panicIf(!bytes.Equal(d, curr), "Translations did change!!!\nRun:\n.\\doit.bat -trans-dl\nto update translations\n")
 }
 
 // Translation describes a single translated text

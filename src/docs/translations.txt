@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8b2fcaafdd6f69bf0922f03e865dc0fce8051f4a
+e69afd70c5ff8bfda1a21ba9cb2c1230dfbd25fb
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8091,62 +8091,6 @@ tw:刪除解除安裝器註冊項失敗。
 uk:Не вдалося видалити інформацію деінсталятора з реєстру
 uz:O'chirish dasturining reyestr kalitlarini o'chirish muvaffaqiyatsiz tugadi
 vn:Không thể xóa các khóa Registry của bộ gỡ cài đặt
-:Failed to register as default program on win 10
-am:Հնարավոր չեղավ գրանցել որպես լռելյայն ծրագիր Win 10-ում
-ar:فشل للتسجيل في البرنامج الافتراضي على فوز 10
-az:win 10 da əsas proqram olaraq qeydiyyatdan keçirmək uğursuz oldu
-bg:Грешка при регистрация като програма по подразбиране на Windows 10
-br:Falha ao registrar como programa padrão no Windows 10
-bs:Neuspješno registriranje kao zadani program na win 10
-by:Немагчыма зарэгістраваць як стандартную праграму ў Win 10
-ca-xv:Ha fallat de registrar-lo com a programa per defecte a win 10
-ca:S'ha produït un error en registrar com a programa per defecte en Windows 10
-cn:注册为 Win 10 默认程序失败
-co:Fiascu per inscrive cum’è prugramma predefinitu nant’à Windows 10
-cy:Methwyd cofrestru fel rhaglen rhagosodedig ar Win 10
-cz:Nepodařilo se nastavit jako výchozí program na Windows 10
-de:Fehler beim Registrieren als Standardanwendung unter Windows 10
-dk:Kunne ikke registreres som standardprogram på win 10
-el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
-es:Error al registrar como lector predeterminado en Windows 10.
-et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
-eu:Hutsegitea win 10-ean berezko programa bezala erregistratzerakoan
-fa:در پیشفرض قرارداد اپلیکیشن در ویندوز 10 خطایی رخ داده است
-fr:Échec de l'enregistrement comme programme par défaut sous Windows 10.
-ga:Theip ar chlárú mar chlár  réamhshocraithe ar Win 10
-gl:Non se puido rexistrar como programa por defecto en Windows 10
-he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- Windows 10 נכשל.
-hi:इस प्रोग्राम को विंडोज १० पर डिफ़ॉल्ट प्रोग्राम के तौर पर दर्ज नहीं जा सका
-hr:Neuspješno registriranje kao zadani program na Windows 10
-hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
-id:Gagal mengatur sebagai aplikasi Windows 10
-it:Impossibile registrare come programma predefinito in Windows 10
-ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
-ka:ვერ მოხერხდა Windows 10-ის საწყის პროგრამად დარეგისტრირება
-kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
-kw:Kovskrifa avel towlen dhefowt gans Win 10 a fyllis
-lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
-lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
-ne:Win 10 मा पूर्वनिर्धारित कार्यक्रमको रूपमा दर्ता गर्न असफल भयो
-nl:Als standaard App in Windows 10 aanmelden mislukt
-nn:Klarte ikkje å bli registrert som standardprogram i Windows 10.
-no:Klarte ikke å bli registrert som standardprogram i Windows 10.
-pl:Nie udało się zarejestrować jako domyślny program na Windows 10
-pt:Falha ao registar como programa pré-definido no Windows 10
-ru:Не удалось зарегистрировать как программу по умолчанию в Windows 10
-si:win10හි ප්‍රධාන යෙදුම ලෙස ලියාපදිංචි කිරීමට අසමත්විය
-sk:Nastavenie predvoleného programu pod Windows 10 zlyhalo.
-sl:Napaka pri registraciji kot win 10 privzeti program
-sp-rs:Neuspelo postavljanje kao podrazumevani program na win 10
-sq:Problem me regjistrimin si program standard në win 10
-sr-rs:Неуспело постављање као подразумевани програм на wин 10
-sv:Misslyckades med registrering som standardprogram på Win 10.
-ta:விண்டோஸ் 10-யில் இயல்புநிலை கணினிநிரலாக பதிவுசெய்வதில் தோல்வி
-th:ไม่สามารถลงทะเบียนเป็นโปรแกรมเริ่มต้นใน win 10
-tr:Win 10'da öntanımlı program olarak kaydedilemedi
-tw:Win 10 下註冊為預設程式失敗。
-uk:Не вдалося зареєструватися як програма по замовчуванню у Windows 10
-vn:Không thể đăng ký làm chương trình mặc định trên Windows 10
 :Failed to rename the file!
 am:Հնարավոր չեղավ վերանվանել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
