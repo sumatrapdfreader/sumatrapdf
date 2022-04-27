@@ -14,7 +14,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "mui/Mui.h"
-#include "PdfPreview.h"
+#include "RegistryPreview.h"
 
 #include "utils/Log.h"
 // TODO: move code to PdfPreviewBase.cpp
