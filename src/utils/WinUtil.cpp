@@ -2509,6 +2509,22 @@ Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     return {dx, dy};
 }
 
+// change size of the window to have a given client size
+void HwndResizeClientSize(HWND hwnd, int dx, int dy) {
+    Rect rc = WindowRect(hwnd);
+    int x = rc.x;
+    int y = rc.y;
+    DWORD style = GetWindowStyle(hwnd);
+    DWORD exStyle = GetWindowExStyle(hwnd);
+    RECT r = {x, y, x + dx, y + dy};
+    BOOL ok = AdjustWindowRectEx(&r, style, false, exStyle);
+    CrashIf(!ok);
+    int dx2 = RectDx(r);
+    int dy2 = RectDy(r);
+    ok = SetWindowPos(hwnd, nullptr, 0, 0, dx2, dy2, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOREPOSITION);
+    CrashIf(!ok);
+}
+
 // position hwnd on the right of hwndRelative
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
     Rect rHwnd = WindowRect(hwnd);

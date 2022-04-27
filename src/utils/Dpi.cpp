@@ -50,10 +50,15 @@ void DpiReset() {
 
 // Uncached getting of dpi
 int DpiGetForHwnd(HWND hwnd) {
+    // TODO: GetDpiForWindow() seems to return default 96 DPI for
+    // GetDesktopWindow(), which makes DpiScale() useless
+    // without HWND. Maybe this is because
+    // "the return value of GetDpiForWindow based on the DPI_AWARENESS of the provided hwnd"
+    // and DPI_AWARENESS of desktop window is set to unaware
     if (DynGetDpiForWindow) {
         // HWND_DESKTOP is 0 and not really HWND
         // GetDpiForWindow(HWND_DESKTOP) returns 0
-        if (hwnd == HWND_DESKTOP) {
+        if (!hwnd || hwnd == HWND_DESKTOP) {
             hwnd = GetDesktopWindow();
         }
         uint dpi = DynGetDpiForWindow(hwnd);
@@ -130,8 +135,7 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
 int DpiScale(int x) {
     int dpi = gLastDpi;
     if (dpi == 0) {
-        HWND hwnd = GetDesktopWindow();
-        dpi = DpiGetForHwnd(hwnd);
+        dpi = DpiGetForHwnd(HWND_DESKTOP);
     }
     return MulDiv(x, dpi, 96);
 }

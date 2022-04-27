@@ -38,7 +38,7 @@
 
 #include "utils/Log.h"
 
-#define kInstallerWinMargin DpiScale(8)
+#define kInstallerWinMargin 8
 
 using namespace wg;
 
@@ -548,8 +548,9 @@ static void PositionInstallButton(Button* b) {
     HWND parent = ::GetParent(b->hwnd);
     Rect r = ClientRect(parent);
     Size size = b->GetIdealSize();
-    int x = r.dx - size.dx - kInstallerWinMargin;
-    int y = r.dy - size.dy - kInstallerWinMargin;
+    int margin = DpiScale(parent, kInstallerWinMargin);
+    int x = r.dx - size.dx - margin;
+    int y = r.dy - size.dy - margin;
     b->SetBounds({x, y, size.dx, size.dy});
 }
 
@@ -624,24 +625,25 @@ static void OnCreateWindow(HWND hwnd) {
     gButtonOptions = CreateDefaultButton(hwnd, _TR("&Options"));
     gButtonOptions->onClicked = OnButtonOptions;
     auto btnSize = gButtonOptions->GetIdealSize();
-    int x = kInstallerWinMargin;
-    int y = r.dy - btnSize.dy - kInstallerWinMargin;
+    int margin = DpiScale(hwnd, kInstallerWinMargin);
+    int x = margin;
+    int y = r.dy - btnSize.dy - margin;
     uint flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
     SetWindowPos(gButtonOptions->hwnd, nullptr, x, y, 0, 0, flags);
 
     gButtonDy = btnSize.dy;
-    gBottomPartDy = gButtonDy + (kInstallerWinMargin * 2);
+    gBottomPartDy = gButtonDy + (margin * 2);
 
     Size size = TextSizeInHwnd(hwnd, L"Foo");
     int staticDy = size.dy + DpiScale(hwnd, 6);
 
     y = r.dy - gBottomPartDy;
-    int dx = r.dx - (kInstallerWinMargin * 2) - DpiScale(hwnd, 2);
+    int dx = r.dx - (margin * 2) - DpiScale(hwnd, 2);
 
     x += DpiScale(hwnd, 2);
 
     // build options controls going from the bottom
-    y -= (staticDy + kInstallerWinMargin);
+    y -= (staticDy + margin);
 
     RECT rc;
     // only show this checkbox if the CPU arch of DLL and OS match
@@ -674,7 +676,7 @@ static void OnCreateWindow(HWND hwnd) {
     }
 
     // a bit more space between text box and checkboxes
-    y -= (DpiScale(hwnd, 4) + kInstallerWinMargin);
+    y -= (DpiScale(hwnd, 4) + margin);
 
     const WCHAR* s = L"&...";
     Size btnSize2 = TextSizeInHwnd(hwnd, s);
@@ -682,12 +684,12 @@ static void OnCreateWindow(HWND hwnd) {
     gButtonBrowseDir = CreateDefaultButton(hwnd, s);
     gButtonBrowseDir->onClicked = OnButtonBrowse;
     // btnSize = gButtonBrowseDir->GetIdealSize();
-    x = r.dx - kInstallerWinMargin - btnSize2.dx;
+    x = r.dx - margin - btnSize2.dx;
     SetWindowPos(gButtonBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
-    x = kInstallerWinMargin;
-    dx = r.dx - (2 * kInstallerWinMargin) - btnSize2.dx - DpiScale(hwnd, 4);
+    x = margin;
+    dx = r.dx - (2 * margin) - btnSize2.dx - DpiScale(hwnd, 4);
 
     EditCreateArgs eargs;
     eargs.parent = hwnd;
@@ -734,11 +736,18 @@ static void CreateMainWindow() {
     const WCHAR* winCls = kInstallerWindowClassName;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
-    int dx = DpiScale(kInstallerWinDx);
-    int dy = DpiScale(kInstallerWinDy);
+    int dx = kInstallerWinDx;
+    int dy = kInstallerWinDy;
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
     gHwndFrame = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    dx = DpiScale(gHwndFrame, kInstallerWinDx);
+    dy = DpiScale(gHwndFrame, kInstallerWinDy);
+    HwndResizeClientSize(gHwndFrame, dx, dy);
+    OnCreateWindow(gHwndFrame);
+    if (gCli->runInstallNow) {
+        PostMessageW(gHwndFrame, WM_APP_START_INSTALLATION, 0, 0);
+    }
 }
 
 static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -751,13 +760,6 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
     }
 
     switch (msg) {
-        case WM_CREATE:
-            OnCreateWindow(hwnd);
-            if (gCli->runInstallNow) {
-                PostMessageW(gHwndFrame, WM_APP_START_INSTALLATION, 0, 0);
-            }
-            break;
-
         case WM_CTLCOLORSTATIC: {
             if (ghbrBackground == nullptr) {
                 ghbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
