@@ -36,12 +36,14 @@
 #define ABOUT_LINE_OUTER_SIZE 1
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
-#define ABOUT_LEFT_RIGHT_SPACE_DX DpiScale(8)
-#define ABOUT_MARGIN_DX DpiScale(10)
-#define ABOUT_BOX_MARGIN_DY DpiScale(6)
+
 #define ABOUT_BORDER_COL RGB(0, 0, 0)
-#define ABOUT_TXT_DY DpiScale(6)
-#define ABOUT_RECT_PADDING DpiScale(8)
+
+constexpr int ABOUT_LEFT_RIGHT_SPACE_DX = 8;
+constexpr int ABOUT_MARGIN_DX = 10;
+constexpr int ABOUT_BOX_MARGIN_DY = 6;
+constexpr int ABOUT_TXT_DY = 6;
+constexpr int ABOUT_RECT_PADDING = 8;
 #define kInnerPadding 8
 
 #define ABOUT_CLASS_NAME L"SUMATRA_PDF_ABOUT"
@@ -308,8 +310,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     }
 
     SelectObject(hdc, penDivideLine);
-    Rect divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX, rect.y + titleRect.dy + 4, 0,
-                    rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
+    Rect divideLine(gAboutLayoutInfo[0].rightPos.x - DpiScale(hwnd, ABOUT_LEFT_RIGHT_SPACE_DX),
+                    rect.y + titleRect.dy + 4, 0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
     PaintLine(hdc, divideLine);
 }
 
@@ -368,18 +370,20 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         }
     }
 
+    int leftRightSpaceDx = DpiScale(hwnd, ABOUT_LEFT_RIGHT_SPACE_DX);
+    int marginDx = DpiScale(hwnd, ABOUT_MARGIN_DX);
+    int aboutTxtDy = DpiScale(hwnd, ABOUT_TXT_DY);
     /* calculate total dimension and position */
     Rect minRect;
-    minRect.dx =
-        ABOUT_LEFT_RIGHT_SPACE_DX + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+    minRect.dx = leftRightSpaceDx + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + leftRightSpaceDx;
     if (minRect.dx < headerSize.dx) {
         minRect.dx = headerSize.dx;
     }
-    minRect.dx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * ABOUT_MARGIN_DX;
+    minRect.dx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * marginDx;
 
     minRect.dy = headerSize.dy;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        minRect.dy += rightDy + ABOUT_TXT_DY;
+        minRect.dy += rightDy + aboutTxtDy;
     }
     minRect.dy += 2 * ABOUT_LINE_OUTER_SIZE + 4;
 
@@ -392,14 +396,14 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     }
 
     /* calculate text positions */
-    int linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+    int linePosX = ABOUT_LINE_OUTER_SIZE + marginDx + leftLargestDx + leftRightSpaceDx;
     int currY = minRect.y + headerSize.dy + 4;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        el->leftPos.x = minRect.x + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - el->leftPos.dx;
+        el->leftPos.x = minRect.x + linePosX - leftRightSpaceDx - el->leftPos.dx;
         el->leftPos.y = currY + (rightDy - leftDy) / 2;
-        el->rightPos.x = minRect.x + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
+        el->rightPos.x = minRect.x + linePosX + leftRightSpaceDx;
         el->rightPos.y = currY;
-        currY += rightDy + ABOUT_TXT_DY;
+        currY += rightDy + aboutTxtDy;
     }
 
     SelectObject(hdc, origFont);
@@ -572,7 +576,8 @@ void OnMenuAbout(WindowInfo* win) {
     SetLayout(hdc, LAYOUT_LTR);
     UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
     EndPaint(gHwndAbout, &ps);
-    rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
+    int rectPadding = DpiScale(gHwndAbout, ABOUT_RECT_PADDING);
+    rc.Inflate(rectPadding, rectPadding);
 
     // resize the new window to just match these dimensions
     Rect wRc = WindowRect(gHwndAbout);

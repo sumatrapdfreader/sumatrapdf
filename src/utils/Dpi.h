@@ -4,5 +4,4 @@
 int DpiGetForHwnd(HWND);
 int DpiGet(HWND);
 int DpiScale(HWND, int);
-int DpiScale(int);
 void DpiScale(HWND, int&, int&);

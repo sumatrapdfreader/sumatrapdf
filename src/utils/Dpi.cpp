@@ -88,8 +88,3 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
     x1 = nx1;
     x2 = nx2;
 }
-
-// TODO: remove usage of this
-int DpiScale(int x) {
-    return DpiScale(nullptr, x);
-}

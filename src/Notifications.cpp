@@ -65,7 +65,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
 
     Rect rMsg = Rect::FromRECT(rc);
     if (wnd->hasClose) {
-        rMsg.dy = std::max(rMsg.dy, DpiScale(16));
+        rMsg.dy = std::max(rMsg.dy, DpiScale(wnd->hwnd, 16));
         rMsg.dx += DpiScale(wnd->hwnd, kCloseLeftMargin);
     }
     int padding = DpiScale(wnd->hwnd, kPadding);
