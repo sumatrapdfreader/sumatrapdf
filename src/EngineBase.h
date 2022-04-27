@@ -63,8 +63,8 @@ struct IPageDestination {
     Kind kind = nullptr;
 
     int pageNo = -1;
-    RectF rect{};
-    float zoom{0.f};
+    RectF rect = {};
+    float zoom = 0.f;
 
     IPageDestination() = default;
     virtual ~IPageDestination(){};

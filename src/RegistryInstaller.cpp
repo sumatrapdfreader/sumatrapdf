@@ -35,7 +35,7 @@
 #include "Installer.h"
 
 #include "ifilter/PdfFilterClsid.h"
-#include "previewer/PdfPreview.h"
+#include "RegistryPreview.h"
 
 #include "utils/Log.h"
 
@@ -529,3 +529,5 @@ void RemoveOwnRegistryKeys(HKEY hkey) {
     AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", kAppName);
     LoggedDeleteRegKey(hkey, keyName);
 }
+
+//------------- pdf preview

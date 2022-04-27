@@ -518,10 +518,10 @@
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
+    <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
-    <ClInclude Include="..\src\previewer\PdfPreview.h" />
     <ClInclude Include="..\src\previewer\PdfPreviewBase.h" />
   </ItemGroup>
   <ItemGroup>
@@ -539,6 +539,7 @@
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
+    <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />

@@ -329,13 +329,10 @@
     <ClCompile Include="..\src\GlobalPrefs.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\InstUninstCommon.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Installer.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\InstallerRegistry.cpp">
+    <ClCompile Include="..\src\InstallerCommon.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MemLeakDetect.cpp">
@@ -354,6 +351,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Print.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RegistryInstaller.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RenderCache.cpp">

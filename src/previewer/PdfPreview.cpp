@@ -93,8 +93,8 @@ class PageRenderer {
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
     Size currSize;
     int reqPage = 0;
-    float reqZoom{0.f};
-    Size reqSize;
+    float reqZoom = 0.f;
+    Size reqSize = {};
     bool reqAbort = false;
     AbortCookie* abortCookie = nullptr;
 

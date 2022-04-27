@@ -35,7 +35,7 @@
 #include "Installer.h"
 
 #include "ifilter/PdfFilterClsid.h"
-#include "previewer/PdfPreview.h"
+#include "RegistryPreview.h"
 
 #include "utils/Log.h"
 
