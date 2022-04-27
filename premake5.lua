@@ -732,7 +732,7 @@ workspace "SumatraPDF"
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
     filter {}
     includedirs { "src", "src/wingui", "mupdf/include" }
-    pdf_filter_files()
+    search_filter_files()
     links { "utils", "unrar", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version"  }
 

@@ -33,9 +33,8 @@
 #include "SumatraPDF.h"
 #include "Version.h"
 #include "Installer.h"
-
-#include "ifilter/PdfFilterClsid.h"
 #include "RegistryPreview.h"
+#include "RegistrySearchFilter.h"
 
 #include "utils/Log.h"
 

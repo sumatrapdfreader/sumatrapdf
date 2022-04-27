@@ -518,6 +518,7 @@ function sumatrapdf_files()
     "RenderCache.*",
     "RegistryInstaller.*",
     "RegistryPreview.*",
+    "RegistrySearchFilter.*",
     "resource.h",
     "SaveAsPdf.*",
     "Scratch.*",
@@ -1078,10 +1079,10 @@ function pdf_preview_files()
   })
 end
 
-function pdf_filter_files()
+function search_filter_files()
   files_in_dir("src/ifilter", {
     "PdfFilter.*",
-    "PdfFilterDll.cpp",
+    "SearchFilterDll.cpp",
     "CPdfFilter.*",
     "FilterBase.h",
   })
@@ -1093,6 +1094,7 @@ function pdf_filter_files()
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
     "PalmDbReader.*",
+    "RegistrySearchFilter.*",
     "MobiDoc.*",
     "EbookDoc.*",
   })

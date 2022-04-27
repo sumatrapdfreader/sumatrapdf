@@ -22,8 +22,8 @@
 #include "CrashHandler.h"
 #include "Translations.h"
 
-#include "ifilter/PdfFilterClsid.h"
 #include "RegistryPreview.h"
+#include "RegistrySearchFilter.h"
 
 #include "SumatraConfig.h"
 #include "DisplayMode.h"

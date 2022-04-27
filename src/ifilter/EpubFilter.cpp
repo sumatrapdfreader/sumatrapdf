@@ -19,7 +19,7 @@
 #include "EbookDoc.h"
 
 #include "FilterBase.h"
-#include "PdfFilterClsid.h"
+#include "RegistrySearchFilter.h"
 #include "EpubFilter.h"
 
 VOID EpubFilter::CleanUp() {

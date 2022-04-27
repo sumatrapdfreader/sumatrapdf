@@ -5,7 +5,7 @@
 #include "utils/WinUtil.h"
 
 #include "FilterBase.h"
-#include "PdfFilterClsid.h"
+#include "RegistrySearchFilter.h"
 #include "TeXFilter.h"
 
 HRESULT TeXFilter::OnInit() {

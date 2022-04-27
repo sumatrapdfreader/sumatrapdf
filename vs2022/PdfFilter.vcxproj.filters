@@ -12,6 +12,7 @@
     <ClInclude Include="..\src\EngineMupdfImpl.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
+    <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\ifilter\EpubFilter.h">
       <Filter>ifilter</Filter>
     </ClInclude>
@@ -32,13 +33,14 @@
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
     <ClCompile Include="..\src\ifilter\EpubFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\PdfFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp">
+    <ClCompile Include="..\src\ifilter\SearchFilterDll.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\TeXFilter.cpp">

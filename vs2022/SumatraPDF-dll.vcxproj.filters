@@ -126,6 +126,9 @@
     <ClInclude Include="..\src\RegistryPreview.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\RegistrySearchFilter.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\RenderCache.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -360,6 +363,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RegistryPreview.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RegistrySearchFilter.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RenderCache.cpp">

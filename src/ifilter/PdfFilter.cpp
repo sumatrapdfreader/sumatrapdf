@@ -14,7 +14,7 @@
 #include "EngineAll.h"
 
 #include "FilterBase.h"
-#include "PdfFilterClsid.h"
+#include "RegistrySearchFilter.h"
 #include "PdfFilter.h"
 
 #include "utils/Log.h"
