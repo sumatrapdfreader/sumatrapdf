@@ -23,7 +23,7 @@ extern int gButtonDy;
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 #define WM_APP_START_INSTALLATION (WM_APP + 2)
 
-extern WCHAR* firstError;
+extern WCHAR* gFirstError;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
 extern WCHAR* gMsgError;
@@ -63,19 +63,16 @@ WCHAR* GetInstalledExePath();
 WCHAR* GetInstallationFilePath(const WCHAR* name);
 WCHAR* GetExistingInstallationFilePath(const WCHAR* name);
 
-void RegisterPreviewer(bool silent);
-void UnRegisterPreviewer(bool silent);
-bool IsPreviewerInstalled();
+void RegisterPreviewer();
+void UnRegisterPreviewer();
 
-void RegisterSearchFilter(bool silent);
-void UnRegisterSearchFilter(bool silent);
-bool IsSearchFilterInstalled();
+void RegisterSearchFilter();
+void UnRegisterSearchFilter();
 
 void UninstallBrowserPlugin();
 
 bool CheckInstallUninstallPossible(bool silent = false);
 char* GetInstallerLogPath();
-void ShowLogFile(const char* logPath);
 
 TempWstr GetRegPathUninstTemp(const WCHAR* appName);
 TempWstr GetRegClassesAppsTemp(const WCHAR* appName);

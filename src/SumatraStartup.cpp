@@ -1318,7 +1318,7 @@ Exit:
 
     HandleRedirectedConsoleOnShutdown();
 
-    ShowLogFile(logFilePath);
+    LaunchFileIfExists(logFilePath);
     if (fastExit) {
         // leave all the remaining clean-up to the OS
         // (as recommended for a quick exit)

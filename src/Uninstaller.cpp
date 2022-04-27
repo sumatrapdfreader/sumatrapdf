@@ -23,13 +23,10 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/Log.h"
 #include "utils/GdiPlusUtil.h"
 
-#include <tlhelp32.h>
-#include <io.h>
 #include "Translations.h"
 #include "Version.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
 
@@ -39,6 +36,10 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "SumatraPDF.h"
 #include "Installer.h"
 #include "AppUtil.h"
+#include "AppTools.h"
+
+#include "RegistryPreview.h"
+#include "RegistrySearchFilter.h"
 
 using namespace wg;
 
@@ -187,7 +188,7 @@ void OnUninstallationFinished() {
     gButtonUninstaller = nullptr;
     CreateButtonExit(gHwndFrame);
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
-    gMsgError = firstError;
+    gMsgError = gFirstError;
     HwndInvalidate(gHwndFrame);
 
     CloseHandle(hThread);
@@ -490,10 +491,10 @@ int RunUninstaller() {
     // unregister search filter and previewer to reduce
     // possibility of blocking
     if (gWasSearchFilterInstalled) {
-        UnRegisterSearchFilter(true);
+        UnRegisterSearchFilter();
     }
     if (gWasPreviewInstaller) {
-        UnRegisterPreviewer(true);
+        UnRegisterPreviewer();
     }
 
     if (gCli->silent) {
@@ -515,15 +516,15 @@ int RunUninstaller() {
 
     // re-register if we un-registered but uninstallation was cancelled
     if (gWasSearchFilterInstalled) {
-        RegisterSearchFilter(true);
+        RegisterSearchFilter();
     }
     if (gWasPreviewInstaller) {
-        RegisterPreviewer(true);
+        RegisterPreviewer();
     }
     InitSelfDelete();
-    ShowLogFile(uninstallerLogPath);
+    LaunchFileIfExists(uninstallerLogPath);
 
 Exit:
-    free(firstError);
+    free(gFirstError);
     return ret;
 }

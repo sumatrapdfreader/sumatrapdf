@@ -13,3 +13,4 @@
 bool InstallPreviewDll(const WCHAR* dllPath, bool allUsers);
 bool UninstallPreviewDll();
 void DisablePreviewInstallExts(const WCHAR* cmdLine);
+bool IsPreviewerInstalled();

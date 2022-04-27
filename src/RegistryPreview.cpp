@@ -7,6 +7,8 @@
 
 #include "RegistryPreview.h"
 
+#include "utils/Log.h"
+
 #define CLSID_I_THUMBNAIL_PROVIDER L"{e357fccd-a995-4576-b01f-234630154e96}"
 #define CLSID_I_EXTRACT_IMAGE L"{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"
 #define CLSID_I_PREVIEW_HANDLER L"{8895b1c6-b41f-4c1c-a562-0d564250836f}"
@@ -152,4 +154,12 @@ void DisablePreviewInstallExts(const WCHAR* cmdLine) {
             gPreviewers[i].skip = !exts.Contains(gPreviewers[i].ext + 1);
         }
     }
+}
+
+bool IsPreviewerInstalled() {
+    const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
+    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    bool isInstalled = str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
+    logf("IsPreviewerInstalled() isInstalled=%d\n", (int)isInstalled);
+    return isInstalled;
 }

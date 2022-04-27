@@ -8,7 +8,7 @@
 
 
         {
-            "name": "Launch Go",
+            "name": "doit.bat",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -18,7 +18,7 @@
             "program": "${workspaceFolder}/do"
         },
         {
-            "name": "Launch dbg 64",
+            "name": "dbg 64",
             "type": "cppvsdbg",
             "preLaunchTask": "build-dbg-64",
             "request": "launch",
@@ -30,12 +30,12 @@
             "externalConsole": false
         },
         {
-            "name": "Launch dbg 64 installer",
+            "name": "installer dbg 64",
             "type": "cppvsdbg",
             "preLaunchTask": "build-dbg-64",
             "request": "launch",
             "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
-            "args": ["-install", "-log"],
+            "args": ["-install"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

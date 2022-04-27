@@ -589,10 +589,13 @@ WCHAR* FormatFileSizeNoTrans(i64 size) {
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), L"Bytes");
 }
 
-void ShowLogFile(const char* logPath) {
-    if (!logPath) {
+void LaunchFileIfExists(const char* path) {
+    if (!path) {
         return;
     }
-    WCHAR* path = ToWstrTemp(logPath);
-    LaunchFile(path, nullptr, L"open");
+    if (!file::Exists(path)) {
+        return;
+    }
+    WCHAR* pathTmp = ToWstrTemp(path);
+    LaunchFile(pathTmp, nullptr, L"open");
 }

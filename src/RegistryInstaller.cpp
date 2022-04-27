@@ -2,39 +2,12 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include <tlhelp32.h>
-#include <io.h>
-
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
 #include "utils/FileUtil.h"
-#include "utils/Dpi.h"
-#include "utils/FrameTimeoutCalculator.h"
 #include "utils/WinUtil.h"
-#include "utils/Timer.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/ByteOrderDecoder.h"
-#include "utils/LzmaSimpleArchive.h"
 
-#include "wingui/UIModels.h"
-
-#include "wingui/Layout.h"
-
-#include "wingui/wingui2.h"
-
-#include "Translations.h"
-
-#include "AppPrefs.h"
-#include "AppTools.h"
 #include "SumatraConfig.h"
-#include "DisplayMode.h"
-#include "Flags.h"
-#include "SumatraPDF.h"
 #include "Version.h"
 #include "Installer.h"
-#include "RegistryPreview.h"
-#include "RegistrySearchFilter.h"
 
 #include "utils/Log.h"
 
@@ -94,7 +67,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
         WCHAR* key = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);
         ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", key);
     }
-    DWORD size = GetDirSize(gCli->installDir) / 1024;
+    DWORD size = GetDirSize(installDir) / 1024;
     // size of installed directory after copying files
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"EstimatedSize", size);
     // current date as YYYYMMDD

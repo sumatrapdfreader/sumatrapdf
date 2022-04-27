@@ -12,3 +12,4 @@
 
 bool InstallSearchFiler(const WCHAR* dllPath, bool allUsers);
 bool UninstallSearchFilter();
+bool IsSearchFilterInstalled();

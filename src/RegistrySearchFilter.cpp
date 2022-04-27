@@ -6,6 +6,8 @@
 
 #include "RegistrySearchFilter.h"
 
+#include "utils/Log.h"
+
 bool InstallSearchFiler(const WCHAR* dllPath, bool allUsers) {
     struct {
         const WCHAR *key, *value, *data;
@@ -76,4 +78,12 @@ bool UninstallSearchFilter() {
         ok &= LoggedDeleteRegKey(HKEY_CURRENT_USER, regKeys[i]);
     }
     return ok;
+}
+
+bool IsSearchFilterInstalled() {
+    const WCHAR* key = L".pdf\\PersistentHandler";
+    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    bool isInstalled = str::EqI(iid, SZ_PDF_FILTER_HANDLER);
+    logf("IsSearchFilterInstalled() isInstalled=%d\n", (int)isInstalled);
+    return isInstalled;
 }

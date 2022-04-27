@@ -2,9 +2,6 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include <tlhelp32.h>
-#include <io.h>
-
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
 #include "utils/FileUtil.h"
@@ -18,20 +15,18 @@
 #include "utils/LzmaSimpleArchive.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-
 #include "wingui/wingui2.h"
 
 #include "Translations.h"
 
 #include "AppPrefs.h"
-#include "AppTools.h"
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
 #include "Flags.h"
-#include "SumatraPDF.h"
 #include "Version.h"
+#include "SumatraPDF.h"
+#include "AppTools.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
@@ -257,11 +252,11 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     gWasPreviewInstaller = false;
 
     if (gCli->withFilter) {
-        RegisterSearchFilter(false);
+        RegisterSearchFilter();
     }
 
     if (gCli->withPreview) {
-        RegisterPreviewer(false);
+        RegisterPreviewer();
     }
 
     UninstallBrowserPlugin();
@@ -404,7 +399,7 @@ static void OnInstallationFinished() {
         CreateButtonExit(gHwndFrame);
         SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
     }
-    gMsgError = firstError;
+    gMsgError = gFirstError;
     HwndInvalidate(gHwndFrame);
 
     CloseHandle(hThread);
@@ -976,7 +971,7 @@ int RunInstaller() {
     if (gCli->log) {
         installerLogPath = GetInstallerLogPath();
         if (installerLogPath) {
-            StartLogToFile(installerLogPath, false);
+            StartLogToFile(installerLogPath, true);
         }
     }
     logf("------------- Starting SumatraPDF installation\n");
@@ -1021,10 +1016,10 @@ int RunInstaller() {
     // unregister search filter and previewer to reduce
     // possibility of blocking the installation because the dlls are loaded
     if (gWasSearchFilterInstalled) {
-        UnRegisterSearchFilter(true);
+        UnRegisterSearchFilter();
     }
     if (gWasPreviewInstaller) {
-        UnRegisterPreviewer(true);
+        UnRegisterPreviewer();
     }
 
     if (gCli->silent) {
@@ -1054,16 +1049,16 @@ int RunInstaller() {
     // re-register if we un-registered but installation was cancelled
     if (gWasSearchFilterInstalled) {
         log("re-registering search filter\n");
-        RegisterSearchFilter(true);
+        RegisterSearchFilter();
     }
     if (gWasPreviewInstaller) {
         log("re-registering previewer\n");
-        RegisterPreviewer(true);
+        RegisterPreviewer();
     }
     log("Installer finished\n");
-    ShowLogFile(installerLogPath);
+    LaunchFileIfExists(installerLogPath);
 Exit:
-    free(firstError);
+    free(gFirstError);
 
     return ret;
 }

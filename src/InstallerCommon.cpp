@@ -7,8 +7,6 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
-#include <tlhelp32.h>
-#include <io.h>
 #include "utils/FileUtil.h"
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
@@ -75,7 +73,7 @@ Color COLOR_MSG_INSTALLATION(gCol5);
 Color COLOR_MSG_FAILED(gCol1);
 
 HWND gHwndFrame = nullptr;
-WCHAR* firstError = nullptr;
+WCHAR* gFirstError = nullptr;
 bool gForceCrash = false;
 WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
@@ -116,8 +114,8 @@ SeqStrings GetSupportedExts() {
 }
 
 void NotifyFailed(const WCHAR* msg) {
-    if (!firstError) {
-        firstError = str::Dup(msg);
+    if (!gFirstError) {
+        gFirstError = str::Dup(msg);
     }
     logf(L"NotifyFailed: %s\n", msg);
 }
@@ -247,84 +245,56 @@ void UninstallBrowserPlugin() {
     NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
 
-bool IsSearchFilterInstalled() {
-    const WCHAR* key = L".pdf\\PersistentHandler";
-    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    bool isInstalled = str::EqI(iid, SZ_PDF_FILTER_HANDLER);
-    logf("IsSearchFilterInstalled() isInstalled=%d\n", isInstalled);
-    return isInstalled;
-}
-
-bool IsPreviewerInstalled() {
-    const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    bool isInstalled = str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
-    logf("IsPreviewerInstalled() isInstalled=%d\n", isInstalled);
-    return isInstalled;
-}
-
 constexpr const WCHAR* kSearchFilterDllName = L"PdfFilter.dll";
 
-void RegisterSearchFilter(bool silent) {
+void RegisterSearchFilter() {
     AutoFreeWstr dllPath = GetInstallationFilePath(kSearchFilterDllName);
-    logf(L"RegisterSearchFilter(silent=%d) dllPath=%s\n", silent, dllPath.Get());
-    bool ok = RegisterServerDLL(dllPath);
+    logf(L"RegisterSearchFilter() dllPath=%s\n", dllPath.Get());
+    bool ok = InstallSearchFiler(dllPath, false);
     if (ok) {
         log("  did registe\n");
         return;
     }
     log("  failed to register\n");
-    if (silent) {
-        return;
-    }
     NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
-void UnRegisterSearchFilter(bool silent) {
+void UnRegisterSearchFilter() {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
-    logf("UnRegisterSearchFilter(silent=%d) dllPath=%s\n", silent, dllPath.Get());
+    logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.Get());
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
-        log(L"  did unregister\n");
+        log("  did unregister\n");
         return;
     }
     log("  failed to unregister\n");
-    if (silent) {
-        return;
-    }
     NotifyFailed(_TR("Couldn't uninstall Sumatra search filter"));
 }
 
 constexpr const WCHAR* kPreviewDllName = L"PdfPreview.dll";
 
-void RegisterPreviewer(bool silent) {
+void RegisterPreviewer() {
     AutoFreeWstr dllPath = GetInstallationFilePath(kPreviewDllName);
-    logf("RegisterPreviewer(silent=%d) dllPath=%s\n", silent, dllPath.Get());
-    // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
+    logf("RegisterPreviewer() dllPath=%s\n", dllPath.Get());
     bool ok = InstallPreviewDll(dllPath, gCli->allUsers);
     if (ok) {
         log("  did register\n");
         return;
     }
     log("  failed to register\n");
-    if (!silent) {
-        NotifyFailed(_TR("Couldn't install PDF previewer"));
-    }
+    NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
-void UnRegisterPreviewer(bool silent) {
+void UnRegisterPreviewer() {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(kPreviewDllName);
-    logf("UnRegisterPreviewer(silent=%d) dllPath=%s\n", silent, dllPath.Get());
-    // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
+    logf("UnRegisterPreviewer() dllPath=%s\n", dllPath.Get());
     bool ok = UninstallPreviewDll();
     if (ok) {
         log("  did unregister\n");
         return;
     }
     log(" failed to unregister\n");
-    if (!silent) {
-        NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
-    }
+    NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
 }
 
 static bool IsProcWithModule(DWORD processId, const WCHAR* modulePath) {
