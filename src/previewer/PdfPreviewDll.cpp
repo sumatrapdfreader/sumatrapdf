@@ -177,16 +177,18 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     return pClassFactory->QueryInterface(riid, ppv);
 }
 
-#include "Installer.h"
-
 STDAPI DllRegisterServer() {
-    log("DllRegisterServer\n");
+    AutoFreeWstr dllPath = path::GetPathOfFileInAppDir();
+    if (!dllPath) {
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+    logf(L"DllRegisterServer: dllPath=%s\n", dllPath.Get());
 
     // for compat with SumatraPDF 3.3 and lower
     // in 3.4 we call this code from the installer
     // pre-3.4 we would write to both HKLM (if permissions) and HKCU
     // in 3.4+ this will only install for current user (HKCU)
-    bool ok = InstallPreviewDll(false);
+    bool ok = InstallPreviewDll(dllPath, false);
     if (!ok) {
         log("DllRegisterServer failed!\n");
         return E_FAIL;

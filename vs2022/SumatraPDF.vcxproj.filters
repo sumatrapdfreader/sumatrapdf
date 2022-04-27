@@ -123,6 +123,9 @@
     <ClInclude Include="..\src\ProgressUpdateUI.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\RegistryPreview.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\RenderCache.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -351,6 +354,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RegistryInstaller.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RegistryPreview.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RenderCache.cpp">

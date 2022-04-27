@@ -3,9 +3,6 @@
 
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
-#define SEARCH_FILTER_DLL_NAME L"PdfFilter.dll"
-#define PREVIEW_DLL_NAME L"PdfPreview.dll"
-
 #define kInstallerWinDx 420
 #define kInstallerWinDy 340
 

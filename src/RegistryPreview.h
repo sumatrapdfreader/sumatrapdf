@@ -10,6 +10,6 @@
 #define SZ_CBX_PREVIEW_CLSID L"{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
 #define SZ_TGA_PREVIEW_CLSID L"{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}"
 
-bool InstallPreviewDll(bool allUsers);
+bool InstallPreviewDll(const WCHAR* dllPath, bool allUsers);
 bool UninstallPreviewDll();
 void DisablePreviewInstallExts(const WCHAR* cmdLine);

@@ -591,6 +591,7 @@
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\Print.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
+    <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\RenderCache.h" />
     <ClInclude Include="..\src\SaveAsPdf.h" />
     <ClInclude Include="..\src\Scratch.h" />
@@ -670,6 +671,7 @@
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\RegistryInstaller.cpp" />
+    <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />
     <ClCompile Include="..\src\SaveAsPdf.cpp" />
     <ClCompile Include="..\src\Scratch.cpp" />

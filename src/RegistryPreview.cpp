@@ -43,16 +43,9 @@ static struct {
 };
 // clang-format on
 
-bool InstallPreviewDll(bool allUsers) {
-    AutoFreeWstr dllPath = path::GetPathOfFileInAppDir();
-    if (!dllPath) {
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-
-#define WriteOrFail_(key, value, data)                     \
-    WriteRegStr(HKEY_LOCAL_MACHINE, key, value, data);     \
-    if (!WriteRegStr(HKEY_CURRENT_USER, key, value, data)) \
-    return false
+bool InstallPreviewDll(const WCHAR* dllPath, bool allUsers) {
+    HKEY hkey = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+    bool ok;
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
         if (gPreviewers[i].skip) {
@@ -61,35 +54,39 @@ bool InstallPreviewDll(bool allUsers) {
         const WCHAR* clsid = gPreviewers[i].clsid;
         const WCHAR* ext = gPreviewers[i].ext;
         const WCHAR* ext2 = gPreviewers[i].ext2;
+        ok = true;
 
         AutoFreeWstr displayName = str::Format(L"SumatraPDF Preview (*%s)", ext);
         // register class
         AutoFreeWstr key = str::Format(L"Software\\Classes\\CLSID\\%s", clsid);
-        WriteOrFail_(key, nullptr, displayName);
-        WriteOrFail_(key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
-        WriteOrFail_(key, L"DisplayName", displayName);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, displayName);
+        ok &=
+            LoggedWriteRegStr(hkey, key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
+        ok &= LoggedWriteRegStr(hkey, key, L"DisplayName", displayName);
         key.Set(str::Format(L"Software\\Classes\\CLSID\\%s\\InProcServer32", clsid));
-        WriteOrFail_(key, nullptr, dllPath);
-        WriteOrFail_(key, L"ThreadingModel", L"Apartment");
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, dllPath);
+        ok &= LoggedWriteRegStr(hkey, key, L"ThreadingModel", L"Apartment");
         // IThumbnailProvider
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext));
-        WriteOrFail_(key, nullptr, clsid);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         if (ext2) {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext2));
-            WriteOrFail_(key, nullptr, clsid);
+            ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         }
         // IPreviewHandler
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext));
-        WriteOrFail_(key, nullptr, clsid);
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         if (ext2) {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext2));
-            WriteOrFail_(key, nullptr, clsid);
+            ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         }
-        WriteOrFail_(REG_KEY_PREVIEW_HANDLERS, clsid, displayName);
+        ok &= LoggedWriteRegStr(hkey, REG_KEY_PREVIEW_HANDLERS, clsid, displayName);
+        if (!ok) {
+            return false;
+        }
     }
-#undef WriteOrFail_
 
-  return true;
+    return true;
 }
 
 static void DeleteOrFail(const WCHAR* key, HRESULT* hr) {

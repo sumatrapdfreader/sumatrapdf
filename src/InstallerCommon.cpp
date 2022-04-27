@@ -263,8 +263,10 @@ bool IsPreviewerInstalled() {
     return isInstalled;
 }
 
+constexpr const WCHAR* kSearchFilterDllName = L"PdfFilter.dll";
+
 void RegisterSearchFilter(bool silent) {
-    AutoFreeWstr dllPath = GetInstallationFilePath(SEARCH_FILTER_DLL_NAME);
+    AutoFreeWstr dllPath = GetInstallationFilePath(kSearchFilterDllName);
     logf(L"RegisterSearchFilter(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     bool ok = RegisterServerDLL(dllPath);
     if (ok) {
@@ -279,7 +281,7 @@ void RegisterSearchFilter(bool silent) {
 }
 
 void UnRegisterSearchFilter(bool silent) {
-    AutoFreeWstr dllPath = GetExistingInstallationFilePath(SEARCH_FILTER_DLL_NAME);
+    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
     logf("UnRegisterSearchFilter(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
@@ -293,36 +295,36 @@ void UnRegisterSearchFilter(bool silent) {
     NotifyFailed(_TR("Couldn't uninstall Sumatra search filter"));
 }
 
+constexpr const WCHAR* kPreviewDllName = L"PdfPreview.dll";
+
 void RegisterPreviewer(bool silent) {
-    AutoFreeWstr dllPath = GetInstallationFilePath(PREVIEW_DLL_NAME);
+    AutoFreeWstr dllPath = GetInstallationFilePath(kPreviewDllName);
     logf("RegisterPreviewer(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
-    bool ok = RegisterServerDLL(dllPath);
+    bool ok = InstallPreviewDll(dllPath, gCli->allUsers);
     if (ok) {
         log("  did register\n");
         return;
     }
-    if (silent) {
-        return;
-    }
     log("  failed to register\n");
-    NotifyFailed(_TR("Couldn't install PDF previewer"));
+    if (!silent) {
+        NotifyFailed(_TR("Couldn't install PDF previewer"));
+    }
 }
 
 void UnRegisterPreviewer(bool silent) {
-    AutoFreeWstr dllPath = GetExistingInstallationFilePath(PREVIEW_DLL_NAME);
+    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kPreviewDllName);
     logf("UnRegisterPreviewer(silent=%d) dllPath=%s\n", silent, dllPath.Get());
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
-    bool ok = UnRegisterServerDLL(dllPath);
+    bool ok = UninstallPreviewDll();
     if (ok) {
         log("  did unregister\n");
         return;
     }
     log(" failed to unregister\n");
-    if (silent) {
-        return;
+    if (!silent) {
+        NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
     }
-    NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
 }
 
 static bool IsProcWithModule(DWORD processId, const WCHAR* modulePath) {

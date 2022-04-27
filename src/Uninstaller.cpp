@@ -62,7 +62,6 @@ static void CreateButtonExit(HWND hwndParent) {
     gButtonExit->onClicked = OnButtonExit;
 }
 
-
 #if 0
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
