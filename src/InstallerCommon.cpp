@@ -247,10 +247,10 @@ void UninstallBrowserPlugin() {
 
 constexpr const WCHAR* kSearchFilterDllName = L"PdfFilter.dll";
 
-void RegisterSearchFilter() {
+void RegisterSearchFilter(bool allUsers) {
     AutoFreeWstr dllPath = GetInstallationFilePath(kSearchFilterDllName);
     logf(L"RegisterSearchFilter() dllPath=%s\n", dllPath.Get());
-    bool ok = InstallSearchFiler(dllPath, false);
+    bool ok = InstallSearchFiler(dllPath, allUsers);
     if (ok) {
         log("  did registe\n");
         return;
@@ -260,9 +260,10 @@ void RegisterSearchFilter() {
 }
 
 void UnRegisterSearchFilter() {
-    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
-    logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.Get());
-    bool ok = UnRegisterServerDLL(dllPath);
+    // AutoFreeWstr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
+    // logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.Get());
+    // bool ok = UnRegisterServerDLL(dllPath);
+    bool ok = UninstallSearchFilter();
     if (ok) {
         log("  did unregister\n");
         return;
@@ -273,10 +274,10 @@ void UnRegisterSearchFilter() {
 
 constexpr const WCHAR* kPreviewDllName = L"PdfPreview.dll";
 
-void RegisterPreviewer() {
+void RegisterPreviewer(bool allUsers) {
     AutoFreeWstr dllPath = GetInstallationFilePath(kPreviewDllName);
     logf("RegisterPreviewer() dllPath=%s\n", dllPath.Get());
-    bool ok = InstallPreviewDll(dllPath, gCli->allUsers);
+    bool ok = InstallPreviewDll(dllPath, allUsers);
     if (ok) {
         log("  did register\n");
         return;

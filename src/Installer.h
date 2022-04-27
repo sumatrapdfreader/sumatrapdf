@@ -63,10 +63,10 @@ WCHAR* GetInstalledExePath();
 WCHAR* GetInstallationFilePath(const WCHAR* name);
 WCHAR* GetExistingInstallationFilePath(const WCHAR* name);
 
-void RegisterPreviewer();
+void RegisterPreviewer(bool allUsers);
 void UnRegisterPreviewer();
 
-void RegisterSearchFilter();
+void RegisterSearchFilter(bool allUsers);
 void UnRegisterSearchFilter();
 
 void UninstallBrowserPlugin();

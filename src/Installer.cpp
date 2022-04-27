@@ -252,11 +252,11 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     gWasPreviewInstaller = false;
 
     if (gCli->withFilter) {
-        RegisterSearchFilter();
+        RegisterSearchFilter(gCli->allUsers);
     }
 
     if (gCli->withPreview) {
-        RegisterPreviewer();
+        RegisterPreviewer(gCli->allUsers);
     }
 
     UninstallBrowserPlugin();
@@ -1049,11 +1049,11 @@ int RunInstaller() {
     // re-register if we un-registered but installation was cancelled
     if (gWasSearchFilterInstalled) {
         log("re-registering search filter\n");
-        RegisterSearchFilter();
+        RegisterSearchFilter(gCli->allUsers);
     }
     if (gWasPreviewInstaller) {
         log("re-registering previewer\n");
-        RegisterPreviewer();
+        RegisterPreviewer(gCli->allUsers);
     }
     log("Installer finished\n");
     LaunchFileIfExists(installerLogPath);

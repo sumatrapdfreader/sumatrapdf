@@ -57,6 +57,7 @@ bool InstallSearchFiler(const WCHAR* dllPath, bool allUsers) {
     return true;
 }
 
+// Note: for compat with pre-3.4 removes HKLM and HKCU keys
 bool UninstallSearchFilter() {
     const WCHAR* regKeys[] = {
         L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,  L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
