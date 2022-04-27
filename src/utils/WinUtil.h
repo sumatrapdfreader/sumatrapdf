@@ -285,7 +285,6 @@ std::tuple<const u8*, DWORD, HGLOBAL> LockDataResource(int id);
 bool IsValidDelayType(int type);
 
 void HwndResizeClientSize(HWND, int, int);
-void HwndDpiAdjust(HWND, float* x, float* y);
 void HwndSetText(HWND, std::string_view s);
 void HwndSetText(HWND, const WCHAR*);
 HICON HwndSetIcon(HWND, HICON);

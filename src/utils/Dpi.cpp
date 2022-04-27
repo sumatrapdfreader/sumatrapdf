@@ -30,39 +30,22 @@ dpi information for that window.
 On WM_DESTROY call DpiRemove(HWND) so that we remove it.
 
 For even faster access you can cache struct Dpi somewhere.
-
-Note: maybe I don't need keep a per-HWND cache and instead
-always call GetDpiXY() ?
 */
-
-static HWND gLastHwndParent = nullptr;
-static HWND gLastHwnd = nullptr;
-static uint gLastDpi = 0;
-
-void DpiReset() {
-    gLastHwndParent = nullptr;
-    gLastHwnd = nullptr;
-    gLastDpi = 0;
-}
 
 #include <shellscalingapi.h>
 #pragma comment(lib, "Shcore")
 
-// Uncached getting of dpi
+// get uncached dpi
 int DpiGetForHwnd(HWND hwnd) {
-    // TODO: GetDpiForWindow() seems to return default 96 DPI for
-    // GetDesktopWindow(), which makes DpiScale() useless
-    // without HWND. Maybe this is because
-    // "the return value of GetDpiForWindow based on the DPI_AWARENESS of the provided hwnd"
-    // and DPI_AWARENESS of desktop window is set to unaware
+    // GetDpiForWindow() returns defult 96 DPI for desktop window
+    // (most likely desktop has DPI_AWARENESS set to UNAWARE)
+    if (!hwnd || (hwnd == HWND_DESKTOP) || (hwnd == GetDesktopWindow())) {
+        goto GetGlobalDpi;
+    }
+
     if (DynGetDpiForWindow) {
-        // HWND_DESKTOP is 0 and not really HWND
-        // GetDpiForWindow(HWND_DESKTOP) returns 0
-        if (!hwnd || hwnd == HWND_DESKTOP) {
-            hwnd = GetDesktopWindow();
-        }
         uint dpi = DynGetDpiForWindow(hwnd);
-        // returns 0 for HWND_DESKTOP,
+        // returns 0 for HWND_DESKTOP
         if (dpi > 0) {
             CrashIf(dpi < 72);
             return (int)dpi;
@@ -80,41 +63,15 @@ int DpiGetForHwnd(HWND hwnd) {
         }
     }
 #endif
-
+GetGlobalDpi:
     ScopedGetDC dc(hwnd);
     int dpi = GetDeviceCaps(dc, LOGPIXELSX);
     return dpi;
 }
 
 int DpiGet(HWND hwnd) {
-    if (hwnd == nullptr) {
-        hwnd = GetDesktopWindow();
-        CrashIf(!hwnd);
-    }
-    if (hwnd == gLastHwnd) {
-        CrashIf(gLastDpi == 0);
-        return gLastDpi;
-    }
-
-    HWND hwndParent = hwnd;
-    // TODO: not sure if it's worth, perf-wise, to go up level
-    while (true) {
-        HWND p = GetParent(hwndParent);
-        if (p == nullptr) {
-            break;
-        }
-        hwndParent = p;
-    }
-    if (hwndParent == gLastHwndParent) {
-        CrashIf(gLastDpi == 0);
-        return gLastDpi;
-    }
-
     int dpi = DpiGetForHwnd(hwnd);
     dpi = RoundUp(dpi, 4);
-    gLastDpi = dpi;
-    gLastHwnd = hwnd;
-    gLastHwndParent = hwndParent;
     return dpi;
 }
 
@@ -132,10 +89,7 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
     x2 = nx2;
 }
 
+// TODO: remove usage of this
 int DpiScale(int x) {
-    int dpi = gLastDpi;
-    if (dpi == 0) {
-        dpi = DpiGetForHwnd(HWND_DESKTOP);
-    }
-    return MulDiv(x, dpi, 96);
+    return DpiScale(nullptr, x);
 }

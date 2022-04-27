@@ -1116,7 +1116,7 @@ Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicke
     return b;
 }
 
-#define kButtonMargin DpiScale(8)
+#define kButtonMargin 8
 
 Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     ButtonCreateArgs args;
@@ -1129,8 +1129,9 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     RECT r;
     GetClientRect(parent, &r);
     Size size = b->GetIdealSize();
-    int x = RectDx(r) - size.dx - kButtonMargin;
-    int y = RectDy(r) - size.dy - kButtonMargin;
+    int margin = DpiScale(parent, kButtonMargin);
+    int x = RectDx(r) - size.dx - margin;
+    int y = RectDy(r) - size.dy - margin;
     r.left = x;
     r.right = x + size.dx;
     r.top = y;

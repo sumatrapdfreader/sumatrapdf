@@ -726,7 +726,7 @@ static void OnCreateWindow(HWND hwnd) {
 }
 //] ACCESSKEY_GROUP Installer
 
-static void CreateMainWindow() {
+static void CreateInstallerWindow() {
     AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
     DWORD exStyle = 0;
@@ -823,7 +823,7 @@ static bool RegisterWinClass() {
 }
 
 static BOOL InstanceInit() {
-    CreateMainWindow();
+    CreateInstallerWindow();
     if (!gHwndFrame) {
         return FALSE;
     }

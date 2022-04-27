@@ -2370,30 +2370,15 @@ HINSTANCE GetInstance() {
     return (HINSTANCE)&__ImageBase;
 }
 
-void HwndDpiAdjust(HWND hwnd, float* x, float* y) {
-    auto dpi = DpiGet(hwnd);
-
-    if (x != nullptr) {
-        float dpiFactor = (float)dpi / 96.f;
-        *x = *x * dpiFactor;
-    }
-
-    if (y != nullptr) {
-        float dpiFactor = (float)dpi / 96.f;
-        *y = *y * dpiFactor;
-    }
-}
-
 Size ButtonGetIdealSize(HWND hwnd) {
     // adjust to real size and position to the right
     SIZE s{};
     Button_GetIdealSize(hwnd, &s);
     // add padding
-    float xPadding = 8 * 2;
-    float yPadding = 2 * 2;
-    HwndDpiAdjust(hwnd, &xPadding, &yPadding);
-    s.cx += (int)xPadding;
-    s.cy += (int)yPadding;
+    int xPadding = DpiScale(hwnd, 8 * 2);
+    int yPadding = DpiScale(hwnd, 2 * 2);
+    s.cx += xPadding;
+    s.cy += yPadding;
     Size res = {s.cx, s.cy};
     return res;
 }

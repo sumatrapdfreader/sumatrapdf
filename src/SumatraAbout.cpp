@@ -42,7 +42,7 @@
 #define ABOUT_BORDER_COL RGB(0, 0, 0)
 #define ABOUT_TXT_DY DpiScale(6)
 #define ABOUT_RECT_PADDING DpiScale(8)
-#define ABOUT_INNER_PADDING DpiScale(8)
+#define kInnerPadding 8
 
 #define ABOUT_CLASS_NAME L"SUMATRA_PDF_ABOUT"
 
@@ -165,7 +165,7 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     txt = VERSION_SUB_TXT;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     txtSize.cx = std::max(txtSize.cx, minWidth);
-    result.dx += 2 * (txtSize.cx + ABOUT_INNER_PADDING);
+    result.dx += 2 * (txtSize.cx + DpiScale(hwnd, kInnerPadding));
 
     return result;
 }
@@ -185,7 +185,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
 
     SetTextColor(hdc, WIN_COL_BLACK);
     SelectObject(hdc, fontVersionTxt);
-    Point pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
+    Point pt(mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding), mainRect.y);
 
     AutoFreeWstr ver = GetAppVersion();
     TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
@@ -208,8 +208,9 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
 
     SIZE txtSize;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    int x = rc.dx - txtSize.cx - ABOUT_INNER_PADDING;
-    int y = rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING;
+    int innerPadding = DpiScale(hwnd, kInnerPadding);
+    int x = rc.dx - txtSize.cx - innerPadding;
+    int y = rc.y + rc.dy - txtSize.cy - innerPadding;
     Rect rect(x, y, txtSize.cx, txtSize.cy);
     RECT rTmp = ToRECT(rect);
     DrawTextW(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
@@ -219,7 +220,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     }
 
     // make the click target larger
-    rect.Inflate(ABOUT_INNER_PADDING, ABOUT_INNER_PADDING);
+    rect.Inflate(innerPadding, innerPadding);
     return rect;
 }
 
@@ -609,6 +610,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
 #define DOCLIST_BOTTOM_BOX_DY DpiScale(win->hwndFrame, 50)
 
 void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
+    HWND hwnd = win->hwndFrame;
     auto col = GetAppColor(AppColor::MainWindowText);
     AutoDeletePen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
@@ -667,8 +669,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
              DOCLIST_MARGIN_RIGHT) /
                 2;
     Point offset(x, rc.y + DOCLIST_MARGIN_TOP);
-    if (offset.x < ABOUT_INNER_PADDING) {
-        offset.x = ABOUT_INNER_PADDING;
+    if (offset.x < DpiScale(hwnd, kInnerPadding)) {
+        offset.x = DpiScale(hwnd, kInnerPadding);
     } else if (list.size() == 0) {
         offset.x = DOCLIST_MARGIN_LEFT;
     }
