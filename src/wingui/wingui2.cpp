@@ -1455,6 +1455,7 @@ HWND Checkbox::Create(const CheckboxCreateArgs& args) {
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
 
     Wnd::CreateControl(cargs);
+    SetButtonCheckState(hwnd, args.initialState);
     SizeToIdealSize(this);
     return hwnd;
 }
