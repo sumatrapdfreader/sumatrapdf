@@ -173,14 +173,15 @@ bool RegisterForOpenWith(HKEY hkey) {
         ok &= LoggedWriteRegStr(hkey, progIDKey, nullptr, desc);
         // ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
 
-        // I thought that ",${n}" is icon id but it seems to be order
-        // of the icon in the exe
+        // Per https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
+        // ",${n}" => n is 0-based index of the icon
+        // ",-${n}" => n is icon with resource id
         WCHAR* iconPath = str::JoinTemp(exePath, L"");
         if (str::Eq(ext, L".epub")) {
-            iconPath = str::JoinTemp(exePath, L",1");
+            iconPath = str::JoinTemp(exePath, L",-2");
         }
         if (str::Eq(ext, L".cbr") || str::Eq(ext, L".cbz") || str::Eq(ext, L".cbt") || str::Eq(ext, L".cb7")) {
-            iconPath = str::JoinTemp(exePath, L",2");
+            iconPath = str::JoinTemp(exePath, L",-3");
         }
 
         key = str::JoinTemp(progIDKey, L"\\Application");
