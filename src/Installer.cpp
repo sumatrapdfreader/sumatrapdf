@@ -311,9 +311,21 @@ static void RestartElevatedForAllUsers() {
     LaunchElevated(exePath, cmdLine);
 }
 
+// in pre-relase the window is wider to acommodate bigger version number
+// TODO: change how we draw version number
+#define kInstallerWinDx 420
+#define kInstallerPreReleseWinDx 492
+
+int GetInstallerWinDx() {
+    if (gIsPreReleaseBuild) {
+        return kInstallerPreReleseWinDx;
+    }
+    return kInstallerWinDx;
+}
+
 static void StartInstallation() {
     // create a progress bar in place of the Options button
-    int dx = DpiScale(gHwndFrame, kInstallerWinDx / 2);
+    int dx = DpiScale(gHwndFrame, GetInstallerWinDx() / 2);
     Rect rc(0, 0, dx, gButtonDy);
     rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
 
@@ -730,13 +742,12 @@ static void CreateInstallerWindow() {
     const WCHAR* winCls = kInstallerWindowClassName;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
-    int dx = kInstallerWinDx;
+    int dx = GetInstallerWinDx();
     int dy = kInstallerWinDy;
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
     gHwndFrame = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
-    dx = DpiScale(gHwndFrame, kInstallerWinDx);
-    dy = DpiScale(gHwndFrame, kInstallerWinDy);
+    DpiScale(gHwndFrame, dx, dy);
     HwndResizeClientSize(gHwndFrame, dx, dy);
     OnCreateWindow(gHwndFrame);
     if (gCli->runInstallNow) {

@@ -3,7 +3,6 @@
 
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
-#define kInstallerWinDx 492
 #define kInstallerWinDy 340
 
 #define kRegExplorerPdfExt L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
@@ -80,3 +79,4 @@ bool WriteUninstallerRegistryInfo(HKEY hkey);
 bool WriteExtendedFileExtensionInfo(HKEY hkey);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveOwnRegistryKeys(HKEY hkey);
+int GetInstallerWinDx();

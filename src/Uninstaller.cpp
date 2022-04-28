@@ -215,15 +215,14 @@ static void CreateUninstallerWindow() {
     AutoFreeWstr title = str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR);
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
-    int dx = kInstallerWinDx;
+    int dx = GetInstallerWinDx();
     int dy = kInstallerWinDy;
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     auto winCls = kInstallerWindowClassName;
     gHwndFrame = CreateWindowW(winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 
-    dx = DpiScale(gHwndFrame, kInstallerWinDx);
-    dy = DpiScale(gHwndFrame, kInstallerWinDy);
+    DpiScale(gHwndFrame, dx, dy);
     HwndResizeClientSize(gHwndFrame, dx, dy);
     OnCreateWindow(gHwndFrame);
 }

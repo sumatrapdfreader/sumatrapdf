@@ -178,10 +178,10 @@ bool RegisterForOpenWith(HKEY hkey) {
         // ",-${n}" => n is icon with resource id
         WCHAR* iconPath = str::JoinTemp(exePath, L"");
         if (str::Eq(ext, L".epub")) {
-            iconPath = str::JoinTemp(exePath, L",-2");
+            iconPath = str::JoinTemp(exePath, L",-3");
         }
         if (str::Eq(ext, L".cbr") || str::Eq(ext, L".cbz") || str::Eq(ext, L".cbt") || str::Eq(ext, L".cb7")) {
-            iconPath = str::JoinTemp(exePath, L",-3");
+            iconPath = str::JoinTemp(exePath, L",-4");
         }
 
         key = str::JoinTemp(progIDKey, L"\\Application");
