@@ -150,7 +150,6 @@ ShCtx\Software\Classes\${ext}\OpenWithProgids
 */
 bool RegisterForOpenWith(HKEY hkey) {
     WCHAR* exePath = GetInstalledExePathTemp();
-    WCHAR* iconPath = str::JoinTemp(exePath, L",1");
     WCHAR* cmdOpen = str::JoinTemp(L"\"", exePath, L"\" \"%1\"");
     WCHAR* key;
     auto exts = gSupportedExts;
@@ -166,6 +165,11 @@ bool RegisterForOpenWith(HKEY hkey) {
         WCHAR* desc = str::JoinTemp(extUC, L" File");
         ok &= LoggedWriteRegStr(hkey, progIDKey, nullptr, desc);
         ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
+
+        WCHAR* iconPath = str::JoinTemp(exePath, L",1");
+        if (str::Eq(ext, L".mobi")) {
+            iconPath = str::JoinTemp(exePath, L",2");
+        }
 
         key = str::JoinTemp(progIDKey, L"\\DefaultIcon");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
@@ -584,7 +588,7 @@ void RemoveOwnRegistryKeys(HKEY hkey) {
         LoggedDeleteRegKey(hkey, key);
 
         key = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
-        LoggedDeleteRegKey(hkey, key);
+        LoggedDeleteRegValue(hkey, key, progIDName);
 
         seqstrings::Next(exts);
     }
