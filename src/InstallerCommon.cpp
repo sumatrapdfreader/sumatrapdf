@@ -88,29 +88,11 @@ static Color gMsgColor;
 
 static WStrVec gProcessesToClose;
 
-// clang-format off
-// list of supported file extensions for which SumatraPDF.exe will
-// be registered as a candidate for the Open With dialog's suggestions
-static SeqStrings gSupportedExts = 
-    ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
-    ".djvu\0.chm\0.mobi\0.epub\0.azw\0.azw3\0.azw4\0" \
-    ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
-    ".jpg\0.jpeg\0.tga\0.gif\0";
-// clang-format on
-
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
 TempWstr GetRegPathUninstTemp(const WCHAR* appName) {
     return str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
-}
-
-TempWstr GetRegClassesAppsTemp(const WCHAR* appName) {
-    return str::JoinTemp(L"Software\\Classes\\Applications\\", appName, L".exe");
-}
-
-SeqStrings GetSupportedExts() {
-    return gSupportedExts;
 }
 
 void NotifyFailed(const WCHAR* msg) {
@@ -160,9 +142,9 @@ WCHAR* GetInstallationFilePath(const WCHAR* name) {
     return res;
 }
 
-WCHAR* GetInstalledExePath() {
+WCHAR* GetInstalledExePathTemp() {
     WCHAR* dir = GetInstallDirTemp();
-    return path::Join(dir, kExeName);
+    return path::JoinTemp(dir, kExeName);
 }
 
 WCHAR* GetShortcutPath(int csidl) {
@@ -260,9 +242,8 @@ void RegisterSearchFilter(bool allUsers) {
 }
 
 void UnRegisterSearchFilter() {
-    // AutoFreeWstr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
-    // logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.Get());
-    // bool ok = UnRegisterServerDLL(dllPath);
+    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
+    logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.Get());
     bool ok = UninstallSearchFilter();
     if (ok) {
         log("  did unregister\n");

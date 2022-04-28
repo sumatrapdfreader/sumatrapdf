@@ -13,6 +13,13 @@
 
 // All registry manipulation needed for installer / uninstaller
 
+// notifies Shell that file associations changed.
+// Invalidates the icon and thumbnail cache.
+// https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shchangenotify
+static void ShellNotifyAssociationsChanged() {
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
+}
+
 // caller needs to str::Free() the result
 static WCHAR* GetInstallDate() {
     SYSTEMTIME st;
@@ -52,7 +59,8 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeWstr installedExePath = GetInstallationFilePath(kExeName);
     AutoFreeWstr installDate = GetInstallDate();
     WCHAR* installDir = GetInstallDirTemp();
-    WCHAR* uninstallerPath = installedExePath; // same as
+    // uninstaller is the same executable with a different flag
+    WCHAR* uninstallerPath = installedExePath;
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath);
 
     WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
@@ -87,31 +95,96 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     return ok;
 }
 
+// clang-format off
+// list of supported file extensions for which SumatraPDF.exe will
+// be registered as a candidate for the Open With dialog's suggestions
+static SeqStrings gSupportedExts = 
+    ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
+    ".djvu\0.chm\0.mobi\0.epub\0.azw\0.azw3\0.azw4\0" \
+    ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
+    ".jpg\0.jpeg\0.tga\0.gif\0";
+// clang-format on
+
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
 // http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
-static bool ListAsDefaultProgramWin10(HKEY hkey) {
+static bool RegisterForDefaultPrograms(HKEY hkey) {
     bool ok = true;
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
-    WCHAR* capKey = str::JoinTemp(L"SOFTWARE\\", kAppName, L"\\Capabilities");
-    ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", kAppName, capKey);
-    WCHAR* desc = str::JoinTemp(kAppName, L" is a PDF reader.");
-    ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
-    WCHAR* appLongName = str::JoinTemp(kAppName, L" Reader");
-    ok &= LoggedWriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
+    WCHAR* appCapabilityPath = str::JoinTemp(L"SOFTWARE\\", kAppName, L"\\Capabilities");
+
+    const WCHAR* desc = L"SumatraPDF is a PDF reader.";
+    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, L"ApplicationDescription", desc);
+    const WCHAR* appLongName = L"SumatraPDF Reader";
+    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, L"ApplicationName", appLongName);
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
-    WCHAR* keyAssoc = str::JoinTemp(capKey, L"\\FileAssociations");
+    WCHAR* keyAssoc = str::JoinTemp(appCapabilityPath, L"\\FileAssociations");
 
-    auto ext = GetSupportedExts();
+    auto ext = gSupportedExts;
     while (ext) {
         WCHAR* extw = ToWstrTemp(ext);
-        ok &= LoggedWriteRegStr(hkey, keyAssoc, extw, kExeName);
+        ok &= LoggedWriteRegStr(hkey, keyAssoc, extw, kAppName);
         seqstrings::Next(ext);
+    }
+
+    ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", kAppName, appCapabilityPath);
+    return ok;
+}
+
+/*
+ShCtx is either HKCU or HKLM
+
+For each extension, create a progid:
+ShCtx\Software\Classes\SumatraPDF.${ext}
+  DefaultIcon
+    (Default) = ${SumatraExePath},${OptIconIndex}
+  shell\open
+    Icon = ${SumatraExePath}
+  shell\open\command
+    (Default) = "${SumatraExePath}" "%1"
+
+Then in:
+ShCtx\Software\Classes\${ext}\OpenWithProgids
+  SumatraPDF.${ext} = "" (empty REG_SZ value)
+*/
+bool RegisterForOpenWith(HKEY hkey) {
+    WCHAR* exePath = GetInstalledExePathTemp();
+    WCHAR* iconPath = str::JoinTemp(exePath, L",1");
+    WCHAR* cmdOpen = str::JoinTemp(L"\"", exePath, L"\" \"%1\"");
+    WCHAR* key;
+    auto exts = gSupportedExts;
+    bool ok = true;
+    while (exts) {
+        WCHAR* ext = ToWstrTemp(exts);
+        WCHAR* progIDName = str::JoinTemp(kAppName, ext);
+        WCHAR* progIDKey = str::JoinTemp(L"Software\\Classes\\", progIDName);
+        ok &= CreateRegKey(hkey, progIDKey);
+
+        // .pdf => "PDF file"
+        WCHAR* extUC = str::ToUpperInPlace(str::DupTemp(ext + 1));
+        WCHAR* desc = str::JoinTemp(extUC, L" File");
+        ok &= LoggedWriteRegStr(hkey, progIDKey, nullptr, desc);
+        ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
+
+        key = str::JoinTemp(progIDKey, L"\\DefaultIcon");
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
+
+        key = str::JoinTemp(progIDKey, L"\\shell\\open");
+        ok &= LoggedWriteRegStr(hkey, key, L"Icon", iconPath);
+
+        key = str::JoinTemp(progIDKey, L"\\shell\\open\\command");
+        ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdOpen);
+
+        key = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
+        ok &= LoggedWriteRegNone(hkey, key, progIDName);
+
+        seqstrings::Next(exts);
     }
     return ok;
 }
 
+#if 0
 bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
@@ -128,7 +201,7 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     bool ok = true;
 
     WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
-    auto exts = GetSupportedExts();
+    auto exts = gSupportedExts;
     while (exts) {
         WCHAR* ext = ToWstrTemp(exts);
         WCHAR* name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
@@ -137,6 +210,7 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     }
     return ok;
 }
+#endif
 
 /*
 Structure of registry entries for associating Sumatra with PDF files.
@@ -321,55 +395,60 @@ bool IsExeAssociatedWithPdfExtension() {
 }
 #endif
 
+TempWstr GetRegClassesAppsTemp(const WCHAR* appName) {
+    return str::JoinTemp(L"Software\\Classes\\Applications\\", appName, L".exe");
+}
+
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
-    AutoFreeWstr exePath = GetInstalledExePath();
+    WCHAR* exePath = GetInstalledExePathTemp();
+    const WCHAR* key;
     if (HKEY_LOCAL_MACHINE == hkey) {
-        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
+        key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, exePath);
     }
-    WCHAR* REG_CLASSES_APPS = GetRegClassesAppsTemp(kAppName);
+    WCHAR* regPath = GetRegClassesAppsTemp(kAppName);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     WCHAR* iconPath = str::JoinTemp(exePath, L",1");
     {
-        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\DefaultIcon");
+        key = str::JoinTemp(regPath, L"\\DefaultIcon");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
     }
-    AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get());
+    AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath);
     {
-        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\Shell\\Open\\Command");
+        key = str::JoinTemp(regPath, L"\\Shell\\Open\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
     }
-    AutoFreeWstr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get());
+    AutoFreeWstr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath);
     {
-        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
+        key = str::JoinTemp(regPath, L"\\Shell\\Print\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printPath);
     }
-    AutoFreeWstr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get());
+    AutoFreeWstr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath);
     {
-        WCHAR* key = str::JoinTemp(REG_CLASSES_APPS, L"\\Shell\\PrintTo\\Command");
+        key = str::JoinTemp(regPath, L"\\Shell\\PrintTo\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
     }
 
-    // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
-    // potentially appear in the Open With lists for other filetypes (such as single images)
-    ok &= ListAsDefaultProgramPreWin10(hkey);
-
-    ok &= ListAsDefaultProgramWin10(hkey);
+    if (IsWindows10OrGreater()) {
+        ok &= RegisterForDefaultPrograms(hkey);
+    }
+    ok &= RegisterForOpenWith(hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, L"Content Type", L"application/pdf");
-    const WCHAR* key = L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
+    key = L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
     ok &= LoggedWriteRegStr(hkey, key, L"Extension", L".pdf");
 
     if (!ok) {
         log("WriteExtendedFileExtensionInfo() failed\n");
     }
 
+    ShellNotifyAssociationsChanged();
     return ok;
 }
 
@@ -459,8 +538,8 @@ void RemoveOwnRegistryKeys(HKEY hkey) {
     // UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* regClassApp = GetRegClassesAppTemp(kAppName);
     LoggedDeleteRegKey(hkey, regClassApp);
-    WCHAR* regClassApps = GetRegClassesAppsTemp(kAppName);
-    LoggedDeleteRegKey(hkey, regClassApps);
+    WCHAR* regPath = GetRegClassesAppsTemp(kAppName);
+    LoggedDeleteRegKey(hkey, regPath);
     {
         WCHAR* key = str::JoinTemp(kRegClassesPdf, L"\\OpenWithProgids");
         LoggedDeleteRegValue(hkey, key, kAppName);
@@ -471,7 +550,7 @@ void RemoveOwnRegistryKeys(HKEY hkey) {
         LoggedDeleteRegKey(hkey, key);
     }
 
-    SeqStrings exts = GetSupportedExts();
+    SeqStrings exts = gSupportedExts;
     WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
     while (exts) {
         WCHAR* ext = ToWstrTemp(exts);
@@ -496,10 +575,24 @@ void RemoveOwnRegistryKeys(HKEY hkey) {
         seqstrings::Next(exts);
     }
 
+    exts = gSupportedExts;
+    while (exts) {
+        WCHAR* ext = ToWstrTemp(exts);
+        WCHAR* progIDName = str::JoinTemp(kAppName, ext);
+        WCHAR* key = str::JoinTemp(L"Software\\Classes\\", progIDName);
+
+        LoggedDeleteRegKey(hkey, key);
+
+        key = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
+        LoggedDeleteRegKey(hkey, key);
+
+        seqstrings::Next(exts);
+    }
+
     // delete keys written in ListAsDefaultProgramWin10()
     LoggedDeleteRegValue(hkey, L"SOFTWARE\\RegisteredApplications", kAppName);
     AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", kAppName);
     LoggedDeleteRegKey(hkey, keyName);
-}
 
-//------------- pdf preview
+    ShellNotifyAssociationsChanged();
+}

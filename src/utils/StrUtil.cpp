@@ -2205,6 +2205,14 @@ const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
     return nullptr;
 }
 
+WCHAR* ToUpperInPlace(WCHAR* s) {
+    WCHAR* res = s;
+    for (; s && *s; s++) {
+        *s = towupper(*s);
+    }
+    return res;
+}
+
 WCHAR* ToLowerInPlace(WCHAR* s) {
     WCHAR* res = s;
     for (; s && *s; s++) {

@@ -392,10 +392,16 @@ bool WriteRegDWORD(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, DWORD 
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegDWORD(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
-    auto res = WriteRegDWORD(hkey, keyName, valName, value);
-    logf(L"WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, (int)value, res);
+bool LoggedWriteRegDWORD(HKEY hkey, const WCHAR* key, const WCHAR* valName, DWORD value) {
+    auto res = WriteRegDWORD(hkey, key, valName, value);
+    logf(L"WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, (int)value, res);
     return res;
+}
+
+bool LoggedWriteRegNone(HKEY hkey, const WCHAR* key, const WCHAR* valName) {
+    LSTATUS res = SHSetValueW(hkey, key, valName, REG_NONE, nullptr, 0);
+    logf(L"LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, res);
+    return (ERROR_SUCCESS == res);
 }
 
 bool CreateRegKey(HKEY hkey, const WCHAR* keyName) {

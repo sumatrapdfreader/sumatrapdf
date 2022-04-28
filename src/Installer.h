@@ -51,14 +51,12 @@ void SetDefaultMsg();
 
 int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated);
 
-SeqStrings GetSupportedExts();
-
 WCHAR* GetShortcutPath(int csidl);
 
 bool ExtractInstallerFiles();
 WCHAR* GetExistingInstallationDir();
 WCHAR* GetInstallDirTemp();
-WCHAR* GetInstalledExePath();
+WCHAR* GetInstalledExePathTemp();
 
 WCHAR* GetInstallationFilePath(const WCHAR* name);
 WCHAR* GetExistingInstallationFilePath(const WCHAR* name);
@@ -75,7 +73,6 @@ bool CheckInstallUninstallPossible(bool silent = false);
 char* GetInstallerLogPath();
 
 TempWstr GetRegPathUninstTemp(const WCHAR* appName);
-TempWstr GetRegClassesAppsTemp(const WCHAR* appName);
 
 // RegistryInstaller.cpp
 

@@ -57,6 +57,7 @@ bool LoggedWriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, 
 bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value);
 bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value);
 bool LoggedWriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value);
+bool LoggedWriteRegNone(HKEY hkey, const WCHAR* key, const WCHAR* valName);
 bool CreateRegKey(HKEY keySub, const WCHAR* keyName);
 bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
 bool LoggedDeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);

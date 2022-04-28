@@ -196,7 +196,7 @@ static void CopySettingsFile() {
 }
 
 static void OnButtonStartSumatra() {
-    AutoFreeWstr exePath(GetInstalledExePath());
+    WCHAR* exePath = GetInstalledExePathTemp();
     RunNonElevated(exePath);
     OnButtonExit();
 }
@@ -213,7 +213,7 @@ static bool CreateAppShortcut(int csidl) {
         return false;
     }
     logf(L"CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath.Get());
-    AutoFreeWstr installedExePath = GetInstalledExePath();
+    WCHAR* installedExePath = GetInstalledExePathTemp();
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -360,9 +360,8 @@ static void OnButtonInstall() {
 
     {
         /* if the app is running, we have to kill it so that we can over-write the executable */
-        WCHAR* exePath = GetInstalledExePath();
+        WCHAR* exePath = GetInstalledExePathTemp();
         KillProcessesWithModule(exePath, true);
-        str::Free(exePath);
     }
 
     if (!CheckInstallUninstallPossible()) {

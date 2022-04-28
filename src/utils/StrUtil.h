@@ -87,8 +87,9 @@ char* ToLower(const char*);
 bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
-WCHAR* ToLowerInPlace(WCHAR* s);
-WCHAR* ToLower(const WCHAR* s);
+WCHAR* ToLowerInPlace(WCHAR*);
+WCHAR* ToLower(const WCHAR*);
+WCHAR* ToUpperInPlace(WCHAR*);
 
 void Utf8Encode(char*& dst, int c);
 

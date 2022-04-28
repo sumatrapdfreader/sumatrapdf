@@ -132,8 +132,8 @@ static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
-    AutoFreeWstr exePath = GetInstalledExePath();
-    auto ownPath = GetExePathTemp();
+    WCHAR* exePath = GetInstalledExePathTemp();
+    WCHAR* ownPath = GetExePathTemp();
     if (!path::IsSame(exePath, ownPath)) {
         KillProcessesWithModule(exePath, true);
     }
