@@ -137,12 +137,17 @@ ShCtx is either HKCU or HKLM
 
 For each extension, create a progid:
 ShCtx\Software\Classes\SumatraPDF.${ext}
+  Application
+    ApplicationCompany = Krzysztof Kowalczyk
+    ApplicationName = SumatraPDF
   DefaultIcon
     (Default) = ${SumatraExePath},${OptIconIndex}
   shell\open
+    AppUserModelID = ???
     Icon = ${SumatraExePath}
   shell\open\command
     (Default) = "${SumatraExePath}" "%1"
+  shell\print\command
 
 Then in:
 ShCtx\Software\Classes\${ext}\OpenWithProgids
@@ -151,6 +156,8 @@ ShCtx\Software\Classes\${ext}\OpenWithProgids
 bool RegisterForOpenWith(HKEY hkey) {
     WCHAR* exePath = GetInstalledExePathTemp();
     WCHAR* cmdOpen = str::JoinTemp(L"\"", exePath, L"\" \"%1\"");
+    WCHAR* cmdPrint = str::JoinTemp(L"\"", exePath, L"\" -print-to-default \"%1\"");
+    WCHAR* cmdPrintTo = str::JoinTemp(L"\"", exePath, L"\" -print-to \"%2\" \"%1\"");
     WCHAR* key;
     auto exts = gSupportedExts;
     bool ok = true;
@@ -158,18 +165,27 @@ bool RegisterForOpenWith(HKEY hkey) {
         WCHAR* ext = ToWstrTemp(exts);
         WCHAR* progIDName = str::JoinTemp(kAppName, ext);
         WCHAR* progIDKey = str::JoinTemp(L"Software\\Classes\\", progIDName);
-        ok &= CreateRegKey(hkey, progIDKey);
+        // ok &= CreateRegKey(hkey, progIDKey);
 
         // .pdf => "PDF file"
         WCHAR* extUC = str::ToUpperInPlace(str::DupTemp(ext + 1));
         WCHAR* desc = str::JoinTemp(extUC, L" File");
         ok &= LoggedWriteRegStr(hkey, progIDKey, nullptr, desc);
-        ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
+        // ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
 
-        WCHAR* iconPath = str::JoinTemp(exePath, L",1");
-        if (str::Eq(ext, L".mobi")) {
+        // I thought that ",${n}" is icon id but it seems to be order
+        // of the icon in the exe
+        WCHAR* iconPath = str::JoinTemp(exePath, L"");
+        if (str::Eq(ext, L".epub")) {
+            iconPath = str::JoinTemp(exePath, L",1");
+        }
+        if (str::Eq(ext, L".cbr") || str::Eq(ext, L".cbz") || str::Eq(ext, L".cbt") || str::Eq(ext, L".cb7")) {
             iconPath = str::JoinTemp(exePath, L",2");
         }
+
+        key = str::JoinTemp(progIDKey, L"\\Application");
+        ok &= LoggedWriteRegStr(hkey, key, L"ApplicationCompany", L"Krzysztof Kowalczyk");
+        ok &= LoggedWriteRegStr(hkey, key, L"ApplicationName", kAppName);
 
         key = str::JoinTemp(progIDKey, L"\\DefaultIcon");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
@@ -179,6 +195,15 @@ bool RegisterForOpenWith(HKEY hkey) {
 
         key = str::JoinTemp(progIDKey, L"\\shell\\open\\command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdOpen);
+
+        // for PDF also register for Print/PrintTo shell actions
+        if (str::Eq(ext, L".pdf")) {
+            key = str::JoinTemp(progIDKey, L"\\shell\\Print\\command");
+            ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPrint);
+
+            key = str::JoinTemp(progIDKey, L"\\shell\\PrintTo\\command");
+            ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPrintTo);
+        }
 
         key = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
         ok &= LoggedWriteRegNone(hkey, key, progIDName);
@@ -403,11 +428,10 @@ TempWstr GetRegClassesAppsTemp(const WCHAR* appName) {
     return str::JoinTemp(L"Software\\Classes\\Applications\\", appName, L".exe");
 }
 
-// http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
-bool WriteExtendedFileExtensionInfo(HKEY hkey) {
-    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
+// pre-3.4, for reference so that we know what to delete
+#if 0
+bool OldWriteFileAssoc(HKEY hkey) {
     bool ok = true;
-
     WCHAR* exePath = GetInstalledExePathTemp();
     const WCHAR* key;
     if (HKEY_LOCAL_MACHINE == hkey) {
@@ -437,6 +461,17 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         key = str::JoinTemp(regPath, L"\\Shell\\PrintTo\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
     }
+    return ok;
+}
+#endif
+
+// http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
+bool WriteExtendedFileExtensionInfo(HKEY hkey) {
+    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
+    bool ok = true;
+    const WCHAR* key;
+
+    // ok &= OldWriteFileAssoc(hkey);
 
     if (IsWindows10OrGreater()) {
         ok &= RegisterForDefaultPrograms(hkey);

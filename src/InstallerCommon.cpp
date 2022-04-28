@@ -323,10 +323,10 @@ static bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
 // If <waitUntilTerminated> is true, will wait until process is fully killed.
 // Returns TRUE if killed a process
 static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bool waitUntilTerminated) {
-    logf(L"KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
     if (!IsProcWithModule(processId, modulePath)) {
         return false;
     }
+    logf(L"KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
 
     BOOL inheritHandle = FALSE;
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?

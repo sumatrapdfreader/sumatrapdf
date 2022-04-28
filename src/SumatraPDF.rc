@@ -74,7 +74,8 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
-2                       ICON "..\\gfx\\gfxalt\\mobi-32bit.ico"
+2                       ICON "..\\gfx\\gfxalt\\epub-32bit.ico"
+3                       ICON "..\\gfx\\gfxalt\\cbx-32bit.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 
