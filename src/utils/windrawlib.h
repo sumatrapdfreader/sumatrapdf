@@ -105,7 +105,6 @@ struct d2d_canvas_t {
     ID2D1Layer* clip_layer;
 };
 
-
 int d2d_init(void);
 void d2d_fini(void);
 void d2d_init_color(D2D1_COLOR_F* c, WD_COLOR color);
@@ -116,3 +115,10 @@ d2d_canvas_t* d2d_canvas_alloc(ID2D1RenderTarget* target, WORD type, UINT width,
 void d2d_reset_transform(d2d_canvas_t* c);
 void d2d_reset_clip(d2d_canvas_t* c);
 void d2d_apply_transform(d2d_canvas_t* c, const D2D1_MATRIX_3X2_F* matrix);
+
+IWICBitmapSource* wic_convert_bitmap(IWICBitmapSource* bitmap);
+
+void dwrite_default_user_locale(WCHAR buffer[LOCALE_NAME_MAX_LENGTH]);
+
+bool wdInitialize();
+void wdTerminate();
