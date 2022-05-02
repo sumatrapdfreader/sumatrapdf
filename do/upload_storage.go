@@ -453,6 +453,7 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
 		wg.Done()
 	}()
+	wg.Wait()
 
 	// downloads of pre-release 64-bit installer often fail
 	// I suspect cloudflare backblaze proxy is caching 404 responses and 64-bit are hit
@@ -472,6 +473,5 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
 		wg.Done()
 	}()
-
 	wg.Wait()
 }
