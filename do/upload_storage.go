@@ -428,7 +428,7 @@ func newMinioBackblazeClient() *minio.Client {
 
 func uploadToStorage(opts *BuildOptions, buildType string) {
 	if !opts.upload {
-		logf(ctx(), "Skipping uploadToStorage() because opts.upload = false\n")
+		logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
 		return
 	}
 
@@ -453,6 +453,17 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
 		wg.Done()
 	}()
+
+	// downloads of pre-release 64-bit installer often fail
+	// I suspect cloudflare backblaze proxy is caching 404 responses and 64-bit are hit
+	// the most because they are most likely to be downloaded first
+	// I'm hoping by delaying uploading https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumatralatest.js
+	// (which drives /prelease.html page) is enough for backblaze to make the uploaded files visible to the
+	// world (including cloudflare)
+	// Alternatively: could do http get against the file until I can see it. Better than arbitrary delay but still
+	// no guarantees the files will be visible from other networks
+	logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
+	time.Sleep(time.Minute * 5)
 
 	wg.Add(1)
 	go func() {
