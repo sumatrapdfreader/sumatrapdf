@@ -41,39 +41,40 @@ struct InstallerWnd;
 
 static InstallerWnd* gWnd = nullptr;
 
-static bool gAutoUpdate = false;
-static HBRUSH ghbrBackground = nullptr;
-
-static Button* gButtonOptions = nullptr;
-static Button* gButtonRunSumatra = nullptr;
 static lzma::SimpleArchive gArchive{};
 
-static Static* gStaticInstDir = nullptr;
-static Edit* gEditInstallationDir = nullptr;
-static Button* gButtonBrowseDir = nullptr;
+// TODO: unused
+static bool gAutoUpdate = false;
 
-static Checkbox* gCheckboxForAllUsers = nullptr;
-static Checkbox* gCheckboxRegisterSearchFilter = nullptr;
-static Checkbox* gCheckboxRegisterPreviewer = nullptr;
-static Progress* gProgressBar = nullptr;
-static Button* gButtonExit = nullptr;
-static Button* gButtonInstall = nullptr;
-
-static HANDLE hThread = nullptr;
 static bool success = false;
 
 struct InstallerWnd {
     bool showOptions = false;
     bool wasSearchFilterInstalled = false;
     bool wasPreviewInstalled = false;
+
+    HBRUSH hbrBackground = nullptr;
+
+    Button* btnOptions = nullptr;
+    Button* btnRunSumatra = nullptr;
+    Static* staticInstDir = nullptr;
+    Edit* editInstallationDir = nullptr;
+    Button* btnBrowseDir = nullptr;
+    Checkbox* checkboxForAllUsers = nullptr;
+    Checkbox* checkboxRegisterSearchFilter = nullptr;
+    Checkbox* checkboxRegisterPreviewer = nullptr;
+    int currProgress = 0;
+    Progress* progressBar = nullptr;
+    Button* btnExit = nullptr;
+    Button* btnInstall = nullptr;
+    HANDLE hThread = nullptr;
 };
 
-int currProgress = 0;
 static void ProgressStep() {
-    currProgress++;
-    if (gProgressBar) {
+    gWnd->currProgress++;
+    if (gWnd->progressBar) {
         // possibly dangerous as is called on a thread
-        gProgressBar->SetCurrent(currProgress);
+        gWnd->progressBar->SetCurrent(gWnd->currProgress);
     }
 }
 
@@ -88,15 +89,6 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked)
     Checkbox* w = new Checkbox();
     w->Create(args);
     return w;
-}
-
-static void OnButtonExit() {
-    SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
-}
-
-static void CreateButtonExit(HWND hwndParent) {
-    gButtonExit = CreateDefaultButton(hwndParent, _TR("Close"));
-    gButtonExit->onClicked = OnButtonExit;
 }
 
 char* GetInstallerLogPath() {
@@ -200,17 +192,6 @@ static void CopySettingsFile() {
     // don't care if it fails or not
     file::Copy(dstPath.Get(), srcPath.Get(), failIfExists);
     logf(L"  copied '%s' to '%s'\n", srcPath.Get(), dstPath.Get());
-}
-
-static void OnButtonStartSumatra() {
-    WCHAR* exePath = GetInstalledExePathTemp();
-    RunNonElevated(exePath);
-    OnButtonExit();
-}
-
-static void CreateButtonRunSumatra(HWND hwndParent) {
-    gButtonRunSumatra = CreateDefaultButton(hwndParent, _TR("Start SumatraPDF"));
-    gButtonRunSumatra->onClicked = OnButtonStartSumatra;
 }
 
 static bool CreateAppShortcut(int csidl) {
@@ -334,7 +315,7 @@ static void StartInstallation() {
     // create a progress bar in place of the Options button
     int dx = DpiScale(gHwndFrame, GetInstallerWinDx() / 2);
     Rect rc(0, 0, dx, gButtonDy);
-    rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
+    rc = MapRectToWindow(rc, gWnd->btnOptions->hwnd, gHwndFrame);
 
     int nInstallationSteps = gArchive.filesCount;
     nInstallationSteps++; // for copying self
@@ -344,29 +325,29 @@ static void StartInstallation() {
     ProgressCreateArgs args;
     args.initialMax = nInstallationSteps;
     args.parent = gHwndFrame;
-    gProgressBar = new Progress();
-    gProgressBar->Create(args);
+    gWnd->progressBar = new Progress();
+    gWnd->progressBar->Create(args);
     RECT prc = {rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy};
-    gProgressBar->SetBounds(prc);
+    gWnd->progressBar->SetBounds(prc);
     // first one to show progress quickly
     ProgressStep();
 
     // disable the install button and remove all the installation options
-    delete gStaticInstDir;
-    delete gEditInstallationDir;
-    delete gButtonBrowseDir;
+    delete gWnd->staticInstDir;
+    delete gWnd->editInstallationDir;
+    delete gWnd->btnBrowseDir;
 
-    delete gCheckboxForAllUsers;
-    delete gCheckboxRegisterSearchFilter;
-    delete gCheckboxRegisterPreviewer;
-    delete gButtonOptions;
+    delete gWnd->checkboxForAllUsers;
+    delete gWnd->checkboxRegisterSearchFilter;
+    delete gWnd->checkboxRegisterPreviewer;
+    delete gWnd->btnOptions;
 
-    gButtonInstall->SetIsEnabled(false);
+    gWnd->btnInstall->SetIsEnabled(false);
 
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     HwndInvalidate(gHwndFrame);
 
-    hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
+    gWnd->hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
 }
 
 static void OnButtonOptions();
@@ -387,17 +368,17 @@ static void OnButtonInstall() {
         return;
     }
 
-    WCHAR* userInstallDir = win::GetTextTemp(gEditInstallationDir->hwnd).Get();
+    WCHAR* userInstallDir = win::GetTextTemp(gWnd->editInstallationDir->hwnd).Get();
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
 
     // note: this checkbox isn't created when running inside Wow64
-    gCli->withFilter = gCheckboxRegisterSearchFilter && gCheckboxRegisterSearchFilter->IsChecked();
+    gCli->withFilter = gWnd->checkboxRegisterSearchFilter && gWnd->checkboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
-    gCli->withPreview = gCheckboxRegisterPreviewer && gCheckboxRegisterPreviewer->IsChecked();
+    gCli->withPreview = gWnd->checkboxRegisterPreviewer && gWnd->checkboxRegisterPreviewer->IsChecked();
 
-    gCli->allUsers = gCheckboxForAllUsers && gCheckboxForAllUsers->IsChecked();
+    gCli->allUsers = gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
 
     if (gCli->allUsers && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers();
@@ -406,21 +387,33 @@ static void OnButtonInstall() {
     StartInstallation();
 }
 
+static void OnButtonExit() {
+    SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
+}
+
+static void OnButtonStartSumatra() {
+    WCHAR* exePath = GetInstalledExePathTemp();
+    RunNonElevated(exePath);
+    OnButtonExit();
+}
+
 static void OnInstallationFinished() {
-    delete gButtonInstall;
-    delete gProgressBar;
+    delete gWnd->btnInstall;
+    delete gWnd->progressBar;
 
     if (success) {
-        CreateButtonRunSumatra(gHwndFrame);
+        gWnd->btnRunSumatra = CreateDefaultButton(gHwndFrame, _TR("Start SumatraPDF"));
+        gWnd->btnRunSumatra->onClicked = OnButtonStartSumatra;
         SetMsg(_TR("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     } else {
-        CreateButtonExit(gHwndFrame);
+        gWnd->btnExit = CreateDefaultButton(gHwndFrame, _TR("Close"));
+        gWnd->btnExit->onClicked = OnButtonExit;
         SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
     }
     gMsgError = gFirstError;
     HwndInvalidate(gHwndFrame);
 
-    CloseHandle(hThread);
+    CloseHandle(gWnd->hThread);
 
     if (gAutoUpdate && success) {
         // click the Start button
@@ -447,21 +440,21 @@ static void OnButtonOptions() {
     gWnd->showOptions = !gWnd->showOptions;
     bool showOpts = gWnd->showOptions;
 
-    EnableAndShow(gStaticInstDir, showOpts);
-    EnableAndShow(gEditInstallationDir, showOpts);
-    EnableAndShow(gButtonBrowseDir, showOpts);
+    EnableAndShow(gWnd->staticInstDir, showOpts);
+    EnableAndShow(gWnd->editInstallationDir, showOpts);
+    EnableAndShow(gWnd->btnBrowseDir, showOpts);
 
-    EnableAndShow(gCheckboxForAllUsers, showOpts);
-    EnableAndShow(gCheckboxRegisterSearchFilter, showOpts);
-    EnableAndShow(gCheckboxRegisterPreviewer, showOpts);
+    EnableAndShow(gWnd->checkboxForAllUsers, showOpts);
+    EnableAndShow(gWnd->checkboxRegisterSearchFilter, showOpts);
+    EnableAndShow(gWnd->checkboxRegisterPreviewer, showOpts);
 
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
     if (showOpts) {
-        SetButtonTextAndResize(gButtonOptions, _TR("Hide &Options"));
+        SetButtonTextAndResize(gWnd->btnOptions, _TR("Hide &Options"));
     } else {
         //| ACCESSKEY_ALTERNATIVE
-        SetButtonTextAndResize(gButtonOptions, _TR("&Options"));
+        SetButtonTextAndResize(gWnd->btnOptions, _TR("&Options"));
     }
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
@@ -470,7 +463,7 @@ static void OnButtonOptions() {
     RECT rcTmp = ToRECT(rc);
     InvalidateRect(gHwndFrame, &rcTmp, TRUE);
 
-    gButtonOptions->SetFocus();
+    gWnd->btnOptions->SetFocus();
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
@@ -528,7 +521,7 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
 }
 
 static void OnButtonBrowse() {
-    WCHAR* installDir = win::GetTextTemp(gEditInstallationDir->hwnd).Get();
+    WCHAR* installDir = win::GetTextTemp(gWnd->editInstallationDir->hwnd).Get();
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {
@@ -541,7 +534,7 @@ static void OnButtonBrowse() {
     bool ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
                               path, dimof(path));
     if (!ok) {
-        gButtonBrowseDir->SetFocus();
+        gWnd->btnBrowseDir->SetFocus();
         return;
     }
 
@@ -552,9 +545,9 @@ static void OnButtonBrowse() {
     if (!str::EndsWithI(path, end)) {
         installPath = path::JoinTemp(path, kAppName);
     }
-    gEditInstallationDir->SetText(installPath);
-    gEditInstallationDir->SetSelection(0, -1);
-    gEditInstallationDir->SetFocus();
+    gWnd->editInstallationDir->SetText(installPath);
+    gWnd->editInstallationDir->SetSelection(0, -1);
+    gWnd->editInstallationDir->SetFocus();
 }
 
 // bottom-right
@@ -607,14 +600,14 @@ static WCHAR* GetDefaultInstallationDir(bool forAllUsers) {
 }
 
 void ForAllUsersStateChanged() {
-    bool checked = gCheckboxForAllUsers->IsChecked();
+    bool checked = gWnd->checkboxForAllUsers->IsChecked();
     logf("ForAllUsersStateChanged() to %d\n", (int)checked);
-    Button_SetElevationRequiredState(gButtonInstall->hwnd, checked);
-    PositionInstallButton(gButtonInstall);
+    Button_SetElevationRequiredState(gWnd->btnInstall->hwnd, checked);
+    PositionInstallButton(gWnd->btnInstall);
     gCli->allUsers = checked;
     str::Free(gCli->installDir);
     gCli->installDir = GetDefaultInstallationDir(gCli->allUsers);
-    gEditInstallationDir->SetText(gCli->installDir);
+    gWnd->editInstallationDir->SetText(gCli->installDir);
 }
 
 static bool InstallerOnWmCommand(WPARAM wp) {
@@ -630,20 +623,20 @@ static bool InstallerOnWmCommand(WPARAM wp) {
 }
 
 //[ ACCESSKEY_GROUP Installer
-static void OnCreateWindow(HWND hwnd) {
-    gButtonInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
-    gButtonInstall->onClicked = OnButtonInstall;
-    PositionInstallButton(gButtonInstall);
+static void CreateInstallerWindowControls(HWND hwnd) {
+    gWnd->btnInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
+    gWnd->btnInstall->onClicked = OnButtonInstall;
+    PositionInstallButton(gWnd->btnInstall);
 
     Rect r = ClientRect(hwnd);
-    gButtonOptions = CreateDefaultButton(hwnd, _TR("&Options"));
-    gButtonOptions->onClicked = OnButtonOptions;
-    auto btnSize = gButtonOptions->GetIdealSize();
+    gWnd->btnOptions = CreateDefaultButton(hwnd, _TR("&Options"));
+    gWnd->btnOptions->onClicked = OnButtonOptions;
+    auto btnSize = gWnd->btnOptions->GetIdealSize();
     int margin = DpiScale(hwnd, kInstallerWinMargin);
     int x = margin;
     int y = r.dy - btnSize.dy - margin;
     uint flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
-    SetWindowPos(gButtonOptions->hwnd, nullptr, x, y, 0, 0, flags);
+    SetWindowPos(gWnd->btnOptions->hwnd, nullptr, x, y, 0, 0, flags);
 
     gButtonDy = btnSize.dy;
     gBottomPartDy = gButtonDy + (margin * 2);
@@ -666,26 +659,26 @@ static void OnCreateWindow(HWND hwnd) {
         // for Windows XP, this means only basic thumbnail support
         const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
         bool isChecked = gCli->withPreview || IsPreviewerInstalled();
-        gCheckboxRegisterPreviewer = CreateCheckbox(hwnd, s, isChecked);
+        gWnd->checkboxRegisterPreviewer = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
-        gCheckboxRegisterPreviewer->SetPos(&rc);
+        gWnd->checkboxRegisterPreviewer->SetPos(&rc);
         y -= staticDy;
 
         isChecked = gCli->withFilter || IsSearchFilterInstalled();
         s = _TR("Let Windows Desktop Search &search PDF documents");
-        gCheckboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
+        gWnd->checkboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
-        gCheckboxRegisterSearchFilter->SetPos(&rc);
+        gWnd->checkboxRegisterSearchFilter->SetPos(&rc);
         y -= staticDy;
     }
 
     {
         const WCHAR* s = _TR("Install for all users");
         bool isChecked = gCli->allUsers;
-        gCheckboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
-        gCheckboxForAllUsers->onCheckStateChanged = ForAllUsersStateChanged;
+        gWnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
+        gWnd->checkboxForAllUsers->onCheckStateChanged = ForAllUsersStateChanged;
         rc = {x, y, x + dx, y + staticDy};
-        gCheckboxForAllUsers->SetPos(&rc);
+        gWnd->checkboxForAllUsers->SetPos(&rc);
         y -= staticDy;
     }
 
@@ -695,11 +688,11 @@ static void OnCreateWindow(HWND hwnd) {
     const WCHAR* s = L"&...";
     Size btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize2.dx += DpiScale(hwnd, 4);
-    gButtonBrowseDir = CreateDefaultButton(hwnd, s);
-    gButtonBrowseDir->onClicked = OnButtonBrowse;
-    // btnSize = gButtonBrowseDir->GetIdealSize();
+    gWnd->btnBrowseDir = CreateDefaultButton(hwnd, s);
+    gWnd->btnBrowseDir->onClicked = OnButtonBrowse;
+    // btnSize = btnBrowseDir->GetIdealSize();
     x = r.dx - margin - btnSize2.dx;
-    SetWindowPos(gButtonBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
+    SetWindowPos(gWnd->btnBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
     x = margin;
@@ -708,13 +701,13 @@ static void OnCreateWindow(HWND hwnd) {
     EditCreateArgs eargs;
     eargs.parent = hwnd;
     eargs.withBorder = true;
-    gEditInstallationDir = new Edit();
-    HWND ehwnd = gEditInstallationDir->Create(eargs);
+    gWnd->editInstallationDir = new Edit();
+    HWND ehwnd = gWnd->editInstallationDir->Create(eargs);
     CrashIf(!ehwnd);
 
-    gEditInstallationDir->SetText(gCli->installDir);
+    gWnd->editInstallationDir->SetText(gCli->installDir);
     rc = {x, y, x + dx, y + staticDy};
-    gEditInstallationDir->SetBounds(rc);
+    gWnd->editInstallationDir->SetBounds(rc);
 
     y -= staticDy;
 
@@ -724,14 +717,14 @@ static void OnCreateWindow(HWND hwnd) {
     StaticCreateArgs args;
     args.parent = hwnd;
     args.text = s2;
-    gStaticInstDir = new Static();
-    gStaticInstDir->Create(args);
-    gStaticInstDir->SetBounds(rc);
+    gWnd->staticInstDir = new Static();
+    gWnd->staticInstDir->Create(args);
+    gWnd->staticInstDir->SetBounds(rc);
 
     gWnd->showOptions = !gWnd->showOptions;
     OnButtonOptions();
 
-    gButtonInstall->SetFocus();
+    gWnd->btnInstall->SetFocus();
 
     if (gAutoUpdate) {
         // click the Install button
@@ -740,7 +733,7 @@ static void OnCreateWindow(HWND hwnd) {
 }
 //] ACCESSKEY_GROUP Installer
 
-static void CreateInstallerWindow() {
+static HWND CreateInstallerHwnd() {
     AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
     DWORD exStyle = 0;
@@ -754,13 +747,14 @@ static void CreateInstallerWindow() {
     int dy = kInstallerWinDy;
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
-    gHwndFrame = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
-    DpiScale(gHwndFrame, dx, dy);
-    HwndResizeClientSize(gHwndFrame, dx, dy);
-    OnCreateWindow(gHwndFrame);
+    HWND hwnd = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    DpiScale(hwnd, dx, dy);
+    HwndResizeClientSize(hwnd, dx, dy);
+    CreateInstallerWindowControls(hwnd);
     if (gCli->runInstallNow) {
-        PostMessageW(gHwndFrame, WM_APP_START_INSTALLATION, 0, 0);
+        PostMessageW(hwnd, WM_APP_START_INSTALLATION, 0, 0);
     }
+    return hwnd;
 }
 
 static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -774,13 +768,13 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
 
     switch (msg) {
         case WM_CTLCOLORSTATIC: {
-            if (ghbrBackground == nullptr) {
-                ghbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
+            if (gWnd->hbrBackground == nullptr) {
+                gWnd->hbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
             }
             HDC hdc = (HDC)wp;
             SetTextColor(hdc, RGB(0, 0, 0));
             SetBkMode(hdc, TRANSPARENT);
-            return (LRESULT)ghbrBackground;
+            return (LRESULT)gWnd->hbrBackground;
         }
 
         case WM_DESTROY:
@@ -807,11 +801,11 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
 
         case WM_APP_INSTALLATION_FINISHED:
             OnInstallationFinished();
-            if (gButtonRunSumatra) {
-                gButtonRunSumatra->SetFocus();
+            if (gWnd->btnRunSumatra) {
+                gWnd->btnRunSumatra->SetFocus();
             }
-            if (gButtonExit) {
-                gButtonExit->SetFocus();
+            if (gWnd->btnExit) {
+                gWnd->btnExit->SetFocus();
             }
             break;
 
@@ -822,23 +816,26 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
     return 0;
 }
 
-static bool RegisterWinClass() {
-    WNDCLASSEX wcex{};
+static bool CreateInstallerWindow() {
+    {
+        WNDCLASSEX wcex{};
 
-    FillWndClassEx(wcex, kInstallerWindowClassName, WndProcInstallerFrame);
-    auto h = GetModuleHandleW(nullptr);
-    WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
-    wcex.hIcon = LoadIconW(h, resName);
+        FillWndClassEx(wcex, kInstallerWindowClassName, WndProcInstallerFrame);
+        auto h = GetModuleHandleW(nullptr);
+        WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
+        wcex.hIcon = LoadIconW(h, resName);
 
-    ATOM atom = RegisterClassExW(&wcex);
-    CrashIf(!atom);
-    return atom != 0;
-}
+        ATOM atom = RegisterClassExW(&wcex);
+        CrashIf(!atom);
+        if (atom == 0) {
+            logf("CreateInstallerWindow: RegisterClassExW() failed\n");
+            return false;
+        }
+    }
 
-static BOOL InstanceInit() {
-    CreateInstallerWindow();
+    gHwndFrame = CreateInstallerHwnd();
     if (!gHwndFrame) {
-        return FALSE;
+        return false;
     }
 
     SetDefaultMsg();
@@ -846,7 +843,7 @@ static BOOL InstanceInit() {
     CenterDialog(gHwndFrame);
     ShowWindow(gHwndFrame, SW_SHOW);
 
-    return TRUE;
+    return true;
 }
 
 // inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/
@@ -878,7 +875,7 @@ static int RunApp() {
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
-        if (dur > 10000 && gButtonInstall && gButtonInstall->IsEnabled()) {
+        if (dur > 10000 && gWnd->btnInstall && gWnd->btnInstall->IsEnabled()) {
             CheckInstallUninstallPossible(true);
             t = TimeGet();
         }
@@ -1051,13 +1048,8 @@ int RunInstaller() {
         InstallerThread(nullptr);
         ret = success ? 0 : 1;
     } else {
-        if (!RegisterWinClass()) {
-            log("RegisterWinClass() failed\n");
-            goto Exit;
-        }
-
-        if (!InstanceInit()) {
-            log("InstanceInit() failed\n");
+        if (!CreateInstallerWindow()) {
+            log("CreateInstallerWindow() failed\n");
             goto Exit;
         }
 
