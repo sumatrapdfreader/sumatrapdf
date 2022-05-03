@@ -764,15 +764,14 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
     }
 
-    if (PrintDlgEx(&pdex) != S_OK) {
-        if (CommDlgExtendedError() != 0) {
-            /* if PrintDlg was cancelled then
-               CommDlgExtendedError is zero, otherwise it returns the
-               error code, which we could look at here if we wanted.
-               for now just warn the user that printing has stopped
-               becasue of an error */
-            MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."));
-        }
+    HRESULT res = PrintDlgEx(&pdex);
+    if (res != S_OK) {
+        logf("OnMenuPrint: PrintDlgEx failed\n");
+        MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."));
+    }
+    auto action = pdex.dwResultAction;
+    if (action != PD_RESULT_PRINT) {
+        // it's cancel or apply so silently ignore as it's not an error
         goto Exit;
     }
 

@@ -26,24 +26,22 @@
  */
 typedef DWORD WD_COLOR;
 
-#define WD_ARGB(a,r,g,b)                                                    \
-        ((((WD_COLOR)(a) & 0xff) << 24) | (((WD_COLOR)(r) & 0xff) << 16) |  \
-         (((WD_COLOR)(g) & 0xff) << 8)  | (((WD_COLOR)(b) & 0xff) << 0))
-#define WD_RGB(r,g,b)               WD_ARGB(255,(r),(g),(b))
+#define WD_ARGB(a, r, g, b)                                                                      \
+    ((((WD_COLOR)(a)&0xff) << 24) | (((WD_COLOR)(r)&0xff) << 16) | (((WD_COLOR)(g)&0xff) << 8) | \
+     (((WD_COLOR)(b)&0xff) << 0))
+#define WD_RGB(r, g, b) WD_ARGB(255, (r), (g), (b))
 
-#define WD_AVALUE(color)            (((WD_COLOR)(color) & 0xff000000U) >> 24)
-#define WD_RVALUE(color)            (((WD_COLOR)(color) & 0x00ff0000U) >> 16)
-#define WD_GVALUE(color)            (((WD_COLOR)(color) & 0x0000ff00U) >> 8)
-#define WD_BVALUE(color)            (((WD_COLOR)(color) & 0x000000ffU) >> 0)
+#define WD_AVALUE(color) (((WD_COLOR)(color)&0xff000000U) >> 24)
+#define WD_RVALUE(color) (((WD_COLOR)(color)&0x00ff0000U) >> 16)
+#define WD_GVALUE(color) (((WD_COLOR)(color)&0x0000ff00U) >> 8)
+#define WD_BVALUE(color) (((WD_COLOR)(color)&0x000000ffU) >> 0)
 
 /* Create WD_COLOR from GDI's COLORREF. */
-#define WD_COLOR_FROM_GDI_EX(a, cref)                                       \
-        WD_ARGB((a), GetRValue(cref), GetGValue(cref), GetBValue(cref))
-#define WD_COLOR_FROM_GDI(cref)     WD_COLOR_FROM_GDI_EX(255,(cref))
+#define WD_COLOR_FROM_GDI_EX(a, cref) WD_ARGB((a), GetRValue(cref), GetGValue(cref), GetBValue(cref))
+#define WD_COLOR_FROM_GDI(cref) WD_COLOR_FROM_GDI_EX(255, (cref))
 
 /* Get GDI's COLORREF from WD_COLOR. */
-#define WD_COLOR_TO_GDI(color)                                              \
-        RGB(WD_RVALUE(color), WD_GVALUE(color), WD_BVALUE(color))
+#define WD_COLOR_TO_GDI(color) RGB(WD_RVALUE(color), WD_GVALUE(color), WD_BVALUE(color))
 
 /*****************************
  ***  2D Geometry Objects  ***
@@ -74,23 +72,23 @@ struct WD_MATRIX {
  ***  Opaque Object Handles  ***
  *******************************/
 
-typedef struct WD_BRUSH_tag *WD_HBRUSH;
-typedef struct WD_HSTROKESTYLE_tag *WD_HSTROKESTYLE;
-typedef struct WD_CANVAS_tag *WD_HCANVAS;
-typedef struct WD_FONT_tag *WD_HFONT;
-typedef struct WD_IMAGE_tag *WD_HIMAGE;
+typedef struct WD_BRUSH_tag* WD_HBRUSH;
+typedef struct WD_HSTROKESTYLE_tag* WD_HSTROKESTYLE;
+typedef struct WD_CANVAS_tag* WD_HCANVAS;
+typedef struct WD_FONT_tag* WD_HFONT;
+typedef struct WD_IMAGE_tag* WD_HIMAGE;
 typedef struct WD_CACHEDIMAGE_tag* WD_HCACHEDIMAGE;
-typedef struct WD_PATH_tag *WD_HPATH;
+typedef struct WD_PATH_tag* WD_HPATH;
 
-#define D2D_CANVASTYPE_BITMAP       0
-#define D2D_CANVASTYPE_DC           1
-#define D2D_CANVASTYPE_HWND         2
+#define D2D_CANVASTYPE_BITMAP 0
+#define D2D_CANVASTYPE_DC 1
+#define D2D_CANVASTYPE_HWND 2
 
-#define D2D_CANVASFLAG_RECTCLIP     0x1
-#define D2D_CANVASFLAG_RTL          0x2
+#define D2D_CANVASFLAG_RECTCLIP 0x1
+#define D2D_CANVASFLAG_RTL 0x2
 
-#define D2D_BASEDELTA_X             0.5f
-#define D2D_BASEDELTA_Y             0.5f
+#define D2D_BASEDELTA_X 0.5f
+#define D2D_BASEDELTA_Y 0.5f
 
 struct d2d_canvas_t {
     WORD type;
@@ -108,8 +106,7 @@ struct d2d_canvas_t {
 int d2d_init(void);
 void d2d_fini(void);
 void d2d_init_color(D2D1_COLOR_F* c, WD_COLOR color);
-void d2d_matrix_mult(D2D1_MATRIX_3X2_F* res,
-                const D2D1_MATRIX_3X2_F* a, const D2D1_MATRIX_3X2_F* b);
+void d2d_matrix_mult(D2D1_MATRIX_3X2_F* res, const D2D1_MATRIX_3X2_F* a, const D2D1_MATRIX_3X2_F* b);
 
 d2d_canvas_t* d2d_canvas_alloc(ID2D1RenderTarget* target, WORD type, UINT width, BOOL rtl);
 void d2d_reset_transform(d2d_canvas_t* c);
