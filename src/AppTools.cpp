@@ -20,7 +20,7 @@
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
-    // see GetInstallationDir() in Installer.cpp
+    // see GetDefaultInstallationDir() in Installer.cpp
     WCHAR* regPathUninst = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
     AutoFreeWstr installedPath = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
     if (!installedPath) {

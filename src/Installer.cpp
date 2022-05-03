@@ -61,11 +61,11 @@ static Button* gButtonInstall = nullptr;
 
 static HANDLE hThread = nullptr;
 static bool success = false;
-static bool gWasSearchFilterInstalled = false;
-static bool gWasPreviewInstaller = false;
 
 struct InstallerWnd {
     bool showOptions = false;
+    bool wasSearchFilterInstalled = false;
+    bool wasPreviewInstalled = false;
 };
 
 int currProgress = 0;
@@ -255,8 +255,8 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     CopySettingsFile();
 
     // mark them as uninstalled
-    gWasSearchFilterInstalled = false;
-    gWasPreviewInstaller = false;
+    gWnd->wasSearchFilterInstalled = false;
+    gWnd->wasPreviewInstalled = false;
 
     if (gCli->withFilter) {
         RegisterSearchFilter(gCli->allUsers);
@@ -569,8 +569,8 @@ static void PositionInstallButton(Button* b) {
 }
 
 // caller needs to str::Free()
-static WCHAR* GetInstallationDir(bool forAllUsers) {
-    logf(L"GetInstallationDir(forAllUsers=%d)\n", (int)forAllUsers);
+static WCHAR* GetDefaultInstallationDir(bool forAllUsers) {
+    logf(L"GetDefaultInstallationDir(forAllUsers=%d)\n", (int)forAllUsers);
     WCHAR* regPath = GetRegPathUninstTemp(kAppName);
     AutoFreeWstr dir = LoggedReadRegStr2(regPath, L"InstallLocation");
     if (dir) {
@@ -613,7 +613,7 @@ void ForAllUsersStateChanged() {
     PositionInstallButton(gButtonInstall);
     gCli->allUsers = checked;
     str::Free(gCli->installDir);
-    gCli->installDir = GetInstallationDir(gCli->allUsers);
+    gCli->installDir = GetDefaultInstallationDir(gCli->allUsers);
     gEditInstallationDir->SetText(gCli->installDir);
 }
 
@@ -996,7 +996,7 @@ int RunInstaller() {
     }
     logf("------------- Starting SumatraPDF installation\n");
     if (!gCli->installDir) {
-        gCli->installDir = GetInstallationDir(gCli->allUsers);
+        gCli->installDir = GetDefaultInstallationDir(gCli->allUsers);
     }
     logf(L"Running'%s' installing into dir '%s'\n", GetExePathTemp().Get(), gCli->installDir);
 
@@ -1004,12 +1004,12 @@ int RunInstaller() {
         return 0;
     }
 
-    gWasSearchFilterInstalled = IsSearchFilterInstalled();
-    if (gWasSearchFilterInstalled) {
+    gWnd->wasSearchFilterInstalled = IsSearchFilterInstalled();
+    if (gWnd->wasSearchFilterInstalled) {
         log("Search filter is installed\n");
     }
-    gWasPreviewInstaller = IsPreviewerInstalled();
-    if (gWasPreviewInstaller) {
+    gWnd->wasPreviewInstalled = IsPreviewerInstalled();
+    if (gWnd->wasPreviewInstalled) {
         log("Previewer is installed\n");
     }
 
@@ -1024,21 +1024,21 @@ int RunInstaller() {
     if (!gCli->runInstallNow) {
         // use settings from previous installation
         if (!gCli->withFilter) {
-            gCli->withFilter = gWasSearchFilterInstalled;
+            gCli->withFilter = gWnd->wasSearchFilterInstalled;
             log("setting gCli->withFilter because search filter installed\n");
         }
         if (!gCli->withPreview) {
-            gCli->withPreview = gWasPreviewInstaller;
+            gCli->withPreview = gWnd->wasPreviewInstalled;
             log("setting gCli->withPreview because previewer installed\n");
         }
     }
 
     // unregister search filter and previewer to reduce
     // possibility of blocking the installation because the dlls are loaded
-    if (gWasSearchFilterInstalled) {
+    if (gWnd->wasSearchFilterInstalled) {
         UnRegisterSearchFilter();
     }
-    if (gWasPreviewInstaller) {
+    if (gWnd->wasPreviewInstalled) {
         UnRegisterPreviewer();
     }
 
@@ -1067,11 +1067,11 @@ int RunInstaller() {
     }
 
     // re-register if we un-registered but installation was cancelled
-    if (gWasSearchFilterInstalled) {
+    if (gWnd->wasSearchFilterInstalled) {
         log("re-registering search filter\n");
         RegisterSearchFilter(gCli->allUsers);
     }
-    if (gWasPreviewInstaller) {
+    if (gWnd->wasPreviewInstalled) {
         log("re-registering previewer\n");
         RegisterPreviewer(gCli->allUsers);
     }
