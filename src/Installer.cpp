@@ -37,6 +37,10 @@
 
 using namespace wg;
 
+struct InstallerWnd;
+
+static InstallerWnd* gWnd = nullptr;
+
 static bool gAutoUpdate = false;
 static HBRUSH ghbrBackground = nullptr;
 
@@ -59,7 +63,10 @@ static HANDLE hThread = nullptr;
 static bool success = false;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
-static bool gShowOptions = false;
+
+struct InstallerWnd {
+    bool showOptions = false;
+};
 
 int currProgress = 0;
 static void ProgressStep() {
@@ -365,7 +372,7 @@ static void StartInstallation() {
 static void OnButtonOptions();
 
 static void OnButtonInstall() {
-    if (gShowOptions) {
+    if (gWnd->showOptions) {
         // hide and disable "Options" button during installation
         OnButtonOptions();
     }
@@ -437,19 +444,20 @@ static Size SetButtonTextAndResize(Button* b, const WCHAR* s) {
 }
 
 static void OnButtonOptions() {
-    gShowOptions = !gShowOptions;
+    gWnd->showOptions = !gWnd->showOptions;
+    bool showOpts = gWnd->showOptions;
 
-    EnableAndShow(gStaticInstDir, gShowOptions);
-    EnableAndShow(gEditInstallationDir, gShowOptions);
-    EnableAndShow(gButtonBrowseDir, gShowOptions);
+    EnableAndShow(gStaticInstDir, showOpts);
+    EnableAndShow(gEditInstallationDir, showOpts);
+    EnableAndShow(gButtonBrowseDir, showOpts);
 
-    EnableAndShow(gCheckboxForAllUsers, gShowOptions);
-    EnableAndShow(gCheckboxRegisterSearchFilter, gShowOptions);
-    EnableAndShow(gCheckboxRegisterPreviewer, gShowOptions);
+    EnableAndShow(gCheckboxForAllUsers, showOpts);
+    EnableAndShow(gCheckboxRegisterSearchFilter, showOpts);
+    EnableAndShow(gCheckboxRegisterPreviewer, showOpts);
 
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
-    if (gShowOptions) {
+    if (showOpts) {
         SetButtonTextAndResize(gButtonOptions, _TR("Hide &Options"));
     } else {
         //| ACCESSKEY_ALTERNATIVE
@@ -720,7 +728,7 @@ static void OnCreateWindow(HWND hwnd) {
     gStaticInstDir->Create(args);
     gStaticInstDir->SetBounds(rc);
 
-    gShowOptions = !gShowOptions;
+    gWnd->showOptions = !gWnd->showOptions;
     OnButtonOptions();
 
     gButtonInstall->SetFocus();
@@ -783,7 +791,7 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             return TRUE;
 
         case WM_PAINT:
-            OnPaintFrame(hwnd, gShowOptions);
+            OnPaintFrame(hwnd, gWnd->showOptions);
             break;
 
         case WM_COMMAND:
@@ -976,6 +984,8 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
 
 int RunInstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
+
+    gWnd = new InstallerWnd();
 
     const char* installerLogPath = nullptr;
     if (gCli->log) {
