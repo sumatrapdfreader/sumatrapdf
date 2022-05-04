@@ -178,7 +178,7 @@ class PreviewBase : public IThumbnailProvider,
 
 class PdfPreview : public PreviewBase {
   public:
-    PdfPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_PDF_PREVIEW_CLSID) {
+    PdfPreview(long* plRefCount) : PreviewBase(plRefCount, kPdfPreviewClsid) {
     }
 
   protected:
@@ -188,7 +188,7 @@ class PdfPreview : public PreviewBase {
 #if 0
 class XpsPreview : public PreviewBase {
   public:
-    XpsPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) {
+    XpsPreview(long* plRefCount) : PreviewBase(plRefCount, kXpsPreviewClsid) {
     }
 
   protected:
@@ -198,7 +198,7 @@ class XpsPreview : public PreviewBase {
 
 class DjVuPreview : public PreviewBase {
   public:
-    DjVuPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_DJVU_PREVIEW_CLSID) {
+    DjVuPreview(long* plRefCount) : PreviewBase(plRefCount, kDjVuPreviewClsid) {
         m_gdiScope = new ScopedGdiPlus();
     }
 
@@ -235,7 +235,7 @@ class MobiPreview : public PreviewBase {
 
 class CbxPreview : public PreviewBase {
   public:
-    CbxPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_CBX_PREVIEW_CLSID) {
+    CbxPreview(long* plRefCount) : PreviewBase(plRefCount, kCbxPreviewClsid) {
         m_gdiScope = new ScopedGdiPlus();
     }
 
@@ -245,7 +245,7 @@ class CbxPreview : public PreviewBase {
 
 class TgaPreview : public PreviewBase {
   public:
-    TgaPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_TGA_PREVIEW_CLSID) {
+    TgaPreview(long* plRefCount) : PreviewBase(plRefCount, kTgaPreviewClsid) {
         m_gdiScope = new ScopedGdiPlus();
     }
 

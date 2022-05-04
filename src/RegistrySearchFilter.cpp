@@ -83,7 +83,7 @@ bool UninstallSearchFilter() {
 
 bool IsSearchFilterInstalled() {
     const WCHAR* key = L".pdf\\PersistentHandler";
-    AutoFreeWstr iid = LoggedReadRegStr2(key, nullptr);
+    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
     bool isInstalled = str::EqI(iid, kPdfFilterHandler);
     logf("IsSearchFilterInstalled() isInstalled=%d\n", (int)isInstalled);
     return isInstalled;
