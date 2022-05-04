@@ -59,14 +59,14 @@ class FilterClassFactory : public IClassFactory {
         ScopedComPtr<IFilter> pFilter;
 
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
+        if (SUCCEEDED(CLSIDFromString(kPdfFilterClsid, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new PdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
-        } else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
+        } else if (SUCCEEDED(CLSIDFromString(kTexFilterClsid, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new TeXFilter(&g_lRefCount);
 #endif
 #ifdef BUILD_EPUB_IFILTER
-        } else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
+        } else if (SUCCEEDED(CLSIDFromString(kEpubFilterClsid, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new EpubFilter(&g_lRefCount);
 #endif
         } else {

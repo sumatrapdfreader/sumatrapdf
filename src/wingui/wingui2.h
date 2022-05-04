@@ -144,7 +144,6 @@ struct StaticCreateArgs {
 
 struct Static : Wnd {
     Static();
-    ~Static() override = default;
 
     ClickedHandler onClicked = nullptr;
 
@@ -172,7 +171,6 @@ struct Button : Wnd {
     bool isDefault = false;
 
     Button();
-    ~Button() override = default;
 
     HWND Create(const ButtonCreateArgs&);
 
@@ -209,7 +207,7 @@ struct Edit : Wnd {
     int maxDx = 0;
 
     Edit();
-    ~Edit();
+    ~Edit() override;
 
     HWND Create(const EditCreateArgs&);
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
@@ -283,7 +281,7 @@ struct Checkbox : Wnd {
     CheckboxStateChangedHandler onCheckStateChanged = nullptr;
 
     Checkbox();
-    ~Checkbox() override = default;
+
     HWND Create(const CheckboxCreateArgs&);
 
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
@@ -310,7 +308,6 @@ struct ProgressCreateArgs {
 
 struct Progress : Wnd {
     Progress();
-    ~Progress() override = default;
 
     int idealDx = 0;
     int idealDy = 0;

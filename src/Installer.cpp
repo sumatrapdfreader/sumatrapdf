@@ -231,6 +231,13 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
         goto Error;
     }
 
+    // for cleaner upgrades, remove registry entries and shortcuts from previous installations
+    // doing it unconditionally, because deleting non-existing things doesn't hurt
+    UninstallBrowserPlugin();
+    UninstallPreviewDll();
+    UninstallSearchFilter();
+    // TODO: remove installation registry and shortcuts
+
     CopySettingsFile();
 
     // mark them as uninstalled
@@ -244,8 +251,6 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     if (gCli->withPreview) {
         RegisterPreviewer(gCli->allUsers);
     }
-
-    UninstallBrowserPlugin();
 
     CreateAppShortcuts(gCli->allUsers);
 
@@ -278,7 +283,10 @@ Error:
 
 static void RestartElevatedForAllUsers() {
     auto exePath = GetExePathTemp();
-    WCHAR* cmdLine = (WCHAR*)L"-run-install-now -all-users";
+    WCHAR* cmdLine = (WCHAR*)L"-run-install-now";
+    if (gWnd->checkboxForAllUsers->IsChecked()) {
+        cmdLine = str::JoinTemp(cmdLine, L" -all-users");
+    }
     if (gCli->withFilter) {
         cmdLine = str::JoinTemp(cmdLine, L" -with-filter");
     }
@@ -306,6 +314,26 @@ int GetInstallerWinDx() {
     return 420;
 }
 
+static void DeleteWnd(Static** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+
+static void DeleteWnd(Button** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+
+static void DeleteWnd(Edit** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+
+static void DeleteWnd(Checkbox** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+
 static void StartInstallation(InstallerWnd* wnd) {
     // create a progress bar in place of the Options button
     int dx = DpiScale(wnd->hwnd, GetInstallerWinDx() / 2);
@@ -313,7 +341,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     rc = MapRectToWindow(rc, wnd->btnOptions->hwnd, wnd->hwnd);
 
     int nInstallationSteps = gArchive.filesCount;
-    nInstallationSteps++; // for copying self
+    nInstallationSteps++; // for copying files to installation dir
     nInstallationSteps++; // for writing registry entries
     nInstallationSteps++; // to show progress at the beginning
 
@@ -328,13 +356,13 @@ static void StartInstallation(InstallerWnd* wnd) {
     ProgressStep();
 
     // disable the install button and remove all the installation options
-    delete wnd->staticInstDir;
-    delete wnd->editInstallationDir;
-    delete wnd->btnBrowseDir;
-    delete wnd->checkboxForAllUsers;
-    delete wnd->checkboxRegisterSearchFilter;
-    delete wnd->checkboxRegisterPreviewer;
-    delete wnd->btnOptions;
+    DeleteWnd(&wnd->staticInstDir);
+    DeleteWnd(&wnd->editInstallationDir);
+    DeleteWnd(&wnd->btnBrowseDir);
+    DeleteWnd(&wnd->checkboxForAllUsers);
+    DeleteWnd(&wnd->checkboxRegisterSearchFilter);
+    DeleteWnd(&wnd->checkboxRegisterPreviewer);
+    DeleteWnd(&wnd->btnOptions);
 
     wnd->btnInstall->SetIsEnabled(false);
 
@@ -368,13 +396,15 @@ static void OnButtonInstall() {
     }
 
     // note: this checkbox isn't created when running inside Wow64
-    gCli->withFilter = gWnd->checkboxRegisterSearchFilter && gWnd->checkboxRegisterSearchFilter->IsChecked();
+    gCli->withFilter = gWnd->checkboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
-    gCli->withPreview = gWnd->checkboxRegisterPreviewer && gWnd->checkboxRegisterPreviewer->IsChecked();
+    gCli->withPreview = gWnd->checkboxRegisterPreviewer->IsChecked();
+    gCli->allUsers = gWnd->checkboxForAllUsers->IsChecked();
 
-    gCli->allUsers = gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
-
-    if (gCli->allUsers && !IsProcessRunningElevated()) {
+    bool needsElevation = gCli->allUsers;
+    needsElevation |= (gWnd->prevInstall.typ == PreviousInstallationType::Both);
+    needsElevation |= (gWnd->prevInstall.typ == PreviousInstallationType::Machine);
+    if (needsElevation && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers();
         ::ExitProcess(0);
     }
@@ -552,39 +582,37 @@ static void PositionInstallButton(Button* b) {
 // caller needs to str::Free()
 static WCHAR* GetDefaultInstallationDir(bool forAllUsers) {
     logf(L"GetDefaultInstallationDir(forAllUsers=%d)\n", (int)forAllUsers);
-    WCHAR* regPath = GetRegPathUninstTemp(kAppName);
-    AutoFreeWstr dir = LoggedReadRegStr2(regPath, L"InstallLocation");
+
+    auto dir = gWnd->prevInstall.installationDir;
     if (dir) {
-        if (str::EndsWithI(dir, L".exe")) {
-            dir.Set(path::GetDir(dir));
-        }
-        if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
-            logf(L"  got '%s' from InstallLocation registry\n", dir.Get());
-            return dir.StealData();
-        }
+        // Note: prev dir might be incompatible with forAllUsers setting
+        // e.g. installing for current user in an admin-only dir
+        // but not sure what should I do in such case
+        logf(L"  using %s from previous install\n", dir);
+        return str::Dup(dir);
     }
 
     if (forAllUsers) {
-        WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, true).Get();
-        if (dataDir) {
-            WCHAR* res = path::Join(dataDir, kAppName);
-            logf(L"  got '%s' by GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", res);
-            return res;
+        dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, true).Get();
+        if (dir) {
+            dir = path::Join(dir, kAppName);
+            logf(L"  using '%s' by GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
+            return dir;
         }
     }
 
-    // fall back to %APPLOCALDATA%\SumatraPDF
-    WCHAR* dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
-    if (dataDir) {
-        WCHAR* res = path::Join(dataDir, kAppName);
-        logf(L"  got '%s' by GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", res);
-        return res;
+    // %APPLOCALDATA%\SumatraPDF
+    dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
+    if (dir) {
+        dir = path::Join(dir, kAppName);
+        logf(L"  using '%s' by GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
+        return dir;
     }
 
-    // fall back to C:\ as a last resort
-    auto res = str::Join(L"C:\\", kAppName);
-    logf(L"  got %s as last resort\n", res);
-    return res;
+    // fall back to C:\SumatraPDF as a last resort
+    dir = str::Join(L"C:\\", kAppName);
+    logf(L"  using %s as last resort\n", dir);
+    return dir;
 }
 
 void ForAllUsersStateChanged() {
@@ -997,25 +1025,20 @@ int RunInstaller() {
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
 
     if (!gCli->runInstallNow) {
-        // default to state from previous installation
+        // if not set explicitly, default to state from previous installation
         if (!gCli->withFilter) {
             gCli->withFilter = gWnd->prevInstall.searchFilterInstalled;
-            log("setting gCli->withFilter because search filter installed\n");
         }
         if (!gCli->withPreview) {
             gCli->withPreview = gWnd->prevInstall.previewInstalled;
-            log("setting gCli->withPreview because previewer installed\n");
         }
     }
+    logf("RunInstaller: gCli->runInstallNow = %d, gCli->withFilter = %d, gCli->withPreview = %d\n", (int)gCli->runInstallNow, (int)gCli->withFilter, (int)gCli->withPreview);
 
     // unregister search filter and previewer to reduce
     // possibility of blocking the installation because the dlls are loaded
-    if (gWnd->prevInstall.searchFilterInstalled) {
-        UnRegisterSearchFilter();
-    }
-    if (gWnd->prevInstall.previewInstalled) {
-        UnRegisterPreviewer();
-    }
+    UninstallSearchFilter();
+    UninstallPreviewDll();
 
     if (gCli->silent) {
         if (gCli->allUsers && !IsProcessRunningElevated()) {

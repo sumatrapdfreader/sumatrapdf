@@ -19,7 +19,7 @@ public:
 
     // IPersist
     IFACEMETHODIMP GetClassID(CLSID *pClassID) {
-        return CLSIDFromString(SZ_EPUB_FILTER_HANDLER, pClassID);
+        return CLSIDFromString(kEpubFilterHandler, pClassID);
     }
 
 private:
