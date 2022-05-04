@@ -371,7 +371,7 @@ EngineBase* DjVuPreview::LoadEngine(IStream* stream) {
     return CreateEngineDjVuFromStream(stream);
 }
 
-EpubPreview::EpubPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID) {
+EpubPreview::EpubPreview(long* plRefCount) : PreviewBase(plRefCount, kEpubPreviewClsid) {
     log("EpubPreview::EpubPreview()\n");
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
@@ -386,7 +386,7 @@ EngineBase* EpubPreview::LoadEngine(IStream* stream) {
     return CreateEngineEpubFromStream(stream);
 }
 
-Fb2Preview::Fb2Preview(long* plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID) {
+Fb2Preview::Fb2Preview(long* plRefCount) : PreviewBase(plRefCount, kFb2PreviewClsid) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
@@ -400,7 +400,7 @@ EngineBase* Fb2Preview::LoadEngine(IStream* stream) {
     return CreateEngineFb2FromStream(stream);
 }
 
-MobiPreview::MobiPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID) {
+MobiPreview::MobiPreview(long* plRefCount) : PreviewBase(plRefCount, kMobiPreviewClsid) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }

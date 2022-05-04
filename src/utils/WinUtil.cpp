@@ -350,21 +350,17 @@ char* ReadRegStrUtf8(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
 }
 
 WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
-    HKEY keySub1 = HKEY_LOCAL_MACHINE;
-    HKEY keySub2 = HKEY_CURRENT_USER;
-    WCHAR* res = ReadRegStr(keySub1, keyName, valName);
+    WCHAR* res = ReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
-        res = ReadRegStr(keySub2, keyName, valName);
+        res = ReadRegStr(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
 }
 
 WCHAR* LoggedReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
-    HKEY keySub1 = HKEY_LOCAL_MACHINE;
-    HKEY keySub2 = HKEY_CURRENT_USER;
-    WCHAR* res = LoggedReadRegStr(keySub1, keyName, valName);
+    WCHAR* res = LoggedReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
-        res = LoggedReadRegStr(keySub2, keyName, valName);
+        res = LoggedReadRegStr(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
 }
