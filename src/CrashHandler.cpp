@@ -4,7 +4,6 @@
 #include "utils/BaseUtil.h"
 
 #pragma warning(disable : 4668)
-#include <tlhelp32.h>
 #include <signal.h>
 #include <eh.h>
 

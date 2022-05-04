@@ -33,7 +33,7 @@
 
 #include "utils/Log.h"
 
-#define kInstallerWinMargin 8
+constexpr int kInstallerWinMargin = 8;
 
 using namespace wg;
 
@@ -42,8 +42,6 @@ struct InstallerWnd;
 static InstallerWnd* gWnd = nullptr;
 
 static lzma::SimpleArchive gArchive{};
-
-enum class PreviousInstallationType { None = 0, User = 1, Machine = 2, Both = 3 };
 
 struct InstallerWnd {
     HWND hwnd = nullptr;
@@ -63,10 +61,10 @@ struct InstallerWnd {
     Button* btnInstall = nullptr;
 
     bool showOptions = false;
-    bool wasSearchFilterInstalled = false;
-    bool wasPreviewInstalled = false;
     bool failed = false;
     HANDLE hThread = nullptr;
+
+    PreviousInstallationInfo prevInstall;
 };
 
 static void ProgressStep() {
@@ -236,8 +234,8 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     CopySettingsFile();
 
     // mark them as uninstalled
-    gWnd->wasSearchFilterInstalled = false;
-    gWnd->wasPreviewInstalled = false;
+    gWnd->prevInstall.searchFilterInstalled = false;
+    gWnd->prevInstall.previewInstalled = false;
 
     if (gCli->withFilter) {
         RegisterSearchFilter(gCli->allUsers);
@@ -969,8 +967,6 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
 int RunInstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
-    gWnd = new InstallerWnd();
-
     const char* installerLogPath = nullptr;
     if (gCli->log) {
         installerLogPath = GetInstallerLogPath();
@@ -979,6 +975,10 @@ int RunInstaller() {
         }
     }
     logf("------------- Starting SumatraPDF installation\n");
+
+    gWnd = new InstallerWnd();
+    GetPreviousInstallInfo(&gWnd->prevInstall);
+
     if (!gCli->installDir) {
         gCli->installDir = GetDefaultInstallationDir(gCli->allUsers);
     }
@@ -986,15 +986,6 @@ int RunInstaller() {
 
     if (!gCli->silent && MaybeMismatchedOSDialog(nullptr)) {
         return 0;
-    }
-
-    gWnd->wasSearchFilterInstalled = IsSearchFilterInstalled();
-    if (gWnd->wasSearchFilterInstalled) {
-        log("Search filter is installed\n");
-    }
-    gWnd->wasPreviewInstalled = IsPreviewerInstalled();
-    if (gWnd->wasPreviewInstalled) {
-        log("Previewer is installed\n");
     }
 
     int ret = 0;
@@ -1006,23 +997,23 @@ int RunInstaller() {
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
 
     if (!gCli->runInstallNow) {
-        // use settings from previous installation
+        // default to state from previous installation
         if (!gCli->withFilter) {
-            gCli->withFilter = gWnd->wasSearchFilterInstalled;
+            gCli->withFilter = gWnd->prevInstall.searchFilterInstalled;
             log("setting gCli->withFilter because search filter installed\n");
         }
         if (!gCli->withPreview) {
-            gCli->withPreview = gWnd->wasPreviewInstalled;
+            gCli->withPreview = gWnd->prevInstall.previewInstalled;
             log("setting gCli->withPreview because previewer installed\n");
         }
     }
 
     // unregister search filter and previewer to reduce
     // possibility of blocking the installation because the dlls are loaded
-    if (gWnd->wasSearchFilterInstalled) {
+    if (gWnd->prevInstall.searchFilterInstalled) {
         UnRegisterSearchFilter();
     }
-    if (gWnd->wasPreviewInstalled) {
+    if (gWnd->prevInstall.previewInstalled) {
         UnRegisterPreviewer();
     }
 
@@ -1046,11 +1037,11 @@ int RunInstaller() {
     }
 
     // re-register if we un-registered but installation was cancelled
-    if (gWnd->wasSearchFilterInstalled) {
+    if (gWnd->prevInstall.searchFilterInstalled) {
         log("re-registering search filter\n");
         RegisterSearchFilter(gCli->allUsers);
     }
-    if (gWnd->wasPreviewInstalled) {
+    if (gWnd->prevInstall.previewInstalled) {
         log("re-registering previewer\n");
         RegisterPreviewer(gCli->allUsers);
     }

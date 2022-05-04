@@ -6,7 +6,6 @@
 
 #include "BaseUtil.h"
 #pragma warning(disable : 4668)
-#include <tlhelp32.h>
 #include "MinHook.h"
 
 LPVOID GetProcInDll(const char* dllName, const char* procName) {

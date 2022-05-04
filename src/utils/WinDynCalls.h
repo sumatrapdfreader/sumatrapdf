@@ -27,7 +27,6 @@ The intent is to standardize how we do it.
 #pragma warning(disable : 4091)
 #include <dbghelp.h>
 #pragma warning(pop)
-#include <tlhelp32.h>
 
 #define API_DECLARATION(name) extern Sig_##name Dyn##name;
 
