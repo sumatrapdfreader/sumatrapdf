@@ -940,7 +940,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     mui::Initialize();
     uitask::Initialize();
 
-    gLogToConsole = true;
+    if (!IsDebuggerPresent()) {
+        // VSCode shows both debugger output and console out which doubles the logging
+        // TODO: only if AttachConsole() succeeds?
+        gLogToConsole = true;
+    }
 
     Flags flags;
     ParseFlags(GetCommandLineW(), flags);

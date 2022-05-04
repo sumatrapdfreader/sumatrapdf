@@ -3,16 +3,22 @@
 
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
-#define kInstallerWinDy 340
+constexpr int kInstallerWinDy = 340;
 
 #define kRegExplorerPdfExt L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
 #define kRegClassesPdf L"Software\\Classes\\.pdf"
 
-/* The window is divided in three parts:
-- top part, where we display nice graphics
-- middle part, where we either display messages or advanced options
-- bottom part, with install/uninstall button
-*/
+enum class PreviousInstallationType { None = 0, User = 1, Machine = 2, Both = 3 };
+
+struct PreviousInstallationInfo {
+    WCHAR* installationDir = nullptr;
+    PreviousInstallationType typ = PreviousInstallationType::None;
+    bool searchFilterInstalled = false;
+    bool previewInstalled = false;
+
+    PreviousInstallationInfo() = default;
+    ~PreviousInstallationInfo();
+};
 
 // This is the height of the lower part
 extern int gBottomPartDy;
@@ -56,6 +62,7 @@ bool ExtractInstallerFiles();
 WCHAR* GetExistingInstallationDir();
 WCHAR* GetInstallDirTemp();
 TempWstr GetInstalledExePathTemp();
+void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 
 WCHAR* GetInstallationFilePath(const WCHAR* name);
 WCHAR* GetExistingInstallationFilePath(const WCHAR* name);

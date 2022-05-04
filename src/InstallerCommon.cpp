@@ -3,21 +3,12 @@
 
 // code used in both Installer.cpp and Uninstaller.cpp
 
-// TODO: not all those are needed
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
 #include "utils/FileUtil.h"
-#include "utils/Timer.h"
 #include "utils/WinUtil.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/LzmaSimpleArchive.h"
 
-#include "wingui/Layout.h"
-
-#include "CrashHandler.h"
 #include "Translations.h"
 
 #include "RegistryPreview.h"
@@ -34,13 +25,13 @@
 
 #include "utils/Log.h"
 
-// define to 1 to enable shadow effect, to 0 to disable
+// set to true to enable shadow effect
 constexpr bool kDrawTextShadow = true;
 constexpr bool kDrawMsgTextShadow = false;
 
-#define kInstallerWinBgColor RGB(0xff, 0xf2, 0) // yellow
+constexpr COLORREF kInstallerWinBgColor = RGB(0xff, 0xf2, 0); // yellow
 
-#define kTenSecondsInMs 10 * 1000
+constexpr DWORD kTenSecondsInMs = 10 * 1000;
 
 using Gdiplus::Bitmap;
 using Gdiplus::Color;
@@ -88,6 +79,10 @@ static Color gMsgColor;
 
 static WStrVec gProcessesToClose;
 
+PreviousInstallationInfo::~PreviousInstallationInfo() {
+    free(installationDir);
+}
+
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
@@ -107,9 +102,10 @@ void SetMsg(const WCHAR* msg, Color color) {
     gMsgColor = color;
 }
 
+// caller has to free()
 WCHAR* GetExistingInstallationDir() {
     log("GetExistingInstallationDir()\n");
-    const WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
+    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
     AutoFreeWstr dir = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
     if (!dir) {
         return nullptr;
@@ -121,6 +117,30 @@ WCHAR* GetExistingInstallationDir() {
         return dir.StealData();
     }
     return nullptr;
+}
+
+void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
+    info->installationDir = GetExistingInstallationDir();
+    if (!info->installationDir) {
+        info->typ = PreviousInstallationType::None;
+        log("GetPreviousInstallInfo: not installed\n");
+        return;
+    }
+    info->searchFilterInstalled = IsSearchFilterInstalled();
+    info->previewInstalled = IsPreviewerInstalled();
+    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
+    AutoFreeWstr dirLM = LoggedReadRegStr(HKEY_LOCAL_MACHINE, regPathUninst, L"InstallLocation");
+    AutoFreeWstr dirCU = LoggedReadRegStr(HKEY_CURRENT_USER, regPathUninst, L"InstallLocation");
+    if (dirLM.Get() && dirCU.Get()) {
+        info->typ = PreviousInstallationType::Both;
+    }
+    if (dirLM.Get()) {
+        info->typ = PreviousInstallationType::Machine;
+    } else {
+        info->typ = PreviousInstallationType::User;
+    }
+    logf(L"GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d\n", info->installationDir,
+         (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ);
 }
 
 WCHAR* GetExistingInstallationFilePath(const WCHAR* name) {
