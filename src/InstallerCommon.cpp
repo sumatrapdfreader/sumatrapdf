@@ -102,8 +102,14 @@ void SetMsg(const WCHAR* msg, Color color) {
     gMsgColor = color;
 }
 
+WCHAR* gCachedExistingInstallationDir = nullptr;
+
 // caller has to free()
 WCHAR* GetExistingInstallationDir() {
+    if (gCachedExistingInstallationDir) {
+        // no logging if returning cached
+        return str::Dup(gCachedExistingInstallationDir);
+    }
     log("GetExistingInstallationDir()\n");
     WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
     AutoFreeWstr dir = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
@@ -114,7 +120,9 @@ WCHAR* GetExistingInstallationDir() {
         dir.Set(path::GetDir(dir));
     }
     if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
-        return dir.StealData();
+        WCHAR* res = dir.StealData();
+        gCachedExistingInstallationDir = str::Dup(res);
+        return res;
     }
     return nullptr;
 }
@@ -395,7 +403,7 @@ int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
 // because that covers SumatraPDF.exe and processes like dllhost.exe
 // that load PdfPreview.dll or PdfFilter.dll (which link to libmupdf.dll)
 // returns false if there are processes and we failed to kill them
-bool KillProcessesUsingInstallation() {
+static bool KillProcessesUsingInstallation() {
     log("KillProcessesUsingInstallation()\n");
     AutoFreeWstr dir = GetExistingInstallationDir();
     if (dir.empty()) {

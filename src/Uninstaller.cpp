@@ -1,15 +1,5 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
-
-/*
-The installer is good enough for production but it doesn't mean it couldn't be improved:
- * some more fanciful animations e.g.:
- * letters could drop down and back up when cursor is over it
- * messages could scroll-in
- * some background thing could be going on, e.g. a spinning 3d cube
- * show fireworks on successful installation/uninstallation
-*/
-
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
@@ -42,8 +32,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "RegistrySearchFilter.h"
 
 using namespace wg;
-
-#define kRegProgId L"ProgId"
 
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
@@ -104,20 +92,6 @@ static void RemoveInstalledFiles() {
     logf(L"RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
-static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
-
-static void RemoveShortcuts() {
-    for (size_t i = 0; i < dimof(shortcutDirs); i++) {
-        int csidl = shortcutDirs[i];
-        WCHAR* path = GetShortcutPathTemp(csidl);
-        if (!path) {
-            continue;
-        }
-        DeleteFile(path);
-    }
-    logf("removed shortcuts\n");
-}
-
 static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
@@ -141,14 +115,12 @@ static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     gWasSearchFilterInstalled = false;
     gWasPreviewInstaller = false;
 
-    RemoveShortcuts();
-
     UninstallBrowserPlugin();
-    RemoveOwnRegistryKeys(HKEY_LOCAL_MACHINE);
-    RemoveOwnRegistryKeys(HKEY_CURRENT_USER);
+    RemoveInstallRegistryKeys(HKEY_LOCAL_MACHINE);
+    RemoveInstallRegistryKeys(HKEY_CURRENT_USER);
+    RemoveAppShortcuts();
 
     RemoveInstalledFiles();
-    // NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
     success = true;
