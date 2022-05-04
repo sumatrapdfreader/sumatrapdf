@@ -19,7 +19,7 @@ public:
 
     // IPersist
     IFACEMETHODIMP GetClassID(CLSID *pClassID) {
-        return CLSIDFromString(SZ_PDF_FILTER_HANDLER, pClassID);
+        return CLSIDFromString(kPdfFilterHandler, pClassID);
     }
 
 private:

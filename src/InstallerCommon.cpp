@@ -176,30 +176,18 @@ TempWstr GetShortcutPathTemp(int csidl) {
     return path::JoinTemp(dir, lnkName);
 }
 
-#ifndef _WIN64
-#define kRegPathPlugin L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin"
-#else
-#define kRegPathPlugin L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64"
-#endif
-
 WCHAR* GetInstalledBrowserPluginPath() {
+#ifndef _WIN64
+    const WCHAR* kRegPathPlugin = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
+#else
+    const WCHAR* kRegPathPlugin = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64";
+#endif
     return LoggedReadRegStr2(kRegPathPlugin, L"Path");
 }
 
-static bool SkipProcessByID(DWORD procID) {
-    // TODO: don't know why this process shows up as using
-    // our files
-    if (procID == 0) {
-        return true;
-    }
-    if (procID == GetCurrentProcessId()) {
-        return true;
-    }
-    return false;
-}
-
 static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
-    if (SkipProcessByID(procId)) {
+    // Note: don't know why procId 0 shows up as using our files
+    if (procId == 0 || procId == GetCurrentProcessId()) {
         return false;
     }
     if (!file1 && !file2) {
@@ -226,7 +214,7 @@ static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
     return false;
 }
 
-#define kBrowserPluginName L"npPdfViewer.dll"
+constexpr const WCHAR* kBrowserPluginName = L"npPdfViewer.dll";
 
 void UninstallBrowserPlugin() {
     log("UninstallBrowserPlugin()\n");

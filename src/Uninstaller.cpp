@@ -54,15 +54,6 @@ static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
 static char* gUninstallerLogPath = nullptr;
 
-static void OnButtonExit() {
-    SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
-}
-
-static void CreateButtonExit(HWND hwndParent) {
-    gButtonExit = CreateDefaultButton(hwndParent, _TR("Close"));
-    gButtonExit->onClicked = OnButtonExit;
-}
-
 #if 0
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
@@ -182,10 +173,15 @@ static void OnButtonUninstall() {
     hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, nullptr);
 }
 
+static void OnButtonExit() {
+    SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
+}
+
 void OnUninstallationFinished() {
     delete gButtonUninstaller;
     gButtonUninstaller = nullptr;
-    CreateButtonExit(gHwndFrame);
+    gButtonExit = CreateDefaultButton(gHwndFrame, _TR("Close"));
+    gButtonExit->onClicked = OnButtonExit;
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gFirstError;
     HwndInvalidate(gHwndFrame);
@@ -205,11 +201,6 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
     return true;
 }
 
-static void OnCreateWindow(HWND hwnd) {
-    gButtonUninstaller = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"));
-    gButtonUninstaller->onClicked = OnButtonUninstall;
-}
-
 static void CreateUninstallerWindow() {
     AutoFreeWstr title = str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR);
     int x = CW_USEDEFAULT;
@@ -223,7 +214,9 @@ static void CreateUninstallerWindow() {
 
     DpiScale(gHwndFrame, dx, dy);
     HwndResizeClientSize(gHwndFrame, dx, dy);
-    OnCreateWindow(gHwndFrame);
+
+    gButtonUninstaller = CreateDefaultButton(gHwndFrame, _TR("Uninstall SumatraPDF"));
+    gButtonUninstaller->onClicked = OnButtonUninstall;
 }
 
 static void ShowUsage() {
@@ -303,7 +296,7 @@ static bool RegisterWinClass() {
     return atom != 0;
 }
 
-static BOOL InstanceInit() {
+static bool InstanceInit() {
     CreateUninstallerWindow();
     if (!gHwndFrame) {
         return FALSE;
