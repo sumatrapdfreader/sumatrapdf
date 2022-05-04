@@ -50,12 +50,12 @@ void SetDefaultMsg();
 
 int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated);
 
-WCHAR* GetShortcutPath(int csidl);
+TempWstr GetShortcutPathTemp(int csidl);
 
 bool ExtractInstallerFiles();
 WCHAR* GetExistingInstallationDir();
 WCHAR* GetInstallDirTemp();
-WCHAR* GetInstalledExePathTemp();
+TempWstr GetInstalledExePathTemp();
 
 WCHAR* GetInstallationFilePath(const WCHAR* name);
 WCHAR* GetExistingInstallationFilePath(const WCHAR* name);

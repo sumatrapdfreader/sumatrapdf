@@ -118,12 +118,11 @@ static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTO
 static void RemoveShortcuts() {
     for (size_t i = 0; i < dimof(shortcutDirs); i++) {
         int csidl = shortcutDirs[i];
-        WCHAR* path = GetShortcutPath(csidl);
+        WCHAR* path = GetShortcutPathTemp(csidl);
         if (!path) {
             continue;
         }
         DeleteFile(path);
-        free(path);
     }
     logf("removed shortcuts\n");
 }

@@ -142,18 +142,18 @@ WCHAR* GetInstallationFilePath(const WCHAR* name) {
     return res;
 }
 
-WCHAR* GetInstalledExePathTemp() {
+TempWstr GetInstalledExePathTemp() {
     WCHAR* dir = GetInstallDirTemp();
     return path::JoinTemp(dir, kExeName);
 }
 
-WCHAR* GetShortcutPath(int csidl) {
+TempWstr GetShortcutPathTemp(int csidl) {
     WCHAR* dir = GetSpecialFolderTemp(csidl, false);
     if (!dir) {
-        return nullptr;
+        return {};
     }
     WCHAR* lnkName = str::JoinTemp(kAppName, L".lnk");
-    return path::Join(dir, lnkName);
+    return path::JoinTemp(dir, lnkName);
 }
 
 #ifndef _WIN64

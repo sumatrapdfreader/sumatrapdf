@@ -33,6 +33,7 @@ bool Match(const WCHAR* path, const WCHAR* filter);
 bool IsAbsolute(const WCHAR* path);
 
 WCHAR* GetDir(const WCHAR* path);
+TempWstr GetDirTemp(const WCHAR* path);
 
 WCHAR* GetTempFilePath(const WCHAR* filePrefix = nullptr);
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
