@@ -220,6 +220,27 @@ static void CreateAppShortcuts(bool forAllUsers) {
     }
 }
 
+static void RemoveShortcutFile(int csidl) {
+    WCHAR* path = GetShortcutPathTemp(csidl);
+    if (!path || !file::Exists(path)) {
+        return;
+    }
+    DeleteFileW(path);
+    logf("RemoveShorcuts: deleted '%s'\n", path);
+}
+
+// those are shortcuts created by versions before 3.4
+static int shortcutDirsPre34[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
+
+void RemoveAppShortcuts() {
+    for (int csidl : shortcutDirs) {
+        RemoveShortcutFile(csidl);
+    }
+    for (int csidl : shortcutDirsPre34) {
+        RemoveShortcutFile(csidl);
+    }
+}
+
 static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     gWnd->failed = true;
     bool ok;
@@ -236,7 +257,9 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     UninstallBrowserPlugin();
     UninstallPreviewDll();
     UninstallSearchFilter();
-    // TODO: remove installation registry and shortcuts
+    RemoveInstallRegistryKeys(HKEY_LOCAL_MACHINE);
+    RemoveInstallRegistryKeys(HKEY_CURRENT_USER);
+    RemoveAppShortcuts();
 
     CopySettingsFile();
 
@@ -1033,7 +1056,8 @@ int RunInstaller() {
             gCli->withPreview = gWnd->prevInstall.previewInstalled;
         }
     }
-    logf("RunInstaller: gCli->runInstallNow = %d, gCli->withFilter = %d, gCli->withPreview = %d\n", (int)gCli->runInstallNow, (int)gCli->withFilter, (int)gCli->withPreview);
+    logf("RunInstaller: gCli->runInstallNow = %d, gCli->withFilter = %d, gCli->withPreview = %d\n",
+         (int)gCli->runInstallNow, (int)gCli->withFilter, (int)gCli->withPreview);
 
     // unregister search filter and previewer to reduce
     // possibility of blocking the installation because the dlls are loaded

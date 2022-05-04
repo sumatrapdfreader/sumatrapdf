@@ -281,7 +281,7 @@ HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
 HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
 
 Note: When making changes below, please also adjust WriteExtendedFileExtensionInfo(),
-UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
+UnregisterFromBeingDefaultViewer() and RemoveInstallRegistryKeys() in Installer.cpp.
 
 */
 
@@ -506,38 +506,31 @@ static const WCHAR* GetRegClassesAppTemp(const WCHAR* appName) {
     return str::JoinTemp(L"Software\\Classes\\", appName);
 }
 
-// TODO: this method no longer works
-#if 0
-/* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
+constexpr const WCHAR* kRegProgId = L"ProgId";
+
+// Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did
+// used in pre-3.4
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
-    logf("UnregisterFromBeingDefaultViewer()\n");
+    log("UnregisterFromBeingDefaultViewer()\n");
     AutoFreeWstr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
     const WCHAR* regClassesApp = GetRegClassesAppTemp(kAppName);
     AutoFreeWstr prev = LoggedReadRegStr(hkey, regClassesApp, L"previous.pdf");
     if (!curr || !str::Eq(curr, kAppName)) {
         // not the default, do nothing
-    } else if (prev) {
-        LoggedWriteRegStr(hkey, kRegClassesPdf, nullptr, prev);
     } else {
-#pragma warning(push)
-#pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the
-                                // specification for the function 'SHDeleteValueW'
+        // TODO: is nullptr valid here?
         LoggedDeleteRegValue(hkey, kRegClassesPdf, nullptr);
-#pragma warning(pop)
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
     AutoFreeWstr buf = LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
     if (str::Eq(buf, kAppName)) {
-        LONG res = SHDeleteValueW(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
-        if (res != ERROR_SUCCESS) {
-            LogLastError(res);
-        }
+        LONG res = LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
     }
-    const WCHAR* kRegApplication = L"Application";
+    constexpr const WCHAR* kRegApplication = L"Application";
     buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication));
     if (str::EqI(buf, kExeName)) {
-        LONG res = SHDeleteValue(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication);
+        LONG res = LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication);
         if (res != ERROR_SUCCESS) {
             LogLastError(res);
         }
@@ -547,7 +540,6 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
         LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", true);
     }
 }
-#endif
 
 // delete registry key but only if it's empty
 static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
@@ -573,9 +565,11 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
     return isEmpty;
 }
 
-void RemoveOwnRegistryKeys(HKEY hkey) {
-    logf("RemoveOwnRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
-    // UnregisterFromBeingDefaultViewer(hkey);
+void RemoveInstallRegistryKeys(HKEY hkey) {
+    logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
+    UnregisterFromBeingDefaultViewer(hkey);
+
+    // those are registry keys written before 3.4
     const WCHAR* regClassApp = GetRegClassesAppTemp(kAppName);
     LoggedDeleteRegKey(hkey, regClassApp);
     WCHAR* regPath = GetRegClassesAppsTemp(kAppName);
@@ -590,6 +584,7 @@ void RemoveOwnRegistryKeys(HKEY hkey) {
         LoggedDeleteRegKey(hkey, key);
     }
 
+    // those are registry keys written before 3.4
     SeqStrings exts = gSupportedExts;
     WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
     while (exts) {
@@ -615,6 +610,7 @@ void RemoveOwnRegistryKeys(HKEY hkey) {
         seqstrings::Next(exts);
     }
 
+    // those were introduced in 3.4
     exts = gSupportedExts;
     while (exts) {
         WCHAR* ext = ToWstrTemp(exts);

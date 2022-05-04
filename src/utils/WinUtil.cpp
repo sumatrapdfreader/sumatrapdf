@@ -456,15 +456,21 @@ bool DeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(hkey, keyName);
     }
-
     LSTATUS res = SHDeleteKeyW(hkey, keyName);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
 bool LoggedDeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
-    auto res = DeleteRegKey(hkey, keyName, resetACLFirst);
-    logf(L"DeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
-    return res;
+    if (resetACLFirst) {
+        ResetRegKeyAcl(hkey, keyName);
+    }
+    LSTATUS res = SHDeleteKeyW(hkey, keyName);
+    logf(L"LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
+    bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
+    if (!ok) {
+        LogLastError(res);
+    }
+    return ok;
 }
 
 bool DeleteRegValue(HKEY hkey, const WCHAR* keyName, const WCHAR* val) {
@@ -473,9 +479,13 @@ bool DeleteRegValue(HKEY hkey, const WCHAR* keyName, const WCHAR* val) {
 }
 
 bool LoggedDeleteRegValue(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
-    auto res = DeleteRegValue(hkey, keyName, valName);
+    auto res = SHDeleteValueW(hkey, keyName, valName);
+    bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
     logf(L"LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey), keyName, valName, res);
-    return res;
+    if (!ok) {
+        LogLastError(res);
+    }
+    return ok;
 }
 
 TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing) {

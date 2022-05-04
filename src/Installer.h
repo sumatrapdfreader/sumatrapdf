@@ -80,10 +80,13 @@ char* GetInstallerLogPath();
 
 TempWstr GetRegPathUninstTemp(const WCHAR* appName);
 
+// Installer.cpp
+void RemoveAppShortcuts();
+
 // RegistryInstaller.cpp
 
 bool WriteUninstallerRegistryInfo(HKEY hkey);
 bool WriteExtendedFileExtensionInfo(HKEY hkey);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
-void RemoveOwnRegistryKeys(HKEY hkey);
+void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();
