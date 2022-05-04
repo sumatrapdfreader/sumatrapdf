@@ -43,18 +43,12 @@ static InstallerWnd* gWnd = nullptr;
 
 static lzma::SimpleArchive gArchive{};
 
-// TODO: unused
-static bool gAutoUpdate = false;
-
-static bool success = false;
+enum class PreviousInstallationType { None = 0, User = 1, Machine = 2, Both = 3 };
 
 struct InstallerWnd {
-    bool showOptions = false;
-    bool wasSearchFilterInstalled = false;
-    bool wasPreviewInstalled = false;
+    HWND hwnd = nullptr;
 
     HBRUSH hbrBackground = nullptr;
-
     Button* btnOptions = nullptr;
     Button* btnRunSumatra = nullptr;
     Static* staticInstDir = nullptr;
@@ -67,6 +61,11 @@ struct InstallerWnd {
     Progress* progressBar = nullptr;
     Button* btnExit = nullptr;
     Button* btnInstall = nullptr;
+
+    bool showOptions = false;
+    bool wasSearchFilterInstalled = false;
+    bool wasPreviewInstalled = false;
+    bool failed = false;
     HANDLE hThread = nullptr;
 };
 
@@ -195,19 +194,20 @@ static void CopySettingsFile() {
 }
 
 static bool CreateAppShortcut(int csidl) {
-    AutoFreeWstr shortcutPath = GetShortcutPath(csidl);
-    if (!shortcutPath.Get()) {
+    WCHAR* shortcutPath = GetShortcutPathTemp(csidl);
+    if (!shortcutPath) {
         log("CreateAppShortcut() failed\n");
         return false;
     }
-    logf(L"CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath.Get());
+    logf(L"CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath);
     WCHAR* installedExePath = GetInstalledExePathTemp();
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/shell/csidl
 // CSIDL_COMMON_DESKTOPDIRECTORY - files and folders on desktop for all users. C:\Documents and Settings\All
-// Users\Desktop CSIDL_COMMON_STARTMENU - Start menu for all users, C:\Documents and Settings\All Users\Start Menu
+// Users\Desktop
+// CSIDL_COMMON_STARTMENU - Start menu for all users, C:\Documents and Settings\All Users\Start Menu
 // CSIDL_DESKTOP - virutal folder, desktop for current user
 // CSIDL_STARTMENU - Start menu for current user. Settings\username\Start Menu
 static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP, CSIDL_STARTMENU};
@@ -223,7 +223,7 @@ static void CreateAppShortcuts(bool forAllUsers) {
 }
 
 static DWORD WINAPI InstallerThread(__unused LPVOID data) {
-    success = false;
+    gWnd->failed = true;
     bool ok;
 
     HKEY key = gCli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
@@ -253,7 +253,7 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
-    success = true;
+    gWnd->failed = false;
 
     ok = WriteUninstallerRegistryInfo(key);
     if (!ok) {
@@ -269,10 +269,10 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     log("Installer thread finished\n");
 Error:
     // TODO: roll back installation on failure (restore previous installation!)
-    if (gHwndFrame) {
+    if (gWnd->hwnd) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
-            PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+            PostMessageW(gWnd->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
         }
     }
     return 0;
@@ -300,22 +300,19 @@ static void RestartElevatedForAllUsers() {
 }
 
 // in pre-relase the window is wider to acommodate bigger version number
-// TODO: change how we draw version number
-#define kInstallerWinDx 420
-#define kInstallerPreReleseWinDx 492
-
+// TODO: instead of changing size of the window, change how we draw version number
 int GetInstallerWinDx() {
     if (gIsPreReleaseBuild) {
-        return kInstallerPreReleseWinDx;
+        return 492;
     }
-    return kInstallerWinDx;
+    return 420;
 }
 
-static void StartInstallation() {
+static void StartInstallation(InstallerWnd* wnd) {
     // create a progress bar in place of the Options button
-    int dx = DpiScale(gHwndFrame, GetInstallerWinDx() / 2);
+    int dx = DpiScale(wnd->hwnd, GetInstallerWinDx() / 2);
     Rect rc(0, 0, dx, gButtonDy);
-    rc = MapRectToWindow(rc, gWnd->btnOptions->hwnd, gHwndFrame);
+    rc = MapRectToWindow(rc, wnd->btnOptions->hwnd, wnd->hwnd);
 
     int nInstallationSteps = gArchive.filesCount;
     nInstallationSteps++; // for copying self
@@ -324,30 +321,29 @@ static void StartInstallation() {
 
     ProgressCreateArgs args;
     args.initialMax = nInstallationSteps;
-    args.parent = gHwndFrame;
-    gWnd->progressBar = new Progress();
-    gWnd->progressBar->Create(args);
+    args.parent = wnd->hwnd;
+    wnd->progressBar = new Progress();
+    wnd->progressBar->Create(args);
     RECT prc = {rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy};
-    gWnd->progressBar->SetBounds(prc);
+    wnd->progressBar->SetBounds(prc);
     // first one to show progress quickly
     ProgressStep();
 
     // disable the install button and remove all the installation options
-    delete gWnd->staticInstDir;
-    delete gWnd->editInstallationDir;
-    delete gWnd->btnBrowseDir;
+    delete wnd->staticInstDir;
+    delete wnd->editInstallationDir;
+    delete wnd->btnBrowseDir;
+    delete wnd->checkboxForAllUsers;
+    delete wnd->checkboxRegisterSearchFilter;
+    delete wnd->checkboxRegisterPreviewer;
+    delete wnd->btnOptions;
 
-    delete gWnd->checkboxForAllUsers;
-    delete gWnd->checkboxRegisterSearchFilter;
-    delete gWnd->checkboxRegisterPreviewer;
-    delete gWnd->btnOptions;
-
-    gWnd->btnInstall->SetIsEnabled(false);
+    wnd->btnInstall->SetIsEnabled(false);
 
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
-    HwndInvalidate(gHwndFrame);
+    HwndInvalidate(wnd->hwnd);
 
-    gWnd->hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
+    wnd->hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
 }
 
 static void OnButtonOptions();
@@ -384,11 +380,11 @@ static void OnButtonInstall() {
         RestartElevatedForAllUsers();
         ::ExitProcess(0);
     }
-    StartInstallation();
+    StartInstallation(gWnd);
 }
 
 static void OnButtonExit() {
-    SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
+    SendMessageW(gWnd->hwnd, WM_CLOSE, 0, 0);
 }
 
 static void OnButtonStartSumatra() {
@@ -401,24 +397,26 @@ static void OnInstallationFinished() {
     delete gWnd->btnInstall;
     delete gWnd->progressBar;
 
-    if (success) {
-        gWnd->btnRunSumatra = CreateDefaultButton(gHwndFrame, _TR("Start SumatraPDF"));
-        gWnd->btnRunSumatra->onClicked = OnButtonStartSumatra;
-        SetMsg(_TR("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
-    } else {
-        gWnd->btnExit = CreateDefaultButton(gHwndFrame, _TR("Close"));
+    if (gWnd->failed) {
+        gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TR("Close"));
         gWnd->btnExit->onClicked = OnButtonExit;
         SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
+    } else {
+        gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TR("Start SumatraPDF"));
+        gWnd->btnRunSumatra->onClicked = OnButtonStartSumatra;
+        SetMsg(_TR("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     }
     gMsgError = gFirstError;
-    HwndInvalidate(gHwndFrame);
+    HwndInvalidate(gWnd->hwnd);
 
     CloseHandle(gWnd->hThread);
 
-    if (gAutoUpdate && success) {
+#if 0 // TODO: not sure
+    if (gCli->runInstallNow && !gWnd->failed) {
         // click the Start button
-        PostMessageW(gHwndFrame, WM_COMMAND, IDOK, 0);
+        PostMessageW(gWnd->hwnd, WM_COMMAND, IDOK, 0);
     }
+#endif
 }
 
 static void EnableAndShow(Wnd* w, bool enable) {
@@ -448,22 +446,20 @@ static void OnButtonOptions() {
     EnableAndShow(gWnd->checkboxRegisterSearchFilter, showOpts);
     EnableAndShow(gWnd->checkboxRegisterPreviewer, showOpts);
 
+    auto btnOptions = gWnd->btnOptions;
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
     if (showOpts) {
-        SetButtonTextAndResize(gWnd->btnOptions, _TR("Hide &Options"));
+        SetButtonTextAndResize(btnOptions, _TR("Hide &Options"));
     } else {
         //| ACCESSKEY_ALTERNATIVE
-        SetButtonTextAndResize(gWnd->btnOptions, _TR("&Options"));
+        SetButtonTextAndResize(btnOptions, _TR("&Options"));
     }
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
 
-    Rect rc = ClientRect(gHwndFrame);
-    RECT rcTmp = ToRECT(rc);
-    InvalidateRect(gHwndFrame, &rcTmp, TRUE);
-
-    gWnd->btnOptions->SetFocus();
+    HwndInvalidate(gWnd->hwnd);
+    btnOptions->SetFocus();
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
@@ -491,12 +487,8 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
     return 0;
 }
 
-static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption, WCHAR* buf, DWORD cchBuf) {
-    if (buf == nullptr || cchBuf < MAX_PATH) {
-        return false;
-    }
-
-    BROWSEINFO bi = {nullptr};
+static TempWstr BrowseForFolderTemp(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption) {
+    BROWSEINFO bi = {};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = caption;
@@ -505,11 +497,12 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
 
     LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
     if (!pidlFolder) {
-        return false;
+        return {};
     }
-    BOOL ok = SHGetPathFromIDList(pidlFolder, buf);
+    WCHAR buf[MAX_PATH];
+    BOOL ok = SHGetPathFromIDListW(pidlFolder, buf);
     if (!ok) {
-        return false;
+        return {};
     }
     IMalloc* pMalloc = nullptr;
     HRESULT hr = SHGetMalloc(&pMalloc);
@@ -517,37 +510,34 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
         pMalloc->Free(pidlFolder);
         pMalloc->Release();
     }
-    return true;
+    return str::DupTemp(buf);
 }
 
 static void OnButtonBrowse() {
-    WCHAR* installDir = win::GetTextTemp(gWnd->editInstallationDir->hwnd).Get();
+    auto editDir = gWnd->editInstallationDir;
+    WCHAR* installDir = win::GetTextTemp(editDir->hwnd).Get();
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {
-        WCHAR* tmp = path::GetDir(installDir);
-        installDir = str::DupTemp(tmp);
-        str::Free(tmp);
+        installDir = path::GetDirTemp(installDir);
     }
 
-    WCHAR path[MAX_PATH]{};
-    bool ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
-                              path, dimof(path));
-    if (!ok) {
+    auto caption = _TR("Select the folder where SumatraPDF should be installed:");
+    WCHAR* installPath = BrowseForFolderTemp(gWnd->hwnd, installDir, caption);
+    if (!installPath) {
         gWnd->btnBrowseDir->SetFocus();
         return;
     }
 
-    WCHAR* installPath = path;
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
     WCHAR* end = str::JoinTemp(L"\\", kAppName);
-    if (!str::EndsWithI(path, end)) {
-        installPath = path::JoinTemp(path, kAppName);
+    if (!str::EndsWithI(installPath, end)) {
+        installPath = path::JoinTemp(installPath, kAppName);
     }
-    gWnd->editInstallationDir->SetText(installPath);
-    gWnd->editInstallationDir->SetSelection(0, -1);
-    gWnd->editInstallationDir->SetFocus();
+    editDir->SetText(installPath);
+    editDir->SetSelection(0, -1);
+    editDir->SetFocus();
 }
 
 // bottom-right
@@ -725,11 +715,6 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     OnButtonOptions();
 
     gWnd->btnInstall->SetFocus();
-
-    if (gAutoUpdate) {
-        // click the Install button
-        PostMessageW(hwnd, WM_COMMAND, IDOK, 0);
-    }
 }
 //] ACCESSKEY_GROUP Installer
 
@@ -796,7 +781,7 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             break;
 
         case WM_APP_START_INSTALLATION:
-            StartInstallation();
+            StartInstallation(gWnd);
             break;
 
         case WM_APP_INSTALLATION_FINISHED:
@@ -833,15 +818,17 @@ static bool CreateInstallerWindow() {
         }
     }
 
+    // TODO: gHwndFrame is shared between installer and uninstaller windows
     gHwndFrame = CreateInstallerHwnd();
     if (!gHwndFrame) {
         return false;
     }
+    gWnd->hwnd = gHwndFrame;
 
     SetDefaultMsg();
 
-    CenterDialog(gHwndFrame);
-    ShowWindow(gHwndFrame, SW_SHOW);
+    CenterDialog(gWnd->hwnd);
+    ShowWindow(gWnd->hwnd, SW_SHOW);
 
     return true;
 }
@@ -866,7 +853,7 @@ static int RunApp() {
             if (msg.message == WM_QUIT) {
                 return (int)msg.wParam;
             }
-            if (!IsDialogMessage(gHwndFrame, &msg)) {
+            if (!IsDialogMessage(gWnd->hwnd, &msg)) {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
@@ -1046,14 +1033,14 @@ int RunInstaller() {
             ::ExitProcess(0);
         }
         InstallerThread(nullptr);
-        ret = success ? 0 : 1;
+        ret = gWnd->failed ? 1 : 0;
     } else {
         if (!CreateInstallerWindow()) {
             log("CreateInstallerWindow() failed\n");
             goto Exit;
         }
 
-        BringWindowToTop(gHwndFrame);
+        BringWindowToTop(gWnd->hwnd);
 
         ret = RunApp();
     }
