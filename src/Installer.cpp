@@ -54,7 +54,7 @@ struct InstallerWnd {
     Button* btnBrowseDir = nullptr;
     Checkbox* checkboxForAllUsers = nullptr;
     Checkbox* checkboxRegisterSearchFilter = nullptr;
-    Checkbox* checkboxRegisterPreviewer = nullptr;
+    Checkbox* checkboxRegisterPreview = nullptr;
     int currProgress = 0;
     Progress* progressBar = nullptr;
     Button* btnExit = nullptr;
@@ -363,7 +363,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     DeleteWnd(&wnd->btnBrowseDir);
     DeleteWnd(&wnd->checkboxForAllUsers);
     DeleteWnd(&wnd->checkboxRegisterSearchFilter);
-    DeleteWnd(&wnd->checkboxRegisterPreviewer);
+    DeleteWnd(&wnd->checkboxRegisterPreview);
     DeleteWnd(&wnd->btnOptions);
 
     wnd->btnInstall->SetIsEnabled(false);
@@ -398,9 +398,9 @@ static void OnButtonInstall() {
     }
 
     // note: this checkbox isn't created when running inside Wow64
-    gCli->withFilter = gWnd->checkboxRegisterSearchFilter->IsChecked();
+    gCli->withFilter = gWnd->checkboxRegisterSearchFilter && gWnd->checkboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
-    gCli->withPreview = gWnd->checkboxRegisterPreviewer->IsChecked();
+    gCli->withPreview = gWnd->checkboxRegisterPreview && gWnd->checkboxRegisterPreview->IsChecked();
     gCli->allUsers = gWnd->checkboxForAllUsers->IsChecked();
 
     bool needsElevation = gCli->allUsers;
@@ -473,7 +473,7 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
 
     EnableAndShow(wnd->checkboxForAllUsers, showOpts);
     EnableAndShow(wnd->checkboxRegisterSearchFilter, showOpts);
-    EnableAndShow(wnd->checkboxRegisterPreviewer, showOpts);
+    EnableAndShow(wnd->checkboxRegisterPreview, showOpts);
 
     auto btnOptions = wnd->btnOptions;
     //[ ACCESSKEY_GROUP Installer
@@ -633,25 +633,34 @@ static bool InstallerOnWmCommand(WPARAM wp) {
     return true;
 }
 
+static void SetTabOrder(HWND* hwnds, int nHwnds) {
+    for (int i = 0; i < nHwnds; i++) {
+        HWND hNew = hwnds[i];
+        HWND hOld = hwnds[(i + 1) % nHwnds];
+        SetWindowPos(hOld, hNew, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+}
+
 //[ ACCESSKEY_GROUP Installer
-static void CreateInstallerWindowControls(HWND hwnd) {
+static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     // intelligently show options if user chose non-defaults
     // via cmd-line
     bool showOptions = false;
 
-    gWnd->btnInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
-    gWnd->btnInstall->onClicked = OnButtonInstall;
-    PositionInstallButton(gWnd->btnInstall);
+    HWND hwnd = wnd->hwnd;
+    wnd->btnInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
+    wnd->btnInstall->onClicked = OnButtonInstall;
+    PositionInstallButton(wnd->btnInstall);
 
     Rect r = ClientRect(hwnd);
-    gWnd->btnOptions = CreateDefaultButton(hwnd, _TR("&Options"));
-    gWnd->btnOptions->onClicked = OnButtonOptions;
-    auto btnSize = gWnd->btnOptions->GetIdealSize();
+    wnd->btnOptions = CreateDefaultButton(hwnd, _TR("&Options"));
+    wnd->btnOptions->onClicked = OnButtonOptions;
+    auto btnSize = wnd->btnOptions->GetIdealSize();
     int margin = DpiScale(hwnd, kInstallerWinMargin);
     int x = margin;
     int y = r.dy - btnSize.dy - margin;
     uint flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
-    SetWindowPos(gWnd->btnOptions->hwnd, nullptr, x, y, 0, 0, flags);
+    SetWindowPos(wnd->btnOptions->hwnd, nullptr, x, y, 0, 0, flags);
 
     gButtonDy = btnSize.dy;
     gBottomPartDy = gButtonDy + (margin * 2);
@@ -677,9 +686,9 @@ static void CreateInstallerWindowControls(HWND hwnd) {
         if (isChecked) {
             showOptions = true;
         }
-        gWnd->checkboxRegisterPreviewer = CreateCheckbox(hwnd, s, isChecked);
+        wnd->checkboxRegisterPreview = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
-        gWnd->checkboxRegisterPreviewer->SetPos(&rc);
+        wnd->checkboxRegisterPreview->SetPos(&rc);
         y -= staticDy;
 
         isChecked = gCli->withFilter || IsSearchFilterInstalled();
@@ -687,9 +696,9 @@ static void CreateInstallerWindowControls(HWND hwnd) {
             showOptions = true;
         }
         s = _TR("Let Windows Desktop Search &search PDF documents");
-        gWnd->checkboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
+        wnd->checkboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
-        gWnd->checkboxRegisterSearchFilter->SetPos(&rc);
+        wnd->checkboxRegisterSearchFilter->SetPos(&rc);
         y -= staticDy;
     }
 
@@ -699,10 +708,10 @@ static void CreateInstallerWindowControls(HWND hwnd) {
         if (isChecked) {
             showOptions = true;
         }
-        gWnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
-        gWnd->checkboxForAllUsers->onCheckStateChanged = ForAllUsersStateChanged;
+        wnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
+        wnd->checkboxForAllUsers->onCheckStateChanged = ForAllUsersStateChanged;
         rc = {x, y, x + dx, y + staticDy};
-        gWnd->checkboxForAllUsers->SetPos(&rc);
+        wnd->checkboxForAllUsers->SetPos(&rc);
         y -= staticDy;
     }
 
@@ -712,11 +721,11 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     const WCHAR* s = L"&...";
     Size btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize2.dx += DpiScale(hwnd, 4);
-    gWnd->btnBrowseDir = CreateDefaultButton(hwnd, s);
-    gWnd->btnBrowseDir->onClicked = OnButtonBrowse;
+    wnd->btnBrowseDir = CreateDefaultButton(hwnd, s);
+    wnd->btnBrowseDir->onClicked = OnButtonBrowse;
     // btnSize = btnBrowseDir->GetIdealSize();
     x = r.dx - margin - btnSize2.dx;
-    SetWindowPos(gWnd->btnBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
+    SetWindowPos(wnd->btnBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
     x = margin;
@@ -725,13 +734,13 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     EditCreateArgs eargs;
     eargs.parent = hwnd;
     eargs.withBorder = true;
-    gWnd->editInstallationDir = new Edit();
-    HWND ehwnd = gWnd->editInstallationDir->Create(eargs);
+    wnd->editInstallationDir = new Edit();
+    HWND ehwnd = wnd->editInstallationDir->Create(eargs);
     CrashIf(!ehwnd);
 
-    gWnd->editInstallationDir->SetText(gCli->installDir);
+    wnd->editInstallationDir->SetText(gCli->installDir);
     rc = {x, y, x + dx, y + staticDy};
-    gWnd->editInstallationDir->SetBounds(rc);
+    wnd->editInstallationDir->SetBounds(rc);
 
     y -= staticDy;
 
@@ -741,14 +750,29 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     StaticCreateArgs args;
     args.parent = hwnd;
     args.text = s2;
-    gWnd->staticInstDir = new Static();
-    gWnd->staticInstDir->Create(args);
-    gWnd->staticInstDir->SetBounds(rc);
+    wnd->staticInstDir = new Static();
+    wnd->staticInstDir->Create(args);
+    wnd->staticInstDir->SetBounds(rc);
 
-    gWnd->showOptions = showOptions;
-    UpdateUIForOptionsState(gWnd);
+    wnd->showOptions = showOptions;
+    UpdateUIForOptionsState(wnd);
 
-    gWnd->btnInstall->SetFocus();
+    HWND hwnds[8] = {};
+    int nHwnds = 0;
+    hwnds[nHwnds++] = wnd->btnInstall->hwnd;
+    hwnds[nHwnds++] = wnd->editInstallationDir->hwnd;
+    hwnds[nHwnds++] = wnd->btnBrowseDir->hwnd;
+    hwnds[nHwnds++] = wnd->checkboxForAllUsers->hwnd;
+    if (wnd->checkboxRegisterSearchFilter) {
+        hwnds[nHwnds++] = wnd->checkboxRegisterSearchFilter->hwnd;
+    }
+    if (wnd->checkboxRegisterPreview) {
+        hwnds[nHwnds++] = wnd->checkboxRegisterPreview->hwnd;
+    }
+    hwnds[nHwnds++] = wnd->btnOptions->hwnd;
+    SetTabOrder(hwnds, nHwnds);
+
+    wnd->btnInstall->SetFocus();
 }
 //] ACCESSKEY_GROUP Installer
 
@@ -769,9 +793,10 @@ static HWND CreateInstallerHwnd() {
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
     HWND hwnd = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    gWnd->hwnd = hwnd;
     DpiScale(hwnd, dx, dy);
     HwndResizeClientSize(hwnd, dx, dy);
-    CreateInstallerWindowControls(hwnd);
+    CreateInstallerWindowControls(gWnd);
     if (gCli->runInstallNow) {
         PostMessageW(hwnd, WM_APP_START_INSTALLATION, 0, 0);
     }

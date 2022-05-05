@@ -11,7 +11,7 @@
 #include "utils/Log.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
-#define USER_AGENT L"SumatraPdfHTTP"
+constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";
 
 bool HttpRspOk(const HttpRsp* rsp) {
     return (rsp->error == ERROR_SUCCESS) && (rsp->httpStatusCode == 200);
@@ -27,7 +27,7 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
     rspOut->error = ERROR_SUCCESS;
-    HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    HINTERNET hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
         logf("HttpGet: InternetOpen failed\n");
         LogLastError();
@@ -103,7 +103,7 @@ bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath) {
         goto Exit;
     }
 
-    hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    hInet = InternetOpen(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
         goto Exit;
     }
@@ -169,7 +169,7 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
     DWORD flags;
     DWORD dwService;
 
-    HINTERNET hInet = InternetOpenW(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    HINTERNET hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
         goto Exit;
     }
