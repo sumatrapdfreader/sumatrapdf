@@ -17,14 +17,14 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
+#include "Settings.h"
+#include "DisplayMode.h"
 #include "AppColors.h"
 #include "Annotation.h"
-#include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-#include "Settings.h"
 #include "DisplayModel.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"

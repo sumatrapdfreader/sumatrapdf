@@ -18,11 +18,8 @@
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
 
-#include "Translations.h"
-
 #include "AppPrefs.h"
-#include "SumatraConfig.h"
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Flags.h"
 #include "Version.h"
 #include "SumatraPDF.h"
@@ -30,6 +27,8 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 #include "Installer.h"
+#include "SumatraConfig.h"
+#include "Translations.h"
 
 #include "utils/Log.h"
 

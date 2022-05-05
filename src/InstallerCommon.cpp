@@ -15,7 +15,6 @@
 #include "RegistrySearchFilter.h"
 
 #include "Settings.h"
-#include "DisplayMode.h"
 #include "SumatraConfig.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"

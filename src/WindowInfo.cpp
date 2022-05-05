@@ -21,12 +21,10 @@
 #include "wingui/wingui2.h"
 using namespace wg;
 
-#include "Annotation.h"
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
 #include "ChmModel.h"
@@ -35,6 +33,7 @@ using namespace wg;
 #include "Notifications.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"

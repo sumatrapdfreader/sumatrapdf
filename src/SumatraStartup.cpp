@@ -25,7 +25,6 @@
 #include "wingui/Window.h"
 #include "wingui/wingui2.h"
 
-#include "Accelerators.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Controller.h"
@@ -34,6 +33,7 @@
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
+#include "Accelerators.h"
 #include "PdfSync.h"
 #include "RenderCache.h"
 #include "ProgressUpdateUI.h"

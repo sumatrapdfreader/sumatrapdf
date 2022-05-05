@@ -11,10 +11,9 @@
 
 #include "wingui/UIModels.h"
 
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "Settings.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "uia/PageProvider.h"

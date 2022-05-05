@@ -14,7 +14,7 @@
 #include "utils/GuessFileType.h"
 #include "utils/Timer.h"
 
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"

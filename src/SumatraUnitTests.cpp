@@ -10,10 +10,9 @@
 
 #include "wingui/UIModels.h"
 
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "Settings.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
 

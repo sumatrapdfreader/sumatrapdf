@@ -32,12 +32,12 @@
 #include "wingui/wingui2.h"
 using namespace wg;
 
-#include "Annotation.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "Annotation.h"
 #include "PdfCreator.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"

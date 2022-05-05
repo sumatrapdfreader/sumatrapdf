@@ -5,15 +5,15 @@
 #include "utils/ScopedWin.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
+#include "mui/Mui.h"
 
 #include "wingui/UIModels.h"
 
-#include "Annotation.h"
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "mui/Mui.h"
+#include "Annotation.h"
 #include "RegistryPreview.h"
 
 // TODO: move code to PdfPreviewBase.cpp

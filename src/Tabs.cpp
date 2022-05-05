@@ -17,11 +17,10 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/TabsCtrl.h"
 
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "Settings.h"
 #include "AppColors.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"

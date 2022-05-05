@@ -14,7 +14,6 @@
 
 #include "wingui/UIModels.h"
 
-#include "Annotation.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Controller.h"
@@ -24,6 +23,7 @@
 #include "FileHistory.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
+#include "Annotation.h"
 #include "AppColors.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"

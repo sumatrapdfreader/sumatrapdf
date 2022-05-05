@@ -5,7 +5,6 @@
 #include "wingui/DialogSizer.h"
 #include "utils/WinUtil.h"
 
-#include "DisplayMode.h"
 #include "Settings.h"
 #include "GlobalPrefs.h"
 

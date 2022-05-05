@@ -20,10 +20,9 @@ extern "C" {
 
 #include "wingui/wingui2.h"
 
-#include "Annotation.h"
 #include "Settings.h"
-#include "DisplayMode.h"
 #include "Controller.h"
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "EngineMupdfImpl.h"

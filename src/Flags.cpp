@@ -5,8 +5,8 @@
 #include "utils/CmdLineArgsIter.h"
 #include "utils/WinUtil.h"
 
-#include "DisplayMode.h"
 #include "Settings.h"
+#include "DisplayMode.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
 #include "WindowInfo.h"

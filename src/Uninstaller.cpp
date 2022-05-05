@@ -9,19 +9,18 @@
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/GdiPlusUtil.h"
 
-#include "Translations.h"
-#include "Version.h"
-
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
 
+#include "Settings.h"
 #include "SumatraConfig.h"
-#include "DisplayMode.h"
 #include "Flags.h"
 #include "SumatraPDF.h"
 #include "Installer.h"
 #include "AppTools.h"
+#include "Translations.h"
+#include "Version.h"
 
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"

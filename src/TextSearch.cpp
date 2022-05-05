@@ -7,7 +7,7 @@
 
 #include "wingui/UIModels.h"
 
-#include "DisplayMode.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "ProgressUpdateUI.h"

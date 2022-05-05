@@ -22,8 +22,8 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
-#include "DisplayMode.h"
 #include "Settings.h"
+#include "DisplayMode.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
 #include "Translations.h"
