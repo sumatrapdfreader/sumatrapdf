@@ -3,7 +3,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
 

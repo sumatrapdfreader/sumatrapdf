@@ -21,7 +21,7 @@ extern "C" {
 #include "wingui/wingui2.h"
 
 #include "Annotation.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

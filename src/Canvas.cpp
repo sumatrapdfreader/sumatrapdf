@@ -24,7 +24,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "DisplayModel.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"

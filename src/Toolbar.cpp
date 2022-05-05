@@ -13,7 +13,7 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "DisplayModel.h"
 #include "AppColors.h"
 #include "GlobalPrefs.h"

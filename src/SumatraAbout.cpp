@@ -13,7 +13,7 @@
 #include "wingui/Window.h"
 #include "wingui/TooltipCtrl.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "SumatraConfig.h"

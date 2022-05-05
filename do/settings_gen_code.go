@@ -475,7 +475,7 @@ func genAndSaveSettingsStructs() {
 	//fmt.Printf("%s\n", s)
 	s = strings.Replace(s, "\n", "\r\n", -1)
 	s = strings.Replace(s, "\t", "    ", -1)
-	path := filepath.Join("src", "SettingsStructs.h")
+	path := filepath.Join("src", "Settings.h")
 	writeFileMust(path, []byte(s))
 	detectClangFormat()
 	clangFormatFile(path)

@@ -21,7 +21,7 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "AppColors.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"

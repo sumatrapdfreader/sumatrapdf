@@ -11,7 +11,7 @@
 
 #include "wingui/UIModels.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

@@ -7,7 +7,7 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "FzImgReader.h"
 #include "FileHistory.h"

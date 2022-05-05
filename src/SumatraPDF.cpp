@@ -33,7 +33,7 @@
 using namespace wg;
 
 #include "Annotation.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

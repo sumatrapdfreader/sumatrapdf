@@ -9,7 +9,7 @@
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"

@@ -11,7 +11,7 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
 

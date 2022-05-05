@@ -8,7 +8,7 @@
 #include "utils/SettingsUtil.h"
 
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
-#include "SettingsStructs.h"
+#include "Settings.h"
 
 #include "GlobalPrefs.h"
 

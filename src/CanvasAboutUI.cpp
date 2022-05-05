@@ -12,7 +12,7 @@
 #include "wingui/FrameRateWnd.h"
 
 #include "AppColors.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"
 #include "SumatraConfig.h"

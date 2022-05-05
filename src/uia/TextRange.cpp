@@ -12,7 +12,7 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "uia/TextRange.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "uia/DocumentProvider.h"

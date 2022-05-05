@@ -11,7 +11,7 @@
 
 #include "SumatraConfig.h"
 #include "DisplayMode.h"
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppUtil.h"
 #include "AppTools.h"

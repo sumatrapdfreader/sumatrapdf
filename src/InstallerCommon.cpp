@@ -14,7 +14,7 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "DisplayMode.h"
 #include "SumatraConfig.h"
 #include "GlobalPrefs.h"

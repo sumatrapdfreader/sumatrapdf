@@ -5,7 +5,7 @@ License: GPLv3 */
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "GlobalPrefs.h"
 #include "FileHistory.h"
 

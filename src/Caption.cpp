@@ -9,7 +9,7 @@
 #include "wingui/Window.h"
 #include "wingui/TabsCtrl.h"
 
-#include "SettingsStructs.h"
+#include "Settings.h"
 #include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "SumatraPDF.h"
