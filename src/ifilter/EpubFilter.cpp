@@ -8,7 +8,6 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/UIModels.h"
 
@@ -21,6 +20,8 @@
 #include "FilterBase.h"
 #include "RegistrySearchFilter.h"
 #include "EpubFilter.h"
+
+#include "utils/Log.h"
 
 VOID EpubFilter::CleanUp() {
     log("EpubFilter::Cleanup()\n");

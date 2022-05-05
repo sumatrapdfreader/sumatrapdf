@@ -13,7 +13,6 @@
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
 #include "utils/DirIter.h"
-#include "utils/Log.h"
 
 #include "wingui/UIModels.h"
 
@@ -23,6 +22,8 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "PdfCreator.h"
+
+#include "utils/Log.h"
 
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;

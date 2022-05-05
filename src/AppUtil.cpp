@@ -5,13 +5,13 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
-#include "utils/Log.h"
-
 // this file should have no further dependencies on src/* so that adding
 // unit tests for its content doesn't require for half of SumatraPDF
 // to be included (helpers with dependencies belong into AppTools.cpp)
 #include "SumatraConfig.h"
 #include "AppUtil.h"
+
+#include "utils/Log.h"
 
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/

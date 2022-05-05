@@ -6,7 +6,6 @@
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/UIModels.h"
 
@@ -25,12 +24,13 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
-#include "AppUtil.h"
 #include "Print.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "Translations.h"
+
+#include "utils/Log.h"
 
 class AbortCookieManager {
     CRITICAL_SECTION cookieAccess;

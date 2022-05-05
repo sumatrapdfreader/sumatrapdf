@@ -5,7 +5,6 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "FilterBase.h"
 #include "RegistrySearchFilter.h"
@@ -16,6 +15,8 @@
 #ifdef BUILD_EPUB_IFILTER
 #include "EpubFilter.h"
 #endif
+
+#include "utils/Log.h"
 
 long g_lRefCount = 0;
 

@@ -1943,3 +1943,26 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 
 } // namespace wg
+
+namespace wg {
+
+void DeleteWnd(Static** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+
+void DeleteWnd(Button** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+
+void DeleteWnd(Edit** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+
+void DeleteWnd(Checkbox** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
+} // namespace wg

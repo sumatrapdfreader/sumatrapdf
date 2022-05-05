@@ -1,16 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
 #include "utils/FileUtil.h"
 #include "utils/Timer.h"
 
 #include "utils/WinUtil.h"
-#include "utils/CmdLineArgsIter.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/Log.h"
 #include "utils/GdiPlusUtil.h"
 
 #include "Translations.h"
@@ -25,11 +21,12 @@
 #include "Flags.h"
 #include "SumatraPDF.h"
 #include "Installer.h"
-#include "AppUtil.h"
 #include "AppTools.h"
 
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
+
+#include "utils/Log.h"
 
 using namespace wg;
 
