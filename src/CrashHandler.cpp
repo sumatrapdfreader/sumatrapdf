@@ -346,9 +346,10 @@ void _uploadDebugReportIfFunc(bool cond, __unused const char* condStr) {
         return;
     }
     didSubmitDebugReport = true;
-    // if this is me debugging, don't send report, just crash
+    // don't send report if this is me debugging
     if (IsDebuggerPresent()) {
         DebugBreak();
+        return;
     }
 #if defined(PRE_RELEASE_VER)
     _uploadDebugReport(condStr);

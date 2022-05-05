@@ -344,7 +344,6 @@ static bool SetupPluginMode(Flags& i) {
         gPluginURL = i.fileNames.at(0);
     }
 
-    CrashIf(i.fileNames.size() != 1);
     while (i.fileNames.size() > 1) {
         free(i.fileNames.Pop());
     }
@@ -947,7 +946,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     }
 
     Flags flags;
-    ParseFlags(GetCommandLineW(), flags);
+    WCHAR* cmdLine = GetCommandLineW();
+    ParseFlags(cmdLine, flags);
     gCli = &flags;
 
     bool isInstaller = flags.install || flags.runInstallNow || IsInstallerAndNamedAsSuch();
@@ -961,6 +961,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
+    logf(L"Starting SumatraPDF, cmd line: '%s'\n", cmdLine);
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (flags.tester) {
