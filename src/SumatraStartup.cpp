@@ -946,8 +946,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     }
 
     Flags flags;
-    WCHAR* cmdLine = GetCommandLineW();
-    ParseFlags(cmdLine, flags);
+    ParseFlags(GetCommandLineW(), flags);
     gCli = &flags;
 
     bool isInstaller = flags.install || flags.runInstallNow || IsInstallerAndNamedAsSuch();
@@ -961,7 +960,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
-    logf(L"Starting SumatraPDF, cmd line: '%s'\n", cmdLine);
+    logf(L"Starting SumatraPDF, cmd line: '%s'\nGetCommandLineW(): '%s'\n", cmdLine, GetCommandLineW());
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (flags.tester) {
