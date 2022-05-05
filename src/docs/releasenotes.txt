@@ -3,10 +3,13 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 3.4 (???)
+* command palette (with 'Ctrl + K')
+* configurable keyboard shortcuts
 * better support for epub files using mupdf's epub engine
 * added ability to search / translate selected text with web services
   we have few built-in and you can add your own via
   https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers
+* installer now has -all-users option for system-wide installation
 * added Annotations.TextIconColor and TextIconType advanced settings
 * added Annotations.UnderlineColor advanced setting
 * added Annotations.DefaultAuthor advanced setting
