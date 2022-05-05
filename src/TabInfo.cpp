@@ -20,7 +20,6 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
-#include "AppUtil.h"
 #include "Selection.h"
 #include "Translations.h"
 #include "EditAnnotations.h"

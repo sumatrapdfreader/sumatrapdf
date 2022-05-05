@@ -11,7 +11,6 @@
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
-#include "utils/Log.h"
 
 #include "wingui/UIModels.h"
 
@@ -38,6 +37,8 @@
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
+
+#include "utils/Log.h"
 
 // open file command
 //  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]

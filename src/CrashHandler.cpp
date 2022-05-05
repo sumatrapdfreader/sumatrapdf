@@ -17,7 +17,6 @@
 #include "DisplayMode.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
-#include "AppUtil.h"
 #include "CrashHandler.h"
 #include "Version.h"
 #include "SumatraConfig.h"

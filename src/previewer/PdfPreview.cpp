@@ -16,9 +16,10 @@
 #include "mui/Mui.h"
 #include "RegistryPreview.h"
 
-#include "utils/Log.h"
 // TODO: move code to PdfPreviewBase.cpp
 #include "PdfPreviewBase.h"
+
+#include "utils/Log.h"
 
 constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;

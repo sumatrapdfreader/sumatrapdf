@@ -336,26 +336,6 @@ int GetInstallerWinDx() {
     return 420;
 }
 
-static void DeleteWnd(Static** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
-static void DeleteWnd(Button** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
-static void DeleteWnd(Edit** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
-static void DeleteWnd(Checkbox** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
 static void StartInstallation(InstallerWnd* wnd) {
     // create a progress bar in place of the Options button
     int dx = DpiScale(wnd->hwnd, GetInstallerWinDx() / 2);

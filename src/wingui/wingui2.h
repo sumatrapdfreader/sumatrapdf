@@ -452,3 +452,10 @@ struct Splitter : public Wnd {
 };
 
 } // namespace wg
+
+namespace wg {
+void DeleteWnd(Static** wnd);
+void DeleteWnd(Button** wnd);
+void DeleteWnd(Edit** wnd);
+void DeleteWnd(Checkbox** wnd);
+} // namespace wg
