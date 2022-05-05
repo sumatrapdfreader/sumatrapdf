@@ -294,7 +294,6 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
     ProgressStep();
     log("Installer thread finished\n");
 Error:
-    // TODO: roll back installation on failure (restore previous installation!)
     if (gWnd->hwnd) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
@@ -603,38 +602,28 @@ static void PositionInstallButton(Button* b) {
 }
 
 // caller needs to str::Free()
-static WCHAR* GetDefaultInstallationDir(bool forAllUsers) {
-    logf(L"GetDefaultInstallationDir(forAllUsers=%d)\n", (int)forAllUsers);
+static WCHAR* GetDefaultInstallationDir(bool forAllUsers, bool ignorePrev) {
+    logf(L"GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
 
-    auto dir = gWnd->prevInstall.installationDir;
-    if (dir) {
-        // Note: prev dir might be incompatible with forAllUsers setting
-        // e.g. installing for current user in an admin-only dir
-        // but not sure what should I do in such case
-        logf(L"  using %s from previous install\n", dir);
-        return str::Dup(dir);
+    WCHAR* dir;
+    WCHAR* dirPrevInstall = gWnd->prevInstall.installationDir;
+    WCHAR* dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
+    WCHAR* dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
+
+    if (dirPrevInstall && !ignorePrev) {
+        logf(L"  using %s from previous install\n", dirPrevInstall);
+        return str::Dup(dirPrevInstall);
     }
 
     if (forAllUsers) {
-        dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, true).Get();
-        if (dir) {
-            dir = path::Join(dir, kAppName);
-            logf(L"  using '%s' by GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
-            return dir;
-        }
-    }
-
-    // %APPLOCALDATA%\SumatraPDF
-    dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true).Get();
-    if (dir) {
-        dir = path::Join(dir, kAppName);
-        logf(L"  using '%s' by GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
+        dir = path::Join(dirAll, kAppName);
+        logf(L"  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
         return dir;
     }
 
-    // fall back to C:\SumatraPDF as a last resort
-    dir = str::Join(L"C:\\", kAppName);
-    logf(L"  using %s as last resort\n", dir);
+    // %APPLOCALDATA%\SumatraPDF
+    dir = path::Join(dirUser, kAppName);
+    logf(L"  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
     return dir;
 }
 
@@ -642,10 +631,9 @@ void ForAllUsersStateChanged() {
     bool checked = gWnd->checkboxForAllUsers->IsChecked();
     logf("ForAllUsersStateChanged() to %d\n", (int)checked);
     Button_SetElevationRequiredState(gWnd->btnInstall->hwnd, checked);
-    PositionInstallButton(gWnd->btnInstall);
     gCli->allUsers = checked;
     str::Free(gCli->installDir);
-    gCli->installDir = GetDefaultInstallationDir(gCli->allUsers);
+    gCli->installDir = GetDefaultInstallationDir(gCli->allUsers, true);
     gWnd->editInstallationDir->SetText(gCli->installDir);
 }
 
@@ -697,7 +685,7 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
         const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
-        bool isChecked = gCli->withPreview || IsPreviewerInstalled();
+        bool isChecked = gCli->withPreview || IsPreviewInstalled();
         gWnd->checkboxRegisterPreviewer = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
         gWnd->checkboxRegisterPreviewer->SetPos(&rc);
@@ -766,6 +754,8 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     gWnd->btnInstall->SetFocus();
 }
 //] ACCESSKEY_GROUP Installer
+
+#define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
 static HWND CreateInstallerHwnd() {
     AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
@@ -1031,7 +1021,7 @@ int RunInstaller() {
     GetPreviousInstallInfo(&gWnd->prevInstall);
 
     if (!gCli->installDir) {
-        gCli->installDir = GetDefaultInstallationDir(gCli->allUsers);
+        gCli->installDir = GetDefaultInstallationDir(gCli->allUsers, false);
     }
     logf(L"Running'%s' installing into dir '%s'\n", GetExePathTemp().Get(), gCli->installDir);
 
