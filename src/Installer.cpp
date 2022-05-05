@@ -67,6 +67,10 @@ struct InstallerWnd {
 };
 
 static void ProgressStep() {
+    if (!gWnd) {
+        // when extracing with -x we don't create window
+        return;
+    }
     gWnd->currProgress++;
     if (gWnd->progressBar) {
         // possibly dangerous as is called on a thread
@@ -132,16 +136,6 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
     }
 
     return true;
-}
-
-static bool CreateInstallationDirectory() {
-    log("CreateInstallationDirectory()\n");
-    bool ok = dir::CreateAll(gCli->installDir);
-    if (!ok) {
-        LogLastError();
-        NotifyFailed(_TR("Couldn't create the installation directory"));
-    }
-    return ok;
 }
 
 static bool CopySelfToDir(const WCHAR* destDir) {
@@ -246,7 +240,7 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     HKEY key = gCli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
-    if (!ExtractInstallerFiles()) {
+    if (!ExtractInstallerFiles(gCli->installDir)) {
         log("ExtractInstallerFiles() failed\n");
         goto Error;
     }
@@ -958,14 +952,17 @@ static bool OpenEmbeddedFilesArchive() {
     return true;
 }
 
-bool ExtractInstallerFiles() {
-    log("ExtractInstallerFiles()\n");
-    if (!CreateInstallationDirectory()) {
-        log("  CreateInstallationDirectory() failed\n");
+bool ExtractInstallerFiles(WCHAR* dir) {
+    logf(L"ExtractInstallerFiles() to '%s'\n", dir);
+    bool ok = dir::CreateAll(dir);
+    if (!ok) {
+        log("  dir::CreateAll() failed\n");
+        LogLastError();
+        NotifyFailed(_TR("Couldn't create the installation directory"));
         return false;
     }
 
-    bool ok = CopySelfToDir(GetInstallDirTemp());
+    ok = CopySelfToDir(dir);
     if (!ok) {
         return false;
     }
@@ -976,7 +973,7 @@ bool ExtractInstallerFiles() {
         return false;
     }
     // on error, ExtractFiles() shows error message itself
-    return ExtractFiles(&gArchive, gCli->installDir);
+    return ExtractFiles(&gArchive, dir);
 }
 
 // returns true if should exit the installer

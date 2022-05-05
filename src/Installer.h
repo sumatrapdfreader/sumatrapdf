@@ -53,7 +53,7 @@ int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated);
 
 TempWstr GetShortcutPathTemp(int csidl);
 
-bool ExtractInstallerFiles();
+bool ExtractInstallerFiles(WCHAR* dir);
 WCHAR* GetExistingInstallationDir();
 WCHAR* GetInstallDirTemp();
 TempWstr GetInstalledExePathTemp();

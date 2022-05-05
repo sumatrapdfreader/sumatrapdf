@@ -960,7 +960,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
-    logf(L"Starting SumatraPDF, cmd line:\n%s\nGetCommandLineW():\n%s\n", cmdLine, GetCommandLineW());
+    logf(L"Starting SumatraPDF, GetCommandLineW():\n%s\n", GetCommandLineW());
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (flags.tester) {
@@ -982,16 +982,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     if (flags.justExtractFiles) {
         RedirectIOToExistingConsole();
-        logf("starting ExeHasInstallerResources()\n");
         if (!ExeHasInstallerResources()) {
-            log("this is not an installer, -x option not available\n");
+            log("this is not a SumatraPDF installer, -x option not available\n");
+            HandleRedirectedConsoleOnShutdown();
+            return 1;
+        }
+        retCode = 0;
+        if (!ExtractInstallerFiles(gCli->installDir)) {
+            log("failed to extract files");
+            LogLastError();
             retCode = 1;
-        } else {
-            if (!ExtractInstallerFiles()) {
-                log("failed to extract files");
-                LogLastError();
-                retCode = 1;
-            }
         }
         HandleRedirectedConsoleOnShutdown();
         return retCode;
