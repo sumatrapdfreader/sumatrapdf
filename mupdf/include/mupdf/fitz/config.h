@@ -211,6 +211,7 @@
 #if FZ_ENABLE_HTML == 0 && FZ_ENABLE_EPUB == 0
 #undef TOFU_SIL
 #define TOFU_SIL
+#error "why"
 #endif
 
 #if !defined(HAVE_LEPTONICA) || !defined(HAVE_TESSERACT)

@@ -179,3 +179,47 @@ _binary_DroidSansFallbackFull_ttf:
 _binary_DroidSansFallbackFull_ttf_size:
     dq $ - _binary_DroidSansFallbackFull_ttf
 
+; ---------
+
+global _binary_CharisSIL_cff
+global _binary_CharisSIL_cff_size
+
+_binary_CharisSIL_cff:
+    incbin "resources/fonts/sil/CharisSIL.cff"
+
+_binary_CharisSIL_cff_size:
+    dq $ - _binary_CharisSIL_cff
+
+
+; ---------
+
+global _binary_CharisSIL_Bold_cff
+global _binary_CharisSIL_Bold_cff_size
+
+_binary_CharisSIL_Bold_cff:
+    incbin "resources/fonts/sil/CharisSIL-Bold.cff"
+
+_binary_CharisSIL_Bold_cff_size:
+    dq $ - _binary_CharisSIL_Bold_cff
+
+; ---------
+
+global _binary_CharisSIL_Italic_cff
+global _binary_CharisSIL_Italic_cff_size
+
+_binary_CharisSIL_Italic_cff:
+    incbin "resources/fonts/sil/CharisSIL-Italic.cff"
+
+_binary_CharisSIL_Italic_cff_size:
+    dq $ - _binary_CharisSIL_Italic_cff
+
+; ---------
+
+global _binary_CharisSIL_BoldItalic_cff
+global _binary_CharisSIL_BoldItalic_cff_size
+
+_binary_CharisSIL_BoldItalic_cff:
+    incbin "resources/fonts/sil/CharisSIL-BoldItalic.cff"
+
+_binary_CharisSIL_BoldItalic_cff_size:
+    dq $ - _binary_CharisSIL_BoldItalic_cff

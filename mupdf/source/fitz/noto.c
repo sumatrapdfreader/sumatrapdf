@@ -51,6 +51,7 @@
 #define TOFU_SYMBOL
 #define TOFU_EMOJI
 #define TOFU_SIL
+#error "why"
 #endif
 
 #ifdef NO_CJK
@@ -60,6 +61,7 @@
 #ifdef TOFU
 #define TOFU_NOTO
 #define TOFU_SIL
+#error "why"
 #endif
 
 #ifdef TOFU_NOTO

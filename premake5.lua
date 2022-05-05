@@ -536,7 +536,7 @@ workspace "SumatraPDF"
     defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
-    defines { "TOFU", "TOFU_CJK_LANG" }
+    defines { "TOFU_NOTO", "TOFU_CJK_LANG" }
 
     disablewarnings {
       "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4245", "4267",
