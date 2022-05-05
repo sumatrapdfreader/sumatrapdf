@@ -197,6 +197,7 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(Install, "install")                        \
     V(UnInstall, "uninstall")                    \
     V(WithFilter, "with-filter")                 \
+    V(WithSearch, "with-search")                 \
     V(WithPreview, "with-preview")               \
     V(Rand, "rand")                              \
     V(Regress, "regress")                        \
@@ -337,7 +338,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.uninstall = true;
             continue;
         }
-        if (arg == Arg::WithFilter) {
+        if (arg == Arg::WithFilter || arg == Arg::WithSearch) {
             i.withFilter = true;
             continue;
         }

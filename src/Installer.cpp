@@ -484,19 +484,18 @@ static Size SetButtonTextAndResize(Button* b, const WCHAR* s) {
     return size;
 }
 
-static void OnButtonOptions() {
-    gWnd->showOptions = !gWnd->showOptions;
-    bool showOpts = gWnd->showOptions;
+static void UpdateUIForOptionsState(InstallerWnd* wnd) {
+    bool showOpts = wnd->showOptions;
 
-    EnableAndShow(gWnd->staticInstDir, showOpts);
-    EnableAndShow(gWnd->editInstallationDir, showOpts);
-    EnableAndShow(gWnd->btnBrowseDir, showOpts);
+    EnableAndShow(wnd->staticInstDir, showOpts);
+    EnableAndShow(wnd->editInstallationDir, showOpts);
+    EnableAndShow(wnd->btnBrowseDir, showOpts);
 
-    EnableAndShow(gWnd->checkboxForAllUsers, showOpts);
-    EnableAndShow(gWnd->checkboxRegisterSearchFilter, showOpts);
-    EnableAndShow(gWnd->checkboxRegisterPreviewer, showOpts);
+    EnableAndShow(wnd->checkboxForAllUsers, showOpts);
+    EnableAndShow(wnd->checkboxRegisterSearchFilter, showOpts);
+    EnableAndShow(wnd->checkboxRegisterPreviewer, showOpts);
 
-    auto btnOptions = gWnd->btnOptions;
+    auto btnOptions = wnd->btnOptions;
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
     if (showOpts) {
@@ -508,8 +507,13 @@ static void OnButtonOptions() {
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
 
-    HwndInvalidate(gWnd->hwnd);
+    HwndInvalidate(wnd->hwnd);
     btnOptions->SetFocus();
+}
+static void OnButtonOptions() {
+    // toggle options ui
+    gWnd->showOptions = !gWnd->showOptions;
+    UpdateUIForOptionsState(gWnd);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
@@ -651,6 +655,10 @@ static bool InstallerOnWmCommand(WPARAM wp) {
 
 //[ ACCESSKEY_GROUP Installer
 static void CreateInstallerWindowControls(HWND hwnd) {
+    // intelligently show options if user chose non-defaults
+    // via cmd-line
+    bool showOptions = false;
+
     gWnd->btnInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
     gWnd->btnInstall->onClicked = OnButtonInstall;
     PositionInstallButton(gWnd->btnInstall);
@@ -686,12 +694,18 @@ static void CreateInstallerWindowControls(HWND hwnd) {
         // for Windows XP, this means only basic thumbnail support
         const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
         bool isChecked = gCli->withPreview || IsPreviewInstalled();
+        if (isChecked) {
+            showOptions = true;
+        }
         gWnd->checkboxRegisterPreviewer = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
         gWnd->checkboxRegisterPreviewer->SetPos(&rc);
         y -= staticDy;
 
         isChecked = gCli->withFilter || IsSearchFilterInstalled();
+        if (isChecked) {
+            showOptions = true;
+        }
         s = _TR("Let Windows Desktop Search &search PDF documents");
         gWnd->checkboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
@@ -702,6 +716,9 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     {
         const WCHAR* s = _TR("Install for all users");
         bool isChecked = gCli->allUsers;
+        if (isChecked) {
+            showOptions = true;
+        }
         gWnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
         gWnd->checkboxForAllUsers->onCheckStateChanged = ForAllUsersStateChanged;
         rc = {x, y, x + dx, y + staticDy};
@@ -748,8 +765,8 @@ static void CreateInstallerWindowControls(HWND hwnd) {
     gWnd->staticInstDir->Create(args);
     gWnd->staticInstDir->SetBounds(rc);
 
-    gWnd->showOptions = !gWnd->showOptions;
-    OnButtonOptions();
+    gWnd->showOptions = showOptions;
+    UpdateUIForOptionsState(gWnd);
 
     gWnd->btnInstall->SetFocus();
 }
