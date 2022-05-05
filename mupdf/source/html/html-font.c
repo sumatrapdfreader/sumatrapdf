@@ -75,6 +75,18 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 	fz_font *best_font = NULL;
 	int size;
 
+	/* SumatraPDF */
+	fz_font* font = fz_load_system_font(ctx, family, is_bold, is_italic, 0);
+	if (font) {
+		fz_font_flags_t *flags = fz_font_flags(font);
+		if (is_bold && !flags->is_bold)
+			flags->fake_bold = 1;
+		if (is_italic && !flags->is_italic)
+			flags->fake_italic = 1;
+		fz_add_html_font_face(ctx, set, family, is_bold, is_italic, 0, "<builtin>", font);
+		fz_drop_font(ctx, font);
+		return font;
+	}
 	data = fz_lookup_builtin_font(ctx, family, is_bold, is_italic, &size);
 	if (data)
 	{
@@ -92,6 +104,7 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 	if (!strcmp(family, "monospace") || !strcmp(family, "sans-serif") || !strcmp(family, "serif"))
 		return fz_load_html_default_font(ctx, set, family, is_bold, is_italic);
 
+	/* SumatraPDF */
 	for (custom = set->custom; custom; custom = custom->next)
 	{
 		if (!strcmp(family, custom->family))
