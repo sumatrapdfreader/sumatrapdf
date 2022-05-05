@@ -5,6 +5,7 @@
 #include "utils/ThreadUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/FileUtil.h"
 
 constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\SumatraPDFLogger";
 
@@ -180,10 +181,20 @@ void logf(const char* fmt, ...) {
 }
 
 void StartLogToFile(const char* path, bool removeIfExists) {
+    CrashIf(logFilePath);
     logFilePath = str::Dup(path);
     if (removeIfExists) {
         remove(path);
     }
+}
+
+bool WriteCurrentLogToFile(const char* path) {
+    ByteSlice slice = gLogBuf->AsByteSlice();
+    if (slice.empty()) {
+        return false;
+    }
+    bool ok = file::WriteFile(path, slice);
+    return ok;
 }
 
 void log(const WCHAR* s) {

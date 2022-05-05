@@ -579,13 +579,15 @@ WCHAR* FormatFileSizeNoTrans(i64 size) {
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), L"Bytes");
 }
 
-void LaunchFileIfExists(const char* path) {
+// returns true if file exists
+bool LaunchFileIfExists(const char* path) {
     if (!path) {
-        return;
+        return false;
     }
     if (!file::Exists(path)) {
-        return;
+        return false;
     }
     WCHAR* pathTmp = ToWstrTemp(path);
     LaunchFile(pathTmp, nullptr, L"open");
+    return true;
 }

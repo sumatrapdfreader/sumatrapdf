@@ -1033,9 +1033,7 @@ int RunInstaller() {
     const char* installerLogPath = nullptr;
     if (gCli->log) {
         installerLogPath = GetInstallerLogPath();
-        if (installerLogPath) {
-            StartLogToFile(installerLogPath, true);
-        }
+        StartLogToFile(installerLogPath, true);
     }
     logf("------------- Starting SumatraPDF installation\n");
 
@@ -1089,9 +1087,7 @@ int RunInstaller() {
             log("CreateInstallerWindow() failed\n");
             goto Exit;
         }
-
         BringWindowToTop(gWnd->hwnd);
-
         ret = RunApp();
     }
 
@@ -1105,9 +1101,18 @@ int RunInstaller() {
         RegisterPreviewer(gCli->allUsers);
     }
     log("Installer finished\n");
-    LaunchFileIfExists(installerLogPath);
 Exit:
-    free(gFirstError);
-
+    if (installerLogPath) {
+        LaunchFileIfExists(installerLogPath);
+    } else if (!gCli->silent && (ret != 0)) {
+        // if installation failed, automatically show the log
+        installerLogPath = GetInstallerLogPath();
+        bool ok = WriteCurrentLogToFile(installerLogPath);
+        if (ok) {
+            LaunchFileIfExists(installerLogPath);
+        }
+    }
+    str::Free(installerLogPath);
+    str::Free(gFirstError);
     return ret;
 }

@@ -10,6 +10,7 @@ extern bool gLogToPipe;
 extern bool gStopLogging;
 extern const char* gLogAppName;
 void StartLogToFile(const char* path, bool removeIfExists);
+bool WriteCurrentLogToFile(const char* path);
 
 /*
 If you do:
