@@ -960,7 +960,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
-    logf(L"Starting SumatraPDF, cmd line: '%s'\nGetCommandLineW(): '%s'\n", cmdLine, GetCommandLineW());
+    logf(L"Starting SumatraPDF, cmd line:\n%s\nGetCommandLineW():\n%s\n", cmdLine, GetCommandLineW());
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (flags.tester) {
@@ -1051,8 +1051,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             ::ExitProcess(0);
         }
     }
-
-    log("Starting SumatraPDF\n");
 
     VerifyNoLibmupdfMismatch();
 

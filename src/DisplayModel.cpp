@@ -960,16 +960,11 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
     if (zoom > 0) {
         return zoom;
     }
-    char* name = str::Dup("");
-    const WCHAR* nameW = dm->GetFilePath();
-    if (nameW) {
-        name = strconv::WstrToUtf8(nameW);
-    }
+    char* name = ToUtf8Temp(dm->GetFilePath());
     logf(
-        "getZoomSafe: invalid zoom, doc: %s, pageNo: %d, pageInfo->zoomReal: %.2f, dm->zoomReal: %.2f, "
+        "getZoomSafe: invalid zoom in doc: %s\npageNo: %d\npageInfo->zoomReal\n%.2f\ndm->zoomReal: %.2f\n"
         "dm->zoomVirtual: %.2f\n",
         name, pageNo, zoom, pageInfo->zoomReal, dm->zoomReal, dm->zoomVirtual);
-    free(name);
     ReportIf(true);
 
     if (dm->zoomReal > 0) {

@@ -672,7 +672,7 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
         return;
     }
 
-    logf(L"InstallCrashHandler crashDumpPath: '%s', crashFilePath: '%s', symDir: '%s'\n", crashDumpPath, crashFilePath,
+    logf(L"InstallCrashHandler crashDumpPath: '%s'\ncrashFilePath: '%s'\nsymDir: '%s'\n", crashDumpPath, crashFilePath,
          symDir);
 
     gCrashDumpPath = str::Dup(crashDumpPath);
