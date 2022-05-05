@@ -248,24 +248,24 @@ static MenuDef menuDefView[] = {
     },
     {
         _TRN("&Single Page"),
-        CmdViewSinglePage,
+        CmdSinglePageView,
     },
     {
         _TRN("&Facing"),
-        CmdViewFacing,
+        CmdFacingView,
     },
     {
         _TRN("&Book View"),
-        CmdViewBook,
+        CmdBookView,
     },
     {
         _TRN("Show &Pages Continuously"),
-        CmdViewContinuous,
+        CmdToggleContinuousView,
     },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
     {
         _TRN("Man&ga Mode"),
-        CmdViewMangaMode,
+        CmdToggleMangaMode,
     },
     {
         kMenuSeparator,
@@ -273,11 +273,11 @@ static MenuDef menuDefView[] = {
     },
     {
         _TRN("Rotate &Left"),
-        CmdViewRotateLeft,
+        CmdRotateLeft,
     },
     {
         _TRN("Rotate &Right"),
-        CmdViewRotateRight,
+        CmdRotateRight,
     },
     {
         kMenuSeparator,
@@ -297,7 +297,7 @@ static MenuDef menuDefView[] = {
     },
     {
         _TRN("Show Book&marks"),
-        CmdViewBookmarks,
+        CmdToggleBookmarks,
     },
     {
         _TRN("Show &Toolbar"),
@@ -754,7 +754,7 @@ static MenuDef menuDefContext[] = {
     },
     {
         _TRN("Show &Bookmarks"),
-        CmdViewBookmarks,
+        CmdToggleBookmarks,
     },
     {
         _TRN("Show &Toolbar"),
@@ -832,8 +832,8 @@ static MenuDef menuDefContextStart[] = {
 // clang-format off
 // those menu items will be disabled if no document is opened, enabled otherwise
 static UINT_PTR disableIfNoDocument[] = {
-    CmdViewRotateLeft,
-    CmdViewRotateRight,
+    CmdRotateLeft,
+    CmdRotateRight,
     CmdGoToNextPage,
     CmdGoToPrevPage,
     CmdGoToFirstPage,
@@ -977,13 +977,12 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
 };
 
 static UINT_PTR rmoveIfChm[] = {
-    CmdSaveAsBookmark, // ???
-    CmdViewSinglePage,
-    CmdViewFacing,
-    CmdViewBook,
-    CmdViewContinuous,
-    CmdViewRotateLeft,
-    CmdViewRotateRight,
+    CmdSinglePageView,
+    CmdFacingView,
+    CmdBookView,
+    CmdToggleContinuousView,
+    CmdRotateLeft,
+    CmdRotateRight,
     CmdTogglePresentationMode,
     CmdToggleScrollbars,
     CmdZoomFitPage,
@@ -1389,7 +1388,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         if (ctx) {
             removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(rmoveIfChm));
-            removeMenu |= (!ctx->isCbx && (cmdId == CmdViewMangaMode));
+            removeMenu |= (!ctx->isCbx && (cmdId == CmdToggleMangaMode));
             removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
             removeMenu |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
 
@@ -1578,21 +1577,21 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
 
     int id = 0;
     if (IsSingle(displayMode)) {
-        id = CmdViewSinglePage;
+        id = CmdSinglePageView;
     } else if (IsFacing(displayMode)) {
-        id = CmdViewFacing;
+        id = CmdFacingView;
     } else if (IsBookView(displayMode)) {
-        id = CmdViewBook;
+        id = CmdBookView;
     } else {
         CrashIf(win->ctrl || DisplayMode::Automatic != displayMode);
     }
 
     CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
-    win::menu::SetChecked(win->menu, CmdViewContinuous, IsContinuous(displayMode));
+    win::menu::SetChecked(win->menu, CmdToggleContinuousView, IsContinuous(displayMode));
 
     if (win->currentTab && win->currentTab->GetEngineType() == kindEngineComicBooks) {
         bool mangaMode = win->AsFixed()->GetDisplayR2L();
-        win::menu::SetChecked(win->menu, CmdViewMangaMode, mangaMode);
+        win::menu::SetChecked(win->menu, CmdToggleMangaMode, mangaMode);
     }
 }
 
@@ -1613,11 +1612,11 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     MenuUpdatePrintItem(win, win->menu);
 
     bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HacToc();
-    win::menu::SetEnabled(win->menu, CmdViewBookmarks, enabled);
+    win::menu::SetEnabled(win->menu, CmdToggleBookmarks, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
     bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
-    win::menu::SetChecked(win->menu, CmdViewBookmarks, checked);
+    win::menu::SetChecked(win->menu, CmdToggleBookmarks, checked);
 
     win::menu::SetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
     win::menu::SetChecked(win->menu, CmdToggleToolbar, gGlobalPrefs->showToolbar);
@@ -1760,8 +1759,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     SetMenuStateForSelection(tab, popup);
 
     MenuUpdatePrintItem(win, popup, true);
-    win::menu::SetEnabled(popup, CmdViewBookmarks, win->ctrl->HacToc());
-    win::menu::SetChecked(popup, CmdViewBookmarks, win->tocVisible);
+    win::menu::SetEnabled(popup, CmdToggleBookmarks, win->ctrl->HacToc());
+    win::menu::SetChecked(popup, CmdToggleBookmarks, win->tocVisible);
 
     win::menu::SetChecked(popup, CmdToggleScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);
 
@@ -1825,7 +1824,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdSelectAll:
         case CmdSaveAs:
         case CmdPrint:
-        case CmdViewBookmarks:
+        case CmdToggleBookmarks:
         case CmdFavoriteToggle:
         case CmdProperties:
         case CmdToggleToolbar:

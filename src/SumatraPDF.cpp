@@ -3272,7 +3272,7 @@ static void OnMenuOptions(WindowInfo* win) {
 }
 
 // toggles 'show pages continuously' state
-static void OnMenuViewContinuous(WindowInfo* win) {
+static void ToggleContinuousView(WindowInfo* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
@@ -3295,7 +3295,7 @@ static void OnMenuViewContinuous(WindowInfo* win) {
     SwitchToDisplayMode(win, newMode);
 }
 
-static void OnMenuViewMangaMode(WindowInfo* win) {
+static void ToggleMangaMode(WindowInfo* win) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -4450,24 +4450,24 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuCustomZoom(win);
             break;
 
-        case CmdViewSinglePage:
+        case CmdSinglePageView:
             SwitchToDisplayMode(win, DisplayMode::SinglePage, true);
             break;
 
-        case CmdViewFacing:
+        case CmdFacingView:
             SwitchToDisplayMode(win, DisplayMode::Facing, true);
             break;
 
-        case CmdViewBook:
+        case CmdBookView:
             SwitchToDisplayMode(win, DisplayMode::BookView, true);
             break;
 
-        case CmdViewContinuous:
-            OnMenuViewContinuous(win);
+        case CmdToggleContinuousView:
+            ToggleContinuousView(win);
             break;
 
-        case CmdViewMangaMode:
-            OnMenuViewMangaMode(win);
+        case CmdToggleMangaMode:
+            ToggleMangaMode(win);
             break;
 
         case CmdToggleToolbar:
@@ -4496,7 +4496,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuChangeLanguage(win->hwndFrame);
             break;
 
-        case CmdViewBookmarks:
+        case CmdToggleBookmarks:
             ToggleTocBox(win);
             break;
 
@@ -4649,15 +4649,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleFullScreen(win);
             break;
 
-        case CmdViewRotateLeft:
-            if (win->AsFixed()) {
-                win->AsFixed()->RotateBy(-90);
+        case CmdRotateLeft:
+            if (dm) {
+                dm->RotateBy(-90);
             }
             break;
 
-        case CmdViewRotateRight:
-            if (win->AsFixed()) {
-                win->AsFixed()->RotateBy(90);
+        case CmdRotateRight:
+            if (dm) {
+                dm->RotateBy(90);
             }
             break;
 
@@ -4829,18 +4829,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             UpdateDocumentColors();
             UpdateTreeCtrlColors(win);
             // UpdateUiForCurrentTab(win);
-            break;
-
-        case CmdRotateLeft:
-            if (dm) {
-                dm->RotateBy(-90);
-            }
-            break;
-
-        case CmdRotateRight:
-            if (dm) {
-                dm->RotateBy(90);
-            }
             break;
 
         case CmdNavigateBack:
@@ -5015,7 +5003,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                     HwndSendCommand(hwnd, CmdFindFirst);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FAVORITES:
-                    HwndSendCommand(hwnd, CmdViewBookmarks);
+                    HwndSendCommand(hwnd, CmdToggleBookmarks);
                     return TRUE;
             }
             return DefWindowProc(hwnd, msg, wp, lp);

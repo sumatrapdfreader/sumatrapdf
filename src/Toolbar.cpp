@@ -69,8 +69,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::None, 0, nullptr}, // separator
     {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
     {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
-    {TbIcon::RotateLeft, CmdViewRotateLeft, _TRN("Rotate &Left\tCtrl+Shift+-")},
-    {TbIcon::RotateRight, CmdViewRotateRight, _TRN("Rotate &Right\tCtrl+Shift++")},
+    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left\tCtrl+Shift+-")},
+    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right\tCtrl+Shift++")},
     {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out")},
     {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In")},
     {TbIcon::None, CmdFindFirst, nullptr},
@@ -113,8 +113,8 @@ static bool IsVisibleToolbarButton(WindowInfo* win, int buttonNo) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
             return !win->AsChm();
-        case CmdViewRotateLeft:
-        case CmdViewRotateRight:
+        case CmdRotateLeft:
+        case CmdRotateRight:
             return NeedsRotateUI(win);
         case CmdFindFirst:
         case CmdFindNext:

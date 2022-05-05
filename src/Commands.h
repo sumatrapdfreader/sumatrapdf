@@ -19,14 +19,14 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdSaveAsBookmark, "Save As Bookmark...")                           \
     V(CmdSendByEmail, "Send Document By Email...")                        \
     V(CmdProperties, "Show Document Properties...")                       \
-    V(CmdViewSinglePage, "View: Single Page")                             \
-    V(CmdViewFacing, "View: Facing")                                      \
-    V(CmdViewBook, "View: Book")                                          \
-    V(CmdViewContinuous, "View: Continuous")                              \
-    V(CmdViewMangaMode, "View: Manga Mode")                               \
-    V(CmdViewRotateLeft, "View: Rotate Left")                             \
-    V(CmdViewRotateRight, "View: Rotate Right")                           \
-    V(CmdViewBookmarks, "View: Bookmarks")                                \
+    V(CmdSinglePageView, "Single Page View")                              \
+    V(CmdFacingView, "Facing View")                                       \
+    V(CmdBookView, "Book View")                                           \
+    V(CmdToggleContinuousView, "Toggle Continuous View")                  \
+    V(CmdToggleMangaMode, "Toggle Manga Mode")                            \
+    V(CmdRotateLeft, "Rotate Left")                                       \
+    V(CmdRotateRight, "Rotate Right")                                     \
+    V(CmdToggleBookmarks, "Toggle Bookmarks")                             \
     V(CmdToggleFullscreen, "Toggle Fullscreen")                           \
     V(CmdPresentationWhiteBackground, "Presentation White Background")    \
     V(CmdPresentationBlackBackground, "Presentation Black Background")    \
@@ -51,21 +51,21 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdScrollRight, "Scroll Right")                                     \
     V(CmdScrollLeftPage, "Scroll Left By Page")                           \
     V(CmdScrollRightPage, "Scroll Right By Page")                         \
-    V(CmdScrollUpPage, "Scroll Up Page")                                  \
+    V(CmdScrollUpPage, "Scroll Up By Page")                               \
     V(CmdScrollDownPage, "Scroll Down By Page")                           \
     V(CmdScrollDownHalfPage, "Scroll Down By Half Page")                  \
     V(CmdScrollUpHalfPage, "Scroll Down By Half Page")                    \
-    V(CmdGoToNextPage, "Go to Next Page")                                 \
-    V(CmdGoToPrevPage, "Go to Previous Page")                             \
-    V(CmdGoToFirstPage, "Go to First Page")                               \
-    V(CmdGoToLastPage, "Go to Last Page")                                 \
+    V(CmdGoToNextPage, "Next Page")                                       \
+    V(CmdGoToPrevPage, "Previous Page")                                   \
+    V(CmdGoToFirstPage, "First Page")                                     \
+    V(CmdGoToLastPage, "Last Page")                                       \
     V(CmdGoToPage, "Go to Page...")                                       \
     V(CmdFindFirst, "Find")                                               \
-    V(CmdFindNext, "Find: Next")                                          \
-    V(CmdFindPrev, "Find: Previous")                                      \
+    V(CmdFindNext, "Find Next")                                           \
+    V(CmdFindPrev, "Find Previous")                                       \
+    V(CmdFindNextSel, "Find Next Selection")                              \
+    V(CmdFindPrevSel, "Find Previous Selection")                          \
     V(CmdFindMatch, "Find: Match Case")                                   \
-    V(CmdFindNextSel, "Find: Next Selection")                             \
-    V(CmdFindPrevSel, "Find: Previous Selection")                         \
     V(CmdSaveAnnotations, "Save Annotations to existing PDF")             \
     V(CmdEditAnnotations, "Edit Annotations")                             \
     V(CmdSelectAnnotation, "Select Annotation in Editor")                 \
@@ -117,9 +117,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdHelpVisitWebsite, "Help: SumatraPDF Website")                    \
     V(CmdHelpAbout, "Help: About SumatraPDF")                             \
     V(CmdMoveFrameFocus, "Move Frame Focus")                              \
-    V(CmdFavoriteAdd, "Favorites: Add")                                   \
-    V(CmdFavoriteDel, "Favorites: Delete")                                \
-    V(CmdFavoriteToggle, "Favorites: Toggle")                             \
+    V(CmdFavoriteAdd, "Add Favorite")                                     \
+    V(CmdFavoriteDel, "Delete Favorite")                                  \
+    V(CmdFavoriteToggle, "Toggle Favorites")                              \
     V(CmdDebugShowLinks, "Debug: Show Links")                             \
     V(CmdDebugCrashMe, "Debug: Crash Me")                                 \
     V(CmdDebugAnnotations, "Debug: Annotations")                          \
@@ -148,8 +148,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdTogglePageInfo, "Toggle Page Info")                              \
     V(CmdCloseCurrentDocument, "Close Current Document")                  \
     V(CmdToggleZoom, "Toggle Zoom")                                       \
-    V(CmdRotateLeft, "Rotate Left")                                       \
-    V(CmdRotateRight, "Rotate Right")                                     \
     V(CmdNavigateBack, "Navigate Back")                                   \
     V(CmdNavigateForward, "Navigate Forward")                             \
     V(CmdShowCursorPosition, "Show Cursor Position")                      \
@@ -206,8 +204,8 @@ enum {
     CmdLast = CmdThemeLast,
 
     // aliases, at the end to not mess ordering
-    CmdViewLayoutFirst = CmdViewSinglePage,
-    CmdViewLayoutLast = CmdViewMangaMode,
+    CmdViewLayoutFirst = CmdSinglePageView,
+    CmdViewLayoutLast = CmdToggleMangaMode,
 
     CmdZoomFirst = CmdZoomFitPage,
     CmdZoomLast = CmdZoomCustom,

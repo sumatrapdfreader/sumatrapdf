@@ -151,15 +151,15 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, VK_ADD, CmdZoomIn},
     {FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdZoomOut},
     {FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdZoomOut},
-    {FCONTROL | FVIRTKEY, '6', CmdViewSinglePage},
-    {FCONTROL | FVIRTKEY, VK_NUMPAD6, CmdViewSinglePage},
-    {FCONTROL | FVIRTKEY, '7', CmdViewFacing},
-    {FCONTROL | FVIRTKEY, VK_NUMPAD7, CmdViewFacing},
-    {FCONTROL | FVIRTKEY, '8', CmdViewBook},
-    {FCONTROL | FVIRTKEY, VK_NUMPAD8, CmdViewBook},
-    {FSHIFT | FCONTROL | FVIRTKEY, VK_ADD, CmdViewRotateRight},
+    {FCONTROL | FVIRTKEY, '6', CmdSinglePageView},
+    {FCONTROL | FVIRTKEY, VK_NUMPAD6, CmdSinglePageView},
+    {FCONTROL | FVIRTKEY, '7', CmdFacingView},
+    {FCONTROL | FVIRTKEY, VK_NUMPAD7, CmdFacingView},
+    {FCONTROL | FVIRTKEY, '8', CmdBookView},
+    {FCONTROL | FVIRTKEY, VK_NUMPAD8, CmdBookView},
+    {FSHIFT | FCONTROL | FVIRTKEY, VK_ADD, CmdRotateRight},
     {FCONTROL | FVIRTKEY, VK_OEM_PLUS, CmdZoomIn},
-    {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_PLUS, CmdViewRotateRight},
+    {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_PLUS, CmdRotateRight},
     {FVIRTKEY, VK_F3, CmdFindNext},
     {FSHIFT | FVIRTKEY, VK_F3, CmdFindPrev},
     {FCONTROL | FVIRTKEY, VK_F3, CmdFindNextSel},
@@ -173,10 +173,10 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FVIRTKEY, VK_F11, CmdTogglePresentationMode},
     {FSHIFT | FCONTROL | FVIRTKEY, 'L', CmdToggleFullscreen},
     {FVIRTKEY, VK_F11, CmdToggleFullscreen},
-    {FVIRTKEY, VK_F12, CmdViewBookmarks},
-    {FSHIFT | FVIRTKEY, VK_F12, CmdViewBookmarks},
-    {FSHIFT | FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdViewRotateLeft},
-    {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdViewRotateLeft},
+    {FVIRTKEY, VK_F12, CmdToggleBookmarks},
+    {FSHIFT | FVIRTKEY, VK_F12, CmdToggleBookmarks},
+    {FSHIFT | FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdRotateLeft},
+    {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdRotateLeft},
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)
@@ -201,7 +201,7 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'w', CmdPresentationWhiteBackground},
     // // for Logitech's wireless presenters which target PowerPoint's shortcuts
     {0, '.', CmdPresentationBlackBackground},
-    {0, 'c', CmdViewContinuous},
+    {0, 'c', CmdToggleContinuousView},
 };
 
 ACCEL* gAccels = nullptr;
