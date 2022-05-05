@@ -3296,11 +3296,10 @@ static void OnMenuViewContinuous(WindowInfo* win) {
 }
 
 static void OnMenuViewMangaMode(WindowInfo* win) {
-    CrashIf(!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks);
-    if (!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
     dm->SetDisplayR2L(!dm->GetDisplayR2L());
     ScrollState state = dm->GetScrollState();
     dm->Relayout(dm->GetZoomVirtual(), dm->GetRotation());
@@ -4780,7 +4779,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
                 bool isShift = IsShiftPressed();
                 openAnnotsInEditWindow(win, annots, isShift);
             }
-        break;
+            break;
 
         case CmdDeleteAnnotation: {
             DeleteAnnotationUnderCursor(win);
