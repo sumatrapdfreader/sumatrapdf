@@ -596,6 +596,7 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             if (PageShown(pageNo)) {
                 float zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
                 PageInfo* pageInfo = GetPageInfo(pageNo);
+                ReportIf(pageInfo->zoomReal < 0.01f);
                 pageInfo->zoomReal = zoom;
                 if (minZoom > zoom) {
                     minZoom = zoom;
@@ -615,12 +616,14 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             zoomReal < ZoomRealFromVirtualForPage(kZoomFitPage, CurrentPageNo())) {
             zoomReal = newZoom;
         }
+        ReportIf(zoomReal < 0.01f);
         for (int pageNo = 1; pageNo <= nPages; pageNo++) {
             PageInfo* pageInfo = GetPageInfo(pageNo);
             pageInfo->zoomReal = zoomReal;
         }
     } else {
         zoomReal = zoomVirtual * 0.01f * dpiFactor;
+        ReportIf(zoomReal < 0.01f);
         for (int pageNo = 1; pageNo <= nPages; pageNo++) {
             PageInfo* pageInfo = GetPageInfo(pageNo);
             pageInfo->zoomReal = zoomReal;
