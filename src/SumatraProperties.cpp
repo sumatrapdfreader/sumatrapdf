@@ -7,6 +7,8 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/wingui2.h"
 
 #include "AppTools.h"
 #include "DisplayMode.h"
@@ -24,9 +26,7 @@
 #include "SumatraProperties.h"
 #include "Translations.h"
 #include "SumatraConfig.h"
-
-#include "wingui/Layout.h"
-#include "wingui/wingui2.h"
+#include "Print.h"
 
 using namespace wg;
 
@@ -186,83 +186,6 @@ static void ConvDateToDisplay(WCHAR** s, bool (*DateParse)(const WCHAR* date, SY
     }
 }
 
-struct PaperSizeDesc {
-    float minDx, maxDx;
-    float minDy, maxDy;
-    PaperFormat paperFormat;
-};
-
-// clang-format off
-static PaperSizeDesc paperSizes[] = {
-    // common ISO 216 formats (metric)
-    {
-        16.53f, 16.55f,
-        23.38f, 23.40f,
-        PaperFormat::A2,
-    },
-    {
-        11.68f, 11.70f,
-        16.53f, 16.55f,
-        PaperFormat::A3,
-    },
-    {
-        8.26f, 8.28f,
-        11.68f, 11.70f,
-        PaperFormat::A4,
-    },
-    {
-        5.82f, 5.85f,
-        8.26f, 8.28f,
-        PaperFormat::A5,
-    },
-    {
-        4.08f, 4.10f,
-        5.82f, 5.85f,
-        PaperFormat::A6,
-    },
-    // common US/ANSI formats (imperial)
-    {
-        8.49f, 8.51f,
-        10.99f, 11.01f,
-        PaperFormat::Letter,
-    },
-    {
-        8.49f, 8.51f,
-        13.99f, 14.01f,
-        PaperFormat::Legal,
-    },
-    {
-        10.99f, 11.01f,
-        16.99f, 17.01f,
-        PaperFormat::Tabloid,
-    },
-    {
-        5.49f, 5.51f,
-        8.49f, 8.51f,
-        PaperFormat::Statement,
-    }
-};
-// clang-format on
-
-static bool fInRange(float x, float min, float max) {
-    return x >= min && x <= max;
-}
-
-PaperFormat GetPaperFormat(SizeF size) {
-    float dx = size.dx;
-    float dy = size.dy;
-    if (dx > dy) {
-        std::swap(dx, dy);
-    }
-    for (auto&& desc : paperSizes) {
-        bool ok = fInRange(dx, desc.minDx, desc.maxDx) && fInRange(dy, desc.minDy, desc.maxDy);
-        if (ok) {
-            return desc.paperFormat;
-        }
-    }
-    return PaperFormat::Other;
-}
-
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
 static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
@@ -270,7 +193,7 @@ static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
     const WCHAR* formatName = L"";
-    switch (GetPaperFormat(size)) {
+    switch (GetPaperFormatFromSizeApprox(size)) {
         case PaperFormat::A2:
             formatName = L" (A2)";
             break;
