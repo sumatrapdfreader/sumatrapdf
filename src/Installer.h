@@ -1,12 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
-
 constexpr int kInstallerWinDy = 340;
-
-#define kRegExplorerPdfExt L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
-#define kRegClassesPdf L"Software\\Classes\\.pdf"
 
 enum class PreviousInstallationType { None = 0, User = 1, Machine = 2, Both = 3 };
 

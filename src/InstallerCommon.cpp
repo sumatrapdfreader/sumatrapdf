@@ -135,7 +135,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
         return;
     }
     info->searchFilterInstalled = IsSearchFilterInstalled();
-    info->previewInstalled = IsPreviewerInstalled();
+    info->previewInstalled = IsPreviewInstalled();
     WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
     AutoFreeWstr dirLM = LoggedReadRegStr(HKEY_LOCAL_MACHINE, regPathUninst, L"InstallLocation");
     AutoFreeWstr dirCU = LoggedReadRegStr(HKEY_CURRENT_USER, regPathUninst, L"InstallLocation");

@@ -282,8 +282,10 @@ HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
 
 Note: When making changes below, please also adjust WriteExtendedFileExtensionInfo(),
 UnregisterFromBeingDefaultViewer() and RemoveInstallRegistryKeys() in Installer.cpp.
-
 */
+
+#define kRegExplorerPdfExt L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
+#define kRegClassesPdf L"Software\\Classes\\.pdf"
 
 // TODO: this method no longer valid
 #if 0
@@ -506,10 +508,8 @@ static const WCHAR* GetRegClassesAppTemp(const WCHAR* appName) {
     return str::JoinTemp(L"Software\\Classes\\", appName);
 }
 
-constexpr const WCHAR* kRegProgId = L"ProgId";
-
-// Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did
-// used in pre-3.4
+// Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did.
+// Used in pre-3.4
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     log("UnregisterFromBeingDefaultViewer()\n");
     AutoFreeWstr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
@@ -523,21 +523,17 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    AutoFreeWstr buf = LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
+    AutoFreeWstr buf = LoggedReadRegStr(hkey, kRegExplorerPdfExt, L"ProgId");
     if (str::Eq(buf, kAppName)) {
-        LONG res = LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegProgId);
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, L"ProgId");
     }
-    constexpr const WCHAR* kRegApplication = L"Application";
-    buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication));
+    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt, L"Application"));
     if (str::EqI(buf, kExeName)) {
-        LONG res = LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt, kRegApplication);
-        if (res != ERROR_SUCCESS) {
-            LogLastError(res);
-        }
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, L"Application");
     }
-    buf.Set(LoggedReadRegStr(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", kRegProgId));
+    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt L"\\UserChoice", L"ProgId"));
     if (str::Eq(buf, kAppName)) {
-        LoggedDeleteRegKey(HKEY_CURRENT_USER, kRegExplorerPdfExt L"\\UserChoice", true);
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt L"\\UserChoice", true);
     }
 }
 

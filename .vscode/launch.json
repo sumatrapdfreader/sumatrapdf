@@ -35,7 +35,7 @@
             "preLaunchTask": "build-dbg-64",
             "request": "launch",
             "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
-            "args": ["-install", "-all-users"],
+            "args": ["-install"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

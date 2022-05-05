@@ -173,6 +173,8 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
     return true;
 }
 
+#define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
+
 static void CreateUninstallerWindow() {
     AutoFreeWstr title = str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR);
     int x = CW_USEDEFAULT;
@@ -444,7 +446,7 @@ int RunUninstaller() {
     if (gWasSearchFilterInstalled) {
         log("Search filter is installed\n");
     }
-    gWasPreviewInstaller = IsPreviewerInstalled();
+    gWasPreviewInstaller = IsPreviewInstalled();
     if (gWasPreviewInstaller) {
         log("Previewer is installed\n");
     }
