@@ -1237,21 +1237,21 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
     if (virt & FALT) {
         const WCHAR* s = L"Alt+";
         if (isGerman) {
-            s = L"Größe";
+            s = L"Größe+";
         }
         str.Append(s);
     }
     if (virt & FCONTROL) {
         const WCHAR* s = L"Ctrl+";
         if (isGerman) {
-            s = L"Strg";
+            s = L"Strg+";
         }
         str.Append(s);
     }
     if (virt & FSHIFT) {
         const WCHAR* s = L"Shift+";
         if (isGerman) {
-            s = L"Umschalt";
+            s = L"Umschalt+";
         }
         str.Append(s);
     }
@@ -1280,62 +1280,84 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
 
     // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     // Note: might need to add if we add more shortcuts
-    const WCHAR* keyStr = nullptr;
+    const char* keyStr = nullptr;
     switch (key) {
         case VK_END:
-            keyStr = L"End";
+            keyStr = "End";
             break;
         case VK_HOME:
-            keyStr = L"Home";
+            keyStr = "Home";
             break;
         case VK_LEFT:
-            keyStr = L"Left";
+            keyStr = "Left";
             if (!isEng) {
-                keyStr = L"<-";
+                keyStr = "<-";
             }
             break;
         case VK_RIGHT:
-            keyStr = L"Right";
+            keyStr = "Right";
             if (!isEng) {
-                keyStr = L"->";
+                keyStr = "->";
             }
             break;
         case VK_UP:
-            keyStr = L"Up";
+            keyStr = "Up";
             break;
         case VK_DOWN:
-            keyStr = L"Down";
+            keyStr = "Down";
+            break;
+        case VK_NEXT:
+            keyStr = "PageDown";
+            break;
+        case VK_PRIOR:
+            keyStr = "PageUp";
             break;
         case VK_BACK:
-            keyStr = L"Backspace";
+            keyStr = "Backspace";
             break;
         case VK_DELETE:
-            keyStr = L"Del";
+            keyStr = "Del";
             break;
         case VK_INSERT:
-            keyStr = L"Insert";
+            keyStr = "Insert";
             break;
         case VK_ESCAPE:
-            keyStr = L"Esc";
+            keyStr = "Esc";
+            break;
+        case VK_RETURN:
+            keyStr = "Return";
+            break;
+        case VK_SPACE:
+            keyStr = "Space";
+            break;
+        case VK_MULTIPLY:
+            keyStr = "*";
             break;
         case VK_ADD:
         case VK_OEM_PLUS:
-            keyStr = L"+";
+            keyStr = "+";
             break;
         case VK_SUBTRACT:
         case VK_OEM_MINUS:
-            keyStr = L"-";
+            keyStr = "-";
             break;
-        case VK_SPACE:
-            keyStr = L"Space";
+        case VK_DIVIDE:
+            keyStr = "/";
             break;
-        case VK_RETURN:
-            keyStr = L"Return";
+        case VK_HELP:
+            keyStr = "Help";
+            break;
+        case VK_SELECT:
+            keyStr = "Select";
             break;
     }
-    CrashIf(!keyStr);
+    if (!keyStr) {
+        logf("Unknown key: 0x%x, virt: 0x%x\n", virt, key);
+        ReportIf(!keyStr);
+    }
     if (keyStr) {
-        str.Append(keyStr);
+        WCHAR* tmp = ToWstrTemp(keyStr);
+        str.Append(tmp);
     }
 }
 
