@@ -30,7 +30,7 @@ struct TabInfo {
     // (split by page, in user coordinates)
     Vec<SelectionOnPage>* selectionOnPage = nullptr;
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
-    float prevZoomVirtual{INVALID_ZOOM};
+    float prevZoomVirtual{kInvalidZoom};
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
     TocTree* currToc = nullptr; // not owned by us
     EditAnnotationsWindow* editAnnotsWindow = nullptr;

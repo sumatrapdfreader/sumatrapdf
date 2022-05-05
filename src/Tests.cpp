@@ -29,8 +29,8 @@ void TestRenderPage(const Flags& i) {
         printf("no file provided\n");
         return;
     }
-    float zoom = ZOOM_ACTUAL_SIZE;
-    if (i.startZoom != INVALID_ZOOM) {
+    float zoom = kZoomActualSize;
+    if (i.startZoom != kInvalidZoom) {
         zoom = i.startZoom;
     }
     for (auto fileName : files) {

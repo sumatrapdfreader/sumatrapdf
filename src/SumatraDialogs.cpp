@@ -436,23 +436,8 @@ const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode) {
     return data.langCode;
 }
 
-static float gItemZoom[] = {ZOOM_FIT_PAGE,
-                            ZOOM_FIT_WIDTH,
-                            ZOOM_FIT_CONTENT,
-                            0,
-                            6400.0,
-                            3200.0,
-                            1600.0,
-                            800.0,
-                            400.0,
-                            200.0,
-                            150.0,
-                            125.0,
-                            100.0,
-                            50.0,
-                            25.0,
-                            12.5,
-                            8.33f};
+static float gItemZoom[] = {kZoomFitPage, kZoomFitWidth, kZoomFitContent, 0,     6400.0, 3200.0, 1600.0, 800.0, 400.0,
+                            200.0,        150.0,         125.0,           100.0, 50.0,   25.0,   12.5,   8.33f};
 
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
     if (!forChm) {
@@ -499,7 +484,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
         WCHAR* customZoom = win::GetTextTemp(GetDlgItem(hDlg, idComboBox));
         float zoom = (float)_wtof(customZoom);
         if (zoom > 0) {
-            newZoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
+            newZoom = limitValue(zoom, kZoomMin, kZoomMax);
         }
     } else {
         if (forChm) {

@@ -576,7 +576,7 @@ static bool OpenFile(StressTest* st, const WCHAR* fileName) {
     }
 
     st->win->ctrl->SetDisplayMode(DisplayMode::Continuous);
-    st->win->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
+    st->win->ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
     st->win->ctrl->GoToFirstPage();
     if (st->win->tocVisible || gGlobalPrefs->showFavorites) {
         SetSidebarVisibility(st->win, st->win->tocVisible, gGlobalPrefs->showFavorites);
@@ -644,16 +644,16 @@ static void RandomizeViewingState(StressTest* st) {
     float zoom;
     switch (n) {
         case 0:
-            ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
+            ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
             break;
         case 1:
-            ctrl->SetZoomVirtual(ZOOM_FIT_WIDTH, nullptr);
+            ctrl->SetZoomVirtual(kZoomFitWidth, nullptr);
             break;
         case 2:
-            ctrl->SetZoomVirtual(ZOOM_FIT_CONTENT, nullptr);
+            ctrl->SetZoomVirtual(kZoomFitContent, nullptr);
             break;
         case 3:
-            ctrl->SetZoomVirtual(ZOOM_ACTUAL_SIZE, nullptr);
+            ctrl->SetZoomVirtual(kZoomActualSize, nullptr);
             break;
         case 4:
             ctrl->SetDisplayMode(DisplayMode::SinglePage);
@@ -674,12 +674,12 @@ static void RandomizeViewingState(StressTest* st) {
             ctrl->SetDisplayMode(DisplayMode::ContinuousBookView);
             break;
         case 10:
-            zoom = ctrl->GetNextZoomStep(ZOOM_MAX);
+            zoom = ctrl->GetNextZoomStep(kZoomMax);
             ctrl->SetZoomVirtual(zoom, nullptr);
             break;
         case 11:
-            zoom = ctrl->GetNextZoomStep(ZOOM_MIN);
-            ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
+            zoom = ctrl->GetNextZoomStep(kZoomMin);
+            ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
             break;
     }
 }

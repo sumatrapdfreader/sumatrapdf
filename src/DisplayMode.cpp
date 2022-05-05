@@ -33,16 +33,16 @@ bool IsBookView(DisplayMode mode) {
 }
 
 bool IsValidZoom(float zoom) {
-    if ((ZOOM_MIN - 0.01f <= zoom) && (zoom <= ZOOM_MAX + 0.01f)) {
+    if ((kZoomMin - 0.01f <= zoom) && (zoom <= kZoomMax + 0.01f)) {
         return true;
     }
-    if (ZOOM_FIT_PAGE == zoom) {
+    if (kZoomFitPage == zoom) {
         return true;
     }
-    if (ZOOM_FIT_WIDTH == zoom) {
+    if (kZoomFitWidth == zoom) {
         return true;
     }
-    if (ZOOM_FIT_CONTENT == zoom) {
+    if (kZoomFitContent == zoom) {
         return true;
     }
     return false;
@@ -82,13 +82,13 @@ DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal) {
 
 float ZoomFromString(const char* s, float defVal) {
     if (str::EqIS(s, "fit page")) {
-        return ZOOM_FIT_PAGE;
+        return kZoomFitPage;
     }
     if (str::EqIS(s, "fit width")) {
-        return ZOOM_FIT_WIDTH;
+        return kZoomFitWidth;
     }
     if (str::EqIS(s, "fit content")) {
-        return ZOOM_FIT_CONTENT;
+        return kZoomFitContent;
     }
     float zoom;
     if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom)) {
@@ -98,7 +98,7 @@ float ZoomFromString(const char* s, float defVal) {
 }
 
 void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
-    float prevZoom = *dst ? ZoomFromString(*dst, INVALID_ZOOM) : INVALID_ZOOM;
+    float prevZoom = *dst ? ZoomFromString(*dst, kInvalidZoom) : kInvalidZoom;
     if (prevZoom == zoom) {
         return;
     }
@@ -114,11 +114,11 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
     }
     CrashIf(!IsValidZoom(zoom));
     free(*dst);
-    if (ZOOM_FIT_PAGE == zoom) {
+    if (kZoomFitPage == zoom) {
         *dst = str::Dup("fit page");
-    } else if (ZOOM_FIT_WIDTH == zoom) {
+    } else if (kZoomFitWidth == zoom) {
         *dst = str::Dup("fit width");
-    } else if (ZOOM_FIT_CONTENT == zoom) {
+    } else if (kZoomFitContent == zoom) {
         *dst = str::Dup("fit content");
     } else {
         *dst = str::Format("%g", zoom);

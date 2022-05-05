@@ -119,7 +119,7 @@ class RenderCache {
     void RequestRendering(DisplayModel* dm, int pageNo);
     void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect, RenderingCallback& callback);
     void CancelRendering(DisplayModel* dm);
-    bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = INVALID_ZOOM, TilePosition* tile = nullptr);
+    bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
     void Invalidate(DisplayModel* dm, int pageNo, RectF rect);
@@ -148,7 +148,7 @@ class RenderCache {
 
     static DWORD WINAPI RenderCacheThread(LPVOID data);
 
-    BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = INVALID_ZOOM,
+    BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,
                            TilePosition* tile = nullptr);
     bool DropCacheEntry(BitmapCacheEntry* entry);
     void FreePage(DisplayModel* dm = nullptr, int pageNo = -1, TilePosition* tile = nullptr);

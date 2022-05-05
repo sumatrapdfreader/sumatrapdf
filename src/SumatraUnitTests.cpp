@@ -107,7 +107,7 @@ static void ParseCommandLineTest() {
         utassert(0 == i.fileNames.size());
         utassert(i.pageNumber == 37);
         utassert(i.startView == DisplayMode::ContinuousFacing);
-        utassert(i.startZoom == ZOOM_FIT_CONTENT);
+        utassert(i.startZoom == kZoomFitContent);
         utassert(i.startScroll.x == 45 && i.startScroll.y == 1234);
     }
 
@@ -130,7 +130,7 @@ static void ParseCommandLineTest() {
     {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -zoom fit-content", i);
-        utassert(i.startZoom == ZOOM_FIT_CONTENT);
+        utassert(i.startZoom == kZoomFitContent);
         utassert(0 == i.fileNames.size());
     }
 }

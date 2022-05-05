@@ -149,12 +149,12 @@ static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
         // 0-2 : fit page
         // 3-5 : fit width
         // 6-8 : fit content
-        *zoom = ZOOM_FIT_CONTENT;
+        *zoom = kZoomFitContent;
         if (zoomVal <= 5) {
-            *zoom = ZOOM_FIT_WIDTH;
+            *zoom = kZoomFitWidth;
         }
         if (zoomVal <= 2) {
-            *zoom = ZOOM_FIT_PAGE;
+            *zoom = kZoomFitPage;
         }
         return;
     }
@@ -166,7 +166,7 @@ static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
     // prevent really small zoom and zoom values that are not valid numbers
     // (which would be parsed as 0)
     if (*zoom < 1.f) {
-        *zoom = ZOOM_ACTUAL_SIZE;
+        *zoom = kZoomActualSize;
     }
 }
 

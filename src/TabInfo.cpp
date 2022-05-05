@@ -99,12 +99,12 @@ void TabInfo::ToggleZoom() const {
         return;
     }
     // TODO: maybe move to Controller?
-    float newZoom = ZOOM_FIT_PAGE;
+    float newZoom = kZoomFitPage;
     float currZoom = ctrl->GetZoomVirtual();
-    if (ZOOM_FIT_PAGE == currZoom) {
-        newZoom = ZOOM_FIT_WIDTH;
-    } else if (ZOOM_FIT_WIDTH == currZoom) {
-        newZoom = ZOOM_FIT_CONTENT;
+    if (kZoomFitPage == currZoom) {
+        newZoom = kZoomFitWidth;
+    } else if (kZoomFitWidth == currZoom) {
+        newZoom = kZoomFitContent;
     }
     ctrl->SetZoomVirtual(newZoom, nullptr);
 }

@@ -28,7 +28,7 @@ struct Flags {
     bool enterPresentation = false;
     bool enterFullScreen = false;
     DisplayMode startView = DisplayMode::Automatic;
-    float startZoom = INVALID_ZOOM;
+    float startZoom = kInvalidZoom;
     Point startScroll = {-1, -1};
     bool showConsole = false;
     HWND hwndPluginParent = nullptr;

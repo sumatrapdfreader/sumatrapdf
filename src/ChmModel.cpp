@@ -277,7 +277,7 @@ ChmModel* ChmModel::AsChm() {
 
 void ChmModel::SetZoomVirtual(float zoom, Point*) {
     if (zoom > 0) {
-        zoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
+        zoom = limitValue(zoom, kZoomMin, kZoomMax);
     }
     if (zoom <= 0 || !IsValidZoom(zoom)) {
         zoom = 100.0f;
@@ -412,7 +412,7 @@ void ChmModel::OnDocumentComplete(const WCHAR* url) {
     // (might be a regression from between r4593 and r4629)
     if (IsValidZoom(initZoom)) {
         SetZoomVirtual(initZoom, nullptr);
-        initZoom = INVALID_ZOOM;
+        initZoom = kInvalidZoom;
     }
     if (cb) {
         cb->PageNoChanged(this, pageNo);
@@ -564,7 +564,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
     }
 
     Vec<float>* zoomLevels = gGlobalPrefs->zoomLevels;
-    CrashIf(zoomLevels->size() != 0 && (zoomLevels->at(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
+    CrashIf(zoomLevels->size() != 0 && (zoomLevels->at(0) < kZoomMin || zoomLevels->Last() > kZoomMax));
     CrashIf(zoomLevels->size() != 0 && zoomLevels->at(0) > zoomLevels->Last());
 
     const float FUZZ = 0.01f;

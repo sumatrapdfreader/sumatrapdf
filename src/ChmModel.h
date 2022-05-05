@@ -79,7 +79,7 @@ struct ChmModel : Controller {
     int currentPageNo = 1;
     HtmlWindow* htmlWindow = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
-    float initZoom = INVALID_ZOOM;
+    float initZoom = kInvalidZoom;
 
     Vec<ChmCacheEntry*> urlDataCache;
     // use a pool allocator for strings that aren't freed until this ChmModel

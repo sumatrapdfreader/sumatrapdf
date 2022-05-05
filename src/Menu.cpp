@@ -1470,10 +1470,10 @@ static struct {
     { CmdZoom12_5,        12.5   },
     { CmdZoom8_33,        8.33f  },
     { CmdZoomCustom,      0      },
-    { CmdZoomFitPage,    ZOOM_FIT_PAGE    },
-    { CmdZoomFitWidth,   ZOOM_FIT_WIDTH   },
-    { CmdZoomFitContent, ZOOM_FIT_CONTENT },
-    { CmdZoomActualSize, ZOOM_ACTUAL_SIZE },
+    { CmdZoomFitPage,    kZoomFitPage    },
+    { CmdZoomFitWidth,   kZoomFitWidth   },
+    { CmdZoomFitContent, kZoomFitContent },
+    { CmdZoomActualSize, kZoomActualSize },
 };
 // clang-format on
 

@@ -95,7 +95,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
     int currPos = si.nPos;
     auto ctrl = win->ctrl;
     int lineHeight = DpiScale(win->hwndCanvas, 16);
-    bool isFitPage = (ZOOM_FIT_PAGE == ctrl->GetZoomVirtual());
+    bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
         lineHeight = 1;
     }
@@ -774,7 +774,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
 
     DeletePen(SelectObject(hdc, oldPen));
 
-    if (dm->GetZoomVirtual() == ZOOM_FIT_CONTENT) {
+    if (dm->GetZoomVirtual() == kZoomFitContent) {
         // also display the content box when fitting content
         pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
         oldPen = SelectObject(hdc, pen);
@@ -1078,7 +1078,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
         Point pt;
         GetCursorPosInHwnd(win->hwndCanvas, pt);
 
-        float zoom = win->ctrl->GetNextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
+        float zoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
         win->ctrl->SetZoomVirtual(zoom, &pt);
         UpdateToolbarState(win);
 
@@ -1095,7 +1095,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     // make sure to scroll whole pages in non-continuous Fit Content mode
-    if (!IsContinuous(win->ctrl->GetDisplayMode()) && ZOOM_FIT_CONTENT == win->ctrl->GetZoomVirtual()) {
+    if (!IsContinuous(win->ctrl->GetDisplayMode()) && kZoomFitContent == win->ctrl->GetZoomVirtual()) {
         if (delta > 0) {
             win->ctrl->GoToPrevPage();
         } else {

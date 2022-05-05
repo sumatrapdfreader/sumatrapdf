@@ -461,7 +461,7 @@ void UpdateToolbarState(WindowInfo* win) {
     WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, CmdZoomFitWidthAndContinuous, 0);
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
-    if (dm == DisplayMode::Continuous && zoomVirtual == ZOOM_FIT_WIDTH) {
+    if (dm == DisplayMode::Continuous && zoomVirtual == kZoomFitWidth) {
         state |= TBSTATE_CHECKED;
     } else {
         state &= ~TBSTATE_CHECKED;
@@ -471,7 +471,7 @@ void UpdateToolbarState(WindowInfo* win) {
     bool isChecked = (state & TBSTATE_CHECKED);
 
     state = (WORD)SendMessageW(hwnd, TB_GETSTATE, CmdZoomFitPageAndSinglePage, 0);
-    if (dm == DisplayMode::SinglePage && zoomVirtual == ZOOM_FIT_PAGE) {
+    if (dm == DisplayMode::SinglePage && zoomVirtual == kZoomFitPage) {
         state |= TBSTATE_CHECKED;
     } else {
         state &= ~TBSTATE_CHECKED;
@@ -480,7 +480,7 @@ void UpdateToolbarState(WindowInfo* win) {
 
     isChecked |= (state & TBSTATE_CHECKED);
     if (!isChecked) {
-        win->currentTab->prevZoomVirtual = INVALID_ZOOM;
+        win->currentTab->prevZoomVirtual = kInvalidZoom;
     }
 }
 

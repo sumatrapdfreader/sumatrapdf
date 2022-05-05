@@ -28,8 +28,8 @@ struct PageInfo {
     /* position of page relative to visible view port: pos.Offset(-viewPort.x, -viewPort.y) */
     Rect pageOnScreen{};
 
-    // when zoomVirtual in DisplayMode is ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH
-    // or ZOOM_FIT_CONTENT, this is per-page zoom level
+    // when zoomVirtual in DisplayMode is kZoomFitPage, kZoomFitWidth
+    // or kZoomFitContent, this is per-page zoom level
     float zoomReal;
 
     /* data that needs to be set before DisplayModel::Relayout().
@@ -164,8 +164,8 @@ struct DisplayModel : Controller {
     [[nodiscard]] int yOffset();
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
-       (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
-       ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
+       (i.e. 100.0 is original size) or one of virtual values kZoomFitPage,
+       kZoomFitWidth or kZoomFitContent, whose real value depends on draw area size */
     void RotateBy(int rotation);
 
     WCHAR* GetTextInRegion(int pageNo, RectF region) const;
@@ -235,14 +235,14 @@ struct DisplayModel : Controller {
 
     /* real zoom value calculated from zoomVirtual. Same as
        zoomVirtual * 0.01 * dpiFactor
-       except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
-    float zoomReal{INVALID_ZOOM};
-    float zoomVirtual{INVALID_ZOOM};
+       except for kZoomFitPage, kZoomFitWidth and kZoomFitContent */
+    float zoomReal{kInvalidZoom};
+    float zoomVirtual{kInvalidZoom};
     int rotation = {0};
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     float dpiFactor{1.0f};
-    float presZoomVirtual{INVALID_ZOOM};
+    float presZoomVirtual{kInvalidZoom};
     DisplayMode presDisplayMode{DisplayMode::Automatic};
 
     Vec<ScrollState> navHistory;

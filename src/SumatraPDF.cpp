@@ -793,7 +793,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         si.nMax = canvas.dy - 1;
         si.nPage = viewPort.dy;
 
-        if (ZOOM_FIT_PAGE != dm->GetZoomVirtual()) {
+        if (kZoomFitPage != dm->GetZoomVirtual()) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
             si.nPage = (uint)(si.nPage * 0.95);
             si.nMax -= viewPort.dy - si.nPage;
@@ -1113,9 +1113,9 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
 
     if (fs) {
         CrashIf(!win->IsDocLoaded());
-        zoomVirtual = ZoomFromString(fs->zoom, ZOOM_FIT_PAGE);
+        zoomVirtual = ZoomFromString(fs->zoom, kZoomFitPage);
         if (win->ctrl->ValidPageNo(ss.page)) {
-            if (ZOOM_FIT_CONTENT != zoomVirtual) {
+            if (kZoomFitContent != zoomVirtual) {
                 ss.x = fs->scrollPos.x;
                 ss.y = fs->scrollPos.y;
             }
@@ -2765,11 +2765,11 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     }
     const char* viewModeStr = DisplayModeToString(ctrl->GetDisplayMode());
     AutoFreeWstr ZoomVirtual(str::Format(L"%.2f", ctrl->GetZoomVirtual()));
-    if (ZOOM_FIT_PAGE == ctrl->GetZoomVirtual()) {
+    if (kZoomFitPage == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitpage");
-    } else if (ZOOM_FIT_WIDTH == ctrl->GetZoomVirtual()) {
+    } else if (kZoomFitWidth == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitwidth");
-    } else if (ZOOM_FIT_CONTENT == ctrl->GetZoomVirtual()) {
+    } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitcontent");
     }
 
@@ -3337,7 +3337,7 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
         OnMenuZoom(win, MenuIdFromVirtualZoom(newZoom));
 
         // remember the previous values for when the toolbar button is unchecked
-        if (INVALID_ZOOM == prevZoom) {
+        if (kInvalidZoom == prevZoom) {
             win->currentTab->prevZoomVirtual = zoom;
             win->currentTab->prevDisplayMode = mode;
         } else {
@@ -3345,7 +3345,7 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
             win->currentTab->prevZoomVirtual = prevZoom;
             win->currentTab->prevDisplayMode = prevMode;
         }
-    } else if (win->currentTab->prevZoomVirtual != INVALID_ZOOM) {
+    } else if (win->currentTab->prevZoomVirtual != kInvalidZoom) {
         float prevZoom = win->currentTab->prevZoomVirtual;
         SwitchToDisplayMode(win, win->currentTab->prevDisplayMode);
         ZoomToSelection(win, prevZoom);
@@ -3924,11 +3924,11 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case '=':
         case 0xE0:
         case 0xE4: {
-            float newZoom = ctrl->GetNextZoomStep(ZOOM_MAX);
+            float newZoom = ctrl->GetNextZoomStep(kZoomMax);
             ZoomToSelection(win, newZoom, false);
         } break;
         case '-': {
-            float newZoom = ctrl->GetNextZoomStep(ZOOM_MIN);
+            float newZoom = ctrl->GetNextZoomStep(kZoomMin);
             ZoomToSelection(win, newZoom, false);
         } break;
         case '/':
@@ -4403,18 +4403,18 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdZoomFitWidthAndContinuous:
-            ChangeZoomLevel(win, ZOOM_FIT_WIDTH, true);
+            ChangeZoomLevel(win, kZoomFitWidth, true);
             break;
 
         case CmdZoomFitPageAndSinglePage:
-            ChangeZoomLevel(win, ZOOM_FIT_PAGE, false);
+            ChangeZoomLevel(win, kZoomFitPage, false);
             break;
 
         case CmdZoomIn: {
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            auto zoom = ctrl->GetNextZoomStep(ZOOM_MAX);
+            auto zoom = ctrl->GetNextZoomStep(kZoomMax);
             ZoomToSelection(win, zoom, false);
         } break;
 
@@ -4422,7 +4422,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            auto zoom = ctrl->GetNextZoomStep(ZOOM_MIN);
+            auto zoom = ctrl->GetNextZoomStep(kZoomMin);
             ZoomToSelection(win, zoom, false);
         } break;
 
@@ -4531,7 +4531,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-            if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
+            if (win->ctrl->GetZoomVirtual() != kZoomFitContent) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
             }
             if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
@@ -4576,7 +4576,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-            if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
+            if (win->ctrl->GetZoomVirtual() != kZoomFitContent) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
             }
             if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {

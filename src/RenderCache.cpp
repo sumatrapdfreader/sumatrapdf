@@ -70,7 +70,7 @@ BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, 
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
         if ((dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) &&
-            (INVALID_ZOOM == zoom || zoom == e->zoom) && (!tile || e->tile == *tile)) {
+            (kInvalidZoom == zoom || zoom == e->zoom) && (!tile || e->tile == *tile)) {
             e->refs++;
             CrashIf(i != e->cacheIdx);
             return e;
@@ -293,7 +293,7 @@ void RenderCache::KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm) 
             entry->dm = newDm;
         }
         // make sure that the page is rerendered eventually
-        entry->zoom = INVALID_ZOOM;
+        entry->zoom = kInvalidZoom;
         entry->outOfDate = true;
     }
 }
@@ -313,7 +313,7 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
     for (int i = 0; i < cacheCount; i++) {
         auto e = cache[i];
         if (e->dm == dm && e->pageNo == pageNo && !GetTileRect(mediabox, e->tile).Intersect(rect).IsEmpty()) {
-            e->zoom = INVALID_ZOOM;
+            e->zoom = kInvalidZoom;
             e->outOfDate = true;
         }
     }
@@ -339,7 +339,7 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
     // use larger tiles when fitting page or width or when a page is smaller
     // than the visible canvas width/height or when rendering pages
     // without clipping optimizations
-    if (zoomVirt == ZOOM_FIT_PAGE || zoomVirt == ZOOM_FIT_WIDTH || pixelbox.dx <= viewPort.dx ||
+    if (zoomVirt == kZoomFitPage || zoomVirt == kZoomFitWidth || pixelbox.dx <= viewPort.dx ||
         pixelbox.dy < viewPort.dy || !engine->HasClipOptimizations(pageNo)) {
         factorAvg /= 2.0;
     }
@@ -708,7 +708,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
             if (renderedReplacement) {
                 *renderedReplacement = true;
             }
-            entry = Find(dm, pageNo, dm->GetRotation(), INVALID_ZOOM, &tile);
+            entry = Find(dm, pageNo, dm->GetRotation(), kInvalidZoom, &tile);
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull()) {

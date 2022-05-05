@@ -183,7 +183,7 @@ static void ShowSearchResult(WindowInfo* win, TextSel* result, bool addNavPt) {
 
     DisplayModel* dm = win->AsFixed();
     if (addNavPt || !dm->PageShown(result->pages[0]) ||
-        (dm->GetZoomVirtual() == ZOOM_FIT_PAGE || dm->GetZoomVirtual() == ZOOM_FIT_CONTENT)) {
+        (dm->GetZoomVirtual() == kZoomFitPage || dm->GetZoomVirtual() == kZoomFitContent)) {
         win->ctrl->GoToPage(result->pages[0], addNavPt);
     }
 
@@ -846,11 +846,11 @@ Set view mode and zoom level DDE command
 eg:
 [SetView("c:\file.pdf", "book view", -2)]
 
-use -1 for ZOOM_FIT_PAGE, -2 for ZOOM_FIT_WIDTH and -3 for ZOOM_FIT_CONTENT
+use -1 for kZoomFitPage, -2 for kZoomFitWidth and -3 for kZoomFitContent
 */
 static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, viewMode;
-    float zoom = INVALID_ZOOM;
+    float zoom = kInvalidZoom;
     Point scroll(-1, -1);
     const WCHAR* next = str::Parse(cmd, L"[SetView(\"%S\",%? \"%S\",%f)]", &pdfFile, &viewMode, &zoom);
     if (!next) {
@@ -878,7 +878,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
         SwitchToDisplayMode(win, mode);
     }
 
-    if (zoom != INVALID_ZOOM) {
+    if (zoom != kInvalidZoom) {
         ZoomToSelection(win, zoom);
     }
 

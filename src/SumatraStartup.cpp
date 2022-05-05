@@ -218,7 +218,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
     } else if (i.pageNumber > 0 && isFirstWin) {
         cmd.AppendFmt(L"[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
     }
-    if ((i.startView != DisplayMode::Automatic || i.startZoom != INVALID_ZOOM ||
+    if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
@@ -278,7 +278,7 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& flags, bool
     if (flags.startView != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, flags.startView);
     }
-    if (flags.startZoom != INVALID_ZOOM) {
+    if (flags.startZoom != kInvalidZoom) {
         ZoomToSelection(win, flags.startZoom);
     }
     if ((flags.startScroll.x != -1 || flags.startScroll.y != -1) && win->AsFixed()) {
@@ -321,8 +321,8 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     }
     tab->ctrl->GoToPage(state->pageNo, true);
 
-    float zoom = ZoomFromString(state->zoom, INVALID_ZOOM);
-    if (zoom != INVALID_ZOOM) {
+    float zoom = ZoomFromString(state->zoom, kInvalidZoom);
+    if (zoom != kInvalidZoom) {
         if (tab->AsFixed()) {
             tab->AsFixed()->Relayout(zoom, state->rotation);
         } else {
@@ -370,7 +370,7 @@ static bool SetupPluginMode(Flags& i) {
         // display documents as single page/continuous/fit width
         // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
         gGlobalPrefs->defaultDisplayModeEnum = DisplayMode::Continuous;
-        gGlobalPrefs->defaultZoomFloat = ZOOM_FIT_WIDTH;
+        gGlobalPrefs->defaultZoomFloat = kZoomFitWidth;
     }
     // use fixed page UI for all document types (so that the context menu always
     // contains all plugin specific entries and the main window is never closed)

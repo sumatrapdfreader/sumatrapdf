@@ -15,13 +15,13 @@ enum class DisplayMode {
     ContinuousBookView,
 };
 
-#define ZOOM_FIT_PAGE -1.f
-#define ZOOM_FIT_WIDTH -2.f
-#define ZOOM_FIT_CONTENT -3.f
-#define ZOOM_ACTUAL_SIZE 100.0f
-#define ZOOM_MAX 6400.f /* max zoom in % */
-#define ZOOM_MIN 8.33f  /* min zoom in % */
-#define INVALID_ZOOM -99.0f
+constexpr float kZoomFitPage = -1.f;
+constexpr float kZoomFitWidth = -2.f;
+constexpr float kZoomFitContent = -3.f;
+constexpr float kZoomActualSize = 100.0f;
+constexpr float kZoomMax = 6400.f; /* max zoom in % */
+constexpr float kZoomMin = 8.33f;  /* min zoom in % */
+constexpr float kInvalidZoom = -99.0f;
 
 bool IsSingle(DisplayMode mode);
 bool IsContinuous(DisplayMode mode);

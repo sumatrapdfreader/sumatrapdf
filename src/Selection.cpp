@@ -213,7 +213,7 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
     if (win->AsFixed()) {
         DisplayModel* dm = win->AsFixed();
         // when not zooming to fit (which contradicts zooming to a specific point), ...
-        if (!relative && (ZOOM_FIT_PAGE == factor || ZOOM_FIT_CONTENT == factor) && scrollToFit) {
+        if (!relative && (kZoomFitPage == factor || kZoomFitContent == factor) && scrollToFit) {
             zoomToPt = false;
         }
         // either scroll towards the center of the current selection (if there is any) ...

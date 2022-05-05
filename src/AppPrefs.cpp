@@ -114,7 +114,7 @@ bool Load() {
     }
     gprefs->lastPrefUpdate = file::GetModificationTime(path.Get());
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
-    gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, ZOOM_ACTUAL_SIZE);
+    gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, kZoomActualSize);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
 
     int weekDiff = GetWeekCount() - gprefs->openCountWeek;
@@ -128,10 +128,10 @@ bool Load() {
 
     // make sure that zoom levels are in the order expected by DisplayModel
     gprefs->zoomLevels->Sort(cmpFloat);
-    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->at(0) < ZOOM_MIN) {
+    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->at(0) < kZoomMin) {
         gprefs->zoomLevels->PopAt(0);
     }
-    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->Last() > ZOOM_MAX) {
+    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->Last() > kZoomMax) {
         gprefs->zoomLevels->Pop();
     }
 
