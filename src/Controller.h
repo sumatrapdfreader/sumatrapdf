@@ -9,6 +9,8 @@ struct IPageDestination;
 struct TocTree;
 struct TocItem;
 struct WindowInfo;
+struct FileState;
+enum class DisplayMode;
 
 using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
 

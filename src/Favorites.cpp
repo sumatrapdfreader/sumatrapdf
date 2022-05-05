@@ -16,12 +16,12 @@
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/TreeCtrl.h"
 
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "SumatraConfig.h"
-#include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"

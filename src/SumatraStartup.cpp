@@ -26,11 +26,11 @@
 #include "wingui/wingui2.h"
 
 #include "Accelerators.h"
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"

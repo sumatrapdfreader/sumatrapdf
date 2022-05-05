@@ -8,14 +8,9 @@
 #include "utils/GuessFileType.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/TrivialHtmlParser.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/UIModels.h"
-
-#include "DisplayMode.h"
 #include "Controller.h"
-#include "EngineBase.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
 

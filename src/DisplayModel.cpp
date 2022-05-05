@@ -50,11 +50,11 @@
 
 #include "wingui/UIModels.h"
 
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "PdfSync.h"
@@ -533,7 +533,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
 int DisplayModel::FirstVisiblePageNo() const {
     CrashIf(!pagesInfo);
     if (!pagesInfo) {
-        return INVALID_PAGE_NO;
+        return kInvalidPageNo;
     }
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
@@ -544,7 +544,7 @@ int DisplayModel::FirstVisiblePageNo() const {
     }
 
     /* If no pages are visible */
-    return INVALID_PAGE_NO;
+    return kInvalidPageNo;
 }
 
 // we consider the most visible page the current one
@@ -556,10 +556,10 @@ int DisplayModel::CurrentPageNo() const {
 
     CrashIf(!pagesInfo);
     if (!pagesInfo) {
-        return INVALID_PAGE_NO;
+        return kInvalidPageNo;
     }
     // determine the most visible page
-    int mostVisiblePage = INVALID_PAGE_NO;
+    int mostVisiblePage = kInvalidPageNo;
     float ratio = 0;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
@@ -571,7 +571,7 @@ int DisplayModel::CurrentPageNo() const {
     }
 
     /* if no page is visible, default to either the first or the last one */
-    if (INVALID_PAGE_NO == mostVisiblePage) {
+    if (kInvalidPageNo == mostVisiblePage) {
         PageInfo* pageInfo = GetPageInfo(1);
         if (pageInfo && viewPort.y > pageInfo->pos.y + pageInfo->pos.dy) {
             mostVisiblePage = PageCount();

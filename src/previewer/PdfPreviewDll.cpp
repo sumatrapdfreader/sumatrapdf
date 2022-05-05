@@ -8,13 +8,12 @@
 
 #include "wingui/UIModels.h"
 
-#include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "RegistryPreview.h"
+#include "PdfPreviewBase.h"
 
 #include "utils/Log.h"
-#include "PdfPreviewBase.h"
 
 long g_lRefCount = 0;
 

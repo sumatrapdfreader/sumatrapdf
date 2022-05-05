@@ -3,17 +3,11 @@ License: GPLv3 */
 
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/UIModels.h"
-
-#include "DisplayMode.h"
-#include "Controller.h"
-#include "EngineBase.h"
 #include "SettingsStructs.h"
-#include "FileHistory.h"
 #include "GlobalPrefs.h"
+#include "FileHistory.h"
 
 /* Handling of file history list.
 

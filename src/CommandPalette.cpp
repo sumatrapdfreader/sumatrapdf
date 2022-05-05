@@ -6,16 +6,14 @@
 #include "utils/UITask.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
 #include "wingui/wingui2.h"
 
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "DisplayModel.h"
 #include "WindowInfo.h"

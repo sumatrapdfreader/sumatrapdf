@@ -13,11 +13,10 @@
 #include "wingui/Window.h"
 #include "wingui/TooltipCtrl.h"
 
-#include "DisplayMode.h"
+#include "SettingsStructs.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "SumatraConfig.h"
-#include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "AppColors.h"
 #include "GlobalPrefs.h"

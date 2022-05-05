@@ -2,19 +2,14 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/CryptoUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/UIModels.h"
-
-#include "DisplayMode.h"
-#include "Controller.h"
-#include "EngineBase.h"
-#include "FzImgReader.h"
 #include "SettingsStructs.h"
+#include "Controller.h"
+#include "FzImgReader.h"
 #include "FileHistory.h"
 
 #include "AppTools.h"

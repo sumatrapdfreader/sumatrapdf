@@ -7,22 +7,18 @@ extern "C" {
 }
 
 #include "utils/BaseUtil.h"
-#include "utils/BitManip.h"
 #include "utils/FileUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/Dpi.h"
 
 #include "wingui/UIModels.h"
 
-#include "resource.h"
-#include "Commands.h"
-#include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "Translations.h"
 #include "EngineAll.h"
+#include "Translations.h"
 #include "SaveAsPdf.h"
+#include "resource.h"
+#include "Commands.h"
 
 #include "utils/Log.h"
 

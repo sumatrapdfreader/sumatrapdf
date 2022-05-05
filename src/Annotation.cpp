@@ -13,11 +13,10 @@ extern "C" {
 #include "wingui/UIModels.h"
 
 #include "Annotation.h"
-#include "DisplayMode.h"
+#include "SettingsStructs.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineMupdfImpl.h"
-#include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 
 /*

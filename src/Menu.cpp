@@ -15,11 +15,11 @@
 #include "wingui/UIModels.h"
 
 #include "Annotation.h"
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "Theme.h"

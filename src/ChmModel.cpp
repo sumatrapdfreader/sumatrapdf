@@ -10,13 +10,12 @@
 
 #include "wingui/UIModels.h"
 
-#include "Annotation.h"
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
-#include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 

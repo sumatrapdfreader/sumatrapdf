@@ -23,8 +23,6 @@ enum class DisplayMode {
 #define ZOOM_MIN 8.33f  /* min zoom in % */
 #define INVALID_ZOOM -99.0f
 
-constexpr int INVALID_PAGE_NO = -1;
-
 bool IsSingle(DisplayMode mode);
 bool IsContinuous(DisplayMode mode);
 bool IsFacing(DisplayMode mode);

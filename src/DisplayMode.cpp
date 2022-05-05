@@ -4,8 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
 
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
+#include "DisplayMode.h"
 #include "GlobalPrefs.h"
 
 #include "utils/Log.h"

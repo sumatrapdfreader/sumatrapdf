@@ -11,7 +11,6 @@
 
 #include "SumatraConfig.h"
 #include "Annotation.h"
-#include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"

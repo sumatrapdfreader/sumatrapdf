@@ -3,13 +3,11 @@
 
 #include "utils/BaseUtil.h"
 #include <synctex_parser.h>
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
 
 #include "wingui/UIModels.h"
 
-#include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "PdfSync.h"

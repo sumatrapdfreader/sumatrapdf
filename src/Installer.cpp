@@ -27,9 +27,9 @@
 #include "Version.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
-#include "Installer.h"
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
+#include "Installer.h"
 
 #include "utils/Log.h"
 

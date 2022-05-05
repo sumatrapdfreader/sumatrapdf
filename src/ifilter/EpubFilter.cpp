@@ -11,7 +11,6 @@
 
 #include "wingui/UIModels.h"
 
-#include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EbookBase.h"

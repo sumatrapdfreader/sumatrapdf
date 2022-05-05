@@ -4,7 +4,6 @@
 #include "utils/BaseUtil.h"
 #include "resource.h"
 
-#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Commands.h"

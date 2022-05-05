@@ -19,7 +19,6 @@
 
 #include "wingui/UIModels.h"
 
-#include "DisplayMode.h"
 #include "Controller.h"
 #include "FzImgReader.h"
 #include "EngineBase.h"

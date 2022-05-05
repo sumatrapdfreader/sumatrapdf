@@ -4,6 +4,8 @@
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 
+constexpr int kInvalidPageNo = -1;
+
 struct Annotation;
 enum class AnnotationType;
 
@@ -174,8 +176,8 @@ struct DisplayModel : Controller {
     int GetPageNoByPoint(Point pt) const;
     Point CvtToScreen(int pageNo, PointF pt);
     Rect CvtToScreen(int pageNo, RectF r);
-    PointF CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
-    RectF CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
+    PointF CvtFromScreen(Point pt, int pageNo = kInvalidPageNo);
+    RectF CvtFromScreen(Rect r, int pageNo = kInvalidPageNo);
 
     bool ShowResultRectToScreen(TextSel* res);
 

@@ -7,9 +7,9 @@
 #include "utils/FileUtil.h"
 #include "utils/SettingsUtil.h"
 
-#include "DisplayMode.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"
+
 #include "GlobalPrefs.h"
 
 #include "utils/Log.h"

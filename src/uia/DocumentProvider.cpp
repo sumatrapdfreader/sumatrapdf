@@ -10,10 +10,10 @@
 
 #include "wingui/UIModels.h"
 
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
-#include "SettingsStructs.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "utils/FileUtil.h"

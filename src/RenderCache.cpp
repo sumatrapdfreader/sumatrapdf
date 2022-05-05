@@ -8,11 +8,11 @@
 
 #include "wingui/UIModels.h"
 
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "RenderCache.h"
@@ -245,7 +245,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
         bool shouldFree;
-        if (dm && pageNo != INVALID_PAGE_NO) {
+        if (dm && pageNo != kInvalidPageNo) {
             // a specific page
             shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
             if (tile) {
@@ -603,7 +603,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
     int curPos = 0;
     for (int i = 0; i < reqCount; i++) {
         PageRenderRequest* req = &(requests[i]);
-        bool shouldRemove = req->dm == dm && (pageNo == INVALID_PAGE_NO || req->pageNo == pageNo) &&
+        bool shouldRemove = req->dm == dm && (pageNo == kInvalidPageNo || req->pageNo == pageNo) &&
                             (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, *tile, 0.5));
         if (i != curPos) {
             requests[curPos] = requests[i];

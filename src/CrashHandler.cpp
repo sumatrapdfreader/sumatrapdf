@@ -14,8 +14,6 @@
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/WinUtil.h"
 
-#include "DisplayMode.h"
-#include "SumatraPDF.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "Version.h"

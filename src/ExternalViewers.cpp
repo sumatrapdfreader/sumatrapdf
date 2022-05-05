@@ -9,11 +9,11 @@
 
 #include "wingui/UIModels.h"
 
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "TabInfo.h"

@@ -33,12 +33,12 @@
 using namespace wg;
 
 #include "Annotation.h"
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "PdfCreator.h"
-#include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "PalmDbReader.h"
@@ -816,7 +816,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
         return;
     }
 
-    if (INVALID_PAGE_NO != pageNo) {
+    if (kInvalidPageNo != pageNo) {
         AutoFreeWstr buf(win->ctrl->GetPageLabel(pageNo));
         win::SetText(win->hwndPageBox, buf);
         ToolbarUpdateStateForWindow(win, false);
@@ -4774,11 +4774,13 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotHighlight:
         case CmdCreateAnnotSquiggly:
         case CmdCreateAnnotStrikeOut:
-        case CmdCreateAnnotUnderline: {
-            auto annots = MakeAnnotationFromSelection(tab, annotType);
-            bool isShift = IsShiftPressed();
-            openAnnotsInEditWindow(win, annots, isShift);
-        } break;
+        case CmdCreateAnnotUnderline:
+            if (win && tab) {
+                auto annots = MakeAnnotationFromSelection(tab, annotType);
+                bool isShift = IsShiftPressed();
+                openAnnotsInEditWindow(win, annots, isShift);
+            }
+        break;
 
         case CmdDeleteAnnotation: {
             DeleteAnnotationUnderCursor(win);

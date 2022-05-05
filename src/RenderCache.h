@@ -13,6 +13,8 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 // i.e. one big page can use as much memory as lots of small pages
 #define MAX_BITMAPS_CACHED 64
 
+struct PageInfo;
+
 class RenderingCallback {
   public:
     virtual void Callback(RenderedBitmap* bmp = nullptr) = 0;
@@ -141,7 +143,7 @@ class RenderCache {
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile = nullptr,
                 RectF* pageRect = nullptr, RenderingCallback* renderCb = nullptr);
-    void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = INVALID_PAGE_NO, TilePosition* tile = nullptr);
+    void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 
     static DWORD WINAPI RenderCacheThread(LPVOID data);

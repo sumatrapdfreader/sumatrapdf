@@ -21,6 +21,7 @@ extern "C" {
 #include "wingui/wingui2.h"
 
 #include "Annotation.h"
+#include "SettingsStructs.h"
 #include "DisplayMode.h"
 #include "Controller.h"
 #include "EngineBase.h"
@@ -28,7 +29,6 @@ extern "C" {
 #include "EngineMupdfImpl.h"
 #include "Translations.h"
 #include "SumatraConfig.h"
-#include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
