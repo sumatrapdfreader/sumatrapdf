@@ -84,16 +84,27 @@ static i32 gCommandsNoActivate[] = {
     CmdOpenFolder,
     // TOOD: probably more
 };
+
+static i32 gRemoveIfAnnotsNotSupported[] = {
+    CmdSaveAnnotations,
+    CmdSelectAnnotation,
+    CmdEditAnnotations,
+    CmdDeleteAnnotation,
+    //CmdDebugAnnotations,
+};
+
 // clang-format on
 
-static bool IsCmdInList(i32 cmdId, int n, i32* list) {
-    for (int i = 0; i < n; i++) {
-        if (list[i] == cmdId) {
+static bool __cmdInList(i32 cmdId, i32* ids, int nIds) {
+    for (int i = 0; i < nIds; i++) {
+        if (ids[i] == cmdId) {
             return true;
         }
     }
     return false;
 }
+
+#define IsCmdInList(name) __cmdInList(cmdId, name, dimof(name))
 
 struct CommandPaletteWnd : Wnd {
     ~CommandPaletteWnd() override = default;
@@ -123,21 +134,28 @@ struct CommandPaletteBuildCtx {
 };
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
-    int n = (int)dimof(gBlacklistCommandsFromPalette);
-    if (IsCmdInList(cmdId, n, gBlacklistCommandsFromPalette)) {
+    if (IsCmdInList(gBlacklistCommandsFromPalette)) {
         return false;
     }
     if (!ctx.isDocLoaded) {
-        n = (int)dimof(gDocumentNotOpenWhitelist);
-        if (!IsCmdInList(cmdId, n, gDocumentNotOpenWhitelist)) {
+        if (!IsCmdInList(gDocumentNotOpenWhitelist)) {
+            return false;
+        }
+    }
+
+    if (!ctx.supportsAnnots) {
+        if ((cmdId >= (i32)CmdCreateAnnotFirst) && (cmdId <= (i32)CmdCreateAnnotLast)) {
+            return false;
+        }
+        if (IsCmdInList(gRemoveIfAnnotsNotSupported)) {
             return false;
         }
     }
 
     switch (cmdId) {
         case CmdDebugShowLinks:
-        case CmdDebugAnnotations:
-        case CmdDebugDownloadSymbols:
+        // case CmdDebugAnnotations:
+        // case CmdDebugDownloadSymbols:
         case CmdDebugTestApp:
         case CmdDebugShowNotif:
         case CmdDebugCrashMe: {
@@ -354,7 +372,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     auto s = listBox->model->Item(sel);
     int cmdId = GetCommandIdByDesc(s.data());
     if (cmdId >= 0) {
-        bool noActivate = IsCmdInList(cmdId, (int)dimof(gCommandsNoActivate), gCommandsNoActivate);
+        bool noActivate = IsCmdInList(gCommandsNoActivate);
         if (noActivate) {
             gHwndToActivateOnClose = nullptr;
         }

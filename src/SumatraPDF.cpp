@@ -3894,10 +3894,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         }
     }
 
-    if (IsCharUpperW((WCHAR)key)) {
-        key = (WPARAM)SingleCharLowerW((WCHAR)key);
-    }
-
     switch (key) {
         case VK_ESCAPE:
             OnFrameKeyEsc(win);
@@ -3909,6 +3905,10 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
 
     if (!win->IsDocLoaded()) {
         return;
+    }
+
+    if (IsCharUpperW((WCHAR)key)) {
+        key = (WPARAM)SingleCharLowerW((WCHAR)key);
     }
 
     auto* ctrl = win->ctrl;
@@ -4765,9 +4765,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             DownloadDebugSymbols();
             break;
 
+#if 0 // TODO: what was that?
         case CmdDebugAnnotations:
             FrameOnChar(win, 'h');
             break;
+#endif
 
         // TODO: make it closer to handling in OnWindowContextMenu()
         case CmdCreateAnnotHighlight:

@@ -122,7 +122,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFavoriteToggle, "Toggle Favorites")                              \
     V(CmdDebugShowLinks, "Debug: Show Links")                             \
     V(CmdDebugCrashMe, "Debug: Crash Me")                                 \
-    V(CmdDebugAnnotations, "Debug: Annotations")                          \
     V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                 \
     V(CmdDebugTestApp, "Debug: Test App")                                 \
     V(CmdDebugShowNotif, "Debug: Show Notification")                      \
@@ -155,6 +154,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenPrevFileInFolder, "Open Previous File In Folder")            \
     V(CmdCommandPalette, "Command Palette")                               \
     V(CmdNone, "Do nothing")
+
+// TODO: was it ever implemented?
+//    V(CmdDebugAnnotations, "Debug: Annotations")                          \
 
 // order of CreateAnnot* must be the same as enum AnnotationType
 /*
@@ -209,6 +211,9 @@ enum {
 
     CmdZoomFirst = CmdZoomFitPage,
     CmdZoomLast = CmdZoomCustom,
+
+    CmdCreateAnnotFirst = CmdCreateAnnotText,
+    CmdCreateAnnotLast = CmdCreateAnnotFileAttachment,
 };
 
 #undef DEF_CMD

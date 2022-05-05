@@ -529,10 +529,12 @@ static MenuDef menuDefDebug[] = {
         "Highlight links",
         CmdDebugShowLinks,
     },
+#if 0
     {
         "Annotation from Selection",
         CmdDebugAnnotations,
     },
+#endif
     {
         "Download symbols",
         CmdDebugDownloadSymbols,
@@ -853,7 +855,7 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdOpenWithPdfXchange,
     CmdRenameFile,
     CmdShowInFolder,
-    CmdDebugAnnotations,
+    //CmdDebugAnnotations,
     // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
     // are removed instead of disabled (and can remain enabled
     // for broken XPS/CHM documents)
@@ -1658,8 +1660,10 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 #endif
 
     win::menu::SetChecked(win->menu, CmdDebugShowLinks, gDebugShowLinks);
+#if 0
     win::menu::SetEnabled(win->menu, CmdDebugAnnotations,
                           tab && tab->selectionOnPage && win->showSelection && EngineSupportsAnnotations(engine));
+#endif
 }
 
 void OnAboutContextMenu(WindowInfo* win, int x, int y) {
@@ -1740,7 +1744,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     int pageNoUnderCursor = dm->GetPageNoByPoint(Point{x, y});
     PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNoUnderCursor);
     EngineBase* engine = dm->GetEngine();
-    bool annotationsSupported = EngineSupportsAnnotations(engine) && !win->isFullScreen;
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
         win::menu::Remove(popup, CmdCopyLinkTarget);
