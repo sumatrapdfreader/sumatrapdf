@@ -593,6 +593,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     // those are registry keys written before 3.4
     SeqStrings exts = gSupportedExts;
     WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
+    WCHAR* p;
     while (exts) {
         WCHAR* ext = ToWstrTemp(exts);
         WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
@@ -601,18 +602,18 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
         keyname = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
         if (!LoggedDeleteRegKey(hkey, keyname)) {
-            continue;
+            goto Next;
         }
         // remove empty keys that the installer might have created
-        WCHAR* p = str::FindCharLast(keyname, '\\');
+        p = str::FindCharLast(keyname, '\\');
         *p = 0;
         if (!DeleteEmptyRegKey(hkey, keyname)) {
-            continue;
+            goto Next;
         }
         p = str::FindCharLast(keyname, '\\');
         *p = 0;
         DeleteEmptyRegKey(hkey, keyname);
-
+Next:
         seqstrings::Next(exts);
     }
 
