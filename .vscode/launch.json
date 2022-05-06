@@ -27,6 +27,18 @@
             "externalConsole": false
         },
         {
+            "name": "dbg 64 log",
+            "type": "cppvsdbg",
+            "preLaunchTask": "build-dbg-64",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
+            "args": ["-log"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
             "name": "installer dbg 64",
             "type": "cppvsdbg",
             "preLaunchTask": "build-dbg-64",

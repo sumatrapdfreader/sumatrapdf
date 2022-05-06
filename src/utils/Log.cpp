@@ -180,6 +180,18 @@ void logf(const char* fmt, ...) {
     va_end(args);
 }
 
+void logfa(const char* fmt, ...) {
+    if (gStopLogging) {
+        return;
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    AutoFree s = str::FmtV(fmt, args);
+    log(s.AsView());
+    va_end(args);
+}
+
 void StartLogToFile(const char* path, bool removeIfExists) {
     CrashIf(logFilePath);
     logFilePath = str::Dup(path);

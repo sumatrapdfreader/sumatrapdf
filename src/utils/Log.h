@@ -46,4 +46,7 @@ void log(const WCHAR* s);
 void logf(const WCHAR* fmt, ...);
 #endif
 
+// always log, even if NO_LOG is defined
+void logfa(const char* fmt, ...);
+
 void DestroyLogging();

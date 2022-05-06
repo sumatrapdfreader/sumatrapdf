@@ -668,6 +668,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
         CrashIf(req.abortCookie != nullptr);
         EngineBase* engine = req.dm->GetEngine();
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
+        auto timeStart = TimeGet();
         bmp = engine->RenderPage(args);
         if (req.abort) {
             delete bmp;
@@ -675,6 +676,12 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
                 req.renderCb->Callback(nullptr);
             }
             continue;
+        }
+        auto durMs = TimeSinceInMs(timeStart);
+        if (durMs > 100) {
+            auto pathW = engine->FileName();
+            char* path = ToUtf8Temp(pathW);
+            logfa("Slow rendering: %2.fms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
         }
 
         if (req.renderCb) {

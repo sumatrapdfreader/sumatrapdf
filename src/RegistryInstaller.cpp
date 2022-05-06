@@ -613,7 +613,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
         p = str::FindCharLast(keyname, '\\');
         *p = 0;
         DeleteEmptyRegKey(hkey, keyname);
-Next:
+    Next:
         seqstrings::Next(exts);
     }
 
