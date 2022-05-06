@@ -4253,6 +4253,28 @@ static void OnMenuCustomZoom(WindowInfo* win) {
     ZoomToSelection(win, zoom);
 }
 
+char* GetLogFilePath() {
+    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    if (!dir.Get()) {
+        return nullptr;
+    }
+    auto path = path::JoinTemp(dir, L"sumatra-log.txt");
+    auto res = strconv::WstrToUtf8(path);
+    return res;
+}
+
+void ShowLogFileSmart() {
+    char* path = gLogFilePath;
+    if (path == nullptr) {
+        path = GetLogFilePath();
+        WriteCurrentLogToFile(path);
+    }
+    LaunchFileIfExists(path);
+    if (path != gLogFilePath) {
+        str::Free(path);
+    }
+}
+
 static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int wmId = LOWORD(wp);
 
@@ -4396,6 +4418,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdCommandPalette:
             RunCommandPallette(win);
+            break;
+
+        case CmdShowLog:
+            ShowLogFileSmart();
             break;
 
         case CmdClose:

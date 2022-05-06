@@ -153,6 +153,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenNextFileInFolder, "Open Next File In Folder")                \
     V(CmdOpenPrevFileInFolder, "Open Previous File In Folder")            \
     V(CmdCommandPalette, "Command Palette")                               \
+    V(CmdShowLog, "Show log")                                             \
     V(CmdNone, "Do nothing")
 
 // TODO: was it ever implemented?

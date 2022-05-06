@@ -32,7 +32,7 @@ bool gStopLogging = false;
 bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 
-static char* logFilePath;
+char* gLogFilePath = nullptr;
 
 // 1 MB - 128 to stay under 1 MB even after appending (an estimate)
 constexpr int kMaxLogBuf = 1024 * 1024 - 128;
@@ -151,8 +151,8 @@ void log(std::string_view s) {
         fflush(stdout);
     }
 
-    if (logFilePath) {
-        auto f = fopen(logFilePath, "a");
+    if (gLogFilePath) {
+        auto f = fopen(gLogFilePath, "a");
         if (f != nullptr) {
             fwrite(s.data(), 1, s.size(), f);
             fflush(f);
@@ -193,8 +193,8 @@ void logfa(const char* fmt, ...) {
 }
 
 void StartLogToFile(const char* path, bool removeIfExists) {
-    CrashIf(logFilePath);
-    logFilePath = str::Dup(path);
+    CrashIf(gLogFilePath);
+    gLogFilePath = str::Dup(path);
     if (removeIfExists) {
         remove(path);
     }
@@ -237,4 +237,5 @@ void DestroyLogging() {
     delete gLogAllocator;
     gLogAllocator = nullptr;
     gLogMutex.Unlock();
+    str::FreePtr(&gLogFilePath);
 }

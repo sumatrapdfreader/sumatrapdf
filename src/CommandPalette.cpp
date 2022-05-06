@@ -75,6 +75,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdHelpAbout,
     CmdFavoriteToggle,
     CmdToggleFullscreen,
+    CmdShowLog,
 };
 
 // for those commands do not activate main window

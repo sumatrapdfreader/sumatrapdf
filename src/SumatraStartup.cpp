@@ -866,17 +866,6 @@ static void ForceStartupLeaks() {
     }
 }
 
-static char* GetLogFilePath() {
-    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    if (!dir.Get()) {
-        return nullptr;
-    }
-    auto path = path::Join(dir, L"sumatra-log.txt", nullptr);
-    auto res = strconv::WstrToUtf8(path);
-    str::Free(path);
-    return res;
-}
-
 int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR cmdLine,
                      __unused int nCmdShow) {
     int retCode = 1; // by default it's error
