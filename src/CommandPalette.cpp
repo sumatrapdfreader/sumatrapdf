@@ -505,10 +505,11 @@ void RunCommandPallette(WindowInfo* win) {
     CrashIf(gCommandPaletteWnd);
     // make min font size 16 (I get 12)
     int fontSize = GetSizeOfDefaultGuiFont();
+    fontSize = (fontSize * 14) / 10; // make font 1.4x bigger than system font
     if (fontSize < 16) {
         fontSize = 16;
     }
-    gCommandPaletteFont = GetDefaultGuiFontOfSize(16);
+    gCommandPaletteFont = GetDefaultGuiFontOfSize(fontSize);
     // TODO: leaking font
 
     auto wnd = new CommandPaletteWnd();
