@@ -124,7 +124,7 @@ static Kind GetKindByFileExt(const WCHAR* path) {
     auto pathA = ToUtf8Temp(path);
     int idx = 0;
     const char* curr = gFileExts;
-    while (curr && *curr) {
+    while (curr) {
         if (str::EndsWithI(pathA.Get(), curr)) {
             int n = (int)dimof(gExtsKind);
             CrashIf(idx >= n);
