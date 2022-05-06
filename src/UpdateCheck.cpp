@@ -187,8 +187,10 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
     int secsBetweenChecks = gIsPreReleaseBuild ? kSecondsInWeek : kSecondsInDay;
     bool checkUpdate = secsSinceLastUpdate > secsBetweenChecks;
+#if 0
     logf("CheckForUpdate: secsBetweenChecks: %d, secsSinceLastUpdate: %d, checkUpdate: %d\n", secsBetweenChecks,
          secsSinceLastUpdate, (int)checkUpdate);
+#endif
     return checkUpdate;
 }
 

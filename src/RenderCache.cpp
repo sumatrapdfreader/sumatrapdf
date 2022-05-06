@@ -681,7 +681,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
         if (durMs > 100) {
             auto pathW = engine->FileName();
             char* path = ToUtf8Temp(pathW);
-            logfa("Slow rendering: %2.fms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
+            logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
         }
 
         if (req.renderCb) {

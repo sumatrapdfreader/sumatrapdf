@@ -18,9 +18,9 @@
 #include "utils/WinUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/Archive.h"
+#include "utils/Timer.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/TreeCtrl.h"
@@ -922,7 +922,7 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
         ctrl = new DisplayModel(engine, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
         VerifyController(ctrl, path);
-        logf(L"CreateControllerForFile: '%s', %d pages\n", path, engine->PageCount());
+        // logf(L"CreateControllerForFile: '%s', %d pages\n", path, engine->PageCount());
         return ctrl;
     }
 
@@ -933,7 +933,7 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
     if (!ctrl) {
         return nullptr;
     }
-    logf(L"CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
+    // logf(L"CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
     return ctrl;
 }
 
@@ -1563,10 +1563,6 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     int threadID = (int)GetCurrentThreadId();
     AutoFreeWstr fullPath(path::Normalize(args.fileName));
     WindowInfo* win = args.win;
-    {
-        auto path = ToUtf8Temp(fullPath);
-        logf("LoadDocument: '%s' tid=%d\n", path.Get(), threadID);
-    }
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
@@ -1631,12 +1627,24 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         }
     }
 
+    auto timeStart = TimeGet();
     HwndPasswordUI pwdUI(win->hwndFrame);
     Controller* ctrl = nullptr;
     if (args.engine != nullptr) {
         ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
     } else {
         ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
+    }
+
+    {
+        char* path = ToUtf8Temp(fullPath);
+        auto durMs = TimeSinceInMs(timeStart);
+        if (ctrl) {
+            int nPages = ctrl->PageCount();
+            logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
+        } else {
+            logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
+        }
     }
 
     if (!ctrl) {
@@ -1683,11 +1691,13 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (!args.forceReuse) {
         // insert a new tab for the loaded document
         win->currentTab = CreateNewTab(win, fullPath);
-        logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
+        // logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
     } else {
         win->currentTab->filePath.SetCopy(fullPath);
+#if 0
         auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.Get());
+#endif
     }
 
     args.fileName = fullPath;
@@ -1707,8 +1717,10 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (currTab->ctrl) {
         nPages = currTab->ctrl->PageCount();
     }
+#if 0
     logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s', %d pages\n", currTab,
          path.Get(), nPages);
+#endif
 
     // TODO: figure why we hit this.
     // happens when opening 3 files via "Open With"
