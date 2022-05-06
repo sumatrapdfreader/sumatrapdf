@@ -1965,4 +1965,9 @@ void DeleteWnd(Checkbox** wnd) {
     delete *wnd;
     *wnd = nullptr;
 }
+
+void DeleteWnd(Progress** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
 } // namespace wg

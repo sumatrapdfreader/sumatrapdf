@@ -28,7 +28,7 @@ static WCHAR* GetInstallDate() {
 }
 
 // Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(const WCHAR* dir) {
+static DWORD GetDirSize(const WCHAR* dir, bool recur) {
     logf(L"GetDirSize(%s)\n", dir);
     AutoFreeWstr dirPattern = path::Join(dir, L"*");
     WIN32_FIND_DATA findData;
@@ -40,11 +40,19 @@ static DWORD GetDirSize(const WCHAR* dir) {
 
     DWORD totalSize = 0;
     do {
-        if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            totalSize += findData.nFileSizeLow;
-        } else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
-            AutoFreeWstr subdir = path::Join(dir, findData.cFileName);
-            totalSize += GetDirSize(subdir);
+        DWORD fattr = findData.dwFileAttributes;
+        bool isDir = fattr & FILE_ATTRIBUTE_DIRECTORY;
+        WCHAR* name = findData.cFileName;
+        if (isDir) {
+            if (recur && !str::Eq(name, L".") && !str::Eq(name, L"..")) {
+                WCHAR* subdir = path::JoinTemp(dir, name);
+                totalSize += GetDirSize(subdir, recur);
+            }
+        } else {
+            bool isNormal = fattr & FILE_ATTRIBUTE_NORMAL;
+            if (isNormal) {
+                totalSize += findData.nFileSizeLow;
+            }
         }
     } while (FindNextFile(h, &findData) != 0);
     FindClose(h);
@@ -75,7 +83,9 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
         WCHAR* key = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);
         ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", key);
     }
-    DWORD size = GetDirSize(installDir) / 1024;
+    // non-recursive because we don't want to count space used for thumbnails
+    // which is in installDir for local install
+    DWORD size = GetDirSize(installDir, false) / 1024;
     // size of installed directory after copying files
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"EstimatedSize", size);
     // current date as YYYYMMDD

@@ -39,8 +39,8 @@ using namespace wg;
 struct InstallerWnd;
 
 static InstallerWnd* gWnd = nullptr;
-
 static lzma::SimpleArchive gArchive{};
+static bool gInstallStarted = false; // a bit of a hack
 
 struct InstallerWnd {
     HWND hwnd = nullptr;
@@ -242,7 +242,7 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     if (!ExtractInstallerFiles(gCli->installDir)) {
         log("ExtractInstallerFiles() failed\n");
-        goto Error;
+        goto Exit;
     }
 
     // for cleaner upgrades, remove registry entries and shortcuts from previous installations
@@ -286,7 +286,7 @@ static DWORD WINAPI InstallerThread(__unused LPVOID data) {
 
     ProgressStep();
     log("Installer thread finished\n");
-Error:
+Exit:
     if (gWnd->hwnd) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
@@ -364,6 +364,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     HwndInvalidate(wnd->hwnd);
 
+    gInstallStarted = true;
     wnd->hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
 }
 
@@ -417,8 +418,8 @@ static void OnButtonStartSumatra() {
 }
 
 static void OnInstallationFinished() {
-    delete gWnd->btnInstall;
-    delete gWnd->progressBar;
+    DeleteWnd(&gWnd->btnInstall);
+    DeleteWnd(&gWnd->progressBar);
 
     if (gWnd->failed) {
         gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TR("Close"));
@@ -916,7 +917,7 @@ static int RunApp() {
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
-        if (dur > 10000 && gWnd->btnInstall && gWnd->btnInstall->IsEnabled()) {
+        if (!gInstallStarted && dur > 10000) {
             CheckInstallUninstallPossible(true);
             t = TimeGet();
         }
@@ -1017,7 +1018,11 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     CrashIf(hr == E_INVALIDARG);
     if (buttonPressedId == kBtnIdDownload) {
-        LaunchBrowser("https://www.sumatrapdfreader.org/download-free-pdf-viewer.html");
+        const char* url = "https://www.sumatrapdfreader.org/download-free-pdf-viewer";
+        if (gIsPreReleaseBuild) {
+            url = "https://www.sumatrapdfreader.org/prerelease";
+        }
+        LaunchBrowser(url);
         return true;
     }
     return false;
@@ -1076,6 +1081,7 @@ int RunInstaller() {
             RestartElevatedForAllUsers();
             ::ExitProcess(0);
         }
+        gInstallStarted = true;
         InstallerThread(nullptr);
         ret = gWnd->failed ? 1 : 0;
     } else {
