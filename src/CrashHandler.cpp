@@ -312,6 +312,7 @@ bool CrashHandlerDownloadSymbols() {
 
 // like crash report, but can be triggered without a crash
 void _uploadDebugReport(const char* condStr) {
+    logf("uploadDebugReport: %s\n", condStr);
     if (!CrashHandlerCanUseNet()) {
         return;
     }
@@ -333,6 +334,7 @@ void _uploadDebugReport(const char* condStr) {
     // SaveCrashInfo(d);
     UploadCrashReport(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());
+    log(sv.data());
     log("_uploadDebugReport() finished\n");
 }
 
@@ -351,9 +353,13 @@ void _uploadDebugReportIfFunc(bool cond, __unused const char* condStr) {
         DebugBreak();
         return;
     }
-#if defined(PRE_RELEASE_VER)
-    _uploadDebugReport(condStr);
-#endif
+    // only enabled for pre-release builds, don't want lots of non-crash
+    // reports from official release
+    // exclude debug builds because don't want to get reports
+    // from people compiling Sumatra themselfes
+    if (gIsPreReleaseBuild && !gIsDebugBuild) {
+        _uploadDebugReport(condStr);
+    }
 }
 
 // If we can't resolve the symbols, we assume it's because we don't have symbols
