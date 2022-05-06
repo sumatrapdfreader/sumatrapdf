@@ -34,14 +34,13 @@
 #include "ExternalViewers.h"
 #include "Favorites.h"
 #include "FileThumbnails.h"
-#include "Menu.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
-#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Toolbar.h"
 #include "EditAnnotations.h"
 #include "Accelerators.h"
+#include "Menu.h"
 
 #include "utils/Log.h"
 
@@ -170,7 +169,7 @@ static MenuDef menuDefFile[] = {
 #ifdef ENABLE_SAVE_SHORTCUT
     {
         _TRN("Save S&hortcut..."),
-        CmdSaveAsBookmark,
+        CmdCreateShortcutToFile,
     },
 //| ACCESSKEY_ALTERNATIVE
 #else
@@ -845,7 +844,7 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdGoToPage,
     CmdFindFirst,
     CmdSaveAs,
-    CmdSaveAsBookmark,
+    CmdCreateShortcutToFile,
     CmdSendByEmail,
     CmdSelectAll,
     CmdProperties,
@@ -870,12 +869,17 @@ static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
     CmdShowInFolder,
 };
 
-static UINT_PTR disableIfNoSelection[] = {
+UINT_PTR disableIfNoSelection[] = {
     CmdCopySelection,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
     CmdSearchSelectionWithBing,
     CmdSearchSelectionWithGoogle,
+    CmdCreateAnnotHighlight,
+    CmdCreateAnnotSquiggly,
+    CmdCreateAnnotStrikeOut,
+    CmdCreateAnnotUnderline,
+    0,
 };
 
 static UINT_PTR menusNoTranslate[] = {
@@ -894,7 +898,7 @@ static UINT_PTR menusNoTranslate[] = {
     CmdZoom8_33,
 };
 
-static UINT_PTR removeIfNoInternetPerms[] = {
+UINT_PTR removeIfNoInternetPerms[] = {
     CmdCheckUpdate,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
@@ -903,14 +907,16 @@ static UINT_PTR removeIfNoInternetPerms[] = {
     CmdHelpVisitWebsite,
     CmdHelpOpenManualInBrowser,
     CmdContributeTranslation,
+    0,
 };
 
-static UINT_PTR removeIfNoFullscreenPerms[] = {
+UINT_PTR removeIfNoFullscreenPerms[] = {
     CmdTogglePresentationMode,
     CmdToggleFullscreen,
+    0,
 };
 
-static UINT_PTR removeIfNoPrefsPerms[] = {
+UINT_PTR removeIfNoPrefsPerms[] = {
     CmdOptions,
     CmdAdvancedOptions,
     CmdPinSelectedDocument,
@@ -918,9 +924,10 @@ static UINT_PTR removeIfNoPrefsPerms[] = {
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdFavoriteToggle,
+    0,
 };
 
-static UINT_PTR removeIfNoCopyPerms[] = {
+UINT_PTR removeIfNoCopyPerms[] = {
     // TODO: probably those are covered by menuDefSelection
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
@@ -934,10 +941,11 @@ static UINT_PTR removeIfNoCopyPerms[] = {
     CmdCopyImage,
     (UINT_PTR)menuDefSelection,
     (UINT_PTR)menuDefMainSelection,
+    0,
 };
 
 // TODO: all prefs params also fall under disk access
-static UINT_PTR removeIfNoDiskAccessPerm[] = {
+UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdNewWindow, // ???
     CmdOpenFile,
     CmdOpenFolder,
@@ -967,18 +975,20 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
 
     (UINT_PTR)menuDefCreateAnnotFromSelection,
     (UINT_PTR)menuDefCreateAnnotUnderCursor,
+    0,
 };
 
-static UINT_PTR removeIfAnnotsNotSupported[] = {
+UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSelectAnnotation,
     CmdEditAnnotations,
     CmdDeleteAnnotation,
     (UINT_PTR)menuDefCreateAnnotFromSelection,
     (UINT_PTR)menuDefCreateAnnotUnderCursor,
+    0,
 };
 
-static UINT_PTR rmoveIfChm[] = {
+UINT_PTR removeIfChm[] = {
     CmdSinglePageView,
     CmdFacingView,
     CmdBookView,
@@ -998,6 +1008,7 @@ static UINT_PTR rmoveIfChm[] = {
     CmdZoom12_5,
     CmdZoom8_33,
     (UINT_PTR)menuDefContext,
+    0,
 };
 // clang-format on
 
@@ -1411,7 +1422,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
 
         if (ctx) {
-            removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(rmoveIfChm));
+            removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(removeIfChm));
             removeMenu |= (!ctx->isCbx && (cmdId == CmdToggleMangaMode));
             removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
             removeMenu |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
@@ -1751,8 +1762,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
+    Point cursorPos{x, y};
     TabInfo* tab = win->currentTab;
-    IPageElement* pageEl = dm->GetElementAtPos({x, y}, nullptr);
+    IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
 
     WCHAR* value = nullptr;
     if (pageEl) {
@@ -1760,11 +1772,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     BuildMenuCtx buildCtx;
-    FillBuildMenuCtx(tab, &buildCtx, Point{x, y});
+    FillBuildMenuCtx(tab, &buildCtx, cursorPos);
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu(), &buildCtx);
 
-    int pageNoUnderCursor = dm->GetPageNoByPoint(Point{x, y});
-    PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNoUnderCursor);
+    int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
+    PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
     EngineBase* engine = dm->GetEngine();
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {

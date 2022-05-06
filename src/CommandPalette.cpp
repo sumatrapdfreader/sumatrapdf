@@ -22,6 +22,8 @@
 #include "CommandPalette.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"
+#include "ExternalViewers.h"
+#include "Annotation.h"
 
 #include "utils/Log.h"
 
@@ -41,8 +43,8 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
 
-    CmdExpandAll,   // TODO: figure the proper context for it
-    CmdCollapseAll, // TODO: figure the proper context for it
+    CmdExpandAll,   // TODO: figure proper context for it
+    CmdCollapseAll, // TODO: figure proper context for it
     CmdMoveFrameFocus,
 
     CmdFavoriteAdd,
@@ -50,6 +52,10 @@ static i32 gBlacklistCommandsFromPalette[] = {
 
     CmdPresentationWhiteBackground,
     CmdPresentationBlackBackground,
+
+    CmdSaveEmbeddedFile, // TODO: figure proper context for it
+    CmdCreateShortcutToFile, // not sure I want this at all
+    CmdToggleMenuBar,
 };
 
 // most commands are not valid when document is not opened
@@ -84,20 +90,33 @@ static i32 gCommandsNoActivate[] = {
     CmdOpenFolder,
     // TOOD: probably more
 };
-
-static i32 gRemoveIfAnnotsNotSupported[] = {
-    CmdSaveAnnotations,
-    CmdSelectAnnotation,
-    CmdEditAnnotations,
-    CmdDeleteAnnotation,
-    //CmdDebugAnnotations,
-};
-
 // clang-format on
+
+// those are shared with Menu.cpp
+extern UINT_PTR removeIfAnnotsNotSupported[];
+extern UINT_PTR disableIfNoSelection[];
+
+extern UINT_PTR removeIfNoInternetPerms[];
+extern UINT_PTR removeIfNoFullscreenPerms[];
+extern UINT_PTR removeIfNoPrefsPerms[];
+extern UINT_PTR removeIfNoDiskAccessPerm[];
+extern UINT_PTR removeIfNoCopyPerms[];
+extern UINT_PTR removeIfChm[];
 
 static bool __cmdInList(i32 cmdId, i32* ids, int nIds) {
     for (int i = 0; i < nIds; i++) {
         if (ids[i] == cmdId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// a must end with sentinel value of 0
+static bool IsCmdInMenuList(i32 cmdId, UINT_PTR* a) {
+    UINT_PTR id = (UINT_PTR)cmdId;
+    for (int i = 0; a[i]; i++) {
+        if (a[i] == id) {
             return true;
         }
     }
@@ -131,7 +150,22 @@ struct CommandPaletteWnd : Wnd {
 struct CommandPaletteBuildCtx {
     bool isDocLoaded = false;
     bool supportsAnnots = false;
+    bool hasSelection = false;
+    bool isChm = false;
+    bool canSendEmail = false;
+    Annotation* annotationUnderCursor = nullptr;
+    bool hasUnsavedAnnotations = false;
+    bool isCursorOnPage = false;
+    bool cursorOnLinkTarget = false;
+    bool cursorOnComment = false;
+    bool cursorOnImage = false;
+    bool hasToc = false;
+
+    ~CommandPaletteBuildCtx();
 };
+CommandPaletteBuildCtx::~CommandPaletteBuildCtx() {
+    delete annotationUnderCursor;
+}
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (IsCmdInList(gBlacklistCommandsFromPalette)) {
@@ -147,9 +181,70 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         if ((cmdId >= (i32)CmdCreateAnnotFirst) && (cmdId <= (i32)CmdCreateAnnotLast)) {
             return false;
         }
-        if (IsCmdInList(gRemoveIfAnnotsNotSupported)) {
+        if (IsCmdInMenuList(cmdId, removeIfAnnotsNotSupported)) {
             return false;
         }
+    }
+
+    if (!ctx.hasSelection && IsCmdInMenuList(cmdId, disableIfNoSelection)) {
+        return false;
+    }
+
+    if (ctx.isChm && IsCmdInMenuList(cmdId, removeIfChm)) {
+        return false;
+    }
+
+    if (!ctx.canSendEmail && (cmdId == CmdSendByEmail)) {
+        return false;
+    }
+
+    if (!ctx.annotationUnderCursor) {
+        if ((cmdId == CmdSelectAnnotation) || (cmdId == CmdDeleteAnnotation)) {
+            return false;
+        }
+    }
+
+    if ((cmdId == CmdSaveAnnotations) && !ctx.hasUnsavedAnnotations) {
+        return false;
+    }
+
+    bool remove = false;
+    if (!HasPermission(Perm::InternetAccess)) {
+        remove |= IsCmdInMenuList(cmdId, removeIfNoInternetPerms);
+    }
+    if (!HasPermission(Perm::FullscreenAccess)) {
+        remove |= IsCmdInMenuList(cmdId, removeIfNoFullscreenPerms);
+    }
+    if (!HasPermission(Perm::SavePreferences)) {
+        remove |= IsCmdInMenuList(cmdId, removeIfNoPrefsPerms);
+    }
+    if (!HasPermission(Perm::PrinterAccess)) {
+        remove |= (cmdId == CmdPrint);
+    }
+    if (!HasPermission(Perm::DiskAccess)) {
+        remove |= IsCmdInMenuList(cmdId, removeIfNoDiskAccessPerm);
+    }
+    if (!HasPermission(Perm::CopySelection)) {
+        remove |= IsCmdInMenuList(cmdId, removeIfNoCopyPerms);
+    }
+    if (remove) {
+        return false;
+    }
+
+    if (!ctx.cursorOnLinkTarget && (cmdId == CmdCopyLinkTarget)) {
+        return false;
+    }
+    if (!ctx.cursorOnComment && (cmdId == CmdCopyComment)) {
+        return false;
+    }
+    if (!ctx.cursorOnImage && (cmdId == CmdCopyImage)) {
+        return false;
+    }
+    if (!ctx.hasToc && (cmdId == CmdToggleBookmarks)) {
+        return false;
+    }
+    if ((cmdId == CmdToggleScrollbars) && !gGlobalPrefs->fixedPageUI.hideScrollbars) {
+        return false;
     }
 
     switch (cmdId) {
@@ -196,11 +291,35 @@ static TabInfo* FindOpenedFile(std::string_view sv) {
 static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
+    TabInfo* tab = win->currentTab;
+    ctx.hasSelection = ctx.isDocLoaded && tab && win->showSelection && tab->selectionOnPage;
+    ctx.canSendEmail = CanSendAsEmailAttachment(tab);
+
+    Point cursorPos;
+    GetCursorPosInHwnd(win->hwndCanvas, cursorPos);
+
     DisplayModel* dm = win->AsFixed();
     if (dm) {
         auto engine = dm->GetEngine();
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
+        ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
+        int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
+        if (pageNoUnderCursor > 0) {
+            ctx.isCursorOnPage = true;
+        }
+        ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, nullptr);
+
+        PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
+        IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
+        if (pageEl) {
+            WCHAR* value = pageEl->GetValue();
+            ctx.cursorOnLinkTarget = value && pageEl->Is(kindPageElementDest);
+            ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
+            ctx.cursorOnImage = pageEl->Is(kindPageElementImage);
+        }
     }
+
+    ctx.hasToc = win->ctrl && win->ctrl->HacToc();
 
     // append paths of opened files
     for (WindowInfo* w : gWindows) {
@@ -505,7 +624,8 @@ void RunCommandPallette(WindowInfo* win) {
     CrashIf(gCommandPaletteWnd);
     // make min font size 16 (I get 12)
     int fontSize = GetSizeOfDefaultGuiFont();
-    fontSize = (fontSize * 14) / 10; // make font 1.4x bigger than system font
+    // make font 1.4x bigger than system font
+    fontSize = (fontSize * 14) / 10;
     if (fontSize < 16) {
         fontSize = 16;
     }

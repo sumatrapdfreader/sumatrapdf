@@ -2715,7 +2715,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     LoadDocument(args);
 }
 
-static void OnMenuSaveBookmark(WindowInfo* win) {
+static void CreateLnkShortcut(WindowInfo* win) {
     if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return;
     }
@@ -4398,8 +4398,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ReloadDocument(win, false);
             break;
 
-        case CmdSaveAsBookmark:
-            OnMenuSaveBookmark(win);
+        case CmdCreateShortcutToFile:
+            CreateLnkShortcut(win);
             break;
 
         case CmdZoomFitWidthAndContinuous:

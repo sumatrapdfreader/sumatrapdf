@@ -125,7 +125,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'N', CmdNewWindow},
     {FSHIFT | FCONTROL | FVIRTKEY, 'N', CmdDuplicateInNewWindow},
     {FCONTROL | FVIRTKEY, 'S', CmdSaveAs},
-    //{FSHIFT | FCONTROL | FVIRTKEY, 'S', CmdSaveAsBookmark},
+    //{FSHIFT | FCONTROL | FVIRTKEY, 'S', CmdCreateShortcutToFile},
 
     {FCONTROL | FVIRTKEY, 'A', CmdSelectAll},
     {FCONTROL | FVIRTKEY, 'B', CmdFavoriteAdd},

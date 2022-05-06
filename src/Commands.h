@@ -16,7 +16,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdRenameFile, "Rename File...")                                    \
     V(CmdExit, "Exit Application")                                        \
     V(CmdReloadDocument, "Reload Document")                               \
-    V(CmdSaveAsBookmark, "Save As Bookmark...")                           \
+    V(CmdCreateShortcutToFile, "Create .lnk Shortcut")                    \
     V(CmdSendByEmail, "Send Document By Email...")                        \
     V(CmdProperties, "Show Document Properties...")                       \
     V(CmdSinglePageView, "Single Page View")                              \
