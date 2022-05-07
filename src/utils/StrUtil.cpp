@@ -1174,22 +1174,16 @@ void Next(const char*& s, int& idx) {
         s++;
     }
     s++; // skip terminating 0
-    idx++;
-}
-
-void Next(const char*& s) {
-    if (!s || !*s) {
-        s = nullptr;
-        return;
-    }
-    while (*s) {
-        s++;
-    }
-    s++; // skip terminating 0
     if (!*s) {
         s = nullptr;
         return;
     }
+    idx++;
+}
+
+void Next(const char*& s) {
+    int idxDummy = 0;
+    Next(s, idxDummy);
 }
 
 // Returns nullptr if s is the same as toFind

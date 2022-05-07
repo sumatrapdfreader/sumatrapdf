@@ -54,86 +54,86 @@ Kind kindFileHeic = "fileHeic";
 // TODO: should .prc be kindFilePalmDoc instead of kindFileMobi?
 // .zip etc. are at the end so that .fb2.zip etc. is recognized at fb2
 #define DEF_EXT_KIND(V)             \
-    V(".txt\0", kindFileTxt)        \
-    V(".js\0", kindFileTxt)         \
-    V(".json\0", kindFileTxt)       \
-    V(".xml\0", kindFileTxt)        \
-    V(".log\0", kindFileTxt)        \
-    V("file_id.diz\0", kindFileTxt) \
-    V("read.me\0", kindFileTxt)     \
-    V(".nfo\0", kindFileTxt)        \
-    V(".tcr\0", kindFileTxt)        \
-    V(".ps\0", kindFilePS)          \
-    V(".ps.gz\0", kindFilePS)       \
-    V(".eps\0", kindFilePS)         \
-    V(".fb2\0", kindFileFb2)        \
-    V(".fb2z\0", kindFileFb2z)      \
-    V(".fbz\0", kindFileFb2z)       \
-    V(".zfb2\0", kindFileFb2z)      \
-    V(".fb2.zip\0", kindFileFb2z)   \
-    V(".cbz\0", kindFileCbz)        \
-    V(".cbr\0", kindFileCbr)        \
-    V(".cb7\0", kindFileCb7)        \
-    V(".cbt\0", kindFileCbt)        \
-    V(".pdf\0", kindFilePDF)        \
-    V(".xps\0", kindFileXps)        \
-    V(".oxps\0", kindFileXps)       \
-    V(".chm\0", kindFileChm)        \
-    V(".png\0", kindFilePng)        \
-    V(".jpg\0", kindFileJpeg)       \
-    V(".jpeg\0", kindFileJpeg)      \
-    V(".gif\0", kindFileGif)        \
-    V(".tif\0", kindFileTiff)       \
-    V(".tiff\0", kindFileTiff)      \
-    V(".bmp\0", kindFileBmp)        \
-    V(".tga\0", kindFileTga)        \
-    V(".jxr\0", kindFileJxr)        \
-    V(".hdp\0", kindFileHdp)        \
-    V(".wdp\0", kindFileWdp)        \
-    V(".webp\0", kindFileWebp)      \
-    V(".epub\0", kindFileEpub)      \
-    V(".mobi\0", kindFileMobi)      \
-    V(".prc\0", kindFileMobi)       \
-    V(".azw\0", kindFileMobi)       \
-    V(".azw1\0", kindFileMobi)      \
-    V(".azw3\0", kindFileMobi)      \
-    V(".pdb\0", kindFilePalmDoc)    \
-    V(".html\0", kindFileHTML)      \
-    V(".htm\0", kindFileHTML)       \
-    V(".xhtml\0", kindFileHTML)     \
-    V(".svg\0", kindFileSvg)        \
-    V(".djvu\0", kindFileDjVu)      \
-    V(".jp2\0", kindFileJp2)        \
-    V(".zip\0", kindFileZip)        \
-    V(".rar\0", kindFileRar)        \
-    V(".7z\0", kindFile7Z)          \
-    V(".heic\0", kindFileHeic)      \
-    V(".tar\0", kindFileTar)
+    V(".txt", kindFileTxt)        \
+    V(".js", kindFileTxt)         \
+    V(".json", kindFileTxt)       \
+    V(".xml", kindFileTxt)        \
+    V(".log", kindFileTxt)        \
+    V("file_id.diz", kindFileTxt) \
+    V("read.me", kindFileTxt)     \
+    V(".nfo", kindFileTxt)        \
+    V(".tcr", kindFileTxt)        \
+    V(".ps", kindFilePS)          \
+    V(".ps.gz", kindFilePS)       \
+    V(".eps", kindFilePS)         \
+    V(".fb2", kindFileFb2)        \
+    V(".fb2z", kindFileFb2z)      \
+    V(".fbz", kindFileFb2z)       \
+    V(".zfb2", kindFileFb2z)      \
+    V(".fb2.zip", kindFileFb2z)   \
+    V(".cbz", kindFileCbz)        \
+    V(".cbr", kindFileCbr)        \
+    V(".cb7", kindFileCb7)        \
+    V(".cbt", kindFileCbt)        \
+    V(".pdf", kindFilePDF)        \
+    V(".xps", kindFileXps)        \
+    V(".oxps", kindFileXps)       \
+    V(".chm", kindFileChm)        \
+    V(".png", kindFilePng)        \
+    V(".jpg", kindFileJpeg)       \
+    V(".jpeg", kindFileJpeg)      \
+    V(".gif", kindFileGif)        \
+    V(".tif", kindFileTiff)       \
+    V(".tiff", kindFileTiff)      \
+    V(".bmp", kindFileBmp)        \
+    V(".tga", kindFileTga)        \
+    V(".jxr", kindFileJxr)        \
+    V(".hdp", kindFileHdp)        \
+    V(".wdp", kindFileWdp)        \
+    V(".webp", kindFileWebp)      \
+    V(".epub", kindFileEpub)      \
+    V(".mobi", kindFileMobi)      \
+    V(".prc", kindFileMobi)       \
+    V(".azw", kindFileMobi)       \
+    V(".azw1", kindFileMobi)      \
+    V(".azw3", kindFileMobi)      \
+    V(".pdb", kindFilePalmDoc)    \
+    V(".html", kindFileHTML)      \
+    V(".htm", kindFileHTML)       \
+    V(".xhtml", kindFileHTML)     \
+    V(".svg", kindFileSvg)        \
+    V(".djvu", kindFileDjVu)      \
+    V(".jp2", kindFileJp2)        \
+    V(".zip", kindFileZip)        \
+    V(".rar", kindFileRar)        \
+    V(".7z", kindFile7Z)          \
+    V(".heic", kindFileHeic)      \
+    V(".tar", kindFileTar)
 
-#define EXT(ext, kind) ext
+#define EXT(ext, kind) ext "\0"
 
 // .fb2.zip etc. must be first so that it isn't classified as .zip
-static const char* gFileExts = DEF_EXT_KIND(EXT) "\0";
+static const char* gFileExts = DEF_EXT_KIND(EXT);
 #undef EXT
 
 #define KIND(ext, kind) kind,
 static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
-static Kind GetKindByFileExt(const WCHAR* path) {
-    auto pathA = ToUtf8Temp(path);
+static Kind GetKindByFileExt(const WCHAR* pathW) {
+    char* path = ToUtf8Temp(pathW);
     int idx = 0;
-    const char* curr = gFileExts;
-    while (curr) {
-        if (str::EndsWithI(pathA.Get(), curr)) {
-            int n = (int)dimof(gExtsKind);
+    auto ext = gFileExts;
+    int n = (int)dimof(gExtsKind);
+    while (ext) {
+        if (str::EndsWithI(path, ext)) {
             CrashIf(idx >= n);
             if (idx >= n) {
                 return nullptr;
             }
             return gExtsKind[idx];
         }
-        seqstrings::Next(curr, idx);
+        seqstrings::Next(ext, idx);
     }
     return nullptr;
 }
