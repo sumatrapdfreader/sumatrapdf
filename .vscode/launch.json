@@ -10,8 +10,6 @@
             "request": "launch",
             "mode": "auto",
             "cwd": "${workspaceFolder}",
-            "stopAtEntry": true,
-            "externalConsole": false,
             "program": "${workspaceFolder}/do"
         },
         {
@@ -24,7 +22,6 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false
         },
         {
             "name": "dbg 64 log",
@@ -36,7 +33,6 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false
         },
         {
             "name": "installer dbg 64",
@@ -48,7 +44,6 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false
         }
     ]
 }

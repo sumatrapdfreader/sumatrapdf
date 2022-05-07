@@ -221,6 +221,7 @@ void WindowInfo::UpdateCanvasSize() {
 
 Size WindowInfo::GetViewPortSize() const {
     Size size = canvasRc.Size();
+    ReportIf(size.IsEmpty());
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
     if ((style & WS_VSCROLL)) {
@@ -230,7 +231,6 @@ Size WindowInfo::GetViewPortSize() const {
         size.dy += GetSystemMetrics(SM_CYHSCROLL);
     }
     CrashIf((style & (WS_VSCROLL | WS_HSCROLL)) && !AsFixed());
-
     return size;
 }
 

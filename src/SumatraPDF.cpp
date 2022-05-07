@@ -1369,7 +1369,9 @@ static WindowInfo* CreateWindowInfo() {
     clsName = CANVAS_CLASS_NAME;
     style = WS_CHILD | WS_HSCROLL | WS_VSCROLL | WS_CLIPCHILDREN;
     /* position and size determined in OnSize */
-    win->hwndCanvas = CreateWindowExW(0, clsName, nullptr, style, 0, 0, 0, 0, hwndFrame, nullptr, h, nullptr);
+    Rect rcFrame = ClientRect(hwndFrame);
+    win->hwndCanvas =
+        CreateWindowExW(0, clsName, nullptr, style, 0, 0, rcFrame.dx, rcFrame.dy, hwndFrame, nullptr, h, nullptr);
     if (!win->hwndCanvas) {
         delete win;
         return nullptr;
@@ -1416,7 +1418,9 @@ static WindowInfo* CreateWindowInfo() {
     }
 
     SetTabsInTitlebar(win, gGlobalPrefs->useTabs);
-
+    // TODO: this is hackish. in general we should diforce
+    // layout re-calculations from WindowInfo and creation of windows
+    win->UpdateCanvasSize();
     return win;
 }
 
