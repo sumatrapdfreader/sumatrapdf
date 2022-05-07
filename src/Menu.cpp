@@ -1563,21 +1563,24 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
     bool filePrintAllowed = true;
 #endif
 
-    int idx;
-    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].idOrSubmenu != CmdPrint; idx++) {
-        // do nothing
-    }
-    if (idx < dimof(menuDefFile)) {
-        const WCHAR* printItem = trans::GetTranslation(menuDefFile[idx].title);
+    for (auto& def : menuDefFile) {
+        if (def.idOrSubmenu != CmdPrint) {
+            continue;
+        }
+        str::WStr printItem = trans::GetTranslation(def.title);
         if (!filePrintAllowed) {
             printItem = _TR("&Print... (denied)");
+        } else {
+            ACCEL accel;
+            if (GetAccelByCmd(CmdPrint, accel)) {
+                AppendAccelKeyToMenuString(printItem, accel);
+            }
         }
         if (!filePrintAllowed || !disableOnly) {
-            ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, printItem);
+            ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, printItem.Get());
         }
+        win::menu::SetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
     }
-
-    win::menu::SetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
 }
 
 static bool IsFileCloseMenuEnabled() {
