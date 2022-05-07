@@ -4530,7 +4530,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleMenuBar:
             if (!win->tabsInTitlebar) {
-                ShowHideMenuBar(win);
+                ToggleMenuBar(win);
             }
             break;
 
@@ -5083,7 +5083,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_SYSCOMMAND:
             // temporarily show the menu bar if it has been hidden
             if (wp == SC_KEYMENU && win && win->isMenuHidden) {
-                ShowHideMenuBar(win, true);
+                ToggleMenuBar(win, true);
             }
             return DefWindowProc(hwnd, msg, wp, lp);
 

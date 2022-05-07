@@ -26,5 +26,5 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);
 int MenuIdFromVirtualZoom(float virtualZoom);
 void UpdateAppMenu(WindowInfo* win, HMENU m);
-void ShowHideMenuBar(WindowInfo* win, bool showTemporarily = false);
+void ToggleMenuBar(WindowInfo* win, bool showTemporarily = false);
 float ZoomMenuItemToZoom(int menuItemId);

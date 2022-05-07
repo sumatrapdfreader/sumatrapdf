@@ -2270,7 +2270,7 @@ void UpdateAppMenu(WindowInfo* win, HMENU m) {
 
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
-void ShowHideMenuBar(WindowInfo* win, bool showTemporarily) {
+void ToggleMenuBar(WindowInfo* win, bool showTemporarily) {
     CrashIf(!win->menu);
     if (win->presentation || win->isFullScreen) {
         return;

@@ -55,7 +55,6 @@ static i32 gBlacklistCommandsFromPalette[] = {
 
     CmdSaveEmbeddedFile, // TODO: figure proper context for it
     CmdCreateShortcutToFile, // not sure I want this at all
-    CmdToggleMenuBar,
 };
 
 // most commands are not valid when document is not opened
@@ -75,6 +74,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdHelpAbout,
     CmdFavoriteToggle,
     CmdToggleFullscreen,
+    CmdToggleMenuBar,
     CmdShowLog,
 };
 
@@ -161,6 +161,7 @@ struct CommandPaletteBuildCtx {
     bool cursorOnComment = false;
     bool cursorOnImage = false;
     bool hasToc = false;
+    bool allowToggleMenuBar = false;
 
     ~CommandPaletteBuildCtx();
 };
@@ -172,10 +173,15 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (IsCmdInList(gBlacklistCommandsFromPalette)) {
         return false;
     }
+
     if (!ctx.isDocLoaded) {
         if (!IsCmdInList(gDocumentNotOpenWhitelist)) {
             return false;
         }
+    }
+
+    if (cmdId == CmdToggleMenuBar) {
+        return ctx.allowToggleMenuBar;
     }
 
     if (!ctx.supportsAnnots) {
@@ -295,6 +301,7 @@ static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     ctx.hasSelection = ctx.isDocLoaded && tab && win->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
+    ctx.allowToggleMenuBar = !win->tabsInTitlebar;
 
     Point cursorPos;
     GetCursorPosInHwnd(win->hwndCanvas, cursorPos);

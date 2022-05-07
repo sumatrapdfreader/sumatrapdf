@@ -877,7 +877,7 @@ void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar) {
     SetParent(win->tabsCtrl->hwnd, inTitlebar ? win->hwndCaption : win->hwndFrame);
     ShowWindow(win->hwndCaption, inTitlebar ? SW_SHOW : SW_HIDE);
     if (inTitlebar != win->isMenuHidden) {
-        ShowHideMenuBar(win);
+        ToggleMenuBar(win);
     }
     if (inTitlebar) {
         CaptionUpdateUI(win, win->caption);
