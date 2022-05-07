@@ -53,7 +53,7 @@ Kind kindFileHeic = "fileHeic";
 
 // TODO: should .prc be kindFilePalmDoc instead of kindFileMobi?
 // .zip etc. are at the end so that .fb2.zip etc. is recognized at fb2
-#define DEF_EXT_KIND(V)             \
+#define DEF_EXT_KIND(V)           \
     V(".txt", kindFileTxt)        \
     V(".js", kindFileTxt)         \
     V(".json", kindFileTxt)       \
@@ -122,20 +122,13 @@ static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 
 static Kind GetKindByFileExt(const WCHAR* pathW) {
     char* path = ToUtf8Temp(pathW);
-    int idx = 0;
-    auto ext = gFileExts;
+    auto ext = path::GetExtTemp(path);
+    int idx = seqstrings::StrToIdxIS(gFileExts, ext);
     int n = (int)dimof(gExtsKind);
-    while (ext) {
-        if (str::EndsWithI(path, ext)) {
-            CrashIf(idx >= n);
-            if (idx >= n) {
-                return nullptr;
-            }
-            return gExtsKind[idx];
-        }
-        seqstrings::Next(ext, idx);
+    if (idx >= n) {
+        return nullptr;
     }
-    return nullptr;
+    return gExtsKind[idx];
 }
 
 // ensure gFileExts and gExtsKind match
