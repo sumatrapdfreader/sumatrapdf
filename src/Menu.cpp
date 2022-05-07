@@ -1585,7 +1585,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 
 static bool IsFileCloseMenuEnabled() {
     for (size_t i = 0; i < gWindows.size(); i++) {
-        if (!gWindows.at(i)->IsAboutWindow()) {
+        if (gWindows.at(i)->IsDocLoaded()) {
             return true;
         }
     }
@@ -1642,9 +1642,6 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     }
 
     SetMenuStateForSelection(tab, win->menu);
-
-    // TODO: happens with UseTabs = false with .pdf files
-    ReportIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
     win::menu::SetEnabled(win->menu, CmdClose, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win->menu);
