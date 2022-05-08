@@ -457,8 +457,9 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    // happened e.g. in crash 50539
     if (win->mouseAction != MouseAction::Idle) {
+        // this can be MouseAction::SelectingText (4)
+        // can't reproduce it so far
         logf("OnMouseLeftButtonDown: win->mouseAction=%d\n", (int)win->mouseAction);
         ReportIf(win->mouseAction != MouseAction::Idle);
     }
