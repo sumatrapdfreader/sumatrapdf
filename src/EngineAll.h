@@ -49,7 +49,7 @@ TocItem* CreateWrapperItem(EngineBase* engine);
 /* EngineMupdf.cpp */
 
 bool IsEngineMupdfSupportedFileType(Kind);
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, int displayDPI, PasswordUI* pwdUI = nullptr);
+EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
 
 ByteSlice LoadEmbeddedPDFFile(const WCHAR* path);

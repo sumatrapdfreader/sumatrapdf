@@ -62,7 +62,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     int dpi = DpiGet(nullptr);
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
-        engine = CreateEngineMupdfFromFile(path, dpi, pwdUI);
+        engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         return engine;
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
@@ -98,7 +98,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         return engine;
     }
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
-        engine = CreateEngineMupdfFromFile(path, dpi, pwdUI);
+        engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2212
         // if failed to open with EngineMupdf, will also try to open
         // with my engine

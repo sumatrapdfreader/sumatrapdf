@@ -3439,6 +3439,9 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
     if (kind == kindFileFb2) {
         return true;
     }
+    if (kind == kindFileFb2z) {
+        return true;
+    }
     if (kind == kindFileHTML) {
         return true;
     }
@@ -3457,9 +3460,39 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
     return false;
 }
 
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, int displayDPI, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, Kind kind, int displayDPI, PasswordUI* pwdUI) {
     if (str::IsEmpty(path)) {
         return nullptr;
+    }
+    if (kind == kindFileFb2z) {
+        AutoDelete<MultiFormatArchive> archive = OpenZipArchive(path, true);
+        if (!archive) {
+            return nullptr;
+        }
+        auto files = archive->GetFileInfos();
+        if (files.size() != 1) {
+            return nullptr;
+        }
+        AutoFree d = archive->GetFileDataById(0);
+        if (d.empty()) {
+            return nullptr;
+        }
+        auto strm = CreateStreamFromData(d.AsSpan());
+        ScopedComPtr<IStream> stream(strm);
+        if (!stream) {
+            return nullptr;
+        }
+        EngineMupdf* engine = new EngineMupdf();
+        if (displayDPI < 70) {
+            displayDPI = 96;
+        }
+        engine->displayDPI = displayDPI;
+        if (!engine->Load(stream, "foo.fb2", pwdUI)) {
+            delete engine;
+            return nullptr;
+        }
+        engine->SetFileName(path);
+        return engine;
     }
     EngineMupdf* engine = new EngineMupdf();
     if (displayDPI < 70) {
