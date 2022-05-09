@@ -1300,8 +1300,6 @@ ContinueOpenWindow:
 
     BringWindowToTop(win->hwndFrame);
 
-    ReportIf(true);
-
     retCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);
     CleanUpThumbnailCache(gFileHistory);

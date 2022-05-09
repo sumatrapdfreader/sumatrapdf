@@ -393,6 +393,9 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
     url.Append(L"&os=");
     auto osVerTemp = ToWstrTemp(GetWindowsVerTemp());
     url.Append(osVerTemp.Get());
+    if (UpdateCheck::UserInitiated == updateCheckType) {
+        url.Append(L"&force");
+    }
     HttpGetAsync(url.Get(), [=](HttpRsp* rsp) {
         uitask::Post([=] {
             DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
