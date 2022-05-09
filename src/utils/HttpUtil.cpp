@@ -103,12 +103,12 @@ bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath) {
         goto Exit;
     }
 
-    hInet = InternetOpen(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
         goto Exit;
     }
 
-    hReq = InternetOpenUrl(hInet, url, nullptr, 0, 0, 0);
+    hReq = InternetOpenUrlW(hInet, url, nullptr, 0, 0, 0);
     if (!hReq) {
         goto Exit;
     }
@@ -154,7 +154,7 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers, str::Str* data) {
+bool HttpPost(const char* serverA, int port, const char* urlA, str::Str* headers, str::Str* data) {
     str::Str resp(2048);
     bool ok = false;
     char* hdr = nullptr;
@@ -168,8 +168,12 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
     DWORD dwRead = 0;
     DWORD flags;
     DWORD dwService;
+    WCHAR* server = ToWstrTemp(serverA);
+    WCHAR* url = ToWstrTemp(urlA);
+    DWORD infoLevel;
 
-    HINTERNET hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    DWORD accessType = INTERNET_OPEN_TYPE_PRECONFIG;
+    HINTERNET hInet = InternetOpenW(kUserAgent, accessType, nullptr, nullptr, 0);
     if (!hInet) {
         goto Exit;
     }
@@ -198,14 +202,14 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
     }
 
     InternetSetOptionW(hReq, INTERNET_OPTION_SEND_TIMEOUT, &timeoutMs, sizeof(timeoutMs));
-
     InternetSetOptionW(hReq, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeoutMs, sizeof(timeoutMs));
 
     if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen)) {
         goto Exit;
     }
 
-    HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &respHttpCode, &respHttpCodeSize, nullptr);
+    infoLevel = HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER;
+    HttpQueryInfoW(hReq, infoLevel, &respHttpCode, &respHttpCodeSize, nullptr);
 
     do {
         char buf[1024];

@@ -34,7 +34,7 @@ constexpr bool gForceAutoUpdate = false;
 
 // clang-format off
 #if defined(PRE_RELEASE_VER)
-//constexpr const WCHAR* kUpdateInfoURL =  L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
+//https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt
 constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/updatecheck-pre-release.txt";
 #else
 constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/update-check-rel.txt";

@@ -26,12 +26,9 @@
 // decide if will risk it and enable logf() calls or convert
 // logf() into a series of log() calls
 
-#if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
-#define CRASH_SUBMIT_SERVER L"updatecheck.io"
-#define CRASH_SUBMIT_PORT 443
-
-#define CRASH_SUBMIT_URL L"/uploadfile/sumatrapdf-crashes"
-#endif
+#define kCrashHandlerServer "www.sumatrapdfreader.org"
+#define kCrashHandlerServerPort 443
+#define kCrashHandlerServerSubmitURL "/uploadcrash/sumatrapdf-crashes"
 
 // The following functions allow crash handler to be used by both installer
 // and sumatra proper. They must be implemented for each app.
@@ -186,7 +183,7 @@ static void UploadCrashReport(ByteSlice d) {
     str::Str data(16 * 1024, gCrashHandlerAllocator);
     data.AppendSpan(d);
 
-    HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_PORT, CRASH_SUBMIT_URL, &headers, &data);
+    HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }
 
 // We might have symbol files for older builds. If we're here, then we
