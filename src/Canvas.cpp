@@ -461,7 +461,9 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
         // this can be MouseAction::SelectingText (4)
         // can't reproduce it so far
         logf("OnMouseLeftButtonDown: win->mouseAction=%d\n", (int)win->mouseAction);
-        ReportIf(win->mouseAction != MouseAction::Idle);
+        // ReportIf(win->mouseAction != MouseAction::Idle);
+        win->mouseAction = MouseAction::Idle;
+        return;
     }
     ReportIf(!win->AsFixed());
 
