@@ -214,11 +214,11 @@ CachedFont* GetCachedFont(const WCHAR* name, float sizePt, FontStyle style) {
 
     Font* font = ::new Font(name, sizePt, style);
     if (font->GetLastStatus() != Status::Ok) {
-        delete font;
+        ::delete font;
         font = ::new Font(L"Times New Roman", sizePt, style);
         if (font->GetLastStatus() != Status::Ok) {
             // if no font is available, return the last successfully created one
-            delete font;
+            ::delete font;
             if (gFontsCache) {
                 return &gFontsCache->cf;
             }

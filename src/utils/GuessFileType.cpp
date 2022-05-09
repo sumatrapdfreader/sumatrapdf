@@ -294,12 +294,7 @@ Kind GuessFileTypeFromContent(ByteSlice d) {
     return nullptr;
 }
 
-static bool IsEpubFile(const WCHAR* path) {
-    AutoDelete<MultiFormatArchive> archive = OpenZipArchive(path, true);
-    if (!archive.Get()) {
-        return false;
-    }
-
+static bool IsEpubArchive(MultiFormatArchive* archive) {
     // assume that if this file exists, this is a epub file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1801
     AutoFree container(archive->GetFileDataByName("META-INF/container.xml"));
@@ -319,32 +314,41 @@ static bool IsEpubFile(const WCHAR* path) {
         }
         d[i - 1] = '\0';
     }
+
+#if 0
     // a proper EPUB document has a "mimetype" file with content
     // "application/epub+zip" as the first entry in its ZIP structure
-    /* cf. https://web.archive.org/web/20140201013228/http://forums.fofou.org:80/sumatrapdf/topic?id=2599331&comments=6
-    if (!str::Eq(zip.GetFileName(0), L"mimetype"))
-        return false; */
+    // https://web.archive.org/web/20140201013228/http://forums.fofou.org:80/sumatrapdf/topic?id=2599331&comments=6
+    if (!str::Eq(archive.GetFileName(0), L"mimetype")) {
+        return false; 
+    }
+#endif
     if (str::Eq(mimetype.data, "application/epub+zip")) {
         return true;
     }
     // also open renamed .ibooks files
-    // cf. http://en.wikipedia.org/wiki/IBooks#Formats
+    // http://en.wikipedia.org/wiki/IBooks#Formats
     return str::Eq(mimetype.data, "application/x-ibooks+zip");
 }
 
 // check if a given file is a likely a .zip archive containing XPS
 // document
-static bool IsXpsArchive(const WCHAR* path) {
-    MultiFormatArchive* archive = OpenZipArchive(path, true);
-    if (!archive) {
-        return false;
-    }
-
+static bool IsXpsArchive(MultiFormatArchive* archive) {
     bool res = archive->GetFileId("_rels/.rels") != (size_t)-1 ||
                archive->GetFileId("_rels/.rels/[0].piece") != (size_t)-1 ||
                archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;
-    delete archive;
     return res;
+}
+
+// we expect 1 file ending with .fb2
+static bool IsFb2Archive(MultiFormatArchive* archive) {
+    auto files = archive->GetFileInfos();
+    if (files.size() != 1) {
+        return false;
+    }
+    auto fi = files[0];
+    auto name = fi->name.data();
+    return str::EndsWithI(name, ".fb2");
 }
 
 // detect file type based on file content
@@ -368,11 +372,18 @@ Kind GuessFileTypeFromContent(const WCHAR* path) {
     }
     auto res = GuessFileTypeFromContent({(u8*)buf, (size_t)n});
     if (res == kindFileZip) {
-        if (IsXpsArchive(path)) {
-            res = kindFileXps;
-        }
-        if (IsEpubFile(path)) {
-            res = kindFileEpub;
+        MultiFormatArchive* archive = OpenZipArchive(path, true);
+        if (archive) {
+            if (IsXpsArchive(archive)) {
+                res = kindFileXps;
+            }
+            if (IsEpubArchive(archive)) {
+                res = kindFileEpub;
+            }
+            if (IsFb2Archive(archive)) {
+                res = kindFileFb2z;
+            }
+            delete archive;
         }
     }
     return res;

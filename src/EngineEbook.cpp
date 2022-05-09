@@ -47,6 +47,9 @@ static const WCHAR* GetDefaultFontName() {
 static float GetDefaultFontSize() {
     // fonts are scaled at higher DPI settings,
     // undo this here for (mostly) consistent results
+    if (gDefaultFontSize == 0) {
+        gDefaultFontSize = 10;
+    }
     return gDefaultFontSize * 96.0f / (float)DpiGetForHwnd(HWND_DESKTOP);
 }
 
