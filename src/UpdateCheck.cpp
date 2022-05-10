@@ -35,9 +35,9 @@ constexpr bool gForceAutoUpdate = false;
 // clang-format off
 #if defined(PRE_RELEASE_VER)
 //https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt
-constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/updatecheck-pre-release.txt";
+constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/updatecheck-pre-release.txt";
 #else
-constexpr const WCHAR* kUpdateInfoURL = L"https://www.sumatrapdfreader.org/update-check-rel.txt";
+constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/update-check-rel.txt";
 #endif
 
 #ifndef WEBSITE_DOWNLOAD_PAGE_URL
@@ -276,19 +276,19 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
     gUpdateCheckInProgress = false;
 
-    const WCHAR* url = rsp->url.Get();
+    const char* url = rsp->url.Get();
 
     if (rsp->error != 0) {
-        logf(L"ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url, (int)rsp->error);
+        logf("ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url, (int)rsp->error);
         return rsp->error;
     }
     if (rsp->httpStatusCode != 200) {
-        logf(L"ShowAutoUpdateDialog: http get of '%s' failed with code %d\n", url, (int)rsp->httpStatusCode);
+        logf("ShowAutoUpdateDialog: http get of '%s' failed with code %d\n", url, (int)rsp->httpStatusCode);
         return ERROR_INTERNET_INVALID_URL;
     }
 
     if (!str::StartsWith(url, kUpdateInfoURL)) {
-        logf(L"ShowAutoUpdateDialog: '%s' is not a valid url\n", url);
+        logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url);
         return ERROR_INTERNET_INVALID_URL;
     }
     str::Str* data = &rsp->data;
@@ -299,8 +299,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
 
     UpdateInfo* updateInfo = ParseUpdateInfo(data->Get());
     if (!updateInfo) {
-        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n",
-             ToUtf8Temp(url).Get(), data->Get());
+        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url, data->Get());
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
     updateInfo->hwndParent = hwndParent;
@@ -349,10 +348,9 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
         // the installer must be named .exe or it won't be able to self-elevate
         // with "runas"
         installerPath = str::JoinTemp(installerPath, L".exe");
-        auto dlURL = ToWstrTemp(updateInfo->dlURL);
-        bool ok = HttpGetToFile(dlURL, installerPath);
-        logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok,
-             ToUtf8Temp(installerPath).Get());
+        char* installerPathA = ToUtf8Temp(installerPath);
+        bool ok = HttpGetToFile(updateInfo->dlURL, installerPathA);
+        logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPathA);
         if (ok) {
             updateInfo->installerPath = str::Dup(installerPath);
         } else {
@@ -387,14 +385,14 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
     gUpdateCheckInProgress = true;
     HWND hwnd = win->hwndFrame;
-    str::WStr url = kUpdateInfoURL;
-    url.Append(L"?v=");
-    url.Append(UPDATE_CHECK_VER);
-    url.Append(L"&os=");
-    auto osVerTemp = ToWstrTemp(GetWindowsVerTemp());
-    url.Append(osVerTemp.Get());
+    str::Str url = kUpdateInfoURL;
+    url.Append("?v=");
+    url.Append(UPDATE_CHECK_VERA);
+    url.Append("&os=");
+    const char* osVerTemp = GetWindowsVerTemp();
+    url.Append(osVerTemp);
     if (UpdateCheck::UserInitiated == updateCheckType) {
-        url.Append(L"&force");
+        url.Append("&force");
     }
     HttpGetAsync(url.Get(), [=](HttpRsp* rsp) {
         uitask::Post([=] {

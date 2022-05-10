@@ -19,11 +19,12 @@ bool HttpRspOk(const HttpRsp* rsp) {
 
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
-bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
-    logf(L"HttpGet: url: '%s'\n", url);
+bool HttpGet(const char* urlA, HttpRsp* rspOut) {
+    logf("HttpGet: url: '%s'\n", urlA);
     HINTERNET hReq = nullptr;
     DWORD infoLevel;
     DWORD headerBuffSize = sizeof(DWORD);
+    WCHAR* url = ToWstrTemp(urlA);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
     rspOut->error = ERROR_SUCCESS;
@@ -34,7 +35,7 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
         goto Error;
     }
 
-    hReq = InternetOpenUrl(hInet, url, nullptr, 0, flags, 0);
+    hReq = InternetOpenUrlW(hInet, url, nullptr, 0, flags, 0);
     if (!hReq) {
         logf("HttpGet: InternetOpenUrl failed\n");
         LogLastError();
@@ -86,19 +87,21 @@ Error:
 }
 
 // Download content of a url to a file
-bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath) {
-    logf(L"HttpGetToFile: url: '%s', file: '%s'\n", url, destFilePath);
+bool HttpGetToFile(const char* urlA, const char* destFilePathA) {
+    logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePathA);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
     DWORD dwRead = 0;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
+    WCHAR* url = ToWstrTemp(urlA);
+    WCHAR* destFilePath = ToWstrTemp(destFilePathA);
     char buf[1024];
 
     HANDLE hf = CreateFileW(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
                             nullptr);
     if (INVALID_HANDLE_VALUE == hf) {
-        logf(L"HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
+        logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePathA);
         LogLastError();
         goto Exit;
     }
@@ -245,7 +248,7 @@ Exit:
 }
 
 // callback function f is responsible for deleting HttpRsp
-void HttpGetAsync(const WCHAR* url, const std::function<void(HttpRsp*)>& f) {
+void HttpGetAsync(const char* url, const std::function<void(HttpRsp*)>& f) {
     // rsp is owned and deleted by f callback
     HttpRsp* rsp = new HttpRsp;
     rsp->url.SetCopy(url);

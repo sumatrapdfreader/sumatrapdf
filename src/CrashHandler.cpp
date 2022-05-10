@@ -45,17 +45,17 @@ static bool gDisableSymbolsDownload = false;
 #endif
 
 // Get url for file with symbols. Caller needs to free().
-static WCHAR* BuildSymbolsUrl() {
-    const WCHAR* urlBase = nullptr;
+static char* BuildSymbolsUrl() {
+    const char* urlBase = nullptr;
     if (gIsPreReleaseBuild) {
-        urlBase = L"https://www.sumatrapdfreader.org/dl/prerel/" TEXT(QM(PRE_RELEASE_VER)) L"/SumatraPDF-prerel";
+        urlBase = "https://www.sumatrapdfreader.org/dl/prerel/" QM(PRE_RELEASE_VER) "/SumatraPDF-prerel";
     } else {
         // assuming this is release version
-        urlBase = L"https://www.sumatrapdfreader.org/dl/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+        urlBase = "https://www.sumatrapdfreader.org/dl/rel/SumatraPDF-" QM(CURR_VERSION);
     }
-    const WCHAR* suff = L".pdb.lzsa";
+    const char* suff = ".pdb.lzsa";
     if (IsProcess64()) {
-        suff = L"-64.pdb.lzsa";
+        suff = "-64.pdb.lzsa";
     }
     return str::Join(urlBase, suff);
 }
@@ -76,7 +76,7 @@ static HeapAllocator* gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
-static WCHAR* gSymbolsUrl = nullptr;
+static char* gSymbolsUrl = nullptr;
 static WCHAR* gCrashDumpPath = nullptr;
 static WCHAR* gSymbolPathW = nullptr;
 static WCHAR* gSymbolsDir = nullptr;
@@ -246,7 +246,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
         return false;
     }
 
-    logf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
+    logf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, ToWstrTemp(gSymbolsUrl).Get());
     if (!symDir || !dir::Exists(symDir)) {
         log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
         return false;

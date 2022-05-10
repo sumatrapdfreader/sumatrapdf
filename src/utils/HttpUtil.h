@@ -3,7 +3,7 @@
 
 class HttpRsp {
   public:
-    AutoFreeWstr url;
+    AutoFreeStr url;
     str::Str data;
     DWORD error = (DWORD)-1;
     DWORD httpStatusCode = (DWORD)-1;
@@ -14,7 +14,7 @@ class HttpRsp {
 bool HttpRspOk(const HttpRsp*);
 
 bool HttpPost(const char* server, int port, const char* url, str::Str* headers, str::Str* data);
-bool HttpGet(const WCHAR* url, HttpRsp* rspOut);
-bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath);
+bool HttpGet(const char* url, HttpRsp* rspOut);
+bool HttpGetToFile(const char* url, const char* destFilePath);
 // void  HttpGetAsync(const char *url, const std::function<void(HttpRsp *)> &);
-void HttpGetAsync(const WCHAR* url, const std::function<void(HttpRsp*)>&);
+void HttpGetAsync(const char* url, const std::function<void(HttpRsp*)>&);
