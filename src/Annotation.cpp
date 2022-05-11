@@ -270,6 +270,9 @@ bool SetContents(Annotation* annot, std::string_view sv) {
 }
 
 void Delete(Annotation* annot) {
+    if (!annot) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     CrashIf(annot->isDeleted);
     ScopedCritSec cs(e->ctxAccess);
