@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -98,35 +98,91 @@ fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_
 	return b;
 }
 
+static inline int iswhite(int a)
+{
+	switch (a) {
+	case '\n': case '\r': case '\t': case ' ':
+	case '\f':
+		return 1;
+	}
+	return 0;
+}
+
 fz_buffer *
 fz_new_buffer_from_base64(fz_context *ctx, const char *data, size_t size)
 {
-	fz_buffer *buf = fz_new_buffer(ctx, size);
+	fz_buffer *out = fz_new_buffer(ctx, size);
 	const char *end = data + (size > 0 ? size : strlen(data));
 	const char *s = data;
+	uint32_t buf = 0;
+	int bits = 0;
+	size_t len;
+
+	/* Implements https://infra.spec.whatwg.org/#forgiving-base64-decode */
+	while (s < end && iswhite(*s))
+		s++;
+	while (s > end && iswhite(*end))
+		end--;
+
+	len = end - s;
+	if (len > 0 && (len & 3) == 0)
+	{
+		if (end[-1] == '=') --end;
+		if (end[-1] == '=') --end;
+	}
+
+	len = end - s;
+	if ((len & 3) == 1)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid number of characters in base64");
+
 	fz_try(ctx)
 	{
 		while (s < end)
 		{
 			int c = *s++;
+
 			if (c >= 'A' && c <= 'Z')
-				fz_append_bits(ctx, buf, c - 'A', 6);
+				c = c - 'A';
 			else if (c >= 'a' && c <= 'z')
-				fz_append_bits(ctx, buf, c - 'a' + 26, 6);
+				c = c - 'a' + 26;
 			else if (c >= '0' && c <= '9')
-				fz_append_bits(ctx, buf, c - '0' + 52, 6);
+				c = c - '0' + 52;
 			else if (c == '+')
-				fz_append_bits(ctx, buf, 62, 6);
+				c = 62;
 			else if (c == '/')
-				fz_append_bits(ctx, buf, 63, 6);
+				c = 63;
+			else if (iswhite(c))
+				continue;
+			else
+				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid character in base64");
+
+			buf <<= 6;
+			buf |= c & 0x3f;
+			bits += 6;
+
+			if (bits == 24)
+			{
+				fz_append_byte(ctx, out, buf >> 16);
+				fz_append_byte(ctx, out, buf >> 8);
+				fz_append_byte(ctx, out, buf >> 0);
+				bits = 0;
+			}
 		}
+
+		if (bits == 18)
+		{
+			fz_append_byte(ctx, out, buf >> 10);
+			fz_append_byte(ctx, out, buf >> 2);
+		}
+		else if (bits == 12)
+			fz_append_byte(ctx, out, buf >> 4);
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_buffer(ctx, buf);
+		fz_drop_buffer(ctx, out);
 		fz_rethrow(ctx);
 	}
-	return buf;
+	return out;
 }
 
 fz_buffer *

@@ -1496,9 +1496,6 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 	pdf_font_desc *fontdesc = NULL;
 	int type3 = 0;
 
-	if (pdf_obj_marked(ctx, dict))
-		fz_throw(ctx, FZ_ERROR_SYNTAX, "Recursive Type3 font definition.");
-
 	if ((fontdesc = pdf_find_item(ctx, pdf_drop_font_imp, dict)) != NULL)
 	{
 		return fontdesc;
@@ -1538,7 +1535,6 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 		fontdesc = pdf_load_simple_font(ctx, doc, dict);
 	}
 
-	(void)pdf_mark_obj(ctx, dict);
 	fz_try(ctx)
 	{
 		/* Create glyph width table for stretching substitute fonts and text extraction. */
@@ -1547,21 +1543,19 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 		/* Load CharProcs */
 		if (type3)
 		{
-			pdf_load_type3_glyphs(ctx, doc, fontdesc);
-
-			/* Type 3 fonts with glyphs that cyclically refer to the
-			type 3 font itself will already have caused its font
-			descriptor to be cached in the store. The font descriptor
-			being prepared here is preferable, so remove any potential
-			font descriptor stored by the call to pdf_load_type3_glyphs()
-			above. */
-			pdf_remove_item(ctx, pdf_drop_font_imp, dict);
+			if (doc->type3_lock)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "recursive type3 font");
+			doc->type3_lock = 1;
+			fz_try(ctx)
+				pdf_load_type3_glyphs(ctx, doc, fontdesc);
+			fz_always(ctx)
+				doc->type3_lock = 0;
+			fz_catch(ctx)
+				fz_rethrow(ctx);
 		}
 
 		pdf_store_item(ctx, dict, fontdesc, fontdesc->size);
 	}
-	fz_always(ctx)
-		pdf_unmark_obj(ctx, dict);
 	fz_catch(ctx)
 	{
 		pdf_drop_font(ctx, fontdesc);

@@ -108,6 +108,9 @@ struct pdf_run_processor
 	int gtop;
 	int gbot;
 	int gparent;
+
+	/* xobject cycle detector */
+	pdf_cycle_list *cycle;
 };
 
 typedef struct
@@ -1183,6 +1186,7 @@ pdf_set_pattern(fz_context *ctx, pdf_run_processor *pr, int what, pdf_pattern *p
 static void
 pdf_run_xobject(fz_context *ctx, pdf_run_processor *proc, pdf_obj *xobj, pdf_obj *page_resources, fz_matrix transform, int is_smask)
 {
+	pdf_cycle_list cycle_here;
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 	pdf_gstate *gstate = NULL;
 	int oldtop = 0;
@@ -1200,8 +1204,10 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *proc, pdf_obj *xobj, pdf_obj
 	fz_default_colorspaces *xobj_default_cs = NULL;
 
 	/* Avoid infinite recursion */
-	if (xobj == NULL || pdf_mark_obj(ctx, xobj))
+	pdf_cycle_list *cycle_up = proc->cycle;
+	if (xobj == NULL || pdf_cycle(ctx, &cycle_here, cycle_up, xobj))
 		return;
+	proc->cycle = &cycle_here;
 
 	fz_var(cs);
 	fz_var(xobj_default_cs);
@@ -1326,7 +1332,7 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *proc, pdf_obj *xobj, pdf_obj
 		pr->default_cs = save_default_cs;
 		fz_drop_default_colorspaces(ctx, xobj_default_cs);
 		fz_drop_colorspace(ctx, cs);
-		pdf_unmark_obj(ctx, xobj);
+		proc->cycle = cycle_up;
 	}
 	fz_catch(ctx)
 	{

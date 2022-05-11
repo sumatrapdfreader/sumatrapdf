@@ -254,6 +254,8 @@ xps_lookup_font(fz_context *ctx, xps_document *doc, char *base_uri, char *font_u
 			{
 				if (doc->cookie)
 					doc->cookie->incomplete = 1;
+				else
+					fz_rethrow(ctx);
 			}
 			else
 				fz_warn(ctx, "cannot find font resource part '%s'", partname);

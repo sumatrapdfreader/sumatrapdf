@@ -590,7 +590,6 @@ static void console_println(js_State *J)
 			js->console->write(js->console_user, s);
 		}
 	}
-	fz_write_byte(js->ctx, fz_stddbg(js->ctx), '\n');
 	js_pushboolean(J, 1);
 }
 

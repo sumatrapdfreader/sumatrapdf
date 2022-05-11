@@ -127,6 +127,8 @@ xps_parse_image_brush(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_rect
 		{
 			if (doc->cookie)
 				doc->cookie->incomplete = 1;
+			else
+				fz_rethrow(ctx);
 		}
 		else
 			fz_warn(ctx, "cannot find image source");

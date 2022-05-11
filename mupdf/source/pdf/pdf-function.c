@@ -28,6 +28,8 @@
 #include <float.h>
 #include <limits.h>
 
+static pdf_function *pdf_load_function_imp(fz_context *ctx, pdf_obj *dict, int in, int out, pdf_cycle_list *cycle);
+
 #define DIV_BY_ZERO(a, b, min, max) (((a) < 0) ^ ((b) < 0) ? (min) : (max))
 
 enum
@@ -1217,7 +1219,7 @@ eval_exponential_func(fz_context *ctx, pdf_function *func, float in, float *out)
  */
 
 static void
-load_stitching_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
+load_stitching_func(fz_context *ctx, pdf_function *func, pdf_obj *dict, pdf_cycle_list *cycle_up)
 {
 	pdf_function **funcs;
 	pdf_obj *obj;
@@ -1236,38 +1238,25 @@ load_stitching_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 	if (!pdf_is_array(ctx, obj))
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "stitching function has no input functions");
 
-	fz_try(ctx)
+	k = pdf_array_len(ctx, obj);
+
+	func->u.st.funcs = Memento_label(fz_malloc_array(ctx, k, pdf_function*), "stitch_fns");
+	func->u.st.bounds = Memento_label(fz_malloc_array(ctx, k - 1, float), "stitch_bounds");
+	func->u.st.encode = Memento_label(fz_malloc_array(ctx, k * 2, float), "stitch_encode");
+	funcs = func->u.st.funcs;
+
+	for (i = 0; i < k; i++)
 	{
-		if (pdf_mark_obj(ctx, obj))
-			fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive function");
-		k = pdf_array_len(ctx, obj);
+		sub = pdf_array_get(ctx, obj, i);
+		funcs[i] = pdf_load_function_imp(ctx, sub, 1, func->n, cycle_up);
 
-		func->u.st.funcs = Memento_label(fz_malloc_array(ctx, k, pdf_function*), "stitch_fns");
-		func->u.st.bounds = Memento_label(fz_malloc_array(ctx, k - 1, float), "stitch_bounds");
-		func->u.st.encode = Memento_label(fz_malloc_array(ctx, k * 2, float), "stitch_encode");
-		funcs = func->u.st.funcs;
+		func->size += pdf_function_size(ctx, funcs[i]);
+		func->u.st.k ++;
 
-		for (i = 0; i < k; i++)
-		{
-			sub = pdf_array_get(ctx, obj, i);
-			funcs[i] = pdf_load_function(ctx, sub, 1, func->n);
-
-			func->size += pdf_function_size(ctx, funcs[i]);
-			func->u.st.k ++;
-
-			if (funcs[i]->m != func->m)
-				fz_warn(ctx, "wrong number of inputs for sub function %d", i);
-			if (funcs[i]->n != func->n)
-				fz_warn(ctx, "wrong number of outputs for sub function %d", i);
-		}
-	}
-	fz_always(ctx)
-	{
-		pdf_unmark_obj(ctx, obj);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
+		if (funcs[i]->m != func->m)
+			fz_warn(ctx, "wrong number of inputs for sub function %d", i);
+		if (funcs[i]->n != func->n)
+			fz_warn(ctx, "wrong number of outputs for sub function %d", i);
 	}
 
 	obj = pdf_dict_get(ctx, dict, PDF_NAME(Bounds));
@@ -1428,15 +1417,16 @@ pdf_eval_function(fz_context *ctx, pdf_function *func, const float *in, int inle
 	}
 }
 
-pdf_function *
-pdf_load_function(fz_context *ctx, pdf_obj *dict, int in, int out)
+static pdf_function *
+pdf_load_function_imp(fz_context *ctx, pdf_obj *dict, int in, int out, pdf_cycle_list *cycle_up)
 {
+	pdf_cycle_list cycle;
 	pdf_function *func;
 	pdf_obj *obj;
 	int i;
 
-	if (pdf_obj_marked(ctx, dict))
-		fz_throw(ctx, FZ_ERROR_SYNTAX, "Recursion in function definition");
+	if (pdf_cycle(ctx, &cycle, cycle_up, dict))
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive function");
 
 	if ((func = pdf_find_item(ctx, pdf_drop_function_imp, dict)) != NULL)
 		return func;
@@ -1493,7 +1483,7 @@ pdf_load_function(fz_context *ctx, pdf_obj *dict, int in, int out)
 			break;
 
 		case STITCHING:
-			load_stitching_func(ctx, func, dict);
+			load_stitching_func(ctx, func, dict, &cycle);
 			break;
 
 		case POSTSCRIPT:
@@ -1513,4 +1503,10 @@ pdf_load_function(fz_context *ctx, pdf_obj *dict, int in, int out)
 	}
 
 	return func;
+}
+
+pdf_function *
+pdf_load_function(fz_context *ctx, pdf_obj *dict, int in, int out)
+{
+	return pdf_load_function_imp(ctx, dict, in, out, NULL);
 }

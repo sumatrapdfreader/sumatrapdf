@@ -16,6 +16,8 @@ do
 done
 
 echo gzip $O.tar
-gzip -f -k $O.tar
-echo xz $O.tar
-xz -f -k $O.tar
+pigz -f -k $O.tar
+echo lzip $O.tar
+plzip -f -k $O.tar
+echo zstd $O.tar
+zstd -q -T0 -19 -f -k $O.tar

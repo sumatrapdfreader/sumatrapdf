@@ -1,3 +1,36 @@
+List of changes in MuPDF 1.20.0
+
+	Experimental C# bindings.
+	Cross compilation should no longer need a host compiler.
+	Major additions to JNI bindings.
+
+	New API to edit outline
+	New API to resolve and create links
+	New API to toggle individual layers in PDF
+		Layer panel in mupdf-gl
+		Layer option in mutool draw
+	New API to add a Javascript console
+		Console panel in mupdf-gl
+
+	Text search API extended to be able to distinguish between separate search hits.
+
+	Command line tool improvements:
+		all: Negative page numbers to index from the last page
+		mutool draw: Add option to render document without text
+		mutool draw and convert: Support DPI option in text and HTML output
+
+	New hybrid HTML output format using "scripts/pdftohtml" script:
+		Graphics in a background image
+		Text on top
+
+	Improved WASM viewer demo
+		Support high DPI screens
+		Progressive loading
+
+	Update to zlib 1.2.12 for security fix.
+
+	Too many bug fixes to list.
+
 List of changes in MuPDF 1.19.0
 
 	Removed support for Luratech JBIG2 and JPEG2000 decoders.

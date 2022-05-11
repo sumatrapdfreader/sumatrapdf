@@ -92,7 +92,7 @@ fz_recognize_document(fz_context *ctx, const char *magic)
 {
 	fz_document_handler_context *dc;
 	int i, best_score, best_i;
-	const char *ext, *needle;
+	const char *ext;
 
 	dc = ctx->handler;
 	if (dc->count == 0)
@@ -100,9 +100,7 @@ fz_recognize_document(fz_context *ctx, const char *magic)
 
 	ext = strrchr(magic, '.');
 	if (ext)
-		needle = ext + 1;
-	else
-		needle = magic;
+		ext = ext + 1;
 
 	best_score = 0;
 	best_i = -1;
@@ -115,22 +113,22 @@ fz_recognize_document(fz_context *ctx, const char *magic)
 		if (dc->handler[i]->recognize)
 			score = dc->handler[i]->recognize(ctx, magic);
 
-		if (!ext)
+		for (entry = &dc->handler[i]->mimetypes[0]; *entry; entry++)
+			if (!fz_strcasecmp(magic, *entry) && score < 100)
+			{
+				score = 100;
+				break;
+			}
+
+		if (ext)
 		{
-			for (entry = &dc->handler[i]->mimetypes[0]; *entry; entry++)
-				if (!fz_strcasecmp(needle, *entry) && score < 100)
+			for (entry = &dc->handler[i]->extensions[0]; *entry; entry++)
+				if (!fz_strcasecmp(ext, *entry) && score < 100)
 				{
 					score = 100;
 					break;
 				}
 		}
-
-		for (entry = &dc->handler[i]->extensions[0]; *entry; entry++)
-			if (!fz_strcasecmp(needle, *entry) && score < 100)
-			{
-				score = 100;
-				break;
-			}
 
 		if (best_score < score)
 		{

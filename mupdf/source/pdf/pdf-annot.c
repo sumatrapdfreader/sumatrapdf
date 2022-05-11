@@ -760,40 +760,30 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 }
 
 static int
-remove_from_tree(fz_context *ctx, pdf_obj *arr, pdf_obj *item)
+remove_from_tree(fz_context *ctx, pdf_obj *arr, pdf_obj *item, pdf_cycle_list *cycle_up)
 {
+	pdf_cycle_list cycle;
 	int i, n, res = 0;
 
-	if (arr == NULL || pdf_mark_obj(ctx, arr))
+	if (arr == NULL || pdf_cycle(ctx, &cycle, cycle_up, arr))
 		return 0;
 
-	fz_try(ctx)
+	n = pdf_array_len(ctx, arr);
+	for (i = 0; i < n; ++i)
 	{
-		n = pdf_array_len(ctx, arr);
-		for (i = 0; i < n; ++i)
+		pdf_obj *obj = pdf_array_get(ctx, arr, i);
+		if (obj == item)
 		{
-			pdf_obj *obj = pdf_array_get(ctx, arr, i);
-			if (obj == item)
-			{
-				pdf_array_delete(ctx, arr, i);
-				res = 1;
-				break;
-			}
-
-			if (remove_from_tree(ctx, pdf_dict_get(ctx, obj, PDF_NAME(Kids)), item))
-			{
-				res = 1;
-				break;
-			}
+			pdf_array_delete(ctx, arr, i);
+			res = 1;
+			break;
 		}
-	}
-	fz_always(ctx)
-	{
-		pdf_unmark_obj(ctx, arr);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
+
+		if (remove_from_tree(ctx, pdf_dict_get(ctx, obj, PDF_NAME(Kids)), item, &cycle))
+		{
+			res = 1;
+			break;
+		}
 	}
 
 	return res;
@@ -873,7 +863,7 @@ pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 			pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
 			pdf_obj *acroform = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
 			pdf_obj *fields = pdf_dict_get(ctx, acroform, PDF_NAME(Fields));
-			(void)remove_from_tree(ctx, fields, annot->obj);
+			(void)remove_from_tree(ctx, fields, annot->obj, NULL);
 		}
 
 		/* The garbage collection pass when saving will remove the annot object,

@@ -30,6 +30,45 @@
  */
 
 static int
+is_keyword(pdf_token tok, pdf_lexbuf *buf, const char *word)
+{
+	/* Ignore trailing garbage when matching keywords */
+	return (tok == PDF_TOK_KEYWORD && !strncmp(buf->scratch, word, strlen(word)));
+}
+
+static void
+skip_to_keyword(fz_context *ctx, fz_stream *file, pdf_lexbuf *buf, const char *end, const char *warn)
+{
+	fz_warn(ctx, "%s", warn);
+	for (;;)
+	{
+		pdf_token tok = pdf_lex(ctx, file, buf);
+		if (is_keyword(tok, buf, end))
+			return;
+		if (tok == PDF_TOK_ERROR)
+			return;
+		if (tok == PDF_TOK_EOF)
+			return;
+	}
+}
+
+static void
+skip_to_token(fz_context *ctx, fz_stream *file, pdf_lexbuf *buf, pdf_token end, const char *warn)
+{
+	fz_warn(ctx, "%s", warn);
+	for (;;)
+	{
+		pdf_token tok = pdf_lex(ctx, file, buf);
+		if (tok == end)
+			return;
+		if (tok == PDF_TOK_ERROR)
+			return;
+		if (tok == PDF_TOK_EOF)
+			return;
+	}
+}
+
+static int
 pdf_code_from_string(char *buf, size_t len)
 {
 	unsigned int a = 0;
@@ -64,13 +103,6 @@ pdf_parse_wmode(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *bu
 		fz_warn(ctx, "expected integer after WMode in cmap");
 }
 
-static int
-is_keyword(pdf_token tok, pdf_lexbuf *buf, const char *word)
-{
-	/* Ignore trailing garbage when matching keywords */
-	return (tok == PDF_TOK_KEYWORD && !strncmp(buf->scratch, word, strlen(word)));
-}
-
 static void
 pdf_parse_codespace_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *buf)
 {
@@ -93,13 +125,18 @@ pdf_parse_codespace_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_
 				hi = pdf_code_from_string(buf->scratch, buf->len);
 				pdf_add_codespace(ctx, cmap, lo, hi, buf->len);
 			}
-			else break;
+			else
+			{
+				skip_to_keyword(ctx, file, buf, "endcodespacerange", "expected string or endcodespacerange");
+				return;
+			}
 		}
-
-		else break;
+		else
+		{
+			skip_to_keyword(ctx, file, buf, "endcodespacerange", "expected string or endcodespacerange");
+			return;
+		}
 	}
-
-	fz_throw(ctx, FZ_ERROR_GENERIC, "expected string or endcodespacerange");
 }
 
 static void
@@ -116,19 +153,28 @@ pdf_parse_cid_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf
 			return;
 
 		else if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string or endcidrange");
+		{
+			skip_to_keyword(ctx, file, buf, "endcidrange", "expected string or endcidrange");
+			return;
+		}
 
 		lo = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex(ctx, file, buf);
 		if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string");
+		{
+			skip_to_keyword(ctx, file, buf, "endcidrange", "expected string");
+			return;
+		}
 
 		hi = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex(ctx, file, buf);
 		if (tok != PDF_TOK_INT)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected integer");
+		{
+			skip_to_keyword(ctx, file, buf, "endcidrange", "expected integer");
+			return;
+		}
 
 		dst = buf->i;
 
@@ -150,13 +196,19 @@ pdf_parse_cid_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 			return;
 
 		else if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string or endcidchar");
+		{
+			skip_to_keyword(ctx, file, buf, "endcidchar", "expected string or endcidchar");
+			return;
+		}
 
 		src = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex(ctx, file, buf);
 		if (tok != PDF_TOK_INT)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected integer");
+		{
+			skip_to_keyword(ctx, file, buf, "endcidchar", "expected integer");
+			return;
+		}
 
 		dst = buf->i;
 
@@ -179,7 +231,10 @@ pdf_parse_bf_range_array(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_l
 
 		/* Note: does not handle [ /Name /Name ... ] */
 		else if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string or ]");
+		{
+			skip_to_token(ctx, file, buf, PDF_TOK_CLOSE_ARRAY, "expected string or ]");
+			return;
+		}
 
 		if (buf->len / 2)
 		{
@@ -209,18 +264,24 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 			return;
 
 		else if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string or endbfrange");
+		{
+			skip_to_keyword(ctx, file, buf, "endbfrange", "expected string or endbfrange");
+			return;
+		}
 
 		lo = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex(ctx, file, buf);
 		if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string");
+		{
+			skip_to_keyword(ctx, file, buf, "endbfrange", "expected string");
+			return;
+		}
 
 		hi = pdf_code_from_string(buf->scratch, buf->len);
 		if (lo < 0 || lo > 65535 || hi < 0 || hi > 65535 || lo > hi)
 		{
-			fz_warn(ctx, "bf_range limits out of range in cmap %s", cmap->cmap_name);
+			skip_to_keyword(ctx, file, buf, "endbfrange", "bfrange limits out of range");
 			return;
 		}
 
@@ -261,7 +322,8 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 
 		else
 		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string or array or endbfrange");
+			skip_to_keyword(ctx, file, buf, "endbfrange", "expected string or array or endbfrange");
+			return;
 		}
 	}
 }
@@ -281,14 +343,20 @@ pdf_parse_bf_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *
 			return;
 
 		else if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string or endbfchar");
+		{
+			skip_to_keyword(ctx, file, buf, "endbfchar", "expected string or endbfchar");
+			return;
+		}
 
 		src = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex(ctx, file, buf);
 		/* Note: does not handle /dstName */
 		if (tok != PDF_TOK_STRING)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected string");
+		{
+			skip_to_keyword(ctx, file, buf, "endbfchar", "expected string");
+			return;
+		}
 
 		if (buf->len / 2)
 		{

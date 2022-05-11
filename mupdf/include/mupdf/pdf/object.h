@@ -88,11 +88,30 @@ int pdf_obj_marked(fz_context *ctx, pdf_obj *obj);
 int pdf_mark_obj(fz_context *ctx, pdf_obj *obj);
 void pdf_unmark_obj(fz_context *ctx, pdf_obj *obj);
 
+typedef struct pdf_cycle_list pdf_cycle_list;
+struct pdf_cycle_list {
+	pdf_cycle_list *up;
+	int num;
+};
+int pdf_cycle(fz_context *ctx, pdf_cycle_list *here, pdf_cycle_list *prev, pdf_obj *obj);
+
+typedef struct
+{
+	int len;
+	unsigned char bits[1];
+} pdf_mark_bits;
+
+pdf_mark_bits *pdf_new_mark_bits(fz_context *ctx, pdf_document *doc);
+void pdf_drop_mark_bits(fz_context *ctx, pdf_mark_bits *marks);
+void pdf_mark_bits_reset(fz_context *ctx, pdf_mark_bits *marks);
+int pdf_mark_bits_set(fz_context *ctx, pdf_mark_bits *marks, pdf_obj *obj);
+
 typedef struct
 {
 	int len;
 	int max;
-	pdf_obj **list;
+	int *list;
+	int local_list[8];
 } pdf_mark_list;
 
 int pdf_mark_list_push(fz_context *ctx, pdf_mark_list *list, pdf_obj *obj);

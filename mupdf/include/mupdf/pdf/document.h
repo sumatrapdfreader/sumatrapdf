@@ -488,6 +488,7 @@ struct pdf_document
 	int num_type3_fonts;
 	int max_type3_fonts;
 	fz_font **type3_fonts;
+	int type3_lock;
 
 	struct {
 		fz_hash_table *fonts;

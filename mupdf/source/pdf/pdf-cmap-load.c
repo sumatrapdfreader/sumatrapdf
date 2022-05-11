@@ -25,9 +25,10 @@
 
 #include <string.h>
 
-pdf_cmap *
-pdf_load_embedded_cmap(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj)
+static pdf_cmap *
+pdf_load_embedded_cmap_imp(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, pdf_cycle_list *cycle_up)
 {
+	pdf_cycle_list cycle;
 	fz_stream *file = NULL;
 	pdf_cmap *cmap = NULL;
 	pdf_cmap *usecmap = NULL;
@@ -57,14 +58,9 @@ pdf_load_embedded_cmap(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj)
 		}
 		else if (pdf_is_indirect(ctx, obj))
 		{
-			if (pdf_mark_obj(ctx, obj))
+			if (pdf_cycle(ctx, &cycle, cycle_up, obj))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "recursive CMap");
-			fz_try(ctx)
-				usecmap = pdf_load_embedded_cmap(ctx, doc, obj);
-			fz_always(ctx)
-				pdf_unmark_obj(ctx, obj);
-			fz_catch(ctx)
-				fz_rethrow(ctx);
+			usecmap = pdf_load_embedded_cmap_imp(ctx, doc, obj, &cycle);
 			pdf_set_usecmap(ctx, cmap, usecmap);
 		}
 
@@ -82,6 +78,12 @@ pdf_load_embedded_cmap(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj)
 	}
 
 	return cmap;
+}
+
+pdf_cmap *
+pdf_load_embedded_cmap(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj)
+{
+	return pdf_load_embedded_cmap_imp(ctx, doc, stmobj, NULL);
 }
 
 pdf_cmap *
