@@ -240,27 +240,7 @@ var (
 
 	globalPrefs = []*Field{
 		mkComment(""),
-		mkEmptyLine(),
-
-		mkField("MainWindowBackground", Color, mkRGBA(0xFF, 0xF2, 0x00, 0x80),
-			"background color of the non-document windows, traditionally yellow").setExpert(),
-
 		//MkField("ThemeName", String, "light", "the name of the theme to use"),
-
-		mkField("SmoothScroll", Bool, false,
-			"if true, implements smooth scrolling").setExpert(),
-		mkField("EscToExit", Bool, false,
-			"if true, Esc key closes SumatraPDF").setExpert(),
-		mkField("ReuseInstance", Bool, false,
-			"if true, we'll always open files using existing SumatraPDF process").setExpert(),
-		mkField("UseSysColors", Bool, false,
-			"if true, we use Windows system colors for background/text color. Over-rides other settings").setExpert(),
-		mkField("RestoreSession", Bool, true,
-			"if true and SessionData isn't empty, that session will be restored at startup").setExpert(),
-		mkField("ToolbarSize", Int, 18, "height of toolbar").setVersion("3.4"),
-		mkField("TabWidth", Int, 300,
-			"maximum width of a single tab"),
-		mkEmptyLine(),
 
 		mkStruct("FixedPageUI", fixedPageUI,
 			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
@@ -268,18 +248,14 @@ var (
 			"customization options for Comic Book and images UI").setExpert(),
 		mkStruct("ChmUI", chmUI,
 			"customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
+		mkEmptyLine(),
+
 		mkArray("SelectionHandlers", selectionHandler, "list of handlers for selected text, shown in context menu when text selection is active. See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)"),
 		mkArray("ExternalViewers", externalViewer,
 			"list of additional external viewers for various file types. "+
 				"See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)").setExpert(),
-		mkField("ShowMenubar", Bool, true,
-			"if false, the menu bar will be hidden for all newly opened windows "+
-				"(use F9 to show it until the window closes or Alt to show it just briefly), only applies if UseTabs is false").setExpert().setVersion("2.5"),
-		mkField("ReloadModifiedDocuments", Bool, true,
-			"if true, a document will be reloaded automatically whenever it's changed "+
-				"(currently doesn't work for documents shown in the ebook UI)").setExpert().setVersion("2.5"),
-		mkField("FullPathInTitle", Bool, false,
-			"if true, we show the full path to a file in the title bar").setExpert().setVersion("3.0"),
+		mkEmptyLine(),
+
 		//the below prefs don't apply to EbookUI (so far)
 		mkCompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 			"zoom levels which zooming steps through in addition to Fit Page, Fit Width and "+
@@ -300,26 +276,17 @@ var (
 		mkCompactArray("DefaultPasswords", String, nil,
 			"passwords to try when opening a password protected document").setDoc("a whitespace separated list of passwords to try when opening a password protected document " +
 			"(passwords containing spaces must be quoted)").setExpert().setVersion("2.4"),
-		mkField("CustomScreenDPI", Int, 0,
-			"actual resolution of the main screen in DPI (if this value "+
-				"isn't positive, the system's UI setting is used)").setExpert().setVersion("2.5"),
 		mkEmptyLine(),
 
+		mkField("RememberOpenedFiles", Bool, true,
+			"if true, we remember which files we opened and their display settings"),
 		mkField("RememberStatePerDocument", Bool, true,
 			"if true, we store display settings for each document separately (i.e. everything "+
 				"after UseDefaultState in FileStates)"),
+		mkField("RestoreSession", Bool, true,
+			"if true and SessionData isn't empty, that session will be restored at startup").setExpert(),
 		mkField("UiLanguage", String, nil,
 			"ISO code of the current UI language").setDoc("[ISO code](langs.html) of the current UI language"),
-		mkField("ShowToolbar", Bool, true,
-			"if true, we show the toolbar at the top of the window"),
-		mkField("ShowFavorites", Bool, false,
-			"if true, we show the Favorites sidebar"),
-		mkField("CheckForUpdates", Bool, true,
-			"if true, we check once a day if an update is available"),
-		mkField("VersionToSkip", String, nil,
-			"we won't ask again to update to this version"),
-		mkField("RememberOpenedFiles", Bool, true,
-			"if true, we remember which files we opened and their display settings"),
 		mkField("InverseSearchCmdLine", String, nil,
 			"pattern used to launch the LaTeX editor when doing inverse search"),
 		mkField("EnableTeXEnhancements", Bool, false,
@@ -330,26 +297,60 @@ var (
 			"book view, continuous, continuous facing, continuous book view"),
 		mkField("DefaultZoom", String, "fit page",
 			"default zoom (in %) or one of those values: fit page, fit width, fit content"),
+		mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
+		mkField("EscToExit", Bool, false,
+			"if true, Esc key closes SumatraPDF").setExpert(),
+		mkField("ReuseInstance", Bool, false,
+			"if true, we'll always open files using existing SumatraPDF process").setExpert(),
+		mkField("ReloadModifiedDocuments", Bool, true,
+			"if true, a document will be reloaded automatically whenever it's changed "+
+				"(currently doesn't work for documents shown in the ebook UI)").setExpert().setVersion("2.5"),
+		mkEmptyLine(),
+
+		mkField("MainWindowBackground", Color, mkRGBA(0xFF, 0xF2, 0x00, 0x80),
+			"background color of the non-document windows, traditionally yellow").setExpert(),
+		mkField("FullPathInTitle", Bool, false,
+			"if true, we show the full path to a file in the title bar").setExpert().setVersion("3.0"),
+		mkField("ShowMenubar", Bool, true,
+			"if false, the menu bar will be hidden for all newly opened windows "+
+				"(use F9 to show it until the window closes or Alt to show it just briefly), only applies if UseTabs is false").setExpert().setVersion("2.5"),
+		mkField("ShowToolbar", Bool, true,
+			"if true, we show the toolbar at the top of the window"),
+		mkField("ShowFavorites", Bool, false,
+			"if true, we show the Favorites sidebar"),
+		mkField("ShowToc", Bool, true,
+			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
+				"in the document"),
+		mkField("TocDy", Int, 0,
+			"if both favorites and bookmarks parts of sidebar are visible, this is "+
+				"the height of bookmarks (table of contents) part"),
+		mkField("SidebarDx", Int, 0,
+			"width of favorites/bookmarks sidebar (if shown)"),
+		mkField("ToolbarSize", Int, 18, "height of toolbar").setVersion("3.4"),
+		mkField("TabWidth", Int, 300,
+			"maximum width of a single tab"),
+		mkField("TreeFontSize", Int, 0,
+			"font size for bookmarks and favorites tree views. 0 means Windows default").setVersion("3.3"),
+		mkField("SmoothScroll", Bool, false,
+			"if true, implements smooth scrolling").setExpert(),
+		mkField("ShowStartPage", Bool, true,
+			"if true, we show a list of frequently read documents when no document is loaded"),
+		mkField("CheckForUpdates", Bool, true,
+			"if true, we check once a day if an update is available"),
+		mkField("VersionToSkip", String, nil,
+			"we won't ask again to update to this version"),
 		mkField("WindowState", Int, 1,
 			"default state of new windows (same as the last closed)").setDoc("default state of the window. 1 is normal, 2 is maximized, " +
 			"3 is fullscreen, 4 is minimized"),
 		mkCompactStruct("WindowPos", windowPos,
 			"default position (can be on any monitor)").setStructName("Rect").setDoc("default position (x, y) and size (width, height) of the window"),
-		mkField("ShowToc", Bool, true,
-			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
-				"in the document"),
-		mkField("SidebarDx", Int, 0,
-			"width of favorites/bookmarks sidebar (if shown)"),
-		mkField("TocDy", Int, 0,
-			"if both favorites and bookmarks parts of sidebar are visible, this is "+
-				"the height of bookmarks (table of contents) part"),
-		mkField("TreeFontSize", Int, 0,
-			"font size for bookmarks and favorites tree views. 0 means Windows default").setVersion("3.3"),
-		mkField("ShowStartPage", Bool, true,
-			"if true, we show a list of frequently read documents when no document is loaded"),
 		mkField("UseTabs", Bool, true,
 			"if true, documents are opened in tabs instead of new windows").setVersion("3.0"),
-		mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
+		mkField("UseSysColors", Bool, false,
+			"if true, we use Windows system colors for background/text color. Over-rides other settings").setExpert(),
+		mkField("CustomScreenDPI", Int, 0,
+			"actual resolution of the main screen in DPI (if this value "+
+				"isn't positive, the system's UI setting is used)").setExpert().setVersion("2.5"),
 		mkEmptyLine(),
 
 		// file history and favorites
@@ -373,7 +374,7 @@ var (
 		mkField("DefaultZoomFloat", Float, -1,
 			"value of DefaultZoom for internal usage").setInternal(),
 		mkEmptyLine(),
-		mkComment("Settings after this line have not been recognized by the current version"),
+		mkComment("Settings below are not recognized by the current version"),
 	}
 
 	globalPrefsStruct = mkStruct("GlobalPrefs", globalPrefs,
