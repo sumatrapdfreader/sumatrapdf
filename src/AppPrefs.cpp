@@ -167,16 +167,10 @@ bool Load() {
     setMin(gprefs->treeFontSize, 0);
     setMinMax(gprefs->toolbarSize, 8, 64);
 
-    // TODO: remove before shipping 3.4. This resets the value from 10
-    // to 0 (which signifies default)
-    if (gprefs->fixedPageUI.ebookFontSize == 10) {
-        gprefs->fixedPageUI.ebookFontSize = 0;
-    }
-
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
-    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
-    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
+    //    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
+    //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
     if (!file::Exists(path.Get())) {
         Save();

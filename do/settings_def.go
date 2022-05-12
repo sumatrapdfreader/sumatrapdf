@@ -83,10 +83,6 @@ var (
 			"if true, TextColor and BackgroundColor will be temporarily swapped").setInternal(),
 		mkField("HideScrollbars", Bool, false,
 			"if true, hides the scrollbars but retains ability to scroll"),
-		mkField("EbookFontName", String, "default",
-			"name of the font for ebook formats"),
-		mkField("EbookFontSize", Float, "0",
-			"size of the font for ebook formats, 0 is default"),
 	}
 
 	comicBookUI = []*Field{
