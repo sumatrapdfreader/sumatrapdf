@@ -8,6 +8,7 @@
 extern bool gIsDebugBuild;
 extern bool gIsAsanBuild;
 extern bool gIsPreReleaseBuild;
+extern bool gIsStoreBuild;
 extern bool gOwnerDrawMenu;
 extern bool gDisableDocumentRestrictions;
 extern const char* builtOn;

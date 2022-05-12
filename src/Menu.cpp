@@ -1420,6 +1420,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         if (!HasPermission(Perm::CopySelection)) {
             removeMenu |= cmdIdInList(removeIfNoCopyPerms);
         }
+        if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
+            removeMenu = true;
+        }
 
         if (ctx) {
             removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(removeIfChm));

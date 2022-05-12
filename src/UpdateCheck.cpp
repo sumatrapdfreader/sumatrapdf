@@ -140,6 +140,10 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
 }
 
 static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
+    if (gIsStoreBuild) {
+        return false;
+    }
+
     if (gUpdateCheckInProgress) {
         logf("CheckForUpdate: skipping because gUpdateCheckInProgress\n");
         return false;

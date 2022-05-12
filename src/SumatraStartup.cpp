@@ -607,6 +607,21 @@ static bool IsInstallerButNotInstalled() {
     return !IsOurExeInstalled();
 }
 
+static void CheckIsStoreBuild() {
+    WCHAR* exePath = GetExePathTemp();
+    const WCHAR* exeName = path::GetBaseNameTemp(exePath);
+    if (str::FindI(exeName, L"store")) {
+        gIsStoreBuild = true;
+        return;
+    }
+    WCHAR* dir = path::GetDirTemp(exePath);
+    WCHAR* path = path::JoinTemp(dir, L"AppxManifest.xml");
+    if (file::Exists(path)) {
+        gIsStoreBuild = true;
+    }
+    return;
+}
+
 // TODO: maybe could set font on TDN_CREATED to Consolas, to better show the message
 static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                                       LONG_PTR lpRefData) {
@@ -938,6 +953,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     ParseFlags(GetCommandLineW(), flags);
     gCli = &flags;
 
+    CheckIsStoreBuild();
     bool isInstaller = flags.install || flags.runInstallNow || IsInstallerAndNamedAsSuch();
     bool isUninstaller = flags.uninstall;
     bool noLogHere = isInstaller || isUninstaller;
