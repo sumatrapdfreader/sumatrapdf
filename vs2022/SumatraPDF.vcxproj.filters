@@ -144,9 +144,6 @@
     <ClInclude Include="..\src\Selection.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SettingsStructs.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\StressTesting.h">
       <Filter>src</Filter>
     </ClInclude>

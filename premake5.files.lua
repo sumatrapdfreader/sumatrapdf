@@ -639,9 +639,13 @@ function utils_files()
     "WebpReader.*",
     "WinDynCalls.*",
     "WinUtil.*",
-    "windrawlib.*",
     "ZipUtil.*",
   })
+  filter {"configurations:Debug"}
+    files_in_dir("src/utils", {
+      "windrawlib.*",
+    })
+  filter {}
 end
 
 function wingui_files()
