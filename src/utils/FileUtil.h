@@ -8,6 +8,7 @@ bool IsSep(char c);
 std::string_view GetBaseName(std::string_view path);
 
 const char* GetBaseNameTemp(const char* path);
+TempStr GetDirTemp(const char* path);
 const char* GetExtTemp(const char* path);
 
 char* Join(const char* path, const char* fileName, Allocator* allocator);

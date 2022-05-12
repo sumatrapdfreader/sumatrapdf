@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/UITask.h"
+#include "utils/FileUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -132,6 +133,8 @@ struct CommandPaletteWnd : Wnd {
 
     Edit* editQuery = nullptr;
     StrVec allStrings;
+    // maps original file path to converted file path
+    StrVec convertedFilePaths;
     ListBox* listBox = nullptr;
     Static* staticHelp = nullptr;
 
@@ -271,13 +274,25 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     return true;
 }
 
-static void AddOpenedFiles(StrVec& strings, WindowInfo* win) {
+static char* ConvertPathForDisplayTemp(const char* s) {
+    const char* name = path::GetBaseNameTemp(s);
+    char* dir = path::GetDirTemp(s);
+    char* res = str::JoinTemp(name, "  (", dir);
+    res = str::JoinTemp(res, ")");
+    return res;
+}
+
+static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, WindowInfo* win) {
     for (TabInfo* tab : win->tabs) {
         if (!tab->IsDocLoaded()) {
             continue;
         }
         auto path = tab->filePath.Get();
-        auto s = ToUtf8Temp(path);
+        char* s = ToUtf8Temp(path);
+        filePaths.AppendIfNotExists(s);
+        s = (char*)path::GetBaseNameTemp(s);
+        // s = ConvertPathForDisplayTemp(s);
+        filePaths.AppendIfNotExists(s);
         // avoid adding the same file opened in multiple window
         strings.AppendIfNotExists(s);
     }
@@ -290,8 +305,8 @@ static TabInfo* FindOpenedFile(std::string_view sv) {
                 continue;
             }
             auto path = tab->filePath.Get();
-            auto s = ToUtf8Temp(path);
-            if (str::Eq(s.Get(), sv.data())) {
+            char* s = ToUtf8Temp(path);
+            if (str::Eq(s, sv.data())) {
                 return tab;
             }
         }
@@ -299,7 +314,7 @@ static TabInfo* FindOpenedFile(std::string_view sv) {
     return nullptr;
 }
 
-static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
+static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
     TabInfo* tab = win->currentTab;
@@ -335,12 +350,16 @@ static void CollectPaletteStrings(StrVec& strings, WindowInfo* win) {
 
     // append paths of opened files
     for (WindowInfo* w : gWindows) {
-        AddOpenedFiles(strings, w);
+        AddOpenedFiles(strings, filePaths, w);
     }
     // append paths of files from history, excluding
     // already appended (from opened files)
     for (FileState* fs : *gGlobalPrefs->fileStates) {
-        strings.AppendIfNotExists(fs->filePath);
+        char* s = fs->filePath;
+        filePaths.Append(s);
+        s = ConvertPathForDisplayTemp(s);
+        filePaths.Append(s);
+        strings.AppendIfNotExists(s);
     }
 
     // we want them sorted
@@ -500,8 +519,8 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     if (sel < 0) {
         return;
     }
-    auto s = listBox->model->Item(sel);
-    int cmdId = GetCommandIdByDesc(s.data());
+    const char* s = listBox->model->Item(sel).data();
+    int cmdId = GetCommandIdByDesc(s);
     if (cmdId >= 0) {
         bool noActivate = IsCmdInList(gCommandsNoActivate);
         if (noActivate) {
@@ -512,8 +531,25 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
 
+    int n = convertedFilePaths.Size() / 2;
+    bool isFromTab = false;
+    for (int i = 0; i < n; i++) {
+        const char* converted = convertedFilePaths.at(i * 2 + 1).data();
+        if (!str::Eq(converted, s)) {
+            continue;
+        }
+        s = convertedFilePaths.at(i * 2).data();
+        // a hack-ish detection of filename from tab
+        // vs. from history. Name from tab are only file names
+        // and therefore much shorter than full path (converted)
+        if (str::Len(s) > str::Len(converted) + 3) {
+            isFromTab = true;
+        }
+        break;
+    }
+
     TabInfo* tab = FindOpenedFile(s);
-    if (tab != nullptr) {
+    if (isFromTab && (tab != nullptr)) {
         if (tab->win->currentTab != tab) {
             SelectTabInWindow(tab);
         }
@@ -522,7 +558,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
 
-    LoadArgs args(s.data(), win);
+    LoadArgs args(s, win);
     args.forceReuse = false; // open in a new tab
     LoadDocument(args);
     ScheduleDelete();
@@ -549,7 +585,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
 }
 
 bool CommandPaletteWnd::Create(WindowInfo* win) {
-    CollectPaletteStrings(allStrings, win);
+    CollectPaletteStrings(allStrings, convertedFilePaths, win);
     {
         CreateCustomArgs args;
         // args.title = L"Command Palette";
@@ -621,10 +657,11 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     if (dy < 480) {
         dy = 480;
     }
-    if (dy > 640) {
-        dy = 640;
+    int dx = rc.dx - 256;
+    if (dx < 640) {
+        dx = 640;
     }
-    LayoutAndSizeToContent(layout, 520, dy, hwnd);
+    LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
     SetIsVisible(true);

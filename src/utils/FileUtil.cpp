@@ -118,6 +118,28 @@ const WCHAR* GetExtTemp(const WCHAR* path) {
     return path + str::Len(path);
 }
 
+TempStr GetDirTemp(const char* path) {
+    const char* baseName = GetBaseNameTemp(path);
+    if (baseName == path) {
+        // relative directory
+        return str::DupTemp(".");
+    }
+    if (baseName == path + 1) {
+        // relative root
+        return str::DupTemp(path, 1);
+    }
+    if (baseName == path + 3 && path[1] == ':') {
+        // local drive root
+        return str::DupTemp(path, 3);
+    }
+    if (baseName == path + 2 && str::StartsWith(path, "\\\\")) {
+        // server root
+        return str::DupTemp(path);
+    }
+    // any subdirectory
+    return str::DupTemp(path, baseName - path - 1);
+}
+
 // caller has to free() the results
 TempWstr GetDirTemp(const WCHAR* path) {
     const WCHAR* baseName = GetBaseNameTemp(path);
