@@ -1420,7 +1420,7 @@ pdf_eval_function(fz_context *ctx, pdf_function *func, const float *in, int inle
 static pdf_function *
 pdf_load_function_imp(fz_context *ctx, pdf_obj *dict, int in, int out, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = {0};
 	pdf_function *func;
 	pdf_obj *obj;
 	int i;

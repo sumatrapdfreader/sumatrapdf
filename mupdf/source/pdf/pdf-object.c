@@ -3165,7 +3165,7 @@ int pdf_obj_refs(fz_context *ctx, pdf_obj *obj)
 static pdf_obj *
 pdf_dict_get_inheritable_imp(fz_context *ctx, pdf_obj *node, pdf_obj *key, int depth, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = {0};
 	pdf_obj *val = pdf_dict_get(ctx, node, key);
 	if (val)
 		return val;
@@ -3188,7 +3188,7 @@ pdf_dict_get_inheritable(fz_context *ctx, pdf_obj *node, pdf_obj *key)
 static pdf_obj *
 pdf_dict_getp_inheritable_imp(fz_context *ctx, pdf_obj *node, const char *path, int depth, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = {0};
 	pdf_obj *val = pdf_dict_getp(ctx, node, path);
 	if (val)
 		return val;
