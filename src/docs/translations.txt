@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8819b1cacdcc11241d24dd98b8a0d379858edf7e
+1601be33f91c38c89de6d333150e57ae1ca56070
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -587,6 +587,7 @@ it:Pagine a&ffiancate
 nl:&Gericht op
 pl:&Wiele stron
 tl:Nakaharap
+uk:По дві сторінки
 :&File
 af:&Lêer
 am:&Ֆայլ
@@ -1263,6 +1264,7 @@ eu:&Hurrengo orrialdea
 it:Pagina &successiva
 nl:&Volgende Pagina
 pl:&Następna strona
+uk:Наступна сторінка
 :&No
 af:&Nee
 am:&Ոչ
@@ -2120,6 +2122,7 @@ sk:&Uložiť do existujúceho PDF
 sl:&Shrani v obstoječo PDF datoteko
 th:&บันทึกไปที่ PDF ที่เปิดอยู่
 tr:Var olan PDF'ye &kaydet
+uk:Зберегти в наявному PDF-файлі
 :&Search With Google
 am:&Որոնել Google-ով
 br:&Buscar com Google
@@ -2145,6 +2148,7 @@ sk:&Hľadať pomocou Google
 sl:&Išči z Google
 th:&ค้นหาด้วย Google
 tr:Google İle &Ara
+uk:Пошук за допомогою Google
 :&Settings
 am:&Կարգավորումներ
 ar:&الإعدادات
@@ -2281,6 +2285,7 @@ de:Einzel&seitenansicht
 it:Pagina &singola
 nl:&Enkele Pagina
 pl:&Pojedyncza strona
+uk:Одна сторінка
 :&Stamp
 am:&Կնիք
 br:&Carimbo
@@ -2305,6 +2310,7 @@ pl:Pie&częć
 sl:&Žig
 th:&ประทับตรา
 tr:&Damga
+uk:Штамп
 :&Strike Out
 am:&Ջնջած
 br:Ri&scar
@@ -2331,6 +2337,7 @@ pl:&Skreślenie
 sl:&Prečrtano
 th:&ตีออก
 tr:&Üstünü Çiz
+uk:Викреслити
 :&Text
 am:&Գրվածք
 az:Mə&tn
@@ -2444,6 +2451,7 @@ sk:&Preložiť pomocou Google
 sl:Prevedi z &Google
 th:&แปลด้วย Google
 tr:Google İle &Çevir
+uk:Перекласти за допомогою Google
 :&Underline
 am:&Ընդգծված
 br:S&ublinhar
@@ -2465,6 +2473,7 @@ nl:&Onderstrepen
 pl:&Podkreślenie
 th:&ขีดเส้นใต้
 tr:&Altını Çiz
+uk:Підкреслити
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -11335,6 +11344,7 @@ eu:&Leiho berria
 it:Nuova &finestra
 nl:Nieuw &Kader
 pl:Nowe &okno
+uk:Нове вікно
 :New version available
 am:Մատչելի է նոր տարբերակ
 bg:Достъпна е нова версия
@@ -12840,6 +12850,7 @@ eu:O&rrialdea...
 it:Pa&gina...
 nl:Pa&gina
 pl:&Strona...
+uk:Сторінка
 :Page %s
 am:Էջ %s
 ar:الصفحة %s
@@ -13454,6 +13465,7 @@ pl:Wyskakujące okienko: %d 0 R
 ru:Всплывающее окно: %d 0 R
 sl:Pojavno okno: %d 0 R
 tr:Baloncuk: %d 0 R
+uk:Спливаюче вікно: %d 0 R
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -13526,6 +13538,7 @@ eu:Aur&kezpena
 it:Presentazione
 nl:Pr&esentatie
 pl:&Prezentacja
+uk:Презентація
 :Previous Page
 af:Vorige Bladsy
 am:Նախորդ էջը
@@ -14122,6 +14135,7 @@ eu:B&errizendatu...
 it:Ri&nomina...
 nl:Her&noem
 pl:Zmień &nazwę...
+uk:Перейменувати...
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
 br:Retângulo: x=%d y=%d dx=%d dy=%d
@@ -14142,6 +14156,7 @@ pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 sl:Pravokotnik: x=%d y=%d dx=%d dy=%d
 tl:Rect: x=%d y=%d dx=%d dy=%d
 tr:Dikdörtgen: x=%d y=%d dx=%d dy=%d
+uk:Прямокутн.: x=%d y=%d dx=%d dy=%d
 :Redact
 am:Փոփոխել
 ar:تنقيح
@@ -14445,6 +14460,7 @@ eu:Itzulikatu e&zkerrera
 it:Ruota a &sinistra
 nl:&Linksom Roteren
 pl:Obróć w &lewo
+uk:Повернути проти годинникової стрілки
 :Rotate &Left\tCtrl+Shift+-
 af:Draai Links\tCtrl+Shift+-
 am:Պտտել ձախ\tCtrl+Shift+-
@@ -14525,6 +14541,7 @@ eu:Itzulikatu e&skuinera
 it:Ruota a &destra
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
+uk:Повернути за годинниковою стрілкою
 :Rotate &Right\tCtrl+Shift++
 af:Draai Regs\tCtrl+Shift++
 am:Պտտել աջ\tCtrl+Shift++
@@ -14621,6 +14638,7 @@ pl:Z&aznaczenie
 sl:I&zbor
 th:&การเลือก
 tr:S&eçim
+uk:Виділення 
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
@@ -14646,6 +14664,7 @@ pl:&Falowanie
 sl:Vi&jugasto
 th:S&ยุ่งเหยิง
 tr:&Kıvrımlı
+uk:Хвилясті 
 :SVG documents
 am:SVG փաստաթղթեր
 bg:SVG документи
@@ -14694,6 +14713,7 @@ nl:Notities opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 sl:Shrani pripombe v obstoječi PDF
 tr:Dipnotları geçerli PDF'ye kaydet
+uk:Збереження приміток до наявного PDF-файлу
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
@@ -14740,6 +14760,7 @@ eu:Gorde &lastertekla...
 it:Sal&va scorciatoia...
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
+uk:Зберегти ярлик...
 :Save annotations?
 am:Պահե՞լ մեկնաբանությունը?
 bg:Да запазя ли обясненията?
@@ -14766,7 +14787,9 @@ nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
 sl:Shraniti pripombe?
 th:บันทึกคำอธิบายประกอบหรือไม่
+tl:I-save ang mga anotasyon?
 tr:Dipnotlar kaydedilsin mi?
+uk:Зберегти анотації?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
 az:Dəyişiklikləri yeni PDF-ə yaz
@@ -14798,6 +14821,7 @@ ru:Сохранить изменения в новый PDF
 sk:Uloženie zmien do nového PDF
 sl:Shrani spremembe v novo PDF datoteko
 th:บันทึกการเปลี่ยนแปลงเป็น PDF ใหม่
+tl:I-save ang mga pagbabago sa isang bagong PDF
 tr:Değişiklikleri yeni PDF'ye kaydet
 uk:Зберегти зміни у новий PDF
 :Save changes to existing PDF
@@ -14854,6 +14878,7 @@ sk:Uložiť do &nového PDF
 sl:Shrani v &novo PDF datoteko
 th:บันทึกไปที่ &​PDF ใหม่
 tr:&Yeni PDF'ye kaydet
+uk:Зберегти в новому PDF-файлі
 :Saved annotations to '%s'
 am:Պահված մեկնաբանություններ '%s'-ում
 br:Anotações salvas em '%s'
@@ -14873,7 +14898,9 @@ nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje w '%s'
 ru:Аннотации сохранены в '%s'
 sl:Shrani pripombe v '%s'
+tl:Nai-save ang mga anotasyon sa '%s'
 tr:Dipnotlar şuraya kaydedildi: '%s'
+uk:Анотації збережені до '%s'
 :Saving of '%s' failed with: '%s'
 am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
 br:Salvamento de '%s' falhou com: '%s'
@@ -14893,6 +14920,7 @@ nl:Opslaan van '%s' mislukt met: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
 sl:Shranjevanje '%s' ni uspelo: '%s'
 tr:'%s' kaydedilmesi başarısız: '%s'
+uk:Не вдалося зберегти '%s' з допомогою: '%s'
 :Search With &Bing
 am:Որոնել &Bing-ով
 br:Buscar com &Bing
@@ -14918,7 +14946,9 @@ pl:Szukaj za pomocą &Bing
 sk:Vyhľadávanie pomocou &Bing
 sl:Išči z &Bing
 th:ค้นหาด้วย &​Bing
+tl:Maghanap Gamit ang &Bing
 tr:&Bing İle Ara
+uk:Пошук за допомогою &Bing
 :Search With &Google
 am:Որոնել &Google-ով
 br:Buscar com &Google
@@ -14945,6 +14975,7 @@ sk:Hľadať pomocou &Google
 sl:Išči z &Google
 th:ค้นหาด้วย &​Google
 tr:&Google İle Ara
+uk:Пошук за допомогою &Google
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -15096,7 +15127,9 @@ nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
 sl:Izberi pripombo v urejevalniku
 th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
+tl:Piliin ang Anotasyon sa Editor
 tr:Düzenleyicide Dipnot Seç
+uk:Вибір приміток у редакторі
 :Select content with Ctrl+left mouse button
 am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 ar:حدد المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
@@ -15218,6 +15251,7 @@ sr-rs:Одабрати фолдер за инсталацију СуматраП
 sv:Välj en katalog där SumatraPDF ska installeras:
 ta:சுமத்ராPDF நிறுவல் கோப்புறை தேர்வு செய்க:
 th:เลือกโฟลเดอร์ที่ควรติดตั้ง SumatraPDF:
+tl:Piliin ang folder kung saan dapat i-install ang SumatraPDF:
 tr:SumatraPDF'nin kurulacağı klasörün yerini seç:
 tw:選擇 SumatraPDF 應安裝的資料夾:
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
@@ -15698,6 +15732,7 @@ de:Lesezeichen anzeigen
 it:Visualizza &Preferiti
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
+uk:Показати закладки
 :Show Favorites
 am:Ցուցադրել ընտրյալները
 ar:إظهار المفضلة
@@ -15856,6 +15891,7 @@ sr-rs:Прикажи недавно читане
 sv:Visa mest lästa
 ta:அடிக்கடி படிப்பவை
 th:แสดงการอ่านบ่อย
+tl:Ipakita ang madalas basahin
 tr:Sık okunanları göster
 tw:顯示經常開啟的檔案
 uk:Найбільш часто читані
@@ -16060,6 +16096,7 @@ nl:Sla deze versie over
 pl:Pomiń tę wersję
 sl:Preskoči to različico
 th:ข้ามรุ่นนี้
+tl:Laktawan ang bersyong ito
 tr:Bu sürümü atla
 uk:Пропустити цю версію
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
@@ -16225,6 +16262,7 @@ ru:Квадрат
 sl:Kvadrat
 ta:நாற்கரம் 
 th:สี่เหลี่ยม
+tl:Parisukat
 tr:Kare
 tw:矩形
 uk:Квадрат
@@ -16728,6 +16766,7 @@ sr-rs:СуматраПДФ деинсталиран
 sv:SumatraPDF är nu borttaget.
 ta:சுமத்ராPDF நிறுவல் நீக்கப்பட்டது.
 th:ถอนการติดตั้ง SumatraPDF แล้ว
+tl:Ang SumatraPDF ay na-uninstall.
 tr:SumatraPDF kaldırıldı.
 tw:已解除安裝 SumatraPDF 。
 uk:SumatraPDF було успішно видалено.
@@ -16916,6 +16955,7 @@ sr-rs:Означени PDF
 sv:Taggad PDF
 ta:குறியிடப்பட்ட PDF
 th:แท็ก PDF
+tl:Naka-tag na PDF
 tr:Etiketli PDF
 tw:已標示的 PDF
 uk:PDF з мітками
@@ -17016,6 +17056,7 @@ pl:Rozmiar tekstu: %d
 ru:Размер текста: %d
 sl:Velikost besedila: %d
 tr:Metin Boyutu: %d
+uk:Розмір тексту: %d
 :Text documents
 am:Գրվածքային փաստաթղթեր
 ar:مستندات نصية
@@ -17262,6 +17303,7 @@ sr-rs:Инсталација је оштећена. Скинути је поно
 sv:Installationsprogrammet är skadat. Vänligen hämta det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 th:โปรแกรมติดตั้งเสียหาย โปรดดาวน์โหลดอีกครั้ง \n ขออภัยในความไม่สะดวก!
+tl:Nasira ang installer. Paki-download muli.\nPaumanhin sa abala!
 tr:Kurucu bozulmuş. Lütfen yeniden indirin.\nGeçici rahatsızlık için özür dileriz!
 tw:安裝程式已損壞。請重新下載。\n抱歉帶來不便！
 uk:Інсталятор було пошкоджено. Будь ласка завантажте його знову.\nВибачте за незручності!
@@ -17320,6 +17362,7 @@ sr-rs:Овај документ користи неподржане опције
 sv:Detta dokument använder funktioner som inte stöds (%s) och kan inte återges korrekt
 ta:இவ்-ஆவணம் ஆதரிக்கப்படாத அம்சங்களை (%s) பயன்படுத்துவதால், திறக்கப்படுவதில் தோல்வி ஏற்படலாம்
 th:เอกสารนี้ใช้คุณสมบัติที่ไม่รองรับ (%s) และอาจแสดงผลไม่ถูกต้อง
+tl:Gumagamit ang dokumentong ito ng mga hindi sinusuportahang feature (%s) at maaaring hindi mai-render nang maayos
 tr:Bu belge desteklenmeyen özellikler içeriyor (%s) ve doğru görüntülenemeyebilir
 tw:此文件使用未支援的功能 (%s) ，並可能無法正確的繪製。
 uk:Даний документ використовує можливості, що не підтримуються (%s) і тому може відображатися з помилками
@@ -17421,6 +17464,7 @@ sk:Preložiť pomocou &DeepL
 sl:Prevedi z &DeepL
 th:แปลด้วย &​DeepL
 tr:&DeepL İle Çevir
+uk:Перекласти за допомогою &DeepL
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
@@ -17478,6 +17522,7 @@ sr-rs:Деинсталирање СуматраПДФ
 sv:Avinstallera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவல் நீக்கு
 th:ถอนการติดตั้ง SumatraPDF
+tl:I-uninstall ang SumatraPDF
 tr:SumatraPDF'i kaldır
 tw:解除安裝 SumatraPDF
 uk:Видалити SumatraPDF
@@ -17539,6 +17584,7 @@ sr-rs:Деинсталирање неуспело
 sv:Avinstallationen misslyckades
 ta:நிறுவல் நீக்கம் தோல்வி
 th:การถอนการติดตั้งล้มเหลว
+tl:Nabigo ang pag-uninstall
 tr:Kaldırılamadı
 tw:解除安裝失敗
 uk:Видалення не було успішним
@@ -17600,6 +17646,7 @@ sr-rs:Деинсталирање у току ...
 sv:Avinstallerar...
 ta:நிறுவல் நீக்கம் செயல்படுகிறது...
 th:กำลังถอนการติดตั้งอยู่ ...
+tl:Kasalukuyang isinasagawa ang pag-uninstall...
 tr:Kaldırılıyor...
 tw:解除安裝正在進行...
 uk:Видалення триває...
@@ -17697,7 +17744,9 @@ nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
 sl:Neshranjene pripombe
 th:ไม่ได้บันทึกคำอธิบายประกอบ
+tl:Mga hindi na-save na anotasyon
 tr:Kaydedilmemiş dipnotlar
+uk:Незбережені анотації
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
 br:Anotações não salvas em '%s'
@@ -17720,7 +17769,9 @@ nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
 sl:Neshranjene pripombe v '%s'
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
+tl:Hindi na-save na mga anotasyon sa '%s'
 tr:'%s' içinde kaydedilmemiş dipnotlar
+uk:Незбережені анотації в '%s'
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
@@ -18176,6 +18227,7 @@ sl:Imaš nameščeno različico '%s'; na voljo pa je različica '%s'.\nAli želi
 th:คุณมีรุ่น '%s'​ และรุ่น '%s'​ ใช่ได้ \nคุณต้องการจะติดตั้งรุ่นใหม่หรือไม่
 tl:Mayroon kang bersyon na '%s' at available ang bersyon na '%s'.\nGusto mo bang mag-install ng bagong bersyon?
 tr:'%s' sürümünüz var ve '%s' sürümü kullanılabilir.\nYeni sürümü kurmak ister misiniz?
+uk:У вас є версія '%s'.Версія '%s' доступна.\nВи хочете встановити нову версію?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
 bg:Вие инсталирате 32-битова версия на SumatraPDF на 64-битова ОС.\nИскате ли да свалите\n64-битовата версия?
@@ -18201,6 +18253,7 @@ sl:Nameščaš 32-bitni SumatraPDF na 64-bitni OS.\nAli želiš prenesti 64-bitn
 th:คุณกำลังติดตั้ง SumatraPDF รุ่น 32-บิต บนระบปฏิบัติการ 64-บิต.\nคุณต้องการดาวน์โหลดหรือไม่\nรุ่น 64-บิต
 tl:Nag-i-install ka ng 32-bit na SumatraPDF sa 64-bit na OS.\nGusto mo bang mag-download ng\n64-bit na bersyon?
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruyorsunuz.\n64 bit sürümü indirmek\nister misiniz?
+uk:Ви встановлюєте 32-розрядну версію SumatraPDF на 64-розрядну ОС.\nБажаєте завантажити\n64-розрядну версію?
 :Zoom
 am:Դիտափոխել
 ar:تكبير/تصغير
