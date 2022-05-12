@@ -2431,6 +2431,14 @@ pdf_cycle(fz_context *ctx, pdf_cycle_list *here, pdf_cycle_list *up, pdf_obj *ob
 		}
 	}
 	here->up = up;
+
+	/* SumatraPDF */
+	upn = (uintptr_t)here->up;
+	if (upn > 0 && upn < 0x100) {
+		// trigger a crash when up is invalid value that will crash things later
+		char *tmp = 0;
+		*tmp = 0;
+	}
 	here->num = num;
 	return 0;
 }
