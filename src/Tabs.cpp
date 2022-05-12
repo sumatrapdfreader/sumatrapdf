@@ -668,12 +668,16 @@ void CreateTabbar(WindowInfo* win) {
 
 // verifies that TabInfo state is consistent with WindowInfo state
 static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
-    CrashIf(!tdata || !win || tdata->ctrl != win->ctrl);
+    CrashIf(tdata->ctrl != win->ctrl);
+#if 0
+    // disabling this check. best I can tell, external apps can change window
+    // title and trigger this
     auto winTitle = win::GetTextTemp(win->hwndFrame);
     if (!str::Eq(winTitle.Get(), tdata->frameTitle.Get())) {
         logf(L"VerifyTabInfo: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle.Get());
         ReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
     }
+#endif
     bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
     if (PM_DISABLED != win->presentation) {
         expectedTocVisibility = false; // PM_BLACK_SCREEN, PM_WHITE_SCREEN
