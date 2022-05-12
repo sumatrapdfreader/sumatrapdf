@@ -49,4 +49,41 @@ void FileUtilTest() {
     utassert(!path::Match(L"C:\\dir.xps\\file.pdf", L"*.xps;*.djvu"));
     utassert(!path::Match(L"C:\\file.pdf", L"f??f.p?f"));
     utassert(!path::Match(L"C:\\.pdf", L"?.pdf"));
+    {
+        WCHAR* path = path::JoinTemp(L"foo", L"bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+
+        path = path::JoinTemp(L"foo\\", L"bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+
+        path = path::JoinTemp(L"foo", L"\\bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+
+        path = path::JoinTemp(L"foo\\", L"\\bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+
+        path = path::JoinTemp(L"foo\\", L"\\bar\\", L"\\z");
+        utassert(str::Eq(path, L"foo\\bar\\z"));
+    }
+    {
+        WCHAR* path = path::Join(L"foo", L"bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+        str::Free(path);
+
+        path = path::Join(L"foo\\", L"bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+        str::Free(path);
+
+        path = path::Join(L"foo", L"\\bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+        str::Free(path);
+
+        path = path::Join(L"foo\\", L"\\bar");
+        utassert(str::Eq(path, L"foo\\bar"));
+        str::Free(path);
+
+        path = path::Join(L"foo\\", L"\\bar\\", L"\\z");
+        utassert(str::Eq(path, L"foo\\bar\\z"));
+        str::Free(path);
+    }
 }
