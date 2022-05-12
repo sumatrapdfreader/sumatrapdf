@@ -362,17 +362,14 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo
         strings.AppendIfNotExists(s);
     }
 
-    // we want them sorted
+    // we want the commands sorted
     StrVec tempStrings;
-    i32 cmdId = CmdFirst + 1;
-    SeqStrings strs = gCommandDescriptions;
-    while (strs) {
-        if (AllowCommand(ctx, cmdId)) {
+    int cmdId = (int)CmdFirst + 1;
+    for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, cmdId)) {
+        if (AllowCommand(ctx, (i32)cmdId)) {
             CrashIf(str::Len(strs) == 0);
             tempStrings.Append(strs);
         }
-        seqstrings::Next(strs);
-        cmdId++;
     }
     StrVecSortedView sortedView;
     tempStrings.GetSortedViewNoCase(sortedView);
@@ -519,7 +516,8 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     if (sel < 0) {
         return;
     }
-    const char* s = listBox->model->Item(sel).data();
+    auto m = (ListBoxModelStrings*)listBox->model;
+    const char* s = m->Item(sel).data();
     int cmdId = GetCommandIdByDesc(s);
     if (cmdId >= 0) {
         bool noActivate = IsCmdInList(gCommandsNoActivate);
