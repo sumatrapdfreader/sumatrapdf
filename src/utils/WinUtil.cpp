@@ -2151,7 +2151,7 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
 }
 
 ByteSlice LoadDataResource(int resId) {
-    HRSRC resSrc = FindResource(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
+    HRSRC resSrc = FindResourceW(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
     CrashIf(!resSrc);
     if (!resSrc) {
         return {};

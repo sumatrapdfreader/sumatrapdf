@@ -953,6 +953,24 @@ static bool OpenEmbeddedFilesArchive() {
     return true;
 }
 
+u32 GetLibmupdfDllSize() {
+    bool ok = OpenEmbeddedFilesArchive();
+    if (!ok) {
+        return 0;
+    }
+    auto archive = &gArchive;
+    int nFiles = archive->filesCount;
+    lzma::FileInfo* fi;
+    for (int i = 0; i < nFiles; i++) {
+        fi = &archive->files[i];
+        if (!str::EqI(fi->name, "libmupdf.dll")) {
+            continue;
+        }
+        return (u32)fi->uncompressedSize;
+    }
+    return 0;
+}
+
 bool ExtractInstallerFiles(WCHAR* dir) {
     logf(L"ExtractInstallerFiles() to '%s'\n", dir);
     bool ok = dir::CreateAll(dir);

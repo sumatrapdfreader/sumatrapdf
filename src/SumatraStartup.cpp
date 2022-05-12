@@ -580,7 +580,7 @@ static bool ExeHasNameOfInstaller() {
 }
 
 static bool ExeHasInstallerResources() {
-    HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+    HRSRC resSrc = FindResourceW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
     return resSrc != nullptr;
 }
 
@@ -634,36 +634,33 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
     return S_OK;
 }
 
-// verify that libmupdf.dll matches the .exe
-static void VerifyNoLibmupdfMismatch() {
-    char* versionCheckFuncName = nullptr;
-    FARPROC addr = nullptr;
+// in Installer.cpp
+u32 GetLibmupdfDllSize();
 
+// verify that libmupdf.dll has the same size as the one embedded in exe
+static void VerifyNoLibmupdfMismatch() {
+    FARPROC addr = nullptr;
+    if (gIsAsanBuild) {
+        return;
+    }
     if (!ExeHasInstallerResources()) {
         // this is not a version that needs libmupdf.dll
         return;
     }
-    if (gIsAsanBuild) {
+    u32 expectedSize = GetLibmupdfDllSize();
+    ReportIf(0 == expectedSize);
+    if (0 == expectedSize) {
         return;
     }
 
-    // if we can load libmupdf.dll, then it's fine too. someone extracted libmupdf.dll
-    // as well or this could be VS build I'm debugging
-    HMODULE h = LoadLibraryA("libmupdf.dll");
-    if (!IsValidHandle(h)) {
-        goto Error;
-    }
-    versionCheckFuncName = str::Join("version_check_", CURR_VERSION_MAJOR_STRA);
-    // change "3.4" => "3_4"
-    str::TransCharsInPlace(versionCheckFuncName, ".", "_");
-    addr = GetProcAddress(h, versionCheckFuncName);
-    str::Free(versionCheckFuncName);
-    if (!addr) {
-        goto Error;
+    WCHAR* exePath = GetExePathTemp();
+    WCHAR* dir = path::GetDirTemp(exePath);
+    WCHAR* path = path::JoinTemp(dir, L"libmupdf.dll");
+    auto realSize = file::GetSize(ToUtf8Temp(path).AsView());
+    if (realSize == (i64)expectedSize) {
+        return;
     }
 
-    return;
-Error:
     constexpr const char* corruptedInstallationConsole = R"(
 Looks like corrupted installation of SumatraPDF.
 

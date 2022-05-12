@@ -30,7 +30,7 @@ struct DLGTEMPLATEEX {
 // gets a dialog template from the resources and sets the RTL flag
 // cf. http://www.ureader.com/msg/1484387.aspx
 static DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
-    HRSRC dialogRC = FindResource(nullptr, MAKEINTRESOURCE(dlgId), RT_DIALOG);
+    HRSRC dialogRC = FindResourceW(nullptr, MAKEINTRESOURCE(dlgId), RT_DIALOG);
     if (!dialogRC) {
         return nullptr;
     }

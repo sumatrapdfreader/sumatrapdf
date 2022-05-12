@@ -801,10 +801,3 @@ void pdf_install_load_system_font_funcs(fz_context* ctx) {
     fz_install_load_system_font_funcs(ctx, pdf_load_windows_font, pdf_load_windows_cjk_font, NULL);
 #endif
 }
-
-void version_check_3_4() {
-    // this is just to mark libmupdf.dll with a symbol so that we can check
-    // that version of SumatraPDF.exe and libmupdf.dll match
-    // this needs to be update when we update version in Version.h
-    // also must update libmupdf.def
-}
