@@ -5,43 +5,30 @@
 
 namespace strconv {
 
-std::wstring_view Utf8ToWstrV(const char* s, size_t cb, Allocator* a) {
+WCHAR* Utf8ToWstr(const char* s, size_t cb, Allocator* a) {
     // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
     if (!s) {
-        return {};
+        return nullptr;
     }
     if (cb == (size_t)-1) {
         cb = str::Len(s);
     }
     if (cb == 0) {
-        return {(const WCHAR*)Allocator::AllocZero(a, sizeof(WCHAR)), 0};
+        return (WCHAR*)Allocator::AllocZero(a, sizeof(WCHAR));
     }
     // ask for the size of buffer needed for converted string
     int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, nullptr, 0);
     size_t cbAlloc = ((size_t)cchNeeded * sizeof(WCHAR)) + sizeof(WCHAR); // +1 for terminating 0
     WCHAR* res = (WCHAR*)Allocator::AllocZero(a, cbAlloc);
     if (!res) {
-        return {nullptr, 0};
+        return nullptr;
     }
     int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, res, (int)cchNeeded);
     ReportIf(cchConverted != cchNeeded);
     // TODO: not sure if invalid test or it's more subtle
     // triggers in Dune.epub
     // ReportIf((size_t)cchConverted != str::Len(res));
-    return {res, (size_t)cchConverted};
-}
-
-std::wstring_view Utf8ToWstrV(std::string_view sv, Allocator* a) {
-    return Utf8ToWstrV(sv.data(), sv.size(), a);
-}
-
-WCHAR* Utf8ToWstr(const char* s, size_t cb, Allocator* a) {
-    auto v = Utf8ToWstrV(s, cb, a);
-    return (WCHAR*)v.data();
-}
-
-WCHAR* Utf8ToWstr(std::string_view sv) {
-    return Utf8ToWstr(sv.data(), sv.size(), nullptr);
+    return res;
 }
 
 std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {

@@ -97,11 +97,11 @@ TempWstr ToWstrTemp(const char* s, size_t cb) {
         CrashIf((int)cb > 0);
         return TempWstr();
     }
-    auto v = strconv::Utf8ToWstrV(s, cb, GetTempAllocator());
-    return TempWstr{v.data(), v.size()};
+    WCHAR* ws = strconv::Utf8ToWstr(s, cb, GetTempAllocator());
+    return TempWstr{ws, str::Len(ws)};
 }
 
 TempWstr ToWstrTemp(std::string_view sv) {
-    auto v = strconv::Utf8ToWstrV(sv, GetTempAllocator());
-    return TempWstr{v.data(), v.size()};
+    WCHAR* ws = strconv::Utf8ToWstr(sv.data(), sv.size(), GetTempAllocator());
+    return TempWstr{ws, str::Len(ws)};
 }

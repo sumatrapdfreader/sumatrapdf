@@ -3,10 +3,7 @@
 
 namespace strconv {
 
-std::wstring_view Utf8ToWstrV(const char* s, size_t cb = (size_t)-1, Allocator* a = nullptr);
-std::wstring_view Utf8ToWstrV(std::string_view sv, Allocator* a = nullptr);
 WCHAR* Utf8ToWstr(const char* s, size_t cb = (size_t)-1, Allocator* a = nullptr);
-WCHAR* Utf8ToWstr(std::string_view sv);
 
 std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
 std::string_view WstrToUtf8V(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
