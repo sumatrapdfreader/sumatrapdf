@@ -271,8 +271,8 @@ BOOL WINAPI HeapFreeHook(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem) {
 }
 
 static bool InitializeSymbols() {
-    AutoFreeWstr symbolPath = GetExeDir();
-    if (!dbghelp::Initialize(symbolPath.Get(), false)) {
+    WCHAR* symbolPath = GetExeDirTemp();
+    if (!dbghelp::Initialize(symbolPath, false)) {
         log("InitializeSymbols: dbghelp::Initialize() failed\n");
         return false;
     }
@@ -282,7 +282,7 @@ static bool InitializeSymbols() {
         return true;
     }
 
-    if (!dbghelp::Initialize(symbolPath.Get(), true)) {
+    if (!dbghelp::Initialize(symbolPath, true)) {
         log("InitializeSymbols: second dbghelp::Initialize() failed\n");
         return false;
     }

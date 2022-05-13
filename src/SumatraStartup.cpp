@@ -616,8 +616,8 @@ static bool IsOurExeInstalled() {
     if (!installedDir.Get()) {
         return false;
     }
-    AutoFreeWstr exeDir = GetExeDir();
-    return str::EqI(installedDir.Get(), exeDir.Get());
+    WCHAR* exeDir = GetExeDirTemp();
+    return str::EqI(installedDir.Get(), exeDir);
 }
 
 static bool IsInstallerButNotInstalled() {

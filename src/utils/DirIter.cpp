@@ -115,32 +115,6 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsIn
     return paths.size() > 0;
 }
 
-#if 0
-// returns a list of directories (full paths) in a given directory
-// TODO: add recursive flag
-std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
-    AutoFreeWstr pattern = path::Join(dir, L"*");
-
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFileW(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        return {};
-    }
-
-    std::vector<std::wstring> res;
-    do {
-        if (IsDirectory(fdata.dwFileAttributes)) {
-            if (!IsSpecialDir(fdata.cFileName)) {
-                AutoFreeWstr s = path::Join(dir, fdata.cFileName);
-                res.emplace_back(std::move(std::wstring(s)));
-            }
-        }
-    } while (FindNextFileW(hfind, &fdata));
-    FindClose(hfind);
-    return res;
-}
-#endif
-
 bool CollectFilesFromDirectory(std::string_view dir, StrVec& files,
                                const std::function<bool(std::string_view)>& fileMatchesFn) {
     auto dirW = ToWstrTemp(dir);

@@ -72,7 +72,7 @@ bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
 
 TempWstr GetExePathTemp();
-WCHAR* GetExeDir();
+TempWstr GetExeDirTemp();
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 

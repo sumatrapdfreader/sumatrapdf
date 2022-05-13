@@ -616,21 +616,17 @@ void HandleRedirectedConsoleOnShutdown() {
     }
 }
 
-/* Return the full exe path of my own executable.
-   Caller needs to free() the result. */
+// Return the full exe path of my own executable
 TempWstr GetExePathTemp() {
     WCHAR buf[MAX_PATH]{};
     GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
     return str::DupTemp(buf);
 }
 
-/* Return directory where this executable is located.
-Caller needs to free()
-*/
-WCHAR* GetExeDir() {
+// Return directory where our executable is located
+TempWstr GetExeDirTemp() {
     auto path = GetExePathTemp();
-    WCHAR* dir = path::GetDir(path);
-    return dir;
+    return path::GetDirTemp(path);
 }
 
 void ChangeCurrDirToDocuments() {

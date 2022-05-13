@@ -5291,18 +5291,18 @@ void ShowCrashHandlerMessage() {
     LaunchFile(url, nullptr, L"open");
 }
 
-static WCHAR* GetSymbolsDir() {
+static TempWstr GetSymbolsDirTemp() {
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return GetExeDir();
+        return GetExeDirTemp();
     }
     TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    return path::Join(dir.Get(), kAppName, L"crashinfo");
+    return path::JoinTemp(dir.Get(), kAppName, L"crashinfo");
 }
 
 static void DownloadDebugSymbols() {
     // over-ride the default symbols directory to be more useful
-    WCHAR* symDir = GetSymbolsDir();
+    WCHAR* symDir = GetSymbolsDirTemp();
     SetSymbolsDir(symDir);
 
     bool ok = CrashHandlerDownloadSymbols();
@@ -5317,7 +5317,6 @@ static void DownloadDebugSymbols() {
     MessageBoxA(nullptr, msg, "Downloading symbols", flags);
 
     free(msg);
-    free(symDir);
 }
 
 void ShutdownCleanup() {

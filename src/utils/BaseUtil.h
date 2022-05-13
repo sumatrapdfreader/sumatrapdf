@@ -131,7 +131,6 @@
 #include <memory>
 #include <string>
 #include <array>
-#include <vector>
 #include <limits>
 #include <span>
 //#include <iostream>
@@ -349,7 +348,7 @@ bool ListRemove(T** root, T* el) {
 struct Allocator {
     Allocator() = default;
     virtual ~Allocator() = default;
-    ;
+
     virtual void* Alloc(size_t size) = 0;
     virtual void* Realloc(void* mem, size_t size) = 0;
     virtual void Free(const void* mem) = 0;
