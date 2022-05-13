@@ -8,7 +8,6 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/CryptoUtil.h"
-#include "utils/DirIter.h"
 
 #include "AppTools.h"
 #include "SumatraConfig.h"

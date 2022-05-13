@@ -20,7 +20,6 @@ To write new regression test:
 #include "utils/WinDynCalls.h"
 #include "utils/Archive.h"
 #include "utils/DbgHelpDyn.h"
-#include "utils/DirIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/GdiPlusUtil.h"
