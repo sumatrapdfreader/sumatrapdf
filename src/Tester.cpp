@@ -149,15 +149,13 @@ static void MobiTestFile(const char* filePathA) {
 
 static void MobiTestDir(char* dir) {
     printf("Testing mobi files in '%s'\n", dir);
-    WCHAR* dirW = ToWstrTemp(dir);
-    DirIter di(dirW, true);
-    for (const WCHAR* path = di.First(); path; path = di.Next()) {
-        char* pathA = ToUtf8Temp(path);
-        Kind kind = GuessFileTypeFromName(pathA);
+    DirTraverse(dir, true, [](const char* path) -> bool {
+        Kind kind = GuessFileTypeFromName(path);
         if (kind == kindFileMobi) {
-            MobiTestFile(pathA);
+            MobiTestFile(path);
         }
-    }
+        return true;
+    });
 }
 
 static void MobiTest(char* dirOrFile) {

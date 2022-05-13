@@ -214,13 +214,13 @@ bool ZipCreator::AddFileFromDir(const WCHAR* filePath, const WCHAR* dir) {
     return AddFile(filePath, nameInZip);
 }
 
-bool ZipCreator::AddDir(const WCHAR* dirPath, bool recursive) {
-    DirIter di(dirPath, recursive);
-    for (const WCHAR* filePath = di.First(); filePath; filePath = di.Next()) {
-        if (!AddFileFromDir(filePath, dirPath)) {
+bool ZipCreator::AddDir(const WCHAR* dir, bool recursive) {
+    DirTraverse(dir, recursive, [this, dir](const WCHAR* path) -> bool {
+        if (!this->AddFileFromDir(path, dir)) {
             return false;
         }
-    }
+        return true;
+    });
     return true;
 }
 

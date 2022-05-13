@@ -823,15 +823,15 @@ class EngineImageDir : public EngineImages {
 static bool LoadImageDir(EngineImageDir* e, const WCHAR* dir) {
     e->SetFileName(dir);
 
-    DirIter di(dir, false);
-    for (const WCHAR* path = di.First(); path; path = di.Next()) {
+    DirTraverse(dir, false, [e](const WCHAR* path) -> bool {
         char* pathA = ToUtf8Temp(path);
         Kind kind = GuessFileTypeFromName(pathA);
         if (IsEngineImageSupportedFileType(kind)) {
             WCHAR* pathCopy = str::Dup(path);
             e->pageFileNames.Append(pathCopy);
         }
-    }
+        return true;
+    });
 
     int nFiles = e->pageFileNames.isize();
     if (nFiles == 0) {

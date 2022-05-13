@@ -1,41 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-/* How to use:
-
-DirIter di(dir, recursive);
-for (const WCHAR *path = di.First(); path; path = di.Next()) {
-    // process path
-}
-
-*/
-class DirIter {
-    bool recursive = false;
-
-    WStrVec dirsToVisit;
-    std::wstring_view startDir; // we don't own the memory
-    AutoFreeWstr currDir;
-    bool foundNext = false;
-
-    bool StartDirIter(std::wstring_view dir);
-    bool TryNextDir();
-
-  public:
-    AutoFreeWstr currPath;
-    HANDLE currFindHandle = nullptr;
-    WIN32_FIND_DATAW currFindData{};
-
-    explicit DirIter(std::wstring_view dir, bool recur = false) {
-        startDir = dir;
-        recursive = recur;
-    }
-    ~DirIter() {
-        FindClose(currFindHandle);
-    }
-
-    const WCHAR* First();
-    const WCHAR* Next();
-};
+bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const char* path)>& cb);
+bool DirTraverse(const WCHAR* dir, bool recurse, const std::function<bool(const WCHAR* path)>& cb);
 
 bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles = false);
 

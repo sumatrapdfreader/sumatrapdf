@@ -181,12 +181,12 @@ static bool IsFileToBench(const WCHAR* path) {
 }
 
 static void CollectFilesToBench(WCHAR* dir, WStrVec& files) {
-    DirIter di(dir, true /* recursive */);
-    for (const WCHAR* filePath = di.First(); filePath; filePath = di.Next()) {
-        if (IsFileToBench(filePath)) {
-            files.Append(str::Dup(filePath));
+    DirTraverse(dir, true, [&files](const WCHAR* path) -> bool {
+        if (IsFileToBench(path)) {
+            files.Append(str::Dup(path));
         }
-    }
+        return true;
+    });
 }
 
 static void BenchDir(WCHAR* dir) {
@@ -239,13 +239,13 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR* dirPath, const WCHAR* filter, WStrVec& paths) {
     bool hasFiles = false;
-    DirIter di(dirPath, true);
-    for (const WCHAR* filePath = di.First(); filePath; filePath = di.Next()) {
+    DirTraverse(dirPath, true, [filter, &hasFiles, &paths](const WCHAR* filePath) -> bool {
         if (IsStressTestSupportedFile(filePath, filter)) {
             paths.Append(str::Dup(filePath));
             hasFiles = true;
         }
-    }
+        return true;
+    });
     return hasFiles;
 }
 
