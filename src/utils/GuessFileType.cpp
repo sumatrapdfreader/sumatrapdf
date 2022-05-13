@@ -417,13 +417,13 @@ const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path) {
     return nullptr;
 }
 
-Kind GuessFileTypeFromName(const WCHAR* path) {
+Kind GuessFileTypeFromName(const char* pathA) {
     VerifyExtsMatch();
 
-    if (!path) {
+    if (!pathA) {
         return nullptr;
     }
-    char* pathA = ToUtf8Temp(path);
+    WCHAR* path = ToWstrTemp(pathA);
     if (path::IsDirectory(pathA)) {
         return kindDirectory;
     }
@@ -441,6 +441,7 @@ Kind GuessFileTypeFromName(const WCHAR* path) {
 }
 
 Kind GuessFileType(const WCHAR* path, bool sniff) {
+    char* pathA = ToUtf8Temp(path);
     if (sniff) {
         Kind kind = GuessFileTypeFromContent(path);
         if (kind) {
@@ -448,9 +449,9 @@ Kind GuessFileType(const WCHAR* path, bool sniff) {
         }
         // for some file types we don't have sniffing so fall back to
         // guess from file name
-        return GuessFileTypeFromName(path);
+        return GuessFileTypeFromName(pathA);
     }
-    return GuessFileTypeFromName(path);
+    return GuessFileTypeFromName(pathA);
 }
 
 static const Kind gImageKinds[] = {kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,

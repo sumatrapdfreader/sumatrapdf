@@ -547,7 +547,8 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
     AutoFree data = file::ReadFile(file);
     fileExt = GfxFileExtFromData(data.AsSpan());
     if (fileExt == nullptr) {
-        Kind kind = GuessFileTypeFromName(file);
+        char* pathA = ToUtf8Temp(file);
+        Kind kind = GuessFileTypeFromName(pathA);
         fileExt = GfxFileExtFromKind(kind);
     }
     CrashIf(fileExt == nullptr);
@@ -824,7 +825,8 @@ static bool LoadImageDir(EngineImageDir* e, const WCHAR* dir) {
 
     DirIter di(dir, false);
     for (const WCHAR* path = di.First(); path; path = di.Next()) {
-        Kind kind = GuessFileTypeFromName(path);
+        char* pathA = ToUtf8Temp(path);
+        Kind kind = GuessFileTypeFromName(pathA);
         if (IsEngineImageSupportedFileType(kind)) {
             WCHAR* pathCopy = str::Dup(path);
             e->pageFileNames.Append(pathCopy);
@@ -1126,8 +1128,7 @@ bool EngineCbx::FinishLoading() {
             return false;
         }
 
-        auto fileNameW = ToWstrTemp(fileName);
-        Kind kind = GuessFileTypeFromName(fileNameW);
+        Kind kind = GuessFileTypeFromName(fileName);
         if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameTemp(fileName), ".")) {
@@ -1370,7 +1371,8 @@ EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
     }
 
     if (!archive) {
-        kind = GuessFileTypeFromName(path);
+        char* pathA = ToUtf8Temp(path);
+        kind = GuessFileTypeFromName(pathA);
         if (kind == kindFileCbt || kind == kindFileTar) {
             archive = OpenTarArchive(path);
         }

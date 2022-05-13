@@ -1000,7 +1000,8 @@ static bool showTocByDefault(const WCHAR* path) {
         return false;
     }
     // we don't want to show toc by default for comic book files
-    Kind kind = GuessFileTypeFromName(path);
+    char* pathA = ToUtf8Temp(path);
+    Kind kind = GuessFileTypeFromName(pathA);
     bool showByDefault = !IsEngineCbxSupportedFileType(kind);
     return showByDefault;
 }
@@ -3031,8 +3032,8 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     // remove unsupported files that have never been successfully loaded
     for (size_t i = files.size(); i > 0; i--) {
         WCHAR* path = files.at(i - 1);
-        Kind kind = GuessFileTypeFromName(path);
         char* pathA = ToUtf8Temp(path);
+        Kind kind = GuessFileTypeFromName(pathA);
         if (!IsSupportedFileType(kind, true) && !DocIsSupportedFileType(kind) && !gFileHistory.Find(pathA, nullptr)) {
             free(files.PopAt(i - 1));
         }

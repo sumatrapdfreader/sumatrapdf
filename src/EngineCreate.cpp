@@ -141,7 +141,8 @@ EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEng
 
     // try to open with the engine guess from file name
     // if that fails, try to guess the file type based on content
-    Kind kind = GuessFileTypeFromName(path);
+    char* pathA = ToUtf8Temp(path);
+    Kind kind = GuessFileTypeFromName(pathA);
     EngineBase* engine = CreateEngineForKind(kind, path, pwdUI, enableChmEngine);
     if (engine) {
         return engine;

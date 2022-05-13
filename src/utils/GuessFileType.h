@@ -45,7 +45,7 @@ const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path);
 
 Kind GuessFileTypeFromContent(const WCHAR* path);
 Kind GuessFileTypeFromContent(ByteSlice d);
-Kind GuessFileTypeFromName(const WCHAR*);
+Kind GuessFileTypeFromName(const char*);
 Kind GuessFileType(const WCHAR* path, bool sniff);
 const WCHAR* GfxFileExtFromData(ByteSlice);
 const WCHAR* GfxFileExtFromKind(Kind);
