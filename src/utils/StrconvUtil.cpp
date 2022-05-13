@@ -58,27 +58,20 @@ char* WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     return res;
 }
 
-std::string_view WstrToUtf8V(const WCHAR* s, size_t cch, Allocator* a) {
+char* WstrToUtf8V(const WCHAR* s, size_t cch, Allocator* a) {
     return WstrToCodePageV(CP_UTF8, s, cch, a);
 }
 
-std::string_view WstrToUtf8V(std::wstring_view sv, Allocator* a) {
-    return WstrToCodePageV(CP_UTF8, sv.data(), sv.size(), a);
-}
-
 char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
-    auto v = WstrToCodePageV(codePage, s, cch, a);
-    return v;
+    return WstrToCodePageV(codePage, s, cch, a);
 }
 
 char* WstrToUtf8(const WCHAR* s, size_t cch, Allocator* a) {
-    auto v = WstrToUtf8V(s, cch, a);
-    return (char*)v.data();
+    return WstrToUtf8V(s, cch, a);
 }
 
 char* WstrToUtf8(std::wstring_view sv, Allocator* a) {
-    auto v = WstrToUtf8V(sv.data(), sv.size(), a);
-    return (char*)v.data();
+    return WstrToUtf8V(sv.data(), sv.size(), a);
 }
 
 // caller needs to free() the result

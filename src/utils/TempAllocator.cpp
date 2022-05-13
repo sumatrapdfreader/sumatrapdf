@@ -84,12 +84,12 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
         return TempStr();
     }
     auto v = strconv::WstrToUtf8V(s, cch, GetTempAllocator());
-    return TempStr{v.data(), v.size()};
+    return TempStr{v};
 }
 
 TempStr ToUtf8Temp(std::wstring_view sv) {
-    auto v = strconv::WstrToUtf8V(sv, GetTempAllocator());
-    return TempStr{v.data(), v.size()};
+    auto v = strconv::WstrToUtf8V(sv.data(), sv.size(), GetTempAllocator());
+    return TempStr{v};
 }
 
 TempWstr ToWstrTemp(const char* s, size_t cb) {

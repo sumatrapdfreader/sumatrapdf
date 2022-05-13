@@ -6,8 +6,7 @@ namespace strconv {
 WCHAR* Utf8ToWstr(const char* s, size_t cb = (size_t)-1, Allocator* a = nullptr);
 
 char* WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
-std::string_view WstrToUtf8V(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
-std::string_view WstrToUtf8V(std::wstring_view, Allocator* a = nullptr);
+char* WstrToUtf8V(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
 char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
 char* WstrToUtf8(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
 char* WstrToUtf8(std::wstring_view sv, Allocator* a = nullptr);
