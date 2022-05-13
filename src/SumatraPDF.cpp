@@ -3080,7 +3080,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
                 rc.y += frameThickness;
                 rc.dy -= frameThickness;
             }
-            float scale = IsZoomed(win->hwndFrame) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR;
+            float scale = IsZoomed(win->hwndFrame) ? 1.f : kCaptionTabBarDyFactor;
             int captionHeight = GetTabbarHeight(win->hwndFrame, scale);
             if (updateToolbars) {
                 int captionWidth;

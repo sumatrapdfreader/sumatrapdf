@@ -687,7 +687,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                     }
                     int captionHeight = 0;
                     if (win::HasCaption(hwnd)) {
-                        float tabScale = CAPTION_TABBAR_HEIGHT_FACTOR;
+                        float tabScale = kCaptionTabBarDyFactor;
                         if (IsZoomed(hwnd)) {
                             tabScale = 1.f;
                         }

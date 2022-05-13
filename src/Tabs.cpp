@@ -50,8 +50,6 @@ using Gdiplus::FontStyleItalic;
 using Gdiplus::FontStyleRegular;
 using Gdiplus::FontStyleStrikeout;
 using Gdiplus::FontStyleUnderline;
-using Gdiplus::FrameDimensionPage;
-using Gdiplus::FrameDimensionTime;
 using Gdiplus::Graphics;
 using Gdiplus::GraphicsPath;
 using Gdiplus::Image;
@@ -79,23 +77,23 @@ using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-#define DEFAULT_CURRENT_BG_COL (COLORREF) - 1
+#define kTabDefaultBgCol (COLORREF) - 1
 
-#define T_CLOSING (TCN_LAST + 1)
-#define T_CLOSE (TCN_LAST + 2)
-#define T_DRAG (TCN_LAST + 3)
+#define kTabClosing (TCN_LAST + 1)
+#define kTabClose (TCN_LAST + 2)
+#define kTabDrag (TCN_LAST + 3)
 
-#define TABBAR_HEIGHT 24
-#define MIN_TAB_WIDTH 100
+#define kTabBarDy 24
+#define kTabMinDx 100
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int dy = DpiScale(hwnd, TABBAR_HEIGHT);
+    int dy = DpiScale(hwnd, kTabBarDy);
     return (int)(dy * factor);
 }
 
 static inline Size GetTabSize(HWND hwnd) {
-    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, MIN_TAB_WIDTH));
-    int dy = DpiScale(hwnd, TABBAR_HEIGHT);
+    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, kTabMinDx));
+    int dy = DpiScale(hwnd, kTabBarDy);
     return Size(dx, dy);
 }
 
@@ -114,7 +112,7 @@ struct TabPainter {
     bool isDragging = false;
     bool inTitlebar = false;
     LPARAM mouseCoordinates = 0;
-    COLORREF currBgCol{DEFAULT_CURRENT_BG_COL};
+    COLORREF currBgCol{kTabDefaultBgCol};
 
     TabPainter(TabsCtrl2* ctrl, Size tabSize);
     ~TabPainter();
@@ -380,7 +378,7 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
         return;
     }
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
-    if ((UINT)T_CLOSING == code) {
+    if ((UINT)kTabClosing == code) {
         // if we have permission to close the tab
         tab->Invalidate(tab->nextTab);
         tab->xClicked = tab->nextTab;
@@ -535,7 +533,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                     // send notification if the highlighted tab is dragged over another
                     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                     int tabNo = tab->highlighted;
-                    uitask::Post([=] { TabNotification(win, T_DRAG, tabNo, hl); });
+                    uitask::Post([=] { TabNotification(win, kTabDrag, tabNo, hl); });
                 }
 
                 tab->Invalidate(hl);
@@ -567,7 +565,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send request to close the tab
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSING, next, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
             } else if (tab->nextTab != -1) {
                 if (tab->nextTab != tab->selectedTabIdx) {
                     // send request to select tab
@@ -584,7 +582,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send notification that the tab is closed
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSE, clicked, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
                 tab->Invalidate(clicked);
                 tab->xClicked = -1;
             }
@@ -601,7 +599,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send request to close the tab
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSING, next, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
             }
             return 0;
 
@@ -610,7 +608,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 // send notification that the tab is closed
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSE, clicked, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
                 tab->Invalidate(clicked);
                 tab->xClicked = -1;
             }
@@ -717,7 +715,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
 void UpdateCurrentTabBgColor(WindowInfo* win) {
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
     // TODO: match either the toolbar (if shown) or background
-    tab->currBgCol = DEFAULT_CURRENT_BG_COL;
+    tab->currBgCol = kTabDefaultBgCol;
     RepaintNow(win->tabsCtrl->hwnd);
 }
 
@@ -821,11 +819,11 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             LoadModelIntoTab(win->tabs.at(current));
             break;
 
-        case T_CLOSING:
+        case kTabClosing:
             // allow the closure
             return FALSE;
 
-        case T_CLOSE:
+        case kTabClose:
             current = win->tabsCtrl->GetSelectedTabIndex();
             if (tab1 == current) {
                 CloseCurrentTab(win);
@@ -834,7 +832,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             }
             break;
 
-        case T_DRAG:
+        case kTabDrag:
             SwapTabs(win, tab1, tab2);
             break;
         case TTN_GETDISPINFOA:
