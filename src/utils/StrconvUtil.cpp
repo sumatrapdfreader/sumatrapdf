@@ -143,7 +143,7 @@ WCHAR* AnsiToWstr(const char* src, size_t cbLen) {
     return StrToWstr(src, CP_ACP, (int)cbLen);
 }
 
-std::string_view WstrToAnsiV(const WCHAR* src) {
+char* WstrToAnsi(const WCHAR* src) {
     return WstrToCodePage(CP_ACP, src);
 }
 

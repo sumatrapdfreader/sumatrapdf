@@ -515,7 +515,7 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    AutoFree syncfname(strconv::WstrToAnsiV(syncfilepath));
+    AutoFree syncfname = strconv::WstrToAnsi(syncfilepath);
     if (!syncfname.Get()) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
@@ -609,7 +609,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        mb_srcfilepath = (char*)strconv::WstrToAnsiV(srcfilepath).data();
+        mb_srcfilepath = strconv::WstrToAnsi(srcfilepath);
         goto TryAgainAnsi;
     }
 

@@ -13,7 +13,7 @@ WCHAR* StrToWstr(const char* src, uint codePage, int cbSrc = -1);
 
 char* UnknownToUtf8(const char*);
 
-std::string_view WstrToAnsiV(const WCHAR*);
+char* WstrToAnsi(const WCHAR*);
 
 WCHAR* AnsiToWstr(const char* src, size_t cbLen = (size_t)-1);
 
