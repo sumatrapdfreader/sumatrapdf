@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1601be33f91c38c89de6d333150e57ae1ca56070
+3dc5ab9da37dddf365c4b2054227ffcdad65e9d4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15101,7 +15101,7 @@ th:เลือก &ทั้งหมด
 tl:Piliin lahat
 tr:&Tümünü Seç
 tw:全選(&A)
-uk:Вибрати всі
+uk:Вибрати все
 uz:&Hammasini tanlash
 vn:Chọn hết
 :Select Annotation in Editor
