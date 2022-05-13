@@ -115,8 +115,8 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsIn
     return paths.size() > 0;
 }
 
-bool CollectFilesFromDirectory(std::string_view dir, StrVec& files,
-                               const std::function<bool(std::string_view)>& fileMatchesFn) {
+bool CollectFilesFromDirectory(const char* dir, StrVec& files,
+                               const std::function<bool(const char*)>& fileMatchesFn) {
     auto dirW = ToWstrTemp(dir);
     AutoFreeWstr pattern = path::Join(dirW, L"*");
 
@@ -130,11 +130,11 @@ bool CollectFilesFromDirectory(std::string_view dir, StrVec& files,
     do {
         isFile = IsRegularFile(fdata.dwFileAttributes);
         if (isFile) {
-            auto name = ToUtf8Temp(fdata.cFileName);
-            AutoFreeStr filePath = path::Join(dir.data(), name.Get(), nullptr);
+            char* name = ToUtf8Temp(fdata.cFileName);
+            char* filePath = path::JoinTemp(dir, name);
             bool matches = true;
             if (fileMatchesFn) {
-                matches = fileMatchesFn(filePath.AsView());
+                matches = fileMatchesFn(filePath);
             }
             if (matches) {
                 files.Append(filePath);

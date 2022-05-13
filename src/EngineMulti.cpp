@@ -429,13 +429,13 @@ EngineBase* CreateEngineMultiFromFiles(std::string_view dir, StrVec& files) {
 }
 
 EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
-    auto isValidFunc = [](std::string_view path) -> bool {
-        bool isValid = str::EndsWithI(path.data(), ".pdf");
+    auto isValidFunc = [](const char* path) -> bool {
+        bool isValid = str::EndsWithI(path, ".pdf");
         return isValid;
     };
     StrVec files;
     auto dir = ToUtf8Temp(dirW);
-    bool ok = CollectFilesFromDirectory(dir.AsView(), files, isValidFunc);
+    bool ok = CollectFilesFromDirectory(dir, files, isValidFunc);
     if (!ok) {
         // TODO: show error message
         return nullptr;

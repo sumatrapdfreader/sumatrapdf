@@ -10,6 +10,7 @@ TempStr GetDirTemp(const char* path);
 const char* GetExtTemp(const char* path);
 
 char* Join(const char* path, const char* fileName, Allocator* allocator);
+TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2 = nullptr);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
 TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);

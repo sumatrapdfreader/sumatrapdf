@@ -49,6 +49,25 @@ const char* GetExtTemp(const char* path) {
     return ext;
 }
 
+TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2) {
+    // TODO: not sure if should allow null path
+    if (IsSep(*fileName)) {
+        fileName++;
+    }
+    const char* sepStr = nullptr;
+    size_t pathLen = str::Len(path);
+    if (pathLen > 0) {
+        if (!IsSep(path[pathLen - 1])) {
+            sepStr = "\\";
+        }
+    }
+    TempStr res = str::JoinTemp(path, sepStr, fileName);
+    if (fileName2) {
+        res = JoinTemp(res, fileName2);
+    }
+    return res;
+}
+
 char* Join(const char* path, const char* fileName, Allocator* allocator) {
     if (IsSep(*fileName)) {
         fileName++;
