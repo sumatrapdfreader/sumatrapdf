@@ -8,8 +8,7 @@ AUTHORS).
 
 More information:
 * [main website](https://www.sumatrapdfreader.org/free-pdf-reader) with downloads and documentation
-* [manual](https://www.sumatrapdfreader.org/manual.html)
-* [all other docs](https://www.sumatrapdfreader.org/docs/SumatraPDF-documentation)
+* [manual](https://www.sumatrapdfreader.org/manual)
 
 To compile you need latest Visual Studio 2022. [Free Community edition](https://www.visualstudio.com/vs/community/) works.
 
