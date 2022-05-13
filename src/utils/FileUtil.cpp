@@ -30,18 +30,6 @@ const char* GetBaseNameTemp(const char* path) {
     return s;
 }
 
-std::string_view GetBaseName(std::string_view path) {
-    const char* end = path.data() + path.size();
-    const char* s = end;
-    for (; s > path.data(); s--) {
-        if (IsSep(s[-1])) {
-            break;
-        }
-    }
-    const char* res = str::Dup(s, end - s);
-    return res;
-}
-
 // do not free, returns pointer inside <path>
 const char* GetExtTemp(const char* path) {
     const char* ext = nullptr;

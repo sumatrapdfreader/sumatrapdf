@@ -8,6 +8,8 @@
                 "${workspaceRoot}/src/utils",
                 "${workspaceRoot}/src/wingui",
                 "${workspaceRoot}/ext/synctex",
+                "${workspaceRoot}/ext/unarr",
+                "${workspaceRoot}/ext/zlib",
                 "${workspaceRoot}/ext/CHMLIB"
             ],
             "defines": [
