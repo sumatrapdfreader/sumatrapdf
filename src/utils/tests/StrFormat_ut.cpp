@@ -12,7 +12,7 @@ void check(const char* got, const char* expected) {
 }
 
 void check(std::string_view got, const char* expected) {
-    utassert(str::Eq(got, expected));
+    utassert(str::Eq(got.data(), expected));
 }
 
 void StrFormatTest() {

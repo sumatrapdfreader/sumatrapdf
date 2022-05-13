@@ -382,9 +382,8 @@ bool Contains(std::string_view s, const char* txt) {
     return contains;
 }
 
-bool ContainsI(std::string_view s, const char* txt) {
-    // TODO: needs to respect s.size()
-    const char* p = str::FindI(s.data(), txt);
+bool ContainsI(const char* s, const char* txt) {
+    const char* p = str::FindI(s, txt);
     bool contains = p != nullptr;
     return contains;
 }
@@ -2928,23 +2927,22 @@ int StrVec::Size() const {
     return index.isize();
 }
 
-std::string_view StrVec::at(int idx) const {
+char* StrVec::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
     u32 start = index.at(idx);
     if (start == kNullIdx) {
-        return {};
+        return nullptr;
     }
     u32 end = (u32)strings.size();
     if (idx + 1 < n) {
         end = (u32)index.at(idx + 1);
     }
-    const char* s = strings.LendData() + start;
-    size_t len = (size_t)(end - start - 1);
-    return {s, len};
+    char* s = strings.LendData() + start;
+    return s;
 }
 
-int StrVec::Find(std::string_view sv, int startAt) const {
+int StrVec::Find(const char* sv, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
         auto s = at(i);
@@ -2955,38 +2953,39 @@ int StrVec::Find(std::string_view sv, int startAt) const {
     return -1;
 }
 
-bool StrVec::Exists(std::string_view sv) const {
+bool StrVec::Exists(const char* sv) const {
     int idx = Find(sv);
     return idx != -1;
 }
 
-int StrVec::AppendIfNotExists(std::string_view sv) {
+int StrVec::AppendIfNotExists(const char* sv) {
     if (Exists(sv)) {
         return -1;
     }
-    return Append(sv.data());
+    return Append(sv);
 }
 
-static bool strLess(std::string_view s1, std::string_view s2) {
-    if (s1.empty()) {
+static bool strLess(const char* s1, const char* s2) {
+    if (str::IsEmpty(s1)) {
         return true;
     }
-    if (s1.empty()) {
+    if (str::IsEmpty(s2)) {
         return false;
     }
-    bool ret = s1 < s2;
-    return ret;
+    int res = strcmp(s1, s2);
+    return res > 0;
 }
 
-static bool strLessNoCase(std::string_view s1, std::string_view s2) {
-    if (s1.empty()) {
+static bool strLessNoCase(const char* s1, const char* s2) {
+    if (str::IsEmpty(s1)) {
         return true;
     }
-    if (s1.empty()) {
+    if (str::IsEmpty(s2)) {
         return false;
     }
-    size_t n1 = s1.size();
-    size_t n2 = s2.size();
+    // TODO:
+    size_t n1 = str::Len(s1);
+    size_t n2 = str::Len(s2);
     for (size_t i = 0; i < n1 && i < n2; i++) {
         int c1 = tolower(s1[i]);
         int c2 = tolower(s2[i]);
@@ -3042,8 +3041,8 @@ bool StrVec::GetSortedView(StrVecSortedView& view, StrLessFunc lessFn) const {
         sortedIndex.Append(i);
     }
     std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        std::string_view is1 = at((int)i1);
-        std::string_view is2 = at((int)i2);
+        const char* is1 = at((int)i1);
+        const char* is2 = at((int)i2);
         bool ret = lessFn(is1, is2);
         return ret;
     });
@@ -3059,7 +3058,7 @@ int StrVecSortedView::Size() const {
     return sortedIndex.isize();
 }
 
-std::string_view StrVecSortedView::at(int i) const {
+char* StrVecSortedView::at(int i) const {
     CrashIf(sortedIndex.size() != v->index.size());
 
     u32 i2 = sortedIndex[i];

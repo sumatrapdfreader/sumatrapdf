@@ -8,7 +8,7 @@ int ListBoxModelStrings::ItemsCount() {
     return strings.Size();
 }
 
-std::string_view ListBoxModelStrings::Item(int i) {
+const char* ListBoxModelStrings::Item(int i) {
     return strings.at(i);
 }
 

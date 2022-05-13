@@ -720,7 +720,7 @@ void TabsCtrl2::MaybeUpdateTooltipText(int idx) {
 
 void TabsCtrl2::SetTooltip(int idx, std::wstring_view sv) {
     WCHAR* curr = tooltips[idx];
-    WCHAR* s = str::Dup(sv);
+    WCHAR* s = str::Dup(sv.data());
     tooltips[idx] = s;
     str::Free(curr);
 }

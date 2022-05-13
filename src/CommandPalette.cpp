@@ -377,7 +377,7 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo
     int n = sortedView.Size();
     for (int i = 0; i < n; i++) {
         auto sv = sortedView.at(i);
-        strings.Append(sv.data());
+        strings.Append(sv);
     }
 }
 
@@ -410,7 +410,7 @@ static bool FilterMatches(const char* str, const char* filter) {
     int nWords = words.Size();
     for (int i = 0; i < nWords; i++) {
         auto word = words.at(i);
-        if (!str::ContainsI(str, word.data())) {
+        if (!str::ContainsI(str, word)) {
             return false;
         }
     }
@@ -421,11 +421,11 @@ static void FilterStrings(const StrVec& strs, const char* filter, StrVec& matche
     matchedOut.Reset();
     int n = strs.Size();
     for (int i = 0; i < n; i++) {
-        auto s = strs.at(i);
-        if (!FilterMatches(s.data(), filter)) {
+        char* s = strs.at(i);
+        if (!FilterMatches(s, filter)) {
             continue;
         }
-        matchedOut.Append(s.data());
+        matchedOut.Append(s);
     }
 }
 
@@ -518,7 +518,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
     auto m = (ListBoxModelStrings*)listBox->model;
-    const char* s = m->Item(sel).data();
+    const char* s = m->Item(sel);
     int cmdId = GetCommandIdByDesc(s);
     if (cmdId >= 0) {
         bool noActivate = IsCmdInList(gCommandsNoActivate);
@@ -533,11 +533,11 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     int n = convertedFilePaths.Size() / 2;
     bool isFromTab = false;
     for (int i = 0; i < n; i++) {
-        const char* converted = convertedFilePaths.at(i * 2 + 1).data();
+        char* converted = convertedFilePaths.at(i * 2 + 1);
         if (!str::Eq(converted, s)) {
             continue;
         }
-        s = convertedFilePaths.at(i * 2).data();
+        s = convertedFilePaths.at(i * 2);
         // a hack-ish detection of filename from tab
         // vs. from history. Name from tab are only file names
         // and therefore much shorter than full path (converted)

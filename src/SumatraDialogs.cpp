@@ -94,14 +94,14 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
     }
     //] ACCESSKEY_GROUP Password Dialog
 
-    TempWstr tmp;
+    WCHAR* tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
-                    data->pwdOut = str::Dup(tmp.AsView());
+                    data->pwdOut = str::Dup(tmp);
                     if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     }
@@ -173,7 +173,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
     }
     //] ACCESSKEY_GROUP GoTo Page Dialog
 
-    TempWstr tmp;
+    WCHAR* tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
@@ -181,7 +181,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
                     tmp = win::GetTextTemp(editPageNo);
-                    data->newPageLabel = str::Dup(tmp.AsView());
+                    data->newPageLabel = str::Dup(tmp);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
 
@@ -225,7 +225,7 @@ static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wp, LP
 static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_Find_Data* data;
 
-    TempWstr tmp;
+    WCHAR* tmp;
 
     switch (msg) {
         case WM_INITDIALOG:
@@ -258,7 +258,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
                 case IDOK:
                     data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_FIND_EDIT));
-                    data->searchTerm = str::Dup(tmp.AsView());
+                    data->searchTerm = str::Dup(tmp);
                     data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
@@ -822,10 +822,10 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
         WORD cmd = LOWORD(wp);
         if (IDOK == cmd) {
-            auto name = win::GetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+            WCHAR* name = win::GetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
-            if (!str::IsEmpty(name.Get())) {
-                data->favName = str::Dup(name.AsView());
+            if (!str::IsEmpty(name)) {
+                data->favName = str::Dup(name);
             } else {
                 data->favName = nullptr;
             }

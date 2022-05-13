@@ -415,7 +415,7 @@ ParsedKV ParseKV(std::string_view& sv, bool full) {
 ParsedKV ParseValueOfKey(std::string_view& str, std::string_view key, bool full) {
     ParsedKV res = ParseKV(str, full);
     if (res.ok) {
-        res.ok = str::Eq(key, res.key);
+        res.ok = str::Eq(key.data(), res.key);
     }
     return res;
 }
@@ -431,7 +431,7 @@ ParsedKV TryParseValueOfKey(std::string_view& str, std::string_view key, bool fu
     }
     res = ParseKV(str, full);
     if (res.ok) {
-        res.ok = str::Eq(key, res.key);
+        res.ok = str::Eq(key.data(), res.key);
     }
     // if failed, restore
     if (!res.ok) {

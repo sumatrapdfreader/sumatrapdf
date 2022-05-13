@@ -19,11 +19,11 @@ size_t Len(const char* s);
 
 void Free(const char*);
 void Free(const u8*);
-void Free(std::string_view);
+//void Free(std::string_view);
 void Free(ByteSlice);
 
 void Free(const WCHAR* s);
-void Free(std::wstring_view);
+//void Free(std::wstring_view);
 
 void FreePtr(const char** s);
 void FreePtr(char** s);
@@ -33,12 +33,12 @@ void FreePtr(WCHAR** s);
 char* Dup(Allocator*, const char* str, size_t cch = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
 char* Dup(Allocator*, std::string_view);
-char* Dup(std::string_view);
+//char* Dup(std::string_view);
 char* Dup(ByteSlice d);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
-WCHAR* Dup(std::wstring_view);
+//WCHAR* Dup(std::wstring_view);
 
 void ReplacePtr(const char** s, const char* snew);
 void ReplacePtr(char** s, const char* snew);
@@ -54,17 +54,17 @@ char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator)
 WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3, Allocator* allocator);
 
 bool Eq(const char* s1, const char* s2);
-bool Eq(std::string_view s1, const char* s2);
+//bool Eq(std::string_view s1, const char* s2);
 bool Eq(ByteSlice sp1, ByteSlice sp2);
 bool EqI(const char* s1, const char* s2);
-bool EqI(std::string_view s1, const char* s2);
+//bool EqI(std::string_view s1, const char* s2);
 bool EqIS(const char* s1, const char* s2);
 bool EqN(const char* s1, const char* s2, size_t len);
 bool EqNI(const char* s1, const char* s2, size_t len);
 bool IsEmpty(const char* s);
 bool StartsWith(const char* str, const char* prefix);
 bool StartsWith(const u8* str, const char* prefix);
-bool StartsWith(std::string_view s, const char* prefix);
+//bool StartsWith(std::string_view s, const char* prefix);
 ByteSlice ToSpan(const char* s);
 
 bool Eq(const WCHAR*, const WCHAR*);
@@ -105,7 +105,7 @@ const char* Find(const char* str, const char* find);
 const char* FindI(const char* str, const char* find);
 
 bool Contains(std::string_view s, const char* txt);
-bool ContainsI(std::string_view s, const char* txt);
+bool ContainsI(const char* s, const char* txt);
 
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
 bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...);
@@ -528,7 +528,7 @@ class WStrList {
     }
 };
 
-typedef bool (*StrLessFunc)(std::string_view s1, std::string_view s2);
+typedef bool (*StrLessFunc)(const char* s1, const char* s2);
 
 struct StrVec;
 
@@ -536,7 +536,7 @@ struct StrVecSortedView {
     StrVec* v; // not owned
     Vec<u32> sortedIndex;
     int Size() const;
-    std::string_view at(int) const;
+    char* at(int) const;
 
     StrVecSortedView() = default;
     ~StrVecSortedView() = default;
@@ -554,12 +554,12 @@ struct StrVec {
     void Reset();
 
     int Size() const;
-    std::string_view at(int) const;
+    char* at(int) const;
 
     int Append(const char*);
-    int Find(std::string_view sv, int startAt = 0) const;
-    bool Exists(std::string_view) const;
-    int AppendIfNotExists(std::string_view);
+    int Find(const char*, int startAt = 0) const;
+    bool Exists(const char*) const;
+    int AppendIfNotExists(const char*);
 
     bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(StrVecSortedView&) const;

@@ -280,7 +280,7 @@ void strWStrTest() {
 static void assertStrEq(std::string_view sv, const char* s) {
     const char* svd = sv.data();
     size_t n = sv.size();
-    bool ok = str::Eq(sv, s);
+    bool ok = str::Eq(svd, s);
     utassert(ok);
     utassert(svd[n] == 0); // ensure ends with 0
 }

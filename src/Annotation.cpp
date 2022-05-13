@@ -258,7 +258,7 @@ std::string_view Contents(Annotation* annot) {
 bool SetContents(Annotation* annot, std::string_view sv) {
     EngineMupdf* e = annot->engine;
     std::string_view currValue = Contents(annot);
-    if (str::Eq(sv, currValue.data())) {
+    if (str::Eq(sv.data(), currValue.data())) {
         return false;
     }
     ScopedCritSec cs(e->ctxAccess);

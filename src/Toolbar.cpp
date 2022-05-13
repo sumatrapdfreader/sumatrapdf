@@ -598,8 +598,8 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     Size size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
-        auto tmp = win::GetTextTemp(win->hwndPageTotal);
-        buf = str::Dup(tmp.AsView());
+        WCHAR* tmp = win::GetTextTemp(win->hwndPageTotal);
+        buf = str::Dup(tmp);
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= DpiScale(win->hwndFrame, kTextPaddingRight);
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
