@@ -305,7 +305,7 @@ static void StrVecTest() {
     CrashIf(!ok);
 
     for (int i = 0; i < n; i++) {
-        auto got = sortedView.at(i);
+        char* got = sortedView.at(i);
         auto exp = strs[sortedOrder[i]];
         assertStrEq(got, exp);
     }

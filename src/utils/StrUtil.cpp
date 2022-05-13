@@ -209,13 +209,6 @@ char* Dup(const char* s, size_t cch) {
     return Dup(nullptr, s, cch);
 }
 
-// allocates a copy of the source string inside the allocator.
-// it's only safe in PoolAllocator because allocated data
-// never moves in memory
-char* Dup(Allocator* a, std::string_view sv) {
-    return Dup(a, sv.data(), sv.size());
-}
-
 char* Dup(const ByteSlice d) {
     return Dup(nullptr, (const char*)d.data(), d.size());
 }
@@ -1088,13 +1081,12 @@ int CmpNatural(const char* a, const char* b) {
     return diff;
 }
 
-bool EmptyOrWhiteSpaceOnly(std::string_view sv) {
-    size_t n = sv.size();
-    if (n == 0) {
+bool EmptyOrWhiteSpaceOnly(const char* s) {
+    if (!s || !*s) {
         return true;
     }
-    for (size_t i = 0; i < n; i++) {
-        char c = sv[i];
+    while (*s) {
+        char c = *s++;
         if (!str::IsWs(c)) {
             return false;
         }
@@ -2940,7 +2932,7 @@ static bool strLess(const char* s1, const char* s2) {
         return false;
     }
     int res = strcmp(s1, s2);
-    return res > 0;
+    return res < 0;
 }
 
 static bool strLessNoCase(const char* s1, const char* s2) {
@@ -2950,7 +2942,7 @@ static bool strLessNoCase(const char* s1, const char* s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    // TODO:
+    // TODO: optimize
     size_t n1 = str::Len(s1);
     size_t n2 = str::Len(s2);
     for (size_t i = 0; i < n1 && i < n2; i++) {

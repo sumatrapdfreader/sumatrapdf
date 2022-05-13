@@ -5,41 +5,49 @@
 
 struct ByteSlice {
     u8* d = nullptr;
-    size_t s = 0;
+    size_t sz = 0;
 
     ByteSlice() = default;
     ~ByteSlice() = default;
+    ByteSlice(const char* str) {
+        d = (u8*)str;
+        sz = strlen(str);
+    }
+    ByteSlice(char* str) {
+        d = (u8*)str;
+        sz = strlen(str);
+    }
     ByteSlice(u8* data, size_t size) {
         d = data;
-        s = size;
+        sz = size;
     }
     ByteSlice(const ByteSlice& data) {
         d = data.data();
-        s = data.size();
+        sz = data.size();
     }
     ByteSlice& operator=(const ByteSlice& other) {
         d = other.d;
-        s = other.s;
+        sz = other.sz;
         return *this;
     }
     ByteSlice(const std::string_view& data) {
         d = (u8*)data.data();
-        s = data.size();
+        sz = data.size();
     }
     u8* data() const {
         return d;
     }
     size_t size() const {
-        return s;
+        return sz;
     }
     bool empty() const {
-        return !d || s == 0;
+        return !d || sz == 0;
     }
     ByteSlice Clone() const {
         if (empty()) {
             return {};
         }
-        u8* res = (u8*)memdup(d, s, 1);
+        u8* res = (u8*)memdup(d, sz, 1);
         return {res, size()};
     }
 };

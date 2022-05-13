@@ -129,7 +129,7 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     return isWine;
 }
 
-static std::string_view BuildCrashInfoText(bool forCrash) {
+static char* BuildCrashInfoText(bool forCrash) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (!forCrash) {
         s.Append("Type: deubg report (not crash)\n");
@@ -163,7 +163,7 @@ static std::string_view BuildCrashInfoText(bool forCrash) {
         s.Append(gSettingsFile);
     }
 
-    return s.StealAsView();
+    return s.StealData();
 }
 
 static void SaveCrashInfo(ByteSlice d) {
@@ -324,16 +324,16 @@ void _uploadDebugReport(const char* condStr) {
         return;
     }
 
-    auto sv = BuildCrashInfoText(false);
-    if (sv.empty()) {
+    auto s = BuildCrashInfoText(false);
+    if (str::IsEmpty(s)) {
         log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
-    auto d = ToSpanU8(sv);
+    ByteSlice d(s);
     // SaveCrashInfo(d);
     UploadCrashReport(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());
-    log(sv.data());
+    log(s);
     log("_uploadDebugReport() finished\n");
 }
 
@@ -378,12 +378,12 @@ void TryUploadCrashReport() {
         log("TryUploadCrashReport(): CrashHandlerDownloadSymbols() failed\n");
     }
 
-    auto sv = BuildCrashInfoText(true);
-    if (sv.empty()) {
+    char* sv = BuildCrashInfoText(true);
+    if (str::IsEmpty(sv)) {
         log("TryUploadCrashReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
-    auto d = ToSpanU8(sv);
+    ByteSlice d = sv;
     SaveCrashInfo(d);
     UploadCrashReport(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());

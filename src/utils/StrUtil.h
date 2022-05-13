@@ -30,7 +30,6 @@ void FreePtr(WCHAR** s);
 
 char* Dup(Allocator*, const char* str, size_t cch = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
-char* Dup(Allocator*, std::string_view);
 char* Dup(ByteSlice d);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
@@ -156,7 +155,7 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAU
 WCHAR* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
 WCHAR* FormatRomanNumeral(int number);
 
-bool EmptyOrWhiteSpaceOnly(std::string_view sv);
+bool EmptyOrWhiteSpaceOnly(const char* sv);
 } // namespace str
 
 namespace url {
