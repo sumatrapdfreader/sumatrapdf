@@ -76,12 +76,12 @@ char* ChmFile::ToUtf8(const u8* text, uint overrideCP) const {
         return str::Dup(s + 3);
     }
     if (overrideCP) {
-        return (char*)strconv::ToMultiByteV(s, overrideCP, CP_UTF8).data();
+        return strconv::ToMultiByteV(s, overrideCP, CP_UTF8);
     }
     if (CP_UTF8 == codepage) {
         return str::Dup(s);
     }
-    return (char*)strconv::ToMultiByteV(s, codepage, CP_UTF8).data();
+    return strconv::ToMultiByteV(s, codepage, CP_UTF8);
 }
 
 WCHAR* ChmFile::ToStr(const char* text) const {

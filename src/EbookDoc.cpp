@@ -104,8 +104,7 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
     if (CP_ACP == codePage) {
         codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
     }
-    auto tmp2 = strconv::ToMultiByteV(s, codePage, CP_UTF8);
-    return (char*)tmp2.data();
+    return strconv::ToMultiByteV(s, codePage, CP_UTF8);
 }
 
 char* NormalizeURL(const char* url, const char* base) {
@@ -1174,7 +1173,7 @@ bool PalmDoc::Load() {
 
     ByteSlice text = mobiDoc->GetHtmlData();
     uint codePage = GuessTextCodepage((const char*)text.data(), text.size(), CP_ACP);
-    AutoFree textUtf8(strconv::ToMultiByteV((const char*)text.data(), codePage, CP_UTF8));
+    AutoFree textUtf8 = strconv::ToMultiByteV((const char*)text.data(), codePage, CP_UTF8);
 
     const char* start = textUtf8.Get();
     const char* end = start + textUtf8.size();

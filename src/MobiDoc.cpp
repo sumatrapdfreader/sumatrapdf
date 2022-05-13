@@ -888,7 +888,7 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
         *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
-        const char* docUtf8 = strconv::ToMultiByteV(doc->Get(), textEncoding, CP_UTF8).data();
+        char* docUtf8 = strconv::ToMultiByteV(doc->Get(), textEncoding, CP_UTF8);
         if (docUtf8) {
             doc->Reset();
             doc->AppendAndFree(docUtf8);

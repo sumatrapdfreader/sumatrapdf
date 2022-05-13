@@ -94,26 +94,26 @@ WCHAR* StrToWstr(const char* src, uint codePage, int cbSrc) {
 }
 
 // caller needs to free() the result
-std::string_view ToMultiByteV(const char* src, uint codePageSrc, uint codePageDest) {
+char* ToMultiByteV(const char* src, uint codePageSrc, uint codePageDest) {
     CrashIf(!src);
     if (!src) {
-        return {};
+        return nullptr;
     }
 
     if (codePageSrc == codePageDest) {
-        return std::string_view(str::Dup(src));
+        return str::Dup(src);
     }
 
     // 20127 is US-ASCII, which by definition is valid CP_UTF8
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
     // don't know what is CP_* name for it (if it exists)
     if ((codePageSrc == 20127) && (codePageDest == CP_UTF8)) {
-        return std::string_view(str::Dup(src));
+        return str::Dup(src);
     }
 
     AutoFreeWstr tmp(StrToWstr(src, codePageSrc));
     if (!tmp) {
-        return {};
+        return nullptr;
     }
 
     return WstrToCodePageV(codePageDest, tmp.Get(), tmp.size());
