@@ -62,14 +62,14 @@ TryAgain64Bit:
             if (!GS_DLL) {
                 continue;
             }
-            AutoFreeWstr dir(path::GetDir(GS_DLL));
-            AutoFreeWstr exe(path::Join(dir, L"gswin32c.exe"));
+            WCHAR* dir = path::GetDirTemp(GS_DLL);
+            WCHAR* exe = path::JoinTemp(dir, L"gswin32c.exe");
             if (file::Exists(exe)) {
-                return exe.StealData();
+                return str::Dup(exe);
             }
-            exe.Set(path::Join(dir, L"gswin64c.exe"));
+            exe = path::JoinTemp(dir, L"gswin64c.exe");
             if (file::Exists(exe)) {
-                return exe.StealData();
+                return str::Dup(exe);
             }
         }
     }

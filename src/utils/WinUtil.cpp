@@ -705,7 +705,7 @@ bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR
         return false;
     }
 
-    lnk->SetWorkingDirectory(AutoFreeWstr(path::GetDir(exePath)));
+    lnk->SetWorkingDirectory(path::GetDirTemp(exePath));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
     // lnk->SetHotkey(0);
     lnk->SetIconLocation(exePath, iconIndex);
@@ -1651,7 +1651,7 @@ bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCH
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
     if (DynSetDllDirectoryW) {
-        AutoFreeWstr dllDir = path::GetDir(dllPath);
+        WCHAR* dllDir = path::GetDirTemp(dllPath);
         DynSetDllDirectoryW(dllDir);
     }
 

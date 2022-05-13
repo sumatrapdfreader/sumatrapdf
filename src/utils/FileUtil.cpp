@@ -117,29 +117,6 @@ const WCHAR* GetExtTemp(const WCHAR* path) {
     return path + str::Len(path);
 }
 
-TempStr GetDirTemp(const char* path) {
-    const char* baseName = GetBaseNameTemp(path);
-    if (baseName == path) {
-        // relative directory
-        return str::DupTemp(".");
-    }
-    if (baseName == path + 1) {
-        // relative root
-        return str::DupTemp(path, 1);
-    }
-    if (baseName == path + 3 && path[1] == ':') {
-        // local drive root
-        return str::DupTemp(path, 3);
-    }
-    if (baseName == path + 2 && str::StartsWith(path, "\\\\")) {
-        // server root
-        return str::DupTemp(path);
-    }
-    // any subdirectory
-    return str::DupTemp(path, baseName - path - 1);
-}
-
-// caller has to free() the results
 TempWstr GetDirTemp(const WCHAR* path) {
     const WCHAR* baseName = GetBaseNameTemp(path);
     if (baseName == path) {
@@ -162,33 +139,26 @@ TempWstr GetDirTemp(const WCHAR* path) {
     return str::DupTemp(path, baseName - path - 1);
 }
 
-// caller has to free() the results
-WCHAR* GetDir(const WCHAR* path) {
-    return str::Dup(GetDirTemp(path));
-}
-
-// caller has to free() the results
-std::string_view GetDir(std::string_view pathSV) {
-    const char* path = pathSV.data();
+TempStr GetDirTemp(const char* path) {
     const char* baseName = GetBaseNameTemp(path);
     if (baseName == path) {
         // relative directory
-        return str::Dup(".");
+        return str::DupTemp(".");
     }
     if (baseName == path + 1) {
         // relative root
-        return str::Dup(path, 1);
+        return str::DupTemp(path, 1);
     }
     if (baseName == path + 3 && path[1] == ':') {
         // local drive root
-        return str::Dup(path, 3);
+        return str::DupTemp(path, 3);
     }
     if (baseName == path + 2 && str::StartsWith(path, "\\\\")) {
         // server root
-        return str::Dup(path);
+        return str::DupTemp(path);
     }
     // any subdirectory
-    return str::Dup(path, baseName - path - 1);
+    return str::DupTemp(path, baseName - path - 1);
 }
 
 TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
@@ -476,8 +446,8 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
     if (!fileName) {
         return str::Dup(modulePath);
     }
-    AutoFreeWstr moduleDir = path::GetDir(modulePath);
-    AutoFreeWstr path = path::Join(moduleDir, fileName);
+    WCHAR* moduleDir = path::GetDirTemp(modulePath);
+    WCHAR* path = path::JoinTemp(moduleDir, fileName);
     return path::Normalize(path);
 }
 } // namespace path
@@ -787,7 +757,7 @@ bool Create(const WCHAR* dir) {
 
 // creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const WCHAR* dir) {
-    AutoFreeWstr parent(path::GetDir(dir));
+    WCHAR* parent = path::GetDirTemp(dir);
     if (!str::Eq(parent, dir) && !Exists(parent)) {
         CreateAll(parent);
     }
@@ -795,7 +765,7 @@ bool CreateAll(const WCHAR* dir) {
 }
 
 bool CreateForFile(const WCHAR* path) {
-    AutoFreeWstr dir(path::GetDir(path));
+    WCHAR* dir = path::GetDirTemp(path);
     return CreateAll(dir);
 }
 

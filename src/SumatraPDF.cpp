@@ -2689,7 +2689,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
     }
 
-    AutoFreeWstr initDir(path::GetDir(srcFileName));
+    WCHAR* initDir = path::GetDirTemp(srcFileName);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -3022,9 +3022,9 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
 
     TabInfo* tab = win->currentTab;
     WStrVec files;
-    AutoFreeWstr pattern(path::GetDir(tab->filePath));
+    WCHAR* pattern = path::GetDirTemp(tab->filePath);
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
-    pattern.Set(path::Join(pattern, L"*"));
+    pattern = path::JoinTemp(pattern, L"*");
     if (!CollectPathsFromDirectory(pattern, files)) {
         return;
     }

@@ -235,7 +235,7 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
         WCHAR* inverseSearchArgs = ToWstrTemp(rule.inverseSearchArgs);
         if (rule.type == SiblingPath) {
             // remove file part
-            AutoFreeWstr dir(path::GetDir(path));
+            WCHAR* dir = path::GetDirTemp(path);
             exePath.Set(path::Join(dir, binaryFileName));
         } else if (rule.type == BinaryDir) {
             exePath.Set(path::Join(path, binaryFileName));

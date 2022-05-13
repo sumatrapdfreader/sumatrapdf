@@ -13,20 +13,20 @@ void FileUtilTest() {
     const WCHAR* baseName = path::GetBaseNameTemp(path1);
     utassert(str::Eq(baseName, L"SumatraPDF.exe"));
 
-    AutoFreeWstr dirName(path::GetDir(path1));
+    WCHAR* dirName = path::GetDirTemp(path1);
     utassert(str::Eq(dirName, L"C:\\Program Files\\SumatraPDF"));
     baseName = path::GetBaseNameTemp(dirName);
     utassert(str::Eq(baseName, L"SumatraPDF"));
 
-    dirName.Set(path::GetDir(L"C:\\Program Files"));
+    dirName = path::GetDirTemp(L"C:\\Program Files");
     utassert(str::Eq(dirName, L"C:\\"));
-    dirName.Set(path::GetDir(dirName));
+    dirName = path::GetDirTemp(dirName);
     utassert(str::Eq(dirName, L"C:\\"));
-    dirName.Set(path::GetDir(L"\\\\server"));
+    dirName = path::GetDirTemp(L"\\\\server");
     utassert(str::Eq(dirName, L"\\\\server"));
-    dirName.Set(path::GetDir(L"file.exe"));
+    dirName = path::GetDirTemp(L"file.exe");
     utassert(str::Eq(dirName, L"."));
-    dirName.Set(path::GetDir(L"/etc"));
+    dirName = path::GetDirTemp(L"/etc");
     utassert(str::Eq(dirName, L"/"));
 
     path1 = L"C:\\Program Files";

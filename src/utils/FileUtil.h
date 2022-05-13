@@ -4,23 +4,21 @@
 namespace path {
 
 bool IsSep(char c);
+bool IsSep(WCHAR c);
 
-const char* GetBaseNameTemp(const char* path);
-TempStr GetDirTemp(const char* path);
 const char* GetExtTemp(const char* path);
+const WCHAR* GetExtTemp(const WCHAR* path);
+const char* GetBaseNameTemp(const char* path);
+const WCHAR* GetBaseNameTemp(const WCHAR* path);
+TempStr GetDirTemp(const char* path);
+TempWstr GetDirTemp(const WCHAR* path);
 
 char* Join(const char* path, const char* fileName, Allocator* allocator);
-TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2 = nullptr);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
-
+TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2 = nullptr);
 TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
-std::string_view GetDir(std::string_view path);
 bool IsDirectory(const char*);
-
-bool IsSep(WCHAR c);
-const WCHAR* GetBaseNameTemp(const WCHAR* path);
-const WCHAR* GetExtTemp(const WCHAR* path);
 
 WCHAR* Normalize(const WCHAR* path);
 WCHAR* ShortPath(const WCHAR* path);
@@ -30,9 +28,6 @@ bool HasVariableDriveLetter(const char* path);
 bool IsOnFixedDrive(const WCHAR* path);
 bool Match(const WCHAR* path, const WCHAR* filter);
 bool IsAbsolute(const WCHAR* path);
-
-WCHAR* GetDir(const WCHAR* path);
-TempWstr GetDirTemp(const WCHAR* path);
 
 WCHAR* GetTempFilePath(const WCHAR* filePrefix = nullptr);
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);

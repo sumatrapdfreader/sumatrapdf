@@ -444,7 +444,7 @@ static void SaveEmbeddedFile(TabInfo* tab, const WCHAR* srcFath, const WCHAR* fi
         // TODO: show an error message
         return;
     }
-    AutoFreeWstr dir = path::GetDir(tab->filePath);
+    WCHAR* dir = path::GetDirTemp(tab->filePath);
     fileName = path::GetBaseNameTemp(fileName);
     AutoFreeWstr dstPath = path::Join(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);

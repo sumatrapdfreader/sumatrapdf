@@ -157,7 +157,7 @@ void SaveThumbnail(FileState& ds) {
         return;
     }
     WCHAR* bmpPath = ToWstrTemp(bmpPathA);
-    AutoFreeWstr thumbsPath(path::GetDir(bmpPath));
+    WCHAR* thumbsPath = path::GetDirTemp(bmpPath);
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
         Gdiplus::Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);

@@ -116,9 +116,9 @@ WCHAR* GetExistingInstallationDir() {
         return nullptr;
     }
     if (str::EndsWithI(dir, L".exe")) {
-        dir.Set(path::GetDir(dir));
+        dir.SetCopy(path::GetDirTemp(dir));
     }
-    if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
+    if (!str::IsEmpty(dir) && dir::Exists(dir)) {
         WCHAR* res = dir.StealData();
         gCachedExistingInstallationDir = str::Dup(res);
         return res;

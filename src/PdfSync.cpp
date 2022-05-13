@@ -113,7 +113,7 @@ int Synchronizer::RebuildIndex() {
 }
 
 WCHAR* Synchronizer::PrependDir(const WCHAR* filename) const {
-    AutoFreeWstr dir(path::GetDir(syncfilepath));
+    WCHAR* dir = path::GetDirTemp(syncfilepath);
     return path::Join(dir, filename);
 }
 

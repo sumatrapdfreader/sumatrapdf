@@ -94,7 +94,7 @@ const WCHAR* DirIter::Next() {
 }
 
 bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles) {
-    AutoFreeWstr dirPath = path::GetDir(pattern);
+    WCHAR* dirPath = path::GetDirTemp(pattern);
 
     WIN32_FIND_DATA fdata{};
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -115,8 +115,7 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsIn
     return paths.size() > 0;
 }
 
-bool CollectFilesFromDirectory(const char* dir, StrVec& files,
-                               const std::function<bool(const char*)>& fileMatchesFn) {
+bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::function<bool(const char*)>& fileMatchesFn) {
     auto dirW = ToWstrTemp(dir);
     AutoFreeWstr pattern = path::Join(dirW, L"*");
 

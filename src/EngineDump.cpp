@@ -540,7 +540,7 @@ int main(__unused int argc, __unused char** argv) {
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (INVALID_HANDLE_VALUE != hfind) {
-        AutoFreeWstr dir(path::GetDir(filePath));
+        WCHAR* dir = path::GetDirTemp(filePath);
         filePath.Set(path::Join(dir, fdata.cFileName));
         FindClose(hfind);
     }
