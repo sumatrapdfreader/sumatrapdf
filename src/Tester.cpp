@@ -109,8 +109,9 @@ static void MobiLayout(MobiDoc* mobiDoc) {
     delete pages;
 }
 
-static void MobiTestFile(const WCHAR* filePath) {
-    wprintf(L"Testing file '%s'\n", filePath);
+static void MobiTestFile(const char* filePathA) {
+    printf("Testing file '%s'\n", filePathA);
+    WCHAR* filePath = ToWstrTemp(filePathA);
     MobiDoc* mobiDoc = MobiDoc::CreateFromFile(filePath);
     if (!mobiDoc) {
         printf(" error: failed to parse the file\n");
@@ -146,24 +147,24 @@ static void MobiTestFile(const WCHAR* filePath) {
     delete mobiDoc;
 }
 
-static void MobiTestDir(WCHAR* dir) {
-    wprintf(L"Testing mobi files in '%s'\n", dir);
-    DirIter di(dir, true);
+static void MobiTestDir(char* dir) {
+    printf("Testing mobi files in '%s'\n", dir);
+    WCHAR* dirW = ToWstrTemp(dir);
+    DirIter di(dirW, true);
     for (const WCHAR* path = di.First(); path; path = di.Next()) {
         char* pathA = ToUtf8Temp(path);
         Kind kind = GuessFileTypeFromName(pathA);
         if (kind == kindFileMobi) {
-            MobiTestFile(path);
+            MobiTestFile(pathA);
         }
     }
 }
 
-static void MobiTest(WCHAR* dirOrFile) {
-    char* dirOrFileA = ToUtf8Temp(dirOrFile);
-    Kind kind = GuessFileTypeFromName(dirOrFileA);
+static void MobiTest(char* dirOrFile) {
+    Kind kind = GuessFileTypeFromName(dirOrFile);
     if (file::Exists(dirOrFile) && kind == kindFileMobi) {
         MobiTestFile(dirOrFile);
-    } else if (path::IsDirectory(dirOrFileA)) {
+    } else if (path::IsDirectory(dirOrFile)) {
         MobiTestDir(dirOrFile);
     }
 }
@@ -239,7 +240,8 @@ int TesterMain() {
     }
 
     if (mobiTest) {
-        MobiTest(dirOrFile);
+        char* dirOrFileA = ToUtf8Temp(dirOrFile);
+        MobiTest(dirOrFileA);
     }
 
     mui::Destroy();
