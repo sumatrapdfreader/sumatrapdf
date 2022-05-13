@@ -169,20 +169,12 @@ void Free(const u8* s) {
     free((void*)s);
 }
 
-void Free(std::string_view sv) {
-    free((void*)sv.data());
-}
-
 void Free(ByteSlice d) {
     free((void*)d.data());
 }
 
 void Free(const WCHAR* s) {
     free((void*)s);
-}
-
-void Free(std::wstring_view sv) {
-    free((void*)sv.data());
 }
 
 void FreePtr(const char** s) {
@@ -224,10 +216,6 @@ char* Dup(Allocator* a, std::string_view sv) {
     return Dup(a, sv.data(), sv.size());
 }
 
-char* Dup(const std::string_view sv) {
-    return Dup(nullptr, sv.data(), sv.size());
-}
-
 char* Dup(const ByteSlice d) {
     return Dup(nullptr, (const char*)d.data(), d.size());
 }
@@ -243,10 +231,6 @@ WCHAR* Dup(const WCHAR* s, size_t cch) {
     return Dup(nullptr, s, cch);
 }
 
-WCHAR* Dup(std::wstring_view sv) {
-    return Dup(nullptr, sv.data(), sv.size());
-}
-
 // return true if s1 == s2, case sensitive
 bool Eq(const char* s1, const char* s2) {
     if (s1 == s2) {
@@ -256,10 +240,6 @@ bool Eq(const char* s1, const char* s2) {
         return false;
     }
     return 0 == strcmp(s1, s2);
-}
-
-bool Eq(std::string_view s1, const char* s2) {
-    return EqN(s1.data(), s2, s1.size());
 }
 
 bool Eq(ByteSlice sp1, ByteSlice sp2) {
@@ -272,10 +252,6 @@ bool Eq(ByteSlice sp1, ByteSlice sp2) {
     const char* s1 = (const char*)sp1.data();
     const char* s2 = (const char*)sp2.data();
     return 0 == strcmp(s1, s2);
-}
-
-bool EqI(std::string_view s1, const char* s2) {
-    return EqNI(s1.data(), s2, s1.size());
 }
 
 // return true if s1 == s2, case insensitive
@@ -351,14 +327,6 @@ bool StartsWith(const u8* str, const char* prefix) {
     return StartsWith((const char*)str, prefix);
 }
 
-bool StartsWith(std::string_view s, const char* prefix) {
-    size_t n = Len(prefix);
-    if (n > s.size()) {
-        return false;
-    }
-    return EqN(s.data(), prefix, n);
-}
-
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const char* s, const char* prefix) {
     if (s == prefix) {
@@ -375,9 +343,8 @@ ByteSlice ToSpan(const char* s) {
     return {(u8*)s, n};
 }
 
-bool Contains(std::string_view s, const char* txt) {
-    // TODO: needs to respect s.size()
-    const char* p = str::Find(s.data(), txt);
+bool Contains(const char* s, const char* txt) {
+    const char* p = str::Find(s, txt);
     bool contains = p != nullptr;
     return contains;
 }
@@ -3134,43 +3101,42 @@ size_t WStrVec2::size() const {
     return index.size();
 }
 
-std::wstring_view WStrVec2::at(int idx) const {
+WCHAR* WStrVec2::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
     u32 start = index.at(idx);
     if (start == kNullIdx) {
-        return {};
+        return nullptr;
     }
     u32 end = (u32)strings.size();
     if (idx + 1 < n) {
         end = (u32)index.at(idx + 1);
     }
-    const WCHAR* s = strings.LendData() + start;
-    size_t len = (size_t)(end - start - 1);
-    return {s, len};
+    WCHAR* s = strings.LendData() + start;
+    return s;
 }
 
 int WStrVec2::Find(const WCHAR* s, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
         auto s2 = at(i);
-        if (str::Eq(s, s2.data())) {
+        if (str::Eq(s, s2)) {
             return i;
         }
     }
     return -1;
 }
 
-bool WStrVec2::Exists(std::wstring_view sv) const {
-    int idx = Find(sv.data(), 0);
+bool WStrVec2::Exists(const WCHAR* sv) const {
+    int idx = Find(sv, 0);
     return idx != -1;
 }
 
-int WStrVec2::AppendIfNotExists(std::wstring_view sv) {
+int WStrVec2::AppendIfNotExists(const WCHAR* sv) {
     if (Exists(sv)) {
         return -1;
     }
-    return Append(sv.data());
+    return Append(sv);
 }
 
 bool WStrVec2::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const {
