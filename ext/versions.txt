@@ -58,9 +58,9 @@ UnRAR           5.9.3
 unarr           trunk
   https://github.com/zeniko/unarr
 
-zlib            1.2.11     2017-01-15   
+zlib            1.2.12
   https://www.zlib.net/
-  https://git.ghostscript.com/?p=thirdparty-zlib.git;a=commit;h=dea93d29387877a582fb57139378af312acd5400)
+  https://git.ghostscript.com/?p=thirdparty-zlib.git;a=commit;h=801678bd53548d3ffa269443fa0e98c538ce11f5)
 
 zlib-ng         trunk      2021-07-23
   https://github.com/zlib-ng/zlib-ng
