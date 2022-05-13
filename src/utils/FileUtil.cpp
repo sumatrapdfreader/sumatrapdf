@@ -79,15 +79,7 @@ char* Join(const char* path, const char* fileName, Allocator* allocator) {
     return str::Join(path, sepStr, fileName, allocator);
 }
 
-bool IsDirectory(std::wstring_view path) {
-    DWORD attrs = GetFileAttributesW(path.data());
-    if (INVALID_FILE_ATTRIBUTES == attrs) {
-        return false;
-    }
-    return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
-}
-
-bool IsDirectory(std::string_view path) {
+bool IsDirectory(const char* path) {
     auto pathW = ToWstrTemp(path);
     DWORD attrs = GetFileAttributesW(pathW);
     if (INVALID_FILE_ATTRIBUTES == attrs) {
@@ -652,6 +644,11 @@ int ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     return (int)nRead;
 }
 
+int ReadN(const char* path, char* buf, size_t toRead) {
+    WCHAR* pathW = ToWstrTemp(path);
+    return ReadN(pathW, buf, toRead);
+}
+
 bool WriteFile(const WCHAR* filePath, ByteSlice d) {
     const void* data = d.data();
     size_t dataLen = d.size();
@@ -745,6 +742,12 @@ bool StartsWithN(const WCHAR* filePath, const char* s, size_t len) {
 
 // return true if a file starts with null-terminated string s
 bool StartsWith(const WCHAR* filePath, const char* s) {
+    return file::StartsWithN(filePath, s, str::Len(s));
+}
+
+// return true if a file starts with null-terminated string s
+bool StartsWith(const char* filePathA, const char* s) {
+    WCHAR* filePath = ToWstrTemp(filePathA);
     return file::StartsWithN(filePath, s, str::Len(s));
 }
 

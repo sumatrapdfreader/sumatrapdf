@@ -16,8 +16,7 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = n
 TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
 std::string_view GetDir(std::string_view path);
-bool IsDirectory(std::string_view);
-bool IsDirectory(std::wstring_view);
+bool IsDirectory(const char*);
 
 bool IsSep(WCHAR c);
 const WCHAR* GetBaseNameTemp(const WCHAR* path);
@@ -57,6 +56,7 @@ ByteSlice ReadFile(const WCHAR* filePath);
 i64 GetSize(std::string_view path);
 
 int ReadN(const WCHAR* path, char* buf, size_t toRead);
+int ReadN(const char* path, char* buf, size_t toRead);
 bool WriteFile(const WCHAR* path, ByteSlice);
 bool Delete(const WCHAR* path);
 bool Delete(const char* path);
@@ -65,6 +65,7 @@ FILETIME GetModificationTime(const char* path);
 bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
 bool StartsWithN(const WCHAR* path, const char* s, size_t len);
 bool StartsWith(const WCHAR* path, const char* s);
+bool StartsWith(const char* path, const char* s);
 
 int GetZoneIdentifier(const char* path);
 bool SetZoneIdentifier(const char* path, int zoneId = URLZONE_INTERNET);

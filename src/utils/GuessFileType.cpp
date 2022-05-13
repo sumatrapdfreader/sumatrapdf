@@ -355,11 +355,11 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(const WCHAR* path) {
-    CrashIf(!path);
-
+Kind GuessFileTypeFromContent(const WCHAR* pathW) {
+    CrashIf(!pathW);
+    char* path = ToUtf8Temp(pathW);
     if (path::IsDirectory(path)) {
-        AutoFreeWstr mimetypePath(path::Join(path, L"mimetype"));
+        char* mimetypePath = path::JoinTemp(path, "mimetype");
         if (file::StartsWith(mimetypePath, "application/epub+zip")) {
             return kindFileEpub;
         }
@@ -423,7 +423,8 @@ Kind GuessFileTypeFromName(const WCHAR* path) {
     if (!path) {
         return nullptr;
     }
-    if (path::IsDirectory(path)) {
+    char* pathA = ToUtf8Temp(path);
+    if (path::IsDirectory(pathA)) {
         return kindDirectory;
     }
     Kind res = GetKindByFileExt(path);

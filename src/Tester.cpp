@@ -158,10 +158,11 @@ static void MobiTestDir(WCHAR* dir) {
 }
 
 static void MobiTest(WCHAR* dirOrFile) {
+    char* dirOrFileA = ToUtf8Temp(dirOrFile);
     Kind kind = GuessFileTypeFromName(dirOrFile);
     if (file::Exists(dirOrFile) && kind == kindFileMobi) {
         MobiTestFile(dirOrFile);
-    } else if (path::IsDirectory(dirOrFile)) {
+    } else if (path::IsDirectory(dirOrFileA)) {
         MobiTestDir(dirOrFile);
     }
 }
