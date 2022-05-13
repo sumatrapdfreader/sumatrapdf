@@ -469,7 +469,7 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const WCHAR* filePath) {
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < kMaxMemoryFileSize) {
-        auto dataTmp = file::ReadFileWithAllocator(filePath, nullptr);
+        auto dataTmp = file::ReadFile(pathA);
         if (dataTmp.empty()) {
             // failed to read
             return nullptr;

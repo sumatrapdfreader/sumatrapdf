@@ -547,8 +547,8 @@ Error:
 #endif
 }
 
-ByteSlice ReadFile(std::string_view path) {
-    return ReadFileWithAllocator(path.data(), nullptr);
+ByteSlice ReadFile(const char* path) {
+    return ReadFileWithAllocator(path, nullptr);
 }
 
 ByteSlice ReadFile(const WCHAR* filePath) {
@@ -626,11 +626,6 @@ i64 GetSize(const char* path) {
         return -1;
     }
     return size.QuadPart;
-}
-
-ByteSlice ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
-    auto pathA = ToUtf8Temp(path);
-    return ReadFileWithAllocator(pathA.Get(), allocator);
 }
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)

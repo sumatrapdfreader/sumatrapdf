@@ -40,17 +40,16 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 
 namespace file {
 
+bool Exists(const char* path);
+bool Exists(const WCHAR* path);
+
 FILE* OpenFILE(const char* path);
 FILE* OpenFILE(const WCHAR* path);
 HANDLE OpenReadOnly(const char*);
 
-bool Exists(const char* path);
-bool Exists(const WCHAR* path);
-
-ByteSlice ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
 ByteSlice ReadFileWithAllocator(const char* path, Allocator*);
 
-ByteSlice ReadFile(std::string_view path);
+ByteSlice ReadFile(const char* path);
 ByteSlice ReadFile(const WCHAR* filePath);
 
 int ReadN(const char* path, char* buf, size_t toRead);
