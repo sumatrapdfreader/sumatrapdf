@@ -546,7 +546,7 @@ bool MobiDoc::ParseHeader() {
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Metadata prop;
         prop.prop = DocumentProperty::UnsupportedFeatures;
-        char* tmp = strconv::WstrToCodePageV(mobiHdr.textEncoding, L"DRM");
+        char* tmp = strconv::WstrToCodePage(mobiHdr.textEncoding, L"DRM");
         prop.value = tmp;
         props.Append(prop);
     }
@@ -888,7 +888,7 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
         *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
-        char* docUtf8 = strconv::ToMultiByteV(doc->Get(), textEncoding, CP_UTF8);
+        char* docUtf8 = strconv::ToMultiByte(doc->Get(), textEncoding, CP_UTF8);
         if (docUtf8) {
             doc->Reset();
             doc->AppendAndFree(docUtf8);

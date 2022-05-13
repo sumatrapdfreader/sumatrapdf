@@ -753,11 +753,11 @@ void StrTest() {
     }
 
     {
-        AutoFree tmp = strconv::ToMultiByteV("abc", 9876, 123456);
+        AutoFree tmp = strconv::ToMultiByte("abc", 9876, 123456);
         utassert(!tmp.Get());
     }
     {
-        AutoFree tmp = strconv::WstrToCodePageV(98765, L"abc");
+        AutoFree tmp = strconv::WstrToCodePage(98765, L"abc");
         utassert(!tmp.Get());
     }
     {
@@ -765,7 +765,7 @@ void StrTest() {
         utassert(str::IsEmpty(tmp.Get()));
     }
     {
-        AutoFree tmp = strconv::WstrToCodePageV(987654, L"abc");
+        AutoFree tmp = strconv::WstrToCodePage(987654, L"abc");
         utassert(str::IsEmpty(tmp.Get()));
     }
 

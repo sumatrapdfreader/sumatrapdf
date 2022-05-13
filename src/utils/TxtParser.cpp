@@ -124,7 +124,7 @@ TxtNode* TxtParser::AllocTxtNodeFromToken(const Token& tok, TxtNode::Type nodeTy
 }
 
 void TxtParser::SetToParse(const std::string_view& str) {
-    data = strconv::UnknownToUtf8V(str);
+    data = strconv::UnknownToUtf8(str.data());
     char* d = (char*)data.Get();
     size_t dLen = data.size();
     size_t n = str::NormalizeNewlinesInPlace(d, d + dLen);
