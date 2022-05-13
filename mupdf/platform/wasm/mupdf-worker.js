@@ -25,8 +25,6 @@
 // Import the WASM module
 importScripts("libmupdf.js");
 
-let fetcher = new Worker("mupdf-fetcher.js");
-
 let mupdf = {};
 let ready = false;
 
@@ -39,7 +37,7 @@ Module.onRuntimeInitialized = function () {
 	wasm_onFetchData = Module.cwrap('onFetchData', 'null', ['number', 'number', 'number', 'number']);
 	wasm_openDocumentFromBuffer = Module.cwrap('openDocumentFromBuffer', 'number', ['number', 'number', 'string']);
 
-	mupdf.openURL = Module.cwrap('openURL', 'number', ['string', 'number', 'number']);
+	mupdf.openURL = Module.cwrap('openURL', 'number', ['string', 'number', 'number', 'number']);
 	mupdf.openDocumentFromStream = Module.cwrap('openDocumentFromStream', 'number', ['number', 'string']);
 	mupdf.freeDocument = Module.cwrap('freeDocument', 'null', ['number']);
 	mupdf.documentTitle = Module.cwrap('documentTitle', 'string', ['number']);
@@ -137,26 +135,14 @@ mupdf.search = function (doc, page, dpi, needle) {
 	return JSON.parse(mupdf.searchJSON(doc, page, dpi, needle));
 }
 
-let trylater_timer = 0;
-let trylater_queue = [];
+let trylaterTimer = 0;
+let trylaterQueue = [];
 
-function trylater_progress() {
-	trylater_timer = 0;
-	let current_queue = trylater_queue;
-	trylater_queue = [];
-	current_queue.forEach(onmessage);
-}
-
-fetcher.onmessage = function (event) {
-	let [ cmd, id, block, data ] = event.data;
-	if (cmd === 'DATA') {
-		onFetchData(id, block, data);
-		if (!trylater_timer)
-			trylater_timer = setTimeout(trylater_progress, 0);
-	}
-	if (cmd === 'ERROR') {
-		console.log("FETCH ERROR", data);
-	}
+function trylaterProgress() {
+	trylaterTimer = 0;
+	let currentQueue = trylaterQueue;
+	trylaterQueue = [];
+	currentQueue.forEach(onmessage);
 }
 
 onmessage = function (event) {
@@ -173,9 +159,92 @@ onmessage = function (event) {
 			postMessage(["RESULT", id, result]);
 	} catch (error) {
 		if (error === "trylater") {
-			trylater_queue.push(event);
+			trylaterQueue.push(event);
 		} else {
 			postMessage(["ERROR", id, {name: error.name, message: error.message}]);
 		}
 	}
+}
+
+// BACKGROUND PROGRESSIVE FETCH
+
+let fetchStates = {};
+
+function fetchOpen(id, url, contentLength, blockShift, prefetch) {
+	console.log("OPEN", url, "PROGRESSIVELY");
+	fetchStates[id] = {
+		url: url,
+		blockShift: blockShift,
+		blockSize: 1 << blockShift,
+		prefetch: prefetch,
+		contentLength: contentLength,
+		map: new Array((contentLength >>> blockShift) + 1).fill(0),
+		closed: false,
+	};
+}
+
+async function fetchRead(id, block) {
+	let state = fetchStates[id];
+
+	if (state.map[block] > 0)
+		return;
+
+	state.map[block] = 1;
+	let contentLength = state.contentLength;
+	let url = state.url;
+	let start = block << state.blockShift;
+	let end = start + state.blockSize;
+	if (end > contentLength)
+		end = contentLength;
+
+	try {
+		let response = await fetch(url, { headers: { Range: `bytes=${start}-${end-1}` } });
+		if (state.closed)
+			return;
+
+		let buffer = await response.arrayBuffer();
+		if (state.closed)
+			return;
+
+		console.log("READ", url, block+1, "/", state.map.length);
+		state.map[block] = 2;
+
+		onFetchData(id, block, buffer);
+		if (!trylaterTimer)
+			trylaterTimer = setTimeout(trylaterProgress, 0);
+
+		if (state.prefetch)
+			fetchReadNext(id, block + 1);
+	} catch(error) {
+		state.map[block] = 0;
+		console.log("FETCH ERROR", url, block, error.toString);
+	}
+}
+
+function fetchReadNext(id, next) {
+	let state = fetchStates[id];
+	if (!state)
+		return;
+
+	// Don't prefetch if we're already waiting for any blocks.
+	for (let block = 0; block < state.map.length; ++block)
+		if (state.map[block] === 1)
+			return;
+
+	// Find next block to prefetch (starting with the last fetched block)
+	for (let block = next; block < state.map.length; ++block)
+		if (state.map[block] === 0)
+			return fetchRead(id, block);
+
+	// Find next block to prefetch (starting from the beginning)
+	for (let block = 0; block < state.map.length; ++block)
+		if (state.map[block] === 0)
+			return fetchRead(id, block);
+
+	console.log("ALL BLOCKS READ");
+}
+
+function fetchClose(id) {
+	fetchStates[id].closed = true;
+	delete fetchStates[id];
 }

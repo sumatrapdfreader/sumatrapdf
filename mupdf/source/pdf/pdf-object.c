@@ -2411,14 +2411,6 @@ pdf_unmark_obj(fz_context *ctx, pdf_obj *obj)
 int
 pdf_cycle(fz_context *ctx, pdf_cycle_list *here, pdf_cycle_list *up, pdf_obj *obj)
 {
-	/* SumatraPDF */
-	uintptr_t upn = (uintptr_t)up;
-	if (upn > 0 && upn < 0x100) {
-		// trigger a crash when up is invalid value that will crash things later
-		char *tmp = 0;
-		*tmp = 0;
-	}
-
 	int num = pdf_to_num(ctx, obj);
 	if (num > 0)
 	{
@@ -2431,14 +2423,6 @@ pdf_cycle(fz_context *ctx, pdf_cycle_list *here, pdf_cycle_list *up, pdf_obj *ob
 		}
 	}
 	here->up = up;
-
-	/* SumatraPDF */
-	upn = (uintptr_t)here->up;
-	if (upn > 0 && upn < 0x100) {
-		// trigger a crash when up is invalid value that will crash things later
-		char *tmp = 0;
-		*tmp = 0;
-	}
 	here->num = num;
 	return 0;
 }
@@ -3165,7 +3149,7 @@ int pdf_obj_refs(fz_context *ctx, pdf_obj *obj)
 static pdf_obj *
 pdf_dict_get_inheritable_imp(fz_context *ctx, pdf_obj *node, pdf_obj *key, int depth, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = {0};
+	pdf_cycle_list cycle;
 	pdf_obj *val = pdf_dict_get(ctx, node, key);
 	if (val)
 		return val;
@@ -3188,7 +3172,7 @@ pdf_dict_get_inheritable(fz_context *ctx, pdf_obj *node, pdf_obj *key)
 static pdf_obj *
 pdf_dict_getp_inheritable_imp(fz_context *ctx, pdf_obj *node, const char *path, int depth, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = {0};
+	pdf_cycle_list cycle;
 	pdf_obj *val = pdf_dict_getp(ctx, node, path);
 	if (val)
 		return val;

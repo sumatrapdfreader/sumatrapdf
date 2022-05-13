@@ -206,7 +206,7 @@ lookup_field_sub(fz_context *ctx, pdf_obj *dict, const char *str, pdf_cycle_list
 static pdf_obj *
 pdf_lookup_field_imp(fz_context *ctx, pdf_obj *arr, const char *str, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = {0};
+	pdf_cycle_list cycle;
 	int len = pdf_array_len(ctx, arr);
 	int i;
 
@@ -801,7 +801,7 @@ int pdf_field_display(fz_context *ctx, pdf_obj *field)
  */
 static char *get_field_name(fz_context *ctx, pdf_obj *field, int spare, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = {0};
+	pdf_cycle_list cycle;
 	char *res = NULL;
 	pdf_obj *parent;
 	const char *lname;
@@ -2006,7 +2006,7 @@ static void pdf_execute_action_imp(fz_context *ctx, pdf_document *doc, pdf_obj *
 
 static void pdf_execute_action_chain(fz_context *ctx, pdf_document *doc, pdf_obj *target, const char *path, pdf_obj *action, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = {0};
+	pdf_cycle_list cycle;
 	pdf_obj *next;
 
 	if (pdf_cycle(ctx, &cycle, cycle_up, action))

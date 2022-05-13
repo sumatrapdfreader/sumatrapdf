@@ -561,10 +561,12 @@ static void tx_dialog(void)
 			ui_spacer();
 			if (ui_button("Okay") || is == UI_INPUT_ACCEPT)
 			{
+				if (pdf_set_text_field_value(ctx, tx_widget, tx_input.text))
+				{
 				trace_action("widget.setTextValue(%q);\n", tx_input.text);
-				pdf_set_text_field_value(ctx, tx_widget, tx_input.text);
 				trace_field_value(tx_widget, tx_input.text);
 				ui.dialog = NULL;
+				}
 			}
 		}
 		ui_panel_end();

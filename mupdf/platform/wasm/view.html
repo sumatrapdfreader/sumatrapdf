@@ -419,7 +419,7 @@ async function openFile(file) {
 	}
 }
 
-async function openURL(url, progressive=true) {
+async function openURL(url, progressive, prefetch) {
 	freeDocument();
 	try {
 		let headResponse = await fetch(url, { method: "HEAD" });
@@ -428,9 +428,12 @@ async function openURL(url, progressive=true) {
 		let acceptRanges = headResponse.headers.get("Accept-Ranges");
 		let contentLength = headResponse.headers.get("Content-Length");
 		let contentType = headResponse.headers.get("Content-Type");
+		console.log("HEAD", url);
+		console.log("Content-Length", contentLength);
+		console.log("Content-Type", contentType);
 		if (acceptRanges === 'bytes' && progressive) {
 			console.log("USING HTTP RANGE REQUESTS");
-			let stm = await mupdf.openURL(url, contentLength, 1 << 20);
+			let stm = await mupdf.openURL(url, contentLength, Math.max(progressive << 10, 1 << 16), prefetch);
 			doc = await mupdf.openDocumentFromStream(stm, contentType || url);
 		} else {
 			let bodyResponse = await fetch(url);
@@ -736,7 +739,7 @@ mupdf.oninit = function () {
 	emptyNode(document.getElementById("pages"));
 	let params = new URLSearchParams(window.location.search);
 	if (params.has("file"))
-		openURL(params.get("file"), params.get("progressive"));
+		openURL(params.get("file"), params.get("progressive") | 0, params.get("prefetch") | 0);
 }
 
 </script>
