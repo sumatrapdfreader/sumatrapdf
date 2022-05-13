@@ -31,31 +31,31 @@ WCHAR* Utf8ToWstr(const char* s, size_t cb, Allocator* a) {
     return res;
 }
 
-std::string_view WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
+char* WstrToCodePageV(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
     if (!s) {
-        return {};
+        return nullptr;
     }
     if (cch == (size_t)-1) {
         cch = str::Len(s);
     }
     if (cch == 0) {
-        return {(const char*)Allocator::AllocZero(a, sizeof(char)), 0};
+        return (char*)Allocator::AllocZero(a, sizeof(char));
     }
     // ask for the size of buffer needed for converted string
     int cbNeeded = WideCharToMultiByte(codePage, 0, s, (int)cch, nullptr, 0, nullptr, nullptr);
     if (cbNeeded == 0) {
-        return {};
+        return nullptr;
     }
     size_t cbAlloc = cbNeeded + sizeof(char); // +1 for terminating 0
     char* res = (char*)Allocator::AllocZero(a, cbAlloc);
     if (!res) {
-        return {nullptr, 0};
+        return nullptr;
     }
     int cbConverted = WideCharToMultiByte(codePage, 0, s, (int)cch, res, cbNeeded, nullptr, nullptr);
     ReportIf(cbConverted != cbNeeded);
     ReportIf((size_t)cbConverted != str::Len(res));
-    return {res, (size_t)cbConverted};
+    return res;
 }
 
 std::string_view WstrToUtf8V(const WCHAR* s, size_t cch, Allocator* a) {
@@ -68,7 +68,7 @@ std::string_view WstrToUtf8V(std::wstring_view sv, Allocator* a) {
 
 char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     auto v = WstrToCodePageV(codePage, s, cch, a);
-    return (char*)v.data();
+    return v;
 }
 
 char* WstrToUtf8(const WCHAR* s, size_t cch, Allocator* a) {

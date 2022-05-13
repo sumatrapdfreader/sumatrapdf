@@ -364,7 +364,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes(strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal));
+            AutoFree bytes = strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal);
             attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
@@ -412,7 +412,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes(strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal));
+            AutoFree bytes = strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal);
             attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
