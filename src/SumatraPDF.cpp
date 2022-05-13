@@ -5203,7 +5203,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     return 0;
 }
 
-static TempStr GetFileSizeAsStrTemp(std::string_view path) {
+static TempStr GetFileSizeAsStrTemp(const char* path) {
     i64 fileSize = file::GetSize(path);
     AutoFreeWstr fileSizeStr = FormatFileSizeNoTrans(fileSize);
     return ToUtf8Temp(fileSizeStr);
@@ -5214,16 +5214,16 @@ void GetProgramInfo(str::Str& s) {
     s.AppendFmt("Crash file: %s\r\n", d.Get());
 
     auto exePathW = GetExePathTemp();
-    auto exePath = ToUtf8Temp(exePathW.AsView());
-    auto fileSizeExe = GetFileSizeAsStrTemp(exePath.AsView());
-    s.AppendFmt("Exe: %s %s\r\n", exePath.Get(), fileSizeExe.Get());
+    char* exePath = ToUtf8Temp(exePathW.AsView());
+    auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
+    s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe.Get());
     if (IsDllBuild()) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
-        AutoFreeStr dir = path::GetDir(exePath);
-        AutoFreeStr dllPath = path::Join(dir.Get(), "libmupdf.dll", nullptr);
-        auto fileSizeDll = GetFileSizeAsStrTemp(dllPath.AsView());
-        s.AppendFmt("Dll: %s %s\r\n", dllPath.Get(), fileSizeDll.Get());
+        char* dir = path::GetDirTemp(exePath);
+        char* dllPath = path::JoinTemp(dir, "libmupdf.dll");
+        auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
+        s.AppendFmt("Dll: %s %s\r\n", dllPath, fileSizeDll.Get());
     }
 
     const char* exeType = IsDllBuild() ? "dll" : "static";

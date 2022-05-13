@@ -175,14 +175,15 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
 }
 
 // add a given file under (optional) nameInZip
-bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
-    AutoFree fileData = file::ReadFile(filePath);
+bool ZipCreator::AddFile(const WCHAR* path, const WCHAR* nameInZip) {
+    AutoFree fileData = file::ReadFile(path);
     if (!fileData.data) {
         return false;
     }
 
     u32 dosdatetime = 0;
-    FILETIME ft = file::GetModificationTime(filePath);
+    char* pathA = ToUtf8Temp(path);
+    FILETIME ft = file::GetModificationTime(pathA);
     if (ft.dwLowDateTime || ft.dwHighDateTime) {
         FILETIME ftLocal;
         WORD dosDate, dosTime;
@@ -192,7 +193,7 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
     }
 
     if (!nameInZip) {
-        nameInZip = path::IsAbsolute(filePath) ? path::GetBaseNameTemp(filePath) : filePath;
+        nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : path;
     }
 
     auto nameA = ToUtf8Temp(nameInZip);

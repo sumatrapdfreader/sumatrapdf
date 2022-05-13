@@ -561,18 +561,8 @@ bool WriteFile(const char* filePath, ByteSlice d) {
     return WriteFile(buf, d);
 }
 
-bool Exists(std::string_view path) {
-    WCHAR* wpath = ToWstrTemp(path);
-    bool exists = Exists(wpath);
-    return exists;
-}
-
-HANDLE OpenReadOnly(const WCHAR* filePath) {
-    return CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-}
-
-HANDLE OpenReadOnly(std::string_view path) {
-    auto filePath = ToWstrTemp(path);
+HANDLE OpenReadOnly(const char* path) {
+    WCHAR* filePath = ToWstrTemp(path);
     return CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
@@ -583,17 +573,33 @@ FILE* OpenFILE(const WCHAR* path) {
     return _wfopen(path, L"rb");
 }
 
-bool Exists(const WCHAR* filePath) {
-    if (nullptr == filePath) {
+bool Exists(const WCHAR* path) {
+    if (!path) {
         return false;
     }
 
     WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
+    BOOL res = GetFileAttributesEx(path, GetFileExInfoStandard, &fileInfo);
     if (0 == res) {
         return false;
     }
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        return false;
+    }
+    return true;
+}
 
+bool Exists(const char* path) {
+    if (!path) {
+        return false;
+    }
+
+    WCHAR* pathW = ToWstrTemp(path);
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+    BOOL res = GetFileAttributesEx(pathW, GetFileExInfoStandard, &fileInfo);
+    if (0 == res) {
+        return false;
+    }
     if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         return false;
     }
@@ -601,13 +607,13 @@ bool Exists(const WCHAR* filePath) {
 }
 
 // returns -1 on error (can't use INVALID_FILE_SIZE because it won't cast right)
-i64 GetSize(std::string_view filePath) {
-    CrashIf(filePath.empty());
-    if (filePath.empty()) {
+i64 GetSize(const char* path) {
+    CrashIf(!path);
+    if (!path) {
         return -1;
     }
 
-    AutoCloseHandle h = OpenReadOnly(filePath);
+    AutoCloseHandle h = OpenReadOnly(path);
     if (!h.IsValid()) {
         return -1;
     }
@@ -629,8 +635,8 @@ ByteSlice ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 // returns -1 for error
-int ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
-    AutoCloseHandle h = OpenReadOnly(filePath);
+int ReadN(const char* path, char* buf, size_t toRead) {
+    AutoCloseHandle h = OpenReadOnly(path);
     if (h == INVALID_HANDLE_VALUE) {
         return false;
     }
@@ -642,11 +648,6 @@ int ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
         return -1;
     }
     return (int)nRead;
-}
-
-int ReadN(const char* path, char* buf, size_t toRead) {
-    WCHAR* pathW = ToWstrTemp(path);
-    return ReadN(pathW, buf, toRead);
 }
 
 bool WriteFile(const WCHAR* filePath, ByteSlice d) {
@@ -701,15 +702,6 @@ bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite) {
     return true;
 }
 
-FILETIME GetModificationTime(const WCHAR* filePath) {
-    FILETIME lastMod{};
-    AutoCloseHandle h(OpenReadOnly(filePath));
-    if (h.IsValid()) {
-        GetFileTime(h, nullptr, nullptr, &lastMod);
-    }
-    return lastMod;
-}
-
 FILETIME GetModificationTime(const char* filePath) {
     FILETIME lastMod{};
     AutoCloseHandle h(OpenReadOnly(filePath));
@@ -728,13 +720,13 @@ bool SetModificationTime(const WCHAR* filePath, FILETIME lastMod) {
 }
 
 // return true if a file starts with string s of size len
-bool StartsWithN(const WCHAR* filePath, const char* s, size_t len) {
+bool StartsWithN(const WCHAR* path, const char* s, size_t len) {
     AutoFree buf(AllocArray<char>(len));
     if (!buf) {
         return false;
     }
-
-    if (!ReadN(filePath, buf.Get(), len)) {
+    char* pathA = ToUtf8Temp(path);
+    if (!ReadN(pathA, buf.Get(), len)) {
         return false;
     }
     return memeq(buf, s, len);

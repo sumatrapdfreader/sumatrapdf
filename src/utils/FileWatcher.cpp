@@ -107,15 +107,15 @@ static void AwakeWatcherThread() {
     SetEvent(g_threadControlHandle);
 }
 
-static void GetFileState(const WCHAR* filePath, FileWatcherState* fs) {
+static void GetFileState(const WCHAR* pathW, FileWatcherState* fs) {
     // Note: in my testing on network drive that is mac volume mounted
     // via parallels, lastWriteTime is not updated. lastAccessTime is,
     // but it's also updated when the file is being read from (e.g.
     // copy f.pdf f2.pdf will change lastAccessTime of f.pdf)
     // So I'm sticking with lastWriteTime
-    fs->time = file::GetModificationTime(filePath);
-    auto path = ToUtf8Temp(filePath);
-    fs->size = file::GetSize(path.AsView());
+    char* path = ToUtf8Temp(pathW);
+    fs->time = file::GetModificationTime(path);
+    fs->size = file::GetSize(path);
 }
 
 static bool FileStateEq(FileWatcherState* fs1, FileWatcherState* fs2) {

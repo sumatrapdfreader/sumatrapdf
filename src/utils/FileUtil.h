@@ -41,28 +41,32 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 namespace file {
 
 FILE* OpenFILE(const char* path);
+FILE* OpenFILE(const WCHAR* path);
+HANDLE OpenReadOnly(const char*);
+
+bool Exists(const char* path);
+bool Exists(const WCHAR* path);
+
+ByteSlice ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
 ByteSlice ReadFileWithAllocator(const char* path, Allocator*);
-bool WriteFile(const char* path, ByteSlice);
 
 ByteSlice ReadFile(std::string_view path);
-
-bool Exists(std::string_view path);
-
-FILE* OpenFILE(const WCHAR* path);
-bool Exists(const WCHAR* path);
-ByteSlice ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
 ByteSlice ReadFile(const WCHAR* filePath);
 
-i64 GetSize(std::string_view path);
-
-int ReadN(const WCHAR* path, char* buf, size_t toRead);
 int ReadN(const char* path, char* buf, size_t toRead);
+
+i64 GetSize(const char*);
+
 bool WriteFile(const WCHAR* path, ByteSlice);
+bool WriteFile(const char* path, ByteSlice);
+
 bool Delete(const WCHAR* path);
 bool Delete(const char* path);
-FILETIME GetModificationTime(const WCHAR* path);
+
 FILETIME GetModificationTime(const char* path);
+
 bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
+
 bool StartsWithN(const WCHAR* path, const char* s, size_t len);
 bool StartsWith(const WCHAR* path, const char* s);
 bool StartsWith(const char* path, const char* s);
@@ -70,8 +74,6 @@ bool StartsWith(const char* path, const char* s);
 int GetZoneIdentifier(const char* path);
 bool SetZoneIdentifier(const char* path, int zoneId = URLZONE_INTERNET);
 bool DeleteZoneIdentifier(const char* path);
-
-HANDLE OpenReadOnly(const WCHAR* path);
 
 bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite);
 

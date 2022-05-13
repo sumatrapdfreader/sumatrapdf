@@ -676,7 +676,7 @@ static void VerifyNoLibmupdfMismatch() {
     WCHAR* exePath = GetExePathTemp();
     WCHAR* dir = path::GetDirTemp(exePath);
     WCHAR* path = path::JoinTemp(dir, L"libmupdf.dll");
-    auto realSize = file::GetSize(ToUtf8Temp(path).AsView());
+    auto realSize = file::GetSize(ToUtf8Temp(path));
     if (realSize == (i64)expectedSize) {
         return;
     }

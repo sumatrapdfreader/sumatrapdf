@@ -394,7 +394,8 @@ bool EngineDjVu::LoadMediaboxes() {
     if (!fileName) {
         return false;
     }
-    AutoCloseHandle h(file::OpenReadOnly(fileName));
+    char* pathA = ToUtf8Temp(fileName);
+    AutoCloseHandle h(file::OpenReadOnly(pathA));
     if (!h.IsValid()) {
         return false;
     }

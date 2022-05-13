@@ -464,8 +464,8 @@ static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
 
 static fz_stream* FzOpenFile2(fz_context* ctx, const WCHAR* filePath) {
     fz_stream* stm = nullptr;
-    auto path = ToUtf8Temp(filePath);
-    i64 fileSize = file::GetSize(path.AsView());
+    char* pathA = ToUtf8Temp(filePath);
+    i64 fileSize = file::GetSize(pathA);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < kMaxMemoryFileSize) {

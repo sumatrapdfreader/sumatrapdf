@@ -112,7 +112,8 @@ bool Load() {
         // guess the ui language on first start
         str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
     }
-    gprefs->lastPrefUpdate = file::GetModificationTime(path.Get());
+    char* pathA = ToUtf8Temp(path);
+    gprefs->lastPrefUpdate = file::GetModificationTime(pathA);
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
     gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, kZoomActualSize);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
@@ -271,7 +272,8 @@ bool Save() {
     if (!ok) {
         return false;
     }
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.Get());
+    char* pathA = ToUtf8Temp(path);
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(pathA);
     return true;
 }
 
@@ -282,14 +284,15 @@ bool Reload() {
     if (!file::Exists(path)) {
         return false;
     }
+    char* pathA = ToUtf8Temp(path);
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental dataloss
     int tryAgainCount = 5;
-    HANDLE h = file::OpenReadOnly(path);
+    HANDLE h = file::OpenReadOnly(pathA);
     while (INVALID_HANDLE_VALUE == h && tryAgainCount-- > 0) {
         Sleep(200);
-        h = file::OpenReadOnly(path);
+        h = file::OpenReadOnly(pathA);
     }
     if (INVALID_HANDLE_VALUE == h) {
         // prefer not reloading to resetting all settings
@@ -298,7 +301,7 @@ bool Reload() {
 
     AutoCloseHandle hScope(h);
 
-    FILETIME time = file::GetModificationTime(path);
+    FILETIME time = file::GetModificationTime(pathA);
     if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
         return true;
     }

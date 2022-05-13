@@ -261,9 +261,8 @@ void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
     }
 }
 
-bool ChmFile::Load(const char* fileNameA) {
-    WCHAR* fileName = ToWstrTemp(fileNameA);
-    data = file::ReadFile(fileName);
+bool ChmFile::Load(const char* path) {
+    data = file::ReadFile(path);
     chmHandle = chm_open((const char*)data.Get(), data.size());
     if (!chmHandle) {
         return false;
@@ -276,7 +275,7 @@ bool ChmFile::Load(const char* fileNameA) {
 
     uint fileCodepage = codepage;
     char header[24]{};
-    int n = file::ReadN(fileName, header, sizeof(header));
+    int n = file::ReadN(path, header, sizeof(header));
     if (n < (int)sizeof(header)) {
         ByteReader r(header, sizeof(header));
         DWORD lcid = r.DWordLE(20);
