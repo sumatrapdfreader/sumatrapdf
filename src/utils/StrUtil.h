@@ -379,6 +379,8 @@ struct WStrVec2 {
 
     int Size() const;
     WCHAR* at(int) const;
+    WCHAR* at(size_t idx) const;
+
     int Append(const WCHAR*, size_t sLen = 0);
     int Find(const WCHAR* s, int startAt = 0) const;
     bool Exists(const WCHAR* s) const;

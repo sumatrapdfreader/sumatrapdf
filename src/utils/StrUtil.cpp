@@ -3351,6 +3351,10 @@ size_t WStrVec2::size() const {
     return index.size();
 }
 
+WCHAR* WStrVec2::at(size_t idx) const {
+    return at((int)idx);
+}
+
 WCHAR* WStrVec2::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
@@ -3427,5 +3431,5 @@ int WStrVecSortedView::Size() const {
 
 WCHAR* WStrVecSortedView::at(int i) const {
     u32 idx = sortedIndex[i];
-    return v->at(idx);
+    return v->at((size_t)idx);
 }
