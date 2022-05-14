@@ -12,24 +12,24 @@ struct ChmModel : Controller {
     ~ChmModel() override;
 
     // meta data
-    [[nodiscard]] const WCHAR* GetFilePath() const override;
-    [[nodiscard]] const WCHAR* GetDefaultFileExt() const override;
-    [[nodiscard]] int PageCount() const override;
+    const WCHAR* GetFilePath() const override;
+    const WCHAR* GetDefaultFileExt() const override;
+    int PageCount() const override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
     // page navigation (stateful)
-    [[nodiscard]] int CurrentPageNo() const override;
+    int CurrentPageNo() const override;
     void GoToPage(int pageNo, bool addNavPoint) override;
-    [[nodiscard]] bool CanNavigate(int dir) const override;
+    bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
 
     // view settings
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
-    [[nodiscard]] DisplayMode GetDisplayMode() const override;
+    DisplayMode GetDisplayMode() const override;
     void SetPresentationMode(bool enable) override;
     void SetZoomVirtual(float zoom, Point* fixPt) override;
-    [[nodiscard]] float GetZoomVirtual(bool absolute = false) const override;
-    [[nodiscard]] float GetNextZoomStep(float towards) const override;
+    float GetZoomVirtual(bool absolute = false) const override;
+    float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;
 
     // table of contents

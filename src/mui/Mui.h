@@ -18,13 +18,13 @@ struct CachedFont {
     HFONT hFont;
 
     HFONT GetHFont();
-    [[nodiscard]] Gdiplus::FontStyle GetStyle() const {
+    Gdiplus::FontStyle GetStyle() const {
         return style;
     }
-    [[nodiscard]] float GetSize() const {
+    float GetSize() const {
         return sizePt;
     }
-    [[nodiscard]] const WCHAR* GetName() const {
+    const WCHAR* GetName() const {
         return name;
     }
     bool SameAs(const WCHAR* name, float sizePt, FontStyle style) const;

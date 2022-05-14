@@ -47,14 +47,14 @@ class MobiDoc {
 
     ~MobiDoc();
 
-    [[nodiscard]] ByteSlice GetHtmlData() const;
+    ByteSlice GetHtmlData() const;
     ByteSlice* GetCoverImage();
-    [[nodiscard]] ByteSlice* GetImage(size_t imgRecIndex) const;
-    [[nodiscard]] const WCHAR* GetFileName() const {
+    ByteSlice* GetImage(size_t imgRecIndex) const;
+    const WCHAR* GetFileName() const {
         return fileName;
     }
     WCHAR* GetProperty(DocumentProperty prop);
-    [[nodiscard]] PdbDocType GetDocType() const {
+    PdbDocType GetDocType() const {
         return docType;
     }
 

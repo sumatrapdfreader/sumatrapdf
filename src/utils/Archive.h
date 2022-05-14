@@ -22,7 +22,7 @@ class MultiFormatArchive {
         i64 filePos = 0;
         char* data = nullptr;
 
-        [[nodiscard]] FILETIME GetWinFileTime() const;
+        FILETIME GetWinFileTime() const;
     };
 
     MultiFormatArchive(archive_opener_t opener, Format format);
@@ -59,7 +59,7 @@ class MultiFormatArchive {
 
     bool OpenUnrarFallback(const char* rarPathUtf);
     ByteSlice GetFileDataByIdUnarrDll(size_t fileId);
-    [[nodiscard]] bool LoadedUsingUnrarDll() const {
+    bool LoadedUsingUnrarDll() const {
         return rarFilePath_ != nullptr;
     }
 };

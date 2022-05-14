@@ -82,11 +82,11 @@ struct WindowInfo {
     // TODO: error windows currently have
     //       !IsAboutWindow() && !IsDocLoaded()
     //       which doesn't allow distinction between PDF, XPS, etc. errors
-    [[nodiscard]] bool IsAboutWindow() const;
-    [[nodiscard]] bool IsDocLoaded() const;
+    bool IsAboutWindow() const;
+    bool IsDocLoaded() const;
 
-    [[nodiscard]] DisplayModel* AsFixed() const;
-    [[nodiscard]] ChmModel* AsChm() const;
+    DisplayModel* AsFixed() const;
+    ChmModel* AsChm() const;
 
     // TODO: use currentTab->ctrl instead
     Controller* ctrl = nullptr; // owned by currentTab

@@ -73,24 +73,24 @@ struct Controller {
     virtual ~Controller() = default;
 
     // meta data
-    [[nodiscard]] virtual const WCHAR* GetFilePath() const = 0;
-    [[nodiscard]] virtual const WCHAR* GetDefaultFileExt() const = 0;
-    [[nodiscard]] virtual int PageCount() const = 0;
+    virtual const WCHAR* GetFilePath() const = 0;
+    virtual const WCHAR* GetDefaultFileExt() const = 0;
+    virtual int PageCount() const = 0;
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
 
     // page navigation (stateful)
-    [[nodiscard]] virtual int CurrentPageNo() const = 0;
+    virtual int CurrentPageNo() const = 0;
     virtual void GoToPage(int pageNo, bool addNavPoint) = 0;
-    [[nodiscard]] virtual bool CanNavigate(int dir) const = 0;
+    virtual bool CanNavigate(int dir) const = 0;
     virtual void Navigate(int dir) = 0;
 
     // view settings
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) = 0;
-    [[nodiscard]] virtual DisplayMode GetDisplayMode() const = 0;
+    virtual DisplayMode GetDisplayMode() const = 0;
     virtual void SetPresentationMode(bool enable) = 0;
     virtual void SetZoomVirtual(float zoom, Point* fixPt) = 0;
-    [[nodiscard]] virtual float GetZoomVirtual(bool absolute = false) const = 0;
-    [[nodiscard]] virtual float GetNextZoomStep(float towards) const = 0;
+    virtual float GetZoomVirtual(bool absolute = false) const = 0;
+    virtual float GetNextZoomStep(float towards) const = 0;
     virtual void SetViewPortSize(Size size) = 0;
 
     // table of contents
@@ -109,10 +109,10 @@ struct Controller {
     virtual void CreateThumbnail(Size size, const std::function<void(RenderedBitmap*)>& saveThumbnail) = 0;
 
     // page labels (optional)
-    [[nodiscard]] virtual bool HasPageLabels() const {
+    virtual bool HasPageLabels() const {
         return false;
     }
-    [[nodiscard]] virtual WCHAR* GetPageLabel(int pageNo) const {
+    virtual WCHAR* GetPageLabel(int pageNo) const {
         return str::Format(L"%d", pageNo);
     }
     virtual int GetPageByLabel(const WCHAR* label) const {
@@ -120,7 +120,7 @@ struct Controller {
     }
 
     // common shortcuts
-    [[nodiscard]] virtual bool ValidPageNo(int pageNo) const {
+    virtual bool ValidPageNo(int pageNo) const {
         return 1 <= pageNo && pageNo <= PageCount();
     }
     virtual bool GoToNextPage() {

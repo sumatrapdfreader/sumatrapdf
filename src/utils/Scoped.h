@@ -19,7 +19,7 @@ class ScopedMem {
         free(ptr);
         ptr = newPtr;
     }
-    [[nodiscard]] T* Get() const {
+    T* Get() const {
         return ptr;
     }
     T* StealData() {
@@ -27,7 +27,7 @@ class ScopedMem {
         ptr = nullptr;
         return tmp;
     }
-    [[nodiscard]] operator T*() const { // NOLINT
+    operator T*() const { // NOLINT
         return ptr;
     }
 };
@@ -78,14 +78,14 @@ struct AutoDelete {
     AutoDelete& operator=(const AutoDelete& other) = delete;
     AutoDelete& operator=(const AutoDelete&& other) = delete;
 
-    [[nodiscard]] operator T*() const { // NOLINT
+    operator T*() const { // NOLINT
         return o;
     }
-    [[nodiscard]] T* operator->() const { // NOLINT
+    T* operator->() const { // NOLINT
         return o;
     }
 
-    [[nodiscard]] T* Get() const {
+    T* Get() const {
         return o;
     }
 };
@@ -162,29 +162,29 @@ struct AutoFree {
     // AutoFree& operator=(const AutoFree& other) = delete;
     // AutoFree& operator=(const AutoFree&& other) = delete;
 
-    [[nodiscard]] char* Get() const {
+    char* Get() const {
         return data;
     }
 
-    [[nodiscard]] operator char*() const { // NOLINT
+    operator char*() const { // NOLINT
         return data;
     }
 
     // for convenince, we calculate the size if wasn't provided
     // by the caller
-    [[nodiscard]] size_t size() const {
+    size_t size() const {
         return len;
     }
 
-    [[nodiscard]] bool empty() const {
+    bool empty() const {
         return (data == nullptr) || (len == 0);
     }
 
-    [[nodiscard]] std::string_view AsView() const {
+    std::string_view AsView() const {
         return {data, len};
     }
 
-    [[nodiscard]] ByteSlice AsSpan() const {
+    ByteSlice AsSpan() const {
         return {(u8*)data, len};
     }
 
@@ -194,14 +194,14 @@ struct AutoFree {
         len = 0;
     }
 
-    [[nodiscard]] char* Release() {
+    char* Release() {
         char* res = data;
         data = nullptr;
         len = 0;
         return res;
     }
 
-    [[nodiscard]] char* StealData() {
+    char* StealData() {
         return this->Release();
     }
 
@@ -263,11 +263,11 @@ struct AutoFreeWstr {
     AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
 #endif
 
-    [[nodiscard]] WCHAR* Get() const {
+    WCHAR* Get() const {
         return data;
     }
 
-    [[nodiscard]] operator WCHAR*() const { // NOLINT
+    operator WCHAR*() const { // NOLINT
         return data;
     }
 

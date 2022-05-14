@@ -209,7 +209,7 @@ struct DoubleBuffer {
     DoubleBuffer& operator=(const DoubleBuffer&) = delete;
     ~DoubleBuffer();
 
-    [[nodiscard]] HDC GetDC() const;
+    HDC GetDC() const;
     void Flush(HDC hdc) const;
 };
 
@@ -246,9 +246,9 @@ struct RenderedBitmap {
     RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
     }
     ~RenderedBitmap();
-    [[nodiscard]] RenderedBitmap* Clone() const;
-    [[nodiscard]] HBITMAP GetBitmap() const;
-    [[nodiscard]] Size Size() const;
+    RenderedBitmap* Clone() const;
+    HBITMAP GetBitmap() const;
+    Size Size() const;
     bool StretchDIBits(HDC hdc, Rect target) const;
 };
 

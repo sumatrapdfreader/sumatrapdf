@@ -210,35 +210,35 @@ struct Str {
     ~Str();
 
     void Reset();
-    [[nodiscard]] char& at(size_t idx) const;
-    [[nodiscard]] char& at(int idx) const;
-    [[nodiscard]] char& operator[](size_t idx) const;
-    [[nodiscard]] char& operator[](long idx) const;
-    [[nodiscard]] char& operator[](ULONG idx) const;
-    [[nodiscard]] char& operator[](int idx) const;
+    char& at(size_t idx) const;
+    char& at(int idx) const;
+    char& operator[](size_t idx) const;
+    char& operator[](long idx) const;
+    char& operator[](ULONG idx) const;
+    char& operator[](int idx) const;
 #if defined(_WIN64)
-    [[nodiscard]] char& at(u32 idx) const;
-    [[nodiscard]] char& operator[](u32 idx) const;
+    char& at(u32 idx) const;
+    char& operator[](u32 idx) const;
 #endif
-    [[nodiscard]] size_t size() const;
-    [[nodiscard]] int isize() const;
+    size_t size() const;
+    int isize() const;
     bool InsertAt(size_t idx, char el);
     bool Append(char el);
     bool Append(const char* src, size_t count = -1);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();
-    [[nodiscard]] char& Last() const;
-    [[nodiscard]] char* StealData();
-    [[nodiscard]] char* LendData() const;
-    [[nodiscard]] int Find(char el, size_t startAt = 0) const;
-    [[nodiscard]] bool Contains(char el) const;
+    char& Last() const;
+    char* StealData();
+    char* LendData() const;
+    int Find(char el, size_t startAt = 0) const;
+    bool Contains(char el) const;
     int Remove(char el);
     void Reverse() const;
     char& FindEl(const std::function<bool(char&)>& check) const;
-    [[nodiscard]] bool IsEmpty() const;
-    [[nodiscard]] std::string_view AsView() const;
-    [[nodiscard]] ByteSlice AsSpan() const;
-    [[nodiscard]] ByteSlice AsByteSlice() const;
+    bool IsEmpty() const;
+    std::string_view AsView() const;
+    ByteSlice AsSpan() const;
+    ByteSlice AsByteSlice() const;
     std::string_view StealAsView();
     bool AppendChar(char c);
     bool Append(const u8* src, size_t size = -1);
@@ -247,17 +247,17 @@ struct Str {
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
     void Set(std::string_view sv);
-    [[nodiscard]] char* Get() const;
-    [[nodiscard]] char LastChar() const;
+    char* Get() const;
+    char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = char*;
 
-    [[nodiscard]] iterator begin() const {
+    iterator begin() const {
         return &(els[0]);
     }
-    [[nodiscard]] iterator end() const {
+    iterator end() const {
         return &(els[len]);
     }
 };
@@ -282,34 +282,34 @@ struct WStr {
     WStr& operator=(const WStr& that);
     ~WStr();
     void Reset();
-    [[nodiscard]] WCHAR& at(size_t idx) const;
-    [[nodiscard]] WCHAR& at(int idx) const;
-    [[nodiscard]] WCHAR& operator[](size_t idx) const;
-    [[nodiscard]] WCHAR& operator[](long idx) const;
-    [[nodiscard]] WCHAR& operator[](ULONG idx) const;
-    [[nodiscard]] WCHAR& operator[](int idx) const;
+    WCHAR& at(size_t idx) const;
+    WCHAR& at(int idx) const;
+    WCHAR& operator[](size_t idx) const;
+    WCHAR& operator[](long idx) const;
+    WCHAR& operator[](ULONG idx) const;
+    WCHAR& operator[](int idx) const;
 #if defined(_WIN64)
-    [[nodiscard]] WCHAR& at(u32 idx) const;
-    [[nodiscard]] WCHAR& operator[](u32 idx) const;
+    WCHAR& at(u32 idx) const;
+    WCHAR& operator[](u32 idx) const;
 #endif
-    [[nodiscard]] size_t size() const;
-    [[nodiscard]] int isize() const;
+    size_t size() const;
+    int isize() const;
     bool InsertAt(size_t idx, const WCHAR& el);
     bool Append(const WCHAR& el);
     bool Append(const WCHAR* src, size_t count = -1);
     WCHAR RemoveAt(size_t idx, size_t count = 1);
     WCHAR RemoveLast();
-    [[nodiscard]] WCHAR& Last() const;
-    [[nodiscard]] WCHAR* StealData();
-    [[nodiscard]] WCHAR* LendData() const;
-    [[nodiscard]] int Find(const WCHAR& el, size_t startAt = 0) const;
-    [[nodiscard]] bool Contains(const WCHAR& el) const;
+    WCHAR& Last() const;
+    WCHAR* StealData();
+    WCHAR* LendData() const;
+    int Find(const WCHAR& el, size_t startAt = 0) const;
+    bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
     void Reverse() const;
     WCHAR& FindEl(const std::function<bool(WCHAR&)>& check) const;
-    [[nodiscard]] bool IsEmpty() const;
-    [[nodiscard]] std::wstring_view AsView() const;
-    [[nodiscard]] std::span<WCHAR> AsSpan() const;
+    bool IsEmpty() const;
+    std::wstring_view AsView() const;
+    std::span<WCHAR> AsSpan() const;
     std::wstring_view StealAsView();
     bool AppendChar(WCHAR c);
     bool AppendSpan(std::span<WCHAR> d);
@@ -317,17 +317,17 @@ struct WStr {
     void AppendFmt(const WCHAR* fmt, ...);
     bool AppendAndFree(const WCHAR* s);
     void Set(std::wstring_view sv);
-    [[nodiscard]] WCHAR* Get() const;
-    [[nodiscard]] WCHAR LastChar() const;
+    WCHAR* Get() const;
+    WCHAR LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = WCHAR*;
 
-    [[nodiscard]] iterator begin() const {
+    iterator begin() const {
         return &(els[0]);
     }
-    [[nodiscard]] iterator end() const {
+    iterator end() const {
         return &(els[len]);
     }
 };
@@ -417,15 +417,15 @@ class WStrList {
         }
     }
 
-    [[nodiscard]] const WCHAR* at(size_t idx) const {
+    const WCHAR* at(size_t idx) const {
         return items.at(idx).string;
     }
 
-    [[nodiscard]] const WCHAR* Last() const {
+    const WCHAR* Last() const {
         return items.Last().string;
     }
 
-    [[nodiscard]] size_t size() const {
+    size_t size() const {
         return count;
     }
 

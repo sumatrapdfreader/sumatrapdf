@@ -267,7 +267,7 @@ class EngineDjVu : public EngineBase {
     IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
-    [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
+    WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
     static EngineBase* CreateFromFile(const WCHAR* path);

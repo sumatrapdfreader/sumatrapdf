@@ -17,12 +17,12 @@ class TextSearch : public TextSelection {
     TextSel* FindNext(ProgressUpdateUI* tracker = nullptr);
 
     // note: the result might not be a valid page number!
-    [[nodiscard]] int GetCurrentPageNo() const {
+    int GetCurrentPageNo() const {
         return findPage;
     }
 
     // note: the result might not be a valid page number!
-    [[nodiscard]] int GetSearchHitStartPageNo() const {
+    int GetSearchHitStartPageNo() const {
         return searchHitStartAt;
     }
 

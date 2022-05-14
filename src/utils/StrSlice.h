@@ -70,11 +70,11 @@ struct Slice {
 
     void Set(char* s, size_t len);
 
-    [[nodiscard]] size_t Left() const;
-    [[nodiscard]] bool Finished() const;
+    size_t Left() const;
+    bool Finished() const;
 
-    [[nodiscard]] char PrevChar() const;
-    [[nodiscard]] char CurrChar() const;
+    char PrevChar() const;
+    char CurrChar() const;
     size_t AdvanceCurrTo(char* s);
     size_t SkipWsUntilNewline();
     size_t SkipUntil(char toFind);

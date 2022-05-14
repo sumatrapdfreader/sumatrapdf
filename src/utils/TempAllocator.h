@@ -33,25 +33,25 @@ struct TempStr {
     TempStr(const TempStr& ts) {
         sv = ts.sv;
     }
-    [[nodiscard]] bool empty() const {
+    bool empty() const {
         return sv.empty();
     }
-    [[nodiscard]] size_t size() const {
+    size_t size() const {
         return sv.size();
     }
-    [[nodiscard]] char* Get() const {
+    char* Get() const {
         return (char*)sv.data();
     }
-    [[nodiscard]] std::string_view AsView() const {
+    std::string_view AsView() const {
         return sv;
     }
-    [[nodiscard]] operator const char*() const { // NOLINT
+    operator const char*() const { // NOLINT
         return sv.data();
     }
-    [[nodiscard]] operator char*() const { // NOLINT
+    operator char*() const { // NOLINT
         return (char*)sv.data();
     }
-    [[nodiscard]] operator std::string_view() const { // NOLINT
+    operator std::string_view() const { // NOLINT
         return sv;
     }
 };
@@ -78,22 +78,22 @@ struct TempWstr {
     TempWstr(const TempWstr& ts) {
         sv = ts.sv;
     }
-    [[nodiscard]] bool empty() const {
+    bool empty() const {
         return sv.empty();
     }
-    [[nodiscard]] size_t size() const {
+    size_t size() const {
         return sv.size();
     }
-    [[nodiscard]] WCHAR* Get() const {
+    WCHAR* Get() const {
         return (WCHAR*)sv.data();
     }
-    [[nodiscard]] std::wstring_view AsView() const {
+    std::wstring_view AsView() const {
         return sv;
     }
-    [[nodiscard]] operator const WCHAR*() const { // NOLINT
+    operator const WCHAR*() const { // NOLINT
         return sv.data();
     }
-    [[nodiscard]] operator WCHAR*() const { // NOLINT
+    operator WCHAR*() const { // NOLINT
         return (WCHAR*)sv.data();
     }
     explicit operator std::wstring_view() const {

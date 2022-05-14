@@ -802,7 +802,7 @@ class EngineImageDir : public EngineImages {
         return nullptr;
     }
 
-    [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
+    WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
     TocTree* GetToc() override;

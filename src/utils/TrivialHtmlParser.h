@@ -31,7 +31,7 @@ struct HtmlElement {
     bool NameIsNS(const char* name, const char* ns) const;
 
     WCHAR* GetAttribute(const char* name) const;
-    [[nodiscard]] HtmlElement* GetChildByTag(HtmlTag tag, int idx = 0) const;
+    HtmlElement* GetChildByTag(HtmlTag tag, int idx = 0) const;
 };
 
 class HtmlParser {
@@ -76,8 +76,8 @@ class HtmlParser {
     HtmlElement* Parse(ByteSlice d, UINT codepage = CP_ACP);
     HtmlElement* ParseInPlace(ByteSlice d, UINT codepage = CP_ACP);
 
-    [[nodiscard]] size_t ElementsCount() const;
-    [[nodiscard]] size_t TotalAttrCount() const;
+    size_t ElementsCount() const;
+    size_t TotalAttrCount() const;
 
     HtmlElement* FindElementByName(const char* name, HtmlElement* from = nullptr);
     HtmlElement* FindElementByNameNS(const char* name, const char* ns, HtmlElement* from = nullptr);

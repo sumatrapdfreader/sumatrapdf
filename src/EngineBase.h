@@ -69,30 +69,30 @@ struct IPageDestination {
     IPageDestination() = default;
     virtual ~IPageDestination(){};
 
-    [[nodiscard]] Kind GetKind() {
+    Kind GetKind() {
         return kind;
     }
 
     // page the destination points to (-1 for external destinations such as URLs)
-    [[nodiscard]] virtual int GetPageNo() {
+    virtual int GetPageNo() {
         return pageNo;
     }
     // rectangle of the destination on the above returned page
-    [[nodiscard]] virtual RectF GetRect() {
+    virtual RectF GetRect() {
         return rect;
     }
     // optional zoom level on the above returned page
-    [[nodiscard]] virtual float GetZoom() {
+    virtual float GetZoom() {
         return zoom;
     }
 
     // string value associated with the destination (e.g. a path or a URL)
-    [[nodiscard]] virtual WCHAR* GetValue() {
+    virtual WCHAR* GetValue() {
         return nullptr;
     }
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    [[nodiscard]] virtual WCHAR* GetName() {
+    virtual WCHAR* GetName() {
         return nullptr;
     }
 };
@@ -157,8 +157,8 @@ struct PageDestination : IPageDestination {
 
     ~PageDestination() override;
 
-    [[nodiscard]] WCHAR* GetValue() override;
-    [[nodiscard]] WCHAR* GetName() override;
+    WCHAR* GetValue() override;
+    WCHAR* GetName() override;
 };
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const WCHAR* value = nullptr);
@@ -343,7 +343,7 @@ struct TocItem {
     TocItem* ChildAt(int n);
     bool IsExpanded();
 
-    [[nodiscard]] bool PageNumbersMatch() const;
+    bool PageNumbersMatch() const;
 };
 
 struct TocTree : TreeModel {
@@ -417,7 +417,7 @@ class EngineBase {
     virtual EngineBase* Clone() = 0;
 
     // number of pages the loaded document contains
-    [[nodiscard]] int PageCount() const;
+    int PageCount() const;
 
     // the box containing the visible page content (usually RectF(0, 0, pageWidth, pageHeight))
     virtual RectF PageMediabox(int pageNo) = 0;
@@ -454,7 +454,7 @@ class EngineBase {
     // the layout type this document's author suggests (if the user doesn't care)
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
-    [[nodiscard]] bool IsImageCollection() const;
+    bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
@@ -465,10 +465,10 @@ class EngineBase {
 
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    [[nodiscard]] bool AllowsCopyingText() const;
+    bool AllowsCopyingText() const;
 
     // the DPI for a file is needed when converting internal measures to physical ones
-    [[nodiscard]] float GetFileDPI() const;
+    float GetFileDPI() const;
 
     // returns a list of all available elements for this page
     // caller must delete the Vec but not the elements inside the vector
@@ -490,29 +490,29 @@ class EngineBase {
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
-    [[nodiscard]] bool HasPageLabels() const;
+    bool HasPageLabels() const;
 
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    [[nodiscard]] virtual WCHAR* GetPageLabel(int pageNo) const;
+    virtual WCHAR* GetPageLabel(int pageNo) const;
 
     // reverts GetPageLabel by returning the first page number having the given label
     virtual int GetPageByLabel(const WCHAR* label) const;
 
     // whether this document required a password in order to be loaded
-    [[nodiscard]] bool IsPasswordProtected() const;
+    bool IsPasswordProtected() const;
 
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
-    [[nodiscard]] char* GetDecryptionKey() const;
+    char* GetDecryptionKey() const;
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    [[nodiscard]] const WCHAR* FileName() const;
+    const WCHAR* FileName() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
