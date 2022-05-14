@@ -1196,7 +1196,7 @@ Point DisplayModel::GetContentStart(int pageNo) const {
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX) {
     if (!ValidPageNo(pageNo)) {
         logf("DisplayModel::GoToPage: invalid pageNo: %d, nPages: %d\n", pageNo, engine->PageCount());
-        ReportIf(ValidPageNo(pageNo));
+        ReportIf(true);
         return;
     }
 
@@ -1761,12 +1761,16 @@ ScrollState DisplayModel::GetScrollState() {
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
     if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0) {
+        // TODO: after 3.4
+        // ReportIf(!ValidPageNo(state.page));
         return state;
     }
 
     Rect screen(Point(), viewPort.Size());
     Rect pageVis = pageInfo->pageOnScreen.Intersect(screen);
     state.page = GetPageNextToPoint(pageVis.TL());
+    // TODO: after 3.4
+    // ReportIf(!ValidPageNo(state.page));
     PointF ptD = CvtFromScreen(pageVis.TL(), state.page);
 
     // Remember to show the margin, if it's currently visible
@@ -1780,8 +1784,7 @@ ScrollState DisplayModel::GetScrollState() {
     return state;
 }
 
-void DisplayModel::SetScrollState(ScrollState state) {
-    // Update the internal metrics first
+void DisplayModel::SetScrollState(const ScrollState state) {
     GoToPage(state.page, 0);
     // Bail out, if the page wasn't scrolled
     if (state.x < 0 && state.y < 0) {

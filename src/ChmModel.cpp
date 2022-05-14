@@ -119,8 +119,6 @@ int ChmModel::CurrentPageNo() const {
 }
 
 void ChmModel::GoToPage(int pageNo, bool) {
-    // TODO: not sure if crashing here is warranted
-    // I've seen a crash with call from RestoreTabOnStartup() which doesn't validate pageNo
     ReportIf(!ValidPageNo(pageNo));
     if (!ValidPageNo(pageNo)) {
         return;

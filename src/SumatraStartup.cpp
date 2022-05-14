@@ -312,6 +312,23 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
         return;
     }
 
+    Controller* ctrl = tab->ctrl;
+    DisplayModel* dm = tab->AsFixed();
+
+    // validate page number from session state
+    // TODO: figure out how this happens in the first place i.e.
+    // why TabState->pageNo etc. gets saved as 0
+    if (state->pageNo < 1) {
+        state->pageNo = 1;
+        state->scrollPos = {-1, -1};
+    } else {
+        int nPages = ctrl->PageCount();
+        if (state->pageNo > nPages) {
+            state->pageNo = nPages;
+            state->scrollPos = {-1, -1};
+        }
+    }
+
     tab->tocState = *state->tocState;
     SetSidebarVisibility(win, state->showToc, gGlobalPrefs->showFavorites);
 
@@ -319,18 +336,21 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     if (displayMode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, displayMode);
     }
-    tab->ctrl->GoToPage(state->pageNo, true);
+
+    if (dm) {
+        ScrollState scrollState = {state->pageNo, state->scrollPos.x, state->scrollPos.y};
+        dm->SetScrollState(scrollState);
+    } else {
+        ctrl->GoToPage(state->pageNo, true);
+    }
 
     float zoom = ZoomFromString(state->zoom, kInvalidZoom);
     if (zoom != kInvalidZoom) {
-        if (tab->AsFixed()) {
-            tab->AsFixed()->Relayout(zoom, state->rotation);
+        if (dm) {
+            dm->Relayout(zoom, state->rotation);
         } else {
-            tab->ctrl->SetZoomVirtual(zoom, nullptr);
+            ctrl->SetZoomVirtual(zoom, nullptr);
         }
-    }
-    if (tab->AsFixed()) {
-        tab->AsFixed()->SetScrollState(ScrollState(state->pageNo, state->scrollPos.x, state->scrollPos.y));
     }
 }
 

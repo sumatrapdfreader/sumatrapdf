@@ -41,7 +41,8 @@ struct PageInfo {
 /* coordinates are in user space units (per page) */
 struct ScrollState {
     ScrollState() = default;
-    explicit ScrollState(int page, double x, double y);
+    ~ScrollState() = default;
+    ScrollState(int page, double x, double y);
     bool operator==(const ScrollState& other) const;
 
     double x = 0;
@@ -182,7 +183,7 @@ struct DisplayModel : Controller {
     bool ShowResultRectToScreen(TextSel* res);
 
     ScrollState GetScrollState();
-    void SetScrollState(ScrollState state);
+    void SetScrollState(const ScrollState state);
 
     void CopyNavHistory(DisplayModel& orig);
 
