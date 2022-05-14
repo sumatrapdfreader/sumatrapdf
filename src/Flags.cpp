@@ -145,7 +145,7 @@ static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
     auto txtDup = ToUtf8Temp(txtOrig);
     char* txt = str::ToLowerInPlace(txtDup.Get());
     int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
-    if (zoomVal != -1) {
+    if (zoomVal >= 0) {
         // 0-2 : fit page
         // 3-5 : fit width
         // 6-8 : fit content

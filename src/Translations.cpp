@@ -247,7 +247,7 @@ void SetCurrentLangByCode(const char* langCode) {
     }
 
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
-    if (-1 == idx) {
+    if (idx < 0) {
         logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode);
         // set to English
         idx = 0;
@@ -265,7 +265,7 @@ void SetCurrentLangByCode(const char* langCode) {
 
 const char* ValidateLangCode(const char* langCode) {
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
-    if (-1 == idx) {
+    if (idx < 0) {
         return nullptr;
     }
     return GetLangCodeByIdx(idx);

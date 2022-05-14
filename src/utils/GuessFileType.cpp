@@ -124,6 +124,9 @@ static Kind GetKindByFileExt(const WCHAR* pathW) {
     char* path = ToUtf8Temp(pathW);
     auto ext = path::GetExtTemp(path);
     int idx = seqstrings::StrToIdxIS(gFileExts, ext);
+    if (idx < 0) {
+        return nullptr;
+    }
     int n = (int)dimof(gExtsKind);
     if (idx >= n) {
         return nullptr;

@@ -383,7 +383,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Str& customColor)
     ItemsFromSeqstrings(items, gColors);
     const char* colorName = GetKnownColorName(col);
     int idx = seqstrings::StrToIdx(gColors, colorName);
-    if (idx == -1) {
+    if (idx < 0) {
         customColor.Reset();
         SerializePdfColor(col, customColor);
         items.Append(customColor.AsView());
