@@ -393,8 +393,8 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Str& customColor)
     w->SetCurrentSelection(idx);
 }
 
-static PdfColor GetDropDownColor(std::string_view sv) {
-    int idx = seqstrings::StrToIdx(gColors, sv.data());
+static PdfColor GetDropDownColor(const char* sv) {
+    int idx = seqstrings::StrToIdx(gColors, sv);
     if (idx >= 0) {
         int nMaxColors = (int)dimof(gColorsValues);
         CrashIf(idx >= nMaxColors);
@@ -404,7 +404,7 @@ static PdfColor GetDropDownColor(std::string_view sv) {
         return 0;
     }
     ParsedColor col;
-    ParseColor(col, sv.data());
+    ParseColor(col, sv);
     return col.pdfCol;
 }
 
@@ -503,9 +503,9 @@ static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
     if (Type(annot) != AnnotationType::FreeText) {
         return;
     }
-    std::string_view fontName = DefaultAppearanceTextFont(annot);
+    const char* fontName = DefaultAppearanceTextFont(annot);
     // TODO: might have other fonts, like "Symb" and "ZaDb"
-    auto itemNo = seqstrings::StrToIdx(gFontNames, fontName.data());
+    auto itemNo = seqstrings::StrToIdx(gFontNames, fontName);
     if (itemNo < 0) {
         return;
     }
@@ -557,7 +557,7 @@ static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownTextColor->GetCurrentSelection();
-    auto item = ew->dropDownTextColor->items.at(idx);
+    const char* item = ew->dropDownTextColor->items.at(idx).data();
     auto col = GetDropDownColor(item);
     SetDefaultAppearanceTextColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -628,7 +628,7 @@ static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
 }
 
 static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
-    std::string_view itemName = IconName(annot);
+    const char* itemName = IconName(annot);
     const char* items = nullptr;
     switch (Type(annot)) {
         case AnnotationType::Text:
@@ -644,11 +644,11 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
             items = gStampIcons;
             break;
     }
-    if (!items || itemName.empty()) {
+    if (!items || str::IsEmpty(itemName)) {
         return;
     }
     ew->dropDownIcon->SetItemsSeqStrings(items);
-    int idx = FindStringInArray(items, itemName.data(), 0);
+    int idx = FindStringInArray(items, itemName, 0);
     ew->dropDownIcon->SetCurrentSelection(idx);
     ew->staticIcon->SetIsVisible(true);
     ew->dropDownIcon->SetIsVisible(true);
@@ -683,7 +683,7 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownColor->GetCurrentSelection();
-    auto item = ew->dropDownColor->items.at(idx);
+    auto item = ew->dropDownColor->items.at(idx).data();
     auto col = GetDropDownColor(item);
     SetColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -704,7 +704,7 @@ static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownInteriorColor->GetCurrentSelection();
-    auto item = ew->dropDownInteriorColor->items.at(idx);
+    auto item = ew->dropDownInteriorColor->items.at(idx).data();
     auto col = GetDropDownColor(item);
     SetInteriorColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);

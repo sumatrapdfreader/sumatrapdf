@@ -419,7 +419,7 @@ bool IsEngineMultiSupportedFileType(Kind kind) {
     return kind == kindDirectory;
 }
 
-EngineBase* CreateEngineMultiFromFiles(std::string_view dir, StrVec& files) {
+EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
     EngineMulti* engine = new EngineMulti();
     if (!engine->LoadFromFiles(dir, files)) {
         delete engine;
@@ -434,7 +434,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
         return isValid;
     };
     StrVec files;
-    auto dir = ToUtf8Temp(dirW);
+    char* dir = ToUtf8Temp(dirW);
     bool ok = CollectFilesFromDirectory(dir, files, isValidFunc);
     if (!ok) {
         // TODO: show error message
@@ -444,7 +444,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
         // TODO: show error message
         return nullptr;
     }
-    EngineBase* engine = CreateEngineMultiFromFiles(dir.AsView(), files);
+    EngineBase* engine = CreateEngineMultiFromFiles(dir, files);
     if (!engine) {
         // TODO: show error message
         return nullptr;

@@ -44,7 +44,7 @@ static bool NeedsEscape(const WCHAR* s) {
 // TODO: we leak because in the past Escape() was freeing str
 // and now we don't but I didn't update all the code
 // doesn't matter because engine dump does its job and quits
-static std::string_view Escape(const WCHAR* str) {
+static char* Escape(const WCHAR* str) {
     if (str::IsEmpty(str)) {
         return {};
     }
@@ -149,8 +149,8 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     AutoFreeWstr fontlist(engine->GetProperty(DocumentProperty::FontList));
     if (fontlist) {
         WStrVec fonts;
-        fonts.Split(fontlist, L"\n");
-        str = Escape(fonts.Join(L"\n\t\t"));
+        Split(fonts, fontlist, L"\n");
+        str = Escape(Join(fonts, L"\n\t\t"));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
     }
 }

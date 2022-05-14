@@ -96,7 +96,7 @@ MultiFormatArchive::~MultiFormatArchive() {
 
 size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, const char* name) {
     for (auto fileInfo : fileInfos) {
-        if (str::EqI(fileInfo->name.data(), name)) {
+        if (str::EqI(fileInfo->name, name)) {
             return fileInfo->fileId;
         }
     }
@@ -165,24 +165,24 @@ ByteSlice MultiFormatArchive::GetFileDataById(size_t fileId) {
     return {data, size};
 }
 
-std::string_view MultiFormatArchive::GetComment() {
+const char* MultiFormatArchive::GetComment() {
     if (!ar_) {
-        return {};
+        return nullptr;
     }
 
     size_t n = ar_get_global_comment(ar_, nullptr, 0);
     if (0 == n || (size_t)-1 == n) {
-        return {};
+        return nullptr;
     }
     char* comment = Allocator::Alloc<char>(&allocator_, n + 1);
     if (!comment) {
-        return {};
+        return nullptr;
     }
     size_t nRead = ar_get_global_comment(ar_, comment, n);
     if (nRead != n) {
-        return {};
+        return nullptr;
     }
-    return std::string_view(comment, n);
+    return comment;
 }
 
 ///// format specific handling /////
@@ -347,7 +347,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     char* data = nullptr;
     size_t size = 0;
-    auto fileName = ToWstrTemp(fileInfo->name.data());
+    auto fileName = ToWstrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     int res;
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());

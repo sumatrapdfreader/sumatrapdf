@@ -14,7 +14,7 @@ class MultiFormatArchive {
 
     struct FileInfo {
         size_t fileId = 0;
-        std::string_view name{};
+        const char* name = nullptr;
         i64 fileTime = 0; // this is typedef'ed as time64_t in unrar.h
         size_t fileSizeUncompressed = 0;
 
@@ -40,7 +40,7 @@ class MultiFormatArchive {
     ByteSlice GetFileDataByName(const char* filename);
     ByteSlice GetFileDataById(size_t fileId);
 
-    std::string_view GetComment();
+    const char* GetComment();
 
     // if true, will load and uncompress all files on open
     bool loadOnOpen = false;

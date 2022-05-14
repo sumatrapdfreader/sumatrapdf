@@ -350,7 +350,7 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
         return false;
     }
     auto fi = files[0];
-    auto name = fi->name.data();
+    auto name = fi->name;
     return str::EndsWithI(name, ".fb2");
 }
 

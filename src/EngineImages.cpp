@@ -1072,8 +1072,8 @@ bool EngineCbx::LoadFromStream(IStream* stream) {
 }
 
 static bool cmpArchFileInfoByName(MultiFormatArchive::FileInfo* f1, MultiFormatArchive::FileInfo* f2) {
-    const char* s1 = f1->name.data();
-    const char* s2 = f2->name.data();
+    const char* s1 = f1->name;
+    const char* s2 = f2->name;
     int res = str::CmpNatural(s1, s2);
     return res < 0;
 }
@@ -1119,7 +1119,7 @@ bool EngineCbx::FinishLoading() {
     size_t n = fileInfos.size();
     for (size_t i = 0; i < n; i++) {
         auto* fileInfo = fileInfos[i];
-        const char* fileName = fileInfo->name.data();
+        const char* fileName = fileInfo->name;
         if (str::Len(fileName) == 0) {
             continue;
         }
@@ -1164,9 +1164,9 @@ bool EngineCbx::FinishLoading() {
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
     for (int i = 0; i < pageCount; i++) {
-        std::string_view fname = pageFiles[i]->name;
-        auto name = ToWstrTemp(fname);
-        const WCHAR* baseName = path::GetBaseNameTemp(name.Get());
+        const char* fname = pageFiles[i]->name;
+        WCHAR* name = ToWstrTemp(fname);
+        const WCHAR* baseName = path::GetBaseNameTemp(name);
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
             root = ti;

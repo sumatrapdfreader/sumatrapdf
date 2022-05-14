@@ -42,7 +42,7 @@ EngineBase* CreateEngineCbxFromStream(IStream* stream);
 /* EngineMulti.cpp */
 
 bool IsEngineMultiSupportedFileType(Kind);
-EngineBase* CreateEngineMultiFromFiles(std::string_view dir, StrVec& files);
+EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files);
 EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW);
 TocItem* CreateWrapperItem(EngineBase* engine);
 
