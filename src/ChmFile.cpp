@@ -442,7 +442,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
         return true;
     }
     visitor->Visit(keyword, nullptr, level);
-    for (int i = 0; i < references.size(); i += 2) {
+    for (int i = 0; i < references.Size(); i += 2) {
         visitor->Visit(references.at(i), references.at(i + 1), level + 1);
     }
     return true;
