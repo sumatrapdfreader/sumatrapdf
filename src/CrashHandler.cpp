@@ -709,13 +709,11 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     if (!prefsData.empty()) {
         // serialize without FileStates info because it's the largest
         GlobalPrefs* gp = NewGlobalPrefs((const char*)prefsData.data());
-        Vec<FileState*>* fileStates = gp->fileStates;
-        gp->fileStates = nullptr;
+        gp->rememberOpenedFiles = false; // disables serializing of file state
         // TODO: also sessionData?
         ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
         gSettingsFile = (char*)d.data();
-        gp->fileStates = fileStates;
-        delete gp;
+        DeleteGlobalPrefs(gp);
         str::Free(prefsData.data());
     }
 
