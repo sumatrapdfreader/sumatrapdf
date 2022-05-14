@@ -383,8 +383,13 @@ struct WStrVec {
 
     int Append(const WCHAR*, size_t sLen = 0);
     int Find(const WCHAR* s, int startAt = 0) const;
+    int FindI(const WCHAR* s, int startAt = 0) const;
     bool Exists(const WCHAR* s) const;
     int AppendIfNotExists(const WCHAR* s);
+
+    void Sort(WStrLessFunc lessFn = nullptr);
+    void SortI();
+    void SortNatural();
 
     bool GetSortedView(WStrVecSortedView&, WStrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(WStrVecSortedView&) const;

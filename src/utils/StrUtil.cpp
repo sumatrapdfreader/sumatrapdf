@@ -3312,6 +3312,11 @@ bool wstrLessNoCase(const WCHAR* s1s, const WCHAR* s2s) {
     return n1 < n2;
 }
 
+bool wstrLessNatural(const WCHAR* s1, const WCHAR* s2) {
+    int n = str::CmpNatural(s1, s2);
+    return n < 0; // TODO: verify it's < and not >
+}
+
 void WStrVec::Reset() {
     strings.Reset();
     index.Reset();
@@ -3381,6 +3386,17 @@ int WStrVec::Find(const WCHAR* s, int startAt) const {
     return -1;
 }
 
+int WStrVec::FindI(const WCHAR* s, int startAt) const {
+    int n = Size();
+    for (int i = startAt; i < n; i++) {
+        auto s2 = at(i);
+        if (str::EqI(s, s2)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 bool WStrVec::Exists(const WCHAR* sv) const {
     int idx = Find(sv, 0);
     return idx != -1;
@@ -3391,6 +3407,26 @@ int WStrVec::AppendIfNotExists(const WCHAR* sv) {
         return -1;
     }
     return Append(sv);
+}
+
+void WStrVec::Sort(WStrLessFunc lessFn) {
+    if (lessFn == nullptr) {
+        lessFn = wstrLess;
+    }
+    std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
+        WCHAR* is1 = at((int)i1);
+        WCHAR* is2 = at((int)i2);
+        bool ret = lessFn(is1, is2);
+        return ret;
+    });
+}
+
+void WStrVec::SortI() {
+    Sort(wstrLessNoCase);
+}
+
+void WStrVec::SortNatural() {
+    Sort(wstrLessNatural);
 }
 
 bool WStrVec::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const {
