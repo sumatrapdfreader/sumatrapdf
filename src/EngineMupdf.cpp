@@ -3296,8 +3296,7 @@ const pdf_write_options pdf_default_write_options2 = {
 // annotations).
 // if filePath is not given, we save under the same name
 // TODO: if the file is locked, this might fail.
-bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
-                            std::function<void(std::string_view)> showErrorFunc) {
+bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<void(const char*)> showErrorFunc) {
     CrashIf(!engine);
     if (!engine) {
         return false;
@@ -3308,9 +3307,9 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
     }
 
     auto timeStart = TimeGet();
-    TempStr currPath = ToUtf8Temp(engine->FileName());
-    if (path.empty()) {
-        path = {currPath.Get()};
+    char* currPath = ToUtf8Temp(engine->FileName());
+    if (str::IsEmpty(path)) {
+        path = currPath;
     }
     fz_context* ctx = epdf->ctx;
 
@@ -3327,14 +3326,14 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
     bool ok = false;
     fz_var(ok);
     fz_try(ctx) {
-        pdf_save_document(ctx, epdf->pdfdoc, path.data(), &save_opts);
+        pdf_save_document(ctx, epdf->pdfdoc, path, &save_opts);
         ok = true;
         auto dur = TimeSinceInMs(timeStart);
-        logf("Saved annotations to '%s' in  %.2f ms\n", path.data(), dur);
+        logf("Saved annotations to '%s' in  %.2f ms\n", path, dur);
     }
     fz_catch(ctx) {
         const char* mupdfErr = fz_caught_message(epdf->ctx);
-        logf("Saving '%s' failed with: '%s'\n", path.data(), mupdfErr);
+        logf("Saving '%s' failed with: '%s'\n", path, mupdfErr);
         if (showErrorFunc) {
             showErrorFunc(mupdfErr);
         }

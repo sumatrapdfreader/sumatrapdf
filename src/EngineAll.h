@@ -58,8 +58,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase*, AnnotationType type, int pa
 int EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>*);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfSupportsAnnotations(EngineBase*);
-bool EngineMupdfSaveUpdated(EngineBase* engine, std::string_view path,
-                            std::function<void(std::string_view)> showErrorFunc);
+bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<void(const char*)> showErrorFunc);
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, AnnotationType* allowedAnnots);
 
 /* EnginePs.cpp */

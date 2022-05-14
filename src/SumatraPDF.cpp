@@ -2103,12 +2103,12 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     if (!ok) {
         return false;
     }
-    TempStr dstFilePath = ToUtf8Temp(dstFileName);
-    ok = EngineMupdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](std::string_view mupdfErr) {
+    char* dstFilePath = ToUtf8Temp(dstFileName);
+    ok = EngineMupdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](const char* mupdfErr) {
         str::Str msg;
         // TODO: duplicated string
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath.Get(), mupdfErr.data());
-        tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView(), NotificationOptions::Warning);
+        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath, mupdfErr);
+        tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
     });
     if (!ok) {
         return false;
@@ -2128,8 +2128,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     LoadDocument(args);
 
     str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), dstFilePath.Get());
-    tab->win->notifications->Show(win->hwndCanvas, msg.AsView());
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), dstFilePath);
+    tab->win->notifications->Show(win->hwndCanvas, msg.LendData());
     return true;
 }
 
@@ -2239,12 +2239,12 @@ static bool MaybeSaveAnnotations(TabInfo* tab) {
             SaveAnnotationsToMaybeNewPdfFile(tab);
             break;
         case SaveChoice::SaveExisting: {
-            TempStr path = ToUtf8Temp(engine->FileName());
-            bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+            char* path = ToUtf8Temp(engine->FileName());
+            bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
                 str::Str msg;
                 // TODO: duplicated message
-                msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
-                tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView(), NotificationOptions::Warning);
+                msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
+                tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
             });
         } break;
         case SaveChoice::Cancel:
@@ -4126,19 +4126,19 @@ static int TestBigNew()
 
 static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    auto path = ToUtf8Temp(engine->FileName());
-    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+    char* path = ToUtf8Temp(engine->FileName());
+    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
-        tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView(), NotificationOptions::Warning);
+        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
+        tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
     });
     if (!ok) {
         return;
     }
     str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path.Get());
-    tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView());
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
+    tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData());
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;

@@ -25,7 +25,7 @@ void SetLineEndingStyles(Annotation*, int start, int end);
 Vec<RectF> GetQuadPointsAsRect(Annotation*);
 time_t CreationDate(Annotation*);
 
-std::string_view AnnotationName(AnnotationType);
+const char* AnnotationName(AnnotationType);
 */
 
 // spot checks the definitions are the same
@@ -105,7 +105,7 @@ static const char* gAnnotReadableNames =
 // clang format-on
 
 /*
-std::string_view AnnotationName(AnnotationType tp) {
+const char* AnnotationName(AnnotationType tp) {
     int n = (int)tp;
     CrashIf(n < -1 || n > (int)AnnotationType::ThreeD);
     if (n < 0) {
@@ -113,7 +113,7 @@ std::string_view AnnotationName(AnnotationType tp) {
     }
     const char* s = seqstrings::IdxToStr(gAnnotNames, n);
     CrashIf(!s);
-    return {s};
+    return s;
 }
 */
 

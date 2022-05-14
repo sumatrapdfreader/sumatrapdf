@@ -345,19 +345,19 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     TabInfo* tab = ew->tab;
     EngineMupdf* engine = GetEngineMupdf(ew);
-    TempStr path = ToUtf8Temp(engine->FileName());
-    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
+    char* path = ToUtf8Temp(engine->FileName());
+    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.Get(), mupdfErr.data());
-        tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView(), NotificationOptions::Warning);
+        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
+        tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
     });
     if (!ok) {
         return;
     }
     str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path.Get());
-    tab->win->notifications->Show(tab->win->hwndCanvas, msg.AsView());
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
+    tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData());
 
     // TODO: hacky: set tab->editAnnotsWindow to nullptr to
     // disable a check in ReloadDocuments. Could pass additional argument
@@ -386,7 +386,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Str& customColor)
     if (idx < 0) {
         customColor.Reset();
         SerializePdfColor(col, customColor);
-        items.Append(customColor.AsView());
+        items.Append(customColor.LendData());
         idx = items.isize() - 1;
     }
     w->SetItems(items);

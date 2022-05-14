@@ -63,7 +63,7 @@ struct Notifications {
 
     NotificationWnd* Show(HWND hwnd, const WCHAR* msg, NotificationOptions opts = NotificationOptions::WithTimeout,
                           Kind groupId = NG_RESPONSE_TO_ACTION);
-    NotificationWnd* Show(HWND hwnd, std::string_view, NotificationOptions opts = NotificationOptions::WithTimeout,
+    NotificationWnd* Show(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
                           Kind groupId = NG_RESPONSE_TO_ACTION);
 
     // groupId is used to classify notifications and causes a notification

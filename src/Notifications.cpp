@@ -417,9 +417,9 @@ NotificationWnd* Notifications::Show(HWND hwnd, const WCHAR* msg, NotificationOp
     return wnd;
 }
 
-NotificationWnd* Notifications::Show(HWND hwnd, std::string_view sv, NotificationOptions opts, Kind groupId) {
-    auto msg = ToWstrTemp(sv);
-    return Show(hwnd, msg.Get(), opts, groupId);
+NotificationWnd* Notifications::Show(HWND hwnd, const char* sv, NotificationOptions opts, Kind groupId) {
+    WCHAR* msg = ToWstrTemp(sv);
+    return Show(hwnd, msg, opts, groupId);
 }
 
 void NotificationWnd::UpdateProgress(int current, int total) {
