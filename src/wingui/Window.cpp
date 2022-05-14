@@ -625,7 +625,7 @@ bool WindowBase::Create(HWND parent) {
         hfont = GetDefaultGuiFont();
     }
     SetFont(hfont);
-    HwndSetText(hwnd, text.AsView());
+    HwndSetText(hwnd, text.LendData());
     return true;
 }
 
@@ -732,16 +732,16 @@ void WindowBase::SetText(const char* sv) {
     text.Set(sv);
     // can be set before we create the window
     if (hwnd) {
-        HwndSetText(hwnd, text.AsView());
+        HwndSetText(hwnd, text.LendData());
         HwndInvalidate(hwnd);
     }
 }
 
-std::string_view WindowBase::GetText() {
+const char* WindowBase::GetText() {
     auto sw = win::GetTextTemp(hwnd);
     auto sa = ToUtf8Temp(sw.AsView());
     text.Set(sa.AsView());
-    return text.AsView();
+    return text.LendData();
 }
 
 void WindowBase::SetTextColor(COLORREF col) {
@@ -852,7 +852,7 @@ bool Window::Create(HWND parent) {
     SetBackgroundColor(backgroundColor);
     SetFont(hfont);
     SetIcon(hIcon);
-    HwndSetText(hwnd, text.AsView());
+    HwndSetText(hwnd, text.LendData());
     return true;
 }
 

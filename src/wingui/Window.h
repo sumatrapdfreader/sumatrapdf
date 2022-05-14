@@ -233,7 +233,7 @@ struct WindowBase : public ILayout {
 
     void SetText(const WCHAR* s);
     void SetText(const char*);
-    std::string_view GetText();
+    const char* GetText();
 
     void SetPos(RECT* r) const;
     // void SetBounds(const RECT& r) const;

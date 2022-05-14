@@ -2431,17 +2431,17 @@ void HwndSetText(HWND hwnd, const WCHAR* s) {
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)s);
 }
 
-void HwndSetText(HWND hwnd, std::string_view sv) {
+void HwndSetText(HWND hwnd, const char* sv) {
     // can be called before a window is created
     if (!hwnd) {
         return;
     }
-    if (sv.empty()) {
+    if (str::IsEmpty(sv)) {
         SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
         return;
     }
-    auto ws = ToWstrTemp(sv);
-    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws.Get());
+    WCHAR* ws = ToWstrTemp(sv);
+    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon

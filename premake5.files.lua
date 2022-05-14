@@ -619,7 +619,6 @@ function utils_files()
     "RegistryPaths.*",
     "Scoped.h",
     "ScopedWin.h",
-    "SerializeTxt.*",
     "SettingsUtil.*",
     "SquareTreeParser.*",
     "StrconvUtil.*",
