@@ -232,7 +232,7 @@ struct WindowBase : public ILayout {
     HICON GetIcon() const;
 
     void SetText(const WCHAR* s);
-    void SetText(std::string_view);
+    void SetText(const char*);
     std::string_view GetText();
 
     void SetPos(RECT* r) const;
@@ -255,7 +255,7 @@ struct Window : WindowBase {
 
     bool Create(HWND parent) override;
 
-    void SetTitle(std::string_view);
+    void SetTitle(const char*);
 
     void Close();
 };

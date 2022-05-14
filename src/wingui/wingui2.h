@@ -100,7 +100,6 @@ struct Wnd : public ILayout {
     bool IsVisible() const;
     void SetText(const WCHAR*);
     void SetText(const char*);
-    void SetText(std::string_view);
 
     TempStr GetText();
     void SetIsEnabled(bool isEnabled) const;
@@ -351,7 +350,7 @@ struct DropDown : Wnd {
     void SetCurrentSelection(int n);
     void SetItems(Vec<std::string_view>& newItems);
     void SetItemsSeqStrings(const char* items);
-    void SetCueBanner(std::string_view);
+    void SetCueBanner(const char*);
 };
 
 } // namespace wg

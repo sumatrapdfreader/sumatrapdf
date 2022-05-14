@@ -724,11 +724,11 @@ HICON WindowBase::GetIcon() const {
 }
 
 void WindowBase::SetText(const WCHAR* s) {
-    auto str = ToUtf8Temp(s);
-    SetText(str.AsView());
+    char* str = ToUtf8Temp(s);
+    SetText(str);
 }
 
-void WindowBase::SetText(std::string_view sv) {
+void WindowBase::SetText(const char* sv) {
     text.Set(sv);
     // can be set before we create the window
     if (hwnd) {
@@ -858,7 +858,7 @@ bool Window::Create(HWND parent) {
 
 Window::~Window() = default;
 
-void Window::SetTitle(std::string_view title) {
+void Window::SetTitle(const char* title) {
     SetText(title);
 }
 

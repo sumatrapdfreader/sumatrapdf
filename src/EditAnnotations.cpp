@@ -422,7 +422,7 @@ static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
     int dx = (int)rect.dx;
     int dy = (int)rect.dy;
     s.AppendFmt(_TRA("Rect: x=%d y=%d dx=%d dy=%d"), x, y, dx, dy);
-    ew->staticRect->SetText(s.AsView());
+    ew->staticRect->SetText(s.Get());
     ew->staticRect->SetIsVisible(true);
 }
 
@@ -433,7 +433,7 @@ static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     str::Str s;
     s.AppendFmt(_TRA("Author: %s"), Author(annot).data());
-    ew->staticAuthor->SetText(s.AsView());
+    ew->staticAuthor->SetText(s.Get());
     ew->staticAuthor->SetIsVisible(true);
 }
 
@@ -454,7 +454,7 @@ static void DoModificationDate(EditAnnotationsWindow* ew, Annotation* annot) {
     s.Append(_TRA("Date:"));
     s.Append(" "); // apptranslator doesn't handle spaces at the end of translated string
     AppendPdfDate(s, ModificationDate(annot));
-    ew->staticModificationDate->SetText(s.AsView());
+    ew->staticModificationDate->SetText(s.Get());
     ew->staticModificationDate->SetIsVisible(true);
 }
 
@@ -465,7 +465,7 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     str::Str s;
     s.AppendFmt(_TRA("Popup: %d 0 R"), popupId);
-    ew->staticPopup->SetText(s.AsView());
+    ew->staticPopup->SetText(s.Get());
     ew->staticPopup->SetIsVisible(true);
 }
 
@@ -473,7 +473,7 @@ static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
     str::Str s = Contents(annot);
     // TODO: don't replace if already is "\r\n"
     Replace(s, "\n", "\r\n");
-    ew->editContents->SetText(s.AsView());
+    ew->editContents->SetText(s.Get());
     ew->staticContents->SetIsVisible(true);
     ew->editContents->SetIsVisible(true);
 }
@@ -528,7 +528,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     int fontSize = DefaultAppearanceTextSize(annot);
     AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
-    ew->staticTextSize->SetText(s.AsView());
+    ew->staticTextSize->SetText(s.Get());
     SetDefaultAppearanceTextSize(ew->annot, fontSize);
     ew->trackbarTextSize->SetValue(fontSize);
     ew->staticTextSize->SetIsVisible(true);
@@ -539,7 +539,7 @@ static void TextFontSizeChanging(EditAnnotationsWindow* ew, TrackbarPosChangingE
     int fontSize = ev->pos;
     SetDefaultAppearanceTextSize(ew->annot, fontSize);
     AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
-    ew->staticTextSize->SetText(s.AsView());
+    ew->staticTextSize->SetText(s.Get());
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
 }
@@ -572,7 +572,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
     int borderWidth = BorderWidth(annot);
     borderWidth = std::clamp(borderWidth, borderWidthMin, borderWidthMax);
     AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
-    ew->staticBorder->SetText(s.AsView());
+    ew->staticBorder->SetText(s.Get());
     ew->trackbarBorder->SetValue(borderWidth);
     ew->staticBorder->SetIsVisible(true);
     ew->trackbarBorder->SetIsVisible(true);
@@ -582,7 +582,7 @@ static void BorderWidthChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEv
     int borderWidth = ev->pos;
     SetBorderWidth(ew->annot, borderWidth);
     AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
-    ew->staticBorder->SetText(s.AsView());
+    ew->staticBorder->SetText(s.Get());
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
 }
@@ -716,7 +716,7 @@ static void DoOpacity(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     int opacity = Opacity(ew->annot);
     AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
-    ew->staticOpacity->SetText(s.AsView());
+    ew->staticOpacity->SetText(s.Get());
     ew->staticOpacity->SetIsVisible(true);
     ew->trackbarOpacity->SetIsVisible(true);
     ew->trackbarOpacity->SetValue(opacity);
@@ -734,7 +734,7 @@ static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent*
     int opacity = ev->pos;
     SetOpacity(ew->annot, opacity);
     AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
-    ew->staticOpacity->SetText(s.AsView());
+    ew->staticOpacity->SetText(s.Get());
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
 }

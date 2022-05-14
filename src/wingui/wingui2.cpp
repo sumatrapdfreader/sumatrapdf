@@ -132,14 +132,6 @@ void Wnd::SetText(const char* s) {
     SetText(ws.Get());
 }
 
-void Wnd::SetText(std::string_view sv) {
-    if (sv.empty()) {
-        SetText(L"");
-    }
-    auto ws = ToWstrTemp(sv);
-    SetText(ws.Get());
-}
-
 TempStr Wnd::GetText() {
     auto sw = win::GetTextTemp(hwnd);
     auto sa = ToUtf8Temp(sw.AsView());
@@ -1612,7 +1604,7 @@ void DropDown::SetCurrentSelection(int n) {
     ComboBox_SetCurSel(hwnd, n);
 }
 
-void DropDown::SetCueBanner(std::string_view sv) {
+void DropDown::SetCueBanner(const char* sv) {
     auto ws = ToWstrTemp(sv);
     ComboBox_SetCueBannerText(hwnd, ws.Get());
 }

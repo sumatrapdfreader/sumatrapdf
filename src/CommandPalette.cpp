@@ -299,7 +299,7 @@ static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, WindowInfo* win) 
     }
 }
 
-static TabInfo* FindOpenedFile(std::string_view sv) {
+static TabInfo* FindOpenedFile(const char* sv) {
     for (WindowInfo* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             if (!tab->IsDocLoaded()) {
@@ -307,7 +307,7 @@ static TabInfo* FindOpenedFile(std::string_view sv) {
             }
             auto path = tab->filePath.Get();
             char* s = ToUtf8Temp(path);
-            if (str::Eq(s, sv.data())) {
+            if (str::Eq(s, sv)) {
                 return tab;
             }
         }
