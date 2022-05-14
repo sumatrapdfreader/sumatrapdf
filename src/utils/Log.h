@@ -40,7 +40,6 @@ static inline void logf(const WCHAR*, ...) {
     // do nothing
 }
 #else
-void log(std::string_view s);
 void log(const char* s);
 void logf(const char* fmt, ...);
 void log(const WCHAR* s);

@@ -111,10 +111,10 @@ static void logToPipe(std::string_view sv) {
     }
 }
 
-void log(std::string_view s) {
+void log(const char* s) {
     // in reduced logging mode, we do want to log to at least the debugger
     if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
-        OutputDebugStringA(s.data());
+        OutputDebugStringA(s);
     }
     if (gStopLogging) {
         return;
@@ -145,27 +145,23 @@ void log(std::string_view s) {
         }
     }
 
-    gLogBuf->Append(s.data(), s.size());
+    size_t n = str::Len(s);
+    gLogBuf->Append(s, n);
     if (gLogToConsole) {
-        fwrite(s.data(), 1, s.size(), stdout);
+        fwrite(s, 1, n, stdout);
         fflush(stdout);
     }
 
     if (gLogFilePath) {
         auto f = fopen(gLogFilePath, "a");
         if (f != nullptr) {
-            fwrite(s.data(), 1, s.size(), f);
+            fwrite(s, 1, n, f);
             fflush(f);
             fclose(f);
         }
     }
     logToPipe(s);
     gLogMutex.Unlock();
-}
-
-void log(const char* s) {
-    auto sv = std::string_view(s);
-    log(sv);
 }
 
 void logf(const char* fmt, ...) {
@@ -176,7 +172,7 @@ void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFree s = str::FmtV(fmt, args);
-    log(s.AsView());
+    log(s.Get());
     va_end(args);
 }
 
@@ -188,7 +184,7 @@ void logfa(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFree s = str::FmtV(fmt, args);
-    log(s.AsView());
+    log(s.Get());
     va_end(args);
 }
 
@@ -213,8 +209,8 @@ void log(const WCHAR* s) {
     if (gStopLogging || !s) {
         return;
     }
-    auto tmp = ToUtf8Temp(s);
-    log(tmp.AsView());
+    char* tmp = ToUtf8Temp(s);
+    log(tmp);
 }
 
 void logf(const WCHAR* fmt, ...) {
