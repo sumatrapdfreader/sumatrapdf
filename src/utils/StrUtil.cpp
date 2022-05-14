@@ -1480,42 +1480,33 @@ char* Str::LendData() const {
     return els;
 }
 
-int Str::Find(char el, size_t startAt) const {
-    for (size_t i = startAt; i < len; i++) {
-        if (els[i] == el) {
-            return (int)i;
+// TODO: rewrite as size_t Find(const char* s, size_t sLen, size_t start);
+bool Str::Contains(const char* s, size_t sLen) {
+    if (str::IsEmpty(s)) {
+        return false;
+    }
+    if (sLen == 0) {
+        sLen = str::Len(s);
+    }
+    if (sLen > len) {
+        return false;
+    }
+    // must account for possibility of 0 in the string
+    const char* curr = LendData();
+    int nLeft = (int)(len - sLen);
+    char c = *s;
+    char c2;
+    while (nLeft >= 0) {
+        c2 = *curr++;
+        nLeft--;
+        if (c != c2) {
+            continue;
+        }
+        if (str::EqN(s, curr - 1, sLen)) {
+            return true;
         }
     }
-    return -1;
-}
-
-bool Str::Contains(char el) const {
-    return -1 != Find(el);
-}
-
-// returns position of removed element or -1 if not removed
-int Str::Remove(char el) {
-    int i = Find(el);
-    if (-1 == i) {
-        return -1;
-    }
-    RemoveAt(i);
-    return i;
-}
-
-void Str::Reverse() const {
-    for (size_t i = 0; i < len / 2; i++) {
-        std::swap(els[i], els[len - i - 1]);
-    }
-}
-
-char& Str::FindEl(const std::function<bool(char&)>& check) const {
-    for (size_t i = 0; i < len; i++) {
-        if (check(els[i])) {
-            return els[i];
-        }
-    }
-    return els[len]; // nullptr-sentinel
+    return false;
 }
 
 bool Str::IsEmpty() const {

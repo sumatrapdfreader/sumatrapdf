@@ -230,11 +230,7 @@ struct Str {
     char& Last() const;
     char* StealData();
     char* LendData() const;
-    int Find(char el, size_t startAt = 0) const;
-    bool Contains(char el) const;
-    int Remove(char el);
-    void Reverse() const;
-    char& FindEl(const std::function<bool(char&)>& check) const;
+    bool Contains(const char* s, size_t sLen = 0);
     bool IsEmpty() const;
     std::string_view AsView() const;
     ByteSlice AsSpan() const;

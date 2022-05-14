@@ -29,6 +29,8 @@ bool gReducedLogging = false;
 // try to log. when true, this stops logging
 bool gStopLogging = false;
 
+bool gSkipDuplicateLines = true;
+
 bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 
@@ -146,8 +148,16 @@ void log(const char* s) {
     }
 
     size_t n = str::Len(s);
-    gLogBuf->Append(s, n);
-    if (gLogToConsole) {
+
+    bool skipLog = gSkipDuplicateLines && gLogBuf->Contains(s);
+
+    // when skipping, we skip buf (crash reports) and console
+    // but write to file and logview
+    if (!skipLog) {
+        gLogBuf->Append(s, n);
+    }
+
+    if (!skipLog && gLogToConsole) {
         fwrite(s, 1, n, stdout);
         fflush(stdout);
     }
