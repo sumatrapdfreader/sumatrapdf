@@ -27,6 +27,30 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "build-rel-asan-64",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}\\vs2022\\SumatraPDF.sln",
+                // Ask msbuild to generate full paths for file names.
+                "/property:GenerateFullPaths=true",
+                "/t:SumatraPDF",
+                "/property:Configuration=Release",
+                "/property:Platform=x64_asan",
+                // multi-process
+                "/m",
+                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                // Reveal the output only if unrecognized errors occur.
+                "reveal": "silent"
+            },
+            // Use the standard MS compiler pattern to detect errors, warnings and infos
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "build-dbg-64",
             "type": "shell",
             "command": "msbuild",
