@@ -73,6 +73,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdHelpOpenManualInBrowser,
     CmdHelpVisitWebsite,
     CmdHelpAbout,
+    CmdDebugDownloadSymbols,
     CmdFavoriteToggle,
     CmdToggleFullscreen,
     CmdToggleMenuBar,
