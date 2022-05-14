@@ -674,7 +674,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
                     if (prefs->enableTeXEnhancements && HasPermission(Perm::DiskAccess)) {
                         auto tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
-                        char* cmdLine = str::Dup(ToUtf8Temp(tmp).AsView());
+                        char* cmdLine = str::Dup(ToUtf8Temp(tmp).Get());
                         str::ReplacePtr(&prefs->inverseSearchCmdLine, cmdLine);
                     }
                     EndDialog(hDlg, IDOK);

@@ -227,9 +227,10 @@ bool ChmFile::ParseSystemData() {
 }
 
 char* ChmFile::ResolveTopicID(unsigned int id) const {
-    AutoFree ivbData = GetData("/#IVB");
+    ByteSlice ivbData = GetData("/#IVB");
+    AutoFree f = ivbData;
     size_t ivbLen = ivbData.size();
-    ByteReader br(ivbData.AsView());
+    ByteReader br(ivbData);
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
         return nullptr;
     }

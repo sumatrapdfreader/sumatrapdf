@@ -138,6 +138,7 @@ static void StrUrlExtractTest() {
     utassert(str::Eq((char*)fileName.Get(), "\xAC\x20"));
 }
 
+#if 0
 static void ParseUntilTest() {
     const char* txt = "foo\nbar\n\nla\n";
     const char* a[] = {
@@ -184,6 +185,7 @@ static void ParseUntilTest() {
         }
     }
 }
+#endif
 
 void strStrTest() {
     {
@@ -835,7 +837,7 @@ void StrTest() {
     StrSeqTest();
     StrConvTest();
     StrUrlExtractTest();
-    ParseUntilTest();
+    // ParseUntilTest();
     WStrVecTest();
     StrListTest();
     StrVecTest();

@@ -30,10 +30,6 @@ struct ByteSlice {
         sz = other.sz;
         return *this;
     }
-    ByteSlice(const std::string_view& data) {
-        d = (u8*)data.data();
-        sz = data.size();
-    }
     u8* data() const {
         return d;
     }

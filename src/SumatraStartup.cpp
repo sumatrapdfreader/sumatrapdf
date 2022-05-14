@@ -543,7 +543,7 @@ static void ReplaceColor(char** col, WCHAR* maybeColor) {
 
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
-        char* cmdLine = str::Dup(ToUtf8Temp(i.inverseSearchCmdLine).AsView());
+        char* cmdLine = str::Dup(ToUtf8Temp(i.inverseSearchCmdLine).Get());
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }

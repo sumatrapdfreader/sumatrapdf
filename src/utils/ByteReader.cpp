@@ -55,11 +55,6 @@ bool ByteReader::Unpack(void* strct, size_t size, const char* format, size_t off
     return idx == size;
 }
 
-ByteReader::ByteReader(std::string_view data) {
-    d = (const u8*)data.data();
-    len = data.size();
-}
-
 ByteReader::ByteReader(ByteSlice data) {
     d = (const u8*)data.data();
     len = data.size();

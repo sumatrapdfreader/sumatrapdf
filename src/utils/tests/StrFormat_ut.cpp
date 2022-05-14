@@ -77,7 +77,7 @@ void StrFormatTest() {
 #endif
 
     {
-        auto s = fmt::Format("foo %s bar %d %s", "sa", 5, L"sab").data();
+        char* s = fmt::Format("foo %s bar %d %s", "sa", 5, L"sab");
         check(s, "foo sa bar 5 sab");
         str::Free(s);
     }

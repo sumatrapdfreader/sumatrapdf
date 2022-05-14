@@ -161,10 +161,10 @@ Fmt::Fmt(const char* fmt) {
     isOk = ParseFormat(*this, fmt);
 }
 
-std::string_view Fmt::Eval(const Arg** args, int nArgs) {
+char* Fmt::Eval(const Arg** args, int nArgs) {
     if (!isOk) {
         // if failed parsing format
-        return {};
+        return nullptr;
     }
 
     for (int n = 0; n < nInst; n++) {
@@ -218,11 +218,10 @@ std::string_view Fmt::Eval(const Arg** args, int nArgs) {
                 break;
         };
     }
-    return res.StealAsView();
+    return res.StealData();
 }
 
-std::string_view Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
-                        const Arg& a6) {
+char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
     const Arg* args[6];
     int nArgs = 0;
     args[nArgs++] = &a1;
@@ -239,11 +238,11 @@ std::string_view Format(const char* s, const Arg& a1, const Arg& a2, const Arg& 
 
     if (nArgs == 0) {
         // TODO: verify that format has no references to args
-        return {s};
+        return (char*)s;
     }
 
     Fmt fmt(s);
-    auto res = fmt.Eval(args, nArgs);
+    char* res = fmt.Eval(args, nArgs);
     return res;
 }
 

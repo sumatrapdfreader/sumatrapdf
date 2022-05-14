@@ -1692,7 +1692,8 @@ static ByteSlice TxtFileToHTML(const WCHAR* path) {
     d.Append(R"(</pre>
 </body>
 </html>)");
-    return d.StealAsView();
+    size_t sz = d.size();
+    return {(u8*)d.StealData(), sz};
 }
 
 static ByteSlice PalmDocToHTML(const WCHAR* path) {

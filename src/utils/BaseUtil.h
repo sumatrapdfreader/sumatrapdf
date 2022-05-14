@@ -583,7 +583,6 @@ defer { instance->Release(); };
 #include "StrUtil.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"
-#include "StringViewUtil.h"
 #include "ColorUtil.h"
 #include "TempAllocator.h"
 

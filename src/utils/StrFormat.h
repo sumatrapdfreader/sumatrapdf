@@ -120,7 +120,7 @@ struct Arg {
 struct Fmt {
     explicit Fmt(const char* fmt);
 
-    std::string_view Eval(const Arg** args, int nArgs);
+    char* Eval(const Arg** args, int nArgs);
 
     bool isOk = true; // true if mismatch between formatting instruction and args
 
@@ -133,6 +133,6 @@ struct Fmt {
     str::Str res;
 };
 
-std::string_view Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(),
-                        const Arg& a4 = Arg(), const Arg& a5 = Arg(), const Arg& a6 = Arg());
+char* Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
+             const Arg& a5 = Arg(), const Arg& a6 = Arg());
 } // namespace fmt

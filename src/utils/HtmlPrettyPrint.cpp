@@ -86,6 +86,7 @@ ByteSlice PrettyPrintHtml(ByteSlice d) {
             }
         }
     }
-    auto sv = res.StealAsView();
-    return sv;
+    size_t sz = res.size();
+    u8* dres = (u8*)res.StealData();
+    return {dres, sz};
 }
