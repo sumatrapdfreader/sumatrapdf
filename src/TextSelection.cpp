@@ -310,7 +310,7 @@ WCHAR* TextSelection::ExtractText(const WCHAR* lineSep) {
         }
     }
 
-    return lines.Join(lineSep);
+    return Join(lines, lineSep);
 }
 
 void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const {

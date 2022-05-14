@@ -82,7 +82,7 @@ TryAgain64Bit:
     }
     GetEnvironmentVariable(L"PATH", envpath, size);
     WStrVec paths;
-    paths.Split(envpath, L";", true);
+    Split(paths, envpath, L";", true);
     for (size_t ix = 0; ix < paths.size(); ix++) {
         AutoFreeWstr exe(path::Join(paths.at(ix), L"gswin32c.exe"));
         if (file::Exists(exe)) {

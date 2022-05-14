@@ -1310,7 +1310,7 @@ WCHAR* EngineCbx::GetProperty(DocumentProperty prop) {
         case DocumentProperty::Title:
             return str::Dup(propTitle);
         case DocumentProperty::Author:
-            return propAuthors.size() ? propAuthors.Join(L", ") : nullptr;
+            return propAuthors.size() ? Join(propAuthors, L", ") : nullptr;
         case DocumentProperty::CreationDate:
             return str::Dup(propDate);
         case DocumentProperty::ModificationDate:

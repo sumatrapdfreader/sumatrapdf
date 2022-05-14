@@ -342,24 +342,24 @@ static void WStrVecTest() {
     WStrVec v;
     v.Append(str::Dup(L"foo"));
     v.Append(str::Dup(L"bar"));
-    WCHAR* s = v.Join();
+    WCHAR* s = Join(v);
     utassert(v.size() == 2);
     utassert(str::Eq(L"foobar", s));
     free(s);
 
-    s = v.Join(L";");
+    s = Join(v, L";");
     utassert(v.size() == 2);
     utassert(str::Eq(L"foo;bar", s));
     free(s);
 
     v.Append(str::Dup(L"glee"));
-    s = v.Join(L"_ _");
+    s = Join(v, L"_ _");
     utassert(v.size() == 3);
     utassert(str::Eq(L"foo_ _bar_ _glee", s));
     free(s);
 
     v.Sort();
-    s = v.Join();
+    s = Join(v);
     utassert(str::Eq(L"barfooglee", s));
     free(s);
 
@@ -375,21 +375,21 @@ static void WStrVecTest() {
 
     {
         WStrVec v2;
-        size_t count = v2.Split(L"a,b,,c,", L",");
+        size_t count = Split(v2, L"a,b,,c,", L",");
         utassert(count == 5 && v2.Find(L"c") == 3);
         utassert(v2.Find(L"") == 2);
         utassert(v2.Find(L"", 3) == 4);
         utassert(v2.Find(L"", 5) == -1);
         utassert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
-        AutoFreeWstr joined(v2.Join(L";"));
+        AutoFreeWstr joined(Join(v2, L";"));
         utassert(str::Eq(joined, L"a;b;;c;"));
     }
 
     {
         WStrVec v2;
-        size_t count = v2.Split(L"a,b,,c,", L",", true);
+        size_t count = Split(v2, L"a,b,,c,", L",", true);
         utassert(count == 3 && v2.Find(L"c") == 2);
-        AutoFreeWstr joined(v2.Join(L";"));
+        AutoFreeWstr joined(Join(v2, L";"));
         utassert(str::Eq(joined, L"a;b;c"));
         AutoFreeWstr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));

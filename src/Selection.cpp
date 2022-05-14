@@ -291,7 +291,7 @@ WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelec
     if (selections.size() == 0) {
         return nullptr;
     }
-    WCHAR* s = selections.Join(lineSep);
+    WCHAR* s = Join(selections, lineSep);
     return s;
 }
 

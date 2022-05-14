@@ -3110,7 +3110,7 @@ WCHAR* EngineMupdf::ExtractFontList() {
     }
 
     fonts.SortNatural();
-    WCHAR* res = fonts.Join(L"\n");
+    WCHAR* res = Join(fonts, L"\n");
     return res;
 }
 
@@ -3187,7 +3187,7 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
         if (fstruct.size() == 0) {
             return nullptr;
         }
-        return fstruct.Join(L",");
+        return Join(fstruct, L",");
     }
 
     if (DocumentProperty::UnsupportedFeatures == prop) {

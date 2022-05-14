@@ -247,7 +247,7 @@ static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
         return nullptr;
     }
     WStrVec parts;
-    parts.Split(fstruct, L",", true);
+    Split(parts, fstruct, L",", true);
 
     WStrVec props;
 
@@ -267,7 +267,7 @@ static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
         props.Append(str::Dup(L"PDF/E (ISO 24517)"));
     }
 
-    return props.Join(L", ");
+    return Join(props, L", ");
 }
 
 // returns a list of permissions denied by this document
@@ -287,7 +287,7 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
         denials.Append(str::Dup(_TR("copying text")));
     }
 
-    return denials.Join(L", ");
+    return Join(denials, L", ");
 }
 
 static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {

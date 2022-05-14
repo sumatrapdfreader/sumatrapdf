@@ -401,7 +401,7 @@ static bool SetupPluginMode(Flags& i) {
         AutoFreeWstr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
         str::TransCharsInPlace(args, L"#", L"&");
         WStrVec parts;
-        parts.Split(args, L"&", true);
+        Split(parts, args, L"&", true);
         for (size_t k = 0; k < parts.size(); k++) {
             WCHAR* part = parts.at(k);
             int pageNo;

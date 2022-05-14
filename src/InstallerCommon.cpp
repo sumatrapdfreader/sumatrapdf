@@ -76,7 +76,7 @@ const WCHAR* gDefaultMsg = nullptr; // Note: translation, not freeing
 static AutoFreeWstr gMsg;
 static Color gMsgColor;
 
-static WStrVec gProcessesToClose;
+static WStrVec2 gProcessesToClose;
 
 PreviousInstallationInfo::~PreviousInstallationInfo() {
     free(installationDir);
@@ -438,7 +438,7 @@ static bool KillProcessesUsingInstallation() {
 
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
-static void ProcessesUsingInstallation(WStrVec& names) {
+static void ProcessesUsingInstallation(WStrVec2& names) {
     log("ProcessesUsingInstallation()\n");
     AutoFreeWstr dir = GetExistingInstallationDir();
     if (dir.empty()) {
@@ -461,6 +461,7 @@ static void ProcessesUsingInstallation(WStrVec& names) {
             // TODO: this kils ReadableProcName logic
             WCHAR* name = str::Format(L"%s (%d)", proc.szExeFile, (int)procID);
             names.Append(name);
+            str::Free(name);
         }
         proc.dwSize = sizeof(proc);
         ok = Process32Next(snap, &proc);
@@ -490,10 +491,11 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
 }
 
 static void SetCloseProcessMsg() {
+    int n = gProcessesToClose.Size();
     AutoFreeWstr procNames(str::Dup(ReadableProcName(gProcessesToClose.at(0))));
-    for (size_t i = 1; i < gProcessesToClose.size(); i++) {
+    for (int i = 1; i < n; i++) {
         const WCHAR* name = ReadableProcName(gProcessesToClose.at(i));
-        if (i < gProcessesToClose.size() - 1) {
+        if (i < n - 1) {
             procNames.Set(str::Join(procNames, L", ", name));
         } else {
             procNames.Set(str::Join(procNames, L" and ", name));

@@ -186,8 +186,8 @@ void InitializePolicies(bool restrict) {
     AutoFreeWstr restrictPath(path::GetPathOfFileInAppDir(RESTRICTIONS_FILE_NAME));
     if (!file::Exists(restrictPath)) {
         gPolicyRestrictions = Perm::All;
-        gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
-        gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
+        Split(gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, L",");
+        Split(gAllowedFileTypes, DEFAULT_FILE_PERCEIVED_TYPES, L",");
         return;
     }
 
@@ -225,14 +225,14 @@ void InitializePolicies(bool restrict) {
             auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransCharsInPlace(protocols, L" :;", L",,,");
-            gAllowedLinkProtocols.Split(protocols, L",", true);
+            Split(gAllowedLinkProtocols, protocols, L",", true);
         }
         value = polsec->GetValue("SafeFileTypes");
         if (value != nullptr) {
             auto protocols = ToWstrTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransCharsInPlace(protocols, L" :;", L",,,");
-            gAllowedFileTypes.Split(protocols, L",", true);
+            Split(gAllowedFileTypes, protocols, L",", true);
         }
     }
 }

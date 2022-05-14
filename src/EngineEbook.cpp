@@ -609,7 +609,7 @@ WCHAR* EngineEbook::ExtractFontList() {
     }
 
     fonts.SortNatural();
-    return fonts.Join(L"\n");
+    return Join(fonts, L"\n");
 }
 
 static void AppendTocItem(TocItem*& root, TocItem* item, int level) {

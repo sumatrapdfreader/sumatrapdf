@@ -1061,7 +1061,7 @@ static void ApplyPrintSettings(Printer* printer, const WCHAR* settings, int page
 
     WStrVec rangeList;
     if (settings) {
-        rangeList.Split(settings, L",", true);
+        Split(rangeList, settings, L",", true);
     }
 
     for (size_t i = 0; i < rangeList.size(); i++) {

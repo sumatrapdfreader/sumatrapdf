@@ -338,118 +338,61 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 ByteSlice ToSpanU8(std::string_view sv);
 
-// TOOD: smarter WStrVec class which uses str::Wstr for the buffer
-// and stores str::wstring_view in an array
-
 // WStrVec owns the strings in the list
 class WStrVec : public Vec<WCHAR*> {
   public:
     WStrVec() = default;
-    WStrVec(const WStrVec& other) : Vec(other) {
-        // make sure not to share string pointers between StrVecs
-        for (size_t i = 0; i < len; i++) {
-            if (at(i)) {
-                at(i) = str::Dup(at(i));
-            }
-        }
-    }
-    ~WStrVec() {
-        FreeMembers();
-    }
 
-    WStrVec& operator=(const WStrVec& other) {
-        if (this == &other) {
-            return *this;
-        }
-
-        FreeMembers();
-        Vec::operator=(other);
-        for (size_t i = 0; i < other.len; i++) {
-            if (at(i)) {
-                at(i) = str::Dup(at(i));
-            }
-        }
-        return *this;
-    }
-
-    void Reset() {
-        FreeMembers();
-    }
-
-    WCHAR* Join(const WCHAR* joint = nullptr) {
-        str::WStr tmp(256);
-        size_t jointLen = str::Len(joint);
-        for (size_t i = 0; i < len; i++) {
-            WCHAR* s = at(i);
-            if (i > 0 && jointLen > 0) {
-                tmp.Append(joint, jointLen);
-            }
-            tmp.Append(s);
-        }
-        return tmp.StealData();
-    }
-
-    int Find(const WCHAR* s, int startAt = 0) const {
-        for (int i = startAt; i < (int)len; i++) {
-            WCHAR* item = at(i);
-            if (str::Eq(s, item)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    bool Contains(const WCHAR* s) const {
-        return -1 != Find(s);
-    }
-
-    int FindI(const WCHAR* s, size_t startAt = 0) const {
-        for (size_t i = startAt; i < len; i++) {
-            WCHAR* item = at(i);
-            if (str::EqI(s, item)) {
-                return (int)i;
-            }
-        }
-        return -1;
-    }
-
-    /* splits a string into several substrings, separated by the separator
-       (optionally collapsing several consecutive separators into one);
-       e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
-       (resp. "a", "b", "c" if separators are collapsed) */
-    size_t Split(const WCHAR* s, const WCHAR* separator, bool collapse = false) {
-        size_t start = len;
-        const WCHAR* next;
-
-        while ((next = str::Find(s, separator)) != nullptr) {
-            if (!collapse || next > s) {
-                Append(str::Dup(s, next - s));
-            }
-            s = next + str::Len(separator);
-        }
-        if (!collapse || *s) {
-            Append(str::Dup(s));
-        }
-
-        return len - start;
-    }
-
-    void Sort() {
-        Vec::Sort(cmpAscii);
-    }
-    void SortNatural() {
-        Vec::Sort(cmpNatural);
-    }
-
-  private:
-    static int cmpNatural(const void* a, const void* b) {
-        return str::CmpNatural(*(const WCHAR**)a, *(const WCHAR**)b);
-    }
-
-    static int cmpAscii(const void* a, const void* b) {
-        return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
-    }
+    WStrVec(const WStrVec& other);
+    ~WStrVec();
+    WStrVec& operator=(const WStrVec& other);
+    void Reset();
+    int Find(const WCHAR* s, int startAt = 0) const;
+    bool Contains(const WCHAR* s) const;
+    int FindI(const WCHAR* s, size_t startAt = 0) const;
+    void Sort();
+    void SortNatural();
 };
+
+size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
+WCHAR* Join(const WStrVec& v, const WCHAR* joint = nullptr);
+
+typedef bool (*WStrLessFunc)(std::wstring_view s1, std::wstring_view s2);
+
+struct WStrVec2;
+
+struct WStrVecSortedView {
+    WStrVec2* v; // not owned
+    Vec<u32> sortedIndex;
+    int Size() const;
+    std::wstring_view at(int) const;
+};
+
+// same design as StrVec
+struct WStrVec2 {
+    str::WStr strings;
+    Vec<u32> index;
+
+    WStrVec2() = default;
+    ~WStrVec2() = default;
+    void Reset();
+
+    int Size() const;
+    WCHAR* at(int) const;
+    int Append(const WCHAR*, size_t sLen = 0);
+    int Find(const WCHAR* s, int startAt = 0) const;
+    bool Exists(const WCHAR* s) const;
+    int AppendIfNotExists(const WCHAR* s);
+
+    bool GetSortedView(WStrVecSortedView&, WStrLessFunc lessFn = nullptr) const;
+    bool GetSortedViewNoCase(WStrVecSortedView&) const;
+
+    // TODO: remove, only for compat
+    size_t size() const;
+};
+
+size_t Split(WStrVec2& v, const WCHAR* s, const WCHAR* separator, bool collapse);
+WCHAR* Join(const WStrVec2& v, const WCHAR* joint = nullptr);
 
 // WStrList is a subset of WStrVec that's optimized for appending and searching
 // WStrList owns the strings it contains and frees them at destruction
@@ -548,7 +491,7 @@ struct StrVec {
     int Size() const;
     char* at(int) const;
 
-    int Append(const char*);
+    int Append(const char*, size_t len = 0);
     int Find(const char*, int startAt = 0) const;
     bool Exists(const char*) const;
     int AppendIfNotExists(const char*);
@@ -557,37 +500,5 @@ struct StrVec {
     bool GetSortedViewNoCase(StrVecSortedView&) const;
 };
 
-typedef bool (*WStrLessFunc)(std::wstring_view s1, std::wstring_view s2);
-
-struct WStrVec2;
-
-struct WStrVecSortedView {
-    WStrVec2* v; // not owned
-    Vec<u32> sortedIndex;
-    int Size() const;
-    std::wstring_view at(int) const;
-};
-
-// same design as StrVec
-struct WStrVec2 {
-    str::WStr strings;
-    Vec<u32> index;
-
-    WStrVec2() = default;
-    ~WStrVec2() = default;
-    void Reset();
-
-    int Size() const;
-    WCHAR* at(int) const;
-    int Append(const WCHAR*);
-    int Find(const WCHAR* s, int startAt = 0) const;
-    bool Exists(const WCHAR* s) const;
-    int AppendIfNotExists(const WCHAR* s);
-
-    bool GetSortedView(WStrVecSortedView&, WStrLessFunc lessFn = nullptr) const;
-    bool GetSortedViewNoCase(WStrVecSortedView&) const;
-
-    // TODO: remove, only for compat
-    size_t size() const;
-    // TODO: rename to Index()
-};
+size_t Split(StrVec& v, const char* s, const char* separator, bool collapse);
+char* Join(const StrVec& v, const char* joint = nullptr);

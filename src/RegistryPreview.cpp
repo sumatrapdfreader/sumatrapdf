@@ -148,7 +148,7 @@ void DisablePreviewInstallExts(const WCHAR* cmdLine) {
         str::ToLowerInPlace(extsList);
         str::TransCharsInPlace(extsList, L";. :", L",,,\0");
         WStrVec exts;
-        exts.Split(extsList, L",", true);
+        Split(exts, extsList, L",", true);
         for (int i = 0; i < dimof(gPreviewers); i++) {
             gPreviewers[i].skip = !exts.Contains(gPreviewers[i].ext + 1);
         }

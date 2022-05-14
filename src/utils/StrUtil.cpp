@@ -2860,7 +2860,7 @@ void StrVec::Reset() {
     index.Reset();
 }
 
-int StrVec::Append(const char* s) {
+int StrVec::Append(const char* s, size_t sLen) {
     bool ok;
     if (s == nullptr) {
         ok = index.Append(kNullIdx);
@@ -2869,9 +2869,13 @@ int StrVec::Append(const char* s) {
         }
         return Size() - 1;
     }
-    size_t sLen = str::Len(s);
+    if (sLen == 0) {
+        sLen = str::Len(s);
+    }
     u32 idx = (u32)strings.size();
-    ok = strings.Append(s, sLen + 1);
+    ok = strings.Append(s, sLen);
+    // ensure to always zero-terminate
+    ok &= strings.AppendChar(0);
     if (!ok) {
         return -1;
     }
@@ -2912,16 +2916,16 @@ int StrVec::Find(const char* sv, int startAt) const {
     return -1;
 }
 
-bool StrVec::Exists(const char* sv) const {
-    int idx = Find(sv);
+bool StrVec::Exists(const char* s) const {
+    int idx = Find(s);
     return idx != -1;
 }
 
-int StrVec::AppendIfNotExists(const char* sv) {
-    if (Exists(sv)) {
+int StrVec::AppendIfNotExists(const char* s) {
+    if (Exists(s)) {
         return -1;
     }
-    return Append(sv);
+    return Append(s);
 }
 
 static bool strLess(const char* s1, const char* s2) {
@@ -3024,6 +3028,195 @@ char* StrVecSortedView::at(int i) const {
     return v->at((int)i2);
 }
 
+WStrVec::WStrVec(const WStrVec& other) : Vec(other) {
+    // make sure not to share string pointers between StrVecs
+    for (size_t i = 0; i < len; i++) {
+        if (at(i)) {
+            at(i) = str::Dup(at(i));
+        }
+    }
+}
+
+WStrVec::~WStrVec() {
+    FreeMembers();
+}
+
+WStrVec& WStrVec::operator=(const WStrVec& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    FreeMembers();
+    Vec::operator=(other);
+    for (size_t i = 0; i < other.len; i++) {
+        if (at(i)) {
+            at(i) = str::Dup(at(i));
+        }
+    }
+    return *this;
+}
+
+void WStrVec::Reset() {
+    FreeMembers();
+}
+
+int WStrVec::Find(const WCHAR* s, int startAt) const {
+    for (int i = startAt; i < (int)len; i++) {
+        WCHAR* item = at(i);
+        if (str::Eq(s, item)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool WStrVec::Contains(const WCHAR* s) const {
+    return -1 != Find(s);
+}
+
+int WStrVec::FindI(const WCHAR* s, size_t startAt) const {
+    for (size_t i = startAt; i < len; i++) {
+        WCHAR* item = at(i);
+        if (str::EqI(s, item)) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+static int cmpNatural(const void* a, const void* b) {
+    return str::CmpNatural(*(const WCHAR**)a, *(const WCHAR**)b);
+}
+
+static int cmpAscii(const void* a, const void* b) {
+    return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
+}
+
+void WStrVec::Sort() {
+    Vec::Sort(cmpAscii);
+}
+void WStrVec::SortNatural() {
+    Vec::Sort(cmpNatural);
+}
+
+/* splits a string into several substrings, separated by the separator
+(optionally collapsing several consecutive separators into one);
+e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+(resp. "a", "b", "c" if separators are collapsed) */
+size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
+    size_t len = v.size();
+    size_t start = len;
+    const WCHAR* next;
+
+    while (true) {
+        next = str::Find(s, separator);
+        if (!next) {
+            break;
+        }
+        if (!collapse || next > s) {
+            v.Append(str::Dup(s, next - s));
+        }
+        s = next + str::Len(separator);
+    }
+    if (!collapse || *s) {
+        v.Append(str::Dup(s));
+    }
+
+    return len - start;
+}
+
+/* splits a string into several substrings, separated by the separator
+(optionally collapsing several consecutive separators into one);
+e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+(resp. "a", "b", "c" if separators are collapsed) */
+size_t Split(WStrVec2& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
+    size_t len = v.size();
+    size_t start = len;
+    const WCHAR* next;
+    while (true) {
+        next = str::Find(s, separator);
+        if (!next) {
+            break;
+        }
+        if (!collapse || next > s) {
+            v.Append(str::DupTemp(s, next - s));
+        }
+        s = next + str::Len(separator);
+    }
+    if (!collapse || *s) {
+        v.Append(s);
+    }
+
+    return len - start;
+}
+
+/* splits a string into several substrings, separated by the separator
+(optionally collapsing several consecutive separators into one);
+e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+(resp. "a", "b", "c" if separators are collapsed) */
+size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
+    size_t len = (size_t)v.Size();
+    size_t start = len;
+    const char* next;
+    while (true) {
+        next = str::Find(s, separator);
+        if (!next) {
+            break;
+        }
+        if (!collapse || next > s) {
+            v.Append(str::DupTemp(s, next - s));
+        }
+        s = next + str::Len(separator);
+    }
+    if (!collapse || *s) {
+        v.Append(s);
+    }
+
+    return len - start;
+}
+
+WCHAR* Join(const WStrVec& v, const WCHAR* joint) {
+    str::WStr tmp(256);
+    size_t len = v.size();
+    size_t jointLen = str::Len(joint);
+    for (size_t i = 0; i < len; i++) {
+        WCHAR* s = v.at(i);
+        if (i > 0 && jointLen > 0) {
+            tmp.Append(joint, jointLen);
+        }
+        tmp.Append(s);
+    }
+    return tmp.StealData();
+}
+
+WCHAR* Join(const WStrVec2& v, const WCHAR* joint) {
+    str::WStr tmp(256);
+    size_t len = v.size();
+    size_t jointLen = str::Len(joint);
+    for (size_t i = 0; i < len; i++) {
+        WCHAR* s = v.at(i);
+        if (i > 0 && jointLen > 0) {
+            tmp.Append(joint, jointLen);
+        }
+        tmp.Append(s);
+    }
+    return tmp.StealData();
+}
+
+char* Join(const StrVec& v, const char* joint) {
+    str::Str tmp(256);
+    int len = v.Size();
+    size_t jointLen = str::Len(joint);
+    for (int i = 0; i < len; i++) {
+        char* s = v.at(i);
+        if (i > 0 && jointLen > 0) {
+            tmp.Append(joint, jointLen);
+        }
+        tmp.Append(s);
+    }
+    return tmp.StealData();
+}
+
 //- WStrVec
 
 bool wstrLess(std::wstring_view s1, std::wstring_view s2) {
@@ -3063,7 +3256,7 @@ void WStrVec2::Reset() {
 }
 
 // returns index with strings
-int WStrVec2::Append(const WCHAR* s) {
+int WStrVec2::Append(const WCHAR* s, size_t sLen) {
     bool ok;
     if (s == nullptr) {
         ok = index.Append(kNullIdx);
@@ -3072,9 +3265,12 @@ int WStrVec2::Append(const WCHAR* s) {
         }
         return Size() - 1;
     }
-    size_t sLen = str::Len(s);
+    if (sLen == 0) {
+        sLen = str::Len(s);
+    }
     u32 idx = (u32)strings.size();
-    ok = strings.Append(s, sLen + 1);
+    ok = strings.Append(s, sLen);
+    ok &= strings.AppendChar(0); // ensure to always 0-terminate
     if (!ok) {
         return -1;
     }
