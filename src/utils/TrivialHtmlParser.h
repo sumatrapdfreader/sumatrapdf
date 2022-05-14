@@ -88,7 +88,7 @@ WCHAR* DecodeHtmlEntitites(const char* string, UINT codepage);
 namespace strconv {
 
 inline WCHAR* FromHtmlUtf8(const char* s, size_t len) {
-    AutoFree tmp(str::Dup(s, len));
+    char* tmp = str::DupTemp(s, len);
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 
