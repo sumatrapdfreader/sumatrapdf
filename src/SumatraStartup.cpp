@@ -1044,6 +1044,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
+#ifdef DEBUG
     if (flags.toEpubPath) {
         RedirectIOToExistingConsole();
         auto res = MobiToEpub(flags.toEpubPath);
@@ -1053,6 +1054,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             goto Exit;
         }
     }
+#endif
 
     if (flags.deleteFile) {
         RedirectIOToExistingConsole();
@@ -1122,11 +1124,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     goto Exit;
 #endif
 
+#ifdef DEBUG
     if (false) {
         // LoadFile();
         LoadRar();
         return 0;
     }
+#endif
 
     if (flags.showConsole) {
         RedirectIOToConsole();

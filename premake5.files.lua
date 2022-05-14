@@ -521,7 +521,6 @@ function sumatrapdf_files()
     "RegistrySearchFilter.*",
     "resource.h",
     "SaveAsPdf.*",
-    "Scratch.*",
     "SearchAndDDE.*",
     "Selection.*",
     "SettingsStructs.*",
@@ -556,6 +555,7 @@ function sumatrapdf_files()
     files_in_dir("src", {
       "Tests.cpp",
       "regress/Regress.*",  
+      "Scratch.*",
     })
     files_in_dir("src/testcode", {
       "test-app.h",
