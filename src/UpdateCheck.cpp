@@ -140,10 +140,6 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
 }
 
 static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
-    if (gIsStoreBuild) {
-        return false;
-    }
-
     if (gUpdateCheckInProgress) {
         logf("CheckForUpdate: skipping because gUpdateCheckInProgress\n");
         return false;
@@ -280,6 +276,11 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
     gUpdateCheckInProgress = false;
 
+    // for store builds we do update check but ignore the result
+    if (gIsStoreBuild) {
+        return 0;
+    }
+
     const char* url = rsp->url.Get();
 
     if (rsp->error != 0) {
@@ -395,6 +396,9 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
     url.Append("&os=");
     const char* osVerTemp = GetWindowsVerTemp();
     url.Append(osVerTemp);
+    if (gIsStoreBuild) {
+        url.Append("&store");
+    }
     if (UpdateCheck::UserInitiated == updateCheckType) {
         url.Append("&force");
     }
