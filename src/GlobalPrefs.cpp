@@ -44,6 +44,7 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
 }
 
 // prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
+// caller has to free()
 ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         for (FileState* fs : *prefs->fileStates) {

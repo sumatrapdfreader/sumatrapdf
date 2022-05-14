@@ -14,6 +14,8 @@
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/WinUtil.h"
 
+#include "Settings.h"
+#include "GlobalPrefs.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "Version.h"
@@ -703,7 +705,19 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
 
     AutoFreeWstr path = prefs::GetSettingsPath();
     // can be empty on first run but that's fine because then we know it has default values
-    gSettingsFile = (char*)file::ReadFile(path).data();
+    ByteSlice prefsData = file::ReadFile(path);
+    if (!prefsData.empty()) {
+        // serialize without FileStates info because it's the largest
+        GlobalPrefs* gp = NewGlobalPrefs((const char*)prefsData.data());
+        Vec<FileState*>* fileStates = gp->fileStates;
+        gp->fileStates = nullptr;
+        // TODO: also sessionData?
+        ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
+        gSettingsFile = (char*)d.data();
+        gp->fileStates = fileStates;
+        delete gp;
+        str::Free(prefsData.data());
+    }
 
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {
