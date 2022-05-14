@@ -28,7 +28,7 @@
 static pdf_obj *
 pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, pdf_obj *needle, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	pdf_obj *kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
 	pdf_obj *names = pdf_dict_get(ctx, node, PDF_NAME(Names));
 
@@ -147,7 +147,7 @@ pdf_lookup_dest(fz_context *ctx, pdf_document *doc, pdf_obj *needle)
 static void
 pdf_load_name_tree_imp(fz_context *ctx, pdf_obj *dict, pdf_document *doc, pdf_obj *node, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	pdf_obj *kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
 	pdf_obj *names = pdf_dict_get(ctx, node, PDF_NAME(Names));
 	int i;
@@ -203,7 +203,7 @@ pdf_load_name_tree(fz_context *ctx, pdf_document *doc, pdf_obj *which)
 pdf_obj *
 pdf_lookup_number_imp(fz_context *ctx, pdf_obj *node, int needle, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	pdf_obj *kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
 	pdf_obj *nums = pdf_dict_get(ctx, node, PDF_NAME(Nums));
 
@@ -288,7 +288,7 @@ pdf_walk_tree_kid(fz_context *ctx,
 			pdf_obj **inherit_vals,
 			pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	pdf_obj **new_vals = NULL;
 
 	if (obj == NULL || pdf_cycle(ctx, &cycle, cycle_up, obj))
@@ -342,7 +342,7 @@ static void pdf_walk_tree_imp(fz_context *ctx, pdf_obj *obj, pdf_obj *kid_name,
 			pdf_obj **inherit_vals,
 			pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 
 	if (obj == NULL || pdf_cycle(ctx, &cycle, cycle_up, obj))
 		return;

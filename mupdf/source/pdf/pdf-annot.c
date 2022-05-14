@@ -762,7 +762,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 static int
 remove_from_tree(fz_context *ctx, pdf_obj *arr, pdf_obj *item, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	int i, n, res = 0;
 
 	if (arr == NULL || pdf_cycle(ctx, &cycle, cycle_up, arr))

@@ -188,7 +188,7 @@ pdf_filter_content_stream(
 static void
 pdf_filter_type3(fz_context *ctx, pdf_document *doc, pdf_obj *obj, pdf_obj *page_res, pdf_filter_options *filter, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	pdf_processor *proc_buffer = NULL;
 	pdf_processor *proc_filter = NULL;
 	pdf_obj *in_res;
@@ -276,7 +276,7 @@ pdf_filter_type3(fz_context *ctx, pdf_document *doc, pdf_obj *obj, pdf_obj *page
 static void
 pdf_filter_xobject(fz_context *ctx, pdf_document *doc, pdf_obj *stm, pdf_obj *page_res, pdf_filter_options *filter, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	pdf_obj *struct_parents_obj;
 	int struct_parents;
 	pdf_obj *new_res = NULL;
@@ -320,7 +320,7 @@ pdf_filter_xobject(fz_context *ctx, pdf_document *doc, pdf_obj *stm, pdf_obj *pa
 pdf_obj *
 pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_res, fz_matrix transform, pdf_filter_options *filter, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
+	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
 	pdf_document *doc = pdf_get_bound_document(ctx, old_xobj);
 	pdf_obj *new_xobj;
 	pdf_obj *new_res, *old_res;

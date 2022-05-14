@@ -1186,7 +1186,7 @@ pdf_set_pattern(fz_context *ctx, pdf_run_processor *pr, int what, pdf_pattern *p
 static void
 pdf_run_xobject(fz_context *ctx, pdf_run_processor *proc, pdf_obj *xobj, pdf_obj *page_resources, fz_matrix transform, int is_smask)
 {
-	pdf_cycle_list cycle_here;
+	pdf_cycle_list cycle_here = { 0 }; /* SumatraPDF */;
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 	pdf_gstate *gstate = NULL;
 	int oldtop = 0;
