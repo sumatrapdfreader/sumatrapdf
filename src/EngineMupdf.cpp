@@ -1667,9 +1667,9 @@ static ByteSlice TxtFileToHTML(const WCHAR* path) {
         return {};
     }
     str::Str fc;
-    std::string_view sv = {(const char*)fd.data(), fd.size()};
-    fc.AppendView(sv);
-    str::Free(sv.data());
+    char* data = (char*)fd.data();
+    fc.Append(data, fd.size());
+    str::Free(data);
     Replace(fc, "&", "&amp;");
     Replace(fc, ">", "&gt;");
     Replace(fc, "<", "&lt;");

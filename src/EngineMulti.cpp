@@ -68,7 +68,7 @@ class EngineMulti : public EngineBase {
     int GetPageByLabel(const WCHAR* label) const override;
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
-    bool LoadFromFiles(std::string_view dir, StrVec& files);
+    bool LoadFromFiles(const char* dir, StrVec& files);
     void UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo);
 
     EngineBase* PageToEngine(int& pageNo) const;
@@ -338,12 +338,12 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     return tocWrapper;
 }
 
-bool EngineMulti::LoadFromFiles(std::string_view dir, StrVec& files) {
+bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     int n = files.Size();
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
-        std::string_view path = files.at(i);
-        auto pathW = ToWstrTemp(path);
+        char* path = files.at(i);
+        WCHAR* pathW = ToWstrTemp(path);
         EngineBase* engine = CreateEngine(pathW, nullptr, true);
         if (!engine) {
             continue;
@@ -366,7 +366,7 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, StrVec& files) {
     }
     UpdatePagesForEngines(enginesInfo);
 
-    auto dirW = ToWstrTemp(dir);
+    WCHAR* dirW = ToWstrTemp(dir);
     TocItem* root = new TocItem(nullptr, dirW, 0);
     root->child = tocFiles;
     auto realRoot = new TocItem();

@@ -99,13 +99,13 @@ static void FreeTranslations() {
     gTranslationCache = nullptr;
 }
 
-static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
+static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
     langCode = str::JoinTemp(langCode, ":");
     int nLangCode = str::Len(langCode);
 
     // parse into lines
-    char* s = (char*)sv.data();
-    int sLen = (int)sv.size();
+    char* s = (char*)d.data();
+    int sLen = (int)d.size();
     Vec<char*> lines;
     int n;
     int nStrings = 0;
@@ -258,8 +258,7 @@ void SetCurrentLangByCode(const char* langCode) {
 
     ByteSlice d = LoadDataResource(2);
     CrashIf(d.empty());
-    std::string_view sv{(const char*)d.data(), d.size()};
-    ParseTranslationsTxt(sv, langCode);
+    ParseTranslationsTxt(d, langCode);
     free(d.data());
 }
 

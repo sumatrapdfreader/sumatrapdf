@@ -1140,9 +1140,9 @@ bool EngineCbx::FinishLoading() {
     if (metadata.data) {
         ParseComicInfoXml(metadata.AsSpan());
     }
-    std::string_view comment = cbxFile->GetComment();
-    if (comment.data()) {
-        json::Parse(comment.data(), this);
+    const char* comment = cbxFile->GetComment();
+    if (comment) {
+        json::Parse(comment, this);
     }
 
     int nFiles = pageFiles.isize();
