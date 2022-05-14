@@ -76,7 +76,7 @@ const WCHAR* gDefaultMsg = nullptr; // Note: translation, not freeing
 static AutoFreeWstr gMsg;
 static Color gMsgColor;
 
-static WStrVec2 gProcessesToClose;
+static WStrVec gProcessesToClose;
 
 PreviousInstallationInfo::~PreviousInstallationInfo() {
     free(installationDir);
@@ -438,7 +438,7 @@ static bool KillProcessesUsingInstallation() {
 
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
-static void ProcessesUsingInstallation(WStrVec2& names) {
+static void ProcessesUsingInstallation(WStrVec& names) {
     log("ProcessesUsingInstallation()\n");
     AutoFreeWstr dir = GetExistingInstallationDir();
     if (dir.empty()) {

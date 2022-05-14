@@ -148,7 +148,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     }
     AutoFreeWstr fontlist(engine->GetProperty(DocumentProperty::FontList));
     if (fontlist) {
-        WStrVec fonts;
+        WStrVecOld fonts;
         Split(fonts, fontlist, L"\n");
         str = Escape(Join(fonts, L"\n\t\t"));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());

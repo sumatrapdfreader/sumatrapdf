@@ -1059,7 +1059,7 @@ static void ApplyPrintSettings(Printer* printer, const WCHAR* settings, int page
     auto devMode = printer->devMode;
     auto printerName = printer->name;
 
-    WStrVec rangeList;
+    WStrVecOld rangeList;
     if (settings) {
         Split(rangeList, settings, L",", true);
     }

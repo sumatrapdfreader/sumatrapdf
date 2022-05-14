@@ -303,7 +303,7 @@ static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx
 }
 
 struct LinkRectList {
-    WStrVec links;
+    WStrVecOld links;
     Vec<fz_rect> coords;
 };
 
@@ -1369,7 +1369,7 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
     }
 }
 
-WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
+WStrVecOld* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
@@ -1385,7 +1385,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         return nullptr;
     }
 
-    WStrVec* labels = new WStrVec();
+    WStrVecOld* labels = new WStrVecOld();
     labels->AppendBlanks(pageCount);
 
     for (size_t i = 0; i < n; i++) {
@@ -1411,7 +1411,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     }
 
     // ensure that all page labels are unique (by appending a number to duplicates)
-    WStrVec dups(*labels);
+    WStrVecOld dups(*labels);
     dups.Sort();
     int nDups = dups.isize();
     for (int i = 1; i < nDups; i++) {
@@ -3022,7 +3022,7 @@ WCHAR* EngineMupdf::ExtractFontList() {
         pdf_unmark_obj(ctx, res);
     }
 
-    WStrVec fonts;
+    WStrVecOld fonts;
     for (size_t i = 0; i < fontList.size(); i++) {
         const char *name = nullptr, *type = nullptr, *encoding = nullptr;
         AutoFree anonFontName;
@@ -3170,7 +3170,7 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
     }
 
     if (DocumentProperty::PdfFileStructure == prop) {
-        WStrVec fstruct;
+        WStrVecOld fstruct;
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Linearized"))) {
             fstruct.Append(str::Dup(L"linearized"));
         }

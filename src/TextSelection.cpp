@@ -143,7 +143,7 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     return result;
 }
 
-static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, WStrVec* lines = nullptr) {
+static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, WStrVecOld* lines = nullptr) {
     int len;
     Rect* coords;
     const WCHAR* text = ts->textCache->GetTextForPage(pageNo, &len, &coords);
@@ -295,7 +295,7 @@ void TextSelection::CopySelection(TextSelection* orig) {
 }
 
 WCHAR* TextSelection::ExtractText(const WCHAR* lineSep) {
-    WStrVec lines;
+    WStrVecOld lines;
 
     int fromPage, fromGlyph, toPage, toGlyph;
     GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);

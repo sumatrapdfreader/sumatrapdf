@@ -341,7 +341,7 @@ static void StrVecTest() {
 }
 
 static void WStrVecTest() {
-    WStrVec v;
+    WStrVecOld v;
     v.Append(str::Dup(L"foo"));
     v.Append(str::Dup(L"bar"));
     WCHAR* s = Join(v);
@@ -366,7 +366,7 @@ static void WStrVecTest() {
     free(s);
 
     {
-        WStrVec v2(v);
+        WStrVecOld v2(v);
         utassert(str::Eq(v2.at(1), L"foo"));
         v2.Append(str::Dup(L"nobar"));
         utassert(str::Eq(v2.at(3), L"nobar"));
@@ -376,7 +376,7 @@ static void WStrVecTest() {
     }
 
     {
-        WStrVec v2;
+        WStrVecOld v2;
         size_t count = Split(v2, L"a,b,,c,", L",");
         utassert(count == 5 && v2.Find(L"c") == 3);
         utassert(v2.Find(L"") == 2);
@@ -388,7 +388,7 @@ static void WStrVecTest() {
     }
 
     {
-        WStrVec v2;
+        WStrVecOld v2;
         size_t count = Split(v2, L"a,b,,c,", L",", true);
         utassert(count == 3 && v2.Find(L"c") == 2);
         AutoFreeWstr joined(Join(v2, L";"));

@@ -77,7 +77,7 @@
 // terminate and delete itself asynchronously while the UI is
 // being set up
 class FileExistenceChecker : public ThreadBase {
-    WStrVec paths;
+    WStrVecOld paths;
 
     void GetFilePathsToCheck();
     void HideMissingFiles();
@@ -400,7 +400,7 @@ static bool SetupPluginMode(Flags& i) {
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
         AutoFreeWstr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
         str::TransCharsInPlace(args, L"#", L"&");
-        WStrVec parts;
+        WStrVecOld parts;
         Split(parts, args, L"&", true);
         for (size_t k = 0; k < parts.size(); k++) {
             WCHAR* part = parts.at(k);

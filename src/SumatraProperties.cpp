@@ -246,10 +246,10 @@ static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
     if (str::IsEmpty(fstruct.Get())) {
         return nullptr;
     }
-    WStrVec parts;
+    WStrVecOld parts;
     Split(parts, fstruct, L",", true);
 
-    WStrVec props;
+    WStrVecOld props;
 
     if (parts.Contains(L"linearized")) {
         props.Append(str::Dup(_TR("Fast Web View")));
@@ -277,7 +277,7 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
         return nullptr;
     }
 
-    WStrVec denials;
+    WStrVecOld denials;
 
     EngineBase* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting()) {

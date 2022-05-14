@@ -30,4 +30,4 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showP
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const WCHAR* text, bool wasModified,
                       bool showProgress);
 extern bool gIsStartup;
-extern WStrVec gDdeOpenOnStartup;
+extern WStrVecOld gDdeOpenOnStartup;

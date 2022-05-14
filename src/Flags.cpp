@@ -93,7 +93,7 @@ bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
         return false;
     }
 
-    WStrVec rangeList;
+    WStrVecOld rangeList;
     Split(rangeList, ranges, L",", true);
     rangeList.SortNatural();
 

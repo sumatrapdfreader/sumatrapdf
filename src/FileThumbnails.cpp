@@ -52,7 +52,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
     AutoFreeStr pattern(path::Join(thumbsPath, kPngExt, nullptr));
 
-    WStrVec files;
+    WStrVecOld files;
     WIN32_FIND_DATA fdata;
 
     WCHAR* pw = ToWstrTemp(pattern);

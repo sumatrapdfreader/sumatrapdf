@@ -3085,9 +3085,9 @@ bool WStrList ::Contains(const WCHAR* str) const {
     return -1 != Find(str);
 }
 
-//--- WStrVec
+//--- WStrVecOld
 
-WStrVec::WStrVec(const WStrVec& other) : Vec(other) {
+WStrVecOld::WStrVecOld(const WStrVecOld& other) : Vec(other) {
     // make sure not to share string pointers between StrVecs
     for (size_t i = 0; i < len; i++) {
         if (at(i)) {
@@ -3096,11 +3096,11 @@ WStrVec::WStrVec(const WStrVec& other) : Vec(other) {
     }
 }
 
-WStrVec::~WStrVec() {
+WStrVecOld::~WStrVecOld() {
     FreeMembers();
 }
 
-WStrVec& WStrVec::operator=(const WStrVec& other) {
+WStrVecOld& WStrVecOld::operator=(const WStrVecOld& other) {
     if (this == &other) {
         return *this;
     }
@@ -3115,11 +3115,11 @@ WStrVec& WStrVec::operator=(const WStrVec& other) {
     return *this;
 }
 
-void WStrVec::Reset() {
+void WStrVecOld::Reset() {
     FreeMembers();
 }
 
-int WStrVec::Find(const WCHAR* s, int startAt) const {
+int WStrVecOld::Find(const WCHAR* s, int startAt) const {
     for (int i = startAt; i < (int)len; i++) {
         WCHAR* item = at(i);
         if (str::Eq(s, item)) {
@@ -3129,11 +3129,11 @@ int WStrVec::Find(const WCHAR* s, int startAt) const {
     return -1;
 }
 
-bool WStrVec::Contains(const WCHAR* s) const {
+bool WStrVecOld::Contains(const WCHAR* s) const {
     return -1 != Find(s);
 }
 
-int WStrVec::FindI(const WCHAR* s, size_t startAt) const {
+int WStrVecOld::FindI(const WCHAR* s, size_t startAt) const {
     for (size_t i = startAt; i < len; i++) {
         WCHAR* item = at(i);
         if (str::EqI(s, item)) {
@@ -3151,10 +3151,10 @@ static int cmpAscii(const void* a, const void* b) {
     return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
 }
 
-void WStrVec::Sort() {
+void WStrVecOld::Sort() {
     Vec::Sort(cmpAscii);
 }
-void WStrVec::SortNatural() {
+void WStrVecOld::SortNatural() {
     Vec::Sort(cmpNatural);
 }
 
@@ -3162,7 +3162,7 @@ void WStrVec::SortNatural() {
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
-size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
+size_t Split(WStrVecOld& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
     size_t startSize = v.size();
     const WCHAR* next;
 
@@ -3187,7 +3187,7 @@ size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse) 
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
-size_t Split(WStrVec2& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
+size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
     size_t startSize = v.size();
     const WCHAR* next;
     while (true) {
@@ -3231,7 +3231,7 @@ size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
     return (size_t)(v.Size() - startSize);
 }
 
-WCHAR* Join(const WStrVec& v, const WCHAR* joint) {
+WCHAR* Join(const WStrVecOld& v, const WCHAR* joint) {
     str::WStr tmp(256);
     size_t len = v.size();
     size_t jointLen = str::Len(joint);
@@ -3245,7 +3245,7 @@ WCHAR* Join(const WStrVec& v, const WCHAR* joint) {
     return tmp.StealData();
 }
 
-WCHAR* Join(const WStrVec2& v, const WCHAR* joint) {
+WCHAR* Join(const WStrVec& v, const WCHAR* joint) {
     str::WStr tmp(256);
     size_t len = v.size();
     size_t jointLen = str::Len(joint);
@@ -3273,7 +3273,7 @@ char* Join(const StrVec& v, const char* joint) {
     return tmp.StealData();
 }
 
-//--- WStrVec2
+//--- WStrVec
 
 bool wstrLess(const WCHAR* s1s, const WCHAR* s2s) {
     std::wstring_view s1 = s1s;
@@ -3312,13 +3312,13 @@ bool wstrLessNoCase(const WCHAR* s1s, const WCHAR* s2s) {
     return n1 < n2;
 }
 
-void WStrVec2::Reset() {
+void WStrVec::Reset() {
     strings.Reset();
     index.Reset();
 }
 
 // returns index with strings
-int WStrVec2::Append(const WCHAR* s, size_t sLen) {
+int WStrVec::Append(const WCHAR* s, size_t sLen) {
     bool ok;
     if (s == nullptr) {
         ok = index.Append(kNullIdx);
@@ -3343,19 +3343,19 @@ int WStrVec2::Append(const WCHAR* s, size_t sLen) {
     return Size() - 1;
 }
 
-int WStrVec2::Size() const {
+int WStrVec::Size() const {
     return index.isize();
 }
 
-size_t WStrVec2::size() const {
+size_t WStrVec::size() const {
     return index.size();
 }
 
-WCHAR* WStrVec2::at(size_t idx) const {
+WCHAR* WStrVec::at(size_t idx) const {
     return at((int)idx);
 }
 
-WCHAR* WStrVec2::at(int idx) const {
+WCHAR* WStrVec::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
     u32 start = index.at(idx);
@@ -3370,7 +3370,7 @@ WCHAR* WStrVec2::at(int idx) const {
     return s;
 }
 
-int WStrVec2::Find(const WCHAR* s, int startAt) const {
+int WStrVec::Find(const WCHAR* s, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
         auto s2 = at(i);
@@ -3381,20 +3381,20 @@ int WStrVec2::Find(const WCHAR* s, int startAt) const {
     return -1;
 }
 
-bool WStrVec2::Exists(const WCHAR* sv) const {
+bool WStrVec::Exists(const WCHAR* sv) const {
     int idx = Find(sv, 0);
     return idx != -1;
 }
 
-int WStrVec2::AppendIfNotExists(const WCHAR* sv) {
+int WStrVec::AppendIfNotExists(const WCHAR* sv) {
     if (Exists(sv)) {
         return -1;
     }
     return Append(sv);
 }
 
-bool WStrVec2::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const {
-    view.v = (WStrVec2*)this;
+bool WStrVec::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const {
+    view.v = (WStrVec*)this;
     view.sortedIndex = this->index; // TOOD: verify this works as expected
 
     if (lessFn == nullptr) {
@@ -3421,7 +3421,7 @@ bool WStrVec2::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const
     return true;
 }
 
-bool WStrVec2::GetSortedViewNoCase(WStrVecSortedView& view) const {
+bool WStrVec::GetSortedViewNoCase(WStrVecSortedView& view) const {
     return GetSortedView(view, wstrLessNoCase);
 }
 

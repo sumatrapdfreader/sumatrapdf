@@ -281,7 +281,7 @@ WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelec
         WCHAR* s = dm->textSelection->ExtractText(lineSep);
         return s;
     }
-    WStrVec selections;
+    WStrVecOld selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
         WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {

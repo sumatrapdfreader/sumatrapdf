@@ -8,13 +8,13 @@ struct PageRange {
 };
 
 struct Flags {
-    WStrVec fileNames;
+    WStrVecOld fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
     // - optional (nullptr if not available) string that represents which pages
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
-    WStrVec pathsToBenchmark;
+    WStrVecOld pathsToBenchmark;
     bool exitWhenDone = false;
     bool printDialog = false;
     WCHAR* printerName = nullptr;
@@ -64,7 +64,7 @@ struct Flags {
 
     // deprecated flags
     char* lang = nullptr;
-    WStrVec globalPrefArgs;
+    WStrVecOld globalPrefArgs;
 
     // related to installer
     bool showHelp = false;

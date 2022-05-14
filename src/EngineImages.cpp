@@ -816,7 +816,7 @@ class EngineImageDir : public EngineImages {
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
 
-    WStrVec pageFileNames;
+    WStrVecOld pageFileNames;
     TocTree* tocTree = nullptr;
 };
 
@@ -1013,7 +1013,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
     // extracted metadata
     AutoFreeWstr propTitle;
-    WStrVec propAuthors;
+    WStrVecOld propAuthors;
     AutoFreeWstr propDate;
     AutoFreeWstr propModDate;
     AutoFreeWstr propCreator;

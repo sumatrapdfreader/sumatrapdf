@@ -572,7 +572,7 @@ WCHAR* EngineEbook::ExtractFontList() {
     ScopedCritSec scope(&pagesAccess);
 
     Vec<mui::CachedFont*> seenFonts;
-    WStrVec fonts;
+    WStrVecOld fonts;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);

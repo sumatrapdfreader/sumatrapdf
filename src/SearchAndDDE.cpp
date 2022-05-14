@@ -47,7 +47,7 @@
 //  eg: [Open("c:\file.pdf", 1, 1, 0)]
 
 bool gIsStartup = false;
-WStrVec gDdeOpenOnStartup;
+WStrVecOld gDdeOpenOnStartup;
 
 Kind NG_FIND_PROGRESS = "findProgress";
 

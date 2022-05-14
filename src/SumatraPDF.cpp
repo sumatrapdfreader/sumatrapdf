@@ -146,11 +146,11 @@ static Perm gPolicyRestrictions = Perm::RestrictedUse;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm::DiskAccess)
-static WStrVec gAllowedLinkProtocols;
+static WStrVecOld gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-static WStrVec gAllowedFileTypes;
+static WStrVecOld gAllowedFileTypes;
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.
@@ -3021,7 +3021,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     }
 
     TabInfo* tab = win->currentTab;
-    WStrVec files;
+    WStrVecOld files;
     WCHAR* pattern = path::GetDirTemp(tab->filePath);
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
     pattern = path::JoinTemp(pattern, L"*");

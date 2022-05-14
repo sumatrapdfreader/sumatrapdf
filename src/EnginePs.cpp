@@ -28,7 +28,7 @@ static WCHAR* GetGhostscriptPath() {
     };
 
     // find all installed Ghostscript versions
-    WStrVec versions;
+    WStrVecOld versions;
     REGSAM access = KEY_READ | KEY_WOW64_32KEY;
 TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
@@ -81,7 +81,7 @@ TryAgain64Bit:
         return nullptr;
     }
     GetEnvironmentVariable(L"PATH", envpath, size);
-    WStrVec paths;
+    WStrVecOld paths;
     Split(paths, envpath, L";", true);
     for (size_t ix = 0; ix < paths.size(); ix++) {
         AutoFreeWstr exe(path::Join(paths.at(ix), L"gswin32c.exe"));
