@@ -2,16 +2,17 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "HtmlWindow.h"
+#include "Dpi.h"
+#include "ScopedWin.h"
+#include "WinUtil.h"
+#include "GuessFileType.h"
+
 #include <mshtml.h>
 #include <mshtmhst.h>
 #include <oaidl.h>
 #include <exdispid.h>
-#include "Timer.h"
-#include "ScopedWin.h"
-#include "WinUtil.h"
-#include "GdiPlusUtil.h"
-#include "GuessFileType.h"
+
+#include "HtmlWindow.h"
 
 // An important (to Sumatra) use case is displaying CHM documents. First we used
 // IE's built-in support form CHM documents (using its: protocol
@@ -166,24 +167,24 @@ class FrameSite : public IUnknown {
     ULONG STDMETHODCALLTYPE Release() override;
 
   protected:
-    LONG refCount;
+    LONG refCount = 0;
 
-    HW_IOleInPlaceFrame* oleInPlaceFrame;
-    HW_IOleInPlaceSiteWindowless* oleInPlaceSiteWindowless;
-    HW_IOleClientSite* oleClientSite;
-    HW_IOleControlSite* oleControlSite;
-    HW_IOleCommandTarget* oleCommandTarget;
-    HW_IOleItemContainer* oleItemContainer;
-    HW_DWebBrowserEvents2* hwDWebBrowserEvents2;
-    HW_IAdviseSink2* adviseSink2;
-    HW_IDocHostUIHandler* docHostUIHandler;
-    HW_IDropTarget* dropTarget;
-    HW_IServiceProvider* serviceProvider;
+    HW_IOleInPlaceFrame* oleInPlaceFrame = nullptr;
+    HW_IOleInPlaceSiteWindowless* oleInPlaceSiteWindowless = nullptr;
+    HW_IOleClientSite* oleClientSite = nullptr;
+    HW_IOleControlSite* oleControlSite = nullptr;
+    HW_IOleCommandTarget* oleCommandTarget = nullptr;
+    HW_IOleItemContainer* oleItemContainer = nullptr;
+    HW_DWebBrowserEvents2* hwDWebBrowserEvents2 = nullptr;
+    HW_IAdviseSink2* adviseSink2 = nullptr;
+    HW_IDocHostUIHandler* docHostUIHandler = nullptr;
+    HW_IDropTarget* dropTarget = nullptr;
+    HW_IServiceProvider* serviceProvider = nullptr;
 
     HtmlWindow* htmlWindow;
 
     // HDC m_hDCBuffer;
-    HWND hwndParent;
+    HWND hwndParent = nullptr;
 
     bool supportsWindowlessActivation;
     bool inPlaceLocked;
@@ -1420,26 +1421,16 @@ void HtmlWindow::UnsubclassHwnd() {
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)userDataBrowserPrev);
 }
 
-HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback* cb)
-    : hwndParent(hwndParent),
-      webBrowser(nullptr),
-      oleObject(nullptr),
-      oleInPlaceObject(nullptr),
-      viewObject(nullptr),
-      connectionPoint(nullptr),
-      htmlContent(nullptr),
-      oleObjectHwnd(nullptr),
-      adviseCookie(0),
-      htmlWinCb(cb),
-      wndProcBrowserPrev(nullptr),
-      userDataBrowserPrev(0),
-      canGoBack(false),
-      canGoForward(false) {
-    CrashIf(!hwndParent);
+HtmlWindow::HtmlWindow(HWND parent, HtmlWindowCallback* cb) {
+    CrashIf(!parent);
+    hwndParent = parent;
+    htmlWinCb = cb;
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
-    htmlSetInProgress = nullptr;
-    htmlSetInProgressUrl = nullptr;
+    zoomDPI = DpiGet(parent);
+    if (zoomDPI < 96) {
+        zoomDPI = 96;
+    }
 }
 
 bool HtmlWindow::CreateBrowser() {
@@ -1640,12 +1631,17 @@ int HtmlWindow::GetZoomPercent() {
     if (FAILED(hr)) {
         return 100;
     }
-    return vtOut.lVal;
+    int zoom = vtOut.lVal;
+    CrashIf(zoomDPI < 96);
+    zoom = (zoom * 96) / zoomDPI; // undo what we do in SetZoomPercent()
+    return zoom;
 }
 
 void HtmlWindow::SetZoomPercent(int zoom) {
     VARIANT vtIn{};
     VARIANT vtOut{};
+    CrashIf(zoomDPI < 96);
+    zoom = (zoom * zoomDPI) / 96;
     VariantSetLong(&vtIn, zoom);
     webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vtIn, &vtOut);
 }

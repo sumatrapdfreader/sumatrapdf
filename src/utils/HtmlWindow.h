@@ -37,21 +37,22 @@ class HtmlWindow {
   protected:
     friend class FrameSite;
 
-    int windowId;
-    HWND hwndParent;
-    IWebBrowser2* webBrowser;
-    IOleObject* oleObject;
-    IOleInPlaceObject* oleInPlaceObject;
-    IViewObject* viewObject;
-    IConnectionPoint* connectionPoint;
-    HtmlMoniker* htmlContent;
-    HWND oleObjectHwnd;
+    int windowId = 0;
+    HWND hwndParent = nullptr;
+    IWebBrowser2* webBrowser = nullptr;
+    IOleObject* oleObject = nullptr;
+    IOleInPlaceObject* oleInPlaceObject = nullptr;
+    IViewObject* viewObject = nullptr;
+    IConnectionPoint* connectionPoint = nullptr;
+    HtmlMoniker* htmlContent = nullptr;
+    HWND oleObjectHwnd = nullptr;
+    int zoomDPI = 96;
 
-    const char* htmlSetInProgress;
-    const WCHAR* htmlSetInProgressUrl;
+    const char* htmlSetInProgress = nullptr;
+    const WCHAR* htmlSetInProgressUrl = nullptr;
 
-    DWORD adviseCookie;
-    bool blankWasShown;
+    DWORD adviseCookie = 0;
+    bool blankWasShown = false;
 
     AutoFreeWstr currentURL;
 
@@ -86,13 +87,13 @@ class HtmlWindow {
     void OnLButtonDown() const;
     HBITMAP TakeScreenshot(Rect area, Size finalSize);
 
-    bool canGoBack;
-    bool canGoForward;
+    bool canGoBack = false;
+    bool canGoForward = false;
 
     // TODO: not for public use
-    WNDPROC wndProcBrowserPrev;
-    LONG_PTR userDataBrowserPrev;
-    HtmlWindowCallback* htmlWinCb;
+    WNDPROC wndProcBrowserPrev = nullptr;
+    LONG_PTR userDataBrowserPrev = 0;
+    HtmlWindowCallback* htmlWinCb = nullptr;
 
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
     void OnDocumentComplete(const WCHAR* url);
