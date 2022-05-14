@@ -50,13 +50,17 @@ bool IsRunningInPortableMode() {
     }
     sCacheIsPortable = 1;
 
+    if (gIsStoreBuild) {
+        return false;
+    }
+
     if (HasBeenInstalled()) {
         sCacheIsPortable = 0;
         return false;
     }
 
-    auto exePath = GetExePathTemp().Get();
-    WCHAR* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES).Get();
+    WCHAR* exePath = GetExePathTemp();
+    WCHAR* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
         return true;
@@ -87,8 +91,8 @@ void SetAppDataPath(const WCHAR* path) {
     gAppDataDir.Set(path::Normalize(path));
 }
 
-/* Generate the full path for a filename used by the app in the userdata path. */
-/* Caller needs to free() the result. */
+// Generate the full path for a filename used by the app in the userdata path
+// Caller needs to free() the result
 WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     if (!fileName) {
         return nullptr;
@@ -110,6 +114,16 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     path = path::JoinTemp(path, kAppName);
     if (!path) {
         return nullptr;
+    }
+
+    // use a different path for store builds
+    if (gIsStoreBuild) {
+        // %APPLOCALDATA%/SumatraPDF Store
+        // %APPLOCALDATA%/SumatraPDF Store Preview
+        path = str::Join(path, L" Store");
+        if (gIsPreReleaseBuild) {
+            path = str::Join(path, L" Preview");
+        }
     }
     bool ok = dir::Create(path);
     if (!ok) {
