@@ -3163,8 +3163,7 @@ void WStrVec::SortNatural() {
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
 size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
-    size_t len = v.size();
-    size_t start = len;
+    size_t startSize = v.size();
     const WCHAR* next;
 
     while (true) {
@@ -3181,7 +3180,7 @@ size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse) 
         v.Append(str::Dup(s));
     }
 
-    return len - start;
+    return v.size() - startSize;
 }
 
 /* splits a string into several substrings, separated by the separator
@@ -3189,8 +3188,7 @@ size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse) 
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
 size_t Split(WStrVec2& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
-    size_t len = v.size();
-    size_t start = len;
+    size_t startSize = v.size();
     const WCHAR* next;
     while (true) {
         next = str::Find(s, separator);
@@ -3206,7 +3204,7 @@ size_t Split(WStrVec2& v, const WCHAR* s, const WCHAR* separator, bool collapse)
         v.Append(s);
     }
 
-    return len - start;
+    return v.size() - startSize;
 }
 
 /* splits a string into several substrings, separated by the separator
@@ -3214,8 +3212,7 @@ size_t Split(WStrVec2& v, const WCHAR* s, const WCHAR* separator, bool collapse)
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
 size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
-    size_t len = (size_t)v.Size();
-    size_t start = len;
+    int startSize = v.Size();
     const char* next;
     while (true) {
         next = str::Find(s, separator);
@@ -3231,7 +3228,7 @@ size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
         v.Append(s);
     }
 
-    return len - start;
+    return (size_t)(v.Size() - startSize);
 }
 
 WCHAR* Join(const WStrVec& v, const WCHAR* joint) {
