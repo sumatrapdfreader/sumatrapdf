@@ -357,7 +357,7 @@ class WStrVec : public Vec<WCHAR*> {
 size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
 WCHAR* Join(const WStrVec& v, const WCHAR* joint = nullptr);
 
-typedef bool (*WStrLessFunc)(std::wstring_view s1, std::wstring_view s2);
+typedef bool (*WStrLessFunc)(const WCHAR* s1, const WCHAR* s2);
 
 struct WStrVec2;
 
@@ -365,7 +365,7 @@ struct WStrVecSortedView {
     WStrVec2* v; // not owned
     Vec<u32> sortedIndex;
     int Size() const;
-    std::wstring_view at(int) const;
+    WCHAR* at(int) const;
 };
 
 // same design as StrVec
@@ -407,60 +407,15 @@ class WStrList {
     Allocator* allocator;
 
   public:
-    explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr) : items(capHint, allocator) {
-        this->allocator = allocator;
-    }
-
-    ~WStrList() {
-        for (Item& item : items) {
-            Allocator::Free(allocator, item.string);
-        }
-    }
-
-    const WCHAR* at(size_t idx) const {
-        return items.at(idx).string;
-    }
-
-    const WCHAR* Last() const {
-        return items.Last().string;
-    }
-
-    size_t size() const {
-        return count;
-    }
-
-    // str must have been allocated by allocator and is owned by StrList
-    void Append(WCHAR* str) {
-        u32 hash = MurmurHashWStrI(str);
-        items.Append(Item{str, hash});
-        count++;
-    }
-
-    int Find(const WCHAR* str, size_t startAt = 0) const {
-        u32 hash = MurmurHashWStrI(str);
-        Item* item = items.LendData();
-        for (size_t i = startAt; i < count; i++) {
-            if (item[i].hash == hash && str::Eq(item[i].string, str)) {
-                return (int)i;
-            }
-        }
-        return -1;
-    }
-
-    int FindI(const WCHAR* str, size_t startAt = 0) const {
-        u32 hash = MurmurHashWStrI(str);
-        Item* item = items.LendData();
-        for (size_t i = startAt; i < count; i++) {
-            if (item[i].hash == hash && str::EqI(item[i].string, str)) {
-                return (int)i;
-            }
-        }
-        return -1;
-    }
-
-    bool Contains(const WCHAR* str) const {
-        return -1 != Find(str);
-    }
+    explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr);
+    ~WStrList();
+    const WCHAR* at(size_t idx) const;
+    const WCHAR* Last() const;
+    size_t size() const;
+    void Append(WCHAR* str);
+    int Find(const WCHAR* str, size_t startAt = 0) const;
+    int FindI(const WCHAR* str, size_t startAt = 0) const;
+    bool Contains(const WCHAR* str) const;
 };
 
 typedef bool (*StrLessFunc)(const char* s1, const char* s2);

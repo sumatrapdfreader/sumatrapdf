@@ -2841,7 +2841,7 @@ void VecStr::Reset() {
 }
 #endif
 
-//- StrVec
+//--- StrVec
 
 /*
 TODO:
@@ -3027,6 +3027,65 @@ char* StrVecSortedView::at(int i) const {
     u32 i2 = sortedIndex[i];
     return v->at((int)i2);
 }
+
+//--- WStrList
+
+WStrList::WStrList(size_t capHint, Allocator* allocator) : items(capHint, allocator) {
+    this->allocator = allocator;
+}
+
+WStrList::~WStrList() {
+    for (Item& item : items) {
+        Allocator::Free(allocator, item.string);
+    }
+}
+
+const WCHAR* WStrList ::at(size_t idx) const {
+    return items.at(idx).string;
+}
+
+const WCHAR* WStrList ::Last() const {
+    return items.Last().string;
+}
+
+size_t WStrList ::size() const {
+    return count;
+}
+
+// str must have been allocated by allocator and is owned by StrList
+void WStrList ::Append(WCHAR* str) {
+    u32 hash = MurmurHashWStrI(str);
+    items.Append(Item{str, hash});
+    count++;
+}
+
+int WStrList ::Find(const WCHAR* str, size_t startAt) const {
+    u32 hash = MurmurHashWStrI(str);
+    Item* item = items.LendData();
+    for (size_t i = startAt; i < count; i++) {
+        if (item[i].hash == hash && str::Eq(item[i].string, str)) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+int WStrList ::FindI(const WCHAR* str, size_t startAt) const {
+    u32 hash = MurmurHashWStrI(str);
+    Item* item = items.LendData();
+    for (size_t i = startAt; i < count; i++) {
+        if (item[i].hash == hash && str::EqI(item[i].string, str)) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+bool WStrList ::Contains(const WCHAR* str) const {
+    return -1 != Find(str);
+}
+
+//--- WStrVec
 
 WStrVec::WStrVec(const WStrVec& other) : Vec(other) {
     // make sure not to share string pointers between StrVecs
@@ -3217,24 +3276,30 @@ char* Join(const StrVec& v, const char* joint) {
     return tmp.StealData();
 }
 
-//- WStrVec
+//--- WStrVec2
 
-bool wstrLess(std::wstring_view s1, std::wstring_view s2) {
+bool wstrLess(const WCHAR* s1s, const WCHAR* s2s) {
+    std::wstring_view s1 = s1s;
+    std::wstring_view s2 = s2s;
+
     if (s1.empty()) {
         return true;
     }
-    if (s1.empty()) {
+    if (s2.empty()) {
         return false;
     }
     bool ret = s1 < s2;
     return ret;
 }
 
-bool wstrLessNoCase(std::wstring_view s1, std::wstring_view s2) {
+bool wstrLessNoCase(const WCHAR* s1s, const WCHAR* s2s) {
+    std::wstring_view s1 = s1s;
+    std::wstring_view s2 = s2s;
+
     if (s1.empty()) {
         return true;
     }
-    if (s1.empty()) {
+    if (s2.empty()) {
         return false;
     }
     size_t n1 = s1.size();
@@ -3346,14 +3411,15 @@ bool WStrVec2::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const
         sortedIndex.Append(i);
     }
     std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        std::wstring_view is1 = at((int)i1);
-        std::wstring_view is2 = at((int)i2);
+        WCHAR* is1 = at((int)i1);
+        WCHAR* is2 = at((int)i2);
         bool ret = lessFn(is1, is2);
         return ret;
     });
 
     return true;
 }
+
 bool WStrVec2::GetSortedViewNoCase(WStrVecSortedView& view) const {
     return GetSortedView(view, wstrLessNoCase);
 }
@@ -3362,7 +3428,7 @@ int WStrVecSortedView::Size() const {
     return sortedIndex.isize();
 }
 
-std::wstring_view WStrVecSortedView::at(int i) const {
+WCHAR* WStrVecSortedView::at(int i) const {
     u32 idx = sortedIndex[i];
     return v->at(idx);
 }
