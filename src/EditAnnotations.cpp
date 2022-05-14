@@ -427,12 +427,13 @@ static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
-    bool isVisible = !Author(annot).empty();
+    const char* author = Author(annot);
+    bool isVisible = !str::IsEmpty(author);
     if (!isVisible) {
         return;
     }
     str::Str s;
-    s.AppendFmt(_TRA("Author: %s"), Author(annot).data());
+    s.AppendFmt(_TRA("Author: %s"), author);
     ew->staticAuthor->SetText(s.Get());
     ew->staticAuthor->SetIsVisible(true);
 }
@@ -656,7 +657,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
 static void IconSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownIcon->GetCurrentSelection();
     auto item = ew->dropDownIcon->items.at(idx);
-    SetIconName(ew->annot, item);
+    SetIconName(ew->annot, item.data());
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
 }
@@ -826,7 +827,7 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
 
 void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annotation* annot) {
     annot = FindMatchingAnnotation(ew, annot);
-    Delete(annot);
+    DeleteAnnotation(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         RebuildAnnotations(ew);
@@ -1510,7 +1511,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
     if (typ == AnnotationType::Text) {
         AutoFreeStr iconName = GetAnnotationTextIcon();
         if (!str::EqI(iconName, "Note")) {
-            SetIconName(res, iconName.AsView());
+            SetIconName(res, iconName.Get());
         }
         auto col = GetAnnotationTextIconColor();
         SetColor(res, col);
