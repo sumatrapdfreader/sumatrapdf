@@ -1360,16 +1360,15 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-EngineBase* EngineCbx::CreateFromFile(const char* pathA) {
+EngineBase* EngineCbx::CreateFromFile(const char* path) {
     auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
 
-    Kind kind = GuessFileTypeFromContent(pathA);
-    WCHAR* path = ToWstrTemp(pathA);
+    Kind kind = GuessFileTypeFromContent(path);
     MultiFormatArchive* archive = nullptr;
     if (kind == kindFileZip) {
-        archive = OpenZipArchive(pathA, false);
+        archive = OpenZipArchive(path, false);
     } else if (kind == kindFileRar) {
         archive = OpenRarArchive(path);
     } else if (kind == kindFile7Z) {
@@ -1377,7 +1376,7 @@ EngineBase* EngineCbx::CreateFromFile(const char* pathA) {
     }
 
     if (!archive) {
-        kind = GuessFileTypeFromName(pathA);
+        kind = GuessFileTypeFromName(path);
         if (kind == kindFileCbt || kind == kindFileTar) {
             archive = OpenTarArchive(path);
         }
@@ -1388,7 +1387,7 @@ EngineBase* EngineCbx::CreateFromFile(const char* pathA) {
     logf("EngineCbx::CreateFromFile(): opening archive took %.2f\n", TimeSinceInMs(timeStart));
 
     auto* engine = new EngineCbx(archive);
-    if (engine->LoadFromFile(pathA)) {
+    if (engine->LoadFromFile(path)) {
         return engine;
     }
     delete engine;

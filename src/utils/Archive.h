@@ -67,12 +67,7 @@ class MultiFormatArchive {
 MultiFormatArchive* OpenZipArchive(const char* path, bool deflatedOnly);
 MultiFormatArchive* Open7zArchive(const char* path);
 MultiFormatArchive* OpenTarArchive(const char* path);
-
-// TODO: remove those
-MultiFormatArchive* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
-MultiFormatArchive* Open7zArchive(const WCHAR* path);
-MultiFormatArchive* OpenTarArchive(const WCHAR* path);
-MultiFormatArchive* OpenRarArchive(const WCHAR* path);
+MultiFormatArchive* OpenRarArchive(const char* path);
 
 MultiFormatArchive* OpenZipArchive(IStream* stream, bool deflatedOnly);
 MultiFormatArchive* Open7zArchive(IStream* stream);

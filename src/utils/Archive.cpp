@@ -195,13 +195,9 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
 }
 
 static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
-    archive->Open(ar_open_file(path), path);
-    return archive;
-}
-
-static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
-    auto pathA = ToUtf8Temp(path);
-    bool ok = archive->Open(ar_open_file_w(path), pathA.Get());
+    WCHAR* pathW = ToWstrTemp(path);
+    ar_stream* stm = ar_open_file_w(pathW);
+    bool ok = archive->Open(stm, path);
     if (!ok) {
         delete archive;
         return nullptr;
@@ -238,30 +234,6 @@ MultiFormatArchive* OpenTarArchive(const char* path) {
 }
 
 MultiFormatArchive* OpenRarArchive(const char* path) {
-    auto* archive = new MultiFormatArchive(ar_open_rar_archive, MultiFormatArchive::Format::Rar);
-    return open(archive, path);
-}
-
-MultiFormatArchive* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
-    auto opener = ar_open_zip_archive_any;
-    if (deflatedOnly) {
-        opener = ar_open_zip_archive_deflated;
-    }
-    auto* archive = new MultiFormatArchive(opener, MultiFormatArchive::Format::Zip);
-    return open(archive, path);
-}
-
-MultiFormatArchive* Open7zArchive(const WCHAR* path) {
-    auto* archive = new MultiFormatArchive(ar_open_7z_archive, MultiFormatArchive::Format::SevenZip);
-    return open(archive, path);
-}
-
-MultiFormatArchive* OpenTarArchive(const WCHAR* path) {
-    auto* archive = new MultiFormatArchive(ar_open_tar_archive, MultiFormatArchive::Format::Tar);
-    return open(archive, path);
-}
-
-MultiFormatArchive* OpenRarArchive(const WCHAR* path) {
     auto* archive = new MultiFormatArchive(ar_open_rar_archive, MultiFormatArchive::Format::Rar);
     return open(archive, path);
 }
