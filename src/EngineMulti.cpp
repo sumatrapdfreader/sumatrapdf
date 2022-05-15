@@ -343,8 +343,7 @@ bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
         char* path = files.at(i);
-        WCHAR* pathW = ToWstrTemp(path);
-        EngineBase* engine = CreateEngine(pathW, nullptr, true);
+        EngineBase* engine = CreateEngine(path, nullptr, true);
         if (!engine) {
             continue;
         }

@@ -71,7 +71,7 @@ EngineBase* CreateEnginePsFromFile(const WCHAR* fileName);
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks);
 
-EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine);
+EngineBase* CreateEngine(const char* filePath, PasswordUI* pwdUI, bool enableChmEngine);
 
 bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>*);

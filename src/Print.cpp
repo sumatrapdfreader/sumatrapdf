@@ -1220,7 +1220,8 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
 bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     logf(L"PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     WCHAR* fileName2 = path::Normalize(fileName);
-    EngineBase* engine = CreateEngine(fileName2, nullptr, true);
+    char* fileName2A = ToUtf8Temp(fileName2);
+    EngineBase* engine = CreateEngine(fileName2A, nullptr, true);
     if (!engine) {
         WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);
         MessageBoxWarningCond(displayErrors, msg, L"Error");

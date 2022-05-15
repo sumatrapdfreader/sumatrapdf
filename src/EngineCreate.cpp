@@ -136,12 +136,12 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     return nullptr;
 }
 
-EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine) {
-    CrashIf(!path);
+EngineBase* CreateEngine(const char* pathA, PasswordUI* pwdUI, bool enableChmEngine) {
+    CrashIf(!pathA);
 
     // try to open with the engine guess from file name
     // if that fails, try to guess the file type based on content
-    char* pathA = ToUtf8Temp(path);
+    WCHAR* path = ToWstrTemp(pathA);
     Kind kind = GuessFileTypeFromName(pathA);
     EngineBase* engine = CreateEngineForKind(kind, path, pwdUI, enableChmEngine);
     if (engine) {

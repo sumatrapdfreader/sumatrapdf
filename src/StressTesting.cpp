@@ -133,12 +133,12 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     }
 
     auto total = TimeGet();
-    logf(L"Starting: %s\n", filePath);
+    logf("Starting: %s\n", pathA);
 
     auto t = TimeGet();
-    EngineBase* engine = CreateEngine(filePath, nullptr, true);
+    EngineBase* engine = CreateEngine(pathA, nullptr, true);
     if (!engine) {
-        logf(L"Error: failed to load %s\n", filePath);
+        logf("Error: failed to load %s\n", pathA);
         return;
     }
 
@@ -167,7 +167,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
 
     delete engine;
 
-    logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
+    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), pathA);
 }
 
 static bool IsFileToBench(const char* path) {

@@ -838,10 +838,10 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     }
 }
 
-static Controller* CreateControllerForEngine(EngineBase* engine, const WCHAR* filePath, PasswordUI* pwdUI,
+static Controller* CreateControllerForEngine(EngineBase* engine, const char* filePath, PasswordUI* pwdUI,
                                              WindowInfo* win) {
     int nPages = engine ? engine->PageCount() : 0;
-    logf(L"CreateControllerForEngine: '%s', %d pages\n", filePath), nPages;
+    logf("CreateControllerForEngine: '%s', %d pages\n", filePath), nPages;
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
@@ -852,24 +852,23 @@ static Controller* CreateControllerForEngine(EngineBase* engine, const WCHAR* fi
 }
 
 // TODO: remove when we figure out why this ctrl->GetFilePath() is not always same as path
-static NO_INLINE void VerifyController(Controller* ctrl, const WCHAR* path) {
+static NO_INLINE void VerifyController(Controller* ctrl, const char* path) {
     if (!ctrl) {
         return;
     }
-    if (str::Eq(ctrl->GetFilePath(), path)) {
+    const WCHAR* ctrlFilePathW = ctrl->GetFilePath();
+    char* ctrlFilePath = ToUtf8Temp(ctrlFilePathW);
+    if (str::Eq(ctrlFilePath, path)) {
         return;
     }
-    const WCHAR* ctrlFilePath = ctrl->GetFilePath();
-    char* s1 = ctrlFilePath ? strconv::WstrToUtf8(ctrlFilePath) : str::Dup("<null>");
-    char* s2 = path ? strconv::WstrToUtf8(path) : str::Dup("<null>");
+    const char* s1 = ctrlFilePath ? ctrlFilePath : "<null>";
+    const char* s2 = path ? path : "<null>";
     logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
     CrashIf(true);
-    str::Free(s1);
-    str::Free(s2);
 }
 
-static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo* win) {
-    char* pathA = ToUtf8Temp(path);
+static Controller* CreateForChm(const char* pathA, PasswordUI* pwdUI, WindowInfo* win) {
+    WCHAR* path = ToWstrTemp(pathA);
     Kind kind = GuessFileType(pathA, true);
 
     bool isChm = ChmModel::IsSupportedFileType(kind);
@@ -890,7 +889,7 @@ static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo
     Controller* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
         delete chmModel;
-        EngineBase* engine = CreateEngine(path, pwdUI, true);
+        EngineBase* engine = CreateEngine(pathA, pwdUI, true);
         if (!engine) {
             return nullptr;
         }
@@ -903,11 +902,11 @@ static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo
         ctrl = chmModel;
     }
     CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed()));
-    VerifyController(ctrl, path);
+    VerifyController(ctrl, pathA);
     return ctrl;
 }
 
-static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI, WindowInfo* win) {
+static Controller* CreateControllerForFile(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
@@ -934,7 +933,7 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
     if (!ctrl) {
         return nullptr;
     }
-    // logf(L"CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
+    // logf("CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
     return ctrl;
 }
 
@@ -1231,7 +1230,8 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     }
 
     HwndPasswordUI pwdUI(win->hwndFrame);
-    Controller* ctrl = CreateControllerForFile(tab->filePath, &pwdUI, win);
+    char* pathA = ToUtf8Temp(tab->filePath);
+    Controller* ctrl = CreateControllerForFile(pathA, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
     // in which case the repair could fail. Instead, if the file is broken,
@@ -1242,8 +1242,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         return;
     }
 
-    char* tabFilePath = ToUtf8Temp(tab->filePath);
-    FileState* fs = NewDisplayState(tabFilePath);
+    FileState* fs = NewDisplayState(pathA);
     tab->ctrl->GetDisplayState(fs);
     UpdateDisplayStateWindowRect(win, fs);
     UpdateSidebarDisplayState(tab, fs);
@@ -1637,19 +1636,18 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     HwndPasswordUI pwdUI(win->hwndFrame);
     Controller* ctrl = nullptr;
     if (args.engine != nullptr) {
-        ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
+        ctrl = CreateControllerForEngine(args.engine, fullPathA, &pwdUI, win);
     } else {
-        ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
+        ctrl = CreateControllerForFile(fullPathA, &pwdUI, win);
     }
 
     {
-        char* path = ToUtf8Temp(fullPath);
         auto durMs = TimeSinceInMs(timeStart);
         if (ctrl) {
             int nPages = ctrl->PageCount();
-            logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
+            logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPathA);
         } else {
-            logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
+            logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPathA, (float)durMs);
         }
     }
 
