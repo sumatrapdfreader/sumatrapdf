@@ -38,8 +38,8 @@ enum class Tab {
 };
 
 static str::WStr wstrFromUtf8(const str::Str& str) {
-    auto s = ToWstrTemp(str.AsView());
-    return str::WStr(s.AsView());
+    auto s = ToWstrTemp(str.LendData(), str.size());
+    return str::WStr(s.Get());
 }
 
 TabItem::TabItem(const std::string_view title, const std::string_view toolTip) {

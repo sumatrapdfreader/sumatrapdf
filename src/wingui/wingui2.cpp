@@ -145,8 +145,8 @@ void Wnd::SetText(const char* s) {
 }
 
 TempStr Wnd::GetText() {
-    auto sw = win::GetTextTemp(hwnd);
-    auto sa = ToUtf8Temp(sw.AsView());
+    WCHAR* sw = win::GetTextTemp(hwnd);
+    auto sa = ToUtf8Temp(sw);
     return sa;
 }
 

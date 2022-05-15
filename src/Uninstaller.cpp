@@ -375,15 +375,15 @@ static WCHAR* GetSelfDeleteBatchPathInTemp() {
 // we create a bash script that deletes us
 static void InitSelfDelete() {
     log("InitSelfDelete()\n");
-    auto exePath = GetExePathTemp();
-    auto exePathA = ToUtf8Temp(exePath.AsView());
+    WCHAR* exePath = GetExePathTemp();
+    char* exePathA = ToUtf8Temp(exePath);
     str::Str script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,
     // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd
     script.Append("timeout /t 2 /nobreak >nul\r\n");
     // delete our executable
-    script.AppendFmt("del \"%s\"\r\n", exePathA.Get());
+    script.AppendFmt("del \"%s\"\r\n", exePathA);
     // del itself
     // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");

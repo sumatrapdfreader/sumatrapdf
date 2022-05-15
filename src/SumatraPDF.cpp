@@ -5214,8 +5214,8 @@ void GetProgramInfo(str::Str& s) {
     auto d = ToUtf8Temp(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.Get());
 
-    auto exePathW = GetExePathTemp();
-    char* exePath = ToUtf8Temp(exePathW.AsView());
+    WCHAR* exePathW = GetExePathTemp();
+    char* exePath = ToUtf8Temp(exePathW);
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
     s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe.Get());
     if (IsDllBuild()) {

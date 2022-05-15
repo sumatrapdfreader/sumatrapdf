@@ -738,9 +738,9 @@ void WindowBase::SetText(const char* sv) {
 }
 
 const char* WindowBase::GetText() {
-    auto sw = win::GetTextTemp(hwnd);
-    auto sa = ToUtf8Temp(sw.AsView());
-    text.Set(sa.AsView());
+    WCHAR* sw = win::GetTextTemp(hwnd);
+    char* sa = ToUtf8Temp(sw);
+    text.Set(sa);
     return text.LendData();
 }
 

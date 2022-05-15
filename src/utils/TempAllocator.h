@@ -57,47 +57,61 @@ struct TempStr {
 };
 
 struct TempWstr {
-    std::wstring_view sv{};
+    const WCHAR* s;
+    int sLen;
 
-    TempWstr() = default;
-    explicit TempWstr(WCHAR* s) {
-        sv = {s, str::Len(s)};
+    TempWstr() {
+        s = nullptr;
+        sLen = 0;
+    };
+    explicit TempWstr(WCHAR* sIn) {
+        s = sIn;
+        sLen = -1; // net yet known
     }
-    explicit TempWstr(WCHAR* s, size_t cch) {
-        sv = {s, cch};
+    explicit TempWstr(WCHAR* sIn, size_t cch) {
+        s = sIn;
+        sLen = (int)cch;
     }
-    explicit TempWstr(const WCHAR* s) {
-        sv = {s, str::Len(s)};
+    explicit TempWstr(const WCHAR* sIn) {
+        s = sIn;
+        sLen = -1; // net yet known
     }
-    explicit TempWstr(const WCHAR* s, size_t cch) {
-        sv = {s, cch};
+    explicit TempWstr(const WCHAR* sIn, size_t cch) {
+        s = sIn;
+        sLen = (int)cch;
     }
-    explicit TempWstr(std::wstring_view s) {
-        sv = s;
-    }
-    TempWstr(const TempWstr& ts) {
-        sv = ts.sv;
+    TempWstr(const TempWstr& o) {
+        s = o.s;
+        sLen = o.sLen;
     }
     bool empty() const {
-        return sv.empty();
+        if (s == nullptr) {
+            return true;
+        }
+        // TOOD: remve const and update sLen?
+        int n = sLen;
+        if (n < 0) {
+            n = (int)str::Len(s);
+        }
+        return n == 0;
     }
     size_t size() const {
-        return sv.size();
+        if (s == nullptr) {
+            return 0;
+        }
+        if (sLen < 0) {
+            return (int)str::Len(s);
+        }
+        return sLen;
     }
     WCHAR* Get() const {
-        return (WCHAR*)sv.data();
-    }
-    std::wstring_view AsView() const {
-        return sv;
+        return (WCHAR*)s;
     }
     operator const WCHAR*() const { // NOLINT
-        return sv.data();
+        return s;
     }
     operator WCHAR*() const { // NOLINT
-        return (WCHAR*)sv.data();
-    }
-    explicit operator std::wstring_view() const {
-        return sv;
+        return (WCHAR*)s;
     }
 };
 
