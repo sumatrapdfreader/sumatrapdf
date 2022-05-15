@@ -495,12 +495,12 @@ class EngineImage : public EngineImages {
 
     bool SaveFileAsPDF(const char* pdfFileName) override;
 
-    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const char* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     Bitmap* image = nullptr;
-    const WCHAR* fileExt = nullptr;
+    const char* fileExt = nullptr;
 
     bool LoadSingleFile(const char* fileName);
     bool LoadFromStream(IStream* stream);
@@ -552,7 +552,7 @@ bool EngineImage::LoadSingleFile(const char* pathA) {
         fileExtA = GfxFileExtFromKind(kind);
     }
     CrashIf(fileExtA == nullptr);
-    fileExt = strconv::Utf8ToWstr(fileExtA);    // TODO: leaks
+    fileExt = fileExtA;
     defaultExt = strconv::Utf8ToWstr(fileExtA); // TODO: leaks
     image = BitmapFromData(data.AsSpan());
     return FinishLoading();
@@ -593,8 +593,8 @@ bool EngineImage::FinishLoading() {
     CrashIf(pages.size() != 1);
 
     // extract all frames from multi-page TIFFs and animated GIFs
-    if (str::Eq(fileExt, L".tif") || str::Eq(fileExt, L".gif")) {
-        const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
+    if (str::Eq(fileExt, ".tif") || str::Eq(fileExt, ".gif")) {
+        const GUID* frameDimension = str::Eq(fileExt, ".tif") ? &FrameDimensionPage : &FrameDimensionTime;
         int nFrames = image->GetFrameCount(frameDimension) - 1;
         for (int i = 0; i < nFrames; i++) {
             pi = new ImagePageInfo();
@@ -662,8 +662,8 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     }
 
     // extract other frames from multi-page TIFFs and animated GIFs
-    CrashIf(!str::Eq(fileExt, L".tif") && !str::Eq(fileExt, L".gif"));
-    const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
+    CrashIf(!str::Eq(fileExt, ".tif") && !str::Eq(fileExt, ".gif"));
+    const GUID* frameDimension = str::Eq(fileExt, ".tif") ? &FrameDimensionPage : &FrameDimensionTime;
     uint frameCount = image->GetFrameCount(frameDimension);
     CrashIf((unsigned int)pageNo > frameCount);
     Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
@@ -692,13 +692,13 @@ RectF EngineImage::LoadMediabox(int pageNo) {
         return mbox;
     }
 
-    CrashIf(!str::Eq(fileExt, L".tif") && !str::Eq(fileExt, L".gif"));
+    CrashIf(!str::Eq(fileExt, ".tif") && !str::Eq(fileExt, ".gif"));
     RectF mbox = RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
     Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!frame) {
         return mbox;
     }
-    const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
+    const GUID* frameDimension = str::Eq(fileExt, ".tif") ? &FrameDimensionPage : &FrameDimensionTime;
     Status ok = frame->SelectActiveFrame(frameDimension, pageNo - 1);
     if (Ok == ok) {
         mbox = RectF(0, 0, (float)frame->GetWidth(), (float)frame->GetHeight());
@@ -733,8 +733,7 @@ bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
     return ok;
 }
 
-EngineBase* EngineImage::CreateFromFile(const WCHAR* fileName) {
-    char* path = ToUtf8Temp(fileName);
+EngineBase* EngineImage::CreateFromFile(const char* path) {
     logf("EngineImage::CreateFromFile(%s)\n", path);
     EngineImage* engine = new EngineImage();
     if (!engine->LoadSingleFile(path)) {
@@ -762,9 +761,9 @@ bool IsEngineImageSupportedFileType(Kind kind) {
     return KindInArray(imageEngineKinds, n, kind);
 }
 
-EngineBase* CreateEngineImageFromFile(const WCHAR* fileName) {
-    logf("CreateEngineImageFromFile(%s)\n", ToUtf8Temp(fileName).Get());
-    return EngineImage::CreateFromFile(fileName);
+EngineBase* CreateEngineImageFromFile(const char* path) {
+    logf("CreateEngineImageFromFile(%s)\n", path);
+    return EngineImage::CreateFromFile(path);
 }
 
 EngineBase* CreateEngineImageFromStream(IStream* stream) {
@@ -790,8 +789,9 @@ class EngineImageDir : public EngineImages {
     }
 
     EngineBase* Clone() override {
-        if (FileName()) {
-            return CreateFromFile(FileName());
+        const char* path = FilePathTemp();
+        if (path) {
+            return CreateFromFile(path);
         }
         return nullptr;
     }
@@ -812,7 +812,7 @@ class EngineImageDir : public EngineImages {
 
     bool SaveFileAsPDF(const char* pdfFileName) override;
 
-    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const char* fileName);
 
     // protected:
 
@@ -823,14 +823,13 @@ class EngineImageDir : public EngineImages {
     TocTree* tocTree = nullptr;
 };
 
-static bool LoadImageDir(EngineImageDir* e, const WCHAR* dir) {
+static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     e->SetFileName(dir);
 
-    DirTraverse(dir, false, [e](const WCHAR* path) -> bool {
-        char* pathA = ToUtf8Temp(path);
-        Kind kind = GuessFileTypeFromName(pathA);
+    DirTraverse(dir, false, [e](const char* path) -> bool {
+        Kind kind = GuessFileTypeFromName(path);
         if (IsEngineImageSupportedFileType(kind)) {
-            WCHAR* pathCopy = str::Dup(path);
+            WCHAR* pathCopy = strconv::Utf8ToWstr(path);
             e->pageFileNames.Append(pathCopy);
         }
         return true;
@@ -955,7 +954,7 @@ bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName) {
     return ok;
 }
 
-EngineBase* EngineImageDir::CreateFromFile(const WCHAR* fileName) {
+EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
     CrashIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
     if (!LoadImageDir(engine, fileName)) {
@@ -965,12 +964,12 @@ EngineBase* EngineImageDir::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-bool IsEngineImageDirSupportedFile(const WCHAR* fileName, __unused bool sniff) {
+bool IsEngineImageDirSupportedFile(const char* fileName, __unused bool sniff) {
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }
 
-EngineBase* CreateEngineImageDirFromFile(const WCHAR* fileName) {
+EngineBase* CreateEngineImageDirFromFile(const char* fileName) {
     return EngineImageDir::CreateFromFile(fileName);
 }
 
@@ -992,7 +991,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::Type type) override;
 
-    static EngineBase* CreateFromFile(const WCHAR* path);
+    static EngineBase* CreateFromFile(const char* path);
     static EngineBase* CreateFromStream(IStream* stream);
 
     // an image for each page
@@ -1002,7 +1001,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
 
-    bool LoadFromFile(const WCHAR* fileName);
+    bool LoadFromFile(const char* fileName);
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
@@ -1050,13 +1049,14 @@ EngineBase* EngineCbx::Clone() {
             return CreateFromStream(stm);
         }
     }
-    if (FileName()) {
-        return CreateFromFile(FileName());
+    const char* path = FilePathTemp();
+    if (path) {
+        return CreateFromFile(path);
     }
     return nullptr;
 }
 
-bool EngineCbx::LoadFromFile(const WCHAR* file) {
+bool EngineCbx::LoadFromFile(const char* file) {
     if (!file) {
         return false;
     }
@@ -1360,15 +1360,16 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
+EngineBase* EngineCbx::CreateFromFile(const char* pathA) {
     auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
-    const char* pathA = ToUtf8Temp(path);
+
     Kind kind = GuessFileTypeFromContent(pathA);
+    WCHAR* path = ToWstrTemp(pathA);
     MultiFormatArchive* archive = nullptr;
     if (kind == kindFileZip) {
-        archive = OpenZipArchive(path, false);
+        archive = OpenZipArchive(pathA, false);
     } else if (kind == kindFileRar) {
         archive = OpenRarArchive(path);
     } else if (kind == kindFile7Z) {
@@ -1387,7 +1388,7 @@ EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
     logf("EngineCbx::CreateFromFile(): opening archive took %.2f\n", TimeSinceInMs(timeStart));
 
     auto* engine = new EngineCbx(archive);
-    if (engine->LoadFromFile(path)) {
+    if (engine->LoadFromFile(pathA)) {
         return engine;
     }
     delete engine;
@@ -1443,7 +1444,7 @@ bool IsEngineCbxSupportedFileType(Kind kind) {
     return KindInArray(cbxKinds, n, kind);
 }
 
-EngineBase* CreateEngineCbxFromFile(const WCHAR* path) {
+EngineBase* CreateEngineCbxFromFile(const char* path) {
     return EngineCbx::CreateFromFile(path);
 }
 

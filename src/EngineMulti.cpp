@@ -427,13 +427,12 @@ EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
     return engine;
 }
 
-EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
+EngineBase* CreateEngineMultiFromDirectory(const char* dir) {
     auto isValidFunc = [](const char* path) -> bool {
         bool isValid = str::EndsWithI(path, ".pdf");
         return isValid;
     };
     StrVec files;
-    char* dir = ToUtf8Temp(dirW);
     bool ok = CollectFilesFromDirectory(dir, files, isValidFunc);
     if (!ok) {
         // TODO: show error message

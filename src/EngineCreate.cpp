@@ -55,19 +55,18 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     return false;
 }
 
-static EngineBase* CreateEngineForKind(Kind kind, const char* pathA, PasswordUI* pwdUI, bool enableChmEngine) {
+static EngineBase* CreateEngineForKind(Kind kind, const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
     if (!kind) {
         return nullptr;
     }
-    WCHAR* path = ToWstrTemp(pathA);
     int dpi = DpiGet(nullptr);
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
-        engine = CreateEngineMupdfFromFile(pathA, kind, dpi, pwdUI);
+        engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         return engine;
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
-        engine = CreateEngineDjVuFromFile(pathA);
+        engine = CreateEngineDjVuFromFile(path);
         return engine;
     }
     if (IsEngineImageSupportedFileType(kind)) {
@@ -91,15 +90,15 @@ static EngineBase* CreateEngineForKind(Kind kind, const char* pathA, PasswordUI*
         return engine;
     }
     if (IsEnginePsSupportedFileType(kind)) {
-        engine = CreateEnginePsFromFile(pathA);
+        engine = CreateEnginePsFromFile(path);
         return engine;
     }
     if (enableChmEngine && (kind == kindFileChm)) {
-        engine = CreateEngineChmFromFile(pathA);
+        engine = CreateEngineChmFromFile(path);
         return engine;
     }
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
-        engine = CreateEngineMupdfFromFile(pathA, kind, dpi, pwdUI);
+        engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2212
         // if failed to open with EngineMupdf, will also try to open
         // with my engine
@@ -115,23 +114,23 @@ static EngineBase* CreateEngineForKind(Kind kind, const char* pathA, PasswordUI*
 #endif
 
     if (kind == kindFileEpub) {
-        engine = CreateEngineEpubFromFile(pathA);
+        engine = CreateEngineEpubFromFile(path);
         return engine;
     }
     if (kind == kindFileFb2 || kind == kindFileFb2z) {
-        engine = CreateEngineFb2FromFile(pathA);
+        engine = CreateEngineFb2FromFile(path);
         return engine;
     }
     if (kind == kindFileMobi) {
-        engine = CreateEngineMobiFromFile(pathA);
+        engine = CreateEngineMobiFromFile(path);
         return engine;
     }
     if (kind == kindFilePalmDoc) {
-        engine = CreateEnginePdbFromFile(pathA);
+        engine = CreateEnginePdbFromFile(path);
         return engine;
     }
     if (kind == kindFileHTML) {
-        engine = CreateEnginePdbFromFile(pathA);
+        engine = CreateEnginePdbFromFile(path);
         return engine;
     }
     return nullptr;

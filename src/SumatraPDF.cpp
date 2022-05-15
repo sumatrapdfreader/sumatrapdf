@@ -2898,7 +2898,8 @@ static void OnMenuOpenFolder(WindowInfo* win) {
         return;
     }
 
-    EngineBase* engine = CreateEngineMultiFromDirectory(dirW);
+    char* dir = ToUtf8Temp(dirW);
+    EngineBase* engine = CreateEngineMultiFromDirectory(dir);
     if (!engine) {
         return;
     }

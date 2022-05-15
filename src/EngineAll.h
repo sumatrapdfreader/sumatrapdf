@@ -29,21 +29,21 @@ void EngineEbookCleanup();
 /* EngineImages.cpp */
 
 bool IsEngineImageSupportedFileType(Kind);
-EngineBase* CreateEngineImageFromFile(const WCHAR* fileName);
+EngineBase* CreateEngineImageFromFile(const char* fileName);
 EngineBase* CreateEngineImageFromStream(IStream* stream);
 
-bool IsEngineImageDirSupportedFile(const WCHAR* fileName, bool sniff = false);
-EngineBase* CreateEngineImageDirFromFile(const WCHAR* fileName);
+bool IsEngineImageDirSupportedFile(const char* fileName, bool sniff = false);
+EngineBase* CreateEngineImageDirFromFile(const char* fileName);
 
 bool IsEngineCbxSupportedFileType(Kind kind);
-EngineBase* CreateEngineCbxFromFile(const WCHAR* path);
+EngineBase* CreateEngineCbxFromFile(const char* path);
 EngineBase* CreateEngineCbxFromStream(IStream* stream);
 
 /* EngineMulti.cpp */
 
 bool IsEngineMultiSupportedFileType(Kind);
 EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files);
-EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW);
+EngineBase* CreateEngineMultiFromDirectory(const char* dirW);
 TocItem* CreateWrapperItem(EngineBase* engine);
 
 /* EngineMupdf.cpp */
