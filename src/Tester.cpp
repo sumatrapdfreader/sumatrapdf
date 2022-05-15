@@ -75,8 +75,9 @@ static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ByteSlice img
     if (img.empty()) {
         return;
     }
-    const WCHAR* ext = GfxFileExtFromData(img);
-    CrashAlwaysIf(!ext);
+    const char* extA = GfxFileExtFromData(img);
+    CrashAlwaysIf(!extA);
+    WCHAR* ext = ToWstrTemp(extA);
     AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, (int)imgNo, ext));
     file::WriteFile(fileName.Get(), img);
 }

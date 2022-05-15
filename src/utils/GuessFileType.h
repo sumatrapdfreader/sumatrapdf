@@ -47,7 +47,7 @@ Kind GuessFileTypeFromContent(const WCHAR* path);
 Kind GuessFileTypeFromContent(ByteSlice d);
 Kind GuessFileTypeFromName(const char*);
 Kind GuessFileType(const WCHAR* path, bool sniff);
-const WCHAR* GfxFileExtFromData(ByteSlice);
-const WCHAR* GfxFileExtFromKind(Kind);
+const char* GfxFileExtFromData(ByteSlice);
+const char* GfxFileExtFromKind(Kind);
 
 bool KindInArray(Kind* kinds, int nKinds, Kind kind);

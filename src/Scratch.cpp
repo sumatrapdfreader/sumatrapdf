@@ -138,8 +138,7 @@ Vec<FileData*> MobiToEpub2(const WCHAR* path) {
             logf("image %d is missing\n", (int)i);
             continue;
         }
-        const WCHAR* ext = GfxFileExtFromData(*imageData);
-        char* extA = ToUtf8Temp(ext).Get();
+        const char* extA = GfxFileExtFromData(*imageData);
         logf("image %d, size: %d, ext: %s\n", (int)i, (int)imageData->size(), extA);
         auto e = new FileData();
         e->name = str::Format("image-%d%s", (int)i, extA);

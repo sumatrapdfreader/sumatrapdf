@@ -447,7 +447,8 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    const WCHAR* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
+    const char* imgExtA = GfxFileExtFromData({(u8*)data.data(), data.size()});
+    WCHAR* imgExt = ToWstrTemp(imgExtA);
     AutoFreeWstr mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
 #ifdef _WIN64

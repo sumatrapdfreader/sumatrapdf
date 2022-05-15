@@ -456,18 +456,18 @@ Kind GuessFileType(const WCHAR* path, bool sniff) {
 static const Kind gImageKinds[] = {kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,
                                    kindFileTga, kindFileJxr,  kindFileWebp, kindFileJp2, kindFileHeic};
 
-static const WCHAR* gImageFormatExts =
-    L".png\0"
-    L".jpg\0"
-    L".gif\0"
-    L".bmp\0"
-    L".tif\0"
-    L".tga\0"
-    L".jxr\0"
-    L".webp\0"
-    L".jp2\0"
-    L".heic\0"
-    L"\0";
+static const char* gImageFormatExts =
+    ".png\0"
+    ".jpg\0"
+    ".gif\0"
+    ".bmp\0"
+    ".tif\0"
+    ".tga\0"
+    ".jxr\0"
+    ".webp\0"
+    ".jp2\0"
+    ".heic\0"
+    "\0";
 
 static int FindImageKindIdx(Kind kind) {
     int n = (int)dimof(gImageKinds);
@@ -479,7 +479,7 @@ static int FindImageKindIdx(Kind kind) {
     return -1;
 }
 
-const WCHAR* GfxFileExtFromKind(Kind kind) {
+const char* GfxFileExtFromKind(Kind kind) {
     int idx = FindImageKindIdx(kind);
     if (idx >= 0) {
         return seqstrings::IdxToStr(gImageFormatExts, idx);
@@ -487,7 +487,7 @@ const WCHAR* GfxFileExtFromKind(Kind kind) {
     return nullptr;
 }
 
-const WCHAR* GfxFileExtFromData(ByteSlice d) {
+const char* GfxFileExtFromData(ByteSlice d) {
     Kind kind = GuessFileTypeFromContent(d);
     return GfxFileExtFromKind(kind);
 }

@@ -545,14 +545,15 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
     SetFileName(file);
 
     AutoFree data = file::ReadFile(file);
-    fileExt = GfxFileExtFromData(data.AsSpan());
-    if (fileExt == nullptr) {
+    const char* fileExtA = GfxFileExtFromData(data.AsSpan());
+    if (fileExtA == nullptr) {
         char* pathA = ToUtf8Temp(file);
         Kind kind = GuessFileTypeFromName(pathA);
-        fileExt = GfxFileExtFromKind(kind);
+        fileExtA = GfxFileExtFromKind(kind);
     }
-    CrashIf(fileExt == nullptr);
-    defaultExt = fileExt;
+    CrashIf(fileExtA == nullptr);
+    fileExt = strconv::Utf8ToWstr(fileExtA);    // TODO: leaks
+    defaultExt = strconv::Utf8ToWstr(fileExtA); // TODO: leaks
     image = BitmapFromData(data.AsSpan());
     return FinishLoading();
 }
@@ -564,15 +565,16 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     fileStream = stream;
     fileStream->AddRef();
 
+    const char* fileExtA = nullptr;
     u8 header[18];
     if (ReadDataFromStream(stream, header, sizeof(header))) {
-        fileExt = GfxFileExtFromData({header, sizeof(header)});
+        fileExtA = GfxFileExtFromData({header, sizeof(header)});
     }
-    if (!fileExt) {
+    if (!fileExtA) {
         return false;
     }
 
-    defaultExt = fileExt;
+    defaultExt = strconv::Utf8ToWstr(fileExtA); // TOOD: leaks
 
     AutoFree data = GetDataFromStream(stream, nullptr);
     image = BitmapFromData(data.AsSpan());
