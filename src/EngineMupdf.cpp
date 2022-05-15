@@ -1600,12 +1600,12 @@ EngineBase* EngineMupdf::Clone() {
 // File names ending in :<digits> are interpreted as containing
 // embedded PDF documents (the digits is stream number of the embedded file stream)
 // the caller must free()
-const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
+const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
     int streamNo = -1;
-    WCHAR* path2 = str::Dup(path);
-    WCHAR* streamNoStr = (WCHAR*)FindEmbeddedPdfFileStreamNo(path2);
+    char* path2 = str::Dup(path);
+    char* streamNoStr = (char*)FindEmbeddedPdfFileStreamNo(path2);
     if (streamNoStr) {
-        WCHAR* rest = (WCHAR*)str::Parse(streamNoStr, L":%d", &streamNo);
+        char* rest = (char*)str::Parse(streamNoStr, ":%d", &streamNo);
         // there shouldn't be any left unparsed data
         CrashIf(!rest);
         if (!rest) {
@@ -1618,14 +1618,15 @@ const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
     return path2;
 }
 
-ByteSlice EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
+ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
     int streamNo = -1;
-    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
+    AutoFreeStr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
     if (streamNo < 0) {
         return {};
     }
 
-    bool ok = Load(fnCopy.Get(), nullptr);
+    WCHAR* path = ToWstrTemp(fnCopy.Get());
+    bool ok = Load(path, nullptr);
     if (!ok) {
         return {};
     }
@@ -1654,7 +1655,7 @@ ByteSlice EngineMupdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
 
 // <filePath> should end with embed marks, which is a stream number
 // inside pdf file
-ByteSlice LoadEmbeddedPDFFile(const WCHAR* filePath) {
+ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
     EngineMupdf* engine = new EngineMupdf();
     auto res = engine->LoadStreamFromPDFFile(filePath);
     delete engine;
@@ -1719,7 +1720,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     str::ReplaceWithCopy(&defaultExt, ext);
 
     int streamNo = -1;
-    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
+    AutoFreeStr fnCopy = ParseEmbeddedStreamNumber(pathA, &streamNo);
 
     Kind kind = GuessFileTypeFromName(path);
     // show .txt, .xml and other text files as plain text
@@ -1760,9 +1761,10 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
 
     fz_stream* file = nullptr;
 
+    WCHAR* fnCopyW = ToWstrTemp(fnCopy);
     fz_var(file);
     fz_try(ctx) {
-        file = FzOpenFile2(ctx, fnCopy);
+        file = FzOpenFile2(ctx, fnCopyW);
     }
     fz_catch(ctx) {
         file = nullptr;

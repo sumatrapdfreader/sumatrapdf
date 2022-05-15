@@ -438,8 +438,9 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
 }
 
-static void SaveEmbeddedFile(TabInfo* tab, const WCHAR* srcFath, const WCHAR* fileName) {
-    auto data = LoadEmbeddedPDFFile(srcFath);
+static void SaveEmbeddedFile(TabInfo* tab, const WCHAR* srcPath, const WCHAR* fileName) {
+    char* srcPathA = ToUtf8Temp(srcPath);
+    ByteSlice data = LoadEmbeddedPDFFile(srcPathA);
     if (data.empty()) {
         // TODO: show an error message
         return;

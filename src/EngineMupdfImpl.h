@@ -113,7 +113,7 @@ class EngineMupdf : public EngineBase {
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
     WCHAR* ExtractFontList();
 
-    ByteSlice LoadStreamFromPDFFile(const WCHAR* filePath);
+    ByteSlice LoadStreamFromPDFFile(const char* filePath);
     void InvalideAnnotationsForPage(int pageNo);
 };
 

@@ -41,7 +41,7 @@ extern Kind kindFileTxt;
 
 extern Kind kindDirectory;
 
-const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path);
+const char* FindEmbeddedPdfFileStreamNo(const char* path);
 
 Kind GuessFileTypeFromContent(const char* path);
 Kind GuessFileTypeFromContent(ByteSlice d);

@@ -392,13 +392,13 @@ Kind GuessFileTypeFromContent(const char* path) {
 
 // embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
 // return pointer starting at ":${pdfStream}"
-const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path) {
-    const WCHAR* start = path;
-    const WCHAR* end = start + str::Len(start) - 1;
+const char* FindEmbeddedPdfFileStreamNo(const char* path) {
+    const char* start = path;
+    const char* end = start + str::Len(start) - 1;
 
     int nDigits = 0;
     while (end > start) {
-        WCHAR c = *end;
+        char c = *end;
         if (c == ':') {
             if (nDigits > 0) {
                 return end;
@@ -415,22 +415,21 @@ const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path) {
     return nullptr;
 }
 
-Kind GuessFileTypeFromName(const char* pathA) {
+Kind GuessFileTypeFromName(const char* path) {
     VerifyExtsMatch();
 
-    if (!pathA) {
+    if (!path) {
         return nullptr;
     }
-    if (path::IsDirectory(pathA)) {
+    if (path::IsDirectory(path)) {
         return kindDirectory;
     }
-    Kind res = GetKindByFileExt(pathA);
+    Kind res = GetKindByFileExt(path);
     if (res != nullptr) {
         return res;
     }
 
     // cases that cannot be decided just by looking at file extension
-    WCHAR* path = ToWstrTemp(pathA);
     if (FindEmbeddedPdfFileStreamNo(path) != nullptr) {
         return kindFilePDF;
     }

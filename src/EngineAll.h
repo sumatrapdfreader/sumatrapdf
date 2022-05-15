@@ -52,8 +52,8 @@ bool IsEngineMupdfSupportedFileType(Kind);
 EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
 
-ByteSlice LoadEmbeddedPDFFile(const WCHAR* path);
-const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut);
+ByteSlice LoadEmbeddedPDFFile(const char* path);
+const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut);
 Annotation* EngineMupdfCreateAnnotation(EngineBase*, AnnotationType type, int pageNo, PointF pos);
 int EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>*);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
