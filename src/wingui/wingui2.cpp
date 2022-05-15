@@ -2024,16 +2024,20 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
     ULONG STDMETHODCALLTYPE AddRef() {
         return 1;
     }
+
     ULONG STDMETHODCALLTYPE Release() {
         return 1;
     }
+
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
         return S_OK;
     }
+
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Environment* env) {
         env->CreateCoreWebView2Controller(m_window, this);
         return S_OK;
     }
+
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Controller* controller) {
         controller->AddRef();
 
@@ -2046,6 +2050,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
         m_cb(controller);
         return S_OK;
     }
+
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args) {
         WCHAR* message = nullptr;
         args->TryGetWebMessageAsString(&message);
@@ -2110,20 +2115,32 @@ void Webview2Wnd::Navigate(const char* url) {
     webview->Navigate(ws);
 }
 
+/*
+Settings:
+put_IsWebMessageEnabled(BOOL isWebMessageEnabled)
+put_AreDefaultScriptDialogsEnabled(BOOL areDefaultScriptDialogsEnabled)
+put_IsStatusBarEnabled(BOOL isStatusBarEnabled)
+put_AreDevToolsEnabled(BOOL areDevToolsEnabled)
+put_AreDefaultContextMenusEnabled(BOOL enabled)
+put_AreHostObjectsAllowed(BOOL allowed)
+put_IsZoomControlEnabled(BOOL enabled)
+put_IsBuiltInErrorPageEnabled(BOOL enabled)
+*/
+
 bool Webview2Wnd::Embed(WebViewMsgCb cb) {
     // TOOD: replace with Interlock* functions
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
     flag.test_and_set();
     // InterlockedCompareExchange()
     WCHAR* userDataFolder = ToWstrTemp(dataDir);
-    HRESULT res = CreateCoreWebView2EnvironmentWithOptions(
+    HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
         nullptr, userDataFolder, nullptr, new webview2_com_handler(hwnd, cb, [&](ICoreWebView2Controller* ctrl) {
             controller = ctrl;
             controller->get_CoreWebView2(&webview);
             webview->AddRef();
             flag.clear();
         }));
-    if (res != S_OK) {
+    if (hr != S_OK) {
         return false;
     }
     MSG msg = {};
@@ -2136,6 +2153,14 @@ bool Webview2Wnd::Embed(WebViewMsgCb cb) {
     auto style = GetWindowLong(hwnd, GWL_STYLE);
     style &= ~(WS_OVERLAPPEDWINDOW);
     SetWindowLong(hwnd, GWL_STYLE, style);
+
+    ICoreWebView2Settings* settings = nullptr;
+    hr = webview->get_Settings(&settings);
+    if (hr == S_OK) {
+        settings->put_AreDefaultContextMenusEnabled(FALSE);
+        settings->put_AreDevToolsEnabled(FALSE);
+        settings->put_IsStatusBarEnabled(FALSE);
+    }
 
     Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
     return true;
