@@ -66,16 +66,16 @@ struct TabsCtrl2 : WindowBase {
 
     Size GetIdealSize() override;
 
-    int InsertTab(int idx, std::string_view sv);
+    int InsertTab(int idx, const char* sv);
     int InsertTab(int idx, const WCHAR* ws);
 
     void RemoveTab(int idx);
     void RemoveAllTabs();
 
-    void SetTabText(int idx, std::string_view sv);
+    void SetTabText(int idx, const char* sv);
     void SetTabText(int idx, const WCHAR* ws);
 
-    void SetTooltip(int idx, std::wstring_view sv);
+    void SetTooltip(int idx, const WCHAR*);
     const WCHAR* GetTooltip(int idx);
 
     WCHAR* GetTabText(int idx);

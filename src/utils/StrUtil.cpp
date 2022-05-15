@@ -1999,10 +1999,6 @@ bool Eq(const WCHAR* s1, const WCHAR* s2) {
     return 0 == wcscmp(s1, s2);
 }
 
-bool Eq(std::wstring_view s1, const WCHAR* s2) {
-    return Eq(s1.data(), s2);
-}
-
 // return true if s1 == s2, case insensitive
 bool EqI(const WCHAR* s1, const WCHAR* s2) {
     if (s1 == s2) {

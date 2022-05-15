@@ -42,6 +42,9 @@ struct TempStr {
     char* Get() const {
         return (char*)sv.data();
     }
+    const char* data() const {
+        return sv.data();
+    }
     std::string_view AsView() const {
         return sv;
     }
@@ -50,9 +53,6 @@ struct TempStr {
     }
     operator char*() const { // NOLINT
         return (char*)sv.data();
-    }
-    operator std::string_view() const { // NOLINT
-        return sv;
     }
 };
 
@@ -120,13 +120,11 @@ TempStr DupTemp(const char* s, size_t cb = (size_t)-1);
 TempWstr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
 
 TempStr DupTemp(std::string_view);
-TempWstr DupTemp(std::wstring_view);
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3 = nullptr);
 TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3 = nullptr);
 } // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);
-TempStr ToUtf8Temp(std::wstring_view);
 TempWstr ToWstrTemp(const char* s, size_t cb = (size_t)-1);
 TempWstr ToWstrTemp(std::string_view sv);

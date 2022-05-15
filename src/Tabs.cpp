@@ -347,7 +347,7 @@ static void SetTabTitle(TabInfo* tab) {
     int idx = win->tabs.Find(tab);
     WCHAR* title = (WCHAR*)tab->GetTabTitle();
     win->tabsCtrl->SetTabText(idx, title);
-    auto tooltip = tab->filePath.AsView();
+    auto tooltip = tab->filePath.Get();
     win->tabsCtrl->SetTooltip(idx, tooltip);
 }
 
@@ -731,9 +731,10 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     tab->canvasRc = win->canvasRc;
 
     int idx = (int)win->tabs.size() - 1;
-    int insertedIdx = win->tabsCtrl->InsertTab(idx, (WCHAR*)tab->GetTabTitle());
+    auto tabs = win->tabsCtrl;
+    int insertedIdx = tabs->InsertTab(idx, tab->GetTabTitle());
     CrashIf(insertedIdx == -1);
-    win->tabsCtrl->SetSelectedTabByIndex(idx);
+    tabs->SetSelectedTabByIndex(idx);
     UpdateTabWidth(win);
     return tab;
 }

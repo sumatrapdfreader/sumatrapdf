@@ -62,10 +62,6 @@ TempWstr DupTemp(const WCHAR* s, size_t cch) {
     return TempWstr(res, cch);
 }
 
-TempWstr DupTemp(std::wstring_view sv) {
-    return DupTemp(sv.data(), sv.size());
-}
-
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
     char* s = Join(s1, s2, s3, GetTempAllocator());
     return TempStr(s);
@@ -84,11 +80,6 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
         return TempStr();
     }
     auto v = strconv::WstrToUtf8(s, cch, GetTempAllocator());
-    return TempStr{v};
-}
-
-TempStr ToUtf8Temp(std::wstring_view sv) {
-    auto v = strconv::WstrToUtf8(sv.data(), sv.size(), GetTempAllocator());
     return TempStr{v};
 }
 

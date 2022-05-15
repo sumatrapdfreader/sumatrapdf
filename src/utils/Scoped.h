@@ -276,12 +276,6 @@ struct AutoFreeWstr {
         data = str::Dup(newVal);
     }
 
-#if 0
-    void SetCopy(std::wstring_view newVal) {
-        str::FreePtr(&data);
-        data = str::Dup(newVal);
-    }
-#endif
     // for convenince, we calculate the size if wasn't provided
     // by the caller
     // this is size in characters, not bytes
@@ -294,11 +288,6 @@ struct AutoFreeWstr {
 
     bool empty() {
         return (data == nullptr) || (size() == 0);
-    }
-
-    std::wstring_view AsView() const {
-        size_t sz = str::Len(data);
-        return {data, sz};
     }
 
     WCHAR* StealData() {

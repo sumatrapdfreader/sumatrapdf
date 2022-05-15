@@ -19,7 +19,6 @@ WCHAR* AnsiToWstr(const char* src, size_t cbLen = (size_t)-1);
 
 } // namespace strconv
 
-
 // shorter names
 // TODO: eventually we want to migrate all strconv:: to them
 char* ToUtf8(const WCHAR* s, size_t cch = (size_t)-1);

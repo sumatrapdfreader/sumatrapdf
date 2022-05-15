@@ -60,7 +60,6 @@ bool StartsWith(const u8* str, const char* prefix);
 ByteSlice ToSpan(const char* s);
 
 bool Eq(const WCHAR*, const WCHAR*);
-bool Eq(std::wstring_view s1, const WCHAR* s2);
 bool EqI(const WCHAR*, const WCHAR*);
 bool EqIS(const WCHAR*, const WCHAR*);
 bool EqN(const WCHAR*, const WCHAR*, size_t);

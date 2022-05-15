@@ -389,13 +389,13 @@ static void InitSelfDelete() {
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
 
     AutoFreeWstr scriptPath = GetSelfDeleteBatchPathInTemp();
-    auto scriptPathA = ToUtf8Temp(scriptPath.AsView());
+    char* scriptPathA = ToUtf8Temp(scriptPath.Get());
     bool ok = file::WriteFile(scriptPathA, script.AsSpan());
     if (!ok) {
-        logf("Failed to write '%s'\n", scriptPathA.Get());
+        logf("Failed to write '%s'\n", scriptPathA);
         return;
     }
-    logf("Created self-delete batch script '%s'\n", scriptPathA.Get());
+    logf("Created self-delete batch script '%s'\n", scriptPathA);
     AutoFreeWstr cmdLine = str::Format(L"cmd.exe /C \"%s\"", scriptPath.Get());
     DWORD flags = CREATE_NO_WINDOW;
     LaunchProcess(cmdLine, nullptr, flags);
