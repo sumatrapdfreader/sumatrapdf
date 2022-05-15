@@ -502,7 +502,7 @@ class EngineImage : public EngineImages {
     Bitmap* image = nullptr;
     const WCHAR* fileExt = nullptr;
 
-    bool LoadSingleFile(const WCHAR* fileName);
+    bool LoadSingleFile(const char* fileName);
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
@@ -538,16 +538,16 @@ EngineBase* EngineImage::Clone() {
     return clone;
 }
 
-bool EngineImage::LoadSingleFile(const WCHAR* file) {
-    if (!file) {
+bool EngineImage::LoadSingleFile(const char* pathA) {
+    if (!pathA) {
         return false;
     }
-    SetFileName(file);
+    WCHAR* path = ToWstrTemp(pathA);
+    SetFileName(path);
 
-    AutoFree data = file::ReadFile(file);
+    AutoFree data = file::ReadFile(pathA);
     const char* fileExtA = GfxFileExtFromData(data.AsSpan());
     if (fileExtA == nullptr) {
-        char* pathA = ToUtf8Temp(file);
         Kind kind = GuessFileTypeFromName(pathA);
         fileExtA = GfxFileExtFromKind(kind);
     }
@@ -734,9 +734,10 @@ bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
 }
 
 EngineBase* EngineImage::CreateFromFile(const WCHAR* fileName) {
-    logf("EngineImage::CreateFromFile(%s)\n", ToUtf8Temp(fileName).Get());
+    char* path = ToUtf8Temp(fileName);
+    logf("EngineImage::CreateFromFile(%s)\n", path);
     EngineImage* engine = new EngineImage();
-    if (!engine->LoadSingleFile(fileName)) {
+    if (!engine->LoadSingleFile(path)) {
         delete engine;
         return nullptr;
     }
