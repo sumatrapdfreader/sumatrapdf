@@ -457,6 +457,10 @@ struct StrVec {
 
     bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(StrVecSortedView&) const;
+
+    void Sort(StrLessFunc lessFn = nullptr);
+    void SortI();
+    void SortNatural();
 };
 
 size_t Split(StrVec& v, const char* s, const char* separator, bool collapse);

@@ -2955,30 +2955,30 @@ static bool strLessNoCase(const char* s1, const char* s2) {
     return n1 < n2;
 }
 
-#if 0
+void StrVec::SortI() {
+    Sort(strLessNoCase);
+}
+
+static bool strLessNatural(const char* s1, const char* s2) {
+    int n = str::CmpNatural(s1, s2);
+    return n < 0; // TODO: verify it's < and not >
+}
+
+void StrVec::SortNatural() {
+    Sort(strLessNatural);
+}
+
 void StrVec::Sort(StrLessFunc lessFn) {
     if (lessFn == nullptr) {
         lessFn = strLess;
     }
-
-    // sortedIndex is 0...Size()-1 value
-    // that points into index Vec
-    // starty by fillng sortedIndex with 0...Size()-1
-    // and then sort by swapping indexes
-    u32 n = (u32)index.size();
-    sortedIndex.Reset();
-    for (u32 i = 0; i < n; i++) {
-        sortedIndex.Append(i);
-    }
-    std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        std::string_view is1 = at((int)i1);
-        std::string_view is2 = at((int)i2);
+    std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
+        char* is1 = at((int)i1);
+        char* is2 = at((int)i2);
         bool ret = lessFn(is1, is2);
         return ret;
     });
-    isSorted = true;
 }
-#endif
 
 bool StrVec::GetSortedView(StrVecSortedView& view, StrLessFunc lessFn) const {
     view.v = (StrVec*)this;

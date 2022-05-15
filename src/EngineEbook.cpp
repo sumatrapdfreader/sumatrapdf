@@ -576,7 +576,7 @@ WCHAR* EngineEbook::ExtractFontList() {
     ScopedCritSec scope(&pagesAccess);
 
     Vec<mui::CachedFont*> seenFonts;
-    WStrVecOld fonts;
+    StrVec fonts;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
@@ -600,12 +600,13 @@ WCHAR* EngineEbook::ExtractFontList() {
             if (ok != Ok) {
                 continue;
             }
-            WCHAR fontName[LF_FACESIZE];
-            ok = family.GetFamilyName(fontName);
-            if (ok != Ok || fonts.FindI(fontName) != -1) {
+            WCHAR fontNameW[LF_FACESIZE];
+            ok = family.GetFamilyName(fontNameW);
+            if (ok != Ok) {
                 continue;
             }
-            fonts.Append(str::Dup(fontName));
+            char* fontName = ToUtf8Temp(fontNameW);
+            fonts.AppendIfNotExists(fontName);
         }
     }
     if (fonts.size() == 0) {
@@ -613,7 +614,8 @@ WCHAR* EngineEbook::ExtractFontList() {
     }
 
     fonts.SortNatural();
-    return Join(fonts, L"\n");
+    char* res = Join(fonts, "\n");
+    return strconv::Utf8ToWstr(res);
 }
 
 static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
