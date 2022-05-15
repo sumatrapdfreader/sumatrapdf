@@ -3463,7 +3463,7 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
     return false;
 }
 
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, Kind kind, int displayDPI, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDPI, PasswordUI* pwdUI) {
     if (str::IsEmpty(path)) {
         return nullptr;
     }
@@ -3502,7 +3502,8 @@ EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, Kind kind, int displayD
         displayDPI = 96;
     }
     engine->displayDPI = displayDPI;
-    if (!engine->Load(path, pwdUI)) {
+    WCHAR* pathW = ToWstrTemp(path);
+    if (!engine->Load(pathW, pwdUI)) {
         delete engine;
         return nullptr;
     }

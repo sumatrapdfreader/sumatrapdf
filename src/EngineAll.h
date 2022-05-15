@@ -8,7 +8,7 @@ struct PasswordUI;
 /* EngineDjVu.cpp */
 void CleanupEngineDjVu();
 bool IsEngineDjVuSupportedFileType(Kind kind);
-EngineBase* CreateEngineDjVuFromFile(const WCHAR* path);
+EngineBase* CreateEngineDjVuFromFile(const char* path);
 EngineBase* CreateEngineDjVuFromStream(IStream* stream);
 
 /* EngineEbook.cpp */
@@ -49,7 +49,7 @@ TocItem* CreateWrapperItem(EngineBase* engine);
 /* EngineMupdf.cpp */
 
 bool IsEngineMupdfSupportedFileType(Kind);
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
+EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
 
 ByteSlice LoadEmbeddedPDFFile(const WCHAR* path);
@@ -65,7 +65,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, A
 
 bool IsEnginePsAvailable();
 bool IsEnginePsSupportedFileType(Kind);
-EngineBase* CreateEnginePsFromFile(const WCHAR* fileName);
+EngineBase* CreateEnginePsFromFile(const char* fileName);
 
 /* EngineCreate.cpp */
 

@@ -134,7 +134,8 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 }
 #endif
 
-static EngineBase* ps2pdf(const WCHAR* path) {
+static EngineBase* ps2pdf(const char* pathA) {
+    WCHAR* path = ToWstrTemp(pathA);
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     AutoFreeWstr shortPath(path::ShortPath(path));
     AutoFreeWstr tmpFile(path::GetTempFilePath(L"PsE"));
@@ -200,14 +201,15 @@ static EngineBase* ps2pdf(const WCHAR* path) {
     return CreateEngineMupdfFromStream(stream, ToUtf8Temp(tmpFile).Get());
 }
 
-static EngineBase* psgz2pdf(const WCHAR* fileName) {
+static EngineBase* psgz2pdf(const char* fileName) {
     AutoFreeWstr tmpFile(path::GetTempFilePath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;
     }
 
-    gzFile inFile = gzopen_w(fileName, "rb");
+    WCHAR* path = ToWstrTemp(fileName);
+    gzFile inFile = gzopen_w(path, "rb");
     if (!inFile) {
         return nullptr;
     }
@@ -229,7 +231,8 @@ static EngineBase* psgz2pdf(const WCHAR* fileName) {
     fclose(outFile);
     gzclose(inFile);
 
-    return ps2pdf(tmpFile);
+    char* tmpFileA = ToUtf8Temp(tmpFile);
+    return ps2pdf(tmpFileA);
 }
 
 // EnginePs is mostly a proxy for a PdfEngine that's fed whatever
@@ -334,12 +337,12 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetToc();
     }
 
-    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const char* fileName);
 
   protected:
     EngineBase* pdfEngine = nullptr;
 
-    bool Load(const WCHAR* fileName) {
+    bool Load(const char* fileName) {
         pageCount = 0;
         CrashIf(FileName() || pdfEngine);
         if (!fileName) {
@@ -371,7 +374,7 @@ class EnginePs : public EngineBase {
     }
 };
 
-EngineBase* EnginePs::CreateFromFile(const WCHAR* fileName) {
+EngineBase* EnginePs::CreateFromFile(const char* fileName) {
     EnginePs* engine = new EnginePs();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -392,6 +395,6 @@ bool IsEnginePsSupportedFileType(Kind kind) {
     return kind == kindFilePS;
 }
 
-EngineBase* CreateEnginePsFromFile(const WCHAR* fileName) {
+EngineBase* CreateEnginePsFromFile(const char* fileName) {
     return EnginePs::CreateFromFile(fileName);
 }

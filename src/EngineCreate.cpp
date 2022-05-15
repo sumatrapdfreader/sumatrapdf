@@ -55,19 +55,19 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     return false;
 }
 
-static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine) {
+static EngineBase* CreateEngineForKind(Kind kind, const char* pathA, PasswordUI* pwdUI, bool enableChmEngine) {
     if (!kind) {
         return nullptr;
     }
-    char* pathA = ToUtf8Temp(path);
+    WCHAR* path = ToWstrTemp(pathA);
     int dpi = DpiGet(nullptr);
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
-        engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
+        engine = CreateEngineMupdfFromFile(pathA, kind, dpi, pwdUI);
         return engine;
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
-        engine = CreateEngineDjVuFromFile(path);
+        engine = CreateEngineDjVuFromFile(pathA);
         return engine;
     }
     if (IsEngineImageSupportedFileType(kind)) {
@@ -91,7 +91,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         return engine;
     }
     if (IsEnginePsSupportedFileType(kind)) {
-        engine = CreateEnginePsFromFile(path);
+        engine = CreateEnginePsFromFile(pathA);
         return engine;
     }
     if (enableChmEngine && (kind == kindFileChm)) {
@@ -99,7 +99,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         return engine;
     }
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
-        engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
+        engine = CreateEngineMupdfFromFile(pathA, kind, dpi, pwdUI);
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2212
         // if failed to open with EngineMupdf, will also try to open
         // with my engine
@@ -137,19 +137,18 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     return nullptr;
 }
 
-EngineBase* CreateEngine(const char* pathA, PasswordUI* pwdUI, bool enableChmEngine) {
-    CrashIf(!pathA);
+EngineBase* CreateEngine(const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
+    CrashIf(!path);
 
     // try to open with the engine guess from file name
     // if that fails, try to guess the file type based on content
-    WCHAR* path = ToWstrTemp(pathA);
-    Kind kind = GuessFileTypeFromName(pathA);
+    Kind kind = GuessFileTypeFromName(path);
     EngineBase* engine = CreateEngineForKind(kind, path, pwdUI, enableChmEngine);
     if (engine) {
         return engine;
     }
 
-    Kind newKind = GuessFileTypeFromContent(pathA);
+    Kind newKind = GuessFileTypeFromContent(path);
     if (kind != newKind) {
         engine = CreateEngineForKind(newKind, path, pwdUI, enableChmEngine);
     }

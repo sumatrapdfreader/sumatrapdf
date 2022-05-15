@@ -180,12 +180,11 @@ struct DjVuContext {
         }
     }
 
-    ddjvu_document_t* OpenFile(const WCHAR* fileName) {
+    ddjvu_document_t* OpenFile(const char* fileName) {
         ScopedCritSec scope(&lock);
-        auto fileNameA(ToUtf8Temp(fileName));
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
-        return ddjvu_document_create_by_filename_utf8(ctx, fileNameA.Get(), /* cache */ FALSE);
+        return ddjvu_document_create_by_filename_utf8(ctx, fileName, /* cache */ FALSE);
     }
 
     ddjvu_document_t* OpenStream(IStream* stream) {
@@ -270,7 +269,7 @@ class EngineDjVu : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    static EngineBase* CreateFromFile(const WCHAR* path);
+    static EngineBase* CreateFromFile(const char* path);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
@@ -288,7 +287,7 @@ class EngineDjVu : public EngineBase {
     bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>& coords);
     char* ResolveNamedDest(const char* name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
-    bool Load(const WCHAR* fileName);
+    bool Load(const char* fileName);
     bool Load(IStream* stream);
     bool FinishLoading();
     bool LoadMediaboxes();
@@ -331,8 +330,9 @@ EngineBase* EngineDjVu::Clone() {
     if (stream != nullptr) {
         return CreateFromStream(stream);
     }
-    if (FileName() != nullptr) {
-        return CreateFromFile(FileName());
+    const char* path = FilePathTemp();
+    if (path) {
+        return CreateFromFile(path);
     }
     return nullptr;
 }
@@ -447,7 +447,7 @@ bool EngineDjVu::LoadMediaboxes() {
     return true;
 }
 
-bool EngineDjVu::Load(const WCHAR* fileName) {
+bool EngineDjVu::Load(const char* fileName) {
     SetFileName(fileName);
     doc = gDjVuContext->OpenFile(fileName);
     return FinishLoading();
@@ -1197,7 +1197,7 @@ int EngineDjVu::GetPageByLabel(const WCHAR* label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-EngineBase* EngineDjVu::CreateFromFile(const WCHAR* path) {
+EngineBase* EngineDjVu::CreateFromFile(const char* path) {
     EngineDjVu* engine = new EngineDjVu();
     if (!engine->Load(path)) {
         delete engine;
@@ -1219,7 +1219,7 @@ bool IsEngineDjVuSupportedFileType(Kind kind) {
     return kind == kindFileDjVu;
 }
 
-EngineBase* CreateEngineDjVuFromFile(const WCHAR* path) {
+EngineBase* CreateEngineDjVuFromFile(const char* path) {
     return EngineDjVu::CreateFromFile(path);
 }
 
