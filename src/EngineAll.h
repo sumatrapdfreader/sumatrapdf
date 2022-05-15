@@ -23,7 +23,7 @@ EngineBase* CreateEngineChmFromFile(const char* fileName);
 EngineBase* CreateEngineHtmlFromFile(const char* fileName);
 EngineBase* CreateEngineTxtFromFile(const char* fileName);
 
-void SetDefaultEbookFont(const WCHAR* name, float size);
+void SetDefaultEbookFont(const char* name, float size);
 void EngineEbookCleanup();
 
 /* EngineImages.cpp */

@@ -37,11 +37,15 @@ Kind kindEngineChm = "engineChm";
 Kind kindEngineHtml = "engineHtml";
 Kind kindEngineTxt = "engineTxt";
 
-static AutoFreeWstr gDefaultFontName;
+static AutoFreeStr gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
 static const WCHAR* GetDefaultFontName() {
-    return gDefaultFontName.Get() ? gDefaultFontName.Get() : L"Georgia";
+    char* s = gDefaultFontName.Get();
+    if (s) {
+        return ToWstrTemp(s);
+    }
+    return L"Georgia";
 }
 
 static float GetDefaultFontSize() {
@@ -53,12 +57,12 @@ static float GetDefaultFontSize() {
     return gDefaultFontSize * 96.0f / (float)DpiGetForHwnd(HWND_DESKTOP);
 }
 
-void SetDefaultEbookFont(const WCHAR* name, float size) {
+void SetDefaultEbookFont(const char* name, float size) {
     // intentionally don't validate the input
-    if (str::Eq(name, L"default")) {
+    if (str::Eq(name, "default")) {
         // "default" is used for mupdf engine to indicate
         // we should use the font as given in css
-        name = L"Georgia";
+        name = "Georgia";
     }
     gDefaultFontName.SetCopy(name);
     // use a somewhat smaller size than in the EbookUI, since fit page/width
