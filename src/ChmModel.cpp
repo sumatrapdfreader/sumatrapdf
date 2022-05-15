@@ -459,10 +459,12 @@ ByteSlice ChmModel::GetDataForUrl(const WCHAR* url) {
     return e->data.AsSpan();
 }
 
-void ChmModel::DownloadData(const WCHAR* url, ByteSlice data) {
-    if (cb) {
-        cb->SaveDownload(url, data);
+void ChmModel::DownloadData(const WCHAR* urlW, ByteSlice data) {
+    if (!cb) {
+        return;
     }
+    char* url = ToUtf8Temp(urlW);
+    cb->SaveDownload(url, data);
 }
 
 void ChmModel::OnLButtonDown() {

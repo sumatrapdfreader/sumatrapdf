@@ -665,7 +665,7 @@ struct ControllerCallbackHandler : ControllerCallback {
         win->linkHandler->GotoLink(dest);
     }
     void FocusFrame(bool always) override;
-    void SaveDownload(const WCHAR* url, ByteSlice data) override;
+    void SaveDownload(const char* url, ByteSlice data) override;
 };
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb& saveThumbnail) {
@@ -752,7 +752,8 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(const WCHAR* url, ByteSlice data) {
+void ControllerCallbackHandler::SaveDownload(const char* urlA, ByteSlice data) {
+    WCHAR* url = ToWstrTemp(urlA);
     AutoFreeWstr fileName(url::GetFileName(url));
     // LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
     char* path = ToUtf8Temp(fileName);

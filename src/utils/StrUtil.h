@@ -161,9 +161,9 @@ bool EmptyOrWhiteSpaceOnly(const char* sv);
 namespace url {
 
 void DecodeInPlace(char* urlA);
+void DecodeInPlace(WCHAR* url);
 
 bool IsAbsolute(const WCHAR* url);
-void DecodeInPlace(WCHAR* url);
 WCHAR* GetFullPath(const WCHAR* url);
 WCHAR* GetFileName(const WCHAR* url);
 
