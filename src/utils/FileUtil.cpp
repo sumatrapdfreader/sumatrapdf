@@ -247,12 +247,12 @@ WCHAR* Normalize(const WCHAR* path) {
 // can be used for interaction with non-UNICODE aware applications
 WCHAR* ShortPath(const WCHAR* path) {
     AutoFreeWstr normpath(Normalize(path));
-    DWORD cch = GetShortPathName(normpath, nullptr, 0);
+    DWORD cch = GetShortPathNameW(normpath, nullptr, 0);
     if (!cch) {
         return normpath.StealData();
     }
     WCHAR* shortpath = AllocArray<WCHAR>(cch);
-    GetShortPathName(normpath, shortpath, cch);
+    GetShortPathNameW(normpath, shortpath, cch);
     return shortpath;
 }
 
@@ -415,7 +415,12 @@ bool Match(const WCHAR* path, const WCHAR* filter) {
 }
 
 bool IsAbsolute(const WCHAR* path) {
-    return !PathIsRelative(path);
+    return !PathIsRelativeW(path);
+}
+
+bool IsAbsolute(const char* path) {
+    WCHAR* ws = ToWstrTemp(path);
+    return !PathIsRelativeW(ws);
 }
 
 // returns the path to either the %TEMP% directory or a

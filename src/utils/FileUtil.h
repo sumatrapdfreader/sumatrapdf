@@ -28,6 +28,7 @@ bool HasVariableDriveLetter(const char* path);
 bool IsOnFixedDrive(const WCHAR* path);
 bool Match(const WCHAR* path, const WCHAR* filter);
 bool IsAbsolute(const WCHAR* path);
+bool IsAbsolute(const char* path);
 
 WCHAR* GetTempFilePath(const WCHAR* filePrefix = nullptr);
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);

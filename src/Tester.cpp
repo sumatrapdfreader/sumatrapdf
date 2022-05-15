@@ -171,15 +171,15 @@ static void MobiTest(char* dirOrFile) {
 // we assume this is called from main sumatradirectory, e.g. as:
 // ./obj-dbg/tester.exe, so we use the known files
 void ZipCreateTest() {
-    const WCHAR* zipFileName = L"tester-tmp.zip";
+    const char* zipFileName = "tester-tmp.zip";
     file::Delete(zipFileName);
     ZipCreator zc(zipFileName);
-    auto ok = zc.AddFile(L"premake5.lua");
+    auto ok = zc.AddFile("premake5.lua");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;
     }
-    ok = zc.AddFile(L"premake5.files.lua");
+    ok = zc.AddFile("premake5.files.lua");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;

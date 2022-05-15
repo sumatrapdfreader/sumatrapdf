@@ -737,8 +737,7 @@ bool EngineEpub::Load(const char* fileName) {
     SetFileName(fileName);
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
-        WCHAR* path = ToWstrTemp(fileName);
-        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(path, true));
+        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
         if (!zipStream) {
             return false;
         }
