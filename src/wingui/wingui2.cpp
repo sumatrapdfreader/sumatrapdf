@@ -1162,12 +1162,12 @@ namespace wg {
 
 Kind kindEdit = "edit";
 
-static bool EditSetCueText(HWND hwnd, std::string_view s) {
+static bool EditSetCueText(HWND hwnd, const char* s) {
     if (!hwnd) {
         return false;
     }
-    auto ws = ToWstrTemp(s);
-    bool ok = Edit_SetCueBannerText(hwnd, ws.Get()) == TRUE;
+    WCHAR* ws = ToWstrTemp(s);
+    bool ok = Edit_SetCueBannerText(hwnd, ws) == TRUE;
     return ok;
 }
 

@@ -67,7 +67,7 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     ByteSlice GetDataForUrl(const WCHAR* url) override {
         return cm->GetDataForUrl(url);
     }
-    void DownloadData(const WCHAR* url, ByteSlice data) override {
+    void DownloadData(const char* url, ByteSlice data) override {
         cm->DownloadData(url, data);
     }
 };
@@ -459,11 +459,10 @@ ByteSlice ChmModel::GetDataForUrl(const WCHAR* url) {
     return e->data.AsSpan();
 }
 
-void ChmModel::DownloadData(const WCHAR* urlW, ByteSlice data) {
+void ChmModel::DownloadData(const char* url, ByteSlice data) {
     if (!cb) {
         return;
     }
-    char* url = ToUtf8Temp(urlW);
     cb->SaveDownload(url, data);
 }
 
@@ -675,7 +674,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         return d;
     }
 
-    void DownloadData(const WCHAR*, ByteSlice) override {
+    void DownloadData(const char*, ByteSlice) override {
     }
 };
 

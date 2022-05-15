@@ -111,11 +111,6 @@ struct AutoFree {
         len = str::Len(data);
     }
 
-    AutoFree(std::string_view s) { // NOLINT
-        data = (char*)s.data();
-        len = s.size();
-    }
-
     AutoFree(ByteSlice s) { // NOLINT
         data = (char*)s.data();
         len = s.size();

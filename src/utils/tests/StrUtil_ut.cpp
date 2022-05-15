@@ -138,55 +138,6 @@ static void StrUrlExtractTest() {
     utassert(str::Eq((char*)fileName.Get(), "\xAC\x20"));
 }
 
-#if 0
-static void ParseUntilTest() {
-    const char* txt = "foo\nbar\n\nla\n";
-    const char* a[] = {
-        "foo",
-        "bar",
-        "",
-        "la",
-    };
-    size_t nEls = dimof(a);
-    {
-        std::string_view sv(txt);
-        size_t i = 0;
-        while (true) {
-            auto el = sv::ParseUntil(sv, '\n');
-            const char* got = el.data();
-            if (got == nullptr) {
-                utassert(i == dimof(a));
-                break;
-            }
-            const char* s = a[i];
-            size_t len = str::Len(s);
-            utassert(len == el.size());
-            utassert(str::EqN(s, got, len));
-            i++;
-            utassert(i <= nEls);
-        }
-    }
-    {
-        std::string_view sv(txt, str::Len(txt) - 1);
-        size_t i = 0;
-        while (true) {
-            auto el = sv::ParseUntilBack(sv, '\n');
-            const char* got = el.data();
-            if (got == nullptr) {
-                utassert(i == dimof(a));
-                break;
-            }
-            const char* s = a[nEls - 1 - i];
-            size_t len = str::Len(s);
-            utassert(len == el.size());
-            utassert(str::EqN(s, got, len));
-            i++;
-            utassert(i <= nEls);
-        }
-    }
-}
-#endif
-
 void strStrTest() {
     {
         // verify that we use buf for initial allocations

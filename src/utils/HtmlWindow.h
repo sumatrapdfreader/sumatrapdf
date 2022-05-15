@@ -26,7 +26,7 @@ class HtmlWindowCallback {
     virtual void OnLButtonDown() = 0;
 
     // called when a file can't be displayed and has to be downloaded instead
-    virtual void DownloadData(const WCHAR* url, ByteSlice data) = 0;
+    virtual void DownloadData(const char* url, ByteSlice data) = 0;
 
     virtual ~HtmlWindowCallback() = default;
 };

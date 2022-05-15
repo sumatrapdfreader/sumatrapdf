@@ -65,7 +65,7 @@ struct ChmModel : Controller {
     void OnDocumentComplete(const WCHAR* url);
     void OnLButtonDown();
     ByteSlice GetDataForUrl(const WCHAR* url);
-    void DownloadData(const WCHAR* url, ByteSlice data);
+    void DownloadData(const char* url, ByteSlice data);
 
     static bool IsSupportedFileType(Kind);
 
