@@ -120,8 +120,7 @@ static const char* gFileExts = DEF_EXT_KIND(EXT);
 static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
-static Kind GetKindByFileExt(const WCHAR* pathW) {
-    char* path = ToUtf8Temp(pathW);
+static Kind GetKindByFileExt(const char* path) {
     auto ext = path::GetExtTemp(path);
     int idx = seqstrings::StrToIdxIS(gFileExts, ext);
     if (idx < 0) {
@@ -140,8 +139,8 @@ static void VerifyExtsMatch() {
     if (gDidVerifyExtsMatch) {
         return;
     }
-    CrashAlwaysIf(kindFileEpub != GetKindByFileExt(L"foo.epub"));
-    CrashAlwaysIf(kindFileJp2 != GetKindByFileExt(L"foo.JP2"));
+    CrashAlwaysIf(kindFileEpub != GetKindByFileExt("foo.epub"));
+    CrashAlwaysIf(kindFileJp2 != GetKindByFileExt("foo.JP2"));
     gDidVerifyExtsMatch = true;
 }
 
@@ -427,7 +426,7 @@ Kind GuessFileTypeFromName(const char* pathA) {
     if (path::IsDirectory(pathA)) {
         return kindDirectory;
     }
-    Kind res = GetKindByFileExt(path);
+    Kind res = GetKindByFileExt(pathA);
     if (res != nullptr) {
         return res;
     }
