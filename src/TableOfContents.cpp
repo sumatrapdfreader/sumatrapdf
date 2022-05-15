@@ -438,16 +438,16 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
 }
 
-static void SaveEmbeddedFile(TabInfo* tab, const WCHAR* srcPath, const WCHAR* fileName) {
-    char* srcPathA = ToUtf8Temp(srcPath);
+static void SaveEmbeddedFile(TabInfo* tab, const char* srcPathA, const char* fileName) {
     ByteSlice data = LoadEmbeddedPDFFile(srcPathA);
     if (data.empty()) {
         // TODO: show an error message
         return;
     }
-    WCHAR* dir = path::GetDirTemp(tab->filePath);
+    char* tabPathA = ToUtf8Temp(tab->filePath);
+    char* dir = path::GetDirTemp(tabPathA);
     fileName = path::GetBaseNameTemp(fileName);
-    AutoFreeWstr dstPath = path::Join(dir, fileName);
+    AutoFreeStr dstPath = path::Join(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
 }
@@ -535,9 +535,12 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         case CmdFavoriteDel:
             DelFavorite(filePath, pageNo);
             break;
-        case CmdSaveEmbeddedFile:
-            SaveEmbeddedFile(tab, embeddedFilePath, fileName);
-            break;
+        case CmdSaveEmbeddedFile: {
+            char* emPath = ToUtf8Temp(embeddedFilePath);
+            char* path = ToUtf8Temp(fileName);
+            SaveEmbeddedFile(tab, emPath, path);
+        } break;
+
         case CmdOpenEmbeddedPDF:
             // TODO: maybe also allow for a fileName hint
             OpenEmbeddedFile(tab, dest);

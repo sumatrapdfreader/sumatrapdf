@@ -117,13 +117,14 @@ LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
 }
 #endif
 
-bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, ByteSlice data) {
+bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     if (!HasPermission(Perm::DiskAccess)) {
         return false;
     }
 
     WCHAR dstFileName[MAX_PATH]{};
-    if (fileName) {
+    if (fileNameA) {
+        WCHAR* fileName = ToWstrTemp(fileNameA);
         str::BufSet(dstFileName, dimof(dstFileName), fileName);
     }
     // CrashIf(fileName && str::FindChar(fileName, '/'));

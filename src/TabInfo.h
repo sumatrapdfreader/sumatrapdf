@@ -55,4 +55,4 @@ struct TabInfo {
     void ToggleZoom() const;
 };
 
-bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, ByteSlice data);
+bool SaveDataToFile(HWND hwndParent, char* fileName, ByteSlice data);

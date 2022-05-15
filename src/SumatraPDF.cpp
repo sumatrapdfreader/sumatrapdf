@@ -755,7 +755,8 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
 void ControllerCallbackHandler::SaveDownload(const WCHAR* url, ByteSlice data) {
     AutoFreeWstr fileName(url::GetFileName(url));
     // LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
-    SaveDataToFile(win->hwndFrame, fileName, data);
+    char* path = ToUtf8Temp(fileName);
+    SaveDataToFile(win->hwndFrame, path, data);
 }
 
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
