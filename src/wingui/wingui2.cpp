@@ -14,6 +14,18 @@
 
 #include "utils/Log.h"
 
+// TODO: don't use it
+#include <atomic>
+
+#include "webview2.h"
+
+// TODO: move to premake
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "Shlwapi.lib")
+// TODO: delay load windowsapp ?
+#pragma comment(lib, "windowsapp")
+#pragma comment(lib, "shell32.lib")
+
 Kind kindWnd = "wnd";
 
 // TODO:
@@ -1931,6 +1943,244 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         return 0;
     }
 
+    return WndProcDefault(hwnd, msg, wparam, lparam);
+}
+
+} // namespace wg
+
+#if 0
+// Convert ASCII hex digit to a nibble (four bits, 0 - 15).
+//
+// Use unsigned to avoid signed overflow UB.
+unsigned char hex2nibble(unsigned char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    } else if (c >= 'A' && c <= 'F') {
+        return 10 + (c - 'A');
+    }
+    return 0;
+}
+
+// Convert ASCII hex string (two characters) to byte.
+//
+// E.g., "0B" => 0x0B, "af" => 0xAF.
+char hex2char(const char* p) {
+    return hex2nibble(p[0]) * 16 + hex2nibble(p[1]);
+}
+
+std::string url_encode(const std::string s) {
+    std::string encoded;
+    for (unsigned int i = 0; i < s.length(); i++) {
+        auto c = s[i];
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded = encoded + c;
+        } else {
+            char hex[4];
+            snprintf(hex, sizeof(hex), "%%%02x", c);
+            encoded = encoded + hex;
+        }
+    }
+    return encoded;
+}
+
+std::string url_decode(const std::string st) {
+    std::string decoded;
+    const char* s = st.c_str();
+    size_t length = strlen(s);
+    for (unsigned int i = 0; i < length; i++) {
+        if (s[i] == '%') {
+            decoded.push_back(hex2char(s + i + 1));
+            i = i + 2;
+        } else if (s[i] == '+') {
+            decoded.push_back(' ');
+        } else {
+            decoded.push_back(s[i]);
+        }
+    }
+    return decoded;
+}
+
+std::string html_from_uri(const std::string s) {
+    if (s.substr(0, 15) == "data:text/html,") {
+        return url_decode(s.substr(15));
+    }
+    return "";
+}
+#endif
+
+namespace wg {
+class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
+                             public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
+                             public ICoreWebView2WebMessageReceivedEventHandler,
+                             public ICoreWebView2PermissionRequestedEventHandler {
+    using webview2_com_handler_cb_t = std::function<void(ICoreWebView2Controller*)>;
+
+  public:
+    webview2_com_handler(HWND hwnd, WebViewMsgCb msgCb, webview2_com_handler_cb_t cb)
+        : m_window(hwnd), msgCb(msgCb), m_cb(cb) {
+    }
+    ULONG STDMETHODCALLTYPE AddRef() {
+        return 1;
+    }
+    ULONG STDMETHODCALLTYPE Release() {
+        return 1;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Environment* env) {
+        env->CreateCoreWebView2Controller(m_window, this);
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Controller* controller) {
+        controller->AddRef();
+
+        ICoreWebView2* webview;
+        ::EventRegistrationToken token;
+        controller->get_CoreWebView2(&webview);
+        webview->add_WebMessageReceived(this, &token);
+        webview->add_PermissionRequested(this, &token);
+
+        m_cb(controller);
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args) {
+        WCHAR* message = nullptr;
+        args->TryGetWebMessageAsString(&message);
+        if (!message) {
+            return S_OK;
+        }
+        char* s = ToUtf8Temp(message);
+        msgCb(s);
+        sender->PostWebMessageAsString(message);
+        CoTaskMemFree(message);
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* sender, ICoreWebView2PermissionRequestedEventArgs* args) {
+        COREWEBVIEW2_PERMISSION_KIND kind;
+        args->get_PermissionKind(&kind);
+        if (kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ) {
+            args->put_State(COREWEBVIEW2_PERMISSION_STATE_ALLOW);
+        }
+        return S_OK;
+    }
+
+  private:
+    HWND m_window;
+    WebViewMsgCb msgCb;
+    webview2_com_handler_cb_t m_cb;
+};
+
+void Webview2Wnd::UpdateWebviewSize() {
+    if (controller == nullptr) {
+        return;
+    }
+    RECT bounds;
+    GetClientRect(hwnd, &bounds);
+    controller->put_Bounds(bounds);
+}
+
+void Webview2Wnd::Eval(const char* js) {
+    WCHAR* ws = ToWstrTemp(js);
+    webview->ExecuteScript(ws, nullptr);
+}
+
+void Webview2Wnd::SetHtml(const char* html) {
+#if 0
+        std::string s = "data:text/html,";
+        s += url_encode(html);
+        WCHAR* html2 = ToWstrTemp(s.c_str());
+        m_webview->Navigate(html2);
+#else
+    WCHAR* html2 = ToWstrTemp(html);
+    webview->NavigateToString(html2);
+#endif
+}
+
+void Webview2Wnd::Init(const char* js) {
+    WCHAR* ws = ToWstrTemp(js);
+    webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
+}
+
+void Webview2Wnd::Navigate(const char* url) {
+    WCHAR* ws = ToWstrTemp(url);
+    webview->Navigate(ws);
+}
+
+bool Webview2Wnd::Embed(WebViewMsgCb cb) {
+    std::atomic_flag flag = ATOMIC_FLAG_INIT;
+    flag.test_and_set();
+
+    wchar_t currentExePath[MAX_PATH];
+    GetModuleFileNameW(NULL, currentExePath, MAX_PATH);
+    wchar_t* currentExeName = PathFindFileNameW(currentExePath);
+
+    wchar_t dataPath[MAX_PATH];
+    if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, dataPath))) {
+        return false;
+    }
+    wchar_t userDataFolder[MAX_PATH];
+    PathCombineW(userDataFolder, dataPath, currentExeName);
+
+    HRESULT res = CreateCoreWebView2EnvironmentWithOptions(
+        nullptr, userDataFolder, nullptr, new webview2_com_handler(hwnd, cb, [&](ICoreWebView2Controller* ctrl) {
+            controller = ctrl;
+            controller->get_CoreWebView2(&webview);
+            webview->AddRef();
+            flag.clear();
+        }));
+    if (res != S_OK) {
+        return false;
+    }
+    MSG msg = {};
+    while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    {
+        auto style = GetWindowLong(hwnd, GWL_STYLE);
+        style &= ~(WS_OVERLAPPEDWINDOW);
+        SetWindowLong(hwnd, GWL_STYLE, style);
+    }
+
+    Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+    return true;
+}
+
+void Webview2Wnd::OnBrowserMessage(const char* msg) {
+    /*
+    auto seq = json_parse(msg, "id", 0);
+    auto name = json_parse(msg, "method", 0);
+    auto args = json_parse(msg, "params", 0);
+    if (bindings.find(name) == bindings.end()) {
+      return;
+    }
+    auto fn = bindings[name];
+    (*fn->first)(seq, args, fn->second);
+    */
+    log(msg);
+}
+
+HWND Webview2Wnd::Create(const CreateCustomArgs& args) {
+    CreateCustom(args);
+    if (!hwnd) {
+        return nullptr;
+    }
+
+    auto cb = std::bind(&Webview2Wnd::OnBrowserMessage, this, std::placeholders::_1);
+    Embed(cb);
+    UpdateWebviewSize();
+    return hwnd;
+}
+
+LRESULT Webview2Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_SIZE) {
+        UpdateWebviewSize();
+    }
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 

@@ -452,6 +452,37 @@ struct Splitter : public Wnd {
 
 } // namespace wg
 
+typedef interface ICoreWebView2 ICoreWebView2;
+typedef interface ICoreWebView2Controller ICoreWebView2Controller;
+
+namespace wg {
+class webview2_com_handler;
+
+using WebViewMsgCb = std::function<void(const char*)>;
+//using dispatch_fn_t = std::function<void()>;
+
+struct Webview2Wnd : Wnd {
+    HWND Create(const CreateCustomArgs&);
+
+    void Eval(const char* js);
+    void SetHtml(const char* html);
+    void Init(const char* js);
+    void Navigate(const char* url);
+    bool Embed(WebViewMsgCb cb);
+
+    virtual void OnBrowserMessage(const char* msg);
+
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+
+    void UpdateWebviewSize();
+
+    // DWORD m_main_thread = GetCurrentThreadId();
+    ICoreWebView2* webview = nullptr;
+    ICoreWebView2Controller* controller = nullptr;
+};
+
+} // namespace wg
+
 namespace wg {
 void DeleteWnd(Static**);
 void DeleteWnd(Button**);
