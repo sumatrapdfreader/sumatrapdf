@@ -364,35 +364,35 @@ static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWstr* url
     return rest && !*rest;
 }
 
-#define DEFAULT_MIME_TYPE L"text/html"
+#define kDefaultMimeType "text/html"
 
 // caller must free() the result
-static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
-    const WCHAR* ext = str::FindCharLast(url, '.');
+static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
+    const char* ext = str::FindCharLast(url, '.');
     if (!ext) {
-        return str::Dup(DEFAULT_MIME_TYPE);
+        return str::Dup(kDefaultMimeType);
     }
 
     if (str::FindChar(ext, ';')) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
-        AutoFreeWstr newUrl(str::Dup(url, str::FindChar(ext, ';') - url));
+        char* newUrl = str::DupTemp(url, str::FindChar(ext, ';') - url);
         return MimeFromUrl(newUrl, imgExt);
     }
 
     static const struct {
-        const WCHAR* ext;
-        const WCHAR* mimetype;
+        const char* ext;
+        const char* mimetype;
     } mimeTypes[] = {
-        {L".html", L"text/html"}, {L".htm", L"text/html"},  {L".gif", L"image/gif"},
-        {L".png", L"image/png"},  {L".jpg", L"image/jpeg"}, {L".jpeg", L"image/jpeg"},
-        {L".bmp", L"image/bmp"},  {L".css", L"text/css"},   {L".txt", L"text/plain"},
+        {".html", "text/html"}, {".htm", "text/html"},  {".gif", "image/gif"},
+        {".png", "image/png"},  {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"},
+        {".bmp", "image/bmp"},  {".css", "text/css"},   {".txt", "text/plain"},
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {
         if (str::EqI(ext, mimeTypes[i].ext)) {
             // trust an image's data more than its extension
-            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
+            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, "image/")) {
                 for (int j = 0; j < dimof(mimeTypes); j++) {
                     if (str::Eq(imgExt, mimeTypes[j].ext)) {
                         return str::Dup(mimeTypes[j].mimetype);
@@ -403,12 +403,14 @@ static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
         }
     }
 
-    AutoFreeWstr contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"Content Type"));
+    WCHAR* extW = ToWstrTemp(ext);
+    AutoFreeWstr contentType(ReadRegStr(HKEY_CLASSES_ROOT, extW, L"Content Type"));
     if (contentType) {
-        return contentType.StealData();
+        WCHAR* res = contentType.Get();
+        return strconv::WstrToUtf8(res);
     }
 
-    return str::Dup(DEFAULT_MIME_TYPE);
+    return str::Dup(kDefaultMimeType);
 }
 
 // TODO: return an error page html in case of errors?
@@ -447,10 +449,11 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    const char* imgExtA = GfxFileExtFromData({(u8*)data.data(), data.size()});
-    WCHAR* imgExt = ToWstrTemp(imgExtA);
-    AutoFreeWstr mime(MimeFromUrl(urlRest, imgExt));
-    pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
+    const char* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
+    char* urlRestA = ToUtf8Temp(urlRest);
+    AutoFreeStr mime(MimeFromUrl(urlRestA, imgExt));
+    WCHAR* mimeW = ToWstrTemp(mime.Get());
+    pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages
     CrashIf(data.size() > ULONG_MAX);
