@@ -354,9 +354,8 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(const WCHAR* pathW) {
-    CrashIf(!pathW);
-    char* path = ToUtf8Temp(pathW);
+Kind GuessFileTypeFromContent(const char* path) {
+    CrashIf(!path);
     if (path::IsDirectory(path)) {
         char* mimetypePath = path::JoinTemp(path, "mimetype");
         if (file::StartsWith(mimetypePath, "application/epub+zip")) {
@@ -422,7 +421,6 @@ Kind GuessFileTypeFromName(const char* pathA) {
     if (!pathA) {
         return nullptr;
     }
-    WCHAR* path = ToWstrTemp(pathA);
     if (path::IsDirectory(pathA)) {
         return kindDirectory;
     }
@@ -432,6 +430,7 @@ Kind GuessFileTypeFromName(const char* pathA) {
     }
 
     // cases that cannot be decided just by looking at file extension
+    WCHAR* path = ToWstrTemp(pathA);
     if (FindEmbeddedPdfFileStreamNo(path) != nullptr) {
         return kindFilePDF;
     }
@@ -439,8 +438,7 @@ Kind GuessFileTypeFromName(const char* pathA) {
     return nullptr;
 }
 
-Kind GuessFileType(const WCHAR* path, bool sniff) {
-    char* pathA = ToUtf8Temp(path);
+Kind GuessFileType(const char* path, bool sniff) {
     if (sniff) {
         Kind kind = GuessFileTypeFromContent(path);
         if (kind) {
@@ -448,9 +446,9 @@ Kind GuessFileType(const WCHAR* path, bool sniff) {
         }
         // for some file types we don't have sniffing so fall back to
         // guess from file name
-        return GuessFileTypeFromName(pathA);
+        return GuessFileTypeFromName(path);
     }
-    return GuessFileTypeFromName(pathA);
+    return GuessFileTypeFromName(path);
 }
 
 static const Kind gImageKinds[] = {kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,

@@ -43,10 +43,10 @@ extern Kind kindDirectory;
 
 const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path);
 
-Kind GuessFileTypeFromContent(const WCHAR* path);
+Kind GuessFileTypeFromContent(const char* path);
 Kind GuessFileTypeFromContent(ByteSlice d);
 Kind GuessFileTypeFromName(const char*);
-Kind GuessFileType(const WCHAR* path, bool sniff);
+Kind GuessFileType(const char* path, bool sniff);
 const char* GfxFileExtFromData(ByteSlice);
 const char* GfxFileExtFromKind(Kind);
 

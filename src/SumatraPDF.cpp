@@ -869,7 +869,8 @@ static NO_INLINE void VerifyController(Controller* ctrl, const WCHAR* path) {
 }
 
 static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo* win) {
-    Kind kind = GuessFileType(path, true);
+    char* pathA = ToUtf8Temp(path);
+    Kind kind = GuessFileType(pathA, true);
 
     bool isChm = ChmModel::IsSupportedFileType(kind);
     if (!isChm) {

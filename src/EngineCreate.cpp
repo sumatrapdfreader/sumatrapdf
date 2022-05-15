@@ -148,7 +148,7 @@ EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEng
         return engine;
     }
 
-    Kind newKind = GuessFileTypeFromContent(path);
+    Kind newKind = GuessFileTypeFromContent(pathA);
     if (kind != newKind) {
         engine = CreateEngineForKind(newKind, path, pwdUI, enableChmEngine);
     }

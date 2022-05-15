@@ -1363,7 +1363,8 @@ EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
     auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
-    Kind kind = GuessFileTypeFromContent(path);
+    const char* pathA = ToUtf8Temp(path);
+    Kind kind = GuessFileTypeFromContent(pathA);
     MultiFormatArchive* archive = nullptr;
     if (kind == kindFileZip) {
         archive = OpenZipArchive(path, false);
@@ -1374,7 +1375,6 @@ EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
     }
 
     if (!archive) {
-        char* pathA = ToUtf8Temp(path);
         kind = GuessFileTypeFromName(pathA);
         if (kind == kindFileCbt || kind == kindFileTar) {
             archive = OpenTarArchive(path);

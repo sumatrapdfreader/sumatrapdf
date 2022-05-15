@@ -113,7 +113,8 @@ static void BenchChmLoadOnly(const WCHAR* filePath) {
 }
 
 static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
-    if (!file::Exists(filePath)) {
+    char* pathA = ToUtf8Temp(filePath);
+    if (!file::Exists(pathA)) {
         return;
     }
 
@@ -121,7 +122,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     // using all text rendering methods, so that we can compare and find
     // docs that take a long time to load
 
-    Kind kind = GuessFileType(filePath, true);
+    Kind kind = GuessFileType(pathA, true);
     if (!kind) {
         return;
     }
@@ -169,7 +170,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
-static bool IsFileToBench(const WCHAR* path) {
+static bool IsFileToBench(const char* path) {
     Kind kind = GuessFileType(path, true);
     if (IsSupportedFileType(kind, true)) {
         return true;
@@ -182,7 +183,8 @@ static bool IsFileToBench(const WCHAR* path) {
 
 static void CollectFilesToBench(WCHAR* dir, WStrVecOld& files) {
     DirTraverse(dir, true, [&files](const WCHAR* path) -> bool {
-        if (IsFileToBench(path)) {
+        char* pathA = ToUtf8Temp(path);
+        if (IsFileToBench(pathA)) {
             files.Append(str::Dup(path));
         }
         return true;
@@ -215,7 +217,8 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     if (filter && !path::Match(path::GetBaseNameTemp(filePath), filter)) {
         return false;
     }
-    Kind kind = GuessFileType(filePath, false);
+    char* pathA = ToUtf8Temp(filePath);
+    Kind kind = GuessFileType(pathA, false);
     if (!kind) {
         return false;
     }
@@ -227,7 +230,7 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     }
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
-    Kind kindSniffed = GuessFileType(filePath, true);
+    Kind kindSniffed = GuessFileType(pathA, true);
     if (!kindSniffed || kindSniffed == kind) {
         return false;
     }
