@@ -13,7 +13,7 @@ const WCHAR* GetBaseNameTemp(const WCHAR* path);
 TempStr GetDirTemp(const char* path);
 TempWstr GetDirTemp(const WCHAR* path);
 
-char* Join(const char* path, const char* fileName, Allocator* allocator);
+char* Join(const char* path, const char* fileName, Allocator* allocator=nullptr);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2 = nullptr);
 TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
@@ -76,6 +76,8 @@ bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite);
 namespace dir {
 
 bool Exists(const WCHAR* dir);
+bool Exists(const char*);
+
 bool Create(const WCHAR* dir);
 bool CreateForFile(const WCHAR* path);
 bool CreateAll(const WCHAR* dir);

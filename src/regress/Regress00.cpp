@@ -4,14 +4,14 @@
 // must be #included from Regress.cpp
 
 // test that a given epub file loads correctly. crash otherwise
-static void RegressTestEpubLoading(const WCHAR *fileName)
+static void RegressTestEpubLoading(const char *fileName)
 {
-    WCHAR *filePath = path::Join(TestFilesDir(), fileName);
+    char *filePath = path::Join(TestFilesDir(), fileName);
     VerifyFileExists(filePath);
-    char* pathA = ToUtf8Temp(fileName);
-    Kind kind = GuessFileType(pathA, true);
+    Kind kind = GuessFileType(fileName, true);
     CrashAlwaysIf(!EpubDoc::IsSupportedFileType(kind));
-    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
+    WCHAR* filePathW = ToWstrTemp(filePath);
+    EpubDoc *doc = EpubDoc::CreateFromFile(filePathW);
     CrashAlwaysIf(!doc);
     delete doc;
 }
@@ -19,24 +19,24 @@ static void RegressTestEpubLoading(const WCHAR *fileName)
 // http://code.google.com/p/sumatrapdf/issues/detail?id=2102
 static void Regress02()
 {
-    RegressTestEpubLoading(L"epub\\sumatra-crash-nov-23-2012.epub");
+    RegressTestEpubLoading("epub\\sumatra-crash-nov-23-2012.epub");
 }
 
 // http://code.google.com/p/sumatrapdf/issues/detail?id=2091
 static void Regress01()
 {
-    RegressTestEpubLoading(L"epub\\sumatra-crash-nov-12-2012.epub");
+    RegressTestEpubLoading("epub\\sumatra-crash-nov-12-2012.epub");
 }
 
 // http://code.google.com/p/sumatrapdf/issues/detail?id=1926
 static void Regress00()
 {
-    WCHAR *filePath = path::Join(TestFilesDir(), L"epub\\widget-figure-gallery-20120405.epub");
+    char *filePath = path::Join(TestFilesDir(), "epub\\widget-figure-gallery-20120405.epub");
     VerifyFileExists(filePath);
-    char* pathA = ToUtf8Temp(filePath);
-    Kind kind = GuessFileType(pathA, true);
+    Kind kind = GuessFileType(filePath, true);
     CrashAlwaysIf(!EpubDoc::IsSupportedFileType(kind));
-    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
+    WCHAR* filePathW = ToWstrTemp(filePath);
+    EpubDoc *doc = EpubDoc::CreateFromFile(filePathW);
     CrashAlwaysIf(!doc);
 
     PoolAllocator textAllocator;

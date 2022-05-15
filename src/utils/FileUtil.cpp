@@ -745,6 +745,20 @@ bool Exists(const WCHAR* dir) {
 
     return (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
+bool Exists(const char* dirA) {
+    if (nullptr == dirA) {
+        return false;
+    }
+    WCHAR* dir = ToWstrTemp(dirA);
+
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+    BOOL res = GetFileAttributesEx(dir, GetFileExInfoStandard, &fileInfo);
+    if (0 == res) {
+        return false;
+    }
+
+    return (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
 
 // Return true if a directory already exists or has been successfully created
 bool Create(const WCHAR* dir) {

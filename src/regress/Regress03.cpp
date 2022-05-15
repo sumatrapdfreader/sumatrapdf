@@ -3,9 +3,8 @@
    https://drive.google.com/file/d/0B2EXZJHDEYllMnkzMUZWWGdueDA/view?usp=sharing
  */
 
-void SearchTestWithDir(const WCHAR* searchFile, const WCHAR* searchTerm, const TextSearchDirection direction,
+void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const TextSearchDirection direction,
                        const TextSel* expected, const int expectedLen) {
-    char* searchFileA = ToUtf8Temp(searchFile);
     EngineBase* engine = CreateEngine(searchFileA, nullptr, true);
     DocumentTextCache* textCache = new DocumentTextCache(engine);
     TextSearch* tsrch = new TextSearch(engine, textCache);
@@ -79,7 +78,7 @@ const TextSel* BuildTextSelList(RegressSearchInfo& info) {
     return result;
 }
 
-void RegressSearch(const WCHAR* filePath, RegressSearchInfo& info) {
+void RegressSearch(const char* filePath, RegressSearchInfo& info) {
     const WCHAR* searchTerm = info.searchPhrase;
     const TextSel* expected = BuildTextSelList(info);
     SearchTestWithDir(filePath, searchTerm, TextSearchDirection::Forward, expected, info.count);
@@ -88,7 +87,7 @@ void RegressSearch(const WCHAR* filePath, RegressSearchInfo& info) {
 }
 
 void Regress03() {
-    WCHAR* filePath = path::Join(TestFilesDir(), L"sumatra-search-across-pages-20170615.pdf");
+    char* filePath = path::Join(TestFilesDir(), "sumatra-search-across-pages-20170615.pdf", nullptr);
     VerifyFileExists(filePath);
     // searches with hits that are all located completely in one page
     RegressSearch(filePath, data_suspendisse);

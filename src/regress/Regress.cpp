@@ -42,9 +42,9 @@ To write new regression test:
 #include "TextSelection.h"
 #include "TextSearch.h"
 
-static const WCHAR* gTestFilesDir;
+static const char* gTestFilesDir;
 
-static const WCHAR* TestFilesDir() {
+static const char* TestFilesDir() {
     return gTestFilesDir;
 }
 
@@ -63,10 +63,10 @@ static void printflush(const char* s) {
 /* Auto-detect the location of test files. Ultimately we might add a cmd-line
 option to specify this directory, for now just add your location(s) to the list */
 static bool FindTestFilesDir() {
-    const WCHAR* dirsToCheck[] = {L"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
-                            L"C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
+    const char* dirsToCheck[] = {"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
+                            "C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
-        const WCHAR* dir = dirsToCheck[i];
+        const char* dir = dirsToCheck[i];
         if (dir::Exists(dir)) {
             gTestFilesDir = dir;
             return true;
@@ -75,9 +75,9 @@ static bool FindTestFilesDir() {
     return false;
 }
 
-static void VerifyFileExists(const WCHAR* filePath) {
+static void VerifyFileExists(const char* filePath) {
     if (!file::Exists(filePath)) {
-        wprintf(L"File '%s' doesn't exist!\n", filePath);
+        printf("File '%s' doesn't exist!\n", filePath);
         system("pause");
         exit(1);
     }
