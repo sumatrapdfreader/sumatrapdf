@@ -1124,10 +1124,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     goto Exit;
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG)
     if (false) {
         // LoadFile();
         LoadRar();
+        return 0;
+    }
+#endif
+
+#if defined(DEBUG)
+    void TestBrowser(); // scratch.cpp
+    if (flags.testBrowser) {
+        TestBrowser();
         return 0;
     }
 #endif

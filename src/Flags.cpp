@@ -245,6 +245,7 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(AllUsers, "all-users")                     \
     V(AllUsers2, "allusers")                     \
     V(RunInstallNow, "run-install-now")          \
+    V(TestBrowser, "test-browser")               \
     V(SetColorRange, "set-color-range")
 
 #define MAKE_ARG(__arg, __name) __arg,
@@ -376,6 +377,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::RunInstallNow) {
             i.runInstallNow = true;
+            continue;
+        }
+        if (arg == Arg::TestBrowser) {
+            i.testBrowser = true;
             continue;
         }
         if (arg == Arg::AllUsers || arg == Arg::AllUsers2) {

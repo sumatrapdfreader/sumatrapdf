@@ -4,7 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "name": "doit.bat",
             "type": "go",
@@ -31,6 +30,17 @@
             "request": "launch",
             "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
             "args": ["-log"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+        },
+        {
+            "name": "dbg 64 test browser",
+            "type": "cppvsdbg",
+            "preLaunchTask": "build-dbg-64",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
+            "args": ["-test-browser"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
