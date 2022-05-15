@@ -148,3 +148,12 @@ char* WstrToAnsi(const WCHAR* src) {
 }
 
 } // namespace strconv
+
+
+char* ToUtf8(const WCHAR* s, size_t cch) {
+    return strconv::WstrToUtf8(s, cch);
+}
+
+WCHAR* ToWstr(const char* s, size_t cb) {
+    return strconv::Utf8ToWstr(s, cb);
+}

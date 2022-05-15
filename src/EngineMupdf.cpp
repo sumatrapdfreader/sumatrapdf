@@ -3025,7 +3025,7 @@ WCHAR* EngineMupdf::ExtractFontList() {
         pdf_unmark_obj(ctx, res);
     }
 
-    WStrVecOld fonts;
+    StrVec fonts;
     for (size_t i = 0; i < fontList.size(); i++) {
         const char *name = nullptr, *type = nullptr, *encoding = nullptr;
         AutoFree anonFontName;
@@ -3104,18 +3104,19 @@ WCHAR* EngineMupdf::ExtractFontList() {
             info.Append(")");
         }
 
-        auto fontInfo = ToWstrTemp(info.LendData());
-        if (fontInfo.Get() && !fonts.Contains(fontInfo)) {
-            fonts.Append(str::Dup(fontInfo.Get()));
+        if (info.IsEmpty()) {
+            continue;
         }
+        char* fontName = info.LendData();
+        fonts.AppendIfNotExists(fontName);
     }
     if (fonts.size() == 0) {
         return nullptr;
     }
 
     fonts.SortNatural();
-    WCHAR* res = Join(fonts, L"\n");
-    return res;
+    char* res = Join(fonts, "\n");
+    return ToWstr(res);
 }
 
 static const char* DocumentPropertyToMupdfMetadataKey(DocumentProperty prop) {
