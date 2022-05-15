@@ -452,16 +452,17 @@ struct Splitter : public Wnd {
 
 } // namespace wg
 
+// TODO: maybe hide those inside a private struct
 typedef interface ICoreWebView2 ICoreWebView2;
 typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
 namespace wg {
-class webview2_com_handler;
-
 using WebViewMsgCb = std::function<void(const char*)>;
-//using dispatch_fn_t = std::function<void()>;
+// using dispatch_fn_t = std::function<void()>;
 
 struct Webview2Wnd : Wnd {
+    ~Webview2Wnd();
+
     HWND Create(const CreateCustomArgs&);
 
     void Eval(const char* js);
@@ -476,6 +477,11 @@ struct Webview2Wnd : Wnd {
 
     void UpdateWebviewSize();
 
+    // this is where the webview2 control stores data
+    // must be set before we call create
+    // TODO: make Webview2CreateCustomArgs
+    // with dataDir
+    char* dataDir = nullptr;
     // DWORD m_main_thread = GetCurrentThreadId();
     ICoreWebView2* webview = nullptr;
     ICoreWebView2Controller* controller = nullptr;

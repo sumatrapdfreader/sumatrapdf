@@ -2111,20 +2111,11 @@ void Webview2Wnd::Navigate(const char* url) {
 }
 
 bool Webview2Wnd::Embed(WebViewMsgCb cb) {
+    // TOOD: replace with Interlock* functions
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
     flag.test_and_set();
-
-    wchar_t currentExePath[MAX_PATH];
-    GetModuleFileNameW(NULL, currentExePath, MAX_PATH);
-    wchar_t* currentExeName = PathFindFileNameW(currentExePath);
-
-    wchar_t dataPath[MAX_PATH];
-    if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, dataPath))) {
-        return false;
-    }
-    wchar_t userDataFolder[MAX_PATH];
-    PathCombineW(userDataFolder, dataPath, currentExeName);
-
+    // InterlockedCompareExchange()
+    WCHAR* userDataFolder = ToWstrTemp(dataDir);
     HRESULT res = CreateCoreWebView2EnvironmentWithOptions(
         nullptr, userDataFolder, nullptr, new webview2_com_handler(hwnd, cb, [&](ICoreWebView2Controller* ctrl) {
             controller = ctrl;
@@ -2141,11 +2132,10 @@ bool Webview2Wnd::Embed(WebViewMsgCb cb) {
         DispatchMessage(&msg);
     }
 
-    {
-        auto style = GetWindowLong(hwnd, GWL_STYLE);
-        style &= ~(WS_OVERLAPPEDWINDOW);
-        SetWindowLong(hwnd, GWL_STYLE, style);
-    }
+    // remove window frame and decorations
+    auto style = GetWindowLong(hwnd, GWL_STYLE);
+    style &= ~(WS_OVERLAPPEDWINDOW);
+    SetWindowLong(hwnd, GWL_STYLE, style);
 
     Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
     return true;
@@ -2166,6 +2156,7 @@ void Webview2Wnd::OnBrowserMessage(const char* msg) {
 }
 
 HWND Webview2Wnd::Create(const CreateCustomArgs& args) {
+    CrashIf(!dataDir);
     CreateCustom(args);
     if (!hwnd) {
         return nullptr;
@@ -2182,6 +2173,10 @@ LRESULT Webview2Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) 
         UpdateWebviewSize();
     }
     return WndProcDefault(hwnd, msg, wparam, lparam);
+}
+
+Webview2Wnd::~Webview2Wnd() {
+    str::Free(dataDir);
 }
 
 } // namespace wg

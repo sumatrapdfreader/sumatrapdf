@@ -25,6 +25,7 @@
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "MobiDoc.h"
+#include "AppTools.h"
 #include "Scratch.h"
 
 #include "utils/Log.h"
@@ -295,6 +296,7 @@ void TestBrowser() {
     {
         Rect rc = ClientRect(w->hwnd);
         w->webView = new Webview2Wnd();
+        w->webView->dataDir = str::Dup(AppGenDataFilenameTemp("webViewData"));
         CreateCustomArgs args;
         args.parent = w->hwnd;
         dx = rc.dx;
