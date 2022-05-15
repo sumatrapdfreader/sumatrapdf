@@ -1081,16 +1081,16 @@ static bool cmpArchFileInfoByName(MultiFormatArchive::FileInfo* f1, MultiFormatA
     return res < 0;
 }
 
-static const WCHAR* GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
+static const char* GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
     switch (cbxFile->format) {
         case MultiFormatArchive::Format::Zip:
-            return L".cbz";
+            return ".cbz";
         case MultiFormatArchive::Format::Rar:
-            return L".cbr";
+            return ".cbr";
         case MultiFormatArchive::Format::SevenZip:
-            return L".cb7";
+            return ".cb7";
         case MultiFormatArchive::Format::Tar:
-            return L".cbt";
+            return ".cbt";
     }
     CrashIf(true);
     return nullptr;
@@ -1114,7 +1114,8 @@ bool EngineCbx::FinishLoading() {
     // TODO: return DpiGetForHwnd(HWND_DESKTOP) instead?
     fileDPI = 96.f;
 
-    defaultExt = GetExtFromArchiveType(cbxFile);
+    const char* ext = GetExtFromArchiveType(cbxFile);
+    defaultExt = strconv::Utf8ToWstr(ext); // TODO: leaks
 
     Vec<MultiFormatArchive::FileInfo*> pageFiles;
 
