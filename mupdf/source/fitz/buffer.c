@@ -153,6 +153,8 @@ fz_new_buffer_from_base64(fz_context *ctx, const char *data, size_t size)
 				c = 63;
 			else if (iswhite(c))
 				continue;
+			else if (c == '=') /* SumatraPDF */
+				continue;
 			else
 				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid character in base64");
 
