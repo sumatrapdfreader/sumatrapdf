@@ -12,16 +12,16 @@ EngineBase* CreateEngineDjVuFromFile(const WCHAR* path);
 EngineBase* CreateEngineDjVuFromStream(IStream* stream);
 
 /* EngineEbook.cpp */
-EngineBase* CreateEngineEpubFromFile(const WCHAR* fileName);
+EngineBase* CreateEngineEpubFromFile(const char* fileName);
 EngineBase* CreateEngineEpubFromStream(IStream* stream);
-EngineBase* CreateEngineFb2FromFile(const WCHAR* fileName);
+EngineBase* CreateEngineFb2FromFile(const char* fileName);
 EngineBase* CreateEngineFb2FromStream(IStream* stream);
-EngineBase* CreateEngineMobiFromFile(const WCHAR* fileName);
+EngineBase* CreateEngineMobiFromFile(const char* fileName);
 EngineBase* CreateEngineMobiFromStream(IStream* stream);
-EngineBase* CreateEnginePdbFromFile(const WCHAR* fileName);
-EngineBase* CreateEngineChmFromFile(const WCHAR* fileName);
-EngineBase* CreateEngineHtmlFromFile(const WCHAR* fileName);
-EngineBase* CreateEngineTxtFromFile(const WCHAR* fileName);
+EngineBase* CreateEnginePdbFromFile(const char* fileName);
+EngineBase* CreateEngineChmFromFile(const char* fileName);
+EngineBase* CreateEngineHtmlFromFile(const char* fileName);
+EngineBase* CreateEngineTxtFromFile(const char* fileName);
 
 void SetDefaultEbookFont(const WCHAR* name, float size);
 void EngineEbookCleanup();

@@ -349,8 +349,8 @@ class ChmTocBuilder : public EbookTocVisitor {
     }
 };
 
-bool ChmModel::Load(const WCHAR* fileName) {
-    this->fileName.SetCopy(fileName);
+bool ChmModel::Load(const char* fileName) {
+    this->fileName.SetCopy(ToWstrTemp(fileName).Get());
     doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return false;
@@ -681,7 +681,8 @@ class ChmThumbnailTask : public HtmlWindowCallback {
 // its first page to a hwnd specially created for it.
 void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked
-    ChmFile* doc = ChmFile::CreateFromFile(fileName);
+    char* fileNameA = ToUtf8Temp(fileName);
+    ChmFile* doc = ChmFile::CreateFromFile(fileNameA);
     if (!doc) {
         return;
     }
@@ -714,7 +715,7 @@ bool ChmModel::IsSupportedFileType(Kind kind) {
     return ChmFile::IsSupportedFileType(kind);
 }
 
-ChmModel* ChmModel::Create(const WCHAR* fileName, ControllerCallback* cb) {
+ChmModel* ChmModel::Create(const char* fileName, ControllerCallback* cb) {
     ChmModel* cm = new ChmModel(cb);
     if (!cm->Load(fileName)) {
         delete cm;

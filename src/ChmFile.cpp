@@ -558,10 +558,9 @@ bool ChmFile::IsSupportedFileType(Kind kind) {
     return kind == kindFileChm;
 }
 
-ChmFile* ChmFile::CreateFromFile(const WCHAR* path) {
+ChmFile* ChmFile::CreateFromFile(const char* path) {
     ChmFile* chmFile = new ChmFile();
-    char* pathA = ToUtf8Temp(path);
-    if (!chmFile || !chmFile->Load(pathA)) {
+    if (!chmFile || !chmFile->Load(path)) {
         delete chmFile;
         return nullptr;
     }

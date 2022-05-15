@@ -376,6 +376,11 @@ const WCHAR* EngineBase::FileName() const {
     return fileNameBase.Get();
 }
 
+const char* EngineBase::FilePathTemp() const {
+    const WCHAR* s = FileName();
+    return ToUtf8Temp(s);
+}
+
 RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
     CrashMe();
     return nullptr;
@@ -383,6 +388,11 @@ RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
 
 void EngineBase::SetFileName(const WCHAR* s) {
     fileNameBase.SetCopy(s);
+}
+
+void EngineBase::SetFileName(const char* s) {
+    WCHAR* ws = ToWstrTemp(s);
+    fileNameBase.SetCopy(ws);
 }
 
 PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {

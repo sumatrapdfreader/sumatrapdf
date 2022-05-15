@@ -461,7 +461,7 @@ static bool IsValidCompression(int comprType) {
     return (COMPRESSION_NONE == comprType) || (COMPRESSION_PALM == comprType) || (COMPRESSION_HUFF == comprType);
 }
 
-MobiDoc::MobiDoc(const WCHAR* filePath) {
+MobiDoc::MobiDoc(const char* filePath) {
     docTocIndex = kInvalidSize;
     fileName = str::Dup(filePath);
 }
@@ -1001,7 +1001,7 @@ bool MobiDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFileMobi;
 }
 
-MobiDoc* MobiDoc::CreateFromFile(const WCHAR* fileName) {
+MobiDoc* MobiDoc::CreateFromFile(const char* fileName) {
     MobiDoc* mb = new MobiDoc(fileName);
     PdbReader* pdbReader = PdbReader::CreateFromFile(fileName);
     if (!pdbReader || !mb->LoadDocument(pdbReader)) {

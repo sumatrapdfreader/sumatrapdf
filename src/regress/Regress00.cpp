@@ -10,8 +10,7 @@ static void RegressTestEpubLoading(const char *fileName)
     VerifyFileExists(filePath);
     Kind kind = GuessFileType(fileName, true);
     CrashAlwaysIf(!EpubDoc::IsSupportedFileType(kind));
-    WCHAR* filePathW = ToWstrTemp(filePath);
-    EpubDoc *doc = EpubDoc::CreateFromFile(filePathW);
+    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
     CrashAlwaysIf(!doc);
     delete doc;
 }
@@ -35,8 +34,7 @@ static void Regress00()
     VerifyFileExists(filePath);
     Kind kind = GuessFileType(filePath, true);
     CrashAlwaysIf(!EpubDoc::IsSupportedFileType(kind));
-    WCHAR* filePathW = ToWstrTemp(filePath);
-    EpubDoc *doc = EpubDoc::CreateFromFile(filePathW);
+    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
     CrashAlwaysIf(!doc);
 
     PoolAllocator textAllocator;

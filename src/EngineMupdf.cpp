@@ -1696,7 +1696,7 @@ static ByteSlice TxtFileToHTML(const WCHAR* path) {
     return {(u8*)d.StealData(), sz};
 }
 
-static ByteSlice PalmDocToHTML(const WCHAR* path) {
+static ByteSlice PalmDocToHTML(const char* path) {
     auto doc = PalmDoc::CreateFromFile(path);
     if (!doc) {
         return {};
@@ -1711,6 +1711,7 @@ static ByteSlice PalmDocToHTML(const WCHAR* path) {
 }
 
 bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
+    char* pathA = ToUtf8Temp(path);
     CrashIf(FileName() || _doc || !ctx);
     SetFileName(path);
 
@@ -1742,7 +1743,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
 
     if (str::EqI(ext, L".pdb")) {
         // synthesize a .html file from pdb file
-        ByteSlice d = PalmDocToHTML(path);
+        ByteSlice d = PalmDocToHTML(pathA);
         if (d.empty()) {
             return false;
         }

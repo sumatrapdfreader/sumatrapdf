@@ -112,8 +112,7 @@ static void MobiLayout(MobiDoc* mobiDoc) {
 
 static void MobiTestFile(const char* filePathA) {
     printf("Testing file '%s'\n", filePathA);
-    WCHAR* filePath = ToWstrTemp(filePathA);
-    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(filePath);
+    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(filePathA);
     if (!mobiDoc) {
         printf(" error: failed to parse the file\n");
         return;
@@ -122,10 +121,11 @@ static void MobiTestFile(const char* filePathA) {
     if (gLayout) {
         auto t = TimeGet();
         MobiLayout(mobiDoc);
-        wprintf(L"Spent %.2f ms laying out %s\n", TimeSinceInMs(t), filePath);
+        printf("Spent %.2f ms laying out %s\n", TimeSinceInMs(t), filePathA);
     }
 
     if (gSaveHtml || gSaveImages) {
+        WCHAR* filePath = ToWstrTemp(filePathA);
         // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
         // construct a base name for extracted html/image files in the form
         // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and

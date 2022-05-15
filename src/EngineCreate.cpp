@@ -59,6 +59,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     if (!kind) {
         return nullptr;
     }
+    char* pathA = ToUtf8Temp(path);
     int dpi = DpiGet(nullptr);
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
@@ -94,7 +95,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         return engine;
     }
     if (enableChmEngine && (kind == kindFileChm)) {
-        engine = CreateEngineChmFromFile(path);
+        engine = CreateEngineChmFromFile(pathA);
         return engine;
     }
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
@@ -114,23 +115,23 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
 #endif
 
     if (kind == kindFileEpub) {
-        engine = CreateEngineEpubFromFile(path);
+        engine = CreateEngineEpubFromFile(pathA);
         return engine;
     }
     if (kind == kindFileFb2 || kind == kindFileFb2z) {
-        engine = CreateEngineFb2FromFile(path);
+        engine = CreateEngineFb2FromFile(pathA);
         return engine;
     }
     if (kind == kindFileMobi) {
-        engine = CreateEngineMobiFromFile(path);
+        engine = CreateEngineMobiFromFile(pathA);
         return engine;
     }
     if (kind == kindFilePalmDoc) {
-        engine = CreateEnginePdbFromFile(path);
+        engine = CreateEnginePdbFromFile(pathA);
         return engine;
     }
     if (kind == kindFileHTML) {
-        engine = CreateEnginePdbFromFile(path);
+        engine = CreateEnginePdbFromFile(pathA);
         return engine;
     }
     return nullptr;

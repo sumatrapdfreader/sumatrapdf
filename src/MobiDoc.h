@@ -5,7 +5,7 @@ class HuffDicDecompressor;
 class PdbReader;
 
 class MobiDoc {
-    WCHAR* fileName = nullptr;
+    char* fileName = nullptr;
 
     PdbReader* pdbReader = nullptr;
 
@@ -31,7 +31,7 @@ class MobiDoc {
     };
     Vec<Metadata> props;
 
-    explicit MobiDoc(const WCHAR* filePath);
+    explicit MobiDoc(const char* filePath);
 
     bool ParseHeader();
     bool LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut);
@@ -50,7 +50,7 @@ class MobiDoc {
     ByteSlice GetHtmlData() const;
     ByteSlice* GetCoverImage();
     ByteSlice* GetImage(size_t imgRecIndex) const;
-    const WCHAR* GetFileName() const {
+    const char* GetFileName() const {
         return fileName;
     }
     WCHAR* GetProperty(DocumentProperty prop);
@@ -62,6 +62,6 @@ class MobiDoc {
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind);
-    static MobiDoc* CreateFromFile(const WCHAR* fileName);
+    static MobiDoc* CreateFromFile(const char* fileName);
     static MobiDoc* CreateFromStream(IStream* stream);
 };

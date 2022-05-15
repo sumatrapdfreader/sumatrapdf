@@ -47,7 +47,7 @@ struct ChmModel : Controller {
     // for quick type determination and type-safe casting
     ChmModel* AsChm() override;
 
-    static ChmModel* Create(const WCHAR* fileName, ControllerCallback* cb = nullptr);
+    static ChmModel* Create(const char* fileName, ControllerCallback* cb = nullptr);
 
     // the following is specific to ChmModel
 
@@ -86,7 +86,7 @@ struct ChmModel : Controller {
     // is deleted (e.g. for titles and URLs for ChmTocItem and ChmCacheEntry)
     PoolAllocator poolAlloc;
 
-    bool Load(const WCHAR* fileName);
+    bool Load(const char* fileName);
     void DisplayPage(const WCHAR* pageUrl);
 
     ChmCacheEntry* FindDataForUrl(const WCHAR* url) const;

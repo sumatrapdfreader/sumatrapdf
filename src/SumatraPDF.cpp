@@ -867,9 +867,8 @@ static NO_INLINE void VerifyController(Controller* ctrl, const char* path) {
     CrashIf(true);
 }
 
-static Controller* CreateForChm(const char* pathA, PasswordUI* pwdUI, WindowInfo* win) {
-    WCHAR* path = ToWstrTemp(pathA);
-    Kind kind = GuessFileType(pathA, true);
+static Controller* CreateForChm(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
+    Kind kind = GuessFileType(path, true);
 
     bool isChm = ChmModel::IsSupportedFileType(kind);
     if (!isChm) {
@@ -889,7 +888,7 @@ static Controller* CreateForChm(const char* pathA, PasswordUI* pwdUI, WindowInfo
     Controller* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
         delete chmModel;
-        EngineBase* engine = CreateEngine(pathA, pwdUI, true);
+        EngineBase* engine = CreateEngine(path, pwdUI, true);
         if (!engine) {
             return nullptr;
         }
@@ -902,7 +901,7 @@ static Controller* CreateForChm(const char* pathA, PasswordUI* pwdUI, WindowInfo
         ctrl = chmModel;
     }
     CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed()));
-    VerifyController(ctrl, pathA);
+    VerifyController(ctrl, path);
     return ctrl;
 }
 

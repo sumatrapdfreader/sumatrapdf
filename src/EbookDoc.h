@@ -35,7 +35,7 @@ class EpubDoc {
     str::Str htmlData;
     Vec<ImageData> images;
     AutoFreeWstr tocPath;
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     PropertyMap props;
     bool isNcxToc = false;
     bool isRtlDoc = false;
@@ -46,7 +46,7 @@ class EpubDoc {
     bool ParseNcxToc(const char* data, size_t dataLen, const char* pagePath, EbookTocVisitor* visitor);
 
   public:
-    explicit EpubDoc(const WCHAR* fileName);
+    explicit EpubDoc(const char* fileName);
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
@@ -56,7 +56,7 @@ class EpubDoc {
     ByteSlice GetFileData(const char* relPath, const char* pagePath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    const char* GetFileName() const;
     bool IsRTL() const;
 
     bool HasToc() const;
@@ -64,7 +64,7 @@ class EpubDoc {
 
     static bool IsSupportedFileType(Kind kind);
 
-    static EpubDoc* CreateFromFile(const WCHAR* path);
+    static EpubDoc* CreateFromFile(const char* path);
     static EpubDoc* CreateFromStream(IStream* stream);
 };
 
@@ -74,7 +74,7 @@ class EpubDoc {
 
 class Fb2Doc {
   public:
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     IStream* stream = nullptr;
 
     str::Str xmlData;
@@ -87,7 +87,7 @@ class Fb2Doc {
     bool Load();
     void ExtractImage(HtmlPullParser* parser, HtmlToken* tok);
 
-    explicit Fb2Doc(const WCHAR* fileName);
+    explicit Fb2Doc(const char* fileName);
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
@@ -97,7 +97,7 @@ class Fb2Doc {
     ByteSlice* GetCoverImage() const;
 
     WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    const char* GetFileName() const;
     bool IsZipped() const;
 
     bool HasToc() const;
@@ -105,7 +105,7 @@ class Fb2Doc {
 
     static bool IsSupportedFileType(Kind kind);
 
-    static Fb2Doc* CreateFromFile(const WCHAR* path);
+    static Fb2Doc* CreateFromFile(const char* path);
     static Fb2Doc* CreateFromStream(IStream* stream);
 };
 
@@ -114,32 +114,32 @@ class Fb2Doc {
 class PdbReader;
 
 class PalmDoc {
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     str::Str htmlData;
     WStrVec tocEntries;
 
     bool Load();
 
   public:
-    explicit PalmDoc(const WCHAR* path);
+    explicit PalmDoc(const char* path);
     ~PalmDoc();
 
     ByteSlice GetHtmlData() const;
 
     WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    const char* GetFileName() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
-    static PalmDoc* CreateFromFile(const WCHAR* path);
+    static PalmDoc* CreateFromFile(const char* path);
 };
 
 /* ********** Plain HTML ********** */
 
 class HtmlDoc {
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     AutoFree htmlData;
     AutoFree pagePath;
     Vec<ImageData> images;
@@ -149,7 +149,7 @@ class HtmlDoc {
     ByteSlice LoadURL(const char* url);
 
   public:
-    explicit HtmlDoc(const WCHAR* path);
+    explicit HtmlDoc(const char* path);
     ~HtmlDoc();
 
     ByteSlice GetHtmlData();
@@ -158,33 +158,33 @@ class HtmlDoc {
     ByteSlice GetFileData(const char* relPath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    const char* GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
-    static HtmlDoc* CreateFromFile(const WCHAR* fileName);
+    static HtmlDoc* CreateFromFile(const char* fileName);
 };
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
 class TxtDoc {
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     str::Str htmlData;
-    bool isRFC;
+    bool isRFC = false;
 
     bool Load();
 
   public:
-    explicit TxtDoc(const WCHAR* fileName);
+    explicit TxtDoc(const char* fileName);
 
     ByteSlice GetHtmlData() const;
 
     WCHAR* GetProperty(DocumentProperty prop) const;
-    const WCHAR* GetFileName() const;
+    const char* GetFileName() const;
 
     bool IsRFC() const;
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
-    static TxtDoc* CreateFromFile(const WCHAR* fileName);
+    static TxtDoc* CreateFromFile(const char* fileName);
 };

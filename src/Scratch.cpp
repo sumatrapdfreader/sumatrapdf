@@ -90,7 +90,7 @@ static const char* tocNcx = R"--(<?xml version='1.0' encoding='utf-8'?>
 </ncx>
 )--";
 
-Vec<FileData*> MobiToEpub2(const WCHAR* path) {
+Vec<FileData*> MobiToEpub2(const char* path) {
     Vec<FileData*> res;
     MobiDoc* doc = MobiDoc::CreateFromFile(path);
     if (!doc) {
@@ -150,7 +150,8 @@ Vec<FileData*> MobiToEpub2(const WCHAR* path) {
 }
 
 Vec<FileData*> MobiToEpub(const WCHAR* path) {
-    auto files = MobiToEpub2(path);
+    char* pathA = ToUtf8Temp(path);
+    auto files = MobiToEpub2(pathA);
     const WCHAR* dstDir = LR"(C:\Users\kjk\Downloads\mobiToEpub)";
     bool failed = false;
     for (auto& f : files) {

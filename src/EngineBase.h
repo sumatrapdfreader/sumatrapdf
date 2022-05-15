@@ -513,6 +513,7 @@ class EngineBase {
 
     // the name of the file this engine handles
     const WCHAR* FileName() const;
+    const char* FilePathTemp() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
@@ -522,6 +523,7 @@ class EngineBase {
 
     // protected:
     void SetFileName(const WCHAR* s);
+    void SetFileName(const char* s);
 };
 
 struct PasswordUI {

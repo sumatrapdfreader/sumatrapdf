@@ -270,7 +270,7 @@ const char* EPUB_OPF_NS = "http://www.idpf.org/2007/opf";
 const char* EPUB_NCX_NS = "http://www.daisy.org/z3986/2005/ncx/";
 const char* EPUB_ENC_NS = "http://www.w3.org/2001/04/xmlenc#";
 
-EpubDoc::EpubDoc(const WCHAR* fileName) {
+EpubDoc::EpubDoc(const char* fileName) {
     this->fileName.SetCopy(fileName);
     InitializeCriticalSection(&zipAccess);
     zip = OpenZipArchive(fileName, true);
@@ -295,28 +295,28 @@ EpubDoc::~EpubDoc() {
 }
 
 // TODO: switch to seqstring
-static bool isHtmlMediaType(const WCHAR* mediatype) {
-    if (str::Eq(mediatype, L"application/xhtml+xml")) {
+static bool isHtmlMediaType(const char* mediatype) {
+    if (str::Eq(mediatype, "application/xhtml+xml")) {
         return true;
     }
-    if (str::Eq(mediatype, L"application/html+xml")) {
+    if (str::Eq(mediatype, "application/html+xml")) {
         return true;
     }
-    if (str::Eq(mediatype, L"application/x-dtbncx+xml")) {
+    if (str::Eq(mediatype, "application/x-dtbncx+xml")) {
         return true;
     }
-    if (str::Eq(mediatype, L"text/html")) {
+    if (str::Eq(mediatype, "text/html")) {
         return true;
     }
-    if (str::Eq(mediatype, L"text/xml")) {
+    if (str::Eq(mediatype, "text/xml")) {
         return true;
     }
     return false;
 }
 
 // TODO: switch to seqstring
-static bool isImageMediaType(const WCHAR* mediatype) {
-    return str::Eq(mediatype, L"image/png") || str::Eq(mediatype, L"image/jpeg") || str::Eq(mediatype, L"image/gif");
+static bool isImageMediaType(const char* mediatype) {
+    return str::Eq(mediatype, "image/png") || str::Eq(mediatype, "image/jpeg") || str::Eq(mediatype, "image/gif");
 }
 
 bool EpubDoc::Load() {
@@ -385,7 +385,8 @@ bool EpubDoc::Load() {
 
     for (node = node->down; node; node = node->next) {
         AutoFreeWstr mediatype(node->GetAttribute("media-type"));
-        if (isImageMediaType(mediatype)) {
+        char* mediaTypeA = ToUtf8Temp(mediatype);
+        if (isImageMediaType(mediaTypeA)) {
             AutoFreeWstr imgPath = node->GetAttribute("href");
             if (!imgPath) {
                 continue;
@@ -400,7 +401,7 @@ bool EpubDoc::Load() {
             data.fileName = strconv::WstrToUtf8(imgPath);
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
-        } else if (isHtmlMediaType(mediatype)) {
+        } else if (isHtmlMediaType(mediaTypeA)) {
             AutoFreeWstr htmlPath(node->GetAttribute("href"));
             if (!htmlPath) {
                 continue;
@@ -591,7 +592,7 @@ WCHAR* EpubDoc::GetProperty(DocumentProperty prop) const {
     return props.Get(prop);
 }
 
-const WCHAR* EpubDoc::GetFileName() const {
+const char* EpubDoc::GetFileName() const {
     return fileName;
 }
 
@@ -737,7 +738,7 @@ bool EpubDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFileEpub;
 }
 
-EpubDoc* EpubDoc::CreateFromFile(const WCHAR* path) {
+EpubDoc* EpubDoc::CreateFromFile(const char* path) {
     EpubDoc* doc = new EpubDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
@@ -760,7 +761,7 @@ EpubDoc* EpubDoc::CreateFromStream(IStream* stream) {
 const char* FB2_MAIN_NS = "http://www.gribuser.ru/xml/fictionbook/2.0";
 const char* FB2_XLINK_NS = "http://www.w3.org/1999/xlink";
 
-Fb2Doc::Fb2Doc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {
+Fb2Doc::Fb2Doc(const char* fileName) : fileName(str::Dup(fileName)) {
 }
 
 Fb2Doc::Fb2Doc(IStream* stream) : stream(stream) {
@@ -991,7 +992,7 @@ WCHAR* Fb2Doc::GetProperty(DocumentProperty prop) const {
     return props.Get(prop);
 }
 
-const WCHAR* Fb2Doc::GetFileName() const {
+const char* Fb2Doc::GetFileName() const {
     return fileName;
 }
 
@@ -1047,7 +1048,7 @@ bool Fb2Doc::IsSupportedFileType(Kind kind) {
     return kind == kindFileFb2 || kind == kindFileFb2z;
 }
 
-Fb2Doc* Fb2Doc::CreateFromFile(const WCHAR* path) {
+Fb2Doc* Fb2Doc::CreateFromFile(const char* path) {
     Fb2Doc* doc = new Fb2Doc(path);
     if (!doc || !doc->Load()) {
         delete doc;
@@ -1067,7 +1068,7 @@ Fb2Doc* Fb2Doc::CreateFromStream(IStream* stream) {
 
 /* ********** PalmDOC (and TealDoc) ********** */
 
-PalmDoc::PalmDoc(const WCHAR* path) {
+PalmDoc::PalmDoc(const char* path) {
     this->fileName = str::Dup(path);
 }
 
@@ -1205,7 +1206,7 @@ WCHAR* PalmDoc::GetProperty(DocumentProperty) const {
     return nullptr;
 }
 
-const WCHAR* PalmDoc::GetFileName() const {
+const char* PalmDoc::GetFileName() const {
     return fileName;
 }
 
@@ -1225,7 +1226,7 @@ bool PalmDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFilePalmDoc;
 }
 
-PalmDoc* PalmDoc::CreateFromFile(const WCHAR* path) {
+PalmDoc* PalmDoc::CreateFromFile(const char* path) {
     PalmDoc* doc = new PalmDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
@@ -1236,7 +1237,7 @@ PalmDoc* PalmDoc::CreateFromFile(const WCHAR* path) {
 
 /* ********** Plain HTML ********** */
 
-HtmlDoc::HtmlDoc(const WCHAR* path) : fileName(str::Dup(path)) {
+HtmlDoc::HtmlDoc(const char* path) : fileName(str::Dup(path)) {
 }
 
 HtmlDoc::~HtmlDoc() {
@@ -1256,7 +1257,7 @@ bool HtmlDoc::Load() {
         return false;
     }
 
-    pagePath.Set(strconv::WstrToUtf8(fileName));
+    pagePath.SetCopy(fileName);
     str::TransCharsInPlace(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData.AsSpan());
@@ -1332,7 +1333,7 @@ WCHAR* HtmlDoc::GetProperty(DocumentProperty prop) const {
     return props.Get(prop);
 }
 
-const WCHAR* HtmlDoc::GetFileName() const {
+const char* HtmlDoc::GetFileName() const {
     return fileName;
 }
 
@@ -1340,7 +1341,7 @@ bool HtmlDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFilePalmDoc;
 }
 
-HtmlDoc* HtmlDoc::CreateFromFile(const WCHAR* fileName) {
+HtmlDoc* HtmlDoc::CreateFromFile(const char* fileName) {
     HtmlDoc* doc = new HtmlDoc(fileName);
     if (!doc || !doc->Load()) {
         delete doc;
@@ -1351,7 +1352,8 @@ HtmlDoc* HtmlDoc::CreateFromFile(const WCHAR* fileName) {
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
-TxtDoc::TxtDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)), isRFC(false) {
+TxtDoc::TxtDoc(const char* fileName) {
+    this->fileName = str::Dup(fileName);
 }
 
 // cf. http://www.cix.co.uk/~gidds/Software/TCR.html
@@ -1500,7 +1502,7 @@ static const char* TextFindRfcEnd(str::Str& htmlData, const char* curr) {
 
 bool TxtDoc::Load() {
     AutoFree text(file::ReadFile(fileName));
-    if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
+    if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
         text.TakeOwnershipOf(DecompressTcrText(text.data, text.size()));
     }
     if (!text.data) {
@@ -1512,7 +1514,7 @@ bool TxtDoc::Load() {
     }
 
     int rfc;
-    isRFC = str::Parse(path::GetBaseNameTemp(fileName), L"rfc%d.txt%$", &rfc) != nullptr;
+    isRFC = str::Parse(path::GetBaseNameTemp(fileName), "rfc%d.txt%$", &rfc) != nullptr;
 
     const char* linkEnd = nullptr;
     bool rfcHeader = false;
@@ -1583,7 +1585,7 @@ WCHAR* TxtDoc::GetProperty(DocumentProperty) const {
     return nullptr;
 }
 
-const WCHAR* TxtDoc::GetFileName() const {
+const char* TxtDoc::GetFileName() const {
     return fileName;
 }
 
@@ -1631,7 +1633,7 @@ bool TxtDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFileTxt;
 }
 
-TxtDoc* TxtDoc::CreateFromFile(const WCHAR* fileName) {
+TxtDoc* TxtDoc::CreateFromFile(const char* fileName) {
     TxtDoc* doc = new TxtDoc(fileName);
     if (!doc || !doc->Load()) {
         delete doc;

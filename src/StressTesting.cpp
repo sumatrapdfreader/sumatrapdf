@@ -93,9 +93,9 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     logf(L"pagerender %3d: %.2f ms\n", pagenum, timeMs);
 }
 
-static void BenchChmLoadOnly(const WCHAR* filePath) {
+static void BenchChmLoadOnly(const char* filePath) {
     auto total = TimeGet();
-    logf(L"Starting: %s\n", filePath);
+    logf("Starting: %s\n", filePath);
 
     auto t = TimeGet();
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
@@ -128,7 +128,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     }
 
     if (ChmModel::IsSupportedFileType(kind) && !gGlobalPrefs->chmUI.useFixedPageUI) {
-        BenchChmLoadOnly(filePath);
+        BenchChmLoadOnly(pathA);
         return;
     }
 
