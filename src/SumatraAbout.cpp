@@ -423,7 +423,7 @@ static void CopyAboutInfoToClipboard(__unused HWND hwnd) {
     AutoFreeWstr ver = GetAppVersion();
     info.AppendFmt(L"%s %s\r\n", kAppName, ver.Get());
     for (size_t i = info.size() - 2; i > 0; i--) {
-        info.Append('-');
+        info.AppendChar('-');
     }
     info.Append(L"\r\n");
     // concatenate all the information into a single string
@@ -434,7 +434,7 @@ static void CopyAboutInfoToClipboard(__unused HWND hwnd) {
     }
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--) {
-            info.Append(' ');
+            info.AppendChar(' ');
         }
         info.AppendFmt(L"%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
     }

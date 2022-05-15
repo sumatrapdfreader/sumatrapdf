@@ -9,7 +9,7 @@ using TabClosedCb = std::function<void(TabsCtrl*, TabsCtrlState*, int)>;
 
 class TabItem {
   public:
-    TabItem(std::string_view title, std::string_view toolTip);
+    TabItem(const char* title, const char* toolTip);
 
     str::Str title;
     str::Str toolTip;

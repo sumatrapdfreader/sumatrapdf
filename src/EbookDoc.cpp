@@ -515,7 +515,7 @@ void EpubDoc::ParseMetadata(const char* content) {
 }
 
 ByteSlice EpubDoc::GetHtmlData() const {
-    return htmlData.AsSpan();
+    return htmlData.AsByteSlice();
 }
 
 ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
@@ -1199,7 +1199,7 @@ bool PalmDoc::Load() {
 }
 
 ByteSlice PalmDoc::GetHtmlData() const {
-    return htmlData.AsSpan();
+    return htmlData.AsByteSlice();
 }
 
 WCHAR* PalmDoc::GetProperty(DocumentProperty) const {
@@ -1578,7 +1578,7 @@ bool TxtDoc::Load() {
 }
 
 ByteSlice TxtDoc::GetHtmlData() const {
-    return htmlData.AsSpan();
+    return htmlData.AsByteSlice();
 }
 
 WCHAR* TxtDoc::GetProperty(DocumentProperty) const {
@@ -1610,7 +1610,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     }
 
     HtmlParser parser;
-    parser.Parse(htmlData.AsSpan(), CP_UTF8);
+    parser.Parse(htmlData.AsByteSlice(), CP_UTF8);
     HtmlElement* el = nullptr;
     while ((el = parser.FindElementByName("b", el)) != nullptr) {
         AutoFreeWstr title(el->GetAttribute("title"));

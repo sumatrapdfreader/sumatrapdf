@@ -102,7 +102,7 @@ static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
 
     for (size_t i = 0; i < strArray->size(); i++) {
         if (i > 0) {
-            serialized.Append(' ');
+            serialized.AppendChar(' ');
         }
         const char* str = strArray->at(i);
         bool needsQuotes = !*str;
@@ -112,14 +112,14 @@ static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
         if (!needsQuotes) {
             serialized.Append(str);
         } else {
-            serialized.Append('"');
+            serialized.AppendChar('"');
             for (const char* c = str; *c; c++) {
                 if ('"' == *c) {
-                    serialized.Append('"');
+                    serialized.AppendChar('"');
                 }
-                serialized.Append(*c);
+                serialized.AppendChar(*c);
             }
-            serialized.Append('"');
+            serialized.AppendChar('"');
         }
     }
 
@@ -143,7 +143,7 @@ static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* seriali
                 if ('"' == *s) {
                     s++;
                 }
-                part.Append(*s);
+                part.AppendChar(*s);
             }
             strArray->Append(part.StealData());
             if ('"' == *s) {

@@ -1690,7 +1690,7 @@ WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
             Rect rect = coords[src - pageText];
             Rect isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
-                result.Append(*src);
+                result.AppendChar(*src);
             }
         } else if (result.size() > 0 && result.Last() != '\n') {
             result.Append(L"\r\n", 2);

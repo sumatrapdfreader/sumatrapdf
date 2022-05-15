@@ -316,7 +316,8 @@ static void RebuildAnnotations(EditAnnotationsWindow* ew) {
         CrashIf(annot->isDeleted);
         s.Reset();
         s.AppendFmt("page %d, ", annot->pageNo);
-        s.AppendView(AnnotationReadableName(annot->type));
+        const char* name = AnnotationReadableName(annot->type);
+        s.Append(name);
         model->strings.Append(s.Get());
     }
 

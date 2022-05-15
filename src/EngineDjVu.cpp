@@ -838,7 +838,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>
             extracted.AppendAndFree(value);
         }
         if (miniexp_symbol("word") == type) {
-            extracted.Append(' ');
+            extracted.AppendChar(' ');
             coords.Append(Rect(rect.x + rect.dx, rect.y, 2, rect.dy));
         }
         item = miniexp_cdr(item);

@@ -171,7 +171,7 @@ WCHAR* Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* filen
         } else if (*perc == 'c') {
             cmdline.AppendFmt(L"%u", col);
         } else if (*perc == '%') {
-            cmdline.Append('%');
+            cmdline.AppendChar('%');
         } else {
             cmdline.Append(perc - 1, 2);
         }

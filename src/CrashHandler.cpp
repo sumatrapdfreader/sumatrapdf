@@ -156,7 +156,7 @@ static char* BuildCrashInfoText(bool forCrash) {
     GetModules(s, true);
 
     s.Append("\n\n-------- Log -----------------\n\n");
-    s.AppendView(gLogBuf->AsView());
+    s.Append(gLogBuf->LendData());
 
     if (gSettingsFile) {
         s.Append("\n\n----- Settings file ----------\n\n");
@@ -183,7 +183,7 @@ static void UploadCrashReport(ByteSlice d) {
     headers.AppendFmt("Content-Type: text/plain");
 
     str::Str data(16 * 1024, gCrashHandlerAllocator);
-    data.AppendSpan(d);
+    data.AppendSlice(d);
 
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }

@@ -581,14 +581,14 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rec
     WCHAR wc = c->c;
     bool isNonPrintable = (wc <= 32) || str::IsNonCharacter(wc);
     if (!isNonPrintable) {
-        s.Append(wc);
+        s.AppendChar(wc);
         rects.Append(r);
         return;
     }
 
     // non-printable or whitespace
     if (!str::IsWs(wc)) {
-        s.Append(L'?');
+        s.AppendChar(L'?');
         rects.Append(r);
         return;
     }
@@ -596,7 +596,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rec
     // collapse multiple whitespace characters into one
     WCHAR prev = s.LastChar();
     if (!str::IsWs(prev)) {
-        s.Append(L' ');
+        s.AppendChar(L' ');
         rects.Append(r);
     }
 }
@@ -1323,9 +1323,9 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
         str::WStr number;
-        number.Append('A' + (pageNo - 1) % 26);
+        number.AppendChar('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
-            number.Append(number.at(0));
+            number.AppendChar(number.at(0));
         }
         if (*type == 'a') {
             str::ToLowerInPlace(number.Get());
@@ -1689,7 +1689,7 @@ static ByteSlice TxtFileToHTML(const WCHAR* path) {
     </head>
 <body>
     <pre>)");
-    d.AppendView(fc.AsView());
+    d.Append(fc.Get());
     d.Append(R"(</pre>
 </body>
 </html>)");

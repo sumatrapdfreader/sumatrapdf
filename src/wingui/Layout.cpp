@@ -29,7 +29,7 @@ static void LogAppendNum(str::Str& s, int n, const char* suffix) {
         s.AppendFmt("%d", n);
     }
     if (suffix) {
-        s.AppendView(suffix);
+        s.Append(suffix);
     }
 }
 
@@ -51,7 +51,7 @@ void LogConstraints(Constraints c, const char* suffix) {
         LogAppendNum(s, c.min.dy, " - ");
         LogAppendNum(s, c.max.dy, " ");
     }
-    s.AppendView(suffix);
+    s.Append(suffix);
     dbglayoutf("%s", s.Get());
 }
 

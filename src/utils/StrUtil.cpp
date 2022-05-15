@@ -1337,11 +1337,6 @@ Str::Str(const Str& that) {
     memcpy(s, sOrig, n);
 }
 
-Str::Str(std::string_view s) {
-    Reset();
-    AppendView(s);
-}
-
 Str::Str(const char* s) {
     Reset();
     Append(s);
@@ -1418,8 +1413,8 @@ bool Str::InsertAt(size_t idx, char el) {
     return true;
 }
 
-bool Str::Append(char el) {
-    return InsertAt(len, el);
+bool Str::AppendChar(char c) {
+    return InsertAt(len, c);
 }
 
 bool Str::Append(const char* src, size_t count) {
@@ -1435,6 +1430,10 @@ bool Str::Append(const char* src, size_t count) {
     }
     memcpy(dst, src, count);
     return true;
+}
+
+bool Str::Append(const Str& s) {
+    return Append(s.LendData(), s.size());
 }
 
 char Str::RemoveAt(size_t idx, size_t count) {
@@ -1517,10 +1516,6 @@ std::string_view Str::AsView() const {
     return {Get(), size()};
 }
 
-ByteSlice Str::AsSpan() const {
-    return {(u8*)Get(), size()};
-}
-
 ByteSlice Str::AsByteSlice() const {
     return {(u8*)Get(), size()};
 }
@@ -1531,22 +1526,11 @@ std::string_view Str::StealAsView() {
     return {d, len};
 }
 
-bool Str::AppendChar(char c) {
-    return InsertAt(len, c);
-}
-
 bool Str::Append(const u8* src, size_t size) {
     return this->Append((const char*)src, size);
 }
 
-bool Str::AppendView(const std::string_view sv) {
-    if (sv.empty()) {
-        return true;
-    }
-    return this->Append(sv.data(), sv.size());
-}
-
-bool Str::AppendSpan(ByteSlice d) {
+bool Str::AppendSlice(ByteSlice d) {
     if (d.empty()) {
         return true;
     }
@@ -1582,9 +1566,9 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
     return true;
 }
 
-void Str::Set(std::string_view sv) {
+void Str::Set(const char* s) {
     Reset();
-    AppendView(sv);
+    Append(s);
 }
 
 char* Str::Get() const {
@@ -1709,15 +1693,9 @@ WStr::WStr(const WStr& that) {
     memcpy(s, sOrig, n);
 }
 
-WStr::WStr(std::wstring_view s) {
-    Reset();
-    AppendView(s);
-}
-
 WStr::WStr(const WCHAR* s) {
     Reset();
-    std::wstring_view ws{s};
-    AppendView(ws);
+    Append(s);
 }
 
 WStr& WStr::operator=(const WStr& that) {
@@ -1791,8 +1769,8 @@ bool WStr::InsertAt(size_t idx, const WCHAR& el) {
     return true;
 }
 
-bool WStr::Append(const WCHAR& el) {
-    return InsertAt(len, el);
+bool WStr::AppendChar(WCHAR c) {
+    return InsertAt(len, c);
 }
 
 bool WStr::Append(const WCHAR* src, size_t count) {
@@ -1898,32 +1876,10 @@ std::wstring_view WStr::AsView() const {
     return {Get(), size()};
 }
 
-std::span<WCHAR> WStr::AsSpan() const {
-    return {Get(), size()};
-}
-
 std::wstring_view WStr::StealAsView() {
     size_t len = size();
     WCHAR* d = StealData();
     return {d, len};
-}
-
-bool WStr::AppendChar(WCHAR c) {
-    return InsertAt(len, c);
-}
-
-bool WStr::AppendView(const std::wstring_view sv) {
-    if (sv.empty()) {
-        return true;
-    }
-    return this->Append(sv.data(), sv.size());
-}
-
-bool WStr::AppendSpan(std::span<WCHAR> d) {
-    if (d.empty()) {
-        return true;
-    }
-    return this->Append(d.data(), d.size());
 }
 
 void WStr::AppendFmt(const WCHAR* fmt, ...) {
@@ -1955,9 +1911,9 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith) {
     return true;
 }
 
-void WStr::Set(std::wstring_view sv) {
+void WStr::Set(const WCHAR* s) {
     Reset();
-    AppendView(sv);
+    Append(s);
 }
 
 WCHAR* WStr::Get() const {

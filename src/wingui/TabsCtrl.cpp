@@ -42,7 +42,7 @@ static str::WStr wstrFromUtf8(const str::Str& str) {
     return str::WStr(s.Get());
 }
 
-TabItem::TabItem(const std::string_view title, const std::string_view toolTip) {
+TabItem::TabItem(const char* title, const char* toolTip) {
     this->title = title;
     this->toolTip = toolTip;
 }

@@ -201,8 +201,7 @@ struct Str {
 
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& that);
-    Str(std::string_view s); // NOLINT
-    Str(const char*);        // NOLINT
+    Str(const char*); // NOLINT
 
     Str& operator=(const Str& that);
 
@@ -222,8 +221,10 @@ struct Str {
     size_t size() const;
     int isize() const;
     bool InsertAt(size_t idx, char el);
-    bool Append(char el);
+    bool AppendChar(char c);
+    // bool Append(char el);
     bool Append(const char* src, size_t count = -1);
+    bool Append(const Str& s);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();
     char& Last() const;
@@ -232,16 +233,13 @@ struct Str {
     bool Contains(const char* s, size_t sLen = 0);
     bool IsEmpty() const;
     std::string_view AsView() const;
-    ByteSlice AsSpan() const;
     ByteSlice AsByteSlice() const;
     std::string_view StealAsView();
-    bool AppendChar(char c);
     bool Append(const u8* src, size_t size = -1);
-    bool AppendView(std::string_view sv);
-    bool AppendSpan(ByteSlice d);
+    bool AppendSlice(ByteSlice d);
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
-    void Set(std::string_view sv);
+    void Set(const char*);
     char* Get() const;
     char LastChar() const;
 
@@ -290,7 +288,7 @@ struct WStr {
     size_t size() const;
     int isize() const;
     bool InsertAt(size_t idx, const WCHAR& el);
-    bool Append(const WCHAR& el);
+    bool AppendChar(WCHAR);
     bool Append(const WCHAR* src, size_t count = -1);
     WCHAR RemoveAt(size_t idx, size_t count = 1);
     WCHAR RemoveLast();
@@ -304,14 +302,10 @@ struct WStr {
     WCHAR& FindEl(const std::function<bool(WCHAR&)>& check) const;
     bool IsEmpty() const;
     std::wstring_view AsView() const;
-    std::span<WCHAR> AsSpan() const;
     std::wstring_view StealAsView();
-    bool AppendChar(WCHAR c);
-    bool AppendSpan(std::span<WCHAR> d);
-    bool AppendView(std::wstring_view sv);
     void AppendFmt(const WCHAR* fmt, ...);
-    bool AppendAndFree(const WCHAR* s);
-    void Set(std::wstring_view sv);
+    bool AppendAndFree(const WCHAR*);
+    void Set(const WCHAR*);
     WCHAR* Get() const;
     WCHAR LastChar() const;
 

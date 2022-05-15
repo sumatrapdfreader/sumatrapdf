@@ -2944,11 +2944,11 @@ static void OnMenuOpen(WindowInfo* win) {
     // methods too early on)
     str::WStr fileFilter;
     fileFilter.Append(_TR("All supported documents"));
-    fileFilter.Append(L'\1');
+    fileFilter.AppendChar(L'\1');
     for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available) {
             fileFilter.Append(fileFormats[i].filter);
-            fileFilter.Append(';');
+            fileFilter.AppendChar(L';');
         }
     }
     CrashIf(fileFilter.Last() != L';');
@@ -2956,9 +2956,9 @@ static void OnMenuOpen(WindowInfo* win) {
     for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available && fileFormats[i].name) {
             fileFilter.Append(fileFormats[i].name);
-            fileFilter.Append(L'\1');
+            fileFilter.AppendChar(L'\1');
             fileFilter.Append(fileFormats[i].filter);
-            fileFilter.Append(L'\1');
+            fileFilter.AppendChar(L'\1');
         }
     }
     fileFilter.Append(_TR("All files"));

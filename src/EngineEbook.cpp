@@ -384,7 +384,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
                     if (swidth > 0) {
-                        content.Append(' ');
+                        content.AppendChar(' ');
                         coords.Append(Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
                     }
                 }
@@ -408,7 +408,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
                     if (swidth > 0) {
-                        content.Append(' ');
+                        content.AppendChar(' ');
                         coords.Append(Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));
                     }
                 }

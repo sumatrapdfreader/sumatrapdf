@@ -899,7 +899,7 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
 
 ByteSlice MobiDoc::GetHtmlData() const {
     if (doc) {
-        return doc->AsSpan();
+        return doc->AsByteSlice();
     }
     return {};
 }
@@ -920,7 +920,7 @@ bool MobiDoc::HasToc() {
     docTocIndex = doc->size(); // no ToC
 
     // search for <reference type=toc filepos=\d+/>
-    HtmlPullParser parser(doc->AsSpan());
+    HtmlPullParser parser(doc->AsByteSlice());
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag() || !tok->NameIs("reference")) {

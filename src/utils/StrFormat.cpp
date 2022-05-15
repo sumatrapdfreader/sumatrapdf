@@ -180,7 +180,7 @@ char* Fmt::Eval(const Arg** args, int nArgs) {
         }
 
         if (inst.t == Type::FormatStr) {
-            res.AppendView(inst.sv);
+            res.Append(inst.sv.data(), inst.sv.size());
             continue;
         }
 
@@ -210,7 +210,7 @@ char* Fmt::Eval(const Arg** args, int nArgs) {
                 res.AppendFmt("%G", arg.u.d);
                 break;
             case Type::Str:
-                res.AppendView(arg.u.sv);
+                res.Append(arg.u.sv.data(), arg.u.sv.size());
                 break;
             case Type::WStr:
                 auto s = ToUtf8Temp(arg.u.wsv.data(), arg.u.wsv.size());
