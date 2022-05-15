@@ -446,6 +446,7 @@ struct StrVec {
     ~StrVec() = default;
     void Reset();
 
+    size_t size() const;
     int Size() const;
     char* at(int) const;
 

@@ -2877,6 +2877,10 @@ int StrVec::Append(const char* s, size_t sLen) {
     return Size() - 1;
 }
 
+size_t StrVec::size() const {
+    return index.size();
+}
+
 int StrVec::Size() const {
     return index.isize();
 }

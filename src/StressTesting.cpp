@@ -112,8 +112,7 @@ static void BenchChmLoadOnly(const char* filePath) {
     logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
-static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
-    char* pathA = ToUtf8Temp(filePath);
+static void BenchFile(const char* pathA, const char* pagesSpecA) {
     if (!file::Exists(pathA)) {
         return;
     }
@@ -147,12 +146,13 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     int pages = engine->PageCount();
     logf("page count: %d\n", pages);
 
-    if (nullptr == pagesSpec) {
+    if (!pagesSpecA) {
         for (int i = 1; i <= pages; i++) {
             BenchLoadRender(engine, i);
         }
     }
 
+    WCHAR* pagesSpec = ToWstrTemp(pagesSpecA);
     CrashIf(pagesSpec && !IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
@@ -181,28 +181,27 @@ static bool IsFileToBench(const char* path) {
     return false;
 }
 
-static void CollectFilesToBench(WCHAR* dir, WStrVecOld& files) {
-    DirTraverse(dir, true, [&files](const WCHAR* path) -> bool {
-        char* pathA = ToUtf8Temp(path);
-        if (IsFileToBench(pathA)) {
-            files.Append(str::Dup(path));
+static void CollectFilesToBench(char* dir, StrVec& files) {
+    DirTraverse(dir, true, [&files](const char* path) -> bool {
+        if (IsFileToBench(path)) {
+            files.Append(path);
         }
         return true;
     });
 }
 
-static void BenchDir(WCHAR* dir) {
-    WStrVecOld files;
+static void BenchDir(char* dir) {
+    StrVec files;
     CollectFilesToBench(dir, files);
     for (size_t i = 0; i < files.size(); i++) {
         BenchFile(files.at(i), nullptr);
     }
 }
 
-void BenchFileOrDir(WStrVecOld& pathsToBench) {
+void BenchFileOrDir(StrVec& pathsToBench) {
     size_t n = pathsToBench.size() / 2;
     for (size_t i = 0; i < n; i++) {
-        WCHAR* path = pathsToBench.at(2 * i);
+        char* path = pathsToBench.at(2 * i);
         if (file::Exists(path)) {
             BenchFile(path, pathsToBench.at(2 * i + 1));
         } else if (dir::Exists(path)) {
