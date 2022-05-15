@@ -995,13 +995,12 @@ static void UpdateUiForCurrentTab(WindowInfo* win) {
     SetWindowStyle(win->hwndPageBox, ES_NUMBER, onlyNumbers);
 }
 
-static bool showTocByDefault(const WCHAR* path) {
+static bool showTocByDefault(const char* path) {
     if (!gGlobalPrefs->showToc) {
         return false;
     }
     // we don't want to show toc by default for comic book files
-    char* pathA = ToUtf8Temp(path);
-    Kind kind = GuessFileTypeFromName(pathA);
+    Kind kind = GuessFileTypeFromName(path);
     bool showByDefault = !IsEngineCbxSupportedFileType(kind);
     return showByDefault;
 }
@@ -1041,7 +1040,8 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     ScrollState ss(1, -1, -1);
     int rotation = 0;
-    bool showToc = showTocByDefault(args.fileName);
+    char* path = ToUtf8Temp(args.fileName);
+    bool showToc = showTocByDefault(path);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState;
     int showType = SW_NORMAL;
     if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
