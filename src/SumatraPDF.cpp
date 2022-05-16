@@ -402,14 +402,13 @@ class HwndPasswordUI : public PasswordUI {
     explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) {
     }
 
-    WCHAR* GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
+    char* GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
 };
 
 /* Get password for a given 'fileName', can be nullptr if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileNameW, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
-    char* fileName = ToUtf8Temp(fileNameW);
+char* HwndPasswordUI::GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
     FileState* fileFromHistory = gFileHistory.Find(fileName, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         AutoFree fingerprint(str::MemToHex(fileDigest, 16));
@@ -424,8 +423,7 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileNameW, u8* fileDigest, u8 de
     // try the list of default passwords before asking the user
     if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {
         char* pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
-        WCHAR* pwdW = strconv::Utf8ToWstr(pwd);
-        return pwdW;
+        return str::Dup(pwd);
     }
 
     if (IsStressTesting()) {
@@ -434,14 +432,14 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileNameW, u8* fileDigest, u8 de
 
     // extract the filename from the URL in plugin mode instead
     // of using the more confusing temporary filename
-    AutoFreeWstr urlName;
     if (gPluginMode) {
-        urlName.Set(url::GetFileName(gPluginURL));
+        WCHAR* urlName = url::GetFileName(gPluginURL);
         if (urlName) {
-            fileNameW = urlName;
+            fileName = ToUtf8Temp(urlName);
+            str::Free(urlName);
         }
     }
-    fileNameW = path::GetBaseNameTemp(fileNameW);
+    fileName = path::GetBaseNameTemp(fileName);
 
     // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd)) {
@@ -452,7 +450,7 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileNameW, u8* fileDigest, u8 de
     win::ToForeground(hwnd);
 
     bool* rememberPwd = gGlobalPrefs->rememberOpenedFiles ? saveKey : nullptr;
-    return Dialog_GetPassword(hwnd, fileNameW, rememberPwd);
+    return Dialog_GetPassword(hwnd, fileName, rememberPwd);
 }
 
 // update global windowState for next default launch when either

@@ -1559,8 +1559,8 @@ class PasswordCloner : public PasswordUI {
         this->cryptKey = cryptKey;
     }
 
-    WCHAR* GetPassword(__unused const WCHAR* fileName, __unused u8* fileDigest, u8 decryptionKeyOut[32],
-                       bool* saveKey) override {
+    char* GetPassword(__unused const char* fileName, __unused u8* fileDigest, u8 decryptionKeyOut[32],
+                      bool* saveKey) override {
         memcpy(decryptionKeyOut, cryptKey, 32);
         *saveKey = true;
         return nullptr;
@@ -1933,7 +1933,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         if (pdfdoc) {
             decryptKey = pdf_crypt_key(ctx, pdfdoc->crypt);
         }
-        AutoFreeWstr pwd(pwdUI->GetPassword(FileName(), digest, decryptKey, &saveKey));
+        AutoFreeStr pwd(pwdUI->GetPassword(FilePathTemp(), digest, decryptKey, &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -1941,7 +1941,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        AutoFree pwdA(strconv::WstrToUtf8(pwd));
+        AutoFree pwdA(str::Dup(pwd));
         ok = fz_authenticate_password(ctx, _doc, pwdA.Get());
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
@@ -1949,14 +1949,14 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
             // TODO: this is only part of SASLprep
             pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
             if (pwd) {
-                pwdA = strconv::WstrToUtf8(pwd);
+                pwdA = str::Dup(pwd);
                 ok = fz_authenticate_password(ctx, _doc, pwdA.Get());
             }
         }
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
-            AutoFree pwd_ansi = strconv::WstrToAnsi(pwd);
+            AutoFree pwd_ansi = str::Dup(pwd.Get());
             AutoFreeWstr pwd_cp1252(strconv::StrToWstr(pwd_ansi.Get(), 1252));
             pwdA = strconv::WstrToUtf8(pwd_cp1252);
             ok = fz_authenticate_password(ctx, _doc, pwdA.Get());

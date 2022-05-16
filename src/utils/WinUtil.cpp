@@ -1624,23 +1624,24 @@ uint GuessTextCodepage(const char* data, size_t len, uint defVal) {
     return info.nCodePage;
 }
 
-WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form) {
+char* NormalizeString(const char* strA, int /* NORM_FORM */ form) {
     if (!DynNormalizeString) {
         return nullptr;
     }
+    WCHAR* str = ToWstrTemp(strA);
     int sizeEst = DynNormalizeString(form, str, -1, nullptr, 0);
     if (sizeEst <= 0) {
         return nullptr;
     }
     // according to MSDN the estimate may be off somewhat:
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
-    sizeEst = sizeEst * 3 / 2 + 1;
+    sizeEst = sizeEst * 2;
     AutoFreeWstr res(AllocArray<WCHAR>(sizeEst));
     sizeEst = DynNormalizeString(form, str, -1, res, sizeEst);
     if (sizeEst <= 0) {
         return nullptr;
     }
-    return res.StealData();
+    return ToUtf8(res.Get());
 }
 
 bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args) {

@@ -64,9 +64,9 @@ static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM d
 
 /* For passing data to/from GetPassword dialog */
 struct Dialog_GetPassword_Data {
-    const WCHAR* fileName; /* name of the file for which we need the password */
-    WCHAR* pwdOut;         /* password entered by the user */
-    bool* remember;        /* remember the password (encrypted) or ask again? */
+    const char* fileName; /* name of the file for which we need the password */
+    char* pwdOut;         /* password entered by the user */
+    bool* remember;       /* remember the password (encrypted) or ask again? */
 };
 
 static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
@@ -101,7 +101,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
-                    data->pwdOut = str::Dup(tmp);
+                    data->pwdOut = strconv::WstrToUtf8(tmp);
                     if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     }
@@ -122,7 +122,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
    nullptr if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-WCHAR* Dialog_GetPassword(HWND hwndParent, const WCHAR* fileName, bool* rememberPassword) {
+char* Dialog_GetPassword(HWND hwndParent, const char* fileName, bool* rememberPassword) {
     Dialog_GetPassword_Data data = {nullptr};
     data.fileName = fileName;
     data.remember = rememberPassword;

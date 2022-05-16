@@ -463,13 +463,13 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
 }
 
 class PasswordHolder : public PasswordUI {
-    const WCHAR* password;
+    const char* password;
 
   public:
-    explicit PasswordHolder(const WCHAR* password) : password(password) {
+    explicit PasswordHolder(const char* password) : password(password) {
     }
-    WCHAR* GetPassword(__unused const WCHAR* fileName, __unused u8* fileDigest, __unused u8 decryptionKeyOut[32],
-                       __unused bool* saveKey) override {
+    char* GetPassword(__unused const char* fileName, __unused u8* fileDigest, __unused u8 decryptionKeyOut[32],
+                      __unused bool* saveKey) override {
         return str::Dup(password);
     }
 };
