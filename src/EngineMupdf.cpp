@@ -3177,22 +3177,23 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
     }
 
     if (DocumentProperty::PdfFileStructure == prop) {
-        WStrVecOld fstruct;
+        WStrVec fstruct;
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Linearized"))) {
-            fstruct.Append(str::Dup(L"linearized"));
+            fstruct.Append(L"linearized");
         }
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Marked"))) {
-            fstruct.Append(str::Dup(L"tagged"));
+            fstruct.Append(L"tagged");
         }
         if (pdf_dict_gets(ctx, pdfInfo, "OutputIntents")) {
             int n = pdf_array_len(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"));
             for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"), i);
                 CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
-                fstruct.Append(strconv::Utf8ToWstr(pdf_to_name(ctx, intent) + 4));
+                WCHAR* s = ToWstrTemp(pdf_to_name(ctx, intent) + 4);
+                fstruct.Append(s);
             }
         }
-        if (fstruct.size() == 0) {
+        if (fstruct.Size() == 0) {
             return nullptr;
         }
         return Join(fstruct, L",");

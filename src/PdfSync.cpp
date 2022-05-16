@@ -56,7 +56,7 @@ class Pdfsync : public Synchronizer {
     UINT SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
     EngineBase* engine;              // needed for converting between coordinate systems
-    WStrVecOld srcfiles;             // source file names
+    WStrVec srcfiles;                // source file names
     Vec<PdfsyncLine> lines;          // record-to-line mapping
     Vec<PdfsyncPoint> points;        // record-to-point mapping
     Vec<PdfsyncFileIndex> fileIndex; // start and end of entries for a file in <lines>
@@ -231,7 +231,7 @@ int Pdfsync::RebuildIndex() {
 
     // add the initial tex file to the source file stack
     filestack.Append(srcfiles.size());
-    srcfiles.Append(jobName.StealData());
+    srcfiles.Append(jobName.Get());
     PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
 

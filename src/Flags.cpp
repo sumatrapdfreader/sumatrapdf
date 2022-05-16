@@ -93,17 +93,17 @@ bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
         return false;
     }
 
-    WStrVecOld rangeList;
+    WStrVec rangeList;
     Split(rangeList, ranges, L",", true);
     rangeList.SortNatural();
 
-    for (size_t i = 0; i < rangeList.size(); i++) {
+    for (WCHAR* rangeStr : rangeList) {
         int start, end;
-        if (str::Parse(rangeList.at(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end) {
+        if (str::Parse(rangeStr, L"%d-%d%$", &start, &end) && 0 < start && start <= end) {
             result.Append(PageRange{start, end});
-        } else if (str::Parse(rangeList.at(i), L"%d-%$", &start) && 0 < start) {
+        } else if (str::Parse(rangeStr, L"%d-%$", &start) && 0 < start) {
             result.Append(PageRange{start, INT_MAX});
-        } else if (str::Parse(rangeList.at(i), L"%d%$", &start) && 0 < start) {
+        } else if (str::Parse(rangeStr, L"%d%$", &start) && 0 < start) {
             result.Append(PageRange{start, start});
         } else {
             return false;
