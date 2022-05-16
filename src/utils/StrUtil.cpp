@@ -1512,10 +1512,6 @@ bool Str::IsEmpty() const {
     return len == 0;
 }
 
-std::string_view Str::AsView() const {
-    return {Get(), size()};
-}
-
 ByteSlice Str::AsByteSlice() const {
     return {(u8*)Get(), size()};
 }

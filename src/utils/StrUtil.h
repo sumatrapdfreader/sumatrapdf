@@ -222,7 +222,6 @@ struct Str {
     int isize() const;
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
-    // bool Append(char el);
     bool Append(const char* src, size_t count = -1);
     bool Append(const Str& s);
     char RemoveAt(size_t idx, size_t count = 1);
@@ -232,7 +231,6 @@ struct Str {
     char* LendData() const;
     bool Contains(const char* s, size_t sLen = 0);
     bool IsEmpty() const;
-    std::string_view AsView() const;
     ByteSlice AsByteSlice() const;
     ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
