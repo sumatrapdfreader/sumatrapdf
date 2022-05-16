@@ -146,11 +146,11 @@ static Perm gPolicyRestrictions = Perm::RestrictedUse;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm::DiskAccess)
-static WStrVecOld gAllowedLinkProtocols;
+static WStrVec gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-static WStrVecOld gAllowedFileTypes;
+static WStrVec gAllowedFileTypes;
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.

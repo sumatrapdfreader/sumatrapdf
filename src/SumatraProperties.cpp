@@ -246,25 +246,25 @@ static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
     if (str::IsEmpty(fstruct.Get())) {
         return nullptr;
     }
-    WStrVecOld parts;
+    WStrVec parts;
     Split(parts, fstruct, L",", true);
 
-    WStrVecOld props;
+    WStrVec props;
 
     if (parts.Contains(L"linearized")) {
-        props.Append(str::Dup(_TR("Fast Web View")));
+        props.Append(_TR("Fast Web View"));
     }
     if (parts.Contains(L"tagged")) {
-        props.Append(str::Dup(_TR("Tagged PDF")));
+        props.Append(_TR("Tagged PDF"));
     }
     if (parts.Contains(L"PDFX")) {
-        props.Append(str::Dup(L"PDF/X (ISO 15930)"));
+        props.Append(L"PDF/X (ISO 15930)");
     }
     if (parts.Contains(L"PDFA1")) {
-        props.Append(str::Dup(L"PDF/A (ISO 19005)"));
+        props.Append(L"PDF/A (ISO 19005)");
     }
     if (parts.Contains(L"PDFE1")) {
-        props.Append(str::Dup(L"PDF/E (ISO 24517)"));
+        props.Append(L"PDF/E (ISO 24517)");
     }
 
     return Join(props, L", ");
@@ -277,14 +277,14 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
         return nullptr;
     }
 
-    WStrVecOld denials;
+    WStrVec denials;
 
     EngineBase* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting()) {
-        denials.Append(str::Dup(_TR("printing document")));
+        denials.Append(_TR("printing document"));
     }
     if (!engine->AllowsCopyingText()) {
-        denials.Append(str::Dup(_TR("copying text")));
+        denials.Append(_TR("copying text"));
     }
 
     return Join(denials, L", ");

@@ -281,12 +281,13 @@ WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelec
         WCHAR* s = dm->textSelection->ExtractText(lineSep);
         return s;
     }
-    WStrVecOld selections;
+    WStrVec selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
         WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {
             selections.Append(text);
         }
+        str::Free(text);
     }
     if (selections.size() == 0) {
         return nullptr;

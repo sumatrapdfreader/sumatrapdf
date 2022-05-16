@@ -77,7 +77,7 @@
 // terminate and delete itself asynchronously while the UI is
 // being set up
 class FileExistenceChecker : public ThreadBase {
-    WStrVecOld paths;
+    WStrVec paths;
 
     void GetFilePathsToCheck();
     void HideMissingFiles();
@@ -96,7 +96,7 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     FileState* fs;
     for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (!fs->isMissing) {
-            WCHAR* fp = strconv::Utf8ToWstr(fs->filePath);
+            WCHAR* fp = ToWstrTemp(fs->filePath);
             paths.Append(fp);
         }
     }
@@ -106,12 +106,8 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
     for (size_t i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
-        WCHAR* fp = strconv::Utf8ToWstr(fs->filePath);
-        if (!paths.Contains(fp)) {
-            paths.Append(fp);
-        } else {
-            str::Free(fp);
-        }
+        WCHAR* fp = ToWstr(fs->filePath);
+        paths.AppendIfNotExists(fp);
     }
 }
 
@@ -139,7 +135,7 @@ void FileExistenceChecker::Run() {
     for (size_t i = 0; i < paths.size(); i++) {
         const WCHAR* path = paths.at(i);
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
-            free(paths.PopAt(i--));
+            paths.PopAt(i--);
         }
     }
 
@@ -400,7 +396,7 @@ static bool SetupPluginMode(Flags& i) {
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
         AutoFreeWstr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
         str::TransCharsInPlace(args, L"#", L"&");
-        WStrVecOld parts;
+        WStrVec parts;
         Split(parts, args, L"&", true);
         for (size_t k = 0; k < parts.size(); k++) {
             WCHAR* part = parts.at(k);
