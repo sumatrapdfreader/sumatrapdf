@@ -1868,16 +1868,6 @@ bool WStr::IsEmpty() const {
     return len == 0;
 }
 
-std::wstring_view WStr::AsView() const {
-    return {Get(), size()};
-}
-
-std::wstring_view WStr::StealAsView() {
-    size_t len = size();
-    WCHAR* d = StealData();
-    return {d, len};
-}
-
 void WStr::AppendFmt(const WCHAR* fmt, ...) {
     va_list args;
     va_start(args, fmt);
