@@ -497,24 +497,3 @@ struct WStrVec {
 
 size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
 WCHAR* Join(const WStrVec& v, const WCHAR* joint = nullptr);
-
-//-------------
-
-// WStrVecOld owns the strings in the list
-class WStrVecOld : public Vec<WCHAR*> {
-  public:
-    WStrVecOld() = default;
-
-    WStrVecOld(const WStrVecOld& other);
-    ~WStrVecOld();
-    WStrVecOld& operator=(const WStrVecOld& other);
-    void Reset();
-    int Find(const WCHAR* s, int startAt = 0) const;
-    bool Contains(const WCHAR* s) const;
-    int FindI(const WCHAR* s, size_t startAt = 0) const;
-    void Sort();
-    void SortNatural();
-};
-
-size_t Split(WStrVecOld& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
-WCHAR* Join(const WStrVecOld& v, const WCHAR* joint = nullptr);

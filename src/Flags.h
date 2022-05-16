@@ -14,7 +14,7 @@ struct Flags {
     // - optional (nullptr if not available) string that represents which pages
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
-    WStrVecOld pathsToBenchmark;
+    WStrVec pathsToBenchmark;
     bool exitWhenDone = false;
     bool printDialog = false;
     WCHAR* printerName = nullptr;
@@ -64,7 +64,7 @@ struct Flags {
 
     // deprecated flags
     char* lang = nullptr;
-    WStrVecOld globalPrefArgs;
+    WStrVec globalPrefArgs;
 
     // related to installer
     bool showHelp = false;

@@ -400,7 +400,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::EscToExit) {
-            i.globalPrefArgs.Append(str::Dup(argName));
+            i.globalPrefArgs.Append(argName);
             continue;
         }
         if (arg == Arg::ArgEnumPrinters && (gIsDebugBuild || gIsPreReleaseBuild)) {
@@ -530,10 +530,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::Bench) {
-            i.pathsToBenchmark.Append(str::Dup(param));
+            i.pathsToBenchmark.Append(param);
             const WCHAR* s = args.AdditionalParam(1);
             if (s && IsBenchPagesInfo(s)) {
-                s = str::Dup(args.EatParam());
+                s = args.EatParam();
                 i.pathsToBenchmark.Append((WCHAR*)s);
             } else {
                 // pathsToBenchmark are always in pairs
@@ -572,14 +572,14 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::BgCol || arg == Arg::BgCol2 || arg == Arg::FwdSearchOffset || arg == Arg::FwdSearchWidth ||
             arg == Arg::FwdSearchColor || arg == Arg::FwdSearchPermanent || arg == Arg::MangaMode) {
-            i.globalPrefArgs.Append(str::Dup(argName));
-            i.globalPrefArgs.Append(str::Dup(param));
+            i.globalPrefArgs.Append(argName);
+            i.globalPrefArgs.Append(param);
             continue;
         }
         if (arg == Arg::SetColorRange && args.AdditionalParam(1)) {
-            i.globalPrefArgs.Append(str::Dup(argName));
-            i.globalPrefArgs.Append(str::Dup(param));
-            i.globalPrefArgs.Append(str::Dup(args.EatParam()));
+            i.globalPrefArgs.Append(argName);
+            i.globalPrefArgs.Append(param);
+            i.globalPrefArgs.Append(args.EatParam());
             continue;
         }
         // again, argName is any of the known args, so assume it's a file starting with '-'
@@ -592,7 +592,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.fileNames.Append(filePath);
             str::Free(filePath);
         } else {
-            i.fileNames.Append(argName);        
+            i.fileNames.Append(argName);
         }
     }
 
