@@ -76,7 +76,7 @@ TempWstr GetExeDirTemp();
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 
-WCHAR* ResolveLnk(const WCHAR* path);
+WCHAR* ResolveLnkTemp(const WCHAR* path);
 bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args = nullptr,
                     const WCHAR* description = nullptr, int iconIndex = 0);
 IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd = nullptr);

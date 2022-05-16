@@ -651,7 +651,7 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
     return (int)diff;
 }
 
-WCHAR* ResolveLnk(const WCHAR* path) {
+WCHAR* ResolveLnkTemp(const WCHAR* path) {
     ScopedMem<OLECHAR> olePath(str::Dup(path));
     if (!olePath) {
         return nullptr;
@@ -683,7 +683,7 @@ WCHAR* ResolveLnk(const WCHAR* path) {
         return nullptr;
     }
 
-    return str::Dup(newPath);
+    return str::DupTemp(newPath);
 }
 
 bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args, const WCHAR* description,

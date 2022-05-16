@@ -1628,10 +1628,9 @@ static void OnDropFiles(WindowInfo* win, HDROP hDrop, bool dragFinish) {
     for (int i = 0; i < nFiles; i++) {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, L".lnk")) {
-            WCHAR* resolved = ResolveLnk(filePath);
+            WCHAR* resolved = ResolveLnkTemp(filePath);
             if (resolved) {
                 str::BufSet(filePath, dimof(filePath), resolved);
-                str::Free(resolved);
             }
         }
         // The first dropped document may override the current window

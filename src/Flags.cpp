@@ -587,12 +587,12 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
 
     CollectFile:
         // TODO: resolve .lnk when opening file
-        if (str::EndsWithI(argName, L".lnk")) {
-            WCHAR* filePath = ResolveLnk(argName);
+        WCHAR* filePath = (WCHAR*)argName;
+        if (str::EndsWithI(filePath, L".lnk")) {
+            filePath = ResolveLnkTemp(argName);
+        }
+        if (filePath) { // resolve might fail
             i.fileNames.Append(filePath);
-            str::Free(filePath);
-        } else {
-            i.fileNames.Append(argName);
         }
     }
 
