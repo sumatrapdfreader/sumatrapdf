@@ -52,7 +52,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
     AutoFreeStr pattern(path::Join(thumbsPath, kPngExt, nullptr));
 
-    WStrVecOld files;
+    WStrVec files;
     WIN32_FIND_DATA fdata;
 
     WCHAR* pw = ToWstrTemp(pattern);
@@ -62,7 +62,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     }
     do {
         if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            files.Append(str::Dup(fdata.cFileName));
+            files.Append(fdata.cFileName);
         }
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
@@ -85,10 +85,9 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
             continue;
         }
         WCHAR* path = files.PopAt(idx);
-        str::Free(path);
     }
 
-    for (auto& pathW : files) {
+    for (WCHAR* pathW : files) {
         char* pathA = ToUtf8Temp(pathW);
         char* bmpPath = path::Join(thumbsPath, pathA, nullptr);
         file::Delete(bmpPath);

@@ -2722,6 +2722,13 @@ bool StrVec::Contains(const char* s) const {
     return idx != -1;
 }
 
+char* StrVec::PopAt(int idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAt(idx);
+    char* res = strings.Get() + strIdx;
+    return res;
+}
+
 static bool strLess(const char* s1, const char* s2) {
     if (str::IsEmpty(s1)) {
         return true;
@@ -3137,6 +3144,13 @@ int WStrVec::AppendIfNotExists(const WCHAR* s) {
         return -1;
     }
     return Append(s);
+}
+
+WCHAR* WStrVec::PopAt(int idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAt(idx);
+    WCHAR* res = strings.Get() + strIdx;
+    return res;
 }
 
 void WStrVec::Sort(WStrLessFunc lessFn) {

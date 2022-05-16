@@ -370,6 +370,7 @@ struct WStrVec {
     int Find(const WCHAR* s, int startAt = 0) const;
     int FindI(const WCHAR* s, int startAt = 0) const;
     bool Contains(const WCHAR* s) const;
+    WCHAR* PopAt(int);
 
     void Sort(WStrLessFunc lessFn = nullptr);
     void SortNoCase();
@@ -456,6 +457,7 @@ struct StrVec {
     int AppendIfNotExists(const char*);
     int Find(const char*, int startAt = 0) const;
     bool Contains(const char*) const;
+    char* PopAt(int);
 
     bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(StrVecSortedView&) const;

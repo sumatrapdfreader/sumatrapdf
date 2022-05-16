@@ -252,6 +252,17 @@ static void StrVecCheckIter(StrVec& v) {
     }
 }
 
+static void CheckPopAt(StrVec& v) {
+    while (v.Size() > 0) {
+        int n = v.Size();
+        int idx = v.Size() / 2;
+        auto exp = v[idx];
+        auto got = v.PopAt(idx);
+        utassert(exp == got); // should be exact same pointer value
+        utassert(v.Size() == n - 1);
+    }
+}
+
 static void StrVecTest() {
     const char* strs[] = {"foo", "bar", "Blast", "this is a large string, my friend"};
     int unsortedOrder[] = {0, 1, 2, 3};
@@ -317,6 +328,7 @@ static void StrVecTest() {
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
+    CheckPopAt(v);
 }
 
 static void WStrVecCheckIter(WStrVec& v) {
@@ -324,6 +336,17 @@ static void WStrVecCheckIter(WStrVec& v) {
     for (WCHAR* s : v) {
         WCHAR* s2 = v[i++];
         utassert(str::Eq(s, s2));
+    }
+}
+
+static void CheckPopAt(WStrVec& v) {
+    while (v.Size() > 0) {
+        int n = v.Size();
+        int idx = v.Size() / 2;
+        auto exp = v[idx];
+        auto got = v.PopAt(idx);
+        utassert(exp == got); // should be exact same pointer value
+        utassert(v.Size() == n - 1);
     }
 }
 
@@ -364,6 +387,7 @@ static void WStrVecTest() {
         v2 = v;
         utassert(v2.size() == 3 && v2.at(0) != v.at(0));
         utassert(str::Eq(v2.at(1), L"foo"));
+        CheckPopAt(v2);
     }
 
     {
@@ -376,6 +400,7 @@ static void WStrVecTest() {
         utassert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
         AutoFreeWstr joined(Join(v2, L";"));
         utassert(str::Eq(joined, L"a;b;;c;"));
+        CheckPopAt(v2);
     }
 
     {
@@ -390,7 +415,9 @@ static void WStrVecTest() {
         AutoFreeWstr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
 #endif
+        CheckPopAt(v2);
     }
+    CheckPopAt(v);
 }
 
 static void WStrVecTest2() {
@@ -406,6 +433,7 @@ static void WStrVecTest2() {
     utassert(v.FindI(L"One") == 0);
     utassert(v.Find(L"Two") == -1);
     WStrVecCheckIter(v);
+    CheckPopAt(v);
 }
 
 void StrTest() {
