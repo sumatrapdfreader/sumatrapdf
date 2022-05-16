@@ -53,7 +53,7 @@ struct TabsCtrl2 : WindowBase {
     bool createToolTipsHwnd = false;
     str::WStr currTooltipText;
 
-    WStrVecOld tooltips;
+    WStrVec tooltips;
 
     // for all WM_NOTIFY messages
     WmNotifyHandler onNotify = nullptr;

@@ -566,7 +566,7 @@ int TabsCtrl2::InsertTab(int idx, const WCHAR* ws) {
     item.mask = TCIF_TEXT;
     item.pszText = (WCHAR*)ws;
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
-    tooltips.InsertAt(idx, str::Dup(L""));
+    tooltips.InsertAt(idx, L"");
     return insertedIdx;
 }
 
@@ -578,7 +578,7 @@ int TabsCtrl2::InsertTab(int idx, const char* sv) {
     WCHAR* s = ToWstrTemp(sv);
     item.pszText = s;
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
-    tooltips.InsertAt(idx, str::Dup(L""));
+    tooltips.InsertAt(idx, L"");
     return insertedIdx;
 }
 
@@ -716,15 +716,12 @@ void TabsCtrl2::MaybeUpdateTooltipText(int idx) {
     // logf(L"MaybeUpdateTooltipText: %s\n", tooltip);
 }
 
-void TabsCtrl2::SetTooltip(int idx, const WCHAR* sIn) {
-    WCHAR* curr = tooltips[idx];
-    WCHAR* s = str::Dup(sIn);
-    tooltips[idx] = s;
-    str::Free(curr);
+void TabsCtrl2::SetTooltip(int idx, const WCHAR* s) {
+    tooltips.SetAt(idx, s);
 }
 
 const WCHAR* TabsCtrl2::GetTooltip(int idx) {
-    if (idx >= tooltips.isize()) {
+    if (idx >= tooltips.Size()) {
         return nullptr;
     }
     WCHAR* res = tooltips.at(idx);

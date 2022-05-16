@@ -320,6 +320,97 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 } // namespace str
 
+//----------------
+
+typedef bool (*StrLessFunc)(const char* s1, const char* s2);
+
+struct StrVec;
+
+struct StrVecSortedView {
+    StrVec* v; // not owned
+    Vec<u32> sortedIndex;
+    int Size() const;
+    char* at(int) const;
+    char* operator[](int) const;
+
+    StrVecSortedView() = default;
+    ~StrVecSortedView() = default;
+};
+
+// strings are stored linearly in strings, separated by 0
+// index is an array of indexes i.e. strings[index[2]] is
+// beginning of string at index 2
+struct StrVec {
+    str::Str strings;
+    Vec<u32> index;
+
+    StrVec() = default;
+    ~StrVec() = default;
+    void Reset();
+
+    size_t size() const;
+    int Size() const;
+    char* at(int) const;
+    char* operator[](int) const;
+
+    int Append(const char*, size_t len = 0);
+    int AppendIfNotExists(const char*);
+    bool InsertAt(int, const char*);
+    void SetAt(int idx, const char* s);
+    int Find(const char*, int startAt = 0) const;
+    bool Contains(const char*) const;
+    char* PopAt(int);
+    char* RemoveAtFast(size_t idx);
+    char* RemoveAt(int idx);
+
+    bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
+    bool GetSortedViewNoCase(StrVecSortedView&) const;
+
+    void Sort(StrLessFunc lessFn = nullptr);
+    void SortNoCase();
+    void SortNatural();
+    struct Iterator {
+        using iterator_category = std::forward_iterator_tag;
+
+        Iterator(StrVec* v, int i) : v(v), idx(i) {
+        }
+
+        char* operator*() const {
+            return v->at(idx);
+        }
+
+        Iterator& operator++() {
+            idx++;
+            return *this;
+        }
+        Iterator operator++(int) {
+            Iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const Iterator& a, const Iterator& b) {
+            return a.idx == b.idx;
+        };
+        friend bool operator!=(const Iterator& a, const Iterator& b) {
+            return a.idx != b.idx;
+        };
+
+        StrVec* v;
+        int idx;
+    };
+    Iterator begin() {
+        return Iterator(this, 0);
+    }
+    Iterator end() {
+        return Iterator(this, index.isize());
+    }
+};
+
+size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
+char* Join(const StrVec& v, const char* joint = nullptr);
+
+//------------
+
 typedef bool (*WStrLessFunc)(const WCHAR* s1, const WCHAR* s2);
 
 struct WStrVec;
@@ -348,11 +439,14 @@ struct WStrVec {
     int Append(const WCHAR*, size_t sLen = 0);
     // TODO: rename to AppendIfNotContains() or AppendIfAbset() or AppendUnique()
     int AppendIfNotExists(const WCHAR* s);
+    void SetAt(int idx, const WCHAR* s);
+    bool InsertAt(int idx, const WCHAR* s);
     int Find(const WCHAR* s, int startAt = 0) const;
     int FindI(const WCHAR* s, int startAt = 0) const;
     bool Contains(const WCHAR* s) const;
     WCHAR* PopAt(int);
-    WCHAR* RemoveAtFast(size_t idx);
+    WCHAR* RemoveAt(int);
+    WCHAR* RemoveAtFast(size_t);
 
     void Sort(WStrLessFunc lessFn = nullptr);
     void SortNoCase();
@@ -404,90 +498,7 @@ struct WStrVec {
 size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
 WCHAR* Join(const WStrVec& v, const WCHAR* joint = nullptr);
 
-typedef bool (*StrLessFunc)(const char* s1, const char* s2);
-
-struct StrVec;
-
-struct StrVecSortedView {
-    StrVec* v; // not owned
-    Vec<u32> sortedIndex;
-    int Size() const;
-    char* at(int) const;
-    char* operator[](int) const;
-
-    StrVecSortedView() = default;
-    ~StrVecSortedView() = default;
-};
-
-// strings are stored linearly in strings, separated by 0
-// index is an array of indexes i.e. strings[index[2]] is
-// beginning of string at index 2
-struct StrVec {
-    str::Str strings;
-    Vec<u32> index;
-
-    StrVec() = default;
-    ~StrVec() = default;
-    void Reset();
-
-    size_t size() const;
-    int Size() const;
-    char* at(int) const;
-    char* operator[](int) const;
-
-    int Append(const char*, size_t len = 0);
-    int AppendIfNotExists(const char*);
-    int Find(const char*, int startAt = 0) const;
-    bool Contains(const char*) const;
-    char* PopAt(int);
-    char* RemoveAtFast(size_t idx);
-
-    bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
-    bool GetSortedViewNoCase(StrVecSortedView&) const;
-
-    void Sort(StrLessFunc lessFn = nullptr);
-    void SortNoCase();
-    void SortNatural();
-
-    struct Iterator {
-        using iterator_category = std::forward_iterator_tag;
-
-        Iterator(StrVec* v, int i) : v(v), idx(i) {
-        }
-
-        char* operator*() const {
-            return v->at(idx);
-        }
-
-        Iterator& operator++() {
-            idx++;
-            return *this;
-        }
-        Iterator operator++(int) {
-            Iterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-        friend bool operator==(const Iterator& a, const Iterator& b) {
-            return a.idx == b.idx;
-        };
-        friend bool operator!=(const Iterator& a, const Iterator& b) {
-            return a.idx != b.idx;
-        };
-
-        StrVec* v;
-        int idx;
-    };
-    Iterator begin() {
-        return Iterator(this, 0);
-    }
-    Iterator end() {
-        return Iterator(this, index.isize());
-    }
-};
-
-size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
-char* Join(const StrVec& v, const char* joint = nullptr);
+//-------------
 
 // WStrVecOld owns the strings in the list
 class WStrVecOld : public Vec<WCHAR*> {

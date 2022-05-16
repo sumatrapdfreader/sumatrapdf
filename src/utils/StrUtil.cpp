@@ -2678,6 +2678,26 @@ int StrVec::AppendIfNotExists(const char* s) {
     return Append(s);
 }
 
+bool StrVec::InsertAt(int idx, const char* s) {
+    size_t n = str::Len(s);
+    u32 strIdx = (u32)strings.size();
+    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    if (!ok) {
+        return false;
+    }
+    return index.InsertAt(idx, strIdx);
+}
+
+void StrVec::SetAt(int idx, const char* s) {
+    size_t n = str::Len(s);
+    u32 strIdx = (u32)strings.size();
+    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    if (!ok) {
+        return;
+    }
+    index[idx] = strIdx;
+}
+
 size_t StrVec::size() const {
     return index.size();
 }
@@ -2722,6 +2742,7 @@ bool StrVec::Contains(const char* s) const {
     return idx != -1;
 }
 
+// TODO: remove, use RemoveAt() instead
 char* StrVec::PopAt(int idx) {
     u32 strIdx = index[idx];
     index.RemoveAt(idx);
@@ -2729,6 +2750,15 @@ char* StrVec::PopAt(int idx) {
     return res;
 }
 
+// Note: returned string remains valid as long as StrVec is valid
+char* StrVec::RemoveAt(int idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAt(idx);
+    char* res = strings.Get() + strIdx;
+    return res;
+}
+
+// Note: returned string remains valid as long as StrVec is valid
 char* StrVec::RemoveAtFast(size_t idx) {
     u32 strIdx = index[idx];
     index.RemoveAtFast(idx);
@@ -3041,6 +3071,27 @@ int WStrVec::AppendIfNotExists(const WCHAR* s) {
     return Append(s);
 }
 
+bool WStrVec::InsertAt(int idx, const WCHAR* s) {
+    size_t n = str::Len(s);
+    u32 strIdx = (u32)strings.size();
+    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    if (!ok) {
+        return false;
+    }
+    return index.InsertAt(idx, strIdx);
+}
+
+void WStrVec::SetAt(int idx, const WCHAR* s) {
+    size_t n = str::Len(s);
+    u32 strIdx = (u32)strings.size();
+    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    if (!ok) {
+        return;
+    }
+    index[idx] = strIdx;
+}
+
+// TODO: remove, use RemoveAt() instead
 WCHAR* WStrVec::PopAt(int idx) {
     u32 strIdx = index[idx];
     index.RemoveAt(idx);
@@ -3048,6 +3099,15 @@ WCHAR* WStrVec::PopAt(int idx) {
     return res;
 }
 
+// Note: returned string remains valid as long as StrVec is valid
+WCHAR* WStrVec::RemoveAt(int idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAt(idx);
+    WCHAR* res = strings.Get() + strIdx;
+    return res;
+}
+
+// Note: returned string remains valid as long as StrVec is valid
 WCHAR* WStrVec::RemoveAtFast(size_t idx) {
     u32 strIdx = index[idx];
     index.RemoveAtFast(idx);
