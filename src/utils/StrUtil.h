@@ -362,15 +362,14 @@ struct WStrVec {
     int Size() const;
     WCHAR* at(int) const;
     WCHAR* at(size_t idx) const;
+    WCHAR* operator[](int) const;
 
     int Append(const WCHAR*, size_t sLen = 0);
+    // TODO: rename to AppendIfNotContains() or AppendIfAbset() or AppendUnique()
+    int AppendIfNotExists(const WCHAR* s);
     int Find(const WCHAR* s, int startAt = 0) const;
     int FindI(const WCHAR* s, int startAt = 0) const;
-    // TODO: replace Exists() with Contains
     bool Contains(const WCHAR* s) const;
-    bool Exists(const WCHAR* s) const;
-    // TODO: rename to AppendIfNotContains() or AppendIfAbset()
-    int AppendIfNotExists(const WCHAR* s);
 
     void Sort(WStrLessFunc lessFn = nullptr);
     void SortI();
@@ -381,9 +380,45 @@ struct WStrVec {
 
     // TODO: remove, only for compat
     size_t size() const;
+
+    struct Iterator {
+        using iterator_category = std::forward_iterator_tag;
+
+        Iterator(WStrVec* v, int i) : v(v), idx(i) {
+        }
+
+        WCHAR* operator*() const {
+            return v->at(idx);
+        }
+
+        Iterator& operator++() {
+            idx++;
+            return *this;
+        }
+        Iterator operator++(int) {
+            Iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const Iterator& a, const Iterator& b) {
+            return a.idx == b.idx;
+        };
+        friend bool operator!=(const Iterator& a, const Iterator& b) {
+            return a.idx != b.idx;
+        };
+
+        WStrVec* v;
+        int idx;
+    };
+    Iterator begin() {
+        return Iterator(this, 0);
+    }
+    Iterator end() {
+        return Iterator(this, index.isize());
+    }
 };
 
-size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse);
+size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
 WCHAR* Join(const WStrVec& v, const WCHAR* joint = nullptr);
 
 typedef bool (*StrLessFunc)(const char* s1, const char* s2);
@@ -418,9 +453,9 @@ struct StrVec {
     char* operator[](int) const;
 
     int Append(const char*, size_t len = 0);
-    int Find(const char*, int startAt = 0) const;
-    bool Exists(const char*) const;
     int AppendIfNotExists(const char*);
+    int Find(const char*, int startAt = 0) const;
+    bool Contains(const char*) const;
 
     bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(StrVecSortedView&) const;
@@ -430,5 +465,5 @@ struct StrVec {
     void SortNatural();
 };
 
-size_t Split(StrVec& v, const char* s, const char* separator, bool collapse);
+size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
 char* Join(const StrVec& v, const char* joint = nullptr);

@@ -294,12 +294,27 @@ static void StrVecTest() {
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
+
+    v.Sort();
+    for (int i = 0; i < n; i++) {
+        char* got = v.at(i);
+        auto exp = strs[sortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+}
+
+static void WStrVecCheckIter(WStrVec& v) {
+    int i = 0;
+    for (WCHAR* s : v) {
+        WCHAR* s2 = v[i++];
+        utassert(str::Eq(s, s2));
+    }
 }
 
 static void WStrVecTest() {
-    WStrVecOld v;
-    v.Append(str::Dup(L"foo"));
-    v.Append(str::Dup(L"bar"));
+    WStrVec v;
+    v.Append(L"foo");
+    v.Append(L"bar");
     WCHAR* s = Join(v);
     utassert(v.size() == 2);
     utassert(str::Eq(L"foobar", s));
@@ -310,21 +325,25 @@ static void WStrVecTest() {
     utassert(str::Eq(L"foo;bar", s));
     free(s);
 
-    v.Append(str::Dup(L"glee"));
+    v.Append(L"glee");
     s = Join(v, L"_ _");
     utassert(v.size() == 3);
     utassert(str::Eq(L"foo_ _bar_ _glee", s));
     free(s);
 
+    WStrVecCheckIter(v);
     v.Sort();
+
+    WStrVecCheckIter(v);
+
     s = Join(v);
     utassert(str::Eq(L"barfooglee", s));
     free(s);
 
     {
-        WStrVecOld v2(v);
+        WStrVec v2(v);
         utassert(str::Eq(v2.at(1), L"foo"));
-        v2.Append(str::Dup(L"nobar"));
+        v2.Append(L"nobar");
         utassert(str::Eq(v2.at(3), L"nobar"));
         v2 = v;
         utassert(v2.size() == 3 && v2.at(0) != v.at(0));
@@ -332,7 +351,7 @@ static void WStrVecTest() {
     }
 
     {
-        WStrVecOld v2;
+        WStrVec v2;
         size_t count = Split(v2, L"a,b,,c,", L",");
         utassert(count == 5 && v2.Find(L"c") == 3);
         utassert(v2.Find(L"") == 2);
@@ -344,28 +363,33 @@ static void WStrVecTest() {
     }
 
     {
-        WStrVecOld v2;
+        WStrVec v2;
         size_t count = Split(v2, L"a,b,,c,", L",", true);
         utassert(count == 3 && v2.Find(L"c") == 2);
         AutoFreeWstr joined(Join(v2, L";"));
         utassert(str::Eq(joined, L"a;b;c"));
+        WStrVecCheckIter(v2);
+
+#if 0
         AutoFreeWstr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
+#endif
     }
 }
 
 static void WStrVecTest2() {
-    WStrVec l;
-    utassert(l.size() == 0);
-    l.Append(str::Dup(L"one"));
-    l.Append(str::Dup(L"two"));
-    l.Append(str::Dup(L"One"));
-    utassert(l.size() == 3);
-    utassert(str::Eq(l.at(0), L"one"));
-    utassert(str::EqI(l.at(2), L"one"));
-    utassert(l.Find(L"One") == 2);
-    utassert(l.FindI(L"One") == 0);
-    utassert(l.Find(L"Two") == -1);
+    WStrVec v;
+    utassert(v.size() == 0);
+    v.Append(str::Dup(L"one"));
+    v.Append(str::Dup(L"two"));
+    v.Append(str::Dup(L"One"));
+    utassert(v.size() == 3);
+    utassert(str::Eq(v.at(0), L"one"));
+    utassert(str::EqI(v.at(2), L"one"));
+    utassert(v.Find(L"One") == 2);
+    utassert(v.FindI(L"One") == 0);
+    utassert(v.Find(L"Two") == -1);
+    WStrVecCheckIter(v);
 }
 
 void StrTest() {

@@ -2671,6 +2671,13 @@ int StrVec::Append(const char* s, size_t sLen) {
     return Size() - 1;
 }
 
+int StrVec::AppendIfNotExists(const char* s) {
+    if (Contains(s)) {
+        return -1;
+    }
+    return Append(s);
+}
+
 size_t StrVec::size() const {
     return index.size();
 }
@@ -2710,16 +2717,9 @@ int StrVec::Find(const char* sv, int startAt) const {
     return -1;
 }
 
-bool StrVec::Exists(const char* s) const {
+bool StrVec::Contains(const char* s) const {
     int idx = Find(s);
     return idx != -1;
-}
-
-int StrVec::AppendIfNotExists(const char* s) {
-    if (Exists(s)) {
-        return -1;
-    }
-    return Append(s);
 }
 
 static bool strLess(const char* s1, const char* s2) {
@@ -2772,8 +2772,8 @@ void StrVec::Sort(StrLessFunc lessFn) {
         lessFn = strLess;
     }
     std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        char* is1 = at((int)i1);
-        char* is2 = at((int)i2);
+        char* is1 = strings.Get() + i1;
+        char* is2 = strings.Get() + i2;
         bool ret = lessFn(is1, is2);
         return ret;
     });
@@ -3082,10 +3082,6 @@ size_t WStrVec::size() const {
     return index.size();
 }
 
-WCHAR* WStrVec::at(size_t idx) const {
-    return at((int)idx);
-}
-
 WCHAR* WStrVec::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
@@ -3099,6 +3095,14 @@ WCHAR* WStrVec::at(int idx) const {
     }
     WCHAR* s = strings.LendData() + start;
     return s;
+}
+
+WCHAR* WStrVec::at(size_t idx) const {
+    return at((int)idx);
+}
+
+WCHAR* WStrVec::operator[](int i) const {
+    return at(i);
 }
 
 int WStrVec::Find(const WCHAR* s, int startAt) const {
@@ -3123,21 +3127,16 @@ int WStrVec::FindI(const WCHAR* s, int startAt) const {
     return -1;
 }
 
-bool WStrVec::Exists(const WCHAR* s) const {
-    int idx = Find(s, 0);
-    return idx != -1;
-}
-
 bool WStrVec::Contains(const WCHAR* s) const {
     int idx = Find(s, 0);
     return idx != -1;
 }
 
-int WStrVec::AppendIfNotExists(const WCHAR* sv) {
-    if (Exists(sv)) {
+int WStrVec::AppendIfNotExists(const WCHAR* s) {
+    if (Contains(s)) {
         return -1;
     }
-    return Append(sv);
+    return Append(s);
 }
 
 void WStrVec::Sort(WStrLessFunc lessFn) {
@@ -3145,8 +3144,8 @@ void WStrVec::Sort(WStrLessFunc lessFn) {
         lessFn = wstrLess;
     }
     std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        WCHAR* is1 = at((int)i1);
-        WCHAR* is2 = at((int)i2);
+        WCHAR* is1 = strings.Get() + i1;
+        WCHAR* is2 = strings.Get() + i2;
         bool ret = lessFn(is1, is2);
         return ret;
     });
