@@ -3204,41 +3204,26 @@ char* Join(const StrVec& v, const char* joint) {
 
 //--- WStrVec
 
-bool wstrLess(const WCHAR* s1s, const WCHAR* s2s) {
-    std::wstring_view s1 = s1s;
-    std::wstring_view s2 = s2s;
-
-    if (s1.empty()) {
+bool wstrLess(const WCHAR* s1, const WCHAR* s2) {
+    if (!s1 || !*s1) {
         return true;
     }
-    if (s2.empty()) {
+    if (!s2 || !*s2) {
         return false;
     }
-    bool ret = s1 < s2;
-    return ret;
+    int n = wcscmp(s1, s2);
+    return n < 0; // TODO: verify is the right order
 }
 
-bool wstrLessNoCase(const WCHAR* s1s, const WCHAR* s2s) {
-    std::wstring_view s1 = s1s;
-    std::wstring_view s2 = s2s;
-
-    if (s1.empty()) {
+bool wstrLessNoCase(const WCHAR* s1, const WCHAR* s2) {
+    if (!s1 || !*s1) {
         return true;
     }
-    if (s2.empty()) {
+    if (!s2 || !*s2) {
         return false;
     }
-    size_t n1 = s1.size();
-    size_t n2 = s2.size();
-    for (size_t i = 0; i < n1 && i < n2; i++) {
-        WCHAR c1 = towlower(s1[i]);
-        WCHAR c2 = towlower(s2[i]);
-        if (c1 == c2) {
-            continue;
-        }
-        return c1 < c2;
-    }
-    return n1 < n2;
+    int n = _wcsicmp(s1, s2);
+    return n < 0; // TODO: verify is the right order
 }
 
 bool wstrLessNatural(const WCHAR* s1, const WCHAR* s2) {

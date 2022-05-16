@@ -268,7 +268,6 @@ struct WStr {
 
     explicit WStr(size_t capHint = 0, Allocator* allocator = nullptr);
     WStr(const WStr&);
-    explicit WStr(std::wstring_view);
     WStr(const WCHAR*); // NOLINT
     WStr& operator=(const WStr& that);
     ~WStr();
@@ -299,8 +298,6 @@ struct WStr {
     void Reverse() const;
     WCHAR& FindEl(const std::function<bool(WCHAR&)>& check) const;
     bool IsEmpty() const;
-    // std::wstring_view AsView() const;
-    // std::wstring_view StealAsView();
     void AppendFmt(const WCHAR* fmt, ...);
     bool AppendAndFree(const WCHAR*);
     void Set(const WCHAR*);

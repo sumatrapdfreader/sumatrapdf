@@ -106,11 +106,6 @@ struct Arg {
         u.sv = arg;
     }
 
-    Arg(std::wstring_view arg) {
-        t = Type::WStr;
-        u.wsv = arg;
-    }
-
     Arg(const WCHAR* arg) {
         t = Type::WStr;
         u.wsv = arg;
