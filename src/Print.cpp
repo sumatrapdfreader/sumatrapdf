@@ -1059,15 +1059,14 @@ static void ApplyPrintSettings(Printer* printer, const WCHAR* settings, int page
     auto devMode = printer->devMode;
     auto printerName = printer->name;
 
-    WStrVecOld rangeList;
+    WStrVec rangeList;
     if (settings) {
         Split(rangeList, settings, L",", true);
     }
 
-    for (size_t i = 0; i < rangeList.size(); i++) {
+    for (WCHAR* s : rangeList) {
         int val;
         PRINTPAGERANGE pr{};
-        WCHAR* s = rangeList.at(i);
         if (str::Parse(s, L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);

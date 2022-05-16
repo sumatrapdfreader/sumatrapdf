@@ -239,11 +239,11 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     return DocIsSupportedFileType(kindSniffed);
 }
 
-static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR* dirPath, const WCHAR* filter, WStrVecOld& paths) {
+static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR* dirPath, const WCHAR* filter, WStrVec& paths) {
     bool hasFiles = false;
     DirTraverse(dirPath, true, [filter, &hasFiles, &paths](const WCHAR* filePath) -> bool {
         if (IsStressTestSupportedFile(filePath, filter)) {
-            paths.Append(str::Dup(filePath));
+            paths.Append(filePath);
             hasFiles = true;
         }
         return true;
@@ -324,19 +324,19 @@ class TestFileProvider {
 };
 
 class FilesProvider : public TestFileProvider {
-    WStrVecOld files;
+    WStrVec files;
     size_t provided;
 
   public:
     explicit FilesProvider(const WCHAR* path) {
-        files.Append(str::Dup(path));
+        files.Append(path);
         provided = 0;
     }
-    FilesProvider(WStrVecOld& newFiles, int n, int offset) {
+    FilesProvider(WStrVec& newFiles, int n, int offset) {
         // get every n-th file starting at offset
         for (size_t i = offset; i < newFiles.size(); i += n) {
             const WCHAR* f = newFiles.at(i);
-            files.Append(str::Dup(f));
+            files.Append(f);
         }
         provided = 0;
     }
@@ -361,8 +361,8 @@ class DirFileProvider : public TestFileProvider {
     AutoFreeWstr fileFilter;
 
     // current state of directory traversal
-    WStrVecOld filesToOpen;
-    WStrVecOld dirsToVisit;
+    WStrVec filesToOpen;
+    WStrVec dirsToVisit;
 
     bool OpenDir(const WCHAR* dirPath);
 
@@ -415,9 +415,9 @@ void DirFileProvider::Restart() {
     OpenDir(startDir);
 }
 
-static size_t GetAllMatchingFiles(const WCHAR* dir, const WCHAR* filter, WStrVecOld& files, bool showProgress) {
-    WStrVecOld dirsToVisit;
-    dirsToVisit.Append(str::Dup(dir));
+static size_t GetAllMatchingFiles(const WCHAR* dir, const WCHAR* filter, WStrVec& files, bool showProgress) {
+    WStrVec dirsToVisit;
+    dirsToVisit.Append(dir);
 
     while (dirsToVisit.size() > 0) {
         if (showProgress) {
@@ -831,9 +831,9 @@ void GetStressTestInfo(str::Str* s) {
 // for each extension, randomly, and inter-leave the files with different
 // extensions, so their testing is evenly distributed.
 // Returns result in <files>.
-static void RandomizeFiles(WStrVecOld& files, int maxPerType) {
-    WStrVecOld fileExts;
-    Vec<WStrVecOld*> filesPerType;
+static void RandomizeFiles(WStrVec& files, int maxPerType) {
+    WStrVec fileExts;
+    Vec<WStrVec*> filesPerType;
 
     for (size_t i = 0; i < files.size(); i++) {
         const WCHAR* file = files.at(i);
@@ -841,22 +841,22 @@ static void RandomizeFiles(WStrVecOld& files, int maxPerType) {
         CrashAlwaysIf(!ext);
         int typeNo = fileExts.FindI(ext);
         if (-1 == typeNo) {
-            fileExts.Append(str::Dup(ext));
-            filesPerType.Append(new WStrVecOld());
+            fileExts.Append(ext);
+            filesPerType.Append(new WStrVec());
             typeNo = (int)filesPerType.size() - 1;
         }
-        filesPerType.at(typeNo)->Append(str::Dup(file));
+        filesPerType.at(typeNo)->Append(file);
     }
 
     for (size_t j = 0; j < filesPerType.size(); j++) {
-        WStrVecOld* all = filesPerType.at(j);
-        WStrVecOld* random = new WStrVecOld();
+        WStrVec* all = filesPerType.at(j);
+        WStrVec* random = new WStrVec();
 
         for (int n = 0; n < maxPerType && all->size() > 0; n++) {
             int idx = rand() % all->size();
             WCHAR* file = all->at(idx);
             random->Append(file);
-            all->RemoveAtFast(idx);
+            all->PopAt(idx);
         }
 
         filesPerType.at(j) = random;
@@ -869,12 +869,12 @@ static void RandomizeFiles(WStrVecOld& files, int maxPerType) {
     while (!gotAll) {
         gotAll = true;
         for (size_t j = 0; j < filesPerType.size(); j++) {
-            WStrVecOld* random = filesPerType.at(j);
+            WStrVec* random = filesPerType.at(j);
             if (random->size() > 0) {
                 gotAll = false;
                 WCHAR* file = random->at(0);
                 files.Append(file);
-                random->RemoveAtFast(0);
+                random->PopAt(0);
             }
         }
     }
@@ -907,7 +907,7 @@ void StartStressTest(Flags* i, WindowInfo* win) {
                 return;
             }
         }
-        WStrVecOld filesToTest;
+        WStrVec filesToTest;
 
         wprintf(L"Scanning for files in directory %s\n", i->stressTestPath);
         fflush(stdout);

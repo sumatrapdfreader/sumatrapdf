@@ -90,7 +90,7 @@ bool DirTraverse(const WCHAR* dir, bool recurse, const std::function<bool(const 
     return true;
 }
 
-bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVecOld& paths, bool dirsInsteadOfFiles) {
+bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles) {
     WCHAR* dirPath = path::GetDirTemp(pattern);
 
     WIN32_FIND_DATA fdata{};
@@ -105,7 +105,8 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVecOld& paths, bool dir
             append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
         }
         if (append) {
-            paths.Append(path::Join(dirPath, fdata.cFileName));
+            WCHAR* s = path::JoinTemp(dirPath, fdata.cFileName);
+            paths.Append(s);
         }
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);

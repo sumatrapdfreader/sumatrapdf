@@ -3023,7 +3023,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     }
 
     TabInfo* tab = win->currentTab;
-    WStrVecOld files;
+    WStrVec files;
     WCHAR* pattern = path::GetDirTemp(tab->filePath);
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
     pattern = path::JoinTemp(pattern, L"*");
@@ -3042,7 +3042,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     }
 
     if (!files.Contains(tab->filePath)) {
-        files.Append(str::Dup(tab->filePath));
+        files.Append(tab->filePath);
     }
     files.SortNatural();
 
