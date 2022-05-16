@@ -2679,6 +2679,11 @@ int StrVec::Size() const {
     return index.isize();
 }
 
+char* StrVec::operator[](int idx) const {
+    CrashIf(idx < 0);
+    return at(idx);
+}
+
 char* StrVec::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
@@ -2815,6 +2820,10 @@ char* StrVecSortedView::at(int i) const {
 
     u32 i2 = sortedIndex[i];
     return v->at((int)i2);
+}
+
+char* StrVecSortedView::operator[](int i) const {
+    return at(i);
 }
 
 //--- WStrList

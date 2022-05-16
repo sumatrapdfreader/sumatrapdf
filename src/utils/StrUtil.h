@@ -416,6 +416,7 @@ struct StrVecSortedView {
     Vec<u32> sortedIndex;
     int Size() const;
     char* at(int) const;
+    char* operator[](int) const;
 
     StrVecSortedView() = default;
     ~StrVecSortedView() = default;
@@ -435,6 +436,7 @@ struct StrVec {
     size_t size() const;
     int Size() const;
     char* at(int) const;
+    char* operator[](int) const;
 
     int Append(const char*, size_t len = 0);
     int Find(const char*, int startAt = 0) const;

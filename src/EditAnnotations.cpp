@@ -372,7 +372,7 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     UpdateUIForSelectedAnnotation(ew, -1);
 }
 
-static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* strings) {
+static void ItemsFromSeqstrings(StrVec& items, const char* strings) {
     while (strings) {
         items.Append(strings);
         seqstrings::Next(strings);
@@ -380,7 +380,7 @@ static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* string
 }
 
 static void DropDownFillColors(DropDown* w, PdfColor col, str::Str& customColor) {
-    Vec<std::string_view> items;
+    StrVec items;
     ItemsFromSeqstrings(items, gColors);
     const char* colorName = GetKnownColorName(col);
     int idx = seqstrings::StrToIdx(gColors, colorName);
@@ -388,7 +388,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Str& customColor)
         customColor.Reset();
         SerializePdfColor(col, customColor);
         items.Append(customColor.LendData());
-        idx = items.isize() - 1;
+        idx = items.Size() - 1;
     }
     w->SetItems(items);
     w->SetCurrentSelection(idx);
@@ -558,7 +558,7 @@ static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownTextColor->GetCurrentSelection();
-    const char* item = ew->dropDownTextColor->items.at(idx).data();
+    char* item = ew->dropDownTextColor->items.at(idx);
     auto col = GetDropDownColor(item);
     SetDefaultAppearanceTextColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -658,7 +658,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
 static void IconSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownIcon->GetCurrentSelection();
     auto item = ew->dropDownIcon->items.at(idx);
-    SetIconName(ew->annot, item.data());
+    SetIconName(ew->annot, item);
     EnableSaveIfAnnotationsChanged(ew);
     WindowInfoRerender(ew->tab->win);
 }
@@ -684,7 +684,7 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownColor->GetCurrentSelection();
-    auto item = ew->dropDownColor->items.at(idx).data();
+    auto item = ew->dropDownColor->items.at(idx);
     auto col = GetDropDownColor(item);
     SetColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -705,7 +705,7 @@ static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownInteriorColor->GetCurrentSelection();
-    auto item = ew->dropDownInteriorColor->items.at(idx).data();
+    auto item = ew->dropDownInteriorColor->items.at(idx);
     auto col = GetDropDownColor(item);
     SetInteriorColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -894,11 +894,11 @@ static void WndSizeHandler(EditAnnotationsWindow* ew, SizeEvent* ev) {
     LayoutToSize(ew->mainLayout, {dx, dy});
 }
 
-static Static* CreateStatic(HWND parent, std::string_view sv = {}) {
+static Static* CreateStatic(HWND parent, const char* s = nullptr) {
     auto w = new Static();
     StaticCreateArgs args;
     args.parent = parent;
-    args.text = sv.data();
+    args.text = s;
     HWND hwnd = w->Create(args);
     CrashIf(!hwnd);
     return w;
