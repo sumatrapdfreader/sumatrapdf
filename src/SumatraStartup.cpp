@@ -223,8 +223,8 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
         auto viewMode = ToWstrTemp(viewModeStr);
-        cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode.Get(), i.startZoom,
-                      i.startScroll.x, i.startScroll.y);
+        cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom, i.startScroll.x,
+                      i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));

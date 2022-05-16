@@ -181,7 +181,8 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
         size_t idxTransW = c->allTranslationsW.size();
         CrashIf(idxTransW > 64 * 1024);
         translation.idxTransW = (u16)idxTransW;
-        c->allTranslationsW.Append(ws.Get(), ws.size() + 1);
+        size_t wsLen = str::Len(ws);
+        c->allTranslationsW.Append(ws, wsLen + 1);
     }
     CrashIf(nTrans != c->nTranslations);
     if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {

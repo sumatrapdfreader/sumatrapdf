@@ -2793,7 +2793,7 @@ static void CreateLnkShortcut(WindowInfo* win) {
 
     auto viewMode = ToWstrTemp(viewModeStr);
     AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(),
-                                    ss.page, viewMode.Get(), ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
+                                    ss.page, viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
     const WCHAR* srcFileName = path::GetBaseNameTemp(ctrl->GetFilePath());
     AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
@@ -4262,7 +4262,7 @@ static void OnMenuCustomZoom(WindowInfo* win) {
 
 char* GetLogFilePath() {
     TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    if (!dir.Get()) {
+    if (!dir) {
         return nullptr;
     }
     auto path = path::JoinTemp(dir, L"sumatra-log.txt");
@@ -5300,7 +5300,7 @@ static TempWstr GetSymbolsDirTemp() {
         return GetExeDirTemp();
     }
     TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    return path::JoinTemp(dir.Get(), kAppName, L"crashinfo");
+    return path::JoinTemp(dir, kAppName, L"crashinfo");
 }
 
 static void DownloadDebugSymbols() {

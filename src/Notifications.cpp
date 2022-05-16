@@ -205,7 +205,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     if (wnd->hasClose) {
         rectMsg.dx -= DpiScale(hwnd, kCloseLeftMargin);
     }
-    WCHAR* text = win::GetTextTemp(hwnd).Get();
+    WCHAR* text = win::GetTextTemp(hwnd);
     rTmp = ToRECT(rectMsg);
     DrawTextW(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 

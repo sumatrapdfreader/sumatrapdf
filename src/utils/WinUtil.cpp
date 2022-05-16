@@ -1722,7 +1722,7 @@ TempWstr GetTextTemp(HWND hwnd) {
         return TempWstr();
     }
     SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)txt);
-    return TempWstr(txt, cch);
+    return txt;
 }
 
 size_t GetTextLen(HWND hwnd) {

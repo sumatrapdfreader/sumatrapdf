@@ -93,7 +93,7 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked)
 
 char* GetInstallerLogPath() {
     TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    if (!dir.Get()) {
+    if (!dir) {
         return nullptr;
     }
     WCHAR* path = path::Join(dir, L"sumatra-install-log.txt", nullptr);
@@ -131,7 +131,7 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
             str::Free(msg);
             return false;
         }
-        logf(L"  extracted '%s'\n", fileName.Get());
+        logf(L"  extracted '%s'\n", fileName);
         ProgressStep();
     }
 
@@ -150,10 +150,10 @@ static bool CopySelfToDir(const WCHAR* destDir) {
     auto dstPathA = ToUtf8Temp(dstPath);
     file::DeleteZoneIdentifier(dstPathA);
     if (!ok) {
-        logf(L"  failed to copy '%s' to dir '%s'\n", exePath.Get(), destDir);
+        logf(L"  failed to copy '%s' to dir '%s'\n", exePath, destDir);
         return false;
     }
-    logf(L"  copied '%s' to dir '%s'\n", exePath.Get(), destDir);
+    logf(L"  copied '%s' to dir '%s'\n", exePath, destDir);
     return true;
 }
 
@@ -165,17 +165,17 @@ static void CopySettingsFile() {
 
     // seen a crash when running elevated
     TempWstr srcDir = GetSpecialFolderTemp(CSIDL_APPDATA, false);
-    if (srcDir.empty()) {
+    if (str::IsEmpty(srcDir)) {
         return;
     }
     TempWstr dstDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    if (dstDir.empty()) {
+    if (str::IsEmpty(dstDir)) {
         return;
     }
 
     const WCHAR* prefsFileName = prefs::GetSettingsFileNameTemp();
-    AutoFreeWstr srcPath = path::Join(srcDir.Get(), kAppName, prefsFileName);
-    AutoFreeWstr dstPath = path::Join(dstDir.Get(), kAppName, prefsFileName);
+    AutoFreeWstr srcPath = path::Join(srcDir, kAppName, prefsFileName);
+    AutoFreeWstr dstPath = path::Join(dstDir, kAppName, prefsFileName);
 
     // don't over-write
     bool failIfExists = true;
@@ -316,7 +316,7 @@ static void RestartElevatedForAllUsers() {
     }
     cmdLine = str::JoinTemp(cmdLine, L" -install-dir \"", gCli->installDir);
     cmdLine = str::JoinTemp(cmdLine, L"\"");
-    logf(L"Re-launching '%s' as elevated, args\n%s\n", exePath.Get(), cmdLine);
+    logf(L"Re-launching '%s' as elevated, args\n%s\n", exePath, cmdLine);
     LaunchElevated(exePath, cmdLine);
 }
 
@@ -386,7 +386,7 @@ static void OnButtonInstall() {
         return;
     }
 
-    WCHAR* userInstallDir = win::GetTextTemp(gWnd->editInstallationDir->hwnd).Get();
+    WCHAR* userInstallDir = win::GetTextTemp(gWnd->editInstallationDir->hwnd);
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
@@ -543,7 +543,7 @@ static TempWstr BrowseForFolderTemp(HWND hwnd, const WCHAR* initialFolder, const
 
 static void OnButtonBrowse() {
     auto editDir = gWnd->editInstallationDir;
-    WCHAR* installDir = win::GetTextTemp(editDir->hwnd).Get();
+    WCHAR* installDir = win::GetTextTemp(editDir->hwnd);
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {
@@ -1062,7 +1062,7 @@ int RunInstaller() {
     if (!gCli->installDir) {
         gCli->installDir = GetDefaultInstallationDir(gCli->allUsers, false);
     }
-    logf(L"Running'%s' installing into dir '%s'\n", GetExePathTemp().Get(), gCli->installDir);
+    logf(L"Running'%s' installing into dir '%s'\n", GetExePathTemp(), gCli->installDir);
 
     if (!gCli->silent && MaybeMismatchedOSDialog(nullptr)) {
         return 0;

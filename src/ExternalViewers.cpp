@@ -323,7 +323,7 @@ static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
     } else if (str::Find(cmdLine, LR"(%1)")) {
         // %1, not quoted, need to add
-        auto s = str::JoinTemp(L"\"", tab->filePath.Get(), L"\"").Get();
+        auto s = str::JoinTemp(L"\"", tab->filePath.Get(), L"\"");
         params.Set(str::Replace(cmdLine, L"%1", s));
     } else {
         params.Set(str::Format(LR"(%s "%s")", cmdLine, tab->filePath.Get()));
@@ -351,7 +351,7 @@ bool PathMatchFilter(const WCHAR* path, char* filter) {
         return true;
     }
     auto s = ToWstrTemp(filter);
-    bool matches = path::Match(path, s.Get());
+    bool matches = path::Match(path, s);
     return matches;
 }
 

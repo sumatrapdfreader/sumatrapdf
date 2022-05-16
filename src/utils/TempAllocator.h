@@ -9,65 +9,7 @@ void ResetTempAllocator();
 
 // exists just to mark the intent
 using TempStr = char*;
-
-struct TempWstr {
-    const WCHAR* s;
-    int sLen;
-
-    TempWstr() {
-        s = nullptr;
-        sLen = 0;
-    };
-    explicit TempWstr(WCHAR* sIn) {
-        s = sIn;
-        sLen = -1; // net yet known
-    }
-    explicit TempWstr(WCHAR* sIn, size_t cch) {
-        s = sIn;
-        sLen = (int)cch;
-    }
-    explicit TempWstr(const WCHAR* sIn) {
-        s = sIn;
-        sLen = -1; // net yet known
-    }
-    explicit TempWstr(const WCHAR* sIn, size_t cch) {
-        s = sIn;
-        sLen = (int)cch;
-    }
-    TempWstr(const TempWstr& o) {
-        s = o.s;
-        sLen = o.sLen;
-    }
-    bool empty() const {
-        if (s == nullptr) {
-            return true;
-        }
-        // TOOD: remve const and update sLen?
-        int n = sLen;
-        if (n < 0) {
-            n = (int)str::Len(s);
-        }
-        return n == 0;
-    }
-    size_t size() const {
-        if (s == nullptr) {
-            return 0;
-        }
-        if (sLen < 0) {
-            return (int)str::Len(s);
-        }
-        return sLen;
-    }
-    WCHAR* Get() const {
-        return (WCHAR*)s;
-    }
-    operator const WCHAR*() const { // NOLINT
-        return s;
-    }
-    operator WCHAR*() const { // NOLINT
-        return (WCHAR*)s;
-    }
-};
+using TempWstr = WCHAR*;
 
 namespace str {
 TempStr DupTemp(const char* s, size_t cb = (size_t)-1);

@@ -39,7 +39,7 @@ enum class Tab {
 
 static str::WStr wstrFromUtf8(const str::Str& str) {
     auto s = ToWstrTemp(str.LendData(), str.size());
-    return str::WStr(s.Get());
+    return str::WStr(s);
 }
 
 TabItem::TabItem(const char* title, const char* toolTip) {

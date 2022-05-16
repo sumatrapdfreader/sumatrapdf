@@ -196,7 +196,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     auto mainInstr = _TR("New version available");
-    auto verTmp = ToWstrTemp(updateInfo->latestVer).Get();
+    WCHAR* verTmp = ToWstrTemp(updateInfo->latestVer);
     auto content =
         str::Format(_TR("You have version '%s' and version '%s' is available.\nDo you want to install new version?"),
                     CURR_VERSION_STR, verTmp);
@@ -266,7 +266,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(LR"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp().Get());
+        cmd.AppendFmt(LR"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp());
     }
     logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.LendData()));
     CreateProcessHelper(installerPath, cmd.Get());
@@ -431,7 +431,7 @@ void UpdateSelfTo(const WCHAR* path) {
     // had time to exit so that we can overwrite it
     ::Sleep(gCli->sleepMs);
 
-    const WCHAR* src = GetExePathTemp().Get();
+    const WCHAR* src = GetExePathTemp();
     bool ok = file::Copy(path, src, false);
     // TODO: maybe retry if copy fails under the theory that the file
     // might be temporarily locked
@@ -441,6 +441,6 @@ void UpdateSelfTo(const WCHAR* path) {
     }
     logf("UpdateSelfTo: copied self to file\n");
 
-    AutoFreeWstr args = str::Format(LR"(-sleep-ms 500 -delete-file "%s")", GetExePathTemp().Get());
+    AutoFreeWstr args = str::Format(LR"(-sleep-ms 500 -delete-file "%s")", GetExePathTemp());
     CreateProcessHelper(path, args.Get());
 }

@@ -307,7 +307,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     str::Slice uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {nullptr};
-    arcData.ArcNameW = rarPath.Get();
+    arcData.ArcNameW = rarPath;
     arcData.OpenMode = RAR_OM_EXTRACT;
     arcData.Callback = unrarCallback;
     arcData.UserData = (LPARAM)&uncompressedBuf;
@@ -322,7 +322,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     auto fileName = ToWstrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     int res;
-    bool ok = FindFile(hArc, &rarHeader, fileName.Get());
+    bool ok = FindFile(hArc, &rarHeader, fileName);
     if (!ok) {
         goto Exit;
     }

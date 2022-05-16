@@ -350,7 +350,7 @@ class ChmTocBuilder : public EbookTocVisitor {
 };
 
 bool ChmModel::Load(const char* fileName) {
-    this->fileName.SetCopy(ToWstrTemp(fileName).Get());
+    this->fileName.SetCopy(ToWstrTemp(fileName));
     doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return false;

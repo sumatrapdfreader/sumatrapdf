@@ -464,8 +464,8 @@ FILE* OpenFILE(const char* path) {
     if (!path) {
         return nullptr;
     }
-    auto pathW = ToWstrTemp(path);
-    return OpenFILE(pathW.Get());
+    WCHAR* pathW = ToWstrTemp(path);
+    return OpenFILE(pathW);
 }
 
 ByteSlice ReadFileWithAllocator(const char* filePath, Allocator* allocator) {

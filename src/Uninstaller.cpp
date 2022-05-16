@@ -342,7 +342,7 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
         }
     }
 
-    logf(L"  copying installer '%s' to '%s'\n", ownPath.Get(), installerTempPath.Get());
+    logf(L"  copying installer '%s' to '%s'\n", ownPath, installerTempPath.Get());
     bool ok = file::Copy(installerTempPath, ownPath, false);
     if (!ok) {
         logf("  failed to copy installer\n");

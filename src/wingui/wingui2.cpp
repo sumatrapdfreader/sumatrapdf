@@ -141,7 +141,7 @@ void Wnd::SetText(const char* s) {
         s = "";
     }
     auto ws = ToWstrTemp(s);
-    SetText(ws.Get());
+    SetText(ws);
 }
 
 TempStr Wnd::GetText() {
@@ -1618,7 +1618,7 @@ void DropDown::SetCurrentSelection(int n) {
 
 void DropDown::SetCueBanner(const char* sv) {
     auto ws = ToWstrTemp(sv);
-    ComboBox_SetCueBannerText(hwnd, ws.Get());
+    ComboBox_SetCueBannerText(hwnd, ws);
 }
 
 void DropDown::SetItems(Vec<std::string_view>& newItems) {

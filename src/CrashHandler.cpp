@@ -248,7 +248,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
         return false;
     }
 
-    logf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, ToWstrTemp(gSymbolsUrl).Get());
+    logf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, ToWstrTemp(gSymbolsUrl));
     if (!symDir || !dir::Exists(symDir)) {
         log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
         return false;

@@ -42,26 +42,19 @@ void ResetTempAllocator() {
 
 namespace str {
 TempStr DupTemp(const char* s, size_t cb) {
-    char* res = str::Dup(GetTempAllocator(), s, cb);
-    return res;
+    return str::Dup(GetTempAllocator(), s, cb);
 }
 
 TempWstr DupTemp(const WCHAR* s, size_t cch) {
-    WCHAR* res = str::Dup(GetTempAllocator(), s, cch);
-    if (cch == (size_t)-1) {
-        cch = str::Len(res);
-    }
-    return TempWstr(res, cch);
+    return str::Dup(GetTempAllocator(), s, cch);
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
-    char* s = Join(s1, s2, s3, GetTempAllocator());
-    return TempStr(s);
+    return Join(s1, s2, s3, GetTempAllocator());
 }
 
 TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
-    WCHAR* s = Join(s1, s2, s3, GetTempAllocator());
-    return TempWstr(s);
+    return Join(s1, s2, s3, GetTempAllocator());
 }
 
 } // namespace str
@@ -71,15 +64,13 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
         CrashIf((int)cch > 0);
         return TempStr();
     }
-    auto v = strconv::WstrToUtf8(s, cch, GetTempAllocator());
-    return TempStr{v};
+    return strconv::WstrToUtf8(s, cch, GetTempAllocator());
 }
 
 TempWstr ToWstrTemp(const char* s, size_t cb) {
     if (!s) {
         CrashIf((int)cb > 0);
-        return TempWstr();
+        return nullptr;
     }
-    WCHAR* ws = strconv::Utf8ToWstr(s, cb, GetTempAllocator());
-    return TempWstr{ws, str::Len(ws)};
+    return strconv::Utf8ToWstr(s, cb, GetTempAllocator());
 }

@@ -18,7 +18,7 @@ void FillWithItems(HWND hwnd, ListBoxModel* model) {
         for (int i = 0; i < model->ItemsCount(); i++) {
             auto sv = model->Item(i);
             auto ws = ToWstrTemp(sv);
-            ListBox_AddString(hwnd, ws.Get());
+            ListBox_AddString(hwnd, ws);
         }
     }
 }

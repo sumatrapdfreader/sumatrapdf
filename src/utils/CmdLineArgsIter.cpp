@@ -75,7 +75,7 @@ WCHAR* CmdLineArgsIter::ParamsTemp() {
     // must concat all the
     WCHAR* s = args[1];
     for (int i = 2; i < nArgs; i++) {
-        s = str::JoinTemp(s, L" ", args[i]).Get();
+        s = str::JoinTemp(s, L" ", args[i]);
     }
     return s;
 }

@@ -26,8 +26,8 @@ bool HasBeenInstalled() {
         return false;
     }
 
-    auto exePath = GetExePathTemp();
-    if (exePath.empty()) {
+    WCHAR* exePath = GetExePathTemp();
+    if (exePath) {
         return false;
     }
 
@@ -321,7 +321,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             return true;
 
         case UWM_DELAYED_CTRL_BACK: {
-            WCHAR* text = win::GetTextTemp(hwnd).Get();
+            WCHAR* text = win::GetTextTemp(hwnd);
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {
