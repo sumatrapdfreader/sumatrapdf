@@ -2729,6 +2729,13 @@ char* StrVec::PopAt(int idx) {
     return res;
 }
 
+char* StrVec::RemoveAtFast(size_t idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAtFast(idx);
+    char* res = strings.Get() + strIdx;
+    return res;
+}
+
 static bool strLess(const char* s1, const char* s2) {
     if (str::IsEmpty(s1)) {
         return true;
@@ -2833,104 +2840,6 @@ char* StrVecSortedView::operator[](int i) const {
     return at(i);
 }
 
-//--- WStrVecOld
-
-WStrVecOld::WStrVecOld(const WStrVecOld& other) : Vec(other) {
-    // make sure not to share string pointers between StrVecs
-    for (size_t i = 0; i < len; i++) {
-        if (at(i)) {
-            at(i) = str::Dup(at(i));
-        }
-    }
-}
-
-WStrVecOld::~WStrVecOld() {
-    FreeMembers();
-}
-
-WStrVecOld& WStrVecOld::operator=(const WStrVecOld& other) {
-    if (this == &other) {
-        return *this;
-    }
-
-    FreeMembers();
-    Vec::operator=(other);
-    for (size_t i = 0; i < other.len; i++) {
-        if (at(i)) {
-            at(i) = str::Dup(at(i));
-        }
-    }
-    return *this;
-}
-
-void WStrVecOld::Reset() {
-    FreeMembers();
-}
-
-int WStrVecOld::Find(const WCHAR* s, int startAt) const {
-    for (int i = startAt; i < (int)len; i++) {
-        WCHAR* item = at(i);
-        if (str::Eq(s, item)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-bool WStrVecOld::Contains(const WCHAR* s) const {
-    return -1 != Find(s);
-}
-
-int WStrVecOld::FindI(const WCHAR* s, size_t startAt) const {
-    for (size_t i = startAt; i < len; i++) {
-        WCHAR* item = at(i);
-        if (str::EqI(s, item)) {
-            return (int)i;
-        }
-    }
-    return -1;
-}
-
-static int cmpNatural(const void* a, const void* b) {
-    return str::CmpNatural(*(const WCHAR**)a, *(const WCHAR**)b);
-}
-
-static int cmpAscii(const void* a, const void* b) {
-    return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
-}
-
-void WStrVecOld::Sort() {
-    Vec::Sort(cmpAscii);
-}
-void WStrVecOld::SortNatural() {
-    Vec::Sort(cmpNatural);
-}
-
-/* splits a string into several substrings, separated by the separator
-(optionally collapsing several consecutive separators into one);
-e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
-(resp. "a", "b", "c" if separators are collapsed) */
-size_t Split(WStrVecOld& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
-    size_t startSize = v.size();
-    const WCHAR* next;
-
-    while (true) {
-        next = str::Find(s, separator);
-        if (!next) {
-            break;
-        }
-        if (!collapse || next > s) {
-            v.Append(str::Dup(s, next - s));
-        }
-        s = next + str::Len(separator);
-    }
-    if (!collapse || *s) {
-        v.Append(str::Dup(s));
-    }
-
-    return v.size() - startSize;
-}
-
 /* splits a string into several substrings, separated by the separator
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
@@ -2977,20 +2886,6 @@ size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
     }
 
     return (size_t)(v.Size() - startSize);
-}
-
-WCHAR* Join(const WStrVecOld& v, const WCHAR* joint) {
-    str::WStr tmp(256);
-    size_t len = v.size();
-    size_t jointLen = str::Len(joint);
-    for (size_t i = 0; i < len; i++) {
-        WCHAR* s = v.at(i);
-        if (i > 0 && jointLen > 0) {
-            tmp.Append(joint, jointLen);
-        }
-        tmp.Append(s);
-    }
-    return tmp.StealData();
 }
 
 WCHAR* Join(const WStrVec& v, const WCHAR* joint) {
@@ -3153,6 +3048,13 @@ WCHAR* WStrVec::PopAt(int idx) {
     return res;
 }
 
+WCHAR* WStrVec::RemoveAtFast(size_t idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAtFast(idx);
+    WCHAR* res = strings.Get() + strIdx;
+    return res;
+}
+
 void WStrVec::Sort(WStrLessFunc lessFn) {
     if (lessFn == nullptr) {
         lessFn = wstrLess;
@@ -3212,4 +3114,116 @@ int WStrVecSortedView::Size() const {
 WCHAR* WStrVecSortedView::at(int i) const {
     u32 idx = sortedIndex[i];
     return v->at((size_t)idx);
+}
+
+//--- WStrVecOld
+
+WStrVecOld::WStrVecOld(const WStrVecOld& other) : Vec(other) {
+    // make sure not to share string pointers between StrVecs
+    for (size_t i = 0; i < len; i++) {
+        if (at(i)) {
+            at(i) = str::Dup(at(i));
+        }
+    }
+}
+
+WStrVecOld::~WStrVecOld() {
+    FreeMembers();
+}
+
+WStrVecOld& WStrVecOld::operator=(const WStrVecOld& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    FreeMembers();
+    Vec::operator=(other);
+    for (size_t i = 0; i < other.len; i++) {
+        if (at(i)) {
+            at(i) = str::Dup(at(i));
+        }
+    }
+    return *this;
+}
+
+void WStrVecOld::Reset() {
+    FreeMembers();
+}
+
+int WStrVecOld::Find(const WCHAR* s, int startAt) const {
+    for (int i = startAt; i < (int)len; i++) {
+        WCHAR* item = at(i);
+        if (str::Eq(s, item)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool WStrVecOld::Contains(const WCHAR* s) const {
+    return -1 != Find(s);
+}
+
+int WStrVecOld::FindI(const WCHAR* s, size_t startAt) const {
+    for (size_t i = startAt; i < len; i++) {
+        WCHAR* item = at(i);
+        if (str::EqI(s, item)) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+static int cmpNatural(const void* a, const void* b) {
+    return str::CmpNatural(*(const WCHAR**)a, *(const WCHAR**)b);
+}
+
+static int cmpAscii(const void* a, const void* b) {
+    return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
+}
+
+void WStrVecOld::Sort() {
+    Vec::Sort(cmpAscii);
+}
+void WStrVecOld::SortNatural() {
+    Vec::Sort(cmpNatural);
+}
+
+/* splits a string into several substrings, separated by the separator
+(optionally collapsing several consecutive separators into one);
+e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+(resp. "a", "b", "c" if separators are collapsed) */
+size_t Split(WStrVecOld& v, const WCHAR* s, const WCHAR* separator, bool collapse) {
+    size_t startSize = v.size();
+    const WCHAR* next;
+
+    while (true) {
+        next = str::Find(s, separator);
+        if (!next) {
+            break;
+        }
+        if (!collapse || next > s) {
+            v.Append(str::Dup(s, next - s));
+        }
+        s = next + str::Len(separator);
+    }
+    if (!collapse || *s) {
+        v.Append(str::Dup(s));
+    }
+
+    return v.size() - startSize;
+}
+
+WCHAR* Join(const WStrVecOld& v, const WCHAR* joint) {
+    str::WStr tmp(256);
+    size_t len = v.size();
+    size_t jointLen = str::Len(joint);
+    for (size_t i = 0; i < len; i++) {
+        WCHAR* s = v.at(i);
+        if (i > 0 && jointLen > 0) {
+            tmp.Append(joint, jointLen);
+        }
+        tmp.Append(s);
+    }
+    return tmp.StealData();
 }

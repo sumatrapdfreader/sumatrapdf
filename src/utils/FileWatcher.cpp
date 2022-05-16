@@ -199,7 +199,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     FILE_NOTIFY_INFORMATION* notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
 
     // collect files that changed, removing duplicates
-    WStrVecOld changedFiles;
+    WStrVec changedFiles;
     for (;;) {
         AutoFreeWstr fileName(str::Dup(notify->FileName, notify->FileNameLength / sizeof(WCHAR)));
         // files can get updated either by writing to them directly or
@@ -211,7 +211,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
                 logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName.Get(),
                      wd->dirPath);
 #endif
-                changedFiles.Append(fileName.StealData());
+                changedFiles.Append(fileName.Get());
             } else {
                 // logf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
             }

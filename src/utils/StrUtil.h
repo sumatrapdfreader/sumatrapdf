@@ -320,25 +320,6 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 } // namespace str
 
-// WStrVecOld owns the strings in the list
-class WStrVecOld : public Vec<WCHAR*> {
-  public:
-    WStrVecOld() = default;
-
-    WStrVecOld(const WStrVecOld& other);
-    ~WStrVecOld();
-    WStrVecOld& operator=(const WStrVecOld& other);
-    void Reset();
-    int Find(const WCHAR* s, int startAt = 0) const;
-    bool Contains(const WCHAR* s) const;
-    int FindI(const WCHAR* s, size_t startAt = 0) const;
-    void Sort();
-    void SortNatural();
-};
-
-size_t Split(WStrVecOld& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
-WCHAR* Join(const WStrVecOld& v, const WCHAR* joint = nullptr);
-
 typedef bool (*WStrLessFunc)(const WCHAR* s1, const WCHAR* s2);
 
 struct WStrVec;
@@ -371,6 +352,7 @@ struct WStrVec {
     int FindI(const WCHAR* s, int startAt = 0) const;
     bool Contains(const WCHAR* s) const;
     WCHAR* PopAt(int);
+    WCHAR* RemoveAtFast(size_t idx);
 
     void Sort(WStrLessFunc lessFn = nullptr);
     void SortNoCase();
@@ -458,6 +440,7 @@ struct StrVec {
     int Find(const char*, int startAt = 0) const;
     bool Contains(const char*) const;
     char* PopAt(int);
+    char* RemoveAtFast(size_t idx);
 
     bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(StrVecSortedView&) const;
@@ -505,3 +488,23 @@ struct StrVec {
 
 size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
 char* Join(const StrVec& v, const char* joint = nullptr);
+
+// WStrVecOld owns the strings in the list
+class WStrVecOld : public Vec<WCHAR*> {
+  public:
+    WStrVecOld() = default;
+
+    WStrVecOld(const WStrVecOld& other);
+    ~WStrVecOld();
+    WStrVecOld& operator=(const WStrVecOld& other);
+    void Reset();
+    int Find(const WCHAR* s, int startAt = 0) const;
+    bool Contains(const WCHAR* s) const;
+    int FindI(const WCHAR* s, size_t startAt = 0) const;
+    void Sort();
+    void SortNatural();
+};
+
+size_t Split(WStrVecOld& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
+WCHAR* Join(const WStrVecOld& v, const WCHAR* joint = nullptr);
+
