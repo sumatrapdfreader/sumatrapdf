@@ -303,7 +303,7 @@ static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx
 }
 
 struct LinkRectList {
-    WStrVecOld links;
+    WStrVec links;
     Vec<fz_rect> coords;
 };
 
@@ -714,8 +714,8 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
 
 static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageText, const WCHAR* start,
                                          const WCHAR* next, Rect* coords) {
-    size_t lastIx = list->coords.size() - 1;
-    AutoFreeWstr uri(list->links.at(lastIx));
+    int lastIx = list->coords.Size() - 1;
+    WCHAR* uri = list->links.at(lastIx);
     const WCHAR* end = next;
     bool multiline = false;
 
@@ -723,8 +723,8 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
         end = LinkifyFindEnd(next, start > pageText ? start[-1] : ' ');
         multiline = LinkifyCheckMultiline(pageText, end, coords);
 
-        AutoFreeWstr part(str::Dup(next, end - next));
-        uri.Set(str::Join(uri, part));
+        WCHAR* part = str::DupTemp(next, end - next);
+        uri = str::JoinTemp(uri, part);
         Rect bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
 
@@ -732,9 +732,9 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
     } while (multiline);
 
     // update the link URL for all partial links
-    list->links.at(lastIx) = str::Dup(uri);
-    for (size_t i = lastIx + 1; i < list->coords.size(); i++) {
-        list->links.Append(str::Dup(uri));
+    list->links.SetAt(lastIx, uri);
+    for (int i = lastIx + 1; i < list->coords.Size(); i++) {
+        list->links.Append(uri);
     }
 
     return end;
@@ -820,7 +820,7 @@ static LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
         }
 
         AutoFreeWstr part(str::Dup(start, end - start));
-        WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
+        WCHAR* uri = protocol ? str::JoinTemp(protocol, part) : part.Get();
         list->links.Append(uri);
         Rect bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
