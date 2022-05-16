@@ -129,8 +129,7 @@ bool IsBenchPagesInfo(const WCHAR* s) {
 }
 
 // -view [continuous][singlepage|facing|bookview]
-static void ParseViewMode(DisplayMode* mode, const WCHAR* txt) {
-    auto s = ToUtf8Temp(txt);
+static void ParseViewMode(DisplayMode* mode, const char* s) {
     *mode = DisplayModeFromString(s, DisplayMode::Automatic);
 }
 
@@ -272,6 +271,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
     CmdLineArgsIter args(cmdLine);
 
     const WCHAR* param = nullptr;
+    char* paramA = nullptr;
     int paramInt = 0;
 
     for (auto argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
@@ -418,6 +418,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             goto CollectFile;
         }
         paramInt = _wtoi(param);
+        paramA = ToUtf8Temp(param);
 
         if (arg == Arg::SleepMs) {
             i.sleepMs = paramInt;
@@ -460,7 +461,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::View) {
-            ParseViewMode(&i.startView, param);
+            ParseViewMode(&i.startView, paramA);
             continue;
         }
         if (arg == Arg::Zoom) {

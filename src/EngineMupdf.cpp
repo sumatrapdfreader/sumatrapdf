@@ -1722,7 +1722,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     int streamNo = -1;
     AutoFreeStr fnCopy = ParseEmbeddedStreamNumber(pathA, &streamNo);
 
-    Kind kind = GuessFileTypeFromName(path);
+    Kind kind = GuessFileTypeFromName(pathA);
     // show .txt, .xml and other text files as plain text
     // using html engine
     if (kind == kindFileTxt) {
