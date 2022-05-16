@@ -819,7 +819,7 @@ class EngineImageDir : public EngineImages {
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
 
-    WStrVecOld pageFileNames;
+    WStrVec pageFileNames;
     TocTree* tocTree = nullptr;
 };
 
@@ -829,13 +829,13 @@ static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     DirTraverse(dir, false, [e](const char* path) -> bool {
         Kind kind = GuessFileTypeFromName(path);
         if (IsEngineImageSupportedFileType(kind)) {
-            WCHAR* pathCopy = strconv::Utf8ToWstr(path);
-            e->pageFileNames.Append(pathCopy);
+            WCHAR* pathW = ToWstrTemp(path);
+            e->pageFileNames.Append(pathW);
         }
         return true;
     });
 
-    int nFiles = e->pageFileNames.isize();
+    int nFiles = e->pageFileNames.Size();
     if (nFiles == 0) {
         return false;
     }
@@ -870,12 +870,12 @@ WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
 }
 
 int EngineImageDir::GetPageByLabel(const WCHAR* label) const {
-    for (size_t i = 0; i < pageFileNames.size(); i++) {
+    for (int i = 0; i < pageFileNames.Size(); i++) {
         const WCHAR* fileName = path::GetBaseNameTemp(pageFileNames.at(i));
         const WCHAR* fileExt = path::GetExtTemp(fileName);
         if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0')) {
-            return (int)i + 1;
+            return i + 1;
         }
     }
 
@@ -912,10 +912,10 @@ bool EngineImageDir::SaveFileAs(const char* copyFileName) {
         return false;
     }
     bool ok = true;
-    for (size_t i = 0; i < pageFileNames.size(); i++) {
-        const WCHAR* filePathOld = pageFileNames.at(i);
-        AutoFreeWstr filePathNew(path::Join(dstPath, path::GetBaseNameTemp(filePathOld)));
-        ok = ok && file::Copy(filePathNew, filePathOld, true);
+    for (WCHAR* pathOld : pageFileNames) {
+        const WCHAR* fileName = path::GetBaseNameTemp(pathOld);
+        WCHAR* pathNew = path::JoinTemp(dstPath, fileName);
+        ok = ok && file::Copy(pathNew, pathOld, true);
     }
     return ok;
 }
@@ -1015,7 +1015,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
     // extracted metadata
     AutoFreeWstr propTitle;
-    WStrVecOld propAuthors;
+    WStrVec propAuthors;
     AutoFreeWstr propDate;
     AutoFreeWstr propModDate;
     AutoFreeWstr propCreator;
@@ -1262,7 +1262,7 @@ void EngineCbx::ParseComicInfoXml(ByteSlice xmlData) {
 }
 
 // extract ComicBookInfo metadata
-// cf. http://code.google.com/p/comicbookinfo/
+// http://code.google.com/p/comicbookinfo/
 bool EngineCbx::Visit(const char* path, const char* value, json::Type type) {
     if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
         propTitle.Set(strconv::Utf8ToWstr(value));
@@ -1284,7 +1284,7 @@ bool EngineCbx::Visit(const char* path, const char* value, json::Type type) {
                 propAuthorTmp.Set(strconv::Utf8ToWstr(value));
             } else if (json::Type::Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
                        !propAuthors.Contains(propAuthorTmp)) {
-                propAuthors.Append(propAuthorTmp.StealData());
+                propAuthors.Append(propAuthorTmp.Get());
             }
         }
         return true;

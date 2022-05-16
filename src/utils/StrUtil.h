@@ -507,4 +507,3 @@ class WStrVecOld : public Vec<WCHAR*> {
 
 size_t Split(WStrVecOld& v, const WCHAR* s, const WCHAR* separator, bool collapse = false);
 WCHAR* Join(const WStrVecOld& v, const WCHAR* joint = nullptr);
-
