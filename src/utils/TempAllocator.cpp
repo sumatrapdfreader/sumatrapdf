@@ -42,12 +42,10 @@ void ResetTempAllocator() {
 
 namespace str {
 TempStr DupTemp(const char* s, size_t cb) {
-    char* res = str::Dup(GetTempAllocator(), s, cb);
     if (cb == (size_t)-1) {
-        // TODO: optimize to remove str::Len(). Add version of str::Dup()
-        // that returns std::string_view
-        cb = str::Len(res);
+        cb = str::Len(s);
     }
+    char* res = str::Dup(GetTempAllocator(), s, cb);
     return TempStr(res, cb);
 }
 
