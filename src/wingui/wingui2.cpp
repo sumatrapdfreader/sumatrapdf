@@ -1566,7 +1566,7 @@ DropDown::DropDown() {
 static void SetDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
     ComboBox_ResetContent(hwnd);
     for (std::string_view s : items) {
-        auto ws = ToWstrTemp(s);
+        WCHAR* ws = ToWstrTemp(s.data());
         ComboBox_AddString(hwnd, ws);
     }
 }
@@ -1647,7 +1647,7 @@ Size DropDown::GetIdealSize() {
     HFONT hfont = GetWindowFont(hwnd);
     Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
     for (std::string_view s : items) {
-        auto ws = ToWstrTemp(s);
+        WCHAR* ws = ToWstrTemp(s.data());
         Size s2 = TextSizeInHwnd(hwnd, ws, hfont);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);

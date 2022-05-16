@@ -559,7 +559,6 @@ int TabsCtrl2::GetTabCount() {
     return n;
 }
 
-// TODO: remove in favor of std::string_view version
 int TabsCtrl2::InsertTab(int idx, const WCHAR* ws) {
     CrashIf(idx < 0);
 
@@ -596,7 +595,6 @@ void TabsCtrl2::RemoveAllTabs() {
     tooltips.Reset();
 }
 
-// TODO: remove in favor of std::string_view version
 void TabsCtrl2::SetTabText(int idx, const WCHAR* ws) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());

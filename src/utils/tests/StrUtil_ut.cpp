@@ -239,16 +239,12 @@ void strWStrTest() {
     }
 }
 
-static void assertStrEq(std::string_view sv, const char* s) {
-    const char* svd = sv.data();
-    size_t n = sv.size();
+static void assertStrEq(const char* svd, const char* s) {
     bool ok = str::Eq(svd, s);
     utassert(ok);
-    utassert(svd[n] == 0); // ensure ends with 0
 }
 
 static void StrVecTest() {
-    std::string_view sv;
     const char* strs[] = {"foo", "bar", "Blast", "this is a large string, my friend"};
     int unsortedOrder[] = {0, 1, 2, 3};
     int sortedOrder[]{2, 1, 0, 3};

@@ -119,12 +119,9 @@ namespace str {
 TempStr DupTemp(const char* s, size_t cb = (size_t)-1);
 TempWstr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
 
-TempStr DupTemp(std::string_view);
-
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3 = nullptr);
 TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3 = nullptr);
 } // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);
 TempWstr ToWstrTemp(const char* s, size_t cb = (size_t)-1);
-TempWstr ToWstrTemp(std::string_view sv);

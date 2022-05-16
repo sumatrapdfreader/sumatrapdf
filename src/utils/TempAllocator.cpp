@@ -50,9 +50,6 @@ TempStr DupTemp(const char* s, size_t cb) {
     }
     return TempStr(res, cb);
 }
-TempStr DupTemp(std::string_view sv) {
-    return DupTemp(sv.data(), sv.size());
-}
 
 TempWstr DupTemp(const WCHAR* s, size_t cch) {
     WCHAR* res = str::Dup(GetTempAllocator(), s, cch);
@@ -89,10 +86,5 @@ TempWstr ToWstrTemp(const char* s, size_t cb) {
         return TempWstr();
     }
     WCHAR* ws = strconv::Utf8ToWstr(s, cb, GetTempAllocator());
-    return TempWstr{ws, str::Len(ws)};
-}
-
-TempWstr ToWstrTemp(std::string_view sv) {
-    WCHAR* ws = strconv::Utf8ToWstr(sv.data(), sv.size(), GetTempAllocator());
     return TempWstr{ws, str::Len(ws)};
 }

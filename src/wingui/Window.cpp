@@ -838,7 +838,7 @@ bool Window::Create(HWND parent) {
     if (initialSize.dy > 0) {
         dy = initialSize.dy;
     }
-    auto title = ToWstrTemp(this->text.AsView());
+    WCHAR* title = ToWstrTemp(this->text.Get());
     HINSTANCE hinst = GetInstance();
     hwnd = CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
     CrashIf(!hwnd);
