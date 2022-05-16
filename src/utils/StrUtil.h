@@ -234,7 +234,7 @@ struct Str {
     bool IsEmpty() const;
     std::string_view AsView() const;
     ByteSlice AsByteSlice() const;
-    std::string_view StealAsView();
+    ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
     bool AppendSlice(ByteSlice d);
     void AppendFmt(const char* fmt, ...);
@@ -324,8 +324,6 @@ struct WStr {
 bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 } // namespace str
-
-ByteSlice ToSpanU8(std::string_view sv);
 
 // WStrVecOld owns the strings in the list
 class WStrVecOld : public Vec<WCHAR*> {

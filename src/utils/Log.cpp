@@ -59,12 +59,15 @@ static const char* getWinError(DWORD errCode) {
 }
 #endif
 
-static void logToPipe(std::string_view sv) {
+static void logToPipe(const char* s, size_t n = 0) {
     if (!gLogToPipe) {
         return;
     }
-    if (sv.empty()) {
+    if (!s || n == 0) {
         return;
+    }
+    if (n == 0) {
+        n = str::Len(s);
     }
 
     DWORD cbWritten = 0;
@@ -96,10 +99,10 @@ static void logToPipe(std::string_view sv) {
         str::Free(initialMsg);
     }
 
-    DWORD cb = (DWORD)sv.size();
+    DWORD cb = (DWORD)n;
     // TODO: what happens when we write more than the server can read?
     // should I loop if cbWritten < cb?
-    ok = WriteFile(hLogPipe, sv.data(), cb, &cbWritten, nullptr);
+    ok = WriteFile(hLogPipe, s, cb, &cbWritten, nullptr);
     if (!ok) {
 #if 0
         DWORD err = GetLastError();
@@ -170,7 +173,7 @@ void log(const char* s) {
             fclose(f);
         }
     }
-    logToPipe(s);
+    logToPipe(s, n);
     gLogMutex.Unlock();
 }
 

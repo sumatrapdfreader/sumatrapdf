@@ -1520,10 +1520,10 @@ ByteSlice Str::AsByteSlice() const {
     return {(u8*)Get(), size()};
 }
 
-std::string_view Str::StealAsView() {
+ByteSlice Str::StealAsByteSlice() {
     size_t len = size();
     char* d = StealData();
-    return {d, len};
+    return {(u8*)d, len};
 }
 
 bool Str::Append(const u8* src, size_t size) {
@@ -2639,10 +2639,6 @@ const WCHAR* IdxToStr(const WCHAR* strs, int idx) {
 }
 
 } // namespace seqstrings
-
-ByteSlice ToSpanU8(std::string_view sv) {
-    return {(u8*)sv.data(), sv.size()};
-}
 
 #if 0
 // TODO: could increase kVecStrIndexSize when expanding array

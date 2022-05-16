@@ -524,8 +524,7 @@ ByteSlice SerializeStruct(const StructInfo* info, const void* strct, const char*
     out.Append(UTF8_BOM);
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);
-    auto sv = out.StealAsView();
-    return ToSpanU8(sv);
+    return out.StealAsByteSlice();
 }
 
 void* DeserializeStruct(const StructInfo* info, const char* data, void* strct) {
