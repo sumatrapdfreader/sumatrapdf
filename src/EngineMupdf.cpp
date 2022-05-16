@@ -1369,7 +1369,7 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
     }
 }
 
-WStrVecOld* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
+WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
@@ -1385,8 +1385,10 @@ WStrVecOld* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         return nullptr;
     }
 
-    WStrVecOld* labels = new WStrVecOld();
-    labels->AppendBlanks(pageCount);
+    WStrVec* labels = new WStrVec();
+    for (int i = 0; i < pageCount; i++) {
+        labels->Append(L"");
+    }
 
     for (size_t i = 0; i < n; i++) {
         pli = data.at(i);
@@ -1400,20 +1402,20 @@ WStrVecOld* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         AutoFreeWstr prefix(PdfToWstr(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
             int idx = pli.startAt + j - 1;
-            free(labels->at(idx));
             WCHAR* label = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
-            labels->at(idx) = label;
+            labels->SetAt(idx, label);
+            str::Free(label);
         }
     }
 
     for (int idx = 0; (idx = labels->Find(nullptr, idx)) != -1; idx++) {
-        labels->at(idx) = str::Dup(L"");
+        labels->SetAt(idx, L"");
     }
 
     // ensure that all page labels are unique (by appending a number to duplicates)
-    WStrVecOld dups(*labels);
+    WStrVec dups(*labels);
     dups.Sort();
-    int nDups = dups.isize();
+    int nDups = dups.Size();
     for (int i = 1; i < nDups; i++) {
         if (!str::Eq(dups.at(i), dups.at(i - 1))) {
             continue;
@@ -1424,9 +1426,9 @@ WStrVecOld* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
             do {
                 unique.Set(str::Format(L"%s.%d", dups.at(i), ++counter));
             } while (labels->Contains(unique));
-            str::ReplaceWithCopy(&labels->at(idx), unique);
+            labels->SetAt(idx, unique.Get());
         }
-        nDups = dups.isize();
+        nDups = dups.Size();
         for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {
             // no-op
         }
