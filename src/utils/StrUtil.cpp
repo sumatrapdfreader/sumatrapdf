@@ -2689,6 +2689,10 @@ bool StrVec::InsertAt(int idx, const char* s) {
 }
 
 void StrVec::SetAt(int idx, const char* s) {
+    if (s == nullptr) {
+        index[idx] = kNullIdx;
+        return;
+    }
     size_t n = str::Len(s);
     u32 strIdx = (u32)strings.size();
     bool ok = strings.Append(s, n + 1); // also append terminating 0
@@ -2754,7 +2758,7 @@ char* StrVec::PopAt(int idx) {
 char* StrVec::RemoveAt(int idx) {
     u32 strIdx = index[idx];
     index.RemoveAt(idx);
-    char* res = strings.Get() + strIdx;
+    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
     return res;
 }
 
@@ -2762,40 +2766,37 @@ char* StrVec::RemoveAt(int idx) {
 char* StrVec::RemoveAtFast(size_t idx) {
     u32 strIdx = index[idx];
     index.RemoveAtFast(idx);
-    char* res = strings.Get() + strIdx;
+    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
     return res;
 }
 
 static bool strLess(const char* s1, const char* s2) {
     if (str::IsEmpty(s1)) {
+        if (str::IsEmpty(s2)) {
+            return false;
+        }
         return true;
     }
     if (str::IsEmpty(s2)) {
         return false;
     }
-    int res = strcmp(s1, s2);
-    return res < 0;
+    int n = strcmp(s1, s2);
+    return n < 0;
 }
 
 static bool strLessNoCase(const char* s1, const char* s2) {
     if (str::IsEmpty(s1)) {
+        // null / empty string is smallest
+        if (str::IsEmpty(s2)) {
+            return false;
+        }
         return true;
     }
     if (str::IsEmpty(s2)) {
         return false;
     }
-    // TODO: optimize
-    size_t n1 = str::Len(s1);
-    size_t n2 = str::Len(s2);
-    for (size_t i = 0; i < n1 && i < n2; i++) {
-        int c1 = tolower(s1[i]);
-        int c2 = tolower(s2[i]);
-        if (c1 == c2) {
-            continue;
-        }
-        return c1 < c2;
-    }
-    return n1 < n2;
+    int n = _stricmp(s1, s2);
+    return n < 0;
 }
 
 void StrVec::SortNoCase() {
@@ -2816,8 +2817,8 @@ void StrVec::Sort(StrLessFunc lessFn) {
         lessFn = strLess;
     }
     std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        char* is1 = strings.Get() + i1;
-        char* is2 = strings.Get() + i2;
+        char* is1 = (i1 == kNullIdx) ? nullptr : strings.Get() + i1;
+        char* is2 = (i2 == kNullIdx) ? nullptr : strings.Get() + i2;
         bool ret = lessFn(is1, is2);
         return ret;
     });
@@ -2922,9 +2923,14 @@ WCHAR* Join(const WStrVec& v, const WCHAR* joint) {
     str::WStr tmp(256);
     size_t len = v.size();
     size_t jointLen = str::Len(joint);
+    size_t firstForJoint = 0;
     for (size_t i = 0; i < len; i++) {
         WCHAR* s = v.at(i);
-        if (i > 0 && jointLen > 0) {
+        if (!s) {
+            firstForJoint++;
+            continue;
+        }
+        if (i > firstForJoint && jointLen > 0) {
             tmp.Append(joint, jointLen);
         }
         tmp.Append(s);
@@ -3082,6 +3088,10 @@ bool WStrVec::InsertAt(int idx, const WCHAR* s) {
 }
 
 void WStrVec::SetAt(int idx, const WCHAR* s) {
+    if (s == nullptr) {
+        index[idx] = kNullIdx;
+        return;
+    }
     size_t n = str::Len(s);
     u32 strIdx = (u32)strings.size();
     bool ok = strings.Append(s, n + 1); // also append terminating 0
@@ -3095,7 +3105,7 @@ void WStrVec::SetAt(int idx, const WCHAR* s) {
 WCHAR* WStrVec::PopAt(int idx) {
     u32 strIdx = index[idx];
     index.RemoveAt(idx);
-    WCHAR* res = strings.Get() + strIdx;
+    WCHAR* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
     return res;
 }
 
@@ -3103,7 +3113,7 @@ WCHAR* WStrVec::PopAt(int idx) {
 WCHAR* WStrVec::RemoveAt(int idx) {
     u32 strIdx = index[idx];
     index.RemoveAt(idx);
-    WCHAR* res = strings.Get() + strIdx;
+    WCHAR* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
     return res;
 }
 
@@ -3111,7 +3121,7 @@ WCHAR* WStrVec::RemoveAt(int idx) {
 WCHAR* WStrVec::RemoveAtFast(size_t idx) {
     u32 strIdx = index[idx];
     index.RemoveAtFast(idx);
-    WCHAR* res = strings.Get() + strIdx;
+    WCHAR* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
     return res;
 }
 
@@ -3120,8 +3130,8 @@ void WStrVec::Sort(WStrLessFunc lessFn) {
         lessFn = wstrLess;
     }
     std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        WCHAR* is1 = strings.Get() + i1;
-        WCHAR* is2 = strings.Get() + i2;
+        WCHAR* is1 = (i1 == kNullIdx) ? nullptr : strings.Get() + i1;
+        WCHAR* is2 = (i2 == kNullIdx) ? nullptr : strings.Get() + i2;
         bool ret = lessFn(is1, is2);
         return ret;
     });

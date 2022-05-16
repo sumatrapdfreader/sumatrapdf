@@ -239,35 +239,45 @@ void strWStrTest() {
     }
 }
 
-static void assertStrEq(const char* svd, const char* s) {
-    bool ok = str::Eq(svd, s);
+static void assertStrEq(const char* s1, const char* s2) {
+    bool ok = str::Eq(s1, s2);
     utassert(ok);
 }
 
-static void StrVecCheckIter(StrVec& v) {
+static void StrVecCheckIter(StrVec& v, const char** strs) {
     int i = 0;
     for (char* s : v) {
-        char* s2 = v[i++];
+        char* s2 = v[i];
         utassert(str::Eq(s, s2));
+        if (strs) {
+            const char* s3 = strs[i];
+            utassert(str::Eq(s, s3));
+        }
+        i++;
     }
 }
 
-static void CheckPopAt(StrVec& v) {
+static void CheckRemoveAt(StrVec& v) {
     while (v.Size() > 0) {
         int n = v.Size();
         int idx = v.Size() / 2;
         auto exp = v[idx];
-        auto got = v.PopAt(idx);
+        char* got;
+        if (n % 2 == 0) {
+            got = v.RemoveAt(idx);
+        } else {
+            got = v.RemoveAtFast(idx);
+        }
         utassert(exp == got); // should be exact same pointer value
         utassert(v.Size() == n - 1);
     }
 }
 
 static void StrVecTest() {
-    const char* strs[] = {"foo", "bar", "Blast", "this is a large string, my friend"};
-    int unsortedOrder[] = {0, 1, 2, 3};
-    int sortedOrder[]{2, 1, 0, 3};
-    int sortedNoCaseOrder[]{1, 2, 0, 3};
+    const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
+    int unsortedOrder[] = {0, 1, 2, 3, 4};
+    int sortedOrder[]{3, 2, 1, 0, 4};
+    int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
 
     int n = (int)dimof(strs);
     StrVec v;
@@ -276,7 +286,7 @@ static void StrVecTest() {
         v.Append(strs[i]);
         utassert(v.Size() == i + 1);
     }
-    StrVecCheckIter(v);
+    StrVecCheckIter(v, strs);
 
     StrVecSortedView sortedView;
     bool ok = v.GetSortedView(sortedView);
@@ -290,7 +300,7 @@ static void StrVecTest() {
 
     // allocate a bunch to test allocating
     for (int i = 0; i < 1024; i++) {
-        v.Append(strs[3]);
+        v.Append(strs[4]);
     }
     utassert(v.Size() == 1024 + n);
 
@@ -302,7 +312,7 @@ static void StrVecTest() {
 
     for (int i = 0; i < 1024; i++) {
         auto got = v.at(i + n);
-        auto exp = strs[3];
+        auto exp = strs[4];
         assertStrEq(got, exp);
     }
 
@@ -321,30 +331,40 @@ static void StrVecTest() {
         auto exp = strs[sortedOrder[i]];
         assertStrEq(got, exp);
     }
-    StrVecCheckIter(v);
+    StrVecCheckIter(v, nullptr);
     v.SortNoCase();
     for (int i = 0; i < n; i++) {
         char* got = v.at(i);
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
-    CheckPopAt(v);
+    CheckRemoveAt(v);
 }
 
-static void WStrVecCheckIter(WStrVec& v) {
+static void WStrVecCheckIter(WStrVec& v, const WCHAR** strs = nullptr) {
     int i = 0;
     for (WCHAR* s : v) {
-        WCHAR* s2 = v[i++];
+        WCHAR* s2 = v[i];
         utassert(str::Eq(s, s2));
+        if (strs) {
+            const WCHAR* s3 = strs[i];
+            utassert(str::Eq(s, s3));
+        }
+        i++;
     }
 }
 
-static void CheckPopAt(WStrVec& v) {
+static void CheckRemoveAt(WStrVec& v) {
     while (v.Size() > 0) {
         int n = v.Size();
         int idx = v.Size() / 2;
         auto exp = v[idx];
-        auto got = v.PopAt(idx);
+        WCHAR* got;
+        if (n % 2 == 0) {
+            got = v.RemoveAt(idx);
+        } else {
+            got = v.RemoveAtFast(idx);
+        }
         utassert(exp == got); // should be exact same pointer value
         utassert(v.Size() == n - 1);
     }
@@ -357,37 +377,49 @@ static void WStrVecTest() {
     WCHAR* s = Join(v);
     utassert(v.size() == 2);
     utassert(str::Eq(L"foobar", s));
-    free(s);
+    str::Free(s);
 
     s = Join(v, L";");
     utassert(v.size() == 2);
     utassert(str::Eq(L"foo;bar", s));
-    free(s);
+    str::Free(s);
+
+    v.Append(nullptr);
+    utassert(v.size() == 3);
 
     v.Append(L"glee");
     s = Join(v, L"_ _");
-    utassert(v.size() == 3);
+    utassert(v.size() == 4);
     utassert(str::Eq(L"foo_ _bar_ _glee", s));
-    free(s);
+    str::Free(s);
 
     WStrVecCheckIter(v);
     v.Sort();
+    const WCHAR* strsSorted[] = {nullptr, L"bar", L"foo", L"glee"};
+    WStrVecCheckIter(v, strsSorted);
 
-    WStrVecCheckIter(v);
+    s = Join(v, L"++");
+    utassert(v.size() == 4);
+    utassert(str::Eq(L"bar++foo++glee", s));
+    str::Free(s);
 
     s = Join(v);
     utassert(str::Eq(L"barfooglee", s));
-    free(s);
+    str::Free(s);
 
     {
         WStrVec v2(v);
-        utassert(str::Eq(v2.at(1), L"foo"));
+        utassert(str::Eq(v2.at(2), L"foo"));
         v2.Append(L"nobar");
-        utassert(str::Eq(v2.at(3), L"nobar"));
+        utassert(str::Eq(v2.at(4), L"nobar"));
         v2 = v;
-        utassert(v2.size() == 3 && v2.at(0) != v.at(0));
-        utassert(str::Eq(v2.at(1), L"foo"));
-        CheckPopAt(v2);
+        utassert(v2.size() == 4);
+        // copies should be same values but at different addresses
+        utassert(v2.at(1) != v.at(1));
+        utassert(str::Eq(v2.at(1), v.at(1)));
+        s = v2.at(2);
+        utassert(str::Eq(s, L"foo"));
+        CheckRemoveAt(v2);
     }
 
     {
@@ -400,7 +432,7 @@ static void WStrVecTest() {
         utassert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
         AutoFreeWstr joined(Join(v2, L";"));
         utassert(str::Eq(joined, L"a;b;;c;"));
-        CheckPopAt(v2);
+        CheckRemoveAt(v2);
     }
 
     {
@@ -415,9 +447,9 @@ static void WStrVecTest() {
         AutoFreeWstr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
 #endif
-        CheckPopAt(v2);
+        CheckRemoveAt(v2);
     }
-    CheckPopAt(v);
+    CheckRemoveAt(v);
 }
 
 static void WStrVecTest2() {
@@ -433,7 +465,7 @@ static void WStrVecTest2() {
     utassert(v.FindI(L"One") == 0);
     utassert(v.Find(L"Two") == -1);
     WStrVecCheckIter(v);
-    CheckPopAt(v);
+    CheckRemoveAt(v);
 }
 
 void StrTest() {
