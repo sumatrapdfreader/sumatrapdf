@@ -28,7 +28,7 @@ static WCHAR* GetGhostscriptPath() {
     };
 
     // find all installed Ghostscript versions
-    WStrVecOld versions;
+    WStrVec versions;
     REGSAM access = KEY_READ | KEY_WOW64_32KEY;
 TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
@@ -39,7 +39,7 @@ TryAgain64Bit:
         }
         WCHAR subkey[32];
         for (DWORD ix = 0; RegEnumKey(hkey, ix, subkey, dimof(subkey)) == ERROR_SUCCESS; ix++) {
-            versions.Append(str::Dup(subkey));
+            versions.Append(subkey);
         }
         RegCloseKey(hkey);
     }
@@ -81,17 +81,17 @@ TryAgain64Bit:
         return nullptr;
     }
     GetEnvironmentVariable(L"PATH", envpath, size);
-    WStrVecOld paths;
+    WStrVec paths;
     Split(paths, envpath, L";", true);
-    for (size_t ix = 0; ix < paths.size(); ix++) {
-        AutoFreeWstr exe(path::Join(paths.at(ix), L"gswin32c.exe"));
-        if (file::Exists(exe)) {
-            return exe.StealData();
+    for (WCHAR* path : paths) {
+        WCHAR* exe = path::JoinTemp(path, L"gswin32c.exe");
+        if (!file::Exists(exe)) {
+            exe = path::JoinTemp(path, L"gswin64c.exe");
         }
-        exe.Set(path::Join(paths.at(ix), L"gswin64c.exe"));
-        if (file::Exists(exe)) {
-            return exe.StealData();
+        if (!file::Exists(exe)) {
+            continue;
         }
+        return str::Dup(exe);
     }
     return nullptr;
 }
