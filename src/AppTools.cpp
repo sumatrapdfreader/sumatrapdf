@@ -220,7 +220,7 @@ static struct {
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
 WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
     WCHAR* firstEditor = nullptr;
-    WStrList foundExes;
+    WStrVec foundExes;
 
     for (auto& rule : editorRules) {
         WCHAR* regKey = ToWstrTemp(rule.regKey);
@@ -248,7 +248,7 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
         }
         // don't show inexistent paths (and don't try again for them)
         if (!file::Exists(exePath)) {
-            foundExes.Append(exePath.StealData());
+            foundExes.Append(exePath.Get());
             continue;
         }
 
@@ -263,7 +263,7 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
         if (!firstEditor) {
             firstEditor = editorCmd.StealData();
         }
-        foundExes.Append(exePath.StealData());
+        foundExes.Append(exePath.Get());
     }
 
     // Fall back to notepad as a default handler
