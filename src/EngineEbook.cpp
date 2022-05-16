@@ -799,7 +799,7 @@ bool EngineEpub::SaveFileAs(const char* copyFileName) {
     auto dstPath = ToWstrTemp(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(dstPath, d.AsSpan());
+        bool ok = !d.empty() && file::WriteFile(dstPath, d.AsByteSlice());
         if (ok) {
             return true;
         }
@@ -1234,7 +1234,7 @@ class ChmDataCache {
     }
 
     ByteSlice GetHtmlData() {
-        return html.AsSpan();
+        return html.AsByteSlice();
     }
 
     ByteSlice* GetImageData(const char* id, const char* pagePath) {

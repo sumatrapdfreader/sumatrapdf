@@ -456,7 +456,7 @@ ByteSlice ChmModel::GetDataForUrl(const WCHAR* url) {
         }
         urlDataCache.Append(e);
     }
-    return e->data.AsSpan();
+    return e->data.AsByteSlice();
 }
 
 void ChmModel::DownloadData(const char* url, ByteSlice data) {

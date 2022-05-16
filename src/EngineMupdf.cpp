@@ -3265,7 +3265,7 @@ bool EngineMupdf::SaveFileAs(const char* copyFileName) {
     auto dstPath = ToWstrTemp(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
-        bool ok = file::WriteFile(dstPath, d.AsSpan());
+        bool ok = file::WriteFile(dstPath, d.AsByteSlice());
         return ok;
     }
     auto path = FileName();
@@ -3482,7 +3482,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
         if (d.empty()) {
             return nullptr;
         }
-        auto strm = CreateStreamFromData(d.AsSpan());
+        auto strm = CreateStreamFromData(d.AsByteSlice());
         ScopedComPtr<IStream> stream(strm);
         if (!stream) {
             return nullptr;

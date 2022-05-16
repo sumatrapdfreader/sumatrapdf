@@ -770,7 +770,7 @@ bool EngineDjVu::SaveFileAs(const char* copyFileName) {
     auto dstPath = ToWstrTemp(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(dstPath, d.AsSpan());
+        bool ok = !d.empty() && file::WriteFile(dstPath, d.AsByteSlice());
         if (ok) {
             return true;
         }

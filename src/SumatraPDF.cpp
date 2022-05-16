@@ -2581,7 +2581,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 
         auto textA = ToUtf8Temp(text.LendData());
         AutoFree textUTF8BOM = str::Join(UTF8_BOM, textA.Get());
-        ok = file::WriteFile(realDstFileName, textUTF8BOM.AsSpan());
+        ok = file::WriteFile(realDstFileName, textUTF8BOM.AsByteSlice());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         WCHAR* producerName = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);

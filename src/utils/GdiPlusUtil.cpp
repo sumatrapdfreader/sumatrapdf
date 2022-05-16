@@ -527,7 +527,7 @@ RenderedBitmap* LoadRenderedBitmapWin(const char* path) {
     if (!data.data) {
         return nullptr;
     }
-    Gdiplus::Bitmap* bmp = BitmapFromDataWin(data.AsSpan());
+    Gdiplus::Bitmap* bmp = BitmapFromDataWin(data.AsByteSlice());
     if (!bmp) {
         return nullptr;
     }

@@ -238,7 +238,7 @@ char* ChmFile::ResolveTopicID(unsigned int id) const {
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
             AutoFree stringsData(GetData("/#STRINGS"));
-            return GetCharZ(stringsData.AsSpan(), br.DWordLE(off + 4));
+            return GetCharZ(stringsData.AsByteSlice(), br.DWordLE(off + 4));
         }
     }
     return nullptr;

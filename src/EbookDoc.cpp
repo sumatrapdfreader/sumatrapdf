@@ -328,7 +328,7 @@ bool EpubDoc::Load() {
         return false;
     }
     HtmlParser parser;
-    HtmlElement* node = parser.ParseInPlace(container.AsSpan());
+    HtmlElement* node = parser.ParseInPlace(container.AsByteSlice());
     if (!node) {
         return false;
     }
@@ -348,7 +348,7 @@ bool EpubDoc::Load() {
     WStrList encList;
     AutoFree encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
     if (encryption.data) {
-        (void)parser.ParseInPlace(encryption.AsSpan());
+        (void)parser.ParseInPlace(encryption.AsByteSlice());
         HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
             WCHAR* uri = cr->GetAttribute("URI");
@@ -365,7 +365,7 @@ bool EpubDoc::Load() {
         return false;
     }
     ParseMetadata(content.data);
-    node = parser.ParseInPlace(content.AsSpan());
+    node = parser.ParseInPlace(content.AsByteSlice());
     if (!node) {
         return false;
     }
@@ -851,7 +851,7 @@ bool Fb2Doc::Load() {
     }
     data.TakeOwnershipOf(tmp);
 
-    HtmlPullParser parser(data.AsSpan());
+    HtmlPullParser parser(data.AsByteSlice());
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     const char* bodyStart = nullptr;
@@ -1260,7 +1260,7 @@ bool HtmlDoc::Load() {
     pagePath.SetCopy(fileName);
     str::TransCharsInPlace(pagePath, "\\", "/");
 
-    HtmlPullParser parser(htmlData.AsSpan());
+    HtmlPullParser parser(htmlData.AsByteSlice());
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
            (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
@@ -1288,7 +1288,7 @@ bool HtmlDoc::Load() {
 }
 
 ByteSlice HtmlDoc::GetHtmlData() {
-    return htmlData.AsSpan();
+    return htmlData.AsByteSlice();
 }
 
 ByteSlice* HtmlDoc::GetImageData(const char* fileName) {

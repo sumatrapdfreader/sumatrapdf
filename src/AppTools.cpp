@@ -391,7 +391,7 @@ void SaveCallstackLogs() {
         return;
     }
     AutoFreeWstr filePath(AppGenDataFilename(L"callstacks.txt"));
-    file::WriteFile(filePath.Get(), s.AsSpan());
+    file::WriteFile(filePath.Get(), s.AsByteSlice());
 }
 
 // TODO: this can be used for extracting other data

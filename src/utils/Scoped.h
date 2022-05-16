@@ -175,11 +175,7 @@ struct AutoFree {
         return (data == nullptr) || (len == 0);
     }
 
-    std::string_view AsView() const {
-        return {data, len};
-    }
-
-    ByteSlice AsSpan() const {
+    ByteSlice AsByteSlice() const {
         return {(u8*)data, len};
     }
 

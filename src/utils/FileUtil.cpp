@@ -714,21 +714,21 @@ bool StartsWith(const char* filePathA, const char* s) {
 }
 
 int GetZoneIdentifier(const char* filePath) {
-    AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
-    auto pathW = ToWstrTemp(path.AsView());
+    char* path = str::JoinTemp(filePath, ":Zone.Identifier");
+    WCHAR* pathW = ToWstrTemp(path);
     return GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, pathW);
 }
 
 bool SetZoneIdentifier(const char* filePath, int zoneId) {
-    AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
+    char* path = str::JoinTemp(filePath, ":Zone.Identifier");
     AutoFreeWstr id(str::Format(L"%d", zoneId));
-    auto pathW = ToWstrTemp(path.AsView());
+    WCHAR* pathW = ToWstrTemp(path);
     return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", id, pathW);
 }
 
 bool DeleteZoneIdentifier(const char* filePath) {
-    AutoFreeStr path(str::Join(filePath, ":Zone.Identifier"));
-    auto pathW = ToWstrTemp(path.AsView());
+    char* path = str::JoinTemp(filePath, ":Zone.Identifier");
+    WCHAR* pathW = ToWstrTemp(path);
     return !!DeleteFileW(pathW);
 }
 

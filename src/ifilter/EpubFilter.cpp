@@ -46,7 +46,7 @@ HRESULT EpubFilter::OnInit() {
         return res;
     }
 
-    auto strm = CreateStreamFromData(data.AsSpan());
+    auto strm = CreateStreamFromData(data.AsByteSlice());
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return E_FAIL;

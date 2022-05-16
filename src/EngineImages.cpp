@@ -311,7 +311,7 @@ bool EngineImages::SaveFileAs(const char* copyFileName) {
     if (d.empty()) {
         return false;
     }
-    return file::WriteFile(dstPath, d.AsSpan());
+    return file::WriteFile(dstPath, d.AsByteSlice());
 }
 
 ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
@@ -546,7 +546,7 @@ bool EngineImage::LoadSingleFile(const char* pathA) {
     SetFileName(path);
 
     AutoFree data = file::ReadFile(pathA);
-    const char* fileExtA = GfxFileExtFromData(data.AsSpan());
+    const char* fileExtA = GfxFileExtFromData(data.AsByteSlice());
     if (fileExtA == nullptr) {
         Kind kind = GuessFileTypeFromName(pathA);
         fileExtA = GfxFileExtFromKind(kind);
@@ -554,7 +554,7 @@ bool EngineImage::LoadSingleFile(const char* pathA) {
     CrashIf(fileExtA == nullptr);
     fileExt = fileExtA;
     defaultExt = strconv::Utf8ToWstr(fileExtA); // TODO: leaks
-    image = BitmapFromData(data.AsSpan());
+    image = BitmapFromData(data.AsByteSlice());
     return FinishLoading();
 }
 
@@ -577,7 +577,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     defaultExt = strconv::Utf8ToWstr(fileExtA); // TOOD: leaks
 
     AutoFree data = GetDataFromStream(stream, nullptr);
-    image = BitmapFromData(data.AsSpan());
+    image = BitmapFromData(data.AsByteSlice());
     return FinishLoading();
 }
 
@@ -924,7 +924,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
     if (bmpData.data) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData.AsSpan());
+        return BitmapFromData(bmpData.AsByteSlice());
     }
     return nullptr;
 }
@@ -1142,7 +1142,7 @@ bool EngineCbx::FinishLoading() {
 
     AutoFree metadata(cbxFile->GetFileDataByName("ComicInfo.xml"));
     if (metadata.data) {
-        ParseComicInfoXml(metadata.AsSpan());
+        ParseComicInfoXml(metadata.AsByteSlice());
     }
     const char* comment = cbxFile->GetComment();
     if (comment) {
