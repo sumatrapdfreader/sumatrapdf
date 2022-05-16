@@ -2754,7 +2754,7 @@ static bool strLessNoCase(const char* s1, const char* s2) {
     return n1 < n2;
 }
 
-void StrVec::SortI() {
+void StrVec::SortNoCase() {
     Sort(strLessNoCase);
 }
 
@@ -3151,7 +3151,7 @@ void WStrVec::Sort(WStrLessFunc lessFn) {
     });
 }
 
-void WStrVec::SortI() {
+void WStrVec::SortNoCase() {
     Sort(wstrLessNoCase);
 }
 

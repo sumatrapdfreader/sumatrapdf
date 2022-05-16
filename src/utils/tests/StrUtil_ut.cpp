@@ -244,6 +244,14 @@ static void assertStrEq(const char* svd, const char* s) {
     utassert(ok);
 }
 
+static void StrVecCheckIter(StrVec& v) {
+    int i = 0;
+    for (char* s : v) {
+        char* s2 = v[i++];
+        utassert(str::Eq(s, s2));
+    }
+}
+
 static void StrVecTest() {
     const char* strs[] = {"foo", "bar", "Blast", "this is a large string, my friend"};
     int unsortedOrder[] = {0, 1, 2, 3};
@@ -257,6 +265,7 @@ static void StrVecTest() {
         v.Append(strs[i]);
         utassert(v.Size() == i + 1);
     }
+    StrVecCheckIter(v);
 
     StrVecSortedView sortedView;
     bool ok = v.GetSortedView(sortedView);
@@ -299,6 +308,13 @@ static void StrVecTest() {
     for (int i = 0; i < n; i++) {
         char* got = v.at(i);
         auto exp = strs[sortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+    StrVecCheckIter(v);
+    v.SortNoCase();
+    for (int i = 0; i < n; i++) {
+        char* got = v.at(i);
+        auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
 }

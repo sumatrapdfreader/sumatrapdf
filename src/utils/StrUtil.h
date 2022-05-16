@@ -372,7 +372,7 @@ struct WStrVec {
     bool Contains(const WCHAR* s) const;
 
     void Sort(WStrLessFunc lessFn = nullptr);
-    void SortI();
+    void SortNoCase();
     void SortNatural();
 
     bool GetSortedView(WStrVecSortedView&, WStrLessFunc lessFn = nullptr) const;
@@ -461,8 +461,44 @@ struct StrVec {
     bool GetSortedViewNoCase(StrVecSortedView&) const;
 
     void Sort(StrLessFunc lessFn = nullptr);
-    void SortI();
+    void SortNoCase();
     void SortNatural();
+
+    struct Iterator {
+        using iterator_category = std::forward_iterator_tag;
+
+        Iterator(StrVec* v, int i) : v(v), idx(i) {
+        }
+
+        char* operator*() const {
+            return v->at(idx);
+        }
+
+        Iterator& operator++() {
+            idx++;
+            return *this;
+        }
+        Iterator operator++(int) {
+            Iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const Iterator& a, const Iterator& b) {
+            return a.idx == b.idx;
+        };
+        friend bool operator!=(const Iterator& a, const Iterator& b) {
+            return a.idx != b.idx;
+        };
+
+        StrVec* v;
+        int idx;
+    };
+    Iterator begin() {
+        return Iterator(this, 0);
+    }
+    Iterator end() {
+        return Iterator(this, index.isize());
+    }
 };
 
 size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
