@@ -345,7 +345,7 @@ bool EpubDoc::Load() {
     url::DecodeInPlace(contentPath);
 
     // encrypted files will be ignored (TODO: support decryption)
-    WStrList encList;
+    WStrVec encList;
     AutoFree encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
     if (encryption.data) {
         (void)parser.ParseInPlace(encryption.AsByteSlice());
@@ -355,6 +355,7 @@ bool EpubDoc::Load() {
             if (uri) {
                 url::DecodeInPlace(uri);
                 encList.Append(uri);
+                str::Free(uri);
             }
             cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
         }
@@ -381,7 +382,7 @@ bool EpubDoc::Load() {
         *contentPath = '\0';
     }
 
-    WStrList idList, pathList;
+    WStrVec idList, pathList;
 
     for (node = node->down; node; node = node->next) {
         AutoFreeWstr mediatype(node->GetAttribute("media-type"));
@@ -415,12 +416,12 @@ bool EpubDoc::Load() {
             }
 
             AutoFreeWstr fullContentPath = str::Join(contentPath, htmlPath);
-            if (encList.size() > 0 && encList.Contains(fullContentPath)) {
+            if (encList.Contains(fullContentPath)) {
                 continue;
             }
             if (htmlPath && htmlId) {
-                idList.Append(htmlId.StealData());
-                pathList.Append(htmlPath.StealData());
+                idList.Append(htmlId.Get());
+                pathList.Append(htmlPath.Get());
             }
         }
     }

@@ -354,8 +354,8 @@ static void WStrVecTest() {
     }
 }
 
-static void StrListTest() {
-    WStrList l;
+static void WStrVecTest2() {
+    WStrVec l;
     utassert(l.size() == 0);
     l.Append(str::Dup(L"one"));
     l.Append(str::Dup(L"two"));
@@ -795,6 +795,6 @@ void StrTest() {
     StrUrlExtractTest();
     // ParseUntilTest();
     WStrVecTest();
-    StrListTest();
+    WStrVecTest2();
     StrVecTest();
 }

@@ -366,7 +366,10 @@ struct WStrVec {
     int Append(const WCHAR*, size_t sLen = 0);
     int Find(const WCHAR* s, int startAt = 0) const;
     int FindI(const WCHAR* s, int startAt = 0) const;
+    // TODO: replace Exists() with Contains
+    bool Contains(const WCHAR* s) const;
     bool Exists(const WCHAR* s) const;
+    // TODO: rename to AppendIfNotContains() or AppendIfAbset()
     int AppendIfNotExists(const WCHAR* s);
 
     void Sort(WStrLessFunc lessFn = nullptr);
@@ -382,30 +385,6 @@ struct WStrVec {
 
 size_t Split(WStrVec& v, const WCHAR* s, const WCHAR* separator, bool collapse);
 WCHAR* Join(const WStrVec& v, const WCHAR* joint = nullptr);
-
-// WStrList is a subset of WStrVecOld that's optimized for appending and searching
-// WStrList owns the strings it contains and frees them at destruction
-class WStrList {
-    struct Item {
-        WCHAR* string = nullptr;
-        u32 hash = 0;
-    };
-
-    Vec<Item> items;
-    size_t count = 0;
-    Allocator* allocator;
-
-  public:
-    explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr);
-    ~WStrList();
-    const WCHAR* at(size_t idx) const;
-    const WCHAR* Last() const;
-    size_t size() const;
-    void Append(WCHAR* str);
-    int Find(const WCHAR* str, size_t startAt = 0) const;
-    int FindI(const WCHAR* str, size_t startAt = 0) const;
-    bool Contains(const WCHAR* str) const;
-};
 
 typedef bool (*StrLessFunc)(const char* s1, const char* s2);
 

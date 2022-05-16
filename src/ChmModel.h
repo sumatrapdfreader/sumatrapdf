@@ -75,7 +75,7 @@ struct ChmModel : Controller {
     CRITICAL_SECTION docAccess;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
 
-    WStrList pages;
+    WStrVec pages;
     int currentPageNo = 1;
     HtmlWindow* htmlWindow = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;

@@ -2826,63 +2826,6 @@ char* StrVecSortedView::operator[](int i) const {
     return at(i);
 }
 
-//--- WStrList
-
-WStrList::WStrList(size_t capHint, Allocator* allocator) : items(capHint, allocator) {
-    this->allocator = allocator;
-}
-
-WStrList::~WStrList() {
-    for (Item& item : items) {
-        Allocator::Free(allocator, item.string);
-    }
-}
-
-const WCHAR* WStrList ::at(size_t idx) const {
-    return items.at(idx).string;
-}
-
-const WCHAR* WStrList ::Last() const {
-    return items.Last().string;
-}
-
-size_t WStrList ::size() const {
-    return count;
-}
-
-// str must have been allocated by allocator and is owned by StrList
-void WStrList ::Append(WCHAR* str) {
-    u32 hash = MurmurHashWStrI(str);
-    items.Append(Item{str, hash});
-    count++;
-}
-
-int WStrList ::Find(const WCHAR* str, size_t startAt) const {
-    u32 hash = MurmurHashWStrI(str);
-    Item* item = items.LendData();
-    for (size_t i = startAt; i < count; i++) {
-        if (item[i].hash == hash && str::Eq(item[i].string, str)) {
-            return (int)i;
-        }
-    }
-    return -1;
-}
-
-int WStrList ::FindI(const WCHAR* str, size_t startAt) const {
-    u32 hash = MurmurHashWStrI(str);
-    Item* item = items.LendData();
-    for (size_t i = startAt; i < count; i++) {
-        if (item[i].hash == hash && str::EqI(item[i].string, str)) {
-            return (int)i;
-        }
-    }
-    return -1;
-}
-
-bool WStrList ::Contains(const WCHAR* str) const {
-    return -1 != Find(str);
-}
-
 //--- WStrVecOld
 
 WStrVecOld::WStrVecOld(const WStrVecOld& other) : Vec(other) {
@@ -3180,8 +3123,13 @@ int WStrVec::FindI(const WCHAR* s, int startAt) const {
     return -1;
 }
 
-bool WStrVec::Exists(const WCHAR* sv) const {
-    int idx = Find(sv, 0);
+bool WStrVec::Exists(const WCHAR* s) const {
+    int idx = Find(s, 0);
+    return idx != -1;
+}
+
+bool WStrVec::Contains(const WCHAR* s) const {
+    int idx = Find(s, 0);
     return idx != -1;
 }
 

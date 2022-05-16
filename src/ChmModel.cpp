@@ -300,7 +300,7 @@ float ChmModel::GetZoomVirtual(bool) const {
 class ChmTocBuilder : public EbookTocVisitor {
     ChmFile* doc = nullptr;
 
-    WStrList* pages = nullptr;
+    WStrVec* pages = nullptr;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
     Allocator* allocator = nullptr;
     // TODO: could use dict::MapWStrToInt instead of StrList in the caller as well
@@ -318,7 +318,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         int pageNo = (int)pages->size() + 1;
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
-            pages->Append(plainUrl.StealData());
+            pages->Append(plainUrl.Get());
             CrashIf((size_t)pageNo != pages->size());
         } else {
             CrashIf((size_t)pageNo == pages->size() + 1);
@@ -327,7 +327,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     }
 
   public:
-    ChmTocBuilder(ChmFile* doc, WStrList* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
+    ChmTocBuilder(ChmFile* doc, WStrVec* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
         this->doc = doc;
         this->pages = pages;
         this->tocTrace = tocTrace;
@@ -357,7 +357,9 @@ bool ChmModel::Load(const char* fileName) {
     }
 
     // always make the document's homepage page 1
-    pages.Append(strconv::AnsiToWstr(doc->GetHomePath()));
+    WCHAR* page = strconv::AnsiToWstr(doc->GetHomePath());
+    pages.Append(page);
+    str::Free(page);
 
     // parse the ToC here, since page numbering depends on it
     tocTrace = new Vec<ChmTocTraceItem>();
