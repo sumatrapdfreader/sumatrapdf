@@ -308,7 +308,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
         }
 
         // TODO: not sure if pdf_new_text_string() handles utf8
-        pdf_obj* valobj = pdf_new_text_string(ctx, val.Get());
+        pdf_obj* valobj = pdf_new_text_string(ctx, val);
         pdf_dict_puts_drop(ctx, info, name, valobj);
     }
     fz_catch(ctx) {

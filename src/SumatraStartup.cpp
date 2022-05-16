@@ -534,7 +534,7 @@ static void ShutdownCommon() {
 
 static void ReplaceColor(char** col, WCHAR* maybeColor) {
     ParsedColor c;
-    ParseColor(c, ToUtf8Temp(maybeColor).Get());
+    ParseColor(c, ToUtf8Temp(maybeColor));
     if (c.parsedOk) {
         char* colNewStr = SerializeColor(c.col);
         str::ReplacePtr(&gGlobalPrefs->mainWindowBackground, colNewStr);
@@ -543,7 +543,7 @@ static void ReplaceColor(char** col, WCHAR* maybeColor) {
 
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
-        char* cmdLine = str::Dup(ToUtf8Temp(i.inverseSearchCmdLine).Get());
+        char* cmdLine = str::Dup(ToUtf8Temp(i.inverseSearchCmdLine));
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }

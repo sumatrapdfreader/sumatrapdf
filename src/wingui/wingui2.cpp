@@ -1112,7 +1112,7 @@ Size Button::SetTextAndResize(const WCHAR* s) {
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked) {
     ButtonCreateArgs args;
     args.parent = parent;
-    args.text = ToUtf8Temp(s).Get();
+    args.text = ToUtf8Temp(s);
 
     auto b = new Button();
     b->onClicked = onClicked;
@@ -1125,7 +1125,7 @@ Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicke
 Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     ButtonCreateArgs args;
     args.parent = parent;
-    args.text = ToUtf8Temp(s).Get();
+    args.text = ToUtf8Temp(s);
 
     auto* b = new Button();
     b->Create(args);

@@ -42,11 +42,8 @@ void ResetTempAllocator() {
 
 namespace str {
 TempStr DupTemp(const char* s, size_t cb) {
-    if (cb == (size_t)-1) {
-        cb = str::Len(s);
-    }
     char* res = str::Dup(GetTempAllocator(), s, cb);
-    return TempStr(res, cb);
+    return res;
 }
 
 TempWstr DupTemp(const WCHAR* s, size_t cch) {

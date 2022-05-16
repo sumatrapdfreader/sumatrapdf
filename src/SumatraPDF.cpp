@@ -256,11 +256,12 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        auto urlA(ToUtf8Temp(url));
-        if (!parent || !urlA.Get() || (urlA.size() > 4096)) {
+        char* urlA = ToUtf8Temp(url);
+        size_t urlLen = str::Len(urlA);
+        if (!parent || !urlA || (urlLen > 4096)) {
             return false;
         }
-        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlA.size() + 1, urlA.Get()};
+        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlLen + 1, urlA};
         return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
@@ -2580,23 +2581,23 @@ static void OnMenuSaveAs(WindowInfo* win) {
         }
 
         auto textA = ToUtf8Temp(text.LendData());
-        AutoFree textUTF8BOM = str::Join(UTF8_BOM, textA.Get());
+        AutoFree textUTF8BOM = str::Join(UTF8_BOM, textA);
         ok = file::WriteFile(realDstFileName, textUTF8BOM.AsByteSlice());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         WCHAR* producerName = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);
         PdfCreator::SetProducerName(producerName);
-        ok = engine->SaveFileAsPDF(pathA.Get());
+        ok = engine->SaveFileAsPDF(pathA);
         if (!ok && gIsDebugBuild) {
             // rendering includes all page annotations
-            ok = PdfCreator::RenderToFile(pathA.Get(), engine);
+            ok = PdfCreator::RenderToFile(pathA, engine);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
-        ok = engine->SaveFileAs(pathA.Get());
+        ok = engine->SaveFileAs(pathA);
     } else if (EngineSupportsAnnotations(engine)) {
         // ... as well as files containing annotations ...
-        ok = engine->SaveFileAs(pathA.Get());
+        ok = engine->SaveFileAs(pathA);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
         // ... else just copy the file
         WCHAR* msgBuf;
@@ -5211,20 +5212,20 @@ static TempStr GetFileSizeAsStrTemp(const char* path) {
 }
 
 void GetProgramInfo(str::Str& s) {
-    auto d = ToUtf8Temp(gCrashFilePath);
-    s.AppendFmt("Crash file: %s\r\n", d.Get());
+    char* d = ToUtf8Temp(gCrashFilePath);
+    s.AppendFmt("Crash file: %s\r\n", d);
 
     WCHAR* exePathW = GetExePathTemp();
     char* exePath = ToUtf8Temp(exePathW);
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
-    s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe.Get());
+    s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe);
     if (IsDllBuild()) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
         char* dir = path::GetDirTemp(exePath);
         char* dllPath = path::JoinTemp(dir, "libmupdf.dll");
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
-        s.AppendFmt("Dll: %s %s\r\n", dllPath, fileSizeDll.Get());
+        s.AppendFmt("Dll: %s %s\r\n", dllPath, fileSizeDll);
     }
 
     const char* exeType = IsDllBuild() ? "dll" : "static";
@@ -5311,7 +5312,7 @@ static void DownloadDebugSymbols() {
     char* msg = nullptr;
     if (ok) {
         auto symDirA = ToUtf8Temp(symDir);
-        msg = str::Format("Downloaded symbols! to %s", symDirA.Get());
+        msg = str::Format("Downloaded symbols! to %s", symDirA);
     } else {
         msg = str::Dup("Failed to download symbols.");
     }

@@ -214,7 +214,7 @@ char* Fmt::Eval(const Arg** args, int nArgs) {
                 break;
             case Type::WStr:
                 auto s = ToUtf8Temp(arg.u.wsv.data(), arg.u.wsv.size());
-                res.Append(s.data(), s.size());
+                res.Append(s);
                 break;
         };
     }

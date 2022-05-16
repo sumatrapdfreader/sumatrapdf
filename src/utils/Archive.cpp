@@ -392,7 +392,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
         i->fileSizeUncompressed = (size_t)rarHeader.UnpSize;
         i->filePos = 0;
         i->fileTime = (i64)rarHeader.FileTime;
-        i->name = str::Dup(&allocator_, name.Get());
+        i->name = str::Dup(&allocator_, name);
         i->data = nullptr;
         if (loadOnOpen) {
             // +2 so that it's zero-terminated even when interprted as WCHAR*

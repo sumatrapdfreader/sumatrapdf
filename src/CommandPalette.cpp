@@ -484,7 +484,7 @@ void CommandPaletteWnd::QueryChanged() {
     auto filter = editQuery->GetText();
     // for efficiency, reusing existing model
     auto m = (ListBoxModelStrings*)listBox->model;
-    FilterStrings(allStrings, filter.Get(), m->strings);
+    FilterStrings(allStrings, filter, m->strings);
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
         listBox->SetCurrentSelection(0);

@@ -527,8 +527,8 @@ ByteSlice ReadFile(const char* path) {
 }
 
 ByteSlice ReadFile(const WCHAR* filePath) {
-    auto path = ToUtf8Temp(filePath);
-    return ReadFileWithAllocator(path.Get(), nullptr);
+    char* path = ToUtf8Temp(filePath);
+    return ReadFileWithAllocator(path, nullptr);
 }
 
 bool WriteFile(const char* filePath, ByteSlice d) {

@@ -7,54 +7,8 @@ Allocator* GetTempAllocator();
 void DestroyTempAllocator();
 void ResetTempAllocator();
 
-// exists just to mark the intent of the variable
-// and provide convenience operators
-struct TempStr {
-    std::string_view sv{};
-
-    TempStr() = default;
-    explicit TempStr(char* s) {
-        sv = {s, str::Len(s)};
-    }
-    explicit TempStr(char* s, size_t cch) {
-        CrashIf((int)cch < 0);
-        sv = {s, cch};
-    }
-    explicit TempStr(const char* s) {
-        sv = {s, str::Len(s)};
-    }
-    explicit TempStr(const char* s, size_t cch) {
-        CrashIf((int)cch < 0);
-        sv = {s, cch};
-    }
-    explicit TempStr(std::string_view s) {
-        sv = s;
-    }
-    TempStr(const TempStr& ts) {
-        sv = ts.sv;
-    }
-    bool empty() const {
-        return sv.empty();
-    }
-    size_t size() const {
-        return sv.size();
-    }
-    char* Get() const {
-        return (char*)sv.data();
-    }
-    const char* data() const {
-        return sv.data();
-    }
-    std::string_view AsView() const {
-        return sv;
-    }
-    operator const char*() const { // NOLINT
-        return sv.data();
-    }
-    operator char*() const { // NOLINT
-        return (char*)sv.data();
-    }
-};
+// exists just to mark the intent
+using TempStr = char*;
 
 struct TempWstr {
     const WCHAR* s;

@@ -1190,7 +1190,7 @@ int EngineDjVu::GetPageByLabel(const WCHAR* label) const {
     auto labelA(ToUtf8Temp(label));
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
-        if (str::EqI(info.title, labelA.Get()) && !str::Eq(info.title, info.id)) {
+        if (str::EqI(info.title, labelA) && !str::Eq(info.title, info.id)) {
             return info.pageno + 1;
         }
     }

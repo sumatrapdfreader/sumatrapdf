@@ -1736,7 +1736,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         fz_drop_buffer(ctx, buf);
         str::Free(d);
         WCHAR* nameHint = str::Join(path, L".html");
-        if (!LoadFromStream(file, ToUtf8Temp(nameHint).Get(), pwdUI)) {
+        if (!LoadFromStream(file, ToUtf8Temp(nameHint), pwdUI)) {
             return false;
         }
         return FinishLoading();
@@ -1753,7 +1753,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         fz_drop_buffer(ctx, buf);
         str::Free(d);
         WCHAR* nameHint = str::Join(path, L".html");
-        if (!LoadFromStream(file, ToUtf8Temp(nameHint).Get(), pwdUI)) {
+        if (!LoadFromStream(file, ToUtf8Temp(nameHint), pwdUI)) {
             return false;
         }
         return FinishLoading();
@@ -1770,7 +1770,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         file = nullptr;
     }
 
-    if (!LoadFromStream(file, ToUtf8Temp(FileName()).Get(), pwdUI)) {
+    if (!LoadFromStream(file, ToUtf8Temp(FileName()), pwdUI)) {
         return false;
     }
 
@@ -1801,7 +1801,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     fz_drop_document(ctx, _doc);
     _doc = nullptr;
 
-    if (!LoadFromStream(file, ToUtf8Temp(FileName()).Get(), pwdUI)) {
+    if (!LoadFromStream(file, ToUtf8Temp(FileName()), pwdUI)) {
         return false;
     }
 
@@ -2401,14 +2401,15 @@ IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
     ScopedCritSec scope1(&pagesAccess);
     ScopedCritSec scope2(ctxAccess);
 
-    auto nameA(ToUtf8Temp(name));
+    char* nameA = ToUtf8Temp(name);
+    size_t nameLen = str::Len(nameA);
     pdf_obj* dest = nullptr;
 
     fz_var(dest);
     pdf_obj* nameobj = nullptr;
     fz_var(nameobj);
     fz_try(ctx) {
-        nameobj = pdf_new_string(ctx, nameA.Get(), (int)nameA.size());
+        nameobj = pdf_new_string(ctx, nameA, (int)nameLen);
         dest = pdf_lookup_dest(ctx, pdfdoc, nameobj);
         pdf_drop_obj(ctx, nameobj);
     }

@@ -873,7 +873,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     }
 
     auto viewModeWstr = ToUtf8Temp(viewMode);
-    DisplayMode mode = DisplayModeFromString(viewModeWstr.Get(), DisplayMode::Automatic);
+    DisplayMode mode = DisplayModeFromString(viewModeWstr, DisplayMode::Automatic);
     if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
     }
@@ -898,7 +898,7 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
     while (!str::IsEmpty(cmd)) {
         {
             auto tmp = ToUtf8Temp(cmd);
-            logf("HandleDdeCmds: '%s'\n", tmp.Get());
+            logf("HandleDdeCmds: '%s'\n", tmp);
         }
 
         const WCHAR* nextCmd = HandleSyncCmd(cmd, ack);

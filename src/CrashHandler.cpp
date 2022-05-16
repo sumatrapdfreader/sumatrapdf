@@ -111,17 +111,17 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         auto nameA = ToUtf8Temp(mod.szModule);
-        if (str::EqI(nameA.Get(), "winex11.drv")) {
+        if (str::EqI(nameA, "winex11.drv")) {
             isWine = true;
         }
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             auto pos = str::FindI(gModulesInfo, pathA);
             if (!pos) {
-                s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
+                s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA);
             }
         } else {
-            s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
+            s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA);
         }
         cont = Module32Next(snap, &mod);
     }

@@ -669,7 +669,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
         auto urlA(ToUtf8Temp(plainUrl));
-        auto d = doc->GetData(urlA.Get());
+        auto d = doc->GetData(urlA);
         data.Append(d);
         return d;
     }

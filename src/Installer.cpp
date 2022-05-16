@@ -82,7 +82,7 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked)
     CheckboxCreateArgs args;
     args.parent = hwndParent;
     if (s) {
-        args.text = ToUtf8Temp(s).Get();
+        args.text = ToUtf8Temp(s);
     }
     args.initialState = isChecked ? CheckState::Checked : CheckState::Unchecked;
 

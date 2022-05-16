@@ -268,7 +268,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         // our process to exit
         cmd.AppendFmt(LR"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp().Get());
     }
-    logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.LendData()).Get());
+    logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.LendData()));
     CreateProcessHelper(installerPath, cmd.Get());
     PostQuitMessage(0);
 }

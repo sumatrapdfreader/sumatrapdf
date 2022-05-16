@@ -464,9 +464,9 @@ bool EpubDoc::Load() {
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
         auto pathA = ToUtf8Temp(fullPath);
-        ReportIf(str::FindChar(pathA.Get(), '"'));
-        str::TransCharsInPlace(pathA.Get(), "\"", "'");
-        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", pathA.Get());
+        ReportIf(str::FindChar(pathA, '"'));
+        str::TransCharsInPlace(pathA, "\"", "'");
+        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", pathA);
         htmlData.Append(html.data);
     }
 
@@ -729,9 +729,9 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
 
     auto pagePath(ToUtf8Temp(tocPath));
     if (isNcxToc) {
-        return ParseNcxToc(tocData, tocDataLen, pagePath.Get(), visitor);
+        return ParseNcxToc(tocData, tocDataLen, pagePath, visitor);
     }
-    return ParseNavToc(tocData, tocDataLen, pagePath.Get(), visitor);
+    return ParseNavToc(tocData, tocDataLen, pagePath, visitor);
 }
 
 bool EpubDoc::IsSupportedFileType(Kind kind) {

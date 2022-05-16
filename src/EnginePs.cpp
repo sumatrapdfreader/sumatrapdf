@@ -163,7 +163,7 @@ static EngineBase* ps2pdf(const char* pathA) {
         const char* fileName = path::GetBaseNameTemp(__FILE__);
         auto gswin = ToUtf8Temp(gswin32c.Get());
         auto tmpFileName = ToUtf8Temp(path::GetBaseNameTemp(tmpFile));
-        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.Get(), tmpFileName.Get());
+        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin, tmpFileName);
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
@@ -198,7 +198,7 @@ static EngineBase* ps2pdf(const char* pathA) {
         return nullptr;
     }
 
-    return CreateEngineMupdfFromStream(stream, ToUtf8Temp(tmpFile).Get());
+    return CreateEngineMupdfFromStream(stream, ToUtf8Temp(tmpFile));
 }
 
 static EngineBase* psgz2pdf(const char* fileName) {

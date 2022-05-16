@@ -61,8 +61,8 @@ static void extractPageText(EngineBase* engine, int pageNo) {
     // print characters as hex because I don't know what kind of locale-specific mangling
     // printf() might do
     int idx = 0;
-    while (uniA.Get()[idx] != 0) {
-        char c = uniA.Get()[idx++];
+    while (uniA[idx] != 0) {
+        char c = uniA[idx++];
         printf("%02x ", (u8)c);
     }
     printf("'\n");

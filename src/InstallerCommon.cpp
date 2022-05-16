@@ -368,7 +368,7 @@ static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bo
 // returns -1 on error, 0 if no matching processes
 int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
     auto modulePathA = ToUtf8Temp(modulePath);
-    logf("KillProcessesWithModule: '%s'\n", modulePathA.Get());
+    logf("KillProcessesWithModule: '%s'\n", modulePathA);
     AutoCloseHandle hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == hProcSnapshot) {
         return -1;
