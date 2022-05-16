@@ -1422,7 +1422,7 @@ static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
 
 class ChmHtmlCollector : public EbookTocVisitor {
     ChmFile* doc = nullptr;
-    WStrList added;
+    WStrVec added;
     str::Str html;
 
   public:
@@ -1477,7 +1477,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlA);
         auto charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
         html.AppendAndFree(doc->ToUtf8((const u8*)pageHtml.data, charset));
-        added.Append(plainUrl.StealData());
+        added.Append(plainUrl.Get());
     }
 };
 
