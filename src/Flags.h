@@ -8,7 +8,7 @@ struct PageRange {
 };
 
 struct Flags {
-    WStrVecOld fileNames;
+    WStrVec fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
     // - optional (nullptr if not available) string that represents which pages

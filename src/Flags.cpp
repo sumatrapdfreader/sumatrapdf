@@ -586,15 +586,14 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         args.RewindParam();
 
     CollectFile:
-        WCHAR* filePath = nullptr;
         // TODO: resolve .lnk when opening file
         if (str::EndsWithI(argName, L".lnk")) {
-            filePath = ResolveLnk(argName);
+            WCHAR* filePath = ResolveLnk(argName);
+            i.fileNames.Append(filePath);
+            str::Free(filePath);
+        } else {
+            i.fileNames.Append(argName);        
         }
-        if (!filePath) {
-            filePath = str::Dup(argName);
-        }
-        i.fileNames.Append(filePath);
     }
 
     if (i.justExtractFiles) {

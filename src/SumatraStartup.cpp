@@ -360,10 +360,6 @@ static bool SetupPluginMode(Flags& i) {
         gPluginURL = i.fileNames.at(0);
     }
 
-    while (i.fileNames.size() > 1) {
-        free(i.fileNames.Pop());
-    }
-
     // don't save preferences for plugin windows (and don't allow fullscreen mode)
     // TODO: Perm::DiskAccess is required for saving viewed files and printing and
     //       Perm::InternetAccess is required for crash reports
