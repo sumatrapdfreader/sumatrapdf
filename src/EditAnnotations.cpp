@@ -830,7 +830,9 @@ void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annota
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         RebuildAnnotations(ew);
-        UpdateUIForSelectedAnnotation(ew, -1);
+        UpdateUIForSelectedAnnotation(ew, 0);
+        ew->listBox->SetCurrentSelection(0);
+
     }
     WindowInfoRerender(tab->win);
     ToolbarUpdateStateForWindow(tab->win, false);
