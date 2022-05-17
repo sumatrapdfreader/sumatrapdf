@@ -17,6 +17,8 @@ Open `vs2022/SumatraPDF.sln` and hit F5 to compile and run.
 For best results use the latest release available as that's what I use and test with.
 If things don't compile, first make sure you're using the latest version of Visual Studio.
 
+Here's more [developer information](https://www.sumatrapdfreader.org/docs/Contribute-to-SumatraPDF).
+
 Notes on targets:
 * `asan` target is for enabling address sanitizer
 
