@@ -1474,12 +1474,11 @@ void DeleteWindowInfo(WindowInfo* win) {
     delete win;
 }
 
-static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
+static void RenameFileInHistory(const char* oldPath, const char* newPath) {
     if (path::IsSame(oldPath, newPath)) {
         return;
     }
-    char* newPathA = ToUtf8Temp(newPath);
-    FileState* fs = gFileHistory.Find(newPathA, nullptr);
+    FileState* fs = gFileHistory.Find(newPath, nullptr);
     bool oldIsPinned = false;
     int oldOpenCount = 0;
     if (fs) {
@@ -1492,11 +1491,9 @@ static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
         }
         DeleteDisplayState(fs);
     }
-    char* oldPathA = ToUtf8Temp(oldPath);
-    fs = gFileHistory.Find(oldPathA, nullptr);
+    fs = gFileHistory.Find(oldPath, nullptr);
     if (fs) {
-        char* filePathA = ToUtf8Temp(newPath);
-        SetFileStatePath(fs, filePathA);
+        SetFileStatePath(fs, newPath);
         // merge Frequently Read data, so that a file
         // doesn't accidentally vanish from there
         fs->isPinned = fs->isPinned || oldIsPinned;
@@ -1509,7 +1506,7 @@ static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
 
 // document path is either a file or a directory
 // (when browsing images inside directory).
-bool DocumentPathExists(const WCHAR* path) {
+bool DocumentPathExists(const char* path) {
     if (file::Exists(path) || dir::Exists(path)) {
         return true;
     }
@@ -1517,7 +1514,7 @@ bool DocumentPathExists(const WCHAR* path) {
         // remove information needed for pointing at embedded documents
         // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
         // container document exists
-        AutoFreeWstr realPath(str::Dup(path, str::FindChar(path + 2, ':') - path));
+        char* realPath = str::DupTemp(path, str::FindChar(path + 2, ':') - path);
         return file::Exists(realPath);
     }
     return false;
@@ -1564,19 +1561,20 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     CrashAlwaysIf(gCrashOnOpen);
 
     int threadID = (int)GetCurrentThreadId();
-    AutoFreeWstr fullPath(path::Normalize(args.fileName));
+    AutoFreeWstr fullPathW(path::Normalize(args.fileName));
     WindowInfo* win = args.win;
+
+    char* fullPath = ToUtf8Temp(fullPathW);
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
-    char* fullPathA = ToUtf8Temp(fullPath);
-    if (failEarly && gFileHistory.Find(fullPathA, nullptr)) {
-        AutoFreeWstr adjPath(str::Dup(fullPath));
+    if (failEarly && gFileHistory.Find(fullPath, nullptr)) {
+        char* adjPath = str::DupTemp(fullPath);
         if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
-            fullPath.Set(adjPath.StealData());
-            fullPathA = ToUtf8Temp(fullPath);
+            fullPathW.Set(ToWstrTemp(adjPath));
+            fullPath = adjPath;
             failEarly = false;
         }
     }
@@ -1584,12 +1582,12 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
     if (failEarly) {
-        AutoFreeWstr msg(str::Format(_TR("File %s not found"), fullPath.Get()));
+        AutoFreeWstr msg(str::Format(_TR("File %s not found"), fullPathW.Get()));
         win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
-        if (gFileHistory.MarkFileInexistent(fullPathA)) {
+        if (gFileHistory.MarkFileInexistent(fullPath)) {
             // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
             if (!args.noSavePrefs) {
                 prefs::Save();
@@ -1634,25 +1632,25 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     HwndPasswordUI pwdUI(win->hwndFrame);
     Controller* ctrl = nullptr;
     if (args.engine != nullptr) {
-        ctrl = CreateControllerForEngine(args.engine, fullPathA, &pwdUI, win);
+        ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
     } else {
-        ctrl = CreateControllerForFile(fullPathA, &pwdUI, win);
+        ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
     }
 
     {
         auto durMs = TimeSinceInMs(timeStart);
         if (ctrl) {
             int nPages = ctrl->PageCount();
-            logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPathA);
+            logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPath);
         } else {
-            logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPathA, (float)durMs);
+            logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPath, (float)durMs);
         }
     }
 
     if (!ctrl) {
         // TODO: same message as in Canvas.cpp to not introduce
         // new translation. Find a better message e.g. why failed.
-        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath.Get());
+        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPathW.Get());
         win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         str::Free(msg);
         ShowWindow(win->hwndFrame, SW_SHOW);
@@ -1660,8 +1658,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
-        fullPathA = ToUtf8Temp(fullPath);
-        if (gFileHistory.MarkFileInexistent(fullPathA)) {
+        if (gFileHistory.MarkFileInexistent(fullPath)) {
             // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
             if (!args.noSavePrefs) {
                 prefs::Save();
@@ -1692,17 +1689,17 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
     if (!args.forceReuse) {
         // insert a new tab for the loaded document
-        win->currentTab = CreateNewTab(win, fullPath);
+        win->currentTab = CreateNewTab(win, fullPathW);
         // logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
     } else {
-        win->currentTab->filePath.SetCopy(fullPath);
+        win->currentTab->filePath.SetCopy(fullPathW);
 #if 0
         auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.Get());
 #endif
     }
 
-    args.fileName = fullPath;
+    args.fileName = fullPathW;
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
     LoadDocIntoCurrentTab(args, ctrl, nullptr);
@@ -1735,9 +1732,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
-        CrashIf(!str::Eq(fullPath, win->currentTab->filePath));
-        fullPathA = ToUtf8Temp(fullPath);
-        FileState* ds = gFileHistory.MarkFileLoaded(fullPathA);
+        CrashIf(!str::Eq(fullPathW, win->currentTab->filePath));
+        FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
         }
@@ -2118,7 +2114,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
 
     AutoFreeWstr newPath(path::Normalize(dstFileName));
     // TODO: this should be 'duplicate FileInHistory"
-    RenameFileInHistory(ToWstrTemp(srcFileName), newPath);
+    RenameFileInHistory(srcFileName, ToUtf8(newPath));
 
     LoadArgs args(dstFileName, win);
     args.forceReuse = true;
@@ -2137,8 +2133,8 @@ enum class SaveChoice {
     Cancel,
 };
 
-SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const WCHAR* filePath) {
-    auto fileName = path::GetBaseNameTemp(filePath);
+SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
+    auto fileName = path::GetBaseNameTemp(ToWstrTemp(filePath));
     auto mainInstr = str::Format(_TR("Unsaved annotations in '%s'"), fileName);
     auto content = _TR("Save annotations?");
 
@@ -2229,7 +2225,7 @@ static bool MaybeSaveAnnotations(TabInfo* tab) {
     }
     tab->askedToSaveAnnotations = true;
     auto path = dm->GetFilePath();
-    auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame, ToWstrTemp(path));
+    auto choice = ShouldSaveAnnotationsDialog(tab->win->hwndFrame, path);
     switch (choice) {
         case SaveChoice::Discard:
             return true;
@@ -2628,7 +2624,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
 
     auto path = win->ctrl->GetFilePath();
-    if (ok && IsUntrustedFile(ToWstrTemp(path), gPluginURL) && !convertToTXT) {
+    if (ok && IsUntrustedFile(path, ToUtf8(gPluginURL)) && !convertToTXT) {
         auto realDstFileNameA = ToUtf8Temp(realDstFileName);
         file::SetZoneIdentifier(realDstFileNameA);
     }
@@ -2671,7 +2667,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     }
 
     auto* ctrl = win->ctrl;
-    AutoFreeWstr srcFileName = ToWstr(ctrl->GetFilePath());
+    AutoFreeStr srcFileName = ctrl->GetFilePath();
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcFileName)) {
         return;
@@ -2694,7 +2690,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
     }
 
-    WCHAR* initDir = path::GetDirTemp(srcFileName);
+    WCHAR* initDir = path::GetDirTemp(ToWstrTemp(srcFileName));
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -2719,7 +2715,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     SetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
-    BOOL moveOk = MoveFileEx(srcFileName.Get(), dstFileName, flags);
+    BOOL moveOk = MoveFileExW(ToWstrTemp(srcFileName.Get()), dstFileName, flags);
     if (!moveOk) {
         LogLastError();
         LoadArgs args(srcFileName, win);
@@ -2730,7 +2726,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     }
 
     AutoFreeWstr newPath(path::Normalize(dstFileName));
-    RenameFileInHistory(srcFileName, newPath);
+    RenameFileInHistory(srcFileName, ToUtf8(newPath));
 
     LoadArgs args(dstFileName, win);
     args.forceReuse = true;

@@ -133,9 +133,10 @@ void FileExistenceChecker::Run() {
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
     for (size_t i = 0; i < paths.size(); i++) {
-        const WCHAR* path = paths.at(i);
+        const WCHAR* pathW = paths.at(i);
+        char* path = ToUtf8Temp(pathW);
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
-            paths.PopAt(i--);
+            paths.RemoveAt(i--);
         }
     }
 

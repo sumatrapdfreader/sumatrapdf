@@ -175,7 +175,7 @@ WindowInfo* CreateAndShowWindowInfo(SessionData* data = nullptr);
 uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
 void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd);
-bool DocumentPathExists(const WCHAR* path);
+bool DocumentPathExists(const char* path);
 void EnterFullScreen(WindowInfo* win, bool presentation = false);
 void ExitFullScreen(WindowInfo* win);
 void SetCurrentLang(const char* langCode);

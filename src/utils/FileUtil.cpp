@@ -329,6 +329,10 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
     return npath1 && str::EqI(npath1, npath2);
 }
 
+bool IsSame(const char* path1, const char* path2) {
+    return IsSame(ToWstrTemp(path1), ToWstrTemp(path2));
+}
+
 bool HasVariableDriveLetter(const char* path) {
     char root[] = R"(?:\)";
     root[0] = (char)toupper(path[0]);
@@ -376,6 +380,10 @@ bool IsOnFixedDrive(const WCHAR* path) {
         type = GetDriveType(path);
     }
     return DRIVE_FIXED == type;
+}
+
+bool IsOnFixedDrive(const char* path) {
+    return IsOnFixedDrive(ToWstrTemp(path));
 }
 
 static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {

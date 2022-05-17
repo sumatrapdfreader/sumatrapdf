@@ -23,10 +23,16 @@ bool IsDirectory(const char*);
 WCHAR* Normalize(const WCHAR* path);
 WCHAR* ShortPath(const WCHAR* path);
 bool IsSame(const WCHAR* path1, const WCHAR* path2);
+bool IsSame(const char* path1, const char* path2);
+
 bool HasVariableDriveLetter(const WCHAR* path);
 bool HasVariableDriveLetter(const char* path);
+
 bool IsOnFixedDrive(const WCHAR* path);
+bool IsOnFixedDrive(const char* path);
+
 bool Match(const WCHAR* path, const WCHAR* filter);
+
 bool IsAbsolute(const WCHAR* path);
 bool IsAbsolute(const char* path);
 
