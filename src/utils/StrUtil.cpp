@@ -2551,6 +2551,22 @@ WCHAR* GetFileName(const WCHAR* url) {
     return str::Dup(base);
 }
 
+char* GetFileName(const char* url) {
+    char* path = str::DupTemp(url);
+    str::TransCharsInPlace(path, "#?", "\0\0");
+    char* base = path + str::Len(path);
+    for (; base > path; base--) {
+        if ('/' == base[-1] || '\\' == base[-1]) {
+            break;
+        }
+    }
+    if (str::IsEmpty(base)) {
+        return nullptr;
+    }
+    DecodeInPlace(base);
+    return str::Dup(base);
+}
+
 } // namespace url
 
 namespace seqstrings {

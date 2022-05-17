@@ -290,14 +290,16 @@ static bool PrintToDevice(const PrintData& pd) {
     auto abortCookie = pd.abortCookie;
 
     EngineBase& engine = *pd.engine;
-    AutoFreeWstr fileName;
 
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
     if (gPluginMode) {
-        fileName.Set(url::GetFileName(gPluginURL));
+        AutoFreeStr fileName = url::GetFileName(gPluginURL);
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        di.lpszDocName = fileName ? fileName.Get() : L"filename";
+        if (!fileName) {
+            fileName.Set("filename");
+        }
+        di.lpszDocName = ToWstrTemp(fileName);
     } else {
         di.lpszDocName = ToWstrTemp(engine.FileName());
     }

@@ -85,7 +85,7 @@ extern Flags* gCli;
 extern bool gDebugShowLinks;
 extern bool gShowFrameRate;
 
-extern const WCHAR* gPluginURL;
+extern const char* gPluginURL;
 extern Favorites gFavorites;
 extern FileHistory gFileHistory;
 extern WNDPROC DefWndProcCloseButton;

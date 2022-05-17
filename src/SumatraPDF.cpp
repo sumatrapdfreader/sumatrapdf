@@ -115,7 +115,7 @@ bool gShowFrameRate = false;
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
-const WCHAR* gPluginURL = nullptr; // owned by Flags in WinMain
+const char* gPluginURL = nullptr; // owned by Flags in WinMain
 
 static Kind NG_PERSISTENT_WARNING = "persistentWarning";
 static Kind NG_PAGE_INFO_HELPER = "pageInfoHelper";
@@ -437,10 +437,9 @@ char* HwndPasswordUI::GetPassword(const char* fileName, u8* fileDigest, u8 decry
     // extract the filename from the URL in plugin mode instead
     // of using the more confusing temporary filename
     if (gPluginMode) {
-        WCHAR* urlName = url::GetFileName(gPluginURL);
+        char* urlName = url::GetFileName(gPluginURL);
         if (urlName) {
-            fileName = ToUtf8Temp(urlName);
-            str::Free(urlName);
+            fileName = urlName; // TODO: leaks
         }
     }
     fileName = path::GetBaseNameTemp(fileName);
@@ -2454,10 +2453,9 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (gPluginMode) {
         // fall back to a generic "filename" instead of the more confusing temporary filename
         srcFileName = "filename";
-        WCHAR* urlName = url::GetFileName(gPluginURL);
+        char* urlName = url::GetFileName(gPluginURL);
         if (urlName) {
-            srcFileName = ToUtf8Temp(urlName);
-            str::Free(urlName);
+            srcFileName = urlName; // TODO: leaks
         }
     }
 
@@ -2630,7 +2628,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
 
     auto path = win->ctrl->GetFilePath();
-    if (ok && IsUntrustedFile(path, ToUtf8(gPluginURL)) && !convertToTXT) {
+    if (ok && IsUntrustedFile(path, gPluginURL) && !convertToTXT) {
         auto realDstFileNameA = ToUtf8Temp(realDstFileName);
         file::SetZoneIdentifier(realDstFileNameA);
     }

@@ -166,6 +166,7 @@ void DecodeInPlace(WCHAR* url);
 bool IsAbsolute(const WCHAR* url);
 WCHAR* GetFullPath(const WCHAR* url);
 WCHAR* GetFileName(const WCHAR* url);
+char* GetFileName(const char* url);
 
 } // namespace url
 

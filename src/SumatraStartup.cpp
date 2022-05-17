@@ -356,9 +356,9 @@ static bool SetupPluginMode(Flags& i) {
         return false;
     }
 
-    gPluginURL = i.pluginURL;
+    gPluginURL = ToUtf8(i.pluginURL);
     if (!gPluginURL) {
-        gPluginURL = i.fileNames.at(0);
+        gPluginURL = ToUtf8(i.fileNames.at(0)); // TODO: leaks?
     }
 
     // don't save preferences for plugin windows (and don't allow fullscreen mode)

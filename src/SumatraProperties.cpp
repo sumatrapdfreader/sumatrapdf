@@ -480,7 +480,8 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
 static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extended) {
     CrashIf(!ctrl);
 
-    WCHAR* str = str::Dup(gPluginMode ? gPluginURL : ToWstrTemp(ctrl->GetFilePath()));
+    const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
+    WCHAR* str = ToWstr(path);
     layoutData->AddProperty(_TR("File:"), str, true);
 
     str = ctrl->GetProperty(DocumentProperty::Title);
