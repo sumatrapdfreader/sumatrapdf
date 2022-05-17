@@ -452,7 +452,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
         AutoFree basePath(str::Dup(baseAnchor->str.s, baseAnchor->str.len));
         AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
         AutoFree absPath(NormalizeURL(relPath, basePath));
-        url.Set(strconv::Utf8ToWstr(absPath.Get()));
+        url.Set(ToWstr(absPath.Get()));
     }
 
     IPageDestination* dest = GetNamedDest(url);
@@ -614,7 +614,7 @@ WCHAR* EngineEbook::ExtractFontList() {
 
     fonts.SortNatural();
     char* res = Join(fonts, "\n");
-    return strconv::Utf8ToWstr(res);
+    return ToWstr(res);
 }
 
 static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
@@ -1445,7 +1445,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
                 if (*path == '/') {
                     path++;
                 }
-                url.Set(strconv::Utf8ToWstr(path));
+                url.Set(ToWstr(path));
                 Visit(nullptr, url, -1);
             }
         }
@@ -1551,7 +1551,7 @@ TocTree* EngineChm::GetToc() {
 static IPageDestination* newChmEmbeddedDest(const char* path) {
     auto res = new PageDestination();
     res->kind = kindDestinationLaunchEmbedded;
-    res->value = strconv::Utf8ToWstr(path::GetBaseNameTemp(path));
+    res->value = ToWstr(path::GetBaseNameTemp(path));
     return res;
 }
 

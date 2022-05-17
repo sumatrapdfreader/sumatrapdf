@@ -228,7 +228,7 @@ const WCHAR* GetTranslation(const char* s) {
         // ReportIf(true);
         // it's a mem leak but the contract is that those strings
         // are not freed and survive long enough they can't be temp strings
-        return strconv::Utf8ToWstr(s);
+        return ToWstr(s);
     }
     auto idx = trans->idxTransW;
     return gTranslationCache->allTranslationsW.LendData() + idx;

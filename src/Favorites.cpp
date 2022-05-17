@@ -346,7 +346,7 @@ static void GetSortedFilePaths(Vec<const WCHAR*>& filePathsSortedOut, FileState*
     FileState* fs;
     for (size_t i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (fs->favorites->size() > 0 && fs != toIgnore) {
-            const WCHAR* s = strconv::Utf8ToWstr(fs->filePath);
+            const WCHAR* s = ToWstr(fs->filePath);
             filePathsSortedOut.Append(s);
         }
     }

@@ -123,7 +123,7 @@ WCHAR* PageDestinationMupdf ::GetValue() {
 
     char* uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
-        value = strconv::Utf8ToWstr(uri);
+        value = ToWstr(uri);
     }
     return value;
 }
@@ -133,7 +133,7 @@ WCHAR* PageDestinationMupdf ::GetName() {
         return name;
     }
     if (outline && outline->title) {
-        name = strconv::Utf8ToWstr(outline->title);
+        name = ToWstr(outline->title);
     }
     return name;
 }
@@ -186,7 +186,7 @@ WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
         // other values: #1,115,208
         return nullptr;
     }
-    WCHAR* path = strconv::Utf8ToWstr(uri);
+    WCHAR* path = ToWstr(uri);
     return path;
 }
 
@@ -200,7 +200,7 @@ WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
     }
     // TODO(port): test with more stuff
     // figure out what PDF_NAME(GoToR) ends up being
-    return strconv::Utf8ToWstr(uri);
+    return ToWstr(uri);
 }
 
 IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
@@ -212,8 +212,8 @@ IPageDestination* NewPageDestinationMupdf(fz_link* link, fz_outline* outline) {
         int pageNo = ResolveLink(uri, &x, &y, &zoom);
         dest->pageNo = pageNo + 1;
         dest->rect = RectF(x, y, x, y);
-        dest->value = strconv::Utf8ToWstr(uri);
-        dest->name = strconv::Utf8ToWstr(uri);
+        dest->value = ToWstr(uri);
+        dest->name = ToWstr(uri);
         dest->zoom = zoom;
     } else {
         // TODO: clean this up
@@ -369,7 +369,7 @@ static float FzRectOverlap(fz_rect r1, RectF r2f) {
 
 static WCHAR* PdfToWstr(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    WCHAR* res = strconv::Utf8ToWstr(s);
+    WCHAR* res = ToWstr(s);
     fz_free(ctx, s);
     return res;
 }
@@ -2283,8 +2283,8 @@ bool EngineMupdf::FinishLoading() {
 static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
-    // WCHAR* path = strconv::Utf8ToWstr(outline->uri);
-    dest->name = strconv::Utf8ToWstr(outline->title);
+    // WCHAR* path = ToWstr(outline->uri);
+    dest->name = ToWstr(outline->title);
     // page is really a stream number
     dest->value = str::Format(L"%s:%d", engine->FileName(), outline->page);
     return dest;
@@ -2297,7 +2297,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
     while (outline) {
         WCHAR* name = nullptr;
         if (outline->title) {
-            name = strconv::Utf8ToWstr(outline->title);
+            name = ToWstr(outline->title);
             name = PdfCleanString(name);
         }
         if (!name) {
@@ -2518,7 +2518,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 
             auto dest = new PageDestination();
             dest->kind = kindDestinationLaunchEmbedded;
-            dest->value = strconv::Utf8ToWstr(attname);
+            dest->value = ToWstr(attname);
 
             auto el = new PageElementDestination(dest);
             el->pageNo = pageNo;
@@ -3150,7 +3150,7 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
                 n = bufSize - 1;
                 buf[bufSize - 1] = 0; // not sure if necessary
             }
-            WCHAR* s = strconv::Utf8ToWstr(buf, (size_t)n - 1);
+            WCHAR* s = ToWstr(buf, (size_t)n - 1);
             return s;
         }
     }

@@ -68,7 +68,7 @@ struct PageDestinationDjVu : IPageDestination {
         kind = kindDestinationDjVu;
         link = str::Dup(l);
         if (comment) {
-            value = strconv::Utf8ToWstr(comment);
+            value = ToWstr(comment);
         }
     }
     ~PageDestinationDjVu() {
@@ -83,7 +83,7 @@ struct PageDestinationDjVu : IPageDestination {
         if (!CouldBeURL(link)) {
             return nullptr;
         }
-        value = strconv::Utf8ToWstr(link);
+        value = ToWstr(link);
         return value;
     }
 };
@@ -826,7 +826,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>
             AppendNewline(extracted, coords, lineSep);
         }
         const char* content = miniexp_to_str(str);
-        WCHAR* value = strconv::Utf8ToWstr(content);
+        WCHAR* value = ToWstr(content);
         if (value) {
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
@@ -1178,7 +1178,7 @@ WCHAR* EngineDjVu::GetPageLabel(int pageNo) const {
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id)) {
-            return strconv::Utf8ToWstr(info.title);
+            return ToWstr(info.title);
         }
     }
     return EngineBase::GetPageLabel(pageNo);

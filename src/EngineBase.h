@@ -111,7 +111,7 @@ struct PageDestinationURL : IPageDestination {
     PageDestinationURL(const char* u) {
         CrashIf(!u);
         kind = kindDestinationLaunchURL;
-        url = strconv::Utf8ToWstr(u);
+        url = ToWstr(u);
     }
 
     ~PageDestinationURL() override {
@@ -137,7 +137,7 @@ struct PageDestinationFile : IPageDestination {
     PageDestinationFile(const char* u) {
         CrashIf(!u);
         kind = kindDestinationLaunchURL;
-        path = strconv::Utf8ToWstr(u);
+        path = ToWstr(u);
     }
 
     ~PageDestinationFile() override {

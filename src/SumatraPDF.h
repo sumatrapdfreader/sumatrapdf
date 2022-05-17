@@ -139,7 +139,7 @@ struct LoadArgs {
 
     explicit LoadArgs(const char* fileName, WindowInfo* win) {
         this->win = win;
-        fileNameToFree = strconv::Utf8ToWstr(fileName);
+        fileNameToFree = ToWstr(fileName);
         this->fileName = fileNameToFree;
     }
 

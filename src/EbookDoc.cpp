@@ -258,7 +258,7 @@ void PropertyMap::Set(DocumentProperty prop, char* valueUtf8, bool replace) {
 WCHAR* PropertyMap::Get(DocumentProperty prop) const {
     int idx = Find(prop);
     if (idx >= 0 && values[idx]) {
-        return strconv::Utf8ToWstr(values[idx].Get());
+        return ToWstr(values[idx].Get());
     }
     return nullptr;
 }

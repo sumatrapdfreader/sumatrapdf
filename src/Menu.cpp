@@ -1454,7 +1454,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         AutoFreeWstr tmp;
         const WCHAR* title = nullptr;
         if (noTranslate) {
-            tmp = strconv::Utf8ToWstr(md.title);
+            tmp = ToWstr(md.title);
             title = tmp.Get();
         } else {
             title = trans::GetTranslation(md.title);
