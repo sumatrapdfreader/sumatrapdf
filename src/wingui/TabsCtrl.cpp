@@ -559,26 +559,14 @@ int TabsCtrl2::GetTabCount() {
     return n;
 }
 
-int TabsCtrl2::InsertTab(int idx, const WCHAR* ws) {
+int TabsCtrl2::InsertTab(int idx, const char* s) {
     CrashIf(idx < 0);
 
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
-    item.pszText = (WCHAR*)ws;
+    item.pszText = ToWstrTemp(s);
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
-    tooltips.InsertAt(idx, L"");
-    return insertedIdx;
-}
-
-int TabsCtrl2::InsertTab(int idx, const char* sv) {
-    CrashIf(idx < 0);
-
-    TCITEMW item{0};
-    item.mask = TCIF_TEXT;
-    WCHAR* s = ToWstrTemp(sv);
-    item.pszText = s;
-    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
-    tooltips.InsertAt(idx, L"");
+    tooltips.InsertAt(idx, "");
     return insertedIdx;
 }
 
@@ -595,29 +583,18 @@ void TabsCtrl2::RemoveAllTabs() {
     tooltips.Reset();
 }
 
-void TabsCtrl2::SetTabText(int idx, const WCHAR* ws) {
+void TabsCtrl2::SetTabText(int idx, const char* s) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());
 
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
-    item.pszText = (WCHAR*)ws;
-    TabCtrl_SetItem(hwnd, idx, &item);
-}
-
-void TabsCtrl2::SetTabText(int idx, const char* sv) {
-    CrashIf(idx < 0);
-    CrashIf(idx >= GetTabCount());
-
-    TCITEMW item{0};
-    item.mask = TCIF_TEXT;
-    WCHAR* s = ToWstrTemp(sv);
-    item.pszText = s;
+    item.pszText = ToWstrTemp(s);
     TabCtrl_SetItem(hwnd, idx, &item);
 }
 
 // result is valid until next call to GetTabText()
-WCHAR* TabsCtrl2::GetTabText(int idx) {
+char* TabsCtrl2::GetTabText(int idx) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());
 
@@ -627,7 +604,8 @@ WCHAR* TabsCtrl2::GetTabText(int idx) {
     item.pszText = buf;
     item.cchTextMax = dimof(buf) - 1; // -1 just in case
     TabCtrl_GetItem(hwnd, idx, &item);
-    lastTabText.Set(buf);
+    char* s = ToUtf8Temp(buf);
+    lastTabText.Set(s);
     return lastTabText.Get();
 }
 
@@ -678,7 +656,8 @@ void TabsCtrl2::MaybeUpdateTooltip() {
         ti.hwnd = hwnd;
         ti.uFlags = TTF_SUBCLASS;
         // ti.lpszText = LPSTR_TEXTCALLBACK;
-        ti.lpszText = currTooltipText.Get();
+        WCHAR* ws = ToWstrTemp(currTooltipText.Get());
+        ti.lpszText = ws;
         ti.uId = 0;
         GetClientRect(hwnd, &ti.rect);
         SendMessage(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
@@ -690,7 +669,7 @@ void TabsCtrl2::MaybeUpdateTooltipText(int idx) {
     if (!ttHwnd) {
         return;
     }
-    const WCHAR* tooltip = GetTooltip(idx);
+    const char* tooltip = GetTooltip(idx);
     if (!tooltip) {
         // TODO: remove tooltip
         return;
@@ -716,14 +695,14 @@ void TabsCtrl2::MaybeUpdateTooltipText(int idx) {
     // logf(L"MaybeUpdateTooltipText: %s\n", tooltip);
 }
 
-void TabsCtrl2::SetTooltip(int idx, const WCHAR* s) {
+void TabsCtrl2::SetTooltip(int idx, const char* s) {
     tooltips.SetAt(idx, s);
 }
 
-const WCHAR* TabsCtrl2::GetTooltip(int idx) {
+const char* TabsCtrl2::GetTooltip(int idx) {
     if (idx >= tooltips.Size()) {
         return nullptr;
     }
-    WCHAR* res = tooltips.at(idx);
+    char* res = tooltips.at(idx);
     return res;
 }

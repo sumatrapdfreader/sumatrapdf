@@ -315,8 +315,8 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         // draw tab's text
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
         br.SetColor(GdiRgbFromCOLORREF(textCol));
-        WCHAR* text = tabsCtrl->GetTabText(i);
-        gfx.DrawString(text, -1, &f, layout, &sf, &br);
+        char* text = tabsCtrl->GetTabText(i);
+        gfx.DrawString(ToWstrTemp(text), -1, &f, layout, &sf, &br);
 
         // paint "x"'s circle
         iterator.NextMarker(&shape);
@@ -348,7 +348,7 @@ static void SetTabTitle(TabInfo* tab) {
     const char* title = tab->GetTabTitle();
     win->tabsCtrl->SetTabText(idx, title);
     auto tooltip = tab->filePath.Get();
-    win->tabsCtrl->SetTooltip(idx, ToWstrTemp(tooltip));
+    win->tabsCtrl->SetTooltip(idx, tooltip);
 }
 
 static void NO_INLINE SwapTabs(WindowInfo* win, int tab1, int tab2) {

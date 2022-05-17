@@ -49,11 +49,11 @@ void SetPos(TabsCtrl*, RECT&);
 void SetFont(TabsCtrl*, HFONT);
 
 struct TabsCtrl2 : WindowBase {
-    str::WStr lastTabText;
+    str::Str lastTabText;
     bool createToolTipsHwnd = false;
-    str::WStr currTooltipText;
+    str::Str currTooltipText;
 
-    WStrVec tooltips;
+    StrVec tooltips;
 
     // for all WM_NOTIFY messages
     WmNotifyHandler onNotify = nullptr;
@@ -67,18 +67,16 @@ struct TabsCtrl2 : WindowBase {
     Size GetIdealSize() override;
 
     int InsertTab(int idx, const char* sv);
-    int InsertTab(int idx, const WCHAR* ws);
 
     void RemoveTab(int idx);
     void RemoveAllTabs();
 
     void SetTabText(int idx, const char* sv);
-    void SetTabText(int idx, const WCHAR* ws);
 
-    void SetTooltip(int idx, const WCHAR*);
-    const WCHAR* GetTooltip(int idx);
+    void SetTooltip(int idx, const char*);
+    const char* GetTooltip(int idx);
 
-    WCHAR* GetTabText(int idx);
+    char* GetTabText(int idx);
 
     int GetSelectedTabIndex();
     int SetSelectedTabByIndex(int idx);
