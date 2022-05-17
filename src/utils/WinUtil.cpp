@@ -721,30 +721,31 @@ bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
-IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd) {
+IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd) {
     ScopedComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
     if (FAILED(hr)) {
         return nullptr;
     }
 
-    IDataObject* pDataObject = nullptr;
-    AutoFreeWstr lpWPath(str::Dup(filePath));
+    WCHAR* lpWPath = ToWstrTemp(filePath);
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(nullptr, nullptr, lpWPath, nullptr, &pidl, nullptr);
-    if (SUCCEEDED(hr)) {
-        ScopedComPtr<IShellFolder> pShellFolder;
-        LPCITEMIDLIST pidlChild;
-        hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
-        if (SUCCEEDED(hr)) {
-            hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, nullptr, (void**)&pDataObject);
-            if (FAILED(hr)) {
-                pDataObject = nullptr;
-            }
-        }
-        CoTaskMemFree(pidl);
+    if (FAILED(hr)) {
+        return nullptr;
     }
-
+    ScopedComPtr<IShellFolder> pShellFolder;
+    LPCITEMIDLIST pidlChild;
+    hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
+    CoTaskMemFree(pidl);
+    if (FAILED(hr)) {
+        return nullptr;
+    }
+    IDataObject* pDataObject = nullptr;
+    hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, nullptr, (void**)&pDataObject);
+    if (FAILED(hr)) {
+        return nullptr;
+    }
     return pDataObject;
 }
 
@@ -1731,6 +1732,14 @@ size_t GetTextLen(HWND hwnd) {
 }
 
 void SetText(HWND hwnd, const WCHAR* txt) {
+    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
+}
+
+void SetText(HWND hwnd, const char* txt) {
+    if (!txt) {
+        txt = "";
+    }
+    WCHAR* ws = ToWstrTemp(txt);
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
 }
 

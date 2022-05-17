@@ -424,7 +424,7 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     auto win = tab->win;
     PageDestinationFile *destFile = (PageDestinationFile*)dest;
     WCHAR* path = destFile->path;
-    WCHAR* tabPath = tab->filePath.Get();
+    WCHAR* tabPath = ToWstrTemp(tab->filePath.Get());
     if (!str::StartsWith(path, tabPath)) {
         return;
     }
@@ -444,8 +444,7 @@ static void SaveEmbeddedFile(TabInfo* tab, const char* srcPathA, const char* fil
         // TODO: show an error message
         return;
     }
-    char* tabPathA = ToUtf8Temp(tab->filePath);
-    char* dir = path::GetDirTemp(tabPathA);
+    char* dir = path::GetDirTemp(tab->filePath);
     fileName = path::GetBaseNameTemp(fileName);
     AutoFreeStr dstPath = path::Join(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);

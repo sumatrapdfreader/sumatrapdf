@@ -288,14 +288,13 @@ static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, WindowInfo* win) 
         if (!tab->IsDocLoaded()) {
             continue;
         }
-        auto path = tab->filePath.Get();
-        char* s = ToUtf8Temp(path);
-        filePaths.AppendIfNotExists(s);
-        s = (char*)path::GetBaseNameTemp(s);
+        const char* path = tab->filePath.Get();
+        filePaths.AppendIfNotExists(path);
+        path = path::GetBaseNameTemp(path);
         // s = ConvertPathForDisplayTemp(s);
-        filePaths.AppendIfNotExists(s);
+        filePaths.AppendIfNotExists(path);
         // avoid adding the same file opened in multiple window
-        strings.AppendIfNotExists(s);
+        strings.AppendIfNotExists(path);
     }
 }
 
@@ -306,8 +305,7 @@ static TabInfo* FindOpenedFile(const char* sv) {
                 continue;
             }
             auto path = tab->filePath.Get();
-            char* s = ToUtf8Temp(path);
-            if (str::Eq(s, sv)) {
+            if (str::Eq(path, sv)) {
                 return tab;
             }
         }

@@ -283,10 +283,9 @@ bool CanViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
         return false;
     }
     // must match file extension
-    const WCHAR* filePath = tab->filePath.Get();
-    const WCHAR* ext = path::GetExtTemp(filePath);
-    WCHAR* exts = ToWstrTemp(ev->exts);
-    const WCHAR* pos = str::FindI(exts, ext);
+    const char* filePath = tab->filePath.Get();
+    const char* ext = path::GetExtTemp(filePath);
+    const char* pos = str::FindI(ev->exts, ext);
     if (!pos) {
         return false;
     }
@@ -318,15 +317,16 @@ static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
         params.Set(str::Replace(cmdLine, L"%p", pageNoStr));
         cmdLine = params;
     }
+    WCHAR* pathW = ToWstrTemp(tab->filePath);
     if (str::Find(cmdLine, LR"("%1")")) {
         // "%1", is alrady quoted so no need to add quotes
-        params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
+        params.Set(str::Replace(cmdLine, L"%1", pathW));
     } else if (str::Find(cmdLine, LR"(%1)")) {
         // %1, not quoted, need to add
-        auto s = str::JoinTemp(L"\"", tab->filePath.Get(), L"\"");
+        auto s = str::JoinTemp(L"\"", pathW, L"\"");
         params.Set(str::Replace(cmdLine, L"%1", s));
     } else {
-        params.Set(str::Format(LR"(%s "%s")", cmdLine, tab->filePath.Get()));
+        params.Set(str::Format(LR"(%s "%s")", cmdLine, pathW));
     }
     return params.StealData();
 }
@@ -365,7 +365,8 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     for (size_t i = 0; i < viewers->size() && i <= idx; i++) {
         ev = viewers->at(i);
         // see AppendExternalViewersToMenu in Menu.cpp
-        if (!ev->commandLine || !PathMatchFilter(tab->filePath, ev->filter)) {
+        WCHAR* pathW = ToWstrTemp(tab->filePath);
+        if (!ev->commandLine || !PathMatchFilter(pathW, ev->filter)) {
             idx++;
         }
     }

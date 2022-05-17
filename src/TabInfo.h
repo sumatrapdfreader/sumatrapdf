@@ -10,11 +10,11 @@ struct WindowInfo;
 /* (none of these depend on WindowInfo, so that a TabInfo could
    be moved between windows once this is supported) */
 struct TabInfo {
-    AutoFreeWstr filePath;
+    AutoFreeStr filePath;
     WindowInfo* win = nullptr;
     Controller* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
-    AutoFreeWstr frameTitle;
+    AutoFreeStr frameTitle;
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;
@@ -38,7 +38,7 @@ struct TabInfo {
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;
 
-    TabInfo(WindowInfo* win, const WCHAR* filePath);
+    TabInfo(WindowInfo* win, const char* filePath);
     ~TabInfo();
 
     DisplayModel* AsFixed() const;
@@ -49,7 +49,7 @@ struct TabInfo {
 
     ChmModel* AsChm() const;
 
-    const WCHAR* GetTabTitle() const;
+    const char* GetTabTitle() const;
     bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
     void ToggleZoom() const;

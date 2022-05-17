@@ -23,7 +23,7 @@
 #include "Translations.h"
 #include "EditAnnotations.h"
 
-TabInfo::TabInfo(WindowInfo* win, const WCHAR* filePath) {
+TabInfo::TabInfo(WindowInfo* win, const char* filePath) {
     this->win = win;
     this->filePath.SetCopy(filePath);
 }
@@ -64,7 +64,7 @@ EngineBase* TabInfo::GetEngine() const {
     return nullptr;
 }
 
-const WCHAR* TabInfo::GetTabTitle() const {
+const char* TabInfo::GetTabTitle() const {
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
     }

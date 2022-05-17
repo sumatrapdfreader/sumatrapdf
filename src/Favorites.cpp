@@ -670,7 +670,7 @@ void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageL
         pl = pageLabel;
     }
     TabInfo* tab = win->currentTab;
-    char* path = ToUtf8Temp(tab->filePath);
+    char* path = tab->filePath;
     gFavorites.AddOrReplace(path, pageNo, ToUtf8(name.Get()), pl);
     // expand newly added favorites by default
     FileState* fav = gFavorites.GetFavByFilePath(path);

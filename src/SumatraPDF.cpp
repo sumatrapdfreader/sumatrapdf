@@ -97,6 +97,9 @@ using std::placeholders::_1;
 #define DEFAULT_LINK_PROTOCOLS L"http,https,mailto"
 #define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video,webpage"
 
+constexpr const char* kSumatraWindowTitle = "SumatraPDF";
+constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
+
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
 #if defined(DEBUG)
@@ -334,11 +337,12 @@ void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepCont
 
 TabInfo* FindTabByFile(const WCHAR* file) {
     AutoFreeWstr normFile(path::Normalize(file));
+    char* normFileA = ToUtf8Temp(normFile);
 
     for (WindowInfo* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
-            WCHAR* fp = tab->filePath;
-            if (!fp || !path::IsSame(tab->filePath, normFile)) {
+            char* fp = tab->filePath;
+            if (!fp || !path::IsSame(fp, normFileA)) {
                 continue;
             }
             return tab;
@@ -509,7 +513,7 @@ void UpdateTabFileDisplayStateForTab(TabInfo* tab) {
     WindowInfo* win = tab->win;
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
-    char* fp = ToUtf8Temp(tab->filePath);
+    char* fp = tab->filePath;
     FileState* fs = gFileHistory.Find(fp, nullptr);
     if (!fs) {
         return;
@@ -936,7 +940,7 @@ static Controller* CreateControllerForFile(const char* path, PasswordUI* pwdUI, 
 }
 
 static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
-    const WCHAR* titlePath = tab->filePath;
+    const char* titlePath = tab->filePath;
     if (!gGlobalPrefs->fullPathInTitle) {
         titlePath = path::GetBaseNameTemp(titlePath);
     }
@@ -953,15 +957,16 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
         }
     }
 
+    char* docTitleA = ToUtf8Temp(docTitle);
     if (!IsUIRightToLeft()) {
-        tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle.Get(), SUMATRA_WINDOW_TITLE));
+        tab->frameTitle.Set(str::Format("%s %s- %s", titlePath, docTitleA, kSumatraWindowTitle));
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle.Get(), titlePath));
+        tab->frameTitle.Set(str::Format("%s %s- %s", kSumatraWindowTitle, docTitleA, titlePath));
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
-        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle.Get()));
+        tab->frameTitle.Set(str::Format(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle.Get()));
     }
 }
 
@@ -1228,7 +1233,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     }
 
     HwndPasswordUI pwdUI(win->hwndFrame);
-    char* pathA = ToUtf8Temp(tab->filePath);
+    char* pathA = tab->filePath;
     Controller* ctrl = CreateControllerForFile(pathA, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
@@ -1347,7 +1352,7 @@ static WindowInfo* CreateWindowInfo() {
     windowPos.x += (nShift * 15); // TODO: DPI scale
 
     const WCHAR* clsName = FRAME_CLASS_NAME;
-    const WCHAR* title = SUMATRA_WINDOW_TITLE;
+    const WCHAR* title = kSumatraWindowTitleW;
     DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     int x = windowPos.x;
     int y = windowPos.y;
@@ -1689,10 +1694,10 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
     if (!args.forceReuse) {
         // insert a new tab for the loaded document
-        win->currentTab = CreateNewTab(win, fullPathW);
+        win->currentTab = CreateNewTab(win, fullPath);
         // logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
     } else {
-        win->currentTab->filePath.SetCopy(fullPathW);
+        win->currentTab->filePath.SetCopy(fullPath);
 #if 0
         auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.Get());
@@ -1711,7 +1716,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     auto currTab = win->currentTab;
-    auto path = ToUtf8Temp(currTab->filePath);
+    const char* path = currTab->filePath;
     int nPages = 0;
     if (currTab->ctrl) {
         nPages = currTab->ctrl->PageCount();
@@ -1727,12 +1732,13 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // via DDE Open command.
     CrashIf(currTab->watcher);
 
+    WCHAR* pathW = ToWstrTemp(path);
     if (gGlobalPrefs->reloadModifiedDocuments) {
-        currTab->watcher = FileWatcherSubscribe(win->currentTab->filePath, [currTab] { scheduleReloadTab(currTab); });
+        currTab->watcher = FileWatcherSubscribe(pathW, [currTab] { scheduleReloadTab(currTab); });
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
-        CrashIf(!str::Eq(fullPathW, win->currentTab->filePath));
+        CrashIf(!str::Eq(fullPathW, pathW));
         FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
@@ -2057,7 +2063,7 @@ static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool 
         }
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
-        win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
+        win::SetText(win->hwndFrame, kSumatraWindowTitle);
         CrashIf(win->tabs.size() != 0 || win->currentTab);
     }
 
@@ -2846,7 +2852,7 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
         return;
     }
     TabInfo* tab = win->currentTab;
-    WCHAR* path = tab->filePath;
+    WCHAR* path = ToWstrTemp(tab->filePath);
     CrashIf(!path);
     if (!path) {
         return;
@@ -2858,7 +2864,7 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
 
     // TODO: should copy the display state from current file
     LoadArgs args(path, newWin);
-    args.fileName = tab->filePath;
+    args.fileName = path;
     args.showWin = true;
     args.noPlaceWindow = true;
     LoadDocument(args);
@@ -3025,7 +3031,8 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
 
     TabInfo* tab = win->currentTab;
     WStrVec files;
-    WCHAR* pattern = path::GetDirTemp(tab->filePath);
+    WCHAR* pathW = ToWstrTemp(tab->filePath);
+    WCHAR* pattern = path::GetDirTemp(pathW);
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
     pattern = path::JoinTemp(pattern, L"*");
     if (!CollectPathsFromDirectory(pattern, files)) {
@@ -3042,12 +3049,12 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
         }
     }
 
-    if (!files.Contains(tab->filePath)) {
-        files.Append(tab->filePath);
+    if (!files.Contains(pathW)) {
+        files.Append(pathW);
     }
     files.SortNatural();
 
-    int index = files.Find(tab->filePath);
+    int index = files.Find(pathW);
     if (forward) {
         index = (index + 1) % (int)files.size();
     } else {

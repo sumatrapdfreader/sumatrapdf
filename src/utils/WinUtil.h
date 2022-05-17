@@ -79,7 +79,7 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 WCHAR* ResolveLnkTemp(const WCHAR* path);
 bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args = nullptr,
                     const WCHAR* description = nullptr, int iconIndex = 0);
-IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd = nullptr);
+IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
 DWORD GetFileVersion(const WCHAR* path);
 
 bool IsKeyPressed(int key);
@@ -179,6 +179,7 @@ size_t GetTextLen(HWND hwnd);
 TempWstr GetTextTemp(HWND hwnd);
 
 void SetText(HWND hwnd, const WCHAR* txt);
+void SetText(HWND hwnd, const char* txt);
 void SetVisibility(HWND hwnd, bool visible);
 bool HasFrameThickness(HWND hwnd);
 bool HasCaption(HWND hwnd);

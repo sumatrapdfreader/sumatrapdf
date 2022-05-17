@@ -1481,7 +1481,8 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         if (cmdId == CmdOpenWithHtmlHelp && ctx) {
             TabInfo* tab = ctx->tab;
-            AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
+            WCHAR* path = tab ? ToWstrTemp(tab->filePath.Get()) : nullptr;
+            AppendExternalViewersToMenu(menu, path);
         }
     }
     RemoveBadMenuSeparators(menu);

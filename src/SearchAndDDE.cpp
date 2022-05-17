@@ -439,7 +439,8 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!dm->pdfSync) {
-        int err = Synchronizer::Create(tab->filePath, dm->GetEngine(), &dm->pdfSync);
+        WCHAR* pathW = ToWstrTemp(tab->filePath);
+        int err = Synchronizer::Create(pathW, dm->GetEngine(), &dm->pdfSync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
             // point if gGlobalPrefs->enableTeXEnhancements is set; we no longer
@@ -472,7 +473,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     if (!file::Exists(srcfilepath)) {
         // if the source file is missing, check if it's been moved to the same place as
         // the PDF document (which happens if all files are moved together)
-        WCHAR* altsrcpath = path::GetDirTemp(tab->filePath);
+        WCHAR* altsrcpath = path::GetDirTemp(ToWstrTemp(tab->filePath));
         altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(srcfilepath));
         if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
             srcfilepath.SetCopy(altsrcpath);

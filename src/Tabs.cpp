@@ -345,10 +345,10 @@ static void SetTabTitle(TabInfo* tab) {
     }
     WindowInfo* win = tab->win;
     int idx = win->tabs.Find(tab);
-    WCHAR* title = (WCHAR*)tab->GetTabTitle();
+    const char* title = tab->GetTabTitle();
     win->tabsCtrl->SetTabText(idx, title);
     auto tooltip = tab->filePath.Get();
-    win->tabsCtrl->SetTooltip(idx, tooltip);
+    win->tabsCtrl->SetTooltip(idx, ToWstrTemp(tooltip));
 }
 
 static void NO_INLINE SwapTabs(WindowInfo* win, int tab1, int tab2) {
@@ -720,7 +720,7 @@ void UpdateCurrentTabBgColor(WindowInfo* win) {
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
-TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
+TabInfo* CreateNewTab(WindowInfo* win, const char* filePath) {
     CrashIf(!win);
     if (!win) {
         return nullptr;
@@ -906,7 +906,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
         return;
     }
     win->currentTab = win->tabs.at(tabIndex);
-    auto path = ToUtf8Temp(win->currentTab->filePath);
+    char* path = win->currentTab->filePath;
     logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path);
     int prevIdx = win->tabsCtrl->SetSelectedTabByIndex(tabIndex);
     if (prevIdx != -1) {

@@ -7,7 +7,7 @@ void SaveCurrentTabInfo(WindowInfo* win);
 void LoadModelIntoTab(TabInfo* tab);
 
 void CreateTabbar(WindowInfo* win);
-TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath);
+TabInfo* CreateNewTab(WindowInfo* win, const char* filePath);
 void TabsOnCloseDoc(WindowInfo* win);
 void TabsOnCloseWindow(WindowInfo* win);
 void TabsOnChangedDoc(WindowInfo* win);

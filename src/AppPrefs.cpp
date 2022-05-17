@@ -203,7 +203,7 @@ static void RememberSessionState() {
         }
         SessionData* data = NewSessionData();
         for (TabInfo* tab : win->tabs) {
-            char* fp = ToUtf8Temp(tab->filePath);
+            char* fp = tab->filePath;
             FileState* fs = NewDisplayState(fp);
             if (tab->ctrl) {
                 tab->ctrl->GetDisplayState(fs);

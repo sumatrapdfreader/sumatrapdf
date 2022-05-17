@@ -819,7 +819,7 @@ void GetStressTestInfo(str::Str* s) {
         }
 
         s->Append("File: ");
-        char* filePath = ToUtf8Temp(w->currentTab->filePath);
+        char* filePath = w->currentTab->filePath;
         s->Append(filePath);
         GetLogInfo(w->stressTest, s);
         s->Append("\r\n");
