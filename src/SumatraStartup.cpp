@@ -641,7 +641,7 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
             WCHAR* s = (WCHAR*)lParam;
-            LaunchBrowser(s);
+            LaunchBrowser(ToUtf8Temp(s));
             break;
     }
     return S_OK;

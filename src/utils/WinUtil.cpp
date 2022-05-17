@@ -828,10 +828,6 @@ bool LaunchFile(const char* path, const char* params, const char* verb, bool hid
     return true;
 }
 
-bool LaunchBrowser(const WCHAR* url) {
-    return LaunchFile(url, nullptr, L"open");
-}
-
 bool LaunchBrowser(const char* url) {
     return LaunchFile(url, nullptr, "open");
 }

@@ -104,7 +104,7 @@ void RestrictPolicies(Perm revokePermission);
 bool HasPermission(Perm permission);
 bool IsUIRightToLeft();
 bool SumatraLaunchBrowser(const char* url);
-bool OpenFileExternally(const WCHAR* path);
+bool OpenFileExternally(const char* path);
 void CloseCurrentTab(WindowInfo* win, bool quitIfLast = false);
 bool CanCloseWindow(WindowInfo* win);
 void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose);

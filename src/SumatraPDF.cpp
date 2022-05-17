@@ -302,16 +302,16 @@ bool DocIsSupportedFileType(Kind kind) {
 
 // lets the shell open a file of any supported perceived type
 // in the default application for opening such files
-bool OpenFileExternally(const WCHAR* path) {
+bool OpenFileExternally(const char* path) {
     if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return false;
     }
 
     // check if this file's perceived type is allowed
-    const WCHAR* ext = path::GetExtTemp(path);
-    AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
+    const char* ext = path::GetExtTemp(path);
+    AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ToWstrTemp(ext), L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
-    if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml")) {
+    if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html") || str::EndsWithI(path, ".xhtml")) {
         perceivedType.SetCopy(L"webpage");
     }
     str::ToLowerInPlace(perceivedType);
@@ -4220,7 +4220,8 @@ static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
     }
     auto langW = ToWstrTemp(lang);
     Replace(url, kUserLangStr, langW);
-    LaunchBrowser(url.Get());
+    char* uri = ToUtf8Temp(url.Get());
+    LaunchBrowser(uri);
     str::Free(selText);
 }
 

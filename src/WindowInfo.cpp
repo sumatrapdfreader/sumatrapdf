@@ -452,7 +452,7 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
         // OpenFileExternally rejects files we'd otherwise
         // have to show a notification to be sure (which we
         // consider bad UI and thus simply don't)
-        bool ok = OpenFileExternally(fullPath);
+        bool ok = OpenFileExternally(ToUtf8Temp(fullPath));
         if (!ok) {
             AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath));
             win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
