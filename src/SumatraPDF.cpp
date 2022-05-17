@@ -4857,7 +4857,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdFavoriteDel:
             if (win->IsDocLoaded()) {
                 auto path = ctrl->GetFilePath();
-                DelFavorite(ToWstrTemp(path), win->currPageNo);
+                DelFavorite(path, win->currPageNo);
             }
             break;
 

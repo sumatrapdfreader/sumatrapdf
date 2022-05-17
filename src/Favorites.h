@@ -28,20 +28,18 @@ class Favorites {
 
     Favorite* GetByMenuId(int menuId, FileState** dsOut = nullptr);
     void ResetMenuIds();
-    FileState* GetFavByFilePath(const WCHAR* filePath);
+    FileState* GetFavByFilePath(const char* filePath);
     FileState* GetByFavorite(Favorite* fn);
-    bool IsPageInFavorites(const WCHAR* filePath, int pageNo);
     bool IsPageInFavorites(const char* filePath, int pageNo);
-    void AddOrReplace(const WCHAR* filePath, int pageNo, const WCHAR* name, const WCHAR* pageLabel = nullptr);
-    void Remove(const WCHAR* filePath, int pageNo);
-    void RemoveAllForFile(const WCHAR* filePath);
+    void AddOrReplace(const char* filePath, int pageNo, const char* name, const WCHAR* pageLabel = nullptr);
+    void Remove(const char* filePath, int pageNo);
+    void RemoveAllForFile(const char* filePath);
 };
 
 bool HasFavorites();
 void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageLabel, AutoFreeWstr& name);
 void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo);
 void AddFavoriteForCurrentPage(WindowInfo* win);
-void DelFavorite(const WCHAR* filePath, int pageNo);
 void DelFavorite(const char* filePath, int pageNo);
 void RebuildFavMenu(WindowInfo* win, HMENU menu);
 void CreateFavorites(WindowInfo* win);
