@@ -195,7 +195,7 @@ static int CALLBACK unrarCallback2(UINT msg, LPARAM userData, LPARAM rarBuffer, 
     if (UCM_PROCESSDATA != msg || !userData) {
         return -1;
     }
-    str::Slice* buf = (str::Slice*)userData;
+    ByteSlice* buf = (ByteSlice*)userData;
     size_t bytesGot = (size_t)bytesProcessed;
     if (bytesGot > buf->Left()) {
         return -1;
@@ -212,7 +212,7 @@ void LoadRar() {
         logf("LoadRar() took %.2f ms\n", dur);
     };
 
-    str::Slice uncompressedBuf;
+    ByteSlice uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = (WCHAR*)rarFilePath;

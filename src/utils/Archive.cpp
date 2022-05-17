@@ -267,7 +267,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     if (UCM_PROCESSDATA != msg || !userData) {
         return -1;
     }
-    str::Slice* buf = (str::Slice*)userData;
+    ByteSlice* buf = (ByteSlice*)userData;
     size_t bytesGot = (size_t)bytesProcessed;
     if (bytesGot > buf->Left()) {
         return -1;
@@ -304,7 +304,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     auto rarPath = ToWstrTemp(rarFilePath_);
 
-    str::Slice uncompressedBuf;
+    ByteSlice uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = rarPath;
@@ -360,7 +360,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
     CrashIf(rarFilePath_);
     auto rarPathW = ToWstrTemp(rarPath);
 
-    str::Slice uncompressedBuf;
+    ByteSlice uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = (WCHAR*)rarPathW;

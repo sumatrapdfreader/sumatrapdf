@@ -6,6 +6,7 @@
 struct ByteSlice {
     u8* d = nullptr;
     size_t sz = 0;
+    u8* curr = nullptr;
 
     ByteSlice() = default;
     ~ByteSlice() = default;
@@ -30,6 +31,14 @@ struct ByteSlice {
         sz = other.sz;
         return *this;
     }
+    void Set(u8* data, size_t size) {
+        d = data;
+        sz = size;
+    }
+    void Set(char* data, size_t size) {
+        d = (u8*)data;
+        sz = size;
+    }
     u8* data() const {
         return d;
     }
@@ -38,6 +47,9 @@ struct ByteSlice {
     }
     bool empty() const {
         return !d || sz == 0;
+    }
+    size_t Left() {
+        return sz - (curr - d);
     }
     ByteSlice Clone() const {
         if (empty()) {
