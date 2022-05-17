@@ -4270,7 +4270,7 @@ char* GetLogFilePath() {
         return nullptr;
     }
     auto path = path::JoinTemp(dir, L"sumatra-log.txt");
-    auto res = strconv::WstrToUtf8(path);
+    auto res = ToUtf8(path);
     return res;
 }
 

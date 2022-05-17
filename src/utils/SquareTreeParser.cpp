@@ -210,11 +210,11 @@ SquareTree::SquareTree(const char* data) : root(nullptr) {
     if (str::StartsWith(data, UTF8_BOM)) {
         dataUtf8.SetCopy(data + 3);
     } else if (str::StartsWith(data, UTF16_BOM)) {
-        auto tmp = strconv::WstrToUtf8((const WCHAR*)(data + 2));
+        auto tmp = ToUtf8((const WCHAR*)(data + 2));
         dataUtf8.Set(tmp);
     } else if (data) {
         AutoFreeWstr tmp(strconv::AnsiToWstr(data));
-        auto tmp2 = strconv::WstrToUtf8(tmp.Get());
+        auto tmp2 = ToUtf8(tmp.Get());
         dataUtf8.Set(tmp2);
     }
     if (!dataUtf8) {

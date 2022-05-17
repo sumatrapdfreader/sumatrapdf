@@ -50,7 +50,7 @@ static char* Escape(const WCHAR* str) {
     }
 
     if (!NeedsEscape(str)) {
-        return strconv::WstrToUtf8(str);
+        return ToUtf8(str);
     }
 
     str::WStr escaped(256);
@@ -76,7 +76,7 @@ static char* Escape(const WCHAR* str) {
                 break;
         }
     }
-    return strconv::WstrToUtf8(escaped.Get());
+    return ToUtf8(escaped.Get());
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {

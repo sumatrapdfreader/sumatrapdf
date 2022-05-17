@@ -91,7 +91,7 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
         s = tmp;
     }
     if (str::StartsWith(s, UTF16_BOM)) {
-        char* tmp2 = strconv::WstrToUtf8((WCHAR*)(s + 2));
+        char* tmp2 = ToUtf8((WCHAR*)(s + 2));
         return tmp2;
     }
     if (str::StartsWith(s, UTF8_BOM)) {

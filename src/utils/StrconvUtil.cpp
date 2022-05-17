@@ -131,7 +131,7 @@ char* UnknownToUtf8(const char* s) {
     if (str::StartsWith(s, UTF16_BOM)) {
         s += 2;
         int cch = (int)((len - 2) / 2);
-        return strconv::WstrToUtf8((const WCHAR*)s, cch);
+        return ToUtf8((const WCHAR*)s, cch);
     }
 
     // if s is valid utf8, leave it alone
@@ -141,7 +141,7 @@ char* UnknownToUtf8(const char* s) {
     }
 
     AutoFreeWstr uni = strconv::AnsiToWstr(s, len);
-    return strconv::WstrToUtf8(uni.Get());
+    return ToUtf8(uni.Get());
 }
 
 WCHAR* AnsiToWstr(const char* src, size_t cbLen) {

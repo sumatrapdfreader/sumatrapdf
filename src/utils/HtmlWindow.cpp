@@ -407,7 +407,7 @@ static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
     AutoFreeWstr contentType(ReadRegStr(HKEY_CLASSES_ROOT, extW, L"Content Type"));
     if (contentType) {
         WCHAR* res = contentType.Get();
-        return strconv::WstrToUtf8(res);
+        return ToUtf8(res);
     }
 
     return str::Dup(kDefaultMimeType);

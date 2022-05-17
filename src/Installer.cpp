@@ -97,7 +97,7 @@ char* GetInstallerLogPath() {
         return nullptr;
     }
     WCHAR* path = path::Join(dir, L"sumatra-install-log.txt", nullptr);
-    auto res = strconv::WstrToUtf8(path);
+    auto res = ToUtf8(path);
     str::Free(path);
     return res;
 }

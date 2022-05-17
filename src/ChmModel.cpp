@@ -450,7 +450,7 @@ ByteSlice ChmModel::GetDataForUrl(const WCHAR* url) {
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(str::Dup(&poolAlloc, plainUrl));
-        AutoFree urlA(strconv::WstrToUtf8(plainUrl));
+        AutoFree urlA(ToUtf8(plainUrl));
         e->data = doc->GetData(urlA.Get());
         if (e->data.empty()) {
             delete e;
@@ -477,7 +477,7 @@ void ChmModel::OnLButtonDown() {
 // named destinations are either in-document URLs or Alias topic IDs
 IPageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     AutoFreeWstr plainUrl(url::GetFullPath(name));
-    AutoFree urlA(strconv::WstrToUtf8(plainUrl));
+    AutoFree urlA(ToUtf8(plainUrl));
     if (!doc->HasData(urlA.Get())) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {

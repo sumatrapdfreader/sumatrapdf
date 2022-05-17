@@ -599,7 +599,7 @@ int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
     }
 
     bool isUtf8 = true;
-    char* mb_srcfilepath = strconv::WstrToUtf8(srcfilepath);
+    char* mb_srcfilepath = ToUtf8(srcfilepath);
 TryAgainAnsi:
     if (!mb_srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;

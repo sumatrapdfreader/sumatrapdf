@@ -1101,7 +1101,7 @@ char* EngineDjVu::ResolveNamedDest(const char* name) {
 }
 
 IPageDestination* EngineDjVu::GetNamedDest(const WCHAR* name) {
-    AutoFree nameA = strconv::WstrToUtf8(name);
+    AutoFree nameA = ToUtf8(name);
     if (!str::StartsWith(nameA.Get(), "#")) {
         nameA.TakeOwnershipOf(str::Join("#", nameA.Get()));
     }

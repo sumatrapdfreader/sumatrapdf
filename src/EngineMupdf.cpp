@@ -1956,7 +1956,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         if (!ok && GetACP() != 1252) {
             AutoFree pwd_ansi = str::Dup(pwd.Get());
             AutoFreeWstr pwd_cp1252(strconv::StrToWstr(pwd_ansi.Get(), 1252));
-            pwdA = strconv::WstrToUtf8(pwd_cp1252);
+            pwdA = ToUtf8(pwd_cp1252);
             ok = fz_authenticate_password(ctx, _doc, pwdA.Get());
         }
     }

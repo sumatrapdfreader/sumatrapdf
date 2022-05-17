@@ -344,7 +344,7 @@ char* ReadRegStrUtf8(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
     if (!ws) {
         return nullptr;
     }
-    auto s = strconv::WstrToUtf8(ws);
+    auto s = ToUtf8(ws);
     str::Free(ws);
     return s;
 }

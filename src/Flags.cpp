@@ -555,7 +555,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::Lang) {
             // TODO: remove the following deprecated options within
             // a release or two
-            i.lang = strconv::WstrToUtf8(param);
+            i.lang = ToUtf8(param);
             continue;
         }
         if (arg == Arg::UpdateSelfTo) {

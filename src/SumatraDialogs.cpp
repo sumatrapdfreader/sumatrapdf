@@ -101,7 +101,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
-                    data->pwdOut = strconv::WstrToUtf8(tmp);
+                    data->pwdOut = ToUtf8(tmp);
                     if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     }
