@@ -106,6 +106,14 @@ WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
     return fixed;
 }
 
+// TODO: optimize
+char* DecodeHtmlEntititesTemp(const char* s, uint codepage) {
+    WCHAR* ws = DecodeHtmlEntitites(s, codepage);
+    char* res = ToUtf8Temp(ws);
+    str::Free(ws);
+    return res;
+}
+
 HtmlParser::HtmlParser()
 
     = default;
@@ -143,6 +151,15 @@ WCHAR* HtmlElement::GetAttribute(const char* name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {
             return DecodeHtmlEntitites(attr->val, codepage);
+        }
+    }
+    return nullptr;
+}
+
+char* HtmlElement::GetAttributeTemp(const char* name) const {
+    for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
+        if (str::EqI(attr->name, name)) {
+            return DecodeHtmlEntititesTemp(attr->val, codepage);
         }
     }
     return nullptr;

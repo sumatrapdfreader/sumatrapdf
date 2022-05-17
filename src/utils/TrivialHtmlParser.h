@@ -31,6 +31,7 @@ struct HtmlElement {
     bool NameIsNS(const char* name, const char* ns) const;
 
     WCHAR* GetAttribute(const char* name) const;
+    char* GetAttributeTemp(const char* name) const;
     HtmlElement* GetChildByTag(HtmlTag tag, int idx = 0) const;
 };
 
@@ -73,8 +74,8 @@ class HtmlParser {
     HtmlParser();
     ~HtmlParser();
 
-    HtmlElement* Parse(ByteSlice d, UINT codepage = CP_ACP);
-    HtmlElement* ParseInPlace(ByteSlice d, UINT codepage = CP_ACP);
+    HtmlElement* Parse(ByteSlice d, uint codepage = CP_ACP);
+    HtmlElement* ParseInPlace(ByteSlice d, uint codepage = CP_ACP);
 
     size_t ElementsCount() const;
     size_t TotalAttrCount() const;
@@ -83,7 +84,8 @@ class HtmlParser {
     HtmlElement* FindElementByNameNS(const char* name, const char* ns, HtmlElement* from = nullptr);
 };
 
-WCHAR* DecodeHtmlEntitites(const char* string, UINT codepage);
+WCHAR* DecodeHtmlEntitites(const char* string, uint codepage);
+char* DecodeHtmlEntititesTemp(const char* string, uint codepage);
 
 namespace strconv {
 

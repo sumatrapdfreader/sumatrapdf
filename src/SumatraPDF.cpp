@@ -753,11 +753,9 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(const char* urlA, ByteSlice data) {
-    WCHAR* url = ToWstrTemp(urlA);
-    AutoFreeWstr fileName(url::GetFileName(url));
+void ControllerCallbackHandler::SaveDownload(const char* url, ByteSlice data) {
+    char* path = url::GetFileName(url);
     // LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
-    char* path = ToUtf8Temp(fileName);
     SaveDataToFile(win->hwndFrame, path, data);
 }
 

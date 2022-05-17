@@ -107,6 +107,11 @@ char* ToMultiByte(const char* src, uint codePageSrc, uint codePageDest) {
     return WstrToCodePage(codePageDest, tmp.Get(), tmp.size());
 }
 
+// caller needs to free() the result
+char* StrToUtf8(const char* src, uint codePage) {
+    return ToMultiByte(src, codePage, CP_UTF8);
+}
+
 // tries to convert a string in unknown encoding to utf8, as best
 // as it can
 // caller has to free() it

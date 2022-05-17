@@ -34,7 +34,7 @@ class EpubDoc {
 
     str::Str htmlData;
     Vec<ImageData> images;
-    AutoFreeWstr tocPath;
+    AutoFreeStr tocPath;
     AutoFreeStr fileName;
     PropertyMap props;
     bool isNcxToc = false;
