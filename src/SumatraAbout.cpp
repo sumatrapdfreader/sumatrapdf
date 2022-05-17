@@ -66,23 +66,22 @@ constexpr int ABOUT_RECT_PADDING = 8;
 #define GIT_COMMIT_ID_STR TEXT(QM(GIT_COMMIT_ID))
 #endif
 
-#define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
-#define URL_AUTHORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
-#define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"
-#define URL_SUPPORT_SUMATRA L"https://www.sumatrapdfreader.org/backers.html"
+#define URL_LICENSE "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
+#define URL_AUTHORS "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
+#define URL_TRANSLATORS "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"
 
 #define LAYOUT_LTR 0
 
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static TooltipCtrl* gAboutTooltip = nullptr;
-static const WCHAR* gClickedURL = nullptr;
+static const char* gClickedURL = nullptr;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
     const WCHAR* leftTxt;
     const WCHAR* rightTxt;
-    const WCHAR* url;
+    const char* url;
 
     /* data calculated by the layout */
     Rect leftPos;
@@ -92,7 +91,7 @@ struct AboutLayoutInfoEl {
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {L"website", L"SumatraPDF website", WEBSITE_MAIN_URL},
     {L"manual", L"SumatraPDF manual", WEBSITE_MANUAL_URL},
-    {L"forums", L"SumatraPDF forums", L"https://forum.sumatrapdfreader.org/"},
+    {L"forums", L"SumatraPDF forums", "https://forum.sumatrapdfreader.org/"},
     {L"programming", L"The Programmers", URL_AUTHORS},
     {L"translations", L"The Translators", URL_TRANSLATORS},
     {L"licenses", L"Various Open Source", URL_LICENSE},
@@ -436,12 +435,12 @@ static void CopyAboutInfoToClipboard(__unused HWND hwnd) {
         for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--) {
             info.AppendChar(' ');
         }
-        info.AppendFmt(L"%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
+        info.AppendFmt(L"%s: %s\r\n", el->leftTxt, el->url ? ToWstrTemp(el->url) : el->rightTxt);
     }
     CopyTextToClipboard(info.LendData());
 }
 
-const WCHAR* GetStaticLink(Vec<StaticLinkInfo*>& staticLinks, int x, int y, StaticLinkInfo** linkOut) {
+char* GetStaticLinkTemp(Vec<StaticLinkInfo*>& staticLinks, int x, int y, StaticLinkInfo** linkOut) {
     if (!HasPermission(Perm::DiskAccess)) {
         return nullptr;
     }
@@ -452,7 +451,8 @@ const WCHAR* GetStaticLink(Vec<StaticLinkInfo*>& staticLinks, int x, int y, Stat
             if (linkOut) {
                 *linkOut = staticLinks.at(i);
             }
-            return staticLinks.at(i)->target;
+            auto res = staticLinks.at(i)->target;
+            return str::DupTemp(res);
         }
     }
 
@@ -479,7 +479,7 @@ static void DeleteInfotip() {
 }
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    const WCHAR* url;
+    const char* url;
     Point pt;
 
     int x = GET_X_LPARAM(lp);
@@ -500,7 +500,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_SETCURSOR:
             if (GetCursorPosInHwnd(hwnd, pt)) {
                 StaticLinkInfo* linkInfo;
-                if (GetStaticLink(gStaticLinks, pt.x, pt.y, &linkInfo)) {
+                if (GetStaticLinkTemp(gStaticLinks, pt.x, pt.y, &linkInfo)) {
                     CreateInfotipForLink(linkInfo);
                     SetCursorCached(IDC_HAND);
                     return TRUE;
@@ -509,12 +509,13 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             DeleteInfotip();
             return DefWindowProc(hwnd, msg, wp, lp);
 
-        case WM_LBUTTONDOWN:
-            gClickedURL = GetStaticLink(gStaticLinks, x, y, nullptr);
-            break;
+        case WM_LBUTTONDOWN: {
+            url = GetStaticLinkTemp(gStaticLinks, x, y, nullptr);
+            str::ReplaceWithCopy(&gClickedURL, url);
+        } break;
 
         case WM_LBUTTONUP:
-            url = GetStaticLink(gStaticLinks, x, y, nullptr);
+            url = GetStaticLinkTemp(gStaticLinks, x, y, nullptr);
             if (url && url == gClickedURL) {
                 SumatraLaunchBrowser(url);
             }
@@ -752,7 +753,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
             ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
 
-            auto sl = new StaticLinkInfo(rect.Union(page), filePath, filePath);
+            char* path = state->filePath;
+            auto sl = new StaticLinkInfo(rect.Union(page), path, path);
             win->staticLinks.Append(sl);
         }
     }

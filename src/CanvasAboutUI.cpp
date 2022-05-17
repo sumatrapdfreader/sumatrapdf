@@ -51,17 +51,17 @@ static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, WPARAM) {
 
     // remember a link under so that on mouse up we only activate
     // link if mouse up is on the same link as mouse down
-    win->urlOnLastButtonDown = GetStaticLink(win->staticLinks, x, y, nullptr);
+    win->urlOnLastButtonDown.SetCopy(GetStaticLinkTemp(win->staticLinks, x, y, nullptr));
 }
 
-static bool IsLink(const WCHAR* url) {
-    if (str::StartsWithI(url, L"http:")) {
+static bool IsLink(const char* url) {
+    if (str::StartsWithI(url, "http:")) {
         return true;
     }
-    if (str::StartsWithI(url, L"https:")) {
+    if (str::StartsWithI(url, "https:")) {
         return true;
     }
-    if (str::StartsWithI(url, L"mailto:")) {
+    if (str::StartsWithI(url, "mailto:")) {
         return true;
     }
     return false;
@@ -70,9 +70,9 @@ static bool IsLink(const WCHAR* url) {
 static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     SetFocus(win->hwndFrame);
 
-    const WCHAR* url = GetStaticLink(win->staticLinks, x, y, nullptr);
-    const WCHAR* prevUrl = win->urlOnLastButtonDown;
-    win->urlOnLastButtonDown = nullptr;
+    char* url = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
+    char* prevUrl = win->urlOnLastButtonDown;
+    win->urlOnLastButtonDown.Set(nullptr);
     if (!url || url != prevUrl) {
         return;
     }
@@ -111,7 +111,7 @@ static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     Point pt;
     if (GetCursorPosInHwnd(hwnd, pt)) {
         StaticLinkInfo* linkInfo;
-        if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
+        if (GetStaticLinkTemp(win->staticLinks, pt.x, pt.y, &linkInfo)) {
             win->ShowToolTip(linkInfo->infotip, linkInfo->rect);
             SetCursorCached(IDC_HAND);
         } else {

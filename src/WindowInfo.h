@@ -61,10 +61,10 @@ struct TouchState {
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
     Rect rect;
-    WCHAR* target = nullptr;
-    WCHAR* infotip = nullptr;
+    char* target = nullptr;
+    char* infotip = nullptr;
 
-    explicit StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip = nullptr);
+    explicit StaticLinkInfo(Rect rect, const char* target, const char* infotip = nullptr);
     StaticLinkInfo() = default;
     StaticLinkInfo(const StaticLinkInfo&);
     StaticLinkInfo& operator=(const StaticLinkInfo& other);
@@ -201,7 +201,7 @@ struct WindowInfo {
 
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;
-    const WCHAR* urlOnLastButtonDown = nullptr;
+    AutoFreeStr urlOnLastButtonDown;
     Annotation* annotationOnLastButtonDown = nullptr;
     Size annotationBeingMovedSize;
     Point annotationBeingMovedOffset;
@@ -244,7 +244,7 @@ struct WindowInfo {
     void ToggleZoom() const;
     void MoveDocBy(int dx, int dy) const;
 
-    void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false) const;
+    void ShowToolTip(const char* text, Rect& rc, bool multiline = false) const;
     void HideToolTip() const;
 
     bool CreateUIAProvider();

@@ -4,12 +4,12 @@
 #define CANVAS_CLASS_NAME L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME L"SUMATRA_PDF_FRAME"
 
-#define WEBSITE_MAIN_URL L"https://www.sumatrapdfreader.org/"
-#define WEBSITE_MANUAL_URL L"https://www.sumatrapdfreader.org/manual.html"
-#define WEBSITE_TRANSLATIONS_URL L"https://www.sumatrapdfreader.org/docs/How-to-contribute-translation.html"
+#define WEBSITE_MAIN_URL "https://www.sumatrapdfreader.org/"
+#define WEBSITE_MANUAL_URL "https://www.sumatrapdfreader.org/manual"
+#define WEBSITE_TRANSLATIONS_URL "https://www.sumatrapdfreader.org/docs/Contribute-translation"
 
 #ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL L"https://www.sumatrapdfreader.org/docs/Join-the-project-as-a-developer.html"
+#define CRASH_REPORT_URL "https://www.sumatrapdfreader.org/docs/Contribute-to-SumatraPDF"
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)
@@ -103,9 +103,8 @@ void InitializePolicies(bool restrict);
 void RestrictPolicies(Perm revokePermission);
 bool HasPermission(Perm permission);
 bool IsUIRightToLeft();
-bool SumatraLaunchBrowser(const WCHAR* url);
+bool SumatraLaunchBrowser(const char* url);
 bool OpenFileExternally(const WCHAR* path);
-// void AssociateExeWithPdfExtension(bool forAllUsers);
 void CloseCurrentTab(WindowInfo* win, bool quitIfLast = false);
 bool CanCloseWindow(WindowInfo* win);
 void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose);

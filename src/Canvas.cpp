@@ -1029,7 +1029,7 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     }
     auto r = pageEl->GetRect();
     Rect rc = dm->CvtToScreen(pageNo, r);
-    win->ShowToolTip(text, rc, true);
+    win->ShowToolTip(ToUtf8Temp(text), rc, true);
 
     bool isLink = pageEl->Is(kindPageElementDest);
 

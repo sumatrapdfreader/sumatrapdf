@@ -1709,8 +1709,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    const WCHAR* filePathW = GetStaticLink(win->staticLinks, x, y, nullptr);
-    char* filePath = ToUtf8Temp(filePathW);
+    char* filePath = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
     if (!filePath || *filePath == '<' || str::StartsWith(filePath, "http://") ||
         str::StartsWith(filePath, "https://")) {
         return;

@@ -75,7 +75,7 @@ LinkHandler::~LinkHandler() {
 
 Vec<WindowInfo*> gWindows;
 
-StaticLinkInfo::StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip) {
+StaticLinkInfo::StaticLinkInfo(Rect rect, const char* target, const char* infotip) {
     this->rect = rect;
     this->target = str::Dup(target);
     this->infotip = str::Dup(infotip);
@@ -297,7 +297,7 @@ void WindowInfo::MoveDocBy(int dx, int dy) const {
     currentTab->MoveDocBy(dx, dy);
 }
 
-void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) const {
+void WindowInfo::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
     if (str::IsEmpty(text)) {
         HideToolTip();
         return;
@@ -392,18 +392,18 @@ void LinkHandler::LaunchURL(const char* uri) {
         return;
     }
 
-    WCHAR* path = ToWstrTemp(uri);
-    WCHAR* colon = str::FindChar(path, ':');
-    WCHAR* hash = str::FindChar(path, '#');
+    char* path = str::DupTemp(uri);
+    char* colon = str::FindChar(path, ':');
+    char* hash = str::FindChar(path, '#');
     if (!colon || (hash && colon > hash)) {
         // treat relative URIs as file paths (without fragment identifier)
         if (hash) {
             *hash = '\0';
         }
-        str::TransCharsInPlace(path, L"/", L"\\");
+        str::TransCharsInPlace(path, "/", "\\");
         url::DecodeInPlace(path);
         // LaunchFile will reject unsupported file types
-        LaunchFile(path, nullptr);
+        LaunchFile(ToWstrTemp(path), nullptr);
     } else {
         // LaunchBrowser will reject unsupported URI schemes
         // TODO: support file URIs?

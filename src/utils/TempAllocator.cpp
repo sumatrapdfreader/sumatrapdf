@@ -62,7 +62,7 @@ TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
     if (!s) {
         CrashIf((int)cch > 0);
-        return TempStr();
+        return nullptr;
     }
     return strconv::WstrToUtf8(s, cch, GetTempAllocator());
 }

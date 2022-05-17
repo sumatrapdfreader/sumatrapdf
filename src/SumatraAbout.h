@@ -14,10 +14,10 @@ void OnMenuAbout(WindowInfo*);
 
 void DrawAboutPage(WindowInfo* win, HDC hdc);
 
-const WCHAR* GetStaticLink(Vec<StaticLinkInfo*>& linkInfo, int x, int y, StaticLinkInfo** info);
+char* GetStaticLinkTemp(Vec<StaticLinkInfo*>& linkInfo, int x, int y, StaticLinkInfo** info);
 
-constexpr const WCHAR* kLinkOpenFile = L"<File,Open>";
-constexpr const WCHAR* kLinkShowList = L"<View,ShowList>";
-constexpr const WCHAR* kLinkHideList = L"<View,HideList>";
+constexpr const char* kLinkOpenFile = "<File,Open>";
+constexpr const char* kLinkShowList = "<View,ShowList>";
+constexpr const char* kLinkHideList = "<View,HideList>";
 
 void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);

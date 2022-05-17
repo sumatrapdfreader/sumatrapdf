@@ -42,9 +42,9 @@ constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/update-
 
 #ifndef WEBSITE_DOWNLOAD_PAGE_URL
 #if defined(PRE_RELEASE_VER)
-#define WEBSITE_DOWNLOAD_PAGE_URL L"https://www.sumatrapdfreader.org/prerelease"
+#define WEBSITE_DOWNLOAD_PAGE_URL "https://www.sumatrapdfreader.org/prerelease"
 #else
-#define WEBSITE_DOWNLOAD_PAGE_URL L"https://www.sumatrapdfreader.org/download-free-pdf-viewer"
+#define WEBSITE_DOWNLOAD_PAGE_URL "https://www.sumatrapdfreader.org/download-free-pdf-viewer"
 #endif
 #endif
 // clang-format on

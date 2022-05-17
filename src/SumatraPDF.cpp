@@ -250,7 +250,7 @@ bool HasPermission(Perm permission) {
 
 // lets the shell open a URI for any supported scheme in
 // the appropriate application (web browser, mail client, etc.)
-bool SumatraLaunchBrowser(const WCHAR* url) {
+bool SumatraLaunchBrowser(const char* url) {
     if (gPluginMode) {
         // pass the URI back to the browser
         CrashIf(gWindows.empty());
@@ -259,12 +259,11 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        char* urlA = ToUtf8Temp(url);
-        size_t urlLen = str::Len(urlA);
-        if (!parent || !urlA || (urlLen > 4096)) {
+        size_t urlLen = str::Len(url);
+        if (!parent || !url || (urlLen > 4096)) {
             return false;
         }
-        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlLen + 1, urlA};
+        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlLen + 1, (char*)url};
         return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
@@ -274,7 +273,7 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
 
     // check if this URL's protocol is allowed
     AutoFreeWstr protocol;
-    if (!str::Parse(url, L"%S:", &protocol)) {
+    if (!str::Parse(url, "%S:", &protocol)) {
         return false;
     }
     str::ToLowerInPlace(protocol);
@@ -282,7 +281,7 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
         return false;
     }
 
-    return LaunchFile(url, nullptr, L"open");
+    return LaunchFile(url, nullptr, "open");
 }
 
 bool DocIsSupportedFileType(Kind kind) {

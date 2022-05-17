@@ -96,6 +96,7 @@ Rect GetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
 
 bool LaunchFile(const WCHAR* path, const WCHAR* params = nullptr, const WCHAR* verb = nullptr, bool hidden = false);
+bool LaunchFile(const char* path, const char* params, const char* verb = nullptr, bool hidden = false);
 bool LaunchBrowser(const WCHAR* url);
 bool LaunchBrowser(const char* url);
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir = nullptr, DWORD flags = 0);

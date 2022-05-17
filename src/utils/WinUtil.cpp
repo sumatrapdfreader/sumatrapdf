@@ -806,12 +806,34 @@ bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool 
     return true;
 }
 
+bool LaunchFile(const char* path, const char* params, const char* verb, bool hidden) {
+    if (str::IsEmpty(path)) {
+        return false;
+    }
+
+    SHELLEXECUTEINFOW sei{};
+    sei.cbSize = sizeof(sei);
+    sei.fMask = SEE_MASK_FLAG_NO_UI;
+    sei.lpVerb = ToWstrTemp(verb);
+    sei.lpFile = ToWstrTemp(path);
+    sei.lpParameters = ToWstrTemp(params);
+    sei.nShow = hidden ? SW_HIDE : SW_SHOWNORMAL;
+    BOOL ok = ShellExecuteExW(&sei);
+    if (!ok) {
+        DWORD err = GetLastError();
+        logf("LaunchFile: ShellExecuteExW path: '%s' params: '%s' verb: '%s'\n", path, params, verb);
+        LogLastError(err);
+        return false;
+    }
+    return true;
+}
+
 bool LaunchBrowser(const WCHAR* url) {
     return LaunchFile(url, nullptr, L"open");
 }
 
 bool LaunchBrowser(const char* url) {
-    return LaunchFile(ToWstrTemp(url), nullptr, L"open");
+    return LaunchFile(url, nullptr, "open");
 }
 
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
