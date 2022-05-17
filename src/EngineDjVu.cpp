@@ -295,7 +295,7 @@ class EngineDjVu : public EngineBase {
 
 EngineDjVu::EngineDjVu() {
     kind = kindEngineDjVu;
-    defaultExt = L".djvu";
+    str::ReplaceWithCopy(&defaultExt, ".djvu");
     // DPI isn't constant for all pages and thus premultiplied
     fileDPI = 300.0f;
     GetDjVuContext();
@@ -390,12 +390,11 @@ struct DjVuInfoChunk {
 static_assert(sizeof(DjVuInfoChunk) == 10, "wrong size of DjVuInfoChunk structure");
 
 bool EngineDjVu::LoadMediaboxes() {
-    const WCHAR* fileName = FileName();
-    if (!fileName) {
+    const char* path = FileName();
+    if (!path) {
         return false;
     }
-    char* pathA = ToUtf8Temp(fileName);
-    AutoCloseHandle h(file::OpenReadOnly(pathA));
+    AutoCloseHandle h(file::OpenReadOnly(path));
     if (!h.IsValid()) {
         return false;
     }
@@ -766,8 +765,7 @@ ByteSlice EngineDjVu::GetFileData() {
     return GetStreamOrFileData(stream, FileName());
 }
 
-bool EngineDjVu::SaveFileAs(const char* copyFileName) {
-    auto dstPath = ToWstrTemp(copyFileName);
+bool EngineDjVu::SaveFileAs(const char* dstPath) {
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(dstPath, d.AsByteSlice());
@@ -775,11 +773,11 @@ bool EngineDjVu::SaveFileAs(const char* copyFileName) {
             return true;
         }
     }
-    const WCHAR* fileName = FileName();
-    if (!fileName) {
+    const char* srcPath = FileName();
+    if (!srcPath) {
         return false;
     }
-    return file::Copy(dstPath, fileName, FALSE);
+    return file::Copy(dstPath, srcPath, false);
 }
 
 static void AppendNewline(str::WStr& extracted, Vec<Rect>& coords, const WCHAR* lineSep) {

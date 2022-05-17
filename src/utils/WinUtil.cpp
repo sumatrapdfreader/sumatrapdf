@@ -1575,7 +1575,7 @@ ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     return {(u8*)data, (size_t)size};
 }
 
-ByteSlice GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
+ByteSlice GetStreamOrFileData(IStream* stream, const char* filePath) {
     if (stream) {
         return GetDataFromStream(stream, nullptr);
     }

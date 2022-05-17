@@ -71,6 +71,7 @@ bool SetZoneIdentifier(const char* path, int zoneId = URLZONE_INTERNET);
 bool DeleteZoneIdentifier(const char* path);
 
 bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite);
+bool Copy(const char* dst, const char* src, bool dontOverwrite);
 
 } // namespace file
 

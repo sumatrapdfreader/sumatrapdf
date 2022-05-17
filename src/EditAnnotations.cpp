@@ -346,7 +346,7 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     TabInfo* tab = ew->tab;
     EngineMupdf* engine = GetEngineMupdf(ew);
-    char* path = ToUtf8Temp(engine->FileName());
+    const char* path = engine->FileName();
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
         str::Str msg;
         // TODO: duplicated message
@@ -834,7 +834,6 @@ void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annota
         RebuildAnnotations(ew);
         UpdateUIForSelectedAnnotation(ew, 0);
         ew->listBox->SetCurrentSelection(0);
-
     }
     WindowInfoRerender(tab->win);
     ToolbarUpdateStateForWindow(tab->win, false);

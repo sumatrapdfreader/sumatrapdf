@@ -462,14 +462,13 @@ static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
     return res;
 }
 
-static fz_stream* FzOpenFile2(fz_context* ctx, const WCHAR* filePath) {
+static fz_stream* FzOpenFile2(fz_context* ctx, const char* path) {
     fz_stream* stm = nullptr;
-    char* pathA = ToUtf8Temp(filePath);
-    i64 fileSize = file::GetSize(pathA);
+    i64 fileSize = file::GetSize(path);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < kMaxMemoryFileSize) {
-        auto dataTmp = file::ReadFile(pathA);
+        auto dataTmp = file::ReadFile(path);
         if (dataTmp.empty()) {
             // failed to read
             return nullptr;
@@ -501,8 +500,9 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const WCHAR* filePath) {
         return stm;
     }
 
+    WCHAR* pathW = ToWstrTemp(path);
     fz_try(ctx) {
-        stm = fz_open_file_w(ctx, filePath);
+        stm = fz_open_file_w(ctx, pathW);
     }
     fz_catch(ctx) {
         stm = nullptr;
@@ -1486,7 +1486,7 @@ static void InstallFitzErrorCallbacks(fz_context* ctx) {
 
 EngineMupdf::EngineMupdf() {
     kind = kindEngineMupdf;
-    defaultExt = str::Dup(L".pdf");
+    defaultExt = str::Dup(".pdf");
     fileDPI = 72.0f;
 
     for (size_t i = 0; i < dimof(mutexes); i++) {
@@ -1542,7 +1542,6 @@ EngineMupdf::~EngineMupdf() {
     delete tocTree;
     DeleteVecMembers(pages);
 
-    str::Free(defaultExt);
     for (size_t i = 0; i < dimof(mutexes); i++) {
         LeaveCriticalSection(&mutexes[i]);
         DeleteCriticalSection(&mutexes[i]);
@@ -1583,7 +1582,7 @@ EngineBase* EngineMupdf::Clone() {
     }
 
     EngineMupdf* clone = new EngineMupdf();
-    bool ok = clone->Load(FileName(), pwdUI);
+    bool ok = clone->Load(FilePathTemp(), pwdUI);
     if (!ok) {
         delete clone;
         delete pwdUI;
@@ -1627,7 +1626,7 @@ ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
         return {};
     }
 
-    WCHAR* path = ToWstrTemp(fnCopy.Get());
+    char* path = fnCopy.Get();
     bool ok = Load(path, nullptr);
     if (!ok) {
         return {};
@@ -1664,7 +1663,7 @@ ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
     return res;
 }
 
-static ByteSlice TxtFileToHTML(const WCHAR* path) {
+static ByteSlice TxtFileToHTML(const char* path) {
     auto fd = file::ReadFile(path);
     if (fd.empty()) {
         return {};
@@ -1713,8 +1712,8 @@ static ByteSlice PalmDocToHTML(const char* path) {
     return {(u8*)res, html.size()};
 }
 
-bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
-    char* pathA = ToUtf8Temp(path);
+bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
+    const char* pathA = path;
     CrashIf(FileName() || _doc || !ctx);
     SetFileName(path);
 
@@ -1737,14 +1736,14 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
         str::Free(d);
-        WCHAR* nameHint = str::Join(path, L".html");
-        if (!LoadFromStream(file, ToUtf8Temp(nameHint), pwdUI)) {
+        char* nameHint = str::JoinTemp(path, ".html");
+        if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
         }
         return FinishLoading();
     }
 
-    if (str::EqI(ext, L".pdb")) {
+    if (str::EqI(ext, ".pdb")) {
         // synthesize a .html file from pdb file
         ByteSlice d = PalmDocToHTML(pathA);
         if (d.empty()) {
@@ -1754,8 +1753,8 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
         str::Free(d);
-        WCHAR* nameHint = str::Join(path, L".html");
-        if (!LoadFromStream(file, ToUtf8Temp(nameHint), pwdUI)) {
+        char* nameHint = str::Join(path, ".html");
+        if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
         }
         return FinishLoading();
@@ -1763,16 +1762,15 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
 
     fz_stream* file = nullptr;
 
-    WCHAR* fnCopyW = ToWstrTemp(fnCopy);
     fz_var(file);
     fz_try(ctx) {
-        file = FzOpenFile2(ctx, fnCopyW);
+        file = FzOpenFile2(ctx, fnCopy);
     }
     fz_catch(ctx) {
         file = nullptr;
     }
 
-    if (!LoadFromStream(file, ToUtf8Temp(FileName()), pwdUI)) {
+    if (!LoadFromStream(file, FileName(), pwdUI)) {
         return false;
     }
 
@@ -1803,7 +1801,7 @@ bool EngineMupdf::Load(const WCHAR* path, PasswordUI* pwdUI) {
     fz_drop_document(ctx, _doc);
     _doc = nullptr;
 
-    if (!LoadFromStream(file, ToUtf8Temp(FileName()), pwdUI)) {
+    if (!LoadFromStream(file, FileName(), pwdUI)) {
         return false;
     }
 
@@ -2684,13 +2682,11 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
 
 RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
-        char* name = str::Dup("");
-        const WCHAR* nameW = FileName();
-        if (nameW) {
-            name = strconv::WstrToUtf8(nameW);
+        const char* name = FileName();
+        if (!name) {
+            name = "";
         }
         logf("doc: %s, pageNo: %d, zoom: %.2f\n", name, pageNo, zoom);
-        free(name);
     }
     ReportIf(zoom <= 0);
     if (zoom <= 0) {
@@ -3265,18 +3261,17 @@ ByteSlice EngineMupdf::GetFileData() {
     return file::ReadFile(path);
 }
 
-bool EngineMupdf::SaveFileAs(const char* copyFileName) {
-    auto dstPath = ToWstrTemp(copyFileName);
+bool EngineMupdf::SaveFileAs(const char* dstPath) {
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.AsByteSlice());
         return ok;
     }
-    auto path = FileName();
-    if (!path) {
+    auto srcPath = FileName();
+    if (!srcPath) {
         return false;
     }
-    bool ok = file::Copy(dstPath, path, false);
+    bool ok = file::Copy(dstPath, srcPath, false);
     return ok;
 }
 
@@ -3316,7 +3311,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
     }
 
     auto timeStart = TimeGet();
-    char* currPath = ToUtf8Temp(engine->FileName());
+    const char* currPath = engine->FileName();
     if (str::IsEmpty(path)) {
         path = currPath;
     }
@@ -3508,8 +3503,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
         displayDPI = 96;
     }
     engine->displayDPI = displayDPI;
-    WCHAR* pathW = ToWstrTemp(path);
-    if (!engine->Load(pathW, pwdUI)) {
+    if (!engine->Load(path, pwdUI)) {
         delete engine;
         return nullptr;
     }

@@ -433,7 +433,7 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
     }
 
     IPageDestination* remoteLink = link;
-    WCHAR* fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
+    WCHAR* fullPath = ToWstrTemp(path::GetDirTemp(win->ctrl->GetFilePath()));
     fullPath = path::JoinTemp(fullPath, path);
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?

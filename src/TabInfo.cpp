@@ -122,10 +122,9 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
         return false;
     }
 
-    WCHAR dstFileName[MAX_PATH]{};
+    WCHAR dstFileName[MAX_PATH] = {0};
     if (fileNameA) {
-        WCHAR* fileName = ToWstrTemp(fileNameA);
-        str::BufSet(dstFileName, dimof(dstFileName), fileName);
+        str::BufSet(dstFileName, dimof(dstFileName), fileNameA);
     }
     // CrashIf(fileName && str::FindChar(fileName, '/'));
 

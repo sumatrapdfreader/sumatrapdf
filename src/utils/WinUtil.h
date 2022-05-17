@@ -139,7 +139,7 @@ HFONT GetDefaultGuiFontOfSize(int size);
 
 IStream* CreateStreamFromData(ByteSlice);
 ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt);
-ByteSlice GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
+ByteSlice GetStreamOrFileData(IStream* stream, const char* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
 uint GuessTextCodepage(const char* data, size_t len, uint defVal = CP_ACP);
 char* NormalizeString(const char* str, int /* NORM_FORM */ form);

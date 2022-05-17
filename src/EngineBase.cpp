@@ -307,7 +307,8 @@ RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectF* page
 }
 
 EngineBase::~EngineBase() {
-    free(decryptionKey);
+    str::Free(decryptionKey);
+    str::Free(defaultExt);
 }
 
 int EngineBase::PageCount() const {
@@ -372,13 +373,12 @@ char* EngineBase::GetDecryptionKey() const {
     return str::Dup(decryptionKey);
 }
 
-const WCHAR* EngineBase::FileName() const {
-    return fileNameBase.Get();
+const char* EngineBase::FileName() const {
+    return fileNameBase;
 }
 
 const char* EngineBase::FilePathTemp() const {
-    const WCHAR* s = FileName();
-    return ToUtf8Temp(s);
+    return fileNameBase;
 }
 
 RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
@@ -386,13 +386,8 @@ RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
     return nullptr;
 }
 
-void EngineBase::SetFileName(const WCHAR* s) {
-    fileNameBase.SetCopy(s);
-}
-
 void EngineBase::SetFileName(const char* s) {
-    WCHAR* ws = ToWstrTemp(s);
-    fileNameBase.SetCopy(ws);
+    fileNameBase.SetCopy(s);
 }
 
 PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {

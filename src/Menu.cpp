@@ -1807,7 +1807,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
 
-    const WCHAR* filePath = win->ctrl->GetFilePath();
+    const char* filePath = win->ctrl->GetFilePath();
     bool favsSupported = HasPermission(Perm::SavePreferences) && HasPermission(Perm::DiskAccess);
     if (favsSupported) {
         if (pageNoUnderCursor > 0) {

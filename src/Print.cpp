@@ -299,7 +299,7 @@ static bool PrintToDevice(const PrintData& pd) {
         // fall back to a generic "filename" instead of the more confusing temporary filename
         di.lpszDocName = fileName ? fileName.Get() : L"filename";
     } else {
-        di.lpszDocName = engine.FileName();
+        di.lpszDocName = ToWstrTemp(engine.FileName());
     }
 
     int current = 1, total = 0;

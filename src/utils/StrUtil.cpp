@@ -786,21 +786,6 @@ size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove) {
     return removed;
 }
 
-// Note: BufSet() should only be used when absolutely necessary (e.g. when
-// handling buffers in OS-defined structures)
-// returns the number of characters written (without the terminating \0)
-size_t BufSet(char* dst, size_t dstCchSize, const char* src) {
-    CrashAlwaysIf(0 == dstCchSize);
-
-    size_t srcCchSize = str::Len(src);
-    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
-
-    errno_t err = strncpy_s(dst, dstCchSize, src, toCopy);
-    CrashIf(err || dst[toCopy] != '\0');
-
-    return toCopy;
-}
-
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
 size_t BufAppend(char* dst, size_t dstCchSize, const char* s) {
@@ -2238,6 +2223,21 @@ size_t NormalizeWSInPlace(WCHAR* str) {
     return src - dst;
 }
 
+// Note: BufSet() should only be used when absolutely necessary (e.g. when
+// handling buffers in OS-defined structures)
+// returns the number of characters written (without the terminating \0)
+size_t BufSet(char* dst, size_t dstCchSize, const char* src) {
+    CrashAlwaysIf(0 == dstCchSize);
+
+    size_t srcCchSize = str::Len(src);
+    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
+
+    errno_t err = strncpy_s(dst, dstCchSize, src, toCopy);
+    CrashIf(err || dst[toCopy] != '\0');
+
+    return toCopy;
+}
+
 size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src) {
     CrashAlwaysIf(0 == dstCchSize);
 
@@ -2247,6 +2247,10 @@ size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src) {
     memset(dst, 0, dstCchSize * sizeof(WCHAR));
     memcpy(dst, src, toCopy * sizeof(WCHAR));
     return toCopy;
+}
+
+size_t BufSet(WCHAR* dst, size_t dstCchSize, const char* src) {
+    return BufSet(dst, dstCchSize, ToWstrTemp(src));
 }
 
 size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
@@ -2271,7 +2275,7 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
 WCHAR* FormatNumWithThousandSep(i64 num, LCID locale) {
     WCHAR thousandSep[4]{};
     if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep))) {
-        str::BufSet(thousandSep, dimof(thousandSep), L",");
+        str::BufSet(thousandSep, dimof(thousandSep), ",");
     }
     AutoFreeWstr buf(str::Format(L"%Iu", (size_t)num));
 
@@ -2302,7 +2306,7 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
     AutoFreeWstr tmp(FormatNumWithThousandSep(num / 100, locale));
     WCHAR decimal[4];
     if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal))) {
-        str::BufSet(decimal, dimof(decimal), L".");
+        str::BufSet(decimal, dimof(decimal), ".");
     }
 
     // always add between one and two decimals after the point

@@ -98,12 +98,12 @@ ChmModel::~ChmModel() {
     DeleteCriticalSection(&docAccess);
 }
 
-const WCHAR* ChmModel::GetFilePath() const {
+const char* ChmModel::GetFilePath() const {
     return fileName;
 }
 
-const WCHAR* ChmModel::GetDefaultFileExt() const {
-    return L".chm";
+const char* ChmModel::GetDefaultFileExt() const {
+    return ".chm";
 }
 
 int ChmModel::PageCount() const {
@@ -350,7 +350,7 @@ class ChmTocBuilder : public EbookTocVisitor {
 };
 
 bool ChmModel::Load(const char* fileName) {
-    this->fileName.SetCopy(ToWstrTemp(fileName));
+    this->fileName.SetCopy(fileName);
     doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return false;
@@ -590,7 +590,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
 }
 
 void ChmModel::GetDisplayState(FileState* fs) {
-    char* fileNameA = ToUtf8Temp(fileName);
+    char* fileNameA = fileName;
     if (!fs->filePath || !str::EqI(fs->filePath, fileNameA)) {
         SetFileStatePath(fs, fileNameA);
     }
@@ -684,8 +684,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
 // its first page to a hwnd specially created for it.
 void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked
-    char* fileNameA = ToUtf8Temp(fileName);
-    ChmFile* doc = ChmFile::CreateFromFile(fileNameA);
+    ChmFile* doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return;
     }

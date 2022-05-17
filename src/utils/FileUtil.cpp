@@ -672,6 +672,17 @@ bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite) {
     return true;
 }
 
+bool Copy(const char* dst, const char* src, bool dontOverwrite) {
+    WCHAR* dstW = ToWstrTemp(dst);
+    WCHAR* srcW = ToWstrTemp(src);
+    BOOL ok = CopyFileW(srcW, dstW, (BOOL)dontOverwrite);
+    if (!ok) {
+        LogLastError();
+        return false;
+    }
+    return true;
+}
+
 FILETIME GetModificationTime(const char* filePath) {
     FILETIME lastMod{};
     AutoCloseHandle h(OpenReadOnly(filePath));

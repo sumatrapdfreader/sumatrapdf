@@ -67,7 +67,7 @@ class EngineMulti : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
+    bool Load(const char* fileName, PasswordUI* pwdUI);
     bool LoadFromFiles(const char* dir, StrVec& files);
     void UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo);
 
@@ -85,7 +85,7 @@ EngineBase* EngineMulti::PageToEngine(int& pageNo) const {
 
 EngineMulti::EngineMulti() {
     kind = kindEngineMulti;
-    defaultExt = L""; // TODO: no extension, is it important?
+    defaultExt = str::Dup(""); // TODO: no extension, is it important?
     fileDPI = 72.0f;
 }
 
@@ -324,11 +324,11 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     }
 
     int nPages = engine->PageCount();
-    const WCHAR* title = path::GetBaseNameTemp(engine->FileName());
-    TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
+    const char* title = path::GetBaseNameTemp(engine->FileName());
+    TocItem* tocWrapper = new TocItem(tocFileRoot, ToWstrTemp(title), 0);
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocFileRoot;
-    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName());
+    char* filePath = (char*)engine->FileName();
     tocWrapper->engineFilePath = filePath;
     tocWrapper->nPages = nPages;
     tocWrapper->pageNo = 1;
@@ -372,8 +372,7 @@ bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
 
-    auto fileName = ToWstrTemp(dir);
-    SetFileName(fileName);
+    SetFileName(dir);
 
     return true;
 }

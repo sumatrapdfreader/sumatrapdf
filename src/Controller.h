@@ -73,8 +73,8 @@ struct Controller {
     virtual ~Controller() = default;
 
     // meta data
-    virtual const WCHAR* GetFilePath() const = 0;
-    virtual const WCHAR* GetDefaultFileExt() const = 0;
+    virtual const char* GetFilePath() const = 0;
+    virtual const char* GetDefaultFileExt() const = 0;
     virtual int PageCount() const = 0;
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
 

@@ -58,7 +58,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         FillRect(hDC, &rcClient, brushBg);
         LOGFONTW lf{};
         lf.lfHeight = -14;
-        str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), L"MS Shell Dlg");
+        str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), "MS Shell Dlg");
         HFONT hFont = CreateFontIndirectW(&lf);
         hFont = (HFONT)SelectObject(hDC, hFont);
         SetTextColor(hDC, 0x000000);

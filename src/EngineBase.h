@@ -398,7 +398,7 @@ class EngineBase {
     Kind kind = nullptr;
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
-    const WCHAR* defaultExt = nullptr;
+    const char* defaultExt = nullptr;
     PageLayout preferredLayout;
     float fileDPI = 96.0f;
     bool isImageCollection = false;
@@ -410,7 +410,7 @@ class EngineBase {
     int pageCount = -1;
 
     // TODO: migrate other engines to use this
-    AutoFreeWstr fileNameBase;
+    AutoFreeStr fileNameBase;
 
     virtual ~EngineBase();
     // creates a clone of this engine (e.g. for printing on a different thread)
@@ -512,7 +512,7 @@ class EngineBase {
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    const WCHAR* FileName() const;
+    const char* FileName() const;
     const char* FilePathTemp() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
@@ -522,7 +522,6 @@ class EngineBase {
     virtual bool HandleLink(IPageDestination*, ILinkHandler*);
 
     // protected:
-    void SetFileName(const WCHAR* s);
     void SetFileName(const char* s);
 };
 

@@ -98,7 +98,7 @@ class EngineMupdf : public EngineBase {
     // the same annotation, we should be back to 0
     bool modifiedAnnotations = false;
 
-    bool Load(const WCHAR* filePath, PasswordUI* pwdUI = nullptr);
+    bool Load(const char* filePath, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);

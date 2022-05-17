@@ -298,9 +298,8 @@ ByteSlice EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
-bool EngineImages::SaveFileAs(const char* copyFileName) {
-    const WCHAR* srcPath = FileName();
-    auto dstPath = ToWstrTemp(copyFileName);
+bool EngineImages::SaveFileAs(const char* dstPath) {
+    const char* srcPath = FileName();
     if (srcPath) {
         bool ok = file::Copy(dstPath, srcPath, false);
         if (ok) {
@@ -526,7 +525,7 @@ EngineBase* EngineImage::Clone() {
 
     EngineImage* clone = new EngineImage();
     clone->SetFileName(FileName());
-    clone->defaultExt = defaultExt;
+    clone->defaultExt = str::Dup(defaultExt);
     clone->fileExt = fileExt;
     clone->fileDPI = fileDPI;
     if (fileStream) {
@@ -538,22 +537,21 @@ EngineBase* EngineImage::Clone() {
     return clone;
 }
 
-bool EngineImage::LoadSingleFile(const char* pathA) {
-    if (!pathA) {
+bool EngineImage::LoadSingleFile(const char* path) {
+    if (!path) {
         return false;
     }
-    WCHAR* path = ToWstrTemp(pathA);
     SetFileName(path);
 
-    AutoFree data = file::ReadFile(pathA);
+    AutoFree data = file::ReadFile(path);
     const char* fileExtA = GfxFileExtFromData(data.AsByteSlice());
     if (fileExtA == nullptr) {
-        Kind kind = GuessFileTypeFromName(pathA);
+        Kind kind = GuessFileTypeFromName(path);
         fileExtA = GfxFileExtFromKind(kind);
     }
     CrashIf(fileExtA == nullptr);
     fileExt = fileExtA;
-    defaultExt = strconv::Utf8ToWstr(fileExtA); // TODO: leaks
+    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileExtA));
     image = BitmapFromData(data.AsByteSlice());
     return FinishLoading();
 }
@@ -573,8 +571,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     if (!fileExtA) {
         return false;
     }
-
-    defaultExt = strconv::Utf8ToWstr(fileExtA); // TOOD: leaks
+    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileExtA));
 
     AutoFree data = GetDataFromStream(stream, nullptr);
     image = BitmapFromData(data.AsByteSlice());
@@ -778,7 +775,7 @@ class EngineImageDir : public EngineImages {
     EngineImageDir() {
         fileDPI = 96.0f;
         kind = kindEngineImageDir;
-        defaultExt = L"";
+        str::ReplaceWithCopy(&defaultExt, "");
         // TODO: is there a better place to expose pageFileNames
         // than through page labels?
         hasPageLabels = true;
@@ -1115,7 +1112,7 @@ bool EngineCbx::FinishLoading() {
     fileDPI = 96.f;
 
     const char* ext = GetExtFromArchiveType(cbxFile);
-    defaultExt = strconv::Utf8ToWstr(ext); // TODO: leaks
+    str::ReplaceWithCopy(&defaultExt, ext);
 
     Vec<MultiFormatArchive::FileInfo*> pageFiles;
 

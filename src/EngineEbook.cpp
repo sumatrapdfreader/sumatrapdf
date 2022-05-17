@@ -228,12 +228,11 @@ ByteSlice EngineEbook::GetFileData() {
 }
 
 bool EngineEbook::SaveFileAs(const char* dstPath) {
-    const WCHAR* srcPath = FileName();
+    const char* srcPath = FileName();
     if (!srcPath) {
         return false;
     }
-    auto dstPathW = ToWstrTemp(dstPath);
-    auto res = file::Copy(dstPathW, srcPath, FALSE);
+    auto res = file::Copy(dstPath, srcPath, false);
     return res != 0;
 }
 
@@ -717,7 +716,7 @@ class EngineEpub : public EngineEbook {
 
 EngineEpub::EngineEpub() : EngineEbook() {
     kind = kindEngineEpub;
-    defaultExt = L".epub";
+    str::ReplaceWithCopy(&defaultExt, ".epub");
 }
 
 EngineEpub::~EngineEpub() {
@@ -791,12 +790,11 @@ bool EngineEpub::FinishLoading() {
 }
 
 ByteSlice EngineEpub::GetFileData() {
-    const WCHAR* fileName = FileName();
-    return GetStreamOrFileData(stream, fileName);
+    const char* path = FileName();
+    return GetStreamOrFileData(stream, path);
 }
 
-bool EngineEpub::SaveFileAs(const char* copyFileName) {
-    auto dstPath = ToWstrTemp(copyFileName);
+bool EngineEpub::SaveFileAs(const char* dstPath) {
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(dstPath, d.AsByteSlice());
@@ -804,11 +802,11 @@ bool EngineEpub::SaveFileAs(const char* copyFileName) {
             return true;
         }
     }
-    const WCHAR* fileName = FileName();
-    if (!fileName) {
+    const char* srcPath = FileName();
+    if (!srcPath) {
         return false;
     }
-    return file::Copy(dstPath, fileName, false);
+    return file::Copy(dstPath, srcPath, false);
 }
 
 TocTree* EngineEpub::GetToc() {
@@ -859,7 +857,7 @@ class EngineFb2 : public EngineEbook {
   public:
     EngineFb2() : EngineEbook() {
         kind = kindEngineFb2;
-        defaultExt = L".fb2";
+        str::ReplaceWithCopy(&defaultExt, ".fb2");
     }
     ~EngineFb2() override {
         delete tocTree;
@@ -917,7 +915,7 @@ bool EngineFb2::FinishLoading() {
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     if (doc->IsZipped()) {
-        defaultExt = L".fb2z";
+        str::ReplaceWithCopy(&defaultExt, ".fb2z");
     }
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
@@ -979,7 +977,7 @@ class EngineMobi : public EngineEbook {
   public:
     EngineMobi() : EngineEbook() {
         kind = kindEngineMobi;
-        defaultExt = L".mobi";
+        str::ReplaceWithCopy(&defaultExt, ".mobi");
     }
     ~EngineMobi() override {
         delete tocTree;
@@ -1131,7 +1129,7 @@ class EnginePdb : public EngineEbook {
   public:
     EnginePdb() : EngineEbook() {
         kind = kindEnginePdb;
-        defaultExt = L".pdb";
+        str::ReplaceWithCopy(&defaultExt, ".pdb");
     }
     ~EnginePdb() override {
         delete tocTree;
@@ -1344,7 +1342,7 @@ class EngineChm : public EngineEbook {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
-        defaultExt = L".chm";
+        str::ReplaceWithCopy(&defaultExt, ".chm");
     }
     ~EngineChm() override {
         delete dataCache;
@@ -1596,7 +1594,7 @@ class EngineHtml : public EngineEbook {
     EngineHtml() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        defaultExt = L".html";
+        str::ReplaceWithCopy(&defaultExt, ".html");
     }
     ~EngineHtml() override {
         delete doc;
@@ -1698,7 +1696,7 @@ class EngineTxt : public EngineEbook {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        defaultExt = L".txt";
+        str::ReplaceWithCopy(&defaultExt, ".txt");
     }
     ~EngineTxt() override {
         delete tocTree;
@@ -1734,8 +1732,7 @@ bool EngineTxt::Load(const char* fileName) {
 
     SetFileName(fileName);
 
-    // TODO: leaks
-    defaultExt = strconv::Utf8ToWstr(path::GetExtTemp(fileName));
+    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileName));
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc) {

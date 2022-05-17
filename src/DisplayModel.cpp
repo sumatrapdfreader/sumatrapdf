@@ -81,11 +81,11 @@ bool ScrollState::operator==(const ScrollState& other) const {
     return page == other.page && x == other.x && y == other.y;
 }
 
-const WCHAR* DisplayModel::GetFilePath() const {
+const char* DisplayModel::GetFilePath() const {
     return engine->FileName();
 }
 
-const WCHAR* DisplayModel::GetDefaultFileExt() const {
+const char* DisplayModel::GetDefaultFileExt() const {
     return engine->defaultExt;
 }
 
@@ -216,7 +216,7 @@ bool DisplayModel::GetPresentationMode() const {
 }
 
 void DisplayModel::GetDisplayState(FileState* fs) {
-    char* fileNameA = ToUtf8Temp(engine->FileName());
+    const char* fileNameA = engine->FileName();
     SetFileStatePath(fs, fileNameA);
 
     fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
@@ -963,7 +963,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
     if (zoom > 0) {
         return zoom;
     }
-    char* name = ToUtf8Temp(dm->GetFilePath());
+    const char* name = dm->GetFilePath();
     logf(
         "getZoomSafe: invalid zoom in doc: %s\npageNo: %d\npageInfo->zoomReal\n%.2f\ndm->zoomReal: %.2f\n"
         "dm->zoomVirtual: %.2f\n",

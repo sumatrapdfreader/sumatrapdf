@@ -241,7 +241,7 @@ class EnginePs : public EngineBase {
   public:
     EnginePs() {
         kind = kindEnginePostScript;
-        defaultExt = L".ps";
+        defaultExt = str::Dup(".ps");
     }
 
     ~EnginePs() override {
@@ -278,16 +278,16 @@ class EnginePs : public EngineBase {
     }
 
     ByteSlice GetFileData() override {
-        const WCHAR* fileName = FileName();
-        return file::ReadFile(fileName);
+        const char* path = FileName();
+        return file::ReadFile(path);
     }
 
-    bool SaveFileAs(const char* copyFileName) override {
-        if (!FileName()) {
+    bool SaveFileAs(const char* dstPath) override {
+        const char* srcPath = FileName();
+        if (!srcPath) {
             return false;
         }
-        auto dstPath = ToWstrTemp(copyFileName);
-        return file::Copy(dstPath, FileName(), false);
+        return file::Copy(dstPath, srcPath, false);
     }
 
     bool SaveFileAsPDF(const char* pdfFileName) override {
@@ -355,8 +355,8 @@ class EnginePs : public EngineBase {
             pdfEngine = ps2pdf(fileName);
         }
 
-        if (str::EndsWithI(FileName(), L".eps")) {
-            defaultExt = L".eps";
+        if (str::EndsWithI(FileName(), ".eps")) {
+            defaultExt = str::Dup(".eps");
         }
 
         if (!pdfEngine) {

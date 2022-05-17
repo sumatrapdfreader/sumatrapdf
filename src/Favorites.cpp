@@ -184,6 +184,10 @@ bool Favorites::IsPageInFavorites(const WCHAR* filePath, int pageNo) {
     return false;
 }
 
+bool Favorites::IsPageInFavorites(const char* path, int pageNo) {
+    return IsPageInFavorites(ToWstrTemp(path), pageNo);
+}
+
 static Favorite* FindByPage(FileState* ds, int pageNo, const WCHAR* pageLabelW = nullptr) {
     if (!ds || !ds->favorites) {
         return nullptr;
@@ -425,6 +429,10 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
     }
 }
 
+static void AppendFavMenus(HMENU m, const char* path) {
+    AppendFavMenus(m, ToWstrTemp(path));
+}
+
 // Called when a user opens "Favorites" top-level menu. We need to construct
 // the menu:
 // - disable add/remove menu items if no document is opened
@@ -436,7 +444,7 @@ void RebuildFavMenu(WindowInfo* win, HMENU menu) {
     if (!win->IsDocLoaded()) {
         win::menu::SetEnabled(menu, CmdFavoriteAdd, false);
         win::menu::SetEnabled(menu, CmdFavoriteDel, false);
-        AppendFavMenus(menu, nullptr);
+        AppendFavMenus(menu, (const char*)nullptr);
     } else {
         AutoFreeWstr label(win->ctrl->GetPageLabel(win->currPageNo));
         bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
@@ -715,6 +723,10 @@ void DelFavorite(const WCHAR* filePath, int pageNo) {
     gFavorites.Remove(filePath, pageNo);
     UpdateFavoritesTreeForAllWindows();
     prefs::Save();
+}
+
+void DelFavorite(const char* path, int pageNo) {
+    DelFavorite(ToWstrTemp(path), pageNo);
 }
 
 void RememberFavTreeExpansionState(WindowInfo* win) {

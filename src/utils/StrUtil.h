@@ -137,6 +137,7 @@ size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 
 size_t BufSet(char* dst, size_t dstCchSize, const char* src);
 size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src);
+size_t BufSet(WCHAR* dst, size_t dstCchSize, const char* src);
 size_t BufAppend(char* dst, size_t dstCchSize, const char* s);
 size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s);
 

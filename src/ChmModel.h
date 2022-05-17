@@ -12,8 +12,8 @@ struct ChmModel : Controller {
     ~ChmModel() override;
 
     // meta data
-    const WCHAR* GetFilePath() const override;
-    const WCHAR* GetDefaultFileExt() const override;
+    const char* GetFilePath() const override;
+    const char* GetDefaultFileExt() const override;
     int PageCount() const override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
@@ -69,7 +69,7 @@ struct ChmModel : Controller {
 
     static bool IsSupportedFileType(Kind);
 
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     ChmFile* doc = nullptr;
     TocTree* tocTree = nullptr;
     CRITICAL_SECTION docAccess;
