@@ -54,4 +54,6 @@
 #define PUBLISHER_STR      "Krzysztof Kowalczyk"
 
 #define APP_NAME_STR        "SumatraPDF"
+
 constexpr const WCHAR* kAppName = L"SumatraPDF";
+constexpr const char* kAppNameA = "SumatraPDF";

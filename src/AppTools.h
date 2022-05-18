@@ -7,6 +7,7 @@ bool IsDllBuild();
 
 WCHAR* AppGenDataFilename(const WCHAR* fileName);
 char* AppGenDataFilenameTemp(const char* fileName);
+
 void SetAppDataPath(const char* path);
 
 // bool IsExeAssociatedWithPdfExtension();

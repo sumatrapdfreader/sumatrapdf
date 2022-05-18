@@ -59,12 +59,12 @@ static int cmpFloat(const void* a, const void* b) {
 
 namespace prefs {
 
-const WCHAR* GetSettingsFileNameTemp() {
-    return L"SumatraPDF-settings.txt";
+char* GetSettingsFileNameTemp() {
+    return str::DupTemp("SumatraPDF-settings.txt");
 }
 
-WCHAR* GetSettingsPath() {
-    return AppGenDataFilename(GetSettingsFileNameTemp());
+char* GetSettingsPathTemp() {
+    return AppGenDataFilenameTemp(GetSettingsFileNameTemp());
 }
 
 static void setMin(int& i, int minVal) {
@@ -92,8 +92,8 @@ bool Load() {
         logf("prefs::Load() took %.2f ms\n", dur);
     };
 
-    AutoFreeWstr path = GetSettingsPath();
-    AutoFree prefsData = file::ReadFile(path.Get());
+    char* path = GetSettingsPathTemp();
+    AutoFree prefsData = file::ReadFile(path);
 
     gGlobalPrefs = NewGlobalPrefs(prefsData.data);
     CrashAlwaysIf(!gGlobalPrefs);
@@ -112,8 +112,7 @@ bool Load() {
         // guess the ui language on first start
         str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
     }
-    char* pathA = ToUtf8Temp(path);
-    gprefs->lastPrefUpdate = file::GetModificationTime(pathA);
+    gprefs->lastPrefUpdate = file::GetModificationTime(path);
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
     gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, kZoomActualSize);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
@@ -173,7 +172,7 @@ bool Load() {
     //    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
-    if (!file::Exists(path.Get())) {
+    if (!file::Exists(path)) {
         Save();
     }
     return true;
@@ -246,12 +245,12 @@ bool Save() {
     str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
 
-    AutoFreeWstr path = GetSettingsPath();
-    ReportIf(!path.data);
-    if (!path.data) {
+    char* path = GetSettingsPathTemp();
+    ReportIf(!path);
+    if (!path) {
         return false;
     }
-    ByteSlice prevPrefs = file::ReadFile(path.data);
+    ByteSlice prevPrefs = file::ReadFile(path);
     const char* prevPrefsData = (char*)prevPrefs.data();
     ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {
@@ -268,31 +267,29 @@ bool Save() {
         return true;
     }
 
-    bool ok = file::WriteFile(path.Get(), prefs);
+    bool ok = file::WriteFile(path, prefs);
     if (!ok) {
         return false;
     }
-    char* pathA = ToUtf8Temp(path);
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(pathA);
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     return true;
 }
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
 bool Reload() {
-    AutoFreeWstr path = GetSettingsPath();
+    char* path = GetSettingsPathTemp();
     if (!file::Exists(path)) {
         return false;
     }
-    char* pathA = ToUtf8Temp(path);
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental dataloss
     int tryAgainCount = 5;
-    HANDLE h = file::OpenReadOnly(pathA);
+    HANDLE h = file::OpenReadOnly(path);
     while (INVALID_HANDLE_VALUE == h && tryAgainCount-- > 0) {
         Sleep(200);
-        h = file::OpenReadOnly(pathA);
+        h = file::OpenReadOnly(path);
     }
     if (INVALID_HANDLE_VALUE == h) {
         // prefer not reloading to resetting all settings
@@ -301,7 +298,7 @@ bool Reload() {
 
     AutoCloseHandle hScope(h);
 
-    FILETIME time = file::GetModificationTime(pathA);
+    FILETIME time = file::GetModificationTime(path);
     if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
         return true;
     }
@@ -359,8 +356,9 @@ void RegisterForFileChanges() {
     }
 
     CrashIf(gWatchedSettingsFile); // only call me once
-    AutoFreeWstr path = GetSettingsPath();
-    gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
+    char* path = GetSettingsPathTemp();
+    WCHAR* pathW = ToWstrTemp(path);
+    gWatchedSettingsFile = FileWatcherSubscribe(pathW, schedulePrefsReload);
 }
 
 void UnregisterForFileChanges() {

@@ -3273,10 +3273,10 @@ static void OnMenuAdvancedOptions() {
         return;
     }
 
-    AutoFreeWstr path = prefs::GetSettingsPath();
+    char* path = prefs::GetSettingsPathTemp();
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
-    LaunchFile(path.Get(), nullptr, L"open");
+    LaunchFile(path, nullptr, "open");
 }
 
 static void OnMenuOptions(HWND hwnd) {

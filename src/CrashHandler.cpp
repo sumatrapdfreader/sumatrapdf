@@ -703,7 +703,7 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     gCrashHandlerAllocator = new HeapAllocator();
     gSymbolsUrl = BuildSymbolsUrl();
 
-    AutoFreeWstr path = prefs::GetSettingsPath();
+    char* path = prefs::GetSettingsPathTemp();
     // can be empty on first run but that's fine because then we know it has default values
     ByteSlice prefsData = file::ReadFile(path);
     if (!prefsData.empty()) {

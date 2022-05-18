@@ -162,24 +162,24 @@ static void CopySettingsFile() {
     // copy the settings from old directory
 
     // seen a crash when running elevated
-    TempWstr srcDir = GetSpecialFolderTemp(CSIDL_APPDATA, false);
+    char* srcDir = GetSpecialFolderATemp(CSIDL_APPDATA, false);
     if (str::IsEmpty(srcDir)) {
         return;
     }
-    TempWstr dstDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
+    char* dstDir = GetSpecialFolderATemp(CSIDL_LOCAL_APPDATA, false);
     if (str::IsEmpty(dstDir)) {
         return;
     }
 
-    const WCHAR* prefsFileName = prefs::GetSettingsFileNameTemp();
-    AutoFreeWstr srcPath = path::Join(srcDir, kAppName, prefsFileName);
-    AutoFreeWstr dstPath = path::Join(dstDir, kAppName, prefsFileName);
+    const char* prefsFileName = prefs::GetSettingsFileNameTemp();
+    char* srcPath = path::JoinTemp(srcDir, kAppNameA, prefsFileName);
+    char* dstPath = path::JoinTemp(dstDir, kAppNameA, prefsFileName);
 
     // don't over-write
     bool failIfExists = true;
     // don't care if it fails or not
-    file::Copy(dstPath.Get(), srcPath.Get(), failIfExists);
-    logf(L"  copied '%s' to '%s'\n", srcPath.Get(), dstPath.Get());
+    file::Copy(dstPath, srcPath, failIfExists);
+    logf("  copied '%s' to '%s'\n", srcPath, dstPath);
 }
 
 static bool CreateAppShortcut(int csidl) {
