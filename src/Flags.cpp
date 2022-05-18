@@ -272,7 +272,6 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
     CmdLineArgsIter args(cmdLine);
 
     const char* param = nullptr;
-    char* paramA = nullptr;
     int paramInt = 0;
 
     for (const char* argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
@@ -426,7 +425,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
 
         if (arg == Arg::PrintTo) {
-            i.printerName = str::Dup(paramA);
+            i.printerName = str::Dup(param);
             i.exitWhenDone = true;
             continue;
         }
@@ -434,7 +433,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
-            i.printSettings = str::Dup(paramA);
+            i.printSettings = str::Dup(param);
             str::RemoveCharsInPlace(i.printSettings, " ");
             str::TransCharsInPlace(i.printSettings, ";", ",");
             continue;
@@ -453,7 +452,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
-            i.destName = str::Dup(paramA);
+            i.destName = str::Dup(param);
             continue;
         }
         if (arg == Arg::Page) {
@@ -461,7 +460,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::View) {
-            ParseViewMode(&i.startView, paramA);
+            ParseViewMode(&i.startView, param);
             continue;
         }
         if (arg == Arg::Zoom) {
@@ -473,7 +472,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::AppData) {
-            i.appdataDir = str::Dup(paramA);
+            i.appdataDir = str::Dup(param);
             continue;
         }
         if (arg == Arg::Plugin) {
@@ -482,7 +481,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
-                i.pluginURL = str::Dup(paramA);
+                i.pluginURL = str::Dup(param);
                 i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam());
             } else {
                 i.hwndPluginParent = (HWND)(INT_PTR)atol(param);
@@ -497,7 +496,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
-            i.stressTestPath = str::Dup(paramA);
+            i.stressTestPath = str::Dup(param);
             int num;
             const char* s = args.AdditionalParam(1);
             if (s && str::FindChar(s, '*')) {
@@ -530,7 +529,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::Bench) {
-            i.pathsToBenchmark.Append(paramA);
+            i.pathsToBenchmark.Append(param);
             const char* s = args.AdditionalParam(1);
             if (s && IsBenchPagesInfo(s)) {
                 s = args.EatParam();
