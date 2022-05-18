@@ -35,6 +35,10 @@ static bool IsSpecialDir(const WCHAR* s) {
     return str::Eq(s, L".") || str::Eq(s, L"..");
 }
 
+static bool IsSpecialDir(const char* s) {
+    return str::Eq(s, ".") || str::Eq(s, "..");
+}
+
 bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const char*)>& cb) {
     auto dirW = ToWstrTemp(dir);
     WCHAR* pattern = path::JoinTemp(dirW, L"*");
@@ -93,8 +97,8 @@ bool DirTraverse(const WCHAR* dir, bool recurse, const std::function<bool(const 
 bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles) {
     WCHAR* dirPath = path::GetDirTemp(pattern);
 
-    WIN32_FIND_DATA fdata{};
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    WIN32_FIND_DATAW fdata{};
+    HANDLE hfind = FindFirstFileW(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
         return false;
     }
@@ -113,11 +117,37 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsIn
     return paths.size() > 0;
 }
 
+bool CollectPathsFromDirectory(const char* patternA, StrVec& paths, bool dirsInsteadOfFiles) {
+    char* dir = path::GetDirTemp(patternA);
+
+    WIN32_FIND_DATAW fdata{};
+    WCHAR* pattern = ToWstr(patternA);
+    HANDLE hfind = FindFirstFileW(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind) {
+        return false;
+    }
+
+    do {
+        bool append = !dirsInsteadOfFiles;
+        char* name = ToUtf8Temp(fdata.cFileName);
+        // TODO: don't append FILE_ATTRIBUTE_DEVICE etc.
+        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            append = dirsInsteadOfFiles && !IsSpecialDir(name);
+        }
+        if (append) {
+            char* path = path::JoinTemp(dir, name);
+            paths.Append(path);
+        }
+    } while (FindNextFileW(hfind, &fdata));
+    FindClose(hfind);
+    return paths.size() > 0;
+}
+
 bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::function<bool(const char*)>& fileMatchesFn) {
     auto dirW = ToWstrTemp(dir);
     WCHAR* pattern = path::JoinTemp(dirW, L"*");
 
-    WIN32_FIND_DATA fdata;
+    WIN32_FIND_DATAW fdata;
     HANDLE hfind = FindFirstFileW(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
         return false;

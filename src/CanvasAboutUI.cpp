@@ -68,12 +68,11 @@ static bool IsLink(const char* url) {
 }
 
 static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
-    SetFocus(win->hwndFrame);
-
     char* url = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
     char* prevUrl = win->urlOnLastButtonDown;
+    bool clickedURL = url || !str::Eq(url, prevUrl);
     win->urlOnLastButtonDown.Set(nullptr);
-    if (!url || url != prevUrl) {
+    if (!clickedURL) {
         return;
     }
     if (str::Eq(url, kLinkOpenFile)) {
@@ -87,10 +86,11 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     } else if (IsLink(url)) {
         SumatraLaunchBrowser(url);
     } else {
-        // assume it's a document
+        // assume it's a thumbnail of a document
         LoadArgs args(url, win);
         LoadDocument(args);
     }
+    // SetFocus(win->hwndFrame);
 }
 
 static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM) {

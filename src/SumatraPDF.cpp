@@ -334,14 +334,13 @@ void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepCont
     UpdateToolbarState(win);
 }
 
-TabInfo* FindTabByFile(const WCHAR* file) {
-    AutoFreeWstr normFile(path::Normalize(file));
-    char* normFileA = ToUtf8Temp(normFile);
+TabInfo* FindTabByFile(const char* file) {
+    char* normFile = path::NormalizeTemp(file);
 
     for (WindowInfo* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             char* fp = tab->filePath;
-            if (!fp || !path::IsSame(fp, normFileA)) {
+            if (!fp || !path::IsSame(fp, normFile)) {
                 continue;
             }
             return tab;
@@ -363,7 +362,7 @@ void SelectTabInWindow(TabInfo* tab) {
 }
 
 // Find the first window showing a given PDF file
-WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
+WindowInfo* FindWindowInfoByFile(const char* file, bool focusTab) {
     TabInfo* tab = FindTabByFile(file);
     if (!tab) {
         return nullptr;
@@ -375,19 +374,20 @@ WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
 }
 
 // Find the first window that has been produced from <file>
-WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab) {
+WindowInfo* FindWindowInfoBySyncFile(const char* pathA, bool focusTab) {
+    WCHAR* path = ToWstrTemp(pathA);
     for (WindowInfo* win : gWindows) {
         Vec<Rect> rects;
         uint page;
         auto dm = win->AsFixed();
-        if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
+        if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
         if (focusTab && win->tabs.size() > 1) {
             // bring a background tab to the foreground
             for (TabInfo* tab : win->tabs) {
                 if (tab != win->currentTab && tab->AsFixed() && tab->AsFixed()->pdfSync &&
-                    tab->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
+                    tab->AsFixed()->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
                     TabsSelect(win, win->tabs.Find(tab));
                     return win;
                 }
@@ -1022,7 +1022,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
     if (!fs && gGlobalPrefs->rememberStatePerDocument) {
-        char* fn = ToUtf8Temp(args.fileName);
+        const char* fn = args.FilePath();
         fs = gFileHistory.Find(fn, nullptr);
         if (fs) {
             if (fs->windowPos.IsEmpty()) {
@@ -1039,7 +1039,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     ScrollState ss(1, -1, -1);
     int rotation = 0;
-    char* path = ToUtf8Temp(args.fileName);
+    const char* path = args.FilePath();
     bool showToc = showTocByDefault(path);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState;
     int showType = SW_NORMAL;
@@ -1146,7 +1146,8 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
 
     if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEngineMupdf) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
-        int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
+        WCHAR* pathW = ToWstrTemp(args.FilePath());
+        int res = Synchronizer::Create(pathW, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res) {
             gGlobalPrefs->enableTeXEnhancements = true;
@@ -1562,10 +1563,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     CrashAlwaysIf(gCrashOnOpen);
 
     int threadID = (int)GetCurrentThreadId();
-    AutoFreeWstr fullPathW(path::Normalize(args.fileName));
+    char* fullPath = path::NormalizeTemp(args.FilePath());
     WindowInfo* win = args.win;
-
-    char* fullPath = ToUtf8Temp(fullPathW);
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
@@ -1574,7 +1573,6 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         char* adjPath = str::DupTemp(fullPath);
         if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
-            fullPathW.Set(ToWstrTemp(adjPath));
             fullPath = adjPath;
             failEarly = false;
         }
@@ -1583,7 +1581,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
     if (failEarly) {
-        AutoFreeWstr msg(str::Format(_TR("File %s not found"), fullPathW.Get()));
+        AutoFreeStr msg(str::Format(_TRA("File %s not found"), fullPath));
         win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
@@ -1651,7 +1649,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (!ctrl) {
         // TODO: same message as in Canvas.cpp to not introduce
         // new translation. Find a better message e.g. why failed.
-        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPathW.Get());
+        char* msg = str::Format(_TRA("Error loading %s"), fullPath);
         win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         str::Free(msg);
         ShowWindow(win->hwndFrame, SW_SHOW);
@@ -1700,7 +1698,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 #endif
     }
 
-    args.fileName = fullPathW;
+    args.SetFilePath(fullPath);
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
     LoadDocIntoCurrentTab(args, ctrl, nullptr);
@@ -1734,7 +1732,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
-        CrashIf(!str::Eq(fullPathW, pathW));
+        CrashIf(!str::Eq(fullPath, path));
         FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
@@ -2118,7 +2116,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     // TODO: this should be 'duplicate FileInHistory"
     RenameFileInHistory(srcFileName, ToUtf8(newPath));
 
-    LoadArgs args(dstFileName, win);
+    LoadArgs args(dstFilePath, win);
     args.forceReuse = true;
     LoadDocument(args);
 
@@ -2729,7 +2727,8 @@ static void OnMenuRenameFile(WindowInfo* win) {
     AutoFreeWstr newPath(path::Normalize(dstFileName));
     RenameFileInHistory(srcFileName, ToUtf8(newPath));
 
-    LoadArgs args(dstFileName, win);
+    char* path = ToUtf8Temp(dstFileName);
+    LoadArgs args(path, win);
     args.forceReuse = true;
     LoadDocument(args);
 }
@@ -2847,7 +2846,7 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
         return;
     }
     TabInfo* tab = win->currentTab;
-    WCHAR* path = ToWstrTemp(tab->filePath);
+    char* path = tab->filePath;
     CrashIf(!path);
     if (!path) {
         return;
@@ -2859,7 +2858,6 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
 
     // TODO: should copy the display state from current file
     LoadArgs args(path, newWin);
-    args.fileName = path;
     args.showWin = true;
     args.noPlaceWindow = true;
     LoadDocument(args);
@@ -2908,7 +2906,7 @@ static void OnMenuOpenFolder(WindowInfo* win) {
     if (!engine) {
         return;
     }
-    LoadArgs args(dirW, win);
+    LoadArgs args(dir, win);
     args.engine = engine;
     LoadDocument(args);
 }
@@ -2990,23 +2988,31 @@ static void OnMenuOpen(WindowInfo* win) {
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
-    AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
-    ofn.lpstrFile = file;
 
-    if (!GetOpenFileNameW(&ofn)) {
-        return;
+    char* fileName = nullptr;
+    char* pstrFile = nullptr;
+    char* dir = nullptr;
+    {
+        AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
+        ofn.lpstrFile = file;
+
+        if (!GetOpenFileNameW(&ofn)) {
+            return;
+        }
+        pstrFile = ToUtf8Temp(ofn.lpstrFile);
+        dir = pstrFile;
+        fileName = pstrFile + ofn.nFileOffset;
     }
 
-    WCHAR* fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without nullptr separator
-        LoadArgs args(ofn.lpstrFile, win);
+        LoadArgs args(fileName, win);
         LoadDocument(args);
         return;
     }
 
     while (*fileName) {
-        AutoFreeWstr filePath = path::Join(ofn.lpstrFile, fileName);
+        char* filePath = path::JoinTemp(dir, fileName);
         if (filePath) {
             LoadArgs args(filePath, win);
             LoadDocument(args);
@@ -3025,31 +3031,30 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     }
 
     TabInfo* tab = win->currentTab;
-    WStrVec files;
-    WCHAR* pathW = ToWstrTemp(tab->filePath);
-    WCHAR* pattern = path::GetDirTemp(pathW);
+    StrVec files;
+    char* path = tab->filePath;
+    char* pattern = path::GetDirTemp(path);
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
-    pattern = path::JoinTemp(pattern, L"*");
+    pattern = path::JoinTemp(pattern, "*");
     if (!CollectPathsFromDirectory(pattern, files)) {
         return;
     }
 
     // remove unsupported files that have never been successfully loaded
     for (size_t i = files.size(); i > 0; i--) {
-        WCHAR* path = files.at(i - 1);
-        char* pathA = ToUtf8Temp(path);
-        Kind kind = GuessFileTypeFromName(pathA);
-        if (!IsSupportedFileType(kind, true) && !DocIsSupportedFileType(kind) && !gFileHistory.Find(pathA, nullptr)) {
-            free(files.PopAt(i - 1));
+        char* pathTmp = files[i - 1];
+        Kind kind = GuessFileTypeFromName(path);
+        if (!IsSupportedFileType(kind, true) && !DocIsSupportedFileType(kind) && !gFileHistory.Find(pathTmp, nullptr)) {
+            files.RemoveAt(i - 1);
         }
     }
 
-    if (!files.Contains(pathW)) {
-        files.Append(pathW);
+    if (!files.Contains(path)) {
+        files.Append(path);
     }
     files.SortNatural();
 
-    int index = files.Find(pathW);
+    int index = files.Find(path);
     if (forward) {
         index = (index + 1) % (int)files.size();
     } else {

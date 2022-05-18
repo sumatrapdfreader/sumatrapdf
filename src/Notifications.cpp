@@ -417,8 +417,8 @@ NotificationWnd* Notifications::Show(HWND hwnd, const WCHAR* msg, NotificationOp
     return wnd;
 }
 
-NotificationWnd* Notifications::Show(HWND hwnd, const char* sv, NotificationOptions opts, Kind groupId) {
-    WCHAR* msg = ToWstrTemp(sv);
+NotificationWnd* Notifications::Show(HWND hwnd, const char* s, NotificationOptions opts, Kind groupId) {
+    WCHAR* msg = ToWstrTemp(s);
     return Show(hwnd, msg, opts, groupId);
 }
 

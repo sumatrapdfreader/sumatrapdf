@@ -626,18 +626,20 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
 
     WindowInfo* win = nullptr;
     if (pdfFile) {
+        char* path = ToUtf8Temp(pdfFile);
         // check if the PDF is already opened
-        win = FindWindowInfoByFile(pdfFile, !newWindow);
+        win = FindWindowInfoByFile(path, !newWindow);
         // if not then open it
         if (newWindow || !win) {
-            LoadArgs args(pdfFile, !newWindow ? win : nullptr);
+            LoadArgs args(path, !newWindow ? win : nullptr);
             win = LoadDocument(args);
         } else if (!win->IsDocLoaded()) {
             ReloadDocument(win, false);
         }
     } else {
         // check if any opened PDF has sync information for the source file
-        win = FindWindowInfoBySyncFile(srcFile, true);
+        char* path = ToUtf8Temp(srcFile);
+        win = FindWindowInfoBySyncFile(path, true);
         if (win && newWindow) {
             LoadArgs args(win->currentTab->filePath, nullptr);
             win = LoadDocument(args);
@@ -684,7 +686,8 @@ static const WCHAR* HandleSearchCmd(const WCHAR* cmd, DDEACK& ack) {
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
+    char* path = ToUtf8Temp(pdfFile);
+    WindowInfo* win = FindWindowInfoByFile(path, true);
     if (!win) {
         return next;
     }
@@ -733,8 +736,9 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         return next;
     }
 
+    char* path = ToUtf8Temp(pdfFile);
     if (win == nullptr) {
-        win = FindWindowInfoByFile(pdfFile, focusTab);
+        win = FindWindowInfoByFile(path, focusTab);
     }
     if (newWindow || !win) {
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2315
@@ -742,7 +746,7 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         if (win == nullptr) {
             win = FindWindowInfoByHwnd(gLastActiveFrameHwnd);
         }
-        LoadArgs args(pdfFile, win);
+        LoadArgs args(path, win);
         win = LoadDocument(args);
     } else if (!win->IsDocLoaded()) {
         ReloadDocument(win, false);
@@ -782,7 +786,8 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
+    char* path = ToUtf8Temp(pdfFile);
+    WindowInfo* win = FindWindowInfoByFile(path, true);
     if (!win) {
         return next;
     }
@@ -819,7 +824,8 @@ static const WCHAR* HandlePageCmd(__unused HWND hwnd, const WCHAR* cmd, DDEACK& 
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
+    char* path = ToUtf8Temp(pdfFile);
+    WindowInfo* win = FindWindowInfoByFile(path, true);
     if (!win) {
         return next;
     }
@@ -862,7 +868,8 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
+    char* path = ToUtf8Temp(pdfFile);
+    WindowInfo* win = FindWindowInfoByFile(path, true);
     if (!win) {
         return next;
     }

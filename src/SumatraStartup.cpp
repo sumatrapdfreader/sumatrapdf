@@ -244,7 +244,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
 
-static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& flags, bool isFirstWin) {
+static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
     WindowInfo* win = LoadDocument(args);
@@ -1252,14 +1252,15 @@ ContinueOpenWindow:
 
     for (const WCHAR* filePath : flags.fileNames) {
         if (restoreSession) {
-            auto tab = FindTabByFile(filePath);
+            char* path = ToUtf8Temp(filePath);
+            auto tab = FindTabByFile(path);
             if (tab) {
                 tabToSelect = tab;
                 continue;
             }
         }
         auto path = ToUtf8Temp(filePath);
-        win = LoadOnStartup(filePath, flags, !win);
+        win = LoadOnStartup(path, flags, !win);
         if (!win) {
             retCode++;
             continue;
@@ -1274,11 +1275,11 @@ ContinueOpenWindow:
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
         for (auto&& filePath : gDdeOpenOnStartup) {
-            if (restoreSession && FindWindowInfoByFile(filePath, false)) {
+            auto path = ToUtf8Temp(filePath);
+            if (restoreSession && FindWindowInfoByFile(path, false)) {
                 continue;
             }
-            auto path = ToUtf8Temp(filePath);
-            win = LoadOnStartup(filePath, flags, !win);
+            win = LoadOnStartup(path, flags, !win);
             if (!win) {
                 retCode++;
             }

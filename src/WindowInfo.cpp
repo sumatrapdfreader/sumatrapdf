@@ -421,20 +421,20 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
     }
 
     // TODO: make it a function
-    AutoFreeWstr path = str::Replace(pathOrig, L"/", L"\\");
-    if (str::StartsWith(path, L".\\")) {
-        path.Set(str::Dup(path + 2));
+    AutoFreeWstr pathW = str::Replace(pathOrig, L"/", L"\\");
+    if (str::StartsWith(pathW, L".\\")) {
+        pathW.Set(str::Dup(pathW + 2));
     }
 
     WCHAR drive;
-    bool isAbsPath = str::StartsWith(path, L"\\") || str::Parse(path, L"%c:\\", &drive);
+    bool isAbsPath = str::StartsWith(pathW, L"\\") || str::Parse(pathW, L"%c:\\", &drive);
     if (isAbsPath) {
         return;
     }
 
     IPageDestination* remoteLink = link;
-    WCHAR* fullPath = ToWstrTemp(path::GetDirTemp(win->ctrl->GetFilePath()));
-    fullPath = path::JoinTemp(fullPath, path);
+    char* fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
+    fullPath = path::JoinTemp(fullPath, ToUtf8Temp(pathW));
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
     WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
@@ -452,7 +452,7 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
         // OpenFileExternally rejects files we'd otherwise
         // have to show a notification to be sure (which we
         // consider bad UI and thus simply don't)
-        bool ok = OpenFileExternally(ToUtf8Temp(fullPath));
+        bool ok = OpenFileExternally(fullPath);
         if (!ok) {
             AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath));
             win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);

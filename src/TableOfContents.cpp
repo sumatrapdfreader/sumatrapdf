@@ -423,11 +423,12 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
     auto win = tab->win;
     PageDestinationFile *destFile = (PageDestinationFile*)dest;
-    WCHAR* path = destFile->path;
+    WCHAR* pathW = destFile->path;
     WCHAR* tabPath = ToWstrTemp(tab->filePath.Get());
-    if (!str::StartsWith(path, tabPath)) {
+    if (!str::StartsWith(pathW, tabPath)) {
         return;
     }
+    char* path = ToUtf8Temp(destFile->path);
     WindowInfo* newWin = FindWindowInfoByFile(path, true);
     if (!newWin) {
         LoadArgs args(path, win);

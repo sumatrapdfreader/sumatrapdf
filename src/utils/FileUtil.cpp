@@ -243,6 +243,14 @@ WCHAR* Normalize(const WCHAR* path) {
     return str::Join(L"\\\\?\\", normpath);
 }
 
+char* NormalizeTemp(const char* path) {
+    WCHAR* s = ToWstrTemp(path);
+    WCHAR* ws = Normalize(s);
+    char* res = ToUtf8Temp(ws);
+    str::Free(ws);
+    return res;
+}
+
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
 WCHAR* ShortPath(const WCHAR* path) {

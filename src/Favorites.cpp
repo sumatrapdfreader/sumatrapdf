@@ -482,7 +482,7 @@ static void GoToFavorite(WindowInfo* win, FileState* fs, Favorite* fn) {
         return;
     }
 
-    WCHAR* fp = ToWstrTemp(fs->filePath);
+    char* fp = fs->filePath;
     WindowInfo* existingWin = FindWindowInfoByFile(fp, true);
     if (existingWin) {
         int pageNo = fn->pageNo;

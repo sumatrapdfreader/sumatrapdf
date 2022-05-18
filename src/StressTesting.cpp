@@ -531,8 +531,8 @@ static void Start(StressTest* st, const WCHAR* path, const WCHAR* filter, const 
     }
 }
 
-static bool OpenFile(StressTest* st, const WCHAR* fileName) {
-    wprintf(L"%s\n", fileName);
+static bool OpenFile(StressTest* st, const char* fileName) {
+    printf("%s\n", fileName);
     fflush(stdout);
 
     LoadArgs args(fileName, nullptr);
@@ -692,7 +692,7 @@ static bool GoToNextFile(StressTest* st) {
             if (!IsInRange(st->fileRanges, ++st->fileIndex)) {
                 continue;
             }
-            if (OpenFile(st, nextFile)) {
+            if (OpenFile(st, ToUtf8Temp(nextFile))) {
                 return true;
             }
             continue;

@@ -121,9 +121,9 @@ void ToggleFullScreen(WindowInfo* win, bool presentation = false);
 void RelayoutWindow(WindowInfo* win);
 
 // note: background tabs are only searched if focusTab is true
-WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab);
-WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab);
-TabInfo* FindTabByFile(const WCHAR* file);
+WindowInfo* FindWindowInfoByFile(const char* file, bool focusTab);
+WindowInfo* FindWindowInfoBySyncFile(const char* file, bool focusTab);
+TabInfo* FindTabByFile(const char* file);
 void SelectTabInWindow(TabInfo*);
 
 class EngineBase;
@@ -131,27 +131,16 @@ class EngineBase;
 // LoadDocument carries a lot of state, this holds them in
 // one place
 struct LoadArgs {
-    explicit LoadArgs(const WCHAR* fileName, WindowInfo* win) {
-        this->fileName = fileName;
-        this->win = win;
-    }
-
     explicit LoadArgs(const char* fileName, WindowInfo* win) {
+        this->fileName.SetCopy(fileName);
         this->win = win;
-        fileNameToFree = ToWstr(fileName);
-        this->fileName = fileNameToFree;
     }
 
-    ~LoadArgs() {
-        str::Free(fileNameToFree);
-    }
+    ~LoadArgs() = default;
 
     // we don't own those values
     EngineBase* engine = nullptr;
-    const WCHAR* fileName = nullptr;
     WindowInfo* win = nullptr;
-
-    const WCHAR* fileNameToFree = nullptr;
 
     bool showWin = true;
     bool forceReuse = false;
@@ -165,6 +154,15 @@ struct LoadArgs {
     // TODO: this is hacky. I save prefs too frequently. Need to go over
     // and rationalize all prefs::Save() calls
     bool noSavePrefs = false;
+    const char* FilePath() const {
+        return fileName.Get();
+    }
+    void SetFilePath(const char* path) {
+        fileName.SetCopy(path);
+    }
+
+  private:
+    AutoFreeStr fileName;
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);
