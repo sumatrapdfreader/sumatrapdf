@@ -335,20 +335,27 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
     }
 }
 
-static int SortByBaseFileName(const void* a, const void* b) {
-    const WCHAR* filePathA = *(const WCHAR**)a;
-    const WCHAR* filePathB = *(const WCHAR**)b;
-    const WCHAR* baseA = path::GetBaseNameTemp(filePathA);
-    const WCHAR* baseB = path::GetBaseNameTemp(filePathB);
-    return str::CmpNatural(baseA, baseB);
+static bool SortByBaseFileName(const char* s1, const char* s2) {
+    if (str::IsEmpty(s1)) {
+        if (str::IsEmpty(s2)) {
+            return false;
+        }
+        return true;
+    }
+    if (str::IsEmpty(s2)) {
+        return false;
+    }
+    const char* base1 = path::GetBaseNameTemp(s1);
+    const char* base2 = path::GetBaseNameTemp(s2);
+    int n = str::CmpNatural(base1, base2);
+    return n < 0;
 }
 
-static void GetSortedFilePaths(Vec<const WCHAR*>& filePathsSortedOut, FileState* toIgnore = nullptr) {
+static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore = nullptr) {
     FileState* fs;
     for (size_t i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (fs->favorites->size() > 0 && fs != toIgnore) {
-            const WCHAR* s = ToWstr(fs->filePath);
-            filePathsSortedOut.Append(s);
+            filePathsSortedOut.Append(fs->filePath);
         }
     }
     filePathsSortedOut.Sort(SortByBaseFileName);
@@ -374,13 +381,13 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     }
 
     // sort the files with favorites by base file name of file path
-    Vec<const WCHAR*> filePathsSorted;
+    StrVec filePathsSorted;
     if (HasPermission(Perm::DiskAccess)) {
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
     }
     if (currFileFav && currFileFav->favorites->size() > 0) {
-        filePathsSorted.InsertAt(0, ToWstrTemp(currFileFav->filePath));
+        filePathsSorted.InsertAt(0, currFileFav->filePath);
     }
 
     if (filePathsSorted.size() == 0) {
@@ -398,8 +405,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     }
 
     for (size_t i = 0; i < menusCount; i++) {
-        const WCHAR* filePathW = filePathsSorted.at(i);
-        char* filePath = ToUtf8(filePathW);
+        const char* filePath = filePathsSorted.at(i);
         FileState* f = gFavorites.GetFavByFilePath(filePath);
         CrashIf(!f);
         if (!f) {
@@ -588,10 +594,9 @@ static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
 static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
     auto* res = new FavTreeModel();
     res->root = new FavTreeItem();
-    Vec<const WCHAR*> filePathsSorted;
+    StrVec filePathsSorted;
     GetSortedFilePaths(filePathsSorted);
-    for (const WCHAR* pathW : filePathsSorted) {
-        char* path = ToUtf8(pathW);
+    for (char* path : filePathsSorted) {
         FileState* f = gFavorites.GetFavByFilePath(path);
         CrashIf(!f);
         if (!f) {
