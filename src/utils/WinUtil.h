@@ -65,6 +65,7 @@ bool DeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
 bool LoggedDeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
 
 TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
+TempStr GetSpecialFolderATemp(int csidl, bool createIfMissing = false);
 
 void DisableDataExecution();
 bool RedirectIOToConsole();

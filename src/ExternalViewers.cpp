@@ -27,7 +27,7 @@ struct ExternalViewerInfo {
     const char* launchArgs;
     Kind engineKind;
     // set by DetectExternalViewers()
-    const WCHAR* exeFullPath; // if found, full path to the executable
+    const char* exeFullPath; // if found, full path to the executable
 };
 
 // kindEngineChm
@@ -140,48 +140,20 @@ static bool CanViewExternally(TabInfo* tab) {
 }
 
 static bool DetectExternalViewer(ExternalViewerInfo* ev) {
-    const WCHAR* partialPath = ToWstrTemp(ev->exePartialPath);
+    const char* partialPath = ev->exePartialPath;
     if (!partialPath || !*partialPath) {
         return false;
     }
 
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
-        WCHAR* path = path::Join(dir, partialPath);
+    int csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
+    for (int csidl : csidls) {
+        char* dir = GetSpecialFolderATemp(csidl);
+        char* path = path::JoinTemp(dir, partialPath);
         if (file::Exists(path)) {
-            ev->exeFullPath = path;
+            ev->exeFullPath = str::Dup(path);
             return true;
         }
-        str::Free(path);
     }
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
-        WCHAR* path = path::Join(dir, partialPath);
-        if (file::Exists(path)) {
-            ev->exeFullPath = path;
-            return true;
-        }
-        str::Free(path);
-    }
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_WINDOWS);
-        WCHAR* path = path::Join(dir, partialPath);
-        if (file::Exists(path)) {
-            ev->exeFullPath = path;
-            return true;
-        }
-        str::Free(path);
-    }
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_SYSTEM);
-        WCHAR* path = path::Join(dir, partialPath);
-        if (file::Exists(path)) {
-            ev->exeFullPath = path;
-            return true;
-        }
-        str::Free(path);
-    }
-
     return false;
 }
 
@@ -193,7 +165,7 @@ void FreeExternalViewers() {
     }
 }
 
-static WCHAR* GetAcrobatPath() {
+static char* GetAcrobatPath() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
     AutoFreeWstr path =
         ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
@@ -202,22 +174,22 @@ static WCHAR* GetAcrobatPath() {
                             nullptr));
     }
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return ToUtf8(path.Get());
     }
     return nullptr;
 }
 
-static WCHAR* GetFoxitPath() {
+static char* GetFoxitPath() {
     AutoFreeWstr path = ReadRegStr(
         HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)", L"DisplayIcon");
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return ToUtf8(path.Get());
     }
     // Registry value for Foxit 5 (and maybe later)
     path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)",
                         L"DisplayIcon"));
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return ToUtf8(path.Get());
     }
     // Registry value for Foxit 5.5 MSI installer
     path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Foxit Software\Foxit Reader)", L"InstallPath"));
@@ -225,12 +197,12 @@ static WCHAR* GetFoxitPath() {
         path.Set(path::Join(path, L"Foxit Reader.exe"));
     }
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return ToUtf8(path.Get());
     }
     return nullptr;
 }
 
-static WCHAR* GetPDFXChangePath() {
+static char* GetPDFXChangePath() {
     AutoFreeWstr path = ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath");
     if (!path) {
         path.Set(ReadRegStr(HKEY_CURRENT_USER, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath"));
@@ -240,7 +212,7 @@ static WCHAR* GetPDFXChangePath() {
     }
     AutoFreeWstr exePath(path::Join(path, L"PDFXCview.exe"));
     if (file::Exists(exePath)) {
-        return exePath.StealData();
+        return ToUtf8(exePath.Get());
     }
     return nullptr;
 }
@@ -339,8 +311,7 @@ bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
         return false;
     }
     AutoFreeStr params = FormatParams(ev->launchArgs, tab);
-    WCHAR* paramsW = ToWstrTemp(params);
-    return LaunchFile(ev->exeFullPath, paramsW);
+    return LaunchFile(ev->exeFullPath, params);
 }
 
 bool PathMatchFilter(const WCHAR* path, char* filter) {

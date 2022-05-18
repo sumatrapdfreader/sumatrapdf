@@ -491,9 +491,21 @@ TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
     WCHAR path[MAX_PATH]{};
     HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
     if (S_OK != res) {
-        return TempWstr(); // TODO: why {} doesn't work?
+        return nullptr;
     }
     return str::DupTemp(path);
+}
+
+TempStr GetSpecialFolderATemp(int csidl, bool createIfMissing) {
+    if (createIfMissing) {
+        csidl = csidl | CSIDL_FLAG_CREATE;
+    }
+    WCHAR path[MAX_PATH]{};
+    HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
+    if (S_OK != res) {
+        return nullptr;
+    }
+    return ToUtf8Temp(path);
 }
 
 void DisableDataExecution() {
