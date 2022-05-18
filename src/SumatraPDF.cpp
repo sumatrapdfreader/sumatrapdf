@@ -2875,25 +2875,25 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
 }
 
 // TODO: similar to Installer.cpp
-static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption, WCHAR* buf, DWORD cchBuf) {
-    if (buf == nullptr || cchBuf < MAX_PATH) {
-        return false;
-    }
+static char* BrowseForFolderTemp(HWND hwnd, const char* initialFolder, const char* caption) {
+    WCHAR dirW[MAX_PATH + 2] = {0};
 
+    AutoFreeWstr captionW = ToWstr(caption);
+    AutoFreeWstr initialFolderW = ToWstr(initialFolder);
     BROWSEINFOW bi{};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-    bi.lpszTitle = caption;
+    bi.lpszTitle = captionW.Get();
     // bi.lpfn = BrowseCallbackProc;
-    bi.lParam = (LPARAM)initialFolder;
+    bi.lParam = (LPARAM)initialFolderW.Get();
 
     LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
     if (!pidlFolder) {
-        return false;
+        return nullptr;
     }
-    BOOL ok = SHGetPathFromIDListW(pidlFolder, buf);
+    BOOL ok = SHGetPathFromIDListW(pidlFolder, dirW);
     if (!ok) {
-        return false;
+        return nullptr;
     }
     IMalloc* pMalloc = nullptr;
     HRESULT hr = SHGetMalloc(&pMalloc);
@@ -2901,18 +2901,17 @@ static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* 
         pMalloc->Free(pidlFolder);
         pMalloc->Release();
     }
-    return true;
+
+    return ToUtf8Temp(dirW);
 }
 
 static void OnMenuOpenFolder(WindowInfo* win) {
     HWND hwnd = win->hwndFrame;
-    WCHAR dirW[MAX_PATH + 2]{};
-    bool ok = BrowseForFolder(hwnd, nullptr, L"Select folder with PDF files", dirW, dimof(dirW));
-    if (!ok) {
+    char* dir = BrowseForFolderTemp(hwnd, nullptr, "Select folder with PDF files");
+    if (!dir) {
         return;
     }
 
-    char* dir = ToUtf8Temp(dirW);
     EngineBase* engine = CreateEngineMultiFromDirectory(dir);
     if (!engine) {
         return;
