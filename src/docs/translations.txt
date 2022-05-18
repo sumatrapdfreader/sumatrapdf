@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fede698576aacfd1c5efff9146951abf4c188693
+bca2e429871feb86ef709452258eee0fa156379a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -77,6 +77,7 @@ cn:实际大小(&A)
 co:&Dimensione attuale
 de:&Tatsächliche Größe
 eu:&Oraingo neurria
+fr:T&aille réelle
 it:Dimensione &attuale
 nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
@@ -172,7 +173,7 @@ et:&Kõik valitud lehed
 eu:&Hautatutako orrialde guztiak
 fa:&همه‌ی صفحات انتخاب ‌شده
 fi:K&aikki valitut sivut
-fr:&Toutes les pages sélectionnées
+fr:Toutes les p&ages sélectionnées
 ga:&Gach leathanach roghnaithe
 gl:Tod&as as páxinas seleccionadas
 he:כל העמודים הנבחרים
@@ -222,6 +223,7 @@ cn:上一视图(B)
 co:&Precedente
 de:&Vorherige Ansicht
 eu:A&tzera
+fr:Revenir (&b)
 it:&Indietro
 nl:&Terug
 pl:&Wstecz
@@ -253,7 +255,7 @@ el:&Άκυρο
 es:Cancelar
 et:&Loobu
 eu:E&zeztatu
-fr:Annuler
+fr:Annuler (&c)
 hr:&Odustani
 hu:&Mégse
 id:&Membatalkan
@@ -284,7 +286,7 @@ de:&Cursor
 el:Αγκύλη
 es:&Cursor
 et:&Caret
-fr:Curseur
+fr:&Curseur
 hr:&Znak za umetanje
 hu:Kurzor
 id:&Sisipan
@@ -308,6 +310,7 @@ cn:关闭(&C)
 co:&Chjode
 de:&Schließen
 eu:It&xi
+fr:Fermer (&c)
 it:&Chiudi
 nl:&Sluiten
 pl:&Zamknij
@@ -416,6 +419,7 @@ cn:复制到剪贴版(&C)
 co:&Cupià in u preme’papei
 de:&In Zwischenablage kopieren
 eu:&Kopiatu gakora
+fr:&Copier dans le Presse-Papiers
 it:&Copia negli Appunti
 nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
@@ -740,6 +744,7 @@ cn:第一页(&F)
 co:P&rima pagina
 de:&Erste Seite
 eu:&Lehen orrialdea
+fr:Première page (&f)
 it:&Prima pagina
 nl:&Eerste Pagina
 pl:&Pierwsza strona
@@ -1054,6 +1059,7 @@ cn:高亮(&H)
 co:&Sopralineà
 de:Text &hervorheben
 eu:&Nabarmendu
+fr:Surligner (&h)
 it:Eviden&zia
 nl:&Markeren
 pl:&Wyróżnienie
@@ -1065,6 +1071,7 @@ cn:最后一页(&L)
 co:&Ultima pagina
 de:&Letzte Seite
 eu:&Azken orrialdea
+fr:Dernière page (&l)
 it:&Ultima pagina
 nl:&Laatste Pagina
 pl:&Ostatnia strona
@@ -1273,6 +1280,7 @@ cn:下一页(&N)
 co:Pagina &seguente
 de:&Nächste Seite
 eu:&Hurrengo orrialdea
+fr:Page Suiva&nte
 it:Pagina &successiva
 nl:&Volgende Pagina
 pl:&Następna strona
@@ -1481,6 +1489,7 @@ cn:打开(&O)...
 co:&Apre…
 de:&Öffnen...
 eu:&Ireki...
+fr:&Ouvrir
 it:&Apri
 nl:&Openen
 pl:&Otwórz...
@@ -1747,6 +1756,7 @@ cn:上一页(&P)
 co:Pagina &precedente
 de:&Vorherige Seite
 eu:A&urreko orrialdea
+fr:Page &Précédente
 it:Pagina &precedente
 nl:&Vorige Pagina
 pl:&Poprzednia strona
@@ -1839,7 +1849,7 @@ et:&Prindi... (keelatud)
 eu:&Irarkitu... (ukatuta)
 fa:&چاپ... (ممنوع شده)
 fi:&Tulosta... (kielletty)
-fr:&Imprimer... (Interdit)
+fr:&Imprimer... (refusé)
 ga:&Clóbhualadh... (diúltaithe)
 gl:&Imprimir... (denegado)
 he:הדפס... (לא התאפשר)
@@ -2300,6 +2310,7 @@ br:&Página única
 cn:单页视图(&S)
 co:&Una pagina sola
 de:Einzel&seitenansicht
+fr:Page unique (&s)
 it:Pagina &singola
 nl:&Enkele Pagina
 pl:&Pojedyncza strona
@@ -2486,6 +2497,7 @@ de:&Unterstreichen
 dk:&Understreg
 el:Υπογράμμιση
 es:&Subrayar
+fr:So&uligner
 hr:Podv&ući
 it:Sottolineato
 kr:밑줄(&U)
@@ -3944,6 +3956,7 @@ el:Συγγραφέας: %s
 es:Autora: %s
 et:Autor: %s
 eu:Egilea: %s
+fr:Auteur : %s
 hr:Autor: %s
 id:Penulis: %s
 it:Autore: %s
@@ -4051,7 +4064,7 @@ et:Automaatselt kontrolli &uuendusi
 eu:&Berezgaitasunez egiaztatu eguneraketak
 fa:بررسی خودکار برای به‌روزرسانی‌ها
 fi:Tarkista pä&ivitykset automaattisesti
-fr:Vérifier &automatiquement les mises à jour
+fr:Vérifier a&utomatiquement les mises à jour
 fy-nl:Automatysk kontrolearje op &fernijings
 ga:Lorg nuashonruithe go huathoibríoch
 gl:Comprobar se hai actualizacións a&utomaticamente
@@ -4409,6 +4422,7 @@ el:Περιθώριο: %d
 es:Borde: %d
 et:Ääris: %d
 eu:Ertza: %d
+fr:Bordure : %d
 hr:Rub: %d
 id:Garis Tepi: %d
 it:Bordo: %d
@@ -4772,7 +4786,7 @@ bs:Ne mogu pokrenuti komandu pretraživanja unazad. Molimo da provjerite komandn
 by:Немагчыма здзейсніць зваротны пошук. Калі ласка, праверце камандны радок у наладах.
 ca-xv:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia de comandes a les preferències.
 ca:No es pot iniciar l'ordre de cerca cap enrere. Comproveu la línia d'ordres a les preferències.
-cn:无法进行逆向搜索，请检查设置数值里的命令栏。
+cn:无法进行逆向搜索，请检查命令行是否在软件设置里正确配置了。
 co:Ùn pò micca lancià a cumanda di ricerca à l’arritrosa. Ci vole à verificà a linea di cumanda in e preferenze.
 cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
@@ -4921,7 +4935,7 @@ et:Vaata, kas on &uuendusi
 eu:&Egiaztatu Eguneraketak
 fa:بررسی برای به‌روزرسانی‌ها
 fi:Tarkista &päivitysten saatavuus
-fr:&Vérifier les mises à jour
+fr:Vérifier les mises à jo&ur
 fy-nl:&Kontrolearje op fernijings
 ga:Lorg Nuashonruithe
 gl:Buscar actualizacións
@@ -5270,6 +5284,7 @@ co:Tavuletta di cumande
 de:Befehlspalette
 et:Käsupalett
 eu:Agindu paleta
+fr:Palette de commande
 it:Elenco comandi
 nl:Opdrachten
 pl:Paleta poleceń
@@ -5354,6 +5369,7 @@ el:Περιεχόμενα:
 es:Contenido:
 et:Sisu:
 eu:Edukiak:
+fr:Contenu :
 hr:Sadržaj:
 id:Isi:
 it:Contenuti:
@@ -5850,6 +5866,7 @@ co:Cupià in u preme’papei
 de:In Zwischenablage kopieren
 et:Kopeeri lõikelauale
 eu:Kopiatu gakora
+fr:Copier dans le Presse-Papiers
 it:Copia negli Appunti
 nl:Kopieer naar klembord
 pl:Kopiuj do schowka
@@ -6901,6 +6918,7 @@ cn:自定义缩放(&Z)...
 co:&Ingrandamentu persunalizatu…
 de:Benutzerdefinierter &Zoom...
 eu:Norbere &Zooma...
+fr:&Zoom personnalisé...
 it:&Zoom personalizzato
 nl:Aangepast & zoom...
 pl:&Własne powiększenie...
@@ -7040,6 +7058,7 @@ el:Ημερομηνία:
 es:Fetcha:
 et:Kuupäev:
 eu:Eguna:
+fr:Date :
 hr:Datum:
 id:Tanggal:
 it:Data:
@@ -7473,6 +7492,7 @@ cn:退出(&X)
 co:&Esce
 de:&Beenden
 eu:I&rten
+fr:Quitter (&x)
 it:&Esci
 nl:A&fsluiten
 pl:&Wyjście
@@ -8012,6 +8032,7 @@ cn:下一视图(&O)
 co:&Dopu
 de:&Nächste Ansicht
 eu:A&urrera
+fr:Avancer (&o)
 it:&Avanti
 nl:V&ooruit
 pl:&Dalej
@@ -8024,6 +8045,7 @@ cn:全屏(&U)
 co:&Screnu sanu
 de:&Vollbild
 eu:Ikusleiho-o&soa
+fr:Plein écran (&u)
 it:Sc&hermo pieno
 nl:V&oledig Scherm
 pl:Pełny &ekran
@@ -8865,6 +8887,7 @@ cn:查找(&D)...
 co:&Circà…
 de:S&uchen...
 eu:&Bilatu...
+fr:Rechercher... (&d)
 it:&Trova
 nl:Zoe&k
 pl:&Znajdź...
@@ -9856,6 +9879,7 @@ co:Ottene infurmazioni di grafie
 de:Schriftarten-Infos erhalten
 et:Hangi fondi infot
 eu:Lortu hizkien argibideak
+fr:Obtenir les Informations sur les Polices
 it:Ottieni informazioni sui font
 nl:Informatie over lettertypen ophalen
 pl:Uzyskaj informacje o czcionkach
@@ -10137,6 +10161,7 @@ el:Εικονίδιο:
 es:Icono:
 et:Ikoon:
 eu:Ikurra:
+fr:Icône :
 hr:Ikona:
 id:Ikon:
 it:Icona:
@@ -10275,6 +10300,7 @@ dk:Blæk
 el:Μελάνι
 es:Tinta
 et:Tint
+fr:Encre
 ga:Dúch
 gl:Trazo
 hr:Tinta
@@ -10463,6 +10489,7 @@ cn:为所有用户安装
 co:Installà per tutti l’utilizatori
 de:Für alle Benutzer installieren
 eu:Ezarri erabiltzaile guztientzat
+fr:Installer pour tous les utilisateurs
 it:Installa per tutti gli utenti
 nl:Installeer voor alle gebruikers
 pl:Zainstaluj dla wszystkich użytkowników
@@ -10637,6 +10664,7 @@ el:Εσωτερικό Χρώμα:
 es:Color Interior
 et:Sisevärv:
 eu:Barneko margoa:
+fr:Couleur Intérieure :
 hr:Unutarnja boja:
 id:Warna Interior:
 it:Colore interno:
@@ -10953,6 +10981,7 @@ el:Τέλος γραμμής:
 es:Fin de Línea:
 et:Joone lõpp:
 eu:Lerro hasiera:
+fr:Fin de Ligne
 hr:Kraj linije:
 id:Garis Akhir:
 it:Fine linea:
@@ -10977,6 +11006,7 @@ el:Έναρξη γραμμής:
 es:Inicio de Línea:
 et:Joone algus:
 eu:Lerro hasiera:
+fr:Début de Ligne
 hr:Početak linije:
 id:Garis Awal:
 it:Inizio linea:
@@ -11398,6 +11428,7 @@ cn:新建窗口(&W)
 co:Nova &finestra
 de:Neues &Fenster
 eu:&Leiho berria
+fr:Nouvelle fenêtre (&w)
 it:Nuova &finestra
 nl:Nieuw &Kader
 pl:Nowe &okno
@@ -11913,6 +11944,7 @@ el:Διαφάνεια:
 es:Opacidad:
 et:Läbipaistvus:
 eu:Iragazkaiztasuna:
+fr:Opacité :
 hr:Neprozirnost:
 id:Kegelapan:
 it:Opacità:
@@ -11938,6 +11970,7 @@ el:Διαφάνεια: %d
 es:Opacidad: %d
 et:Läbipaistvus: %d
 eu:Iragazkaiztasuna: %d
+fr:Opacité : %d
 hr:Neprozirnost: %d
 id:Kegelapan: %d
 it:Opacità: %d
@@ -12909,6 +12942,7 @@ cn:前往第 ... 页(&G)
 co:Pa&gina…
 de:&Seite...
 eu:O&rrialdea...
+fr:Pa&ge...
 it:Pa&gina...
 nl:Pa&gina
 pl:&Strona...
@@ -13519,6 +13553,7 @@ el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
 et:Hüpikaken: %d 0 R
 eu:Ohar-leihoa: %d 0 R
+fr:Popup: %d 0 R
 hr:Skočna obavijest: %d 0 R
 id:Munculkan: %d 0 R
 it:Popup: %d 0 R
@@ -13601,6 +13636,7 @@ cn:幻灯片(&E)
 co:&Presentazione
 de:Pr&äsentation
 eu:Aur&kezpena
+fr:Prés&entation
 it:Presentazione
 nl:Pr&esentatie
 pl:&Prezentacja
@@ -14199,6 +14235,7 @@ cn:重命名(&N)...
 co:&Rinuminà…
 de:Umbe&nennen...
 eu:B&errizendatu...
+fr:Re&nommer...
 it:Ri&nomina...
 nl:Her&noem
 pl:Zmień &nazwę...
@@ -14213,6 +14250,7 @@ de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
 et:Ristkülik: x=%d y=%d dx=%d dy=%d
+fr:Rect: x=%d y=%d dx=%d dy=%d
 hr:Pravokutnik: x=%d y=%d dx=%d dy=%d
 id:Persegi: x=%d y=%d dx=%d dy=%d
 it:Rettangolo: x=%d Y=%d dx=%d dy=%d
@@ -14527,6 +14565,7 @@ cn:逆时针旋转(&L)
 co:Girà à &manca
 de:&Gegen UZS drehen
 eu:Itzulikatu e&zkerrera
+fr:Rotation vers &la gauche
 it:Ruota a &sinistra
 nl:&Linksom Roteren
 pl:Obróć w &lewo
@@ -14609,6 +14648,7 @@ cn:顺时针旋转(&R)
 co:Girà à &diritta
 de:Im &UZS drehen
 eu:Itzulikatu e&skuinera
+fr:Rotation vers la d&roite
 it:Ruota a &destra
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
@@ -14834,6 +14874,7 @@ cn:保存快捷方式(&H)...
 co:Arregistrà l’&accurtatoghju…
 de:Verknüpfung speichern...
 eu:Gorde &lastertekla...
+fr:Enregistrer le raccourci (&h)
 it:Sal&va scorciatoia...
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
@@ -14970,6 +15011,7 @@ de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
 et:Märkused salvestatud '%s'
+fr:Annotation enregistrée vers '%s'
 hr:Bilješke spremljene u '%s'
 id:Catatan tersimpan di: %s'
 it:Annotazioni salvate in '%s'
@@ -14993,6 +15035,7 @@ de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
 et:Salvestamine '%s' ebaõnnestus: '%s'
+fr:L'enregistrement de '%s' a échoué avec : '%s'
 hr:Spremanje '%s' neuspjelo sa: '%s'
 id:Penyimpanan %s' gagal dengan: %s'
 it:Salvataggio di '%s' fallito con: '%s'
@@ -15816,6 +15859,7 @@ br:Mostrar favo&ritos
 cn:显示书签(&M)
 co:Affissà l’&indette
 de:Lesezeichen anzeigen
+fr:Afficher les &marque-pages
 it:Visualizza &Preferiti
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
@@ -17062,6 +17106,7 @@ de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
 et:Teksti joondus:
+fr:Alignement du Texte :
 hr:Poravnavanje teksta:
 id:Rata Teks:
 it:Allineamento testo:
@@ -17087,6 +17132,7 @@ de:Textfarbe:
 el:Text Color: 
 es:Color de Texto:
 et:Teksti värv
+fr:Couleur du Texte :
 hr:Boja teksta:
 id:Warna Teks:
 it:Colore testo:
@@ -17113,6 +17159,7 @@ de:Textgröße:
 el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
 et:Teksti suurus:
+fr:Taille du Texte :
 hr:Veličina teksta:
 id:Ukuran Teks:
 it:Dimensione testo:
@@ -17138,6 +17185,7 @@ de:Textgröße: %d
 el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 et:Teksti suurus: %d
+fr:Taille du Texte : %d
 hr:Veličina teksta: %d
 id:Ukuran Teks: %d
 it:Dimensione testo: %d
@@ -18717,7 +18765,7 @@ et:teksti kopeerimine
 eu:idazkia kopiatzen
 fa:در حال رونوشت متن
 fi:Tekstin kopiointi
-fr:copie de texte
+fr:copie du texte
 ga:ag macasamhlú an téacs
 gl:copiando texto
 he:מעתיק טקסט
