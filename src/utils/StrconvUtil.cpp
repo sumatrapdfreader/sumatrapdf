@@ -148,6 +148,13 @@ WCHAR* AnsiToWstr(const char* src, size_t cbLen) {
     return StrToWstr(src, CP_ACP, (int)cbLen);
 }
 
+char* AnsiToUtf8(const char* src, size_t cbLen) {
+    WCHAR* ws = StrToWstr(src, CP_ACP, (int)cbLen);
+    char* res = ToUtf8(ws);
+    str::Free(ws);
+    return res;
+}
+
 char* WstrToAnsi(const WCHAR* src) {
     return WstrToCodePage(CP_ACP, src);
 }

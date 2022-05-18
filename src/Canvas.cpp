@@ -1019,17 +1019,16 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
         win->HideToolTip();
         return TRUE;
     }
-    WCHAR* text = pageEl->GetValue();
+    char* text = pageEl->GetValue();
     if (!dm->ValidPageNo(pageNo)) {
         const char* kind = pageEl->GetKind();
-        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", ToUtf8Temp(text), kind,
-             pageNo);
+        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", text, kind, pageNo);
         ReportIf(true);
         return TRUE;
     }
     auto r = pageEl->GetRect();
     Rect rc = dm->CvtToScreen(pageNo, r);
-    win->ShowToolTip(ToUtf8Temp(text), rc, true);
+    win->ShowToolTip(text, rc, true);
 
     bool isLink = pageEl->Is(kindPageElementDest);
 

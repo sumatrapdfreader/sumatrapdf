@@ -674,8 +674,8 @@ void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti, bool withCheckbox
     tvitem->state = state;
     tvitem->stateMask = stateMask;
     tvitem->lParam = static_cast<LPARAM>(ti);
-    auto title = tm->Text(ti);
-    tvitem->pszText = title;
+    char* title = tm->Text(ti);
+    tvitem->pszText = ToWstrTemp(title);
 }
 
 #if 0

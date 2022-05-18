@@ -5,6 +5,7 @@ class FrameSite;
 class HtmlMoniker;
 
 bool IsBlankUrl(const WCHAR*);
+bool IsBlankUrl(const char*);
 
 // HtmlWindowCallback allows HtmlWindow to notify other code about notable
 // events or delegate some of the functionality.

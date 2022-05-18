@@ -61,7 +61,7 @@ class EngineMulti : public EngineBase {
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
-    IPageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
     char* GetPageLabel(int pageNo) const override;
@@ -171,7 +171,7 @@ RenderedBitmap* EngineMulti::GetImageForPageElement(IPageElement* ipel) {
     return e->GetImageForPageElement(pel);
 }
 
-IPageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineMulti::GetNamedDest(const char* name) {
     for (auto&& pe : pageToEngine) {
         EngineBase* e = pe.engine;
         auto dest = e->GetNamedDest(name);
@@ -325,7 +325,7 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
 
     int nPages = engine->PageCount();
     const char* title = path::GetBaseNameTemp(engine->FileName());
-    TocItem* tocWrapper = new TocItem(tocFileRoot, ToWstrTemp(title), 0);
+    TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocFileRoot;
     char* filePath = (char*)engine->FileName();
@@ -365,8 +365,7 @@ bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     }
     UpdatePagesForEngines(enginesInfo);
 
-    WCHAR* dirW = ToWstrTemp(dir);
-    TocItem* root = new TocItem(nullptr, dirW, 0);
+    TocItem* root = new TocItem(nullptr, dir, 0);
     root->child = tocFiles;
     auto realRoot = new TocItem();
     realRoot->child = root;

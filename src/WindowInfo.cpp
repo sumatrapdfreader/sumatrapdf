@@ -62,11 +62,11 @@ struct LinkHandler : ILinkHandler {
         return win->ctrl;
     }
     void GotoLink(IPageDestination*) override;
-    void GotoNamedDest(const WCHAR*) override;
+    void GotoNamedDest(const char*) override;
     void ScrollTo(IPageDestination*) override;
     void LaunchURL(const char*) override;
     void LaunchFile(const char* path, IPageDestination*) override;
-    IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
+    IPageDestination* FindTocItem(TocItem* item, const char* name, bool partially) override;
 };
 
 LinkHandler::~LinkHandler() {
@@ -340,23 +340,21 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     }
     if (kindDestinationLaunchURL == kind) {
         auto d = (PageDestinationURL*)dest;
-        char* urlA = ToUtf8Temp(d->url);
-        LaunchURL(urlA);
+        LaunchURL(d->url);
         return;
     }
     if (kindDestinationLaunchFile == kind) {
         PageDestinationFile* pdf = (PageDestinationFile*)dest;
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
-        WCHAR* tmpPath = CleanupFileURL(pdf->path);
+        char* tmpPath = CleanupFileURL(pdf->path);
         // heuristic: replace %20 with ' '
-        if (!file::Exists(tmpPath) && (str::Find(tmpPath, L"%20") != nullptr)) {
-            WCHAR* tmp = str::Replace(tmpPath, L"%20", L" ");
+        if (!file::Exists(tmpPath) && (str::Find(tmpPath, "%20") != nullptr)) {
+            char* tmp = str::Replace(tmpPath, "%20", " ");
             str::Free(tmpPath);
             tmpPath = tmp;
         }
-        char* tmpPathA = ToUtf8Temp(tmpPath);
-        LaunchFile(tmpPathA, dest);
+        LaunchFile(tmpPath, dest);
         str::Free(tmpPath);
         return;
     }
@@ -466,7 +464,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
         return;
     }
 
-    WCHAR* destName = remoteLink->GetName();
+    char* destName = remoteLink->GetName();
     if (destName) {
         IPageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
@@ -480,21 +478,21 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
 
 // normalizes case and whitespace in the string
 // caller needs to free() the result
-static WCHAR* NormalizeFuzzy(const WCHAR* str) {
-    WCHAR* dup = str::Dup(str);
-    CharLowerW(dup);
+static char* NormalizeFuzzy(const char* str) {
+    char* dup = str::Dup(str);
+    str::ToLowerInPlace(dup);
     str::NormalizeWSInPlace(dup);
     // cf. AddTocItemToView
     return dup;
 }
 
-static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially) {
+static bool MatchFuzzy(const char* s1, const char* s2, bool partially) {
     if (!partially) {
         return str::Eq(s1, s2);
     }
 
     // only match at the start of a word (at the beginning and after a space)
-    for (const WCHAR* last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
+    for (const char* last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
         if (last == s1 || *(last - 1) == ' ') {
             return true;
         }
@@ -504,10 +502,10 @@ static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially) {
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-IPageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, bool partially) {
+IPageDestination* LinkHandler::FindTocItem(TocItem* item, const char* name, bool partially) {
     for (; item; item = item->next) {
         if (item->title) {
-            AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
+            AutoFreeStr fuzTitle(NormalizeFuzzy(item->title));
             if (MatchFuzzy(fuzTitle, name, partially)) {
                 return item->GetPageDestination();
             }
@@ -520,7 +518,7 @@ IPageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, boo
     return nullptr;
 }
 
-void LinkHandler::GotoNamedDest(const WCHAR* name) {
+void LinkHandler::GotoNamedDest(const char* name) {
     CrashIf(!win || win->linkHandler != this);
     Controller* ctrl = win->ctrl;
     if (!ctrl) {
@@ -540,7 +538,7 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     } else if (ctrl->HacToc()) {
         auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
-        AutoFreeWstr fuzName(NormalizeFuzzy(name));
+        AutoFreeStr fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName, false);
         if (!dest) {
             dest = FindTocItem(root, fuzName, true);
@@ -551,8 +549,7 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
         }
     }
     if (!hasDest && ctrl->HasPageLabels()) {
-        char* nameA = ToUtf8Temp(name);
-        int pageNo = ctrl->GetPageByLabel(nameA);
+        int pageNo = ctrl->GetPageByLabel(name);
         if (ctrl->ValidPageNo(pageNo)) {
             ctrl->GoToPage(pageNo, true);
         }

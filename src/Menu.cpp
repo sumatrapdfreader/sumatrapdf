@@ -1772,7 +1772,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     TabInfo* tab = win->currentTab;
     IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
 
-    WCHAR* value = nullptr;
+    char* value = nullptr;
     if (pageEl) {
         value = pageEl->GetValue();
     }
@@ -1827,6 +1827,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
                 win::menu::Remove(popup, CmdFavoriteDel);
 
                 // %s and not %d because re-using translation from RebuildFavMenu()
+                // TODO: append the right keyboard shortcut
                 const char* tr = _TRA("Add page %s to favorites\tCtrl+B");
                 AutoFreeStr s = str::Format(tr, pageLabel.Get());
                 win::menu::SetText(popup, CmdFavoriteAdd, s);
@@ -1890,7 +1891,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
             break;
         case CmdCopyLinkTarget: {
-            WCHAR* tmp = CleanupURLForClipbardCopy(value);
+            char* tmp = CleanupURLForClipbardCopy(value);
             CopyTextToClipboard(tmp);
             str::Free(tmp);
         } break;

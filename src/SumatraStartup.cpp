@@ -254,7 +254,7 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     }
 
     if (win->IsDocLoaded() && flags.destName && isFirstWin) {
-        WCHAR* dest = ToWstrTemp(flags.destName);
+        char* dest = flags.destName;
         win->linkHandler->GotoNamedDest(dest);
     } else if (win->IsDocLoaded() && flags.pageNumber > 0 && isFirstWin) {
         if (win->ctrl->ValidPageNo(flags.pageNumber)) {

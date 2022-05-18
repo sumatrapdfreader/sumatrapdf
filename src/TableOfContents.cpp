@@ -59,7 +59,7 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
     if (!link) {
         return;
     }
-    WCHAR* path = link->GetValue();
+    char* path = link->GetValue();
     if (!path) {
         path = tocItem->title;
     }
@@ -80,7 +80,7 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
                 (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k = kindDestinationDjVu);
     CrashIf(!isOk);
 
-    str::WStr infotip;
+    str::Str infotip;
 
     // Display the item's full label, if it's overlong
     RECT rcLine, rcLabel;
@@ -89,13 +89,13 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
 
     // TODO: this causes a duplicate. Not sure what changed
     if (false && rcLine.right + 2 < rcLabel.right) {
-        WCHAR* currInfoTip = tm->Text(ti);
+        char* currInfoTip = tm->Text(ti);
         infotip.Append(currInfoTip);
-        infotip.Append(L"\r\n");
+        infotip.Append("\r\n");
     }
 
     if (kindDestinationLaunchEmbedded == k) {
-        AutoFreeWstr tmp = str::Format(_TR("Attachment: %s"), path);
+        AutoFreeStr tmp = str::Format(_TRA("Attachment: %s"), path);
         infotip.Append(tmp.Get());
     } else {
         infotip.Append(path);
@@ -378,7 +378,8 @@ next:
         return;
     }
     if (node->title) {
-        for (const WCHAR* c = node->title; *c; c++) {
+        WCHAR* ws = ToWstrTemp(node->title);
+        for (const WCHAR* c = ws; *c; c++) {
             if (isLeftToRightChar(*c)) {
                 l2r++;
             } else if (isRightToLeftChar(*c)) {
@@ -411,7 +412,7 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     if (dti->dest) {
         pageNo = dti->dest->GetPageNo();
     }
-    char* name = ToUtf8Temp(dti->title);
+    char* name = dti->title;
     AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNo);
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
 }
@@ -423,12 +424,11 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
     auto win = tab->win;
     PageDestinationFile *destFile = (PageDestinationFile*)dest;
-    WCHAR* pathW = destFile->path;
-    WCHAR* tabPath = ToWstrTemp(tab->filePath.Get());
-    if (!str::StartsWith(pathW, tabPath)) {
+    char* path = destFile->path;
+    char* tabPath = tab->filePath.Get();
+    if (!str::StartsWith(path, tabPath)) {
         return;
     }
-    char* path = ToUtf8Temp(destFile->path);
     WindowInfo* newWin = FindWindowInfoByFile(path, true);
     if (!newWin) {
         LoadArgs args(path, win);
@@ -439,8 +439,8 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
 }
 
-static void SaveEmbeddedFile(TabInfo* tab, const char* srcPathA, const char* fileName) {
-    ByteSlice data = LoadEmbeddedPDFFile(srcPathA);
+static void SaveEmbeddedFile(TabInfo* tab, const char* srcPath, const char* fileName) {
+    ByteSlice data = LoadEmbeddedPDFFile(srcPath);
     if (data.empty()) {
         // TODO: show an error message
         return;
@@ -474,8 +474,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     TabInfo* tab = win->currentTab;
     HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
-    const WCHAR* embeddedFilePath = nullptr;
-    WCHAR* fileName = nullptr;
+    const char* embeddedFilePath = nullptr;
+    char* fileName = nullptr;
     if (dest && dest->GetKind() == kindDestinationLaunchEmbedded) {
         auto embeddedFile = (PageDestinationFile*)dest;
         // this is a path to a file on disk, e.g. a path to opened PDF
@@ -483,8 +483,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         embeddedFilePath = embeddedFile->path;
         // this is name of the file as set inside PDF file
         fileName = dti->dest->GetName();
-        const WCHAR* ext = path::GetExtTemp(fileName);
-        bool canOpenEmbedded = str::EqI(ext, L".pdf");
+        const char* ext = path::GetExtTemp(fileName);
+        bool canOpenEmbedded = str::EqI(ext, ".pdf");
         if (!canOpenEmbedded) {
             win::menu::Remove(popup, CmdOpenEmbeddedPDF);
         }
@@ -536,9 +536,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             DelFavorite(filePath, pageNo);
             break;
         case CmdSaveEmbeddedFile: {
-            char* emPath = ToUtf8Temp(embeddedFilePath);
-            char* path = ToUtf8Temp(fileName);
-            SaveEmbeddedFile(tab, emPath, path);
+            SaveEmbeddedFile(tab, embeddedFilePath, fileName);
         } break;
 
         case CmdOpenEmbeddedPDF:

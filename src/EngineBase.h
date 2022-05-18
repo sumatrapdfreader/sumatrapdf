@@ -87,81 +87,69 @@ struct IPageDestination {
     }
 
     // string value associated with the destination (e.g. a path or a URL)
-    virtual WCHAR* GetValue() {
+    virtual char* GetValue() {
         return nullptr;
     }
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    virtual WCHAR* GetName() {
+    virtual char* GetName() {
         return nullptr;
     }
 };
 
 struct PageDestinationURL : IPageDestination {
-    WCHAR* url = nullptr;
+    char* url = nullptr;
 
     PageDestinationURL() = delete;
-
-    PageDestinationURL(const WCHAR* u) {
-        CrashIf(!u);
-        kind = kindDestinationLaunchURL;
-        url = str::Dup(u);
-    }
 
     PageDestinationURL(const char* u) {
         CrashIf(!u);
         kind = kindDestinationLaunchURL;
-        url = ToWstr(u);
+        url = str::Dup(u);
     }
 
     ~PageDestinationURL() override {
         str::Free(url);
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         return url;
     }
 };
 
 struct PageDestinationFile : IPageDestination {
-    WCHAR* path = nullptr;
+    char* path = nullptr;
 
     PageDestinationFile() = delete;
 
-    PageDestinationFile(const WCHAR* u) {
+    PageDestinationFile(const char* u) {
         CrashIf(!u);
         kind = kindDestinationLaunchFile;
         path = str::Dup(u);
-    }
-
-    PageDestinationFile(const char* u) {
-        CrashIf(!u);
-        kind = kindDestinationLaunchURL;
-        path = ToWstr(u);
     }
 
     ~PageDestinationFile() override {
         str::Free(path);
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         return path;
     }
 };
 
 struct PageDestination : IPageDestination {
-    WCHAR* value = nullptr;
-    WCHAR* name = nullptr;
+    char* value = nullptr;
+    char* name = nullptr;
 
     PageDestination() = default;
 
     ~PageDestination() override;
 
-    WCHAR* GetValue() override;
-    WCHAR* GetName() override;
+    char* GetValue() override;
+    char* GetName() override;
 };
 
-IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const WCHAR* value = nullptr);
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const char* value = nullptr);
 
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9f
@@ -197,7 +185,7 @@ struct IPageElement {
 
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
-    virtual WCHAR* GetValue() {
+    virtual char* GetValue() {
         return nullptr;
     }
     // if this element is a link, this returns information about the link's destination
@@ -219,9 +207,9 @@ struct PageElementImage : IPageElement {
 };
 
 struct PageElementComment : IPageElement {
-    WCHAR* comment = nullptr;
+    char* comment = nullptr;
 
-    PageElementComment(const WCHAR* c) {
+    PageElementComment(const char* c) {
         kind = kindPageElementComment;
         comment = str::Dup(c);
     }
@@ -230,7 +218,7 @@ struct PageElementComment : IPageElement {
         str::Free(comment);
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         return comment;
     }
 };
@@ -247,7 +235,7 @@ struct PageElementDestination : IPageElement {
         delete dest;
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         if (dest) {
             return dest->GetValue();
         }
@@ -283,7 +271,7 @@ struct TocItem {
     TocItem* parent = nullptr;
 
     // the item's visible label
-    WCHAR* title = nullptr;
+    char* title = nullptr;
 
     // in some formats, the document can specify the tree item
     // is expanded by default. We keep track if user toggled
@@ -327,7 +315,7 @@ struct TocItem {
 
     TocItem() = default;
 
-    explicit TocItem(TocItem* parent, const WCHAR* title, int pageNo);
+    explicit TocItem(TocItem* parent, const char* title, int pageNo);
 
     ~TocItem();
 
@@ -356,7 +344,7 @@ struct TocTree : TreeModel {
     // TreeModel
     TreeItem Root() override;
 
-    WCHAR* Text(TreeItem) override;
+    char* Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
     TreeItem ChildAt(TreeItem, int index) override;
@@ -479,7 +467,7 @@ class EngineBase {
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
-    virtual IPageDestination* GetNamedDest(const WCHAR* name);
+    virtual IPageDestination* GetNamedDest(const char* name);
 
     // checks whether this document has an associated Table of Contents
     bool HacToc();
@@ -531,4 +519,7 @@ struct PasswordUI {
 };
 
 WCHAR* CleanupFileURL(const WCHAR*);
+char* CleanupFileURL(const char* s);
+
 WCHAR* CleanupURLForClipbardCopy(const WCHAR*);
+char* CleanupURLForClipbardCopy(const char* s);

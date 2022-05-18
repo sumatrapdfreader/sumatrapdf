@@ -130,7 +130,10 @@ bool GetCursorPosInHwnd(HWND, Point&);
 POINT GetCursorPosInHwnd(HWND);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 char* GetDefaultPrinterNameTemp();
+
 bool CopyTextToClipboard(const WCHAR* text, bool appendOnly = false);
+bool CopyTextToClipboard(const char* textA, bool appendOnly = false);
+
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 
 bool IsWindowStyleSet(HWND hwnd, DWORD flags);

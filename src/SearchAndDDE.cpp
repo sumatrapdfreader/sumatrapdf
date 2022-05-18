@@ -798,7 +798,7 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    win->linkHandler->GotoNamedDest(destName);
+    win->linkHandler->GotoNamedDest(ToUtf8Temp(destName));
     ack.fAck = 1;
     win->Focus();
     return next;

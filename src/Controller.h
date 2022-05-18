@@ -34,11 +34,11 @@ struct ILinkHandler {
     virtual ~ILinkHandler(){};
     virtual Controller* GetController() = 0;
     virtual void GotoLink(IPageDestination*) = 0;
-    virtual void GotoNamedDest(const WCHAR*) = 0;
+    virtual void GotoNamedDest(const char*) = 0;
     virtual void ScrollTo(IPageDestination*) = 0;
     virtual void LaunchURL(const char*) = 0;
     virtual void LaunchFile(const char* path, IPageDestination*) = 0;
-    virtual IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) = 0;
+    virtual IPageDestination* FindTocItem(TocItem* item, const char* name, bool partially) = 0;
 };
 
 struct ControllerCallback {
@@ -101,7 +101,7 @@ struct Controller {
     virtual TocTree* GetToc() = 0;
     virtual void ScrollTo(int pageNo, RectF rect, float zoom) = 0;
 
-    virtual IPageDestination* GetNamedDest(const WCHAR* name) = 0;
+    virtual IPageDestination* GetNamedDest(const char* name) = 0;
 
     // get display state (pageNo, zoom, scroll etc. of the document)
     virtual void GetDisplayState(FileState* ds) = 0;

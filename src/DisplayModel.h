@@ -96,7 +96,7 @@ struct DisplayModel : Controller {
     TocTree* GetToc() override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
-    IPageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const char* name) override;
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)

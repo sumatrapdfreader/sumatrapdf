@@ -1312,6 +1312,39 @@ bool CopyTextToClipboard(const WCHAR* text, bool appendOnly) {
     return handle != nullptr;
 }
 
+bool CopyTextToClipboard(const char* textA, bool appendOnly) {
+    CrashIf(!textA);
+    if (!textA) {
+        return false;
+    }
+
+    WCHAR* text = ToWstrTemp(textA);
+    if (!appendOnly) {
+        if (!OpenClipboard(nullptr)) {
+            return false;
+        }
+        EmptyClipboard();
+    }
+
+    size_t n = str::Len(text) + 1;
+    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
+    if (handle) {
+        WCHAR* globalText = (WCHAR*)GlobalLock(handle);
+        if (globalText) {
+            str::BufSet(globalText, n, text);
+        }
+        GlobalUnlock(handle);
+
+        SetClipboardData(CF_UNICODETEXT, handle);
+    }
+
+    if (!appendOnly) {
+        CloseClipboard();
+    }
+
+    return handle != nullptr;
+}
+
 static bool SetClipboardImage(HBITMAP hbmp) {
     if (!hbmp) {
         return false;

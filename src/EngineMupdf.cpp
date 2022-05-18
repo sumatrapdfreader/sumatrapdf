@@ -98,8 +98,8 @@ struct PageDestinationMupdf : IPageDestination {
     fz_outline* outline = nullptr;
     fz_link* link = nullptr;
 
-    WCHAR* value = nullptr;
-    WCHAR* name = nullptr;
+    char* value = nullptr;
+    char* name = nullptr;
 
     PageDestinationMupdf(fz_link* l, fz_outline* o) {
         // exactly one must be provided
@@ -112,28 +112,28 @@ struct PageDestinationMupdf : IPageDestination {
         str::Free(name);
     }
 
-    WCHAR* GetValue() override;
-    WCHAR* GetName() override;
+    char* GetValue() override;
+    char* GetName() override;
 };
 
-WCHAR* PageDestinationMupdf ::GetValue() {
+char* PageDestinationMupdf ::GetValue() {
     if (value) {
         return value;
     }
 
     char* uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
-        value = ToWstr(uri);
+        value = str::Dup(uri);
     }
     return value;
 }
 
-WCHAR* PageDestinationMupdf ::GetName() {
+char* PageDestinationMupdf ::GetName() {
     if (name) {
         return name;
     }
     if (outline && outline->title) {
-        name = ToWstr(outline->title);
+        name = str::Dup(outline->title);
     }
     return name;
 }
@@ -279,7 +279,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     }
 
     if (str::StartsWithI(uri, "file://")) {
-        WCHAR* path = ToWstrTemp(uri);
+        char* path = str::DupTemp(uri);
         path = CleanupFileURL(path);
         auto res = new PageDestinationFile(path);
         res->rect = FzGetRectF(link, outline);
@@ -397,6 +397,23 @@ static WCHAR* PdfCleanString(WCHAR* s) {
     }
     str::NormalizeWSInPlace(s);
     return s;
+}
+
+// some PDF documents contain control characters in outline titles or /Info properties
+// we replace them with spaces and cleanup for display with NormalizeWSInPlace()
+static void PdfCleanString(char* s) {
+    if (!s) {
+        return;
+    }
+    char* curr = s;
+    while (*curr) {
+        char c = *curr;
+        if (c < 0x20) {
+            *curr = ' ';
+        }
+        curr++;
+    }
+    str::NormalizeWSInPlace(s);
 }
 
 struct istream_filter {
@@ -1047,7 +1064,7 @@ RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
-static TocItem* NewTocItemWithDestination(TocItem* parent, WCHAR* title, IPageDestination* dest) {
+static TocItem* NewTocItemWithDestination(TocItem* parent, char* title, IPageDestination* dest) {
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     return res;
@@ -1154,7 +1171,8 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         }
 
         // TODO: those leak on xps
-        auto dest = new PageDestinationURL(uri);
+        char* uriA = ToUtf8Temp(uri);
+        auto dest = new PageDestinationURL(uriA);
         auto pel = new PageElementDestination(dest);
         pel->rect = ToRectF(bbox);
         pageInfo->autoLinks.Append(pel);
@@ -2291,9 +2309,9 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
     // WCHAR* path = ToWstr(outline->uri);
-    dest->name = ToWstr(outline->title);
+    dest->name = str::Dup(outline->title);
     // page is really a stream number
-    dest->value = str::Format(L"%s:%d", engine->FileName(), outline->page);
+    dest->value = str::Format("%s:%d", engine->FileName(), outline->page);
     return dest;
 }
 
@@ -2302,13 +2320,13 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
     TocItem* curr = nullptr;
 
     while (outline) {
-        WCHAR* name = nullptr;
+        char* name = nullptr;
         if (outline->title) {
-            name = ToWstr(outline->title);
-            name = PdfCleanString(name);
+            name = str::Dup(outline->title);
+            PdfCleanString(name);
         }
         if (!name) {
-            name = str::Dup(L"");
+            name = str::Dup("");
         }
 
         int pageNo = FzGetPageNo(ctx, _doc, nullptr, outline);
@@ -2400,7 +2418,7 @@ MakeTree:
     return tocTree;
 }
 
-IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -2408,15 +2426,14 @@ IPageDestination* EngineMupdf::GetNamedDest(const WCHAR* name) {
     ScopedCritSec scope1(&pagesAccess);
     ScopedCritSec scope2(ctxAccess);
 
-    char* nameA = ToUtf8Temp(name);
-    size_t nameLen = str::Len(nameA);
+    size_t nameLen = str::Len(name);
     pdf_obj* dest = nullptr;
 
     fz_var(dest);
     pdf_obj* nameobj = nullptr;
     fz_var(nameobj);
     fz_try(ctx) {
-        nameobj = pdf_new_string(ctx, nameA, (int)nameLen);
+        nameobj = pdf_new_string(ctx, name, (int)nameLen);
         dest = pdf_lookup_dest(ctx, pdfdoc, nameobj);
         pdf_drop_obj(ctx, nameobj);
     }
@@ -2463,7 +2480,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
     return pageInfo;
 }
 
-static IPageElement* NewFzComment(const WCHAR* comment, int pageNo, RectF rect) {
+static IPageElement* NewFzComment(const char* comment, int pageNo, RectF rect) {
     auto res = new PageElementComment(comment);
     res->pageNo = pageNo;
     res->rect = rect;
@@ -2480,9 +2497,8 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     if (str::IsEmpty(contents)) {
         s = label;
     }
-    auto ws = ToWstrTemp(s);
     RectF rd = ToRectF(rect);
-    return NewFzComment(ws, pageNo, rd);
+    return NewFzComment(s, pageNo, rd);
 }
 
 static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
@@ -2525,7 +2541,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 
             auto dest = new PageDestination();
             dest->kind = kindDestinationLaunchEmbedded;
-            dest->value = ToWstr(attname);
+            dest->value = str::Dup(attname);
 
             auto el = new PageElementDestination(dest);
             el->pageNo = pageNo;

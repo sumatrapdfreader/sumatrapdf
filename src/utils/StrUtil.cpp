@@ -2516,6 +2516,11 @@ bool IsAbsolute(const WCHAR* url) {
     return colon && (!hash || hash > colon);
 }
 
+bool IsAbsolute(const char* url) {
+    const char* colon = str::FindChar(url, ':');
+    const char* hash = str::FindChar(url, '#');
+    return colon && (!hash || hash > colon);
+}
 void DecodeInPlace(WCHAR* url) {
     if (!str::FindChar(url, '%')) {
         return;
@@ -2531,6 +2536,13 @@ void DecodeInPlace(WCHAR* url) {
 WCHAR* GetFullPath(const WCHAR* url) {
     WCHAR* path = str::Dup(url);
     str::TransCharsInPlace(path, L"#?", L"\0\0");
+    DecodeInPlace(path);
+    return path;
+}
+
+char* GetFullPathTemp(const char* url) {
+    char* path = str::Dup(url);
+    str::TransCharsInPlace(path, "#?", "\0\0");
     DecodeInPlace(path);
     return path;
 }

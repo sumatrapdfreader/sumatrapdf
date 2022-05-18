@@ -16,6 +16,7 @@ char* UnknownToUtf8(const char*);
 char* WstrToAnsi(const WCHAR*);
 
 WCHAR* AnsiToWstr(const char* src, size_t cbLen = (size_t)-1);
+char* AnsiToUtf8(const char* src, size_t cbLen = (size_t)-1);
 
 } // namespace strconv
 

@@ -115,7 +115,7 @@ TocTree* DisplayModel::GetToc() {
     return engine->GetToc();
 }
 
-IPageDestination* DisplayModel::GetNamedDest(const WCHAR* name) {
+IPageDestination* DisplayModel::GetNamedDest(const char* name) {
     return engine->GetNamedDest(name);
 }
 

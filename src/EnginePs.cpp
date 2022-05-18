@@ -329,7 +329,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->HandleLink(dest, lh);
     }
 
-    IPageDestination* GetNamedDest(const WCHAR* name) override {
+    IPageDestination* GetNamedDest(const char* name) override {
         return pdfEngine->GetNamedDest(name);
     }
 

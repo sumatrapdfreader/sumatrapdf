@@ -65,7 +65,7 @@ class EngineMupdf : public EngineBase {
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
-    IPageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
     char* GetPageLabel(int pageNo) const override;

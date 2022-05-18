@@ -51,17 +51,17 @@ PageDestination::~PageDestination() {
 }
 
 // string value associated with the destination (e.g. a path or a URL)
-WCHAR* PageDestination::GetValue() {
+char* PageDestination::GetValue() {
     return value;
 }
 
 // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
 // (mainly applicable for links of type "LaunchFile" to PDF documents)
-WCHAR* PageDestination::GetName() {
+char* PageDestination::GetName() {
     return name;
 }
 
-IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, const WCHAR* value) {
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, const char* value) {
     if (value) {
         return new PageDestinationURL(value);
     }
@@ -83,7 +83,7 @@ Kind kindTocFzOutlineAttachment = "tocFzOutlineAttachment";
 Kind kindTocFzLink = "tocFzLink";
 Kind kindTocDjvu = "tocDjvu";
 
-TocItem::TocItem(TocItem* parent, const WCHAR* title, int pageNo) {
+TocItem::TocItem(TocItem* parent, const char* title, int pageNo) {
     this->title = str::Dup(title);
     this->pageNo = pageNo;
     this->parent = parent;
@@ -209,7 +209,7 @@ TreeItem TocTree::Root() {
     return (TreeItem)root;
 }
 
-WCHAR* TocTree::Text(TreeItem ti) {
+char* TocTree::Text(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return tocItem->title;
 }
@@ -340,7 +340,7 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-IPageDestination* EngineBase::GetNamedDest(const WCHAR*) {
+IPageDestination* EngineBase::GetNamedDest(const char*) {
     return nullptr;
 }
 
@@ -414,6 +414,19 @@ static const WCHAR* SkipFileProtocolTemp(const WCHAR* s) {
     return s;
 }
 
+// skip file:// and maybe file:/// from s. It might be added by mupdf
+// do not free the result
+static const char* SkipFileProtocolTemp(const char* s) {
+    if (!str::StartsWithI(s, "file://")) {
+        return s;
+    }
+    s += 7; // skip "file://"
+    while (*s == '/') {
+        s++;
+    }
+    return s;
+}
+
 // skip mailto: from s.
 static const WCHAR* SkipMailProtocolTemp(const WCHAR* s) {
     if (!str::StartsWithI(s, L"mailto:")) {
@@ -426,6 +439,17 @@ static const WCHAR* SkipMailProtocolTemp(const WCHAR* s) {
     return s;
 }
 
+// skip mailto: from s
+static const char* SkipMailProtocolTemp(const char* s) {
+    if (!str::StartsWithI(s, "mailto:")) {
+        return s;
+    }
+    s += 7;             // skip "mailto:"
+    while (*s == '/') { // probably not needed but just in case
+        s++;
+    }
+    return s;
+}
 // s could be in format "file://path.pdf#page=1"
 // We only want the "path.pdf"
 // caller must free
@@ -441,12 +465,32 @@ WCHAR* CleanupFileURL(const WCHAR* s) {
     return s2;
 }
 
+char* CleanupFileURL(const char* s) {
+    s = SkipFileProtocolTemp(s);
+    char* s2 = str::Dup(s);
+    char* s3 = str::FindChar(s2, '#');
+    if (s3) {
+        *s3 = 0;
+    }
+    return s2;
+}
+
 // s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
 // We only want the "path.pdf" / "foo@bar.com"
 // caller must free
 WCHAR* CleanupURLForClipbardCopy(const WCHAR* s) {
     WCHAR* s2 = CleanupFileURL(s);
     WCHAR* s3 = str::Dup(SkipMailProtocolTemp(s));
+    str::Free(s2);
+    return s3;
+}
+
+// s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
+// We only want the "path.pdf" / "foo@bar.com"
+// caller must free
+char* CleanupURLForClipbardCopy(const char* s) {
+    char* s2 = CleanupFileURL(s);
+    char* s3 = str::Dup(SkipMailProtocolTemp(s));
     str::Free(s2);
     return s3;
 }

@@ -41,7 +41,7 @@ struct FavTreeItem {
 
     HTREEITEM hItem = nullptr;
     FavTreeItem* parent = nullptr;
-    WCHAR* text = nullptr;
+    char* text = nullptr;
     bool isExpanded = false;
 
     // not owned by us
@@ -60,7 +60,7 @@ struct FavTreeModel : public TreeModel {
 
     TreeItem Root() override;
 
-    WCHAR* Text(TreeItem) override;
+    char* Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
     TreeItem ChildAt(TreeItem, int index) override;
@@ -80,7 +80,7 @@ TreeItem FavTreeModel::Root() {
     return (TreeItem)root;
 }
 
-WCHAR* FavTreeModel::Text(TreeItem ti) {
+char* FavTreeModel::Text(TreeItem ti) {
     auto fti = (FavTreeItem*)ti;
     return fti->text;
 }
@@ -566,11 +566,9 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fav, bool isExpanded) {
     res->isExpanded = isExpanded;
 
     if (isCollapsed) {
-        char* s = FavCompactReadableName(fav, fn);
-        res->text = ToWstr(s);
-        str::Free(s);
+        res->text = FavCompactReadableName(fav, fn);
     } else {
-        WCHAR* fp = ToWstrTemp(fav->filePath);
+        char* fp = fav->filePath;
         res->text = str::Dup(path::GetBaseNameTemp(fp));
     }
     return res;
@@ -581,9 +579,7 @@ static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
     for (size_t i = 0; i < n; i++) {
         Favorite* fn = f->favorites->at(i);
         auto* ti = new FavTreeItem();
-        char* s = FavReadableName(fn);
-        ti->text = ToWstr(s);
-        str::Free(s);
+        ti->text = FavReadableName(fn);
         ti->parent = parent;
         ti->favorite = fn;
         parent->children.Append(ti);
@@ -691,7 +687,7 @@ void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const char* pageLa
 }
 
 void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo) {
-    AutoFreeWstr name;
+    char* name = nullptr;
     auto tab = win->currentTab;
     auto* ctrl = tab->ctrl;
     if (ctrl->HacToc()) {
@@ -700,12 +696,11 @@ void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo) {
         TocItem* root = docTree->root;
         TocItem* item = TocItemForPageNo(root, pageNo);
         if (item) {
-            name.SetCopy(item->title);
+            name = item->title;
         }
     }
     AutoFreeStr pageLabel = ctrl->GetPageLabel(pageNo);
-    char* nameA = ToUtf8Temp(name);
-    AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), nameA);
+    AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
 }
 
 void AddFavoriteForCurrentPage(WindowInfo* win) {

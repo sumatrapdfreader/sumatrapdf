@@ -338,7 +338,7 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo
         PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
-            WCHAR* value = pageEl->GetValue();
+            char* value = pageEl->GetValue();
             ctx.cursorOnLinkTarget = value && pageEl->Is(kindPageElementDest);
             ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
             ctx.cursorOnImage = pageEl->Is(kindPageElementImage);

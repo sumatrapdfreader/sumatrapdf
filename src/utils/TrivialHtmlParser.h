@@ -94,4 +94,8 @@ inline WCHAR* FromHtmlUtf8(const char* s, size_t len) {
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 
+inline char* FromHtmlUtf8Temp(const char* s, size_t len) {
+    char* tmp = str::DupTemp(s, len);
+    return DecodeHtmlEntititesTemp(tmp, CP_UTF8);
+}
 } // namespace strconv

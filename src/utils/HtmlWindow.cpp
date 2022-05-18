@@ -138,6 +138,10 @@ bool IsBlankUrl(const WCHAR* url) {
     return str::EqI(L"about:blank", url);
 }
 
+bool IsBlankUrl(const char* url) {
+    return str::EqI("about:blank", url);
+}
+
 // HW stands for HtmlWindow
 // FrameSite ties together HtmlWindow and all the COM interfaces we need to implement
 // to support it

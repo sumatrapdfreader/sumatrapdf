@@ -38,7 +38,7 @@ struct ChmModel : Controller {
 
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
-    IPageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const char* name) override;
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
@@ -75,7 +75,7 @@ struct ChmModel : Controller {
     CRITICAL_SECTION docAccess;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
 
-    WStrVec pages;
+    StrVec pages;
     int currentPageNo = 1;
     HtmlWindow* htmlWindow = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
@@ -87,9 +87,9 @@ struct ChmModel : Controller {
     PoolAllocator poolAlloc;
 
     bool Load(const char* fileName);
-    void DisplayPage(const WCHAR* pageUrl);
+    void DisplayPage(const char* pageUrl);
 
-    ChmCacheEntry* FindDataForUrl(const WCHAR* url) const;
+    ChmCacheEntry* FindDataForUrl(const char* url) const;
 
     void ZoomTo(float zoomLevel) const;
 };

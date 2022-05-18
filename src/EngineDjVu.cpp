@@ -62,13 +62,13 @@ static bool CouldBeURL(const char* link) {
 
 struct PageDestinationDjVu : IPageDestination {
     const char* link = nullptr;
-    WCHAR* value = nullptr;
+    char* value = nullptr;
 
     PageDestinationDjVu(const char* l, const char* comment) {
         kind = kindDestinationDjVu;
         link = str::Dup(l);
         if (comment) {
-            value = ToWstr(comment);
+            value = str::Dup(comment);
         }
     }
     ~PageDestinationDjVu() {
@@ -76,14 +76,14 @@ struct PageDestinationDjVu : IPageDestination {
         str::Free(value);
     }
 
-    WCHAR* GetValue() {
+    char* GetValue() override {
         if (value) {
             return value;
         }
         if (!CouldBeURL(link)) {
             return nullptr;
         }
-        value = ToWstr(link);
+        value = str::Dup(link);
         return value;
     }
 };
@@ -115,8 +115,7 @@ static IPageElement* NewDjVuLink(int pageNo, Rect rect, const char* link, const 
 }
 
 static TocItem* NewDjVuTocItem(TocItem* parent, const char* title, const char* link) {
-    auto s = ToWstrTemp(title);
-    auto res = new TocItem(parent, s, 0);
+    auto res = new TocItem(parent, title, 0);
     res->dest = NewDjVuDestination(link, nullptr);
     if (res->dest) {
         res->pageNo = res->dest->GetPageNo();
@@ -263,7 +262,7 @@ class EngineDjVu : public EngineBase {
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
-    IPageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
     char* GetPageLabel(int pageNo) const override;
@@ -1100,13 +1099,12 @@ char* EngineDjVu::ResolveNamedDest(const char* name) {
     return nullptr;
 }
 
-IPageDestination* EngineDjVu::GetNamedDest(const WCHAR* name) {
-    AutoFree nameA = ToUtf8(name);
-    if (!str::StartsWith(nameA.Get(), "#")) {
-        nameA.TakeOwnershipOf(str::Join("#", nameA.Get()));
+IPageDestination* EngineDjVu::GetNamedDest(const char* name) {
+    if (!str::StartsWith(name, "#")) {
+        name = str::JoinTemp("#", name);
     }
 
-    AutoFree link = ResolveNamedDest(nameA.Get());
+    AutoFree link = ResolveNamedDest(name);
     if (link) {
         return NewDjVuDestination(link, nullptr);
     }

@@ -878,7 +878,7 @@ int EngineImageDir::GetPageByLabel(const char* label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-static TocItem* newImageDirTocItem(TocItem* parent, WCHAR* title, int pageNo) {
+static TocItem* newImageDirTocItem(TocItem* parent, char* title, int pageNo) {
     return new TocItem(parent, title, pageNo);
 };
 
@@ -886,12 +886,12 @@ TocTree* EngineImageDir::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    WCHAR* ws = ToWstrTemp(GetPageLabel(1));
-    TocItem* root = newImageDirTocItem(nullptr, ws, 1);
+    char* label = GetPageLabel(1);
+    TocItem* root = newImageDirTocItem(nullptr, label, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
-        ws = ToWstrTemp(GetPageLabel(i));
-        TocItem* item = newImageDirTocItem(root, ws, i);
+        label = GetPageLabel(1);
+        TocItem* item = newImageDirTocItem(root, label, i);
         item->id = i;
         root->AddSiblingAtEnd(item);
     }
@@ -1169,8 +1169,7 @@ bool EngineCbx::FinishLoading() {
     TocItem* curr = nullptr;
     for (int i = 0; i < pageCount; i++) {
         const char* fname = pageFiles[i]->name;
-        WCHAR* name = ToWstrTemp(fname);
-        const WCHAR* baseName = path::GetBaseNameTemp(name);
+        const char* baseName = path::GetBaseNameTemp(fname);
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
             root = ti;
