@@ -98,7 +98,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #ifdef GIT_COMMIT_ID
     // TODO: use short ID for rightTxt (only first 7 digits) with less hackery
     {L"last change", L"git commit " GIT_COMMIT_ID_STR,
-     L"https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
+     "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
 #endif
 #ifdef PRE_RELEASE_VER
     {L"a note", L"Pre-release version, for testing only!", nullptr},
@@ -293,10 +293,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
         }
         SetTextColor(hdc, col);
         size_t txtLen = str::Len(el->rightTxt);
-#ifdef GIT_COMMIT_ID
-        if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
-            txtLen -= str::Len(GIT_COMMIT_ID_STR) - 7;
-#endif
+        if (gitCommidId) {
+            if (str::EndsWith(ToUtf8Temp(el->rightTxt), gitCommidId)) {
+                txtLen -= str::Len(gitCommidId) - 7;
+            }
+        }
         TextOutW(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)txtLen);
 
         if (hasUrl) {
@@ -349,11 +350,11 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
         size_t txtLen = str::Len(el->rightTxt);
-#ifdef GIT_COMMIT_ID
-        if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR)) {
-            txtLen -= str::Len(GIT_COMMIT_ID_STR) - 7;
+        if (gitCommidId) {
+            if (str::EndsWith(ToUtf8Temp(el->rightTxt), gitCommidId)) {
+                txtLen -= str::Len(gitCommidId) - 7;
+            }
         }
-#endif
         GetTextExtentPoint32W(hdc, el->rightTxt, (int)txtLen, &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;

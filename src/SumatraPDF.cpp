@@ -5260,8 +5260,8 @@ void GetProgramInfo(str::Str& s) {
     }
     s.Append("\r\n");
 
-    if (gitSha1 != nullptr) {
-        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitSha1, gitSha1);
+    if (gitCommidId != nullptr) {
+        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId, gitCommidId);
     }
 }
 
