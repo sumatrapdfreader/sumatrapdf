@@ -1153,24 +1153,25 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             continue;
         }
 
-        WCHAR* name = ToWstrTemp(ev->name);
+        char* name = ev->name;
         if (str::IsEmpty(name)) {
             CmdLineArgsIter args(ToWstrTemp(ev->commandLine));
             int nArgs = args.nArgs - 2;
             if (nArgs == 0) {
                 continue;
             }
-            WCHAR* arg0 = args.at(2 + 0);
+            char* arg0 = args.at(2 + 0);
             name = str::DupTemp(path::GetBaseNameTemp(arg0));
-            WCHAR* ext = (WCHAR*)path::GetExtTemp(name);
+            char* ext = (char*)path::GetExtTemp(name);
             if (ext) {
                 *ext = 0;
             }
         }
 
-        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), name));
+        AutoFreeStr menuString = str::Format(_TRA("Open in %s"), name);
         uint menuId = CmdOpenWithExternalFirst + count;
-        InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+        WCHAR* ws = ToWstrTemp(menuString);
+        InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, ws);
         if (!filePath) {
             win::menu::SetEnabled(menuFile, menuId, false);
         }

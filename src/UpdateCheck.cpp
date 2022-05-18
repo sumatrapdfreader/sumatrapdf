@@ -418,7 +418,7 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
 // the assumption is that this is a portable version downloaded to temp directory
 // we should copy ourselves over the existing file, launch ourselves and
 // tell our new copy to delete ourselves
-void UpdateSelfTo(const WCHAR* path) {
+void UpdateSelfTo(const char* path) {
     CrashIf(!path);
     if (!file::Exists(path)) {
         logf("UpdateSelfTo: failed because destination doesn't exist\n");
@@ -426,13 +426,13 @@ void UpdateSelfTo(const WCHAR* path) {
     }
 
     auto sleepMs = gCli->sleepMs;
-    logf(L"UpdateSelfTo: '%s', sleep for %d ms\n", path, sleepMs);
+    logf("UpdateSelfTo: '%s', sleep for %d ms\n", path, sleepMs);
     // sleeping for a bit to make sure that the program that launched us
     // had time to exit so that we can overwrite it
     ::Sleep(gCli->sleepMs);
 
-    const WCHAR* src = GetExePathTemp();
-    bool ok = file::Copy(path, src, false);
+    const char* srcPath = GetExePathATemp();
+    bool ok = file::Copy(path, srcPath, false);
     // TODO: maybe retry if copy fails under the theory that the file
     // might be temporarily locked
     if (!ok) {
@@ -441,6 +441,6 @@ void UpdateSelfTo(const WCHAR* path) {
     }
     logf("UpdateSelfTo: copied self to file\n");
 
-    AutoFreeWstr args = str::Format(LR"(-sleep-ms 500 -delete-file "%s")", GetExePathTemp());
+    AutoFreeStr args = str::Format(R"(-sleep-ms 500 -delete-file "%s")", srcPath);
     CreateProcessHelper(path, args.Get());
 }

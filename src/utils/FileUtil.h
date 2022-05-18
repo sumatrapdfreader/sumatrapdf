@@ -90,9 +90,16 @@ bool Exists(const WCHAR* dir);
 bool Exists(const char*);
 
 bool Create(const WCHAR* dir);
+bool Create(const char* dir);
+
 bool CreateForFile(const WCHAR* path);
+
 bool CreateAll(const WCHAR* dir);
+bool CreateAll(const char* dir);
+
 bool RemoveAll(const WCHAR* dir);
+bool RemoveAll(const char* dir);
+
 } // namespace dir
 
 bool FileTimeEq(const FILETIME& a, const FILETIME& b);

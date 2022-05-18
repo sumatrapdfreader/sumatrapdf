@@ -305,28 +305,28 @@ bool CouldBePDFDoc(TabInfo* tab) {
     return !tab || !tab->ctrl || tab->GetEngineType() == kindEngineMupdf;
 }
 
-static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
+static char* FormatParams(const char* cmdLine, TabInfo* tab) {
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
-    AutoFreeWstr params;
+    AutoFreeStr params;
     if (cmdLine == nullptr) {
-        cmdLine = LR"("%1")";
+        cmdLine = R"("%1")";
     }
-    if (str::Find(cmdLine, L"%p")) {
-        AutoFreeWstr pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
-        params.Set(str::Replace(cmdLine, L"%p", pageNoStr));
+    if (str::Find(cmdLine, "%p")) {
+        AutoFreeStr pageNoStr(str::Format("%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
+        params.Set(str::Replace(cmdLine, "%p", pageNoStr));
         cmdLine = params;
     }
-    WCHAR* pathW = ToWstrTemp(tab->filePath);
-    if (str::Find(cmdLine, LR"("%1")")) {
+    char* path = tab->filePath;
+    if (str::Find(cmdLine, R"("%1")")) {
         // "%1", is alrady quoted so no need to add quotes
-        params.Set(str::Replace(cmdLine, L"%1", pathW));
-    } else if (str::Find(cmdLine, LR"(%1)")) {
+        params.Set(str::Replace(cmdLine, "%1", path));
+    } else if (str::Find(cmdLine, R"(%1)")) {
         // %1, not quoted, need to add
-        auto s = str::JoinTemp(L"\"", pathW, L"\"");
-        params.Set(str::Replace(cmdLine, L"%1", s));
+        char* s = str::JoinTemp("\"", path, "\"");
+        params.Set(str::Replace(cmdLine, "%1", s));
     } else {
-        params.Set(str::Format(LR"(%s "%s")", cmdLine, pathW));
+        params.Set(str::Format(R"(%s "%s")", cmdLine, path));
     }
     return params.StealData();
 }
@@ -338,8 +338,9 @@ bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     if (!canView || ev->exeFullPath == nullptr) {
         return false;
     }
-    AutoFreeWstr params = FormatParams(ToWstrTemp(ev->launchArgs), tab);
-    return LaunchFile(ev->exeFullPath, params);
+    AutoFreeStr params = FormatParams(ev->launchArgs, tab);
+    WCHAR* paramsW = ToWstrTemp(params);
+    return LaunchFile(ev->exeFullPath, paramsW);
 }
 
 bool PathMatchFilter(const WCHAR* path, char* filter) {
@@ -378,12 +379,12 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     if (args.nArgs == 0) {
         return false;
     }
-    const WCHAR* exePath = args.at(0);
+    const char* exePath = args.at(0);
     if (!file::Exists(exePath)) {
         return false;
     }
-    const WCHAR* cmdLine = args.ParamsTemp();
-    AutoFreeWstr params = FormatParams(cmdLine, tab);
+    char* cmdLine = args.ParamsTemp();
+    AutoFreeStr params = FormatParams(cmdLine, tab);
     return LaunchFile(exePath, params);
 }
 

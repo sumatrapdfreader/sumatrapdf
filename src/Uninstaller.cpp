@@ -68,7 +68,7 @@ const char* gInstalledFiles[] = {
 static void RemoveInstalledFiles() {
     // can't use GetExistingInstallationDir() anymore because we
     // delete registry entries
-    WCHAR* dir = gCli->installDir;
+    char* dir = gCli->installDir;
     if (!dir) {
         log("RemoveInstalledFiles(): dir is empty\n");
     }
@@ -85,7 +85,7 @@ static void RemoveInstalledFiles() {
     }
 #endif
     bool ok = dir::RemoveAll(dir);
-    logf(L"RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
+    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
 static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
@@ -415,10 +415,11 @@ int RunUninstaller() {
     }
 
     // TODO: remove dependency on this in the uninstaller
-    gCli->installDir = GetExistingInstallationDir();
+    gCli->installDir = GetExistingInstallationDirA();
+    WCHAR* instDir = ToWstrTemp(gCli->installDir);
     WCHAR* cmdLine = GetCommandLineW();
     WCHAR* exePath = GetExePathTemp();
-    logf(L"Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
+    logf(L"Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
 
     int ret = 1;
     auto installerExists = file::Exists(exePath);

@@ -149,9 +149,8 @@ Vec<FileData*> MobiToEpub2(const char* path) {
     return res;
 }
 
-Vec<FileData*> MobiToEpub(const WCHAR* path) {
-    char* pathA = ToUtf8Temp(path);
-    auto files = MobiToEpub2(pathA);
+Vec<FileData*> MobiToEpub(const char* path) {
+    auto files = MobiToEpub2(path);
     const WCHAR* dstDir = LR"(C:\Users\kjk\Downloads\mobiToEpub)";
     bool failed = false;
     for (auto& f : files) {

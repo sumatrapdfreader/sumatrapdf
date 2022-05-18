@@ -202,13 +202,13 @@ int TesterMain() {
     // ScopedGdiPlus gdi;
     // mui::Initialize();
 
-    WCHAR* dirOrFile = nullptr;
+    char* dirOrFile = nullptr;
 
     bool mobiTest = false;
     int i = 2; // skip program name and "/tester"
     while (i < nArgs) {
-        WCHAR* arg = argv.at(i);
-        if (str::Eq(arg, L"-mobi")) {
+        char* arg = argv.at(i);
+        if (str::Eq(arg, "-mobi")) {
             ++i;
             if (i == nArgs) {
                 return Usage();
@@ -216,16 +216,16 @@ int TesterMain() {
             mobiTest = true;
             dirOrFile = argv.at(i);
             ++i;
-        } else if (str::Eq(arg, L"-layout")) {
+        } else if (str::Eq(arg, "-layout")) {
             gLayout = true;
             ++i;
-        } else if (str::Eq(arg, L"-save-html")) {
+        } else if (str::Eq(arg, "-save-html")) {
             gSaveHtml = true;
             ++i;
-        } else if (str::Eq(arg, L"-save-images")) {
+        } else if (str::Eq(arg, "-save-images")) {
             gSaveImages = true;
             ++i;
-        } else if (str::Eq(arg, L"-zip-create")) {
+        } else if (str::Eq(arg, "-zip-create")) {
             ZipCreateTest();
             ++i;
         } else {
@@ -239,8 +239,7 @@ int TesterMain() {
     }
 
     if (mobiTest) {
-        char* dirOrFileA = ToUtf8Temp(dirOrFile);
-        MobiTest(dirOrFileA);
+        MobiTest(dirOrFile);
     }
 
     mui::Destroy();

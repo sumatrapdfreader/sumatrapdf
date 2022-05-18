@@ -832,9 +832,28 @@ bool Create(const WCHAR* dir) {
     return ERROR_ALREADY_EXISTS == GetLastError();
 }
 
+// Return true if a directory already exists or has been successfully created
+bool Create(const char* dir) {
+    WCHAR* dirW = ToWstrTemp(dir);
+    BOOL ok = CreateDirectoryW(dirW, nullptr);
+    if (ok) {
+        return true;
+    }
+    return ERROR_ALREADY_EXISTS == GetLastError();
+}
+
 // creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const WCHAR* dir) {
     WCHAR* parent = path::GetDirTemp(dir);
+    if (!str::Eq(parent, dir) && !Exists(parent)) {
+        CreateAll(parent);
+    }
+    return Create(dir);
+}
+
+// creates a directory and all its parent directories that don't exist yet
+bool CreateAll(const char* dir) {
+    char* parent = path::GetDirTemp(dir);
     if (!str::Eq(parent, dir) && !Exists(parent)) {
         CreateAll(parent);
     }
@@ -850,6 +869,21 @@ bool CreateForFile(const WCHAR* path) {
 bool RemoveAll(const WCHAR* dir) {
     // path must be doubly terminated
     // (https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/ns-shellapi-_shfileopstructa)
+    size_t n = str::Len(dir) + 2;
+    AutoFreeWstr path = AllocArray<WCHAR>(n);
+    str::BufSet(path, n, dir);
+    FILEOP_FLAGS flags = FOF_NO_UI;
+    uint op = FO_DELETE;
+    SHFILEOPSTRUCTW shfo = {nullptr, op, path, nullptr, flags, FALSE, nullptr, nullptr};
+    int res = SHFileOperationW(&shfo);
+    return res == 0;
+}
+
+// remove directory and all its children
+bool RemoveAll(const char* dirA) {
+    // path must be doubly terminated
+    // (https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/ns-shellapi-_shfileopstructa)
+    WCHAR* dir = ToWstrTemp(dirA);
     size_t n = str::Len(dir) + 2;
     AutoFreeWstr path = AllocArray<WCHAR>(n);
     str::BufSet(path, n, dir);

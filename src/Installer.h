@@ -45,7 +45,10 @@ extern Gdiplus::Color gCol5Shadow;
 
 void OnPaintFrame(HWND hwnd, bool skipoMessage);
 void AnimStep();
+
 void NotifyFailed(const WCHAR* msg);
+void NotifyFailed(const char* msg);
+
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
 void SetDefaultMsg();
 
@@ -53,8 +56,11 @@ int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated);
 
 TempWstr GetShortcutPathTemp(int csidl);
 
-bool ExtractInstallerFiles(WCHAR* dir);
+bool ExtractInstallerFiles(char* dir);
+
 WCHAR* GetExistingInstallationDir();
+char* GetExistingInstallationDirA();
+
 WCHAR* GetInstallDirTemp();
 TempWstr GetInstalledExePathTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);

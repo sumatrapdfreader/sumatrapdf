@@ -224,8 +224,9 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
                       i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
-        AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
-        cmd.AppendFmt(L"[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath.Get(), i.forwardSearchLine);
+        char* srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
+        WCHAR* sourcePath = ToWstrTemp(srcPath);
+        cmd.AppendFmt(L"[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath, i.forwardSearchLine);
     }
     if (i.search != nullptr) {
         // TODO: quote if i.search has '"' in it
@@ -289,12 +290,14 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         uint page;
         Vec<Rect> rects;
-        AutoFreeWstr sourcePath(path::Normalize(flags.forwardSearchOrigin));
+        char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
+        WCHAR* sourcePath = ToWstrTemp(srcPath);
         int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, flags.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, flags.forwardSearchLine, 0, ret, page, rects);
     }
     if (flags.search != nullptr) {
-        FindTextOnThread(win, TextSearchDirection::Forward, flags.search, true /*wasModified*/, true /*showProgress*/);
+        WCHAR* search = ToWstrTemp(flags.search);
+        FindTextOnThread(win, TextSearchDirection::Forward, search, true /*wasModified*/, true /*showProgress*/);
     }
     return win;
 }
@@ -526,9 +529,9 @@ static void ShutdownCommon() {
 }
 #endif
 
-static void ReplaceColor(char** col, WCHAR* maybeColor) {
+static void ReplaceColor(char** col, char* maybeColor) {
     ParsedColor c;
-    ParseColor(c, ToUtf8Temp(maybeColor));
+    ParseColor(c, maybeColor);
     if (c.parsedOk) {
         char* colNewStr = SerializeColor(c.col);
         str::ReplacePtr(&gGlobalPrefs->mainWindowBackground, colNewStr);
@@ -537,47 +540,47 @@ static void ReplaceColor(char** col, WCHAR* maybeColor) {
 
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
-        char* cmdLine = str::Dup(ToUtf8Temp(i.inverseSearchCmdLine));
+        char* cmdLine = str::Dup(i.inverseSearchCmdLine);
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }
     gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
 
-    WCHAR* arg = nullptr;
-    WCHAR* param = nullptr;
+    char* arg = nullptr;
+    char* param = nullptr;
     for (size_t n = 0; n < i.globalPrefArgs.size(); n++) {
         arg = i.globalPrefArgs.at(n);
-        if (str::EqI(arg, L"-esc-to-exit")) {
+        if (str::EqI(arg, "-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
-        } else if (str::EqI(arg, L"-bgcolor") || str::EqI(arg, L"-bg-color")) {
+        } else if (str::EqI(arg, "-bgcolor") || str::EqI(arg, "-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->mainWindowBackground, param);
-        } else if (str::EqI(arg, L"-set-color-range")) {
+        } else if (str::EqI(arg, "-set-color-range")) {
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->fixedPageUI.textColor, param);
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, param);
-        } else if (str::EqI(arg, L"-fwdsearch-offset")) {
+        } else if (str::EqI(arg, "-fwdsearch-offset")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(param);
+            gGlobalPrefs->forwardSearch.highlightOffset = atoi(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-fwdsearch-width")) {
+        } else if (str::EqI(arg, "-fwdsearch-width")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(param);
+            gGlobalPrefs->forwardSearch.highlightWidth = atoi(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-fwdsearch-color")) {
+        } else if (str::EqI(arg, "-fwdsearch-color")) {
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->forwardSearch.highlightColor, param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-fwdsearch-permanent")) {
+        } else if (str::EqI(arg, "-fwdsearch-permanent")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(param);
+            gGlobalPrefs->forwardSearch.highlightPermanent = atoi(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-manga-mode")) {
+        } else if (str::EqI(arg, "-manga-mode")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", param) || str::Eq(L"1", param);
+            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI("true", param) || str::Eq("1", param);
         }
     }
 }

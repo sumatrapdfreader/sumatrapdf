@@ -37,10 +37,10 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
         utassert(i.globalPrefArgs.size() == 2);
-        const WCHAR* s = i.globalPrefArgs.at(0);
-        utassert(str::Eq(s, L"-fwdsearch-width"));
+        const char* s = i.globalPrefArgs.at(0);
+        utassert(str::Eq(s, "-fwdsearch-width"));
         s = i.globalPrefArgs.at(1);
-        utassert(str::Eq(s, L"5"));
+        utassert(str::Eq(s, "5"));
         utassert(2 == i.pathsToBenchmark.size());
         utassert(str::Eq("foo.pdf", i.pathsToBenchmark.at(0)));
         utassert(nullptr == i.pathsToBenchmark.at(1));

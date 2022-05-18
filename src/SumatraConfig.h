@@ -17,5 +17,6 @@ extern const char* gitCommidId;
 extern const char* preReleaseVersion;
 
 constexpr const WCHAR* kExeName = L"SumatraPDF.exe";
+constexpr const char* kExeNameA = "SumatraPDF.exe";
 
 int GetAppIconID();

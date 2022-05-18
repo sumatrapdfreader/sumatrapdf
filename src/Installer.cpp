@@ -102,8 +102,8 @@ char* GetInstallerLogPath() {
     return res;
 }
 
-bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
-    logf(L"ExtractFiles(): dir '%s'\n", destDir);
+static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
+    logf("ExtractFiles(): dir '%s'\n", destDir);
     lzma::FileInfo* fi;
     u8* uncompressed;
 
@@ -115,45 +115,43 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
 
         if (!uncompressed) {
             NotifyFailed(
-                _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
+                _TRA("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
         }
-        auto fileName = ToWstrTemp(fi->name);
-        AutoFreeWstr filePath = path::Join(destDir, fileName);
+        char* filePath = path::JoinTemp(destDir, fi->name);
 
         ByteSlice d = {uncompressed, fi->uncompressedSize};
         bool ok = file::WriteFile(filePath, d);
         free(uncompressed);
 
         if (!ok) {
-            WCHAR* msg = str::Format(_TR("Couldn't write %s to disk"), filePath.data);
+            char* msg = str::Format(_TRA("Couldn't write %s to disk"), filePath);
             NotifyFailed(msg);
             str::Free(msg);
             return false;
         }
-        logf(L"  extracted '%s'\n", fileName);
+        logf("  extracted '%s'\n", filePath);
         ProgressStep();
     }
 
     return true;
 }
 
-static bool CopySelfToDir(const WCHAR* destDir) {
-    logf(L"CopySelfToDir(%s)\n", destDir);
-    auto exePath = GetExePathTemp();
-    WCHAR* dstPath = path::JoinTemp(destDir, kExeName);
+static bool CopySelfToDir(const char* destDir) {
+    logf("CopySelfToDir(%s)\n", destDir);
+    char* exePath = GetExePathATemp();
+    char* dstPath = path::JoinTemp(destDir, kExeNameA);
     bool failIfExists = false;
     bool ok = file::Copy(dstPath, exePath, failIfExists);
     // strip zone identifier (if exists) to avoid windows
     // complaining when launching the file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
-    auto dstPathA = ToUtf8Temp(dstPath);
-    file::DeleteZoneIdentifier(dstPathA);
+    file::DeleteZoneIdentifier(dstPath);
     if (!ok) {
-        logf(L"  failed to copy '%s' to dir '%s'\n", exePath, destDir);
+        logf("  failed to copy '%s' to dir '%s'\n", exePath, destDir);
         return false;
     }
-    logf(L"  copied '%s' to dir '%s'\n", exePath, destDir);
+    logf("  copied '%s' to dir '%s'\n", exePath, destDir);
     return true;
 }
 
@@ -298,7 +296,7 @@ Exit:
 
 static void RestartElevatedForAllUsers() {
     auto exePath = GetExePathTemp();
-    WCHAR* cmdLine = (WCHAR*)L"-run-install-now";
+    const WCHAR* cmdLine = L"-run-install-now";
     if (gWnd->checkboxForAllUsers->IsChecked()) {
         cmdLine = str::JoinTemp(cmdLine, L" -all-users");
     }
@@ -314,7 +312,8 @@ static void RestartElevatedForAllUsers() {
     if (gCli->log) {
         cmdLine = str::JoinTemp(cmdLine, L" -log");
     }
-    cmdLine = str::JoinTemp(cmdLine, L" -install-dir \"", gCli->installDir);
+    WCHAR* dirW = ToWstrTemp(gCli->installDir);
+    cmdLine = str::JoinTemp(cmdLine, L" -install-dir \"", dirW);
     cmdLine = str::JoinTemp(cmdLine, L"\"");
     logf(L"Re-launching '%s' as elevated, args\n%s\n", exePath, cmdLine);
     LaunchElevated(exePath, cmdLine);
@@ -386,7 +385,7 @@ static void OnButtonInstall() {
         return;
     }
 
-    WCHAR* userInstallDir = win::GetTextTemp(gWnd->editInstallationDir->hwnd);
+    char* userInstallDir = win::GetTextATemp(gWnd->editInstallationDir->hwnd);
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
@@ -580,7 +579,7 @@ static void PositionInstallButton(Button* b) {
 }
 
 // caller needs to str::Free()
-static WCHAR* GetDefaultInstallationDir(bool forAllUsers, bool ignorePrev) {
+static char* GetDefaultInstallationDir(bool forAllUsers, bool ignorePrev) {
     logf(L"GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
 
     WCHAR* dir;
@@ -590,19 +589,19 @@ static WCHAR* GetDefaultInstallationDir(bool forAllUsers, bool ignorePrev) {
 
     if (dirPrevInstall && !ignorePrev) {
         logf(L"  using %s from previous install\n", dirPrevInstall);
-        return str::Dup(dirPrevInstall);
+        return ToUtf8(dirPrevInstall);
     }
 
     if (forAllUsers) {
         dir = path::Join(dirAll, kAppName);
         logf(L"  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
-        return dir;
+        return ToUtf8(dir);
     }
 
     // %APPLOCALDATA%\SumatraPDF
     dir = path::Join(dirUser, kAppName);
     logf(L"  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
-    return dir;
+    return ToUtf8(dir);
 }
 
 void ForAllUsersStateChanged() {
@@ -971,8 +970,8 @@ u32 GetLibmupdfDllSize() {
     return 0;
 }
 
-bool ExtractInstallerFiles(WCHAR* dir) {
-    logf(L"ExtractInstallerFiles() to '%s'\n", dir);
+bool ExtractInstallerFiles(char* dir) {
+    logf("ExtractInstallerFiles() to '%s'\n", dir);
     bool ok = dir::CreateAll(dir);
     if (!ok) {
         log("  dir::CreateAll() failed\n");

@@ -7,4 +7,4 @@ enum class UpdateCheck {
 };
 
 void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType);
-void UpdateSelfTo(const WCHAR* path);
+void UpdateSelfTo(const char* path);

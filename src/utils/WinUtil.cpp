@@ -616,11 +616,17 @@ void HandleRedirectedConsoleOnShutdown() {
     }
 }
 
-// Return the full exe path of my own executable
 TempWstr GetExePathTemp() {
     WCHAR buf[MAX_PATH]{};
     GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
     return str::DupTemp(buf);
+}
+
+// Return the full exe path of my own executable
+TempStr GetExePathATemp() {
+    WCHAR buf[MAX_PATH]{};
+    GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
+    return ToUtf8Temp(buf);
 }
 
 // Return directory where our executable is located
@@ -684,6 +690,42 @@ WCHAR* ResolveLnkTemp(const WCHAR* path) {
     }
 
     return str::DupTemp(newPath);
+}
+
+char* ResolveLnkTemp(const char* path) {
+    WCHAR* pathW = ToWstr(path);
+    ScopedMem<OLECHAR> olePath(pathW);
+    if (!olePath) {
+        return nullptr;
+    }
+
+    ScopedComPtr<IShellLink> lnk;
+    if (!lnk.Create(CLSID_ShellLink)) {
+        return nullptr;
+    }
+
+    ScopedComQIPtr<IPersistFile> file(lnk);
+    if (!file) {
+        return nullptr;
+    }
+
+    HRESULT hRes = file->Load(olePath, STGM_READ);
+    if (FAILED(hRes)) {
+        return nullptr;
+    }
+
+    hRes = lnk->Resolve(nullptr, SLR_UPDATE);
+    if (FAILED(hRes)) {
+        return nullptr;
+    }
+
+    WCHAR newPath[MAX_PATH]{};
+    hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
+    if (FAILED(hRes)) {
+        return nullptr;
+    }
+
+    return ToUtf8Temp(newPath);
 }
 
 bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args, const WCHAR* description,
@@ -848,11 +890,37 @@ HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
     return pi.hProcess;
 }
 
+HANDLE LaunchProcess(const char* cmdLine, const char* currDir, DWORD flags) {
+    PROCESS_INFORMATION pi = {nullptr};
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
+
+    // CreateProcess() might modify cmd line argument, so make a copy
+    // in case caller provides a read-only string
+    WCHAR* cmdLineW = ToWstrTemp(cmdLine);
+    WCHAR* dirW = ToWstrTemp(currDir);
+    if (!CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, FALSE, flags, nullptr, dirW, &si, &pi)) {
+        return nullptr;
+    }
+
+    CloseHandle(pi.hThread);
+    return pi.hProcess;
+}
+
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
     if (!args) {
         args = L"";
     }
     AutoFreeWstr cmd = str::Format(L"\"%s\" %s", exe, args);
+    AutoCloseHandle process = LaunchProcess(cmd);
+    return process != nullptr;
+}
+
+bool CreateProcessHelper(const char* exe, const char* args) {
+    if (!args) {
+        args = "";
+    }
+    AutoFreeStr cmd = str::Format("\"%s\" %s", exe, args);
     AutoCloseHandle process = LaunchProcess(cmd);
     return process != nullptr;
 }
@@ -1731,17 +1799,28 @@ void ToForeground(HWND hwnd) {
     SetForegroundWindow(hwnd);
 }
 
-/* return text of window or edit control, nullptr in case of an error.
-caller needs to free() the result */
+// return text of window or edit control, nullptr in case of an error
 TempWstr GetTextTemp(HWND hwnd) {
     size_t cch = GetTextLen(hwnd);
-    size_t nBytes = (cch + 2) * sizeof(WCHAR);
+    size_t nBytes = (cch + 2) * sizeof(WCHAR); // +2 for extra room
     WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
     if (nullptr == txt) {
-        return TempWstr();
+        return nullptr;
     }
     SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)txt);
     return txt;
+}
+
+// return text of window or edit control, nullptr in case of an error
+TempStr GetTextATemp(HWND hwnd) {
+    size_t cch = GetTextLen(hwnd);
+    size_t nBytes = (cch + 2) * sizeof(WCHAR); // +2 for extra room
+    WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
+    if (nullptr == txt) {
+        return nullptr;
+    }
+    SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)txt);
+    return ToUtf8Temp(txt);
 }
 
 size_t GetTextLen(HWND hwnd) {

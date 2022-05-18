@@ -96,6 +96,13 @@ void NotifyFailed(const WCHAR* msg) {
     logf(L"NotifyFailed: %s\n", msg);
 }
 
+void NotifyFailed(const char* msg) {
+    if (!gFirstError) {
+        gFirstError = ToWstr(msg);
+    }
+    logf("NotifyFailed: %s\n", msg);
+}
+
 void SetMsg(const WCHAR* msg, Color color) {
     gMsg.SetCopy(msg);
     gMsgColor = color;
@@ -124,6 +131,12 @@ WCHAR* GetExistingInstallationDir() {
         return res;
     }
     return nullptr;
+}
+
+// caller has to free()
+char* GetExistingInstallationDirA() {
+    AutoFreeWstr res = GetExistingInstallationDir();
+    return ToUtf8(res);
 }
 
 void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
@@ -159,12 +172,14 @@ WCHAR* GetExistingInstallationFilePath(const WCHAR* name) {
 }
 
 WCHAR* GetInstallDirTemp() {
-    logf(L"GetInstallDirTemp() => %s\n", gCli->installDir);
-    return gCli->installDir;
+    logf("GetInstallDirTemp() => %s\n", gCli->installDir);
+    WCHAR* dirW = ToWstrTemp(gCli->installDir);
+    return dirW;
 }
 
 WCHAR* GetInstallationFilePath(const WCHAR* name) {
-    auto res = path::Join(gCli->installDir, name);
+    WCHAR* dirW = ToWstrTemp(gCli->installDir);
+    WCHAR* res = path::Join(dirW, name);
     logf(L"GetInstallationFilePath(%s) = > %s\n", name, res);
     return res;
 }

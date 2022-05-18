@@ -72,11 +72,15 @@ bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
 
 TempWstr GetExePathTemp();
+TempStr GetExePathATemp();
+
 TempWstr GetExeDirTemp();
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 
 WCHAR* ResolveLnkTemp(const WCHAR* path);
+char* ResolveLnkTemp(const char* path);
+
 bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args = nullptr,
                     const WCHAR* description = nullptr, int iconIndex = 0);
 IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
@@ -98,8 +102,13 @@ Rect GetVirtualScreenRect();
 bool LaunchFile(const WCHAR* path, const WCHAR* params = nullptr, const WCHAR* verb = nullptr, bool hidden = false);
 bool LaunchFile(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);
 bool LaunchBrowser(const char* url);
+
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir = nullptr, DWORD flags = 0);
+HANDLE LaunchProcess(const char* cmdLine, const char* currDir = nullptr, DWORD flags = 0);
+
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args);
+bool CreateProcessHelper(const char* exe, const char* args);
+
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
 bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
@@ -177,6 +186,7 @@ void ToForeground(HWND hwnd);
 
 size_t GetTextLen(HWND hwnd);
 TempWstr GetTextTemp(HWND hwnd);
+TempStr GetTextATemp(HWND hwnd);
 
 void SetText(HWND hwnd, const WCHAR* txt);
 void SetText(HWND hwnd, const char* txt);

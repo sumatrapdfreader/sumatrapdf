@@ -141,8 +141,8 @@ static const char* zoomValues =
 // -zoom [fitwidth|fitpage|fitcontent|n]
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
-static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
-    auto txtDup = ToUtf8Temp(txtOrig);
+static void ParseZoomValue(float* zoom, const char* txtOrig) {
+    auto txtDup = str::DupTemp(txtOrig);
     char* txt = str::ToLowerInPlace(txtDup);
     int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
     if (zoomVal >= 0) {
@@ -171,9 +171,9 @@ static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
 }
 
 // -scroll x,y
-static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
+static void ParseScrollValue(Point* scroll, const char* txt) {
     int x, y;
-    if (str::Parse(txt, L"%d,%d%$", &x, &y)) {
+    if (str::Parse(txt, "%d,%d%$", &x, &y)) {
         *scroll = Point(x, y);
     }
 }
@@ -255,11 +255,11 @@ enum class Arg { Unknown = -1, ARGS(MAKE_ARG) };
 
 static const char* gArgNames = ARGS(MAKE_STR);
 
-static Arg GetArg(const WCHAR* s) {
+static Arg GetArg(const char* s) {
     if (!CouldBeArg(s)) {
         return Arg::Unknown;
     }
-    char* arg = ToUtf8Temp(s + 1);
+    const char* arg = s + 1;
     int idx = seqstrings::StrToIdxIS(gArgNames, arg);
     if (idx < 0) {
         return Arg::Unknown;
@@ -271,11 +271,11 @@ static Arg GetArg(const WCHAR* s) {
 void ParseFlags(const WCHAR* cmdLine, Flags& i) {
     CmdLineArgsIter args(cmdLine);
 
-    const WCHAR* param = nullptr;
+    const char* param = nullptr;
     char* paramA = nullptr;
     int paramInt = 0;
 
-    for (auto argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
+    for (const char* argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
         Arg arg = GetArg(argName);
         if (arg == Arg::Unknown) {
             goto CollectFile;
@@ -418,8 +418,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // one of the args without params, so assume this is a file that starts with '-'
             goto CollectFile;
         }
-        paramInt = _wtoi(param);
-        paramA = ToUtf8Temp(param);
+        paramInt = atoi(param);
 
         if (arg == Arg::SleepMs) {
             i.sleepMs = paramInt;
@@ -448,7 +447,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             i.forwardSearchOrigin = str::Dup(param);
-            i.forwardSearchLine = _wtoi(args.EatParam());
+            i.forwardSearchLine = atoi(args.EatParam());
             continue;
         }
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
@@ -484,9 +483,9 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
                 i.pluginURL = str::Dup(paramA);
-                i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.EatParam());
+                i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam());
             } else {
-                i.hwndPluginParent = (HWND)(INT_PTR)_wtol(param);
+                i.hwndPluginParent = (HWND)(INT_PTR)atol(param);
             }
             continue;
         }
@@ -500,16 +499,16 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
             i.stressTestPath = str::Dup(paramA);
             int num;
-            const WCHAR* s = args.AdditionalParam(1);
+            const char* s = args.AdditionalParam(1);
             if (s && str::FindChar(s, '*')) {
-                i.stressTestFilter = ToUtf8(args.EatParam());
+                i.stressTestFilter = str::Dup(args.EatParam());
                 s = args.AdditionalParam(1);
             }
-            if (s && IsValidPageRange(ToUtf8Temp(s))) {
-                i.stressTestRanges = ToUtf8(args.EatParam());
+            if (s && IsValidPageRange(s)) {
+                i.stressTestRanges = str::Dup(args.EatParam());
                 s = args.AdditionalParam(1);
             }
-            if (s && str::Parse(s, L"%dx%$", &num) && num > 0) {
+            if (s && str::Parse(s, "%dx%$", &num) && num > 0) {
                 i.stressTestCycles = num;
                 args.EatParam();
             }
@@ -532,10 +531,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::Bench) {
             i.pathsToBenchmark.Append(paramA);
-            const WCHAR* s = args.AdditionalParam(1);
-            if (s && IsBenchPagesInfo(ToUtf8Temp(s))) {
+            const char* s = args.AdditionalParam(1);
+            if (s && IsBenchPagesInfo(s)) {
                 s = args.EatParam();
-                i.pathsToBenchmark.Append(ToUtf8Temp(s));
+                i.pathsToBenchmark.Append(s);
             } else {
                 // pathsToBenchmark are always in pairs
                 // i.e. path + page spec
@@ -556,7 +555,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::Lang) {
             // TODO: remove the following deprecated options within
             // a release or two
-            i.lang = ToUtf8(param);
+            i.lang = str::Dup(param);
             continue;
         }
         if (arg == Arg::UpdateSelfTo) {
@@ -588,13 +587,12 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
 
     CollectFile:
         // TODO: resolve .lnk when opening file
-        WCHAR* filePath = (WCHAR*)argName;
-        if (str::EndsWithI(filePath, L".lnk")) {
+        const char* filePath = argName;
+        if (str::EndsWithI(filePath, ".lnk")) {
             filePath = ResolveLnkTemp(argName);
         }
         if (filePath) { // resolve might fail
-            char* s = ToUtf8Temp(filePath);
-            i.fileNames.Append(s);
+            i.fileNames.Append(filePath);
         }
     }
 
@@ -603,7 +601,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         // or current directory if no /d given
         i.silent = true;
         if (!i.installDir) {
-            i.installDir = str::Dup(L".");
+            i.installDir = str::Dup(".");
         }
     }
 }

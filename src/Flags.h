@@ -19,7 +19,7 @@ struct Flags {
     bool printDialog = false;
     char* printerName = nullptr;
     char* printSettings = nullptr;
-    WCHAR* forwardSearchOrigin = nullptr;
+    char* forwardSearchOrigin = nullptr;
     int forwardSearchLine = 0;
     bool reuseDdeInstance = false;
     char* destName = nullptr;
@@ -36,14 +36,14 @@ struct Flags {
     bool exitImmediately = false;
     bool silent = false;
     char* appdataDir = nullptr;
-    WCHAR* inverseSearchCmdLine = nullptr;
+    char* inverseSearchCmdLine = nullptr;
     bool invertColors = false;
     bool regress = false;
     bool tester = false;
     // -new-window, if true and we're using tabs, opens
     // the document in new window
     bool inNewWindow = false;
-    WCHAR* search = nullptr;
+    char* search = nullptr;
 
     // stress-testing related
     char* stressTestPath = nullptr;
@@ -64,11 +64,11 @@ struct Flags {
 
     // deprecated flags
     char* lang = nullptr;
-    WStrVec globalPrefArgs;
+    StrVec globalPrefArgs;
 
     // related to installer
     bool showHelp = false;
-    WCHAR* installDir = nullptr;
+    char* installDir = nullptr;
     bool install = false;
     bool uninstall = false;
     bool withFilter = false;
@@ -79,10 +79,10 @@ struct Flags {
     bool runInstallNow = false;
 
     // for internal use
-    WCHAR* updateSelfTo = nullptr;
-    WCHAR* deleteFile = nullptr;
+    char* updateSelfTo = nullptr;
+    char* deleteFile = nullptr;
 
-    WCHAR* toEpubPath = nullptr;
+    char* toEpubPath = nullptr;
 
     // for some commands, will sleep for sleepMs milliseconds
     // before proceeding
