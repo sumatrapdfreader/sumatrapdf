@@ -94,9 +94,6 @@ using std::placeholders::_1;
 
 #define RESTRICTIONS_FILE_NAME L"sumatrapdfrestrict.ini"
 
-#define DEFAULT_LINK_PROTOCOLS L"http,https,mailto"
-#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video,webpage"
-
 constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
 
@@ -149,11 +146,11 @@ static Perm gPolicyRestrictions = Perm::RestrictedUse;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm::DiskAccess)
-static WStrVec gAllowedLinkProtocols;
+static StrVec gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-static WStrVec gAllowedFileTypes;
+static StrVec gAllowedFileTypes;
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.
@@ -173,6 +170,9 @@ void SetCurrentLang(const char* langCode) {
     trans::SetCurrentLangByCode(langCode);
 }
 
+#define DEFAULT_FILE_PERCEIVED_TYPES "audio,video,webpage"
+#define DEFAULT_LINK_PROTOCOLS "http,https,mailto"
+
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
     CrashIf(gPolicyRestrictions != Perm::RestrictedUse);
@@ -189,8 +189,8 @@ void InitializePolicies(bool restrict) {
     AutoFreeWstr restrictPath(path::GetPathOfFileInAppDir(RESTRICTIONS_FILE_NAME));
     if (!file::Exists(restrictPath)) {
         gPolicyRestrictions = Perm::All;
-        Split(gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, L",");
-        Split(gAllowedFileTypes, DEFAULT_FILE_PERCEIVED_TYPES, L",");
+        Split(gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, ",");
+        Split(gAllowedFileTypes, DEFAULT_FILE_PERCEIVED_TYPES, ",");
         return;
     }
 
@@ -222,20 +222,19 @@ void InitializePolicies(bool restrict) {
 
     // determine the list of allowed link protocols and perceived file types
     if ((gPolicyRestrictions & Perm::DiskAccess) != (Perm)0) {
-        const char* value;
-        value = polsec->GetValue("LinkProtocols");
+        const char* value = polsec->GetValue("LinkProtocols");
         if (value != nullptr) {
-            auto protocols = ToWstrTemp(value);
+            char* protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransCharsInPlace(protocols, L" :;", L",,,");
-            Split(gAllowedLinkProtocols, protocols, L",", true);
+            str::TransCharsInPlace(protocols, " :;", ",,,");
+            Split(gAllowedLinkProtocols, protocols, ",", true);
         }
         value = polsec->GetValue("SafeFileTypes");
         if (value != nullptr) {
-            auto protocols = ToWstrTemp(value);
+            char* protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransCharsInPlace(protocols, L" :;", L",,,");
-            Split(gAllowedFileTypes, protocols, L",", true);
+            str::TransCharsInPlace(protocols, " :;", ",,,");
+            Split(gAllowedFileTypes, protocols, ",", true);
         }
     }
 }
@@ -272,7 +271,7 @@ bool SumatraLaunchBrowser(const char* url) {
     }
 
     // check if this URL's protocol is allowed
-    AutoFreeWstr protocol;
+    AutoFreeStr protocol;
     if (!str::Parse(url, "%S:", &protocol)) {
         return false;
     }
@@ -309,13 +308,14 @@ bool OpenFileExternally(const char* path) {
 
     // check if this file's perceived type is allowed
     const char* ext = path::GetExtTemp(path);
-    AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ToWstrTemp(ext), L"PerceivedType"));
+    AutoFreeWstr perceivedTypeW(ReadRegStr(HKEY_CLASSES_ROOT, ToWstrTemp(ext), L"PerceivedType"));
+    char* perceivedType = ToUtf8Temp(perceivedTypeW);
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html") || str::EndsWithI(path, ".xhtml")) {
-        perceivedType.SetCopy(L"webpage");
+        perceivedType = str::DupTemp("webpage");
     }
     str::ToLowerInPlace(perceivedType);
-    if (gAllowedFileTypes.Contains(L"*")) {
+    if (gAllowedFileTypes.Contains("*")) {
         /* allow all file types (not recommended) */;
     } else if (!perceivedType || !gAllowedFileTypes.Contains(perceivedType)) {
         return false;
