@@ -27,11 +27,11 @@ void DeleteDisplayState(FileState* fs) {
     FreeStruct(&gFileStateInfo, fs);
 }
 
-Favorite* NewFavorite(int pageNo, const WCHAR* name, const WCHAR* pageLabel) {
+Favorite* NewFavorite(int pageNo, const char* name, const char* pageLabel) {
     Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, nullptr);
     fav->pageNo = pageNo;
-    fav->name = ToUtf8(name);
-    fav->pageLabel = ToUtf8(pageLabel);
+    fav->name = str::Dup(name);
+    fav->pageLabel = str::Dup(pageLabel);
     return fav;
 }
 

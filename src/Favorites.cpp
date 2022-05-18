@@ -183,14 +183,13 @@ bool Favorites::IsPageInFavorites(const char* filePath, int pageNo) {
     return false;
 }
 
-static Favorite* FindByPage(FileState* ds, int pageNo, const WCHAR* pageLabelW = nullptr) {
+static Favorite* FindByPage(FileState* ds, int pageNo, const char* pageLabel = nullptr) {
     if (!ds || !ds->favorites) {
         return nullptr;
     }
     auto favs = ds->favorites;
     int n = favs->isize();
-    if (pageLabelW) {
-        char* pageLabel = ToUtf8Temp(pageLabelW);
+    if (pageLabel) {
         for (int i = 0; i < n; i++) {
             auto fav = favs->at(i);
             if (str::Eq(fav->pageLabel, pageLabel)) {
@@ -214,7 +213,7 @@ static int SortByPageNo(const void* a, const void* b) {
     return na->pageNo - nb->pageNo;
 }
 
-void Favorites::AddOrReplace(const char* filePath, int pageNo, const char* name, const WCHAR* pageLabel) {
+void Favorites::AddOrReplace(const char* filePath, int pageNo, const char* name, const char* pageLabel) {
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
         CrashIf(gGlobalPrefs->rememberOpenedFiles);
@@ -225,9 +224,9 @@ void Favorites::AddOrReplace(const char* filePath, int pageNo, const char* name,
     Favorite* fn = FindByPage(fav, pageNo, pageLabel);
     if (fn) {
         str::ReplacePtr(&fn->name, name);
-        CrashIf(fn->pageLabel && !str::Eq(fn->pageLabel, ToUtf8Temp(pageLabel)));
+        CrashIf(fn->pageLabel && !str::Eq(fn->pageLabel, pageLabel));
     } else {
-        fn = NewFavorite(pageNo, ToWstrTemp(name), pageLabel);
+        fn = NewFavorite(pageNo, name, pageLabel);
         fav->favorites->Append(fn);
         fav->favorites->Sort(SortByPageNo);
     }
@@ -664,23 +663,24 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
     return currItem;
 }
 
-void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageLabel, AutoFreeWstr& name) {
+void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const char* pageLabel, const char* nameIn) {
+    AutoFreeStr name = str::Dup(nameIn);
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd) {
         return;
     }
 
-    AutoFreeWstr plainLabel(str::Format(L"%d", pageNo));
+    AutoFreeStr plainLabel(str::Format("%d", pageNo));
     bool needsLabel = !str::Eq(plainLabel, pageLabel);
 
     RememberFavTreeExpansionStateForAllWindows();
-    const WCHAR* pl = nullptr;
+    const char* pl = nullptr;
     if (needsLabel) {
         pl = pageLabel;
     }
     TabInfo* tab = win->currentTab;
     char* path = tab->filePath;
-    gFavorites.AddOrReplace(path, pageNo, ToUtf8(name.Get()), pl);
+    gFavorites.AddOrReplace(path, pageNo, name, pl);
     // expand newly added favorites by default
     FileState* fav = gFavorites.GetFavByFilePath(path);
     if (fav && fav->favorites->size() == 2) {
@@ -704,7 +704,8 @@ void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo) {
         }
     }
     AutoFreeStr pageLabel = ctrl->GetPageLabel(pageNo);
-    AddFavoriteWithLabelAndName(win, pageNo, ToWstrTemp(pageLabel.Get()), name);
+    char* nameA = ToUtf8Temp(name);
+    AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), nameA);
 }
 
 void AddFavoriteForCurrentPage(WindowInfo* win) {

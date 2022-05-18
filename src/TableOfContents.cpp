@@ -411,10 +411,9 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     if (dti->dest) {
         pageNo = dti->dest->GetPageNo();
     }
-    AutoFreeWstr name = str::Dup(dti->title);
+    char* name = ToUtf8Temp(dti->title);
     AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNo);
-    WCHAR* pageLabelW = ToWstrTemp(pageLabel);
-    AddFavoriteWithLabelAndName(win, pageNo, pageLabelW, name);
+    AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
 }
 
 static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {

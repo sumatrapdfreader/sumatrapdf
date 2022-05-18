@@ -31,13 +31,13 @@ class Favorites {
     FileState* GetFavByFilePath(const char* filePath);
     FileState* GetByFavorite(Favorite* fn);
     bool IsPageInFavorites(const char* filePath, int pageNo);
-    void AddOrReplace(const char* filePath, int pageNo, const char* name, const WCHAR* pageLabel = nullptr);
+    void AddOrReplace(const char* filePath, int pageNo, const char* name, const char* pageLabel = nullptr);
     void Remove(const char* filePath, int pageNo);
     void RemoveAllForFile(const char* filePath);
 };
 
 bool HasFavorites();
-void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageLabel, AutoFreeWstr& name);
+void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const char* pageLabel, const char* nameIn);
 void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo);
 void AddFavoriteForCurrentPage(WindowInfo* win);
 void DelFavorite(const char* filePath, int pageNo);

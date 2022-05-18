@@ -796,8 +796,12 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
 }
 
 struct Dialog_AddFav_Data {
-    const WCHAR* pageNo;
-    WCHAR* favName;
+    char* pageNo = nullptr;
+    char* favName = nullptr;
+    ~Dialog_AddFav_Data() {
+        str::Free(pageNo);
+        str::Free(favName);
+    }
 };
 
 static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
@@ -810,7 +814,8 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
         if (data->favName) {
-            SetDlgItemText(hDlg, IDC_FAV_NAME_EDIT, data->favName);
+            WCHAR* ws = ToWstrTemp(data->favName);
+            SetDlgItemTextW(hDlg, IDC_FAV_NAME_EDIT, ws);
             EditSelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         }
         CenterDialog(hDlg);
@@ -825,9 +830,9 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
             WCHAR* name = win::GetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
             if (!str::IsEmpty(name)) {
-                data->favName = str::Dup(name);
+                str::ReplacePtr(&data->favName, ToUtf8(name));
             } else {
-                data->favName = nullptr;
+                str::FreePtr(&data->favName);
             }
             EndDialog(hDlg, IDOK);
             return TRUE;
@@ -844,10 +849,10 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
 // returns true if the user wants to add a favorite.
 // favName is the name the user wants the favorite to have
 // (passing in a non-nullptr favName will use it as default name)
-bool Dialog_AddFavorite(HWND hwnd, const WCHAR* pageNo, AutoFreeWstr& favName) {
+bool Dialog_AddFavorite(HWND hwnd, const char* pageNo, AutoFreeStr& favName) {
     Dialog_AddFav_Data data;
-    data.pageNo = pageNo;
-    data.favName = favName;
+    data.pageNo = str::Dup(pageNo);
+    data.favName = str::Dup(favName);
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FAV_ADD, hwnd, Dialog_AddFav_Proc, (LPARAM)&data);
     if (IDCANCEL == res) {
@@ -856,6 +861,6 @@ bool Dialog_AddFavorite(HWND hwnd, const WCHAR* pageNo, AutoFreeWstr& favName) {
     }
 
     CrashIf(!(data.favName != favName || !data.favName));
-    favName.Set(data.favName);
+    favName.SetCopy(data.favName);
     return true;
 }
