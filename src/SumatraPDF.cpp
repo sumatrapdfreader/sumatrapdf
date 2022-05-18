@@ -827,7 +827,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     }
 
     if (kInvalidPageNo != pageNo) {
-        AutoFreeWstr buf(win->ctrl->GetPageLabel(pageNo));
+        AutoFreeStr buf(win->ctrl->GetPageLabel(pageNo));
         win::SetText(win->hwndPageBox, buf);
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels()) {
@@ -1821,10 +1821,10 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
     if (!win->ctrl->ValidPageNo(pageNo)) {
         pageNo = win->ctrl->CurrentPageNo();
     }
-    AutoFreeWstr pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
+    AutoFreeStr pageInfo(str::Format("%s %d / %d", _TRA("Page:"), pageNo, win->ctrl->PageCount()));
     if (win->ctrl->HasPageLabels()) {
-        AutoFreeWstr label(win->ctrl->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
+        AutoFreeStr label(win->ctrl->GetPageLabel(pageNo));
+        pageInfo.Set(str::Format("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
     }
     if (!wnd) {
         auto options = NotificationOptions::Persist;
@@ -2805,9 +2805,10 @@ static void CreateLnkShortcut(WindowInfo* win) {
     auto viewMode = ToWstrTemp(viewModeStr);
     AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(),
                                     ss.page, viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
-    AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
+    AutoFreeStr label = ctrl->GetPageLabel(ss.page);
     const WCHAR* srcFileName = ToWstrTemp(path::GetBaseNameTemp(ctrl->GetFilePath()));
-    AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
+    WCHAR* labelW = ToWstrTemp(label);
+    AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), labelW, srcFileName);
     auto exePath = GetExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -3409,12 +3410,14 @@ static void OnMenuGoToPage(WindowInfo* win) {
     }
 
     auto* ctrl = win->ctrl;
-    AutoFreeWstr label = ctrl->GetPageLabel(ctrl->CurrentPageNo());
-    AutoFreeWstr newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
-    if (!newPageLabel) {
+    AutoFreeStr label = ctrl->GetPageLabel(ctrl->CurrentPageNo());
+    WCHAR* labelW = ToWstrTemp(label);
+    AutoFreeWstr newPageLabelW(Dialog_GoToPage(win->hwndFrame, labelW, ctrl->PageCount(), !ctrl->HasPageLabels()));
+    if (!newPageLabelW) {
         return;
     }
 
+    char* newPageLabel = ToUtf8(newPageLabelW);
     int newPageNo = ctrl->GetPageByLabel(newPageLabel);
     if (ctrl->ValidPageNo(newPageNo)) {
         ctrl->GoToPage(newPageNo, true);

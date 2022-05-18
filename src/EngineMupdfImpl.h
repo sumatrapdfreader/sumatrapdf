@@ -68,8 +68,8 @@ class EngineMupdf : public EngineBase {
     IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
-    WCHAR* GetPageLabel(int pageNo) const override;
-    int GetPageByLabel(const WCHAR* label) const override;
+    char* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const char* label) const override;
 
     int GetAnnotations(Vec<Annotation*>* annotsOut);
 

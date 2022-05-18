@@ -266,8 +266,8 @@ class EngineDjVu : public EngineBase {
     IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
-    WCHAR* GetPageLabel(int pageNo) const override;
-    int GetPageByLabel(const WCHAR* label) const override;
+    char* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const char* label) const override;
 
     static EngineBase* CreateFromFile(const char* path);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -1174,21 +1174,20 @@ TocTree* EngineDjVu::GetToc() {
     return tocTree;
 }
 
-WCHAR* EngineDjVu::GetPageLabel(int pageNo) const {
+char* EngineDjVu::GetPageLabel(int pageNo) const {
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id)) {
-            return ToWstr(info.title);
+            return str::Dup(info.title);
         }
     }
     return EngineBase::GetPageLabel(pageNo);
 }
 
-int EngineDjVu::GetPageByLabel(const WCHAR* label) const {
-    auto labelA(ToUtf8Temp(label));
+int EngineDjVu::GetPageByLabel(const char* label) const {
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
-        if (str::EqI(info.title, labelA) && !str::Eq(info.title, info.id)) {
+        if (str::EqI(info.title, label) && !str::Eq(info.title, info.id)) {
             return info.pageno + 1;
         }
     }

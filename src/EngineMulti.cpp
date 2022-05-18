@@ -64,8 +64,8 @@ class EngineMulti : public EngineBase {
     IPageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
 
-    WCHAR* GetPageLabel(int pageNo) const override;
-    int GetPageByLabel(const WCHAR* label) const override;
+    char* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const char* label) const override;
 
     bool Load(const char* fileName, PasswordUI* pwdUI);
     bool LoadFromFiles(const char* dir, StrVec& files);
@@ -222,7 +222,7 @@ TocTree* EngineMulti::GetToc() {
     return tocTree;
 }
 
-WCHAR* EngineMulti::GetPageLabel(int pageNo) const {
+char* EngineMulti::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || pageNo >= pageCount) {
         return nullptr;
     }
@@ -231,7 +231,7 @@ WCHAR* EngineMulti::GetPageLabel(int pageNo) const {
     return e->GetPageLabel(pageNo);
 }
 
-int EngineMulti::GetPageByLabel(const WCHAR* label) const {
+int EngineMulti::GetPageByLabel(const char* label) const {
     for (auto&& pe : pageToEngine) {
         EngineBase* e = pe.engine;
         int pageNo = e->GetPageByLabel(label);

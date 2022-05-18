@@ -1563,6 +1563,11 @@ void SetText(HMENU m, int id, const WCHAR* s) {
     }
 }
 
+void SetText(HMENU m, int id, const char* s) {
+    WCHAR* ws = ToWstrTemp(s);
+    SetText(m, id, ws);
+}
+
 /* Make a string safe to be displayed as a menu item
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,

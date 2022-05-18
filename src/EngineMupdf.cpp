@@ -3387,22 +3387,23 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
     return true;
 }
 
-WCHAR* EngineMupdf::GetPageLabel(int pageNo) const {
+char* EngineMupdf::GetPageLabel(int pageNo) const {
     if (!pageLabels || pageNo < 1 || PageCount() < pageNo) {
         return EngineBase::GetPageLabel(pageNo);
     }
 
-    return str::Dup(pageLabels->at(pageNo - 1));
+    return ToUtf8(pageLabels->at(pageNo - 1));
 }
 
-int EngineMupdf::GetPageByLabel(const WCHAR* label) const {
+int EngineMupdf::GetPageByLabel(const char* label) const {
     if (!pdfdoc) {
         // non-pdf documents don't have labels so label is just a page number as string
         return EngineBase::GetPageByLabel(label);
     }
+    WCHAR* labelW = ToWstrTemp(label);
     int pageNo = 0;
     if (pageLabels) {
-        pageNo = pageLabels->Find(label) + 1;
+        pageNo = pageLabels->Find(labelW) + 1;
     }
 
     if (!pageNo) {

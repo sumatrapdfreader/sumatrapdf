@@ -357,12 +357,12 @@ bool EngineBase::HasPageLabels() const {
     return hasPageLabels;
 }
 
-WCHAR* EngineBase::GetPageLabel(int pageNo) const {
-    return str::Format(L"%d", pageNo);
+char* EngineBase::GetPageLabel(int pageNo) const {
+    return str::Format("%d", pageNo);
 }
 
-int EngineBase::GetPageByLabel(const WCHAR* label) const {
-    return _wtoi(label);
+int EngineBase::GetPageByLabel(const char* label) const {
+    return atoi(label);
 }
 
 bool EngineBase::IsPasswordProtected() const {

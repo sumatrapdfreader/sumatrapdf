@@ -153,18 +153,23 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     return true;
 }
 
-void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool highlight) {
-    win::SetText(hwnd, message);
+void NotificationWnd::UpdateMessage(const WCHAR* msg, int timeoutInMS, bool highlight) {
+    win::SetText(hwnd, msg);
     this->highlight = highlight;
     if (timeoutInMS != 0) {
         hasClose = false;
     }
     SetRtl(hwnd, IsUIRightToLeft());
-    UpdateWindowPosition(this, message, false);
+    UpdateWindowPosition(this, msg, false);
     InvalidateRect(hwnd, nullptr, FALSE);
     if (timeoutInMS != 0) {
         SetTimer(hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
     }
+}
+
+void NotificationWnd::UpdateMessage(const char* msg, int timeoutInMS, bool highlight) {
+    WCHAR* ws = ToWstrTemp(msg);
+    UpdateMessage(ws, timeoutInMS, highlight);
 }
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {

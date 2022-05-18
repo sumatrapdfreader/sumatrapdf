@@ -112,11 +112,11 @@ struct Controller {
     virtual bool HasPageLabels() const {
         return false;
     }
-    virtual WCHAR* GetPageLabel(int pageNo) const {
-        return str::Format(L"%d", pageNo);
+    virtual char* GetPageLabel(int pageNo) const {
+        return str::Format("%d", pageNo);
     }
-    virtual int GetPageByLabel(const WCHAR* label) const {
-        return _wtoi(label);
+    virtual int GetPageByLabel(const char* label) const {
+        return atoi(label);
     }
 
     // common shortcuts

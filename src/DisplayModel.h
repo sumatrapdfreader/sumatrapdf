@@ -104,8 +104,8 @@ struct DisplayModel : Controller {
 
     // page labels (optional)
     bool HasPageLabels() const override;
-    WCHAR* GetPageLabel(int pageNo) const override;
-    int GetPageByLabel(const WCHAR* label) const override;
+    char* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const char* label) const override;
 
     // common shortcuts
     bool ValidPageNo(int pageNo) const override;

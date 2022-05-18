@@ -412,8 +412,9 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
         pageNo = dti->dest->GetPageNo();
     }
     AutoFreeWstr name = str::Dup(dti->title);
-    AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
-    AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
+    AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNo);
+    WCHAR* pageLabelW = ToWstrTemp(pageLabel);
+    AddFavoriteWithLabelAndName(win, pageNo, pageLabelW, name);
 }
 
 static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
@@ -496,20 +497,20 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     if (pageNo > 0) {
-        AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
+        AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
             win::menu::Remove(popup, CmdFavoriteAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
-            auto tr = _TR("Remove page %s from favorites");
-            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+            const char* tr = _TRA("Remove page %s from favorites");
+            AutoFreeStr s = str::Format(tr, pageLabel.Get());
             win::menu::SetText(popup, CmdFavoriteDel, s);
         } else {
             win::menu::Remove(popup, CmdFavoriteDel);
             // %s and not %d because re-using translation from RebuildFavMenu()
-            auto tr = _TR("Add page %s to favorites");
-            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+            const char* tr = _TRA("Add page %s to favorites");
+            AutoFreeStr s = str::Format(tr, pageLabel.Get());
             win::menu::SetText(popup, CmdFavoriteAdd, s);
         }
     } else {

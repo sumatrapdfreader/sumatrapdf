@@ -202,7 +202,10 @@ void Remove(HMENU m, int id);
 // TODO: this doesn't recognize enum Cmd, why?
 // void Remove(HMENU m, enum Cmd id);
 void Empty(HMENU m);
+
 void SetText(HMENU m, int id, const WCHAR* s);
+void SetText(HMENU m, int id, const char* s);
+
 char* ToSafeStringTemp(const char* s);
 
 } // namespace menu

@@ -128,11 +128,11 @@ bool DisplayModel::HasPageLabels() const {
     return engine->HasPageLabels();
 }
 
-WCHAR* DisplayModel::GetPageLabel(int pageNo) const {
+char* DisplayModel::GetPageLabel(int pageNo) const {
     return engine->GetPageLabel(pageNo);
 }
 
-int DisplayModel::GetPageByLabel(const WCHAR* label) const {
+int DisplayModel::GetPageByLabel(const char* label) const {
     return engine->GetPageByLabel(label);
 }
 

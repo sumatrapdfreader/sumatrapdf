@@ -545,8 +545,8 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     } else if (WM_CHAR == msg) {
         switch (wp) {
             case VK_RETURN: {
-                auto buf = win::GetTextTemp(win->hwndPageBox);
-                int newPageNo = win->ctrl->GetPageByLabel(buf);
+                char* s = win::GetTextATemp(win->hwndPageBox);
+                int newPageNo = win->ctrl->GetPageByLabel(s);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
                     SetFocus(win->hwndFrame);

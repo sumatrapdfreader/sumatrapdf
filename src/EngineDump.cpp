@@ -41,6 +41,20 @@ static bool NeedsEscape(const WCHAR* s) {
     return false;
 }
 
+static bool NeedsEscape(const char* s) {
+    // TODO: optimize to do a single loop over s
+    if (str::FindChar(s, '<')) {
+        return true;
+    }
+    if (str::FindChar(s, '&')) {
+        return true;
+    }
+    if (str::FindChar(s, '"')) {
+        return true;
+    }
+    return false;
+}
+
 // TODO: we leak because in the past Escape() was freeing str
 // and now we don't but I didn't update all the code
 // doesn't matter because engine dump does its job and quits
@@ -55,6 +69,41 @@ static char* Escape(const WCHAR* str) {
 
     str::WStr escaped(256);
     for (const WCHAR* s = str; *s; s++) {
+        switch (*s) {
+            case '&':
+                escaped.Append(L"&amp;");
+                break;
+            case '<':
+                escaped.Append(L"&lt;");
+                break;
+            case '>':
+                escaped.Append(L"&gt;");
+                break;
+            case '"':
+                escaped.Append(L"&quot;");
+                break;
+            case '\'':
+                escaped.Append(L"&amp;");
+                break;
+            default:
+                escaped.Append(*s);
+                break;
+        }
+    }
+    return ToUtf8(escaped.Get());
+}
+
+static char* Escape(const char* str) {
+    if (str::IsEmpty(str)) {
+        return {};
+    }
+
+    if (!NeedsEscape(str)) {
+        return str::Dup(str);
+    }
+
+    str::Str escaped(256);
+    for (const char* s = str; *s; s++) {
         switch (*s) {
             case '&':
                 escaped.Append(L"&amp;");

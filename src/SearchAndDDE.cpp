@@ -263,10 +263,10 @@ struct FindThreadData : public ProgressUpdateUI {
         } else if (!success && loopedAround) {
             wnd->UpdateMessage(_TR("No matches were found"), 3000);
         } else {
-            AutoFreeWstr label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetSearchHitStartPageNo()));
-            AutoFreeWstr buf(str::Format(_TR("Found text at page %s"), label.Get()));
+            AutoFreeStr label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetSearchHitStartPageNo()));
+            AutoFreeStr buf(str::Format(_TRA("Found text at page %s"), label.Get()));
             if (loopedAround) {
-                buf.Set(str::Format(_TR("Found text at page %s (again)"), label.Get()));
+                buf.Set(str::Format(_TRA("Found text at page %s (again)"), label.Get()));
                 MessageBeep(MB_ICONINFORMATION);
             }
             wnd->UpdateMessage(buf, 3000, loopedAround);

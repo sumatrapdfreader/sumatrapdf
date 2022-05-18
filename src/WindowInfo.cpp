@@ -551,7 +551,8 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
         }
     }
     if (!hasDest && ctrl->HasPageLabels()) {
-        int pageNo = ctrl->GetPageByLabel(name);
+        char* nameA = ToUtf8Temp(name);
+        int pageNo = ctrl->GetPageByLabel(nameA);
         if (ctrl->ValidPageNo(pageNo)) {
             ctrl->GoToPage(pageNo, true);
         }

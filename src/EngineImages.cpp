@@ -802,8 +802,8 @@ class EngineImageDir : public EngineImages {
         return nullptr;
     }
 
-    WCHAR* GetPageLabel(int pageNo) const override;
-    int GetPageByLabel(const WCHAR* label) const override;
+    char* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const char* label) const override;
 
     TocTree* GetToc() override;
 
@@ -855,7 +855,7 @@ static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     return true;
 }
 
-WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
+char* EngineImageDir::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || PageCount() < pageNo) {
         return EngineBase::GetPageLabel(pageNo);
     }
@@ -863,14 +863,15 @@ WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
     const WCHAR* path = pageFileNames.at(pageNo - 1);
     const WCHAR* fileName = path::GetBaseNameTemp(path);
     size_t n = path::GetExtTemp(fileName) - fileName;
-    return str::Dup(fileName, n);
+    return ToUtf8(fileName, n);
 }
 
-int EngineImageDir::GetPageByLabel(const WCHAR* label) const {
+int EngineImageDir::GetPageByLabel(const char* label) const {
+    WCHAR* labelW = ToWstrTemp(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
         const WCHAR* fileName = path::GetBaseNameTemp(pageFileNames.at(i));
         const WCHAR* fileExt = path::GetExtTemp(fileName);
-        if (str::StartsWithI(fileName, label) &&
+        if (str::StartsWithI(fileName, labelW) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0')) {
             return i + 1;
         }
@@ -887,11 +888,11 @@ TocTree* EngineImageDir::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    AutoFreeWstr ws = GetPageLabel(1);
+    WCHAR* ws = ToWstrTemp(GetPageLabel(1));
     TocItem* root = newImageDirTocItem(nullptr, ws, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
-        ws = GetPageLabel(i);
+        ws = ToWstrTemp(GetPageLabel(i));
         TocItem* item = newImageDirTocItem(root, ws, i);
         item->id = i;
         root->AddSiblingAtEnd(item);

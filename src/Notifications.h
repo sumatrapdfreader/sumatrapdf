@@ -45,7 +45,8 @@ struct NotificationWnd : public ProgressUpdateUI {
 
     ~NotificationWnd() override;
 
-    void UpdateMessage(const WCHAR* message, int timeoutInMS = 0, bool highlight = false);
+    void UpdateMessage(const WCHAR* msg, int timeoutInMS = 0, bool highlight = false);
+    void UpdateMessage(const char* msg, int timeoutInMS = 0, bool highlight = false);
 
     // ProgressUpdateUI methods
     void UpdateProgress(int current, int total) override;
